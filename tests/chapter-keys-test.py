@@ -55,6 +55,12 @@ try:
     check(changed(k7, keys(overlay=ov)) == ['rise'], 'overlay review-cut.json wins over the root\'s')
     open(f'{ov}/manifest.txt', 'w').write('# h\n' + '0' * 64 + ' 1 clips/02.mp4\n')
     check(changed(keys(overlay=ov), {**keys(overlay=ov)}) == [] and keys(overlay=ov)['create'] != k7['create'], 'overlay manifest sha is used for a media file')
+    # per-chapter epoch: only that chapter's key moves
+    real = ck.read_chapter_epochs; k8 = keys()
+    try:
+        ck.read_chapter_epochs = lambda d: {'rise': '9'}; k9 = keys()
+    finally: ck.read_chapter_epochs = real
+    check(changed(k8, k9) == ['rise'], 'a per-chapter epoch changes only that chapter\'s key')
     # CLI
     import subprocess, sys
     r = subprocess.run([sys.executable, f'{WT}/tools/experience/chapter-keys.py', HQ, '--root', tmp, '--resolution', '720p', '--json', '--chapter', 'rise'], capture_output=True, text=True)

@@ -9,6 +9,7 @@ One cache key per film chapter: sha256 of a canonical JSON (keys sorted) of ever
     chapter post/college-seed.json
   * the sha256 of every media file the shot names (screens clips etc.; 'missing' when the file is not there)
   * the resolution (480p | 720p | 1080p | 4K) and RENDER_EPOCH (tools/experience/render-epoch.txt)
+  * a per-chapter epoch ('chapter <id> <n>' in render-epoch.txt), for a code change that alters one chapter's pixels
 Nothing else: no code hashes (bump the epoch when a code change alters pixels), and no field of the shot is left out.
 
 <hq dir> is repo-relative (or absolute under --root; root default = this script's repo). --overlay is a freeze directory:
@@ -62,11 +63,20 @@ def read_epoch(script_dir):
         if l.strip() and not l.lstrip().startswith('#'): return l.strip()
     raise SystemExit('render-epoch.txt has no epoch line')
 
+def read_chapter_epochs(script_dir):
+    """'chapter <id> <n>' lines of render-epoch.txt: that chapter alone re-renders (its key changes); every other key stays."""
+    out = {}
+    for l in open(os.path.join(script_dir, 'render-epoch.txt')).read().split('\n'):
+        w = l.split()
+        if len(w) == 3 and w[0] == 'chapter': out[w[1]] = w[2]
+    return out
+
 def canon(o): return json.dumps(o, sort_keys=True, separators=(',', ':'), ensure_ascii=False)
 
 def chapter_keys(hq, resolution, root, overlay=None, epoch=None, only=None):
     """-> [(index 1-based, id, key)] in film order"""
-    T = Tree(root, overlay); epoch = epoch or read_epoch(os.path.dirname(os.path.abspath(__file__)))
+    here = os.path.dirname(os.path.abspath(__file__))
+    T = Tree(root, overlay); epoch = epoch or read_epoch(here); chapter_epochs = read_chapter_epochs(here)
     review = T.load(f'{hq}/review-cut.json'); out = []
     def cutinfo(cut): return {k: v for k, v in cut.items() if k not in ('shots', 'name')}
     for i, s in enumerate(review['shots']):
@@ -82,6 +92,7 @@ def chapter_keys(hq, resolution, root, overlay=None, epoch=None, only=None):
         media = sorted({v for sh in shots for v in strings(sh) if MEDIA.search(v) and not v.startswith(('http', 'data:', '/'))})
         payload = {'epoch': epoch, 'resolution': resolution, 'chapter': cid, 'source': src, 'cut': cutinfo(cut), 'shots': shots,
                    'seed': {'name': seed_for(cid), 'sha256': T.sha(seed)}, 'media': {m: T.sha(m) for m in media}}
+        if cid in chapter_epochs: payload['chapterEpoch'] = chapter_epochs[cid]   # only that chapter's key changes
         out.append((i + 1, cid, hashlib.sha256(canon(payload).encode()).hexdigest()))
     return out
 

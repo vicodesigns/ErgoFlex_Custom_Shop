@@ -3,3 +3,6 @@
 # re-renders every chapter. Data edits (cameras, lights, desk builds, screens, seeds) never need a bump.
 # 2 (2026-11-10): people in the rooms, photographic window views and their regrade, desk users' chairs turned to face the desk.
 2
+# Per-chapter epoch: this chapter alone re-renders (its key changes); the global epoch above stays.
+# commons 3 (2026-11-11): architecture pass in the library (balcony, piers, doors, datum rails) moved its pixels.
+chapter commons 3
