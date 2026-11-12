@@ -297,4 +297,32 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
     const party = castEntries('home', { id: 'house', width: 3600, depth: 4200, back: -1450 }).filter(s => s.modes?.includes('party'));
     assert.ok(party.length >= 3 && party.every(s => !s.desk), 'home party: guests, nobody at the desk');
 }
-console.log('PASS room people: library entries, desk-height casting and fade, chair hand-over, film filter and placement, film casting, stations.');
+{   // The Studio loads the people of the hour and brings the others when their hour comes; a film loads its whole cast.
+    const { INSTITUTIONAL_ROOMS } = await import('../institutional-scenes.mjs');
+    const layout = INSTITUTIONAL_ROOMS.government.layouts.spacious, mode = { now: 'morning' }, loads = [];
+    const counting = { ...library, instance: async id => { loads.push(id); return library.instance(id); } };
+    const { room } = makeRoom('government', layout); room.peopleState = () => ({ mode: mode.now, height: 43.5, pose: { x: layout.desk[0], z: layout.desk[1], yaw: 0 } });
+    const all = castEntries('government', layout), mornings = all.filter(s => !s.modes || s.modes.includes('morning')).length;
+    globalThis.__PEOPLE_LAZY__ = true;
+    const people = new RoomPeople(room, counting); await people.setEnabled(true);
+    const first = people.people.length;
+    assert.ok(people.waiting.length > 15 && first < people.people.length + people.waiting.length, 'the cast of the other hours waits');
+    assert.ok(people.people.every(o => { const s = o.userData.person; return !s.modes || s.modes.includes('morning') || (s.desk && !s.station); }), 'only the morning\'s people (and whoever is at the mobile desk) are loaded');
+    assert.ok(people.people.filter(o => !o.userData.person.variant).length >= mornings, 'everyone of the morning is there');
+    mode.now = 'afternoon'; people.update(room.peopleState()); await people.settled();
+    people.update(room.peopleState());
+    assert.ok(people.people.length > first + 8, 'the afternoon\'s people were brought in when the hour changed');
+    assert.ok(people.people.some(o => o.visible && o.userData.person.station === 'counter-accessible' && o.userData.person.modes.join() === 'afternoon'), 'and they are shown (the clerk at the accessible counter)');
+    assert.ok(!people.waiting.some(s => s.modes.includes('afternoon')), 'nobody of the afternoon still waits');
+    mode.now = 'morning'; people.update(room.peopleState()); const again = loads.length; mode.now = 'afternoon'; people.update(room.peopleState()); await people.settled();
+    assert.equal(loads.length, again, 'an hour that was loaded is not loaded again');
+    delete globalThis.__PEOPLE_LAZY__;
+    const { room: set } = makeRoom('government', layout); set.peopleState = room.peopleState;
+    const film = new RoomPeople(set, library); film.setFilter({}); await film.setEnabled(true);
+    assert.equal(film.waiting.length, 0, 'a film loads the whole cast at once');
+    const studioOnly = castEntries('occmedialab', { id: 'house', index: 1, width: 10200, depth: 13000, back: -4333, stations: [] }).filter(s => s.studio);
+    const { room: lab } = makeRoom('occmedialab', { id: 'house', index: 1, width: 10200, depth: 13000, back: -4333, stations: [] });
+    const coast = new RoomPeople(lab, library); coast.setFilter({ except: [] });
+    assert.ok(studioOnly.length >= 2 && !coast.specs().some(s => s.studio), 'people marked for the Studio are not in a film that takes the whole room');
+}
+console.log('PASS room people: library entries, desk-height casting and fade, chair hand-over, film filter and placement, film casting, stations, loading by the hour.');
