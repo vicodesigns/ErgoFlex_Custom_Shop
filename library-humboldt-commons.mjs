@@ -497,7 +497,8 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     const darkGlass = own(material('#262c31', { roughness: .06, metalness: 0, envMapIntensity: .5 }));
     {
         const dz = SIDE_DOOR_Z[1] - SIDE_DOOR_Z[0], mid = (SIDE_DOOR_Z[0] + SIDE_DOOR_Z[1]) / 2, HEAD = 2150, frame = kit(), lever = kit();
-        box(right, [10, SOFFIT, dz], [PROUD_X + 65, SOFFIT / 2, mid], darkGlass).castShadow = false;
+        // Bronze-tinted door glass, a little diffuse so the room's lights do not print a hard highlight on it.
+        box(right, [10, SOFFIT, dz], [PROUD_X + 65, SOFFIT / 2, mid], own(material('#2a2f33', { roughness: .32, metalness: 0, envMapIntensity: .35 }))).castShadow = false;
         for (const z of [SIDE_DOOR_Z[0] + 25, SIDE_DOOR_Z[1] - 25]) frame.box([70, SOFFIT, 50], [PROUD_X + 35, SOFFIT / 2, z]);
         frame.box([70, 50, dz], [PROUD_X + 35, HEAD, mid]).box([70, 40, dz], [PROUD_X + 35, SOFFIT - 20, mid]);
         // The leaf's stiles and bottom rail, hinged at the far jamb, lever by the pier (photo 3).
@@ -602,8 +603,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     // figure wall, standing proud of it with a return face toward the hall.
     const leftTrim = kit(); for (const [z, wide] of [[-1000, 450], [3000, 450], [MEZ[1] - 150, 300]]) leftTrim.box([OH - 40, 3800, wide], [XL + (OH - 40) / 2, 1900, z]);
     baked(left, leftTrim, olive);
-    // Two short datum lines at the hall end of the olive wall (chair rail and door-head height, photo 2).
-    const reveals = kit(); for (const y of [950, 2100]) reveals.box([6, 10, 1500], [XL + 2, y, MEZ[1] - 300 - 750]);
+    const reveals = kit();
     for (const y of [3000, 4800]) reveals.box([6, 10, front - MEZ[1]], [XL + 2, y, (MEZ[1] + front) / 2]);
     reveals.box([6, 3800, 20], [XL + 2, 1900, MEZ[1]]);
     // Veneered fascia panels: 2440 mm long, with hairline joints.
@@ -619,6 +619,8 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     box(left, [3080, 80, MEZ_LEN + 160], [XL - 1540, h + 40, MEZ_MID], whiteFlat).castShadow = false;
     const guard = kit(), guardCap = kit();
     const GX = EDGE - 90;
+    // Two short bronze datum rails at the hall end of the olive wall (chair-rail and door-head height, photo 2).
+    for (const y of [950, 2100]) guard.box([8, 14, 1500], [XL + 4, y, MEZ[1] - 300 - 750]);
     for (let z = MEZ[0] + 50; z <= MEZ[1] - 50; z += 1500) guard.box([50, 1070, 50], [GX, 4200 + 535, z]);
     for (const y of [4250, 5200]) guard.box([10, 40, MEZ_LEN - 100], [GX, y, MEZ_MID]);
     for (let z = MEZ[0] + 100; z < MEZ[1] - 40; z += 100) guard.box([12, 950, 12], [GX, 4725, z]);

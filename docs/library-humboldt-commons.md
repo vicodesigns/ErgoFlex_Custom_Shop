@@ -318,8 +318,9 @@ around them moved.
 - **Olive piers carry the edge beam:** the two along the commons are 560 deep (were
   300), and a new 300 mm wide pier stands where the olive wall meets the white figure
   wall (z 11700 to 12000), proud of it, with a return face toward the hall.
-- **Two short datum lines** (950 and 2100, 1.5 m long) replace the full-length
-  reveals on the olive wall; the canoe track hangs under the edge beam.
+- **Two short bronze datum rails** (950 and 2100, 1.5 m long, at the hall end)
+  replace the full-length reveals on the olive wall; the canoe track hangs under the
+  edge beam.
 - **Not built, for the owner to choose:** in photo 2 the olive wall is frontal to the
   camera while the figure wall recedes, so in the real building the figure hall
   leaves the junction at 90° (an L-shaped plan with an outside corner at the canoe
