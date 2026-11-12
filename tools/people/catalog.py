@@ -3,7 +3,8 @@
 
     python3 tools/people/catalog.py        (build.py runs it after every build)
 
-  characters: { id: { name, sex, age, years, heritage, height (cm), outfit: [garments], colors: { top, bottom, shoes, hair } } }
+  characters: { id: { name, role?, sex, age, years, heritage, height (cm), outfit: [garments], colors: { top, bottom, shoes, hair } } }
+              (age 'child' = one of cast.CHILDREN, who have the child postures; the middle-school students are 'teen')
   poses:      { id: { label, stance, desk: bool, seat (mm), heights: [inches] } }
   models:     { '<library id>': { character, pose, deskHeight?, aids: [...] } }       what is built (assets/props/index.json)
 Any character can be built in any pose on request: python3 tools/people/build.py people-<character>-<pose>.
@@ -41,10 +42,14 @@ for cid, c in cast.CHARACTERS.items():
     ph = c['phenotype']; y = years(ph['age'])
     tall = max((p['size'][1] for p in built.values() if p['person']['character'] == cid and cast.POSE_INFO.get(p['person']['pose'], ('', ''))[1] in ('standing', 'walking') and not p['person']['pose'].startswith('stretch')), default=None)
     colors = {role(g): hexc(v) for g, v in (c.get('tint') or {}).items()}
+    # garments made from the base mesh (garments.py): a scrubs top or a gown is the top, socks are the shoes; the white coat keeps its colour
+    for kind, kw in c.get('wear', []):
+        if kind in ('scrubs', 'gown', 'socks') and 'color' in kw: colors['shoes' if kind == 'socks' else 'top'] = hexc(kw['color'])
     if c.get('hair_tint'): colors['hair'] = hexc(c['hair_tint'])
-    characters[cid] = {'name': c['name'], 'sex': ('girl' if ph['gender'] < .5 else 'boy') if y < 13 else 'woman' if ph['gender'] < .5 else 'man', 'age': age_group(y), 'years': round(y), 'heritage': heritage(ph['race']),
+    characters[cid] = {'name': c['name'], **({'role': c['role']} if c.get('role') else {}), 'sex': ('girl' if ph['gender'] < .5 else 'boy') if y < 14 else 'woman' if ph['gender'] < .5 else 'man',
+                       'age': 'child' if cid in cast.CHILDREN else age_group(max(y, 13)), 'years': round(y), 'heritage': heritage(ph['race']),
                        'height': round(tall / 10) if tall else round((1.287 * ph['height'] + (.87 if ph['gender'] < .5 else 1.16)) * 100),
-                       'outfit': c.get('clothes', []), 'colors': colors}
+                       'outfit': [kind for kind, _kw in c.get('wear', [])] + c.get('clothes', []), 'colors': colors}
 poses = {pid: {'label': label, 'stance': stance, 'desk': where == 'desk', 'seat': seat, **({'heights': list(cast.DESK_HEIGHTS[pid])} if pid in cast.DESK_HEIGHTS else {})}
          for pid, (label, stance, where, seat, _held) in cast.POSE_INFO.items()}
 models = {}

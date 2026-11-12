@@ -15,7 +15,7 @@ from mathutils import Vector
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import cast, pose_lib, held  # noqa: E402
+import cast, pose_lib, held, garments, worn  # noqa: E402
 
 argv = sys.argv[sys.argv.index('--') + 1:]
 OUT_ID, OUT_DIR = argv[0], argv[1]
@@ -102,6 +102,33 @@ for o in meshes:
                     ins = [l.from_node for i in node.inputs for l in i.links]; node = next((n for n in ins if n.type == 'TEX_IMAGE'), ins[0] if ins else None)
                 if node and node.image: node.image = tint_image(node.image, tint)
 
+# ---- glasses as frames only (safety glasses): the faces the texture leaves clear go (cast: 'frames': [glasses, ...])
+for o in meshes:
+    if o.name.split('.', 1)[-1] not in who.get('frames', []): continue
+    image = next((n.image for m in o.data.materials for n in m.node_tree.nodes if n.type == 'TEX_IMAGE' and n.image), None); uv = o.data.uv_layers.active
+    if not image or not uv: continue
+    w, h = image.size; px = np.empty(w * h * 4, dtype=np.float32); image.pixels.foreach_get(px); alpha = px.reshape(h, w, 4)[..., 3]
+    def clear(p):
+        u = sum(uv.data[i].uv.x for i in p.loop_indices) / p.loop_total; v = sum(uv.data[i].uv.y for i in p.loop_indices) / p.loop_total
+        return alpha[min(h - 1, max(0, int(v % 1 * h))), min(w - 1, max(0, int(u % 1 * w)))] < .6
+    gone = {i for p in o.data.polygons if clear(p) for i in p.vertices} - {i for p in o.data.polygons if not clear(p) for i in p.vertices}
+    faces = [p.index for p in o.data.polygons if clear(p)]
+    if faces:
+        import bmesh as _bm
+        bm = _bm.new(); bm.from_mesh(o.data); bm.faces.ensure_lookup_table(); _bm.ops.delete(bm, geom=[bm.faces[i] for i in faces], context='FACES'); bm.to_mesh(o.data); bm.free()
+
+# ---- garments made from the base mesh (a white coat, a gown, socks; gloves are the hands' own faces) ------
+meshes += garments.build(who, base, rig, OUT_DIR, OUT_ID)
+
+# ---- a shirt tucked in: it ends under the belt (cast: 'tuck': [garment, ...]) -------------------------------
+for o in meshes:
+    kind = o.name.split('.', 1)[-1]
+    if kind not in who.get('tuck', []): continue
+    line = (rig.matrix_world @ rig.data.bones['spine_01'].head_local).z + .008 * (rig.matrix_world @ rig.data.bones['head'].head_local).z / 1.47
+    gone = [v.index for v in o.data.vertices if (o.matrix_world @ v.co).z < line]
+    vg = o.vertex_groups.new(name='tucked'); vg.add(gone, 1., 'REPLACE')
+    mod = o.modifiers.new('Tucked', 'MASK'); mod.vertex_group = 'tucked'; mod.invert_vertex_group = True
+
 # ---- knee-length shorts: a pair of trousers loses everything that follows the calves and feet ---------
 for o in meshes:
     kind = o.name.split('.', 1)[-1]
@@ -137,11 +164,13 @@ pose_lib.apply_pose(rig, pose)
 # What each held thing follows when the Director fine-tunes the pose (the wheelchair stays where it is).
 HELD_BONE = {'gamepad': 'hand_r', 'carton': 'hand_r', 'backpack': 'spine_03', 'headphones': 'head', 'wheelchair': None, 'prosthesis': 'calf_{side}'}
 extras, extra_bone = [], {}
-for kind, kw in spec.get('held', []):
+for kind, kw in list(spec.get('held', [])) + list(who.get('carry', {}).get(spec['pose'], [])):
     made = held.BUILDERS[kind](rig, **dict(kw)); extras += made
     for o in made: extra_bone[o.name] = (HELD_BONE[kind] if kind in HELD_BONE else 'hand_{side}')
     for o in made:
         if extra_bone[o.name]: extra_bone[o.name] = extra_bone[o.name].format(side=kw.get('side', 'r'))
+# What the role wears on the body (belt, badge, lanyard...): found on the posed clothes, each following one bone.
+for o, bone in worn.build(rig, meshes, who, spec): extras.append(o); extra_bone[o.name] = bone
 
 # ---- bake to one static mesh -------------------------------------------------------------------
 dg = bpy.context.evaluated_depsgraph_get(); baked = []
@@ -170,7 +199,7 @@ body = next(b for b in baked if b.name == base_name + '.baked')
 SMALL = ('low-poly', 'teeth', 'tongue', 'eyebrow', 'eyelash', 'glasses')
 cloth = [b for b in baked if b is not body and b not in extras and not any(k in b.name.lower() for k in SMALL) and not (who.get('hair') and who['hair'] in b.name)]
 # Outer garments first, in the order the character lists them: each layer loses the faces a layer above it covers.
-order = {name: i for i, name in enumerate(who['clothes'])}
+order = {name: i for i, name in enumerate(garments.names(who) + who['clothes'])}
 cloth.sort(key=lambda b: order.get(b.name.split('.', 1)[-1].replace('.baked', ''), 99))
 
 
@@ -178,14 +207,18 @@ def tree_of(o):
     bm = bmesh.new(); bm.from_mesh(o.data); bm.transform(o.matrix_world); t = BVHTree.FromBMesh(bm); bm.free(); return t
 
 
-def cull_under(o, trees, reach, through=.018):
+def cull_under(o, trees, reach, through=.018, corners=False, whole=False):
     if not trees: return
     bm = bmesh.new(); bm.from_mesh(o.data); bm.transform(o.matrix_world); bm.normal_update()
     # Covered: a layer above lies just outside the face (within `reach`), or the face has pushed out through that
-    # layer (by up to `through`).
+    # layer (by up to `through`). corners: a face with only a corner through the layer above goes too. whole: a face
+    # goes only if all of it is covered (skin at the edge of a neckline stays, or the opening shows holes).
+    def under(p, n): return any(t.ray_cast(p + n * .0005, n, reach)[0] is not None or t.ray_cast(p - n * .0005, -n, through)[0] is not None for t in trees)
     def hidden(f):
         c = f.calc_center_median()
-        return any(t.ray_cast(c + f.normal * .0005, f.normal, reach)[0] is not None or t.ray_cast(c - f.normal * .0005, -f.normal, through)[0] is not None for t in trees)
+        if whole: return under(c, f.normal) and all(under(v.co, f.normal) for v in f.verts)
+        if any(t.ray_cast(c + f.normal * .0005, f.normal, reach)[0] is not None or t.ray_cast(c - f.normal * .0005, -f.normal, through)[0] is not None for t in trees): return True
+        return corners and any(t.ray_cast(v.co - f.normal * .0005, -f.normal, through)[0] is not None for v in f.verts for t in trees)
     covered = [f for f in bm.faces if hidden(f)]
     bmesh.ops.delete(bm, geom=covered, context='FACES'); bm.transform(o.matrix_world.inverted()); bm.to_mesh(o.data); bm.free()
 
@@ -197,9 +230,11 @@ for c in cloth:
         mod = c.modifiers.new('Budget', 'DECIMATE'); mod.ratio = 14000 / n
         dg2 = bpy.context.evaluated_depsgraph_get(); me = bpy.data.meshes.new_from_object(c.evaluated_get(dg2), preserve_all_data_layers=True, depsgraph=dg2); c.modifiers.clear(); old = c.data; c.data = me; bpy.data.meshes.remove(old)
 trees = [tree_of(c) for c in cloth]
-cull_under(body, trees, .035)
+made = len(garments.names(who))      # (garments made from the base mesh: smooth shells with cut necklines)
+cull_under(body, trees, .035, whole=made > 0)
 # A garment can push further out through the one over it than skin does (a trouser yoke through the back of a shirt).
-for i, c in enumerate(cloth[1:], 1): cull_under(c, trees[:i], .025, .045)
+# (what is under a shell shows at every corner that pokes through it)
+for i, c in enumerate(cloth[1:], 1): cull_under(c, trees[:i], .025, .045, corners=i >= 1 and made > 0 and c.name.split('.', 1)[-1].replace('.baked', '') in who['clothes'])
 bpy.ops.object.select_all(action='DESELECT')
 for b in baked: b.select_set(True)
 bpy.context.view_layer.objects.active = baked[0]; bpy.ops.object.join(); person = bpy.context.object; person.name = OUT_ID
