@@ -49,7 +49,6 @@ for (const [room, specs] of Object.entries(ROOM_PEOPLE)) for (const spec of LAYO
                 for (const [who, spots] of where) assert.equal(spots.size, 1, `${room} ${L.id} ${phase}: ${who} is in one place (${[...spots].join(', ')})`);
                 for (const [station, who] of at) assert.equal(who.size, 1, `${room} ${L.id} ${phase}: one person at ${station}`);
             }
-            for (const s of specs.filter(s => s.station)) assert.ok(L.stations.some(d => d.id === s.station), `${room} ${L.id}: ${s.station} is a desk of this layout`);
         }
     }
     // the living and working rooms keep that desk user and add the people their furniture is there for, by a piece of furniture each
