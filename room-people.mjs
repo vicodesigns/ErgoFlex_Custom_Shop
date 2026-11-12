@@ -298,7 +298,20 @@ export const ROOM_PEOPLE = {
         spot('people-omar-wheel-watch', 4000, 2850, [4981, 2850], { layout: 'house', modes: ['party'], colors: LOOK.omarSchool }),
         spot('people-lin-stand-drink', 3900, 1950, [4981, 2700], { layout: 'house', modes: ['party'], colors: LOOK.guestA }),
         spot('people-ben-stand-drink', -450, -1600, [0, -2600], { layout: 'house', modes: ['party'], colors: LOOK.benSchool }),
-        spot('people-mia-stand-drink', 500, -1650, [0, -2600], { layout: 'house', modes: ['party'], colors: LOOK.guestC })
+        spot('people-mia-stand-drink', 500, -1650, [0, -2600], { layout: 'house', modes: ['party'], colors: LOOK.guestC }),
+        // The rest of the class, in the Studio (the film's chapters keep the people they were made with): eight more at
+        // the tables by day, a study group after school at the chairs that stay down, the teacher planning at night,
+        // more of them standing at the projects for the showcase.
+        L => { const M = ['morning'], A = ['afternoon'], MA = ['morning', 'afternoon'], E = ['evening'], P = ['party'];
+            const seat = (who, pose, chair, modes) => ({ id: `people-${who}-${pose}`, on: 'student-chair-' + chair, seat: /sit-read/.test(pose) ? 420 : 450, turn: 180, modes, key: `${who}-class-${pose}-${modes[0]}`, studio: true });
+            return [
+                seat('nia', 'sit-write', '0-0-0', MA), seat('max', 'sit-listen', '0-1-1', MA), seat('yara', 'sit-laptop', '0-2-1', ['morning', 'afternoon', 'evening']), seat('finn', 'sit-listen', '1-0-0', MA),
+                seat('suki', 'sit-write', '1-0-1', MA), seat('diego', 'sit-raise', '1-1-0', M), seat('diego', 'sit-write', '1-1-0', ['afternoon', 'evening']), seat('amal', 'sit-listen', '1-2-0', MA), seat('jack', 'sit-laptop', '1-2-1', MA),
+                seat('nia', 'sit-read', '0-0-0', E), seat('suki', 'sit-laptop', '2-0-0', E), seat('jack', 'sit-write', '2-2-0', E),
+                { id: 'people-hale-sit-type', desk: 'sit', modes: ['night'], colors: LOOK.hale, studio: true }, { id: 'people-hale-sit-type-30', desk: 'sit', modes: ['night'], colors: LOOK.hale, studio: true },
+                ...chat(L, .5, .62, [['people-nia-stand-talk', { key: 'nia-showcase' }], ['people-max-stand-drink', { key: 'max-showcase' }], ['people-finn-stand-phone', { key: 'finn-showcase' }]], { modes: P, studio: true }, 620),
+                ...chat(L, .32, .8, [['people-yara-stand-present', { key: 'yara-showcase' }], ['people-amal-stand-wait', { key: 'amal-showcase' }]], { modes: P, studio: true })
+            ]; }
     ],
     occmedialab: [
         { id: 'people-maya-sit-type', desk: 'sit', modes: [] }, { id: 'people-maya-sit-type-30', desk: 'sit', modes: [] }, { id: 'people-maya-stand-type', desk: 'stand', modes: [] },
@@ -731,7 +744,7 @@ export const ROOM_PEOPLE = {
                 ...staffAt(L, [
                     ['duty-sergeant', 'brandt', big ? ['afternoon', 'evening', 'night'] : null, { key: 'brandt-duty' }],
                     ['intake-officer', 'cole', ['afternoon', 'evening']], ['intake-officer', 'lin', ['morning', 'night'], { ...U, key: 'lin-intake' }],
-                    ['report-writing-2', 'andre', ['afternoon', 'evening'], U],
+                    ['report-writing-2', 'andre', ['afternoon', 'evening'], U], ['report-writing-2', 'kofi', ['morning', 'night'], { desk: 'wheel', key: 'kofi-dispatch', ...U }],
                     ['crime-analyst', 'tran', ['afternoon', 'evening']],
                     ['report-writing-3', 'priya', ['afternoon', 'night'], U]]),
                 { id: 'people-sam-sit-laptop', on: 'operator-chair-0', seat: 450, toward: 'workstation-0', modes: big ? ['afternoon', 'evening', 'night'] : ['afternoon', 'night'], key: 'sam-workstation', ...U },
@@ -739,7 +752,17 @@ export const ROOM_PEOPLE = {
                 ...(big ? [seat('cole', 'sit-listen', 0, M), seat('andre', 'sit-write', 1, M), seat('priya', 'sit-listen', 2, M), seat('tran', 'sit-write', 3, M), seat('sam', 'sit-listen', 4, M), seat('jo', 'sit-listen', 5, M),
                     seat('omar', 'sit-write', 6, M), seat('maya', 'sit-listen', 7, M), seat('hale', 'sit-listen', 8, M)]
                     : [{ id: 'people-cole-sit-listen', on: 'briefing-chair-0', seat: 450, toward: 'activity-table', modes: M }, { id: 'people-andre-sit-write', on: 'briefing-chair-1', seat: 450, toward: 'activity-table', modes: M, ...U }]),
-                // case review
+                // the rest of the room while the squad is briefed: two detectives at the evidence table, the property clerk
+                { id: 'people-elena-sit-write', on: 'evidence-chair-0', seat: 450, toward: 'evidence-table', modes: M, key: 'elena-evidence' },
+                { id: 'people-raj-sit-listen', on: 'evidence-chair-1', seat: 450, toward: 'evidence-table', modes: M, key: 'raj-evidence' },
+                ...(big ? [standBy('people-mina-stand-work', 'property-locker', 900, { modes: ['morning', 'afternoon'], key: 'mina-property' })] : []),
+                // case review (in the two larger rooms a couple give a statement at the table, and there is a queue at intake)
+                ...(big ? [{ id: 'people-tom-sit-listen', on: 'briefing-chair-0', seat: 450, toward: 'activity-table', modes: A, key: 'tom-statement' },
+                    { id: 'people-ivy-sit-listen', on: 'briefing-chair-1', seat: 450, toward: 'activity-table', modes: A, key: 'ivy-statement' },
+                    standRound('people-raj-stand-present', 'activity-table', 180, 1150, { modes: A, key: 'raj-statement' })] : []),
+                ...(big > 1 ? across(L, 'intake-officer', 'people-bruno-stand-wait', 1800, { modes: A, side: 350, key: 'bruno-intake' }) : []),
+                standRound('people-dee-stand-phone', 'walk-off-mat', 110, 950, { modes: ['afternoon', 'evening'], key: 'dee-waiting' }),
+                { id: 'people-luca-sit-phone', on: 'briefing-chair-0', seat: 420, toward: 'activity-table', modes: N, key: 'luca-waiting' },
                 { id: 'people-jo-sit-write', on: 'evidence-chair-0', seat: 450, toward: 'evidence-table', modes: A, key: 'jo-evidence' },
                 { id: 'people-hale-sit-listen', on: 'evidence-chair-1', seat: 450, toward: 'evidence-table', modes: A, key: 'hale-evidence' },
                 ...across(L, 'intake-officer', 'people-grace-cane-stand', 1000, { modes: A }),
@@ -966,7 +989,19 @@ export const ROOM_PEOPLE = {
                 spot('people-priya-stand-phone', 2500, 6000, [2500, 9000], { clear: true, modes: [N], key: 'priya-hall-leaving' }),
                 spot('people-hale-stand-talk', 400, 3300, [-1087, 1500], { clear: true, modes: [P], colors: LOOK.hale, key: 'hale-hall-project' }),
                 spot('people-jo-stand-present', -3000, 800, [-1087, 800], { clear: true, modes: [P], key: 'jo-hall-project' }),
-                spot('people-sam-stand-mug', -1100, 4300, [-1087, 1500], { clear: true, modes: [P], key: 'sam-hall-project' })
+                spot('people-sam-stand-mug', -1100, 4300, [-1087, 1500], { clear: true, modes: [P], key: 'sam-hall-project' }),
+                // the far end of the hall: students down the cafe tables, people on their way through
+                sit('nia', 'sit-laptop', [3671, 17844], [4500, 17850], [M, A]), sit('max', 'sit-read', [4901, 18531], [4500, 17850], [A]),
+                sit('yara', 'sit-write', [3690, 20301], [4500, 20300], [A, E]), sit('finn', 'sit-phone', [4898, 21003], [4500, 20300], [A]),
+                sit('suki', 'sit-laptop', [3701, 22747], [4500, 22750], [M, A, E]), sit('diego', 'sit-chat', [1395, 18204], [1400, 19000], [A, E]), sit('amal', 'sit-chat', [1406, 19794], [1400, 19000], [A, E]),
+                sit('elena', 'sit-read', [1400, 14977], [1400, 14200], [M, E]), sit('tom', 'sit-read', [4901, 16082], [4500, 15400], [M, E]),
+                { id: 'people-jack-walk', at: [2600, 16500], turn: 0, clear: true, modes: [M], key: 'jack-hall-walk' },
+                { id: 'people-sara-walk', at: [2300, 19500], turn: 180, clear: true, modes: [A], key: 'sara-hall-walk' },
+                spot('people-tom-cane-stand', -2800, 13000, [-3896, 13000], { clear: true, modes: [A], key: 'tom-hall-sculpture' }),
+                spot('people-raj-stand-phone', -2500, 15200, [-3896, 15200], { clear: true, modes: [A], key: 'raj-hall' }),
+                spot('people-luca-stand-talk', -900, 21000, [0, 21000], { clear: true, modes: [A, E], key: 'luca-hall' }), spot('people-dee-stand-talk', 150, 21000, [-900, 21000], { clear: true, modes: [A, E], key: 'dee-hall' }),
+                sit('nia', 'sit-write', [3671, 17844], [4500, 17850], [P]), sit('max', 'sit-laptop', [4901, 18531], [4500, 17850], [P]), sit('yara', 'sit-listen', [3690, 20301], [4500, 20300], [P]), sit('finn', 'sit-laptop', [4898, 21003], [4500, 20300], [P]),
+                spot('people-bruno-stand-drink', 300, 6200, [-400, 6200], { clear: true, modes: [P], key: 'bruno-hall-project' }), spot('people-mina-stand-drink', -400, 6200, [300, 6200], { clear: true, modes: [P], key: 'mina-hall-project' })
             ].map(s => ({ ...s, layout: 'humboldt' })); }
     ]
 };
