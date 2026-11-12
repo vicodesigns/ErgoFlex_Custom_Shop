@@ -166,8 +166,13 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     pickedN=id;said=null;
     write(next,text,{last:id,tab:true});
     // Show it: the playhead goes to where the new desk starts (the stage switches to it, then this status line returns).
-    try{if(bridge.ready())seek(Math.min(1,(shown(next,at)[0]+.01)/total()));}catch{}
-    said={text,until:Date.now()+15000,at:lastPlayhead};
+    // A stage that is still switching desks refuses a seek: try again shortly, unless the playhead or the pick moved on.
+    const from=lastPlayhead,to=Math.min(1,(shown(next,at)[0]+.01)/total());let tries=20;
+    const go=()=>{
+      if(pickedN!==id||lastPlayhead!==from||!isOpen())return;
+      try{if(!bridge.ready())throw 0;seek(to);said={text,until:Date.now()+15000,at:lastPlayhead};}catch{if(tries-->0)setTimeout(go,300);}
+    };
+    said={text,until:Date.now()+15000,at:lastPlayhead};go();
   }
   function remove(n=null){
     const l=list(),v=picked(n);if(!v)return;
