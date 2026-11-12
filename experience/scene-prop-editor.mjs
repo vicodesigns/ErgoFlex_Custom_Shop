@@ -1,4 +1,5 @@
-import {cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets} from './prop-edits.mjs';
+import {cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,propTarget,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets} from './prop-edits.mjs';
+import {stackRows} from './lane-rows.mjs';
 import {createPropLibrary,deskItem} from './prop-library.mjs';
 import {groupPanelHtml,groupCentreDelta,pickMode} from './prop-selection.mjs';
 import {dropToSurface} from './drop-to-surface.mjs';
@@ -14,12 +15,17 @@ import {dropToSurface} from './drop-to-surface.mjs';
 // Multi-select (prop-selection.mjs): Shift+click adds, Ctrl/Cmd+click toggles, click empty clears; everything selected
 // (room props and desk items alike, all are prop edits) moves, turns, hides and resets together, one undo step each.
 // A gizmo drag moves the live object at once (restored by __directorPropsRestore before film-fx re-installs).
+// The timeline's Props lane: one bar per desk item, added prop and edited prop over the seconds it is on screen. Drag a
+// bar's ends (or the Prop inspector's "On screen" fields) to set when it appears and leaves, with a fade in and out
+// (prop-edits.mjs show). In a chapter the film renders as sub-shots (the finale) every desk has its own bars under its
+// stretch of the Desk versions lane, and an edit belongs to the desk it was made on (prop-edits.mjs desk).
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const r3=v=>Math.round(v*1000)/1000,r1=v=>Math.round(v*10)/10;
 const wrapDeg=d=>{d=((d+180)%360+360)%360-180;return Math.abs(d)<1e-6?0:d;};
 const MODES={translate:'Move',rotate:'Rotate',scale:'Scale'},VERB={translate:'Moved',rotate:'Rotated',scale:'Scaled'};
 const STATE_KEY='ergoflex.sceneAssets.v1';
-export function createScenePropEditor({bridge,shot,film,commit,status,open,rerender,onSelect=()=>{},lightsShowing=()=>false,fold=()=>{},person=()=>false,blocked=()=>false}){
+export function createScenePropEditor({bridge,shot,film,commit,status,open,rerender,onSelect=()=>{},lightsShowing=()=>false,fold=()=>{},person=()=>false,blocked=()=>false,
+  scope=()=>null,versions=()=>[],seconds=()=>0,time=()=>0,seek=()=>{}}){
   let sel=null,others=[],lockedKeys=()=>new Set(),itemsCache=null,itemsAt=0,flash=null,pivotAt=0,pivotDirty=true,mode='translate',tools=null,booting=null,drag=null,snapping=false,pending=null,dialogPlan=null,placing=false;
   const snaps=new Map(),frame=()=>document.getElementById('stage'),win=()=>frame()?.contentWindow;
   const three=()=>bridge.stage()?.three?.();
@@ -32,6 +38,37 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   const edits=()=>effectivePropEdits(film(),shot());
   const editOfKey=key=>edits().find(e=>propKey(e)===key)||null;
   const editedCount=()=>edits().length;
+  // ---- a desk of its own and time on screen (prop-edits.mjs desk / show)
+  // scope(): the desk on stage in a chapter rendered as sub-shots {n, preset, label, start, from, to}, null elsewhere.
+  // versions(): that chapter's desks in time order ([] elsewhere). A new edit there belongs to the desk on stage.
+  const deskNow=()=>scope()||null;
+  const withDesk=t=>{const d=deskNow();return d?.preset&&!t.desk?{...t,desk:d.preset}:t;};
+  const END=100000,r2=v=>Math.round(v*100)/100;   // show.to END: until the desk (or the chapter) ends
+  // Where an edit's seconds count from and when it can be on screen, in chapter seconds: {t0, lo, hi, desk, n, label}.
+  // A desk's edit counts from its sub-shot's start (t0) and can show while that desk is the one on screen (lo…hi).
+  function spanOf(desk,n=null){
+    const T=seconds()||0;if(!desk)return {t0:0,lo:0,hi:T};
+    const list=versions().filter(v=>v.preset===desk),t=time(),v=list.find(x=>x.n===n)||list.find(x=>x.n===deskNow()?.n)||list.find(x=>t>=x.from&&t<x.to)||list[0];
+    return v?{t0:v.start,lo:v.from,hi:Math.min(T,v.to),desk,n:v.n,label:v.label}:{t0:0,lo:0,hi:T,desk,missing:true};
+  }
+  // An edit's time on screen within its span, in chapter seconds.
+  function onScreen(e,span){
+    const w=e?.show,clamp=x=>Math.max(span.lo,Math.min(span.hi,x));
+    return {from:w?clamp(span.t0+w.from):span.lo,to:w?clamp(span.t0+w.to):span.hi,fadeIn:w?.fadeIn||0,fadeOut:w?.fadeOut||0,timed:!!w};
+  }
+  // The show for chapter seconds from…to in a span: an end on the span's edge stays open; the whole time is no show.
+  function showFor(span,{from,to,fadeIn=0,fadeOut=0}){
+    const atLo=from<=span.lo+.05,atHi=to>=span.hi-.05;
+    if(atLo&&atHi&&!fadeIn&&!fadeOut)return undefined;
+    return {from:atLo&&!fadeIn?0:r2(Math.max(0,from-span.t0)),to:atHi&&!fadeOut?END:r2(to-span.t0),...(fadeIn?{fadeIn:r2(fadeIn)}:{}),...(fadeOut?{fadeOut:r2(fadeOut)}:{})};
+  }
+  const timeText=(s,span)=>s.from<=span.lo+.05&&s.to>=span.hi-.05?(span.desk?'the whole time its desk is on screen':'the whole chapter'):`${r1(s.from)}–${r1(s.to)} s`;
+  // Writes a prop's time on screen (m: {key, target}); next in chapter seconds.
+  function writeShow(m,next,span,name){
+    const e=editOfKey(m.key),show=showFor(span,next),edit={...m.target,...(e||{}),show};if(show===undefined)delete edit.show;
+    const fades=[next.fadeIn?`fades in ${r1(next.fadeIn)} s`:'',next.fadeOut?`fades out ${r1(next.fadeOut)} s`:''].filter(Boolean).join(', ');
+    write(m.key,edit,`${name}: on screen ${timeText(next,span)}${fades?', '+fades:''}.`);
+  }
   // Every prop write: seeds shot.propEdits from the film's earlier-exported entries first (like camera keys).
   function write(key,next,text,{undoKey=null}={}){
     if(next&&!cleanPropEdit(next)&&!isNoopEdit(next)){status(`${CANT_SAVE}: ${UNUSUAL}`,true);rerender();return;}
@@ -108,6 +145,9 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     if(only(t))return t;
     throw Error(`${label(o)} can't be told apart from an identical prop at the same spot, so it can't be edited on its own.`);
   }
+  // The target of the prop under a click or in a list: its own installed Director edit's, else its name's, kept to
+  // the desk on stage in a sub-shot chapter.
+  function targetOf(o){const mine=filmEdit(o)&&cleanPropEdit(filmEdit(o));return mine||withDesk(targetFor(o));}
   // The prop as film-fx placed it (before any live drag) and where it is without the Director's edit.
   function installed(o){const s=snaps.get(o);return s?{position:s.position.clone(),rotation:o.rotation.clone().setFromQuaternion(s.quaternion,o.rotation.order),scale:s.scale.clone()}:{position:o.position.clone(),rotation:o.rotation.clone(),scale:o.scale.clone()};}
   const parentScale=o=>{const {THREE}=tools;if(!o.parent)return new THREE.Vector3(1,1,1);o.parent.updateWorldMatrix(true,false);return o.parent.getWorldScale(new THREE.Vector3());};
@@ -183,10 +223,14 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   }
   async function addProp(entry){
     await ensure();if(!editing()){status('Pause the chapter first: props are added on the paused frame.',true);return;}
-    const at=placement(entry),e=cleanAddEdit({add:{asset:entry.id},id:newAddId(),label:entry.name,parent:at.kind,position:at.position,rotation:at.rotation,scale:[1,1,1]});
+    // It comes in at the playhead (from the start when the playhead is within half a second of it) and stays to the
+    // end of the chapter, or of the desk on stage in a sub-shot chapter: its bar in the Props lane trims it.
+    const d=deskNow(),span=spanOf(d?.preset,d?.n),now=Math.max(span.lo,Math.min(span.hi,time())),late=now-span.lo>.5&&span.hi-now>=.3;
+    const at=placement(entry),e=cleanAddEdit({add:{asset:entry.id},id:newAddId(),label:entry.name,parent:at.kind,position:at.position,rotation:at.rotation,scale:[1,1,1],
+      ...(d?.preset?{desk:d.preset}:{}),...(late?{show:showFor(span,{from:r2(now),to:span.hi})}:{})});
     if(!e)throw Error(`${entry.name} can't be added (its library id is unusual).`);
-    const key=propKey(e);write(key,e,`Added ${entry.name} ${at.kind==='desk'?'on the desk (it rides the lift and tilt)':'on the floor in front of the camera'}: W move · E rotate · T scale · Shift snaps · Delete removes it.`);
-    sel={key,target:{match:e.match,label:e.label},obj:null};onSelect();rerender();
+    const key=propKey(e);write(key,e,`Added ${entry.name} ${at.kind==='desk'?'on the desk (it rides the lift and tilt)':'on the floor in front of the camera'}${d?` of Desk ${d.n} · ${d.label}`:''}${late?`, from ${r1(now)} s (drag its bar in the Props lane to change when it shows)`:''}: W move · E rotate · T scale · Shift snaps · Delete removes it.`);
+    sel={key,target:propTarget(e),obj:null};onSelect();rerender();
     return e;
   }
   const library=createPropLibrary({status,room:()=>shot()?.room,roomName:()=>shot()?.room,
@@ -205,7 +249,10 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   }
   function find(key,target){
     const scene=sceneOf();if(!scene)return null;const hit=installedIndex().get(key);if(hit&&inScene(hit))return hit;
-    const e=editOfKey(key)||target||sel?.target;if(!e||!win()?.__filmEdits)return null;const f=win().__filmEdits.editTargets(e);return f.length===1?f[0]:null;
+    const e=editOfKey(key)||target||sel?.target;if(!e||!win()?.__filmEdits)return null;
+    // Another desk's prop: the item of that name on stage now belongs to the desk that is showing, not to this edit.
+    if(e.desk&&e.desk!==deskNow()?.preset)return null;
+    const f=win().__filmEdits.editTargets(e);return f.length===1?f[0]:null;
   }
   // ---- stage tools: gizmo, selection box, picking
   async function boot(){
@@ -245,7 +292,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     tools={THREE,group,box,boxes,fbox,pivot,gizmo,t};syncSnap();requestAnimationFrame(tick);return tools;
   }
   const isAncestor=(a,o)=>{for(let p=o;p;p=p.parent)if(p===a)return true;return false;};
-  const ensure=()=>booting||=boot().then(t=>{rerender();return t;},error=>{booting=null;throw error;});
+  const ensure=()=>booting||=boot().then(t=>{learn();rerender();return t;},error=>{booting=null;throw error;});
   function syncSnap(){if(!tools)return;const g=tools.gizmo;g.setTranslationSnap(snapping?.05:null);g.setRotationSnap(snapping?tools.THREE.MathUtils.degToRad(15):null);g.setScaleSnap(snapping?.1:null);}
   // Highlight boxes (one per selected item), the group pivot (centre of the movable ones) and the gizmo.
   function syncBoxes(objs){
@@ -323,8 +370,8 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   // ---- selection
   // how: 'replace' (click), 'add' (Shift+click), 'toggle' (Ctrl/Cmd+click).
   function pick(o,{how='replace'}={}){
-    let target;try{target=filmEdit(o)?cleanPropEdit(filmEdit(o))||targetFor(o):targetFor(o);}catch(error){if(how==='replace'){sel=null;others=[];onSelect();rerender();}status(`${CANT_SAVE}: ${error.message}`,true);return;}
-    const t={match:target.match,...(target.asset?{asset:target.asset}:{}),...(target.path?{path:target.path}:{}),...(target.near?{near:target.near}:{}),label:target.label||o.name||''};
+    let target;try{target=targetOf(o);}catch(error){if(how==='replace'){sel=null;others=[];onSelect();rerender();}status(`${CANT_SAVE}: ${error.message}`,true);return;}
+    const t=propTarget({...target,label:target.label||o.name||''});
     const key=propKey(t);
     if(lockedKeys().has(key)){status(`${label(o)} is locked in a layer: unlock the layer in Layers to pick it in the view.`,true);return;}
     const blocked=isAddEdit(filmEdit(o))?'':unrecordable(o,t),entry={key,target:t,obj:o,blocked};
@@ -344,7 +391,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function select(key,{how='replace'}={}){
     if(!tools){ensure().then(()=>select(key,{how})).catch(error=>status(error.message,true));return;}
     const e=editOfKey(key),o=find(key);if(!e&&!o)return;
-    const entry={key,target:e?{match:e.match,...(e.asset?{asset:e.asset}:{}),...(e.path?{path:e.path}:{}),...(e.near?{near:e.near}:{}),label:e.label}:items().find(i=>i.key===key)?.target||sel?.target,obj:o};
+    const entry={key,target:e?propTarget(e):items().find(i=>i.key===key)?.target||sel?.target,obj:o};
     if(how==='toggle'&&isSel(key))setMembers(members().filter(m=>m.key!==key));
     else setMembers(how==='replace'?[entry]:[...members().filter(m=>m.key!==key),entry]);
     status(o?`${label(o)} selected${o&&!shown(o)?' (hidden in this chapter: untick Hide to bring it back)':''}.`:`${e?.label?nice(e.label):'That prop'} is not in the room right now (the film setup did not find it).`,!o);
@@ -382,7 +429,9 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function reset(){if(!sel)return;if(group()){const list=members().filter(m=>editOfKey(m.key));if(!list.length){status('They are already where the film puts them.');return;}writeMany(list.map(m=>({key:m.key,next:null})),`${list.length} items back to the film. One Undo brings them back.`);return;}if(isAddEdit(editOfKey(sel.key))){remove();return;}const name=sel.target.label?nice(sel.target.label):'The prop';if(!editOfKey(sel.key)){status(name+' is already where the film puts it.');return;}write(sel.key,null,`${name} back to the film.`);}
   function resetAll(){const n=editedCount();if(!n){status('No prop edits in this chapter: the props are the film\'s.');return;}const a=edits().filter(isAddEdit).length;commit(()=>{shot().propEdits=[];},{render:false});if(sel&&a)sel=null;status(`All props back to the film (${n} edit${n===1?'':'s'} cleared${a?`, ${a} added prop${a===1?'':'s'} removed`:''}). Undo brings them back.`);rerender();}
   async function changed(el){
-    await ensure();if(group()){groupChanged(el);return;}const o=current();if(!sel||!o)return;const name=el.name,v=Number(el.value);
+    await ensure();if(group()){groupChanged(el);return;}
+    if(sel&&/^pp-t-/.test(el.name)){changedTiming(el.name,el.value===''?NaN:Number(el.value));return;}
+    const o=current();if(!sel||!o)return;const name=el.name,v=Number(el.value);
     if(sel.blocked){status(`${CANT_SAVE}: ${sel.blocked}`,true);rerender();return;}
     if(name==='pp-hide'){hide(el.checked);return;}
     if(el.value===''||!Number.isFinite(v))throw Error('Enter a number.');
@@ -404,9 +453,9 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     if(!tools||!three()?.scene)return [];if(itemsCache&&performance.now()-itemsAt<1500)return itemsCache;
     const seen=new Set(),out=[];
     sceneOf().traverse(x=>{if(!x.isMesh||isOurs(x))return;const o=meaningful(x);if(!o||seen.has(o))return;seen.add(o);
-      try{const t=filmEdit(o)?cleanPropEdit(filmEdit(o))||targetFor(o):targetFor(o),key=propKey({match:t.match,asset:t.asset,path:t.path,near:t.near});
+      try{const t=targetOf(o),key=propKey(t);
         if(out.some(i=>i.key===key))return;
-        out.push({key,target:{match:t.match,...(t.asset?{asset:t.asset}:{}),...(t.path?{path:t.path}:{}),...(t.near?{near:t.near}:{}),label:t.label||o.name||''},obj:o,name:label(o),desk:onDeskItself(o)||ridesDesk(o),hidden:!shown(o)||editOfKey(key)?.hide===true,area:areaOf(o)});}catch{}
+        out.push({key,target:propTarget({...t,label:t.label||o.name||''}),obj:o,name:label(o),desk:onDeskItself(o)||ridesDesk(o),hidden:!shown(o)||editOfKey(key)?.hide===true,area:areaOf(o)});}catch{}
     });
     itemsAt=performance.now();return itemsCache=out;
   }
@@ -560,6 +609,33 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     rerender();
   }
   // ---- inspector (Props tab)
+  // ---- On screen: when the selected prop appears and leaves, and its fades (chapter seconds in the fields)
+  const selName=()=>{const o=current(),e=sel&&editOfKey(sel.key);return o?label(o):nice(e?.label||sel?.target.label||'');};
+  const selSpan=()=>{const e=editOfKey(sel.key);return spanOf((e||sel.target).desk);};
+  function timingHtml(){
+    const e=editOfKey(sel.key),span=selSpan(),s=onScreen(e,span);
+    const num=(name,text,value,extra='')=>`<label>${text}<input name="${name}" type="number" step=".1" min="0" value="${value}" ${extra}></label>`;
+    const where=span.missing?`Its desk (${escape(span.desk)}) is not in this chapter now, so it does not show.`:span.desk?`Belongs to Desk ${escape(span.n)} · ${escape(span.label)}, on screen ${r1(span.lo)}–${r1(span.hi)} s. It follows that desk if you reorder the desks.`:`The chapter runs 0–${r1(span.hi)} s.`;
+    return `<div class="prop-timing" data-prop-timing><h5>On screen <small>${escape(timeText(s,span))}</small></h5>
+      <div class="director-grid">${num('pp-t-from','Appears at (s)',r2(s.from))}${num('pp-t-to','Leaves at (s)',r2(s.to))}${num('pp-t-fin','Fade in (s)',s.fadeIn,'max="30"')}${num('pp-t-fout','Fade out (s)',s.fadeOut,'max="30"')}</div>
+      <div class="director-actions"><button data-action="pp-t-from-now" title="It appears at the playhead">Appear at playhead</button><button data-action="pp-t-to-now" title="It leaves at the playhead">Leave at playhead</button><button data-action="pp-t-all" ${s.timed?'':'disabled'} title="On screen the whole time again, no fades">Whole time</button></div>
+      <p class="director-hint">${where} You can also drag the ends of its bar in the timeline's Props lane.</p></div>`;
+  }
+  function setTiming(change){
+    if(!sel)return;if(sel.blocked){status(`${CANT_SAVE}: ${sel.blocked}`,true);return;}
+    const span=selSpan();if(span.missing){status('Its desk is not in this chapter now: nothing to time.',true);return;}
+    const s=onScreen(editOfKey(sel.key),span),next={from:s.from,to:s.to,fadeIn:s.fadeIn,fadeOut:s.fadeOut,...change};
+    if('from' in change)next.from=Math.max(span.lo,Math.min(change.from,next.to-.1));
+    if('to' in change)next.to=Math.min(span.hi,Math.max(change.to,next.from+.1));
+    if(next.to-next.from<.1){status('It needs at least a tenth of a second on screen.',true);rerender();return;}
+    const len=next.to-next.from;next.fadeIn=Math.min(next.fadeIn,len);next.fadeOut=Math.min(next.fadeOut,len);
+    writeShow(sel,next,span,selName());
+  }
+  function changedTiming(name,v){
+    if(!Number.isFinite(v)||v<0)throw Error('Enter seconds, 0 or more.');
+    if(name==='pp-t-from')setTiming({from:v});else if(name==='pp-t-to')setTiming({to:v});
+    else if(name==='pp-t-fin')setTiming({fadeIn:Math.min(30,v)});else if(name==='pp-t-fout')setTiming({fadeOut:Math.min(30,v)});
+  }
   function panel(){
     if(!three()?.scene)return '<h3>Props</h3><p class="director-hint">Loading the chapter…</p>';
     const o=current(),e=sel&&editOfKey(sel.key),st=permanentState(),n=editedCount();
@@ -567,7 +643,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       <div class="director-actions"><button data-action="pp-add" class="prop-add-button" title="Add a model from the prop library: it goes on the desk or the floor in front of the camera, ready to move">+ Add prop</button><button data-action="pp-reset-all" ${n?'':'disabled'} title="Every prop back to the film in this chapter: one step, Undo brings them back">Reset all props to the film${n?' ('+n+')':''}</button><button data-action="pp-permanent" ${st.ok?'':'disabled'} title="${escape(st.ok?'Write these prop edits into Studio\'s room layout (you confirm each one)':st.why)}">Make permanent in Studio…</button></div>${st.ok?'':`<p class="director-hint" data-permanent-why>${escape(st.why)}</p>`}`;
     if(!sel)return head+'<p class="director-hint">No prop selected. Shift+click adds to the selection, Ctrl+click adds or removes.</p>';
     if(group())return head+groupPanelHtml({members:members().map(m=>({key:m.key,name:nice(m.target.label||''),desk:!!(objOf(m)&&(onDeskItself(objOf(m))||ridesDesk(objOf(m)))),hidden:editOfKey(m.key)?.hide===true||(!!objOf(m)&&!shown(objOf(m))),blocked:m.blocked,missing:!objOf(m)})),mode,escape,edited:members().some(m=>editOfKey(m.key)),extra:dropButtons()});
-    if(!o)return head+`<div class="movement-inspector prop-inspector" data-reveal="prop"><h4 title="${escape(sel.target.label||'')}">${escape(nice(sel.target.label))}</h4><p class="director-hint">Not in the room right now (the film setup did not find it).</p><div class="director-actions"><button data-action="pp-reset" ${e?'':'disabled'}>Reset to the film</button></div></div>`;
+    if(!o)return head+`<div class="movement-inspector prop-inspector" data-reveal="prop"><h4 title="${escape(sel.target.label||'')}">${escape(nice(sel.target.label))}</h4><p class="director-hint">${(e||sel.target).desk&&(e||sel.target).desk!==deskNow()?.preset?'It belongs to another desk of this chapter: click its bar in the Props lane to go to that desk.':'Not in the room right now (the film setup did not find it).'}</p>${timingHtml()}<div class="director-actions"><button data-action="pp-reset" ${e?'':'disabled'}>Reset to the film</button></div></div>`;
     if(!tools)return head;if(isAddEdit(e))return head+addPanel(o,e);const b=base(o),{THREE}=tools,pos=o.getWorldPosition(new THREE.Vector3()).toArray(),turn=e?.rotation||[0,0,0],fac=e?.scale||[1,1,1],uniform=Math.abs(fac[0]-fac[1])<1e-4&&Math.abs(fac[1]-fac[2])<1e-4;
     const num=(name,text,value,step,extra='')=>`<label>${text}<input name="${name}" type="number" step="${step}" value="${value}" ${extra}></label>`;
     const studio=plan().find(r=>r.key===sel.key),hidden=e?.hide===true||!shown(o),moved=b?o.getWorldPosition(new THREE.Vector3()).distanceTo(b.world):0;
@@ -578,7 +654,8 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       <label>Scale ×<input name="pp-s" type="number" min=".01" max="100" step=".05" value="${uniform?Number(fac[0].toFixed(3)):''}" placeholder="mixed"></label>
       <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-s'+k,'Scale '+k+' ×',Number(fac[i].toFixed(3)),.05,'min=".01" max="100"')).join('')}</div>
       ${dropButtons()}
-      <label class="director-check"><input type="checkbox" name="pp-hide" ${hidden?'checked':''}>Hide in this chapter</label>
+      ${timingHtml()}
+      <label class="director-check"><input type="checkbox" name="pp-hide" ${e?.hide===true||(!shown(o)&&!e?.show)?'checked':''}>Hide in this chapter</label>
       <div class="director-actions"><button data-action="pp-reset" ${e?'':'disabled'} title="This prop back to where the film puts it">Reset to the film</button></div>
       <p class="director-hint" data-studio-note>${studio?(studio.ok?'Studio: can be made permanent.':'Studio: '+escape(studio.why)):onDeskItself(o)?'Studio: '+escape(ON_DESK):'Studio: unchanged (edit the prop to make it permanent later).'}</p></div>`;
   }
@@ -592,6 +669,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       <label>Scale ×<input name="pp-s" type="number" min=".01" max="100" step=".05" value="${uniform?Number(fac[0].toFixed(3)):''}" placeholder="mixed"></label>
       <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-s'+k,'Scale '+k+' ×',Number(fac[i].toFixed(3)),.05,'min=".01" max="100"')).join('')}</div>
       ${dropButtons()}
+      ${timingHtml()}
       <div class="director-actions"><button data-action="pp-place" aria-pressed="${placing}" title="Then click a surface in the view: the desktop (it rides the desk), a table, a shelf or the floor">Place on a surface…</button><button data-action="pp-remove" title="Take it out of this chapter (Delete): Undo brings it back">Remove from this chapter</button></div>
       <p class="director-hint" data-studio-note>${studio?(studio.ok?'Studio: can be added to the room for good (Make permanent in Studio…).':'Studio: '+escape(studio.why)):''}</p></div>`;
   }
@@ -603,6 +681,10 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     if(name==='pp-drop'||name==='pp-drop-flat'||name==='pp-drop-align'){await dropSelected(name==='pp-drop-flat'?'flat':name==='pp-drop-align'?'align':'drop');return;}
     if(name==='pp-place'){const o=current();if(!o||!isAddEdit(editOfKey(sel.key)))return;placing=!placing;rerender();status(placing?`Click a surface in the view to put ${label(o)} there (the desktop, a table, the floor). Click Place again to cancel.`:'Placing cancelled.');return;}
     if(name==='pp-pick'){select(arg);return;}
+    if(name==='pp-lane'){if(performance.now()<barSuppress)return;laneClick(laneList[Number(arg)]);return;}
+    if(name==='pp-t-from-now'){setTiming({from:r2(time())});return;}
+    if(name==='pp-t-to-now'){setTiming({to:r2(time())});return;}
+    if(name==='pp-t-all'){setTiming({from:-1,to:END,fadeIn:0,fadeOut:0});return;}
     if(name==='pp-unsel'){setMembers(members().filter(m=>m.key!==arg));return;}
     if(name==='pp-clear'){deselect();onSelect();status('Selection cleared.');return;}
     if(name==='pp-reset-all'){resetAll();return;}
@@ -612,14 +694,87 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     if(name.startsWith('pp-mode-')){setMode(name.slice(8));return;}
   }
   function setMode(m){if(!MODES[m])return;if(group()&&m==='scale'){status('Scale works on one item at a time: select one item, or move and turn the group.',true);return;}mode=m;rerender();status(`Gizmo: ${MODES[m].toLowerCase()}${sel?'':' (select a prop first)'}.`);}
-  // Props lane: edited props as chips (hidden ones struck through), click to select; reset-all chip.
-  function lane(){
-    const list=edits();
-    return `${list.map(e=>{const k=propKey(e),hiddenChip=e.hide===true,added=isAddEdit(e);return `<button class="lamp-chip prop-chip ${hiddenChip?'prop-hidden':''} ${added?'prop-added':''} ${isSel(k)?'selected':''}" data-action="pp-pick" data-section="${escape(k)}" title="${escape((e.label||e.match)+' · '+describePropEdit(e))}${hiddenChip?' · click, then untick Hide to bring it back':''}${added?' · Delete removes it':''}">${added?'<b aria-label="added">+</b>':''}${escape(added?(e.label||propName(e.add.asset)):propName(e.label||e.match.replace(/^\^|\$$/g,'').replace(/\\/g,'')))}</button>`;}).join('')}${list.length?'<button class="lamp-chip lamp-reset" data-action="pp-reset-all" title="Every prop back to the film, added ones removed: one step, Undo brings them back">↺ Reset all props to the film</button>':'<span class="desk-lane-empty">Click a prop in the view to move, turn, scale or hide it in this chapter, or + Prop to add one</span>'}`;
+  // ---- the timeline's Props lane: bars over the seconds each prop is on screen
+  // The desk's own items are learned from the stage (they differ per desk in a sub-shot chapter) and kept for the
+  // session, so every desk's bars are there once it has been on stage.
+  const seen=new Map(),seenKey=desk=>`${shot()?.id||''}|${desk||''}`;
+  try{for(const [k,v] of Object.entries(JSON.parse(sessionStorage.getItem('directorPropItems')||'{}')))if(Array.isArray(v))seen.set(k,v);}catch{}
+  function learn(){
+    if(!tools||!three()?.scene)return;const d=deskNow();if(versions().length&&!d)return;
+    const list=items().filter(i=>i.desk&&!i.obj?.userData?.directorAdd&&(!i.hidden||editOfKey(i.key))).map(i=>({key:i.key,target:i.target,name:i.name}));
+    const k=seenKey(d?.preset),was=JSON.stringify(seen.get(k)||null);if(JSON.stringify(list)===was)return false;
+    seen.set(k,list);try{sessionStorage.setItem('directorPropItems',JSON.stringify(Object.fromEntries(seen)));}catch{}
+    return true;
   }
+  const laneName=e=>isAddEdit(e)?(e.label||propName(e.add.asset)):propName(e.label||e.match.replace(/^\^|\$$/g,'').replace(/\\/g,''));
+  let laneList=[],laneRows=1,barDrag=null,barSuppress=0,wanted=null;const ROW=17,MAX_ROWS=9;
+  function laneItems(){
+    const T=seconds()||1,vs=versions(),out=[],chapter={t0:0,lo:0,hi:T},all=edits();
+    const push=(span,row)=>{const s=onScreen(row.e,span);out.push({id:row.key+'|'+(span.n||''),...row,span,start:s.from,end:Math.max(s.from+.01,s.to),timed:s.timed,fadeIn:s.fadeIn,fadeOut:s.fadeOut});};
+    const spans=vs.length?vs.map(v=>({t0:v.start,lo:v.from,hi:Math.min(T,v.to),n:v.n,label:v.label,desk:v.preset})):[chapter];
+    for(const span of spans){
+      const rows=new Map(),known=seen.get(seenKey(span.desk));
+      for(const k of known||[])rows.set(k.key,{key:k.key,target:k.target,name:k.name,e:editOfKey(k.key)});
+      for(const e of all){if(vs.length&&e.desk!==span.desk)continue;const k=propKey(e);if(!rows.has(k))rows.set(k,{key:k,target:propTarget(e),name:laneName(e),e});}
+      for(const r of rows.values())push(span,r);
+      if(vs.length&&!known)out.push({id:'ghost|'+span.n,ghost:true,span,start:span.lo,end:span.hi,name:`Desk ${span.n} · ${span.label}: click to see its items`});
+    }
+    // Edits that hold for every desk of a sub-shot chapter (made before desks had props of their own): one bar each.
+    if(vs.length)for(const e of all.filter(e=>!e.desk)){const k=propKey(e);if(!out.some(i=>i.key===k))push(chapter,{key:k,target:propTarget(e),name:laneName(e),e});}
+    return out;
+  }
+  function lane(){
+    laneList=laneItems();laneRows=1;const T=seconds()||1;
+    if(!laneList.length)return '<span class="desk-lane-empty">Click a prop in the view to move, turn, scale, hide or time it · + Prop adds one from the library</span>';
+    const layers=stackRows(laneList);laneRows=layers.count;
+    return laneList.map((it,i)=>{
+      const e=it.e,x=it.start/T*100,w=Math.max(.5,(it.end-it.start)/T*100),top=1+layers.row.get(it.id)*ROW;
+      if(it.ghost)return `<button type="button" class="prop-bar ghost" data-action="pp-lane" data-index="${i}" style="left:${x}%;width:${w}%;top:${top}px;height:${ROW-2}px" title="Go to this desk: its items are listed here once it has been on stage">${escape(it.name)}</button>`;
+      const hiddenBar=e?.hide===true,added=isAddEdit(e),fi=it.fadeIn>0?Math.min(100,it.fadeIn/(it.end-it.start)*100):0,fo=it.fadeOut>0?Math.min(100,it.fadeOut/(it.end-it.start)*100):0;
+      const tip=`${it.name}${it.span.desk?` · Desk ${it.span.n} · ${it.span.label}`:''} · on screen ${timeText({from:it.start,to:it.end},it.span)}${e?' · '+describePropEdit(e):' · as the film has it'}${hiddenBar?' · hidden: click, then untick Hide to bring it back':''} · click to select, drag an end to set when it appears or leaves${it.timed?', drag the middle to move it':''}`;
+      return `<button type="button" class="prop-bar ${e?'prop-chip':'film'} ${hiddenBar?'prop-hidden':''} ${added?'prop-added':''} ${it.timed?'timed':''} ${isSel(it.key)?'selected':''}" data-action="pp-lane" data-index="${i}" style="left:${x}%;width:${w}%;top:${top}px;height:${ROW-2}px;--fade-in:${fi}%;--fade-out:${fo}%" title="${escape(tip)}">${added?'<b aria-label="added">+</b>':''}${escape(it.name)}</button>`;}).join('');
+  }
+  const laneHeight=()=>Math.min(MAX_ROWS,Math.max(2,laneRows))*ROW+4;
+  // A click on a bar: the playhead goes into its seconds when it is outside them (so its desk comes on stage), then
+  // the prop is selected (as soon as the stage has it).
+  function laneClick(it){
+    if(!it)return;const t=time(),inside=t>=it.start-1e-3&&t<=it.end+1e-3;
+    if(!inside||it.ghost){const to=Math.min(it.end-.05,it.start+(it.ghost?.2:.1));seek(Math.max(0,to));}
+    if(it.ghost){status(`${it.name.split(':')[0]} is coming on stage: its items appear in the Props lane.`);return;}
+    setMembers([{key:it.key,target:it.target,obj:tools?find(it.key,it.target):null}]);
+    const o=current();wanted=o?null:{key:it.key,target:it.target,until:performance.now()+8000};status(o?`${label(o)} selected · W move · E rotate · T scale · drag its bar's ends to set when it shows.`:`${it.name} selected${it.span.desk&&it.span.desk!==deskNow()?.preset?`: going to Desk ${it.span.n} · ${it.span.label}`:''}.`);
+    if(!tools)ensure().catch(error=>status(error.message,true));
+  }
+  // A bar's ends drag to set when the prop appears and leaves (within its desk's seconds, snapped to a tenth);
+  // the middle of a timed bar moves it. Back over the whole stretch, the timing is cleared.
+  document.addEventListener('pointerdown',ev=>{
+    const bar=ev.target.closest?.('.prop-bar');if(!bar||bar.classList.contains('ghost')||ev.button!==0||!editing())return;
+    const it=laneList[Number(bar.dataset.index)],T=seconds(),r=bar.getBoundingClientRect(),box=bar.parentElement.getBoundingClientRect();if(!it||!T||!box.width)return;
+    const grip=Math.min(8,r.width/3),edge=ev.clientX-r.left<grip?'in':r.right-ev.clientX<grip?'out':'move';
+    barDrag={it,bar,edge,x:ev.clientX,width:box.width,T,from:[it.start,it.end],now:null};
+  },true);
+  document.addEventListener('pointermove',ev=>{
+    const d=barDrag;if(!d||(!d.now&&Math.abs(ev.clientX-d.x)<3))return;
+    const dt=(ev.clientX-d.x)/d.width*d.T,snap=v=>Math.round(v*10)/10,{lo,hi}=d.it.span;let [a,b]=d.from;
+    if(d.edge==='in')a=Math.max(lo,Math.min(b-.2,snap(a+dt)));
+    else if(d.edge==='out')b=Math.min(hi,Math.max(a+.2,snap(b+dt)));
+    else if(d.it.timed){const len=b-a;a=Math.max(lo,Math.min(hi-len,snap(a+dt)));b=a+len;}
+    else return;
+    d.now=[a,b];d.bar.style.left=a/d.T*100+'%';d.bar.style.width=Math.max(.5,(b-a)/d.T*100)+'%';
+    status(`${d.it.name}: on screen ${r1(a)}–${r1(b)} s.`);
+  },true);
+  const endBar=()=>{
+    const d=barDrag;barDrag=null;if(!d?.now)return;barSuppress=performance.now()+350;
+    const [a,b]=d.now,it=d.it;if(Math.abs(a-d.from[0])<1e-6&&Math.abs(b-d.from[1])<1e-6){rerender();return;}
+    const len=b-a;writeShow(it,{from:a,to:b,fadeIn:Math.min(it.fadeIn,len),fadeOut:Math.min(it.fadeOut,len)},it.span,it.name);
+  };
+  document.addEventListener('pointerup',endBar,true);document.addEventListener('pointercancel',()=>{if(barDrag?.now)rerender();barDrag=null;},true);
   // After film-fx (re)installs: objects may be new; folded-in props keep their Studio place on the stage.
   function applied(){
     found=null;itemsCache=null;pivotDirty=true;for(const m of members())if(m.obj&&!inScene(m.obj))m.obj=null;
+    learn();
+    // A bar clicked for a desk that was not on stage: its prop is picked up now that it is.
+    if(wanted&&performance.now()<wanted.until&&sel?.key===wanted.key){const o=tools&&find(wanted.key,wanted.target);if(o){sel.obj=o;wanted=null;status(`${label(o)} selected · W move · E rotate · T scale · drag its bar's ends to set when it shows.`);}}else wanted=null;
     if(pending&&!edits().some(e=>pending.keys.has(propKey(e)))){
       // Added props: the chapter's copy is gone with its edit; Studio's own item stands in its place (as Studio loads it).
       for(const r of pending.rows.filter(r=>r.add)){const room=win()?.ErgoFlex?.workspaceRoom;room?.addAsset(r.add.propId,r.studioKey,r.add.position).then(obj=>{if(!obj)return;obj.position.copy(r.local.p);obj.quaternion.copy(r.local.q);obj.scale.copy(r.local.s);obj.updateMatrixWorld(true);bridge.stage()?.wake?.(300);}).catch(error=>console.warn('[props] Studio copy',error));}
@@ -627,7 +782,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       pending=null;bridge.stage()?.wake?.(300);
     }
   }
-  return {panel,lane,action,changed,select,deselect,hide,reset,setMode,applied,editedCount,ensure,
+  return {panel,lane,laneHeight,action,changed,select,deselect,hide,reset,setMode,applied,editedCount,ensure,learn,
     selected:()=>sel?.key||null,selectedKeys:()=>members().map(m=>m.key),selectKeys,items,hideItems:(keys,on,also)=>hideItems(keys.map(k=>{const i=items().find(x=>x.key===k);return i?{key:k,target:i.target,obj:i.obj}:{key:k};}),on,also),
     flashKey,setLocked:fn=>{lockedKeys=fn;},isHidden:key=>{const e=editOfKey(key);if(e)return e.hide===true;const i=items().find(x=>x.key===key);return !!i&&i.hidden;},selectedName:()=>sel?(current()?.name||sel.target.label):null,mode:()=>mode,
     addProp,dropSelected,dropObject,writeLive,openLibrary:()=>library.open(),library:()=>library,

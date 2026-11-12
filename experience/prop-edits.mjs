@@ -15,6 +15,12 @@
 //   axes from its origin (desk: the featured desk's desktop dressing, so it rides lift and tilt; room: the room's
 //   asset root, or the stage when there is no room), rotation = local Euler degrees, scale = factors on the library
 //   size. Delete / Reset to the film remove it.
+// A desk of its own (chapters the film renders as sub-shots, the finale): desk:'<preset id>' keeps an edit to the sub-shot
+//   whose desk is that model ('office'), wherever it stands in the order and each time it appears; without it the edit
+//   holds for every desk of the chapter. film-edits.mjs skips an edit whose desk is not the shot's preset.
+// On screen for part of the time: show:{from, to, fadeIn?, fadeOut?} in seconds: chapter seconds, or for an edit with a
+//   desk, seconds after that desk's sub-shot begins (its renderRange start), so the timing follows the desk when the
+//   desks are reordered. Outside from…to the prop is not drawn; fadeIn / fadeOut ramp its opacity inside the window.
 // Nothing here touches Studio: "Make permanent in Studio" (scene-prop-editor.mjs) writes Studio's room state
 // through the studio server, only when Vico confirms it.
 const finite=v=>typeof v==='number'&&Number.isFinite(v);
@@ -25,8 +31,23 @@ export const escapeRegex=s=>String(s).replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&');
 const validRegex=s=>{try{new RegExp(s,'i');return true;}catch{return false;}};
 // No change at all (back where the film puts it).
 const zero=v=>!v||v.every(n=>Math.abs(n)<1e-4),one=v=>!v||v.every(n=>Math.abs(n-1)<1e-4);
-export const isNoop=e=>zero(e.position)&&zero(e.rotation)&&one(e.scale)&&e.hide===undefined;
-const ASSET=/^[a-z0-9][a-z0-9._-]{0,119}$/i,ADD_ID=/^[a-z0-9]{1,16}$/i;
+export const isNoop=e=>zero(e.position)&&zero(e.rotation)&&one(e.scale)&&e.hide===undefined&&!e.show;
+const ASSET=/^[a-z0-9][a-z0-9._-]{0,119}$/i,ADD_ID=/^[a-z0-9]{1,16}$/i,DESK=/^[a-z0-9-]{1,40}$/;
+const r2=v=>Math.round(v*100)/100;
+// {from, to, fadeIn?, fadeOut?}: 0 <= from < to, at least 0.1 s long, fades no longer than the window.
+export function cleanShow(v){
+  if(!v||typeof v!=='object'||!finite(v.from)||!finite(v.to))return undefined;
+  const from=Math.max(0,r2(v.from)),to=Math.min(100000,r2(v.to));if(!(to-from>=.1-1e-9))return undefined;
+  const out={from,to},fade=x=>finite(x)&&x>0?Math.min(r2(x),r2(to-from)):0,a=fade(v.fadeIn),b=fade(v.fadeOut);
+  if(a>0)out.fadeIn=a;if(b>0)out.fadeOut=b;return out;
+}
+const cleanDesk=v=>typeof v==='string'&&DESK.test(v)?v:undefined;
+// Opacity (0…1) of a timed prop at `seconds` (film-edits.mjs draws with the same rule); 1 without a window.
+export function showFactor(show,seconds){
+  if(!show)return 1;if(seconds<show.from-1e-6||seconds>show.to+1e-6)return 0;
+  let f=1;if(show.fadeIn>0)f=Math.min(f,(seconds-show.from)/show.fadeIn);if(show.fadeOut>0)f=Math.min(f,(show.to-seconds)/show.fadeOut);
+  return Math.max(0,Math.min(1,f));
+}
 export const isAddEdit=e=>!!e?.add;
 export const addName=(asset,id)=>`Added prop:${asset}#${id}`;
 export const addMatch=(asset,id)=>'^'+escapeRegex(addName(asset,id))+'$';
@@ -37,6 +58,7 @@ export function cleanAddEdit(e){
   out.parent=e.parent==='desk'?'desk':'room';
   out.position=vec(e.position)||[0,0,0];out.rotation=vec(e.rotation)||[0,0,0];
   out.scale=Array.isArray(e.scale)?vec(e.scale,n=>n>=.001&&n<=1000)||[1,1,1]:finite(e.scale)&&e.scale>=.001&&e.scale<=1000?[e.scale,e.scale,e.scale].map(r4):[1,1,1];
+  const desk=cleanDesk(e.desk),show=cleanShow(e.show);if(desk)out.desk=desk;if(show)out.show=show;
   return out;
 }
 export function cleanPropEdit(e){
@@ -49,10 +71,13 @@ export function cleanPropEdit(e){
   const position=vec(e.position),rotation=vec(e.rotation),scale=Array.isArray(e.scale)?vec(e.scale,n=>n>=.001&&n<=1000):finite(e.scale)&&e.scale>=.001&&e.scale<=1000?[e.scale,e.scale,e.scale].map(r4):undefined;
   if(!zero(position)){if(e.space==='local')out.space='local';out.position=position;}if(!zero(rotation))out.rotation=rotation;if(!one(scale))out.scale=scale;
   if(typeof e.hide==='boolean')out.hide=e.hide;
+  const desk=cleanDesk(e.desk),show=cleanShow(e.show);if(desk)out.desk=desk;if(show)out.show=show;
   return isNoop(out)?null:out;
 }
-// One target = one prop: the same match / asset / path / near.
-export const propKey=e=>JSON.stringify([e.match||'',e.asset||'',e.path||'',e.near||null]);
+// One target = one prop: the same match / asset / path / near, and for a prop of one desk (finale) that desk.
+export const propKey=e=>JSON.stringify([e.match||'',e.asset||'',e.path||'',e.near||null,...(cleanDesk(e.desk)?[e.desk]:[])]);
+// The fields that name a prop (what a selection, a layer row or a new edit starts from).
+export const propTarget=e=>({match:e.match,...(e.asset?{asset:e.asset}:{}),...(e.path?{path:e.path}:{}),...(e.near?{near:e.near}:{}),...(cleanDesk(e.desk)?{desk:e.desk}:{}),label:e.label||''});
 export function cleanPropEdits(v={}){
   if(!Array.isArray(v.propEdits))return {};
   const by=new Map();for(const e of v.propEdits.slice(0,300).map(cleanPropEdit))if(e)by.set(propKey(e),e);
@@ -74,14 +99,20 @@ export function propName(name){
   return clean?clean[0].toUpperCase()+clean.slice(1):'Prop';
 }
 const len=v=>Math.hypot(...v),deg=v=>Number(v.toFixed(1)),m=v=>Number(v.toFixed(2));
+// "on screen 2–6.5 s after its desk comes in, fades in 0.4 s".
+export function describeShow(e){
+  const s=e.show;if(!s)return '';
+  return `on screen ${m(s.from)}–${m(s.to)} s${e.desk?' after its desk comes in':''}${s.fadeIn?`, fades in ${m(s.fadeIn)} s`:''}${s.fadeOut?`, fades out ${m(s.fadeOut)} s`:''}`;
+}
 // "moved 0.32 m (x +0.20, z −0.25), turned 15° about y, scaled ×1.2, hidden".
 export function describePropEdit(e){
-  if(isAddEdit(e)){const s=e.scale||[1,1,1],k=Math.abs(s[0]-s[1])<1e-4&&Math.abs(s[1]-s[2])<1e-4?s[0]:null;return `added ${e.parent==='desk'?'on the desk':'to the room'}${k!==null&&Math.abs(k-1)>1e-4?`, scaled ×${Number(k.toFixed(3))}`:k===null?`, scaled ×${s.map(n=>Number(n.toFixed(3))).join(' / ')} (x / y / z)`:''}`;}
+  if(isAddEdit(e)){const s=e.scale||[1,1,1],k=Math.abs(s[0]-s[1])<1e-4&&Math.abs(s[1]-s[2])<1e-4?s[0]:null;return `added ${e.parent==='desk'?'on the desk':'to the room'}${k!==null&&Math.abs(k-1)>1e-4?`, scaled ×${Number(k.toFixed(3))}`:k===null?`, scaled ×${s.map(n=>Number(n.toFixed(3))).join(' / ')} (x / y / z)`:''}${e.show?', '+describeShow(e):''}`;}
   const parts=[],axes=v=>v.map((n,i)=>Math.abs(n)<5e-4?'':`${'xyz'[i]} ${n>0?'+':'−'}${m(Math.abs(n))}`).filter(Boolean).join(', ');
   if(e.position)parts.push(`moved ${m(len(e.position))} m${e.space==='local'?' on the desk':''} (${axes(e.position)})`);
   if(e.rotation){const r=e.rotation.map((n,i)=>Math.abs(n)<.05?'':`${deg(n)}° about ${'xyz'[i]}`).filter(Boolean);parts.push('turned '+r.join(', '));}
   if(e.scale){const [x,y,z]=e.scale;parts.push(Math.abs(x-y)<1e-4&&Math.abs(y-z)<1e-4?`scaled ×${Number(x.toFixed(3))}`:`scaled ×${e.scale.map(n=>Number(n.toFixed(3))).join(' / ')} (x / y / z)`);}
   if(e.hide===true)parts.push('hidden');if(e.hide===false)parts.push('shown (the film hides it)');
+  if(e.show)parts.push(describeShow(e));
   return parts.join(', ')||'no change';
 }
 // Studio's room state key for a chapter's room (studio.js sceneAssetState: room:layout for measured rooms).

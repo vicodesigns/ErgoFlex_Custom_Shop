@@ -24,7 +24,7 @@ import {effectiveDeskEdits} from './desk-edits.mjs';
 import {createStartPose} from './start-pose.mjs';
 import {createRenderRequest} from './render-request.mjs';
 import {createSceneDeskEditor} from './scene-desk-editor.mjs';
-import {createDeskVersions} from './desk-versions.mjs';
+import {createDeskVersions,deskVersions as deskVersionList} from './desk-versions.mjs';
 import {createDeskBuildPanel} from './desk-build-panel.mjs';
 import {createTitleEditor,loadTitleSource} from './title-editor.mjs';
 import {score} from './score.mjs';
@@ -460,7 +460,21 @@ export function mountDirector(bridge,catalog,initial){
     return `<div class="lane-group-head" data-lane-group="${g}"><span class="desk-lane-label"><button data-action="group-toggle" data-index="${['motion','lighting','titles','props'].indexOf(g)}" aria-expanded="${!groupClosed(g)}" title="${groupClosed(g)?'Show':'Hide'} the ${g} lanes${g==='lighting'?' (Shift+L jumps here)':''}">${groupClosed(g)?'▸':'▾'} ${g.toUpperCase()}</button></span><div class="lane-group-summary">${groupClosed(g)?ticks.map(t=>`<i style="left:${t/s*100}%"></i>`).join(''):''}</div></div>`;
   }
   // PROPS: the chapter's edited props as chips (hidden ones struck through), click one to select it.
-  function propsGroup(){if(!filmShot())return '';return `${laneGroupHead('props')}<div class="lane-group-body desk-lanes prop-lanes" data-lane-body="props" ${groupClosed('props')?'hidden':''}><div class="desk-lane-row ${sceneProps.editedCount()?'':'empty'}" data-lane-color="props"><span class="desk-lane-label" title="Props moved, turned, scaled or hidden in this chapter (click a prop in the view to edit one)">Props <small data-props-count>${propCount()}</small></span><div class="desk-lane lamps-lane props-lane" data-props-lane>${sceneProps.lane()}</div></div><div class="desk-lane-row ${scenePeople.count()?'':'empty'}" data-lane-color="people" style="${peopleLaneStyle(4)}"><span class="desk-lane-label" title="The people in this chapter and the seconds each one is in the room (click a bar to select them)">People <small data-people-count>${scenePeople.count()||''}</small></span><div class="desk-lane people-lane" data-people-lane style="${peopleLaneStyle(0)}">${scenePeople.lane()}</div></div></div>`;}
+  function propsGroup(){if(!filmShot())return '';return `${laneGroupHead('props')}<div class="lane-group-body desk-lanes prop-lanes" data-lane-body="props" ${groupClosed('props')?'hidden':''}>${propsLaneRow()}<div class="desk-lane-row ${scenePeople.count()?'':'empty'}" data-lane-color="people" style="${peopleLaneStyle(4)}"><span class="desk-lane-label" title="The people in this chapter and the seconds each one is in the room (click a bar to select them)">People <small data-people-count>${scenePeople.count()||''}</small></span><div class="desk-lane people-lane" data-people-lane style="${peopleLaneStyle(0)}">${scenePeople.lane()}</div></div></div>`;}
+  // The Props lane: a bar per desk item, added prop and edited prop over the seconds it is on screen (scene-prop-editor.mjs
+  // lane()); as tall as its rows, scrolling past nine.
+  function propsLaneRow(){
+    const html=sceneProps.lane(),bars=html.includes('prop-bar'),h=bars?sceneProps.laneHeight():0;
+    return `<div class="desk-lane-row prop-bars-row ${bars?'':'empty'}" data-lane-color="props" ${h?`style="height:${h+4}px"`:''}><span class="desk-lane-label" title="The desk's items and every prop you added or changed, over the seconds each is on screen: click a bar to select it, drag its ends to set when it appears and leaves">Props <small data-props-count>${propCount()}</small></span><div class="desk-lane props-lane prop-bars-lane" data-props-lane ${h?`style="height:${h}px"`:''}>${html}</div></div>`;
+  }
+  // The desks of a chapter the film renders as sub-shots (the finale), with the cut's edits: [] elsewhere. Kept until
+  // the film data or the edits change (the Props lane and the prop inspector ask on every render).
+  let versionMemo=null;
+  function deskVersionsNow(){
+    const s=shot();if(!s)return [];const film=bridge.filmShot?.(s.id),subs=bridge.filmSubshots?.(s.id),key=JSON.stringify(s.deskVersions||null);
+    if(versionMemo&&versionMemo.film===film&&versionMemo.subs===subs&&versionMemo.id===s.id&&versionMemo.key===key)return versionMemo.list;
+    versionMemo={film,subs,id:s.id,key,list:film?deskVersionList(film,subs,s.deskVersions):[]};return versionMemo.list;
+  }
   // The People lane grows with the people who are in the room at the same time (scene-people-editor.mjs lane()).
   const peopleLaneStyle=extra=>{const h=scenePeople.laneHeight();return h?`height:${h+extra}px`:'';};
   let peopleLaneFor=null;
@@ -580,7 +594,8 @@ export function mountDirector(bridge,catalog,initial){
   // Props (scene-prop-editor.mjs): click a prop in the view, gizmo, Props tab, Props lane; per chapter only.
   function renderSceneProps(soft=false){
     const box=panel.querySelector('[data-scene-props]');if(box&&!(soft&&typing())){const active=box.contains(document.activeElement)?document.activeElement.name:null;box.innerHTML=sceneProps.panel();if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});}
-    const lane=timeline.querySelector('[data-props-lane]');if(lane){lane.innerHTML=sceneProps.lane();const n=timeline.querySelector('[data-props-count]');if(n)n.textContent=propCount();}
+    const lane=timeline.querySelector('[data-props-lane]');if(lane){const html=sceneProps.lane(),bars=html.includes('prop-bar'),h=bars?sceneProps.laneHeight():0,row=lane.closest('.desk-lane-row'),top=lane.scrollTop;
+      lane.innerHTML=html;lane.style.height=h?h+'px':'';lane.scrollTop=top;if(row){row.style.height=h?h+4+'px':'';row.classList.toggle('empty',!bars);}const n=timeline.querySelector('[data-props-count]');if(n)n.textContent=propCount();}
     syncLightTools?.();syncSelectedHeader();renderLayers();repulse();
   }
   // Branding (branding-editor.mjs): the school stickers / logos, one edit for every desk of the room; per chapter only.
@@ -598,6 +613,7 @@ export function mountDirector(bridge,catalog,initial){
     drop(project);for(const p of [...undo,...redo])drop(p);changed();render();
   }
   const sceneProps=createScenePropEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:renderSceneProps,lightsShowing:()=>sceneLights.showing(),fold:foldProps,person:o=>scenePeople.pickObject(o),blocked:()=>!!scenePeople.posing(),
+    scope:()=>{const s=shot();return s&&deskVersionsNow().length?bridge.deskVersion?.(s.id)||null:null;},versions:deskVersionsNow,seconds:()=>shot()?.seconds||0,time:()=>playhead*(shot()?.seconds||0),seek:t=>seekCamera(t/(shot()?.seconds||1)),
     onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();deskSel.deselect();renderTimeline();renderSceneProps();if(inspector!=='layers')reveal('prop');}});
   // People (scene-people-editor.mjs): the chapter's cast; click a person in the view, gizmo, People tab; per chapter only.
   function renderPeople(soft=false){

@@ -32,6 +32,11 @@
 //   featured desk's desktop dressing, riding lift and tilt; room: the room's asset root, else the stage). Loaded by
 //   prepareAdds(shot) (await it before installEdits; film-fx does) through Studio's own PROP_LIBRARY (workspace-3d.mjs,
 //   the same module instance and GLB cache as the app), named 'Added prop:<asset>#<id>', removed by restore().
+//   desk:'<preset id>' (Director edits in a chapter rendered as sub-shots): the edit is skipped unless the shot's
+//   preset is that desk, so each desk of the finale keeps its own props (experience/prop-edits.mjs).
+//   show:{from, to, fadeIn, fadeOut} (seconds; chapter seconds, or with desk: seconds after the sub-shot's
+//   renderRange start): the matched objects (or the added prop) are drawn only from…to, their opacity ramped over
+//   fadeIn / fadeOut inside the window (materials are copied only while a fade runs).
 //   director:true marks the Director's own prop edits (experience/prop-edits.mjs): offsets from the film's
 //   placement, applied after every hand-made edit; build-round8-director.py replaces them on import.
 //   lightType:'<regex on light type>' (PointLight|SpotLight|HemisphereLight|
@@ -144,8 +149,48 @@ export function propLibrary() {
 }
 const prepared = new WeakMap();
 // Load every added prop of the shot (cached GLBs, fresh instances) so installEdits can place them synchronously.
+// An edit kept to one desk of a sub-shot chapter (desk:'<preset id>') holds only in the shot whose preset is that desk.
+export const forThisDesk = (edit, shot) => !edit?.desk || edit.desk === shot?.preset;
+// Opacity (0…1) of a timed edit at chapter seconds s (the same rule as experience/prop-edits.mjs showFactor);
+// a window that reaches the end of the shot stays on through its last frame.
+export function showFactor(edit, shot, s) {
+  const w = edit?.show; if (!w) return 1;
+  const t = s - (edit.desk ? shot?.renderRange?.[0] || 0 : 0);
+  if (t < w.from - 1e-6 || t > w.to + 1e-6) return 0;
+  let f = 1; if (w.fadeIn > 0) f = Math.min(f, (t - w.from) / w.fadeIn); if (w.fadeOut > 0) f = Math.min(f, (w.to - t) / w.fadeOut);
+  return Math.max(0, Math.min(1, f));
+}
+let lastSeconds = 0;   // the last chapter time applied: a timed prop installed while paused is right before the next frame
+// A timed edit on its objects: not drawn outside the window (a getter over whatever else sets visible), and while a
+// fade runs the meshes wear see-through copies of their materials (shared maps, so a playing screen keeps playing).
+function installShow(edit, objects, shot, undo, live) {
+  const cell = { f: 1 }, fades = [];
+  for (const o of objects) {
+    const own = Object.getOwnPropertyDescriptor(o, 'visible'); let raw = own && !('value' in own) ? undefined : o.visible;
+    const get = own?.get ? () => own.get.call(o) : () => raw, set = own?.set ? v => own.set.call(o, v) : v => { raw = v; };
+    Object.defineProperty(o, 'visible', { configurable: true, enumerable: true, get: () => cell.f > 0 && get(), set });
+    undo.push(() => { delete o.visible; if (own && !('value' in own)) Object.defineProperty(o, 'visible', own); else o.visible = raw; });
+    o.traverse(mesh => { if (mesh.material && !mesh.userData.filmFx) fades.push({ mesh, orig: null, copy: null }); });
+  }
+  const endFade = x => { if (!x.copy) return; if (x.mesh.material === x.copy) x.mesh.material = x.orig; for (const m of [].concat(x.copy)) m.dispose(); x.orig = x.copy = null; };
+  const tick = s => {
+    cell.f = showFactor(edit, shot, s);
+    const fading = cell.f > 0 && cell.f < 1;
+    for (const x of fades) {
+      if (!fading) { endFade(x); continue; }
+      if (!x.copy || x.mesh.material !== x.copy) {
+        if (x.copy) for (const m of [].concat(x.copy)) m.dispose();
+        x.orig = x.mesh.material;
+        const dup = m => { const c = m.clone(); c.onBeforeCompile = m.onBeforeCompile; c.customProgramCacheKey = m.customProgramCacheKey; c.userData = { ...m.userData, filmFxCopy: true, showBase: m.opacity }; c.transparent = true; return c; };
+        x.copy = Array.isArray(x.orig) ? x.orig.map(dup) : dup(x.orig); x.mesh.material = x.copy;
+      }
+      for (const m of [].concat(x.copy)) m.opacity = m.userData.showBase * cell.f;
+    }
+  };
+  tick(lastSeconds); live.push(tick); undo.push(() => { for (const x of fades) endFade(x); });
+}
 export async function prepareAdds(shot, library = null) {   // library: tests pass a stand-in for PROP_LIBRARY
-  const adds = (shot.sceneEdits || []).filter(e => e?.add);
+  const adds = (shot.sceneEdits || []).filter(e => e?.add && forThisDesk(e, shot));
   if (!adds.length) return 0;
   const lib = library || await propLibrary();
   await Promise.all(adds.map(async e => {
@@ -171,8 +216,8 @@ export function addParent(kind) {
 // Scene units per millimetre (a library instance is in millimetres at scale 1000 under a millimetre parent).
 export const mmScale = () => api.workspaceAccessories?.scale || api.workspaceRoom?.scale || .001;
 function installAdd(edit, n, undo) {
-  const o = prepared.get(edit); if (!o) { console.warn(`[film-fx] sceneEdits[${n}] add: ${edit.add?.asset || edit.add} not loaded (prepareAdds first)`); return; }
-  const parent = addParent(edit.parent); if (!parent) { console.warn(`[film-fx] sceneEdits[${n}] add: no desk to put ${edit.add?.asset || edit.add} on`); return; }
+  const o = prepared.get(edit); if (!o) { console.warn(`[film-fx] sceneEdits[${n}] add: ${edit.add?.asset || edit.add} not loaded (prepareAdds first)`); return null; }
+  const parent = addParent(edit.parent); if (!parent) { console.warn(`[film-fx] sceneEdits[${n}] add: no desk to put ${edit.add?.asset || edit.add} on`); return null; }
   const asset = typeof edit.add === 'string' ? edit.add : edit.add.asset;
   parent.updateWorldMatrix(true, false); const k = parent.getWorldScale(new THREE.Vector3()).x || 1, base = 1000 * mmScale() / k;
   o.name = `Added prop:${asset}#${edit.id}`; o.userData.directorAdd = { asset, id: edit.id, label: edit.label || asset, parent: edit.parent === 'desk' ? 'desk' : 'room' };
@@ -181,6 +226,7 @@ function installAdd(edit, n, undo) {
   parent.add(o); o.updateMatrixWorld(true);
   (o.userData.__filmFxEdits ||= []).push(edit); edit.__count = 1;
   undo.push(() => { o.removeFromParent(); delete o.userData.__filmFxEdits; prepared.delete(edit); });
+  return o;
 }
 const PHYSICAL = new Set(['clearcoat', 'clearcoatRoughness', 'sheen', 'transmission', 'iridescence']);
 export function installEdits(shot) {
@@ -191,12 +237,14 @@ export function installEdits(shot) {
     Object.defineProperty(m, field, { configurable: true, enumerable: true, get: () => raw * factor(), set: v => { raw = v; } });
     undo.push(() => { delete m[field]; if (own) Object.defineProperty(m, field, own); m[field] = raw; });
   };
+  const timed = [];
   for (const [n, edit] of (shot.sceneEdits || []).entries()) {
-    if (edit?.add) { installAdd(edit, n, undo); continue; }
+    if (!forThisDesk(edit, shot)) continue;
+    if (edit?.add) { const o = installAdd(edit, n, undo); if (o && edit.show) timed.push([edit, [o]]); continue; }
     if (edit?.match === '@window' && vistaEdit(edit, undo)) continue;
     const found = targets(edit);
     if (!found.length) { console.warn(`[film-fx] sceneEdits[${n}] matched nothing: ${edit.match}`); continue; }
-    edit.__count = found.length;
+    edit.__count = found.length; if (edit.show) timed.push([edit, found]);
     for (const o of found) {
       // Which edits act on each object (the Director reads its own director:true entry and the film's moves here).
       (o.userData.__filmFxEdits ||= []).push(edit); undo.push(() => { const a = o.userData.__filmFxEdits, i = a ? a.lastIndexOf(edit) : -1; if (i >= 0) a.splice(i, 1); if (a && !a.length) delete o.userData.__filmFxEdits; });
@@ -289,9 +337,11 @@ export function installEdits(shot) {
       });
     }
   }
+  // Timed edits go on last, over every hide and material edit above.
+  for (const [edit, objects] of timed) installShow(edit, objects, shot, undo, live);
   return {
     count: (shot.sceneEdits || []).map(e => e.__count || 0),
-    apply(seconds) { for (const f of live) f(seconds); },
+    apply(seconds) { lastSeconds = seconds; for (const f of live) f(seconds); },
     restore() { for (const f of undo.reverse()) f(); for (const c of swapped.values()) c.dispose(); }
   };
 }

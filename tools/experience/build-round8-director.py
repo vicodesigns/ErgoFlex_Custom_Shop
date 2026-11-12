@@ -295,6 +295,27 @@ def apply_lighting(cid, f, lighting):
 
 
 PROP_FIELDS = ('match', 'asset', 'path', 'near', 'label', 'space', 'position', 'rotation', 'scale', 'hide')
+PROP_DESK = re.compile(r'^[a-z0-9-]{1,40}$')
+
+
+def clean_show(v):
+    """A prop's time on screen (experience/prop-edits.mjs cleanShow): {from, to, fadeIn?, fadeOut?} seconds; None if not one."""
+    num = lambda x: isinstance(x, (int, float)) and not isinstance(x, bool) and x == x and abs(x) != float('inf')
+    if not isinstance(v, dict) or not num(v.get('from')) or not num(v.get('to')): return None
+    a, b = max(0, round(v['from'], 2)), min(100000, round(v['to'], 2))
+    if b - a < .1 - 1e-9: return None
+    out = {'from': a, 'to': b}
+    for k in ('fadeIn', 'fadeOut'):
+        if num(v.get(k)) and v[k] > 0: out[k] = min(round(v[k], 2), round(b - a, 2))
+    return out
+
+
+def desk_and_show(e, d):
+    """The prop's own desk (a sub-shot chapter) and its time on screen, kept on the cleaned edit d."""
+    if isinstance(e.get('desk'), str) and PROP_DESK.match(e['desk']): d['desk'] = e['desk']
+    show = clean_show(e.get('show'))
+    if show: d['show'] = show
+    return d
 
 
 ADD_ASSET = re.compile(r'^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$')
@@ -315,6 +336,7 @@ def clean_add(e):
     d['position'] = vec(e.get('position'), [0, 0, 0]); d['rotation'] = vec(e.get('rotation'), [0, 0, 0])
     sc = vec(e.get('scale'), None)
     d['scale'] = sc if sc and all(.001 <= x <= 1000 for x in sc) else [1, 1, 1]
+    desk_and_show(e, d)
     d['director'] = True
     return d
 
@@ -336,15 +358,19 @@ def clean_props(props):
         for k in ('asset', 'path', 'label'):
             if k in d and not isinstance(d[k], str): d.pop(k)
         if d.get('space') != 'local' or 'position' not in d: d.pop('space', None)
-        if not any(k in d for k in ('position', 'rotation', 'scale', 'hide')): continue
+        desk_and_show(e, d)
+        if not any(k in d for k in ('position', 'rotation', 'scale', 'hide', 'show')): continue
         d['director'] = True; out.append(d)
     return out
 
 
 def apply_props(cid, f, props):
-    """The chapter's sceneEdits: its hand-made entries as they are, then the Director's (replacing earlier director: true)."""
+    """The chapter's sceneEdits: its hand-made entries as they are, then the Director's (replacing earlier director: true).
+    A chapter rendered as sub-shots (hero: shots/13-subshots.json) gets them in every sub-shot too, so the film shows the
+    Director's props; an edit kept to one desk (desk: '<preset>') is skipped by film-edits.mjs in the other desks' shots."""
     mine = clean_props(props)
     paths = [CUT] + ([f] if f else []) + ([os.path.join(H, 'previews', 'awaken-v5-cut.json')] if cid == 'awaken' else [])
+    if cid == 'hero': paths.append(os.path.join(H, 'shots', '13-subshots.json'))
     wrote = []
     for p in paths:
         if not os.path.exists(p): continue
@@ -354,7 +380,7 @@ def apply_props(cid, f, props):
             hand = [e for e in s.get('sceneEdits') or [] if not e.get('director')]
             if hand or mine: s['sceneEdits'] = hand + copy.deepcopy(mine)
             else: s.pop('sceneEdits', None)
-        if dump(p, d): wrote.append(os.path.relpath(p, H))
+        if dump(p, d, **({'indent': None} if p.endswith('13-subshots.json') else {})): wrote.append(os.path.relpath(p, H))
     return wrote
 
 

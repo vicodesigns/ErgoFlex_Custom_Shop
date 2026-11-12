@@ -3,7 +3,7 @@
 // A layer has no film effect of its own: hiding a layer writes the ordinary per-chapter hide edits (shot.propEdits)
 // for its items, so the film matches; "locked" only stops the stage from picking those items; the importer
 // (tools/experience/build-round8-director.py) keeps the list in director-camera-<id>.json as 'propLayers'.
-const KEY=/^\["[^]{0,300}","[^]{0,200}","[^]{0,400}",(null|\[[-\d.,e]+\])\]$/;
+const KEY=/^\["[^]{0,300}","[^]{0,200}","[^]{0,400}",(null|\[[-\d.,e]+\])(,"[a-z0-9-]{1,40}")?\]$/;
 const id=()=>globalThis.crypto?.randomUUID?.()||Math.random().toString(36).slice(2,12);
 const safeId=v=>typeof v==='string'&&/^[A-Za-z0-9][A-Za-z0-9_-]{0,79}$/.test(v)?v:id();
 export function cleanPropLayer(l){
