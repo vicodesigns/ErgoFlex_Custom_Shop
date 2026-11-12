@@ -102,7 +102,7 @@ class Cloth:
 
     def save(self, name, out_dir, out_id):
         img = bpy.data.images.new(name, N, N, alpha=True); img.pixels.foreach_set(self.px.ravel())
-        path = os.path.join(out_dir, 'tex', f'{out_id}-{name}.png'); os.makedirs(os.path.dirname(path), exist_ok=True)
+        path = os.path.join(out_dir, 'tex', f'{out_id}--{name}.png'); os.makedirs(os.path.dirname(path), exist_ok=True)
         img.filepath_raw = path; img.file_format = 'PNG'; img.save(); return img
 
 
@@ -292,7 +292,90 @@ def gloves(who, base, rig, out_dir, out_id, color=(.25, .42, .72), cuff=.07):
     return []
 
 
-BUILDERS = {'coat': coat, 'gown': gown, 'scrubs': scrubs, 'socks': socks, 'gloves': gloves}
+def headscarf(who, base, rig, out_dir, out_id, color=(.8, .76, .68), name='headscarf', push=.011):
+    """A wrapped headscarf: over the hair line, the ears and the neck, open round the face, falling onto the chest
+    and between the shoulder blades. Not cut from the helpers (there is none round the head): a surface laid over
+    the head and neck by rays from outside, hanging straight where the body goes in under the jaw and at the nape,
+    weighted like the skin nearest to it. The material is 'Human.headscarf_hair': the Studio recolours it as the hair."""
+    from mathutils.bvhtree import BVHTree
+    from mathutils.kdtree import KDTree
+    at = _shape(base); W = _weights(base); helper = _members(base, 'HelperGeometry') | _members(base, 'JointCubes')
+    polys = [tuple(p.vertices) for p in base.data.polygons if not any(i in helper for i in p.vertices)]
+    skin = sorted({i for p in polys for i in p}); points = [tuple(v) for v in at]; faces = list(polys)
+    for c in bpy.data.objects:          # it lies over what is worn: a thick collar would come through a scarf laid on the skin
+        if c.type != 'MESH' or c.name.split('.', 1)[-1] not in who['clothes'] or 'glasses' in c.name: continue
+        first = len(points); points += [tuple(c.matrix_world @ v.co) for v in c.data.vertices]; faces += [tuple(first + i for i in f.vertices) for f in c.data.polygons]
+    bare = BVHTree.FromPolygons([tuple(v) for v in at], polys); tree = BVHTree.FromPolygons(points, faces)
+    head = [at[i] for i in skin if W[i].get('head', 0) > .8]; top = max(p.z for p in head); front = min(p.y for p in head)
+    chin = min(p.z for p in head if abs(p.x) < .02 and p.y < front + .045); tall = top - chin; k = tall / .235
+    cy = (front + max(p.y for p in head)) / 2; C = Vector((0, cy, chin + .58 * tall)); neck = _joint(rig, 'neck_01').z
+
+    def reach(origin, to):
+        d = to - origin; hit = tree.ray_cast(origin, d.normalized(), d.length)[0]; return (hit - to).length if hit is not None else 0.
+
+    n, up, down = 48, 8, 26; rows = []; aim = lambda j: (math.sin(math.tau * j / n), math.cos(math.tau * j / n))       # column 0 is the back of the head
+    full = lambda j: .008 * k * max(0, aim(j)[1])                       # the hair under it: a little fuller at the back
+    for i in range(up + 1):                                              # over the skull, from near the crown down to ear height
+        e = math.radians(80) * (1 - i / up); row = []
+        for j in range(n):
+            d = Vector((math.cos(e) * aim(j)[0], math.cos(e) * aim(j)[1], math.sin(e))); row.append(C + d * (reach(C + d * .6, C) + push + full(j)))
+        rows.append(row)
+    crown = C + Vector((0, 0, reach(C + Vector((0, 0, .6)), C) + push))
+    last = [math.hypot(p.x, p.y - cy) for p in rows[-1]]
+    for i in range(1, down + 1):                                         # down the neck: each column to its own hem
+        row = []
+        for j in range(n):
+            x, y = aim(j); hem = neck - k * (.04 + (.1 if y < 0 else .06) * abs(y) ** 1.5); z = C.z + (hem - C.z) * i / down; step = (C.z - hem) / down
+            axis = Vector((0, cy, z)); body = reach(axis + Vector((x, y, 0)) * .6, axis) + push + (full(j) if z > chin else 0) + .012 * min(1, max(0, (neck + .02 - z) / .06))
+            # under the jaw it goes in to the neck; anywhere else it hangs nearly straight from what is above
+            r = min(.21 * k, max(body, last[j] - step * (1.15 if y < -.25 and chin - .05 * k < z < chin + .005 else .1))); last[j] = r
+            row.append(Vector((x * r, cy + y * r, z)))
+        rows.append(row)
+    bm = bmesh.new(); grid = [[bm.verts.new(p) for p in row] for row in rows]; tip = bm.verts.new(crown)
+    for j in range(n): bm.faces.new((tip, grid[0][(j + 1) % n], grid[0][j]))
+    for i in range(len(grid) - 1):
+        for j in range(n): bm.faces.new((grid[i][j], grid[i][(j + 1) % n], grid[i + 1][(j + 1) % n], grid[i + 1][j]))
+    uv = bm.loops.layers.uv.verify(); where = {v: (j / n, 1 - i / (len(grid) - 1)) for i, row in enumerate(grid) for j, v in enumerate(row)}; where[tip] = (.5, 1)
+    for f in bm.faces:
+        wrap = max(where[l.vert][0] for l in f.loops) - min(where[l.vert][0] for l in f.loops) > .5
+        for l in f.loops: u, v = where[l.vert]; l[uv].uv = (u + (1 if wrap and u < .5 else 0), v)
+        f.smooth = True
+    # the face: an oval seen from the front, from the middle of the forehead to under the chin, in front of the ears
+    half, zt, zb, sides = .057 * k, chin + .75 * tall, chin - .006, 28; zc, hz = (zt + zb) / 2, (zt - zb) / 2
+    oval = [Vector((half * math.copysign(abs(math.cos(t)) ** .8, math.cos(t)), 0, zc + hz * math.copysign(abs(math.sin(t)) ** .8, math.sin(t)))) for t in (math.tau * s / sides for s in range(sides))]
+    planes = [(a, Vector((b.z - a.z, 0, a.x - b.x)).normalized()) for a, b in zip(oval, oval[1:] + oval[:1])]            # normals point out of the oval
+    inside = lambda p, slack=0.: p.y < cy and all((p - a).dot(no) < slack for a, no in planes)
+    for a, no in planes:
+        faces = [f for f in bm.faces if inside(f.calc_center_median(), .03)]
+        bmesh.ops.bisect_plane(bm, geom=faces + list({e for f in faces for e in f.edges}) + list({v for f in faces for v in f.verts}), dist=1e-5, plane_co=a, plane_no=no)
+    bmesh.ops.delete(bm, geom=[f for f in bm.faces if inside(f.calc_center_median())], context='FACES')
+    bmesh.ops.delete(bm, geom=[v for v in bm.verts if not v.link_faces], context='VERTS')
+    rim = [v for v in bm.verts if v.is_boundary and v.co.z > zb - .01 and v.co.y < cy and abs(v.co.x) < half + .01]
+    for v in rim:                                                        # the edge round the face lies on the skin
+        q = bare.find_nearest(v.co)[0]
+        if q is not None and (v.co - q).length > 1e-5: v.co = q + (v.co - q).normalized() * .003
+    for _ in range(3): bmesh.ops.smooth_vert(bm, verts=[v for v in bm.verts if not v.is_boundary], factor=.5, use_axis_x=True, use_axis_y=True, use_axis_z=True)
+    bm.normal_update(); me = bpy.data.meshes.new(name); bm.to_mesh(me); bm.free()
+    o = bpy.data.objects.new('Human.' + name, me); o.parent = base.parent; o.matrix_world = base.matrix_world.copy()
+    for c in base.users_collection: c.objects.link(o)
+    inv = base.matrix_world.inverted()
+    for v in me.vertices: v.co = inv @ v.co
+    # it follows the skin nearest to it (the four nearest, by distance)
+    kd = KDTree(len(skin)); [kd.insert(at[i], i) for i in skin]; kd.balance(); names = {g.index: g.name for g in base.vertex_groups}; groups = {}
+    for v in me.vertices:
+        near = kd.find_n(base.matrix_world @ v.co, 4); total = {}
+        for _co, i, dist in near:
+            for g in base.data.vertices[i].groups:
+                if names[g.group] in rig.data.bones: total[names[g.group]] = total.get(names[g.group], 0) + g.weight / (dist + .004)
+        norm = sum(total.values()) or 1
+        for bone, w in total.items(): (groups.get(bone) or groups.setdefault(bone, o.vertex_groups.new(name=bone))).add([v.index], w / norm, 'REPLACE')
+    o.modifiers.new('Armature', 'ARMATURE').object = rig
+    cloth = Cloth(color, 13, grain=.03)
+    o.data.materials.append(_material('Human.' + name + '_hair', cloth.save(name, out_dir, out_id), .88)); return [o]
+
+
+OVER = {'headscarf'}        # laid over the clothes, not fitted round the body: the clothes under them stay whole
+BUILDERS = {'coat': coat, 'gown': gown, 'scrubs': scrubs, 'socks': socks, 'gloves': gloves, 'headscarf': headscarf}
 
 
 def build(who, base, rig, out_dir, out_id):

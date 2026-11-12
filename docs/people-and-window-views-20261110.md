@@ -372,3 +372,47 @@ Postures the roles brought (anyone can take them: `python3 tools/people/build.py
 
 `build.py --who a,b` and `--pose p,q` narrow `--all`. Builds here run with `--jobs 4`: nine Blender processes beside a
 browser audit ran the machine out of memory.
+
+## More everyday people (12 November, round three)
+
+Rooms hold up to 19 people at once and the 11 everyday adults and 8 teenagers ran out. Eighteen more, all in
+`tools/people/cast.py`:
+
+| Adults | | Students (16 to 19) | |
+|---|---|---|---|
+| Elena | woman, 45, striped blouse | Nia | girl, 17, curls, yellow T-shirt, backpack |
+| Kofi | man, 32, striped shirt; also in a wheelchair | Max | boy, 18, blond, green long sleeves |
+| Mina | woman, 28, fringe, flowered trousers | Yara | girl, 19, long hair, coral sweater, backpack |
+| Raj | man, 55, suit and tie, glasses | Finn | boy, 16, red hair, red T-shirt, backpack |
+| Sara | woman, 35, headscarf | Suki | girl, 17, lilac T-shirt |
+| Tom | man, 68, field jacket; also with a walking stick | Diego | boy, 19, grey long sleeves, backpack |
+| Ivy | woman, 60, plum trouser suit, glasses | Amal | girl, 18, striped blouse and jeans |
+| Luca | man, 28, dark green T-shirt | Jack | boy, 19, white T-shirt, backpack |
+| Bruno | man, 48, heavy build, red polo shirt | | |
+| Dee | woman, 25, athletic, coral T-shirt and leggings | | |
+
+Each is built in the postures a room's hours ask for (`CROWD` in `cast.py`: the desk family at 28, 30, 35.5, 39 and
+43.5 in, standing by, talking, on the phone, presenting, at a bench, with a mug or a drink, walking, and seated writing,
+listening, at a laptop, reading, on the phone, chatting); the students also with a hand up; Kofi in `wheel-type`
+(28 and 31 in) and `wheel-watch`; Tom in `cane-stand`. The backpacks are worn in `walk`.
+
+What a character can now say besides the MakeHuman phenotype (all in `build_people.py`):
+
+- `face`: MakeHuman's detail targets by name with a weight (`'nose-hump-incr': .4`; `'lr-cheek-bones-incr'` is the left
+  and the right target of a pair). An unknown name stops the build.
+- `skin_tone`: a factor per channel on the skin texture. The asset packs have a pale and a dark skin set and little
+  between; `(.8, .66, .55)` on a pale skin is a mid brown, `(1.4, 1.34, 1.28)` lightens a dark one.
+- `parts`: `{outfit: 'top' | 'bottom' | 'both'}`. The one-piece outfits (`male_casualsuit02` to `06`,
+  `female_casualsuit01/02`, `female_elegantsuit01`, `female_sportsuit01`, the `toigo_*_suit`s) are a top and a bottom
+  that do not touch: `'bottom'` keeps the jeans for under another shirt, `'top'` the shirt for over other trousers,
+  `'both'` wears it whole and gives the bottom half a material of its own (`Human.<outfit>_pants`), so the Studio
+  recolours top and bottom as two garments. (`male_casualsuit01` and the overalls are one piece and cannot be split.)
+- `dye`: `{garment: colour}`, and `'<outfit>:bottom'` for the bottom half of an outfit worn whole. Unlike `tint`, which
+  flattens the fabric to one colour, a dye keeps stripes, prints, seams and the pale wear of denim.
+- `wear: [('headscarf', {'color': ...})]` (`garments.py`): a wrapped headscarf laid over the head, the neck and the
+  clothes, open round the face. Its material is `Human.headscarf_hair`: a placement's `colors.hair` recolours it.
+- `look: 3`: this round's material handling. The MakeHuman logo is taken off the chest of the four T-shirts that
+  carry it, a tint or dye goes to the fabric's colour texture where an ambient occlusion map is mixed over it, a height
+  map is no longer exported as a normal map (it turned the tucked T-shirt nearly black), and skin is only removed where
+  a whole face is under cloth or has come through it (no notches of missing neck along a collar). People built before
+  this round do not have the key and build as they did.

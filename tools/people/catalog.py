@@ -41,10 +41,13 @@ characters = {}
 for cid, c in cast.CHARACTERS.items():
     ph = c['phenotype']; y = years(ph['age'])
     tall = max((p['size'][1] for p in built.values() if p['person']['character'] == cid and cast.POSE_INFO.get(p['person']['pose'], ('', ''))[1] in ('standing', 'walking') and not p['person']['pose'].startswith('stretch')), default=None)
-    colors = {role(g): hexc(v) for g, v in (c.get('tint') or {}).items()}
+    # (an outfit in parts, cast 'parts': its bottom half is '<outfit>:bottom', or the outfit itself when only that half is worn)
+    part = lambda g: 'bottom' if g.endswith(':bottom') or c.get('parts', {}).get(g) == 'bottom' else role(g)
+    colors = {part(g): hexc(v) for g, v in {**(c.get('tint') or {}), **(c.get('dye') or {})}.items()}
     # garments made from the base mesh (garments.py): a scrubs top or a gown is the top, socks are the shoes; the white coat keeps its colour
     for kind, kw in c.get('wear', []):
         if kind in ('scrubs', 'gown', 'socks') and 'color' in kw: colors['shoes' if kind == 'socks' else 'top'] = hexc(kw['color'])
+        if kind == 'headscarf': colors['hair'] = hexc(kw.get('color', (.8, .76, .68)))       # (the Studio recolours a headscarf as the hair)
     if c.get('hair_tint'): colors['hair'] = hexc(c['hair_tint'])
     characters[cid] = {'name': c['name'], **({'role': c['role']} if c.get('role') else {}), 'sex': ('girl' if ph['gender'] < .5 else 'boy') if y < 14 else 'woman' if ph['gender'] < .5 else 'man',
                        'age': 'child' if cid in cast.CHILDREN else age_group(max(y, 13)), 'years': round(y), 'heritage': heritage(ph['race']),

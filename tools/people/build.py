@@ -14,7 +14,7 @@ assets/props/index.json (category "people"). Thumbnails: tools/props/thumbnails.
 Needs: BLENDER (default ~/blender/blender-4.2.3-linux-x64/blender) with MPFB and
 the MakeHuman CC0 asset packs in BLENDER_USER_RESOURCES (default ~/blender/mpfb-user).
 """
-import json, os, struct, subprocess, sys, tempfile
+import glob, json, os, struct, subprocess, sys, tempfile
 from concurrent.futures import ThreadPoolExecutor
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
@@ -49,7 +49,9 @@ def blender(o):
     r = subprocess.run([gltf_transform, 'optimize', raw, out, '--compress', 'meshopt', '--texture-compress', 'webp', '--texture-size', str(o.get('textureSize', 1024)),
                         '--simplify', 'false', '--palette', 'false', '--join', 'false'], capture_output=True, text=True)
     if r.returncode: return o, None, 'optimize failed\n' + r.stderr[-800:]
-    if not keep: os.remove(raw)
+    if not keep:
+        os.remove(raw)
+        for f in glob.glob(os.path.join(work, 'tex', glob.escape(o['id']) + '--*.png')): os.remove(f)      # (the textures it was built with: some 10 MB a model)
     return o, result, None
 
 

@@ -38,6 +38,9 @@ IT_POSTURES = EVERYDAY + ['push-cart']
 CLERK_POSTURES = EVERYDAY + ['stand-counter']
 STUDENT_POSTURES = EVERYDAY + ['sit-raise']
 PATIENT_POSTURES = ['sit-read', 'sit-listen', 'stand-wait', 'walk', 'lie-bed']
+# Round three's everyday people: the desk family and what a room's hours ask of anyone.
+CROWD = ['sit-type', 'stand-low', 'stand-mid', 'stand-type', 'stand-wait', 'stand-talk', 'stand-phone', 'stand-present', 'stand-work', 'stand-mug', 'stand-drink', 'walk',
+         'sit-write', 'sit-listen', 'sit-laptop', 'sit-read', 'sit-phone', 'sit-chat']
 
 CHARACTERS = {
     'maya': {
@@ -364,6 +367,140 @@ CHARACTERS = {
         'name': 'Fern', 'role': 'student', 'phenotype': {'gender': .0, 'age': .24, 'muscle': .45, 'weight': .47, 'height': 0.6, 'proportions': .5, 'race': race(1, 0, 0)},
         'skin': 'young_caucasian_female', 'eyes': 'green', 'hair': 'braid01', 'hair_tint': (.5, .22, .1), 'eyebrows': 'eyebrow006', 'eyelashes': 'eyelashes02',
         'clothes': ['female_casualsuit01', 'shoes06'], 'carry': {'walk': [('backpack', {'color': (.2, .5, .3)})]}, 'postures': STUDENT_POSTURES,
+    },
+    # ---- round three: more everyday people, so a crowd is not the same few faces. Each has a face of their own
+    # ('face': MakeHuman's detail targets; 'lr-' = both sides), a skin tone where the three skin sets fall between
+    # ('skin_tone': a factor on the skin texture), and outfits put together from halves of the one-piece suits
+    # ('parts': {outfit: 'top' | 'bottom' | 'both'}; 'dye': a colour that keeps the fabric's stripes, print and seams;
+    # '<outfit>:bottom' is the bottom half of an outfit worn whole).
+    'elena': {
+        'name': 'Elena', 'phenotype': {'gender': .0, 'age': .655, 'muscle': .45, 'weight': .56, 'height': .525, 'proportions': .55, 'race': race(.8, .1, .1)},
+        'skin': 'middleage_caucasian_female', 'skin_tone': (.93, .84, .76), 'eyes': 'brown', 'hair': 'elvs_unkempt_french_braid', 'hair_tint': (.1, .06, .04), 'eyebrows': 'eyebrow009', 'eyelashes': 'eyelashes03',
+        'face': {'head-oval': .5, 'nose-hump-incr': .4, 'nose-scale-vert-incr': .3, 'lr-cheek-bones-incr': .4, 'mouth-scale-horiz-incr': .3, 'chin-height-incr': .3, 'eyebrows-angle-up': .3, 'lr-eye-bag-incr': .3},
+        'clothes': ['female_elegantsuit01', 'toigo_wool_pants', 'toigo_ankle_boots_female'], 'parts': {'female_elegantsuit01': 'top'},
+        'dye': {'female_elegantsuit01': (.2, .4, .42)}, 'tint': {'toigo_wool_pants': (.1, .1, .12), 'toigo_ankle_boots_female': (.1, .07, .05)}, 'look': 3, 'postures': CROWD,
+    },
+    'kofi': {
+        'name': 'Kofi', 'phenotype': {'gender': 1., 'age': .555, 'muscle': .62, 'weight': .5, 'height': .47, 'proportions': .62, 'race': race(0, 1, 0)},
+        'skin': 'young_african_male', 'eyes': 'brown', 'hair': 'culturalibre_hair_02', 'hair_tint': (.035, .03, .028), 'eyebrows': 'eyebrow003', 'eyelashes': 'eyelashes01',
+        'face': {'head-square': .4, 'chin-width-incr': .5, 'chin-prominent-incr': .3, 'mouth-lowerlip-volume-incr': .4, 'forehead-scale-vert-incr': .3, 'lr-ear-scale-decr': .3, 'nose-width2-incr': .3},
+        'clothes': ['male_casualsuit03', 'shoes04'], 'parts': {'male_casualsuit03': 'both'},
+        'dye': {'male_casualsuit03': (.34, .46, .62), 'male_casualsuit03:bottom': (.1, .13, .2)}, 'look': 3, 'postures': CROWD + ['wheel-type', 'wheel-watch'],
+    },
+    'mina': {
+        'name': 'Mina', 'phenotype': {'gender': .0, 'age': .525, 'muscle': .4, 'weight': .42, 'height': .55, 'proportions': .6, 'race': race(0, 0, 1)},
+        'skin': 'young_asian_female', 'skin_tone': (.96, .88, .8), 'eyes': 'brown', 'hair': 'cortu_straight_bangs', 'hair_tint': (.04, .035, .035), 'eyebrows': 'eyebrow005', 'eyelashes': 'eyelashes02',
+        'face': {'head-round': .5, 'lr-cheek-volume-incr': .4, 'nose-scale-horiz-decr': .2, 'nose-point-up': .4, 'mouth-scale-horiz-decr': .4, 'chin-triangle': .3, 'lr-eye-scale-incr': .2},
+        'clothes': ['joepal_crude_t-shirt_female', 'toigo_harem_pants', 'toigo_ballet_flats'], 'tuck': ['joepal_crude_t-shirt_female'],
+        'tint': {'toigo_ballet_flats': (.08, .07, .07)}, 'look': 3, 'postures': CROWD,
+    },
+    'raj': {
+        'name': 'Raj', 'phenotype': {'gender': 1., 'age': .73, 'muscle': .45, 'weight': .6, 'height': .43, 'proportions': .5, 'race': race(.45, .15, .4)},
+        'skin': 'middleage_asian_male', 'skin_tone': (.8, .66, .55), 'eyes': 'brown', 'hair': 'short01', 'hair_tint': (.2, .19, .185), 'eyebrows': 'eyebrow010', 'eyelashes': 'eyelashes01',
+        'face': {'head-rectangular': .5, 'nose-hump-incr': .5, 'nose-scale-horiz-incr': .3, 'nose-point-down': .4, 'lr-eye-bag-incr': .6, 'eyebrows-trans-down': .3, 'neck-double-incr': .3, 'mouth-angles-down': .2, 'chin-width-incr': .2},
+        'clothes': ['male_elegantsuit01', 'shoes03', 'frankyaye_glasses_library_male'], 'frames': ['frankyaye_glasses_library_male'], 'tint': {'shoes03': (.04, .035, .03)}, 'look': 3, 'postures': CROWD,
+    },
+    'sara': {
+        'name': 'Sara', 'phenotype': {'gender': .0, 'age': .58, 'muscle': .42, 'weight': .5, 'height': .53, 'proportions': .55, 'race': race(.65, .15, .2)},
+        'skin': 'young_caucasian_female2', 'skin_tone': (.9, .8, .7), 'eyes': 'brownlight', 'eyebrows': 'eyebrow012', 'eyelashes': 'eyelashes03',
+        'face': {'head-oval': .6, 'nose-scale-vert-incr': .4, 'nose-curve-convex': .3, 'lr-cheek-bones-incr': .3, 'mouth-lowerlip-volume-incr': .3, 'eyebrows-angle-up': .2, 'lr-eye-scale-incr': .25, 'chin-height-decr': .2},
+        'wear': [('headscarf', {'color': (.38, .55, .58)})], 'clothes': ['toigo_fisherman_sweater', 'toigo_wool_pants', 'toigo_flats'],
+        'tint': {'toigo_fisherman_sweater': (.8, .7, .58), 'toigo_wool_pants': (.13, .15, .23), 'toigo_flats': (.1, .08, .07)}, 'look': 3, 'postures': CROWD,
+    },
+    'tom': {
+        'name': 'Tom', 'phenotype': {'gender': 1., 'age': .83, 'muscle': .4, 'weight': .55, 'height': .47, 'proportions': .45, 'race': race(1, 0, 0)},
+        'skin': 'old_caucasian_male', 'eyes': 'lightblue', 'hair': 'short02', 'hair_tint': (.7, .7, .69), 'eyebrows': 'eyebrow001', 'eyelashes': 'eyelashes01',
+        'face': {'head-square': .5, 'nose-volume-incr': .5, 'nose-scale-horiz-incr': .3, 'lr-ear-scale-incr': .5, 'lr-ear-lobe-incr': .5, 'lr-eye-bag-incr': .7, 'neck-double-incr': .4, 'mouth-angles-down': .3, 'chin-cleft-incr': .4,
+                 'mouth-upperlip-volume-decr': .4, 'eyebrows-trans-down': .3},
+        'clothes': ['male_casualsuit05', 'toigo_wool_pants', 'shoes01'], 'parts': {'male_casualsuit05': 'top'},
+        'dye': {'male_casualsuit05': (.36, .31, .24)}, 'tint': {'toigo_wool_pants': (.13, .13, .15)}, 'look': 3, 'postures': CROWD + ['cane-stand'],
+    },
+    'ivy': {
+        'name': 'Ivy', 'phenotype': {'gender': .0, 'age': .77, 'muscle': .4, 'weight': .6, 'height': .45, 'proportions': .5, 'race': race(.05, .95, 0)},
+        'skin': 'middleage_african_female', 'eyes': 'brown', 'hair': 'rehmanpolanski_hair_bun_brown', 'hair_tint': (.42, .41, .4), 'eyebrows': 'eyebrow004', 'eyelashes': 'eyelashes01',
+        'face': {'head-round': .4, 'lr-cheek-volume-incr': .5, 'nose-width2-incr': .3, 'mouth-scale-horiz-incr': .3, 'lr-eye-bag-incr': .4, 'chin-height-decr': .3, 'neck-double-incr': .25, 'mouth-angles-up': .3},
+        'clothes': ['toigo_female_suit_2', 'toigo_flats', 'spamrakuen_sagerfrogs_glasses_01'], 'frames': ['spamrakuen_sagerfrogs_glasses_01'],
+        'dye': {'toigo_female_suit_2': (.3, .19, .33)}, 'tint': {'toigo_flats': (.06, .05, .05)}, 'look': 3, 'postures': CROWD,
+    },
+    'luca': {
+        'name': 'Luca', 'phenotype': {'gender': 1., 'age': .525, 'muscle': .55, 'weight': .44, 'height': .5, 'proportions': .62, 'race': race(1, 0, 0)},
+        'skin': 'young_caucasian_male2', 'skin_tone': (.95, .87, .79), 'eyes': 'green', 'hair': 'culturalibre_hair_05', 'hair_tint': (.09, .06, .04), 'eyebrows': 'eyebrow008', 'eyelashes': 'eyelashes01',
+        'face': {'head-diamond': .5, 'nose-greek-incr': .5, 'nose-scale-vert-incr': .3, 'chin-prominent-incr': .4, 'chin-cleft-incr': .3, 'lr-cheek-bones-incr': .4, 'lr-cheek-inner-decr': .3, 'eyebrows-trans-down': .3, 'mouth-scale-horiz-incr': .2},
+        'clothes': ['male_casualsuit06', 'toigo_ankle_boots_male'], 'parts': {'male_casualsuit06': 'both'},
+        'dye': {'male_casualsuit06': (.17, .24, .2), 'male_casualsuit06:bottom': (.07, .07, .08)}, 'look': 3, 'postures': CROWD,
+    },
+    'bruno': {
+        'name': 'Bruno', 'phenotype': {'gender': 1., 'age': .68, 'muscle': .5, 'weight': .9, 'height': .48, 'proportions': .45, 'race': race(.65, .15, .2)},
+        'skin': 'middleage_caucasian_male', 'skin_tone': (.86, .74, .63), 'eyes': 'brown', 'hair': 'short04', 'hair_tint': (.1, .09, .085), 'eyebrows': 'eyebrow009', 'eyelashes': 'eyelashes01',
+        'face': {'head-fat-incr': .7, 'head-round': .5, 'neck-double-incr': .7, 'lr-cheek-volume-incr': .6, 'nose-volume-incr': .4, 'nose-scale-horiz-incr': .4, 'chin-width-incr': .5, 'mouth-scale-horiz-incr': .3, 'neck-scale-horiz-incr': .5},
+        'clothes': ['namuhekam_male_polo_shirt', 'male_casualsuit04', 'shoes01'], 'parts': {'male_casualsuit04': 'bottom'},
+        'tint': {'namuhekam_male_polo_shirt': (.45, .1, .09), 'shoes01': (.12, .08, .06)}, 'look': 3, 'postures': CROWD,
+    },
+    'dee': {
+        'name': 'Dee', 'phenotype': {'gender': .0, 'age': .5, 'muscle': .8, 'weight': .42, 'height': .52, 'proportions': .7, 'race': race(.4, .5, .1)},
+        'skin': 'young_caucasian_female', 'skin_tone': (.7, .56, .45), 'eyes': 'brown', 'hair': 'faydaen_hair_1', 'hair_tint': (.07, .045, .03), 'eyebrows': 'eyebrow007', 'eyelashes': 'eyelashes02',
+        'face': {'head-triangular': .4, 'lr-cheek-bones-incr': .5, 'chin-prominent-incr': .2, 'nose-scale-horiz-incr': .25, 'nose-point-up': .2, 'mouth-lowerlip-volume-incr': .3, 'mouth-upperlip-volume-incr': .3,
+                 'forehead-scale-vert-decr': .2, 'lr-eye-corner2-up': .3},
+        'clothes': ['joepal_crude_t-shirt_female', 'female_sportsuit01', 'shoes05'], 'parts': {'female_sportsuit01': 'bottom'},
+        'dye': {'joepal_crude_t-shirt_female': (.85, .36, .3), 'female_sportsuit01': (.08, .08, .1)}, 'look': 3, 'postures': CROWD,
+    },
+    # Students of 16 to 19 (MakeHuman age .31 to .375).
+    'nia': {
+        'name': 'Nia', 'phenotype': {'gender': .0, 'age': .33, 'muscle': .45, 'weight': .47, 'height': .6, 'proportions': .55, 'race': race(.05, .95, 0)},
+        'skin': 'young_african_female', 'eyes': 'brown', 'hair': 'cortu_strawberry_cloud_hair', 'hair_tint': (.05, .035, .03), 'eyebrows': 'eyebrow007', 'eyelashes': 'eyelashes02',
+        'face': {'head-oval': .4, 'forehead-nubian-incr': .3, 'lr-cheek-volume-incr': .3, 'nose-point-up': .2, 'mouth-scale-horiz-decr': .2, 'chin-height-decr': .3, 'lr-eye-scale-incr': .3},
+        'clothes': ['female_casualsuit01', 'shoes06'], 'parts': {'female_casualsuit01': 'both'}, 'dye': {'female_casualsuit01': (.9, .72, .2)},
+        'carry': {'walk': [('backpack', {'color': (.3, .2, .45)})]}, 'look': 3, 'postures': CROWD + ['sit-raise'],
+    },
+    'max': {
+        'name': 'Max', 'phenotype': {'gender': 1., 'age': .355, 'muscle': .5, 'weight': .5, 'height': .635, 'proportions': .55, 'race': race(1, 0, 0)},
+        'skin': 'young_caucasian_male', 'eyes': 'blue', 'hair': 'short02', 'hair_tint': (.58, .45, .26), 'eyebrows': 'eyebrow008', 'eyelashes': 'eyelashes01',
+        'face': {'head-rectangular': .4, 'chin-width-incr': .3, 'nose-scale-vert-incr': .3, 'nose-point-up': .3, 'lr-ear-wing-incr': .5, 'mouth-scale-horiz-incr': .3, 'eyebrows-angle-down': .2},
+        'clothes': ['male_casualsuit02', 'cortu_cargo_pants', 'shoes05'], 'parts': {'male_casualsuit02': 'top'},
+        'dye': {'male_casualsuit02': (.22, .4, .3)}, 'tint': {'cortu_cargo_pants': (.42, .38, .3)}, 'look': 3, 'postures': CROWD + ['sit-raise'],
+    },
+    'yara': {
+        'name': 'Yara', 'phenotype': {'gender': .0, 'age': .375, 'muscle': .45, 'weight': .5, 'height': .58, 'proportions': .6, 'race': race(.66, .17, .17)},
+        'skin': 'young_caucasian_female', 'skin_tone': (.88, .76, .66), 'eyes': 'brown', 'hair': 'long01', 'hair_tint': (.09, .055, .035), 'eyebrows': 'eyebrow011', 'eyelashes': 'eyelashes03',
+        'face': {'head-diamond': .4, 'nose-hump-incr': .25, 'nose-scale-vert-incr': .3, 'lr-cheek-bones-incr': .5, 'eyebrows-angle-up': .3, 'mouth-lowerlip-volume-incr': .4, 'chin-triangle': .3},
+        'clothes': ['toigo_fisherman_sweater', 'female_casualsuit01', 'toigo_ankle_boots_female'], 'parts': {'female_casualsuit01': 'bottom'},
+        'tint': {'toigo_fisherman_sweater': (.7, .28, .22), 'toigo_ankle_boots_female': (.4, .27, .17)}, 'dye': {'female_casualsuit01': (.12, .15, .22)},
+        'carry': {'walk': [('backpack', {'color': (.6, .5, .3)})]}, 'look': 3, 'postures': CROWD + ['sit-raise'],
+    },
+    'finn': {
+        'name': 'Finn', 'phenotype': {'gender': 1., 'age': .3125, 'muscle': .45, 'weight': .42, 'height': .63, 'proportions': .5, 'race': race(1, 0, 0)},
+        'skin': 'young_caucasian_male2', 'eyes': 'green', 'hair': 'short03', 'hair_tint': (.5, .2, .07), 'eyebrows': 'eyebrow001', 'eyelashes': 'eyelashes01',
+        'face': {'head-round': .5, 'lr-cheek-volume-incr': .4, 'nose-point-up': .5, 'nose-scale-vert-decr': .3, 'lr-ear-wing-incr': .6, 'lr-ear-scale-incr': .3, 'chin-height-decr': .3, 'mouth-scale-horiz-incr': .2},
+        'clothes': ['male_casualsuit04', 'shoes06'], 'parts': {'male_casualsuit04': 'both'}, 'dye': {'male_casualsuit04': (.72, .2, .15)},
+        'carry': {'walk': [('backpack', {'color': (.15, .2, .3)})]}, 'look': 3, 'postures': CROWD + ['sit-raise'],
+    },
+    'suki': {
+        'name': 'Suki', 'phenotype': {'gender': .0, 'age': .33, 'muscle': .4, 'weight': .4, 'height': .685, 'proportions': .55, 'race': race(0, 0, 1)},
+        'skin': 'young_asian_female', 'skin_tone': (.97, .9, .83), 'eyes': 'brown', 'hair': 'elvs_french_braid_variation', 'hair_tint': (.045, .035, .04), 'eyebrows': 'eyebrow006', 'eyelashes': 'eyelashes02',
+        'face': {'head-invertedtriangular': .4, 'chin-triangle': .4, 'nose-scale-horiz-decr': .3, 'mouth-scale-horiz-decr': .3, 'lr-cheek-bones-incr': .2, 'lr-eye-corner2-up': .3, 'forehead-scale-vert-incr': .2},
+        'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'shoes04'],
+        'dye': {'toigo_basic_tucked_t-shirt': (.7, .6, .85)}, 'tint': {'toigo_wool_pants': (.82, .8, .74)}, 'look': 3, 'postures': CROWD + ['sit-raise'],
+    },
+    'diego': {
+        'name': 'Diego', 'phenotype': {'gender': 1., 'age': .375, 'muscle': .6, 'weight': .55, 'height': .61, 'proportions': .55, 'race': race(.6, .15, .25)},
+        'skin': 'young_caucasian_male2', 'skin_tone': (.82, .68, .56), 'eyes': 'brown', 'hair': 'cortu_short_messy_hair', 'hair_tint': (.07, .05, .04), 'eyebrows': 'eyebrow002', 'eyelashes': 'eyelashes01',
+        'face': {'head-square': .4, 'chin-width-incr': .4, 'chin-prominent-incr': .3, 'nose-scale-horiz-incr': .3, 'nose-hump-incr': .2, 'eyebrows-trans-down': .4, 'mouth-lowerlip-volume-incr': .2, 'neck-scale-horiz-incr': .3},
+        'clothes': ['male_casualsuit02', 'shoes05'], 'parts': {'male_casualsuit02': 'both'}, 'dye': {'male_casualsuit02': (.2, .2, .23)},
+        'carry': {'walk': [('backpack', {'color': (.5, .15, .1)})]}, 'look': 3, 'postures': CROWD + ['sit-raise'],
+    },
+    'amal': {
+        'name': 'Amal', 'phenotype': {'gender': .0, 'age': .355, 'muscle': .42, 'weight': .46, 'height': .63, 'proportions': .55, 'race': race(.45, .15, .4)},
+        'skin': 'young_asian_female', 'skin_tone': (.76, .62, .5), 'eyes': 'brown', 'hair': 'culturalibre_hair_01', 'hair_tint': (.04, .03, .03), 'eyebrows': 'eyebrow012', 'eyelashes': 'eyelashes03',
+        'face': {'head-oval': .5, 'nose-scale-vert-incr': .25, 'nose-point-down': .2, 'lr-eye-scale-incr': .35, 'eyebrows-trans-down': .2, 'mouth-upperlip-volume-incr': .3, 'lr-cheek-volume-incr': .2, 'chin-height-incr': .2},
+        'clothes': ['female_elegantsuit01', 'female_casualsuit01', 'toigo_ballet_flats'], 'parts': {'female_elegantsuit01': 'top', 'female_casualsuit01': 'bottom'},
+        'tint': {'toigo_ballet_flats': (.4, .1, .12)}, 'look': 3, 'postures': CROWD + ['sit-raise'],
+    },
+    'jack': {
+        'name': 'Jack', 'phenotype': {'gender': 1., 'age': .375, 'muscle': .5, 'weight': .42, 'height': .6, 'proportions': .6, 'race': race(.4, .55, .05)},
+        'skin': 'young_african_male', 'skin_tone': (1.4, 1.34, 1.28), 'eyes': 'brown', 'hair': 'afro01', 'hair_tint': (.06, .045, .04), 'eyebrows': 'eyebrow003', 'eyelashes': 'eyelashes01',
+        'face': {'head-rectangular': .3, 'head-scale-vert-incr': .3, 'chin-height-incr': .4, 'nose-scale-vert-incr': .4, 'lr-cheek-inner-decr': .4, 'lr-cheek-bones-incr': .3, 'neck-scale-vert-incr': .4, 'mouth-scale-horiz-incr': .2},
+        'clothes': ['male_casualsuit06', 'cortu_cargo_pants', 'shoes02'], 'parts': {'male_casualsuit06': 'top'}, 'tint': {'cortu_cargo_pants': (.2, .24, .19)},
+        'carry': {'walk': [('backpack', {'color': (.12, .12, .13)})]}, 'look': 3, 'postures': CROWD + ['sit-raise'],
     },
 }
 CHILDREN = ('tess', 'milo', 'lila', 'ravi', 'theo', 'ines', 'nora', 'jun')
