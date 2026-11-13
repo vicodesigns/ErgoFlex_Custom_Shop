@@ -201,7 +201,9 @@ export const ROOM_PEOPLE = {
         { id: 'people-andre-stand-type', desk: 'stand', modes: ['morning', 'afternoon', 'evening', 'night'] },   // he stands when the desk goes up, at any hour
         { id: 'people-andre-sit-type', desk: 'sit', modes: ['morning', 'afternoon', 'evening'] }, { id: 'people-andre-sit-type-30', desk: 'sit', modes: ['morning', 'afternoon', 'evening'] },
         { id: 'people-andre-sit-mix', desk: 'sit', modes: ['night'] }, { id: 'people-andre-sit-mix-30', desk: 'sit', modes: ['night'] },
-        { id: 'people-mia-stand-phone', by: 'music-vocal-mic', reach: 420, modes: ['evening'], colors: { top: '#6b4a7a', bottom: '#22242a' } },
+        // (in the smallest studio the mic stands near the open front: in front of it she stood half off the floor, so there
+        // she sings from behind it, facing the room, where Andre stands at the party)
+        L => [{ id: 'people-mia-stand-phone', by: 'music-vocal-mic', ...(L.id === 'apartment' ? { reach: -330, turn: 360 } : { reach: 420 }), modes: ['evening'], colors: { top: '#6b4a7a', bottom: '#22242a' } }],
         { id: 'people-andre-stand-talk', by: 'music-vocal-mic', reach: -330, turn: 360, modes: ['party'] },
         { id: 'people-lin-sit-chat', on: 'music-piano-bench', seat: 470, turn: 180, modes: ['party'], colors: LOOK.guestB },
         L => L.id === 'house' ? [spot('people-zoe-stand-drink', 330, 2300, [1025, 1486], { ...PARTY, colors: LOOK.guestD }), spot('people-eli-stand-drink', 1450, 2250, [1025, 1486], PARTY)]
@@ -228,7 +230,7 @@ export const ROOM_PEOPLE = {
         L => L.id === 'premium' ? [spot('people-lin-stand-talk', -950, 1600, [-300, 1700], PARTY), spot('people-ben-stand-drink', -300, 1250, [-950, 1600], { ...PARTY, colors: LOOK.benStudio }),
             spot('people-ava-stand-drink', -550, 2250, [-950, 1600], { ...PARTY, colors: LOOK.guestB }), spot('people-omar-wheel-watch', 1950, 2550, [2600, 2550], { ...PARTY, colors: LOOK.omarStudio }),
             spot('people-sofia-stand-drink', 1450, 1250, [1950, 2550], { ...PARTY, colors: LOOK.sofia })]
-            : ring([-L.width * .08, L.back + L.depth * .55], 480, ['people-lin-stand-talk', 'people-ben-stand-drink', ['people-ava-stand-drink', { colors: LOOK.guestD }]], PARTY, 30),
+            : ring([-L.width * .08, L.back + L.depth * .55 + (L.id === 'apartment' ? 200 : 0)], 480, ['people-lin-stand-talk', 'people-ben-stand-drink', ['people-ava-stand-drink', { colors: LOOK.guestD }]], PARTY, 30),   // (200 mm further from the desk in the smallest atelier: Ben stood against its front edge)
         // (the smallest atelier has no easel: in the evening Sofia sketches sitting on the floor)
         L => L.id !== 'apartment' ? [] : chat(L, .6, .62, [['people-sofia-sit-floor', { key: 'sofia-floor', colors: LOOK.sofia }]], { modes: ['evening'] }, 250),
         // the largest atelier (the film's is the one before it): someone at the worktable, a visitor on the sofa
@@ -283,8 +285,9 @@ export const ROOM_PEOPLE = {
             spot('people-leo-carry-box', x + 1700, z + 1000, [x + 1700, z - 1500], { modes: ['afternoon'], ...(L.id === 'house' ? {} : { clear: true }) }),
             spot('people-jo-stand-talk', x + 650, z + 750, [x + 300, z + 1900], PARTY),
             spot('people-noah-stand-mug', x - 200, z + 1750, [x + 650, z + 750], { ...PARTY, colors: LOOK.guestB }),
-            spot('people-grace-cane-stand', x + 650, z + 1950, [x + 650, z + 750], { ...PARTY, colors: LOOK.graceShop }),
-            spot('people-omar-wheel-watch', x + 1450, z + 1450, [x + 650, z + 750], { ...PARTY, colors: LOOK.omarShop })]; },
+            // (the smallest workshop: Grace and Omar where there is room, or not there; Omar's chair stood in the tool cart)
+            spot('people-grace-cane-stand', x + 650, z + 1950, [x + 650, z + 750], { ...PARTY, colors: LOOK.graceShop, ...(L.id === 'apartment' ? { clear: true } : {}) }),
+            spot('people-omar-wheel-watch', x + 1450, z + 1450, [x + 650, z + 750], { ...PARTY, colors: LOOK.omarShop, ...(L.id === 'apartment' ? { clear: true } : {}) })]; },
         // the larger workshops: two at the assembly island, others at the machines
         L => tier(L) < 2 ? [] : [
             standRound('people-andre-stand-work', 'assembly-island', 180, 1050, { modes: ['morning', 'afternoon'], key: 'andre-island' }),
