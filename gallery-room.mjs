@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=polish-20261112f';
+import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113a';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { gallerySessionDetails } from './gallery-bedroom-detail.mjs?v=polish-20261111f';
@@ -202,7 +203,9 @@ export function buildGalleryRoom(room, root, layout, helpers) {
     const skyCanvas=document.createElement('canvas');skyCanvas.width=skyCanvas.height=512;const skyMap=new THREE.CanvasTexture(skyCanvas);skyMap.colorSpace=THREE.SRGBColorSpace;
     const pane=mesh(right,new THREE.PlaneGeometry(ww,wh),new THREE.MeshBasicMaterial({map:skyMap}),[w/2+52,low+wh/2,wz]);pane.rotation.y=-Math.PI/2;pane.castShadow=pane.receiveShadow=false;
     // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
-    const windowVista = attachVista(pane, 'city'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
+    // Or a modelled place behind the glass (window-scenery.mjs), or the painted canvas alone: windowView() decides. A gallery at street level (a bench and bike stands on the pavement).
+    const outlookView = windowView('gallery'), windowVista = outlookView === 'photo' ? attachVista(pane, 'city') : null; if (windowVista) room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
+    const scenery = outlookView === 'scenery' ? attachScenery(pane, 'city', { floor: -(low + wh / 2), seed: 3303, storey: 0, variant: 'open' }) : null;
     for(const z of [a,wz,b])box(right,[65,wh+60,25],[w/2-10,low+wh/2,z],black);for(const y of [low,low+wh])box(right,[65,25,ww+60],[w/2-10,y,wz],black);
     box(right,[140,35,ww+70],[w/2-45,low-17.5,wz],marble);
     room.walls.push({obj:right,axis:'z',limit:-w/2*root.scale.x});
@@ -359,7 +362,7 @@ export function buildGalleryRoom(room, root, layout, helpers) {
         // A low city skyline outside; windows light up after dark.
         for(let i=0;i<14;i++){const bw=24+hash(i)*34,x=i*38-10,top=300+hash(i+5)*120;c.fillStyle=dark?'#141d2a':id==='evening'?'#6b6670':'#9aa9ad';c.fillRect(x,top,bw,512-top);
             if(dark||id==='evening')for(let y=top+10;y<470;y+=16)for(let wx=x+5;wx<x+bw-6;wx+=10)if(hash(i*31+y*.7+wx)>.55){c.fillStyle=hash(wx+y)>.3?'#ffd89a':'#c9e3ff';c.globalAlpha=dark?.85:.4;c.fillRect(wx,y,4,6);c.globalAlpha=1;}}
-        c.fillStyle=dark?'#24302c':'#7c918b';c.fillRect(0,470,512,42);skyMap.needsUpdate=true; windowVista.setPhase(id);
+        c.fillStyle=dark?'#24302c':'#7c918b';c.fillRect(0,470,512,42);skyMap.needsUpdate=true; windowVista?.setPhase(id); scenery?.setHour(id);
         glowMats.forEach((mat,channel)=>{mat.color.set(mode.colors[channel]);mat.emissive.set(mode.colors[channel]);mat.emissiveIntensity=.1+mode.wash*accent;});
         washMats.forEach((mat,channel)=>mat.color.set(mode.colors[channel]).multiplyScalar((.05+mode.wash*.3)*accent));
         poolMat.color.set(mode.colors[0]).multiplyScalar((.03+mode.wash*.16)*accent);
