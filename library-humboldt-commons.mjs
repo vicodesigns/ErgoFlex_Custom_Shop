@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
+import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113a';
 import { migrateHumboldtGroupFurniture } from './humboldt-furniture-migration.mjs?v=commons-home-comfort-20261024';
 import { buildHumboldtLife } from './library-humboldt-life.mjs?v=polish-20261111f';
 import { addCampusLife } from './campus-lived-in.mjs?v=polish-20261111f';
@@ -728,13 +729,13 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
         for (let i = 0; i < uv.count; i++) uv.setX(i, .5 + offset + (uv.getX(i) - .5) * span);
         const p = mesh(parent, g, glass, at); p.rotation.y = rotY; p.castShadow = p.receiveShadow = false; return p;
     };
-    pane(back, [glassBack.x1 - glassBack.x0, glassBack.y1], [(glassBack.x0 + glassBack.x1) / 2, glassBack.y1 / 2, bz - 30], 0);
+    const backPane = pane(back, [glassBack.x1 - glassBack.x0, glassBack.y1], [(glassBack.x0 + glassBack.x1) / 2, glassBack.y1 / 2, bz - 30], 0);
     const bayFrame = kit(); for (const x of [glassBack.x0, 2280, 3320, glassBack.x1]) bayFrame.box([60, glassBack.y1, 150], [x, glassBack.y1 / 2, bz + 20]);
     for (const y of [40, 2400, glassBack.y1 - 30]) bayFrame.box([glassBack.x1 - glassBack.x0, 60, 150], [(glassBack.x0 + glassBack.x1) / 2, y, bz + 20]);
     baked(back, bayFrame, bronze, false);
     // The slot between the pier and the desk bay: one lite with a transom at 950 (photo 3).
     const SLOT = [FIN_Z[1], -3200], slotMid = (SLOT[0] + SLOT[1]) / 2, slotW = SLOT[1] - SLOT[0];
-    pane(right, [slotW, SOFFIT], [XR + 30, SOFFIT / 2, slotMid], -Math.PI / 2);
+    const slotPane = pane(right, [slotW, SOFFIT], [XR + 30, SOFFIT / 2, slotMid], -Math.PI / 2);
     const slotFrame = kit(); for (const z of [SLOT[0] + 30, SLOT[1]]) slotFrame.box([150, SOFFIT, 60], [XR - 20, SOFFIT / 2, z]);
     for (const y of [30, 950]) slotFrame.box([150, y < 100 ? 60 : 50, slotW], [XR - 20, y, slotMid]);
     baked(right, slotFrame, bronze, false);
@@ -749,10 +750,12 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
         sills.box([200, 350, z1 - z0], [x - 100 - inward, 175, (z0 + z1) / 2]);
         return p;
     };
-    const frontPane = run(XR, GLASS_Z, STEP_Z, SOFFIT, 0); run(HALL_XR, STEP_Z + 600, SOLID_Z, CAFE_SOFFIT, 0);
+    const frontPane = run(XR, GLASS_Z, STEP_Z, SOFFIT, 0), hallPane = run(HALL_XR, STEP_Z + 600, SOLID_Z, CAFE_SOFFIT, 0);
     baked(right, curtain, alu, false); baked(right, sills, plinthWhite, false);
     // Behind the storefront: the outdoor view a short vestibule away, so the entry reads by day and dusk.
     const vestibule = pane(frontWall, [DOOR[1] - DOOR[0], TRANSOM], [(DOOR[0] + DOOR[1]) / 2, TRANSOM / 2, front + 600], Math.PI); vestibule.material = frontGlass;
+    // Or the campus modelled behind all the glass (window-scenery.mjs): one world per side, every pane of a side an opening into it.
+    const scenery = windowView('library') === 'scenery' ? attachScenery([backPane, slotPane, frontPane, hallPane, vestibule], 'humboldt', { floor: -glassBack.y1 / 2, seed: 7130 }) : null;
     const vestSides = kit(); for (const x of [DOOR[0], DOOR[1]]) vestSides.box([40, TRANSOM, 600], [x, TRANSOM / 2, front + 300]);
     baked(frontWall, vestSides, whiteFlat, false);
     // Tall narrow dark-glass slot in the hall's solid run.
@@ -1195,7 +1198,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     // ---------- Daypart atmosphere ----------
     room.roomAtmosphere = (modeId, accent = 1) => {
         const mode = HUMBOLDT_MODES[modeId] || HUMBOLDT_MODES.morning, night = modeId === 'night';
-        viewMode = modeId; drawView(modeId); updateBulletin(modeId);
+        viewMode = modeId; drawView(modeId); scenery?.setHour(modeId); updateBulletin(modeId);
         life.apply(modeId, mode); readingDetails(modeId); frontGlass.color.set(modeId === 'evening' ? '#c8c8c8' : '#ffffff');
         campusLife.apply(modeId, accent);
         lensA.emissiveIntensity = (.06 + mode.wash * .35) * accent; lensB.emissiveIntensity = night ? .04 : lensA.emissiveIntensity;

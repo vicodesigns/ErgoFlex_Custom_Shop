@@ -87,7 +87,7 @@ export class Halos {
 export const BOX = new THREE.BoxGeometry(1, 1, 1), QUAD = new THREE.PlaneGeometry(1, 1);
 const SPRAY = new THREE.TetrahedronGeometry(1, 0), CORE = new THREE.IcosahedronGeometry(1, 2), CORE_FAR = new THREE.IcosahedronGeometry(1, 1), BLOOM = new THREE.TetrahedronGeometry(1, 0), ROCK = new THREE.IcosahedronGeometry(1, 0);
 const STEM = new THREE.CylinderGeometry(.72, 1, 1, 7, 1, true).translate(0, .5, 0), POLE = new THREE.CylinderGeometry(1, 1, 1, 6, 1, true).translate(0, .5, 0);
-const Y = new THREE.Vector3(0, 1, 0), q = new THREE.Quaternion(), euler = new THREE.Euler(), at = new THREE.Vector3(), scale = new THREE.Vector3(), m4 = new THREE.Matrix4();
+const Y = new THREE.Vector3(0, 1, 0), FWD = new THREE.Vector3(0, 0, 1), q = new THREE.Quaternion(), euler = new THREE.Euler(), at = new THREE.Vector3(), scale = new THREE.Vector3(), m4 = new THREE.Matrix4();
 
 // A tapered limb (or pole) from a to b, radius r at a.
 export function limb(b, a, end, radius, hex, { geometry = STEM, ambient = .5 } = {}) {
@@ -235,11 +235,11 @@ export function fanPalm(b, r, x, ground, z, { height = 18000, hex = '#6f8452', s
 }
 
 // A feather palm (queen or Canary palm): arching fronds of leaflets on a shorter, stouter trunk.
-export function featherPalm(b, r, x, ground, z, { height = 7000, hex = '#5f7d48', fronds = 18, trunk = '#857563', stout = 1 } = {}) {
+export function featherPalm(b, r, x, ground, z, { height = 7000, hex = '#5f7d48', fronds = 18, trunk = '#8e877c', stout = 1 } = {}) {
     if (!seen(b, x, z, 8000)) return;
     const top = new THREE.Vector3(x + (r() - .5) * 600, ground + height, z + (r() - .5) * 300), barkC = colour(trunk);
-    limb(b, new THREE.Vector3(x, ground - 100, z), top, 260 * stout, barkC);
-    b.add(SPRAY, M(top.x, top.y - 200, top.z, 420 * stout, 600, 420 * stout), () => barkC.clone().multiplyScalar(.75), { light: false });
+    limb(b, new THREE.Vector3(x, ground - 100, z), top, 170 * stout, barkC);
+    b.add(SPRAY, M(top.x, top.y - 200, top.z, 300 * stout, 600, 300 * stout), () => barkC.clone().multiplyScalar(.75), { light: false });
     const base = colour(hex);
     for (let k = 0; k < fronds; k++) {
         const a = k / fronds * 6.28 + r() * .3, rise = .3 + r() * .9, len = 2800 + r() * 1200, out = new THREE.Vector3(Math.cos(a), 0, Math.sin(a)), side = new THREE.Vector3(-Math.sin(a), 0, Math.cos(a));
@@ -349,7 +349,7 @@ export function building(k, r, x, ground, z, { width = 16000, depth = 14000, flo
             b.quad(bay * .78, sh * .62, [wx, ground + sh * .4, face + 30], glassC.clone().multiplyScalar(.7));
             b.box([bay * .9, 420, 120], [wx, ground + sh * .82, face + 60], frame);
             if (r() < .45) b.box([bay * .82, 160, 1100], [wx, ground + sh * .74, face + 600], ['#7a4b3e', '#3f5a54', '#5a5a6e', '#8a7a52'][Math.floor(r() * 4)]);
-            if (r() < .8) { lights.quad(bay * .74, sh * .55, [wx, ground + sh * .4, face + 42], colour('#ffe2b8').multiplyScalar(.75)); b.light(wx, ground + 1600, face + 2200, '#ffd9a8', 4200, .45); }
+            if (r() < .8) { lights.quad(bay * .74, sh * .55, [wx, ground + sh * .4, face + 42], colour('#ffe2b8').multiplyScalar(.75)); b.light(wx, ground + 1600, face + 2200, '#ffd9a8', 3800, .32); }
             if (neon && r() < .7) { const nc = neon[Math.floor(r() * neon.length)]; lights.box([bay * .55, 260, 40], [wx, ground + sh + 500, face + 70], nc); halos.add(wx, ground + sh + 500, face + 300, bay * .55, nc, .35); b.light(wx, ground + sh, face + 2500, nc, 5000, .5); }
         } }
     // rooftop: a plant room, a water tank
@@ -365,15 +365,19 @@ export function streetLamp(k, x, ground, z, { height = 6500, reach = 1200, hex =
     b.box([520, 140, 260], [x, ground + height - 60, z + face * reach], '#2f3133');
     lights.box([440, 30, 200], [x, ground + height - 140, z + face * reach], hex);
     halos.add(x, ground + height - 200, z + face * reach, 1800, hex, .45 * power);
-    b.light(x, ground + height - 300, z + face * reach, hex, 9000, 1.15 * power);
+    b.light(x, ground + height - 300, z + face * reach, hex, 8500, .8 * power);
 }
 // A parked car: a body, a cabin with dark glass, wheels; its colour muted.
+const CABIN = (() => { const s = new THREE.Shape(); s.moveTo(-.5, 0); s.lineTo(.5, 0); s.lineTo(.3, 1); s.lineTo(-.38, 1); s.closePath(); return new THREE.ExtrudeGeometry(s, { depth: 1, bevelEnabled: false }).translate(0, 0, -.5); })();
 export function car(k, r, x, ground, z, { turn = 0, hex } = {}) {
     if (!seen(k.land, x, z, 3000)) return;
-    const b = k.land, body = hex || ['#5b6168', '#8b8f93', '#2f3438', '#6e3b36', '#3d4f62', '#c9c7c0', '#4a5446'][Math.floor(r() * 7)], len = 4300 + r() * 500, w = 1800;
-    const R = new THREE.Matrix4().makeRotationY(turn), box = (size, p, hex) => b.add(BOX, new THREE.Matrix4().makeTranslation(x, ground, z).multiply(R).multiply(M(p[0], p[1], p[2], size[0], size[1], size[2])), (() => { const c = colour(hex); return () => c; })(), { ambient: .55 });
-    box([len, 700, w], [0, 600, 0], body); box([len * .55, 560, w * .88], [-len * .05, 1220, 0], '#2a3036'); box([len * .52, 60, w * .8], [-len * .05, 1520, 0], body);
-    for (const sx of [-1, 1]) for (const sz of [-1, 1]) box([620, 620, 240], [sx * len * .32, 320, sz * w * .46], '#1c1c1e');
+    const b = k.land, body = hex || ['#5b6168', '#7d8186', '#2f3438', '#5e3a36', '#3d4f62', '#a8a6a0', '#4a5446', '#6b6256'][Math.floor(r() * 8)], len = 4300 + r() * 500, w = 1780;
+    const T = new THREE.Matrix4().makeTranslation(x, ground, z).multiply(new THREE.Matrix4().makeRotationY(turn));
+    const put = (geometry, m, hex) => { const c = colour(hex); b.add(geometry, T.clone().multiply(m), () => c, { ambient: .55, facet: true }); };
+    put(BOX, M(0, 560, 0, len, 560, w), body); put(BOX, M(-len * .02, 860, 0, len * .96, 80, w * .97), body);
+    // the cabin: windscreen and rear window raked, glass dark, a roof in the body's colour
+    put(CABIN, M(-len * .06, 900, 0, len * .58, 520, w * .86), '#262b30'); put(BOX, M(-len * .1, 1440, 0, len * .36, 40, w * .82), body);
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) put(BOX, M(sx * len * .32, 320, sz * w * .44, 620, 620, 260), '#1c1c1e');
 }
 // A bench, a bollard, a bike rack, a bin: the furniture of paths and plazas.
 export function bench(b, x, ground, z, turn = 0, hex = '#76624f') {
@@ -396,7 +400,10 @@ export function wire(b, a, end, sag, hex = '#2b2b2b', radius = 18) {
 // A fence of boards (or pickets, or a chain-link run: thin posts and a grey veil).
 export function fence(b, r, x0, x1, ground, z, { height = 1750, hex = '#9a7d62', kind = 'boards', gap } = {}) {
     if (kind === 'chain') { for (let x = x0; x <= x1; x += 2500) pole(b, x, ground, z, height + 100, 30, '#8c9094');
-        b.box([x1 - x0, 30, 30], [(x0 + x1) / 2, ground + height, z], '#8c9094'); b.quad(x1 - x0, height, [(x0 + x1) / 2, ground + height / 2, z], colour('#7d8387').multiplyScalar(.75), { light: false }); return; }
+        // the mesh: two families of slanted wires (seen through, as chain-link is), only where the openings can see it
+        b.box([x1 - x0, 30, 30], [(x0 + x1) / 2, ground + height, z], '#8c9094'); const wire = colour('#9aa0a4'), slant = Math.SQRT2 * height;
+        for (let x = x0; x <= x1; x += 220) { if (!seen(b, x, z, 2000)) continue; for (const s of [-1, 1]) b.add(BOX, new THREE.Matrix4().compose(at.set(x, ground + height / 2, z), q.setFromAxisAngle(FWD, s * Math.PI / 4), scale.set(14, slant, 14)), () => wire, { ambient: .7 }); }
+        return; }
     const step = gap ?? (kind === 'pickets' ? 140 : 150), w = kind === 'pickets' ? 85 : 138;
     for (let x = x0; x <= x1; x += step) b.box([w, height + (kind === 'pickets' ? 0 : Math.abs(x) % 450 === 0 ? 60 : 0), 26], [x, ground + height / 2, z], hex, .07, r);
     b.box([x1 - x0, 90, 40], [(x0 + x1) / 2, ground + height * .75, z - 30], hex); b.box([x1 - x0, 90, 40], [(x0 + x1) / 2, ground + height * .2, z - 30], hex);

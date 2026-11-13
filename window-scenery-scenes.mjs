@@ -142,7 +142,89 @@ function studioGarden(k, ctx) {
     for (let x = -50000; x <= 50000; x += 2800 + r() * 900) crown(b, r, x, ground + 2000 + r() * 1200, -42000 - r() * 5000, 3200 + r() * 1100, 2900 + r() * 900, 2400, '#587361', { size: 1300, lobes: .2 });
 }
 
+// A sword fern: fronds of leaflets arching out of a clump (the north coast's forest floor).
+function fern(b, r, x, ground, z, size = 700, hex = '#4f6e40') {
+    const base = colour(hex), fronds = 9 + Math.floor(r() * 5);
+    for (let k = 0; k < fronds; k++) {
+        const a = r() * 6.28, rise = .5 + r() * .7, len = size * (.7 + r() * .5), out = V(Math.cos(a), 0, Math.sin(a)), side = V(-Math.sin(a), 0, Math.cos(a)), c = base.clone().offsetHSL(0, 0, (r() - .5) * .08);
+        let prev = V(x, ground, z);
+        for (let i = 1; i <= 5; i++) { const t = i / 5, p = V(x, ground, z).addScaledVector(out, len * t).add(V(0, len * (rise * t - (rise + .4) * t * t * .8) + len * .25 * t, 0)), leaf = len * .16 * (1 - t * .6);
+            for (const s of [-1, 1]) b.tri(prev, p, p.clone().addScaledVector(side, s * leaf).add(V(0, -leaf * .3, 0)), c.clone().multiplyScalar(.82 + .18 * (i % 2)), .5);
+            prev = p; }
+    }
+}
+
+// ---- the north coast campus under a marine layer (the Humboldt commons): redwoods, ferns and rhododendrons, a damp
+// lawn and concrete paths with path lights, a campus building of concrete and timber across the lawn, forested ridges
+// fading into the fog. The commons has glass on three sides; each looks out on its own part of the campus.
+//   facing 0 (the back wall's tall glass): the grove behind the commons, trunks near and far in the fog.
+//   facing 1 (the long glass along the right: the slot, the junction and the hall): the lawn, the path, the building.
+//   facing 2 (the hall end's vestibule): the entry plaza.
+function humboldt(k, ctx) {
+    const { land: b, r } = k, ground = ctx.ground - 120, L = ctx.left - 12000, R = ctx.right + 12000, cx = (ctx.left + ctx.right) / 2;
+    const lawnC = colour('#5f7650'), moss = colour('#6c7a52'), duff = colour('#5b4a3a'), conc = colour('#a9a69e'), out = new THREE.Color();
+    const near = Math.min(0, ctx.near) - 200;
+    if (ctx.facing === 0) {
+        // the grove: forest floor of needles and duff, ferns, a path between the trunks
+        const path = x => -9000 + Math.sin(x / 5200) * 2600;
+        land(b, ground, L, R, ctx.near - 60, -18000, -70000, (x, z) => { const d = Math.abs(z - path(x));
+            if (d < 900) return out.copy(colour('#8c7f6c')).multiplyScalar(.9 + r() * .15); const p = Math.sin(x / 1700) * Math.sin(z / 1300) * .5 + .5; return out.copy(duff).lerp(moss, p * .6).multiplyScalar(.85 + r() * .15); });
+        for (let x = ctx.left - 3000; x < ctx.right + 3000; x += 500 + r() * 400) fern(b, r, x, ground, near - 1300 - r() * 1400, 650 + r() * 350);
+        for (let n = 0; n < 40; n++) { const x = L + r() * (R - L), z = -3000 - r() * 30000; if (Math.abs(z - path(x)) < 1300) continue; fern(b, r, x, ground, z, 700 + r() * 400); }
+        for (let x = L; x < R; x += 9000 + r() * 4000) pathLight(k, x, ground, path(x) + 1200);
+        bench(b, cx + 3800, ground, path(cx + 3800) + 1300);
+        // trunks: a near pair, a middle rank, the far ones going pale in the fog; young redwoods with branches lower down
+        const trunks = [[cx - 5200, -6200, 1.5], [cx + 4300, -7600, 1.25], [cx - 1200, -15500, 1.1], [cx + 9800, -13000, 1.35], [cx - 11500, -12500, 1.2],
+            [cx + 2800, -23000, 1.0], [cx - 7400, -24500, 1.15], [cx + 15500, -21500, 1.0], [cx - 17500, -19500, 1.1], [cx + 7600, -32000, .95], [cx - 2500, -36000, 1.0], [cx - 14000, -34000, .9], [cx + 20000, -33000, .9]];
+        for (const [x, z, g] of trunks) redwood(b, r, x, ground, z, { height: 42000 + r() * 22000, girth: g });
+        for (const [x, z] of [[cx + 1200, -9500], [cx - 8500, -17500], [cx + 12500, -26500], [cx - 3800, -28500]]) redwood(b, r, x, ground, z, { height: 14000 + r() * 5000, girth: .4, start: .1 });
+        for (let x = L - 20000; x < R + 20000; x += 4500 + r() * 2500) redwood(b, r, x, ground, -48000 - r() * 12000, { height: 45000, girth: 1.1, start: .18, size: 2300 });
+        return;
+    }
+    if (ctx.facing === 2) {
+        // the entry plaza: concrete paving, bike racks, bollard lights, a pair of redwoods, the campus path beyond
+        land(b, ground, L, R, ctx.near - 60, -14000, -60000, (x, z) => z > -9000 ? out.copy(conc).multiplyScalar((Math.floor(x / 1500) + Math.floor(z / 1500)) % 2 ? .92 : 1) : out.copy(lawnC).multiplyScalar(.9 + r() * .1));
+        for (let x = cx - 3000; x <= cx + 3000; x += 750) { limb(b, V(x, ground, -4200), V(x, ground + 800, -4200), 25, '#8d9296'); limb(b, V(x, ground + 800, -4200), V(x + 500, ground + 800, -4200), 25, '#8d9296'); limb(b, V(x + 500, ground + 800, -4200), V(x + 500, ground, -4200), 25, '#8d9296'); }
+        for (const x of [cx - 6000, cx + 6000]) pathLight(k, x, ground, -6000);
+        for (const x of [cx - 9000, cx + 8000]) redwood(b, r, x, ground, -11000, { height: 48000, girth: 1.2 });
+        for (let x = L; x < R; x += 1600 + r() * 900) shrub(b, r, x, ground, -9600 - r() * 600, 800 + r() * 300, pick(r, ['#4e6a44', '#5a7449', '#46613f']));
+        for (const x of [cx - 4500, cx + 4500]) streetLamp(k, x, ground, -10500, { height: 4500, reach: 300 });
+        for (let x = L - 20000; x < R + 20000; x += 5000 + r() * 3000) redwood(b, r, x, ground, -30000 - r() * 15000, { height: 45000, girth: 1, start: .2, size: 2000 });
+        return;
+    }
+    // facing 1: along the long glass. Planting right outside, a concrete path, the lawn, the building across, the trees.
+    land(b, ground, L, R, Math.max(...ctx.openings.map(o => o.z)) - 60, -16000, -80000, (x, z) => {
+        if (z > near - 1800) return out.copy(duff).lerp(moss, .4).multiplyScalar(.9 + r() * .12);
+        if (z > near - 4200) return out.copy(conc).multiplyScalar(Math.abs((x % 1800 + 1800) % 1800) < 40 ? .7 : .95 + r() * .06);
+        const p = Math.sin(x / 2300) * Math.sin(z / 1900) * .5 + .5; return out.copy(lawnC).lerp(moss, p * .4).multiplyScalar(.9 + r() * .1); });
+    for (let x = ctx.left - 1500; x < ctx.right + 1500; x += 700 + r() * 700) { const z = near - 1500 - r() * 700;
+        if (r() < .3) shrub(b, r, x, ground, z, 700 + r() * 300, pick(r, ['#3f5a3c', '#47603f']), { size: 110 }); else fern(b, r, x, ground, z, 600 + r() * 300);
+        if (r() < .12) flowers(b, r, x, ground + 1000, z, 650, 40, ['#b86a7e', '#c98a9a', '#a85a6e'], 32); }
+    for (let x = ctx.left; x < ctx.right; x += 12000) pathLight(k, x + 3000, ground, near - 4600);
+    // the lawn's trees: young redwoods and a big-leaf maple or two
+    for (let x = ctx.left - 4000; x < ctx.right + 4000; x += 11000 + r() * 5000) {
+        if (r() < .6) redwood(b, r, x, ground, -14000 - r() * 6000, { height: 26000 + r() * 12000, girth: .7, start: .12 });
+        else tree(b, r, x, ground, -12000 - r() * 5000, { height: 11000, hex: '#5f7a48', shape: 'round' });
+    }
+    // the building across the lawn: concrete frame, timber infill, lit after dark
+    const by = -36000;
+    for (let x = ctx.left - 6000; x < ctx.right + 6000; x += 30000) {
+        building(k, r, x + 12000, ground, by, { width: 26000, depth: 16000, floors: 3, storey: 3800, wall: '#a9a59c', glass: '#36424a', frame: '#9b9890', shops: false, litRate: .3, warm: .6, cornice: false, bays: 8, style: 'band', fins: '#7a5e48', roof: '#5f5b55' });
+        b.box([26000, 400, 1600], [x + 12000, ground + 11500, by + 8600], '#8d8a83');
+    }
+    for (let x = ctx.left - 8000; x < ctx.right + 8000; x += 9000) streetLamp(k, x, ground, -26000, { height: 4500, reach: 300, power: .8 });
+    for (let x = L - 30000; x < R + 30000; x += 6000 + r() * 4000) redwood(b, r, x, ground, -48000 - r() * 14000, { height: 50000, girth: 1.1, start: .15, size: 2300 });
+    ridge(b, r, -76000, ground, L - 40000, R + 40000, 14000, '#4a5d52', { step: 2500 });
+}
+
 export const SCENES = {
     garden: { build: garden, storey: 0 },
-    'studio-garden': { build: studioGarden, storey: 0, hazeFar: 46000 }
+    'studio-garden': { build: studioGarden, storey: 0, hazeFar: 46000 },
+    // the marine layer: a low grey sky that burns off by afternoon, the air thick with it, the trunks going pale with distance
+    humboldt: { build: humboldt, storey: 0, hazeFar: 34000, lampLevel: .7, haloLevel: 1.2, hours: {
+        morning: { tint: [.86, .88, .86], zenith: '#a3b0b8', horizon: '#d5d8d4', sun: [-50, 16, '#f2eee2', .22], clouds: .95, haze: .62, air: '#c9cfcd' },
+        afternoon: { tint: [.94, .95, .92], zenith: '#8aa5bb', horizon: '#d6dcdc', sun: [45, 42, '#fff6e6', .35], clouds: .7, haze: .52, air: '#cdd4d4' },
+        evening: { tint: [.62, .56, .55], zenith: '#56607c', horizon: '#b99a8a', sun: [36, 6, '#ffb07a', .6], clouds: .8, haze: .66, air: '#9a8c86' },
+        night: { tint: [.09, .11, .15], zenith: '#0d1420', horizon: '#26303a', clouds: .9, haze: .6, air: '#1e2730', stars: .15 },
+        party: { tint: [.12, .12, .2], zenith: '#151a32', horizon: '#33304e', clouds: .85, haze: .6, air: '#262640', stars: .1 } } }
 };
