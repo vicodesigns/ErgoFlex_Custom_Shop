@@ -5,7 +5,7 @@ import { buildLibraryCampusDetails } from './library-campus-details.mjs?v=librar
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 import { attachVista } from './window-vista.mjs?v=polish-20261112f';
 import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113b';
-import { makeHumboldtLayout, buildHumboldtCommons } from './library-humboldt-commons.mjs?v=polish-20261111h';
+import { makeHumboldtLayout, buildHumboldtCommons } from './library-humboldt-commons.mjs?v=polish-20261113b';
 
 // Campus-library concepts, not a survey of the Humboldt pilot site.
 // Architecture and furniture coordinates are millimetres.

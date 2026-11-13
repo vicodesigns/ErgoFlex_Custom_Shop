@@ -4,7 +4,7 @@ import { attachScenery, windowView } from './window-scenery.mjs?v=polish-2026111
 import { createSunPatch } from './room-sun-patch.mjs?v=polish-20261111f';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
-import { HOME_LAYOUTS } from './home-office.mjs?v=polish-20261113a';
+import { HOME_LAYOUTS } from './home-office.mjs?v=polish-20261113b';
 
 const names = ['Apartment recording nook', 'Home production studio', 'Writing & recording room', 'Producer studio & lounge', 'Production & performance suite'];
 export const MUSIC_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map((home, index) => {

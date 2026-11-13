@@ -4,7 +4,7 @@ import { attachScenery, windowView } from './window-scenery.mjs?v=polish-2026111
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 import {loungeDesign} from './lounge-design.mjs';
 import {buildLoungeDetails} from './lounge-reset-detail.mjs';
-import {buildContemporaryLounge} from './lounge-contemporary.mjs';
+import {buildContemporaryLounge} from './lounge-contemporary.mjs?v=polish-20261113b';
 
 const tiers = [
     ['apartment', 'Apartment living lounge', 3600, 4200, 2600],
