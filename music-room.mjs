@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=polish-20261112f';
+import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113a';
 import { createSunPatch } from './room-sun-patch.mjs?v=polish-20261111f';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
@@ -325,8 +326,11 @@ export function buildMusicRoom(room, root, layout, helpers) {
     const skyMap = new THREE.CanvasTexture(skyCanvas); skyMap.colorSpace = THREE.SRGBColorSpace;
     const pane = mesh(entry, new THREE.PlaneGeometry(ww, wh), new THREE.MeshBasicMaterial({ map: skyMap }), [-w / 2 - 55, low + wh / 2, wz]);
     // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
-    const windowVista = attachVista(pane, 'city'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
+    // Or a modelled street behind the glass (window-scenery.mjs), or the painted canvas alone: windowView() decides.
+    const view = windowView('music'), windowVista = view === 'photo' ? attachVista(pane, 'city') : null; if (windowVista) room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     pane.rotation.y = Math.PI / 2; pane.castShadow = pane.receiveShadow = false;
+    // A music room upstairs in a town house; the apartment is four floors up. Its own street, not the gym's.
+    const scenery = view === 'scenery' ? attachScenery(pane, 'city', { floor: -(low + wh / 2), seed: 6203, storey: layout.id === 'apartment' ? 12000 : 3400 }) : null;
     for (const z of [a, wz, b]) box(entry, [65, wh + 50, 35], [-w / 2 + 8, low + wh / 2, z], trim);
     for (const y of [low, low + wh]) box(entry, [70, 35, ww + 50], [-w / 2 + 8, y, wz], trim);
     box(entry, [180, 35, ww + 80], [-w / 2 + 50, low - 20, wz], wood, 3);
@@ -621,7 +625,7 @@ export function buildMusicRoom(room, root, layout, helpers) {
         }
         c.fillStyle = dark ? '#0d1410' : dusk ? '#33362c' : '#5f7362';
         for (let x = 0; x < 540; x += 26) { c.beginPath(); c.arc(x, 512, 24 + (x * 7 % 13), Math.PI, 0); c.fill(); }
-        skyMap.needsUpdate = true; windowVista.setPhase(modeId);
+        skyMap.needsUpdate = true; windowVista?.setPhase(modeId); scenery?.setHour(modeId);
     };
     // Day: sun through the two-light window. After dark: the floor lamp, the
     // rack lamp and the coloured wash land where those fixtures are.
