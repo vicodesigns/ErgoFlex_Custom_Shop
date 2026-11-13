@@ -50,7 +50,8 @@ const WINDOW_SCENERY = {
     hospital: { scene: 'city', variant: 'hospital', seed: 4101, storey: 12000 },
     laboratory: { scene: 'city', variant: 'louvres', seed: 4202, storey: 7500 },
     mobileit: { scene: 'city', variant: 'dock', seed: 4303, storey: 1200 },
-    government: { scene: 'city', variant: 'civic+flowerbox', seed: 4404, storey: 6000 }
+    government: { scene: 'city', variant: 'civic+flowerbox', seed: 4404, storey: 6000 },
+    police: { scene: 'city', variant: 'bars', seed: 4505, storey: 3600 }
 };
 
 // Suspended acoustic ceiling where a room asks for one: 610 × 1220 mm (2 × 4 ft)
