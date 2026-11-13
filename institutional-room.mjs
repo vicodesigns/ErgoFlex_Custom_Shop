@@ -37,7 +37,7 @@ const WINDOW_VISTAS = {
 // The settings with a modelled outlook (window-scenery.mjs): Orange Coast College's media lab looks over its quad from a
 // floor up; the Huntington Beach classroom is a floor up over the Oilers' field. Both look out to the Pacific.
 const WINDOW_SCENERY = {
-    occmedialab: { scene: 'socal-campus', seed: 5150, storey: 4200 },
+    occmedialab: { scene: 'socal-campus', seed: 5150, storey: 8400 },   // upstairs at the mesa's edge: the sea in view
     highschool: { scene: 'beach-school', seed: 1906, storey: 4000 },
     // schoolyards: the kindergarten and elementary rooms on the ground, the middle school a floor up over its ball court
     kindergarten: { scene: 'schoolyard', variant: 'kinder', seed: 6101, storey: 0 },

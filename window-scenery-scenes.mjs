@@ -557,71 +557,80 @@ function campusBlock(k, r, x, ground, z, { width = 36000, floors = 3, wall = '#d
     b.box([width, 220, 3200], [x, ground + 3000, face + 1600], '#d4cec2'); for (let i = 0; i <= width / 4500; i++) pole(b, x - width / 2 + i * 4500, ground, face + 3000, 3000, 90, '#9a948a');
     for (let i = 0; i < width / 4500; i++) { const lx = x - width / 2 + (i + .5) * 4500; k.lights.box([300, 30, 300], [lx, ground + 2870, face + 1600], '#fff0d6'); k.land.light(lx, ground + 2600, face + 1600, '#ffe8c8', 3200, .45); }
 }
-// The coast beyond: the land falls away past `edge` (a bluff, `drop` below) to a low town of stucco roofs and palms,
-// a beach at `shore`, and the Pacific out to the horizon (k.sea: drawn by its own shader, the sky in it, the sun's
-// glitter low in the evening).
-function coast(k, ctx, edge, drop, shore) {
-    const { land: b, r } = k, ground = ctx.ground, low = ground - drop, cx = (ctx.left + ctx.right) / 2, out = new THREE.Color(), dry = colour('#a8a07e'), sand = colour('#d6ccb2');
-    groundPlane(b, low, cx - 600000, cx + 600000, shore, edge + 2000, 8000, (x, z) => out.copy(dry).lerp(colour('#b9ae96'), .5 + .5 * Math.sin(x / 9000 + z / 7000)).multiplyScalar(.9 + r() * .1), .8);
-    groundPlane(b, low - 300, cx - 600000, cx + 600000, shore - 50000, shore, 10000, () => out.copy(sand).multiplyScalar(.95 + r() * .06), .85);
-    for (let i = 0; i < 36; i++) { const z = edge - 12000 - r() * ((edge - 12000) - (shore + 30000)), x = cx + (r() - .5) * 1.4 * Math.abs(z);
-        if (r() < .65) house(k, r, x, low, z, { width: 9000 + r() * 4000, eaves: 3000, ridge: 1800, wall: pick(r, ['#e6dcc8', '#d9cdb5', '#efe6d4', '#cfc6b4']), roof: pick(r, ['#a8644a', '#9c5e48', '#8a7a6a']), lit: [0, 2], storeys: 1, porch: false });
-        else fanPalm(b, r, x, low, z, { height: 20000 + r() * 6000 }); }
-    k.sea = { y: low - 500, x0: cx - 1000000, x1: cx + 1000000, z0: -1150000, z1: shore - 50000, color: '#3a5f75' };
+// The coast beyond: the land falls away past `edge` down a scrubby bluff (`drop` below) to a strip of the beach town
+// (stucco blocks and houses under clay-tile roofs, palms), the coast road, a broad beach at `shore` with its wet edge
+// and surf, and the Pacific out to the horizon (k.sea: drawn by its own shader, the sky in it, the sun's glitter low in
+// the evening). Seen from a floor up on the bluff the sea is a band six to ten degrees deep, as in the photograph.
+function coast(k, ctx, edge, drop, shore, townFrom, townTo) {
+    const { land: b, r } = k, ground = ctx.ground, low = ground - drop, cx = (ctx.left + ctx.right) / 2, out = new THREE.Color();
+    const scrub = colour('#7c8460'), dry = colour('#a39a78'), sand = colour('#d8ccae'), wet = colour('#a8a08a'), road = colour('#55575a');
+    const roadZ = townTo - 2500, sandZ = roadZ - 3500;
+    groundPlane(b, low, cx - 260000, cx + 260000, sandZ, edge - 2000, 3000, (x, z) => z > roadZ + 2200 ? out.copy(dry).lerp(scrub, .5 + .5 * Math.sin(x / 7000 + z / 5000)).multiplyScalar(.85 + r() * .15) : z > roadZ - 2200 ? out.copy(road).multiplyScalar(.95 + r() * .08) : out.copy(sand).multiplyScalar(.9));
+    groundPlane(b, low - 200, cx - 700000, cx + 700000, shore - 2000, sandZ, 8000, (x, z) => out.copy(z < shore + 9000 ? wet : sand).multiplyScalar(.93 + r() * .07 + .04 * Math.sin(x / 13000)));
+    // the bluff's face: a steep slope of scrub between the school's ground and the town's
+    { const geo = new THREE.PlaneGeometry(560000, Math.hypot(drop, 9000), 140, 4); geo.rotateX(-Math.PI / 2 - Math.atan2(drop, 9000)); b.add(geo, M(cx, ground - drop / 2, edge - 4500), (p) => out.copy(scrub).lerp(dry, .5 + .5 * Math.sin(p.x / 3000)).multiplyScalar(.75 + r() * .2)); geo.dispose(); }
+    for (let x = cx - 70000; x < cx + 70000; x += 2500 + r() * 3000) shrub(b, r, x, ground - 1500 - r() * drop * .6, edge - 2000 - r() * 6000, 900 + r() * 700, pick(r, ['#62704c', '#6e7a52', '#58664a']), { size: 300 });
+    // the town: blocks and houses under tile roofs, palms among them
+    for (let z = townFrom; z > townTo; z -= 9000 + r() * 4000) for (let x = cx - 80000 - r() * 10000; x < cx + 80000; x += 13000 + r() * 9000) {
+        if (r() < .2) { fanPalm(b, r, x, low, z, { height: 16000 + r() * 8000 }); continue; }
+        house(k, r, x, low, z, { width: 9000 + r() * 6000, depth: 8000 + r() * 3000, eaves: r() < .5 ? 6000 : 3200, ridge: 2200, storeys: 2, wall: pick(r, ['#e6dcc0', '#dccfae', '#efe4c8', '#d8c6a2', '#e8d6b4']), roof: pick(r, ['#b0613f', '#a85a3c', '#b86c48', '#9c5638']), lit: r() < .5 ? [0, 3] : [2], porch: false });
+    }
+    for (let x = cx - 90000; x < cx + 90000; x += 18000 + r() * 12000) streetLamp(k, x, low, roadZ + 2600, { height: 7000, reach: 1400, face: -1, power: .7 });
+    for (let x = cx - 90000; x < cx + 90000; x += 9000 + r() * 16000) if (r() < .5) car(k, r, x, low, roadZ + (r() < .5 ? 1100 : -1100), { turn: (r() < .5 ? 0 : Math.PI) });
+    for (let i = 0; i < 9; i++) { const x = cx + (r() - .5) * 160000; for (let j = 0; j < 2 + Math.floor(r() * 3); j++) fanPalm(b, r, x + (r() - .5) * 5000, low, sandZ + 2500 + r() * 2500, { height: 15000 + r() * 9000 }); }
+    // the surf: lines of foam on the sea side of the shore
+    for (const [dz, w, l] of [[1400, 2600, .9], [7500, 700, .62]]) b.add(QUAD, new THREE.Matrix4().compose(V(cx, low - 150, shore - dz), new THREE.Quaternion().setFromAxisAngle(V(1, 0, 0), -Math.PI / 2), V(1400000, w, 1)), () => colour('#c8ccc4').multiplyScalar(l));
+    k.sea = { y: low - 300, x0: cx - 1000000, x1: cx + 1000000, z0: -1150000, z1: shore - 1500, color: '#2a5874' };
 }
 function socal(k, ctx, kind) {
     const { land: b, r } = k, ground = ctx.ground, cx = (ctx.left + ctx.right) / 2, L = ctx.left - 30000, R = ctx.right + 30000;
     const lawnC = colour('#7d8a62'), dry = colour('#a39d7c'), conc = colour('#c3bcae'), track = colour('#9a5a48'), out = new THREE.Color();
     if (kind === 'campus') {
-        // Orange Coast College from the media lab, a floor up: a planted strip and the walk below, the quad with its
-        // jacarandas and benches, palms along the walk, a block across one side of the quad, the car park on the other,
-        // and past the edge of the mesa the low town, the beach and the sea.
-        const walk = z => z > -4500 && z < -1800, quadEnd = -42000, edge = -90000;
+        // Orange Coast College from the media lab, upstairs at the mesa's edge: a planted strip and the walk below, the
+        // quad with jacarandas and benches to either side, palms along the walk, a block across one side of the quad,
+        // the car park on the other, and past the edge of the mesa the town, the beach and the sea.
+        const walk = z => z > -4500 && z < -1800, quadEnd = -22000, edge = -36000;
         land(b, ground, L, R, -60, -30000, edge, (x, z) => {
-            if (walk(z) || (Math.abs(x - cx - 4000) < 1500 && z > quadEnd + 9000)) return out.copy(conc).multiplyScalar((Math.floor(x / 1500) % 2 ? .95 : 1) * (.96 + r() * .05));
+            if (walk(z) || (Math.abs(x - cx - 4000) < 1500 && z > quadEnd + 6000)) return out.copy(conc).multiplyScalar((Math.floor(x / 1500) % 2 ? .95 : 1) * (.96 + r() * .05));
             if (z > -1800) return out.copy(colour('#7d6a56')).multiplyScalar(.9 + r() * .1);
             if (z > quadEnd) { const p = Math.sin(x / 2600) * Math.sin(z / 2100) * .5 + .5; return out.copy(lawnC).lerp(dry, p * .3).multiplyScalar(.93 + r() * .07); }
-            if (z > quadEnd - 34000 && x > cx - 4000) return out.copy(colour('#56585a')).multiplyScalar((Math.abs(((x % 2700) + 2700) % 2700) < 90) ? 1.7 : .95 + r() * .08);
+            if (z < quadEnd && z > edge + 2000 && x > cx + 9000) return out.copy(colour('#56585a')).multiplyScalar((Math.abs(((x % 2700) + 2700) % 2700) < 90) ? 1.5 : .95 + r() * .08);
             return out.copy(dry).multiplyScalar(.9 + r() * .1); }, 600);
         for (let x = ctx.left - 6000; x < ctx.right + 6000; x += 900 + r() * 700) { if (r() < .5) agave(b, r, x, ground, -900 - r() * 600, 450 + r() * 300, pick(r, ['#7f9a84', '#8aa48a', '#6f8c7a'])); else shrub(b, r, x, ground, -1000 - r() * 500, 450 + r() * 200, pick(r, ['#5f7a4c', '#6c8452']), { size: 120 }); }
-        for (let x = ctx.left - 12000; x < ctx.right + 12000; x += 9000) { if (Math.abs(x - cx) > ctx.width / 2 + 1500) featherPalm(b, r, x + r() * 2000, ground, -6000 - r() * 1500, { height: 7000 + r() * 2500 }); pathLight(k, x + 4500, ground, -5000); }
+        for (let x = ctx.left - 12000; x < ctx.right + 12000; x += 9000) { if (Math.abs(x - cx) > ctx.width / 2 + 3000) featherPalm(b, r, x + r() * 2000, ground, -6000 - r() * 1500, { height: 7000 + r() * 2500 }); pathLight(k, x + 4500, ground, -5000); }
         for (let x = ctx.left - 4000; x < ctx.right + 8000; x += 6000 + r() * 4000) bench(b, x, ground, -5200, 0, '#b8b2a6');
-        // the quad's trees: jacarandas (lilac in flower, green otherwise) and a coral tree, tall fan palms along the far walk
-        for (const [x, z, h] of [[-9000, -15000, 8000], [7000, -18000, 9000], [-2000, -26000, 8500], [15000, -27000, 9500], [-17000, -24000, 8000], [24000, -16000, 8500]]) {
-            tree(b, r, cx + x, ground, z, { height: h, hex: r() < .55 ? '#8f86b0' : '#6e8656', shape: 'spreading', bark: '#6f655c' }); }
-        for (let x = L; x < R; x += 7000 + r() * 2000) fanPalm(b, r, x, ground, quadEnd + 6000 + r() * 1500, { height: 17000 + r() * 6000 });
-        campusBlock(k, r, cx - 24000, ground, quadEnd - 9000, { width: 34000, floors: 3 });
-        for (let x = cx; x < R + 20000; x += 5200 + r() * 1200) if (r() < .7) car(k, r, x, ground, quadEnd - 24000 - Math.floor(r() * 3) * 6000);
-        for (let x = cx + 6000; x < R + 20000; x += 30000) floodlight(k, x, ground, quadEnd - 27000, 11000);
-        for (let x = L - 40000; x < R + 40000; x += 9000 + r() * 6000) fanPalm(b, r, x, ground, edge + 3000 + r() * 2000, { height: 18000 + r() * 6000 });
-        coast(k, ctx, edge, 25000, -460000);
+        // the quad's trees, kept to its sides (the view down the middle is the sea's): jacarandas, a coral tree
+        for (const [x, z, h, j] of [[-13000, -12000, 8000, 1], [12500, -15000, 8500, 0], [-19000, -19000, 8000, 0], [21000, -18000, 9000, 1], [-27000, -14000, 8500, 0]]) {
+            tree(b, r, cx + x, ground, z, { height: h, hex: j ? '#86849a' : '#6e8656', shape: 'spreading', bark: '#6f655c' }); }
+        for (let x = L - 20000; x < R + 20000; x += 7000 + r() * 6000) if (Math.abs(x - cx) > 9000 || r() < .3) fanPalm(b, r, x, ground, quadEnd + 3000 + r() * 3000, { height: 14000 + r() * 9000 });
+        campusBlock(k, r, cx - 36000, ground, quadEnd - 4000, { width: 26000, floors: 3 });
+        for (let x = cx + 11000; x < R + 20000; x += 5200 + r() * 1200) if (r() < .6) car(k, r, x, ground, quadEnd - 4000 - Math.floor(r() * 2) * 5000, { turn: Math.PI / 2 });
+        floodlight(k, cx + 26000, ground, edge + 3000, 11000);
+        coast(k, ctx, edge, 28000, -250000, -140000, -200000);
         return;
     }
-    // Huntington Beach High from a classroom a floor up: succulents and a walk below, the fence, the track and the
-    // field with its goalposts, bleachers across one side, the floodlights, palms in a row behind, a pumpjack; past the
-    // field the land falls to the low town, the beach and the sea.
-    const fenceZ = -5200, trackZ = -9000, fieldZ0 = -16000, fieldZ1 = -64000, fieldX = cx + 6000, edge = -94000;
-    land(b, ground, L, R, -60, -30000, edge, (x, z) => {
+    // Huntington Beach High from a classroom a floor up on the bluff: succulents and a walk below, the fence, the school's
+    // lawn with palms in clumps, the track and bleachers off to the left with their floodlights, a pumpjack on the right;
+    // past the lawn the bluff falls to the town, the coast road, the beach and the sea.
+    const fenceZ = -5200, edge = -13000, trackX = cx - 16000;
+    land(b, ground, L - 40000, R + 40000, -60, -8000, edge, (x, z) => {
         if (z > -3200) return out.copy(conc).multiplyScalar(.95 + r() * .05);
         if (z > fenceZ) return out.copy(colour('#7d6a56')).multiplyScalar(.9 + r() * .1);
-        const inside = Math.abs(x - fieldX) < 34000 && z < fieldZ0 && z > fieldZ1;
-        if (z < trackZ && z > fieldZ1 - 7000 && Math.abs(x - fieldX) < 40000 && !inside) { const lane = Math.abs(((z - trackZ) % 1220 + 1220) % 1220) < 50; return lane ? out.set(.85, .82, .78) : out.copy(track).multiplyScalar(.92 + r() * .08); }
-        if (inside) { const yard = Math.abs(((x - fieldX) % 4570 + 4570) % 4570) < 70 || Math.abs(z - fieldZ0) < 90 || Math.abs(z - fieldZ1) < 90;
-            return yard ? out.set(.82, .82, .78) : out.copy(lawnC).multiplyScalar(((Math.floor((x - fieldX) / 4570) % 2) ? .92 : 1.02) * (.96 + r() * .04)); }
-        return out.copy(lawnC).lerp(dry, .4).multiplyScalar(.9 + r() * .1); }, 600);
+        if (x < trackX && z < -6000 && z > -11000) { const lane = Math.abs(((z + 7000) % 1220 + 1220) % 1220) < 50; return lane ? out.set(.85, .82, .78) : out.copy(track).multiplyScalar(.92 + r() * .08); }
+        if (false) { const yard = Math.abs(((x - trackX) % 4570 + 4570) % 4570) < 70; return yard ? out.set(.82, .82, .78) : out.copy(lawnC).multiplyScalar(((Math.floor((x - trackX) / 4570) % 2) ? .92 : 1.02) * (.96 + r() * .04)); }
+        return out.copy(lawnC).lerp(dry, .45 + .2 * Math.sin(x / 4000)).multiplyScalar(.9 + r() * .1); }, 600);
     for (let x = ctx.left - 4000; x < ctx.right + 4000; x += 600 + r() * 500) agave(b, r, x, ground, -800 - r() * 700, 380 + r() * 260, pick(r, ['#7f9a84', '#8aa48a', '#6f8c7a', '#8e9a6a']));
     grass(b, r, ctx.left - 3000, ctx.right + 3000, -4700, -3400, ground, 300, '#7d8a5a', 260);
     fence(b, r, L, R, ground, fenceZ, { kind: 'chain', height: 2400 });
-    for (const x of [fieldX - 50000, fieldX + 50000]) { limb(b, V(x, ground, fieldZ0 - 24000), V(x, ground + 3000, fieldZ0 - 24000), 90, '#d8c24a'); b.box([5600, 120, 120], [x, ground + 3000, fieldZ0 - 24000], '#d8c24a'); for (const s of [-1, 1]) pole(b, x + s * 2800, ground + 3000, fieldZ0 - 24000, 6000, 50, '#d8c24a'); }
-    bleachers(b, fieldX - 36000, fieldX - 6000, ground, fieldZ1 - 9000, 12);
-    b.box([10000, 3000, 3000], [fieldX - 21000, ground + 1500 + 12 * 420, fieldZ1 - 9000 - 12 * 760 - 1500], '#c9c2b4');
-    for (const x of [fieldX - 38000, fieldX + 38000]) for (const z of [fieldZ0 + 2000, fieldZ1 - 4000]) floodlight(k, x, ground, z, 22000, z > -30000 ? -1 : 1);
-    for (let x = L - 30000; x < R + 30000; x += 7000 + r() * 3000) fanPalm(b, r, x, ground, edge + 4000 - r() * 2000, { height: 18000 + r() * 6000 });
+    bleachers(b, trackX - 30000, trackX - 6000, ground, -6500, 7);
+    for (const x of [trackX - 34000, trackX - 2000]) floodlight(k, x, ground, -11500, 22000, 1);
+    // palms in clumps of two to four, every one its own height and lean (not a fence of poles)
+    for (const [x, z] of [[trackX + 3000, -10500], [cx + 12000, -10000], [cx + 26000, -9500]]) for (let j = 0, n = 2 + Math.floor(r() * 2); j < n; j++) fanPalm(b, r, x + (r() - .5) * 3000, ground, z + (r() - .5) * 1500, { height: 12000 + r() * 12000 });
     for (let x = ctx.left - 14000; x < ctx.right + 14000; x += 11000 + r() * 3000) if (Math.abs(x - cx) > ctx.width / 2 + 2000) tree(b, r, x, ground, -7000 - r() * 1500, { height: 6500, hex: '#6c8452', shape: 'round' });
-    pumpjack(b, cx - 34000, ground, -40000, .6, 1.1);
-    coast(k, ctx, edge, 12000, -420000);
+    pumpjack(b, cx - 36000, ground - 20000, -40000, .6, 1);
+    coast(k, ctx, edge, 20000, -145000, -55000, -84000);
 }
-const SOCAL = { morning: { horizon: '#ebdcc6', air: '#e6dccb', haze: .5 }, afternoon: { horizon: '#e4e4da', air: '#dfe0d8', haze: .45, tint: [1, .98, .93] }, evening: { sun: [32, 3, '#ffa060', 1.1] } };
+const SOCAL = { morning: { horizon: '#e4dccb', air: '#dcdcd2', haze: .45 }, afternoon: { zenith: '#6fa2cf', horizon: '#d8e2e6', air: '#d4dcdc', haze: .38, tint: [1, .98, .93] }, evening: { sun: [32, 3, '#ffa060', 1.0] } };
 
 // ---- a college campus (the library room, the study, the college and university classrooms): lawns crossed by
 // paths, oaks and maples (a few turning), benches and lamps, a brick wing with stone trim and a slate roof across the
