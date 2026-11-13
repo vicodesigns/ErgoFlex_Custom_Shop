@@ -131,13 +131,13 @@
    "age": "young adult",
    "years": 38,
    "heritage": "Mixed",
-   "height": 174,
+   "height": 173,
    "outfit": [
     "male_casualsuit05",
     "shoes02"
    ],
    "colors": {
-    "hair": "#474141"
+    "hair": "#65615f"
    }
   },
   "sam": {
@@ -205,10 +205,14 @@
    "heritage": "Mixed",
    "height": 165,
    "outfit": [
-    "female_sportsuit01",
+    "joepal_crude_t-shirt_female",
+    "toigo_harem_pants",
     "shoes05"
    ],
-   "colors": {}
+   "colors": {
+    "top": "#6facba",
+    "bottom": "#47474c"
+   }
   },
   "jo": {
    "name": "Jo",

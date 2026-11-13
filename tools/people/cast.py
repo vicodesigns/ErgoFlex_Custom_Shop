@@ -52,7 +52,7 @@ CHARACTERS = {
     },
     'andre': {
         'name': 'Andre', 'phenotype': {'gender': 1., 'age': .5, 'muscle': .6, 'weight': .52, 'height': .5, 'proportions': .6, 'race': race(.05, .9, .05)},
-        'skin': 'young_african_male', 'eyes': 'brown', 'hair': 'short02', 'eyebrows': 'eyebrow003', 'eyelashes': 'eyelashes01',
+        'skin': 'young_african_male', 'eyes': 'brown', 'hair': 'short01', 'eyebrows': 'eyebrow003', 'eyelashes': 'eyelashes01',
         'clothes': ['namuhekam_male_polo_shirt', 'cortu_cargo_pants', 'shoes04'],
         'hair_tint': (.05, .045, .04),
         'tint': {'namuhekam_male_polo_shirt': (.16, .36, .34), 'cortu_cargo_pants': (.5, .45, .37)},
@@ -88,7 +88,7 @@ CHARACTERS = {
     },
     'omar': {
         'name': 'Omar', 'phenotype': {'gender': 1., 'age': .6, 'muscle': .6, 'weight': .55, 'height': .5, 'proportions': .55, 'race': race(.55, .15, .3)},
-        'skin': 'middleage_asian_male', 'eyes': 'brown', 'hair': 'short02', 'hair_tint': (.06, .05, .05), 'eyebrows': 'eyebrow009', 'eyelashes': 'eyelashes01',
+        'skin': 'middleage_asian_male', 'eyes': 'brown', 'hair': 'short04', 'hair_tint': (.13, .12, .115), 'eyebrows': 'eyebrow009', 'eyelashes': 'eyelashes01',
         'clothes': ['male_casualsuit05', 'shoes02'],
     },
     'sam': {
@@ -112,7 +112,8 @@ CHARACTERS = {
     'priya': {
         'name': 'Priya', 'phenotype': {'gender': .0, 'age': .45, 'muscle': .55, 'weight': .45, 'height': .6, 'proportions': .65, 'race': race(.35, .15, .5)},
         'skin': 'young_asian_female', 'eyes': 'brown', 'hair': 'braid01', 'eyebrows': 'eyebrow012', 'eyelashes': 'eyelashes02',
-        'clothes': ['female_sportsuit01', 'shoes05'],
+        # (a tee over loose trousers: the sportsuit's crop top left her midriff and back bare, worst with her arms up in the gym)
+        'clothes': ['joepal_crude_t-shirt_female', 'toigo_harem_pants', 'shoes05'], 'tint': {'joepal_crude_t-shirt_female': (.16, .42, .5), 'toigo_harem_pants': (.06, .06, .07)},
     },
     'jo': {
         'name': 'Jo', 'phenotype': {'gender': .0, 'age': .62, 'muscle': .55, 'weight': .55, 'height': .55, 'proportions': .5, 'race': race(1, 0, 0)},
@@ -637,7 +638,7 @@ def _hang(k, side, swing=0.):
 def stand_phone(k):
     """Weight on one leg, phone in the right hand, eyes on it: the desk is driven from the app."""
     return {'pelvis_offset': (.02, 0, -.005), 'pelvis_roll': -2, 'spine': (1, 2, 3), 'neck': 12, 'head': 14,
-            'hand_r': {'at': _s(k, -.11, -.25, 1.17), 'fingers': (.15, -.25, 1), 'palm': (.1, 1, .3), 'elbow': (-.22, .25, -.4), 'curl': .62, 'thumb': .45},
+            'hand_r': {'at': _s(k, -.06, -.23, 1.09), 'fingers': (.35, -.9, .25), 'palm': (.05, .55, .85), 'elbow': (-.22, .25, -.4), 'curl': .6, 'thumb': .55},
             'hand_l': _hang(k, 'l'),
             'foot_l': {'at': _s(k, .10, .0, .07 / k), 'toes': (.3, -1, 0)}, 'foot_r': {'at': _s(k, -.12, .04, .07 / k), 'toes': (-.35, -1, 0)}}
 
