@@ -286,6 +286,50 @@ function city(k, ctx, { neon = false } = {}) {
 const CITY_NIGHT = { night: { horizon: '#3a3a4e', air: '#2a2c3a', stars: .25, tint: [.13, .14, .2] }, party: { horizon: '#47385e', air: '#2e2844', stars: .15 } };
 const NEON_NIGHT = { evening: { horizon: '#d98a70', zenith: '#4a4f82' }, night: { zenith: '#120f2a', horizon: '#4d3466', air: '#2c2342', stars: .1, tint: [.13, .12, .2] }, party: { zenith: '#16102e', horizon: '#5a3270', air: '#33264a', stars: .05 } };
 
+// ---- a yard behind a garage workshop: a concrete apron and gravel, a lumber rack under a lean-to, a shed, a work
+// trailer, a chain-link and board fence, fruit trees, a utility pole with its wires, the neighbours' roofs; a yard light
+// over the door after dark.
+function yard(k, ctx) {
+    const { land: b, r } = k, ground = ctx.ground - 150, cx = (ctx.left + ctx.right) / 2, w = ctx.width, flip = r() < .5 ? 1 : -1;
+    const conc = colour('#a9a59d'), gravel = colour('#9a8f80'), dirt = colour('#8a7a64'), grassC = colour('#75835a'), out = new THREE.Color();
+    land(b, ground, cx - 26000, cx + 26000, -60, -20000, -80000, (x, z) => {
+        if (z > -4500) return out.copy(conc).multiplyScalar(((Math.floor(x / 3000) + Math.floor(z / 3000)) % 2 ? .95 : 1) * (.96 + r() * .05));
+        const d = Math.sin(x / 2100 + 1) * Math.sin(z / 1700) * .5 + .5;
+        if (z > -14000) return out.copy(gravel).lerp(dirt, d * .5).multiplyScalar(.9 + r() * .12);
+        return out.copy(grassC).lerp(dirt, d * .3).multiplyScalar(.9 + r() * .1); }, 450);
+    // near the wall: a workbench outside, sawhorses, a stack of pavers, weeds along the wall's foot
+    grass(b, r, ctx.left - 2000, ctx.right + 2000, -900, -300, ground, 260, '#748a58', 300);
+    for (const s of [-1, 1]) { const x = cx + s * 900; for (const [dx, dz] of [[-350, 0], [350, 0]]) limb(b, V(x + dx, ground, -2400 + dz - 200), V(x + dx * .4, ground + 750, -2400), 30, '#a08060'); b.box([1100, 90, 120], [x, ground + 760, -2400], '#a88a68'); }
+    for (let i = 0; i < 4; i++) b.box([1200, 90, 1000], [cx - flip * 2600, ground + 45 + i * 90, -3200], '#b5aea2', .04, r);
+    // the lean-to with the lumber rack, the shed
+    const lx = cx + flip * (w / 2 + 2500), lz = -6800;
+    for (const dx of [-2400, 2400]) for (const dz of [-1200, 1200]) b.box([120, 2700, 120], [lx + dx, ground + 1350, lz + dz], '#7f6a55');
+    b.box([5600, 80, 3000], [lx, ground + 2750, lz], '#8d9298');
+    for (let i = 0; i < 7; i++) b.box([4600, 90 + r() * 60, 2000], [lx, ground + 350 + i * 260, lz], pick(r, ['#c9a77a', '#bf9b6c', '#d1b083', '#b48e62']), .05, r);
+    const sx = cx - flip * 6500, sz = -12500;
+    house(k, r, sx, ground, sz, { width: 4200, depth: 3200, eaves: 2400, ridge: 1100, wall: '#8c9a88', roof: '#5d5a56', lit: [], porch: false, storeys: 1 });
+    // a work trailer and a pickup
+    b.box([3600, 120, 1900], [cx + flip * 1800, ground + 600, -9500], '#5d6266'); for (const s of [-1, 1]) b.box([560, 560, 200], [cx + flip * 1800, ground + 300, -9500 + s * 900], '#1c1c1e');
+    b.box([3400, 500, 60], [cx + flip * 1800, ground + 900, -8580], '#6a7074');
+    car(k, r, cx + flip * 7200, ground, -10500, { hex: '#6b7a86', turn: .2 });
+    // the fence, the fruit trees, the pole and its wires
+    fence(b, r, -30000, 30000, ground, -17500, { kind: 'chain', height: 1800 });
+    fence(b, r, cx - flip * 26000, cx - flip * 9000, ground, -17800, { height: 1800, hex: '#8f7a64' });
+    for (const [x, z, h] of [[-8000, -15500, 5200], [4500, -16000, 4800], [12500, -15200, 5600], [-15000, -16500, 4600], [20000, -16200, 5000]]) tree(b, r, cx + x * flip, ground, z, { height: h, hex: pick(r, ['#5f7a4b', '#68834f', '#57724a']), shape: 'spreading' });
+    const p1 = V(cx - flip * 3500, ground, -15000), p2 = V(cx + flip * 26000, ground, -18500);
+    utilityPole(k, p1.x, ground, p1.z); utilityPole(k, p2.x, ground, p2.z);
+    for (const s of [-900, 0, 900]) { wire(b, V(p1.x + s, ground + 9950, p1.z), V(p2.x + s, ground + 9950, p2.z), 900); wire(b, V(p1.x + s, ground + 9950, p1.z), V(p1.x - flip * 30000 + s, ground + 9950, p1.z + 1500), 1100); }
+    wire(b, V(p1.x, ground + 9200, p1.z), V(cx, ground + 3800, -200), 600);
+    // the neighbours, their trees; the yard light over the workshop's door
+    house(k, r, cx - flip * 12000, ground, -30000, { width: 10000, wall: '#c8bba6', roof: '#6e5e55', lit: [1, 3] });
+    house(k, r, cx + flip * 9000, ground, -33000, { width: 9000, eaves: 3000, wall: '#b9b8ae', roof: '#5f6266', lit: [0], storeys: 1 });
+    for (let x = -50000; x <= 50000; x += 4000 + r() * 4000) tree(b, r, cx + x, ground, -40000 - r() * 8000, { height: 8000 + r() * 4000, hex: '#587253', size: 900 });
+    for (let x = -60000; x <= 60000; x += 3000 + r() * 1000) crown(b, r, x, ground + 2400 + r() * 1200, -60000 - r() * 5000, 3500, 3200, 2400, '#5b735f', { size: 1500, lobes: .2 });
+    k.lights.box([300, 160, 200], [cx + flip * (w / 2 + 700), ctx.top + 300, -150], '#ffe2b0'); k.halos.add(cx + flip * (w / 2 + 700), ctx.top + 200, -350, 900, '#ffd9a0', .5);
+    b.light(cx + flip * (w / 2 + 700), ctx.top, -1500, '#ffd9a0', 8000, .55);
+    pathLight(k, sx + 2600, ground, sz + 2200, '#ffd9a8', .5);
+}
+
 // ---- Southern California, near the coast: palms, stucco and concrete, bright hazy air.
 // An agave or aloe: a rosette of stiff pointed leaves.
 function agave(b, r, x, ground, z, size = 500, hex = '#7f9a84') {
@@ -389,6 +433,7 @@ export const SCENES = {
         party: { tint: [.12, .12, .2], zenith: '#151a32', horizon: '#33304e', clouds: .85, haze: .6, air: '#262640', stars: .1 } } },
     city: { build: (k, ctx) => city(k, ctx), storey: 3400, hazeFar: 90000, lampLevel: .78, hours: CITY_NIGHT },
     'city-neon': { build: (k, ctx) => city(k, ctx, { neon: true }), storey: 3400, hazeFar: 90000, lampLevel: .78, haloLevel: .8, hours: NEON_NIGHT },
+    yard: { build: yard, storey: 0, hazeFar: 80000 },
     'socal-campus': { build: (k, ctx) => socal(k, ctx, 'campus'), storey: 4200, hazeFar: 110000, hours: SOCAL },
     'beach-school': { build: (k, ctx) => socal(k, ctx, 'field'), storey: 0, hazeFar: 110000, haloLevel: .8, hours: SOCAL }
 };

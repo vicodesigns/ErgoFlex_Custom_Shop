@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=polish-20261112f';
+import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113a';
 import { createSunPatch } from './room-sun-patch.mjs?v=polish-20261111f';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
@@ -224,7 +225,9 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
     const skyCanvas=document.createElement('canvas');skyCanvas.width=skyCanvas.height=512;const skyMap=new THREE.CanvasTexture(skyCanvas);skyMap.colorSpace=THREE.SRGBColorSpace;
     const pane=mesh(left,new THREE.PlaneGeometry(ww,wh),new THREE.MeshBasicMaterial({map:skyMap}),[-w/2-52,low+wh/2,wz]);pane.rotation.y=Math.PI/2;pane.castShadow=pane.receiveShadow=false;
     // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
-    const windowVista = attachVista(pane, 'yard'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
+    // Or the yard modelled behind the glass (window-scenery.mjs), or the painted canvas alone: windowView() decides.
+    const view = windowView('workshop'), windowVista = view === 'photo' ? attachVista(pane, 'yard') : null; if (windowVista) room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
+    const scenery = view === 'scenery' ? attachScenery(pane, 'yard', { floor: -(low + wh / 2), seed: 3319 }) : null;
     for(const z of [a,wz,b])box(left,[65,wh+50,30],[-w/2+10,low+wh/2,z],steel);for(const y of [low,low+wh])box(left,[65,30,ww+60],[-w/2+10,y,wz],steel);box(left,[170,30,ww+80],[-w/2+50,low-15,wz],ply);
     for(const z of [(a+wz)/2,(wz+b)/2])kbox(left,[30,16,ww/2-40],[-w/2+10,low+wh*.55,z],steel);
     // A precast concrete lintel carries the blockwork over the opening: 215 deep (one course), 200 bearing each side.
@@ -582,7 +585,7 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
         c.fillStyle=near;c.fillRect(250,330,190,182);c.beginPath();c.moveTo(236,334);c.lineTo(345,270);c.lineTo(454,334);c.fill();
         c.fillStyle=night||id==='evening'?'#f2c46e':'#a7b9bd';c.fillRect(290,370,46,40);c.fillRect(370,370,46,40);
         c.fillStyle=near;for(let x=0;x<512;x+=26)c.fillRect(x,446,18,66);c.fillRect(0,462,512,8);
-        skyMap.needsUpdate=true; windowVista.setPhase(id);
+        skyMap.needsUpdate=true; windowVista?.setPhase(id); scenery?.setHour(id);
     };
     // The garage window prints its four lights on the slab: low and long in the
     // morning, short at midday, gone at night when the bench lamps take over.
