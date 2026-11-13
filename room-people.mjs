@@ -543,7 +543,7 @@ export const ROOM_PEOPLE = {
         standRound('people-grace-stand-drink', 'gallery-bench', 180, 1300, { modes: ['party'] }),
         // the larger galleries: visitors at each of the other works, a guide in the morning, someone resting on the sofa
         L => { const big = tier(L); return big ? [
-            standRound('people-priya-stand-present', 'aphrodite-plinth', 90, 1350, { modes: ['morning'], key: 'priya-guide' }),
+            standRound('people-priya-stand-present', 'aphrodite-plinth', 80, 1350, { modes: ['morning'], key: 'priya-guide' }),   // (at 90 degrees her presenting arm went through the back wall)
             standRound('people-sofia-stand-wait', 'aphrodite-plinth', 60, 1400, { modes: ['afternoon', 'evening'], key: 'sofia-aphrodite' }),
             standRound('people-maya-stand-talk', 'mercury-plinth', 250, 1500, { modes: ['afternoon'], key: 'maya-mercury' }),
             standRound('people-nora-kid-stand', 'mercury-plinth', 290, 1400, { modes: ['afternoon'], key: 'nora-mercury' }),
