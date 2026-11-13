@@ -330,7 +330,7 @@ export function buildMusicRoom(room, root, layout, helpers) {
     const view = windowView('music'), windowVista = view === 'photo' ? attachVista(pane, 'city') : null; if (windowVista) room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     pane.rotation.y = Math.PI / 2; pane.castShadow = pane.receiveShadow = false;
     // A music room upstairs in a town house; the apartment is four floors up. Its own street, not the gym's.
-    const scenery = view === 'scenery' ? attachScenery(pane, 'city', { floor: -(low + wh / 2), seed: 6203, storey: layout.id === 'apartment' ? 12000 : 3400 }) : null;
+    const scenery = view === 'scenery' ? attachScenery(pane, 'city', { floor: -(low + wh / 2), seed: 6203, variant: 'low', storey: layout.id === 'apartment' ? 12000 : 3400 }) : null;
     for (const z of [a, wz, b]) box(entry, [65, wh + 50, 35], [-w / 2 + 8, low + wh / 2, z], trim);
     for (const y of [low, low + wh]) box(entry, [70, 35, ww + 50], [-w / 2 + 8, y, wz], trim);
     box(entry, [180, 35, ww + 80], [-w / 2 + 50, low - 20, wz], wood, 3);

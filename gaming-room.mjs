@@ -210,7 +210,7 @@ export function buildGamingRoom(room, root, layout, helpers) {
     const view = windowView('gaming'), windowVista = view === 'photo' ? attachVista(pane, 'city-neon') : null; if (windowVista) room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     pane.rotation.y = Math.PI / 2; pane.castShadow = pane.receiveShadow = false;
     // An upstairs room of a town house over a busy street; the apartment is five floors up.
-    const scenery = view === 'scenery' ? attachScenery(pane, 'city-neon', { floor: -(low + wh / 2), seed: 9077, storey: layout.id === 'apartment' ? 15000 : 3400 }) : null;
+    const scenery = view === 'scenery' ? attachScenery(pane, 'city-neon', { floor: -(low + wh / 2), seed: 9077, variant: 'corner', storey: layout.id === 'apartment' ? 15000 : 3400 }) : null;
     for (const z of [rearEnd, wz, forwardEnd]) box(entry, [70, wh + 50, 35], [-w / 2 + 5, low + wh / 2, z], trim);
     for (const y of [low, low + wh]) box(entry, [70, 35, ww + 50], [-w / 2 + 5, y, wz], trim);
     box(entry, [180, 35, ww + 90], [-w / 2 + 50, low - 25, wz], walnut, 3);
