@@ -194,7 +194,11 @@ def wellness(s):
     # Gym: "Pause. Stretch. Breathe. Reset." Maya works seated; when the desk starts to rise she gets up and
     # stretches while it climbs, then works on her feet. Her chair stays, pushed back toward the bike. Priya
     # stretches at the mobility board, clear of the plant. His camera, unchanged.
-    people(s, only=['people-maya-sit-type', 'people-maya-stand-type', 'people-priya-stretch'],
+    # The gym's black-and-red regrade repaints whatever is under Room:gym by material colour and hue; people stand
+    # under it too (their hair and clothes came out grey and black). Keep them out of it.
+    for e in s['sceneEdits']:
+        if e.get('gymBlackRed') and '(Prop:|ErgoFlex desk' in e.get('path', ''): e['path'] = e['path'].replace('(Prop:|ErgoFlex desk', '(Prop:|Person|ErgoFlex desk')
+    people(s, only=['people-maya-sit-type', 'people-maya-stand-type', 'people-priya-stretch', 'kai-bike'],
            cast=[{'key': 'maya-break', 'id': 'people-maya-stretch', 'at': [-421, 350], 'turn': 180, 'colors': {'top': '#2d7d8a', 'bottom': '#1f2228', 'shoes': '#ececec'}}],   # (her gym clothes, as at the desk)
            place={'people-priya-stretch': {'at': [1250, -1000], 'turn': 180}},
            when={'maya-break': [[6.6, 10.35, .3, .35]]}, chair={'back': 100, 'side': -700, 'turn': 60})

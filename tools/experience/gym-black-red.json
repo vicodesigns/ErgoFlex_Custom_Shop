@@ -2,7 +2,7 @@
  "sceneEdits": [
   {
    "match": "",
-   "path": "^Room:gym(?!.*(Prop:|ErgoFlex desk|Desk dressing|LED))",
+   "path": "^Room:gym(?!.*(Prop:|Person|ErgoFlex desk|Desk dressing|LED))",
    "materialColor": "#bbc99a",
    "material": {
     "color": "#a8101c",
@@ -12,7 +12,7 @@
   },
   {
    "match": "",
-   "path": "^Room:gym(?!.*(Prop:|ErgoFlex desk|Desk dressing|LED))",
+   "path": "^Room:gym(?!.*(Prop:|Person|ErgoFlex desk|Desk dressing|LED))",
    "materialColor": "#9fc2bc",
    "material": {
     "color": "#a8101c",
@@ -22,7 +22,7 @@
   },
   {
    "match": "",
-   "path": "^Room:gym(?!.*(Prop:|ErgoFlex desk|Desk dressing|LED))",
+   "path": "^Room:gym(?!.*(Prop:|Person|ErgoFlex desk|Desk dressing|LED))",
    "materialType": "Basic",
    "recolor": [
     {
@@ -37,7 +37,7 @@
   },
   {
    "match": "",
-   "path": "^Room:gym(?!.*(Prop:|ErgoFlex desk|Desk dressing|LED)).*Kettlebell and medicine ball shelf",
+   "path": "^Room:gym(?!.*(Prop:|Person|ErgoFlex desk|Desk dressing|LED)).*Kettlebell and medicine ball shelf",
    "recolor": [
     {
      "hue": [
@@ -75,7 +75,7 @@
   },
   {
    "match": "",
-   "path": "^Room:gym(?!.*(Prop:|ErgoFlex desk|Desk dressing|LED))",
+   "path": "^Room:gym(?!.*(Prop:|Person|ErgoFlex desk|Desk dressing|LED))",
    "materialType": "!Basic",
    "recolor": [
     {
@@ -251,7 +251,7 @@
   },
   {
    "match": "",
-   "path": "^Room:gym(?!.*(Prop:|ErgoFlex desk|Desk dressing|LED))",
+   "path": "^Room:gym(?!.*(Prop:|Person|ErgoFlex desk|Desk dressing|LED))",
    "lightType": "PointLight",
    "recolor": [
     {
