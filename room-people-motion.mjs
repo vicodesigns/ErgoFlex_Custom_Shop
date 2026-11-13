@@ -462,15 +462,7 @@ export function solveStill(rig, key, input) {
         if (resting.includes(s)) { rig.reach(upper, lower, hand, key.wp[hand]); rig.reach(upper, lower, hand, key.wp[hand]); rig.setWorld(hand, key.wq[hand]); }
         if (TYPES.has(pose) && input.taps !== false) tapKeys(rig, s, time, seed, life);
     }
-    // a reader turns a page now and then: the right hand lets go, crosses the page and comes back
-    if (pose === 'sit-read') {
-        const period = 17 + hash(4, seed) * 12, n = Math.floor(time / period), at = (n + .15 + hash(n, seed + 60) * .6) * period, u = (time - at) / 2.3;
-        if (u > 0 && u < 1) {
-            const [, upper, lower, hand] = rig.side.r.arm, other = rig.wp[rig.side.l.arm[3]], over = Math.sin(Math.PI * u) ** 2 * life;
-            rig.fk(); handQ.copy(rig.wq[hand]); spot.copy(rig.wp[hand]).lerp(other, .5 * over); spot.addScaledVector(Y, .025 * Math.sin(Math.PI * u) * life);
-            rig.reach(upper, lower, hand, spot); rig.setWorld(hand, handQ);
-        }
-    }
+    // (a reader turning a page, and every other activity: ACTS below)
     rig.fk();
     if (ACTS[pose]) { ACTS[pose](rig, key, time, seed, life); rig.fk(); }
 }
@@ -483,28 +475,209 @@ export function solveStill(rig, key, input) {
 const armTo = (rig, s, at, q = null) => { const [, upper, lower, hand] = rig.side[s].arm; rig.reach(upper, lower, hand, at); rig.reach(upper, lower, hand, at); if (q) rig.setWorld(hand, q); rig.fk(); };
 // 0 except for `length` seconds once every `period` (the moment is the person's own): rises, holds, falls
 const moment = (time, seed, n, period, length, edge = .28) => { const p = period * (1 + .5 * hash(n, seed)), u = (time + hash(n + 1, seed) * p) % p; return u < length ? ss(0, edge, u / length) * (1 - ss(1 - edge, 1, u / length)) : 0; };
+// An action now and then, at irregular moments of the person's own: time runs in stretches of about `period` seconds
+// (longer by up to a third for some people), each with one action of `length` seconds somewhere in its middle half, so
+// two actions are at least half a stretch apart (a pause) and at most one and a half stretches. 0 outside, rises,
+// holds, falls. epSide: -1 or 1 for the action that is on now (which way it goes).
+const stretchOf = (time, seed, id, period) => { const P = period * (1 + .33 * hash(id, seed)), n = Math.floor(time / P); return { P, n }; };
+const ep = (time, seed, id, period, length, edge = .25) => {
+    const { P, n } = stretchOf(time, seed, id, period), gap = .25 * P, at = n * P + gap + hash(n, seed + id) * Math.max(0, P - length - 2 * gap), u = (time - at) / length;
+    return u > 0 && u < 1 ? ss(0, edge, u) * (1 - ss(1 - edge, 1, u)) : 0;
+};
+const epSide = (time, seed, id, period) => hash(stretchOf(time, seed, id, period).n, seed + id + 1) < .5 ? -1 : 1;
+// A value -1..1 that holds for about `step` seconds and then moves to the next one (in the last quarter of the step).
+const held = (time, seed, id, step) => { const x = time / (step * (1 + .3 * hash(id, seed))) + hash(id + 1, seed) * 7, n = Math.floor(x); return lerp(hash(n, seed + id), hash(n + 1, seed + id), ss(.72, 1, x - n)) * 2 - 1; };
+// The neck (.4) and the head (.6) turn by yaw (+: to the person's left) and pitch (+: down).
+const headTurn = (rig, yaw, pitch) => { for (const [bone, share] of [[rig.b.neck_01, .4], [rig.b.head, .6]]) { rig.turnWorld(bone, turn.setFromAxisAngle(Y, yaw * share).multiply(turn2.setFromAxisAngle(X, pitch * share))); rig.fk(); } };
+// Whether a posture has an arm at (nearly) full stretch to where its hand rests (then the shoulders may only come toward it).
+const armsStraight = (rig, key) => key.straight ??= ['l', 'r'].some(s => { const [, upper, lower, hand] = rig.side[s].arm; return key.wp[hand].distanceTo(key.wp[upper]) > .98 * (rig.offset[lower].length() + rig.offset[hand].length()); });
+// Hands that rest on something go back onto it after the body has moved.
+const pinHands = (rig, key, sides) => { for (const s of sides) { const h = rig.side[s].arm[3]; armTo(rig, s, key.wp[h], key.wq[h]); } };
+// A hand that rests on the body (thumbs at the belt) follows the bone it rests on.
+const bodyQ = Q(), bodyQ2 = Q(), bodyAt = V();
+const onBone = (rig, key, s, bone) => {
+    const h = rig.side[s].arm[3]; bodyQ.copy(rig.wq[bone]).multiply(bodyQ2.copy(key.wq[bone]).invert());
+    bodyAt.copy(key.wp[h]).sub(key.wp[bone]).applyQuaternion(bodyQ).add(rig.wp[bone]); armTo(rig, s, bodyAt, bodyQ2.copy(bodyQ).multiply(key.wq[h]));
+};
+// Standing: the weight goes onto one foot (dx metres toward it, + the person's left): the hip over it rises, the
+// shoulders stay level, the knees give a little; the feet stay where they are.
+const shiftWeight = (rig, key, dx, dip = 0) => {
+    spot.copy(rig.wp[rig.b.pelvis]); spot.x += dx; spot.y -= Math.abs(dx) * .25 + dip; rig.placePelvis(spot); rig.fk();
+    rig.turnWorld(rig.b.pelvis, turn.setFromAxisAngle(Z, dx * 2)); rig.fk(); rig.turnWorld(rig.b.spine_02, turn.setFromAxisAngle(Z, -dx * 1.6)); rig.fk();
+    feetStay(rig, key);
+};
 function write(rig, key, time, seed, life, size = 1) {
-    // a line of writing: the pen goes along the line (the writer's left to right), trembling with the letters, comes back, and rests now and then
+    // a line of writing: the pen goes along the line (the writer's left to right), trembling with the letters, lifts and
+    // comes back to the start of the next line, and rests now and then; the head follows the pen along the line
     const hand = rig.side.r.arm[3], pause = moment(time, seed, 71, 13, 3), line = ((time * (.13 + hash(72, seed) * .05) + hash(73, seed)) % 1), go = (1 - pause) * life;
-    const along = line < .86 ? line / .86 : 1 - ss(.86, 1, line);
-    handAt.copy(key.wp[hand]); handAt.x += (.032 - .064 * along) * size * go;
-    handAt.x += Math.sin(time * 11.3 + seed) * .0035 * size * go; handAt.z += Math.sin(time * 8.1 + seed * 1.7) * .005 * size * go;
+    const back = ss(.86, 1, line), along = line < .86 ? line / .86 : 1 - back;
+    handAt.copy(key.wp[hand]); handAt.x += (.045 - .09 * along) * size * go;
+    handAt.x += Math.sin(time * 11.3 + seed) * .0035 * size * go * (1 - back); handAt.z += Math.sin(time * 8.1 + seed * 1.7) * .005 * size * go * (1 - back);
+    handAt.y += Math.sin(Math.PI * back) * .009 * size * go;      // (the pen off the page on its way back)
     armTo(rig, 'r', handAt, key.wq[hand]);
+    headTurn(rig, (.5 - along) * .08 * go, 0);
     if (pause > 0) { rig.turnWorld(rig.b.head, turn.setFromAxisAngle(X, -.16 * pause * life)); rig.fk(); }      // looks up to think
 }
-function sip(rig, key, time, seed, life) {
-    // the cup comes up to the mouth, tips, and goes back to where it is held
-    const hand = rig.side.r.arm[3], w = moment(time, seed, 81, 17, 2.9, .34) * life; if (!(w > 0)) return;
-    handAt.copy(rig.wp[rig.b.head]); handAt.x -= .055; handAt.y -= .075; handAt.z += .15; handAt.lerpVectors(key.wp[hand], handAt, w);
+function sip(rig, key, time, seed, life, chat = 0) {
+    // the cup comes up to the mouth, tips, and goes back to where it is held (every 8 to 14 seconds, with pauses); someone
+    // chatting with a drink moves it a little with the words in between
+    const hand = rig.side.r.arm[3], w = ep(time, seed, 81, 10, 2.8, .34) * life;
+    if (!(w > 0) && !(chat > 0)) return;
+    handAt.copy(key.wp[hand]);
+    if (chat > 0) { const said = ss(-.2, .3, noise(time * .23, seed + 84)) * chat * life * (1 - w); handAt.x += noise(time * .8, seed + 85) * .025 * said; handAt.y += (noise(time * .9 + 3, seed + 86) * .025 + .01) * said; }
+    spot.copy(rig.wp[rig.b.head]); spot.x -= .055; spot.y -= .075; spot.z += .15; handAt.lerp(spot, w);
     handQ.copy(key.wq[hand]).premultiply(turn.setFromAxisAngle(X, -.3 * ss(.6, 1, w)));
     armTo(rig, 'r', handAt, handQ);
     rig.turnWorld(rig.b.head, turn.setFromAxisAngle(X, -.07 * ss(.6, 1, w))); rig.fk();
 }
+// A reader's eyes go along the lines and down the page (the head carries them: no eye bones); now and then the right
+// hand lets go, crosses the page and turns it.
+function read(rig, key, time, seed, life, period = 10) {
+    const P = period * (1 + .8 * hash(4, seed)), n = Math.floor(time / P), at = (n + .15 + hash(n, seed + 60) * .6) * P, u = (time - at) / 2.3, turning = u > 0 && u < 1 ? Math.sin(Math.PI * u) : 0;
+    const line = time / (2.4 + hash(61, seed) * .8) + hash(62, seed) * 9, x = line % 1, page = (line / 9) % 1;
+    const across = x < .85 ? x / .85 : 1 - ss(.85, 1, x);
+    headTurn(rig, (.045 - .09 * across) * (1 - turning) * life, (-.03 + .07 * page) * (1 - turning) * life);
+    if (turning > 0) {
+        const [, upper, lower, hand] = rig.side.r.arm, other = rig.wp[rig.side.l.arm[3]], over = turning ** 2 * life;
+        handQ.copy(rig.wq[hand]); spot.copy(rig.wp[hand]).lerp(other, .5 * over); spot.addScaledVector(Y, .035 * turning * life);
+        rig.reach(upper, lower, hand, spot); rig.setWorld(hand, handQ);
+    }
+}
+// On a phone: the thumb scrolls in bursts (a quick flick up the screen, slower back), the phone tilts with it, now and
+// then it comes closer to read, and every so often the head comes up from it and looks about.
+function phone(rig, key, time, seed, life) {
+    const hand = rig.side.r.arm[3], up = ep(time, seed, 221, 10, 2.4, .3) * life, near = (.5 + .5 * held(time, seed, 222, 7)) * life;
+    const busy = ss(-.25, .15, noise(time * .33, seed + 223)) * (1 - up) * life, x = (time * (1.2 + hash(224, seed) * .6)) % 1, flick = x < .25 ? ss(0, .25, x) : 1 - ss(.25, 1, x);
+    handAt.copy(rig.wp[hand]); handAt.y += .02 * near - .025 * up; handAt.z += .015 * near - .01 * up;
+    handQ.copy(rig.wq[hand]).premultiply(turn.setFromAxisAngle(X, .05 * (flick - .5) * busy));
+    armTo(rig, 'r', handAt, handQ);
+    const t1 = rig.index.get('thumb_01_r'), t2 = rig.index.get('thumb_02_r');
+    if (t1 !== undefined) rig.lq[t1].multiply(turn.setFromAxisAngle(X, (flick - .5) * .4 * busy));      // (thumb_01 about x: the tip goes across the palm, over the screen)
+    if (t2 !== undefined) rig.lq[t2].multiply(turn.setFromAxisAngle(Z, -.18 * (x < .25 ? 0 : Math.sin(Math.PI * (x - .25) / .75)) * busy));      // (lifted on the way back)
+    rig.fk();
+    headTurn(rig, .14 * up * epSide(time, seed, 221, 10), -.3 * up);
+}
+// Sitting on the floor: a slow rock from side to side, leaning in now and then, looking about; the hands stay on the knees.
+function floorSit(rig, key, time, seed, life, size) {
+    const rock = Math.sin(time * Math.PI * 2 / (4.5 + hash(231, seed) * 2) + hash(232, seed) * 6.28) * (.6 + .4 * held(time, seed, 233, 6)), lean = ep(time, seed, 234, 9, 3, .3);
+    bend(rig, Z, .05 * size * rock * life); bend(rig, X, .07 * size * lean * life);
+    headTurn(rig, .3 * held(time, seed, 235, 3.2) * life, (.06 * held(time, seed, 236, 4.5) - .05 * lean) * life);
+    pinHands(rig, key, 'lr');
+}
+// Standing by: the weight from one foot to the other and back (holding on each), the head and shoulders turn to look about.
+function waitAbout(rig, key, time, seed, life, quick = 1) {
+    shiftWeight(rig, key, .02 * held(time, seed, 211, 7 / quick) * life);
+    const look = held(time, seed, 212, 3.5 / quick);
+    rig.turnWorld(rig.b.spine_03, turn.setFromAxisAngle(Y, .08 * look * life)); rig.fk();
+    headTurn(rig, .3 * look * life, .07 * held(time, seed, 213, 5 / quick) * life);
+}
 const bend = (rig, axis, angle) => { for (const [bone, share] of [[rig.b.spine_01, .3], [rig.b.spine_02, .4], [rig.b.spine_03, .3]]) { rig.turnWorld(bone, turn.setFromAxisAngle(axis, angle * share)); rig.fk(); } };
 const feetStay = (rig, key) => { for (const s of ['l', 'r']) { const [thigh, calf, foot] = rig.side[s].leg; rig.reach(thigh, calf, foot, key.wp[foot]); rig.reach(thigh, calf, foot, key.wp[foot]); rig.setWorld(foot, key.wq[foot]); } rig.fk(); };
 const ACTS = {
-    'sit-write': write, 'kid-sit-k': (rig, key, time, seed, life) => write(rig, key, time, seed, life, 1.5), 'kid-sit-e': (rig, key, time, seed, life) => write(rig, key, time, seed, life, 1.5), 'kid-kneel-craft': (rig, key, time, seed, life) => write(rig, key, time, seed, life, 1.6),
-    'stand-mug': sip, 'stand-drink': sip, 'sit-mug': sip, 'sit-chat': sip,
+    'sit-write': write, 'kid-sit-k': (rig, key, time, seed, life) => write(rig, key, time, seed, life, 1.1), 'kid-sit-e': (rig, key, time, seed, life) => write(rig, key, time, seed, life, 1.1), 'kid-kneel-craft': (rig, key, time, seed, life) => write(rig, key, time, seed, life, 1.15),
+    'stand-mug': sip, 'sit-mug': sip, 'stand-drink': (rig, key, time, seed, life) => sip(rig, key, time, seed, life, 1), 'sit-chat'(rig, key, time, seed, life) {
+        // chatting on the sofa: the head nods along with the talk as well
+        sip(rig, key, time, seed, life, 1);
+        headTurn(rig, 0, Math.max(0, Math.sin(time * 2.3 + seed)) * .045 * ss(-.2, .3, noise(time * .23, seed + 84)) * life);
+    },
+    'sit-read': (rig, key, time, seed, life) => read(rig, key, time, seed, life, 10),
+    'kid-read-floor': (rig, key, time, seed, life) => read(rig, key, time, seed, life, 8),
+    // listening in a class or a meeting: nods now and then (two or three), settles back or forward in the seat and leans
+    // a little to one side, glances aside; the hands stay where they rest and the hips on the seat
+    'sit-listen'(rig, key, time, seed, life) {
+        // (someone built with the arms at full stretch to the table, Rosa, only leans toward it: leaning back or aside would
+        // pull the hands off it)
+        const straight = armsStraight(rig, key), nods = ep(time, seed, 201, 7, 2.2, .2), nod = Math.sin(Math.PI * time * (1.6 + hash(202, seed) * .5)) ** 2 * nods, settle = straight ? .5 + .5 * held(time, seed, 203, 9) : held(time, seed, 203, 9);
+        bend(rig, X, .035 * settle * life); if (!straight) bend(rig, Z, .02 * held(time, seed, 204, 13) * life);
+        const glance = ep(time, seed, 205, 11, 2.4, .3) * epSide(time, seed, 205, 11);
+        headTurn(rig, .28 * glance * life, (.075 * nod - .03 * settle) * life);
+        pinHands(rig, key, 'lr');
+    },
+    'stand-wait': waitAbout, 'kid-stand-wait': (rig, key, time, seed, life) => waitAbout(rig, key, time, seed, life, 1.6),
+    'stand-phone': phone, 'sit-phone': phone,
+    'kid-sit-floor': (rig, key, time, seed, life) => floorSit(rig, key, time, seed, life, 1), 'sit-floor': (rig, key, time, seed, life) => floorSit(rig, key, time, seed, life, .6),
+    // a child showing something: the hand with it lifts and turns it, a little bounce at the knees, the head goes from the
+    // thing to the one it is shown to
+    'kid-stand'(rig, key, time, seed, life) {
+        const hand = rig.side.r.arm[3], show = held(time, seed, 241, 2.4), bounce = ep(time, seed, 242, 6, 1.5, .2) * Math.abs(Math.sin(Math.PI * time * 2.6));
+        shiftWeight(rig, key, .012 * held(time, seed, 243, 4) * life, .014 * bounce * life);
+        handAt.copy(rig.wp[hand]); handAt.y += .035 * show * life; handAt.z += .02 * (.5 + .5 * show) * life;
+        armTo(rig, 'r', handAt, handQ.copy(rig.wq[hand]).premultiply(turn.setFromAxisAngle(Y, .35 * held(time, seed, 244, 1.8) * life)));
+        headTurn(rig, .15 * held(time, seed, 245, 3) * life, .12 * show * life);
+    },
+    // in a wheelchair, watching: leans in and sits back, nods now and then, one hand at a time lets go to adjust
+    // something and comes back to where it rests; the hips stay in the seat
+    'wheel-watch'(rig, key, time, seed, life) {
+        bend(rig, X, .04 * held(time, seed, 251, 8) * life);
+        const nods = ep(time, seed, 252, 9, 2, .2) * Math.sin(Math.PI * time * 1.7) ** 2;
+        headTurn(rig, 0, .06 * nods * life);
+        pinHands(rig, key, 'lr');
+        const fidget = ep(time, seed, 253, 10, 2.4, .3) * life, s = epSide(time, seed, 253, 10) < 0 ? 'r' : 'l', hand = rig.side[s].arm[3];
+        if (fidget > 0) { handAt.copy(key.wp[hand]); handAt.y += .035 * fidget; handAt.x += (s === 'l' ? -1 : 1) * .03 * fidget; handAt.z += .02 * fidget; armTo(rig, s, handAt, handQ.copy(key.wq[hand]).premultiply(turn.setFromAxisAngle(Z, (s === 'l' ? 1 : -1) * .3 * fidget))); }
+    },
+    // standing with a walking stick (right hand): the weight goes onto the stick and back, the trunk with it; the free
+    // hand moves a little now and then; the hand stays on the stick and the feet where they are
+    'cane-stand'(rig, key, time, seed, life) {
+        const lean = (.5 + .5 * held(time, seed, 261, 6)) * life;
+        shiftWeight(rig, key, -.012 * lean, .003 * lean); bend(rig, Z, .03 * lean);
+        const free = rig.side.l.arm[3], lift = ep(time, seed, 262, 9, 2.2, .3) * life;
+        if (lift > 0) { handAt.copy(rig.wp[free]); handAt.z += .07 * lift; handAt.y += .05 * lift; handAt.x -= .02 * lift; armTo(rig, 'l', handAt, rig.wq[free].clone()); }
+        headTurn(rig, .22 * held(time, seed, 263, 4) * life, 0);
+        pinHands(rig, key, 'r');
+    },
+    // carrying a box: it is hitched up now and then (both hands together, the trunk leaning back with it), the weight
+    // shifts; the box is on the right hand and the left keeps its place against it
+    'carry-box'(rig, key, time, seed, life) {
+        const w = held(time, seed, 271, 6) * life, hitch = ep(time, seed, 272, 6, 1.1, .35) * life;
+        shiftWeight(rig, key, .015 * w);
+        bend(rig, X, -.035 * hitch);
+        spot.set(.008 * w, .035 * hitch, .01 * hitch);
+        for (const s of ['l', 'r']) { const hand = rig.side[s].arm[3]; handAt.copy(key.wp[hand]).add(spot); armTo(rig, s, handAt, key.wq[hand]); }
+        headTurn(rig, .15 * held(time, seed, 273, 4) * life, 0);
+    },
+    // a clipboard (left hand) and a pen (right): writes on the chart in short lines, looks up now and then
+    'stand-chart'(rig, key, time, seed, life) {
+        pinHands(rig, key, 'l');
+        write(rig, key, time, seed, life, .75);
+    },
+    // kneeling at a low shelf: the hand goes along the shelf, now and then draws something out a little and puts it back;
+    // the head follows the hand; the other hand stays on the knee
+    'kneel-shelf'(rig, key, time, seed, life) {
+        const hand = rig.side.r.arm[3], along = held(time, seed, 281, 3) * life, pull = ep(time, seed, 282, 7, 1.8, .3) * life;
+        bend(rig, Y, -.05 * along);
+        handAt.copy(key.wp[hand]); handAt.x += .07 * along; handAt.z -= .035 * pull; handAt.y += .01 * pull;
+        armTo(rig, 'r', handAt, key.wq[hand]);
+        pinHands(rig, key, 'l');
+        headTurn(rig, .25 * along, 0);
+    },
+    // at ease, thumbs at the belt: the weight from foot to foot, a slow look over the room; the hands stay on the belt
+    'stand-brief'(rig, key, time, seed, life) {
+        shiftWeight(rig, key, .016 * held(time, seed, 291, 8) * life);
+        const look = held(time, seed, 292, 4.5);
+        rig.turnWorld(rig.b.spine_03, turn.setFromAxisAngle(Y, .06 * look * life)); rig.fk();
+        headTurn(rig, .32 * look * life, .05 * held(time, seed, 293, 6) * life);
+        onBone(rig, key, 'l', rig.b.pelvis); onBone(rig, key, 'r', rig.b.pelvis);
+    },
+    // on the radio (left hand at the shoulder): now and then the radio comes to the mouth and they speak, the head tipped
+    // to it, the free hand moving a little; in between they look about
+    'stand-radio'(rig, key, time, seed, life) {
+        const radio = rig.side.l.arm[3], talk = ep(time, seed, 301, 8, 2.6, .25) * life;
+        if (talk > 0) {
+            spot.copy(rig.wp[rig.b.head]); spot.x += .05; spot.y -= .08; spot.z += .1;
+            handAt.copy(rig.wp[radio]).lerp(spot, .35 * talk); armTo(rig, 'l', handAt, rig.wq[radio].clone());
+            const free = rig.side.r.arm[3]; handAt.copy(rig.wp[free]); handAt.z += .05 * talk; handAt.y += .03 * talk; armTo(rig, 'r', handAt, rig.wq[free].clone());
+        }
+        headTurn(rig, .12 * talk + .25 * held(time, seed, 302, 4) * (1 - talk) * life, .05 * talk);
+    },
+    // at the microscope: the hands turn the focus a little, now and then the head comes up from the eyepieces to think
+    'sit-microscope'(rig, key, time, seed, life) {
+        const lift = ep(time, seed, 311, 16, 2.4, .3) * life, focus = Math.sin(time * 1.3 + seed) * ss(-.2, .2, noise(time * .2, seed + 312)) * (1 - lift) * life;
+        bend(rig, X, -.03 * lift); headTurn(rig, 0, -.18 * lift);
+        for (const s of ['l', 'r']) {
+            const hand = rig.side[s].arm[3], lower = rig.side[s].arm[2]; dir.copy(key.wp[hand]).sub(key.wp[lower]).normalize();
+            armTo(rig, s, key.wp[hand], handQ.copy(key.wq[hand]).premultiply(turn.setFromAxisAngle(dir, (s === 'l' ? 1 : -1) * .18 * focus)));
+        }
+    },
     // a hand up in class: it stretches higher, sinks a little when the arm tires, and waves for attention
     'sit-raise'(rig, key, time, seed, life) {
         const hand = rig.side.r.arm[3], tired = (.5 + .5 * noise(time * .09 + 3, seed + 90)) * life, wave = moment(time, seed, 91, 9, 1.6) * life;
@@ -519,18 +692,26 @@ const ACTS = {
         armTo(rig, 'r', handAt, key.wq[hand]);
     },
     // presenting: the arm toward the board moves over what is shown, the head goes between the board and the room
+    // (every 7 to 12 seconds the arm reaches further out and up to point, and holds it: the shoulders and the head turn to
+    // the board with it, then back to the room)
     'stand-present'(rig, key, time, seed, life) {
-        const hand = rig.side.r.arm[3];
-        handAt.copy(key.wp[hand]); handAt.x += noise(time * .37, seed + 111) * .05 * life; handAt.y += noise(time * .31 + 2, seed + 112) * .07 * life;
+        const hand = rig.side.r.arm[3], shoulder = rig.side.r.arm[1], point = ep(time, seed, 114, 8, 2.8, .22) * life, board = Math.sign(key.wp[hand].x) || -1;
+        rig.turnWorld(rig.b.spine_03, turn.setFromAxisAngle(Y, .09 * board * point)); rig.fk();
+        handAt.copy(key.wp[hand]); handAt.x += noise(time * .37, seed + 111) * .05 * life * (1 - point); handAt.y += noise(time * .31 + 2, seed + 112) * .07 * life * (1 - point);
+        dir.copy(key.wp[hand]).sub(key.wp[shoulder]).normalize(); handAt.addScaledVector(dir, .08 * point); handAt.y += .05 * point;
         armTo(rig, 'r', handAt, key.wq[hand]);
-        rig.turnWorld(rig.b.head, turn.setFromAxisAngle(Y, noise(time * .13 + 9, seed + 113) * .32 * life)); rig.fk();
+        headTurn(rig, (.45 * board * point + noise(time * .13 + 9, seed + 113) * .3 * (1 - point)) * life, 0);
     },
-    // explaining: the open hand moves with the words, the head nods along
+    // explaining: the open hand moves with the words in beats, phrases with pauses between them, the other hand joins for
+    // the important bits; the head nods along and the shoulders turn a little with the phrase
     'stand-talk'(rig, key, time, seed, life) {
-        const hand = rig.side.r.arm[3], said = (.35 + .65 * ss(-.2, .3, noise(time * .21, seed + 120))) * life;
-        handAt.copy(key.wp[hand]); handAt.x += noise(time * .9, seed + 121) * .045 * said; handAt.y += (noise(time * 1.1 + 3, seed + 122) * .05 + .02) * said; handAt.z += noise(time * .7 + 7, seed + 123) * .035 * said;
+        const hand = rig.side.r.arm[3], said = (.15 + .85 * ss(-.2, .3, noise(time * .21, seed + 120))) * life, beat = Math.max(0, Math.sin(time * (4.2 + hash(125, seed) * 1.4) + seed)) ** 2 * said;
+        rig.turnWorld(rig.b.spine_03, turn.setFromAxisAngle(Y, noise(time * .3 + 5, seed + 126) * .06 * said)); rig.fk();
+        handAt.copy(key.wp[hand]); handAt.x += noise(time * .9, seed + 121) * .07 * said; handAt.y += (noise(time * 1.1 + 3, seed + 122) * .07 + .03) * said + .025 * beat; handAt.z += noise(time * .7 + 7, seed + 123) * .05 * said;
         armTo(rig, 'r', handAt, key.wq[hand]);
-        rig.turnWorld(rig.b.head, turn.setFromAxisAngle(X, Math.max(0, Math.sin(time * 2.1 + seed)) * .035 * said)); rig.fk();
+        const both = ep(time, seed, 124, 8, 2.2, .3) * said, other = rig.side.l.arm[3];
+        if (both > 0) { handAt.copy(key.wp[other]); handAt.x -= .05 * both; handAt.y += (.16 + .02 * beat) * both; handAt.z += .17 * both; armTo(rig, 'l', handAt, key.wq[other]); }
+        headTurn(rig, 0, Math.max(0, Math.sin(time * 2.1 + seed)) * .06 * said);
     },
     // on the sofa with a controller: the body leans with the game, both hands (and the pad in them) with it
     'sit-controller'(rig, key, time, seed, life) {
@@ -540,6 +721,9 @@ const ACTS = {
             const hand = rig.side[s].arm[3];
             handAt.copy(key.wp[hand]); handAt.x += -lean * .35 + noise(time * 1.9, seed + 132) * .008 * life; handAt.y += (noise(time * 2.3 + 4, seed + 133) * .008 + .025 * jolt) * life; handAt.z += .03 * jolt;
             armTo(rig, s, handAt, handQ.copy(key.wq[hand]).premultiply(turn.setFromAxisAngle(Z, lean * .8)));
+            // the thumbs work the sticks and buttons (thumb_01 about x: the tip goes over the pad), each in its own rhythm
+            const thumb = rig.index.get('thumb_01_' + s);
+            if (thumb !== undefined) { rig.lq[thumb].multiply(turn.setFromAxisAngle(X, (noise(time * (2.6 + (s === 'l' ? 0 : .9)), seed + (s === 'l' ? 134 : 135)) * .22 + .12 * jolt) * life)); rig.fk(); }
         }
     },
     // at a bench: the tool hand works to and fro in bursts, the other steadies the piece
