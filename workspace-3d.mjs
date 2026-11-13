@@ -195,7 +195,9 @@ export const PROP_LIBRARY = {
                 const owned = m.name === 'Artist shelf wood' ? new THREE.MeshPhysicalMaterial({ color: m.color, roughness: m.roughness }) : m.clone(); owned.userData.sharedTextures = true;
                 obj.ownedMaterials ||= []; obj.ownedMaterials.push(owned);
                 if (m.name === 'Artist shelf wood') obj.userData.artistShelfWood = true;
-                else { owned.thickness = .0025; owned.ior = 1.49; owned.depthWrite = false; owned.side = THREE.DoubleSide; }
+                // clear acrylic as plain transparency: a transmissive material shows whatever the transmission pass has behind
+                // it, which in a room is the dark studio backdrop (the holders read black)
+                else { owned.transmission = 0; owned.transparent = true; owned.opacity = .34; owned.color.set('#eef6f8'); owned.roughness = .06; owned.metalness = 0; owned.depthWrite = false; owned.side = THREE.DoubleSide; }
                 return owned;
             });
             obj.material = Array.isArray(obj.material) ? materials : materials[0];

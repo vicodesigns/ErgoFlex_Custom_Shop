@@ -41,6 +41,7 @@
 //     {…}|false} | {type:'rect'|'spot'|'point'|'directional', position|at:
 //     {az,el,dist}, target, color, intensity, width, height, angle, penumbra}]
 // --list-screens [--list-at 0.5] [--list-objects '^Room:|leap']: print every screen-like mesh (and clock) for the shots,
+//   [--list-materials 'easel|alumin']: with it, the materials (type, colour, metalness, environment, opacity) of every mesh whose path or material name matches,
 //   with world position, size, aspect, facing and on-screen pixel size; also
 //   writes <out>/NN-screens.json.
 // --storage seed.json (localStorage key → string, e.g. saved builds/artwork, or
@@ -76,7 +77,7 @@ async function stage(browser){
   // --screen <repo path>: swap the in-scene media clip (ambient-clip.mp4) for
   // a cleared one in this render only. The app's own asset is untouched.
   if(opts.screen){await page.setRequestInterception(true);page.on('request',r=>/\/ambient-clip\.mp4(\?|$)/.test(r.url())?r.continue({url:opts.server+'/'+opts.screen.replace(/^\/+/,'')}):r.continue());}
-  page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource/.test(m.text()))console.log('[stage]',m.text().slice(0,240));});
+  page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource/.test(m.text()))console.log('[stage]',m.text().slice(0,240));else if(/^\[film-quality\]/.test(m.text()))console.log(m.text().slice(0,400));});
   page.on('pageerror',e=>console.log('[stage error]',String(e).slice(0,240)));
   await page.goto(opts.server+'/experience/experience.css');
   // --storage <json>: seed this origin's localStorage (e.g. the owner's saved
@@ -106,7 +107,8 @@ if(QUALITY)for(const s of cut.shots)if(s.quality===undefined)s.quality=QUALITY;
 const usesFx=shot=>FX_FIELDS.some(k=>shot[k]!==undefined);
 async function loadFx(frame){await frame.evaluate(async()=>{if(!window.__filmFx)window.__filmFx=await import('/tools/experience/film-fx.mjs');});}
 async function grab(frame,t,seconds,quality=.96,chapter=seconds,video=false){
-  const url=await frame.evaluate(async(t,s,q,c,v)=>{const fx=window.__filmFx;if(fx)await fx.frame(t,c,{video:v});try{await window.ErgoPresentation.bakeFrame(t,window.__rc,s);}finally{fx?.after();}return window.__rc.toDataURL('image/jpeg',q);},t,seconds,quality,chapter,video);
+  const url=await frame.evaluate(async(t,s,q,c,v,mre,mof)=>{const fx=window.__filmFx;if(fx)await fx.frame(t,c,{video:v});try{await window.ErgoPresentation.bakeFrame(t,window.__rc,s);if(mre)window.__rcMaterials=(0,eval)('('+mof+')')(mre);}finally{fx?.after();}return window.__rc.toDataURL('image/jpeg',q);},t,seconds,quality,chapter,video,opts['list-materials']||null,String(materialsOf));
+  if(opts['list-materials'])printMaterials(await frame.evaluate(()=>window.__rcMaterials));
   return Buffer.from(url.slice(url.indexOf(',')+1),'base64');
 }
 
@@ -160,6 +162,19 @@ async function renderShot(frame,i){
   }finally{await frame.evaluate(()=>{window.ErgoPresentation.endBake();window.__filmFx?.clear();}).catch(()=>{});}
 }
 
+// --list-materials <regex>: the materials of every mesh whose path (names from the root down) or material name matches,
+// as the stage has them now (run in the page). With --stills / --at they are printed after each still (the film's
+// edits and fades applied); with --list-screens after the listing.
+function materialsOf(mre){
+  const m=window.ErgoFlex.loadedModel;let root=m;while(root.parent)root=root.parent;const r=new RegExp(mre,'i'),out=[];
+  root.traverse(o=>{if(!o.isMesh)return;let path=o.name,p=o.parent,shown=o.visible;while(p){if(p.name)path=p.name+' > '+path;shown=shown&&p.visible;p=p.parent;}
+    for(const x of [].concat(o.material)){if(!x||!(r.test(path)||r.test(x.name||'')))continue;
+      out.push({path:path.slice(-110),material:x.name,type:x.type,color:x.color?.getHexString?.(),metalness:x.metalness,roughness:x.roughness,envMap:x.envMap?(x.envMap===root.environment?'scene':'own'):null,envMapIntensity:x.envMapIntensity===undefined?undefined:+x.envMapIntensity.toFixed(3),opacity:x.opacity,transparent:x.transparent,transmission:x.transmission,vertexColors:x.vertexColors,map:!!x.map,shown,side:x.side,copy:!!x.userData?.filmFxCopy,sceneEnv:+(root.environmentIntensity??1).toFixed(3)});}});
+  return out;
+}
+function printMaterials(list){
+  for(const x of list||[])console.log(`  material ${x.material} (${x.type}${x.copy?', film copy':''}) on ${x.path}: colour ${x.color} metal ${x.metalness} rough ${x.roughness} env ${x.envMap||'-'} x${x.envMapIntensity} opacity ${x.opacity}${x.transparent?' transparent':''}${x.transmission?' transmission '+x.transmission:''}${x.vertexColors?' vertexColors':''}${x.map?' map':''}${x.side?' side '+x.side:''}${x.shown?'':' HIDDEN'} (scene env ${x.sceneEnv})`);
+}
 async function listShot(frame,i){
   const shot=cut.shots[i],tag=pad(i);await loadFx(frame);
   await frame.evaluate(async s=>{window.__filmFx.clear();window.__filmFx.beforePrepare(s);try{await window.ErgoPresentation.prepare(s);}finally{window.__filmFx.unhookPreset();}},shot);
@@ -173,7 +188,9 @@ async function listShot(frame,i){
     if(re){const m=window.ErgoFlex.loadedModel;let root=m;while(root.parent)root=root.parent;root.updateMatrixWorld(true);const r=new RegExp(re,'i'),q=o=>{const p=o.getWorldPosition(o.position.clone()),e=new o.quaternion.constructor();o.getWorldQuaternion(e);const b=new (window.__filmFx.Box3)().setFromObject(o);return {name:o.name,position:[p.x,p.y,p.z].map(v=>+v.toFixed(4)),yaw:+(2*Math.atan2(e.y,e.w)*180/Math.PI).toFixed(2),box:b.isEmpty()?null:[b.min.x,b.min.z,b.max.x,b.max.z,b.max.y].map(v=>+v.toFixed(3))};};
       const box=window.__filmFx.deskBox?.();out.objects=[{...q(m),name:'(desk pivot) '+m.name}];if(box)out.objects.push({name:'(desk box centre)',position:box.map(v=>+v.toFixed(4)),yaw:0});root.traverse(o=>{if(o!==m&&r.test(o.name))out.objects.push(q(o));});}
     return out;},shot,opts['list-objects']||null);
+  if(opts['list-materials'])result.materials=await frame.evaluate(materialsOf,opts['list-materials']);
   if(at!==null)await frame.evaluate(()=>window.ErgoPresentation.endBake());
+  printMaterials(result.materials);
   for(const o of result.objects||[])console.log(`  object ${o.name}  at [${o.position.join(', ')}] yaw ${o.yaw}°${o.box?`  box x ${o.box[0]}..${o.box[2]} z ${o.box[1]}..${o.box[3]} top ${o.box[4]}`:''}`);
   await frame.evaluate(()=>window.__filmFx.clear());
   fs.writeFileSync(path.join(opts.out,tag+'-screens.json'),JSON.stringify({shot:shot.id,room:shot.room,seconds:shot.seconds,...result},null,1));

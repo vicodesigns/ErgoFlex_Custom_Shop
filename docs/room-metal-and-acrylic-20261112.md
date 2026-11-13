@@ -1,0 +1,43 @@
+# Metal and clear acrylic in the rooms and the film (November 12, 2026)
+
+Vico: in the artist chapter "the aluminium and brushed aluminium in the easel bar accessory, the plexi / plastic for
+the easel brush holder accessory and the aluminium tilt actuators" look wrong; "check every other scene for these
+issues as well".
+
+## What was wrong
+
+- **In the film** every metal went black. The high-quality profile (`tools/experience/film-quality.mjs`,
+  `reflections`) photographs the room into a cube map from the middle of the desk and gives it to every material
+  with metalness of 0.6 or more as its environment. The room it photographs has its ceiling and near walls cut away
+  for the camera, so the capture is mostly black: the artist chapter measured 0.002, 0, 0, 0, 0, 0 on its six
+  sides (`reflectionLevel`, now printed with the `[film-quality]` line). A metal with a black environment is black.
+- **In the Studio** the same materials reflected the product stage's environment, a dark studio with softboxes
+  (`createStudioEnvironment`): silver where a softbox is mirrored, near black where the backdrop is.
+- **Clear acrylic** (the painter's shelf holders) is a transmissive material; what shows through it is whatever the
+  transmission pass has behind it, in a room mostly darkness. The cuts worked round it with a scene edit that made
+  the acrylic opaque white.
+
+## What changed
+
+- `studio.js` `roomGlossPass` (run from `scene.onBeforeRender`): in a room, a material with metalness of 0.45 or
+  more, or named acrylic / plexi, gets its own environment, a room (`createRoomGlossEnvironment`: bright ceiling,
+  light walls, a window, a darker floor), at `scene.environmentIntensity` times `ROOM_GLOSS`, so a dark room, the
+  hour and a film's `environmentScale` dim it with everything else. The product stage keeps the studio; switching
+  back restores the materials. New objects are found within 20 renders, every frame while a film bakes; a film's
+  material copies (fades, edits) are recognised by the environment they carry (`userData.roomGlossBase`).
+  Nothing else in a room changes: its light and its other reflections still come from `scene.environment`.
+- `film-quality.mjs` calls `ErgoFlex.applyRoomGloss()` before its own swap, so the metals keep the room
+  environment and the capture only reaches what is left (glass). The capture's brightness is logged.
+- `workspace-3d.mjs`: the painter's shelf acrylic is plain transparency (opacity 0.34, no transmission).
+- The three cuts lose the scene edit that made that acrylic opaque (create chapter).
+- `tools/experience/render-cut.cjs --list-materials '<regex>'`: prints the materials (type, colour, metalness,
+  environment and its level, opacity, film copy or not) of matching meshes, after each still or with
+  `--list-screens`. This is how the black bar was traced.
+
+## Checked
+
+Film frames of all nine room chapters before and after (three moments each): the easel bar, the drafting bar, the
+tilt actuators and desk hardware, the workshop's tools read as metal; nothing else moved. The Studio's artist room
+and workshop.
+
+Every room chapter's pixels change where metal is in shot, so cached chapters are stale until rendered again.

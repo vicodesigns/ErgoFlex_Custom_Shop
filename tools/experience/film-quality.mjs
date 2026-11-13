@@ -72,7 +72,18 @@ export async function installQuality(shot, { screens = [] } = {}) {
     const c = desk.getCenter(new THREE.Vector3()); cam.position.set(c.x, desk.min.y + deskSize.y * .75, c.z); scene.add(cam);
     const was = api.loadedModel.visible; api.loadedModel.visible = false;
     try { cam.update(renderer, scene); } finally { api.loadedModel.visible = was; cam.removeFromParent(); }
+    // how bright the capture is (mean radiance of each face's middle): a black capture turns every metal in the film black
+    try {
+      const n = 16, buf = new Uint16Array(n * n * 4), at = Math.floor((q.reflections - n) / 2), level = [];
+      for (let face = 0; face < 6; face++) { renderer.readRenderTargetPixels(rt, at, at, n, n, buf, face); let sum = 0; for (let i = 0; i < n * n; i++) sum += (THREE.DataUtils.fromHalfFloat(buf[i * 4]) + THREE.DataUtils.fromHalfFloat(buf[i * 4 + 1]) + THREE.DataUtils.fromHalfFloat(buf[i * 4 + 2])) / 3; level.push(+(sum / (n * n)).toFixed(3)); }
+      info.reflectionLevel = level;      // +x, -x, +y (ceiling), -y (floor), +z, -z
+    } catch (error) { info.reflectionLevel = String(error).slice(0, 80); }
     const pmrem = new THREE.PMREMGenerator(renderer), env = pmrem.fromCubemap(rt.texture).texture; pmrem.dispose(); rt.dispose();
+    // Metals and clear plastics in a room already reflect a room (studio.js roomGlossPass: the same in the Studio
+    // and here, at the room's own level). They keep it: this capture is taken inside a room whose ceiling and near
+    // walls are cut away for the camera and often comes out black (reflectionLevel above), which turned the film's
+    // aluminium black. What is left for the capture: glass and whatever else has no environment of its own yet.
+    api.applyRoomGloss?.();
     const swapped = [];
     scene.traverse(o => { if (!o.isMesh || within(o, api.loadedModel) && named(o, LEDISH)) return;
       for (const m of [].concat(o.material || [])) {

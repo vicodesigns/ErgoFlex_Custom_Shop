@@ -63,7 +63,7 @@ import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=polish-20261111f';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=polish-20261112d';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=polish-20261112e';
 import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs?v=20261110-stationary-organizer';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=polish-20261111f';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=polish-20261111f';
@@ -1226,6 +1226,50 @@ function createStudioEnvironment() {
     return envScene;
 }
 
+// ---- Metal and clear plastic in a room ---------------------------------------------------------------------------
+// scene.environment is a dark studio with softboxes: right for the product stage, but in a room a nearly fully
+// metallic surface mirrors that dark backdrop and reads black (the easel bar, the tilt actuators, a brush's
+// ferrule), and clear acrylic shows the same darkness. In a room such materials reflect a room instead (bright
+// ceiling, light walls, a window, a darker floor) at the room's own level: scene.environmentIntensity scales it, so
+// a dark room, the hour, or a film's environmentScale dims them with everything else. The product stage keeps the
+// studio. Everything else in a room is untouched: its light and its reflections come from scene.environment as before.
+const ROOM_GLOSS = 1;      // the room reflection's level against scene.environmentIntensity
+const roomGloss = { env: null, touched: new Map(), frame: 0 };
+function createRoomGlossEnvironment() {
+    const env = new THREE.Scene(); env.background = new THREE.Color(0x8d8c88);      // the walls
+    const panel = (w, h, intensity, x, y, z) => { const mat = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }); mat.color.setScalar(intensity); const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat); mesh.position.set(x, y, z); mesh.lookAt(0, 0, 0); env.add(mesh); };
+    panel(18, 18, 1.5, 0, 9, .01);      // the ceiling and its lights
+    panel(18, 18, .3, 0, -8, .01);      // the floor
+    panel(6, 5, 2.8, -9, 3, 2);         // a window
+    panel(5, 4, 1.3, 8, 2.5, -4);       // a lit wall
+    return env;
+}
+const glossy = m => m?.isMeshStandardMaterial && !m.envMap && (m.metalness >= .45 || /acrylic|plexi/i.test(m.name || ''));
+function roomGlossPass(now = false) {
+    const g = roomGloss; if (!g.env) return;
+    if (selectedRoomScene === 'product') {      // back to the studio's reflections
+        if (g.touched.size) { for (const [m, base] of g.touched) { m.envMap = null; m.envMapIntensity = base; delete m.userData.roomGlossBase; m.needsUpdate = true; } g.touched.clear(); }
+        return;
+    }
+    // (what loads later is found within a third of a second; a film's bake looks every frame, so a still and the
+    // film's frame agree; what is gone is let go)
+    if (now === true || roomGloss.everyFrame || g.frame++ % 20 === 0) {
+        const seen = new Set();
+        scene.traverse(o => {
+            if (o.isMesh) for (const m of [].concat(o.material)) {
+                if (!m) continue;
+                if (g.touched.has(m)) seen.add(m);
+                // a copy of one of ours (a film's fade clones the material with whatever level it had that frame)
+                else if (m.envMap === g.env) { g.touched.set(m, m.userData.roomGlossBase ?? 1); seen.add(m); }
+                else if (glossy(m)) { m.userData.roomGlossBase = m.envMapIntensity ?? 1; g.touched.set(m, m.userData.roomGlossBase); m.envMap = g.env; m.needsUpdate = true; seen.add(m); }
+            }
+        });
+        for (const m of g.touched.keys()) if (!seen.has(m)) g.touched.delete(m);
+    }
+    const level = (scene.environmentIntensity ?? 1) * ROOM_GLOSS;
+    for (const [m, base] of g.touched) m.envMapIntensity = base * level;
+}
+
 // Three.js renders translate, rotate and scale as separate gizmos. This wrapper
 // layers the three handle families around one object, arbitrates overlapping
 // hit targets, and exposes the same small API the rest of the editor already
@@ -1446,6 +1490,8 @@ function initThreeJS() {
     pmremGenerator.compileEquirectangularShader();
     scene.environment = pmremGenerator.fromScene(createStudioEnvironment(), 0.06).texture;
     scene.environmentIntensity = 1.15;
+    roomGloss.env = pmremGenerator.fromScene(createRoomGlossEnvironment(), 0.08).texture;
+    scene.onBeforeRender = () => roomGlossPass();
     pmremGenerator.dispose();
 
     // Shadow-catcher floor: renders ONLY the soft shadow over the CSS backdrop
@@ -12556,6 +12602,8 @@ window.ErgoFlex = {
     setGlidePosition,
     get glidePosition() { return { x: glideOffset.x, z: glideOffset.z }; },
     get currentConfig() { return { ...currentConfig }; },
+    // A room's metal and clear plastic reflect a room (roomGlossPass): do it now, before a film's own passes look at the materials.
+    applyRoomGloss() { roomGlossPass(true); },
     get renderer() { return renderer; },
     get loadedModel() { return loadedModel; },
     // Edit machinery. Exposed because it is scene state with no DOM
@@ -12754,9 +12802,11 @@ if (window.__ERGO_PRESENTATION__) {
         beginBake(width,height){
             if(bakeViewport)throw Error('A bake is already running.');
             const size=renderer.getSize(new THREE.Vector2());bakeViewport={size,pixelRatio:renderer.getPixelRatio(),aspect:camera.aspect};
+            roomGloss.everyFrame=true;
             renderer.setAnimationLoop(null);renderer.setPixelRatio(1);renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();
         },
         endBake(){
+            roomGloss.everyFrame=false;
             if(!bakeViewport)return;const saved=bakeViewport;bakeViewport=null;renderer.setPixelRatio(saved.pixelRatio);renderer.setSize(saved.size.x,saved.size.y,false);camera.aspect=saved.aspect;camera.updateProjectionMatrix();requestAnimationFrame(syncViewerSize);
         },
         bakeDraw(canvas,seconds){
