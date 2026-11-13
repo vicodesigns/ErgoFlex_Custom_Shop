@@ -232,7 +232,9 @@ export const ROOM_PEOPLE = {
             spot('people-sofia-stand-drink', 1450, 1250, [1950, 2550], { ...PARTY, colors: LOOK.sofia })]
             : ring([-L.width * .08, L.back + L.depth * .55 + (L.id === 'apartment' ? 200 : 0)], 480, ['people-lin-stand-talk', 'people-ben-stand-drink', ['people-ava-stand-drink', { colors: LOOK.guestD }]], PARTY, 30),   // (200 mm further from the desk in the smallest atelier: Ben stood against its front edge)
         // (the smallest atelier has no easel: in the evening Sofia sketches sitting on the floor)
-        L => L.id !== 'apartment' ? [] : chat(L, .6, .62, [['people-sofia-sit-floor', { key: 'sofia-floor', colors: LOOK.sofia }]], { modes: ['evening'] }, 250),
+        // (on the rug in front of the desk: a free-spot search found none in a room this small, so the atelier stood empty
+        // in the evening)
+        L => L.id !== 'apartment' ? [] : [spot('people-sofia-sit-floor', L.width * .05, L.back + L.depth * .78, [-L.width * .25, L.back + L.depth * .35], { key: 'sofia-floor', colors: LOOK.sofia, modes: ['evening'] })],
         // the largest atelier (the film's is the one before it): someone at the worktable, a visitor on the sofa
         L => tier(L) < 4 ? [] : [
             standRound('people-priya-stand-work', 'artist-worktable', 180, 1000, { modes: ['afternoon'], key: 'priya-worktable' }),
