@@ -198,7 +198,8 @@ export function solveDesk(rig, keys, input) {
     const b = rig.b, standing = tau >= STAND_UP / 2;
     // how far along each part of standing up is
     const roll = ss(.05, .85, tau), rise = clamp01((tau - .95) / 1.4), core = sit ? ss(1.05, 2.4, tau) : 1, legs = sit ? ss(.95, 2.3, tau) : 1;
-    const lean = THREE.MathUtils.degToRad(36) * ss(.5, 1.28, tau) * (1 - ss(1.32, 2.25, tau));
+    // (the lean comes late enough that someone who has just sat down is upright again soon, not hunched at the keys)
+    const lean = THREE.MathUtils.degToRad(36) * ss(.7, 1.25, tau) * (1 - ss(1.32, 2.25, tau));
     // ---- core: pelvis, spine, neck and head turn from the seated posture to the standing one
     const standQ = (out, i) => type && wait ? out.slerpQuaternions(wait.q[i], tq.copy(type.w > 0 ? tw.slerpQuaternions(type.a.q[i], type.b.q[i], type.w) : type.a.q[i]), ke) : out.copy((wait || type.a).q[i]);
     for (let i = 0; i < rig.n; i++) {
@@ -213,7 +214,9 @@ export function solveDesk(rig, keys, input) {
     // ---- pelvis: back with the chair, then forward over the feet and up
     const seat = sit ? blendV(V(), sit, b.pelvis) : null, feet = type || wait ? standV(V(), b.pelvis) : null;
     const pelvis = spot;
-    if (seat && feet) pelvis.set(lerp(seat.x, feet.x, ss(0, 1, rise)), lerp(seat.y, feet.y, ss(.1, 1, rise)), lerp(seat.z - ROLL * roll, feet.z, ss(0, .86, rise)));
+    // (up off the seat first, then forward over the feet: the hips leave the seat upward, never forward past its edge
+    // while still low; sitting down it is the other way round, back over the seat first and then down onto it)
+    if (seat && feet) pelvis.set(lerp(seat.x, feet.x, ss(0, 1, rise)), lerp(seat.y, feet.y, ss(0, .8, rise)), lerp(seat.z - ROLL * roll, feet.z, ss(.12, .9, rise)));
     else pelvis.copy(seat || feet);
     // life: a slow shift of weight from foot to foot while standing, a small settling in the seat
     const upright = seat && feet ? ss(.8, 1, rise) : feet ? 1 : 0;
@@ -247,7 +250,7 @@ export function solveDesk(rig, keys, input) {
     }
     rig.fk();
     // ---- arms
-    const lift = (standing ? type : sit)?.lift ?? 0, keyed = standing ? type : sit, armsDown = !sit ? 1 : !wait ? 0 : ss(1.45, 2.5, tau);
+    const lift = (standing ? type : sit)?.lift ?? 0, keyed = standing ? type : sit, armsDown = !sit ? 1 : !wait ? 0 : ss(1.7, 2.5, tau);   // (the hands push on the thighs until the legs have taken the weight)
     for (const s of ['l', 'r']) {
         const arm = rig.side[s].arm, [clavicle, upper, lower, hand] = arm, [thigh, calf] = rig.side[s].leg, fingers = rig.side[s].fingers;
         // away from the keys: seated and getting up, a hand on each thigh; standing, the arms hang
@@ -289,7 +292,7 @@ export function solveDesk(rig, keys, input) {
         if (life > 0 && ke > .98 && keyed && input.taps !== false) tapKeys(rig, s, time, seed, life);
     }
     rig.fk();
-    return { stance: standing ? 'stand' : 'sit', chair: { back: ROLL * roll + SCOOT * ss(.55, 1.1, tau) + NUDGE * ss(1.15, 2.05, tau), turn: 0 }, lean };
+    return { stance: standing ? 'stand' : 'sit', chair: { back: ROLL * roll + SCOOT * ss(.55, 1.1, tau) + NUDGE * ss(1.4, 2.3, tau), turn: 0 }, lean };
 }
 
 // ---- one person at the featured desk, over one or more of their models ---------------------------------------------
