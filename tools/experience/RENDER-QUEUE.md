@@ -45,6 +45,15 @@ clone at `036ccc1` or later, as before), and check sha256 and size. A mismatch m
 fetch again once, and if it still differs, skip the job and tell Vico's session. `request/cut.json` (the cut) and
 `request/request.json` (Vico's original request) are lines of the manifest like any other file. Symlinks were dereferenced.
 
+**Every line has a url-path (since 2026-11-13).** Code and the film's JSON are copied into the freeze's own folder, as before.
+Everything else (models, images, sound, clips: about 2.3 GB) is fetched from a store keyed by content,
+`exports/render-blobs/<aa>/<sha256><.ext>`, which `freeze-blobs.py` fills at freeze time (a file is copied once; later freezes
+find it by its sha). Nothing a manifest lists is read from the live checkout any more, so a merge or a rebuild on the desk
+after the freeze cannot fail the sha check. Before this, two 4K film jobs failed every attempt for hours because a merge had
+changed four files they listed by path. Nothing changes for the render PC: fetch `<base>/<url-path>`, write to `path`, check.
+`python3 tools/experience/freeze-blobs.py prune <repo root> [--days 21]` deletes stored copies no freeze has used for that long
+(run by hand; a queued job older than that would lose its files).
+
 ## 3. Render
 
 With your existing pipeline, from the clone with the overlay, at the job's resolution:

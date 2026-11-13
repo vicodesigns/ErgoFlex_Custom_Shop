@@ -29,6 +29,7 @@ try:
     open(f'{R}/exports/cinematic-intro-20261030/screens/02-curved.mp4', 'wb').write(b'not really a video')   # a win-exports.txt screens line
     with open(f'{R}/institutional-media.mjs', 'a') as f: f.write('\n// another session is editing this\n')
     head_media = sh('git', 'show', 'HEAD:institutional-media.mjs', cwd=R).stdout; head_tour = sh('git', 'show', 'HEAD:scene-tour.mjs', cwd=R).stdout
+    shutil.rmtree(f'{R}/exports/render-queue', ignore_errors=True)      # the clone brings the tracked queue with its old jobs: this test starts with none
     review = json.load(open(f'{R}/{HQ}/review-cut.json')); ids = [s['id'] for s in review['shots']]
     def req(**kw):
         r = {'v': 1, 'scope': 'chapter', 'chapter': 'create', 'resolution': '720p', 'note': 'hello', 'created': '2026-11-07T12:00:00.000Z', 'signature': 'abcd1234abcd1234', 'exportSha': None, 'estimateMinutes': 3.1}
@@ -56,7 +57,14 @@ try:
     check(open(f'{R}/{F}/scene-tour.mjs', 'rb').read() == head_tour.encode(), "another session's live scene-tour.mjs pinned back to HEAD")
     check(open(f'{R}/{F}/institutional-media.mjs', 'rb').read() == head_media.encode(), 'institutional-media.mjs pinned back to HEAD')
     check(f'{HQ}/review-cut.json' in by and f'{F}/request/cut.json' in by and f'{F}/request/request.json' in by and 'studio-state.json' in by, 'manifest lists review-cut.json, studio-state.json, the cut and the request')
-    check(len(by.get('exports/cinematic-intro-20261030/screens/02-curved.mp4', [])) == 3 and not any(p.endswith('.mp4') and p.startswith(HQ) for p in by), 'screens clip from win-exports.txt listed (url-path = path); film-dir videos are not')
+    clip = by.get('exports/cinematic-intro-20261030/screens/02-curved.mp4', [])
+    check(len(clip) == 4 and clip[3].startswith('exports/render-blobs/') and clip[3].endswith(clip[0] + '.mp4') and not any(p.endswith('.mp4') and p.startswith(HQ) for p in by), 'screens clip from win-exports.txt listed with a stored copy; film-dir videos are not')
+    # nothing a manifest lists is read from the checkout: every line has a url-path, in the freeze or in the store
+    check(all(len(c) == 4 and (c[3].startswith(F + '/') or c[3].startswith('exports/render-blobs/')) for c in by.values()), 'every manifest line has a url-path (frozen copy or stored copy)')
+    # so a change in the checkout after the freeze (a merge, a rebuild) leaves the job fetchable as frozen
+    open(f'{R}/exports/cinematic-intro-20261030/screens/02-curved.mp4', 'wb').write(b'replaced after the freeze')
+    check(hashlib.sha256(open(f'{R}/{clip[3]}', 'rb').read()).hexdigest() == clip[0] if len(clip) == 4 else False, 'a file changed in the checkout after the freeze: the job still fetches what was frozen')
+    open(f'{R}/exports/cinematic-intro-20261030/screens/02-curved.mp4', 'wb').write(b'not really a video')
     # ---- film request, sequential: ids in time order
     time.sleep(1.1); p2 = sh(SH, req(scope='film', chapter='hero', resolution='4K', note=''), R, env=env)
     check(p2.returncode == 0, 'film request runs: ' + (p2.stderr.strip()[-300:] or 'ok'))
