@@ -7418,16 +7418,6 @@
   {
    "match": "",
    "path": "ergoflex-painter-shelf",
-   "materialName": "^Artist clear acrylic$",
-   "material": {
-    "transmission": 0,
-    "color": "#f1f4f5",
-    "roughness": 0.3
-   }
-  },
-  {
-   "match": "",
-   "path": "ergoflex-painter-shelf",
    "materialName": "^Brush ochre handle$",
    "material": {
     "color": "#e3a33a"
@@ -7865,7 +7855,7 @@
  ],
  "people": {
   "only": [
-   "people-lin-stand-paint"
+   "lin-at-wheel"
   ],
   "cast": [
    {
@@ -7887,7 +7877,7 @@
      0
     ]
    ],
-   "people-lin-stand-paint": [
+   "lin-at-wheel": [
     [
      0,
      14

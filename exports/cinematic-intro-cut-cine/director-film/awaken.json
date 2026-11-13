@@ -611,26 +611,6 @@
  ],
  "sceneEdits": [
   {
-   "match": "^Wheel_[FR]_[LR]",
-   "materialColor": "#a38c8c",
-   "material": {
-    "color": "#2a2a2e",
-    "roughness": 0.45,
-    "metalness": 0,
-    "clearcoat": 0.3,
-    "clearcoatRoughness": 0.25
-   }
-  },
-  {
-   "match": "^Wheel_[FR]_[LR]",
-   "materialColor": "#2a2a2a",
-   "materialType": "Physical",
-   "material": {
-    "metalness": 1,
-    "roughness": 0.3
-   }
-  },
-  {
    "match": "@grid",
    "opacity": 0.35,
    "radialFade": [

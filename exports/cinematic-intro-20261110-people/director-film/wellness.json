@@ -4932,7 +4932,7 @@
   },
   {
    "match": "",
-   "path": "^Room:gym(?!.*(Prop:|ErgoFlex desk|Desk dressing|LED))",
+   "path": "^Room:gym(?!.*(Prop:|Person|ErgoFlex desk|Desk dressing|LED))",
    "materialColor": "#bbc99a",
    "material": {
     "color": "#a8101c",
@@ -4943,7 +4943,7 @@
   },
   {
    "match": "",
-   "path": "^Room:gym(?!.*(Prop:|ErgoFlex desk|Desk dressing|LED))",
+   "path": "^Room:gym(?!.*(Prop:|Person|ErgoFlex desk|Desk dressing|LED))",
    "materialColor": "#9fc2bc",
    "material": {
     "color": "#a8101c",
@@ -4954,7 +4954,7 @@
   },
   {
    "match": "",
-   "path": "^Room:gym(?!.*(Prop:|ErgoFlex desk|Desk dressing|LED))",
+   "path": "^Room:gym(?!.*(Prop:|Person|ErgoFlex desk|Desk dressing|LED))",
    "materialType": "Basic",
    "recolor": [
     {
@@ -4970,7 +4970,7 @@
   },
   {
    "match": "",
-   "path": "^Room:gym(?!.*(Prop:|ErgoFlex desk|Desk dressing|LED)).*Kettlebell and medicine ball shelf",
+   "path": "^Room:gym(?!.*(Prop:|Person|ErgoFlex desk|Desk dressing|LED)).*Kettlebell and medicine ball shelf",
    "recolor": [
     {
      "hue": [
@@ -5009,7 +5009,7 @@
   },
   {
    "match": "",
-   "path": "^Room:gym(?!.*(Prop:|ErgoFlex desk|Desk dressing|LED))",
+   "path": "^Room:gym(?!.*(Prop:|Person|ErgoFlex desk|Desk dressing|LED))",
    "materialType": "!Basic",
    "recolor": [
     {
@@ -5188,7 +5188,7 @@
   },
   {
    "match": "",
-   "path": "^Room:gym(?!.*(Prop:|ErgoFlex desk|Desk dressing|LED))",
+   "path": "^Room:gym(?!.*(Prop:|Person|ErgoFlex desk|Desk dressing|LED))",
    "lightType": "PointLight",
    "recolor": [
     {
@@ -5578,7 +5578,8 @@
   "only": [
    "people-maya-sit-type",
    "people-maya-stand-type",
-   "people-priya-stretch"
+   "people-priya-stretch",
+   "kai-bike"
   ],
   "cast": [
    {
@@ -5588,7 +5589,12 @@
      -421,
      350
     ],
-    "turn": 180
+    "turn": 180,
+    "colors": {
+     "top": "#2d7d8a",
+     "bottom": "#1f2228",
+     "shoes": "#ececec"
+    }
    }
   ],
   "place": {
