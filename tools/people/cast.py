@@ -923,6 +923,20 @@ def gym_curl(k):
             'foot_l': {'at': _s(k, .14, .0, .07 / k), 'toes': (.25, -1, 0)}, 'foot_r': {'at': _s(k, -.14, .02, .07 / k), 'toes': (-.3, -1, 0)}}
 
 
+# The artist's pottery wheel (artist-room.mjs): the stool's seat is 0.43 up; the wheel head is 0.56 in front of the
+# pelvis, its top 0.48 up, and the pot on it stands 0.16 high and 0.2 across.
+POTTERY_SEAT, POTTERY_WHEEL = .43, (-.56, .48)
+
+
+def sit_pottery(k):
+    """Throwing a pot: on the low stool, knees either side of the wheel, leaning in, both hands round the clay,
+    elbows braced toward the thighs, eyes on the pot."""
+    def hand(s): return {'at': (s * .125, POTTERY_WHEEL[0] + .1, POTTERY_WHEEL[1] + .12), 'fingers': (-s * .45, -1, -.3), 'palm': (-s, -.1, -.15), 'elbow': (s * .3, .25, -.3), 'curl': .55, 'thumb': .3}
+    def foot(s): return {'at': (s * .34, -.36, .075), 'toes': (s * .4, -1, 0), 'knee': (s * .5, -.6, .2), 'pitch': 20}      # (flat: the feet lean with the pelvis, 20 degrees)
+    return {'pelvis': (0, 0, POTTERY_SEAT + .09), 'pelvis_pitch': 20, 'spine': (11, 10, 8), 'neck': 10, 'head': 12,
+            'hand_l': hand(1), 'hand_r': hand(-1), 'foot_l': foot(1), 'foot_r': foot(-1)}
+
+
 WHEEL_SEAT = .5      # manual wheelchair seat
 
 
@@ -1161,6 +1175,7 @@ POSES = {
     'lie-bed': lie_bed,
     'sit-microscope': sit_microscope,
     'stand-counter': stand_counter,
+    'sit-pottery': sit_pottery,
     'gym-cycle': gym_cycle,
     'gym-pullup': gym_pullup,
     'gym-box': gym_box,
@@ -1186,14 +1201,14 @@ OUTPUTS = [
     {'id': 'people-kai-sit-controller', 'character': 'kai', 'pose': 'sit-controller', 'name': 'Kai, on the sofa with a controller', 'held': [('gamepad', {})]},
     {'id': 'people-kai-wheel-type', 'character': 'kai', 'pose': 'wheel-type', 'height': 28, 'name': 'Kai, at the desk (wheelchair)', 'held': [('wheelchair', {'color': (.1, .35, .7)})]},
     {'id': 'people-kai-wheel-roll', 'character': 'kai', 'pose': 'wheel-roll', 'name': 'Kai, rolling (wheelchair)', 'held': [('wheelchair', {'color': (.1, .35, .7)})]},
-    {'id': 'people-zoe-sit-laptop', 'character': 'zoe', 'pose': 'sit-laptop', 'name': 'Zoe, at a laptop'},
+    {'id': 'people-zoe-sit-laptop', 'character': 'zoe', 'pose': 'sit-laptop', 'name': 'Zoe, at a laptop', 'held': [('laptop', {})]},
     {'id': 'people-zoe-walk', 'character': 'zoe', 'pose': 'walk', 'name': 'Zoe, walking with a backpack', 'held': [('backpack', {})]},
     {'id': 'people-zoe-stand-type', 'character': 'zoe', 'pose': 'stand-type', 'height': 41, 'name': 'Zoe, at a standing desk (41 in)'},
     {'id': 'people-mia-sit-listen', 'character': 'mia', 'pose': 'sit-listen', 'name': 'Mia, listening at a table'},
     {'id': 'people-mia-sit-type', 'character': 'mia', 'pose': 'sit-type', 'height': 28, 'name': 'Mia, typing at the desk (seated)'},
     {'id': 'people-leo-sit-raise', 'character': 'leo', 'pose': 'sit-raise', 'name': 'Leo, hand up at a table'},
     {'id': 'people-leo-sit-write', 'character': 'leo', 'pose': 'sit-write', 'name': 'Leo, writing at a table', 'held': [('pen', {'side': 'r'})]},
-    {'id': 'people-noah-sit-laptop', 'character': 'noah', 'pose': 'sit-laptop', 'name': 'Noah, at a laptop'},
+    {'id': 'people-noah-sit-laptop', 'character': 'noah', 'pose': 'sit-laptop', 'name': 'Noah, at a laptop', 'held': [('laptop', {})]},
     {'id': 'people-noah-sit-type', 'character': 'noah', 'pose': 'sit-type', 'height': 28, 'name': 'Noah, typing at the desk (seated)'},
     {'id': 'people-hale-stand-present', 'character': 'hale', 'pose': 'stand-present', 'name': 'Mr Hale, presenting', 'held': [('tablet', {'side': 'l'})]},
     {'id': 'people-omar-wheel-type', 'character': 'omar', 'pose': 'wheel-type', 'height': 31, 'name': 'Omar, typing at the desk (wheelchair)', 'held': [('wheelchair', {})]},
@@ -1209,7 +1224,7 @@ OUTPUTS = [
     {'id': 'people-lin-sit-phone', 'character': 'lin', 'pose': 'sit-phone', 'name': 'Lin, seated with her phone', 'held': [('phone', {'side': 'r'})]},
     {'id': 'people-ava-sit-write', 'character': 'ava', 'pose': 'sit-write', 'name': 'Ava, writing at a table', 'held': [('pen', {'side': 'r'})]},
     {'id': 'people-eli-sit-listen', 'character': 'eli', 'pose': 'sit-listen', 'name': 'Eli, listening at a table'},
-    {'id': 'people-sofia-sit-laptop', 'character': 'sofia', 'pose': 'sit-laptop', 'name': 'Sofia, at a laptop'},
+    {'id': 'people-sofia-sit-laptop', 'character': 'sofia', 'pose': 'sit-laptop', 'name': 'Sofia, at a laptop', 'held': [('laptop', {})]},
     {'id': 'people-omar-wheel-watch', 'character': 'omar', 'pose': 'wheel-watch', 'name': 'Omar, watching a screen (wheelchair)', 'held': [('wheelchair', {})]},
     {'id': 'people-omar-wheel-roll', 'character': 'omar', 'pose': 'wheel-roll', 'name': 'Omar, rolling (wheelchair)', 'held': [('wheelchair', {})]},
     {'id': 'people-lin-stand-paint', 'character': 'lin', 'pose': 'stand-paint', 'name': 'Lin, painting at an easel', 'held': [('brush', {'side': 'r'}), ('palette', {'side': 'l'})]},
@@ -1247,7 +1262,7 @@ POSE_INFO = {
     'white-cane': ('Walking with a white cane', 'walking', '', 0, [('cane', {'side': 'r', 'white': True})]),
     'walk': ('Walking', 'walking', '', 0, []),
     'sit-write': ('Writing at a table', 'seated', '', 450, [('pen', {'side': 'r'})]),
-    'sit-laptop': ('At a laptop', 'seated', '', 450, []),
+    'sit-laptop': ('At a laptop', 'seated', '', 450, [('laptop', {})]),      # (the laptop is theirs: it is on the table wherever they sit)
     'sit-read': ('Reading', 'seated', '', 420, [('book', {'side': 'l'})]),
     'sit-listen': ('Listening at a table', 'seated', '', 450, []),
     'sit-raise': ('Hand raised', 'seated', '', 450, []),
@@ -1285,6 +1300,7 @@ POSE_INFO = {
     'lie-bed': ('Lying in a hospital bed', 'seated', '', 663, []),
     'sit-microscope': ('At a microscope, on a lab stool', 'seated', '', 650, []),
     'stand-counter': ('Serving at a counter', 'standing', '', 0, []),
+    'sit-pottery': ('Throwing a pot at the wheel', 'seated', '', 430, []),
     'gym-cycle': ('Riding the training bike', 'seated', '', 967, []),
     'gym-pullup': ('Doing a pull-up on the rack', 'standing', '', 0, []),
     'gym-box': ('Working the heavy bag', 'standing', '', 0, []),
@@ -1293,7 +1309,7 @@ POSE_INFO = {
 }
 # The roles' postures: built for the characters that list them ('postures'), for anyone else on request.
 ROLE_POSES = {'stand-brief', 'stand-radio', 'stand-chart', 'push-cart', 'lie-bed', 'sit-microscope', 'stand-counter',
-              'gym-cycle', 'gym-pullup', 'gym-box', 'gym-press', 'gym-curl'}      # (the gym's: built for those who train there, ALSO below)
+              'gym-cycle', 'gym-pullup', 'gym-box', 'gym-press', 'gym-curl', 'sit-pottery'}      # (the gym's: built for those who train there, ALSO below)
 # Built where the pose puts them, not dropped until something touches the floor (a body lying on a bed has nothing on it).
 RAISED = {'lie-bed', 'sit-microscope', 'gym-cycle', 'gym-pullup', 'gym-press'}       # (feet on a stool's ring, on pedals or off the floor under a bar are not on the floor either)
 DESK_HEIGHTS = {'sit-type': (28, 30), 'stand-type': (43.5,), 'stand-type-low': (28, 30), 'wheel-type': (28, 31), 'sit-coffee': (28, 30), 'stand-coffee': (43.5,), 'stand-low': (35.5,), 'stand-mid': (39,), 'kid-stand-desk': (28,), 'kid-sit-desk': (28,)}
@@ -1310,7 +1326,9 @@ def listed(who, pose): return pose in CHARACTERS[who]['postures'] if 'postures' 
 # desk; Grace and Ben in a hospital bed, so a ward of three has three different people.
 ALSO = ['people-sam-sit-type', 'people-sam-sit-type-30', 'people-grace-lie-bed', 'people-ben-lie-bed',
         # the gym: on the bike, at the rack's bar, on the bench, at the dumbbells and at the bag
-        'people-zoe-gym-cycle', 'people-kai-gym-cycle', 'people-lin-gym-pullup', 'people-andre-gym-press', 'people-lin-gym-curl', 'people-sofia-gym-box']
+        'people-zoe-gym-cycle', 'people-kai-gym-cycle', 'people-lin-gym-pullup', 'people-andre-gym-press', 'people-lin-gym-curl', 'people-sofia-gym-box',
+        # the artist's studio: at the pottery wheel
+        'people-lin-sit-pottery']
 # A posture nudged for one person (metres added to a hand's or a foot's place): the clipboard lies as the left hand
 # holds it, and on Yusuf's broader chest it tips into the writing hand.
 NUDGE = {('yusuf', 'stand-chart'): {'hand_r': (.02, .0, .035)}}

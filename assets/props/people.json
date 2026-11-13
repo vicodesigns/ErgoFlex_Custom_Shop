@@ -1754,6 +1754,12 @@
    "desk": false,
    "seat": 0
   },
+  "sit-pottery": {
+   "label": "Throwing a pot at the wheel",
+   "stance": "seated",
+   "desk": false,
+   "seat": 430
+  },
   "gym-cycle": {
    "label": "Riding the training bike",
    "stance": "seated",
@@ -11734,6 +11740,12 @@
    "character": "kai",
    "pose": "gym-cycle",
    "name": "Kai: riding the training bike",
+   "aids": []
+  },
+  "people-lin-sit-pottery": {
+   "character": "lin",
+   "pose": "sit-pottery",
+   "name": "Lin: throwing a pot at the wheel",
    "aids": []
   }
  }

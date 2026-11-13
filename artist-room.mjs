@@ -13,7 +13,7 @@ export const ARTIST_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map
     const compact = index === 0, large = index >= 3;
     const desk = [compact ? -80 : -200, back + 850];
     const cabinet = [width / 2 - 310, back + 1430];
-    const easel = [-width / 2 + 670, front - (large ? 2100 : 740)];
+    const easel = [-width / 2 + 670, front - (large ? 2500 : 740)];      // the second station: a pottery wheel (it was a floor easel); in the large rooms clear of the worktable
     const table = [-width / 2 + 770, front - 880];
     const props = [
         { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 980], turn: 180 },
@@ -603,30 +603,48 @@ export function buildArtistRoom(room, root, layout, helpers) {
     }
 
     if (!layout.compact) {
-        const easel = new THREE.Group(); easel.name = 'Artist painting easel'; easel.position.set(layout.easel[0], 0, layout.easel[1]); easel.rotation.y = .22; root.add(easel);
-        register(easel, 'artist-easel', 'Painting easel and canvas');
-        for (const x of [-310, 310]) { box(easel, [65, 30, 650], [x, 15, 0], oak, 3); rod(easel, [x, 40, -170], [x * .85, 1830, -170], 23, oak); }
-        const rest = box(easel, [740, 60, 120], [0, 770, -120], oak, 4); rest.name = 'Easel canvas rest';
-        const lip = box(easel, [740, 38, 14], [0, 819, -58], oak, 2); lip.name = 'Easel retaining lip';
-        box(easel, [540, 40, 50], [0, 1670, -150], oak, 3);
-        // The lowest rotated rear corner sits on the rest; the full canvas is behind the lip.
-        const art = frame(easel, 660, 850, [0, 800 + 425 * Math.cos(.025) + 16 * Math.sin(.025), -140], 3, 'Painting in progress');
-        art.rotation.x = -.025;
-        const rearBrace = rod(easel, [0, 1700, -190], [0, 40, -430], 21, oak); rearBrace.name = 'Easel rear brace';
-        box(easel, [80, 30, 90], [0, 15, -430], oak, 3);
-        box(easel, [190, 24, 220], [455, 788, -90], oak, 3);
-        rod(easel, [310, 680, -130], [455, 775, -90], 8, metal);
-        brushCup(easel, [455, 800, -90], blueGlaze, 'easel');
-        // Clamp lamp on the mast, angled down onto the canvas.
-        const clamp = group(easel, 'Easel clamp lamp', [200, 1800, -120]); clamp.rotation.x = .7;
-        mesh(clamp, new THREE.CylinderGeometry(22, 50, 85, 18, 1, true), material('#b8975c', { metalness: .4, roughness: .45, side: THREE.DoubleSide }), [0, 0, 0]);
-        flat(sphere(clamp, [20, 20, 20], [0, -22, 0], lampGlow));
-        rod(easel, [200, 1800, -150], [0, 1770, -150], 6, metal);
-        // Paint-spattered drop cloth under the easel.
+        // The desk tilts into an easel, so the studio's second station is for clay: a wheel with a pot on it, a low
+        // stool, water and a sponge, and a rack of ware drying by the wall. (room-people.mjs seats the potter by the
+        // wheel's origin, facing it from the stool; `Pottery wheel head` turns while someone throws.)
+        // (the stool is on the room's side, turned a little to the front: the potter faces the rack on the wall)
+        const wheel = group(root, 'Artist pottery wheel', [layout.easel[0], 0, layout.easel[1]], Math.PI / 2 - .25);
+        register(wheel, 'ceramics-wheel', 'Pottery wheel and stool');
+        const enamel = material('#8c9a94', { roughness: .5, metalness: .15 }), wet = material('#8e7a69', { roughness: .45 }), bisque = material('#dcc7ab', { roughness: .9 }), alu = material('#b9bcbb', { metalness: .7, roughness: .35 });
+        const lathe = (parent, profile, mat, at, name) => { const o = mesh(parent, new THREE.LatheGeometry(profile.map(([r, y]) => new THREE.Vector2(r, y)), 28), mat, at); if (name) o.name = name; return o; };
+        for (let i = 0; i < 3; i++) { const a = i * Math.PI * 2 / 3 + .5; rod(wheel, [Math.sin(a) * 190, 0, Math.cos(a) * 190], [Math.sin(a) * 170, 130, Math.cos(a) * 170], 22, metal); }
+        mesh(wheel, new THREE.CylinderGeometry(245, 225, 300, 28), enamel, [0, 270, 0]);
+        lathe(wheel, [[160, 0], [262, 0], [272, 70], [262, 70], [255, 12], [160, 12]], material('#3c4442', { roughness: .6, side: THREE.DoubleSide }), [0, 420, 0], 'Pottery splash pan');
+        const head = group(wheel, 'Pottery wheel head');
+        mesh(head, new THREE.CylinderGeometry(150, 150, 18, 32), alu, [0, 471, 0]);
+        mesh(head, new THREE.CylinderGeometry(32, 32, 50, 16), metal, [0, 440, 0]);
+        lathe(head, [[0, 0], [62, 0], [92, 30], [100, 85], [88, 130], [80, 158], [72, 158], [80, 128], [90, 85], [82, 34], [56, 12], [0, 12]], wet, [0, 480, 0], 'Pot on the wheel');
+        box(wheel, [150, 45, 230], [330, 22, 150], metal, 6).name = 'Pottery wheel pedal';
+        lathe(wheel, [[0, 0], [95, 0], [118, 210], [112, 210], [90, 8], [0, 8]], material('#d4d0c6', { roughness: .6, side: THREE.DoubleSide }), [-360, 0, 120], 'Pottery water bucket');
+        flat(mesh(wheel, new THREE.CylinderGeometry(104, 92, 6, 24), material('#9aa7a8', { roughness: .15, transparent: true, opacity: .7 }), [-360, 150, 120]));
+        box(wheel, [70, 30, 50], [-345, 165, 105], material('#d9b24f', { roughness: 1 }), 8);
+        const stool = group(wheel, 'Pottery stool', [0, 0, 560]);
+        mesh(stool, new THREE.CylinderGeometry(165, 165, 36, 24), oak, [0, 412, 0]);
+        for (let i = 0; i < 3; i++) { const a = i * Math.PI * 2 / 3; rod(stool, [Math.sin(a) * 110, 400, Math.cos(a) * 110], [Math.sin(a) * 175, 0, Math.cos(a) * 175], 17, oak); }
+        const rack = group(root, 'Artist ware rack', [-w / 2 + 185, 0, layout.easel[1] + 40], Math.PI / 2);
+        register(rack, 'ceramics-rack', 'Rack of pots drying');
+        for (const x of [-365, 365]) for (const z of [-125, 125]) box(rack, [28, 1340, 28], [x, 670, z], oak, 2);
+        const SHAPES = {
+            bowl: [[0, 0], [40, 0], [95, 45], [110, 80], [104, 80], [90, 48], [36, 10], [0, 10]],
+            vase: [[0, 0], [45, 0], [70, 60], [62, 140], [35, 190], [42, 215], [36, 215], [28, 190], [54, 140], [62, 62], [40, 8], [0, 8]],
+            cup: [[0, 0], [38, 0], [44, 90], [40, 90], [34, 8], [0, 8]],
+            jar: [[0, 0], [55, 0], [80, 50], [78, 120], [50, 150], [50, 165], [44, 165], [44, 150], [70, 118], [72, 52], [50, 8], [0, 8]]
+        };
+        const glazes = [bisque, clay, blueGlaze, sage, chalk, bisque];
+        [150, 520, 890, 1260].forEach((y, shelf) => {
+            box(rack, [770, 26, 290], [0, y, 0], oak, 2);
+            const row = [['bowl', 'jar', 'cup', 'cup'], ['vase', 'bowl', 'jar'], ['cup', 'cup', 'vase', 'bowl'], ['jar', 'vase', 'bowl']][shelf];
+            row.forEach((kind, i) => lathe(rack, SHAPES[kind], shelf === 3 ? bisque : glazes[(i + shelf * 2) % glazes.length], [-290 + i * (580 / (row.length - 1)), y + 13, (i % 2 ? 30 : -25)], 'Ware: ' + kind));
+        });
+        // A clay-spattered cloth under the wheel.
         const clothMap = texture((c, tw, th) => {
             const rnd = random(23); c.fillStyle = '#e3dac8'; c.fillRect(0, 0, tw, th);
             for (let i = 0; i < 14; i++) { c.strokeStyle = 'rgba(120,100,70,.08)'; c.lineWidth = 6 + rnd() * 14; c.beginPath(); c.moveTo(rnd() * tw, 0); c.bezierCurveTo(rnd() * tw, th * .3, rnd() * tw, th * .7, rnd() * tw, th); c.stroke(); }
-            const colors = ['#b6503d', '#e2b543', '#3d5577', '#4d7b7a', '#f4efe3', '#6d4f6f', '#2f302f'];
+            const colors = ['#b08a6a', '#c9a988', '#8a6a52', '#e8dccb', '#a47a5c', '#d6c2a8', '#6f5846'];      // (slip and clay)
             for (let i = 0; i < 260; i++) {
                 const r = Math.pow(rnd(), 1.6) * tw * .42, az = rnd() * 6.283, x = tw / 2 + Math.cos(az) * r, y = th * .45 + Math.sin(az) * r * .8;
                 c.fillStyle = colors[i % colors.length] + 'cc'; ellipse(c, x, y, 1 + rnd() * 6, 1 + rnd() * 5, rnd() * 3);
@@ -638,6 +656,10 @@ export function buildArtistRoom(room, root, layout, helpers) {
         // Taboret by the window: glass palette, paint tubes and brushes.
         const taboret = paintTaboret = group(root, 'Artist paint taboret', [-w / 2 + 430, 0, layout.easel[1] - 700], .3);
         register(taboret, 'artist-taboret', 'Paint taboret and glass palette');
+        // The painting in progress (it changes with the session) leans on the wall beyond the taboret, under the
+        // window's sill, now that there is no floor easel.
+        const wip = group(root, 'Artist painting wall', [-w / 2 + 30, 0, layout.easel[1] - 1320], Math.PI / 2);
+        frame(wip, 560, 720, [0, 368, 66], 3, 'Painting in progress').rotation.x = -.14;
         for (const x of [-205, 205]) for (const z of [-205, 205]) box(taboret, [28, 720, 28], [x, 360, z], metal);
         box(taboret, [470, 30, 470], [0, 705, 0], oak, 4);
         box(taboret, [440, 18, 440], [0, 300, 0], oak, 2);

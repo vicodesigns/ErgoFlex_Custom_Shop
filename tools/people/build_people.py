@@ -343,7 +343,7 @@ pose_lib.apply_pose(rig, pose)
 cleared = worn.clear_hands(rig, meshes, who, pose)
 if cleared: pose = cleared; pose_lib.apply_pose(rig, pose)
 # What each held thing follows when the Director fine-tunes the pose (the wheelchair stays where it is).
-HELD_BONE = {'gamepad': 'hand_r', 'carton': 'hand_r', 'backpack': 'spine_03', 'headphones': 'head', 'wheelchair': None, 'prosthesis': 'calf_{side}'}
+HELD_BONE = {'gamepad': 'hand_r', 'carton': 'hand_r', 'backpack': 'spine_03', 'headphones': 'head', 'wheelchair': None, 'laptop': None, 'prosthesis': 'calf_{side}'}
 extras, extra_bone = [], {}
 for kind, kw in list(spec.get('held', [])) + list(who.get('carry', {}).get(spec['pose'], [])):
     made = held.BUILDERS[kind](rig, **dict(kw)); extras += made

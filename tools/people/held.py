@@ -289,10 +289,24 @@ def dumbbell(rig, side, color=(.035, .035, .04)):
         tube('dumbbell head', .048, (s * .07, 0, 0), (s * .125, 0, 0), rubber, w, 6) for s in (-1, 1)]
 
 
+def laptop(rig, color=(.6, .62, .65), table=.74, reach=-.36):
+    """An open laptop on the table under typing hands (the 'sit-laptop' posture: wrists 0.36 m in front of the pelvis,
+    0.05 above a 0.74 m table). It stands where the table is, not in a hand: palm rest toward the person, the keys
+    under the fingers, the lid leaning back 18 degrees with a lit screen."""
+    w = rig.matrix_world @ T(0, reach - .085, table); lid = w @ T(0, -.11, .012) @ R('X', 18)
+    shell = material('laptop', color, .38, .85); keys = material('laptop keys', (.055, .055, .06), .6)
+    screen = material('laptop screen', (.36, .45, .58), .25, 0., emit=(.34, .43, .56))
+    return [box('laptop base', (.32, .22, .014), shell, w, at=(0, 0, .007), bevel=.004),
+            box('laptop keys', (.27, .1, .002), keys, w, at=(0, -.035, .0146)),
+            box('laptop pad', (.09, .055, .002), keys, w, at=(0, .065, .0143)),
+            box('laptop lid', (.32, .008, .21), shell, lid, at=(0, 0, .105), bevel=.003),
+            box('laptop screen', (.296, .002, .186), screen, lid, at=(0, .0048, .105))]
+
+
 
 BUILDERS = {'phone': phone, 'tablet': tablet, 'book': book, 'pen': pen, 'mug': mug, 'gamepad': gamepad, 'brush': brush, 'palette': palette,
             'cane': cane, 'backpack': backpack, 'headphones': headphones, 'cup': cup, 'carton': carton, 'radio': radio, 'clipboard': clipboard,
-            'wheelchair': wheelchair, 'crutch': crutch, 'screwdriver': screwdriver, 'prosthesis': prosthesis, 'dumbbell': dumbbell}
+            'wheelchair': wheelchair, 'crutch': crutch, 'screwdriver': screwdriver, 'prosthesis': prosthesis, 'dumbbell': dumbbell, 'laptop': laptop}
 
 
 def build(rig, items):

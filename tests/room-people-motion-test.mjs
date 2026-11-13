@@ -166,13 +166,15 @@ for (const who of ['maya', 'andre', 'grace', 'noah', 'sam']) {
     for (const [who, pose, id] of [['grace', 'sit-read', 'people-grace-sit-read'], ['zoe', 'stand-type', 'people-zoe-stand-type'], ['leo', 'sit-write', 'people-leo-sit-write'], ['andre', 'stand-phone', 'people-andre-stand-phone'], ['kai', 'wheel-type', 'people-kai-wheel-type'], ['grace', 'cane-stand', 'people-grace-cane-stand']]) {
         const rig = rigOf(who), key = rig.key(id), seed = 77; assert.equal(key.pose, pose);
         solveStill(rig, key, { time: 5, seed, life: 0 }); assert.ok(worst(rig, key) < 1e-9, id + ': without life it is the model as built');
-        let turned = false, most = 0;
+        let turned = false, most = 0, wrote = 0;
         for (let time = 0; time < 90; time += .21) {
             solveStill(rig, key, { time, seed });
             for (const s of ['l', 'r']) {
                 const foot = rig.side[s].leg[2], hand = rig.side[s].arm[3];
                 assert.ok(rig.wp[foot].distanceTo(key.wp[foot]) < 2e-4, `${id}: ${s} foot stays put at ${time.toFixed(1)}`);
-                if (/type|write|cane/.test(pose) && !(pose === 'cane-stand' && s === 'l')) assert.ok(rig.wp[hand].distanceTo(key.wp[hand]) < (pose === 'wheel-type' ? .005 : .002), `${id}: ${s} hand stays where it rests`);   // Kai's arms are at full stretch at the 28 in desk as built
+                // the writing hand writes: it stays on the table (its height) within a line's length of where it was
+                if (pose === 'sit-write' && s === 'r') { assert.ok(Math.abs(rig.wp[hand].y - key.wp[hand].y) < .003 && rig.wp[hand].distanceTo(key.wp[hand]) < .06, id + ': the pen stays on the page'); wrote = Math.max(wrote, rig.wp[hand].distanceTo(key.wp[hand])); }
+                else if (/type|write|cane/.test(pose) && !(pose === 'cane-stand' && s === 'l')) assert.ok(rig.wp[hand].distanceTo(key.wp[hand]) < (pose === 'wheel-type' ? .005 : .002), `${id}: ${s} hand stays where it rests`);   // Kai's arms are at full stretch at the 28 in desk as built
             }
             const right = rig.wp[rig.side.r.arm[3]].distanceTo(key.wp[rig.side.r.arm[3]]); if (pose === 'sit-read' && right > .03) turned = true;
             most = Math.max(most, rig.wp[rig.b.head].distanceTo(key.wp[rig.b.head]));
@@ -180,6 +182,7 @@ for (const who of ['maya', 'andre', 'grace', 'noah', 'sam']) {
         }
         assert.ok(most > .0005, id + ': there is life in it');
         if (pose === 'sit-read') assert.ok(turned, 'the reader turns a page within a minute and a half');
+        if (pose === 'sit-write') assert.ok(wrote > .02, 'the writer writes');
         solveStill(rig, key, { time: 33.3, seed }); const a = snapshot(rig); solveStill(rig, key, { time: 2, seed }); solveStill(rig, key, { time: 33.3, seed });
         assert.deepEqual(snapshot(rig), a, id + ': same time and seed, same pose');
     }
@@ -223,6 +226,27 @@ for (const who of ['maya', 'andre', 'grace', 'noah', 'sam']) {
     let ahead = -Infinity, behind = Infinity;
     for (let time = 0; time < 2; time += .05) { solveTread(rig, plan, time); const d = rig.wp[fl].z - rig.wp[fr].z; ahead = Math.max(ahead, d); behind = Math.min(behind, d); assert.ok(Math.abs(rig.wp[rig.b.pelvis].z - key.wp[rig.b.pelvis].z) < .05, 'the walker stays on the spot'); }
     assert.ok(ahead > .3 && behind < -.3, 'the feet pass each other, a stride apart');
+}
+// ---- what people do where they are: a drink is sipped, a hand that is up waves, a brush paints, feet stay put
+{
+    for (const [who, pose] of [['ben', 'stand-mug'], ['leo', 'sit-raise'], ['lin', 'stand-paint'], ['hale', 'stand-present'], ['kai', 'sit-controller'], ['jo', 'stand-work'], ['priya', 'stretch'], ['zoe', 'stretch-open'], ['andre', 'stand-talk']]) {
+        const id = `people-${who}-${pose}`, rig = rigOf(who), key = rig.key(id), seed = 23, hr = rig.side.r.arm[3], hl = rig.side.l.arm[3], head = rig.b.head;
+        if (!key) continue;
+        solveStill(rig, key, { time: 4, seed, life: 0 }); assert.ok(worst(rig, key) < 1e-9, id + ': without life it is the model as built');
+        let moved = 0, near = Infinity;
+        for (let time = 0; time < 80; time += .17) {
+            solveStill(rig, key, { time, seed });
+            assert.ok(rig.lq.every(q => Number.isFinite(q.x + q.y + q.z + q.w)), id + ': a pose at ' + time.toFixed(2));
+            moved = Math.max(moved, rig.wp[hr].distanceTo(key.wp[hr])); near = Math.min(near, rig.wp[hr].distanceTo(rig.wp[head]));
+            if (!/controller/.test(pose)) for (const s of ['l', 'r']) assert.ok(rig.wp[rig.side[s].leg[2]].distanceTo(key.wp[rig.side[s].leg[2]]) < 3e-4, `${id}: ${s} foot stays put`);
+            if (pose === 'stand-work') assert.ok(rig.wp[hl].distanceTo(key.wp[hl]) < .002 && Math.abs(rig.wp[hr].y - key.wp[hr].y) < .004, id + ': one hand steadies the piece, the tool stays at the bench');
+            if (pose === 'sit-controller') assert.ok(Math.abs(rig.wp[hl].distanceTo(rig.wp[hr]) - key.wp[hl].distanceTo(key.wp[hr])) < .012, id + ': both hands stay on the pad');
+        }
+        assert.ok(moved > (pose === 'sit-controller' ? .01 : .03), id + ': it is an activity (' + moved.toFixed(3) + ')');
+        if (pose === 'stand-mug') assert.ok(near < .26, id + ': the cup reaches the mouth (' + near.toFixed(3) + ')');
+        solveStill(rig, key, { time: 21.4, seed }); const a = snapshot(rig); solveStill(rig, key, { time: 6, seed }); solveStill(rig, key, { time: 21.4, seed });
+        assert.deepEqual(snapshot(rig), a, id + ': same time and seed, same pose');
+    }
 }
 // ---- a change of posture on the spot
 {

@@ -130,3 +130,30 @@ combination in the Studio (house, morning) keeps its cast.
 
 Not done: rowing, a barbell squat (the bar is part of the rack), running rather than walking on the treadmill.
 
+## Activities, laptops and the pottery wheel (November 12, night)
+
+Vico: "have the characters go about doing an activity", "they should all have a laptop if they're doing that
+activity", and in the artist's studio "a small ceramics corner" instead of the floor easel ("the desk replaces the
+need for a painter's easel").
+
+- **Laptops.** The `sit-laptop` posture now carries its own open laptop (`held.py` `laptop`, on the table under the
+  hands, not in a hand). All 62 models were rebuilt. Before, none of the people in that posture had anything on the
+  table (the people at the rooms' other desks type on those desks' keyboards and were fine).
+- **Activities** (`room-people-motion.mjs` `ACTS`, run by `solveStill` on top of breathing and the drifting head, so
+  the Studio and a film get them alike): the pen writes along a line and pauses (`sit-write`, the children's drawing
+  postures), a raised hand stretches, sinks and waves (`sit-raise`), the brush paints and goes to the palette
+  (`stand-paint`), a presenter's arm and head move (`stand-present`), a talker's hand talks (`stand-talk`), a drink
+  is sipped (`stand-mug`, `stand-drink`, `sit-mug`, `sit-chat`), a gamer leans with the game (`sit-controller`), the
+  tool hand works at the bench (`stand-work`), stretches are stretched (`stretch`, `stretch-open`, `floor-stretch`),
+  a child sets pieces down (`kid-play-floor`). Each is worked out from the posture as built, seeded per person, pure.
+- **The pottery wheel** (`artist-room.mjs`; every size but the nook): where the floor easel stood there is a wheel
+  with a pot on it, a stool, a water bucket, a clay-spattered cloth, and a rack of ware by the wall (`ceramics-wheel`,
+  `ceramics-rack`). The painting in progress leans under the window sill beyond the paint taboret, which stays by
+  the desk. Lin throws a pot in the morning and the evening (`sit-pottery`, built on the wheel; her hands ride up and
+  down the clay and the wheel head turns: `Pottery wheel head`). In the large rooms the corner is 0.4 m further back,
+  clear of the worktable.
+- **The film.** The artist chapter's room changes in all three cuts (its opening shot was on the easel; it is now on
+  the wheel). In "Vico's cut with people" Lin is at the wheel; in the alternate cut she is at the wheel for the first
+  14 s and paints at the tilted desk from 19.5 s as before (`people.only: ['lin-at-wheel']`). People in chapters
+  rendered before this keep still hands and no laptops until the chapter is rendered again.
+

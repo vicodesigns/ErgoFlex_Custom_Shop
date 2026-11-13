@@ -12,7 +12,7 @@ import { buildInstitutionalRoom } from './institutional-room.mjs?v=polish-202611
 import { refineRoomSurfaces } from './room-refinement.mjs?v=polish-20261111f';
 import { polishRoomProp } from './room-polish.mjs?v=polish-20261111f';
 import { RoomLife } from './room-life.mjs?v=polish-20261111f';
-import { RoomPeople } from './room-people.mjs?v=polish-20261112c';
+import { RoomPeople } from './room-people.mjs?v=polish-20261112d';
 import { propUnitCorrection } from './prop-scale.mjs?v=prop-unit-scale-20261013';
 import { atelierSceneChair } from './atelier-scene-seating.mjs?v=conference-chairs-20261015';
 import { milanoSceneSofa } from './milano-scene-seating.mjs?v=milano-seating-20261014';
@@ -34,7 +34,7 @@ import { ACCESSORIES, accessory } from './catalog.mjs?v=preset-size-setups-20261
 import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES, migrateHomeReadingFurniture } from './home-office.mjs?v=polish-20261111f';
 import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=polish-20261111f';
 import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=polish-20261111h';
-import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=polish-20261111h';
+import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=polish-20261112d';
 import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=polish-20261111f';
 
 import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=polish-20261111f';

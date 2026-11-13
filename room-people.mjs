@@ -47,7 +47,7 @@
 // alone. The film casts each chapter through a filter (setFilter): who is in, who is moved, extra people of its
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
-import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, solveTread, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=polish-20261112c';
+import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, solveTread, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=polish-20261112d';
 
 // How far in front of a desk's anchor the person's pelvis is (mm), for a keyboard on the pull-out tray, and how far
 // behind the keyboard's centre it is wherever the keyboard really sits (tray or desktop).
@@ -211,12 +211,14 @@ export const ROOM_PEOPLE = {
             seated('people-zoe-sit-listen', 'kenney-furniture-lounge-sofa', 'ergoflex-coffee-table', { along: -420, modes: ['afternoon', 'evening'], key: 'zoe-sofa' }),
             standBy('people-noah-stand-phone', 'music-drum-kit', 1100, { modes: ['afternoon'], key: 'noah-drums' })]
     ],
-    // Two artists share the studio: Sofia at the desk by day, Lin at the easel in the morning and at golden hour, Lin
-    // alone reviewing at the desk at night; the open studio has visitors looking at the work.
+    // Two artists share the studio: Sofia at the desk by day (the tilted desk is the easel), Lin throwing a pot at
+    // the wheel in the morning and at golden hour, Lin alone reviewing at the desk at night; the open studio has
+    // visitors looking at the work.
     creative: [
-        // the film's painter (as its chapters know her); in the Studio she stands a little nearer the easel, clear of the worktable
+        // (the painter of films cut before the wheel replaced the floor easel: only where a cut still places her)
         { id: 'people-lin-stand-paint', by: 'artist-easel', reach: 640, modes: [] },
-        { key: 'lin-at-easel', id: 'people-lin-stand-paint', by: 'artist-easel', reach: 500, modes: ['morning', 'evening'] },
+        // on the wheel's stool, facing the wheel (the posture is built on it: tools/people/cast.py sit_pottery)
+        { key: 'lin-at-wheel', id: 'people-lin-sit-pottery', by: 'ceramics-wheel', reach: 560, turn: 180, modes: ['morning', 'evening'] },
         { id: 'people-maya-stand-type', desk: 'stand', modes: [] }, { id: 'people-maya-sit-type', desk: 'sit', modes: [] },
         { id: 'people-grace-sit-read', on: 'kenney-furniture-lounge-sofa', seat: 420, along: 380, modes: [] },   // the sofa faces the open front: feet would leave the room
         // the evening's 30 degree drawing tilt brings the top through a standing typist: Lin paints alone until the desk
@@ -1664,8 +1666,10 @@ export class RoomPeople {
             drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold); life.live = on;
             // a rider's bike: its crank turns with the feet, the pedals stay level
             if (moved?.crank !== undefined) { const crank = object.userData.personAnchor?.getObjectByName('Bike crank'); if (crank) { this.turnCrank(crank, moved.crank); turning.add(crank); this.cranks.add(crank); } }
+            // a potter's wheel: its head (and the pot on it) turns while they throw
+            if (moved?.wheel !== undefined) { const head = object.userData.personAnchor?.getObjectByName('Pottery wheel head'); if (head) { head.rotation.y = moved.wheel; this.dirty = true; turning.add(head); this.cranks.add(head); } }
         }
-        for (const crank of this.cranks) if (!turning.has(crank)) { this.turnCrank(crank, 0); this.cranks.delete(crank); }      // (nobody on it any more: as the room built it)
+        for (const crank of this.cranks) if (!turning.has(crank)) { if (crank.name === 'Bike crank') this.turnCrank(crank, 0); else { crank.rotation.y = 0; this.dirty = true; } this.cranks.delete(crank); }      // (nobody on it any more: as the room built it)
     }
     training(object) { return !!object.userData.person.tread || WORKOUTS.has(this.library.entry?.(object.userData.person.id)?.person?.pose); }
     turnCrank(crank, angle) { crank.rotation.x = -angle; for (const pedal of crank.children) if (pedal.name === 'Bike pedal') pedal.rotation.x = angle; this.dirty = true; }

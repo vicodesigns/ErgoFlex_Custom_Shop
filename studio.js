@@ -63,12 +63,12 @@ import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=polish-20261111f';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=polish-20261112c';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=polish-20261112d';
 import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs?v=20261110-stationary-organizer';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=polish-20261111f';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=polish-20261111f';
 import { MUSIC_MODES, MUSIC_LAYOUTS, musicLayoutForSize, musicLayoutById } from './music-room.mjs?v=polish-20261111h';
-import { ARTIST_MODES, ARTIST_LAYOUTS, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=polish-20261111h';
+import { ARTIST_MODES, ARTIST_LAYOUTS, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=polish-20261112d';
 import { STUDY_MODES, STUDY_LAYOUTS, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=polish-20261111f';
 import { OFFICE_MODES, OFFICE_LAYOUTS, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=polish-20261111f';
 import { GYM_MODES, GYM_LAYOUTS, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=polish-20261112c';

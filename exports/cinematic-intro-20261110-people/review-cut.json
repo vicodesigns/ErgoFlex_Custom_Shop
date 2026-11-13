@@ -28063,17 +28063,8 @@
    ],
    "people": {
     "only": [
-     "people-lin-stand-paint"
-    ],
-    "place": {
-     "people-lin-stand-paint": {
-      "at": [
-       -2380,
-       2380
-      ],
-      "turn": 158
-     }
-    }
+     "lin-at-wheel"
+    ]
    }
   },
   {

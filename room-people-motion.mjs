@@ -370,7 +370,7 @@ const TYPES = new Set(['sit-type', 'stand-type', 'stand-mid', 'stand-type-low', 
 const ON_FEET = new Set(['stand-type', 'stand-mid', 'stand-type-low', 'stand-brief', 'stand-radio', 'stand-chart', 'stand-counter', 'stand-wait', 'stand-phone', 'stand-present', 'stand-work', 'stand-paint', 'cane-stand', 'kid-stand', 'kid-stand-wait', 'kid-stand-desk']);
 const INTENT = new Set(['stand-chart', 'sit-microscope', 'stand-radio', 'sit-read', 'sit-phone', 'stand-phone', 'sit-write', 'stand-work', 'stand-paint', 'sit-controller', 'kid-read-floor', 'kid-sit-desk', 'kid-stand-desk', 'kid-sit-k', 'kid-sit-e', 'kid-kneel-craft', 'kid-play-floor']);      // eyes on what the hands hold
 export const livelyPose = pose => pose !== 'walk' && pose !== 'white-cane' && pose !== 'push-cart';
-export const WORKOUTS = new Set(['gym-cycle', 'gym-pullup', 'gym-press', 'gym-curl', 'gym-box']);      // postures that are an exercise: solveWorkout
+export const WORKOUTS = new Set(['gym-cycle', 'gym-pullup', 'gym-press', 'gym-curl', 'gym-box', 'sit-pottery']);      // postures that work a machine: solveWorkout
 export function solveStill(rig, key, input) {
     const time = input.time ?? 0, seed = input.seed | 0, life = input.life ?? 1, b = rig.b, pose = key.pose;
     if (WORKOUTS.has(pose)) return solveWorkout(rig, key, input);
@@ -403,7 +403,95 @@ export function solveStill(rig, key, input) {
         }
     }
     rig.fk();
+    if (ACTS[pose]) { ACTS[pose](rig, key, time, seed, life); rig.fk(); }
 }
+
+// ---- what people do where they are --------------------------------------------------------------------------------
+// On top of the life above, a posture that is an activity shows it: the pen writes, the brush paints, a drink is
+// sipped, a hand that is up stretches and waves, a talker's hand talks. Each is worked out from the posture as built
+// (the hand's own place and turn), small enough that hands stay on the table, the canvas or the controller, and
+// seeded per person so a class does not move as one. Pure. (rig.fk() is current on entry and brought up to date on return.)
+const armTo = (rig, s, at, q = null) => { const [, upper, lower, hand] = rig.side[s].arm; rig.reach(upper, lower, hand, at); rig.reach(upper, lower, hand, at); if (q) rig.setWorld(hand, q); rig.fk(); };
+// 0 except for `length` seconds once every `period` (the moment is the person's own): rises, holds, falls
+const moment = (time, seed, n, period, length, edge = .28) => { const p = period * (1 + .5 * hash(n, seed)), u = (time + hash(n + 1, seed) * p) % p; return u < length ? ss(0, edge, u / length) * (1 - ss(1 - edge, 1, u / length)) : 0; };
+function write(rig, key, time, seed, life, size = 1) {
+    // a line of writing: the pen goes along the line (the writer's left to right), trembling with the letters, comes back, and rests now and then
+    const hand = rig.side.r.arm[3], pause = moment(time, seed, 71, 13, 3), line = ((time * (.13 + hash(72, seed) * .05) + hash(73, seed)) % 1), go = (1 - pause) * life;
+    const along = line < .86 ? line / .86 : 1 - ss(.86, 1, line);
+    handAt.copy(key.wp[hand]); handAt.x += (.032 - .064 * along) * size * go;
+    handAt.x += Math.sin(time * 11.3 + seed) * .0035 * size * go; handAt.z += Math.sin(time * 8.1 + seed * 1.7) * .005 * size * go;
+    armTo(rig, 'r', handAt, key.wq[hand]);
+    if (pause > 0) { rig.turnWorld(rig.b.head, turn.setFromAxisAngle(X, -.16 * pause * life)); rig.fk(); }      // looks up to think
+}
+function sip(rig, key, time, seed, life) {
+    // the cup comes up to the mouth, tips, and goes back to where it is held
+    const hand = rig.side.r.arm[3], w = moment(time, seed, 81, 17, 2.9, .34) * life; if (!(w > 0)) return;
+    handAt.copy(rig.wp[rig.b.head]); handAt.x -= .055; handAt.y -= .075; handAt.z += .15; handAt.lerpVectors(key.wp[hand], handAt, w);
+    handQ.copy(key.wq[hand]).premultiply(turn.setFromAxisAngle(X, -.3 * ss(.6, 1, w)));
+    armTo(rig, 'r', handAt, handQ);
+    rig.turnWorld(rig.b.head, turn.setFromAxisAngle(X, -.07 * ss(.6, 1, w))); rig.fk();
+}
+const bend = (rig, axis, angle) => { for (const [bone, share] of [[rig.b.spine_01, .3], [rig.b.spine_02, .4], [rig.b.spine_03, .3]]) { rig.turnWorld(bone, turn.setFromAxisAngle(axis, angle * share)); rig.fk(); } };
+const feetStay = (rig, key) => { for (const s of ['l', 'r']) { const [thigh, calf, foot] = rig.side[s].leg; rig.reach(thigh, calf, foot, key.wp[foot]); rig.reach(thigh, calf, foot, key.wp[foot]); rig.setWorld(foot, key.wq[foot]); } rig.fk(); };
+const ACTS = {
+    'sit-write': write, 'kid-sit-k': (rig, key, time, seed, life) => write(rig, key, time, seed, life, 1.5), 'kid-sit-e': (rig, key, time, seed, life) => write(rig, key, time, seed, life, 1.5), 'kid-kneel-craft': (rig, key, time, seed, life) => write(rig, key, time, seed, life, 1.6),
+    'stand-mug': sip, 'stand-drink': sip, 'sit-mug': sip, 'sit-chat': sip,
+    // a hand up in class: it stretches higher, sinks a little when the arm tires, and waves for attention
+    'sit-raise'(rig, key, time, seed, life) {
+        const hand = rig.side.r.arm[3], tired = (.5 + .5 * noise(time * .09 + 3, seed + 90)) * life, wave = moment(time, seed, 91, 9, 1.6) * life;
+        handAt.copy(key.wp[hand]); handAt.y += .025 - .13 * tired; handAt.z += .05 * tired; handAt.x += Math.sin(time * 9.5) * .035 * wave;
+        armTo(rig, 'r', handAt, key.wq[hand]);
+    },
+    // at the easel: strokes on the canvas, a dab now and then, the brush back to the palette to load
+    'stand-paint'(rig, key, time, seed, life) {
+        const hand = rig.side.r.arm[3], other = rig.wp[rig.side.l.arm[3]], load = moment(time, seed, 101, 11, 2.4, .36) * life;
+        handAt.copy(key.wp[hand]); handAt.x += noise(time * .55, seed + 102) * .07 * life; handAt.y += (noise(time * .41 + 5, seed + 103) * .09 + Math.sin(time * 5.2) * .012) * life;
+        if (load > 0) { spot.copy(other); spot.y += .06; spot.z += .03; spot.x -= .05; handAt.lerp(spot, load); }
+        armTo(rig, 'r', handAt, key.wq[hand]);
+    },
+    // presenting: the arm toward the board moves over what is shown, the head goes between the board and the room
+    'stand-present'(rig, key, time, seed, life) {
+        const hand = rig.side.r.arm[3];
+        handAt.copy(key.wp[hand]); handAt.x += noise(time * .37, seed + 111) * .05 * life; handAt.y += noise(time * .31 + 2, seed + 112) * .07 * life;
+        armTo(rig, 'r', handAt, key.wq[hand]);
+        rig.turnWorld(rig.b.head, turn.setFromAxisAngle(Y, noise(time * .13 + 9, seed + 113) * .32 * life)); rig.fk();
+    },
+    // explaining: the open hand moves with the words, the head nods along
+    'stand-talk'(rig, key, time, seed, life) {
+        const hand = rig.side.r.arm[3], said = (.35 + .65 * ss(-.2, .3, noise(time * .21, seed + 120))) * life;
+        handAt.copy(key.wp[hand]); handAt.x += noise(time * .9, seed + 121) * .045 * said; handAt.y += (noise(time * 1.1 + 3, seed + 122) * .05 + .02) * said; handAt.z += noise(time * .7 + 7, seed + 123) * .035 * said;
+        armTo(rig, 'r', handAt, key.wq[hand]);
+        rig.turnWorld(rig.b.head, turn.setFromAxisAngle(X, Math.max(0, Math.sin(time * 2.1 + seed)) * .035 * said)); rig.fk();
+    },
+    // on the sofa with a controller: the body leans with the game, both hands (and the pad in them) with it
+    'sit-controller'(rig, key, time, seed, life) {
+        const lean = noise(time * .45, seed + 130) * .07 * life, jolt = moment(time, seed, 131, 6, .7) * life;
+        bend(rig, Z, lean); bend(rig, X, .05 * jolt);
+        for (const s of ['l', 'r']) {
+            const hand = rig.side[s].arm[3];
+            handAt.copy(key.wp[hand]); handAt.x += -lean * .35 + noise(time * 1.9, seed + 132) * .008 * life; handAt.y += (noise(time * 2.3 + 4, seed + 133) * .008 + .025 * jolt) * life; handAt.z += .03 * jolt;
+            armTo(rig, s, handAt, handQ.copy(key.wq[hand]).premultiply(turn.setFromAxisAngle(Z, lean * .8)));
+        }
+    },
+    // at a bench: the tool hand works to and fro in bursts, the other steadies the piece
+    'stand-work'(rig, key, time, seed, life) {
+        const hand = rig.side.r.arm[3], busy = (1 - moment(time, seed, 141, 8, 2.2)) * life;
+        handAt.copy(key.wp[hand]); handAt.x += Math.sin(time * 7.4 + seed) * .036 * busy; handAt.z += Math.sin(time * 3.7 + seed) * .008 * busy;
+        armTo(rig, 'r', handAt, key.wq[hand]);
+    },
+    // a standing stretch: a slow bend from side to side, arms overhead
+    'stretch'(rig, key, time, seed, life) { bend(rig, Z, Math.sin(time * Math.PI * 2 / (7.5 + hash(151, seed) * 2) + hash(152, seed) * 6.28) * .2 * life); feetStay(rig, key); },
+    // hands behind the head: the chest opens, the trunk turns slowly one way and the other
+    'stretch-open'(rig, key, time, seed, life) { const u = time * Math.PI * 2 / (6.5 + hash(161, seed) * 2) + hash(162, seed) * 6.28; bend(rig, Y, Math.sin(u) * .3 * life); bend(rig, X, -.04 * (1 + Math.sin(u * 2)) * life); feetStay(rig, key); },
+    // on the mat: reaching forward and easing off, slowly
+    'floor-stretch'(rig, key, time, seed, life) { bend(rig, X, (.5 + .5 * Math.sin(time * Math.PI * 2 / (6 + hash(171, seed) * 2) + hash(172, seed) * 6.28)) * .1 * life); },
+    // a child building on the floor: one hand sets a piece down, lifts, sets down
+    'kid-play-floor'(rig, key, time, seed, life) {
+        const hand = rig.side.r.arm[3], u = time * (.5 + hash(181, seed) * .2) + hash(182, seed), n = Math.floor(u), x = u - n;
+        handAt.copy(key.wp[hand]); handAt.y += Math.sin(Math.PI * x) * .07 * life; handAt.x += (hash(n, seed + 183) - .5) * .12 * ss(0, .5, x) * life + (hash(n - 1, seed + 183) - .5) * .12 * (1 - ss(0, .5, x)) * life;
+        armTo(rig, 'r', handAt, key.wq[hand]);
+    }
+};
 
 // ---- someone training on the gym's equipment ------------------------------------------------------------------------
 // The posture as built (tools/people/cast.py gym_*) is one moment of the exercise; the rest of it is worked out from
@@ -414,6 +502,7 @@ export function solveStill(rig, key, input) {
 //   gym-press   the dumbbells come down beside the chest and go up again
 //   gym-curl    one forearm comes up as the other goes down
 //   gym-box     two jabs and a breath: the left glove goes out to the bag (as built) and comes back to the guard
+//   sit-pottery the hands ride up and down the clay on a turning wheel: { wheel: radians }
 const centre = V(), handAt = V(), elbowAxis = V();
 export function solveWorkout(rig, key, input) {
     const time = input.time ?? 0, seed = input.seed | 0, life = input.life ?? 1, b = rig.b, pose = key.pose, out = {};
@@ -477,6 +566,19 @@ export function solveWorkout(rig, key, input) {
             rig.turnWorld(lower, turn.setFromAxisAngle(X, fold * down)); rig.fk();
             rig.turnWorld(upper, turn.setFromAxisAngle(X, -.1 * down)); rig.fk();      // the elbow gives a little
         }
+        return out;
+    }
+    if (pose === 'sit-pottery') {
+        // throwing a pot: the wheel turns, the hands ride up the clay and come down again, the body leans in with them
+        const u = time / (5.5 + hash(1, seed) * 2) + begin, w = .5 - .5 * Math.cos(u * Math.PI * 2), squeeze = .5 + .5 * Math.sin(u * Math.PI * 4);
+        for (const [bone, share] of [[b.spine_01, .4], [b.spine_02, .6]]) { rig.turnWorld(bone, turn.setFromAxisAngle(X, .035 * w * share)); rig.fk(); }
+        look(.35);
+        for (const s of ['l', 'r']) {
+            const [, upper, lower, hand] = rig.side[s].arm, out2 = s === 'l' ? 1 : -1;
+            handAt.copy(key.wp[hand]); handAt.y += -.035 + .075 * w; handAt.x += out2 * (.012 - .02 * squeeze * w);
+            rig.reach(upper, lower, hand, handAt); rig.reach(upper, lower, hand, handAt); rig.setWorld(hand, key.wq[hand]);
+        }
+        rig.fk(); out.wheel = time * Math.PI * 2 * 1.6;
         return out;
     }
     // gym-box
