@@ -64,6 +64,64 @@ function garden(k, ctx) {
     for (let x = -42000; x <= 42000; x += 2600 + r() * 900) crown(b, r, x, ground + 1600 + r() * 900, -47000 - r() * 4000, 3000 + r() * 1100, 2600 + r() * 900, 2400, '#557260', { size: 1300, lobes: .2 });
 }
 
+// ---- other back gardens (the bedroom, the kitchen, the child's room): the same kind of place as the home room's,
+// laid out by the seed (mirrored, trees and sheds moved) and with what stands nearest the glass its own:
+//   'bedroom': upstairs; a porch roof of tiles under the sill, the garden seen from above, a patio with a parasol.
+//   'kitchen': herb boxes on the sill, raised vegetable beds, a greenhouse, a compost bin, bean poles.
+//   'kids': a swing set, a trampoline, a sandpit, a tree with a tree house.
+function backGarden(k, ctx) {
+    const { land: b, r } = k, cx = (ctx.left + ctx.right) / 2, w = ctx.width, ground = ctx.ground - 200, sill = ctx.bottom, f = r() < .5 ? 1 : -1, jit = s => (r() - .5) * s, v = ctx.variant;
+    const grassC = colour('#71855d'), dry = colour('#8a9a6a'), gravel = colour('#b3a998'), soil = colour('#5e4a3a'), out = new THREE.Color();
+    const lawnAt = (x, z) => { const patch = Math.sin(x / 2900 + r() * .2) * Math.sin(z / 2300) * .5 + .5; return out.copy(grassC).lerp(dry, patch * .4).multiplyScalar(.92 + r() * .08); };
+    land(b, ground, cx - 26000, cx + 26000, -60, -16000, -56000, (x, z) => z > -2600 ? out.copy(gravel).multiplyScalar(.92 + r() * .1) : lawnAt(x, z), 500);
+    if (v === 'bedroom') {   // the porch roof under the window: clay tiles sloping away, a gutter
+        const eave = sill - 1500, geo = new THREE.PlaneGeometry(w + 4000, 1300, 8, 6).rotateX(-Math.PI / 2 + .5), tile = colour('#5d5f62');
+        b.add(geo, M(cx, eave + 280, -700), p => tile.clone().multiplyScalar(.85 + .15 * Math.sin(p.z / 90) * Math.sin(p.x / 140)), { ambient: .6 }); geo.dispose();
+        b.box([w + 4000, 110, 130], [cx, eave - 30, -1300], '#4f4d4b');
+        const px = cx + f * 3200, pz = -6500; b.box([4200, 40, 3600], [px, ground + 20, pz], '#bdb3a2'); b.box([1100, 720, 1100], [px, ground + 360, pz], '#e2ddd2');
+        pole(b, px, ground, pz, 2300, 30, '#d8d2c4'); b.add(new THREE.ConeGeometry(1500, 500, 10, 1, true), M(px, ground + 2450, pz), () => colour('#9c8c74'), { ambient: .6 });
+    }
+    if (v === 'kitchen') {   // herb boxes on the sill outside, raised beds, bean poles, a greenhouse, a compost bin
+        b.box([w + 200, 220, 260], [cx, sill - 130, -330], '#7a5c46');
+        for (let x = cx - w / 2; x <= cx + w / 2; x += 170 + r() * 80) shrub(b, r, x, sill - 60, -330, 90 + r() * 60, pick(r, ['#6a8a52', '#5c7c4a', '#7f9a60']), { size: 30 });
+        for (let i = 0; i < 6; i++) { const bx = cx - 5400 + (i % 3) * 3600 + jit(400), bz = -4200 - Math.floor(i / 3) * 3000;
+            b.box([2800, 450, 1200], [bx, ground + 225, bz], '#8a6e54'); b.box([2700, 40, 1100], [bx, ground + 455, bz], soil);
+            const crop = pick(r, ['#5f8a4c', '#7a9a52', '#4f7a48', '#8aa060']);
+            for (let x = bx - 1150; x <= bx + 1150; x += 280) { if (i === 2) { limb(b, V(x, ground + 450, bz), V(x + 60, ground + 2300, bz), 12, '#8a7458'); crown(b, r, x + 30, ground + 1500, bz, 160, 700, 160, '#5f8a4c', { size: 70, core: 0 }); }
+                else shrub(b, r, x, ground + 460, bz + jit(300), 150 + r() * 80, crop, { size: 45 }); } }
+        const gx = cx - f * 7000, gz = -10500; b.box([3000, 300, 2200], [gx, ground + 150, gz], '#9e6e58');
+        for (const s of [-1, 0, 1]) b.box([40, 2300, 40], [gx + s * 1450, ground + 1150, gz + 1100], '#e2ddd2');
+        b.quad(2900, 2000, [gx, ground + 1300, gz + 1110], colour('#b9c8c6').multiplyScalar(.72)); b.box([3100, 40, 2300], [gx, ground + 2320, gz], '#e2ddd2');
+        b.box([900, 1000, 900], [cx + f * 5500, ground + 500, -8800], '#3f4a3c');
+    }
+    if (v === 'kids') {   // a swing set, a trampoline, a sandpit, a tree house
+        const sx = cx + f * 2600, sz = -5200;
+        for (const s of [-1, 1]) { limb(b, V(sx + s * 1500, ground, sz - 900), V(sx + s * 1500, ground + 2300, sz), 45, '#c24f3e'); limb(b, V(sx + s * 1500, ground, sz + 900), V(sx + s * 1500, ground + 2300, sz), 45, '#c24f3e'); }
+        b.box([3200, 90, 90], [sx, ground + 2300, sz], '#c24f3e');
+        for (const s of [-.5, .5]) { for (const d of [-200, 200]) limb(b, V(sx + s * 1500 + d, ground + 2280, sz), V(sx + s * 1500 + d, ground + 500, sz), 8, '#4a4a4a'); b.box([500, 40, 220], [sx + s * 1500, ground + 480, sz], '#2f5d8a'); }
+        const tx = cx - f * 3300, tz = -7600; b.add(new THREE.CylinderGeometry(1700, 1700, 120, 18, 1), M(tx, ground + 750, tz), () => colour('#2a2c30'), { ambient: .6 });
+        b.add(new THREE.CylinderGeometry(1800, 1800, 160, 18, 1, true), M(tx, ground + 760, tz), () => colour('#3a6a9a'), { ambient: .6 });
+        for (let a = 0; a < 6.28; a += 1.05) limb(b, V(tx + Math.cos(a) * 1750, ground, tz + Math.sin(a) * 1750), V(tx + Math.cos(a) * 1750, ground + 760, tz + Math.sin(a) * 1750), 25, '#6d7074');
+        b.box([2000, 200, 2000], [cx + f * 600, ground + 100, -3600], '#a67e5a'); b.box([1800, 40, 1800], [cx + f * 600, ground + 190, -3600], '#e0d2a8');
+        const hx = cx + f * 7600, hz = -10500; tree(b, r, hx, ground, hz, { height: 7500, hex: '#617f4f', shape: 'spreading' });
+        b.box([1800, 1300, 1600], [hx, ground + 3300, hz + 400], '#9a7a5a'); b.box([2100, 120, 1900], [hx, ground + 4000, hz + 400], '#6a4e3c'); b.quad(500, 500, [hx, ground + 3400, hz + 1210], colour('#2a2a2a'));
+        for (let y = 300; y < 2700; y += 300) b.box([600, 40, 40], [hx - 300, ground + y, hz + 1300], '#8a6a4c');
+    }
+    // trees, a shed, a flower bed, the fence and hedge at the end, lights after dark
+    for (const [x, z, h, shape] of [[w * .5 + 3200 + jit(1500), -6500 + jit(1500), 5800, 'round'], [-w * .5 - 4600 + jit(1500), -9500 + jit(2000), 4800, 'ornamental'], [jit(9000), -13200 + jit(1200), 6200, 'round']])
+        tree(b, r, cx + f * x, ground, z, { height: h + jit(1200), hex: pick(r, ['#688856', '#5f7d53', '#7f9566', '#5a7a50']), shape });
+    house(k, r, cx - f * (8000 + jit(3000)), ground, -12500, { width: 3600, depth: 2600, eaves: 2200, ridge: 900, wall: pick(r, ['#7f8e7c', '#8e7a68', '#6f7f8c']), roof: '#4f4c4a', lit: [], porch: false, storeys: 1 });
+    for (let j = 0; j < 12; j++) { const z = -3000 - j * 700, x = cx + f * (w * .5 + 1800 + Math.sin(j * 1.3) * 300); shrub(b, r, x, ground, z, 320 + r() * 140, '#6b8a58'); if (r() < .6) flowers(b, r, x, ground + 420, z, 300, 10, undefined, 30); }
+    const fz = -15000 + jit(1500);
+    fence(b, r, cx - 26000, cx + 26000, ground, fz, { hex: pick(r, ['#9a7d62', '#8a7f72', '#a08670']) }); hedge(b, r, cx - 26000, cx + 26000, ground, fz + 700, 2000 + r() * 600, 1100, '#53704d');
+    for (const x of [cx - f * 3500, cx + f * 4500]) pathLight(k, x, ground, -2900, '#ffd9a8', .45);
+    house(k, r, cx + f * (-9000 + jit(4000)), ground, -30000 + jit(4000), { lit: [0, 2, 4], wall: pick(r, ['#d6cab5', '#cbbfae', '#c8c2b6', '#d9cfbd']), roof: pick(r, ['#96705e', '#7c6a64', '#6e6058']) });
+    house(k, r, cx + f * (12000 + jit(4000)), ground, -33000 + jit(3000), { width: 10000, eaves: 5200, ridge: 2800, wall: pick(r, ['#cbbfae', '#bdb5a5']), roof: '#7c6a64', lit: [1, 3] });
+    streetLamp(k, cx + f * 2000 + jit(4000), ground, -26000, { height: 5600, face: 1, power: .8 });
+    for (let i = 0; i < 6; i++) { const x = cx + jit(44000), z = -22000 - r() * 10000; if (r() < .7) tree(b, r, x, ground, z, { height: 6000 + r() * 2500, hex: '#58754f' }); else conifer(b, r, x, ground, z, { height: 7000 + r() * 2000 }); }
+    for (let x = cx - 44000; x <= cx + 44000; x += 2600 + r() * 900) crown(b, r, x, ground + 1700 + r() * 900, -47000 - r() * 4000, 3000 + r() * 1100, 2600 + r() * 900, 2400, '#557260', { size: 1300, lobes: .2 });
+}
+
 // ---- an artist's studio garden (the creative room). A walled garden kept for working in: terracotta pots of herbs
 // and geraniums on a gravel strip under the sill, a brick path running out to an arched gate in an old garden wall,
 // a lawn, a vine-covered pergola with string lights, a lavender bed, an old fruit tree and a birch, a small glasshouse,
@@ -322,8 +380,11 @@ function city(k, ctx, { neon = false } = {}) {
     if (!plaza) for (let z = far - 6000; z > -52000; z -= 12000) for (const side of [-1, 1]) streetLamp(k, crossX + side * (crossW / 2 - 900), ground, z, { height: 6500, reach: 0, face: 1, hex: neon ? '#ffd2a8' : '#ffd29a', power: .8 });
     if (!plaza) { const z = -30000 - r() * 8000, x = crossX + 1800; car(k, r, x, ground, z, { turn: Math.PI / 2 }); k.lights.box([1300, 140, 60], [x, ground + 700, z + 2250], '#d23a2a'); k.halos.add(x, ground + 700, z + 2400, 800, '#ff4030', .3); }
     // behind: taller blocks; far off: the towers
+    // (from high up the blocks behind are lower and further apart, so the room sees over them to the towers and the sky)
+    const high = ctx.storey > 18000;
     for (let x = L - 20000; x < R + 20000;) { const width = 14000 + r() * 12000;
-        building(k, r, x + width / 2, ground, -52000 - r() * 10000, { width, depth: 18000, floors: 9 + Math.floor(r() * 9), wall: pick(r, walls), style: r() < .4 ? 'band' : 'punched', bays: 5, shops: false, litRate: neon ? .5 : .32, warm: .6, cornice: r() < .5 });
+        if (high && r() < .45) { x += width; continue; }
+        building(k, r, x + width / 2, ground, -52000 - r() * 10000, { width, depth: 18000, floors: high ? 4 + Math.floor(r() * 5) : 9 + Math.floor(r() * 9), wall: pick(r, walls), style: r() < .4 ? 'band' : 'punched', bays: 5, shops: false, litRate: neon ? .5 : .32, warm: .6, cornice: r() < .5 });
         x += width + 2000 + r() * 6000; }
     for (let x = L - 60000; x < R + 60000;) { const width = 16000 + r() * 16000, floors = 18 + Math.floor(r() * 30);
         building(k, r, x + width / 2, ground, -105000 - r() * 30000, { width, depth: 20000, floors, storey: 3600, wall: pick(r, ['#9aa3aa', '#a9adb0', '#8a949c', '#b2aa9e']), glass: '#56646f', style: 'band', bays: 6, shops: false, litRate: neon ? .55 : .3, warm: .5, cornice: false });
@@ -483,6 +544,7 @@ const SOCAL = { morning: { horizon: '#ebdcc6', air: '#e6dccb', haze: .5 }, after
 
 export const SCENES = {
     garden: { build: garden, storey: 0 },
+    'back-garden': { build: backGarden, storey: 0 },
     'studio-garden': { build: studioGarden, storey: 0, hazeFar: 46000 },
     // the marine layer: a low grey sky that burns off by afternoon, the air thick with it, the trunks going pale with distance
     humboldt: { build: humboldt, storey: 0, hazeFar: 34000, lampLevel: .7, haloLevel: 1.2, hours: {
