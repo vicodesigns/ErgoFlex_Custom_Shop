@@ -231,7 +231,7 @@ export function crown(b, r, cx, cy, cz, rx, ry, rz, hex, { size = spray(cz), den
     void flat;
     const L = leavesOf(b) || b, base = colour(hex), seed = r() * 100, p = 1.6, centre = new THREE.Vector3(cx, cy, cz);
     const lobeAt = (dx, dy, dz) => 1 + lobes * (1.5 * Math.sin(dx * 3.1 + seed) * Math.sin(dy * 2.9 + seed * 1.3) * Math.sin(dz * 3.3 + seed * .7) + .45 * Math.sin(dx * 7 + dy * 5 + seed));
-    const card = Math.min(Math.max(size * 5, 320), Math.max(rx, ry) * 1.05), kind = cell ?? (card > 1500 ? LEAF.clump : LEAF.broad);
+    const card = Math.min(Math.max(size * 5, 320), Math.max(rx, ry) * 1.05), kind = cell ?? (card > 1500 ? LEAF.clump : card > 800 ? LEAF.small : LEAF.broad);   // single leaves near, dense small leaves at middle distance, clumps far
     if (core) {
         const geometry = card > 900 ? CORE_FAR : CORE, dark = base.clone().multiplyScalar(.36 * light);
         m4.compose(at.set(cx, cy, cz), q.set(0, 0, 0, 1), scale.set(rx * core * .82, ry * core * .82, rz * core * .82));
@@ -338,17 +338,18 @@ export function fanPalm(b, r, x, ground, z, { height = 18000, hex = '#6f8452', s
         limb(b, prev, p, 210 - t * 70, barkC.clone().multiplyScalar(.85 + .1 * (i % 2)), { geometry: POLE }); prev = p; }
     const head = prev.clone(); (b.land || b).shadow(x, ground, z, 1800, 1800, .35, 600);
     // the skirt: dead fronds hanging close under the head, short
-    for (let k = 0; k < 40; k++) { const a = r() * 6.28, h = r(), R = 260 + 200 * (1 - h);
+    const far = Math.abs(z) > 40000, fronds = far ? 14 : 34, pleats = far ? 4 : 9;   // (far palms: a few pixels, fewer pieces)
+    for (let k = 0; k < (far ? 10 : 40); k++) { const a = r() * 6.28, h = r(), R = 260 + 200 * (1 - h);
         const c = colour(skirt).offsetHSL(0, 0, (r() - .5) * .08).multiplyScalar(.6 + .3 * h);
         euler.set((r() - .5) * .3, -a, (r() - .5) * .3); q.setFromEuler(euler); m4.compose(at.set(head.x + Math.cos(a) * R, head.y - 250 - h * 1400, head.z + Math.sin(a) * R), q, scale.set(200, 700, 120));
         b.add(SPRAY, m4, () => c, { facet: true }); }
     // fan leaves: pleated fans on stalks radiating from the head, held up and out, the lower ones drooping
     const base = colour(hex);
-    for (let k = 0; k < 34; k++) {
-        const a = k / 34 * 6.28 + r() * .3, tilt = -.75 + r() * 1.6, len = 1500 + r() * 600, dir = new THREE.Vector3(Math.cos(a) * Math.cos(tilt), Math.sin(tilt), Math.sin(a) * Math.cos(tilt));
+    for (let k = 0; k < fronds; k++) {
+        const a = k / fronds * 6.28 + r() * .3, tilt = -.75 + r() * 1.6, len = 1500 + r() * 600, dir = new THREE.Vector3(Math.cos(a) * Math.cos(tilt), Math.sin(tilt), Math.sin(a) * Math.cos(tilt));
         const stalk = head.clone().addScaledVector(dir, len * .5), side = new THREE.Vector3().crossVectors(dir, Y).normalize(); if (side.lengthSq() < .1) side.set(1, 0, 0);
         const up = new THREE.Vector3().crossVectors(side, dir).normalize(), c = base.clone().offsetHSL((r() - .5) * .03, 0, (r() - .5) * .08).multiplyScalar(tilt < -.3 ? .75 : 1);
-        for (let s = 0; s < 9; s++) { const u0 = (s / 9 - .5) * 2.3, u1 = ((s + 1) / 9 - .5) * 2.3;
+        for (let s = 0; s < pleats; s++) { const u0 = (s / pleats - .5) * 2.3, u1 = ((s + 1) / pleats - .5) * 2.3;
             const tip = (d, f) => stalk.clone().addScaledVector(dir, Math.cos(d) * len * .55 * f).addScaledVector(side, Math.sin(d) * len * .55 * f).addScaledVector(up, -Math.abs(d) * 160 - (1 - f) * 0);
             b.tri(stalk, tip(u0, .82 + (s % 2) * .18), tip(u1, .82 + ((s + 1) % 2) * .18), c.clone().multiplyScalar(s % 2 ? .86 : 1)); }
         limb(b, head, stalk, 35, '#6b6450', { geometry: POLE });
@@ -480,7 +481,7 @@ export function building(k, r, x, ground, z, { width = 16000, depth = 14000, flo
             if (r() < litRate) { const curtain = r() < .45, lc = colour(litColours[Math.floor(r() * (r() < warm ? 4 : 5))]).multiplyScalar((.32 + r() * .3) * (curtain ? .6 : 1)); lights.quad(ww, wh * (curtain ? .5 : 1), [wx, y - (curtain ? wh * .25 : 0), face + (make ? 46 : 56)], lc); }
         }
     }
-    if (fins) { const n2 = (bays ?? Math.max(2, Math.round(width / 3200))) * 2; for (let i = 0; i <= n2; i++) b.box([180, height - 300, 420], [x - width / 2 + width * i / n2, ground + (height - 300) / 2, face + 210], fins, .08, r); }
+    if (fins) { const n2 = Math.max(2, Math.round((bays ?? Math.max(2, Math.round(width / 3200))) * .5)); for (let i = 0; i <= n2; i++) b.box([320, height - 300, 1100], [x - width / 2 + width * i / n2, ground + (height - 300) / 2, face + 550], fins, .08, r); }   // (few and deep: many thin ones read as bars from inside)
     if (side) { const sx = x + side * width / 2, sideN = Math.max(1, Math.round(depth / 3600));
         for (let f = shops ? 1 : 0; f < floors; f++) for (let i = 0; i < sideN; i++) {
             const y = ground + base + f * storey + storey * .52, wz = z - depth / 2 + depth / sideN * (i + .5);

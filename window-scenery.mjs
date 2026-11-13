@@ -50,8 +50,8 @@ export const DEFAULT_VIEW = { '*': 'photo' };
 // A scene may adjust any of these for its place (SCENES[name].hours), e.g. a marine layer or a city's glow.
 // Party is an ordinary late evening outside (the room's own party lights carry the mood; M7 of the November 13 review).
 export const HOURS = {
-    morning:   { tint: [1.0, .95, .86], zenith: '#7aabd2', horizon: '#e6d8c2', sun: [-52, 13, '#ffe2b0', .8], light: [.62, .62], clouds: .42, lamp: 0, haze: .5, air: '#dcd6ca', stars: 0 },
-    afternoon: { tint: [.98, .99, .97], zenith: '#7aa9cf', horizon: '#dbe3e6', sun: [48, 50, '#fff4e2', .45], light: [.58, .7], clouds: .5, lamp: 0, haze: .42, air: '#d3dbe0', stars: 0 },
+    morning:   { tint: [1.0, .95, .86], zenith: '#7aabd2', horizon: '#e6d8c2', sun: [-52, 13, '#ffe2b0', .8], light: [.62, .62], clouds: .42, lamp: 0, haze: .42, air: '#dcd6ca', stars: 0 },
+    afternoon: { tint: [.98, .99, .97], zenith: '#7aa9cf', horizon: '#dbe3e6', sun: [48, 50, '#fff4e2', .45], light: [.58, .7], clouds: .5, lamp: 0, haze: .34, air: '#d3dbe0', stars: 0 },
     evening:   { tint: [.78, .62, .55], zenith: '#55628c', horizon: '#e49c6c', sun: [38, 5, '#ff9f5c', 1.0], light: [.6, .75], clouds: .55, lamp: .5, haze: .55, air: '#b88a74', stars: 0 },
     night:     { tint: [.11, .135, .21], zenith: '#09101f', horizon: '#1d2a40', sun: [30, 36, '#c9d6f0', .22], light: [.8, .3], clouds: .2, lamp: 1, haze: .45, air: '#151d30', stars: 1 },
     party:     { tint: [.13, .14, .22], zenith: '#0c1226', horizon: '#2a2a40', sun: [-40, 30, '#d0d4ec', .2], light: [.8, .3], clouds: .25, lamp: 1, haze: .45, air: '#1b1e30', stars: .6 }
@@ -162,7 +162,8 @@ const SEA_AT = `
 float seaHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 vec3 seaAt(vec3 view, vec3 sunDir, vec2 spot) {
     float down = clamp(-view.y, 0., 1.), fres = exp(-down * 12.);
-    vec3 c = mix(seaColor * (.55 + .45 * clamp(sunDir.y * 2. + .3, 0., 1.)), mix(horizon, zenith, .45), .1 + .28 * fres);
+    float day = clamp(dot(zenith, vec3(.3, .59, .11)) * 4., .06, 1.);   // the water's own colour is lit by the day (dark at night)
+    vec3 c = mix(seaColor * day * (.55 + .45 * clamp(sunDir.y * 2. + .3, 0., 1.)), mix(horizon, zenith, .45), .1 + .28 * fres);
     vec3 r = reflect(view, vec3(0., 1., 0.)); float s = max(dot(r, sunDir), 0.), s2 = s * s, s6 = s2 * s2 * s2;
     vec2 g = spot / 1800., cell = floor(g), f = fract(g) - .5; float sparkle = step(.55, seaHash(cell)) * (.5 + .5 * seaHash(cell + 3.1)) * smoothstep(.5, .1, length(f));
     float s48 = s6 * s6; s48 *= s48; s48 *= s48;
@@ -200,7 +201,7 @@ void main() {
     float up = dir.y;
     vec3 c = mix(horizon, zenith, pow(smoothstep(-.02, .62, up), .75));
     if (up < 0.) { c = mix(c, horizon * .92, smoothstep(.0, -.12, up));            // below the horizon: the far air (behind the scenery)
-        if (sea > .5) c = seaAt(dir, sunDir, dir.xz / max(-up, 1e-4) * 9e5); }   // beyond the modelled sea: more of it, to the horizon
+        if (sea > .5) c = up > -.035 ? seaAt(dir, sunDir, dir.xz / max(-up, 1e-4) * 9e5) : mix(horizon, seaColor, .5); }   // beyond the modelled sea: more of it, to the horizon (lower down the sea mesh covers it: a plain colour there)
     float s = max(dot(dir, sunDir), 0.), s2 = s * s, s5 = s2 * s2 * s, s40 = s5 * s5; s40 *= s40; s40 *= s40;
     c += sunColor * sunPower * (pow(s, 900.) * 1.6 + s40 * .32 + s5 * .1);
     // stars after dark: sparse soft points, fewer toward the horizon's glow

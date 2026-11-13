@@ -451,7 +451,7 @@ function city(k, ctx, { neon = false } = {}) {
         row(cx + 9000, R, block(() => 1 + Math.floor(r() * 2)));
         b.box([18000, 900, 300], [cx, ground + 450, far - 2400], '#8f8a82');
         for (let x = cx - 7800; x < cx + 7800; x += 2600) if (r() < .55) car(k, r, x + 1300, ground, across - 5000, { turn: Math.PI / 2 + (r() - .5) * .1 });
-        const bx = cx + side * 4000; for (const s of [-1, 1]) pole(b, bx + s * 2500, ground, across - 11000, 7500, 160, '#5a5c5e');
+        const bx = cx + side * 10500; for (const s of [-1, 1]) pole(b, bx + s * 2500, ground, across - 11000, 7500, 160, '#5a5c5e');
         b.box([7000, 3200, 300], [bx, ground + 9000, across - 11000], '#4f5560'); b.quad(6600, 2800, [bx, ground + 9000, across - 10840], colour('#7d8a8c'));
         k.lights.box([7000, 120, 200], [bx, ground + 10700, across - 10800], '#f0e6d0'); b.light(bx, ground + 9000, across - 9000, '#f4ecd8', 3500, .2);
         for (let x = L - 20000; x < R + 20000;) { const width = 14000 + r() * 14000;
@@ -472,8 +472,8 @@ function city(k, ctx, { neon = false } = {}) {
     // far off: the towers
     skyline(k, r, cx, ground, { near: -260000, far: -1000000, min: 40000, max: 140000, neon });
 }
-const CITY_NIGHT = { night: { horizon: '#3a3a4e', air: '#2a2c3a', stars: .25, tint: [.13, .14, .2] }, party: { horizon: '#47385e', air: '#2e2844', stars: .15 } };
-const NEON_NIGHT = { evening: { horizon: '#d98a70', zenith: '#4a4f82' }, night: { zenith: '#120f2a', horizon: '#4d3466', air: '#2c2342', stars: .1, tint: [.13, .12, .2] }, party: { zenith: '#16102e', horizon: '#5a3270', air: '#33264a', stars: .05 } };
+const CITY_NIGHT = { night: { horizon: '#3a3a4e', air: '#2a2c3a', stars: .25, tint: [.13, .14, .2] }, party: { horizon: '#36334a', air: '#26263a', stars: .15 } };
+const NEON_NIGHT = { evening: { horizon: '#d98a70', zenith: '#4a4f82' }, night: { zenith: '#0e0f22', horizon: '#33304a', air: '#24223a', stars: .1, tint: [.12, .12, .19] }, party: { zenith: '#10112a', horizon: '#3a3150', air: '#282640', stars: .05 } };
 
 // ---- a yard behind a garage workshop: a concrete apron and gravel, a lumber rack under a lean-to, a shed, a work
 // trailer, a chain-link and board fence, fruit trees, a utility pole with its wires, the neighbours' roofs; a yard light
@@ -491,10 +491,10 @@ function yard(k, ctx) {
     for (const s of [-1, 1]) { const x = cx + s * 900; for (const [dx, dz] of [[-350, 0], [350, 0]]) limb(b, V(x + dx, ground, -2400 + dz - 200), V(x + dx * .4, ground + 750, -2400), 30, '#a08060'); b.box([1100, 90, 120], [x, ground + 760, -2400], '#a88a68'); }
     for (let i = 0; i < 4; i++) b.box([1200, 90, 1000], [cx - flip * 2600, ground + 45 + i * 90, -3200], '#b5aea2', .04, r);
     // the lean-to with the lumber rack, the shed
-    const lx = cx + flip * (w / 2 + 2500), lz = -6800;
+    const lx = cx + flip * (w / 2 + 6000), lz = -7800;
     for (const dx of [-2400, 2400]) for (const dz of [-1200, 1200]) b.box([120, 2700, 120], [lx + dx, ground + 1350, lz + dz], '#7f6a55');
     b.box([5600, 80, 3000], [lx, ground + 2750, lz], '#8d9298');
-    for (let i = 0; i < 7; i++) b.box([4600, 90 + r() * 60, 2000], [lx, ground + 350 + i * 260, lz], pick(r, ['#c9a77a', '#bf9b6c', '#d1b083', '#b48e62']), .05, r);
+    for (let i = 0; i < 4; i++) b.box([4600, 90 + r() * 60, 2000], [lx, ground + 350 + i * 260, lz], pick(r, ['#c9a77a', '#bf9b6c', '#d1b083', '#b48e62']), .05, r);
     const sx = cx - flip * 6500, sz = -12500;
     house(k, r, sx, ground, sz, { width: 4200, depth: 3200, eaves: 2400, ridge: 1100, wall: '#8c9a88', roof: '#5d5a56', lit: [], porch: false, storeys: 1 });
     // a work trailer and a pickup
@@ -723,8 +723,8 @@ export const SCENES = {
         evening: { tint: [.62, .56, .55], zenith: '#56607c', horizon: '#b99a8a', sun: [36, 6, '#ffb07a', .6], clouds: .8, haze: .66, air: '#9a8c86' },
         night: { tint: [.09, .11, .15], zenith: '#0d1420', horizon: '#26303a', clouds: .9, haze: .6, air: '#1e2730', stars: .15 },
         party: { tint: [.12, .12, .2], zenith: '#151a32', horizon: '#33304e', clouds: .85, haze: .6, air: '#262640', stars: .1 } } },
-    city: { build: (k, ctx) => city(k, ctx), storey: 3400, hazeFar: 90000, lampLevel: .78, hours: CITY_NIGHT },
-    'city-neon': { build: (k, ctx) => city(k, ctx, { neon: true }), storey: 3400, hazeFar: 90000, lampLevel: .78, haloLevel: .8, hours: NEON_NIGHT },
+    city: { build: (k, ctx) => city(k, ctx), storey: 3400, hazeFar: 110000, lampLevel: .78, hours: CITY_NIGHT },
+    'city-neon': { build: (k, ctx) => city(k, ctx, { neon: true }), storey: 3400, hazeFar: 110000, lampLevel: .78, haloLevel: .8, hours: NEON_NIGHT },
     yard: { build: yard, storey: 0, hazeFar: 80000 },
     'socal-campus': { build: (k, ctx) => socal(k, ctx, 'campus'), storey: 4200, hazeFar: 140000, hours: SOCAL },
     'beach-school': { build: (k, ctx) => socal(k, ctx, 'field'), storey: 4000, hazeFar: 140000, haloLevel: .8, hours: SOCAL }

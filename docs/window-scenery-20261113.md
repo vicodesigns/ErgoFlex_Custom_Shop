@@ -28,16 +28,38 @@ How it stays behind the room:
   seen through all of its openings (each opening a rectangle at its own depth, so a glazed door set back from the
   windows works), so window A and window B of a wall line up. A wall facing another way gets its own scene (its own
   seed, and the scene knows which wall it is: `ctx.facing`).
-- **Its own light.** No textures, no shadows, the room's lamps do not reach it. Each vertex carries its daylight
-  colour and the light the place's own lamps throw on it after dark (street lamps, lit windows, garden lights: pools
-  baked per vertex), plus a mesh of what glows and soft halos round the lamps.
-- **The hour** (`HOURS`, a scene's own `hours`, `setHour`): a tint, haze toward the colour of the air, the lamps, the
-  sky (gradient, sun or moon, clouds, stars). All of it numbers, colours and vectors, so the film's time-of-day blend
-  carries them (the sun's direction too: it is a uniform in the window's frame).
-- **Calm**: `LEVEL` (.8) scales everything outside; colours are muted on purpose and the far ground goes into haze.
-- **Cost**: per room about 38 000 to 95 000 triangles (the library, with glass on three sides, about 120 000); things the
-  room's cameras cannot see through the openings are not built; built once
-  and kept (the last four) for when a room is rebuilt.
+- **Its own light, from the hour's sky.** The room's lamps do not reach it. The shader lights the land with the hour's
+  sun (its direction is the one the sky draws the sun at, so the shade falls on the side away from it) and a sky/ground
+  hemisphere; the normals are uploaded (a byte each). Contact occlusion is baked into each vertex's colour: the ground
+  darkens under cars, trees, benches and rocks and at a building's foot, and so do their feet. A grain from a small
+  generated noise texture breaks up walls and ground. After dark the place's own lamps add their pools (baked per
+  vertex; a sixth of it on leaves), lit windows and shopfronts glow (a quarter of the windows at most, dimmer and
+  uneven, half of them curtained) and soft halos sit round the lamps; colours go greyer.
+- **Foliage is cards**, quads cut out of a generated leaf atlas (512 px, four cells: single broad leaves near, a
+  conifer spray, dense small leaves at middle distance, clumps far). Each card takes its crown's normal, so a crown is
+  lit as one volume; a dark mass inside fills the gaps; the cut-out threshold follows the mip level so far crowns keep
+  their mass. (The trial's tetrahedra read as paper confetti.)
+- **Far blocks and towers** draw their windows as a grid in the shader (a normal of length .85 marks a facade), a few of
+  them lit after dark, so a skyline of towers a kilometre off costs a box each.
+- **The air.** Far things take the colour of the air with distance, and keep going into it beyond the scene's
+  `hazeFar`, so towers a kilometre off are pale shapes.
+- **The hour** (`HOURS`, a scene's own `hours`, `setHour`): tint, `light` (how much the sky and the sun light the land),
+  haze and air, the lamps, the sky (gradient, sun or moon, clouds, stars). All numbers, colours and vectors, so the
+  film's time-of-day blend carries them (the sun's direction too). Party is an ordinary navy late evening outside; a
+  room whose party is daytime (the child's room, the bedroom) passes a daytime hour.
+- **The sky** on the pane: clouds from two fetches of the noise texture, coloured from the sky itself (so they go dark
+  at night) with soft edges; stars are soft points sized to the pixel; the sea's glitter is soft. `drift` moves the
+  clouds; it is 0 (they stand still) unless a film animates it.
+- **Calm**: `LEVEL` (.8) scales everything outside; colours are muted; nothing outside is lit like a stage.
+- **Draw order**: the sky pane first (no depth), then the room, then the land (`ORDER`), so the room's walls reject what
+  is behind them before it is shaded.
+- **Cost**: 13 000 to 100 000 triangles per world (a city from high up is the cheapest: its far blocks are boxes);
+  built in 25 to 200 ms in node; things the room's cameras cannot see through the openings are not built (a wedge that
+  widens past 15 m for oblique cameras); built once and kept (the last four) for when a room is rebuilt. The meshes are
+  marked `sharedProp`, so a room's disposal frees their materials and leaves the kept geometry; a world pushed out of
+  the cache is freed on the GPU. The pane's own material is freed with the room.
+- **Film**: `tools/experience/film-quality.mjs` hides the scenery from its GTAO pass and keeps it out of `bloomOnly`
+  (the scenery sits under nodes named "Window ...").
 
 ## The places
 
@@ -45,7 +67,7 @@ Scenes (`window-scenery-scenes.mjs`): `garden` (the home room), `back-garden` (o
 'kitchen', 'kids'), `studio-garden`, `humboldt`, `socal-campus` and `beach-school` (both with the Pacific beyond),
 `city` and `city-neon`, `yard`, `campus` (variants 'quad', 'green', 'court'), `schoolyard` ('kinder', 'elementary',
 'middle'). The city's variants say what stands nearest the glass ('balcony', 'glass', 'ledge', 'planters', 'louvres',
-'flowerbox', 'bars', 'open', 'dock') and what is across the street ('civic', 'hospital'); its facades are brick,
+'flowerbox', 'bars', 'open', 'dock') and what is across the street (a composition: 'street', 'corner', 'low', 'square', 'civic', 'hospital'); from 12 m up a city room sees a roofscape below it and a skyline of towers far off; its facades are brick,
 stone, render or panel. No two rooms share a view: each has its own seed, and storey and what is nearest the glass
 differ.
 
@@ -54,11 +76,11 @@ differ.
 | home (rise) | `garden` | ground | planter under the sill, terrace, lawn, trees, bench, fence and hedge, neighbours' houses |
 | creative (create) | `studio-garden` | ground | herb pots, brick path to an arched gate in an old wall, pergola with string lights, glasshouse, an easel |
 | library humboldt (commons) | `humboldt` | ground | three sides: the redwood grove; ferns, lawn and a campus building; the entry plaza. Marine layer |
-| occmedialab (coast) | `socal-campus` | 4.2 m | quad with jacarandas, a mid-century block, car park, palms on the mesa's edge, the town, beach and sea |
-| highschool (oilers) | `beach-school` | 4 m | over the fence: track and field, bleachers, floodlights, palms, a pumpjack, the town and the sea |
-| gym (wellness) | `city` | 0.6 m | planter and railings, the street, the row across, a side street to the towers |
-| gaming (music) | `city-neon` | 3.4 m | the same city with neon |
-| music (media, night) | `city` | 3.4 m | another street of it |
+| occmedialab (coast) | `socal-campus` | 8.4 m | the quad (jacarandas to its sides), a mid-century block, car park, over the mesa's edge the town's tile roofs, the beach and the sea |
+| highschool (oilers) | `beach-school` | 4 m | over the fence: the lawn, track and bleachers to the left, palms in clumps, the bluff down to the town, the beach and the sea |
+| gym (wellness) | `city` 'square' | 0.6 m | planter and railings, the street, a square of plane trees with a kiosk and a fountain, a row of blocks beyond |
+| gaming (music) | `city-neon` 'corner' | 3.4 m | the side street at the window's edge, neon |
+| music (media, night) | `city` 'low' | 3.4 m | a low row of shops, a car park opposite, low roofs and towers far off under the sky |
 | workshop (storage) | `yard` | ground | apron, lumber lean-to, shed, trailer, fences, fruit trees, utility pole |
 | bedroom | `back-garden` 'bedroom' | 3 m | a slate porch roof below, the garden from above, a patio with a parasol |
 | kitchen | `back-garden` 'kitchen' | ground | herb box on the sill, raised vegetable beds, bean poles, greenhouse |
@@ -86,12 +108,16 @@ The scifi room has no window to the outside (a space station), so it has no scen
 `windowView(room)` picks the view: `?window=scenery` in the Studio's address (`?window=painted` for the canvas the
 room paints itself, `?window=photo` for the photograph), `localStorage['ergoflex.windowView']`, or
 `globalThis.__efWindowView`; otherwise `DEFAULT_VIEW` in `window-scenery.mjs`. Making scenery the default:
-`DEFAULT_VIEW = { '*': 'scenery' }` for every room, or add one room, e.g. `music: 'scenery'`. A film chapter whose room
+`DEFAULT_VIEW = { '*': 'scenery' }` for every room, or add one room, e.g. `music: 'scenery'`. The Humboldt commons is
+`library-humboldt` and the contemporary lounge `lounge-contemporary` (their own ids, so they can go first). A film chapter whose room
 changes needs its re-render. Test stills of a chapter: add `"ergoflex.windowView": "scenery"` to a copy of the seed
 passed to `render-cut.cjs --storage`.
 
 `tests/window-scenery-test.mjs` checks the module without a browser (every scene, its cost, that it is outside the
-wall, the hours, several openings, walls facing different ways, the opening test, reuse).
+wall, the hours, several openings, walls facing different ways, the opening test, reuse, draw order and sharing, the
+land lit from the sky's sun, a navy party, leaves under lamps, three city compositions, sky from high floors, the sea in
+view). `tests/window-scenery-rooms-test.cjs` builds every room in scenery mode in a browser (a world per wall, shaders
+compiled, daytime parties, the window against the frame after dark, the photograph path without scenery).
 
 ## Adding a room
 
@@ -101,6 +127,9 @@ path unchanged (`view === 'photo' ? attachVista(...) : null`), and call `scenery
 
 ## Known weaknesses
 
-- Leaves are small faceted sprays over a lumpy mass: they read as foliage at a distance and a little papery close up.
-- Conifers' branch tiers are regular; redwood sprays are flat layers.
-- Cars, people and anything that moves: none (cars are parked; two have their lamps on after dark).
+- Facades nearest the glass are modelled boxes with flat colours and a grain; no brick or window texture.
+- Cars are simple extrusions, parked; two have their lamps on after dark. No people outside.
+- Conifer and redwood sprays are flat cards; seen edge-on from a grazing camera they thin out.
+- The high school's beach is below the sill from a camera standing back in the room (the sea is what it sees); close
+  to the glass, or in the film's camera, the roofs and the beach show.
+- Blinds: many rooms lower theirs over the scenery at some hours (the owner's call, unchanged).

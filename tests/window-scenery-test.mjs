@@ -2,7 +2,8 @@
 //   node tests/window-scenery-test.mjs
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { attachScenery, windowView, HOURS, LEVEL, SCENES, DEFAULT_VIEW, hourOf } from '../window-scenery.mjs';
+import { attachScenery, windowView, HOURS, LEVEL, SCENES, DEFAULT_VIEW, hourOf, ORDER } from '../window-scenery.mjs';
+import { sharedTextures } from '../window-scenery-kit.mjs?v=polish-20261113b';   // (the stamp the scenery module imports it with: one instance)
 
 // ---- which view a window shows: the photograph unless asked otherwise, the default in one place
 assert.equal(windowView('home'), 'photo', 'the default view is the photograph'); assert.equal(windowView(), 'photo');
@@ -130,5 +131,34 @@ for (const name of Object.keys(SCENES)) {
   assert.ok(!through(V(0, 6000, -5000), V(0, 0, 3000), openings), 'not above the window');
   assert.ok(!through(V(0, 0, -5000), V(0, 0, -8000), openings), 'nothing from outside the wall'); }
 
+// ---- the November 13 review's checks: draw order, sharing, the light agreeing with the sun, compositions, the coast
+{ const pane = paneIn(new THREE.Group(), 1700, 1400, [0, 1550, -1800]), view = attachScenery(pane, 'garden', { floor: -1550 }), meshes = view.group.children;
+  assert.ok(ORDER.pane < 0 && meshes.every(m => m.renderOrder > 0), 'the land is drawn after the room\'s opaques (the walls reject it first), the sky pane first');
+  assert.ok(meshes.every(m => m.userData.sharedProp && m.ownedMaterials?.[0] === m.material), 'the room frees the materials, not the kept geometry');
+  assert.ok(pane.replacedMaterials?.length === 1, 'the pane\'s own material is freed with the room');
+  const leaves = meshes.find(m => m.name === 'Window scenery leaves'); assert.ok(leaves && leaves.geometry.attributes.uv && /LEAVES/.test(Object.keys(leaves.material.defines).join()), 'foliage is cards cut out of the leaf texture');
+  const { leaves: atlas, noise } = sharedTextures(); assert.ok(leaves.material.uniforms.leafMap.value === atlas && view.sky.uniforms.noiseMap.value === noise && atlas.image.width === 512 && noise.image.width === 128, 'two small generated textures, shared');
+  const land = meshes[0], n = land.geometry.attributes.normal; assert.ok(n && n.normalized && n.array instanceof Int8Array, 'the land carries its normals (lit in the shader)');
+  for (const id of Object.keys(HOURS)) { view.setHour(id); const s = view.sky.uniforms.sunLocal.value, f = land.material.uniforms.sunDirF.value;
+      assert.ok(Math.abs(f.x - s.x) < 1e-9 && Math.abs(f.y - s.y) < 1e-9 && Math.abs(f.z + s.z) < 1e-9, id + ': the land is lit from where the sun is in the sky'); }
+  view.setHour('party'); const z = view.sky.uniforms.zenith.value, hsl = {}; z.getHSL(hsl, THREE.SRGBColorSpace); assert.ok(hsl.s < .6 && hsl.l < .1 && hsl.h > .55 && hsl.h < .7, 'party outside is a navy late evening, not violet');
+  const g = land.geometry.attributes.glow, lg = leaves.geometry.attributes.glow; let wall = 0, leaf = 0; for (let i = 0; i < g.count; i++) wall = Math.max(wall, g.getX(i)); for (let i = 0; i < lg.count; i++) leaf = Math.max(leaf, lg.getX(i));
+  assert.ok(leaf < wall * .5, 'leaves take a fraction of a lamp\'s light (no paper lanterns)');
+  view.dispose(); }
+// the film's three city chapters see three different compositions; from high up the sky has the upper part of the window
+{ const eyeAbove = (name, variant, storey, seed, within) => { const pane = paneIn(new THREE.Group(), 1600, 1450, [0, 1575, -1800]), view = attachScenery(pane, name, { floor: -1575, variant, storey, seed });
+      const p = view.group.children[0].geometry.attributes.position; let worst = -90;
+      for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i) - 25, z = p.getZ(i); if (Math.abs(x) < 6000 && z < -8000 && z > -within) worst = Math.max(worst, Math.atan2(y, -z) * 180 / Math.PI); }
+      const key = p.count; view.dispose(); return { worst, key }; };
+  const gym = eyeAbove('city', 'square', 600, 4401, 150000), music = eyeAbove('city', 'low', 3400, 6203, 150000), gaming = eyeAbove('city-neon', 'corner', 3400, 9077, 150000);
+  assert.ok(new Set([gym.key, music.key, gaming.key]).size === 3, 'the gym, the gaming room and the music room do not share a street');
+  assert.ok(music.worst < 10, 'the music room (the film\'s night chapter) sees sky over the roofs across (' + music.worst.toFixed(1) + ' deg)');
+  for (const [variant, storey, seed] of [['ledge', 22000, 3101], ['glass', 30000, 3505], ['ledge', 38000, 4606]]) { const { worst } = eyeAbove('city', variant, storey, seed, 150000);
+      assert.ok(worst < 4, `from ${storey / 1000} m up the roofs within 150 m stay below the eye (${worst.toFixed(1)} deg)`); } }
+// the coast: the sea a band six to twelve degrees deep below the horizon from the rooms' storeys
+for (const [name, storey] of [['beach-school', 4000], ['socal-campus', 8400]]) { const pane = paneIn(new THREE.Group(), 1600, 1450, [0, 1575, -1800]), view = attachScenery(pane, name, { floor: -1575, storey });
+    const sea = view.group.children.find(o => o.name === 'Window scenery sea'); sea.geometry.computeBoundingBox(); const b = sea.geometry.boundingBox, deg = Math.atan2(25 - b.max.y, -b.max.z) * 180 / Math.PI;
+    assert.ok(deg > 6 && deg < 12, name + ': the sea from the horizon down to ' + deg.toFixed(1) + ' degrees'); view.dispose(); }
+
 assert.throws(() => attachScenery(new THREE.Mesh(), 'moon-base', { width: 1, height: 1 }), /No window scenery/);
-console.log('PASS window scenery: the view switch and its default, ' + Object.keys(SCENES).length + ' scenes (built, outside the wall, cost, lights after dark, depth, hours, reuse), several openings in one wall, walls facing different ways, the opening test, dispose');
+console.log('PASS window scenery: the view switch and its default, ' + Object.keys(SCENES).length + ' scenes (built, outside the wall, cost, lights after dark, depth, hours, reuse), several openings in one wall, walls facing different ways, the opening test, dispose, draw order and sharing, light from the sky\'s sun, navy party, leaves under lamps, three city compositions, sky from high floors, the sea in view');
