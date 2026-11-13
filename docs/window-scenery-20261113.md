@@ -35,23 +35,51 @@ How it stays behind the room:
   sky (gradient, sun or moon, clouds, stars). All of it numbers, colours and vectors, so the film's time-of-day blend
   carries them (the sun's direction too: it is a uniform in the window's frame).
 - **Calm**: `LEVEL` (.8) scales everything outside; colours are muted on purpose and the far ground goes into haze.
-- **Cost**: per room about 45 000 to 77 000 triangles (the library, with glass on three sides, about 120 000); things the
+- **Cost**: per room about 38 000 to 95 000 triangles (the library, with glass on three sides, about 120 000); things the
   room's cameras cannot see through the openings are not built; built once
   and kept (the last four) for when a room is rebuilt.
 
 ## The places
 
-| Room (film chapter) | Scene | Storey | Outside |
+Scenes (`window-scenery-scenes.mjs`): `garden` (the home room), `back-garden` (other gardens; variants 'bedroom',
+'kitchen', 'kids'), `studio-garden`, `humboldt`, `socal-campus` and `beach-school` (both with the Pacific beyond),
+`city` and `city-neon`, `yard`, `campus` (variants 'quad', 'green', 'court'), `schoolyard` ('kinder', 'elementary',
+'middle'). The city's variants say what stands nearest the glass ('balcony', 'glass', 'ledge', 'planters', 'louvres',
+'flowerbox', 'bars', 'open', 'dock') and what is across the street ('civic', 'hospital'); its facades are brick,
+stone, render or panel. No two rooms share a view: each has its own seed, and storey and what is nearest the glass
+differ.
+
+| Room (film chapter) | Scene, variant | Storey | Outside |
 |---|---|---|---|
-| home (rise) | `garden` | ground | planter under the sill, terrace, lawn, trees, bench, fence and hedge, neighbours' houses, a street lamp |
-| creative (create) | `studio-garden` | ground | pots of herbs on gravel, a brick path to an arched gate in an old wall, lavender, a vine pergola with string lights, fruit tree, birch, glasshouse, carved stone, an easel |
-| library humboldt (commons) | `humboldt` | ground | back glass: the redwood grove in the fog; long glass: ferns, a path, the lawn, a campus building, redwoods; vestibule: the entry plaza. Marine-layer hours |
-| occmedialab (coast) | `socal-campus` | a floor up | succulents below, palms and benches on the walk, the quad's jacarandas, a mid-century block with sunshades, the car park, palms and hills in the haze |
-| highschool (oilers) | `beach-school` | ground | succulents, the fence, the track and field, goalposts, bleachers, floodlights, rows of fan palms, low roofs, a pumpjack |
-| gym (wellness) | `city` | ground (apartment: 4 floors up) | planter and railings, the pavement's plane trees and lamps, parked cars, the row across with shops, taller blocks, towers |
-| gaming (music) | `city-neon` | upstairs (apartment: 5 floors) | the same street with neon signs over the shops and on the towers, a violet glow after dark |
-| music (media, at night) | `city` | upstairs (apartment: 4 floors) | a different street of the same city (own seed) |
-| workshop (storage) | `yard` | ground | concrete apron, sawhorses, a lumber lean-to, a shed, a trailer and a pickup, chain-link and board fence, fruit trees, a utility pole and wires, the neighbours |
+| home (rise) | `garden` | ground | planter under the sill, terrace, lawn, trees, bench, fence and hedge, neighbours' houses |
+| creative (create) | `studio-garden` | ground | herb pots, brick path to an arched gate in an old wall, pergola with string lights, glasshouse, an easel |
+| library humboldt (commons) | `humboldt` | ground | three sides: the redwood grove; ferns, lawn and a campus building; the entry plaza. Marine layer |
+| occmedialab (coast) | `socal-campus` | 4.2 m | quad with jacarandas, a mid-century block, car park, palms on the mesa's edge, the town, beach and sea |
+| highschool (oilers) | `beach-school` | 4 m | over the fence: track and field, bleachers, floodlights, palms, a pumpjack, the town and the sea |
+| gym (wellness) | `city` | 0.6 m | planter and railings, the street, the row across, a side street to the towers |
+| gaming (music) | `city-neon` | 3.4 m | the same city with neon |
+| music (media, night) | `city` | 3.4 m | another street of it |
+| workshop (storage) | `yard` | ground | apron, lumber lean-to, shed, trailer, fences, fruit trees, utility pole |
+| bedroom | `back-garden` 'bedroom' | 3 m | a slate porch roof below, the garden from above, a patio with a parasol |
+| kitchen | `back-garden` 'kitchen' | ground | herb box on the sill, raised vegetable beds, bean poles, greenhouse |
+| childroom | `back-garden` 'kids' | ground | sandpit, swing set, trampoline, a tree house (the room had no photograph) |
+| office | `city` 'ledge' | 22 m | a stone ledge, the blocks' roofs, the towers |
+| coworking | `city` 'planters' | 9 m | a terrace with planters |
+| gallery | `city` 'open' | ground | a bench and bike stands on the pavement |
+| lounge | `city` 'balcony' | 15 m | its balcony |
+| lounge (contemporary) | `city` 'glass' | 30 m | a glass balustrade, roofs, the towers and sky |
+| library room | `campus` 'quad' | ground | lawns, oaks and maples, brick wings |
+| study | `campus` 'court' | 4 m | a paved court with a fountain |
+| college / university | `campus` 'green' / 'quad' | ground / 8 m | an open green and a long wing / a quad |
+| kindergarten / elementary / middleschool | `schoolyard` | ground / ground / 4 m | sunflowers and a sandpit / bike racks / a ball court |
+| hospital | `city` 'hospital' | 12 m | a forecourt with a drop-off canopy before a white medical block |
+| laboratory | `city` 'louvres' | 7.5 m | sun-shade louvres outside the glass |
+| mobileit | `city` 'dock' | 1.2 m | a loading dock's edge and bollards |
+| government | `city` 'civic+flowerbox' | 6 m | a window box; across, a plaza with flagpoles and a stone portico |
+| police | `city` 'bars' | 3.6 m | a security grille |
+| security | `city` 'ledge' | 38 m | the roofs below, towers level with the room |
+
+The scifi room has no window to the outside (a space station), so it has no scenery.
 
 ## Trying it
 
