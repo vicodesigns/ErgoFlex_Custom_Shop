@@ -33,7 +33,7 @@
 //     ahead of the desk after a turn and a roll; without them it is ahead along +x.
 //     person:'<library id>' puts that posed person (assets/props, category people) there instead of the pylon,
 //     facing the desk, from the first frame (rise is ignored); turn (deg) adds to the facing. prepareObstacles(shot)
-//     loads them first (film-fx awaits it).
+//     loads them first (film-fx awaits it). A dog ('dog…') wags its tail, moves its head and breathes; still:true keeps it still.
 //     A simulated pylon, styled like the stage's proximity pylons. ahead is the gap
 //     in scene units between the desk's (or, from:'base', the base's front at the pylon's height) initial front (+x) edge and the pylon's near
 //     face; x is sideways from the desk's centre. rise eases its scale in.
@@ -64,11 +64,46 @@ export async function prepareObstacles(shot) {
   return wanted.length;
 }
 
+// A dog that stands in for a pylon is one unrigged mesh: it is given life in its vertex shader. In the dog's own frame
+// (z from tail to nose, y up) the tail wags from its root, the head turns and nods from the neck, the chest breathes;
+// the paws and the body stay where they stand. `seconds` drives it, so a frame of the film is always the same.
+function animateDog(person) {
+  person.updateMatrixWorld(true);
+  const inv = new THREE.Matrix4().copy(person.matrixWorld).invert(), box = new THREE.Box3(), v = new THREE.Vector3(), time = { value: 0 }, meshes = [];
+  person.traverse(m => { const pos = m.isMesh && m.geometry?.attributes?.position; if (!pos) return;
+    const to = new THREE.Matrix4().multiplyMatrices(inv, m.matrixWorld); for (let i = 0; i < pos.count; i += 3) box.expandByPoint(v.fromBufferAttribute(pos, i).applyMatrix4(to)); meshes.push([m, to]); });
+  if (box.isEmpty()) return null;
+  const size = box.getSize(new THREE.Vector3());
+  for (const [m, to] of meshes) {
+    const uniforms = { dogTime: time, dogIn: { value: to }, dogOut: { value: to.clone().invert() }, dogMin: { value: box.min.clone() }, dogSize: { value: size } };
+    const patch = mat => { const c = mat.clone();
+      c.onBeforeCompile = sh => { Object.assign(sh.uniforms, uniforms);
+        sh.vertexShader = sh.vertexShader.replace('#include <common>', `#include <common>
+uniform float dogTime; uniform mat4 dogIn, dogOut; uniform vec3 dogMin, dogSize;
+vec2 dogTurn(vec2 p, float a) { float c = cos(a), s = sin(a); return vec2(p.x * c - p.y * s, p.x * s + p.y * c); }
+vec3 dogMove(vec3 pos) {
+  vec3 p = (dogIn * vec4(pos, 1.)).xyz, n = (p - dogMin) / dogSize; float mid = dogMin.x + .5 * dogSize.x;
+  float tail = smoothstep(.3, .1, n.z) * smoothstep(.36, .5, n.y), tz = dogMin.z + .3 * dogSize.z;                 // the tail, from its root
+  vec2 t = dogTurn(vec2(p.x - mid, p.z - tz), sin(dogTime * 8.5) * .5 * (.6 + .4 * sin(dogTime * .9 + 1.)) * tail); p.x = mid + t.x; p.z = tz + t.y;
+  float ty = dogMin.y + .64 * dogSize.y; vec2 lift = dogTurn(vec2(p.z - tz, p.y - ty), -(.12 + .2 * sin(dogTime * 2.3 + .5)) * tail); p.z = tz + lift.x; p.y = ty + lift.y;   // and lifts and drops as it wags
+  float head = smoothstep(.68, .86, n.z) * smoothstep(.42, .6, n.y), hz = dogMin.z + .7 * dogSize.z, hy = dogMin.y + .62 * dogSize.y;   // the head, from the neck
+  vec2 h = dogTurn(vec2(p.x - mid, p.z - hz), (.24 * sin(dogTime * .8) + .07 * sin(dogTime * 2.1 + .7)) * head); p.x = mid + h.x; p.z = hz + h.y;
+  vec2 nod = dogTurn(vec2(p.z - hz, p.y - hy), (.13 * sin(dogTime * 1.1 + 2.) - .03) * head); p.z = hz + nod.x; p.y = hy + nod.y;
+  float chest = smoothstep(.3, .45, n.z) * smoothstep(.78, .6, n.z) * smoothstep(.3, .5, n.y), breath = sin(dogTime * 2.6);      // breathing
+  p.x = mid + (p.x - mid) * (1. + .035 * breath * chest); p.y += .008 * dogSize.y * breath * chest;
+  return (dogOut * vec4(p, 1.)).xyz;
+}`).replace('#include <begin_vertex>', '#include <begin_vertex>\ntransformed = dogMove(transformed);'); };
+      c.customProgramCacheKey = () => 'film-dog'; return c; };
+    m.material = Array.isArray(m.material) ? m.material.map(patch) : patch(m.material);
+  }
+  return time;
+}
+
 export function installStatus(shot) {
   const game = api.ledGameMode, counts = game.counts;
   const frame = counts.map(n => new Uint8Array(n * 4)), events = (shot.ledStatus || []).map(e => ({ ...e }));
   const group = new THREE.Group(); group.name = 'Film status'; group.userData.filmFx = true;
-  const pylons = [], regular0 = api.ledColor || '#ffffff';
+  const pylons = [], dogs = [], regular0 = api.ledColor || '#ffffff';
   const rgbOf = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
   // The status frames go to the strips through the game path, which uploads them as LINEAR bytes
   // (led-pixel-renderer linearByteToSrgb), while the regular look is the sRGB colour regularRgb. So the
@@ -131,7 +166,9 @@ export function installStatus(shot) {
         const k = api.workspaceAccessories?.scale || api.workspaceRoom?.scale || .001;
         person.scale.setScalar(1000 * k); person.position.y = box.min.y;
         person.rotation.y = Math.atan2(c.x - person.position.x, c.z - person.position.z) + THREE.MathUtils.degToRad(o.turn || 0);
-        person.traverse(m => { if (m.isMesh) m.castShadow = true; }); group.add(person); continue;
+        person.traverse(m => { if (m.isMesh) m.castShadow = true; }); group.add(person);
+        if (/^dog/.test(o.person) && o.still !== true) { const time = animateDog(person); if (time) dogs.push(time); }
+        continue;
       }
       pylons.push({ mesh, h, y0: box.min.y, rise: o.rise || [0, 0] }); group.add(mesh);
     }
@@ -139,6 +176,7 @@ export function installStatus(shot) {
   }
   return {
     frame(seconds) {
+      for (const time of dogs) time.value = seconds;
       for (const p of pylons) {
         const u = p.rise[1] > p.rise[0] ? smooth((seconds - p.rise[0]) / (p.rise[1] - p.rise[0])) : 1;
         p.mesh.visible = u > 0; p.mesh.scale.y = Math.max(.001, u); p.mesh.position.y = p.y0 + p.h * u / 2;
