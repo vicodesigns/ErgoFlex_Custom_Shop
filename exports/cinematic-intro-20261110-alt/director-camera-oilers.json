@@ -225,7 +225,8 @@
      1011
     ],
     "turn": -180.0,
-    "y": 60
+    "y": 60,
+    "hide": true
    },
    {
     "key": "people-eli-sit-listen",

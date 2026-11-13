@@ -236,7 +236,7 @@ function installAdd(edit, n, undo) {
 }
 const PHYSICAL = new Set(['clearcoat', 'clearcoatRoughness', 'sheen', 'transmission', 'iridescence']);
 export function installEdits(shot) {
-  const undo = [], live = [], swapped = new Map();
+  const undo = [], live = [], swapped = new Map(), editCopies = [];
   const wrap = (m, field, factor) => {
     // Instance accessor: everything that writes m[field] is multiplied by factor().
     const own = Object.getOwnPropertyDescriptor(m, field); let raw = m[field];
@@ -251,6 +251,10 @@ export function installEdits(shot) {
     const found = targets(edit);
     if (!found.length) { console.warn(`[film-fx] sceneEdits[${n}] matched nothing: ${edit.match}`); continue; }
     edit.__count = found.length; if (edit.show) timed.push([edit, found]);
+    // clone:true copies are this edit's own: two edits that recolour two props sharing one library material (oilers'
+    // charcoal wainscot and orange rail, both kenney-furniture-paneling) each get their copy instead of the last one
+    // painting both. Copies made only to go physical (clearcoat …) stay shared across edits, as before.
+    const copies = edit.clone ? new Map() : swapped; if (copies !== swapped) editCopies.push(copies);
     for (const o of found) {
       // Which edits act on each object (the Director reads its own director:true entry and the film's moves here).
       (o.userData.__filmFxEdits ||= []).push(edit); undo.push(() => { const a = o.userData.__filmFxEdits, i = a ? a.lastIndexOf(edit) : -1; if (i >= 0) a.splice(i, 1); if (a && !a.length) delete o.userData.__filmFxEdits; });
@@ -299,11 +303,11 @@ export function installEdits(shot) {
           if (!m || (mok && !mok(m))) return m;
           const needPhysical = Object.keys(mat).some(k => PHYSICAL.has(k)) && !m.isMeshPhysicalMaterial && m.isMeshStandardMaterial;
           if (!(needPhysical || edit.clone)) return m;
-          if (!swapped.has(m)) {
+          if (!copies.has(m)) {
             let c; if (needPhysical) { c = new THREE.MeshPhysicalMaterial(); THREE.MeshStandardMaterial.prototype.copy.call(c, m); c.onBeforeCompile = m.onBeforeCompile; c.customProgramCacheKey = m.customProgramCacheKey; } else c = m.clone();
-            c.userData = { ...m.userData, filmFxCopy: true }; swapped.set(m, c);
+            c.userData = { ...m.userData, filmFxCopy: true }; copies.set(m, c);
           }
-          return swapped.get(m);
+          return copies.get(m);
         });
         if (next.some((m, i) => m !== list[i])) { const orig = mesh.material; mesh.material = Array.isArray(orig) ? next : next[0]; undo.push(() => { mesh.material = orig; }); }
         // An opaque surface made fadeable joins the transparent pass; keep it
@@ -348,7 +352,7 @@ export function installEdits(shot) {
   return {
     count: (shot.sceneEdits || []).map(e => e.__count || 0),
     apply(seconds) { lastSeconds = seconds; for (const f of live) f(seconds); },
-    restore() { for (const f of undo.reverse()) f(); for (const c of swapped.values()) c.dispose(); }
+    restore() { for (const f of undo.reverse()) f(); for (const map of [swapped, ...editCopies]) for (const c of map.values()) c.dispose(); }
   };
 }
 // ---------- recolor (sceneEdits[].recolor) ----------
