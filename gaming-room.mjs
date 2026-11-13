@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=polish-20261112f';
+import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113a';
 import { createSunPatch } from './room-sun-patch.mjs?v=polish-20261111f';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
@@ -205,8 +206,11 @@ export function buildGamingRoom(room, root, layout, helpers) {
     const skyMap = new THREE.CanvasTexture(skyCanvas); skyMap.colorSpace = THREE.SRGBColorSpace;
     const pane = mesh(entry, new THREE.PlaneGeometry(ww, wh), new THREE.MeshBasicMaterial({ map: skyMap }), [-w / 2 - 55, low + wh / 2, wz]);
     // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
-    const windowVista = attachVista(pane, 'city-neon'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
+    // Or a modelled neon street behind the glass (window-scenery.mjs), or the painted canvas alone: windowView() decides.
+    const view = windowView('gaming'), windowVista = view === 'photo' ? attachVista(pane, 'city-neon') : null; if (windowVista) room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     pane.rotation.y = Math.PI / 2; pane.castShadow = pane.receiveShadow = false;
+    // An upstairs room of a town house over a busy street; the apartment is five floors up.
+    const scenery = view === 'scenery' ? attachScenery(pane, 'city-neon', { floor: -(low + wh / 2), seed: 9077, storey: layout.id === 'apartment' ? 15000 : 3400 }) : null;
     for (const z of [rearEnd, wz, forwardEnd]) box(entry, [70, wh + 50, 35], [-w / 2 + 5, low + wh / 2, z], trim);
     for (const y of [low, low + wh]) box(entry, [70, 35, ww + 50], [-w / 2 + 5, y, wz], trim);
     box(entry, [180, 35, ww + 90], [-w / 2 + 50, low - 25, wz], walnut, 3);
@@ -523,7 +527,7 @@ export function buildGamingRoom(room, root, layout, helpers) {
             for (let y = top + 10; y < 500; y += 16) for (let x = bx + 5; x < bx + bw - 5; x += 9)
                 if ((x * 7 + y * 3 + i) % 5 < 2) { c.fillStyle = (x + y) % 3 ? '#ffd58a' : '#7fe3f0'; c.fillRect(x, y, 4, 6); }
         }
-        skyMap.needsUpdate = true; windowVista.setPhase(modeId);
+        skyMap.needsUpdate = true; windowVista?.setPhase(modeId); scenery?.setHour(modeId);
         strips.forEach(paint);
         const lit = Math.min(.9, mode.rgb * accent), unlit = .12 + .4 * Math.max(0, 1 - lit);
         hexChannels.forEach((channel, i) => hexes.setColorAt(i, tile.set(tone(mode, channel)).multiplyScalar(lit * 1.05).add(color.copy(frost).multiplyScalar(unlit))));

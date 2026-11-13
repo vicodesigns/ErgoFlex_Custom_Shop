@@ -388,6 +388,7 @@ export const SCENES = {
         night: { tint: [.09, .11, .15], zenith: '#0d1420', horizon: '#26303a', clouds: .9, haze: .6, air: '#1e2730', stars: .15 },
         party: { tint: [.12, .12, .2], zenith: '#151a32', horizon: '#33304e', clouds: .85, haze: .6, air: '#262640', stars: .1 } } },
     city: { build: (k, ctx) => city(k, ctx), storey: 3400, hazeFar: 90000, lampLevel: .78, hours: CITY_NIGHT },
+    'city-neon': { build: (k, ctx) => city(k, ctx, { neon: true }), storey: 3400, hazeFar: 90000, lampLevel: .78, haloLevel: .8, hours: NEON_NIGHT },
     'socal-campus': { build: (k, ctx) => socal(k, ctx, 'campus'), storey: 4200, hazeFar: 110000, hours: SOCAL },
     'beach-school': { build: (k, ctx) => socal(k, ctx, 'field'), storey: 0, hazeFar: 110000, haloLevel: .8, hours: SOCAL }
 };
