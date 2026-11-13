@@ -127,8 +127,8 @@ for (const who of ['maya', 'andre', 'grace', 'noah', 'sam']) {
     solveDesk(rig, actor.keys, { tau: 2.6, k: .4, height: 43, time: 99, seed: 7 }); solveDesk(rig, actor.keys, { tau: 0, k: 1, height: 28, time: 3, seed: actor.seed });
     solveDesk(rig, actor.keys, input); assert.deepEqual(snapshot(rig), first, who + ': same inputs, same pose');
     // life: small, and it keeps the hands on the keys and the feet on the floor
-    // (with life on, the seated back sits upright, SIT_UPRIGHT: the head is measured from that pose, with life too small to move it)
-    solveDesk(rig, actor.keys, { tau: 0, k: 1, height: 28, time: 0, seed: actor.seed, life: 1e-9 }); const upright = rig.wp[rig.b.head].clone(), uprightQ = rig.wq[rig.b.head].clone();
+    // (with life on, the seated back sits upright, SIT_UPRIGHT: the head is measured from that pose, without life)
+    solveDesk(rig, actor.keys, { tau: 0, k: 1, height: 28, time: null, seed: actor.seed, upright: true }); const upright = rig.wp[rig.b.head].clone(), uprightQ = rig.wq[rig.b.head].clone();
     let moved = 0;
     for (let time = 0; time < 40; time += .37) {
         solveDesk(rig, actor.keys, { tau: 0, k: 1, height: 28, time, seed: actor.seed });
