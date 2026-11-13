@@ -113,7 +113,7 @@ CHARACTERS = {
         'name': 'Priya', 'phenotype': {'gender': .0, 'age': .45, 'muscle': .55, 'weight': .45, 'height': .6, 'proportions': .65, 'race': race(.35, .15, .5)},
         'skin': 'young_asian_female', 'eyes': 'brown', 'hair': 'braid01', 'eyebrows': 'eyebrow012', 'eyelashes': 'eyelashes02',
         # (a tee over loose trousers: the sportsuit's crop top left her midriff and back bare, worst with her arms up in the gym)
-        'clothes': ['joepal_crude_t-shirt_female', 'toigo_harem_pants', 'shoes05'], 'tint': {'joepal_crude_t-shirt_female': (.16, .42, .5), 'toigo_harem_pants': (.06, .06, .07)},
+        'clothes': ['joepal_crude_t-shirt_female', 'toigo_harem_pants', 'shoes05'], 'tint': {'joepal_crude_t-shirt_female': (.12, .15, .21), 'toigo_harem_pants': (.06, .06, .07)},
     },
     'jo': {
         'name': 'Jo', 'phenotype': {'gender': .0, 'age': .62, 'muscle': .55, 'weight': .55, 'height': .55, 'proportions': .5, 'race': race(1, 0, 0)},
