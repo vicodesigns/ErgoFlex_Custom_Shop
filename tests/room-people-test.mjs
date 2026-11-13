@@ -38,7 +38,8 @@ for (const [room, specs] of Object.entries(ROOM_PEOPLE)) for (const spec of LAYO
         assert.equal(on(L, 'gym-pullup').length, L.tier >= 2 ? 1 : 0, id + ': the rack\'s bar from the studio up');
         assert.equal(on(L, 'gym-press').length, L.tier >= 2 ? 1 : 0, id + ': the bench press from the studio up');
     }
-    assert.ok(!castEntries('gym', GYM_LAYOUTS.house).some(s => /gym-/.test(s.id) && s.modes.includes('morning')), 'the film\'s gym (house, morning) keeps its cast');
+    // the film's gym (house, morning): its chapter names Kai on the bike, and the Studio shows the same morning
+    assert.deepEqual(castEntries('gym', GYM_LAYOUTS.house).filter(s => /gym-/.test(s.id) && s.modes.includes('morning')).map(s => s.key), ['kai-bike'], 'the film\'s gym (house, morning): Kai on the bike, nobody else on a machine');
     const walkers = castEntries('gym', GYM_LAYOUTS.executive).filter(s => s.tread); assert.ok(walkers.length === 2 && walkers.every(s => s.by === 'treadmill' && s.up === 186), 'walkers stand on the treadmill\'s belt');
     for (const s of castEntries('gym', GYM_LAYOUTS.executive).filter(s => /gym-/.test(s.id))) assert.ok(readFileSync(new URL('../assets/props/people-rigs/' + s.id.split('-')[1] + '.json', import.meta.url), 'utf8').includes(`"${s.id}"`), s.id + ' has its bones on file (it moves)');
 }

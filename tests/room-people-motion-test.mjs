@@ -426,5 +426,30 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
         assert.deepEqual([walkers.people[0].position.x, walkers.people[0].position.z], [0, 0], 'at a film\'s second the walker stands where the room (or the cut) has them');
         walkers.dispose(); delete ROOM_PEOPLE.strolltest;
     }
+    // ---- seats: someone a film places at a spot in a seated posture sits on the room's chair that is there (it stays);
+    // with nothing to sit on they get a task chair of their own; someone standing where a chair is still clears it
+    {
+        const { ROOM_PEOPLE } = await import('../room-people.mjs');
+        ROOM_PEOPLE.seattest = [];
+        const desk = { pose: { x: -3000, z: -3000, yaw: 0 }, height: 28, time: 0, now: 0 };
+        const seatRoom = () => { const made = makeRoom('seattest'); made.room.roomLayout = { id: 'house', width: 8000, depth: 8000, back: -4000 }; made.chair.position.set(1000, 0, 1000); return made; };
+        const run = async (cast, life = false) => { const made = seatRoom(), seats = new RoomPeople(made.room, library); seats.setFilter({ only: [], cast, ...(life ? {} : { life: false }) }); await seats.setEnabled(true); await seats.built;
+            for (let i = 0; i < 3; i++) { seats.update(desk); await seats.settled(500); } return { seats, chair: made.chair }; };
+        const sat = await run([{ key: 'on-chair', id: 'people-sofia-sit-laptop', at: [1000, 1000], turn: 0 }, { key: 'on-air', id: 'people-kai-sit-write', at: [-1500, 1500], turn: 90 }]);
+        assert.ok(sat.chair.visible, 'the room\'s chair stays under someone seated on its spot');
+        assert.ok(!sat.seats.byKey('on-chair').userData.personChair, 'and they get no second chair');
+        const air = sat.seats.byKey('on-air'), own = air.userData.personChair;
+        assert.ok(own && own.visible && own.parent === sat.seats.room.root, 'seated where there is nothing to sit on: a chair of their own');
+        assert.ok(Math.hypot(own.position.x - air.position.x, own.position.z - air.position.z) < 1 && Math.abs(own.rotation.y - air.rotation.y) < 1e-6, 'under them, facing the way they face');
+        sat.seats.dispose();
+        const stood = await run([{ key: 'stands', id: 'people-zoe-stand-wait', at: [1000, 1000], turn: 0 }]);
+        assert.ok(!stood.chair.visible && !stood.seats.byKey('stands').userData.personChair, 'someone standing where a chair is: the chair makes way, and they get none');
+        stood.seats.dispose();
+        // a film's walker: cast in the walking posture with a path, they walk it (the stride, then the standing posture)
+        const walk = await run([{ key: 'walks', id: 'people-zoe-walk', at: [0, 0], turn: 90, walk: { to: [1400, 0], start: 0, then: 'people-zoe-stand-wait' } }], true);
+        const xs = []; for (const time of [0, .4, .8, 1.2, 3]) { walk.seats.update({ ...desk, time }); xs.push(walk.seats.byKey('walks').position.x); }
+        assert.ok(xs[0] < 5 && xs.every((x, i) => !i || x >= xs[i - 1] - 1e-6) && xs[2] > 150 && Math.abs(xs[4] - 1400) < 5, 'a film\'s walker in the walking posture walks their path: ' + xs.map(x => Math.round(x)).join(', '));
+        walk.seats.dispose(); delete ROOM_PEOPLE.seattest;
+    }
 }
 console.log('PASS room people motion: rig files, the desk driver (rise, lower, stop, turn back, tilt, wheelchair, short stature), exact end poses, planted feet, knees, keyboard following, determinism, life, the person in the room (film and Studio paths, chair, pose adjustments on top), posture changes in a shot and with the daypart, a walk along a path.');

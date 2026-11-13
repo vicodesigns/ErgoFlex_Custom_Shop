@@ -254,7 +254,7 @@ export const ROOM_PEOPLE = {
         // The bike from the house up; the rack's bar, the bench and the dumbbells from the studio up; the treadmill in
         // the two largest; the bag in the wellness suite. Someone at the water, Ben spotting at the bench.
         L => tier(L) < 1 ? [] : [
-            { id: 'people-kai-gym-cycle', by: 'spin-bike', reach: 290, turn: 180, modes: ['afternoon'], key: 'kai-bike', colors: { top: '#2f2f35', bottom: '#3c4f6b' } },
+            { id: 'people-kai-gym-cycle', by: 'spin-bike', reach: 290, turn: 180, modes: tier(L) < 2 ? ['morning', 'afternoon'] : ['afternoon'], key: 'kai-bike', colors: { top: '#2f2f35', bottom: '#3c4f6b' } },
             { id: 'people-zoe-gym-cycle', by: 'spin-bike', reach: 290, turn: 180, modes: tier(L) < 2 ? ['evening'] : ['morning', 'evening'], key: 'zoe-bike', colors: { top: '#e0553f', bottom: '#1f2228' } }],
         L => tier(L) < 2 ? [] : [
             { id: 'people-lin-gym-pullup', by: 'power-rack', reach: 460, turn: 360, modes: ['morning', 'evening'], key: 'lin-bar', colors: { top: '#3a4a5c', bottom: '#1f2228' } },
@@ -1630,6 +1630,7 @@ export class RoomPeople {
         for (const actor of driven) this.chairOf(actor, state);
         this.liven(time, dt, now);
         this.clearChairs();
+        this.ownChairs();
         this.seatChildren();
     }
     // Life in the people who stay where they are (room-people-motion.mjs solveStill): breathing, a drifting head, a
@@ -1810,7 +1811,7 @@ export class RoomPeople {
     get lively() { return this.enabled && this.people.some(o => o.visible && (o.userData.personLife?.live || o.userData.personDriven)); }
     async enliven(object) {
         const spec = object.userData.person, person = this.library.entry(spec.id)?.person, still = o => { o.userData.personStill = true; };
-        if (!person || !(livelyPose(person.pose) || (!this.filter && person.pose === 'walk' && !spec.walk))) return still(object);      // (a Studio walker strolls: stroll())
+        if (!person || !(livelyPose(person.pose) || (person.pose === 'walk' && (spec.walk ? !!this.filter : !this.filter)))) return still(object);      // (a Studio walker strolls: stroll(); a film's walker with a path walks it)
         const data = await this.library.rigData(person.character).catch(() => null); if (!data) return still(object);
         if (!this.rigsOf.has(person.character)) this.rigsOf.set(person.character, new PersonRig(data));
         const rig = this.rigsOf.get(person.character); if (!rig.has(spec.id)) return still(object);
@@ -1837,7 +1838,8 @@ export class RoomPeople {
         const spots = this.people.filter(o => o.visible && o.userData.person.desk).map(o => o.position);
         if (this.chairSpot) spots.push(this.chairSpot, this.chairHome);   // the room's own desk chair stays out while the film's is in the room
         // anyone standing or sitting on the floor where a chair is (a party guest by the desk): the chair is not there with them
-        const feet = this.people.filter(o => { const s = o.userData.person; return o.visible && !s.desk && !s.on && !s.near; }).map(o => o.position);
+        // (someone placed at a spot in a seated posture sits on the chair that is there: it stays under them)
+        const feet = this.people.filter(o => { const s = o.userData.person; return o.visible && !s.desk && !s.on && !s.near && !this.sitter(o); }).map(o => o.position);
         const taken = new Set(this.people.filter(o => o.visible && o.userData.personAnchor).map(o => o.userData.personAnchor));   // the seat somebody is on stays
         const chairs = this.room.assets().filter(chair => CHAIRS.test((chair.userData.propId || '') + ' ' + (chair.userData.decorUpgrade || '')) && !/armchair|lounge|sofa/i.test(chair.userData.propId || '') && !taken.has(chair)).map(chair => {
             // stools and classroom chairs stay unless someone stands right where they are (the workshop's bar stool)
@@ -1851,6 +1853,37 @@ export class RoomPeople {
         for (const { chair, blocked } of chairs) {
             if (blocked && !this.hidden.has(chair)) { this.hidden.set(chair, chair.visible); chair.visible = false; }
             else if (!blocked && this.hidden.has(chair)) { chair.visible = this.hidden.get(chair); this.hidden.delete(chair); }
+        }
+    }
+    // Seated on a seat (not on the floor, not a child on a child's seat): the posture needs something under it.
+    sitter(object) { return /^sit-(?!floor)/.test(this.library.entry?.(object.userData.person.id)?.person?.pose || ''); }
+    // Nobody sits on air: someone placed at a spot in a seated posture (a film's cast, the Director) with nothing to sit
+    // on under them gets a task chair of their own, facing the way they face. Looked up once per place: a ray down
+    // through the pelvis that meets anything of the room between 250 and 700 mm is a seat.
+    ownChairs() {
+        const root = this.room.root; let things = null;
+        for (const object of this.people) {
+            const spec = object.userData.person;
+            if (object.userData.personChair || object.userData.personMissing || spec.desk || spec.station || spec.on || spec.near || spec.by || spec.around || !spec.at || !this.sitter(object)) continue;
+            const key = Math.round(object.position.x) + ',' + Math.round(object.position.z); if (object.userData.personSeatProbe === key) continue;
+            object.userData.personSeatProbe = key;
+            // the room without its people: their matrices are left to the renderer (refreshed here, a skinned model's
+            // bind matrix would lag its world matrix until the next frame), and a ray through one would leave it a
+            // bounding sphere of this moment
+            if (!things) { things = root.children.filter(o => o.visible && !/^Person/.test(o.name || '')); root.updateWorldMatrix(true, false); for (const o of things) o.updateWorldMatrix(false, true); }
+            this.ray.set(root.localToWorld(new THREE.Vector3(object.position.x, 1500, object.position.z)), down.clone().transformDirection(root.matrixWorld));
+            const seat = this.ray.intersectObjects(things, true).some(hit => {
+                for (let a = hit.object; a && a !== root; a = a.parent) if (!a.visible || /^Person/.test(a.name || '')) return false;
+                const y = root.worldToLocal(hit.point.clone()).y; return y > 250 && y < 700; });
+            if (seat) continue;
+            const token = this.room.token, cast = this.generation;
+            this.later(Promise.resolve(this.library.instance(TASK_CHAIR)).then(chair => {
+                const person = this.people.find(o => o.userData.person === spec);   // (the model with a skeleton may have taken the first one's place)
+                if (!chair || !person || person.userData.personChair || token !== this.room.token || root !== this.room.root || cast !== this.generation) return;
+                chair.name = 'Person chair:' + spec.id; root.add(chair); person.userData.personChair = chair; this.show(person, person.visible);
+                if (person.userData.personAmount !== undefined) chair.visible = person.visible && person.userData.personAmount > .5;
+                this.dirty = true;
+            }).catch(error => console.warn('[people] a chair for ' + spec.id + ' did not load:', error?.message || error)));
         }
     }
     restoreChairs() { for (const [chair, visible] of this.hidden) chair.visible = visible; this.hidden.clear(); this.returnSeats(); }

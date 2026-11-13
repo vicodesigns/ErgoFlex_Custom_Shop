@@ -35096,7 +35096,6 @@
      "people-leo-sit-write",
      "people-zoe-sit-laptop",
      "people-eli-sit-listen",
-     "people-zoe-walk",
      "people-ben-white-cane",
      "people-grace-cane-stand"
     ],
@@ -35140,6 +35139,23 @@
       ],
       "turn": -19,
       "y": 20
+     },
+     {
+      "key": "zoe-walks",
+      "id": "people-zoe-walk",
+      "at": [
+       2500,
+       1500
+      ],
+      "turn": 90,
+      "walk": {
+       "to": [
+        3900,
+        1500
+       ],
+       "start": 0,
+       "then": "people-zoe-stand-wait"
+      }
      }
     ],
     "when": {
@@ -50515,7 +50531,8 @@
     "only": [
      "people-maya-sit-type",
      "people-maya-stand-type",
-     "people-priya-stretch"
+     "people-priya-stretch",
+     "kai-bike"
     ],
     "cast": [
      {

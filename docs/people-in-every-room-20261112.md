@@ -125,8 +125,9 @@ How it is made:
   house up, the film's gym included, when that chapter is rendered again.
 - `tools/rooms/room-stills.cjs --frames n --every ms` takes several stills of a view a moment apart (to see movement).
 
-The film: the gym chapter of the cuts with people names its people (`only`), so nobody new is in it; the film's own
-combination in the Studio (house, morning) keeps its cast.
+The film: the gym chapter of the two cuts with people now names Kai on the bike as well (`only: [..., 'kai-bike']`,
+he is in the opening shot), and the Studio's house gym has him there in the morning too (see "The film's chapters"
+below).
 
 Not done: rowing, a barbell squat (the bar is part of the rack), running rather than walking on the treadmill.
 
@@ -167,4 +168,25 @@ as they were. The stride is the film's walk (`walkPlan` / `solveWalk`) between t
 posture at both ends. Strollers always move (they are not counted against the four lively people). A film is not
 touched: its walkers have a path of their own (`walk` on the placement) and at a film's second a stroller stands
 where the room or the cut has them. Today's walkers: Zoe in the media lab, Jo, Jack and Sara in the library hall.
+
+## The film's chapters, and nobody sits on air (November 12, late night)
+
+A look through every room chapter of "Vico's cut with people" with the activities in (six stills each):
+
+- **Gym chapter**: Kai rides the bike (both cuts with people; the Studio's house gym in the morning as well, so the
+  Studio and the film show the same morning).
+- **Library chapter**: Zoe stood frozen in a stride in the opening shot. She is cast with a path now and walks
+  (`cast: { key: 'zoe-walks', id: 'people-zoe-walk', at, turn, walk: { to, start: 0, then: 'people-zoe-stand-wait' } }`).
+  A film's walker may be in the walking posture: `enliven` gives them their skeleton when the placement has a `walk`.
+- **Seats** (`RoomPeople.clearChairs`, `ownChairs`, `sitter`). Since November 10 the room's chairs made way for anyone
+  placed at a spot by hand ("a party guest by the desk"), which also took the chair from under people the cuts seat at
+  a spot: Sofia and Kai at the table beside the library desk and Mia at that desk sat on air for most of the chapter.
+  Now someone in a seated posture (`sit-*`, not `sit-floor`) keeps the chair that is there, and if a ray down through
+  their pelvis meets nothing of the room between 250 and 700 mm they get a task chair of their own, under them and
+  facing their way (it comes and goes with them, like a desk user's). Someone standing where a chair is still clears
+  it. Checked in the library chapter (both cuts), the alternate cut's classroom (the students keep the classroom
+  chairs) and the gaming chapter (Kai on the sofa gets no chair).
+- The other chapters keep their casts: their people already move with what they do (writing, typing on a laptop that
+  is now there, bench work, the game).
+- `tools/experience/render-cut.cjs --list-objects '<regex>'` marks objects that are switched off with `(hidden)`.
 
