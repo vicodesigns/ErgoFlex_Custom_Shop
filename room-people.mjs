@@ -47,7 +47,7 @@
 // alone. The film casts each chapter through a filter (setFilter): who is in, who is moved, extra people of its
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
-import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=polish-20261112a';
+import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, solveTread, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=polish-20261112c';
 
 // How far in front of a desk's anchor the person's pelvis is (mm), for a keyboard on the pull-out tray, and how far
 // behind the keyboard's centre it is wherever the keyboard really sits (tray or desktop).
@@ -248,13 +248,22 @@ export const ROOM_PEOPLE = {
         L => { const circuit = [['people-priya-stretch', { key: 'priya-circuit' }], ['people-zoe-stretch-open', { colors: { top: '#e0553f', bottom: '#1f2228' } }], ['people-kai-floor-stretch', { colors: { top: '#2f2f35', bottom: '#3c4f6b' } }]];
             if (L.id === 'house') return [spot(circuit[0][0], -380, 2000, [-380, 1000], { ...PARTY, ...circuit[0][1] }), spot(circuit[1][0], -380, 3000, [-380, 1000], { ...PARTY, ...circuit[1][1] }), spot(circuit[2][0], 720, 2250, [720, 3250], { ...PARTY, ...circuit[2][1] })];
             return [{ id: circuit[0][0], by: 'training-zone', reach: 0, turn: 180, ...PARTY, ...circuit[0][1] }, { id: circuit[1][0], by: 'training-zone', reach: 800, turn: 180, ...PARTY, ...circuit[1][1] }, { id: circuit[2][0], by: 'training-zone', reach: -700, turn: 90, ...PARTY, ...circuit[2][1] }]; },
-        // the larger gyms: others warming up by the rack, the treadmill and the bag, someone at the water
+        // On the equipment (postures built on it, tools/people/cast.py gym_*: `by` with the machine's own origin).
+        // The bike from the house up; the rack's bar, the bench and the dumbbells from the studio up; the treadmill in
+        // the two largest; the bag in the wellness suite. Someone at the water, Ben spotting at the bench.
+        L => tier(L) < 1 ? [] : [
+            { id: 'people-kai-gym-cycle', by: 'spin-bike', reach: 290, turn: 180, modes: ['afternoon'], key: 'kai-bike', colors: { top: '#2f2f35', bottom: '#3c4f6b' } },
+            { id: 'people-zoe-gym-cycle', by: 'spin-bike', reach: 290, turn: 180, modes: tier(L) < 2 ? ['evening'] : ['morning', 'evening'], key: 'zoe-bike', colors: { top: '#e0553f', bottom: '#1f2228' } }],
         L => tier(L) < 2 ? [] : [
-            standRound('people-lin-stretch', 'power-rack', 180, 1500, { modes: ['morning', 'evening'], key: 'lin-rack', colors: { top: '#3a4a5c', bottom: '#1f2228' } }),
-            standRound('people-andre-stretch-open', 'treadmill', 90, 1350, { modes: ['afternoon'], key: 'andre-treadmill', colors: { top: '#30343c', bottom: '#22252b' } }),
+            { id: 'people-lin-gym-pullup', by: 'power-rack', reach: 460, turn: 360, modes: ['morning', 'evening'], key: 'lin-bar', colors: { top: '#3a4a5c', bottom: '#1f2228' } },
+            standBy('people-lin-gym-curl', 'dumbbell-rack', 1000, { modes: ['afternoon'], key: 'lin-weights', colors: { top: '#3a4a5c', bottom: '#1f2228' } }),
+            { id: 'people-andre-gym-press', by: 'weight-bench', reach: 300, turn: 360, modes: ['morning'], key: 'andre-bench', colors: { top: '#30343c', bottom: '#22252b' } },
+            standRound('people-ben-stand-wait', 'weight-bench', 270, 1100, { modes: ['morning'], key: 'ben-bench' }),
             standBy('people-sam-stand-phone', 'hydration-station', 800, { modes: ['afternoon', 'evening'], key: 'sam-water' }),
-            standRound('people-sofia-sit-floor', 'boxing-station', 200, 1400, { modes: ['evening'], key: 'sofia-bag' }),
-            standRound('people-ben-stand-wait', 'weight-bench', 270, 1100, { modes: ['morning'], key: 'ben-bench' })]
+            // walking on the treadmill's belt (186 mm up; `tread`: the walk on the spot, room-people-motion.mjs)
+            { id: 'people-andre-stand-wait', by: 'treadmill', reach: -60, turn: 180, up: 186, tread: { pace: 2.05 }, modes: ['afternoon', 'evening'], key: 'andre-treadmill', colors: { top: '#30343c', bottom: '#22252b' } },
+            { id: 'people-sofia-stand-wait', by: 'treadmill', reach: -60, turn: 180, up: 186, tread: { pace: 1.9 }, modes: ['morning'], key: 'sofia-treadmill', colors: { top: '#7a3b8f', bottom: '#1f2228' } },
+            { id: 'people-sofia-gym-box', around: ['boxing-station', 235, 810], modes: ['evening'], key: 'sofia-bag', colors: { top: '#7a3b8f', bottom: '#1f2228' } }]
     ],
     // Jo's workshop: Jo planning standing at the desk in the morning, at bench height with Leo bringing stock in the
     // afternoon, seated detail work in the evening, alone at the desk at night, an open workshop with visitors
@@ -1071,7 +1080,7 @@ const frontOf = yaw => new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
 export class RoomPeople {
     constructor(room, library) {
         this.room = room; this.library = library; this.enabled = false; this.built = null; this.people = []; this.hidden = new Map(); this.filter = null;
-        this.actors = []; this.clock = null; this.lifeClock = 0; this.eye = null; this.rigsOf = new Map(); this.pickedAt = -Infinity; this.picked = []; this.pairs = []; this.pending = new Set(); this.waiting = []; this.lastMode = undefined; this.generation = 0; this.keysHome = null;
+        this.actors = []; this.clock = null; this.lifeClock = 0; this.eye = null; this.rigsOf = new Map(); this.pickedAt = -Infinity; this.picked = []; this.pairs = []; this.pending = new Set(); this.cranks = new Set(); this.waiting = []; this.lastMode = undefined; this.generation = 0; this.keysHome = null;
         this.dirty = false;       // dirty: someone moved since the Studio last looked (their shadow has to follow)
         this.ray = new THREE.Raycaster();
     }
@@ -1410,6 +1419,7 @@ export class RoomPeople {
             object.position.set(x, spec.y || 0, z); object.rotation.y = turn;
         }
         if (spec.seat && anchor) object.position.y = this.seatLift(object, spec, anchor);
+        else if (spec.up) object.position.y = spec.up;      // standing on something (a treadmill's belt), mm
     }
     // ---- A free spot. A fixed angle that suits one size of a room puts a guest in a sculpture or through a wall in
     // another: a placement with clear: true takes the nearest spot round (or along) its prop where a standing person
@@ -1633,19 +1643,32 @@ export class RoomPeople {
                 this.pickedAt = now; const eye = this.eye, far = o => eye ? o.position.distanceToSquared(eye) : 0;
                 this.picked = [...pool].sort((a, b) => far(a) - far(b)).slice(0, LIVELY).map(o => o.userData.person);
             }
-            chosen = pool.filter(o => this.picked.includes(o.userData.person));
+            // (whoever is training on a machine always moves: a rider who is not pedalling is a statue)
+            chosen = pool.filter(o => this.picked.includes(o.userData.person) || this.training(o));
         }
+        const turning = new Set();
         const hold = typeof window !== 'undefined' && !!window.__directorDragging;
         for (const object of pool) {
             const life = object.userData.personLife, on = chosen.includes(object);
             if (life === undefined) { if (on) { object.userData.personLife = null; this.later(this.enliven(object)); } continue; }
             if (!life || !object.userData.personRig || (!on && !life.live)) continue;
             if (object.userData.person.walk && on) { this.walkAlong(object, life, object.userData.person.walk, film ? time : null, hold); continue; }
+            // walking on a treadmill's belt: the stride of a walk, on the spot
+            if (object.userData.person.tread && on) {
+                life.tread ||= walkPlan(life.rig, life.key, life.key, [[0, 0], [0, 24]], { pace: object.userData.person.tread.pace, step: object.userData.person.tread.step ? object.userData.person.tread.step / 1000 : undefined });
+                solveTread(life.rig, life.tread, this.lifeClock, (life.seed % 1000) / 1000);
+                drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold); life.live = true; continue;
+            }
             // out of the nearest few: back to the posture as built, once
-            solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: on ? 1 : 0, taps: film || dt < .05 });
+            const moved = solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: on ? 1 : 0, taps: film || dt < .05 });
             drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold); life.live = on;
+            // a rider's bike: its crank turns with the feet, the pedals stay level
+            if (moved?.crank !== undefined) { const crank = object.userData.personAnchor?.getObjectByName('Bike crank'); if (crank) { this.turnCrank(crank, moved.crank); turning.add(crank); this.cranks.add(crank); } }
         }
+        for (const crank of this.cranks) if (!turning.has(crank)) { this.turnCrank(crank, 0); this.cranks.delete(crank); }      // (nobody on it any more: as the room built it)
     }
+    training(object) { return !!object.userData.person.tread || WORKOUTS.has(this.library.entry?.(object.userData.person.id)?.person?.pose); }
+    turnCrank(crank, angle) { crank.rotation.x = -angle; for (const pedal of crank.children) if (pedal.name === 'Bike pedal') pedal.rotation.x = angle; this.dirty = true; }
     // ---- a change of posture on the spot (room-people-motion.mjs solveChange) instead of a dissolve
     // Two placements of one character at one spot make a change when one leaves as the other comes:
     //   film: their `when` windows meet (one ends within .75 s of the other's start);

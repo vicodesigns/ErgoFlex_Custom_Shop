@@ -282,10 +282,17 @@ def prosthesis(rig, side):
     return [tube('socket', .062, knee - d * .06, mid, carbon, W, 16, radius2=.04), tube('socket adapter', .028, mid, mid + d * .05, steel, W, 12),
             tube('pylon', .015, mid + d * .05, ankle + d * .03, steel, W, 12), tube('ankle adapter', .03, ankle + d * .0, ankle + d * .08, steel, W, 12)]
 
+def dumbbell(rig, side, color=(.035, .035, .04)):
+    """A rubber hex dumbbell gripped in the fist: the handle lies across the palm."""
+    w = hand_frame(rig, side, .03); rubber = material('dumbbell', color, .8); steel = material('dumbbell handle', (.62, .63, .65), .3, .9)
+    return [tube('dumbbell handle', .013, (-.075, 0, 0), (.075, 0, 0), steel, w, 12)] + [
+        tube('dumbbell head', .048, (s * .07, 0, 0), (s * .125, 0, 0), rubber, w, 6) for s in (-1, 1)]
+
+
 
 BUILDERS = {'phone': phone, 'tablet': tablet, 'book': book, 'pen': pen, 'mug': mug, 'gamepad': gamepad, 'brush': brush, 'palette': palette,
             'cane': cane, 'backpack': backpack, 'headphones': headphones, 'cup': cup, 'carton': carton, 'radio': radio, 'clipboard': clipboard,
-            'wheelchair': wheelchair, 'crutch': crutch, 'screwdriver': screwdriver, 'prosthesis': prosthesis}
+            'wheelchair': wheelchair, 'crutch': crutch, 'screwdriver': screwdriver, 'prosthesis': prosthesis, 'dumbbell': dumbbell}
 
 
 def build(rig, items):

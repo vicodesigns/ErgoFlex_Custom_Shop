@@ -22,7 +22,8 @@ people whatever their size.
 | Classic library | 17 | readers at every table; one librarian at night |
 | Library commons | 29 | the film's hall: readers and pairs down the cafe tables to the far end, visitors at the sculptures |
 | Office, coworking, gallery, orbital deck, media lab | 9, 17, 14, 12, 13 | people are added with the floor area |
-| Gym, workshop, lounge, kitchen and the private rooms | 3 to 10 | one or two more in the largest sizes |
+| Gym | 7 | people training on the machines (see below) |
+| Workshop, lounge, kitchen and the private rooms | 3 to 10 | one or two more in the largest sizes |
 
 Counts fall with the room size (a function of the layout's `index`, `tier(L)`) and with the hour: fewer in the evening,
 one or two at night where the place is staffed at night, nobody where it is closed (office, coworking space, gym,
@@ -86,5 +87,46 @@ Nothing in the film changes:
 ## Not in this change
 
 - Six more children (Zuri, Hugo, Yuki, Karim, Lucia, Kian) joined later the same day: the kindergarten has 8 by day, the elementary classroom 8 to 10.
-- Poses on gym equipment (cycling, running, lifting): the larger gyms have people warming up beside it.
+- People on the gym's equipment came the same evening: see "On the gym's equipment" below.
 - The role garments are smooth shells with painted detail; real cloth assets would need a download.
+
+## On the gym's equipment (November 12, evening)
+
+The gym's people now train on its machines, and they move.
+
+| Machine (from which size) | Who, when | Posture (`tools/people/cast.py`) | What moves |
+|---|---|---|---|
+| Training bike (house up) | Kai in the afternoon, Zoe in the evening (and the morning from the studio up) | `gym-cycle` | the feet go round with the crank, the bike's pedals turn with them |
+| Rack's top bar (studio up) | Lin, morning and evening | `gym-pullup` | pull-ups: the body rises and sinks under the bar |
+| Bench (studio up) | Andre in the morning, Ben standing by | `gym-press` | the dumbbells come down beside the chest and go up |
+| Dumbbell rack (studio up) | Lin in the afternoon | `gym-curl` | one forearm up as the other goes down |
+| Treadmill (the two largest) | Sofia in the morning, Andre in the afternoon and evening | their `stand-wait` model, `tread` | a brisk walk on the belt, on the spot |
+| Heavy bag (the wellness suite) | Sofia in the evening | `gym-box` | two jabs and a breath |
+
+How it is made:
+
+- **Postures built on the machine.** Each `gym_*` posture in `cast.py` is written with the machine's own measurements
+  (saddle, handlebar and crank; the bar's height; the bench's seat and the slope of its back pad; the bag's front), so
+  hands and feet meet it whatever the person's size. They are role postures (built for those listed in `ALSO`, for
+  anyone else on request). `held.py` has a `dumbbell`.
+- **Placed by the machine's origin.** `{ by: '<machine>', reach, turn }` puts the person at the machine's own origin
+  plus `reach` along its front, so a layout that moves the machine moves the person. `up: mm` stands someone on
+  something (the treadmill's belt is 186 mm up).
+- **Movement** (`room-people-motion.mjs`): `solveWorkout` works the exercise out from the one built moment (pure: the
+  same second is the same pose; without life it is the model as built). `solveTread` is the walk's stride with the
+  body where it is. `solveStill` hands a workout posture to `solveWorkout`, so the film and the Director can use these
+  people like any other.
+- **The bike's crank** (`gym-room.mjs`): axle, arms and pedals are a group named `Bike crank`; `RoomPeople.liven` turns
+  it with the rider's feet (`turnCrank`) and puts it back when nobody rides.
+- **Always moving.** In the Studio only the four people nearest the camera breathe and shift; whoever trains on a
+  machine always moves (`RoomPeople.training`).
+- **The bench.** Its back pad sloped the wrong way against its own rails (the high end at the seat); it now rises
+  from the seat to the head end. This is the one change to the room itself, and it shows in every size from the
+  house up, the film's gym included, when that chapter is rendered again.
+- `tools/rooms/room-stills.cjs --frames n --every ms` takes several stills of a view a moment apart (to see movement).
+
+The film: the gym chapter of the cuts with people names its people (`only`), so nobody new is in it; the film's own
+combination in the Studio (house, morning) keeps its cast.
+
+Not done: rowing, a barbell squat (the bar is part of the rack), running rather than walking on the treadmill.
+

@@ -471,3 +471,11 @@ each model whole at room distance and close on the face, old next to new). The o
 In `cast.CHILDREN`, so the catalog marks them `child` and they are built in the ten `kid-` postures like the other
 eight (`people-<name>-kid-<posture>`). `tests/room-people-test.mjs` names the children in a regular expression where it
 checks that the children's rooms are cast with children: a room that casts one of the six needs the name added there.
+
+## On the gym's equipment (12 November, evening)
+
+Postures `gym-cycle`, `gym-pullup`, `gym-press`, `gym-curl` and `gym-box`, built on the gym's machines and moving
+(pedalling, pull-ups, presses, curls, jabs), a walk on the treadmill's belt, and a `dumbbell` to hold. Described in
+`docs/people-in-every-room-20261112.md`, "On the gym's equipment". After building or rebuilding any of them run
+`node tools/people/export-rigs.mjs <character>`: the movement reads the bones from there.
+

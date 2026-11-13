@@ -12,7 +12,7 @@ import { buildInstitutionalRoom } from './institutional-room.mjs?v=polish-202611
 import { refineRoomSurfaces } from './room-refinement.mjs?v=polish-20261111f';
 import { polishRoomProp } from './room-polish.mjs?v=polish-20261111f';
 import { RoomLife } from './room-life.mjs?v=polish-20261111f';
-import { RoomPeople } from './room-people.mjs?v=polish-20261112b';
+import { RoomPeople } from './room-people.mjs?v=polish-20261112c';
 import { propUnitCorrection } from './prop-scale.mjs?v=prop-unit-scale-20261013';
 import { atelierSceneChair } from './atelier-scene-seating.mjs?v=conference-chairs-20261015';
 import { milanoSceneSofa } from './milano-scene-seating.mjs?v=milano-seating-20261014';
@@ -38,7 +38,7 @@ import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist
 import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=polish-20261111f';
 
 import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=polish-20261111f';
-import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=polish-20261111h';
+import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=polish-20261112c';
 import { themedGymLayout } from './gym-theme.mjs?v=polish-20261111f';
 import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=polish-20261111f';
 import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=people-vistas-20261110';

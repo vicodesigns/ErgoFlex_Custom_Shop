@@ -4,6 +4,7 @@
 //   node tools/rooms/room-stills.cjs <out dir> <room:layout:daypart[:size]> [...] --port 3123
 //        [--views asloaded,overview,eyeL,eyeR,desk,reverse,top] [--people] [--mode-height] [--eval file.js] [--w 1280 --h 720]
 //        [--storage ergoflex.gymTheme=blackred,key=value]   localStorage set before the Studio starts (the gym's colourway)
+//        [--frames 6 --every 250]   that many stills of each view, so many ms apart (people who move: -f0, -f1, ... on the names)
 //
 // Needs a server of this checkout on --port (node tools/studio-server.mjs --port 3123 --host 127.0.0.1 --no-watch
 // --state /tmp/some-state.json) and Chrome at /usr/bin/google-chrome with the GPU (run under the stills lock).
@@ -17,7 +18,7 @@ const path = require('path'), fs = require('fs');
 const ROOT = path.resolve(__dirname, '..', '..');
 const puppeteer = require(fs.existsSync(path.join(ROOT, 'node_modules/puppeteer')) ? path.join(ROOT, 'node_modules/puppeteer') : '/home/ergo/ErgoFlex_Custom_Shop/node_modules/puppeteer');
 const args = process.argv.slice(2), flag = n => { const i = args.indexOf('--' + n); if (i < 0) return null; const v = args[i + 1]; args.splice(i, 2); return v; }, bool = n => { const i = args.indexOf('--' + n); if (i < 0) return false; args.splice(i, 1); return true; };
-const port = flag('port') || 3123, storage = (flag('storage') || '').split(',').filter(Boolean).map(kv => kv.split('=')), evalFile = flag('eval'), W = +(flag('w') || 1280), H = +(flag('h') || 720), people = bool('people'), modeHeight = bool('mode-height');
+const port = flag('port') || 3123, storage = (flag('storage') || '').split(',').filter(Boolean).map(kv => kv.split('=')), evalFile = flag('eval'), W = +(flag('w') || 1280), H = +(flag('h') || 720), frames = +(flag('frames') || 1), every = +(flag('every') || 250), people = bool('people'), modeHeight = bool('mode-height');
 const views = (flag('views') || 'overview,eyeL,eyeR,desk').split(';').flatMap(v => v.startsWith('cam=') ? [v] : v.split(','));
 const out = args.shift(), specs = args;
 if (!out || !specs.length) { console.error('usage: room-stills.cjs <out dir> <room:layout:daypart[:size]> ... --port N'); process.exit(2); }
@@ -67,8 +68,11 @@ fs.mkdirSync(out, { recursive: true });
                 // any other name (asloaded): the camera stays where the Studio put it
                 await EnvironmentReview.settleView(); await new Promise(r => setTimeout(r, 400));
             }, view);
-            const data = await frame.evaluate(W => EnvironmentReview.capture(W), W);
-            fs.writeFileSync(path.join(out, `${room}-${layout}-${phase}-${view.startsWith('cam=') ? 'cam' + views.indexOf(view) : view}.jpg`), Buffer.from(data.split(',')[1], 'base64'));
+            for (let f = 0; f < frames; f++) {
+                if (f) await new Promise(r => setTimeout(r, every));
+                const data = await frame.evaluate(W => EnvironmentReview.capture(W), W);
+                fs.writeFileSync(path.join(out, `${room}-${layout}-${phase}-${view.startsWith('cam=') ? 'cam' + views.indexOf(view) : view}${frames > 1 ? '-f' + f : ''}.jpg`), Buffer.from(data.split(',')[1], 'base64'));
+            }
         }
         console.log(spec, JSON.stringify(report), ((Date.now() - t0) / 1000).toFixed(1) + 's');
     }

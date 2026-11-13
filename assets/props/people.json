@@ -1753,6 +1753,36 @@
    "stance": "standing",
    "desk": false,
    "seat": 0
+  },
+  "gym-cycle": {
+   "label": "Riding the training bike",
+   "stance": "seated",
+   "desk": false,
+   "seat": 967
+  },
+  "gym-pullup": {
+   "label": "Doing a pull-up on the rack",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "gym-box": {
+   "label": "Working the heavy bag",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "gym-press": {
+   "label": "Pressing dumbbells on the bench",
+   "stance": "seated",
+   "desk": false,
+   "seat": 492
+  },
+  "gym-curl": {
+   "label": "Curling dumbbells",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
   }
  },
  "models": {
@@ -11668,6 +11698,42 @@
    "character": "kian",
    "pose": "kid-kneel-craft",
    "name": "Kian: kneeling at a low craft table",
+   "aids": []
+  },
+  "people-zoe-gym-cycle": {
+   "character": "zoe",
+   "pose": "gym-cycle",
+   "name": "Zoe: riding the training bike",
+   "aids": []
+  },
+  "people-lin-gym-pullup": {
+   "character": "lin",
+   "pose": "gym-pullup",
+   "name": "Lin: doing a pull-up on the rack",
+   "aids": []
+  },
+  "people-andre-gym-press": {
+   "character": "andre",
+   "pose": "gym-press",
+   "name": "Andre: pressing dumbbells on the bench",
+   "aids": []
+  },
+  "people-lin-gym-curl": {
+   "character": "lin",
+   "pose": "gym-curl",
+   "name": "Lin: curling dumbbells",
+   "aids": []
+  },
+  "people-sofia-gym-box": {
+   "character": "sofia",
+   "pose": "gym-box",
+   "name": "Sofia: working the heavy bag",
+   "aids": []
+  },
+  "people-kai-gym-cycle": {
+   "character": "kai",
+   "pose": "gym-cycle",
+   "name": "Kai: riding the training bike",
    "aids": []
   }
  }

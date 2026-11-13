@@ -27,6 +27,21 @@ for (const [room, specs] of Object.entries(ROOM_PEOPLE)) for (const spec of LAYO
     if (spec.desk) assert.ok(Number.isFinite(entry.person?.deskHeight), spec.id + ' records the desk height its pose fits');
 }
 
+{   // The gym: people on the equipment, each on the machine their posture was built on, from the size that has it.
+    const { GYM_LAYOUTS } = await import('../gym-room.mjs');
+    const on = (L, pose) => castEntries('gym', L).filter(s => entries.get(s.id)?.person?.pose === pose);
+    assert.equal(castEntries('gym', GYM_LAYOUTS.apartment).filter(s => /gym-/.test(s.id)).length, 0, 'the nook has no machines and nobody on one');
+    for (const [id, L] of Object.entries(GYM_LAYOUTS)) {
+        if (!L.tier) continue;
+        assert.ok(on(L, 'gym-cycle').length === 2 && on(L, 'gym-cycle').every(s => s.by === 'spin-bike' && s.turn === 180), id + ': riders on the bike, facing its handlebar');
+        const riders = on(L, 'gym-cycle').flatMap(s => s.modes); assert.equal(new Set(riders).size, riders.length, id + ': one rider at a time');
+        assert.equal(on(L, 'gym-pullup').length, L.tier >= 2 ? 1 : 0, id + ': the rack\'s bar from the studio up');
+        assert.equal(on(L, 'gym-press').length, L.tier >= 2 ? 1 : 0, id + ': the bench press from the studio up');
+    }
+    assert.ok(!castEntries('gym', GYM_LAYOUTS.house).some(s => /gym-/.test(s.id) && s.modes.includes('morning')), 'the film\'s gym (house, morning) keeps its cast');
+    const walkers = castEntries('gym', GYM_LAYOUTS.executive).filter(s => s.tread); assert.ok(walkers.length === 2 && walkers.every(s => s.by === 'treadmill' && s.up === 186), 'walkers stand on the treadmill\'s belt');
+    for (const s of castEntries('gym', GYM_LAYOUTS.executive).filter(s => /gym-/.test(s.id))) assert.ok(readFileSync(new URL('../assets/props/people-rigs/' + s.id.split('-')[1] + '.json', import.meta.url), 'utf8').includes(`"${s.id}"`), s.id + ' has its bones on file (it moves)');
+}
 {   // Rooms without their own cast get a desk user; the children's rooms have children in them, on child furniture.
     const cast = id => new RoomPeople({ id, roomLayout: { id: 'house' } }, null).specs();
     // the institutional rooms have casts of their own: the person at the mobile desk at each of its four heights, the others

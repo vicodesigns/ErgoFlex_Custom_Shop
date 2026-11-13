@@ -85186,6 +85186,204 @@
     "character": "kian",
     "pose": "kid-kneel-craft"
    }
+  },
+  {
+   "id": "people-zoe-gym-cycle",
+   "name": "Zoe: riding the training bike",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-zoe-gym-cycle.glb",
+   "anchor": "floor",
+   "size": [
+    497.4,
+    1302.3,
+    883.7
+   ],
+   "min": [
+    -248.7,
+    303,
+    -163
+   ],
+   "max": [
+    248.7,
+    1605.3,
+    720.7
+   ],
+   "tris": 34804,
+   "bytes": 1115380,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "zoe",
+    "pose": "gym-cycle"
+   }
+  },
+  {
+   "id": "people-lin-gym-pullup",
+   "name": "Lin: doing a pull-up on the rack",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lin-gym-pullup.glb",
+   "anchor": "floor",
+   "size": [
+    754.2,
+    1449.4,
+    429.4
+   ],
+   "min": [
+    -377.1,
+    761.1,
+    -318.8
+   ],
+   "max": [
+    377.1,
+    2210.5,
+    110.6
+   ],
+   "tris": 43623,
+   "bytes": 943408,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lin",
+    "pose": "gym-pullup"
+   }
+  },
+  {
+   "id": "people-andre-gym-press",
+   "name": "Andre: pressing dumbbells on the bench",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-gym-press.glb",
+   "anchor": "floor",
+   "size": [
+    788.4,
+    1438,
+    1450.4
+   ],
+   "min": [
+    -394.2,
+    -3.2,
+    -794.3
+   ],
+   "max": [
+    394.2,
+    1434.8,
+    656.1
+   ],
+   "tris": 35260,
+   "bytes": 887224,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "gym-press"
+   }
+  },
+  {
+   "id": "people-lin-gym-curl",
+   "name": "Lin: curling dumbbells",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-lin-gym-curl.glb",
+   "anchor": "floor",
+   "size": [
+    677.3,
+    1548.5,
+    309
+   ],
+   "min": [
+    -361.9,
+    0,
+    -105.2
+   ],
+   "max": [
+    315.4,
+    1548.5,
+    203.8
+   ],
+   "tris": 49951,
+   "bytes": 989780,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "lin",
+    "pose": "gym-curl"
+   }
+  },
+  {
+   "id": "people-sofia-gym-box",
+   "name": "Sofia: working the heavy bag",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-sofia-gym-box.glb",
+   "anchor": "floor",
+   "size": [
+    445.8,
+    1453.3,
+    892.8
+   ],
+   "min": [
+    -269.3,
+    0,
+    -253.2
+   ],
+   "max": [
+    176.5,
+    1453.3,
+    639.6
+   ],
+   "tris": 50314,
+   "bytes": 1014756,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "sofia",
+    "pose": "gym-box"
+   }
+  },
+  {
+   "id": "people-kai-gym-cycle",
+   "name": "Kai: riding the training bike",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-kai-gym-cycle.glb",
+   "anchor": "floor",
+   "size": [
+    484.6,
+    1240.6,
+    812.7
+   ],
+   "min": [
+    -242.3,
+    312.8,
+    -127.3
+   ],
+   "max": [
+    242.3,
+    1553.4,
+    685.4
+   ],
+   "tris": 33412,
+   "bytes": 890512,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "kai",
+    "pose": "gym-cycle"
+   }
   }
  ],
  "screens": [

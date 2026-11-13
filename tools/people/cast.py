@@ -10,6 +10,7 @@ Furniture the seated and desk poses are built for (measured in the app):
   task chair seat 0.435 m; keyboard top 0.678 m at the 28 in desk height, 0.759 m
   at 31 in and 1.095 m at 43.5 in; wrists rest ~0.40 m in front of the pelvis.
 """
+import math
 
 SEAT = .435          # Steelcase Leap seat
 KEYS_SIT = .678      # keyboard top, desk at 28 in
@@ -857,6 +858,71 @@ def stand_counter(k):
             'foot_l': {'at': (.12, .0, .07), 'toes': (.25, -1, 0)}, 'foot_r': {'at': (-.12, .04, .07), 'toes': (-.3, -1, 0)}}
 
 
+# ---- the gym's equipment (gym-room.mjs, millimetres there, metres here). Each posture is built on the machine as
+# it stands in the room, so hands and feet meet the bar, the pedals, the bag and the bench whatever the person's size.
+# The training bike: the saddle's top is 0.967 up; the handlebar (0.018 thick) is 0.71 in front of the saddle's middle
+# and 1.11 up; the crank's axle is 0.22 in front and 0.37 up, its pedals 0.10 from it and 0.20 either side.
+BIKE_SADDLE, BIKE_BAR, BIKE_CRANK, BIKE_THROW = .967, (-.71, 1.11), (-.22, .37), .10
+
+
+def gym_cycle(k):
+    """On the training bike: leaning to the handlebar, both hands on it, the left pedal down and the right one up."""
+    def hand(s): return {'at': (s * .2, BIKE_BAR[0] + .075, BIKE_BAR[1] + .03), 'fingers': (-s * .1, -1, -.45), 'palm': (0, -.25, -1), 'elbow': (s * .3, .25, -.3), 'curl': 1.5, 'thumb': .6}
+    def foot(s, up): return {'at': (s * .17, BIKE_CRANK[0] + .1, BIKE_CRANK[1] + up * BIKE_THROW + .0175 + .11), 'toes': (s * .06, -1, 0), 'pitch': 22 + (-8 if up < 0 else 4),      # (the sole near level on the pedal: the feet lean with the pelvis, 22 degrees, toes down; + lifts the toes)
+            'knee': (s * .04, -.6, .3)}
+    # (the heels a little up: a leg of 0.70 m, Kai's, still reaches the pedal at the bottom of its turn)
+    return {'pelvis': (0, .03, BIKE_SADDLE + .09), 'pelvis_pitch': 22, 'spine': (12, 11, 8), 'neck': -12, 'head': -16,
+            'hand_l': hand(1), 'hand_r': hand(-1), 'foot_l': foot(1, -1), 'foot_r': foot(-1, 1)}
+
+
+PULL_BAR = 2.19      # the rack's pull-up bar (m), 0.02 thick
+
+
+def gym_pullup(k):
+    """Half way up a pull-up on the rack's top bar: hands over the bar a little wider than the shoulders, elbows bent
+    out to the sides, eyes on the bar, knees bent and the feet behind."""
+    top = PULL_BAR - .36 - .46 * k      # the shoulders are 0.3 under the bar here
+    def hand(s): return {'at': (s * .31, .03, PULL_BAR - .09), 'fingers': (0, -.08, 1), 'palm': (0, -1, 0), 'elbow': (s * .5, .12, -.3), 'curl': 2.1, 'thumb': .9}      # (the bar lies at the knuckles, the fingers over it)
+    def foot(s): return {'at': (s * .085 * k, .3 * k, top - .58 * k), 'toes': (s * .1, -1, 0), 'pitch': 38, 'knee': (s * .05, -.6, -.2)}
+    return {'pelvis': (0, .02, top), 'pelvis_pitch': -3, 'spine': (-2, -3, -4), 'neck': -8, 'head': -12,
+            'hand_l': hand(1), 'hand_r': hand(-1), 'foot_l': foot(1), 'foot_r': foot(-1)}
+
+
+BAG = .62            # the front of the boxing bag is this far in front of the pelvis (it is 0.38 across, 0.9 to 1.9 up)
+
+
+def gym_box(k):
+    """At the heavy bag: left foot forward, the body turned half away, the left glove out on the bag, the right at
+    the chin, knees soft, eyes on the bag."""
+    return {'pelvis_offset': (0, 0, -.045 * k), 'pelvis_yaw': -28, 'pelvis_pitch': 4, 'spine': (3, 3, 2), 'spine_twist': 10, 'neck': 2, 'head': 2, 'head_yaw': 22,
+            'hand_l': {'at': (.06 * k, -(BAG - .085), 1.36 * k), 'fingers': (-.12, -1, .05), 'palm': (-.15, 0, -1), 'elbow': (.22, .3, -.25), 'curl': 2.2, 'thumb': 1.},
+            'hand_r': {'at': _s(k, -.12, -.25, 1.3), 'fingers': (.25, -.35, 1), 'palm': (1, .25, 0), 'elbow': (-.2, .2, -.5), 'curl': 2.2, 'thumb': 1.},
+            'foot_l': {'at': _s(k, .13, -.2, .07 / k), 'toes': (-.12, -1, 0)}, 'foot_r': {'at': _s(k, -.15, .22, .095 / k), 'toes': (-.75, -.7, 0), 'pitch': 14}}
+
+
+# The strength bench: the seat's top is 0.492 up; the back pad starts 0.11 behind the pelvis and rises 16 degrees
+# toward the head (0.487 up at its low end, 0.735 at the far end, 0.87 further on).
+BENCH, BENCH_RISE = .492, 16.4
+
+
+def gym_press(k):
+    """On the bench with a pair of dumbbells: lying back on the inclined pad, the weights pressed up over the chest,
+    elbows a little bent, feet flat on the floor either side."""
+    lift = math.sin(math.radians(BENCH_RISE)); chest = (.4 * k, BENCH + .1 + .4 * k * lift + .1 * k)      # the shoulders: behind the pelvis, above the seat
+    def hand(s): return {'at': (s * .25 * k, chest[0] + .01, chest[1] + .49 * k), 'fingers': (-s * .08, .1, 1), 'palm': (0, -1, .1), 'elbow': (s * .45, 0, -.3), 'curl': 1.5, 'thumb': .8}
+    def foot(s): return {'at': (s * .27, -.4 * k, .075), 'toes': (s * .28, -1, 0), 'knee': (s * .1, -.5, .5), 'pitch': -(90 - BENCH_RISE - 2)}      # (flat on the floor: the feet lie back with the pelvis, toes up; - lowers the toes)
+    return {'pelvis': (0, 0, BENCH + .105), 'pelvis_pitch': -(90 - BENCH_RISE) + 2, 'spine': (0, 0, -1), 'neck': 6, 'head': 4,
+            'hand_l': hand(1), 'hand_r': hand(-1), 'foot_l': foot(1), 'foot_r': foot(-1)}
+
+
+def gym_curl(k):
+    """A dumbbell curl on the feet: the left weight up at the shoulder, the right one down at the thigh, elbows in."""
+    return {'spine': (-1, 0, 1), 'neck': 4, 'head': 5, 'head_yaw': 8,
+            'hand_l': {'at': _s(k, .2, -.2, 1.27), 'fingers': (-.1, .25, 1), 'palm': (0, 1, .15), 'elbow': (.12, .35, -.6), 'curl': 1.5, 'thumb': .8},
+            'hand_r': {'at': _s(k, -.25, -.06, .86), 'fingers': (0, -.25, -1), 'palm': (0, -1, 0), 'elbow': (-.1, .35, .05), 'curl': 1.5, 'thumb': .8},
+            'foot_l': {'at': _s(k, .14, .0, .07 / k), 'toes': (.25, -1, 0)}, 'foot_r': {'at': _s(k, -.14, .02, .07 / k), 'toes': (-.3, -1, 0)}}
+
+
 WHEEL_SEAT = .5      # manual wheelchair seat
 
 
@@ -1095,6 +1161,11 @@ POSES = {
     'lie-bed': lie_bed,
     'sit-microscope': sit_microscope,
     'stand-counter': stand_counter,
+    'gym-cycle': gym_cycle,
+    'gym-pullup': gym_pullup,
+    'gym-box': gym_box,
+    'gym-press': gym_press,
+    'gym-curl': gym_curl,
 }
 
 # id -> character, pose, library name, what they hold.
@@ -1214,11 +1285,17 @@ POSE_INFO = {
     'lie-bed': ('Lying in a hospital bed', 'seated', '', 663, []),
     'sit-microscope': ('At a microscope, on a lab stool', 'seated', '', 650, []),
     'stand-counter': ('Serving at a counter', 'standing', '', 0, []),
+    'gym-cycle': ('Riding the training bike', 'seated', '', 967, []),
+    'gym-pullup': ('Doing a pull-up on the rack', 'standing', '', 0, []),
+    'gym-box': ('Working the heavy bag', 'standing', '', 0, []),
+    'gym-press': ('Pressing dumbbells on the bench', 'seated', '', 492, [('dumbbell', {'side': 'l'}), ('dumbbell', {'side': 'r'})]),
+    'gym-curl': ('Curling dumbbells', 'standing', '', 0, [('dumbbell', {'side': 'l'}), ('dumbbell', {'side': 'r'})]),
 }
 # The roles' postures: built for the characters that list them ('postures'), for anyone else on request.
-ROLE_POSES = {'stand-brief', 'stand-radio', 'stand-chart', 'push-cart', 'lie-bed', 'sit-microscope', 'stand-counter'}
+ROLE_POSES = {'stand-brief', 'stand-radio', 'stand-chart', 'push-cart', 'lie-bed', 'sit-microscope', 'stand-counter',
+              'gym-cycle', 'gym-pullup', 'gym-box', 'gym-press', 'gym-curl'}      # (the gym's: built for those who train there, ALSO below)
 # Built where the pose puts them, not dropped until something touches the floor (a body lying on a bed has nothing on it).
-RAISED = {'lie-bed', 'sit-microscope'}       # (and feet on a stool's ring are not on the floor either)
+RAISED = {'lie-bed', 'sit-microscope', 'gym-cycle', 'gym-pullup', 'gym-press'}       # (feet on a stool's ring, on pedals or off the floor under a bar are not on the floor either)
 DESK_HEIGHTS = {'sit-type': (28, 30), 'stand-type': (43.5,), 'stand-type-low': (28, 30), 'wheel-type': (28, 31), 'sit-coffee': (28, 30), 'stand-coffee': (43.5,), 'stand-low': (35.5,), 'stand-mid': (39,), 'kid-stand-desk': (28,), 'kid-sit-desk': (28,)}
 # Who a posture is for: adult poses are built on adult furniture, child poses on child furniture.
 CHILD_POSES = {p for p in POSE_INFO if p.startswith('kid-')}
@@ -1231,7 +1308,9 @@ def listed(who, pose): return pose in CHARACTERS[who]['postures'] if 'postures' 
 
 # Built besides: Sam's listed seated desk models wear his gaming headphones (sit-game), these are him at any other
 # desk; Grace and Ben in a hospital bed, so a ward of three has three different people.
-ALSO = ['people-sam-sit-type', 'people-sam-sit-type-30', 'people-grace-lie-bed', 'people-ben-lie-bed']
+ALSO = ['people-sam-sit-type', 'people-sam-sit-type-30', 'people-grace-lie-bed', 'people-ben-lie-bed',
+        # the gym: on the bike, at the rack's bar, on the bench, at the dumbbells and at the bag
+        'people-zoe-gym-cycle', 'people-kai-gym-cycle', 'people-lin-gym-pullup', 'people-andre-gym-press', 'people-lin-gym-curl', 'people-sofia-gym-box']
 # A posture nudged for one person (metres added to a hand's or a foot's place): the clipboard lies as the left hand
 # holds it, and on Yusuf's broader chest it tips into the writing hand.
 NUDGE = {('yusuf', 'stand-chart'): {'hand_r': (.02, .0, .035)}}

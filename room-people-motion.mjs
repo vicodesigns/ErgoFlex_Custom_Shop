@@ -370,8 +370,10 @@ const TYPES = new Set(['sit-type', 'stand-type', 'stand-mid', 'stand-type-low', 
 const ON_FEET = new Set(['stand-type', 'stand-mid', 'stand-type-low', 'stand-brief', 'stand-radio', 'stand-chart', 'stand-counter', 'stand-wait', 'stand-phone', 'stand-present', 'stand-work', 'stand-paint', 'cane-stand', 'kid-stand', 'kid-stand-wait', 'kid-stand-desk']);
 const INTENT = new Set(['stand-chart', 'sit-microscope', 'stand-radio', 'sit-read', 'sit-phone', 'stand-phone', 'sit-write', 'stand-work', 'stand-paint', 'sit-controller', 'kid-read-floor', 'kid-sit-desk', 'kid-stand-desk', 'kid-sit-k', 'kid-sit-e', 'kid-kneel-craft', 'kid-play-floor']);      // eyes on what the hands hold
 export const livelyPose = pose => pose !== 'walk' && pose !== 'white-cane' && pose !== 'push-cart';
+export const WORKOUTS = new Set(['gym-cycle', 'gym-pullup', 'gym-press', 'gym-curl', 'gym-box']);      // postures that are an exercise: solveWorkout
 export function solveStill(rig, key, input) {
     const time = input.time ?? 0, seed = input.seed | 0, life = input.life ?? 1, b = rig.b, pose = key.pose;
+    if (WORKOUTS.has(pose)) return solveWorkout(rig, key, input);
     rig.load(key);
     if (!(life > 0)) { rig.fk(); return; }
     const standing = ON_FEET.has(pose), sway = standing ? noise(time * .11 + 7.3, seed) * .014 * life : 0;
@@ -401,6 +403,103 @@ export function solveStill(rig, key, input) {
         }
     }
     rig.fk();
+}
+
+// ---- someone training on the gym's equipment ------------------------------------------------------------------------
+// The posture as built (tools/people/cast.py gym_*) is one moment of the exercise; the rest of it is worked out from
+// that moment, so hands and feet stay on the machine they were built on. Pure: the same second is always the same
+// pose. Returns what the machine has to show: { crank: radians } for the bike (its pedals turn with the feet).
+//   gym-cycle   the ankles go round the crank (they were built on its pedals, one down, one up), hands on the bar
+//   gym-pullup  the body rises and sinks under the bar, hands where they are
+//   gym-press   the dumbbells come down beside the chest and go up again
+//   gym-curl    one forearm comes up as the other goes down
+//   gym-box     two jabs and a breath: the left glove goes out to the bag (as built) and comes back to the guard
+const centre = V(), handAt = V(), elbowAxis = V();
+export function solveWorkout(rig, key, input) {
+    const time = input.time ?? 0, seed = input.seed | 0, life = input.life ?? 1, b = rig.b, pose = key.pose, out = {};
+    rig.load(key); rig.fk();
+    if (!(life > 0)) return out;
+    const L = rig.side.l, R = rig.side.r, begin = hash(3, seed);
+    const pin = s => { const [, upper, lower, hand] = rig.side[s].arm; rig.reach(upper, lower, hand, key.wp[hand]); rig.reach(upper, lower, hand, key.wp[hand]); rig.setWorld(hand, key.wq[hand]); };
+    const look = amount => {      // a head that is not quite still
+        const yaw = noise(time * .17, seed + 5) * .05 * amount, nod = noise(time * .21 + 11, seed + 7) * .03 * amount;
+        rig.turnWorld(b.neck_01, turn.setFromAxisAngle(Y, yaw * .4).multiply(turn2.setFromAxisAngle(X, nod * .4))); rig.fk();
+        rig.turnWorld(b.head, turn.setFromAxisAngle(Y, yaw * .6).multiply(turn2.setFromAxisAngle(X, nod * .6))); rig.fk();
+    };
+    if (pose === 'gym-cycle') {
+        // a little over one turn of the crank a second; the hips rock toward the leg that pushes down
+        const a = time * Math.PI * 2 * (1.05 + hash(1, seed) * .2), fl = L.leg[2], fr = R.leg[2];
+        centre.addVectors(key.wp[fl], key.wp[fr]).multiplyScalar(.5); const r = Math.hypot(key.wp[fl].y - key.wp[fr].y, key.wp[fl].z - key.wp[fr].z) / 2;
+        spot.copy(key.wp[b.pelvis]); spot.x += .006 * Math.cos(a); rig.placePelvis(spot); rig.fk();
+        rig.turnWorld(b.pelvis, turn.setFromAxisAngle(Z, .02 * Math.cos(a))); rig.fk(); rig.turnWorld(b.spine_02, turn.setFromAxisAngle(Z, -.02 * Math.cos(a))); rig.fk();
+        look(1);
+        for (const [s, at0] of [['l', -Math.PI / 2], ['r', Math.PI / 2]]) {      // (built: the left pedal down, the right one up; the top goes forward)
+            const [thigh, calf, foot] = rig.side[s].leg, at = at0 - a;
+            spot.set(key.wp[foot].x, centre.y + r * Math.sin(at), centre.z + r * Math.cos(at));
+            rig.reach(thigh, calf, foot, spot); rig.reach(thigh, calf, foot, spot);
+            // the heel drops a little as the foot pushes over the top and lifts as it comes round behind
+            rig.setWorld(foot, turn.setFromAxisAngle(X, .12 * Math.cos(at + .6)).multiply(footQ.copy(key.wq[foot])));
+        }
+        rig.fk(); pin('l'); pin('r'); rig.fk(); out.crank = a;
+        return out;
+    }
+    if (pose === 'gym-pullup') {
+        // up in a second, a moment at the top, down slower, a breath hanging: w is 0 at the bottom, 1 at the top
+        const period = 3.6 + hash(1, seed) * .8, u = (time / period + begin) % 1, w = u < .3 ? ss(0, .3, u) : u < .4 ? 1 : u < .8 ? 1 - ss(.4, .8, u) : 0;
+        const [, upper, lower, hand] = L.arm, arm = rig.offset[lower].length() + rig.offset[hand].length(), sh = key.wp[upper], h = key.wp[hand];
+        const flat = Math.hypot(h.x - sh.x, h.z - sh.z), over = h.y - sh.y, low = Math.sqrt(Math.max(0, (arm * .985) ** 2 - flat * flat)) - over, high = Math.max(0, Math.min(over - .1, h.y - key.wp[b.head].y));      // (down to nearly straight arms, up until the chin is at the bar)
+        spot.copy(key.wp[b.pelvis]); spot.y += lerp(-Math.max(0, low), high, w); spot.z += .025 * (1 - w); rig.placePelvis(spot); rig.fk();
+        rig.turnWorld(b.pelvis, turn.setFromAxisAngle(X, .07 * (1 - w) - .03)); rig.fk();      // the legs hang back a little at the bottom
+        rig.turnWorld(b.head, turn.setFromAxisAngle(X, -.12 * w)); rig.fk();                    // the chin goes over the bar
+        pin('l'); pin('r'); rig.fk();
+        return out;
+    }
+    if (pose === 'gym-press') {
+        const period = 3.1 + hash(1, seed) * .7, u = (time / period + begin) % 1, w = u < .45 ? ss(0, .45, u) : u < .5 ? 1 : u < .9 ? 1 - ss(.5, .9, u) : 0;      // 1: the weights are down
+        look(.5);
+        for (const s of ['l', 'r']) {
+            const [, upper, lower, hand] = rig.side[s].arm, reach = rig.offset[lower].length() + rig.offset[hand].length();
+            handAt.copy(key.wp[hand]); handAt.y -= reach * .52 * w; handAt.x += (s === 'l' ? 1 : -1) * .07 * w;
+            rig.reach(upper, lower, hand, handAt); rig.reach(upper, lower, hand, handAt); rig.setWorld(hand, key.wq[hand]);
+        }
+        rig.fk();
+        return out;
+    }
+    if (pose === 'gym-curl') {
+        // built with the left weight up and the right one down; each forearm turns at the elbow, one after the other
+        const period = 3.4 + hash(1, seed) * .8, w = .5 + .5 * Math.cos((time / period + begin) * Math.PI * 2), sway = noise(time * .11 + 7.3, seed) * .01;      // w: how far up the left one is
+        spot.copy(key.wp[b.pelvis]); spot.x += sway; rig.placePelvis(spot); rig.fk(); look(.6);
+        for (const s of ['l', 'r']) { const [thigh, calf, foot] = rig.side[s].leg; rig.reach(thigh, calf, foot, key.wp[foot]); rig.reach(thigh, calf, foot, key.wp[foot]); rig.setWorld(foot, key.wq[foot]); }
+        rig.fk();
+        const fold = 1.95;      // radians between the hanging forearm and the one at the shoulder
+        for (const [s, down] of [['l', 1 - w], ['r', -w]]) {
+            const [, upper, lower] = rig.side[s].arm; if (Math.abs(down) < 1e-4) continue;
+            rig.turnWorld(lower, turn.setFromAxisAngle(X, fold * down)); rig.fk();
+            rig.turnWorld(upper, turn.setFromAxisAngle(X, -.1 * down)); rig.fk();      // the elbow gives a little
+        }
+        return out;
+    }
+    // gym-box
+    const period = 2.9 + hash(1, seed) * .6, u = ((time / period + begin) % 1) * period, jab = t0 => { const x = (u - t0) / .5; return x > 0 && x < 1 ? Math.sin(Math.PI * x) ** 1.5 : 0; };
+    const w = Math.max(jab(.1), jab(.75)), bounce = Math.abs(Math.sin(time * Math.PI * 2 / .62 + begin * 6.28)) * .012;
+    spot.copy(key.wp[b.pelvis]); spot.y -= bounce; spot.z -= .03 * (1 - w); rig.placePelvis(spot); rig.fk();
+    rig.turnWorld(b.spine_02, turn.setFromAxisAngle(Y, .16 * (1 - w))); rig.fk();      // the shoulder comes back with the glove
+    for (const s of ['l', 'r']) { const [thigh, calf, foot] = rig.side[s].leg; rig.reach(thigh, calf, foot, key.wp[foot]); rig.reach(thigh, calf, foot, key.wp[foot]); rig.setWorld(foot, key.wq[foot]); }
+    rig.fk();
+    {   // the left glove: on the bag at w = 1, back at the guard (across from the right one, a little lower) at 0
+        const [, upper, lower, hand] = L.arm, guard = key.wp[R.arm[3]];
+        handAt.set(-guard.x + .02, guard.y - .04, guard.z + .05).lerp(key.wp[hand], w);
+        rig.reach(upper, lower, hand, handAt); rig.reach(upper, lower, hand, handAt); rig.setWorld(hand, key.wq[hand]);
+    }
+    rig.fk();
+    return out;
+}
+
+// In place of a walk along a path: the same stride with the body where it is (on a treadmill's belt). `plan` is a
+// straight walkPlan long enough to have a steady middle; the pose there repeats every two steps.
+export function solveTread(rig, plan, time, begin = 0) {
+    const g = 8 + ((time * plan.pace + begin * 2) % 2);
+    solveWalk(rig, plan, g);
 }
 
 // ---- someone who changes posture where they are ------------------------------------------------------------------------

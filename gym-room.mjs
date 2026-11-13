@@ -299,7 +299,7 @@ export function buildGymRoom(room, root, layout, helpers) {
         for (const z of [-480, 480]) { box(g, [650, 65, 80], [0, 32.5, z], rubber, 4); rod(g, [0, 65, z], [0, 410, z], 26, steel); }
         rod(g, [0, 345, -530], [0, 345, 550], 35, steel);
         box(g, [330, 85, 380], [0, 450, 410], rubber, 20);
-        const pad = box(g, [330, 85, 900], [0, 570, -240], rubber, 20); pad.rotation.x = -.28;
+        const pad = box(g, [330, 85, 900], [0, 570, -240], rubber, 20); pad.rotation.x = .28;      // (rising from the seat to the head end, with its rails)
         for (const x of [-145, 145]) rod(g, [x, 420, 500], [x, 695, -665], 6, lime);
     };
     if (tier) bench([w / 2 - 600, 0, bz + 2720]);
@@ -319,8 +319,14 @@ export function buildGymRoom(room, root, layout, helpers) {
         rod(bike, [-260, 1110, -420], [-260, 1180, -570], 18, rubber); rod(bike, [260, 1110, -420], [260, 1180, -570], 18, rubber);
         box(bike, [230, 125, 18], [0, 1160, -450], graphite, 8);
         label(bike, '24:08', [195, 85], [0, 1160, -437], I.bikeScreen);
-        rod(bike, [-170, 370, 70], [170, 370, 70], 13, silver);
-        for (const s of [-1, 1]) box(bike, [100, 35, 160], [s * 200, 370 + s * 100, 70], rubber, 5);
+        // The crank turns with a rider's feet (room-people.mjs liven): axle, arms, and pedals that hang level from it.
+        const crank = new THREE.Group(); crank.name = 'Bike crank'; crank.position.set(0, 370, 70); bike.add(crank);
+        rod(crank, [-170, 0, 0], [170, 0, 0], 13, silver);
+        for (const s of [-1, 1]) {
+            rod(crank, [s * 160, 0, 0], [s * 160, s * 100, 0], 9, silver);
+            const pedal = new THREE.Group(); pedal.name = 'Bike pedal'; pedal.position.set(s * 200, s * 100, 0); crank.add(pedal);
+            box(pedal, [100, 35, 160], [0, 0, 0], rubber, 5);
+        }
     }
     if (tier >= 2) {
         const rack = group('power-rack', 'Squat rack and Olympic bar', [w / 2 - 1020, 0, front - 1220]);

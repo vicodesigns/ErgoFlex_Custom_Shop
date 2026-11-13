@@ -33,128 +33,128 @@
  },
  "house": {
   "morning": {
-   "meshes": 398,
-   "materials": "eb2d3e71",
+   "meshes": 400,
+   "materials": "2a638f19",
    "instances": "29b15d4a",
    "lights": "d8d29f0e"
   },
   "afternoon": {
-   "meshes": 398,
-   "materials": "01799f05",
+   "meshes": 400,
+   "materials": "acc7e22d",
    "instances": "29b15d4a",
    "lights": "68ec4983"
   },
   "evening": {
-   "meshes": 398,
-   "materials": "b0c293f9",
+   "meshes": 400,
+   "materials": "5844d769",
    "instances": "29b15d4a",
    "lights": "29add640"
   },
   "night": {
-   "meshes": 398,
-   "materials": "ea98f162",
+   "meshes": 400,
+   "materials": "5e892eb2",
    "instances": "29b15d4a",
    "lights": "0a40734d"
   },
   "party": {
-   "meshes": 398,
-   "materials": "56093fcf",
+   "meshes": 400,
+   "materials": "4d57eb47",
    "instances": "29b15d4a",
    "lights": "b049fd6b"
   }
  },
  "spacious": {
   "morning": {
-   "meshes": 437,
-   "materials": "ae70260f",
+   "meshes": 439,
+   "materials": "ad99369f",
    "instances": "f039bf5a",
    "lights": "d8d29f0e"
   },
   "afternoon": {
-   "meshes": 437,
-   "materials": "71f12213",
+   "meshes": 439,
+   "materials": "002a0da3",
    "instances": "f039bf5a",
    "lights": "68ec4983"
   },
   "evening": {
-   "meshes": 437,
-   "materials": "37ad53a3",
+   "meshes": 439,
+   "materials": "f4592ccb",
    "instances": "f039bf5a",
    "lights": "29add640"
   },
   "night": {
-   "meshes": 437,
-   "materials": "5f27692c",
+   "meshes": 439,
+   "materials": "3eb73af4",
    "instances": "f039bf5a",
    "lights": "0a40734d"
   },
   "party": {
-   "meshes": 437,
-   "materials": "1b9049e0",
+   "meshes": 439,
+   "materials": "2cfb2b68",
    "instances": "f039bf5a",
    "lights": "b049fd6b"
   }
  },
  "premium": {
   "morning": {
-   "meshes": 452,
-   "materials": "24b8c0a3",
+   "meshes": 454,
+   "materials": "b66ddf0b",
    "instances": "f039bf5a",
    "lights": "d8d29f0e"
   },
   "afternoon": {
-   "meshes": 452,
-   "materials": "9993560b",
+   "meshes": 454,
+   "materials": "8bb3dfb3",
    "instances": "f039bf5a",
    "lights": "68ec4983"
   },
   "evening": {
-   "meshes": 452,
-   "materials": "fd303ca3",
+   "meshes": 454,
+   "materials": "a2582473",
    "instances": "f039bf5a",
    "lights": "29add640"
   },
   "night": {
-   "meshes": 452,
-   "materials": "2adb0d5c",
+   "meshes": 454,
+   "materials": "9cfa405c",
    "instances": "f039bf5a",
    "lights": "0a40734d"
   },
   "party": {
-   "meshes": 452,
-   "materials": "8ce7520d",
+   "meshes": 454,
+   "materials": "73f88c55",
    "instances": "f039bf5a",
    "lights": "b049fd6b"
   }
  },
  "executive": {
   "morning": {
-   "meshes": 458,
-   "materials": "10735c69",
+   "meshes": 460,
+   "materials": "95471779",
    "instances": "f039bf5a",
    "lights": "d8d29f0e"
   },
   "afternoon": {
-   "meshes": 458,
-   "materials": "3707183b",
+   "meshes": 460,
+   "materials": "6df193cb",
    "instances": "f039bf5a",
    "lights": "68ec4983"
   },
   "evening": {
-   "meshes": 458,
-   "materials": "e4ee7213",
+   "meshes": 460,
+   "materials": "efe7c7eb",
    "instances": "f039bf5a",
    "lights": "29add640"
   },
   "night": {
-   "meshes": 458,
-   "materials": "7486b8d8",
+   "meshes": 460,
+   "materials": "5910a010",
    "instances": "f039bf5a",
    "lights": "0a40734d"
   },
   "party": {
-   "meshes": 458,
-   "materials": "8f631ee1",
+   "meshes": 460,
+   "materials": "5f192fe1",
    "instances": "f039bf5a",
    "lights": "b049fd6b"
   }

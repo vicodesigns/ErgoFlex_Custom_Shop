@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as THREE from 'three';
 import { RoomPeople } from '../room-people.mjs';
-import { PersonRig, DeskActor, simulateDesk, settleDesk, stepDesk, deskDescription, deskWants, solveDesk, solveStill, solveChange, walkPlan, solveWalk, STAND_UP } from '../room-people-motion.mjs';
+import { PersonRig, DeskActor, simulateDesk, settleDesk, stepDesk, deskDescription, deskWants, solveDesk, solveStill, solveChange, walkPlan, solveWalk, STAND_UP, solveTread } from '../room-people-motion.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const rigOf = who => new PersonRig(JSON.parse(fs.readFileSync(path.join(root, 'assets/props/people-rigs', who + '.json'), 'utf8')));
@@ -183,6 +183,46 @@ for (const who of ['maya', 'andre', 'grace', 'noah', 'sam']) {
         solveStill(rig, key, { time: 33.3, seed }); const a = snapshot(rig); solveStill(rig, key, { time: 2, seed }); solveStill(rig, key, { time: 33.3, seed });
         assert.deepEqual(snapshot(rig), a, id + ': same time and seed, same pose');
     }
+}
+// ---- training on the gym's equipment: hands stay on the bar, feet go round the crank, the same second is the same pose
+{
+    const far = (rig, key, i) => rig.wp[i].distanceTo(key.wp[i]);
+    for (const [who, pose] of [['zoe', 'gym-cycle'], ['kai', 'gym-cycle'], ['lin', 'gym-pullup'], ['andre', 'gym-press'], ['lin', 'gym-curl'], ['sofia', 'gym-box']]) {
+        const id = `people-${who}-${pose}`, rig = rigOf(who), key = rig.key(id), seed = 41; assert.equal(key.pose, pose);
+        solveStill(rig, key, { time: 5, seed, life: 0 }); assert.ok(worst(rig, key) < 1e-9, id + ': without life it is the model as built');
+        const L = rig.side.l, R = rig.side.r, fl = L.leg[2], fr = R.leg[2], hl = L.arm[3], hr = R.arm[3], pelvis = rig.b.pelvis;
+        const mid = key.wp[fl].clone().add(key.wp[fr]).multiplyScalar(.5), throwOf = Math.hypot(key.wp[fl].y - key.wp[fr].y, key.wp[fl].z - key.wp[fr].z) / 2;
+        let low = Infinity, high = -Infinity, reach = 0;
+        for (let time = 0; time < 30; time += .13) {
+            const out = solveStill(rig, key, { time, seed });
+            assert.ok(rig.lq.every(q => Number.isFinite(q.x + q.y + q.z + q.w)), id + ': a pose at ' + time.toFixed(2));
+            if (pose === 'gym-cycle') {
+                assert.ok(Number.isFinite(out.crank), 'the rider tells the bike how far its crank has turned');
+                for (const [foot, hand] of [[fl, hl], [fr, hr]]) {
+                    assert.ok(Math.abs(Math.hypot(rig.wp[foot].y - mid.y, rig.wp[foot].z - mid.z) - throwOf) < .004, id + ': a foot stays on its pedal\'s circle');
+                    assert.ok(far(rig, key, hand) < .003, id + ': hands stay on the handlebar');
+                }
+                // the left pedal: down as built, then round with the crank (the top goes forward)
+                assert.ok(Math.abs(rig.wp[fl].y - (mid.y - throwOf * Math.cos(out.crank))) < .004 && Math.abs(rig.wp[fl].z - (mid.z - throwOf * Math.sin(out.crank))) < .004, id + ': the foot is where the crank has the pedal');
+            }
+            if (pose === 'gym-pullup') { assert.ok(far(rig, key, hl) < .003 && far(rig, key, hr) < .003, id + ': hands stay on the bar'); assert.ok(rig.wp[rig.b.head].y < key.wp[hl].y + .06, id + ': the head stays under the bar'); }
+            if (pose === 'gym-curl' || pose === 'gym-box') assert.ok(far(rig, key, fl) < 2e-4 && far(rig, key, fr) < 2e-4, id + ': feet stay put');
+            if (pose === 'gym-press') assert.ok(far(rig, key, pelvis) < 1e-6 && rig.wp[hl].y <= key.wp[hl].y + 1e-6, id + ': the hips stay on the bench, the weights come down from the top');
+            const y = pose === 'gym-pullup' ? rig.wp[pelvis].y : rig.wp[hl].y; low = Math.min(low, y); high = Math.max(high, y); reach = Math.max(reach, far(rig, key, hl));
+        }
+        if (pose === 'gym-pullup') assert.ok(high - low > .12, id + ': the body rises and sinks');
+        if (pose === 'gym-press' || pose === 'gym-curl') assert.ok(high - low > .2, id + ': the weight travels');
+        if (pose === 'gym-box') assert.ok(reach > .2, id + ': the glove comes back to the guard');
+        solveStill(rig, key, { time: 12.7, seed }); const a = snapshot(rig); solveStill(rig, key, { time: 3, seed }); solveStill(rig, key, { time: 12.7, seed });
+        assert.deepEqual(snapshot(rig), a, id + ': same time and seed, same pose');
+    }
+    // the treadmill: the stride of a walk on the spot, the same every two steps, feet passing each other
+    const rig = rigOf('andre'), key = rig.key('people-andre-stand-wait'), plan = walkPlan(rig, key, key, [[0, 0], [0, 24]], { pace: 2.05 }), fl = rig.side.l.leg[2], fr = rig.side.r.leg[2];
+    solveTread(rig, plan, 1.3); const a = snapshot(rig); solveTread(rig, plan, 1.3 + 2 / 2.05); const b = snapshot(rig);
+    assert.ok(a.every((v, i) => Math.abs(v - b[i]) < 1e-6), 'the treadmill walk repeats every two steps');
+    let ahead = -Infinity, behind = Infinity;
+    for (let time = 0; time < 2; time += .05) { solveTread(rig, plan, time); const d = rig.wp[fl].z - rig.wp[fr].z; ahead = Math.max(ahead, d); behind = Math.min(behind, d); assert.ok(Math.abs(rig.wp[rig.b.pelvis].z - key.wp[rig.b.pelvis].z) < .05, 'the walker stays on the spot'); }
+    assert.ok(ahead > .3 && behind < -.3, 'the feet pass each other, a stride apart');
 }
 // ---- a change of posture on the spot
 {
