@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113a';
 import {interiorCraftFinishes} from './interior-craft-detail.mjs';
 import {buildChildActivities} from './child-room-activities.mjs';
 import {CHILD_AGE_STAGES,childAgeStage,childModesForStage} from './child-growth-profiles.mjs';
@@ -134,6 +135,8 @@ export function buildChildRoom(room,root,l,h){
   if(id==='night'){c.fillStyle=m.sky[0];c.beginPath();c.arc(tw*sun[0]+11,th*sun[1]-5,21,0,7);c.fill();c.fillStyle='#ddd9c7';for(let i=0;i<25;i++){c.beginPath();c.arc(jitter(i+40)*tw,jitter(i+90)*th*.65,1+i%2,0,7);c.fill();}}
   for(let row=0;row<2;row++){c.fillStyle=id==='night'?['#2d4350','#223943'][row]:id==='evening'?['#879c90','#657f75'][row]:['#a0b8a2','#789a81'][row];for(let i=0;i<8;i++){c.beginPath();c.arc(i*90,th+45+row*45-jitter(i)*65,100,0,7);c.fill();}}sky.needsUpdate=true;};
  const view=mesh(right,new THREE.PlaneGeometry(ww,wh),skyMat,[w/2+65,low+wh/2,windowZ]);view.rotation.y=-Math.PI/2;view.castShadow=false;
+ // Or a back garden modelled behind the glass (window-scenery.mjs): a swing set, a trampoline, a tree house. The room has no photograph; 'photo' keeps its painted sky.
+ const scenery=windowView('childroom')==='scenery'?attachScenery(view,'back-garden',{floor:-(low+wh/2),seed:2303,storey:0,variant:'kids'}):null;
  const blind=box(right,[30,1,ww-35],[w/2-38,low+wh,windowZ],linen,2);blind.userData.presentationOnly=true;
  for(const z of [windowZ-ww/2,windowZ,windowZ+ww/2])box(right,[95,wh+80,38],[w/2-10,low+wh/2,z],cream,3);
  for(const y of [low,low+wh])box(right,[130,45,ww+90],[w/2-15,y,windowZ],cream,3);
@@ -230,7 +233,7 @@ export function buildChildRoom(room,root,l,h){
  const interiors=enhanceChildInteriors({room,root,layout:l,helpers:h,materials,groups}),stageDecor=enhanceChildGrowth({room,root,layout:l,helpers:h,materials,groups}),personality=enhanceChildPersonality({room,root,layout:l,helpers:h,materials,groups}),earlyLife=buildEarlyYearsLife({root,layout:l,helpers:h,materials,groups,footprint}),wallLife=enhanceEarlyYearsWalls({root,layout:l,helpers:h,materials,groups}),lighting=enhanceChildLighting({root,layout:l,helpers:h,groups,skyMat});let lastSky=null;
  enhanceChildMaterials({room,root,layout:l,helpers:h,materials,groups});
  room.roomAtmosphere=(id,accent=1)=>{const phase=modes[id]?id:'morning',m=modes[phase],cue=CHILD_LIGHT_CUES[phase];activity.update(phase);interiors.update(phase);stageDecor.update(phase);personality.update(phase);earlyLife.update(phase);wallLife.update(phase);
-  if(lastSky!==phase){paintSky(phase);lastSky=phase;}skyMat.color.set('#ffffff');skyMat.emissiveIntensity=cue.window;skyMat.emissive.set(m.sky[1]);
+  if(lastSky!==phase){paintSky(phase);lastSky=phase;}scenery?.setHour(phase);skyMat.color.set('#ffffff');skyMat.emissiveIntensity=cue.window;skyMat.emissive.set(m.sky[1]);
   blind.scale.y=wh*cue.blind;blind.position.y=low+wh-blind.scale.y/2;
   moonGlow.emissiveIntensity=cue.moon*.9;readingGlow.emissiveIntensity=cue.reading*.8;
   lights.forEach(({light,power,channel})=>{light.intensity=power*cue[channel]*accent;light.color.set(channel==='moon'?'#ffca85':phase==='afternoon'?'#f3e4cb':'#ffd6a0');});
