@@ -190,3 +190,43 @@ A look through every room chapter of "Vico's cut with people" with the activitie
   is now there, bench work, the game).
 - `tools/experience/render-cut.cjs --list-objects '<regex>'` marks objects that are switched off with `(hidden)`.
 
+
+## Review of everyone in every room (November 13)
+
+Vico: "review all the people in all of the environments and make any improvements and suggestions where needed".
+Every room of the catalogue, every layout and all five dayparts went through `tools/people/cast-audit.cjs` (which
+now also reports feet off the floor, a sitter sunk into or floating over a seat, and a seat's back in front of the
+person sitting on it), and every flagged person, every film room and the nine film chapters of both cuts with people
+were looked at in stills, close up from the side and the front for the seated.
+
+Fixed:
+
+- **Laptops in the air.** The laptop posture carries its own laptop at table height: on the premium and executive home
+  sofa, the media lab's couch and the designer chairs at its reel screening (no table) it hung in front of them. Noah
+  reads a book (sat back, clear of the coffee table), Rosa is on her phone, the screening watches. The film's lab
+  morning (Sofia at the table) is as it was. Test: laptop, writing and typing postures are at a table, in every room.
+- **Two Mayas in the gym chapter** (both cuts with people). While she stretched beside the rising desk (`maya-break`)
+  the moving desk user stayed at the desk too, the two inside each other in two outfits. A film's own cast of the
+  desk user's character elsewhere, timed with `when`, now takes them away from the desk for those seconds (the chair
+  stays parked); an older cut's standing-by stand-in still gives way to the desk user. The stretch wears her gym
+  clothes. Tests: one Maya at every second; the same clothes away from the desk.
+- **Backwards on their chairs.** The executive office's review chairs stood with their backs to the table
+  (`office-room.mjs`, two turns swapped), so the whole review sat on them backwards. The university's wing chairs
+  and the security room's break armchair are a model built facing -z: Rosa, Andre and Omar sat face to the backrest.
+  Someone put `on` a seat now faces away from its back whichever way the model points (`RoomPeople.backAhead`; a turn
+  that already seats them right, a backless seat, `toward` and `face` are left as they were).
+- **Smallest rooms.** The vocalist stood half off the music studio's floor (she sings from behind the mic there);
+  Omar's wheelchair stood in the workshop's tool cart at the open-workshop party (Grace and Omar only where there is
+  room; Omar is not there); the artist's party guests stood against the desk (200 mm further off); the smallest atelier
+  stood empty in the evening (Sofia's free-spot search found no floor: she sits on the rug in front of the desk).
+- **Gallery guide** (house up, morning): her presenting arm went through the back wall (80 degrees round the plinth).
+
+Looked at and right as they are: the film chapters' seated people (the commons readers, the gaming sofa, the
+classroom), Lin at the wheel, Jo at the workshop bench at night (the audit's 47 % "in the bench" is the bench's box),
+the bar stools (the audit's "sunk" there is a backrest hit), the police briefing chairs (their writing tablet reads as a
+back ahead), the children at their tables and on the rugs, the patients in bed, the desk users at evening and party
+(the audit's "desk user inside a station" lines are its own sequence: the stills show them at the desk).
+
+Not changed, for Vico (see the review report): people on seats higher than their posture was built for sit with their
+feet 50 to 70 mm off the floor (a 420 mm posture on a 470 to 490 mm chair, bench or sofa; the classroom chairs are 60);
+postures built for those seats, or the legs following the seat, would put them down.
