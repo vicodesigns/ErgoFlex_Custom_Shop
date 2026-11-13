@@ -11,8 +11,9 @@ materials get the right alpha mode, gltf-transform compresses it into
 assets/props/<id>.glb, and the prop is entered in tools/props/manifest.json and
 assets/props/index.json (category "people"). Thumbnails: tools/props/thumbnails.mjs.
 
-Needs: BLENDER (default ~/blender/blender-4.2.3-linux-x64/blender) with MPFB and
-the MakeHuman CC0 asset packs in BLENDER_USER_RESOURCES (default ~/blender/mpfb-user).
+Needs: BLENDER (default ~/blender/blender-4.2.3-linux-x64/blender; on Windows
+~/blender/blender-4.2.3-windows-x64/blender.exe) with MPFB 2.0.18 and the MakeHuman CC0 asset packs in
+BLENDER_USER_RESOURCES (default ~/blender/mpfb-user). Runs on Linux and Windows (there: python, not python3).
 """
 import glob, json, os, struct, subprocess, sys, tempfile
 from concurrent.futures import ThreadPoolExecutor
@@ -21,7 +22,8 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.abspath(os.pat
 sys.path.insert(0, HERE)
 import cast  # noqa: E402
 
-BLENDER = os.environ.get('BLENDER', os.path.expanduser('~/blender/blender-4.2.3-linux-x64/blender'))
+WINDOWS = os.name == 'nt'      # (the render PC builds people too: same Blender, MPFB and packs under ~/blender)
+BLENDER = os.environ.get('BLENDER', os.path.expanduser('~/blender/blender-4.2.3-windows-x64/blender.exe' if WINDOWS else '~/blender/blender-4.2.3-linux-x64/blender'))
 ENV = dict(os.environ, BLENDER_USER_RESOURCES=os.environ.get('BLENDER_USER_RESOURCES', os.path.expanduser('~/blender/mpfb-user')))
 args = sys.argv[1:]
 jobs = int(args[args.index('--jobs') + 1]) if '--jobs' in args else 4
@@ -31,7 +33,7 @@ no_manifest = '--no-manifest' in args                      # built on request: l
 who = args[args.index('--who') + 1].split(',') if '--who' in args else None     # with --all: only these characters
 poses = args[args.index('--pose') + 1].split(',') if '--pose' in args else None   # with --all: only these postures
 only = [a for i, a in enumerate(args) if not a.startswith('--') and (i == 0 or args[i - 1] not in ('--jobs', '--preview', '--who', '--pose'))]
-gltf_transform = os.path.join(ROOT, 'node_modules/.bin/gltf-transform')
+gltf_transform = ['node', os.path.join(ROOT, 'node_modules', '@gltf-transform', 'cli', 'bin', 'cli.js')]      # (not node_modules/.bin: that is a shell launcher, a .cmd on Windows)
 outputs = [cast.output(i) for i in only] if only else cast.all_outputs() if '--all' in args else list(cast.OUTPUTS)
 if who: outputs = [o for o in outputs if o['character'] in who]
 if poses: outputs = [o for o in outputs if o['pose'] in poses]
@@ -46,7 +48,7 @@ def blender(o):
     if r.returncode or not line: return o, None, 'Blender failed\n' + (r.stdout[-1500:] + r.stderr[-1500:])
     result = json.loads(line[7:]); raw = os.path.join(work, o['id'] + '.glb'); out = os.path.join(ROOT, 'assets/props', o['id'] + '.glb')
     set_alpha(raw, result['alpha'], result.get('cutoff', {}))
-    r = subprocess.run([gltf_transform, 'optimize', raw, out, '--compress', 'meshopt', '--texture-compress', 'webp', '--texture-size', str(o.get('textureSize', 1024)),
+    r = subprocess.run([*gltf_transform, 'optimize', raw, out, '--compress', 'meshopt', '--texture-compress', 'webp', '--texture-size', str(o.get('textureSize', 1024)),
                         '--simplify', 'false', '--palette', 'false', '--join', 'false'], capture_output=True, text=True)
     if r.returncode: return o, None, 'optimize failed\n' + r.stderr[-800:]
     if not keep:
