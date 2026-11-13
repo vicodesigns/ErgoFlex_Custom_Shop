@@ -567,7 +567,7 @@ export function buildHomeOffice(room, root, layout, helpers) {
     const sky = box(back, [ww, wh, 8], [wx, bottom + wh / 2, bz - 65], new THREE.MeshBasicMaterial({ map: skyMap }));
     // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
     // A trial (window-scenery.mjs): a modelled garden behind the glass instead of the photograph, or the painted canvas alone.
-    const view = windowView(), scenery = view === 'scenery' ? attachScenery(sky, 'garden', { width: ww, height: wh, floor: -(bottom + wh / 2) }) : null;
+    const view = windowView('home'), scenery = view === 'scenery' ? attachScenery(sky, 'garden', { width: ww, height: wh, floor: -(bottom + wh / 2) }) : null;
     const windowVista = view === 'photo' ? attachVista(sky, 'garden') : null; if (windowVista) room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     sky.castShadow = false; sky.receiveShadow = false;
     for (const x of [left, wx, right]) box(back, [35, wh + 65, 65], [x, bottom + wh / 2, bz + 8], trim);
