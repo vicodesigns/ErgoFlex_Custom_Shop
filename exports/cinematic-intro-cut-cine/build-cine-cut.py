@@ -68,13 +68,13 @@ def awaken(s):
     # The desk's front (user side) faces +x until the turn, about +z after it.
     # Desk centre after the first roll: about (0.5, 0, 0.15).
     cam(s, his('awaken', 0, 1.8, 2, 4.4, 5.3, 6.2, 6.9, 7.4) + [
-        key(9.25, (5.0, 1.4, 3.95), (0.5, 1.15, 0.15), 33, 'Lift starts: down toward the floor'),
-        key(11.2, (5.0, 0.45, 3.75), (0.5, 1.22, 0.15), 35, 'Low three-quarter: the desktop climbs (blue)'),
-        key(16.1, (4.6, 0.4, 3.5), (0.5, 1.42, 0.15), 35, 'Low, easing in: standing height'),
+        key(9.25, (4.1, 1.3, 3.25), (0.5, 1.15, 0.15), 33, 'Lift starts: in and down toward the floor'),
+        key(11.2, (4.0, 0.55, 3.1), (0.5, 1.25, 0.15), 36, 'Low three-quarter: the desktop climbs (blue)'),
+        key(16.1, (3.95, 1.9, 3.05), (0.5, 1.68, 0.15), 39, 'Craning up with it: the desktop and its light, standing height'),
         key(18.5, (2.7, 1.3, 5.5), (0.5, 1.4, 0.15), 32, 'Side three-quarter: the board will tilt'),
         key(24.6, (2.45, 1.5, 5.05), (0.5, 1.45, 0.15), 33.5, 'Side three-quarter: 65 degrees, raised (purple)'),
-        key(26.6, (4.4, 5.3, 4.3), (0.45, 1.35, 0.3), 37, 'Up and over: the turn starts'),
-        key(31.25, (1.4, 5.6, 6.0), (0.45, 1.35, 0.4), 37, 'From above: the desk turns on its ring'),
+        key(26.6, (3.2, 4.1, 3.1), (0.45, 1.6, 0.3), 38, 'Up and over: the turn starts'),
+        key(31.25, (1.1, 4.3, 4.3), (0.45, 1.6, 0.4), 38, 'From above: the desk turns on its ring'),
     ] + his('awaken', 35.85, 37.2, 40.2, 42.5, 44.85), ease_in=True)
 
 
@@ -87,11 +87,11 @@ def rise(s):
     # rising column stand side by side against the clock wall; an arc to the front three-quarter while it lowers,
     # window behind her; and a slow widening into the evening room, a calm frame for the dissolve.
     cam(s, his('rise', 0, 2) + [
-        key(4.3, (0.55, 1.55, 3.3), (-0.25, 1.12, 0.25), 49, 'Back along the desk: Maya on her feet, the desk rises'),
-        key(7.6, (0.6, 1.7, 3.28), (-0.25, 1.33, 0.25), 53, 'Profile: standing height, the clock wall behind'),
-        key(9.45, (0.75, 1.69, 3.25), (-0.22, 1.32, 0.22), 53, 'Profile: midday, it starts down'),
-        key(12.65, (2.3, 1.35, 2.75), (-0.4, 1.15, 0.12), 46, 'Front three-quarter: seated again, the window behind'),
-        key(18, (3.4, 1.75, 3.05), (-0.7, 1.15, 0.0), 46, 'Evening: the whole room'),
+        key(4.3, (1.55, 1.62, 2.5), (-0.6, 1.3, 0.35), 54, 'Back off the notes to the front three-quarter: Maya up, the readout climbs'),
+        key(7.6, (1.6, 1.72, 2.5), (-0.6, 1.42, 0.35), 54, 'Standing height on the readout, Maya beside the column'),
+        key(9.45, (1.7, 1.7, 2.5), (-0.58, 1.42, 0.3), 54, 'Midday: it starts down'),
+        key(12.65, (2.3, 1.4, 2.75), (-0.4, 1.2, 0.15), 46, 'Front three-quarter: seated again, the window behind'),
+        key(18, (1.45, 1.5, 1.95), (-0.6, 1.35, 0.4), 44, 'Evening: in toward the screens and the summary of the day'),
     ])
 
 
@@ -106,13 +106,14 @@ def create(s):
     # the front as the board goes on to the painting, desk, screens and stool whole for the dissolve.
     cam(s, [
         key(0, (6.1, 1.85, 1.95), (0.0, 1.25, 1.85), 40, 'Lin at the wheel, the desk at the back of the studio'),
-        key(2.6, (4.3, 1.85, 0.65), (-1.2, 1.45, 0.35), 42, 'Past her, toward the desk'),
+        key(2.35, (5.7, 1.82, 1.9), (0.0, 1.25, 1.75), 39, 'Lin at the wheel: slow push'),
+        key(2.4, (3.75, 1.9, -0.3), (-1.37, 1.45, 0.31), 45, 'Cut: the desk, front three-quarter', cut=True),
         key(4.2, (3.5, 1.95, -0.6), (-1.37, 1.45, 0.31), 45, 'Front three-quarter: the lift to 52 in'),
         key(6.8, (3.1, 2.1, -1.45), (-1.37, 1.6, 0.31), 45, 'Up with it; the arc begins'),
         key(12.4, (1.1, 2.0, -3.1), (-1.37, 1.6, 0.31), 47, 'Side three-quarter: the board tilts to drafting'),
-        key(16.9, (1.3, 2.0, -2.95), (-1.37, 1.6, 0.31), 47, 'Drafting at 40 degrees'),
+        key(16.9, (2.0, 2.0, -2.55), (-1.37, 1.6, 0.31), 46, 'Drafting at 40 degrees, the arc goes on'),
         key(19.5, (3.15, 2.05, 0.35), (-1.37, 1.6, 0.31), 42, 'Round to the front: the painting'),
-        key(23.5, (2.9, 2.0, 0.35), (-1.37, 1.6, 0.31), 41, 'The painting, settled'),
+        key(23.5, (2.75, 1.98, 0.35), (-1.37, 1.6, 0.31), 40, 'The painting: easing in'),
     ])
 
 
@@ -123,12 +124,12 @@ def commons(s):
     # facing it, the wheelchair parked at (6.03, -12.45); her teammates work at the project table on the +z side.
     # His route crossed the drive behind the student at the near table (her head hid the desk at 10.5 s) and his
     # last frame cut the wheelchair at the right edge behind a large water bottle. Here: his establishing over the
-    # double-height commons, then down over the tables and a high track parallel to the cork wall: the desk turns
-    # off the wall and drives across the frame toward Mia, over the shoulders of the team at the table. As it
+    # double-height commons, then a high, nearly still wide from behind the tables: the desk turns off the wall and
+    # drives across the frame to Mia, everyone in the frame whole (a lateral track slid people across the edges). As it
     # arrives, a cut to the front: desk, Mia and the wheelchair whole, the campus board behind.
     cam(s, his('commons', 0, 2) + [
-        key(5.0, (-4.6, 3.0, -6.3), (-2.1, 0.95, -12.0), 44, 'Down over the tables: the desk turns off the wall'),
-        key(11.55, (2.5, 3.45, -6.2), (2.7, 0.95, -11.8), 44, 'Tracking the drive along the cork wall, over the team'),
+        key(5.0, (-0.6, 4.6, -2.4), (-1.0, 0.8, -11.6), 38, 'High over the tables: the desk turns off the wall'),
+        key(11.55, (-0.1, 4.4, -3.0), (-0.2, 0.85, -11.6), 37, 'It drives across the cork wall to Mia, the team below'),
         key(11.6, (5.7, 1.75, -7.5), (3.9, 0.95, -11.9), 52, 'Front: the desk docks at Mia, the wheelchair beside', cut=True),
         key(16, (5.6, 1.7, -7.8), (3.9, 0.95, -11.9), 50, 'Slow push into the dissolve'),
     ])
@@ -144,11 +145,12 @@ def coast(s):
     # three-quarter as it rises; then frontal at seated eye height, where its user would sit, for the tilt.
     cam(s, [
         key(0, (1.3, 2.15, -5.2), (-1.6, 1.15, 0.2), 36, 'Down the aisle: Maya at the centre bay, the free suite beyond'),
-        key(2.4, (1.5, 2.05, -2.2), (-2.4, 1.2, 4.0), 36, 'Past her, the suite at the end of the row'),
+        key(1.95, (1.32, 2.12, -4.6), (-1.6, 1.15, 0.5), 36, 'Down the aisle: slow push'),
+        key(2.0, (1.4, 2.0, -0.2), (-2.8, 1.2, 5.0), 36, 'Cut past her: the suite at the end of the row', cut=True),
         key(4.4, (1.2, 1.95, 0.9), (-2.8, 1.2, 5.0), 36, 'Down the aisle: the suite rises'),
         key(7.4, (0.6, 1.85, 2.5), (-2.8, 1.3, 5.0), 38, 'Lift lands'),
         key(11.25, (0.75, 1.95, 5.7), (-2.8, 1.3, 5.0), 42, 'Front three-quarter, where its user sits: the board tilts up'),
-        key(14.5, (0.6, 1.92, 5.65), (-2.8, 1.3, 5.0), 41, 'Settled'),
+        key(14.5, (0.35, 1.9, 5.55), (-2.8, 1.3, 5.0), 40, 'Easing in'),
     ])
 
 
@@ -163,8 +165,10 @@ def oilers(s):
     # across the room above the student rows to a raised profile from the room side, window light from the left, so
     # it rises beside Noah; then a small arc as he works standing.
     cam(s, his('oilers', 0, 0.6) + [
-        key(1.9, (5.3, 1.6, 1.9), (2.0, 1.4, 6.6), 42, 'Back off Kai, clear of the set-design desk'),
-        key(3.5, (4.3, 2.3, 2.5), (-2.5, 1.3, 5.6), 42, 'Up and along the window: Noah at the featured desk'),
+        key(1.15, (5.02, 0.62, 3.22), (10.05, 1.67, 7.83), 42, 'Kai (hold)'),
+        key(1.2, (5.2, 2.2, 2.0), (-2.0, 1.3, 5.6), 42, 'Cut: along the window, the class, Noah at the featured desk', cut=True),
+        key(4.45, (4.6, 2.3, 2.35), (-2.4, 1.3, 5.6), 42, 'Drifting along the window'),
+        key(4.5, (-0.6, 2.2, 1.45), (-2.9, 1.25, 5.7), 44, 'Cut: toward the featured desk', cut=True),
         key(7.6, (-2.2, 2.15, 1.1), (-2.9, 1.25, 5.7), 44, 'Profile, window light: Noah gets up'),
         key(11, (-2.15, 2.25, 1.25), (-2.9, 1.4, 5.7), 44, 'The desk rises beside him'),
         key(14, (-1.3, 2.25, 1.55), (-2.8, 1.45, 5.7), 46, 'He works standing'),
@@ -181,7 +185,9 @@ def wellness(s):
     # the closing push cut Priya at the right. Here: his wide opening from the mirror wall (Kai whole on the bike),
     # then a crane up to a high front three-quarter: from there Maya no longer hides the desk, the desktop visibly
     # climbs past her shoulders and Priya is whole at the left; then down to a mid-height three-quarter as she works.
-    cam(s, his('wellness', 0, 3) + [
+    cam(s, his('wellness', 0) + [
+        key(2.45, (4.95, 1.85, -1.9), (-0.9, 0.79, 0.78), 47, 'Wide from the mirror wall: slow push'),
+        key(2.5, (3.05, 2.7, -1.1), (-1.2, 1.45, -0.35), 52, 'Cut: high front three-quarter', cut=True),
         key(6.0, (2.85, 2.6, -0.95), (-1.2, 1.5, -0.35), 52, 'Crane up: the desk begins to rise, Maya gets up'),
         key(11, (2.65, 2.5, -0.65), (-1.2, 1.6, -0.3), 52, 'High three-quarter: the desktop climbs past her'),
         key(16, (2.65, 2.1, -1.75), (-1.1, 1.5, -0.05), 49, 'Down to her: working standing'),
@@ -218,6 +224,8 @@ def music(s):
     cam(s, [
         key(0, (2.9, 3.6, -0.9), (0.2, 0.55, 1.0), 52, 'High over the room: the floor light plays, Kai on the sofa'),
         key(6.3, (2.9, 3.2, -0.45), (-0.2, 0.85, 0.75), 50, 'Craning down as it rises and tilts with the game'),
+        key(7.75, (2.9, 3.0, -0.3), (-0.3, 0.95, 0.65), 49, 'Still craning'),
+        key(7.8, (3.3, 2.3, 0.45), (-0.73, 1.5, 0.21), 43.5, 'Cut on the rise: front view', cut=True),
     ] + his('music', 10.65, 12.5))
 
 
@@ -232,9 +240,9 @@ def media(s):
     # the window side, desk and Omar in one frame with the guitar wall behind, the film's light on both; a slow
     # push; an arc behind Omar to an over-the-shoulder on the screen (his head whole), easing in to the dissolve.
     cam(s, [
-        key(0, (0.9, 1.4, 2.9), (-0.45, 1.15, -0.8), 48, 'Window side: the desk and Omar, the film lighting the room'),
-        key(7, (0.75, 1.4, 2.55), (-0.45, 1.15, -0.8), 48, 'Slow push'),
-        key(12, (3.15, 1.85, -1.05), (-0.6, 1.2, -0.35), 46, 'Round behind Omar: his view of the picture'),
+        key(0, (1.6, 1.45, 3.1), (-0.4, 1.15, -0.8), 52, 'Window side: the desk and Omar, the film lighting the room'),
+        key(8.95, (1.4, 1.45, 2.7), (-0.4, 1.15, -0.8), 51, 'Slow push'),
+        key(9.0, (3.3, 1.88, -1.1), (-0.6, 1.2, -0.35), 46, 'Cut: behind Omar, his view of the picture', cut=True),
         key(17, (2.95, 1.82, -1.0), (-0.6, 1.2, -0.35), 44, 'Over his shoulder, into the dissolve'),
     ])
 
@@ -247,17 +255,19 @@ def storage(s):
     # (2.3, 2.0); the board folds to 65 degrees (2.5-12.5 s) and lifts (6.9-9.9); the desk rolls +x to (4.0, -0.5)
     # (7.7-13.2), then -z to about (3.9, -3.5) (13.2-18.3) and turns to park against the far wall (18.3-21.9). Jo
     # works at the tool wall. His camera skimmed the desktop at 1.5 s, saw the fold face-on (the angle only read late)
-    # and let the desk fill the frame during the roll. Here: his opening on the tool wall (Andre is out of frame during
-    # his fade) with a slow push instead of the skim; a hard cut on the action at 2.5 s to a side three-quarter
+    # and let the desk fill the frame during the roll. Here: a top-down opening on the desktop and its robots (Andre out of
+    # frame during his fade) with a slow push instead of his skim; a hard cut on the action at 2.5 s to a side three-quarter
     # from the far (-z) side, which reads the fold's angle with Andre clear of the desk; giving way out through the
     # open side as the desk rolls toward that spot; then his tracking and parking keys from 17.3 s. Every view looks into the room (-x), and the frame's far edge stays
     # inside the room's corner.
-    cam(s, his('storage', 0, 0.7) + [
-        key(2.45, (4.8, 1.85, 2.45), (1.0, 0.87, -2.5), 40, 'Window light across the tool wall: slow push'),
+    cam(s, [
+        key(0, (2.45, 3.5, 0.15), (1.9, 1.0, -0.3), 36, 'From above: the desktop and its robots'),
+        key(2.45, (2.4, 3.25, 0.1), (1.9, 1.0, -0.3), 35, 'Easing down (Andre is out of frame through his fade-in)'),
         key(2.5, (4.3, 1.8, -3.4), (2.65, 1.15, 0.1), 42, 'Side three-quarter: Andre has tapped, the board folds', cut=True),
-        key(7.7, (4.15, 1.85, -3.55), (2.65, 1.2, 0.1), 42, 'Folded toward 65 degrees, lifted'),
-        key(10.5, (6.2, 1.8, -1.0), (3.0, 1.1, -0.3), 44, 'It rolls out; we give way through the open side'),
-        key(13.2, (7.4, 1.7, 0.6), (3.6, 1.1, -1.0), 44, 'It turns along the wall'),
+        key(7.7, (4.0, 1.9, -3.65), (2.5, 1.25, 0.1), 44, 'Folded toward 65 degrees, lifted'),
+        key(8.85, (4.1, 1.9, -3.65), (2.6, 1.25, 0.1), 45, 'It starts to roll'),
+        key(8.9, (7.5, 1.75, 1.2), (3.5, 1.45, -1.4), 40, 'Cut on the roll: from outside, along the wall', cut=True),
+        key(13.2, (7.9, 1.8, 0.85), (3.7, 1.4, -1.35), 42, 'It turns along the wall'),
     ] + his('storage', 17.3, 19.6, 20.5, 22.1, 22.5, 24.978))
 
 
