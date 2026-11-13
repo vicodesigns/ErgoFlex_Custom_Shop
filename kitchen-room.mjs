@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=polish-20261112f';
+import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113a';
 import { windowSun } from './room-window-sun.mjs?v=polish-20261111f';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -182,7 +183,9 @@ export function buildKitchenRoom(room, root, layout, helpers) {
     const skyCanvas = document.createElement('canvas'); skyCanvas.width = skyCanvas.height = 512; const skyMap = new THREE.CanvasTexture(skyCanvas); skyMap.colorSpace = THREE.SRGBColorSpace;
     const pane = mesh(left, new THREE.PlaneGeometry(ww, wh), new THREE.MeshBasicMaterial({ map: skyMap }), [-w / 2 - 53, low + wh / 2, wz]); pane.rotation.y = Math.PI / 2; pane.castShadow = pane.receiveShadow = false;
     // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
-    const windowVista = attachVista(pane, 'garden'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
+    // Or a modelled place behind the glass (window-scenery.mjs), or the painted canvas alone: windowView() decides. A kitchen garden: herb boxes on the sill, raised beds.
+    const outlookView = windowView('kitchen'), windowVista = outlookView === 'photo' ? attachVista(pane, 'garden') : null; if (windowVista) room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
+    const scenery = outlookView === 'scenery' ? attachScenery(pane, 'back-garden', { floor: -(low + wh / 2), seed: 2202, storey: 0, variant: 'kitchen' }) : null;
     // Daylight from the window on the floor, reshaped for each daypart in roomAtmosphere.
     const sun = windowSun(root, { x: -w / 2, from: a, to: b, panes: 2, span: w, name: 'Kitchen window daylight patch' });
     for (const z of [a, wz, b]) box(left, [65, wh + 45, 30], [-w / 2 + 10, low + wh / 2, z], oak);
@@ -541,7 +544,7 @@ export function buildKitchenRoom(room, root, layout, helpers) {
         const roofs = dim ? '#1c2533' : id === 'evening' ? '#6e5a63' : '#9aa7a6';
         c.fillStyle = roofs; for (let i = 0; i < 6; i++) { const x = i * 95 - 20, top = 330 + hash(i + 60) * 40; c.beginPath(); c.moveTo(x, 430); c.lineTo(x, top + 30); c.lineTo(x + 45, top); c.lineTo(x + 95, top + 30); c.lineTo(x + 95, 430); c.fill(); if (id !== 'morning' && id !== 'afternoon') { c.fillStyle = '#ffd38a'; c.fillRect(x + 30, top + 50, 12, 14); if (i % 2) c.fillRect(x + 58, top + 52, 12, 14); c.fillStyle = roofs; } }
         c.fillStyle = dim ? '#1d2d27' : id === 'evening' ? '#4c5c45' : '#7f9a6f'; for (let i = 0; i < 14; i++) { c.beginPath(); c.arc(i * 40, 470 + hash(i) * 14, 44 + i % 3 * 12, 0, Math.PI * 2); c.fill(); }
-        skyMap.needsUpdate = true; windowVista.setPhase(id);
+        skyMap.needsUpdate = true; windowVista?.setPhase(id); scenery?.setHour(id);
     };
     room.roomAtmosphere = (id, accent = 1) => {
         sun.set(id, accent);
