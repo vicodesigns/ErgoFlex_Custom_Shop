@@ -38,7 +38,10 @@ const WINDOW_VISTAS = {
 // floor up; the Huntington Beach classroom is a floor up over the Oilers' field. Both look out to the Pacific.
 const WINDOW_SCENERY = {
     occmedialab: { scene: 'socal-campus', seed: 5150, storey: 4200 },
-    highschool: { scene: 'beach-school', seed: 1906, storey: 4000 }
+    highschool: { scene: 'beach-school', seed: 1906, storey: 4000 },
+    // college and university classrooms over their campus
+    college: { scene: 'campus', variant: 'green', seed: 5303, storey: 0 },
+    university: { scene: 'campus', variant: 'quad', seed: 5404, storey: 8000 }
 };
 
 // Suspended acoustic ceiling where a room asks for one: 610 × 1220 mm (2 × 4 ft)
