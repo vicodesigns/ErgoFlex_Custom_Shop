@@ -49,8 +49,9 @@ export const OFFICE_LAYOUTS = Object.fromEntries(sizes.map(([id, name, width, de
             { id: 'tea-cup', at: [lounge[0] + 290, 391.2, lounge[1] - 920] });
     }
     if (index === 4) for (const x of [900, 1800, 2700]) {
-        props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [x, 0, front - 2700], turn: 180 },
-            { id: 'kenney-furniture-chair-modern-cushion', at: [x, 0, front - 900] });
+        // (each row faces the table between them, front - 1800: the chairs stood with their backs to it)
+        props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [x, 0, front - 2700] },
+            { id: 'kenney-furniture-chair-modern-cushion', at: [x, 0, front - 900], turn: 180 });
     }
     props.push({ id: 'kenney-furniture-kitchen-coffee-machine', at: [0, 900, back + 250] });
     // Larger offices finish the lounge with one statement tree beside the sofa.

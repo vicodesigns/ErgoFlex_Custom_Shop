@@ -362,4 +362,11 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
         }
     }
 }
-console.log('PASS room people: library entries, desk-height casting and fade, chair hand-over, film filter and placement, film casting, stations, loading by the hour, postures with things on a table at a table, the same clothes away from the desk.');
+{   // Review, November 13: the executive office's review-table chairs stood with their backs to the table, so the review
+    // sat on them the wrong way round (the people face the table: `toward`). Each row faces the table between the rows.
+    const { OFFICE_LAYOUTS } = await import('../office-room.mjs');
+    const chairs = OFFICE_LAYOUTS.executive.props.filter(p => p.id === 'kenney-furniture-chair-modern-cushion'), middle = chairs.reduce((a, p) => a + p.at[2], 0) / chairs.length;
+    assert.equal(chairs.length, 6, 'six chairs round the review table');
+    for (const c of chairs) assert.ok(Math.cos(THREE.MathUtils.degToRad(c.turn || 0)) * (middle - c.at[2]) > 0, `the chair at z ${c.at[2]} faces the table (z ${middle})`);
+}
+console.log('PASS room people: library entries, desk-height casting and fade, chair hand-over, film filter and placement, film casting, stations, loading by the hour, postures with things on a table at a table, the same clothes away from the desk, chairs facing their table.');
