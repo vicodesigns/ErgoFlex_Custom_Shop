@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=polish-20261112f';
+import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113a';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 import {loungeDesign} from './lounge-design.mjs';
 import {buildLoungeDetails} from './lounge-reset-detail.mjs';
@@ -290,7 +291,9 @@ export function buildLoungeRoom(room, root, layout, helpers) {
     const skyCanvas=document.createElement('canvas');skyCanvas.width=skyCanvas.height=512;const skyMap=new THREE.CanvasTexture(skyCanvas);skyMap.colorSpace=THREE.SRGBColorSpace;
     const pane=mesh(left,new THREE.PlaneGeometry(ww,wh),new THREE.MeshBasicMaterial({map:skyMap}),[-w/2-52,low+wh/2,wz]);pane.rotation.y=Math.PI/2;pane.castShadow=pane.receiveShadow=false;
     // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
-    const windowVista = attachVista(pane, 'city'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
+    // Or a modelled place behind the glass (window-scenery.mjs), or the painted canvas alone: windowView() decides. An apartment lounge five floors up (its balcony).
+    const outlookView = windowView('lounge'), windowVista = outlookView === 'photo' ? attachVista(pane, 'city') : null; if (windowVista) room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
+    const scenery = outlookView === 'scenery' ? attachScenery(pane, 'city', { floor: -(low + wh / 2), seed: 3404, storey: 15000, variant: 'balcony' }) : null;
     for(const z of [a,wz,b])box(left,[65,wh+50,30],[-w/2+10,low+wh/2,z],walnut);for(const y of [low,low+wh])box(left,[65,30,ww+60],[-w/2+10,y,wz],walnut);box(left,[170,30,ww+80],[-w/2+50,low-15,wz],walnut,3);
     const curtains=[];for(const z of [a-75,b+75])for(let i=0;i<5;i++)curtains.push({at:[-w/2+60+(i%2)*14,1200,z-60+i*30],size:[24,2100,24],color:'#bdb39d'});
     instanced(left,new THREE.CylinderGeometry(1,1,1,10),material('#ffffff',{roughness:.95}),curtains,true);
@@ -420,7 +423,7 @@ export function buildLoungeRoom(room, root, layout, helpers) {
         v.hills.slice(0,1).forEach(col=>{c.fillStyle=col;c.beginPath();c.moveTo(0,s);for(let x=0;x<=s;x+=8)c.lineTo(x,s*.62+Math.sin(x*.011)*22+Math.sin(x*.037)*8);c.lineTo(s,s);c.fill();});
         c.fillStyle=v.city;for(let i=0;i<16;i++){const bw=18+rand(i)*26,bh=40+rand(i*7)*110,x=i*34+rand(i*3)*10;c.fillRect(x,s*.78-bh,bw,bh+s*.3);if(v.windows)for(let wy=s*.78-bh+8;wy<s*.78;wy+=12)for(let wx=x+4;wx<x+bw-4;wx+=8)if(rand(wx*wy)>.55){c.fillStyle=`rgba(255,214,150,${v.windows*.9})`;c.fillRect(wx,wy,3,5);c.fillStyle=v.city;}}
         v.hills.slice(1).forEach((col,i)=>{c.fillStyle=col;c.beginPath();c.moveTo(0,s);for(let x=0;x<=s;x+=6)c.lineTo(x,s*(.8+i*.08)+Math.sin(x*.05+i)*10+(rand(Math.floor(x/18)+i*40)-.5)*16);c.lineTo(s,s);c.fill();});
-        skyMap.needsUpdate=true; windowVista.setPhase(id);
+        skyMap.needsUpdate=true; windowVista?.setPhase(id); scenery?.setHour(id);
         // Window light pool: two soft panes, skewed with the sun's sweep.
         const p=sunCanvas.getContext('2d');p.clearRect(0,0,256,256);p.filter='blur(7px)';const skew=mode.sunShift/(mode.sunLength||1)*.6,falloff=p.createLinearGradient(0,0,256,0);falloff.addColorStop(0,'#ffffff');falloff.addColorStop(.6,'rgba(255,255,255,.75)');falloff.addColorStop(1,'rgba(255,255,255,.1)');p.fillStyle=falloff;
         for(const [z0,z1] of [[.06,.47],[.53,.94]]){p.beginPath();p.moveTo(16,z0*256);p.lineTo(16,z1*256);p.lineTo(240,(z1+skew)*256);p.lineTo(240,(z0+skew)*256);p.fill();}
