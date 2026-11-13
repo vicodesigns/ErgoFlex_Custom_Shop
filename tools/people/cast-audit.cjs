@@ -9,6 +9,11 @@
 // filtered), position (room mm) and whether it is inside the room, the distance to the nearest other visible person,
 // and furniture it intersects: sample points of the person's mesh inside a mesh box of a piece of furniture other than
 // the one they sit on, stand at or roll in (an overlap of 3 % or more of the points is reported as a problem).
+// Also (November 13): `low`, the lowest point of the person against the floor (or what they stand on): over 45 mm
+// either way is reported (feet in the air or through the floor; not for beds, the bike, the bar, or high stools with
+// `rise`); and for a seated person their seat: its top under the pelvis (`gap`: the pose's seat height above it,
+// negative = sunk; a hit on a backrest or arm can make this read wrong, look before trusting it) and rays level
+// ahead of and behind them 250 and 400 mm above the seat: the backrest hit ahead and not behind is BACKWARDS.
 // --survey adds the room's layouts, dayparts (label, description, desk height), stations and furniture (for planning).
 // Needs a static server of the worktree on --port (the kit's serve.cjs) and Chrome at /usr/bin/google-chrome.
 const fs = require('fs'), path = require('path');
@@ -76,6 +81,33 @@ async function inspect(room, layout, phase, size, survey) {
             if (n) hits.push({ id: f.id, share: Math.round(n / pts.length * 1000) / 10 });
         }
         row.hits = hits.sort((a, b) => b.share - a.share).slice(0, 4);
+        // feet: the lowest point of the person against the floor (or what they stand on, `up`); a seated person on a
+        // high stool may rest their feet on its rail, so only the standing and the low-seated are held to the floor
+        const pose = window.ErgoFlex.workspaceRoom.people.library.entry?.(s.id)?.person?.pose || '';
+        row.pose = pose; if (s.rise) row.rise = s.rise; row.low = Math.round(pb.min.y - (s.up || 0));
+        // seat direction: the seat under a seated person (the one they were put on, the task chair they brought, their
+        // own chair) has its back behind them. Its parts higher than 180 mm above the seat, within 650 mm of them, are
+        // the back (and arms, which cancel out side to side): their middle must not be in front of the person.
+        if (/^sit-(?!floor)|^kid-sit-(?!floor)/.test(pose)) {
+            const onId = [].concat(s.on || [])[0], seatObj = o.userData.personAnchor || (onId ? P.props(onId)[[].concat(s.on)[1] || 0] : null) || (s.near ? r.assets().filter(a => /chair|stool|steelcase-leap|aeron/i.test((a.userData.propId || '') + ' ' + (a.userData.decorUpgrade || ''))).map(a => ({ a, d: new T.Box3().setFromObject(a).applyMatrix4(inv).getCenter(new T.Vector3()).setY(0).distanceTo(new T.Vector3(s.near[0], 0, s.near[1])) })).filter(c => c.d < 450).sort((x, y) => x.d - y.d)[0]?.a : null) || o.userData.personActor?.chair || o.userData.personChair || [...(P.kidSeats?.values() || [])].find(k => k.copy.visible && Math.hypot(k.copy.position.x - o.position.x, k.copy.position.z - o.position.z) < 50)?.copy || null;
+            if (seatObj) {
+                // rays against the seat alone: down through the pelvis (its top), then level, 250 and 400 mm above that
+                // top, ahead of and behind the person (centre and 120 mm either side): the back is the side that is hit
+                seatObj.updateWorldMatrix(true, true); const ray = new T.Raycaster(), M = root.matrixWorld, W = v => v.clone().applyMatrix4(M), Wd = v => v.clone().transformDirection(M);
+                const cast = (from, dir, far) => { ray.set(W(from), Wd(dir)); ray.far = far * M.getMaxScaleOnAxis(); return ray.intersectObject(seatObj, true).filter(h => h.object.visible).map(h => local(h.point)); };
+                const tops = cast(new T.Vector3(o.position.x, 1500, o.position.z), new T.Vector3(0, -1, 0), 1500).map(h => h.y).filter(y => y > 200 && y < 800), top = tops.length ? Math.max(...tops) : null;
+                row.seat = { id: anchorOf(s) || (s.near ? 'chair near ' + s.near : o.userData.personChair || o.userData.personActor?.chair ? 'own task chair' : 'own seat'), top: top === null ? null : Math.round(top), gap: top === null ? null : Math.round(o.position.y + (s.seat ?? (s.desk ? (s.chair === false || /-kid-sit-desk/.test(s.id) ? 495 : 435) : 450)) - top) };   // the pose's seat height above the seat's top: negative = sunk into it
+                if (top !== null) {
+                    const f = new T.Vector3(Math.sin(o.rotation.y), 0, Math.cos(o.rotation.y)), side = new T.Vector3(f.z, 0, -f.x); let ahead = Infinity, behind = Infinity;
+                    for (const up of [250, 400]) for (const off of [-120, 0, 120]) {
+                        const from = new T.Vector3(o.position.x, top + up, o.position.z).addScaledVector(side, off);
+                        for (const [sgn, set] of [[1, d => { ahead = Math.min(ahead, d); }], [-1, d => { behind = Math.min(behind, d); }]]) { const h = cast(from, f.clone().multiplyScalar(sgn), 700)[0]; if (h) set(Math.round(h.distanceTo(from))); }
+                    }
+                    row.seat.ahead = Number.isFinite(ahead) ? ahead : null; row.seat.behind = Number.isFinite(behind) ? behind : null;
+                    if (row.seat.ahead !== null && row.seat.ahead >= 60 && row.seat.ahead < 450 && (row.seat.behind === null || row.seat.behind > row.seat.ahead)) row.seat.back = row.seat.ahead;   // its back in front of them: sat the wrong way round (a hit within 60 mm is the ray starting inside a cushion)
+                }
+            } else row.seat = null;
+        }
         return row;
     });
     for (const a of rows) if (a.visible) { let best = Infinity, who = null; for (const b of rows) if (b !== a && b.visible) { const d = Math.hypot(a.at[0] - b.at[0], a.at[1] - b.at[1]); if (d < best) { best = d; who = b.key; } } a.nearest = who ? { key: who, mm: Math.round(best) } : null; }
@@ -116,9 +148,10 @@ async function inspect(room, layout, phase, size, survey) {
         let rep; try { rep = await frame.evaluate(`(${inspect})(${JSON.stringify(room)},${JSON.stringify(layout)},${JSON.stringify(phase)},${JSON.stringify(size)},${survey})`); }
         catch (e) { rep = { room, layout, phase, error: String(e.message || e).slice(0, 300) }; }
         reports.push(rep);
-        const bad = (rep.people || []).filter(p => p.visible && ((p.hands ?? 0) > 60 || !p.inside || p.hits.some(h => h.share >= 3) || (p.nearest && p.nearest.mm < 600)));
+        const lowBad = p => !/lie-bed|gym-cycle|gym-pullup/.test(p.pose) && !(p.seat && p.rise) && (p.low > 45 || p.low < -45), backBad = p => p.seat && p.seat.back !== undefined, gapBad = p => p.seat && p.seat.gap !== null && p.seat.gap !== undefined && Math.abs(p.seat.gap) > 45;
+        const bad = (rep.people || []).filter(p => p.visible && ((p.hands ?? 0) > 60 || !p.inside || p.hits.some(h => h.share >= 3) || (p.nearest && p.nearest.mm < 600) || lowBad(p) || backBad(p) || gapBad(p)));
         const hiddenDesk = (rep.people || []).filter(p => /cast but hidden/.test(p.why)).map(p => p.key + ' (' + p.why + ')');
-        console.log(`${room}:${layout}:${phase} desk ${rep.deskHeight} in, ${(rep.people || []).some(p => p.visible && /desk/.test(p.why) === false && rep.people) ? '' : ''}${(rep.people || []).filter(p => p.visible).length}/${(rep.people || []).length} shown` + (rep.error ? ' ERROR ' + rep.error : '') + ((rep.people || []).some(p => p.visible && p.desk) ? '' : hiddenDesk.length ? '  DESK EMPTY: ' + hiddenDesk.join(', ') : '') + (bad.length ? '  PROBLEMS: ' + bad.map(p => `${p.key}${p.inside ? '' : ' outside'}${p.hits.filter(h => h.share >= 3).map(h => ` in ${h.id} ${h.share}%`).join('')}${p.nearest && p.nearest.mm < 600 ? ` ${p.nearest.mm}mm from ${p.nearest.key}` : ''}${(p.hands ?? 0) > 60 ? ` hands ${p.hands}mm off the keyboard (tilt ${rep.deskTilt})` : ''}`).join('; ') : ''));
+        console.log(`${room}:${layout}:${phase} desk ${rep.deskHeight} in, ${(rep.people || []).some(p => p.visible && /desk/.test(p.why) === false && rep.people) ? '' : ''}${(rep.people || []).filter(p => p.visible).length}/${(rep.people || []).length} shown` + (rep.error ? ' ERROR ' + rep.error : '') + ((rep.people || []).some(p => p.visible && p.desk) ? '' : hiddenDesk.length ? '  DESK EMPTY: ' + hiddenDesk.join(', ') : '') + (bad.length ? '  PROBLEMS: ' + bad.map(p => `${p.key}${p.inside ? '' : ' outside'}${p.hits.filter(h => h.share >= 3).map(h => ` in ${h.id} ${h.share}%`).join('')}${p.nearest && p.nearest.mm < 600 ? ` ${p.nearest.mm}mm from ${p.nearest.key}` : ''}${(p.hands ?? 0) > 60 ? ` hands ${p.hands}mm off the keyboard (tilt ${rep.deskTilt})` : ''}${lowBad(p) ? ` feet ${p.low}mm ${p.low > 0 ? 'above' : 'below'} the floor` : ''}${backBad(p) ? ` BACKWARDS on ${p.seat.id} (its back ${p.seat.back}mm in front)` : ''}${gapBad(p) ? ` ${p.seat.gap > 0 ? 'above' : 'sunk into'} ${p.seat.id} by ${Math.abs(p.seat.gap)}mm` : ''}`).join('; ') : ''));
     }
     if (outFile) fs.writeFileSync(outFile, JSON.stringify(reports, null, 1));
     await browser.close();
