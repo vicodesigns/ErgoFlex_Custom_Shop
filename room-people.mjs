@@ -1392,6 +1392,10 @@ export class RoomPeople {
                 const want = Math.atan2(c.x - centre.x, c.z - centre.z), own = this.yawOf(anchor); let off = Infinity;
                 for (let k = 0; k < 4; k++) { const y = own + k * Math.PI / 2, e = Math.abs(Math.atan2(Math.sin(y - want), Math.cos(y - want))); if (e < off) { off = e; yaw = y + turn; } }
             }
+            // a seat with a back is sat on facing away from it, whichever way its model points (the university's wing
+            // chairs are built facing -z: Rosa and Andre sat in them the wrong way round). `toward` and `face` are left
+            // as they are: they face what the seat belongs to.
+            if (spec.on && !to && !spec.face && /-(kid-)?sit-(?!floor)/.test(spec.id) && this.backAhead(anchor, centre, yaw)) yaw += Math.PI;
             const side = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
             object.position.copy(centre).addScaledVector(side, spec.along || 0).addScaledVector(frontOf(yaw), spec.depth ?? 60); object.position.y = 0; object.rotation.y = yaw;
         } else if (spec.around) {
@@ -1494,6 +1498,18 @@ export class RoomPeople {
             if (spec.at ? again || moved : again || !anchor || this.anchorKey(anchor) !== object.userData.personAnchorAt || (spec.clear && moved)) this.settle(object, spec);
         }
         this.blocked = null;
+    }
+    // Whether a seat's back is ahead of someone sat on it facing `yaw`: the middle of its highest quarter (the back,
+    // with arms that cancel out side to side) more than 80 mm ahead of its centre. A seat without a back (a stool, a
+    // bench) has that middle near its centre and keeps the way it was given.
+    backAhead(seat, centre, yaw) {
+        const root = this.room.root; root.updateWorldMatrix(true, true); const inv = root.matrixWorld.clone().invert(), pts = [], v = new THREE.Vector3();
+        seat.traverse(m => { if (!m.isMesh || m.isInstancedMesh || !m.geometry?.attributes?.position) return; const p = m.geometry.attributes.position, step = Math.max(1, Math.floor(p.count / 600)); for (let i = 0; i < p.count; i += step) pts.push(v.fromBufferAttribute(p, i).applyMatrix4(m.matrixWorld).applyMatrix4(inv).clone()); });
+        if (pts.length < 8) return false;
+        let lo = Infinity, hi = -Infinity; for (const p of pts) { lo = Math.min(lo, p.y); hi = Math.max(hi, p.y); }
+        const top = pts.filter(p => p.y > lo + (hi - lo) * .75); if (!top.length) return false;
+        const ahead = top.reduce((a, p) => a + (p.x - centre.x) * Math.sin(yaw) + (p.z - centre.z) * Math.cos(yaw), 0) / top.length;
+        return ahead > 80;
     }
     // How far the person moves up or down so the pose's seat height meets the real seat under the pelvis.
     seatLift(object, spec, anchor) {

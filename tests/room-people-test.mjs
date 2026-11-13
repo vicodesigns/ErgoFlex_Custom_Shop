@@ -369,4 +369,23 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
     assert.equal(chairs.length, 6, 'six chairs round the review table');
     for (const c of chairs) assert.ok(Math.cos(THREE.MathUtils.degToRad(c.turn || 0)) * (middle - c.at[2]) > 0, `the chair at z ${c.at[2]} faces the table (z ${middle})`);
 }
+{   // Review, November 13: someone put `on` a seat with a back sits facing away from the back, whichever way the seat's
+    // model points (the university's wing chairs are built facing -z: Rosa and Andre sat in them the wrong way round).
+    // A given turn that already seats them right stays; a seat without a back keeps the way it was given.
+    const chairFacing = (id, backZ, turn = 0) => { const g = new THREE.Group(); g.userData.propId = id;
+        const part = (size, at) => { const m = new THREE.Mesh(new THREE.BoxGeometry(...size)); m.position.set(...at); g.add(m); };
+        part([600, 120, 600], [0, 420, 0]); if (backZ) part([600, 700, 120], [0, 800, backZ]);
+        g.rotation.y = THREE.MathUtils.degToRad(turn); return g; };
+    const root = new THREE.Group(), room = { id: 'university', root, token: 1, ready: Promise.resolve(), roomLayout: { id: 'house' }, assets: () => root.children.filter(o => o.userData.propId && !o.name.startsWith('Person')), peopleState: null };
+    const seats = { 'chair-plus': chairFacing('chair-plus', -260), 'chair-minus': chairFacing('chair-minus', 260), 'chair-turned': chairFacing('chair-turned', 260), 'stool-plain': chairFacing('stool-plain', 0) };
+    Object.values(seats).forEach((g, i) => { g.position.set(i * 2000, 0, 0); root.add(g); });
+    const people = new RoomPeople(room, library), cast = [{ key: 'a', id: 'people-rosa-sit-read', on: 'chair-plus', seat: 420 }, { key: 'b', id: 'people-andre-sit-read', on: 'chair-minus', seat: 420 },
+        { key: 'c', id: 'people-jo-sit-read', on: 'chair-turned', seat: 420, turn: 180 }, { key: 'd', id: 'people-hale-sit-phone', on: 'stool-plain', seat: 420, turn: 180 }];
+    people.setFilter({ only: [], cast, life: false }); await people.setEnabled(true); people.update({ mode: 'afternoon', height: 28, pose: { x: 0, z: -3000, yaw: 0 }, time: 1, now: 0 });
+    const facing = key => { const o = people.byKey(key); return Math.round(THREE.MathUtils.radToDeg(Math.atan2(Math.sin(o.rotation.y), Math.cos(o.rotation.y)))); };
+    assert.equal(facing('a'), 0, 'a chair built facing +z: as it points');
+    assert.equal(Math.abs(facing('b')), 180, 'a chair built facing -z: turned round, the back behind her');
+    assert.equal(Math.abs(facing('c')), 180, 'a turn that already seats someone right is kept');
+    assert.equal(Math.abs(facing('d')), 180, 'a seat without a back keeps the turn it was given');
+}
 console.log('PASS room people: library entries, desk-height casting and fade, chair hand-over, film filter and placement, film casting, stations, loading by the hour, postures with things on a table at a table, the same clothes away from the desk, chairs facing their table.');
