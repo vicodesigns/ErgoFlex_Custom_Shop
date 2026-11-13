@@ -341,4 +341,14 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
     const coast = new RoomPeople(lab, library); coast.setFilter({ except: [] });
     assert.ok(studioOnly.length >= 2 && !coast.specs().some(s => s.studio), 'people marked for the Studio are not in a film that takes the whole room');
 }
-console.log('PASS room people: library entries, desk-height casting and fade, chair hand-over, film filter and placement, film casting, stations, loading by the hour.');
+{   // Review, November 13: the laptop and writing postures carry a laptop or a pad at table height (held.py): they sit
+    // at a table, never on a sofa, couch, armchair or bench, and not on the media lab's designer chairs at the screening
+    // (a row of chairs with no table). Before, Noah's laptop floated in front of him on the home's sofa.
+    const atTable = /^sit-(laptop|write|type)$/, noTable = /sofa|couch|armchair|lounge|ottoman|bench|waiting|rocker|bed/;
+    for (const room of Object.keys(ROOM_PEOPLE)) for (const L of LAYOUTS) for (const s of castEntries(room, L)) {
+        const pose = entries.get(s.id)?.person?.pose || '', seat = String([].concat(s.on || [])[0] || '');
+        if (atTable.test(pose)) assert.ok(!noTable.test(seat), `${room} ${L.id}: ${s.key || s.id} (${pose}) is at a table, not on ${seat}`);
+        if (room === 'occmedialab' && /designer-chair/.test(seat) && s.modes?.includes('party')) assert.ok(!atTable.test(pose), `occmedialab ${L.id}: ${s.key || s.id} watches the screening (no table at the designer chairs then)`);
+    }
+}
+console.log('PASS room people: library entries, desk-height casting and fade, chair hand-over, film filter and placement, film casting, stations, loading by the hour, postures with things on a table at a table.');

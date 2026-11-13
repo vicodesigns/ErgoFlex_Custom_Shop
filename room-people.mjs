@@ -171,7 +171,7 @@ export const ROOM_PEOPLE = {
             : ring(L.id === 'house' ? [450, 1150] : [L.width * .14, L.back + L.depth * .62], L.id === 'house' ? 600 : 540, [['people-maya-stand-talk', { colors: LOOK.homeParty }], ['people-noah-stand-drink', { colors: LOOK.guestE }], ['people-zoe-stand-drink', { colors: LOOK.guestB }]], PARTY, 200),
         // the two largest homes have a lounge end: someone on the sofa after lunch, coffee being made in the morning
         L => tier(L) < 3 ? [] : [
-            { id: 'people-noah-sit-laptop', on: 'sofa-fabric', seat: 450, along: -420, modes: ['afternoon'], key: 'noah-sofa' },
+            { id: 'people-noah-sit-read', on: 'sofa-fabric', seat: 420, along: -420, depth: -120, modes: ['afternoon'], key: 'noah-sofa' },   // (a book: the laptop posture brings its own table-height laptop, which floated in front of him)
             standBy('people-andre-stand-mug', 'kenney-furniture-kitchen-coffee-machine', 850, { modes: ['morning'], key: 'andre-coffee' })]
     ],
     // Sam's gaming room: coffee and a fresh setup in the morning, practice alone after lunch, co-op on the sofa with
@@ -341,8 +341,10 @@ export const ROOM_PEOPLE = {
         ...crewOf('ava', ['afternoon', 'evening'], { colors: LOOK.ava }),
         ...crewOf('kai', ['night'], { colors: LOOK.kaiLab }),   // the late edit is at the featured bay, the one bay the room still lights
         { id: 'people-ava-stand-low', desk: 'stand', modes: ['morning'], colors: LOOK.ava },   // the desk at 35 in; at the screening everyone has turned to the screen
-        { id: 'people-noah-sit-laptop', on: ['ergoflex-designer-chair', 0], seat: 450, modes: ['party'] },
-        { id: 'people-sofia-sit-laptop', on: ['ergoflex-designer-chair', 3], seat: 450, modes: ['morning', 'party'] },
+        // at the screening the designer chairs stand in a row with no table: watching, not at a laptop (whose laptop would float)
+        { key: 'people-noah-sit-laptop', id: 'people-noah-sit-listen', on: ['ergoflex-designer-chair', 0], seat: 450, modes: ['party'] },
+        { id: 'people-sofia-sit-laptop', on: ['ergoflex-designer-chair', 3], seat: 450, modes: ['morning'] },   // (at the table in the morning: the film's lab)
+        { key: 'sofia-screening', id: 'people-sofia-sit-listen', on: ['ergoflex-designer-chair', 3], seat: 450, modes: ['party'] },
         { id: 'people-zoe-walk', layout: 'house', at: [1900, 4300], turn: -90, modes: ['morning'] },
         // The reel showcase: people standing in the open floor, turned to the screen on the back wall.
         L => L.id === 'house' ? [spot('people-omar-wheel-watch', -1300, 350, [0, -4225], PARTY), { id: 'people-mia-stand-drink', beside: [1050, 450], ...PARTY, colors: LOOK.guestB },   // by the featured bay, a drink in her hand
@@ -353,7 +355,7 @@ export const ROOM_PEOPLE = {
         L => tier(L) < 2 ? [] : [
             ...staffAt(L, [['colour-grade-05', 'priya', ['afternoon', 'evening']], ['animation-06', 'zoe', ['morning', 'afternoon']], ['film-edit-07', 'mia', ['afternoon', 'evening']],
                 ['sound-design-08', 'eli', ['afternoon']], ['digital-art-09', 'sofia', ['afternoon']], ['film-edit-10', 'leo', ['afternoon']], ['animation-11', 'noah', ['afternoon', 'evening']]]),
-            { id: 'people-rosa-sit-laptop', on: 'ergoflex-couch', seat: 420, modes: ['afternoon'], key: 'rosa-couch' },
+            { id: 'people-rosa-sit-phone', on: 'ergoflex-couch', seat: 420, modes: ['afternoon'], key: 'rosa-couch' },   // (no table at the couch for a laptop)
             standBy('people-hale-stand-present', 'mobile-review-display', 1200, { modes: ['evening'], colors: LOOK.hale, key: 'hale-review' })],
         // every size, in the Studio only (the film's chapter takes the room's cast as it was): someone at the capture stage,
         // and the reel showcase in the sizes that had none
