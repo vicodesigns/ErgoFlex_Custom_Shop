@@ -48,6 +48,9 @@
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
 import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, solveTread, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=polish-20261112d';
+// who looks at whom (RoomPeople.gazeOf)
+const GAZE_TALK = /^(stand-talk|sit-chat|stand-drink|stand-mug|stand-coffee|sit-coffee)$/, GAZE_IDLE = /^(stand-wait|wheel-roll|wheel-watch|cane-stand|white-cane|sit-listen)$/;
+const gazeM = new THREE.Matrix4(), gazeW = new THREE.Vector3();
 
 // How far in front of a desk's anchor the person's pelvis is (mm), for a keyboard on the pull-out tray, and how far
 // behind the keyboard's centre it is wherever the keyboard really sits (tray or desktop).
@@ -1698,7 +1701,8 @@ export class RoomPeople {
                 drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold); life.live = true; continue;
             }
             // out of the nearest few: back to the posture as built, once
-            const moved = solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: on ? 1 : 0, taps: film || dt < .05 });
+            const gaze = on ? this.gazeOf(object, life) : null;
+            const moved = solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: on ? 1 : 0, taps: film || dt < .05, look: gaze?.at, lookAmount: gaze?.amount });
             drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold); life.live = on;
             // a rider's bike: its crank turns with the feet, the pedals stay level
             if (moved?.crank !== undefined) { const crank = object.userData.personAnchor?.getObjectByName('Bike crank'); if (crank) { this.turnCrank(crank, moved.crank); turning.add(crank); this.cranks.add(crank); } }
@@ -1706,6 +1710,24 @@ export class RoomPeople {
             if (moved?.wheel !== undefined) { const head = object.userData.personAnchor?.getObjectByName('Pottery wheel head'); if (head) { head.rotation.y = moved.wheel; this.dirty = true; turning.add(head); this.cranks.add(head); } }
         }
         for (const crank of this.cranks) if (!turning.has(crank)) { if (crank.name === 'Bike crank') this.turnCrank(crank, 0); else { crank.rotation.y = 0; this.dirty = true; } this.cranks.delete(crank); }      // (nobody on it any more: as the room built it)
+    }
+    // Where someone who stays where they are looks (solveStill's input.look, a point in their skeleton's frame): someone
+    // talking or with a drink looks at the nearest person in front of them within 3.5 m; someone standing by, waiting or
+    // listening looks at the person at the featured desk if they are in front of them within 9 m. Anyone else: their
+    // posture's own gaze (typists their screen, readers their page: solveStill).
+    gazeOf(object, life) {
+        const pose = life.key?.pose || '', talks = GAZE_TALK.test(pose), waits = talks || GAZE_IDLE.test(pose); if (!waits) return null;
+        const root = object.userData.personRig?.bones.get('Root')?.parent; if (!root) return null;
+        root.updateWorldMatrix(true, false); gazeM.copy(root.matrixWorld).invert();
+        const headOf = o => { const h = o.visible && o !== object && o.userData.personRig?.bones.get('head'); if (!h) return null; h.updateWorldMatrix(true, false); return h.getWorldPosition(gazeW).applyMatrix4(gazeM); };
+        const ahead = (p, far) => p && p.z > .2 && Math.hypot(p.x, p.z) < far && Math.abs(Math.atan2(p.x, p.z)) < 1.3;
+        if (talks) {
+            let best = null, near = Infinity;
+            for (const other of this.people) { const p = headOf(other); if (!ahead(p, 3.5)) continue; const d = Math.hypot(p.x, p.z); if (d < near) { near = d; best = (best || new THREE.Vector3()).copy(p); } }
+            if (best) return { at: best, amount: .8 };
+        }
+        for (const actor of this.actors) for (const m of actor.members) { const p = headOf(m.object); if (ahead(p, 9)) return { at: p.clone(), amount: .55 }; }
+        return null;
     }
     training(object) { return !!object.userData.person.tread || this.strolls(object) || WORKOUTS.has(this.library.entry?.(object.userData.person.id)?.person?.pose); }
     // ---- a stroll: a walker in the Studio goes along the longest clear stretch from where they stand (their own
