@@ -157,3 +157,14 @@ need for a painter's easel").
   14 s and paints at the tilted desk from 19.5 s as before (`people.only: ['lin-at-wheel']`). People in chapters
   rendered before this keep still hands and no laptops until the chapter is rendered again.
 
+## Strolls (November 12, night)
+
+Someone cast in the walking posture stood frozen in a stride in the Studio. They walk now (`RoomPeople.stroll`):
+from where the room put them they take the longest clear stretch (their own heading first, then the other seven
+directions; checked every 250 mm like a guest's free spot: walls, furniture, the desk and its user, loose chairs,
+the others), up to 4.5 m, stop, look about, turn and come back, again and again. Under 1.5 m of clear floor they stay
+as they were. The stride is the film's walk (`walkPlan` / `solveWalk`) between the character's `stand-wait`
+posture at both ends. Strollers always move (they are not counted against the four lively people). A film is not
+touched: its walkers have a path of their own (`walk` on the placement) and at a film's second a stroller stands
+where the room or the cut has them. Today's walkers: Zoe in the media lab, Jo, Jack and Sara in the library hall.
+

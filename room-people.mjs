@@ -1422,6 +1422,7 @@ export class RoomPeople {
         }
         if (spec.seat && anchor) object.position.y = this.seatLift(object, spec, anchor);
         else if (spec.up) object.position.y = spec.up;      // standing on something (a treadmill's belt), mm
+        object.userData.personHome = [object.position.x, object.position.z, object.rotation.y];      // (where a stroller starts from and comes back to)
     }
     // ---- A free spot. A fixed angle that suits one size of a room puts a guest in a sculpture or through a wall in
     // another: a placement with clear: true takes the nearest spot round (or along) its prop where a standing person
@@ -1655,6 +1656,8 @@ export class RoomPeople {
             if (life === undefined) { if (on) { object.userData.personLife = null; this.later(this.enliven(object)); } continue; }
             if (!life || !object.userData.personRig || (!on && !life.live)) continue;
             if (object.userData.person.walk && on) { this.walkAlong(object, life, object.userData.person.walk, film ? time : null, hold); continue; }
+            // someone cast in a walking posture walks (the Studio; a film gives its walkers a path of their own)
+            if (this.strolls(object)) { if (!film && on && this.stroll(object, life, hold)) continue; this.strollHome(object, life); }
             // walking on a treadmill's belt: the stride of a walk, on the spot
             if (object.userData.person.tread && on) {
                 life.tread ||= walkPlan(life.rig, life.key, life.key, [[0, 0], [0, 24]], { pace: object.userData.person.tread.pace, step: object.userData.person.tread.step ? object.userData.person.tread.step / 1000 : undefined });
@@ -1671,7 +1674,42 @@ export class RoomPeople {
         }
         for (const crank of this.cranks) if (!turning.has(crank)) { if (crank.name === 'Bike crank') this.turnCrank(crank, 0); else { crank.rotation.y = 0; this.dirty = true; } this.cranks.delete(crank); }      // (nobody on it any more: as the room built it)
     }
-    training(object) { return !!object.userData.person.tread || WORKOUTS.has(this.library.entry?.(object.userData.person.id)?.person?.pose); }
+    training(object) { return !!object.userData.person.tread || this.strolls(object) || WORKOUTS.has(this.library.entry?.(object.userData.person.id)?.person?.pose); }
+    // ---- a stroll: a walker in the Studio goes along the longest clear stretch from where they stand (their own
+    // heading first), stops, looks about, turns and comes back. The stretch is checked like a guest's free spot
+    // (walls, furniture, the desk and its user, loose chairs, the others); under 1.5 m they stay where they are.
+    strolls(object) { const s = object.userData.person; return !s.walk && !s.desk && !s.station && object.userData.personLife?.stroll !== false && this.library.entry?.(s.id)?.person?.pose === 'walk'; }
+    stroll(object, life, hold) {
+        // (the model drawn with its skeleton is another object than the one the room placed: it stands where that one stood)
+        const spec = object.userData.person, home = object.userData.personHome ||= [object.position.x, object.position.z, object.rotation.y];
+        const sign = home.map(v => v.toFixed(2)).join();
+        if (!life.stroll || life.stroll.sign !== sign) {
+            const who = this.character(object), id = `people-${who}-stand-wait`, stand = life.rig.has(id) ? life.rig.key(id) : null, [hx, hz, hyaw] = home;
+            let best = null;
+            if (stand) for (const turn of [0, 1, -1, 2, -2, 3, -3, 4]) {
+                const yaw = hyaw + turn * Math.PI / 4, dx = Math.sin(yaw), dz = Math.cos(yaw); let d = 0;
+                while (d < 4500 && this.spotFree(new THREE.Vector3(hx + dx * (d + 250), 0, hz + dz * (d + 250)), object, spec)) d += 250;
+                if (d >= 1500 && (!best || d > best.d + 500)) best = { d, dx, dz }; if (!turn && d >= 2500) break;
+            }
+            this.blocked = null;
+            if (!best) { life.stroll = false; return false; }
+            const a = [hx / 1000, hz / 1000], b = [(hx + best.dx * best.d) / 1000, (hz + best.dz * best.d) / 1000], pace = 1.55 + (life.seed % 100) / 400;
+            life.stroll = { sign, stand, there: walkPlan(life.rig, stand, stand, [a, b], { pace }), back: walkPlan(life.rig, stand, stand, [b, a], { pace }), pause: 3 + (life.seed % 7) * .45, a, b, y: object.position.y, start: this.lifeClock };      // (they set off from where they stand, now)
+        }
+        const st = life.stroll, t1 = st.there.seconds, t2 = st.back.seconds, u = Math.max(0, this.lifeClock - st.start) % (t1 + t2 + st.pause * 2), yawOut = Math.atan2(st.b[0] - st.a[0], st.b[1] - st.a[1]);
+        let x, z, yaw;
+        const rest = (at, from, w) => { solveStill(life.rig, st.stand, { time: this.lifeClock, seed: life.seed, life: 1 }); x = at[0]; z = at[1]; yaw = from + Math.PI * THREE.MathUtils.smoothstep(w, .3, .75); };
+        if (u < t1) { const r = solveWalk(life.rig, st.there, st.there.at(u)); x = r.x; z = r.z; yaw = r.yaw; }
+        else if (u < t1 + st.pause) rest(st.b, yawOut, (u - t1) / st.pause);
+        else if (u < t1 + st.pause + t2) { const r = solveWalk(life.rig, st.back, st.back.at(u - t1 - st.pause)); x = r.x; z = r.z; yaw = r.yaw; }
+        else rest(st.a, yawOut + Math.PI, (u - t1 - st.pause - t2) / st.pause);
+        drawPose(life.rig, object.userData.personRig, 0, spec.pose || null, hold);
+        object.position.set(x * 1000, st.y, z * 1000); object.rotation.y = yaw; life.live = life.strolling = true; this.dirty = true;
+        return true;
+    }
+    // (a stroller who stops being one, a film, a change of cast, is back where the room put them)
+    strollHome(object, life) { if (!life.strolling) return; const home = object.userData.personHome; if (home) { object.position.x = home[0]; object.position.z = home[1]; object.rotation.y = home[2]; } life.strolling = false; this.dirty = true; }
+
     turnCrank(crank, angle) { crank.rotation.x = -angle; for (const pedal of crank.children) if (pedal.name === 'Bike pedal') pedal.rotation.x = angle; this.dirty = true; }
     // ---- a change of posture on the spot (room-people-motion.mjs solveChange) instead of a dissolve
     // Two placements of one character at one spot make a change when one leaves as the other comes:
@@ -1772,7 +1810,7 @@ export class RoomPeople {
     get lively() { return this.enabled && this.people.some(o => o.visible && (o.userData.personLife?.live || o.userData.personDriven)); }
     async enliven(object) {
         const spec = object.userData.person, person = this.library.entry(spec.id)?.person, still = o => { o.userData.personStill = true; };
-        if (!person || !livelyPose(person.pose)) return still(object);
+        if (!person || !(livelyPose(person.pose) || (!this.filter && person.pose === 'walk' && !spec.walk))) return still(object);      // (a Studio walker strolls: stroll())
         const data = await this.library.rigData(person.character).catch(() => null); if (!data) return still(object);
         if (!this.rigsOf.has(person.character)) this.rigsOf.set(person.character, new PersonRig(data));
         const rig = this.rigsOf.get(person.character); if (!rig.has(spec.id)) return still(object);

@@ -403,5 +403,28 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
     assert.equal(people.actors.length, 0); people.update({ ...desk, height: 39.5, time: 5 }); assert.deepEqual(shown(), [], 'motion off, in a film: nobody at 38 to 40 in, as its chapters were made (the mid-height posture is the Studio\'s)');
     people.update({ ...desk, height: 33, time: 5 }); assert.deepEqual(shown(), [], 'motion off: nobody between the built heights, as before');
     people.dispose();
+    // ---- a stroll: in the Studio someone cast in a walking posture walks a clear stretch, turns and comes back
+    {
+        const { ROOM_PEOPLE } = await import('../room-people.mjs');
+        ROOM_PEOPLE.strolltest = [{ id: 'people-zoe-walk', at: [0, 0], turn: 0 }];
+        const { room } = makeRoom('strolltest'); room.roomLayout = { id: 'house', width: 6000, depth: 7000, back: -1500 }; room.root.children[0].position.set(2500, 0, -1000);      // (the chair out of the way)
+        const walkers = new RoomPeople(room, library); await walkers.setEnabled(true); await walkers.built;
+        let now = 0, far = 0, back = Infinity, maxStep = 0, last = null;
+        for (let i = 0; i < 60 * 30; i++) {
+            now += 1000 / 60; walkers.update({ pose: { x: -2000, z: -1200, yaw: 0 }, height: 28, time: null, now }); if (i % 30 === 0) await walkers.settled(200);
+            const o = walkers.people[0], d = Math.hypot(o.position.x, o.position.z);
+            assert.ok(Math.abs(o.position.x) < 3000 - 250 && o.position.z > -1500 + 250 && o.position.z < 5500 - 250, 'the stroller stays inside the room');
+            if (last) maxStep = Math.max(maxStep, Math.hypot(o.position.x - last[0], o.position.z - last[1])); last = [o.position.x, o.position.z];
+            far = Math.max(far, d); if (far > 1400) back = Math.min(back, d);
+        }
+        assert.ok(far >= 1500 && far <= 4600, 'the stroller walks a stretch of the room (' + Math.round(far) + ' mm)');
+        assert.ok(back < 60, 'and comes back to where the room put them (' + Math.round(back) + ' mm)');
+        assert.ok(maxStep < 40, 'at a walk, without a jump (' + maxStep.toFixed(1) + ' mm a frame)');
+        // a film: the same person keeps their place
+        for (let i = 0; i < 200; i++) { now += 1000 / 60; walkers.update({ pose: { x: -2000, z: -1200, yaw: 0 }, height: 28, time: null, now }); }      // out on the stretch again
+        walkers.update({ pose: { x: -2000, z: -1200, yaw: 0 }, height: 28, time: 3, now });
+        assert.deepEqual([walkers.people[0].position.x, walkers.people[0].position.z], [0, 0], 'at a film\'s second the walker stands where the room (or the cut) has them');
+        walkers.dispose(); delete ROOM_PEOPLE.strolltest;
+    }
 }
 console.log('PASS room people motion: rig files, the desk driver (rise, lower, stop, turn back, tilt, wheelchair, short stature), exact end poses, planted feet, knees, keyboard following, determinism, life, the person in the room (film and Studio paths, chair, pose adjustments on top), posture changes in a shot and with the daypart, a walk along a path.');
