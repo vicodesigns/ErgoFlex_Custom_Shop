@@ -49,7 +49,8 @@ const WINDOW_SCENERY = {
     // the city, each from its own height with its own thing outside the glass
     hospital: { scene: 'city', variant: 'hospital', seed: 4101, storey: 12000 },
     laboratory: { scene: 'city', variant: 'louvres', seed: 4202, storey: 7500 },
-    mobileit: { scene: 'city', variant: 'dock', seed: 4303, storey: 1200 }
+    mobileit: { scene: 'city', variant: 'dock', seed: 4303, storey: 1200 },
+    government: { scene: 'city', variant: 'civic+flowerbox', seed: 4404, storey: 6000 }
 };
 
 // Suspended acoustic ceiling where a room asks for one: 610 × 1220 mm (2 × 4 ft)
