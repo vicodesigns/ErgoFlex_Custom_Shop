@@ -175,7 +175,17 @@ def oilers(s):
                  {'key': 'noah-stands', 'id': 'people-noah-stand-type', 'desk': 'stand'}] +
                 ([] if ALT else [{'key': 'noah-waits', 'id': 'people-noah-stand-wait', 'at': [-3757, -1155], 'turn': 180}]),
            when={'noah-sits': [[0, 8.25, 0, 0]], 'noah-stands': [[10.69, 99, 0, 0]]} if ALT else {'noah-waits': [[8.3, 10.7, .4, .4]]}, chair={'back': 250, 'side': -780, 'turn': 35})
-    if not ALT: return                            # his cut: his camera; Noah gets up as the desk rises
+    if not ALT:
+        # His cut, his note: the desk beside Kai is set up for him from the first frame (48 in, flat, 28 in, facing
+        # him) and he works at it; the easel would stand off the flat top, so it is hidden. The pose allows for his
+        # Director move of this desk (-2.275 stage x, about -1508 mm room z), so Kai stays where his opening frames him.
+        s['people']['cast'][0] = {'key': 'kai', 'id': 'people-kai-wheel-type', 'station': 'project-review', 'desk': 'wheel'}
+        edits = [{'desk': 'station-project-review', 'name': 'APA set and costume design review desk', 'size': '48x30',
+                  'pose': {'x': -4080, 'z': 5308, 'yaw': 0}, 'initial': {'height': 28, 'tilt': 0}}]
+        kept = [(('sceneDeskEdits', edits) if k == 'sceneDeskPoses' else (k, v)) for k, v in s.items()]
+        s.clear(); s.update(kept)
+        s['sceneEdits'].append({'match': '^Prop:ergoflex-art-easel$', 'hide': True})
+        return                                    # his cut: his camera; Noah gets up as the desk rises
     cam(s, [
         key(0, (-2148, 398, 3318), (-5190, 1104, 6660), 42, 'Home of the Oilers: banner, longboard, Kai at the set-design desk'),
         key(0.6, (-2148, 398, 3318), (-5190, 1104, 6660), 42, 'Home of the Oilers (hold)'),
