@@ -43,13 +43,13 @@ work = os.path.join(tempfile.gettempdir(), 'ergoflex-people'); os.makedirs(work,
 
 def blender(o):
     r = subprocess.run([BLENDER, '-b', '--python-exit-code', '1', '--python', os.path.join(HERE, 'build_people.py'), '--', o['id'], work] + (['--preview', os.path.join(preview, o['id'])] if preview else []),
-                       capture_output=True, text=True, env=ENV)
+                       capture_output=True, text=True, encoding='utf-8', errors='replace', env=ENV)
     line = next((l for l in r.stdout.splitlines() if l.startswith('RESULT ')), None)
     if r.returncode or not line: return o, None, 'Blender failed\n' + (r.stdout[-1500:] + r.stderr[-1500:])
     result = json.loads(line[7:]); raw = os.path.join(work, o['id'] + '.glb'); out = os.path.join(ROOT, 'assets/props', o['id'] + '.glb')
     set_alpha(raw, result['alpha'], result.get('cutoff', {}))
     r = subprocess.run([*gltf_transform, 'optimize', raw, out, '--compress', 'meshopt', '--texture-compress', 'webp', '--texture-size', str(o.get('textureSize', 1024)),
-                        '--simplify', 'false', '--palette', 'false', '--join', 'false'], capture_output=True, text=True)
+                        '--simplify', 'false', '--palette', 'false', '--join', 'false'], capture_output=True, text=True, encoding='utf-8', errors='replace')
     if r.returncode: return o, None, 'optimize failed\n' + r.stderr[-800:]
     if not keep:
         os.remove(raw)
