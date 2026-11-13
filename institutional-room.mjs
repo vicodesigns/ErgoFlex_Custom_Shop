@@ -41,6 +41,8 @@ const WINDOW_SCENERY = {
     highschool: { scene: 'beach-school', seed: 1906, storey: 4000 },
     // schoolyards: the kindergarten and elementary rooms on the ground, the middle school a floor up over its ball court
     kindergarten: { scene: 'schoolyard', variant: 'kinder', seed: 6101, storey: 0 },
+    elementary: { scene: 'schoolyard', variant: 'elementary', seed: 6202, storey: 0 },
+    middleschool: { scene: 'schoolyard', variant: 'middle', seed: 6303, storey: 4000 },
     // college and university classrooms over their campus
     college: { scene: 'campus', variant: 'green', seed: 5303, storey: 0 },
     university: { scene: 'campus', variant: 'quad', seed: 5404, storey: 8000 }
