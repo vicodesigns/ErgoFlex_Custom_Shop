@@ -1,9 +1,9 @@
 import * as THREE from 'three';
-import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
+import { attachVista } from './window-vista.mjs?v=polish-20261112f';
 import { createSunPatch } from './room-sun-patch.mjs?v=polish-20261111f';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
-import { HOME_LAYOUTS } from './home-office.mjs?v=polish-20261111f';
+import { HOME_LAYOUTS } from './home-office.mjs?v=polish-20261112f';
 
 const names = ['Apartment recording nook', 'Home production studio', 'Writing & recording room', 'Producer studio & lounge', 'Production & performance suite'];
 export const MUSIC_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map((home, index) => {

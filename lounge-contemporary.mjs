@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
+import { attachVista } from './window-vista.mjs?v=polish-20261112f';
 import {loungeDesign} from './lounge-design.mjs';
 import {buildLoungeChess} from './lounge-table-games.mjs';
 import {dressContemporaryLounge} from './lounge-contemporary-detail.mjs';

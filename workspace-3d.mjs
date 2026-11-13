@@ -8,7 +8,7 @@ import { upgradeCampusFurniture, bindCampusFurniture, applyCampusLighting } from
 import { atelierSceneBed, bindAtelierBed, applyAtelierBedLighting } from './atelier-scene-beds.mjs?v=atelier-beds-20261014';
 import { atelierSceneLamp, bindAtelierLamp, applyAtelierLighting } from './atelier-scene-lighting.mjs?v=gallery-bedroom-20261025';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=polish-20261111f';
-import { buildInstitutionalRoom } from './institutional-room.mjs?v=polish-20261111f';
+import { buildInstitutionalRoom } from './institutional-room.mjs?v=polish-20261112f';
 import { refineRoomSurfaces } from './room-refinement.mjs?v=polish-20261111f';
 import { polishRoomProp } from './room-polish.mjs?v=polish-20261111f';
 import { RoomLife } from './room-life.mjs?v=polish-20261111f';
@@ -18,30 +18,30 @@ import { atelierSceneChair } from './atelier-scene-seating.mjs?v=conference-chai
 import { milanoSceneSofa } from './milano-scene-seating.mjs?v=milano-seating-20261014';
 import { migrateHighschoolFixtureTransform } from './hbhs-design.mjs';
 import { createDailyDeskKit, createDeskNotebook, placeDailyDeskKit } from './room-desk-details.mjs?v=polish-20261111f';
-import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=polish-20261111h';
-import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=people-vistas-20261110';
+import { buildLibraryRoom, libraryLayoutForSize, libraryLayoutById } from './library-room.mjs?v=polish-20261112f';
+import { buildCoworkingRoom, coworkingLayoutForSize, coworkingLayoutById } from './coworking-room.mjs?v=polish-20261112f';
 import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-room.mjs?v=polish-20261111g';
-import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=polish-20261111f';
+import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=polish-20261112f';
 import { buildChildRoom, CHILD_MODES, childLayoutForSize, childLayoutById } from './child-room.mjs?v=child-room-20261111';
-import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=polish-20261111f';
-import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById, polishWorkshopEquipment } from './workshop-room.mjs?v=polish-20261111h';
+import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=polish-20261112f';
+import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById, polishWorkshopEquipment } from './workshop-room.mjs?v=polish-20261112f';
 import * as THREE from 'three';
 import { RoomBounceLight } from './room-bounce-light.mjs?v=polish-20261111f';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { ACCESSORIES, accessory } from './catalog.mjs?v=preset-size-setups-20261012';
-import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES, migrateHomeReadingFurniture } from './home-office.mjs?v=polish-20261111f';
-import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=polish-20261111f';
-import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=polish-20261111h';
-import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=polish-20261112d';
-import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=polish-20261111f';
+import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES, migrateHomeReadingFurniture } from './home-office.mjs?v=polish-20261112f';
+import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=polish-20261112f';
+import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=polish-20261112f';
+import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=polish-20261112f';
+import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=polish-20261112f';
 
-import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=polish-20261111f';
-import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=polish-20261112c';
+import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=polish-20261112f';
+import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=polish-20261112f';
 import { themedGymLayout } from './gym-theme.mjs?v=polish-20261111f';
-import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=polish-20261111f';
-import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=people-vistas-20261110';
+import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=polish-20261112f';
+import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=polish-20261112f';
 
 // Original geometry in millimetres: X is user-right, Z is toward the user.
 // The CAD desk uses X for depth and Z for width. Only the mounting layer maps

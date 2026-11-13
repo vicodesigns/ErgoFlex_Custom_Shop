@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { attachVista } from './window-vista.mjs?v=window-vista-20261110b';
+import { attachVista } from './window-vista.mjs?v=polish-20261112f';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { gallerySessionDetails } from './gallery-bedroom-detail.mjs?v=polish-20261111f';

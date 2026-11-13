@@ -41,3 +41,20 @@ tilt actuators and desk hardware, the workshop's tools read as metal; nothing el
 and workshop.
 
 Every room chapter's pixels change where metal is in shot, so cached chapters are stale until rendered again.
+
+## Calmer window views (same night)
+
+Vico: "the windows and the content out of them are too much, they are too bright and compete with the room".
+
+`window-vista.mjs` `CALM` is laid over every window grade: gain 0.82, saturation 0.95, contrast 0.92, a softer focus
+(`soften` 1.5: a camera focused on the room leaves the view a little out of focus) and a thin veil of haze by day.
+One place sets every window in the Studio and the film; `{ gain: 1, saturation: 1, contrast: 1, soften: .6, haze: 0 }`
+is the look before. A first, greyer setting (gain 0.74, saturation 0.78, haze 0.17) was calm but dull; keeping the
+colour and taking only light and sharpness away reads better.
+
+Open with Vico: he also liked the painted views that were there before the photographs, and is open to modelled
+scenery outside the windows (foreground planting, a balcony rail, a neighbouring facade) for real depth.
+
+`tools/dev/restamp.py <stamp> [base]` gives every changed root module a new cache stamp wherever it is imported,
+up to index.html (the scratch script that did this was lost twice with /tmp).
+

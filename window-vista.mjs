@@ -30,8 +30,14 @@ export const VISTAS = {
     'city-neon': { day: 'city-day', dusk: 'city-neon', duskPhases: ['night', 'party'], zoom: .8 }
 };
 
-// A window is brighter than the room: daylight grades sit above 1 so the tone
-// mapper rolls the view off the way a camera exposed for the interior would.
+// The view sits behind the room, it does not compete with it (Vico, November 12: the windows were "too bright and
+// compete with the room environment"). CALM is laid over every grade below: less light, less contrast and colour,
+// a softer focus (a camera focused on the room leaves the view outside a little out of focus) and a veil of haze.
+// One place to turn them all up or down; 1, 1, 1, .6, 0 is the look before.
+export const CALM = { gain: .82, saturation: .95, contrast: .92, soften: 1.5, haze: .05, hazeDusk: .02 };
+const HAZE = [.82, .86, .9];
+
+// The grades as tuned before CALM (a window brighter than the room, rolled off by the tone mapper).
 const DAY = {
     morning: { gain: [1.34, 1.25, 1.1], lift: [.014, .014, .018], saturation: .98 },
     afternoon: { gain: [1.3, 1.28, 1.25], lift: [.008, .008, .012], saturation: 1.02 },
@@ -57,8 +63,8 @@ function load(name) {
 const VERTEX = `varying vec3 vWorld;
 void main() { vec4 w = modelMatrix * vec4(position, 1.0); vWorld = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`;
 const FRAGMENT = `uniform sampler2D dayMap; uniform sampler2D duskMap;
-uniform float duskMix, saturation, zoom, horizon, soften, contrast;
-uniform vec3 gain, lift, wRight, wUp, wOut;
+uniform float duskMix, saturation, zoom, horizon, soften, contrast, haze;
+uniform vec3 gain, lift, wRight, wUp, wOut, hazeColor;
 uniform vec2 tanHalf;
 varying vec3 vWorld;
 void main() {
@@ -69,6 +75,7 @@ void main() {
     vec3 c = texture2D(dayMap, uv, soften).rgb;
     if (duskMix > 0.) c = mix(c, texture2D(duskMap, uv, soften).rgb, duskMix);
     c = max((c - .42) * contrast + .42, 0.);
+    c = mix(c, hazeColor, haze);
     c = mix(vec3(dot(c, vec3(.2126, .7152, .0722))), c, saturation) * gain + lift;
     gl_FragColor = vec4(c, 1.);
     #include <tonemapping_fragment>
@@ -83,7 +90,7 @@ const local = new THREE.Vector3(), quaternion = new THREE.Quaternion(), UP = new
 export function attachVista(pane, name, phase = 'afternoon') {
     const vista = VISTAS[name]; if (!vista) throw Error('No window vista "' + name + '".');
     const uniforms = {
-        dayMap: { value: null }, duskMap: { value: null }, duskMix: { value: 0 }, saturation: { value: 1 }, soften: { value: .6 }, contrast: { value: 1 },
+        dayMap: { value: null }, duskMap: { value: null }, duskMix: { value: 0 }, saturation: { value: 1 }, soften: { value: CALM.soften }, contrast: { value: 1 }, haze: { value: 0 }, hazeColor: { value: new THREE.Vector3(...HAZE) },
         zoom: { value: vista.zoom ?? 1 }, horizon: { value: vista.horizon ?? 0 }, tanHalf: { value: new THREE.Vector2(TAN_X, TAN_Y) },
         gain: { value: new THREE.Vector3(1, 1, 1) }, lift: { value: new THREE.Vector3() },
         wRight: { value: new THREE.Vector3(1, 0, 0) }, wUp: { value: UP.clone() }, wOut: { value: new THREE.Vector3(0, 0, -1) }
@@ -93,8 +100,9 @@ export function attachVista(pane, name, phase = 'afternoon') {
     const setPhase = id => {
         const dusk = !!vista.dusk && vista.duskPhases.includes(id), grade = (dusk ? DUSK : DAY)[id] || DAY.afternoon;
         // The photograph's own grade applies to its daylight picture; the after-dark one is exposed for its hour.
-        uniforms.duskMix.value = dusk ? 1 : 0; uniforms.saturation.value = grade.saturation * (dusk ? 1 : vista.saturation ?? 1); uniforms.contrast.value = dusk ? 1 : vista.contrast ?? 1;
-        uniforms.gain.value.fromArray(grade.gain).multiplyScalar(dusk ? 1 : vista.brightness ?? 1); uniforms.lift.value.fromArray(grade.lift);
+        uniforms.duskMix.value = dusk ? 1 : 0; uniforms.saturation.value = grade.saturation * (dusk ? 1 : vista.saturation ?? 1) * CALM.saturation; uniforms.contrast.value = (dusk ? 1 : vista.contrast ?? 1) * CALM.contrast;
+        uniforms.gain.value.fromArray(grade.gain).multiplyScalar((dusk ? 1 : vista.brightness ?? 1) * CALM.gain); uniforms.lift.value.fromArray(grade.lift);
+        const dark = id === 'night' || id === 'party'; uniforms.haze.value = dark ? 0 : dusk || id === 'evening' ? CALM.hazeDusk : CALM.haze;
     };
     setPhase(phase);
     const before = pane.onBeforeRender;
