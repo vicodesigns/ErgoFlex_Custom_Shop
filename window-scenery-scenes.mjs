@@ -542,9 +542,49 @@ function socal(k, ctx, kind) {
 }
 const SOCAL = { morning: { horizon: '#ebdcc6', air: '#e6dccb', haze: .5 }, afternoon: { horizon: '#e4e4da', air: '#dfe0d8', haze: .45, tint: [1, .98, .93] }, evening: { sun: [32, 3, '#ffa060', 1.1] } };
 
+// ---- a college campus (the library room, the study, the college and university classrooms): lawns crossed by
+// paths, oaks and maples (a few turning), benches and lamps, a brick wing with stone trim and a slate roof across the
+// lawn, another building beyond, a clock tower on some. variant: 'quad' (a lawn enclosed by wings), 'green' (open
+// lawn, a long wing), 'court' (a paved court with a fountain nearest the glass).
+const pitchedRoof = (b, x, y, z, width, depth, rise, hex) => { const sh = new THREE.Shape(); sh.moveTo(-depth / 2 - 300, 0); sh.lineTo(0, rise); sh.lineTo(depth / 2 + 300, 0); sh.closePath();
+    const g = new THREE.ExtrudeGeometry(sh, { depth: width + 400, bevelEnabled: false }); b.add(g, new THREE.Matrix4().makeRotationY(Math.PI / 2).setPosition(x - width / 2 - 200, y, z), () => colour(hex), { facet: true }); g.dispose(); };
+function collegeWing(k, r, x, ground, z, { width = 40000, floors = 3, tower = false, depth = 14000 } = {}) {
+    const h = building(k, r, x, ground, z, { width, depth, floors, storey: 3900, shops: false, material: r() < .7 ? 'brick' : 'stone', bays: Math.round(width / 3600), litRate: .4, cornice: true });
+    if (!h) return; pitchedRoof(k.land, x, ground + h, z, width, depth, 5200, pick(r, ['#555a60', '#4f5458', '#5d5650']));
+    for (let i = 0; i < Math.round(width / 9000); i++) k.land.box([1800, 1600, 1400], [x - width / 2 + 4500 + i * 9000, ground + h + 1200, z + depth / 2 - 600], '#c9bfae');
+    if (tower) { const tx = x + (r() - .5) * width * .4, th = h + 14000; k.land.box([5200, th, 5200], [tx, ground + th / 2, z + depth / 2 - 2000], '#9b6d5a');
+        k.land.box([5600, 600, 5600], [tx, ground + th - 4000, z + depth / 2 - 2000], '#d2c8b4'); k.land.add(new THREE.CylinderGeometry(1200, 1200, 80, 18).rotateX(Math.PI / 2), M(tx, ground + th - 2400, z + depth / 2 + 650), () => colour('#e8e2d2'));
+        k.land.add(new THREE.ConeGeometry(4000, 6000, 4, 1).rotateY(Math.PI / 4), M(tx, ground + th + 3000, z + depth / 2 - 2000), () => colour('#56605c'), { facet: true }); }
+}
+function campus(k, ctx) {
+    const { land: b, r } = k, ground = ctx.ground - 150, cx = (ctx.left + ctx.right) / 2, w = ctx.width, v = ctx.variant || 'green', f = r() < .5 ? 1 : -1, jit = s => (r() - .5) * s;
+    const lawnC = colour('#6f855a'), dry = colour('#879668'), path = colour('#bdb3a2'), out = new THREE.Color();
+    const paths = [z => cx + f * 2500 + z * .35 * f, z => cx - f * 9000 - z * .5 * f];
+    land(b, ground, cx - 30000, cx + 30000, -60, -24000, -90000, (x, z) => {
+        if (v === 'court' && z > -9000) return out.copy(path).multiplyScalar((Math.floor(x / 1200) + Math.floor(z / 1200)) % 2 ? .93 : 1);
+        if (paths.some(p => Math.abs(x - p(z)) < 900) || (z < -30000 && z > -32500)) return out.copy(path).multiplyScalar(.94 + r() * .06);
+        const patch = Math.sin(x / 2700) * Math.sin(z / 2200) * .5 + .5; return out.copy(lawnC).lerp(dry, patch * .35).multiplyScalar(.93 + r() * .07); }, 500);
+    // nearest the glass
+    if (v === 'court') { const fx = cx + f * 1500, fz = -5200; b.add(new THREE.CylinderGeometry(2600, 2700, 600, 20, 1), M(fx, ground + 300, fz), () => colour('#bfb6a6'));
+        b.add(new THREE.CylinderGeometry(2350, 2350, 20, 20, 1), M(fx, ground + 590, fz), () => colour('#5f7884'), { light: false }); b.add(new THREE.CylinderGeometry(500, 700, 1600, 12, 1), M(fx, ground + 900, fz), () => colour('#c9c0b0'));
+        for (const s of [-1, 1]) bench(b, fx + s * 4200, ground, fz + 1200, s * .4, '#6a5a4a'); }
+    else for (let x = ctx.left - 2500; x < ctx.right + 2500; x += 900 + r() * 500) shrub(b, r, x, ground, -1200 - r() * 500, 420 + r() * 160, pick(r, ['#567148', '#5f7a4c', '#4f6a44']), { size: 90 });
+    // trees: oaks and maples, one or two turning
+    const spots = v === 'quad' ? [[-9000, -11000], [8000, -13000], [-15000, -21000], [14000, -22000], [-3000, -24000]] : [[-7000, -9000], [11000, -12500], [-15000, -17000], [3000, -20000], [19000, -21000], [-23000, -24000]];
+    for (const [x, z] of spots) { const turn = r() < .2; tree(b, r, cx + f * x + jit(2000), ground, z + jit(2000), { height: 8000 + r() * 4000, hex: turn ? pick(r, ['#a8743e', '#b5603c', '#9a8a44']) : pick(r, ['#5e7a4a', '#66804c', '#58744a']), shape: r() < .5 ? 'spreading' : 'round', bark: '#5a4d42' }); }
+    for (let z = -6000; z > -30000; z -= 8000) { const x = paths[0](z); pathLight(k, x + 1300, ground, z, '#ffdcae', .6); if (r() < .6) bench(b, x - 1600, ground, z - 1500, f * Math.PI / 2, '#5d4f42'); }
+    // the buildings
+    if (v === 'quad') { collegeWing(k, r, cx, ground, -40000, { width: 52000, floors: 3, tower: r() < .6 }); for (const s of [-1, 1]) collegeWing(k, r, cx + s * 30000, ground, -25000, { width: 26000, floors: 3 }); }
+    else collegeWing(k, r, cx + f * 6000 + jit(6000), ground, -38000 + jit(4000), { width: 46000 + jit(10000), floors: 2 + Math.floor(r() * 2), tower: v === 'green' && r() < .5 });
+    collegeWing(k, r, cx - f * 28000, ground, -60000, { width: 30000, floors: 4 });
+    for (let x = cx - 60000; x <= cx + 60000; x += 3800 + r() * 2200) tree(b, r, x, ground, -70000 - r() * 12000, { height: 11000 + r() * 4000, hex: '#587353', size: 1200 });
+    ridge(b, r, -140000, ground, cx - 160000, cx + 160000, 9000, '#64786a', { step: 4000 });
+}
+
 export const SCENES = {
     garden: { build: garden, storey: 0 },
     'back-garden': { build: backGarden, storey: 0 },
+    campus: { build: campus, storey: 0, hazeFar: 90000 },
     'studio-garden': { build: studioGarden, storey: 0, hazeFar: 46000 },
     // the marine layer: a low grey sky that burns off by afternoon, the air thick with it, the trunks going pale with distance
     humboldt: { build: humboldt, storey: 0, hazeFar: 34000, lampLevel: .7, haloLevel: 1.2, hours: {
