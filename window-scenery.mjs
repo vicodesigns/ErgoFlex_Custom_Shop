@@ -204,6 +204,7 @@ function world(panes, name, scene, options) {
     const key = [name, options.variant, seed, ctx.storey, round(ctx.floor), ...ctx.openings.flatMap(o => [round(o.x), round(o.y), round(o.z), round(o.w), round(o.h)])].join('|');
     const entry = built(name, key, () => {
         const k = { land: new Builder(scene.sun || SUN), lights: new Builder(scene.sun || SUN), halos: new Halos(), r: rand(seed) };
+        k.land.view = { cx: (ctx.left + ctx.right) / 2, half: ctx.width / 2 + 3000, slope: 1.6 };   // what the room's cameras can see through the openings
         scene.build(k, ctx);
         const geometries = [k.land.geometry(), k.lights.geometry(), k.halos.geometry()];
         return { geometries, users: 0, triangles: k.land.triangles + k.lights.triangles + k.halos.position.length / 9 };

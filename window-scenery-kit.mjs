@@ -16,6 +16,10 @@ const A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3(),
 
 export const M = (x, y, z, sx = 1, sy = sx, sz = sx, turn = 0) => new THREE.Matrix4().compose(new THREE.Vector3(x, y, z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), turn), new THREE.Vector3(sx, sy, sz));
 
+// Whether something at (x, z), `radius` across, can be seen through the openings from anywhere a room's cameras go:
+// a wedge widening with distance (b.view, set from the openings when a world is built). Things outside it are skipped.
+export const seen = (b, x, z, radius = 0) => !b.view || Math.abs(x - b.view.cx) - radius < b.view.half + Math.abs(z) * b.view.slope;
+
 // Geometry with a colour per vertex. `tone` is the colour by day with the baked sun in it; `glow` is what the lights
 // after dark put on the surface (added under the hour's `lamp`), from the point lights given with light().
 export class Builder {
@@ -132,6 +136,7 @@ export function crown(b, r, cx, cy, cz, rx, ry, rz, hex, { size = spray(cz), den
 // A broadleaf tree: a trunk forking into limbs, a crown of several masses (gaps between them), grounded at `ground`.
 // shape: 'round', 'tall' (narrow, upright), 'spreading' (wide, low), 'ornamental' (small, light).
 export function tree(b, r, x, ground, z, { height = 6000, spread, hex = '#62804f', bark = '#5e5046', shape = 'round', density = 1, size } = {}) {
+    if (!seen(b, x, z, 8000)) return;
     const wide = { round: .36, tall: .24, spreading: .48, ornamental: .4 }[shape] ?? .36, R = height * (spread ?? wide), fork = height * (shape === 'tall' ? .28 : shape === 'spreading' ? .32 : .38);
     const lean = (r() - .5) * height * .05, base = new THREE.Vector3(x, ground - 100, z), top = new THREE.Vector3(x + lean, ground + fork, z + (r() - .5) * height * .03), trunkR = height * (shape === 'ornamental' ? .016 : .022);
     const barkC = colour(bark); limb(b, base, top, trunkR, barkC);
@@ -147,6 +152,7 @@ export function tree(b, r, x, ground, z, { height = 6000, spread, hex = '#62804f
 
 // A conifer (fir, spruce, pine): whorls of drooping branches, each a line of flat sprays, on a straight trunk.
 export function conifer(b, r, x, ground, z, { height = 8000, width = .34, hex = '#3d5c4a', bark = '#4f4038', size, density = 1, start = .1 } = {}) {
+    if (!seen(b, x, z, 8000)) return;
     const sun = b.sun, base = colour(hex), sz = size ?? spray(z) * 1.1;
     limb(b, new THREE.Vector3(x, ground - 100, z), new THREE.Vector3(x, ground + height * .97, z), height * .012, bark);
     const whorls = Math.round(10 + height / 1500);
@@ -171,6 +177,7 @@ export function conifer(b, r, x, ground, z, { height = 8000, width = .34, hex = 
 // A coast redwood: a massive straight red-brown trunk, furrowed, and short drooping sprays that start high; seen from
 // the ground the crown runs off the top of the window and the trunks are what you see.
 export function redwood(b, r, x, ground, z, { height = 42000, girth = 1.0, hex = '#4a5c3c', bark = '#6a4a3c', size, start = .32 } = {}) {
+    if (!seen(b, x, z, 8000)) return;
     const sun = b.sun, R0 = 650 * girth, barkC = colour(bark), dark = barkC.clone().multiplyScalar(.6), out = new THREE.Color(), seed = r() * 50;
     // the trunk: a fluted, tapering column; the bark's furrows in the colour
     const trunk = new THREE.CylinderGeometry(R0 * .28, R0, height, 12, 8, true).translate(0, height / 2, 0);
@@ -179,20 +186,20 @@ export function redwood(b, r, x, ground, z, { height = 42000, girth = 1.0, hex =
     // a buttressed foot
     b.add(new THREE.ConeGeometry(R0 * 1.55, R0 * 2.2, 10, 1, true).translate(0, R0 * 1.1, 0), M(x, ground - 60, z, 1, 1, 1, seed), () => barkC.clone().multiplyScalar(.82), { ambient: .5 });
     // sprays high above the window's sight lines are never seen (from a ground floor the view tops out near 40 degrees)
-    const base = colour(hex), sz = size ?? spray(z) * 1.2, tiers = Math.round(12 + height / 4000), seen = ground + 5000 + Math.abs(z) * .85;
+    const base = colour(hex), sz = size ?? spray(z) * 1.2, tiers = Math.round(12 + height / 4000), sightTop = ground + 5000 + Math.abs(z) * .85;
     for (let w = 0; w < tiers; w++) {
-        const t = start + (1 - start) * w / tiers, y = ground + height * t; if (y > seen) break;
+        const t = start + (1 - start) * w / tiers, y = ground + height * t; if (y > sightTop) break;
         const R = (1600 + 3400 * Math.sin(Math.PI * Math.min(1, (t - start) / (1 - start) * 1.1))) * girth * (.7 + r() * .5);
         const count = 4 + Math.floor(r() * 3);
         for (let k = 0; k < count; k++) {
             const a = r() * 6.28, ca = Math.cos(a), sa = Math.sin(a); if (sa < -.5 && r() < .7) continue;
-            const L = R * (.6 + r() * .5), steps = Math.max(2, Math.round(L / (sz * .6)));
+            const L = R * (.6 + r() * .5), steps = Math.max(2, Math.round(L / (sz * .5)));
             for (let j = 1; j <= steps; j++) {
                 const f = j / steps, px = x + ca * (R0 * .5 + L * f), pz = z + sa * (R0 * .5 + L * f), py = y - L * f * .28 + f * f * L * .18 - (r() * .6) * sz;
                 const light = (.32 + .7 * (.5 + .5 * (ca * sun.x + .4 * sun.y + sa * sun.z)) ** 2) * (.6 + .4 * f);
                 const c = base.clone().offsetHSL((r() - .5) * .03, (r() - .5) * .08, (r() - .5) * .07).multiplyScalar(light), sc = sz * (.7 + r() * .6);
                 euler.set((r() - .5) * .6, -a + (r() - .5) * .8, .35 + (r() - .5) * .5); q.setFromEuler(euler);
-                m4.compose(at.set(px, py, pz), q, scale.set(sc * 1.3, sc * .5, sc * .9));
+                m4.compose(at.set(px, py, pz), q, scale.set(sc * 1.7, sc * .6, sc * 1.2));
                 b.add(SPRAY, m4, (pt, nr) => shadeOut.copy(c).multiplyScalar(.82 + .28 * Math.max(0, nr.dot(sun))), { light: false, facet: true });
             }
         }
@@ -202,6 +209,7 @@ export function redwood(b, r, x, ground, z, { height = 42000, girth = 1.0, hex =
 // A fan palm (the tall, thin Washingtonia of Southern California): a slim grey trunk with a slight curve, a skirt of
 // dead fronds under a small head of fan leaves high up.
 export function fanPalm(b, r, x, ground, z, { height = 18000, hex = '#6f8452', skirt = '#8a7357' } = {}) {
+    if (!seen(b, x, z, 8000)) return;
     const bend = new THREE.Vector3((r() - .5) * height * .06, 0, (r() - .5) * height * .03), barkC = colour('#8b7f72'), segs = 6;
     let prev = new THREE.Vector3(x, ground - 100, z);
     for (let i = 1; i <= segs; i++) { const t = i / segs, p = new THREE.Vector3(x + bend.x * t * t, ground + height * t, z + bend.z * t * t);
@@ -228,6 +236,7 @@ export function fanPalm(b, r, x, ground, z, { height = 18000, hex = '#6f8452', s
 
 // A feather palm (queen or Canary palm): arching fronds of leaflets on a shorter, stouter trunk.
 export function featherPalm(b, r, x, ground, z, { height = 7000, hex = '#5f7d48', fronds = 18, trunk = '#857563', stout = 1 } = {}) {
+    if (!seen(b, x, z, 8000)) return;
     const top = new THREE.Vector3(x + (r() - .5) * 600, ground + height, z + (r() - .5) * 300), barkC = colour(trunk);
     limb(b, new THREE.Vector3(x, ground - 100, z), top, 260 * stout, barkC);
     b.add(SPRAY, M(top.x, top.y - 200, top.z, 420 * stout, 600, 420 * stout), () => barkC.clone().multiplyScalar(.75), { light: false });
@@ -245,7 +254,7 @@ export function featherPalm(b, r, x, ground, z, { height = 7000, hex = '#5f7d48'
 }
 
 // Low planting: a shrub (a small crown sitting on the ground), a clipped hedge, flowers in a bed, grass tufts.
-export const shrub = (b, r, x, ground, z, radius, hex, options = {}) => crown(b, r, x, ground + radius * .62, z, radius * 1.1, radius * .72, radius, hex, { size: Math.min(spray(z), radius * .55), under: .9, ...options });
+export const shrub = (b, r, x, ground, z, radius, hex, options = {}) => seen(b, x, z, radius) && crown(b, r, x, ground + radius * .62, z, radius * 1.1, radius * .72, radius, hex, { size: Math.min(spray(z), radius * .55), under: .9, ...options });
 export function hedge(b, r, x0, x1, ground, z, height, depth, hex, { size } = {}) {
     const sz = size ?? spray(z) * .9;
     for (let x = x0; x < x1; x += depth * 1.1) { const w = Math.min(depth * 1.3, x1 - x);
@@ -284,6 +293,7 @@ export function ridge(b, r, z, y0, x0, x1, height, hex, { step = 1500, rough = .
 // A house: walls, a pitched roof along x, windows on the face toward the room (dark glass by day; `lit` ones glow
 // after dark), a door with a porch light.
 export function house(k, r, x, ground, z, { width = 9000, depth = 7000, eaves = 5600, ridge: rise = 2600, wall = '#d6cab5', roof = '#96705e', lit = [1, 4], porch = true, storeys = 2 } = {}) {
+    if (!seen(k.land, x, z, width / 2 + 3000)) return;
     const { land: b, lights } = k;
     b.box([width, eaves, depth], [x, ground + eaves / 2, z], wall);
     const shape = new THREE.Shape(); shape.moveTo(-depth / 2 - 350, 0); shape.lineTo(0, rise); shape.lineTo(depth / 2 + 350, 0); shape.closePath();
@@ -305,6 +315,7 @@ export function house(k, r, x, ground, z, { width = 9000, depth = 7000, eaves = 
 // A block of a city: a box of `floors` storeys, its face toward the room (+z) a grid of windows (and its side, when it
 // shows), a cornice, a ground floor of shops. litRate: the share of windows lit after dark.
 export function building(k, r, x, ground, z, { width = 16000, depth = 14000, floors = 6, storey = 3200, wall = '#b9ab97', glass = '#3e4a55', frame = '#d9d2c4', bays, litRate = .35, shops = true, side = 0, style = 'punched', cornice = true, warm = .7, neon = null, skip = 0, fins = null, roof = null } = {}) {
+    if (!seen(k.land, x, z, width / 2 + 3000)) return 0;
     const { land: b, lights, halos } = k, height = floors * storey + (shops ? 600 : 0), face = z + depth / 2, wallC = colour(wall).offsetHSL(0, 0, (r() - .5) * .05);
     b.box([width, height, depth], [x, ground + height / 2, z], wallC);
     if (cornice) b.box([width + 300, 380, 500], [x, ground + height - 190, face - 100], frame);
@@ -348,6 +359,7 @@ export function building(k, r, x, ground, z, { width = 16000, depth = 14000, flo
 
 // A street lamp: a pole, an arm over the road, a head; after dark a lamp, a halo and a pool of light.
 export function streetLamp(k, x, ground, z, { height = 6500, reach = 1200, hex = '#ffd6a0', face = 1, power = 1 } = {}) {
+    if (!seen(k.land, x, z, 3000)) return;
     const { land: b, lights, halos } = k; pole(b, x, ground, z, height, 70, '#3c3e40');
     b.box([reach, 70, 70], [x, ground + height, z + face * reach / 2], '#3c3e40');
     b.box([520, 140, 260], [x, ground + height - 60, z + face * reach], '#2f3133');
@@ -357,6 +369,7 @@ export function streetLamp(k, x, ground, z, { height = 6500, reach = 1200, hex =
 }
 // A parked car: a body, a cabin with dark glass, wheels; its colour muted.
 export function car(k, r, x, ground, z, { turn = 0, hex } = {}) {
+    if (!seen(k.land, x, z, 3000)) return;
     const b = k.land, body = hex || ['#5b6168', '#8b8f93', '#2f3438', '#6e3b36', '#3d4f62', '#c9c7c0', '#4a5446'][Math.floor(r() * 7)], len = 4300 + r() * 500, w = 1800;
     const R = new THREE.Matrix4().makeRotationY(turn), box = (size, p, hex) => b.add(BOX, new THREE.Matrix4().makeTranslation(x, ground, z).multiply(R).multiply(M(p[0], p[1], p[2], size[0], size[1], size[2])), (() => { const c = colour(hex); return () => c; })(), { ambient: .55 });
     box([len, 700, w], [0, 600, 0], body); box([len * .55, 560, w * .88], [-len * .05, 1220, 0], '#2a3036'); box([len * .52, 60, w * .8], [-len * .05, 1520, 0], body);
