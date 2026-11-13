@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=polish-20261112f';
+import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113a';
 import { windowSun } from './room-window-sun.mjs?v=polish-20261111f';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 import { HOME_LAYOUTS } from './home-office.mjs?v=polish-20261113a';
@@ -374,7 +375,9 @@ export function buildStudyRoom(room, root, layout, helpers) {
     const skyMap = new THREE.CanvasTexture(skyCanvas); skyMap.colorSpace = THREE.SRGBColorSpace;
     const pane = mesh(entry, new THREE.PlaneGeometry(ww, wh), new THREE.MeshBasicMaterial({ map: skyMap }), [-w / 2 - 55, low + wh / 2, wz]); pane.rotation.y = Math.PI / 2; pane.castShadow = pane.receiveShadow = false;
     // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
-    const windowVista = attachVista(pane, 'campus'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
+    // Or a modelled place behind the glass (window-scenery.mjs), or the painted canvas alone: windowView() decides. A study a floor up over a college court and its fountain.
+    const outlookView = windowView('study'), windowVista = outlookView === 'photo' ? attachVista(pane, 'campus') : null; if (windowVista) room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
+    const scenery = outlookView === 'scenery' ? attachScenery(pane, 'campus', { floor: -(low + wh / 2), seed: 5202, storey: 4000, variant: 'court' }) : null;
     // Daylight from the window on the floor, reshaped for each daypart in roomAtmosphere.
     const sun = windowSun(root, { x: -w / 2, from: a, to: b, panes: 2, span: w, name: 'Study window daylight patch' });
     // Six-light casement: frame, glazing bars and sill baked as one walnut piece.
@@ -677,7 +680,7 @@ export function buildStudyRoom(room, root, layout, helpers) {
     room.roomAtmosphere = (modeId, accent = 1) => {
         sun.set(modeId, accent);
         const mode = STUDY_MODES[modeId] || STUDY_MODES.afternoon;
-        paintView(skyCanvas.getContext('2d'), mode, modeId); skyMap.needsUpdate = true; windowVista.setPhase(modeId);
+        paintView(skyCanvas.getContext('2d'), mode, modeId); skyMap.needsUpdate = true; windowVista?.setPhase(modeId); scenery?.setHour(modeId);
         // Shelf strips stay on for late reading even when the room wash is low.
         glow.forEach(mat => { mat.color.set(mode.colors[0]); mat.emissive.set(mode.colors[0]); mat.emissiveIntensity = .08 + Math.max(mode.wash, mode.practical * .7) * accent; });
         lights.forEach(spec => { spec.light.color.set(spec.task ? '#f8dbac' : mode.colors[0]); spec.light.intensity = spec.power * (spec.task ? mode.practical : mode.wash) * accent; });
