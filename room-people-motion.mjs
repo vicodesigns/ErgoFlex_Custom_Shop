@@ -545,11 +545,26 @@ const ACTS = {
     // at a bench: the tool hand works to and fro in bursts, the other steadies the piece
     'stand-work'(rig, key, time, seed, life) {
         const hand = rig.side.r.arm[3], busy = (1 - moment(time, seed, 141, 8, 2.2)) * life;
+        // (the shoulders turn a little with each stroke and the body leans into the work; the other hand stays on the piece)
+        bend(rig, Y, Math.sin(time * 7.4 + seed) * .035 * busy); bend(rig, X, (.02 + .012 * Math.sin(time * 3.7 + seed)) * busy);
+        const other = rig.side.l.arm[3]; armTo(rig, 'l', key.wp[other], key.wq[other]);
         handAt.copy(key.wp[hand]); handAt.x += Math.sin(time * 7.4 + seed) * .036 * busy; handAt.z += Math.sin(time * 3.7 + seed) * .008 * busy;
-        armTo(rig, 'r', handAt, key.wq[hand]);
+        armTo(rig, 'r', handAt, handQ.copy(key.wq[hand]).premultiply(turn.setFromAxisAngle(Y, Math.sin(time * 7.4 + seed + .6) * .12 * busy)));
     },
     // a standing stretch: a slow bend from side to side, arms overhead
-    'stretch'(rig, key, time, seed, life) { bend(rig, Z, Math.sin(time * Math.PI * 2 / (7.5 + hash(151, seed) * 2) + hash(152, seed) * 6.28) * .2 * life); feetStay(rig, key); },
+    // (the hips go the other way, and on each breath in the hands reach a little higher)
+    'stretch'(rig, key, time, seed, life) {
+        const side = Math.sin(time * Math.PI * 2 / (7.5 + hash(151, seed) * 2) + hash(152, seed) * 6.28) * life, reach = (.5 + .5 * Math.sin(time * Math.PI * 2 / 3.9 + hash(153, seed) * 6.28)) * life;
+        spot.copy(rig.wp[rig.b.pelvis]); spot.x -= .025 * side; rig.placePelvis(spot); rig.fk();
+        bend(rig, Z, side * .24); feetStay(rig, key);
+        for (const s of ['l', 'r']) { const hand = rig.side[s].arm[3]; handAt.copy(rig.wp[hand]); handAt.y += .035 * reach; handAt.x += (s === 'l' ? -1 : 1) * .012 * reach; armTo(rig, s, handAt, rig.wq[hand].clone()); }
+    },
+    // in a wheelchair, rolling: the hands push on the rims and come back, the trunk leans into each push
+    'wheel-roll'(rig, key, time, seed, life) {
+        const u = time * Math.PI * 2 / (2.6 + hash(191, seed) * .8) + hash(192, seed) * 6.28, push = (.5 + .5 * Math.sin(u)) * life;
+        bend(rig, X, .06 * push);
+        for (const s of ['l', 'r']) { const hand = rig.side[s].arm[3]; handAt.copy(key.wp[hand]); handAt.z += .05 * push - .015 * life; handAt.y -= .03 * push; armTo(rig, s, handAt, key.wq[hand]); }
+    },
     // hands behind the head: the chest opens, the trunk turns slowly one way and the other
     'stretch-open'(rig, key, time, seed, life) { const u = time * Math.PI * 2 / (6.5 + hash(161, seed) * 2) + hash(162, seed) * 6.28; bend(rig, Y, Math.sin(u) * .3 * life); bend(rig, X, -.04 * (1 + Math.sin(u * 2)) * life); feetStay(rig, key); },
     // on the mat: reaching forward and easing off, slowly
@@ -588,8 +603,12 @@ export function solveWorkout(rig, key, input) {
         // a little over one turn of the crank a second; the hips rock toward the leg that pushes down
         const a = time * Math.PI * 2 * (1.05 + hash(1, seed) * .2), fl = L.leg[2], fr = R.leg[2];
         centre.addVectors(key.wp[fl], key.wp[fr]).multiplyScalar(.5); const r = Math.hypot(key.wp[fl].y - key.wp[fr].y, key.wp[fl].z - key.wp[fr].z) / 2;
-        spot.copy(key.wp[b.pelvis]); spot.x += .006 * Math.cos(a); rig.placePelvis(spot); rig.fk();
-        rig.turnWorld(b.pelvis, turn.setFromAxisAngle(Z, .02 * Math.cos(a))); rig.fk(); rig.turnWorld(b.spine_02, turn.setFromAxisAngle(Z, -.02 * Math.cos(a))); rig.fk();
+        // (and the body rides with them: the hips dip with each stroke, the trunk leans in a little and nods with it, the
+        // shoulders roll against the hips; the arms are nearly straight as built, so the shoulders only ever come toward
+        // the bars, never away: the hands stay on them, below)
+        spot.copy(key.wp[b.pelvis]); spot.x += .008 * Math.cos(a); spot.y -= .006 * (.5 + .5 * Math.cos(2 * a)); rig.placePelvis(spot); rig.fk();
+        rig.turnWorld(b.pelvis, turn.setFromAxisAngle(Z, .035 * Math.cos(a))); rig.fk(); rig.turnWorld(b.spine_02, turn.setFromAxisAngle(Z, -.03 * Math.cos(a))); rig.fk();
+        bend(rig, X, .035 + .025 * (.5 + .5 * Math.cos(2 * a))); rig.turnWorld(b.spine_03, turn.setFromAxisAngle(Y, .02 * Math.cos(a))); rig.fk();
         look(1);
         for (const [s, at0] of [['l', -Math.PI / 2], ['r', Math.PI / 2]]) {      // (built: the left pedal down, the right one up; the top goes forward)
             const [thigh, calf, foot] = rig.side[s].leg, at = at0 - a;
