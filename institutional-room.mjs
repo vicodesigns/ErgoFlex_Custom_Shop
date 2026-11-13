@@ -47,7 +47,8 @@ const WINDOW_SCENERY = {
     college: { scene: 'campus', variant: 'green', seed: 5303, storey: 0 },
     university: { scene: 'campus', variant: 'quad', seed: 5404, storey: 8000 },
     // the city, each from its own height with its own thing outside the glass
-    hospital: { scene: 'city', variant: 'hospital', seed: 4101, storey: 12000 }
+    hospital: { scene: 'city', variant: 'hospital', seed: 4101, storey: 12000 },
+    laboratory: { scene: 'city', variant: 'louvres', seed: 4202, storey: 7500 }
 };
 
 // Suspended acoustic ceiling where a room asks for one: 610 × 1220 mm (2 × 4 ft)

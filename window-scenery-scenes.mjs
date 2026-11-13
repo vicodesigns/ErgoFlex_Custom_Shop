@@ -314,7 +314,7 @@ function city(k, ctx, { neon = false } = {}) {
             b.box([500, 450, 500], [cx + span * .3, fy + 225, -1100], '#7d5f4a'); shrub(b, r, cx + span * .3, fy + 450, -1100, 320, '#5f7d4c', { size: 60 });
             b.box([480, 40, 480], [cx - span * .28, fy + 440, -1000], '#4a4c4e'); b.box([480, 480, 40], [cx - span * .28, fy + 680, -1230], '#4a4c4e'); }
     }
-    if (opts.includes('louvres')) for (let x = ctx.left - 1500; x <= ctx.right + 1500; x += 700) b.box([90, ctx.height + 1600, 420], [x, (ctx.top + ctx.bottom) / 2, -450], '#b8b6b0');
+    if (opts.includes('louvres')) for (let x = ctx.left - 1500; x <= ctx.right + 1500; x += 900) b.box([55, ctx.height + 1600, 380], [x, (ctx.top + ctx.bottom) / 2, -450], '#8f8d88');
     if (opts.includes('flowerbox')) { b.box([ctx.width + 300, 320, 380], [cx, ctx.bottom - 170, -300], '#6e5a48');
         for (let x = ctx.left; x <= ctx.right; x += 220) { shrub(b, r, x, ctx.bottom - 40, -300, 120, '#5f7d4c', { size: 40 }); flowers(b, r, x, ctx.bottom + 120, -300, 110, 5, ['#c8504a', '#e8e0d0', '#d88a9a'], 26); } }
     if (opts.includes('bars')) { for (let x = ctx.left - 100; x <= ctx.right + 100; x += 160) b.box([24, ctx.height + 200, 24], [x, (ctx.top + ctx.bottom) / 2, -260], '#2c2e30');
