@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
-import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113a';
+import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113b';
 import { migrateHumboldtGroupFurniture } from './humboldt-furniture-migration.mjs?v=commons-home-comfort-20261024';
 import { buildHumboldtLife } from './library-humboldt-life.mjs?v=polish-20261111f';
 import { addCampusLife } from './campus-lived-in.mjs?v=polish-20261111f';
@@ -755,7 +755,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     // Behind the storefront: the outdoor view a short vestibule away, so the entry reads by day and dusk.
     const vestibule = pane(frontWall, [DOOR[1] - DOOR[0], TRANSOM], [(DOOR[0] + DOOR[1]) / 2, TRANSOM / 2, front + 600], Math.PI); vestibule.material = frontGlass;
     // Or the campus modelled behind all the glass (window-scenery.mjs): one world per side, every pane of a side an opening into it.
-    const scenery = windowView('library') === 'scenery' ? attachScenery([backPane, slotPane, frontPane, hallPane, vestibule], 'humboldt', { floor: -glassBack.y1 / 2, seed: 7130 }) : null;
+    const scenery = windowView('library-humboldt') === 'scenery' ? attachScenery([backPane, slotPane, frontPane, hallPane, vestibule], 'humboldt', { floor: -glassBack.y1 / 2, seed: 7130 }) : null;
     const vestSides = kit(); for (const x of [DOOR[0], DOOR[1]]) vestSides.box([40, TRANSOM, 600], [x, TRANSOM / 2, front + 300]);
     baked(frontWall, vestSides, whiteFlat, false);
     // Tall narrow dark-glass slot in the hall's solid run.

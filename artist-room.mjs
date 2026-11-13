@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=polish-20261112f';
-import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113a';
+import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113b';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
 import { artistStudyMaps, artistSessionDetails } from './artist-studio-detail.mjs?v=artist-studio-20261025';
 import { HOME_LAYOUTS } from './home-office.mjs?v=polish-20261113a';

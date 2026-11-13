@@ -3,7 +3,7 @@ import { institutionalOak, drawInstitutionalCampus, enrichInstitutionalRoom, det
 import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=polish-20261111f';
 import { addCampusLife } from './campus-lived-in.mjs?v=polish-20261111f';
 import { attachVista } from './window-vista.mjs?v=polish-20261112f';
-import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113a';
+import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113b';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 
 // Shared architectural kit. The shell (floor, walls, daylight window, door,

@@ -9,7 +9,7 @@
 // storey: how far a room is above the ground outside, unless the room says. hours: the place's own light per hour,
 // laid over HOURS. hazeFar: the distance at which the air has its full say.
 import * as THREE from 'three';
-import { BOX as BOX_UNIT, QUAD, colour, M, ground as groundPlane, ridge, crown, tree, conifer, redwood, fanPalm, featherPalm, shrub, hedge, flowers, grass, rock, house, building, streetLamp, car, bench, pathLight, utilityPole, wire, fence, masonry, pole, limb, spray } from './window-scenery-kit.mjs?v=polish-20261113a';
+import { BOX as BOX_UNIT, QUAD, colour, M, ground as groundPlane, ridge, crown, tree, conifer, redwood, fanPalm, featherPalm, shrub, hedge, flowers, grass, rock, house, building, streetLamp, car, bench, pathLight, utilityPole, wire, fence, masonry, pole, limb, spray } from './window-scenery-kit.mjs?v=polish-20261113b';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const pick = (r, list) => list[Math.floor(r() * list.length)];

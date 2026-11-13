@@ -146,7 +146,7 @@ async function installPost(renderer, scene, q, deskWidth, screens, info) {
       // Meshes with their own onBeforeRender (the film's LED floor bounce reads its shader's uniforms there) and the LED
       // surface overlays are hidden in the glow pass, never swapped to the black material (HQ21 crash on awareness).
       const custom = o.onBeforeRender !== THREE.Object3D.prototype.onBeforeRender;
-      if (bloomOnly) { if (named(o, bloomOnly)) n++; else if (custom || named(o, RECEIVER)) muted.push(o); else others.push(o); return; }
+      if (bloomOnly) { if (o.userData.windowScenery !== true && named(o, bloomOnly)) n++; else if (custom || named(o, RECEIVER)) muted.push(o); else others.push(o); return; }
       // bloomReceivers false: the surface overlays are hidden (not blacked: their own onBeforeRender needs their shader) in the glow pass.
       if (q.bloomReceivers === false && named(o, RECEIVER)) { muted.push(o); return; }
       const isScreen = screenMeshes.has(o) || (m?.isMeshBasicMaterial && m.map && named(o, SCREENISH));
@@ -181,7 +181,8 @@ async function installPost(renderer, scene, q, deskWidth, screens, info) {
       }
       const ac = this.autoClear; this.autoClear = false;
       try {
-        if (gtao) { gtao.camera = cam; gtao.render(this, null, null); this.setRenderTarget(null); aoQuad.render(this); }   // AO multiplied onto the canvas, masked
+        if (gtao) { const hid = []; scene.traverse(o => { if (o.userData.windowScenery === true && o.visible) { o.visible = false; hid.push(o); } });   // the scenery outside the window: no AO from it (its shader keeps it to the openings; the AO pass draws it without)
+          gtao.camera = cam; gtao.render(this, null, null); for (const o of hid) o.visible = true; this.setRenderTarget(null); aoQuad.render(this); }   // AO multiplied onto the canvas, masked
         if (bloom) { bloom.renderToScreen = false; bloom.render(this, null, glowRT); this.setRenderTarget(null); this.autoClear = false; glowQuad.render(this); }
       } finally { this.autoClear = ac; }
     } finally { this.shadowMap.autoUpdate = auto; this.setRenderTarget(null); busy = false; }

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=polish-20261112f';
-import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113a';
+import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113b';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 import { HOME_SESSIONS, homeSessionPinboard, buildHomeSessionDetail } from './home-session-detail.mjs?v=home-sessions-20261022';
 import { homeComfortDetails } from './home-comfort-detail.mjs?v=commons-home-comfort-20261024';

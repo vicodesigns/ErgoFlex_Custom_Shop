@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=polish-20261112f';
-import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113a';
+import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113b';
 import {loungeDesign} from './lounge-design.mjs';
 import {buildLoungeChess} from './lounge-table-games.mjs';
 import {dressContemporaryLounge} from './lounge-contemporary-detail.mjs';
@@ -54,7 +54,7 @@ export function buildContemporaryLounge(room,root,l,h,modes){
  const skyCanvas=document.createElement('canvas');skyCanvas.width=skyCanvas.height=512;const sky=own(new THREE.CanvasTexture(skyCanvas));sky.colorSpace=THREE.SRGBColorSpace;
  const view=mesh(left,new THREE.PlaneGeometry(ww,wh),new THREE.MeshBasicMaterial({map:sky}),[-w/2-50,low+wh/2,wz]);view.rotation.y=Math.PI/2;view.castShadow=false;
  // Or a modelled street behind the glass (window-scenery.mjs): a high-rise apartment, a glass balustrade outside.
- const outlookView=windowView('lounge'),windowVista=outlookView==='photo'?attachVista(view,'city'):null;if(windowVista)room.windowViewReady=Promise.all([room.windowViewReady,windowVista.ready]);
+ const outlookView=windowView('lounge-contemporary'),windowVista=outlookView==='photo'?attachVista(view,'city'):null;if(windowVista)room.windowViewReady=Promise.all([room.windowViewReady,windowVista.ready]);
  const scenery=outlookView==='scenery'?attachScenery(view,'city',{floor:-(low+wh/2),seed:3505,storey:30000,variant:'glass'}):null;
  // The glazing and 200 mm curtain margins remain completely unoccupied.
  const media=fixture(right,'modern-media-wall','Timber-framed cinema and acoustic wall',[w/2-12,0,l.loungeZ],-Math.PI/2);

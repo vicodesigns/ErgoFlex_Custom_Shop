@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113a';
+import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113b';
 import {interiorCraftFinishes} from './interior-craft-detail.mjs';
 import {buildChildActivities} from './child-room-activities.mjs';
 import {CHILD_AGE_STAGES,childAgeStage,childModesForStage} from './child-growth-profiles.mjs';
@@ -233,7 +233,7 @@ export function buildChildRoom(room,root,l,h){
  const interiors=enhanceChildInteriors({room,root,layout:l,helpers:h,materials,groups}),stageDecor=enhanceChildGrowth({room,root,layout:l,helpers:h,materials,groups}),personality=enhanceChildPersonality({room,root,layout:l,helpers:h,materials,groups}),earlyLife=buildEarlyYearsLife({root,layout:l,helpers:h,materials,groups,footprint}),wallLife=enhanceEarlyYearsWalls({root,layout:l,helpers:h,materials,groups}),lighting=enhanceChildLighting({root,layout:l,helpers:h,groups,skyMat});let lastSky=null;
  enhanceChildMaterials({room,root,layout:l,helpers:h,materials,groups});
  room.roomAtmosphere=(id,accent=1)=>{const phase=modes[id]?id:'morning',m=modes[phase],cue=CHILD_LIGHT_CUES[phase];activity.update(phase);interiors.update(phase);stageDecor.update(phase);personality.update(phase);earlyLife.update(phase);wallLife.update(phase);
-  if(lastSky!==phase){paintSky(phase);lastSky=phase;}scenery?.setHour(phase);skyMat.color.set('#ffffff');skyMat.emissiveIntensity=cue.window;skyMat.emissive.set(m.sky[1]);
+  if(lastSky!==phase){paintSky(phase);lastSky=phase;}scenery?.setHour(phase==='party'?'afternoon':phase);skyMat.color.set('#ffffff');skyMat.emissiveIntensity=cue.window;skyMat.emissive.set(m.sky[1]);
   blind.scale.y=wh*cue.blind;blind.position.y=low+wh-blind.scale.y/2;
   moonGlow.emissiveIntensity=cue.moon*.9;readingGlow.emissiveIntensity=cue.reading*.8;
   lights.forEach(({light,power,channel})=>{light.intensity=power*cue[channel]*accent;light.color.set(channel==='moon'?'#ffca85':phase==='afternoon'?'#f3e4cb':'#ffd6a0');});

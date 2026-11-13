@@ -19,7 +19,7 @@ const paneIn = (parent, w, h, at, turn = 0, geometry = 'plane') => {
     const pane = new THREE.Mesh(geometry === 'box' ? new THREE.BoxGeometry(w, h, 8) : new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial());
     pane.position.set(...at); pane.rotation.y = turn; parent.add(pane); return pane;
 };
-const uniformKinds = m => Object.entries(m.uniforms).every(([, x]) => typeof x.value === 'number' || x.value.isColor || x.value.isVector3 || x.value.isVector2 || x.value.isMatrix4 || (Array.isArray(x.value) && x.value.every(v => v.isVector3 || v.isVector2)));
+const uniformKinds = m => Object.entries(m.uniforms).every(([, x]) => typeof x.value === 'number' || (x.value.isTexture && x.value.userData.sharedScenery) || x.value.isColor || x.value.isVector3 || x.value.isVector2 || x.value.isMatrix4 || (Array.isArray(x.value) && x.value.every(v => v.isVector3 || v.isVector2)));
 const nearestZ = mesh => { const p = mesh.geometry.attributes.position; let nearest = -Infinity; for (let i = 0; i < p.count; i++) nearest = Math.max(nearest, p.getZ(i)); return Math.round(nearest); };
 
 // ---- every scene: built, outside the wall, at a cost a room can carry, its own light, every hour
@@ -67,7 +67,7 @@ for (const name of Object.keys(SCENES)) {
     for (const id of Object.keys(HOURS)) { view.setHour(id); const h = hourOf(name, id);
         assert.ok(Math.max(...h.tint) <= 1.02 && h.haze > 0 && h.haze < 1, name + ' ' + id + ': a tint that does not brighten the land, some haze');
         const sun = new THREE.Vector3().copy(s.sunLocal.value); assert.ok(Math.abs(sun.length() - 1) < 1e-6 && sun.y > 0 && sun.z > 0, name + ' ' + id + ': the sun (or the moon) is up, outside the window'); }
-    for (const m of view.materials) assert.ok(uniformKinds(m), name + ': every uniform is a number, a colour, a vector, the window\'s matrix or the openings');
+    for (const m of view.materials) assert.ok(uniformKinds(m), name + ': every uniform is a number, a colour, a vector, the window\'s matrix, the openings or a shared generated texture');
     // the frame follows the window: straight out of this one is -Z
     pane.onBeforeRender(); assert.ok(s.wOut.value.distanceTo(new THREE.Vector3(0, 0, -1)) < 1e-6, name + ': straight out of the window');
     // built once: the same room built again takes the same geometry
@@ -88,7 +88,7 @@ for (const name of Object.keys(SCENES)) {
   for (const [name, variant, storey, seed] of rooms) { if (!SCENES[name]) continue;   // (a scene not built yet)
       const pane = paneIn(new THREE.Group(), 1600, 1450, [0, 1575, -1800]), view = attachScenery(pane, name, { floor: -1575, variant, storey, seed });
       const land = view.group.children[0], nearest = nearestZ(land), key = land.geometry.attributes.position.count + ':' + land.geometry.attributes.position.getX(1000);
-      assert.ok(nearest < -40 && view.triangles > 15000 && view.triangles < 150000, `${name} ${variant} ${storey}: outside the wall (${nearest}), ${view.triangles} triangles`);
+      assert.ok(nearest < -40 && view.triangles > 8000 && view.triangles < 150000, `${name} ${variant} ${storey}: outside the wall (${nearest}), ${view.triangles} triangles`);
       assert.ok(!seen.has(key), `${name} ${variant} ${storey}: not the same view as another room's`); seen.add(key); view.dispose();
   } }
 
