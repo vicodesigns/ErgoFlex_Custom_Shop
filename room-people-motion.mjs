@@ -158,6 +158,42 @@ const hash = (n, seed) => { let x = Math.imul((n | 0) ^ Math.imul(seed | 0, 0x9E
 const noise = (x, seed) => { const i = Math.floor(x), f = x - i, u = f * f * (3 - 2 * f); return lerp(hash(i, seed), hash(i + 1, seed), u) * 2 - 1; };
 export const seedOf = text => { let h = 2166136261; for (const c of String(text)) h = Math.imul(h ^ c.charCodeAt(0), 16777619); return h >>> 0; };
 
+
+// ---- where someone looks ------------------------------------------------------------------------------------------
+// The face's own forward, as a direction in the head bone's frame: in the character's standing-by posture the eyes are
+// on the desktop, FACE_DOWN degrees below the model's forward (+z; pose_lib stand_wait: spine 1+2+2, neck 7, head 8).
+// (Asked before a pose is solved: reading a posture loads it into the rig.)
+const FACE_DOWN = 20;
+const faceQ = Q(), gazeV = V(), lookV = V(), lookAxis = V(), lookTurn = Q();
+function faceOf(rig) {
+    if (rig.face) return rig.face;
+    const ids = Object.keys(rig.postures), id = ids.find(i => /stand-wait$/.test(i)) || ids.find(i => /stand/.test(i)) || ids[0], key = rig.key(id);
+    const down = THREE.MathUtils.degToRad(FACE_DOWN);
+    return rig.face = new THREE.Vector3(0, -Math.sin(down), Math.cos(down)).applyQuaternion(faceQ.copy(key.wq[rig.b.head]).invert()).normalize();
+}
+export const LOOK_YAW = .7, LOOK_PITCH = .42;      // radians the neck and head together turn toward a target, at most (40 and 24 degrees)
+// Turns the neck (.4) and the head (.6) so that the face points `amount` of the way to `target` (a point in the
+// model's frame), within LOOK_YAW / LOOK_PITCH of where the posture has it looking: small turns, never a broken neck.
+// fk() must be current; it is current afterwards.
+export function lookToward(rig, target, amount) {
+    if (!target || !(amount > 0)) return;
+    const b = rig.b, face = faceOf(rig), from = v7.copy(rig.wp[b.head]); from.y += .07;      // (the eyes: a little above the head bone)
+    gazeV.copy(face).applyQuaternion(rig.wq[b.head]); lookV.copy(target).sub(from); if (lookV.lengthSq() < 1e-6) return; lookV.normalize();
+    const wrap = a => Math.atan2(Math.sin(a), Math.cos(a)), clamp = THREE.MathUtils.clamp;
+    const yaw = clamp(wrap(Math.atan2(lookV.x, lookV.z) - Math.atan2(gazeV.x, gazeV.z)), -LOOK_YAW, LOOK_YAW) * amount;
+    const pitch = clamp(Math.asin(clamp(lookV.y, -1, 1)) - Math.asin(clamp(gazeV.y, -1, 1)), -LOOK_PITCH, LOOK_PITCH) * amount;
+    for (const [bone, share] of [[b.neck_01, .4], [b.head, .6]]) {
+        rig.turnWorld(bone, lookTurn.setFromAxisAngle(Y, yaw * share)); rig.fk();
+        gazeV.copy(face).applyQuaternion(rig.wq[b.head]); lookAxis.crossVectors(gazeV, Y);
+        if (lookAxis.lengthSq() > 1e-8) { rig.turnWorld(bone, lookTurn.setFromAxisAngle(lookAxis.normalize(), pitch * share)); rig.fk(); }
+    }
+}
+// Where a typist looks: the screen above and beyond the hands on the keys (a laptop's, just beyond them).
+function screenFrom(rig, l, r, lift, laptop, out) {
+    out.copy(l).add(r).multiplyScalar(.5); out.y += lift + (laptop ? .1 : .36); out.z += laptop ? .14 : .3; return out;
+}
+const screenAt = V();
+
 // ---- the person at the desk -----------------------------------------------------------------------------------------
 // keys: { sit: [key, ...], stand: [key, ...] (hands on the keyboard, built for key.deskHeight, lowest first; either may
 // be empty), wait: key | null (standing, arms loose) }.
@@ -196,7 +232,7 @@ export function solveDesk(rig, keys, input) {
     const mobile = keys.sit.length > 0 && keys.stand.length > 0, tau = mobile ? input.tau : keys.sit.length ? 0 : STAND_UP;
     const k = clamp01(input.k), ke = k * k * (3 - 2 * k), height = input.height, time = input.time, life = time === null || time === undefined ? 0 : input.life ?? 1, seed = input.seed | 0;
     const sit = byHeight(keys.sit, height), type = byHeight(keys.stand, height), wait = keys.wait || type?.a;
-    const b = rig.b, standing = tau >= STAND_UP / 2;
+    const b = rig.b, standing = tau >= STAND_UP / 2; if (life > 0) faceOf(rig);
     // how far along each part of standing up is
     const roll = ss(.05, .85, tau), rise = clamp01((tau - .95) / 1.4), core = sit ? ss(1.05, 2.4, tau) : 1, legs = sit ? ss(.95, 2.3, tau) : 1;
     // (the lean comes late enough that someone who has just sat down is upright again soon, not hunched at the keys)
@@ -245,6 +281,14 @@ export function solveDesk(rig, keys, input) {
             for (const [bone, share] of [[b.spine_01, .35], [b.spine_02, .35], [b.spine_03, .3], [b.neck_01, -.3], [b.head, -.4]]) { rig.turnWorld(bone, turn.setFromAxisAngle(X, back * share)); rig.fk(); }
         }
         if (upright > 0) { rig.turnWorld(b.pelvis, turn.setFromAxisAngle(Z, sway * 1.3)); rig.fk(); rig.turnWorld(b.spine_02, turn.setFromAxisAngle(Z, -sway * 1.1)); rig.fk(); }
+        // eyes on the screen: on the keys, standing by while the desk moves (the screen goes up and down with it), less
+        // while they lean in to get up; the drift and the glances down below come on top of it
+        const screenPair = standing ? type : sit;
+        if (screenPair) {
+            const L = rig.side.l.arm[3], R = rig.side.r.arm[3];
+            screenFrom(rig, blendV(v5, screenPair, L), blendV(v6, screenPair, R), screenPair.lift, false, screenAt);
+            lookToward(rig, screenAt, .85 * (1 - lean / THREE.MathUtils.degToRad(36)));
+        }
         const glance = ss(.62, .8, noise(time * .16 + 31, seed)), yaw = (noise(time * .19, seed + 5) * .07 + noise(time * .053 + 3, seed + 6) * .09) * life, nod = (noise(time * .23 + 11, seed + 7) * .03 + glance * .2 * (1 - ke * .35)) * life;
         rig.turnWorld(b.neck_01, turn.setFromAxisAngle(Y, yaw * .4).multiply(turn2.setFromAxisAngle(X, nod * .4 + .004 * breath))); rig.fk();
         rig.turnWorld(b.head, turn.setFromAxisAngle(Y, yaw * .6).multiply(turn2.setFromAxisAngle(X, nod * .6))); rig.fk();
@@ -386,6 +430,7 @@ export const WORKOUTS = new Set(['gym-cycle', 'gym-pullup', 'gym-press', 'gym-cu
 export function solveStill(rig, key, input) {
     const time = input.time ?? 0, seed = input.seed | 0, life = input.life ?? 1, b = rig.b, pose = key.pose;
     if (WORKOUTS.has(pose)) return solveWorkout(rig, key, input);
+    if (life > 0) faceOf(rig);
     rig.load(key);
     if (!(life > 0)) { rig.fk(); return; }
     const standing = ON_FEET.has(pose), sway = standing ? noise(time * .11 + 7.3, seed) * .014 * life : 0;
@@ -394,8 +439,15 @@ export function solveStill(rig, key, input) {
     rig.fk();
     if (standing) { rig.turnWorld(b.pelvis, turn.setFromAxisAngle(Z, sway * 1.3)); rig.fk(); rig.turnWorld(b.spine_02, turn.setFromAxisAngle(Z, -sway * 1.1)); rig.fk(); }
     rig.turnWorld(b.spine_02, turn.setFromAxisAngle(X, -.008 * breath)); rig.fk(); rig.turnWorld(b.spine_03, turn.setFromAxisAngle(X, -.011 * breath)); rig.fk();
-    const fixed = INTENT.has(pose) ? .35 : 1, glance = INTENT.has(pose) ? 0 : ss(.62, .8, noise(time * .16 + 31, seed));
-    const yaw = (noise(time * .19, seed + 5) * .07 + noise(time * .053 + 3, seed + 6) * .09) * life * fixed, nod = (noise(time * .23 + 11, seed + 7) * .03 * fixed + glance * .14) * life;
+    // where they look: a typist at the screen (or the laptop), anyone else where the room asks (input.look: someone they
+    // talk to, the desk that moves; a point in the model's frame, input.lookAmount of the way); someone with nothing
+    // to look at lets the eyes wander further than someone at work
+    let target = input.look || null, amount = input.lookAmount ?? .75;
+    if (!target && TYPES.has(pose)) { target = screenFrom(rig, key.wp[rig.side.l.arm[3]], key.wp[rig.side.r.arm[3]], 0, pose === 'sit-laptop', screenAt); amount = .8; }
+    if (target) lookToward(rig, target, amount * life);
+    const idle = !target && !INTENT.has(pose) ? 2.2 : 1;
+    const fixed = INTENT.has(pose) ? .35 : target ? .6 : 1, glance = INTENT.has(pose) ? 0 : ss(.62, .8, noise(time * .16 + 31, seed));
+    const yaw = (noise(time * .19, seed + 5) * .07 + noise(time * .053 + 3, seed + 6) * .09) * life * fixed * idle, nod = (noise(time * .23 + 11, seed + 7) * .03 * fixed + glance * .14) * life;
     rig.turnWorld(b.neck_01, turn.setFromAxisAngle(Y, yaw * .4).multiply(turn2.setFromAxisAngle(X, nod * .4 + .004 * breath))); rig.fk();
     rig.turnWorld(b.head, turn.setFromAxisAngle(Y, yaw * .6).multiply(turn2.setFromAxisAngle(X, nod * .6))); rig.fk();
     if (standing) for (const s of ['l', 'r']) { const [thigh, calf, foot] = rig.side[s].leg; rig.reach(thigh, calf, foot, key.wp[foot]); rig.reach(thigh, calf, foot, key.wp[foot]); rig.setWorld(foot, key.wq[foot]); }
