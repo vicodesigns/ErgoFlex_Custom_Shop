@@ -5,16 +5,16 @@ import * as THREE from 'three';
 import { attachScenery, windowView, HOURS, LEVEL, SCENES, DEFAULT_VIEW, hourOf, ORDER } from '../window-scenery.mjs';
 import { sharedTextures } from '../window-scenery-kit.mjs?v=polish-20261113b';   // (the stamp the scenery module imports it with: one instance)
 
-// ---- which view a window shows: the photograph unless asked otherwise, the default in one place
-assert.equal(windowView('home'), 'photo', 'the default view is the photograph'); assert.equal(windowView(), 'photo');
-globalThis.__efWindowView = 'scenery'; assert.equal(windowView('gym'), 'scenery');
+// ---- which view a window shows: the 3D scenery unless asked otherwise, the default in one place
+assert.equal(windowView('home'), 'scenery', 'the default view is the 3D scenery'); assert.equal(windowView(), 'scenery');
+globalThis.__efWindowView = 'photo'; assert.equal(windowView('gym'), 'photo');
 globalThis.__efWindowView = 'painted'; assert.equal(windowView('gym'), 'painted');
-globalThis.__efWindowView = 'hologram'; assert.equal(windowView('gym'), 'photo', 'an unknown view is the default');
+globalThis.__efWindowView = 'hologram'; assert.equal(windowView('gym'), 'scenery', 'an unknown view is the default');
 delete globalThis.__efWindowView;
-DEFAULT_VIEW.music = 'scenery'; assert.equal(windowView('music'), 'scenery', 'a room can have its own default'); assert.equal(windowView('gym'), 'photo');
-DEFAULT_VIEW['*'] = 'scenery'; assert.equal(windowView('gym'), 'scenery', 'one line makes scenery every room\'s default');
-globalThis.__efWindowView = 'photo'; assert.equal(windowView('music'), 'photo', 'asking for the photograph still works when scenery is the default');
-delete globalThis.__efWindowView; delete DEFAULT_VIEW.music; DEFAULT_VIEW['*'] = 'photo';
+DEFAULT_VIEW.music = 'photo'; assert.equal(windowView('music'), 'photo', 'a room can have its own default'); assert.equal(windowView('gym'), 'scenery');
+DEFAULT_VIEW['*'] = 'photo'; assert.equal(windowView('gym'), 'photo', 'one line makes the photograph every room\'s default');
+globalThis.__efWindowView = 'scenery'; assert.equal(windowView('music'), 'scenery', 'asking for the scenery still works when the photograph is the default');
+delete globalThis.__efWindowView; delete DEFAULT_VIEW.music; DEFAULT_VIEW['*'] = 'scenery';
 
 const paneIn = (parent, w, h, at, turn = 0, geometry = 'plane') => {
     const pane = new THREE.Mesh(geometry === 'box' ? new THREE.BoxGeometry(w, h, 8) : new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial());

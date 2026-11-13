@@ -3,7 +3,7 @@
 Vico, November 12: the windows "are too bright and compete with the room environment"; "I am kinda liking the old
 versions"; "open to 3D environments outside of the windows to make the depth and feeling of more immersion".
 November 13, after the garden trial in the home room: "I like that 3D like environment for the outside of the window",
-for all the environments. The default stays the photograph until he chooses (one line, below).
+for all the environments. The 3D scenery is the default since Nov 13 2026 (his choice; one line, below).
 
 ## What it is
 
@@ -107,8 +107,8 @@ The scifi room has no window to the outside (a space station), so it has no scen
 
 `windowView(room)` picks the view: `?window=scenery` in the Studio's address (`?window=painted` for the canvas the
 room paints itself, `?window=photo` for the photograph), `localStorage['ergoflex.windowView']`, or
-`globalThis.__efWindowView`; otherwise `DEFAULT_VIEW` in `window-scenery.mjs`. Making scenery the default:
-`DEFAULT_VIEW = { '*': 'scenery' }` for every room, or add one room, e.g. `music: 'scenery'`. The Humboldt commons is
+`globalThis.__efWindowView`; otherwise `DEFAULT_VIEW` in `window-scenery.mjs`. The 3D scenery is the default for every
+room since Nov 13 2026 (`DEFAULT_VIEW = { '*': 'scenery' }`); one room gets its photograph back with e.g. `library: 'photo'`. The Humboldt commons is
 `library-humboldt` and the contemporary lounge `lounge-contemporary` (their own ids, so they can go first). A film chapter whose room
 changes needs its re-render. Test stills of a chapter: add `"ergoflex.windowView": "scenery"` to a copy of the seed
 passed to `render-cut.cjs --storage`.

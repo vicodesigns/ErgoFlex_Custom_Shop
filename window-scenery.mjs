@@ -39,9 +39,9 @@ export const LEVEL = .8;
 
 // What every room's windows show unless asked otherwise ('photo', 'scenery' or 'painted'). '*' is every room; a room's
 // id (home, creative, library, library-humboldt, occmedialab, highschool, gym, gaming, music, workshop, lounge,
-// lounge-contemporary, ...) overrides it for that room. Making scenery the default is one line here: '*': 'scenery',
-// or e.g. music: 'scenery' for one room.
-export const DEFAULT_VIEW = { '*': 'photo' };
+// lounge-contemporary, ...) overrides it for that room, e.g. library: 'photo' to give one room its photograph back.
+// The 3D scenery is the default since Nov 13 2026 (Vico's choice, after seeing it in the Studio).
+export const DEFAULT_VIEW = { '*': 'scenery' };
 
 // The hour outside. tint: what the light does to the land's colours. zenith / horizon: the sky. sun: [degrees to the
 // right of straight out, degrees up, colour, strength in the sky] (the moon after dark). light: [how much the sky lights
