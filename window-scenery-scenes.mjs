@@ -217,6 +217,75 @@ function humboldt(k, ctx) {
     ridge(b, r, -76000, ground, L - 40000, R + 40000, 14000, '#4a5d52', { step: 2500 });
 }
 
+// ---- a city street (the gym, the music room; the neon version for the gaming room). Our building's front: a planter
+// and railings, the pavement with plane trees and street lamps, a road with parked cars, the far pavement, a row of
+// four- to seven-storey buildings with shops at street level, taller blocks behind them, towers far off in the haze.
+// The storey (the room's floor above the street) decides how much of the street is seen. After dark: lamps and their
+// pools, lit windows and shopfronts, the odd car's lights; neon: signs over the shops and on the towers, a violet glow.
+const NEON = ['#ff4fa8', '#46d6ff', '#a066ff', '#ff9a4a', '#5cf0a8'];
+function city(k, ctx, { neon = false } = {}) {
+    const { land: b, r } = k, ground = ctx.ground, cx = (ctx.left + ctx.right) / 2, L = ctx.left - 30000, R = ctx.right + 30000;
+    const kerb = -5200, far = -15400, across = -19000, asphalt = colour('#4a4c50'), paving = colour('#a29d94'), out = new THREE.Color();
+    // a side street runs away from the window's line across the road: a view between the blocks to the towers
+    const crossX = cx + (r() - .5) * 5000, crossW = 11000, inCross = (x, pad = 0) => Math.abs(x - crossX) < crossW / 2 + pad;
+    const fill = (x, z) => {
+        if (z < far - 2600 && inCross(x)) { const lane = Math.abs(x - crossX) < 70 && (z % 6000 + 6000) % 6000 < 3000; return lane ? out.set(.62, .6, .52) : Math.abs(x - crossX) > crossW / 2 - 2600 ? out.copy(paving).multiplyScalar(.95) : out.copy(asphalt).multiplyScalar(.92 + r() * .1); }
+        if (z > kerb) return out.copy(paving).multiplyScalar((Math.floor(x / 900) + Math.floor(z / 900)) % 2 ? .94 : 1).multiplyScalar(.95 + r() * .05);
+        if (z > kerb - 250 || (z < far && z > far - 250)) return out.copy(paving).multiplyScalar(1.08);
+        if (z > far) { const lane = Math.abs(z - (kerb + far) / 2) < 70 && (x % 6000 + 6000) % 6000 < 3000; return lane ? out.set(.62, .6, .52) : out.copy(asphalt).multiplyScalar(.92 + r() * .1); }
+        return out.copy(paving).multiplyScalar(.92 + r() * .06); };
+    land(b, ground, L, R, -60, -24000, -90000, fill, 600);
+    // our side: a planter and railings against the building (seen from the ground floor), then the pavement
+    if (ctx.storey < 2500) {
+        b.box([ctx.width + 6000, 450, 900], [cx, ground + 225, -700], '#8f8a82');
+        for (let x = ctx.left - 3000; x < ctx.right + 3000; x += 420 + r() * 200) shrub(b, r, x, ground + 450, -700 + (r() - .5) * 300, 230 + r() * 120, pick(r, ['#58744c', '#4f6b47', '#62804f']), { size: 70 });
+        for (let x = ctx.left - 3000; x <= ctx.right + 3000; x += 130) b.box([22, 1000, 22], [x, ground + 950, -1250], '#2e3134');
+        b.box([ctx.width + 6000, 40, 50], [cx, ground + 1450, -1250], '#2e3134');
+    }
+    // the near pavement's trees and lamps, the far pavement's
+    // (never right in front of the window: the street is what the room looks at)
+    for (let x = L + 8000 + r() * 3000; x < R - 8000; x += 9000 + r() * 3000) {
+        if (Math.abs(x - cx) < ctx.width / 2 + 2600) continue;
+        tree(b, r, x, ground, kerb + 1200, { height: 9000 + r() * 2000, hex: pick(r, ['#647f4e', '#6c8754', '#5c7849']), bark: '#8b8170', shape: 'tall' });
+        b.box([1200, 30, 1200], [x, ground + 15, kerb + 1200], '#5b5045');
+    }
+    for (let x = L + 4000; x < R; x += 16000) streetLamp(k, x, ground, kerb + 500, { height: 7000, reach: 1600, face: -1, hex: neon ? '#ffd2a8' : '#ffd29a' });
+    for (let x = L + 12000; x < R; x += 16000) streetLamp(k, x, ground, far - 500, { height: 7000, reach: 1600, face: 1, hex: neon ? '#ffd2a8' : '#ffd29a' });
+    for (let x = L + 6000 + r() * 4000; x < R - 8000; x += 10000 + r() * 4000) if (!inCross(x, 1500)) tree(b, r, x, ground, far - 1500, { height: 8500 + r() * 2000, hex: pick(r, ['#647f4e', '#5c7849']), bark: '#8b8170', shape: 'tall' });
+    // parked cars both sides, a couple moving (their lamps on after dark)
+    for (let x = L + 5000; x < R - 5000; x += 5600 + r() * 2500) if (r() < .75) car(k, r, x, ground, kerb - 1200);
+    for (let x = L + 5000; x < R - 5000; x += 5600 + r() * 2500) if (r() < .75) car(k, r, x, ground, far + 1200);
+    for (const [x, z, dir] of [[cx - 9000 + r() * 4000, kerb - 3700, 1], [cx + 6000 + r() * 5000, far + 3700, -1]]) {
+        car(k, r, x, ground, z); k.lights.box([60, 160, 1400], [x + dir * 2250, ground + 650, z], '#fff2dc'); k.lights.box([60, 140, 1400], [x - dir * 2250, ground + 700, z], '#d23a2a');
+        k.halos.add(x + dir * 2400, ground + 650, z, 700, '#fff0d8', .35); b.light(x + dir * 5000, ground + 400, z, '#fff0d8', 4500, .35);
+    }
+    // the row across the street: varied widths and heights, shops at street level
+    const walls = neon ? ['#8d8a86', '#7a7470', '#a09a92', '#6e6a68', '#9a8f84'] : ['#b9ab97', '#c9bfae', '#a8907a', '#bdb4a6', '#9d8270', '#cfc6b8'];
+    const row = (x0, x1, depth, fn) => { for (let x = x0; x < x1;) { const width = Math.min(x1 - x, 9000 + r() * 9000); if (width > 4000) fn(x, width, depth); x += width; } };
+    const block = (x, width) => { const floors = 3 + Math.floor(r() * 4);
+        building(k, r, x + width / 2, ground, across - 7000, { width: width - 200, depth: 14000, floors, wall: pick(r, walls), litRate: neon ? .5 : .45, warm: neon ? .45 : .75, neon: neon ? NEON : null });
+        if (neon && r() < .5) { const c = pick(r, NEON), bx = x + width * (.15 + r() * .7); k.lights.box([380, 4200, 120], [bx, ground + 7500, across + 400], c); k.halos.add(bx, ground + 7500, across + 900, 2600, c, .3); b.light(bx, ground + 6000, across + 3000, c, 7000, .4); }
+    };
+    row(L, crossX - crossW / 2, 0, block); row(crossX + crossW / 2, R, 0, block);
+    // down the side street: its lamps, the sides of the blocks along it (windows on the street), a car going away
+    for (const side of [-1, 1]) for (let z = across - 16000; z > -50000; z -= 14000 + r() * 4000) {
+        const w = 12000, x = crossX + side * (crossW / 2 + w / 2), floors = 3 + Math.floor(r() * 5);
+        building(k, r, x, ground, z, { width: w, depth: 13000, floors, wall: pick(r, walls), litRate: neon ? .5 : .4, warm: .7, shops: false, side: -side, cornice: false });
+    }
+    for (let z = far - 6000; z > -52000; z -= 12000) for (const side of [-1, 1]) streetLamp(k, crossX + side * (crossW / 2 - 900), ground, z, { height: 6500, reach: 0, face: 1, hex: neon ? '#ffd2a8' : '#ffd29a', power: .8 });
+    { const z = -30000 - r() * 8000, x = crossX + 1800; car(k, r, x, ground, z, { turn: Math.PI / 2 }); k.lights.box([1300, 140, 60], [x, ground + 700, z + 2250], '#d23a2a'); k.halos.add(x, ground + 700, z + 2400, 800, '#ff4030', .3); }
+    // behind: taller blocks; far off: the towers
+    for (let x = L - 20000; x < R + 20000;) { const width = 14000 + r() * 12000;
+        building(k, r, x + width / 2, ground, -52000 - r() * 10000, { width, depth: 18000, floors: 9 + Math.floor(r() * 9), wall: pick(r, walls), style: r() < .4 ? 'band' : 'punched', bays: 5, shops: false, litRate: neon ? .5 : .32, warm: .6, cornice: r() < .5 });
+        x += width + 2000 + r() * 6000; }
+    for (let x = L - 60000; x < R + 60000;) { const width = 16000 + r() * 16000, floors = 18 + Math.floor(r() * 30);
+        building(k, r, x + width / 2, ground, -105000 - r() * 30000, { width, depth: 20000, floors, storey: 3600, wall: pick(r, ['#9aa3aa', '#a9adb0', '#8a949c', '#b2aa9e']), glass: '#56646f', style: 'band', bays: 6, shops: false, litRate: neon ? .55 : .3, warm: .5, cornice: false });
+        if (neon && r() < .6) { const c = pick(r, NEON), h = floors * 3600; k.lights.box([width * .7, 1600, 200], [x + width / 2, ground + h - 2500, -105000 + 10000 + 300], c); k.halos.add(x + width / 2, ground + h - 2500, -94000, width * .5, c, .25); }
+        x += width + 4000 + r() * 12000; }
+}
+const CITY_NIGHT = { night: { horizon: '#3a3a4e', air: '#2a2c3a', stars: .25, tint: [.13, .14, .2] }, party: { horizon: '#47385e', air: '#2e2844', stars: .15 } };
+const NEON_NIGHT = { evening: { horizon: '#d98a70', zenith: '#4a4f82' }, night: { zenith: '#120f2a', horizon: '#4d3466', air: '#2c2342', stars: .1, tint: [.13, .12, .2] }, party: { zenith: '#16102e', horizon: '#5a3270', air: '#33264a', stars: .05 } };
+
 // ---- Southern California, near the coast: palms, stucco and concrete, bright hazy air.
 // An agave or aloe: a rosette of stiff pointed leaves.
 function agave(b, r, x, ground, z, size = 500, hex = '#7f9a84') {
@@ -318,6 +387,7 @@ export const SCENES = {
         evening: { tint: [.62, .56, .55], zenith: '#56607c', horizon: '#b99a8a', sun: [36, 6, '#ffb07a', .6], clouds: .8, haze: .66, air: '#9a8c86' },
         night: { tint: [.09, .11, .15], zenith: '#0d1420', horizon: '#26303a', clouds: .9, haze: .6, air: '#1e2730', stars: .15 },
         party: { tint: [.12, .12, .2], zenith: '#151a32', horizon: '#33304e', clouds: .85, haze: .6, air: '#262640', stars: .1 } } },
+    city: { build: (k, ctx) => city(k, ctx), storey: 3400, hazeFar: 90000, lampLevel: .78, hours: CITY_NIGHT },
     'socal-campus': { build: (k, ctx) => socal(k, ctx, 'campus'), storey: 4200, hazeFar: 110000, hours: SOCAL },
     'beach-school': { build: (k, ctx) => socal(k, ctx, 'field'), storey: 0, hazeFar: 110000, haloLevel: .8, hours: SOCAL }
 };
