@@ -38,6 +38,7 @@ const ROLL = .265;                     // metres the chair rolls back before its
 const SWAP = 1.45;                     // seconds into standing up at which the standing model takes over from the seated one
 const SCOOT = .09;                     // they slide to the front of the seat as they lean in (the chair's base clears their heels)
 const NUDGE = .15;                     // and how much further the calves push it as the knees straighten
+const SIT_UPRIGHT = 7;                 // degrees the back comes up from the built seated postures while they sit at the keys (life on)
 
 // ---- driver --------------------------------------------------------------------------------------------------
 // desc: { sit: { lo, hi } | null, stand: { lo, hi } | null }: the desk heights (inches) at which the seated and
@@ -235,6 +236,14 @@ export function solveDesk(rig, keys, input) {
         // breathing lifts the chest; the hips roll into the standing leg; the head drifts and now and then looks down at
         // the hands or across the room
         rig.turnWorld(b.spine_02, turn.setFromAxisAngle(X, -.008 * breath)); rig.fk(); rig.turnWorld(b.spine_03, turn.setFromAxisAngle(X, -.011 * breath)); rig.fk();
+        // seated, the built typing postures sit 8 to 11 degrees forward of upright (a hunch at the keys): the back comes up
+        // over the hips while they sit (not while they lean in to stand), the head keeps most of its line to the screen and
+        // the hands stay on the keys (the arms reach for them below); the pelvis stays on the seat
+        const seated = sit ? 1 - ss(.35, .75, tau) : 0;      // (whole whenever there is life: the posture, not the breathing)
+        if (seated > 0) {
+            const back = -THREE.MathUtils.degToRad(SIT_UPRIGHT) * seated;
+            for (const [bone, share] of [[b.spine_01, .35], [b.spine_02, .35], [b.spine_03, .3], [b.neck_01, -.3], [b.head, -.4]]) { rig.turnWorld(bone, turn.setFromAxisAngle(X, back * share)); rig.fk(); }
+        }
         if (upright > 0) { rig.turnWorld(b.pelvis, turn.setFromAxisAngle(Z, sway * 1.3)); rig.fk(); rig.turnWorld(b.spine_02, turn.setFromAxisAngle(Z, -sway * 1.1)); rig.fk(); }
         const glance = ss(.62, .8, noise(time * .16 + 31, seed)), yaw = (noise(time * .19, seed + 5) * .07 + noise(time * .053 + 3, seed + 6) * .09) * life, nod = (noise(time * .23 + 11, seed + 7) * .03 + glance * .2 * (1 - ke * .35)) * life;
         rig.turnWorld(b.neck_01, turn.setFromAxisAngle(Y, yaw * .4).multiply(turn2.setFromAxisAngle(X, nod * .4 + .004 * breath))); rig.fk();

@@ -127,11 +127,13 @@ for (const who of ['maya', 'andre', 'grace', 'noah', 'sam']) {
     solveDesk(rig, actor.keys, { tau: 2.6, k: .4, height: 43, time: 99, seed: 7 }); solveDesk(rig, actor.keys, { tau: 0, k: 1, height: 28, time: 3, seed: actor.seed });
     solveDesk(rig, actor.keys, input); assert.deepEqual(snapshot(rig), first, who + ': same inputs, same pose');
     // life: small, and it keeps the hands on the keys and the feet on the floor
+    // (with life on, the seated back sits upright, SIT_UPRIGHT: the head is measured from that pose, with life too small to move it)
+    solveDesk(rig, actor.keys, { tau: 0, k: 1, height: 28, time: 0, seed: actor.seed, life: 1e-9 }); const upright = rig.wp[rig.b.head].clone(), uprightQ = rig.wq[rig.b.head].clone();
     let moved = 0;
     for (let time = 0; time < 40; time += .37) {
         solveDesk(rig, actor.keys, { tau: 0, k: 1, height: 28, time, seed: actor.seed });
         assert.ok(rig.wp[L.arm[3]].distanceTo(sit28.wp[L.arm[3]]) < .003 && rig.wp[R.arm[3]].distanceTo(sit28.wp[R.arm[3]]) < .003, who + ': wrists stay on the keys while breathing');
-        const head = rig.wp[rig.b.head].distanceTo(sit28.wp[rig.b.head]); assert.ok(head < .03, who + ': the head moves a little, not a lot'); moved = Math.max(moved, 1 - Math.abs(rig.wq[rig.b.head].dot(sit28.wq[rig.b.head])));
+        const head = rig.wp[rig.b.head].distanceTo(upright); assert.ok(head < .03, who + ': the head moves a little, not a lot'); moved = Math.max(moved, 1 - Math.abs(rig.wq[rig.b.head].dot(uprightQ)));
         solveDesk(rig, actor.keys, { tau: STAND_UP, k: 0, height: 36, time, seed: actor.seed });
         for (const s of [L, R]) assert.ok(rig.wp[s.leg[2]].distanceTo(actor.keys.wait.wp[s.leg[2]]) < 1e-4, who + ': feet stay put while the weight shifts');
     }
