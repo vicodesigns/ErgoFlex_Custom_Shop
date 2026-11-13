@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=polish-20261112f';
+import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113a';
 import { interiorCraftFinishes } from './interior-craft-detail.mjs?v=natural-finishes-20261104';
 import { HOME_SESSIONS, homeSessionPinboard, buildHomeSessionDetail } from './home-session-detail.mjs?v=home-sessions-20261022';
 import { homeComfortDetails } from './home-comfort-detail.mjs?v=commons-home-comfort-20261024';
@@ -565,7 +566,9 @@ export function buildHomeOffice(room, root, layout, helpers) {
     const skyMap = new THREE.CanvasTexture(skyCanvas); skyMap.colorSpace = THREE.SRGBColorSpace;
     const sky = box(back, [ww, wh, 8], [wx, bottom + wh / 2, bz - 65], new THREE.MeshBasicMaterial({ map: skyMap }));
     // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
-    const windowVista = attachVista(sky, 'garden'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
+    // A trial (window-scenery.mjs): a modelled garden behind the glass instead of the photograph, or the painted canvas alone.
+    const view = windowView(), scenery = view === 'scenery' ? attachScenery(sky, 'garden', { width: ww, height: wh, floor: -(bottom + wh / 2) }) : null;
+    const windowVista = view === 'photo' ? attachVista(sky, 'garden') : null; if (windowVista) room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     sky.castShadow = false; sky.receiveShadow = false;
     for (const x of [left, wx, right]) box(back, [35, wh + 65, 65], [x, bottom + wh / 2, bz + 8], trim);
     for (const y of [bottom, bottom + wh / 2, bottom + wh]) box(back, [ww + 65, 35, 65], [wx, y, bz + 8], trim);
@@ -837,9 +840,9 @@ export function buildHomeOffice(room, root, layout, helpers) {
         poolGain.v = accent; pools.apply(modeId); dropZone(modeId);
         const sm = sunMode(); sun.update(sm === 'patch' ? modeId : 'night'); sunLight?.update(modeId);
         paintView(skyCanvas.getContext('2d'), skyCanvas.width, skyCanvas.height, mode, look);
-        skyMap.needsUpdate = true; windowVista.setPhase(modeId);
+        skyMap.needsUpdate = true; windowVista?.setPhase(modeId); scenery?.setHour(modeId);
         // The garden photograph is a daylight picture: grade it down to golden hour in the evening.
-        if (modeId === 'evening') windowVista.material.uniforms.gain.value.multiply(new THREE.Vector3(.72, .6, .52));
+        if (modeId === 'evening' && windowVista) windowVista.material.uniforms.gain.value.multiply(new THREE.Vector3(.72, .6, .52));
         paintClock(clockCanvas.getContext('2d'), 256, look.time); clockMap.needsUpdate = true;
         const drop = Math.max(60, look.shade * wh); blind.scale.y = drop; shadeMap.repeat.set(1, Math.max(1, drop / 210));
         lights.forEach(({light,power},i)=>{light.intensity=power*mode.practical*accent*(HOME_SESSIONS[modeId]||HOME_SESSIONS.afternoon).light[i];});

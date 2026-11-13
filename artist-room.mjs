@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=polish-20261112f';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
 import { artistStudyMaps, artistSessionDetails } from './artist-studio-detail.mjs?v=artist-studio-20261025';
-import { HOME_LAYOUTS } from './home-office.mjs?v=polish-20261112f';
+import { HOME_LAYOUTS } from './home-office.mjs?v=polish-20261113a';
 import { createSunPatch } from './room-sun-patch.mjs?v=polish-20261111f';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 
