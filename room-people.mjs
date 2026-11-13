@@ -1573,6 +1573,15 @@ export class RoomPeople {
             actor.cover = rival === Infinity ? 1 : tied ? 0 : Math.abs(rival - actor.off) < 1e-6 ? 1 : THREE.MathUtils.smoothstep(rival - actor.off, -.5, .5);
             // someone with one stance only (seated, with the desk gone up past them) is not at the desk beyond the heights their poses reach
             if (!actor.mobile) actor.cover *= 1 - THREE.MathUtils.smoothstep(actor.off, HEIGHT_SOLID, HEIGHT_FIT);
+            // away from the desk for a moment: a film's own cast of the same character somewhere else, timed with `when` (Maya
+            // stretching while the gym's desk rises) is that person, so they are not at the desk as well. (A standing-by
+            // model, stand-wait, is an older cut's stand-in for the gap: the desk user fills that gap themselves, below.)
+            actor.away = 0;
+            if (time !== null) for (const o of this.people) {
+                const s = o.userData.person; if (!s.extra || s.desk || o.userData.personMissing || !this.allowed(s) || !this.filter?.when?.[this.keyOf(s)]) continue;
+                const person = this.library.entry(s.id)?.person; if (person && person.pose !== 'stand-wait' && person.character === actor.character) actor.away = Math.max(actor.away, this.present(s, time));
+            }
+            actor.cover *= 1 - actor.away;
         }
         this.resettle(mode, pose);
         for (const object of this.people) {
@@ -1824,7 +1833,7 @@ export class RoomPeople {
     // little further back (or where filter.chair parks it) while they are on their feet.
     chairOf(actor, state) {
         const chair = actor.chair, pose = state?.pose; if (!chair) return;
-        const there = actor.objects.some(o => o.visible);
+        const there = actor.objects.some(o => o.visible) || actor.away > 0;   // (their chair stays while they are away from the desk)
         chair.visible = there && !!pose; if (!chair.visible) return;
         const yaw = pose.yaw || 0, front = frontOf(yaw), side = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw)), sitter = actor.members.find(m => m.role === 'sit');
         const short = sitter ? sitter.behind - BEHIND_KEYS.sit : 0;

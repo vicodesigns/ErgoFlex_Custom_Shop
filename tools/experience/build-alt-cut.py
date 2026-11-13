@@ -195,7 +195,7 @@ def wellness(s):
     # stretches while it climbs, then works on her feet. Her chair stays, pushed back toward the bike. Priya
     # stretches at the mobility board, clear of the plant. His camera, unchanged.
     people(s, only=['people-maya-sit-type', 'people-maya-stand-type', 'people-priya-stretch'],
-           cast=[{'key': 'maya-break', 'id': 'people-maya-stretch', 'at': [-421, 350], 'turn': 180}],
+           cast=[{'key': 'maya-break', 'id': 'people-maya-stretch', 'at': [-421, 350], 'turn': 180, 'colors': {'top': '#2d7d8a', 'bottom': '#1f2228', 'shoes': '#ececec'}}],   # (her gym clothes, as at the desk)
            place={'people-priya-stretch': {'at': [1250, -1000], 'turn': 180}},
            when={'maya-break': [[6.6, 10.35, .3, .35]]}, chair={'back': 100, 'side': -700, 'turn': 60})
 

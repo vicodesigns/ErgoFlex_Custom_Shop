@@ -50542,7 +50542,12 @@
        -421,
        350
       ],
-      "turn": 180
+      "turn": 180,
+      "colors": {
+       "top": "#2d7d8a",
+       "bottom": "#1f2228",
+       "shoes": "#ececec"
+      }
      }
     ],
     "place": {

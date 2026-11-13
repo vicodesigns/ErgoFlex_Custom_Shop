@@ -344,6 +344,17 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
     // a parked chair (the film's people.chair) is where the film puts it while she stands
     people.setFilter({ only: [], cast, life: false, chair: { back: 300, side: 760, turn: -42 } }); await people.built; at(13);
     assert.ok(Math.abs(actor.chair.position.x - (60 + 760)) < 2 && Math.abs(actor.chair.position.z - 530) < 2, 'parked where the chapter says');
+    // away from the desk for a moment (the gym chapter: Maya stretches while the desk rises): the film's own cast of her
+    // elsewhere is her, so she is not at the desk as well; her chair stays where it was parked (review, November 13)
+    {
+        const { room: gym } = makeRoom('gym'), p2 = new RoomPeople(gym, library), seen = time => { p2.update({ ...desk, height: track.heightAt(time), time, track, now: 0 }); return p2.people.filter(o => o.visible).map(o => o.userData.person.id); };
+        p2.setFilter({ only: [], cast: [...cast, { key: 'break', id: 'people-maya-stretch', at: [-421, 350], turn: 180 }], when: { break: [[5, 9, 0, 0]] }, life: false, chair: { back: 300, side: 760, turn: -42 } }); await p2.setEnabled(true);
+        assert.deepEqual(seen(7), ['people-maya-stretch'], 'stretching, and not at the desk too'); assert.ok(p2.actors.find(a => a.members.length).chair.visible, 'her chair stays in the room');
+        assert.deepEqual(seen(13), ['people-maya-stand-type'], 'back at the desk when the stretch is over');
+        p2.setFilter({ only: [], cast: [...cast, { key: 'waits', id: 'people-maya-stand-wait', at: [-167, 405], turn: 180 }], when: { waits: [[5, 9, 0, 0]] }, life: false }); await p2.setEnabled(true);
+        assert.equal(seen(7).length, 1, 'an older cut\'s standing-by stand-in still gives way to the desk user (one of her)');
+        await p2.setEnabled(false);
+    }
     // Studio path: the live height, stepped; a jump of the desk is taken as it stands
     people.setFilter({ only: [], cast, life: false }); await people.built;
     let now = 0, h = 28; const live = (target, steps) => { for (let i = 0; i < steps; i++) { now += 1000 / 60; h += Math.sign(target - h) * Math.min(Math.abs(target - h), 1.55 / 60); people.update({ ...desk, height: h, target: Math.abs(target - h) > 1e-3 ? target : null, time: null, now }); assert.equal(shown().length, 1); } };

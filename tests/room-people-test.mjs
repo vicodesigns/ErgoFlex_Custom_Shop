@@ -351,4 +351,15 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
         if (room === 'occmedialab' && /designer-chair/.test(seat) && s.modes?.includes('party')) assert.ok(!atTable.test(pose), `occmedialab ${L.id}: ${s.key || s.id} watches the screening (no table at the designer chairs then)`);
     }
 }
-console.log('PASS room people: library entries, desk-height casting and fade, chair hand-over, film filter and placement, film casting, stations, loading by the hour, postures with things on a table at a table.');
+{   // Review, November 13: in the two cuts with people, someone a chapter casts for a moment away from the desk (Maya
+    // stretching in the gym) is the desk user of that chapter, in the same clothes (she stretched in grey and worked in teal).
+    for (const cut of ['people', 'alt']) for (const shot of JSON.parse(readFileSync(new URL(`../exports/cinematic-intro-20261110-${cut}/review-cut.json`, import.meta.url), 'utf8')).shots) {
+        const p = shot.people; if (!p?.cast || !shot.room) continue;
+        const room = castEntries(shot.room, shot.layout || 'house'), named = s => (p.only || []).includes(s.key || s.id);
+        for (const c of p.cast.filter(c => !c.desk && p.when?.[c.key])) {
+            const who = entries.get(c.id)?.person?.character, desk = room.find(s => s.desk && !s.station && named(s) && entries.get(s.id)?.person?.character === who);
+            if (desk?.colors) assert.deepEqual(c.colors, desk.colors, `${cut} ${shot.id}: ${c.key} wears what ${who} wears at the desk`);
+        }
+    }
+}
+console.log('PASS room people: library entries, desk-height casting and fade, chair hand-over, film filter and placement, film casting, stations, loading by the hour, postures with things on a table at a table, the same clothes away from the desk.');
