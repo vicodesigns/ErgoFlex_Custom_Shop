@@ -3,6 +3,7 @@ import { institutionalOak, drawInstitutionalCampus, enrichInstitutionalRoom, det
 import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=polish-20261111f';
 import { addCampusLife } from './campus-lived-in.mjs?v=polish-20261111f';
 import { attachVista } from './window-vista.mjs?v=polish-20261112f';
+import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113a';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 
 // Shared architectural kit. The shell (floor, walls, daylight window, door,
@@ -32,6 +33,11 @@ const defaultOptions = spec => ({
 const WINDOW_VISTAS = {
     highschool: 'coast', occmedialab: 'coast', kindergarten: 'garden', elementary: 'garden',
     hospital: 'city', laboratory: 'city', mobileit: 'city', government: 'city', police: 'city', security: 'city'
+};
+// The settings with a modelled outlook (window-scenery.mjs): Orange Coast College's media lab looks over its quad from a
+// floor up.
+const WINDOW_SCENERY = {
+    occmedialab: { scene: 'socal-campus', seed: 5150, storey: 4200 }
 };
 
 // Suspended acoustic ceiling where a room asks for one: 610 × 1220 mm (2 × 4 ft)
@@ -333,7 +339,10 @@ export function buildInstitutionalRoom(room, root, layout, h) {
     const decorate = room.decorateProp;
     room.decorateProp = (object, placement) => { if (placement.phases) object.userData.propPhases = placement.phases; decorate?.(object, placement); };
     // The photographed outlook takes over the daylight pane once it has loaded, whichever material a group module left on it.
-    const windowVista = attachVista(skyPane, WINDOW_VISTAS[spec.id] || 'campus'); room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
+    // Or the place modelled behind the glass (window-scenery.mjs), where a setting has a scene, or the painted canvas alone.
+    const view = WINDOW_SCENERY[spec.id] ? windowView(spec.id) : 'photo';
+    const windowVista = view === 'photo' ? attachVista(skyPane, WINDOW_VISTAS[spec.id] || 'campus') : null; if (windowVista) room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
+    const scenery = view === 'scenery' ? attachScenery(skyPane, WINDOW_SCENERY[spec.id].scene, { floor: -1700, ...WINDOW_SCENERY[spec.id] }) : null;
     const campusLife = addCampusLife({ room, root, layout, asset, byId });
     // Slim linear ceiling fixtures disappear with the camera cutaway.
     const ceilingGroup = new THREE.Group(); ceilingGroup.name = 'Ceiling lighting'; root.add(ceilingGroup); room.ceilingFixture = ceilingGroup;
@@ -348,7 +357,7 @@ export function buildInstitutionalRoom(room, root, layout, h) {
     room.roomAtmosphere = (phase, gain = 1) => {
         const mode = spec.modes[phase] || spec.modes.morning;
         drawInstitutionalCampus(sky.map.image.getContext('2d'), 512, 512, phase, mode.sky, spec); sky.map.needsUpdate = true;
-        windowVista.setPhase(phase);
+        windowVista?.setPhase(phase); scenery?.setHour(phase);
         glow.emissiveIntensity = .15 + mode.practical * gain;
         screenMats.forEach(m => {
             // Screens stay readable without lighting the whole watch room.

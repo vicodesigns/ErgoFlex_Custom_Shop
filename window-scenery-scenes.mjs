@@ -217,6 +217,97 @@ function humboldt(k, ctx) {
     ridge(b, r, -76000, ground, L - 40000, R + 40000, 14000, '#4a5d52', { step: 2500 });
 }
 
+// ---- Southern California, near the coast: palms, stucco and concrete, bright hazy air.
+// An agave or aloe: a rosette of stiff pointed leaves.
+function agave(b, r, x, ground, z, size = 500, hex = '#7f9a84') {
+    const c = colour(hex);
+    for (let k = 0; k < 14; k++) { const a = k / 14 * 6.28 + r() * .3, up = .3 + r() * .9, len = size * (.7 + r() * .5), d = V(Math.cos(a) * Math.cos(up), Math.sin(up), Math.sin(a) * Math.cos(up)), side = V(-Math.sin(a), 0, Math.cos(a)).multiplyScalar(size * .09);
+        const o = V(x, ground + 40, z), tip = o.clone().addScaledVector(d, len); b.tri(o.clone().add(side), o.clone().sub(side), tip, c.clone().multiplyScalar(.85 + r() * .25), .5); }
+}
+// A stadium light standard: a tall pole and a bank of lamps that floods the field after dark.
+function floodlight(k, x, ground, z, height = 21000, aim = 1) {
+    const { land: b, lights, halos } = k; pole(b, x, ground, z, height, 240, '#8e9296');
+    b.box([3200, 2200, 300], [x, ground + height + 900, z], '#6b7074');
+    for (let i = 0; i < 3; i++) for (let j = 0; j < 4; j++) lights.box([560, 420, 40], [x - 1200 + j * 800, ground + height + 300 + i * 650, z + aim * 170], '#f4f1e8');
+    halos.add(x, ground + height + 900, z + aim * 600, 4200, '#efeee6', .4);
+    b.light(x, ground + 600, z + aim * 22000, '#e8ece8', 32000, .55);
+}
+// An oil pumpjack (Huntington Beach: the Oilers): a base, a samson post, the walking beam and its horse head.
+function pumpjack(b, x, ground, z, turn = 0, s = 1) {
+    const R = new THREE.Matrix4().makeRotationY(turn), put = (size, p, hex, rz = 0) => { const c = colour(hex); b.add(new THREE.BoxGeometry(1, 1, 1), new THREE.Matrix4().makeTranslation(x, ground, z).multiply(R).multiply(new THREE.Matrix4().compose(V(p[0] * s, p[1] * s, p[2] * s), new THREE.Quaternion().setFromAxisAngle(V(0, 0, 1), rz), V(size[0] * s, size[1] * s, size[2] * s))), () => c, { ambient: .5 }); };
+    put([6000, 400, 1600], [0, 200, 0], '#6e6a62');
+    put([300, 4200, 300], [0, 2300, 500], '#4f5a5e', .12); put([300, 4200, 300], [0, 2300, -500], '#4f5a5e', .12); put([300, 4200, 300], [700, 2300, 0], '#4f5a5e', -.25);
+    put([6400, 450, 380], [-300, 4500, 0], '#3c4448', .08); put([900, 1900, 450], [-3500, 4000, 0], '#3c4448', .2);
+    put([1600, 1600, 900], [2400, 1200, 0], '#7d3f34'); limb(b, V(x - 3800 * s * Math.cos(turn), ground + 3200 * s, z + 3800 * s * Math.sin(turn)), V(x - 3800 * s * Math.cos(turn), ground + 400 * s, z + 3800 * s * Math.sin(turn)), 25 * s, '#2d2d2d', {});
+}
+// A bank of aluminium bleachers, rising away from the field.
+function bleachers(b, x0, x1, ground, z, rows = 12) {
+    for (let i = 0; i < rows; i++) { b.box([x1 - x0, 80, 380], [(x0 + x1) / 2, ground + 450 + i * 420, z - i * 760], '#b9bcbd'); b.box([x1 - x0, 420, 30], [(x0 + x1) / 2, ground + 240 + i * 420, z - i * 760 + 200], '#7f8487'); }
+    for (let x = x0; x <= x1; x += 4000) limb(b, V(x, ground, z), V(x, ground + rows * 420 + 200, z - rows * 760), 60, '#8e9296', {});
+    b.box([x1 - x0, 1100, 40], [(x0 + x1) / 2, ground + rows * 420 + 900, z - rows * 760 - 200], '#8e9296');
+}
+// A mid-century campus block: concrete frame, ribbon windows behind sunshade fins, a covered walk along its foot.
+function campusBlock(k, r, x, ground, z, { width = 36000, floors = 3, wall = '#ddd6c8', fins = '#c9c1b2', lit = .4 } = {}) {
+    const b = k.land, h = building(k, r, x, ground, z, { width, depth: 18000, floors, storey: 4000, wall, glass: '#3d4a52', frame: '#bfb8aa', shops: false, style: 'band', bays: Math.round(width / 3600), litRate: lit, cornice: false, roof: '#cfc8ba' });
+    const face = z + 9000;
+    for (let f = 0; f < floors; f++) b.box([width, 140, 900], [x, ground + 4000 * f + 3600, face + 450], fins);
+    for (let i = 0; i <= width / 1800; i++) b.box([120, h - 400, 600], [x - width / 2 + i * 1800, ground + (h - 400) / 2, face + 300], fins);
+    b.box([width, 220, 3200], [x, ground + 3000, face + 1600], '#d4cec2'); for (let i = 0; i <= width / 4500; i++) pole(b, x - width / 2 + i * 4500, ground, face + 3000, 3000, 90, '#9a948a');
+    for (let i = 0; i < width / 4500; i++) { const lx = x - width / 2 + (i + .5) * 4500; k.lights.box([300, 30, 300], [lx, ground + 2870, face + 1600], '#fff0d6'); k.land.light(lx, ground + 2600, face + 1600, '#ffe8c8', 3200, .45); }
+}
+function socal(k, ctx, kind) {
+    const { land: b, r } = k, ground = ctx.ground, cx = (ctx.left + ctx.right) / 2, w = ctx.width, L = ctx.left - 30000, R = ctx.right + 30000;
+    const lawnC = colour('#7d8a62'), dry = colour('#a39d7c'), conc = colour('#c3bcae'), track = colour('#9a5a48'), out = new THREE.Color();
+    if (kind === 'campus') {
+        // Orange Coast College from the media lab, a floor up: a planted strip and the walk below, the quad with its
+        // jacarandas and benches, palms along the walk, the block across the quad, a car park beyond, the hills in the haze.
+        const walk = z => z > -4500 && z < -1800, quadEnd = -42000;
+        land(b, ground, L, R, -60, -30000, -100000, (x, z) => {
+            if (walk(z) || (Math.abs(x - cx - 4000) < 1500 && z > quadEnd + 9000)) return out.copy(conc).multiplyScalar((Math.floor(x / 1500) % 2 ? .95 : 1) * (.96 + r() * .05));
+            if (z > -1800) return out.copy(colour('#7d6a56')).multiplyScalar(.9 + r() * .1);
+            if (z > quadEnd) { const p = Math.sin(x / 2600) * Math.sin(z / 2100) * .5 + .5; return out.copy(lawnC).lerp(dry, p * .3).multiplyScalar(.93 + r() * .07); }
+            if (z > quadEnd - 30000) return out.copy(colour('#56585a')).multiplyScalar((Math.abs(((x % 2700) + 2700) % 2700) < 90) ? 1.7 : .95 + r() * .08);
+            return out.copy(dry).multiplyScalar(.9 + r() * .1); }, 600);
+        for (let x = ctx.left - 6000; x < ctx.right + 6000; x += 900 + r() * 700) { if (r() < .5) agave(b, r, x, ground, -900 - r() * 600, 450 + r() * 300, pick(r, ['#7f9a84', '#8aa48a', '#6f8c7a'])); else shrub(b, r, x, ground, -1000 - r() * 500, 450 + r() * 200, pick(r, ['#5f7a4c', '#6c8452']), { size: 120 }); }
+        for (let x = ctx.left - 12000; x < ctx.right + 12000; x += 9000) { featherPalm(b, r, x + r() * 2000, ground, -6000 - r() * 1500, { height: 7000 + r() * 2500 }); pathLight(k, x + 4500, ground, -5000); }
+        for (let x = ctx.left - 4000; x < ctx.right + 8000; x += 6000 + r() * 4000) bench(b, x, ground, -5200, 0, '#b8b2a6');
+        // the quad's trees: jacarandas (lilac in flower, green otherwise) and a coral tree, tall fan palms along the far walk
+        for (const [x, z, h] of [[-9000, -15000, 8000], [7000, -18000, 9000], [-2000, -26000, 8500], [15000, -27000, 9500], [-17000, -24000, 8000], [24000, -16000, 8500]]) {
+            tree(b, r, cx + x, ground, z, { height: h, hex: r() < .55 ? '#8f86b0' : '#6e8656', shape: 'spreading', bark: '#6f655c' }); }
+        for (let x = L; x < R; x += 7000 + r() * 2000) fanPalm(b, r, x, ground, quadEnd + 6000 + r() * 1500, { height: 17000 + r() * 6000 });
+        campusBlock(k, r, cx - 6000, ground, quadEnd - 9000, { width: 52000, floors: 3 });
+        for (let x = L - 20000; x < R + 20000; x += 5200 + r() * 1200) if (r() < .7) car(k, r, x, ground, quadEnd - 24000 - Math.floor(r() * 3) * 6000);
+        for (let x = L - 20000; x < R + 20000; x += 30000) floodlight(k, x, ground, quadEnd - 27000, 11000);
+        for (let x = L - 60000; x < R + 60000; x += 5000 + r() * 5000) fanPalm(b, r, x, ground, -80000 - r() * 20000, { height: 20000 + r() * 6000 });
+        ridge(b, r, -160000, ground, L - 120000, R + 120000, 16000, '#9a8f84', { step: 4000, rough: .5, bumps: 5 });
+        return;
+    }
+    // Huntington Beach High from a ground-floor classroom: succulents and a walk outside, the fence, the track and the
+    // field with its goalposts, bleachers across, the floodlights, palms in rows behind, the town's low roofs, a pumpjack.
+    const fenceZ = -5200, trackZ = -9000, fieldZ0 = -16000, fieldZ1 = -64000, fieldX = cx + 6000;
+    land(b, ground, L, R, -60, -30000, -110000, (x, z) => {
+        if (z > -3200) return out.copy(conc).multiplyScalar(.95 + r() * .05);
+        if (z > fenceZ) return out.copy(colour('#7d6a56')).multiplyScalar(.9 + r() * .1);
+        const dz = Math.max(fieldZ1 - z, z - fieldZ0, 0), inside = Math.abs(x - fieldX) < 34000 && z < fieldZ0 && z > fieldZ1;
+        if (z < trackZ && z > fieldZ1 - 7000 && Math.abs(x - fieldX) < 40000 && !inside) { const lane = Math.abs(((z - trackZ) % 1220 + 1220) % 1220) < 50; return lane ? out.set(.85, .82, .78) : out.copy(track).multiplyScalar(.92 + r() * .08); }
+        if (inside) { const yard = Math.abs(((x - fieldX) % 4570 + 4570) % 4570) < 70 || Math.abs(z - fieldZ0) < 90 || Math.abs(z - fieldZ1) < 90;
+            return yard ? out.set(.82, .82, .78) : out.copy(lawnC).multiplyScalar(((Math.floor((x - fieldX) / 4570) % 2) ? .92 : 1.02) * (.96 + r() * .04)); }
+        void dz; return out.copy(lawnC).lerp(dry, .4).multiplyScalar(.9 + r() * .1); }, 600);
+    for (let x = ctx.left - 4000; x < ctx.right + 4000; x += 600 + r() * 500) agave(b, r, x, ground, -800 - r() * 700, 380 + r() * 260, pick(r, ['#7f9a84', '#8aa48a', '#6f8c7a', '#8e9a6a']));
+    grass(b, r, ctx.left - 3000, ctx.right + 3000, -4700, -3400, ground, 300, '#7d8a5a', 260);
+    fence(b, r, L, R, ground, fenceZ, { kind: 'chain', height: 2400 });
+    for (const x of [fieldX - 50000, fieldX + 50000]) { limb(b, V(x, ground, fieldZ0 - 24000), V(x, ground + 3000, fieldZ0 - 24000), 90, '#d8c24a'); b.box([5600, 120, 120], [x, ground + 3000, fieldZ0 - 24000], '#d8c24a'); for (const s of [-1, 1]) pole(b, x + s * 2800, ground + 3000, fieldZ0 - 24000, 6000, 50, '#d8c24a'); }
+    bleachers(b, fieldX - 30000, fieldX + 30000, ground, fieldZ1 - 9000, 14);
+    b.box([12000, 3200, 3000], [fieldX, ground + 1600 + 14 * 420, fieldZ1 - 9000 - 14 * 760 - 1500], '#c9c2b4');
+    for (const x of [fieldX - 38000, fieldX + 38000]) for (const z of [fieldZ0 + 2000, fieldZ1 - 4000]) floodlight(k, x, ground, z, 22000, z > -30000 ? -1 : 1);
+    for (let x = L - 30000; x < R + 30000; x += 6000 + r() * 2500) fanPalm(b, r, x, ground, fieldZ1 - 22000 - r() * 5000, { height: 18000 + r() * 6000 });
+    for (let x = ctx.left - 14000; x < ctx.right + 14000; x += 11000 + r() * 3000) tree(b, r, x, ground, -7000 - r() * 1500, { height: 6500, hex: '#6c8452', shape: 'round' });
+    for (let x = L - 40000; x < R + 40000; x += 12000 + r() * 6000) house(k, r, x, ground, -112000 - r() * 8000, { width: 9000, eaves: 3000, ridge: 1800, wall: pick(r, ['#e6dcc8', '#d9cdb5', '#efe6d4', '#cfc6b4']), roof: pick(r, ['#a8644a', '#9c5e48', '#8a7a6a']), lit: [0, 2], storeys: 1, porch: false });
+    pumpjack(b, cx - 34000, ground, -40000, .6, 1.1);
+    for (let x = L - 80000; x < R + 80000; x += 6000 + r() * 6000) fanPalm(b, r, x, ground, -135000 - r() * 20000, { height: 22000 });
+}
+const SOCAL = { morning: { horizon: '#ebdcc6', air: '#e6dccb', haze: .5 }, afternoon: { horizon: '#e4e4da', air: '#dfe0d8', haze: .45, tint: [1, .98, .93] } };
+
 export const SCENES = {
     garden: { build: garden, storey: 0 },
     'studio-garden': { build: studioGarden, storey: 0, hazeFar: 46000 },
@@ -226,5 +317,6 @@ export const SCENES = {
         afternoon: { tint: [.94, .95, .92], zenith: '#8aa5bb', horizon: '#d6dcdc', sun: [45, 42, '#fff6e6', .35], clouds: .7, haze: .52, air: '#cdd4d4' },
         evening: { tint: [.62, .56, .55], zenith: '#56607c', horizon: '#b99a8a', sun: [36, 6, '#ffb07a', .6], clouds: .8, haze: .66, air: '#9a8c86' },
         night: { tint: [.09, .11, .15], zenith: '#0d1420', horizon: '#26303a', clouds: .9, haze: .6, air: '#1e2730', stars: .15 },
-        party: { tint: [.12, .12, .2], zenith: '#151a32', horizon: '#33304e', clouds: .85, haze: .6, air: '#262640', stars: .1 } } }
+        party: { tint: [.12, .12, .2], zenith: '#151a32', horizon: '#33304e', clouds: .85, haze: .6, air: '#262640', stars: .1 } } },
+    'socal-campus': { build: (k, ctx) => socal(k, ctx, 'campus'), storey: 4200, hazeFar: 110000, hours: SOCAL }
 };

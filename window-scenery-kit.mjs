@@ -349,7 +349,7 @@ export function building(k, r, x, ground, z, { width = 16000, depth = 14000, flo
             b.quad(bay * .78, sh * .62, [wx, ground + sh * .4, face + 30], glassC.clone().multiplyScalar(.7));
             b.box([bay * .9, 420, 120], [wx, ground + sh * .82, face + 60], frame);
             if (r() < .45) b.box([bay * .82, 160, 1100], [wx, ground + sh * .74, face + 600], ['#7a4b3e', '#3f5a54', '#5a5a6e', '#8a7a52'][Math.floor(r() * 4)]);
-            if (r() < .8) { lights.quad(bay * .74, sh * .55, [wx, ground + sh * .4, face + 42], colour('#ffe2b8').multiplyScalar(.75)); b.light(wx, ground + 1600, face + 2200, '#ffd9a8', 3800, .32); }
+            if (r() < .8) { lights.quad(bay * .74, sh * .55, [wx, ground + sh * .4, face + 42], colour('#ffe2b8').multiplyScalar(.5 + r() * .15)); b.light(wx, ground + 1600, face + 2200, '#ffd9a8', 3800, .32); }
             if (neon && r() < .7) { const nc = neon[Math.floor(r() * neon.length)]; lights.box([bay * .55, 260, 40], [wx, ground + sh + 500, face + 70], nc); halos.add(wx, ground + sh + 500, face + 300, bay * .55, nc, .35); b.light(wx, ground + sh, face + 2500, nc, 5000, .5); }
         } }
     // rooftop: a plant room, a water tank
@@ -371,7 +371,7 @@ export function streetLamp(k, x, ground, z, { height = 6500, reach = 1200, hex =
 const CABIN = (() => { const s = new THREE.Shape(); s.moveTo(-.5, 0); s.lineTo(.5, 0); s.lineTo(.3, 1); s.lineTo(-.38, 1); s.closePath(); return new THREE.ExtrudeGeometry(s, { depth: 1, bevelEnabled: false }).translate(0, 0, -.5); })();
 export function car(k, r, x, ground, z, { turn = 0, hex } = {}) {
     if (!seen(k.land, x, z, 3000)) return;
-    const b = k.land, body = hex || ['#5b6168', '#7d8186', '#2f3438', '#5e3a36', '#3d4f62', '#a8a6a0', '#4a5446', '#6b6256'][Math.floor(r() * 8)], len = 4300 + r() * 500, w = 1780;
+    const b = k.land, body = hex || ['#4f545a', '#6d7176', '#2f3438', '#53352f', '#36475a', '#85827c', '#424b3f', '#5c5449'][Math.floor(r() * 8)], len = 4300 + r() * 500, w = 1780;
     const T = new THREE.Matrix4().makeTranslation(x, ground, z).multiply(new THREE.Matrix4().makeRotationY(turn));
     const put = (geometry, m, hex) => { const c = colour(hex); b.add(geometry, T.clone().multiply(m), () => c, { ambient: .55, facet: true }); };
     put(BOX, M(0, 560, 0, len, 560, w), body); put(BOX, M(-len * .02, 860, 0, len * .96, 80, w * .97), body);
