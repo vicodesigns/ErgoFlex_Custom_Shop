@@ -39,6 +39,8 @@ const WINDOW_VISTAS = {
 const WINDOW_SCENERY = {
     occmedialab: { scene: 'socal-campus', seed: 5150, storey: 4200 },
     highschool: { scene: 'beach-school', seed: 1906, storey: 4000 },
+    // schoolyards: the kindergarten and elementary rooms on the ground, the middle school a floor up over its ball court
+    kindergarten: { scene: 'schoolyard', variant: 'kinder', seed: 6101, storey: 0 },
     // college and university classrooms over their campus
     college: { scene: 'campus', variant: 'green', seed: 5303, storey: 0 },
     university: { scene: 'campus', variant: 'quad', seed: 5404, storey: 8000 }
