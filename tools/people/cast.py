@@ -46,13 +46,17 @@ CROWD = ['sit-type', 'stand-low', 'stand-mid', 'stand-type', 'stand-wait', 'stan
 CHARACTERS = {
     'maya': {
         'name': 'Maya', 'phenotype': {'gender': .0, 'age': .42, 'muscle': .45, 'weight': .5, 'height': .61, 'proportions': .6, 'race': race(.55, .2, .25)},
-        'skin': 'young_caucasian_female2', 'eyes': 'brown', 'hair': 'ponytail01', 'eyebrows': 'eyebrow006', 'eyelashes': 'eyelashes02',
+        'skin': 'young_caucasian_female2', 'eyes': 'brown', 'hair': 'ponytail01', 'eyebrows': 'eyebrow001', 'eyelashes': 'eyelashes02',
+        # (a softer face: brows a little higher with body, not a drawn line; 'brow_cutoff' build_people.py)
+        'face': {'eyebrows-trans-up': .1, 'mouth-angles-up': .1}, 'brow_cutoff': .25,
         'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'shoes05'],
         'tint': {'toigo_basic_tucked_t-shirt': (.8, .76, .68), 'toigo_wool_pants': (.2, .26, .34)},
     },
     'andre': {
         'name': 'Andre', 'phenotype': {'gender': 1., 'age': .5, 'muscle': .6, 'weight': .52, 'height': .5, 'proportions': .6, 'race': race(.05, .9, .05)},
-        'skin': 'young_african_male', 'eyes': 'brown', 'hair': 'short01', 'eyebrows': 'eyebrow003', 'eyelashes': 'eyelashes01',
+        'skin': 'young_african_male', 'eyes': 'brown', 'hair': 'short01', 'eyebrows': 'eyebrow001', 'eyelashes': 'eyelashes01',
+        # (a relaxed face: brows up and level where they sat in a scowl, a softer brow edge; 'brow_cutoff' build_people.py)
+        'face': {'eyebrows-angle-up': .45, 'eyebrows-trans-up': .2, 'mouth-angles-up': .15}, 'brow_cutoff': .15,
         'clothes': ['namuhekam_male_polo_shirt', 'cortu_cargo_pants', 'shoes04'],
         'hair_tint': (.05, .045, .04),
         'tint': {'namuhekam_male_polo_shirt': (.16, .36, .34), 'cortu_cargo_pants': (.5, .45, .37)},
@@ -65,7 +69,9 @@ CHARACTERS = {
     },
     'kai': {
         'name': 'Kai', 'phenotype': {'gender': 1., 'age': .33, 'muscle': .45, 'weight': .45, 'height': .45, 'proportions': .55, 'race': race(.1, 0, .9)},
-        'skin': 'young_asian_male', 'eyes': 'brown', 'hair': 'short04', 'eyebrows': 'eyebrow002', 'eyelashes': 'eyelashes01',
+        'skin': 'young_asian_male', 'eyes': 'brown', 'hair': 'short04', 'eyebrows': 'eyebrow001', 'eyelashes': 'eyelashes01',
+        # (a relaxed face: brows up and level where they sat in a scowl, a softer brow edge; 'brow_cutoff' build_people.py)
+        'face': {'eyebrows-angle-up': .5, 'eyebrows-trans-up': .2, 'mouth-angles-up': .15}, 'brow_cutoff': .15,
         'clothes': ['namuhekam_male_polo_shirt', 'toigo_wool_pants', 'shoes06'],
         'tint': {'namuhekam_male_polo_shirt': (.72, .3, .12), 'toigo_wool_pants': (.13, .14, .17)},
     },
@@ -123,6 +129,8 @@ CHARACTERS = {
     'mia': {
         'name': 'Mia', 'phenotype': {'gender': .0, 'age': .32, 'muscle': .4, 'weight': .45, 'height': .59, 'proportions': .6, 'race': race(1, 0, 0)},
         'skin': 'young_caucasian_female', 'eyes': 'blue', 'hair': 'toigo_curled_under_bob', 'eyebrows': 'eyebrow005', 'eyelashes': 'eyelashes02',
+        # (a softer face: brows a little higher with body, not a drawn line; 'brow_cutoff' build_people.py)
+        'face': {'eyebrows-trans-up': .1, 'mouth-angles-up': .1}, 'brow_cutoff': .25,
         'clothes': ['toigo_fisherman_sweater', 'toigo_wool_pants', 'shoes06'],
         'tint': {'toigo_fisherman_sweater': (.3, .45, .4), 'toigo_wool_pants': (.2, .22, .3)},
     },
@@ -133,7 +141,9 @@ CHARACTERS = {
     },
     'noah': {
         'name': 'Noah', 'phenotype': {'gender': 1., 'age': .34, 'muscle': .55, 'weight': .45, 'height': .63, 'proportions': .6, 'race': race(.1, .85, .05)},
-        'skin': 'young_african_male', 'eyes': 'brown', 'hair': 'afro01', 'eyebrows': 'eyebrow008', 'eyelashes': 'eyelashes01',
+        'skin': 'young_african_male', 'eyes': 'brown', 'hair': 'afro01', 'eyebrows': 'eyebrow001', 'eyelashes': 'eyelashes01',
+        # (a relaxed face: brows up and level where they sat in a scowl, a softer brow edge; 'brow_cutoff' build_people.py)
+        'face': {'eyebrows-angle-up': .45, 'eyebrows-trans-up': .2, 'mouth-angles-up': .15}, 'brow_cutoff': .15,
         'clothes': ['namuhekam_male_polo_shirt', 'cortu_cargo_pants', 'shoes05'],
         'tint': {'namuhekam_male_polo_shirt': (.85, .82, .76), 'cortu_cargo_pants': (.16, .18, .22)},
     },

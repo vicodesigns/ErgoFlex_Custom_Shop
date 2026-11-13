@@ -243,6 +243,7 @@ for o in meshes:
         m['alpha'] = 'MASK' if cut else 'OPAQUE'
         # (round three: a brow keeps more of its soft edge, or it is a drawn line)
         if LOOK >= 3 and 'eyebrow' in o.name: m['cutoff'] = .3
+        if 'eyebrow' in o.name and who.get('brow_cutoff'): m['cutoff'] = who['brow_cutoff']      # (cast: a character's own, softer brow edge)
         if not cut:
             for link in list(bsdf.inputs['Alpha'].links): tree.links.remove(link)
             bsdf.inputs['Alpha'].default_value = 1
