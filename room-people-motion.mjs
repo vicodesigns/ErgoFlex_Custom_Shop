@@ -197,7 +197,8 @@ const screenAt = V();
 // ---- the person at the desk -----------------------------------------------------------------------------------------
 // keys: { sit: [key, ...], stand: [key, ...] (hands on the keyboard, built for key.deskHeight, lowest first; either may
 // be empty), wait: key | null (standing, arms loose) }.
-// input: { tau, k, height (inches), time (seconds, for the life in the pose; null = none), seed, life: 0..1 }
+// input: { tau, k, height (inches), time (seconds, for the life in the pose; null = none), seed, life: 0..1,
+//         upright (seated: the back up over the hips, SIT_UPRIGHT; default: whenever there is life) }
 // Leaves the pose in rig.lq / rig.lp (fk() current) and returns { stance: 'sit' | 'stand', chair: { back, turn } }
 // (metres the chair has rolled back from under the seated person, degrees it has turned).
 const turn = Q(), turn2 = Q(), handQ = Q(), footQ = Q(), spot = V(), dir = V(), up = V(), hip = V(), keysAt = V(), awayAt = V();
@@ -268,6 +269,14 @@ export function solveDesk(rig, keys, input) {
     if (lean > 1e-4) {
         for (const [bone, share] of [[b.pelvis, .52], [b.spine_01, .2], [b.spine_02, .16], [b.spine_03, .12], [b.neck_01, -.34], [b.head, -.5]]) { rig.turnWorld(bone, turn.setFromAxisAngle(X, lean * share)); rig.fk(); }
     }
+    const sitsUp = input.upright ?? life > 0, sitUpright = () => {
+        const seated = sit ? 1 - ss(.35, .75, tau) : 0;      // (whole whenever it is on: the posture, not the breathing)
+        if (seated > 0) {
+            const back = -THREE.MathUtils.degToRad(SIT_UPRIGHT) * seated;
+            for (const [bone, share] of [[b.spine_01, .35], [b.spine_02, .35], [b.spine_03, .3], [b.neck_01, -.3], [b.head, -.4]]) { rig.turnWorld(bone, turn.setFromAxisAngle(X, back * share)); rig.fk(); }
+        }
+    };
+    if (!(life > 0) && sitsUp) sitUpright();
     if (life > 0) {
         // breathing lifts the chest; the hips roll into the standing leg; the head drifts and now and then looks down at
         // the hands or across the room
@@ -275,11 +284,7 @@ export function solveDesk(rig, keys, input) {
         // seated, the built typing postures sit 8 to 11 degrees forward of upright (a hunch at the keys): the back comes up
         // over the hips while they sit (not while they lean in to stand), the head keeps most of its line to the screen and
         // the hands stay on the keys (the arms reach for them below); the pelvis stays on the seat
-        const seated = sit ? 1 - ss(.35, .75, tau) : 0;      // (whole whenever there is life: the posture, not the breathing)
-        if (seated > 0) {
-            const back = -THREE.MathUtils.degToRad(SIT_UPRIGHT) * seated;
-            for (const [bone, share] of [[b.spine_01, .35], [b.spine_02, .35], [b.spine_03, .3], [b.neck_01, -.3], [b.head, -.4]]) { rig.turnWorld(bone, turn.setFromAxisAngle(X, back * share)); rig.fk(); }
-        }
+        if (sitsUp) sitUpright();
         if (upright > 0) { rig.turnWorld(b.pelvis, turn.setFromAxisAngle(Z, sway * 1.3)); rig.fk(); rig.turnWorld(b.spine_02, turn.setFromAxisAngle(Z, -sway * 1.1)); rig.fk(); }
         // eyes on the screen: on the keys, standing by while the desk moves (the screen goes up and down with it), less
         // while they lean in to get up; the drift and the glances down below come on top of it
