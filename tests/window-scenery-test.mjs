@@ -50,6 +50,10 @@ for (const name of Object.keys(SCENES)) {
     for (const m of [land.material, lights.material, halos.material]) assert.ok(/!throughWindow\(vWorld\)\) discard/.test(m.fragmentShader) && m.defines.OPENINGS === 1 && m.uniforms.openHalf.value[0].equals(new THREE.Vector2(850, 700)), name + ': kept only where the sight line crosses the opening');
     assert.ok(/discard;\s+\/\/ from outside the wall/.test(view.sky.fragmentShader), name + ': the sky is not drawn from outside the wall');
     assert.ok(land.material.uniforms === lights.material.uniforms && land.material.uniforms === halos.material.uniforms, name + ': one set of values for the land, its lights and halos');
+    // the coast's scenes look out to the sea: a plane of its own (the sky in it, the sun's glitter), more of it in the sky to the horizon
+    if (/socal|beach/.test(name)) { const sea = view.group.children.find(o => o.name === 'Window scenery sea');
+        assert.ok(sea && /!throughWindow\(vWorld\)\) discard/.test(sea.material.fragmentShader) && view.sky.uniforms.sea.value === 1 && view.materials.includes(sea.material), name + ': the Pacific beyond the land, seen only through the opening'); }
+    else assert.equal(view.sky.uniforms.sea.value, 0, name + ': no sea');
     // the pane is the sky: drawn first, without depth, so the land shows in front of it
     assert.ok(pane.material === view.sky && !view.sky.depthWrite && pane.renderOrder < land.renderOrder, name + ': the pane carries the sky');
     // the hours: numbers, colours and vectors that the film's time-of-day blend (film-tod) can carry from one to the next
@@ -72,6 +76,21 @@ for (const name of Object.keys(SCENES)) {
     view.dispose();
     assert.ok(pane.material.isMeshBasicMaterial && !view.group.parent && pane.renderOrder === 0 && !pane.userData.windowScenery, name + ': disposed, the pane has its own material again');
 }
+
+// ---- the rooms' own versions of a place (variant, storey, seed as the rooms pass them): built, outside the wall, affordable,
+// and no two the same
+{ const rooms = [['back-garden', 'bedroom', 3000, 2101], ['back-garden', 'kitchen', 0, 2202], ['back-garden', 'kids', 0, 2303],
+    ['campus', 'quad', 0, 5101], ['campus', 'court', 4000, 5202], ['campus', 'green', 0, 5303], ['campus', 'quad', 8000, 5404],
+    ['schoolyard', 'kinder', 0, 6101], ['schoolyard', 'elementary', 0, 6202], ['schoolyard', 'middle', 4000, 6303],
+    ['city', 'ledge', 22000, 3101], ['city', 'planters', 9000, 3202], ['city', 'open', 0, 3303], ['city', 'balcony', 15000, 3404], ['city', 'glass', 30000, 3505],
+    ['city', 'hospital', 12000, 4101], ['city', 'louvres', 7500, 4202], ['city', 'dock', 1200, 4303], ['city', 'civic+flowerbox', 6000, 4404], ['city', 'bars', 3600, 4505], ['city', 'ledge', 38000, 4606]];
+  const seen = new Set();
+  for (const [name, variant, storey, seed] of rooms) { if (!SCENES[name]) continue;   // (a scene not built yet)
+      const pane = paneIn(new THREE.Group(), 1600, 1450, [0, 1575, -1800]), view = attachScenery(pane, name, { floor: -1575, variant, storey, seed });
+      const land = view.group.children[0], nearest = nearestZ(land), key = land.geometry.attributes.position.count + ':' + land.geometry.attributes.position.getX(1000);
+      assert.ok(nearest < -40 && view.triangles > 15000 && view.triangles < 150000, `${name} ${variant} ${storey}: outside the wall (${nearest}), ${view.triangles} triangles`);
+      assert.ok(!seen.has(key), `${name} ${variant} ${storey}: not the same view as another room's`); seen.add(key); view.dispose();
+  } }
 
 // ---- the home room's pane (a thin box) and an opening size given by the room
 { const wall = new THREE.Group(), painted = new THREE.MeshBasicMaterial(), pane = paneIn(wall, 1700, 1400, [-670, 1550, -1865], 0, 'box'); pane.material = painted;

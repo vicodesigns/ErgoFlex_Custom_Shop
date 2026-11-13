@@ -104,10 +104,35 @@ void main() {
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
 }`;
+// The sea (a scene that has one): a level plane far out, its colour the sky it reflects (more of it toward the
+// horizon) over the water's own, the sun's (or moon's) glitter broken into sparkles, fading into the horizon's haze.
+const SEA_AT = `
+float seaHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+vec3 seaAt(vec3 view, vec3 sunDir, vec2 spot) {
+    float down = clamp(-view.y, 0., 1.), fres = exp(-down * 12.);
+    vec3 c = mix(seaColor * (.55 + .45 * clamp(sunDir.y * 2. + .3, 0., 1.)), mix(horizon, zenith, .35), .12 + .3 * fres);
+    vec3 r = reflect(view, vec3(0., 1., 0.)); float s = max(dot(r, sunDir), 0.);
+    vec2 cell = floor(spot / 1800.); float sparkle = step(.55, seaHash(cell)) * (.5 + .5 * seaHash(cell + 3.1));
+    c += sunColor * sunPower * (pow(s, 40.) * 1.4 * sparkle + pow(s, 6.) * .12);
+    return mix(c, horizon * .92, exp(-down * 160.) * .6);           // into the haze at the horizon
+}`;
+const SEA = `uniform vec3 zenith, horizon, sunLocal, sunColor, wOut, wRight, seaColor; uniform float sunPower, level, seaY;
+varying vec3 vWorld;
+${PORTAL}
+${SEA_AT}
+void main() {
+    if (!throughWindow(vWorld)) discard;
+    vec3 view = isOrthographic ? vec3(-viewMatrix[0][2], -viewMatrix[1][2], -viewMatrix[2][2]) : normalize(vWorld - cameraPosition);
+    vec3 sunDir = normalize(wRight * sunLocal.x + vec3(0., sunLocal.y, 0.) + wOut * sunLocal.z);
+    gl_FragColor = vec4(seaAt(view, sunDir, (portalInv * vec4(vWorld, 1.)).xz) * level, 1.);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
+}`;
 const SKY_VERTEX = `varying vec3 vWorld;
 void main() { vec4 w = modelMatrix * vec4(position, 1.0); vWorld = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`;
-const SKY = `uniform vec3 zenith, horizon, sunLocal, sunColor, wOut, wRight; uniform float sunPower, clouds, stars, level, drift, nearZ; uniform mat4 portalInv;
+const SKY = `uniform vec3 zenith, horizon, sunLocal, sunColor, wOut, wRight, seaColor; uniform float sunPower, clouds, stars, level, drift, nearZ, sea; uniform mat4 portalInv;
 varying vec3 vWorld;
+${SEA_AT}
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float noise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3. - 2. * f);
     return mix(mix(hash(i), hash(i + vec2(1., 0.)), f.x), mix(hash(i + vec2(0., 1.)), hash(i + vec2(1., 1.)), f.x), f.y); }
@@ -120,6 +145,7 @@ void main() {
     float up = dir.y;
     vec3 c = mix(horizon, zenith, pow(smoothstep(-.02, .62, up), .75));
     c = mix(c, horizon * .92, smoothstep(.0, -.12, up));            // below the horizon: the far air (behind the scenery)
+    if (sea > .5 && up < 0.) c = seaAt(dir, sunDir, dir.xz / max(-up, 1e-4) * 9e5);   // beyond the modelled sea: more of it, to the horizon
     float s = max(dot(dir, sunDir), 0.);
     c += sunColor * sunPower * (pow(s, 900.) * 1.6 + pow(s, 40.) * .32 + pow(s, 5.) * .1);
     // stars after dark: sparse points, fewer toward the horizon's glow
@@ -207,7 +233,8 @@ function world(panes, name, scene, options) {
         k.land.view = { cx: (ctx.left + ctx.right) / 2, half: ctx.width / 2 + 3000, slope: 1.6 };   // what the room's cameras can see through the openings
         scene.build(k, ctx);
         const geometries = [k.land.geometry(), k.lights.geometry(), k.halos.geometry()];
-        return { geometries, users: 0, triangles: k.land.triangles + k.lights.triangles + k.halos.position.length / 9 };
+        if (k.sea) { const { y, x0, x1, z0, z1 } = k.sea; geometries.push(new THREE.PlaneGeometry(x1 - x0, z1 - z0, 1, 1).rotateX(-Math.PI / 2).translate((x0 + x1) / 2, y, (z0 + z1) / 2)); }
+        return { geometries, sea: k.sea, users: 0, triangles: k.land.triangles + k.lights.triangles + k.halos.position.length / 9 };
     });
     entry.users++;
     const shared = { ...portal, tint: { value: new THREE.Vector3(1, 1, 1) }, air: { value: new THREE.Color() }, haze: { value: 0 }, hazeFar: { value: scene.hazeFar ?? 52000 }, level: { value: LEVEL }, lamp: { value: 0 }, lampLevel: { value: scene.lampLevel ?? 1 }, haloLevel: { value: scene.haloLevel ?? 1 } };
@@ -221,8 +248,17 @@ function world(panes, name, scene, options) {
     const sky = new THREE.ShaderMaterial({ vertexShader: SKY_VERTEX, fragmentShader: SKY, depthWrite: false, side: frame.material?.side ?? THREE.FrontSide, uniforms: {
         portalInv: portal.portalInv, nearZ: { value: Math.min(...openings.map(o => o.at.z)) - 5 },
         zenith: { value: new THREE.Color() }, horizon: { value: new THREE.Color() }, sunLocal: { value: new THREE.Vector3(0, 1, 0) }, sunColor: { value: new THREE.Color() }, sunPower: { value: 0 },
-        clouds: { value: .4 }, stars: { value: 0 }, level: { value: LEVEL }, drift: { value: 0 }, wOut: { value: new THREE.Vector3(0, 0, -1) }, wRight: { value: new THREE.Vector3(1, 0, 0) } } });
+        clouds: { value: .4 }, stars: { value: 0 }, level: { value: LEVEL }, drift: { value: 0 }, wOut: { value: new THREE.Vector3(0, 0, -1) }, wRight: { value: new THREE.Vector3(1, 0, 0) },
+        seaColor: { value: new THREE.Color(entry.sea?.color || '#3a5f75') }, sea: { value: entry.sea ? 1 : 0 } } });
     sky.name = 'Window sky · ' + name;
+    let sea = null;
+    if (entry.sea) {
+        const u = sky.uniforms, seaMaterial = new THREE.ShaderMaterial({ vertexShader: SKY_VERTEX, fragmentShader: SEA, defines, side: THREE.DoubleSide, uniforms: { ...portal,
+            zenith: u.zenith, horizon: u.horizon, sunLocal: u.sunLocal, sunColor: u.sunColor, sunPower: u.sunPower, wOut: u.wOut, wRight: u.wRight, level: u.level,
+            seaColor: u.seaColor, seaY: { value: entry.sea.y } } });
+        seaMaterial.name = 'Window sea · ' + name;
+        sea = new THREE.Mesh(entry.geometries[3], seaMaterial); sea.name = 'Window scenery sea'; sea.frustumCulled = false; sea.renderOrder = -11; sea.userData.windowScenery = true; group.add(sea);
+    }
     const befores = new Map();
     for (const { pane } of openings) {
         pane.userData.paintedMaterial ||= pane.material; pane.userData.viewMaterial = pane.material; pane.material = sky; pane.userData.windowScenery = name; pane.userData.sceneryRenderOrder = pane.renderOrder; pane.renderOrder = -20;
@@ -247,8 +283,8 @@ function world(panes, name, scene, options) {
     };
     const dispose = () => {
         for (const { pane } of openings) { pane.onBeforeRender = befores.get(pane) || (() => {}); pane.material = pane.userData.viewMaterial; pane.renderOrder = pane.userData.sceneryRenderOrder ?? 0; delete pane.userData.windowScenery; }
-        group.removeFromParent(); land.material.dispose(); glow.material.dispose(); haloMaterial.dispose(); sky.dispose();
+        group.removeFromParent(); land.material.dispose(); glow.material.dispose(); haloMaterial.dispose(); sky.dispose(); sea?.material.dispose();
         entry.users--; if (entry.evicted && !entry.users) for (const g of entry.geometries) g.dispose();
     };
-    return { group, setHour, sky, materials: [land.material, glow.material, haloMaterial, sky], triangles: entry.triangles, openings: ctx.openings, dispose };
+    return { group, setHour, sky, materials: [land.material, glow.material, haloMaterial, sky, ...(sea ? [sea.material] : [])], triangles: entry.triangles, openings: ctx.openings, dispose };
 }

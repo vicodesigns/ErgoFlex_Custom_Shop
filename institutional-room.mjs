@@ -35,10 +35,10 @@ const WINDOW_VISTAS = {
     hospital: 'city', laboratory: 'city', mobileit: 'city', government: 'city', police: 'city', security: 'city'
 };
 // The settings with a modelled outlook (window-scenery.mjs): Orange Coast College's media lab looks over its quad from a
-// floor up; the Huntington Beach classroom is on the ground floor by the Oilers' field.
+// floor up; the Huntington Beach classroom is a floor up over the Oilers' field. Both look out to the Pacific.
 const WINDOW_SCENERY = {
     occmedialab: { scene: 'socal-campus', seed: 5150, storey: 4200 },
-    highschool: { scene: 'beach-school', seed: 1906, storey: 0 }
+    highschool: { scene: 'beach-school', seed: 1906, storey: 4000 }
 };
 
 // Suspended acoustic ceiling where a room asks for one: 610 × 1220 mm (2 × 4 ft)
