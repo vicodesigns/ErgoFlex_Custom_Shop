@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { attachVista } from './window-vista.mjs?v=polish-20261112f';
+import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113a';
 import {loungeDesign} from './lounge-design.mjs';
 import {buildLoungeChess} from './lounge-table-games.mjs';
 import {dressContemporaryLounge} from './lounge-contemporary-detail.mjs';
@@ -52,7 +53,9 @@ export function buildContemporaryLounge(room,root,l,h,modes){
  room.walls.push({obj:left,axis:'z',limit:w/2*root.scale.x,sign:-1});
  const skyCanvas=document.createElement('canvas');skyCanvas.width=skyCanvas.height=512;const sky=own(new THREE.CanvasTexture(skyCanvas));sky.colorSpace=THREE.SRGBColorSpace;
  const view=mesh(left,new THREE.PlaneGeometry(ww,wh),new THREE.MeshBasicMaterial({map:sky}),[-w/2-50,low+wh/2,wz]);view.rotation.y=Math.PI/2;view.castShadow=false;
- const windowVista=attachVista(view,'city');room.windowViewReady=Promise.all([room.windowViewReady,windowVista.ready]);
+ // Or a modelled street behind the glass (window-scenery.mjs): a high-rise apartment, a glass balustrade outside.
+ const outlookView=windowView('lounge'),windowVista=outlookView==='photo'?attachVista(view,'city'):null;if(windowVista)room.windowViewReady=Promise.all([room.windowViewReady,windowVista.ready]);
+ const scenery=outlookView==='scenery'?attachScenery(view,'city',{floor:-(low+wh/2),seed:3505,storey:30000,variant:'glass'}):null;
  // The glazing and 200 mm curtain margins remain completely unoccupied.
  const media=fixture(right,'modern-media-wall','Timber-framed cinema and acoustic wall',[w/2-12,0,l.loungeZ],-Math.PI/2);
  const cinema=l.tier>=3,mediaW=cinema?2800:2020;
@@ -125,6 +128,6 @@ export function buildContemporaryLounge(room,root,l,h,modes){
   if(placement.id!=='coffee-table')return;for(const child of [...object.children])object.remove(child);object.name='Sculpted mineral coffee table';object.userData.loungeTable='contemporary-stone-v2';object.userData.roomSupportHeights=[.3912];box(object,[1.2,.04,.7061],[0,.3712,0],stone,.07);box(object,[.75,.315,.40],[0,.1575,0],charcoal,.055);box(object,[.9,.0362,.48],[0,.3331,0],steel,.025);
  };
  root.userData.dimensionsMm={width:w,depth:d,height};root.userData.loungeDesign={revision:2,style:'contemporary',palette:p.name,desk:{...p.desk},window:{start:a,end,clearance:200},deskFeature:{x:0,z:l.desk[1],width:heroW},barZ:l.tier>=3?l.barZ:null,zones:['centered workspace','media','conversation',...(l.tier>=3?['refreshments']:[])],tableTopMm:391.2};
- let last=null;room.roomAtmosphere=(phase,accent=1)=>{windowVista.setPhase(phase);const mode=modes[phase]||modes.afternoon;if(last!==phase){const c=skyCanvas.getContext('2d'),g=c.createLinearGradient(0,0,0,512);g.addColorStop(0,mode.sky[0]);g.addColorStop(1,mode.sky[1]);c.fillStyle=g;c.fillRect(0,0,512,512);c.fillStyle=phase==='night'?'#1b2d40':'#8baca6';c.beginPath();c.moveTo(0,512);for(let x=0;x<=512;x+=8)c.lineTo(x,380+Math.sin(x*.012)*32);c.lineTo(512,512);c.fill();sky.needsUpdate=true;last=phase;}glow.emissive.set(mode.colors[1]);warm.emissive.set(mode.colors[0]);glow.emissiveIntensity=(phase==='night'?.24:.18+mode.wash*.7)*accent;warm.emissiveIntensity=(.08+mode.practical*.7)*accent;lights.forEach(s=>{s.light.color.set(s.bias?mode.colors[1]:mode.colors[phase==='party'&&s.partyColor?2:0]);s.light.intensity=s.power*(s.bias?mode.wash:mode.practical)*(root.scale.x*1000)**2*accent;});root.userData.atmosphere=phase;root.userData.loungeDesign.phase=phase;dressing.update(phase);};
+ let last=null;room.roomAtmosphere=(phase,accent=1)=>{windowVista?.setPhase(phase);scenery?.setHour(phase);const mode=modes[phase]||modes.afternoon;if(last!==phase){const c=skyCanvas.getContext('2d'),g=c.createLinearGradient(0,0,0,512);g.addColorStop(0,mode.sky[0]);g.addColorStop(1,mode.sky[1]);c.fillStyle=g;c.fillRect(0,0,512,512);c.fillStyle=phase==='night'?'#1b2d40':'#8baca6';c.beginPath();c.moveTo(0,512);for(let x=0;x<=512;x+=8)c.lineTo(x,380+Math.sin(x*.012)*32);c.lineTo(512,512);c.fill();sky.needsUpdate=true;last=phase;}glow.emissive.set(mode.colors[1]);warm.emissive.set(mode.colors[0]);glow.emissiveIntensity=(phase==='night'?.24:.18+mode.wash*.7)*accent;warm.emissiveIntensity=(.08+mode.practical*.7)*accent;lights.forEach(s=>{s.light.color.set(s.bias?mode.colors[1]:mode.colors[phase==='party'&&s.partyColor?2:0]);s.light.intensity=s.power*(s.bias?mode.wash:mode.practical)*(root.scale.x*1000)**2*accent;});root.userData.atmosphere=phase;root.userData.loungeDesign.phase=phase;dressing.update(phase);};
  interiorCraftFinishes(room,{linen:[cloth],wood:[oak],metal:[steel]});room.roomAtmosphere('afternoon');
 }
