@@ -163,7 +163,7 @@ float seaHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.545
 vec3 seaAt(vec3 view, vec3 sunDir, vec2 spot) {
     float down = clamp(-view.y, 0., 1.), fres = exp(-down * 12.);
     float day = clamp(dot(zenith, vec3(.3, .59, .11)) * 4., .06, 1.);   // the water's own colour is lit by the day (dark at night)
-    vec3 c = mix(seaColor * day * (.55 + .45 * clamp(sunDir.y * 2. + .3, 0., 1.)), mix(horizon, zenith, .45), .1 + .28 * fres);
+    vec3 c = mix(seaColor * day * (.55 + .45 * clamp(sunDir.y * 2. + .3, 0., 1.)), mix(horizon, zenith, .45), .16 + .34 * fres);
     vec3 r = reflect(view, vec3(0., 1., 0.)); float s = max(dot(r, sunDir), 0.), s2 = s * s, s6 = s2 * s2 * s2;
     vec2 g = spot / 1800., cell = floor(g), f = fract(g) - .5; float sparkle = step(.55, seaHash(cell)) * (.5 + .5 * seaHash(cell + 3.1)) * smoothstep(.5, .1, length(f));
     float s48 = s6 * s6; s48 *= s48; s48 *= s48;

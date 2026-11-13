@@ -78,7 +78,7 @@ differ.
 | library humboldt (commons) | `humboldt` | ground | three sides: the redwood grove; ferns, lawn and a campus building; the entry plaza. Marine layer |
 | occmedialab (coast) | `socal-campus` | 8.4 m | the quad (jacarandas to its sides), a mid-century block, car park, over the mesa's edge the town's tile roofs, the beach and the sea |
 | highschool (oilers) | `beach-school` | 4 m | over the fence: the lawn, track and bleachers to the left, palms in clumps, the bluff down to the town, the beach and the sea |
-| gym (wellness) | `city` 'square' | 0.6 m | planter and railings, the street, a square of plane trees with a kiosk and a fountain, a row of blocks beyond |
+| gym (wellness) | `city` 'square' | 13 m | a high floor, like the photograph: roofs below the eye and the towers beyond (the ground-floor square read as near crowns against the sky through the film's low cameras) |
 | gaming (music) | `city-neon` 'corner' | 3.4 m | the side street at the window's edge, neon |
 | music (media, night) | `city` 'low' | 3.4 m | a low row of shops, a car park opposite, low roofs and towers far off under the sky |
 | workshop (storage) | `yard` | ground | apron, lumber lean-to, shed, trailer, fences, fruit trees, utility pole |

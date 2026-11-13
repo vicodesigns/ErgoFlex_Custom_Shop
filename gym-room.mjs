@@ -214,8 +214,9 @@ export function buildGymRoom(room, root, layout, helpers) {
     // The photographed view replaces the painted canvas once it has loaded; the canvas stays as the fallback.
     // Or a modelled street behind the glass (window-scenery.mjs), or the painted canvas alone: windowView() decides.
     const view = windowView('gym'), windowVista = view === 'photo' ? attachVista(pane, 'city') : null; if (windowVista) room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
-    // A home gym is on the ground floor (a step up from the pavement); the apartment nook is four floors up.
-    const scenery = view === 'scenery' ? attachScenery(pane, 'city', { floor: -(low + wh / 2), seed: 4401, variant: 'square', storey: layout.id === 'apartment' ? 12000 : 600 }) : null;
+    // Both gyms look out from an upper floor over roofs to the towers, like the photograph (from the ground floor the
+    // film's low cameras saw only near tree crowns against the sky).
+    const scenery = view === 'scenery' ? attachScenery(pane, 'city', { floor: -(low + wh / 2), seed: 4401, variant: 'square', storey: layout.id === 'apartment' ? 12000 : 13000 }) : null;
     for (const z of [a, wz, b]) box(left, [65, wh + 40, 30], [-w / 2 + 10, low + wh / 2, z], steel);
     for (const y of [low, low + wh]) box(left, [65, 30, ww + 40], [-w / 2 + 10, y, wz], steel);
     box(left, [180, 30, ww + 70], [-w / 2 + 50, low - 15, wz], oak, 3);

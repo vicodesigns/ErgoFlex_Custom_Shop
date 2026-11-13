@@ -579,8 +579,8 @@ function coast(k, ctx, edge, drop, shore, townFrom, townTo) {
     for (let x = cx - 90000; x < cx + 90000; x += 9000 + r() * 16000) if (r() < .5) car(k, r, x, low, roadZ + (r() < .5 ? 1100 : -1100), { turn: (r() < .5 ? 0 : Math.PI) });
     for (let i = 0; i < 9; i++) { const x = cx + (r() - .5) * 160000; for (let j = 0; j < 2 + Math.floor(r() * 3); j++) fanPalm(b, r, x + (r() - .5) * 5000, low, sandZ + 2500 + r() * 2500, { height: 15000 + r() * 9000 }); }
     // the surf: lines of foam on the sea side of the shore
-    for (const [dz, w, l] of [[1400, 2600, .9], [7500, 700, .62]]) b.add(QUAD, new THREE.Matrix4().compose(V(cx, low - 150, shore - dz), new THREE.Quaternion().setFromAxisAngle(V(1, 0, 0), -Math.PI / 2), V(1400000, w, 1)), () => colour('#c8ccc4').multiplyScalar(l));
-    k.sea = { y: low - 300, x0: cx - 1000000, x1: cx + 1000000, z0: -1150000, z1: shore - 1500, color: '#2a5874' };
+    for (const [dz, w, l] of [[1400, 3200, 1], [8000, 1100, .8], [16000, 700, .6]]) b.add(QUAD, new THREE.Matrix4().compose(V(cx, low - 150, shore - dz), new THREE.Quaternion().setFromAxisAngle(V(1, 0, 0), -Math.PI / 2), V(1400000, w, 1)), () => colour('#eef0ea').multiplyScalar(l));
+    k.sea = { y: low - 300, x0: cx - 1000000, x1: cx + 1000000, z0: -1150000, z1: shore - 1500, color: '#3c7890' };
 }
 function socal(k, ctx, kind) {
     const { land: b, r } = k, ground = ctx.ground, cx = (ctx.left + ctx.right) / 2, L = ctx.left - 30000, R = ctx.right + 30000;
@@ -716,11 +716,12 @@ export const SCENES = {
     campus: { build: campus, storey: 0, hazeFar: 90000 },
     schoolyard: { build: schoolyard, storey: 0, hazeFar: 80000 },
     'studio-garden': { build: studioGarden, storey: 0, hazeFar: 46000 },
-    // the marine layer: a low grey sky that burns off by afternoon, the air thick with it, the trunks going pale with distance
-    humboldt: { build: humboldt, storey: 0, hazeFar: 34000, lampLevel: .7, haloLevel: 1.2, hours: {
-        morning: { tint: [.86, .88, .86], zenith: '#a3b0b8', horizon: '#d5d8d4', sun: [-50, 16, '#f2eee2', .22], clouds: .95, haze: .62, air: '#c9cfcd' },
-        afternoon: { tint: [.94, .95, .92], zenith: '#8aa5bb', horizon: '#d6dcdc', sun: [45, 42, '#fff6e6', .35], clouds: .7, haze: .52, air: '#cdd4d4' },
-        evening: { tint: [.62, .56, .55], zenith: '#56607c', horizon: '#b99a8a', sun: [36, 6, '#ffb07a', .6], clouds: .8, haze: .66, air: '#9a8c86' },
+    // the marine layer: a low grey sky that burns off by afternoon, the far trunks going pale with distance (thin enough
+    // that the grove still reads as trees through the film's cameras, which see it from across the room)
+    humboldt: { build: humboldt, storey: 0, hazeFar: 60000, lampLevel: .7, haloLevel: 1.2, hours: {
+        morning: { tint: [.86, .88, .86], zenith: '#a3b0b8', horizon: '#d5d8d4', sun: [-50, 16, '#f2eee2', .22], clouds: .95, haze: .46, air: '#c9cfcd' },
+        afternoon: { tint: [.94, .95, .92], zenith: '#8aa5bb', horizon: '#d6dcdc', sun: [45, 42, '#fff6e6', .35], clouds: .7, haze: .38, air: '#cdd4d4' },
+        evening: { tint: [.62, .56, .55], zenith: '#56607c', horizon: '#b99a8a', sun: [36, 6, '#ffb07a', .6], clouds: .8, haze: .52, air: '#9a8c86' },
         night: { tint: [.09, .11, .15], zenith: '#0d1420', horizon: '#26303a', clouds: .9, haze: .6, air: '#1e2730', stars: .15 },
         party: { tint: [.12, .12, .2], zenith: '#151a32', horizon: '#33304e', clouds: .85, haze: .6, air: '#262640', stars: .1 } } },
     city: { build: (k, ctx) => city(k, ctx), storey: 3400, hazeFar: 110000, lampLevel: .78, hours: CITY_NIGHT },
