@@ -35,7 +35,7 @@ def role(garment):
 def hexc(c): return '#%02x%02x%02x' % tuple(round(max(0, min(1, v)) ** (1 / 2.2) * 255) for v in c)
 
 
-index = json.load(open(os.path.join(ROOT, 'assets/props/index.json')))['props']
+index = json.load(open(os.path.join(ROOT, 'assets/props/index.json'), encoding='utf-8'))['props']
 built = {p['id']: p for p in index if p.get('category') == 'people' and p.get('person')}
 characters = {}
 for cid, c in cast.CHARACTERS.items():
@@ -62,5 +62,5 @@ for mid, p in built.items():
     aids = sorted({('white cane' if h[1].get('white') else 'walking stick') if h[0] == 'cane' else h[0] for h in o.get('held', []) if h[0] in ('wheelchair', 'cane', 'prosthesis')})
     models[mid] = {**p['person'], 'name': p['name'], 'aids': aids}
 out = os.path.join(ROOT, 'assets/props/people.json')
-json.dump({'v': 1, 'characters': characters, 'poses': poses, 'models': models}, open(out, 'w'), indent=1); open(out, 'a').write('\n')
+json.dump({'v': 1, 'characters': characters, 'poses': poses, 'models': models}, open(out, 'w', encoding='utf-8', newline='\n'), indent=1); open(out, 'a', encoding='utf-8', newline='\n').write('\n')
 print('people catalog: %d characters, %d poses, %d models built' % (len(characters), len(poses), len(models)))
