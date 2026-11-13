@@ -222,12 +222,17 @@ function humboldt(k, ctx) {
 // four- to seven-storey buildings with shops at street level, taller blocks behind them, towers far off in the haze.
 // The storey (the room's floor above the street) decides how much of the street is seen. After dark: lamps and their
 // pools, lit windows and shopfronts, the odd car's lights; neon: signs over the shops and on the towers, a violet glow.
+const QUAD_FLAG = new THREE.PlaneGeometry(1, 1);
 const NEON = ['#ff4fa8', '#46d6ff', '#a066ff', '#ff9a4a', '#5cf0a8'];
 function city(k, ctx, { neon = false } = {}) {
     const { land: b, r } = k, ground = ctx.ground, cx = (ctx.left + ctx.right) / 2, L = ctx.left - 30000, R = ctx.right + 30000;
     const kerb = -5200, far = -15400, across = -19000, asphalt = colour('#4a4c50'), paving = colour('#a29d94'), out = new THREE.Color();
     // a side street runs away from the window's line across the road: a view between the blocks to the towers
-    const crossX = cx + (r() - .5) * 5000, crossW = 11000, inCross = (x, pad = 0) => Math.abs(x - crossX) < crossW / 2 + pad;
+    // variant: what stands nearest the glass ('balcony', 'ledge', 'glass' balustrade, 'planters' on a terrace) and what
+    // is across the street ('civic': a plaza with flagpoles before a stone building with a portico; 'hospital': a
+    // forecourt with a drop-off canopy before a white medical block), joined with '+'
+    const opts = (ctx.variant || '').split('+'), civic = opts.includes('civic'), hospital = opts.includes('hospital'), plaza = civic || hospital;
+    const crossX = cx + (r() - .5) * 5000, crossW = plaza ? 0 : 11000, inCross = (x, pad = 0) => !plaza && Math.abs(x - crossX) < crossW / 2 + pad;
     const fill = (x, z) => {
         if (z < far - 2600 && inCross(x)) { const lane = Math.abs(x - crossX) < 70 && (z % 6000 + 6000) % 6000 < 3000; return lane ? out.set(.62, .6, .52) : Math.abs(x - crossX) > crossW / 2 - 2600 ? out.copy(paving).multiplyScalar(.95) : out.copy(asphalt).multiplyScalar(.92 + r() * .1); }
         if (z > kerb) return out.copy(paving).multiplyScalar((Math.floor(x / 900) + Math.floor(z / 900)) % 2 ? .94 : 1).multiplyScalar(.95 + r() * .05);
@@ -236,12 +241,33 @@ function city(k, ctx, { neon = false } = {}) {
         return out.copy(paving).multiplyScalar(.92 + r() * .06); };
     land(b, ground, L, R, -60, -24000, -90000, fill, 600);
     // our side: a planter and railings against the building (seen from the ground floor), then the pavement
-    if (ctx.storey < 2500) {
+    if (ctx.storey < 2500 && !opts.includes('open') && !opts.includes('dock')) {
         b.box([ctx.width + 6000, 450, 900], [cx, ground + 225, -700], '#8f8a82');
         for (let x = ctx.left - 3000; x < ctx.right + 3000; x += 420 + r() * 200) shrub(b, r, x, ground + 450, -700 + (r() - .5) * 300, 230 + r() * 120, pick(r, ['#58744c', '#4f6b47', '#62804f']), { size: 70 });
         for (let x = ctx.left - 3000; x <= ctx.right + 3000; x += 130) b.box([22, 1000, 22], [x, ground + 950, -1250], '#2e3134');
         b.box([ctx.width + 6000, 40, 50], [cx, ground + 1450, -1250], '#2e3134');
     }
+    // right outside the glass, on the room's own floor
+    const fy = ctx.floor, span = ctx.width + 3000, metal = '#3a3d40';
+    if (opts.includes('balcony') || opts.includes('glass')) {
+        b.box([span, 220, 1600], [cx, fy - 110, -880], '#a9a59d');
+        if (opts.includes('glass')) { for (let x = cx - span / 2; x <= cx + span / 2; x += 1500) b.box([50, 1050, 50], [x, fy + 525, -1640], '#9aa0a4'); b.box([span, 50, 70], [cx, fy + 1060, -1640], '#9aa0a4'); }
+        else { for (let x = cx - span / 2; x <= cx + span / 2; x += 120) b.box([18, 1000, 18], [x, fy + 500, -1640], metal); b.box([span, 40, 60], [cx, fy + 1020, -1640], metal);
+            b.box([500, 450, 500], [cx + span * .3, fy + 225, -1100], '#7d5f4a'); shrub(b, r, cx + span * .3, fy + 450, -1100, 320, '#5f7d4c', { size: 60 });
+            b.box([480, 40, 480], [cx - span * .28, fy + 440, -1000], '#4a4c4e'); b.box([480, 480, 40], [cx - span * .28, fy + 680, -1230], '#4a4c4e'); }
+    }
+    if (opts.includes('louvres')) for (let x = ctx.left - 1500; x <= ctx.right + 1500; x += 700) b.box([90, ctx.height + 1600, 420], [x, (ctx.top + ctx.bottom) / 2, -450], '#b8b6b0');
+    if (opts.includes('flowerbox')) { b.box([ctx.width + 300, 320, 380], [cx, ctx.bottom - 170, -300], '#6e5a48');
+        for (let x = ctx.left; x <= ctx.right; x += 220) { shrub(b, r, x, ctx.bottom - 40, -300, 120, '#5f7d4c', { size: 40 }); flowers(b, r, x, ctx.bottom + 120, -300, 110, 5, ['#c8504a', '#e8e0d0', '#d88a9a'], 26); } }
+    if (opts.includes('bars')) { for (let x = ctx.left - 100; x <= ctx.right + 100; x += 160) b.box([24, ctx.height + 200, 24], [x, (ctx.top + ctx.bottom) / 2, -260], '#2c2e30');
+        for (const y of [ctx.bottom - 60, ctx.top + 60]) b.box([ctx.width + 300, 50, 40], [cx, y, -260], '#2c2e30'); }
+    if (opts.includes('open')) { bench(b, cx + span * .25, ground, -1800, 0, '#4a4c4e'); for (let i = 0; i < 3; i++) { const x = cx - span * .3 + i * 900; limb(b, V(x, ground, -2600), V(x, ground + 800, -2600), 25, '#3a3d40'); limb(b, V(x, ground + 800, -2600), V(x + 600, ground + 800, -2600), 25, '#3a3d40'); limb(b, V(x + 600, ground + 800, -2600), V(x + 600, ground, -2600), 25, '#3a3d40'); }
+        b.box([600, 900, 400], [cx - span * .05, ground + 450, -1500], '#2f3a36'); }
+    if (opts.includes('dock')) { b.box([span + 6000, ctx.storey, 2600], [cx, ground + ctx.storey / 2, -1360], '#9d9a92'); b.box([span + 6000, 120, 160], [cx, ground + ctx.storey, -2560], '#c9a83a');
+        for (let x = cx - span / 2 - 2000; x <= cx + span / 2 + 2000; x += 2400) b.box([220, 1000, 220], [x, ground + ctx.storey + 500, -2300], '#d8b43a'); }
+    if (opts.includes('ledge')) { b.box([span, 160, 420], [cx, ctx.bottom - 110, -300], '#b5ad9f'); b.box([span, 320, 120], [cx, ctx.bottom - 330, -150], '#a8a092'); }
+    if (opts.includes('planters')) { b.box([span, 200, 2400], [cx, fy - 100, -1300], '#8f8a82');
+        for (let x = cx - span / 2 + 600; x < cx + span / 2; x += 2200) { b.box([1600, 600, 700], [x, fy + 300, -2100], '#6e6a64'); shrub(b, r, x, fy + 600, -2100, 520, pick(r, ['#58744c', '#62804f']), { size: 80 }); } }
     // the near pavement's trees and lamps, the far pavement's
     // (never right in front of the window: the street is what the room looks at)
     for (let x = L + 8000 + r() * 3000; x < R - 8000; x += 9000 + r() * 3000) {
@@ -263,17 +289,38 @@ function city(k, ctx, { neon = false } = {}) {
     const walls = neon ? ['#8d8a86', '#7a7470', '#a09a92', '#6e6a68', '#9a8f84'] : ['#b9ab97', '#c9bfae', '#a8907a', '#bdb4a6', '#9d8270', '#cfc6b8'];
     const row = (x0, x1, depth, fn) => { for (let x = x0; x < x1;) { const width = Math.min(x1 - x, 9000 + r() * 9000); if (width > 4000) fn(x, width, depth); x += width; } };
     const block = (x, width) => { const floors = 3 + Math.floor(r() * 4);
-        building(k, r, x + width / 2, ground, across - 7000, { width: width - 200, depth: 14000, floors, wall: pick(r, walls), litRate: neon ? .5 : .45, warm: neon ? .45 : .75, neon: neon ? NEON : null });
+        building(k, r, x + width / 2, ground, across - 7000, { width: width - 200, depth: 14000, floors, material: pick(r, neon ? ['brick', 'render', 'panel', 'stone'] : ['brick', 'brick', 'stone', 'render', 'panel']), litRate: neon ? .5 : .45, warm: neon ? .45 : .75, neon: neon ? NEON : null });
         if (neon && r() < .5) { const c = pick(r, NEON), bx = x + width * (.15 + r() * .7); k.lights.box([380, 4200, 120], [bx, ground + 7500, across + 400], c); k.halos.add(bx, ground + 7500, across + 900, 2600, c, .3); b.light(bx, ground + 6000, across + 3000, c, 7000, .4); }
     };
-    row(L, crossX - crossW / 2, 0, block); row(crossX + crossW / 2, R, 0, block);
+    if (plaza) {   // a paved plaza (or forecourt) and, across it, the civic building or the medical block
+        const bz = across - 26000, flagX = cx + (r() - .5) * 6000, bw = 60000;
+        if (civic) {
+            building(k, r, cx, ground, bz - 9000, { width: bw, depth: 18000, floors: 4, storey: 4400, shops: false, material: 'stone', bays: 16, litRate: .3 });
+            const face = bz;   // the portico: steps, columns, a pediment
+            for (let i = 0; i < 4; i++) b.box([26000 - i * 600, 300, 1200], [cx, ground + 150 + i * 300, face + 4600 - i * 1100], '#cfc6b4');
+            for (let i = 0; i < 8; i++) b.add(new THREE.CylinderGeometry(500, 560, 10500, 12, 1, true), M(cx - 10500 + i * 3000, ground + 1200 + 5250, face + 1800), () => colour('#ddd5c4'), { ambient: .55 });
+            b.box([25000, 1200, 3000], [cx, ground + 12300, face + 1500], '#d6cdbb');
+            const ped = new THREE.Shape(); ped.moveTo(-12800, 0); ped.lineTo(0, 3200); ped.lineTo(12800, 0); ped.closePath(); const pg = new THREE.ExtrudeGeometry(ped, { depth: 2800, bevelEnabled: false });
+            b.add(pg, M(cx, ground + 12900, face + 100), () => colour('#d2c9b6'), { facet: true }); pg.dispose();
+            for (let i = 0; i < 3; i++) { const x = flagX - 4000 + i * 4000; pole(b, x, ground, -21000, 11000, 70, '#c9c9c4');
+                b.add(QUAD_FLAG, M(x + 900, ground + 10200, -21000, 1800, 1100, 1), () => colour(['#5a6e8c', '#8c4b45', '#d8d2c2'][i]), { light: false }); }
+        } else {
+            building(k, r, cx, ground, bz - 9000, { width: bw, depth: 18000, floors: 6, storey: 3800, shops: false, style: 'band', wall: '#dcdad4', glass: '#4a5a66', litRate: .5, warm: .4, cornice: false, roof: '#cfcac0', bays: 14 });
+            b.box([22000, 400, 7000], [cx, ground + 4200, bz + 3500], '#e3e1dc'); for (let x = cx - 10000; x <= cx + 10000; x += 5000) pole(b, x, ground, bz + 6700, 4000, 120, '#b9bcbe');
+            for (let x = cx - 9000; x <= cx + 9000; x += 3000) { k.lights.box([600, 40, 600], [x, ground + 3980, bz + 3500], '#f2f4f0'); }
+            b.light(cx, ground + 3500, bz + 4000, '#eef2f0', 9000, .6);
+            b.box([5200, 2400, 2100], [cx + 6000, ground + 1300, bz + 9000], '#e8e6e0'); b.box([1600, 1900, 2000], [cx + 8600, ground + 950, bz + 9000], '#e8e6e0'); b.quad(2000, 260, [cx + 6000, ground + 1500, bz + 10060], colour('#a8433a'));
+        }
+        for (let x = cx - 22000; x <= cx + 22000; x += 7300) { if (Math.abs(x - flagX) < 6000 && civic) continue; b.box([2200, 500, 2200], [x, ground + 250, -26000], '#a49d90'); tree(b, r, x, ground + 500, -26000, { height: 7000, hex: '#62804e', shape: 'round' }); }
+        for (let x = cx - 24000; x <= cx + 24000; x += 2400) b.box([220, 900, 220], [x, ground + 450, far - 900], '#6a6c6e');
+    } else { row(L, crossX - crossW / 2, 0, block); row(crossX + crossW / 2, R, 0, block); }
     // down the side street: its lamps, the sides of the blocks along it (windows on the street), a car going away
-    for (const side of [-1, 1]) for (let z = across - 16000; z > -50000; z -= 14000 + r() * 4000) {
+    if (!plaza) for (const side of [-1, 1]) for (let z = across - 16000; z > -50000; z -= 14000 + r() * 4000) {
         const w = 12000, x = crossX + side * (crossW / 2 + w / 2), floors = 3 + Math.floor(r() * 5);
-        building(k, r, x, ground, z, { width: w, depth: 13000, floors, wall: pick(r, walls), litRate: neon ? .5 : .4, warm: .7, shops: false, side: -side, cornice: false });
+        building(k, r, x, ground, z, { width: w, depth: 13000, floors, material: pick(r, ['brick', 'stone', 'render']), litRate: neon ? .5 : .4, warm: .7, shops: false, side: -side, cornice: false });
     }
-    for (let z = far - 6000; z > -52000; z -= 12000) for (const side of [-1, 1]) streetLamp(k, crossX + side * (crossW / 2 - 900), ground, z, { height: 6500, reach: 0, face: 1, hex: neon ? '#ffd2a8' : '#ffd29a', power: .8 });
-    { const z = -30000 - r() * 8000, x = crossX + 1800; car(k, r, x, ground, z, { turn: Math.PI / 2 }); k.lights.box([1300, 140, 60], [x, ground + 700, z + 2250], '#d23a2a'); k.halos.add(x, ground + 700, z + 2400, 800, '#ff4030', .3); }
+    if (!plaza) for (let z = far - 6000; z > -52000; z -= 12000) for (const side of [-1, 1]) streetLamp(k, crossX + side * (crossW / 2 - 900), ground, z, { height: 6500, reach: 0, face: 1, hex: neon ? '#ffd2a8' : '#ffd29a', power: .8 });
+    if (!plaza) { const z = -30000 - r() * 8000, x = crossX + 1800; car(k, r, x, ground, z, { turn: Math.PI / 2 }); k.lights.box([1300, 140, 60], [x, ground + 700, z + 2250], '#d23a2a'); k.halos.add(x, ground + 700, z + 2400, 800, '#ff4030', .3); }
     // behind: taller blocks; far off: the towers
     for (let x = L - 20000; x < R + 20000;) { const width = 14000 + r() * 12000;
         building(k, r, x + width / 2, ground, -52000 - r() * 10000, { width, depth: 18000, floors: 9 + Math.floor(r() * 9), wall: pick(r, walls), style: r() < .4 ? 'band' : 'punched', bays: 5, shops: false, litRate: neon ? .5 : .32, warm: .6, cornice: r() < .5 });

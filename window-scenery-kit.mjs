@@ -87,7 +87,7 @@ export class Halos {
 export const BOX = new THREE.BoxGeometry(1, 1, 1), QUAD = new THREE.PlaneGeometry(1, 1);
 const SPRAY = new THREE.TetrahedronGeometry(1, 0), CORE = new THREE.IcosahedronGeometry(1, 2), CORE_FAR = new THREE.IcosahedronGeometry(1, 1), BLOOM = new THREE.TetrahedronGeometry(1, 0), ROCK = new THREE.IcosahedronGeometry(1, 0);
 const STEM = new THREE.CylinderGeometry(.72, 1, 1, 7, 1, true).translate(0, .5, 0), POLE = new THREE.CylinderGeometry(1, 1, 1, 6, 1, true).translate(0, .5, 0);
-const Y = new THREE.Vector3(0, 1, 0), FWD = new THREE.Vector3(0, 0, 1), q = new THREE.Quaternion(), euler = new THREE.Euler(), at = new THREE.Vector3(), scale = new THREE.Vector3(), m4 = new THREE.Matrix4();
+const Y = new THREE.Vector3(0, 1, 0), X = new THREE.Vector3(1, 0, 0), FWD = new THREE.Vector3(0, 0, 1), q = new THREE.Quaternion(), euler = new THREE.Euler(), at = new THREE.Vector3(), scale = new THREE.Vector3(), m4 = new THREE.Matrix4();
 
 // A tapered limb (or pole) from a to b, radius r at a.
 export function limb(b, a, end, radius, hex, { geometry = STEM, ambient = .5 } = {}) {
@@ -314,16 +314,34 @@ export function house(k, r, x, ground, z, { width = 9000, depth = 7000, eaves = 
 
 // A block of a city: a box of `floors` storeys, its face toward the room (+z) a grid of windows (and its side, when it
 // shows), a cornice, a ground floor of shops. litRate: the share of windows lit after dark.
-export function building(k, r, x, ground, z, { width = 16000, depth = 14000, floors = 6, storey = 3200, wall = '#b9ab97', glass = '#3e4a55', frame = '#d9d2c4', bays, litRate = .35, shops = true, side = 0, style = 'punched', cornice = true, warm = .7, neon = null, skip = 0, fins = null, roof = null } = {}) {
+// material ('brick', 'stone', 'render', 'panel') gives the face its make: the wall's tone, string courses and pilasters,
+// windows set in a shadowed reveal with sills (and heads on brick), a stepped cornice or a parapet, signs over the
+// shops, things on the roof. Without it the face is plain (far blocks, campus buildings).
+const MAKES = {
+    brick: { walls: ['#946655', '#8a5d4d', '#a07462', '#7f5a4c'], trim: '#d2c8b4', courses: 1, pilasters: true, heads: true },
+    stone: { walls: ['#c9bda6', '#bdb19b', '#cfc5b2'], trim: '#e0d8c6', courses: 1, pilasters: true, heads: false },
+    render: { walls: ['#d3ccbf', '#b9b3a8', '#c7bfae', '#a5a9a7'], trim: '#e4ded2', courses: 2, pilasters: false, heads: false },
+    panel: { walls: ['#77787a', '#6c6f72', '#86837d'], trim: '#5b5d60', courses: 1, pilasters: false, heads: false }
+};
+const SIGNS = ['#5c3a34', '#2f4c4a', '#353f55', '#7a6a3e', '#4a4a4c', '#6d4f3a'];
+const TANK = new THREE.CylinderGeometry(1, 1, 1, 10, 1);
+export function building(k, r, x, ground, z, { width = 16000, depth = 14000, floors = 6, storey = 3200, wall = '#b9ab97', glass = '#3e4a55', frame = '#d9d2c4', bays, litRate = .35, shops = true, side = 0, style = 'punched', cornice = true, warm = .7, neon = null, skip = 0, fins = null, roof = null, material = null } = {}) {
     if (!seen(k.land, x, z, width / 2 + 3000)) return 0;
-    const { land: b, lights, halos } = k, height = floors * storey + (shops ? 600 : 0), face = z + depth / 2, wallC = colour(wall).offsetHSL(0, 0, (r() - .5) * .05);
+    const make = material && MAKES[material], { land: b, lights, halos } = k, base = shops ? 600 : 0, height = floors * storey + base, face = z + depth / 2;
+    const wallC = colour(make ? make.walls[Math.floor(r() * make.walls.length)] : wall).offsetHSL(0, 0, (r() - .5) * .05), trim = make ? colour(make.trim).offsetHSL(0, 0, (r() - .5) * .04) : colour(frame);
     b.box([width, height, depth], [x, ground + height / 2, z], wallC);
-    if (cornice) b.box([width + 300, 380, 500], [x, ground + height - 190, face - 100], frame);
+    if (cornice) { b.box([width + 300, 380, 500], [x, ground + height - 190, face - 100], trim);
+        if (make && material !== 'panel' && material !== 'render') b.box([width + 600, 160, 760], [x, ground + height - 20, face - 230], trim); }
+    else if (make) b.box([width, 700, 200], [x, ground + height + 350, face - 100], wallC.clone().multiplyScalar(.92));     // a parapet
     if (roof) b.box([width + 1200, 450, depth + 1200], [x, ground + height + 225, z], roof);
     const n = bays ?? Math.max(2, Math.round(width / 3200)), bay = width / n, glassC = colour(glass);
-    const litColours = ['#ffd9a3', '#ffe4bd', '#fff0d6', '#f6d8b0', '#d9e4f0'];
+    const litColours = ['#ffd9a3', '#ffe4bd', '#fff0d6', '#f6d8b0', '#d9e4f0'], wFrac = .42 + r() * .16, hFrac = .5 + r() * .12, reveal = wallC.clone().multiplyScalar(.62);
+    if (make) {
+        for (let f = shops ? 1 : 0; f < floors; f += make.courses) b.box([width + 120, 140, 160], [x, ground + base + f * storey + 70, face + 80], trim);
+        if (make.pilasters) for (let i = 0; i <= n; i += 2) b.box([300, height - base - (shops ? 3800 - base : 0), 140], [x - width / 2 + bay * i, ground + (height + (shops ? 3800 : 0)) / 2, face + 70], trim.clone().multiplyScalar(.96));
+    }
     for (let f = shops ? 1 : 0; f < floors; f++) {
-        const y = ground + (shops ? 600 : 0) + f * storey + storey * .52;
+        const y = ground + base + f * storey + storey * .52;
         if (style === 'band') {   // a curtain wall: one band of glass per floor
             b.quad(width - 400, storey * .62, [x, y, face + 12], glassC.clone().multiplyScalar(.85 + .3 * (f / floors)));
             for (let i = 0; i < n; i++) if (r() < litRate) lights.quad(bay * .8, storey * .5, [x - width / 2 + bay * (i + .5), y, face + 22], litColours[Math.floor(r() * (r() < warm ? 4 : 5))]);
@@ -331,29 +349,41 @@ export function building(k, r, x, ground, z, { width = 16000, depth = 14000, flo
         }
         for (let i = 0; i < n; i++) {
             if (skip && r() < skip) continue;
-            const wx = x - width / 2 + bay * (i + .5), ww = bay * .52, wh = storey * .56;
-            b.box([ww + 160, wh + 160, 40], [wx, y, face + 20], frame); b.quad(ww, wh, [wx, y, face + 44], glassC.clone().multiplyScalar(.75 + r() * .4 + .25 * (f / floors)));
-            if (r() < litRate) { const lc = colour(litColours[Math.floor(r() * (r() < warm ? 4 : 5))]).multiplyScalar(.6 + r() * .45); lights.quad(ww, wh * (r() < .3 ? .55 : 1), [wx, y, face + 56], lc); }
+            const wx = x - width / 2 + bay * (i + .5), ww = bay * (make ? wFrac : .52), wh = storey * (make ? hFrac : .56), g = glassC.clone().multiplyScalar(.75 + r() * .4 + .25 * (f / floors));
+            if (make) { b.box([ww + 140, wh + 140, 30], [wx, y, face + 15], reveal); b.quad(ww, wh, [wx, y, face + 34], g);
+                b.box([ww + 260, 90, 170], [wx, y - wh / 2 - 60, face + 85], trim); if (make.heads) b.box([ww + 240, 170, 60], [wx, y + wh / 2 + 120, face + 30], trim); }
+            else { b.box([ww + 160, wh + 160, 40], [wx, y, face + 20], frame); b.quad(ww, wh, [wx, y, face + 44], g); }
+            if (r() < litRate) { const lc = colour(litColours[Math.floor(r() * (r() < warm ? 4 : 5))]).multiplyScalar(.6 + r() * .45); lights.quad(ww, wh * (r() < .3 ? .55 : 1), [wx, y, face + (make ? 46 : 56)], lc); }
         }
     }
     if (fins) { const n2 = (bays ?? Math.max(2, Math.round(width / 3200))) * 2; for (let i = 0; i <= n2; i++) b.box([180, height - 300, 420], [x - width / 2 + width * i / n2, ground + (height - 300) / 2, face + 210], fins, .08, r); }
     if (side) { const sx = x + side * width / 2, sideN = Math.max(1, Math.round(depth / 3600));
         for (let f = shops ? 1 : 0; f < floors; f++) for (let i = 0; i < sideN; i++) {
-            const y = ground + (shops ? 600 : 0) + f * storey + storey * .52, wz = z - depth / 2 + depth / sideN * (i + .5);
+            const y = ground + base + f * storey + storey * .52, wz = z - depth / 2 + depth / sideN * (i + .5);
             b.add(QUAD, new THREE.Matrix4().compose(at.set(sx + side * 30, y, wz), q.setFromAxisAngle(Y, side * Math.PI / 2), scale.set(depth / sideN * .5, storey * .55, 1)), () => glassC, { light: false });
             if (r() < litRate * .8) lights.add(QUAD, new THREE.Matrix4().compose(at.set(sx + side * 45, y, wz), q.setFromAxisAngle(Y, side * Math.PI / 2), scale.set(depth / sideN * .5, storey * .55, 1)), () => colour('#ffdcaa'));
         } }
-    if (shops) {   // a ground floor of shopfronts: glass, a fascia, an awning, lit after dark
+    if (shops) {   // a ground floor of shopfronts: glass, a fascia with its sign, an awning or a hanging sign, lit after dark
         const sh = 3800;
-        for (let i = 0; i < n; i++) { const wx = x - width / 2 + bay * (i + .5);
+        for (let i = 0; i < n; i++) { const wx = x - width / 2 + bay * (i + .5), sign = colour(SIGNS[Math.floor(r() * SIGNS.length)]).offsetHSL(0, 0, (r() - .5) * .05);
             b.quad(bay * .78, sh * .62, [wx, ground + sh * .4, face + 30], glassC.clone().multiplyScalar(.7));
-            b.box([bay * .9, 420, 120], [wx, ground + sh * .82, face + 60], frame);
-            if (r() < .45) b.box([bay * .82, 160, 1100], [wx, ground + sh * .74, face + 600], ['#7a4b3e', '#3f5a54', '#5a5a6e', '#8a7a52'][Math.floor(r() * 4)]);
+            b.box([bay * .92, 520, 140], [wx, ground + sh * .82, face + 70], make ? sign : frame);
+            if (make) b.quad(bay * .5, 220, [wx, ground + sh * .82, face + 142], trim.clone().multiplyScalar(.95));
+            if (r() < .45) { const aw = colour(['#7a4b3e', '#3f5a54', '#5a5a6e', '#8a7a52', '#6b6f62'][Math.floor(r() * 5)]);
+                b.add(BOX, new THREE.Matrix4().compose(at.set(wx, ground + sh * .7, face + 650), q.setFromAxisAngle(X, .35), scale.set(bay * .82, 60, 1250)), () => aw, { ambient: .6 });
+                b.box([bay * .82, 260, 40], [wx, ground + sh * .7 - 270, face + 1230], aw.clone().multiplyScalar(.85)); }
+            else if (make && r() < .35) { b.box([60, 700, 600], [wx + bay * .4, ground + sh + 300, face + 420], sign); b.box([40, 900, 40], [wx + bay * .4, ground + sh + 750, face + 120], '#3c3e40'); }
             if (r() < .8) { lights.quad(bay * .74, sh * .55, [wx, ground + sh * .4, face + 42], colour('#ffe2b8').multiplyScalar(.5 + r() * .15)); b.light(wx, ground + 1600, face + 2200, '#ffd9a8', 3800, .32); }
             if (neon && r() < .7) { const nc = neon[Math.floor(r() * neon.length)]; lights.box([bay * .55, 260, 40], [wx, ground + sh + 500, face + 70], nc); halos.add(wx, ground + sh + 500, face + 300, bay * .55, nc, .35); b.light(wx, ground + sh, face + 2500, nc, 5000, .5); }
         } }
-    // rooftop: a plant room, a water tank
-    if (r() < .6) b.box([width * .3, 1800, depth * .3], [x + (r() - .5) * width * .4, ground + height + 900, z - depth * .1], '#9a958d');
+    // on the roof: a plant room, a water tank on legs, air-conditioning units, an aerial
+    const top = ground + height;
+    if (r() < .6) b.box([width * .3, 1800, depth * .3], [x + (r() - .5) * width * .4, top + 900, z - depth * .1], '#9a958d');
+    if (make) {
+        if (r() < .35) { const tx = x + (r() - .5) * width * .6, tz = z + depth * .1; b.add(TANK, M(tx, top + 3200, tz, 1300, 2600, 1300), () => colour('#7d6a58'), { ambient: .55 }); for (const [dx, dz] of [[-900, -900], [900, -900], [-900, 900], [900, 900]]) b.box([90, 1900, 90], [tx + dx, top + 950, tz + dz], '#4a4b4c'); }
+        for (let i = 0, m = Math.floor(r() * 4); i < m; i++) b.box([1100, 800, 900], [x + (r() - .5) * width * .7, top + 400, face - 1500 - r() * 3000], '#a3a3a0');
+        if (r() < .4) pole(b, x + (r() - .5) * width * .5, top, face - 2000, 3500, 35, '#58595b');
+    }
     return height;
 }
 
@@ -368,16 +398,22 @@ export function streetLamp(k, x, ground, z, { height = 6500, reach = 1200, hex =
     b.light(x, ground + height - 300, z + face * reach, hex, 8500, .8 * power);
 }
 // A parked car: a body, a cabin with dark glass, wheels; its colour muted.
-const CABIN = (() => { const s = new THREE.Shape(); s.moveTo(-.5, 0); s.lineTo(.5, 0); s.lineTo(.3, 1); s.lineTo(-.38, 1); s.closePath(); return new THREE.ExtrudeGeometry(s, { depth: 1, bevelEnabled: false }).translate(0, 0, -.5); })();
+// A parked car: a body with a raked bonnet and boot, a glass cabin with its roof in the body's colour, wheels with
+// hubs, lamps front and back; a few muted colours.
+const profile = points => { const sh = new THREE.Shape(); sh.moveTo(...points[0]); for (const p of points.slice(1)) sh.lineTo(...p); sh.closePath(); return sh; };
+const CAR_BODY = new THREE.ExtrudeGeometry(profile([[-2200, 280], [2200, 280], [2230, 520], [2150, 720], [1050, 860], [-1450, 900], [-2150, 820], [-2230, 560]]), { depth: 1, bevelEnabled: false }).translate(0, 0, -.5);
+const CAR_CABIN = new THREE.ExtrudeGeometry(profile([[1050, 860], [250, 1400], [-1050, 1420], [-1650, 900]]), { depth: 1, bevelEnabled: false }).translate(0, 0, -.5);
+const WHEEL = new THREE.CylinderGeometry(330, 330, 230, 10, 1).rotateX(Math.PI / 2), HUB = new THREE.CylinderGeometry(170, 170, 250, 8, 1).rotateX(Math.PI / 2);
+const CAR_COLOURS = ['#4f545a', '#6d7176', '#2f3438', '#5e3c36', '#36475a', '#8d8a83', '#424b3f', '#6a5f52', '#7a2f2b', '#9a9890'];
 export function car(k, r, x, ground, z, { turn = 0, hex } = {}) {
     if (!seen(k.land, x, z, 3000)) return;
-    const b = k.land, body = hex || ['#4f545a', '#6d7176', '#2f3438', '#53352f', '#36475a', '#85827c', '#424b3f', '#5c5449'][Math.floor(r() * 8)], len = 4300 + r() * 500, w = 1780;
-    const T = new THREE.Matrix4().makeTranslation(x, ground, z).multiply(new THREE.Matrix4().makeRotationY(turn));
-    const put = (geometry, m, hex) => { const c = colour(hex); b.add(geometry, T.clone().multiply(m), () => c, { ambient: .55, facet: true }); };
-    put(BOX, M(0, 560, 0, len, 560, w), body); put(BOX, M(-len * .02, 860, 0, len * .96, 80, w * .97), body);
-    // the cabin: windscreen and rear window raked, glass dark, a roof in the body's colour
-    put(CABIN, M(-len * .06, 900, 0, len * .58, 520, w * .86), '#262b30'); put(BOX, M(-len * .1, 1440, 0, len * .36, 40, w * .82), body);
-    for (const sx of [-1, 1]) for (const sz of [-1, 1]) put(BOX, M(sx * len * .32, 320, sz * w * .44, 620, 620, 260), '#1c1c1e');
+    const b = k.land, body = colour(hex || CAR_COLOURS[Math.floor(r() * CAR_COLOURS.length)]), glass = colour('#262c32'), tyre = colour('#1b1b1d'), hub = colour('#8a8d90');
+    const T = new THREE.Matrix4().makeTranslation(x, ground, z).multiply(new THREE.Matrix4().makeRotationY(turn)), sx = .95 + r() * .1;
+    const put = (geometry, m, shade, options) => b.add(geometry, T.clone().multiply(m), shade, { ambient: .55, facet: true, ...options });
+    put(CAR_BODY, M(0, 0, 0, sx, 1, 1780), () => body);
+    put(CAR_CABIN, M(0, 0, 0, sx, 1, 1520), (p, n) => n.y > .8 ? body : glass);
+    for (const wx of [-1380, 1320]) for (const wz of [-800, 800]) { put(WHEEL, M(wx * sx, 330, wz), () => tyre); put(HUB, M(wx * sx, 330, wz), () => hub); }
+    put(BOX, M(2215 * sx, 640, 0, 30, 110, 1500), () => colour('#d8d4c8')); put(BOX, M(-2215 * sx, 700, 0, 30, 120, 1500), () => colour('#6e2a24'));
 }
 // A bench, a bollard, a bike rack, a bin: the furniture of paths and plazas.
 export function bench(b, x, ground, z, turn = 0, hex = '#76624f') {
