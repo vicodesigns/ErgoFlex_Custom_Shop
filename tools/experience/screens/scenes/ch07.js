@@ -2,6 +2,8 @@
 // Main (Dell 16:9): guided workout coach around the app's real exercise demo clips,
 // shown in dark mode (inverted). Tablet (3:2): breathing coach + heart rate.
 (function () {
+  // the lift's travel from sitting (28 in) to where it stops: 15.5 in to 43.5 until Nov 14 2026, 13 in to Maya's 41 since
+  const LIFT = (SHOT.clips || []).find(c => c.kind === 'lift'), SPAN = (LIFT ? LIFT.target : 43.5) - 28;
   const hr = t => 74 + 26 * sm(seg(t, 7, 14)) + 3 * Math.sin(t * 1.7) + 2 * noise(t * 2);
   function ecg(x, y, w, h, t, col) {
     const pts = [];
@@ -50,7 +52,7 @@
         icon('up', vx + 120, vy + vh - 130, 80, C.blue2, 10);
         T(`${p.height.toFixed(1)} in`, vx + 190, vy + vh - 104, 92, {w: 700});
         T('Desk rising to standing', vx + vw - 70, vy + vh - 150, 36, {w: 500, a: 'right', c: C.soft});
-        bar(vx + 640, vy + vh - 110, vw - 710, 20, (p.height - 28) / 15.5, lin(0, 0, W, 0, [[0, C.blue], [1, C.teal]]));
+        bar(vx + 640, vy + vh - 110, vw - 710, 20, (p.height - 28) / SPAN, lin(0, 0, W, 0, [[0, C.blue], [1, C.teal]]));
       });
       // countdown before the lift
       alpha(win(t, -1, 3, .4), () => {
@@ -64,7 +66,7 @@
       if (ph < 2) {
         const left = ph === 0 ? 3 - t : 8 - t;
         ring(rx + rw / 2, 350, 150, 30, ph === 0 ? t / 3 : (t - 3) / 5, ph === 0 ? C.amber : C.blue2, {glow: 20});
-        T(ph === 0 ? String(Math.ceil(Math.max(.01, left))) : `${Math.round(clamp((p.height - 28) / 15.5) * 100)}%`, rx + rw / 2, 385, 110, {w: 700, a: 'center'});
+        T(ph === 0 ? String(Math.ceil(Math.max(.01, left))) : `${Math.round(clamp((p.height - 28) / SPAN) * 100)}%`, rx + rw / 2, 385, 110, {w: 700, a: 'center'});
         T(ph === 0 ? 'get ready' : 'rising', rx + rw / 2, 440, 34, {w: 500, a: 'center', c: C.dim});
       } else {
         ring(rx + rw / 2, 350, 150, 30, 1 - el / setLen, C.teal, {glow: 20});
