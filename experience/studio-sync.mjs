@@ -1,4 +1,4 @@
-// Studio <-> Director sync (docs/director-studio-sync-pr-draft.md, phase 1: props and desks; no render change).
+// Studio <-> Director sync: props, desks and saved character placements.
 //
 // Studio and the Director share one state through the studio server (tools/studio-server.mjs, /api/studio-state).
 // The Director's stage is a frame with its own in-memory copy of that state, taken when the Director page loaded.
@@ -17,10 +17,14 @@
 //   desks  'ergoflex.sceneDesksBySizeV2'. The film builds a chapter's room desks from the room itself, not from Studio's
 //          saved desks (stage.mjs clearRoomRecipe), so that the film never depends on them. A Studio desk change
 //          therefore reaches a chapter only as a chapter desk edit, when it is adopted here.
+//   people saved :person: transforms in sceneAssets are offered as chapter peopleEdits. Adoption is selective,
+//          undoable, and preserves the rest of the cast and its timing. Refresh never silently replaces the cast.
 import {decodeStoredJSON,encodeStoredJSON} from '../browser-design-storage.mjs';
 import {propKey,describePropEdit,propName,effectivePropEdits,studioSceneIds} from './prop-edits.mjs';
 import {cleanDeskEdit,effectiveDeskEdits,describeDeskEdit} from './desk-edits.mjs';
 import {clampStartPose} from './start-pose.mjs';
+import {cleanPeople} from './people-edits.mjs';
+import {studioPeopleChanges,peopleEditsFromStudio} from './studio-people-sync.mjs';
 
 export const ASSETS_KEY='ergoflex.sceneAssets.v1',DESKS_KEY='ergoflex.sceneDesksBySizeV2';
 export const STUDIO_KEYS=[ASSETS_KEY,DESKS_KEY];
@@ -79,7 +83,7 @@ export function deskEditFromStudio(desk,studio,existing=null){
 const STUDIO_DID={moved:'Studio moved it','put back':'Studio put it back where the room has it',removed:'Studio removed it',restored:'Studio put it back in the room',added:'Studio added it','taken out':'Studio took it out again'};
 // The rows of the Adopt dialog. kind 'prop': the chapter also edits a prop Studio changed. kind 'desk': Studio changed
 // a room desk (conflict: the chapter edits it too). take: what "take Studio's" does.
-export function adoptRows({assetChanges=[],deskChanges=[],propEdits=[],deskEdits=[],featured=null}){
+export function adoptRows({assetChanges=[],deskChanges=[],peopleChanges=[],peopleEdits=null,propEdits=[],deskEdits=[],featured=null}){
   const rows=[];
   for(const c of assetChanges){
     const e=propEdits.find(p=>p.asset&&'scene:'+p.asset===c.editorId);if(!e)continue;
@@ -93,6 +97,13 @@ export function adoptRows({assetChanges=[],deskChanges=[],propEdits=[],deskEdits
     const can=c.what.some(w=>['size','place','start'].includes(w));
     rows.push({kind:'desk',id:c.desk,name:c.studio.name,conflict:!!e,desk:c,studio:'Studio changed its '+c.what.join(', '),
       chapter:e?describeDeskEdit(e):'as the film has it',take:can?'Use Studio\'s size, place and start in this chapter'+(e?.clips?.length||e?.build?' (the chapter\'s moves and build stay)':''):''});
+  }
+  for(const person of peopleChanges){
+    const name=person.id.replace(/^people-/,'').split('-')[0];
+    rows.push({kind:'person',id:person.key,name:name.charAt(0).toUpperCase()+name.slice(1),person,
+      conflict:!!peopleEdits?.cast?.some(p=>p.key===person.key),studio:person.removed?'Studio removed this person':'Studio changed their position, turn or size',
+      chapter:peopleEdits?.cast?.some(p=>p.key===person.key)?'your Director placement':'the film\'s cast',
+      take:person.removed?'Hide this person in the chapter':'Use Studio\'s position, turn and size in this chapter'});
   }
   return rows;
 }
@@ -157,15 +168,20 @@ export function createStudioSync({bridge,project,index,shot,film,commit,status,r
   function paint(){
     const n=waiting.length;top.hidden=!n||busy;
     top.textContent=`Studio changed: ${n} edit${n===1?'':'s'} · Refresh`;
-    top.title=`${who()} saved ${n} change${n===1?'':'s'} to Studio's props or desks. Read them into the stage: the chapter's edits and Undo stay.`;
+    top.title=`${who()} saved ${n} change${n===1?'':'s'} to Studio's props, desks or people. Read them into the stage: the chapter's edits and Undo stay.`;
     rerender();
   }
   const available=()=>!!sync()?.pull;
   const who=()=>[...new Set(waiting.map(k=>k.by))].join(', ');
+  function peopleSeed(){
+    const own=cleanPeople(shot()?.peopleEdits);if(own)return own;
+    const f=film()?.people;
+    return cleanPeople({cast:api()?.workspaceRoom?.people?.resolved?.()||[],when:f?.when||{},...(f?.chair?{chair:f.chair}:{}),...(f?.fade!==undefined?{fade:f.fade}:{})})||{cast:[]};
+  }
   function html(){
     if(!available())return '';
     const n=waiting.length;
-    return `<button data-action="ss-refresh" data-studio-refresh class="${n?'studio-changed':''}" ${busy?'disabled':''} title="${escape(n?`${who()} saved ${n} change${n===1?'':'s'} to Studio's props or desks. Read them into the stage: the chapter's edits and Undo stay.`:'Read Studio\'s props and desks into the stage again. The chapter\'s edits and Undo stay.')}">${n?`Studio changed: ${n} edit${n===1?'':'s'} · Refresh`:'Refresh from Studio'}</button>`;
+    return `<button data-action="ss-refresh" data-studio-refresh class="${n?'studio-changed':''}" ${busy?'disabled':''} title="${escape(n?`${who()} saved ${n} change${n===1?'':'s'} to Studio's props, desks or people. Read them into the stage: the chapter's edits and Undo stay.`:'Read Studio\'s props, desks and character placements into the stage again. The chapter\'s edits and Undo stay.')}">${n?`Studio changed: ${n} edit${n===1?'':'s'} · Refresh`:'Refresh from Studio'}</button>`;
   }
   async function refresh(){
     if(busy)return;if(!available())throw Error('Studio\'s shared state is not available on this server.');
@@ -175,17 +191,20 @@ export function createStudioSync({bridge,project,index,shot,film,commit,status,r
       status('Reading Studio…');
       const pulled=await sync().pull(key=>STUDIO_KEYS.includes(key));seenRev=pulled.rev;waiting=[];
       const values=Object.fromEntries(STUDIO_KEYS.map(k=>[k,localStorage.getItem(k)])),changed=STUDIO_KEYS.filter(k=>shown.get(k)!==values[k]);
-      if(!changed.length){status('Studio has nothing new for this stage.');return;}
       const s=shot(),roomKey=api()?.sceneDesks?.key||null,featured=api()?.sceneDesks?.selected??null,before=Object.fromEntries(changed.map(k=>[k,shown.get(k)]));
-      await bridge.refreshStudio(project(),index(),Object.fromEntries(changed.map(k=>[k,values[k]])));
+      if(changed.length)await bridge.refreshStudio(project(),index(),Object.fromEntries(changed.map(k=>[k,values[k]])));
       for(const k of changed)shown.set(k,values[k]);
-      const assetChanges=changed.includes(ASSETS_KEY)?diffSceneAssets(before[ASSETS_KEY],values[ASSETS_KEY],studioSceneIds(s)):[];
+      const sceneIds=studioSceneIds(s),layout=api()?.workspaceRoom?.roomLayout?.id;
+      if(!s.layout&&layout)sceneIds.unshift(`${s.room}:${layout}`);
+      const assetChanges=(changed.includes(ASSETS_KEY)?diffSceneAssets(before[ASSETS_KEY],values[ASSETS_KEY],sceneIds):[]).filter(c=>!/:person:/.test(c.editorId));
+      // Offer saved placements even when Director opened after the Studio save, or a previous offer was kept.
+      const peopleChanges=studioPeopleChanges(values[ASSETS_KEY],sceneIds,peopleSeed().cast);
       // The room's desks as the film has them (under the chapter's edits), for desks Studio saves for the first time.
       const known={};for(const r of api()?.sceneDesks?.records?.values()||[]){const st=r.deskEditWas?.state||r.state;if(st?.pose)known[r.id]={size:st.size,pose:{...st.pose},height:st.height,tilt:st.tilt};}
       const deskChanges=roomKey&&changed.includes(DESKS_KEY)?diffSceneDesks(before[DESKS_KEY],values[DESKS_KEY],roomKey,known):[];
-      rows=adoptRows({assetChanges,deskChanges,propEdits:effectivePropEdits(film(),s),deskEdits:effectiveDeskEdits(film(),s),featured});
-      const conflicts=rows.filter(r=>r.conflict).length,here=assetChanges.length+deskChanges.length;
-      status(`Refreshed from Studio${here?`: ${assetChanges.length} prop change${assetChanges.length===1?'':'s'} and ${deskChanges.length} desk change${deskChanges.length===1?'':'s'} in this room`:' (nothing in this chapter\'s room changed)'}. The chapter's edits and Undo are as they were.${conflicts?` ${conflicts} also edited in this chapter: choose which to keep.`:''}`);
+      rows=adoptRows({assetChanges,deskChanges,peopleChanges,peopleEdits:s.peopleEdits,propEdits:effectivePropEdits(film(),s),deskEdits:effectiveDeskEdits(film(),s),featured});
+      const conflicts=rows.filter(r=>r.conflict).length;
+      status(`Refreshed from Studio: ${assetChanges.length} prop, ${deskChanges.length} desk and ${peopleChanges.length} character change${peopleChanges.length===1?'':'s'} in this room. The chapter's edits and Undo are as they were.${conflicts?` ${conflicts} also edited in this chapter: choose which to keep.`:''}`);
       if(rows.length)openAdopt();
     }finally{busy=false;paint();}
   }
@@ -194,10 +213,10 @@ export function createStudioSync({bridge,project,index,shot,film,commit,status,r
   function openAdopt(){
     if(!rows.length){status('Studio and this chapter do not disagree on anything since the last Refresh.');return;}
     const conflicts=rows.filter(r=>r.conflict).length;
-    dialog.innerHTML=`<div class="director-heading"><div><span class="director-kicker">STUDIO CHANGED</span><h2 id="studio-adopt-title">${conflicts?'Keep the chapter\'s edit, or take Studio\'s?':'Use Studio\'s desks in this chapter?'}</h2></div></div>
+    dialog.innerHTML=`<div class="director-heading"><div><span class="director-kicker">STUDIO CHANGED</span><h2 id="studio-adopt-title">${conflicts?'Keep the chapter\'s edit, or take Studio\'s?':'Use Studio\'s changes in this chapter?'}</h2></div></div>
       <p>${conflicts?'Studio changed something this chapter also edits. ':''}Nothing changes unless you choose it here; one Undo puts it back.${rows.some(r=>r.kind==='desk')?' Room desks: the film keeps its own desk layout, so Studio\'s desk shows in a chapter only when you take it.':''}</p>
       <ul class="prop-permanent-list studio-adopt-list">${rows.map((r,i)=>`<li class="${r.take?'':'blocked'}"><b>${escape(r.name)}</b>${r.conflict?' <em>edited in both</em>':''}<small>${escape(r.studio)} · the chapter: ${escape(r.chapter)}</small>
-        <label class="director-check"><input type="radio" name="adopt-${i}" value="keep" checked><span>Keep ${r.conflict?'the chapter\'s edit':'the film\'s desk'}</span></label>
+        <label class="director-check"><input type="radio" name="adopt-${i}" value="keep" checked><span>Keep ${r.conflict?'the chapter\'s edit':r.kind==='person'?'the film\'s character':'the film\'s desk'}</span></label>
         ${r.take?`<label class="director-check"><input type="radio" name="adopt-${i}" value="take" data-adopt="${i}"><span>${escape(r.take)}</span></label>`:`<small>${r.gone?'The chapter\'s edit stays: the film still has this desk.':'Only its build changed in Studio: a chapter takes a build in the Build tab.'}</small>`}</li>`).join('')}</ul>
       <div class="director-actions"><button data-adopt-go class="primary" disabled>Apply</button><button data-adopt-cancel>Close</button></div>`;
     dialog.showModal();dialog.querySelector('[data-adopt-cancel]').focus();
@@ -210,10 +229,12 @@ export function createStudioSync({bridge,project,index,shot,film,commit,status,r
     dialog.close();if(taken.length)adopt(taken);
   });
   function adopt(taken){
-    const props=new Set(taken.filter(r=>r.kind==='prop').map(r=>r.id)),desks=taken.filter(r=>r.kind==='desk'&&r.desk);
+    const props=new Set(taken.filter(r=>r.kind==='prop').map(r=>r.id)),desks=taken.filter(r=>r.kind==='desk'&&r.desk),people=taken.filter(r=>r.kind==='person');
+    const seed=people.length?peopleSeed():null;
     commit(()=>{
       const s=shot(),f=film();
       if(props.size)s.propEdits=effectivePropEdits(f,s).filter(e=>!props.has(propKey(e)));
+      if(people.length)s.peopleEdits=peopleEditsFromStudio(seed,people.map(r=>r.person));
       if(desks.length){
         let list=effectiveDeskEdits(f,s);
         for(const r of desks){const next=deskEditFromStudio(r.id,r.desk.studio,list.find(e=>e.desk===r.id)||null);list=list.filter(e=>e.desk!==r.id);if(next)list.push(next);}

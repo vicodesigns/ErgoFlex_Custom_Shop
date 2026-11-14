@@ -252,6 +252,7 @@ function plainLocalTransform(obj) {
 
 function applyPlainLocalTransform(obj, transform) {
     if (!transform) return;
+    if (obj.userData.person && !window.__ERGO_PRESENTATION__) obj.userData.personPlacement = structuredClone(transform);
     transform = notebookTransform(obj, transform);
     transform = roomLifeDisplayTransform(obj, transform);
     obj.position.set(transform.p.x, transform.p.y, transform.p.z);
@@ -357,7 +358,9 @@ function selectionTarget(obj) {
 
 function registerSceneAsset(obj) {
     const editorId = sceneAssetEditorId(obj);
-    if (!editorId || sceneAssetRegistry.has(editorId)) return;
+    if (!editorId || sceneAssetRegistry.get(editorId)?.obj === obj) return;
+    const previous=sceneAssetRegistry.get(editorId);
+    if(previous)unregisterSceneAsset(previous.obj);
     obj.userData.editorId = editorId;
     const entry = {
         obj, editorId, name: sceneAssetName(obj), kind: 'sceneAsset',
@@ -410,9 +413,15 @@ function canonicalTransformPlain(obj) {
 }
 
 function captureActiveSceneAssetTransforms() {
+    // Rigging may replace a person's mesh after the first room hydration.
+    for(const obj of workspaceRoom?.people?.people || [])if(obj.parent&&obj.userData.personPlacement)registerSceneAsset(obj);
     if (!sceneAssetRegistry.size) return;
     const state = sceneAssetState();
-    sceneAssetRegistry.forEach(entry => state.transforms.set(entry.editorId, canonicalTransformPlain(entry.obj)));
+    sceneAssetRegistry.forEach(entry => {
+        // Merely displaying a cast member must not turn its animated default pose into a fixed placement.
+        if (entry.obj.userData.person && !entry.obj.userData.personPlacement) return;
+        state.transforms.set(entry.editorId, canonicalTransformPlain(entry.obj));
+    });
 }
 
 async function hydrateSceneAssets(sceneId, token = sceneAssetHydrationToken) {
@@ -600,7 +609,8 @@ function initSceneDeskEditing() {
     if(sceneDesks)return;
     let groundingSignature='';
     const liveAnchor=r=>{
-        loadedModel.updateWorldMatrix(true,true);workspaceRoom.root.updateWorldMatrix(true,false);
+        // An anchor is model-local: its children do not need another full CAD hierarchy update.
+        loadedModel.updateWorldMatrix(true,false);workspaceRoom.root.updateWorldMatrix(true,false);
         if(r?.rig?.anchorModel)return workspaceRoom.root.worldToLocal(loadedModel.localToWorld(r.rig.anchorModel.clone()));
         const center=deskCollisionBox()?.getCenter(new THREE.Vector3())||new THREE.Box3().setFromObject(loadedModel).getCenter(new THREE.Vector3());
         return workspaceRoom.root.worldToLocal(center);
@@ -1410,7 +1420,7 @@ function initThreeJS() {
     // WebGL can be unavailable (GPU process crash, hardware acceleration off).
     // Fail gracefully instead of dying with an endless spinner.
     try {
-        renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+        renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
     } catch (e) {
         console.error('[ErgoFlex] WebGL context creation failed:', e);
         showWebGLError();
@@ -1611,6 +1621,7 @@ function initThreeJS() {
         onEditEnd:snapshot=>{
             const items=(snapshot||[]).map(item=>({...item,after:canonicalTransformPlain(item.obj)}))
                 .filter(item=>['p','q','s'].some(key=>Object.keys(item.before[key]).some(axis=>Math.abs(item.before[key][axis]-item.after[key][axis])>1e-8)));
+            for(const item of items)if(item.obj.userData.person){item.obj.userData.personPlacement=structuredClone(item.after);registerSceneAsset(item.obj);}
             if(items.length)transaction({type:'room-transform',items});
         }});
     initSceneDeskEditing();
@@ -1751,6 +1762,7 @@ function captureAssetBaseline(obj) {
 function recordCanonicalEdit(obj) {
     const editorId = obj.userData?.editorId;
     if (editorId && obj.userData?.sceneAsset) {
+        if(obj.userData.person)obj.userData.personPlacement=canonicalTransformPlain(obj);
         sceneAssetState().transforms.set(editorId, canonicalTransformPlain(obj));
         persistSceneAssetStates();
     } else if (editorId) {
@@ -4344,7 +4356,13 @@ function loadModel() {
         applyAccessoryVisibility();
         if (!workspaceRoom) {
             workspaceRoom = new WorkspaceRoom(scene, millimetreScale);
-            workspaceRoom.peopleState = () => ({ height: liftToHeight(currentLift), mode: roomPeopleMode, pose: sceneDesks?.active ? sceneDesks.ctx.readLive(sceneDesks.active).pose : null, keyboard: featuredKeyboard(), time: roomPeopleTime, station: roomPeopleStation,
+            workspaceRoom.onPersonModel = (object, previous) => {
+                if(window.__ERGO_PRESENTATION__||object.parent!==workspaceRoom.root)return;
+                const id=sceneAssetEditorId(previous);
+                if(sceneAssetRegistry.get(id)?.obj===previous)registerSceneAsset(object);
+                if(sceneCopyDefaults.get(id)===previous)sceneCopyDefaults.set(id,object);
+            };
+            workspaceRoom.peopleState = () => ({ height: liftToHeight(currentLift), mode: roomPeopleMode, pose: sceneDesks?.active ? sceneDesks.ctx.readLive(sceneDesks.active).pose : null, keyboard: featuredKeyboard(), time: roomPeopleTime, station: roomPeopleStation, editing: isDraggingTransform || !!roomInteractions?.drag || !!itemGizmo?.drag,
                 // for the person at the desk (room-people-motion.mjs): where the desk is travelling to, its tilt, and in a film the desk's whole track
                 target: Math.abs(targetLift - currentLift) > .001 ? liftToHeight(targetLift) : null, tilt: primaryTiltConfig()?.currentDeg || 0, track: roomPeopleTime === null ? null : roomPeopleTrack });
         }
@@ -10835,10 +10853,25 @@ function featuredKeyboard() {
     return { x: pose.x + side * c + ahead * s, z: pose.z - side * s + ahead * c };
 }
 function syncRoomPeople() {
+    const room=workspaceRoom, token=room?.token;
     const control = document.getElementById('room-people-control'), available = !!workspaceRoom?.people && (workspaceRoom.people.available || !!roomPeopleFilter?.cast?.length);   // a film can cast a room that has no people of its own
     if (control) { control.hidden = !available; control.querySelector('input').checked = roomPeopleEnabled; }
     return (workspaceRoom?.setPeopleEnabled(roomPeopleEnabled && available, roomPeopleFilter) || Promise.resolve())
-        .then(() => { presentationShadowDirty = true; renderPacing?.invalidate(); }).catch(error => console.warn('[people]', error));
+        .then(async () => {
+            await room?.people?.settled?.();
+            if(room!==workspaceRoom||room?.token!==token)return;
+            if(!window.__ERGO_PRESENTATION__&&room?.people?.enabled){
+                const state=sceneAssetState();
+                for(const obj of room.people.people){
+                    if(!obj.parent)continue;
+                    const id=sceneAssetEditorId(obj);
+                    if(state.removed.has(id)){obj.removeFromParent();continue;}
+                    applyPlainLocalTransform(obj,state.transforms.get(id));registerSceneAsset(obj);
+                }
+                roomInteractions?.bind(room);
+            }
+            presentationShadowDirty = true; renderPacing?.invalidate();
+        }).catch(error => console.warn('[people]', error));
 }
 // filter (film only): { only: [ids], except: [ids] }; not stored.
 // One of the room's other desks as it is now, for the person working at it (room-people.mjs): where it stands and how

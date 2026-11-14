@@ -172,6 +172,10 @@ export class RoomInteractions {
         if(this.deskPointer?.(e))return;
         if(e.target!==this.canvas||e.button!==0||!this.enabled()||e.shiftKey||e.altKey||e.ctrlKey||e.metaKey)return;
         if(this.drag){this.end();return;}
+        // Visible people can acquire a rig after the room first loads. Pick the current model,
+        // rather than the retired mesh that was registered before its animation became ready.
+        const room=this.room();
+        if(room?.people?.people.some(obj=>obj.parent&&visible(obj)&&!this.entries.some(entry=>entry.obj===obj)))this.bind(room);
         this.point(e);
         const hit=this.ray.intersectObject(this.root||new THREE.Group(),true).find(h=>visible(h.object)&&this.entries.some(row=>row.objects.some(obj=>descendant(h.object,obj))));
         if(!hit){this.select(null);return;}

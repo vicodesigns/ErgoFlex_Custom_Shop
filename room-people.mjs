@@ -47,6 +47,7 @@
 // alone. The film casts each chapter through a filter (setFilter): who is in, who is moved, extra people of its
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
+import {updateSkinnedBounds} from './skinned-bounds.mjs';
 import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, solveTread, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=polish-20261112d';
 // who looks at whom (RoomPeople.gazeOf)
 const GAZE_TALK = /^(stand-talk|sit-chat|stand-drink|stand-mug|stand-coffee|sit-coffee)$/, GAZE_IDLE = /^(stand-wait|wheel-roll|wheel-watch|cane-stand|white-cane|sit-listen)$/;
@@ -1199,11 +1200,12 @@ export class RoomPeople {
             if (!rigged || at < 0) { delete object.userData.personRigging; return object; }
             const bones = new Map(), rest = new Map(); rigged.traverse(o => { if (o.isBone) { bones.set(o.name, o); rest.set(o.name, o.quaternion.clone()); } });
             rigged.name = object.name; rigged.position.copy(object.position); rigged.rotation.copy(object.rotation); rigged.visible = object.visible;
-            for (const k of ['person', 'personFit', 'personChair', 'personChairBase', 'personMissing', 'personAmount']) if (object.userData[k] !== undefined) rigged.userData[k] = object.userData[k];
+            for (const k of ['person', 'personFit', 'personChair', 'personChairBase', 'personMissing', 'personAmount', 'sceneAsset', 'sceneAssetKey', 'sceneAssetRole', 'editorId', 'personPlacement']) if (object.userData[k] !== undefined) rigged.userData[k] = object.userData[k];
             rigged.userData.personRig = { bones, rest };
             if (object.userData.personMaterials) { for (const m of object.userData.personMaterials) m.dispose(); this.ownMaterials(rigged); }
             object.parent?.add(rigged); object.removeFromParent(); this.people[at] = rigged;
             const now = this.current(rigged) || spec; this.resize(rigged, now); this.recolor(rigged, now); this.pose(rigged, now);
+            this.room.onPersonModel?.(rigged, object);
             return rigged;
         })();
     }
@@ -1333,6 +1335,9 @@ export class RoomPeople {
             if (chair) { chair.name = 'Person chair:' + spec.id; chair.visible = false; root.add(chair); object.userData.personChair = chair; }
             if (spec.desk || this.filter?.when?.[this.keyOf(spec)]) this.ownMaterials(object);
             root.add(object); this.people.push(object); this.resize(object, spec); this.recolor(object, spec);
+            // The Studio may load people after the room's first asset hydration. Their editor identity must
+            // follow the placement, not the order in which models and posture variants finish loading.
+            if (!globalThis.__ERGO_PRESENTATION__) room.registerInteractionAsset?.(object, `${room.id}:${room.roomLayout?.id || 'shell'}:person:${this.keyOf(spec)}:${spec.id}`);
             if (this.posed(spec)) posed.push(object);
             if (spec.station) this.atStation(object, spec);
             else if (!spec.desk && !spec.beside) this.settle(object, spec);
@@ -1610,6 +1615,10 @@ export class RoomPeople {
     // time: seconds into a film chapter (null in the Studio), for the filter's `when`.
     update(state) {
         if (!this.enabled || !this.people.length) return;
+        if (state?.editing) {
+            for (const person of this.people) person.traverse(o => { if (o.isSkinnedMesh) o.frustumCulled = false; });
+            return;
+        }
         const height = state?.height ?? 28, pose = state?.pose, mode = state?.mode, time = state?.time ?? null, busy = new Set(); let working = false, seated = 0;
         const now = state?.now ?? (typeof performance !== 'undefined' ? performance.now() : 0), dt = this.clock === null ? 0 : (now - this.clock) / 1000; this.clock = now;
         // A tilted top stows its keyboard somewhere else (under the desk): the person stays where the keyboard was while
@@ -1730,6 +1739,18 @@ export class RoomPeople {
         this.clearChairs();
         this.ownChairs();
         this.seatChildren();
+        // A deliberate Studio placement wins over the cast's automatic root positioning. Bone animation
+        // continues, while room/layout restoration and posture-model replacement keep the edited location.
+        if (!globalThis.__ERGO_PRESENTATION__) for (const object of this.people) {
+            const t = object.userData.personPlacement;
+            if (!t) continue;
+            object.position.set(t.p.x, t.p.y, t.p.z);
+            object.quaternion.set(t.q.x, t.q.y, t.q.z, t.q.w);
+            object.scale.set(t.s.x, t.s.y, t.s.z);
+            object.updateMatrixWorld(true);
+        }
+        // Pose-aware bounds let the GPU skip off-screen bodies without clipping animated limbs.
+        for (const person of this.people) if (person.visible && person.userData.personRig) updateSkinnedBounds(person);
     }
     // Life in the people who stay where they are (room-people-motion.mjs solveStill): breathing, a drifting head, a
     // shift of weight, typing fingers, a page turned. They are drawn skinned for it. In a film everyone in the shot.
