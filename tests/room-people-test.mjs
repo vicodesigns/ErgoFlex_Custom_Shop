@@ -256,7 +256,7 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
     await people.setEnabled(true); people.update({ mode: 'morning', height: 28, pose: { x: 0, z: 0, yaw: 0 } });
     const hale = people.people.find(o => o.visible && /^people-hale-stand-present/.test(o.userData.person.id));
     assert.equal(hale?.userData.person.id, 'people-hale-stand-present-left', 'the mirrored presenting posture, not the right-arm one');
-    assert.deepEqual([hale.position.x, hale.position.z, Math.round(THREE.MathUtils.radToDeg(hale.rotation.y))], [-1450, -2950, 15]);
+    assert.deepEqual([hale.position.x, hale.position.z, Math.round(THREE.MathUtils.radToDeg(hale.rotation.y))], [-1450, -2950, 30]);
 }
 {   // A person at one of the room's other desks follows that desk as it is now: where it stands, and sitting or standing with its height.
     const stations = [{ id: 'window-research', at: [-4300, 1000], turn: 0, height: 28 }];

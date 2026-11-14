@@ -369,7 +369,7 @@ export const ROOM_PEOPLE = {
         { id: 'people-sofia-sit-laptop', on: 'student-chair-1-1-1', seat: 450, turn: 180, modes: ['morning', 'afternoon'], colors: LOOK.schoolSofia },
         // left of the whiteboard (seen from the class), pointing at it with his left arm, turned 15 degrees toward it
         // (Vico, Nov 13 2026; cast.py stand-present-left is aimed from here at the board's face, x 600-2800 at z -3913)
-        { id: 'people-hale-stand-present-left', layout: 'house', at: [-1450, -2950], turn: 15, modes: ['morning'] },
+        { id: 'people-hale-stand-present-left', layout: 'house', at: [-1450, -2950], turn: 30, modes: ['morning'] },
         { id: 'people-hale-stand-type', station: 'demonstration-desk', desk: 'stand', modes: ['afternoon', 'party'], colors: LOOK.hale },
         { id: 'people-hale-stand-low', desk: 'stand', modes: ['evening'], colors: LOOK.hale },   // after school, the desk at 35 in
         // The Oiler showcase: students at their projects, families standing at the demos.
