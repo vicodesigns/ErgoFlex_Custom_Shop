@@ -1626,7 +1626,7 @@ function initThreeJS() {
         }});
     initSceneDeskEditing();
     window.addEventListener('pagehide',()=>{
-        sceneDesks?.persist();roomInteractions?.end();clearTimeout(roomFurnitureSaveTimer);persistSceneAssetStates();
+        sceneDesks?.autosave();roomInteractions?.end();clearTimeout(roomFurnitureSaveTimer);persistSceneAssetStates();
     });
     loadModel();
 
@@ -6582,7 +6582,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if(toggleHeightBtn) {
         toggleHeightBtn.addEventListener('click', () => {
-            manualLiftOverride = false;
+            manualLiftOverride = false; sceneDesks?.markEdited();
             isStanding = !isStanding;
 
             targetLift = isStanding ? LIFT_MAX
@@ -8603,7 +8603,7 @@ function setupGlideControls() {
     const pad = document.getElementById('glide-pad');
     const updatePointer = e => {
         const rect = pad.getBoundingClientRect();
-        glideInput.set((e.clientX - rect.left - rect.width / 2) / (rect.width * 0.35), (e.clientY - rect.top - rect.height / 2) / (rect.height * 0.35));
+        glideInput.set((e.clientX - rect.left - rect.width / 2) / (rect.width * 0.35), (e.clientY - rect.top - rect.height / 2) / (rect.height * 0.35)); sceneDesks?.markEdited();
         if (glideInput.length() > 1) glideInput.normalize();
         document.getElementById('glide-knob').style.transform = `translate(calc(-50% + ${glideInput.x * 30}px), calc(-50% + ${glideInput.y * 30}px))`;
     };
@@ -8661,7 +8661,7 @@ function setupGlideControls() {
     pad.onkeydown = e => {
         if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) return;
         e.preventDefault(); if (!manualGlideReady()) return;
-        glideTarget.copy(glideOffset); glideKeys.add(e.key);
+        glideTarget.copy(glideOffset); glideKeys.add(e.key); sceneDesks?.markEdited();
         glideInput.set(Number(glideKeys.has('ArrowRight')) - Number(glideKeys.has('ArrowLeft')), Number(glideKeys.has('ArrowDown')) - Number(glideKeys.has('ArrowUp')));
         if (glideInput.length() > 1) glideInput.normalize();
     };
@@ -8829,7 +8829,7 @@ function yawRadiansPerSecond() {
     return glideSpeed / projection;
 }
 function setYawCommand(direction) {
-    yawCommand = roomSafety.alert ? 0 : direction;
+    yawCommand = roomSafety.alert ? 0 : direction; if (yawCommand) sceneDesks?.markEdited();
     const status = document.getElementById('glide-status');
     if (status) status.textContent = direction ? (direction > 0 ? 'Turning right' : 'Turning left') : 'Ready to move';
 }
@@ -8850,6 +8850,7 @@ function primaryTiltConfig() {
 // Both tracks behave the same way, so the spring-back lives in one place.
 function wireJogSlider(slider, onJog, onSettle) {
     if (!slider) return;
+    const jog = onJog; onJog = value => { if (value) sceneDesks?.markEdited(); jog(value); };   // the user moves the desk: a room edit
     const read = () => {
         // Normalise against the track's own half-span, not against `max` alone.
         // `max` alone was only ever right for a symmetric range, and read as a
@@ -9733,7 +9734,7 @@ function wireRemote(dock, header) {
         const minimum = minimumHeightForTilt(primaryTiltConfig()?.currentDeg ?? 0, currentConfig.size);
         const clamped = THREE.MathUtils.clamp(value, minimum, HEIGHT_MAX);
         heightField.value = clamped.toFixed(1);
-        goToHeight(clamped);
+        sceneDesks?.markEdited(); goToHeight(clamped);
     };
     heightField.addEventListener('change', commitHeight);
     heightField.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); commitHeight(); heightField.blur(); } });
@@ -9750,7 +9751,7 @@ function wireRemote(dock, header) {
         const clamped = THREE.MathUtils.clamp(value, config.minDeg,
             Math.min(config.maxDeg, maximumTiltForHeight(liftToHeight(currentLift), currentConfig.size)));
         tiltField.value = String(Number(clamped.toFixed(1)));
-        goToTilt(clamped);
+        sceneDesks?.markEdited(); goToTilt(clamped);
     };
     tiltField.addEventListener('change', commitTilt);
     tiltField.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); commitTilt(); tiltField.blur(); } });
@@ -9768,7 +9769,7 @@ function wireRemote(dock, header) {
             () => {
                 const value = (kind === 'lift' ? liftPresets : tiltPresets)[slot];
                 if (value === null) { notifyUser('That preset is empty. Press and hold to save the current position.'); return; }
-                if (kind === 'lift') goToHeight(value); else goToTilt(value);
+                sceneDesks?.markEdited(); if (kind === 'lift') goToHeight(value); else goToTilt(value);
             },
             () => {
                 if (kind === 'lift') {
@@ -12211,7 +12212,7 @@ function initStudio() {
         panel.querySelector('.room-mobility-controls').dataset.scene=id;
         panel.querySelector('[data-mobility-start]').onclick=()=>sceneDesks?.activities.start();
         panel.querySelector('[data-mobility-return]').onclick=()=>sceneDesks?.activities.start(true);
-        panel.querySelector('[data-mobility-stop]').onclick=()=>{haltAllMotion();sceneDesks?.persist();};
+        panel.querySelector('[data-mobility-stop]').onclick=()=>{haltAllMotion();sceneDesks?.autosave();};
         panel.querySelectorAll(`[data-${prefix}-mode]`).forEach(b => {
             b.title=`Prepare ${profile.modes[b.getAttribute(`data-${prefix}-mode`)].label} Groove`;
             b.onclick = () => prepareGrooveMode(id, b.getAttribute(`data-${prefix}-mode`));

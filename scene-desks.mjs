@@ -13,6 +13,9 @@ export class SceneDesks {
     constructor(ctx){
         this.ctx=ctx;this.data=cleanSceneDeskData(ctx.readStore?.());this.records=new Map();
         this.selected=null;this.key=null;this.recording=null;this.playing=null;this.drag=null;this.saveElapsed=0;
+        // Saved only after a real edit (persist, or markEdited for the live controls), never on opening a room or after
+        // an automatic change (routines, Groove playback, auto-stow): dirty = an edit is waiting to be written.
+        this.dirty=false;this.settle=null;
         this.ray=new THREE.Raycaster();this.pointer=new THREE.Vector2();
         this.highlight=new THREE.Box3Helper(new THREE.Box3(),0x45cfac);this.highlight.visible=false;ctx.scene.add(this.highlight);
         this.objects=new SceneDeskObjects(this);
@@ -29,7 +32,9 @@ export class SceneDesks {
             this.ctx.restoreProductAccessories?.(this.data.productAccessories);
         }
     }
-    persist(){this.capture();const saved=this.ctx.writeStore?.(SCENE_DESKS_KEY,cleanSceneDeskData(this.data))!==false;this.ctx.changed?.(saved);return saved;}
+    persist(){this.capture();const saved=this.ctx.writeStore?.(SCENE_DESKS_KEY,cleanSceneDeskData(this.data))!==false;this.dirty=false;this.settle=null;this.ctx.changed?.(saved);return saved;}
+    markEdited(){if(this.key)this.dirty=true;}
+    autosave(){return this.dirty?this.persist():false;}
     capture(){
         if(!this.key||!this.roomData)return;
         if(this.active?.product)this.data.productAccessories=this.ctx.selectedAccessories();
@@ -42,7 +47,7 @@ export class SceneDesks {
         this.roomData.selected=this.selected;
     }
     dispose(){
-        this.stop();this.activities.restoreChairs();this.objects.endDrag();this.objects.selected=null;this.endDrag();this.capture();
+        this.stop();this.activities.restoreChairs();this.objects.endDrag();this.objects.selected=null;this.endDrag();this.autosave();
         this.activities.message='';this.activities.resolved=null;this.activities.lastPlan=null;
         for(const r of this.records.values()){this.objects.stow.restore(r);r.peripherals?.dispose();if(r.rig){if(r.group)this.ctx.unregisterBody?.(r.group);this.ctx.disposeDress?.(r);}r.rig?.dispose();}
         this.records.clear();this.selected=null;this.key=null;this.highlight.visible=false;
@@ -89,6 +94,7 @@ export class SceneDesks {
         if(this.active){this.ensureRig(this.active);this.ctx.activate?.(this.active);this.ctx.writeLive(this.active);this.active.rig.setBodyVisible(false);}
         for(const r of this.records.values())if(r.rig)r.rig.setBodyVisible(r.id!==this.selected);
         this.ctx.showLive(!!this.active,this.selected==='main');
+        this.dirty=false;this.settle=null;   // opening a room is not an edit
         this.sync();
     }
     ensureRig(r){
@@ -124,7 +130,7 @@ export class SceneDesks {
         const old=this.active;
         if(old){this.ensureRig(old);this.ctx.restyle?.(old);old.rig.updatePose(old.state.height,old.state.tilt);this.place(old);old.rig.setBodyVisible(true);}
         this.selected=id;this.ensureRig(next);this.ctx.restyle?.(next);this.ctx.activate?.(next);this.ctx.writeLive(next);next.rig.setBodyVisible(false);
-        this.ctx.showLive(true,id==='main');this.persist();this.sync();return true;
+        this.ctx.showLive(true,id==='main');this.autosave();this.sync();return true;
     }
     pick(event){
         const {canvas,camera}=this.ctx,rect=canvas.getBoundingClientRect();
@@ -163,7 +169,7 @@ export class SceneDesks {
         if(e&&this.objects.endDrag(e))return true;
         const d=this.drag;if(!d||(e&&e.pointerId!==d.pointer))return false;
         this.drag=null;if(this.ctx.canvas.hasPointerCapture(d.pointer))this.ctx.canvas.releasePointerCapture(d.pointer);
-        this.ctx.controls.enabled=d.controls;this.ctx.canvas.style.cursor='';this.persist();if(d.changed)this.ctx.edit?.(d.before,this.serialize());
+        this.ctx.controls.enabled=d.controls;this.ctx.canvas.style.cursor='';if(d.changed){this.persist();this.ctx.edit?.(d.before,this.serialize());}
         if(e){e.preventDefault();e.stopImmediatePropagation();}return true;
     }
     setSize(size){
@@ -199,13 +205,13 @@ export class SceneDesks {
         const pose=this.ctx.freePosition(size);if(!pose){this.ctx.status('There is no clear space for another desk. Rearrange items first.');return false;}
         const id='added-'+crypto.randomUUID();Object.assign(state,{name:'Desk '+(this.records.size+1),size,pose,added:true,phases:{},objects:{}});
         delete state.sizeSetups;delete state.peripheralSetup;
-        const r={id,state};this.records.set(id,r);this.ensureRig(r);this.place(r);this.ctx.configureDeskMix?.(this);this.select(id);this.ctx.edit?.(before,this.serialize());return id;
+        const r={id,state};this.records.set(id,r);this.ensureRig(r);this.place(r);this.ctx.configureDeskMix?.(this);this.markEdited();this.select(id);this.ctx.edit?.(before,this.serialize());return id;
     }
     remove(){
         const r=this.active;if(!r)return false;
         this.stop();this.ctx.halt();this.capture();const before=this.serialize();r.peripherals?.dispose();if(r.group)this.ctx.unregisterBody?.(r.group);this.ctx.disposeDress?.(r);r.rig?.dispose();r.group?.removeFromParent();
         delete this.roomData.desks[r.id];if(!r.state.added)this.roomData.deleted.push(r.id);
-        this.records.delete(r.id);this.selected=null;
+        this.records.delete(r.id);this.selected=null;this.markEdited();
         const id=this.records.keys().next().value;
         if(id)this.select(id);else{this.ctx.showLive(false,false);this.persist();this.sync();}
         this.ctx.edit?.(before,this.serialize());return true;
@@ -274,13 +280,13 @@ export class SceneDesks {
                 const desired=t<0?s:run.frames?.length?sampleDeskRecording(run.frames,t):run.setting;
                 const end=run.approach.duration+(run.frames?.at(-1)?.t||0);finished&&=playing.elapsed>=end;
                 if(!this.ctx.canPlace(run.r,desired)){
-                    this.stop();this.ctx.status(run.r.state.name+': group Groove stopped because an object is ahead.');this.persist();return;
+                    this.stop();this.ctx.status(run.r.state.name+': group Groove stopped because an object is ahead.');this.autosave();return;
                 }
                 Object.assign(run.r.state,desired);this.place(run.r);
                 if(run.r.id===this.selected)this.ctx.writeLive(run.r);
                 else if(run.r.poseAt!==`${desired.height}:${desired.tilt}`){run.r.rig.updatePose(desired.height,desired.tilt);run.r.poseAt=`${desired.height}:${desired.tilt}`;}
             }
-            if(finished){for(const run of playing.runs){run.r.state.lights=clone(run.setting.lights);this.ctx.lightDesk?.(run.r);}this.stop();this.persist();}
+            if(finished){for(const run of playing.runs){run.r.state.lights=clone(run.setting.lights);this.ctx.lightDesk?.(run.r);}this.stop();this.autosave();}
         }
         if(this.active){
             Object.assign(this.active.state,this.ctx.readLive(this.active));this.place(this.active);
@@ -290,7 +296,12 @@ export class SceneDesks {
             if(this.highlight.visible)this.highlight.box.copy(this.ctx.liveBox());
         }
         for(const r of this.records.values()){this.objects.phase(r);r.peripherals?.update();this.objects.stow.update(r);}
-        this.ctx.updateLights?.(dt);this.saveElapsed+=dt;if(this.saveElapsed>=1&&!playing){this.saveElapsed=0;this.capture();this.ctx.writeStore?.(SCENE_DESKS_KEY,cleanSceneDeskData(this.data));this.sync();}
+        this.ctx.updateLights?.(dt);this.saveElapsed+=dt;
+        if(this.saveElapsed>=1&&!playing){
+            // a live-control edit is written once the desk has come to rest (a lift takes seconds)
+            this.saveElapsed=0;const a=this.active?.state,at=a?JSON.stringify([a.pose,a.height,a.tilt]):'';
+            if(this.dirty&&at===this.settle)this.persist();else this.settle=at;this.sync();
+        }
     }
     sync(){this.ctx.sync?.(this);}
 }
