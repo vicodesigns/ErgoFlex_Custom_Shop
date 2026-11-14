@@ -60,6 +60,8 @@ import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdow
          WOOD_SPECIES, woodSpecies, SURFACE_TREATMENTS, FINISH_COLLECTIONS, TRIM_COLORS,
          ACCESSORIES, PRESETS, accessory, accessoryFits } from './catalog.mjs?v=20261110-stationary-organizer';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
+import { createStudioLayers, setLayersHidden } from './studio-layers-panel.mjs';
+import { layersSwitch, UI_SWITCH_KEY as LAYERS_UI_SWITCH_KEY } from './studio-layers-model.mjs';
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=polish-20261111f';
@@ -297,6 +299,86 @@ function setRoomSaveStatus(message) {
 
 try { restoreSceneAssetStates(JSON.parse(localStorage.getItem(SCENE_ASSET_STATE_KEY) || '{}')); } catch (_) {}
 
+// --- Layers (show / hide), phase 2 ---------------------------------------------------------------------------------
+// The panel and the hide behaviour live in studio-layers-panel.mjs (DOM) and studio-layers-model.mjs (pure); the data is
+// 'ergoflex.sceneLayers.v1' (scene-layers.mjs). studio.js only has the small guarded hooks below. Off in a presentation
+// frame (the Director's stage and film renders see exactly what they saw before), on product-demo.html, and with
+// ?layers=0 or localStorage['ergoflex.layers.ui'] = '0' (then the Studio is exactly as before phase 2).
+let studioLayers = null;
+const LAYERS_ON = (() => { try { return !window.__ERGO_PRESENTATION__ && !EVENT_DEMO && layersSwitch(location.search, localStorage.getItem(LAYERS_UI_SWITCH_KEY)); } catch (_) { return false; } })();
+// The layers room key: the same key as sceneAssetState ('<room>:<layout>' for measured rooms).
+function layersRoomKey() {
+    if (!selectedRoomScene || selectedRoomScene === 'product') return null;
+    const profile = measuredRoomProfile(selectedRoomScene);
+    return profile ? `${selectedRoomScene}:${(workspaceRoom?.id === selectedRoomScene ? workspaceRoom.roomLayout?.id : null) || profile.layout?.id}` : selectedRoomScene;
+}
+function layersPhaseLabels() {
+    const modes = measuredRoomProfile()?.modes, out = {};
+    if (Array.isArray(modes)) modes.forEach(m => { if (m?.id && m.label) out[m.id] = m.label; });
+    else if (modes && typeof modes === 'object') for (const [id, m] of Object.entries(modes)) if (m?.label) out[id] = m.label;
+    return out;
+}
+// The room's scene assets as plain rows for the panel (people are phase 4 and are left out by the model).
+function layersItems() {
+    const root = workspaceRoom?.root; if (!root) return [];
+    const walls = (workspaceRoom.walls || []).map(w => w?.obj).filter(Boolean), v = new THREE.Vector3(), out = [];
+    root.updateWorldMatrix(true, false);
+    for (const entry of sceneAssetRegistry.values()) {
+        const obj = entry?.obj; if (!obj?.userData) continue;
+        let onWall = false; for (let p = obj.parent; p && !onWall; p = p.parent) onWall = walls.includes(p);
+        let at; try { const q = root.worldToLocal(obj.getWorldPosition(v)); at = [q.x, q.z]; } catch (_) { at = undefined; }
+        out.push({ id: entry.editorId, obj, name: partLabel(entry.editorId) || entry.name, propId: obj.userData.propId, role: obj.userData.sceneAssetRole,
+            category: PROP_LIBRARY.entry?.(obj.userData.propId)?.category, anchor: obj.userData.propAnchor, onWall, custom: !!entry.isCustom, person: !!obj.userData.person, at });
+    }
+    return out;
+}
+// hydrateSceneAssets: keep an old-deleted object (it becomes a hidden "old delete" row) instead of removing it.
+function studioLayersKeeps(obj) { try { return !!studioLayers?.keeps(obj); } catch (_) { return false; } }
+// Delete in Rearrange: stock items are hidden everywhere instead; returns true (all handled), the entries still to
+// delete (added items), or null (the old behaviour).
+function studioLayersDelete(entries) { try { return studioLayers ? studioLayers.hideForDelete(entries) : null; } catch (error) { console.warn('[layers] delete', error); return null; } }
+// A hidden item cannot be picked by the editor's part raycast either.
+function layersPickable(obj, on) {
+    obj?.traverse?.(child => {
+        if (!child.isMesh) return;
+        const i = interactableObjects.indexOf(child);
+        if (on && i < 0) interactableObjects.push(child); else if (!on && i > -1) interactableObjects.splice(i, 1);
+    });
+}
+function initStudioLayers(beforeEl) {
+    if (!LAYERS_ON) return;
+    try {
+        studioLayers = createStudioLayers({
+            THREE, scene: () => scene, roomKey: layersRoomKey, phase: () => measuredRoomProfile()?.mode || '*', size: () => currentConfig?.size || '*', phaseLabels: layersPhaseLabels,
+            items: layersItems, assetState: () => sceneAssetState(),
+            readRaw: key => localStorage.getItem(key), writeRaw: (key, value) => localStorage.setItem(key, value),
+            transaction: entry => transaction(entry), notify: text => notifyUser(text),
+            selectObject: obj => {
+                if (roomRearrangeMode !== 'items' || !roomInteractions) return false;
+                const entry = roomInteractions.entries?.find(e => e.obj === obj || e.objects?.includes(obj));
+                if (entry) roomInteractions.select(entry); return !!entry;
+            },
+            frame: obj => focusObjects([obj], { animate: true }),
+            afterVisibility: () => {
+                try { roomInteractions?.bind(workspaceRoom); } catch (error) { console.warn('[layers] interactions', error); }
+                if (workspaceRoom?.people) workspaceRoom.people.placed = false;   // someone on a chair hidden or shown again is placed anew
+                renderPacing?.invalidate?.();
+            },
+            selectedIds: () => {
+                const objs = roomRearrangeMode === 'items' && roomInteractions?.selected ? roomInteractions.selected.objects || [] : movingObjects.map(i => i.obj);
+                return [...new Set(objs.map(o => selectionTarget(o)?.userData?.editorId).filter(id => typeof id === 'string' && id.startsWith('scene:')))];
+            },
+            deleteAdded: id => { const entry = sceneAssetRegistry.get(id); if (entry?.isCustom) deleteSceneAssetEntries([entry]); },
+            setPickable: layersPickable,
+            signature: () => `${layersRoomKey()}|${measuredRoomProfile()?.mode || '*'}|${currentConfig?.size}|${sceneAssetRegistry.size}`,
+            // the dock's {open, width}, kept in the shell's record ('ergoflex.ui.shell.v1'); read directly before the shell mounts
+            prefs: () => { try { return (window.ErgoStudioShell?.mounted ? window.ErgoStudioShell.prefs : JSON.parse(localStorage.getItem('ergoflex.ui.shell.v1') || 'null'))?.layers || {}; } catch (_) { return {}; } },
+            savePrefs: v => window.ErgoStudioShell?.setPref?.('layers', v)
+        });
+        studioLayers.mount(beforeEl);
+    } catch (error) { studioLayers = null; console.warn('[layers] off: the panel could not start; the Studio works as before', error); }
+}
+
 // --- Custom part names ---------------------------------------------------------
 // editorId is immutable — baked tilt configs, actuator rigs and saved groups all key
 // off it, and obj.name is what the loader's TELESCOPING_PARTS / INITIAL_ANIMATED_PARTS
@@ -432,7 +514,12 @@ async function hydrateSceneAssets(sceneId, token = sceneAssetHydrationToken) {
     sceneCopyDefaults = new Map(defaults.map(o => [sceneAssetEditorId(o), o]));
     for (const obj of defaults) {
         const editorId = sceneAssetEditorId(obj);
-        if (state.removed.has(editorId)) { obj.removeFromParent(); continue; }
+        // (Layers on: an old delete stays in the scene, hidden, as a row that can be switched back on; `removed` is not
+        // rewritten, so a film, which never runs Layers, still leaves it out.)
+        if (state.removed.has(editorId)) {
+            if (!studioLayersKeeps(obj)) { obj.removeFromParent(); continue; }
+            setLayersHidden(obj, true);   // hidden at once; studioLayers.hydrated() then shows it if its row was switched back on
+        }
         const saved = state.transforms.get(editorId), updated = workspaceRoom?.migrateSavedTransform?.(obj, saved) || saved;
         if (updated && updated !== saved) state.transforms.set(editorId, updated);
         applyPlainLocalTransform(obj, updated);
@@ -446,6 +533,7 @@ async function hydrateSceneAssets(sceneId, token = sceneAssetHydrationToken) {
         applyPlainLocalTransform(object, state.transforms.get(addition.editorId));
         registerSceneAsset(object);
     }
+    if (studioLayers && sceneId === selectedRoomScene && token === sceneAssetHydrationToken) studioLayers.hydrated();
     buildSceneTree();
     renderSceneAssetList();
     updateSceneLibraryStatus();
@@ -1980,6 +2068,7 @@ function captureOfficeStation(spec, millimetreScale, stationIndex = 0) {
 function invertEntry(entry) {
     switch (entry.type) {
         case 'scene-desks':return {...entry,before:entry.after,after:entry.before};
+        case 'layers':return {...entry,before:entry.after,after:entry.before};   // show / hide (studio-layers-panel.mjs)
         case 'transform':
         case 'room-transform':
             return { ...entry, items: entry.items.map(i => ({ obj: i.obj, before: i.after, after: i.before })) };
@@ -2006,6 +2095,8 @@ function invertEntry(entry) {
 }
 
 function applyEntry(entry) {
+    // show / hide: rewrites only the entries it names (in whatever room is open), so it survives a room change
+    if(entry.type==='layers'){studioLayers?.applyUndo(entry);return;}
     if(entry.type==='scene-desks'){haltAllMotion();sceneDesks.restore(entry.before);setRoomScene(selectedRoomScene,false,{preserveDesk:true,defaultDesktop:false});return;}
     if (entry.type === 'room-transform') {
         haltAllMotion();roomGroove?.reset();
@@ -5939,6 +6030,10 @@ function deleteSelectedSceneAssets() {
 
 function deleteSceneAssetEntries(entries) {
     if (!entries.length) return false;
+    // Layers on: a stock item is hidden everywhere (its row brings it back); only added items are deleted below.
+    const layered = studioLayersDelete(entries);
+    if (layered === true) return true;
+    if (Array.isArray(layered)) entries = layered;
     haltAllMotion(); roomInteractions?.end(); roomGroove?.reset();
     const records = entries.map(sceneAssetRecord);
     records.forEach(record => setSceneAssetPresence(record, false));
@@ -12128,6 +12223,7 @@ function initStudio() {
     peopleControl.innerHTML = '<input type="checkbox" id="room-people-toggle"><span>People</span>';
     peopleControl.querySelector('input').onchange = e => setRoomPeople(e.target.checked);
     toolbar.append(peopleControl);
+    initStudioLayers(peopleControl);   // the Layers button goes just before the people switch (guarded; off with ?layers=0)
     const deskRearrangeControl=document.createElement('label');deskRearrangeControl.id='room-rearrange-desks-control';deskRearrangeControl.hidden=true;
     deskRearrangeControl.innerHTML='<input type="checkbox" id="room-rearrange-desks-toggle" aria-describedby="room-interaction-hint"><span>Rearrange desks</span>';
     deskRearrangeControl.querySelector('input').onchange=e=>setRoomRearrangeMode(e.target.checked?'desks':'off');

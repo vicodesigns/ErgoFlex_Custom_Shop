@@ -1,0 +1,69 @@
+/* Studio Layers panel (studio-layers-panel.mjs). Desktop: a right-hand dock, resizable (--layers-width, remembered).
+   Phones (<= 760 px): a bottom sheet at half height with a drag handle (tap: peek / back). Colours follow the shell's
+   theme variables (--ui-*) with fallbacks, so the panel reads in both portal themes. */
+.layers-open { display: inline-flex; align-items: center; gap: 6px; }
+.layers-open.active { outline: 2px solid var(--ui-accent, #45cfac); outline-offset: -2px; }
+.layers-badge { min-width: 18px; padding: 0 5px; border-radius: 9px; background: var(--ui-accent, #45cfac); color: #0b1a14; font-size: 11px; line-height: 18px; text-align: center; }
+.layers-badge[hidden] { display: none; }
+
+.layers-dock {
+  --layers-width: 340px;
+  position: fixed; z-index: 40; top: 72px; right: 0; bottom: 0; width: var(--layers-width); box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 8px 16px;
+  background: var(--ui-panel, #f7f8f6); color: var(--ui-text, #1c2420); border-left: 1px solid var(--ui-border, #d5dbd6);
+  box-shadow: -12px 0 32px #0b1a1422; font-size: 13px; line-height: 1.4; overscroll-behavior: contain;
+}
+.layers-dock[hidden] { display: none; }
+.layers-handle { position: absolute; left: 0; top: 0; bottom: 0; width: 8px; cursor: ew-resize; touch-action: none; }
+.layers-handle:hover { background: #45cfac33; }
+.layers-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+.layers-head h2 { margin: 0; font-size: 15px; font-weight: 650; }
+.layers-setting { margin: 2px 0 0; opacity: .75; font-size: 12px; }
+.layers-close { min-width: 36px; min-height: 36px; border: 0; background: none; color: inherit; font-size: 20px; cursor: pointer; }
+.layers-scope { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+.layers-scope select, .layers-search { flex: 1; min-height: 34px; box-sizing: border-box; border: 1px solid var(--ui-border, #d5dbd6); border-radius: 8px; background: var(--ui-card, #fff); color: inherit; padding: 4px 8px; font: inherit; }
+.layers-search { width: 100%; }
+.layers-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.layers-filters button { min-height: 30px; padding: 3px 10px; border: 1px solid var(--ui-border, #d5dbd6); border-radius: 15px; background: var(--ui-card, #fff); color: inherit; font: inherit; font-size: 12px; cursor: pointer; }
+.layers-filters button[aria-pressed="true"] { background: var(--ui-accent, #45cfac); color: #0b1a14; border-color: transparent; }
+.layers-filters button[data-ly-showall] { margin-left: auto; }
+.layers-filters button:disabled { opacity: .45; cursor: default; }
+.layers-anywhere { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; }
+.layers-list { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; margin: 0 -6px; padding: 0 6px; }
+.layers-group { margin: 0 0 6px; }
+.layers-group > summary { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 36px; padding: 0 2px; cursor: pointer; font-weight: 650; font-size: 12px; text-transform: uppercase; letter-spacing: .03em; list-style: none; }
+.layers-group > summary::-webkit-details-marker { display: none; }
+.layers-group > summary small { font-weight: 500; text-transform: none; opacity: .7; }
+.layers-group ul { list-style: none; margin: 0; padding: 0; }
+.layers-row { display: flex; align-items: center; gap: 4px; min-height: 44px; border-top: 1px solid var(--ui-border, #e3e7e3); }
+.layers-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 4px 2px; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.layers-kind { width: 18px; text-align: center; opacity: .65; }
+.layers-text { min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; }
+.layers-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.layers-text small { flex-basis: 100%; opacity: .65; font-size: 11px; }
+.layers-chip { padding: 0 6px; border-radius: 8px; background: #45cfac2e; font-size: 11px; white-space: nowrap; }
+.layers-row.is-hidden .layers-main { opacity: .45; font-style: italic; }
+.layers-row.is-missing .layers-main { opacity: .55; }
+.layers-eye, .layers-trash { flex: none; width: 44px; height: 44px; display: inline-grid; place-items: center; border: 0; border-radius: 8px; background: none; color: inherit; cursor: pointer; }
+.layers-eye svg { width: 20px; height: 20px; }
+.layers-eye:hover, .layers-trash:hover, .layers-main:hover { background: #45cfac1c; }
+.layers-group > summary .layers-eye { width: 36px; height: 36px; }
+.layers-empty, .layers-foot { margin: 6px 0 0; font-size: 11px; opacity: .65; }
+.layers-sheet { max-width: min(420px, 94vw); border: 1px solid var(--ui-border, #d5dbd6); border-radius: 14px; background: var(--ui-panel, #f7f8f6); color: var(--ui-text, #1c2420); padding: 14px; }
+.layers-sheet form { display: grid; gap: 8px; }
+.layers-sheet h3 { margin: 0; font-size: 15px; }
+.layers-sheet p { margin: 0 0 4px; font-size: 12px; opacity: .8; }
+.layers-sheet button { min-height: 44px; border: 1px solid var(--ui-border, #d5dbd6); border-radius: 10px; background: var(--ui-card, #fff); color: inherit; font: inherit; text-align: left; padding: 6px 12px; cursor: pointer; }
+.layers-sheet .layers-sheet-close { text-align: center; }
+
+@media (max-width: 760px) {
+  .layers-dock {
+    top: auto; left: 0; right: 0; bottom: 0; width: auto; height: 50vh; padding: 18px 12px 10px;
+    border-left: 0; border-top: 1px solid var(--ui-border, #d5dbd6); border-radius: 16px 16px 0 0; box-shadow: 0 -12px 32px #0b1a1433;
+  }
+  .layers-dock.peek { height: 72px; overflow: hidden; }
+  .layers-handle { left: 50%; top: 6px; bottom: auto; width: 56px; height: 6px; margin-left: -28px; border-radius: 3px; background: var(--ui-border, #c7cec8); cursor: pointer; }
+  .layers-handle::before { content: ''; position: absolute; inset: -14px -20px; }
+  .layers-row, .layers-main { min-height: 52px; }
+  .layers-filters { flex-wrap: nowrap; overflow-x: auto; }
+}

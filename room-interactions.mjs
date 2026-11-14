@@ -9,6 +9,8 @@ const visible = obj => { for(let p=obj;p;p=p.parent)if(!p.visible)return false;r
 export const floorBox = box => ({minX:box.min.x,maxX:box.max.x,minZ:box.min.z,maxZ:box.max.z,minY:box.min.y,maxY:box.max.y});
 const portable = /chair|steelcase|stool|bench|ottoman|potted|plant|monstera|floor.*lamp|lamp.*floor|vocal-mic|tool.cart|robot-dog/i;
 const architecture = /ceiling|window|curtain|door|daylight|lighting.track|suspended.*light|groove/i;
+// Hidden with the Studio's Layers eye (studio-layers-panel.mjs; never set in a film): not an item to pick, move or bump into.
+const layersHidden = obj => { for(let p=obj;p;p=p.parent)if(p.userData?.layersHidden)return true;return false; };
 const descendant = (obj,parent) => { for(let p=obj;p;p=p.parent)if(p===parent)return true;return false; };
 
 export class RoomInteractions {
@@ -33,7 +35,7 @@ export class RoomInteractions {
         // Procedural decorations keep their entire frame/board as one object.
         for(const wall of room.walls)for(const obj of wall.obj.children)if(obj.isGroup)candidates.add(obj);
         for(const obj of candidates){
-            if(obj.userData.sceneDeskId||obj.userData.presentationOnly||wallRoots.has(obj)||obj===room.ceilingFixture||obj.isLight||obj.userData.grooveMarker||architecture.test(obj.name)&&!obj.userData.editableRoomItem)continue;
+            if(layersHidden(obj)||obj.userData.sceneDeskId||obj.userData.presentationOnly||wallRoots.has(obj)||obj===room.ceilingFixture||obj.isLight||obj.userData.grooveMarker||architecture.test(obj.name)&&!obj.userData.editableRoomItem)continue;
             if([...candidates].some(parent=>parent!==obj&&!wallRoots.has(parent)&&descendant(obj,parent)&&!(obj.userData.sceneAsset&&parent.userData.sceneAsset)))continue;
             const b=new THREE.Box3().setFromObject(obj),size=b.getSize(new THREE.Vector3());
             if(b.isEmpty()||Math.max(size.x,size.z)<scale*50)continue;

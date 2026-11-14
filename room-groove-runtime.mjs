@@ -3,6 +3,8 @@ import { angleDelta, grooveDestination, planGroove, segmentIsClear, poseIsClear 
 
 // Cutaway visibility is a camera choice. Hidden walls and furnishings still
 // occupy physical space; architecture is handled by the room bounds.
+// Hidden with Layers (the Studio only; a film never sets the flag): the item or a group it sits in.
+const layersHidden = o => { for (let p = o; p; p = p.parent) if (p.userData?.layersHidden) return true; return false; };
 export function grooveObstacles(room) {
     const root = room.root, walls = new Set(room.walls.map(w => w.obj));
     root.updateWorldMatrix(true, true);
@@ -14,11 +16,12 @@ export function grooveObstacles(room) {
         } else candidates.push(child);
     }
     for (const obj of candidates) {
-        if (obj.userData.grooveMarker || obj.userData.sceneDeskActive || obj.isLight) continue;
+        // (an item hidden with the Studio's Layers eye is out of the room, unlike a cutaway: studio-layers-panel.mjs)
+        if (obj.userData.grooveMarker || obj.userData.sceneDeskActive || obj.isLight || layersHidden(obj)) continue;
         // Compute in room coordinates, without first rotating a world AABB.
         const box = new THREE.Box3();
         obj.traverse(o => {
-            if (!o.isMesh || !o.geometry) return;
+            if (!o.isMesh || !o.geometry || layersHidden(o)) return;
             // An InstancedMesh's geometry box is one instance at its own origin;
             // the instances' extent is the mesh's own boundingBox.
             let local;

@@ -26,7 +26,8 @@ export const ALIAS_MM = 300;
 const finite = v => typeof v === 'number' && Number.isFinite(v);
 const CELL = new RegExp(`^(${PHASES.join('|')}|\\*)/(${SIZES.join('|')}|\\*)$`);
 const ROOM = /^[a-z][a-z0-9]{0,40}(:[a-z0-9-]{1,40})?$/;
-const ITEM = /^(scene:[^\s|]{1,300}|desk:[a-z][a-z0-9-]{0,79}|person:[a-z0-9][a-z0-9_-]{0,47})$/i;
+// (scene asset keys may hold spaces: '<room>:<layout>:placement:93:0:Wainscot cap rail'; never '|' or a line break)
+const ITEM = /^(scene:[^|\r\n\t]{1,300}|desk:[a-z][a-z0-9-]{0,79}|person:[a-z0-9][a-z0-9_-]{0,47})$/i;
 const ASSET = /^[a-z0-9@][a-z0-9._@-]{0,119}$/i;
 const LEGACY = ['removed', 'deleted'];
 const MAX_ENTRIES = 5000;

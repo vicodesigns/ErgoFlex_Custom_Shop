@@ -35,7 +35,8 @@ let prefs = { v: 1, groups: {}, more: {}, sidebarHidden: false };
 function loadPrefs() {
     try {
         const stored = JSON.parse(localStorage.getItem(PREF_KEY) || 'null');
-        if (stored?.v === 1) prefs = { v: 1, groups: { ...stored.groups }, more: { ...stored.more }, sidebarHidden: stored.sidebarHidden === true };
+        if (stored?.v === 1) prefs = { v: 1, groups: { ...stored.groups }, more: { ...stored.more }, sidebarHidden: stored.sidebarHidden === true,
+            ...(stored.layers && typeof stored.layers === 'object' ? { layers: { ...stored.layers } } : {}) };   // the Layers dock: {open, width}
     } catch {}
 }
 function savePrefs() { try { localStorage.setItem(PREF_KEY, JSON.stringify(prefs)); } catch {} }
@@ -160,7 +161,7 @@ function buildBar() {
 
     // The desks panel is mounted later by studio.js as `hint.before(panel)`: keeping the hint here
     // (it is positioned out of the row by CSS) puts that panel in the menus where it belongs.
-    toolbar.append(...[cameraMenu, light, screens, bar.querySelector('.scene-desk-panel'), hint, $('room-desk-palette'), $('room-people-control'),
+    toolbar.append(...[cameraMenu, light, screens, bar.querySelector('.scene-desk-panel'), hint, $('room-desk-palette'), $('layers-open'), $('room-people-control'),
         $('room-rearrange-desks-control'), $('room-rearrange-control'), $('room-undo-btn'), $('room-redo-btn'), $('room-save-status'),
         h('span', { class: 'vb-end' }, ...[$('send-to-director'), panelToggle, find].filter(Boolean))].filter(Boolean));
 
@@ -495,5 +496,7 @@ window.ErgoStudioShell = {
     openFind, closeFind, reveal,
     findIndex: () => findIndex().map(({ label, where, el }) => ({ label, where, id: el.id || null })),
     get prefs() { return JSON.parse(JSON.stringify(prefs)); },
+    // Other panels' remembered settings in this one record (only 'layers' so far: studio-layers-panel.mjs).
+    setPref(name, value) { if (name !== 'layers' || !value || typeof value !== 'object') return false; prefs.layers = JSON.parse(JSON.stringify(value)); savePrefs(); return true; },
     PREF_KEY
 };
