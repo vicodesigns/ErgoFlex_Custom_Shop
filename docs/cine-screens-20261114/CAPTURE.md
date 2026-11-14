@@ -66,4 +66,24 @@ See the table in the S6 report and `node tools/experience/screens/capture.mjs --
 
 ## Capture time (CPU, this machine, one clip at a time)
 
-(filled in from the S6 captures)
+Measured by S6 on Nov 14 (Ryzen desktop, headless Chrome with SwiftShader, one clip at a time; seconds of capture.mjs,
+an upper bound where a lock wait is included). About 20 minutes for all 33 clips; memory stays near 1 GB.
+
+| clip | size | length | capture |
+|---|---|---:|---:|
+| cine-awaken-main | 2560x1072 | 45.9 s | 131 s (+ the twin video decode with TWIN) |
+| cine-rise-portrait / -curved | 1080x1856 / 2560x1072 | 19 s | ~45 s / 53 s |
+| cine-create-landscape / -portrait | 1920x1120 / 1080x1856 | 24.5 s | 39 s / 39 s |
+| cine-create-floor-plan (png) | 1600x1000 | still | 1 s |
+| cine-commons-reservation | 1920x800 | 17 s | 35 s |
+| cine-coast-main / -curved / -portrait / -wall | 1920x1120 / 1920x800 / 1080x1856 / 3840x1520 | 15.5 s | 25 / 28 / 34 / 55 s |
+| cine-oilers-curved / -portrait / -laptop | 1920x800 / 1080x1856 / 1280x776 | 15 s | 31 / 24 / 20 s |
+| cine-wellness-main / -tablet | 1920x1080 / 1620x1080 | 17 s | 45 / 34 s (the main decodes the demo clip once) |
+| cine-awareness-main | 1920x800 | 13 s | <= 78 s |
+| cine-music-tv / -arcade / -marquee / -streamdeck | 1920x1080 / 1360x1080 / 1920x504 / 960x616 | 13.5 s | 23 / 20 / 20 / 17 s (+ the montage decode once) |
+| cine-storage-phone | 540x1160 | 26 s | 34 s |
+| cine-hero-gaming / -artist / -hbhs / -occ / -home | 1920x800 | 49 s | ~98 s each |
+| cine-hero-office-wide / -portrait | 2560x1072 / 1080x1856 | 10 s | 28 / 22 s |
+
+The music spectrum needs numpy for `audio-bands.py` (not installed on this Windows Python: the clips are then captured
+without a spectrum, the beat still from the tempo map; `pip install numpy` gives the equaliser the real score).
