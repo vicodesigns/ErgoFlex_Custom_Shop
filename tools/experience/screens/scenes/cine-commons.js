@@ -50,7 +50,7 @@
     draw(t) {
       const o = SHOT.clip.opts || {}, PREV = o.prev || 'Yara', NEXT = o.next || 'Mia', TEAM = o.team || [NEXT, 'Kai', 'Sofia'];
       const L = lift(), D = drive(), MIA = L.start + .8, ARRIVE = D.start + D.duration, NOTES_AT = ARRIVE + .6;
-      const height = t => lerp(43.5, +L.target || 32, eio(seg(t, L.start, L.start + L.duration)));
+      const height = t => pose(t).height;   // the desk's own pose (Yara's 39 in down to Mia's preset)
       backdrop(t, {top: '#0b1220', bot: '#060a12', blobs: [[t < MIA ? YC : MC, .1], [C.blue, .1]]});
       appIcon(80, 80, 72, {glow: true});
       T('Commons · shared ErgoFlex desk', 140, 100, 56, {w: 600});
@@ -89,7 +89,7 @@
         T(arrived ? `Welcome, ${NEXT}` : `${NEXT}'s turn`, 450, 360, 120, {w: 700});
         T(arrived ? 'Your desk is here · until 10:00 AM' : 'Booked from the team table · 8:00 to 10:00', 455, 430, 46, {c: C.soft});
         card(120, 540, 700, 230, {r: 36});
-        const hh = height(t), at32 = hh <= (+L.target || 32) + .05;
+        const hh = height(t), at32 = hh <= (+L.target || 30) + .05;
         T('Height', 170, 600, 40, {c: C.dim});
         T(hh.toFixed(1) + ' in', 170, 700, 100, {w: 700, c: at32 ? MC : C.text});
         T(at32 ? 'Her preset' : 'Lowering to her preset', 170, 750, 34, {c: C.soft});

@@ -6,18 +6,21 @@
 //   tilt ..         "Board tilted · colour mode": the grade (the tilt clip, 9.65-11.25 s)
 //   tilt end ..     the export finishes: "COAST_final_4K.mp4 · 100 % · sent to Portfolio Review" (the wall reel's
 //                   first title credits her: ch05w opts.credit)
-// opts: {name (the suite's person, from S4's decision), sign: 2.4, suite: 'Suite 3'}.
+// opts: {name (the suite's person, from S4's decision), sign: 2.4 (< 0: signed in from the first frame), suite: 'Suite 3',
+//   exportAt}. Nov 14 (S4): Ava edits seated at 28 in from the start, the suite rises to 39 in (3.6-7.6 s) and she works
+//   standing; without a tilt clip the grade starts after she is up (lift end + 1.2 s) and the export lands at exportAt
+//   (default 11.0 s).
 (function () {
   const EDIT = [[0, 2.6, 0, 'ocean sunset'], [2.6, 5.0, 1, 'ridge dusk'], [5.0, 7.6, 3, 'interview A'], [7.6, 9.8, 2, 'city night'], [9.8, 12.6, 4, 'road trip'], [12.6, 99, 5, 'aurora']];
   const at_ = s => EDIT.find(e => s >= e[0] && s < e[1]);
   SCENES.c05m = {
     draw(t) {
       const o = SHOT.clip.opts || {}, name = o.name || 'Student', SIGN = o.sign ?? 2.4, suite = o.suite || 'Suite 3', p = pose(t);
-      const L = clipsOf('lift')[0] || {start: 4.4, duration: 3, target: 38}, TL = clipsOf('tilt')[0] || {start: 9.65, duration: 1.6, target: 5};
-      const L1 = L.start + L.duration, T0 = TL.start, T1 = TL.start + TL.duration, EXP = T1 + .2;
+      const L = clipsOf('lift')[0] || {start: 4.4, duration: 3, target: 38}, TL = clipsOf('tilt')[0] || null;
+      const L1 = L.start + L.duration, T0 = TL ? TL.start : L1 + 1.2, T1 = TL ? TL.start + TL.duration : T0, EXP = o.exportAt ?? (TL ? T1 + .2 : 11.0);
       g.fillStyle = '#05070c'; g.fillRect(0, 0, W, H);
       // ---- free / sign-in
-      const signed = sm(seg(t, SIGN, SIGN + .5));
+      const signed = SIGN < 0 ? 1 : sm(seg(t, SIGN, SIGN + .5));
       alpha(1 - signed, () => {
         backdrop(t, {top: '#101a30', bot: '#05070c', blobs: [[C.coral, .14], [C.blue, .14]]});
         T('OCC MEDIA ARTS', W / 2, 360, 44, {w: 600, a: 'center', c: C.coral, ls: 10});
@@ -52,7 +55,7 @@
           T(`${p.height.toFixed(1)} in`, W - 630, vy + 205, 96, {w: 700, c: p.height >= +L.target - .05 ? C.teal : C.text});
         });
         // the tilt: colour mode
-        toast(t, T0, T1 - T0 + 1.4, W - 820, vy + 30, 760, `Board tilted ${Math.round(+TL.target)}° · colour mode`, 'Grade · Teal & Amber', {col: C.amber, icon: 'tilt', h: 150});
+        toast(t, T0, (TL ? T1 - T0 : 0) + 1.6, W - 820, vy + 30, 760, TL ? `Board tilted ${Math.round(+TL.target)}° · colour mode` : 'Colour pass · standing', 'Grade · Teal & Amber', {col: C.amber, icon: TL ? 'tilt' : 'drop', h: 150});
         // the export
         alpha(sm(seg(t, EXP, EXP + .4)), () => {
           const pr = clamp(.6 + .4 * eo(seg(t, EXP, EXP + 1.6))), done = pr >= 1;
