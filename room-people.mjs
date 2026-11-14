@@ -162,7 +162,12 @@ const LOOK = {
     // work clothes: the rest of a squad or a watch beside the uniformed characters, a ward's staff, a lab's coats
     police: { top: '#1c2942', bottom: '#171b24', shoes: '#101114' }, guard: { top: '#25282d', bottom: '#1a1c20', shoes: '#101114' },
     scrubsTeal: { top: '#2f8f8a', bottom: '#2f8f8a', shoes: '#e9e9e6' }, scrubsBlue: { top: '#3d6fae', bottom: '#3d6fae', shoes: '#e9e9e6' }, scrubsPlum: { top: '#7a4a78', bottom: '#7a4a78', shoes: '#e9e9e6' },
-    labCoat: { top: '#eef0ee', bottom: '#3a4250' }, techPolo: { top: '#2d5f8f', bottom: '#2b2f38' }
+    labCoat: { top: '#eef0ee', bottom: '#3a4250' }, techPolo: { top: '#2d5f8f', bottom: '#2b2f38' },
+    // the extras who are in more than one school of the film (the commons wear their own clothes): another outfit in the
+    // media lab (coast) and in the high school (oilers), so Sofia, Zoe, Mia, Eli and Leo are not the same figure in each
+    labSofia: { top: '#6b3f5e', bottom: '#2b2e36' }, labZoe: { top: '#5a6e3a', bottom: '#2b2d33' },
+    schoolSofia: { top: '#c9a24a', bottom: '#3a4150' }, schoolZoe: { top: '#2f6f73', bottom: '#2a2d33' }, schoolMia: { top: '#8a3b4a', bottom: '#2c2f3a' },
+    schoolEli: { top: '#4a6d8c', bottom: '#3a3530' }, schoolLeo: { top: '#a8553a', bottom: '#2b2d33' }
 };
 
 export const ROOM_PEOPLE = {
@@ -316,13 +321,13 @@ export const ROOM_PEOPLE = {
         // Studio (the films cast that desk themselves).
         { id: 'people-kai-wheel-type', desk: 'wheel', modes: ['morning', 'afternoon'] },
         { id: 'people-fern-sit-type', station: 'accessible-student', desk: 'sit', modes: ['morning', 'afternoon'], colors: LOOK.heroSchool, studio: true },
-        { id: 'people-zoe-stand-type', station: 'student-standing', desk: 'stand', modes: ['morning', 'afternoon', 'evening'] },
-        { id: 'people-mia-sit-type', station: 'window-research', desk: 'sit', modes: ['morning', 'afternoon', 'evening'] },
+        { id: 'people-zoe-stand-type', station: 'student-standing', desk: 'stand', modes: ['morning', 'afternoon', 'evening'], colors: LOOK.schoolZoe },
+        { id: 'people-mia-sit-type', station: 'window-research', desk: 'sit', modes: ['morning', 'afternoon', 'evening'], colors: LOOK.schoolMia },
         { id: 'people-noah-sit-type', station: 'research-desk', desk: 'sit', modes: ['morning', 'afternoon'] },
-        { id: 'people-leo-sit-raise', on: 'student-chair-0-1-0', seat: 450, turn: 180, modes: ['morning'] },
+        { id: 'people-leo-sit-raise', on: 'student-chair-0-1-0', seat: 450, turn: 180, modes: ['morning'], colors: LOOK.schoolLeo },
         { id: 'people-ava-sit-write', on: 'student-chair-0-0-1', seat: 450, turn: 180, modes: ['morning', 'afternoon'] },
-        { id: 'people-eli-sit-listen', on: 'student-chair-0-2-0', seat: 450, turn: 180, modes: ['morning', 'afternoon'] },
-        { id: 'people-sofia-sit-laptop', on: 'student-chair-1-1-1', seat: 450, turn: 180, modes: ['morning', 'afternoon'] },
+        { id: 'people-eli-sit-listen', on: 'student-chair-0-2-0', seat: 450, turn: 180, modes: ['morning', 'afternoon'], colors: LOOK.schoolEli },
+        { id: 'people-sofia-sit-laptop', on: 'student-chair-1-1-1', seat: 450, turn: 180, modes: ['morning', 'afternoon'], colors: LOOK.schoolSofia },
         { id: 'people-hale-stand-present', layout: 'house', at: [1750, -3200], turn: 0, modes: ['morning'] },   // beside the whiteboard, which is in the middle of the wall (Vico, Nov 13 2026)
         { id: 'people-hale-stand-type', station: 'demonstration-desk', desk: 'stand', modes: ['afternoon', 'party'], colors: LOOK.hale },
         { id: 'people-hale-stand-low', desk: 'stand', modes: ['evening'], colors: LOOK.hale },   // after school, the desk at 35 in
@@ -361,9 +366,9 @@ export const ROOM_PEOPLE = {
         { id: 'people-ava-stand-low', desk: 'stand', modes: ['morning'], colors: LOOK.ava },   // the desk at 35 in; at the screening everyone has turned to the screen
         // at the screening the designer chairs stand in a row with no table: watching, not at a laptop (whose laptop would float)
         { key: 'people-noah-sit-laptop', id: 'people-noah-sit-listen', on: ['ergoflex-designer-chair', 0], seat: 450, modes: ['party'] },
-        { id: 'people-sofia-sit-laptop', on: ['ergoflex-designer-chair', 3], seat: 450, modes: ['morning'] },   // (at the table in the morning: the film's lab)
-        { key: 'sofia-screening', id: 'people-sofia-sit-listen', on: ['ergoflex-designer-chair', 3], seat: 450, modes: ['party'] },
-        { id: 'people-zoe-walk', layout: 'house', at: [1900, 4300], turn: -90, modes: ['morning'] },
+        { id: 'people-sofia-sit-laptop', on: ['ergoflex-designer-chair', 3], seat: 450, modes: ['morning'], colors: LOOK.labSofia },   // (at the table in the morning: the film's lab)
+        { key: 'sofia-screening', id: 'people-sofia-sit-listen', on: ['ergoflex-designer-chair', 3], seat: 450, modes: ['party'], colors: LOOK.labSofia },
+        { id: 'people-zoe-walk', layout: 'house', at: [1900, 4300], turn: -90, modes: ['morning'], colors: LOOK.labZoe },
         // The reel showcase: people standing in the open floor, turned to the screen on the back wall.
         L => L.id === 'house' ? [spot('people-omar-wheel-watch', -1300, 350, [0, -4225], PARTY), { id: 'people-mia-stand-drink', beside: [1050, 450], ...PARTY, colors: LOOK.guestB },   // by the featured bay, a drink in her hand
             
