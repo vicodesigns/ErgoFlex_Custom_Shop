@@ -669,6 +669,19 @@ def stand_present(k):
             'foot_l': {'at': _s(k, .12, .0, .07 / k), 'toes': (.3, -1, 0)}, 'foot_r': {'at': _s(k, -.13, .03, .07 / k), 'toes': (-.45, -1, 0)}}
 
 
+def stand_present_left(k):
+    """stand-present the other way round, for a presenter standing left of the board (as the class sees it): the left
+    arm out to his side at shoulder height, pointing at the board with the index finger, the tablet on the right
+    forearm, the head turned a little toward the board. Aimed for the high school (Hale at [-1450, -2950] turned 15
+    degrees, room-people.mjs): the line from the shoulder runs to the board's face at about x 1500, 1.64 m up, a little
+    behind his side."""
+    return {'spine': (0, 1, 1), 'spine_twist': 6, 'neck': 0, 'head': -2, 'head_yaw': 18,
+            'hand_l': {'at': _s(k, .627, .024, 1.343), 'fingers': (1, .3, .4), 'palm': (0, -.3, -1), 'elbow': (0, .1, -.3), 'shoulder': (0, -8),
+                       'curl': 1.2, 'thumb': .6, 'each': {'index': .04}},
+            'hand_r': {'at': _s(k, -.17, -.24, 1.08), 'fingers': (.75, -.65, .05), 'palm': (0, .15, 1), 'elbow': (-.25, .25, -.3), 'curl': .25, 'thumb': .1},
+            'foot_l': {'at': _s(k, .13, .03, .07 / k), 'toes': (.45, -1, 0)}, 'foot_r': {'at': _s(k, -.12, .0, .07 / k), 'toes': (-.3, -1, 0)}}
+
+
 def walk(k):
     """Mid-stride: left heel down, right toe leaving the floor, arms swinging against the legs."""
     return {'pelvis_offset': (0, 0, -.03 * k), 'pelvis_yaw': 4, 'spine': (3, 2, 1), 'spine_twist': -8, 'neck': 2, 'head': 0, 'head_yaw': 4,
@@ -1197,6 +1210,7 @@ POSES = {
     'stand-phone': stand_phone,
     'stand-wait': stand_wait,
     'stand-present': stand_present,
+    'stand-present-left': stand_present_left,
     'walk': walk,
     'stand-mug': stand_mug,
     'stand-drink': stand_drink,
@@ -1262,6 +1276,7 @@ OUTPUTS = [
     {'id': 'people-noah-sit-laptop', 'character': 'noah', 'pose': 'sit-laptop', 'name': 'Noah, at a laptop', 'held': [('laptop', {})]},
     {'id': 'people-noah-sit-type', 'character': 'noah', 'pose': 'sit-type', 'height': 28, 'name': 'Noah, typing at the desk (seated)'},
     {'id': 'people-hale-stand-present', 'character': 'hale', 'pose': 'stand-present', 'name': 'Mr Hale, presenting', 'held': [('tablet', {'side': 'l'})]},
+    {'id': 'people-hale-stand-present-left', 'character': 'hale', 'pose': 'stand-present-left', 'name': 'Mr Hale, presenting from the left of the board', 'held': [('tablet', {'side': 'r'})]},
     {'id': 'people-omar-wheel-type', 'character': 'omar', 'pose': 'wheel-type', 'height': 31, 'name': 'Omar, typing at the desk (wheelchair)', 'held': [('wheelchair', {})]},
     {'id': 'people-omar-wheel-type-28', 'character': 'omar', 'pose': 'wheel-type', 'height': 28, 'name': 'Omar, typing at the desk at 28 in (wheelchair)', 'held': [('wheelchair', {})]},
     {'id': 'people-lin-stand-type', 'character': 'lin', 'pose': 'stand-type', 'height': 43.5, 'name': 'Lin, typing at the desk (standing)'},
@@ -1305,6 +1320,7 @@ POSE_INFO = {
     'stand-wait': ('Standing by, arms loose', 'standing', '', 0, []),
     'stand-phone': ('Standing, phone in hand', 'standing', '', 0, [('phone', {'side': 'r'})]),
     'stand-present': ('Presenting, tablet on the arm', 'standing', '', 0, [('tablet', {'side': 'l'})]),
+    'stand-present-left': ('Presenting, pointing to his left', 'standing', '', 0, [('tablet', {'side': 'r'})]),
     'stand-work': ('Working at a bench', 'standing', '', 0, [('screwdriver', {'side': 'r'})]),
     'stand-paint': ('Painting at an easel', 'standing', '', 0, [('brush', {'side': 'r'}), ('palette', {'side': 'l'})]),
     'stretch': ('Stretching, arms overhead', 'standing', '', 0, []),
@@ -1369,6 +1385,8 @@ DESK_HEIGHTS = {'sit-type': (28, 30), 'stand-type': (43.5,), 'stand-type-low': (
 # Who a posture is for: adult poses are built on adult furniture, child poses on child furniture.
 CHILD_POSES = {p for p in POSE_INFO if p.startswith('kid-')}
 def suits(who, pose): return (who in CHILDREN) == (pose in CHILD_POSES)
+# A presenter's posture aimed at one room's board (stand-present-left, the high school's Hale): his listed model only.
+ROLE_POSES = ROLE_POSES | {'stand-present-left'}
 # What the library holds of a character: everything that suits them, or, for a role character, their own list
 # ('postures'). Any other posture is still built on request (output()).
 # (the mid-height desk is at the shoulders of someone of short stature: Rosa works at 28 and 30 in)

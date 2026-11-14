@@ -1463,6 +1463,12 @@
    "desk": false,
    "seat": 0
   },
+  "stand-present-left": {
+   "label": "Presenting, pointing to his left",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
   "stand-work": {
    "label": "Working at a bench",
    "stance": "standing",
@@ -11778,6 +11784,12 @@
    "pose": "power-type",
    "deskHeight": 32,
    "name": "Mia: typing at the desk, in the power wheelchair",
+   "aids": []
+  },
+  "people-hale-stand-present-left": {
+   "character": "hale",
+   "pose": "stand-present-left",
+   "name": "Mr Hale, presenting from the left of the board",
    "aids": []
   }
  }

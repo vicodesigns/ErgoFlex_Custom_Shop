@@ -85484,6 +85484,39 @@
     "pose": "power-type",
     "deskHeight": 32
    }
+  },
+  {
+   "id": "people-hale-stand-present-left",
+   "name": "Mr Hale, presenting from the left of the board",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-hale-stand-present-left.glb",
+   "anchor": "floor",
+   "size": [
+    1169.6,
+    1762.1,
+    632.3
+   ],
+   "min": [
+    -311.4,
+    0.0,
+    -132.0
+   ],
+   "max": [
+    858.2,
+    1762.1,
+    500.3
+   ],
+   "tris": 34788,
+   "bytes": 1376676,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "hale",
+    "pose": "stand-present-left"
+   }
   }
  ],
  "screens": [

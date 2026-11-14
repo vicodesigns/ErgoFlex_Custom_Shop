@@ -14,7 +14,8 @@ pose survives export), then hands, feet, fingers, spine and head are set.
       'spine_twist': deg, 'spine_side': deg,
       'neck': deg, 'head': deg,       # forward nod (+ looks down)
       'head_yaw': deg, 'head_roll': deg,
-      'hand_l': {'at': (x,y,z), 'fingers': (dx,dy,dz), 'palm': (dx,dy,dz), 'elbow': (dx,dy,dz), 'curl': 0..1, 'thumb': 0..1, 'spread': 0..1},
+      'hand_l': {'at': (x,y,z), 'fingers': (dx,dy,dz), 'palm': (dx,dy,dz), 'elbow': (dx,dy,dz), 'curl': 0..1, 'thumb': 0..1, 'spread': 0..1,
+                 'each': {'index': 0..1, ...}},   # a finger curled on its own (a pointing index)
       'hand_r': {...},                # 'at' is the wrist. 'shoulder': (forward, down) degrees of the collarbone (optional). Without 'at' the arm is posed by 'arm': (pitch, out, twist, elbow bend)
       'foot_l': {'at': (x,y,z), 'toes': (dx,dy,dz), 'knee': (dx,dy,dz), 'pitch': deg},
       'foot_r': {...},                # 'at' is the ankle; rest ankle height is ~0.07
@@ -77,10 +78,11 @@ def aim_hand(rig, side, fingers, palm):
     set_bone_world(rig, name, m)
 
 
-def curl_fingers(rig, side, curl=.35, thumb=.25, spread=0.):
-    """Relaxed flexion: every joint bends toward the palm."""
+def curl_fingers(rig, side, curl=.35, thumb=.25, spread=0., fingers=None):
+    """Relaxed flexion: every joint bends toward the palm. fingers: {name: amount} for one finger on its own (a
+    pointing index: {'index': .05})."""
     for f in FINGERS:
-        amount = thumb if f == 'thumb' else curl
+        amount = (fingers or {}).get(f, thumb if f == 'thumb' else curl)
         for j, share in ((1, 38), (2, 46), (3, 30)):
             name = f'{f}_0{j}_{side}'
             if name not in rig.pose.bones:
@@ -196,7 +198,7 @@ def apply_pose(rig, pose):
             rotate_world(rig, 'lowerarm_' + side, axis, bend)
         if 'fingers' in spec:
             aim_hand(rig, side, spec['fingers'], spec.get('palm', (0, 0, -1)))
-        curl_fingers(rig, side, spec.get('curl', .3), spec.get('thumb', .2), spec.get('spread', 0))
+        curl_fingers(rig, side, spec.get('curl', .3), spec.get('thumb', .2), spec.get('spread', 0), spec.get('each'))
 
     # Legs.
     for side in ('l', 'r'):

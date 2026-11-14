@@ -19144,6 +19144,14 @@
    "scenes": [],
    "converter": "people-generator",
    "collection": "people"
+  },
+  {
+   "id": "people-hale-stand-present-left",
+   "name": "Mr Hale, presenting from the left of the board",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
   }
  ],
  "screens": [
