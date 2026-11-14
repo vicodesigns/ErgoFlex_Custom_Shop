@@ -74,6 +74,45 @@ const CHAIRS = /chair|stool|steelcase-leap|aeron/i;
 // Which part of a person a material is (MakeHuman names: 'Human.<asset>'); null = skin, eyes, teeth, things held.
 const NOT_WORN = /^(body|low-poly|teeth|tongue|eyebrow|eyelashes|eyes)/i, PARTS = { glasses: /glasses/i, shoes: /shoe|flats|boot|sneaker/i, bottom: /pants|skirt|jeans|shorts|trousers/i, hair: /hair|ponytail|afro|bob|braid|bun|^short\d|^long\d|mohawk|pigtail/i };
 export const partOf = name => { if (!/^Human\./.test(name || '')) return null; const n = name.slice(6); if (NOT_WORN.test(n)) return null; for (const [part, re] of Object.entries(PARTS)) if (re.test(n)) return part; return 'top'; };
+// ---- hair edges ------------------------------------------------------------------------------------------------------
+// Hair, brows and lashes are cut-outs (glTF alphaMode MASK, cutoff 0.4 or the character's brow_cutoff: tools/people/
+// build.py set_alpha), so each of their edges is a yes or no per pixel and reads stair-stepped. With the hair edge on,
+// those materials (only those: never clothes or skin) use alpha to coverage on the canvas's multisampling (studio.js
+// makes the renderer with antialias: true), so the edge is smoothed like a polygon's; hair also cuts at
+// HAIR_EDGE.cutoff (nearer its painted strands); brows and lashes keep the cutoff they were built with. The canvas's
+// own alpha is blended (src + dst * (1 - src)), so it stays opaque where hair is over the room.
+// Switch: ?hairedge=1 or 0 in the page's address, else localStorage['ergoflex.hairEdge'] = '1' or '0', else
+// HAIR_EDGE.studio in the Studio and HAIR_EDGE.film in a presentation frame (the films: off until judged in a film
+// render). Read once per page (hairEdgeEnabled).
+export const HAIR_EDGE = { studio: true, film: false, cutoff: .25, param: 'hairedge', key: 'ergoflex.hairEdge' };
+export function parseHairEdge(search, stored, presentation) {
+    const read = v => v === '1' || v === 'on' || v === 'true' ? true : v === '0' || v === 'off' || v === 'false' ? false : null;
+    let fromUrl = null; try { fromUrl = read(new URLSearchParams(search || '').get(HAIR_EDGE.param)); } catch { /* no address */ }
+    return fromUrl ?? read(stored) ?? (presentation ? HAIR_EDGE.film : HAIR_EDGE.studio);
+}
+let hairEdgeOn = null;
+export function hairEdgeEnabled() {
+    if (hairEdgeOn !== null) return hairEdgeOn;
+    let stored = null; try { stored = globalThis.localStorage?.getItem(HAIR_EDGE.key) ?? null; } catch { /* storage off */ }
+    let search = ''; try { search = globalThis.location?.search || ''; } catch { /* no window */ }
+    return hairEdgeOn = parseHairEdge(search, stored, !!globalThis.__ERGO_PRESENTATION__);
+}
+// 'hair', 'face' (brows, lashes) or null: only cut-out materials (alphaTest) of those parts are ever touched
+export const hairEdgeKind = m => !m || !(m.alphaTest > 0) || typeof m.name !== 'string' ? null : partOf(m.name) === 'hair' || /^Human\..*bangs/i.test(m.name) ? 'hair' : /^Human\.(eyebrow|eyelash)/i.test(m.name) ? 'face' : null;
+export function hairEdge(m, on) {
+    const kind = hairEdgeKind(m); if (!kind) return false;
+    const from = m.userData.hairEdgeFrom ||= { alphaTest: m.alphaTest };
+    if (on) {
+        m.alphaToCoverage = true; m.alphaTest = kind === 'hair' ? Math.min(from.alphaTest, HAIR_EDGE.cutoff) : from.alphaTest;
+        m.blending = THREE.CustomBlending; m.blendEquation = m.blendEquationAlpha = THREE.AddEquation;
+        m.blendSrc = THREE.OneFactor; m.blendDst = THREE.ZeroFactor; m.blendSrcAlpha = THREE.OneFactor; m.blendDstAlpha = THREE.OneMinusSrcAlphaFactor;
+    } else {
+        m.alphaToCoverage = false; m.alphaTest = from.alphaTest; m.blending = THREE.NormalBlending;
+        m.blendSrcAlpha = m.blendDstAlpha = m.blendEquationAlpha = null;
+    }
+    m.userData.hairEdgeOn = !!on; m.needsUpdate = true; return true;
+}
+const hairEdges = (object, on) => object.traverse(o => { if (o.isMesh) for (const m of [].concat(o.material)) hairEdge(m, on); });
 // What a garment looks like as built: its average colour and brightness (linear), over all of it and separately above
 // and below the waist (personLower, workspace-3d.mjs), read from its texture where its vertices sit.
 const statCache = new WeakMap();
@@ -1338,6 +1377,7 @@ export class RoomPeople {
             if (!object) continue;
             object.name = 'Person:' + spec.id; object.userData.person = spec; object.userData.personFit = this.library.entry(spec.id)?.person?.deskHeight ?? null; object.visible = false;
             if (chair) { chair.name = 'Person chair:' + spec.id; chair.visible = false; root.add(chair); object.userData.personChair = chair; }
+            if (hairEdgeEnabled()) hairEdges(object, true);      // (before ownMaterials: its copies keep it)
             if (spec.desk || this.filter?.when?.[this.keyOf(spec)]) this.ownMaterials(object);
             root.add(object); this.people.push(object); this.resize(object, spec); this.recolor(object, spec);
             // The Studio may load people after the room's first asset hydration. Their editor identity must
@@ -1403,7 +1443,10 @@ export class RoomPeople {
     }
     fade(object, amount) {
         if (object.userData.personFade === amount) return; object.userData.personFade = amount;
-        for (const m of object.userData.personMaterials || []) { const solid = amount >= 1; m.transparent = solid ? m.userData.solid.transparent : true; m.opacity = m.userData.solid.opacity * amount; m.needsUpdate = true; }
+        for (const m of object.userData.personMaterials || []) {
+            const solid = amount >= 1; m.transparent = solid ? m.userData.solid.transparent : true; m.opacity = m.userData.solid.opacity * amount; m.needsUpdate = true;
+            if (m.userData.hairEdgeFrom && m.userData.hairEdgeOn !== solid && hairEdgeEnabled()) hairEdge(m, solid);      // (a fading person's hair blends as usual)
+        }
         const chair = object.userData.personChair; if (chair && !object.userData.personDriven) chair.visible = object.visible && amount > .5;
         object.traverse(o => { if (o.isMesh) o.castShadow = amount > .5; });
     }

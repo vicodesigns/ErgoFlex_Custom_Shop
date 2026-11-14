@@ -2,7 +2,7 @@
 // filter and placement, and stations whose height a pose does not fit.   node tests/room-people-test.mjs
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { RoomPeople, ROOM_PEOPLE, castEntries, parseLively, rankLively, staggerDue, staggerEvery, easeLife, LIVELY_DEFAULT, LIVELY_EVERY } from '../room-people.mjs';
+import { RoomPeople, ROOM_PEOPLE, castEntries, parseLively, rankLively, staggerDue, staggerEvery, easeLife, LIVELY_DEFAULT, LIVELY_EVERY, HAIR_EDGE, parseHairEdge, hairEdge, hairEdgeKind } from '../room-people.mjs';
 import { readFileSync } from 'node:fs';
 
 const index = JSON.parse(readFileSync(new URL('../assets/props/index.json', import.meta.url), 'utf8'));
@@ -432,4 +432,32 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
         assert.equal(easeLife(.5, false, 10), 0); assert.equal(easeLife(.5, true, -1), .5, 'no step back for a negative dt');
     }
 }
-console.log('PASS room people: library entries, desk-height casting and fade, chair hand-over, film filter and placement, film casting, stations, loading by the hour, postures with things on a table at a table, the same clothes away from the desk, chairs facing their table.');
+// ---- hair edges: alpha to coverage on hair, brows and lashes only; off in a presentation frame unless asked for
+{
+    assert.equal(parseHairEdge('', null, false), HAIR_EDGE.studio, 'the Studio: as HAIR_EDGE.studio');
+    assert.equal(parseHairEdge('', null, true), false, 'a presentation frame (the films): off by default');
+    assert.equal(parseHairEdge('?hairedge=1', null, true), true); assert.equal(parseHairEdge('?hairedge=0', '1', false), false, 'the address before storage');
+    assert.equal(parseHairEdge('', '0', false), false); assert.equal(parseHairEdge('?hairedge=x', null, true), false, 'nonsense is no answer');
+    const mat = (name, alphaTest) => Object.assign(new THREE.MeshStandardMaterial(), { name, alphaTest });
+    const hair = mat('Human.short04', .4), brow = mat('Human.eyebrow001', .12), lash = mat('Human.eyelashes01', .4), shirt = mat('Human.namuhekam_male_polo_shirt', 0),
+        cutPants = mat('Human.toigo_wool_pants', .5), skin = mat('Human.body', 0), held = mat('Held.chair frame (0.1, 0.35, 0.7)', 0);
+    for (const m of [hair, brow, lash, shirt, cutPants, skin, held]) hairEdge(m, true);
+    assert.ok(hair.alphaToCoverage && hair.alphaTest === HAIR_EDGE.cutoff && hair.blending === THREE.CustomBlending && hair.transparent === false, 'hair: coverage, the softer cutoff, still drawn with the solid things');
+    assert.ok(hair.blendSrc === THREE.OneFactor && hair.blendDst === THREE.ZeroFactor && hair.blendSrcAlpha === THREE.OneFactor && hair.blendDstAlpha === THREE.OneMinusSrcAlphaFactor, 'hair: the colour replaces, the canvas alpha stays opaque');
+    assert.ok(brow.alphaToCoverage && brow.alphaTest === .12 && lash.alphaToCoverage && lash.alphaTest === .4, 'brows and lashes: coverage at their own cutoff');
+    for (const m of [shirt, cutPants, skin, held]) assert.ok(!m.alphaToCoverage && m.blending === THREE.NormalBlending && !m.userData.hairEdgeFrom, m.name + ': never touched');
+    const copy = hair.clone(); assert.ok(copy.alphaToCoverage && copy.userData.hairEdgeFrom.alphaTest === .4, 'a person\'s own copy of the material keeps it');
+    hairEdge(hair, false); assert.ok(!hair.alphaToCoverage && hair.alphaTest === .4 && hair.blending === THREE.NormalBlending, 'off: as built');
+    // every cut-out material of every person in the library is hair, a brow or lashes, and nothing else is a cut-out
+    const kinds = new Map();
+    for (const p of index.props.filter(p => p.category === 'people')) {
+        const b = readFileSync(new URL('../' + p.file, import.meta.url)), doc = JSON.parse(b.subarray(20, 20 + b.readUInt32LE(12)).toString('utf8'));
+        for (const m of doc.materials || []) {
+            const kind = hairEdgeKind({ name: m.name, alphaTest: m.alphaMode === 'MASK' ? (m.alphaCutoff ?? .5) : 0 });
+            assert.equal(!!kind, m.alphaMode === 'MASK', `${p.id}: ${m.name} (${m.alphaMode || 'OPAQUE'}) is ${kind || 'not hair'}`);
+            if (kind) kinds.set(m.name, kind);
+        }
+    }
+    assert.ok([...kinds.values()].includes('hair') && [...kinds.values()].includes('face'), 'hair, brows and lashes in the library');
+}
+console.log('PASS room people: library entries, desk-height casting and fade, chair hand-over, film filter and placement, film casting, stations, loading by the hour, postures with things on a table at a table, the same clothes away from the desk, chairs facing their table, hair edges.');
