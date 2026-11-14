@@ -33,7 +33,7 @@ const CINE = [
   cine('wellness', 7, {id: 'cine-wellness-tablet', target: 'tablet', role: 'focus -> breathing with the stretch -> nice reset', w: 1620, h: 1080, scene: 'c07t', opts: {name: 'Maya'}}),
   cine('awareness', 8, {id: 'cine-awareness-main', target: 'main-landscape', role: 'radar on the roll of the cut: the pet, stopped short', w: 1920, h: 800, scene: 'c08', opts: {gap: 16, label: 'Pet'}}),
   // coast (written LAST: COAST_PERSON is S4's decision of who uses the featured suite; Maya is at the centre bay)
-  cine('coast', 5, {id: 'cine-coast-main', target: 'main-landscape', role: 'the featured suite: sign-in, height, colour, export', w: 1920, h: 1120, scene: 'c05m', opts: {name: COAST_PERSON, sign: 2.4}}),
+  cine('coast', 5, {id: 'cine-coast-main', target: 'main-landscape', role: 'the featured suite: sign-in, height, colour, export', w: 1920, h: 1120, scene: 'c05m', opts: {name: COAST_PERSON, sign: -1}}),
   cine('coast', 5, {id: 'cine-coast-curved', target: 'ergoflex-wide-monitor/monitor-screen', role: 'centre bay (Maya): NLE', w: 1920, h: 800, scene: 'ch05l', opts: {who: 'Maya', credit: COAST_PERSON}}),
   cine('coast', 5, {id: 'cine-coast-portrait', target: 'ergoflex-portrait-monitor/monitor-screen', role: 'centre bay (Maya): colour + export', w: 1080, h: 1856, scene: 'ch05p'}),
   cine('coast', 5, {id: 'cine-coast-wall', target: 'occ-display', role: 'screening wall: the reel opens on COAST', w: 3840, h: 1520, scene: 'ch05w', opts: {credit: COAST_PERSON}}),

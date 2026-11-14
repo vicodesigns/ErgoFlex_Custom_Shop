@@ -39476,19 +39476,27 @@
    "screens": [
     {
      "target": "main-landscape",
-     "src": "exports/cinematic-intro-20261030/screens/05-main.mp4"
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-coast-main.mp4",
+     "offset": 0,
+     "loop": false
     },
     {
      "target": "ergoflex-wide-monitor/monitor-screen",
-     "src": "exports/cinematic-intro-20261030/screens/05-curved.mp4"
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-coast-curved.mp4",
+     "offset": 0,
+     "loop": false
     },
     {
      "target": "ergoflex-portrait-monitor/monitor-screen",
-     "src": "exports/cinematic-intro-20261030/screens/05-portrait.mp4"
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-coast-portrait.mp4",
+     "offset": 0,
+     "loop": false
     },
     {
      "target": "occ-display",
-     "src": "exports/cinematic-intro-20261030/screens/05-wall.mp4",
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-coast-wall.mp4",
+     "offset": 0,
+     "loop": false,
      "brightness": 0.6
     }
    ],
