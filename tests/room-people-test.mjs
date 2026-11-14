@@ -2,7 +2,7 @@
 // filter and placement, and stations whose height a pose does not fit.   node tests/room-people-test.mjs
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { RoomPeople, ROOM_PEOPLE, castEntries } from '../room-people.mjs';
+import { RoomPeople, ROOM_PEOPLE, castEntries, parseLively, rankLively, staggerDue, staggerEvery, easeLife, LIVELY_DEFAULT, LIVELY_EVERY } from '../room-people.mjs';
 import { readFileSync } from 'node:fs';
 
 const index = JSON.parse(readFileSync(new URL('../assets/props/index.json', import.meta.url), 'utf8'));
@@ -387,5 +387,49 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
     assert.equal(Math.abs(facing('b')), 180, 'a chair built facing -z: turned round, the back behind her');
     assert.equal(Math.abs(facing('c')), 180, 'a turn that already seats someone right is kept');
     assert.equal(Math.abs(facing('d')), 180, 'a seat without a back keeps the turn it was given');
+}
+{   // Who moves in the Studio: the budget's override, the largest in the picture, hysteresis, the stagger, the easing.
+    assert.equal(LIVELY_DEFAULT, 12);
+    assert.deepEqual([parseLively('?lively=8', null), parseLively('', '20'), parseLively('?lively=0', '12'), parseLively('', null), parseLively('?x=1&lively=abc', '5'), parseLively('?lively=-3', null), parseLively('?room=library&lively=20', '4')],
+        [8, 20, 0, 12, 5, 12, 20], 'the address first, then the stored value, then the default; 0 is the old way');
+    const view = { tanHalf: Math.tan(Math.PI / 8), aspect: 16 / 9, near: .01 };      // a 45 degree camera looking down -z
+    const at = (key, x, z, tall = 1.7) => ({ key, x, y: 0, z, tall });
+    {   // larger in the picture first: near before far, standing before seated at the same distance; behind the camera and
+        // outside the picture never; someone half in the picture counts
+        const people = [at('far', 0, -12), at('near', .5, -3), at('seated', -.3, -3, 1.2), at('behind', 0, 2), at('aside', 30, -4), at('edge', 2.6, -3.5), at('mid', 0, -6)];
+        const { order, chosen } = rankLively(people, view, 3);
+        assert.deepEqual(order, ['near', 'edge', 'seated', 'mid', 'far'], 'ranked by size in the picture: ' + order.join(' '));
+        assert.deepEqual([...chosen].sort(), ['edge', 'near', 'seated'], 'the three largest move');
+        assert.ok(!order.includes('behind') && !order.includes('aside'), 'nobody behind the camera or outside the picture');
+        assert.equal(rankLively(people, view, 0).chosen.size, 0); assert.equal(rankLively(people, view, 50).chosen.size, 5, 'never more than are in the picture');
+    }
+    {   // hysteresis: the one who moves keeps the place against someone a little larger, not against someone much larger;
+        // two people of about the same size at the edge of the list do not swap at every pick
+        const keepA = rankLively([at('a', 0, -5), at('b', 0, -4.4)], view, 1, new Set(['a'])).chosen;
+        assert.deepEqual([...keepA], ['a'], 'a keeps the place against b, 14 % larger');
+        assert.deepEqual([...rankLively([at('a', 0, -5), at('b', 0, -3)], view, 1, new Set(['a'])).chosen], ['b'], 'b, two thirds larger, takes it');
+        let before = null, flips = 0;
+        for (let pick = 0; pick < 40; pick++) {
+            const wobble = pick % 2 ? .06 : -.06, now = rankLively([at('a', 0, -5 - wobble), at('b', 0, -5 + wobble), at('c', 0, -2)], view, 2, before).chosen;
+            if (before && [...now].some(k => !before.has(k))) flips++; before = now;
+        }
+        assert.equal(flips, 0, 'nobody flips in and out at the edge of the list');
+    }
+    {   // the stagger: the largest LIVELY_EVERY every frame, the next as many every second frame, the rest every third, each
+        // on a frame of their own: twelve people are never all solved in one frame and each is solved at least every third
+        assert.deepEqual([0, 3, 4, 7, 8, 30].map(staggerEvery), [1, 1, 2, 2, 3, 3]); assert.equal(LIVELY_EVERY, 4);
+        const phases = Array.from({ length: 12 }, (_, i) => (i * 2654435761) >>> 0), last = new Array(12).fill(-1); let most = 0, least = 99;
+        for (let frame = 0; frame < 60; frame++) {
+            let n = 0; for (let rank = 0; rank < 12; rank++) if (staggerDue(rank, frame, phases[rank])) { if (last[rank] >= 0) assert.ok(frame - last[rank] <= 3, 'solved at least every third frame'); last[rank] = frame; n++; }
+            most = Math.max(most, n); least = Math.min(least, n);
+        }
+        assert.ok(most <= 9 && least >= 6, `a room of twelve: ${least} to ${most} solved a frame, not twelve`);
+        for (let rank = 0; rank < LIVELY_EVERY; rank++) for (let frame = 0; frame < 9; frame++) assert.ok(staggerDue(rank, frame, 12345), 'the largest every frame');
+    }
+    {   // coming to life and going back over LIVELY_EASE (.8 s): no jump, whatever the frame rate
+        let a = 0, frames = 0; while (a < 1) { const b = easeLife(a, true, 1 / 60); assert.ok(b - a <= 1 / 48 + 1e-9, 'a small step'); a = b; frames++; }
+        assert.ok(frames >= 47 && frames <= 49, 'alive after .8 s (' + frames + ' frames)');
+        assert.equal(easeLife(.5, false, 10), 0); assert.equal(easeLife(.5, true, -1), .5, 'no step back for a negative dt');
+    }
 }
 console.log('PASS room people: library entries, desk-height casting and fade, chair hand-over, film filter and placement, film casting, stations, loading by the hour, postures with things on a table at a table, the same clothes away from the desk, chairs facing their table.');

@@ -494,6 +494,29 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
         assert.deepEqual([walkers.people[0].position.x, walkers.people[0].position.z], [0, 0], 'at a film\'s second the walker stands where the room (or the cut) has them');
         walkers.dispose(); delete ROOM_PEOPLE.strolltest;
     }
+    // ---- the Studio's lively people: chosen in the camera's picture (someone behind it is never made skinned), made
+    // skinned in idle time, and coming to life gradually from the posture as built (no jump at the hand-over)
+    {
+        const { ROOM_PEOPLE } = await import('../room-people.mjs');
+        ROOM_PEOPLE.livelytest = [{ key: 'front', id: 'people-zoe-stand-wait', at: [0, 0], turn: 180 }, { key: 'side', id: 'people-andre-stand-wait', at: [1200, 1500], turn: 180 }, { key: 'behind', id: 'people-grace-stand-wait', at: [0, -7000], turn: 0 }];
+        const { room } = makeRoom('livelytest'); room.roomLayout = { id: 'house', width: 9000, depth: 16000, back: -8000 }; room.root.children[0].position.set(4000, 0, 6000);
+        const crowd = new RoomPeople(room, library); await crowd.setEnabled(true); await crowd.built;
+        const camera = new THREE.PerspectiveCamera(45, 16 / 9, 10, 1e6); camera.position.set(0, 1500, -4000); camera.lookAt(0, 800, 3000); camera.updateMatrixWorld();
+        crowd.view = camera; let now = 0; const step = () => { now += 1000 / 60; crowd.update({ pose: { x: -4000, z: 7000, yaw: 0 }, height: 28, time: null, now }); };
+        const of = key => crowd.byKey(key);
+        step(); await crowd.settled(2000); step();
+        assert.ok(of('front').userData.personRig && of('side').userData.personRig, 'the two in the picture are made skinned');
+        assert.equal(of('behind').userData.personLife, undefined, 'someone behind the camera is never made skinned');
+        // the first frames of life: a small part of it, the bones close to the posture as built
+        const life = of('front').userData.personLife, rig = life.rig, key = life.key; assert.ok(life.amount > 0 && life.amount < .1, 'comes to life gradually (' + life.amount.toFixed(3) + ')');
+        let most = 0; for (let i = 0; i < rig.n; i++) most = Math.max(most, rig.wp[i].distanceTo(key.wp[i])); assert.ok(most < .004, 'at the hand-over the pose is the one built (' + (most * 1000).toFixed(1) + ' mm)');
+        for (let i = 0; i < 60; i++) step(); assert.equal(life.amount, 1, 'fully alive after a second'); assert.ok(life.live);
+        // turned away from them: they go back to the posture as built over the easing, and stop
+        camera.lookAt(0, 800, -12000); camera.updateMatrixWorld(); now += 600; for (let i = 0; i < 70; i++) step();
+        assert.equal(life.amount, 0); assert.equal(life.live, false, 'out of the picture: back to the posture as built');
+        let off = 0; for (let i = 0; i < rig.n; i++) off = Math.max(off, rig.wp[i].distanceTo(key.wp[i])); assert.ok(off < 1e-6, 'exactly as built');
+        crowd.dispose(); delete ROOM_PEOPLE.livelytest;
+    }
     // ---- seats: someone a film places at a spot in a seated posture sits on the room's chair that is there (it stays);
     // with nothing to sit on they get a task chair of their own; someone standing where a chair is still clears it
     {

@@ -57,7 +57,12 @@ const gazeM = new THREE.Matrix4(), gazeW = new THREE.Vector3();
 const REACH = { sit: 945, wheel: 935, stand: 890 };
 const BEHIND_KEYS = { sit: 470, wheel: 460, stand: 415 };
 const HEIGHT_FIT = 1.4;                       // inches either side of the height a desk pose was built for
-const LIVELY = 4;                             // Studio: how many people besides the desk user breathe and shift (the nearest to the camera)
+const LIVELY = 4;                             // Studio, the old way (lively=0): the 4 nearest to the camera move, every frame
+export const LIVELY_DEFAULT = 12;             // Studio: how many people besides the desk user move: the largest in the picture
+const LIVELY_PARAM = 'lively', LIVELY_KEY = 'ergoflex.peopleLively';     // ?lively=N or localStorage[LIVELY_KEY] = N (0: the old way)
+const LIVELY_KEEP = 1.3;                      // whoever moves already keeps their place unless someone is this much larger
+const LIVELY_SPARE = 4;                       // this many more than the budget are made ready (skinned) in idle time
+const LIVELY_EASE = .8;                       // seconds over which someone comes to life or goes back to the posture as built
 const HEIGHT_SOLID = .45;                     // within this the person is fully there; beyond it they fade out to HEIGHT_FIT
 const NEARBY = [[0, 0], [250, 0], [-250, 0], [0, 250], [0, -250], [350, 350], [-350, 350], [350, -350], [-350, -350], [550, 0], [-550, 0], [0, 550], [0, -550]];   // where a person at a spot looks for room (mm)
 const TASK_CHAIR = 'steelcase-leap-v2';       // seat 435 mm: what the seated desk poses were built on
@@ -1086,6 +1091,48 @@ export function deskFamily(id) {
     return list.filter(([other]) => other !== id);
 }
 
+// ---- who moves in the Studio (pure; RoomPeople.liven) --------------------------------------------------------------
+// The budget: ?lively=N in the page's address, else localStorage['ergoflex.peopleLively'], else LIVELY_DEFAULT. 0 is
+// the old way (the LIVELY nearest, every frame). Read once per page (livelyBudget).
+export function parseLively(search, stored) {
+    const read = v => { const n = Number.parseInt(v, 10); return Number.isFinite(n) && n >= 0 ? Math.min(n, 200) : null; };
+    let fromUrl = null; try { fromUrl = read(new URLSearchParams(search || '').get(LIVELY_PARAM)); } catch { /* no address */ }
+    return fromUrl ?? read(stored) ?? LIVELY_DEFAULT;
+}
+let budget = null;
+export function livelyBudget() {
+    if (budget !== null) return budget;
+    let stored = null; try { stored = globalThis.localStorage?.getItem(LIVELY_KEY) ?? null; } catch { /* storage off */ }
+    let search = ''; try { search = globalThis.location?.search || ''; } catch { /* no window */ }
+    return budget = parseLively(search, stored);
+}
+// How large each person is in the picture, and who of them moves. people: [{ key, x, y, z, tall }]: the middle of the
+// person in the camera's frame (it looks down -z; metres or mm, the same unit as tall), tall: their height. view:
+// { tanHalf: tan(vertical fov / 2), aspect, near }. Someone behind the camera or wholly outside the picture gets no
+// size and never a place. The n largest move; whoever is in `before` (a Set of keys) counts LIVELY_KEEP times their
+// size, so nobody at the edge of the list flips in and out at each pick. Returns { order: keys largest first (those
+// in the picture), chosen: Set of keys }.
+export function rankLively(people, view, n, before = null, keep = LIVELY_KEEP) {
+    const sized = [];
+    for (const p of people) {
+        const depth = -p.z; if (!(depth > (view.near ?? .01))) continue;
+        const half = depth * view.tanHalf, size = p.tall / (2 * half);       // (half the person's height, in half-heights of the picture)
+        if (Math.abs(p.y) / half > 1 + size || Math.abs(p.x) / (half * view.aspect) > 1 + size / view.aspect) continue;
+        sized.push({ key: p.key, size, score: size * (before?.has(p.key) ? keep : 1) });
+    }
+    const order = [...sized].sort((a, b) => b.size - a.size).map(s => s.key);
+    const chosen = new Set([...sized].sort((a, b) => b.score - a.score).slice(0, Math.max(0, n)).map(s => s.key));
+    return { order, chosen };
+}
+// Staggering the work: the largest LIVELY_EVERY in the list are solved every frame, the next as many every second
+// frame, the rest every third, each person on a frame of their own (phase: any integer of theirs). The loops are
+// driven by time, so they look the same at any of these rates.
+export const LIVELY_EVERY = 4;
+export const staggerEvery = rank => rank < LIVELY_EVERY ? 1 : rank < 2 * LIVELY_EVERY ? 2 : 3;
+export const staggerDue = (rank, frame, phase) => { const every = staggerEvery(rank); return ((frame + (phase >>> 0)) % every) === 0; };
+// Coming to life and going back: `amount` (0..1) goes toward 1 (on) or 0 over LIVELY_EASE seconds.
+export const easeLife = (amount, on, dt, seconds = LIVELY_EASE) => { const step = Math.max(0, dt) / seconds; return on ? Math.min(1, amount + step) : Math.max(0, amount - step); };
+
 const down = new THREE.Vector3(0, -1, 0), poseTurn = new THREE.Quaternion();
 const frontOf = yaw => new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
 
@@ -1681,47 +1728,113 @@ export class RoomPeople {
         this.seatChildren();
     }
     // Life in the people who stay where they are (room-people-motion.mjs solveStill): breathing, a drifting head, a
-    // shift of weight, typing fingers, a page turned. They are drawn skinned for it. In a film everyone in the shot;
-    // in the Studio the LIVELY nearest to the camera (this.eye, room millimetres), picked again twice a second.
-    // Walkers are left alone. filter.life === false: nobody.
+    // shift of weight, typing fingers, a page turned. They are drawn skinned for it. In a film everyone in the shot.
+    // In the Studio (livenStudio) the livelyBudget() largest in the picture, picked again twice a second; with the budget
+    // at 0, the LIVELY nearest to the camera (this.eye, room millimetres), as it was. Walkers are left alone.
+    // filter.life === false: nobody.
     liven(time, dt, now) {
         if (!this.library.rigData || this.filter?.life === false) return;
         const film = time !== null;
         const pool = this.people.filter(o => o.visible && !o.userData.personDriven && !o.userData.personStill && !o.userData.personChanging);
-        let chosen = pool;
-        if (!film && pool.length > LIVELY) {
-            if (now - this.pickedAt > 500) {
-                this.pickedAt = now; const eye = this.eye, far = o => eye ? o.position.distanceToSquared(eye) : 0;
-                this.picked = [...pool].sort((a, b) => far(a) - far(b)).slice(0, LIVELY).map(o => o.userData.person);
-            }
-            // (whoever is training on a machine always moves: a rider who is not pedalling is a statue)
-            chosen = pool.filter(o => this.picked.includes(o.userData.person) || this.training(o));
-        }
         const turning = new Set();
         const hold = typeof window !== 'undefined' && !!window.__directorDragging;
-        for (const object of pool) {
-            const life = object.userData.personLife, on = chosen.includes(object);
-            if (life === undefined) { if (on) { object.userData.personLife = null; this.later(this.enliven(object)); } continue; }
-            if (!life || !object.userData.personRig || (!on && !life.live)) continue;
-            if (object.userData.person.walk && on) { this.walkAlong(object, life, object.userData.person.walk, film ? time : null, hold); continue; }
-            // someone cast in a walking posture walks (the Studio; a film gives its walkers a path of their own)
-            if (this.strolls(object)) { if (!film && on && this.stroll(object, life, hold)) continue; this.strollHome(object, life); }
-            // walking on a treadmill's belt: the stride of a walk, on the spot
-            if (object.userData.person.tread && on) {
-                life.tread ||= walkPlan(life.rig, life.key, life.key, [[0, 0], [0, 24]], { pace: object.userData.person.tread.pace, step: object.userData.person.tread.step ? object.userData.person.tread.step / 1000 : undefined });
-                solveTread(life.rig, life.tread, this.lifeClock, (life.seed % 1000) / 1000);
-                drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold); life.live = true; continue;
+        if (!film && livelyBudget() > 0) this.livenStudio(pool, dt, now, livelyBudget(), hold, turning);
+        else {
+            let chosen = pool;
+            if (!film && pool.length > LIVELY) {
+                if (now - this.pickedAt > 500) {
+                    this.pickedAt = now; const eye = this.eye, far = o => eye ? o.position.distanceToSquared(eye) : 0;
+                    this.picked = [...pool].sort((a, b) => far(a) - far(b)).slice(0, LIVELY).map(o => o.userData.person);
+                }
+                // (whoever is training on a machine always moves: a rider who is not pedalling is a statue)
+                chosen = pool.filter(o => this.picked.includes(o.userData.person) || this.training(o));
             }
-            // out of the nearest few: back to the posture as built, once
-            const gaze = on ? this.gazeOf(object, life) : null;
-            const moved = solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: on ? 1 : 0, taps: film || dt < .05, look: gaze?.at, lookAmount: gaze?.amount });
-            drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold); life.live = on;
-            // a rider's bike: its crank turns with the feet, the pedals stay level
-            if (moved?.crank !== undefined) { const crank = object.userData.personAnchor?.getObjectByName('Bike crank'); if (crank) { this.turnCrank(crank, moved.crank); turning.add(crank); this.cranks.add(crank); } }
-            // a potter's wheel: its head (and the pot on it) turns while they throw
-            if (moved?.wheel !== undefined) { const head = object.userData.personAnchor?.getObjectByName('Pottery wheel head'); if (head) { head.rotation.y = moved.wheel; this.dirty = true; turning.add(head); this.cranks.add(head); } }
+            for (const object of pool) {
+                const life = object.userData.personLife, on = chosen.includes(object);
+                if (life === undefined) { if (on) { object.userData.personLife = null; this.later(this.enliven(object)); } continue; }
+                if (!life || !object.userData.personRig || (!on && !life.live)) continue;
+                this.moveOne(object, life, on, on ? 1 : 0, film, time, dt, hold, turning);
+            }
         }
         for (const crank of this.cranks) if (!turning.has(crank)) { if (crank.name === 'Bike crank') this.turnCrank(crank, 0); else { crank.rotation.y = 0; this.dirty = true; } this.cranks.delete(crank); }      // (nobody on it any more: as the room built it)
+    }
+    // One person's life this frame (amount: 0..1, how much of it; 0 is the posture as built).
+    moveOne(object, life, on, amount, film, time, dt, hold, turning) {
+        if (object.userData.person.walk && on) { this.walkAlong(object, life, object.userData.person.walk, film ? time : null, hold); return; }
+        // someone cast in a walking posture walks (the Studio; a film gives its walkers a path of their own)
+        if (this.strolls(object)) { if (!film && on && this.stroll(object, life, hold)) return; this.strollHome(object, life); }
+        // walking on a treadmill's belt: the stride of a walk, on the spot
+        if (object.userData.person.tread && on) {
+            life.tread ||= walkPlan(life.rig, life.key, life.key, [[0, 0], [0, 24]], { pace: object.userData.person.tread.pace, step: object.userData.person.tread.step ? object.userData.person.tread.step / 1000 : undefined });
+            solveTread(life.rig, life.tread, this.lifeClock, (life.seed % 1000) / 1000);
+            drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold); life.live = true; return;
+        }
+        // out of the list: back to the posture as built (at amount 0)
+        const gaze = amount > 0 ? this.gazeOf(object, life) : null;
+        const moved = solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: amount, taps: film || dt < .05, look: gaze?.at, lookAmount: gaze?.amount });
+        drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold); life.live = amount > 0;
+        // a rider's bike: its crank turns with the feet, the pedals stay level
+        if (moved?.crank !== undefined) { const crank = object.userData.personAnchor?.getObjectByName('Bike crank'); if (crank) { this.turnCrank(crank, moved.crank); turning.add(crank); this.cranks.add(crank); } }
+        // a potter's wheel: its head (and the pot on it) turns while they throw
+        if (moved?.wheel !== undefined) { const head = object.userData.personAnchor?.getObjectByName('Pottery wheel head'); if (head) { head.rotation.y = moved.wheel; this.dirty = true; turning.add(head); this.cranks.add(head); } }
+    }
+    // The Studio: who moves is picked twice a second by size in the picture (rankLively, the camera in this.view, set by
+    // the room each frame; without one yet, nobody), with hysteresis. The budget's people and LIVELY_SPARE
+    // more are made skinned in idle time before they are needed (enliven: the skinned model in the posture as built
+    // looks exactly like the baked one, so the hand-over does not show); someone who joins the list comes to life over
+    // LIVELY_EASE seconds and someone who leaves it goes back to the posture as built the same way. The largest few are
+    // solved every frame, the others every second or third (staggerDue). Whoever trains on a machine, walks or strolls
+    // always moves, every frame, and takes no place in the budget (training()).
+    livenStudio(pool, dt, now, n, hold, turning) {
+        const keyOf = o => o.userData.person;
+        // (picked again twice a second, and at once when the people are placed or moved: a room just built has them all at
+        // its origin for a moment)
+        const still = pool.filter(o => !this.training(o)), sign = still.reduce((sum, o, i) => sum + (i + 1) * (Math.round(o.position.x) * 3 + Math.round(o.position.z) * 7), still.length);
+        if (now - this.pickedAt > 500 || !this.livelySet || sign !== this.livelySign || this.view !== this.livelyView) {
+            this.pickedAt = now; this.livelySign = sign; this.livelyView = this.view;
+            const ranked = this.rankPool(still, n);
+            this.livelySet = ranked.chosen; this.livelyRank = new Map(ranked.order.filter(k => ranked.chosen.has(k)).map((k, i) => [k, i]));
+            this.livelyReady = new Set(ranked.order.slice(0, n + LIVELY_SPARE));
+        }
+        this.frame = (this.frame || 0) + 1;
+        const step = Math.min(.1, Math.max(0, dt || 0));
+        for (const object of pool) {
+            const spec = keyOf(object), train = this.training(object), on = train || this.livelySet.has(spec), life = object.userData.personLife;
+            if (life === undefined) { if (on || this.livelyReady.has(spec)) this.queueEnliven(object, on); continue; }
+            if (!life || !object.userData.personRig) continue;
+            life.amount = train ? (on ? 1 : 0) : easeLife(life.amount ?? 0, on, step);
+            if (!on && !(life.amount > 0) && !life.live) continue;
+            // (fully alive and not training: on this person's own frame of the stagger only)
+            if (!train && on && life.amount >= 1 && life.live && !staggerDue(this.livelyRank.get(spec) ?? 99, this.frame, life.seed)) continue;
+            this.moveOne(object, life, on, life.amount, false, null, dt, hold, turning);
+        }
+    }
+    // rankLively over the people in the pool: their middles in the camera's frame and their heights (world units).
+    rankPool(list, n) {
+        const camera = this.view, keyOf = o => o.userData.person;
+        this.tallOf ||= new Map();
+        const tall = o => { const spec = keyOf(o); if (!this.tallOf.has(spec)) { const size = new THREE.Box3().setFromObject(o).getSize(new THREE.Vector3()); this.tallOf.set(spec, size.y > 0 ? size.y : 1700); } return this.tallOf.get(spec); };
+        if (camera?.isPerspectiveCamera) {
+            camera.updateMatrixWorld(); const inv = camera.matrixWorldInverse, at = new THREE.Vector3();
+            const people = list.map(o => { const h = tall(o); o.getWorldPosition(at); at.y += h / 2; at.applyMatrix4(inv); return { key: keyOf(o), x: at.x, y: at.y, z: at.z, tall: h }; });
+            return rankLively(people, { tanHalf: Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2), aspect: camera.aspect || 1, near: camera.near }, n, this.livelySet);
+        }
+        // no camera yet (the first update, from setEnabled, comes before the room's first frame): nobody, so that nobody is
+        // made skinned for a picture that is not there (whoever trains still moves)
+        return { order: [], chosen: new Set() };
+    }
+    // Making someone skinned (enliven) one at a time, when the page is idle (requestIdleCallback; a timer where there is
+    // none), the people about to move first.
+    queueEnliven(object, first) {
+        object.userData.personLife = null; (this.enlivening ||= [])[first ? 'unshift' : 'push'](object); this.pumpEnliven();
+    }
+    pumpEnliven() {
+        if (this.enlivenBusy || !this.enlivening?.length) return;
+        const object = this.enlivening.shift(); this.enlivenBusy = true;
+        const idle = new Promise(done => typeof requestIdleCallback === 'function' ? requestIdleCallback(() => done(), { timeout: 700 }) : setTimeout(done, 0));
+        // (by then the picture may have changed: someone no longer wanted is left for later)
+        const wanted = () => { const spec = object.userData.person; if (this.livelyReady?.has(spec) || this.livelySet?.has(spec) || this.training(object)) return true; delete object.userData.personLife; return false; };
+        this.later(idle.then(() => this.people.includes(object) && wanted() ? this.enliven(object) : null).finally(() => { this.enlivenBusy = false; this.pumpEnliven(); }));
     }
     // Where someone who stays where they are looks (solveStill's input.look, a point in their skeleton's frame): someone
     // talking or with a drink looks at the nearest person in front of them within 3.5 m; someone standing by, waiting or
@@ -1991,5 +2104,6 @@ export class RoomPeople {
         for (const seat of (this.kidSeats || new Map()).values()) seat.copy.removeFromParent(); this.kidSeats?.clear();
         for (const object of this.people) { object.userData.personChair?.removeFromParent(); object.removeFromParent(); for (const m of object.userData.personMaterials || []) m.dispose(); object.traverse(o => o.skeleton?.dispose?.()); }
         this.people = []; this.built = null; this.actors = []; this.pairs = []; this.waiting = []; this.generation++;
+        this.livelySet = null; this.livelyReady = null; this.livelyRank = null; this.enlivening = []; this.tallOf = null;
     }
 }
