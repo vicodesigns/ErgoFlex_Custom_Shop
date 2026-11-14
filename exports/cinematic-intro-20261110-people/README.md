@@ -11,7 +11,7 @@ person in the room makes necessary:
 | awaken (opener), hero (finale) | none | nothing |
 | rise (home) | Maya types seated, is on her feet while the desk moves, types standing at midday, sits again in the evening; her chair stays | nothing |
 | create (artist studio) | Lin paints at her easel, at the canvas's left edge so his opening passes beside her | nothing |
-| commons (Humboldt) | Mia in the power wheelchair calls the desk from her phone and works at it when it arrives (short dissolve); two teammates at the table; the hall | the desk starts centred on the green carpet (his note), its drive is longer; the wheelchair stands 400 mm nearer the table head |
+| commons (Humboldt) | (Nov 13 story, `build-commons-story.py`) Yara works standing at the desk as the night runs out; her booking ends at 8:00 (the desk's screen: `screens/04-reservation.mp4`), she takes her bag and walks off; the desk lowers to Mia's 32 in and drives itself to her at the project table, where she waits in her red power wheelchair and types when it arrives; two teammates at the table; the hall | a new bird's-eye opening and swoop (0-6.6 s), his camera from 8.6 s; the drive re-timed (6.8-13.4 s); the wheelchair moved under Mia, facing the desk |
 | coast (OCC media lab) | the other bays are in use | nothing |
 | oilers (high school) | Kai in his wheelchair at the set-design desk; the class; Noah at the featured desk: seated, on his feet as it rises, typing standing | nothing |
 | wellness (gym) | Maya sits, stretches while the desk rises, works standing; Priya at the mobility board | nothing |
@@ -22,3 +22,5 @@ person in the room makes necessary:
 
 Rebuild after any change to his cut, and mix chapters with `tools/experience/pick-chapters.py` (see the alternate
 cut's README beside this folder).
+
+`build-commons-story.py` writes the commons chapter in place; run it again after `build-alt-cut.py --variant people`.
