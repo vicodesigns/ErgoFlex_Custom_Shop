@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
-"""Cinematographer's cut: Vico's cut with people, re-shot. Camera only.
+"""Cinematographer's cut: the camera stories of the working cut.
 
-    python tools/experience/../../exports/cinematic-intro-cut-cine/build-cine-cut.py [--only id,id]
+    python exports/cinematic-intro-cut-cine/build-cine-cut.py --only id[,id]
 
-Rewrites `cameraPlan` and `camera` of chosen chapters in this folder's review-cut.json, in place, and nothing else:
-every other field (seconds, motion, titles, people, props, light, time of day) stays exactly as it came from
-"Vico's cut with people" (exports/cinematic-intro-20261110-people), so each chapter still replaces the same chapter
-of his cut one for one. His cut is only read, for the story keys reused from his cameras.
+Rewrites `cameraPlan` and `camera` of chosen chapters in this folder's review-cut.json, in place, and nothing else.
+Since November 14 2026 this cut is the WORKING CUT: people, props, screens and desk moves are edited directly in
+review-cut.json and are NOT synced from "Vico's cut with people" (exports/cinematic-intro-20261110-people); that cut
+is only read, for the story keys reused from his cameras (`his()`). A chapter's camera lives in its function here:
+change it here and run with `--only <your chapters>` (never without --only while other streams edit the cut), or,
+if you edit a chapter's camera by hand in review-cut.json, delete its function here so a rerun cannot revert it.
 
 Story keys here are in stage (world) units, the ones --list-screens / --list-objects print: about 0.0384 per inch,
 y up. In the rooms, the room's own millimetres map as W(x, y, z) = (z, y, -x) / 662.84 (build-alt-cut.py).
