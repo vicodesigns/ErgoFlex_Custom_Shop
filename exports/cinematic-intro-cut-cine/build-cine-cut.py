@@ -192,18 +192,17 @@ def oilers(s):
     # High school. The featured desk (centre about (-3.03, 0, 5.66)) faces +x, 0.85 in front of the ocean window
     # wall (z 7.66). Kai waits at it in his wheelchair while Noah, standing at its end (-3.0, 4.07), talks with him;
     # the desk comes down to Kai's height (8.0-11 s) and he types. Mia works at the window desk (2.75, 6.4); Nia and
-    # Finn sit at the near table (chairs at x 1.61), facing Mr. Hale at the board. Opening (to 1.2 s): the
-    # coast-to-oilers hand-over (stream S4 owns the keys before the second shot's cut). The second shot (S5, Nov 14):
-    # high over the class from the back of the room, Mia whole on the left, Nia and Finn from behind lower right,
-    # Noah and Kai talking at the featured desk in the middle, the teacher on the right; a slow push over the class.
-    # Third shot: a front three-quarter from the window side, Kai at the desk, Noah facing him and the lens, the quiz
-    # screens to the lens, the desk coming down to him.
-    cam(s, his('oilers', 0, 0.6) + [
-        key(1.15, (5.02, 0.62, 3.22), (10.05, 1.67, 7.83), 42, 'Fern (hold)'),
-        # (from the -z side of the back of the room: the white review desk stays out of the bottom left, and the
-        # orange ball on top of Mia's desk stays clear above the quiz screen)
-        key(1.2, (6.4, 2.6, 3.2), (-2.5, 1.0, 5.2), 46, 'Cut: over the class from the back, Noah talking with Kai at the featured desk', cut=True),
-        key(4.45, (6.0, 2.55, 3.25), (-2.55, 1.02, 5.05), 46, 'A slow push over the class'),
+    # Finn sit at the near table (chairs at x 1.61), facing Mr. Hale at the board.
+    # The film dissolves coast into oilers over 0-1.5 s (S4's hand-off: oilers frame 45 is the first frame out of the
+    # dissolve, and the opening runs unbroken to at least 3.0 s). So the chapter opens on one readable frame and holds
+    # it (Vico, Nov 14: no split-second student and jump): over the class from the -z side of the back of the room, a
+    # little low, Mia whole on the left, Nia and Finn from behind, Noah talking with Kai at the featured desk, the
+    # teacher at the board; the white review desk out of the bottom left and the orange ball on top of Mia's desk clear
+    # above the quiz screen; one slow push to 4.45 s. Then a cut to a front three-quarter from the window side: Kai at
+    # the desk, Noah facing him and the lens, the quiz screens to the lens, the desk coming down to him.
+    cam(s, [
+        key(0, (6.4, 2.6, 3.2), (-2.5, 1.0, 5.2), 46, 'Over the class from the back: Noah talking with Kai at the featured desk (the dissolve from coast lands here)'),
+        key(4.45, (6.0, 2.55, 3.25), (-2.55, 1.02, 5.05), 46, 'One slow push over the class, no cut until 4.5 s'),
         key(4.5, (-0.5, 1.95, 7.15), (-3.0, 1.45, 5.45), 50, 'Cut: front three-quarter from the window side, Kai at the desk', cut=True),
         key(8.0, (-0.6, 1.95, 7.2), (-3.0, 1.5, 5.45), 50, 'The desk starts down'),
         key(11, (-0.55, 2.05, 7.3), (-3.0, 1.45, 5.45), 53, 'The desk comes down to Kai, the quiz on the screens'),
