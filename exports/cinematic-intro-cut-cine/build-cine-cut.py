@@ -57,6 +57,20 @@ def cam(shot, keys, ease_in=False, ease_out=False):
     os.unlink(name)
 
 
+def frame_right(k, dx):
+    """The same key with its aim turned left about the vertical, so what it frames sits `dx` of the frame width
+    further right (16:9; the lens and height unchanged). Keeps the lower-left title area clear of the desk."""
+    import math
+    k = dict(k)
+    p, t = k['position'], k['target']
+    h = 2 * math.atan(math.tan(math.radians(k['fov']) / 2) * 16 / 9)
+    a = math.atan(2 * dx * math.tan(h / 2))                     # yaw left by a: centre moves right by dx of the width
+    vx, vz = t[0] - p[0], t[2] - p[2]
+    c, s = math.cos(a), math.sin(a)                             # left turn seen from above (y up): (x, z) -> (x c + z s, -x s + z c)
+    k['target'] = [round(p[0] + vx * c + vz * s, 4), t[1], round(p[2] - vx * s + vz * c, 4)]
+    return k
+
+
 CHAPTERS = {}
 def chapter(fn): CHAPTERS[fn.__name__] = fn; return fn
 
@@ -69,11 +83,14 @@ def awaken(s):
     # ring), then his front three-quarter for the level-and-lower and his roll to the lens into the dissolve.
     # The desk's front (user side) faces +x until the turn, about +z after it.
     # Desk centre after the first roll: about (0.5, 0, 0.15).
-    cam(s, his('awaken', 0, 1.8, 2, 4.4, 5.3, 6.2, 6.9, 7.4) + [
-        key(9.25, (4.1, 1.3, 3.25), (0.5, 1.15, 0.15), 33, 'Lift starts: in and down toward the floor'),
-        key(11.2, (4.0, 0.55, 3.1), (0.5, 1.25, 0.15), 36, 'Low three-quarter: the desktop climbs (blue)'),
-        key(16.1, (3.95, 1.9, 3.05), (0.5, 1.68, 0.15), 39, 'Craning up with it: the desktop and its light, standing height'),
-        key(18.5, (2.7, 1.3, 5.5), (0.5, 1.4, 0.15), 32, 'Side three-quarter: the board will tilt'),
+    # Nov 14 (Vico, img19): the titles sit lower left (ERGOFLEX 3.6-9.2 s, SAFETY 13.2-18.4 s); the keys under them
+    # are aimed so the desk stands in the right part of the frame, clear of the title block (frame_right).
+    R = dict(zip((4.4, 5.3, 6.2, 6.9, 7.4), (0.3, 0.22, 0.17, 0.16, 0.16)))
+    cam(s, [frame_right(k, R[k['at']]) if k['at'] in R else k for k in his('awaken', 0, 1.8, 2, 4.4, 5.3, 6.2, 6.9, 7.4)] + [
+        frame_right(key(9.25, (4.1, 1.3, 3.25), (0.5, 1.15, 0.15), 33, 'Lift starts: in and down toward the floor'), 0.12),
+        frame_right(key(11.2, (4.0, 0.55, 3.1), (0.5, 1.25, 0.15), 36, 'Low three-quarter: the desktop climbs (blue)'), 0.12),
+        frame_right(key(16.1, (3.95, 1.9, 3.05), (0.5, 1.68, 0.15), 39, 'Craning up with it: the desktop and its light, standing height'), 0.16),
+        frame_right(key(18.5, (2.7, 1.3, 5.5), (0.5, 1.4, 0.15), 32, 'Side three-quarter: the board will tilt'), 0.14),
         key(24.6, (2.45, 1.5, 5.05), (0.5, 1.45, 0.15), 33.5, 'Side three-quarter: 65 degrees, raised (purple)'),
         key(26.6, (3.2, 4.1, 3.1), (0.45, 1.6, 0.3), 38, 'Up and over: the turn starts'),
         key(31.25, (1.1, 4.3, 4.3), (0.45, 1.6, 0.4), 38, 'From above: the desk turns on its ring'),
@@ -104,18 +121,23 @@ def create(s):
     # over Lin's head (her head cut by the frame corner for three seconds) and he watched the drafting tilt from a
     # close low angle that stretched the board. Here: Lin whole at the left of a deep frame, the desk waiting at the
     # back; a glide past her side to the desk's front three-quarter for the lift; an arc to the side three-quarter
-    # while the board tilts, so the 40 degree drafting angle is a clean line against the wall; and back round to
-    # the front as the board goes on to the painting, desk, screens and stool whole for the dissolve.
+    # while the board tilts, so the 40 degree drafting angle is a clean line against the wall; back round to the
+    # front as the board goes on to the painting; then a cut to Lin painting at the tilted canvas to the end.
     cam(s, [
         key(0, (6.1, 1.85, 1.95), (0.0, 1.25, 1.85), 40, 'Lin at the wheel, the desk at the back of the studio'),
         key(2.35, (5.7, 1.82, 1.9), (0.0, 1.25, 1.75), 39, 'Lin at the wheel: slow push'),
-        key(2.4, (3.75, 1.9, -0.3), (-1.37, 1.45, 0.31), 45, 'Cut: the desk, front three-quarter', cut=True),
-        key(4.2, (3.5, 1.95, -0.6), (-1.37, 1.45, 0.31), 45, 'Front three-quarter: the lift to 52 in'),
-        key(6.8, (3.1, 2.1, -1.45), (-1.37, 1.6, 0.31), 45, 'Up with it; the arc begins'),
+        # (Nov 14: aimed a little left so the desk and stool keep right of the TILT title, 3.6-9.6 s)
+        frame_right(key(2.4, (3.75, 1.9, -0.3), (-1.37, 1.45, 0.31), 45, 'Cut: the desk, front three-quarter', cut=True), 0.06),
+        frame_right(key(4.2, (3.5, 1.95, -0.6), (-1.37, 1.45, 0.31), 45, 'Front three-quarter: the lift to 52 in'), 0.06),
+        frame_right(key(6.8, (3.1, 2.1, -1.45), (-1.37, 1.6, 0.31), 45, 'Up with it; the arc begins'), 0.08),
         key(12.4, (1.1, 2.0, -3.1), (-1.37, 1.6, 0.31), 47, 'Side three-quarter: the board tilts to drafting'),
         key(16.9, (2.0, 2.0, -2.55), (-1.37, 1.6, 0.31), 46, 'Drafting at 40 degrees, the arc goes on'),
-        key(19.5, (3.15, 2.05, 0.35), (-1.37, 1.6, 0.31), 42, 'Round to the front: the painting'),
-        key(23.5, (2.75, 1.98, 0.35), (-1.37, 1.6, 0.31), 40, 'The painting: easing in'),
+        key(19.45, (3.15, 2.05, 0.35), (-1.37, 1.6, 0.31), 42, 'Round to the front: the board tilts on to the painting'),
+        # Nov 14 (Vico, notes section 5): the chapter ends on Lin painting at the tilted canvas, as in the 1080p render
+        # req-20261114T004013 (that render was of the alternate cut, exports/cinematic-intro-20261110-alt: her staging
+        # `people.cast` lin-desk from 19.5 s is set in review-cut.json). These two keys are that render's, unchanged.
+        key(19.5, (1.0862, 2.2932, -0.7845), (-1.2069, 2.1121, 0.528), 42, 'Cut: later, Lin paints at the tilted canvas', cut=True),
+        key(23.5, (0.9957, 2.0065, -1.2974), (-1.3578, 1.7802, 0.347), 43, 'Slow arc around her brush hand'),
     ])
 
 

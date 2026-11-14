@@ -14,6 +14,17 @@
 >
 > The text below describes the camera-only round of November 13 and is kept as its record.
 
+## November 14 (working cut): awaken and create
+
+- awaken: both titles (ERGOFLEX 3.6-9.2 s, SAFETY 13.2-18.4 s) sit lower left; the keys under them are aimed so the
+  desk stands in the right part of the frame, clear of the title block (`frame_right` in build-cine-cut.py; Vico's
+  img19).
+- create: the ending from the 1080p render req-20261114T004013 (which was of the alternate cut): from 19.5 s Lin paints
+  at the tilted canvas (`people.cast` lin-desk, people-lin-stand-paint, as in that cut; Lin at the wheel 0-14 s), with
+  that render's two closing camera keys after a cut at 19.5 s. The opening keys are aimed a little left so the desk and
+  stool clear the TILT title. Screens: offset 0 (clip time = chapter time). For the screen content: digital painting
+  0-7.0 s, architecture on both screens 7.0-16.9 s, natural landscapes on both 16.9-23.5 s.
+
 `review-cut.json` is "Vico's cut with people" (`exports/cinematic-intro-20261110-people`) re-shot: **only the camera
 changes**. Every chapter keeps its length, its order, its desk moves (motion, status lights), titles, people, props,
 lighting and time of day, field for field, so any chapter here replaces the same chapter of his cut one for one:
