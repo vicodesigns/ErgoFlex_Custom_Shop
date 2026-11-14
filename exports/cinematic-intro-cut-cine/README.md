@@ -19,6 +19,13 @@ cut on purpose: a Director pass would copy his oilers keys back into review-cut.
 **Result at hand-off (against the new source, 9aef44f): OK, identical outside the camera; camera changed in 11
 chapters, hero unchanged.**
 
+## Score and EDL (Nov 14, S7)
+
+This cut has its own `edl.json` (real chapter lengths: storage 24.978 s, the film 244.828 s) and its own score in `score/`,
+both GENERATED from the cut by `python3 tools/experience/build-cine-score.py exports/cinematic-intro-cut-cine` (about 2
+min, CPU). `score/score.wav` is gitignored and must be built on the desk; a render request for this cut is refused while
+`--check` fails. How the music follows chapter lengths, cuts and titles: `score/SCORE-GUIDE.md`.
+
 The film had a common pattern this cut works against: similar slow orbits at one height, often at the moment the
 desk moved, with a person standing between the lens and the moving part, and people cut by the frame edge. Here
 each chapter picks the angle that makes its desk move readable (profile or side three-quarter for height and
