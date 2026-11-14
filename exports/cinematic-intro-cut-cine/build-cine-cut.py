@@ -251,15 +251,16 @@ def media(s):
 @chapter
 def storage(s):
     # Workshop, the story of 13 November (room millimetres, W() to stage units). Andre works on the robot at the desk
-    # (100, 1560 facing -z; the desk stands at 100, 1100), sets it on the desk's top shelf (1.3-2.8 s; the shelf's own
-    # robot takes over at 2.887 s), walks round to the desk's left (4.25-8.46 s, ending at -1120, 1538 facing 117 deg),
-    # takes out his phone, raises it (9.2 s) and taps the one button (the screen lights at 11.14 s). The Groove: the
+    # (100, 1560 facing -z; the desk stands at 100, 1100), sets it on the desk's top shelf (1.0-2.4 s; the shelf's own
+    # robot takes over at 2.534 s), walks round to the desk's left (3.9-7.71 s, ending at -1120, 1538 facing 117 deg),
+    # takes out his phone, raises it (7.71-9.13 s) and taps the one button (the screen lights at 11.14 s). The Groove: the
     # board folds from 11.25 s, the desk rolls forward (12.25-17.05 s, to 100, 2548), lifts (14.75-17.75), rolls right to
     # the wall (17.05-22.15) and turns there (18.95-22.55). Every view has a wall behind him (the room's front, +z, is
     # open: the void). Here: high from his left at the desk (his face, hands, robot and shelf, the hand-over); a cut to a
-    # wide from the right-front as he walks round (whole, never at the frame's edge); a cut high over his right shoulder,
-    # 1.7 m from the phone (the glass nearly face on, his finger and the glass clear of his shoulder and head, the desk
-    # beyond), held through the tap; a cut to the side three-quarter that reads the fold's angle as it starts; a cut
+    # wide from the right-front as he walks round (whole, never at the frame's edge); a cut (8.95 s) to an insert on the
+    # phone from in front of him and above, over its tip, 0.78 m away (the glass about a quarter of the frame high in
+    # the middle, the big amber button, his left index coming down on it, the floor at his feet beyond), held through the tap;
+    # a cut (11.45 s) to the side three-quarter that reads the fold's angle as it starts; a cut
     # outside along the wall as it rolls; his tracking and parking keys from 19.9 s. (Checked in node with his posed
     # skeleton and the frame's corner rays: C:/work/people-review/workshop/work/camcheck.mjs.)
     cam(s, [
@@ -267,9 +268,9 @@ def storage(s):
         key(2.9, W(-1550, 1950, 1320), W(40, 1330, 1080), 37, 'He sets it on the top shelf (slow push)'),
         key(3.6, W(1800, 1650, 3200), W(-800, 950, 1750), 46, 'Cut to the front-right: he walks round to the left', cut=True),
         key(8.4, W(1650, 1650, 3100), W(-1000, 950, 1650), 44, 'He stops, facing the desk, and takes out his phone'),
-        key(9.2, W(-1314, 2500, 2479), W(-534, 1219, 1302), 36, 'Cut high over his shoulder: the phone, the desk beyond', cut=True),
-        key(11.6, W(-1270, 2450, 2420), W(-534, 1219, 1302), 34, 'The tap: the button lights'),
-        key(11.65, (4.3, 1.8, -3.4), (2.65, 1.15, 0.1), 42, 'Side three-quarter: the board folds', cut=True),
+        key(8.95, W(-591, 1993, 1206), W(-855, 1286, 1405), 30, 'Insert from in front and above, over the tip of the phone: the one button', cut=True),
+        key(11.4, W(-605, 1957, 1216), W(-855, 1286, 1405), 30, 'The tap: the button lights'),
+        key(11.45, (4.3, 1.8, -3.4), (2.65, 1.15, 0.1), 42, 'Side three-quarter: the board folds', cut=True),
         key(14.0, (4.1, 1.9, -3.65), (2.75, 1.25, 0.35), 45, 'Folding, rolling forward'),
         key(14.8, (7.5, 1.75, 1.2), (3.5, 1.45, -1.4), 40, 'Cut on the roll: from outside, along the wall', cut=True),
         key(17.05, (7.9, 1.8, 0.85), (3.7, 1.4, -1.35), 42, 'It turns along the wall'),
