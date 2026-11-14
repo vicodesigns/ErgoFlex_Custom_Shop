@@ -309,13 +309,18 @@ def storage(s):
 
 
 # His cut, the workshop told as Vico asked (13 November): Andre is at the desk working on the robot, sets it on the
-# desk's top shelf, steps back round to its left, takes his phone out and taps the one button, and the Groove folds the
+# desk's top shelf, walks round to its left, takes his phone out and taps the one button, and the Groove folds the
 # desk to 65 degrees and rolls it to the wall on its own. Room millimetres; the desk stands at (100, 1100) facing +z
 # until it moves (its home in the house layout, -1300, 450, plus the chapter's start pose, 55.118 / 25.591 in).
 ANDRE_DESK = [100, 1560]          # at the desktop's front cutout, 130 mm behind its edge, facing the desk (-z)
-ANDRE_PHONE = [-1050, 1720]       # where his walk ends (walkPlan with his rig: 3.0 s, 6 steps), clear of the desk's roll
-ANDRE_WALK = [ANDRE_DESK, [-150, 1950], [-900, 2100], [-1450, 1850], ANDRE_PHONE]    # back out of the cutout, round to the left, turn to face the desk
-GROOVE = 9.8                      # the tap lights the screen at 9.69 s; the status light and the fold start here
+# The walk (walkPlan with his rig: 8 steps of 0.45 m at 1.9 a second, 4.21 s): back out of the cutout, along behind
+# the desk's front to the left on a wide curve, and round on one 0.36 m-radius turn to face the desk's way (117 deg)
+# at (-1120, 1538): 0.46 m clear of the desk's left edge, so it rolls past him, and 0.5 m from the air compressor.
+ANDRE_WALK = [ANDRE_DESK, [-107, 1948], [-201, 2080], [-327, 2181], [-476, 2245], [-636, 2267], [-1136, 2267], [-1232, 2254],
+              [-1321, 2216], [-1397, 2155], [-1454, 2077], [-1487, 1986], [-1496, 1890], [-1478, 1794], [-1436, 1707],
+              [-1372, 1635], [-1291, 1582], [-1199, 1552], [-1120, 1538]]
+ANDRE_PHONE, ANDRE_PHONE_TURN = [-1120, 1538], 117.0
+GROOVE = 11.25                    # the tap lights the screen at 11.14 s; the status light and the fold start here
 
 
 def storage_story(s):
@@ -323,32 +328,33 @@ def storage_story(s):
     # One Andre throughout: each placement hands over to the next as a change of posture on the spot (their windows
     # meet), the walk takes him from the desk to his phone spot, and a cut at its end hands over to the phone postures
     # (the walk ends in the first of them: the same pose, the same place). `swap`: the robot stays where he set it while
-    # his hands leave it (the shelf's own robot takes over at 2.633 s, below); the screen lights as the finger lands.
+    # his hands leave it (the shelf's own robot takes over at 2.887 s, below); the screen lights as the finger lands.
     people(s, only=['people-jo-stand-work'], cast=[
         andre('andre-robot', 'stand-robot-work', ANDRE_DESK, 180),
         andre('andre-shelf', 'stand-robot-shelf', ANDRE_DESK, 180),
-        andre('andre-steps-back', 'walk', ANDRE_DESK, 180, swap=.08, walk={'path': ANDRE_WALK, 'start': 4.0, 'pace': 2.0, 'then': 'people-andre-stand-phone-pull'}),
-        andre('andre-phone-out', 'stand-phone-pull', ANDRE_PHONE, 108),
-        andre('andre-phone-up', 'stand-phone-up', ANDRE_PHONE, 108),
-        andre('andre-presses', 'stand-phone-press', ANDRE_PHONE, 108, swap=.85),
-        andre('andre-watches', 'stand-phone-watch', ANDRE_PHONE, 108)],
-        when={'andre-robot': [[0, 1.8, 0, 0]], 'andre-shelf': [[1.8, 3.25, 0, 0]], 'andre-steps-back': [[3.25, 7.0, 0, 0]], 'andre-phone-out': [[7.0, 7.75, 0, 0]],
-              'andre-phone-up': [[7.75, 9.2, 0, 0]], 'andre-presses': [[9.2, 10.65, 0, 0]], 'andre-watches': [[10.65, 99, 0, 0]]})
-    # The robot: his own (people-andre-stand-robot-*) until he lets go of it on the shelf; the toy story's desktop
-    # Robo-Pal and its cradle are not on the desk (he has it out of the cradle), its shelf Robo-Pal sits where he set it
-    # (120 mm toward the front of the shelf, in reach) from the moment his hands leave it, whatever the tilt; the mat it
-    # would sit on is not on the shelf (it only faded in with the tilt).
+        andre('andre-steps-back', 'walk', ANDRE_DESK, 180, swap=.08, walk={'path': ANDRE_WALK, 'start': 4.25, 'pace': 1.9, 'step': 450, 'then': 'people-andre-stand-phone-pull'}),
+        andre('andre-phone-out', 'stand-phone-pull', ANDRE_PHONE, ANDRE_PHONE_TURN),
+        andre('andre-phone-up', 'stand-phone-up', ANDRE_PHONE, ANDRE_PHONE_TURN),
+        andre('andre-presses', 'stand-phone-press', ANDRE_PHONE, ANDRE_PHONE_TURN, swap=.85),
+        andre('andre-watches', 'stand-phone-watch', ANDRE_PHONE, ANDRE_PHONE_TURN)],
+        when={'andre-robot': [[0, 2.05, 0, 0]], 'andre-shelf': [[2.05, 3.5, 0, 0]], 'andre-steps-back': [[3.5, 8.46, 0, 0]], 'andre-phone-out': [[8.46, 9.2, 0, 0]],
+              'andre-phone-up': [[9.2, 10.65, 0, 0]], 'andre-presses': [[10.65, 12.7, 0, 0]], 'andre-watches': [[12.7, 99, 0, 0]]})
+    # One robot: his own (people-andre-stand-robot-*) until he lets go of it on the shelf, then the toy story's shelf
+    # Robo-Pal where he set it (120 mm toward the front of the shelf, in reach), shown from that moment whatever the tilt.
+    # Not in this chapter: the desktop Robo-Pal and its cradle (he has it out of the cradle), the shelf's maker mat (it
+    # only faded in with the tilt) and the companion droid at the shelf's end (a second robot).
     s['sceneEdits'] += [
         {'match': '^Smart robot figure · Robo-Pal$', 'label': 'Smart robot figure · Robo-Pal', 'hide': True},
         {'match': '^Smart robot figure · Robo-Pal \\(stowed\\)$', 'label': 'Smart robot figure · Robo-Pal (stowed)', 'space': 'local', 'position': [0, 0, round(120 * K, 4)],
-         'show': {'from': 2.633, 'to': s['seconds'], 'fadeIn': 0, 'fadeOut': 0}},
-        {'match': '^Smart robot maker mat \\(stowed\\)$', 'label': 'Smart robot maker mat (stowed)', 'hide': True}]
+         'show': {'from': 2.887, 'to': s['seconds'], 'fadeIn': 0, 'fadeOut': 0}},
+        {'match': '^Smart robot maker mat \\(stowed\\)$', 'label': 'Smart robot maker mat (stowed)', 'hide': True},
+        {'match': '^Companion droid prototype$', 'label': 'Companion droid prototype', 'hide': True}]
     # The Groove starts on his tap: the same moves at the same speeds (fold 10 s, lift to 52.5 in, the roll to the wall
-    # and the quarter turn), started 7.3 s later and closer together so it parks at 22.7 s: the roll forward starts 1 s
-    # into the fold (4.8 s, was 5.5) and the turn overlaps the end of the roll to the side; same end pose.
+    # and the quarter turn), closer together so it parks at 22.55 s: the roll forward starts 1 s into the fold (4.8 s,
+    # was 5.5), the turn runs with the second half of the roll to the side; same end pose.
     clips = {c['id']: c for c in s['motion']['clips']}
     for cid, start, duration in (('builtin-tilt-0', GROOVE, 10.0), ('5ea0ea02-1cb2-449a-8034-814879e82b98', GROOVE + 1, 4.8), ('d2e4c43f-6210-43af-8d20-fe2c9a7caa9a', GROOVE + 3.5, 3.0),
-                                 ('storage-roll', GROOVE + 5.8, 5.1), ('fd16bf28-f7a4-4fe5-bde7-e3afcc94628e', GROOVE + 9.3, 3.6)):
+                                 ('storage-roll', GROOVE + 5.8, 5.1), ('fd16bf28-f7a4-4fe5-bde7-e3afcc94628e', GROOVE + 7.7, 3.6)):
         clips[cid]['start'] = round(start, 3); clips[cid]['duration'] = duration
     s['motion']['clips'].sort(key=lambda c: c['start'])
     s['ledStatus'] = [
@@ -356,24 +362,28 @@ def storage_story(s):
         {'at': round(GROOVE + 1, 3), 'dur': 2.5, 'kind': 'wheels', 'mode': 3, 'reverse': True},
         {'at': round(GROOVE + 3.5, 3), 'dur': .8, 'kind': 'lift-up', 'fade': 1, 'fadeIn': .6},
         {'at': round(GROOVE + 4.3, 3), 'dur': 1.5, 'kind': 'wheels', 'fade': 1, 'fadeIn': .6, 'mode': 3, 'reverse': True},
-        {'at': round(GROOVE + 5.8, 3), 'dur': 3.5, 'kind': 'wheels', 'fade': 1, 'fadeIn': .6, 'mode': 2},
-        {'at': round(GROOVE + 9.3, 3), 'dur': 3.678, 'kind': 'wheels', 'fade': 1, 'fadeIn': .6, 'mode': 5}]
-    # His camera where it still tells the story, retimed to where the desk now is when it does that; new views for the
-    # robot on the shelf (from behind the desk, over the shelves) and the tap (over his right shoulder, the desk beyond).
+        {'at': round(GROOVE + 5.8, 3), 'dur': 1.9, 'kind': 'wheels', 'fade': 1, 'fadeIn': .6, 'mode': 2},
+        {'at': round(GROOVE + 7.7, 3), 'dur': 3.678, 'kind': 'wheels', 'fade': 1, 'fadeIn': .6, 'mode': 5}]
+    # The camera, every view with a wall behind Andre (the room's front is open: the void). 0-3.5 s from his left,
+    # a little above his hands, the right wall and the bench behind: his face, the robot in his hands, the shelf it goes
+    # on and the hand-over. Cut to a wide from the right-front for the walk, the left and back walls behind him, whole.
+    # Cut high over his right shoulder, 1.4 m from the phone (the glass seen nearly face on, his finger and the glass
+    # clear of his shoulder and head, the desk beyond), held through the tap (11.14 s); cut to his fold view as it
+    # starts. From there his keys, retimed to where the desk is when each tells its part. (Checked in node with his
+    # posed skeleton and the frame's corner rays: C:/work/people-review/workshop/work/camcheck.mjs.)
     his = {k['at']: k for k in s['cameraPlan']['keys']}
     moved = lambda old, at: dict(his[old], at=at)
     track = lambda at: dict(his[13.2], at=at, position=W(-1500, 984, 4500), target=W(1400, 600, 1300), fov=40)
     cam(s, [
-        key(0, (-450, 1650, -150), (60, 1250, 1350), 40, 'Andre at the desk, working on the robot (from behind the shelves)'),
-        key(2.7, (-330, 1600, 100), (20, 1330, 1150), 38, 'He sets it on the top shelf'),
-        key(3.4, (-330, 1600, 100), (20, 1330, 1150), 38, 'He sets it on the top shelf (hold)'),
-        moved(3.5, 4.6), moved(4.3, 6.2),
-        key(7.2, (-1480, 1880, 2175), (-765, 1280, 1627), 40, 'Over his shoulder: the phone, the desk beyond'),
-        key(8.2, (-1440, 1850, 2140), (-765, 1280, 1627), 38, 'The one button'),
-        key(10.0, (-1400, 1830, 2110), (-700, 1250, 1580), 38, 'The tap: the board starts to fold'),
-        moved(6.0, 11.0), moved(8.3, 11.6), moved(10.0, 12.8), track(15.6), track(16.4),
-        moved(17.3, 19.7), moved(19.6, 20.4), moved(20.5, 21.3), moved(22.1, 22.9), moved(22.5, 23.3), moved(24.978, 24.978)])
-
+        key(0, (-1500, 1700, 1500), (60, 1250, 1150), 38, 'From his left: Andre at the desk, working on the robot'),
+        key(2.9, (-1400, 1680, 1440), (40, 1360, 1080), 38, 'He sets it on the top shelf'),
+        key(3.5, (-1400, 1680, 1440), (40, 1360, 1080), 38, 'He sets it on the top shelf (hold)'),
+        key(3.9, (1500, 1800, 2950), (-750, 900, 1750), 48, 'Wide from the right: he walks round to the left of the desk', cut=True),
+        key(8.4, (1350, 1780, 2850), (-950, 950, 1650), 44, 'He stops, facing the desk, and takes out his phone'),
+        key(9.2, (-1249, 2300, 2277), (-534, 1219, 1302), 36, 'High over his right shoulder: the phone, the desk beyond', cut=True),
+        key(11.6, (-1225, 2270, 2250), (-534, 1219, 1302), 33, 'The tap: the button lights'),
+        dict(moved(6.0, 12.0), cut=True), moved(8.3, 13.3), moved(10.0, 14.2), track(17.05), track(17.85),
+        moved(17.3, 19.9), moved(19.6, 20.9), moved(20.5, 21.7), moved(22.1, 22.75), moved(22.5, 23.15), moved(24.978, 24.978)])
 
 for shot in cut['shots']:
     fn = CHAPTERS.get(shot['id'])
