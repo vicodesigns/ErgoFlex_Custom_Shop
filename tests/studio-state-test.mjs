@@ -34,6 +34,16 @@ let n = 0; const ok = name => { n++; console.log('ok', name); };
   ok('sceneAssets: per room, stale writers keep others\' rooms');
 }
 {
+  // Show / hide (scene-layers.mjs): one entry per room item, so two browsers hiding different things in the SAME room
+  // both keep theirs (sceneAssets above is per room: there the stale writer's room would win).
+  const K = 'ergoflex.sceneLayers.v1', a = 'highschool:house|desk:station-research-desk', b = 'highschool:house|scene:highschool:house:fixture:desk-zone-rug';
+  const base = JSON.stringify({});
+  const A = JSON.stringify({ [a]: { kind: 'desk', cells: { 'morning/60x30': true } } }), B = JSON.stringify({ [b]: { kind: 'fixture', cells: { '*/*': true } } });
+  const m = mergeWrite(K, mergeWrite(K, base, A, base).value, B, base), out = JSON.parse(m.value);
+  assert.ok(m.merged); assert.deepEqual(Object.keys(out).sort(), [a, b].sort()); assert.deepEqual(m.changed, ['|' + b]);
+  ok('sceneLayers: per item, two writers in one room both kept');
+}
+{
   const ids = changedEntries('ergoflex.clientCuts.v1', JSON.stringify({ version: 1, cuts: [{ id: 'x', a: 1 }], drafts: { d: 1 }, active: 'x' }), JSON.stringify({ version: 1, cuts: [{ id: 'x', a: 2 }, { id: 'y' }], drafts: { d: 1 }, active: 'y' }));
   assert.deepEqual(ids, { changed: ['cuts|x', 'cuts|y'], removed: [] });
   const base = JSON.stringify({ version: 1, cuts: [{ id: 'x', a: 1 }, { id: 'y', a: 1 }], drafts: { p: 1 }, active: 'x' });
