@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
-"""Check that this cut differs from its source ("Vico's cut with people") only in camera fields.
+"""Note what this cut changes against "Vico's cut with people" outside the camera (informational since Nov 14).
 
-    python exports/cinematic-intro-cut-cine/check-camera-only.py [source review-cut.json]
+    python exports/cinematic-intro-cut-cine/check-camera-only.py [--strict] [source review-cut.json]
 
-Compares every field of every chapter (and the top level) of this folder's review-cut.json with the source cut,
-except `camera` and `cameraPlan`; also the chapter order and seconds, and the other film-data files this folder
-copied from the source (compared as JSON, so line endings do not matter). Exit status 1 on any difference.
+Since November 14 2026 this cut is the WORKING CUT: people, props, screens, desk moves and cameras are edited here
+directly, and it no longer has to match the cut with people outside the camera. This script now only reports what
+differs (every field except `camera`/`cameraPlan`, the chapter order and seconds, and the film-data files first
+copied from the source, compared as JSON), so a reviewer can see which chapters carry their own staging. It exits 0;
+`--strict` restores the old rule (exit 1 on any difference outside the camera).
 """
 import json, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 SRC_DIR = os.path.join(ROOT, 'exports', 'cinematic-intro-20261110-people')
-SRC = sys.argv[1] if len(sys.argv) > 1 else os.path.join(SRC_DIR, 'review-cut.json')
+STRICT = '--strict' in sys.argv
+ARGS = [a for a in sys.argv[1:] if a != '--strict']
+SRC = ARGS[0] if ARGS else os.path.join(SRC_DIR, 'review-cut.json')
 CAMERA = {'camera', 'cameraPlan'}
 
 
@@ -51,5 +55,9 @@ print('chapters:', len(cine['shots']), 'seconds:', [s['seconds'] for s in cine['
 print('camera changed in:', ', '.join(changed) or 'none')
 print('camera unchanged in:', ', '.join(s['id'] for s in cine['shots'] if s['id'] not in changed) or 'none')
 if problems:
-    print('DIFFERENCES OUTSIDE THE CAMERA:'); [print('  ' + p) for p in problems[:200]]; sys.exit(1)
-print('OK: every field other than camera/cameraPlan is identical to the source.')
+    staged = sorted({p.split('.')[0].split('[')[0] for p in problems})
+    print('NOTE: differences outside the camera (expected: this is the working cut), in:', ', '.join(staged))
+    [print('  ' + p) for p in problems[:200]]
+    if STRICT: sys.exit(1)
+else:
+    print('OK: every field other than camera/cameraPlan is identical to the source.')

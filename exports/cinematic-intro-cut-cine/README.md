@@ -1,5 +1,19 @@
 # Cinematographer's cut (November 13, 2026; round 2 rebased on 9aef44f)
 
+> **Since November 14 2026 this is the WORKING CUT** (Vico). People, props, screens, desk moves and cameras are
+> edited here directly; it no longer has to stay camera-only against "Vico's cut with people", and nothing is synced
+> from that cut (nor from it to the master cut hq14, the alternate cut or the cut with people, which are never
+> written). Rules for editing `review-cut.json`:
+> - Each stream writes only its own chapters' entries; keep the file's format (Python `json.dumps(cut, indent=1)`,
+>   ensure_ascii, LF, no final newline) so a load-and-dump round-trips byte for byte and diffs stay per chapter.
+> - Cameras: `build-cine-cut.py` still holds each chapter's camera story. Change a camera there and run it with
+>   `--only <your chapters>`; if you set a chapter's camera by hand in review-cut.json, delete that chapter's
+>   function from build-cine-cut.py in the same commit so a rerun cannot revert it.
+> - `check-camera-only.py` is no longer a required check: it now only notes which chapters differ from the cut with
+>   people outside the camera, and exits 0 (`--strict` gives the old exit status 1).
+>
+> The text below describes the camera-only round of November 13 and is kept as its record.
+
 `review-cut.json` is "Vico's cut with people" (`exports/cinematic-intro-20261110-people`) re-shot: **only the camera
 changes**. Every chapter keeps its length, its order, its desk moves (motion, status lights), titles, people, props,
 lighting and time of day, field for field, so any chapter here replaces the same chapter of his cut one for one:
