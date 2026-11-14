@@ -49,8 +49,9 @@ CHARACTERS = {
         'skin': 'young_caucasian_female2', 'eyes': 'brown', 'hair': 'ponytail01', 'eyebrows': 'eyebrow001', 'eyelashes': 'eyelashes02',
         # (a softer face: brows a little higher with body, not a drawn line; 'brow_cutoff' build_people.py)
         'face': {'eyebrows-trans-up': .1, 'mouth-angles-up': .1}, 'brow_cutoff': .2,
-        'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'shoes05'],
-        'tint': {'toigo_basic_tucked_t-shirt': (.8, .76, .68), 'toigo_wool_pants': (.2, .26, .34)},
+        # (a looser T-shirt: the tucked one drew the breast's shape and a nipple in the standing close-up)
+        'clothes': ['joepal_crude_t-shirt_female', 'toigo_wool_pants', 'shoes05'], 'tuck': ['joepal_crude_t-shirt_female'],
+        'dye': {'joepal_crude_t-shirt_female': (.8, .76, .68)}, 'tint': {'toigo_wool_pants': (.2, .26, .34)},
     },
     'andre': {
         'name': 'Andre', 'phenotype': {'gender': 1., 'age': .5, 'muscle': .6, 'weight': .52, 'height': .5, 'proportions': .6, 'race': race(.05, .9, .05)},
@@ -95,7 +96,7 @@ CHARACTERS = {
     'omar': {
         'name': 'Omar', 'phenotype': {'gender': 1., 'age': .6, 'muscle': .6, 'weight': .55, 'height': .5, 'proportions': .55, 'race': race(.55, .15, .3)},
         'skin': 'middleage_asian_male', 'eyes': 'brown', 'hair': 'short04', 'hair_tint': (.13, .12, .115), 'eyebrows': 'eyebrow009', 'eyelashes': 'eyelashes01',
-        'clothes': ['male_casualsuit05', 'shoes02'],
+        'clothes': ['male_casualsuit05', 'shoes04'],      # (shoes02's texture is smeared and mottled close up)
     },
     'sam': {
         'name': 'Sam', 'phenotype': {'gender': 1., 'age': .44, 'muscle': .55, 'weight': .48, 'height': .55, 'proportions': .6, 'race': race(1, 0, 0)},
@@ -105,7 +106,7 @@ CHARACTERS = {
     },
     'ben': {
         'name': 'Ben', 'phenotype': {'gender': 1., 'age': .8, 'muscle': .45, 'weight': .55, 'height': .5, 'proportions': .5, 'race': race(.3, .7, 0)},
-        'skin': 'old_african_male', 'eyes': 'brown', 'hair': 'short03', 'hair_tint': (.5, .5, .5), 'eyebrows': 'eyebrow010', 'eyelashes': 'eyelashes01',
+        'skin': 'old_african_male', 'eyes': 'brown', 'hair': 'short02', 'hair_tint': (.42, .41, .4), 'eyebrows': 'eyebrow010', 'eyelashes': 'eyelashes01',
         'clothes': ['toigo_fisherman_sweater', 'toigo_wool_pants', 'shoes01', 'toigo_round_glasses_leopard'],
         'tint': {'toigo_fisherman_sweater': (.14, .2, .32), 'toigo_wool_pants': (.3, .27, .23), 'toigo_round_glasses_leopard': (.03, .03, .03)},
     },
@@ -711,7 +712,9 @@ def cane_stand(k):
 def white_cane(k):
     """Walking with a long white cane swept ahead in the right hand."""
     return {'pelvis_offset': (0, 0, -.02 * k), 'spine': (2, 2, 1), 'spine_twist': 5, 'neck': -2, 'head': -2,
-            'hand_r': {'at': _s(k, -.14, -.3, .93), 'fingers': (.1, -1, -.5), 'palm': (1, 0, .1), 'elbow': (-.2, .3, -.2), 'curl': .85, 'thumb': .6},
+            # (a handshake grip: the hand across the cane, which runs down from the palm to the floor ahead, the fingers
+            # round it and the thumb over them; held.cane puts the long cane across the base of the fingers)
+            'hand_r': {'at': _s(k, -.14, -.3, .93), 'fingers': (.15, -.9, .4), 'palm': (.98, .12, -.11), 'elbow': (-.2, .3, -.2), 'curl': 1.4, 'thumb': .9},
             'hand_l': _hang(k, 'l', .1),
             'foot_l': {'at': _s(k, .085, .2, .12 / k), 'toes': (.08, -1, 0), 'pitch': 30, 'knee': (.03, -.7, -.1)},
             'foot_r': {'at': _s(k, -.085, -.22, .085 / k), 'toes': (-.08, -1, 0), 'pitch': -10, 'knee': (-.03, -.6, .1)}}
@@ -1385,6 +1388,14 @@ ALSO = ['people-sam-sit-type', 'people-sam-sit-type-30', 'people-grace-lie-bed',
 # holds it, and on Yusuf's broader chest it tips into the writing hand.
 NUDGE = {('yusuf', 'stand-chart'): {'hand_r': (.02, .0, .035)},
          ('zoe', 'gym-cycle'): {'hip_z': .03}}      # (her hips are fuller under the hip joints than Kai's: on the saddle, not sunk into it)
+# The film's two typists seen close (Maya, Noah): the knuckles up and the fingers arched down to the home row, close
+# together, not a hand laid flat with the fingers spread. The fingertips meet the keys where the flat hand's did
+# (within 2 mm, Blender measure).
+TYPE_ARCH = {'fingers': (0, -1, -.12), 'curl': 1.0, 'thumb': .35, 'spread': .06, 'lift': -.004}
+for _who in ('maya', 'noah'):
+    for _pose in ('sit-type', 'stand-type', 'stand-type-low', 'wheel-type', 'sit-laptop'):
+        for _side, _sign in (('hand_l', 1), ('hand_r', -1)):
+            NUDGE.setdefault((_who, _pose), {})[_side] = {'fingers': (-_sign * .12, *TYPE_ARCH['fingers'][1:]), 'curl': TYPE_ARCH['curl'], 'thumb': TYPE_ARCH['thumb'], 'spread': TYPE_ARCH['spread'], 'at': (0, 0, TYPE_ARCH['lift'])}
 # A model in an outfit of its own ('as' on its output: these keys replace the character's): in a hospital bed Grace
 # and Ben wear a gown like the ward's patients, not their day clothes.
 VARIANTS = {
