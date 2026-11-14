@@ -3,10 +3,10 @@
 // t = chapter seconds. The beats follow the chapter (review-cut.json, shot "commons"):
 //   0-4.6    Yara's booking runs out, the clock racing (the night going by in a few seconds)
 //   4.6-6.8  time's up; Mia, who booked the next slot from the team table, is next
-//   6.2-8.2  the desk lowers 43.5 -> 32 in (her preset), 6.8-13.4 it drives itself to her
+//   6.2-8.2  the desk lowers 43.5 -> 32 in (her preset), 7.2-13.4 it drives itself to her
 //   13.4-    welcome, Mia
 (function () {
-  const END = 4.6, LIFT = [6.2, 8.2], DRIVE = [6.8, 13.4], ARRIVE = 13.4;
+  const END = 4.6, LIFT = [6.2, 8.2], DRIVE = [7.2, 13.4], ARRIVE = 13.4;
   const YARA = C.amber, MIA = C.teal;
   // the clock: 5:40 AM to 8:00 AM over the first 4.6 s, eased so it slows into the hour
   const clockMin = t => lerp(5 * 60 + 40, 8 * 60, eio(seg(t, 0, END)));
