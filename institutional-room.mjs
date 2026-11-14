@@ -331,7 +331,8 @@ export function buildInstitutionalRoom(room, root, layout, h) {
     // A real low support anchors all five daily activity kits.
     table('activity-table', 'Daily planning table', [layout.activity[0], 0, layout.activity[1]], 1300, 650, 740);
     cabinet('storage', [w / 2 - 760, 0, bz + 430], 1250, options.storage.height, options.storage.open);
-    chair('mobile-desk-chair', [layout.desk[0], 0, layout.desk[1] + 1050], 450, Math.PI / 5);
+    const deskChair = chair('mobile-desk-chair', [layout.desk[0], 0, layout.desk[1] + 1050], 450, Math.PI / 5);
+    if (deskChair?.userData) deskChair.userData.layersStation = 'main';   // the featured desk's own chair (the Studio's Layers hide it with desk:main)
 
     const kit = {
         THREE, room, root, layout, spec, h, group, options, box, mesh, rod, sphere, material, mat,

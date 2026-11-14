@@ -203,10 +203,17 @@ async function main() {
     const hk = await pollUntil(() => page.evaluate(() => ({ h: window.ErgoFlex.heightInches, v: window.__lyE2E.snap() })), x => Math.abs(x.h - 28) <= .05 && !!kai && !!x.v.people[kai]?.shown, { timeout: 30000 });
     check('Kai is shown at the featured desk at 28 in before its hide', hk.ok, `${kai || 'no featured-desk user'} shown ${hk.value.v.people[kai]?.shown}, desk at ${Number(hk.value.h).toFixed(2)} in${took(hk)}`);
     const k0 = hk.value.v, [desksB0, localB0] = await deskWrites();
-    await layers('hide', MAIN, 'cell'); w = await until(v => !v.desks[MAIN]?.shown && v.selected !== 'main' && (!kai || !v.people[kai]?.shown));
+    // the featured desk's own chair (marked station 'main' in the room's layout): goes and returns with it. Before the hide
+    // it may already be set aside by the people code (Kai brings his wheelchair): "returns" means as it was before.
+    const mainOwn = v => Object.entries(v.items || {}).filter(([, x]) => x.station === 'main'), shortM = k => k.split(':').slice(-2).join(':');
+    const mainBefore = Object.fromEntries(mainOwn(k0).map(([k, x]) => [k, x.shown]));
+    check('the featured desk has its own chair in the room', mainOwn(k0).length >= 1, `${mainOwn(k0).length} items marked as the featured desk's: ${mainOwn(k0).map(([k, x]) => shortM(k) + (x.shown ? '' : ' (set aside)')).join(', ')}`);
+    await layers('hide', MAIN, 'cell'); w = await until(v => !v.desks[MAIN]?.shown && v.selected !== 'main' && (!kai || !v.people[kai]?.shown) && mainOwn(v).every(([, x]) => !x.shown));
+    check('hide the featured desk: its chair goes too (it does not stand alone where the desk was)', mainOwn(w.value).every(([, x]) => !x.shown), mainOwn(w.value).filter(([, x]) => x.shown).map(([k]) => shortM(k) + ' still shown').join(', ') + took(w));
     check('hide the featured desk: it is invisible and another desk is featured', !w.value.desks[MAIN]?.shown && w.value.selected !== 'main', `main shown ${w.value.desks[MAIN]?.shown}, selected ${w.value.selected}${took(w)}`);
     check('hide the featured desk: Kai goes with it', !kai || !w.value.people[kai]?.shown, `${kai} still shown${took(w)}`);
-    await layers('show', MAIN, 'cell'); w = await until(v => v.selected === 'main' && v.desks[MAIN]?.shown && (!kai || (v.people[kai]?.shown && samePlace(v.people[kai], k0.people[kai]))));
+    await layers('show', MAIN, 'cell'); w = await until(v => v.selected === 'main' && v.desks[MAIN]?.shown && (!kai || (v.people[kai]?.shown && samePlace(v.people[kai], k0.people[kai]))) && mainOwn(v).every(([k, x]) => x.shown === mainBefore[k]));
+    check('show the featured desk: its chair is as it was before (set aside for Kai, or shown)', mainOwn(w.value).every(([k, x]) => x.shown === mainBefore[k]), mainOwn(w.value).map(([k, x]) => `${shortM(k)} shown ${x.shown} (before: ${mainBefore[k]})`).join(', ') + took(w));
     const hAfter = await page.evaluate(() => window.ErgoFlex.heightInches);
     check('show the featured desk: featured again, Kai back at the same pose', w.ok,
       `selected ${w.value.selected}, main shown ${w.value.desks[MAIN]?.shown}, ${kai} shown ${w.value.people[kai]?.shown}, desk at ${Number(hAfter).toFixed(2)} in${took(w)}`);
@@ -234,6 +241,22 @@ async function main() {
     // 5. reload: still hidden (the redo above left it hidden for First bell)
     await open(); w = await until(hiddenR, 60000);
     check('after a reload the hide is still there', w.ok, sayR(w.value) + took(w));
+    // 7. another room type, where the featured desk's user sits on the room's own chair (the home office, Wave lab:
+    // seated at 28 in): hide the featured desk -> the desk, its user and its chair go; show -> all as before
+    try {
+      await page.evaluate(() => { window.ErgoFlex.setRoomScene('home'); });
+      await pollUntil(() => page.evaluate(() => window.ErgoFlex.workspaceRoom?.id === 'home' && !!window.ErgoFlex.sceneDesks?.records?.size), x => x, { timeout: 240000 });
+      await page.evaluate(() => { window.ErgoFlex.setMeasuredRoomMode('home', 'afternoon'); window.ErgoFlex.setRoomPeople(true); });
+      await page.evaluate(() => { const E = window.ErgoFlex; for (const c of E.tiltConfigs || []) { try { E.setTilt(c.name, 0); } catch {} } E.setHeight(28); });
+      const user = await page.evaluate(() => window.__lyE2E.userOf(null));
+      const h0 = await pollUntil(snap, v => !!v.desks[MAIN]?.shown && mainOwn(v).length >= 1 && (!user || !!v.people[user]?.shown), { timeout: 60000 }), b = h0.value;
+      const chairBefore = Object.fromEntries(mainOwn(b).map(([k, x]) => [k, x.shown]));
+      check('home office: the featured desk, its user and its own chair before the hide', h0.ok, `desk shown ${b.desks[MAIN]?.shown}, user ${user || 'none'} shown ${b.people[user]?.shown}, chair ${mainOwn(b).map(([k, x]) => shortM(k) + ' shown ' + x.shown).join(', ') || 'not found'}${took(h0)}`);
+      await layers('hide', MAIN, 'cell'); w = await until(v => !v.desks[MAIN]?.shown && (!user || !v.people[user]?.shown) && mainOwn(v).every(([, x]) => !x.shown), 60000);
+      check('home office: hide the featured desk -> the desk, its user and its chair are gone', w.ok, `desk shown ${w.value.desks[MAIN]?.shown}, ${user} shown ${w.value.people[user]?.shown}, chair ${mainOwn(w.value).map(([k, x]) => shortM(k) + ' shown ' + x.shown).join(', ')}${took(w)}`);
+      await layers('show', MAIN, 'cell'); w = await until(v => v.desks[MAIN]?.shown && (!user || v.people[user]?.shown === b.people[user]?.shown) && mainOwn(v).every(([k, x]) => x.shown === chairBefore[k]), 60000);
+      check('home office: show -> all as before', w.ok, `expected desk shown, ${user} shown ${b.people[user]?.shown}, chair ${JSON.stringify(chairBefore)}; now desk ${w.value.desks[MAIN]?.shown}, ${user} ${w.value.people[user]?.shown}, chair ${JSON.stringify(Object.fromEntries(mainOwn(w.value).map(([k, x]) => [k, x.shown])))}${took(w)}`);
+    } catch (error) { check('home office part', false, error.message); }
     check('no page errors', !errors.length, errors.slice(0, 2).join(' | '));
   } catch (error) {
     check('the run', false, error.message);

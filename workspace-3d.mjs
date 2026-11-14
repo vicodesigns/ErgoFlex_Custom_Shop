@@ -1752,6 +1752,7 @@ export class WorkspaceRoom {
                 fixture.replacedMaterials = [...retired];
                 fixture.clear(); root.updateMatrixWorld(true); fixture.attach(object);
                 object.userData.sceneAsset = false; fixture.userData.propId = placement.id;
+                if (typeof placement.station === 'string') fixture.userData.layersStation = placement.station;   // (Layers: the fixture is the scene asset)
             }
             const support=this.propSupports.find(s=>s.id===placement.id&&s.at.every((v,i)=>Math.abs(v-position[i])<1));
             if(support){root.updateMatrixWorld(true);support.obj.attach(object);}

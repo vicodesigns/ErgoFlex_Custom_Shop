@@ -21,7 +21,7 @@ export const BEDROOM_LAYOUTS = Object.fromEntries(tiers.map(([id, name, width, d
     const props = [
         // bed-2 has its headboard at +Z; turn it toward the back wall.
         { id: tier ? 'bed' : 'bed-2', at: [bed[0], 0, bed[1]], turn: tier ? 0 : 180 },
-        { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 960], turn: 180 },
+        { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 960], turn: 180, station: 'main' },
         { id: 'dresser', at: [width / 2 - 420, 0, front - 850], turn: -90 },
         { id: 'table-mirror-2', at: [width / 2 - 420, 1089.6, front - 850], turn: -90 },
         { id: 'kenney-furniture-plant-small2', at: [width / 2 - 420, 1089.6, front - 1170] },

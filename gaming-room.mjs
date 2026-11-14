@@ -17,7 +17,7 @@ export const GAMING_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map
     const cabinetX = width / 2 - 370, cabinetZ = back + 320;
     const loungeZ = back + depth - (large ? 1500 : 1150), gameTable = [400, loungeZ - 100];
     const props = [
-        { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 980], turn: 180 },
+        { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 980], turn: 180, station: 'main' },
         { id: 'ergoflex-desktop-pc', at: [cabinetX, 610, cabinetZ], turn: 0 },
         { id: 'kenney-furniture-books', at: [cabinetX - 95, 1604, back + 145] },
         { id: 'kenney-furniture-plant-small2', at: [cabinetX + 120, 1934, back + 140] },

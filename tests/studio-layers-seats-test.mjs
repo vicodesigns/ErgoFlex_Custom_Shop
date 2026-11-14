@@ -12,13 +12,15 @@ import {createStudioLayers} from '../studio-layers-panel.mjs';
 import {entryKey} from '../scene-layers.mjs';
 import {ownVisible} from '../room-people.mjs';
 import {setLayersHidden} from '../studio-layers-panel.mjs';
+import fs from 'node:fs';
+import {placements,ROOMS,SNAPSHOT} from './room-placements-proof.mjs';
 
 let n=0;const ok=name=>{n++;console.log('ok',name);};
 // every layout: each station with a chair has exactly one chair naming it, 1050 mm (or chairDistance) in front, turned
 // with it; a station without a chair gets none from its layout; no placement names a station the layout lacks
 function checkLayout(where,layout,{chairOf=s=>s.chairId||'steelcase-leap-v2',auto=s=>s.chair!==false}={}){
   const ids=new Set((layout.stations||[]).map(s=>s.id)),named=(layout.props||[]).map((p,i)=>({p,i})).filter(x=>x.p.station!==undefined);
-  for(const x of named)assert.ok(ids.has(x.p.station),`${where}: room:${x.i}:${x.p.id} names a station the layout lacks: ${x.p.station}`);
+  for(const x of named)assert.ok(x.p.station==='main'||ids.has(x.p.station),`${where}: room:${x.i}:${x.p.id} names a station the layout lacks: ${x.p.station}`);
   for(const s of layout.stations||[]){
     if(auto(s)){
       const gen=named.filter(x=>x.p.station===s.id&&x.p.id===chairOf(s));
@@ -46,7 +48,7 @@ function checkLayout(where,layout,{chairOf=s=>s.chairId||'steelcase-leap-v2',aut
   // exactly these four belong to a desk: the two station chairs, the drafting chair, the PC tower. The teacher's
   // conference chair, the lab stools, the student chairs and everything else stay with the room.
   assert.deepEqual(L.props.map((p,i)=>p.station?`room:${i}:${p.id}>${p.station}`:null).filter(Boolean),
-    ['room:1:ergoflex-office-chair>window-research','room:2:ergoflex-office-chair>research-desk','room:19:ergoflex-tall-office-chair>project-review','room:20:ergoflex-desktop-pc>research-desk']);
+    ['room:0:steelcase-leap-v2>main','room:1:ergoflex-office-chair>window-research','room:2:ergoflex-office-chair>research-desk','room:19:ergoflex-tall-office-chair>project-review','room:20:ergoflex-desktop-pc>research-desk']);
   assert.ok(L.props.filter(p=>/ergoflex-artist-stool|ergoflex-designer-chair/.test(p.id)).every(p=>!p.station),'the lab stools and the conference chair are the room\'s');
   assert.equal(deskOfItem({station:'research-desk'}),'desk:station-research-desk');assert.equal(deskOfItem({}),null);assert.equal(deskOfItem({station:'bad id!'}),null);
   ok('high school: room:1, room:2 (station chairs), room:19 (drafting chair) and room:20 (PC tower) belong to their desks; nothing else does');
@@ -132,5 +134,59 @@ const items=()=>[{id:CH,name:'Office chair',propId:'ergoflex-office-chair',role:
   assert.equal(ownVisible({visible:true}),true);assert.equal(ownVisible({visible:false}),false,'no Layers: plain visible (the film path)');
   assert.ok(!Object.keys((()=>{const o={visible:true,userData:{}};setLayersHidden(o,true);return o;})()).includes('layersRawVisible'),'not enumerable: a copy never carries it');
   ok('a chair set aside by the people code while Layers hides it records its own visibility, and comes back');
+}
+// ---- the featured desk's own chair (Vico, Nov 14: "the chair should also disappear if it's part of the desk set")
+{
+  // Every room type marks it explicitly in its layout (station: 'main'); nothing else in any layout is marked main.
+  // Rooms whose desk has no chair of its own: the kitchen and the gym (standing desks, no chair placement).
+  const CHAIR=/steelcase-leap-v2|stool-bar-square/;let rooms=0;
+  for(const [room,layouts] of Object.entries(ROOMS))for(const [id,l] of Object.entries(layouts||{})){
+    const mains=(l.props||[]).map((p,i)=>({p,i})).filter(x=>x.p.station==='main');
+    assert.equal(mains.length,1,`${room}/${id}: one chair of the featured desk (${mains.length})`);
+    const {p,i}=mains[0];assert.ok(CHAIR.test(p.id),`${room}/${id}: room:${i}:${p.id} is a desk chair`);
+    if(l.desk&&!/^(home|gaming|music|creative|study)$/.test(room))assert.ok(Math.hypot(p.at[0]-l.desk[0],p.at[2]-l.desk[1])<=1100,`${room}/${id}: at the featured desk`);   // (a description, not the rule: the rule is the marker)
+    rooms++;
+  }
+  assert.ok(rooms>=90,rooms+' layouts');
+  // the marker changes nothing else: ids, positions, turns and order (= the saved keys' indexes) are as before
+  const before=JSON.parse(fs.readFileSync(SNAPSHOT,'utf8')),now=placements();
+  assert.deepEqual(Object.keys(now).sort(),Object.keys(before).sort());
+  for(const k of Object.keys(before))assert.deepEqual(now[k],before[k],k+': placements unchanged but for the marker');
+  // the high school: the Steelcase that replaces the procedural task chair is room:0 and hands the marker to the fixture
+  const hs=INSTITUTIONAL_ROOMS.highschool.layouts.house.props[0];assert.deepEqual([hs.id,hs.replaceFixture,hs.station],['steelcase-leap-v2','mobile-desk-chair','main']);
+  const w3=fs.readFileSync(new URL('../workspace-3d.mjs',import.meta.url),'utf8'),ir=fs.readFileSync(new URL('../institutional-room.mjs',import.meta.url),'utf8'),cr=fs.readFileSync(new URL('../child-room.mjs',import.meta.url),'utf8');
+  assert.match(w3,/if \(typeof placement\.station === 'string'\) fixture\.userData\.layersStation = placement\.station;/,'a replaced fixture carries the marker');
+  assert.match(ir,/const deskChair = chair\('mobile-desk-chair'[^\n]*\n\s*if \(deskChair\?\.userData\) deskChair\.userData\.layersStation = 'main';/,'the procedural task chair is marked too');
+  assert.match(cr,/seat\.userData\.layersStation='main'/,'the child room\'s desk stool is marked');
+  assert.equal(deskOfItem({station:'main'}),'desk:main');
+  ok(`the featured desk's own chair is marked in all ${rooms} layouts (one each, a desk chair at the featured desk), placements otherwise unchanged`);
+}
+{
+  // Hide desk:main: its chair goes with it (in the high school, Kai's wheelchair had set the task chair aside: the people
+  // code put it back when Kai went; Layers keeps it hidden, and on show it is back to what the people code last asked).
+  const MAINCH=id('fixture:mobile-desk-chair'),deskList=[{id:'desk:main',name:'Main desk',featured:true},...desks.slice(1)];
+  const items2=()=>[...items(),{id:MAINCH,name:'Task chair',role:'room',station:'main'}];
+  const objs=Object.fromEntries(items2().map(d=>[d.id,{name:d.name,visible:true,userData:{}}])),storage=new Map(),undo=[];
+  objs[MAINCH].visible=false;   // set aside for Kai's wheelchair
+  const L=createStudioLayers({roomKey:()=>HS,phase:()=>'morning',size:()=>'60x30',items:()=>items2().map(d=>({...d,obj:objs[d.id]})),desks:()=>deskList,people:()=>[],
+    assetState:()=>({removed:new Set()}),readRaw:k=>storage.get(k)??null,writeRaw:(k,v)=>storage.set(k,v),transaction:e=>undo.push(e),notify:()=>{},applyDesks:()=>false,applyPeople:()=>false});
+  L.hydrated();
+  let row=L.test.rows().find(r=>r.id===MAINCH);assert.equal(row.nestedIn,'desk:main','nested under the featured desk');assert.equal(row.hidden,false);
+  L.test.hide('desk:main','cell');
+  row=L.test.rows().find(r=>r.id===MAINCH);assert.ok(row.hidden&&row.nestedIn==='desk:main','hidden with the desk');
+  const full=buildRows({room:HS,items:items2(),layers:JSON.parse(storage.get('ergoflex.sceneLayers.v1')),phase:'morning',size:'60x30',desks:deskList}).rows.find(r=>r.id===MAINCH);
+  assert.ok(full.byDesk&&!full.own&&eyeLocked(full),'its eye is the desk one (locked)');assert.equal(objs[MAINCH].visible,false);
+  objs[MAINCH].visible=true;assert.equal(objs[MAINCH].visible,false,'Kai gone: the people code shows the chair again; the hide holds');
+  assert.deepEqual(Object.keys(JSON.parse(storage.get('ergoflex.sceneLayers.v1'))),[entryKey(HS,'desk:main')],'only the desk entry');
+  objs[MAINCH].visible=false;   // Kai back (desk shown next): the people code sets it aside again
+  L.test.show('desk:main','cell');assert.equal(objs[MAINCH].visible,false,'shown: as the people code last asked (set aside for Kai)');
+  // a featured desk whose user sits on its chair (the home office): hide -> the chair goes; show -> back
+  const HO='home:house',HCH='scene:home:house:room:0:steelcase-leap-v2',ho={visible:true,userData:{}},st2=new Map();
+  const H=createStudioLayers({roomKey:()=>HO,phase:()=>'morning',size:()=>'60x30',items:()=>[{id:HCH,name:'Steelcase leap',propId:'steelcase-leap-v2',role:'room',station:'main',obj:ho}],desks:()=>[{id:'desk:main',name:'Main desk',featured:true}],people:()=>[],
+    assetState:()=>({removed:new Set()}),readRaw:k=>st2.get(k)??null,writeRaw:(k,v)=>st2.set(k,v),transaction:()=>{},notify:()=>{},applyDesks:()=>false,applyPeople:()=>false});
+  H.hydrated();H.test.hide('desk:main','cell');assert.equal(ho.visible,false);H.test.show('desk:main','cell');assert.equal(ho.visible,true);
+  // the chair follows desk:main, not whichever desk is featured: hiding a station never takes it
+  L.test.hide(R,'cell');assert.equal(L.test.rows().find(r=>r.id===MAINCH).hidden,false,'another desk hidden: the main chair stays');
+  ok('desk:main: its chair hides and returns with it (high school task chair set aside for Kai; home office Steelcase), never with another desk');
 }
 console.log(`Layers seats and desk props: ${n} checks pass.`);

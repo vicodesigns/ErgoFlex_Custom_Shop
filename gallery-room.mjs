@@ -21,7 +21,7 @@ export const GALLERY_LAYOUTS = Object.fromEntries(tiers.map(([id, name, width, d
     // rooms give that corner to the salon chair, so it joins the sculpture walk.
     const sculpture = tier ? [-width / 2 + 850, (thinker[1] + vase[1]) / 2 + 300] : [width / 2 - 650, front - 650];
     const props = [
-        { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 970], turn: 180 },
+        { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 970], turn: 180, station: 'main' },
         { id: 'the-thinker', at: [thinker[0], 850, thinker[1]], turn: 25 },
         { id: 'antique-vase', at: [vase[0], 1000, vase[1]] }
     ];

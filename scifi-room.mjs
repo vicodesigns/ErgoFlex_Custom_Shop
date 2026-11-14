@@ -13,7 +13,7 @@ export const SCIFI_LAYOUTS = Object.fromEntries(tiers.map(([id, name, width, dep
     const desk = [width / 2 - 900, back + 950];
     const service = [-width / 2 + 420, back + 2150];
     const props = [
-        { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 980], turn: 180 },
+        { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 980], turn: 180, station: 'main' },
         { id: 'space-age-radio', at: [service[0] + 80, 900, service[1] - 300], turn: 90 },
         { id: 'binoculars', at: [service[0] + 70, 900, service[1] + 360], turn: 90 },
         { id: 'robot-dog', at: [-width / 2 + 1150, 0, back + 2350], turn: 25 },

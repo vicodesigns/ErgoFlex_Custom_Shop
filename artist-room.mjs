@@ -17,7 +17,7 @@ export const ARTIST_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map
     const easel = [-width / 2 + 670, front - (large ? 2500 : 740)];      // the second station: a pottery wheel (it was a floor easel); in the large rooms clear of the worktable
     const table = [-width / 2 + 770, front - 880];
     const props = [
-        { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 980], turn: 180 },
+        { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 980], turn: 180, station: 'main' },
         { id: 'paper-bin', at: [width / 2 - 250, 0, back + 2360] },
         { id: 'kenney-furniture-potted-plant', at: [-width / 2 + 250, 0, back + 290] },
         { id: 'kenney-furniture-books', at: [width / 2 - 165, 1524, back + 1190], turn: -90 },

@@ -45,7 +45,7 @@ export function makeHumboldtLayout() {
     // order matches the first commons build; anything new is appended at the end.
     const props = [
         // Task chair on the room side of the wall desk, facing the wall.
-        { id: 'steelcase-leap-v2', at: [DESK[0] - 1050, 0, DESK[1]], turn: 90 },
+        { id: 'steelcase-leap-v2', at: [DESK[0] - 1050, 0, DESK[1]], turn: 90, station: 'main' },   // station: the featured desk's own chair (Layers)
         // Reading nook away from the pilot's route to the shared project table.
         { id: 'atelier-timber-obsidian', at: [-2800, 0, 4700], turn: 0, finish: 'charcoal' },
         { id: 'atelier-timber-clay', at: [-1500, 0, 4700], turn: 0, finish: 'raspberry' },
