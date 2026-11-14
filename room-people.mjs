@@ -152,7 +152,7 @@ const standRound = (id, prop, degrees, mm, extra = {}) => ({ id, around: [prop, 
 const LOOK = {
     gymMaya: { top: '#2d7d8a', bottom: '#1f2228', shoes: '#ececec' }, gymNoah: { top: '#c44a32', bottom: '#25272d', shoes: '#f0f0f0' },
     homeParty: { top: '#7b2f3d', bottom: '#2a2730' }, sofia: { top: '#c26a3e', bottom: '#2c303b' }, linNight: { top: '#4a4f5c', bottom: '#2b2b2e' },
-    hale: { top: '#33465e', bottom: '#2d3036' }, ava: { top: '#2f5f8f', bottom: '#d8d2c4' }, kaiLab: { top: '#3a3d44', bottom: '#5b6470' },
+    heroSchool: { hair: '#d9b96e' }, hale: { top: '#33465e', bottom: '#2d3036' }, ava: { top: '#2f5f8f', bottom: '#d8d2c4' }, kaiLab: { top: '#3a3d44', bottom: '#5b6470' },
     homeNight: { top: '#5d6b7a', bottom: '#2a2c33' }, benStudio: { top: '#7a5a3a', bottom: '#2b2d33' }, benSchool: { top: '#3d5a4a', bottom: '#30323a' }, graceSchool: { top: '#6a4d7d', bottom: '#2c2a33' }, graceShop: { top: '#3f6a6a', bottom: '#33302c' },
     omarStudio: { top: '#8a3f3a', bottom: '#2a2c31' }, omarSchool: { top: '#2f4d7a', bottom: '#2c2f36' }, omarShop: { top: '#4a5a3a', bottom: '#2b2b2b' },
     teacherK: { top: '#3f7a6b', bottom: '#2c2f38' }, teacherE: { top: '#8a5a3a', bottom: '#2a2d35' },
@@ -308,6 +308,9 @@ export const ROOM_PEOPLE = {
     ],
     highschool: [
         { id: 'people-maya-stand-type', desk: 'stand', modes: [] }, { id: 'people-maya-sit-type', desk: 'sit', modes: [] },
+        // The featured desk's own user at first bell, in the Studio (the film casts that desk itself): a blonde student,
+        // standing or seated as the desk's height asks.
+        ...['stand-type', 'sit-type', 'sit-type-30'].map(pose => ({ id: `people-fern-${pose}`, desk: pose.startsWith('sit') ? 'sit' : 'stand', modes: ['morning'], colors: LOOK.heroSchool, studio: true })),
         // First bell (the film's lesson) and the afternoon wave lab; after school two stay on; nobody at night.
         { id: 'people-kai-wheel-type', station: 'accessible-student', desk: 'wheel', modes: ['morning', 'afternoon'] },
         { id: 'people-zoe-stand-type', station: 'student-standing', desk: 'stand', modes: ['morning', 'afternoon', 'evening'] },
