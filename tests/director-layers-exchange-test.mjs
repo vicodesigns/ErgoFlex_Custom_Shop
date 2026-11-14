@@ -96,6 +96,16 @@ const items=[item(BK,'Prop:ergoflex-small-bookshelf'),item(CH,'Prop:ergoflex-des
   assert.deepEqual(back.deskEdits,[{desk:'station-research-desk',pose:{x:1,z:2,yaw:0}}]);assert.deepEqual(back.propEdits,[]);assert.ok(back.cast.every(p=>!p.hide));
   assert.deepEqual(deskHidePlan({stationId:'research-desk',hide:false,items:stage,deskEdits:[],propEdits:[],cast:[]}).deskEdits,[],'showing a desk the chapter never hid: no edit');
   assert.equal(deskHidePlan({stationId:'research-desk',hide:true,featured:'station-research-desk',items:stage}).ok,false,'the featured desk is refused');
+  // a desk nobody works at in this chapter (the people cut's oilers casts Noah elsewhere): no cast change, so the
+  // caller writes no peopleEdits; the desk and its chair / PC still go
+  const castNoNoah=cast.filter(p=>p.station!=='research-desk'),nobody=deskHidePlan({stationId:'research-desk',hide:true,featured:'main',items:stage,deskEdits:[],propEdits:[],cast:castNoNoah});
+  assert.ok(nobody.ok);assert.equal(nobody.cast,null,'no user: cast null (no peopleEdits written)');assert.deepEqual(nobody.users,[]);
+  assert.deepEqual(nobody.deskEdits,[{desk:'station-research-desk',hide:true}]);assert.equal(nobody.propEdits.length,2);
+  assert.equal(deskHidePlan({stationId:'research-desk',hide:true,items:stage,cast:plan.cast}).cast,null,'already out of the cast: nothing to change');
+  assert.deepEqual(plan.users,['noah-sit-type'],'a desk with a user: who leaves');
+  // a user who is an extra of the chapter's own cast (the people cut's Fern at the design review desk) leaves the same way
+  const fern=deskHidePlan({stationId:'project-review',hide:true,featured:'main',items:stage,cast:[{key:'fern',id:'people-fern-sit-type',station:'project-review',desk:'sit'},...cast]});
+  assert.deepEqual(fern.cast.filter(p=>p.hide).map(p=>p.key),['fern']);
   // the Refresh row: one row for the desk and what goes with it
   const rows=layerAdoptRows([{id:'desk:station-research-desk',kind:'desk',label:'MMET media desk',change:'hidden',room:HS},{id:'desk:station-gone',kind:'desk',change:'hidden',room:HS}],{targets:stageTargets(stage),items:stage.slice(0,3),cast,featured:'main',setting:'First bell · 60 in'});
   assert.equal(rows[0].take,'Hide MMET media desk with office chair, desktop pc and Noah in this chapter too');assert.deepEqual(rows[0].desk,{stationId:'research-desk',hide:true});

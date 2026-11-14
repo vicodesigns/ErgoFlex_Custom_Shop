@@ -261,7 +261,7 @@ export function createStudioSync({bridge,project,index,shot,film,commit,status,r
       for(const r of layerDesks){
         const plan=deskHidePlan({stationId:r.desk.stationId,hide:r.desk.hide,featured:api()?.sceneDesks?.selected||'main',items:stageItems(),deskEdits:effectiveDeskEdits(f,s),propEdits:effectivePropEdits(f,s),cast:(s.peopleEdits?cleanPeople(s.peopleEdits):deskSeed)?.cast||[]});
         if(!plan.ok)continue;
-        s.deskEdits=plan.deskEdits;s.propEdits=plan.propEdits;const p=cleanPeople({...(cleanPeople(s.peopleEdits)||deskSeed),cast:plan.cast});if(p)s.peopleEdits=p;
+        s.deskEdits=plan.deskEdits;s.propEdits=plan.propEdits;if(plan.cast){const p=cleanPeople({...(cleanPeople(s.peopleEdits)||deskSeed),cast:plan.cast});if(p)s.peopleEdits=p;}   // (nobody at that desk: no peopleEdits)
       }
       if(people.length)s.peopleEdits=peopleEditsFromStudio(seed,people.map(r=>r.person));
       if(desks.length){

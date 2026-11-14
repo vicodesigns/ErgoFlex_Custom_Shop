@@ -127,8 +127,11 @@ export function deskHidePlan({ stationId, hide, featured = 'main', items = [], d
   if (at >= 0) { if (clean) desks[at] = clean; else desks.splice(at, 1); } else if (clean) desks.push(clean);
   const mine = belongingsOf(items, stationId), unnamed = mine.filter(x => !x.target?.match).map(x => x.name);
   const props = applyLayerRows(propEdits, mine.filter(x => x.target?.match).map(x => ({ kind: 'layer', edit: { ...x.target, hide } })));
-  const people = (cast || []).map(p => p?.station === stationId ? (hide ? { ...p, hide: true } : (({ hide: _, ...rest }) => rest)(p)) : p);
-  return { ok: true, deskEdits: desks, propEdits: props, cast: people, unnamed, belongings: mine.map(x => x.name), users: people.filter(p => p?.station === stationId).map(p => p.key) };
+  // its user(s): cast entries at that station. cast is null when no entry changes (a desk nobody works at in this
+  // chapter): then the caller writes NO peopleEdits (a chapter's cast is copied in only when someone really leaves it).
+  const users = (cast || []).filter(p => p?.station === stationId), changes = users.some(p => (p.hide === true) !== !!hide);
+  const people = changes ? (cast || []).map(p => p?.station === stationId ? (hide ? { ...p, hide: true } : (({ hide: _, ...rest }) => rest)(p)) : p) : null;
+  return { ok: true, deskEdits: desks, propEdits: props, cast: people, unnamed, belongings: mine.map(x => x.name), users: users.map(p => p.key) };
 }
 // Make permanent of a chapter that hides room desks: their chair / prop hide edits fold back into ONE desk entry each
 // (the Studio derives those items from the desk). rows: splitPermanent(...).layers; deskEdits: the chapter's.

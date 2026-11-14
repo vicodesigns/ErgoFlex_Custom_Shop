@@ -637,7 +637,7 @@ export function mountDirector(bridge,catalog,initial){
     const s=shot(),f=filmShot();if(!s)return;
     const seed=studioSync.peopleSeed?.()||{cast:[]},plan=deskHidePlan({stationId,hide,featured:stageFeatured(),items:sceneProps.items(),deskEdits:effectiveDeskEdits(f,s),propEdits:layersPropEdits(f,s),cast:seed.cast||[]});
     if(!plan.ok){status(plan.why,true);return;}
-    commit(()=>{const x=shot();x.deskEdits=plan.deskEdits;x.propEdits=plan.propEdits;const people=layersCleanPeople({...seed,cast:plan.cast});if(people)x.peopleEdits=people;},{render:true});
+    commit(()=>{const x=shot();x.deskEdits=plan.deskEdits;x.propEdits=plan.propEdits;if(plan.cast){const people=layersCleanPeople({...seed,cast:plan.cast});if(people)x.peopleEdits=people;}},{render:true});
     status(`${hide?'Hid':'Showed'} ${item.name.replace(/ · ErgoFlex desk$/,'')}${plan.belongings.length?' with '+plan.belongings.length+' thing'+(plan.belongings.length===1?'':'s')+' of its own':''}${plan.users.length?' and '+plan.users.join(', '):''} in this chapter.${plan.unnamed.length?' Not on the stage (left as they are): '+plan.unnamed.join(', ')+'.':''} One Undo brings ${hide?'them back':'the hide back'}.`);
   }
   const layersStudio={on:()=>layersOn(),setting:()=>chapterSetting(shot()),featured:stageFeatured,hideDesk:layersHideDesk,
