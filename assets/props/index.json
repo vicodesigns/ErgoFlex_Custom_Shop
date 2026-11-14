@@ -85574,7 +85574,7 @@
     276.4
    ],
    "tris": 35046,
-   "bytes": 1150180,
+   "bytes": 1150260,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -85592,9 +85592,9 @@
    "file": "assets/props/people-andre-stand-phone-up.glb",
    "anchor": "floor",
    "size": [
-    694.4,
+    693.8,
     1771.4,
-    513.6
+    519.9
    ],
    "min": [
     -329.6,
@@ -85602,12 +85602,12 @@
     -140.5
    ],
    "max": [
-    364.8,
+    364.2,
     1771.4,
-    373.1
+    379.4
    ],
-   "tris": 35290,
-   "bytes": 1151856,
+   "tris": 35294,
+   "bytes": 1151904,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -85625,9 +85625,9 @@
    "file": "assets/props/people-andre-stand-phone-press.glb",
    "anchor": "floor",
    "size": [
-    695.9,
+    695.3,
     1771.4,
-    513.6
+    519.9
    ],
    "min": [
     -329.6,
@@ -85635,12 +85635,12 @@
     -140.5
    ],
    "max": [
-    366.3,
+    365.7,
     1771.4,
-    373.1
+    379.4
    ],
-   "tris": 35302,
-   "bytes": 1150404,
+   "tris": 35294,
+   "bytes": 1150516,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -85673,7 +85673,7 @@
     206.3
    ],
    "tris": 35340,
-   "bytes": 1151176,
+   "bytes": 1151188,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,

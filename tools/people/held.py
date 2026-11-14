@@ -69,7 +69,7 @@ def phone(rig, side, tilt=0, color=(.03, .03, .035), grip=None, screen=None):
     a phone to use it with one hand: its back in the palm, its top toward the thumb side (the index finger), its far edge
     at the roots of the fingers so they curl round it, the thumb over the glass. screen: what the glass shows (phone_screen_image: the desk app's one-button Groove page)."""
     if grip == 'hold':      # (its top toward the thumb side, its far edge at the finger roots)
-        w = hand_frame(rig, side, .018) @ T(.02, .05, 0) @ R('Z', -90) @ R('X', tilt)
+        w = hand_frame(rig, side, .026) @ T(.02, .05, 0) @ R('Z', -90) @ R('X', tilt)
     else: w = hand_frame(rig, side, .012) @ T(0, .035, 0) @ R('X', tilt)
     body = box('phone', (.072, .152, .008), material('phone', color, .35), w, bevel=.003)
     if not screen: return [body, box('phone screen', (.066, .142, .0012), material('phone screen', (.02, .02, .03), .1, emit=(.55, .7, .9)), w, at=(0, 0, .0046))]

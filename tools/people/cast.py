@@ -704,7 +704,7 @@ def stand_phone_pull(k):
     """The right hand at the front pocket, drawing the phone out, top first (held as it will be used: its back in the
     palm, the fingers round its far edge; here the palm faces the thigh)."""
     return {'spine': (2, 3, 3), 'spine_twist': -4, 'neck': 9, 'head': 11, 'head_yaw': -12,
-            'hand_r': {'at': _s(k, -.178, -.022, .79), 'fingers': (0, -1, -.15), 'palm': (1, .1, 0), 'elbow': (-.15, .3, .1), 'curl': .32, 'thumb': -.35},
+            'hand_r': {'at': _s(k, -.178, -.022, .79), 'fingers': (0, -1, -.15), 'palm': (1, .1, 0), 'elbow': (-.15, .3, .1), 'curl': .22, 'thumb': -.8},
             'hand_l': _hang(k, 'l', -.02),
             'foot_l': {'at': _s(k, .10, .0, .07 / k), 'toes': (.25, -1, 0)}, 'foot_r': {'at': _s(k, -.12, .04, .07 / k), 'toes': (-.3, -1, 0)}}
 
@@ -712,11 +712,11 @@ def stand_phone_pull(k):
 def _phone_up(k, touch):
     # The phone up in the right hand (the fingers point across to the left, the palm toward the eyes: its top points
     # away and up), the left index over the screen's one button, `touch` metres off the glass. Absolute places: they
-    # meet on the glass of Andre's phone (measured on his build: the button 0.30 m in front of him, 1.279 m up).
-    n = (0, .423, .906); tip = (-.0015 + n[0] * (touch + .006), -.2978 + n[1] * (touch + .006), 1.2788 + n[2] * (touch + .006))
+    # meet on the glass of Andre's phone (measured on his build: the button 0.30 m in front of him, 1.286 m up).
+    n = (0, .423, .906); tip = (-.0017 + n[0] * (touch + .006), -.2944 + n[1] * (touch + .006), 1.2861 + n[2] * (touch + .006))
     d = (-.76, -.466, -.455)
     return {'pelvis_offset': (.015, 0, -.005), 'pelvis_roll': -1.5, 'spine': (3, 4, 5), 'neck': 17, 'head': 20,
-            'hand_r': {'at': _s(k, -.096, -.255, 1.099), 'fingers': (1, -.05, .05), 'palm': (0, .42, .9), 'elbow': (-.3, .15, -.35), 'curl': .32, 'thumb': -.35},
+            'hand_r': {'at': _s(k, -.096, -.255, 1.099), 'fingers': (1, -.05, .05), 'palm': (0, .42, .9), 'elbow': (-.3, .15, -.35), 'curl': .06, 'thumb': -.8},
             # (the wrist: back along the finger from its tip, corrected by where the tip landed in a first build)
             'hand_l': {'at': tuple(t - .18 * x + c for t, x, c in zip(tip, d, (.0106, -.0418, .0312))), 'fingers': d, 'palm': (.3, .2, -1), 'elbow': (.3, .1, -.3), 'curl': .85, 'thumb': .5, 'each': {'index': .03}},
             'foot_l': {'at': _s(k, .10, .0, .07 / k), 'toes': (.25, -1, 0)}, 'foot_r': {'at': _s(k, -.12, .04, .07 / k), 'toes': (-.3, -1, 0)}}
@@ -735,7 +735,7 @@ def stand_phone_press(k):
 def stand_phone_watch(k):
     """Done: the phone lowered in the right hand at his side, head up, watching the desk go."""
     return {'pelvis_offset': (-.012, 0, -.005), 'pelvis_roll': 2, 'spine': (0, 0, 1), 'neck': 0, 'head': -2,
-            'hand_r': {'at': _s(k, -.235, -.02, .84), 'fingers': (0, -.3, -1), 'palm': (1, .05, 0), 'elbow': (-.1, .3, .05), 'curl': .32, 'thumb': -.35},
+            'hand_r': {'at': _s(k, -.235, -.02, .84), 'fingers': (0, -.3, -1), 'palm': (1, .05, 0), 'elbow': (-.1, .3, .05), 'curl': .22, 'thumb': -.8},
             'hand_l': _hang(k, 'l', .0),
             'foot_l': {'at': _s(k, .12, .0, .07 / k), 'toes': (.3, -1, 0)}, 'foot_r': {'at': _s(k, -.12, .03, .07 / k), 'toes': (-.35, -1, 0)}}
 

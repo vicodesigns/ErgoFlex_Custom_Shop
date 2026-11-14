@@ -9,13 +9,13 @@
    "heritage": "Mixed",
    "height": 166,
    "outfit": [
-    "toigo_basic_tucked_t-shirt",
+    "joepal_crude_t-shirt_female",
     "toigo_wool_pants",
     "shoes05"
    ],
    "colors": {
-    "top": "#e6e1d6",
-    "bottom": "#7b8a9c"
+    "bottom": "#7b8a9c",
+    "top": "#e6e1d6"
    }
   },
   "andre": {
@@ -131,10 +131,10 @@
    "age": "young adult",
    "years": 38,
    "heritage": "Mixed",
-   "height": 173,
+   "height": 172,
    "outfit": [
     "male_casualsuit05",
-    "shoes02"
+    "shoes04"
    ],
    "colors": {
     "hair": "#65615f"
@@ -164,7 +164,7 @@
    "age": "senior",
    "years": 64,
    "heritage": "African",
-   "height": 179,
+   "height": 180,
    "outfit": [
     "toigo_fisherman_sweater",
     "toigo_wool_pants",
@@ -175,7 +175,7 @@
     "top": "#687b98",
     "bottom": "#948d83",
     "glasses": "#343434",
-    "hair": "#bababa"
+    "hair": "#acaaa8"
    }
   },
   "rosa": {
