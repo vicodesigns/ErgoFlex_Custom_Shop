@@ -165,10 +165,11 @@ def coast(s):
 
 @chapter
 def oilers(s):
-    # High school: the whole class, minus the seat the camera flies through. Kai, in his wheelchair, is at the
-    # set-design desk (tilted up as a drafting board in the film, so he is not typing). Noah has the featured desk.
-    # His tour of the room lands on Noah seated at it; the film cuts to the desktop as it rises, then to the window
-    # side: Noah on his feet at the raised desk, the class behind him.
+    # High school: the whole class, minus the seat the camera flies through.
+    # Alternate cut: Kai, in his wheelchair, is by the set-design desk (rolling, not typing) and Noah has the featured
+    # desk. The tour of the room lands on Noah seated at it; the film cuts to the desktop as it rises, then to the
+    # window side: Noah on his feet at the raised desk, the class behind him.
+    # His cut (people variant, below): Kai is the protagonist at the featured desk, which comes down to him.
     people(s, **{'except': ['people-ava-sit-write', 'people-maya-sit-type', 'people-maya-stand-type', 'people-kai-wheel-type', 'people-noah-sit-type']},
            cast=[{'key': 'kai', 'id': 'people-kai-wheel-roll', 'at': [-4300, 4735], 'turn': 180},
                  {'key': 'noah-sits', 'id': 'people-noah-sit-type-30', 'desk': 'sit'},
@@ -176,16 +177,31 @@ def oilers(s):
                 ([] if ALT else [{'key': 'noah-waits', 'id': 'people-noah-stand-wait', 'at': [-3757, -1155], 'turn': 180}]),
            when={'noah-sits': [[0, 8.25, 0, 0]], 'noah-stands': [[10.69, 99, 0, 0]]} if ALT else {'noah-waits': [[8.3, 10.7, .4, .4]]}, chair={'back': 250, 'side': -780, 'turn': 35})
     if not ALT:
-        # His cut, his note: the desk beside Kai is set up for him from the first frame (48 in, flat, 28 in, facing
-        # him) and he works at it; the easel would stand off the flat top, so it is hidden. The pose allows for his
-        # Director move of this desk (-2.275 stage x, about -1508 mm room z), so Kai stays where his opening frames him.
-        s['people']['cast'][0] = {'key': 'kai', 'id': 'people-kai-wheel-type', 'station': 'project-review', 'desk': 'wheel'}
+        # His cut: the white desk by the window his opening frames is set up from the first frame (48 in, flat, 28 in)
+        # for the student who works at it; the easel would stand off the flat top, so it is hidden. The pose allows for
+        # his Director move of this desk (-2.275 stage x, about -1508 mm room z), so it stays where his opening frames it.
         edits = [{'desk': 'station-project-review', 'name': 'APA set and costume design review desk', 'size': '48x30',
                   'pose': {'x': -4080, 'z': 5308, 'yaw': 0}, 'initial': {'height': 28, 'tilt': 0}}]
         kept = [(('sceneDeskEdits', edits) if k == 'sceneDeskPoses' else (k, v)) for k, v in s.items()]
         s.clear(); s.update(kept)
         s['sceneEdits'].append({'match': '^Prop:ergoflex-art-easel$', 'hide': True})
-        return                                    # his cut: his camera; Noah gets up as the desk rises
+        # Kai is the protagonist at the featured desk (Vico, Nov 13 2026: "put the guy in the wheelchair at the black one
+        # by the carpet ... main protagonist ... that's where the camera flies"). The desk starts at standing height and
+        # comes down to his wheelchair's 31 in at the same 8 s move (his camera lands with it). Kai waits in front of it,
+        # 200 mm back (wheel-watch), and as it lands changes in place into his typing posture at the desk (the two `when`
+        # windows meet: room-people.mjs pairUp), which brings him the last 200 mm in. Noah presents beside the desk and
+        # lowers his tablet as it starts down. The white window desk his opening frames is a blonde student's (Fern,
+        # recoloured, as in the Studio). Room millimetres; the featured desk stands at about (-3749, -2045), facing +z.
+        s['motion']['initial']['height'] = 43.5
+        s['motion']['clips'][0].update(label="Comes down to Kai's wheelchair height", target=31)
+        s['ledStatus'][0]['kind'] = 'lift-down'
+        s['people']['cast'] = [{'key': 'fern', 'id': 'people-fern-sit-type', 'station': 'project-review', 'desk': 'sit', 'colors': {'hair': '#d9b96e'}},
+                               {'key': 'kai-waits', 'id': 'people-kai-wheel-watch', 'at': [-3757, -910], 'turn': 180},
+                               {'key': 'kai', 'id': 'people-kai-wheel-type-31', 'at': [-3757, -1110], 'turn': 180},
+                               {'key': 'noah-presents', 'id': 'people-noah-stand-present', 'at': [-2700, -2000], 'turn': -90},
+                               {'key': 'noah-waits', 'id': 'people-noah-stand-wait', 'at': [-2700, -2000], 'turn': -90}]
+        s['people']['when'] = {'kai-waits': [[0, 10.8, 0, 0]], 'kai': [[10.8, 14, 0, 0]], 'noah-presents': [[0, 8.0, 0, 0]], 'noah-waits': [[8.0, 14, 0, 0]]}
+        return                                    # his cut: his camera, which lands on the desk as it comes down
     cam(s, [
         key(0, (-2148, 398, 3318), (-5190, 1104, 6660), 42, 'Home of the Oilers: banner, longboard, Kai at the set-design desk'),
         key(0.6, (-2148, 398, 3318), (-5190, 1104, 6660), 42, 'Home of the Oilers (hold)'),
