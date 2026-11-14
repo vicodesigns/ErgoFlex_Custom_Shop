@@ -61,3 +61,4 @@ exports/cinematic-intro-20261104-hq12/shots/12.json
 exports/cinematic-intro-20261104-hq12/shots/13.json
 exports/cinematic-intro-20261104-hq12/shots/13-subshots.json
 exports/cinematic-intro-20261104-hq12/titles-src.json
+exports/cinematic-intro-20261110-people/screens/04-reservation.mp4

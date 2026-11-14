@@ -21,7 +21,9 @@ MUT=$( { git diff --name-only; git ls-files --others --exclude-standard -- '*.mj
   # change what a queued job renders (2026-11-07: HEAD moved after a freeze and Win's sha checks failed on 11 files).
   git diff --name-only 650da42 HEAD -- '*.mjs' '*.js' '*.cjs' '*.py' '*.css' '*.html' ':!exports' 2>/dev/null; for d in "$@"; do find -L "$d" -type f -name '*.json' ! -path '*/renders*' ! -path '*/director-exports/*'; done; } | sort -u | while read f; do [ -f "$f" ] && echo "$f"; done)
 mkdir -p $F; for f in $MUT; do mkdir -p $F/$(dirname $f); cp -p "$f" "$F/$f"; done
-EXTRA=$(for d in "$@"; do find -L "$d" -type f ! -name '*.mkv' ! -name '*.mp4' ! -path '*/renders*' ! -path '*/final/*.mp4'; done)
+# (a cut's own screen clips are inputs: the library chapter's reservation screen lives in the people cut's screens/ and
+# was left out, so the render PC failed that chapter on every retry, 2026-11-13)
+EXTRA=$(for d in "$@"; do find -L "$d" -type f ! -name '*.mkv' \( ! -name '*.mp4' -o -path '*/screens/*.mp4' \) ! -path '*/renders*' ! -path '*/final/*.mp4'; done)
 FREV=$(python3 -c "import json;print(json.load(open('$F/studio-state.json'))['rev'])"); M=$F/manifest.txt
 { echo "# $TAG frozen inputs: Desk 02 $(git rev-parse --short HEAD), studio-state rev $FREV, frozen $(date -Is). Columns: sha256 size path [url-path]; fetch base+url-path (default path), write to path. Overlay onto a clone at 036ccc1 or later."
   for p in $( { grep -v '\.html$' $S/win-exports.txt; grep -E '^app-reference/' $S/untracked-app-reference.txt | grep -vE '^app-reference/demo_tts/|\.html$|\.last_build_id$'; git diff --name-only 650da42 HEAD 2>/dev/null | grep -v '^exports/render-queue/'; echo "$EXTRA"; } | sort -u); do [ -f "$p" ] || continue; echo "$MUT" | grep -qxF "$p" && continue; printf '%s %s %s\n' "$(sha256sum < "$p" | cut -d' ' -f1)" "$(stat -Lc %s "$p")" "$p"; done
