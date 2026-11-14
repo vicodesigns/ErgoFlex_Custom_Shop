@@ -8,8 +8,9 @@
 //               at: [x, z], turn, y,                         or at a spot: room millimetres, degrees, lift in mm
 //               scale,                                       size factor (1 = as built)
 //               colors: { top, bottom, shoes, hair },        '#rrggbb' for those parts of the model (absent: as built)
-//               pose: { '<bone>': [x, y, z, w] } } ],        pose fine tuning: that bone turned from the built pose (quaternion,
+//               pose: { '<bone>': [x, y, z, w] },            pose fine tuning: that bone turned from the built pose (quaternion,
 //                                                            the bone's own frame; experience/pose-editor.mjs)
+//               look: ['<key>', ...] } ],                    whom they look at (room-people.mjs gazeOf)
 //     when: { '<key>': [[t0, t1, fadeIn?, fadeOut?], ...] }, the seconds of the chapter that person is there (absent: all of it)
 //     chair: { back, side, turn }, fade                      as in the film's people filter
 //   }
@@ -50,6 +51,7 @@ export function cleanPerson(e){
   const colors={};for(const part of PARTS)if(typeof e.colors?.[part]==='string'&&/^#[0-9a-f]{6}$/i.test(e.colors[part]))colors[part]=e.colors[part].toLowerCase();
   if(Object.keys(colors).length)out.colors=colors;
   const pose=cleanPose(e.pose);if(pose)out.pose=pose;
+  const look=[].concat(e.look??[]).filter(k=>typeof k==='string'&&KEY.test(k)).slice(0,4);if(look.length)out.look=look;
   return out;
 }
 export function cleanSpans(v,seconds=Infinity){

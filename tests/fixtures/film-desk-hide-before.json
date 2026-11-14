@@ -1114,7 +1114,11 @@
        -3757,
        -910
       ],
-      "turn": 180
+      "turn": 180,
+      "look": [
+       "noah-talks",
+       "noah-waits"
+      ]
      },
      {
       "key": "kai",
@@ -1126,13 +1130,16 @@
       "turn": 180
      },
      {
-      "key": "noah-presents",
-      "id": "people-noah-stand-present",
+      "key": "noah-talks",
+      "id": "people-noah-stand-talk",
       "at": [
        -2700,
        -2000
       ],
-      "turn": -90
+      "turn": -44,
+      "look": [
+       "kai-waits"
+      ]
      },
      {
       "key": "noah-waits",
@@ -1141,7 +1148,33 @@
        -2700,
        -2000
       ],
-      "turn": -90
+      "turn": -44,
+      "look": [
+       "kai-waits",
+       "kai"
+      ]
+     },
+     {
+      "key": "nia-class",
+      "id": "people-nia-sit-write",
+      "on": "student-chair-0-0-0",
+      "seat": 450,
+      "turn": 180,
+      "colors": {
+       "top": "#3f6b5a",
+       "bottom": "#2c2f38"
+      }
+     },
+     {
+      "key": "finn-class",
+      "id": "people-finn-sit-listen",
+      "on": "student-chair-0-0-1",
+      "seat": 450,
+      "turn": 180,
+      "colors": {
+       "top": "#2f4d6a",
+       "bottom": "#2b2d33"
+      }
      }
     ],
     "when": {
@@ -1161,7 +1194,7 @@
        0
       ]
      ],
-     "noah-presents": [
+     "noah-talks": [
       [
        0,
        8,
@@ -1267,11 +1300,10 @@
     "place": {
      "people-kai-sit-controller": {
       "at": [
-       -1400,
-       1230
+       -1260,
+       1431
       ],
-      "turn": 118,
-      "y": 70
+      "turn": 151
      }
     }
    }

@@ -40,6 +40,8 @@
 //                                                     film only, on a standing person: from `start` they walk the path
 //                                                     (from where they stand, or along `path`) and stand at its end, in
 //                                                     the posture of `then` if given; they face along the path at both ends
+//   look: '<key>' | ['<key>', ...]                    whom they look at, whatever their posture (whichever of them is there,
+//                                                     in front within 9 m): a listener who turns to the talker
 //   layout: '<layout id>'                             only in that room layout;  modes: [...] only in those dayparts
 //   key: '<name>'                                     a name for this placement when one model is used twice
 //   studio: true                                      only in the Studio: left out whenever a film casts the room (its chapters stay as they were)
@@ -1928,18 +1930,23 @@ export class RoomPeople {
     // talking or with a drink looks at the nearest person in front of them within 3.5 m; someone standing by, waiting or
     // listening looks at the person at the featured desk if they are in front of them within 9 m. Anyone else: their
     // posture's own gaze (typists their screen, readers their page: solveStill).
+    // A placement's `look` names whom they look at (a key, or keys: whichever of them is there and in front within 9 m),
+    // whatever their posture: someone listening to a classmate who talks to them (the oilers film).
     gazeOf(object, life) {
-        const pose = life.key?.pose || '', talks = GAZE_TALK.test(pose), desk = GAZE_DESK.test(pose), waits = talks || desk || GAZE_IDLE.test(pose); if (!waits) return null;
+        const pose = life.key?.pose || '', talks = GAZE_TALK.test(pose), desk = GAZE_DESK.test(pose), waits = talks || desk || GAZE_IDLE.test(pose);
+        const look = (this.current(object) || object.userData.person)?.look; if (!waits && !look) return null;
         const root = object.userData.personRig?.bones.get('Root')?.parent; if (!root) return null;
         root.updateWorldMatrix(true, false); gazeM.copy(root.matrixWorld).invert();
+        const headOf = o => { const h = o.visible && o !== object && o.userData.personRig?.bones.get('head'); if (!h) return null; h.updateWorldMatrix(true, false); return h.getWorldPosition(gazeW).applyMatrix4(gazeM); };
+        const ahead = (p, far) => p && p.z > .2 && Math.hypot(p.x, p.z) < far && Math.abs(Math.atan2(p.x, p.z)) < 1.3;
+        if (look) { const keys = [].concat(look); for (const other of this.people) if (keys.includes(this.keyOf(other.userData.person))) { const p = headOf(other); if (ahead(p, 9)) return { at: p.clone(), amount: .8 }; } }
+        if (!waits) return null;
         // the featured desk, about a metre up (the folded board), wherever it is now
         if (desk) {
             const at = this.deskLive, room = this.room?.root; if (!at || !room) return null;
             room.updateWorldMatrix(true, false); room.localToWorld(gazeDesk.set(at.x, 1000, at.z)).applyMatrix4(gazeM);
             return Number.isFinite(gazeDesk.x) ? { at: gazeDesk.clone(), amount: .85 } : null;
         }
-        const headOf = o => { const h = o.visible && o !== object && o.userData.personRig?.bones.get('head'); if (!h) return null; h.updateWorldMatrix(true, false); return h.getWorldPosition(gazeW).applyMatrix4(gazeM); };
-        const ahead = (p, far) => p && p.z > .2 && Math.hypot(p.x, p.z) < far && Math.abs(Math.atan2(p.x, p.z)) < 1.3;
         if (talks) {
             let best = null, near = Infinity;
             for (const other of this.people) { const p = headOf(other); if (!ahead(p, 3.5)) continue; const d = Math.hypot(p.x, p.z); if (d < near) { near = d; best = (best || new THREE.Vector3()).copy(p); } }
