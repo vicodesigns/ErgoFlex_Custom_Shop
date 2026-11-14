@@ -983,6 +983,21 @@ def wheel_type(inches=31):
             'foot_l': {'at': (.085, -.41, .235), 'toes': (.1, -1, 0)}, 'foot_r': {'at': (-.085, -.41, .235), 'toes': (-.1, -1, 0)}}
 
 
+# The red power wheelchair of the Library commons (assets/props/electric-wheelchair.glb), measured in the film's side
+# view: the seat cushion is 0.47 up, its footplate 0.19 up and about 0.43 ahead of where someone seated on it stands
+# (room-people.mjs `on`: 60 mm ahead of the chair's middle). Nothing held: the person sits in the room's own chair.
+POWER_SEAT = .47
+POWER_FEET = {'foot_l': {'at': (.09, -.40, .255), 'toes': (.12, -1, 0)}, 'foot_r': {'at': (-.09, -.40, .255), 'toes': (-.12, -1, 0)}}
+
+
+def power_type(inches=32):
+    """In the power wheelchair at the desk, both hands on the keyboard, feet on the footplate."""
+    keys = keys_at(inches)
+    return {'pelvis': (0, .03, POWER_SEAT + .09), 'pelvis_pitch': 2, 'spine': (3, 4, 4), 'neck': 2, 'head': -2,
+            'hand_l': {'at': (.14, -.375, keys + .04), 'elbow': (.16, .28, -.3), **_TYPE_L},
+            'hand_r': {'at': (-.14, -.375, keys + .04), 'elbow': (-.16, .28, -.3), **_TYPE_R}, **POWER_FEET}
+
+
 def sit_coffee(inches=28):
     """Seated at the desk, sitting back a little: the left hand on the keyboard, a mug in the right, reading the screen."""
     keys = keys_at(inches)
@@ -1070,6 +1085,7 @@ def kid_stand_desk(inches=28):
 
 # Desk poses take the desk height (inches) from the output's 'height'.
 DESK_POSES = {'sit-type': sit_type, 'stand-type': stand_type, 'wheel-type': wheel_type, 'sit-coffee': sit_coffee, 'stand-coffee': stand_coffee,
+              'power-type': power_type,
               # Standing at the desk's lowest setting: the working height for a person of short stature.
               'stand-type-low': lambda inches=28: dict(stand_type(inches, .27), spine=(1, 2, 2), neck=0, head=-4),
               # Standing at a desk set between sitting and standing (35-36 in, bench height): leaning in over the work.
@@ -1156,6 +1172,13 @@ POSES = {
         'hand_r': {'at': (-.05, -.3, LOUNGE + .3), 'fingers': (.3, -.5, .8), 'palm': (.3, .8, .5), 'elbow': (-.3, .15, -.2), 'curl': .6, 'thumb': .4},
         'hand_l': {'at': (.09, -.27, LOUNGE + .27), 'fingers': (-.5, -.6, .6), 'palm': (-.3, .7, .6), 'elbow': (.3, .15, -.2), 'curl': .5, 'thumb': .3},
         'foot_l': {'at': (.12, -.4, .075), 'toes': (.2, -1, 0)}, 'foot_r': {'at': (-.12, -.36, .075), 'toes': (-.2, -1, 0)},
+    },
+    # The same in the commons' power wheelchair (POWER_SEAT): the phone in the lap, feet on the footplate.
+    'power-phone': {
+        'pelvis': (0, .03, POWER_SEAT + .09), 'pelvis_pitch': 0, 'spine': (4, 6, 6), 'neck': 14, 'head': 16,
+        'hand_r': {'at': (-.05, -.3, POWER_SEAT + .3), 'fingers': (.3, -.5, .8), 'palm': (.3, .8, .5), 'elbow': (-.3, .15, -.2), 'curl': .6, 'thumb': .4},
+        'hand_l': {'at': (.09, -.27, POWER_SEAT + .27), 'fingers': (-.5, -.6, .6), 'palm': (-.3, .7, .6), 'elbow': (.3, .15, -.2), 'curl': .5, 'thumb': .3},
+        **POWER_FEET,
     },
     'stand-phone': stand_phone,
     'stand-wait': stand_wait,
@@ -1281,6 +1304,8 @@ POSE_INFO = {
     'sit-controller': ('On a sofa with a game controller', 'seated', '', 420, [('gamepad', {})]),
     'wheel-roll': ('Rolling, in a wheelchair', 'wheelchair', '', 0, [('wheelchair', {})]),
     'wheel-watch': ('Watching a screen, in a wheelchair', 'wheelchair', '', 0, [('wheelchair', {})]),
+    'power-phone': ('In the power wheelchair, phone in hand', 'wheelchair', '', 470, [('phone', {'side': 'r'})]),      # (the room's chair, not held)
+    'power-type': ('Typing at the desk, in the power wheelchair', 'wheelchair', 'desk', 470, []),
     'stand-low': ('Working standing at a bench-height desk', 'standing', 'desk', 0, []),
     'sit-coffee': ('Coffee at the desk, seated', 'seated', 'desk', 435, [('cup', {'side': 'r'})]),
     'stand-coffee': ('Coffee at the desk, standing', 'standing', 'desk', 0, [('cup', {'side': 'r'})]),
@@ -1320,10 +1345,10 @@ POSE_INFO = {
 }
 # The roles' postures: built for the characters that list them ('postures'), for anyone else on request.
 ROLE_POSES = {'stand-brief', 'stand-radio', 'stand-chart', 'push-cart', 'lie-bed', 'sit-microscope', 'stand-counter',
-              'gym-cycle', 'gym-pullup', 'gym-box', 'gym-press', 'gym-curl', 'sit-pottery'}      # (the gym's: built for those who train there, ALSO below)
+              'gym-cycle', 'gym-pullup', 'gym-box', 'gym-press', 'gym-curl', 'sit-pottery', 'power-phone', 'power-type'}      # (the gym's: built for those who train there, ALSO below)
 # Built where the pose puts them, not dropped until something touches the floor (a body lying on a bed has nothing on it).
-RAISED = {'lie-bed', 'sit-microscope', 'gym-cycle', 'gym-pullup', 'gym-press'}       # (feet on a stool's ring, on pedals or off the floor under a bar are not on the floor either)
-DESK_HEIGHTS = {'sit-type': (28, 30), 'stand-type': (43.5,), 'stand-type-low': (28, 30), 'wheel-type': (28, 31), 'sit-coffee': (28, 30), 'stand-coffee': (43.5,), 'stand-low': (35.5,), 'stand-mid': (39,), 'kid-stand-desk': (28,), 'kid-sit-desk': (28,)}
+RAISED = {'lie-bed', 'sit-microscope', 'gym-cycle', 'gym-pullup', 'gym-press', 'power-phone', 'power-type'}       # (feet on a stool's ring, on pedals or off the floor under a bar are not on the floor either)
+DESK_HEIGHTS = {'sit-type': (28, 30), 'stand-type': (43.5,), 'stand-type-low': (28, 30), 'wheel-type': (28, 31), 'power-type': (32,), 'sit-coffee': (28, 30), 'stand-coffee': (43.5,), 'stand-low': (35.5,), 'stand-mid': (39,), 'kid-stand-desk': (28,), 'kid-sit-desk': (28,)}
 # Who a posture is for: adult poses are built on adult furniture, child poses on child furniture.
 CHILD_POSES = {p for p in POSE_INFO if p.startswith('kid-')}
 def suits(who, pose): return (who in CHILDREN) == (pose in CHILD_POSES)
@@ -1339,7 +1364,9 @@ ALSO = ['people-sam-sit-type', 'people-sam-sit-type-30', 'people-grace-lie-bed',
         # the gym: on the bike, at the rack's bar, on the bench, at the dumbbells and at the bag
         'people-zoe-gym-cycle', 'people-kai-gym-cycle', 'people-lin-gym-pullup', 'people-andre-gym-press', 'people-lin-gym-curl', 'people-sofia-gym-box',
         # the artist's studio: at the pottery wheel
-        'people-lin-sit-pottery']
+        'people-lin-sit-pottery',
+        # the Library commons: Mia in the room's red power wheelchair (the film's commons chapter), feet on its footplate
+        'people-mia-power-phone', 'people-mia-power-type']
 # A posture nudged for one person (metres added to a hand's or a foot's place): the clipboard lies as the left hand
 # holds it, and on Yusuf's broader chest it tips into the writing hand.
 NUDGE = {('yusuf', 'stand-chart'): {'hand_r': (.02, .0, .035)}}

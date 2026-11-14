@@ -85417,6 +85417,73 @@
     "character": "lin",
     "pose": "sit-pottery"
    }
+  },
+  {
+   "id": "people-mia-power-phone",
+   "name": "Mia: in the power wheelchair, phone in hand",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-mia-power-phone.glb",
+   "anchor": "floor",
+   "size": [
+    491.1,
+    1042.5,
+    685
+   ],
+   "min": [
+    -231.5,
+    181.1,
+    -119
+   ],
+   "max": [
+    259.6,
+    1223.6,
+    566
+   ],
+   "tris": 34434,
+   "bytes": 1313036,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "mia",
+    "pose": "power-phone"
+   }
+  },
+  {
+   "id": "people-mia-power-type",
+   "name": "Mia: typing at the desk, in the power wheelchair",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-mia-power-type.glb",
+   "anchor": "floor",
+   "size": [
+    445,
+    1077.6,
+    682.1
+   ],
+   "min": [
+    -222.5,
+    176.3,
+    -118.5
+   ],
+   "max": [
+    222.5,
+    1253.9,
+    563.6
+   ],
+   "tris": 34282,
+   "bytes": 1307492,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "mia",
+    "pose": "power-type",
+    "deskHeight": 32
+   }
   }
  ],
  "screens": [

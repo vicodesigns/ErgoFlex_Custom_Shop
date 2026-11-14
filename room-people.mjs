@@ -1500,9 +1500,21 @@ export class RoomPeople {
         for (const object of this.people) {
             const spec = object.userData.person; if (spec.desk || spec.station || spec.beside || !(spec.on || spec.by || spec.near || spec.around || (spec.at && spec.clear)) || this.filter?.place?.[this.keyOf(spec)] || this.filter?.place?.[spec.id]) continue;
             const anchor = object.userData.personAnchor;
-            if (spec.at ? again || moved : again || !anchor || this.anchorKey(anchor) !== object.userData.personAnchorAt || (spec.clear && moved)) this.settle(object, spec);
+            if (spec.at ? again || moved : again || !anchor || this.anchorKey(anchor) !== object.userData.personAnchorAt || (spec.clear && moved)) { this.settle(object, spec); this.rehome(object); }
         }
         this.blocked = null;
+    }
+    // Someone settled again (the seat they are on was moved: a film's sceneEdits move the commons' wheelchair after the
+    // cast is placed) is somewhere else now: a change of posture they are part of starts and ends there, not where
+    // they were when its skeletons were loaded (readyChange).
+    rehome(object) {
+        const spec = object.userData.person, home = { position: object.position.clone(), turn: object.rotation.y };
+        for (const pair of this.pairs || []) {
+            if (!pair.ready || pair.live) continue;
+            if (pair.from === spec) pair.homeFrom = home;
+            if (pair.to === spec) pair.homeTo = { ...home, position: home.position.clone() };
+            if (pair.from === spec || pair.to === spec) pair.homeTo.turn = pair.homeFrom.turn + THREE.MathUtils.euclideanModulo(pair.homeTo.turn - pair.homeFrom.turn + Math.PI, Math.PI * 2) - Math.PI;
+        }
     }
     // Whether a seat's back is ahead of someone sat on it facing `yaw`: the middle of its highest quarter (the back,
     // with arms that cancel out side to side) more than 80 mm ahead of its centre. A seat without a back (a stool, a

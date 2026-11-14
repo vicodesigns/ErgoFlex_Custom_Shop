@@ -1559,6 +1559,21 @@
    "desk": false,
    "seat": 0
   },
+  "power-phone": {
+   "label": "In the power wheelchair, phone in hand",
+   "stance": "wheelchair",
+   "desk": false,
+   "seat": 470
+  },
+  "power-type": {
+   "label": "Typing at the desk, in the power wheelchair",
+   "stance": "wheelchair",
+   "desk": true,
+   "seat": 470,
+   "heights": [
+    32
+   ]
+  },
   "stand-low": {
    "label": "Working standing at a bench-height desk",
    "stance": "standing",
@@ -11750,6 +11765,19 @@
    "character": "lin",
    "pose": "sit-pottery",
    "name": "Lin: throwing a pot at the wheel",
+   "aids": []
+  },
+  "people-mia-power-phone": {
+   "character": "mia",
+   "pose": "power-phone",
+   "name": "Mia: in the power wheelchair, phone in hand",
+   "aids": []
+  },
+  "people-mia-power-type": {
+   "character": "mia",
+   "pose": "power-type",
+   "deskHeight": 32,
+   "name": "Mia: typing at the desk, in the power wheelchair",
    "aids": []
   }
  }

@@ -425,11 +425,11 @@ export function drawPose(rig, drawn, dz = 0, pose = null, hold = false) {
 // The posture as built with life in it: breathing, a head that drifts, a shift of weight for those on their feet
 // (feet pinned), typing fingers, a page turned by a reader. Hands that rest on something (keys, a table, a bench, a
 // stick) stay exactly where they are. key: rig.key(id). input: { time, seed, life: 0..1 }. Pure.
-const RESTING = { 'sit-type': 'lr', 'stand-type': 'lr', 'stand-mid': 'lr', 'stand-type-low': 'lr', 'stand-counter': 'lr', 'sit-microscope': 'lr', 'lie-bed': 'lr', 'wheel-type': 'lr', 'sit-laptop': 'lr', 'sit-write': 'lr', 'sit-listen': 'lr', 'sit-raise': 'l', 'stand-work': 'lr', 'cane-stand': 'r', 'wheel-roll': 'lr', 'wheel-watch': 'lr',
+const RESTING = { 'sit-type': 'lr', 'stand-type': 'lr', 'stand-mid': 'lr', 'stand-type-low': 'lr', 'stand-counter': 'lr', 'sit-microscope': 'lr', 'lie-bed': 'lr', 'wheel-type': 'lr', 'power-type': 'lr', 'sit-laptop': 'lr', 'sit-write': 'lr', 'sit-listen': 'lr', 'sit-raise': 'l', 'stand-work': 'lr', 'cane-stand': 'r', 'wheel-roll': 'lr', 'wheel-watch': 'lr',
     'kid-stand-desk': 'lr', 'kid-sit-desk': 'lr', 'kid-sit-k': 'lr', 'kid-sit-e': 'lr', 'kid-kneel-craft': 'lr', 'kid-play-floor': 'lr' };
-const TYPES = new Set(['sit-type', 'stand-type', 'stand-mid', 'stand-type-low', 'wheel-type', 'sit-laptop']);
+const TYPES = new Set(['sit-type', 'stand-type', 'stand-mid', 'stand-type-low', 'wheel-type', 'power-type', 'sit-laptop']);
 const ON_FEET = new Set(['stand-type', 'stand-mid', 'stand-type-low', 'stand-brief', 'stand-radio', 'stand-chart', 'stand-counter', 'stand-wait', 'stand-phone', 'stand-present', 'stand-work', 'stand-paint', 'cane-stand', 'kid-stand', 'kid-stand-wait', 'kid-stand-desk']);
-const INTENT = new Set(['stand-chart', 'sit-microscope', 'stand-radio', 'sit-read', 'sit-phone', 'stand-phone', 'sit-write', 'stand-work', 'stand-paint', 'sit-controller', 'kid-read-floor', 'kid-sit-desk', 'kid-stand-desk', 'kid-sit-k', 'kid-sit-e', 'kid-kneel-craft', 'kid-play-floor']);      // eyes on what the hands hold
+const INTENT = new Set(['stand-chart', 'sit-microscope', 'stand-radio', 'sit-read', 'sit-phone', 'power-phone', 'stand-phone', 'sit-write', 'stand-work', 'stand-paint', 'sit-controller', 'kid-read-floor', 'kid-sit-desk', 'kid-stand-desk', 'kid-sit-k', 'kid-sit-e', 'kid-kneel-craft', 'kid-play-floor']);      // eyes on what the hands hold
 export const livelyPose = pose => pose !== 'walk' && pose !== 'white-cane' && pose !== 'push-cart';
 export const WORKOUTS = new Set(['gym-cycle', 'gym-pullup', 'gym-press', 'gym-curl', 'gym-box', 'sit-pottery']);      // postures that work a machine: solveWorkout
 export function solveStill(rig, key, input) {
