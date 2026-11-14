@@ -19152,6 +19152,14 @@
    "scenes": [],
    "converter": "people-generator",
    "collection": "people"
+  },
+  {
+   "id": "people-maya-stand-type-41",
+   "name": "Maya, typing at the desk at 41 in (standing)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
   }
  ],
  "screens": [

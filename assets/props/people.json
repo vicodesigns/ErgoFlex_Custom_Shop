@@ -11870,6 +11870,13 @@
    "deskHeight": 30,
    "name": "Mia: typing at the desk, in the power wheelchair (desk at 30 in)",
    "aids": []
+  },
+  "people-maya-stand-type-41": {
+   "character": "maya",
+   "pose": "stand-type",
+   "deskHeight": 41,
+   "name": "Maya, typing at the desk at 41 in (standing)",
+   "aids": []
   }
  }
 }

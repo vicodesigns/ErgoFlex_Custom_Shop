@@ -337,7 +337,8 @@ if who.get('limbs'):
     drop = sum(rig.data.bones[b].length for b in ('thigh_l', 'calf_l')) * (1 - who['limbs'][0])
     pose = dict(pose, limbs=who['limbs'])
     if 'pelvis' not in pose: off = pose.get('pelvis_offset', (0, 0, 0)); pose['pelvis_offset'] = (off[0], off[1], off[2] - drop)
-for limb, by in getattr(cast, 'NUDGE', {}).get((spec['character'], spec['pose']), {}).items():
+for limb, by in [*getattr(cast, 'NUDGE', {}).get((spec['character'], spec['pose']), {}).items(), *getattr(cast, 'NUDGE', {}).get(spec['id'], {}).items()]:
+    # (the posture's nudge for this person, then one model's own, by its id)
     # (a number: added to a number of the pose, 'hip_z'; a tuple: added to the limb's 'at'; a dict: the limb's fields it
     # names replaced, its 'at' added)
     pose = dict(pose)
