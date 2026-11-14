@@ -119,18 +119,27 @@ def create(s):
 
 @chapter
 def commons(s):
-    # Humboldt commons. The desk waits on the green carpet at (-2.5, 0, -12.2) by the back wall (z -13.7), turns
-    # and drives +x along the wall to dock at about (2.8, -11.5); Mia, who called it, waits at (4.16, -11.47)
-    # facing it, the wheelchair parked at (6.03, -12.45); her teammates work at the project table on the +z side.
-    # His route crossed the drive behind the student at the near table (her head hid the desk at 10.5 s) and his
-    # last frame cut the wheelchair at the right edge behind a large water bottle. Here: his establishing over the
-    # double-height commons, then a high wide from behind the tables that dollies in as the desk turns off the wall
-    # and drives across the frame to Mia (the desk grows to about half the frame by the cut), everyone whole. As it
-    # arrives, a cut to the front: desk, Mia and the wheelchair whole, the campus board behind.
-    cam(s, his('commons', 0, 2) + [
-        key(5.0, (-0.6, 4.6, -2.4), (-1.0, 0.8, -11.6), 38, 'High over the tables: the desk turns off the wall'),
-        key(11.55, (1.3, 3.5, -6.5), (2.2, 1.1, -11.5), 40, 'Dollying in as it drives across the cork wall to Mia'),
-        key(11.6, (5.7, 1.75, -7.5), (3.9, 0.95, -11.9), 52, 'Front: the desk docks at Mia, the wheelchair beside', cut=True),
+    # Humboldt commons, the story of November 13 (exports/cinematic-intro-20261110-people/build-commons-story.py):
+    # Yara works standing at the desk on the green carpet at (-2.5, 0, -12.2) by the back wall (z -13.7) while the
+    # night runs out (light and the screen's clock, 0-3.8 s); her booking ends at 4.6 s, she takes her bag (4.6-6.0)
+    # and walks off toward (-5.4, -2.0) from 6.0 s; the desk lowers (6.2-8.2), turns and drives +x along the wall
+    # (6.8-13.4) to dock at about (2.8, -11.5) for Mia, in her red power wheelchair at (4.12, -11.47) facing it;
+    # her teammates work at the project table on the +z side. Here: an overhead of the whole commons craning down
+    # (no roll, the frame inside the room); a cut to a front three-quarter of Yara at the desk with the booking
+    # screen facing the lens (slow push); a cut as she turns with her bag to a low view from the room that she walks
+    # toward, the desk lowering and turning off the wall behind her (she stays whole); a cut to the high wide from
+    # behind the tables that dollies in as the desk drives across the cork wall (the desk grows to about half the
+    # frame); as it arrives, a cut to the front: desk, Mia and the wheelchair whole, the campus board behind.
+    cam(s, [
+        key(0, (3.0, 22, -5.6), (3.0, 0, -5.85), 40, 'Overhead: the whole commons as the night runs out'),
+        key(2.4, (1.8, 15.5, -6.9), (1.8, 0, -7.25), 40, 'Craning down over the tables toward the desk'),
+        key(2.45, (0.5, 2.15, -8.3), (-2.55, 1.5, -12.0), 44, 'Front three-quarter: Yara at the desk, the booking clock racing to 8:00', cut=True),
+        key(5.2, (0.0, 2.1, -8.75), (-2.6, 1.48, -12.05), 42, 'Slow push: time is up'),
+        key(5.25, (-6.4, 1.55, -6.9), (-3.0, 1.05, -11.1), 48, 'Low from the room: Yara takes her bag and walks toward the lens', cut=True),
+        key(8.25, (-6.1, 1.65, -7.3), (-2.2, 1.0, -11.5), 46, 'The desk lowers and turns off the wall behind her'),
+        key(8.3, (-0.6, 4.6, -2.4), (-1.0, 0.8, -11.6), 38, 'High over the tables: the desk drives along the cork wall', cut=True),
+        key(12.4, (1.3, 3.5, -6.5), (2.2, 1.1, -11.5), 40, 'Dollying in as it drives across the cork wall to Mia'),
+        key(12.45, (5.7, 1.75, -7.5), (3.9, 0.95, -11.9), 52, 'Front: the desk docks at Mia in her wheelchair', cut=True),
         key(16, (5.6, 1.7, -7.8), (3.9, 0.95, -11.9), 50, 'Slow push into the dissolve'),
     ])
 
