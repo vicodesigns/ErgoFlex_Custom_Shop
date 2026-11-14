@@ -10,6 +10,8 @@ import {COWORKING_LAYOUTS} from '../coworking-room.mjs';
 import {buildRows,groupRows,hiddenCount,visibilityOf,deskOfItem,eyeLocked} from '../studio-layers-model.mjs';
 import {createStudioLayers} from '../studio-layers-panel.mjs';
 import {entryKey} from '../scene-layers.mjs';
+import {ownVisible} from '../room-people.mjs';
+import {setLayersHidden} from '../studio-layers-panel.mjs';
 
 let n=0;const ok=name=>{n++;console.log('ok',name);};
 // every layout: each station with a chair has exactly one chair naming it, 1050 mm (or chairDistance) in front, turned
@@ -118,5 +120,17 @@ const items=()=>[{id:CH,name:'Office chair',propId:'ergoflex-office-chair',role:
   L.applyUndo(undo.at(-1));assert.equal(objs[CH].visible,false,'undo of the show: hidden by the desk');
   L.applyUndo({...undo.at(-1),before:undo.at(-1).after,after:undo.at(-1).before});assert.equal(objs[CH].visible,false,'redo: back to before (still set aside)');
   ok('a station chair set aside for its seated user: not a Layers hide, not counted, and returned to exactly that after the desk is shown');
+}
+{
+  // The people code setting a chair aside WHILE Layers hides it: it must record the chair's own visibility (what was set
+  // underneath the hide), not the hide's `false`, or the chair would stay invisible after the desk and its user return.
+  const chair={visible:true,userData:{}},people=new Map();
+  setLayersHidden(chair,true);assert.equal(chair.visible,false);assert.equal(ownVisible(chair),true,'its own visibility under the hide');
+  people.set(chair,ownVisible(chair));chair.visible=false;   // room-people.mjs: set aside (records true)
+  setLayersHidden(chair,false);assert.equal(chair.visible,false,'shown by Layers: still set aside');
+  chair.visible=people.get(chair);people.delete(chair);assert.equal(chair.visible,true,'the people code puts it back: visible (not stuck invisible)');
+  assert.equal(ownVisible({visible:true}),true);assert.equal(ownVisible({visible:false}),false,'no Layers: plain visible (the film path)');
+  assert.ok(!Object.keys((()=>{const o={visible:true,userData:{}};setLayersHidden(o,true);return o;})()).includes('layersRawVisible'),'not enumerable: a copy never carries it');
+  ok('a chair set aside by the people code while Layers hides it records its own visibility, and comes back');
 }
 console.log(`Layers seats and desk props: ${n} checks pass.`);

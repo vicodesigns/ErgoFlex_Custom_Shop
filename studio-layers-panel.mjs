@@ -25,7 +25,9 @@ export function setLayersHidden(obj, on) {
   if (on) {
     const own = Object.getOwnPropertyDescriptor(obj, 'visible'); let raw = obj.visible;
     Object.defineProperty(obj, 'visible', { configurable: true, enumerable: true, get: () => false, set: v => { raw = v; own?.set?.call(obj, v); } });
-    restore.set(obj, () => { delete obj.visible; if (own && (own.get || own.set)) Object.defineProperty(obj, 'visible', own); else obj.visible = raw; });
+    // what was set underneath the hide (room-people.mjs ownVisible): not enumerable, so a copy never carries it
+    Object.defineProperty(obj, 'layersRawVisible', { configurable: true, enumerable: false, get: () => !!raw });
+    restore.set(obj, () => { delete obj.visible; delete obj.layersRawVisible; if (own && (own.get || own.set)) Object.defineProperty(obj, 'visible', own); else obj.visible = raw; });
     if (obj.userData) obj.userData.layersHidden = true;
   } else {
     restore.get(obj)(); restore.delete(obj);

@@ -1189,6 +1189,9 @@ export const easeLife = (amount, on, dt, seconds = LIVELY_EASE) => { const step 
 const down = new THREE.Vector3(0, -1, 0), poseTurn = new THREE.Quaternion();
 const frontOf = yaw => new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
 
+// A chair's own visibility, to put back later: under the Studio's Layers hide (studio-layers-panel.mjs) `visible` reads
+// false, so read what was set underneath it (layersRawVisible; absent everywhere else, the film included).
+export const ownVisible = o => typeof o?.layersRawVisible === 'boolean' ? o.layersRawVisible : o.visible;
 export class RoomPeople {
     constructor(room, library) {
         this.room = room; this.library = library; this.enabled = false; this.built = null; this.people = []; this.hidden = new Map(); this.filter = null;
@@ -2128,7 +2131,7 @@ export class RoomPeople {
         const seat = this.people.find(o => o.visible && o.userData.person.desk === 'sit' && !o.userData.person.station);
         if (seat) for (const c of chairs) if (!c.fixed && Math.hypot(seat.position.x - c.centre.x, seat.position.z - c.centre.z) < 1300) c.blocked = true;
         for (const { chair, blocked } of chairs) {
-            if (blocked && !this.hidden.has(chair)) { this.hidden.set(chair, chair.visible); chair.visible = false; }
+            if (blocked && !this.hidden.has(chair)) { this.hidden.set(chair, ownVisible(chair)); chair.visible = false; }
             else if (!blocked && this.hidden.has(chair)) { chair.visible = this.hidden.get(chair); this.hidden.delete(chair); }
         }
     }
@@ -2191,7 +2194,7 @@ export class RoomPeople {
             live.add(key);
             if (seat.copy.parent !== person.parent) person.parent.add(seat.copy);
             // the room's own chair is out while its copy is under the child, however far the room has pushed it back
-            if (!this.hidden.has(seat.source)) { this.hidden.set(seat.source, seat.source.visible); seat.source.visible = false; }
+            if (!this.hidden.has(seat.source)) { this.hidden.set(seat.source, ownVisible(seat.source)); seat.source.visible = false; }
             seat.copy.visible = true; seat.copy.position.set(person.position.x, seat.y, person.position.z); seat.copy.rotation.set(0, person.rotation.y + seat.turn, 0);
         }
         for (const [key, seat] of seats) if (!live.has(key)) seat.copy.visible = false;
