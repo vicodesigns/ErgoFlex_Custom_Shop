@@ -34,9 +34,11 @@ const EXPORT = path.join(ROOT, 'exports/cinematic-intro-20261030');
 // working cut (CINE_CUT, default exports/cinematic-intro-cut-cine/review-cut.json; CAPTURE_SHOT=<cut.json or shot.json>
 // overrides) and the clip goes to the entry's out dir (default exports/cinematic-intro-cut-cine/screens; CAPTURE_OUT
 // overrides). An entry with still:true writes one PNG (<id>.png, frame at opts.stillAt or 0) instead of an MP4.
-// Music (audio:true): CINE_SCORE=<wav> with CINE_SCORE_START=<seconds of the chapter's first frame in it> analyses that
-// score instead of the 2026-10-30 one; CINE_TEMPO=<json> (or the entry's tempo) hands the score's tempo map to the scene
-// as SHOT.tempo ({bpm, beats:[film or chapter seconds…], start?}: see scenes/ch09.js).
+// Music (audio:true), cine clips: the cut's own score (S7): the spectrum from <cut dir>/score/score.wav at the chapter's
+// start in <cut dir>/edl.json (by id), the beat from <cut dir>/score/tempo-map.json chapters.<id> (beats_rel from
+// music_from) handed to the scene as SHOT.tempo (see scenes/ch09.js). Both are read at capture time (regenerated with
+// the final score). Without score.wav: no spectrum (the scene's own pulse). CINE_SCORE=<wav> + CINE_SCORE_START=<s> and
+// CINE_TEMPO=<json> override them.
 // PYTHON overrides the interpreter for audio-bands.py (default python on win32, else python3).
 const OUT = process.env.CAPTURE_OUT ? path.resolve(ROOT, process.env.CAPTURE_OUT) : path.join(EXPORT, 'screens');
 const CINE_CUT = path.resolve(ROOT, process.env.CINE_CUT || 'exports/cinematic-intro-cut-cine/review-cut.json');
@@ -99,7 +101,14 @@ function prepVideo(v) {
 }
 
 // Score spectrum for the chapter's span of the film (audio-reactive screens).
-function prepAudio(chapter, dur) {
+function prepAudio(chapter, dur, clip = {}) {
+  if (clip.shot && !process.env.CINE_SCORE) {   // the cut's own score and edl
+    const dir = path.dirname(CINE_CUT), wav = path.join(dir, 'score/score.wav'), edlF = path.join(dir, 'edl.json');
+    const ch = fs.existsSync(edlF) && JSON.parse(fs.readFileSync(edlF, 'utf8')).chapters.find(c => c.id === clip.shot);
+    if (!ch || !fs.existsSync(wav)) { console.log(`  audio: ${!ch ? path.relative(ROOT, edlF) + ' (chapter ' + clip.shot + ')' : path.relative(ROOT, wav)} missing -> no spectrum (beat pulse only)`); return null; }
+    process.env.CINE_SCORE = path.relative(ROOT, wav); process.env.CINE_SCORE_START = String(ch.start);
+    try { return prepAudio(chapter, dur); } finally { delete process.env.CINE_SCORE; delete process.env.CINE_SCORE_START; }
+  }
   if (process.env.CINE_SCORE) {
     const wav = path.resolve(ROOT, process.env.CINE_SCORE), start = Number(process.env.CINE_SCORE_START);
     if (!Number.isFinite(start)) throw new Error('CINE_SCORE needs CINE_SCORE_START (seconds of the chapter start in the score)');
@@ -125,11 +134,24 @@ function prepAudio(chapter, dur) {
   return {...JSON.parse(fs.readFileSync(file, 'utf8')), filmStart: ch.start};
 }
 
+// The score's tempo map for a clip: CINE_TEMPO / clip.tempo, else the cut's score/tempo-map.json (cine clips). A map with
+// chapters.<id> (S7's tempo-map.json) gives that chapter's beats in chapter seconds from music_from; a plain
+// {bpm, first?} or {beats, in, chapterStart} object is passed through.
+function tempoFor(clip) {
+  const f = process.env.CINE_TEMPO || clip.tempo || (clip.shot ? path.join(path.dirname(CINE_CUT), 'score/tempo-map.json') : null);
+  if (!f || !fs.existsSync(path.resolve(ROOT, f))) return null;
+  const m = JSON.parse(fs.readFileSync(path.resolve(ROOT, f), 'utf8'));
+  const c = m.chapters ? m.chapters[clip.shot] : m;
+  if (!c) return null;
+  if (Array.isArray(c.beats_rel)) return {beats: c.beats_rel, in: 'chapter', first: c.music_from ?? c.beats_rel[0], bpm: c.bpm, source: path.relative(ROOT, path.resolve(ROOT, f))};
+  return c;
+}
+
 async function renderClip(clip) {
   const shot = shotData(clip.chapter, clip);
-  const audio = clip.audio ? prepAudio(clip.chapter, shot.duration) : null;
-  const tempoFile = process.env.CINE_TEMPO || clip.tempo;
-  const tempo = tempoFile && clip.audio ? JSON.parse(fs.readFileSync(path.resolve(ROOT, tempoFile), 'utf8')) : null;
+  const audio = clip.audio ? prepAudio(clip.chapter, shot.duration, clip) : null;
+  const tempo = clip.audio ? tempoFor(clip) : null;
+  if (clip.audio) console.log(`  ${clip.id}: tempo ${tempo ? (tempo.beats ? tempo.beats.length + ' beats from ' + tempo.first + ' s, ~' + tempo.bpm + ' BPM' : tempo.bpm + ' BPM') : 'none (115.2 BPM default)'}, spectrum ${audio ? 'from ' + (audio.filmStart ?? '?') + ' s' : 'none'}`);
   const videos = (clip.videos || []).map(prepVideo);
   if (TWIN && clip.scene === 'ch01') {
     // Cache per twin file (path, size, mtime), so a re-rendered twin is decoded again.

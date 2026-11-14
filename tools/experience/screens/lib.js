@@ -351,7 +351,7 @@ function waveform(x, y, w, h, seed, col, o = {}) {
 
 // ---------- tiny 3D: flat-shaded polygons, back faces culled, painter's sort (the cine create chapter's house) ----------
 // cam: {target:[x,y,z], yaw (deg, about +y), pitch (deg, looking down), dist, fov (deg), cx, cy (screen centre)}.
-// faces: [{p:[[x,y,z]…] (counter-clockwise seen from outside), col:'#hex', a?:alpha, edge?:css, lw?, glow?, two?:true (never culled)}].
+// faces: [{p:[[x,y,z]…] (wound as box3's: visually clockwise when seen from outside), col:'#hex', a?:alpha, edge?:css, lw?, glow?, two?:true (never culled)}].
 const shadeHex = (hex, k) => { const n = parseInt(hex.slice(1), 16), c = v => Math.max(0, Math.min(255, Math.round(v * k))); return `rgb(${c(n >> 16 & 255)},${c(n >> 8 & 255)},${c(n & 255)})`; };
 function cam3d(cam) {
   const ya = cam.yaw * Math.PI / 180, pa = cam.pitch * Math.PI / 180, cy_ = Math.cos(ya), sy_ = Math.sin(ya), cp = Math.cos(pa), sp = Math.sin(pa);
@@ -366,7 +366,7 @@ function mesh3d(faces, cam, o = {}) {
   for (const fc of faces) {
     const P = fc.p.map(proj);
     let area = 0; for (let i = 0; i < P.length; i++) { const a = P[i], b = P[(i + 1) % P.length]; area += a[0] * b[1] - b[0] * a[1]; }
-    if (!fc.two && area > 0) continue;   // screen y points down: outward CCW faces seen from the front have negative area
+    if (!fc.two && area < 0) continue;   // box3's outward faces have positive shoelace area (screen y down) when they face the lens
     const [a, b, c] = fc.p, u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
     const n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]], nl = Math.hypot(...n) || 1;
     const lam = Math.abs((n[0] * L[0] + n[1] * L[1] + n[2] * L[2]) / (nl * ln));

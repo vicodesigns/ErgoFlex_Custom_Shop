@@ -33,8 +33,8 @@
           card(40, 1080, W - 80, 420, {r: 44, top: '#14304a', bot: '#0c1c2e', border: hexA(C.blue2, .6), accent: C.blue});
           icon('down', 140, 1210, 90, C.blue2, 11);
           T(`Lowering to ${name}'s height`, 220, 1200, 56, {w: 700});
-          T(`${p.height.toFixed(1)} in`, 220, 1340, 130, {w: 700, c: C.blue2});
-          T(`preset ${(+L.target).toFixed(0)} in · wheelchair`, W - 90, 1340, 40, {w: 500, a: 'right', c: C.soft});
+          T(`${p.height.toFixed(1)} in`, 220, 1350, 130, {w: 700, c: C.blue2});
+          T(`his preset · ${(+L.target).toFixed(0)} in`, W - 90, 1200, 40, {w: 500, a: 'right', c: C.soft});
           bar(90, 1420, W - 180, 26, clamp((43.5 - p.height) / (43.5 - +L.target)), lin(90, 0, W - 90, 0, [[0, C.blue], [1, C.teal]]));
         });
         alpha(sm(seg(t, REVEAL, REVEAL + .4)), () => {
@@ -58,7 +58,7 @@
           T(n, x + 110, y + 72, 46, {w: me ? 700 : 500, c: me ? C.text : C.soft});
           if (me) T('+100', x + 450, y + 72, 40, {w: 700, a: 'right', c: C.green});
         });
-        T('+ 22 more', 60, 1740, 44, {w: 500, c: C.dim});
+        T(`+ ${29 - cls.length} more`, 60 + 490 + 110, 1130 + Math.floor(cls.length / 2) * 140 + 72, 44, {w: 500, c: C.dim});
       });
     },
   };
