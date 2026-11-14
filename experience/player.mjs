@@ -203,7 +203,8 @@ async function playShot(i,{position=0,forceLive=false,range=null}={}){
     if(!record){
       preparation=preparation.catch(()=>{}).then(()=>token===generation?prepareStage(next):null);
       await preparation;if(token!==generation)return;clearBaked();
-      stage().reduced(reduced.matches);stage().pause(false);stage().tick(position);stage().pause(!playing||document.hidden);
+      // Director playback and seeking must sample the authored motion even when the OS reduces automatic animation.
+      stage().reduced(reduced.matches&&!directorOpen);stage().pause(false);stage().tick(position);stage().pause(!playing||document.hidden);
     }
     if(token!==generation)return;
     preparedShot=JSON.stringify(next);
@@ -406,7 +407,7 @@ async function openDirector(){
       const blob=await bakeArchive(cut,records),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='ergoflex-intro-bakes.zip';a.click();setTimeout(()=>URL.revokeObjectURL(url),120000);
     },
     async downloadBake(){const {record}=await cachedBake(shots[index]);if(!record)throw Error('Bake this chapter first.');const url=URL.createObjectURL(record.blob),a=document.createElement('a');a.href=url;a.download='ergoflex-'+shots[index].id+'.webm';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);},
-    editMode(on){if(bakeController)return;directorOpen=on;if(!on)previewOnly=false;playing=false;clock.setRunning(false,performance.now());stage().edit(on);stage().pause(true);frame.inert=!on;$('pause').textContent='Play';$('director').textContent=on?'Close editor':'Director Mode';syncAudio();},
+    editMode(on){if(bakeController)return;directorOpen=on;stage().reduced(reduced.matches&&!on);if(!on)previewOnly=false;playing=false;clock.setRunning(false,performance.now());stage().edit(on);stage().pause(true);frame.inert=!on;$('pause').textContent='Play';$('director').textContent=on?'Close editor':'Director Mode';syncAudio();},
     update(value){stage()?.wake?.();const position=index>=0?clock.progress(performance.now(),shots[index].seconds):0;applyClient(value);
       {const s=shots[index],setup=s&&filmSetup(s.id);if(setup){const cast=liveFilmShot(setup,s).people??null,pk=JSON.stringify(cast);if(pk!==fxPeople){fxPeople=pk;stage().peopleTrack?.(cast,s.id);}}}
       if(fxShot&&shots[index]?.id===fxShot){const key=lightsKey(shots[index]);if(key!==fxLights){fxLights=key;cancelAnimationFrame(fxTimer);fxTimer=requestAnimationFrame(()=>refreshFilmLights());}}clearTimeout(bakeRefreshTimer);bakeRefreshTimer=setTimeout(refreshBakeStatus,200);if(activeBake){liveAt(position);return;}if(shots[index]){stage().secondsTrack?.(shots[index].seconds,shots[index].id);stage().cameraTrack(shots[index].camera,shots[index].id);stage().motionTrack(shots[index].motion,shots[index].id);stage().deskEditsTrack?.(effectiveDeskEdits(filmSetup(shots[index].id),shots[index]),shots[index].id);}if(directorOpen){playing=false;clock.setRunning(false,performance.now());stage().edit(true);frame.inert=false;$('pause').textContent='Play';syncAudio();}},

@@ -286,7 +286,8 @@ export class SceneDesks {
             Object.assign(this.active.state,this.ctx.readLive(this.active));this.place(this.active);
             const poseAt=`${this.active.state.height}:${this.active.state.tilt}`;
             if(!playing&&this.active.poseAt!==poseAt){this.active.rig?.updatePose(this.active.state.height,this.active.state.tilt);this.active.poseAt=poseAt;}
-            this.highlight.box.copy(this.ctx.liveBox());this.highlight.visible=!this.active.product&&this.ctx.rearrange();
+            this.highlight.visible=!this.active.product&&this.ctx.rearrange();
+            if(this.highlight.visible)this.highlight.box.copy(this.ctx.liveBox());
         }
         for(const r of this.records.values()){this.objects.phase(r);r.peripherals?.update();this.objects.stow.update(r);}
         this.ctx.updateLights?.(dt);this.saveElapsed+=dt;if(this.saveElapsed>=1&&!playing){this.saveElapsed=0;this.capture();this.ctx.writeStore?.(SCENE_DESKS_KEY,cleanSceneDeskData(this.data));this.sync();}

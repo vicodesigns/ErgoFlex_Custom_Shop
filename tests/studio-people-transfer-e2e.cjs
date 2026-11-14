@@ -1,0 +1,68 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const os=require('node:os');
+const net=require('node:net');
+const {spawn}=require('node:child_process');
+const puppeteer=require('puppeteer');
+const root=path.resolve(__dirname,'..');
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const freePort=()=>new Promise(resolve=>{const s=net.createServer().listen(0,'127.0.0.1',()=>{const port=s.address().port;s.close(()=>resolve(port));});});
+(async()=>{
+ const temp=fs.mkdtempSync(path.join(os.tmpdir(),'ergoflex-people-transfer-')),state=path.join(temp,'state.json');
+ fs.writeFileSync(state,JSON.stringify({format:'ergoflex-studio-state-v1',rev:0,keys:{}}));
+ const port=await freePort(),base='http://127.0.0.1:'+port;
+ const server=spawn(process.execPath,['tools/studio-server.mjs','--port',String(port),'--host','127.0.0.1','--state',state,'--no-watch'],{cwd:root,windowsHide:true,stdio:['ignore','pipe','pipe']});
+ await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('server startup timeout')),20000);server.stdout.on('data',d=>{if(d.toString().includes('studio server')){clearTimeout(timer);resolve();}});server.once('exit',code=>reject(Error('server exited '+code)));});
+ let browser;
+ try{
+  browser=await puppeteer.launch({headless:true,defaultViewport:{width:1500,height:1100},args:['--disable-background-timer-throttling','--disable-renderer-backgrounding']});
+  const studio=await browser.newPage(),errors=[];
+  for(const page of [studio])page.on('pageerror',e=>errors.push(e.message));
+  await studio.goto(base+'/?view=product');
+  await studio.waitForFunction(()=>window.ErgoFlex?.sceneDesks?.active,{timeout:180000});
+  const desired=await studio.evaluate(async()=>{
+   const a=ErgoFlex;a.setRoomScene('highschool');await a.workspaceRoom.ready;await a.setRoomPeople(true);await a.workspaceRoom.people.settled();
+   const person=a.workspaceRoom.people.people.find(o=>o.userData.person.id==='people-leo-sit-raise');if(!person)throw Error('Leo not loaded');
+   const before=a.roomInteractions.onEditStart();person.position.x+=650;person.position.z+=200;person.rotation.y+=.35;person.scale.multiplyScalar(1.15);
+   a.roomInteractions.onEditEnd(before);a.roomInteractions.onChange();
+   await new Promise(r=>setTimeout(r,650));await window.__studioState.flush();
+   return {key:a.workspaceRoom.people.keyOf(person.userData.person),at:[Math.round(person.position.x),Math.round(person.position.z)],y:Math.round(person.position.y),scale:1.15};
+  });
+  console.log('PASS Studio character edit saved',JSON.stringify(desired));
+  const director=await browser.newPage();director.on('pageerror',e=>errors.push(e.message));await director.bringToFront();
+  const chapter=base+'/exports/cinematic-intro-20261110-alt/director-ch06-oilers.html';
+  await director.goto(chapter,{waitUntil:'domcontentloaded'});
+  const ready=()=>director.waitForFunction(()=>/Camera is live/.test(document.querySelector('#director-panel [data-status]')?.textContent||''),{timeout:240000});
+  await ready();
+  const live=()=>director.evaluate(key=>{const p=document.getElementById('stage').contentWindow.ErgoFlex.workspaceRoom.people;return p.list().find(o=>o.key===key&&!o.variant&&o.allowed)},desired.key);
+  const original=await live();
+  const refresh=async()=>{await director.evaluate(()=>document.querySelector('[data-action="ss-refresh"]').click());await director.waitForSelector('#studio-adopt[open]',{timeout:120000});};
+  const take=async()=>{await director.evaluate(()=>{const row=[...document.querySelectorAll('#studio-adopt li')].find(e=>e.querySelector('b')?.textContent==='Leo');if(!row)throw Error('Leo adoption row missing');const radio=row.querySelector('[data-adopt]');radio.click();document.querySelector('[data-adopt-go]').click();});await director.waitForFunction(d=>{const p=document.getElementById('stage').contentWindow.ErgoFlex.workspaceRoom.people.list().find(o=>o.key===d.key&&!o.variant&&o.allowed);return p&&Math.abs(p.at[0]-d.at[0])<2&&Math.abs(p.at[1]-d.at[1])<2&&Math.abs(p.scale-d.scale)<.001},{timeout:60000},desired);};
+  await refresh();assert.deepEqual((await live()).at,original.at,'refresh offers instead of overwriting');await take();
+  console.log('PASS adoption offered for Studio edits saved before Director opened');
+  const undo=()=>director.evaluate(()=>document.querySelector('[data-action="undo"]').click());
+  const redo=()=>director.evaluate(()=>document.querySelector('[data-action="redo"]').click());
+  await undo();await director.waitForFunction(({key,at})=>document.getElementById('stage').contentWindow.ErgoFlex.workspaceRoom.people.list().some(o=>o.key===key&&!o.variant&&o.allowed&&Math.abs(o.at[0]-at[0])<2),{timeout:60000},{key:desired.key,at:original.at});
+  await redo();await director.waitForFunction(d=>document.getElementById('stage').contentWindow.ErgoFlex.workspaceRoom.people.list().some(o=>o.key===d.key&&!o.variant&&o.allowed&&Math.abs(o.at[0]-d.at[0])<2),{timeout:60000},desired);
+  console.log('PASS Undo and Redo restore the two character placements');
+  const downloads=path.join(temp,'downloads');fs.mkdirSync(downloads);const cdp=await director.createCDPSession();await cdp.send('Browser.setDownloadBehavior',{behavior:'allow',downloadPath:downloads});
+  await director.evaluate(()=>document.querySelector('[data-action="save-export"]').click());
+  let file;for(let i=0;i<80;i++){file=fs.readdirSync(downloads).find(f=>f.endsWith('.json'));if(file)break;await wait(250);}assert.ok(file,'cut exported');
+  const exported=JSON.parse(fs.readFileSync(path.join(downloads,file))),person=exported.shots[0].peopleEdits.cast.find(p=>p.key===desired.key);
+  assert.deepEqual(person.at,desired.at);assert.equal(person.scale,desired.scale);assert.ok(exported.shots[0].camera.keys.length,'camera keys preserved');assert.ok(exported.shots[0].motion.clips.length,'desk motion preserved');
+  console.log('PASS exported cut includes the character placement and keeps camera/desk tracks');
+  await director.reload({waitUntil:'domcontentloaded'});await ready();assert.deepEqual((await live()).at,desired.at);
+  console.log('PASS character placement survives Director reload');
+  await director.evaluate(()=>document.querySelector('[data-inspector-tab="people"]').click());
+  await director.evaluate(key=>{const row=[...document.querySelectorAll('.people-row')].find(e=>e.textContent.includes('Leo'));row.querySelector('.people-pick').click();},desired.key);
+  await director.waitForSelector('[name="pe-x"]',{timeout:30000});
+  await director.evaluate(x=>{const field=document.querySelector('[name="pe-x"]');field.value=String(x);field.dispatchEvent(new Event('change',{bubbles:true}));},desired.at[0]+100);
+  await wait(600);await refresh();
+  assert.ok(await director.$eval('#studio-adopt',e=>e.textContent.includes('edited in both')),'Director edits are identified as conflicts');
+  await director.evaluate(()=>document.querySelector('[data-adopt-cancel]').click());assert.equal((await live()).at[0],desired.at[0]+100,'Keep preserves Director position');
+  await refresh();await take();console.log('PASS Keep Director versus adopt Studio conflict choices');
+  assert.deepEqual(errors,[],'no browser errors');console.log('PASS no browser errors; isolated test state '+state);
+ }finally{await browser?.close();server.kill();}
+})().catch(e=>{console.error(e);process.exitCode=1});
+
