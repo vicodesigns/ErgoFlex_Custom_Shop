@@ -1,0 +1,2592 @@
+{
+ "cinematic-intro-20261110-people": {
+  "director-camera-oilers.json#0": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "review-cut.json#awaken": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "review-cut.json#rise": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [
+     "people-maya-sit-type",
+     "people-maya-stand-type"
+    ],
+    "chair": {
+     "back": 300,
+     "side": 760,
+     "turn": -42
+    },
+    "cast": [
+     {
+      "key": "maya-waits",
+      "id": "people-maya-stand-wait",
+      "at": [
+       -167,
+       405
+      ],
+      "turn": 180
+     }
+    ],
+    "when": {
+     "maya-waits": [
+      [
+       3.75,
+       7.4,
+       0.4,
+       0.4
+      ],
+      [
+       9.65,
+       12.5,
+       0.4,
+       0.4
+      ]
+     ]
+    }
+   }
+  },
+  "review-cut.json#create": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [
+     "lin-at-wheel"
+    ]
+   }
+  },
+  "review-cut.json#commons": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [
+     "people-leo-sit-write",
+     "people-zoe-sit-laptop",
+     "people-eli-sit-listen",
+     "people-ben-white-cane",
+     "people-grace-cane-stand"
+    ],
+    "cast": [
+     {
+      "key": "yara-works",
+      "id": "people-yara-stand-type",
+      "at": [
+       7230,
+       -1657
+      ],
+      "turn": 90
+     },
+     {
+      "key": "yara-leaves",
+      "id": "people-yara-walk",
+      "at": [
+       7230,
+       -1657
+      ],
+      "turn": 90,
+      "walk": {
+       "path": [
+        [
+         7230,
+         -1657
+        ],
+        [
+         6827,
+         -2453
+        ],
+        [
+         5568,
+         -3049
+        ],
+        [
+         4242,
+         -3447
+        ],
+        [
+         2651,
+         -3513
+        ],
+        [
+         1326,
+         -3579
+        ]
+       ],
+       "start": 6,
+       "then": "people-yara-stand-wait"
+      }
+     },
+     {
+      "key": "mia-waits",
+      "id": "people-mia-power-phone",
+      "turn": 90,
+      "on": "electric-wheelchair",
+      "seat": 470,
+      "depth": -40
+     },
+     {
+      "key": "mia-works",
+      "id": "people-mia-power-type",
+      "turn": 90,
+      "on": "electric-wheelchair",
+      "seat": 470,
+      "depth": -40
+     },
+     {
+      "key": "mate-right",
+      "id": "people-sofia-sit-laptop",
+      "at": [
+       6100,
+       476
+      ],
+      "turn": -3,
+      "y": 20
+     },
+     {
+      "key": "mate-left",
+      "id": "people-kai-sit-write",
+      "at": [
+       4868,
+       297
+      ],
+      "turn": -19,
+      "y": 20
+     },
+     {
+      "key": "zoe-walks",
+      "id": "people-zoe-walk",
+      "at": [
+       2500,
+       1500
+      ],
+      "turn": 90,
+      "walk": {
+       "to": [
+        3900,
+        1500
+       ],
+       "start": 0,
+       "then": "people-zoe-stand-wait"
+      }
+     }
+    ],
+    "when": {
+     "yara-works": [
+      [
+       0,
+       5.3,
+       0,
+       0.5
+      ]
+     ],
+     "yara-leaves": [
+      [
+       5.3,
+       99,
+       0.5,
+       0
+      ]
+     ],
+     "mia-waits": [
+      [
+       0,
+       13.1,
+       0,
+       0.5
+      ]
+     ],
+     "mia-works": [
+      [
+       12.6,
+       99,
+       0.5,
+       0
+      ]
+     ]
+    }
+   }
+  },
+  "review-cut.json#coast": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "except": [
+     "people-maya-sit-type",
+     "people-maya-sit-type-30",
+     "people-maya-stand-type",
+     "people-noah-sit-laptop"
+    ],
+    "cast": [
+     {
+      "key": "bay-1",
+      "id": "people-maya-sit-type",
+      "station": "film-edit-01",
+      "desk": "sit"
+     }
+    ]
+   }
+  },
+  "review-cut.json#oilers": {
+   "film": [
+    {
+     "desk": "station-project-review",
+     "name": "APA set and costume design review desk",
+     "size": "48x30",
+     "pose": {
+      "x": -4080,
+      "z": 5308,
+      "yaw": 0
+     },
+     "initial": {
+      "height": 28,
+      "tilt": 0
+     }
+    }
+   ],
+   "clean": {
+    "deskEdits": [
+     {
+      "desk": "station-project-review",
+      "name": "APA set and costume design review desk",
+      "size": "48x30",
+      "pose": {
+       "x": -4080,
+       "z": 5308,
+       "yaw": 0
+      },
+      "initial": {
+       "height": 28,
+       "tilt": 0
+      }
+     }
+    ]
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "except": [
+     "people-ava-sit-write",
+     "people-maya-sit-type",
+     "people-maya-stand-type",
+     "people-kai-wheel-type",
+     "people-noah-sit-type"
+    ],
+    "cast": [
+     {
+      "key": "fern",
+      "id": "people-fern-sit-type",
+      "station": "project-review",
+      "desk": "sit",
+      "colors": {
+       "hair": "#d9b96e"
+      }
+     },
+     {
+      "key": "kai-waits",
+      "id": "people-kai-wheel-watch",
+      "at": [
+       -3757,
+       -910
+      ],
+      "turn": 180
+     },
+     {
+      "key": "kai",
+      "id": "people-kai-wheel-type-31",
+      "at": [
+       -3757,
+       -1110
+      ],
+      "turn": 180
+     },
+     {
+      "key": "noah-presents",
+      "id": "people-noah-stand-present",
+      "at": [
+       -2700,
+       -2000
+      ],
+      "turn": -90
+     },
+     {
+      "key": "noah-waits",
+      "id": "people-noah-stand-wait",
+      "at": [
+       -2700,
+       -2000
+      ],
+      "turn": -90
+     }
+    ],
+    "when": {
+     "kai-waits": [
+      [
+       0,
+       10.8,
+       0,
+       0
+      ]
+     ],
+     "kai": [
+      [
+       10.8,
+       14,
+       0,
+       0
+      ]
+     ],
+     "noah-presents": [
+      [
+       0,
+       8,
+       0,
+       0
+      ]
+     ],
+     "noah-waits": [
+      [
+       8,
+       14,
+       0,
+       0
+      ]
+     ]
+    },
+    "chair": {
+     "back": 250,
+     "side": -780,
+     "turn": 35
+    }
+   }
+  },
+  "review-cut.json#wellness": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [
+     "people-maya-sit-type",
+     "people-maya-stand-type",
+     "people-priya-stretch",
+     "kai-bike"
+    ],
+    "cast": [
+     {
+      "key": "maya-break",
+      "id": "people-maya-stretch",
+      "at": [
+       -421,
+       350
+      ],
+      "turn": 180,
+      "colors": {
+       "top": "#2d7d8a",
+       "bottom": "#1f2228",
+       "shoes": "#ececec"
+      }
+     }
+    ],
+    "place": {
+     "people-priya-stretch": {
+      "at": [
+       1250,
+       -1000
+      ],
+      "turn": 180
+     }
+    },
+    "when": {
+     "maya-break": [
+      [
+       6.6,
+       10.35,
+       0.3,
+       0.35
+      ]
+     ]
+    },
+    "chair": {
+     "back": 100,
+     "side": -700,
+     "turn": 60
+    }
+   }
+  },
+  "review-cut.json#awareness": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "review-cut.json#music": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [
+     "people-kai-sit-controller"
+    ],
+    "place": {
+     "people-kai-sit-controller": {
+      "at": [
+       -1400,
+       1230
+      ],
+      "turn": 118,
+      "y": 70
+     }
+    }
+   }
+  },
+  "review-cut.json#media": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [],
+    "cast": [
+     {
+      "key": "omar",
+      "id": "people-omar-wheel-watch",
+      "at": [
+       930,
+       720
+      ],
+      "turn": 200
+     }
+    ]
+   }
+  },
+  "review-cut.json#storage": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [
+     "people-jo-stand-work"
+    ],
+    "cast": [
+     {
+      "key": "andre-robot",
+      "id": "people-andre-stand-robot-work",
+      "at": [
+       100,
+       1560
+      ],
+      "turn": 180
+     },
+     {
+      "key": "andre-shelf",
+      "id": "people-andre-stand-robot-shelf",
+      "at": [
+       100,
+       1560
+      ],
+      "turn": 180
+     },
+     {
+      "key": "andre-steps-back",
+      "id": "people-andre-walk",
+      "at": [
+       100,
+       1560
+      ],
+      "turn": 180,
+      "swap": 0.08,
+      "walk": {
+       "path": [
+        [
+         100,
+         1560
+        ],
+        [
+         -107,
+         1948
+        ],
+        [
+         -201,
+         2080
+        ],
+        [
+         -327,
+         2181
+        ],
+        [
+         -476,
+         2245
+        ],
+        [
+         -636,
+         2267
+        ],
+        [
+         -1136,
+         2267
+        ],
+        [
+         -1232,
+         2254
+        ],
+        [
+         -1321,
+         2216
+        ],
+        [
+         -1397,
+         2155
+        ],
+        [
+         -1454,
+         2077
+        ],
+        [
+         -1487,
+         1986
+        ],
+        [
+         -1496,
+         1890
+        ],
+        [
+         -1478,
+         1794
+        ],
+        [
+         -1436,
+         1707
+        ],
+        [
+         -1372,
+         1635
+        ],
+        [
+         -1291,
+         1582
+        ],
+        [
+         -1199,
+         1552
+        ],
+        [
+         -1120,
+         1538
+        ]
+       ],
+       "start": 3.9,
+       "pace": 2.1,
+       "step": 450,
+       "then": "people-andre-stand-phone-pull"
+      }
+     },
+     {
+      "key": "andre-phone-out",
+      "id": "people-andre-stand-phone-pull",
+      "at": [
+       -1120,
+       1538
+      ],
+      "turn": 117
+     },
+     {
+      "key": "andre-phone-up",
+      "id": "people-andre-stand-phone-up",
+      "at": [
+       -1120,
+       1538
+      ],
+      "turn": 117
+     },
+     {
+      "key": "andre-presses",
+      "id": "people-andre-stand-phone-press",
+      "at": [
+       -1120,
+       1538
+      ],
+      "turn": 117,
+      "swap": 0.85
+     },
+     {
+      "key": "andre-watches",
+      "id": "people-andre-stand-phone-watch",
+      "at": [
+       -1120,
+       1538
+      ],
+      "turn": 117
+     }
+    ],
+    "when": {
+     "andre-robot": [
+      [
+       0,
+       1.7,
+       0,
+       0
+      ]
+     ],
+     "andre-shelf": [
+      [
+       1.7,
+       3.15,
+       0,
+       0
+      ]
+     ],
+     "andre-steps-back": [
+      [
+       3.15,
+       7.71,
+       0,
+       0
+      ]
+     ],
+     "andre-phone-out": [
+      [
+       7.71,
+       8.42,
+       0,
+       0
+      ]
+     ],
+     "andre-phone-up": [
+      [
+       8.42,
+       10.65,
+       0,
+       0
+      ]
+     ],
+     "andre-presses": [
+      [
+       10.65,
+       12.7,
+       0,
+       0
+      ]
+     ],
+     "andre-watches": [
+      [
+       12.7,
+       99,
+       0,
+       0
+      ]
+     ]
+    }
+   }
+  },
+  "review-cut.json#hero": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/13-subshots.json#hero": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  }
+ },
+ "cinematic-intro-cut-cine": {
+  "review-cut.json#awaken": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "review-cut.json#rise": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [
+     "people-maya-sit-type",
+     "people-maya-stand-type"
+    ],
+    "chair": {
+     "back": 300,
+     "side": 760,
+     "turn": -42
+    },
+    "cast": [
+     {
+      "key": "maya-waits",
+      "id": "people-maya-stand-wait",
+      "at": [
+       -167,
+       405
+      ],
+      "turn": 180
+     }
+    ],
+    "when": {
+     "maya-waits": [
+      [
+       3.75,
+       7.4,
+       0.4,
+       0.4
+      ],
+      [
+       9.65,
+       12.5,
+       0.4,
+       0.4
+      ]
+     ]
+    }
+   }
+  },
+  "review-cut.json#create": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [
+     "lin-at-wheel"
+    ]
+   }
+  },
+  "review-cut.json#commons": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [
+     "people-leo-sit-write",
+     "people-zoe-sit-laptop",
+     "people-eli-sit-listen",
+     "people-ben-white-cane",
+     "people-grace-cane-stand"
+    ],
+    "cast": [
+     {
+      "key": "yara-works",
+      "id": "people-yara-stand-type",
+      "at": [
+       7230,
+       -1657
+      ],
+      "turn": 90
+     },
+     {
+      "key": "yara-leaves",
+      "id": "people-yara-walk",
+      "at": [
+       7230,
+       -1657
+      ],
+      "turn": 90,
+      "walk": {
+       "path": [
+        [
+         7230,
+         -1657
+        ],
+        [
+         6827,
+         -2453
+        ],
+        [
+         5568,
+         -3049
+        ],
+        [
+         4242,
+         -3447
+        ],
+        [
+         2651,
+         -3513
+        ],
+        [
+         1326,
+         -3579
+        ]
+       ],
+       "start": 6,
+       "then": "people-yara-stand-wait"
+      }
+     },
+     {
+      "key": "mia-waits",
+      "id": "people-mia-power-phone",
+      "turn": 90,
+      "on": "electric-wheelchair",
+      "seat": 470,
+      "depth": -40
+     },
+     {
+      "key": "mia-works",
+      "id": "people-mia-power-type",
+      "turn": 90,
+      "on": "electric-wheelchair",
+      "seat": 470,
+      "depth": -40
+     },
+     {
+      "key": "mate-right",
+      "id": "people-sofia-sit-laptop",
+      "at": [
+       6100,
+       476
+      ],
+      "turn": -3,
+      "y": 20
+     },
+     {
+      "key": "mate-left",
+      "id": "people-kai-sit-write",
+      "at": [
+       4868,
+       297
+      ],
+      "turn": -19,
+      "y": 20
+     },
+     {
+      "key": "zoe-walks",
+      "id": "people-zoe-walk",
+      "at": [
+       2500,
+       1500
+      ],
+      "turn": 90,
+      "walk": {
+       "to": [
+        3900,
+        1500
+       ],
+       "start": 0,
+       "then": "people-zoe-stand-wait"
+      }
+     }
+    ],
+    "when": {
+     "yara-works": [
+      [
+       0,
+       5.3,
+       0,
+       0.5
+      ]
+     ],
+     "yara-leaves": [
+      [
+       5.3,
+       99,
+       0.5,
+       0
+      ]
+     ],
+     "mia-waits": [
+      [
+       0,
+       13.1,
+       0,
+       0.5
+      ]
+     ],
+     "mia-works": [
+      [
+       12.6,
+       99,
+       0.5,
+       0
+      ]
+     ]
+    }
+   }
+  },
+  "review-cut.json#coast": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "except": [
+     "people-maya-sit-type",
+     "people-maya-sit-type-30",
+     "people-maya-stand-type",
+     "people-noah-sit-laptop"
+    ],
+    "cast": [
+     {
+      "key": "bay-1",
+      "id": "people-maya-sit-type",
+      "station": "film-edit-01",
+      "desk": "sit"
+     }
+    ]
+   }
+  },
+  "review-cut.json#oilers": {
+   "film": [
+    {
+     "desk": "station-project-review",
+     "name": "APA set and costume design review desk",
+     "size": "48x30",
+     "pose": {
+      "x": -4080,
+      "z": 5308,
+      "yaw": 0
+     },
+     "initial": {
+      "height": 28,
+      "tilt": 0
+     }
+    }
+   ],
+   "clean": {
+    "deskEdits": [
+     {
+      "desk": "station-project-review",
+      "name": "APA set and costume design review desk",
+      "size": "48x30",
+      "pose": {
+       "x": -4080,
+       "z": 5308,
+       "yaw": 0
+      },
+      "initial": {
+       "height": 28,
+       "tilt": 0
+      }
+     }
+    ]
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "except": [
+     "people-ava-sit-write",
+     "people-maya-sit-type",
+     "people-maya-stand-type",
+     "people-kai-wheel-type",
+     "people-noah-sit-type"
+    ],
+    "cast": [
+     {
+      "key": "fern",
+      "id": "people-fern-sit-type",
+      "station": "project-review",
+      "desk": "sit",
+      "colors": {
+       "hair": "#d9b96e"
+      }
+     },
+     {
+      "key": "kai-waits",
+      "id": "people-kai-wheel-watch",
+      "at": [
+       -3757,
+       -910
+      ],
+      "turn": 180
+     },
+     {
+      "key": "kai",
+      "id": "people-kai-wheel-type-31",
+      "at": [
+       -3757,
+       -1110
+      ],
+      "turn": 180
+     },
+     {
+      "key": "noah-presents",
+      "id": "people-noah-stand-present",
+      "at": [
+       -2700,
+       -2000
+      ],
+      "turn": -90
+     },
+     {
+      "key": "noah-waits",
+      "id": "people-noah-stand-wait",
+      "at": [
+       -2700,
+       -2000
+      ],
+      "turn": -90
+     }
+    ],
+    "when": {
+     "kai-waits": [
+      [
+       0,
+       10.8,
+       0,
+       0
+      ]
+     ],
+     "kai": [
+      [
+       10.8,
+       14,
+       0,
+       0
+      ]
+     ],
+     "noah-presents": [
+      [
+       0,
+       8,
+       0,
+       0
+      ]
+     ],
+     "noah-waits": [
+      [
+       8,
+       14,
+       0,
+       0
+      ]
+     ]
+    },
+    "chair": {
+     "back": 250,
+     "side": -780,
+     "turn": 35
+    }
+   }
+  },
+  "review-cut.json#wellness": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [
+     "people-maya-sit-type",
+     "people-maya-stand-type",
+     "people-priya-stretch",
+     "kai-bike"
+    ],
+    "cast": [
+     {
+      "key": "maya-break",
+      "id": "people-maya-stretch",
+      "at": [
+       -421,
+       350
+      ],
+      "turn": 180,
+      "colors": {
+       "top": "#2d7d8a",
+       "bottom": "#1f2228",
+       "shoes": "#ececec"
+      }
+     }
+    ],
+    "place": {
+     "people-priya-stretch": {
+      "at": [
+       1250,
+       -1000
+      ],
+      "turn": 180
+     }
+    },
+    "when": {
+     "maya-break": [
+      [
+       6.6,
+       10.35,
+       0.3,
+       0.35
+      ]
+     ]
+    },
+    "chair": {
+     "back": 100,
+     "side": -700,
+     "turn": 60
+    }
+   }
+  },
+  "review-cut.json#awareness": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "review-cut.json#music": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [
+     "people-kai-sit-controller"
+    ],
+    "place": {
+     "people-kai-sit-controller": {
+      "at": [
+       -1400,
+       1230
+      ],
+      "turn": 118,
+      "y": 70
+     }
+    }
+   }
+  },
+  "review-cut.json#media": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [],
+    "cast": [
+     {
+      "key": "omar",
+      "id": "people-omar-wheel-watch",
+      "at": [
+       930,
+       720
+      ],
+      "turn": 200
+     }
+    ]
+   }
+  },
+  "review-cut.json#storage": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [
+     "people-jo-stand-work"
+    ],
+    "cast": [
+     {
+      "key": "andre-robot",
+      "id": "people-andre-stand-robot-work",
+      "at": [
+       100,
+       1560
+      ],
+      "turn": 180
+     },
+     {
+      "key": "andre-shelf",
+      "id": "people-andre-stand-robot-shelf",
+      "at": [
+       100,
+       1560
+      ],
+      "turn": 180
+     },
+     {
+      "key": "andre-steps-back",
+      "id": "people-andre-walk",
+      "at": [
+       100,
+       1560
+      ],
+      "turn": 180,
+      "swap": 0.08,
+      "walk": {
+       "path": [
+        [
+         100,
+         1560
+        ],
+        [
+         -107,
+         1948
+        ],
+        [
+         -201,
+         2080
+        ],
+        [
+         -327,
+         2181
+        ],
+        [
+         -476,
+         2245
+        ],
+        [
+         -636,
+         2267
+        ],
+        [
+         -1136,
+         2267
+        ],
+        [
+         -1232,
+         2254
+        ],
+        [
+         -1321,
+         2216
+        ],
+        [
+         -1397,
+         2155
+        ],
+        [
+         -1454,
+         2077
+        ],
+        [
+         -1487,
+         1986
+        ],
+        [
+         -1496,
+         1890
+        ],
+        [
+         -1478,
+         1794
+        ],
+        [
+         -1436,
+         1707
+        ],
+        [
+         -1372,
+         1635
+        ],
+        [
+         -1291,
+         1582
+        ],
+        [
+         -1199,
+         1552
+        ],
+        [
+         -1120,
+         1538
+        ]
+       ],
+       "start": 3.9,
+       "pace": 2.1,
+       "step": 450,
+       "then": "people-andre-stand-phone-pull"
+      }
+     },
+     {
+      "key": "andre-phone-out",
+      "id": "people-andre-stand-phone-pull",
+      "at": [
+       -1120,
+       1538
+      ],
+      "turn": 117
+     },
+     {
+      "key": "andre-phone-up",
+      "id": "people-andre-stand-phone-up",
+      "at": [
+       -1120,
+       1538
+      ],
+      "turn": 117
+     },
+     {
+      "key": "andre-presses",
+      "id": "people-andre-stand-phone-press",
+      "at": [
+       -1120,
+       1538
+      ],
+      "turn": 117,
+      "swap": 0.85
+     },
+     {
+      "key": "andre-watches",
+      "id": "people-andre-stand-phone-watch",
+      "at": [
+       -1120,
+       1538
+      ],
+      "turn": 117
+     }
+    ],
+    "when": {
+     "andre-robot": [
+      [
+       0,
+       1.7,
+       0,
+       0
+      ]
+     ],
+     "andre-shelf": [
+      [
+       1.7,
+       3.15,
+       0,
+       0
+      ]
+     ],
+     "andre-steps-back": [
+      [
+       3.15,
+       7.71,
+       0,
+       0
+      ]
+     ],
+     "andre-phone-out": [
+      [
+       7.71,
+       8.42,
+       0,
+       0
+      ]
+     ],
+     "andre-phone-up": [
+      [
+       8.42,
+       10.65,
+       0,
+       0
+      ]
+     ],
+     "andre-presses": [
+      [
+       10.65,
+       12.7,
+       0,
+       0
+      ]
+     ],
+     "andre-watches": [
+      [
+       12.7,
+       99,
+       0,
+       0
+      ]
+     ]
+    }
+   }
+  },
+  "review-cut.json#hero": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/13-subshots.json#hero": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  }
+ },
+ "cinematic-intro-20261104-hq14": {
+  "director-camera-awareness.json#0": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "director-camera-coast.json#0": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "director-camera-commons.json#0": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "director-camera-create.json#0": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "director-camera-hero.json#0": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "director-camera-media.json#0": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "director-camera-music.json#0": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "director-camera-oilers.json#0": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "director-camera-rise.json#0": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "director-camera-rise.pre-ch2pass.json#0": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "director-camera-rise.pre-liftfix.json#0": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "director-camera-storage.json#0": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "director-camera-wellness.json#0": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "review-cut.json#awaken": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "review-cut.json#rise": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "review-cut.json#create": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "review-cut.json#commons": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "review-cut.json#coast": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "review-cut.json#oilers": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "review-cut.json#wellness": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "review-cut.json#awareness": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "review-cut.json#music": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "review-cut.json#media": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "review-cut.json#storage": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "review-cut.json#hero": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/01.json#awaken": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/02.json#rise": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/02.pre-hq18.json#rise": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/02.pre-hq19.json#rise": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/02.pre-hq35.json#rise": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/03.json#create": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/03.pre-hq18.json#create": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/03.pre-hq35.json#create": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/04.json#commons": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/04.pre-hq16.json#commons": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/05.json#coast": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/08.json#wellness": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/09.json#awareness": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/10.json#music": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/11.json#media": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/11.pre-hq36.json#media": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/12.json#storage": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/12.pre-hq16b.json#storage": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/12.pre-hq36.json#storage": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/13-subshots.json#hero": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/13-subshots.pre-hq20.json#hero": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/13.json#hero": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  }
+ },
+ "cinematic-intro-20261110-alt": {
+  "director-camera-hero.json#0": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "director-camera-oilers.json#0": {
+   "film": [],
+   "clean": {
+    "deskEdits": [
+     {
+      "desk": "station-window-research",
+      "name": "Coastal research nook",
+      "initial": {
+       "height": 43.5,
+       "tilt": -5
+      }
+     }
+    ]
+   },
+   "merge": {
+    "sceneDeskEdits": [
+     {
+      "desk": "station-window-research",
+      "name": "Coastal research nook",
+      "initial": {
+       "height": 43.5,
+       "tilt": -5
+      }
+     }
+    ]
+   },
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "cast": [
+     {
+      "key": "people-maya-stand-type",
+      "id": "people-maya-stand-type",
+      "desk": "stand"
+     },
+     {
+      "key": "people-maya-sit-type",
+      "id": "people-maya-sit-type",
+      "desk": "sit"
+     },
+     {
+      "key": "people-kai-wheel-type",
+      "id": "people-kai-wheel-type",
+      "desk": "wheel",
+      "station": "accessible-student"
+     },
+     {
+      "key": "people-zoe-stand-type",
+      "id": "people-zoe-stand-type",
+      "desk": "stand",
+      "station": "student-standing"
+     },
+     {
+      "key": "people-mia-sit-type",
+      "id": "people-mia-sit-type",
+      "desk": "sit",
+      "station": "window-research"
+     },
+     {
+      "key": "people-noah-sit-type",
+      "id": "people-noah-sit-type",
+      "desk": "sit",
+      "station": "research-desk"
+     },
+     {
+      "key": "people-leo-sit-raise",
+      "id": "people-leo-sit-raise",
+      "at": [
+       -235,
+       1011
+      ],
+      "turn": -180,
+      "y": 60
+     },
+     {
+      "key": "people-ava-sit-write",
+      "id": "people-ava-sit-write",
+      "at": [
+       -1765,
+       1011
+      ],
+      "turn": -180,
+      "y": 60,
+      "hide": true
+     },
+     {
+      "key": "people-eli-sit-listen",
+      "id": "people-eli-sit-listen",
+      "at": [
+       1915,
+       1051
+      ],
+      "turn": -180,
+      "y": 60
+     },
+     {
+      "key": "people-sofia-sit-laptop",
+      "id": "people-sofia-sit-laptop",
+      "at": [
+       385,
+       3011
+      ],
+      "turn": -180,
+      "y": 60
+     },
+     {
+      "key": "people-hale-stand-present",
+      "id": "people-hale-stand-present",
+      "at": [
+       2600,
+       -3250
+      ],
+      "turn": 0
+     }
+    ],
+    "chair": {
+     "back": 250,
+     "side": -780,
+     "turn": 35
+    }
+   }
+  },
+  "review-cut.json#awaken": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "review-cut.json#rise": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [
+     "people-maya-sit-type",
+     "people-maya-stand-type"
+    ],
+    "chair": {
+     "back": 300,
+     "side": 760,
+     "turn": -42
+    },
+    "cast": [
+     {
+      "key": "maya-waits",
+      "id": "people-maya-stand-wait",
+      "at": [
+       -167,
+       405
+      ],
+      "turn": 180
+     }
+    ],
+    "when": {
+     "maya-waits": [
+      [
+       3.75,
+       7.4,
+       0.4,
+       0.4
+      ],
+      [
+       9.65,
+       12.5,
+       0.4,
+       0.4
+      ]
+     ]
+    }
+   }
+  },
+  "review-cut.json#create": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [
+     "lin-at-wheel"
+    ],
+    "cast": [
+     {
+      "key": "lin-desk",
+      "id": "people-lin-stand-paint",
+      "at": [
+       -200,
+       -130
+      ],
+      "turn": 180
+     }
+    ],
+    "when": {
+     "lin-desk": [
+      [
+       19.5,
+       99,
+       0,
+       0
+      ]
+     ],
+     "lin-at-wheel": [
+      [
+       0,
+       14
+      ]
+     ]
+    }
+   }
+  },
+  "review-cut.json#commons": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [
+     "people-leo-sit-write",
+     "people-zoe-sit-laptop",
+     "people-eli-sit-listen",
+     "people-ben-white-cane",
+     "people-grace-cane-stand"
+    ],
+    "cast": [
+     {
+      "key": "mia-waits",
+      "id": "people-mia-sit-phone",
+      "at": [
+       7600,
+       2760
+      ],
+      "turn": 180,
+      "y": 75
+     },
+     {
+      "key": "mia-works",
+      "id": "people-mia-sit-type-30",
+      "at": [
+       7600,
+       2740
+      ],
+      "turn": 180,
+      "y": 60
+     },
+     {
+      "key": "mate-right",
+      "id": "people-sofia-sit-laptop",
+      "at": [
+       6100,
+       476
+      ],
+      "turn": -3,
+      "y": 20
+     },
+     {
+      "key": "mate-left",
+      "id": "people-kai-sit-write",
+      "at": [
+       4868,
+       297
+      ],
+      "turn": -19,
+      "y": 20
+     },
+     {
+      "key": "zoe-walks",
+      "id": "people-zoe-walk",
+      "at": [
+       2500,
+       1500
+      ],
+      "turn": 90,
+      "walk": {
+       "to": [
+        3900,
+        1500
+       ],
+       "start": 0,
+       "then": "people-zoe-stand-wait"
+      }
+     }
+    ],
+    "when": {
+     "mia-waits": [
+      [
+       0,
+       12.785,
+       0,
+       0
+      ]
+     ],
+     "mia-works": [
+      [
+       12.785,
+       99,
+       0,
+       0
+      ]
+     ]
+    }
+   }
+  },
+  "review-cut.json#coast": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "except": [
+     "people-maya-sit-type",
+     "people-maya-sit-type-30",
+     "people-maya-stand-type",
+     "people-noah-sit-laptop"
+    ],
+    "cast": [
+     {
+      "key": "bay-1",
+      "id": "people-maya-sit-type",
+      "station": "film-edit-01",
+      "desk": "sit"
+     }
+    ]
+   }
+  },
+  "review-cut.json#oilers": {
+   "film": [
+    {
+     "desk": "station-window-research",
+     "name": "Coastal research nook",
+     "initial": {
+      "height": 43.5,
+      "tilt": -5
+     }
+    }
+   ],
+   "clean": {
+    "deskEdits": [
+     {
+      "desk": "station-window-research",
+      "name": "Coastal research nook",
+      "initial": {
+       "height": 43.5,
+       "tilt": -5
+      }
+     }
+    ]
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [],
+    "cast": [
+     {
+      "key": "people-maya-stand-type",
+      "id": "people-maya-stand-type",
+      "desk": "stand"
+     },
+     {
+      "key": "people-maya-sit-type",
+      "id": "people-maya-sit-type",
+      "desk": "sit"
+     },
+     {
+      "key": "people-kai-wheel-type",
+      "id": "people-kai-wheel-type",
+      "desk": "wheel",
+      "station": "accessible-student"
+     },
+     {
+      "key": "people-zoe-stand-type",
+      "id": "people-zoe-stand-type",
+      "desk": "stand",
+      "station": "student-standing"
+     },
+     {
+      "key": "people-mia-sit-type",
+      "id": "people-mia-sit-type",
+      "desk": "sit",
+      "station": "window-research"
+     },
+     {
+      "key": "people-noah-sit-type",
+      "id": "people-noah-sit-type",
+      "desk": "sit",
+      "station": "research-desk"
+     },
+     {
+      "key": "people-leo-sit-raise",
+      "id": "people-leo-sit-raise",
+      "at": [
+       -235,
+       1011
+      ],
+      "turn": -180,
+      "y": 60
+     },
+     {
+      "key": "people-eli-sit-listen",
+      "id": "people-eli-sit-listen",
+      "at": [
+       1915,
+       1051
+      ],
+      "turn": -180,
+      "y": 60
+     },
+     {
+      "key": "people-sofia-sit-laptop",
+      "id": "people-sofia-sit-laptop",
+      "at": [
+       385,
+       3011
+      ],
+      "turn": -180,
+      "y": 60
+     },
+     {
+      "key": "people-hale-stand-present",
+      "id": "people-hale-stand-present",
+      "at": [
+       2600,
+       -3250
+      ],
+      "turn": 0
+     }
+    ],
+    "chair": {
+     "back": 250,
+     "side": -780,
+     "turn": 35
+    }
+   }
+  },
+  "review-cut.json#wellness": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [
+     "people-maya-sit-type",
+     "people-maya-stand-type",
+     "people-priya-stretch",
+     "kai-bike"
+    ],
+    "cast": [
+     {
+      "key": "maya-break",
+      "id": "people-maya-stretch",
+      "at": [
+       -421,
+       350
+      ],
+      "turn": 180,
+      "colors": {
+       "top": "#2d7d8a",
+       "bottom": "#1f2228",
+       "shoes": "#ececec"
+      }
+     }
+    ],
+    "place": {
+     "people-priya-stretch": {
+      "at": [
+       1250,
+       -1000
+      ],
+      "turn": 180
+     }
+    },
+    "when": {
+     "maya-break": [
+      [
+       6.6,
+       10.35,
+       0.3,
+       0.35
+      ]
+     ]
+    },
+    "chair": {
+     "back": 100,
+     "side": -700,
+     "turn": 60
+    }
+   }
+  },
+  "review-cut.json#awareness": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "review-cut.json#music": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [
+     "people-kai-sit-controller"
+    ],
+    "place": {
+     "people-kai-sit-controller": {
+      "at": [
+       -1400,
+       1230
+      ],
+      "turn": 118,
+      "y": 70
+     }
+    }
+   }
+  },
+  "review-cut.json#media": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [],
+    "cast": [
+     {
+      "key": "omar",
+      "id": "people-omar-wheel-watch",
+      "at": [
+       620,
+       720
+      ],
+      "turn": 207
+     }
+    ]
+   }
+  },
+  "review-cut.json#storage": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": {
+    "only": [
+     "people-jo-stand-work",
+     "people-andre-stand-phone"
+    ],
+    "place": {
+     "people-andre-stand-phone": {
+      "at": [
+       -1350,
+       1550
+      ],
+      "turn": 100
+     }
+    }
+   }
+  },
+  "review-cut.json#hero": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  },
+  "shots/13-subshots.json#hero": {
+   "film": [],
+   "clean": {
+    "deskEdits": []
+   },
+   "merge": {},
+   "people": null,
+   "mergePeople": {},
+   "filmPeople": null
+  }
+ }
+}

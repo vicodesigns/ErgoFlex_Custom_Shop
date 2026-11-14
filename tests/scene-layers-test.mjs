@@ -181,8 +181,9 @@ const deg=d=>d*Math.PI/180,obj=(i)=>({role:'desktop',added:false,removed:false,l
   assert.deepEqual(edits[2].prop,{match:'^Prop:ergoflex-office-chair$',asset:'highschool:house:room:1:ergoflex-office-chair',label:'Prop:ergoflex-office-chair',hide:false});
   assert.deepEqual(cleanPropEdit(edits[2].prop),edits[2].prop,'a valid film prop edit (prop-edits.mjs)');
   assert.ok(/subject/.test(edits[3].why)&&/stage/.test(edits[4].why));
-  // deskEdits do not know `hide` yet (phase 4): today's cleaner drops it, so nothing reaches a cut by accident
-  assert.equal(cleanDeskEdit(edits[0].desk),null);
+  // (pin updated deliberately in phase 3, set B: a chapter desk edit now keeps `hide: true`, and only `true`)
+  assert.deepEqual(cleanDeskEdit(edits[0].desk),{desk:'station-research-desk',hide:true});
+  assert.equal(cleanDeskEdit({desk:'station-research-desk',hide:false}),null,'hide:false is not kept: no edit');
   ok('diffLayers and toChapterEdits: Studio hides at a chapter\'s cell, as film edits');
 }
 

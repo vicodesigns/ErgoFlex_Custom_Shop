@@ -54,10 +54,24 @@ export function applyDesk(ctx, entry) {
   // BUILD HOOK (DeskBuild): edit.build -> wood / base / trim / accessories on this desk (experience/desk-build.mjs). The
   // accessories load a moment later: entry.pending settles when they are in (installDeskEdits().ready).
   if (edit.build) entry.pending = import('../../experience/desk-build.mjs').then(m => m.applyBuild(ctx.api, r.id, edit.build)).catch(e => console.warn('[film-fx] desk build ' + r.id, e));
+  if (edit.hide === true) hideDesk(entry);   // last: after a size rebuild (frameDesk keeps it hidden after a build rebuild)
 }
 // CLIPS HOOK (DeskChoreo): edit.clips sampled at the chapter time (desk-choreo.mjs createDeskChoreo, in installDeskEdits)
-// -> the desk's rig, held to its size's lift / tilt limits. Nothing per desk is left to do here.
-export function frameDesk(ctx, entry, seconds) {}
+// -> the desk's rig, held to its size's lift / tilt limits. Only a hidden desk needs anything per frame (below).
+export function frameDesk(ctx, entry, seconds) { if (entry.edit.hide === true) hideDesk(entry); }
+// HIDE (Layers, a chapter's accepted desk hide): the desk's group is not drawn; its screens, accessories and objects ride
+// the group. Sticky (the app sets `visible` back each frame), put back on restore. A rebuilt group (a size or build
+// change) is hidden again on the next frame. Its user leaves through the chapter's cast, its chair and props through
+// ordinary prop hide edits (the Director writes both with it). An edit without `hide` never comes here.
+export function hideDesk(entry) {
+  const g = entry.record?.group; if (!g || entry.hidden?.group === g) return false;
+  unhideDesk(entry);
+  const own = Object.getOwnPropertyDescriptor(g, 'visible'); let raw = g.visible;
+  Object.defineProperty(g, 'visible', { configurable: true, enumerable: true, get: () => false, set: v => { raw = v; own?.set?.call(g, v); } });
+  entry.hidden = { group: g, restore: () => { delete g.visible; if (own && (own.get || own.set)) Object.defineProperty(g, 'visible', own); else g.visible = raw; } };
+  return true;
+}
+export function unhideDesk(entry) { const h = entry.hidden; if (!h) return false; entry.hidden = null; try { h.restore(); } catch (error) { console.warn('[film-fx] desk unhide', error); } return true; }
 
 export function installDeskEdits(list, api) {
   const desks = api.sceneDesks, ctx = { api, desks }, entries = [], missing = [], choreo = createDeskChoreo(api);
@@ -80,6 +94,7 @@ export function installDeskEdits(list, api) {
     restore() {
       choreo.restore();   // each desk back to its start pose first, then the rest of the edit below
       for (const e of entries.reverse()) {
+        if (e.hidden) unhideDesk(e);   // (only a hidden desk has this)
         const r = e.record; delete r.deskEditWas; if (desks.records.get(r.id) !== r) continue;
         if (e.edit.build) import('../../experience/desk-build.mjs').then(m => m.restoreBuild(api, r.id));   // before a size rebuild: the room's own style / accessories back
         const prior = clone(e.was.state);

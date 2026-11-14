@@ -7,7 +7,9 @@
 //    pose?:{x, z, yaw},                         room-local millimetres / radians (the record's state.pose)
 //    initial?:{height, tilt},                   inches / degrees at 0 s, clamped for the desk's size (start-pose.mjs)
 //    clips?:[…]                                 DeskChoreo: the desk's lift / tilt moves (desk-clips.mjs clip objects)
-//    build?:{woodFinish, baseFinish, trimColor, accessories:[{id, slot}]}}     DeskBuild
+//    build?:{woodFinish, baseFinish, trimColor, accessories:[{id, slot}]}     DeskBuild
+//    hide?:true}                                Layers: the desk (and what rides on it) is not in this chapter; only `true` is
+//                                               kept, so an edit without it is exactly what it was before (film-desk-edits.mjs)
 // shot.deskEdits absent: the film shot's own sceneDeskEdits (an earlier Export cut, imported by
 // build-round8-director.py as director-camera 'desks') are the Director's edits. Present (even []): they replace those.
 import {clampStartPose} from './start-pose.mjs';
@@ -28,6 +30,7 @@ export function cleanDeskEdit(e){
   // DeskChoreo / DeskBuild own their cleaning; here they pass through when sane.
   if(Array.isArray(e.clips)&&e.clips.length&&e.clips.length<=200&&e.clips.every(c=>c&&typeof c==='object')&&jsonSize(e.clips)<=200000)out.clips=structuredClone(e.clips);
   const build=cleanDeskBuild(e.build);if(build)out.build=build;   // desk-build.mjs
+  if(e.hide===true)out.hide=true;
   return Object.keys(out).some(k=>k!=='desk'&&k!=='name')?out:null;
 }
 export function cleanDeskEdits(v={}){
@@ -48,5 +51,6 @@ export function describeDeskEdit(e,was={}){
   if(e.initial)parts.push(`starts at ${e.initial.height}″ / ${e.initial.tilt}°`);
   if(e.clips?.length)parts.push(e.clips.length+' move'+(e.clips.length===1?'':'s'));
   if(e.build)parts.push('built');
+  if(e.hide)parts.push('hidden in this chapter');
   return parts.join(', ')||'unchanged';
 }
