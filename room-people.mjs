@@ -308,11 +308,13 @@ export const ROOM_PEOPLE = {
     ],
     highschool: [
         { id: 'people-maya-stand-type', desk: 'stand', modes: [] }, { id: 'people-maya-sit-type', desk: 'sit', modes: [] },
-        // The featured desk's own user at first bell, in the Studio (the film casts that desk itself): a blonde student,
-        // standing or seated as the desk's height asks.
-        ...['stand-type', 'sit-type', 'sit-type-30'].map(pose => ({ id: `people-fern-${pose}`, desk: pose.startsWith('sit') ? 'sit' : 'stand', modes: ['morning'], colors: LOOK.heroSchool, studio: true })),
         // First bell (the film's lesson) and the afternoon wave lab; after school two stay on; nobody at night.
-        { id: 'people-kai-wheel-type', station: 'accessible-student', desk: 'wheel', modes: ['morning', 'afternoon'] },
+        // Kai is the room's main person: at the featured desk, set to his wheelchair's height (Vico, Nov 13 2026: "put the
+        // guy in the wheelchair at the black one by the carpet ... that's where the camera flies"). The films cast or leave
+        // out this placement by its id, so it keeps no key. The white desk by the window is a blonde student's, in the
+        // Studio (the films cast that desk themselves).
+        { id: 'people-kai-wheel-type', desk: 'wheel', modes: ['morning', 'afternoon'] },
+        { id: 'people-fern-sit-type', station: 'accessible-student', desk: 'sit', modes: ['morning', 'afternoon'], colors: LOOK.heroSchool, studio: true },
         { id: 'people-zoe-stand-type', station: 'student-standing', desk: 'stand', modes: ['morning', 'afternoon', 'evening'] },
         { id: 'people-mia-sit-type', station: 'window-research', desk: 'sit', modes: ['morning', 'afternoon', 'evening'] },
         { id: 'people-noah-sit-type', station: 'research-desk', desk: 'sit', modes: ['morning', 'afternoon'] },
@@ -322,7 +324,6 @@ export const ROOM_PEOPLE = {
         { id: 'people-sofia-sit-laptop', on: 'student-chair-1-1-1', seat: 450, turn: 180, modes: ['morning', 'afternoon'] },
         { id: 'people-hale-stand-present', layout: 'house', at: [2600, -3250], turn: 0, modes: ['morning'] },
         { id: 'people-hale-stand-type', station: 'demonstration-desk', desk: 'stand', modes: ['afternoon', 'party'], colors: LOOK.hale },
-        { id: 'people-leo-sit-type', desk: 'sit', modes: ['afternoon'] }, { id: 'people-leo-sit-type-30', desk: 'sit', modes: ['afternoon'] },
         { id: 'people-hale-stand-low', desk: 'stand', modes: ['evening'], colors: LOOK.hale },   // after school, the desk at 35 in
         // The Oiler showcase: students at their projects, families standing at the demos.
         { id: 'people-ava-stand-type', station: 'project-review', desk: 'stand', modes: ['party'], colors: LOOK.ava },
