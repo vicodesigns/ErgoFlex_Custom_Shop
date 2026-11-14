@@ -594,7 +594,29 @@ def choose_tempo(anchors, lo=104, hi=124, pref=116):
     return best[1], best[2], best[3]
 
 
-def build_plan(edl):
+def plan_anchors(edl):
+    """Title B, every dissolve centre (EDL centres, not shifted) between it and the end card, the end card; and which
+    chapter (0-based index) owns each segment between two anchors."""
+    chs = sorted(edl['chapters'], key=lambda c: c['start'])
+    title_b = find_beat(edl, r'title B|digital twin', 16.0)
+    end_card = find_beat(edl, r'end card|wordmark', chs[-1]['start'] + 8.0)
+    centres = [(chs[i]['end'] + chs[i + 1]['start']) / 2 for i in range(len(chs) - 1)]
+    anchors, owners, cidx = [title_b], [], []
+    for i, c in enumerate(centres):
+        if c > anchors[-1] + 2.5 and c < end_card - 2.5:
+            anchors.append(c)
+            owners.append(i)
+            cidx.append(i)
+    anchors.append(end_card)
+    owners.append(len(chs) - 1)
+    return anchors, owners, cidx
+
+
+def build_plan(edl, tempo=None):
+    """tempo (optional, build-cine-score.py): a tempo map computed elsewhere, used instead of choose_tempo:
+    {anchors: [title B, centres..., end card] (moved within their dissolves), bpm, seg_beats, knots: [[t, beat], ...]
+    (extra points of the beat->time map, e.g. picture cuts on a beat), title_a, wake_k (bars of the wake section)}.
+    Without it the plan is exactly as before."""
     chs = sorted(edl['chapters'], key=lambda c: c['start'])
     total = float(edl['total'])
     title_a = find_beat(edl, r'title A|level up', 1.5)
@@ -602,6 +624,8 @@ def build_plan(edl):
     hero = chs[-1]
     end_card = find_beat(edl, r'end card|wordmark', hero['start'] + 8.0)
     centres = [(chs[i]['end'] + chs[i + 1]['start']) / 2 for i in range(len(chs) - 1)]
+    if tempo:
+        return _build_plan_tempo(edl, chs, total, centres, tempo)
 
     # anchors: title B, every dissolve centre after it, the end card
     anchors = [title_b]
@@ -620,12 +644,41 @@ def build_plan(edl):
         bs.append(bs[-1] + n)
     grid = Grid(anchors, bs, beat)
 
+    return _sections(chs, total, title_a, title_b, end_card, centres, anchors, owners, bpm, seg_beats, devs, grid, edl)
+
+
+def _build_plan_tempo(edl, chs, total, centres, tempo):
+    anchors = [float(a) for a in tempo['anchors']]
+    _, owners, _ = plan_anchors(edl)
+    assert len(anchors) == len(owners) + 1, 'tempo anchors do not match the EDL'
+    bpm = float(tempo['bpm'])
+    seg_beats = [int(n) for n in tempo['seg_beats']]
+    beat = 60 / bpm
+    bs = [0.0]
+    for n in seg_beats:
+        bs.append(bs[-1] + n)
+    devs = np.array([abs((a1 - a0) / (n * beat) - 1) for a0, a1, n in zip(anchors[:-1], anchors[1:], seg_beats)])
+    pts = sorted(list(zip(anchors, bs)) + [(float(t), float(b)) for t, b in tempo.get('knots', [])])
+    grid = Grid([p[0] for p in pts], [p[1] for p in pts], beat)
+    title_a = float(tempo.get('title_a', find_beat(edl, r'title A|level up', 1.5)))
+    return _sections(chs, total, title_a, anchors[0], anchors[-1], centres, anchors, owners, bpm, seg_beats, devs, grid,
+                     edl, wake_k=tempo.get('wake_k'))
+
+
+def _sections(chs, total, title_a, title_b, end_card, centres, anchors, owners, bpm, seg_beats, devs, grid, edl, wake_k=None):
+    hero = chs[-1]
+    beat = grid.beat
+    bs = [0.0]
+    for n in seg_beats:
+        bs.append(bs[-1] + n)
     sections = []
 
     # pre-title-B: the wake section begins on the first bar line ~a bar after title A
     k = 1
     while title_b - 4 * (k + 1) * beat >= title_a + 0.9 * 4 * beat:
         k += 1
+    if wake_k:
+        k = int(wake_k)
     wake_b0 = -4.0 * k
     pulse_bar = None
     for kk in range(k, 0, -1):
@@ -1467,29 +1520,13 @@ def write_pngs(out_wav, plan):
 # main
 # ---------------------------------------------------------------------------
 
-def main():
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument('edl')
-    ap.add_argument('out')
-    ap.add_argument('--seed', type=int, default=20261030)
-    ap.add_argument('--target-lufs', type=float, default=-16.0)
-    ap.add_argument('--ceiling', type=float, default=-1.9, help='limiter ceiling, dBTP (4x oversampled)')
-    ap.add_argument('--no-extras', action='store_true', help='skip cue sheet, analysis json and PNGs')
-    ap.add_argument('--stems', action='store_true', help='also write per-bus stems (float, pre-master) for debugging')
-    args = ap.parse_args()
-
-    with open(args.edl) as f:
-        edl = json.load(f)
-    plan = build_plan(edl)
-    print(f'tempo {plan["bpm"]:.2f} BPM; segments (beats) {plan["seg_beats"]}; max bend '
-          f'{100 * float(np.max(plan["devs"])):.2f} %; pulse at {plan["pulse_t"]:.2f} s')
-    for s in plan['sections']:
-        print(f'  {s["name"]:<10} {s["t0"]:7.2f}-{s["t1"]:7.2f}  {" ".join(s.get("chords", []))}')
-
-    mix, events, N, NM = compose(plan, args.seed)
+def premaster(plan, seed, stems_dir=None, hook=None):
+    """Compose, effects, macro dynamics, master EQ and fades: the mix before loudness and limiting, exactly edl.total long.
+    hook(x) -> x may add layers (same length) before the fades."""
+    mix, events, N, NM = compose(plan, seed)
 
     # ---- effects ----
-    rng = np.random.default_rng(args.seed + 1)
+    rng = np.random.default_rng(seed + 1)
     ir = make_ir(rng)
     beat = plan['grid'].beat
     dly = make_delay_ir(0.75 * beat, fb=0.36)
@@ -1517,8 +1554,8 @@ def main():
     tcm, mdb = curve(plan, {sec['name']: STYLES[sec['style']].get('mixdb', 0.0) for sec in plan['sections']
                             if sec['style'] in STYLES}, smooth_s=plan['dissolve'])
     x *= undb(1.0) ** at_samples(tcm, mdb, NM)[None, :]
-    if args.stems:
-        sd = os.path.join(os.path.dirname(args.out), 'stems')
+    if stems_dir:
+        sd = stems_dir
         os.makedirs(sd, exist_ok=True)
         for k, v in list(mix.buses.items()) + [('reverb', rev_ret), ('delay', dly_ret)]:
             np.save(os.path.join(sd, k + '.npy'), v[:, :N].astype(np.float32))
@@ -1534,6 +1571,9 @@ def main():
     x = np.stack([np.fft.irfft(np.fft.rfft(x[c], nfft) * eq, nfft)[:N] for c in range(2)])
     x -= x.mean(axis=1, keepdims=True)
 
+    if hook:  # extra layers (build-cine-score.py: the desk's movement sounds) join before the fades and the master
+        x = hook(x)
+
     # fades: start from true silence, ring out to silence at total
     fi = int(0.01 * SR)
     x[:, :fi] *= fade_in(fi)
@@ -1541,27 +1581,57 @@ def main():
     x[:, -fo:] *= ((0.5 + 0.5 * np.cos(np.pi * (np.arange(fo) + 0.5) / fo)) ** 1.5)
     x[:, -1] = 0
 
+    return x, events, N
+
+
+def master(x, plan, target_lufs=-16.0, ceiling=-1.9):
+    """Gain to target_lufs and the 4x-oversampled true-peak limiter at ceiling dBTP. Returns (y, report)."""
     # ---- loudness + true-peak limiter (iterate) ----
     pre_rep = dict(raw_tp=round(true_peak_db(x), 2), raw_lufs=round(integrated_lufs(x), 2))
-    gain_db = args.target_lufs - pre_rep['raw_lufs']
+    gain_db = target_lufs - pre_rep['raw_lufs']
     gr_max = 0
     for it in range(6):
         y = x * undb(gain_db)
-        g, gr_max = limiter_gain(y, args.ceiling)
+        g, gr_max = limiter_gain(y, ceiling)
         y = y * g[None, :]
         lufs = integrated_lufs(y)
         tp = true_peak_db(y)
         print(f'  master iter {it}: gain {gain_db:+.2f} dB, limiter max GR {gr_max:.2f} dB, '
               f'{lufs:.2f} LUFS, TP {tp:.2f} dBTP')
-        if abs(lufs - args.target_lufs) < 0.05 and tp <= args.ceiling + 0.15:
+        if abs(lufs - target_lufs) < 0.05 and tp <= ceiling + 0.15:
             break
-        gain_db += args.target_lufs - lufs
+        gain_db += target_lufs - lufs
     x = y
     pre_rep.update(master_gain_db=round(gain_db, 2), limiter_max_gr_db=round(gr_max, 2),
                    limited_ms=round(float(np.sum(g < 0.999)) / SR * 1000, 1),
                    limiter_gr_db_by_section={sec['name']: round(-db(float(np.min(g[int(sec['t0'] * SR):max(int(sec['t0'] * SR) + 1, int(sec['t1'] * SR))]))), 2)
                                              for sec in plan['sections']})
     print('  limiter GR by section:', pre_rep['limiter_gr_db_by_section'])
+
+    return x, pre_rep
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument('edl')
+    ap.add_argument('out')
+    ap.add_argument('--seed', type=int, default=20261030)
+    ap.add_argument('--target-lufs', type=float, default=-16.0)
+    ap.add_argument('--ceiling', type=float, default=-1.9, help='limiter ceiling, dBTP (4x oversampled)')
+    ap.add_argument('--no-extras', action='store_true', help='skip cue sheet, analysis json and PNGs')
+    ap.add_argument('--stems', action='store_true', help='also write per-bus stems (float, pre-master) for debugging')
+    args = ap.parse_args()
+
+    with open(args.edl) as f:
+        edl = json.load(f)
+    plan = build_plan(edl)
+    print(f'tempo {plan["bpm"]:.2f} BPM; segments (beats) {plan["seg_beats"]}; max bend '
+          f'{100 * float(np.max(plan["devs"])):.2f} %; pulse at {plan["pulse_t"]:.2f} s')
+    for s in plan['sections']:
+        print(f'  {s["name"]:<10} {s["t0"]:7.2f}-{s["t1"]:7.2f}  {" ".join(s.get("chords", []))}')
+
+    x, events, N = premaster(plan, args.seed, os.path.join(os.path.dirname(args.out), 'stems') if args.stems else None)
+    x, pre_rep = master(x, plan, args.target_lufs, args.ceiling)
 
     os.makedirs(os.path.dirname(os.path.abspath(args.out)), exist_ok=True)
     write_wav24(args.out, x, np.random.default_rng(args.seed + 2))
