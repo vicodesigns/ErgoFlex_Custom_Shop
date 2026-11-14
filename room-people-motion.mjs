@@ -444,7 +444,7 @@ export function drawPose(rig, drawn, dz = 0, pose = null, hold = false) {
 const RESTING = { 'sit-type': 'lr', 'stand-type': 'lr', 'stand-mid': 'lr', 'stand-type-low': 'lr', 'stand-counter': 'lr', 'sit-microscope': 'lr', 'lie-bed': 'lr', 'wheel-type': 'lr', 'power-type': 'lr', 'sit-laptop': 'lr', 'sit-write': 'lr', 'sit-listen': 'lr', 'sit-raise': 'l', 'stand-work': 'lr', 'cane-stand': 'r', 'wheel-roll': 'lr', 'wheel-watch': 'lr',
     'kid-stand-desk': 'lr', 'kid-sit-desk': 'lr', 'kid-sit-k': 'lr', 'kid-sit-e': 'lr', 'kid-kneel-craft': 'lr', 'kid-play-floor': 'lr' };
 const TYPES = new Set(['sit-type', 'stand-type', 'stand-mid', 'stand-type-low', 'wheel-type', 'power-type', 'sit-laptop']);
-const ON_FEET = new Set(['stand-type', 'stand-mid', 'stand-type-low', 'stand-brief', 'stand-radio', 'stand-chart', 'stand-counter', 'stand-wait', 'stand-phone', 'stand-present', 'stand-work', 'stand-paint', 'cane-stand', 'kid-stand', 'kid-stand-wait', 'kid-stand-desk']);
+const ON_FEET = new Set(['stand-type', 'stand-mid', 'stand-type-low', 'stand-brief', 'stand-radio', 'stand-chart', 'stand-counter', 'stand-wait', 'stand-phone', 'stand-present', 'stand-present-left', 'stand-work', 'stand-paint', 'cane-stand', 'kid-stand', 'kid-stand-wait', 'kid-stand-desk']);
 const INTENT = new Set(['stand-chart', 'sit-microscope', 'stand-radio', 'sit-read', 'sit-phone', 'power-phone', 'stand-phone', 'sit-write', 'stand-work', 'stand-paint', 'sit-controller', 'kid-read-floor', 'kid-sit-desk', 'kid-stand-desk', 'kid-sit-k', 'kid-sit-e', 'kid-kneel-craft', 'kid-play-floor']);      // eyes on what the hands hold
 export const livelyPose = pose => pose !== 'walk' && pose !== 'white-cane' && pose !== 'push-cart';
 export const WORKOUTS = new Set(['gym-cycle', 'gym-pullup', 'gym-press', 'gym-curl', 'gym-box', 'sit-pottery']);      // postures that work a machine: solveWorkout
@@ -717,6 +717,31 @@ const ACTS = {
         dir.copy(key.wp[hand]).sub(key.wp[shoulder]).normalize(); handAt.addScaledVector(dir, .08 * point); handAt.y += .05 * point;
         armTo(rig, 'r', handAt, key.wq[hand]);
         headTurn(rig, (.45 * board * point + noise(time * .13 + 9, seed + 113) * .3 * (1 - point)) * life, 0);
+    },
+    // presenting from the left of the board (stand-present-left): the left arm is out at the board and keeps the point
+    // the posture was built with, so it is right wherever the room turns him toward the board. Every 7 to 9 seconds the
+    // point is re-aimed 2 to 3 degrees (rises, holds, falls back) with a tiny retarget in the hold, and it drifts under a
+    // degree between: the whole arm turns about the shoulder (the reach stays the same, the hand and the extended finger
+    // turn with it). The tablet hand on the right shifts a few mm and stays level. The head goes between the class and
+    // the board (turns relative to the built head, which already looks a little toward the board).
+    'stand-present-left'(rig, key, time, seed, life) {
+        const upper = rig.side.l?.arm[1], hand = rig.side.l?.arm[3], tablet = rig.side.r?.arm[3];
+        if (upper === undefined || hand === undefined || !key.wp[hand] || !key.wp[upper]) return;
+        const aim = ep(time, seed, 151, 7, 3.2, .3) * life, way = epSide(time, seed, 151, 7), n = stretchOf(time, seed, 151, 7).n;
+        const yaw = (noise(time * .21, seed + 152) * .012 + way * (.035 + .015 * hash(n, seed + 153)) * aim + noise(time * .9 + 4, seed + 154) * .006 * aim) * life;
+        const pitch = (noise(time * .17 + 3, seed + 155) * .01 + (hash(n, seed + 156) - .5) * .04 * aim) * life;
+        rig.turnWorld(rig.b.spine_03, turn.setFromAxisAngle(Y, .035 * aim)); rig.fk();      // (the shoulders a little toward the board with the point)
+        dir.copy(key.wp[hand]).sub(key.wp[upper]);
+        up.crossVectors(dir, Y); if (up.lengthSq() < 1e-8) up.set(0, 0, 1); up.normalize();
+        handQ.setFromAxisAngle(Y, yaw).multiply(turn2.setFromAxisAngle(up, pitch));
+        handAt.copy(dir).applyQuaternion(handQ).add(rig.wp[upper]);
+        armTo(rig, 'l', handAt, turn.copy(handQ).multiply(key.wq[hand]));
+        if (tablet !== undefined && key.wp[tablet]) {
+            handAt.copy(key.wp[tablet]); handAt.x += noise(time * .29 + 7, seed + 157) * .006 * life; handAt.y += noise(time * .23 + 1, seed + 158) * .008 * life; handAt.z += noise(time * .19 + 5, seed + 159) * .006 * life;
+            armTo(rig, 'r', handAt, key.wq[tablet]);
+        }
+        const toBoard = Math.max(aim, ep(time, seed, 160, 6, 2.4, .3) * life), toClass = ep(time, seed, 161, 9, 3, .3) * life * (1 - toBoard);
+        headTurn(rig, .28 * toBoard - .22 * toClass, 0);
     },
     // explaining: the open hand moves with the words in beats, phrases with pauses between them, the other hand joins for
     // the important bits; the head nods along and the shoulders turn a little with the phrase

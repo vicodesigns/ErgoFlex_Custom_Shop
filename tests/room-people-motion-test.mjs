@@ -292,7 +292,8 @@ for (const who of ['maya', 'sam']) {
         ['jun', 'kid-stand', 'feet', 'hand'], ['ravi', 'kid-read-floor', 'seat', 'hand'], ['grace', 'sit-read', 'seat', 'hand'], ['omar', 'wheel-watch', 'seat', 'hand'],
         ['grace', 'cane-stand', 'rest:r feet', 'hand'], ['jo', 'carry-box', 'pair feet', 'hand'], ['nina', 'stand-chart', 'rest:l feet', 'hand'], ['lin', 'kneel-shelf', 'rest:l seat', 'hand'],
         ['reyes', 'stand-brief', 'belt feet', 'head'], ['reyes', 'stand-radio', 'feet', 'hand'], ['vega', 'sit-microscope', 'rest:lr seat', 'head'], ['noah', 'stand-talk', 'feet', 'hand'],
-        ['hale', 'stand-present', 'feet', 'hand'], ['zoe', 'stand-drink', 'feet', 'hand'], ['sofia', 'sit-chat', 'seat', 'hand'], ['kai', 'sit-write', 'seat', 'hand'], ['kai', 'sit-controller', 'seat', 'thumb']
+        ['hale', 'stand-present', 'feet', 'hand'], ['zoe', 'stand-drink', 'feet', 'hand'], ['sofia', 'sit-chat', 'seat', 'hand'], ['kai', 'sit-write', 'seat', 'hand'], ['kai', 'sit-controller', 'seat', 'thumb'],
+        ['hale', 'stand-present-left', 'feet', 'head']
     ];
     const angle = (a, b) => 2 * Math.acos(Math.min(1, Math.abs(a.dot(b))));
     const inFrame = (rig, base, i) => rig.wp[i].clone().sub(rig.wp[base]).applyQuaternion(rig.wq[base].clone().invert());
@@ -332,6 +333,30 @@ for (const who of ['maya', 'sam']) {
         for (let time = 0; time < 120; time += .1) { solveStill(rig, key, { time, seed }); const near = rig.wp[hr].distanceTo(rig.wp[rig.b.head]) < .3; if (near && !up) starts.push(time); up = near; }
         const gaps = starts.slice(1).map((t, i) => t - starts[i]);
         assert.ok(gaps.length >= 7 && gaps.every(g => g > 6 && g < 16.5), 'sips every 8 to 14 s (seed ' + seed + ': ' + gaps.map(g => g.toFixed(1)).join(' ') + ')');
+    }
+    // the high school's teacher points at the board with his left arm (stand-present-left): with life the point is
+    // re-aimed a few degrees, the index fingertip stays within 150 mm of the line it was built on (shoulder to fingertip,
+    // which the room aims at the board), the arm within 5 degrees of the posture, the finger as built; the tablet stays level
+    {
+        const rig = rigOf('hale'), key = rig.key('people-hale-stand-present-left'); assert.ok(key, 'stand-present-left is built');
+        const sh = rig.side.l.arm[1], hl = rig.side.l.arm[3], tip = rig.index.get('index_03_l'), tab = rig.side.r.arm[3];
+        const index = ['index_01_l', 'index_02_l', 'index_03_l'].map(n => rig.index.get(n));
+        solveStill(rig, key, { time: 12.3, seed: 4, life: 0 }); assert.ok(worst(rig, key) < 1e-9, 'stand-present-left: without life it is the model as built');
+        const from = key.wp[sh], along = key.wp[tip].clone().sub(from).normalize(), arm0 = key.wp[hl].clone().sub(key.wp[sh]).normalize();
+        assert.ok(along.x > .8, 'the point goes out to his left (' + along.toArray().map(v => v.toFixed(2)) + ')');
+        let off = 0, turned = 0, finger = 0, tilt = 0;
+        for (const seed of [1, 7, 23, 41, 99]) for (let time = 0; time < 20; time += 1 / 20) {
+            solveStill(rig, key, { time, seed });
+            const p = rig.wp[tip].clone().sub(from); off = Math.max(off, p.clone().sub(along.clone().multiplyScalar(p.dot(along))).length());
+            turned = Math.max(turned, rig.wp[hl].clone().sub(rig.wp[sh]).normalize().angleTo(arm0));
+            for (const i of index) finger = Math.max(finger, 1 - Math.abs(rig.lq[i].dot(key.q[i])));
+            tilt = Math.max(tilt, 2 * Math.acos(Math.min(1, Math.abs(rig.wq[tab].dot(key.wq[tab])))));
+        }
+        const deg = THREE.MathUtils.radToDeg;
+        assert.ok(off < .15, `the fingertip stays on the line to the board (${(off * 1000).toFixed(1)} mm)`);
+        assert.ok(turned < THREE.MathUtils.degToRad(5) && turned > THREE.MathUtils.degToRad(1), `the point is re-aimed a few degrees (${deg(turned).toFixed(2)})`);
+        assert.ok(finger < 1e-9, 'the index finger stays extended as built');
+        assert.ok(tilt < 1e-6, 'the tablet stays level');
     }
 }
 // ---- a change of posture on the spot
