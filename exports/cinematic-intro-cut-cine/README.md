@@ -41,6 +41,20 @@
   (frame 36, inside the dissolve); S5's branch (cine/s5) replaces it with a class view from frame 0 and no cut
   before 4.5 s.
 
+## November 14: Maya's standing height, rise and wellness (Vico's rule in note 6: elbows at 90 degrees, forearms level)
+
+- **rise and wellness**: the desk stands at **41 in** (was 43.5, about 2.8 in too high for her: elbow 86 degrees,
+  forearm +15) in rise (`comfortable-standing`) and wellness (`stand-break`); timing unchanged. Maya types standing as
+  the new `people-maya-stand-type-41` (tools/people/cast.py: stand-type built for 41 in, her hands 40 mm nearer the
+  body; rig measure elbow 90, forearm 0), cast at the featured desk as `maya-stand` (`desk: stand`, `reach: 850`) with
+  `people-maya-stand-type` out of `people.only`, so the desk actor carries her from sit-type up to it. Cameras unchanged.
+- The rise title and the rise shot's `detail` say Rise to 41″ (only the number; the title's detail shadow path is
+  shortened to the shorter text). The monitors' height readouts follow the lift's target (screens ch02.js, ch07.js);
+  the rise and wellness clips that show them come from stream S6 (captures that read the cut and end on 41.0); until
+  S6 lands, the cut still points at the old clips, which end on 43.5.
+- **Landing order**: the people commit that builds `people-maya-stand-type-41` (model, index.json, people.json,
+  people-rigs/maya.json) must land before or with any branch whose cut casts it; without it Maya is missing standing.
+
 ## November 14 (working cut): awaken and create
 
 - awaken: both titles (ERGOFLEX 3.6-9.2 s, SAFETY 13.2-18.4 s) sit lower left; the keys under them are aimed so the
