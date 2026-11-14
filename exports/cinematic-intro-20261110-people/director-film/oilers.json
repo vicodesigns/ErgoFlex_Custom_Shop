@@ -13,7 +13,7 @@
  "motion": {
   "version": 2,
   "initial": {
-   "height": 30,
+   "height": 43.5,
    "tilt": 0,
    "x": 0,
    "z": 0,
@@ -27,8 +27,8 @@
     "start": 8.0,
     "duration": 3.0,
     "easing": "smooth",
-    "label": "Teacher rises to present",
-    "target": 43.5
+    "label": "Comes down to Kai's wheelchair height",
+    "target": 31
    }
   ]
  },
@@ -5045,7 +5045,7 @@
   {
    "at": 8.0,
    "dur": 3.0,
-   "kind": "lift-up",
+   "kind": "lift-down",
    "fade": 1,
    "fadeIn": 0.6
   }
@@ -5088,38 +5088,82 @@
   ],
   "cast": [
    {
-    "key": "kai",
-    "id": "people-kai-wheel-type",
+    "key": "fern",
+    "id": "people-fern-sit-type",
     "station": "project-review",
-    "desk": "wheel"
+    "desk": "sit",
+    "colors": {
+     "hair": "#d9b96e"
+    }
    },
    {
-    "key": "noah-sits",
-    "id": "people-noah-sit-type-30",
-    "desk": "sit"
+    "key": "kai-waits",
+    "id": "people-kai-wheel-watch",
+    "at": [
+     -3757,
+     -910
+    ],
+    "turn": 180
    },
    {
-    "key": "noah-stands",
-    "id": "people-noah-stand-type",
-    "desk": "stand"
+    "key": "kai",
+    "id": "people-kai-wheel-type-31",
+    "at": [
+     -3757,
+     -1110
+    ],
+    "turn": 180
+   },
+   {
+    "key": "noah-presents",
+    "id": "people-noah-stand-present",
+    "at": [
+     -2700,
+     -2000
+    ],
+    "turn": -90
    },
    {
     "key": "noah-waits",
     "id": "people-noah-stand-wait",
     "at": [
-     -3757,
-     -1155
+     -2700,
+     -2000
     ],
-    "turn": 180
+    "turn": -90
    }
   ],
   "when": {
+   "kai-waits": [
+    [
+     0,
+     10.8,
+     0,
+     0
+    ]
+   ],
+   "kai": [
+    [
+     10.8,
+     14,
+     0,
+     0
+    ]
+   ],
+   "noah-presents": [
+    [
+     0,
+     8.0,
+     0,
+     0
+    ]
+   ],
    "noah-waits": [
     [
-     8.3,
-     10.7,
-     0.4,
-     0.4
+     8.0,
+     14,
+     0,
+     0
     ]
    ]
   },
