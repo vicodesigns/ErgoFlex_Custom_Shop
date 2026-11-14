@@ -467,4 +467,19 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
     }
     assert.ok([...kinds.values()].includes('hair') && [...kinds.values()].includes('face'), 'hair, brows and lashes in the library');
 }
+{   // look: a listener turns to whoever the placement names (in front, within 9 m), whatever the posture; otherwise as before
+    const people = new RoomPeople({ id: 'highschool', roomLayout: { id: 'house' }, root: new THREE.Group() }, null);
+    const person = (spec, at) => { const root = new THREE.Group(), body = new THREE.Group(), head = new THREE.Object3D(); root.add(body); body.add(head); root.position.set(...at); head.position.set(0, 1.5, 0);
+        const o = new THREE.Group(); o.visible = true; o.userData.person = spec; o.userData.personRig = { bones: new Map([['Root', body], ['head', head]]) }; return o; };
+    const kai = person({ key: 'kai-waits', look: ['noah-talks', 'noah-waits'] }, [0, 0, 0]), noah = person({ key: 'noah-talks' }, [1, 0, 2]), behind = person({ key: 'noah-waits' }, [0, 0, -2]);
+    people.people = [kai, noah, behind];
+    const g = people.gazeOf(kai, { key: { pose: 'wheel-watch' } });
+    assert.ok(g && Math.abs(g.at.x - 1) < 1e-6 && Math.abs(g.at.z - 2) < 1e-6 && Math.abs(g.at.y - 1.5) < 1e-6 && g.amount === .8, 'looks at the one named, in front');
+    assert.ok(people.gazeOf(kai, { key: { pose: 'sit-type' } })?.at, 'whatever the posture');
+    noah.visible = false; assert.equal(people.gazeOf(kai, { key: { pose: 'wheel-watch' } }), null, 'nobody named in front (one gone, one behind): no one to look at');
+    kai.userData.person = { key: 'kai-waits' }; noah.visible = true;
+    assert.equal(people.gazeOf(kai, { key: { pose: 'sit-type' } }), null, 'without look, a typist keeps the gaze of the posture');
+    const { cleanPeople } = await import('../experience/people-edits.mjs');   // a Director people edit keeps it
+    assert.deepEqual(cleanPeople({ cast: [{ key: 'kai-waits', id: 'people-kai-wheel-watch', at: [0, 0], turn: 180, look: ['noah-talks', 'not a key!', 7] }] }).cast[0].look, ['noah-talks']);
+}
 console.log('PASS room people: library entries, desk-height casting and fade, chair hand-over, film filter and placement, film casting, stations, loading by the hour, postures with things on a table at a table, the same clothes away from the desk, chairs facing their table, hair edges.');

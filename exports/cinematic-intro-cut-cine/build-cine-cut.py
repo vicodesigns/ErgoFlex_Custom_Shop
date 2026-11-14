@@ -168,19 +168,22 @@ def coast(s):
 @chapter
 def oilers(s):
     # High school. The featured desk (centre about (-3.03, 0, 5.66)) faces +x, 0.85 in front of the ocean window
-    # wall (z 7.66). Noah sits at it, then stands to wait at (-1.7, 5.67) while it rises (8.0-11 s). Kai rolls in by the
-    # window at the far end. His camera craned up off Kai (Kai cut by the frame), passed close behind a seated student,
-    # and ended on standing Noah with his head cut by the top edge. Here: his low opening on Kai; a cut to a high frame
-    # along the window, the class and Noah at the desk; a cut to a front three-quarter from the window side: the quiz
-    # screens face the lens, Noah whole beside the desk, the desk at half the frame or more, rising against the wall.
+    # wall (z 7.66). Kai waits at it in his wheelchair while Noah, standing at its end (-3.0, 4.07), talks with him;
+    # the desk comes down to Kai's height (8.0-11 s) and he types. Mia works at the window desk (2.75, 6.4); Nia and
+    # Finn sit at the near table (chairs at x 1.61), facing Mr. Hale at the board. Opening (to 1.2 s): the
+    # coast-to-oilers hand-over (stream S4 owns the keys before the second shot's cut). The second shot (S5, Nov 14):
+    # high over the class from the back of the room, Mia whole on the left, Nia and Finn from behind lower right,
+    # Noah and Kai talking at the featured desk in the middle, the teacher on the right; a slow push over the class.
+    # Third shot: a front three-quarter from the window side, Kai at the desk, Noah facing him and the lens, the quiz
+    # screens to the lens, the desk coming down to him.
     cam(s, his('oilers', 0, 0.6) + [
-        key(1.15, (5.02, 0.62, 3.22), (10.05, 1.67, 7.83), 42, 'Kai (hold)'),
-        key(1.2, (5.2, 2.2, 2.0), (-2.0, 1.3, 5.6), 42, 'Cut: along the window, the class, Noah at the featured desk', cut=True),
-        key(4.45, (4.6, 2.3, 2.35), (-2.4, 1.3, 5.6), 42, 'Drifting along the window'),
-        key(4.5, (-0.5, 1.95, 7.15), (-3.0, 1.45, 5.45), 50, 'Cut: front three-quarter from the window side, Noah at the desk', cut=True),
-        key(8.0, (-0.6, 1.95, 7.2), (-3.0, 1.5, 5.45), 50, 'Noah gets up'),
-        key(11, (-0.55, 2.05, 7.3), (-3.0, 1.78, 5.45), 53, 'The desk rises beside him, the quiz on the screens'),
-        key(14, (-0.7, 2.05, 7.3), (-3.0, 1.8, 5.45), 52, 'He works standing'),
+        key(1.15, (5.02, 0.62, 3.22), (10.05, 1.67, 7.83), 42, 'Fern (hold)'),
+        key(1.2, (6.6, 3.0, 4.5), (-2.4, 1.0, 4.7), 44, 'Cut: high over the class from the back, Noah talking with Kai at the featured desk', cut=True),
+        key(4.45, (5.9, 2.8, 4.45), (-2.6, 1.05, 4.7), 44, 'A slow push over the class'),
+        key(4.5, (-0.5, 1.95, 7.15), (-3.0, 1.45, 5.45), 50, 'Cut: front three-quarter from the window side, Kai at the desk', cut=True),
+        key(8.0, (-0.6, 1.95, 7.2), (-3.0, 1.5, 5.45), 50, 'The desk starts down'),
+        key(11, (-0.55, 2.05, 7.3), (-3.0, 1.45, 5.45), 53, 'The desk comes down to Kai, the quiz on the screens'),
+        key(14, (-0.7, 2.05, 7.3), (-3.0, 1.45, 5.45), 52, 'He works at his height'),
     ])
 
 
@@ -222,16 +225,16 @@ def awareness(s):
 @chapter
 def music(s):
     # Gaming room (x -2.31..4.48, z -3.52..2.84). The desk (centre about (-0.69, 0, 0.37)) faces +x, its LEDs
-    # following the game; the Orbit Runner arcade stands on its -z side; Kai plays from the sofa at (1.86, 2.11),
-    # turned to the desk's screen. It rises and tilts at 6.3-9.3 s. His camera opened on the back of Kai's head
-    # and swung across during the lift, cutting Kai's head at the left edge. Here: a steep high angle over the
-    # room, the desk's light playing on the floor and Kai whole on the sofa answering it, craning down the whole
-    # time; a cut at 5.0 s (before Kai would slide off the edge) to a front view that pushes in through the rise
-    # and tilt to his symmetric frame.
+    # following the game; the Orbit Runner arcade stands on its -z side; Kai plays from a one-person armchair at about
+    # (2.16, 1.9), turned to the desk's screen (Vico, Nov 14: the sofa did not face the desk). It rises and tilts at
+    # 6.3-9.3 s. His camera opened on the back of Kai's head and swung across during the lift, cutting Kai's head at
+    # the left edge. Here: a steep high angle over the room, the desk's light playing on the floor and Kai whole in
+    # his armchair answering it, craning down the whole time; a cut at 5.0 s to a front view (Kai just out of the left
+    # edge) that pushes in through the rise and tilt to his symmetric frame.
     cam(s, [
-        key(0, (2.9, 3.75, -1.0), (0.2, 0.55, 1.0), 52, 'High over the room: the floor light plays, Kai on the sofa'),
+        key(0, (2.9, 3.75, -1.0), (0.2, 0.55, 1.0), 52, 'High over the room: the floor light plays, Kai in his armchair'),
         key(4.95, (2.95, 3.05, -0.55), (-0.1, 0.85, 0.8), 50, 'Craning down the whole time'),
-        key(5.0, (4.0, 2.5, -0.8), (-0.73, 1.4, 0.1), 38, 'Cut: front view, it rises and tilts with the game', cut=True),
+        key(5.0, (4.0, 2.5, -0.95), (-0.73, 1.4, 0.0), 38, 'Cut: front view, it rises and tilts with the game (Kai out of the frame edge)', cut=True),
     ] + his('music', 10.65, 12.5))
 
 
