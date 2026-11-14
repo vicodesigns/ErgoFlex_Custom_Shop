@@ -25,6 +25,8 @@ import {cleanDeskEdit,effectiveDeskEdits,describeDeskEdit} from './desk-edits.mj
 import {clampStartPose} from './start-pose.mjs';
 import {cleanPeople} from './people-edits.mjs';
 import {studioPeopleChanges,peopleEditsFromStudio} from './studio-people-sync.mjs';
+import {diffLayers,chapterCell} from '../scene-layers.mjs';
+import {LAYERS_KEY,layersOn,chapterRooms,chapterSetting,stageTargets,layerAdoptRows,applyLayerRows,deskHidePlan} from './layers-exchange.mjs';
 
 export const ASSETS_KEY='ergoflex.sceneAssets.v1',DESKS_KEY='ergoflex.sceneDesksBySizeV2';
 export const STUDIO_KEYS=[ASSETS_KEY,DESKS_KEY];
@@ -34,6 +36,14 @@ const parse=raw=>{try{const v=raw?JSON.parse(raw):{};return v&&typeof v==='objec
 const decode=raw=>{try{const v=raw?decodeStoredJSON(raw):null;return v&&typeof v==='object'?v:{};}catch{return {};}};
 const same=(a,b)=>JSON.stringify(a??null)===JSON.stringify(b??null);
 
+// ---- Layers (show / hide, phase 3): what the Studio hid or showed at a chapter's time and size, in the chapter's
+// room(s): [{id, kind, label, change:'hidden'|'shown', room}]. The film never reads the layers key: these rows only
+// become chapter edits when Vico takes them in the Adopt dialog (layers-exchange.mjs layerAdoptRows / applyLayerRows).
+export function diffSceneLayers(beforeRaw,afterRaw,shot,rooms){
+  const cell=chapterCell(shot),[mode,size]=cell.split('/'),out=[];
+  for(const room of rooms||[])for(const r of diffLayers(beforeRaw,afterRaw,room,mode,size))out.push({...r,room});
+  return out;
+}
 // ---- what changed in Studio between two values of a key
 // Props of the chapter's room: [{editorId, sceneId, change:'moved'|'put back'|'removed'|'restored'|'added'|'taken out'}]
 export function diffSceneAssets(beforeRaw,afterRaw,sceneIds){
@@ -151,15 +161,18 @@ const shown=new Map();
 export function noteStudioValue(key,value){shown.set(key,value??null);}
 // ---- the Director's controller
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-export function createStudioSync({bridge,project,index,shot,film,commit,status,rerender,render}){
+export function createStudioSync({bridge,project,index,shot,film,commit,status,rerender,render,stageItems=()=>[]}){
   const sync=()=>window.__studioState,frame=()=>document.getElementById('stage'),api=()=>frame()?.contentWindow?.ErgoFlex;
   let waiting=[],seenRev=sync()?.rev||0,busy=false,rows=[];
   for(const key of STUDIO_KEYS)if(!shown.has(key))try{shown.set(key,localStorage.getItem(key));}catch{shown.set(key,null);}
+  // Layers: watched and diffed here, never handed to the stage (bridge.refreshStudio): the film does not read it.
+  const LAYERS=layersOn(),WATCH=LAYERS?[...STUDIO_KEYS,LAYERS_KEY]:STUDIO_KEYS;
+  if(LAYERS&&!shown.has(LAYERS_KEY))try{shown.set(LAYERS_KEY,localStorage.getItem(LAYERS_KEY));}catch{shown.set(LAYERS_KEY,null);}
   // The shared poll: Studio's keys saved by another tab since the last Refresh are this module's; the rest keep the reload badge.
   sync()?.watch?.(keys=>{
-    const mine=keys.filter(k=>STUDIO_KEYS.includes(k.key)&&k.rev>seenRev),count=waiting.length;
+    const mine=keys.filter(k=>WATCH.includes(k.key)&&k.rev>seenRev),count=waiting.length;
     waiting=mine;if(mine.length!==count)paint();
-    return keys.filter(k=>!STUDIO_KEYS.includes(k.key));
+    return keys.filter(k=>!WATCH.includes(k.key));
   });
   // The badge also sits in the page's top bar, beside Close editor: the inspector scrolls, a change must not scroll away.
   const top=document.createElement('button');top.type='button';top.id='studio-changed';top.hidden=true;
@@ -189,7 +202,7 @@ export function createStudioSync({bridge,project,index,shot,film,commit,status,r
     busy=true;paint();
     try{
       status('Reading Studio…');
-      const pulled=await sync().pull(key=>STUDIO_KEYS.includes(key));seenRev=pulled.rev;waiting=[];
+      const pulled=await sync().pull(key=>WATCH.includes(key));seenRev=pulled.rev;waiting=[];
       const values=Object.fromEntries(STUDIO_KEYS.map(k=>[k,localStorage.getItem(k)])),changed=STUDIO_KEYS.filter(k=>shown.get(k)!==values[k]);
       const s=shot(),roomKey=api()?.sceneDesks?.key||null,featured=api()?.sceneDesks?.selected??null,before=Object.fromEntries(changed.map(k=>[k,shown.get(k)]));
       if(changed.length)await bridge.refreshStudio(project(),index(),Object.fromEntries(changed.map(k=>[k,values[k]])));
@@ -203,8 +216,15 @@ export function createStudioSync({bridge,project,index,shot,film,commit,status,r
       const known={};for(const r of api()?.sceneDesks?.records?.values()||[]){const st=r.deskEditWas?.state||r.state;if(st?.pose)known[r.id]={size:st.size,pose:{...st.pose},height:st.height,tilt:st.tilt};}
       const deskChanges=roomKey&&changed.includes(DESKS_KEY)?diffSceneDesks(before[DESKS_KEY],values[DESKS_KEY],roomKey,known):[];
       rows=adoptRows({assetChanges,deskChanges,peopleChanges,peopleEdits:s.peopleEdits,propEdits:effectivePropEdits(film(),s),deskEdits:effectiveDeskEdits(film(),s),featured});
+      // Layers: the Studio's hides and shows at this chapter's time and size, named from this stage (never guessed)
+      let layerChanges=[];
+      if(LAYERS){try{
+        const now=localStorage.getItem(LAYERS_KEY),was=shown.get(LAYERS_KEY)??null;
+        if(now!==was){layerChanges=diffSceneLayers(was,now,s,chapterRooms(s,layout||null));shown.set(LAYERS_KEY,now);}
+        if(layerChanges.length)rows.push(...layerAdoptRows(layerChanges,{targets:stageTargets(stageItems()),propEdits:effectivePropEdits(film(),s),featured:featured||'main',setting:chapterSetting(s),items:stageItems(),cast:peopleSeed().cast||[]}));
+      }catch(error){console.warn('[layers] refresh',error);}}
       const conflicts=rows.filter(r=>r.conflict).length;
-      status(`Refreshed from Studio: ${assetChanges.length} prop, ${deskChanges.length} desk and ${peopleChanges.length} character change${peopleChanges.length===1?'':'s'} in this room. The chapter's edits and Undo are as they were.${conflicts?` ${conflicts} also edited in this chapter: choose which to keep.`:''}`);
+      status(`Refreshed from Studio: ${assetChanges.length} prop, ${deskChanges.length} desk${LAYERS?`, ${layerChanges.length} show / hide`:''} and ${peopleChanges.length} character change${peopleChanges.length===1?'':'s'} in this room. The chapter's edits and Undo are as they were.${conflicts?` ${conflicts} also edited in this chapter: choose which to keep.`:''}`);
       if(rows.length)openAdopt();
     }finally{busy=false;paint();}
   }
@@ -216,8 +236,8 @@ export function createStudioSync({bridge,project,index,shot,film,commit,status,r
     dialog.innerHTML=`<div class="director-heading"><div><span class="director-kicker">STUDIO CHANGED</span><h2 id="studio-adopt-title">${conflicts?'Keep the chapter\'s edit, or take Studio\'s?':'Use Studio\'s changes in this chapter?'}</h2></div></div>
       <p>${conflicts?'Studio changed something this chapter also edits. ':''}Nothing changes unless you choose it here; one Undo puts it back.${rows.some(r=>r.kind==='desk')?' Room desks: the film keeps its own desk layout, so Studio\'s desk shows in a chapter only when you take it.':''}</p>
       <ul class="prop-permanent-list studio-adopt-list">${rows.map((r,i)=>`<li class="${r.take?'':'blocked'}"><b>${escape(r.name)}</b>${r.conflict?' <em>edited in both</em>':''}<small>${escape(r.studio)} · the chapter: ${escape(r.chapter)}</small>
-        <label class="director-check"><input type="radio" name="adopt-${i}" value="keep" checked><span>Keep ${r.conflict?'the chapter\'s edit':r.kind==='person'?'the film\'s character':'the film\'s desk'}</span></label>
-        ${r.take?`<label class="director-check"><input type="radio" name="adopt-${i}" value="take" data-adopt="${i}"><span>${escape(r.take)}</span></label>`:`<small>${r.gone?'The chapter\'s edit stays: the film still has this desk.':'Only its build changed in Studio: a chapter takes a build in the Build tab.'}</small>`}</li>`).join('')}</ul>
+        <label class="director-check"><input type="radio" name="adopt-${i}" value="keep" checked><span>Keep ${r.conflict?'the chapter\'s edit':r.kind==='person'?'the film\'s character':r.kind==='layer'?'the chapter as it is':'the film\'s desk'}</span></label>
+        ${r.take?`<label class="director-check"><input type="radio" name="adopt-${i}" value="take" data-adopt="${i}"><span>${escape(r.take)}</span></label>`:r.kind==='layer'?`<small>${escape(r.chapter)}</small>`:`<small>${r.gone?'The chapter\'s edit stays: the film still has this desk.':'Only its build changed in Studio: a chapter takes a build in the Build tab.'}</small>`}</li>`).join('')}</ul>
       <div class="director-actions"><button data-adopt-go class="primary" disabled>Apply</button><button data-adopt-cancel>Close</button></div>`;
     dialog.showModal();dialog.querySelector('[data-adopt-cancel]').focus();
   }
@@ -229,11 +249,20 @@ export function createStudioSync({bridge,project,index,shot,film,commit,status,r
     dialog.close();if(taken.length)adopt(taken);
   });
   function adopt(taken){
-    const props=new Set(taken.filter(r=>r.kind==='prop').map(r=>r.id)),desks=taken.filter(r=>r.kind==='desk'&&r.desk),people=taken.filter(r=>r.kind==='person');
+    const props=new Set(taken.filter(r=>r.kind==='prop').map(r=>r.id)),desks=taken.filter(r=>r.kind==='desk'&&r.desk),people=taken.filter(r=>r.kind==='person'),layerRows=taken.filter(r=>r.kind==='layer'&&r.edit),layerDesks=taken.filter(r=>r.kind==='layer'&&r.desk);
+    const deskSeed=layerDesks.length?peopleSeed():null;
     const seed=people.length?peopleSeed():null;
     commit(()=>{
       const s=shot(),f=film();
       if(props.size)s.propEdits=effectivePropEdits(f,s).filter(e=>!props.has(propKey(e)));
+      // Layers: the Studio's hide (or show) as this chapter's own prop edit (the film's ordinary hide), one undo step
+      if(layerRows.length)s.propEdits=applyLayerRows(effectivePropEdits(f,s),layerRows);
+      // a room desk: the desk edit + its chair and props + its user out of the cast, in this same undo step
+      for(const r of layerDesks){
+        const plan=deskHidePlan({stationId:r.desk.stationId,hide:r.desk.hide,featured:api()?.sceneDesks?.selected||'main',items:stageItems(),deskEdits:effectiveDeskEdits(f,s),propEdits:effectivePropEdits(f,s),cast:(s.peopleEdits?cleanPeople(s.peopleEdits):deskSeed)?.cast||[]});
+        if(!plan.ok)continue;
+        s.deskEdits=plan.deskEdits;s.propEdits=plan.propEdits;const p=cleanPeople({...(cleanPeople(s.peopleEdits)||deskSeed),cast:plan.cast});if(p)s.peopleEdits=p;
+      }
       if(people.length)s.peopleEdits=peopleEditsFromStudio(seed,people.map(r=>r.person));
       if(desks.length){
         let list=effectiveDeskEdits(f,s);
@@ -258,5 +287,5 @@ export function createStudioSync({bridge,project,index,shot,film,commit,status,r
     if(name==='ss-refresh'){await refresh();return;}
     if(name==='ss-adopt'){openAdopt();return;}
   }
-  return {html,action,refresh,remember,pending:()=>waiting.length,rows:()=>rows,busy:()=>busy};
+  return {html,action,refresh,remember,pending:()=>waiting.length,rows:()=>rows,busy:()=>busy,peopleSeed};
 }

@@ -8,6 +8,9 @@ import {filmRenderShot,createStillRenderer} from './film-render.mjs';
 import {createSceneLightEditor} from './scene-light-editor.mjs';
 import {createScenePropEditor} from './scene-prop-editor.mjs';
 import {createLayersPanel} from './layers-panel.mjs';
+import {layersOn,studioHiddenHere,chapterRooms,chapterSetting,deskHidePlan,LAYERS_KEY} from './layers-exchange.mjs';
+import {effectivePropEdits as layersPropEdits} from './prop-edits.mjs';
+import {cleanPeople as layersCleanPeople} from './people-edits.mjs';
 import {createScenePeopleEditor} from './scene-people-editor.mjs';
 import {createBrandingEditor} from './branding-editor.mjs';
 import {createFloorReflectionEditor} from './floor-reflection-editor.mjs';
@@ -625,7 +628,21 @@ export function mountDirector(bridge,catalog,initial){
   const scenePeople=createScenePeopleEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:()=>renderPeople(),time:()=>playhead*shot().seconds,lightsShowing:()=>sceneLights.showing(),
     onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();sceneProps.deselect();deskSel.deselect();renderTimeline();reveal('person');}});
   // Layers (layers-panel.mjs): the chapter's props and desk items as an outliner, named layers (select, hide, lock); shot.propLayers.
-  const layers=createLayersPanel({root:panel,shot,commit,status,props:sceneProps,rerender:()=>renderLayers()});
+  // The Studio's show / hide (Layers phase 3; ?layers=0 or localStorage 'ergoflex.layers.ui' = '0': the tab as before):
+  // what the Studio hides at this chapter's time and size, read from this page's copy of the shared key. Never the stage's.
+  const stageLayout=()=>{try{return document.getElementById('stage')?.contentWindow?.ErgoFlex?.workspaceRoom?.roomLayout?.id||null;}catch{return null;}};
+  const stageFeatured=()=>{try{return document.getElementById('stage')?.contentWindow?.ErgoFlex?.sceneDesks?.selected||'main';}catch{return 'main';}};
+  // A room desk's eye: the desk edit, its chair and props as prop hide edits, its user out of the cast: one undo step.
+  function layersHideDesk(item,stationId,hide){
+    const s=shot(),f=filmShot();if(!s)return;
+    const seed=studioSync.peopleSeed?.()||{cast:[]},plan=deskHidePlan({stationId,hide,featured:stageFeatured(),items:sceneProps.items(),deskEdits:effectiveDeskEdits(f,s),propEdits:layersPropEdits(f,s),cast:seed.cast||[]});
+    if(!plan.ok){status(plan.why,true);return;}
+    commit(()=>{const x=shot();x.deskEdits=plan.deskEdits;x.propEdits=plan.propEdits;const people=layersCleanPeople({...seed,cast:plan.cast});if(people)x.peopleEdits=people;},{render:true});
+    status(`${hide?'Hid':'Showed'} ${item.name.replace(/ · ErgoFlex desk$/,'')}${plan.belongings.length?' with '+plan.belongings.length+' thing'+(plan.belongings.length===1?'':'s')+' of its own':''}${plan.users.length?' and '+plan.users.join(', '):''} in this chapter.${plan.unnamed.length?' Not on the stage (left as they are): '+plan.unnamed.join(', ')+'.':''} One Undo brings ${hide?'them back':'the hide back'}.`);
+  }
+  const layersStudio={on:()=>layersOn(),setting:()=>chapterSetting(shot()),featured:stageFeatured,hideDesk:layersHideDesk,
+    hiddenHere:()=>{try{const s=shot();return s?studioHiddenHere(localStorage.getItem(LAYERS_KEY),s,chapterRooms(s,stageLayout()),sceneProps.items()):new Map();}catch(error){console.warn('[layers]',error);return new Map();}}};
+  const layers=createLayersPanel({root:panel,shot,commit,status,props:sceneProps,rerender:()=>renderLayers(),studio:layersStudio});
   function renderLayers(){
     const box=panel.querySelector('[data-scene-layers]');if(!box||inspector!=='layers')return;
     const active=box.contains(document.activeElement)?document.activeElement.name:null;if(active==='ly-search'&&typing())return;
@@ -749,7 +766,7 @@ export function mountDirector(bridge,catalog,initial){
   }
   // Studio <-> Director (studio-sync.mjs): the "Studio changed" badge, Refresh from Studio, Adopt Studio's version.
   function renderStudioSync(){for(const el of panel.querySelectorAll('[data-studio-sync]'))el.innerHTML=studioSync.html();}
-  const studioSync=createStudioSync({bridge,project:()=>project,index:()=>selected,shot,film:filmShot,commit,status,rerender:renderStudioSync,render:()=>render()});
+  const studioSync=createStudioSync({bridge,project:()=>project,index:()=>selected,shot,film:filmShot,commit,status,rerender:renderStudioSync,render:()=>render(),stageItems:()=>{try{return sceneProps.items();}catch{return [];}}});
   function loadProject(value,keepDraft=true){if(keepDraft)draft();project=cleanCut(value,catalog);for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId=null;playhead=0;undo=[];redo=[];undoLabels=[];redoLabels=[];labelPending=null;group=null;changed();render();load();}
   function render(){renderPanel();renderTimeline();}
   function renderPanel(){

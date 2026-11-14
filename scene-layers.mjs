@@ -227,7 +227,9 @@ export const chapterCell = shot => cellOf(PHASES.includes(shot?.mode) ? shot.mod
 // match by name, experience/prop-edits.mjs); featured: the chapter's featured desk record id (never hidden).
 // Returns [{id, kind, ok, why?, prop?: propEdit, desk?: deskEdit, person?: {key, hide}}]; hide:false shows again.
 const escapeRegex = s => String(s).replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&');
-export function toChapterEdits(rows, { names = new Map(), featured = 'main' } = {}) {
+// targets: Map(item id -> the Director's own film target for that object ({match, asset?, path?, near?, label}),
+// scene-prop-editor.mjs targetFor); preferred over names, which only give '^name$' (not unique when twins share a name).
+export function toChapterEdits(rows, { names = new Map(), targets = new Map(), featured = 'main' } = {}) {
   return (rows || []).map(r => {
     const hide = r.change === 'hidden', id = r.id;
     if (id.startsWith('desk:')) {
@@ -236,7 +238,8 @@ export function toChapterEdits(rows, { names = new Map(), featured = 'main' } = 
       return { id, kind: 'desk', ok: true, desk: { desk, hide } };
     }
     if (id.startsWith('person:')) return { id, kind: 'person', ok: true, person: { key: id.slice(7), hide } };
-    const asset = id.replace(/^scene:/, ''), name = names.get?.(id);
+    const asset = id.replace(/^scene:/, ''), target = targets.get?.(id), name = names.get?.(id);
+    if (target && typeof target.match === 'string') return { id, kind: r.kind, ok: true, prop: { ...target, hide } };
     if (!name) return { id, kind: r.kind, ok: false, why: 'Not on the stage in this chapter, so the film has nothing to hide.' };
     return { id, kind: r.kind, ok: true, prop: { match: '^' + escapeRegex(name) + '$', asset, label: name, hide } };
   });

@@ -1,4 +1,5 @@
 import {noteStudioValue} from './studio-sync.mjs';
+import {layersOn,splitPermanent,writePermanentLayers,permanentCells,foldDeskHides,LAYERS_KEY} from './layers-exchange.mjs';
 import {cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,propTarget,DESK_SURFACES,onDesk,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets} from './prop-edits.mjs';
 import {stackRows} from './lane-rows.mjs';
 import {stowWindow,EASEL_ANGLE} from './prop-stow-window.mjs';
@@ -555,7 +556,9 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       const editorId='scene:'+o.userData.sceneAssetKey;
       if(!room.api.sceneAssetRegistry.has(editorId))return {...row,ok:false,why:'Studio does not list this prop in this room\'s layout.'};
       if(handMoves(o).length&&(e.position||e.rotation||e.scale))return {...row,ok:false,why:'The film\'s own setup also moves this prop in this chapter, so Studio and the film would disagree. Keep it as a chapter edit.'};
-      if(e.hide===true)return {...row,ok:true,editorId,remove:true,change:row.change+' → removed from the room in Studio'};
+      // Layers on: a chapter hide becomes a Studio hide at this chapter's time and size (the layers key), not a delete
+      // from every chapter of the room; the chapter keeps its own hide edit (the film never reads the Studio's hides).
+      if(e.hide===true)return {...row,ok:true,editorId,remove:true,change:row.change+(layersOn()?' → hidden in Studio (its time and size: below)':' → removed from the room in Studio')};
       if(!(e.position||e.rotation||e.scale))return {...row,ok:false,why:'Only shown in this chapter: Studio already shows it.'};
       if(snaps.has(o))return {...row,ok:false,why:'Finish the drag first.'};
       // Studio keeps the local transform under its parent without the room's daily staging (room-life.mjs).
@@ -587,6 +590,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     dialog.innerHTML=`<div class="director-heading"><div><span class="director-kicker">MAKE PERMANENT IN STUDIO</span><h2 id="prop-permanent-title">Write these props to Studio?</h2></div></div>
       <p>Studio's <b>${escape(room.id||'')}</b> room keeps exactly these changes, for Studio and for every chapter in that room. This chapter's edits for them are then folded in (Studio holds them). Nothing else in Studio changes.</p>
       <ul class="prop-permanent-list">${st.rows.map((r,i)=>`<li class="${r.ok?'':'blocked'}"><label class="director-check"><input type="checkbox" data-permanent="${i}" ${r.ok?'checked':'disabled'}><span><b title="${escape(r.raw)}">${escape(r.name)}</b> · ${escape(r.change)}${r.ok?'':`<small>${escape(r.why)}</small>`}</span></label></li>`).join('')}</ul>
+      ${layersOn()&&st.rows.some(r=>r.ok&&r.remove)?`<label class="director-check">Studio hides them <select data-permanent-cell>${permanentCells(shot()).map((c,i)=>`<option value="${escape(c.cell)}" ${i?'':'selected'}>${escape(c.label)}</option>`).join('')}</select></label><p class="director-hint">This chapter keeps its own hide: the film never reads Studio's hides.</p>`:''}
       <div class="director-actions"><button data-permanent-go class="primary" ${st.ok?'':'disabled'}>Write ${st.n||0} prop${st.n===1?'':'s'} to Studio</button><button data-permanent-cancel>Cancel</button></div><p class="director-hint" data-permanent-status role="status"></p>`;
     dialog.showModal();dialog.querySelector('[data-permanent-cancel]').focus();
   }
@@ -596,22 +600,32 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const go=event.target.closest('[data-permanent-go]');if(!go)return;
     const rows=[...dialog.querySelectorAll('[data-permanent]:checked')].map(el=>dialogPlan[Number(el.dataset.permanent)]).filter(r=>r?.ok);if(!rows.length)return;
     go.disabled=true;const say=t=>{const el=dialog.querySelector('[data-permanent-status]');if(el)el.textContent=t;};say('Writing to Studio…');
-    try{await makePermanent(rows);dialog.close();}catch(error){say(error.message);go.disabled=false;status(error.message,true);}
+    try{await makePermanent(rows,dialog.querySelector('[data-permanent-cell]')?.value||null);dialog.close();}catch(error){say(error.message);go.disabled=false;status(error.message,true);}
   });
-  async function makePermanent(rows){
-    const sceneId=rows[0].sceneId||studioRoom().id,api=studioRoom().api,sync=window.__studioState;
+  async function makePermanent(all,cell=null){
+    const sceneId=all[0].sceneId||studioRoom().id,api=studioRoom().api,sync=window.__studioState,mem=api.sceneAssetStates.get(sceneId);
+    // Layers on: stock props hidden in this chapter go to the layers key at `cell` (Studio-added ones are still taken out);
+    // off: everything as before (sceneAssets: removed / added / transforms).
+    const split=layersOn()?splitPermanent(all,new Set(mem?.added?.keys?.()||[])):{layers:[],assets:all},rows=split.assets;
     const got=await fetch('/api/studio-state',{cache:'no-store'});if(!got.ok)throw Error(`Studio's state is unavailable (${got.status}).`);
-    const base=(await got.json()).values?.[STATE_KEY]??null,value=writeSceneAssets(base,sceneId,rows.map(r=>({editorId:r.editorId,...(r.add?{add:r.add,transform:r.transform}:r.remove?{remove:true}:{transform:r.transform})})));
-    const posted=await fetch('/api/studio-state',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({client:sync?.client||'director-'+Math.random().toString(36).slice(2,10),by:'Director',changes:[{key:STATE_KEY,value,base}]})});
-    if(!posted.ok)throw Error(`Studio did not take the change (${posted.status}).`);const result=(await posted.json()).results?.[0];if(!result||result.skipped||result.error)throw Error('Studio did not take the change: '+(result?.skipped||result?.error||'no answer'));
+    const values=(await got.json()).values||{},changes=[];
+    if(rows.length){const base=values[STATE_KEY]??null;changes.push({key:STATE_KEY,base,value:writeSceneAssets(base,sceneId,rows.map(r=>({editorId:r.editorId,...(r.add?{add:r.add,transform:r.transform}:r.remove?{remove:true}:{transform:r.transform})})))});}
+    // a room desk this chapter hides: its chair / prop hides fold back into ONE desk entry (the Studio derives them)
+    if(split.layers.length){const base=values[LAYERS_KEY]??null,layerRows=foldDeskHides(split.layers,shot()?.deskEdits||[]);changes.push({key:LAYERS_KEY,base,value:writePermanentLayers(base,sceneId,layerRows,cell||permanentCells(shot())[0].cell,{t:Date.now()})});}
+    const posted=await fetch('/api/studio-state',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({client:sync?.client||'director-'+Math.random().toString(36).slice(2,10),by:'Director',changes})});
+    if(!posted.ok)throw Error(`Studio did not take the change (${posted.status}).`);const results=(await posted.json()).results||[];
+    if(results.length!==changes.length||results.some(x=>!x||x.skipped||x.error))throw Error('Studio did not take the change: '+(results.find(x=>x?.skipped||x?.error)?.skipped||results.find(x=>x?.error)?.error||'no answer'));
     // This page's copy of the shared state (no second write: the sync script sees it as its own base) and the stage's memory.
-    try{const stored=(await (await fetch('/api/studio-state',{cache:'no-store'})).json()).values?.[STATE_KEY];if(stored){sync?.base?.set(STATE_KEY,stored);localStorage.setItem(STATE_KEY,stored);bridge.stageStorage?.(STATE_KEY,stored);noteStudioValue(STATE_KEY,stored);}}catch{}
-    const mem=api.sceneAssetStates.get(sceneId);
+    // The layers key is never handed to the stage: the film does not read it.
+    try{const now=(await (await fetch('/api/studio-state',{cache:'no-store'})).json()).values||{};
+      if(rows.length&&now[STATE_KEY]){const stored=now[STATE_KEY];sync?.base?.set(STATE_KEY,stored);localStorage.setItem(STATE_KEY,stored);bridge.stageStorage?.(STATE_KEY,stored);noteStudioValue(STATE_KEY,stored);}
+      if(split.layers.length&&now[LAYERS_KEY]){const stored=now[LAYERS_KEY];sync?.base?.set(LAYERS_KEY,stored);localStorage.setItem(LAYERS_KEY,stored);noteStudioValue(LAYERS_KEY,stored);}}catch{}
     for(const r of rows){if(!mem)break;if(r.add){mem.added?.set?.(r.editorId,{editorId:r.editorId,propId:r.add.propId,position:r.add.position});mem.transforms.set(r.editorId,r.transform);continue;}if(r.remove){const a=mem.added;if(a?.has?.(r.editorId)){a.delete(r.editorId);mem.transforms.delete(r.editorId);}else mem.removed.add(r.editorId);}else mem.transforms.set(r.editorId,r.transform);}
     // The props keep their place on the stage once the chapter's edits are folded in (film-fx re-installs without them).
-    pending={rows,keys:new Set(rows.map(r=>r.key))};fold(pending.keys);
-    if(group())setMembers(members().filter(m=>!pending.keys.has(m.key)));else if(sel&&pending.keys.has(sel.key))sel=null;
-    status(`Made ${rows.length} prop${rows.length===1?'':'s'} permanent in Studio (${sceneId}): ${rows.map(r=>r.name).join(', ')}. This chapter's edits for them are folded in; Export cut so the film follows.`);
+    // (only what sceneAssets now holds is folded: a hide written to the layers key stays this chapter's own edit)
+    const keys=new Set(rows.map(r=>r.key));pending=rows.length?{rows,keys}:null;if(rows.length)fold(keys);
+    if(group())setMembers(members().filter(m=>!keys.has(m.key)));else if(sel&&keys.has(sel.key))sel=null;
+    status(`Made ${all.length} prop${all.length===1?'':'s'} permanent in Studio (${sceneId}): ${all.map(r=>r.name).join(', ')}.${rows.length?' This chapter\'s edits for them are folded in; Export cut so the film follows.':''}${split.layers.length?` ${split.layers.length} hidden in Studio for this chapter's time and size; the chapter keeps its own hide.`:''}`);
     rerender();
   }
   // ---- inspector (Props tab)
