@@ -1814,6 +1814,42 @@
    "stance": "standing",
    "desk": false,
    "seat": 0
+  },
+  "stand-robot-work": {
+   "label": "At the desk, working on the robot",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "stand-robot-shelf": {
+   "label": "Setting the robot on the desk shelf",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "stand-phone-pull": {
+   "label": "Taking the phone out of a pocket",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "stand-phone-up": {
+   "label": "Phone up, about to tap",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "stand-phone-press": {
+   "label": "Tapping the one button on the phone",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "stand-phone-watch": {
+   "label": "Phone lowered, watching the desk go",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
   }
  },
  "models": {
@@ -11784,6 +11820,42 @@
    "pose": "power-type",
    "deskHeight": 32,
    "name": "Mia: typing at the desk, in the power wheelchair",
+   "aids": []
+  },
+  "people-andre-stand-robot-work": {
+   "character": "andre",
+   "pose": "stand-robot-work",
+   "name": "Andre: at the desk, working on the robot",
+   "aids": []
+  },
+  "people-andre-stand-robot-shelf": {
+   "character": "andre",
+   "pose": "stand-robot-shelf",
+   "name": "Andre: setting the robot on the desk shelf",
+   "aids": []
+  },
+  "people-andre-stand-phone-pull": {
+   "character": "andre",
+   "pose": "stand-phone-pull",
+   "name": "Andre: taking the phone out of a pocket",
+   "aids": []
+  },
+  "people-andre-stand-phone-up": {
+   "character": "andre",
+   "pose": "stand-phone-up",
+   "name": "Andre: phone up, about to tap",
+   "aids": []
+  },
+  "people-andre-stand-phone-press": {
+   "character": "andre",
+   "pose": "stand-phone-press",
+   "name": "Andre: tapping the one button on the phone",
+   "aids": []
+  },
+  "people-andre-stand-phone-watch": {
+   "character": "andre",
+   "pose": "stand-phone-watch",
+   "name": "Andre: phone lowered, watching the desk go",
    "aids": []
   },
   "people-hale-stand-present-left": {

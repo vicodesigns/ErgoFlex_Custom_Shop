@@ -654,6 +654,92 @@ def stand_phone(k):
             'foot_l': {'at': _s(k, .10, .0, .07 / k), 'toes': (.3, -1, 0)}, 'foot_r': {'at': _s(k, -.12, .04, .07 / k), 'toes': (-.35, -1, 0)}}
 
 
+# ---- the workshop film (storage chapter): Andre at the featured desk with the Robo-Pal, then the one-button Groove ----
+# Where the robot is, in the character's frame (metres; he stands at the desktop's front cutout, facing it): sitting on
+# the desktop in front of him, and on the desk's top shelf exactly where the film's shelf robot is (the toy story's
+# stowed Robo-Pal, moved 120 mm toward the front of the shelf by the chapter's sceneEdits). Measured on the desk model
+# at 43.5 in (desktop top 1.100 m, top shelf 1.359 m; the shelf's middle 0.233 m behind the desk's centre, the cutout's
+# edge 0.332 m in front of it) with him 0.13 m behind the cutout's edge. Turn: degrees about the vertical (the toy
+# story turns it 8 degrees).
+ROBOT_DESK = ((.06, -.33, 1.1045), 8.)
+ROBOT_SHELF = ((.1163, -.5656, 1.3638), 8.)
+# These two postures are built where they stand (RAISED: not dropped to the floor afterwards), so the robot is exactly
+# at these heights: the ankles are posed at Andre's own ankle height in his shoes.
+ANDRE_ANKLE = .097      # (less what each posture's foot pitch leaves under the sole: work .013, shelf .005)
+
+
+def _robot_hand(robot, at, fingers, palm, elbow, curl=.55, thumb=.35, spread=0.):
+    """A hand placed in the robot's own frame (x toward the character's left, y toward the character, z up; metres from
+    the point it sits on), so the same grip is the same grip wherever the robot is."""
+    (x0, y0, z0), turn = robot; c, s = math.cos(math.radians(turn)), math.sin(math.radians(turn))
+    rot = lambda v: (v[0] * c - v[1] * s, v[0] * s + v[1] * c, v[2])
+    p = rot(at)
+    return {'at': (x0 + p[0], y0 + p[1], z0 + p[2]), 'fingers': rot(fingers), 'palm': rot(palm), 'elbow': elbow, 'curl': curl, 'thumb': thumb, 'spread': spread}
+
+
+# The right hand holds the robot by its side, under its arm (fingers round toward its back), the same in every posture
+# that holds it, so it rides the hand from the desk to the shelf without a jump.
+_GRIP_R = dict(at=(-.057, .029, .08), fingers=(.05, -1, -.2), palm=(1, 0, 0), curl=.42, thumb=.3)
+_GRIP_L = dict(at=(.057, .029, .08), fingers=(-.05, -1, -.2), palm=(-1, 0, 0), curl=.42, thumb=.3)
+
+
+def stand_robot_work(k):
+    """At the desk, working on the robot that sits on the desktop: the right hand steadies it by its side, the left
+    works at its open chest; leaning in, eyes on it."""
+    return {'pelvis_offset': (0, .015, -.021), 'spine': (7, 9, 7), 'neck': 14, 'head': 18, 'head_yaw': 4,
+            'hand_r': _robot_hand(ROBOT_DESK, elbow=(-.32, .25, -.2), **_GRIP_R),
+            'hand_l': _robot_hand(ROBOT_DESK, (.085, .125, .1), (-.5, -.75, -.45), (.25, -.35, -1), (.3, .25, -.3), curl=.5, thumb=.35),
+            'foot_l': {'at': (.11 * k, .0, ANDRE_ANKLE - .013), 'toes': (.22, -1, 0)}, 'foot_r': {'at': (-.12 * k, .03 * k, ANDRE_ANKLE - .013), 'toes': (-.28, -1, 0)}}
+
+
+def stand_robot_shelf(k):
+    """Leaning in over the desk, setting the robot down on the top shelf with both hands at its sides."""
+    return {'pelvis_offset': (0, .035, -.017), 'pelvis_pitch': 5, 'spine': (5, 6, 5), 'neck': -4, 'head': -4,
+            'hand_r': _robot_hand(ROBOT_SHELF, elbow=(-.3, .1, -.35), **_GRIP_R),
+            'hand_l': _robot_hand(ROBOT_SHELF, elbow=(.3, .1, -.35), **_GRIP_L),
+            'foot_l': {'at': (.11 * k, .0, ANDRE_ANKLE - .005), 'toes': (.22, -1, 0)}, 'foot_r': {'at': (-.12 * k, .03 * k, ANDRE_ANKLE - .005), 'toes': (-.28, -1, 0)}}
+
+
+def stand_phone_pull(k):
+    """The right hand at the front pocket, drawing the phone out, top first (held as it will be used: its back in the
+    palm, the fingers round its far edge; here the palm faces the thigh)."""
+    return {'spine': (2, 3, 3), 'spine_twist': -4, 'neck': 9, 'head': 11, 'head_yaw': -12,
+            'hand_r': {'at': _s(k, -.178, -.022, .79), 'fingers': (0, -1, -.15), 'palm': (1, .1, 0), 'elbow': (-.15, .3, .1), 'curl': .32, 'thumb': -.35},
+            'hand_l': _hang(k, 'l', -.02),
+            'foot_l': {'at': _s(k, .10, .0, .07 / k), 'toes': (.25, -1, 0)}, 'foot_r': {'at': _s(k, -.12, .04, .07 / k), 'toes': (-.3, -1, 0)}}
+
+
+def _phone_up(k, touch):
+    # The phone up in the right hand (the fingers point across to the left, the palm toward the eyes: its top points
+    # away and up), the left index over the screen's one button, `touch` metres off the glass. Absolute places: they
+    # meet on the glass of Andre's phone (measured on his build: the button 0.30 m in front of him, 1.279 m up).
+    n = (0, .423, .906); tip = (-.0015 + n[0] * (touch + .006), -.2978 + n[1] * (touch + .006), 1.2788 + n[2] * (touch + .006))
+    d = (-.76, -.466, -.455)
+    return {'pelvis_offset': (.015, 0, -.005), 'pelvis_roll': -1.5, 'spine': (3, 4, 5), 'neck': 17, 'head': 20,
+            'hand_r': {'at': _s(k, -.096, -.255, 1.099), 'fingers': (1, -.05, .05), 'palm': (0, .42, .9), 'elbow': (-.3, .15, -.35), 'curl': .32, 'thumb': -.35},
+            # (the wrist: back along the finger from its tip, corrected by where the tip landed in a first build)
+            'hand_l': {'at': tuple(t - .18 * x + c for t, x, c in zip(tip, d, (.0106, -.0418, .0312))), 'fingers': d, 'palm': (.3, .2, -1), 'elbow': (.3, .1, -.3), 'curl': .85, 'thumb': .5, 'each': {'index': .03}},
+            'foot_l': {'at': _s(k, .10, .0, .07 / k), 'toes': (.25, -1, 0)}, 'foot_r': {'at': _s(k, -.12, .04, .07 / k), 'toes': (-.3, -1, 0)}}
+
+
+def stand_phone_up(k):
+    """The phone up in the right hand, the screen toward the eyes, the left index over the one button."""
+    return _phone_up(k, .025)
+
+
+def stand_phone_press(k):
+    """The same, the left index down on the button."""
+    return _phone_up(k, 0)
+
+
+def stand_phone_watch(k):
+    """Done: the phone lowered in the right hand at his side, head up, watching the desk go."""
+    return {'pelvis_offset': (-.012, 0, -.005), 'pelvis_roll': 2, 'spine': (0, 0, 1), 'neck': 0, 'head': -2,
+            'hand_r': {'at': _s(k, -.235, -.02, .84), 'fingers': (0, -.3, -1), 'palm': (1, .05, 0), 'elbow': (-.1, .3, .05), 'curl': .32, 'thumb': -.35},
+            'hand_l': _hang(k, 'l', .0),
+            'foot_l': {'at': _s(k, .12, .0, .07 / k), 'toes': (.3, -1, 0)}, 'foot_r': {'at': _s(k, -.12, .03, .07 / k), 'toes': (-.35, -1, 0)}}
+
+
 def stand_wait(k):
     """Standing where the desk user stands, arms loose, eyes on the desktop: on their feet while the desk moves."""
     return {'spine': (1, 2, 2), 'neck': 7, 'head': 8, 'head_yaw': -4,
@@ -1209,6 +1295,12 @@ POSES = {
     },
     'stand-phone': stand_phone,
     'stand-wait': stand_wait,
+    'stand-robot-work': stand_robot_work,
+    'stand-robot-shelf': stand_robot_shelf,
+    'stand-phone-pull': stand_phone_pull,
+    'stand-phone-up': stand_phone_up,
+    'stand-phone-press': stand_phone_press,
+    'stand-phone-watch': stand_phone_watch,
     'stand-present': stand_present,
     'stand-present-left': stand_present_left,
     'walk': walk,
@@ -1375,12 +1467,20 @@ POSE_INFO = {
     'gym-box': ('Working the heavy bag', 'standing', '', 0, []),
     'gym-press': ('Pressing dumbbells on the bench', 'seated', '', 492, [('dumbbell', {'side': 'l'}), ('dumbbell', {'side': 'r'})]),
     'gym-curl': ('Curling dumbbells', 'standing', '', 0, [('dumbbell', {'side': 'l'}), ('dumbbell', {'side': 'r'})]),
+    # the workshop film's (storage): the robot and the phone where that chapter has them (ROBOT_DESK, ROBOT_SHELF)
+    'stand-robot-work': ('At the desk, working on the robot', 'standing', '', 0, [('robot', {'side': 'r', 'at': ROBOT_DESK[0], 'turn': ROBOT_DESK[1]})]),
+    'stand-robot-shelf': ('Setting the robot on the desk shelf', 'standing', '', 0, [('robot', {'side': 'r', 'at': ROBOT_SHELF[0], 'turn': ROBOT_SHELF[1]})]),
+    'stand-phone-pull': ('Taking the phone out of a pocket', 'standing', '', 0, [('phone', {'side': 'r', 'grip': 'hold', 'screen': 'ready'})]),
+    'stand-phone-up': ('Phone up, about to tap', 'standing', '', 0, [('phone', {'side': 'r', 'grip': 'hold', 'screen': 'ready'})]),
+    'stand-phone-press': ('Tapping the one button on the phone', 'standing', '', 0, [('phone', {'side': 'r', 'grip': 'hold', 'screen': 'pressed'})]),
+    'stand-phone-watch': ('Phone lowered, watching the desk go', 'standing', '', 0, [('phone', {'side': 'r', 'grip': 'hold', 'screen': 'running'})]),
 }
 # The roles' postures: built for the characters that list them ('postures'), for anyone else on request.
 ROLE_POSES = {'stand-brief', 'stand-radio', 'stand-chart', 'push-cart', 'lie-bed', 'sit-microscope', 'stand-counter',
-              'gym-cycle', 'gym-pullup', 'gym-box', 'gym-press', 'gym-curl', 'sit-pottery', 'power-phone', 'power-type'}      # (the gym's: built for those who train there, ALSO below)
+              'gym-cycle', 'gym-pullup', 'gym-box', 'gym-press', 'gym-curl', 'sit-pottery', 'power-phone', 'power-type',
+              'stand-robot-work', 'stand-robot-shelf', 'stand-phone-pull', 'stand-phone-up', 'stand-phone-press', 'stand-phone-watch'}      # (the gym's: built for those who train there, ALSO below)
 # Built where the pose puts them, not dropped until something touches the floor (a body lying on a bed has nothing on it).
-RAISED = {'lie-bed', 'sit-microscope', 'gym-cycle', 'gym-pullup', 'gym-press', 'power-phone', 'power-type'}       # (feet on a stool's ring, on pedals or off the floor under a bar are not on the floor either)
+RAISED = {'lie-bed', 'sit-microscope', 'gym-cycle', 'gym-pullup', 'gym-press', 'power-phone', 'power-type', 'stand-robot-work', 'stand-robot-shelf'}       # (feet on a stool's ring, on pedals or off the floor under a bar are not on the floor either)
 DESK_HEIGHTS = {'sit-type': (28, 30), 'stand-type': (43.5,), 'stand-type-low': (28, 30), 'wheel-type': (28, 31), 'power-type': (32,), 'sit-coffee': (28, 30), 'stand-coffee': (43.5,), 'stand-low': (35.5,), 'stand-mid': (39,), 'kid-stand-desk': (28,), 'kid-sit-desk': (28,)}
 # Who a posture is for: adult poses are built on adult furniture, child poses on child furniture.
 CHILD_POSES = {p for p in POSE_INFO if p.startswith('kid-')}
@@ -1401,7 +1501,11 @@ ALSO = ['people-sam-sit-type', 'people-sam-sit-type-30', 'people-grace-lie-bed',
         # the artist's studio: at the pottery wheel
         'people-lin-sit-pottery',
         # the Library commons: Mia in the room's red power wheelchair (the film's commons chapter), feet on its footplate
-        'people-mia-power-phone', 'people-mia-power-type']
+        'people-mia-power-phone', 'people-mia-power-type',
+        # the workshop film (storage): Andre works on the robot, sets it on the desk's top shelf, takes out his phone and
+        # starts the desk's Groove with one tap
+        'people-andre-stand-robot-work', 'people-andre-stand-robot-shelf', 'people-andre-stand-phone-pull', 'people-andre-stand-phone-up',
+        'people-andre-stand-phone-press', 'people-andre-stand-phone-watch']
 # A posture nudged for one person (metres added to a hand's or a foot's place): the clipboard lies as the left hand
 # holds it, and on Yusuf's broader chest it tips into the writing hand.
 NUDGE = {('yusuf', 'stand-chart'): {'hand_r': (.02, .0, .035)},

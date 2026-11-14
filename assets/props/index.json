@@ -85486,6 +85486,204 @@
    }
   },
   {
+   "id": "people-andre-stand-robot-work",
+   "name": "Andre: at the desk, working on the robot",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-stand-robot-work.glb",
+   "anchor": "floor",
+   "size": [
+    637.2,
+    1698.6,
+    593.8
+   ],
+   "min": [
+    -272.7,
+    0.1,
+    -129.7
+   ],
+   "max": [
+    364.5,
+    1698.7,
+    464.1
+   ],
+   "tris": 40196,
+   "bytes": 1179812,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "stand-robot-work"
+   }
+  },
+  {
+   "id": "people-andre-stand-robot-shelf",
+   "name": "Andre: setting the robot on the desk shelf",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-stand-robot-shelf.glb",
+   "anchor": "floor",
+   "size": [
+    576.4,
+    1754.2,
+    845
+   ],
+   "min": [
+    -254.9,
+    0,
+    -140.7
+   ],
+   "max": [
+    321.5,
+    1754.2,
+    704.3
+   ],
+   "tris": 40400,
+   "bytes": 1180092,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "stand-robot-shelf"
+   }
+  },
+  {
+   "id": "people-andre-stand-phone-pull",
+   "name": "Andre: taking the phone out of a pocket",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-stand-phone-pull.glb",
+   "anchor": "floor",
+   "size": [
+    562.2,
+    1810,
+    417.1
+   ],
+   "min": [
+    -270.2,
+    0,
+    -140.7
+   ],
+   "max": [
+    292,
+    1810,
+    276.4
+   ],
+   "tris": 35046,
+   "bytes": 1150180,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "stand-phone-pull"
+   }
+  },
+  {
+   "id": "people-andre-stand-phone-up",
+   "name": "Andre: phone up, about to tap",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-stand-phone-up.glb",
+   "anchor": "floor",
+   "size": [
+    694.4,
+    1771.4,
+    513.6
+   ],
+   "min": [
+    -329.6,
+    0,
+    -140.5
+   ],
+   "max": [
+    364.8,
+    1771.4,
+    373.1
+   ],
+   "tris": 35290,
+   "bytes": 1151856,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "stand-phone-up"
+   }
+  },
+  {
+   "id": "people-andre-stand-phone-press",
+   "name": "Andre: tapping the one button on the phone",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-stand-phone-press.glb",
+   "anchor": "floor",
+   "size": [
+    695.9,
+    1771.4,
+    513.6
+   ],
+   "min": [
+    -329.6,
+    0,
+    -140.5
+   ],
+   "max": [
+    366.3,
+    1771.4,
+    373.1
+   ],
+   "tris": 35302,
+   "bytes": 1150404,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "stand-phone-press"
+   }
+  },
+  {
+   "id": "people-andre-stand-phone-watch",
+   "name": "Andre: phone lowered, watching the desk go",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-stand-phone-watch.glb",
+   "anchor": "floor",
+   "size": [
+    596.6,
+    1822,
+    358.3
+   ],
+   "min": [
+    -297,
+    0,
+    -152
+   ],
+   "max": [
+    299.6,
+    1822,
+    206.3
+   ],
+   "tris": 35340,
+   "bytes": 1151176,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "stand-phone-watch"
+   }
+  },
+  {
    "id": "people-hale-stand-present-left",
    "name": "Mr Hale, presenting from the left of the board",
    "category": "people",

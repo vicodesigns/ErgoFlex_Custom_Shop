@@ -64,10 +64,60 @@ def T(x, y, z):
 
 
 # ---- items -------------------------------------------------------------------------------------------
-def phone(rig, side, tilt=0, color=(.03, .03, .035)):
-    w = hand_frame(rig, side, .012) @ T(0, .035, 0) @ R('X', tilt)
-    return [box('phone', (.072, .152, .008), material('phone', color, .35), w, bevel=.003),
-            box('phone screen', (.066, .142, .0012), material('phone screen', (.02, .02, .03), .1, emit=(.55, .7, .9)), w, at=(0, 0, .0046))]
+def phone(rig, side, tilt=0, color=(.03, .03, .035), grip=None, screen=None):
+    """A phone. grip None: lying on the palm along the fingers (the older postures). grip 'hold': held the way one holds
+    a phone to use it with one hand: its back in the palm, its top toward the thumb side (the index finger), its far edge
+    at the roots of the fingers so they curl round it, the thumb over the glass. screen: what the glass shows (phone_screen_image: the desk app's one-button Groove page)."""
+    if grip == 'hold':      # (its top toward the thumb side, its far edge at the finger roots)
+        w = hand_frame(rig, side, .018) @ T(.02, .05, 0) @ R('Z', -90) @ R('X', tilt)
+    else: w = hand_frame(rig, side, .012) @ T(0, .035, 0) @ R('X', tilt)
+    body = box('phone', (.072, .152, .008), material('phone', color, .35), w, bevel=.003)
+    if not screen: return [body, box('phone screen', (.066, .142, .0012), material('phone screen', (.02, .02, .03), .1, emit=(.55, .7, .9)), w, at=(0, 0, .0046))]
+    # the glass as a picture: a flat face with the page mapped on it, its top toward the phone's top (+Y)
+    bm = bmesh.new(); uv = bm.loops.layers.uv.new('UVMap'); hw, hh, z = .033, .071, .0047
+    f = bm.faces.new([bm.verts.new(v) for v in ((-hw, -hh, z), (hw, -hh, z), (hw, hh, z), (-hw, hh, z))])
+    for loop, t in zip(f.loops, ((0, 0), (1, 0), (1, 1), (0, 1))): loop[uv].uv = t
+    return [body, _obj('phone screen', bm, screen_material(screen), w)]
+
+
+def phone_screen_image(state, size=(270, 580)):
+    """The ErgoFlex app's Groove page as the phone shows it: one big round button. state 'ready' (an amber ring with
+    the play mark), 'pressed' (the button filled and lit) or 'running' (lit, with the routine's progress ring).
+    Rows run from the bottom of the glass (Blender's image order); the top of the glass is the phone's top."""
+    import numpy as np
+    W, H = size; y, x = np.mgrid[0:H, 0:W].astype(np.float32); px = np.zeros((H, W, 4), np.float32); px[..., 3] = 1
+    y = H - 1 - y      # (from here on y counts down from the top of the glass)
+    bg, amber, dark, white = np.array([.035, .05, .07]), np.array([.95, .61, .0]), np.array([.06, .08, .1]), np.array([.88, .9, .92])
+    px[..., :3] = bg + (np.array([.07, .09, .12]) - bg) * (y / H)[..., None]
+    def paint(mask, colour, a=1.): px[..., :3] = px[..., :3] * (1 - a * mask[..., None]) + colour * (a * mask[..., None])
+    soft = lambda d, w=1.5: np.clip(.5 - d / w, 0, 1)
+    def pill(x0, y0, x1, y1, colour, a=1.):
+        r = (y1 - y0) / 2; cx = np.clip(x, x0 + r, x1 - r); paint(soft(np.hypot(x - cx, y - (y0 + y1) / 2) - r), colour, a)
+    pill(18, 14, 110, 24, white, .5); pill(205, 15, 252, 23, white, .35)            # the status bar
+    pill(28, 56, 196, 80, white, .92); pill(28, 92, 148, 104, white, .42)           # "Groove" and the room's name
+    cx, cy, r = W / 2, H * .5, W * .34; d = np.hypot(x - cx, y - cy)
+    if state == 'ready':
+        paint(soft(np.abs(d - r) - 6), amber); paint(soft(d - (r - 12)), dark)
+    else:
+        paint(np.clip(1 - (d - r) / 28, 0, 1) * (d > r) * .5, amber); paint(soft(d - r), amber)      # lit, with a glow round it
+        if state == 'running':
+            turn = (np.arctan2(x - cx, -(y - cy)) + np.pi) / (2 * np.pi); paint(soft(np.abs(d - (r + 18)) - 3) * (turn < .32), white, .9)
+    inside = (x > cx - r * .3) & (np.abs(y - cy) < (cx + r * .45 - x) * .6)              # the play mark, pointing right
+    paint(inside.astype(np.float32), amber if state == 'ready' else dark)
+    pill(52, H - 120, 218, H - 102, white, .78); pill(80, H - 90, 190, H - 78, white, .38)   # "Store: fold and roll"
+    return px
+
+
+_screens = {}
+def screen_material(state):
+    """The phone's glass with phone_screen_image(state) on it, lit (emission) like a screen."""
+    if state in _screens: return _screens[state]
+    W, H = 270, 580; img = bpy.data.images.new('phone-groove-' + state, W, H); img.pixels.foreach_set(phone_screen_image(state, (W, H)).ravel()); img.pack()
+    m = bpy.data.materials.new('Held.phone screen ' + state); m.use_nodes = True; nt = m.node_tree; b = nt.nodes['Principled BSDF']
+    t = nt.nodes.new('ShaderNodeTexImage'); t.image = img
+    nt.links.new(t.outputs['Color'], b.inputs['Base Color']); nt.links.new(t.outputs['Color'], b.inputs['Emission Color'])
+    b.inputs['Emission Strength'].default_value = 1.; b.inputs['Roughness'].default_value = .12
+    m['alpha'] = 'OPAQUE'; _screens[state] = m; return m
 
 
 def tablet(rig, side, color=(.12, .12, .13)):
@@ -305,9 +355,35 @@ def laptop(rig, color=(.6, .62, .65), table=.74, reach=-.36):
 
 
 
+_robot = None
+def robot(rig, at, turn=0., side='r'):
+    """The workshop's Robo-Pal (tools/people/robo-pal.json: the toy story's own seated figure, the one on the desk's top
+    shelf), its root (the point it sits on) at `at` (metres, the character's frame), facing the character and turned
+    `turn` degrees about the vertical. It follows the hand (side) it is held in. Where it is set down on the shelf it is
+    exactly where the film's shelf robot is, so the one can take over from the other."""
+    global _robot
+    import json, os, bmesh
+    if _robot is None: _robot = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'robo-pal.json'), encoding='utf-8'))
+    # the figure's frame (x across, y up, z the way it faces; mm) -> the character's (it faces +Y, toward the character)
+    w = T(*at) @ R('Z', turn) @ Matrix(((-1, 0, 0, 0), (0, 0, 1, 0), (0, 1, 0, 0), (0, 0, 0, 1))) @ Matrix.Scale(.001, 4)
+    lin = lambda c: c / 12.92 if c <= .04045 else ((c + .055) / 1.055) ** 2.4
+    rgb = lambda h: tuple(lin(int(h.lstrip('#')[i:i + 2], 16) / 255) for i in (0, 2, 4))
+    out = []
+    for n, part in enumerate(_robot['materials']):
+        emit = tuple(c * min(1., part.get('emissiveIntensity', 1) / 2.5) for c in rgb(part['emissive'])) if part.get('emissive') else None
+        mat = material('robo-pal %d' % n, rgb(part['color']), part['roughness'], part['metalness'], emit=emit)
+        p = part['positions']; verts = [tuple(p[i:i + 3]) for i in range(0, len(p), 3)]
+        me = bpy.data.meshes.new('Robo-Pal %d' % n); me.from_pydata(verts, [], [(i, i + 1, i + 2) for i in range(0, len(verts), 3)])
+        bm = bmesh.new(); bm.from_mesh(me); bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=.02); bm.to_mesh(me); bm.free()
+        o = bpy.data.objects.new('Robo-Pal %d' % n, me); o.data.materials.append(mat); o.matrix_world = w; bpy.context.scene.collection.objects.link(o)
+        out.append(o)
+    return out
+
+
 BUILDERS = {'phone': phone, 'tablet': tablet, 'book': book, 'pen': pen, 'mug': mug, 'gamepad': gamepad, 'brush': brush, 'palette': palette,
             'cane': cane, 'backpack': backpack, 'headphones': headphones, 'cup': cup, 'carton': carton, 'radio': radio, 'clipboard': clipboard,
-            'wheelchair': wheelchair, 'crutch': crutch, 'screwdriver': screwdriver, 'prosthesis': prosthesis, 'dumbbell': dumbbell, 'laptop': laptop}
+            'wheelchair': wheelchair, 'crutch': crutch, 'screwdriver': screwdriver, 'prosthesis': prosthesis, 'dumbbell': dumbbell, 'laptop': laptop,
+            'robot': robot}
 
 
 def build(rig, items):
