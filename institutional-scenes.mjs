@@ -70,9 +70,10 @@ function makeModes(labels, accent, kind) {
     }]));
 }
 // Station chairs: a Steelcase prop (or the station's `chairId`) 1050 mm in front of the desk, turned with it.
+// `station`: the desk it belongs to (the Studio's Layers hide it with that desk; nothing else reads it).
 function stationChair(s) {
     const a = (s.turn || 0) * Math.PI / 180, distance = s.chairDistance ?? 1050;
-    return { id: s.chairId || 'steelcase-leap-v2', at: [s.at[0] + Math.sin(a) * distance, 0, s.at[1] + Math.cos(a) * distance], turn: 180 + (s.turn || 0) };
+    return { id: s.chairId || 'steelcase-leap-v2', at: [s.at[0] + Math.sin(a) * distance, 0, s.at[1] + Math.cos(a) * distance], turn: 180 + (s.turn || 0), station: s.id };
 }
 const mergeModes = (modes, extra = {}) => { for (const [phase, values] of Object.entries(extra)) modes[phase] = { ...modes[phase], ...values }; return modes; };
 export const INSTITUTIONAL_ROOMS = Object.fromEntries(definitions.map(row => {

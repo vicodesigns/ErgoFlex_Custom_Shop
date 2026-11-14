@@ -111,10 +111,15 @@ export function buildRows({ room, items = [], layers = {}, phase, size, desks = 
     if (to && to !== id && !entryOf.has(to)) { entryOf.set(to, { id, e: entries.get(id) }); aliases.set(id, to); }
     else if (to !== id) aliases.set(id, null);
   }
+  const deskIds = new Map(desks.map(d => [d.id, d.name]));
   for (const d of list) {
-    const hit = entryOf.get(d.id), e = hit?.e || null, group = kindOf(d);
-    rows.push({ id: d.id, entryId: hit?.id || d.id, name: d.name || labelOfId(d.id), group, kind: entryKind(group), hidden: hiddenAt(e, phase, size), anywhere: hiddenAnywhere(e),
-      chip: chipOf(e, phase, size), legacy: e?.legacy || null, custom: group === 'added', secondary: secondaryOf(d, e, hit && hit.id !== d.id) });
+    const hit = entryOf.get(d.id), e = hit?.e || null, group = kindOf(d), own = hiddenAt(e, phase, size);
+    // A seat or prop that belongs to a desk (its placement names the station: deskOfItem) goes and comes back with
+    // the desk's eye, with no entry of its own; its own hide still holds when the desk is shown.
+    const desk = deskOfItem(d), nestedIn = desk && deskIds.has(desk) ? desk : null, byDesk = !!nestedIn && hiddenAt(entries.get(nestedIn) || null, phase, size);
+    rows.push({ id: d.id, entryId: hit?.id || d.id, name: d.name || labelOfId(d.id), group, kind: entryKind(group), hidden: own || byDesk, own, byDesk, ...(nestedIn ? { nestedIn } : {}), anywhere: hiddenAnywhere(e),
+      chip: chipOf(e, phase, size), legacy: e?.legacy || null, custom: group === 'added',
+      secondary: [nestedIn ? `belongs to ${deskIds.get(nestedIn) || labelOfId(nestedIn)}${byDesk ? ' · hidden with it' : ''}` : '', secondaryOf(d, e, hit && hit.id !== d.id)].filter(Boolean).join(' · ') });
   }
   for (const [id, e] of entries) {
     if (!id.startsWith('scene:') || (aliases.has(id) ? aliases.get(id) : byId.has(id) ? id : null)) continue;
@@ -124,6 +129,12 @@ export function buildRows({ room, items = [], layers = {}, phase, size, desks = 
   }
   return { rows, aliases };
 }
+// ---- what belongs to a desk: ONLY an explicit relation, never a distance. The room's placement names the station
+// (`station: '<id>'`, carried to the object as userData.layersStation by workspace-3d.mjs): the chair every station
+// gets from its layout (institutional-scenes.mjs stationChair, office-room.mjs, coworking-room.mjs) and props the room
+// assigns by hand (the high school's drafting chair at the design review desk, the media desk's PC tower).
+// -> 'desk:station-<id>' or null. (The featured desk's chair is a fixture of the room and stays.)
+export const deskOfItem = d => typeof d?.station === 'string' && /^[a-z0-9][a-z0-9_-]{0,60}$/i.test(d.station) ? 'desk:station-' + d.station : null;
 // ---- desks and people (phase 4)
 const SAFE_KEY = /[^a-z0-9_-]+/g;
 // The layers key of a person of the cast: their placement key (a posture variant is the same person).
@@ -192,8 +203,8 @@ export function filterRows(rows, { query = '', filter = 'all', anywhere = false 
 }
 export function groupRows(rows) {
   const byName = (a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || a.name.localeCompare(b.name);
-  // A desk's user is nested under its desk row (desk.nested), not listed again under People.
-  const groups = GROUPS.map(g => { const list = rows.filter(r => r.group === g.id && !(g.id === 'person' && r.nestedIn)).sort(byName); return { ...g, rows: list, count: list.length, hidden: list.filter(r => r.hidden).length }; });
+  // What belongs to a desk (its user, its chair, its props) is nested under the desk row (desk.nested), not listed again.
+  const groups = GROUPS.map(g => { const list = rows.filter(r => r.group === g.id && !(g.id !== 'desk' && r.nestedIn)).sort(byName); return { ...g, rows: list, count: list.length, hidden: list.filter(r => r.hidden).length }; });
   const desk = groups.find(g => g.id === 'desk');
   if (desk) desk.rows = desk.rows.map(d => ({ ...d, nested: rows.filter(r => r.nestedIn === d.id).sort(byName) }));
   return groups.filter(g => g.count);
@@ -247,8 +258,8 @@ export const deleteToast = (hidden, deleted) => [hidden ? (hidden === 1 ? DELETE
   deleted ? `${deleted} added item${deleted === 1 ? '' : 's'} deleted.` : ''].filter(Boolean).join(' ');
 
 // ---- what the scene should show: Map(item id -> hidden) for the room's listable items at (phase, size)
-export function visibilityOf({ room, items = [], layers = {}, phase, size }) {
-  const { rows } = buildRows({ room, items, layers, phase, size }), out = new Map();
+export function visibilityOf({ room, items = [], layers = {}, phase, size, desks = [] }) {
+  const { rows } = buildRows({ room, items, layers, phase, size, desks }), out = new Map();
   for (const r of rows) if (!r.missing) out.set(r.id, r.hidden);
   return out;
 }

@@ -39,7 +39,7 @@ export const OFFICE_LAYOUTS = Object.fromEntries(sizes.map(([id, name, width, de
         : [[spread, back + (index === 0 ? 1160 : 1000)], [spread, back + 3800], [-spread, back + 3800], [spread, back + 6500]];
     const stations = Object.values(roles).slice(0, count - 1).map((role, i) => ({ ...role, at: positions[i] }));
     const props = [{ id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 1030], turn: 180 }];
-    for (const station of stations) props.push({ id: 'steelcase-leap-v2', at: [station.at[0], 0, station.at[1] + 1050], turn: 180 });
+    for (const station of stations) props.push({ id: 'steelcase-leap-v2', at: [station.at[0], 0, station.at[1] + 1050], turn: 180, station: station.id });   // station: its desk (Layers)
     props.push({ id: 'monstera', at: [width / 2 - 510, 0, front - 550] });
     const lounge = index > 0 ? [-width / 2 + 1650, front - 550] : [0, front - 500];
     if (index === 0) {

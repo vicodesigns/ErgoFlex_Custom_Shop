@@ -118,7 +118,8 @@ const STAGES = {
             p('ergoflex-artist-stool', 4060, -2000), p('ergoflex-artist-stool', 4060, -1300), p('ergoflex-paper-tray', 4700, -2500, -90, 900), p('ergoflex-plant-2', 4700, -330),
             p('ergoflex-printer', -1800, -3640, 0, 1050),
             // Front: drafting chair at the design review desk, the media desk's production PC, trash and recycling by the lockers.
-            p('ergoflex-tall-office-chair', -1000, 7560, 180), p('ergoflex-desktop-pc', 2480, 6620, -90), p('ergoflex-trash-can', 3400, 7760), p('ergoflex-trash-can', 3850, 7760),
+            // (`station`: the desk they belong to: the Studio's Layers hide them with it. Same place and index as before.)
+            p('ergoflex-tall-office-chair', -1000, 7560, 180, 0, { station: 'project-review' }), p('ergoflex-desktop-pc', 2480, 6620, -90, 0, { station: 'research-desk' }), p('ergoflex-trash-can', 3400, 7760), p('ergoflex-trash-can', 3850, 7760),
             // An orchestra student's violin on a table (APA), and the APA script and score library under the spirit wall.
             p('ergoflex-violin', 2420, 4520, 20, 740), p('ergoflex-small-bookshelf', -4700, 6350, 90), ...HS_SEAT_PROPS.map(([id, x, z, turn, phases]) => p(id, x, z, turn, 742, { phases }))],
         stations: [

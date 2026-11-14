@@ -70,7 +70,7 @@ export function createStudioLayers(ctx) {
   // force: after a room load (old deletes were hidden during hydration; the room's picking and people follow now).
   function apply(force = false) {
     const r = room(); if (!r) { try { ctx.applyDesks?.(new Map()); } catch {} return; }
-    const list = items(), vis = visibilityOf({ room: r, items: list, layers, phase: phase(), size: size() });
+    const list = items(), vis = visibilityOf({ room: r, items: list, layers, phase: phase(), size: size(), desks: desks() });   // (a desk's chair and props go with it)
     let changed = force && list.some(d => vis.get(d.id) === true);
     for (const d of list) {
       const hide = vis.get(d.id) === true, flipped = setLayersHidden(d.obj, hide);

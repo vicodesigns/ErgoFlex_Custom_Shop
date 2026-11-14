@@ -84,6 +84,13 @@ function installPageHelpers() {
         const key = s.variant || s.key || s.id, was = out.people[key], on = !!o.parent && shownChain(o);
         if (!was || (on && !was.shown)) out.people[key] = { shown: on || !!was?.shown, station: s.station || null, desk: s.desk || null, x: o.position.x, z: o.position.z, yaw: o.rotation.y };
       }
+      // what belongs to a desk (its placement names the station: userData.layersStation): shown, and where (room frame)
+      out.items = {};
+      for (const o of E.workspaceRoom?.assets?.() || []) {
+        const st = o?.userData?.layersStation; if (typeof st !== 'string') continue;
+        const key = 'scene:' + o.userData.sceneAssetKey; o.updateWorldMatrix?.(true, false);
+        out.items[key] = { station: st, propId: o.userData.propId || '', shown: !!o.parent && shownChain(o), p: o.position.toArray(), q: o.quaternion.toArray() };
+      }
       return out;
     },
     userOf(station) { for (const o of window.ErgoFlex.workspaceRoom?.people?.people || []) { const s = o?.userData?.person; if (s && (station ? s.station === station : s.desk && !s.station) && (!s.modes || s.modes.includes(window.ErgoFlex.measuredRoom?.mode))) return s.variant || s.key || s.id; } return null; },
@@ -156,6 +163,26 @@ async function main() {
     const moved = w.value.people[noah] && b0.people[noah] ? Math.round(Math.hypot(w.value.people[noah].x - b0.people[noah].x, w.value.people[noah].z - b0.people[noah].z)) + ' units' : '?';
     check('the eye: the desk and Noah are back, seated, at the same pose', w.ok && w.value.people[noah]?.desk === 'sit', `${sayR(w.value)}, desk role ${w.value.people[noah]?.desk}, moved ${moved}${took(w)}`);
     const [desksA, localA] = await deskWrites();
+
+    // 1b. what belongs to the media desk (its office chair, the PC tower) goes and comes back with it
+    const mine = v => Object.entries(v.items || {}).filter(([, x]) => x.station === 'research-desk'), theirs = v => Object.entries(v.items || {}).filter(([, x]) => x.station !== 'research-desk');
+    check('the media desk has its chair and PC tower in the room', mine(b0).length >= 2 && mine(b0).every(([, x]) => x.shown), `${mine(b0).length} items belong to it: ${mine(b0).map(([k, x]) => k.split(':').slice(-2).join(':') + (x.shown ? '' : ' (hidden)')).join(', ')}`);
+    await layers('hide', RESEARCH, 'cell'); w = await until(v => hiddenR(v) && mine(v).every(([, x]) => !x.shown));
+    check('hide the media desk: its chair and PC tower are invisible too', w.ok, mine(w.value).filter(([, x]) => x.shown).map(([k]) => k.split(':').slice(-2).join(':') + ' still shown').join(', ') + took(w));
+    const moved1 = theirs(b0).filter(([k, x]) => w.value.items[k]?.shown !== x.shown).map(([k]) => k.split(':').slice(-2).join(':'));
+    check('hide the media desk: the other desks\' chairs and props are unchanged', !moved1.length, moved1.join(', ') + ' changed');
+    await layers('show', RESEARCH, 'cell'); w = await until(v => shownR(v) && mine(v).every(([, x]) => x.shown));
+    const off = mine(b0).filter(([k, x]) => { const y = w.value.items[k]; return !y || Math.hypot(...y.p.map((c, i) => c - x.p[i])) > .5 || Math.abs(y.q.reduce((a, c, i) => a + c * x.q[i], 0)) < .9999; }).map(([k]) => k.split(':').slice(-2).join(':'));
+    check('show the media desk: its chair and PC tower are back at the same transforms', w.ok && !off.length, (off.length ? off.join(', ') + ' moved' : 'not all back') + took(w));
+    // an item hidden on its own stays hidden when its desk comes back
+    const pcKey = mine(b0).find(([, x]) => /desktop-pc/.test(x.propId))?.[0] || mine(b0).at(-1)?.[0];
+    if (pcKey) {
+      await layers('hide', pcKey, 'all'); await until(v => !v.items[pcKey]?.shown);
+      await layers('hide', RESEARCH, 'cell'); await until(hiddenR); await layers('show', RESEARCH, 'cell');
+      w = await until(v => shownR(v) && !v.items[pcKey]?.shown && mine(v).filter(([k]) => k !== pcKey).every(([, x]) => x.shown));
+      check('an item hidden on its own stays hidden when its desk is shown', w.ok, `${pcKey.split(':').slice(-2).join(':')} shown ${w.value.items[pcKey]?.shown}${took(w)}`);
+      await layers('show', pcKey, 'all'); await until(v => v.items[pcKey]?.shown);
+    } else check('an item hidden on its own stays hidden when its desk is shown', false, 'the media desk has no item of its own to hide');
     check('hiding the research desk wrote nothing to ' + DESKS_KEY, desksA === desks0 && localA === local0, `server ${desks0 === desksA ? 'same' : 'changed'}, this browser ${local0 === localA ? 'same' : 'changed'}`);
 
     // 2. the featured desk (Kai goes with it). Kai sits in a wheelchair: his postures are for 28 and 31 in, so the
@@ -185,8 +212,10 @@ async function main() {
     // 4. undo / redo
     await layers('hide', RESEARCH, 'cell'); await until(hiddenR);
     await page.evaluate(() => window.ErgoFlex.undoEdit()); const u = await until(shownR);
-    await page.evaluate(() => window.ErgoFlex.redoEdit()); const r = await until(hiddenR);
+    await page.evaluate(() => window.ErgoFlex.redoEdit()); const r = await until(v => hiddenR(v) && mine(v).every(([, x]) => !x.shown));
     check('undo shows it, redo hides it again', u.ok && r.ok, `after undo: ${sayR(u.value)}; after redo: ${sayR(r.value)}`);
+    check('undo / redo take the desk\'s chair and PC tower with it', mine(u.value).every(([, x]) => x.shown) && mine(r.value).every(([, x]) => !x.shown),
+      `after undo ${mine(u.value).filter(([, x]) => !x.shown).length} still hidden, after redo ${mine(r.value).filter(([, x]) => x.shown).length} still shown`);
     await page.evaluate(() => window.__lyE2E.flush()); await settle(1500);
     const stored = (await api()).values?.[LAYERS_KEY] || '';
     check('the hide is in the shared ' + LAYERS_KEY, stored.includes('desk:station-research-desk'), 'no research desk entry on the server');

@@ -328,7 +328,8 @@ function layersItems() {
         let onWall = false; for (let p = obj.parent; p && !onWall; p = p.parent) onWall = walls.includes(p);
         let at; try { const q = root.worldToLocal(obj.getWorldPosition(v)); at = [q.x, q.z]; } catch (_) { at = undefined; }
         out.push({ id: entry.editorId, obj, name: partLabel(entry.editorId) || entry.name, propId: obj.userData.propId, role: obj.userData.sceneAssetRole,
-            category: PROP_LIBRARY.entry?.(obj.userData.propId)?.category, anchor: obj.userData.propAnchor, onWall, custom: !!entry.isCustom, person: !!obj.userData.person, at });
+            category: PROP_LIBRARY.entry?.(obj.userData.propId)?.category, anchor: obj.userData.propAnchor, onWall, custom: !!entry.isCustom, person: !!obj.userData.person, at,
+            station: typeof obj.userData.layersStation === 'string' ? obj.userData.layersStation : undefined });   // the desk it belongs to (its placement says so)
     }
     return out;
 }

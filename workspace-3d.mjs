@@ -1741,6 +1741,7 @@ export class WorkspaceRoom {
             object.rotation.y = THREE.MathUtils.degToRad(placement.turn || 0);
             if (placement.scale) object.scale.multiplyScalar(placement.scale);
             markSceneAsset(object, { key: `${scene.id}:${scene.physical ? this.roomLayout.id + ':' : ''}room:${index}:${placement.id}` });
+            if (typeof placement.station === 'string') object.userData.layersStation = placement.station;   // the desk it belongs to (Studio Layers only)
             root.add(object);
             // Upgrade a procedural fixture without changing its saved editor key.
             // Shared GLB resources stay owned by PROP_LIBRARY, as for other props.
