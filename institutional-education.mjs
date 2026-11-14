@@ -1629,6 +1629,7 @@ function wainscot(kit, mat, height, { depth = 8, cap = null, capH = 32, capD = 2
     }
     const walls = { back: kit.back, right: kit.right, left: kit.left, front: kit.frontWall };
     for (const side of ['back', 'right', 'left', 'front']) {
+        if (!walls[side]) continue;   // no front wall in a film frame (or in a room that has none): nothing to dress
         if (parts[side].length) {
             const geo = mergeGeometries(parts[side], false); parts[side].forEach(p => p.dispose()); geo.userData.eduUV = true;
             const m = new THREE.Mesh(geo, mat); m.name = 'Wainscot wall finish'; m.receiveShadow = true; m.castShadow = false; walls[side].add(m);
