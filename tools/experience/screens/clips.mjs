@@ -4,6 +4,57 @@
 const DEMO = '/home/ergo/ErgoFlex_Custom_Shop/app-reference/demo_media/';
 const SCREENS = '/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-20261030/screens/';
 // target = the harness screen target from INVENTORY.md
+
+// ---- The cine cut (exports/cinematic-intro-cut-cine, the working cut since Nov 14 2026): each clip samples its chapter
+// of review-cut.json by id (shot), is chapter seconds + 1 s long, plays at offset 0 (loop:false) and is written to
+// exports/cinematic-intro-cut-cine/screens/<id>.mp4. Proposal: docs/cine-screens-20261114/SCREENS-PROPOSAL.md.
+// CREATE_ACTS: create's three ranges (S3): digital painting 0..A, architecture A..B, oil painting B..end.
+export const CREATE_ACTS = {A: 6.8, B: 16.9};
+// COAST_PERSON: who uses coast's featured suite (S4 decides; provisional)
+export const COAST_PERSON = 'Ava';
+const CINE_OUT = 'exports/cinematic-intro-cut-cine/screens';
+const cine = (shot, chapter, rest) => ({chapter, shot, out: CINE_OUT, ...rest});
+const CINE = [
+  cine('awaken', 1, {id: 'cine-awaken-main', target: 'main-landscape', role: 'digital twin + first-start self-test', w: 2560, h: 1072, scene: 'ch01', opts: {checklist: true}}),
+  cine('rise', 2, {id: 'cine-rise-portrait', target: 'main-portrait', role: 'Maya: wellness height app', w: 1080, h: 1856, scene: 'ch02p',
+    opts: {name: 'Maya', initials: 'M', evening: true, ck: [[0, 480], [4, 512], [8, 655], [12, 840], [15, 1000], [18, 1050]]}}),
+  cine('rise', 2, {id: 'cine-rise-curved', target: 'main-landscape', role: 'Maya: the workday, the evening summary', w: 2560, h: 1072, scene: 'ch02l',
+    opts: {name: 'Maya', colleague: 'Rosa Kim', ck: [[0, 480], [4, 512], [8, 655], [12, 840], [15, 1000], [18, 1050]], toast: [14.6, 99, '3h 10m standing · 4 stand breaks']}}),
+  cine('create', 3, {id: 'cine-create-landscape', target: 'main-landscape', role: 'Lin: painting -> house model -> meadow reference', w: 1920, h: 1120, scene: 'c03l', opts: {...CREATE_ACTS, name: 'Lin'}}),
+  cine('create', 3, {id: 'cine-create-portrait', target: 'main-portrait', role: 'Lin: references -> floor plan -> creek reference', w: 1080, h: 1856, scene: 'c03p', opts: {...CREATE_ACTS, name: 'Lin'}}),
+  cine('create', 3, {id: 'cine-create-floor-plan', target: 'texture:Architect floor plan', role: 'the drafting paper relabelled as a home (PNG)', w: 1600, h: 1000, scene: 'cplan', still: true}),
+  cine('commons', 4, {id: 'cine-commons-reservation', target: 'main-landscape', role: 'the booking ends (Yara), the next turn (Mia), the team notes', w: 1920, h: 800, scene: 'c04r',
+    opts: {prev: 'Yara', next: 'Mia', team: ['Mia', 'Kai', 'Sofia']}}),
+  cine('oilers', 6, {id: 'cine-oilers-curved', target: 'main-landscape', role: 'orbit lesson with the teacher cursor', w: 1920, h: 800, scene: 'ch06l', opts: {teacher: 'Hale · teacher'}}),
+  cine('oilers', 6, {id: 'cine-oilers-portrait', target: 'main-portrait', role: 'quiz -> lowering to Kai -> Kai +100 -> class', w: 1080, h: 1856, scene: 'c06p', opts: {name: 'Kai'}}),
+  cine('oilers', 6, {id: 'cine-oilers-laptop', target: 'main-landscape-2', role: 'the answer pad (Kai)', w: 1280, h: 776, scene: 'c06k', opts: {name: 'Kai'}}),
+  cine('wellness', 7, {id: 'cine-wellness-main', target: 'main-landscape', role: 'Maya: report -> time to move -> the stretch + height -> standing', w: 1920, h: 1080, scene: 'c07l',
+    opts: {name: 'Maya'}, videos: [{key: 'shoulder', src: 'app-reference/demo_media/seated_scapular_squeeze_01_demo.mp4', t: 17, scale: '1280:-2'}]}),
+  cine('wellness', 7, {id: 'cine-wellness-tablet', target: 'tablet', role: 'focus -> breathing with the stretch -> nice reset', w: 1620, h: 1080, scene: 'c07t', opts: {name: 'Maya'}}),
+  cine('awareness', 8, {id: 'cine-awareness-main', target: 'main-landscape', role: 'radar on the roll of the cut: the pet, stopped short', w: 1920, h: 800, scene: 'c08', opts: {gap: 16, label: 'Pet'}}),
+  // coast (written LAST: COAST_PERSON is S4's decision of who uses the featured suite; Maya is at the centre bay)
+  cine('coast', 5, {id: 'cine-coast-main', target: 'main-landscape', role: 'the featured suite: sign-in, height, colour, export', w: 1920, h: 1120, scene: 'c05m', opts: {name: COAST_PERSON, sign: 2.4}}),
+  cine('coast', 5, {id: 'cine-coast-curved', target: 'ergoflex-wide-monitor/monitor-screen', role: 'centre bay (Maya): NLE', w: 1920, h: 800, scene: 'ch05l', opts: {who: 'Maya', credit: COAST_PERSON}}),
+  cine('coast', 5, {id: 'cine-coast-portrait', target: 'ergoflex-portrait-monitor/monitor-screen', role: 'centre bay (Maya): colour + export', w: 1080, h: 1856, scene: 'ch05p'}),
+  cine('coast', 5, {id: 'cine-coast-wall', target: 'occ-display', role: 'screening wall: the reel opens on COAST', w: 3840, h: 1520, scene: 'ch05w', opts: {credit: COAST_PERSON}}),
+  // music: the beat follows the new score's tempo map once S7 publishes it (CINE_TEMPO=<file>, CINE_SCORE + CINE_SCORE_START)
+  ...[['arcade', 'arcade', 1360, 1080, 'ch09a'], ['marquee', 'marquee', 1920, 504, 'ch09m'], ['streamdeck', 'atelier-gaming-streamdeck-cyber/gaming-macro-key-display', 960, 616, 'ch09k'],
+    ['tv', 'tv', 1920, 1080, 'ch09c']].map(([n, target, w, h, scene]) => cine('music', 9, {id: 'cine-music-' + n, target, role: 'gaming room ' + n + ' on the score', w, h, scene, audio: true,
+    opts: {handle: 'neonrunner', rename: {nova_kai: 'novaflux'}, burst: [6.3, ['desk lights synced', 'the desk moves with the game??', 'LEDs on the beat']]},
+    ...(n === 'tv' ? {videos: [{key: 'montage', src: 'exports/cinematic-intro-20261030/screens/09-game-montage.mp4', t: 16, scale: '854:-2'}]} : {})})),
+  cine('storage', 11, {id: 'cine-storage-phone', target: 'texture:Held.phone screen (andre)', role: 'the phone in the hand of Andre: one button, then the steps', w: 540, h: 1160, scene: 'c11p', opts: {tap: 11.14}}),
+  // hero, the office version (financial analyst): its window is 12.5-21.9 s and the shot plays these at offset -13.1, so 10 s
+  // (300 frames) reach past its end (the hq12 clips were 8 s: their last frame held 0.8 s into the dissolve)
+  cine('hero', 12, {id: 'cine-hero-office-wide', target: 'main-landscape', role: 'finale office version: markets, DCF model', w: 2560, h: 1072, scene: 'ch13w', frames: 300}),
+  cine('hero', 12, {id: 'cine-hero-office-portrait', target: 'main-portrait', role: 'finale office version: portfolio', w: 1080, h: 1856, scene: 'ch13p', frames: 300}),
+  // hero: one 48 s home per desk version (shots/13-subshots.json), greeting that version's chapter person
+  ...[['gaming', 'Kai', 'Game night', [['Lights', 'Game sync', '', 'pink', .8, 'LED scene'], ['Height', '47.0', 'in', 'blue2', .7, 'Play height'], ['Tonight', '2h 10m', '', 'violet', .6, 'Session'], ['Tilt', '5°', '', 'cyan', .3, 'Screen angle']]],
+    ['artist', 'Lin', 'Studio day', [['Canvas', 'Saved', '', 'pink', .9, 'Lakeside dusk'], ['Surface', '55°', '', 'violet', .6, 'Easel'], ['Model', 'House A', '', 'cyan', .7, 'A-101 synced'], ['Studio', '4h 30m', '', 'amber', .75, 'Today']]],
+    ['hbhs', 'Kai', 'Period 2 done', [['Quiz', '+100', '', 'green', 1, 'Mercury ✓'], ['Height', '31.0', 'in', 'blue2', .25, 'His preset'], ['Class', '68%', '', 'teal', .68, 'got it right'], ['Next', 'Lab', '', 'amber', .4, 'Period 3']]],
+    ['occ', COAST_PERSON, 'Edit suite', [['Export', '100%', '', 'green', 1, 'COAST_final_4K'], ['Suite', '38.0', 'in', 'blue2', .4, 'Standing edit'], ['Review', '5', 'films', 'coral', .8, 'Portfolio'], ['Grade', 'Teal', '', 'amber', .6, '& Amber']]],
+    ['home', '', 'Your desk is ready', null],
+  ].map(([v, name, sub, tiles]) => cine('hero', 12, {id: 'cine-hero-' + v, target: 'main-landscape', role: `finale ${v} version home`, w: 1920, h: 800, scene: 'ch12', opts: {homeUntil: 1e3, name, sub, ...(tiles ? {tiles} : {})}})),
+];
 export const CLIPS = [
   {id: '01-main', chapter: 1, target: 'main-landscape', role: 'curved main: digital-twin control', w: 2560, h: 1072, scene: 'ch01'},
   // Round 8 alternative for the same monitor (Vico: wellness / how the desk helps, no twin): same size, same shot timing.
@@ -42,4 +93,5 @@ export const CLIPS = [
   {id: '13-main', chapter: 13, target: 'main-landscape', role: 'curved: app home for the whole finale (Vico: no logo-only monitors)', w: 1920, h: 800, scene: 'ch12', opts: {homeUntil: 1e3}},
   {id: '13-fin-portrait', chapter: 13, target: 'main-portrait', role: 'portrait: portfolio (financial analyst)', w: 1080, h: 1856, scene: 'ch13p'},
   {id: '13-fin-wide', chapter: 13, target: 'main-landscape', role: 'curved: markets, DCF model, watchlist', w: 2560, h: 1072, scene: 'ch13w'},
+  ...CINE,
 ];

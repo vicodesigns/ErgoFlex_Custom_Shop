@@ -30,7 +30,18 @@ const EXPORT = path.join(ROOT, 'exports/cinematic-intro-20261030');
 // (tools/experience/build-round8-twin.py), chapter time 0 at frame 0. The card draws frame round(t * 30)
 // (pre-decoded like the demo clips, held on the last frame). Unset, ch01 draws the 2D side view as before.
 // CHROME_PATH overrides the browser (default: the standard Windows install on win32, else /usr/bin/google-chrome).
+// Cine clips (clips.mjs entries with shot:'<chapter id>', Nov 14 2026): the desk pose is sampled from that chapter of the
+// working cut (CINE_CUT, default exports/cinematic-intro-cut-cine/review-cut.json; CAPTURE_SHOT=<cut.json or shot.json>
+// overrides) and the clip goes to the entry's out dir (default exports/cinematic-intro-cut-cine/screens; CAPTURE_OUT
+// overrides). An entry with still:true writes one PNG (<id>.png, frame at opts.stillAt or 0) instead of an MP4.
+// Music (audio:true): CINE_SCORE=<wav> with CINE_SCORE_START=<seconds of the chapter's first frame in it> analyses that
+// score instead of the 2026-10-30 one; CINE_TEMPO=<json> (or the entry's tempo) hands the score's tempo map to the scene
+// as SHOT.tempo ({bpm, beats:[film or chapter seconds…], start?}: see scenes/ch09.js).
+// PYTHON overrides the interpreter for audio-bands.py (default python on win32, else python3).
 const OUT = process.env.CAPTURE_OUT ? path.resolve(ROOT, process.env.CAPTURE_OUT) : path.join(EXPORT, 'screens');
+const CINE_CUT = path.resolve(ROOT, process.env.CINE_CUT || 'exports/cinematic-intro-cut-cine/review-cut.json');
+const PYTHON = process.env.PYTHON || (process.platform === 'win32' ? 'python' : 'python3');
+const outDir = clip => process.env.CAPTURE_OUT ? OUT : clip.out ? path.resolve(ROOT, clip.out) : OUT;
 const CACHE = path.join(HERE, '.cache');
 const FPS = 30;
 const TWIN = process.env.TWIN ? path.resolve(ROOT, process.env.TWIN) : null;
@@ -48,9 +59,17 @@ const wanted = args.filter(a => !a.startsWith('--'));
 const clips = wanted.length ? CLIPS.filter(c => wanted.some(w => c.id === w || c.id.startsWith(w))) : CLIPS;
 if (!clips.length) { console.error('no clips match', wanted); process.exit(1); }
 
-function shotData(chapter) {
+function cineShot(id) {
+  const file = process.env.CAPTURE_SHOT ? path.resolve(ROOT, process.env.CAPTURE_SHOT) : CINE_CUT;
+  const data = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const shot = Array.isArray(data.shots) ? data.shots.find(s => s.id === id) : data;
+  if (!shot || shot.id !== id) throw new Error(`no shot '${id}' in ${path.relative(ROOT, file)}`);
+  return shot;
+}
+function shotData(chapter, clip = {}) {
   const nn = String(chapter).padStart(2, '0');
-  const shot = JSON.parse(fs.readFileSync(process.env.CAPTURE_SHOT ? path.resolve(ROOT, process.env.CAPTURE_SHOT) : path.join(EXPORT, 'shots', nn + '.json'), 'utf8'));
+  const shot = clip.shot ? cineShot(clip.shot) : JSON.parse(fs.readFileSync(process.env.CAPTURE_SHOT ? path.resolve(ROOT, process.env.CAPTURE_SHOT) : path.join(EXPORT, 'shots', nn + '.json'), 'utf8'));
+  shot.motion = shot.motion || {initial: {height: 28, tilt: 0, x: 0, z: 0, yaw: 0}, clips: []}; shot.motion.clips = shot.motion.clips || [];
   const seconds = shot.seconds, dur = seconds + 1, rate = 60;
   const poses = [];
   for (let i = 0; i <= dur * rate; i++) poses.push(sampleClipMotion(shot.motion, i / rate));
@@ -62,10 +81,14 @@ function shotData(chapter) {
 
 // Demo exercise clips etc. are pre-decoded to jpg frames at 30 fps so the page
 // can draw frame N deterministically (no <video> seeking).
+// An old absolute path (the Linux render box's /home/ergo/ErgoFlex_Custom_Shop/...) falls back to the same path in this checkout.
+const localSrc = src => fs.existsSync(src) ? src : /ErgoFlex_Custom_Shop\//.test(src) ? path.join(ROOT, src.split('ErgoFlex_Custom_Shop/').pop()) : path.resolve(ROOT, src);
 function prepVideo(v) {
   const dir = path.join(CACHE, v.cache || v.key);
   const done = path.join(dir, '.done');
-  if (!fs.existsSync(done)) {
+  // a .done marker without frames (the markers are in git, the frames are not) decodes again
+  if (!fs.existsSync(done) || !fs.readdirSync(dir).some(f => f.endsWith('.jpg'))) {
+    v = {...v, src: localSrc(v.src)};
     fs.mkdirSync(dir, {recursive: true});
     const vf = [`fps=${FPS}`, v.scale ? `scale=${v.scale}` : null, v.crop ? `crop=${v.crop}` : null].filter(Boolean).join(',');
     execFileSync('ffmpeg', ['-v', 'error', '-y', ...(v.ss ? ['-ss', String(v.ss)] : []), '-i', v.src, '-t', String(v.t || 30), '-vf', vf, '-q:v', String(v.q || 3), path.join(dir, 'f%05d.jpg')]);
@@ -77,22 +100,36 @@ function prepVideo(v) {
 
 // Score spectrum for the chapter's span of the film (audio-reactive screens).
 function prepAudio(chapter, dur) {
+  if (process.env.CINE_SCORE) {
+    const wav = path.resolve(ROOT, process.env.CINE_SCORE), start = Number(process.env.CINE_SCORE_START);
+    if (!Number.isFinite(start)) throw new Error('CINE_SCORE needs CINE_SCORE_START (seconds of the chapter start in the score)');
+    const stamp = fs.statSync(wav).mtimeMs.toFixed(0), file = path.join(CACHE, `audio-cine-${chapter}-${start}-${stamp}.json`);
+    if (!fs.existsSync(file)) { fs.mkdirSync(CACHE, {recursive: true}); fs.writeFileSync(file, execFileSync(PYTHON, [path.join(HERE, 'audio-bands.py'), wav, String(start), String(dur), String(FPS), '32'], {maxBuffer: 1 << 28})); }
+    return {...JSON.parse(fs.readFileSync(file, 'utf8')), filmStart: start};
+  }
   const edl = JSON.parse(fs.readFileSync(path.join(EXPORT, 'edl.json'), 'utf8'));
   const ch = edl.chapters.find(c => c.index === chapter);
   const wav = path.join(EXPORT, 'score/score.wav');
+  if (!fs.existsSync(wav)) {   // no score here: the analysis cached in git for this chapter, else none (the scene's own pulse)
+    const hit = fs.existsSync(CACHE) && fs.readdirSync(CACHE).find(f => f.startsWith(`audio-${chapter}-${ch.start}-`) && f.endsWith('.json'));
+    console.log(`  audio: ${path.relative(ROOT, wav)} missing -> ${hit ? 'cached ' + hit : 'none (beat pulse only)'}`);
+    return hit ? {...JSON.parse(fs.readFileSync(path.join(CACHE, hit), 'utf8')), filmStart: ch.start} : null;
+  }
   const stamp = fs.statSync(wav).mtimeMs.toFixed(0);
   const file = path.join(CACHE, `audio-${chapter}-${ch.start}-${stamp}.json`);
   if (!fs.existsSync(file)) {
     fs.mkdirSync(CACHE, {recursive: true});
-    const json = execFileSync('python3', [path.join(HERE, 'audio-bands.py'), wav, String(ch.start), String(dur), String(FPS), '32'], {maxBuffer: 1 << 28});
+    const json = execFileSync(PYTHON, [path.join(HERE, 'audio-bands.py'), wav, String(ch.start), String(dur), String(FPS), '32'], {maxBuffer: 1 << 28});
     fs.writeFileSync(file, json);
   }
   return {...JSON.parse(fs.readFileSync(file, 'utf8')), filmStart: ch.start};
 }
 
 async function renderClip(clip) {
-  const shot = shotData(clip.chapter);
+  const shot = shotData(clip.chapter, clip);
   const audio = clip.audio ? prepAudio(clip.chapter, shot.duration) : null;
+  const tempoFile = process.env.CINE_TEMPO || clip.tempo;
+  const tempo = tempoFile && clip.audio ? JSON.parse(fs.readFileSync(path.resolve(ROOT, tempoFile), 'utf8')) : null;
   const videos = (clip.videos || []).map(prepVideo);
   if (TWIN && clip.scene === 'ch01') {
     // Cache per twin file (path, size, mtime), so a re-rendered twin is decoded again.
@@ -101,7 +138,7 @@ async function renderClip(clip) {
     console.log(`${clip.id}: twin ${path.relative(ROOT, TWIN)} (${videos.at(-1).count} frames)`);
   }
   const total = Math.round(shot.duration * FPS);
-  const frames = limitFrames ? Math.min(total, Number(limitFrames)) : total;
+  const frames = limitFrames ? Math.min(total, Number(limitFrames)) : clip.frames ? Math.min(total, clip.frames) : total;   // clip.frames: a clip that plays only inside a window
   const browser = await puppeteer.launch({
     executablePath: CHROME, headless: 'new',
     args: ['--disable-gpu', '--disable-gpu-compositing', '--use-angle=swiftshader', '--allow-file-access-from-files',
@@ -115,7 +152,7 @@ async function renderClip(clip) {
     page.on('pageerror', e => console.log('  [pageerror]', e.message));
     await page.evaluateOnNewDocument((data) => { window.__SHOT = data; }, {
       ...shot, clip: {id: clip.id, role: clip.role, scene: clip.scene, w: clip.w, h: clip.h, opts: clip.opts || {}},
-      videos: Object.fromEntries(videos.map(v => [v.key, v])), audio, root: pathToFileURL(ROOT).href,
+      videos: Object.fromEntries(videos.map(v => [v.key, v])), audio, tempo, root: pathToFileURL(ROOT).href,
     });
     await page.goto(pathToFileURL(path.join(HERE, 'page.html')).href, {waitUntil: 'load'});
     await page.evaluate(() => window.__ready);
@@ -128,7 +165,15 @@ async function renderClip(clip) {
       console.log(`${clip.id}: stills -> ${stillDir}`);
       return;
     }
+    const OUT = outDir(clip);
     fs.mkdirSync(OUT, {recursive: true});
+    if (clip.still) {
+      const t0 = Date.now(), png = path.join(OUT, clip.id + '.png');
+      await page.evaluate(t => window.render(t), (clip.opts || {}).stillAt || 0);
+      await page.screenshot({path: png});
+      console.log(`${clip.id}: still ${clip.w}x${clip.h} -> ${path.relative(ROOT, png)} (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
+      return;
+    }
     const out = path.join(OUT, clip.id + '.mp4');
     const tmp = out.replace(/\.mp4$/, '.part.mp4');
     ff = spawn('ffmpeg', ['-v', 'error', '-y', '-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-',

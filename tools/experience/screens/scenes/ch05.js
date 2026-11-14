@@ -16,8 +16,9 @@
       // title bar
       g.fillStyle = 'rgba(0,0,0,0.4)'; g.fillRect(0, 0, W, 70);
       fillR(28, 18, 34, 34, 9, C.coral); icon('play', 45, 35, 22, '#fff');
+      const O = SHOT.clip.opts || {};   // cine cut: who (the editor at this bay), credit (the film's director)
       T('Reel Studio', 78, 47, 30, {w: 700});
-      T('COAST  ·  Ideas become stories', 300, 47, 28, {w: 500, c: C.dim});
+      T(O.who ? `COAST  ·  ${O.who}'s bay` : 'COAST  ·  Ideas become stories', 300, 47, 28, {w: 500, c: C.dim});
       pill(W - 30, 14, 'Auto-saved', 24, {a: 'right', dot: C.green, bg: 'rgba(255,255,255,0.06)', c: C.soft});
       // bins (left) - widens on ultrawide screens
       const binW = W - 1040 - 420 - 60, cols = Math.max(2, Math.floor((binW - 24) / 200)), tw0 = (binW - 24 - (cols - 1) * 14) / cols;
@@ -41,7 +42,7 @@
           fillR(mx + 60, my + mh - 200, 560 * eo(seg(t, .4, 1)), 140, 14, 'rgba(0,0,0,0.55)');
           fillR(mx + 60, my + mh - 200, 10, 140, 5, C.coral);
           T('COAST', mx + 96, my + mh - 120, 64, {w: 700, ls: 10});
-          T('a short film by Dana Ortiz', mx + 98, my + mh - 82, 28, {w: 500, c: C.soft});
+          T('a short film by ' + (O.credit || 'Dana Ortiz'), mx + 98, my + mh - 82, 28, {w: 500, c: C.soft});
         });
         // cut flash
         const since = Math.min(...EDIT.map(e => { const d = s - PH0 - e[0]; return d >= 0 ? d : 99; }));
@@ -158,7 +159,7 @@
         const a = intro + i * per - .2, b = a + per + .4;
         const v = Math.min(sm(seg(t, a - .2, a + .3)), 1 - sm(seg(t, b - .3, b + .2)) + (i === WORKS.length - 1 ? 1 : 0));
         if (v <= 0) continue;
-        const [k, name, title, kind] = WORKS[i], lt = t - a;
+        const [k, name0, title, kind] = WORKS[i], lt = t - a, name = i === 0 && (SHOT.clip.opts || {}).credit || name0;
         alpha(v, () => {
           footage(k, 0, 0, W, H, t, {zoom: 1.04 + lt * .03});
           g.fillStyle = lin(0, H * .45, 0, H, [[0, 'rgba(0,0,0,0)'], [1, 'rgba(0,0,0,0.85)']]); g.fillRect(0, 0, W, H);

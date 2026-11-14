@@ -133,7 +133,7 @@
   }
   SCENES.ch01 = {
     prefetch(t) { return twinOn() ? [['twin', twinIdx(t)]] : []; },
-    draw(t) {
+    draw(t, o = {}) {
       if (SHOT.lightsOn && !ON) { ON = SHOT.lightsOn; BOOT = ON + 1.5; EARLY = BOOT + 5; }
       if (t < ON) { g.fillStyle = '#000'; g.fillRect(0, 0, W, H); return; }
       if (!B) B = beats();
@@ -173,6 +173,23 @@
             T('N', 0, -72, 22, {w: 700, a: 'center', c: C.dim});
             at(0, 0, 1, () => { polyFill([[0, -54], [-14, 0], [14, 0]], C.teal); polyFill([[0, 54], [-14, 0], [14, 0]], 'rgba(255,255,255,0.25)'); }, hd * Math.PI / 180);
           });
+          // opts.checklist (the cine cut's opener, Nov 14 2026): a first-start self-test of every move the chapter makes,
+          // listed from the start and ticked as each one ends, then 'All systems ready' once the last has landed.
+          if (o.checklist) {
+            const all = logEntries(), done = all.filter(e => t >= e.end).length, ready = all.length && done === all.length;
+            card(rx, 620, rw, 430, {r: 30, accent: ready ? C.green : null, border: ready ? hexA(C.green, .5) : C.line});
+            T('FIRST START · SELF-TEST', rx + 34, 676, 26, {w: 600, c: C.dim, ls: 3});
+            T(ready ? 'All systems ready' : `${done} of ${all.length}`, rx + rw - 34, 676, 26, {w: 700, a: 'right', c: ready ? C.green : C.soft});
+            const rowH = Math.min(52, 350 / Math.max(1, all.length)), sz = Math.min(30, rowH * .62);
+            all.forEach((e, i) => {
+              const y = 712 + i * rowH, on = t >= e.t && t < e.end, ok = t >= e.end;
+              if (on) fillR(rx + 16, y - 4, rw - 32, rowH - 4, 12, hexA(e.col, .14));
+              iconBadge(e.icn, rx + 56, y + rowH / 2 - 4, rowH * .32, ok || on ? e.col : C.faint);
+              T(e.text, rx + 92, y + rowH / 2 + sz * .3, sz, {w: on ? 700 : 600, c: ok ? C.soft : on ? C.text : C.faint});
+              if (ok) icon('check', rx + rw - 60, y + rowH / 2 - 4, sz * 1.1, C.green, 4);
+              else if (on) ring(rx + rw - 60, y + rowH / 2 - 4, rowH * .26, 5, seg(t, e.t, e.end), e.col);
+            });
+          } else {
           // activity log
           card(rx, 620, rw, 430, {r: 30});
           T('ACTIVITY', rx + 34, 676, 26, {w: 600, c: C.dim, ls: 3});
@@ -186,6 +203,7 @@
               else { const fr = seg(t, e.t, e.end); ring(rx + rw - 60, y + 20, 15, 5, fr, e.col); }
             });
           });
+          }
         });
       });
       // "Digital twin synced" moment in the longest hold between moves. Over the real desk it sits small at the

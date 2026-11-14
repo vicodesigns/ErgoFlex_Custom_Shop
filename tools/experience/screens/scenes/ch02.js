@@ -5,8 +5,13 @@
   const L1 = LIFTS[0] || {start: 1.6, duration: 4.8, target: 43.5}, L2 = LIFTS[1] || {start: 7.4, duration: 3.2, target: 52.5};
   const E1 = L1.start + L1.duration, E2 = L2.start + L2.duration, UP2 = L2.target > L1.target;
   // Workday clock shared by both screens: 8:00 AM at t=0, ~6:00 PM by the end.
-  const CK = [[0, 480], [4, 512], [8, 655], [12, 840], [15, 1040], [17, 1080]];
-  const clock = t => { for (let i = 1; i < CK.length; i++) if (t <= CK[i][0]) { const [a, ma] = CK[i - 1], [b, mb] = CK[i]; return lerp(ma, mb, (t - a) / (b - a)); } return 1080; };
+  // opts (Nov 14 2026, the cine cut; defaults = the earlier clips): name / initials of the person at the desk (Vico: the
+  // screens name whoever sits there), ck = the clock keys [[t, minutes], …] (the room clock of the chapter), toast =
+  // [at, dur, sub] of the closing 'Great day' toast, evening = greet 'Good evening' from 5 PM.
+  const O = SHOT.clip.opts || {}, NAME = O.name || 'Alex', INITIALS = O.initials || 'AK';
+  const CK = O.ck || [[0, 480], [4, 512], [8, 655], [12, 840], [15, 1040], [17, 1080]], CKEND = CK[CK.length - 1][1];
+  const clock = t => { for (let i = 1; i < CK.length; i++) if (t <= CK[i][0]) { const [a, ma] = CK[i - 1], [b, mb] = CK[i]; return lerp(ma, mb, (t - a) / (b - a)); } return CKEND; };
+  const greet = t => (O.evening && clock(t) >= 1020 ? 'Good evening, ' : clock(t) < 720 ? 'Good morning, ' : 'Good afternoon, ') + NAME;
   const day = t => seg(t, 0, 16); // 0 morning .. 1 evening
   const fmtH = h => h.toFixed(1);
 
@@ -35,8 +40,8 @@
       appIcon(92, 168, 84, {glow: true});
       T('ErgoFlex', 152, 162, 40, {w: 700});
       T('Wellness', 152, 202, 28, {w: 500, c: C.dim});
-      avatar(W - 92, 168, 42, C.violet, 'AK');
-      T(clock(t) < 720 ? 'Good morning, Alex' : 'Good afternoon, Alex', 60, 300, 58, {w: 600});
+      avatar(W - 92, 168, 42, C.violet, INITIALS);
+      T(greet(t), 60, 300, 58, {w: 600});
 
       // ---- hero height card
       const cy = 330, ch = 700;
@@ -168,8 +173,8 @@
 
   // ---------------- Curved ultrawide: the workday ----------------
   const PEOPLE = [
-    ['Maya Chen', '#e0a07a', '#3a6fd8', '#2a3c5a'], ['Jordan Lee', '#8d5a3b', '#e0663d', '#3a2f4a'], ['Sam Rivera', '#c98d66', '#26a17a', '#20343a'],
-    ['Priya N.', '#a8714f', '#9a5cf0', '#2e2a48'], ['Alex (you)', '#e8b48f', '#1388ec', '#1c2c44'], ['Leo Park', '#f0c4a0', '#d84a7a', '#3a2a36'],
+    [O.colleague || 'Maya Chen', '#e0a07a', '#3a6fd8', '#2a3c5a'], ['Jordan Lee', '#8d5a3b', '#e0663d', '#3a2f4a'], ['Sam Rivera', '#c98d66', '#26a17a', '#20343a'],
+    ['Priya N.', '#a8714f', '#9a5cf0', '#2e2a48'], [NAME + ' (you)', '#e8b48f', '#1388ec', '#1c2c44'], ['Leo Park', '#f0c4a0', '#d84a7a', '#3a2a36'],
   ];
   function person(x, y, w, h, i, t, speaking) {
     const [name, skin, shirt, room] = PEOPLE[i];
@@ -215,7 +220,7 @@
     });
   }
   function secMorning(t, x0) {
-    T('Good morning, Alex', x0, 220, 92, {w: 700});
+    T('Good morning, ' + NAME, x0, 220, 92, {w: 700});
     T('Thursday · 3 meetings · 2 focus blocks', x0, 290, 40, {w: 400, c: C.dim});
     // weather / sun card
     card(x0, 350, 560, 600, {accent: C.amber, r: 40});
@@ -325,7 +330,8 @@
       });
       dock(t, t < 4.1 ? 0 : t < 8.1 ? 1 : t < 12.1 ? 2 : 3);
       topBar(t, tint);
-      toast(t, 15.0, 2.5, W - 760, 96, 660, 'Great day, Alex', '6h 40m focused · 9 stand breaks', {col: C.green, icon: 'check'});
+      const [ta, td, tsub] = O.toast || [15.0, 2.5, '6h 40m focused · 9 stand breaks'];
+      toast(t, ta, td, W - 760, 96, 660, 'Great day, ' + NAME, tsub, {col: C.green, icon: 'check'});
       vignette(.4);
     },
   };

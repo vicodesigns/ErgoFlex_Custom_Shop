@@ -2,8 +2,26 @@
 // Beat grid matches the score: music section starts on a bar line at t=0.75 s, 115.2 BPM.
 // Spectrum/level data comes from the score itself (SHOT.audio, see audio-bands.py).
 (function () {
-  const BPM = 115.2, B0 = .75;
-  const beat = t => (t - B0) * BPM / 60;
+  // The beat comes from the score's tempo map when the capture hands one over (SHOT.tempo, capture.mjs CINE_TEMPO):
+  //   {bpm, first?}                     a steady tempo, first beat at chapter seconds `first` (default 0.75)
+  //   {bpm?, beats:[…], in:'film'|'chapter'?, chapterStart?}   beat times; 'film' times are made chapter seconds with
+  //                                     chapterStart (or the score analysis' filmStart); bpm then only labels the chip
+  // Without it: the 2026-10-30 score, 115.2 BPM from 0.75 s. opts (cine cut): handle (the streamer's neutral handle on the
+  // LIVE preview), rename {old: new} for chat names, burst [at, ['msg', …]] (chat lines landing on a desk move).
+  const O = SHOT.clip.opts || {}, TM = SHOT.tempo || null;
+  const BEATS = TM && Array.isArray(TM.beats) && TM.beats.length > 1
+    ? TM.beats.map(b => TM.in === 'film' ? b - (TM.chapterStart ?? SHOT.audio?.filmStart ?? 0) : b) : null;
+  const BPM = TM?.bpm || (BEATS ? 60 / ((BEATS[BEATS.length - 1] - BEATS[0]) / (BEATS.length - 1)) : 115.2);
+  const B0 = BEATS ? BEATS.find(b => b >= 0) ?? BEATS[0] : TM?.first ?? .75;
+  function beat(t) {   // beats since B0 (fractional), negative before it
+    if (!BEATS) return (t - B0) * BPM / 60;
+    const i0 = BEATS.indexOf(B0); let i = i0;
+    if (t < B0) return (t - B0) * BPM / 60;
+    while (i < BEATS.length - 1 && BEATS[i + 1] <= t) i++;
+    const a = BEATS[i], b = BEATS[i + 1] ?? a + 60 / BPM;
+    return i - i0 + (t - a) / (b - a);
+  }
+  const beatTime = k => { if (!BEATS) return B0 + k * 60 / BPM; const i0 = BEATS.indexOf(B0), j = i0 + Math.floor(k), f = k - Math.floor(k); const a = BEATS[j] ?? B0 + k * 60 / BPM, b = BEATS[j + 1] ?? a + 60 / BPM; return a + f * (b - a); };
   const pulse = t => t < B0 ? 0 : Math.exp(-fract(beat(t)) * 5);
   const bar4 = t => t < B0 ? 0 : Math.exp(-fract(beat(t) / 4) * 3);
   const hue = t => (285 + t * 30) % 360; // LED spectrum sweep (12 s period)
@@ -75,7 +93,7 @@
       // BPM chip
       fillR(70, 1640, 260, 70, 35, 'rgba(255,255,255,0.08)');
       circle(110, 1675, 14 + 6 * pulse(t), hsl(h, 100, 62));
-      T('115 BPM', 140, 1690, 36, {w: 700});
+      T(`${Math.round(BPM)} BPM`, 140, 1690, 36, {w: 700});
       fillR(360, 1640, W - 430, 70, 35, lin(360, 0, W - 70, 0, [[0, hsl(h, 100, 55, .9)], [.5, hsl(h + 60, 100, 55, .9)], [1, hsl(h + 120, 100, 55, .9)]]));
       T('Desk LEDs · spectrum', 400, 1690, 34, {w: 600, c: '#fff'});
       g.fillStyle = `rgba(255,255,255,${.06 * bar4(t)})`; g.fillRect(0, 0, W, H);
@@ -85,7 +103,11 @@
   // ---------------- Landscape: stream dashboard + chat ----------------
   const USERS = [['pixelpanda', C.cyan], ['nova_kai', C.pink], ['driftqueen', C.amber], ['retroRex', C.lime], ['glitchbyte', C.violet], ['lumen', C.teal], ['mochi', C.coral], ['bytebeat', C.blue2]];
   const MSGS = ['that drift was CLEAN', 'GG!!', 'the LEDs hit on the beat', 'what desk is that??', 'this song slaps', 'clip it clip it', 'combo x12 lets go', 'retro round next pls', 'lights match the music', 'W stream', 'HYPE', 'ErgoFlex setup goals', 'one more race', 'that boss fight tho', 'no way, perfect lap', 'hype train incoming'];
-  function msg(i) { const r = rng(i * 31 + 7); return {u: USERS[Math.floor(r() * USERS.length)], text: MSGS[i % MSGS.length], badge: r() < .3}; }
+  function msg(i) {
+    const r = rng(i * 31 + 7), u = USERS[Math.floor(r() * USERS.length)], m = {u: O.rename?.[u[0]] ? [O.rename[u[0]], u[1]] : u, text: MSGS[i % MSGS.length], badge: r() < .3};
+    if (O.burst) { const [at0, lines] = O.burst, first = Math.ceil(at0 * 1.6) + 6; if (i >= first && i < first + lines.length) m.text = lines[i - first]; }
+    return m;
+  }
   SCENES.ch09c = {
     prefetch(t) { return SHOT.videos.montage ? [['montage', Math.round(t * 30)]] : []; },
     draw(t) {
@@ -101,7 +123,7 @@
       T('Night Squad', 160, 82, 44, {w: 700});
       ['# general', '# clips', '# setups'].forEach((s, i) => T(s, 160, 170 + i * 62, 34, {w: i === 0 ? 600 : 500, c: i === 0 ? C.text : C.dim}));
       T('VOICE · LOBBY', 160, 400, 26, {w: 600, c: C.dim, ls: 3});
-      [['nova_kai', C.pink], ['retroRex', C.lime], ['you', C.blue2], ['mochi', C.coral]].forEach(([n, c], i) => {
+      [['nova_kai', C.pink], ['retroRex', C.lime], ['you', C.blue2], ['mochi', C.coral]].map(([n, c]) => [O.rename?.[n] || n, c]).forEach(([n, c], i) => {
         const y = 470 + i * 104, talk = noise(t * 2.2 + i * 5) > .55;
         avatar(200, y, 38, c, n[0].toUpperCase(), talk ? {ring: C.green, ringW: 5, ringGap: 5} : {});
         T(n, 262, y + 13, 36, {w: 600, c: talk ? C.text : C.soft});
@@ -114,9 +136,9 @@
         const im = frameImg('montage', Math.round(t * 30));
         if (im) drawCover(im, px, py, pw, ph); else { g.fillStyle = lin(px, py, px + pw, py + ph, [[0, hsl(h, 80, 40)], [1, hsl(h + 90, 80, 30)]]); g.fillRect(px, py, pw, ph); }
       });
-      pill(px + 24, py + 24, 'LIVE', 30, {bg: '#ff2d55', c: '#fff', wt: 700});
+      pill(px + 24, py + 24, O.handle ? 'LIVE · ' + O.handle : 'LIVE', 30, {bg: '#ff2d55', c: '#fff', wt: 700});
       const viewers = Math.round(1204 + t * 13 + 20 * noise(t));
-      pill(px + 160, py + 24, viewers.toLocaleString('en-US') + ' watching', 30, {bg: 'rgba(0,0,0,0.6)', c: '#fff'});
+      pill(px + 24 + (O.handle ? tw('LIVE · ' + O.handle, 30, 700) + 64 : 136), py + 24, viewers.toLocaleString('en-US') + ' watching', 30, {bg: 'rgba(0,0,0,0.6)', c: '#fff'});
       // hype meter driven by the score level
       const hy = py + ph + 40;
       card(px - 8, hy, pw + 16, 150, {r: 26});
@@ -178,7 +200,7 @@
       for (let k = Math.floor(b) - 6; k <= Math.floor(b) + 2; k++) {
         if (k < 0) continue;
         const pa = k * 1.9 * 60 / BPM + 1.2; // ship reaches this angle one beat-ish later
-        const tSpawn = B0 + k * 60 / BPM, tHit = tSpawn + 1.2 / 1.9;
+        const tSpawn = beatTime(k), tHit = tSpawn + 1.2 / 1.9;
         if (t < tSpawn) continue;
         const px = cx + Math.cos(pa) * R, py = cy + Math.sin(pa) * R;
         if (t < tHit) { const sc = eo(seg(t, tSpawn, tSpawn + .25)); at(px, py, sc, () => { g.save(); g.shadowColor = hsl(h + 60 + k * 40, 100, 60); g.shadowBlur = 30; polyFill([[0, -26], [8, -8], [26, 0], [8, 8], [0, 26], [-8, 8], [-26, 0], [-8, -8]], hsl(h + 60 + k * 40, 100, 70)); g.restore(); }, t * 3); }

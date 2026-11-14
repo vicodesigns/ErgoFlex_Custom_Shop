@@ -348,3 +348,50 @@ function waveform(x, y, w, h, seed, col, o = {}) {
   g.fillStyle = col;
   for (let i = 0; i < n; i++) { const v = (.2 + .8 * fbm(i * .09 + seed * 17)) * (.5 + .5 * noise(i * .5 + seed)); const hh = Math.max(2, v * h); g.fillRect(x + i * (o.step || 5), y + (h - hh) / 2, (o.step || 5) - 2, hh); }
 }
+
+// ---------- tiny 3D: flat-shaded polygons, back faces culled, painter's sort (the cine create chapter's house) ----------
+// cam: {target:[x,y,z], yaw (deg, about +y), pitch (deg, looking down), dist, fov (deg), cx, cy (screen centre)}.
+// faces: [{p:[[x,y,z]…] (counter-clockwise seen from outside), col:'#hex', a?:alpha, edge?:css, lw?, glow?, two?:true (never culled)}].
+const shadeHex = (hex, k) => { const n = parseInt(hex.slice(1), 16), c = v => Math.max(0, Math.min(255, Math.round(v * k))); return `rgb(${c(n >> 16 & 255)},${c(n >> 8 & 255)},${c(n & 255)})`; };
+function cam3d(cam) {
+  const ya = cam.yaw * Math.PI / 180, pa = cam.pitch * Math.PI / 180, cy_ = Math.cos(ya), sy_ = Math.sin(ya), cp = Math.cos(pa), sp = Math.sin(pa);
+  const f = (H / 2) / Math.tan((cam.fov || 30) * Math.PI / 360), [tx, ty, tz] = cam.target || [0, 0, 0];
+  const toCam = ([x, y, z]) => { x -= tx; y -= ty; z -= tz; const x1 = x * cy_ - z * sy_, z1 = x * sy_ + z * cy_; return [x1, y * cp + z1 * sp, -y * sp + z1 * cp + cam.dist]; };
+  const proj = p => { const [x, y, z] = toCam(p), d = Math.max(.05, z); return [cam.cx + f * x / d, cam.cy - f * y / d, z]; };
+  return {toCam, proj};
+}
+function mesh3d(faces, cam, o = {}) {
+  const {proj} = cam3d(cam), L = o.light || [-.45, .8, .4], ln = Math.hypot(...L), amb = o.ambient ?? .5, dif = o.diffuse ?? .6;
+  const out = [];
+  for (const fc of faces) {
+    const P = fc.p.map(proj);
+    let area = 0; for (let i = 0; i < P.length; i++) { const a = P[i], b = P[(i + 1) % P.length]; area += a[0] * b[1] - b[0] * a[1]; }
+    if (!fc.two && area > 0) continue;   // screen y points down: outward CCW faces seen from the front have negative area
+    const [a, b, c] = fc.p, u = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], v = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+    const n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]], nl = Math.hypot(...n) || 1;
+    const lam = Math.abs((n[0] * L[0] + n[1] * L[1] + n[2] * L[2]) / (nl * ln));
+    out.push({P, z: P.reduce((s, q) => s + q[2], 0) / P.length + (fc.bias || 0), fc, k: fc.flat ? 1 : amb + dif * lam});
+  }
+  out.sort((m, n) => n.z - m.z);
+  for (const {P, fc, k} of out) {
+    g.save(); g.globalAlpha *= fc.a ?? 1;
+    g.beginPath(); P.forEach((q, i) => i ? g.lineTo(q[0], q[1]) : g.moveTo(q[0], q[1])); g.closePath();
+    if (fc.glow) { g.shadowColor = fc.glow; g.shadowBlur = 30; }
+    g.fillStyle = shadeHex(fc.col, k); g.fill(); g.shadowBlur = 0;
+    if (fc.edge) { g.strokeStyle = fc.edge; g.lineWidth = fc.lw || 2; g.lineJoin = 'round'; g.stroke(); }
+    g.restore();
+  }
+  return out.length;
+}
+// An axis-aligned box as 5 or 6 outward faces (bottom left out unless o.bottom).
+function box3(x0, y0, z0, x1, y1, z1, col, o = {}) {
+  const F = [
+    [[x0, y1, z0], [x0, y1, z1], [x1, y1, z1], [x1, y1, z0]],   // top (+y)
+    [[x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]],   // +z
+    [[x1, y0, z0], [x0, y0, z0], [x0, y1, z0], [x1, y1, z0]],   // -z
+    [[x1, y0, z1], [x1, y0, z0], [x1, y1, z0], [x1, y1, z1]],   // +x
+    [[x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0]],   // -x
+  ];
+  if (o.bottom) F.push([[x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1]]);
+  return F.map(p => ({p, col, ...o, bottom: undefined}));
+}
