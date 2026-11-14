@@ -4,6 +4,8 @@
   const LIFTS = (SHOT.clips || []).filter(c => c.kind === 'lift').sort((a, b) => a.start - b.start);
   const L1 = LIFTS[0] || {start: 1.6, duration: 4.8, target: 43.5}, L2 = LIFTS[1] || {start: 7.4, duration: 3.2, target: 52.5};
   const E1 = L1.start + L1.duration, E2 = L2.start + L2.duration, UP2 = L2.target > L1.target;
+  // the standing preset is where the first lift stops (43.5 in until Nov 14 2026; Maya's own height, 41 in, since)
+  const STAND = L1.target;
   // Workday clock shared by both screens: 8:00 AM at t=0, ~6:00 PM by the end.
   // opts (Nov 14 2026, the cine cut; defaults = the earlier clips): name / initials of the person at the desk (Vico: the
   // screens name whoever sits there), ck = the clock keys [[t, minutes], …] (the room clock of the chapter), toast =
@@ -21,7 +23,7 @@
     if (r > .05) return {label: 'Rising', col: C.blue2, icon: 'up'};
     if (r < -.05) return {label: 'Lowering', col: C.coral, icon: 'down'};
     if (p.height >= 52.3) return {label: 'Full height', col: C.teal, icon: 'check'};
-    if (p.height >= 43) return {label: 'Standing', col: C.green, icon: 'check'};
+    if (p.height >= STAND - .5) return {label: 'Standing', col: C.green, icon: 'check'};
     return {label: 'Sitting', col: C.amber, icon: 'desk'};
   }
   function deskGlyph(x, y, s, h01, tilt, col) { // tiny side-view desk drawn at ground y
@@ -56,7 +58,7 @@
       fillR(gx - 16, gy1, 32, gy0 - gy1, 16, 'rgba(255,255,255,0.08)');
       const hy = lerp(gy0, gy1, h01);
       fillR(gx - 16, hy, 32, gy0 - hy, 16, lin(0, gy1, 0, gy0, [[0, C.teal], [1, C.blue]]));
-      [[28, 'Sit'], [43.5, 'Stand'], [52.5, 'Max']].forEach(([v, l]) => {
+      [[28, 'Sit'], [STAND, 'Stand'], [52.5, 'Max']].forEach(([v, l]) => {
         const yy = lerp(gy0, gy1, (v - 28) / 24.5), on = Math.abs(p.height - v) < .4;
         fillR(gx - 40, yy - 2, 16, 4, 2, on ? C.text : C.faint);
         T(l, gx - 56, yy + 12, 30, {w: on ? 700 : 500, a: 'right', c: on ? C.text : C.faint});
@@ -160,7 +162,7 @@
       fillR(bx, 520, 240, 400, 120, 'rgba(255,255,255,0.06)');
       icon('down', bx + 120, 720, 200, C.faint, 22);
       // presets
-      [[28, 'Sit'], [43.5, 'Stand'], [52.5, 'Max']].forEach(([v, l], i) => {
+      [[28, 'Sit'], [STAND, 'Stand'], [52.5, 'Max']].forEach(([v, l], i) => {
         const x = 80 + i * 360, on = Math.abs(p.height - v) < .4, near = (r > .05 && ((i === 1 && t < 7) || (i === 2 && t > 7)));
         fillR(x, 640, 330, 280, 50, on ? hexA(C.green, .28) : near ? hexA(C.blue, .22) : 'rgba(255,255,255,0.06)');
         if (on || near) strokeR(x, 640, 330, 280, 50, on ? C.green : C.blue2, 5);
