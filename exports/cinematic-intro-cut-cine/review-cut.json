@@ -14182,7 +14182,7 @@
    "kind": "lift",
    "seconds": 18,
    "title": "Your height. Your rhythm.",
-   "detail": "Sit to focus. Rise to 52.5\u2033 to recharge.",
+   "detail": "Sit to focus. Rise to 41\u2033 to recharge.",
    "preset": "office",
    "transition": 1.1,
    "size": "60x30",
@@ -19724,7 +19724,7 @@
    "screens": [
     {
      "target": "main-landscape",
-     "src": "exports/cinematic-intro-cut-cine/screens/02-curved.mp4",
+     "src": "exports/cinematic-intro-20261104-hq14/screens/02-curved.mp4",
      "brightness": [
       [
        0,
@@ -19744,7 +19744,7 @@
     },
     {
      "target": "main-portrait",
-     "src": "exports/cinematic-intro-cut-cine/screens/02-portrait.mp4",
+     "src": "exports/cinematic-intro-20261104-hq14/screens/02-portrait.mp4",
      "brightness": [
       [
        0,
@@ -50115,7 +50115,7 @@
    "screens": [
     {
      "target": "main-landscape",
-     "src": "exports/cinematic-intro-cut-cine/screens/07-main.mp4",
+     "src": "exports/cinematic-intro-20261030/screens/07-main.mp4",
      "base": {
       "offset": 0,
       "loop": true
