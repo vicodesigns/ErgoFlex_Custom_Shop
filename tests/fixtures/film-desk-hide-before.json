@@ -871,7 +871,7 @@
     "cast": [
      {
       "key": "yara-works",
-      "id": "people-yara-stand-type",
+      "id": "people-yara-stand-mid",
       "at": [
        7230,
        -1657
@@ -927,7 +927,7 @@
      },
      {
       "key": "mia-works",
-      "id": "people-mia-power-type",
+      "id": "people-mia-power-type-30",
       "turn": 90,
       "on": "electric-wheelchair",
       "seat": 470,
@@ -1020,7 +1020,8 @@
      "people-maya-sit-type",
      "people-maya-sit-type-30",
      "people-maya-stand-type",
-     "people-noah-sit-laptop"
+     "people-noah-sit-laptop",
+     "people-ava-stand-low"
     ],
     "cast": [
      {
@@ -1028,6 +1029,24 @@
       "id": "people-maya-sit-type",
       "station": "film-edit-01",
       "desk": "sit"
+     },
+     {
+      "key": "ava-sits",
+      "id": "people-ava-sit-type",
+      "desk": "sit",
+      "colors": {
+       "top": "#2f5f8f",
+       "bottom": "#d8d2c4"
+      }
+     },
+     {
+      "key": "ava-stands",
+      "id": "people-ava-stand-mid",
+      "desk": "stand",
+      "colors": {
+       "top": "#2f5f8f",
+       "bottom": "#d8d2c4"
+      }
      }
     ]
    }

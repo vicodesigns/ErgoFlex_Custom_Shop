@@ -351,6 +351,9 @@ if cleared: pose = cleared; pose_lib.apply_pose(rig, pose)
 # What each held thing follows when the Director fine-tunes the pose (the wheelchair stays where it is).
 HELD_BONE = {'gamepad': 'hand_r', 'carton': 'hand_r', 'backpack': 'spine_03', 'headphones': 'head', 'wheelchair': None, 'laptop': None, 'prosthesis': 'calf_{side}'}
 extras, extra_bone = [], {}
+# What is worn on the body is fitted outside the posed body and clothes (not the hair, the eyes, brows or teeth).
+held.BODY = [o for o in meshes if o.type == 'MESH' and not any(k in o.name.lower() for k in ('low-poly', 'teeth', 'tongue', 'eyebrow', 'eyelash', 'glasses'))
+             and not (who.get('hair') and who['hair'] in o.name)]
 for kind, kw in list(spec.get('held', [])) + list(who.get('carry', {}).get(spec['pose'], [])):
     made = held.BUILDERS[kind](rig, **dict(kw)); extras += made
     for o in made: extra_bone[o.name] = (HELD_BONE[kind] if kind in HELD_BONE else 'hand_{side}')
