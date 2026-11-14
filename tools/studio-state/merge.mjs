@@ -13,6 +13,7 @@ import { decodeStoredJSON, encodeStoredJSON } from '../../browser-design-storage
 // codec 'pool' = the app's browser-design-storage encoding, 'plain' = JSON.
 export const SPECS = {
   'ergoflex.sceneAssets.v1': { codec: 'plain', containers: [[]] },                 // per room:size
+  'ergoflex.sceneLayers.v1': { codec: 'plain', containers: [[]] },                  // per '<room>|<item>' (scene-layers.mjs: show / hide)
   'ergoflex.sceneDesksBySizeV2': { codec: 'pool', containers: [['rooms']] },        // per room/size
   'ergoflex.sceneDesksV1': { codec: 'pool', containers: [['rooms']] },
   'ergoflex.buildPresetsV1': { codec: 'pool', containers: [['entries']] },          // per preset
