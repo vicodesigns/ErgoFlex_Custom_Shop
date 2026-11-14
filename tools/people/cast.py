@@ -871,18 +871,29 @@ def stand_counter(k):
 
 # ---- the gym's equipment (gym-room.mjs, millimetres there, metres here). Each posture is built on the machine as
 # it stands in the room, so hands and feet meet the bar, the pedals, the bag and the bench whatever the person's size.
-# The training bike: the saddle's top is 0.967 up; the handlebar (0.018 thick) is 0.71 in front of the saddle's middle
+# The training bike: the saddle's top is 0.967 up; the handlebar (0.018 in radius) is 0.71 in front of the saddle's middle
 # and 1.11 up; the crank's axle is 0.22 in front and 0.37 up, its pedals 0.10 from it and 0.20 either side.
 BIKE_SADDLE, BIKE_BAR, BIKE_CRANK, BIKE_THROW = .967, (-.71, 1.11), (-.22, .37), .10
 
 
+BIKE_GRIP = 25       # degrees the hands slope down toward the bar (the forearms' slope)
+
+
 def gym_cycle(k):
-    """On the training bike: leaning to the handlebar, both hands on it, the left pedal down and the right one up."""
-    def hand(s): return {'at': (s * .2, BIKE_BAR[0] + .075, BIKE_BAR[1] + .03), 'fingers': (-s * .1, -1, -.45), 'palm': (0, -.25, -1), 'elbow': (s * .3, .25, -.3), 'curl': 1.5, 'thumb': .6}
+    """On the training bike: sitting on the saddle, leaning to the handlebar with the elbows soft and both hands
+    wrapped round it, the left pedal down and the right one up."""
+    # The grip: the palm lies over the top of the bar (0.018 in radius) with the knuckles over its front, the fingers curl
+    # round the front and under it, the thumb under from behind. The wrist is where the palm's base is, behind and
+    # above the bar.
+    b = math.radians(BIKE_GRIP); u, n = (-math.cos(b), -math.sin(b)), (math.sin(b), -math.cos(b))      # (y, z): along the hand, out of the palm
+    over = .018 + .028; contact = (BIKE_BAR[0] - n[0] * over, BIKE_BAR[1] - n[1] * over)                     # the hand's middle line over the bar
+    wrist = (contact[0] - u[0] * .058, contact[1] - u[1] * .058)
+    def hand(s): return {'at': (s * .2, wrist[0], wrist[1]), 'fingers': (0, u[0], u[1]), 'palm': (0, n[0], n[1]), 'elbow': (s * .3, .2, -.35), 'shoulder': (16, 3), 'curl': 1.75, 'thumb': .6}
     def foot(s, up): return {'at': (s * .17, BIKE_CRANK[0] + .1, BIKE_CRANK[1] + up * BIKE_THROW + .0175 + .11), 'toes': (s * .06, -1, 0), 'pitch': 22 + (-8 if up < 0 else 4),      # (the sole near level on the pedal: the feet lean with the pelvis, 22 degrees, toes down; + lifts the toes)
             'knee': (s * .04, -.6, .3)}
-    # (the heels a little up: a leg of 0.70 m, Kai's, still reaches the pedal at the bottom of its turn)
-    return {'pelvis': (0, .03, BIKE_SADDLE + .09), 'pelvis_pitch': 22, 'spine': (12, 11, 8), 'neck': -12, 'head': -16,
+    # (the hips down on the saddle: the sit bones on its rubber, the knee of the leg at the bottom still a little bent;
+    # the trunk leans further so that a short rider's arms, Kai's 0.41 m, reach the bar with the elbows soft)
+    return {'pelvis': (0, .03, BIKE_SADDLE + .07), 'hip_z': BIKE_SADDLE + .067, 'pelvis_pitch': 28, 'spine': (15, 14, 10), 'neck': -18, 'head': -22,
             'hand_l': hand(1), 'hand_r': hand(-1), 'foot_l': foot(1, -1), 'foot_r': foot(-1, 1)}
 
 
@@ -1369,7 +1380,8 @@ ALSO = ['people-sam-sit-type', 'people-sam-sit-type-30', 'people-grace-lie-bed',
         'people-mia-power-phone', 'people-mia-power-type']
 # A posture nudged for one person (metres added to a hand's or a foot's place): the clipboard lies as the left hand
 # holds it, and on Yusuf's broader chest it tips into the writing hand.
-NUDGE = {('yusuf', 'stand-chart'): {'hand_r': (.02, .0, .035)}}
+NUDGE = {('yusuf', 'stand-chart'): {'hand_r': (.02, .0, .035)},
+         ('zoe', 'gym-cycle'): {'hip_z': .03}}      # (her hips are fuller under the hip joints than Kai's: on the saddle, not sunk into it)
 # A model in an outfit of its own ('as' on its output: these keys replace the character's): in a hospital bed Grace
 # and Ben wear a gown like the ward's patients, not their day clothes.
 VARIANTS = {
