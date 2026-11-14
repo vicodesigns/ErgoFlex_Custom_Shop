@@ -2,8 +2,9 @@
 """Show / hide (scene-layers.mjs) and the film's chapter keys (tools/experience/chapter-keys.py).
 A Studio hide lives in 'ergoflex.sceneLayers.v1' in studio-state.json: the film never reads it, so a change to it must
 not change any chapter key. A chapter's own hide (the Director's, in the cut shot) must change only that chapter's key.
-Also pins the known hole (DESIGN.md 5.3, phase 5, not approved): the renders' --state-keys overlay of
-'ergoflex.sceneAssets.v1' is not in the key either, so a Studio move or removal does not change a key today.
+The former known hole (DESIGN.md 5.3) is closed by phase 5 (render epoch 3 -> 4): the renders' --state-keys overlay of
+'ergoflex.sceneAssets.v1' is now in the key (the chapter's room slice), so a Studio move or removal in the high school
+changes the oilers key, and only that one. This check was flipped on purpose when phase 5 landed.
 Tiny synthetic film in a temp dir, no browser.     python tests/chapter-keys-layers-test.py"""
 import importlib.util, json, os, shutil, tempfile
 WT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -38,7 +39,10 @@ try:
           {'highschool:house': {'removed': [BK], 'added': [], 'transforms': {}}})
     check(changed(base, keys()) == [], 'a Studio hide or show (sceneLayers.v1) changes no chapter key')
     state({}, {'highschool:house': {'removed': [], 'added': [], 'transforms': {BK: {'p': {'x': 1}}}}})
-    check(changed(base, keys()) == [], 'known hole (phase 5, not approved): a Studio sceneAssets move or removal changes no key either')
+    check(changed(base, keys()) == ['oilers'], 'phase 5 (was the known hole): a Studio sceneAssets move or removal in the high school changes the oilers key and no other')
+    state({}, {'highschool:house': {'removed': [BK], 'added': [], 'transforms': {}}, 'library:humboldt': {'removed': ['scene:x'], 'added': [], 'transforms': {}}})
+    check(changed(base, keys()) == [], 'a sceneAssets change in a room no chapter of this film uses changes no key')
+    state({}, {'highschool:house': {'removed': [BK], 'added': [], 'transforms': {}}})
     cut['shots'][5]['sceneEdits'] = [{'match': '^Prop:ergoflex-small-bookshelf$', 'asset': BK[6:], 'hide': True, 'director': True}]; w(f'{HQ}/review-cut.json', cut)
     check(changed(base, keys()) == ['oilers'], 'a chapter\'s own hide edit changes only that chapter\'s key')
     cut['shots'][5]['sceneDeskEdits'] = [{'desk': 'station-research-desk', 'hide': True}]; k1 = keys(); w(f'{HQ}/review-cut.json', cut)

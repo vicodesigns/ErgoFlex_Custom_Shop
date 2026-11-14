@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """tools/experience/chapter-keys.py: keys are stable, a change to one chapter's camera changes only that key, a seed change
 changes only the chapters that use it, a media change only its chapter, resolution / epoch change all, awaken follows
-previews/awaken-v5-cut.json and hero shots/13-subshots.json, an overlay (freeze) file wins over the root's. Runs on a tiny
+previews/awaken-v5-cut.json and hero shots/13-subshots.json, an overlay (freeze) file wins over the root's, and the Studio's
+room state the render overlays (studio-state.json 'ergoflex.sceneAssets.v1', the chapter's room slice only; sceneLayers never)
+changes exactly the chapters of that room, with an empty / missing / unreadable state stable. Runs on a tiny
 synthetic film in a temp dir (no browser).     python3 tests/chapter-keys-test.py"""
 import copy, importlib.util, json, os, shutil, tempfile
 WT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -16,7 +18,15 @@ tmp = tempfile.mkdtemp(prefix='chapter-keys-test-')
 def w(rel, o, root=tmp):
     p = os.path.join(root, rel); os.makedirs(os.path.dirname(p), exist_ok=True)
     open(p, 'wb' if isinstance(o, bytes) else 'w').write(o if isinstance(o, bytes) else json.dumps(o))
-def shot(i): return {'id': IDS[i], 'seconds': 10 + i, 'camera': {'x': i, 'y': 1}, 'screens': {'main': 'clips/%02d.mp4' % i}, 'detail': 'text', 'note': 'n'}
+# the film's rooms as in hq14 review-cut.json (chapter 'music' is in the gaming room, 'media' in the music room)
+ROOMS = {'awaken': ('product', None), 'rise': ('home', 'house'), 'create': ('creative', 'premium'), 'commons': ('library', 'humboldt'),
+         'coast': ('occmedialab', 'house'), 'oilers': ('highschool', 'house'), 'wellness': ('gym', 'house'), 'awareness': ('product', None),
+         'music': ('gaming', 'house'), 'media': ('music', 'house'), 'storage': ('workshop', 'house'), 'hero': ('product', None)}
+def shot(i):
+    s = {'id': IDS[i], 'seconds': 10 + i, 'camera': {'x': i, 'y': 1}, 'screens': {'main': 'clips/%02d.mp4' % i}, 'detail': 'text', 'note': 'n'}
+    room, layout = ROOMS[IDS[i]]; s['room'] = room
+    if layout: s['layout'] = layout
+    return s
 def build():
     w(f'{HQ}/review-cut.json', {'name': 'cut', 'shots': [shot(i) for i in range(12)]})
     w(f'{HQ}/previews/awaken-v5-cut.json', {'name': 'v5', 'shots': [shot(0)]})
@@ -61,6 +71,70 @@ try:
         ck.read_chapter_epochs = lambda d: {**real(d), 'rise': '9'}; k9 = keys()
     finally: ck.read_chapter_epochs = real
     check(changed(k8, k9) == ['rise'], 'a per-chapter epoch changes only that chapter\'s key')
+    # ---- Studio room state the render overlays (--state-keys ergoflex.sceneAssets.v1 from studio-state.json): phase 5
+    SA, SL = 'ergoflex.sceneAssets.v1', 'ergoflex.sceneLayers.v1'
+    def state(assets=None, layers=None, raw=None, deleted=False, indent=None, root=tmp, crlf=False):
+        ks = {}
+        if assets is not None or raw is not None:
+            ks[SA] = {'rev': 1, 'ts': 0, 'by': 't', **({'deleted': True} if deleted else {'value': raw if raw is not None else json.dumps(assets)})}
+        if layers is not None: ks[SL] = {'rev': 1, 'ts': 0, 'by': 't', 'value': json.dumps(layers)}
+        txt = json.dumps({'format': 'ergoflex-studio-state-v1', 'rev': 1, 'keys': ks}, indent=indent)
+        w('studio-state.json', (txt.replace('\n', '\r\n') if crlf else txt).encode(), root)
+    HS = 'highschool:house'; T1 = {'p': {'x': 1.25, 'y': 0, 'z': -2}, 'q': {'x': 0, 'y': 0, 'z': 0, 'w': 1}, 's': {'x': 1, 'y': 1, 'z': 1}}
+    def room(removed=(), added=(), transforms=None): return {'removed': list(removed), 'added': list(added), 'transforms': transforms or {}}
+    nostate = keys()
+    state({}); check(keys() == nostate, 'an empty sceneAssets value = no studio-state.json at all (stable, no crash)')
+    state({HS: room()}); check(keys() == nostate, 'an empty high school slice = an absent one')
+    state({HS: room()}, raw='not json'); check(keys() == nostate, 'an unparseable value = empty (the render\'s JSON.parse fails the same way)')
+    state(raw='x', deleted=True); check(keys() == nostate, 'a deleted record = absent (the render does not overlay it)')
+    w('studio-state.json', b'{broken', tmp); check(keys() == nostate, 'an unreadable studio-state.json degrades to the absent value (no crash)')
+    state({HS: room(transforms={'scene:highschool:house:room:24:bookshelf': T1})}); s1 = keys()
+    check(changed(nostate, s1) == ['oilers'], 'a transform in the high school changes the oilers key and no other (' + ','.join(changed(nostate, s1)) + ')')
+    T2 = copy.deepcopy(T1); T2['p']['x'] = 1.26; state({HS: room(transforms={'scene:highschool:house:room:24:bookshelf': T2})})
+    check(changed(s1, keys()) == ['oilers'], 'a second move of the same prop changes oilers again')
+    state({HS: room(transforms={'scene:highschool:house:room:24:bookshelf': T1}), 'library:humboldt': room(transforms={'scene:library:humboldt:room:3:x': T1})}); s2 = keys()
+    check(changed(s1, s2) == ['commons'] and s2['oilers'] == s1['oilers'], 'a move in another room (library) changes nothing for oilers, only commons')
+    state({HS: room(transforms={'scene:highschool:house:room:24:bookshelf': T1}), 'highschool:apartment': room(removed=['scene:a'])})
+    check(changed(s1, keys()) == [], 'another layout of the same room (highschool:apartment) changes nothing')
+    state({HS: room(transforms={'scene:highschool:house:room:24:bookshelf': T1}), 'music:house': room(removed=['scene:m'])})
+    check(changed(s1, keys()) == ['media'], 'the music room\'s slice moves chapter media (its shot.room), not chapter music')
+    state({HS: room(transforms={'scene:highschool:house:room:24:bookshelf': T1}), 'product': room(added=[{'editorId': 'scene:p1', 'propId': 'plant'}])})
+    check(changed(s1, keys()) == ['awaken', 'awareness', 'hero'], 'the product stage\'s slice moves the product chapters (hero through its sub-shots)')
+    state({HS: room(transforms={'scene:highschool:house:room:24:bookshelf': T1}), 'highschool': room(removed=['scene:b'])})
+    check(changed(s1, keys()) == ['oilers'], 'a bare room entry (folded into a layout on load) counts for that room\'s chapters')
+    BK = 'scene:highschool:house:room:24:ergoflex-small-bookshelf'
+    state({HS: room(removed=[BK], transforms={'scene:highschool:house:room:24:bookshelf': T1})}); s3 = keys()
+    check(changed(s1, s3) == ['oilers'], 'a removal in the high school changes only oilers')
+    state({HS: room(removed=[BK, 'scene:z', BK], transforms={'scene:highschool:house:room:24:bookshelf': T1})}); s4 = keys()
+    state({HS: room(removed=['scene:z', BK], transforms={'scene:highschool:house:room:24:bookshelf': T1})})
+    check(changed(s3, s4) == ['oilers'] and keys() == s4, 'removed is a set: order and duplicates do not change a key')
+    ADD = {'editorId': 'scene:highschool:house:add:1', 'propId': 'plant', 'position': [0, 0, 800]}
+    state({HS: room(removed=[BK], added=[ADD], transforms={'scene:highschool:house:room:24:bookshelf': T1})}); s5 = keys()
+    check(changed(s3, s5) == ['oilers'], 'an added item in the high school changes only oilers')
+    state({HS: room(removed=[BK], added=[ADD, {'editorId': 'scene:x'}], transforms={'scene:highschool:house:room:24:bookshelf': T1})})
+    check(keys() == s5, 'an added entry without propId (the render skips it) changes nothing')
+    # same state, other spelling: key order, whitespace, CRLF, 1.0 vs 1, -0.0 vs 0
+    v = {HS: {'transforms': {'scene:highschool:house:room:24:bookshelf': {'s': {'z': 1.0, 'y': 1, 'x': 1}, 'q': {'w': 1.0, 'z': -0.0, 'y': 0, 'x': 0}, 'p': {'z': -2.0, 'y': 0, 'x': 1.25}}},
+              'added': [ADD], 'removed': [BK]}, 'zz:other': room()}
+    state(raw=json.dumps(v, indent=3, sort_keys=False), indent=2, crlf=True)
+    check(keys() == s5, 'the same state with other key order, whitespace, CRLF and float spelling gives the same keys')
+    state({HS: room(removed=[BK], added=[ADD], transforms={'scene:highschool:house:room:24:bookshelf': T1})},
+          layers={HS + '|' + BK: {'kind': 'prop', 'legacy': 'removed', 'cells': {'*/*': False}}, HS + '|desk:x': {'kind': 'desk', 'cells': {'morning/60x30': True}}})
+    check(keys() == s5, 'a Studio show / hide (sceneLayers.v1) changes no key')
+    # the freeze's studio-state.json wins over the root's (that is the copy the render PC renders with)
+    ov2 = tempfile.mkdtemp(prefix='ck-freeze-'); state({}, root=ov2)
+    check(keys(overlay=ov2) == nostate and keys() == s5, 'a freeze\'s studio-state.json is the one keyed, not the live one')
+    shutil.rmtree(ov2, ignore_errors=True)
+    # canonical form pinned (same bytes on every machine): what the key hashes for the oilers room
+    got = ck.canon(ck.room_slices(json.loads(json.dumps(v)), [{'room': 'highschool', 'layout': 'house'}]))
+    want = ('{"highschool:house":{"added":[{"editorId":"scene:highschool:house:add:1","position":[0,0,800],"propId":"plant"}],'
+            '"removed":["scene:highschool:house:room:24:ergoflex-small-bookshelf"],"transforms":{"scene:highschool:house:room:24:bookshelf":'
+            '{"p":{"x":1.25,"y":0,"z":-2},"q":{"w":1,"x":0,"y":0,"z":0},"s":{"x":1,"y":1,"z":1}}}}}')
+    check(got == want, 'canonical room slice is pinned: ' + (got if got != want else 'ok'))
+    check(ck.room_slices({}, [{'room': 'highschool', 'layout': 'house'}]) == {} and ck.room_slices({HS: None}, [{'room': 'highschool'}]) == {}, 'no state / null slice -> {}')
+    check(set(ck.room_slices({'highschool:house': room(removed=['a']), 'highschool:wing': room(removed=['b']), 'high': room(removed=['c'])}, [{'room': 'highschool'}])) == {'highschool:house', 'highschool:wing'},
+          'a shot without a layout takes every layout of its room (superset), never a prefix-alike room')
+    os.remove(f'{tmp}/studio-state.json')
     # CLI
     import subprocess, sys
     r = subprocess.run([sys.executable, f'{WT}/tools/experience/chapter-keys.py', HQ, '--root', tmp, '--resolution', '720p', '--json', '--chapter', 'rise'], capture_output=True, text=True)

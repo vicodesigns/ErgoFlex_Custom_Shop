@@ -10,7 +10,12 @@ One cache key per film chapter: sha256 of a canonical JSON (keys sorted) of ever
   * the sha256 of every media file the shot names (screens clips etc.; 'missing' when the file is not there)
   * the resolution (480p | 720p | 1080p | 4K) and RENDER_EPOCH (tools/experience/render-epoch.txt)
   * a per-chapter epoch ('chapter <id> <n>' in render-epoch.txt), for a code change that alters one chapter's pixels
+  * 'studioAssets': the slice of the Studio's room state 'ergoflex.sceneAssets.v1' (removed / added / transforms) for the
+    chapter's room(s), exactly what the render overlays (render-cut.cjs --state-keys ergoflex.sceneAssets.v1 reads it from
+    <root>/studio-state.json, i.e. the freeze's frozen copy; studio.js restoreSceneAssetStates + hydrateSceneAssets apply it).
+    See studio_assets() for which entries, the canonical form, and what an absent/unreadable state hashes as.
 Nothing else: no code hashes (bump the epoch when a code change alters pixels), and no field of the shot is left out.
+Other Studio state (ergoflex.sceneLayers.v1, desks, presets, ...) is never in a key: the render does not overlay it.
 
 <hq dir> is repo-relative (or absolute under --root; root default = this script's repo). --overlay is a freeze directory:
 a file is read from <freeze>/<path> when it exists there, else from <root>/<path>; sha256 of media/seeds come from the
@@ -45,7 +50,7 @@ class Tree:
     def load(self, rel):
         p = self.path(rel)
         if not p: raise FileNotFoundError(rel)
-        return json.load(open(p))
+        with open(p, encoding='utf-8-sig') as f: return json.load(f)   # utf-8 on every OS (Windows' default is cp1252)
     def sha(self, rel):
         if rel in self._sha: return self._sha[rel]
         p = self.path(rel); s = None
@@ -73,11 +78,89 @@ def read_chapter_epochs(script_dir):
 
 def canon(o): return json.dumps(o, sort_keys=True, separators=(',', ':'), ensure_ascii=False)
 
+# ---- Studio room state the render overlays (phase 5 of the layers design, DESIGN.md 5.2/5.3) -----------------------------
+# The render (render-cut.cjs stage(), --state-keys ergoflex.sceneAssets.v1, no --state) seeds localStorage with the chapter's
+# seed file and then overwrites ONE key with <root>/studio-state.json keys['ergoflex.sceneAssets.v1'].value (when that record
+# exists and is not deleted); the render PC's <root>/studio-state.json is the freeze's frozen copy (freeze-inputs.sh always
+# freezes it), which is what Tree reads with --overlay <freeze>. studio.js then: restoreSceneAssetStates(JSON.parse(value))
+# (an unparseable value = no Studio state at all), and for the open room hydrateSceneAssets(sceneId): `removed` ids are
+# removeFromParent()ed, `transforms` applied, `added` items (editorId + propId) built. The state of a room is keyed
+# '<room>:<layout>' for measured rooms and '<room>' otherwise (sceneAssetState); a bare '<room>' entry of a measured room is
+# folded into '<room>:<layout at load>' on restore. The Director maps a shot to those ids with prop-edits.mjs studioSceneIds.
+STATE_KEY = 'ergoflex.sceneAssets.v1'
+
+def _num(o):
+    """Canonical numbers: an integral float is the int (JS writes 1, not 1.0), -0.0 is 0. No rounding: Python's float repr
+    is the shortest round-trip form on every platform, and rounding could give two different states one key."""
+    if isinstance(o, float): return int(o) if o == o and o not in (float('inf'), float('-inf')) and o.is_integer() else o
+    if isinstance(o, dict): return {k: _num(v) for k, v in o.items()}
+    if isinstance(o, list): return [_num(v) for v in o]
+    return o
+
+def _parse_assets(raw):
+    """The render's JSON.parse(localStorage value) -> {sceneId: saved}; anything else = empty (studio.js try/catch)."""
+    if not isinstance(raw, str): return {}
+    try: v = json.loads(raw)
+    except ValueError: return {}
+    return v if isinstance(v, dict) else {}
+
+def _slice(saved):
+    """One room's saved state as studio.js restoreSceneAssetStates keeps it, canonical; None when it holds nothing.
+    removed is a Set (order and duplicates do not matter: sorted, unique); added keeps only items with editorId and propId,
+    one per editorId (a Map: first position, last value), in order; transforms is an object (key order irrelevant)."""
+    if not isinstance(saved, dict): return None
+    rem, add, tr = saved.get('removed') or [], saved.get('added') or [], saved.get('transforms') or {}
+    if isinstance(rem, list): rem = sorted({x for x in rem if isinstance(x, str)})
+    if isinstance(add, list):
+        m = {}
+        for a in add:
+            if isinstance(a, dict) and a.get('editorId') and a.get('propId'): m[canon(a['editorId'])] = a
+        add = list(m.values())
+    if not rem and not add and not tr: return None
+    return _num({'removed': rem, 'added': add, 'transforms': tr})
+
+def scene_ids(shot, assets):
+    """The sceneAssets entries a shot's room can read: prop-edits.mjs studioSceneIds ('<room>:<layout>' and '<room>'); a shot
+    with a room but no layout also takes every '<room>:*' entry (the stage then opens the room's default layout, which this
+    script cannot know: a superset, so a change there never keeps a stale key)."""
+    room, layout = shot.get('room'), shot.get('layout')
+    if not isinstance(room, str) or not room: return set()
+    if layout: return {f'{room}:{layout}', room}
+    return {room} | {k for k in assets if k.startswith(room + ':')}
+
+def studio_assets(T, seed_rel):
+    """-> {sceneId: raw saved} the render ends up with for 'ergoflex.sceneAssets.v1'. The overlay from studio-state.json
+    when that file is readable and its record exists and is not deleted; otherwise (no state file, unreadable, key absent
+    or deleted: the render would keep the seed's value, or crash without a state file) the seed's own value of that key,
+    and {} when the seed has none. Never raises: a call without state degrades to the seed's value / {} (stable)."""
+    try:
+        st = T.load('studio-state.json')
+        rec = st['keys'].get(STATE_KEY) if isinstance(st, dict) and isinstance(st.get('keys'), dict) else None
+    except (OSError, ValueError): rec = None
+    if isinstance(rec, dict) and not rec.get('deleted'): return _parse_assets(rec.get('value'))
+    try:
+        seed = T.load(seed_rel)
+        if isinstance(seed, dict) and seed.get('format') == 'ergoflex-studio-state-v1':
+            r = (seed.get('keys') or {}).get(STATE_KEY)
+            return _parse_assets(r.get('value')) if isinstance(r, dict) and not r.get('deleted') else {}
+        return _parse_assets(seed.get(STATE_KEY)) if isinstance(seed, dict) else {}
+    except (OSError, ValueError): return {}
+
+def room_slices(assets, shots):
+    """{sceneId: canonical slice} for the chapter's shots; rooms with nothing saved are left out, so an empty slice, a
+    missing one and an absent state all give {} (one stable value), and other rooms never enter."""
+    ids = set().union(*(scene_ids(sh, assets) for sh in shots)) if shots else set()
+    out = {}
+    for sid in sorted(ids):
+        sl = _slice(assets.get(sid))
+        if sl is not None: out[sid] = sl
+    return out
+
 def chapter_keys(hq, resolution, root, overlay=None, epoch=None, only=None):
     """-> [(index 1-based, id, key)] in film order"""
     here = os.path.dirname(os.path.abspath(__file__))
     T = Tree(root, overlay); epoch = epoch or read_epoch(here); chapter_epochs = read_chapter_epochs(here)
-    review = T.load(f'{hq}/review-cut.json'); out = []
+    review = T.load(f'{hq}/review-cut.json'); out = []; assets_by_seed = {}
     def cutinfo(cut): return {k: v for k, v in cut.items() if k not in ('shots', 'name')}
     for i, s in enumerate(review['shots']):
         cid = s['id']
@@ -92,6 +175,8 @@ def chapter_keys(hq, resolution, root, overlay=None, epoch=None, only=None):
         media = sorted({v for sh in shots for v in strings(sh) if MEDIA.search(v) and not v.startswith(('http', 'data:', '/'))})
         payload = {'epoch': epoch, 'resolution': resolution, 'chapter': cid, 'source': src, 'cut': cutinfo(cut), 'shots': shots,
                    'seed': {'name': seed_for(cid), 'sha256': T.sha(seed)}, 'media': {m: T.sha(m) for m in media}}
+        if seed not in assets_by_seed: assets_by_seed[seed] = studio_assets(T, seed)
+        payload['studioAssets'] = room_slices(assets_by_seed[seed], shots)   # always present ({} = nothing saved for the room)
         if cid in chapter_epochs: payload['chapterEpoch'] = chapter_epochs[cid]   # only that chapter's key changes
         out.append((i + 1, cid, hashlib.sha256(canon(payload).encode()).hexdigest()))
     return out

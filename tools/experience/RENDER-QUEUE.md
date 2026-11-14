@@ -80,7 +80,9 @@ With your existing pipeline, from the clone with the overlay, at the job's resol
 ## 3b. Chapter cache (render only what changed)
 
 A chapter's key (`tools/experience/chapter-keys.py`, computed by the desk from the frozen film data at the job's resolution) is a
-sha256 over everything that decides its frames: its render shot(s), seed file, media clips, the resolution and `render-epoch.txt`.
+sha256 over everything that decides its frames: its render shot(s), seed file, media clips, the resolution and `render-epoch.txt`,
+and (from render epoch 4) its room's slice of the Studio state the render overlays (`--state-keys ergoflex.sceneAssets.v1` from the
+frozen `studio-state.json`: that room's removed / added / transforms), so a Studio move or removal re-renders that room's chapters.
 Same key = same frames, so an earlier render at that resolution can be reused. Cache dir on the render PC:
 
     F:\ErgoFlex_Render\cache\<resolution>\<chapter id>-<key>.mkv        e.g.  cache\4K\rise-3efc1943…ac4c.mkv   (the key is the full 64 hex chars)
