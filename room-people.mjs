@@ -1333,6 +1333,7 @@ export class RoomPeople {
             if (s.scale && s.scale !== 1) out.scale = s.scale;
             if (s.colors) out.colors = { ...s.colors };
             if (s.pose) out.pose = structuredClone(s.pose);
+            const look = (this.current(o) || s).look; if (look) out.look = [].concat(look);   // (a film's listener keeps whom they look at)
             return out;
         });
     }

@@ -178,8 +178,10 @@ def oilers(s):
     # screens to the lens, the desk coming down to him.
     cam(s, his('oilers', 0, 0.6) + [
         key(1.15, (5.02, 0.62, 3.22), (10.05, 1.67, 7.83), 42, 'Fern (hold)'),
-        key(1.2, (6.6, 3.0, 4.5), (-2.4, 1.0, 4.7), 44, 'Cut: high over the class from the back, Noah talking with Kai at the featured desk', cut=True),
-        key(4.45, (5.9, 2.8, 4.45), (-2.6, 1.05, 4.7), 44, 'A slow push over the class'),
+        # (from the -z side of the back of the room: the white review desk stays out of the bottom left, and the
+        # orange ball on top of Mia's desk stays clear above the quiz screen)
+        key(1.2, (6.4, 2.6, 3.2), (-2.5, 1.0, 5.2), 46, 'Cut: over the class from the back, Noah talking with Kai at the featured desk', cut=True),
+        key(4.45, (6.0, 2.55, 3.25), (-2.55, 1.02, 5.05), 46, 'A slow push over the class'),
         key(4.5, (-0.5, 1.95, 7.15), (-3.0, 1.45, 5.45), 50, 'Cut: front three-quarter from the window side, Kai at the desk', cut=True),
         key(8.0, (-0.6, 1.95, 7.2), (-3.0, 1.5, 5.45), 50, 'The desk starts down'),
         key(11, (-0.55, 2.05, 7.3), (-3.0, 1.45, 5.45), 53, 'The desk comes down to Kai, the quiz on the screens'),
