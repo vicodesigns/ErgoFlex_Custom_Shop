@@ -34,8 +34,8 @@
     "id": "builtin-wheels-0",
     "lane": "wheels",
     "kind": "pose",
-    "start": 6.8,
-    "duration": 6.6,
+    "start": 7.2,
+    "duration": 6.2,
     "easing": "linear",
     "label": "Drive to the table",
     "target": {
@@ -7006,14 +7006,14 @@
  ],
  "ledStatus": [
   {
-   "at": 6.8,
-   "dur": 1.947,
+   "at": 7.2,
+   "dur": 1.829,
    "kind": "wheels",
    "mode": 6
   },
   {
-   "at": 8.747,
-   "dur": 4.653,
+   "at": 9.029,
+   "dur": 4.371,
    "kind": "wheels",
    "mode": 3
   }
