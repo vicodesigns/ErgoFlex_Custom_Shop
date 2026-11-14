@@ -322,7 +322,7 @@ export const ROOM_PEOPLE = {
         { id: 'people-ava-sit-write', on: 'student-chair-0-0-1', seat: 450, turn: 180, modes: ['morning', 'afternoon'] },
         { id: 'people-eli-sit-listen', on: 'student-chair-0-2-0', seat: 450, turn: 180, modes: ['morning', 'afternoon'] },
         { id: 'people-sofia-sit-laptop', on: 'student-chair-1-1-1', seat: 450, turn: 180, modes: ['morning', 'afternoon'] },
-        { id: 'people-hale-stand-present', layout: 'house', at: [2600, -3250], turn: 0, modes: ['morning'] },
+        { id: 'people-hale-stand-present', layout: 'house', at: [1750, -3200], turn: 0, modes: ['morning'] },   // beside the whiteboard, which is in the middle of the wall (Vico, Nov 13 2026)
         { id: 'people-hale-stand-type', station: 'demonstration-desk', desk: 'stand', modes: ['afternoon', 'party'], colors: LOOK.hale },
         { id: 'people-hale-stand-low', desk: 'stand', modes: ['evening'], colors: LOOK.hale },   // after school, the desk at 35 in
         // The Oiler showcase: students at their projects, families standing at the demos.
