@@ -229,6 +229,7 @@ function tapKeys(rig, s, time, seed, life) {
     rig.lq[arm[3]].multiply(turn.setFromAxisAngle(X, tap * .012));
 }
 
+const CUP_HAND = { 'sit-coffee': 'r', 'stand-coffee': 'r' };      // desk postures with a drink in one hand (tools/people/cast.py)
 export function solveDesk(rig, keys, input) {
     const mobile = keys.sit.length > 0 && keys.stand.length > 0, tau = mobile ? input.tau : keys.sit.length ? 0 : STAND_UP;
     const k = clamp01(input.k), ke = k * k * (3 - 2 * k), height = input.height, time = input.time, life = time === null || time === undefined ? 0 : input.life ?? 1, seed = input.seed | 0;
@@ -269,7 +270,9 @@ export function solveDesk(rig, keys, input) {
     if (lean > 1e-4) {
         for (const [bone, share] of [[b.pelvis, .52], [b.spine_01, .2], [b.spine_02, .16], [b.spine_03, .12], [b.neck_01, -.34], [b.head, -.5]]) { rig.turnWorld(bone, turn.setFromAxisAngle(X, lean * share)); rig.fk(); }
     }
-    const sitsUp = input.upright ?? life > 0, sitUpright = () => {
+    // (the coffee postures are built sitting back already, the cup hand off the keys: the upright correction would pull
+    // the typing hand, at full stretch to the keys, off them)
+    const sitsUp = input.upright ?? (life > 0 && !(sit && CUP_HAND[sit.a.pose])), sitUpright = () => {
         const seated = sit ? 1 - ss(.35, .75, tau) : 0;      // (whole whenever it is on: the posture, not the breathing)
         if (seated > 0) {
             const back = -THREE.MathUtils.degToRad(SIT_UPRIGHT) * seated;
@@ -309,6 +312,8 @@ export function solveDesk(rig, keys, input) {
     rig.fk();
     // ---- arms
     const lift = (standing ? type : sit)?.lift ?? 0, keyed = standing ? type : sit, armsDown = !sit ? 1 : !wait ? 0 : ss(1.7, 2.5, tau);   // (the hands push on the thighs until the legs have taken the weight)
+    // a drink at the desk (sit-coffee, stand-coffee): one hand holds it and does not type
+    const cup = keyed ? CUP_HAND[(keyed.w > .5 ? keyed.b : keyed.a).pose] || null : null;
     for (const s of ['l', 'r']) {
         const arm = rig.side[s].arm, [clavicle, upper, lower, hand] = arm, [thigh, calf] = rig.side[s].leg, fingers = rig.side[s].fingers;
         // away from the keys: seated and getting up, a hand on each thigh; standing, the arms hang
@@ -347,9 +352,20 @@ export function solveDesk(rig, keys, input) {
         // fingers: curled for the keys, looser away from them; typing taps them in bursts
         const loose = wait || keyed.a;
         for (const i of fingers) { rig.lq[i].copy(loose.q[i]); if (ke > 0 && keyed) rig.lq[i].slerp(blendQ(tq, keyed, i), ke); }
-        if (life > 0 && ke > .98 && keyed && input.taps !== false) tapKeys(rig, s, time, seed, life);
+        if (life > 0 && ke > .98 && keyed && input.taps !== false && s !== cup) tapKeys(rig, s, time, seed, life);
     }
     rig.fk();
+    // the drink: held where the posture holds it (it follows the keyboard's height with the other hand), and every 8 to
+    // 14 seconds brought to the mouth, tipped and put back (sip), while the other hand types on
+    if (cup && life > 0 && ke > .9) {
+        const hand = rig.side[cup].arm[3], w = ep(time, seed, 81, 10, 2.8, .34) * life * ss(.9, 1, ke);      // (eased off as the hands leave the keys)
+        if (w > 0) {
+            handAt.copy(rig.wp[hand]); spot.copy(rig.wp[b.head]); spot.x += cup === 'r' ? -.055 : .055; spot.y -= .075; spot.z += .15; handAt.lerp(spot, w);
+            handQ.copy(rig.wq[hand]).premultiply(turn.setFromAxisAngle(X, -.3 * ss(.6, 1, w)));
+            armTo(rig, cup, handAt, handQ);
+            rig.turnWorld(b.head, turn.setFromAxisAngle(X, -.07 * ss(.6, 1, w))); rig.fk();
+        }
+    }
     return { stance: standing ? 'stand' : 'sit', chair: { back: ROLL * roll + SCOOT * ss(.55, 1.1, tau) + NUDGE * ss(1.4, 2.3, tau), turn: 0 }, lean };
 }
 

@@ -140,6 +140,35 @@ for (const who of ['maya', 'andre', 'grace', 'noah', 'sam']) {
     assert.ok(moved > 1e-5, who + ': the head does move');
 }
 
+// ---- a drink at the desk (sit-coffee, stand-coffee): the right hand holds the cup (no keystrokes in it; it rests where
+// it was built, and now and then it comes to the mouth), the left hand types; life off is the model as built
+for (const who of ['maya', 'sam']) {
+    const rig = rigOf(who), actor = new DeskActor(rig);
+    actor.configure([member(`people-${who}-sit-coffee`, 'sit', 470), member(`people-${who}-sit-coffee-30`, 'sit', 470), member(`people-${who}-stand-coffee`, 'stand', 415)]);
+    const [sit28, sit30] = actor.keys.sit, stand = actor.keys.stand[0], L = rig.side.l, R = rig.side.r, angle = (a, c) => 2 * Math.acos(Math.min(1, Math.abs(a.dot(c))));
+    assert.deepEqual([sit28.pose, sit30.pose, stand.pose], ['sit-coffee', 'sit-coffee', 'stand-coffee']);
+    for (const [tau, height, key] of [[0, 28, sit28], [0, 30, sit30], [STAND_UP, 43.5, stand]]) {
+        solveDesk(rig, actor.keys, { tau, k: 1, height, time: null, seed: actor.seed });
+        assert.ok(worst(rig, key) < 1e-6, `${who}: with a drink at ${height} in, the model as built`);
+        let typed = 0, sipped = Infinity, held = 0, samples = 0, still = 0;
+        for (let time = 0; time < 40; time += .13) {
+            solveDesk(rig, actor.keys, { tau, k: 1, height, time, seed: actor.seed });
+            // the cup hand's fingers hold the cup: never a keystroke in them
+            for (const i of R.fingers) still = Math.max(still, angle(rig.lq[i], key.q[i]));
+            typed = Math.max(typed, ...L.fingers.map(i => angle(rig.lq[i], key.q[i])));
+            assert.ok(rig.wp[L.arm[3]].distanceTo(key.wp[L.arm[3]]) < .005, `${who}: the typing hand stays on the keys at ${height} in`);      // (Maya at 28 in is built with that arm at full stretch: breathing moves it 4 mm)
+            const toMouth = rig.wp[R.arm[3]].distanceTo(rig.wp[rig.b.head]), off = rig.wp[R.arm[3]].distanceTo(key.wp[R.arm[3]]);
+            sipped = Math.min(sipped, toMouth); held += off < .002 ? 1 : 0; samples++;
+        }
+        assert.ok(still < 1e-6, `${who}: no keystrokes in the hand with the cup (${still.toFixed(4)})`);
+        assert.ok(typed > .02, `${who}: the other hand types`);
+        assert.ok(sipped < .26, `${who}: the cup comes to the mouth at ${height} in (${sipped.toFixed(3)})`);
+        assert.ok(held / samples > .65, `${who}: between sips the cup is held where it was built, within 2 mm (${(100 * held / samples).toFixed(0)} % of the time)`);
+        solveDesk(rig, actor.keys, { tau, k: 1, height, time: 17.3, seed: actor.seed }); const a = snapshot(rig); solveDesk(rig, actor.keys, { tau, k: 1, height, time: 3, seed: actor.seed }); solveDesk(rig, actor.keys, { tau, k: 1, height, time: 17.3, seed: actor.seed });
+        assert.deepEqual(snapshot(rig), a, who + ': same time, same pose');
+    }
+}
+
 // ---- who makes one person: seated and standing models of a character; someone in a wheelchair stays in it
 {
     const rig = rigOf('omar'), actor = new DeskActor(rig);
