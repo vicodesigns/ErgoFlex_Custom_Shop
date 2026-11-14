@@ -11863,6 +11863,13 @@
    "pose": "stand-present-left",
    "name": "Mr Hale, presenting from the left of the board",
    "aids": []
+  },
+  "people-mia-power-type-30": {
+   "character": "mia",
+   "pose": "power-type",
+   "deskHeight": 30,
+   "name": "Mia: typing at the desk, in the power wheelchair (desk at 30 in)",
+   "aids": []
   }
  }
 }

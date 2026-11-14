@@ -1502,6 +1502,8 @@ ALSO = ['people-sam-sit-type', 'people-sam-sit-type-30', 'people-grace-lie-bed',
         'people-lin-sit-pottery',
         # the Library commons: Mia in the room's red power wheelchair (the film's commons chapter), feet on its footplate
         'people-mia-power-phone', 'people-mia-power-type',
+        # (and at 30 in, her working height: elbows level, knees and armrests clear of the tray; Nov 14)
+        'people-mia-power-type-30',
         # the workshop film (storage): Andre works on the robot, sets it on the desk's top shelf, takes out his phone and
         # starts the desk's Groove with one tap
         'people-andre-stand-robot-work', 'people-andre-stand-robot-shelf', 'people-andre-stand-phone-pull', 'people-andre-stand-phone-up',

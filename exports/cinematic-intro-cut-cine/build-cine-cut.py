@@ -155,12 +155,13 @@ def coast(s):
     # her bay, no window at the frame edge; a cut past her to a close three-quarter, the suite at half the frame or
     # more as it rises; then his ending from 11.25 s, without his 2 s hold (one slow push to the end).
     cam(s, [
-        key(0, (0.9, 1.7, -3.5), (-1.7, 1.1, 0.3), 32, 'Down the aisle: Maya at the centre bay'),
-        key(1.95, (0.85, 1.68, -3.1), (-1.75, 1.1, 0.5), 32, 'Down the aisle: slow push'),
-        key(2.0, (0.2, 1.75, 2.0), (-2.8, 1.25, 5.0), 40, 'Cut past her: the free suite', cut=True),
-        key(4.4, (-0.2, 1.75, 2.9), (-2.8, 1.25, 5.0), 42, 'Close three-quarter: the suite rises'),
-        key(7.4, (-0.35, 1.85, 3.25), (-2.85, 1.3, 5.0), 42, 'Lift lands'),
-    ] + his('coast', 11.25, 14.5))
+        key(0, (0.55, 2.25, 1.55), (-2.3, 1.35, 4.95), 40, 'Ava edits seated at the free suite, the bays beyond'),
+        key(3.6, (0.35, 2.2, 1.95), (-2.35, 1.4, 4.95), 40, 'She gets up as the suite sets off'),
+        key(7.6, (0.05, 2.3, 2.6), (-2.5, 1.6, 5.0), 40, 'The suite arrives at her standing height'),
+        key(9.4, (0.55, 2.35, 4.3), (-2.6, 1.5, 4.9), 40, 'Round behind her, wide of her shoulder'),
+        key(11.25, (-0.45, 2.1, 7.1), (-2.9, 1.45, 4.72), 42, 'She works standing; the Orange Coast College mark on the desktop'),
+        key(14.5, (-0.62, 2.06, 6.95), (-2.9, 1.45, 4.72), 42, 'A slow push into the dissolve (no cut after 9 s)'),
+    ])
 
 
 @chapter
