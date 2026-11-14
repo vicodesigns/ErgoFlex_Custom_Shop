@@ -93,12 +93,21 @@ export async function mountStage(ctx) {
     ctx.camera.position.copy(focus).add(offset.set(Math.cos(angle),height,Math.sin(angle)).normalize().multiplyScalar(distance));
     ctx.camera.lookAt(focus);ctx.controls.target.copy(focus);
   }
+  // The stage's floor rings (pulse, sweep, reach) are drawn after the film's floor overlays: the product rig's contact
+  // shadow (renderOrder 2), the LED floor tint (a multiply, 2.5) and the LED floor bounce / foot glow / floor light (3).
+  // Drawn before them (renderOrder 0, as until 2026-11-14) a ring was darkened under the desk and took the LED's hue
+  // (yellow, red, near black) wherever the floor pool lay: an uneven ring under a flat fill. The LED light is unchanged.
+  const RING_ORDER=4;
+  const ringMesh=(geometry,color,opacity,y)=>{const m=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide,transparent:true,opacity,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.y=y;m.renderOrder=RING_ORDER;extras.add(m);return m;};
   function stageFloor() {
     const b=box(),sz=b.getSize(new THREE.Vector3()),w=Math.max(sz.x,sz.z),c=b.getCenter(new THREE.Vector3());
     grid=new THREE.GridHelper(w*7,48,0x1c9cdf,0x173648);grid.position.set(c.x,b.min.y-.002,c.z);extras.add(grid);
     floorCenter=new THREE.Vector3(c.x,b.min.y+sz.y*.12,c.z);
-    pulse=new THREE.Mesh(new THREE.RingGeometry(w*.5,w*.51,96),new THREE.MeshBasicMaterial({color:0x27c6ff,side:THREE.DoubleSide,transparent:true,opacity:.8,depthWrite:false}));
-    pulse.rotation.x=-Math.PI/2;pulse.position.set(c.x,b.min.y+.003,c.z);extras.add(pulse);
+    // One pulse ring per stage. The proximity chapter builds its floor a second time (prepare's product floor, then
+    // proximity()): the first pulse was left behind as a second ring that neither moved nor followed the desk, so it
+    // lay on the moving pulse (a doubled ring) and stayed where the desk started once it rolled (an off-centre ring).
+    if(pulse){pulse.removeFromParent();pulse.geometry.dispose();pulse.material.dispose();}
+    pulse=ringMesh(new THREE.RingGeometry(w*.5,w*.51,96),0x27c6ff,.8,b.min.y+.003);pulse.position.x=c.x;pulse.position.z=c.z;
     // The rings are the desk's: they stay centred under it when it rolls (ringHome: the centre and the desk's place at the start).
     ringHome={c:c.clone(),p:ctx.loadedModel.getWorldPosition(new THREE.Vector3())};
     light=new THREE.PointLight(0x46ceff,w*2,w*5,2);light.position.set(c.x+w,b.min.y+w,c.z+w);extras.add(light);
@@ -124,11 +133,12 @@ export async function mountStage(ctx) {
       const p=new THREE.Mesh(new THREE.CylinderGeometry(w*.055,w*.065,w*.64,16),new THREE.MeshStandardMaterial({color:0x163344,metalness:.6,roughness:.3,emissive:0x0873a4,emissiveIntensity:.6}));
       p.position.set(c.x+x*w,b.min.y+w*.32,c.z+z*w);p.userData.y=p.position.y;extras.add(p);pylons.push(p);
     }
-    sweep=new THREE.Mesh(new THREE.RingGeometry(w*.8,w*.82,96,1,0,Math.PI*.65),new THREE.MeshBasicMaterial({color:0x62dbff,side:THREE.DoubleSide,transparent:true,opacity:.65,depthWrite:false}));
-    sweep.rotation.x=-Math.PI/2;sweep.position.set(c.x,b.min.y+.01,c.z);extras.add(sweep);
+    // The sweep is an arc of the reach ring itself: the same band (radii and width) on the same scale, so it brightens
+    // the ring as it turns. It was a wider band (w*.8-.82, scaled by sonar/(w*.81)) over the reach (w*.8-.812, scaled by
+    // sonar/(w*.806)), which drew two rings a band-width apart wherever the arc passed.
+    sweep=ringMesh(new THREE.RingGeometry(w*.8,w*.812,96,1,0,Math.PI*.65),0x62dbff,.65,b.min.y+.01);sweep.position.x=c.x;sweep.position.z=c.z;
     // The sonar's reach: a whole circle under the sweep, shown once the reach is known (sonarReach).
-    reach=new THREE.Mesh(new THREE.RingGeometry(w*.8,w*.812,128),new THREE.MeshBasicMaterial({color:0x62dbff,side:THREE.DoubleSide,transparent:true,opacity:.42,depthWrite:false}));
-    reach.rotation.x=-Math.PI/2;reach.position.set(c.x,b.min.y+.008,c.z);reach.visible=false;reach.userData.w=w;extras.add(reach);
+    reach=ringMesh(new THREE.RingGeometry(w*.8,w*.812,128),0x62dbff,.42,b.min.y+.008);reach.position.x=c.x;reach.position.z=c.z;reach.visible=false;reach.userData.w=w;
     start=frame(b,false);start.distance=w*3.8/Math.min(1,ctx.camera.aspect);start.center.copy(c);start.height=.9;
   }
   async function mediaScreen() {
@@ -251,9 +261,10 @@ export async function mountStage(ctx) {
     const u=reduced?1:ease(t),kind=shot.kind;
     if(kind==='proximity'&&reach&&!sonar&&sonarTries++<240)sonar=sonarReach();
     if(pulse&&sonar){
-      // a pulse every 1.6 s from the desk's footprint out to the reach, fading as it goes
+      // a pulse every 1.6 s from the desk's footprint out to the reach, fading in over its first .13 s (no ring popping
+      // up at the footprint) and out as it goes
       const w=reach.userData.w,phase=(t*shot.seconds/1.6)%1,from=Math.min(w*.5,sonar*.6);
-      pulse.scale.setScalar((from+(sonar-from)*phase)/(w*.5));pulse.material.opacity=reduced?0:.8*(1-phase)*(1-phase*.4);
+      pulse.scale.setScalar((from+(sonar-from)*phase)/(w*.5));pulse.material.opacity=reduced?0:.8*Math.min(1,phase/.08)*(1-phase)*(1-phase*.4);
     } else if(pulse){pulse.scale.setScalar(1+t*5);pulse.material.opacity=reduced?0:Math.max(0,.85-t);}
     if(trace)trace.geometry.setDrawRange(0,Math.max(2,Math.round(50*u)));
     if(!shot.motion){
@@ -266,7 +277,7 @@ export async function mountStage(ctx) {
     if(kind==='proximity'){
       for(const p of pylons){p.scale.y=Math.max(.001,ease(t/.2));p.position.y=p.userData.y-(1-p.scale.y)*p.geometry.parameters.height/2;}
       sweep.rotation.z=t*Math.PI*8;
-      if(sonar){const w=reach.userData.w;sweep.scale.setScalar(sonar/(w*.81));reach.scale.setScalar(sonar/(w*.806));reach.visible=true;}
+      if(sonar){const w=reach.userData.w,k=sonar/(w*.806);sweep.scale.setScalar(k);reach.scale.setScalar(k);reach.visible=true;}
       if(t>.55&&!shot.motion)ctx.demoMove(ease((t-.55)/.2)*deskSpan*.16,0,0);
     }
     if(kind==='wellness'&&!shot.motion)ctx.pose(28+15.5*ease((t-.25)/.45),0);
