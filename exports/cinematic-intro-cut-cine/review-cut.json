@@ -69246,7 +69246,17 @@
       ]
      ]
     }
-   }
+   },
+   "screens": [
+    {
+     "target": "texture",
+     "material": "^Held\\.phone screen",
+     "person": "andre",
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-storage-phone.mp4",
+     "offset": 0,
+     "loop": false
+    }
+   ]
   },
   {
    "id": "hero",
@@ -87060,7 +87070,9 @@
    "screens": [
     {
      "target": "main-landscape",
-     "src": "exports/cinematic-intro-20261104-hq12/screens/13-main.mp4"
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-hero-home.mp4",
+     "offset": 0,
+     "loop": false
     }
    ],
    "ledGlow": 0.2,
