@@ -67,7 +67,7 @@ See the table in the S6 report and `node tools/experience/screens/capture.mjs --
 ## Capture time (CPU, this machine, one clip at a time)
 
 Measured by S6 on Nov 14 (Ryzen desktop, headless Chrome with SwiftShader, one clip at a time; seconds of capture.mjs,
-an upper bound where a lock wait is included). About 20 minutes for all 33 clips; memory stays near 1 GB.
+an upper bound where a lock wait is included). About 20 minutes for all 29 clips; memory stays near 1 GB.
 
 | clip | size | length | capture |
 |---|---|---:|---:|
