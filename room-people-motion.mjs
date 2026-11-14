@@ -442,10 +442,12 @@ export function drawPose(rig, drawn, dz = 0, pose = null, hold = false) {
 // (feet pinned), typing fingers, a page turned by a reader. Hands that rest on something (keys, a table, a bench, a
 // stick) stay exactly where they are. key: rig.key(id). input: { time, seed, life: 0..1 }. Pure.
 const RESTING = { 'sit-type': 'lr', 'stand-type': 'lr', 'stand-mid': 'lr', 'stand-type-low': 'lr', 'stand-counter': 'lr', 'sit-microscope': 'lr', 'lie-bed': 'lr', 'wheel-type': 'lr', 'power-type': 'lr', 'sit-laptop': 'lr', 'sit-write': 'lr', 'sit-listen': 'lr', 'sit-raise': 'l', 'stand-work': 'lr', 'cane-stand': 'r', 'wheel-roll': 'lr', 'wheel-watch': 'lr',
-    'kid-stand-desk': 'lr', 'kid-sit-desk': 'lr', 'kid-sit-k': 'lr', 'kid-sit-e': 'lr', 'kid-kneel-craft': 'lr', 'kid-play-floor': 'lr' };
+    'kid-stand-desk': 'lr', 'kid-sit-desk': 'lr', 'kid-sit-k': 'lr', 'kid-sit-e': 'lr', 'kid-kneel-craft': 'lr', 'kid-play-floor': 'lr',
+    // (the workshop film: a hand that holds the robot where it sits, both hands at the phone so the finger stays on its button)
+    'stand-robot-work': 'r', 'stand-robot-shelf': 'lr', 'stand-phone-up': 'lr', 'stand-phone-press': 'lr' };
 const TYPES = new Set(['sit-type', 'stand-type', 'stand-mid', 'stand-type-low', 'wheel-type', 'power-type', 'sit-laptop']);
-const ON_FEET = new Set(['stand-type', 'stand-mid', 'stand-type-low', 'stand-brief', 'stand-radio', 'stand-chart', 'stand-counter', 'stand-wait', 'stand-phone', 'stand-present', 'stand-present-left', 'stand-work', 'stand-paint', 'cane-stand', 'kid-stand', 'kid-stand-wait', 'kid-stand-desk']);
-const INTENT = new Set(['stand-chart', 'sit-microscope', 'stand-radio', 'sit-read', 'sit-phone', 'power-phone', 'stand-phone', 'sit-write', 'stand-work', 'stand-paint', 'sit-controller', 'kid-read-floor', 'kid-sit-desk', 'kid-stand-desk', 'kid-sit-k', 'kid-sit-e', 'kid-kneel-craft', 'kid-play-floor']);      // eyes on what the hands hold
+const ON_FEET = new Set(['stand-type', 'stand-mid', 'stand-type-low', 'stand-brief', 'stand-radio', 'stand-chart', 'stand-counter', 'stand-wait', 'stand-phone', 'stand-present', 'stand-present-left', 'stand-work', 'stand-paint', 'cane-stand', 'kid-stand', 'kid-stand-wait', 'kid-stand-desk', 'stand-robot-work', 'stand-robot-shelf', 'stand-phone-pull', 'stand-phone-up', 'stand-phone-press', 'stand-phone-watch']);
+const INTENT = new Set(['stand-chart', 'sit-microscope', 'stand-radio', 'sit-read', 'sit-phone', 'power-phone', 'stand-phone', 'sit-write', 'stand-work', 'stand-paint', 'sit-controller', 'kid-read-floor', 'kid-sit-desk', 'kid-stand-desk', 'kid-sit-k', 'kid-sit-e', 'kid-kneel-craft', 'kid-play-floor', 'stand-robot-work', 'stand-robot-shelf', 'stand-phone-up', 'stand-phone-press']);      // eyes on what the hands hold
 export const livelyPose = pose => pose !== 'walk' && pose !== 'white-cane' && pose !== 'push-cart';
 export const WORKOUTS = new Set(['gym-cycle', 'gym-pullup', 'gym-press', 'gym-curl', 'gym-box', 'sit-pottery']);      // postures that work a machine: solveWorkout
 export function solveStill(rig, key, input) {
@@ -776,6 +778,17 @@ const ACTS = {
         handAt.copy(key.wp[hand]); handAt.x += Math.sin(time * 7.4 + seed) * .036 * busy; handAt.z += Math.sin(time * 3.7 + seed) * .008 * busy;
         armTo(rig, 'r', handAt, handQ.copy(key.wq[hand]).premultiply(turn.setFromAxisAngle(Y, Math.sin(time * 7.4 + seed + .6) * .12 * busy)));
     },
+    // at the desk with the robot (the workshop film): the right hand holds it where it sits (RESTING), the left works at
+    // its open chest in short bursts (a few millimetres to and fro, the wrist turning), now and then it stops while he
+    // looks; the head goes with the work
+    'stand-robot-work'(rig, key, time, seed, life) {
+        const hand = rig.side.l.arm[3], busy = (1 - moment(time, seed, 321, 6, 1.6)) * life, w = Math.sin(time * 5.1 + seed) * busy, u = Math.sin(time * 2.3 + seed * .7) * busy;
+        handAt.copy(key.wp[hand]); handAt.x += .01 * w; handAt.y += .006 * u; handAt.z += .006 * Math.sin(time * 3.3 + seed) * busy;
+        armTo(rig, 'l', handAt, handQ.copy(key.wq[hand]).premultiply(turn.setFromAxisAngle(Z, .14 * w)));
+        headTurn(rig, .05 * held(time, seed, 322, 3) * life, .025 * u);
+    },
+    // phone lowered, watching the desk go (its head follows the desk: RoomPeople.gazeOf): the weight settles from foot to foot
+    'stand-phone-watch'(rig, key, time, seed, life) { shiftWeight(rig, key, .014 * held(time, seed, 331, 6) * life); },
     // a standing stretch: a slow bend from side to side, arms overhead
     // (the hips go the other way, and on each breath in the hands reach a little higher)
     'stretch'(rig, key, time, seed, life) {

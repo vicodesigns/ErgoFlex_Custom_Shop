@@ -827,13 +827,17 @@ export async function installWorkshopToyStory(api) {
     }
   };
 
-  // Smooth 7°..10° tilt cross-fade between Desktop Workbench state and Stowed Shelf state
+  // Smooth 7°..10° tilt cross-fade between Desktop Workbench state and Stowed Shelf state. A node that a film chapter
+  // gives a time on screen of its own (a sceneEdits `show` window: the storage chapter's Robo-Pal, which Andre sets on
+  // the top shelf by hand) is left out of the cross-fade: it is there, whole, and the chapter's window decides.
+  const timed = node => !!node?.userData?.__filmFxEdits?.some?.(edit => edit?.show);
   const applyTilt = (rawTilt = 0) => {
     const tilt = Number(rawTilt) || 0;
     let u = THREE.MathUtils.clamp((tilt - TILT_FADE_START) / (TILT_FADE_END - TILT_FADE_START), 0, 1);
     u = u * u * (3 - 2 * u);
-    setNodesFade(desktopNodes, 1 - u);
-    setNodesFade(stowedNodes, u);
+    setNodesFade(desktopNodes.filter(n => !timed(n)), 1 - u);
+    setNodesFade(stowedNodes.filter(n => !timed(n)), u);
+    setNodesFade(desktopNodes.concat(stowedNodes).filter(timed), 1);
   };
 
   // Hook both rig.updatePose and peripherals.update so live playback, timeline scrubbing,

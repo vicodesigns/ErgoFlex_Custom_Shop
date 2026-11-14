@@ -960,7 +960,7 @@ export async function install(shot) {
   active.desk = await installDeskObjects(shot);
   if (shot.deskFinish) active.finish = installDeskFinish(shot.deskFinish);
   if (shot.featuredBuild) active.featured = await installFeaturedBuild(shot.featuredBuild);
-  if (shot.room === 'workshop') active.workshopToyStory = await (await import('./workshop-toy-story.mjs?v=20261110-stationary-organizer')).installWorkshopToyStory(api);
+  if (shot.room === 'workshop') active.workshopToyStory = await (await import('./workshop-toy-story.mjs?v=20261113-andre-shelf')).installWorkshopToyStory(api);
   if (shot.sceneDeskPoses?.length) active.deskPoses = installSceneDeskPoses(shot.sceneDeskPoses);
   if (shot.sceneDeskEdits?.length) { active.deskEdits = (await import('./film-desk-edits.mjs')).installDeskEdits(shot.sceneDeskEdits, api); await active.deskEdits.ready; }
   // School branding on every room desk (after the poses: a rig re-poses its artwork with it).

@@ -48,9 +48,11 @@
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
 import {updateSkinnedBounds} from './skinned-bounds.mjs';
-import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, solveTread, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=polish-20261112d';
+import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, solveTread, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=workshop-20261113';
 // who looks at whom (RoomPeople.gazeOf)
 const GAZE_TALK = /^(stand-talk|sit-chat|stand-drink|stand-mug|stand-coffee|sit-coffee)$/, GAZE_IDLE = /^(stand-wait|wheel-roll|wheel-watch|cane-stand|white-cane|sit-listen)$/;
+const GAZE_DESK = /^stand-phone-watch$/;      // watching the featured desk go (the workshop film): the head follows it
+const gazeDesk = new THREE.Vector3();
 const gazeM = new THREE.Matrix4(), gazeW = new THREE.Vector3();
 
 // How far in front of a desk's anchor the person's pelvis is (mm), for a keyboard on the pull-out tray, and how far
@@ -1737,6 +1739,7 @@ export class RoomPeople {
             actor.cover *= 1 - actor.away;
         }
         this.resettle(mode, pose);
+        this.deskLive = pose && Number.isFinite(pose.x) && Number.isFinite(pose.z) ? pose : null;      // (where the featured desk is now: gazeOf)
         for (const object of this.people) {
             const spec = object.userData.person, fit = object.userData.personFit;
             const there = this.present(spec, time);
@@ -1923,9 +1926,15 @@ export class RoomPeople {
     // listening looks at the person at the featured desk if they are in front of them within 9 m. Anyone else: their
     // posture's own gaze (typists their screen, readers their page: solveStill).
     gazeOf(object, life) {
-        const pose = life.key?.pose || '', talks = GAZE_TALK.test(pose), waits = talks || GAZE_IDLE.test(pose); if (!waits) return null;
+        const pose = life.key?.pose || '', talks = GAZE_TALK.test(pose), desk = GAZE_DESK.test(pose), waits = talks || desk || GAZE_IDLE.test(pose); if (!waits) return null;
         const root = object.userData.personRig?.bones.get('Root')?.parent; if (!root) return null;
         root.updateWorldMatrix(true, false); gazeM.copy(root.matrixWorld).invert();
+        // the featured desk, about a metre up (the folded board), wherever it is now
+        if (desk) {
+            const at = this.deskLive, room = this.room?.root; if (!at || !room) return null;
+            room.updateWorldMatrix(true, false); room.localToWorld(gazeDesk.set(at.x, 1000, at.z)).applyMatrix4(gazeM);
+            return Number.isFinite(gazeDesk.x) ? { at: gazeDesk.clone(), amount: .85 } : null;
+        }
         const headOf = o => { const h = o.visible && o !== object && o.userData.personRig?.bones.get('head'); if (!h) return null; h.updateWorldMatrix(true, false); return h.getWorldPosition(gazeW).applyMatrix4(gazeM); };
         const ahead = (p, far) => p && p.z > .2 && Math.hypot(p.x, p.z) < far && Math.abs(Math.atan2(p.x, p.z)) < 1.3;
         if (talks) {
@@ -2026,7 +2035,11 @@ export class RoomPeople {
             else if (pair.live || pair.stop) { pair.live = pair.stop = false; this.endChange(pair, a, b); }
         }
         for (const [pair, a, b, w] of under) {
-            const { model } = solveChange(pair.rig, pair.keyFrom, pair.keyTo, w), shown = model === 'from' ? a : b, ease = THREE.MathUtils.smoothstep(w, 0, .72);
+            // (`swap` on the second placement: how far through the change (0..1) the second model takes over, .5 when not
+            // given. Something put down stays with the first model until the hands have left it (early: the robot set on
+            // the shelf in the workshop film); a screen that lights when it is touched, late.)
+            const { model } = solveChange(pair.rig, pair.keyFrom, pair.keyTo, w), cut = Number.isFinite(pair.to?.swap) ? THREE.MathUtils.clamp(pair.to.swap, .02, .98) : null;
+            const shown = (cut === null ? model === 'from' : w < cut) ? a : b, ease = THREE.MathUtils.smoothstep(w, 0, .72);
             shown.position.lerpVectors(pair.homeFrom.position, pair.homeTo.position, ease); shown.rotation.y = pair.homeFrom.turn + (pair.homeTo.turn - pair.homeFrom.turn) * ease;
             drawPose(pair.rig, shown.userData.personRig, 0, shown.userData.person.pose || null);
             a.userData.personChanging = b.userData.personChanging = true; pair.live = true; this.dirty = true; out.set(a, { shown }); out.set(b, { shown });
