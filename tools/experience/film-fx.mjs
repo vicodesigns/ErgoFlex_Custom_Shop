@@ -78,6 +78,7 @@
 import * as THREE from 'three';
 import { sampleScreenColours } from '../../led-screen-sampler.mjs';
 import { accessory } from '../../catalog.mjs';
+import { isTextureTarget, installTextureScreens } from './film-texture-screens.mjs';
 
 const api = window.ErgoFlex;
 const sceneRoot = () => { let s = api.loadedModel; while (s?.parent) s = s.parent; return s; };
@@ -313,6 +314,7 @@ function draw(sc) {
 async function installScreens(shot, list) {
   const out = [];
   for (const [i, spec] of (shot.screens || []).entries()) {
+    if (isTextureTarget(spec)) continue;   // painted into a material's own picture (film-texture-screens.mjs)
     const target = resolve(list, spec.target ?? i);
     if (!target) throw Error(`screens[${i}]: no screen matches target "${spec.target}". Run render-cut --list-screens.`);
     const media = await loadMedia(spec.src), f = target.frame;
@@ -978,6 +980,8 @@ export async function install(shot) {
   if (active.desk.added.length || active.desk.toggled.length || shot.deskObjects) await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   const list = active.list = discover(shot);
   active.screens = await installScreens(shot, list);
+  const texSpecs = (shot.screens || []).filter(isTextureTarget);
+  if (texSpecs.length) active.texScreens = installTextureScreens(sceneRoot(), texSpecs, await Promise.all(texSpecs.map(sc => loadMedia(sc.src))));
   if (shot.ledMode === 'media') {
     active.led = await makeLed(shot, active.screens, list);
     api.setLedEffect({ mode: 'solid', period: 6 }, false);
@@ -1102,6 +1106,7 @@ export async function frame(t, chapterSeconds, { video = false, screens = true, 
   active.quality?.frame();
   active.edits?.apply(chapterSeconds); active.lights?.apply(chapterSeconds); active.lightEdits?.apply(); lap('lights');
   if (active.screens.length && screens) { await updateScreens(active.screens, chapterSeconds); lap('screens'); }
+  if (active.texScreens && screens) { await active.texScreens.frame(chapterSeconds, seek); lap('screens'); }
   if (active.clocks.length) setClocks(active.clocks, active.shot.clock, active.shot, chapterSeconds);
   active.status?.frame(chapterSeconds); lap('status');
   if (active.led) {
@@ -1122,6 +1127,7 @@ export function clear() {
   if (!active) return;
   after();
   for (const sc of active.screens) { sc.mesh.removeFromParent(); sc.mesh.geometry.dispose(); sc.material?.dispose(); sc.mesh.material.dispose(); sc.texture.dispose(); if (sc.media instanceof HTMLVideoElement) { sc.media.removeAttribute('src'); sc.media.load(); } }
+  active.texScreens?.restore();
   if (active.led?.source.sampler) { active.led.source.media.removeAttribute('src'); active.led.source.media.load(); }
   if (active.clocks.length) restoreClocks(active.clocks);
   if (active.globals) { active.globals.exposureCell?.undo(); active.globals.scene.environmentIntensity = active.globals.env; api.renderer.toneMappingExposure = active.globals.exposure; }

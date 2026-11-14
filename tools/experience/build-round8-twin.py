@@ -15,15 +15,23 @@ Re-run it whenever the cinematographer changes the awaken shot; the framing is d
 
 Then (render PC): render-cut --cut <hq>/post/twin-cut.json --shots 0 --video --size 1472x640 ... -> <out>/01.mkv,
 and capture.mjs with TWIN=<that mkv> draws frame round(t * 30) of it into the card (screens/scenes/ch01.js).
+
+  TWIN_SOURCE=<cut.json> TWIN_OUT=<twin-cut.json> build-round8-twin.py   (the cine cut, Nov 14 2026) the twin of that cut's
+      'awaken' chapter instead of <hq>/shots/01.json, written to TWIN_OUT; the monitor still shows <hq>/post/opener-screen.png.
 """
 import copy, json, math, os, subprocess, sys
 
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 H = sys.argv[1] if len(sys.argv) > 1 else os.path.join(root, 'exports/cinematic-intro-20261104-hq14')
 SRC = os.path.join(H, 'shots', '01.json')
+if os.environ.get('TWIN_SOURCE'):   # a whole cut: its awaken chapter, written out as the one-shot file poses() reads
+    import tempfile
+    _cut = json.load(open(os.path.join(root, os.environ['TWIN_SOURCE']), encoding='utf-8'))
+    _aw = next(s for s in _cut['shots'] if s['id'] == 'awaken')
+    SRC = os.path.join(tempfile.mkdtemp(prefix='twin-'), 'awaken.json'); json.dump(_aw, open(SRC, 'w'))
 FINISH = os.environ.get('TWIN_FINISH', '').strip().lower()
 assert FINISH in ('', 'pearl'), 'TWIN_FINISH: pearl or unset'
-OUT = os.path.join(H, 'post', 'twin-pearl-cut.json' if FINISH else 'twin-cut.json')
+OUT = os.path.join(root, os.environ['TWIN_OUT']) if os.environ.get('TWIN_OUT') else os.path.join(H, 'post', 'twin-pearl-cut.json' if FINISH else 'twin-cut.json')
 SEED_IN = os.path.join(root, 'exports/cinematic-intro-20261030/post/college-seed.json')
 SEED_OUT = os.path.join(H, 'post', 'twin-pearl-seed.json')
 PEARL = {'woodFinish': 'Pearl White', 'baseFinish': 'White', 'trimColor': '#f5f5f2'}   # catalog.mjs names / TRIM_COLORS White
@@ -89,8 +97,8 @@ def screens(shot):
     out = []
     for s in shot.get('screens') or []:
         s = dict(s)
-        if '/screens/01-main' in s.get('src', ''):
-            s['src'] = os.path.relpath(os.path.join(H, 'post', 'opener-screen.png'), root)
+        if '/screens/01-main' in s.get('src', '') or '/cine-awaken-main' in s.get('src', ''):
+            s['src'] = os.path.relpath(os.path.join(H, 'post', 'opener-screen.png'), root).replace(os.sep, '/')
             s['loop'] = False
         out.append(s)
     return out
@@ -128,7 +136,7 @@ shot = json.load(open(SRC))
 assert shot.get('id') == 'awaken', SRC
 t, (cx, cz, r, d) = twin(shot)
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
-json.dump({'name': 'HQ14 digital twin (ch01 monitor card)', 'source': os.path.relpath(SRC, root), 'shots': [t]}, open(OUT, 'w'), indent=1)
+json.dump({'name': 'HQ14 digital twin (ch01 monitor card)', 'source': os.environ.get('TWIN_SOURCE') or os.path.relpath(SRC, root), 'shots': [t]}, open(OUT, 'w'), indent=1)
 if FINISH == 'pearl': print(f'{os.path.relpath(SEED_OUT, root)}: {pearl_seed()} build -> {PEARL}')
 print(f'{os.path.relpath(OUT, root)}: {t["seconds"]:g} s, {len(t["motion"]["clips"])} clips, {len(t.get("ledStatus", []))} LED states; '
       f'camera az {AZ:g} el {EL:g} fov {FOV:g} at {d:.2f} u, envelope centre ({cx:.3f}, {cz:.3f}) r {r:.2f}; render {SIZE[0]}x{SIZE[1]}')

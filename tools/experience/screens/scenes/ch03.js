@@ -120,4 +120,6 @@
       T(c.toUpperCase(), 200, H - 110, 56, {w: 700}); T('picked from reference', W - 100, H - 112, 34, {w: 500, a: 'right', c: C.dim});
     },
   };
+  // shared with the cine cut's create screens (scenes/cine-create.js): the same painting, paced by that chapter
+  SCENES._ch03 = {PAL, STROKES, strokePath, cursorBrush};
 })();
