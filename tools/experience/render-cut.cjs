@@ -178,10 +178,15 @@ function printMaterials(list){
 async function listShot(frame,i){
   const shot=cut.shots[i],tag=pad(i);await loadFx(frame);
   await frame.evaluate(async s=>{window.__filmFx.clear();window.__filmFx.beforePrepare(s);try{await window.ErgoPresentation.prepare(s);}finally{window.__filmFx.unhookPreset();}},shot);
-  if(shot.accessories)await frame.evaluate(s=>window.__filmFx.install({id:s.id,room:s.room,seconds:s.seconds,accessories:s.accessories}),shot);
+  // --list-objects: the shot's film effects are installed exactly as a render installs them (scene edits, desk edits, ...)
+  // and the frame hooks run before the bake, so the listing shows what the film draws (before 2026-11-14 a listing
+  // installed only the accessories: a film-fx hide or move never showed in it). Without --list-objects, as before.
+  const listFx=opts['list-objects']!==undefined&&usesFx(shot);
+  if(listFx){const info=await frame.evaluate(s=>window.__filmFx.install(s),{...shot,__stageClip:opts.screen});console.log(`${tag} ${shot.id}: film fx (listing)`,JSON.stringify(info));}
+  else if(shot.accessories)await frame.evaluate(s=>window.__filmFx.install({id:s.id,room:s.room,seconds:s.seconds,accessories:s.accessories}),shot);
   // --list-at <fraction>: bake that moment first, so the desk's pose (clips, motion.initial) is applied.
   const at=opts['list-at']!==undefined?Number(opts['list-at']):null;
-  if(at!==null)await frame.evaluate(async(t,s)=>{window.__rc=document.createElement('canvas');window.__rc.width=320;window.__rc.height=180;window.ErgoPresentation.beginBake(320,180);await window.ErgoPresentation.bakeFrame(t,window.__rc,s);},at,at*shot.seconds);
+  if(at!==null)await frame.evaluate(async(t,s,c,fxOn)=>{window.__rc=document.createElement('canvas');window.__rc.width=320;window.__rc.height=180;window.ErgoPresentation.beginBake(320,180);const fx=fxOn?window.__filmFx:null;if(fx)await fx.frame(t,c,{video:false});try{await window.ErgoPresentation.bakeFrame(t,window.__rc,s);}finally{fx?.after();}},at,at*shot.seconds,shot.seconds*at,listFx);
   const result=await frame.evaluate((s,re)=>{
     const out={screens:window.__filmFx.listScreens(s),clocks:window.__filmFx.listClocks()};
     // --list-objects <regex>: world position and yaw of matching objects (plus the desk's pivot).

@@ -71,6 +71,15 @@ export function hideDesk(entry) {
   entry.hidden = { group: g, restore: () => { delete g.visible; if (own && (own.get || own.set)) Object.defineProperty(g, 'visible', own); else g.visible = raw; } };
   return true;
 }
+export function deskHideReport(list, entries, desks) {
+  const out = [];
+  for (const edit of list || []) {
+    if (edit?.hide !== true) continue;
+    const e = entries.find(x => x.edit === edit), r = e?.record || desks?.records?.get?.(edit.desk) || null, g = e?.hidden?.group || null;
+    out.push({ desk: edit.desk, record: !!r, featured: !!r && r.id === desks?.selected, group: g ? g.name || '(unnamed group)' : null, hidden: !!g && g.visible === false });
+  }
+  return out;
+}
 export function unhideDesk(entry) { const h = entry.hidden; if (!h) return false; entry.hidden = null; try { h.restore(); } catch (error) { console.warn('[film-fx] desk unhide', error); } return true; }
 
 export function installDeskEdits(list, api) {
@@ -89,6 +98,9 @@ export function installDeskEdits(list, api) {
   choreo.set(entries.map(e => e.edit));
   return {
     desks: entries.map(e => e.record.id), missing,
+    // the film-fx log (install info): one line per desk edit that hides, so a run proves it: {desk, record, group, hidden}
+    // record: the room has that desk; group: the name of the object hidden (the drawn desk); hidden: its visible reads false
+    hides: deskHideReport(list, entries, desks),
     ready: Promise.all(entries.map(e => e.pending).filter(Boolean)),
     frame(seconds) { for (const e of entries) frameDesk(ctx, e, seconds); choreo.apply(seconds); },
     restore() {
