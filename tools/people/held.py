@@ -171,7 +171,8 @@ def palette(rig, side):
 
 def cane(rig, side, white=False, length=None):
     """A stick from the hand to the floor; the hand grips its top."""
-    grip = hand_frame(rig, side, .03).translation
+    # (the long cane lies across the base of the fingers, which close round it; the walking stick's handle in the palm)
+    grip = (hand_frame(rig, side, .022) @ Vector((0, .035, 0)) if white else hand_frame(rig, side, .03).translation)
     foot = Vector((grip.x + (.05 if side == 'l' else -.05), grip.y - (.42 if white else .1), 0))
     world = Matrix.Identity(4)
     if white:
