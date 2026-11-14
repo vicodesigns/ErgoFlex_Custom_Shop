@@ -95,4 +95,28 @@ const items=()=>[{id:CH,name:'Office chair',propId:'ergoflex-office-chair',role:
   assert.deepEqual([objs[CH].visible,objs[PC].visible],[true,false],'the PC hidden on its own stays hidden when the desk is shown');
   ok('panel stub: the desk\'s eye takes its chair and PC with it and brings them back; undo/redo; an own hide holds');
 }
+{
+  // At First bell Noah sits at the media desk and the people code sets the room's station chair aside (visible = false)
+  // for the chair his posture brings. That is not a Layers hide: the row shows it as shown, the badge does not count it,
+  // and hiding then showing the desk gives back exactly the visibility the people code last asked for.
+  const objs=Object.fromEntries(items().map(d=>[d.id,{name:d.name,visible:true,userData:{}}])),storage=new Map(),undo=[];
+  objs[CH].visible=false;   // stepped aside for Noah
+  const L=createStudioLayers({roomKey:()=>HS,phase:()=>'morning',size:()=>'60x30',items:()=>items().map(d=>({...d,obj:objs[d.id]})),desks:()=>desks,people:()=>[],
+    assetState:()=>({removed:new Set()}),readRaw:k=>storage.get(k)??null,writeRaw:(k,v)=>storage.set(k,v),transaction:e=>undo.push(e),notify:()=>{},applyDesks:()=>false,applyPeople:()=>false});
+  L.hydrated();
+  let rows=L.test.rows(),chair=rows.find(r=>r.id===CH);
+  assert.equal(chair.hidden,false,'stepped aside is not hidden by Layers');assert.equal(objs[CH].visible,false,'Layers leaves the people code state alone');
+  L.test.hide(R,'cell');assert.deepEqual([objs[CH].visible,objs[PC].visible],[false,false]);
+  // while the desk is hidden its user is gone: the people code puts the chair back (raw true), then Noah comes back
+  objs[CH].visible=true;assert.equal(objs[CH].visible,false,'the sticky hide holds');
+  L.test.show(R,'cell');assert.deepEqual([objs[CH].visible,objs[PC].visible],[true,true],'show: the chair as the people code last set it, the PC as before');
+  objs[CH].visible=false;   // Noah sits again: set aside again
+  L.test.hide(R,'cell');objs[CH].visible=false;L.test.show(R,'cell');
+  assert.deepEqual([objs[CH].visible,objs[PC].visible],[false,true],'nothing touched by the people code meanwhile: back exactly as before the hide (set aside)');
+  // the badge counts Layers hides only
+  rows=L.test.rows();assert.equal(rows.filter(r=>r.hidden).length,0,'no Layers hide: nothing counted, though the chair is invisible');
+  L.applyUndo(undo.at(-1));assert.equal(objs[CH].visible,false,'undo of the show: hidden by the desk');
+  L.applyUndo({...undo.at(-1),before:undo.at(-1).after,after:undo.at(-1).before});assert.equal(objs[CH].visible,false,'redo: back to before (still set aside)');
+  ok('a station chair set aside for its seated user: not a Layers hide, not counted, and returned to exactly that after the desk is shown');
+}
 console.log(`Layers seats and desk props: ${n} checks pass.`);
