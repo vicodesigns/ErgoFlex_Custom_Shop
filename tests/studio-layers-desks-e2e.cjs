@@ -48,6 +48,16 @@ function formatResult(checks) {
   lines.push(failed ? `${failed} of ${checks.length} checks failed` : `all ${checks.length} checks passed`);
   return { lines, code: failed || !checks.length ? 1 : 0 };
 }
+// Poll read() until pred(value) or the timeout: {ok, value, ms}. now / sleep for tests.
+async function pollUntil(read, pred, { timeout = 30000, interval = 250, now = Date.now, sleep = ms => new Promise(r => setTimeout(r, ms)) } = {}) {
+  const t0 = now(); let value;
+  for (;;) {
+    value = await read();
+    if (pred(value)) return { ok: true, value, ms: now() - t0 };
+    if (now() - t0 >= timeout) return { ok: false, value, ms: now() - t0 };
+    await sleep(interval);
+  }
+}
 // Compare two snapshots of the room (page side: snap()), all desks and people but the ones named.
 function othersUnchanged(before, after, { desks = [], people = [] } = {}) {
   const diffs = [];
@@ -110,64 +120,80 @@ async function main() {
       await settle(3000);
     }
     const snap = () => page.evaluate(() => window.__lyE2E.snap());
-    const mode = async m => { await page.evaluate(m => window.ErgoFlex.setMeasuredRoomMode('highschool', m), m); await settle(2500); };
+    // Wait on the state itself (seen on the desk: a fixed pause read the room one daypart behind while the new hour's
+    // people loaded). Each check polls the page until its condition holds or 30 s pass, and says how long it took.
+    const until = (pred, timeout = 30000) => pollUntil(snap, v => { try { return !!pred(v); } catch { return false; } }, { timeout });
+    const took = w => ` (after ${Math.round(w.ms / 100) / 10} s)`;
+    const mode = m => page.evaluate(m => window.ErgoFlex.setMeasuredRoomMode('highschool', m), m);
     const layers = (fn, id, scope) => page.evaluate((fn, id, scope) => window.ErgoFlex.layers[fn](id, scope), fn, id, scope);
     const serverDesks = async () => (await api()).values?.[DESKS_KEY] ?? null;
+    const deskWrites = async () => { await page.evaluate(() => window.__lyE2E.flush()); await settle(1500); return [await serverDesks(), await page.evaluate(k => localStorage.getItem(k), DESKS_KEY)]; };
+    let noah = null;
+    const hiddenR = v => !v.desks[RESEARCH]?.shown && v.desks[RESEARCH]?.meshesShown === 0 && !v.people[noah]?.shown;
+    const shownR = v => v.desks[RESEARCH]?.shown && v.people[noah]?.shown;
+    const sayR = v => `desk shown ${v.desks[RESEARCH]?.shown} (${v.desks[RESEARCH]?.meshesShown} of ${v.desks[RESEARCH]?.meshes} meshes drawn), ${noah} shown ${v.people[noah]?.shown}`;
 
     await open();
     check('the page has the Layers test API', await page.evaluate(() => !!window.ErgoFlex.layers?.rows && !!window.ErgoFlex.undoEdit), 'window.ErgoFlex.layers or undoEdit is missing (is Layers switched off?)');
-    const noah = await page.evaluate(() => window.__lyE2E.userOf('research-desk')), kai = await page.evaluate(() => window.__lyE2E.userOf(null));
-    const b0 = await snap(), desks0 = await serverDesks(), local0 = await page.evaluate(k => localStorage.getItem(k), DESKS_KEY);
-    check('the research desk and Noah are shown at First bell before any hide', b0.desks[RESEARCH]?.shown && noah && b0.people[noah]?.shown, `desk shown ${b0.desks[RESEARCH]?.shown}, user ${noah} shown ${b0.people[noah]?.shown}`);
+    noah = await page.evaluate(() => window.__lyE2E.userOf('research-desk'));
+    const w0 = await until(shownR, 60000), b0 = w0.value, [desks0, local0] = await deskWrites();
+    check('the research desk and Noah are shown at First bell before any hide', w0.ok && noah, `user ${noah}; ${sayR(b0)}${took(w0)}`);
     const rows = await page.evaluate(() => window.ErgoFlex.layers.rows());
     check('the Desks group lists the research desk with its user nested under it', rows.some(r => r.id === RESEARCH && r.group === 'desk') && rows.some(r => r.nestedIn === RESEARCH), 'no desk row or no nested user row for ' + RESEARCH);
 
     // 1. one eye, this time and size
-    await layers('hide', RESEARCH, 'cell'); await settle();
-    let s = await snap();
-    check('hide (this time & size): the research desk, its screens and objects are invisible', !s.desks[RESEARCH]?.shown && s.desks[RESEARCH]?.meshesShown === 0, `shown ${s.desks[RESEARCH]?.shown}, ${s.desks[RESEARCH]?.meshesShown} of ${s.desks[RESEARCH]?.meshes} meshes still drawn`);
-    check('hide: Noah is not shown', !s.people[noah]?.shown, `${noah} still shown`);
-    const d1 = othersUnchanged(b0, s, { desks: [RESEARCH], people: [noah] });
+    await layers('hide', RESEARCH, 'cell');
+    let w = await until(hiddenR);
+    check('hide (this time & size): the research desk, its screens and objects are invisible', !w.value.desks[RESEARCH]?.shown && w.value.desks[RESEARCH]?.meshesShown === 0, sayR(w.value) + took(w));
+    check('hide: Noah is not shown', !w.value.people[noah]?.shown, sayR(w.value) + took(w));
+    const d1 = othersUnchanged(b0, w.value, { desks: [RESEARCH], people: [noah] });
     check('hide: the room\'s other desks and people are unchanged', !d1.length, d1.slice(0, 4).join(', '));
-    await mode('afternoon'); s = await snap();
-    check('Wave lab: the research desk and Noah are back', s.desks[RESEARCH]?.shown && s.people[noah]?.shown, `desk ${s.desks[RESEARCH]?.shown}, ${noah} ${s.people[noah]?.shown}`);
-    await mode('morning'); s = await snap();
-    check('First bell again: hidden again', !s.desks[RESEARCH]?.shown && !s.people[noah]?.shown, `desk ${s.desks[RESEARCH]?.shown}, ${noah} ${s.people[noah]?.shown}`);
-    await layers('show', RESEARCH, 'cell'); await settle(2000); s = await snap();
-    check('the eye: the desk and Noah are back, seated, at the same pose', s.desks[RESEARCH]?.shown && s.people[noah]?.shown && s.people[noah]?.desk === 'sit' && samePlace(s.people[noah], b0.people[noah]),
-      `desk ${s.desks[RESEARCH]?.shown}, ${noah} shown ${s.people[noah]?.shown} desk ${s.people[noah]?.desk}, moved ${s.people[noah] && b0.people[noah] ? Math.round(Math.hypot(s.people[noah].x - b0.people[noah].x, s.people[noah].z - b0.people[noah].z)) + ' units' : '?'}`);
+    await mode('afternoon'); w = await until(shownR);
+    check('Wave lab: the research desk and Noah are back', w.ok, sayR(w.value) + took(w));
+    await mode('morning'); w = await until(hiddenR);
+    check('First bell again: hidden again', w.ok, sayR(w.value) + took(w));
+    await layers('show', RESEARCH, 'cell'); w = await until(v => shownR(v) && samePlace(v.people[noah], b0.people[noah]));
+    const moved = w.value.people[noah] && b0.people[noah] ? Math.round(Math.hypot(w.value.people[noah].x - b0.people[noah].x, w.value.people[noah].z - b0.people[noah].z)) + ' units' : '?';
+    check('the eye: the desk and Noah are back, seated, at the same pose', w.ok && w.value.people[noah]?.desk === 'sit', `${sayR(w.value)}, desk role ${w.value.people[noah]?.desk}, moved ${moved}${took(w)}`);
+    const [desksA, localA] = await deskWrites();
+    check('hiding the research desk wrote nothing to ' + DESKS_KEY, desksA === desks0 && localA === local0, `server ${desks0 === desksA ? 'same' : 'changed'}, this browser ${local0 === localA ? 'same' : 'changed'}`);
 
-    // 2. the featured desk (Kai goes with it)
-    check('Kai is shown at the featured desk before its hide', kai && b0.people[kai]?.shown, `${kai || 'no featured-desk user'} not shown (the desk is not at a wheelchair height?)`);
-    await layers('hide', MAIN, 'cell'); await settle(2500); s = await snap();
-    check('hide the featured desk: it is invisible and another desk is featured', !s.desks[MAIN]?.shown && s.selected !== 'main', `main shown ${s.desks[MAIN]?.shown}, selected ${s.selected}`);
-    check('hide the featured desk: Kai goes with it', !kai || !s.people[kai]?.shown, `${kai} still shown`);
-    await layers('show', MAIN, 'cell'); await settle(2500); s = await snap();
-    check('show the featured desk: featured again, Kai back at the same pose', s.selected === 'main' && s.desks[MAIN]?.shown && (!kai || (s.people[kai]?.shown && samePlace(s.people[kai], b0.people[kai]))),
-      `selected ${s.selected}, main shown ${s.desks[MAIN]?.shown}, ${kai} shown ${s.people[kai]?.shown}`);
+    // 2. the featured desk (Kai goes with it). Kai sits in a wheelchair: his postures are for 28 and 31 in, so the
+    // featured desk goes to 28 in, flat, first (the empty test state starts it at the First bell height, 43.5 in).
+    const kai = await page.evaluate(() => window.__lyE2E.userOf(null));
+    await page.evaluate(() => { const E = window.ErgoFlex; for (const c of E.tiltConfigs || []) { try { E.setTilt(c.name, 0); } catch {} } E.setHeight(28); });
+    const hk = await pollUntil(() => page.evaluate(() => ({ h: window.ErgoFlex.heightInches, v: window.__lyE2E.snap() })), x => Math.abs(x.h - 28) <= .05 && !!kai && !!x.v.people[kai]?.shown, { timeout: 30000 });
+    check('Kai is shown at the featured desk at 28 in before its hide', hk.ok, `${kai || 'no featured-desk user'} shown ${hk.value.v.people[kai]?.shown}, desk at ${Number(hk.value.h).toFixed(2)} in${took(hk)}`);
+    const k0 = hk.value.v, [desksB0, localB0] = await deskWrites();
+    await layers('hide', MAIN, 'cell'); w = await until(v => !v.desks[MAIN]?.shown && v.selected !== 'main' && (!kai || !v.people[kai]?.shown));
+    check('hide the featured desk: it is invisible and another desk is featured', !w.value.desks[MAIN]?.shown && w.value.selected !== 'main', `main shown ${w.value.desks[MAIN]?.shown}, selected ${w.value.selected}${took(w)}`);
+    check('hide the featured desk: Kai goes with it', !kai || !w.value.people[kai]?.shown, `${kai} still shown${took(w)}`);
+    await layers('show', MAIN, 'cell'); w = await until(v => v.selected === 'main' && v.desks[MAIN]?.shown && (!kai || (v.people[kai]?.shown && samePlace(v.people[kai], k0.people[kai]))));
+    const hAfter = await page.evaluate(() => window.ErgoFlex.heightInches);
+    check('show the featured desk: featured again, Kai back at the same pose', w.ok,
+      `selected ${w.value.selected}, main shown ${w.value.desks[MAIN]?.shown}, ${kai} shown ${w.value.people[kai]?.shown}, desk at ${Number(hAfter).toFixed(2)} in${took(w)}`);
+    const [desksB1, localB1] = await deskWrites();
+    check('hiding the featured desk wrote nothing to ' + DESKS_KEY, desksB1 === desksB0 && localB1 === localB0, `server ${desksB0 === desksB1 ? 'same' : 'changed'}, this browser ${localB0 === localB1 ? 'same' : 'changed'}`);
 
     // 3. everywhere
-    await layers('hide', RESEARCH, 'all'); await settle(); const e1 = await snap(); await mode('afternoon'); const e2 = await snap(); await mode('morning');
-    check('hide everywhere: hidden at First bell and at Wave lab', !e1.desks[RESEARCH]?.shown && !e2.desks[RESEARCH]?.shown && !e2.people[noah]?.shown, `First bell ${e1.desks[RESEARCH]?.shown}, Wave lab ${e2.desks[RESEARCH]?.shown}`);
-    await layers('show', RESEARCH, 'all'); await settle(); s = await snap();
-    check('show everywhere: back', s.desks[RESEARCH]?.shown && s.people[noah]?.shown, `desk ${s.desks[RESEARCH]?.shown}, ${noah} ${s.people[noah]?.shown}`);
+    await layers('hide', RESEARCH, 'all'); const e1 = await until(hiddenR); await mode('afternoon'); await settle(1500); const e2 = await until(hiddenR, 8000);
+    check('hide everywhere: hidden at First bell and at Wave lab', e1.ok && e2.ok, `First bell: ${sayR(e1.value)}; Wave lab: ${sayR(e2.value)}`);
+    await mode('morning'); await until(hiddenR, 8000);
+    await layers('show', RESEARCH, 'all'); w = await until(shownR);
+    check('show everywhere: back', w.ok, sayR(w.value) + took(w));
 
     // 4. undo / redo
-    await layers('hide', RESEARCH, 'cell'); await settle();
-    await page.evaluate(() => window.ErgoFlex.undoEdit()); await settle(); const u = await snap();
-    await page.evaluate(() => window.ErgoFlex.redoEdit()); await settle(); const r = await snap();
-    check('undo shows it, redo hides it again', u.desks[RESEARCH]?.shown && u.people[noah]?.shown && !r.desks[RESEARCH]?.shown && !r.people[noah]?.shown, `after undo ${u.desks[RESEARCH]?.shown}, after redo ${r.desks[RESEARCH]?.shown}`);
-
-    // 5. nothing written to the desks key by hiding
+    await layers('hide', RESEARCH, 'cell'); await until(hiddenR);
+    await page.evaluate(() => window.ErgoFlex.undoEdit()); const u = await until(shownR);
+    await page.evaluate(() => window.ErgoFlex.redoEdit()); const r = await until(hiddenR);
+    check('undo shows it, redo hides it again', u.ok && r.ok, `after undo: ${sayR(u.value)}; after redo: ${sayR(r.value)}`);
     await page.evaluate(() => window.__lyE2E.flush()); await settle(1500);
-    const desks1 = await serverDesks(), local1 = await page.evaluate(k => localStorage.getItem(k), DESKS_KEY);
-    check('hiding wrote nothing to ' + DESKS_KEY, desks1 === desks0 && local1 === local0, `server ${desks0 === desks1 ? 'same' : 'changed'}, this browser ${local0 === local1 ? 'same' : 'changed'}`);
     const stored = (await api()).values?.[LAYERS_KEY] || '';
     check('the hide is in the shared ' + LAYERS_KEY, stored.includes('desk:station-research-desk'), 'no research desk entry on the server');
 
-    // 6. reload: still hidden (the redo above left it hidden for First bell)
-    await open(); s = await snap();
-    check('after a reload the hide is still there', !s.desks[RESEARCH]?.shown && !s.people[noah]?.shown, `desk ${s.desks[RESEARCH]?.shown}, ${noah} ${s.people[noah]?.shown}`);
+    // 5. reload: still hidden (the redo above left it hidden for First bell)
+    await open(); w = await until(hiddenR, 60000);
+    check('after a reload the hide is still there', w.ok, sayR(w.value) + took(w));
     check('no page errors', !errors.length, errors.slice(0, 2).join(' | '));
   } catch (error) {
     check('the run', false, error.message);
@@ -177,5 +203,5 @@ async function main() {
   return finish(code);
 }
 
-module.exports = { serverArgs, pickPort, chromeOptions, formatResult, othersUnchanged, samePlace, installPageHelpers, FORBIDDEN_PORTS };
+module.exports = { serverArgs, pickPort, chromeOptions, formatResult, othersUnchanged, samePlace, pollUntil, installPageHelpers, FORBIDDEN_PORTS };
 if (require.main === module) main().then(code => process.exit(code), error => { console.log('FAIL the run: ' + error.message); process.exit(1); });

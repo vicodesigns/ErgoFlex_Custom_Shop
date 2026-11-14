@@ -47,5 +47,14 @@ assert.deepEqual(E.othersUnchanged(before, { desks: { 'desk:a': { shown: false }
 assert.deepEqual(E.othersUnchanged(before, { desks: { 'desk:a': { shown: true }, 'desk:b': { shown: false } }, people: { noah: { shown: true } } }), ['desk:b disappeared', 'zoe disappeared']);
 assert.ok(E.samePlace({ x: 1, z: 2, yaw: 3.14 }, { x: 4, z: 2, yaw: -3.14 + 2 * Math.PI - 2 * Math.PI + 6.28 }));
 assert.ok(!E.samePlace({ x: 0, z: 0, yaw: 0 }, { x: 10, z: 0, yaw: 0 })); assert.ok(!E.samePlace(null, { x: 0, z: 0, yaw: 0 }));
+// pollUntil: waits on the state, not a fixed pause (fake clock: no real waiting)
+{
+  let t = 0, reads = 0; const clock = { now: () => t, sleep: async ms => { t += ms; } };
+  const hit = await E.pollUntil(async () => ++reads, v => v >= 4, { timeout: 30000, interval: 250, ...clock });
+  assert.deepEqual([hit.ok, hit.value, hit.ms], [true, 4, 750]);
+  t = 0; const miss = await E.pollUntil(async () => 'still hidden', () => false, { timeout: 1000, interval: 250, ...clock });
+  assert.deepEqual([miss.ok, miss.value, miss.ms], [false, 'still hidden', 1000], 'times out with the last state, for the reason line');
+  t = 0; const first = await E.pollUntil(async () => 1, () => true, clock); assert.deepEqual([first.ok, first.ms], [true, 0]);
+}
 assert.equal(typeof E.installPageHelpers, 'function'); assert.ok(E.FORBIDDEN_PORTS.has(3000));
 console.log('Layers desks e2e helpers: server args, free port, launch options, result lines, comparisons: pass.');

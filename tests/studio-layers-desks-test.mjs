@@ -84,4 +84,23 @@ const people=[{id:'person:noah-sit-type',name:'Noah (sit type)',desk:R},{id:'per
   assert.equal(P.stationNow(specs.noah,{station:()=>null}).height,28,'no live desk at all: the layout\'s station as before');
   ok('room-people: studioOut only without a film filter; a gone station has nobody and its user is not marked missing');
 }
+{
+  // A daypart change re-applies desk hides at once (seen on the desk: one daypart behind while the panel's 500 ms check
+  // waited for the new hour's people to load). studio.js setMeasuredRoomMode calls studioLayers.apply() after the mode
+  // is set; the panel's apply() reads the time then, for desks and people alike.
+  const fs=await import('node:fs'),src=fs.readFileSync(new URL('../studio.js',import.meta.url),'utf8');
+  const body=src.slice(src.indexOf('function setMeasuredRoomMode('),src.indexOf('function setRoomScene('));
+  const setAt=body.indexOf('institutionalState[sceneId].mode = id'),applyAt=body.indexOf('studioLayers?.apply();');
+  assert.ok(setAt>0&&applyAt>setAt,'setMeasuredRoomMode re-applies Layers after the mode is set');
+  let phase='morning';const deskCalls=[],peopleCalls=[];
+  const layers={[entryKey(HS,R)]:{kind:'desk',cells:{'morning/60x30':true}}};
+  const L=createStudioLayers({roomKey:()=>HS,phase:()=>phase,size:()=>'60x30',items:()=>[],desks:()=>desks,people:()=>people,assetState:()=>({removed:new Set()}),
+    readRaw:()=>JSON.stringify(layers),writeRaw:()=>{},applyDesks:v=>{deskCalls.push(v);return false;},applyPeople:o=>{peopleCalls.push(o);return false;}});
+  L.hydrated();assert.equal(deskCalls.at(-1).get(R),true);
+  for(const [p,want] of [['afternoon',false],['morning',true],['afternoon',false],['evening',false],['morning',true]]){
+    phase=p;L.apply();
+    assert.equal(deskCalls.at(-1).get(R),want,`desk at ${p}`);assert.equal(peopleCalls.at(-1)(specs.noah),want,`Noah at ${p}`);
+  }
+  ok('a daypart change: the very next apply uses the new time for the desk and its user (never one behind)');
+}
 console.log(`Layers desks and people: ${n} checks pass.`);

@@ -11486,6 +11486,9 @@ function setMeasuredRoomMode(sceneId, id, moveDesk = true) {
         sceneDesks?.stop();if(sceneDesks?.activities){sceneDesks.activities.message='';sceneDesks.activities.resolved=null;}sceneDesks?.sync();
         applyRoomLighting();
     }
+    // Layers: show / hide for the new time at once (the panel's own 500 ms check can be held up for seconds while
+    // the new hour's people load; seen on the desk: one daypart behind). Guarded; never in a presentation frame.
+    studioLayers?.apply();
     syncHomeOfficeUI();
     sceneTour?.sync();
 }
