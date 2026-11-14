@@ -1669,7 +1669,7 @@ const WALLS = {
         // felt tack strip (910–1210) and Tower Plaster above (homage to the 1926 plaster).
         const dado = S.mapped('dado', (c, W, H) => drawPaint(c, W, H, '#35383b'), [256, 256], [800, 900], { roughness: .55 });
         const felt = S.mapped('tack-felt', (c, W, H) => drawFelt(c, W, H, '#46494d', '#5a5d61', '#36383b'), [512, 256], [600, 300], { roughness: .95, surface: 'fabric' });
-        const fw = kit.frontWall ? { sides: ['back', 'right', 'left', 'front'], frontSkip: [[HS_FRONT.door - 560, HS_FRONT.door + 560]] } : {};
+        const fw = kit.frontWall ? { sides: ['back', 'right', 'left', 'front'] } : {};
         wainscot(kit, dado, 900, { cap: HB.orange, capH: 10, capD: 14, ...fw }); wainscot(kit, felt, 300, { lift: 910, cap: HB.black, capH: 12, capD: 16, depth: 10, ...fw });
         // Limewash clouds on the shell's plaster (the registry wall colour tints them).
         const wash = (c, W, H) => { const base = '#f6f2ea'; c.fillStyle = base; c.fillRect(0, 0, W, H); for (let i = 0; i < 60; i++) { const x = rnd(i * 2.3) * W, y = rnd(i * 4.7) * H, r = W * (.05 + rnd(i * 6.1) * .14); wrapped(W, H, (dx, dy) => { const g = c.createRadialGradient(x + dx, y + dy, 0, x + dx, y + dy, r); g.addColorStop(0, (i % 2 ? shade(base, .03) : shade(base, -.035)) + '66'); g.addColorStop(1, base + '00'); c.fillStyle = g; c.fillRect(x + dx - r, y + dy - r, r * 2, r * 2); }); } };
@@ -2691,12 +2691,14 @@ function pennants(kit, parent, list) {
 // felt tack strip (WALLS), the Lombard frieze, and school-spirit pieces in the Oiler palette. It is one cutaway wall
 // group (room.walls: hidden while the camera is in front of it, as the back wall is while the camera is behind it),
 // and every piece is a wall asset in that group, so the dollhouse view from the front still opens the room.
+// No door: the room's entry door (with its EXIT sign) is a metre round the corner on the door wall. Right of the
+// mural everything hangs above 1230 mm, over the media desk, its chair and the bins.
 // Wall-mounted only (nothing on the floor in front of it but a locker bank in the window corner): the activity table's
 // built-in spot (-3400, 7400), the drafting stool (-1000, 7560), the media desk's chair and user (x 1170..1830),
 // the waste bins (3400 / 3850, 7760) and the door-wall lockers (x >= 4680) keep their floor.
 // The film is left alone: the oilers chapter dresses its own front wall (its cut's sceneEdits), so in a presentation
 // frame (film, Director stage) this wall is not built and the chapter's frames do not change.
-const HS_FRONT = { door: 2650, lockers: -4500, trophies: -3150, mural: -450, board: 1450, photos: 3950 };
+const HS_FRONT = { lockers: -4500, trophies: -3150, mural: -450, board: 1550, calendar: 2750, photos: 4000 };
 function frontWall(kit) {
     if (globalThis.__ERGO_PRESENTATION__ || kit.frontWall) return kit.frontWall || null;
     const { w, front, ceiling, root, room } = kit;
@@ -2746,6 +2748,20 @@ function drawTeamPhoto(c, W, H, n) {
     c.fillStyle = HB.black; c.fillRect(0, H * .84, W, H * .16);
     write(c, ['SURF TEAM · STATE CHAMPS', 'ROBOTICS · REGIONALS', 'APA · SPRING MUSICAL'][n], W / 2, H * .92, H * .075, HB.plaster, 'center', '800', W * .9);
 }
+function drawOilerCalendar(c, W, H) {
+    // The month on a black board: orange header, cream day cells, the week's events in team colours.
+    c.fillStyle = HB.black; c.fillRect(0, 0, W, H);
+    c.fillStyle = HB.orange; c.fillRect(0, 0, W, H * .16); varsity(c, 'OILER CALENDAR  ·  NOVEMBER', W / 2, H * .085, H * .075, HB.black, { track: .05, max: W * .9 });
+    const days = ['MON', 'TUE', 'WED', 'THU', 'FRI'], cw = W * .92 / 5, x0 = W * .04, y0 = H * .22, ch = (H * .74) / 4.3;
+    days.forEach((d, i) => write(c, d, x0 + cw * (i + .5), y0 + ch * .15, ch * .2, HB.plaster, 'center', '800'));
+    const events = { 3: ['SURF MEET', HB.pacific], 6: ['SPIRIT WEEK', HB.orange], 7: ['SPIRIT WEEK', HB.orange], 8: ['RALLY', HB.orange], 11: ['APA PREVIEW', '#8a2f3a'], 14: ['WAVE LAB', HB.pacific], 17: ['FINALS', HB.black] };
+    for (let r = 0; r < 4; r++) for (let i = 0; i < 5; i++) {
+        const n = r * 5 + i, x = x0 + cw * i + 4, y = y0 + ch * .35 + r * ch, ev = events[n];
+        c.fillStyle = n === 9 ? '#f6d7a4' : HB.cream; c.fillRect(x, y, cw - 8, ch - 8);
+        write(c, String(3 + r * 7 + i), x + 10, y + ch * .2, ch * .18, '#5a5d61', 'left', '800');
+        if (ev) { c.fillStyle = ev[1]; c.fillRect(x + 6, y + ch * .5, cw - 20, ch * .3); write(c, ev[0], x + cw / 2 - 4, y + ch * .66, ch * .15, ev[1] === HB.black ? HB.orange : '#ffffff', 'center', '800', cw - 30); }
+    }
+}
 function dressFrontWall(kit, E) {
     const { w, front } = kit, F = HS_FRONT, g0 = kit.frontWall;
     // Lombard band frieze along the top, as on the teaching wall.
@@ -2786,27 +2802,19 @@ function dressFrontWall(kit, E) {
     // The Oilers mural (2400 x 1200, framed in black) under a picture light.
     E.panel(E.wall('front', 'front-mural', 'Wall Oilers mural', F.mural, 1980, 22), 2400, 1200, drawOilersMural, { frame: HB.black, border: 22, res: 1536 });
     pictureLight(kit, E, 'front', F.mural, 2700, 2000, [.04, .02, .42, .16, .36], { drop: 1300, finish: HB.black });
-    // Club notice board (cork, 900 x 800) with the PA speaker above it.
-    const board = E.wall('front', 'front-notice-board', 'Wall Oiler clubs notice board', F.board, 1650, 20);
+    // Club notice board (cork, 900 x 800, bottom at 1250) with the PA speaker above it.
+    const board = E.wall('front', 'front-notice-board', 'Wall Oiler clubs notice board', F.board, 1670, 20);
     E.panel(board, 900, 800, drawClubBoard, { frame: HB.black, border: 20, res: 768 });
     const pins = detailKit(); for (let n = 0; n < 6; n++) pins.ball(9, [((n % 3) - 1) * 279, Math.floor(n / 3) ? -100 + 70 : 230 + 70, 26], [HB.orange, HB.black, HB.pacific][n % 3], [1, 1, .6], [0, 0, 0], 'metal'); E.build(pins, board);
     const pa = E.wall('front', 'front-pa-speaker', 'Wall PA speaker', F.board, 2450, 40), pk = detailKit();
     pk.add(new THREE.CylinderGeometry(150, 150, 40, 32), [0, 0, 0], '#e8e4da', [1, 1, 1], [Math.PI / 2, 0, 0]);
     for (let r = 0; r < 4; r++) pk.add(new THREE.TorusGeometry(30 + r * 28, 4, 4, 32), [0, 0, 22], '#9a958a');
     E.build(pk, pa);
-    // Corridor door, as the room's entry door (black frame, oak leaf, vision panel), with push bar, kick plate, closer.
-    const door = new THREE.Group(); door.name = 'Corridor door (back of the class)'; g0.add(door); door.position.set(F.door, 0, front - 18); door.rotation.y = Math.PI;
-    kit.box(door, [1020, 2240, 35], [0, 1120, 0], E.M(HB.black, 'powder', { roughness: .5 }), 5);
-    kit.box(door, [930, 2150, 38], [0, 1075, 22], kit.oak, 5);
-    kit.box(door, [200, 780, 10], [0, 1560, 47], E.M('#9eb9bd', 'powder'), 5);
-    kit.box(door, [880, 230, 4], [0, 130, 43], kit.metal, 2);
-    kit.rod(door, [-330, 1000, 70], [330, 1000, 70], 16, kit.metal); for (const x of [-330, 330]) kit.rod(door, [x, 1000, 42], [x, 1000, 70], 10, kit.metal);
-    kit.box(door, [320, 60, 70], [-200, 2185, 52], kit.metal, 6);
-    // Room number plaque by the door (as on the door wall).
-    E.panel(E.wall('front', 'front-room-plaque', 'Wall room number plaque (back of the class)', F.door + 680, 1500, 10), 120, 120, (c, W, H) => { c.fillStyle = HB.orange; c.fillRect(0, 0, W, H); varsity(c, '214', W / 2, H * .42, H * .36, HB.black, { track: .02 }); write(c, 'SCIENCE', W / 2, H * .78, H * .13, HB.black, 'center', '800'); }, { frame: HB.black, border: 6, depth: 10, res: 256 });
-    // Three framed team photos over the bins, short of the door-wall lockers.
-    const photos = E.wall('front', 'front-team-photos', 'Wall framed team photos', F.photos, 1800, 20);
-    [470, 0, -470].forEach((x, n) => E.panel(photos, 420, 300, (c, W, H) => drawTeamPhoto(c, W, H, n), { frame: HB.black, border: 16, at: [x, (n - 1) * 20, 0], res: 512 }));
+    // The month's calendar (1100 x 800 in a black frame, bottom at 1282) between the board and the photos.
+    E.panel(E.wall('front', 'front-calendar', 'Wall Oiler calendar', F.calendar, 1700, 18), 1100, 800, drawOilerCalendar, { frame: HB.black, border: 18, res: 1024 });
+    // Three framed team photos, two over one, over the bins and short of the door-wall lockers (local +x is toward the window).
+    const photos = E.wall('front', 'front-team-photos', 'Wall framed team photos', F.photos, 1775, 20);
+    [[230, 175], [-230, 175], [0, -175]].forEach(([x, y], n) => E.panel(photos, 420, 300, (c, W, H) => drawTeamPhoto(c, W, H, n), { frame: HB.black, border: 16, at: [x, y, 0], res: 512 }));
     // Showcase pennant string, as on the other three walls.
     E.show(wallBunting(kit, E, g0, [w / 2 - 300, 2830, front - 175], [-w / 2 + 300, 2830, front - 175], 26, 60), [4]);
 }
