@@ -55,7 +55,7 @@ export class SceneDeskActivities {
         }
         const selected=[...m.records.values()].filter(r=>activity.kind!=='work'||homes[r.id]?.[r.state.size]);
         this.run={kind:activity.kind,title:activity.title,stage:'lift',desks:selected,index:0,elapsed:0,finished:0,blocked:[],postureBlocked:new Set(),homes:copy(homes)};
-        m.playing={activity:true};m.persist();this.say(activity.title+' · lifting safely before folding.');return true;
+        m.playing={activity:true};m.autosave();this.say(activity.title+' · lifting safely before folding.');return true;
     }
     say(message){this.message=message;this.manager.sync();}
     apply(r,pose){
@@ -173,7 +173,7 @@ export class SceneDeskActivities {
     }
     update(dt){
         const run=this.run,m=this.manager;if(!run)return;
-        if(!m.ctx.activityValid?.()){m.stop();m.persist();return;}
+        if(!m.ctx.activityValid?.()){m.stop();m.autosave();return;}
         if(run.stage==='lift'||run.stage==='fold'){
             let done=true;
             for(const r of run.desks){
@@ -207,7 +207,7 @@ export class SceneDeskActivities {
             this.run=null;m.playing=null;this.clearPreview();
             if(returned&&!blocked&&!this.chairs.size){for(const r of run.desks){delete m.roomData.activityHome[r.id]?.[r.state.size];if(!Object.keys(m.roomData.activityHome[r.id]||{}).length)delete m.roomData.activityHome[r.id];}}
             const inPlace=run.moves.filter(move=>move.inPlace).length;
-            m.persist();this.say(`${run.title} · ${run.finished} desks ${returned?'returned':run.kind==='storage'?'in Storage Mode at 65°':'arranged'}${inPlace?` (${inPlace} in existing wall bays)`:''}${blocked?`; ${blocked} remain in a clear bay or folded because furniture limits movement`:''}${returned&&this.chairs.size?`; ${this.chairs.size} chairs remain parked until their original spots are clear`:''}.`);return;
+            m.autosave();this.say(`${run.title} · ${run.finished} desks ${returned?'returned':run.kind==='storage'?'in Storage Mode at 65°':'arranged'}${inPlace?` (${inPlace} in existing wall bays)`:''}${blocked?`; ${blocked} remain in a clear bay or folded because furniture limits movement`:''}${returned&&this.chairs.size?`; ${this.chairs.size} chairs remain parked until their original spots are clear`:''}.`);return;
         }
         const r=m.records.get(move.id);
         if(run.stage==='travel'){
@@ -217,7 +217,7 @@ export class SceneDeskActivities {
                 const stationary=Math.hypot(r.state.pose.x-p.x,r.state.pose.z-p.z)<.01&&Math.abs(angleDelta(r.state.pose.yaw,p.yaw))<.0001;
                 if(!(move.authoredReturn&&stationary)&&!segmentIsClear(r.state.pose,p,deskRoomBounds(room),others,{...move.footprint,margin:15})){
                     this.lastBlock={id:r.id,from:copy(r.state.pose),to:p,footprint:move.footprint,hits:others.filter(o=>!segmentIsClear(r.state.pose,p,deskRoomBounds(room),[o],{...move.footprint,margin:15})),plannedHits:this.lastPlan?.obstacles.filter(o=>!segmentIsClear(r.state.pose,p,deskRoomBounds(room),[o],{...move.footprint,margin:15}))};
-                    m.stop();m.persist();this.say(r.state.name+': stopped because the route changed. Move the obstruction, then try again.');return;
+                    m.stop();m.autosave();this.say(r.state.name+': stopped because the route changed. Move the obstruction, then try again.');return;
                 }
                 this.apply(r,{pose:p});
             }
