@@ -42,8 +42,9 @@
     g.strokeStyle = ink; g.lineWidth = 8; g.strokeRect(...OUT);
     g.lineWidth = 5; ROOMS.forEach(({r}) => g.strokeRect(...r));
     g.lineWidth = 2; g.strokeRect(180, 160, 1120, 620);
-    g.fillStyle = ink; g.font = '600 24px Poppins';
-    ROOMS.forEach(({n, r}) => { g.fillText(n, r[0] + 24, r[1] + 44); g.font = '500 20px Poppins'; g.fillText(area(r) + ' m²', r[0] + 24, r[1] + 74); g.font = '600 24px Poppins'; });
+    const L = o.big ? 1.9 : 1;
+    g.fillStyle = ink;
+    ROOMS.forEach(({n, r}) => { g.font = `600 ${24 * L}px Poppins`; g.fillText(n, r[0] + 24, r[1] + 44 * L); g.font = `500 ${20 * L}px Poppins`; g.fillText(area(r) + ' m²', r[0] + 24, r[1] + 78 * L); });
     g.lineWidth = 2; g.beginPath(); g.arc(DOOR[0], DOOR[1], DOOR[2], -Math.PI / 2, 0); g.stroke();
     g.beginPath(); g.arc(1180, 740, 60, Math.PI, Math.PI * 1.5); g.stroke();   // the front door, into the entry
     g.font = '500 22px monospace'; g.fillText('N ↑', 1390, 160);
@@ -70,7 +71,7 @@
     F.push(...box3(ox0, -.25, oz0, ox1, 0, oz1, '#d9d4c8', {edge: 'rgba(40,50,60,.35)', lw: 1.5}));   // the slab
     ROOMS.forEach(({r, col}, i) => {   // room floors, the lit one brighter
       const x0 = mx(r[0]), z0 = mz(r[1]), x1 = mx(r[0] + r[2]), z1 = mz(r[1] + r[3]);
-      F.push({p: [[x0, .01, z0], [x0, .01, z1], [x1, .01, z1], [x1, .01, z0]], col: i === hl ? '#ffbf5c' : col, flat: true, bias: .4, glow: i === hl ? 'rgba(255,170,60,.6)' : null});
+      F.push({p: [[x0, .01, z0], [x0, .01, z1], [x1, .01, z1], [x1, .01, z0]], col: i === hl ? '#ffbf5c' : col, flat: true, two: true, bias: .4, glow: i === hl ? 'rgba(255,170,60,.6)' : null});
     });
     if (hW > .02) for (const [x0, z0, x1, z1, ext] of WALLS) {
       const th = (ext ? T_EXT : T_INT) / 2, horiz = Math.abs(z0 - z1) < 1e-6;
@@ -80,13 +81,13 @@
         const L = horiz ? x1 - x0 : z1 - z0, n = Math.max(1, Math.floor(L / 2.6));
         for (let k = 0; k < n; k++) {
           const c = (k + .5) / n, ww = .9, y0 = .9, y1 = 2.1, out = horiz ? (z0 < 0 ? -th - .01 : th + .01) : (x0 < 0 ? -th - .01 : th + .01);
-          if (horiz) { const cx = x0 + L * c, zz = z0 + out; F.push({p: z0 < 0 ? [[cx + ww / 2, y0, zz], [cx - ww / 2, y0, zz], [cx - ww / 2, y1, zz], [cx + ww / 2, y1, zz]] : [[cx - ww / 2, y0, zz], [cx + ww / 2, y0, zz], [cx + ww / 2, y1, zz], [cx - ww / 2, y1, zz]], col: '#6fa8d8', flat: true, bias: -.05, edge: 'rgba(255,255,255,.6)', lw: 1.5}); }
-          else { const cz = z0 + L * c, xx = x0 + out; F.push({p: x0 < 0 ? [[xx, y0, cz - ww / 2], [xx, y0, cz + ww / 2], [xx, y1, cz + ww / 2], [xx, y1, cz - ww / 2]] : [[xx, y0, cz + ww / 2], [xx, y0, cz - ww / 2], [xx, y1, cz - ww / 2], [xx, y1, cz + ww / 2]], col: '#6fa8d8', flat: true, bias: -.05, edge: 'rgba(255,255,255,.6)', lw: 1.5}); }
+          if (horiz) { const cx = x0 + L * c, zz = z0 + out; F.push({p: z0 < 0 ? [[cx + ww / 2, y0, zz], [cx - ww / 2, y0, zz], [cx - ww / 2, y1, zz], [cx + ww / 2, y1, zz]] : [[cx - ww / 2, y0, zz], [cx + ww / 2, y0, zz], [cx + ww / 2, y1, zz], [cx - ww / 2, y1, zz]], col: '#6fa8d8', flat: true, two: true, bias: -.05, edge: 'rgba(255,255,255,.6)', lw: 1.5}); }
+          else { const cz = z0 + L * c, xx = x0 + out; F.push({p: x0 < 0 ? [[xx, y0, cz - ww / 2], [xx, y0, cz + ww / 2], [xx, y1, cz + ww / 2], [xx, y1, cz - ww / 2]] : [[xx, y0, cz + ww / 2], [xx, y0, cz - ww / 2], [xx, y1, cz - ww / 2], [xx, y1, cz + ww / 2]], col: '#6fa8d8', flat: true, two: true, bias: -.05, edge: 'rgba(255,255,255,.6)', lw: 1.5}); }
         }
       }
     }
     if (roofA > .01) {   // a gable roof along x, hovering roofLift above the walls (an architect's exploded model)
-      const y0 = WH + roofLift, yr = y0 + 1.7, zc = (oz0 + oz1) / 2, col = '#8a5a44', o = {a: roofA, edge: 'rgba(255,230,210,.35)', lw: 1.5};
+      const y0 = WH + roofLift, yr = y0 + 1.7, zc = (oz0 + oz1) / 2, col = '#8a5a44', o = {a: roofA, two: true, edge: 'rgba(255,230,210,.35)', lw: 1.5};
       F.push({p: [[ox0, y0, oz0], [ox1, y0, oz0], [ox1, yr, zc], [ox0, yr, zc]].reverse(), col, ...o});   // north slope
       F.push({p: [[ox0, y0, oz1], [ox0, yr, zc], [ox1, yr, zc], [ox1, y0, oz1]].reverse(), col, ...o});   // south slope
       F.push({p: [[ox0, y0, oz0], [ox0, yr, zc], [ox0, y0, oz1]], col: '#efe9df', ...o});   // gables
@@ -140,12 +141,13 @@
     q.globalAlpha = 1;
     // reeds and grasses: long curved strokes, foreground heavy (the easel painting's language)
     for (let i = 0; i < o.reeds; i++) {
-      const u = Math.pow(R(), .6), base = h * (.62 + .4 * u), x = w * R(), len = h * (.12 + .45 * u * R()), bend = (R() - .5) * w * .12;
+      const u = Math.pow(R(), .45), base = h * (.78 + .26 * u), x = w * R(), len = h * (.05 + .3 * u * u * (.4 + .6 * R())), bend = (R() - .5) * w * .08;
       const col = ['#2f8a2a', '#59b23a', '#c9b45a', '#e0c070', '#8a5a2a', '#b8452e', '#1f5a24', '#a6d24a'][Math.floor(R() * 8)];
-      q.strokeStyle = col; q.lineWidth = 2 + 9 * u * R(); q.lineCap = 'round';
+      q.strokeStyle = col; q.lineWidth = 2 + 7 * u * R(); q.lineCap = 'round'; q.globalAlpha = .55 + .45 * u;
       q.beginPath(); q.moveTo(x, base); q.quadraticCurveTo(x + bend * .3, base - len * .6, x + bend, base - len); q.stroke();
       if (R() < .25) { q.strokeStyle = '#f2e3a0'; q.lineWidth = 1.5; q.beginPath(); q.moveTo(x + 2, base); q.quadraticCurveTo(x + bend * .3 + 2, base - len * .6, x + bend + 2, base - len); q.stroke(); }
     }
+    q.globalAlpha = 1;
     if (o.tree) { q.fillStyle = '#3a2a1c'; q.fillRect(w * .72, h * .3, w * .025, h * .3); for (let i = 0; i < 26; i++) { q.fillStyle = ['#2f6a2a', '#3f8a32', '#5aa63a'][i % 3]; q.beginPath(); q.arc(w * (.73 + (R() - .5) * .22), h * (.28 + (R() - .5) * .16), w * (.03 + .04 * R()), 0, Math.PI * 2); q.fill(); } }
     return (CACHE[key] = c);
   }
@@ -217,7 +219,7 @@
       });
       // act 3: the reference
       alpha(a3, () => {
-        landscape(meadow('wide', 1920, 1120, {seed: 7, hz: .34, reeds: 900, dabs: 700}), 0, 0, W, H, t, B);
+        landscape(meadow('wide', 1920, 1120, {seed: 7, hz: .34, reeds: 320, dabs: 900, tree: true}), 0, 0, W, H, t, B);
         g.fillStyle = 'rgba(0,0,0,0.12)'; g.fillRect(0, 0, W, H);
         fillR(30, 26, 760, 76, 38, 'rgba(10,12,16,0.62)');
         T('Reference · Meadow edge, late afternoon', 64, 76, 32, {w: 600});
@@ -257,7 +259,7 @@
         const yaw = yawAt(t, A, B), hl = facing(yaw), k = eo(seg(t, A, A + .8));
         const pw = W - 60, ph = pw * 1000 / 1600, px = 30, py = 260;
         g.save(); g.shadowColor = 'rgba(0,0,0,.6)'; g.shadowBlur = 30; fillR(px, py, pw, ph, 18, '#f2eee3'); g.restore();
-        clip(px, py, pw, ph, 18, () => drawPlanSheet(px, py, pw, ph, {hl}));
+        clip(px, py, pw, ph, 18, () => drawPlanSheet(px, py, pw, ph, {hl, big: true}));
         // the model's view on the plan: a cone from the viewer toward the house
         const s = pw / 1600, hx = px + CX * s, hz = py + CZ * s, a = yaw * Math.PI / 180, vx = Math.sin(a), vz = -Math.cos(a);
         alpha(.85 * k, () => { const ex = hx + vx * 460 * s, ez = hz + vz * 460 * s; g.fillStyle = hexA(C.blue, .18); g.beginPath(); g.moveTo(ex, ez); g.lineTo(hx + (vx * Math.cos(.5) - vz * Math.sin(.5)) * 120 * s, hz + (vz * Math.cos(.5) + vx * Math.sin(.5)) * 120 * s); g.lineTo(hx + (vx * Math.cos(-.5) - vz * Math.sin(-.5)) * 120 * s, hz + (vz * Math.cos(-.5) + vx * Math.sin(-.5)) * 120 * s); g.closePath(); g.fill(); circle(ex, ez, 14, C.blue); });
@@ -270,7 +272,7 @@
         ROOMS.forEach(({n, r, col}, i) => { const y = py + ph + 290 + i * 112, on = i === hl; if (on) fillR(50, y - 62, W - 100, 96, 24, hexA('#f2a33a', .22)); fillR(80, y - 40, 52, 52, 12, on ? '#ffbf5c' : col); T(n, 160, y, 42, {w: on ? 700 : 500, c: on ? C.text : C.soft}); T(area(r), W - 80, y, 42, {w: 700, a: 'right', c: on ? '#ffcf8a' : C.soft}); });
       });
       alpha(a3, () => {   // a second natural reference, vertical
-        landscape(meadow('tall', 1080, 1856, {seed: 21, hz: .3, reeds: 1100, dabs: 900, creek: true}), 0, 0, W, H, t, B);
+        landscape(meadow('tall', 1080, 1856, {seed: 21, hz: .3, reeds: 380, dabs: 1000, creek: true}), 0, 0, W, H, t, B);
         g.fillStyle = 'rgba(0,0,0,0.12)'; g.fillRect(0, 0, W, H);
         fillR(30, 30, W - 60, 120, 40, 'rgba(10,12,16,0.62)');
         T('Creek through the reeds', 70, 104, 44, {w: 700}); T(`${name} · 2 pins`, W - 70, 104, 34, {w: 500, a: 'right', c: C.soft});

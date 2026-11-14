@@ -4,15 +4,17 @@
 (function () {
   // The beat comes from the score's tempo map when the capture hands one over (SHOT.tempo, capture.mjs CINE_TEMPO):
   //   {bpm, first?}                     a steady tempo, first beat at chapter seconds `first` (default 0.75)
-  //   {bpm?, beats:[…], in:'film'|'chapter'?, chapterStart?}   beat times; 'film' times are made chapter seconds with
-  //                                     chapterStart (or the score analysis' filmStart); bpm then only labels the chip
+  //   {bpm?, beats:[…], in:'film'|'chapter'?, chapterStart?, first?}   beat times; 'film' times are made chapter seconds
+  //                                     with chapterStart (or the score analysis' filmStart); counting starts at `first`;
+  //                                     bpm then only labels the chip (the beats carry tempo changes, e.g. at a cut)
   // Without it: the 2026-10-30 score, 115.2 BPM from 0.75 s. opts (cine cut): handle (the streamer's neutral handle on the
   // LIVE preview), rename {old: new} for chat names, burst [at, ['msg', …]] (chat lines landing on a desk move).
   const O = SHOT.clip.opts || {}, TM = SHOT.tempo || null;
   const BEATS = TM && Array.isArray(TM.beats) && TM.beats.length > 1
     ? TM.beats.map(b => TM.in === 'film' ? b - (TM.chapterStart ?? SHOT.audio?.filmStart ?? 0) : b) : null;
   const BPM = TM?.bpm || (BEATS ? 60 / ((BEATS[BEATS.length - 1] - BEATS[0]) / (BEATS.length - 1)) : 115.2);
-  const B0 = BEATS ? BEATS.find(b => b >= 0) ?? BEATS[0] : TM?.first ?? .75;
+  // the first counted beat: the map's first (S7: music_from; a pickup beat before it is not counted), else the first >= 0
+  const B0 = BEATS ? BEATS.find(b => b >= (TM.first ?? 0) - 1e-6) ?? BEATS[0] : TM?.first ?? .75;
   function beat(t) {   // beats since B0 (fractional), negative before it
     if (!BEATS) return (t - B0) * BPM / 60;
     const i0 = BEATS.indexOf(B0); let i = i0;

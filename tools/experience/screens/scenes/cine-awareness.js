@@ -43,7 +43,7 @@
       card(rx + rw * .5 + 20, 360, rw * .5 - 20, 400, {r: 44});
       T('SPEED', rx + rw * .5 + 70, 440, 34, {w: 700, c: C.dim, ls: 4});
       T(speed(t).toFixed(1), rx + rw * .5 + 70, 620, 190, {w: 700});
-      T('in/s · limit 6', rx + rw * .5 + 70, 710, 44, {w: 500, c: C.soft});
+      T(speed(t) > .2 ? 'in/s · rolling' : 'in/s · held', rx + rw * .5 + 70, 710, 44, {w: 500, c: C.soft});
       bar(rx, 820, rw, 40, seen ? 1 - clamp(dist / 60) : 0, lin(rx, 0, rx + rw, 0, [[0, C.green], [.6, C.amber], [1, C.coral]]));
       T('Sensors · 8 of 8 active', rx, 940, 44, {w: 500, c: C.dim});
       vignette(.45);

@@ -92,7 +92,7 @@
         const hh = height(t), at32 = hh <= (+L.target || 32) + .05;
         T('Height', 170, 600, 40, {c: C.dim});
         T(hh.toFixed(1) + ' in', 170, 700, 100, {w: 700, c: at32 ? MC : C.text});
-        T(at32 ? 'Her preset' : 'Lowering to her preset', 480, 700, 38, {c: C.soft});
+        T(at32 ? 'Her preset' : 'Lowering to her preset', 170, 750, 34, {c: C.soft});
         const k = eio(seg(t, D.start, ARRIVE)), x0 = 960, x1 = W - 200, y = 690;
         card(880, 540, W - 940, 230, {r: 36});
         T(arrived ? 'Arrived at table 4' : t < D.start ? 'Ready to go' : 'Driving to table 4', 940, 600, 46, {w: 600});

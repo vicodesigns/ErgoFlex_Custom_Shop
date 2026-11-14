@@ -26,7 +26,7 @@ const CINE = [
   cine('commons', 4, {id: 'cine-commons-reservation', target: 'main-landscape', role: 'the booking ends (Yara), the next turn (Mia), the team notes', w: 1920, h: 800, scene: 'c04r',
     opts: {prev: 'Yara', next: 'Mia', team: ['Mia', 'Kai', 'Sofia']}}),
   cine('oilers', 6, {id: 'cine-oilers-curved', target: 'main-landscape', role: 'orbit lesson with the teacher cursor', w: 1920, h: 800, scene: 'ch06l', opts: {teacher: 'Hale · teacher'}}),
-  cine('oilers', 6, {id: 'cine-oilers-portrait', target: 'main-portrait', role: 'quiz -> lowering to Kai -> Kai +100 -> class', w: 1080, h: 1856, scene: 'c06p', opts: {name: 'Kai'}}),
+  cine('oilers', 6, {id: 'cine-oilers-portrait', target: 'main-portrait', role: 'quiz -> lowering to Kai -> Kai +100 -> class', w: 1080, h: 1856, scene: 'c06p', opts: {name: 'Kai', class: ['Fern', 'Noah', 'Nia', 'Finn', 'Zoe', 'Mia', 'Leo', 'Sofia']}}),
   cine('oilers', 6, {id: 'cine-oilers-laptop', target: 'main-landscape-2', role: 'the answer pad (Kai)', w: 1280, h: 776, scene: 'c06k', opts: {name: 'Kai'}}),
   cine('wellness', 7, {id: 'cine-wellness-main', target: 'main-landscape', role: 'Maya: report -> time to move -> the stretch + height -> standing', w: 1920, h: 1080, scene: 'c07l',
     opts: {name: 'Maya'}, videos: [{key: 'shoulder', src: 'app-reference/demo_media/seated_scapular_squeeze_01_demo.mp4', t: 17, scale: '1280:-2'}]}),
@@ -48,7 +48,7 @@ const CINE = [
   cine('hero', 12, {id: 'cine-hero-office-wide', target: 'main-landscape', role: 'finale office version: markets, DCF model', w: 2560, h: 1072, scene: 'ch13w', frames: 300}),
   cine('hero', 12, {id: 'cine-hero-office-portrait', target: 'main-portrait', role: 'finale office version: portfolio', w: 1080, h: 1856, scene: 'ch13p', frames: 300}),
   // hero: one 48 s home per desk version (shots/13-subshots.json), greeting that version's chapter person
-  ...[['gaming', 'Kai', 'Game night', [['Lights', 'Game sync', '', 'pink', .8, 'LED scene'], ['Height', '47.0', 'in', 'blue2', .7, 'Play height'], ['Tonight', '2h 10m', '', 'violet', .6, 'Session'], ['Tilt', '5°', '', 'cyan', .3, 'Screen angle']]],
+  ...[['gaming', 'Kai', 'Game night', [['Lights', 'Sync', '', 'pink', .8, 'LEDs on the game'], ['Height', '47.0', 'in', 'blue2', .7, 'Play height'], ['Tonight', '2h 10m', '', 'violet', .6, 'Session'], ['Tilt', '5°', '', 'cyan', .3, 'Screen angle']]],
     ['artist', 'Lin', 'Studio day', [['Canvas', 'Saved', '', 'pink', .9, 'Lakeside dusk'], ['Surface', '55°', '', 'violet', .6, 'Easel'], ['Model', 'House A', '', 'cyan', .7, 'A-101 synced'], ['Studio', '4h 30m', '', 'amber', .75, 'Today']]],
     ['hbhs', 'Kai', 'Period 2 done', [['Quiz', '+100', '', 'green', 1, 'Mercury ✓'], ['Height', '31.0', 'in', 'blue2', .25, 'His preset'], ['Class', '68%', '', 'teal', .68, 'got it right'], ['Next', 'Lab', '', 'amber', .4, 'Period 3']]],
     ['occ', COAST_PERSON, 'Edit suite', [['Export', '100%', '', 'green', 1, 'COAST_final_4K'], ['Suite', '38.0', 'in', 'blue2', .4, 'Standing edit'], ['Review', '5', 'films', 'coral', .8, 'Portfolio'], ['Grade', 'Teal', '', 'amber', .6, '& Amber']]],
