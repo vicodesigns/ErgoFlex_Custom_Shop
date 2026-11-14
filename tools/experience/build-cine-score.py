@@ -15,7 +15,7 @@ desk versions, via join-subshots.py --plan). What it writes (the default run):
                              the master's); beats = title A, title B, the end card (= the logo's first frame), cut to black.
   <cut>/score/score.wav      48 kHz 24-bit stereo, exactly edl.total long (gitignored: build it where the film is frozen)
   <cut>/score/tempo-map.json the tempo map (bar and beat times, per chapter relative to its start, local BPM), the inputs
-                             digest the --check compares, the WAV's sha256
+                             digest the --check compares, the WAV's sha256 (written by the build; --check only reads)
   <cut>/score/CUE-SHEET.md, score-analysis.json, score-spectrogram.png
 
 The music is tools/experience/score-synth.py (same instruments, styles and master) with a tempo map fitted to the
@@ -28,12 +28,23 @@ picture instead of to the EDL alone:
   * the title A bloom lands on title A, the logo hit on the wordmark's first frame;
   * the finale changes chord with each desk version (LOOK_CHORDS) instead of holding one chord until the last bars;
   * the desk's movement sounds (assets/led/audio) follow this cut's ledStatus (SFX_RULES), clipped to what the
-    chapter shows, mixed before the master (no limiter delay).
+    chapter shows, mixed before the master (no limiter delay). This is the one layer the master's score.wav has on top
+    of score-synth.py: build-round6-audio.py's pass (same sounds and levels; the master's WAV is score-synth --no-extras
+    plus that pass with the cut of Nov 9, sample for sample). The safety/status/HQ8 splices left with the status chapter.
 Deterministic: same cut and code in, same samples out (seeded noise and dither); the WAV's sha256 is printed and stored.
 CPU only: numpy and ffmpeg. About 2 minutes.
 """
-import argparse, hashlib, importlib.util, json, math, os, subprocess, sys, time
-import numpy as np
+import argparse, ast, hashlib, importlib.util, json, math, os, subprocess, sys, time
+
+np = None   # numpy, imported by need_numpy(): --check and the digest are stdlib only
+
+
+def need_numpy():
+    global np
+    if np is None:
+        import numpy
+        np = numpy
+    return np
 
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE))
 MASTER = 'exports/cinematic-intro-20261104-hq14'
@@ -122,9 +133,9 @@ def edl_problems(cut_dir, edl):
             p.append(f"beat '{key}': edl.json {have[0]['at'] if have else 'missing'}, titles-src says {bw['at']}")
     src = J(os.path.join(cut_dir, 'titles-src.json')); dur = {c['id']: float(c['duration']) for c in want['chapters']}
     for t in src['titles']:
-        if t['chapter'] not in dur: p.append(f"title '{t['title']}' is in chapter {t['chapter']}, which the cut does not have")
+        if t['chapter'] not in dur: p.append(f"title: '{t['title']}' is in chapter {t['chapter']}, which the cut does not have (fix the title in the Director)")
         elif t['rel_out'] is not None and t['rel_out'] > dur[t['chapter']] + 1e-6:
-            p.append(f"title '{t['title']}' ends at {t['rel_out']} s, after its chapter's {dur[t['chapter']]} s")
+            p.append(f"title: '{t['title']}' ends at {t['rel_out']} s, after its chapter's {dur[t['chapter']]} s (fix the title in the Director)")
     return p
 
 
@@ -218,8 +229,8 @@ def fit_tempo(synth, edl, pic):
             for bi in range(nb_):
                 prev = V[:, bi, :].reshape(-1); tp = T[k - 1][:, bi, :].reshape(-1)
                 tn = T[k][bi].reshape(-1)
-                J = JUMP_WEIGHT * ((tn[None, :] / tp[:, None] - 1) / 0.01) ** 2
-                tot = prev[:, None] + J
+                jump = JUMP_WEIGHT * ((tn[None, :] / tp[:, None] - 1) / 0.01) ** 2
+                tot = prev[:, None] + jump
                 am = tot.argmin(axis=0)
                 Vn[bi] = (tot[am, np.arange(len(tn))] + C[k][bi].reshape(-1) + np.repeat(pen[k + 1], 3)).reshape(nc_, 3)
                 arg[bi] = am.reshape(nc_, 3)
@@ -306,17 +317,36 @@ def sfx_hook(synth, cues):
 
 # ---------------------------------------------------------------------------------------------------------------------
 
+def code_digest(path):
+    """The code as Python sees it: comments, docstrings and formatting do not count (an edit to a comment does not make
+    a score stale); any change to a statement or a knob does."""
+    tree = ast.parse(open(path, encoding='utf-8').read())
+    for node in ast.walk(tree):
+        body = getattr(node, 'body', None)
+        if isinstance(body, list) and body and isinstance(body[0], ast.Expr) and isinstance(getattr(body[0], 'value', None), ast.Constant)                 and isinstance(body[0].value.value, str):
+            node.body = body[1:] or [ast.Pass()]
+    return hashlib.sha256(ast.dump(tree, include_attributes=False).encode()).hexdigest()
+
+
 def inputs_digest(cut_dir, edl_bytes):
-    """What the score depends on: the EDL used, the cut's titles, finale sub-shots, chapter lengths, cuts and ledStatus,
-    and this code. --check compares it with the score's tempo-map.json."""
-    cut = J(os.path.join(cut_dir, 'review-cut.json'))
-    part = [[s['id'], s['seconds'], [k['at'] for k in s['cameraPlan']['keys'] if k.get('cut')], s.get('ledStatus', [])] for s in cut['shots']]
-    h = hashlib.sha256()
-    for b in (edl_bytes, open(os.path.join(cut_dir, 'titles-src.json'), 'rb').read(),
-              open(os.path.join(cut_dir, 'shots', '13-subshots.json'), 'rb').read(), json.dumps(part, sort_keys=True).encode(),
-              open(__file__, 'rb').read(), open(os.path.join(HERE, 'score-synth.py'), 'rb').read()):
-        h.update(hashlib.sha256(b.replace(b'\r\n', b'\n')).digest())   # line endings differ between checkouts
-    return h.hexdigest()
+    """Exactly what the score depends on, nothing else (so a title text or an LED edit elsewhere does not refuse a
+    request): the EDL's chapters, dissolves and beats; title A, title B and the logo from titles-src.json; every chapter's
+    length and hard cuts; the ledStatus of the chapters that have movement sounds (SFX_RULES) and the opener's 'off'
+    (the wake); the finale's desk-version changes (join-subshots.py --plan); the music code (code_digest)."""
+    edl = json.loads(edl_bytes.decode('utf-8'))
+    cut = J(os.path.join(cut_dir, 'review-cut.json')); src = J(os.path.join(cut_dir, 'titles-src.json'))
+    first = cut['shots'][0]['id']
+    aw = [[t['rel_in']] for t in src['titles'] if t['chapter'] == first][:2]
+    shots = [[s['id'], s['seconds'], [k['at'] for k in s['cameraPlan']['keys'] if k.get('cut')],
+              [e for e in s.get('ledStatus', []) if e['kind'] in SFX_RULES.get(s['id'], ()) or (s['id'] == first and e['kind'] == 'off')]]
+             for s in cut['shots']]
+    plan = subprocess.run([sys.executable, os.path.join(HERE, 'join-subshots.py'), os.path.join(cut_dir, 'shots', '13-subshots.json'),
+                           os.devnull, os.devnull, '--plan'], capture_output=True, text=True, check=True).stdout
+    plan = json.loads(plan); looks = [plan['fades'], plan['seconds']]
+    part = dict(edl=[edl['chapters'], edl['dissolve'], edl.get('transitions'), edl.get('beats'), edl['total']],
+                titles=[aw, src['logo']['chapter'], src['logo']['rel_in']], shots=shots, looks=looks,
+                code=[code_digest(os.path.abspath(__file__)), code_digest(os.path.join(HERE, 'score-synth.py'))])
+    return hashlib.sha256(json.dumps(part, sort_keys=True).encode()).hexdigest()
 
 
 def tempo_json(plan, tempo, report, pic, edl, wav_sha, digest, edl_src):
@@ -345,15 +375,16 @@ def tempo_json(plan, tempo, report, pic, edl, wav_sha, digest, edl_src):
 
 def check(cut_dir):
     p = []; ep = os.path.join(cut_dir, 'edl.json')
-    if not os.path.exists(ep): p.append('no edl.json in the cut (run build-cine-score.py <cut>)')
+    cmd = f'python3 tools/experience/build-cine-score.py {os.path.relpath(cut_dir, ROOT).replace(os.sep, "/")}'
+    if not os.path.exists(ep): p.append(f'no edl.json in the cut (run: {cmd})')
     else: p += edl_problems(cut_dir, J(ep))
     wav = os.path.join(cut_dir, 'score', 'score.wav'); tm = os.path.join(cut_dir, 'score', 'tempo-map.json')
-    if not os.path.exists(wav): p.append('no score/score.wav (build it on this machine: build-cine-score.py <cut>)')
+    if not os.path.exists(wav): p.append(f'no score/score.wav (build it on this machine: {cmd})')
     elif not os.path.exists(tm): p.append('no score/tempo-map.json next to the score')
     else:
         t = J(tm)
         if os.path.exists(ep) and t.get('inputs_sha256') != inputs_digest(cut_dir, open(ep, 'rb').read()):
-            p.append('score/score.wav was built from other inputs (chapter lengths, cuts, titles, ledStatus, EDL or code changed): re-run build-cine-score.py')
+            p.append(f'score/score.wav was built from other inputs (chapter lengths, cuts, title A/B or logo times, movement events, finale versions or the music code changed): run {cmd}')
         if t.get('edl') != 'cut': p.append("score/score.wav was built on the master's EDL, not the cut's")
         if t.get('wav_sha256') != sha_file(wav): p.append('score/score.wav is not the file its tempo-map.json describes')
     return p
@@ -373,6 +404,7 @@ def main():
         print('OK: edl.json and score/score.wav are in step with the cut' if not p else f'{len(p)} problem(s)')
         sys.exit(1 if p else 0)
     t_start = time.time()
+    need_numpy()
     if a.edl == 'cut':
         edl = generate_edl(cut_dir); ep = os.path.join(cut_dir, 'edl.json')
         txt = json.dumps(edl, indent=1) + '\n'

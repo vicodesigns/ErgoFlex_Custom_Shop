@@ -29,7 +29,7 @@ sha256 and `check OK`. Run it on the desk, where the film is frozen: `score/scor
 
 - **Chapter starts.** Every chapter starts on a bar line inside its dissolve: within 0.3 s of the dissolve's centre.
 - **Whole bars.** Every chapter gets whole 4/4 bars. A chapter that gets longer or shorter gains or loses bars, and its tempo moves by at most 3 %. When nothing else fits, a chapter ends on one 2/4 bar (the cue sheet says so).
-- **Steady tempo.** Neighbouring chapters stay within about 2.5 % of each other's tempo, so the groove does not lurch at a dissolve.
+- **Steady tempo.** A tempo step between neighbouring chapters is costed (`JUMP_WEIGHT`), not forbidden: today the largest step is 2.4 %, and the cue sheet's section map shows each chapter's tempo.
 - **Cuts on the beat.** A hard cut inside a chapter is pulled onto a beat where the tempo allows it. The cue sheet's "Picture sync" table lists each cut as on the beat, or how far off it is.
 - **Finale.** Each desk version gets its own chord. The last version goes IV, Vsus, V into the logo.
 - **Movement sounds.** They follow the cut's `ledStatus`:
@@ -50,5 +50,16 @@ This fails, naming the problem, when `edl.json` or the score no longer match the
 - the score is missing;
 - the score was built from other inputs.
 
-A render request for this cut runs the same check and is refused until the command above has been run again.
+The check compares only what the music uses: chapter lengths and dissolves, the hard cuts, title A, title B and the
+logo's time, the movement events of the chapters that have sounds, the finale's desk versions, and the music code
+(comments do not count). A title's text, or an LED edit in a chapter without sounds, does not make the score stale.
+`--check` only reads; the build writes `score/tempo-map.json`.
+
+A render request for this cut runs the same check and is refused until the command above has been run again. One
+failure the command cannot fix: a title that runs past its chapter's end. That is fixed in the Director (the request
+says so).
+
+A copy of this cut (`film-cuts.py duplicate`) takes the generated `edl.json` but not `score/`. The duplicate command
+prints the one command that builds the copy's score; until it has run, render requests for the copy are refused with
+the same command.
 `render-request.sh` then lays this folder's `edl.json` and `score/score.wav` over the master's in the freeze.
