@@ -1246,6 +1246,9 @@ OUTPUTS = [
     {'id': 'people-kai-sit-controller', 'character': 'kai', 'pose': 'sit-controller', 'name': 'Kai, on the sofa with a controller', 'held': [('gamepad', {})]},
     {'id': 'people-kai-wheel-type', 'character': 'kai', 'pose': 'wheel-type', 'height': 28, 'name': 'Kai, at the desk (wheelchair)', 'held': [('wheelchair', {'color': (.1, .35, .7)})]},
     {'id': 'people-kai-wheel-roll', 'character': 'kai', 'pose': 'wheel-roll', 'name': 'Kai, rolling (wheelchair)', 'held': [('wheelchair', {'color': (.1, .35, .7)})]},
+    # (his own blue chair in his other wheelchair postures too: made up from their ids they had the red default)
+    {'id': 'people-kai-wheel-type-31', 'character': 'kai', 'pose': 'wheel-type', 'height': 31, 'name': 'Kai: typing at the desk, in a wheelchair (desk at 31 in)', 'held': [('wheelchair', {'color': (.1, .35, .7)})]},
+    {'id': 'people-kai-wheel-watch', 'character': 'kai', 'pose': 'wheel-watch', 'name': 'Kai: watching a screen, in a wheelchair', 'held': [('wheelchair', {'color': (.1, .35, .7)})]},
     {'id': 'people-zoe-sit-laptop', 'character': 'zoe', 'pose': 'sit-laptop', 'name': 'Zoe, at a laptop', 'held': [('laptop', {})]},
     {'id': 'people-zoe-walk', 'character': 'zoe', 'pose': 'walk', 'name': 'Zoe, walking with a backpack', 'held': [('backpack', {})]},
     {'id': 'people-zoe-stand-type', 'character': 'zoe', 'pose': 'stand-type', 'height': 41, 'name': 'Zoe, at a standing desk (41 in)'},
