@@ -1605,27 +1605,30 @@ function applyUV(root) {
 // Wainscot and wall finish along the three walls (non-assets: they belong to
 // the cutaway wall groups). The door span is skipped; under the glazing the
 // finish stops below the sill (800). `skip` holds back-wall x ranges.
-function wainscot(kit, mat, height, { depth = 8, cap = null, capH = 32, capD = 22, skip = [], sides = ['back', 'right', 'left'], lift = 0 } = {}) {
+function wainscot(kit, mat, height, { depth = 8, cap = null, capH = 32, capD = 22, skip = [], frontSkip = [], sides = ['back', 'right', 'left'], lift = 0 } = {}) {
     const { w, bz, front, d } = kit, doorZ = front - 1600, win = [bz + d * .3, bz + d * .78];
-    const runs = { back: [], right: [], left: [] };
+    const runs = { back: [], right: [], left: [], front: [] };
     const cut = (a, b, holes) => { let segs = [[a, b]]; for (const [h0, h1] of holes) segs = segs.flatMap(([s, e]) => h1 <= s || h0 >= e ? [[s, e]] : [[s, h0], [h1, e]].filter(([x0, x1]) => x1 - x0 > 60)); return segs; };
     if (sides.includes('back')) runs.back = cut(-w / 2, w / 2, skip).map(s => [...s, height]);
     if (sides.includes('right')) runs.right = cut(bz, front, [[doorZ - 560, doorZ + 560]]).map(s => [...s, height]);
     if (sides.includes('left')) runs.left = height + lift > 790 ? [[bz, win[0], height], [win[0], win[1], Math.min(height, 790 - lift)], [win[1], front, height]] : [[bz, front, height]];
-    const parts = { back: [], right: [], left: [] }, caps = { back: cap && detailKit(), right: cap && detailKit(), left: cap && detailKit() };
-    for (const side of ['back', 'right', 'left']) for (const [a, b, hgt] of runs[side]) {
+    // The front wall (the high school's, behind the class): the same run as the back wall, its door span skipped.
+    if (sides.includes('front') && kit.frontWall) runs.front = cut(-w / 2, w / 2, frontSkip).map(s => [...s, height]);
+    const across = side => side === 'back' || side === 'front', face = (side, off) => side === 'back' ? bz + 18 + off : front - 18 - off;
+    const parts = { back: [], right: [], left: [], front: [] }, caps = { back: cap && detailKit(), right: cap && detailKit(), left: cap && detailKit(), front: cap && detailKit() };
+    for (const side of ['back', 'right', 'left', 'front']) for (const [a, b, hgt] of runs[side]) {
         if (hgt <= 0) continue;
         const len = b - a, mid = (a + b) / 2, y = lift + hgt / 2;
-        const g = side === 'back' ? new THREE.BoxGeometry(len, hgt, depth) : new THREE.BoxGeometry(depth, hgt, len);
-        const at = side === 'back' ? [mid, y, bz + 18 + depth / 2] : side === 'right' ? [w / 2 - 4 - depth / 2, y, mid] : [-w / 2 + 4 + depth / 2, y, mid];
+        const g = across(side) ? new THREE.BoxGeometry(len, hgt, depth) : new THREE.BoxGeometry(depth, hgt, len);
+        const at = across(side) ? [mid, y, face(side, depth / 2)] : side === 'right' ? [w / 2 - 4 - depth / 2, y, mid] : [-w / 2 + 4 + depth / 2, y, mid];
         g.translate(...at); uvBox(g, mat.userData.eduUV[0], hgt, [0, -lift, 0]); g.userData.eduUV = true; parts[side].push(g);
         const k = caps[side]; if (!k || hgt < height) continue;
-        const top = lift + hgt + capH / 2, cd = side === 'back' ? [len + 4, capH, capD] : [capD, capH, len + 4];
-        const ca = side === 'back' ? [mid, top, bz + 18 + capD / 2] : side === 'right' ? [w / 2 - 4 - capD / 2, top, mid] : [-w / 2 + 4 + capD / 2, top, mid];
-        k.box(cd, ca, cap); k.box(side === 'back' ? [len + 4, 6, capD + 6] : [capD + 6, 6, len + 4], [ca[0] + (side === 'right' ? -3 : side === 'left' ? 3 : 0), top + capH / 2 - 3, ca[2] + (side === 'back' ? 3 : 0)], shade(cap, .04));
+        const top = lift + hgt + capH / 2, cd = across(side) ? [len + 4, capH, capD] : [capD, capH, len + 4];
+        const ca = across(side) ? [mid, top, face(side, capD / 2)] : side === 'right' ? [w / 2 - 4 - capD / 2, top, mid] : [-w / 2 + 4 + capD / 2, top, mid];
+        k.box(cd, ca, cap); k.box(across(side) ? [len + 4, 6, capD + 6] : [capD + 6, 6, len + 4], [ca[0] + (side === 'right' ? -3 : side === 'left' ? 3 : 0), top + capH / 2 - 3, ca[2] + (side === 'back' ? 3 : side === 'front' ? -3 : 0)], shade(cap, .04));
     }
-    const walls = { back: kit.back, right: kit.right, left: kit.left };
-    for (const side of ['back', 'right', 'left']) {
+    const walls = { back: kit.back, right: kit.right, left: kit.left, front: kit.frontWall };
+    for (const side of ['back', 'right', 'left', 'front']) {
         if (parts[side].length) {
             const geo = mergeGeometries(parts[side], false); parts[side].forEach(p => p.dispose()); geo.userData.eduUV = true;
             const m = new THREE.Mesh(geo, mat); m.name = 'Wainscot wall finish'; m.receiveShadow = true; m.castShadow = false; walls[side].add(m);
@@ -1666,7 +1669,8 @@ const WALLS = {
         // felt tack strip (910–1210) and Tower Plaster above (homage to the 1926 plaster).
         const dado = S.mapped('dado', (c, W, H) => drawPaint(c, W, H, '#35383b'), [256, 256], [800, 900], { roughness: .55 });
         const felt = S.mapped('tack-felt', (c, W, H) => drawFelt(c, W, H, '#46494d', '#5a5d61', '#36383b'), [512, 256], [600, 300], { roughness: .95, surface: 'fabric' });
-        wainscot(kit, dado, 900, { cap: HB.orange, capH: 10, capD: 14 }); wainscot(kit, felt, 300, { lift: 910, cap: HB.black, capH: 12, capD: 16, depth: 10 });
+        const fw = kit.frontWall ? { sides: ['back', 'right', 'left', 'front'], frontSkip: [[HS_FRONT.door - 560, HS_FRONT.door + 560]] } : {};
+        wainscot(kit, dado, 900, { cap: HB.orange, capH: 10, capD: 14, ...fw }); wainscot(kit, felt, 300, { lift: 910, cap: HB.black, capH: 12, capD: 16, depth: 10, ...fw });
         // Limewash clouds on the shell's plaster (the registry wall colour tints them).
         const wash = (c, W, H) => { const base = '#f6f2ea'; c.fillStyle = base; c.fillRect(0, 0, W, H); for (let i = 0; i < 60; i++) { const x = rnd(i * 2.3) * W, y = rnd(i * 4.7) * H, r = W * (.05 + rnd(i * 6.1) * .14); wrapped(W, H, (dx, dy) => { const g = c.createRadialGradient(x + dx, y + dy, 0, x + dx, y + dy, r); g.addColorStop(0, (i % 2 ? shade(base, .03) : shade(base, -.035)) + '66'); g.addColorStop(1, base + '00'); c.fillStyle = g; c.fillRect(x + dx - r, y + dy - r, r * 2, r * 2); }); } };
         const wall = kit.wall; if (wall?.isMaterial && !wall.map) { wall.map = canvasTexture(wash, 512, 512); wall.roughness = .9; wall.userData.eduUV = [2400, 2400]; wall.needsUpdate = true; }
@@ -1885,6 +1889,7 @@ function eduKit(kit) {
     E.wall = (wall, id, name, along, y, depth = 24) => {
         const { w, bz } = kit;
         if (wall === 'back') return kit.asset(id, name, [along, y, bz + 22 + depth / 2], kit.back);
+        if (wall === 'front') { const g = kit.asset(id, name, [along, y, kit.front - 22 - depth / 2], kit.frontWall); g.rotation.y = Math.PI; return g; }   // local +x points to the window wall
         const right = wall === 'right', g = kit.asset(id, name, [right ? w / 2 - 22 - depth / 2 : -w / 2 + 22 + depth / 2, y, along], right ? kit.right : kit.left);
         g.rotation.y = right ? -Math.PI / 2 : Math.PI / 2; return g;
     };
@@ -1921,7 +1926,7 @@ function eduKit(kit) {
         const m = new THREE.MeshBasicMaterial({ map: poolTexture(), color: '#000000', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
         m.userData.sharedTextures = true;
         const o = new THREE.Mesh(E.poolGeo, m); o.name = 'Light pool'; o.position.set(...at); o.scale.set(sx, sy, 1); o.renderOrder = 2; o.castShadow = o.receiveShadow = false; o.raycast = noRay;
-        o.rotation.set(...(Array.isArray(face) ? face : { floor: [-Math.PI / 2, 0, 0], back: [0, 0, 0], right: [0, -Math.PI / 2, 0], left: [0, Math.PI / 2, 0] }[face]));
+        o.rotation.set(...(Array.isArray(face) ? face : { floor: [-Math.PI / 2, 0, 0], back: [0, 0, 0], front: [0, Math.PI, 0], right: [0, -Math.PI / 2, 0], left: [0, Math.PI / 2, 0] }[face]));
         if (parent.userData.propId) {
             o.updateMatrix(); const local = o.matrix.clone(), zero = new THREE.Matrix4().makeScale(0, 0, 0);
             o.matrixAutoUpdate = false; o.matrixWorldAutoUpdate = false; o.frustumCulled = false;
@@ -2525,6 +2530,8 @@ const DECOR = {
         pennants(kit, pen, [[0, -700, 0, 600, 220, -.05], [1, 700, 0, 600, 220, .04]]);
         // Window wall front bay: the Oiler spirit wall (banner, surf-team longboard, trophy shelf).
         spiritWall(kit, E);
+        // The wall behind the class (the open front of the other rooms), Studio only.
+        if (frontWall(kit)) dressFrontWall(kit, E);
         // Showcase only: pennant strings at wall level (the ceiling decor is outside the review cameras).
         E.show(wallBunting(kit, E, kit.left, [-w / 2 + 40, 2930, 5480], [-w / 2 + 40, 2930, 7950], 14, 110), [4]);
         E.show(wallBunting(kit, E, kit.back, [-w / 2 + 300, 2830, bz + 175], [w / 2 - 300, 2830, bz + 175], 26, 60), [4]);
@@ -2678,6 +2685,131 @@ function pennants(kit, parent, list) {
     const m = new THREE.Mesh(mergeGeometries(parts, false), mat); parts.forEach(p => p.dispose()); m.name = 'Felt pennants'; m.castShadow = false; m.receiveShadow = true; parent.add(m);
     E.build(k, parent);
 }
+// ---- High school: the wall behind the class ---------------------------------
+// The shell leaves every room's front open; looking from the teacher's corner the high school then ends in the
+// Studio backdrop. This closes it with a designed wall matching the other three: the charcoal dado, orange cap and
+// felt tack strip (WALLS), the Lombard frieze, and school-spirit pieces in the Oiler palette. It is one cutaway wall
+// group (room.walls: hidden while the camera is in front of it, as the back wall is while the camera is behind it),
+// and every piece is a wall asset in that group, so the dollhouse view from the front still opens the room.
+// Wall-mounted only (nothing on the floor in front of it but a locker bank in the window corner): the activity table's
+// built-in spot (-3400, 7400), the drafting stool (-1000, 7560), the media desk's chair and user (x 1170..1830),
+// the waste bins (3400 / 3850, 7760) and the door-wall lockers (x >= 4680) keep their floor.
+// The film is left alone: the oilers chapter dresses its own front wall (its cut's sceneEdits), so in a presentation
+// frame (film, Director stage) this wall is not built and the chapter's frames do not change.
+const HS_FRONT = { door: 2650, lockers: -4500, trophies: -3150, mural: -450, board: 1450, photos: 3950 };
+function frontWall(kit) {
+    if (globalThis.__ERGO_PRESENTATION__ || kit.frontWall) return kit.frontWall || null;
+    const { w, front, ceiling, root, room } = kit;
+    const g = new THREE.Group(); g.name = `${kit.spec.name} front wall`; root.add(g);
+    kit.box(g, [w + 160, ceiling, 80], [0, ceiling / 2, front + 40], kit.wall);
+    room.walls.push({ obj: g, axis: 'x', limit: front * root.scale.x, sign: -1 });
+    return kit.frontWall = g;
+}
+function drawOilersMural(c, W, H) {
+    // Black field, sunset band, the pier and a derrick over the surf, OILERS in varsity letters.
+    c.fillStyle = HB.black; c.fillRect(0, 0, W, H);
+    const sky = c.createLinearGradient(0, 0, 0, H * .62); sky.addColorStop(0, '#2a2b2e'); sky.addColorStop(.7, HB.deep); sky.addColorStop(1, '#f0a35e');
+    c.fillStyle = sky; c.fillRect(W * .04, H * .06, W * .92, H * .56);
+    dot(c, W * .7, H * .5, H * .16, '#f6d7a4');
+    c.fillStyle = HB.black; c.fillRect(W * .04, H * .62, W * .92, H * .3);
+    for (let n = 0; n < 7; n++) { c.strokeStyle = n % 2 ? HB.pacific : HB.plaster; c.lineWidth = H * .012; c.beginPath(); for (let x = W * .04; x <= W * .96; x += 6) { const y = H * (.66 + n * .035) + Math.sin(x / W * 26 + n) * H * .008; if (x === W * .04) c.moveTo(x, y); else c.lineTo(x, y); } c.stroke(); }
+    c.fillStyle = HB.black; c.fillRect(W * .5, H * .53, W * .4, H * .025); for (let n = 0; n < 9; n++) c.fillRect(W * (.51 + n * .045), H * .53, W * .006, H * .12);   // the pier
+    iconDerrick(c, W * .2, H * .62, H * .42, HB.black, H * .014);
+    varsity(c, 'OILERS', W / 2, H * .3, H * .3, HB.plaster, { outline: HB.orange, line: H * .02, track: .06, max: W * .8 });
+    c.fillStyle = HB.orange; c.fillRect(W * .04, H * .92, W * .92, H * .012);
+    write(c, 'SURF CITY  ·  ONE SCHOOL  ·  EST. 1906', W / 2, H * .96, H * .035, HB.plaster, 'center', '800');
+    c.strokeStyle = HB.orange; c.lineWidth = H * .012; c.strokeRect(W * .04, H * .06, W * .92, H * .86);
+}
+function drawClubBoard(c, W, H) {
+    // Cork with the week's sign-ups pinned on it.
+    c.fillStyle = '#b48a5c'; c.fillRect(0, 0, W, H); for (let i = 0; i < W * H / 14; i++) { c.fillStyle = ['#8f6a43', '#c79e6c', '#a77d50'][i % 3]; c.fillRect(rnd(i) * W, rnd(i + 31) * H, 2, 2); }
+    c.fillStyle = HB.black; c.fillRect(0, 0, W, H * .13); varsity(c, 'OILER CLUBS', W / 2, H * .067, H * .075, HB.orange, { track: .06 });
+    const notes = [['SURF TEAM', 'TRYOUTS FRI 6:30 AM', HB.cream, HB.orange], ['ROBOTICS', 'BUILD NIGHT TUE', '#ffffff', HB.pacific], ['APA', 'AUDITIONS · BLACK BOX', '#f6e7a6', HB.black],
+        ['MMET', 'FILM FEST ENTRIES', '#ffffff', HB.orange], ['SCIENCE OLYMPIAD', 'MEETING RM 214', '#d9ece6', HB.black], ['ASB', 'SPIRIT WEEK VOTE', HB.cream, HB.pacific]];
+    notes.forEach(([head, line, paper, ink], n) => {
+        const x = W * (.05 + (n % 3) * .31), y = H * (.19 + Math.floor(n / 3) * .41), w = W * .28, h = H * .36, rot = (rnd(n + 3) - .5) * .08;
+        c.save(); c.translate(x + w / 2, y + h / 2); c.rotate(rot); c.fillStyle = '#00000030'; c.fillRect(-w / 2 + 4, -h / 2 + 5, w, h); c.fillStyle = paper; c.fillRect(-w / 2, -h / 2, w, h);
+        c.fillStyle = ink; c.fillRect(-w / 2, -h / 2, w, h * .2); write(c, head, 0, -h / 2 + h * .1, h * .1, '#ffffff', 'center', '800', w * .9);
+        for (let l = 0; l < 4; l++) { c.fillStyle = '#9a958a'; c.fillRect(-w * .38, -h * .12 + l * h * .12, w * (.76 - (l % 2) * .2), 2); }
+        write(c, line, 0, h * .38, h * .075, ink, 'center', '700', w * .9); dot(c, 0, -h / 2 + 6, 7, [HB.orange, HB.black, HB.pacific][n % 3]); c.restore();
+    });
+}
+function drawTeamPhoto(c, W, H, n) {
+    // A framed team photo: three rows of players in team colours before a backdrop, and a caption strip.
+    c.fillStyle = ['#7aa8bf', '#4a5458', '#c9b996'][n]; c.fillRect(0, 0, W, H * .84);
+    if (n === 0) { c.fillStyle = '#e7d8b0'; c.fillRect(0, H * .58, W, H * .26); c.fillStyle = HB.pacific; c.fillRect(0, H * .5, W, H * .08); }
+    for (let r = 0; r < 3; r++) for (let q = 0; q < 7 - r; q++) {
+        const x = W * (.12 + q * .76 / (6 - r)), y = H * (.36 + r * .14), s = H * (.07 + r * .006);
+        dot(c, x, y - s * 1.1, s * .55, ['#e2b48c', '#a8714d', '#f0c9a6', '#6b4630'][(q + r + n) % 4]);
+        c.fillStyle = (q + r + n) % 3 ? HB.orange : HB.black; c.fillRect(x - s * .7, y - s * .5, s * 1.4, s * 1.6);
+    }
+    c.fillStyle = HB.black; c.fillRect(0, H * .84, W, H * .16);
+    write(c, ['SURF TEAM · STATE CHAMPS', 'ROBOTICS · REGIONALS', 'APA · SPRING MUSICAL'][n], W / 2, H * .92, H * .075, HB.plaster, 'center', '800', W * .9);
+}
+function dressFrontWall(kit, E) {
+    const { w, front } = kit, F = HS_FRONT, g0 = kit.frontWall;
+    // Lombard band frieze along the top, as on the teaching wall.
+    { const fw = w - 120, m = E.tex((c, W, H) => drawArcadeFrieze(c, W, H, W / (fw / 240)), 4096, 64, 'plaster', .9), f = kit.mesh(g0, new THREE.PlaneGeometry(fw, 140), m, [0, 2950, front - 21]); f.rotation.y = Math.PI; f.castShadow = false; f.name = 'Lombard band frieze'; }
+    // Locker bank in the window corner (600 x 300 x 1850), the door-wall lockers' design: black body, orange and
+    // black doors, brass number plates and the OILERS stencil on the end that faces the room.
+    const lockers = E.wall('front', 'front-lockers', 'Student lockers (back of the class)', F.lockers, 0, 300), lk = detailKit();
+    lk.box([600, 1850, 300], [0, 925, 0], '#202124', null, 'metal'); lk.box([610, 90, 310], [0, 45, 0], '#151617', null, 'metal'); lk.box([610, 20, 312], [0, 1860, 0], '#151617', null, 'metal');
+    for (let n = 0; n < 6; n++) {
+        const x = -190 + (n % 3) * 190, y = n < 3 ? 1380 : 520, door = (n + (n < 3 ? 0 : 1)) % 2 ? '#2a2b2e' : '#e2692a';
+        lk.box([178, n < 3 ? 900 : 820, 8], [x, y, 152], door, null, 'metal'); for (let v = 0; v < 5; v++) lk.box([116, 7, 4], [x, y + 360 - v * 18, 157], '#151617', null, 'metal');
+        lk.box([16, 70, 10], [x + 66, y - 40, 159], '#c8cfd2', null, 'metal'); lk.box([44, 26, 3], [x - 38, y + 240, 157], '#c9b37a', null, 'metal');
+    }
+    E.build(lk, lockers);
+    { const pl = kit.mesh(lockers, new THREE.PlaneGeometry(260, 1500), E.tex(drawLockerStencil, 192, 1024, 'powder', .5), [-302, 960, 0]); pl.rotation.y = -Math.PI / 2; pl.castShadow = false; }
+    // Oiler trophy case (1600 x 850 x 280, hung at 1350): black frame, felt back, two glass shelves, cups, balls
+    // and plaques, an LED strip under the top and its wash on the wall.
+    const tc = E.wall('front', 'front-trophy-case', 'Wall Oiler trophy case', F.trophies, 1775, 280), t = detailKit(), gold = detailKit();
+    t.box([1600, 850, 16], [0, 0, -132], '#2a2b2e', null, 'fabric');
+    for (const x of [-790, 790]) t.box([20, 850, 280], [x, 0, 0], HB.black, null, 'metal');
+    for (const y of [-415, 415]) t.box([1600, 20, 280], [0, y, 0], HB.black, null, 'metal');
+    t.box([1600, 6, 12], [0, 405, 134], HB.orange, null, 'metal');
+    [-405, -120, 160].forEach((y, n) => { for (let q = 0; q < 4; q++) {
+        const x = -600 + q * 400 + (n % 2) * 60, kind = (q + n) % 4;
+        if (kind === 0) { gold.cyl(30, 40, 30, [x, y + 55, -20], '#c9a64a'); gold.add(new THREE.CylinderGeometry(70, 26, 130, 20), [x, y + 135, -20], '#c9a64a'); t.box([110, 40, 110], [x, y + 20, -20], HB.black); }
+        else if (kind === 1) { t.cyl(30, 40, 30, [x, y + 15, -20], HB.black); t.ball(95, [x, y + 125, -20], [HB.orange, '#f3f0e6', '#7a4a2a'][n % 3]); }
+        else if (kind === 2) t.box([200, 240, 22], [x, y + 135, -110], HB.black, [-.1, 0, 0]);
+        else { gold.add(new THREE.ConeGeometry(55, 190, 6), [x, y + 125, -20], '#c9a64a'); t.box([130, 30, 110], [x, y + 15, -20], HB.black); }
+    } });
+    E.build(t, tc); gold.build(tc, E.M('#c9a64a', 'metal', { metalness: .6, roughness: .3 }));
+    const glass = kit.material('#dfeff2', { transparent: true, opacity: .2, roughness: .05, metalness: .1, depthWrite: false });
+    for (const y of [-120, 160]) kit.mesh(tc, new THREE.BoxGeometry(1560, 10, 250), glass, [0, y, 0]).castShadow = false;
+    kit.mesh(tc, new THREE.BoxGeometry(1560, 810, 6), glass, [0, 0, 136]).castShadow = false;
+    kit.box(tc, [1520, 5, 12], [0, 396, 100], E.glow('#ffe4c0', [.15, .1, .9, .35, 1.1]), 2);
+    E.pool(g0, onWall(kit, 'front', F.trophies, 1600, 40), [2000, 1300], '#ffd9a8', [.03, .02, .3, .12, .42], 'front');
+    // Felt pennants over the case.
+    pennants(kit, E.wall('front', 'front-pennants', 'Wall back-of-class pennants', F.trophies, 2450, 0), [[0, -560, 0, 560, 200, -.04], [2, 0, 0, 560, 200, .03], [4, 560, 0, 560, 200, -.02]]);
+    // The Oilers mural (2400 x 1200, framed in black) under a picture light.
+    E.panel(E.wall('front', 'front-mural', 'Wall Oilers mural', F.mural, 1980, 22), 2400, 1200, drawOilersMural, { frame: HB.black, border: 22, res: 1536 });
+    pictureLight(kit, E, 'front', F.mural, 2700, 2000, [.04, .02, .42, .16, .36], { drop: 1300, finish: HB.black });
+    // Club notice board (cork, 900 x 800) with the PA speaker above it.
+    const board = E.wall('front', 'front-notice-board', 'Wall Oiler clubs notice board', F.board, 1650, 20);
+    E.panel(board, 900, 800, drawClubBoard, { frame: HB.black, border: 20, res: 768 });
+    const pins = detailKit(); for (let n = 0; n < 6; n++) pins.ball(9, [((n % 3) - 1) * 279, Math.floor(n / 3) ? -100 + 70 : 230 + 70, 26], [HB.orange, HB.black, HB.pacific][n % 3], [1, 1, .6], [0, 0, 0], 'metal'); E.build(pins, board);
+    const pa = E.wall('front', 'front-pa-speaker', 'Wall PA speaker', F.board, 2450, 40), pk = detailKit();
+    pk.add(new THREE.CylinderGeometry(150, 150, 40, 32), [0, 0, 0], '#e8e4da', [1, 1, 1], [Math.PI / 2, 0, 0]);
+    for (let r = 0; r < 4; r++) pk.add(new THREE.TorusGeometry(30 + r * 28, 4, 4, 32), [0, 0, 22], '#9a958a');
+    E.build(pk, pa);
+    // Corridor door, as the room's entry door (black frame, oak leaf, vision panel), with push bar, kick plate, closer.
+    const door = new THREE.Group(); door.name = 'Corridor door (back of the class)'; g0.add(door); door.position.set(F.door, 0, front - 18); door.rotation.y = Math.PI;
+    kit.box(door, [1020, 2240, 35], [0, 1120, 0], E.M(HB.black, 'powder', { roughness: .5 }), 5);
+    kit.box(door, [930, 2150, 38], [0, 1075, 22], kit.oak, 5);
+    kit.box(door, [200, 780, 10], [0, 1560, 47], E.M('#9eb9bd', 'powder'), 5);
+    kit.box(door, [880, 230, 4], [0, 130, 43], kit.metal, 2);
+    kit.rod(door, [-330, 1000, 70], [330, 1000, 70], 16, kit.metal); for (const x of [-330, 330]) kit.rod(door, [x, 1000, 42], [x, 1000, 70], 10, kit.metal);
+    kit.box(door, [320, 60, 70], [-200, 2185, 52], kit.metal, 6);
+    // Room number plaque by the door (as on the door wall).
+    E.panel(E.wall('front', 'front-room-plaque', 'Wall room number plaque (back of the class)', F.door + 680, 1500, 10), 120, 120, (c, W, H) => { c.fillStyle = HB.orange; c.fillRect(0, 0, W, H); varsity(c, '214', W / 2, H * .42, H * .36, HB.black, { track: .02 }); write(c, 'SCIENCE', W / 2, H * .78, H * .13, HB.black, 'center', '800'); }, { frame: HB.black, border: 6, depth: 10, res: 256 });
+    // Three framed team photos over the bins, short of the door-wall lockers.
+    const photos = E.wall('front', 'front-team-photos', 'Wall framed team photos', F.photos, 1800, 20);
+    [470, 0, -470].forEach((x, n) => E.panel(photos, 420, 300, (c, W, H) => drawTeamPhoto(c, W, H, n), { frame: HB.black, border: 16, at: [x, (n - 1) * 20, 0], res: 512 }));
+    // Showcase pennant string, as on the other three walls.
+    E.show(wallBunting(kit, E, g0, [w / 2 - 300, 2830, front - 175], [-w / 2 + 300, 2830, front - 175], 26, 60), [4]);
+}
 // HOME OF THE OILERS banner, a surf-team longboard on brackets and a lit glass
 // trophy shelf: one wall asset (above 900, so no floor footprint). Its name must
 // not start with Window / Door / Ceiling (RoomInteractions would skip it).
@@ -2804,12 +2936,12 @@ function sunPatch(kit, E) {
     };
 }
 // Wall placement: [x, y, z] at `off` mm from the wall surface, facing into the room.
-const onWall = (kit, wall, along, y, off) => wall === 'back' ? [along, y, kit.bz + 18 + off] : wall === 'right' ? [kit.w / 2 - 18 - off, y, along] : [-kit.w / 2 + 18 + off, y, along];
-const wallGroup = (kit, wall) => ({ back: kit.back, right: kit.right, left: kit.left })[wall];
+const onWall = (kit, wall, along, y, off) => wall === 'back' ? [along, y, kit.bz + 18 + off] : wall === 'front' ? [along, y, kit.front - 18 - off] : wall === 'right' ? [kit.w / 2 - 18 - off, y, along] : [-kit.w / 2 + 18 + off, y, along];
+const wallGroup = (kit, wall) => ({ back: kit.back, right: kit.right, left: kit.left, front: kit.frontWall })[wall];
 // Picture / rail light: a slim bar on two arms above the artwork, its emissive
 // lens and a soft wash down the wall (and the artwork).
 function pictureLight(kit, E, wall, along, y, span, levels, { drop = 1000, finish = '#3a3a36', color = '#ffdcae', heads = 0, poolW = span * 1.35 } = {}) {
-    const g = wallGroup(kit, wall), side = wall !== 'back', size = l => side ? [70, 30, l] : [l, 30, 70];
+    const g = wallGroup(kit, wall), side = wall === 'left' || wall === 'right', size = l => side ? [70, 30, l] : [l, 30, 70];
     const metal = E.M(finish, 'metal', { metalness: .55, roughness: .38 }), lens = E.glow('#fff1d8', levels.map(v => .12 + v * 2.2));
     kit.box(g, size(span), onWall(kit, wall, along, y, 130), metal, 6);
     kit.box(g, side ? [50, 6, span - 30] : [span - 30, 6, 50], onWall(kit, wall, along, y - 17, 130), lens, 2);
