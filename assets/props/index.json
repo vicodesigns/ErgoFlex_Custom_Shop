@@ -85195,22 +85195,22 @@
    "file": "assets/props/people-zoe-gym-cycle.glb",
    "anchor": "floor",
    "size": [
-    497.4,
-    1302.3,
-    883.7
+    519.6,
+    1253.2,
+    930.1
    ],
    "min": [
-    -248.7,
-    303,
-    -163
+    -259.8,
+    288.3,
+    -168
    ],
    "max": [
-    248.7,
-    1605.3,
-    720.7
+    259.8,
+    1541.5,
+    762.1
    ],
-   "tris": 34804,
-   "bytes": 1115380,
+   "tris": 34752,
+   "bytes": 1115224,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -85360,22 +85360,22 @@
    "file": "assets/props/people-kai-gym-cycle.glb",
    "anchor": "floor",
    "size": [
-    484.6,
-    1241.8,
-    812.7
+    493.8,
+    1137.1,
+    886
    ],
    "min": [
-    -242.3,
-    312.8,
-    -127.3
+    -246.9,
+    298.5,
+    -123.7
    ],
    "max": [
-    242.3,
-    1554.6,
-    685.4
+    246.9,
+    1435.6,
+    762.3
    ],
-   "tris": 33412,
-   "bytes": 887360,
+   "tris": 33380,
+   "bytes": 887880,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,

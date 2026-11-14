@@ -338,7 +338,10 @@ if who.get('limbs'):
     pose = dict(pose, limbs=who['limbs'])
     if 'pelvis' not in pose: off = pose.get('pelvis_offset', (0, 0, 0)); pose['pelvis_offset'] = (off[0], off[1], off[2] - drop)
 for limb, by in getattr(cast, 'NUDGE', {}).get((spec['character'], spec['pose']), {}).items():
-    pose = dict(pose); pose[limb] = dict(pose[limb], at=tuple(a + b for a, b in zip(pose[limb]['at'], by)))
+    # (a number: added to a number of the pose, 'hip_z'; a tuple: added to the limb's 'at')
+    pose = dict(pose)
+    if isinstance(by, (int, float)): pose[limb] = pose[limb] + by
+    else: pose[limb] = dict(pose[limb], at=tuple(a + b for a, b in zip(pose[limb]['at'], by)))
 pose_lib.apply_pose(rig, pose)
 # A hand that rests on the body is kept outside this character's clothes (worn.clear_hands): posed again, moved out.
 cleared = worn.clear_hands(rig, meshes, who, pose)

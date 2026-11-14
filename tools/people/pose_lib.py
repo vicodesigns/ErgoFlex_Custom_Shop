@@ -9,12 +9,13 @@ pose survives export), then hands, feet, fingers, spine and head are set.
       'pelvis': (x, y, z),            # pelvis bone head
       'pelvis_pitch': deg,            # forward tilt (+ leans forward)
       'pelvis_yaw': deg, 'pelvis_roll': deg,
+      'hip_z': z,                     # optional: then the pelvis is moved up or down so the hip joints are at this height
       'spine': (deg, deg, deg),       # forward bend of spine_01..03 (+ forward)
       'spine_twist': deg, 'spine_side': deg,
       'neck': deg, 'head': deg,       # forward nod (+ looks down)
       'head_yaw': deg, 'head_roll': deg,
       'hand_l': {'at': (x,y,z), 'fingers': (dx,dy,dz), 'palm': (dx,dy,dz), 'elbow': (dx,dy,dz), 'curl': 0..1, 'thumb': 0..1, 'spread': 0..1},
-      'hand_r': {...},                # 'at' is the wrist. Without 'at' the arm is posed by 'arm': (pitch, out, twist, elbow bend)
+      'hand_r': {...},                # 'at' is the wrist. 'shoulder': (forward, down) degrees of the collarbone (optional). Without 'at' the arm is posed by 'arm': (pitch, out, twist, elbow bend)
       'foot_l': {'at': (x,y,z), 'toes': (dx,dy,dz), 'knee': (dx,dy,dz), 'pitch': deg},
       'foot_r': {...},                # 'at' is the ankle; rest ankle height is ~0.07
     }
@@ -151,6 +152,9 @@ def apply_pose(rig, pose):
     rotate_world(rig, 'pelvis', Z, pose.get('pelvis_yaw', 0))
     rotate_world(rig, 'pelvis', X, pose.get('pelvis_pitch', 0))   # a positive turn about X tips the top toward -Y (forward)
     rotate_world(rig, 'pelvis', Y, pose.get('pelvis_roll', 0))
+    if 'hip_z' in pose:      # the hip joints at this height whoever sits (the pelvis bone's head is not as high above them in everyone)
+        hz = (bone_world(rig, 'thigh_l').translation.z + bone_world(rig, 'thigh_r').translation.z) / 2
+        set_bone_world(rig, 'pelvis', Matrix.Translation((0, 0, pose['hip_z'] - hz)) @ bone_world(rig, 'pelvis'))
 
     # Spine, neck and head (FK). Forward is -Y, so a forward bend is a positive rotation about X.
     yaw = Matrix.Rotation(math.radians(pose.get('pelvis_yaw', 0)), 3, 'Z')
@@ -170,6 +174,11 @@ def apply_pose(rig, pose):
     for side in ('l', 'r'):
         spec = pose.get('hand_' + side) or {}
         s = 1 if side == 'l' else -1
+        if 'shoulder' in spec:
+            # the shoulder brought forward (+ degrees, reaching) and down (+ degrees) by the collarbone, before the arm reaches
+            fwd, down = (tuple(spec['shoulder']) + (0,))[:2]
+            up = bone_dir(rig, 'spine_03'); rotate_world(rig, 'clavicle_' + side, up, -s * fwd)
+            rotate_world(rig, 'clavicle_' + side, up.cross(bone_dir(rig, 'clavicle_' + side)), down)
         if 'at' in spec:
             wrist = Vector(spec['at']); shoulder = bone_world(rig, 'upperarm_' + side).translation
             pole = (shoulder + wrist) / 2 + Vector(spec.get('elbow', (s * .25, .2, -.3)))
