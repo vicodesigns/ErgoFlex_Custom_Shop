@@ -35,7 +35,7 @@ export const COWORKING_LAYOUTS = Object.fromEntries(sizes.map(([id, name, width,
     const cafe = [width / 2 - 350, back + (index === 3 ? 5600 : index > 1 ? 6600 : 3450)];
     const focus = index >= 2 ? [-width / 2 + 850, front - 3300] : null;
     const call = index >= 3 ? [width / 2 - 800, front - (index === 3 ? 4300 : 5100)] : null;
-    const props = [{ id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 1050], turn: 180 }];
+    const props = [{ id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 1050], turn: 180, station: 'main' }];
     for (const s of stations) props.push({ id: 'steelcase-leap-v2', at: [s.at[0], 0, s.at[1] + 1050], turn: 180, station: s.id });   // station: its desk (Layers)
     if (index === 0) props.push({ id: 'kenney-furniture-lounge-chair', at: [lounge[0], 0, lounge[1]] });
     else props.push({ id: 'kenney-furniture-lounge-sofa', at: [lounge[0], 0, lounge[1]] },

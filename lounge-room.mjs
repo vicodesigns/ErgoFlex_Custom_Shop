@@ -18,7 +18,7 @@ export const LOUNGE_LAYOUTS = Object.fromEntries(tiers.map(([id, name, width, de
     const desk = [0, back + 1000];
     const loungeZ = front - (tier ? 1500 : 1200), sofaX = -width / 2 + (tier ? 540 : 460), tableX = -width / 2 + (tier ? 1700 : 1460);
     const props = [
-        { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 980], turn: 180 },
+        { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 980], turn: 180, station: 'main' },
         { id: tier ? 'sofa-fabric' : 'sofa-leather-wood', at: [sofaX, 0, loungeZ], turn: 90 },
         { id: 'coffee-table', at: [tableX, 0, loungeZ], turn: 90 },
         { id: 'game-controller', at: [tableX + 60, 402, loungeZ - 210], turn: 90 },

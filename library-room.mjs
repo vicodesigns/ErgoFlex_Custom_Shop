@@ -53,7 +53,7 @@ function makeLibraryLayout([id, name, width, depth, height], index, legacy = fal
     // Put circulation beside the catalog/returns zone, leaving the window
     // study edge and the route out of the pilot desk bay unobstructed.
     const service = index >= 2 ? [width / 2 - 1700, back + 1700] : null;
-    const props = [{ id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 1050], turn: 180 }, { id: 'monstera', at: [-width / 2 + 450, 0, back + 430] }];
+    const props = [{ id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 1050], turn: 180, station: 'main' }, { id: 'monstera', at: [-width / 2 + 450, 0, back + 430] }];
     for (const [i, at] of reading.slice(0, index >= 3 ? 2 : 1).entries()) {
         const seats = index === 0 ? [-500, 500] : [-650, 650];
         for (const x of seats) for (const z of [legacy ? -850 : -1000, legacy ? 850 : 1000]) props.push({ id: 'kenney-furniture-chair-modern-cushion', at: [at[0] + x, 0, at[1] + z], turn: z > 0 ? 180 : 0 });

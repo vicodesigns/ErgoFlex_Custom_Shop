@@ -24,7 +24,7 @@ export const WORKSHOP_LAYOUTS = Object.fromEntries(tiers.map(([id, name, width, 
         { id: 'toolbox', at: [width / 2 - 1250, 900, back + 330] },
         { id: 'site-radio', at: [width / 2 - 900, 900, back + 290], turn: -15 },
         { id: 'tool-cart', at: [width / 2 - 440, 0, front - 820], turn: -90 },
-        { id: 'kenney-furniture-stool-bar-square', at: [desk[0], 0, desk[1] + 900] },
+        { id: 'kenney-furniture-stool-bar-square', at: [desk[0], 0, desk[1] + 900], station: 'main' },
         { id: 'cork-board', at: [0, 1750, back + 46], on: 'wall' }
     ];
     if (tier) props.push({ id: 'shop-machine', at: [width / 2 - 650, 0, back + 1800], turn: -90 },

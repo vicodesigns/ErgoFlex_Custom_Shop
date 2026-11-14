@@ -12,7 +12,7 @@ import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-202
 export const HOME_LAYOUTS = {
     apartment: { id: 'apartment', name: 'Apartment office', width: 2800, depth: 3200, height: 2600, back: -1050, desk: [0, -310],
         props: [
-            { id: 'steelcase-leap-v2', at: [-120, 0, 600], turn: 180 },
+            { id: 'steelcase-leap-v2', at: [-120, 0, 600], turn: 180, station: 'main' },
             { id: 'armchair-poppi', at: [900, 0, 1660], turn: 180 },
             { id: 'journal', at: [80, 451, 1870], turn: 15 },
             { id: 'ficus', at: [-1110, 0, -710] },
@@ -20,7 +20,7 @@ export const HOME_LAYOUTS = {
         ] },
     house: { id: 'house', name: 'Dedicated home office', width: 3600, depth: 4200, height: 2700, back: -1450, desk: [-160, -540],
         props: [
-            { id: 'steelcase-leap-v2', at: [-160, 0, 460], turn: 180 },
+            { id: 'steelcase-leap-v2', at: [-160, 0, 460], turn: 180, station: 'main' },
             { id: 'armchair-poppi', at: [-1150, 0, 1820], turn: 145 },
             { id: 'journal', at: [-475, 451, 2100], turn: -12 },
             { id: 'monstera', at: [1300, 0, 2090] },
@@ -32,7 +32,7 @@ export const HOME_LAYOUTS = {
 Object.assign(HOME_LAYOUTS, {
     spacious: { id: 'spacious', name: 'Spacious home office', width: 4200, depth: 4800, height: 2800, back: -1600, desk: [-300, -600], table: [-650, 2260],
         props: [
-            { id: 'steelcase-leap-v2', at: [-300, 0, 450], turn: 180 },
+            { id: 'steelcase-leap-v2', at: [-300, 0, 450], turn: 180, station: 'main' },
             { id: 'armchair-poppi', at: [-1420, 0, 1970], turn: 145 },
             { id: 'journal', at: [-650, 451, 2260], turn: -12 },
             { id: 'monstera', at: [1600, 0, 2560] },
@@ -41,7 +41,7 @@ Object.assign(HOME_LAYOUTS, {
         ] },
     premium: { id: 'premium', name: 'Premium home office', width: 5200, depth: 5800, height: 3000, back: -1850, desk: [-450, -700], table: [-1100, 2550],
         props: [
-            { id: 'steelcase-leap-v2', at: [-450, 0, 350], turn: 180 },
+            { id: 'steelcase-leap-v2', at: [-450, 0, 350], turn: 180, station: 'main' },
             { id: 'armchair-poppi', at: [-1900, 0, 2190], turn: 145 },
             { id: 'journal', at: [-1100, 451, 2550], turn: -12 },
             { id: 'sofa-fabric', at: [650, 0, 3130], turn: 180 },
@@ -51,7 +51,7 @@ Object.assign(HOME_LAYOUTS, {
         ] },
     executive: { id: 'executive', name: 'Executive office suite', width: 6500, depth: 7000, height: 3200, back: -2200, desk: [-650, -850], table: [-1630, 3000],
         props: [
-            { id: 'steelcase-leap-v2', at: [-650, 0, 250], turn: 180 },
+            { id: 'steelcase-leap-v2', at: [-650, 0, 250], turn: 180, station: 'main' },
             { id: 'armchair-poppi', at: [-2460, 0, 2590], turn: 145 },
             { id: 'armchair-poppi', at: [-2410, 0, 3880], turn: 35 },
             { id: 'journal', at: [-1630, 451, 3000], turn: -12 },

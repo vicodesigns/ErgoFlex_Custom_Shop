@@ -133,8 +133,10 @@ export function buildRows({ room, items = [], layers = {}, phase, size, desks = 
 // (`station: '<id>'`, carried to the object as userData.layersStation by workspace-3d.mjs): the chair every station
 // gets from its layout (institutional-scenes.mjs stationChair, office-room.mjs, coworking-room.mjs) and props the room
 // assigns by hand (the high school's drafting chair at the design review desk, the media desk's PC tower).
-// -> 'desk:station-<id>' or null. (The featured desk's chair is a fixture of the room and stays.)
-export const deskOfItem = d => typeof d?.station === 'string' && /^[a-z0-9][a-z0-9_-]{0,60}$/i.test(d.station) ? 'desk:station-' + d.station : null;
+// -> 'desk:station-<id>', 'desk:main' (the featured desk's own chair) or null.
+// station 'main': the featured desk's own chair (marked in every room type's layout, or on its built fixture) -> desk:main.
+// It follows desk:main, whichever desk is featured at the moment.
+export const deskOfItem = d => typeof d?.station !== 'string' || !/^[a-z0-9][a-z0-9_-]{0,60}$/i.test(d.station) ? null : d.station === 'main' ? 'desk:main' : 'desk:station-' + d.station;
 // ---- desks and people (phase 4)
 const SAFE_KEY = /[^a-z0-9_-]+/g;
 // The layers key of a person of the cast: their placement key (a posture variant is the same person).

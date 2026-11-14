@@ -16,7 +16,7 @@ export const MUSIC_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map(
     const piano = [-width / 2 + 260, front - (large ? 2100 : 950)];
     const performance = [width / 2 - 720, front - (compact ? 440 : 1050)];
     const props = [
-        { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 980], turn: 180 },
+        { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 980], turn: 180, station: 'main' },
         ...[-1, 1].map(sign => ({ id: 'ergoflex-slim-speaker', at: [desk[0] + sign * speakers, 750, desk[1] - 260], turn: -sign * 10 })),
         { id: 'studio-recorder', at: [rack[0], 800, rack[1]], turn: 0 },
         { id: 'kenney-furniture-books', at: [width / 2 - 160, 1504, rack[1] - 120], turn: -90 },

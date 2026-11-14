@@ -85,7 +85,7 @@ export const INSTITUTIONAL_ROOMS = Object.fromEntries(definitions.map(row => {
         const width = dimensions[0] + index * 1800, depth = dimensions[1] + index * 2200, back = -depth / 3, desk = [-width / 2 + 1250, back + 1900];
         const layout = { id: tier, index, schoolRows: ({kindergarten:2,elementary:3,middleschool:4,highschool:4,college:5,university:5})[id], desktopSize: index === 0 ? '48x30' : '60x30', name: EDUCATIONAL_LEVELS[id] ? name : ['Small', 'Medium', 'Large'][index] + ' ' + name.toLowerCase(), width, depth,
             height: 3100 + index * 150, back, desk,
-            daylight: [-width / 2 + 100, back + depth * .54], activity: [width / 2 - 1000, back + depth - 700], props: [{ id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 1050], turn: 180, replaceFixture: 'mobile-desk-chair' }] };
+            daylight: [-width / 2 + 100, back + depth * .54], activity: [width / 2 - 1000, back + depth - 700], props: [{ id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 1050], turn: 180, replaceFixture: 'mobile-desk-chair', station: 'main' }] };
         // Extra ErgoFlex desks: rendered by WorkspaceRoom.addOfficeStations
         // from a snapshot of the live desk at each station's size and pose.
         layout.stations = (group?.stations?.(id, layout) || []).map(s => ({ size: '60x30', turn: 0, height: 28, tilt: 0, ...s }));

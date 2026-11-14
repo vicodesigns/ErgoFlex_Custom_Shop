@@ -14,7 +14,7 @@ export const STUDY_LAYOUTS = Object.fromEntries(Object.values(HOME_LAYOUTS).map(
     const table = [reading[0] + (large ? 820 : -830), front - 310];
     const console = [-width / 2 + 340, back + 650];
     const props = [
-        { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 960], turn: 180 },
+        { id: 'steelcase-leap-v2', at: [desk[0], 0, desk[1] + 960], turn: 180, station: 'main' },
         { id: 'armchair-leather', at: [reading[0], 0, reading[1]], turn: large ? 10 : -10 },
         { id: 'coffee-table-2', at: [table[0], 0, table[1]] },
         { id: 'journal', at: [table[0] - 70, 700, table[1]], turn: -12 },
