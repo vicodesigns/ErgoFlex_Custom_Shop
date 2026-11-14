@@ -11863,6 +11863,13 @@
    "pose": "stand-present-left",
    "name": "Mr Hale, presenting from the left of the board",
    "aids": []
+  },
+  "people-maya-stand-type-41": {
+   "character": "maya",
+   "pose": "stand-type",
+   "deskHeight": 41,
+   "name": "Maya, typing at the desk at 41 in (standing)",
+   "aids": []
   }
  }
 }

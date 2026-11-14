@@ -1344,6 +1344,8 @@ OUTPUTS = [
     {'id': 'people-maya-stretch', 'character': 'maya', 'pose': 'stretch-open', 'name': 'Maya, stretching at her desk'},
     {'id': 'people-maya-stand-phone', 'character': 'maya', 'pose': 'stand-phone', 'name': 'Maya, with the desk app on her phone', 'held': [('phone', {'side': 'r'})]},
     {'id': 'people-maya-stand-type', 'character': 'maya', 'pose': 'stand-type', 'height': 43.5, 'name': 'Maya, typing at the desk (standing)'},
+    # (her own standing height: elbows at 90 degrees and level forearms at 41 in; 43.5 in fits someone about 1.85 m tall)
+    {'id': 'people-maya-stand-type-41', 'character': 'maya', 'pose': 'stand-type', 'height': 41, 'name': 'Maya, typing at the desk at 41 in (standing)'},
     {'id': 'people-maya-stand-wait', 'character': 'maya', 'pose': 'stand-wait', 'name': 'Maya, on her feet while the desk moves'},
     {'id': 'people-andre-sit-type', 'character': 'andre', 'pose': 'sit-type', 'height': 28, 'name': 'Andre, typing at the desk (seated)'},
     {'id': 'people-andre-sit-type-30', 'character': 'andre', 'pose': 'sit-type', 'height': 30, 'name': 'Andre, typing at the desk at 30 in (seated)'},
@@ -1518,6 +1520,10 @@ for _who in ('maya', 'noah'):
     for _pose in ('sit-type', 'stand-type', 'stand-type-low', 'wheel-type', 'sit-laptop'):
         for _side, _sign in (('hand_l', 1), ('hand_r', -1)):
             NUDGE.setdefault((_who, _pose), {})[_side] = {'fingers': (-_sign * .12, *TYPE_ARCH['fingers'][1:]), 'curl': TYPE_ARCH['curl'], 'thumb': TYPE_ARCH['thumb'], 'spread': TYPE_ARCH['spread'], 'at': (0, 0, TYPE_ARCH['lift'])}
+# One model's own nudge (by its id, after the posture's): Maya standing at 41 in keeps her hands 40 mm nearer the
+# body (its film placements stand her 40 mm nearer the keys, reach 850), so her elbows bend to 90 degrees over level
+# forearms (rig measure: elbow 90, forearm 0, upper arm 15 forward; without it 101 / -1 / 19).
+NUDGE['people-maya-stand-type-41'] = {'hand_l': (0, .04, 0), 'hand_r': (0, .04, 0)}
 # A model in an outfit of its own ('as' on its output: these keys replace the character's): in a hospital bed Grace
 # and Ben wear a gown like the ward's patients, not their day clothes.
 VARIANTS = {
