@@ -1960,6 +1960,9 @@ export class RoomPeople {
         const [ra, rb] = await Promise.all([this.rig(a), this.rig(b)]); if (!ra.userData.personRig || !rb.userData.personRig) return;
         const home = o => ({ position: o.position.clone(), turn: o.rotation.y });
         Object.assign(change, { rig, keyFrom: rig.key(change.from.id), keyTo: rig.key(change.to.id), homeFrom: home(ra), homeTo: home(rb) });
+        // someone who walks off after the change turns toward their path during it, not in one frame as the walk starts
+        // (the walker is not placed on its path yet when the skeletons load: it still faces the way it was cast)
+        const path = change.to.walk?.path; if (path?.length > 1) change.homeTo.turn = Math.atan2(path[1][0] - path[0][0], path[1][1] - path[0][1]);
         // a turn the short way round
         change.homeTo.turn = change.homeFrom.turn + THREE.MathUtils.euclideanModulo(change.homeTo.turn - change.homeFrom.turn + Math.PI, Math.PI * 2) - Math.PI;
         change.length = 1.4 + THREE.MathUtils.clamp(Math.abs(change.keyTo.wp[rig.b.pelvis].y - change.keyFrom.wp[rig.b.pelvis].y) / .3, 0, 1);
