@@ -3,7 +3,8 @@
 # re-renders every chapter. Data edits (cameras, lights, desk builds, screens, seeds) never need a bump.
 # 2 (2026-11-10): people in the rooms, photographic window views and their regrade, desk users' chairs turned to face the desk.
 # 3 (2026-11-13): metal reads as metal and clear acrylic as acrylic (room environment gloss, film reflections), calmer window views, people with laptops, activities, walkers and chairs under seated people, the pottery wheel in the artist's studio.
-3
+# 4 (2026-11-14, Vico: "do a render bump"): 3D scenery behind the windows instead of the photographs, rebuilt people (faces and brows, hands, the bike riders on the saddle, Kai's blue wheelchair, the teacher's pointing posture), more and larger life loops, the sonar rings and the dog in the proximity chapter, the desk's own wheel materials, and the high school room as Vico rearranged it in the Studio (the saved room state is not part of a chapter's key).
+4
 # Per-chapter epoch: this chapter alone re-renders (its key changes); the global epoch above stays.
 # commons 3 (2026-11-11): architecture pass in the library (balcony, piers, doors, datum rails) moved its pixels.
 chapter commons 3
