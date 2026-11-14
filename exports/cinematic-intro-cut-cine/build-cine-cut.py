@@ -250,25 +250,29 @@ def media(s):
 
 @chapter
 def storage(s):
-    # Workshop (x -2.84..5.73, z -4.11..4.83; the +x side is the open cutaway, the void beyond it). Seen from above:
-    # the desk starts at about (1.9, 0, -0.3) facing +x; Andre (who fades in at 1.0-1.5 s) taps the app at
-    # (2.3, 2.0); the board folds to 65 degrees (2.5-12.5 s) and lifts (6.9-9.9); the desk rolls +x to (4.0, -0.5)
-    # (7.7-13.2), then -z to about (3.9, -3.5) (13.2-18.3) and turns to park against the far wall (18.3-21.9). Jo
-    # works at the tool wall. His camera skimmed the desktop at 1.5 s, saw the fold face-on (the angle only read late)
-    # and let the desk fill the frame during the roll. Here: a top-down opening on the desktop and its robots (Andre out of
-    # frame during his fade) with a slow push instead of his skim; a hard cut on the action at 2.5 s to a side three-quarter
-    # from the far (-z) side, which reads the fold's angle with Andre clear of the desk; giving way out through the
-    # open side as the desk rolls toward that spot; then his tracking and parking keys from 17.3 s. Every view looks into the room (-x), and the frame's far edge stays
-    # inside the room's corner.
+    # Workshop, the story of 13 November (room millimetres, W() to stage units). Andre works on the robot at the desk
+    # (100, 1560 facing -z; the desk stands at 100, 1100), sets it on the desk's top shelf (1.1-2.5 s), walks round to
+    # the desk's left (4.0-7.0 s, ending at -1050, 1720 facing it), takes out his phone and taps the one button (the
+    # screen lights at 9.69 s). The Groove: the board folds from 9.8 s (to 65 degrees at 19.8), the desk rolls forward
+    # (10.8-15.6 s, to 100, 2548), lifts (13.3-16.3), rolls right to the wall (15.6-20.7) and turns there (19.1-22.7).
+    # Here: a high three-quarter from his left at the desk, so his hands, the robot and the shelf read with him whole;
+    # a cut to a wide from the room's front as he walks round (he stays whole, never at the frame edge); a cut over his
+    # right shoulder for the tap (phone in the foreground, the desk beyond, so the fold is seen to follow the tap); a
+    # cut to the side three-quarter that reads the fold's angle (the first cut's view of 9.9 s, unchanged in kind); a
+    # cut outside along the wall as it rolls; his tracking and parking keys from 19.7 s.
     cam(s, [
-        key(0, (2.45, 3.5, 0.15), (1.9, 1.0, -0.3), 36, 'From above: the desktop and its robots'),
-        key(2.45, (2.4, 3.25, 0.1), (1.9, 1.0, -0.3), 35, 'Easing down (Andre is out of frame through his fade-in)'),
-        key(2.5, (4.3, 1.8, -3.4), (2.65, 1.15, 0.1), 42, 'Side three-quarter: Andre has tapped, the board folds', cut=True),
-        key(7.7, (4.0, 1.9, -3.65), (2.5, 1.25, 0.1), 44, 'Folded toward 65 degrees, lifted'),
-        key(8.85, (4.1, 1.9, -3.65), (2.6, 1.25, 0.1), 45, 'It starts to roll'),
-        key(8.9, (7.5, 1.75, 1.2), (3.5, 1.45, -1.4), 40, 'Cut on the roll: from outside, along the wall', cut=True),
-        key(13.2, (7.9, 1.8, 0.85), (3.7, 1.4, -1.35), 42, 'It turns along the wall'),
-    ] + his('storage', 17.3, 19.6, 20.5, 22.1, 22.5, 24.978))
+        key(0, W(-1500, 2000, 300), W(50, 1200, 1250), 38, 'High from his left: Andre at the desk with the robot'),
+        key(2.6, W(-1350, 1900, 500), W(60, 1260, 1200), 36, 'He sets it on the top shelf (slow push)'),
+        key(3.6, W(-200, 1750, 3500), W(-400, 1000, 1500), 42, 'Cut to the front: he walks round to the left', cut=True),
+        key(6.9, W(-380, 1700, 3400), W(-700, 1050, 1600), 41, 'He stops, facing the desk'),
+        key(7.0, W(-1480, 1880, 2175), W(-765, 1280, 1627), 40, 'Cut over his shoulder: the phone, the desk beyond', cut=True),
+        key(9.85, W(-1400, 1830, 2110), W(-720, 1260, 1600), 38, 'The tap; the board starts to fold'),
+        key(9.9, (4.3, 1.8, -3.4), (2.65, 1.15, 0.1), 42, 'Side three-quarter: the board folds, the desk rolls', cut=True),
+        key(12.2, (4.0, 1.9, -3.65), (2.6, 1.2, 0.3), 44, 'Folding, rolling forward'),
+        key(13.0, (4.1, 1.9, -3.65), (2.8, 1.25, 0.4), 45, 'Folding, rolling forward'),
+        key(13.05, (7.5, 1.75, 1.2), (3.5, 1.45, -1.4), 40, 'Cut on the roll: from outside, along the wall', cut=True),
+        key(15.6, (7.9, 1.8, 0.85), (3.7, 1.4, -1.35), 42, 'It turns along the wall'),
+    ] + his('storage', 19.7, 20.4, 21.3, 22.9, 23.3, 24.978))
 
 
 def main():
