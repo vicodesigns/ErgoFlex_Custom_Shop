@@ -247,9 +247,16 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
     const ids = shown(people);
     assert.ok(ids.includes('people-zoe-stand-type'), 'the 41 in pose fits the 41 in station');
     assert.ok(!ids.includes('people-mia-sit-type'), 'a 28 in pose is not put at a 36 in station');
-    assert.ok(!ids.includes('people-hale-stand-present'), 'house-layout placements stay out of other layouts');
+    assert.ok(!ids.includes('people-hale-stand-present-left'), 'house-layout placements stay out of other layouts');
     const zoe = people.people.find(o => o.userData.person.id === 'people-zoe-stand-type');
     assert.deepEqual([zoe.position.x, zoe.position.z], [4380, 1890]);
+}
+{   // The high school's teacher stands left of the board (as the class sees it) and points at it with his left arm.
+    const { room } = makeRoom('highschool', { id: 'house' }), people = new RoomPeople(room, library);
+    await people.setEnabled(true); people.update({ mode: 'morning', height: 28, pose: { x: 0, z: 0, yaw: 0 } });
+    const hale = people.people.find(o => o.visible && /^people-hale-stand-present/.test(o.userData.person.id));
+    assert.equal(hale?.userData.person.id, 'people-hale-stand-present-left', 'the mirrored presenting posture, not the right-arm one');
+    assert.deepEqual([hale.position.x, hale.position.z, Math.round(THREE.MathUtils.radToDeg(hale.rotation.y))], [-1450, -2950, 15]);
 }
 {   // A person at one of the room's other desks follows that desk as it is now: where it stands, and sitting or standing with its height.
     const stations = [{ id: 'window-research', at: [-4300, 1000], turn: 0, height: 28 }];
