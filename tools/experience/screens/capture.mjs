@@ -113,7 +113,11 @@ function prepAudio(chapter, dur, clip = {}) {
     const wav = path.resolve(ROOT, process.env.CINE_SCORE), start = Number(process.env.CINE_SCORE_START);
     if (!Number.isFinite(start)) throw new Error('CINE_SCORE needs CINE_SCORE_START (seconds of the chapter start in the score)');
     const stamp = fs.statSync(wav).mtimeMs.toFixed(0), file = path.join(CACHE, `audio-cine-${chapter}-${start}-${stamp}.json`);
-    if (!fs.existsSync(file)) { fs.mkdirSync(CACHE, {recursive: true}); fs.writeFileSync(file, execFileSync(PYTHON, [path.join(HERE, 'audio-bands.py'), wav, String(start), String(dur), String(FPS), '32'], {maxBuffer: 1 << 28})); }
+    if (!fs.existsSync(file)) {
+      fs.mkdirSync(CACHE, {recursive: true});
+      try { fs.writeFileSync(file, execFileSync(PYTHON, [path.join(HERE, 'audio-bands.py'), wav, String(start), String(dur), String(FPS), '32'], {maxBuffer: 1 << 28, stdio: ['ignore', 'pipe', 'pipe']})); }
+      catch (e) { console.log(`  audio: audio-bands.py failed (${String(e.stderr || e.message).trim().split(String.fromCharCode(10)).pop()}) -> no spectrum (needs numpy)`); return null; }
+    }
     return {...JSON.parse(fs.readFileSync(file, 'utf8')), filmStart: start};
   }
   const edl = JSON.parse(fs.readFileSync(path.join(EXPORT, 'edl.json'), 'utf8'));
