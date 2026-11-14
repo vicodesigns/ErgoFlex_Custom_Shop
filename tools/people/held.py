@@ -237,16 +237,95 @@ def cane(rig, side, white=False, length=None):
     return out
 
 
+# The person's posed body and clothes (no hair, brows, lashes, eyes or teeth), set by build_people.py before the held
+# things are made: what is worn on the body (the backpack) is fitted outside it.
+BODY = []
+
+
+def _seg_dist(p, a, b):
+    """Distance of the points p (N x 3) from the segment a-b."""
+    import numpy as np
+    a, b = np.asarray(a, float), np.asarray(b, float); d = b - a; t = np.clip(((p - a) @ d) / max(d @ d, 1e-9), 0, 1)
+    return np.linalg.norm(p - (a + t[:, None] * d), axis=1)
+
+
+def _torso_points(rig, inv):
+    """The posed body and clothes (BODY) in the frame `inv` maps world to, without the arms, and of those the ones of
+    the trunk itself (a point nearer an arm's bones than the spine's is the arm's; over the shoulder joints, inside
+    them, it is the shoulder's: the strap rides there)."""
+    import numpy as np
+    dg = bpy.context.evaluated_depsgraph_get(); pts = []
+    for o in BODY:
+        if o.type != 'MESH': continue
+        e = o.evaluated_get(dg); me = e.to_mesh()
+        co = np.empty(len(me.vertices) * 3); me.vertices.foreach_get('co', co); e.to_mesh_clear()
+        mw = np.array(inv @ o.matrix_world); pts.append(co.reshape(-1, 3) @ mw[:3, :3].T + mw[:3, 3])
+    if not pts: return None, None
+    p = np.concatenate(pts)
+    def at(b, tail=False): pb = rig.pose.bones[b]; return np.array(inv @ (rig.matrix_world @ (pb.tail if tail else pb.head)))
+    spine = np.minimum(_seg_dist(p, at('pelvis'), at('spine_03', True)), _seg_dist(p, at('spine_03', True), at('head')))
+    arm = np.full(len(p), np.inf)
+    for s in 'lr':
+        arm = np.minimum(arm, _seg_dist(p, at('upperarm_' + s), at('lowerarm_' + s)))
+        arm = np.minimum(arm, _seg_dist(p, at('lowerarm_' + s), at('hand_' + s, True)))
+    trunk = spine <= arm; joint = min(abs(at('upperarm_l')[0]), abs(at('upperarm_r')[0])); ua_y = at('upperarm_l')[1]
+    shoulder = (np.abs(p[:, 0]) < .9 * joint) & (p[:, 1] > ua_y - .04)
+    keep = trunk | shoulder
+    return p[keep], trunk[keep]
+
+
 def backpack(rig, color=(.16, .22, .3)):
-    """On the back, with straps over the shoulders. Frame: X across, Y up the spine, Z out of the back."""
+    """On the back, with straps over the shoulders. Frame: X across, Y up the spine, Z out of the back, origin at the
+    chest (spine_03). Fitted to the person (BODY, Nov 14: it hung low and its straps went through the shoulders): the
+    pack's top a little under the top of the shoulders, its front against the back, each strap round the top of the
+    shoulder, down the chest and out under the arm to the pack's lower corner, clear of the body and clothes.
+    Without BODY: the fixed placement of before."""
+    import numpy as np
     w = frame_of(rig, 'spine_03'); y = (w.to_3x3() @ Vector((0, 1, 0))).normalized()
     back = Vector((0, 1, 0)); back = (back - y * back.dot(y)).normalized(); x = y.cross(back)
-    m = Matrix((x, y, back)).transposed().to_4x4(); m.translation = w.translation + back * .17 - y * .02
+    m = Matrix((x, y, back)).transposed().to_4x4(); m.translation = w.translation
     mat = material('backpack ' + str(color), color, .85); strap = material('strap', (.06, .06, .07), .9)
-    out = [box('backpack', (.29, .4, .15), mat, m, bevel=.03), box('backpack pocket', (.2, .17, .05), mat, m, at=(0, -.09, .085), bevel=.02),
-           tube('backpack handle', .008, (-.04, .21, -.03), (.04, .21, -.03), strap, m, 8)]
-    for s in (-1, 1):
-        path = [(s * .09, .19, -.05), (s * .1, .25, -.15), (s * .115, .2, -.27), (s * .13, .03, -.31), (s * .16, -.12, -.2), (s * .13, -.17, -.07)]
+    p, trunk = _torso_points(rig, m.inverted()) if BODY else (None, None)
+    if p is None or len(p) < 100:
+        c = (0, -.02, .17)
+        paths = [[(a + c[0], b + c[1], d + c[2]) for a, b, d in ((s * .09, .19, -.05), (s * .1, .25, -.15), (s * .115, .2, -.27), (s * .13, .03, -.31), (s * .16, -.12, -.2), (s * .13, -.17, -.07))]
+                 for s in (-1, 1)]
+    else:
+        inv = m.inverted(); ua = [inv @ (rig.matrix_world @ rig.pose.bones['upperarm_' + s].head) for s in 'lr']
+        xs = .65 * (abs(ua[0].x) + abs(ua[1].x)) / 2          # the strap: between the neck and the shoulder joint
+        neck_y = (inv @ (rig.matrix_world @ rig.pose.bones['neck_01'].head)).y
+        R, CLEAR = .014, .006                                 # (the strap's radius and the gap it keeps)
+        def slab(cx, half=.022): return p[(np.abs(p[:, 0] - cx) < half) & (p[:, 1] < neck_y + .04)]      # (not the head)
+        y_sh = min(slab(s * xs)[:, 1].max() for s in (-1, 1))          # the top of the shoulder where the strap crosses
+        H = .4; y_top = y_sh - .045; cy = y_top - H / 2                  # the pack's top just under it
+        band = p[(np.abs(p[:, 0]) < .14) & (p[:, 1] < y_top) & (p[:, 1] > y_top - H)]
+        cz = band[:, 2].max() + .075 + .004                               # its front face on the back
+        c = (0, cy, cz); paths = []
+        for s in (-1, 1):
+            S = slab(s * xs); S = S[S[:, 1] > y_sh - .2]
+            # Round the top of the shoulder: about a centre under it, at each angle just outside the farthest point.
+            mid = S[np.abs(S[:, 1] - (y_sh - .1)) < .02]; zc = (mid[:, 2].min() + mid[:, 2].max()) / 2 if len(mid) else 0.
+            C = np.array([y_sh - .1, zc]); rel = S[:, 1:] - C
+            ang = np.degrees(np.arctan2(rel[:, 0], rel[:, 1])); dist = np.linalg.norm(rel, axis=1)
+            arc, r = [], .1
+            for a in range(10, 171, 16):          # (0: straight back, 90: up, 180: straight ahead)
+                near = dist[np.abs(ang - a) < 10]
+                if len(near): r = near.max()
+                q = C + np.array([math.sin(math.radians(a)), math.cos(math.radians(a))]) * (r + R + CLEAR)
+                arc.append((s * xs, q[0], q[1]))
+            # Down the chest, then out under the arm to the pack's lower corner.
+            down = []
+            for i, dy in enumerate((.17, .26)):
+                yl = y_sh - dy; xi = s * (xs + .025 * (i + 1)); F = p[(np.abs(p[:, 0] - xi) < .025) & (np.abs(p[:, 1] - yl) < .02)]
+                if len(F): down.append((xi, yl, F[:, 2].min() - R - CLEAR))
+            yl = y_sh - .32; side = p[trunk & (np.abs(p[:, 1] - yl) < .02) & (p[:, 0] * s > 0)]
+            if len(side):
+                sw = np.abs(side[:, 0]).max(); zs = side[np.abs(side[:, 0]) > sw - .03][:, 2].mean()
+                down.append((s * (sw + R + CLEAR), yl, zs))
+            paths.append([(s * xs * .95, cy + H / 2 - .02, cz - .06)] + arc + down + [(s * .13, cy - H / 2 + .05, cz - .07)])
+    out = [box('backpack', (.29, .4, .15), mat, m, at=c, bevel=.03), box('backpack pocket', (.2, .17, .05), mat, m, at=(c[0], c[1] - .09, c[2] + .085), bevel=.02),
+           tube('backpack handle', .008, (-.04, c[1] + .21, c[2] - .03), (.04, c[1] + .21, c[2] - .03), strap, m, 8)]
+    for path in paths:
         for a, b in zip(path, path[1:]): out.append(tube('backpack strap', .014, a, b, strap, m, 8))
     return out
 

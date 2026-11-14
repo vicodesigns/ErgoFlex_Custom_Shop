@@ -14,6 +14,27 @@
 >
 > The text below describes the camera-only round of November 13 and is kept as its record.
 
+## November 14: commons and coast (Vico's notes 6, 6b and 7)
+
+- **commons**: the desk starts at 39 in (was 43.5) and Yara types at it as `people-yara-stand-mid` (built for 39 in;
+  she is 1.57 m: elbows about 90 degrees, forearms level, instead of reaching up). Her backpack is fitted to her body
+  (tools/people/held.py `backpack`: the pack's top just under the shoulders, the straps over them); the bag on the
+  desk's base shelf is hidden from 5.25 s, the cut where she has taken it (`accessories.add[].visible`). The desk
+  lowers to 30 in for Mia (was 32), who types at it as `people-mia-power-type-30`; a side still at 30 in showed her
+  knees and the chair's armrests clear of the keyboard tray. Camera unchanged.
+- **coast**: one person's action from start to end, one continuous camera (no cut). Ava (the room's morning student
+  at the featured suite, blue top) edits seated at 28 in; the suite rises 28 to 39 in (3.6-7.6 s), she gets up as it
+  sets off (the room's desk actor: chair back, she stands, hands back on the keys as it arrives) and works standing
+  at 39 in (`people-ava-stand-mid`). The camera starts on her seated from the front three-quarter, follows the rise,
+  rounds behind her wide of her shoulder and ends on the desktop with the Orange Coast College mark and her at the
+  keyboard. The board tilt (to +5 at 9.65 s) is gone: a tilt beyond 4 degrees takes a typist's hands off the keys.
+  Maya stays at her own bay (bay 1), out of this camera.
+- **coast to oilers**: the film's EDL dissolves these two over 1.5 s (`transitions[4]` of the HQ14 EDL): coast
+  13.0-14.5 s over oilers 0-1.5 s (30 fps: coast frames 390-434, oilers frames 0-44). Coast holds one slow push
+  through it (no cut after 9.4 s). Hand-off frame: **oilers frame 45 (1.5 s)**, the first frame out of the dissolve;
+  oilers' opening shot runs unbroken from frame 0 to at least frame 90 (3.0 s), so the dissolve opens on one
+  readable frame and no cut falls inside it or right after it (the oilers camera is stream S5's).
+
 `review-cut.json` is "Vico's cut with people" (`exports/cinematic-intro-20261110-people`) re-shot: **only the camera
 changes**. Every chapter keeps its length, its order, its desk moves (motion, status lights), titles, people, props,
 lighting and time of day, field for field, so any chapter here replaces the same chapter of his cut one for one:
