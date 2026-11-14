@@ -135,7 +135,7 @@ export function createStudioLayers(ctx) {
       if (beforeEl?.parentNode) beforeEl.before(button); else document.getElementById('scene-controls')?.append(button);
       root = document.createElement('aside'); root.id = 'layers-panel'; root.className = 'layers-dock'; root.hidden = true; root.setAttribute('aria-label', 'Layers');
       const pref = (() => { try { return ctx.prefs?.() || {}; } catch { return {}; } })();
-      if (Number.isFinite(pref.width)) root.style.setProperty('--layers-width', Math.max(260, Math.min(620, pref.width)) + 'px');
+      if (Number.isFinite(pref.width)) { const w = Math.max(260, Math.min(620, pref.width)) + 'px'; root.style.setProperty('--layers-width', w); document.documentElement.style.setProperty('--layers-width', w); }   // (on <html> too: the 3D view makes room by it)
       document.body.append(root);
       sheet = document.createElement('dialog'); sheet.id = 'layers-scope-sheet'; sheet.className = 'layers-sheet'; document.body.append(sheet);
       wire(); watch();
@@ -263,7 +263,7 @@ export function createStudioLayers(ctx) {
     root.addEventListener('pointerdown', event => {
       if (!event.target.closest('[data-ly-handle]') || matchMedia(PHONE).matches) return;
       event.preventDefault(); const start = event.clientX, w = root.getBoundingClientRect().width;
-      const move = e => root.style.setProperty('--layers-width', Math.max(260, Math.min(620, w + start - e.clientX)) + 'px');
+      const move = e => { const px = Math.max(260, Math.min(620, w + start - e.clientX)) + 'px'; root.style.setProperty('--layers-width', px); document.documentElement.style.setProperty('--layers-width', px); };
       const up = () => { removeEventListener('pointermove', move); removeEventListener('pointerup', up); try { ctx.savePrefs?.({ ...(ctx.prefs?.() || {}), width: Math.round(root.getBoundingClientRect().width) }); } catch {} };
       addEventListener('pointermove', move); addEventListener('pointerup', up);
     });

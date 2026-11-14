@@ -8,12 +8,14 @@
 
 .layers-dock {
   --layers-width: 340px;
-  position: fixed; z-index: 40; top: 72px; right: 0; bottom: 0; width: var(--layers-width); box-sizing: border-box;
+  position: fixed; z-index: 52; top: var(--shell-top, 54px); right: 0; bottom: 0; width: var(--layers-width); box-sizing: border-box;   /* above the 3D view (#viewer-shell is 51), below the open menus (60+) */
   display: flex; flex-direction: column; gap: 8px; padding: 10px 12px 8px 16px;
   background: var(--ui-panel, #f7f8f6); color: var(--ui-text, #1c2420); border-left: 1px solid var(--ui-border, #d5dbd6);
   box-shadow: -12px 0 32px #0b1a1422; font-size: 13px; line-height: 1.4; overscroll-behavior: contain;
 }
 .layers-dock[hidden] { display: none; }
+/* The 3D view makes room for the dock instead of sitting under it (desktop only: the phone sheet floats over the view). */
+@media (min-width: 761px) { html.layers-docked body.shell-layout #viewer-shell { right: var(--layers-width, 340px); } }
 .layers-handle { position: absolute; left: 0; top: 0; bottom: 0; width: 8px; cursor: ew-resize; touch-action: none; }
 .layers-handle:hover { background: #45cfac33; }
 .layers-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
@@ -22,7 +24,7 @@
 .layers-close { min-width: 36px; min-height: 36px; border: 0; background: none; color: inherit; font-size: 20px; cursor: pointer; }
 .layers-scope { display: flex; align-items: center; gap: 8px; font-size: 12px; }
 .layers-scope select, .layers-search { flex: 1; min-height: 34px; box-sizing: border-box; border: 1px solid var(--ui-border, #d5dbd6); border-radius: 8px; background: var(--ui-card, #fff); color: inherit; padding: 4px 8px; font: inherit; }
-.layers-search { width: 100%; }
+.layers-search { flex: none; width: 100%; }   /* in the dock's column it must not stretch downwards */
 .layers-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .layers-filters button { min-height: 30px; padding: 3px 10px; border: 1px solid var(--ui-border, #d5dbd6); border-radius: 15px; background: var(--ui-card, #fff); color: inherit; font: inherit; font-size: 12px; cursor: pointer; }
 .layers-filters button[aria-pressed="true"] { background: var(--ui-accent, #45cfac); color: #0b1a14; border-color: transparent; }
