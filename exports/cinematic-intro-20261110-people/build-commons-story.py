@@ -19,7 +19,7 @@ The story, second by second (stage units as --list-objects prints them; the room
   6.0-     she walks off across the commons (walk path, clear of the task chair on the carpet and the tables' chairs) and
            stands at the far tables, out of the later frames
   6.2-8.2  the desk lowers to 32 in, Mia's preset (the screen: "Mia's turn")
-  6.8-13.4 it drives itself along the cork wall to the head of the project table (his drive, re-timed) where Mia, who booked
+  7.2-13.4 it drives itself along the cork wall to the head of the project table (his drive, re-timed) where Mia, who booked
            it from the team table, waits in her red power wheelchair with her phone; she types once it is there
   8.6-16   his camera keys (whole desk on the drive, track right toward the table, the group, the wheelchair whole)
 Mia sits in the room's red power wheelchair (Prop:electric-wheelchair, moved under her and facing the desk) in postures
@@ -48,8 +48,8 @@ def commons(s):
     m['initial']['height'] = 43.5                                   # Yara works standing (stand-type: 43.5 in)
     for c in m['clips']:
         if c['lane'] == 'lift': c['start'], c['duration'], c['target'] = 6.2, 2.0, 32    # down to Mia's preset
-        if c['lane'] == 'wheels': c['start'], c['duration'] = 6.8, 6.6                  # his path, 13.4 s arrival kept
-    s['ledStatus'] = [{'at': 6.8, 'dur': 1.947, 'kind': 'wheels', 'mode': 6}, {'at': 8.747, 'dur': 4.653, 'kind': 'wheels', 'mode': 3}]
+        if c['lane'] == 'wheels': c['start'], c['duration'] = 7.2, 6.2                  # his path, 13.4 s arrival kept
+    s['ledStatus'] = [{'at': 7.2, 'dur': 1.829, 'kind': 'wheels', 'mode': 6}, {'at': 9.029, 'dur': 4.371, 'kind': 'wheels', 'mode': 3}]
     s['timeOfDay'] = [{'at': -1, 'mode': 'night'}, {'at': 0.2, 'mode': 'night'}, {'at': 3.8, 'mode': 'morning', 'ease': 'smooth'}]
     edits = [e for e in s['sceneEdits'] if e.get('match') not in ('^Prop:backpack-leather$', '^Prop:backpack-daypack$')]
     for e in edits:
