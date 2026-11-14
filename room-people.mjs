@@ -1335,7 +1335,13 @@ export class RoomPeople {
     // (A model id in a film's list means the placement without a key of its own: the room may cast the same model a second
     // time under a key, for another daypart, and that twin is not the one an older cut meant.)
     named(spec) { const only = this.filter?.only; return !!only && (only.includes(this.keyOf(spec)) || (!spec.key && !spec.variant && only.includes(spec.id))); }
-    allowed(spec) { const f = this.filter, k = this.keyOf(spec), has = list => list.includes(k) || (!spec.key && !spec.variant && list.includes(spec.id)); return !f || spec.extra || ((!f.only || has(f.only)) && !has(f.except || [])); }
+    // studioOut(spec): the Studio's Layers (studio.js layersApplyPeople): someone hidden, or the person at a hidden desk.
+    // Only without a film filter: a film never sets it, and a chapter's cast is the film's own.
+    allowed(spec) {
+        const f = this.filter, k = this.keyOf(spec), has = list => list.includes(k) || (!spec.key && !spec.variant && list.includes(spec.id));
+        if (!f && typeof this.studioOut === 'function') { try { if (this.studioOut(spec)) return false; } catch { /* a broken hook never hides anyone */ } }
+        return !f || spec.extra || ((!f.only || has(f.only)) && !has(f.except || []));
+    }
     // 0..1: how much of the person is there at this second of the film.
     present(spec, time) {
         const spans = this.filter?.when?.[this.keyOf(spec)]; if (!spans || !Number.isFinite(time)) return 1;
@@ -1467,12 +1473,13 @@ export class RoomPeople {
     // Director moves and raises these desks) decides where the person is and whether their pose suits it (update);
     // without a live desk it is the layout's station as designed.
     stationNow(spec, state) {
-        const live = state?.station?.(spec.station); if (live?.pose) return live;
+        const live = state?.station?.(spec.station); if (live?.gone) return null; if (live?.pose) return live;   // gone: hidden or deleted (the Studio's Layers): nobody there, no layout fallback
         const station = this.room.roomLayout?.stations?.find(s => s.id === spec.station);
         return station ? { height: station.height ?? 28, pose: { x: station.at[0], z: station.at[1], yaw: THREE.MathUtils.degToRad(station.turn || 0) } } : null;
     }
     atStation(object, spec, state = null) {
-        const desk = this.stationNow(spec, state); if (!desk) { object.userData.personMissing = true; return null; }
+        // (a desk that is gone for now, hidden with Layers, is not "missing": its user comes back with it)
+        const desk = this.stationNow(spec, state); if (!desk) { if (!state?.station?.(spec.station)?.gone) object.userData.personMissing = true; return null; }
         const yaw = desk.pose.yaw || 0;
         object.position.set(desk.pose.x, 0, desk.pose.z).addScaledVector(frontOf(yaw), spec.reach ?? REACH[spec.desk]); object.rotation.y = yaw + Math.PI;
         return desk;

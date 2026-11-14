@@ -61,7 +61,7 @@ import { PRODUCT_CONFIG, defaultConfig, money, configurationPrice, priceBreakdow
          ACCESSORIES, PRESETS, accessory, accessoryFits } from './catalog.mjs?v=20261110-stationary-organizer';
 import { PROJECT_FORMAT_VERSION, validateProjectFile, hardProblems, softProblems } from './project-io.mjs';
 import { createStudioLayers, setLayersHidden } from './studio-layers-panel.mjs';
-import { layersSwitch, UI_SWITCH_KEY as LAYERS_UI_SWITCH_KEY } from './studio-layers-model.mjs';
+import { layersSwitch, UI_SWITCH_KEY as LAYERS_UI_SWITCH_KEY, frameView, projectLayers, projectLayersRestore, LAYERS_KEY, personLayerKey, personName, personDesk } from './studio-layers-model.mjs';
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=polish-20261111f';
@@ -332,6 +332,78 @@ function layersItems() {
     }
     return out;
 }
+// ---- Layers, phase 4: the room's ErgoFlex desks and its cast as rows; one eye hides a desk, what rides on it and its user.
+let layersDeskMoved = null, layersPeopleSig = '';   // {from, to}: the featured desk was hidden, so another one is featured meanwhile
+function layersDesks() {
+    const sd = sceneDesks; if (!sd?.key || !sd.records?.size || sd.key === 'product/default') return [];
+    return [...sd.records].map(([id, r]) => ({ id: 'desk:' + id, name: r.state?.name || id, featured: id === 'main' }));
+}
+function layersPeople() {
+    const p = workspaceRoom?.people; if (!p?.enabled || !Array.isArray(p.people)) return [];
+    const mode = measuredRoomProfile()?.mode, out = new Map();
+    for (const o of p.people) {
+        const spec = o?.userData?.person; if (!spec || spec.extra) continue;
+        if (spec.modes && !spec.modes.includes(mode)) continue;   // not in the room at this hour (modes [] = films only)
+        const key = personLayerKey(spec); if (!key || out.has('person:' + key)) continue;
+        out.set('person:' + key, { id: 'person:' + key, name: personName(key), desk: personDesk(spec), model: spec.variant ? undefined : spec.id });
+    }
+    return [...out.values()];
+}
+function layersObjectOf(id) {
+    if (id.startsWith('desk:')) { const rid = id.slice(5), r = sceneDesks?.records?.get(rid); return r ? (rid === sceneDesks.selected ? loadedModel : r.group) || null : null; }
+    if (id.startsWith('person:')) { const key = id.slice(7), list = (workspaceRoom?.people?.people || []).filter(o => o?.userData?.person && personLayerKey(o.userData.person) === key); return list.find(o => o.visible) || list[0] || null; }
+    return null;
+}
+// The scene side of the desks' visibility: vis = Map('desk:<id>' -> hidden). The featured (selected) desk is the live
+// model, so hiding it first makes another visible desk the featured one (the main desk if it can), and showing it again
+// makes it featured again. Every desk hidden: the live model goes too. Returns whether anything changed.
+function layersApplyDesks(vis) {
+    const sd = sceneDesks, liveObjects = () => [loadedModel, ...(workspaceAccessories?.objects?.() || [])].filter(Boolean);
+    if (!sd?.key || sd.key === 'product/default' || !sd.records?.size || !vis) {   // no room desks (another room, the product): nothing of ours stays hidden
+        let changed = false; for (const o of liveObjects()) if (setLayersHidden(o, false)) changed = true; layersDeskMoved = null; return changed;
+    }
+    const hidden = id => vis.get('desk:' + id) === true; let changed = false;
+    for (const [id, r] of sd.records) r.layersHidden = hidden(id);
+    if (layersDeskMoved && (!sd.records.has(layersDeskMoved.from) || sd.selected !== layersDeskMoved.to)) layersDeskMoved = null;   // the user chose another desk meanwhile
+    if (layersDeskMoved && !hidden(layersDeskMoved.from)) { const from = layersDeskMoved.from; layersDeskMoved = null; if (sd.select(from)) changed = true; }
+    if (sd.selected && hidden(sd.selected)) {
+        const next = sd.records.has('main') && !hidden('main') ? 'main' : [...sd.records.keys()].find(id => !hidden(id));
+        if (next) { const from = sd.selected; if (sd.select(next)) { layersDeskMoved = layersDeskMoved || { from, to: next }; if (layersDeskMoved.to !== next) layersDeskMoved.to = next; changed = true; } }
+    }
+    const live = !!sd.selected && hidden(sd.selected);
+    for (const [id, r] of sd.records) if (r.group && setLayersHidden(r.group, id === sd.selected ? live : hidden(id))) changed = true;
+    for (const o of liveObjects()) if (setLayersHidden(o, live)) changed = true;
+    return changed;
+}
+// The people: RoomPeople asks studioOut(spec) (the Studio only; a film never sets it). Re-placed when an answer changes.
+function layersApplyPeople(out) {
+    const p = workspaceRoom?.people; if (!p || typeof out !== 'function') return false;
+    p.studioOut = out;
+    const sig = (p.people || []).map(o => { try { return o?.userData?.person && out(o.userData.person) ? 1 : 0; } catch (_) { return 0; } }).join('');
+    if (sig === layersPeopleSig) return false;
+    layersPeopleSig = sig; p.placed = false; return true;
+}
+// A row's item framed from further back and above, looking down at it with its surroundings, inside the room
+// (studio-layers-model.mjs frameView). Falls back to the ordinary focus when there is no room.
+function layersFrame(obj) {
+    if (!camera || !controls || !obj) return;
+    const box = new THREE.Box3().setFromObject(obj); if (box.isEmpty()) return;
+    const c = box.getCenter(new THREE.Vector3()), sz = box.getSize(new THREE.Vector3()), room = workspaceRoom, fb = room?.floorBounds;
+    if (!fb || !room.root) { focusObjects([obj], { animate: true }); return; }
+    const unit = Math.abs(room.root.scale?.x || .001) * 1000;   // world units per metre (rooms are built in mm)
+    const ceilingMm = room.roomLayout?.height ?? 2700, ceiling = room.root.localToWorld(new THREE.Vector3(0, ceilingMm, 0)).y;
+    const v = frameView({ center: c.toArray(), size: sz.toArray(), from: camera.position.toArray(), fov: camera.fov, aspect: camera.aspect, unit,
+        room: { min: [fb.min.x, fb.min.z], max: [fb.max.x, fb.max.z], floor: fb.min.y, ceiling } });
+    controls.autoRotate = false;
+    startCameraTween(new THREE.Vector3(...v.position), new THREE.Vector3(...v.target));
+}
+// Save / Load project carry the hides (decision 8). Not only with the panel on: a project keeps its data whatever the switch.
+function layersForProject() { try { return projectLayers(localStorage.getItem(LAYERS_KEY)); } catch (_) { return {}; } }
+function layersFromProject(saved) {
+    if (window.__ERGO_PRESENTATION__) return;
+    try { const raw = projectLayersRestore(saved); if (raw !== null && raw !== localStorage.getItem(LAYERS_KEY)) localStorage.setItem(LAYERS_KEY, raw); }
+    catch (error) { console.warn('[layers] project', error); }
+}
 // hydrateSceneAssets: keep an old-deleted object (it becomes a hidden "old delete" row) instead of removing it.
 function studioLayersKeeps(obj) { try { return !!studioLayers?.keeps(obj); } catch (_) { return false; } }
 // Delete in Rearrange: stock items are hidden everywhere instead; returns true (all handled), the entries still to
@@ -352,13 +424,15 @@ function initStudioLayers(beforeEl) {
             THREE, scene: () => scene, roomKey: layersRoomKey, phase: () => measuredRoomProfile()?.mode || '*', size: () => currentConfig?.size || '*', phaseLabels: layersPhaseLabels,
             items: layersItems, assetState: () => sceneAssetState(),
             readRaw: key => localStorage.getItem(key), writeRaw: (key, value) => localStorage.setItem(key, value),
-            transaction: entry => transaction(entry), notify: text => notifyUser(text),
+            transaction: entry => transaction(entry),
+            // defer: shown after everything else the action does (its toast is the last one); ms: how long it stays
+            notify: (text, { ms, defer } = {}) => { if (defer) setTimeout(() => notifyUser(text, { ms }), 0); else notifyUser(text, { ms }); },
             selectObject: obj => {
                 if (roomRearrangeMode !== 'items' || !roomInteractions) return false;
                 const entry = roomInteractions.entries?.find(e => e.obj === obj || e.objects?.includes(obj));
                 if (entry) roomInteractions.select(entry); return !!entry;
             },
-            frame: obj => focusObjects([obj], { animate: true }),
+            frame: layersFrame,
             afterVisibility: () => {
                 try { roomInteractions?.bind(workspaceRoom); } catch (error) { console.warn('[layers] interactions', error); }
                 if (workspaceRoom?.people) workspaceRoom.people.placed = false;   // someone on a chair hidden or shown again is placed anew
@@ -370,7 +444,8 @@ function initStudioLayers(beforeEl) {
             },
             deleteAdded: id => { const entry = sceneAssetRegistry.get(id); if (entry?.isCustom) deleteSceneAssetEntries([entry]); },
             setPickable: layersPickable,
-            signature: () => `${layersRoomKey()}|${measuredRoomProfile()?.mode || '*'}|${currentConfig?.size}|${sceneAssetRegistry.size}`,
+            signature: () => `${layersRoomKey()}|${measuredRoomProfile()?.mode || '*'}|${currentConfig?.size}|${sceneAssetRegistry.size}|${sceneDesks?.selected}|${[...(sceneDesks?.records || [])].map(([id, r]) => id + ':' + (r.group?.uuid || '')).join(',')}|${workspaceRoom?.people?.people?.length || 0}`,
+            desks: layersDesks, people: layersPeople, applyDesks: layersApplyDesks, applyPeople: layersApplyPeople, objectOf: layersObjectOf,
             // the dock's {open, width}, kept in the shell's record ('ergoflex.ui.shell.v1'); read directly before the shell mounts
             prefs: () => { try { return (window.ErgoStudioShell?.mounted ? window.ErgoStudioShell.prefs : JSON.parse(localStorage.getItem('ergoflex.ui.shell.v1') || 'null'))?.layers || {}; } catch (_) { return {}; } },
             savePrefs: v => window.ErgoStudioShell?.setPref?.('layers', v)
@@ -4710,6 +4785,7 @@ function serializeProject() {
                 studyMode,
                 studyLayout: selectedStudyLayout().id,
                 sceneAssets: serializeSceneAssetStates(),
+                sceneLayers: layersForProject(),   // show / hide (ergoflex.sceneLayers.v1), every room
                 groovePositions: normalizeGroovePresets(groovePresets),
                 sceneAssetLabels: [...partLabels].filter(([editorId]) => editorId.startsWith('scene:')),
                 sceneAssetLocked: [...lockedParts].filter(editorId => editorId.startsWith('scene:')),
@@ -5080,6 +5156,7 @@ function applyProjectPresentation(project) {
     applySurfaceFinish();
     clearSceneAssetRegistration();
     restoreSceneAssetStates(presentation.sceneAssets || {});
+    layersFromProject(presentation.sceneLayers);   // a project saved before Layers leaves the stored hides as they are
     for (const [editorId, label] of presentation.sceneAssetLabels || []) partLabels.set(editorId, label);
     for (const editorId of presentation.sceneAssetLocked || []) lockedParts.add(editorId);
     persistSceneAssetStates();
@@ -10973,7 +11050,10 @@ function syncRoomPeople() {
 // One of the room's other desks as it is now, for the person working at it (room-people.mjs): where it stands and how
 // high it is, in room millimetres and inches. The desk the film or the customer is moving is the featured one.
 function roomPeopleStation(id) {
-    const r = sceneDesks?.records.get('station-' + id); if (!r?.state?.pose) return null;
+    const r = sceneDesks?.records.get('station-' + id);
+    // Layers (Studio only): a hidden desk, or one deleted from the room, has nobody at it (room-people.mjs: no layout fallback)
+    if (LAYERS_ON && sceneDesks?.key && (r?.layersHidden || (!r && sceneDesks.roomData?.deleted?.includes?.('station-' + id)))) return { gone: true };
+    if (!r?.state?.pose) return null;
     if (r === sceneDesks.active) return { height: liftToHeight(currentLift), pose: sceneDesks.ctx.readLive(r).pose };
     const g = r.group; return { height: r.state.height, pose: g ? { x: g.position.x, z: g.position.z, yaw: g.rotation.y } : r.state.pose };
 }
@@ -11619,10 +11699,12 @@ function mountSceneTour() {
     document.addEventListener('change', () => requestAnimationFrame(() => sceneTour.sync()));
     workspaceRoom?.ready?.then(() => sceneTour.sync());
 }
-function notifyUser(message) {
-    const toast = document.getElementById('studio-toast');
+// opts.ms: how long the toast stays (default 4.5 s). Callers that pass anything else as a second argument are unaffected.
+function notifyUser(message, opts) {
+    const ms = opts && typeof opts === 'object' ? opts.ms : undefined, toast = document.getElementById('studio-toast');
+    if (!toast) return;
     toast.textContent = message; toast.hidden = false;
-    clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.hidden = true, 4500);
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.hidden = true, Number.isFinite(ms) && ms > 0 ? ms : 4500);
 }
 function persistCart() {
     try { localStorage.setItem(CART_KEY, encodeStoredJSON(cartItems)); }
@@ -12673,6 +12755,9 @@ window.ErgoFlex = {
     startCurrentGroove,
     saveCurrentGroovePosition, resetCurrentGroovePosition,
     get sceneDesks(){return sceneDesks;},
+    // Layers: the panel's test API (rows, hide / show in a scope) for tests/studio-layers-desks-e2e.cjs; null when Layers is off
+    get layers(){return studioLayers?.test||null;},
+    undoEdit: () => performUndo(), redoEdit: () => performRedo(),
     get savedGroovePositions() { return normalizeGroovePresets(groovePresets); },
     get itemGizmo() { return itemGizmo; },
     copySelectedWorkspaceItems, pasteSelectedWorkspaceItems,

@@ -69,3 +69,9 @@
   .layers-row, .layers-main { min-height: 52px; }
   .layers-filters { flex-wrap: nowrap; overflow-x: auto; }
 }
+
+/* Phase 4: a desk's user nested under its desk row; an eye that belongs to the desk (the user is hidden with it). */
+.layers-nest { list-style: none; }
+.layers-nest > ul { margin: 0 0 0 26px; padding: 0; border-left: 2px solid var(--ui-border, #e3e7e3); }
+.layers-row.is-nested { min-height: 40px; border-top: 0; }
+.layers-eye[aria-disabled="true"] { opacity: .35; cursor: not-allowed; }

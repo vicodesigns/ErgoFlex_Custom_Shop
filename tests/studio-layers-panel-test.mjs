@@ -170,5 +170,5 @@ const legacy=ids=>Object.fromEntries(ids.map(i=>[entryKey(HS,i),{kind:i.includes
   assert.equal(setLayersHidden(null,true),false);
   ok('setLayersHidden: sticky, and restores whatever was there');
 }
-assert.deepEqual(GROUPS.map(g=>g.id),['furniture','wall','fixture','light','desk-item','added','missing']);
+assert.deepEqual(GROUPS.map(g=>g.id),['desk','person','furniture','wall','fixture','light','desk-item','added','missing']);   // (desks and people: phase 4)
 console.log(`Studio layers panel: ${n} checks pass.`);

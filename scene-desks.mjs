@@ -126,6 +126,7 @@ export class SceneDesks {
     }
     select(id){
         const next=this.records.get(id);if(!next||id===this.selected)return !!next;
+        if(next.layersHidden){this.ctx.status?.((next.state?.name||'That desk')+' is hidden here: Layers -> its eye brings it back.');return false;}   // (studio.js layersApplyDesks)
         this.objects.endDrag();this.objects.selected=null;this.stop();this.ctx.halt();this.capture();
         const old=this.active;
         if(old){this.ensureRig(old);this.ctx.restyle?.(old);old.rig.updatePose(old.state.height,old.state.tilt);this.place(old);old.rig.setBodyVisible(true);}
@@ -250,7 +251,7 @@ export class SceneDesks {
     play(all=false){
         if(this.recording||this.playing)return false;
         this.ctx.halt();this.capture();const phase=this.ctx.phase(),runs=[];
-        for(const r of all?this.records.values():[this.active].filter(Boolean)){
+        for(const r of all?[...this.records.values()].filter(r=>!r.layersHidden):[this.active].filter(Boolean)){   // (a desk hidden with Layers sits a group Groove out)
             const setting=r.state.phases[phase];if(!setting)continue;
             const frames=setting.recording;
             const first=frames?.length?{pose:{x:frames[0].x,z:frames[0].z,yaw:frames[0].yaw},height:frames[0].height,tilt:frames[0].tilt}:setting;

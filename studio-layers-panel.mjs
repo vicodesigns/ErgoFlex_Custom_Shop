@@ -5,11 +5,12 @@
 // film renders): studio.js does not create it there, so the film sees exactly what it saw before.
 // This module imports no three.js (ctx.THREE) and touches no DOM until mount(), so node can import it.
 import { LAYERS_KEY, GROUPS, buildRows, filterRows, groupRows, hiddenCount, scopeChoices, defaultScope, cellFor, settingLine, changeFor, applySide,
-  showAllChange, SHOW_ALL_CONFIRM, showAllConfirmText, deletePlan, deleteToast, visibilityOf, hiddenAtLine, entryKind, kindOf, listable } from './studio-layers-model.mjs';
+  showAllChange, SHOW_ALL_CONFIRM, showAllConfirmText, deletePlan, deleteToastPlan, visibilityOf, entryKind, kindOf, listable,
+  sheetNext, createPress, scopeSheetModel, rowTapPlan, deskVisibility, personOut, eyeLocked } from './studio-layers-model.mjs';
 import { cleanLayers, migrateRoom, entryKey, validRoom } from './scene-layers.mjs';
 
 const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const ICON = { furniture: '▣', wall: '▤', fixture: '◫', light: '✦', 'desk-item': '▭', added: '＋', missing: '?' };
+const ICON = { desk: '▬', person: '☺', furniture: '▣', wall: '▤', fixture: '◫', light: '✦', 'desk-item': '▭', added: '＋', missing: '?' };
 const EYE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>';
 const EYE_OFF = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" fill="none" stroke="currentColor" stroke-width="2" opacity=".5"/><path d="M4 4l16 16" stroke="currentColor" stroke-width="2.4"/></svg>';
 const PHONE = '(max-width: 760px)';
@@ -39,13 +40,17 @@ export const isLayersHidden = obj => restore.has(obj);
 //       setPickable(obj, on), signature(), prefs(), savePrefs(v)}
 export function createStudioLayers(ctx) {
   let layers = {}, scope = null, scopeFor = null, query = '', filter = 'all', anywhere = false, open = false, root = null, button = null, sheet = null;
-  let aliases = new Map(), lastSig = '', timer = null, closed = new Set();
-  const say = (t) => { try { ctx.notify?.(t); } catch {} };
+  let sheetModel = null, aliases = new Map(), lastSig = '', timer = null, closed = new Set(), ui = { open: false, peek: false };
+  const isPhone = () => { try { return matchMedia(PHONE).matches; } catch { return false; } };
+  const say = (t, opts) => { try { ctx.notify?.(t, opts); } catch {} };
   const room = () => { try { return ctx.roomKey?.() || null; } catch { return null; } };
   const phase = () => { try { return ctx.phase?.() || '*'; } catch { return '*'; } };
   const size = () => { try { return ctx.size?.() || '*'; } catch { return '*'; } };
   const labels = () => { try { return ctx.phaseLabels?.() || {}; } catch { return {}; } };
   const items = () => { try { return (ctx.items?.() || []).filter(listable); } catch (error) { console.warn('[layers] items', error); return []; } };
+  // phase 4: the room's ErgoFlex desks and its cast at this hour (studio.js layersDesks / layersPeople)
+  const desks = () => { try { return ctx.desks?.() || []; } catch (error) { console.warn('[layers] desks', error); return []; } };
+  const people = () => { try { return ctx.people?.() || []; } catch (error) { console.warn('[layers] people', error); return []; } };
   const read = () => { try { return cleanLayers(ctx.readRaw?.(LAYERS_KEY)); } catch { return {}; } };
   // The stored layers with the current room's old deletes migrated in (memory only until an edit writes them).
   function fresh() {
@@ -58,13 +63,13 @@ export function createStudioLayers(ctx) {
   }
   function currentScope() { const p = phase(); if (scopeFor !== room() + '|' + p) { scope = defaultScope(p); scopeFor = room() + '|' + p; } return scope; }
   function model() {
-    const r = room(), built = buildRows({ room: r, items: items(), layers, phase: phase(), size: size() });
+    const r = room(), built = buildRows({ room: r, items: items(), layers, phase: phase(), size: size(), desks: desks(), people: people() });
     aliases = built.aliases; return built.rows;
   }
   // ---- the scene: hide / show every listed item for the current time and size
   // force: after a room load (old deletes were hidden during hydration; the room's picking and people follow now).
   function apply(force = false) {
-    const r = room(); if (!r) return;
+    const r = room(); if (!r) { try { ctx.applyDesks?.(new Map()); } catch {} return; }
     const list = items(), vis = visibilityOf({ room: r, items: list, layers, phase: phase(), size: size() });
     let changed = force && list.some(d => vis.get(d.id) === true);
     for (const d of list) {
@@ -72,6 +77,9 @@ export function createStudioLayers(ctx) {
       if (flipped) changed = true;
       if (flipped || hide) try { ctx.setPickable?.(d.obj, !hide); } catch {}
     }
+    // desks (with what rides on them) and the people at them: studio.js does the scene side
+    try { if (ctx.applyDesks?.(deskVisibility({ room: r, desks: desks(), layers, phase: phase(), size: size() }))) changed = true; } catch (error) { console.warn('[layers] desks', error); }
+    try { if (ctx.applyPeople?.(personOut({ room: r, layers, phase: phase(), size: size() }))) changed = true; } catch (error) { console.warn('[layers] people', error); }
     if (changed) try { ctx.afterVisibility?.(); } catch (error) { console.warn('[layers] after', error); }
     paintBadge(list);
   }
@@ -84,7 +92,11 @@ export function createStudioLayers(ctx) {
     if (text) say(text);
     return true;
   }
-  const metaOf = id => { const d = items().find(x => x.id === id); return d ? { kind: entryKind(kindOf(d)), label: d.name, propId: d.propId || undefined, at: d.at } : {}; };
+  const metaOf = id => {
+    if (id.startsWith('desk:')) { const d = desks().find(x => x.id === id); return { kind: 'desk', label: d?.name }; }
+    if (id.startsWith('person:')) { const p = people().find(x => x.id === id); return { kind: 'person', label: p?.name, model: p?.model }; }
+    const d = items().find(x => x.id === id); return d ? { kind: entryKind(kindOf(d)), label: d.name, propId: d.propId || undefined, at: d.at } : {};
+  };
   const entryIds = () => { const m = new Map(); for (const [from, to] of aliases) if (to) m.set(to, from); return m; };
   function setHidden(ids, hidden, cell = cellFor(currentScope(), phase(), size()), text = null) {
     layers = fresh(); model();
@@ -105,7 +117,7 @@ export function createStudioLayers(ctx) {
         const plan = deletePlan((entries || []).map(e => ({ id: e?.editorId, custom: !!e?.isCustom, person: !!e?.obj?.userData?.person, entry: e })));
         if (!plan.hide.length || !validRoom(room())) return null;   // no room key: the old delete, never a silent no-op
         setHidden(plan.hide, true, '*/*');
-        say(deleteToast(plan.hide.length, plan.remove.length));
+        const toast = deleteToastPlan(plan.hide.length, plan.remove.length); say(toast.text, { ms: toast.ms, defer: toast.defer });   // deferred: the last toast, 7 s
         return plan.remove.length ? plan.remove.map(x => x.entry) : true;
       } catch (error) { console.warn('[layers] delete', error); return null; }
     },
@@ -117,8 +129,17 @@ export function createStudioLayers(ctx) {
       catch (error) { console.warn('[layers] undo', error); }
     },
     mount,
+    // For tests (an agent's browser check: tests/studio-layers-desks-e2e.cjs, through window.ErgoFlex.layers): the rows,
+    // and hide / show one item in a scope ('cell' | 'time' | 'size' | 'all'). Same paths as the eye (one undo step each).
+    test: {
+      rows: () => model().map(r => ({ id: r.id, name: r.name, group: r.group, hidden: r.hidden, chip: r.chip, nestedIn: r.nestedIn || null })),
+      hide: (id, scope = 'cell') => setHidden([id], true, cellFor(scope, phase(), size())),
+      show: (id, scope = 'cell') => setHidden([id], false, cellFor(scope, phase(), size())),
+      apply: () => apply(), stored: () => read()
+    },
     get open() { return open; },
-    toggle: show => setOpen(show ?? !open)
+    toggle: show => setOpen(show ?? !open),
+    get ui() { return { ...ui }; }
   };
   const sig = () => { try { return ctx.signature?.() || ''; } catch { return ''; } };
   // A new time of day, desk size, room or a later-loaded item: show the right things (cheap check, twice a second).
@@ -131,7 +152,7 @@ export function createStudioLayers(ctx) {
       button.setAttribute('aria-controls', 'layers-panel'); button.setAttribute('aria-expanded', 'false');
       button.title = 'Layers: everything in this room, with an eye to hide or show it (H hides the selection, Alt+H shows all)';
       button.innerHTML = '<span>Layers</span><b class="layers-badge" hidden></b>';
-      button.onclick = () => setOpen(!open);
+      button.onclick = () => uiEvent('button');
       if (beforeEl?.parentNode) beforeEl.before(button); else document.getElementById('scene-controls')?.append(button);
       root = document.createElement('aside'); root.id = 'layers-panel'; root.className = 'layers-dock'; root.hidden = true; root.setAttribute('aria-label', 'Layers');
       const pref = (() => { try { return ctx.prefs?.() || {}; } catch { return {}; } })();
@@ -139,32 +160,36 @@ export function createStudioLayers(ctx) {
       document.body.append(root);
       sheet = document.createElement('dialog'); sheet.id = 'layers-scope-sheet'; sheet.className = 'layers-sheet'; document.body.append(sheet);
       wire(); watch();
-      if (pref.open === true && !matchMedia(PHONE).matches) setOpen(true, false);
+      if (pref.open === true) uiEvent('restore', false);
     } catch (error) { console.warn('[layers] the panel could not be built; the Studio works without it', error); }
     return api;
   }
-  function setOpen(show, remember = true) {
-    open = !!show; if (!root) return;
-    root.hidden = !open; button?.setAttribute('aria-expanded', String(open)); button?.classList.toggle('active', open);
-    document.documentElement.classList.toggle('layers-docked', open && !matchMedia(PHONE).matches);
-    if (open) { root.classList.remove('peek'); layers = fresh(); render(); }
-    if (remember) try { ctx.savePrefs?.({ ...(ctx.prefs?.() || {}), open }); } catch {}
+  // The dock / phone sheet state is studio-layers-model.mjs sheetNext; this only paints it.
+  function uiEvent(event, remember = true) {
+    const was = ui.open; ui = sheetNext(ui, event, { phone: isPhone() }); open = ui.open; if (!root) return;
+    root.hidden = !open; root.classList.toggle('peek', ui.peek); button?.setAttribute('aria-expanded', String(open)); button?.classList.toggle('active', open);
+    document.documentElement.classList.toggle('layers-docked', open && !isPhone());
+    if (open && !was) { layers = fresh(); render(); }
+    if (remember && was !== open) try { ctx.savePrefs?.({ ...(ctx.prefs?.() || {}), open }); } catch {}
   }
+  function setOpen(show, remember = true) { if (!!show !== ui.open) uiEvent(show ? 'button' : 'close', remember); }
   function paintBadge(list) {
     if (!button) return;
-    const n = hiddenCount(buildRows({ room: room(), items: list || items(), layers, phase: phase(), size: size() }).rows), b = button.querySelector('.layers-badge');
+    const n = hiddenCount(buildRows({ room: room(), items: list || items(), layers, phase: phase(), size: size(), desks: desks(), people: people() }).rows), b = button.querySelector('.layers-badge');
     if (b) { b.hidden = !n; b.textContent = String(n); }
     button.setAttribute('aria-label', n ? `Layers, ${n} hidden in this setting` : 'Layers');
   }
   function rowHtml(r) {
-    const name = esc(r.name), eyeTitle = r.hidden ? `Show ${name} (right-click or long-press: where)` : `Hide ${name} (right-click or long-press: where)`;
-    return `<li class="layers-row${r.hidden ? ' is-hidden' : ''}${r.missing ? ' is-missing' : ''}" data-ly-id="${esc(r.id)}">
+    const name = esc(r.name), locked = eyeLocked(r);
+    const eyeTitle = locked ? `${name} is hidden with its desk: show the desk to bring them back` : r.kind === 'desk' ? `${r.hidden ? 'Show' : 'Hide'} ${name}, what is on it and the person at it (right-click or long-press: where)` : r.hidden ? `Show ${name} (right-click or long-press: where)` : `Hide ${name} (right-click or long-press: where)`;
+    const nested = (r.nested || []).map(rowHtml).join('');
+    return `<li class="layers-row${r.hidden ? ' is-hidden' : ''}${r.missing ? ' is-missing' : ''}${r.nestedIn ? ' is-nested' : ''}" data-ly-id="${esc(r.id)}">
       <button type="button" class="layers-main" data-ly-select title="${r.missing ? 'Not in the room' : r.hidden ? 'Hidden: click to see where it is' : 'Select and show it'}">
         <span class="layers-kind" aria-hidden="true">${ICON[r.group] || '•'}</span>
         <span class="layers-text"><span class="layers-name">${name}</span>${r.chip ? `<span class="layers-chip">${esc(r.chip)}</span>` : ''}${r.secondary ? `<small>${esc(r.secondary)}</small>` : ''}</span>
       </button>
       ${r.custom ? `<button type="button" class="layers-trash" data-ly-trash title="Delete ${name} (it was added; Ctrl+Z brings it back)" aria-label="Delete ${name}">🗑</button>` : ''}
-      <button type="button" class="layers-eye" data-ly-eye aria-pressed="${!r.hidden}" title="${eyeTitle}" aria-label="${r.hidden ? 'Show' : 'Hide'} ${name}">${r.hidden ? EYE_OFF : EYE}</button></li>`;
+      <button type="button" class="layers-eye" data-ly-eye aria-pressed="${!r.hidden}" ${locked ? 'aria-disabled="true"' : ''} title="${eyeTitle}" aria-label="${r.hidden ? 'Show' : 'Hide'} ${name}">${r.hidden ? EYE_OFF : EYE}</button></li>${nested ? `<li class="layers-nest"><ul>${nested}</ul></li>` : ''}`;
   }
   function render() {
     if (!root || !open) { paintBadge(); return; }
@@ -179,21 +204,24 @@ export function createStudioLayers(ctx) {
         <button type="button" data-ly-showall ${hiddenCount(rows) ? '' : 'disabled'}>Show all hidden</button></div>
       <div class="layers-list">${groups.length ? groups.map(g => `<details class="layers-group" data-ly-group="${g.id}" ${closed.has(g.id) ? '' : 'open'}><summary><span>${esc(g.title)} <small>${g.count}${g.hidden ? ` · ${g.hidden} hidden` : ''}</small></span>${g.id === 'missing' ? '' : `<button type="button" class="layers-eye" data-ly-group-eye="${g.id}" aria-pressed="${g.hidden < g.count}" title="${g.hidden === g.count ? 'Show' : 'Hide'} every ${esc(g.title.toLowerCase())} in this list" aria-label="${g.hidden === g.count ? 'Show' : 'Hide'} all ${esc(g.title)}">${g.hidden === g.count ? EYE_OFF : EYE}</button>`}</summary><ul>${g.rows.map(rowHtml).join('')}</ul></details>`).join('')
         : `<p class="layers-empty">${rows.length ? 'Nothing matches.' : 'This room has no items to list yet.'}</p>`}</div>
-      <p class="layers-foot">Desks and people get their own rows in the next step. H hides the selection here; Alt+H shows all hidden here.</p>`;
+      <p class="layers-foot">A desk's eye hides the desk, what is on it and the person at it. H hides the selection here; Alt+H shows all hidden here.</p>`;
     if (focus) { const el = root.querySelector(`[name="${focus}"]`); el?.focus({ preventScroll: true }); if (el?.type === 'search') el.setSelectionRange(el.value.length, el.value.length); }
   }
   const rowOf = id => model().find(r => r.id === id);
-  const objOf = id => items().find(d => d.id === id)?.obj || null;
+  const objOf = id => { if (/^(desk|person):/.test(id)) { try { return ctx.objectOf?.(id) || null; } catch { return null; } } return items().find(d => d.id === id)?.obj || null; };
   function toggleRow(id) {
     const r = rowOf(id); if (!r) return;
+    if (eyeLocked(r)) { say(`${r.name} is hidden with ${r.secondary.replace(/^at /, '').replace(/ · .*$/, '')}: show the desk to bring them back.`); return; }
     setHidden([r.id], !r.hidden, cellFor(currentScope(), phase(), size()), `${r.hidden ? 'Showing' : 'Hid'} ${r.name}${r.hidden ? '' : ` (${scopeLabel()})`}. Ctrl+Z undoes.`);
   }
   const scopeLabel = () => scopeChoices(phase(), size(), labels()[phase()]).find(c => c.scope === currentScope())?.label.toLowerCase() || '';
   function selectRow(id) {
-    const r = rowOf(id), obj = objOf(id); if (!r || !obj) return;
-    if (r.hidden) { ghost(obj); try { ctx.frame?.(obj); } catch {} say(`${r.name} is hidden here: the outline shows where it is.`); }
-    else { try { ctx.selectObject?.(obj); ctx.frame?.(obj); } catch (error) { console.warn('[layers] select', error); } }
-    if (matchMedia(PHONE).matches) root.classList.add('peek');
+    const r = rowOf(id), obj = objOf(id), plan = rowTapPlan(r, { phone: isPhone() });
+    if (plan.toast) say(plan.toast);
+    if (!obj) return;
+    if (plan.ghost) ghost(obj);
+    try { if (plan.select) ctx.selectObject?.(obj); if (plan.frame) ctx.frame?.(obj); } catch (error) { console.warn('[layers] select', error); }
+    if (plan.peek) uiEvent('row', false);
   }
   // 1.5 s outline of a hidden item (a box: its own meshes stay hidden).
   function ghost(obj) {
@@ -217,40 +245,39 @@ export function createStudioLayers(ctx) {
   // The per-row scope sheet (right-click / long-press on the eye or the row).
   function openSheet(id) {
     const r = rowOf(id); if (!r || !sheet) return;
-    const e = layers[entryKey(room(), r.entryId)] || null, p = phase(), s = size();
-    sheet.innerHTML = `<form method="dialog"><h3>${r.hidden ? 'Show or hide' : 'Hide'} ${esc(r.name)}</h3><p>${esc(hiddenAtLine(e, labels()))}</p>
-      ${scopeChoices(p, s, labels()[p]).map(c => `<button type="button" data-ly-sheet-hide="${c.scope}">Hide: ${esc(c.label)}</button>`).join('')}
-      <button type="button" data-ly-sheet-show="here">Show here (${esc(settingLine(labels()[p], p, s))})</button>
-      <button type="button" data-ly-sheet-show="all">Show everywhere</button>
+    const m = scopeSheetModel({ row: r, entry: layers[entryKey(room(), r.entryId)] || null, phase: phase(), size: size(), labels: labels() });
+    sheet.innerHTML = `<form method="dialog"><h3>${esc(m.title)}</h3><p>${esc(m.line)}</p>
+      ${m.buttons.map((x, i) => `<button type="button" data-ly-sheet="${i}">${esc(x.label)}</button>`).join('')}
       <button value="close" class="layers-sheet-close">Close</button></form>`;
-    sheet.dataset.id = id;
+    sheet.dataset.id = id; sheetModel = m;
     try { sheet.showModal(); } catch { sheet.setAttribute('open', ''); }
   }
   function wire() {
-    let press = null;
+    // long-press (touch): studio-layers-model.mjs createPress decides; a timer asks it once the delay is over
+    const press = createPress(); let pressTimer = null;
     root.addEventListener('click', event => {
       const t = event.target;
-      if (t.closest('[data-ly-close]')) { setOpen(false); return; }
-      if (t.closest('[data-ly-handle]') && matchMedia(PHONE).matches) { root.classList.toggle('peek'); root.classList.remove('full'); return; }
+      if (press.swallowClick() && t.closest('[data-ly-id]')) { event.preventDefault(); return; }
+      if (t.closest('[data-ly-close]')) { uiEvent('close'); return; }
+      if (t.closest('[data-ly-handle]') && isPhone()) { uiEvent('handle', false); return; }
       const f = t.closest('[data-ly-filter]'); if (f) { filter = f.dataset.lyFilter; render(); return; }
       if (t.closest('[data-ly-showall]')) { showAll(); return; }
       const ge = t.closest('[data-ly-group-eye]'); if (ge) { event.preventDefault(); groupEye(ge.dataset.lyGroupEye); return; }
       const row = t.closest('[data-ly-id]'); if (!row) return;
-      if (press?.fired) { press = null; return; }
       const id = row.dataset.lyId;
       if (t.closest('[data-ly-eye]')) { toggleRow(id); return; }
       if (t.closest('[data-ly-trash]')) { try { ctx.deleteAdded?.(id); } catch (error) { console.warn('[layers] delete', error); } layers = fresh(); render(); return; }
       if (t.closest('[data-ly-select]')) selectRow(id);
     });
     root.addEventListener('contextmenu', event => { const row = event.target.closest('[data-ly-id]'); if (!row) return; event.preventDefault(); openSheet(row.dataset.lyId); });
-    // long-press (touch): 500 ms without moving opens the scope sheet; the click that follows is swallowed
     root.addEventListener('pointerdown', event => {
       const row = event.target.closest('[data-ly-id]'); if (!row || event.pointerType === 'mouse') return;
-      const at = { x: event.clientX, y: event.clientY };
-      press = { at, fired: false, timer: setTimeout(() => { if (press) { press.fired = true; openSheet(row.dataset.lyId); } }, 500) };
+      press.down(event.clientX, event.clientY, performance.now(), row.dataset.lyId); clearTimeout(pressTimer);
+      pressTimer = setTimeout(() => { const id = press.id; if (press.tick(performance.now()) === 'long' && id) openSheet(id); }, 520);
     });
-    const cancel = event => { if (!press || press.fired) return; if (event.type === 'pointermove' && Math.hypot(event.clientX - press.at.x, event.clientY - press.at.y) < 10) return; clearTimeout(press.timer); press = null; };
-    root.addEventListener('pointermove', cancel); root.addEventListener('pointerup', event => { if (press && !press.fired) { clearTimeout(press.timer); press = null; } }); root.addEventListener('pointercancel', cancel);
+    root.addEventListener('pointermove', event => { if (press.move(event.clientX, event.clientY) === 'cancelled') clearTimeout(pressTimer); });
+    root.addEventListener('pointerup', () => { clearTimeout(pressTimer); press.up(performance.now()); });
+    root.addEventListener('pointercancel', () => { clearTimeout(pressTimer); press.cancel(); });
     root.addEventListener('input', event => {
       if (event.target.name === 'ly-search') { query = event.target.value; render(); }
     });
@@ -268,11 +295,9 @@ export function createStudioLayers(ctx) {
       addEventListener('pointermove', move); addEventListener('pointerup', up);
     });
     sheet.addEventListener('click', event => {
-      const id = sheet.dataset.id, h = event.target.closest('[data-ly-sheet-hide]'), s = event.target.closest('[data-ly-sheet-show]');
-      if (!h && !s) return;
-      const r = rowOf(id); sheet.close?.(); sheet.removeAttribute('open'); if (!r) return;
-      if (h) setHidden([r.id], true, cellFor(h.dataset.lySheetHide, phase(), size()), `Hid ${r.name}. Ctrl+Z undoes.`);
-      else setHidden([r.id], false, s.dataset.lySheetShow === 'all' ? '*/*' : cellFor('cell', phase(), size()), `Showing ${r.name}. Ctrl+Z undoes.`);
+      const el = event.target.closest('[data-ly-sheet]'); if (!el || !sheetModel) return;
+      const b = sheetModel.buttons[Number(el.dataset.lySheet)], r = rowOf(sheet.dataset.id); sheet.close?.(); sheet.removeAttribute('open'); if (!b || !r) return;
+      setHidden([r.id], b.kind === 'hide', b.cell, `${b.kind === 'hide' ? 'Hid' : 'Showing'} ${r.name}. Ctrl+Z undoes.`);
     });
     // H hides the selection in the current scope; Alt+H shows all hidden here.
     document.addEventListener('keydown', event => {

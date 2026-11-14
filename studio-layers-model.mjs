@@ -18,6 +18,8 @@ export function layersSwitch(search, stored) {
 
 // ---- kinds and groups
 export const GROUPS = [
+  { id: 'desk', title: 'Desks' },
+  { id: 'person', title: 'People' },
   { id: 'furniture', title: 'Furniture' },
   { id: 'wall', title: 'Wall pieces' },
   { id: 'fixture', title: 'Fixtures' },
@@ -87,8 +89,11 @@ export function hiddenAtText(entry, labels = {}) {
 // items: [{id, name, propId, role, category, anchor, onWall, custom, person, at}] (the room's scene assets as built);
 // layers: the whole layers value; room: the layers room key. Returns {rows, aliases: Map(entry id -> item id)}.
 // A row: {id, entryId, name, group, kind, hidden, anywhere, chip, legacy, custom, secondary, missing?}
-export function buildRows({ room, items = [], layers = {}, phase, size }) {
+// desks: [{id:'desk:<record id>', name, featured}] (the room's ErgoFlex desks); people: [{id:'person:<key>', name, desk:
+// 'desk:<record id>' | null}] (the room's cast at this hour; a desk user follows its desk). Phase 4.
+export function buildRows({ room, items = [], layers = {}, phase, size, desks = [], people = [] }) {
   const entries = validRoom(room) ? roomEntries(layers, room) : new Map(), byId = new Map(), aliases = new Map(), rows = [];
+  rows.push(...deskRows({ entries, desks, people, phase, size }));
   const list = items.filter(listable);
   for (const d of list) byId.set(d.id, d);
   const candidates = list.filter(d => indexKeyed(d.id)).map(d => ({ id: d.id, propId: d.propId || propIdOf(d.id), at: d.at }));
@@ -119,6 +124,57 @@ export function buildRows({ room, items = [], layers = {}, phase, size }) {
   }
   return { rows, aliases };
 }
+// ---- desks and people (phase 4)
+const SAFE_KEY = /[^a-z0-9_-]+/g;
+// The layers key of a person of the cast: their placement key (a posture variant is the same person).
+export function personLayerKey(spec) {
+  const k = String(spec?.variant || spec?.key || spec?.id || '').toLowerCase().replace(/^people-/, '').replace(SAFE_KEY, '-').replace(/^[^a-z0-9]+/, '').slice(0, 48);
+  return k || null;
+}
+// "Mia (sit type)"
+export function personName(key) {
+  const [first, ...rest] = String(key || '').split('-').filter(Boolean);
+  if (!first) return 'Person';
+  return first[0].toUpperCase() + first.slice(1) + (rest.length ? ` (${rest.join(' ')})` : '');
+}
+// The desk a person follows: a station's user its station desk; the featured desk's user desk:main.
+export const personDesk = spec => spec?.station ? 'desk:station-' + spec.station : spec?.desk ? 'desk:main' : null;
+function deskRows({ entries, desks, people, phase, size }) {
+  const out = [], deskName = new Map(desks.map(d => [d.id, d.name]));
+  for (const d of desks) {
+    if (!validItem(d.id)) continue;
+    const e = entries.get(d.id) || null, users = people.filter(p => p.desk === d.id).map(p => p.name);
+    out.push({ id: d.id, entryId: d.id, name: d.name || labelOfId(d.id), group: 'desk', kind: 'desk', hidden: hiddenAt(e, phase, size), anywhere: hiddenAnywhere(e),
+      chip: chipOf(e, phase, size), legacy: e?.legacy || null, custom: false, featured: !!d.featured,
+      secondary: [d.featured ? 'the featured desk' : '', users.length ? `${users.join(', ')} ${users.length === 1 ? 'works' : 'work'} here` : ''].filter(Boolean).join(' · ') });
+  }
+  for (const p of people) {
+    if (!validItem(p.id)) continue;
+    const e = entries.get(p.id) || null, own = hiddenAt(e, phase, size), desk = p.desk && deskName.has(p.desk) ? p.desk : null;
+    const byDesk = !!desk && hiddenAt(entries.get(desk) || null, phase, size);
+    out.push({ id: p.id, entryId: p.id, name: p.name || personName(p.id.slice(7)), group: 'person', kind: 'person', hidden: own || byDesk, own, byDesk, nestedIn: desk,
+      anywhere: hiddenAnywhere(e), chip: chipOf(e, phase, size), legacy: null, custom: false,
+      secondary: desk ? `at ${deskName.get(desk) || labelOfId(desk)}${byDesk ? ' · hidden with its desk' : ' · follows its desk'}` : '' });
+  }
+  return out;
+}
+// Which desks are hidden now: Map('desk:<id>' -> true/false)
+export function deskVisibility({ room, desks = [], layers = {}, phase, size }) {
+  const entries = validRoom(room) ? roomEntries(layers, room) : new Map(), out = new Map();
+  for (const d of desks) out.set(d.id, hiddenAt(entries.get(d.id) || null, phase, size));
+  return out;
+}
+// Whether a person of the cast is out now (their own hide, or their desk's). For RoomPeople in the Studio only.
+export function personOut({ room, layers = {}, phase, size }) {
+  const entries = validRoom(room) ? roomEntries(layers, room) : new Map();
+  return spec => {
+    const key = personLayerKey(spec); if (key && hiddenAt(entries.get('person:' + key) || null, phase, size)) return true;
+    const desk = personDesk(spec); return !!desk && hiddenAt(entries.get(desk) || null, phase, size);
+  };
+}
+// A signature of what personOut answers for a cast (to re-place people only when it changes).
+export const peopleOutSignature = (cast, out) => (cast || []).map(s => (out(s) ? '1' : '0')).join('');
+
 function secondaryOf(d, e, aliased) {
   const parts = [];
   if (d.role && d.role !== 'room') parts.push('on the desk');
@@ -135,8 +191,12 @@ export function filterRows(rows, { query = '', filter = 'all', anywhere = false 
     && (filter !== 'hidden' || (anywhere ? r.anywhere : r.hidden)));
 }
 export function groupRows(rows) {
-  const byName = (a, b) => a.name.localeCompare(b.name);
-  return GROUPS.map(g => { const list = rows.filter(r => r.group === g.id).sort(byName); return { ...g, rows: list, count: list.length, hidden: list.filter(r => r.hidden).length }; }).filter(g => g.count);
+  const byName = (a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0) || a.name.localeCompare(b.name);
+  // A desk's user is nested under its desk row (desk.nested), not listed again under People.
+  const groups = GROUPS.map(g => { const list = rows.filter(r => r.group === g.id && !(g.id === 'person' && r.nestedIn)).sort(byName); return { ...g, rows: list, count: list.length, hidden: list.filter(r => r.hidden).length }; });
+  const desk = groups.find(g => g.id === 'desk');
+  if (desk) desk.rows = desk.rows.map(d => ({ ...d, nested: rows.filter(r => r.nestedIn === d.id).sort(byName) }));
+  return groups.filter(g => g.count);
 }
 export const hiddenCount = rows => rows.filter(r => r.hidden && !r.missing).length;
 
@@ -194,4 +254,89 @@ export function visibilityOf({ room, items = [], layers = {}, phase, size }) {
 }
 // A short status line for the badge / tooltip.
 export const badgeText = n => n ? `${n} hidden` : '';
+
+// ---- the Delete toast: shown after everything the delete itself does (a deferred toast is the last one), and long
+// enough to read. (Seen on the desk: the hide happened but no toast was noticed; the Studio's toast lasts 4.5 s.)
+export const TOAST_MS = 7000;
+export const deleteToastPlan = (hidden, deleted) => ({ text: deleteToast(hidden, deleted), ms: TOAST_MS, defer: true });
+
+// ---- framing a row's item: from further back and above, looking down at it with its surroundings in view, never
+// outside the room's walls or above its ceiling. World units; unit = world units per metre.
+//   center, size: the item's box centre and size; from: the camera's position now (keeps the side the viewer is on);
+//   room: {min:[x, z], max:[x, z], floor, ceiling} or null; fov: vertical degrees; aspect.
+// Returns {position:[x, y, z], target:[x, y, z], distance}.
+export function frameView({ center, size = [0, 0, 0], from = null, room = null, fov = 35, aspect = 16 / 9, unit = 1 }) {
+  const u = unit > 0 ? unit : 1, [cx, cy, cz] = center, r = .5 * Math.hypot(...size);
+  let R = Math.max(r * 2.5, 1.2 * u);                                              // the item and about a metre around it
+  if (room) R = Math.min(R, Math.max(r * 1.2, .5 * Math.hypot(room.max[0] - room.min[0], room.max[1] - room.min[1])));
+  const half = Math.min(fov, 2 * Math.atan(Math.tan(fov * Math.PI / 360) * aspect) * 180 / Math.PI) * Math.PI / 360;
+  const distance = R / Math.sin(half), el = 40 * Math.PI / 180;                     // 40 degrees down onto the item
+  let hx = from ? from[0] - cx : 0, hz = from ? from[2] - cz : 1; const hl = Math.hypot(hx, hz) || 1; hx /= hl; hz /= hl;
+  if (!from || Math.hypot(from[0] - cx, from[2] - cz) < 1e-6) { hx = 0; hz = 1; }
+  let x = cx + hx * distance * Math.cos(el), y = cy + distance * Math.sin(el), z = cz + hz * distance * Math.cos(el);
+  if (room) {
+    const floor = room.floor ?? 0, eye = floor + 2.0 * u;                           // above a standing person's eyes
+    const top = room.ceiling != null ? room.ceiling - .15 * u : Infinity, m = .25 * u;
+    y = Math.max(y, Math.min(eye, top)); y = Math.min(y, top);
+    const clamp = (v, a, b) => a > b ? (a + b) / 2 : Math.min(Math.max(v, a), b);
+    x = clamp(x, room.min[0] + m, room.max[0] - m); z = clamp(z, room.min[1] + m, room.max[1] - m);
+  }
+  return { position: [x, y, z], target: [cx, cy, cz], distance: Math.hypot(x - cx, y - cy, z - cz) };
+}
+
+// ---- the phone sheet and the dock: {open, peek} after an event. phone: the bottom sheet (<= 760 px).
+//   'button' (the tools-row Layers button: toggles), 'close', 'handle' (phone: peek <-> half), 'row' (a row tapped:
+//   on a phone the sheet drops to a peek so the framed item can be seen), 'restore' (a stored open on a desktop)
+export function sheetNext(state, event, { phone = false } = {}) {
+  const s = { open: !!state?.open, peek: !!state?.peek };
+  if (event === 'button') return s.open ? { open: false, peek: false } : { open: true, peek: false };
+  if (event === 'close') return { open: false, peek: false };
+  if (event === 'restore') return phone ? s : { open: true, peek: false };
+  if (event === 'handle') return phone && s.open ? { open: true, peek: !s.peek } : s;
+  if (event === 'row') return phone && s.open ? { open: true, peek: true } : s;
+  return s;
+}
+// ---- long-press (touch): held LONG_PRESS_MS without moving more than LONG_PRESS_SLOP px opens the scope sheet; the
+// click that follows a long-press is swallowed (it must not toggle the eye or select the row).
+export const LONG_PRESS_MS = 500, LONG_PRESS_SLOP = 10;
+export function createPress({ delay = LONG_PRESS_MS, slop = LONG_PRESS_SLOP } = {}) {
+  let p = null, swallow = false;
+  return {
+    down(x, y, t, id) { p = { x, y, t, id, fired: false }; swallow = false; },
+    move(x, y) { if (p && !p.fired && Math.hypot(x - p.x, y - p.y) >= slop) p = null; return p ? 'held' : 'cancelled'; },
+    // at time t: 'long' once (open the sheet for p.id), else null
+    tick(t) { if (p && !p.fired && t - p.t >= delay) { p.fired = true; swallow = true; return 'long'; } return null; },
+    up(t) { const was = p; p = null; if (!was) return null; if (was.fired) return 'long-done'; return t - was.t >= delay ? 'long-late' : 'tap'; },
+    cancel() { p = null; },
+    // the click after a long-press: true once (swallow it)
+    swallowClick() { const s = swallow; swallow = false; return s; },
+    get id() { return p?.id ?? null; }
+  };
+}
+// ---- the scope sheet of one row: its title, the "Hidden at ..." line and its buttons
+export function scopeSheetModel({ row, entry = null, phase, size, labels = {} }) {
+  if (!row) return null;
+  const choices = scopeChoices(phase, size, labels[phase]);
+  return { id: row.id, title: `${row.hidden ? 'Show or hide' : 'Hide'} ${row.name}`, line: hiddenAtText(entry, labels),
+    buttons: [...choices.map(c => ({ kind: 'hide', scope: c.scope, label: `Hide: ${c.label}`, cell: cellFor(c.scope, phase, size) })),
+      { kind: 'show', where: 'here', label: `Show here (${settingLine(labels[phase], phase, size)})`, cell: cellFor('cell', phase, size) },
+      { kind: 'show', where: 'all', label: 'Show everywhere', cell: '*/*' }] };
+}
+// ---- a row tapped or clicked: what happens (a shown item is selected and framed; a hidden one gets the outline)
+// A person hidden only because their desk is (byDesk, not own): the eye is the desk's.
+export const eyeLocked = row => !!row?.byDesk && !row?.own;
+export function rowTapPlan(row, { phone = false } = {}) {
+  if (!row || row.missing) return { select: false, ghost: false, frame: false, peek: false, toast: row?.missing ? `${row.name} is not in the room any more.` : '' };
+  return { select: !row.hidden, ghost: row.hidden, frame: true, peek: phone, toast: row.hidden ? `${row.name} is hidden here: the outline shows where it is.` : '' };
+}
+
+// ---- Save / Load project (Vico's decision 8: projects carry the hides)
+// What a project stores: the cleaned layers value (every room), from the stored raw string.
+export const projectLayers = raw => cleanLayers(raw);
+// What a project load writes back: the raw string to store, or null to leave the stored hides as they are (a project
+// saved before Layers has no field: it loads unchanged). The same cleaning as everything else that reads the key.
+export function projectLayersRestore(saved) {
+  if (saved === undefined || saved === null) return null;
+  return JSON.stringify(cleanLayers(saved));
+}
 export { cellOf, hiddenAt, hiddenAtText as hiddenAtLine, splitKey };

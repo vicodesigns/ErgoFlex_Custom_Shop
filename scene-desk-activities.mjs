@@ -53,7 +53,7 @@ export class SceneDeskActivities {
             // feature, before furnishing fingerprints were included.
             homes[r.id][r.state.size].clearance||=clearance;
         }
-        const selected=[...m.records.values()].filter(r=>activity.kind!=='work'||homes[r.id]?.[r.state.size]);
+        const selected=[...m.records.values()].filter(r=>!r.layersHidden&&(activity.kind!=='work'||homes[r.id]?.[r.state.size]));   // (hidden with Layers: out of the routine)
         this.run={kind:activity.kind,title:activity.title,stage:'lift',desks:selected,index:0,elapsed:0,finished:0,blocked:[],postureBlocked:new Set(),homes:copy(homes)};
         m.playing={activity:true};m.autosave();this.say(activity.title+' · lifting safely before folding.');return true;
     }
