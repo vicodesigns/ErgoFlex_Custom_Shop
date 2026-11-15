@@ -41,7 +41,9 @@
 //                                                     (from where they stand, or along `path`) and stand at its end, in
 //                                                     the posture of `then` if given; they face along the path at both ends
 //                                                     (a walking posture, `walk`, starts and ends standing: walkStance;
-//                                                     `toes: 'stiff'`: the foot pitches whole, the toes not bending)
+//                                                     `toes: 'stiff'`: the foot pitches whole, the toes not bending;
+//                                                     `turn`: degrees they face at the end, else the `then` placement's
+//                                                     there, else along the last leg; `look` is honoured on the way)
 //   look: '<key>' | ['<key>', ...]                    whom they look at, whatever their posture (whichever of them is there,
 //                                                     in front within 9 m): a listener who turns to the talker
 //   act: { at: seconds, dur: seconds, by: [x, y, z] mm }  film only: an action at that moment of the chapter, for the
@@ -63,7 +65,7 @@
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
 import {updateSkinnedBounds} from './skinned-bounds.mjs';
-import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, solveWalk, solveTread, rollPlan, actedKey, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=roll-walk-20261115';
+import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, solveWalk, lookToward, solveTread, rollPlan, actedKey, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=roll-walk-20261115';
 // who looks at whom (RoomPeople.gazeOf)
 const GAZE_TALK = /^(stand-talk|sit-chat|stand-drink|stand-mug|stand-coffee|sit-coffee)$/, GAZE_IDLE = /^(stand-wait|wheel-roll|wheel-watch|cane-stand|white-cane|sit-listen)$/;
 const GAZE_DESK = /^stand-phone-watch$/;      // watching the featured desk go (the workshop film): the head follows it
@@ -2234,7 +2236,7 @@ export class RoomPeople {
             // (the model drawn is the walking posture's, skinned to standing: its soles, a few millimetres off the floor
             // that way, are measured once and the footprints lowered by as much)
             if (life.plan) {
-                const plan = options => walkPlan(life.rig, life.key, (walk.then && life.rig.key(walk.then)) || life.key, path, { pace: walk.pace, step: walk.step ? walk.step / 1000 : undefined, toes: walk.toes, ...options });
+                const endYaw = this.walkEnd(walk, path), plan = options => walkPlan(life.rig, life.key, (walk.then && life.rig.key(walk.then)) || life.key, path, { pace: walk.pace, step: walk.step ? walk.step / 1000 : undefined, toes: walk.toes, endYaw, ...options });
                 const { sole, heels } = this.soleOf(object, life, life.plan); life.plan = plan({ sole, heels });
                 life.plan = plan({ sole, heels, land: this.landOf(object, life, life.plan) });
             }
@@ -2243,7 +2245,19 @@ export class RoomPeople {
         const g = life.plan.at(time === null ? 0 : Math.max(0, time - (walk.start || 0))), root = solveWalk(life.rig, life.plan, g);
         drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold);
         object.position.x = root.x * 1000; object.position.z = root.z * 1000; object.rotation.y = root.yaw; life.live = true;
+        // (a walker with `look` looks at them: on the way a little, standing at the end as anyone standing does)
+        if ((this.current(object) || object.userData.person).look) {
+            const gaze = this.gazeOf(object, life), total = life.plan.steps.length, on = THREE.MathUtils.smoothstep(g, 0, .8) * (1 - THREE.MathUtils.smoothstep(g, total - .9, total));
+            if (gaze) { lookToward(life.rig, gaze.at, gaze.amount * (1 - .45 * on)); drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold); }
+        }
         if (g > 0 && g < life.plan.steps.length) this.dirty = true;
+    }
+    // Which way a walker faces at the end of the walk: `walk.turn` (degrees), or the turn of the placement that takes
+    // over there (the `then` posture at the path's end, within 60 mm); otherwise along the last leg (walkPlan).
+    walkEnd(walk, path) {
+        if (Number.isFinite(walk.turn)) return THREE.MathUtils.degToRad(walk.turn);
+        const end = path[path.length - 1], next = walk.then && (this.filter?.cast || []).find(c => c.id === walk.then && Array.isArray(c.at) && Number.isFinite(c.turn) && Math.hypot(c.at[0] / 1000 - end[0], c.at[1] / 1000 - end[1]) < .06);
+        return next ? THREE.MathUtils.degToRad(next.turn) : undefined;
     }
     // An action at a moment of the film (a placement's `act`: { at: chapter seconds, dur: seconds, by: [x, y, z] mm in
     // the room }): room-people-motion.mjs SCREEN_ACTS. The movement is turned into the model's frame; a tap finds the
@@ -2263,7 +2277,11 @@ export class RoomPeople {
     // model has them: tools/people/build_people.py) turn with it.
     rollAlong(object, life, roll, time, hold) {
         const sign = JSON.stringify(roll) + '|' + JSON.stringify(object.userData.person.at || null);
-        if (life.rollSign !== sign) { const path = this.rollPath(object, roll); life.rollSign = sign; life.roll = path ? rollPlan(path, this.rollOptions(roll)) : null; }
+        if (life.rollSign !== sign) {
+            const path = this.rollPath(object, roll); life.rollSign = sign; life.roll = path ? rollPlan(path, this.rollOptions(roll)) : null;
+            // (a corner whose legs are too short for the radius asked turns tighter than asked: the route's data to fix)
+            for (const c of life.roll?.tight || []) console.warn(`[people] ${this.keyOf(object.userData.person)}: roll corner ${c.corner} turns on ${Math.round(c.fits * 1000)} mm, not the ${Math.round(c.radius * 1000)} mm asked (a leg next to it is too short)`);
+        }
         if (!life.roll) return;
         const t = time === null ? 0 : Math.max(0, time - (roll.start || 0)), r = life.roll.at(t), gaze = this.gazeOf(object, life);
         if (!(life.roll.length > 1e-3)) r.yaw = THREE.MathUtils.degToRad(object.userData.person.turn || 0);      // (no path to face along: the way it was placed)

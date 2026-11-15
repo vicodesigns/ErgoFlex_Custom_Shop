@@ -463,6 +463,20 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
             assert.ok(Math.min(...trunk) > 0 && Math.max(...trunk) < 6, `${who}: the trunk ${Math.min(...trunk).toFixed(1)}-${Math.max(...trunk).toFixed(1)} deg forward`);
         }
     }
+    // the end of a walk faces exactly the way asked (endYaw: the next placement's turn), or along the last leg however
+    // short it is (S9's reviewer: Noah's 0.2 m last leg left him 47 degrees off, then a snap at the change)
+    {
+        const rig = rigOf('noah'), key = rig.key('people-noah-stand-wait'), route = [[-2.681, -1.248], [-2.818, -.914], [-2.930, -1.080]], last = Math.atan2(-.112, -.166);
+        const wrapped = a => Math.atan2(Math.sin(a), Math.cos(a));
+        const p1 = walkPlan(rig, key, key, route, { pace: 2.2 }), r1 = { ...solveWalk(rig, p1, p1.steps.length) };
+        assert.ok(Math.abs(wrapped(r1.yaw - last)) < 1e-6, `facing along the short last leg at the end (${(r1.yaw * 180 / Math.PI).toFixed(1)} deg)`);
+        const p2 = walkPlan(rig, key, key, route, { pace: 2.2, endYaw: THREE.MathUtils.degToRad(-146) }), r2 = { ...solveWalk(rig, p2, p2.steps.length) };
+        assert.ok(Math.abs(wrapped(r2.yaw - THREE.MathUtils.degToRad(-146))) < 1e-6, 'facing the way asked at the end');
+        const p3 = walkPlan(rig, key, key, [[0, 0], [0, 1.5], [.15, 1.6]], { endYaw: Math.PI / 2 }), r3 = { ...solveWalk(rig, p3, 0) };
+        assert.ok(Math.abs(r3.yaw) < 1e-6, 'and along the first leg at the start');
+        let last3 = null; for (let g = 0; g <= p3.steps.length; g += 1 / 60) { const y = solveWalk(rig, p3, g).yaw; if (last3 !== null) assert.ok(Math.abs(wrapped(y - last3)) < .06, 'turning smoothly to it'); last3 = y; }
+        assert.ok(p3.prints.every(list => Math.abs(wrapped(list[list.length - 1].yaw - Math.PI / 2)) < 1e-6), 'the feet end turned that way too');
+    }
     // the drawn soles (room-people.mjs soleOf / landOf): the footprints lower by the sole's height, the ankle at a
     // landing lower by the heel's
     const rig = rigOf('zoe'), key = rig.key('people-zoe-walk'), a = walkPlan(rig, key, key, [[0, 0], [0, 3]]), b = walkPlan(rig, key, key, [[0, 0], [0, 3]], { sole: [.004, .011], land: [.005, .006] });
@@ -708,7 +722,17 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
         const walk = await run([{ key: 'walks', id: 'people-zoe-walk', at: [0, 0], turn: 90, walk: { to: [1400, 0], start: 0, then: 'people-zoe-stand-wait' } }], true);
         const xs = []; for (const time of [0, .4, .8, 1.2, 3]) { walk.seats.update({ ...desk, time }); xs.push(walk.seats.byKey('walks').position.x); }
         assert.ok(xs[0] < 5 && xs.every((x, i) => !i || x >= xs[i - 1] - 1e-6) && xs[2] > 150 && Math.abs(xs[4] - 1400) < 5, 'a film\'s walker in the walking posture walks their path: ' + xs.map(x => Math.round(x)).join(', '));
-        walk.seats.dispose(); delete ROOM_PEOPLE.seattest;
+        walk.seats.dispose();
+        // the walk ends turned as the placement that takes over there stands (the `then` posture at the path's end), and
+        // a walker with `look` looks at them (S9's reviewer: Noah ended 47 degrees off and looked away)
+        const head = run => run.seats.byKey('walks').userData.personRig.bones.get('head').getWorldQuaternion(new THREE.Quaternion());
+        const walker = more => ({ key: 'walks', id: 'people-zoe-walk', at: [0, 0], turn: 90, walk: { to: [1400, 0], start: 0, then: 'people-zoe-stand-wait' }, ...more });
+        const friend = { key: 'friend', id: 'people-ben-stand-wait', at: [2600, -400], turn: -60 }, then = { key: 'then', id: 'people-zoe-stand-wait', at: [1400, 0], turn: 120 };
+        const plain = await run([walker({}), then, friend], true); plain.seats.update({ ...desk, time: 5 });
+        assert.ok(Math.abs(plain.seats.byKey('walks').rotation.y - THREE.MathUtils.degToRad(120)) < 1e-3, 'the walk ends facing as the next placement stands: ' + (plain.seats.byKey('walks').rotation.y * 180 / Math.PI).toFixed(1));
+        const looks = await run([walker({ look: 'friend' }), then, friend], true); looks.seats.update({ ...desk, time: 5 });
+        assert.ok(1 - Math.abs(head(plain).dot(head(looks))) > 1e-3, 'a walker with `look` turns the head to them');
+        plain.seats.dispose(); looks.seats.dispose(); delete ROOM_PEOPLE.seattest;
     }
 }
 // ---- the working cut: whoever steps out from the desk (`fromDesk`) is up before the step and has their hands back on

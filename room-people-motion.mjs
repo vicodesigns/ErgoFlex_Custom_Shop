@@ -1012,7 +1012,8 @@ export function solveChange(rig, from, to, w) {
 //              default: the toes stay flat on the floor while the heel is up) | 'stiff' (the foot pitches whole),
 //              sole: [left, right] (metres the drawn soles stand above the floor in the posture: below),
 //              heels: [[y, z], [y, z]] (the drawn heels' first contact from the ankles), land: [left, right] (metres
-//              the drawn heels stand off the floor as a foot lands: below) }
+//              the drawn heels stand off the floor as a foot lands: below), startYaw / endYaw (radians, about y, 0
+//              facing +z: the way they face where the walk starts and ends; along the first and last leg when not given) }
 // Returns { length, seconds, prints, at(seconds) -> g } where g counts steps (the gait clock).
 // A walk starts and ends standing: a built walking posture (`walk`, mid-stride, feet pitched, hips low: the film's
 // walkers are cast in it for its model, a backpack on some) is taken as the character's standing-by posture
@@ -1032,7 +1033,13 @@ export function walkPlan(rig, from, to, path, options = {}) {
     // where the path is and which way it heads at a distance along it (yaw about y: 0 faces +z)
     const along = s => { const leg = legs.find(l => s <= l.s0 + l.d) || legs[legs.length - 1], t = leg.d > 0 ? clamp01((s - leg.s0) / leg.d) : 0; return { x: lerp(leg.a.x, leg.b.x, t), z: lerp(leg.a.y, leg.b.y, t), yaw: Math.atan2(leg.b.x - leg.a.x, leg.b.y - leg.a.y) }; };
     // the heading turns over 0.35 m either side of a corner, not at once
-    const heading = s => { const a = along(Math.max(0, s - .35)), b = along(Math.min(length, s + .35)); return Math.hypot(b.x - a.x, b.z - a.z) > 1e-6 ? Math.atan2(b.x - a.x, b.z - a.z) : a.yaw; };
+    const curve = s => { const a = along(Math.max(0, s - .35)), b = along(Math.min(length, s + .35)); return Math.hypot(b.x - a.x, b.z - a.z) > 1e-6 ? Math.atan2(b.x - a.x, b.z - a.z) : a.yaw; };
+    // (at the two ends exactly the way asked: options.startYaw / endYaw, radians, or along the first and the last leg,
+    // reached over up to 0.6 m (half the path at most): a short last leg, or a placement that stands turned from the
+    // path, is faced in full when the walk ends, not snapped to at the next change)
+    const wrap = a => Math.atan2(Math.sin(a), Math.cos(a)), yawOf = l => l ? Math.atan2(l.b.x - l.a.x, l.b.y - l.a.y) : 0;
+    const startYaw = Number.isFinite(options.startYaw) ? options.startYaw : yawOf(legs.find(l => l.d > 1e-6)), endYaw = Number.isFinite(options.endYaw) ? options.endYaw : yawOf([...legs].reverse().find(l => l.d > 1e-6)), span = Math.max(1e-3, Math.min(.6, length / 2));
+    const heading = s => { let h = curve(s); h += wrap(endYaw - h) * ss(length - span, length, s); h += wrap(startYaw - h) * (1 - ss(0, span, s)); return h; };
     const leg = rig.offset[L.leg[1]].length() + rig.offset[L.leg[2]].length(), want = options.step || leg * .64, strides = Math.max(1, Math.round(length / want)), step = length / strides;
     // footprints: where each ankle is while that foot is on the floor. Both feet start in `from` and end in `to`.
     // (options.sole: [left, right] metres the drawn model's soles are above the floor with the feet flat where the
@@ -1082,7 +1089,7 @@ const kneeSpan = (a, b, deg) => Math.sqrt(a * a + b * b + 2 * a * b * Math.cos(T
 export function solveWalk(rig, plan, g) {
     const { steps, from, to } = plan, b = rig.b, total = steps.length, s = plan.travel(g), at = plan.along(s), yaw = plan.heading(s), c = Math.cos(yaw), sn = Math.sin(yaw);
     const blend = ss(0, 1, g / total), walking = ss(0, .8, g) * (1 - ss(total - .9, total, g));      // how much of the walk's own carriage is in the pose
-    if (walking > 0) faceOf(rig);      // (before the pose: reading a posture loads it)
+    faceOf(rig);      // (before the pose: reading a posture loads it; a walker who looks at someone, room-people.mjs, needs it after)
     for (let i = 0; i < rig.n; i++) rig.lq[i].slerpQuaternions(from.q[i], to.q[i], blend);
     rig.lp[b.Root].lerpVectors(from.root, to.root, blend);
     const phase = g - Math.floor(g), odd = Math.floor(g) % 2 === 0 ? 1 : -1;      // odd: +1 while the left foot steps
@@ -1202,13 +1209,14 @@ export function rollPlan(path, options = {}) {
     if (P.length < 2) { const p = P[0] || { x: 0, z: 0 }; P.push({ x: p.x, z: p.z + 1e-6 }); }
     // the path as a dense polyline: straight runs, and circular arcs where it turns (tangent lengths at most half of
     // either leg, so neighbouring corners never overlap)
-    const dense = [P[0]], seg = (a, b) => { const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / .01)); for (let i = 1; i <= n; i++) dense.push({ x: lerp(a.x, b.x, i / n), z: lerp(a.z, b.z, i / n) }); };
+    const tight = [], dense = [P[0]], seg = (a, b) => { const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / .01)); for (let i = 1; i <= n; i++) dense.push({ x: lerp(a.x, b.x, i / n), z: lerp(a.z, b.z, i / n) }); };
     let from = P[0];
     for (let i = 1; i < P.length - 1; i++) {
         const a = P[i - 1], c = P[i], b = P[i + 1], l1 = Math.hypot(c.x - a.x, c.z - a.z), l2 = Math.hypot(b.x - c.x, b.z - c.z);
         const d1 = { x: (c.x - a.x) / l1, z: (c.z - a.z) / l1 }, d2 = { x: (b.x - c.x) / l2, z: (b.z - c.z) / l2 }, cross = d1.x * d2.z - d1.z * d2.x, turn = Math.acos(THREE.MathUtils.clamp(d1.x * d2.x + d1.z * d2.z, -1, 1));
         if (turn < 1e-4 || turn > Math.PI - 1e-3) { seg(from, c); from = c; continue; }
         const tl = Math.min(R * Math.tan(turn / 2), l1 / 2, l2 / 2), r = tl / Math.tan(turn / 2), sign = cross < 0 ? -1 : 1;
+        if (r < R * .9) tight.push({ corner: i, radius: R, fits: r });      // (a leg too short for the radius asked: the turn is tighter; plan.tight)
         // (the centre is on the inside of the turn, r from where the arc leaves the first leg)
         const A = { x: c.x - d1.x * tl, z: c.z - d1.z * tl }, B = { x: c.x + d2.x * tl, z: c.z + d2.z * tl }, n = { x: -sign * d1.z, z: sign * d1.x }, C = { x: A.x + n.x * r, z: A.z + n.z * r };
         seg(from, A);
@@ -1257,7 +1265,7 @@ export function rollPlan(path, options = {}) {
     };
     const e = along(length);
     return {
-        length, seconds, speed: v, pushes, along,
+        length, seconds, speed: v, pushes, along, tight,
         end: { x: e.x, z: e.z, yaw: wrapAngle(e.heading) },
         at(t) { const s = travel(t), p = along(s); return { x: p.x, z: p.z, yaw: p.heading, s, v: speedAt(t), wheel: wheelAt(s), push: pushAt(s, t) }; }
     };
