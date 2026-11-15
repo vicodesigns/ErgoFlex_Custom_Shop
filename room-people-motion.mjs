@@ -482,7 +482,9 @@ export function solveStill(rig, key, input) {
     }
     // (a reader turning a page, and every other activity: ACTS below)
     rig.fk();
-    if (ACTS[pose]) { ACTS[pose](rig, key, time, seed, life); rig.fk(); }
+    // (along a film's path someone in a wheelchair pushes the rims in time with the wheels: input.roll, pushRims)
+    if (pose === 'wheel-roll' && input.roll) { pushRims(rig, key, input.roll, life); rig.fk(); }
+    else if (ACTS[pose]) { ACTS[pose](rig, key, time, seed, life); rig.fk(); }
 }
 
 // ---- what people do where they are --------------------------------------------------------------------------------
@@ -797,7 +799,8 @@ const ACTS = {
         bend(rig, Z, side * .24); feetStay(rig, key);
         for (const s of ['l', 'r']) { const hand = rig.side[s].arm[3]; handAt.copy(rig.wp[hand]); handAt.y += .035 * reach; handAt.x += (s === 'l' ? -1 : 1) * .012 * reach; armTo(rig, s, handAt, rig.wq[hand].clone()); }
     },
-    // in a wheelchair, rolling: the hands push on the rims and come back, the trunk leans into each push
+    // in a wheelchair, rolling: the hands push on the rims and come back, the trunk leans into each push (on the spot, in
+    // a rhythm of the person's own; along a film's path the pushes are the wheels' own: pushRims, from solveStill)
     'wheel-roll'(rig, key, time, seed, life) {
         const u = time * Math.PI * 2 / (2.6 + hash(191, seed) * .8) + hash(192, seed) * 6.28, push = (.5 + .5 * Math.sin(u)) * life;
         bend(rig, X, .06 * push);
@@ -1053,4 +1056,105 @@ export function solveWalk(rig, plan, g) {
     }
     rig.fk();
     rootAt.x = at.x; rootAt.z = at.z; rootAt.yaw = yaw; return rootAt;
+}
+
+// ---- rolling in a wheelchair along a path --------------------------------------------------------------------------
+// A roll is planned once (rollPlan) and then read at any second: pure, so a film frame depends only on its time. The
+// chair glides along the path with its corners rounded (arcs of up to `radius` metres, smaller where the legs are
+// short), sets off and comes to rest smoothly (its speed eases up and down over `ease` seconds), and faces along the
+// path at every point, so it ends facing along the last leg. The rear wheels turn with the distance each of them rolls
+// (the outer one further in a turn), and each comes to rest on a whole number of eighths of a turn: the spokes (16,
+// laced in pairs: tools/people/held.py wheelchair) then stand as in a model built at rest, so a still model of the
+// same chair can take over without the wheels jumping. The hands push on the handrims in time with the wheels: a push
+// every `stroke` metres, the hand moving with the rim while it grips it (pushRims).
+//   path: [[x, z], ...] metres in the room's floor plane, two points or more
+//   options: { speed: m/s (default .8), ease: seconds to set off and to stop (1.2), radius: corner radius m (.45),
+//              wheel: rear wheel radius m (.3), track: m from the chair's middle to each rear wheel (.27),
+//              stroke: m rolled per push (.75), coast: m rolled at the end without a new push (.6) }
+// Returns { length, seconds, end: { x, z, yaw }, at(seconds) -> { x, z, yaw, s, v, wheel: { l, r } (radians each has
+// turned, + rolling forward), push: { l: { turn, lift }, r, grip, bend } } } (yaw about y: 0 faces +z, as walkPlan;
+// grip: the hands are on the rims; bend: radians the trunk leans forward).
+export const WHEEL_AXLE = { y: .3, z: -.07, x: .27 };      // the rear axle in the model's frame (held.py wheelchair: r .3, axle .07 behind the pelvis)
+// The push: radians about the axle from the built grip (it takes hold PUSH_FROM behind it and lets go PUSH_ARC
+// further on), metres off the rim on the way back. The built postures have the arms nearly straight down to the rims,
+// so the trunk leans in with the hands (LEAN + LEAN_TURN per radian forward, while the chair is under way): measured on
+// Kai, the wrist then stays within its reach from 0.2 rad behind the grip to 0.4 ahead of it.
+const PUSH_FROM = -.2, PUSH_ARC = .6, PUSH_LIFT = .04, PUSH_OUT = .025, LEAN = .25, LEAN_TURN = .4, LEAN_MAX = .45;
+const wrapAngle = a => Math.atan2(Math.sin(a), Math.cos(a));
+export function rollPlan(path, options = {}) {
+    const speed0 = options.speed ?? .8, ease = Math.max(.05, options.ease ?? 1.2), R = options.radius ?? .45, wheelR = options.wheel ?? .3, track = options.track ?? WHEEL_AXLE.x;
+    const stroke = options.stroke ?? .75, coast = options.coast ?? .6;
+    const P = path.map(([x, z]) => ({ x, z })).filter((p, i, a) => i === 0 || Math.hypot(p.x - a[i - 1].x, p.z - a[i - 1].z) > 1e-6);
+    if (P.length < 2) { const p = P[0] || { x: 0, z: 0 }; P.push({ x: p.x, z: p.z + 1e-6 }); }
+    // the path as a dense polyline: straight runs, and circular arcs where it turns (tangent lengths at most half of
+    // either leg, so neighbouring corners never overlap)
+    const dense = [P[0]], seg = (a, b) => { const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / .01)); for (let i = 1; i <= n; i++) dense.push({ x: lerp(a.x, b.x, i / n), z: lerp(a.z, b.z, i / n) }); };
+    let from = P[0];
+    for (let i = 1; i < P.length - 1; i++) {
+        const a = P[i - 1], c = P[i], b = P[i + 1], l1 = Math.hypot(c.x - a.x, c.z - a.z), l2 = Math.hypot(b.x - c.x, b.z - c.z);
+        const d1 = { x: (c.x - a.x) / l1, z: (c.z - a.z) / l1 }, d2 = { x: (b.x - c.x) / l2, z: (b.z - c.z) / l2 }, cross = d1.x * d2.z - d1.z * d2.x, turn = Math.acos(THREE.MathUtils.clamp(d1.x * d2.x + d1.z * d2.z, -1, 1));
+        if (turn < 1e-4 || turn > Math.PI - 1e-3) { seg(from, c); from = c; continue; }
+        const tl = Math.min(R * Math.tan(turn / 2), l1 / 2, l2 / 2), r = tl / Math.tan(turn / 2), sign = cross < 0 ? -1 : 1;
+        // (the centre is on the inside of the turn, r from where the arc leaves the first leg)
+        const A = { x: c.x - d1.x * tl, z: c.z - d1.z * tl }, B = { x: c.x + d2.x * tl, z: c.z + d2.z * tl }, n = { x: -sign * d1.z, z: sign * d1.x }, C = { x: A.x + n.x * r, z: A.z + n.z * r };
+        seg(from, A);
+        const a0 = Math.atan2(A.z - C.z, A.x - C.x), da = wrapAngle(Math.atan2(B.z - C.z, B.x - C.x) - a0), steps = Math.max(2, Math.ceil(Math.abs(da) * r / .01));
+        for (let k = 1; k <= steps; k++) { const ang = a0 + da * k / steps; dense.push({ x: C.x + r * Math.cos(ang), z: C.z + r * Math.sin(ang) }); }
+        from = B;
+    }
+    seg(from, P[P.length - 1]);
+    // distance along it and the heading, unwrapped (a left turn adds: yaw grows as the way ahead swings to the left)
+    const S = new Float64Array(dense.length), H = new Float64Array(dense.length);
+    for (let i = 1; i < dense.length; i++) S[i] = S[i - 1] + Math.hypot(dense[i].x - dense[i - 1].x, dense[i].z - dense[i - 1].z);
+    for (let i = 0; i < dense.length; i++) { const a = dense[Math.max(0, i - 1)], b = dense[Math.min(dense.length - 1, i + 1)], h = Math.atan2(b.x - a.x, b.z - a.z); H[i] = i ? H[i - 1] + wrapAngle(h - H[i - 1]) : h; }
+    const length = S[S.length - 1];
+    const along = s => {
+        s = Math.min(length, Math.max(0, s)); let lo = 0, hi = S.length - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (S[m] <= s) lo = m; else hi = m; }
+        const f = S[hi] > S[lo] ? (s - S[lo]) / (S[hi] - S[lo]) : 0; return { x: lerp(dense[lo].x, dense[hi].x, f), z: lerp(dense[lo].z, dense[hi].z, f), heading: lerp(H[lo], H[hi], f) };
+    };
+    // the speed: up over `ease` seconds (smoothstep), steady, down over `ease` seconds; a short path never reaches `speed0`
+    const v = Math.min(speed0, length / ease), seconds = length / v + ease;
+    const ramp = u => u * u * u - u * u * u * u / 2;      // (the integral of smoothstep from 0 to u)
+    const travel = t => { t = Math.min(seconds, Math.max(0, t)); if (t < ease) return v * ease * ramp(t / ease); if (t > seconds - ease) return length - v * ease * ramp((seconds - t) / ease); return v * ease / 2 + v * (t - ease); };
+    const speedAt = t => t <= 0 || t >= seconds ? 0 : v * Math.min(ss(0, 1, t / ease), ss(0, 1, (seconds - t) / ease));
+    // the wheels: the distance each rolls, scaled (by under 2 % on a path of a few metres) so each ends on an eighth of a turn
+    const turned = (s, side) => { const d = along(s).heading - H[0]; return (s - (side === 'l' ? 1 : -1) * track * d) / wheelR; };
+    const eighth = Math.PI / 4, fit = side => { const end = turned(length, side); return Math.abs(end) > 1e-6 ? Math.max(1, Math.round(Math.abs(end) / eighth)) * eighth / Math.abs(end) : 1; };
+    const k = { l: fit('l'), r: fit('r') }, wheelAt = s => ({ l: turned(s, 'l') * k.l, r: turned(s, 'r') * k.r });
+    // the pushes: push n starts at n * stroke (none after length - coast); while gripping, the hand turns about the axle
+    // exactly as its wheel does (from where it took hold: the built grip for the first push, PUSH_FROM after); then it
+    // lets go and comes back over the rim to take hold again, or, after the last push, to the built grip
+    const grip = Math.min(.95, PUSH_ARC * wheelR / stroke), pushes = Math.max(1, Math.floor(Math.max(0, length - coast) / stroke) + 1);
+    const under = t => Math.min(1, speedAt(t) / Math.max(1e-6, v * .5));      // (how much the trunk takes part: none at rest)
+    const lean = (out, t) => { out.bend = under(t) * THREE.MathUtils.clamp(LEAN + LEAN_TURN * (out.l.turn + out.r.turn) / 2, 0, LEAN_MAX); return out; };
+    const pushAt = (s, t) => {
+        const n = Math.min(pushes - 1, Math.floor(s / stroke)), s0 = n * stroke, u = (s - s0) / stroke, w0 = wheelAt(s0), start = n === 0 ? 0 : PUSH_FROM, out = {};
+        if (u <= grip) { const w = wheelAt(s); for (const side of ['l', 'r']) out[side] = { turn: start + w[side] - w0[side], lift: 0 }; out.grip = true; return lean(out, t); }
+        const w1 = wheelAt(s0 + grip * stroke), last = n === pushes - 1, back = last ? ss(0, 1, (s - s0 - grip * stroke) / Math.max(.05, length - s0 - grip * stroke - .05)) : ss(0, 1, (u - grip) / (1 - grip));
+        for (const side of ['l', 'r']) { const end = start + w1[side] - w0[side], to = last ? 0 : PUSH_FROM; out[side] = { turn: lerp(end, to, back), lift: back < 1 ? Math.sin(Math.PI * back) : 0 }; }
+        out.grip = false; return lean(out, t);
+    };
+    const e = along(length);
+    return {
+        length, seconds, speed: v, pushes, along,
+        end: { x: e.x, z: e.z, yaw: wrapAngle(e.heading) },
+        at(t) { const s = travel(t), p = along(s); return { x: p.x, z: p.z, yaw: p.heading, s, v: speedAt(t), wheel: wheelAt(s), push: pushAt(s, t) }; }
+    };
+}
+// The hands on the handrims along a roll (input.roll of solveStill: a rollPlan(...).at() result): each wrist turns
+// about the rear axle by its push's angle from where the posture was built (on the rim), lifted off the rim on the way
+// back; the trunk leans into each push.
+const axleAt = V(), rimTurn = Q(), rimOut = V();
+function pushRims(rig, key, roll, life) {
+    const push = roll.push; if (!push) return;
+    bend(rig, X, push.bend * life);
+    for (const s of ['l', 'r']) {
+        const hand = rig.side[s].arm[3], p = push[s]; if (!p) continue;
+        axleAt.set(key.wp[hand].x, WHEEL_AXLE.y, WHEEL_AXLE.z);
+        rimTurn.setFromAxisAngle(X, p.turn * life);
+        handAt.copy(key.wp[hand]).sub(axleAt); rimOut.copy(handAt).normalize();
+        handAt.applyQuaternion(rimTurn).addScaledVector(rimOut.applyQuaternion(rimTurn), PUSH_LIFT * p.lift * life).add(axleAt);
+        handAt.x += (s === 'l' ? 1 : -1) * PUSH_OUT * p.lift * life;
+        armTo(rig, s, handAt, handQ.copy(rimTurn).multiply(key.wq[hand]));
+    }
 }

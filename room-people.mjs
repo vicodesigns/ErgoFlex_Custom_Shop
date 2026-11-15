@@ -42,6 +42,14 @@
 //                                                     the posture of `then` if given; they face along the path at both ends
 //   look: '<key>' | ['<key>', ...]                    whom they look at, whatever their posture (whichever of them is there,
 //                                                     in front within 9 m): a listener who turns to the talker
+//   roll: { path: [[x, z], ...] | to: [x, z], start: seconds, speed: m/s, ease: seconds, radius: mm }
+//                                                     film only, someone in a wheelchair (a 'wheel-roll' model): from `start`
+//                                                     they glide along the path (room-people-motion.mjs rollPlan: eased off
+//                                                     and to rest, corners rounded, the wheels turning with the distance and
+//                                                     the hands pushing the rims in time) and stay at its end, facing along
+//                                                     its last leg. A placement of the same character that takes over there
+//                                                     (its `when` starting as this one's ends) is a change of posture at
+//                                                     the path's end (a wheelchair user rolling in and docking at a desk)
 //   layout: '<layout id>'                             only in that room layout;  modes: [...] only in those dayparts
 //   key: '<name>'                                     a name for this placement when one model is used twice
 //   studio: true                                      only in the Studio: left out whenever a film casts the room (its chapters stay as they were)
@@ -50,11 +58,23 @@
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
 import {updateSkinnedBounds} from './skinned-bounds.mjs';
-import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, solveTread, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=workshop-20261113';
+import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, solveTread, rollPlan, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=roll-20261114';
 // who looks at whom (RoomPeople.gazeOf)
 const GAZE_TALK = /^(stand-talk|sit-chat|stand-drink|stand-mug|stand-coffee|sit-coffee)$/, GAZE_IDLE = /^(stand-wait|wheel-roll|wheel-watch|cane-stand|white-cane|sit-listen)$/;
 const GAZE_DESK = /^stand-phone-watch$/;      // watching the featured desk go (the workshop film): the head follows it
 const gazeDesk = new THREE.Vector3();
+// A wheelchair's rear wheels on the drawn model (bones wheel_l / wheel_r, their +y along the axle): turned `wheel.l` /
+// `wheel.r` radians from as built, rolling forward. A model without them is left as it is.
+const wheelAxis = new THREE.Vector3(), wheelTurn = new THREE.Quaternion();
+function turnWheels(drawn, wheel) {
+    if (!drawn || !wheel) return;
+    for (const side of ['l', 'r']) {
+        const bone = drawn.bones.get('wheel_' + side), rest = drawn.rest.get('wheel_' + side); if (!bone || !rest || !Number.isFinite(wheel[side])) continue;
+        // (+y of the bone is the axle; turned so that the top of the wheel goes forward, +z of the model, whichever way the axle points)
+        const out = wheelAxis.set(0, 1, 0).applyQuaternion(rest).x >= 0 ? 1 : -1;
+        bone.quaternion.copy(rest).multiply(wheelTurn.setFromAxisAngle(wheelAxis.set(0, 1, 0), out * wheel[side]));
+    }
+}
 const gazeM = new THREE.Matrix4(), gazeW = new THREE.Vector3();
 
 // How far in front of a desk's anchor the person's pelvis is (mm), for a keyboard on the pull-out tray, and how far
@@ -1852,6 +1872,7 @@ export class RoomPeople {
     // One person's life this frame (amount: 0..1, how much of it; 0 is the posture as built).
     moveOne(object, life, on, amount, film, time, dt, hold, turning) {
         if (object.userData.person.walk && on) { this.walkAlong(object, life, object.userData.person.walk, film ? time : null, hold); return; }
+        if (object.userData.person.roll && on) { this.rollAlong(object, life, object.userData.person.roll, film ? time : null, hold); return; }
         // someone cast in a walking posture walks (the Studio; a film gives its walkers a path of their own)
         if (this.strolls(object)) { if (!film && on && this.stroll(object, life, hold)) return; this.strollHome(object, life); }
         // walking on a treadmill's belt: the stride of a walk, on the spot
@@ -2001,9 +2022,23 @@ export class RoomPeople {
     // The person is then one model, whole, whose bones go from the first posture to the second (1.4 s, 2.4 s where
     // they get up or sit down), centred on the moment the windows meet. Things held appear and go half way.
     sameSpot(a, b) {
-        const turn = Math.abs(THREE.MathUtils.euclideanModulo(a.rotation.y - b.rotation.y + Math.PI, Math.PI * 2) - Math.PI);
-        return Math.hypot(a.position.x - b.position.x, a.position.z - b.position.z) < 220 && turn < .3;
+        // (someone who rolls along a path changes posture where it ends: rollEnd)
+        const pa = this.rollEnd(a) || { position: a.position, turn: a.rotation.y }, pb = { position: b.position, turn: b.rotation.y };
+        const turn = Math.abs(THREE.MathUtils.euclideanModulo(pa.turn - pb.turn + Math.PI, Math.PI * 2) - Math.PI);
+        return Math.hypot(pa.position.x - pb.position.x, pa.position.z - pb.position.z) < 220 && turn < .3;
     }
+    // Where a placement with `roll` ends up: the end of its path, facing along the last leg (room millimetres, radians), or null.
+    rollEnd(object) {
+        const roll = object.userData.person.roll; if (!roll) return null;
+        const path = this.rollPath(object, roll); if (!path) return null;
+        const end = rollPlan(path, this.rollOptions(roll)).end;
+        return { position: new THREE.Vector3(end.x * 1000, object.position.y, end.z * 1000), turn: end.yaw };
+    }
+    rollPath(object, roll) {
+        const at = object.userData.person.at, path = (roll.path || [roll.from || at || [object.position.x, object.position.z], roll.to]).map(p => Array.isArray(p) ? [p[0] / 1000, p[1] / 1000] : null);
+        return path.length > 1 && path.every(p => p && p.every(Number.isFinite)) ? path : null;
+    }
+    rollOptions(roll) { return { speed: roll.speed, ease: roll.ease, radius: Number.isFinite(roll.radius) ? roll.radius / 1000 : undefined }; }
     character(object) { return this.library.entry?.(object.userData.person.id)?.person?.character || null; }
     // Work left running in the background: rig() swaps a person for the rigged model and frees the old materials when it
     // lands. settled() resolves when none is under way (at most `limit` ms); the film's warm-up waits for it.
@@ -2053,6 +2088,7 @@ export class RoomPeople {
             const shown = (cut === null ? model === 'from' : w < cut) ? a : b, ease = THREE.MathUtils.smoothstep(w, 0, .72);
             shown.position.lerpVectors(pair.homeFrom.position, pair.homeTo.position, ease); shown.rotation.y = pair.homeFrom.turn + (pair.homeTo.turn - pair.homeFrom.turn) * ease;
             drawPose(pair.rig, shown.userData.personRig, 0, shown.userData.person.pose || null);
+            if (shown === a && pair.wheels) turnWheels(shown.userData.personRig, pair.wheels);
             a.userData.personChanging = b.userData.personChanging = true; pair.live = true; this.dirty = true; out.set(a, { shown }); out.set(b, { shown });
         }
         return out;
@@ -2065,10 +2101,14 @@ export class RoomPeople {
         const rig = this.rigsOf.get(who), a = find(change.from), b = find(change.to); if (!a || !b || !rig.has(change.from.id) || !rig.has(change.to.id)) return;
         const [ra, rb] = await Promise.all([this.rig(a), this.rig(b)]); if (!ra.userData.personRig || !rb.userData.personRig) return;
         const home = o => ({ position: o.position.clone(), turn: o.rotation.y });
-        Object.assign(change, { rig, keyFrom: rig.key(change.from.id), keyTo: rig.key(change.to.id), homeFrom: home(ra), homeTo: home(rb) });
+        // (someone who rolled there changes posture at the end of the path, not where they set off)
+        const end = this.rollEnd(ra), rolled = change.from.roll && this.rollPath(ra, change.from.roll);
+        if (rolled) { const plan = rollPlan(rolled, this.rollOptions(change.from.roll)); change.wheels = plan.at(plan.seconds).wheel; }      // (its wheels as they came to rest)
+        Object.assign(change, { rig, keyFrom: rig.key(change.from.id), keyTo: rig.key(change.to.id), homeFrom: end ? { position: end.position.clone(), turn: end.turn } : home(ra), homeTo: home(rb) });
         // someone who walks off after the change turns toward their path during it, not in one frame as the walk starts
         // (the walker is not placed on its path yet when the skeletons load: it still faces the way it was cast)
         const path = change.to.walk?.path; if (path?.length > 1) change.homeTo.turn = Math.atan2(path[1][0] - path[0][0], path[1][1] - path[0][1]);
+        const rolls = change.to.roll && this.rollPath(rb, change.to.roll); if (rolls) change.homeTo.turn = rollPlan(rolls, this.rollOptions(change.to.roll)).at(0).yaw;
         // a turn the short way round
         change.homeTo.turn = change.homeFrom.turn + THREE.MathUtils.euclideanModulo(change.homeTo.turn - change.homeFrom.turn + Math.PI, Math.PI * 2) - Math.PI;
         change.length = 1.4 + THREE.MathUtils.clamp(Math.abs(change.keyTo.wp[rig.b.pelvis].y - change.keyFrom.wp[rig.b.pelvis].y) / .3, 0, 1);
@@ -2095,6 +2135,20 @@ export class RoomPeople {
         drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold);
         object.position.x = root.x * 1000; object.position.z = root.z * 1000; object.rotation.y = root.yaw; life.live = true;
         if (g > 0 && g < life.plan.steps.length) this.dirty = true;
+    }
+    // A film's wheelchair user rolling along a path (a placement with `roll`): at its start until `start`, then rolling
+    // it, then at its end. Planned once per path; the wheels of the drawn model (bones wheel_l / wheel_r, where the
+    // model has them: tools/people/build_people.py) turn with it.
+    rollAlong(object, life, roll, time, hold) {
+        const sign = JSON.stringify(roll) + '|' + JSON.stringify(object.userData.person.at || null);
+        if (life.rollSign !== sign) { const path = this.rollPath(object, roll); life.rollSign = sign; life.roll = path ? rollPlan(path, this.rollOptions(roll)) : null; }
+        if (!life.roll) return;
+        const t = time === null ? 0 : Math.max(0, time - (roll.start || 0)), r = life.roll.at(t), gaze = this.gazeOf(object, life);
+        solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: 1, roll: r, look: gaze?.at, lookAmount: gaze?.amount });
+        drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold);
+        turnWheels(object.userData.personRig, r.wheel);
+        object.position.x = r.x * 1000; object.position.z = r.z * 1000; object.rotation.y = r.yaw; life.live = true;
+        if (t > 0 && t < life.roll.seconds) this.dirty = true;
     }
     get lively() { return this.enabled && this.people.some(o => o.visible && (o.userData.personLife?.live || o.userData.personDriven)); }
     async enliven(object) {
