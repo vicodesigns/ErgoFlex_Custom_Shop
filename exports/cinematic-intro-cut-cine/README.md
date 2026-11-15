@@ -331,3 +331,6 @@ stage's own models (skin against the floor, per frame), before -> after:
 - A planted foot off the floor: up to 156-163 mm -> at most 7-11 mm.
 - Walk timings: unchanged.
 Numbers: C:/work/cine-pics/s19/walk-numbers.json.
+
+## Director: editing a walker's or a roller's path (S31 M3)
+Select someone with a `walk` or `roll` in the People tab: their path is drawn on the stage floor (a chair's corners rounded as `rollPlan` rounds them, a walker's footprints from the stage's plan) with a handle per point; the green one is the start, their placement `at`. Drag a handle to move that point (Shift snaps to 5 cm), drag the line or a + to add a point, Ctrl+click the floor to add a last one; select a handle and press Delete (or right-click it, or Alt+click) to remove it. The person re-solves live; every step is one undo. The People tab's Walk / Roll path section has the fields (walk: start, pace, stride, end turn, then, toes; roll: start, speed, corner radius, ease) and the points in room mm; only the film's own fields are written. Moving the person with W moves `at` and the path's start together. Code: experience/people-path-edit.mjs (pure; tests/people-path-edit-test.mjs), experience/people-path-gizmo.mjs; smoke: tests/director-people-path-e2e.mjs.

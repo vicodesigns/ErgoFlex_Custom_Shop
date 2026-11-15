@@ -2,6 +2,7 @@ import {cleanPeople,effectivePeople,newKey,spanText,PARTS} from './people-edits.
 import {createPoseEditor} from './scene-pose-editor.mjs';
 import {stackRows} from './lane-rows.mjs';
 import {loadSavedPoses,storeSavedPoses,addSavedPose} from './saved-poses.mjs';
+import {createPathGizmo} from './people-path-gizmo.mjs';   // S31 M3 path editing (hook)
 // Director "People": who is in the chapter. The People tab lists the cast; click a person in the view (or a row) to
 // select them, then move / turn / scale them with the gizmo (W / E / T) or the fields, change who they are
 // (character) and what they are doing (posture), set the seconds they are in the room, duplicate or remove them, and
@@ -90,7 +91,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   const free=e=>!!e&&!e.desk&&!e.beside;
   function tick(){
     if(!tools)return;requestAnimationFrame(tick);
-    pose.tick();
+    pose.tick();paths.tick();   // S31 M3 hook
     if(pose.active()){tools.box.visible=false;if(tools.gizmo.object&&!tools.gizmo.dragging)tools.gizmo.detach();tools.gizmo.visible=tools.gizmo.enabled=false;return;}
     const {box,gizmo}=tools,e=sel&&entry(sel),o=e&&objectOf(sel),on=!!o&&o.visible&&editing()&&!lightsShowing();
     box.visible=on;if(on)box.setFromObject(o);
@@ -106,7 +107,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   }
   function endDrag(){
     const o=tools?.gizmo.object,e=sel&&entry(sel);if(!o||!e)return;const now=read(o),name=personName(e);
-    edit(sel,p=>{if(mode==='translate'){p.at=now.at;p.y=Math.max(-2000,now.y);}else if(mode==='rotate')p.turn=now.turn;else p.scale=Math.min(3,Math.max(.2,now.scale));},
+    edit(sel,p=>{if(mode==='translate'){p.at=now.at;p.y=Math.max(-2000,now.y);paths.bodyMoved(p);/* S31 M3 hook */}else if(mode==='rotate')p.turn=now.turn;else p.scale=Math.min(3,Math.max(.2,now.scale));},
       mode==='translate'?`Moved ${name}.`:mode==='rotate'?`Turned ${name} to ${now.turn}°.`:`${name} is now ${Math.round(now.scale*100)} % of their built size.`);
   }
   // Where a new person goes: on the floor in the lower middle of the view, facing the camera.
@@ -120,6 +121,8 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   // ---- pose mode (scene-pose-editor.mjs)
   const pose=createPoseEditor({win,three,tools:()=>tools,stagePeople,entry,edit:(...a)=>edit(...a),status,rerender,personName:e=>e?personName(e):'',editing,saved:e=>savedHTML(e)});
   const poseEditor=pose;     // swap() has a `pose` argument of its own
+  // S31 M3 hook: a walker's / roller's path on the floor and in the People tab (people-path-gizmo.mjs)
+  const paths=createPathGizmo({win,three,tools:()=>tools,stagePeople,entry,edit:(...a)=>edit(...a),status,editing,lightsShowing,selected:()=>sel,posing:()=>pose.active(),personName:e=>e?personName(e):'',objectOf:k=>objectOf(k),cast:()=>cast(),modelOf:id=>modelOf(id),poseOf:id=>poseOf(id),seconds});
   // ---- selection
   function select(key,{announce=true}={}){
     const e=entry(key);if(!e){deselect();return;}
@@ -246,6 +249,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   }
   async function changed(el){
     if(pose.changed(el))return;
+    if(paths.changed(el))return;   // S31 M3 hook
     const name=el.name,e=sel&&entry(sel),v=Number(el.value);
     if(name==='pe-sex'||name==='pe-age'||name==='pe-heritage'){filters[name.slice(3)]=el.value;rerender();return;}
     if(!e)return;
@@ -270,6 +274,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   }
   async function action(name,index){
     if(pose.action(name,index))return;
+    if(paths.action(name,index))return;   // S31 M3 hook
     if(name==='pe-pose-enter'){if(sel){await ensure();await enterPose(sel);}return;}
     if(name==='pe-pose-save'){savePose();return;}
     if(name==='pe-pose-apply'){await applySaved(index);return;}
@@ -360,6 +365,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       ${select_('pe-anchor',isFree?'free':'desk',[['free','Free spot (move by hand)'],['desk',e.station?'At a desk in the room':'At the film desk (follows it)']])}
       ${isFree?`<div class="director-row people-fields">${field('X',`pe-x`,e.at[0],{step:10,unit:'mm'})}${field('Z','pe-z',e.at[1],{step:10,unit:'mm'})}${field('Turn','pe-turn',e.turn||0,{step:5,min:-360,max:360,unit:'°'})}${field('Lift','pe-y',e.y||0,{step:5,unit:'mm',title:'Raises a seated person onto a seat, or anyone onto a step'})}</div>
       <div class="director-actions people-modes">${Object.entries(MODES).map(([k,l])=>`<button type="button" data-action="pe-mode-${k}" aria-pressed="${mode===k}">${l}</button>`).join('')}<button type="button" data-action="pe-face-desk">Face the desk</button><button type="button" data-action="pe-face-camera">Face the camera</button></div>`:'<p class="director-hint">They work at the desk and move with it, and they sit or stand as its height changes: seated at 28 to 30 in, standing at 43.5 in, out of the way while it travels between.</p>'}
+      ${paths.panel(e)/* S31 M3 hook */}
       <div class="director-row people-fields">${field('Size','pe-scale',Math.round((e.scale||1)*100),{step:1,min:20,max:300,unit:'%',title:'100 % is the size the character was built at'})}</div>
       <h4>Clothes and hair</h4>
       <div class="people-colors">${PARTS.map((part,i)=>{const mine=e.colors?.[part],was=asBuilt?.[part]||c?.colors?.[part]||'#8a8f96';return `<label title="${mine?'Recoloured':'As built'}: ${part}">${cap(part)}<span><input type="color" name="pe-color-${part}" value="${escape(mine||was)}">${mine?`<button type="button" data-action="pe-color-reset" data-index="${i}" title="Back to the colour the character was built with">↺</button>`:''}</span></label>`;}).join('')}</div>
@@ -421,5 +427,5 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   const header=()=>{const e=sel&&entry(sel);return e?{name:personName(e),detail:pose.active()===sel?'Pose mode'+(pose.joint()?' · '+pose.jointLabel():''):doing(e)}:null;};
   // After the film setup is (re)applied or the cut changes: the selection may be gone.
   function applied(){if(sel&&!entry(sel)){pose.exit();sel=null;}ensure().catch(()=>null);}
-  return {panel,lane,laneHeight,action,changed,select,deselect,selected:()=>sel,header,pickObject,setMode,mode:()=>mode,count,remove:k=>{if(k===undefined&&pose.active()){pose.resetJoint();return;}remove(k);},posing:()=>pose.active(),applied,openLibrary,effective:()=>effectivePeople(film(),shot())};
+  return {panel,lane,laneHeight,action,changed,select,deselect,selected:()=>sel,header,pickObject,setMode,mode:()=>mode,count,remove:k=>{if(k===undefined&&pose.active()){pose.resetJoint();return;}if(k===undefined&&paths.removeSelected())return;/* S31 M3 hook */remove(k);},posing:()=>pose.active(),applied,openLibrary,effective:()=>effectivePeople(film(),shot())};
 }
