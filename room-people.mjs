@@ -65,7 +65,7 @@
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
 import {updateSkinnedBounds} from './skinned-bounds.mjs';
-import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, solveWalk, lookToward, solveTread, rollPlan, actedKey, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=roll-walk-20261115';
+import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, shoeFit, solveWalk, lookToward, solveTread, rollPlan, actedKey, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=roll-walk-20261115b';
 // who looks at whom (RoomPeople.gazeOf)
 const GAZE_TALK = /^(stand-talk|sit-chat|stand-drink|stand-mug|stand-coffee|sit-coffee)$/, GAZE_IDLE = /^(stand-wait|wheel-roll|wheel-watch|cane-stand|white-cane|sit-listen)$/;
 const GAZE_DESK = /^stand-phone-watch$/;      // watching the featured desk go (the workshop film): the head follows it
@@ -2237,8 +2237,8 @@ export class RoomPeople {
             // that way, are measured once and the footprints lowered by as much)
             if (life.plan) {
                 const endYaw = this.walkEnd(walk, path), plan = options => walkPlan(life.rig, life.key, (walk.then && life.rig.key(walk.then)) || life.key, path, { pace: walk.pace, step: walk.step ? walk.step / 1000 : undefined, toes: walk.toes, endYaw, ...options });
-                const { sole, heels } = this.soleOf(object, life, life.plan); life.plan = plan({ sole, heels });
-                life.plan = plan({ sole, heels, land: this.landOf(object, life, life.plan) });
+                const shoes = this.soleOf(object, life, life.plan); life.plan = plan(shoes);
+                life.plan = plan({ ...shoes, land: this.landOf(object, life, life.plan) });
             }
         }
         if (!life.plan) return;
@@ -2291,9 +2291,6 @@ export class RoomPeople {
         object.position.x = r.x * 1000; object.position.z = r.z * 1000; object.rotation.y = r.yaw; life.live = true;
         if (t > 0 && t < life.roll.seconds) this.dirty = true;
     }
-    // The drawn shoes at the walk's start, in the model's metres: how far each sole (the skinned shoe nearer that ankle)
-    // stands above the floor, sole: [left, right], and the point of each heel that meets the floor first with the toes
-    // up (as solveWalk lands a step), heels: [[y, z] from the ankle, ...] (null where there is nothing to measure).
     // (each vertex of a skinned mesh: the side of the leg bone that moves it most, calf_, foot_ or ball_: 0 left,
     // 1 right, -1 neither; kept with the geometry)
     legSides(o) {
@@ -2303,41 +2300,32 @@ export class RoomPeople {
         for (let i = 0; i < n; i++) { let best = -1; for (let k = 0; k < 4; k++) { const w = sw.getComponent(i, k); if (w > best) { best = w; out[i] = side[si.getComponent(i, k)] ?? -1; } } }
         return g.userData.legSides = out;
     }
-    soleOf(object, life, plan) {
-        const drawn = object.userData.personRig, sole = [Infinity, Infinity], heels = [null, null], best = [Infinity, Infinity]; if (!drawn) return { sole: [0, 0], heels };
-        solveWalk(life.rig, plan, 0); drawPose(life.rig, drawn, 0, null); object.updateMatrixWorld(true);
-        const rig = life.rig, ankles = ['l', 'r'].map(s => rig.wp[rig.side[s].leg[2]]), inv = new THREE.Matrix4().copy(object.matrixWorld).invert(), v = new THREE.Vector3();
-        const c = Math.cos(.2), s = Math.sin(.2);      // (solveWalk's GAIT.land)
+    // The drawn model's skin below 0.15 m (its shoes and trouser hems), in the model's frame as now posed: [[x, y, z,
+    // side], ...], side the leg (calf_, foot_ or ball_) that moves the vertex most (0 left, 1 right).
+    legPoints(object) {
+        const out = [], v = new THREE.Vector3(); object.updateMatrixWorld(true); const inv = new THREE.Matrix4().copy(object.matrixWorld).invert();
         object.traverse(o => {
             if (!o.isSkinnedMesh || /^Held\./.test(o.name) || /^Held\./.test(o.material?.name || '')) return;
             const pos = o.geometry?.attributes?.position; if (!pos || !o.skeleton) return;
             const sides = this.legSides(o);
-            for (let i = 0; i < pos.count; i++) {
-                const k = sides[i]; if (k < 0) continue;
-                o.getVertexPosition(i, v); v.applyMatrix4(o.matrixWorld).applyMatrix4(inv); if (v.y > .12) continue;
-                const a = ankles[k];
-                if (v.y < sole[k]) sole[k] = v.y;
-                const dy = v.y - a.y, dz = v.z - a.z, up = dy * c + dz * s;      // (its height with the toes up)
-                if (up < best[k]) { best[k] = up; heels[k] = [dy, dz]; }
-            }
+            for (let i = 0; i < pos.count; i++) { if (sides[i] < 0) continue; o.getVertexPosition(i, v); v.applyMatrix4(o.matrixWorld).applyMatrix4(inv); if (v.y < .15) out.push([v.x, v.y, v.z, sides[i]]); }
         });
-        return { sole: sole.map(y => Number.isFinite(y) ? y : 0), heels };
+        return out;
     }
-    // How far each drawn heel stands above the floor as that foot lands (a step in the middle of the walk, the toes
-    // up): [left, right] metres, 0 where it cannot be measured.
+    // The drawn shoes at the walk's start (room-people-motion.mjs shoeFit): { sole, tilt, heels }.
+    soleOf(object, life, plan) {
+        const drawn = object.userData.personRig; if (!drawn) return {};
+        solveWalk(life.rig, plan, 0); drawPose(life.rig, drawn, 0, null);
+        return shoeFit(life.rig, this.legPoints(object));
+    }
+    // How far each drawn foot still stands above the floor as it lands (a step in the middle of the walk, the toes up):
+    // [left, right] metres, 0 where it cannot be measured.
     landOf(object, life, plan) {
         const drawn = object.userData.personRig, out = [0, 0]; if (!drawn) return out;
-        const rig = life.rig, inv = new THREE.Matrix4(), v = new THREE.Vector3();
         for (const k of [0, 1]) {
             const st = plan.steps.filter(s => s.which === k)[1]; if (!st) continue;
-            solveWalk(rig, plan, st.g1 + 1e-3); drawPose(rig, drawn, 0, null); object.updateMatrixWorld(true); inv.copy(object.matrixWorld).invert();
-            let low = Infinity;
-            object.traverse(o => {
-                if (!o.isSkinnedMesh || /^Held\./.test(o.name) || /^Held\./.test(o.material?.name || '')) return;
-                const pos = o.geometry?.attributes?.position; if (!pos || !o.skeleton) return;
-                const sides = this.legSides(o);
-                for (let i = 0; i < pos.count; i++) { if (sides[i] !== k) continue; o.getVertexPosition(i, v); v.applyMatrix4(o.matrixWorld).applyMatrix4(inv); if (v.y < low) low = v.y; }
-            });
+            solveWalk(life.rig, plan, st.g1 + 1e-3); drawPose(life.rig, drawn, 0, null);
+            let low = Infinity; for (const [, y, , side] of this.legPoints(object)) if (side === k && y < low) low = y;
             if (Number.isFinite(low)) out[k] = low;      // (the floor is the model's y = 0)
         }
         return out;

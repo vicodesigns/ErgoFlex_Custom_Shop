@@ -6,7 +6,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as THREE from 'three';
 import { RoomPeople } from '../room-people.mjs';
-import { PersonRig, DeskActor, simulateDesk, settleDesk, stepDesk, deskDescription, deskWants, solveDesk, solveStill, solveChange, walkPlan, solveWalk, STAND_UP, solveTread } from '../room-people-motion.mjs';
+import { PersonRig, DeskActor, simulateDesk, settleDesk, stepDesk, deskDescription, deskWants, solveDesk, solveStill, solveChange, walkPlan, solveWalk, STAND_UP, solveTread, shoeFit } from '../room-people-motion.mjs';
+import { NodeIO } from '@gltf-transform/core';
+import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
+import { MeshoptDecoder } from 'meshoptimizer';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const rigOf = who => new PersonRig(JSON.parse(fs.readFileSync(path.join(root, 'assets/props/people-rigs', who + '.json'), 'utf8')));
@@ -498,6 +501,38 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
         assert.ok(Math.abs(r3.yaw) < 1e-6, 'and along the first leg at the start');
         let last3 = null; for (let g = 0; g <= p3.steps.length; g += 1 / 60) { const y = solveWalk(rig, p3, g).yaw; if (last3 !== null) assert.ok(Math.abs(wrapped(y - last3)) < .06, 'turning smoothly to it'); last3 = y; }
         assert.ok(p3.prints.every(list => Math.abs(wrapped(list[list.length - 1].yaw - Math.PI / 2)) < 1e-6), 'the feet end turned that way too');
+    }
+    // a turn too big for the walk at TURN_RATE keeps both ends exact (the rate rises, plan.turnRate says so)
+    {
+        const rig = rigOf('noah'), key = rig.key('people-noah-stand-wait'), plan = walkPlan(rig, key, key, [[0, 0], [0, .6]], { endYaw: Math.PI, pace: 2.6 }), wrapped = a => Math.atan2(Math.sin(a), Math.cos(a));
+        assert.ok(Math.abs(wrapped(solveWalk(rig, plan, 0).yaw)) < 1e-6 && Math.abs(wrapped(solveWalk(rig, plan, plan.steps.length).yaw - Math.PI)) < 1e-6, 'both ends of an over-fast turn kept');
+        assert.ok(plan.turnRate > 120, `and the rate reported: ${plan.turnRate.toFixed(0)} deg/s`);
+    }
+    // the drawn heels (shoeFit on the film walkers' own models, skinned as the stage does): behind the ankle, so every
+    // foot lands heel first (S19 review: Zoe's 'heel' was 81 mm ahead of the ankle and she landed toe first)
+    {
+        await MeshoptDecoder.ready;
+        const io = new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({ 'meshopt.decoder': MeshoptDecoder });
+        const skin = async (rig, id) => {
+            const doc = await io.read(path.join(root, 'assets/props', id + '.glb')), node = doc.getRoot().listNodes().find(n => n.getMesh() && n.getSkin()), sk = node.getSkin();
+            const joints = sk.listJoints().map(j => j.getName()), ibm = joints.map((_, i) => new THREE.Matrix4().fromArray(sk.getInverseBindMatrices().getElement(i, []))), side = joints.map(n => { const m = /^(calf|foot|ball)_(l|r)$/.exec(n); return m ? (m[2] === 'l' ? 0 : 1) : -1; });
+            return () => { const M = joints.map((n, k) => new THREE.Matrix4().compose(rig.wp[rig.index.get(n)], rig.wq[rig.index.get(n)], new THREE.Vector3(1, 1, 1)).multiply(ibm[k])), out = [], a = [], b = [], c = [], v = new THREE.Vector3(), w = new THREE.Vector3();
+                for (const prim of node.getMesh().listPrimitives()) { if (/Held/.test(prim.getMaterial()?.getName() || '')) continue; const P = prim.getAttribute('POSITION'), J = prim.getAttribute('JOINTS_0'), W = prim.getAttribute('WEIGHTS_0');
+                    for (let i = 0; i < P.getCount(); i++) { P.getElement(i, a); J.getElement(i, b); W.getElement(i, c); const t = c[0] + c[1] + c[2] + c[3] || 1; w.set(0, 0, 0); let best = -1, k0 = -1; for (let k = 0; k < 4; k++) { if (!c[k]) continue; w.addScaledVector(v.fromArray(a).applyMatrix4(M[b[k]]), c[k] / t); if (c[k] > best) { best = c[k]; k0 = b[k]; } } if (w.y < .15 && side[k0] >= 0) out.push([w.x, w.y, w.z, side[k0]]); } }
+                return out; };
+        };
+        for (const [who, fromId, toId, route, options] of walkers.slice(0, 4)) {
+            const rig = rigOf(who); if (!rig.has(fromId) || !rig.has(toId)) continue;
+            const points = await skin(rig, fromId); let plan = walkPlan(rig, rig.key(fromId), rig.key(toId), route, options);
+            solveWalk(rig, plan, 0); const fit = shoeFit(rig, points());
+            assert.ok(fit.heels.every(h => h && h[1] < 0), `${who}: the measured heels are behind the ankles (${JSON.stringify(fit.heels)})`);
+            plan = walkPlan(rig, rig.key(fromId), rig.key(toId), route, { ...options, ...fit });
+            for (const st of plan.steps.slice(1, -2)) {
+                solveWalk(rig, plan, st.g1 + .02); const a = rig.wp[rig.side[st.which ? 'r' : 'l'].leg[2]]; let low = null;
+                for (const [x, y, z, k] of points()) if (k === st.which && (!low || y < low[1])) low = [x, y, z];
+                assert.ok(low[2] < a.z + .02, `${who}: lands heel first at ${st.g1.toFixed(2)} (lowest point ${((low[2] - a.z) * 1000).toFixed(0)} mm from the ankle)`);
+            }
+        }
     }
     // the drawn soles (room-people.mjs soleOf / landOf): the footprints lower by the sole's height, the ankle at a
     // landing lower by the heel's
