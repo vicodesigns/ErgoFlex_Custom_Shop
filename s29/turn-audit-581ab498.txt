@@ -1,0 +1,27 @@
+## rise (home) max: maya 55 deg/s @4.808
+## create (creative) max: lin 1 deg/s @19.508
+## commons (library) max: grace 13 deg/s @3.258, yara 1718 deg/s @4.558, mia 927 deg/s @13.558, sofia 1 deg/s @11.500, kai 16 deg/s @13.033, zoe 9 deg/s @0.275
+  yara     4.558-4.558 s  peak 1718 deg/s @4.558 (head 1.02 m/s) yara-works
+  yara     4.825-5.375 s  peak 163 deg/s @5.100 (head 0.45 m/s) yara-works
+  mia      12.158-12.158 s  peak 124 deg/s @12.158 (head 0.48 m/s) mia-waits
+  mia      13.558-13.558 s  peak 927 deg/s @13.558 (head 0.26 m/s) mia-works
+## coast (occmedialab) max: sofia 7 deg/s @13.150, ava 68 deg/s @4.950
+## oilers (highschool) max: leo 23 deg/s @1.550, eli 32 deg/s @4.675, sofia 7 deg/s @13.150, hale 55 deg/s @4.033, kai 6194 deg/s @0.004, noah 4718 deg/s @10.158, nia 15 deg/s @1.175, finn 40 deg/s @4.033
+  kai      0.004-0.004 s  peak 6194 deg/s @0.004 (head 2.51 m/s) kai-rolls
+  kai      2.125-2.133 s  peak 168 deg/s @2.133 (head 1.07 m/s) kai-rolls
+  noah     2.600-2.600 s  peak 2561 deg/s @2.600 (head 2.23 m/s) noah-talks
+  kai      2.625-2.658 s  peak 165 deg/s @2.650 (head 1.23 m/s) kai-rolls
+  noah     4.350-4.458 s  peak 136 deg/s @4.458 (head 0.67 m/s) noah-steps
+  kai      4.950-5.275 s  peak 4069 deg/s @5.125 (head 2.87 m/s) kai-rolls
+  noah     4.975-5.058 s  peak 123 deg/s @5.025 (head 0.83 m/s) noah-steps
+  noah     7.925-7.925 s  peak 156 deg/s @7.925 (head 1.51 m/s) noah-taps
+  noah     10.158-10.158 s  peak 4718 deg/s @10.158 (head 2.36 m/s) noah-watches
+  kai      12.058-12.058 s  peak 1184 deg/s @12.058 (head 0.60 m/s) kai-docks
+## wellness (gym) max: priya 9 deg/s @1.808, maya 49 deg/s @9.708, kai 13 deg/s @2.750
+## music (gaming) max: kai 23 deg/s @3.650
+## media (music) max: omar 20 deg/s @16.058
+## storage (workshop) max: jo 16 deg/s @6.608, andre 216 deg/s @2.950
+  andre    1.000-1.000 s  peak 192 deg/s @1.000 (head 1.00 m/s) andre-robot
+  andre    2.600-3.283 s  peak 216 deg/s @2.950 (head 0.69 m/s) andre-steps-back
+  andre    6.133-6.783 s  peak 182 deg/s @6.633 (head 1.18 m/s) andre-steps-back
+  andre    12.000-12.000 s  peak 168 deg/s @12.000 (head 1.12 m/s) andre-presses

@@ -1,0 +1,38 @@
+// S29 (scratch, not committed): head turn-rate audit of every chapter's people, headless, on S20's audit harness.
+// Per character (one solid model), the head bone's world rotation rate (deg/s) and head speed (mm/s) between 1/120 s
+// sub-frames; prints the intervals where the head turns faster than --min deg/s, with the peak.
+import fs from 'node:fs';
+import * as THREE from 'three';
+const { RoomPeople } = await import('../../room-people.mjs');
+const mod = await import('./s29-ghost-audit.mjs');
+const args = process.argv.slice(2); const opt = k => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : null; };
+const cut = JSON.parse(fs.readFileSync(opt('cut') || mod.CUT, 'utf8')), MIN = Number(opt('min') || 120), only = opt('chapter');
+const orig = RoomPeople.prototype.update; let rec = null;
+const q = new THREE.Quaternion(), p = new THREE.Vector3();
+RoomPeople.prototype.update = function (st) {
+  const r = orig.call(this, st); if (!rec) return r;
+  const by = new Map();
+  for (const o of this.people) { if (!o.visible || (o.userData.personAmount ?? 1) <= .02) continue; const who = this.character(o); if (!who) continue; (by.get(who) || by.set(who, []).get(who)).push(o); }
+  for (const [who, list] of by) {
+    if (list.length !== 1) { rec.last.delete(who); continue; }
+    const o = list[0], b = o.userData.personRig?.bones.get('head'); if (!b) { rec.last.delete(who); continue; }
+    o.updateMatrixWorld(true); b.getWorldQuaternion(q); b.getWorldPosition(p);
+    const last = rec.last.get(who), t = st.time;
+    if (last && t > last.t && t - last.t <= 1 / 120 + 1e-6) {
+      const dt = t - last.t, deg = 2 * Math.acos(Math.min(1, Math.abs(q.dot(last.q)))) * 180 / Math.PI / dt, mms = p.distanceTo(last.p) / dt;
+      rec.rows.push({ who, t, deg, mms, key: this.keyOf(o.userData.person) });
+    }
+    rec.last.set(who, { t, q: q.clone(), p: p.clone() });
+  }
+  return r;
+};
+for (const shot of cut.shots) {
+  if (only && shot.id !== only) continue; if (!shot.people || typeof shot.people !== 'object') continue;
+  rec = { rows: [], last: new Map() };
+  await mod.auditChapter(shot, { step: 1 / 120 });
+  const fast = rec.rows.filter(r => r.deg >= MIN), iv = [];
+  for (const r of fast) { const l = iv.findLast(i => i.who === r.who); if (l && r.t - l.to <= .05) { l.to = r.t; if (r.deg > l.peak) Object.assign(l, { peak: r.deg, at: r.t, mms: r.mms, key: r.key }); } else iv.push({ who: r.who, from: r.t, to: r.t, peak: r.deg, at: r.t, mms: r.mms, key: r.key }); }
+  const top = {}; for (const r of rec.rows) if (!top[r.who] || r.deg > top[r.who].deg) top[r.who] = r;
+  console.log(`## ${shot.id} (${shot.room}) max: ` + Object.entries(top).map(([w, r]) => `${w} ${r.deg.toFixed(0)} deg/s @${r.t.toFixed(3)}`).join(', '));
+  for (const i of iv) console.log(`  ${i.who.padEnd(8)} ${i.from.toFixed(3)}-${i.to.toFixed(3)} s  peak ${i.peak.toFixed(0)} deg/s @${i.at.toFixed(3)} (head ${(i.mms / 1000).toFixed(2)} m/s) ${i.key}`);
+}
