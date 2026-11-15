@@ -21,7 +21,8 @@ export const SCREEN_TRAVEL = 2.2;      // seconds for a full travel (studio.js: 
 
 const num = (v, fallback) => Number.isFinite(Number(v)) ? Number(v) : fallback;
 const clamp01 = x => x < 0 ? 0 : x > 1 ? 1 : x;
-const level = v => v === true ? 1 : v === false ? 0 : clamp01(num(v, 0));
+// (true / false, or a number 0..1; anything else, a string included, is no level at all: the key is dropped)
+const level = v => v === true ? 1 : v === false ? 0 : typeof v === 'number' && Number.isFinite(v) ? clamp01(v) : null;
 const smooth = t => t * t * (3 - 2 * t);
 
 // The field as the film gives it -> { from, open: [{ at, to, dur, easing }], screen: [{ at, mode, ... }] } (keys in
@@ -29,13 +30,13 @@ const smooth = t => t * t * (3 - 2 * t);
 export function cleanTouchscreen(value) {
     if (!value || typeof value !== 'object') return null;
     const spec = Array.isArray(value) ? { open: value } : value;
-    const open = (Array.isArray(spec.open) ? spec.open : []).filter(k => k && Number.isFinite(Number(k.at))).map(k => ({
-        at: Number(k.at), to: level(k.to ?? k.open), dur: k.dur === undefined ? null : Math.max(0, num(k.dur, 0)), easing: k.easing === 'linear' ? 'linear' : 'smooth'
-    })).sort((a, b) => a.at - b.at);
+    const open = (Array.isArray(spec.open) ? spec.open : []).filter(k => k && typeof k.at === 'number' && Number.isFinite(k.at) && level(k.to ?? k.open) !== null).map(k => ({
+        at: k.at, to: level(k.to ?? k.open), dur: typeof k.dur === 'number' && Number.isFinite(k.dur) ? Math.max(0, k.dur) : null, easing: k.easing === 'linear' ? 'linear' : 'smooth'
+    })).sort((a, b) => a.at - b.at);      // (dur null or missing: the app's speed)
     const screen = (Array.isArray(spec.screen) ? spec.screen : []).filter(k => k && Number.isFinite(Number(k.at)) && typeof k.mode === 'string')
         .map(k => ({ ...k, at: Number(k.at) })).sort((a, b) => a.at - b.at);
     if (!open.length && !screen.length && spec.from === undefined) return null;
-    return { from: level(spec.from ?? 0), open, screen };
+    return { from: level(spec.from ?? 0) ?? 0, open, screen };
 }
 
 const cache = new WeakMap();
@@ -60,15 +61,33 @@ export function screenProgressAt(spec, seconds) {
     return clamp01(prev ? value(prev.key, prev.from, t) : s.from);
 }
 
-// What the face shows at `seconds`: the screen key in force (its fields without `at`, plus `since`, seconds since it
-// began), or null for the app's own screen.
+// What the face shows at `seconds`: the screen key in force (its fields without `at`), or null for the app's own
+// screen. (No clock in it: the face is redrawn only when what it shows changes.)
 export function screenContentAt(spec, seconds) {
     const s = cleaned(spec); if (!s) return null;
     const t = num(seconds, 0); let key = null;
     for (const k of s.screen) { if (t < k.at) break; key = k; }
     if (!key || key.mode === 'app') return null;
     const { at, ...fields } = key;
-    return { ...fields, since: Math.round((t - at) * 1000) / 1000 };
+    return fields;
+}
+
+// The field as a cut keeps it (experience/cuts.mjs cleanShot: the Director's load, import, export and bake key):
+// numbers and the known names only; a screen key's other fields are its mode's (the screens stream has modes of its
+// own), kept when they are a short name with a string, number or boolean value. undefined: nothing to keep.
+const FIELD = /^[A-Za-z][A-Za-z0-9]{0,31}$/;
+export function cleanTouchscreenField(value) {
+    const s = cleanTouchscreen(value); if (!s) return undefined;
+    const out = { from: s.from, open: s.open.slice(0, 64).map(k => ({ at: Math.max(0, Math.min(600, k.at)), to: k.to, ...(k.dur === null ? {} : { dur: Math.min(60, k.dur) }), easing: k.easing })), screen: [] };
+    for (const k of s.screen.slice(0, 64)) {
+        const key = { at: Math.max(0, Math.min(600, k.at)), mode: String(k.mode).slice(0, 40) };
+        for (const [name, v] of Object.entries(k)) {
+            if (name === 'at' || name === 'mode' || !FIELD.test(name) || ['constructor', 'prototype'].includes(name)) continue;
+            if (typeof v === 'string') key[name] = v.slice(0, 160); else if (typeof v === 'boolean' || (typeof v === 'number' && Number.isFinite(v))) key[name] = v;
+        }
+        out.screen.push(key);
+    }
+    return out;
 }
 
 // Both, for the stage: { progress, screen } (studio.js setFilmTouchscreen), or null for a shot without the field.

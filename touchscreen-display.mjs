@@ -8,13 +8,14 @@
 //   'prompt'   { title, text, button, sub, pressed }   a question and one big button (FILM_BUTTON on the canvas);
 //              pressed: true (or 0..1) shows it pushed in and lit, the way the app answers a touch
 //   'moving'   { title, target, from, done }            the live height, large, travelling from `from` to `target`
-//              (inches) with a bar; once within 0.05 in of the target, `done` (default 'At height') with a tick
+//              (inches; give both: without `from` there is no bar) with a bar; once within 0.05 in of the target,
+//              `done` (default 'At height') with a tick
 //   'message'  { title, text }                          a title and a line of text
 // More modes (the screens stream's): TouchscreenDisplay.modes.<name> = (ui, state, film) => {...}, drawing in
 // ui.c (the 2D context; ui.text, ui.box, ui.ink, ui.muted, ui.blue, ui.panel, ui.dark, ui.top: where the body starts).
 // A key whose mode is not known shows the app's own screen.
 export const FILM_BUTTON = { x: 200, y: 400, w: 880, h: 190 };      // canvas pixels of the prompt's button (1280 x 760)
-const filmModes = {
+const filmModes = Object.assign(Object.create(null), {
     prompt(ui, state, f) {
         const { c, text, box, ink, muted, dark } = ui, b = FILM_BUTTON, p = f.pressed === true ? 1 : Math.max(0, Math.min(1, Number(f.pressed) || 0));
         if (f.title) text(String(f.title), 70, 190, 58, ink, '700');
@@ -30,8 +31,8 @@ const filmModes = {
         c.textAlign = 'left'; c.restore();
     },
     moving(ui, state, f) {
-        const { c, text, box, ink, muted, blue, dark } = ui, h = state.height, target = Number(f.target), from = Number.isFinite(Number(f.from)) ? Number(f.from) : h;
-        const there = Number.isFinite(target) && Math.abs(h - target) < .05, down = Number.isFinite(target) && target < from;
+        const { c, text, box, ink, muted, blue, dark } = ui, h = state.height, target = Number(f.target), from = f.from !== undefined && f.from !== null && Number.isFinite(Number(f.from)) ? Number(f.from) : null;
+        const there = Number.isFinite(target) && Math.abs(h - target) < .05, down = Number.isFinite(target) && target < (from ?? h);
         text(String(there ? (f.done || 'At height') : (f.title || (down ? 'Lowering' : 'Raising'))), 70, 175, 44, there ? (dark ? '#4fd17a' : '#1f8a45') : ink, '700');
         c.textAlign = 'right'; text(h.toFixed(1), 830, 470, 250, ink, '700'); c.textAlign = 'left';
         text('in', 850, 470, 64, muted, '600');
@@ -39,6 +40,7 @@ const filmModes = {
             if (there) { c.save(); c.strokeStyle = dark ? '#4fd17a' : '#1f8a45'; c.lineWidth = 16; c.lineCap = 'round'; c.lineJoin = 'round'; c.beginPath(); c.moveTo(1010, 380); c.lineTo(1060, 430); c.lineTo(1150, 320); c.stroke(); c.restore(); }
             else { c.save(); c.fillStyle = blue; c.beginPath(); const y = down ? 330 : 430, s = down ? 1 : -1; c.moveTo(1030, y); c.lineTo(1150, y); c.lineTo(1090, y + s * 90); c.closePath(); c.fill(); c.restore(); }
             text(`${down ? '↓' : '↑'} ${target.toFixed(1)} in`, 70, 600, 40, muted, '600');
+            if (from === null) return;      // (no `from`: no bar)
             const span = Math.abs(target - from) || 1, done = Math.max(0, Math.min(1, Math.abs(h - from) / span));
             box(70, 640, 1140, 34, 17, dark ? '#12181d' : '#dae1e9', false);
             if (done > 0) { c.fillStyle = there ? (dark ? '#4fd17a' : '#1f8a45') : blue; c.beginPath(); c.roundRect(70, 640, Math.max(34, 1140 * done), 34, 17); c.fill(); }
@@ -49,7 +51,7 @@ const filmModes = {
         if (f.title) text(String(f.title), 70, 260, 64, ink, '700');
         if (f.text) text(String(f.text), 72, 340, 34, muted, '400');
     }
-};
+});
 export class TouchscreenDisplay {
     static modes = filmModes;
     constructor(){this.canvas=document.createElement('canvas');this.canvas.width=1280;this.canvas.height=760;this.ctx=this.canvas.getContext('2d');this.key='';this.theme='light';}
@@ -77,7 +79,7 @@ export class TouchscreenDisplay {
         c.save();c.translate(955,22);c.strokeStyle=state.guard?blue:muted;c.fillStyle=state.guard?(dark?'#164485':'#adc4fa'):panel;c.lineWidth=4;
         c.beginPath();c.moveTo(0,8);c.lineTo(20,0);c.lineTo(40,8);c.lineTo(38,29);c.quadraticCurveTo(32,44,20,50);c.quadraticCurveTo(8,44,2,29);c.closePath();c.fill();c.stroke();c.restore();
         box(1105,20,134,47,24,'#bd2822');text('STOP',1133,53,22,'#fff','700');
-        const mode=state.film&&TouchscreenDisplay.modes[state.film.mode];
+        const mode=state.film&&typeof state.film.mode==='string'&&Object.hasOwn(TouchscreenDisplay.modes,state.film.mode)?TouchscreenDisplay.modes[state.film.mode]:null;
         if(mode){mode({c,text,box,ink,muted,blue,panel,base,dark,top:83,width:1280,height:760},state,state.film);return true;}
         box(26,105,310,478,30);box(361,105,548,478,30);box(934,105,320,478,30);
         text('HEIGHT',46,141,17,muted);text('GLIDE',382,141,17,muted);text('TILT',954,141,17,muted);
