@@ -31,6 +31,7 @@ def manifest(job):
     for l in open(f"{R}/{job['manifest']}").read().strip().split('\n')[1:]:
         c = l.split(' ')
         if '/request/' in c[2]: continue              # the request itself (its created stamp differs by design)
+        if c[2].endswith('exports/render-queue/queue.json'): continue   # grows with every request
         rows.append(' '.join([c[0], c[1], c[2].replace(F, 'F')] + [x.replace(F, 'F') for x in c[3:]]))
     return sorted(rows)
 def last_job(): return json.load(open(f'{R}/exports/render-queue/queue.json'))['jobs'][-1]
