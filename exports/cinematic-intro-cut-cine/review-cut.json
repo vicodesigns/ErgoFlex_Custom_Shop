@@ -69874,7 +69874,7 @@
      "src": "exports/cinematic-intro-cut-cine/screens/cine-storage-phone.mp4",
      "offset": 0,
      "loop": false,
-     "flipX": true
+     "flipY": true
     }
    ]
   },

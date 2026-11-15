@@ -43,8 +43,8 @@ TEXTURES = {
     # the drafting board's paper, relabelled as a home (a still: the same plan as the left monitor and the 3D house);
     # within 'desk': only the featured desk's kit (another drafting kit in the room keeps its sheet)
     'create': [{'target': 'texture', 'mesh': '^Architect floor plan$', 'within': 'desk', 'src': SCR + 'cine-create-floor-plan.png'}],
-    # the phone in Andre's hand; flipX: the clip is authored upright, the texture turned so the insert's camera (far side of Andre) reads it (every phone posture of his is its own GLB; all of them show the clip)
-    'storage': [{'target': 'texture', 'material': '^Held\\.phone screen', 'person': 'andre', 'src': SCR + 'cine-storage-phone.mp4', 'offset': 0, 'loop': False, 'flipX': True}],
+    # the phone in Andre's hand; flipY (a half turn, not mirrored): the clip is authored upright and Andre holds the phone toward himself, so it reads upside down to the insert's camera (far side of Andre) and upright to him (every phone posture of his is its own GLB; all of them show the clip)
+    'storage': [{'target': 'texture', 'material': '^Held\\.phone screen', 'person': 'andre', 'src': SCR + 'cine-storage-phone.mp4', 'offset': 0, 'loop': False, 'flipY': True}],
 }
 HERO_VERSIONS = {'gaming': {'main-landscape': 'cine-hero-gaming'}, 'artist': {'main-landscape': 'cine-hero-artist'},
                  # hbhs: its portrait plays oilers' own quiz (Kai's chapter) at the version's offset (-20.3: the votes,

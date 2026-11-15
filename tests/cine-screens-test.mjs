@@ -96,6 +96,7 @@ assert(/cine-rise-phone\.mp4$/.test(byId(after, 'rise').screens.find(x => x.targ
 const tex = [...byId(after, 'create').screens, ...byId(after, 'storage').screens].filter(x => x.target === 'texture');
 assert.equal(tex.length, 2, 'the drafting paper and the phone in hand are texture targets');
 assert(tex.some(x => x.mesh === '^Architect floor plan$') && tex.some(x => x.person === 'andre' && x.material === '^Held\\.phone screen'));
+assert(byId(after, 'storage').screens.some(x => x.target === 'texture' && x.flipY === true && !x.flipX && !x.rotate), 'the phone Andre holds toward himself is turned a half turn (flipY of the flipped-authored texture), not mirrored: upside down to the insert camera, upright to him');
 run('--only', ALL); assert.equal(fs.readFileSync(CUT, 'utf8'), once, 'idempotent'); assert.equal(fs.readFileSync(SUB, 'utf8'), subOnce, 'idempotent (versions)');
 const subKeys = s => s.shots.map(({screens, ...r}) => r);
 assert.deepEqual(subKeys(sub), subKeys(subBefore), 'the finale versions: only screens changes');
