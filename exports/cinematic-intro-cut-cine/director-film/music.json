@@ -3814,6 +3814,11 @@
  "ledGlow": 1,
  "screens": [
   {
+   "target": "main-landscape",
+   "src": "exports/cinematic-intro-20261030/screens/09-game-montage.mp4",
+   "brightness": 0.55
+  },
+  {
    "target": "arcade",
    "src": "exports/cinematic-intro-cut-cine/screens/cine-music-arcade.mp4",
    "offset": 0,
