@@ -47,7 +47,7 @@ export async function mountStage(ctx) {
   ctx.renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
   const extras = new THREE.Group(); extras.name='Cinematic effects'; ctx.scene.add(extras);
   const ringAt = new THREE.Vector3();
-  let shot=null, start=null, media=null, video=null, hidden=[], grid=null, pylons=[], sweep=null, light=null, pulse=null, floorCenter=null, trace=null, ringHome=null, reach=null, sonar=null, sonarTries=0;
+  let shot=null, start=null, media=null, video=null, hidden=[], grid=null, pylons=[], sweep=null, light=null, pulse=null, floorCenter=null, trace=null, ringHome=null, reach=null, sonar=null, sonarTries=0, pings=[], obstacles=[], pingStop=0, echo=null;
   let reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   let paused=false, sounds=false, mirror=null, sequence=-1, session=null, preparing=false,lastProgress=0;
   let readProgress=()=>0,deskSpan=1,lastMediaColour=0;
@@ -69,7 +69,7 @@ export async function mountStage(ctx) {
     if(video){video.pause();video.removeAttribute('src');video.load();video=null;}
     for(const [o,visible,mask] of hidden){o.visible=visible;o.layers.mask=mask;} hidden=[];
     extras.traverse(o=>{o.geometry?.dispose(); if(o.material)for(const m of Array.isArray(o.material)?o.material:[o.material]){m.map?.dispose();m.dispose();}});
-    extras.clear(); media=null;grid=null;pylons=[];sweep=null;light=null;pulse=null;trace=null;reach=null;sonar=null;sonarTries=0;
+    extras.clear(); media=null;grid=null;pylons=[];sweep=null;light=null;pulse=null;trace=null;reach=null;sonar=null;sonarTries=0;pings=[];obstacles=[];pingStop=0;echo=null;
   }
   function frame(targetBox, wide=false) {
     const center=targetBox.getCenter(new THREE.Vector3()), size=targetBox.getSize(new THREE.Vector3());
@@ -99,8 +99,24 @@ export async function mountStage(ctx) {
   // (yellow, red, near black) wherever the floor pool lay: an uneven ring under a flat fill. The LED light is unchanged.
   const RING_ORDER=4;
   const ringMesh=(geometry,color,opacity,y)=>{const m=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide,transparent:true,opacity,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.y=y;m.renderOrder=RING_ORDER;extras.add(m);return m;};
+  // The centre the rings start from is the centre of the desk's bottom shelf: the base shelf that carries the floor
+  // light, the whole shelf (Vico, 2026-11-14). It was the centre of the model's whole box, which also holds the film's
+  // LED helper planes and the desktop's overhang, so the rings sat about 24 cm in front of the shelf's centre. The shelf
+  // is the base panel with the largest footprint (the side and back panels are thin slabs); a desk without one falls
+  // back to the box centre.
+  function deskCentre(fallback) {
+    const model=ctx.loadedModel,one=new THREE.Box3();let best=null,area=0;model.updateWorldMatrix(true,true);
+    model.traverse(o=>{
+      if(!o.isMesh||!o.geometry||!/^Base_Panels(_\d+)?$/.test(o.name||''))return;
+      one.setFromObject(o);if(one.isEmpty())return;
+      const a=(one.max.x-one.min.x)*(one.max.z-one.min.z);if(a>area){area=a;best=one.clone();}
+    });
+    return best?new THREE.Vector3((best.min.x+best.max.x)/2,fallback.y,(best.min.z+best.max.z)/2):fallback;
+  }
+  // One thin ring at radius r (the band keeps its width at any radius: a scaled ring would thicken as it grows).
+  const setRing=(m,r,band)=>{const p=m.geometry.attributes.position,n=p.count/2,a=Math.max(0,r-band/2),b=r+band/2;for(let i=0;i<n;i++){const t=i/(n-1)*Math.PI*2,cs=Math.cos(t),sn=Math.sin(t);p.setXY(i,a*cs,a*sn);p.setXY(i+n,b*cs,b*sn);}p.needsUpdate=true;};
   function stageFloor() {
-    const b=box(),sz=b.getSize(new THREE.Vector3()),w=Math.max(sz.x,sz.z),c=b.getCenter(new THREE.Vector3());
+    const b=box(),sz=b.getSize(new THREE.Vector3()),w=Math.max(sz.x,sz.z),c=deskCentre(b.getCenter(new THREE.Vector3()));
     grid=new THREE.GridHelper(w*7,48,0x1c9cdf,0x173648);grid.position.set(c.x,b.min.y-.002,c.z);extras.add(grid);
     floorCenter=new THREE.Vector3(c.x,b.min.y+sz.y*.12,c.z);
     // One pulse ring per stage. The proximity chapter builds its floor a second time (prepare's product floor, then
@@ -124,7 +140,8 @@ export async function mountStage(ctx) {
     if(shot.motion?.clips)ctx.placeDirector(sampleClipMotion(shot.motion,shot.seconds));
     scene.updateMatrixWorld(true);
     const at=ctx.loadedModel.getWorldPosition(new THREE.Vector3()),cx=ringHome.c.x+at.x-ringHome.p.x,cz=ringHome.c.z+at.z-ringHome.p.z,b=new THREE.Box3();let best=Infinity;
-    for(const o of found){b.setFromObject(o);if(b.isEmpty())continue;best=Math.min(best,Math.hypot(Math.max(b.min.x-cx,0,cx-b.max.x),Math.max(b.min.z-cz,0,cz-b.max.z)));}
+    obstacles=[];
+    for(const o of found){b.setFromObject(o);if(b.isEmpty())continue;obstacles.push(b.clone());best=Math.min(best,Math.hypot(Math.max(b.min.x-cx,0,cx-b.max.x),Math.max(b.min.z-cz,0,cz-b.max.z)));}
     return Number.isFinite(best)&&best>0?best:null;
   }
   function proximity() {
@@ -139,6 +156,13 @@ export async function mountStage(ctx) {
     sweep=ringMesh(new THREE.RingGeometry(w*.8,w*.812,96,1,0,Math.PI*.65),0x62dbff,.65,b.min.y+.01);sweep.position.x=c.x;sweep.position.z=c.z;
     // The sonar's reach: a whole circle under the sweep, shown once the reach is known (sonarReach).
     reach=ringMesh(new THREE.RingGeometry(w*.8,w*.812,128),0x62dbff,.42,b.min.y+.008);reach.position.x=c.x;reach.position.z=c.z;reach.visible=false;reach.userData.w=w;
+    // The film's sonar (a film obstacle on the stage): three pings alive at once, each a thin ring that leaves the desk's
+    // centre and runs out to the obstacle's near edge as it is in that frame, like a submarine's sonar: one wide, one
+    // halfway, one just leaving. They replace the standing outer ring and its turning arc, which never pulsed (Vico,
+    // 2026-11-14). A ping arrives at the obstacle exactly when the desk stops (pingStop: the end of the last roll).
+    pings=[0,1,2].map(i=>{const m=ringMesh(new THREE.RingGeometry(w*.5,w*.51,128),0x45d2ff,0,b.min.y+.006+i*.0005);m.position.x=c.x;m.position.z=c.z;m.frustumCulled=false;m.visible=false;m.name='Stage sonar ping';return m;});
+    echo=ringMesh(new THREE.RingGeometry(w*.5,w*.51,128),0x7fe3ff,0,b.min.y+.0085);echo.position.x=c.x;echo.position.z=c.z;echo.frustumCulled=false;echo.visible=false;echo.name='Stage sonar echo';
+    pingStop=Math.max(0,...(shot?.motion?.clips||[]).filter(k=>k.lane==='wheels').map(k=>k.start+k.duration));
     start=frame(b,false);start.distance=w*3.8/Math.min(1,ctx.camera.aspect);start.center.copy(c);start.height=.9;
   }
   async function mediaScreen() {
@@ -260,7 +284,8 @@ export async function mountStage(ctx) {
     if(reduced)t=1;
     const u=reduced?1:ease(t),kind=shot.kind;
     if(kind==='proximity'&&reach&&!sonar&&sonarTries++<240)sonar=sonarReach();
-    if(pulse&&sonar){
+    if(pulse&&sonar&&pings.length){pulse.material.opacity=0;                 // the film's sonar: the pings below, once the desk is placed
+    } else if(pulse&&sonar){
       // a pulse every 1.6 s from the desk's footprint out to the reach, fading in over its first .13 s (no ring popping
       // up at the footprint) and out as it goes
       const w=reach.userData.w,phase=(t*shot.seconds/1.6)%1,from=Math.min(w*.5,sonar*.6);
@@ -277,12 +302,29 @@ export async function mountStage(ctx) {
     if(kind==='proximity'){
       for(const p of pylons){p.scale.y=Math.max(.001,ease(t/.2));p.position.y=p.userData.y-(1-p.scale.y)*p.geometry.parameters.height/2;}
       sweep.rotation.z=t*Math.PI*8;
-      if(sonar){const w=reach.userData.w,k=sonar/(w*.806);sweep.scale.setScalar(k);reach.scale.setScalar(k);reach.visible=true;}
+      if(sonar&&pings.length){sweep.visible=false;reach.visible=false;}
+      else if(sonar){const w=reach.userData.w,k=sonar/(w*.806);sweep.scale.setScalar(k);reach.scale.setScalar(k);reach.visible=true;}
       if(t>.55&&!shot.motion)ctx.demoMove(ease((t-.55)/.2)*deskSpan*.16,0,0);
     }
     if(kind==='wellness'&&!shot.motion)ctx.pose(28+15.5*ease((t-.25)/.45),0);
     if(shot.motion){const p=shot.motion.clips?sampleClipMotion(shot.motion,t*shot.seconds):sampleDeskTracks(shot.motion.tracks,t);ctx.pose(p.height,p.tilt);ctx.placeDirector(p);}
-    if(ringHome&&(pulse||sweep)){const d=ctx.loadedModel.getWorldPosition(ringAt).sub(ringHome.p);for(const ring of [pulse,sweep,reach])if(ring){ring.position.x=ringHome.c.x+d.x;ring.position.z=ringHome.c.z+d.z;}}
+    if(ringHome&&(pulse||sweep)){const d=ctx.loadedModel.getWorldPosition(ringAt).sub(ringHome.p);for(const ring of [pulse,sweep,reach,echo,...pings])if(ring){ring.position.x=ringHome.c.x+d.x;ring.position.z=ringHome.c.z+d.z;}
+      if(sonar&&pings.length){
+        // the reach in this frame: from the desk's centre where it is now to the nearest obstacle's near edge
+        const cx=ringHome.c.x+d.x,cz=ringHome.c.z+d.z;let far=Infinity;
+        for(const o of obstacles)far=Math.min(far,Math.hypot(Math.max(o.min.x-cx,0,cx-o.max.x),Math.max(o.min.z-cz,0,cz-o.max.z)));
+        if(!Number.isFinite(far)||far<=0)far=sonar;
+        const w=reach.userData.w,sec=t*shot.seconds,travel=2.4,from=far*.06,band=w*.007;
+        pings.forEach((ring,i)=>{
+          const phase=((((sec-pingStop)/travel+i/pings.length)%1)+1)%1;
+          setRing(ring,from+(far-from)*phase,band);ring.visible=!reduced;
+          ring.material.opacity=reduced?0:.9*Math.min(1,phase/.05)*(1-.3*phase)*Math.min(1,(1-phase)/.05);   // in at the centre, still bright as it touches
+        });
+        // The echo: each ping that reaches the obstacle lights a ring at the obstacle's edge, which fades until the next
+        // one arrives, so the widest circle in any frame is the one the obstacle stands on and it pulses with the pings.
+        if(echo){const gap=travel/pings.length,since=((((sec-pingStop)%gap)+gap)%gap)/gap;setRing(echo,far,band*1.25);echo.visible=!reduced;echo.material.opacity=reduced?0:.85*Math.pow(1-since,1.6)+.1;}
+      }
+    }
     if(deskChoreo.count())deskChoreo.apply(t*shot.seconds);
     if(shot.people)api.setRoomPeopleTime?.(t*shot.seconds,deskTrack());
     if(kind==='media'&&media){const now=performance.now(),updated=media.update(now);if(updated&&now-lastMediaColour>=100){lastMediaColour=now;try{const p=media.ctx2d.getImageData(Math.floor(media.canvas.width/2),Math.floor(media.canvas.height/2),1,1).data;api.setLedColor('#'+[p[0],p[1],p[2]].map(v=>Math.max(25,v).toString(16).padStart(2,'0')).join(''),false);}catch{}}}
