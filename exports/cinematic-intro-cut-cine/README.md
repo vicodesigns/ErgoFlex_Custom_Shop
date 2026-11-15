@@ -261,3 +261,16 @@ frame until after it.
 - Titles were not composited over the new frames (the render path used here does not draw them).
 - Dissolves between chapters were not previewed end to end (each chapter was rendered alone).
 - Director import keeps only 64 camera keys; like his cut with people, these chapters carry more (dense splines).
+
+## Oilers: the touchscreen story (S9, Nov 14)
+
+Vico's note: nobody used the desk's onboard touchscreen; in the high school the standing student should slide it out
+and lower the desk for the student in the wheelchair. `build-oilers-story.py` writes the oilers chapter's story fields
+(seconds, motion, ledStatus, touchscreen, Kai's and Noah's placements; everyone else kept), its camera stays in
+`build-cine-cut.py` (`--only oilers`). **The chapter is now 15 s (was 14)**: the score and the oilers title window
+follow its length and cut times. 0-5.3 s the class view (no cut before 1.5 s): Kai rolls in down the aisle (`roll`),
+Noah greets him and steps to the desk's front-right corner; 5.3-9.0 s the insert over his right shoulder: he draws
+the screen out (`act`), taps 'Lower to Kai's height' at 8.2 s, the desk starts down at 8.5 s (43.5 to 31 in over 3 s)
+with the live height on the screen (`touchscreen`); 9.0 s on the front three-quarter: Kai rolls the last half metre
+in and docks (typing from 12.75 s), Noah steps back and watches. S6's monitor clips (cine-oilers-*.mp4) were timed
+for the 14 s chapter with the lift at 8-11 s: their 'Lowering to Kai's height' readout now runs ahead of the desk.

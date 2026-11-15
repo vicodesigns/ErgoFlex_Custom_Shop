@@ -210,24 +210,27 @@ def coast(s):
 
 @chapter
 def oilers(s):
-    # High school. The featured desk (centre about (-3.03, 0, 5.66)) faces +x, 0.85 in front of the ocean window
-    # wall (z 7.66). Kai waits at it in his wheelchair while Noah, standing at its end (-3.0, 4.07), talks with him;
-    # the desk comes down to Kai's height (8.0-11 s) and he types. Mia works at the window desk (2.75, 6.4); Nia and
-    # Finn sit at the near table (chairs at x 1.61), facing Mr. Hale at the board.
-    # The film dissolves coast into oilers over 0-1.5 s (S4's hand-off: oilers frame 45 is the first frame out of the
-    # dissolve, and the opening runs unbroken to at least 3.0 s). So the chapter opens on one readable frame and holds
-    # it (Vico, Nov 14: no split-second student and jump): over the class from the -z side of the back of the room, a
-    # little low, Mia whole on the left, Nia and Finn from behind, Noah talking with Kai at the featured desk, the
-    # teacher at the board; the white review desk out of the bottom left and the orange ball on top of Mia's desk clear
-    # above the quiz screen; one slow push to 4.45 s. Then a cut to a front three-quarter from the window side: Kai at
-    # the desk, Noah facing him and the lens, the quiz screens to the lens, the desk coming down to him.
+    # High school, the approved story of Nov 14 (build-oilers-story.py; 15 s). The featured desk (centre about
+    # (-3.03, 0, 5.66)) faces +x, 0.85 in front of the ocean window wall (z 7.66). The film dissolves coast into
+    # oilers over 0-1.5 s (S4's hand-off: no cut before it), so the chapter opens on S5's class view and holds it:
+    # over the class from the back, Kai rolling in along the aisle toward the featured desk, Noah at its right end
+    # turning to greet him; one slow push to 5.25 s. Then the insert over Noah's right shoulder (fov 22, about 1.1 m
+    # from the screen, from above): the desk's front-right corner, his hand drawing the touchscreen out, the face turning up with
+    # 'Lower to Kai's height', his finger landing on the button (8.2 s) and the desk starting down (8.5 s) with the
+    # height counting on the screen. Cut at 9.0 s to the front three-quarter from the window side: the desk comes
+    # down, Kai rolls the last metre in under it and starts the quiz, Noah steps back and watches.
+    btn = (-3161.4, 1078.8, -1423.7)                               # the button on the open screen, room mm
     cam(s, [
-        key(0, (6.4, 2.6, 3.2), (-2.5, 1.0, 5.2), 46, 'Over the class from the back: Noah talking with Kai at the featured desk (the dissolve from coast lands here)'),
-        key(4.45, (6.0, 2.55, 3.25), (-2.55, 1.02, 5.05), 46, 'One slow push over the class, no cut until 4.5 s'),
-        key(4.5, (-0.5, 1.95, 7.15), (-3.0, 1.45, 5.45), 50, 'Cut: front three-quarter from the window side, Kai at the desk', cut=True),
-        key(8.0, (-0.6, 1.95, 7.2), (-3.0, 1.5, 5.45), 50, 'The desk starts down'),
-        key(11, (-0.55, 2.05, 7.3), (-3.0, 1.45, 5.45), 53, 'The desk comes down to Kai, the quiz on the screens'),
-        key(14, (-0.7, 2.05, 7.3), (-3.0, 1.45, 5.45), 52, 'He works at his height'),
+        key(0, (6.4, 2.6, 3.2), (-2.5, 1.0, 5.2), 46, 'Over the class from the back: Kai rolls in, Noah at the desk (the dissolve from coast lands here)'),
+        key(5.25, (5.9, 2.53, 3.27), (-2.55, 1.02, 5.05), 46, 'One slow push over the class, no cut until 5.3 s'),
+        # (high over his right shoulder: 0.35 m to his right, 0.15 m behind him, 2.0 m up, looking down past his head and
+        # shoulder at the glass, which faces the lens within 36 degrees, about 1.1 m away; lower or closer, his shoulder
+        # and back cover the screen or the lens is inside them)
+        key(5.3, W(-2556, 2000, -1152), W(btn[0] + 30, btn[1] - 40, btn[2] + 10), 22, "Cut: insert over Noah's right shoulder, the screen at the desk's corner", cut=True),
+        key(8.95, W(-2600, 1960, -1170), W(btn[0] + 20, btn[1] - 30, btn[2] + 10), 22, "His finger on 'Lower to Kai's height'; the desk starts down"),
+        key(9.0, (-0.5, 1.95, 7.15), (-3.0, 1.45, 5.45), 50, 'Cut: front three-quarter from the window side, the desk coming down to Kai', cut=True),
+        key(11.5, (-0.55, 2.0, 7.25), (-3.0, 1.45, 5.45), 51, 'At his height: Kai rolls in under it'),
+        key(15, (-0.7, 2.05, 7.3), (-3.0, 1.45, 5.45), 52, 'He starts the quiz; Noah watches'),
     ])
 
 
