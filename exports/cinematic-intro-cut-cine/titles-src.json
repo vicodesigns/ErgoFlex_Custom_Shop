@@ -100,7 +100,7 @@
   {
    "chapter": "create",
    "rel_in": 3.6,
-   "rel_out": 9.6,
+   "rel_out": 9.2,
    "eyebrow": "TILT",
    "title": "Angle it to your art.",
    "detail": "From digital to drafting to oil. Everything within reach.",
@@ -370,8 +370,8 @@
   },
   {
    "chapter": "storage",
-   "rel_in": 2.75,
-   "rel_out": 9.75,
+   "rel_in": 3.85,
+   "rel_out": 8.8,
    "eyebrow": "STORAGE",
    "title": "Make room for what\u2019s next.",
    "detail": "One tap: fold to 65\u00b0, roll to the wall.",
