@@ -1,6 +1,57 @@
 // Live screen artwork. Drawn at texture resolution, so it remains legible on
 // both physical panel sizes without baking a phone's status/navigation bars.
+//
+// Film screens (state.film, set by a film chapter's `touchscreen.screen` keys: experience/touchscreen-track.mjs,
+// studio.js setFilmTouchscreen): { mode, since, ...the mode's fields }. The header bar (ErgoFlex, STOP) stays; the body
+// below it is the mode's. The height a mode shows is state.height, the desk's real height at that frame, so a number
+// that counts down is the desk moving. Modes:
+//   'prompt'   { title, text, button, sub, pressed }   a question and one big button (FILM_BUTTON on the canvas);
+//              pressed: true (or 0..1) shows it pushed in and lit, the way the app answers a touch
+//   'moving'   { title, target, from, done }            the live height, large, travelling from `from` to `target`
+//              (inches) with a bar; once within 0.05 in of the target, `done` (default 'At height') with a tick
+//   'message'  { title, text }                          a title and a line of text
+// More modes (the screens stream's): TouchscreenDisplay.modes.<name> = (ui, state, film) => {...}, drawing in
+// ui.c (the 2D context; ui.text, ui.box, ui.ink, ui.muted, ui.blue, ui.panel, ui.dark, ui.top: where the body starts).
+// A key whose mode is not known shows the app's own screen.
+export const FILM_BUTTON = { x: 200, y: 400, w: 880, h: 190 };      // canvas pixels of the prompt's button (1280 x 760)
+const filmModes = {
+    prompt(ui, state, f) {
+        const { c, text, box, ink, muted, dark } = ui, b = FILM_BUTTON, p = f.pressed === true ? 1 : Math.max(0, Math.min(1, Number(f.pressed) || 0));
+        if (f.title) text(String(f.title), 70, 190, 58, ink, '700');
+        if (f.text) text(String(f.text), 72, 258, 32, muted, '400');
+        text(`Now ${state.height.toFixed(1)} in`, 72, 330, 28, muted, '600');
+        // the button: raised, then pushed in (a little smaller, darker) with a ring of light round it
+        c.save(); const k = 1 - .025 * p, cx = b.x + b.w / 2, cy = b.y + b.h / 2; c.translate(cx, cy); c.scale(k, k); c.translate(-cx, -cy);
+        if (p > 0) { c.save(); c.shadowColor = '#5aa8ffcc'; c.shadowBlur = 46 * p; c.fillStyle = '#5aa8ff'; c.beginPath(); c.roundRect(b.x - 10, b.y - 10, b.w + 20, b.h + 20, 58); c.globalAlpha = .55 * p; c.fill(); c.restore(); }
+        const top = dark ? '#2f7cf0' : '#3a46b8', down = dark ? '#1450b8' : '#1f2a86', mix = (a, z) => { const h = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)); const x = h(a), y = h(z); return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * p).toString(16).padStart(2, '0')).join(''); };
+        box(b.x, b.y, b.w, b.h, 48, mix(top, down), p < .5);
+        c.textAlign = 'center'; text(String(f.button || 'OK'), cx, cy + (f.sub ? 4 : 20), 60, '#ffffff', '700');
+        if (f.sub) text(String(f.sub), cx, cy + 58, 28, '#d8e2ff', '600');
+        c.textAlign = 'left'; c.restore();
+    },
+    moving(ui, state, f) {
+        const { c, text, box, ink, muted, blue, dark } = ui, h = state.height, target = Number(f.target), from = Number.isFinite(Number(f.from)) ? Number(f.from) : h;
+        const there = Number.isFinite(target) && Math.abs(h - target) < .05, down = Number.isFinite(target) && target < from;
+        text(String(there ? (f.done || 'At height') : (f.title || (down ? 'Lowering' : 'Raising'))), 70, 175, 44, there ? (dark ? '#4fd17a' : '#1f8a45') : ink, '700');
+        c.textAlign = 'right'; text(h.toFixed(1), 830, 470, 250, ink, '700'); c.textAlign = 'left';
+        text('in', 850, 470, 64, muted, '600');
+        if (Number.isFinite(target)) {
+            if (there) { c.save(); c.strokeStyle = dark ? '#4fd17a' : '#1f8a45'; c.lineWidth = 16; c.lineCap = 'round'; c.lineJoin = 'round'; c.beginPath(); c.moveTo(1010, 380); c.lineTo(1060, 430); c.lineTo(1150, 320); c.stroke(); c.restore(); }
+            else { c.save(); c.fillStyle = blue; c.beginPath(); const y = down ? 330 : 430, s = down ? 1 : -1; c.moveTo(1030, y); c.lineTo(1150, y); c.lineTo(1090, y + s * 90); c.closePath(); c.fill(); c.restore(); }
+            text(`${down ? '↓' : '↑'} ${target.toFixed(1)} in`, 70, 600, 40, muted, '600');
+            const span = Math.abs(target - from) || 1, done = Math.max(0, Math.min(1, Math.abs(h - from) / span));
+            box(70, 640, 1140, 34, 17, dark ? '#12181d' : '#dae1e9', false);
+            if (done > 0) { c.fillStyle = there ? (dark ? '#4fd17a' : '#1f8a45') : blue; c.beginPath(); c.roundRect(70, 640, Math.max(34, 1140 * done), 34, 17); c.fill(); }
+        }
+    },
+    message(ui, state, f) {
+        const { text, ink, muted } = ui;
+        if (f.title) text(String(f.title), 70, 260, 64, ink, '700');
+        if (f.text) text(String(f.text), 72, 340, 34, muted, '400');
+    }
+};
 export class TouchscreenDisplay {
+    static modes = filmModes;
     constructor(){this.canvas=document.createElement('canvas');this.canvas.width=1280;this.canvas.height=760;this.ctx=this.canvas.getContext('2d');this.key='';this.theme='light';}
     update(state){
         const key=JSON.stringify(state);if(key===this.key)return false;this.key=key;this.theme=state.theme;
@@ -26,6 +77,8 @@ export class TouchscreenDisplay {
         c.save();c.translate(955,22);c.strokeStyle=state.guard?blue:muted;c.fillStyle=state.guard?(dark?'#164485':'#adc4fa'):panel;c.lineWidth=4;
         c.beginPath();c.moveTo(0,8);c.lineTo(20,0);c.lineTo(40,8);c.lineTo(38,29);c.quadraticCurveTo(32,44,20,50);c.quadraticCurveTo(8,44,2,29);c.closePath();c.fill();c.stroke();c.restore();
         box(1105,20,134,47,24,'#bd2822');text('STOP',1133,53,22,'#fff','700');
+        const mode=state.film&&TouchscreenDisplay.modes[state.film.mode];
+        if(mode){mode({c,text,box,ink,muted,blue,panel,base,dark,top:83,width:1280,height:760},state,state.film);return true;}
         box(26,105,310,478,30);box(361,105,548,478,30);box(934,105,320,478,30);
         text('HEIGHT',46,141,17,muted);text('GLIDE',382,141,17,muted);text('TILT',954,141,17,muted);
         chip(state.heightSpeed||'Medium',184,120,115);chip(state.glideSpeed||'Medium',765,120,115);chip(state.tiltSpeed||'Fast',1084,120,115);
