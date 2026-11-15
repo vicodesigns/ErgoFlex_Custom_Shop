@@ -4127,12 +4127,18 @@ function addLedUprightSpill(surface, strip, receiver, direction, minY, maxY, opt
 
 // The wheels and their mounts receive the desk's LEDs above them (Vico, Nov 14: "the lighting should be reflected on
 // the wheels ... the bottom of the desktop ... illuminate right above them"): the omni wheels' rollers and side discs,
-// the motor brackets and the motors. Two receivers each, both the lift columns' upright receiver unchanged (shader,
-// falloff, gain 1, reach 12 to 28): the foot strip under the footrest (ledParts[38], the strip that also lays the LED
+// the motor brackets and the motors. Two receivers each, both the lift columns' upright receiver (same shader, falloff
+// and reach 12 to 28; gain WHEEL_LED_GAIN): the foot strip under the footrest (ledParts[38], the strip that also lays the LED
 // pool on the floor around the wheels, a few inches above them) and the desktop's centre underside strip, which is
 // some forty inches up and adds little, as on the columns' feet; it grows as the desk comes down. Each overlay is a
 // child of its mesh, so it turns with the wheel. The pins and screws are left out (too small to show it, and the
 // overlay count would pass four hundred).
+// The wheels' gain on that receiver (chingon's decision, Nov 14: Vico's request authorizes it). At the columns' gain (1)
+// and the film's base level (baseStrength 36) the wheels took about 0.2/255 of the LED: a black silhouette in a blue or
+// red pool. At 8 the rollers' and mounts' sides towards the foot strip take its colour; 16 looked the same (the
+// shader's own cap, alpha 0.55, is reached near the strip), so 8 keeps more of the falloff. The cap and the falloff
+// bound it: a lit side towards the strip, not a flat tint.
+const WHEEL_LED_GAIN = 8;
 function addWheelLedReceivers() {
     const foot = ledParts[38]?.part;
     const wheelPart = obj => {
@@ -4145,10 +4151,10 @@ function addWheelLedReceivers() {
     for (const { obj } of partRegistry.values()) {
         if (!obj.isMesh || !(wheelPart(obj) || /^(Brackets|Nema_17_Motors)(?:_\d+)?$/.test(obj.name))) continue;
         if (foot) addLedUprightSpill(obj, foot, 'base', -1, -1000, 1000,
-            { underside: true, uprightOnly: false, gain: 1, minReach: 12, maxReach: 28 });
+            { underside: true, uprightOnly: false, gain: WHEEL_LED_GAIN, minReach: 12, maxReach: 28 });
         for (const group of [ledStandardStrips, ledExtendedStrips]) {
             addLedUprightSpill(obj, group.children[2], 'base', -1, -1000, 49,
-                { underside: true, uprightOnly: false, gain: 1, minReach: 12, maxReach: 28 });
+                { underside: true, uprightOnly: false, gain: WHEEL_LED_GAIN, minReach: 12, maxReach: 28 });
         }
     }
 }
