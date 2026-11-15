@@ -977,9 +977,10 @@ export function solveTread(rig, plan, time, begin = 0) {
 // and `to` at 1. Pure. Returns { model: 'from' | 'to' } (which of the two built models to draw: they bend alike).
 // `arms`: the part of the change (0..1) in which the arms go from the one posture to the other, [.22, 1] when not given
 // (the workshop film: hands off a shelf before he turns away, a placement's `change.arms`, room-people.mjs).
-// `shift`: { x, z, e } when the model itself moves during the change (metres in the model's frame, from the first spot to
-// the second, and the share of it done now): each foot stays on the floor where it was and then steps to where it goes,
-// the left and then the right (a step back from a desk), instead of sliding with the model.
+// `shift`: { x, z, yaw, e } when the model itself moves and turns during the change (metres in the first spot's frame,
+// from the first spot to the second, the turn between them in radians, and the share of both done now): each foot stays
+// on the floor where it was and then steps (lifted, turned with the step) to where it goes, first the foot on the side
+// it turns to (the left when it does not turn: a step back from a desk), instead of sliding or spinning with the model.
 export function solveChange(rig, from, to, w, arms0 = null, shift = null) {
     const b = rig.b, t = clamp01(w), hips = ss(0, .72, t), spine = ss(.08, .82, t), head = ss(.15, .92, t), arms = arms0 ? ss(arms0[0], arms0[1], t) : ss(.22, 1, t);
     if (t <= 0 || t >= 1) { rig.load(t <= 0 ? from : to); rig.fk(); return { model: t <= 0 ? 'from' : 'to' }; }
@@ -999,10 +1000,14 @@ export function solveChange(rig, from, to, w, arms0 = null, shift = null) {
         const [thigh, calf, foot] = rig.side[s].leg, far = from.wp[foot].distanceTo(to.wp[foot]);
         // the feet move while the weight is in the seat: before getting up, after sitting down
         if (shift) {
-            const step = ss(...(s === 'l' ? [.04, .42] : [.36, .76]), t), sx = shift.x, sz = shift.z, e = shift.e, reach = Math.hypot(sx, sz) + far;
-            awayAt.set(lerp(from.wp[foot].x - sx * e, to.wp[foot].x + sx * (1 - e), step), lerp(from.wp[foot].y, to.wp[foot].y, step), lerp(from.wp[foot].z - sz * e, to.wp[foot].z + sz * (1 - e), step));
-            awayAt.y += Math.min(.035, reach * .3) * Math.sin(Math.PI * step);
-            footQ.slerpQuaternions(from.wq[foot], to.wq[foot], step);
+            const yaw = shift.yaw || 0, first = yaw >= 0 ? 'l' : 'r', step = ss(...(s === first ? [.04, .42] : [.36, .76]), t), e = shift.e;
+            // where it is and where it goes, in the first spot's frame (the second spot's footprint turned and moved there)
+            v1.copy(to.wp[foot]).applyAxisAngle(Y, yaw); v1.x += shift.x; v1.z += shift.z;
+            const reach = Math.hypot(v1.x - from.wp[foot].x, v1.z - from.wp[foot].z);
+            awayAt.lerpVectors(from.wp[foot], v1, step); awayAt.y += Math.min(.035, reach * .3) * Math.sin(Math.PI * step);
+            // into the model's frame now (it has moved e of the way and turned e of the turn)
+            awayAt.x -= shift.x * e; awayAt.z -= shift.z * e; awayAt.applyAxisAngle(Y, -yaw * e);
+            footQ.slerpQuaternions(from.wq[foot], turn.setFromAxisAngle(Y, yaw).multiply(to.wq[foot]), step).premultiply(turn2.setFromAxisAngle(Y, -yaw * e));
             rig.reach(thigh, calf, foot, awayAt); rig.reach(thigh, calf, foot, awayAt); rig.setWorld(foot, footQ);
             continue;
         }

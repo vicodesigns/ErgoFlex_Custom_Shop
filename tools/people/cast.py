@@ -661,12 +661,12 @@ def stand_phone(k):
 # at 43.5 in (desktop top 1.100 m, top shelf 1.359 m; the shelf's middle 0.233 m behind the desk's centre, the cutout's
 # edge 0.332 m in front of it) with him 0.17 m behind the cutout's edge (0.13 m before Nov 14: his belly was in its edge). Turn: degrees about the vertical (the toy
 # story turns it 8 degrees).
-ROBOT_DESK = ((.06, -.37, 1.1045), 8.)
+ROBOT_DESK = ((.06, -.25, 1.1045), 8.)
 ROBOT_SHELF = ((.1163, -.6056, 1.3638), 8.)
-# On the way up (stand-robot-lift): lifted straight up from the desktop, 120 mm in front of the shelf's front edge (0.478 m
-# in front of him, the board's top 1.359 m) and 100 mm above it, so the hands (fingers round its back) rise clear of the
-# board and then carry it over the edge and set it down.
-ROBOT_LIFT = ((.1163, -.36, 1.46), 8.)
+# On the way up (stand-robot-lift): lifted up and toward him off the desktop, 200 mm in front of the shelf's front edge (0.478 m
+# in front of him, the board's top 1.359 m) and 100 mm above it, so the hands (the right fingers round its back, 86 mm
+# past it) rise clear of the board and then carry it over the edge and set it down.
+ROBOT_LIFT = ((.1163, -.21, 1.46), 8.)
 # These two postures are built where they stand (RAISED: not dropped to the floor afterwards), so the robot is exactly
 # at these heights: the ankles are posed at Andre's own ankle height in his shoes.
 ANDRE_ANKLE = .097      # (less what each posture's foot pitch leaves under the sole: work .013, shelf .005)
@@ -683,7 +683,7 @@ def _robot_hand(robot, at, fingers, palm, elbow, curl=.55, thumb=.35, spread=0.)
 
 # The right hand holds the robot by its side, under its arm (fingers round toward its back), the same in every posture
 # that holds it, so it rides the hand from the desk to the shelf without a jump.
-_GRIP_R = dict(at=(-.057, .029, .08), fingers=(.05, -1, -.2), palm=(1, 0, 0), curl=.42, thumb=.3)
+_GRIP_R = dict(at=(-.057, .029, .08), fingers=(.05, -1, -.2), palm=(1, 0, 0), curl=.8, thumb=.3)
 _GRIP_L = dict(at=(.057, .029, .08), fingers=(-.05, -1, -.2), palm=(-1, 0, 0), curl=.42, thumb=.3)
 
 
@@ -691,7 +691,7 @@ def stand_robot_work(k):
     """At the desk, working on the robot that sits on the desktop: the right hand steadies it by its side (the elbow out
     and up, clear of the desktop: it lay in it before Nov 14), the left works at its open chest; leaning in, eyes on it."""
     return {'pelvis_offset': (0, .015, -.021), 'spine': (7, 9, 7), 'neck': 14, 'head': 18, 'head_yaw': 4,
-            'hand_r': _robot_hand(ROBOT_DESK, elbow=(-.5, .1, .15), **_GRIP_R),
+            'hand_r': _robot_hand(ROBOT_DESK, elbow=(-.5, .05, .35), **_GRIP_R),
             'hand_l': _robot_hand(ROBOT_DESK, (.085, .125, .1), (-.5, -.75, -.45), (.25, -.35, -1), (.3, .25, -.3), curl=.5, thumb=.35),
             'foot_l': {'at': (.11 * k, .0, ANDRE_ANKLE - .013), 'toes': (.22, -1, 0)}, 'foot_r': {'at': (-.12 * k, .03 * k, ANDRE_ANKLE - .013), 'toes': (-.28, -1, 0)}}
 
@@ -715,11 +715,11 @@ def stand_robot_shelf(k):
 
 
 def stand_robot_release(k):
-    """The robot left on the shelf: the hands open and drawn back toward the chest, above the desktop, before they come
-    down (so they do not drop through the desk on the way)."""
+    """The robot left on the shelf: the hands let go and come back to him, relaxed in front of the belt, before they come
+    down (so they do not drop through the desk on the way; the wrists as they hang, not turned)."""
     return {'pelvis_offset': (0, .0, -.008), 'spine': (2, 3, 3), 'neck': 6, 'head': 8,
-            'hand_r': {'at': (-.12, -.13, 1.27), 'fingers': (.15, -.6, .8), 'palm': (1, .1, .1), 'elbow': (-.3, .3, -.3), 'curl': .3, 'thumb': .3},
-            'hand_l': {'at': (.12, -.13, 1.27), 'fingers': (-.15, -.6, .8), 'palm': (-1, .1, .1), 'elbow': (.3, .3, -.3), 'curl': .3, 'thumb': .3},
+            'hand_r': {'at': (-.16, -.13, 1.13), 'fingers': (.15, -1, -.3), 'palm': (.75, 0, -.65), 'elbow': (-.3, .3, -.3), 'curl': .45, 'thumb': .4},
+            'hand_l': {'at': (.16, -.13, 1.13), 'fingers': (-.15, -1, -.3), 'palm': (-.75, 0, -.65), 'elbow': (.3, .3, -.3), 'curl': .45, 'thumb': .4},
             'foot_l': {'at': (.11 * k, .0, ANDRE_ANKLE - .005), 'toes': (.22, -1, 0)}, 'foot_r': {'at': (-.12 * k, .03 * k, ANDRE_ANKLE - .005), 'toes': (-.28, -1, 0)}}
 
 
@@ -1576,7 +1576,7 @@ ROLE_POSES = {'stand-brief', 'stand-radio', 'stand-chart', 'push-cart', 'lie-bed
               'stand-robot-work', 'stand-robot-lift', 'stand-robot-shelf', 'stand-robot-release', 'stand-phone-pull', 'stand-phone-up', 'stand-phone-press', 'stand-phone-watch',
               'stand-screen-pull', 'stand-screen-tap', 'stand-screen-press'}      # (the gym's: built for those who train there, ALSO below)
 # Built where the pose puts them, not dropped until something touches the floor (a body lying on a bed has nothing on it).
-RAISED = {'lie-bed', 'sit-microscope', 'gym-cycle', 'gym-pullup', 'gym-press', 'power-phone', 'power-type', 'stand-robot-work', 'stand-robot-lift', 'stand-robot-shelf', 'stand-robot-release', 'stand-screen-pull', 'stand-screen-tap', 'stand-screen-press'}       # (feet on a stool's ring, on pedals or off the floor under a bar are not on the floor either)
+RAISED = {'lie-bed', 'sit-microscope', 'gym-cycle', 'gym-pullup', 'gym-press', 'power-phone', 'power-type', 'stand-robot-work', 'stand-robot-lift', 'stand-robot-shelf', 'stand-screen-pull', 'stand-screen-tap', 'stand-screen-press'}       # (feet on a stool's ring, on pedals or off the floor under a bar are not on the floor either)
 DESK_HEIGHTS = {'sit-type': (28, 30), 'stand-type': (43.5,), 'stand-type-low': (28, 30), 'wheel-type': (28, 31), 'power-type': (32,), 'sit-coffee': (28, 30), 'stand-coffee': (43.5,), 'stand-low': (35.5,), 'stand-mid': (39,), 'kid-stand-desk': (28,), 'kid-sit-desk': (28,)}
 # Who a posture is for: adult poses are built on adult furniture, child poses on child furniture.
 CHILD_POSES = {p for p in POSE_INFO if p.startswith('kid-')}

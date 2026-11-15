@@ -678,6 +678,33 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
     { const w = .42, e = THREE.MathUtils.smoothstep(w, 0, .6); solveChange(rig, shelf, go, w, [.35, 1], { x: 0, z: back, e }); assert.ok(Math.abs(room(rig.wp[fl], e) - (go.wp[fl].z + back)) < .003, 'step: the left foot has stepped back'); assert.ok(Math.abs(room(rig.wp[fr], e) - shelf.wp[fr].z) < .03, 'step: the right foot not yet'); }
     for (let w = 0, last = null; w <= 1.0001; w += 1 / 60) { const e = THREE.MathUtils.smoothstep(w, 0, .6); solveChange(rig, shelf, go, w, [.35, 1], { x: 0, z: back, e }); const f = [room(rig.wp[fl], e), room(rig.wp[fr], e)]; if (last) assert.ok(Math.abs(f[0] - last[0]) < .03 && Math.abs(f[1] - last[1]) < .03, 'step: no foot jumps'); for (const i of [fl, fr]) assert.ok(rig.wp[i].y > .07, 'step: feet not under the floor'); last = f; }
     solveChange(rig, shelf, go, 1, [.35, 1], { x: 0, z: back, e: 1 }); assert.ok(worst(rig, go) < 1e-9, 'step: ends as built');
+    // a step that turns as well (the workshop's turn away, 105 deg): a foot on the floor stays where it is in the room
+    // while the model turns under it, and nothing jumps
+    {
+        const walkKey = rig.key('people-andre-walk'), yaw = THREE.MathUtils.degToRad(105), d = { x: -.04, z: .12 }, ease = w => THREE.MathUtils.smoothstep(w, 0, 1);
+        const room = (v, e) => new THREE.Vector3(v.x, v.y, v.z).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw * e).add(new THREE.Vector3(d.x * e, 0, d.z * e));
+        let last = null;
+        for (let w = 0; w <= 1.0001; w += 1 / 120) {
+            const e = ease(w); solveChange(rig, go, walkKey, w, [.1, .6], { ...d, yaw, e });
+            const f = [fl, fr].map(i => room(rig.wp[i], e));
+            if (w > .01 && w < .03) assert.ok(f[0].distanceTo(room(go.wp[fl], 0)) < .003 && f[1].distanceTo(room(go.wp[fr], 0)) < .003, 'turning step: both feet where they stood at the start');
+            if (last) for (const k of [0, 1]) assert.ok(f[k].distanceTo(last[k]) < .03, 'turning step: no foot jumps at ' + w.toFixed(3));
+            last = f;
+        }
+        // the foot that steps second is still on its print while the first steps (left first: a turn to his left)
+        const e = ease(.3); solveChange(rig, go, walkKey, .3, [.1, .6], { ...d, yaw, e }); assert.ok(room(rig.wp[fr], e).distanceTo(room(go.wp[fr], 0)) < .003, 'turning step: the right foot planted while the left steps');
+    }
+    // the workshop film's chain of postures pairs into skeleton blends with margin: one spot (< 200 mm, < 0.27 rad apart)
+    // and windows that meet, so no step of it falls back to a dissolve (sameSpot: 220 mm, 0.3 rad)
+    {
+        const cut = JSON.parse(fs.readFileSync(new URL('../exports/cinematic-intro-cut-cine/review-cut.json', import.meta.url), 'utf8')), st = cut.shots.find(s => s.id === 'storage').people, by = Object.fromEntries(st.cast.map(c => [c.key, c]));
+        const chain = ['andre-robot', 'andre-lift', 'andre-shelf', 'andre-lets-go', 'andre-steps-back'];
+        for (let i = 1; i < chain.length; i++) {
+            const a = by[chain[i - 1]], b = by[chain[i]], turn = Math.abs(THREE.MathUtils.euclideanModulo(THREE.MathUtils.degToRad(a.turn - b.turn) + Math.PI, Math.PI * 2) - Math.PI);
+            assert.ok(Math.hypot(a.at[0] - b.at[0], a.at[1] - b.at[1]) < 200 && turn < .27, `${a.key} -> ${b.key} pairs with margin`);
+            assert.equal(st.when[a.key][0][1], st.when[b.key][0][0], `${a.key} -> ${b.key}: the windows meet`);
+        }
+    }
     // toes: 'bend': while a heel is up the toes stay level (the ball bone flat), and the walk is otherwise the same
     const key = rig.key('people-andre-stand-wait'), path = [[0, 0], [0, 3]], a = walkPlan(rig, key, key, path), b = walkPlan(rig, key, key, path, { toes: 'bend' }), ball = rig.side.l.leg[3];
     assert.equal(a.toes, false); assert.equal(b.toes, true);

@@ -2113,12 +2113,12 @@ export class RoomPeople {
             // which the arms move and the body turns and moves to the new spot; [.22, 1] and [0, .72] when not given. The
             // workshop film: the hands come off the shelf before he turns away from the desk.)
             const plan = pair.to?.change, part = k => Array.isArray(plan?.[k]) && plan[k].length === 2 && plan[k].every(Number.isFinite) && plan[k][0] < plan[k][1] ? plan[k] : null;
-            // (`change.step`: the move to the new spot is a step, the feet planted, not a slide: same turn at both spots)
+            // (`change.step`: the move to the new spot and the turn are steps, the feet planted, not a slide or a spin)
             const turnPart = part('turn') || [0, .72], ease = THREE.MathUtils.smoothstep(w, turnPart[0], turnPart[1]);
             let shift = null;
             if (plan?.step === true) {
                 const dx = (pair.homeTo.position.x - pair.homeFrom.position.x) / 1000, dz = (pair.homeTo.position.z - pair.homeFrom.position.z) / 1000, yaw = pair.homeFrom.turn, c = Math.cos(yaw), sn = Math.sin(yaw);
-                shift = { x: dx * c - dz * sn, z: dx * sn + dz * c, e: ease };
+                shift = { x: dx * c - dz * sn, z: dx * sn + dz * c, yaw: pair.homeTo.turn - pair.homeFrom.turn, e: ease };
             }
             const { model } = solveChange(pair.rig, pair.keyFrom, pair.keyTo, w, part('arms'), shift), cut = Number.isFinite(pair.to?.swap) ? THREE.MathUtils.clamp(pair.to.swap, .02, .98) : null;
             const shown = (cut === null ? model === 'from' : w < cut) ? a : b;
