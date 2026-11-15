@@ -6,7 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as THREE from 'three';
-import { PersonRig, solveStill } from '../room-people-motion.mjs';
+import { PersonRig, solveStill, actedKey } from '../room-people-motion.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const rig = new PersonRig(JSON.parse(fs.readFileSync(path.join(root, 'assets/props/people-rigs/noah.json'), 'utf8')));
@@ -37,5 +37,9 @@ const hand = rig.side.r.arm[3];
     assert.ok(after.clone().sub(before).distanceTo(by) < .012, 'drawn out by the screen\'s travel');
     assert.ok(Math.abs(mid.clone().sub(before).length() - by.length() / 2) < .015, 'half way at half the time');
     solveStill(rig, key, { time: 3, seed: 5, life: 1 }); assert.ok(rig.wp[hand].distanceTo(before) < .01, 'without an act: the posture as built (with its life)');
+    // a change that follows the pull starts where the hand drew the screen to (actedKey), the built key untouched
+    const acted = actedKey(rig, key, { since: Infinity, dur: 1.2, by, press: null }), built = key.wp[hand].clone();
+    assert.ok(acted.wp[hand].clone().sub(built).distanceTo(by) < .012 && key.wp[hand].equals(built), 'the acted key has the hand at the end of the pull');
+    assert.equal(actedKey(rig, rig.key(ids[1]), { since: Infinity, dur: 1, by: null, press: null }).wp[hand].distanceTo(rig.key(ids[1]).wp[hand]) < 1e-9, true, 'after a tap: as built');
 }
 console.log('PASS room people screen: Noah\'s pull and tap postures in his rig, the tap on the glass at its moment, the pull with the screen.');

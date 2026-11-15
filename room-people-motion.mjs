@@ -622,6 +622,13 @@ const SCREEN_ACTS = {
         } else { handAt.copy(key.wp[hand]); if (act.by) handAt.addScaledVector(act.by, down); else handAt.z += .025 * down; armTo(rig, 'r', handAt, key.wq[hand]); }
     }
 };
+// A posture as its action leaves it (the pull: the hand where the screen was drawn to), as a key: a change of
+// posture that follows the action starts from there, not from the posture as built (room-people.mjs readyChange).
+export function actedKey(rig, key, act) {
+    if (!act || !SCREEN_ACTS[key.pose]) return key;
+    rig.load(key); rig.fk(); SCREEN_ACTS[key.pose](rig, key, act, 1); rig.fk();
+    return { ...key, id: key.id + '|acted', q: rig.lq.map(q => q.clone()), root: rig.lp[rig.b.Root].clone(), pelvis: rig.lp[rig.b.pelvis].clone(), wp: rig.wp.map(v => v.clone()), wq: rig.wq.map(q => q.clone()) };
+}
 const ACTS = {
     'sit-write': write, 'kid-sit-k': (rig, key, time, seed, life) => write(rig, key, time, seed, life, 1.1), 'kid-sit-e': (rig, key, time, seed, life) => write(rig, key, time, seed, life, 1.1), 'kid-kneel-craft': (rig, key, time, seed, life) => write(rig, key, time, seed, life, 1.15),
     'stand-mug': sip, 'sit-mug': sip, 'stand-drink': (rig, key, time, seed, life) => sip(rig, key, time, seed, life, 1), 'sit-chat'(rig, key, time, seed, life) {

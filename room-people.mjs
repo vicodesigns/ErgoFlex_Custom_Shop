@@ -61,7 +61,7 @@
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
 import {updateSkinnedBounds} from './skinned-bounds.mjs';
-import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, solveTread, rollPlan, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=roll-20261114';
+import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, solveTread, rollPlan, actedKey, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=roll-20261114';
 // who looks at whom (RoomPeople.gazeOf)
 const GAZE_TALK = /^(stand-talk|sit-chat|stand-drink|stand-mug|stand-coffee|sit-coffee)$/, GAZE_IDLE = /^(stand-wait|wheel-roll|wheel-watch|cane-stand|white-cane|sit-listen)$/;
 const GAZE_DESK = /^stand-phone-watch$/;      // watching the featured desk go (the workshop film): the head follows it
@@ -2055,6 +2055,7 @@ export class RoomPeople {
         const free = this.people.filter(o => this.free(o) && this.character(o)), modes = o => o.userData.person.modes;
         for (const a of free) for (const b of free) {
             if (a === b || this.character(a) !== this.character(b) || !this.sameSpot(a, b)) continue;
+            if (a.userData.person.roll && b.userData.person.roll) continue;      // (one roll after another: the second sets off where the first came to rest, as it is)
             const wa = when?.[this.keyOf(a.userData.person)], wb = when?.[this.keyOf(b.userData.person)];
             if (wa && wb) { for (const [, t1] of wa) for (const [t0] of wb) if (Math.abs(t1 - t0) <= .75) pairs.push({ from: a.userData.person, to: b.userData.person, at: (t1 + t0) / 2 }); }
             // cast for different dayparts: a change waiting for the daypart to change
@@ -2111,6 +2112,8 @@ export class RoomPeople {
         // someone who walks off after the change turns toward their path during it, not in one frame as the walk starts
         // (the walker is not placed on its path yet when the skeletons load: it still faces the way it was cast)
         const path = change.to.walk?.path; if (path?.length > 1) change.homeTo.turn = Math.atan2(path[1][0] - path[0][0], path[1][1] - path[0][1]);
+        // (a posture whose action has moved it, the hand that drew the screen out, changes from where the action left it)
+        if (change.from.act) { const act = this.actOf({ userData: { person: change.from }, rotation: { y: change.homeFrom.turn } }, {}, Infinity); if (act) change.keyFrom = actedKey(rig, change.keyFrom, act); }
         const rolls = change.to.roll && this.rollPath(rb, change.to.roll); if (rolls) change.homeTo.turn = rollPlan(rolls, this.rollOptions(change.to.roll)).at(0).yaw;
         // a turn the short way round
         change.homeTo.turn = change.homeFrom.turn + THREE.MathUtils.euclideanModulo(change.homeTo.turn - change.homeFrom.turn + Math.PI, Math.PI * 2) - Math.PI;
@@ -2150,7 +2153,7 @@ export class RoomPeople {
             by = (life.actBy ||= new THREE.Vector3()).set((x * c - z * s) / 1000, y / 1000, (x * s + z * c) / 1000);
         }
         const id = object.userData.person.id, pressId = /-tap$/.test(id) ? id.replace(/-tap$/, '-press') : null;
-        return { since: time - act.at, dur: Number.isFinite(act.dur) ? act.dur : 1, by, press: pressId && life.rig.has(pressId) ? life.rig.key(pressId) : null };
+        return { since: time - act.at, dur: Number.isFinite(act.dur) ? act.dur : 1, by, press: pressId && life.rig?.has(pressId) ? life.rig.key(pressId) : null };
     }
     // A film's wheelchair user rolling along a path (a placement with `roll`): at its start until `start`, then rolling
     // it, then at its end. Planned once per path; the wheels of the drawn model (bones wheel_l / wheel_r, where the
