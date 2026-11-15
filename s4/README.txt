@@ -11,3 +11,4 @@ coast-orbit-7.6-14.4s-AFTER-fix: 7.6, 8.3, 9.0, 9.6, 10.3, 11.0, 11.6, 12.2, 13.
 commons-mia-side-check-30in-with-30in-model: the desk at 30 in, people-mia-power-type-30: hands on the keys, knees and armrests clear.
 commons-yara-walk-side-*: a fixed side camera on her walk (stills 6.2-9.4 s every 0.2 s; armswing-a 8.8 s, arms at the extremes; -b 9.2 s).
 backpacks-*-FIX: the 12 rebuilt walkers after the strap fixes; shoulder zoom: finn first fit | finn fix | yara first fit | yara fix.
+commons-yara-walk-BEHIND-*: from behind and above, 1280x720, at 94e01d37 (stills 6.4-9.8 s every 0.2 s; armswing-a 8.2 s, -b 8.8 s, the two arm-swing extremes).
