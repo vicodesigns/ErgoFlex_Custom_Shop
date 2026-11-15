@@ -350,6 +350,7 @@ def main():
         fn = CHAPTERS.get(shot['id'])
         if fn and (not ONLY or shot['id'] in ONLY): fn(shot)
     out = json.dumps(cut, indent=1).encode()                   # the cut's own style: one-space indent, LF, no final newline
+    sys.path.insert(0, HERE); from director_guard import guard; guard(json.loads(raw), cut, who='build-cine-cut.py')   # (a chapter edited in the Director is his)
     if out != raw:
         with open(CUT, 'wb') as f: f.write(out)
     print('cine cut:', CUT, 'chapters re-shot:', [k for k in CHAPTERS if not ONLY or k in ONLY])

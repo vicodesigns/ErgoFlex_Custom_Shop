@@ -81,6 +81,7 @@ def main():
     only = set(args[args.index('--only') + 1].split(',')) if '--only' in args else None
     dry = '--dry-run' in args
     cut = json.loads(open(CUT, 'rb').read().replace(b'\r\n', b'\n'))
+    before = json.loads(json.dumps(cut))
     changed = []
     for s in cut['shots']:
         cid = s['id']
@@ -100,6 +101,7 @@ def main():
             if new != old: changed.append('hero:' + v['preset']); v['screens'] = new
     for c in changed: print('screens:', c)
     if dry or not changed: print('(nothing written)' if not changed else '(dry run)'); return
+    sys.path.insert(0, HERE); from director_guard import guard; guard(before, cut, args, who='build-screens.py')   # (a chapter whose screens were edited in the Director is his)
     open(CUT, 'w', encoding='utf-8', newline='\n').write(json.dumps(cut, indent=1))
     open(SUB, 'w', encoding='utf-8', newline='\n').write(json.dumps(sub))
 

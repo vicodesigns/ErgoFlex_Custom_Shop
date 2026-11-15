@@ -10,13 +10,23 @@
 //               colors: { top, bottom, shoes, hair },        '#rrggbb' for those parts of the model (absent: as built)
 //               pose: { '<bone>': [x, y, z, w] },            pose fine tuning: that bone turned from the built pose (quaternion,
 //                                                            the bone's own frame; experience/pose-editor.mjs)
-//               look: ['<key>', ...] } ],                    whom they look at (room-people.mjs gazeOf)
+//               look: ['<key>', ...],                        whom they look at (room-people.mjs gazeOf)
+//               poseKeys: [{ t, pose, ease? }, ...],          the joints along the chapter's time (people-pose-keys.mjs)
+//               walk, roll, act, change, on, seat, ... } ],   the film's own placement fields (room-people.mjs, top): kept as they are
 //     when: { '<key>': [[t0, t1, fadeIn?, fadeOut?], ...] }, the seconds of the chapter that person is there (absent: all of it)
 //     chair: { back, side, turn }, fade                      as in the film's people filter
 //   }
 // shot.peopleEdits absent: the chapter's cast is the film's (film.people). Present: it is the whole cast, the room's
 // own people included as plain entries (the People tab copies them in on the first edit), so a later change to a
 // room's standing cast never changes a chapter Vico has arranged.
+//
+// v: 2 (S31, 2026-11-15): shot.peopleEdits = { v: 2, ...the film's whole `people` object } VERBATIM: only, except, place,
+// chair, fade, when and the cast with every field, known here or not. Nothing is whitelisted, so a chapter with walks,
+// rolls, actions and seated extras goes through the Director and comes back the same. The Director import
+// (build-round8-director.py) does the same on its side: the film's `people` is this object minus `v` and minus the cast
+// entries with hide: true (and their `when`). Without `v` it is the first form above (cleaned field by field).
+import {cleanPoseKeys} from '../people-pose-keys.mjs';
+export {cleanPoseKeys,poseAt,setPoseKey,removePoseKey,moveKey,setKeyEase,copyKey,pasteKey,keyTimes,keyedBones,EASES,KEY_SNAP} from '../people-pose-keys.mjs';
 const finite=v=>typeof v==='number'&&Number.isFinite(v);
 const r1=v=>Math.round(v*10)/10,r3=v=>Math.round(v*1000)/1000;
 const KEY=/^[a-z0-9][a-z0-9_-]{0,47}$/i,MODEL=/^people-[a-z0-9][a-z0-9._-]{0,90}$/i,STATION=/^[a-z0-9][a-z0-9_-]{0,60}$/i;
@@ -36,6 +46,9 @@ export function cleanPose(v){
   }
   return Object.keys(out).length?out:null;
 }
+const PLACED=['on','near','by','around'];
+const KEPT=[...PLACED,'seat','along','depth','rise','toward','face','clear','walk','roll','act','change','toes','tread'];
+const plain=v=>{try{return JSON.stringify(v)!==undefined;}catch{return false;}};
 export function cleanPerson(e){
   if(!e||typeof e!=='object'||typeof e.id!=='string'||!MODEL.test(e.id))return null;
   const key=typeof e.key==='string'&&KEY.test(e.key)?e.key:e.id.slice(0,48),out={key,id:e.id};
@@ -46,8 +59,14 @@ export function cleanPerson(e){
     const at=pair(e.at,100000),beside=pair(e.beside,20000);
     if(at){out.at=at;out.turn=finite(e.turn)?r1(((e.turn+180)%360+360)%360-180):0;if(finite(e.y)&&Math.abs(e.y)<=5000&&Math.abs(e.y)>=.5)out.y=Math.round(e.y);}
     else if(beside)out.beside=beside;
-    else return null;
+    else if(!PLACED.some(k=>e[k]!==undefined))return null;   // (on a seat, near a spot, by or around a prop: the film's own placements)
+    else if(finite(e.turn))out.turn=r1(e.turn);              // (their `turn` corrects the way the seat or the prop faces them)
   }
+  // the film's own fields (room-people.mjs): kept as they are, so a walker, a wheelchair roll, an action or a seated
+  // extra is still one after an edit in the People tab
+  for(const k of KEPT)if(e[k]!==undefined&&plain(e[k]))out[k]=structuredClone(e[k]);
+  if(e.chair===false)out.chair=false;
+  const keys=cleanPoseKeys(e.poseKeys);if(keys)out.poseKeys=keys;
   if(finite(e.scale)&&e.scale>=.2&&e.scale<=3&&Math.abs(e.scale-1)>1e-3)out.scale=r3(e.scale);
   const colors={};for(const part of PARTS)if(typeof e.colors?.[part]==='string'&&/^#[0-9a-f]{6}$/i.test(e.colors[part]))colors[part]=e.colors[part].toLowerCase();
   if(Object.keys(colors).length)out.colors=colors;
@@ -65,8 +84,16 @@ export function cleanSpans(v,seconds=Infinity){
   });
   return spans.length?spans:null;
 }
+// v: 2: the film's whole people object as it is (see the top); only a cast entry that is not a person is dropped.
+function cleanPeopleV2(v){
+  let out;try{out=JSON.parse(JSON.stringify(v));}catch{return null;}
+  out.cast=out.cast.filter(e=>e&&typeof e==='object'&&typeof e.id==='string'&&MODEL.test(e.id));
+  for(const e of out.cast){if(e.poseKeys!==undefined){const keys=cleanPoseKeys(e.poseKeys);if(keys)e.poseKeys=keys;else delete e.poseKeys;}}
+  return out;
+}
 export function cleanPeople(v){
   if(!v||typeof v!=='object'||!Array.isArray(v.cast))return null;
+  if(v.v===2)return cleanPeopleV2(v);
   const cast=[],seen=new Set();
   for(const raw of v.cast.slice(0,80)){const p=cleanPerson(raw);if(!p)continue;let key=p.key,n=2;while(seen.has(key))key=(p.key.slice(0,44)+'-'+n++);p.key=key;seen.add(key);cast.push(p);}
   const out={cast},when={};
@@ -81,6 +108,12 @@ export function cleanPeopleEdits(v={}){const p=cleanPeople(v.peopleEdits);return
 // The film's `people` for a chapter with Director edits: nobody of the room's own cast, the Director's cast instead.
 export function peopleFilter(edits){
   const p=cleanPeople(edits);if(!p)return null;
+  if(p.v===2){   // the whole object, minus the marker and the hidden people (and their times)
+    const {v,...out}=p,gone=new Set(out.cast.filter(e=>e.hide===true).map(e=>e.key||e.id));
+    out.cast=out.cast.filter(e=>e.hide!==true);
+    if(out.when&&typeof out.when==='object'){out.when=Object.fromEntries(Object.entries(out.when).filter(([k])=>!gone.has(k)||out.cast.some(e=>(e.key||e.id)===k)));if(!Object.keys(out.when).length)delete out.when;}
+    return out;
+  }
   const cast=p.cast.filter(e=>!e.hide).map(({hide,...e})=>e),keys=new Set(cast.map(e=>e.key)),out={only:[],cast};
   const when=Object.fromEntries(Object.entries(p.when||{}).filter(([k])=>keys.has(k)));if(Object.keys(when).length)out.when=when;
   if(p.chair)out.chair=p.chair;if(p.fade!==undefined)out.fade=p.fade;
