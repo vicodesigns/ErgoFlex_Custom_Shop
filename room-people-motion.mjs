@@ -981,7 +981,10 @@ export function solveTread(rig, plan, time, begin = 0) {
 // from the first spot to the second, the turn between them in radians, and the share of both done now): each foot stays
 // on the floor where it was and then steps (lifted, turned with the step) to where it goes, first the foot on the side
 // it turns to (the left when it does not turn: a step back from a desk), instead of sliding or spinning with the model.
-export function solveChange(rig, from, to, w, arms0 = null, shift = null) {
+// `line`: the hands go straight from where they were to where they go (two-bone reach along the line, the elbows as the
+// turns put them), not along the arc the turned shoulders and elbows draw: hands that leave a shelf over a desk come back
+// over it instead of swinging down through it (the workshop film, `change.hands: 'line'`).
+export function solveChange(rig, from, to, w, arms0 = null, shift = null, line = false) {
     const b = rig.b, t = clamp01(w), hips = ss(0, .72, t), spine = ss(.08, .82, t), head = ss(.15, .92, t), arms = arms0 ? ss(arms0[0], arms0[1], t) : ss(.22, 1, t);
     if (t <= 0 || t >= 1) { rig.load(t <= 0 ? from : to); rig.fk(); return { model: t <= 0 ? 'from' : 'to' }; }
     const part = new Float32Array(rig.n).fill(hips);
@@ -1017,6 +1020,16 @@ export function solveChange(rig, from, to, w, arms0 = null, shift = null) {
         rig.reach(thigh, calf, foot, awayAt); rig.reach(thigh, calf, foot, awayAt); rig.setWorld(foot, footQ);
     }
     rig.fk();
+    if (line) {
+        const a = arms0 ? ss(arms0[0], arms0[1], t) : ss(.22, 1, t), yaw = shift?.yaw || 0, e = shift?.e || 0;
+        for (const s of ['l', 'r']) {
+            const [, upper, lower, hand] = rig.side[s].arm;
+            // (where it was, carried with the body as it steps; where it goes, in the model's frame now)
+            const goes = to.wp[hand].clone(); if (shift) { goes.applyAxisAngle(Y, yaw); goes.x += shift.x * (1 - e); goes.z += shift.z * (1 - e); goes.applyAxisAngle(Y, -yaw * e); }
+            const at = from.wp[hand].clone().lerp(goes, a), q = rig.wq[hand].clone();
+            rig.reach(upper, lower, hand, at); rig.reach(upper, lower, hand, at); rig.setWorld(hand, q); rig.fk();
+        }
+    }
     return { model: t < .5 ? 'from' : 'to' };
 }
 

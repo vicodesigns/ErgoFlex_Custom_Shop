@@ -714,15 +714,6 @@ def stand_robot_shelf(k):
             'foot_l': {'at': (.11 * k, .0, ANDRE_ANKLE - .005), 'toes': (.22, -1, 0)}, 'foot_r': {'at': (-.12 * k, .03 * k, ANDRE_ANKLE - .005), 'toes': (-.28, -1, 0)}}
 
 
-def stand_robot_release(k):
-    """The robot left on the shelf: the hands let go and come back to him, relaxed in front of the belt, before they come
-    down (so they do not drop through the desk on the way; the wrists as they hang, not turned)."""
-    return {'pelvis_offset': (0, .0, -.008), 'spine': (2, 3, 3), 'neck': 6, 'head': 8,
-            'hand_r': {'at': (-.16, -.13, 1.13), 'fingers': (.15, -1, -.3), 'palm': (.75, 0, -.65), 'elbow': (-.3, .3, -.3), 'curl': .45, 'thumb': .4},
-            'hand_l': {'at': (.16, -.13, 1.13), 'fingers': (-.15, -1, -.3), 'palm': (-.75, 0, -.65), 'elbow': (.3, .3, -.3), 'curl': .45, 'thumb': .4},
-            'foot_l': {'at': (.11 * k, .0, ANDRE_ANKLE - .005), 'toes': (.22, -1, 0)}, 'foot_r': {'at': (-.12 * k, .03 * k, ANDRE_ANKLE - .005), 'toes': (-.28, -1, 0)}}
-
-
 def stand_phone_pull(k):
     """The right hand at the front pocket, drawing the phone out, top first (held as it will be used: its back in the
     palm, the fingers round its far edge; here the palm faces the thigh)."""
@@ -1376,7 +1367,6 @@ POSES = {
     'stand-robot-work': stand_robot_work,
     'stand-robot-lift': stand_robot_lift,
     'stand-robot-shelf': stand_robot_shelf,
-    'stand-robot-release': stand_robot_release,
     'stand-phone-pull': stand_phone_pull,
     'stand-phone-up': stand_phone_up,
     'stand-phone-press': stand_phone_press,
@@ -1560,7 +1550,6 @@ POSE_INFO = {
     'stand-robot-work': ('At the desk, working on the robot', 'standing', '', 0, [('robot', {'side': 'r', 'at': ROBOT_DESK[0], 'turn': ROBOT_DESK[1]})]),
     'stand-robot-lift': ('Lifting the robot toward the desk shelf', 'standing', '', 0, [('robot', {'side': 'r', 'at': ROBOT_LIFT[0], 'turn': ROBOT_LIFT[1]})]),
     'stand-robot-shelf': ('Setting the robot on the desk shelf', 'standing', '', 0, [('robot', {'side': 'r', 'at': ROBOT_SHELF[0], 'turn': ROBOT_SHELF[1]})]),
-    'stand-robot-release': ('Letting go of the robot on the shelf', 'standing', '', 0, []),
     'stand-phone-pull': ('Taking the phone out of a pocket', 'standing', '', 0, [('phone', {'side': 'r', 'grip': 'hold', 'screen': 'ready'})]),
     'stand-phone-up': ('Phone up, about to tap', 'standing', '', 0, [('phone', {'side': 'r', 'grip': 'hold', 'screen': 'ready'})]),
     'stand-phone-press': ('Tapping the one button on the phone', 'standing', '', 0, [('phone', {'side': 'r', 'grip': 'hold', 'screen': 'pressed'})]),
@@ -1573,7 +1562,7 @@ POSE_INFO = {
 # The roles' postures: built for the characters that list them ('postures'), for anyone else on request.
 ROLE_POSES = {'stand-brief', 'stand-radio', 'stand-chart', 'push-cart', 'lie-bed', 'sit-microscope', 'stand-counter',
               'gym-cycle', 'gym-pullup', 'gym-box', 'gym-press', 'gym-curl', 'sit-pottery', 'power-phone', 'power-type',
-              'stand-robot-work', 'stand-robot-lift', 'stand-robot-shelf', 'stand-robot-release', 'stand-phone-pull', 'stand-phone-up', 'stand-phone-press', 'stand-phone-watch',
+              'stand-robot-work', 'stand-robot-lift', 'stand-robot-shelf', 'stand-phone-pull', 'stand-phone-up', 'stand-phone-press', 'stand-phone-watch',
               'stand-screen-pull', 'stand-screen-tap', 'stand-screen-press'}      # (the gym's: built for those who train there, ALSO below)
 # Built where the pose puts them, not dropped until something touches the floor (a body lying on a bed has nothing on it).
 RAISED = {'lie-bed', 'sit-microscope', 'gym-cycle', 'gym-pullup', 'gym-press', 'power-phone', 'power-type', 'stand-robot-work', 'stand-robot-lift', 'stand-robot-shelf', 'stand-screen-pull', 'stand-screen-tap', 'stand-screen-press'}       # (feet on a stool's ring, on pedals or off the floor under a bar are not on the floor either)
@@ -1602,7 +1591,7 @@ ALSO = ['people-sam-sit-type', 'people-sam-sit-type-30', 'people-grace-lie-bed',
         'people-mia-power-type-30',
         # the workshop film (storage): Andre works on the robot, sets it on the desk's top shelf, takes out his phone and
         # starts the desk's Groove with one tap
-        'people-andre-stand-robot-work', 'people-andre-stand-robot-lift', 'people-andre-stand-robot-shelf', 'people-andre-stand-robot-release', 'people-andre-stand-phone-pull', 'people-andre-stand-phone-up',
+        'people-andre-stand-robot-work', 'people-andre-stand-robot-lift', 'people-andre-stand-robot-shelf', 'people-andre-stand-phone-pull', 'people-andre-stand-phone-up',
         'people-andre-stand-phone-press', 'people-andre-stand-phone-watch']
 # A posture nudged for one person (metres added to a hand's or a foot's place): the clipboard lies as the left hand
 # holds it, and on Yusuf's broader chest it tips into the writing hand.

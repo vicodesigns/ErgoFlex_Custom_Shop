@@ -85915,39 +85915,6 @@
     "character": "andre",
     "pose": "stand-robot-lift"
    }
-  },
-  {
-   "id": "people-andre-stand-robot-release",
-   "name": "Andre: letting go of the robot on the shelf",
-   "category": "people",
-   "scenes": [],
-   "file": "assets/props/people-andre-stand-robot-release.glb",
-   "anchor": "floor",
-   "size": [
-    710.4,
-    1789.6,
-    403.5
-   ],
-   "min": [
-    -355.2,
-    0,
-    -129.7
-   ],
-   "max": [
-    355.2,
-    1789.6,
-    273.8
-   ],
-   "tris": 35180,
-   "bytes": 1142344,
-   "source": "tools/people/cast.py",
-   "license": "CC0 (MakeHuman / MPFB assets)",
-   "attribution": null,
-   "collection": "people",
-   "person": {
-    "character": "andre",
-    "pose": "stand-robot-release"
-   }
   }
  ],
  "screens": [

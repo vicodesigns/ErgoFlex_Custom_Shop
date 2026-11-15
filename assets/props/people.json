@@ -1833,12 +1833,6 @@
    "desk": false,
    "seat": 0
   },
-  "stand-robot-release": {
-   "label": "Letting go of the robot on the shelf",
-   "stance": "standing",
-   "desk": false,
-   "seat": 0
-  },
   "stand-phone-pull": {
    "label": "Taking the phone out of a pocket",
    "stance": "standing",
@@ -11930,12 +11924,6 @@
    "character": "andre",
    "pose": "stand-robot-lift",
    "name": "Andre: lifting the robot toward the desk shelf",
-   "aids": []
-  },
-  "people-andre-stand-robot-release": {
-   "character": "andre",
-   "pose": "stand-robot-release",
-   "name": "Andre: letting go of the robot on the shelf",
    "aids": []
   }
  }

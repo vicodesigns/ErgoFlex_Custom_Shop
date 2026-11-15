@@ -46,7 +46,8 @@
 //                                                     posture (see sameSpot below): how long it takes (default 1.4 s, more
 //                                                     when getting up), the parts of it (0..1) in which the arms move and
 //                                                     the body turns and moves to the new spot (default [.22, 1], [0, .72]),
-//                                                     and `step`: that move is a step (feet planted, left then right)
+//                                                     `step`: that move is a step (feet planted, left then right), and
+//                                                     `hands: 'line'`: the hands go straight, not along the arms' arc
 //   look: '<key>' | ['<key>', ...]                    whom they look at, whatever their posture (whichever of them is there,
 //                                                     in front within 9 m): a listener who turns to the talker
 //   act: { at: seconds, dur: seconds, by: [x, y, z] mm }  film only: an action at that moment of the chapter, for the
@@ -2120,7 +2121,7 @@ export class RoomPeople {
                 const dx = (pair.homeTo.position.x - pair.homeFrom.position.x) / 1000, dz = (pair.homeTo.position.z - pair.homeFrom.position.z) / 1000, yaw = pair.homeFrom.turn, c = Math.cos(yaw), sn = Math.sin(yaw);
                 shift = { x: dx * c - dz * sn, z: dx * sn + dz * c, yaw: pair.homeTo.turn - pair.homeFrom.turn, e: ease };
             }
-            const { model } = solveChange(pair.rig, pair.keyFrom, pair.keyTo, w, part('arms'), shift), cut = Number.isFinite(pair.to?.swap) ? THREE.MathUtils.clamp(pair.to.swap, .02, .98) : null;
+            const { model } = solveChange(pair.rig, pair.keyFrom, pair.keyTo, w, part('arms'), shift, plan?.hands === 'line'), cut = Number.isFinite(pair.to?.swap) ? THREE.MathUtils.clamp(pair.to.swap, .02, .98) : null;
             const shown = (cut === null ? model === 'from' : w < cut) ? a : b;
             shown.position.lerpVectors(pair.homeFrom.position, pair.homeTo.position, ease); shown.rotation.y = pair.homeFrom.turn + (pair.homeTo.turn - pair.homeFrom.turn) * ease;
             drawPose(pair.rig, shown.userData.personRig, 0, shown.userData.person.pose || null);

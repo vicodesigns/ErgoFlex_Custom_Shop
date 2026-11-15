@@ -1542,24 +1542,25 @@
      },
      {
       "key": "andre-lets-go",
-      "id": "people-andre-stand-robot-release",
+      "id": "people-andre-stand-wait",
       "at": [
        100,
-       1775
+       1810
       ],
       "turn": 194,
       "swap": 0.06,
       "change": {
        "seconds": 0.8,
        "arms": [
-        0,
+        0.6,
         1
        ],
        "turn": [
         0,
         0.6
        ],
-       "step": true
+       "step": true,
+       "hands": "line"
       }
      },
      {
@@ -1567,22 +1568,22 @@
       "id": "people-andre-walk",
       "at": [
        60,
-       1900
+       1935
       ],
       "turn": 180,
       "walk": {
        "path": [
         [
          60,
-         1900
+         1935
         ],
         [
          -250,
-         2072
+         2107
         ],
         [
          -345,
-         2165
+         2200
         ],
         [
          -476,

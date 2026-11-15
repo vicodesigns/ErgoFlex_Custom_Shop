@@ -664,7 +664,7 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
 }
 // ---- the workshop film's change options (room-people-motion.mjs solveChange `arms` and `shift`, walkPlan `toes`)
 {
-    const rig = rigOf('andre'), shelf = rig.key('people-andre-stand-robot-shelf'), go = rig.key('people-andre-stand-robot-release'), hand = rig.side.r.arm[3];
+    const rig = rigOf('andre'), shelf = rig.key('people-andre-stand-robot-shelf'), go = rig.key('people-andre-stand-wait'), hand = rig.side.r.arm[3];
     // without the options a change is as before
     solveChange(rig, shelf, go, .3); const plain = snapshot(rig); solveChange(rig, shelf, go, .3, null, null); assert.deepEqual(snapshot(rig), plain, 'no options: the change as before');
     // arms: [.35, 1]: the hands have not left the shelf posture's place (in the model's frame) before .35 of the change
@@ -694,14 +694,14 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
         // the foot that steps second is still on its print while the first steps (left first: a turn to his left)
         const e = ease(.3); solveChange(rig, go, walkKey, .3, [.1, .6], { ...d, yaw, e }); assert.ok(room(rig.wp[fr], e).distanceTo(room(go.wp[fr], 0)) < .003, 'turning step: the right foot planted while the left steps');
     }
-    // the workshop film's chain of postures pairs into skeleton blends with margin: one spot (< 200 mm, < 0.27 rad apart)
+    // the workshop film's chain of postures pairs into skeleton blends with margin: one spot (< 215 mm, < 0.27 rad apart)
     // and windows that meet, so no step of it falls back to a dissolve (sameSpot: 220 mm, 0.3 rad)
     {
         const cut = JSON.parse(fs.readFileSync(new URL('../exports/cinematic-intro-cut-cine/review-cut.json', import.meta.url), 'utf8')), st = cut.shots.find(s => s.id === 'storage').people, by = Object.fromEntries(st.cast.map(c => [c.key, c]));
         const chain = ['andre-robot', 'andre-lift', 'andre-shelf', 'andre-lets-go', 'andre-steps-back'];
         for (let i = 1; i < chain.length; i++) {
             const a = by[chain[i - 1]], b = by[chain[i]], turn = Math.abs(THREE.MathUtils.euclideanModulo(THREE.MathUtils.degToRad(a.turn - b.turn) + Math.PI, Math.PI * 2) - Math.PI);
-            assert.ok(Math.hypot(a.at[0] - b.at[0], a.at[1] - b.at[1]) < 200 && turn < .27, `${a.key} -> ${b.key} pairs with margin`);
+            assert.ok(Math.hypot(a.at[0] - b.at[0], a.at[1] - b.at[1]) < 215 && turn < .27, `${a.key} -> ${b.key} pairs with margin`);
             assert.equal(st.when[a.key][0][1], st.when[b.key][0][0], `${a.key} -> ${b.key}: the windows meet`);
         }
     }
