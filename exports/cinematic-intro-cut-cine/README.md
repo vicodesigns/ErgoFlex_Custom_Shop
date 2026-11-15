@@ -295,7 +295,7 @@ in commons, Noah in oilers) now starts and ends standing, plants each foot flat 
 toe. The hips ride as the legs allow (knee about 10 deg in mid-stance), the trunk is about 3 deg forward, the arms
 hang loose, the body turns at most 115 deg/s, and the walk ends facing the next placement's turn. Measured with the
 stage's own models (skin against the floor, per frame), before -> after:
-- Skin under the floor: Andre 69 -> 1.3 mm, Yara 44 -> 3.6, Zoe 54 -> 0, Noah 26 -> 2.2.
+- Skin under the floor: Andre 69 -> 3.8 mm, Yara 44 -> 3.6, Zoe 54 -> 0, Noah 26 -> 2.2.
 - A planted foot off the floor: up to 156-163 mm -> at most 7-11 mm.
 - Walk timings: unchanged.
 Numbers: C:/work/cine-pics/s19/walk-numbers.json.
