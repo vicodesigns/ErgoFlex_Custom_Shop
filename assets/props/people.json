@@ -1204,7 +1204,7 @@
    "age": "teen",
    "years": 19,
    "heritage": "Mixed",
-   "height": 157,
+   "height": 158,
    "outfit": [
     "toigo_fisherman_sweater",
     "female_casualsuit01",
@@ -11896,6 +11896,12 @@
    "name": "Maya, typing at the desk at 41 in (standing)",
    "aids": []
   },
+  "people-noah-stand-screen-pull": {
+   "character": "noah",
+   "pose": "stand-screen-pull",
+   "name": "Noah: drawing the desk's touchscreen out",
+   "aids": []
+  },
   "people-noah-stand-screen-tap": {
    "character": "noah",
    "pose": "stand-screen-tap",
@@ -11908,10 +11914,11 @@
    "name": "Noah: tapping the desk's touchscreen",
    "aids": []
   },
-  "people-noah-stand-screen-pull": {
-   "character": "noah",
-   "pose": "stand-screen-pull",
-   "name": "Noah: drawing the desk's touchscreen out",
+  "people-yara-stand-type-39": {
+   "character": "yara",
+   "pose": "stand-type",
+   "deskHeight": 39,
+   "name": "Yara: typing at the desk, standing (desk at 39 in)",
    "aids": []
   }
  }

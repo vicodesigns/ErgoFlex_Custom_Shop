@@ -474,7 +474,10 @@ CHARACTERS = {
     },
     'yara': {
         'name': 'Yara', 'phenotype': {'gender': .0, 'age': .375, 'muscle': .45, 'weight': .5, 'height': .58, 'proportions': .6, 'race': race(.66, .17, .17)},
-        'skin': 'young_caucasian_female', 'skin_tone': (.88, .76, .66), 'eyes': 'brown', 'hair': 'long01', 'hair_tint': (.09, .055, .035), 'eyebrows': 'eyebrow011', 'eyelashes': 'eyelashes03',
+        # (S21: long01 is one painted sheet to the hips, a slab on screen that hid her back and backpack; o4saken_long01
+        # is layered strand cards to the shoulders. hair_look: build_people.py's strand material for it)
+        'skin': 'young_caucasian_female', 'skin_tone': (.88, .76, .66), 'eyes': 'brown', 'hair': 'o4saken_long01', 'hair_tint': (.09, .055, .035), 'eyebrows': 'eyebrow011', 'eyelashes': 'eyelashes03',
+        'hair_look': {'rough': .42, 'aniso': .6, 'turn': 0., 'cutoff': .3, 'clear_face': (.05, .075, -.04, .06), 'flyaway': .16},
         'face': {'head-diamond': .4, 'nose-hump-incr': .25, 'nose-scale-vert-incr': .3, 'lr-cheek-bones-incr': .5, 'eyebrows-angle-up': .3, 'mouth-lowerlip-volume-incr': .4, 'chin-triangle': .3},
         'clothes': ['toigo_fisherman_sweater', 'female_casualsuit01', 'toigo_ankle_boots_female'], 'parts': {'female_casualsuit01': 'bottom'},
         'tint': {'toigo_fisherman_sweater': (.7, .28, .22), 'toigo_ankle_boots_female': (.4, .27, .17)}, 'dye': {'female_casualsuit01': (.12, .15, .22)},
@@ -1569,6 +1572,8 @@ ALSO = ['people-sam-sit-type', 'people-sam-sit-type-30', 'people-grace-lie-bed',
         'people-zoe-gym-cycle', 'people-kai-gym-cycle', 'people-lin-gym-pullup', 'people-andre-gym-press', 'people-lin-gym-curl', 'people-sofia-gym-box',
         # the artist's studio: at the pottery wheel
         'people-lin-sit-pottery',
+        # the Library commons: Yara upright at the 39 in desk, hands on the keys (stand-mid leans her in over the work: S22's audit)
+        'people-yara-stand-type-39',
         # the Library commons: Mia in the room's red power wheelchair (the film's commons chapter), feet on its footplate
         'people-mia-power-phone', 'people-mia-power-type',
         # (and at 30 in, her working height: elbows level, knees and armrests clear of the tray; Nov 14)

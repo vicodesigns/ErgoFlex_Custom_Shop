@@ -257,6 +257,16 @@ for o in meshes:
         bsdf.inputs['Roughness'].default_value = rough
         for link in list(bsdf.inputs['Metallic'].links): tree.links.remove(link)
         bsdf.inputs['Metallic'].default_value = 0
+        # Strand-card hair (cast 'hair_look'): a little glossier, with a highlight drawn out across the strands
+        # (KHR_materials_anisotropy, which three.js reads: a band round the head, not a dot), tips cut nearer their soft
+        # ends, and a material name the Studio and the films know as hair (room-people.mjs partOf: /hair/).
+        look = who.get('hair_look')
+        if look and who.get('hair') and who['hair'] in o.name:
+            bsdf.inputs['Roughness'].default_value = look.get('rough', rough)
+            if look.get('aniso'):
+                bsdf.inputs['Anisotropic'].default_value = look['aniso']; bsdf.inputs['Anisotropic Rotation'].default_value = look.get('turn', 0.)
+            if look.get('cutoff'): m['cutoff'] = look['cutoff']
+            if 'hair' not in m.name.lower(): m.name = m.name + '_hair'
         # A height map is not a normal map: exported as one it turns the fabric nearly black (the tucked T-shirt).
         for link in list(bsdf.inputs['Normal'].links) if LOOK >= 3 else []:
             if link.from_node.type == 'BUMP' and link.from_node.inputs['Height'].links and not link.from_node.inputs['Normal'].links: tree.links.remove(link)
@@ -293,6 +303,32 @@ for o in meshes:
     if faces:
         import bmesh as _bm
         bm = _bm.new(); bm.from_mesh(o.data); bm.faces.ensure_lookup_table(); _bm.ops.delete(bm, geom=[bm.faces[i] for i in faces], context='FACES'); bm.to_mesh(o.data); bm.free()
+
+# ---- hair clear of the face (cast hair_look 'clear_face'): the strand cards that hang in front of the eyes and the
+# cheeks go, each whole (a card cut in half ends in a straight edge); the hair still frames the face from the sides.
+# 'flyaway': the cards reaching higher than this over the head bone go too (metres for a 1.47 m head bone, like the
+# face box): a crown of spikes standing up, not volume (the hair's top stays near where a sheet of hair would be).
+if (who.get('hair_look') or {}).get('clear_face'):
+    import bmesh as _bm
+    head = rig.matrix_world @ rig.data.bones['head'].head_local; k = head.z / 1.47; half, top, low, ahead = who['hair_look']['clear_face']
+    crown = head.z + who['hair_look'].get('flyaway', 1.) * k
+    for o in meshes:
+        if not (who.get('hair') and who['hair'] in o.name): continue
+        bm = _bm.new(); bm.from_mesh(o.data); bm.verts.ensure_lookup_table(); world = o.matrix_world; seen = set(); gone = []; islands = cleared = 0
+        def in_face(p): return abs(p.x - head.x) < half * k and head.z + low * k < p.z < head.z + top * k and p.y < head.y - ahead * k
+        for v in bm.verts:
+            if v.index in seen: continue
+            stack = [v]; seen.add(v.index); part = []
+            while stack:
+                x = stack.pop(); part.append(x)
+                for e in x.link_edges:
+                    y = e.other_vert(x)
+                    if y.index not in seen: seen.add(y.index); stack.append(y)
+            islands += 1
+            if len(part) < 400 and any(in_face(world @ x.co) or (world @ x.co).z > crown for x in part): gone += part; cleared += 1
+        print('hair: %d of %d cards cleared from the face and the crown' % (cleared, islands), file=sys.stderr)
+        if gone: _bm.ops.delete(bm, geom=gone, context='VERTS'); bm.to_mesh(o.data)
+        bm.free()
 
 # ---- garments made from the base mesh (a white coat, a gown, socks; gloves are the hands' own faces) ------
 meshes += garments.build(who, base, rig, OUT_DIR, OUT_ID)
