@@ -27,9 +27,10 @@
           T(k, 120, y + 140, 100, {w: 700, c}); T(n, 230, y + 135, 80, {w: 700});
           T(String(V[i]), W - 110, y + 135, 80, {w: 700, a: 'right', c: C.soft});
         });
-        T(`${Math.min(30, tot)} of 30 answered`, 60, 1640, 60, {w: 600, c: C.soft});
-        // the desk comes down to him: the overlay over the answers while it moves
-        alpha(win(t, L.start - .2, REVEAL + .3, .4), () => {
+        alpha(1 - sm(seg(t, REVEAL - .2, REVEAL + .2)), () => T(`${Math.min(30, tot)} of 30 answered`, 60, 1640, 60, {w: 600, c: C.soft}));
+        // the desk comes down to him: the overlay over the answers while it moves, kept up through the reveal so his
+        // 31.0 in stays readable
+        alpha(sm(seg(t, L.start - .2, L.start + .2)), () => {
           card(40, 1080, W - 80, 420, {r: 44, top: '#14304a', bot: '#0c1c2e', border: hexA(C.blue2, .6), accent: C.blue});
           icon('down', 140, 1210, 90, C.blue2, 11);
           T(`Lowering to ${name}'s height`, 220, 1200, 56, {w: 700});
@@ -39,10 +40,10 @@
         });
         alpha(sm(seg(t, REVEAL, REVEAL + .4)), () => {
           const k = back(seg(t, REVEAL, REVEAL + .5));
-          at(W / 2, 1300, lerp(.7, 1, k), () => {
-            card(-470, -170, 940, 340, {r: 50, top: '#173a2f', bot: '#0d1f1c', border: hexA(C.green, .7), accent: C.green});
-            circle(-330, 0, 90, C.green); icon('check', -330, 0, 120, '#06231a', 14);
-            T('Mercury ✓', -200, -20, 80, {w: 700}); T(`${name} +100`, -200, 70, 64, {w: 700, c: C.green});
+          at(W / 2, 1680, lerp(.7, 1, k), () => {
+            card(-500, -150, 1000, 300, {r: 50, top: '#173a2f', bot: '#0d1f1c', border: hexA(C.green, .7), accent: C.green});
+            circle(-360, 0, 80, C.green); icon('check', -360, 0, 110, '#06231a', 14);
+            T('Mercury ✓', -240, -20, 76, {w: 700}); T(`${name} +100`, -240, 66, 60, {w: 700, c: C.green});
           });
         });
       });

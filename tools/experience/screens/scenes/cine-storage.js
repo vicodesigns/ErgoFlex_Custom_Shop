@@ -3,13 +3,16 @@
 // The ErgoFlex app with one button: ready while he takes it out, his finger on it, the tap lights it (TAP), then the
 // desk's own steps tick off from the chapter's clips (fold to 65°, roll to the wall) and "Parked · floor clear".
 // review-cut.json 'storage': phone out 7.71, up 8.42, press 10.65, the button lights 11.14; fold 11.25-21.25, rolls
-// 12.25-22.15, turn to 22.55. opts: {tap: 11.14, desk: 'Workshop desk'}.
+// 12.25-22.15, turn to 22.55. opts: {tap: 11.14, desk: 'Workshop desk', flip: true}.
+// flip: the picture turned 180 degrees so the insert's camera (8.95-11.45 s, in front of Andre, over the tip of the
+// phone) reads it upright (chingon, Nov 14: a viewer must be able to read 'Store the desk'); to Andre it is then upside down.
 (function () {
   SCENES.c11p = {
     draw(t) {
       const o = SHOT.clip.opts || {}, TAP = o.tap ?? 11.14, p = pose(t);
       const tilt = clipsOf('tilt')[0] || {start: 11.25, duration: 10, target: 65}, rolls = clipsOf('wheels');
       const FOLD = +tilt.target || 65, rollA = rolls.length ? rolls[0].start : 12.25, PARK = rolls.length ? Math.max(...rolls.map(c => c.start + c.duration)) : 22.5;
+      if (o.flip) { g.translate(W, H); g.rotate(Math.PI); }
       g.fillStyle = '#05070c'; g.fillRect(0, 0, W, H);
       g.fillStyle = rad(W / 2, H * .45, W * 1.2, [[0, hexA(t >= TAP ? C.amber : C.blue, .16)], [1, 'rgba(0,0,0,0)']]); g.fillRect(0, 0, W, H);
       // status bar + app header (the phone's design space is 1080 wide)

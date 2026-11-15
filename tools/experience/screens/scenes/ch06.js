@@ -41,8 +41,9 @@
       const sy = 255, sx = px + 50 + (pw - 100) * mass;
       const [wx, wy] = wander(t, 3, 900, 300, 500, 400, .3);
       const drag = Math.max(win(t, 2, 4.5, .4), win(t, 7, 9, .4));
-      const tl = (SHOT.clip.opts || {}).teacher;   // cine cut: the teacher's name on the cursor
-      cursor(lerp(wx, sx, drag), lerp(wy, sy, drag), 1.6, '#ffffff', tl, tl ? C.violet : undefined);
+      const tl = (SHOT.clip.opts || {}).teacher;   // cine cut: the teacher's name, a pill by the lesson title (not on the cursor: it covered the sliders)
+      cursor(lerp(wx, sx, drag), lerp(wy, sy, drag), 1.6, '#ffffff');
+      if (tl) pill(60 + 40 + tw('Live simulation', 32, 600) + 70, 140, tl, 32, {dot: C.violet, bg: hexA(C.violet, .18), c: '#d9ccff'});
       toast(t, 8.4, 2.6, 60, 830, 900, 'Kepler: equal areas', 'closer planets move faster', {col: C.amber, icon: 'atom', h: 160, ts: 52, ss: 34});
       vignette(.4);
     },

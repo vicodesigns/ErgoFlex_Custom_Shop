@@ -3,13 +3,16 @@
 
     python exports/cinematic-intro-cut-cine/build-screens.py [--only id,id] [--dry-run]
 
+Every chapter is opt-in: with no --only, only OWNED_LANDED is written (S6's own chapters and those whose owner has
+landed, extended when the coordinator says so); --only writes exactly the chapters named.
+
 Writes ONLY the `screens` field of review-cut.json's chapters (and the hero versions' `screens` in shots/13-subshots.json),
 so it lands after each chapter's owner and can be re-run at any time (values are absolute: re-runs change nothing).
 Every clip is captured by tools/experience/screens/capture.mjs (clips.mjs, the `cine-*` entries) into
 exports/cinematic-intro-cut-cine/screens/, is chapter seconds + 1 s long and plays at offset 0 with loop false; a
 monitor's brightness / blend carry over from the entry it replaces. Targets not named here keep their clip (rise's
 phone on the charger, music's game montage, media's movie). Proposal: docs/cine-screens-20261114/SCREENS-PROPOSAL.md.
-coast is written last (its featured-suite person comes from S4); media keeps its film.
+media keeps its film.
 Check after a capture: python exports/cinematic-intro-cut-cine/check-screens.py
 """
 import json, os, sys
@@ -31,21 +34,25 @@ PLAN = {
     'music': {'arcade': 'cine-music-arcade', 'marquee': 'cine-music-marquee', 'tv': 'cine-music-tv',
               'atelier-gaming-streamdeck-cyber/gaming-macro-key-display': 'cine-music-streamdeck'},
     'hero': {'main-landscape': 'cine-hero-home'},
-    # written last, after S4 (its featured-suite person): only with --only coast
     'coast': {'main-landscape': 'cine-coast-main', 'ergoflex-wide-monitor/monitor-screen': 'cine-coast-curved',
               'ergoflex-portrait-monitor/monitor-screen': 'cine-coast-portrait', 'occ-display': 'cine-coast-wall'},
 }
-EXPLICIT = {'coast'}   # chapters written only when named in --only
+# chapters written by a run without --only: S6's own (storage, hero) and those whose owner has landed (coast: S4)
+OWNED_LANDED = {'storage', 'hero', 'coast'}
 TEXTURES = {
-    # the drafting board's paper, relabelled as a home (a still: the same plan as the left monitor and the 3D house)
-    'create': [{'target': 'texture', 'mesh': '^Architect floor plan$', 'src': SCR + 'cine-create-floor-plan.png'}],
+    # the drafting board's paper, relabelled as a home (a still: the same plan as the left monitor and the 3D house);
+    # within 'desk': only the featured desk's kit (another drafting kit in the room keeps its sheet)
+    'create': [{'target': 'texture', 'mesh': '^Architect floor plan$', 'within': 'desk', 'src': SCR + 'cine-create-floor-plan.png'}],
     # the phone in Andre's hand (every phone posture of his is its own GLB; all of them show the clip)
     'storage': [{'target': 'texture', 'material': '^Held\\.phone screen', 'person': 'andre', 'src': SCR + 'cine-storage-phone.mp4', 'offset': 0, 'loop': False}],
 }
 HERO_VERSIONS = {'gaming': {'main-landscape': 'cine-hero-gaming'}, 'artist': {'main-landscape': 'cine-hero-artist'},
-                 'hbhs': {'main-landscape': 'cine-hero-hbhs'}, 'occ': {'main-landscape': 'cine-hero-occ'},
+                 # hbhs: its portrait plays oilers' own quiz (Kai's chapter) at the version's offset (-20.3: the votes,
+                 # clip 1.0-7.4 s, before the lowering overlay at 7.8 s)
+                 'hbhs': {'main-landscape': 'cine-hero-hbhs', 'main-portrait': 'cine-oilers-portrait'}, 'occ': {'main-landscape': 'cine-hero-occ'},
                  # the analyst's clips keep their offset (-13.1: local clip time from the version's start) and are 10 s now
                  'office': {'main-landscape': 'cine-hero-office-wide', 'main-portrait': 'cine-hero-office-portrait'}}
+KEEP_OFFSET = {'office': ('main-landscape', 'main-portrait'), 'hbhs': ('main-portrait',)}   # windowed clips keep their offset
 CARRY = ('brightness', 'blend', 'fit', 'inset', 'rotate', 'flipX', 'res')
 
 
@@ -79,7 +86,7 @@ def main():
         cid = s['id']
         if cid not in PLAN and cid not in TEXTURES: continue
         if only and cid not in only: continue
-        if not only and cid in EXPLICIT: continue
+        if not only and cid not in OWNED_LANDED: continue
         new = screens_for(cid, s.get('screens'))
         if new != s.get('screens'): changed.append(cid); s['screens'] = new
     sub = json.loads(open(SUB, 'rb').read().replace(b'\r\n', b'\n'))
@@ -88,7 +95,7 @@ def main():
             plan = HERO_VERSIONS.get(v.get('preset'))
             if not plan: continue
             old = v.get('screens') or []
-            new = [{**entry(sc['target'], plan[sc['target']], sc), **({'offset': sc['offset']} if v.get('preset') == 'office' and 'offset' in sc else {})}
+            new = [{**entry(sc['target'], plan[sc['target']], sc), **({'offset': sc['offset']} if v.get('preset') in KEEP_OFFSET and 'offset' in sc and sc['target'] in KEEP_OFFSET[v['preset']] else {})}
                    if sc.get('target') in plan else sc for sc in old]
             if new != old: changed.append('hero:' + v['preset']); v['screens'] = new
     for c in changed: print('screens:', c)

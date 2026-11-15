@@ -47,7 +47,12 @@ const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cine-screens-')), CUT = path.
 fs.writeFileSync(CUT, read(path.join(CUTDIR, 'review-cut.json'))); fs.writeFileSync(SUB, read(path.join(CUTDIR, 'shots/13-subshots.json')));
 const run = (...a) => execFileSync(PY0, [path.join(CUTDIR, 'build-screens.py'), ...a], {env: {...process.env, SCREENS_CUT: CUT, SCREENS_SUB: SUB}, encoding: 'utf8'});
 const before = JSON.parse(fs.readFileSync(CUT, 'utf8')), subBefore = JSON.parse(fs.readFileSync(SUB, 'utf8'));
+// opt-in: a run without --only writes S6's own and the landed chapters only (OWNED_LANDED), nothing else
 run();
+const OWNED = new Set(['storage', 'hero', 'coast']);
+for (const s0 of before.shots) if (!OWNED.has(s0.id)) assert.deepEqual(JSON.parse(fs.readFileSync(CUT, 'utf8')).shots.find(x => x.id === s0.id), s0, s0.id + ': not written without --only');
+const ALL = 'awaken,rise,create,commons,coast,oilers,wellness,awareness,music,storage,hero';
+run('--only', ALL);
 const once = fs.readFileSync(CUT, 'utf8'), subOnce = fs.readFileSync(SUB, 'utf8');
 const PY = PY0;
 assert(!once.includes(String.fromCharCode(13)) && !once.endsWith(String.fromCharCode(10)), 'LF, no final newline');
@@ -59,14 +64,14 @@ for (const s of before.shots) {
   const a = byId(after, s.id), {screens: _a, ...restA} = a, {screens: _b, ...restB} = s;
   assert.deepEqual(restA, restB, s.id + ': only screens changes');
 }
-assert.deepEqual(byId(after, 'coast').screens, byId(before, 'coast').screens, 'coast is held back by default');
 assert.deepEqual(byId(after, 'media').screens, byId(before, 'media').screens, 'media keeps its film');
 const manifest = new Set(cine.map(c => c.id));
 const named = [];
 for (const s of [...after.shots, ...sub.shots.map(v => ({...v, version: true}))]) for (const sc of s.screens || []) {
   const m = sc.src.match(/^exports\/cinematic-intro-cut-cine\/screens\/(cine-[\w-]+)\.(mp4|png)$/); if (!m) continue;
   assert(manifest.has(m[1]), `${s.id}: ${m[1]} is a manifest clip`); named.push(sc.src);
-  if (m[2] === 'mp4') { assert.equal(sc.loop, false, sc.src + ' loop false'); assert(s.version && s.preset === 'office' ? sc.offset === -13.1 : sc.offset === 0, sc.src + ' offset'); }
+  if (m[2] === 'mp4') { assert.equal(sc.loop, false, sc.src + ' loop false'); const keep = s.version && (s.preset === 'office' || (s.preset === 'hbhs' && sc.target === 'main-portrait'));
+    assert(keep ? sc.offset < 0 : sc.offset === 0, sc.src + ' offset'); }
 }
 const music = byId(after, 'music').screens, main = music.find(x => x.target === 'main-landscape');
 assert(/09-game-montage\.mp4$/.test(main.src) && main.brightness === .55, 'music keeps the game montage on the main monitor');
@@ -75,10 +80,12 @@ assert(/02-phone\.mp4$/.test(byId(after, 'rise').screens.find(x => x.target === 
 const tex = [...byId(after, 'create').screens, ...byId(after, 'storage').screens].filter(x => x.target === 'texture');
 assert.equal(tex.length, 2, 'the drafting paper and the phone in hand are texture targets');
 assert(tex.some(x => x.mesh === '^Architect floor plan$') && tex.some(x => x.person === 'andre' && x.material === '^Held\\.phone screen'));
-run(); assert.equal(fs.readFileSync(CUT, 'utf8'), once, 'idempotent'); assert.equal(fs.readFileSync(SUB, 'utf8'), subOnce, 'idempotent (versions)');
+run('--only', ALL); assert.equal(fs.readFileSync(CUT, 'utf8'), once, 'idempotent'); assert.equal(fs.readFileSync(SUB, 'utf8'), subOnce, 'idempotent (versions)');
 const subKeys = s => s.shots.map(({screens, ...r}) => r);
 assert.deepEqual(subKeys(sub), subKeys(subBefore), 'the finale versions: only screens changes');
 run('--only', 'coast');
+assert(sub.shots.find(v => v.preset === 'hbhs').screens.some(x => x.target === 'main-portrait' && /cine-oilers-portrait/.test(x.src) && x.offset === -20.3), 'hbhs version plays oilers own quiz at its offset');
+assert(byId(after, 'create').screens.some(x => x.target === 'texture' && x.within === 'desk'), 'the drafting sheet is scoped to the featured desk');
 const coast = byId(JSON.parse(fs.readFileSync(CUT, 'utf8')), 'coast').screens;
 assert.equal(coast.filter(x => /cine-coast-/.test(x.src)).length, 4, 'coast lands when named');
 for (const sc of coast) if (/cine-coast-/.test(sc.src)) named.push(sc.src);
@@ -96,4 +103,4 @@ assert.match(read(path.join(SCR, 'scenes/ch09.js')), /TM\?\.first \?\? \.75/, 'a
 const listed = new Set(read(path.join(ROOT, 'tools/experience/freeze-lists/win-exports.txt')).split('\n').map(l => l.trim()));
 for (const src of new Set(named)) assert(listed.has(src), src + ' is in freeze-lists/win-exports.txt');
 fs.rmSync(tmp, {recursive: true, force: true});
-console.log(`cine screens: ${cine.length} clips, build-screens writes only screens (idempotent, coast last), defaults kept, freeze list complete: OK`);
+console.log(`cine screens: ${cine.length} clips, build-screens opt-in per chapter, writes only screens (idempotent), defaults kept, freeze list complete: OK`);

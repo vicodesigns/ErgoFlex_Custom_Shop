@@ -11,7 +11,7 @@
 // Also: SCENES.cplan, the drafting paper itself (1600x1000 still, film texture target 'Architect floor plan').
 (function () {
   const O = () => SHOT.clip.opts || {};
-  const acts = () => { const o = O(); return {A: o.A ?? 6.8, B: o.B ?? 16.9, name: o.name || 'Lin'}; };
+  const acts = () => { const o = O(); return {A: o.A ?? 7.0, B: o.B ?? 16.9, name: o.name || 'Lin'}; };
   const X = 0.35;   // crossfade between acts (s)
 
   // ---------------- the plan: the drafting kit's sheet (workspace-3d.mjs), relabelled as a home ----------------
