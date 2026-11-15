@@ -1,0 +1,52 @@
+ 0.00 kai-rolls clearance   225 mm to Student work table                  clear width across  2048 mm  Noah  1909 mm
+ 0.25 kai-rolls clearance   225 mm to Student work table                  clear width across  2048 mm  Noah  1909 mm
+ 0.50 kai-rolls clearance   225 mm to Student work table                  clear width across  2048 mm  Noah  1905 mm
+ 0.75 kai-rolls clearance   225 mm to Student work table                  clear width across  1428 mm  Noah  1865 mm
+ 1.00 kai-rolls clearance   225 mm to Student work table                  clear width across  1349 mm  Noah  1767 mm
+ 1.25 kai-rolls clearance   225 mm to Student work table                  clear width across  1302 mm  Noah  1606 mm
+ 1.50 kai-rolls clearance   225 mm to Student work table                  clear width across  1240 mm  Noah  1404 mm
+ 1.75 kai-rolls clearance   233 mm to Student work table                  clear width across  3148 mm  Noah  1187 mm
+ 2.00 kai-rolls clearance   246 mm to Student work table                  clear width across  3417 mm  Noah   985 mm
+ 2.25 kai-rolls clearance   317 mm to Student work table                  clear width across  3384 mm  Noah   648 mm
+ 2.50 kai-rolls clearance   298 mm to Student work table                  clear width across  3308 mm  Noah   446 mm
+ 2.75 kai-rolls clearance   298 mm to Student work table                  clear width across  3308 mm  Noah   496 mm
+ 3.00 kai-rolls clearance   272 mm to Student work table                  clear width across  2038 mm  Noah   372 mm
+ 3.25 kai-rolls clearance   303 mm to Student work table                  clear width across  2038 mm  Noah   385 mm
+ 3.50 kai-rolls clearance   264 mm to Coastal research nook · ErgoFlex d  clear width across  2042 mm  Noah   363 mm
+ 3.75 kai-rolls clearance   242 mm to Coastal research nook · ErgoFlex d  clear width across  3487 mm  Noah   390 mm
+ 4.00 kai-rolls clearance   242 mm to Coastal research nook · ErgoFlex d  clear width across  3516 mm  Noah   369 mm
+ 4.25 kai-rolls clearance   242 mm to Coastal research nook · ErgoFlex d  clear width across  3271 mm  Noah   439 mm
+ 4.50 kai-rolls clearance   244 mm to Coastal research nook · ErgoFlex d  clear width across  3298 mm  Noah   476 mm
+ 4.75 kai-rolls clearance   359 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   430 mm
+ 5.00 kai-rolls clearance   429 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   391 mm
+ 5.25 kai-rolls clearance   439 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   313 mm
+ 5.50 kai-rolls clearance   439 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   226 mm
+ 5.75 kai-rolls clearance   439 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   226 mm
+ 6.00 kai-rolls clearance   439 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   226 mm
+ 6.25 kai-rolls clearance   439 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   226 mm
+ 6.50 kai-rolls clearance   439 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   226 mm
+ 6.75 kai-rolls clearance   439 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   226 mm
+ 7.00 kai-rolls clearance   439 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   226 mm
+ 7.25 kai-rolls clearance   439 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   226 mm
+ 7.50 kai-rolls clearance   439 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   226 mm
+ 7.75 kai-rolls clearance   439 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   226 mm
+ 8.00 kai-rolls clearance   439 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   226 mm
+ 8.25 kai-rolls clearance   439 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   226 mm
+ 8.50 kai-rolls clearance   439 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   226 mm
+ 8.75 kai-rolls clearance   439 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   226 mm
+ 9.00 kai-rolls clearance   439 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   226 mm
+ 9.25 kai-rolls clearance   439 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   226 mm
+ 9.50 kai-rolls clearance   439 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   226 mm
+ 9.75 kai-docks clearance   440 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   226 mm
+10.00 kai-docks clearance   458 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   226 mm
+10.25 kai-docks clearance   507 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   321 mm
+10.50 kai-docks clearance   522 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   269 mm
+10.75 kai-docks clearance   606 mm to Coastal research nook · ErgoFlex d  clear width across  5303 mm  Noah   268 mm
+11.00 kai-docks clearance   736 mm to Prop:ergoflex-designer-chair        clear width across  5303 mm  Noah   469 mm
+11.25 kai-docks clearance   819 mm to Prop:ergoflex-designer-chair        clear width across  5303 mm  Noah   446 mm
+11.50 kai-docks clearance   819 mm to Prop:ergoflex-designer-chair        clear width across  5303 mm  Noah   397 mm
+11.75 kai-docks clearance   819 mm to Prop:ergoflex-designer-chair        clear width across  5303 mm  Noah   301 mm
+12.00 kai-docks clearance   819 mm to Prop:ergoflex-designer-chair        clear width across  5303 mm  Noah   301 mm
+12.25 kai-docks clearance   819 mm to Prop:ergoflex-designer-chair        clear width across  5303 mm  Noah   301 mm
+MIN clearance 225 mm (Student work table at 0.00 s), MIN width 1240 mm (at 1.50 s), MIN to Noah 226 mm (at 10.00 s)
+drawn 50 frames to proof6/drawn
