@@ -57,7 +57,7 @@ Picture: img30.
 ## 5. Artist studio chapter (create)
 
 Pictures: img31 and img32 (the opening frame, canvas still white), img33 (the ending he wants, from the 1080p
-render `req-20261114T004013` of his cut with people), img34 (the ending now).
+render `req-20261114T004013` of the alternate cut, exports/cinematic-intro-20261110-alt), img34 (the ending now).
 
 > I like it a lot. I think we can improve it by, in the beginning, right as it starts, the screen on the right
 > starts as white, but the digital painting goes by so quick that it kind of doesn't make sense. It keeps going
