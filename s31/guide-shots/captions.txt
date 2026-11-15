@@ -1,0 +1,6 @@
+01-people-tab-person-selected.png: People tab with Andre selected (storage, 5 s): who he is, posture, place, and the view with his selection box and gizmo
+02-path-handle-dragging.png: Andre's walk drawn on the floor, a handle per point (green = where he stands); a middle point being dragged, he follows live
+03-walk-path-section.png: People tab, Walk path section: start, pace, end facing and the points of the path (each one editable, x removes it)
+04-pose-mode-autokey-key-set.png: Pose mode on Omar (media): Auto-key on (red), the left elbow bent at 6 s has just written a key; the joint dots on the body
+05-pose-keys-row.png: The timeline's Pose keys row for the person in pose mode: a diamond per key (3 s and 6 s); click one to go there, drag to retime, Delete removes
+06-people-track-dragging.png: People track (oilers): a row per person with what is programmed (purple roll, blue walk, orange action, yellow posture change); Noah's screen tap being dragged later, the status line shows the new time
