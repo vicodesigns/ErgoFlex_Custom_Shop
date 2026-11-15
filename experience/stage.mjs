@@ -314,7 +314,7 @@ export async function mountStage(ctx) {
         const cx=ringHome.c.x+d.x,cz=ringHome.c.z+d.z;let far=Infinity;
         for(const o of obstacles)far=Math.min(far,Math.hypot(Math.max(o.min.x-cx,0,cx-o.max.x),Math.max(o.min.z-cz,0,cz-o.max.z)));
         if(!Number.isFinite(far)||far<=0)far=sonar;
-        const w=reach.userData.w,sec=t*shot.seconds,travel=2.4,from=far*.06,band=w*.007;
+        const w=reach.userData.w,sec=t*shot.seconds,travel=7.2,from=far*.06,band=w*.007;   // a slow sonar: a ping leaves every 2.4 s (it was every .8 s: too fast, Vico)
         pings.forEach((ring,i)=>{
           const phase=((((sec-pingStop)/travel+i/pings.length)%1)+1)%1;
           setRing(ring,from+(far-from)*phase,band);ring.visible=!reduced;
