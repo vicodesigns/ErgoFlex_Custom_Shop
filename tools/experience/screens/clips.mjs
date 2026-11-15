@@ -43,7 +43,7 @@ const CINE = [
     ['tv', 'tv', 1920, 1080, 'ch09c']].map(([n, target, w, h, scene]) => cine('music', 9, {id: 'cine-music-' + n, target, role: 'gaming room ' + n + ' on the score', w, h, scene, audio: true,
     opts: {handle: 'neonrunner', rename: {nova_kai: 'novaflux'}, burst: [6.3, ['desk lights synced', 'the desk moves with the game??', 'LEDs on the beat']]},
     ...(n === 'tv' ? {videos: [{key: 'montage', src: 'exports/cinematic-intro-20261030/screens/09-game-montage.mp4', t: 16, scale: '854:-2'}]} : {})})),
-  cine('storage', 11, {id: 'cine-storage-phone', target: 'texture:Held.phone screen (andre)', role: 'the phone in the hand of Andre: one big button and the words Store the desk (no small text), then the progress ring', w: 540, h: 1160, scene: 'c11p', opts: {tap: 11.14}}),
+  cine('storage', 11, {id: 'cine-storage-phone', target: 'texture:Held.phone screen (andre)', role: 'the phone in the hand of Andre: the saved Groove: a big play button and the word Groove, upright (flipX on the texture); the tap lights it, pause and a progress ring', w: 540, h: 1160, scene: 'c11p', opts: {tap: 11.14}}),
   // hero, the office version (financial analyst): its window is 12.5-21.9 s and the shot plays these at offset -13.1, so 10 s
   // (300 frames) reach past its end (the hq12 clips were 8 s: their last frame held 0.8 s into the dissolve)
   cine('hero', 12, {id: 'cine-hero-office-wide', target: 'main-landscape', role: 'finale office version: markets, DCF model', w: 2560, h: 1072, scene: 'ch13w', frames: 300}),
