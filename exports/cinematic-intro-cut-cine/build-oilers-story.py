@@ -13,8 +13,8 @@ ledStatus, touchscreen, and Kai's and Noah's placements in people (cast and when
   5.3- 8.2  (the insert) his hand draws the touchscreen out (5.4-6.5), it turns up and asks
             'Lower to Kai's height'; his index finger lands on the button at TAP and it lights
   TAP+0.3   the desk starts down, 43.5 to 31 in over 3 s, the live height counting down on the screen
-  9.4-11.8  Kai rolls the last half metre in under the desk and docks (wheel-type-31 from 12.75)
-  9.4-15    Noah straightens up, steps back out of Kai's way (10.1-11.6) and watches; Kai starts the quiz
+  8.0-11.77 Kai rolls along the cross-aisle and round into the desk as it comes down, and docks (wheel-type-31 from 12.75)
+  9.4-15    Noah straightens up at the corner, turned a little to his right, and watches; Kai starts the quiz
 Placements in room millimetres (room-people.mjs); the touchscreen field: experience/touchscreen-track.mjs.
 """
 import json, math, os, sys
@@ -25,7 +25,6 @@ CUT = os.path.join(HERE, 'review-cut.json')
 SECONDS = 15
 TAP = 8.2                                   # the finger on the button
 LIFT_AT, LIFT_FOR = TAP + .3, 3.0           # the desk starts within half a second of the tap
-import math
 # Kai at the keyboard, turned 180 (S5's placement, 60 mm to the window side since round 5: the room it leaves between
 # him and Noah at the desk's corner)
 DOCK = [-3817, -1110]
@@ -70,7 +69,7 @@ NOAH_AT, NOAH_TURN = [-2930, -1080], -146   # at the front-right corner, facing 
 NOAH_TALK, NOAH_TALK_TURN = [-2800, CROSS_Z], 90
 NOAH_VIA = [round(NOAH_AT[0] + .559 * 400), round(NOAH_AT[1] + .829 * 400)]
 # after the tap he straightens up where he stands, turned 16 degrees to his right (a change of posture: under the
-# 17 degrees that pairs it), his left arm out of the way of Kai rolling in, and watches him (look: walkers ignore it)
+# 17 degrees that pairs it), his left arm out of the way of Kai rolling in, and watches the desk come down to him
 NOAH_WATCH_TURN = -162
 TALK_TO = 2.9                               # he greets Kai until then (the change into his walk 2.2-3.6 s)
 STEP_AT = 3.6                               # he sets off toward the corner (1.43 s of steps: at the corner by 5.03 s)
@@ -141,7 +140,9 @@ def main():
         {'key': 'noah-steps', 'id': 'people-noah-stand-wait', 'at': NOAH_TALK, 'turn': NOAH_TALK_TURN, 'walk': {'path': [NOAH_TALK, NOAH_VIA, NOAH_AT], 'start': STEP_AT, 'pace': 2.8, 'then': 'people-noah-stand-screen-pull'}},
         {'key': 'noah-pulls', 'id': 'people-noah-stand-screen-pull', 'at': NOAH_AT, 'turn': NOAH_TURN, 'act': {'at': PULL_AT, 'dur': PULL_FOR, 'by': [0, 0, 120]}},
         {'key': 'noah-taps', 'id': 'people-noah-stand-screen-tap', 'at': NOAH_AT, 'turn': NOAH_TURN, 'act': {'at': TAP}},
-        {'key': 'noah-watches', 'id': 'people-noah-stand-wait', 'at': NOAH_AT, 'turn': NOAH_WATCH_TURN, 'look': ['kai-docks', 'kai']},
+        # (no `look`: Kai comes up behind and beside him, outside the gaze's 1.3 rad cone until about 11 s, and the head
+        # would turn to him in one frame as he entered it; Noah's head keeps its own slow drift instead)
+        {'key': 'noah-watches', 'id': 'people-noah-stand-wait', 'at': NOAH_AT, 'turn': NOAH_WATCH_TURN},
     ]
     when = {k: v for k, v in p['when'].items() if not (k.startswith('kai') or k.startswith('noah'))}
     when.update({
