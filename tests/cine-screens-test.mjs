@@ -41,7 +41,7 @@ assert(typeof COAST_PERSON === 'string' && COAST_PERSON, 'the coast person is na
 // wellness (S16's stretch): the beats in order inside the chapter, the stretch after the desk has started up
 {
   const wel = cut.shots.find(x => x.id === 'wellness'), lift = wel.motion.clips.find(c => c.lane === 'lift'), B = WELLNESS_BEATS;
-  assert(lift.start <= B.nudge && B.nudge < B.stretch && B.stretch < B.stretchEnd && B.stretchEnd <= B.reset && B.reset < B.work && B.work + .5 <= wel.seconds, 'wellness beats in order, inside the chapter');
+  assert(B.nudge < lift.start && lift.start < B.stretch && B.stretch < B.stretchEnd && B.stretchEnd <= B.breatheEnd && B.breatheEnd <= B.reset && B.reset + 1 <= wel.seconds, 'wellness beats in order, inside the chapter');
   for (const id of ['cine-wellness-main', 'cine-wellness-tablet']) assert.equal(cine.find(c => c.id === id).opts.stretch, B.stretch, id + ' gets the beats');
 }
 const kai = cine.find(c => c.id === 'cine-music-tv');
