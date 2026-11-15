@@ -26,14 +26,20 @@ BLUE = '&H00EC8813&'
 BOX_A, BOX_BLUR, SCRIM_BLOCK = 'B0', 18, False   # title line boxes: alpha B0 = 31% black, soft edge (HQ20 F); SCRIM_BLOCK True = the old block scrim  # #1388ec as ASS BGR
 
 ANCHOR = (128, 912)   # title anchor: the headline's left edge / bottom line (Director Mode's film-titles.mjs ANCHOR)
+# A title's optional 'place' (film-titles.mjs PLACES; absent = lower-left, everything as before): (x, line y offset,
+# ASS alignment, box alpha). top-*: the eyebrow's top 110 px from the top edge, as the supporting line's bottom is from
+# the bottom lower left; *-right: lines flush right at 1920 - 128 (\an3); top boxes darker ('70', 56% black) since they
+# sit over skies and windows. Custom shadow paths are relative to the placed anchor.
+PLACE_DY, BOX_A_TOP = 110 - (812 - 28), '70'
+PLACES = {'lower-left': (128, 0, 1, None), 'top-left': (128, PLACE_DY, 1, BOX_A_TOP), 'top-right': (1920 - 128, PLACE_DY, 3, BOX_A_TOP)}
 LINE_TIMING = {'eyebrow': (0, 10), 'title': (140, 14), 'detail': (380, 10)}   # (delay ms, rise px) as below
 
 def ass_num(v):
     v = round(float(v) + 0.0, 2); return str(int(v)) if v == int(v) else f'{v:g}'
 
-def ass_drawing(path):
+def ass_drawing(path, anchor=ANCHOR):
     """A shadow path as an ASS drawing in absolute 1920x1080 coordinates (film-titles.mjs assDrawing())."""
-    P, (ax, ay) = path['points'], ANCHOR
+    P, (ax, ay) = path['points'], anchor
     xy = lambda x, y: f'{ass_num(x + ax)} {ass_num(y + ay)}'
     out = ['m ' + xy(P[0]['x'], P[0]['y'])]
     for i, p in enumerate(P):
@@ -76,7 +82,7 @@ def main():
     # ---- titles.json (absolute) + ASS -------------------------------------
     titles = [dict(id=f"{t['chapter']}-{i}", chapter=t['chapter'], start=round(start[t['chapter']] + t['rel_in'], 3),
                    end=round(start[t['chapter']] + t['rel_out'], 3), eyebrow=t['eyebrow'], title=t['title'], detail=t['detail'], scrim=t.get('scrim'),
-                   shadow=t.get('shadow') or {})
+                   shadow=t.get('shadow') or {}, **({'place': t['place']} if t.get('place') in PLACES and t['place'] != 'lower-left' else {}))
               for i, t in enumerate(src['titles'])]
     logo_at = start[src['logo']['chapter']] + src['logo']['rel_in']
     cta = dict(id='cta', chapter=src['cta']['chapter'], start=round(start[src['cta']['chapter']] + src['cta']['rel_in'], 3),
@@ -110,23 +116,24 @@ def main():
     CTA_Y = 904
     for t in titles:
         a, b = t['start'], t['end']
+        X0, DY, AN, BOX_PLACE = PLACES[t.get('place', 'lower-left')]
         # (Until HQ20: one soft, blurred 1300 x 350 scrim behind the text block, per-title 'scrim' alpha; now fitted line boxes.)
         if SCRIM_BLOCK: ass.append(f'Dialogue: 0,{ts(a - .2)},{ts(b + .2)},Scrim,,0,0,0,,{{\\an7\\pos(0,0)\\p1\\1c&H000000&\\1a&HFF&\\blur90\\t(0,900,\\1a&H{t.get('scrim') or '90'}&)\\t({int((b - a) * 1000 - 300)},{int((b - a) * 1000 + 400)},\\1a&HFF&)}}m 0 730 l 1300 730 1300 1080 0 1080{{\\p0}}')
         def line(layer, style, y, text, delay, rise=14):
             dur = int((b - a) * 1000)
             return (f'Dialogue: {layer},{ts(a + delay / 1000)},{ts(b)},{style},,0,0,0,,'
-                    f'{{\\an1\\move({X0},{y + rise},{X0},{y},0,900)\\fad(650,420)\\blur5\\t(0,700,\\blur0)}}{text}')
+                    f'{{\\an{AN}\\move({X0},{y + DY + rise},{X0},{y + DY},0,900)\\fad(650,420)\\blur5\\t(0,700,\\blur0)}}{text}')
         # Director Mode's shadow: blur / opacity restyle the boxes; paths replace them (one drawing each, timed like its line).
         sh = t['shadow']; blur = ass_num(sh.get('blur', BOX_BLUR))
-        alpha = f"{max(0, min(255, round(255 * (1 - float(sh['opacity']))))):02X}" if 'opacity' in sh else BOX_A
+        alpha = f"{max(0, min(255, round(255 * (1 - float(sh['opacity']))))):02X}" if 'opacity' in sh else (BOX_PLACE or BOX_A)
         tint = f'\\3a&H{alpha}&' if alpha != BOX_A else ''
         def box(style, y, text, delay, rise=14):
             return (f'Dialogue: 0,{ts(a + delay / 1000)},{ts(b)},Box{style},,0,0,0,,'
-                    f'{{\\an1\\move({X0},{y + rise},{X0},{y},0,900)\\fad(650,420){tint}\\blur{blur}}}{text}')
+                    f'{{\\an{AN}\\move({X0},{y + DY + rise},{X0},{y + DY},0,900)\\fad(650,420){tint}\\blur{blur}}}{text}')
         for p in sh.get('paths') or []:
             delay, rise = LINE_TIMING.get(p.get('line'), (0, 10))
             ass.append(f'Dialogue: 0,{ts(a + delay / 1000)},{ts(b)},Scrim,,0,0,0,,{{\\an7\\move(0,{rise},0,0,0,900)\\fad(650,420)\\p1\\bord0\\shad0'
-                       f'\\1c&H000000&\\1a&H{alpha}&\\blur{blur}}}{ass_drawing(p)}{{\\p0}}')
+                       f'\\1c&H000000&\\1a&H{alpha}&\\blur{blur}}}{ass_drawing(p, (X0, ANCHOR[1] + DY))}{{\\p0}}')
         for style, y, key, delay, rise in (('Eyebrow', 812, 'eyebrow', 0, 10), ('Title', 912, 'title', 140, 14), ('Detail', 970, 'detail', 380, 10)):
             if not SCRIM_BLOCK and not sh.get('paths'): ass.append(box(style, y, t[key], delay, rise))
             ass.append(line(1, style, y, t[key], delay, rise))

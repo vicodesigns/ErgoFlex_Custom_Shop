@@ -15,6 +15,7 @@ import {cleanDeskEdits} from './desk-edits.mjs';
 import {cleanDeskBuildField} from './desk-build.mjs';
 import {cleanDeskVersionsField} from './desk-versions-edit.mjs';
 import {cleanFilmTitles} from './film-titles.mjs';
+import {cleanTouchscreenField} from './touchscreen-track.mjs';
 export const CUTS_KEY='ergoflex.clientCuts.v1';
 export const KINDS=[['room','Explore the room'],['hero','Desk showcase'],['glide','Omni-wheel movement'],['lift','Sit to stand'],['tilt','Drafting / easel'],['group','Group-work Groove'],['storage','Storage Groove'],['wellness','Movement break'],['proximity','Proximity demo'],['music','Music lighting'],['media','Curved-screen media']];
 export const PRESET_IDS=['office','artist','gaming','music','library','compact','creative','architect','occ','hbhs'];
@@ -55,6 +56,8 @@ export function cleanShot(v={},catalog){
   if(shot.deskEdits)shot.deskEdits=cleanDeskChoreo({deskEdits:shot.deskEdits},shot.seconds).deskEdits;
   // Film titles edited in the Director (absent until then): copy, timing, shadow shape.
   const titles=cleanFilmTitles(v.filmTitles,shot.seconds);if(titles?.length)shot.filmTitles=titles;
+  // The desk's onboard touchscreen posed from chapter time (touchscreen-track.mjs), absent unless the film gives it.
+  const touchscreen=cleanTouchscreenField(v.touchscreen);if(touchscreen)shot.touchscreen=touchscreen;
   return shot;
 }
 export function cleanCut(value,catalog){

@@ -25,7 +25,7 @@ SCR = 'exports/cinematic-intro-cut-cine/screens/'
 # chapter -> {target: clip id}; 'texture' entries are film texture targets (tools/experience/film-texture-screens.mjs)
 PLAN = {
     'awaken': {'main-landscape': 'cine-awaken-main'},
-    'rise': {'main-landscape': 'cine-rise-curved', 'main-portrait': 'cine-rise-portrait'},
+    'rise': {'main-landscape': 'cine-rise-curved', 'main-portrait': 'cine-rise-portrait', 'phone': 'cine-rise-phone'},
     'create': {'main-landscape': 'cine-create-landscape', 'main-portrait': 'cine-create-portrait'},
     'commons': {'main-landscape': 'cine-commons-reservation'},
     'oilers': {'main-landscape': 'cine-oilers-curved', 'main-portrait': 'cine-oilers-portrait', 'main-landscape-2': 'cine-oilers-laptop'},
@@ -43,8 +43,8 @@ TEXTURES = {
     # the drafting board's paper, relabelled as a home (a still: the same plan as the left monitor and the 3D house);
     # within 'desk': only the featured desk's kit (another drafting kit in the room keeps its sheet)
     'create': [{'target': 'texture', 'mesh': '^Architect floor plan$', 'within': 'desk', 'src': SCR + 'cine-create-floor-plan.png'}],
-    # the phone in Andre's hand (every phone posture of his is its own GLB; all of them show the clip)
-    'storage': [{'target': 'texture', 'material': '^Held\\.phone screen', 'person': 'andre', 'src': SCR + 'cine-storage-phone.mp4', 'offset': 0, 'loop': False}],
+    # the phone in Andre's hand; flipX: the clip is authored upright, the texture turned so the insert's camera (far side of Andre) reads it (every phone posture of his is its own GLB; all of them show the clip)
+    'storage': [{'target': 'texture', 'material': '^Held\\.phone screen', 'person': 'andre', 'src': SCR + 'cine-storage-phone.mp4', 'offset': 0, 'loop': False, 'flipX': True}],
 }
 HERO_VERSIONS = {'gaming': {'main-landscape': 'cine-hero-gaming'}, 'artist': {'main-landscape': 'cine-hero-artist'},
                  # hbhs: its portrait plays oilers' own quiz (Kai's chapter) at the version's offset (-20.3: the votes,

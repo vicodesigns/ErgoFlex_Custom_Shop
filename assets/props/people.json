@@ -1862,6 +1862,24 @@
    "stance": "standing",
    "desk": false,
    "seat": 0
+  },
+  "stand-screen-pull": {
+   "label": "Drawing the desk's touchscreen out",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "stand-screen-tap": {
+   "label": "A finger over the desk's touchscreen",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "stand-screen-press": {
+   "label": "Tapping the desk's touchscreen",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
   }
  },
  "models": {
@@ -11888,6 +11906,24 @@
    "pose": "stand-type",
    "deskHeight": 41,
    "name": "Maya, typing at the desk at 41 in (standing)",
+   "aids": []
+  },
+  "people-noah-stand-screen-tap": {
+   "character": "noah",
+   "pose": "stand-screen-tap",
+   "name": "Noah: a finger over the desk's touchscreen",
+   "aids": []
+  },
+  "people-noah-stand-screen-press": {
+   "character": "noah",
+   "pose": "stand-screen-press",
+   "name": "Noah: tapping the desk's touchscreen",
+   "aids": []
+  },
+  "people-noah-stand-screen-pull": {
+   "character": "noah",
+   "pose": "stand-screen-pull",
+   "name": "Noah: drawing the desk's touchscreen out",
    "aids": []
   },
   "people-andre-stand-robot-lift": {

@@ -55,6 +55,20 @@
 - **Landing order**: the people commit that builds `people-maya-stand-type-41` (model, index.json, people.json,
   people-rigs/maya.json) must land before or with any branch whose cut casts it; without it Maya is missing standing.
 
+## November 14: wellness, Maya gets up at the desk (stream S16; Vico: "it just goes from sitting to standing")
+
+- Cause: the stretch model `maya-break` (`people-maya-stretch`, same character as the desk user) was timed 6.6-10.35 s
+  at a spot 265 mm behind her. A film placement of the desk user's character makes the desk actor `away`
+  (room-people.mjs), so 0.3 s after she started getting up (the lift sets off at 6.0 s) she dissolved into the stretch
+  there, and at 10.35 s dissolved back already standing at the keys. Rise has no such placement (its `stand-wait`
+  stand-in gives way to the actor), so the actor plays the whole get-up there.
+- Fix: `maya-break` is marked `fromDesk: true`, stands where she stands at the desk (`at` [-421, 85], same facing) and
+  is timed 9.7-12.3 s. The desk actor now plays the same get-up as in rise (hands off at 6.0 s, up by 8.93 s, the chair
+  rolls back and parks aside, `people.chair` unchanged), then her bones change on the spot from that standing pose to the
+  stretch (9.0-10.4 s), she stretches, and they change back to her typing pose at 41 in (11.6-13.0 s); she types to the
+  end. No dissolve. `fromDesk` (room-people.mjs `stepOuts`) is new and only this placement uses it. Chapter length (16 s),
+  lift timing, camera and titles unchanged.
+
 ## November 14 (working cut): awaken and create
 
 - awaken: both titles (ERGOFLEX 3.6-9.2 s, SAFETY 13.2-18.4 s) sit lower left; the keys under them are aimed so the
@@ -84,6 +98,41 @@ copied film-data files (titles-src.json, shots/13-subshots.json). director-camer
 cut on purpose: a Director pass would copy his oilers keys back into review-cut.json.
 **Result at hand-off (against the new source, 9aef44f): OK, identical outside the camera; camera changed in 11
 chapters, hero unchanged.**
+
+## November 15: titles clear of the desk and of people (S12)
+
+Vico: "the title shouldn't overlap the desk". The title block sits lower left (about x 0.07-0.43, y 0.70-0.92 of the
+frame). Checked on stills with the titles burned in at each title's in (+0.7 s), middle and out (-0.3 s).
+
+- Camera only (`frame(key, dx, dy, fov)` in build-cine-cut.py: the lens `fov` degrees wider, then the aim turned so
+  the frame's content sits `dx` of the (widened) width further right and `dy` of the height higher): rise (4.3-9.45 s
+  keys), commons (the two shots under the title), coast (the three keys under it, 3-4 degrees wider), awareness (the
+  drive shot, 5 degrees wider, and the floor-level profile raised), music (the high shot and the front view), media
+  (the first shot). Storage's camera is as it was (a turn of its walk-round wide opened the room's open left edge,
+  the void, and Andre walks through the lower left there from 5.3 to 6.6 s).
+- Timing (titles-src.json): storage's title plays on the fold shot, 11.75-14.75 s (was 2.75-9.75 s, over the desk at
+  the hand-over and Andre in the phone insert): the floor in front of the folding desk is clear, and the line it
+  carries ("One tap: fold to 65 degrees, roll to the wall") is what that shot shows; 3.0 s on screen, under the 3.5 s
+  guide (the Director only notes it). create's TILT title ends at 9.2 s (was 9.6) before the stool comes under its
+  last line.
+- hero: `frame-hero-title.py` turns the aim of the one sub-shot on screen under the closing title (the architect desk,
+  shots/13-subshots.json, 33.2-48 s) by up to 0.05 of the width, eased in over 34.2-34.8 s and out over 39.4-40.4 s,
+  so the near leg clears the end of "day." at about 37 s; the other sub-shots and review-cut.json's hero camera are
+  unchanged (none is on screen then).
+- Title placement option (for wellness; the cut does not use it yet): a title's `place` in titles-src.json,
+  `top-left` or `top-right` (absent or `lower-left` = the standing layout, drawn byte for byte as before:
+  tests/cinematic-titles-test.mjs against tests/fixtures/titles-lower-left). Same type sizes, line spacing and safe
+  margins: the eyebrow's top 110 px from the top edge (as the supporting line's bottom is from the bottom lower left),
+  right placements flush right at 1792; the fitted boxes behind a top title are darker (56% black, for skies and
+  windows). Honoured by finish-intro.py, the Director's title overlay and editor (experience/film-titles.mjs,
+  title-editor.mjs) and the Director import (build-round8-director.py); a custom shadow shape is relative to the
+  placed anchor. The score does not depend on these (it reads awaken's two titles and the logo only):
+  build-cine-score.py's input digest is unchanged.
+- create: the stool is drawn only until 19.5 s (`show`): from the cut, Lin (people-lin-stand-paint at [-200, -130])
+  stands where it was; side and top stills showed her legs through its seat.
+- Not changed here: wellness (the frame is full: Kai's bike, Maya, her chair and the desk span the width; a wider or
+  turned lens brings the cyclist under the title; the placement option above is for it, Vico picks), oilers (S9
+  retimes it).
 
 ## Score and EDL (Nov 14, S7)
 
@@ -212,3 +261,27 @@ frame until after it.
 - Titles were not composited over the new frames (the render path used here does not draw them).
 - Dissolves between chapters were not previewed end to end (each chapter was rendered alone).
 - Director import keeps only 64 camera keys; like his cut with people, these chapters carry more (dense splines).
+
+## Oilers: the touchscreen story (S9, Nov 14)
+
+Vico's note: nobody used the desk's onboard touchscreen; in the high school the standing student should slide it out
+and lower the desk for the student in the wheelchair. `build-oilers-story.py` writes the oilers chapter's story fields
+(seconds, motion, ledStatus, touchscreen, Kai's and Noah's placements; everyone else kept), its camera stays in
+`build-cine-cut.py` (`--only oilers`). **The chapter is now 15 s (was 14)**: the score and the oilers title window
+follow its length and cut times. 0-5.3 s the class view (no cut before 1.5 s): Kai rolls in down the aisle (`roll`),
+Noah greets him and steps to the desk's front-right corner; 5.3-9.0 s the insert over his right shoulder: he draws
+the screen out (`act`), taps 'Lower to Kai's height' at 8.2 s, the desk starts down at 8.5 s (43.5 to 31 in over 3 s)
+with the live height on the screen (`touchscreen`); 9.0 s on the front three-quarter: Kai rolls the last half metre
+in and docks (typing from 12.75 s), Noah steps back and watches. Round 2 (camera only): the class view cranes up
+and left from 1.5 s so Kai stays readable over the near table; the insert is two shots, low from Kai's side for the
+pull (5.3-7.0 s) and face-on from the screen's user's place for the tap (7.0-9.0 s); the third shot is further back
+and higher (Kai from the chest up, Noah whole). S6's monitor clips (cine-oilers-*.mp4) were timed
+for the 14 s chapter with the lift at 8-11 s; S15 retimed them to this story on cine/s15.
+
+Round 3 (the aisle, Vico: 'he rolls right through them'): for this chapter only (sceneEdits labelled 'S9 aisle' in
+`build-oilers-story.py`; the Studio room is unchanged) the two student work tables at the window end are moved apart
+with their chairs (Leo, Nia and Finn sit on them and follow) and what lies on them; Kai's route runs between them and
+down a cross-aisle to the desk; Noah greets him from 0.3 m right of the desk's corner and steps round. Proof: an
+overhead frame every 0.25 s of his roll with the chair's footprint (wheels, handrims, footplate, elbows: 716 x 940 mm)
+against the furniture's boxes (outside the repo: C:/work/cine-pics/s9/round3-aisle, clearance-table.txt): minimum
+clearance 110 mm, minimum clear width across his way 1107 mm, minimum gap to Noah 109 mm (with a 300 mm body radius).

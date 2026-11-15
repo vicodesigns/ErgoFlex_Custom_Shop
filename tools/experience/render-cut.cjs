@@ -40,6 +40,10 @@
 //   lights:[{preset:'productRig', scale, key/rimLeft/rimRight/pool/contact:
 //     {…}|false} | {type:'rect'|'spot'|'point'|'directional', position|at:
 //     {az,el,dist}, target, color, intensity, width, height, angle, penumbra}]
+// Stage fields (experience/stage.mjs, no film fx needed):
+//   touchscreen:{from:0,open:[{at,to:0..1,dur,easing}],screen:[{at,mode:'prompt'|'moving'|'message'|…,…}]}
+//     the desk's onboard touchscreen posed from chapter time (experience/touchscreen-track.mjs) and what its face
+//     shows (touchscreen-display.mjs film modes; the 'moving' mode counts the desk's real height). Absent: untouched.
 // --list-screens [--list-at 0.5] [--list-objects '^Room:|leap']: print every screen-like mesh (and clock) for the shots,
 //   [--list-materials 'easel|alumin']: with it, the materials (type, colour, metalness, environment, opacity) of every mesh whose path or material name matches,
 //   with world position, size, aspect, facing and on-screen pixel size; also

@@ -96,7 +96,7 @@ const lightsKey=s=>{const l=exportLighting(s);return JSON.stringify([l.ledStatus
 // film-fx resolves 'three' through the stage page's import map, so it loads inside the stage frame.
 async function stageFx(){
   const win=frame.contentWindow;if(win.__filmFx)return win.__filmFx;
-  await new Promise((resolve,reject)=>{win.__filmFxDone=resolve;win.__filmFxFail=reject;const s=win.document.createElement('script');s.type='module';s.textContent="import('/tools/experience/film-fx.mjs?v=20261110-stationary-organizer').then(m=>{window.__filmFx=m;window.__filmFxDone();},e=>window.__filmFxFail(e));";win.document.head.append(s);});
+  await new Promise((resolve,reject)=>{win.__filmFxDone=resolve;win.__filmFxFail=reject;const s=win.document.createElement('script');s.type='module';s.textContent="import('/tools/experience/film-fx.mjs?v=20261114-cine-s1-wheels').then(m=>{window.__filmFx=m;window.__filmFxDone();},e=>window.__filmFxFail(e));";win.document.head.append(s);});
   return win.__filmFx;
 }
 // Film chapters: the live camera is the film's (film-render.mjs filmCamera, what Render still and the 4K use):
@@ -117,7 +117,9 @@ async function prepareStage(next){
   const shot=liveFilmShot(setup,next);fx.beforePrepare(shot);
   // The stage casts the room from the shot it prepares: the film's people with the Director's cast over them.
   fxPeople=JSON.stringify(shot.people??null);
-  let result;try{result=await stage().prepare(shot.people?{...next,people:shot.people}:next);}finally{fx.unhookPreset();}
+  // (and its onboard touchscreen: the Director's if the chapter has one, else the film's)
+  let staged=shot.people?{...next,people:shot.people}:next;const touchscreen=next.touchscreen??shot.touchscreen;if(touchscreen!==undefined&&staged.touchscreen!==touchscreen)staged={...staged,touchscreen};
+  let result;try{result=await stage().prepare(staged);}finally{fx.unhookPreset();}
   fxError=null;try{await fx.install(shot);liveFx=fx;fxShot=next.id;fxAt=-1;fxLights=lightsKey(next);director?.filmApplied?.();}catch(error){console.error('[film fx]',error);fx.clear();fxError=error.message;director?.setStatus('The film setup could not be applied: '+error.message);}
   return result;
 }

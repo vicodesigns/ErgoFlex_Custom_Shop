@@ -235,6 +235,9 @@ def apply(n, cid, f, dc, log):
         motion = dict(motion); motion['initial'] = start_pose(motion.get('initial') or {'height': 30, 'tilt': 0, 'x': 0, 'z': 0, 'yaw': 0}, dc['initial'], log)
 
     def put(s, seconds):
+        # (a chapter's touchscreen keys are not retimed with its clips: say so when the length changes)
+        if s.get('touchscreen') and abs(float(s.get('seconds', seconds)) - seconds) > 1e-6:
+            log('    WARNING: touchscreen keys (open / screen at) left as they were for %s -> %s s: retime them by hand' % (s.get('seconds'), seconds))
         s['seconds'] = seconds; s['cameraPlan'] = copy.deepcopy(plan); s['camera'] = copy.deepcopy(camera)
         if motion is not None: s['motion'] = copy.deepcopy(motion)
         if status is not None: s['ledStatus'] = copy.deepcopy(status)
@@ -767,6 +770,7 @@ def run_pages(ids, downloads):
 
 
 TITLE_TEXT = (('eyebrow', 60), ('title', 140), ('detail', 260))
+TITLE_PLACES = ('top-left', 'top-right')   # titles-src 'place' (absent = lower-left; film-titles.mjs PLACES)
 
 
 def clean_shadow(v):
@@ -806,6 +810,8 @@ def import_titles(cid, titles, seconds, log):
         else: e.pop('shadow', None)
         if d.get('timed'): e['director_timing'] = True
         else: e.pop('director_timing', None)
+        if d.get('place') in TITLE_PLACES: e['place'] = d['place']
+        else: e.pop('place', None)
         new.append(e); was.append(mine.get(d.get('id'), {}))
     if [src['titles'][i] for i in old_idx] == new: return []
     at = old_idx[0] if old_idx else len(src['titles'])
@@ -818,7 +824,7 @@ def import_titles(cid, titles, seconds, log):
     gone = len(old_idx) - sum(1 for o in was if o)
     if gone > 0: log(f'    {gone} title(s) of {cid} no longer in the export: removed')
     for e, old in zip(new, was):
-        what = [k for k in ('rel_in', 'rel_out', 'eyebrow', 'title', 'detail', 'shadow') if old.get(k) != e.get(k)]
+        what = [k for k in ('rel_in', 'rel_out', 'eyebrow', 'title', 'detail', 'shadow', 'place') if old.get(k) != e.get(k)]
         log(f'    title {e["rel_in"]:g}-{e["rel_out"]:g} s {e["title"]!r}: {", ".join(what) or "unchanged"}{" (timing set in Director)" if e.get("director_timing") else ""}')
     return [f'titles-src.json (backup titles-src.pre-{tag}.json)']
 

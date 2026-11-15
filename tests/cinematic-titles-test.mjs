@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {LINES,ANCHOR,BOX_BLUR,BOX_OPACITY,chapterTitles,cutRule,timingNotes,cleanFilmTitles,cleanShadow,fittedBox,fittedPaths,shadowOf,lineState,restTime,svgPath,assDrawing,segments,bounds,nearestOnPath,insertPoint,deletePoint,toggleSmooth,moveHandle,movePoint,transformPaths,pointCount,srcEntry} from '../experience/film-titles.mjs';
+import {LINES,ANCHOR,BOX_BLUR,BOX_OPACITY,chapterTitles,cutRule,timingNotes,cleanFilmTitles,cleanShadow,fittedBox,fittedPaths,shadowOf,lineState,restTime,svgPath,assDrawing,segments,bounds,nearestOnPath,insertPoint,deletePoint,toggleSmooth,moveHandle,movePoint,transformPaths,pointCount,srcEntry,placeOf,PLACES,PLACE_DY,BOX_OPACITY_TOP,textBounds} from '../experience/film-titles.mjs';
 import {cleanShot,cleanCut} from '../experience/cuts.mjs';
 const root=path.dirname(path.dirname(fileURLToPath(import.meta.url))),X=path.join(root,'tools/experience');
 
@@ -102,4 +102,42 @@ try{
   const riseBoxes=ass.filter(l=>/Box(Eyebrow|Title|Detail)/.test(l)&&l.includes('0:00:44'));assert.equal(riseBoxes.length,0);
   assert.equal(ass.filter(l=>/,BoxTitle,/.test(l)).length,2,'the other titles keep their fitted boxes');
 }finally{fs.rmSync(H,{recursive:true,force:true});}
-console.log('Film titles: cut rule + gentle notes, fitted boxes (libass geometry), fade / rise timing, point editing (insert keeps the outline, smooth / sharp, mirrored and broken handles, delete, scale), cut keeps filmTitles, import -> titles-src (backup, film order, director_timing), titles-after-cut keeps his timing, finish-intro draws the same path verified.');
+
+// ---- placement ('place': lower-left (absent) | top-left | top-right) ----
+// Director: no field = the film's standing layout, unchanged; the others move the anchor (and flush right).
+assert.deepEqual(placeOf({}).anchor,ANCHOR);assert.equal(placeOf({}).boxOpacity,BOX_OPACITY);assert.equal(placeOf({place:'nowhere'}).key,'lower-left');
+assert.equal(PLACE_DY,110-(812-28));assert.deepEqual(placeOf({place:'top-left'}).anchor,[128,912+PLACE_DY]);assert.deepEqual(placeOf({place:'top-right'}).anchor,[1792,912+PLACE_DY]);
+assert.equal(placeOf({place:'top-right'}).boxOpacity,BOX_OPACITY_TOP);
+assert.deepEqual(fittedPaths({...title,place:'lower-left'},measure),fittedPaths(title,measure));
+assert.deepEqual(shadowOf({...title,place:'top-left'},measure).paths,fittedPaths(title,measure),'top-left: same boxes, relative to the moved anchor');
+assert.deepEqual(fittedBox(T,597,'right'),{x0:-597-26,x1:26,y0:912-86-26-912,y1:26});
+assert.deepEqual(textBounds({...title,place:'top-right'},measure),{x0:-measure(T,title.title),x1:0,y0:812-28-912,y1:0});
+assert.deepEqual(textBounds(title,measure),{x0:0,x1:measure(T,title.title),y0:812-28-912,y1:0});
+assert.equal(cleanFilmTitles([{...title,place:'top-right'}])[0].place,'top-right');
+assert.equal(cleanFilmTitles([{...title,place:'lower-left'}])[0].place,undefined);assert.equal(cleanFilmTitles([{...title,place:'centre'}])[0].place,undefined);
+assert.equal(srcEntry('rise',{...title,place:'top-left'}).place,'top-left');assert.equal(srcEntry('rise',title).place,undefined);
+assert.equal(svgPath(sq,placeOf({place:'top-right'}).anchor),`M 1792 ${912+PLACE_DY} L 1892 ${912+PLACE_DY} L 1892 ${962+PLACE_DY} L 1792 ${962+PLACE_DY} L 1792 ${912+PLACE_DY} Z`);
+// finish-intro: every title without the field is drawn byte for byte as before the option existed (golden ASS and
+// titles.json made by the previous finish-intro.py from the Cinematographer's cut's titles-src.json and edl.json).
+{
+  const G=path.join(root,'tests/fixtures/titles-lower-left'),eol=b=>b.toString('utf8').replace(/\r\n/g,'\n');
+  const run=(srcObj)=>{const D=fs.mkdtempSync(path.join(os.tmpdir(),'ergoflex-place-'));try{
+    fs.copyFileSync(path.join(G,'edl.json'),path.join(D,'edl.json'));fs.writeFileSync(path.join(D,'titles-src.json'),JSON.stringify(srcObj,null,1));
+    execFileSync('python3',[path.join(X,'finish-intro.py'),D,'--titles-only'],{stdio:'ignore'});
+    return {ass:eol(fs.readFileSync(path.join(D,'final','titles.ass'))),json:eol(fs.readFileSync(path.join(D,'final','titles.json')))};}finally{fs.rmSync(D,{recursive:true,force:true});}};
+  const gsrc=JSON.parse(fs.readFileSync(path.join(G,'titles-src.json'),'utf8')),golden={ass:eol(fs.readFileSync(path.join(G,'titles.ass'))),json:eol(fs.readFileSync(path.join(G,'titles.json')))};
+  assert.ok(gsrc.titles.every(t=>!t.place),'the golden source has no placed title');
+  const same=run(gsrc);assert.equal(same.ass,golden.ass,'titles.ass byte-identical without the field');assert.equal(same.json,golden.json,'titles.json byte-identical without the field');
+  const ll=run({...gsrc,titles:gsrc.titles.map(t=>({...t,place:'lower-left'}))});assert.equal(ll.ass,golden.ass,"'lower-left' = no field");assert.equal(ll.json,golden.json);
+  const i=gsrc.titles.findIndex(t=>t.chapter==='wellness'),w=gsrc.titles[i];
+  for(const [place,x,an] of [['top-left',128,1],['top-right',1792,3]]){
+    const got=run({...gsrc,titles:gsrc.titles.map((t,k)=>k===i?{...t,place}:t)}),lines=got.ass.split('\n'),gl=golden.ass.split('\n');
+    const mine=l=>l.endsWith('}'+w.eyebrow)||l.endsWith('}'+w.title)||l.endsWith('}'+w.detail);
+    assert.deepEqual(lines.filter(l=>!mine(l)),gl.filter(l=>!mine(l)),`${place}: every other line unchanged`);
+    const head=lines.filter(l=>mine(l)&&l.includes(',Title,'))[0];
+    assert.ok(head.includes(`{\\an${an}\\move(${x},${912+PLACE_DY+14},${x},${912+PLACE_DY},0,900)`),`${place}: headline at the placed anchor`);
+    const box=lines.filter(l=>mine(l)&&l.includes(',BoxTitle,'))[0];assert.ok(box.includes(`\\an${an}\\move(${x},`)&&box.includes('\\3a&H70&'),`${place}: fitted box placed and darker`);
+    assert.equal(JSON.parse(got.json).titles[i].place,place);assert.equal(JSON.parse(got.json).titles.filter(t=>t.place).length,1);
+  }
+}
+console.log('Film titles: cut rule + gentle notes, fitted boxes (libass geometry), fade / rise timing, point editing (insert keeps the outline, smooth / sharp, mirrored and broken handles, delete, scale), cut keeps filmTitles, import -> titles-src (backup, film order, director_timing), titles-after-cut keeps his timing, finish-intro draws the same path, placement (absent = byte-identical film titles; top-left / top-right) verified.');

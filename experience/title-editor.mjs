@@ -1,4 +1,4 @@
-import {LINES,ANCHOR,FILM_W,FONT_REAL,DESC,BOX_BLUR,BOX_OPACITY,BLUR_SIGMA,chapterTitles,cutRule,timingNotes,cleanFilmTitles,shadowOf,fittedPaths,textBounds,lineState,pathTiming,restTime,svgPath,bounds,nearestOnPath,insertPoint,deletePoint,toggleSmooth,moveHandle,movePoint,transformPaths,pointCount} from './film-titles.mjs';
+import {LINES,ANCHOR,FILM_W,FONT_REAL,DESC,BOX_BLUR,BOX_OPACITY,BLUR_SIGMA,chapterTitles,cutRule,timingNotes,cleanFilmTitles,shadowOf,fittedPaths,textBounds,lineState,pathTiming,restTime,svgPath,bounds,nearestOnPath,insertPoint,deletePoint,toggleSmooth,moveHandle,movePoint,transformPaths,pointCount,placeOf} from './film-titles.mjs';
 import {stackRows,rowVar} from './lane-rows.mjs';
 // Film titles in Director Mode: the TITLES lane (one block per title card: drag to move, edges to trim), the Title
 // inspector (copy, timing, shadow) and the title overlay in the 16:9 frame, drawn as finish-intro.py burns it in.
@@ -215,16 +215,16 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   const shape={pt:null,sel:new Set(),draft:null};let lastPt=null;
   const blurFilter=(id,b)=>`<filter id="${id}" filterUnits="userSpaceOnUse" x="-400" y="-400" width="2720" height="1880"><feGaussianBlur stdDeviation="${(b*BLUR_SIGMA).toFixed(3)}"/></filter>`;
   function cardSvg(t,at,rest){
-    const S=shapeFor(t),defs=[],parts=[];let n=0;
+    const S=shapeFor(t),P=placeOf(t),defs=[],parts=[];let n=0;
     // shadow (layer 0): each path its own soft shape, timed like its line (finish-intro: one Dialogue each)
     if(S.blur>0)defs.push(blurFilter('tb-'+t.id,S.blur));
     S.paths.forEach(p=>{const [delay,rise]=pathTiming(p),st=rest?{on:true,alpha:1,dy:0}:lineState(t,delay,rise,at);if(!st.on||st.alpha<=0)return;
-      parts.push(`<path d="${svgPath(p)}" fill="#000" fill-opacity="${(S.opacity*st.alpha).toFixed(4)}" transform="translate(0 ${st.dy.toFixed(2)})" ${S.blur>0?`filter="url(#tb-${t.id})"`:''}/>`);});
+      parts.push(`<path d="${svgPath(p,P.anchor)}" fill="#000" fill-opacity="${(S.opacity*st.alpha).toFixed(4)}" transform="translate(0 ${st.dy.toFixed(2)})" ${S.blur>0?`filter="url(#tb-${t.id})"`:''}/>`);});
     // text (layer 1), with its drop shadow
     for(const L of LINES){const s=t[L.key];if(!s)continue;const st=rest?{on:true,alpha:1,dy:0,blur:0}:lineState(t,L.delay,L.rise,at);if(!st.on||st.alpha<=0)continue;
       const fid=st.blur>.05?`tt-${t.id}-${n++}`:null;if(fid)defs.push(blurFilter(fid,st.blur));
-      const y=L.y-L.size*DESC+st.dy,attrs=`font-family="${FAMILY[L.weight]}" font-weight="${L.weight}" font-size="${(L.size/FONT_REAL).toFixed(3)}" letter-spacing="${L.spacing}" style="font-kerning:none;white-space:pre"`;
-      parts.push(`<g ${fid?`filter="url(#${fid})"`:''} opacity="${st.alpha.toFixed(4)}"><text x="${128+L.shadow}" y="${(y+L.shadow).toFixed(2)}" ${attrs} fill="#000" fill-opacity="${L.shadowAlpha.toFixed(3)}">${escape(s)}</text><text x="128" y="${y.toFixed(2)}" ${attrs} fill="${L.color}">${escape(s)}</text></g>`);}
+      const y=L.y+P.dy-L.size*DESC+st.dy,attrs=`font-family="${FAMILY[L.weight]}" font-weight="${L.weight}" font-size="${(L.size/FONT_REAL).toFixed(3)}" letter-spacing="${L.spacing}"${P.align==='right'?' text-anchor="end"':''} style="font-kerning:none;white-space:pre"`;
+      parts.push(`<g ${fid?`filter="url(#${fid})"`:''} opacity="${st.alpha.toFixed(4)}"><text x="${P.x+L.shadow}" y="${(y+L.shadow).toFixed(2)}" ${attrs} fill="#000" fill-opacity="${L.shadowAlpha.toFixed(3)}">${escape(s)}</text><text x="${P.x}" y="${y.toFixed(2)}" ${attrs} fill="${L.color}">${escape(s)}</text></g>`);}
     return {defs:defs.join(''),body:parts.join('')};
   }
   function shapeFor(t){const S=shadowOf(t,measure);if(editing&&t.id===selected&&shape.draft)S.paths=shape.draft;return S;}
@@ -237,13 +237,13 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   }
   // A selected title shows its shadow's outline (dashed); clicking the shape starts editing it.
   function hintLayer(t,at){
-    const S=shadowOf(t,measure);return `<g class="shape-hint">${S.paths.map(p=>{const [delay,rise]=pathTiming(p),st=lineState(t,delay,rise,at);return st.on?`<path data-hint d="${svgPath(p)}" transform="translate(0 ${st.dy.toFixed(2)})"><title>Click to edit the shadow shape</title></path>`:'';}).join('')}</g>`;
+    const S=shadowOf(t,measure);return `<g class="shape-hint">${S.paths.map(p=>{const [delay,rise]=pathTiming(p),st=lineState(t,delay,rise,at);return st.on?`<path data-hint d="${svgPath(p,placeOf(t).anchor)}" transform="translate(0 ${st.dy.toFixed(2)})"><title>Click to edit the shadow shape</title></path>`:'';}).join('')}</g>`;
   }
   // ---- shadow shape editing ---------------------------------------------------------------------------------
-  const [AX,AY]=ANCHOR,px=()=>FILM_W/Math.max(1,svg.getBoundingClientRect().width);
+  const anchorOf=t=>placeOf(t).anchor,px=()=>FILM_W/Math.max(1,svg.getBoundingClientRect().width);
   function editLayer(t){
-    const S=shapeFor(t),k=px(),h=5.5*k,parts=[`<rect class="se-bg" x="0" y="0" width="${FILM_W}" height="1080" fill="transparent"/>`];
-    S.paths.forEach((p,pi)=>{const d=svgPath(p);parts.push(`<path class="se-body" data-body="${pi}" d="${d}"/><path class="se-edge" data-edge="${pi}" d="${d}" stroke-width="${12*k}"/><path class="se-outline ${shape.sel.has(pi)?'sel':''}" d="${d}"/>`);});
+    const S=shapeFor(t),[AX,AY]=anchorOf(t),k=px(),h=5.5*k,parts=[`<rect class="se-bg" x="0" y="0" width="${FILM_W}" height="1080" fill="transparent"/>`];
+    S.paths.forEach((p,pi)=>{const d=svgPath(p,[AX,AY]);parts.push(`<path class="se-body" data-body="${pi}" d="${d}"/><path class="se-edge" data-edge="${pi}" d="${d}" stroke-width="${12*k}"/><path class="se-outline ${shape.sel.has(pi)?'sel':''}" d="${d}"/>`);});
     const sel=[...shape.sel].filter(i=>S.paths[i]),bb=sel.length?bounds(sel.map(i=>S.paths[i])):null;
     // the resize frame sits a little outside the shape, so its squares never cover the points
     if(bb){const g=9*k,[x0,y0,x1,y1]=[bb.x0+AX-g,bb.y0+AY-g,bb.x1+AX+g,bb.y1+AY+g],m=[(x0+x1)/2,(y0+y1)/2];
@@ -254,7 +254,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
       parts.push(smooth?`<circle class="se-pt ${on?'on':''}" data-pt="${pi}:${j}" cx="${q.x+AX}" cy="${q.y+AY}" r="${h}"><title>Smooth point · drag to move · double-click: sharp</title></circle>`:`<rect class="se-pt ${on?'on':''}" data-pt="${pi}:${j}" x="${q.x+AX-h}" y="${q.y+AY-h}" width="${2*h}" height="${2*h}"><title>Sharp point · drag to move · double-click: smooth</title></rect>`);}));
     return `<g class="shape-edit">${parts.join('')}</g>`;
   }
-  const filmPoint=event=>{const m=svg.getScreenCTM();if(!m)return [0,0];const p=new DOMPoint(event.clientX,event.clientY).matrixTransform(m.inverse());return [p.x-AX,p.y-AY];};
+  const filmPoint=event=>{const m=svg.getScreenCTM();if(!m)return [0,0];const p=new DOMPoint(event.clientX,event.clientY).matrixTransform(m.inverse()),[AX,AY]=anchorOf(item());return [p.x-AX,p.y-AY];};
   function saveShape(paths,message){
     put(t=>{t.shadow={...t.shadow,paths:structuredClone(paths)};return t;},{message});shape.draft=null;lastKey='';sync();
   }

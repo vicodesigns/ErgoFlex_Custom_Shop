@@ -16,7 +16,7 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCR = path.join(ROOT, 'tools/experience/screens'), CUTDIR = path.join(ROOT, 'exports/cinematic-intro-cut-cine');
-const {CLIPS, CREATE_ACTS, COAST_PERSON} = await import(pathToFileURL(path.join(SCR, 'clips.mjs')).href);
+const {CLIPS, CREATE_ACTS, COAST_PERSON, WELLNESS_BEATS, OILERS_BEATS} = await import(pathToFileURL(path.join(SCR, 'clips.mjs')).href);
 const read = p => fs.readFileSync(p, 'utf8').replace(/\r\n/g, '\n');
 const page = read(path.join(SCR, 'page.html'));
 const loaded = [...page.matchAll(/src="(scenes\/[^"]+)"/g)].map(m => m[1]);
@@ -26,7 +26,8 @@ const cut = JSON.parse(read(path.join(CUTDIR, 'review-cut.json'))), ids = new Se
 
 // 1. the manifest
 const cine = CLIPS.filter(c => c.shot);
-assert(cine.length >= 25, 'the cine clips are in the manifest');
+assert.equal(cine.length, 30, 'the cine clips are in the manifest (29 + the rise phone)');
+assert(cine.some(c => c.id === 'cine-rise-phone' && c.target === 'phone' && c.opts.name === 'Maya'), 'the rise phone is a cine clip');
 assert.equal(new Set(CLIPS.map(c => c.id)).size, CLIPS.length, 'clip ids are unique');
 for (const c of cine) {
   assert(/^cine-/.test(c.id), c.id + ': cine- prefix');
@@ -37,6 +38,21 @@ for (const c of cine) {
 }
 assert(CREATE_ACTS.A > 0 && CREATE_ACTS.B > CREATE_ACTS.A, 'create acts in order');
 assert(typeof COAST_PERSON === 'string' && COAST_PERSON, 'the coast person is named');
+// wellness (S16's stretch): the beats in order inside the chapter, the stretch after the desk has started up
+{
+  const wel = cut.shots.find(x => x.id === 'wellness'), lift = wel.motion.clips.find(c => c.lane === 'lift'), B = WELLNESS_BEATS;
+  assert(B.nudge < lift.start && lift.start < B.stretch && B.stretch < B.stretchEnd && B.stretchEnd <= B.breatheEnd && B.breatheEnd <= B.reset && B.reset + 1 <= wel.seconds, 'wellness beats in order, inside the chapter');
+  for (const id of ['cine-wellness-main', 'cine-wellness-tablet']) assert.equal(cine.find(c => c.id === id).opts.stretch, B.stretch, id + ' gets the beats');
+}
+// oilers (S9's 15 s chapter): the beats sit where the story puts them, against the cut's own lift and Kai's typing
+{
+  const oil = cut.shots.find(x => x.id === 'oilers'), lift = oil.motion.clips.find(c => c.lane === 'lift'), landed = lift.start + lift.duration;
+  const typing = (oil.people.when.kai || [[99]])[0][0];
+  const B = OILERS_BEATS;
+  assert(B.dock >= landed && B.tap >= typing && B.reveal > B.tap && B.dash > B.reveal && B.dash + .8 <= oil.seconds, 'oilers beats in order, inside the chapter');
+  assert(B.reveal >= landed + 1, 'the reveal comes at least 1 s after the desk lands at 31 in');
+  for (const id of ['cine-oilers-portrait', 'cine-oilers-laptop']) assert.deepEqual(Object.fromEntries(Object.keys(B).map(k => [k, cine.find(c => c.id === id).opts[k]])), B, id + ' gets the beats');
+}
 const kai = cine.find(c => c.id === 'cine-music-tv');
 assert(!JSON.stringify(kai.opts).match(/kai/i) || kai.opts.rename?.nova_kai, 'the gaming room names no Kai (neutral handle, nova_kai renamed)');
 assert(!/kai/i.test(kai.opts.handle), 'the stream handle is neutral');
@@ -76,7 +92,7 @@ for (const s of [...after.shots, ...sub.shots.map(v => ({...v, version: true}))]
 const music = byId(after, 'music').screens, main = music.find(x => x.target === 'main-landscape');
 assert(/09-game-montage\.mp4$/.test(main.src) && main.brightness === .55, 'music keeps the game montage on the main monitor');
 assert.equal(music.find(x => x.target === 'arcade').brightness, .55, 'brightness carries over');
-assert(/02-phone\.mp4$/.test(byId(after, 'rise').screens.find(x => x.target === 'phone').src), 'rise keeps the phone on the charger');
+assert(/cine-rise-phone\.mp4$/.test(byId(after, 'rise').screens.find(x => x.target === 'phone').src), 'rise: the phone on the charger plays its cine clip');
 const tex = [...byId(after, 'create').screens, ...byId(after, 'storage').screens].filter(x => x.target === 'texture');
 assert.equal(tex.length, 2, 'the drafting paper and the phone in hand are texture targets');
 assert(tex.some(x => x.mesh === '^Architect floor plan$') && tex.some(x => x.person === 'andre' && x.material === '^Held\\.phone screen'));

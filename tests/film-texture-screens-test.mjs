@@ -89,4 +89,19 @@ assert.match(src, /if \(texSpecs\.length\) active\.texScreens = installTextureSc
 assert.match(src, /filter\(isTextureTarget\)\.map\(sc => \{   \/\/ texture targets: what each one matches here/, 'listed by --list-screens');
 assert.match(src, /if \(active\.texScreens && screens\) \{ await active\.texScreens\.frame\(chapterSeconds, seek\)/, 'updated per frame');
 assert.match(src, /active\.texScreens\?\.restore\(\);/, 'restored on clear');
+// 5. flipX / flipY / rotate:180 turn the picture on the canvas (S11: the storage insert's camera reads the phone from the far side).
+{
+  const calls = [], mk = (w, h) => ({ width: w, height: h, getContext: () => ({ setTransform: (...a) => calls.push(a), drawImage() {} }) });
+  const run = async extra => {
+    calls.length = 0; const x = person('people-andre-flip-' + Math.random());
+    const f = installTextureScreens(scene, [{ ...phone, ...extra }], [video], { makeCanvas: mk, warn() {} });
+    await f.frame(10, async () => {}); const w = f.items[0].canvas.width, h = f.items[0].canvas.height; f.restore(); scene.remove(x.g);
+    return { calls: calls.map(a => a.join(',')), w, h };
+  };
+  const none = await run({}), fx1 = await run({ flipX: true }), fy1 = await run({ flipY: true }), r180 = await run({ rotate: 180 });
+  assert(!none.calls.some(c => /^-1|^1,0,0,-1/.test(c)), 'no flip: the canvas is drawn as it is');
+  assert(fx1.calls.includes(`-1,0,0,1,${fx1.w},0`), 'flipX mirrors across the canvas');
+  assert(fy1.calls.includes(`1,0,0,-1,0,${fy1.h}`), 'flipY mirrors up/down');
+  assert(r180.calls.includes(`-1,0,0,-1,${r180.w},${r180.h}`), 'rotate:180 turns it half a turn');
+}
 console.log('film texture screens: inert unless named, person and desk scoped, warns when unmatched, later postures, stills once, restore + release: OK');

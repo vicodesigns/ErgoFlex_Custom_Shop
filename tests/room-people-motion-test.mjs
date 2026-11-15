@@ -466,6 +466,45 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
         assert.equal(seen(7).length, 1, 'an older cut\'s standing-by stand-in still gives way to the desk user (one of her)');
         await p2.setEnabled(false);
     }
+    // stepping out from the desk (`fromDesk`, the gym chapter since November 14: Vico saw her go from seated to stretching
+    // to standing in dissolves): she gets up at the desk as it sets off (the chair rolls aside), then her bones change
+    // from where she stands to the stretch and, at the window's end, back to where she is at the keys; one whole model of
+    // her at every moment, with no jump at either end
+    {
+        const { room: gym } = makeRoom('gym'), p3 = new RoomPeople(gym, library), park = { back: 100, side: -700, turn: 60 };
+        const seen = time => { p3.update({ ...desk, height: track.heightAt(time), time, track, now: 0 }); return p3.people.filter(o => o.visible); };
+        p3.setFilter({ only: [], cast: [...cast, { key: 'break', id: 'people-maya-stretch', fromDesk: true, at: [60, 260], turn: 180 }], when: { break: [[5.5, 12.5, .3, .35]] }, life: false, chair: park }); await p3.setEnabled(true);
+        seen(0); await p3.settled(); seen(0);
+        const me = p3.actors.find(a => a.members.length), stretch = () => p3.byKey('break'), L = 1.4 + Math.min(1, Math.abs(me.rig.key('people-maya-stretch').wp[me.rig.b.pelvis].y - me.keys.wait.wp[me.rig.b.pelvis].y) / .3);
+        const [start, end] = [5.5 - L / 2, 12.5 + L / 2], bones = o => [...o.userData.personRig.bones.entries()].filter(([n]) => n !== 'still').map(([n, b]) => [n, b.quaternion.clone(), b.position.clone()]);
+        const sameBones = (a, b, eps) => a.every(([n, q, p], i) => n === b[i][0] && q.angleTo(b[i][1]) < eps && p.distanceTo(b[i][2]) < eps);
+        assert.ok(stretch().userData.personRig && stretch().userData.personStepHome, 'the stretch is rigged before it is needed');
+        seen(start - .3); assert.ok(me.state.tau >= 2.6 - 1e-6 && me.state.k === 0, 'she is up, hands off the keys, before she steps out');
+        for (let t = 0; t <= 14; t += .05) { const v = seen(t); assert.equal(v.length, 1, 'one model of her at ' + t.toFixed(2) + ' s'); assert.equal(v[0].userData.personAmount, 1, 'whole, not dissolving, at ' + t.toFixed(2)); assert.ok(me.chair.visible, 'her chair stays'); }
+        // out: the last frame at the desk and the first of the change are the same body in the same place
+        const before = seen(start - 1e-4)[0], b0 = bones(before), p0 = before.position.clone(); assert.match(before.userData.person.id, /^people-maya-stand-/);
+        const first = seen(start + 1e-4)[0]; assert.equal(first.userData.person.id, 'people-maya-stretch');
+        assert.ok(sameBones(bones(first), b0, 2e-3) && first.position.distanceTo(p0) < 2, 'she steps out from where she stands, as she stands');
+        assert.ok(Math.abs(me.chair.position.x - (60 - 700)) < 2, 'the chair has rolled aside (parked) by then');
+        // half way she is on her way; after it she is in the stretch as built, at its spot
+        const mid = seen(5.5)[0]; assert.equal(mid.userData.person.id, 'people-maya-stretch'); assert.ok(!sameBones(bones(mid), b0, 1e-2) && mid.position.distanceTo(stretch().userData.personStepHome.position) > 1, 'half way through the change');
+        const held = seen(9)[0], built9 = new THREE.Quaternion().fromArray(built('people-maya-stretch', 'upperarm_l'));
+        assert.equal(held, stretch()); assert.ok(held.userData.personRig.bones.get('upperarm_l').quaternion.angleTo(built9.normalize()) < 1e-3, 'stretching, as built'); assert.ok(held.position.distanceTo(held.userData.personStepHome.position) < 1e-6, 'where the film put her');
+        // in: the change ends as the desk user is then (hands on the keys), and she carries on from there
+        const last = seen(end - 1e-4)[0], b1 = bones(last), p1 = last.position.clone(); assert.equal(last.userData.person.id, 'people-maya-stretch');
+        const after = seen(end + 1e-4)[0]; assert.equal(after.userData.person.id, 'people-maya-stand-type'); assert.equal(me.state.k, 1);
+        assert.ok(sameBones(bones(after), b1, 2e-3) && after.position.distanceTo(p1) < 2, 'back at the keys from where the change left her');
+        // scrubbing gives the same bones; outside the window the stretch is at its own spot again, unseen
+        seen(6); const a6 = bones(stretch()); seen(10); seen(13.9); seen(6); assert.ok(sameBones(bones(stretch()), a6, 1e-6), 'same second, same pose');
+        seen(13.9); assert.ok(!stretch().visible && stretch().position.distanceTo(stretch().userData.personStepHome.position) < 1e-6);
+        // a second placement stepping out at the same time is left out (one of her), with one warning
+        const warn = console.warn, warned = []; console.warn = m => warned.push(m);
+        p3.setFilter({ only: [], cast: [...cast, { key: 'break', id: 'people-maya-stretch', fromDesk: true, at: [60, 260], turn: 180 }, { key: 'break2', id: 'people-maya-stretch-2', fromDesk: true, at: [60, 260], turn: 180 }], when: { break: [[5.5, 12.5]], break2: [[8, 10]] }, life: false, chair: park }); await p3.setEnabled(true);
+        seen(0); await p3.settled(); seen(0);
+        for (const t of [7, 9, 11]) for (let i = 0; i < 2; i++) assert.deepEqual(seen(t).map(o => o.userData.person.id), ['people-maya-stretch'], 'one of her at ' + t + ' s');
+        console.warn = warn; assert.equal(warned.filter(m => /break2/.test(m)).length, 1, 'warned once');
+        await p3.setEnabled(false);
+    }
     // Studio path: the live height, stepped; a jump of the desk is taken as it stands
     people.setFilter({ only: [], cast, life: false }); await people.built;
     let now = 0, h = 28; const live = (target, steps) => { for (let i = 0; i < steps; i++) { now += 1000 / 60; h += Math.sign(target - h) * Math.min(Math.abs(target - h), 1.55 / 60); people.update({ ...desk, height: h, target: Math.abs(target - h) > 1e-3 ? target : null, time: null, now }); assert.equal(shown().length, 1); } };
@@ -597,6 +636,32 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
         walk.seats.dispose(); delete ROOM_PEOPLE.seattest;
     }
 }
+// ---- the working cut: whoever steps out from the desk (`fromDesk`) is up before the step and has their hands back on
+// the keys by the end of the step back, inside the chapter (the wellness chapter since November 14)
+{
+    const { sampleClipMotion } = await import('../experience/desk-clips.mjs');
+    const cut = JSON.parse(fs.readFileSync(path.join(root, 'exports/cinematic-intro-cut-cine/review-cut.json'), 'utf8')), byId = new Map(index.props.map(p => [p.id, p]));
+    let checked = 0;
+    for (const shot of cut.shots) for (const c of shot.people?.cast || []) {
+        if (!c.fromDesk) continue;
+        const who = byId.get(c.id)?.person?.character, rig = rigOf(who), ids = [...(shot.people.cast || []).filter(d => d.desk && !d.station).map(d => d.id), ...(shot.people.only || [])];
+        const desk = ids.map(id => byId.get(id)?.person).filter(p => p && p.character === who && Number.isFinite(p.deskHeight));
+        const heights = role => desk.filter(p => p.pose.startsWith(role)).map(p => p.deskHeight);
+        const sim = simulateDesk(deskDescription(heights('sit'), heights('stand')), t => sampleClipMotion(shot.motion, t).height, shot.seconds, 60);
+        const length = 1.4 + Math.min(1, Math.abs(rig.key(c.id).wp[rig.b.pelvis].y - rig.key(`people-${who}-stand-wait`).wp[rig.b.pelvis].y) / .3);
+        for (const [t0, t1] of shot.people.when[c.key]) {
+            const out = sim.at(t0 - length / 2), back = sim.at(t1 + length / 2);
+            assert.ok(out.tau >= STAND_UP - 1e-3 && out.k < 1e-3, `${shot.id}: ${c.key} steps out at ${(t0 - length / 2).toFixed(2)} s once ${who} is up, hands off the keys (tau ${out.tau.toFixed(2)}, k ${out.k.toFixed(2)})`);
+            assert.ok(back.tau >= STAND_UP - 1e-3 && back.k > 1 - 1e-3, `${shot.id}: ${c.key} is back at the keys, hands on, at ${(t1 + length / 2).toFixed(2)} s (k ${back.k.toFixed(2)})`);
+            assert.ok(t1 - t0 >= length && t1 + length / 2 <= shot.seconds, `${shot.id}: ${c.key}'s window holds both steps inside the chapter`);
+            // nobody else of hers away from the desk meanwhile (another step out, an older placement that dissolves in): one of her
+            for (const d of shot.people.cast.filter(d => d !== c && !d.desk && shot.people.when?.[d.key] && byId.get(d.id)?.person?.character === who && byId.get(d.id)?.person?.pose !== 'stand-wait'))
+                for (const [u0, u1] of shot.people.when[d.key]) assert.ok(u1 + (d.fromDesk ? length / 2 : 0) < t0 - length / 2 || u0 - (d.fromDesk ? length / 2 : 0) > t1 + length / 2, `${shot.id}: ${d.key} is not away from the desk while ${c.key} is`);
+            checked++;
+        }
+    }
+    assert.ok(checked >= 1, 'the wellness chapter steps out from the desk');
+}
 // ---- the workshop film's change options (room-people-motion.mjs solveChange `arms` and `shift`, walkPlan `toes`)
 {
     const rig = rigOf('andre'), shelf = rig.key('people-andre-stand-robot-shelf'), go = rig.key('people-andre-stand-robot-release'), hand = rig.side.r.arm[3];
@@ -625,4 +690,4 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
     }
     assert.ok(flatter > 10, 'toes: the toes are flatter while the heel is up (' + flatter + ' samples)');
 }
-console.log('PASS room people motion: rig files, the desk driver (rise, lower, stop, turn back, tilt, wheelchair, short stature), exact end poses, planted feet, knees, keyboard following, determinism, life, the person in the room (film and Studio paths, chair, pose adjustments on top), posture changes in a shot and with the daypart, a walk along a path.');
+console.log('PASS room people motion: rig files, the desk driver (rise, lower, stop, turn back, tilt, wheelchair, short stature), exact end poses, planted feet, knees, keyboard following, determinism, life, the person in the room (film and Studio paths, chair, pose adjustments on top), posture changes in a shot and with the daypart, a walk along a path, stepping out from the desk and back.');

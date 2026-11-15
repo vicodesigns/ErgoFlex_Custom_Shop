@@ -357,7 +357,7 @@ held.BODY = [o for o in meshes if o.type == 'MESH' and not any(k in o.name.lower
              and not (who.get('hair') and who['hair'] in o.name)]
 for kind, kw in list(spec.get('held', [])) + list(who.get('carry', {}).get(spec['pose'], [])):
     made = held.BUILDERS[kind](rig, **dict(kw)); extras += made
-    for o in made: extra_bone[o.name] = (HELD_BONE[kind] if kind in HELD_BONE else 'hand_{side}')
+    for o in made: extra_bone[o.name] = o.get('bone') or (HELD_BONE[kind] if kind in HELD_BONE else 'hand_{side}')      # ('bone': a wheel that turns, held.wheelchair)
     for o in made:
         if extra_bone[o.name]: extra_bone[o.name] = extra_bone[o.name].format(side=kw.get('side', 'r'))
 # What the role wears on the body (belt, badge, lanyard...): found on the posed clothes, each following one bone.
@@ -376,6 +376,13 @@ rig.select_set(True); bpy.context.view_layer.objects.active = rig
 bpy.ops.object.mode_set(mode='POSE'); bpy.ops.pose.armature_apply(selected=False)
 bpy.ops.object.mode_set(mode='EDIT')
 still = rig.data.edit_bones.new('still'); still.head = (0, 0, 0); still.tail = (0, 0, .1)
+# A held thing that turns on its own (a wheelchair's rear wheel: held.wheelchair wheels=True) gets a bone of its own,
+# from its hub along its axle, with no parent (it stays with the model, like `still`).
+for o in extras:
+    name = o.get('bone') if o.type == 'MESH' else None
+    if not name or name in rig.data.edit_bones or 'axle' not in o: continue
+    at = rig.matrix_world.inverted() @ Vector(tuple(o['axle'])[:3]); along = (rig.matrix_world.inverted().to_3x3() @ Vector(tuple(o['axle'])[3:])).normalized()
+    bone = rig.data.edit_bones.new(name); bone.head = at; bone.tail = at + along * .1
 bpy.ops.object.mode_set(mode='OBJECT'); rig.select_set(False)
 for o in extras:
     if o.type != 'MESH': continue

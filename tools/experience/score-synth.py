@@ -1190,6 +1190,29 @@ def make_delay_ir(delay_s, fb=0.38, taps=8):
     return irs
 
 
+def local_delay(x, grid, fb, n_out, taps=8):
+    """make_delay_ir's dotted-eighth ping-pong echo, but repeat k sounds exactly 0.75 k beats (of the tempo map) after
+    its source, so the echoes stay on the grid where the tempo bends, and the read position moves smoothly through
+    every tempo step. Same tap gains, ping-pong channels and Gaussian smearing as make_delay_ir."""
+    n = min(len(x), n_out)
+    t = np.arange(n) / SR
+    ts, bs = grid.ts, grid.bs
+    # the beat position of every output sample (the map extrapolated at the nominal beat outside it); repeat k is read
+    # where the beat was 0.75 k beats earlier: continuous through anchors and knots, so no jump (click) at a tempo step
+    b = np.interp(t, ts, bs)
+    b = np.where(t < ts[0], bs[0] + (t - ts[0]) / grid.beat, b)
+    b = np.where(t > ts[-1], bs[-1] + (t - ts[-1]) / grid.beat, b)
+    out = np.zeros((2, n_out))
+    src = np.arange(len(x))
+    for k in range(1, taps + 1):
+        sigma = 1.0 + 1.6 * k
+        w = int(4 * sigma)
+        g = np.exp(-0.5 * (np.arange(-w, w + 1) / sigma) ** 2); g /= g.sum()
+        xs = np.convolve(x, g, mode='same')
+        out[k % 2, :n] += (fb ** (k - 1)) * np.interp(grid.t(b - 0.75 * k) * SR, src, xs, left=0.0, right=0.0)
+    return out
+
+
 # ---------------------------------------------------------------------------
 # loudness, true peak, limiter
 # ---------------------------------------------------------------------------
@@ -1484,7 +1507,7 @@ def write_cue_sheet(path, plan, events, meas, rep, edl_path, out_wav):
     lines.append(f'python3 tools/experience/score-synth.py {os.path.relpath(edl_path, os.getcwd())} {os.path.relpath(out_wav, os.getcwd())}')
     lines.append('```')
     lines.append('')
-    with open(path, 'w') as f:
+    with open(path, 'w', encoding='utf-8', newline='\n') as f:
         f.write('\n'.join(lines))
 
 
@@ -1541,7 +1564,10 @@ def premaster(plan, seed, stems_dir=None, hook=None):
     for k, s in sends_dly.items():
         if k in mix.buses:
             dsend += s * 0.5 * (mix.buses[k][0] + mix.buses[k][1])
-    dly_ret = np.stack([fft_convolve(dsend, dly[c])[:NM] for c in range(2)])
+    if plan.get('echo_local'):   # build-cine-score.py: the echo follows the local tempo of the map
+        dly_ret = local_delay(dsend, plan['grid'], 0.36, NM)
+    else:
+        dly_ret = np.stack([fft_convolve(dsend, dly[c])[:NM] for c in range(2)])
     rsend = np.zeros((2, NM))
     for k, s in sends_rev.items():
         if k in mix.buses:
@@ -1622,7 +1648,7 @@ def main():
     ap.add_argument('--stems', action='store_true', help='also write per-bus stems (float, pre-master) for debugging')
     args = ap.parse_args()
 
-    with open(args.edl) as f:
+    with open(args.edl, encoding='utf-8') as f:
         edl = json.load(f)
     plan = build_plan(edl)
     print(f'tempo {plan["bpm"]:.2f} BPM; segments (beats) {plan["seg_beats"]}; max bend '
@@ -1645,7 +1671,7 @@ def main():
     rep['ffmpeg'] = meas
     rep['tempo'] = dict(bpm=plan['bpm'], seg_beats=plan['seg_beats'], max_bend_pct=round(100 * float(np.max(plan['devs'])), 2))
     d = os.path.dirname(args.out)
-    with open(os.path.join(d, 'score-analysis.json'), 'w') as f:
+    with open(os.path.join(d, 'score-analysis.json'), 'w', encoding='utf-8', newline='\n') as f:
         json.dump(rep, f, indent=1)
     write_cue_sheet(os.path.join(d, 'CUE-SHEET.md'), plan, events, meas, rep, os.path.abspath(args.edl),
                     os.path.abspath(args.out))

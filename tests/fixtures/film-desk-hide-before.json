@@ -1113,16 +1113,72 @@
       }
      },
      {
-      "key": "kai-waits",
-      "id": "people-kai-wheel-watch",
+      "key": "kai-rolls",
+      "id": "people-kai-wheel-roll",
       "at": [
-       -3757,
-       -910
+       -961,
+       1300
       ],
-      "turn": 180,
+      "turn": 0,
+      "roll": {
+       "path": [
+        [
+         -961,
+         1300
+        ],
+        [
+         -961,
+         -265
+        ],
+        [
+         -3757,
+         -265
+        ],
+        [
+         -3757,
+         -610
+        ]
+       ],
+       "start": 0.3,
+       "speed": 1,
+       "radius": 350
+      },
       "look": [
        "noah-talks",
-       "noah-waits"
+       "noah-steps",
+       "noah-pulls",
+       "noah-taps",
+       "noah-watches"
+      ]
+     },
+     {
+      "key": "kai-docks",
+      "id": "people-kai-wheel-roll",
+      "at": [
+       -3757,
+       -610
+      ],
+      "turn": 180,
+      "roll": {
+       "path": [
+        [
+         -3757,
+         -610
+        ],
+        [
+         -3757,
+         -1110
+        ]
+       ],
+       "start": 9.4,
+       "speed": 0.7
+      },
+      "look": [
+       "noah-talks",
+       "noah-steps",
+       "noah-pulls",
+       "noah-taps",
+       "noah-watches"
       ]
      },
      {
@@ -1138,24 +1194,83 @@
       "key": "noah-talks",
       "id": "people-noah-stand-talk",
       "at": [
-       -2700,
-       -2000
+       -2681,
+       -1248
       ],
-      "turn": -44,
+      "turn": 43,
       "look": [
-       "kai-waits"
+       "kai-rolls",
+       "kai-docks"
       ]
      },
      {
-      "key": "noah-waits",
+      "key": "noah-steps",
       "id": "people-noah-stand-wait",
       "at": [
-       -2700,
-       -2000
+       -2681,
+       -1248
       ],
-      "turn": -44,
+      "turn": 43,
+      "walk": {
+       "path": [
+        [
+         -2681,
+         -1248
+        ],
+        [
+         -2818,
+         -914
+        ],
+        [
+         -2930,
+         -1080
+        ]
+       ],
+       "start": 4,
+       "pace": 2.2,
+       "then": "people-noah-stand-screen-pull"
+      }
+     },
+     {
+      "key": "noah-pulls",
+      "id": "people-noah-stand-screen-pull",
+      "at": [
+       -2930,
+       -1080
+      ],
+      "turn": -146,
+      "act": {
+       "at": 5.4,
+       "dur": 1.1,
+       "by": [
+        0,
+        0,
+        120
+       ]
+      }
+     },
+     {
+      "key": "noah-taps",
+      "id": "people-noah-stand-screen-tap",
+      "at": [
+       -2930,
+       -1080
+      ],
+      "turn": -146,
+      "act": {
+       "at": 8.2
+      }
+     },
+     {
+      "key": "noah-watches",
+      "id": "people-noah-stand-wait",
+      "at": [
+       -2930,
+       -1080
+      ],
+      "turn": -146,
       "look": [
-       "kai-waits",
+       "kai-docks",
        "kai"
       ]
      },
@@ -1183,35 +1298,67 @@
      }
     ],
     "when": {
-     "kai-waits": [
+     "kai-rolls": [
       [
        0,
-       11,
+       9.4,
        0,
-       0.4
+       0
+      ]
+     ],
+     "kai-docks": [
+      [
+       9.4,
+       12.75,
+       0,
+       0
       ]
      ],
      "kai": [
       [
-       10.6,
-       14,
-       0.4,
+       12.75,
+       99,
+       0,
        0
       ]
      ],
      "noah-talks": [
       [
        0,
-       8.2,
+       3.3,
        0,
-       0.4
+       0
       ]
      ],
-     "noah-waits": [
+     "noah-steps": [
       [
-       7.8,
-       14,
-       0.4,
+       3.3,
+       5.4,
+       0,
+       0
+      ]
+     ],
+     "noah-pulls": [
+      [
+       5.4,
+       7.2,
+       0,
+       0
+      ]
+     ],
+     "noah-taps": [
+      [
+       7.2,
+       9.4,
+       0,
+       0
+      ]
+     ],
+     "noah-watches": [
+      [
+       9.4,
+       99,
+       0,
        0
       ]
      ]
@@ -1252,9 +1399,10 @@
      {
       "key": "maya-break",
       "id": "people-maya-stretch",
+      "fromDesk": true,
       "at": [
        -421,
-       350
+       85
       ],
       "turn": 180,
       "colors": {
@@ -1276,8 +1424,8 @@
     "when": {
      "maya-break": [
       [
-       6.6,
-       10.35,
+       9.7,
+       12.3,
        0.3,
        0.35
       ]

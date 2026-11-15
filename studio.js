@@ -28,7 +28,7 @@ import { RoomInteractions } from './room-interactions.mjs?v=polish-20261111f';
 import { RenderPacing, pruneTinyCasters } from './render-pacing.mjs?v=render-pacing-vsm-20261015';
 import { SceneTour, tourEnabled } from './scene-tour.mjs?v=highschool-setting-20261104';
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
-import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
+import { TouchscreenDisplay } from './touchscreen-display.mjs?v=film-touchscreen-20261114';
 import { roomPolishLighting } from './room-polish.mjs?v=polish-20261111f';
 import { roomViewBounds } from './room-view-bounds.mjs?v=table-clearance-20261021';
 import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle, roomDeskStyle } from './room-desk-styles.mjs?v=polish-20261111f';
@@ -122,6 +122,10 @@ const WIDE_SCREEN_REST_TURN = SCREEN_TURN + THREE.MathUtils.degToRad(12);
 let screenAssembly = null;
 let screenProgress = 0;
 let screenTarget = 0;
+// A film chapter's touchscreen (setFilmTouchscreen): what the face shows (a TouchscreenDisplay film mode, or null for
+// the app's own screen) and where the screen was before the film took it over.
+let filmTouchscreen = null;
+let touchscreenBeforeFilm = null;
 let ledParts = [];
 let ledDesktopFit = null;
 let ledDesktopRoot = null;
@@ -1290,6 +1294,7 @@ let sharedBasePaintMaterial = null;
 let sharedPolishedAluminumMaterial = null;
 let sharedBlackPlasticMaterial = null;
 let sharedBlackMetalMaterial = null;
+let sharedWheelRollerMaterial = null;
 
 const gltfLoader = new GLTFLoader();
 const textureLoader = new THREE.TextureLoader();
@@ -1297,9 +1302,16 @@ textureLoader.setCrossOrigin('anonymous');
 
 const BIRCH_COLORS = ["eaeda2", "ebee87", "ffff00", "bbff00"];
 const BASE_PAINT_COLORS = ["4fa5bd", "51b8d3", "51d0ef", "d4b3e6", "ffbbff", "689bad"];
-const POLISHED_ALUMINUM_COLORS = ["e8e800", "7ec7f9", "ce8ca4", "000000", "4db6c1", "e7e7e7", "00ffff", "ff0000", "6288aa", "bbffe0", "babb95", "a5f1d0", "a38c8c", "5e4343"];
+const POLISHED_ALUMINUM_COLORS = ["e8e800", "7ec7f9", "ce8ca4", "000000", "4db6c1", "e7e7e7", "00ffff", "ff0000", "6288aa", "bbffe0", "babb95", "a5f1d0"];
 const BLACK_PLASTIC_COLORS = ["0000ff", "e6dabd"];
 const BLACK_METAL_COLORS = ["7c5f5f", "75b4bd"];
+// The omni wheels' rollers (each wheel's barrel rollers; 7c5f5f is its side plates and pins): rubber (Vico, Nov 14:
+// "they're made out of like a rubber, dull plastic"). Until 2026-11-10 the app left them the GLB's own material (a38c8c
+// with glTF's default metalness 1 and roughness 1: a rough dark pink-grey metal); only the film made them dark rubber,
+// through a scene edit. The 2026-11-10 checkpoint put them in POLISHED_ALUMINUM_COLORS (white mirror rollers). 5e4343 is
+// in no current model; it is kept with a38c8c as that checkpoint and the film's wheel code paired them. Matched before
+// the aluminium list, so an older frozen studio.js list cannot win.
+const WHEEL_ROLLER_COLORS = ["a38c8c", "5e4343"];
 
 const canvas = document.getElementById('model-canvas');
 const loader = document.getElementById('loader');
@@ -1419,10 +1431,18 @@ function createRoomGlossEnvironment() {
     return env;
 }
 const glossy = m => m?.isMeshStandardMaterial && !m.envMap && (m.metalness >= .45 || /acrylic|plexi/i.test(m.name || ''));
+// The desk's own hardware (its aluminium: tilt actuators, side connector discs, motor brackets; and the wheels' dark
+// metal) reflects the same room, at DESK_HARDWARE_GLOSS of its level. Its aluminium is a white, polished, fully
+// metallic material (as in the visualizer): at the full room level it read white (Vico, Nov 14: the tilt actuators "are
+// supposed to be like a aluminum gray, and they're white right now"), and against the studio's dark environment its
+// flat faces (the connector discs) read black. At this level it is grey aluminium from any angle (Vico's older video,
+// docs/reference/cine-notes-20261114 img56 to img58). The product stage keeps the studio, as for every other metal.
+const DESK_HARDWARE_GLOSS = .5;
+const deskHardware = m => m?.userData?.deskHardware === true && m.isMeshStandardMaterial;
 function roomGlossPass(now = false) {
     const g = roomGloss; if (!g.env) return;
     if (selectedRoomScene === 'product') {      // back to the studio's reflections
-        if (g.touched.size) { for (const [m, base] of g.touched) { m.envMap = null; m.envMapIntensity = base; delete m.userData.roomGlossBase; m.needsUpdate = true; } g.touched.clear(); }
+        if (g.touched.size) { for (const [m, base] of g.touched) { m.envMap = null; m.envMapIntensity = m.userData.roomGlossOwn ?? base; delete m.userData.roomGlossBase; delete m.userData.roomGlossOwn; m.needsUpdate = true; } g.touched.clear(); }
         return;
     }
     // (what loads later is found within a third of a second; a film's bake looks every frame, so a still and the
@@ -1435,7 +1455,12 @@ function roomGlossPass(now = false) {
                 if (g.touched.has(m)) seen.add(m);
                 // a copy of one of ours (a film's fade clones the material with whatever level it had that frame)
                 else if (m.envMap === g.env) { g.touched.set(m, m.userData.roomGlossBase ?? 1); seen.add(m); }
-                else if (glossy(m)) { m.userData.roomGlossBase = m.envMapIntensity ?? 1; g.touched.set(m, m.userData.roomGlossBase); m.envMap = g.env; m.needsUpdate = true; seen.add(m); }
+                else if (glossy(m)) {
+                    // roomGlossOwn: the material's own level, put back on the product stage (the hardware's room level is lower)
+                    m.userData.roomGlossOwn = m.envMapIntensity ?? 1;
+                    m.userData.roomGlossBase = m.userData.roomGlossOwn * (deskHardware(m) ? DESK_HARDWARE_GLOSS : 1);
+                    g.touched.set(m, m.userData.roomGlossBase); m.envMap = g.env; m.needsUpdate = true; seen.add(m);
+                }
             }
         });
         for (const m of g.touched.keys()) if (!seen.has(m)) g.touched.delete(m);
@@ -3563,7 +3588,8 @@ function updateTouchscreenDisplay() {
         heightSpeed:document.querySelector('#lift-speed option:checked')?.textContent?.trim()||'Medium',
         glideSpeed:document.querySelector('#glide-speed option:checked')?.textContent?.trim()||'Medium',
         tiltSpeed:document.querySelector('#tilt-speed option:checked')?.textContent?.trim()||'Fast',
-        heightJog:Math.round(liftJog*10)/10,phase:mode||'Workspace',moving:!!(glideInput.lengthSq()||yawCommand||liftJog||tiltJog||glideActive||Math.abs(targetLift-currentLift)>.001)});
+        heightJog:Math.round(liftJog*10)/10,phase:mode||'Workspace',moving:!!(glideInput.lengthSq()||yawCommand||liftJog||tiltJog||glideActive||Math.abs(targetLift-currentLift)>.001),
+        ...(filmTouchscreen?{film:filmTouchscreen}:{})});
     if(changed&&touchscreenTexture)touchscreenTexture.needsUpdate=true;
 }
 
@@ -3629,6 +3655,26 @@ function setScreenProgress(value) {
         moving.position.x = pivot.x - SCREEN_SLIDE * (1 - slide);
         moving.rotation.z = SCREEN_TURN * turn;
     }
+}
+
+// A film chapter poses the touchscreen from its own clock (experience/stage.mjs, experience/touchscreen-track.mjs):
+// film = { progress: 0..1, screen: { mode, ... } | null }. The target follows the pose, so the app's dt easing (the
+// render loop) has nothing to do. null hands the screen back as it was before the film took it (a chapter without the
+// field: nothing changes, it was never taken).
+function setFilmTouchscreen(film) {
+    if (!film) {
+        if (!touchscreenBeforeFilm) return;
+        const before = touchscreenBeforeFilm; touchscreenBeforeFilm = null; filmTouchscreen = null;
+        if (before.progress !== screenProgress) presentationShadowDirty = true;
+        screenTarget = before.target; setScreenProgress(before.progress); updateTouchscreenDisplay();
+        return;
+    }
+    if (!touchscreenBeforeFilm) touchscreenBeforeFilm = { progress: screenProgress, target: screenTarget };
+    const progress = THREE.MathUtils.clamp(Number(film.progress) || 0, 0, 1);
+    filmTouchscreen = film.screen && typeof film.screen === 'object' ? film.screen : null;
+    // (the stowed screen's own parts are part of the desk and may cast shadows: a film frame redraws them when it moves)
+    if (progress !== screenProgress) presentationShadowDirty = true;
+    screenTarget = progress; setScreenProgress(progress); updateTouchscreenDisplay();
 }
 
 function setTouchscreenOpen(open) {
@@ -4104,6 +4150,43 @@ function addLedUprightSpill(surface, strip, receiver, direction, minY, maxY, opt
     ledSpillMaterials.push({ material, receiver, minReach, maxReach, strip });
 }
 
+// The wheels and their mounts receive the desk's LEDs above them (Vico, Nov 14: "the lighting should be reflected on
+// the wheels ... the bottom of the desktop ... illuminate right above them"): the omni wheels' rollers and side discs,
+// the motor brackets (not the motors: 10,761 triangles each, dark, and not visibly helped; the reviewer's cost note).
+// Three overlays each (the foot strip, and the centre strip of both desktop sizes), all the lift columns' upright receiver (same shader, falloff
+// and reach 12 to 28; gain WHEEL_LED_GAIN): the foot strip under the footrest (ledParts[38], the strip that also lays the LED
+// pool on the floor around the wheels, a few inches above them) and the desktop's centre underside strip, which is
+// some forty inches up and adds little, as on the columns' feet; it grows as the desk comes down. Each overlay is a
+// child of its mesh, so it turns with the wheel. The pins and screws are left out (too small to show it, and the
+// overlay count would pass four hundred). Known, as for every receiver: a film fade's material clone freezes the
+// overlay's light frame, and the scene-desk rig bakes skip ShaderMaterials (the room's other desks get no wheel light).
+// The wheels' gain on that receiver (chingon's decision, Nov 14: Vico's request authorizes it). It is well above every
+// other receiver's (the columns 1, the actuators 1.5, the crossbar 2) and works by driving the shader into its own cap
+// (alpha 0.55) near the foot strip; the falloff still shapes it away from the strip. At gain 1, with the film's cut
+// setting ledSurfaces.baseStrength 36 (the app's default is 54), the wheels took about 0.2/255 of the LED: a black
+// silhouette in a blue or red pool. At 8 the rollers' and mounts' sides towards the strip take its colour; 16 looked
+// the same (the cap), so 8 keeps more of the falloff.
+const WHEEL_LED_GAIN = 8;
+function addWheelLedReceivers() {
+    const foot = ledParts[38]?.part;
+    const wheelPart = obj => {
+        if (!/^Wheel_[FR]_[LR]/.test(obj.name)) return false;
+        if (obj.material === sharedWheelRollerMaterial) return true;
+        obj.geometry.computeBoundingBox();
+        const b = obj.geometry.boundingBox;
+        return (b.max.x - b.min.x) * (b.max.y - b.min.y) > 4;      // the two side discs (3.8 x 3.8 authored inches)
+    };
+    for (const { obj } of partRegistry.values()) {
+        if (!obj.isMesh || !(wheelPart(obj) || /^Brackets(?:_\d+)?$/.test(obj.name))) continue;
+        if (foot) addLedUprightSpill(obj, foot, 'base', -1, -1000, 1000,
+            { underside: true, uprightOnly: false, gain: WHEEL_LED_GAIN, minReach: 12, maxReach: 28 });
+        for (const group of [ledStandardStrips, ledExtendedStrips]) {
+            addLedUprightSpill(obj, group.children[2], 'base', -1, -1000, 49,
+                { underside: true, uprightOnly: false, gain: WHEEL_LED_GAIN, minReach: 12, maxReach: 28 });
+        }
+    }
+}
+
 function addFootLedFloorGlow(parent) {
     // ShadowMaterial catches shadows but cannot display the LED color. Place a
     // separate transparent pool just above the floor and parent it to the
@@ -4313,6 +4396,7 @@ async function loadLedOverlay() {
                     { actuator: true, uprightOnly: false, gain: 1.5, minReach: 12, maxReach: 28 });
             }
         }
+        addWheelLedReceivers();
         addFootLedFloorGlow(roots.base);
         // All LED receivers use the mesh-aligned light fields above. Three.js
         // selects lights by the camera's layers, not each receiving mesh's
@@ -4362,6 +4446,7 @@ function loadModel() {
         sharedPolishedAluminumMaterial = null;
         sharedBlackPlasticMaterial = null;
         sharedBlackMetalMaterial = null;
+        sharedWheelRollerMaterial = null;
 
         movingObjects = [];
         liftObjects.clear();
@@ -4400,7 +4485,8 @@ function loadModel() {
                     const colorHex = mat.color ? mat.color.getHexString().toLowerCase() : 'ffffff';
                     let newMaterial = mat;
 
-                    if (BIRCH_COLORS.includes(colorHex)) newMaterial = getOrCreateWoodMaterial(woodRoleFor(child));
+                    if (WHEEL_ROLLER_COLORS.includes(colorHex)) newMaterial = getOrCreateWheelRollerMaterial();
+                    else if (BIRCH_COLORS.includes(colorHex)) newMaterial = getOrCreateWoodMaterial(woodRoleFor(child));
                     else if (BASE_PAINT_COLORS.includes(colorHex)) newMaterial = getOrCreateBasePaintMaterial();
                     else if (POLISHED_ALUMINUM_COLORS.includes(colorHex)) newMaterial = getOrCreatePolishedAluminumMaterial();
                     else if (BLACK_PLASTIC_COLORS.includes(colorHex)) newMaterial = getOrCreateBlackPlasticMaterial();
@@ -7321,6 +7407,7 @@ function getOrCreatePolishedAluminumMaterial() {
             ior: 2.5,
             envMapIntensity: 1.35
         });
+        sharedPolishedAluminumMaterial.userData.deskHardware = true;      // roomGlossPass: the room reflection at DESK_HARDWARE_GLOSS
     }
     return sharedPolishedAluminumMaterial;
 }
@@ -7339,17 +7426,36 @@ function getOrCreateBlackPlasticMaterial() {
 
 function getOrCreateBlackMetalMaterial() {
     if (!sharedBlackMetalMaterial) {
+        // The visualizer's (desk_viewer/desk-viewer.js materials.metal) and this desk's until the 2026-11-10
+        // checkpoint, which made it a light grey (#525862) clear-coated metal: the wheels' side plates read silver.
         sharedBlackMetalMaterial = new THREE.MeshPhysicalMaterial({
-            color: new THREE.Color("#525862"),
-            metalness: 0.52,
-            roughness: 0.24,
-            clearcoat: 0.48,
-            clearcoatRoughness: 0.16,
+            color: new THREE.Color("#2a2a2a"),
+            metalness: 0.85,
+            roughness: 0.3,
             ior: 1.8,
-            envMapIntensity: 1.55
+            envMapIntensity: 1.2
         });
+        sharedBlackMetalMaterial.userData.deskHardware = true;      // roomGlossPass: the room reflection at DESK_HARDWARE_GLOSS
     }
     return sharedBlackMetalMaterial;
+}
+
+// The wheels' rollers: dark grey rubber (dielectric, so they take the room's light, not a mirrored environment), light
+// enough that their shape reads on the dark product stage and the under-desk LEDs show on them (their receivers:
+// addWheelLedReceivers). Sheen: the film's earlier roller edit (roughness 0.45, clearcoat 0.3); option B for Vico is
+// roughness 0.8 without clearcoat.
+function getOrCreateWheelRollerMaterial() {
+    if (!sharedWheelRollerMaterial) {
+        sharedWheelRollerMaterial = new THREE.MeshPhysicalMaterial({
+            name: 'Wheel roller rubber',
+            color: new THREE.Color("#47484c"),
+            metalness: 0,
+            roughness: 0.45,
+            clearcoat: 0.3,
+            clearcoatRoughness: 0.25
+        });
+    }
+    return sharedWheelRollerMaterial;
 }
 
 function populateFinishOptions() {
@@ -12590,6 +12696,7 @@ function initStudio() {
 window.ErgoFlex = {
     get sceneScreens(){return sceneScreens;},
     setTouchscreenOpen,
+    setFilmTouchscreen,
     get touchscreenOpen() { return screenTarget > 0.5; },
     get touchscreenProgress() { return screenProgress; },
     get touchscreenReady() { return !!screenAssembly; },
