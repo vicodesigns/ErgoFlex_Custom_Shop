@@ -52,7 +52,7 @@ export async function openDirectorBrowser({width=VIEW?Number(VIEW[1]):1600,heigh
   });
   page.on('pageerror',e=>errors.push(e.message));
   page.on('console',m=>{const t=m.text();if(/not exported|does not provide an export|SyntaxError/.test(t))errors.push(t);});
-  const close=async()=>{await browser.close().catch(()=>{});server?.kill();fs.rmSync(profile,{recursive:true,force:true});};
+  const close=async()=>{await browser.close().catch(()=>{});server?.kill();try{fs.rmSync(profile,{recursive:true,force:true,maxRetries:5,retryDelay:300});}catch{}};
   return {base,browser,page,errors,close,stateFile,shared};
 }
 // A chapter page (director-chNN-*.html) up to "Camera is live".

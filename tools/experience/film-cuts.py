@@ -35,7 +35,7 @@ DATA = ('shots/*.json', 'director-camera.json', 'director-camera-*.json', 'previ
 SUPPORT = ('shots/13-subshots.json', 'post/finale-seed.json', 'titles-src.json')
 
 
-def rel(d): return os.path.relpath(os.path.abspath(d if os.path.isabs(d) else os.path.join(ROOT, d)), ROOT).strip('/')
+def rel(d): return os.path.relpath(os.path.abspath(d if os.path.isabs(d) else os.path.join(ROOT, d)), ROOT).replace(os.sep, '/').strip('/')
 def full(d): return os.path.join(ROOT, rel(d))
 def slug(s): return re.sub(r'-+', '-', re.sub(r'[^a-z0-9]+', '-', s.lower())).strip('-')[:40] or 'cut'
 def info(d):

@@ -734,7 +734,7 @@ def film_list(rows):
     full = {s['id']: s for s in load(CUT)['shots']}
     v5 = os.path.join(H, 'previews', 'awaken-v5-cut.json')
     if os.path.exists(v5): full['awaken'] = load(v5)['shots'][0]
-    base, items = '/' + os.path.relpath(os.path.abspath(H), root).strip('/'), []
+    base, items = '/' + os.path.relpath(os.path.abspath(H), root).replace(os.sep, '/').strip('/'), []
     cl = os.path.join(H, 'director-chapters.json')
     before = {c.get('id'): c for c in load(cl).get('chapters', [])} if os.path.exists(cl) else {}
     for n, cid, page, js, src, cs, mine in rows:
