@@ -401,6 +401,81 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
     solveWalk(rig, plan, 4.37); const a = snapshot(rig); solveWalk(rig, plan, 9); solveWalk(rig, plan, 4.37); assert.deepEqual(snapshot(rig), a, who + ': same step, same pose');
 }
 
+// ---- the film's walkers (S19, Nov 14): a walk cast in the built walking posture (mid-stride, feet pitched, hips low)
+// starts and ends standing; a gait of a person, not a crouch or a march: steps that fit the leg and the pace, feet
+// that stay on their footprints without going into the floor, the toes flat while the heel is up, the swinging foot
+// clear of the floor, about 10 degrees of knee in mid-stance and about 60 in the swing, a hip bob of a few
+// centimetres, the trunk nearly upright and the eyes ahead. (The paths and paces of the cine cut's walkers.)
+{
+    const mm = list => list.map(([x, z]) => [x / 1000, z / 1000]), deg = r => r * 180 / Math.PI;
+    const walkers = [
+        ['andre', 'people-andre-walk', 'people-andre-stand-phone-pull', mm([[100, 1560], [-107, 1948], [-201, 2080], [-476, 2245], [-1136, 2267], [-1397, 2155], [-1496, 1890], [-1436, 1707], [-1291, 1582], [-1120, 1538]]), { pace: 2.1, step: .45 }],
+        ['yara', 'people-yara-walk', 'people-yara-stand-wait', mm([[7230, -1657], [6827, -2453], [5568, -3049], [4242, -3447], [2651, -3513], [1326, -3579]]), {}],
+        ['zoe', 'people-zoe-walk', 'people-zoe-stand-wait', mm([[2500, 1500], [3900, 1500]]), {}],
+        ['noah', 'people-noah-stand-wait', 'people-noah-stand-screen-pull', mm([[-2681, -1248], [-2818, -914], [-2930, -1080]]), { pace: 2.2 }],
+        ['ben', 'people-ben-walk', 'people-ben-walk', mm([[0, 0], [0, 4000]]), {}],
+    ];
+    for (const [who, fromId, toId, route, options] of walkers) {
+        const rig = rigOf(who); if (!rig.has(fromId) || !rig.has(toId)) continue;
+        const stand = rig.key(`people-${who}-stand-wait`), from = rig.key(fromId), to = rig.key(toId), plan = walkPlan(rig, from, to, route, options), total = plan.steps.length;
+        const leg = rig.offset[rig.side.l.leg[1]].length() + rig.offset[rig.side.l.leg[2]].length();
+        // a walking posture is not where a walk starts: standing is
+        if (from.pose === 'walk') { assert.equal(plan.from, stand, who + ': the walk starts from standing, not mid-stride'); solveWalk(rig, plan, 0); assert.ok(worst(rig, stand) < 1e-6, who + ': standing at the start'); }
+        if (to.pose === 'walk') assert.equal(plan.to, stand, who + ': and ends standing');
+        // steps that fit the leg and the pace: 0.45-0.75 of the leg (hip to ankle) a step, 0.6-1.4 m/s
+        assert.ok(plan.step > .45 * leg && plan.step < .75 * leg, `${who}: a step of ${plan.step.toFixed(3)} m for a leg of ${leg.toFixed(3)} m`);
+        assert.ok(plan.step * plan.pace > .6 && plan.step * plan.pace < 1.4, `${who}: ${(plan.step * plan.pace).toFixed(2)} m/s`);
+        // the feet set apart about as the hips are, not the stance's width (no waddle)
+        const across = plan.steps.slice(0, -2).map(st => { const at = plan.along(st.to.s); return 2 * Math.hypot(st.to.x - at.x, st.to.z - at.z); });
+        if (across.length) assert.ok(Math.max(...across) < .16, `${who}: step width ${Math.max(...across).toFixed(3)} m`);
+        const ballStand = ['l', 'r'].map(s => stand.wp[rig.side[s].leg[3]].y), held = [null, null];
+        let midKnee = [], swingKnee = 0, pelvis = [], trunk = [];
+        for (let g = 0; g <= total + 1e-9; g += 1 / 60) {
+            const root = { ...solveWalk(rig, plan, g) }, c = Math.cos(root.yaw), sn = Math.sin(root.yaw), world = v => new THREE.Vector3(root.x + v.x * c + v.z * sn, v.y, root.z - v.x * sn + v.z * c);
+            const steady = g > 1.2 && g < total - 1.5, knee = s => { const [th, ca, fo] = rig.side[s].leg; return deg(rig.wp[ca].clone().sub(rig.wp[th]).angleTo(rig.wp[fo].clone().sub(rig.wp[ca]))); };
+            ['l', 'r'].forEach((s, which) => {
+                const [, , foot, ball] = rig.side[s].leg, st = plan.steps.find(x => x.which === which && g > x.g0 && g < x.g1), air = st ? (g - st.g0) / (st.g1 - st.g0) : -1;
+                const prints = plan.prints[which], print = st ? st.from : plan.steps.filter(x => x.which === which && g >= x.g1).pop()?.to || prints[0];
+                // the ball of a planted foot: on its footprint (not sliding), never under the floor; the toes flat (the toe
+                // tip, 6 cm on from the ball along the toes, the bone's y, not below the ball's standing height)
+                if (!st) {
+                    const at = world(rig.wp[ball]), flat = rig.wp[ball].y < ballStand[which] + .004; if (!held[which]) { if (flat) held[which] = at; } else if (flat) assert.ok(Math.hypot(at.x - held[which].x, at.z - held[which].z) < .004, `${who}: the ${s} foot stays put at ${g.toFixed(2)}`);
+                    assert.ok(rig.wp[ball].y > ballStand[which] - (print.y - (stand.wp[foot].y)) - .002, `${who}: the ${s} ball is not in the floor at ${g.toFixed(2)} (${rig.wp[ball].y.toFixed(4)})`);
+                    const toe = new THREE.Vector3(0, .06, 0).applyQuaternion(rig.wq[ball]).add(rig.wp[ball]);
+                    assert.ok(toe.y > ballStand[which] - .012, `${who}: the ${s} toes stay flat, not through the floor, at ${g.toFixed(2)} (${toe.y.toFixed(4)})`);
+                } else held[which] = null;
+                // the swinging foot clears the floor in mid-swing (ball and ankle), but is not lifted like a march
+                if (air > .3 && air < .7 && steady) {
+                    assert.ok(rig.wp[ball].y > ballStand[which] + .012, `${who}: the ${s} toes clear the floor in the swing at ${g.toFixed(2)}`);
+                    assert.ok(rig.wp[foot].y < stand.wp[foot].y + .14, `${who}: the ${s} foot is not lifted high at ${g.toFixed(2)} (${rig.wp[foot].y.toFixed(3)})`);
+                    swingKnee = Math.max(swingKnee, knee(s));
+                    if (air > .4 && air < .6) midKnee.push(knee(s === 'l' ? 'r' : 'l'));
+                }
+            });
+            if (steady) { pelvis.push(rig.wp[rig.b.pelvis].y); const tr = rig.wp[rig.b.neck_01].clone().sub(rig.wp[rig.b.pelvis]); trunk.push(deg(Math.atan2(tr.z, tr.y))); }
+        }
+        if (total >= 6) {
+            const mean = midKnee.reduce((a, b) => a + b, 0) / midKnee.length, bob = Math.max(...pelvis) - Math.min(...pelvis), drop = stand.wp[rig.b.pelvis].y - Math.max(...pelvis);
+            assert.ok(mean > 3 && mean < 18, `${who}: the standing knee in mid-stance ${mean.toFixed(1)} deg`);
+            assert.ok(swingKnee > 45 && swingKnee < 72, `${who}: the knee in the swing up to ${swingKnee.toFixed(1)} deg`);
+            assert.ok(bob > .01 && bob < .055, `${who}: the hips bob ${(bob * 1000).toFixed(0)} mm`);
+            assert.ok(drop < .03, `${who}: the hips at their highest ${(drop * 1000).toFixed(0)} mm under standing (no crouch)`);
+            assert.ok(Math.min(...trunk) > 0 && Math.max(...trunk) < 6, `${who}: the trunk ${Math.min(...trunk).toFixed(1)}-${Math.max(...trunk).toFixed(1)} deg forward`);
+        }
+    }
+    // the drawn soles (room-people.mjs soleOf / landOf): the footprints lower by the sole's height, the ankle at a
+    // landing lower by the heel's
+    const rig = rigOf('zoe'), key = rig.key('people-zoe-walk'), a = walkPlan(rig, key, key, [[0, 0], [0, 3]]), b = walkPlan(rig, key, key, [[0, 0], [0, 3]], { sole: [.004, .011], land: [.005, .006] });
+    assert.ok(a.prints.every((list, i) => list.every((p, j) => Math.abs(p.y - b.prints[i][j].y - [.004, .011][i]) < 1e-9)), 'the footprints lower by the drawn soles');
+    const land = b.steps.find(st => st.which === 0 && st.g1 > 2); solveWalk(rig, a, land.g1 + .01); const ya = rig.wp[rig.side.l.leg[2]].y; solveWalk(rig, b, land.g1 + .01);
+    assert.ok(Math.abs(ya - .004 - rig.wp[rig.side.l.leg[2]].y - .005) < .0015, 'a landing foot lower by the drawn heel');
+    // toes: 'stiff' keeps the whole foot pitched at heel-off (the old way); the default bends the toes
+    const stiff = walkPlan(rig, key, key, [[0, 0], [0, 3]], { toes: 'stiff' }), off = a.steps[3].g0 - .05;
+    const toes = rig.side[a.steps[3].which ? 'r' : 'l'].leg[3];
+    solveWalk(rig, a, off); const bent = rig.lq[toes].clone(); solveWalk(rig, stiff, off);
+    assert.ok(!stiff.toes && a.toes && 1 - Math.abs(bent.dot(rig.lq[toes])) > 1e-4, 'the toes bend unless stiff');
+}
+
 // ---- in the room (room-people.mjs): one person at the desk at every height, their chair, the film's time path
 {
     const entries = new Map(index.props.map(p => [p.id, p])), dataOf = who => JSON.parse(fs.readFileSync(path.join(root, 'assets/props/people-rigs', who + '.json'), 'utf8'));

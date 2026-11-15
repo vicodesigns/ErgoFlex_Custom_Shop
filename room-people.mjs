@@ -40,6 +40,8 @@
 //                                                     film only, on a standing person: from `start` they walk the path
 //                                                     (from where they stand, or along `path`) and stand at its end, in
 //                                                     the posture of `then` if given; they face along the path at both ends
+//                                                     (a walking posture, `walk`, starts and ends standing: walkStance;
+//                                                     `toes: 'stiff'`: the foot pitches whole, the toes not bending)
 //   look: '<key>' | ['<key>', ...]                    whom they look at, whatever their posture (whichever of them is there,
 //                                                     in front within 9 m): a listener who turns to the talker
 //   act: { at: seconds, dur: seconds, by: [x, y, z] mm }  film only: an action at that moment of the chapter, for the
@@ -61,7 +63,7 @@
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
 import {updateSkinnedBounds} from './skinned-bounds.mjs';
-import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, solveTread, rollPlan, actedKey, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=roll-20261114';
+import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, solveWalk, solveTread, rollPlan, actedKey, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=roll-walk-20261115';
 // who looks at whom (RoomPeople.gazeOf)
 const GAZE_TALK = /^(stand-talk|sit-chat|stand-drink|stand-mug|stand-coffee|sit-coffee)$/, GAZE_IDLE = /^(stand-wait|wheel-roll|wheel-watch|cane-stand|white-cane|sit-listen)$/;
 const GAZE_DESK = /^stand-phone-watch$/;      // watching the featured desk go (the workshop film): the head follows it
@@ -2122,7 +2124,9 @@ export class RoomPeople {
         // (someone who rolled there changes posture at the end of the path, not where they set off)
         const end = this.rollEnd(ra), rolled = change.from.roll && this.rollPath(ra, change.from.roll);
         if (rolled) { const plan = rollPlan(rolled, this.rollOptions(change.from.roll)); change.wheels = plan.at(plan.seconds).wheel; }      // (its wheels as they came to rest)
-        Object.assign(change, { rig, keyFrom: rig.key(change.from.id), keyTo: rig.key(change.to.id), homeFrom: end ? { position: end.position.clone(), turn: end.turn } : home(ra), homeTo: home(rb) });
+        // (someone who walks off from a change starts the walk standing, walkStance: the change ends there, not in the
+        // walking posture as built, mid-stride)
+        Object.assign(change, { rig, keyFrom: rig.key(change.from.id), keyTo: change.to.walk ? walkStance(rig, rig.key(change.to.id)) : rig.key(change.to.id), homeFrom: end ? { position: end.position.clone(), turn: end.turn } : home(ra), homeTo: home(rb) });
         // someone who walks off after the change turns toward their path during it, not in one frame as the walk starts
         // (the walker is not placed on its path yet when the skeletons load: it still faces the way it was cast)
         const path = change.to.walk?.path; if (path?.length > 1) change.homeTo.turn = Math.atan2(path[1][0] - path[0][0], path[1][1] - path[0][1]);
@@ -2226,7 +2230,14 @@ export class RoomPeople {
         const sign = JSON.stringify(walk) + '|' + JSON.stringify(object.userData.person.at || null);
         if (life.walkSign !== sign) {
             const path = (walk.path || [walk.from || [object.position.x, object.position.z], walk.to]).map(([x, z]) => [x / 1000, z / 1000]);
-            life.walkSign = sign; life.plan = path.length > 1 && path.every(p => p.every(Number.isFinite)) ? walkPlan(life.rig, life.key, (walk.then && life.rig.key(walk.then)) || life.key, path, { pace: walk.pace, step: walk.step ? walk.step / 1000 : undefined }) : null;
+            life.walkSign = sign; life.plan = path.length > 1 && path.every(p => p.every(Number.isFinite)) ? walkPlan(life.rig, life.key, (walk.then && life.rig.key(walk.then)) || life.key, path, { pace: walk.pace, step: walk.step ? walk.step / 1000 : undefined, toes: walk.toes }) : null;
+            // (the model drawn is the walking posture's, skinned to standing: its soles, a few millimetres off the floor
+            // that way, are measured once and the footprints lowered by as much)
+            if (life.plan) {
+                const plan = options => walkPlan(life.rig, life.key, (walk.then && life.rig.key(walk.then)) || life.key, path, { pace: walk.pace, step: walk.step ? walk.step / 1000 : undefined, toes: walk.toes, ...options });
+                const { sole, heels } = this.soleOf(object, life, life.plan); life.plan = plan({ sole, heels });
+                life.plan = plan({ sole, heels, land: this.landOf(object, life, life.plan) });
+            }
         }
         if (!life.plan) return;
         const g = life.plan.at(time === null ? 0 : Math.max(0, time - (walk.start || 0))), root = solveWalk(life.rig, life.plan, g);
@@ -2261,6 +2272,57 @@ export class RoomPeople {
         turnWheels(object.userData.personRig, r.wheel);
         object.position.x = r.x * 1000; object.position.z = r.z * 1000; object.rotation.y = r.yaw; life.live = true;
         if (t > 0 && t < life.roll.seconds) this.dirty = true;
+    }
+    // The drawn shoes at the walk's start, in the model's metres: how far each sole (the skinned shoe nearer that ankle)
+    // stands above the floor, sole: [left, right], and the point of each heel that meets the floor first with the toes
+    // up (as solveWalk lands a step), heels: [[y, z] from the ankle, ...] (null where there is nothing to measure).
+    // (each vertex of a skinned mesh: the side of the leg bone that moves it most, calf_, foot_ or ball_: 0 left,
+    // 1 right, -1 neither; kept with the geometry)
+    legSides(o) {
+        const g = o.geometry; if (g.userData.legSides) return g.userData.legSides;
+        const si = g.attributes.skinIndex, sw = g.attributes.skinWeight, n = g.attributes.position.count, out = new Int8Array(n).fill(-1); if (!si || !sw) return g.userData.legSides = out;
+        const side = o.skeleton.bones.map(b => { const m = /^(calf|foot|ball)_(l|r)$/.exec(b?.name || ''); return m ? (m[2] === 'l' ? 0 : 1) : -1; });
+        for (let i = 0; i < n; i++) { let best = -1; for (let k = 0; k < 4; k++) { const w = sw.getComponent(i, k); if (w > best) { best = w; out[i] = side[si.getComponent(i, k)] ?? -1; } } }
+        return g.userData.legSides = out;
+    }
+    soleOf(object, life, plan) {
+        const drawn = object.userData.personRig, sole = [Infinity, Infinity], heels = [null, null], best = [Infinity, Infinity]; if (!drawn) return { sole: [0, 0], heels };
+        solveWalk(life.rig, plan, 0); drawPose(life.rig, drawn, 0, null); object.updateMatrixWorld(true);
+        const rig = life.rig, ankles = ['l', 'r'].map(s => rig.wp[rig.side[s].leg[2]]), inv = new THREE.Matrix4().copy(object.matrixWorld).invert(), v = new THREE.Vector3();
+        const c = Math.cos(.2), s = Math.sin(.2);      // (solveWalk's GAIT.land)
+        object.traverse(o => {
+            if (!o.isSkinnedMesh || /^Held\./.test(o.name) || /^Held\./.test(o.material?.name || '')) return;
+            const pos = o.geometry?.attributes?.position; if (!pos || !o.skeleton) return;
+            const sides = this.legSides(o);
+            for (let i = 0; i < pos.count; i++) {
+                const k = sides[i]; if (k < 0) continue;
+                o.getVertexPosition(i, v); v.applyMatrix4(o.matrixWorld).applyMatrix4(inv); if (v.y > .12) continue;
+                const a = ankles[k];
+                if (v.y < sole[k]) sole[k] = v.y;
+                const dy = v.y - a.y, dz = v.z - a.z, up = dy * c + dz * s;      // (its height with the toes up)
+                if (up < best[k]) { best[k] = up; heels[k] = [dy, dz]; }
+            }
+        });
+        return { sole: sole.map(y => Number.isFinite(y) ? y : 0), heels };
+    }
+    // How far each drawn heel stands above the floor as that foot lands (a step in the middle of the walk, the toes
+    // up): [left, right] metres, 0 where it cannot be measured.
+    landOf(object, life, plan) {
+        const drawn = object.userData.personRig, out = [0, 0]; if (!drawn) return out;
+        const rig = life.rig, inv = new THREE.Matrix4(), v = new THREE.Vector3();
+        for (const k of [0, 1]) {
+            const st = plan.steps.filter(s => s.which === k)[1]; if (!st) continue;
+            solveWalk(rig, plan, st.g1 + 1e-3); drawPose(rig, drawn, 0, null); object.updateMatrixWorld(true); inv.copy(object.matrixWorld).invert();
+            let low = Infinity;
+            object.traverse(o => {
+                if (!o.isSkinnedMesh || /^Held\./.test(o.name) || /^Held\./.test(o.material?.name || '')) return;
+                const pos = o.geometry?.attributes?.position; if (!pos || !o.skeleton) return;
+                const sides = this.legSides(o);
+                for (let i = 0; i < pos.count; i++) { if (sides[i] !== k) continue; o.getVertexPosition(i, v); v.applyMatrix4(o.matrixWorld).applyMatrix4(inv); if (v.y < low) low = v.y; }
+            });
+            if (Number.isFinite(low)) out[k] = low;      // (the floor is the model's y = 0)
+        }
+        return out;
     }
     get lively() { return this.enabled && this.people.some(o => o.visible && (o.userData.personLife?.live || o.userData.personDriven)); }
     async enliven(object) {
