@@ -11,7 +11,9 @@ For every `screens` entry of review-cut.json and of shots/13-subshots.json (the 
 --freeze also fails a clip under exports/ that is not listed in tools/experience/freeze-lists/win-exports.txt (the list
 that carries untracked exports to the Windows render PC: a missing clip made a render job loop, Nov 13-14).
 Capture sidecars (<clip>.capture.json, written by capture.mjs): a clip whose recorded desk moves differ from its
-chapter's in the cut now is STALE (re-capture it), and a music clip captured without the score's tempo map FAILS.
+chapter's in the cut now is STALE (re-capture it), a music clip captured without the score's tempo map FAILS, and a clip
+captured with a different tempo than the cut's CURRENT score/tempo-map.json (bpm, music_from, beat count, and the
+chapter start its spectrum was cut from) is STALE too (S27: the four gaming-room clips passed with an old 115 BPM map).
 The cut's own 'hero' entry (cine-hero-home) is checked too, though the finale renders from the six versions in
 shots/13-subshots.json; it is what a render of the cut's hero shot alone would show.
 Prints one line per clip; exit status 1 on any failure. Needs ffprobe on PATH.
@@ -43,6 +45,24 @@ def motion_key(s):   # as capture.mjs records it: sha1 of {motion, seconds}, key
     return hashlib.sha1(json.dumps(_js({'motion': s.get('motion'), 'seconds': s.get('seconds')}), sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()).hexdigest()[:16]
 
 
+def tempo_problem(c, tmap):
+    """Why a sidecar's tempo differs from the cut's current tempo map (chapters.<shot>), or None. tmap None: not checked."""
+    ch = ((tmap or {}).get('chapters') or {}).get(c.get('shot'))
+    if not c.get('audio') or not ch: return None
+    t = c.get('tempo')
+    if not t: return 'music captured without the score tempo map (fallback 115.2 BPM)'
+    want = {'bpm': ch.get('bpm'), 'music_from': ch.get('music_from'), 'beats': len(ch.get('beats_rel') or [])}
+    got = {'bpm': t.get('bpm'), 'music_from': t.get('first'), 'beats': t.get('beats')}
+    diff = []
+    for k in ('bpm', 'music_from'):
+        if want[k] is not None and (got[k] is None or abs(float(got[k]) - float(want[k])) > 0.005): diff.append(f'{k} {got[k]} (cut: {want[k]})')
+    if want['beats'] and got['beats'] != want['beats']: diff.append(f"beats {got['beats']} (cut: {want['beats']})")
+    sp = c.get('spectrum')
+    if isinstance(sp, (int, float)) and not isinstance(sp, bool) and ch.get('start') is not None and abs(sp - float(ch['start'])) > 0.005:
+        diff.append(f"spectrum from {sp} s (cut: chapter start {ch['start']} s)")
+    return ("STALE: captured with another tempo map than the cut's now: " + '; '.join(diff) + ' (re-capture)') if diff else None
+
+
 def main():
     a = sys.argv[1:]
     root = os.path.abspath(a[a.index('--root') + 1]) if '--root' in a else REPO
@@ -58,6 +78,8 @@ def main():
     hero = next((s for s in cut if s['id'] == 'hero'), {}); wins = hero.get('subshots') or {}
     sub = os.path.join(HERE, 'shots', '13-subshots.json')
     if os.path.exists(sub): shots += [(f"{s['id']}:{s.get('preset')}", s, wins.get(s.get('subshot'))) for s in load(sub)['shots']]
+    tf = os.path.join(HERE, 'score', 'tempo-map.json')
+    tmap = load(tf) if os.path.isfile(tf) else None
     bad = 0
     for sid, s, win in shots:
         if only and sid.split(':')[0] not in only: continue
@@ -77,7 +99,7 @@ def main():
                 c = json.load(open(car, encoding='utf-8'))
                 src_shot = byid.get(c.get('shot'), s)   # the chapter it was captured from (the finale reuses oilers' quiz)
                 if c.get('motion') and c['motion'] != motion_key(src_shot): why = 'STALE: the desk moves changed since the capture (re-capture)'
-                elif c.get('audio') and not c.get('tempo'): why = 'music captured without the score tempo map (fallback 115.2 BPM)'
+                else: why = tempo_problem(c, tmap)
             elif not why and sid == 'music' and '/cine-music-' in src: why = 'no capture sidecar: tempo unknown (re-capture)'
             d = _dur.get(p)
             print(f"{'FAIL' if why else 'ok  '} {sid:<18} {str(sc.get('target'))[:34]:<34} {src}" + (f'  [{d:.2f} s]' if d else '') + (f'  <- {why}' if why else ''))
