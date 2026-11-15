@@ -350,9 +350,9 @@ build-oilers-story.py stops the build when rollPlan would clamp a corner, tests/
 at the top of the cross-aisle (room x -1500) and rolls in from 8.0 s, docking 60 mm to the window side (room x -3817).
 Noah greets him from the cross-aisle facing him, turns (at most 116 degrees a second) and walks to the corner on a last
 leg of 0.4 m, so he arrives facing the screen; after the tap he straightens up there turned 16 degrees to his right
-and watches Kai (`look`). Proof every frame (30 a second, the reviewer's scripts): Kai's chair footprint at least
+and watches the desk come down to Kai (no `look`: Kai is outside the gaze cone until about 11 s and the head would snap to him). Proof every frame (30 a second, the reviewer's scripts): Kai's chair footprint at least
 217 mm from every low object (furniture, seated students), clear width at least 1240 mm, at least 216 mm from Noah's
-skeleton (torso 170 mm, limbs 55 mm); Kai turns at most 136 degrees a second (in the class view, far from the lens),
+skeleton (torso 170 mm, limbs 55 mm); Kai turns at most 122 degrees a second (in the class view, far from the lens),
 Noah at most 116.
 
 ## Walks (S19, Nov 15)
