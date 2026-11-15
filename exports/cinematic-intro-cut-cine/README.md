@@ -19,12 +19,13 @@
 - Andre no longer passes through the featured desk (measured on the stage's own meshes): he stands at 100, 1600 (40 mm
   further back: his belly was in the cutout's edge), works with the right elbow out and up (it lay in the desktop),
   lifts the robot straight up off the desktop in front of the top shelf (`people-andre-stand-robot-lift`), sets it down
-  with the elbows level with the hands (the forearms crossed the shelf board), lets go and steps back 175 mm with his
-  feet planted (`people-andre-stand-robot-release`, `change.step`), then turns away over 1.4 s (peak head yaw about 113
+  with the elbows level with the hands (the forearms crossed the shelf board), lets go and steps back 210 mm with his
+  feet planted into `people-andre-stand-wait` (`change.step`; the hands come back in a straight line, `change.hands:
+  'line'`, instead of swinging down through the desktop), then turns away over 1.4 s (peak head yaw about 113
   deg/s, in the wide after the 3.6 s cut; 0-3.6 s under 75 deg/s) with stepping feet, and walks off on a first leg that
   leaves the desktop's front wings (his forearms went through them). Phone-out at 7.71 s, tap, fold and camera unchanged;
   chapter length unchanged. New placement options in room-people.mjs (opt-in, storage only): `change: { seconds, arms,
-  turn, step }` and walk `toes: 'bend'`.
+  turn, step, hands }` and walk `toes: 'bend'`.
 - tools/people/cast.py's ROBOT_DESK, ROBOT_LIFT and ROBOT_SHELF are now in his frame at 1600 (ROBOT_SHELF 40 mm further:
   the shelf robot is where it was in the room). The older cuts that cast him at 100, 1560 with the earlier robot postures
   (exports/cinematic-intro-20261110-people storage, tools/experience/build-alt-cut.py ANDRE_DESK, director-film/storage.json)

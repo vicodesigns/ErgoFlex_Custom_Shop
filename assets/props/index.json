@@ -85893,20 +85893,20 @@
    "size": [
     748.9,
     1751.2,
-    481.1
+    519.3
    ],
    "min": [
-    -284.4,
+    -282.3,
     -0.4,
     -130.6
    ],
    "max": [
-    464.5,
+    466.6,
     1750.8,
-    350.5
+    388.7
    ],
-   "tris": 40380,
-   "bytes": 1180424,
+   "tris": 40330,
+   "bytes": 1179680,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,

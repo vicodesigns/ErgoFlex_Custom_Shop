@@ -663,10 +663,10 @@ def stand_phone(k):
 # story turns it 8 degrees).
 ROBOT_DESK = ((.06, -.25, 1.1045), 8.)
 ROBOT_SHELF = ((.1163, -.6056, 1.3638), 8.)
-# On the way up (stand-robot-lift): lifted up and toward him off the desktop, 200 mm in front of the shelf's front edge (0.478 m
-# in front of him, the board's top 1.359 m) and 100 mm above it, so the hands (the right fingers round its back, 86 mm
-# past it) rise clear of the board and then carry it over the edge and set it down.
-ROBOT_LIFT = ((.1163, -.21, 1.46), 8.)
+# On the way up (stand-robot-lift): lifted up and toward him off the desktop, 230 mm in front of the shelf's front edge (0.478 m
+# in front of him, the board's top 1.359 m) and 60 mm above it, so the hands (the right fingers curled round its back,
+# _GRIP_R) rise clear of the board and then carry it over the edge and set it down (below his eyes, not in front of his face).
+ROBOT_LIFT = ((.1163, -.25, 1.42), 8.)
 # These two postures are built where they stand (RAISED: not dropped to the floor afterwards), so the robot is exactly
 # at these heights: the ankles are posed at Andre's own ankle height in his shoes.
 ANDRE_ANKLE = .097      # (less what each posture's foot pitch leaves under the sole: work .013, shelf .005)
