@@ -457,7 +457,10 @@ export function solveStill(rig, key, input) {
     if (WORKOUTS.has(pose)) return solveWorkout(rig, key, input);
     if (life > 0) faceOf(rig);
     rig.load(key);
-    if (!(life > 0)) { rig.fk(); return; }
+    // (input.actLife: how much of a film's action (act, roll) there is, when it is not the life's amount: the life fades
+    // round a change of posture, the action the film times does not)
+    const actLife = input.actLife ?? life;
+    if (!(life > 0) && !((input.act || input.roll) && actLife > 0)) { rig.fk(); return; }
     const standing = ON_FEET.has(pose), sway = standing ? noise(time * .11 + 7.3, seed) * .014 * life : 0;
     const breath = Math.sin(time * Math.PI * 2 / (3.7 + hash(1, seed) * 1.2) + hash(2, seed) * 6.28) * life;
     if (standing) { spot.copy(key.wp[b.pelvis]); spot.x += sway; spot.y -= (.005 + Math.abs(sway) * .2) * life; rig.placePelvis(spot); }
@@ -485,9 +488,9 @@ export function solveStill(rig, key, input) {
     // (a reader turning a page, and every other activity: ACTS below)
     rig.fk();
     // (along a film's path someone in a wheelchair pushes the rims in time with the wheels: input.roll, pushRims)
-    if (pose === 'wheel-roll' && input.roll) { pushRims(rig, key, input.roll, life); rig.fk(); }
+    if (pose === 'wheel-roll' && input.roll) { pushRims(rig, key, input.roll, actLife); rig.fk(); }
     // (an action at a moment of the film: input.act, SCREEN_ACTS)
-    else if (input.act && SCREEN_ACTS[pose]) { SCREEN_ACTS[pose](rig, key, input.act, life); rig.fk(); }
+    else if (input.act && SCREEN_ACTS[pose]) { SCREEN_ACTS[pose](rig, key, input.act, actLife); rig.fk(); }
     else if (ACTS[pose]) { ACTS[pose](rig, key, time, seed, life); rig.fk(); }
 }
 

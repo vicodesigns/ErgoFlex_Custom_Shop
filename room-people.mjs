@@ -96,6 +96,8 @@ const gazeM = new THREE.Matrix4(), gazeW = new THREE.Vector3();
 const REACH = { sit: 945, wheel: 935, stand: 890 };
 const BEHIND_KEYS = { sit: 470, wheel: 460, stand: 415 };
 // Seconds a change of posture on the spot takes (solveChange): 1.4, up to 2.4 where the hips rise or sink (getting up, sitting down).
+// Seconds the life (breathing, a look) takes to go out of a model before a film's change of posture and come into the next after it.
+const PAIR_EASE = .6;
 const changeLength = (rig, from, to) => 1.4 + THREE.MathUtils.clamp(Math.abs(to.wp[rig.b.pelvis].y - from.wp[rig.b.pelvis].y) / .3, 0, 1);
 const HEIGHT_FIT = 1.4;                       // inches either side of the height a desk pose was built for
 const LIVELY = 4;                             // Studio, the old way (lively=0): the 4 nearest to the camera move, every frame
@@ -1396,7 +1398,9 @@ export class RoomPeople {
         const spans = this.filter?.when?.[this.keyOf(spec)]; if (!spans || !Number.isFinite(time)) return 1;
         const fade = this.filter.fade ?? .5; let amount = 0;
         for (const [t0, t1, fin = fade, fout = fade] of spans) {
-            if (time < t0 || time > t1) continue;
+            // (a window is [t0, t1): at the second one window ends and the next begins, a cut with no fade, a frame that
+            // falls on it has the next placement only, not both in full: one figure at every frame)
+            if (time < t0 || time >= t1) continue;
             amount = Math.max(amount, Math.min(fin > 0 && t0 > 0 ? (time - t0) / fin : 1, fout > 0 ? (t1 - time) / fout : 1, 1));
         }
         return THREE.MathUtils.smoothstep(amount, 0, 1);
@@ -1892,13 +1896,14 @@ export class RoomPeople {
                 const life = object.userData.personLife, on = chosen.includes(object);
                 if (life === undefined) { if (on) { object.userData.personLife = null; this.later(this.enliven(object)); } continue; }
                 if (!life || !object.userData.personRig || (!on && !life.live)) continue;
-                this.moveOne(object, life, on, on ? object.userData.personStepLife ?? 1 : 0, film, time, dt, hold, turning);   // (stepped out: the life comes in after the step, stepOuts)
+                const step = object.userData.personStepLife ?? 1, pair = object.userData.personPairLife ?? 1;   // (stepped out: the life comes in after the step, stepOuts; round a change of posture: changing)
+                this.moveOne(object, life, on, on ? step * pair : 0, film, time, dt, hold, turning, on ? step : 0);
             }
         }
         for (const crank of this.cranks) if (!turning.has(crank)) { if (crank.name === 'Bike crank') this.turnCrank(crank, 0); else { crank.rotation.y = 0; this.dirty = true; } this.cranks.delete(crank); }      // (nobody on it any more: as the room built it)
     }
     // One person's life this frame (amount: 0..1, how much of it; 0 is the posture as built).
-    moveOne(object, life, on, amount, film, time, dt, hold, turning) {
+    moveOne(object, life, on, amount, film, time, dt, hold, turning, actLife = amount) {
         if (object.userData.person.walk && on) { this.walkAlong(object, life, object.userData.person.walk, film ? time : null, hold); return; }
         if (object.userData.person.roll && on) { this.rollAlong(object, life, object.userData.person.roll, film ? time : null, hold); return; }
         // someone cast in a walking posture walks (the Studio; a film gives its walkers a path of their own)
@@ -1911,7 +1916,7 @@ export class RoomPeople {
         }
         // out of the list: back to the posture as built (at amount 0)
         const gaze = amount > 0 ? this.gazeOf(object, life) : null, act = film ? this.actOf(object, life, time) : null;
-        const moved = solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: amount, taps: film || dt < .05, look: gaze?.at, lookAmount: gaze?.amount, ...(act ? { act } : {}) });
+        const moved = solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: amount, actLife, taps: film || dt < .05, look: gaze?.at, lookAmount: gaze?.amount, ...(act ? { act } : {}) });
         drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold); life.live = amount > 0;
         // a rider's bike: its crank turns with the feet, the pedals stay level
         if (moved?.crank !== undefined) { const crank = object.userData.personAnchor?.getObjectByName('Bike crank'); if (crank) { this.turnCrank(crank, moved.crank); turning.add(crank); this.cranks.add(crank); } }
@@ -2102,8 +2107,16 @@ export class RoomPeople {
             this.lastMode = mode;
         }
         const under = [];
+        // (a film's change starts from the first posture as built and ends in the second as built: the life (breathing,
+        // a look, a gesture) goes out of the first model over the PAIR_EASE s before the change and comes into the second
+        // over the PAIR_EASE s after it, so the bones do not jump from the living pose to the built one in one sub-frame)
+        for (const o of this.people) delete o.userData.personPairLife;
+        const ease = (o, v) => { o.userData.personPairLife = Math.min(o.userData.personPairLife ?? 1, v); };
+        // (and a walker's hand-over to the same person where the path ends, walkEndTurn: the life comes into the next placement after it)
+        if (film) for (const o of this.people) { const end = o.userData.personLife?.endTurn, next = end && find(end.next); if (next) ease(next, THREE.MathUtils.smoothstep(time, end.at, end.at + PAIR_EASE)); }
         for (const pair of this.pairs) {
             const a = find(pair.from), b = find(pair.to); if (!a || !b || !pair.ready || (film ? pair.at === null : pair.at !== null)) continue;
+            if (film) { const s = pair.at - pair.length / 2, e = pair.at + pair.length / 2; ease(a, 1 - THREE.MathUtils.smoothstep(time, s - PAIR_EASE, s)); ease(b, THREE.MathUtils.smoothstep(time, e, e + PAIR_EASE)); }
             const length = pair.length, w = film ? (time - (pair.at - length / 2)) / length : pair.start === null ? -1 : (this.lifeClock - pair.start) / length, on = w > 0 && w < 1;
             if (!film && w >= 1) pair.start = null;
             if (on) under.push([pair, a, b, w]);
@@ -2259,11 +2272,15 @@ export class RoomPeople {
                 const shoes = this.soleOf(object, life, life.plan); life.plan = plan(shoes);
                 life.plan = plan({ ...shoes, land: this.landOf(object, life, life.plan) });
             }
+            life.endTurn = life.plan && time !== null ? this.walkEndTurn(object, life, walk) : null;
         }
         if (!life.plan) return;
         const g = life.plan.at(time === null ? 0 : Math.max(0, time - (walk.start || 0))), root = solveWalk(life.rig, life.plan, g);
         drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold);
-        object.position.x = root.x * 1000; object.position.z = root.z * 1000; object.rotation.y = root.yaw; life.live = true;
+        // (handing over to the same person standing where the path ends: they turn to face the way that placement does
+        // as they arrive, not in one frame as the next one takes over)
+        const end = life.endTurn, turn = end && time !== null ? end.by * THREE.MathUtils.smoothstep(time, end.from, end.to) : 0;
+        object.position.x = root.x * 1000; object.position.z = root.z * 1000; object.rotation.y = root.yaw + turn; life.live = true;
         // (a walker with `look` looks at them: on the way a little, standing at the end as anyone standing does)
         if ((this.current(object) || object.userData.person).look) {
             const gaze = this.gazeOf(object, life), total = life.plan.steps.length, on = THREE.MathUtils.smoothstep(g, 0, .8) * (1 - THREE.MathUtils.smoothstep(g, total - .9, total));
@@ -2277,6 +2294,23 @@ export class RoomPeople {
         if (Number.isFinite(walk.turn)) return THREE.MathUtils.degToRad(walk.turn);
         const end = path[path.length - 1], next = walk.then && (this.filter?.cast || []).find(c => c.id === walk.then && Array.isArray(c.at) && Number.isFinite(c.turn) && Math.hypot(c.at[0] / 1000 - end[0], c.at[1] / 1000 - end[1]) < .06);
         return next ? THREE.MathUtils.degToRad(next.turn) : undefined;
+    }
+    // A film's walker whose window ends as a placement of the same character starts (within .75 s) at the end of its
+    // path (within 220 mm, sameSpot's distance): that placement takes over with a cut, and wherever the walk leaves them
+    // facing (the heading over the last 0.35 m, a short last leg blends the one before it) they would snap to its turn
+    // on that frame. Instead they turn the rest of the way over the end of the walk: from half a second before they
+    // arrive to 0.4 s after (by the window's end at the latest). { by: radians, from, to: chapter seconds } or null.
+    walkEndTurn(object, life, walk) {
+        const spec = object.userData.person, when = this.filter?.when, own = when?.[this.keyOf(spec)], who = this.character(object); if (!own?.length || !who) return null;
+        const plan = life.plan, last = plan.along(plan.length), arrive = (walk.start || 0) + plan.seconds, ends = Math.max(...own.map(w => w[1]));
+        const next = this.people.find(o => {
+            const s = o.userData.person; if (o === object || s.walk || s.roll || !this.free(o) || this.character(o) !== who) return false;
+            return (when[this.keyOf(s)] || []).some(([t0]) => Math.abs(t0 - ends) <= .75) && Math.hypot(o.position.x - last.x * 1000, o.position.z - last.z * 1000) < 220;
+        });
+        if (!next) return null;
+        const yaw = plan.heading(plan.length), by = THREE.MathUtils.euclideanModulo(next.rotation.y - yaw + Math.PI, Math.PI * 2) - Math.PI;
+        // (next, at: the placement that takes over and when: its life comes in after the hand-over, changing())
+        const to = Math.min(arrive + .4, ends); return { by: Math.abs(by) < THREE.MathUtils.degToRad(2) ? 0 : by, from: Math.min(arrive - .5, to - .3), to, next: next.userData.person, at: ends };
     }
     // An action at a moment of the film (a placement's `act`: { at: chapter seconds, dur: seconds, by: [x, y, z] mm in
     // the room }): room-people-motion.mjs SCREEN_ACTS. The movement is turned into the model's frame; a tap finds the
@@ -2302,8 +2336,11 @@ export class RoomPeople {
             for (const c of life.roll?.tight || []) console.warn(`[people] ${this.keyOf(object.userData.person)}: roll corner ${c.corner} turns on ${Math.round(c.fits * 1000)} mm, not the ${Math.round(c.radius * 1000)} mm asked (a leg next to it is too short)`);
         }
         if (!life.roll) return;
-        const t = time === null ? 0 : Math.max(0, time - (roll.start || 0)), r = life.roll.at(t), gaze = this.gazeOf(object, life);
+        const t = time === null ? 0 : Math.max(0, time - (roll.start || 0)), r = life.roll.at(t);
         if (!(life.roll.length > 1e-3)) r.yaw = THREE.MathUtils.degToRad(object.userData.person.turn || 0);      // (no path to face along: the way it was placed)
+        // (where they look is found from where they are this frame: on the frame a placement takes over, its model has not been placed yet)
+        object.position.x = r.x * 1000; object.position.z = r.z * 1000; object.rotation.y = r.yaw;
+        const gaze = this.gazeOf(object, life);
         solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: 1, roll: r, look: gaze?.at, lookAmount: gaze?.amount });
         drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold);
         turnWheels(object.userData.personRig, r.wheel);
