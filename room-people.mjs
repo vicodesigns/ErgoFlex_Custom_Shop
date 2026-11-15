@@ -1331,7 +1331,12 @@ export class RoomPeople {
             const s = o.userData.person, out = { key: this.keyOf(s), id: s.id };
             if (s.desk) { out.desk = s.desk; if (s.station) out.station = s.station; if (s.reach !== undefined) out.reach = s.reach; if (s.chair === false) out.chair = false; }
             else if (s.beside && !s.at) out.beside = s.beside;
-            else { out.at = [Math.round(o.position.x), Math.round(o.position.z)]; out.turn = Math.round(THREE.MathUtils.radToDeg(o.rotation.y) * 10) / 10; if (Math.abs(o.position.y) > .5) out.y = Math.round(o.position.y); }
+            else {
+                // (someone who steps out from the desk is kept where the cast put them, not where a step has them now)
+                const home = s.fromDesk ? o.userData.personStepHome : null, at = home ? home.position : o.position, turn = home ? home.turn : o.rotation.y;
+                out.at = [Math.round(at.x), Math.round(at.z)]; out.turn = Math.round(THREE.MathUtils.radToDeg(turn) * 10) / 10; if (Math.abs(at.y) > .5) out.y = Math.round(at.y);
+            }
+            if (s.fromDesk === true && !s.desk) out.fromDesk = true;
             if (s.scale && s.scale !== 1) out.scale = s.scale;
             if (s.colors) out.colors = { ...s.colors };
             if (s.pose) out.pose = structuredClone(s.pose);
@@ -1762,6 +1767,7 @@ export class RoomPeople {
             // stepped out from the desk (stepOuts): there, whole, for the steps and the time between them, and nowhere else
             const step = steps.get(object);
             if (step) { on = !!step.phase; object.userData.personAmount = 1; this.drawStep(object, step); }
+            else if (object.userData.personStepLife !== undefined) delete object.userData.personStepLife;   // (no longer stepping out: life as anyone's)
             // an older cut's stand-in for the gap (a standing-by model of the desk user, cast by hand for the seconds the
             // desk moves): the desk user fills that gap themselves now
             if (on && !spec.desk && spec.extra && driven.length && this.filter?.when?.[this.keyOf(spec)]) {
@@ -2110,7 +2116,7 @@ export class RoomPeople {
     // The steps of this second: Map object -> { actor, phase: 'out' | 'hold' | 'in' | null, w, from, to, dz, desk, life }.
     // Every placement that steps out is in it (phase null outside its windows: not there).
     stepOuts(time, state, driven) {
-        const out = new Map(); if (time === null || !state?.pose || !this.filter?.when) return out;
+        const out = new Map(), busy = new Set(); if (time === null || !state?.pose || !this.filter?.when) return out;
         for (const o of this.people) {
             const s = o.userData.person, spans = s.fromDesk && !s.desk ? this.filter.when[this.keyOf(s)] : null;
             if (!spans || o.userData.personMissing || !this.allowed(s) || !o.userData.personRig) continue;
@@ -2121,6 +2127,8 @@ export class RoomPeople {
             const length = changeLength(actor.rig, up, actor.rig.key(s.id));
             for (const [t0, t1] of spans) {
                 const start = t0 - length / 2, end = t1 + length / 2; if (time < start || time > end) continue;
+                if (busy.has(actor)) { const k = this.keyOf(s); if (!(this.warnedSteps ||= new Set()).has(k)) { this.warnedSteps.add(k); console.warn('[people] ' + k + ': ' + actor.character + ' is already stepping out (overlapping fromDesk windows): left out'); } break; }   // (two at once: one of her, the first)
+                busy.add(actor);
                 if (time < t0 + length / 2) {
                     const desk = this.deskUserAt(actor, start, state);
                     Object.assign(step, { phase: 'out', w: (time - start) / length, from: desk.key, to: actor.rig.key(s.id, desk.key.dz), dz: desk.key.dz, desk: desk.spot });

@@ -40,6 +40,7 @@ export function cleanPerson(e){
   if(!e||typeof e!=='object'||typeof e.id!=='string'||!MODEL.test(e.id))return null;
   const key=typeof e.key==='string'&&KEY.test(e.key)?e.key:e.id.slice(0,48),out={key,id:e.id};
   if(e.hide===true)out.hide=true;
+  if(e.fromDesk===true&&!['sit','stand','wheel'].includes(e.desk))out.fromDesk=true;   // (the desk user stepping out and back: room-people.mjs stepOuts)
   if(['sit','stand','wheel'].includes(e.desk)){out.desk=e.desk;if(typeof e.station==='string'&&STATION.test(e.station))out.station=e.station;if(finite(e.reach)&&e.reach>=0&&e.reach<=3000)out.reach=Math.round(e.reach);}
   else{
     const at=pair(e.at,100000),beside=pair(e.beside,20000);

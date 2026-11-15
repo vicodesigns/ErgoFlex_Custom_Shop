@@ -492,4 +492,20 @@ const shown = people => people.people.filter(o => o.visible).map(o => o.userData
     assert.deepEqual(out['noah-talks'].look, ['kai-waits'], 'a single key becomes a list');
     film.cast[0].look = undefined; assert.ok(!('look' in Object.fromEntries(people.resolved().map(p => [p.key, p]))['kai-waits']), 'no look: none written');
 }
+{   // fromDesk (the desk user stepping out and back, Maya stretching in the gym): a Director people edit keeps it, the
+    // starting cast / Studio-sync seed (resolved()) keeps it and the spot the cast put her at (not where a step has her
+    // when it is seeded mid-step), and the two round-trip
+    const { cleanPeople } = await import('../experience/people-edits.mjs');
+    const entry = { key: 'maya-break', id: 'people-maya-stretch', fromDesk: true, at: [-421, 85], turn: 180 };
+    assert.equal(cleanPeople({ cast: [entry] }).cast[0].fromDesk, true, 'cleanPerson keeps fromDesk');
+    assert.ok(!('fromDesk' in cleanPeople({ cast: [{ ...entry, fromDesk: 'yes' }] }).cast[0]) && !('fromDesk' in cleanPeople({ cast: [{ key: 'm', id: 'people-maya-stand-type', desk: 'stand', fromDesk: true }] }).cast[0]), 'only true, and only off the desk');
+    const people = new RoomPeople({ id: 'gym', roomLayout: { id: 'house' }, root: new THREE.Group() }, null), o = new THREE.Group();
+    people.setFilter({ cast: [entry], when: { 'maya-break': [[9.7, 12.3]] } });
+    o.userData.person = { ...entry, extra: true }; o.position.set(-300, 0, 20); o.rotation.y = Math.PI / 2;   // (part way through a step)
+    o.userData.personStepHome = { position: new THREE.Vector3(-421, 0, 85), turn: Math.PI }; people.people = [o];
+    const seed = people.resolved()[0];
+    assert.deepEqual([seed.fromDesk, seed.at, seed.turn], [true, [-421, 85], 180], 'resolved() keeps fromDesk and where the cast put her');
+    assert.deepEqual(cleanPeople({ cast: [seed] }).cast[0], cleanPeople({ cast: [entry] }).cast[0], 'round trip');
+    o.userData.personStepHome = null; assert.deepEqual(people.resolved()[0].at, [-300, 20], 'before she has a home (not placed yet), where she is');
+}
 console.log('PASS room people: library entries, desk-height casting and fade, chair hand-over, film filter and placement, film casting, stations, loading by the hour, postures with things on a table at a table, the same clothes away from the desk, chairs facing their table, hair edges.');
