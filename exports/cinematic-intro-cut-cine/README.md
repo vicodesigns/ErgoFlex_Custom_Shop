@@ -223,5 +223,8 @@ follow its length and cut times. 0-5.3 s the class view (no cut before 1.5 s): K
 Noah greets him and steps to the desk's front-right corner; 5.3-9.0 s the insert over his right shoulder: he draws
 the screen out (`act`), taps 'Lower to Kai's height' at 8.2 s, the desk starts down at 8.5 s (43.5 to 31 in over 3 s)
 with the live height on the screen (`touchscreen`); 9.0 s on the front three-quarter: Kai rolls the last half metre
-in and docks (typing from 12.75 s), Noah steps back and watches. S6's monitor clips (cine-oilers-*.mp4) were timed
+in and docks (typing from 12.75 s), Noah steps back and watches. Round 2 (camera only): the class view cranes up
+and left from 1.5 s so Kai stays readable over the near table; the insert is two shots, low from Kai's side for the
+pull (5.3-7.0 s) and face-on from the screen's user's place for the tap (7.0-9.0 s); the third shot is further back
+and higher (Kai from the chest up, Noah whole). S6's monitor clips (cine-oilers-*.mp4) were timed
 for the 14 s chapter with the lift at 8-11 s: their 'Lowering to Kai's height' readout now runs ahead of the desk.
