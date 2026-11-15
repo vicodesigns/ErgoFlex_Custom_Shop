@@ -936,8 +936,13 @@ export function solveTread(rig, plan, time, begin = 0) {
 // follow, the arms come last; where the hips rise or sink (sitting down, getting up) the trunk leans in on the way;
 // feet that end somewhere else step there one after the other, and feet that stay are pinned. Exactly `from` at 0
 // and `to` at 1. Pure. Returns { model: 'from' | 'to' } (which of the two built models to draw: they bend alike).
-export function solveChange(rig, from, to, w) {
-    const b = rig.b, t = clamp01(w), hips = ss(0, .72, t), spine = ss(.08, .82, t), head = ss(.15, .92, t), arms = ss(.22, 1, t);
+// `arms`: the part of the change (0..1) in which the arms go from the one posture to the other, [.22, 1] when not given
+// (the workshop film: hands off a shelf before he turns away, a placement's `change.arms`, room-people.mjs).
+// `shift`: { x, z, e } when the model itself moves during the change (metres in the model's frame, from the first spot to
+// the second, and the share of it done now): each foot stays on the floor where it was and then steps to where it goes,
+// the left and then the right (a step back from a desk), instead of sliding with the model.
+export function solveChange(rig, from, to, w, arms0 = null, shift = null) {
+    const b = rig.b, t = clamp01(w), hips = ss(0, .72, t), spine = ss(.08, .82, t), head = ss(.15, .92, t), arms = arms0 ? ss(arms0[0], arms0[1], t) : ss(.22, 1, t);
     if (t <= 0 || t >= 1) { rig.load(t <= 0 ? from : to); rig.fk(); return { model: t <= 0 ? 'from' : 'to' }; }
     const part = new Float32Array(rig.n).fill(hips);
     for (const i of [b.spine_01, b.spine_02, b.spine_03]) part[i] = spine;
@@ -954,6 +959,14 @@ export function solveChange(rig, from, to, w) {
     for (const s of ['l', 'r']) {
         const [thigh, calf, foot] = rig.side[s].leg, far = from.wp[foot].distanceTo(to.wp[foot]);
         // the feet move while the weight is in the seat: before getting up, after sitting down
+        if (shift) {
+            const step = ss(...(s === 'l' ? [.04, .42] : [.36, .76]), t), sx = shift.x, sz = shift.z, e = shift.e, reach = Math.hypot(sx, sz) + far;
+            awayAt.set(lerp(from.wp[foot].x - sx * e, to.wp[foot].x + sx * (1 - e), step), lerp(from.wp[foot].y, to.wp[foot].y, step), lerp(from.wp[foot].z - sz * e, to.wp[foot].z + sz * (1 - e), step));
+            awayAt.y += Math.min(.035, reach * .3) * Math.sin(Math.PI * step);
+            footQ.slerpQuaternions(from.wq[foot], to.wq[foot], step);
+            rig.reach(thigh, calf, foot, awayAt); rig.reach(thigh, calf, foot, awayAt); rig.setWorld(foot, footQ);
+            continue;
+        }
         const window = rising ? (s === 'l' ? [.02, .3] : [.2, .48]) : (s === 'l' ? [.52, .8] : [.7, .98]), step = far < .004 ? hips : ss(window[0], window[1], t);
         awayAt.lerpVectors(from.wp[foot], to.wp[foot], step); awayAt.y += Math.min(.035, far * .3) * Math.sin(Math.PI * step);
         footQ.slerpQuaternions(from.wq[foot], to.wq[foot], step);
@@ -969,7 +982,7 @@ export function solveChange(rig, from, to, w) {
 // the legs follow by IK), so feet cannot slide. From standing (posture `from`) to standing (`to`; the same posture
 // when not given), facing along the path at both ends.
 //   path: [[x, z], ...] metres in the room's floor plane (two points or more; corners are walked as given)
-//   options: { step: metres (default from the leg length), pace: steps a second (default 1.8) }
+//   options: { step: metres (default from the leg length), pace: steps a second (default 1.8), toes: 'bend' (solveWalk) }
 // Returns { length, seconds, prints, at(seconds) -> g } where g counts steps (the gait clock).
 const hermite = (p0, p1, m0, m1, t) => { const t2 = t * t, t3 = t2 * t; return (2 * t3 - 3 * t2 + 1) * p0 + (t3 - 2 * t2 + t) * m0 + (-2 * t3 + 3 * t2) * p1 + (t3 - t2) * m1; };
 export function walkPlan(rig, from, to, path, options = {}) {
@@ -998,7 +1011,7 @@ export function walkPlan(rig, from, to, path, options = {}) {
     const slope = i => i <= 0 || i >= knots.length - 1 ? 0 : (knots[i + 1][1] - knots[i - 1][1]) / (knots[i + 1][0] - knots[i - 1][0]);
     const travel = g => { g = Math.min(steps.length, Math.max(0, g)); let i = 1; while (i < knots.length - 1 && g > knots[i][0]) i++; const [g0, s0] = knots[i - 1], [g1, s1] = knots[i], h = g1 - g0; return Math.min(s1, Math.max(s0, hermite(s0, s1, slope(i - 1) * h, slope(i) * h, (g - g0) / h))); };
     const pace = options.pace || 1.8;
-    return { length, step, steps, prints, along, heading, travel, from, to, pace, seconds: steps.length / pace, at: seconds => clamp01(seconds * pace / steps.length) * steps.length };
+    return { length, step, steps, prints, along, heading, travel, from, to, pace, toes: options.toes === 'bend', seconds: steps.length / pace, at: seconds => clamp01(seconds * pace / steps.length) * steps.length };
 }
 // The pose at gait clock g (plan.at(seconds)): rig.lq / rig.lp in the model's frame. Returns where the model stands:
 // { x, z, yaw } (metres, radians; the room's frame).
@@ -1043,6 +1056,10 @@ export function solveWalk(rig, plan, g) {
         const dx = x - at.x, dz = z - at.z; printAt.set(dx * c - dz * sn, y, dx * sn + dz * c);
         rig.reach(thigh, calf, foot, printAt); rig.reach(thigh, calf, foot, printAt);
         footQ.slerpQuaternions(from.wq[foot], to.wq[foot], blend); rig.setWorld(foot, turn.setFromAxisAngle(Y, face - yaw).multiply(turn2.setFromAxisAngle(X, pitch)).multiply(footQ));
+        // (plan.toes: the toes bend at the ball while the heel is up, flat on the floor instead of through it, until the
+        // foot is well off the floor: the workshop film's walk, `walk.toes: 'bend'`)
+        const bend = plan.toes && pitch > 0 ? (next ? 1 - ss(.15, .5, air) : 1) : 0;
+        if (bend > 0) { rig.fk(); footQ.slerpQuaternions(from.wq[ball], to.wq[ball], blend).premultiply(turn.setFromAxisAngle(Y, face - yaw)); rig.setWorld(ball, footQ.slerpQuaternions(rig.wq[ball], footQ.clone(), bend)); }
     }
     rig.fk();
     // arms swing against the legs from the shoulder, the elbow giving a little on the way forward

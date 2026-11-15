@@ -85493,22 +85493,22 @@
    "file": "assets/props/people-andre-stand-robot-work.glb",
    "anchor": "floor",
    "size": [
-    637.2,
+    670.4,
     1698.6,
-    593.8
+    633.8
    ],
    "min": [
-    -272.7,
+    -319.8,
     0.1,
     -129.7
    ],
    "max": [
-    364.5,
+    350.6,
     1698.7,
-    464.1
+    504.1
    ],
-   "tris": 40196,
-   "bytes": 1179812,
+   "tris": 40342,
+   "bytes": 1180196,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -85526,22 +85526,22 @@
    "file": "assets/props/people-andre-stand-robot-shelf.glb",
    "anchor": "floor",
    "size": [
-    576.4,
+    615.4,
     1754.2,
-    845
+    885
    ],
    "min": [
-    -254.9,
+    -254.4,
     0,
     -140.7
    ],
    "max": [
-    321.5,
+    361,
     1754.2,
-    704.3
+    744.3
    ],
-   "tris": 40400,
-   "bytes": 1180092,
+   "tris": 40374,
+   "bytes": 1179608,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -85782,6 +85782,72 @@
     "character": "maya",
     "pose": "stand-type",
     "deskHeight": 41
+   }
+  },
+  {
+   "id": "people-andre-stand-robot-lift",
+   "name": "Andre: lifting the robot toward the desk shelf",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-stand-robot-lift.glb",
+   "anchor": "floor",
+   "size": [
+    728.5,
+    1751.2,
+    689.3
+   ],
+   "min": [
+    -288.8,
+    -0.4,
+    -130.6
+   ],
+   "max": [
+    439.7,
+    1750.8,
+    558.7
+   ],
+   "tris": 40380,
+   "bytes": 1179984,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "stand-robot-lift"
+   }
+  },
+  {
+   "id": "people-andre-stand-robot-release",
+   "name": "Andre: letting go of the robot on the shelf",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-stand-robot-release.glb",
+   "anchor": "floor",
+   "size": [
+    694,
+    1789.6,
+    395
+   ],
+   "min": [
+    -347,
+    8.2,
+    -129.7
+   ],
+   "max": [
+    347,
+    1797.8,
+    265.3
+   ],
+   "tris": 35020,
+   "bytes": 1141028,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "stand-robot-release"
    }
   }
  ],

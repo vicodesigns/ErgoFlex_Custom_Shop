@@ -1364,37 +1364,73 @@
       "id": "people-andre-stand-robot-work",
       "at": [
        100,
-       1560
+       1600
       ],
       "turn": 180
+     },
+     {
+      "key": "andre-lift",
+      "id": "people-andre-stand-robot-lift",
+      "at": [
+       100,
+       1600
+      ],
+      "turn": 180,
+      "change": {
+       "seconds": 1
+      }
      },
      {
       "key": "andre-shelf",
       "id": "people-andre-stand-robot-shelf",
       "at": [
        100,
-       1560
+       1600
       ],
-      "turn": 180
+      "turn": 180,
+      "change": {
+       "seconds": 1
+      }
+     },
+     {
+      "key": "andre-lets-go",
+      "id": "people-andre-stand-robot-release",
+      "at": [
+       100,
+       1775
+      ],
+      "turn": 180,
+      "swap": 0.06,
+      "change": {
+       "seconds": 0.9,
+       "arms": [
+        0.35,
+        1
+       ],
+       "turn": [
+        0,
+        0.6
+       ],
+       "step": true
+      }
      },
      {
       "key": "andre-steps-back",
       "id": "people-andre-walk",
       "at": [
-       100,
-       1560
+       60,
+       1900
       ],
       "turn": 180,
-      "swap": 0.08,
       "walk": {
        "path": [
         [
-         100,
-         1560
+         60,
+         1900
         ],
         [
-         -107,
-         1948
+         -120,
+         2000
         ],
         [
          -201,
@@ -1465,10 +1501,22 @@
          1538
         ]
        ],
-       "start": 3.9,
-       "pace": 2.1,
+       "start": 4.4,
+       "pace": 2.13,
        "step": 450,
-       "then": "people-andre-stand-phone-pull"
+       "then": "people-andre-stand-phone-pull",
+       "toes": "bend"
+      },
+      "change": {
+       "seconds": 1,
+       "arms": [
+        0.1,
+        0.6
+       ],
+       "turn": [
+        0.2,
+        0.9
+       ]
       }
      },
      {
@@ -1513,22 +1561,38 @@
      "andre-robot": [
       [
        0,
-       1.7,
+       1,
+       0,
+       0
+      ]
+     ],
+     "andre-lift": [
+      [
+       1,
+       2,
        0,
        0
       ]
      ],
      "andre-shelf": [
       [
-       1.7,
-       3.15,
+       2,
+       2.95,
+       0,
+       0
+      ]
+     ],
+     "andre-lets-go": [
+      [
+       2.95,
+       3.9,
        0,
        0
       ]
      ],
      "andre-steps-back": [
       [
-       3.15,
+       3.9,
        7.71,
        0,
        0

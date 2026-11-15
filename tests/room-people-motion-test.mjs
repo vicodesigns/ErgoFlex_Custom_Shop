@@ -597,4 +597,32 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
         walk.seats.dispose(); delete ROOM_PEOPLE.seattest;
     }
 }
+// ---- the workshop film's change options (room-people-motion.mjs solveChange `arms` and `shift`, walkPlan `toes`)
+{
+    const rig = rigOf('andre'), shelf = rig.key('people-andre-stand-robot-shelf'), go = rig.key('people-andre-stand-robot-release'), hand = rig.side.r.arm[3];
+    // without the options a change is as before
+    solveChange(rig, shelf, go, .3); const plain = snapshot(rig); solveChange(rig, shelf, go, .3, null, null); assert.deepEqual(snapshot(rig), plain, 'no options: the change as before');
+    // arms: [.35, 1]: the hands have not left the shelf posture's place (in the model's frame) before .35 of the change
+    solveChange(rig, shelf, go, .3, [.35, 1]); const early = rig.wp[hand].clone(); solveChange(rig, shelf, go, .3);
+    assert.ok(rig.wp[hand].distanceTo(go.wp[hand]) < early.distanceTo(go.wp[hand]) - .01, 'arms [.35, 1]: the hands still at the shelf at .3, the default has them on the way');
+    solveChange(rig, shelf, go, 1, [.35, 1]); assert.ok(worst(rig, go) < 1e-9, 'arms window: ends as built');
+    // shift: a step back 0.2 m (the model moves -z in its own frame... its spot moves +0.2 m behind him): each foot stays on
+    // the floor where it was in the room until its step, then is where the new spot has it
+    const fl = rig.side.l.leg[2], fr = rig.side.r.leg[2], back = .2, room = (v, e) => v.z + back * e;
+    for (const w of [0, .02]) { const e = THREE.MathUtils.smoothstep(w, 0, .6); solveChange(rig, shelf, go, w, [.35, 1], { x: 0, z: back, e }); assert.ok(Math.abs(room(rig.wp[fl], e) - shelf.wp[fl].z) < .002 && Math.abs(room(rig.wp[fr], e) - shelf.wp[fr].z) < .002, 'step: both feet planted at the start'); }
+    { const w = .42, e = THREE.MathUtils.smoothstep(w, 0, .6); solveChange(rig, shelf, go, w, [.35, 1], { x: 0, z: back, e }); assert.ok(Math.abs(room(rig.wp[fl], e) - (go.wp[fl].z + back)) < .003, 'step: the left foot has stepped back'); assert.ok(Math.abs(room(rig.wp[fr], e) - shelf.wp[fr].z) < .03, 'step: the right foot not yet'); }
+    for (let w = 0, last = null; w <= 1.0001; w += 1 / 60) { const e = THREE.MathUtils.smoothstep(w, 0, .6); solveChange(rig, shelf, go, w, [.35, 1], { x: 0, z: back, e }); const f = [room(rig.wp[fl], e), room(rig.wp[fr], e)]; if (last) assert.ok(Math.abs(f[0] - last[0]) < .03 && Math.abs(f[1] - last[1]) < .03, 'step: no foot jumps'); for (const i of [fl, fr]) assert.ok(rig.wp[i].y > .07, 'step: feet not under the floor'); last = f; }
+    solveChange(rig, shelf, go, 1, [.35, 1], { x: 0, z: back, e: 1 }); assert.ok(worst(rig, go) < 1e-9, 'step: ends as built');
+    // toes: 'bend': while a heel is up the toes stay level (the ball bone flat), and the walk is otherwise the same
+    const key = rig.key('people-andre-stand-wait'), path = [[0, 0], [0, 3]], a = walkPlan(rig, key, key, path), b = walkPlan(rig, key, key, path, { toes: 'bend' }), ball = rig.side.l.leg[3];
+    assert.equal(a.toes, false); assert.equal(b.toes, true);
+    let flatter = 0;
+    for (let g = .5; g < a.steps.length - 1; g += 1 / 20) {
+        solveWalk(rig, a, g); const pa = rig.wp.map(v => v.clone()), ta = Math.abs(new THREE.Euler().setFromQuaternion(rig.wq[ball]).x);
+        solveWalk(rig, b, g); const tb = Math.abs(new THREE.Euler().setFromQuaternion(rig.wq[ball]).x);
+        for (const i of [rig.b.pelvis, rig.b.head, rig.side.l.leg[2], rig.side.r.leg[2]]) assert.ok(rig.wp[i].distanceTo(pa[i]) < 1e-9, 'toes: the body and ankles walk as before');
+        if (tb < ta - .05) flatter++;
+    }
+    assert.ok(flatter > 10, 'toes: the toes are flatter while the heel is up (' + flatter + ' samples)');
+}
 console.log('PASS room people motion: rig files, the desk driver (rise, lower, stop, turn back, tilt, wheelchair, short stature), exact end poses, planted feet, knees, keyboard following, determinism, life, the person in the room (film and Studio paths, chair, pose adjustments on top), posture changes in a shot and with the daypart, a walk along a path.');

@@ -40,6 +40,13 @@
 //                                                     film only, on a standing person: from `start` they walk the path
 //                                                     (from where they stand, or along `path`) and stand at its end, in
 //                                                     the posture of `then` if given; they face along the path at both ends
+//                                                     (`toes: 'bend'`: the toes bend at the ball while a heel is up)
+//   change: { seconds, arms: [a, b], turn: [a, b], step: true }
+//                                                     film only, on the second of two placements that make a change of
+//                                                     posture (see sameSpot below): how long it takes (default 1.4 s, more
+//                                                     when getting up), the parts of it (0..1) in which the arms move and
+//                                                     the body turns and moves to the new spot (default [.22, 1], [0, .72]),
+//                                                     and `step`: that move is a step (feet planted, left then right)
 //   look: '<key>' | ['<key>', ...]                    whom they look at, whatever their posture (whichever of them is there,
 //                                                     in front within 9 m): a listener who turns to the talker
 //   layout: '<layout id>'                             only in that room layout;  modes: [...] only in those dayparts
@@ -50,7 +57,7 @@
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
 import {updateSkinnedBounds} from './skinned-bounds.mjs';
-import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, solveTread, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=workshop-20261113';
+import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, solveWalk, solveTread, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=workshop-20261114-s17';
 // who looks at whom (RoomPeople.gazeOf)
 const GAZE_TALK = /^(stand-talk|sit-chat|stand-drink|stand-mug|stand-coffee|sit-coffee)$/, GAZE_IDLE = /^(stand-wait|wheel-roll|wheel-watch|cane-stand|white-cane|sit-listen)$/;
 const GAZE_DESK = /^stand-phone-watch$/;      // watching the featured desk go (the workshop film): the head follows it
@@ -2049,8 +2056,19 @@ export class RoomPeople {
             // (`swap` on the second placement: how far through the change (0..1) the second model takes over, .5 when not
             // given. Something put down stays with the first model until the hands have left it (early: the robot set on
             // the shelf in the workshop film); a screen that lights when it is touched, late.)
-            const { model } = solveChange(pair.rig, pair.keyFrom, pair.keyTo, w), cut = Number.isFinite(pair.to?.swap) ? THREE.MathUtils.clamp(pair.to.swap, .02, .98) : null;
-            const shown = (cut === null ? model === 'from' : w < cut) ? a : b, ease = THREE.MathUtils.smoothstep(w, 0, .72);
+            // (`change` on the second placement: { arms: [from, to], turn: [from, to] }, the parts of the change (0..1) in
+            // which the arms move and the body turns and moves to the new spot; [.22, 1] and [0, .72] when not given. The
+            // workshop film: the hands come off the shelf before he turns away from the desk.)
+            const plan = pair.to?.change, part = k => Array.isArray(plan?.[k]) && plan[k].length === 2 && plan[k].every(Number.isFinite) && plan[k][0] < plan[k][1] ? plan[k] : null;
+            // (`change.step`: the move to the new spot is a step, the feet planted, not a slide: same turn at both spots)
+            const turnPart = part('turn') || [0, .72], ease = THREE.MathUtils.smoothstep(w, turnPart[0], turnPart[1]);
+            let shift = null;
+            if (plan?.step === true) {
+                const dx = (pair.homeTo.position.x - pair.homeFrom.position.x) / 1000, dz = (pair.homeTo.position.z - pair.homeFrom.position.z) / 1000, yaw = pair.homeFrom.turn, c = Math.cos(yaw), sn = Math.sin(yaw);
+                shift = { x: dx * c - dz * sn, z: dx * sn + dz * c, e: ease };
+            }
+            const { model } = solveChange(pair.rig, pair.keyFrom, pair.keyTo, w, part('arms'), shift), cut = Number.isFinite(pair.to?.swap) ? THREE.MathUtils.clamp(pair.to.swap, .02, .98) : null;
+            const shown = (cut === null ? model === 'from' : w < cut) ? a : b;
             shown.position.lerpVectors(pair.homeFrom.position, pair.homeTo.position, ease); shown.rotation.y = pair.homeFrom.turn + (pair.homeTo.turn - pair.homeFrom.turn) * ease;
             drawPose(pair.rig, shown.userData.personRig, 0, shown.userData.person.pose || null);
             a.userData.personChanging = b.userData.personChanging = true; pair.live = true; this.dirty = true; out.set(a, { shown }); out.set(b, { shown });
@@ -2072,6 +2090,7 @@ export class RoomPeople {
         // a turn the short way round
         change.homeTo.turn = change.homeFrom.turn + THREE.MathUtils.euclideanModulo(change.homeTo.turn - change.homeFrom.turn + Math.PI, Math.PI * 2) - Math.PI;
         change.length = 1.4 + THREE.MathUtils.clamp(Math.abs(change.keyTo.wp[rig.b.pelvis].y - change.keyFrom.wp[rig.b.pelvis].y) / .3, 0, 1);
+        if (Number.isFinite(change.to.change?.seconds)) change.length = THREE.MathUtils.clamp(change.to.change.seconds, .6, 3);      // (`change.seconds`: its own length)
         change.ready = true;
     }
     // After a change both models are as built again, each where it belongs.
@@ -2088,7 +2107,7 @@ export class RoomPeople {
         const sign = JSON.stringify(walk) + '|' + JSON.stringify(object.userData.person.at || null);
         if (life.walkSign !== sign) {
             const path = (walk.path || [walk.from || [object.position.x, object.position.z], walk.to]).map(([x, z]) => [x / 1000, z / 1000]);
-            life.walkSign = sign; life.plan = path.length > 1 && path.every(p => p.every(Number.isFinite)) ? walkPlan(life.rig, life.key, (walk.then && life.rig.key(walk.then)) || life.key, path, { pace: walk.pace, step: walk.step ? walk.step / 1000 : undefined }) : null;
+            life.walkSign = sign; life.plan = path.length > 1 && path.every(p => p.every(Number.isFinite)) ? walkPlan(life.rig, life.key, (walk.then && life.rig.key(walk.then)) || life.key, path, { pace: walk.pace, step: walk.step ? walk.step / 1000 : undefined, toes: walk.toes }) : null;
         }
         if (!life.plan) return;
         const g = life.plan.at(time === null ? 0 : Math.max(0, time - (walk.start || 0))), root = solveWalk(life.rig, life.plan, g);

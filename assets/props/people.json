@@ -1821,8 +1821,20 @@
    "desk": false,
    "seat": 0
   },
+  "stand-robot-lift": {
+   "label": "Lifting the robot toward the desk shelf",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
   "stand-robot-shelf": {
    "label": "Setting the robot on the desk shelf",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
+  "stand-robot-release": {
+   "label": "Letting go of the robot on the shelf",
    "stance": "standing",
    "desk": false,
    "seat": 0
@@ -11876,6 +11888,18 @@
    "pose": "stand-type",
    "deskHeight": 41,
    "name": "Maya, typing at the desk at 41 in (standing)",
+   "aids": []
+  },
+  "people-andre-stand-robot-lift": {
+   "character": "andre",
+   "pose": "stand-robot-lift",
+   "name": "Andre: lifting the robot toward the desk shelf",
+   "aids": []
+  },
+  "people-andre-stand-robot-release": {
+   "character": "andre",
+   "pose": "stand-robot-release",
+   "name": "Andre: letting go of the robot on the shelf",
    "aids": []
   }
  }
