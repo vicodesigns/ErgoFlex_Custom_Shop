@@ -4,7 +4,10 @@
 // it changes is put back by restore().
 //
 //   screens:[{target:'texture', src, mesh?:'<regex on the mesh name>', material?:'<regex on the material name>',
-//             person?:'<who>', within?:'desk', offset=0, rate=1, loop=true}]
+//             person?:'<who>', within?:'desk', offset=0, rate=1, loop=true, flipX=false, flipY=false, rotate=0}]
+//   flipX / flipY / rotate:180 turn the picture on the texture (not on the clip): a phone held out toward a camera
+//   on the far side of the person has its own UVs upside down to that camera; the texture is oriented for the shot
+//   that reads it and the clip stays authored the right way up (Nov 14, S11: the storage insert).
 //
 // The matching materials get the clip as their colour map, and as their emissive map when they had one (a lit screen
 // stays lit), with the original map's UV settings (flipY, wrap, repeat, offset, rotation), so a picture authored at the
@@ -78,7 +81,10 @@ export function installTextureScreens(root, specs, media, { makeCanvas = (w, h) 
   }
   function paint(item) {
     const { ctx, canvas, media: v } = item; if (!ctx) return;
-    ctx.setTransform?.(1, 0, 0, 1, 0, 0); ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+    const { flipX, flipY, rotate } = item.spec, turn = (Number(rotate) || 0) % 360 === 180, sx = (flipX ? -1 : 1) * (turn ? -1 : 1), sy = (flipY ? -1 : 1) * (turn ? -1 : 1);
+    ctx.setTransform?.(1, 0, 0, 1, 0, 0);
+    if (sx < 0 || sy < 0) ctx.setTransform?.(sx, 0, 0, sy, sx < 0 ? canvas.width : 0, sy < 0 ? canvas.height : 0);
+    ctx.drawImage(v, 0, 0, canvas.width, canvas.height); ctx.setTransform?.(1, 0, 0, 1, 0, 0);
     item.texture.needsUpdate = true; item.drawn = true;
   }
   return {
