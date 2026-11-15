@@ -1,0 +1,9 @@
+S1 desk hardware stills, round 2 (code cine/s1-r2 187c6002, on 4ddf6038). 960x540 film stills (render-cut --at, HQ13).
+before_*: the film as it was (04f24e0f). after_*: the fix.
+Close-ups: wheel, actuator, side connector (rooms: connector from three angles: -connector, -connector-front, -connector-rear).
+Product stage (awaken) with white, blue and red LEDs; rooms: artist studio (create), library (commons), high school (oilers),
+one wide each; gaming room at night (music chapter's room, solid blue / red LEDs), wheel close-ups.
+after_grid-sheenAB.jpg: roller sheen A (rows 1 and the first two of row 3: roughness 0.45, clearcoat 0.3, the default) vs B
+(row 2 and the second / fourth of row 3: roughness 0.8, no clearcoat). Row 1 / 2: product white, blue, red, artist studio.
+Row 3: gaming night blue A, blue B, red A, red B.
+The connector-front / -rear angles and the gaming room and sheen pictures have no before_ counterparts.
