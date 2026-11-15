@@ -1748,6 +1748,7 @@ export class RoomPeople {
             for (const pair of this.pairs) if (pair.live) { const a = this.people.find(o => o.userData.person === pair.from), b = this.people.find(o => o.userData.person === pair.to); if (a && b) this.endChange(pair, a, b); }
             this.pairs = this.pairUp();
             this.readySteps();
+            this.readyLives(time);
         }
         this.lifeClock = time !== null ? time : this.lifeClock + Math.min(.1, Math.max(0, dt));
         const changing = this.changing(time, mode);
@@ -2250,6 +2251,16 @@ export class RoomPeople {
         const end = life.endTurn, turn = end && time !== null ? end.by * THREE.MathUtils.smoothstep(time, end.from, end.to) : 0;
         object.position.x = root.x * 1000; object.position.z = root.z * 1000; object.rotation.y = root.yaw + turn; life.live = true;
         if (g > 0 && g < life.plan.steps.length) this.dirty = true;
+    }
+    // A film's placements that come in later in the chapter (a `when` window) get their life (skeleton, bone data) when
+    // the cast is placed, so the film's warm-up (settled()) waits for it: otherwise the first frame they are in draws
+    // the model as built and the next one jumps to the living pose (Lin's hand at the easel, 0.6 m, create 19.5 s).
+    readyLives(time) {
+        if (time === null || !this.filter?.when || !this.library.rigData || this.filter.life === false) return;
+        for (const o of this.people) {
+            const s = o.userData.person; if (o.userData.personLife !== undefined || o.userData.personDriven || o.userData.personMissing || s.desk || !this.allowed(s) || !this.filter.when[this.keyOf(s)]) continue;
+            o.userData.personLife = null; this.later(this.enliven(o));
+        }
     }
     // A film's walker whose window ends as a placement of the same character starts (within .75 s) at the end of its
     // path (within 220 mm, sameSpot's distance): that placement takes over with a cut, and wherever the walk leaves them

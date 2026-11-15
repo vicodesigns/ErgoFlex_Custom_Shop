@@ -24,6 +24,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as THREE from 'three';
 import { RoomPeople, castEntries } from '../../room-people.mjs';
 import { sampleClipMotion } from '../../experience/desk-clips.mjs';
+import { PersonRig } from '../../room-people-motion.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const CUT = path.join(root, 'exports/cinematic-intro-cut-cine/review-cut.json');
@@ -69,6 +70,17 @@ const round = (v, n = 2) => Math.round(v * 10 ** n) / 10 ** n;
 
 // One chapter: { id, room, seconds, ghosts: [{ character, from, to, keys, worst, why }], exempt: [...] }
 const PARTS = ['head', 'hand_l', 'hand_r'];
+// Where a model's head and hands are (room millimetres): from its skeleton, or for a model drawn without one (the
+// baked model, on the first frame of someone whose skeleton is still loading) from its posture as built.
+const builtRigs = new Map();
+function partsOf(o) {
+    o.updateMatrixWorld(true);
+    const bones = o.userData.personRig?.bones; if (bones?.get('head')) return PARTS.map(n => bones.get(n)?.getWorldPosition(new THREE.Vector3()) || null);
+    const id = o.userData.person.id, who = characterOf(id), data = who && dataOf(who); if (!data?.postures?.[id]) return null;
+    if (!builtRigs.has(who)) builtRigs.set(who, new PersonRig(data));
+    const rig = builtRigs.get(who), key = rig.key(id), index = { head: rig.b.head, hand_l: rig.side.l.arm[3], hand_r: rig.side.r.arm[3] };
+    return PARTS.map(n => index[n] >= 0 ? key.wp[index[n]].clone().applyMatrix4(o.matrixWorld) : null);
+}
 // JUMP: the most a head or hand may move in one 1/120 s sub-frame (mm). A brisk walk is 1.5-2 m/s (13-17 mm); a hand
 // reaching or swinging peaks near 3 m/s (25 mm); a turn in place carries the head and hands round at about as much.
 // 40 mm (4.8 m/s) is well above anything a person does in the film and well below a pop (a snap of 17 deg moves a
@@ -114,8 +126,8 @@ export async function auditChapter(shot, { step = 1 / 120, threshold = .02, rigs
             // renders 4 sub-frames a frame and blends two of them, so a jump between two sub-frames reads as a double
             // image too: two poses in one frame). Per 1/120 s; a jump over `jump` mm is a pop.
             for (const [who, list] of by) {
-                const o = list.length === 1 ? list[0].o : null, bones = o?.userData.personRig?.bones; if (!bones?.get('head')) { heads.delete(who); continue; }
-                o.updateMatrixWorld(true); const at = PARTS.map(n => bones.get(n)?.getWorldPosition(new THREE.Vector3()) || null), last = heads.get(who);
+                const o = list.length === 1 ? list[0].o : null, at = o ? partsOf(o) : null; if (!at) { heads.delete(who); continue; }
+                const last = heads.get(who);
                 if (last && t - last.t <= 1 / 120 + 1e-6) {
                     const scale = (1 / 120) / (t - last.t), d = PARTS.map((n, i) => at[i] && last.at[i] ? at[i].distanceTo(last.at[i]) * scale : 0), i = d.indexOf(Math.max(...d));
                     const m = moves.get(who) || { mm: 0 }; if (d[i] > m.mm) moves.set(who, { mm: Math.round(d[i]), part: PARTS[i], at: round(t, 4), key: list[0].key });
