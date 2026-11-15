@@ -161,7 +161,7 @@ export async function mountStage(ctx) {
     // centre and runs out to the obstacle's near edge as it is in that frame, like a submarine's sonar: one wide, one
     // halfway, one just leaving. They replace the standing outer ring and its turning arc, which never pulsed (Vico,
     // 2026-11-14). A ping arrives at the obstacle exactly when the desk stops (pingStop: the end of the last roll).
-    pings=[0,1,2].map(i=>{const m=ringMesh(new THREE.RingGeometry(w*.5,w*.51,128),0x45d2ff,0,b.min.y+.006+i*.0005);m.position.x=c.x;m.position.z=c.z;m.frustumCulled=false;m.visible=false;m.name='Stage sonar ping';return m;});
+    pings=[0,1,2,3,4,5,6].map(i=>{const m=ringMesh(new THREE.RingGeometry(w*.5,w*.51,128),0x45d2ff,0,b.min.y+.006+i*.0005);m.position.x=c.x;m.position.z=c.z;m.frustumCulled=false;m.visible=false;m.name='Stage sonar ping';return m;});
     echo=ringMesh(new THREE.RingGeometry(w*.5,w*.51,128),0x7fe3ff,0,b.min.y+.0085);echo.position.x=c.x;echo.position.z=c.z;echo.frustumCulled=false;echo.visible=false;echo.name='Stage sonar echo';
     pingStop=Math.max(0,...(shot?.motion?.clips||[]).filter(k=>k.lane==='wheels').map(k=>k.start+k.duration));
     start=frame(b,false);start.distance=w*3.8/Math.min(1,ctx.camera.aspect);start.center.copy(c);start.height=.9;
@@ -317,15 +317,23 @@ export async function mountStage(ctx) {
         const cx=ringHome.c.x+d.x,cz=ringHome.c.z+d.z;let far=Infinity;
         for(const o of obstacles)far=Math.min(far,Math.hypot(Math.max(o.min.x-cx,0,cx-o.max.x),Math.max(o.min.z-cz,0,cz-o.max.z)));
         if(!Number.isFinite(far)||far<=0)far=sonar;
-        const w=reach.userData.w,sec=t*shot.seconds,travel=7.2,from=far*.06,band=w*.007;   // a slow sonar: a ping leaves every 2.4 s (it was every .8 s: too fast, Vico)
+        // A slow sonar: a ping leaves the centre every 2.4 s and runs outward at one steady speed (the speed that takes
+        // 7.2 s to the obstacle where the desk comes to rest), and is gone the moment it reaches the obstacle's near edge
+        // as it is in this frame. A ring's radius depends only on its age, so NO RING EVER SHRINKS while the desk rolls
+        // toward the obstacle (they used to be drawn as a fraction of the shrinking distance, and the echo ring sat on
+        // that distance all the time: "a fourth that starts big and gets a little small", Vico). One ping arrives
+        // exactly as the desk stops (pingStop).
+        const w=reach.userData.w,sec=t*shot.seconds,travel=7.2,gap=2.4,from=sonar*.06,speed=(sonar-from)/travel,band=w*.007;
+        const first=Math.ceil((sec-pingStop+travel)/gap-1e-9);let echoAge=Infinity;        // newest ping: age in [0, gap)
         pings.forEach((ring,i)=>{
-          const phase=((((sec-pingStop)/travel+i/pings.length)%1)+1)%1;
-          setRing(ring,from+(far-from)*phase,band);ring.visible=!reduced;
-          ring.material.opacity=reduced?0:.9*Math.min(1,phase/.05)*(1-.3*phase)*Math.min(1,(1-phase)/.05);   // in at the centre, still bright as it touches
+          const age=sec-(pingStop-travel+(first-1-i)*gap),r=from+speed*age;
+          if(age<0||r>=far){ring.visible=false;ring.material.opacity=0;if(age>=0)echoAge=Math.min(echoAge,(r-far)/speed);return;}
+          setRing(ring,r,band);ring.visible=!reduced;
+          ring.material.opacity=reduced?0:.9*Math.min(1,age/.35)*(1-.3*r/far);              // in at the centre, still bright as it arrives
         });
-        // The echo: each ping that reaches the obstacle lights a ring at the obstacle's edge, which fades until the next
-        // one arrives, so the widest circle in any frame is the one the obstacle stands on and it pulses with the pings.
-        if(echo){const gap=travel/pings.length,since=((((sec-pingStop)%gap)+gap)%gap)/gap;setRing(echo,far,band*1.25);echo.visible=!reduced;echo.material.opacity=reduced?0:.85*Math.pow(1-since,1.6)+.1;}
+        // The echo: a ping that reaches the obstacle lights a ring at the obstacle's edge for .7 s, then it is gone until
+        // the next arrival, so the obstacle stands on the widest circle each time a ping lands and nothing lingers to shrink.
+        if(echo){const k=echoAge<.7?Math.pow(1-echoAge/.7,1.6):0;setRing(echo,far,band*1.25);echo.visible=!reduced&&k>0;echo.material.opacity=reduced?0:.85*k;}
       }
     }
     if(deskChoreo.count())deskChoreo.apply(t*shot.seconds);
