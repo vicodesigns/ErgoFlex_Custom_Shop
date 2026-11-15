@@ -1190,6 +1190,28 @@ def make_delay_ir(delay_s, fb=0.38, taps=8):
     return irs
 
 
+def local_delay(x, grid, fb, n_out, taps=8):
+    """make_delay_ir's dotted-eighth ping-pong echo, but each repeat k lands k x 0.75 of the LOCAL beat after the
+    sound (the beat length at the output time, from the tempo map), so the echoes stay on the grid where the tempo
+    bends. Same tap gains, ping-pong channels and Gaussian smearing as make_delay_ir."""
+    n = min(len(x), n_out)
+    t = np.arange(n) / SR
+    ts, bs = grid.ts, grid.bs
+    i = np.clip(np.searchsorted(ts, t, side='right') - 1, 0, len(ts) - 2)
+    beat_len = (ts[i + 1] - ts[i]) / (bs[i + 1] - bs[i])
+    beat_len = np.where((t < ts[0]) | (t >= ts[-1]), grid.beat, beat_len)
+    d = 0.75 * beat_len * SR
+    out = np.zeros((2, n_out))
+    src = np.arange(len(x))
+    for k in range(1, taps + 1):
+        sigma = 1.0 + 1.6 * k
+        w = int(4 * sigma)
+        g = np.exp(-0.5 * (np.arange(-w, w + 1) / sigma) ** 2); g /= g.sum()
+        xs = np.convolve(x, g, mode='same')
+        out[k % 2, :n] += (fb ** (k - 1)) * np.interp(np.arange(n) - k * d, src, xs, left=0.0, right=0.0)
+    return out
+
+
 # ---------------------------------------------------------------------------
 # loudness, true peak, limiter
 # ---------------------------------------------------------------------------
@@ -1541,7 +1563,10 @@ def premaster(plan, seed, stems_dir=None, hook=None):
     for k, s in sends_dly.items():
         if k in mix.buses:
             dsend += s * 0.5 * (mix.buses[k][0] + mix.buses[k][1])
-    dly_ret = np.stack([fft_convolve(dsend, dly[c])[:NM] for c in range(2)])
+    if plan.get('echo_local'):   # build-cine-score.py: the echo follows the local tempo of the map
+        dly_ret = local_delay(dsend, plan['grid'], 0.36, NM)
+    else:
+        dly_ret = np.stack([fft_convolve(dsend, dly[c])[:NM] for c in range(2)])
     rsend = np.zeros((2, NM))
     for k, s in sends_rev.items():
         if k in mix.buses:

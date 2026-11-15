@@ -20,17 +20,19 @@ desk versions, via join-subshots.py --plan). What it writes (the default run):
 
 The music is tools/experience/score-synth.py (same instruments, styles and master) with a tempo map fitted to the
 picture instead of to the EDL alone:
-  * title B, every dissolve and the end card are bar lines, as before, but a dissolve's bar line may sit anywhere inside
-    the dissolve's middle (DISSOLVE_SLACK), so every chapter gets whole 4/4 bars (no dropped half bar before a
-    transition) at a tempo within MAX_BEND of the film's tempo (no lurch between chapters);
-  * the hard cuts inside chapters are pulled onto beats (CUT weight; then a knot in the tempo map where the bend stays
-    under KNOT_BEND), the finale's desk-version changes onto bar lines;
+  * title B, every dissolve and the end card are bar lines; a dissolve's bar line may sit anywhere inside the
+    dissolve's middle (DISSOLVE_SLACK), so every chapter gets whole 4/4 bars at a tempo within MAX_BEND of the film's;
+  * v2: no tempo step anywhere (chapter joins, knots, title B) is larger than STEP_CAP (1.5 %). The fit costs and caps
+    the steps, and an inside cut is pulled onto a beat (a knot) only when every step stays under the cap;
+  * v2: the finale is whole 2-bar phrases, one chord each (HERO_CYCLE, then HERO_CADENCE into the logo); its desk
+    versions (shots/13-subshots.json) land on phrase lines where the cap allows;
+  * v2: the echo follows the local tempo (score-synth.local_delay);
   * the title A bloom lands on title A, the logo hit on the wordmark's first frame;
-  * the finale changes chord with each desk version (LOOK_CHORDS) instead of holding one chord until the last bars;
-  * the desk's movement sounds (assets/led/audio) follow this cut's ledStatus (SFX_RULES), clipped to what the
-    chapter shows, mixed before the master (no limiter delay). This is the one layer the master's score.wav has on top
-    of score-synth.py: build-round6-audio.py's pass (same sounds and levels; the master's WAV is score-synth --no-extras
-    plus that pass with the cut of Nov 9, sample for sample). The safety/status/HQ8 splices left with the status chapter.
+  * the desk's movement sounds (assets/led/audio) follow this cut's ledStatus (SFX_RULES), only while the motion clip
+    of that lane runs, clipped to what the chapter shows, re-keyed into the score's key (SCORE_KEY), 8 dB lower than
+    v1 (SFX_DB), mixed before the master. This is the one layer the master's score.wav has on top of score-synth.py
+    (build-round6-audio.py's pass with the cut of Nov 9). The safety, status and HQ8 splices left with the status
+    chapter.
 Deterministic: same cut and code in, same samples out (seeded noise and dither); the WAV's sha256 is printed and stored.
 CPU only: numpy and ffmpeg. About 2 minutes.
 """
@@ -54,20 +56,22 @@ SEED = 20261030
 # ---- knobs (see SCORE-GUIDE.md next to this cut's score) ----
 DISSOLVE_SLACK = 0.30      # s: how far a chapter's first bar line may sit from its dissolve centre (and <= 0.45 x dissolve)
 MAX_BEND = 0.03            # a chapter's tempo stays within 3 % of the film's
-CUT_WEIGHT = 16.0           # cost of a hard cut half a beat off the grid (1.0 = a 1 % tempo bend)
-LOOK_WEIGHT = 16.0          # cost of a finale desk-version change half a bar off a bar line
-JUMP_WEIGHT = 0.5          # cost of a 1 % tempo step between neighbouring chapters (squared)
-HALF_BAR_COST = 20.0       # a chapter that ends on a 2/4 bar (only when whole bars cannot fit within MAX_BEND)
-KNOT_BEND = 0.035          # a knot (cut exactly on a beat) may bend the tempo either side by this much,
-LOOK_KNOT_BEND = 0.04
-KNOT_STEP = 0.05           # and the tempo may step by at most this much at the cut
-LOOK_CHORDS = ['D/F#', 'Gmaj9', 'Em9', 'Bm9', 'F#m7', 'Gmaj9', 'Em9', 'A6', 'Bm9', 'Gmaj9', 'Em9']   # one per desk version
-LAST_LOOK = ['Gmaj9', 'Asus4', 'A']   # the last version: IV ... Vsus V into the logo (D)
+STEP_CAP = 0.015           # no tempo step anywhere (chapter joins, knots, title B) larger than 1.5 % (v2)
+CUT_WEIGHT = 4.0           # cost of a hard cut inside a chapter half a beat off the grid (1.0 = a 1 % tempo bend); v2:
+                           # a steady groove comes first, an inside cut gets a knot only when it stays under STEP_CAP
+LOOK_WEIGHT = 16.0         # cost of a finale desk-version change half a phrase unit (2 bars) off a phrase line
+JUMP_WEIGHT = 2.0          # cost of a 1 % tempo step between neighbouring chapters (squared), under the hard STEP_CAP
+HALF_BAR_COST = 200.0      # a chapter that ends on a 2/4 bar (only when whole bars cannot fit)
+HERO_UNIT = 8              # beats: the finale moves in 2-bar phrases (one chord each), so it is a whole number of them
+HERO_CYCLE = ['D/F#', 'Gmaj9', 'Em9', 'Bm9']   # 2 bars each from the finale's first bar ...
+HERO_CADENCE = ['Gmaj9', 'Gmaj9', 'Asus4', 'A']  # ... and its last 4 bars: IV, Vsus V into the logo (D)
 SOUND = {'lift-up': 'movement_lift_up', 'lift-down': 'movement_lift_down', 'tilt-extend': 'movement_tilt_extend',
          'tilt-retract': 'movement_tilt_retract', 'wheels': 'movement_wheels'}
+LANE = {'lift-up': 'lift', 'lift-down': 'lift', 'tilt-extend': 'tilt', 'tilt-retract': 'tilt', 'wheels': 'wheels'}
 SFX_RULES = {'awaken': set(SOUND), 'commons': {'wheels'}, 'awareness': {'wheels'}, 'storage': set(SOUND)}   # storage: the one-button sequence
-SFX_DB = {'wheels': -17.0}; SFX_DB_DEFAULT = -14.0   # relative to the mastered music (as HQ11)
+SFX_DB = {'wheels': -25.0}; SFX_DB_DEFAULT = -22.0   # v2: 8 dB under HQ11's levels, relative to the mastered music
 SFX_FADE_IN, SFX_FADE_OUT = 0.3, 0.25
+SCORE_KEY = {2, 4, 6, 7, 9, 11, 1}   # D major (= B minor, G Lydian): every section of the score uses these pitch classes
 
 
 def load_synth():
@@ -171,9 +175,13 @@ def picture(cut_dir, edl):
     for cid, kinds in SFX_RULES.items():
         if cid not in win: continue
         s0, a, b = win[cid]
+        clips = [(c['start'], c['start'] + c['duration'], c['lane']) for c in shots[cid].get('motion', {}).get('clips', [])]
         for e in shots[cid].get('ledStatus', []):
-            if e['kind'] in kinds:
-                t0, t1 = max(a, e['at']), min(b, e['at'] + e['dur'])
+            if e['kind'] not in kinds: continue
+            # only while the desk really moves that way in the picture (the motion clip of that lane)
+            for c0, c1, lane in clips:
+                if lane != LANE[e['kind']]: continue
+                t0, t1 = max(a, e['at'], c0), min(b, e['at'] + e['dur'], c1)
                 if t1 - t0 > 0.2: sfx.append([round(s0 + t0, 3), round(t1 - t0, 3), e['kind']])
     merged = []
     for at, dur, kind in sorted(sfx):       # back-to-back events of one sound play as one cue
@@ -188,7 +196,18 @@ def picture(cut_dir, edl):
 # tempo map fitted to the picture
 # ---------------------------------------------------------------------------------------------------------------------
 
-def fit_tempo(synth, edl, pic):
+def piece_tempos(pts):
+    P = sorted(pts)
+    return [60 * (b1 - b0) / (t1 - t0) for (t0, b0), (t1, b1) in zip(P[:-1], P[1:])]
+
+
+def max_step(pts, bpm_wake):
+    """The largest tempo step between neighbouring pieces of the map, the wake (nominal tempo) before title B included."""
+    T = [bpm_wake] + piece_tempos(pts)
+    return max(abs(b / a - 1) for a, b in zip(T[:-1], T[1:]))
+
+
+def fit_tempo(synth, edl, pic, cap=STEP_CAP):
     base, owners, cidx = synth.plan_anchors(edl)
     A = [pic['title_b']] + [pic['dissolves'][i][0] for i in cidx] + [pic['logo']]
     lo = [-0.05] + [-min(DISSOLVE_SLACK, 0.45 * pic['dissolves'][i][1]) for i in cidx] + [0.0]
@@ -201,7 +220,7 @@ def fit_tempo(synth, edl, pic):
         if 0 <= k < K: tg[k].append((t, 1, CUT_WEIGHT))
     for t in pic['looks']:
         k = int(np.searchsorted(A, t)) - 1
-        if 0 <= k < K: tg[k].append((t, 4, LOOK_WEIGHT))
+        if 0 <= k < K: tg[k].append((t, HERO_UNIT, LOOK_WEIGHT))
     pen = [(d / 0.3) ** 2 * 0.5 for d in D]
     best = None
     for bpm in np.arange(104, 124.001, 0.25):
@@ -210,18 +229,23 @@ def fit_tempo(synth, edl, pic):
         for k in range(K):
             ta = A[k] + D[k][:, None, None]; tb = A[k + 1] + D[k + 1][None, :, None]
             L = tb - ta; s_ = (A[k + 1] - A[k]) / beat
-            ns = sorted({max(4, 4 * math.floor(s_ / 4)), 4 * math.floor(s_ / 4) + 4, max(2, 2 * round(s_ / 2))})
+            if k == K - 1:     # the finale: whole 2-bar phrases
+                u = HERO_UNIT; ns = sorted({max(u, u * math.floor(s_ / u)), u * math.floor(s_ / u) + u})
+            else:
+                ns = sorted({max(4, 4 * math.floor(s_ / 4)), 4 * math.floor(s_ / 4) + 4, max(2, 2 * round(s_ / 2))})
             ns += [ns[-1]] * (3 - len(ns))
             n = np.array(ns, float)[None, None, :]
             tempo = 60 * n / L; dev = tempo / bpm - 1
             c = (dev / 0.01) ** 2 + np.where(n % 4 == 0, 0.0, HALF_BAR_COST)
             c = np.where(np.abs(dev) <= MAX_BEND, c, np.inf)
+            if k == 0:          # the wake runs at the film's tempo up to title B
+                c = np.where(np.abs(dev) <= cap, c + JUMP_WEIGHT * (dev / 0.01) ** 2, np.inf)
             for t, unit, w in tg[k]:
                 x = (t - ta) / L * n / unit
                 c = c + w * (np.abs(x - np.round(x)) / 0.5) ** 2
             C.append(c); T.append(tempo); NS.append(ns)
-        # second-order chain: state = (start offset, end offset, beat count) of the last segment, so the tempo step
-        # between neighbouring chapters can be costed (JUMP_WEIGHT per 1 % step, squared)
+        # second-order chain: state = (start offset, end offset, beat count) of the last segment; the step between
+        # neighbouring chapters is costed and capped (STEP_CAP)
         V = pen[0][:, None, None] + C[0] + pen[1][None, :, None]; back = []
         for k in range(1, K):
             nb_, nc_ = len(D[k]), len(D[k + 1])
@@ -229,7 +253,8 @@ def fit_tempo(synth, edl, pic):
             for bi in range(nb_):
                 prev = V[:, bi, :].reshape(-1); tp = T[k - 1][:, bi, :].reshape(-1)
                 tn = T[k][bi].reshape(-1)
-                jump = JUMP_WEIGHT * ((tn[None, :] / tp[:, None] - 1) / 0.01) ** 2
+                r = tn[None, :] / tp[:, None] - 1
+                jump = np.where(np.abs(r) <= cap, JUMP_WEIGHT * (r / 0.01) ** 2, np.inf)
                 tot = prev[:, None] + jump
                 am = tot.argmin(axis=0)
                 Vn[bi] = (tot[am, np.arange(len(tn))] + C[k][bi].reshape(-1) + np.repeat(pen[k + 1], 3)).reshape(nc_, 3)
@@ -245,48 +270,44 @@ def fit_tempo(synth, edl, pic):
             idx.append(ai); nsel.insert(0, NS[k - 1][ni])
         idx = idx[::-1]
         best = (score, float(bpm), [round(A[k] + float(D[k][idx[k]]), 3) for k in range(K + 1)], nsel)
-    if not best: sys.exit('no tempo map within MAX_BEND fits this cut; raise MAX_BEND or DISSOLVE_SLACK')
+    if not best:
+        if cap < MAX_BEND:
+            print(f'  no tempo map with steps under {100 * cap:.2f} %: trying {100 * (cap + 0.0025):.2f} %')
+            return fit_tempo(synth, edl, pic, cap + 0.0025)
+        sys.exit('no tempo map within MAX_BEND fits this cut; raise MAX_BEND or DISSOLVE_SLACK')
     _, bpm, anchors, seg = best
     bs = np.concatenate([[0], np.cumsum(seg)]).astype(float)
     pts = list(zip(anchors, bs))
+    # knots: the finale's version changes first, then the inside cuts; each only if every tempo step stays under the cap
+    cands = sorted([(t, unit, k) for k in range(K) for t, unit, _ in tg[k]], key=lambda c: (c[1] == 1, c[0]))
     knots, report = [], []
-    for k in range(K):
-        for t, unit, w in sorted(tg[k]):
-            P = sorted(pts); i = max(j for j in range(len(P)) if P[j][0] <= t)
-            (t0, b0), (t1, b1) = P[i], P[i + 1]
-            x = b0 + (t - t0) / (t1 - t0) * (b1 - b0)
-            ref = bs[0] if unit == 1 else bs[k]          # bars count from the section's first bar
-            kk = ref + unit * round((x - ref) / unit)
-            off = (x - kk) / unit
-            ok = False
-            if abs(off) * unit > 0.04 and b0 < kk < b1:
-                seg_t = (anchors[k + 1] - anchors[k]) / seg[k]
-                r1 = (t - t0) / (kk - b0) / seg_t - 1; r2 = (t1 - t) / (b1 - kk) / seg_t - 1
-                lim = KNOT_BEND if unit == 1 else LOOK_KNOT_BEND
-                if abs(r1) <= lim and abs(r2) <= lim and abs(r1 - r2) <= KNOT_STEP:
-                    pts.append((t, float(kk))); knots.append([t, float(kk)]); ok = True; off = 0.0
-            report.append(dict(t=t, kind='cut' if unit == 1 else 'look', off_beats=round(off * unit, 2), knot=ok))
-    return dict(bpm=bpm, anchors=anchors, seg_beats=[int(n) for n in seg], knots=knots, title_a=pic['title_a']), report
+    for t, unit, k in cands:
+        P = sorted(pts); i = max(j for j in range(len(P)) if P[j][0] <= t)
+        (t0, b0), (t1, b1) = P[i], P[i + 1]
+        x = b0 + (t - t0) / (t1 - t0) * (b1 - b0)
+        ref = bs[0] if unit == 1 else bs[k]          # phrase units count from the section's first bar
+        kk = ref + unit * round((x - ref) / unit)
+        off = (x - kk) / unit
+        ok = False
+        if abs(off) * unit > 0.04 and b0 < kk < b1:
+            trial = pts + [(t, float(kk))]
+            if max_step(trial, bpm) <= cap + 1e-9 and all(abs(v / bpm - 1) <= MAX_BEND for v in piece_tempos(trial)):
+                pts = trial; knots.append([t, float(kk)]); ok = True; off = 0.0
+        report.append(dict(t=t, kind='cut' if unit == 1 else 'look', off_beats=round(off * unit, 2), knot=ok))
+    report.sort(key=lambda r: r['t'])
+    return dict(bpm=bpm, anchors=anchors, seg_beats=[int(n) for n in seg], knots=knots, title_a=pic['title_a'],
+                step_cap=round(cap, 4), max_step=round(max_step(pts, bpm), 4)), report
 
 
 def hero_chords(plan, pic):
+    """Even phrases: one chord per 2 bars from the finale's first bar (HERO_CYCLE), the last 4 bars the cadence."""
     hero = plan['sections'][-2]
     assert hero['style'] in ('finale', 'hero'), hero['style']
-    g = plan['grid']; looks = pic['looks']
-    starts = [float(g.t(b)) for b, _ in hero['bars']]
-    bar = 60 / plan['bpm'] * 4
-    li = [sum(1 for c in looks if c <= t + 0.25 * bar) for t in starts]
-    last = len(looks)
-    out = []
-    n_last = sum(1 for l in li if l == last)
-    for i, l in enumerate(li):
-        if l < last: out.append(LOOK_CHORDS[l % len(LOOK_CHORDS)])
-        else:
-            j = i - (len(li) - n_last)
-            tailc = LAST_LOOK[-(n_last - j):] if n_last - j <= len(LAST_LOOK) - 1 else None
-            out.append(LAST_LOOK[0] if tailc is None or n_last - j > 2 else tailc[0])
-    hero['chords'] = out
-    return out
+    n = len(hero['bars'])
+    tail = HERO_CADENCE[-min(n, len(HERO_CADENCE)):]
+    body = [HERO_CYCLE[(i // 2) % len(HERO_CYCLE)] for i in range(n - len(tail))]
+    hero['chords'] = body + tail
+    return hero['chords']
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -299,12 +320,36 @@ def decode(name):
     return np.frombuffer(raw, '<f4').reshape(-1, 2).T.astype(np.float64)
 
 
-def sfx_hook(synth, cues):
+def key_fit(y):
+    """Pitch-class energy of a sound (60 Hz-5 kHz, first 8 s): the share in SCORE_KEY after each shift (-6..+5
+    semitones). Returns (best shift, share before, share after)."""
+    m = y.mean(axis=0)[:8 * SR]
+    X = np.abs(np.fft.rfft(m * np.hanning(len(m)))) ** 2; f = np.fft.rfftfreq(len(m), 1 / SR)
+    sel = (f > 60) & (f < 5000)
+    pc = np.round(12 * np.log2(f[sel] / 440.0) + 69).astype(int) % 12
+    E = np.bincount(pc, weights=X[sel], minlength=12); E = E / E.sum()
+    share = lambda s: float(sum(E[p] for p in range(12) if (p + s) % 12 in SCORE_KEY))
+    best = max(range(-6, 6), key=lambda s: (round(share(s), 3), -abs(s)))
+    return best, share(0), share(best)
+
+
+def shift(y, semis):
+    """Re-key by resampling (a motor's pitch and speed change together, as a real motor's would)."""
+    if semis == 0: return y
+    r = 2.0 ** (semis / 12.0); n = int(y.shape[1] / r); pos = np.arange(n) * r; src = np.arange(y.shape[1])
+    return np.stack([np.interp(pos, src, y[c]) for c in range(y.shape[0])])
+
+
+def sfx_hook(synth, cues, report=None):
     def hook(x):
         g0 = -16.0 - synth.integrated_lufs(x)          # the master's gain, near enough: levels are set against the master
         cache = {}
         for at, dur, kind in cues:
-            y = cache.setdefault(kind, decode(SOUND[kind]))
+            if kind not in cache:
+                y = decode(SOUND[kind]); s, before, after = key_fit(y)
+                cache[kind] = shift(y, s)
+                if report is not None: report[kind] = dict(shift_semitones=s, in_key_before=round(before, 3), in_key_after=round(after, 3))
+            y = cache[kind]
             n = int(round(dur * SR)); i0 = int(round(at * SR))
             reps = int(math.ceil(n / y.shape[1])); seg = np.tile(y, reps)[:, :n].copy()
             fi, fo = min(n // 2, int(SFX_FADE_IN * SR)), min(n // 2, int(SFX_FADE_OUT * SR))
@@ -338,7 +383,8 @@ def inputs_digest(cut_dir, edl_bytes):
     first = cut['shots'][0]['id']
     aw = [[t['rel_in']] for t in src['titles'] if t['chapter'] == first][:2]
     shots = [[s['id'], s['seconds'], [k['at'] for k in s['cameraPlan']['keys'] if k.get('cut')],
-              [e for e in s.get('ledStatus', []) if e['kind'] in SFX_RULES.get(s['id'], ()) or (s['id'] == first and e['kind'] == 'off')]]
+              [e for e in s.get('ledStatus', []) if e['kind'] in SFX_RULES.get(s['id'], ()) or (s['id'] == first and e['kind'] == 'off')],
+              [[c['start'], c['duration'], c['lane']] for c in s.get('motion', {}).get('clips', [])] if s['id'] in SFX_RULES else []]
              for s in cut['shots']]
     plan = subprocess.run([sys.executable, os.path.join(HERE, 'join-subshots.py'), os.path.join(cut_dir, 'shots', '13-subshots.json'),
                            os.devnull, os.devnull, '--plan'], capture_output=True, text=True, check=True).stdout
@@ -423,6 +469,7 @@ def main():
         if ks: tempo['wake_k'] = min(ks, key=lambda k: abs(pic['title_b'] - 4 * k * beat - pic['led_on']))
     plan = synth.build_plan(edl, tempo)
     chords = hero_chords(plan, pic)
+    plan['echo_local'] = True     # the echo follows the local tempo (score-synth premaster)
     print(f"tempo {tempo['bpm']} BPM, segments {tempo['seg_beats']}, knots {len(tempo['knots'])}")
     for s in plan['sections']:
         bpm = 60 * (s['b1'] - s['b0']) / (s['t1'] - s['t0']) if s.get('bars') else 0
@@ -431,12 +478,15 @@ def main():
         print(f"  {r['kind']:<4} {r['t']:8.3f}  " + ('on the grid (knot)' if r['knot'] else f"off by {r['off_beats']} beat"))
     print('  sfx', ', '.join(f'{k} {t}+{d}' for t, d, k in pic['sfx']))
     if a.plan: return
-    x, events, N = synth.premaster(plan, SEED, hook=sfx_hook(synth, pic['sfx']))
+    keyrep = {}
+    x, events, N = synth.premaster(plan, SEED, hook=sfx_hook(synth, pic['sfx'], keyrep))
+    print('  movement sounds re-keyed:', keyrep)
     x, pre_rep = synth.master(x, plan)
     out = a.out or os.path.join(cut_dir, 'score', 'score.wav'); d = os.path.dirname(os.path.abspath(out)); os.makedirs(d, exist_ok=True)
     synth.write_wav24(out, x, np.random.default_rng(SEED + 2))
     wav_sha = sha_file(out)
     tm = tempo_json(plan, tempo, report, pic, edl, wav_sha, inputs_digest(cut_dir, edl_bytes), a.edl)
+    tm['sfx_key'] = keyrep
     open(os.path.join(d, 'tempo-map.json'), 'w', encoding='utf-8', newline='\n').write(json.dumps(tm, indent=1) + '\n')
     if not a.no_extras:
         rep = synth.analyze(x, plan, events); rep['master'] = pre_rep; meas = synth.ffmpeg_measure(out); rep['ffmpeg'] = meas
