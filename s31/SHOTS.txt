@@ -1,0 +1,13 @@
+S31 screenshots (Director, Cinematographer's cut, scratch server, studio state rev 3478). Branch cine/s31-r2 32f801da.
+s31-check-1-noah-selected.png   oilers 4.6 s: Noah (noah-steps) selected while he walks, gizmo on him (moved +100 mm: only his `at` changes)
+s31-check-2-pose.png            oilers 1 s: pose mode on Noah standing still (noah-talks), left elbow turned, auto-key off -> `pose`
+s31-posekey-1-first-key.png     media: pose mode, auto-key on, elbow changed at 3.2 s -> first key diamond (pose panel + timeline Pose keys row)
+s31-posekey-2-dragged.png       the 6 s key dragged to 8 s on the Pose keys row
+s31-posekey-3-three-keys.png    a key copied and pasted at 11 s (three keys)
+s31-posekey-stage-3s/6s/9s.png  media, Omar: elbow keyed as built at 3 s and 60 deg at 9 s; the stage shows 0 / 30 / 60 deg at 3 / 6 / 9 s
+s31-track-1-people-track.png    oilers 8.2 s: People track, a row per person (Kai, Noah...), programmed diamonds (purple roll, blue walk,
+                                orange action, yellow posture change, green in/out); Noah's tap clicked -> playhead 8.2 s, Noah selected
+s31-track-2-retimed.png         the tap dragged to 8.6 s and Kai's docking change to 9.8 s
+s31-path-1-handles.png          storage 5 s: Andre selected while walking, his path on the floor with a handle per point (engineer B's M3)
+s31-path-2-point-dragged.png    a middle point dragged
+s31-combined-pose.png           storage 9.5 s: pose mode on Andre (andre-phone-up), a key written with auto-key on
