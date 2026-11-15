@@ -85783,6 +85783,105 @@
     "pose": "stand-type",
     "deskHeight": 41
    }
+  },
+  {
+   "id": "people-noah-stand-screen-pull",
+   "name": "Noah: drawing the desk's touchscreen out",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-noah-stand-screen-pull.glb",
+   "anchor": "floor",
+   "size": [
+    527.2,
+    1687.9,
+    664.5
+   ],
+   "min": [
+    -248.1,
+    -4.1,
+    -164.4
+   ],
+   "max": [
+    279.1,
+    1683.8,
+    500.1
+   ],
+   "tris": 33552,
+   "bytes": 1231960,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "noah",
+    "pose": "stand-screen-pull"
+   }
+  },
+  {
+   "id": "people-noah-stand-screen-tap",
+   "name": "Noah: a finger over the desk's touchscreen",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-noah-stand-screen-tap.glb",
+   "anchor": "floor",
+   "size": [
+    525.2,
+    1718.4,
+    565.7
+   ],
+   "min": [
+    -246,
+    -3.8,
+    -164.4
+   ],
+   "max": [
+    279.2,
+    1714.6,
+    401.3
+   ],
+   "tris": 33524,
+   "bytes": 1231724,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "noah",
+    "pose": "stand-screen-tap"
+   }
+  },
+  {
+   "id": "people-noah-stand-screen-press",
+   "name": "Noah: tapping the desk's touchscreen",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-noah-stand-screen-press.glb",
+   "anchor": "floor",
+   "size": [
+    528.5,
+    1718.4,
+    576.6
+   ],
+   "min": [
+    -249.3,
+    -3.8,
+    -164.4
+   ],
+   "max": [
+    279.2,
+    1714.6,
+    412.2
+   ],
+   "tris": 33528,
+   "bytes": 1231732,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "noah",
+    "pose": "stand-screen-press"
+   }
   }
  ],
  "screens": [

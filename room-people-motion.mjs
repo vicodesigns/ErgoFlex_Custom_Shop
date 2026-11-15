@@ -444,10 +444,12 @@ export function drawPose(rig, drawn, dz = 0, pose = null, hold = false) {
 const RESTING = { 'sit-type': 'lr', 'stand-type': 'lr', 'stand-mid': 'lr', 'stand-type-low': 'lr', 'stand-counter': 'lr', 'sit-microscope': 'lr', 'lie-bed': 'lr', 'wheel-type': 'lr', 'power-type': 'lr', 'sit-laptop': 'lr', 'sit-write': 'lr', 'sit-listen': 'lr', 'sit-raise': 'l', 'stand-work': 'lr', 'cane-stand': 'r', 'wheel-roll': 'lr', 'wheel-watch': 'lr',
     'kid-stand-desk': 'lr', 'kid-sit-desk': 'lr', 'kid-sit-k': 'lr', 'kid-sit-e': 'lr', 'kid-kneel-craft': 'lr', 'kid-play-floor': 'lr',
     // (the workshop film: a hand that holds the robot where it sits, both hands at the phone so the finger stays on its button)
-    'stand-robot-work': 'r', 'stand-robot-shelf': 'lr', 'stand-phone-up': 'lr', 'stand-phone-press': 'lr' };
+    'stand-robot-work': 'r', 'stand-robot-shelf': 'lr', 'stand-phone-up': 'lr', 'stand-phone-press': 'lr',
+    // (the high school film: the hand on the desk's touchscreen, its edge or its glass)
+    'stand-screen-pull': 'r', 'stand-screen-tap': 'r', 'stand-screen-press': 'r' };
 const TYPES = new Set(['sit-type', 'stand-type', 'stand-mid', 'stand-type-low', 'wheel-type', 'power-type', 'sit-laptop']);
-const ON_FEET = new Set(['stand-type', 'stand-mid', 'stand-type-low', 'stand-brief', 'stand-radio', 'stand-chart', 'stand-counter', 'stand-wait', 'stand-phone', 'stand-present', 'stand-present-left', 'stand-work', 'stand-paint', 'cane-stand', 'kid-stand', 'kid-stand-wait', 'kid-stand-desk', 'stand-robot-work', 'stand-robot-shelf', 'stand-phone-pull', 'stand-phone-up', 'stand-phone-press', 'stand-phone-watch']);
-const INTENT = new Set(['stand-chart', 'sit-microscope', 'stand-radio', 'sit-read', 'sit-phone', 'power-phone', 'stand-phone', 'sit-write', 'stand-work', 'stand-paint', 'sit-controller', 'kid-read-floor', 'kid-sit-desk', 'kid-stand-desk', 'kid-sit-k', 'kid-sit-e', 'kid-kneel-craft', 'kid-play-floor', 'stand-robot-work', 'stand-robot-shelf', 'stand-phone-up', 'stand-phone-press']);      // eyes on what the hands hold
+const ON_FEET = new Set(['stand-type', 'stand-mid', 'stand-type-low', 'stand-brief', 'stand-radio', 'stand-chart', 'stand-counter', 'stand-wait', 'stand-phone', 'stand-present', 'stand-present-left', 'stand-work', 'stand-paint', 'cane-stand', 'kid-stand', 'kid-stand-wait', 'kid-stand-desk', 'stand-robot-work', 'stand-robot-shelf', 'stand-phone-pull', 'stand-phone-up', 'stand-phone-press', 'stand-phone-watch', 'stand-screen-pull', 'stand-screen-tap', 'stand-screen-press']);
+const INTENT = new Set(['stand-chart', 'sit-microscope', 'stand-radio', 'sit-read', 'sit-phone', 'power-phone', 'stand-phone', 'sit-write', 'stand-work', 'stand-paint', 'sit-controller', 'kid-read-floor', 'kid-sit-desk', 'kid-stand-desk', 'kid-sit-k', 'kid-sit-e', 'kid-kneel-craft', 'kid-play-floor', 'stand-robot-work', 'stand-robot-shelf', 'stand-phone-up', 'stand-phone-press', 'stand-screen-pull', 'stand-screen-tap', 'stand-screen-press']);      // eyes on what the hands hold
 export const livelyPose = pose => pose !== 'walk' && pose !== 'white-cane' && pose !== 'push-cart';
 export const WORKOUTS = new Set(['gym-cycle', 'gym-pullup', 'gym-press', 'gym-curl', 'gym-box', 'sit-pottery']);      // postures that work a machine: solveWorkout
 export function solveStill(rig, key, input) {
@@ -484,6 +486,8 @@ export function solveStill(rig, key, input) {
     rig.fk();
     // (along a film's path someone in a wheelchair pushes the rims in time with the wheels: input.roll, pushRims)
     if (pose === 'wheel-roll' && input.roll) { pushRims(rig, key, input.roll, life); rig.fk(); }
+    // (an action at a moment of the film: input.act, SCREEN_ACTS)
+    else if (input.act && SCREEN_ACTS[pose]) { SCREEN_ACTS[pose](rig, key, input.act, life); rig.fk(); }
     else if (ACTS[pose]) { ACTS[pose](rig, key, time, seed, life); rig.fk(); }
 }
 
@@ -593,6 +597,31 @@ function waitAbout(rig, key, time, seed, life, quick = 1) {
 }
 const bend = (rig, axis, angle) => { for (const [bone, share] of [[rig.b.spine_01, .3], [rig.b.spine_02, .4], [rig.b.spine_03, .3]]) { rig.turnWorld(bone, turn.setFromAxisAngle(axis, angle * share)); rig.fk(); } };
 const feetStay = (rig, key) => { for (const s of ['l', 'r']) { const [thigh, calf, foot] = rig.side[s].leg; rig.reach(thigh, calf, foot, key.wp[foot]); rig.reach(thigh, calf, foot, key.wp[foot]); rig.setWorld(foot, key.wq[foot]); } rig.fk(); };
+// Actions timed by the film (the high school chapter: Noah and the desk's touchscreen). input.act: { since: seconds
+// since the action's moment (negative before it), dur: seconds, by: a Vector3 in the model's frame (metres),
+// press: the key of the pressed posture or null } (room-people.mjs actOf, from the placement's `act`).
+//   stand-screen-pull   built with the right hand at the edge of the stowed screen: from the moment on, the hand
+//                       draws the screen out along its rails, `by` over `dur` (smooth), and stays there
+//   stand-screen-tap    built with the index finger over a button on the glass (hover): at the moment the finger is
+//                       on it, as in the pressed posture (stand-screen-press: the same, the finger on the glass); down
+//                       over 0.15 s, held 0.3 s, up over 0.15 s. Without a pressed posture it goes `by` (default 25 mm
+//                       ahead) instead.
+const SCREEN_ACTS = {
+    'stand-screen-pull'(rig, key, act, life) {
+        const hand = rig.side.r.arm[3], w = act.dur > 0 ? ss(0, act.dur, act.since) : act.since >= 0 ? 1 : 0;
+        if (!act.by) return;
+        handAt.copy(key.wp[hand]).addScaledVector(act.by, w * life); armTo(rig, 'r', handAt, key.wq[hand]);
+    },
+    'stand-screen-tap'(rig, key, act, life) {
+        const down = ss(-.15, 0, act.since) * (1 - ss(.3, .45, act.since)) * life; if (!(down > 0)) return;
+        const hand = rig.side.r.arm[3], press = act.press;
+        if (press) {
+            handAt.lerpVectors(key.wp[hand], press.wp[hand], down); handQ.slerpQuaternions(key.wq[hand], press.wq[hand], down);
+            armTo(rig, 'r', handAt, handQ);
+            for (const i of rig.side.r.fingers) rig.lq[i].slerpQuaternions(key.q[i], press.q[i], down);
+        } else { handAt.copy(key.wp[hand]); if (act.by) handAt.addScaledVector(act.by, down); else handAt.z += .025 * down; armTo(rig, 'r', handAt, key.wq[hand]); }
+    }
+};
 const ACTS = {
     'sit-write': write, 'kid-sit-k': (rig, key, time, seed, life) => write(rig, key, time, seed, life, 1.1), 'kid-sit-e': (rig, key, time, seed, life) => write(rig, key, time, seed, life, 1.1), 'kid-kneel-craft': (rig, key, time, seed, life) => write(rig, key, time, seed, life, 1.15),
     'stand-mug': sip, 'sit-mug': sip, 'stand-drink': (rig, key, time, seed, life) => sip(rig, key, time, seed, life, 1), 'sit-chat'(rig, key, time, seed, life) {

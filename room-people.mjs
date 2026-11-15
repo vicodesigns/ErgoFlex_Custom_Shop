@@ -42,6 +42,9 @@
 //                                                     the posture of `then` if given; they face along the path at both ends
 //   look: '<key>' | ['<key>', ...]                    whom they look at, whatever their posture (whichever of them is there,
 //                                                     in front within 9 m): a listener who turns to the talker
+//   act: { at: seconds, dur: seconds, by: [x, y, z] mm }  film only: an action at that moment of the chapter, for the
+//                                                     postures that have one (room-people-motion.mjs SCREEN_ACTS: a hand
+//                                                     drawing the desk's touchscreen out `by`, a finger tapping its glass)
 //   roll: { path: [[x, z], ...] | to: [x, z], start: seconds, speed: m/s, ease: seconds, radius: mm }
 //                                                     film only, someone in a wheelchair (a 'wheel-roll' model): from `start`
 //                                                     they glide along the path (room-people-motion.mjs rollPlan: eased off
@@ -1896,8 +1899,8 @@ export class RoomPeople {
             drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold); life.live = true; return;
         }
         // out of the list: back to the posture as built (at amount 0)
-        const gaze = amount > 0 ? this.gazeOf(object, life) : null;
-        const moved = solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: amount, taps: film || dt < .05, look: gaze?.at, lookAmount: gaze?.amount });
+        const gaze = amount > 0 ? this.gazeOf(object, life) : null, act = film ? this.actOf(object, life, time) : null;
+        const moved = solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: amount, taps: film || dt < .05, look: gaze?.at, lookAmount: gaze?.amount, ...(act ? { act } : {}) });
         drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold); life.live = amount > 0;
         // a rider's bike: its crank turns with the feet, the pedals stay level
         if (moved?.crank !== undefined) { const crank = object.userData.personAnchor?.getObjectByName('Bike crank'); if (crank) { this.turnCrank(crank, moved.crank); turning.add(crank); this.cranks.add(crank); } }
@@ -2222,6 +2225,19 @@ export class RoomPeople {
         drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold);
         object.position.x = root.x * 1000; object.position.z = root.z * 1000; object.rotation.y = root.yaw; life.live = true;
         if (g > 0 && g < life.plan.steps.length) this.dirty = true;
+    }
+    // An action at a moment of the film (a placement's `act`: { at: chapter seconds, dur: seconds, by: [x, y, z] mm in
+    // the room }): room-people-motion.mjs SCREEN_ACTS. The movement is turned into the model's frame; a tap finds the
+    // character's pressed posture beside the hovering one (<id> with -tap replaced by -press).
+    actOf(object, life, time) {
+        const act = object.userData.person.act; if (!act || !Number.isFinite(act.at) || time === null) return null;
+        let by = null;
+        if (Array.isArray(act.by) && act.by.length === 3 && act.by.every(Number.isFinite)) {
+            const c = Math.cos(object.rotation.y), s = Math.sin(object.rotation.y), [x, y, z] = act.by;
+            by = (life.actBy ||= new THREE.Vector3()).set((x * c - z * s) / 1000, y / 1000, (x * s + z * c) / 1000);
+        }
+        const id = object.userData.person.id, pressId = /-tap$/.test(id) ? id.replace(/-tap$/, '-press') : null;
+        return { since: time - act.at, dur: Number.isFinite(act.dur) ? act.dur : 1, by, press: pressId && life.rig.has(pressId) ? life.rig.key(pressId) : null };
     }
     // A film's wheelchair user rolling along a path (a placement with `roll`): at its start until `start`, then rolling
     // it, then at its end. Planned once per path; the wheels of the drawn model (bones wheel_l / wheel_r, where the
