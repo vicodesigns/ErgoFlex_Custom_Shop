@@ -14,6 +14,25 @@
 >
 > The text below describes the camera-only round of November 13 and is kept as its record.
 
+## The Director on this cut (S31, Nov 15): review-cut.json is the source of truth
+
+- Pages: `director-ch*.html`, `director-chapters.json`, `director-film/*.json` are built from the current review-cut.json
+  with `python3 tools/experience/film-cuts.py pages exports/cinematic-intro-cut-cine` (on a machine with every screen
+  clip: a clip missing there is left out of the Director's copy; `tests/director-cine-roundtrip-test.mjs` fails when they
+  are stale). Rebuild them after any change to review-cut.json.
+- Round trip: Export cut from the Director, then `build-round8-director.py exports/cinematic-intro-cut-cine --import
+  <export>` and `build-round8-director.py exports/cinematic-intro-cut-cine` (the pass). An export with no edit changes
+  nothing (byte-identical). Camera keys the Director did not move come back as the plan's own keys and the baked camera
+  is kept (no thinning, no re-bake); only an edited chapter's camera is re-baked from its keys. People come back as
+  `peopleEdits` v2 (the film's whole `people`, every field), so walks, rolls, acts, seats, only / except / when survive.
+- A chapter the pass changed gets `directorEdited: {at, fields}` in review-cut.json. The generator scripts
+  (`build-cine-cut.py`, `build-oilers-story.py`, `build-screens.py`: `director_guard.py`) refuse to overwrite a field in
+  `fields` unless run with `--overwrite-director-edits`.
+- The People track (timeline): one row per person with a diamond at every change already programmed (in / out, posture
+  change, walk / roll start, waypoints, arrival, actions). Dragging one retimes it; what follows is in
+  `experience/people-track.mjs` (a posture change moves both windows' edge; a start moves the whole walk / roll; an
+  arrival or waypoint sets the pace / speed; an action moves with its length kept). Pose keys: pose mode, Auto-key.
+
 ## November 15: music, Kai's seat (Vico on the 22:12 render: "he's sitting inside of it, his legs are clipping")
 
 - Measured (Kai's posed `people-kai-sit-controller` vertices against a 5 mm height field of `armchair-poppi`, in the

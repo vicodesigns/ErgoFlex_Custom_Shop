@@ -7,6 +7,17 @@
 // Fingers open and close a step at a time; one side can be copied to the other; a joint, a limb or the whole pose
 // goes back to the posture as built. Every change is one undo step and lives in the chapter's cast as
 // cast[i].pose = { '<bone>': [x, y, z, w] } (people-edits.mjs), so the live stage, Render still and the film show it.
+import {poseAt,setPoseKey,removePoseKey,moveKey,setKeyEase,copyKey,pasteKey,keyTimes,EASES,KEY_SNAP} from '../people-pose-keys.mjs';
+// Pose KEYS (S31, Blender's way): with Auto-key on (the red dot; off until turned on, then remembered) every adjustment writes a key at the playhead
+// for the bones it changed (cast[i].poseKeys: [{t, pose, ease}], people-pose-keys.mjs); between keys each bone eases from
+// key to key on top of what is programmed (desk arms, the walk, the roll, the acts). Key all (I) / Key limb key
+// the bones as they are now. The selected person's keys are diamonds on their row (the People tab while posing, and the
+// timeline's Pose keys row): click one = the playhead goes there, drag = retime, Delete = remove it; the selected key's
+// ease (smooth / linear / hold: how it LEAVES toward the next key), copy and paste at the playhead. Auto-key off: the
+// adjustment goes into the static `pose`, as before. Every step is one undo step.
+const EASE_LABEL={smooth:'Smooth',linear:'Linear',hold:'Hold (step)'};
+const IDENT=[0,0,0,1];
+const sameQ=(a,b)=>{a=a||IDENT;b=b||IDENT;const d=Math.abs(a[0]*b[0]+a[1]*b[1]+a[2]*b[2]+a[3]*b[3]);return d>1-2e-8;};
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const r1=v=>Math.round(v*10)/10;
 // bone, name, group, [the two bones a drag of this one bends]
@@ -24,8 +35,13 @@ const sideOf=bone=>/_l$/.test(bone)?'l':/_r$/.test(bone)?'r':null;
 const ARM=/^(clavicle|upperarm|lowerarm|hand|thumb_\d+|index_\d+|middle_\d+|ring_\d+|pinky_\d+)_[lr]$/,LEG=/^(thigh|calf|foot|ball)_[lr]$/;
 const limbOf=bone=>ARM.test(bone)?ARM:LEG.test(bone)?LEG:null;
 
-export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,rerender,personName,editing,saved=null}){
-  let key=null,joint=null,gmode='rotate',h=null,rigging=false,drag=null,listening=false,orbit=true;
+export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,rerender,personName,editing,saved=null,time=()=>0,seek=()=>{},seconds=()=>0}){
+  let key=null,joint=null,gmode='rotate',h=null,rigging=false,drag=null,listening=false,orbit=true,selT=null,clip=null;
+  const AUTO='ergoflex.director.autoKey';
+  let autoKey=(()=>{try{return globalThis.localStorage?.getItem(AUTO)==='1';}catch{return false;}})();      // (off until turned on, as in Blender: then remembered)
+  const now=()=>Math.round(time()*1000)/1000;
+  const fmt=t=>(Math.round(t*100)/100).toFixed(2);
+  const keyAt=(e,t)=>keyTimes(e).find(k=>Math.abs(k-t)<=KEY_SNAP/2+1e-9);
   const T=()=>tools().THREE;
   const rigOf=()=>h?.object.userData.personRig||null;
   const bone=name=>rigOf()?.bones.get(name)||null;
@@ -80,7 +96,7 @@ export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,
     // someone at a desk changes posture with its height: the joints here belong to the posture pose mode was opened on
     if(o.userData.person?.variant&&o.userData.person.id!==entry(key).id){exit();status('The desk has them in another posture now: pose mode is closed, the pose is kept.');return;}
     if(!o.userData.personRig){if(!rigging){rigging=true;people.rig(o).catch(()=>null).finally(()=>{rigging=false;});}if(h)h.group.visible=false;return;}
-    if(!h||h.object!==o)build(o);
+    if(!h||h.object!==o){const first=!h;build(o);if(first)rerender();}      // (the panel said 'Loading the skeleton…' until now)
     const {THREE,t}=tools(),on=o.visible&&editing();h.group.visible=on;
     const p=new THREE.Vector3(),cam=t.camera.getWorldPosition(new THREE.Vector3()),k=Math.tan(THREE.MathUtils.degToRad(t.camera.fov||40)/2);
     for(const [name,m] of h.dots){
@@ -125,7 +141,45 @@ export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,
     for(const [name,b] of rig.bones){const d=rig.rest.get(name).clone().invert().multiply(b.quaternion);if(Math.hypot(d.x,d.y,d.z)>1e-4)out[name]=[d.x,d.y,d.z,d.w];}
     return out;
   }
-  function commit(text,undoKey=null){const pose=read();edit(key,x=>{if(Object.keys(pose).length)x.pose=pose;else delete x.pose;},text,{undoKey});}
+  // A new entry from a pose-keys helper into the cast entry being edited (poseKeys only: the static pose stays).
+  const takeKeys=(x,n)=>{if(n.poseKeys?.length)x.poseKeys=n.poseKeys;else delete x.poseKeys;};
+  function commit(text,undoKey=null){
+    const pose=read(),e=entry(key);
+    if(autoKey&&e){
+      // the bones this step changed against what shows at the playhead (keys and static pose): those are keyed
+      const t=now(),was=poseAt(e,t)||{},bones=new Set([...Object.keys(pose),...Object.keys(was)]),map={};
+      for(const b of bones)if(!sameQ(pose[b],was[b]))map[b]=pose[b]||IDENT;
+      if(!Object.keys(map).length){rerender();return;}
+      selT=t;edit(key,x=>takeKeys(x,setPoseKey(x,t,map)),`${text} Key at ${fmt(t)} s (auto-key).`,{undoKey:undoKey&&undoKey+'@'+t});return;
+    }
+    edit(key,x=>{if(Object.keys(pose).length)x.pose=pose;else delete x.pose;},text,{undoKey});
+  }
+  // Key all / Key limb (I): the bones as they are now, at the playhead (a bone as built is keyed as identity).
+  function keyNow(which){
+    const rig=rigOf(),e=entry(key);if(!rig||!e)return;const pose=read(),t=now();
+    let names;
+    if(which==='limb'){if(!joint){status('Choose a joint first: its arm, leg or group is keyed.',true);return;}const re=limbOf(joint),side=sideOf(joint),group=info(joint)[2];names=re?[...rig.bones.keys()].filter(n=>re.test(n)&&sideOf(n)===side):JOINTS.filter(j=>j[2]===group).map(j=>j[0]).filter(n=>rig.bones.has(n));}
+    else names=[...new Set([...JOINTS.map(j=>j[0]).filter(n=>rig.bones.has(n)),...Object.keys(pose)])];
+    const map=Object.fromEntries(names.map(n=>[n,pose[n]||IDENT]));selT=t;
+    edit(key,x=>takeKeys(x,setPoseKey(x,t,map)),`${personName(e)}: ${which==='limb'?info(joint)[2].toLowerCase():'whole pose'} keyed at ${fmt(t)} s.`);
+  }
+  function keyEdit(fn,text){const e=entry(key);if(!e)return;edit(key,x=>takeKeys(x,fn(x)),text);}
+  function deleteKey(t=selT){const e=entry(key);if(t===null||!e||keyAt(e,t)===undefined){status('Select a key (a diamond) first.',true);return false;}selT=null;keyEdit(x=>removePoseKey(x,t),`${personName(e)}: key at ${fmt(t)} s deleted.`);return true;}
+  function retime(from,to){
+    const e=entry(key),T=seconds()||Infinity;if(!e)return;to=Math.max(0,Math.min(T,Math.round(to*1000)/1000));if(Math.abs(to-from)<1e-4){rerender();return;}
+    const hit=keyAt(e,to),over=hit!==undefined&&Math.abs(hit-from)>1e-6;selT=to;
+    keyEdit(x=>moveKey(x,from,to),`${personName(e)}: key moved ${fmt(from)} → ${fmt(to)} s.${over?' It replaces the key that was there.':''}`);
+  }
+  // The selected person's keys as diamonds over the chapter (the pose panel and the timeline's Pose keys row).
+  function keyDiamonds(){
+    const e=key&&entry(key),T=seconds()||1;if(!e)return '';
+    return keyTimes(e).map(t=>`<button type="button" class="pose-key ${selT!==null&&Math.abs(selT-t)<1e-6?'selected':''}" data-pose-key="${t}" style="left:${t/T*100}%" title="Pose key at ${fmt(t)} s · click: go there · drag: retime · Delete: remove" aria-label="Pose key at ${fmt(t)} s"></button>`).join('');
+  }
+  function keyLane(){
+    const e=key&&entry(key),T=seconds()||1;
+    if(!e)return '<span class="pose-keys-empty">Double-click a person to pose them: their pose keys show here</span>';
+    return `${keyDiamonds()}<div class="camera-track-playhead" data-shared-playhead style="left:${time()/T*100}%"></div>`;
+  }
   // The selected joint's turn from the built pose, as three angles (degrees): bend, twist (about the bone), side.
   function angles(name=joint){
     const rig=rigOf(),b=name&&bone(name);if(!b)return [0,0,0];const THREE=T();
@@ -213,7 +267,7 @@ export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,
     const e=entry(k);if(!e)return;key=k;joint=null;gmode='rotate';
     status(`Pose mode: ${personName(e)}. Click a dot on the body: blue turns a joint, orange (hands, feet) moves the whole limb. Esc or Done leaves.`);rerender();
   }
-  function exit(){if(!key)return;key=null;joint=null;drag=null;dispose();rerender();}
+  function exit(){if(!key)return;key=null;joint=null;drag=null;selT=null;dispose();rerender();}
   function setMode(m){if(!key)return false;if(m==='translate'&&!limb()){status('Only hands and feet move (the limb follows). Other joints turn: E.');return true;}if(m==='translate'||m==='rotate'){gmode=m;rerender();}return true;}
   // ---- the People tab while posing
   const num=(labelText,name,value)=>`<label>${labelText}<input type="number" name="${name}" value="${value}" step="2" min="-180" max="180"><small>°</small></label>`;
@@ -223,6 +277,7 @@ export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,
       <div class="people-pose-bar"><strong>Pose mode</strong><span>${adjusted?`${adjusted} joint${adjusted===1?'':'s'} adjusted`:'as built'}</span><button type="button" class="primary" data-action="pe-pose-done">Done</button></div>
       ${ready?'':'<p class="director-hint people-busy">Loading the skeleton…</p>'}
       <p class="director-hint">Click a dot on the body. <b class="pose-fk">Blue</b> dots turn a joint. <b class="pose-ik">Orange</b> dots (hands, feet) drag the whole arm or leg. Undo steps back one adjustment.</p>
+      ${keysPanel(e)}
       <h4>Joint</h4>
       <select name="pe-joint" aria-label="Joint"><option value="">Choose a joint…</option>${groups.map(g=>`<optgroup label="${escape(g)}">${JOINTS.filter(j=>j[2]===g).map(j=>`<option value="${j[0]}" ${j[0]===joint?'selected':''}>${escape(j[1])}${e?.pose?.[j[0]]?' •':''}</option>`).join('')}</optgroup>`).join('')}</select>
       ${joint?`${limb()?`<div class="director-actions people-modes"><button type="button" data-action="pe-pose-move" aria-pressed="${gmode==='translate'}" title="Drag the hand or foot; the limb follows (W)">Move limb</button><button type="button" data-action="pe-pose-turn" aria-pressed="${gmode==='rotate'}" title="Turn the wrist or ankle itself (E)">Turn joint</button></div>`:''}
@@ -236,7 +291,28 @@ export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,
       <div class="director-actions people-end"><button type="button" data-action="pe-pose-reset" ${adjusted?'':'disabled'}>Reset the whole pose</button></div>
     </section>`;
   }
+  function keysPanel(e){
+    const ts=keyTimes(e),t=now(),here=keyAt(e,t),sel=selT!==null&&keyAt(e,selT)!==undefined?keyAt(e,selT):null,ease=sel!==null?((e.poseKeys||[]).find(k=>Math.abs(k.t-sel)<1e-6)?.ease||'smooth'):null;
+    const prev=[...ts].reverse().find(k=>k<t-1e-6),next=ts.find(k=>k>t+1e-6);
+    return `<h4>Keys <small class="director-hint">${ts.length?`${ts.length} key${ts.length===1?'':'s'}`:'none yet'} · playhead <span data-pose-at>${fmt(t)}</span> s</small></h4>
+      <div class="director-actions pose-keys-tools"><button type="button" class="pose-autokey" data-action="pe-key-auto" aria-pressed="${autoKey}" title="Auto-key: every adjustment writes a key at the playhead (off: it changes the pose for the whole chapter)">● Auto-key</button><button type="button" data-action="pe-key-all" title="Key the whole pose as it is now, at the playhead (I)">Key all</button><button type="button" data-action="pe-key-limb" ${joint?'':'disabled'} title="Key the selected joint's arm, leg or group">Key limb</button></div>
+      <div class="pose-key-row" data-pose-key-row aria-label="Pose keys of ${escape(personName(e))}">${keyDiamonds()}<div class="pose-key-playhead" data-shared-playhead style="left:${t/(seconds()||1)*100}%"></div></div>
+      <div class="director-actions pose-keys-nav"><button type="button" data-action="pe-key-prev" ${prev===undefined?'disabled':''} title="Previous key">◀ Key</button><button type="button" data-action="pe-key-next" ${next===undefined?'disabled':''} title="Next key">Key ▶</button><button type="button" data-action="pe-key-copy" ${sel===null&&here===undefined?'disabled':''} title="Copy the selected key (or the key at the playhead)">Copy</button><button type="button" data-action="pe-key-paste" ${clip?'':'disabled'} title="Paste the copied key at the playhead">Paste</button><button type="button" class="danger" data-action="pe-key-delete" ${sel===null?'disabled':''} title="Delete the selected key (Delete)">Delete key</button></div>
+      ${sel!==null?`<div class="director-row people-fields pose-key-fields"><label>Key at<input type="number" name="pe-key-t" value="${fmt(sel)}" step="0.05" min="0" max="${seconds()}"><small>s</small></label><label>Ease out<select name="pe-key-ease">${EASES.map(x=>`<option value="${x}" ${x===ease?'selected':''}>${EASE_LABEL[x]||x}</option>`).join('')}</select></label></div>`:''}
+      ${!autoKey?'<p class="director-hint">Auto-key is off: adjustments change the pose for the whole chapter.</p>':''}`;
+  }
+  // The playhead moved: the panel's time readout.
+  function sync(){const at=document.querySelector('[data-pose-at]');if(at)at.textContent=fmt(now());}
   function action(name,index){
+    if(name==='pe-key-auto'){autoKey=!autoKey;try{localStorage.setItem(AUTO,autoKey?'1':'0');}catch{}status(autoKey?'Auto-key on: each adjustment keys the bones it changes at the playhead.':'Auto-key off: adjustments change the pose for the whole chapter.');rerender();return true;}
+    if(!key)return false;
+    const e=entry(key);
+    if(name==='pe-key-all'){keyNow('all');return true;}
+    if(name==='pe-key-limb'){keyNow('limb');return true;}
+    if(name==='pe-key-delete'){deleteKey();return true;}
+    if(name==='pe-key-prev'||name==='pe-key-next'){const ts=keyTimes(e),t=now(),k=name==='pe-key-prev'?[...ts].reverse().find(x=>x<t-1e-6):ts.find(x=>x>t+1e-6);if(k!==undefined){selT=k;seek(k);rerender();}return true;}
+    if(name==='pe-key-copy'){const t=selT??keyAt(e,now());const c=t!==undefined&&t!==null?copyKey(e,t):null;if(c){clip=c;status(`Copied the key at ${fmt(t)} s (${Object.keys(c.pose).length} bones). Paste puts it at the playhead.`);rerender();}return true;}
+    if(name==='pe-key-paste'){if(!clip)return true;const t=now();selT=t;keyEdit(x=>pasteKey(x,t,clip),`${personName(e)}: key pasted at ${fmt(t)} s.`);return true;}
     if(name==='pe-pose-done'){exit();status('Pose kept. Double-click the person to adjust it again.');return true;}
     if(!key)return false;
     if(name==='pe-pose-move'){setMode('translate');return true;}
@@ -249,6 +325,8 @@ export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,
   }
   function changed(el){
     if(!key)return false;
+    if(el.name==='pe-key-t'){const v=Number(el.value);if(selT===null||!Number.isFinite(v))return true;retime(selT,v);return true;}
+    if(el.name==='pe-key-ease'){const e=entry(key);if(selT===null||!EASES.includes(el.value))return true;const t=selT;keyEdit(x=>setKeyEase(x,t,el.value),`${personName(e)}: key at ${fmt(t)} s eases ${el.value==='hold'?'by holding until the next key':el.value}.`);return true;}
     if(el.name==='pe-joint'){if(el.value)pick(el.value);else{joint=null;rerender();}return true;}
     if(el.name==='pe-grip-l'||el.name==='pe-grip-r'){setGrip(el.name.slice(-1),Number(el.value)||0);return true;}
     if(el.name==='pe-pose-name')return true;      // read when Save pose is pressed
@@ -256,5 +334,24 @@ export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,
     if(axis>=0){const v=Number(el.value);if(el.value.trim()===''||!Number.isFinite(v))throw Error('Type a number of degrees.');setAngle(axis,Math.max(-180,Math.min(180,v)));return true;}
     return false;
   }
-  return {enter,exit,tick,panel,action,changed,setMode,personAt,active:()=>key,joint:()=>joint,jointLabel:()=>joint?label(joint):'',resetJoint:()=>reset('joint'),ready:()=>!!rigOf()};
+  // Key diamonds (either row): click = select and go there, drag = retime (0.05 s steps, Shift: free).
+  let kd=null,kdSuppress=0;
+  document.addEventListener('pointerdown',ev=>{
+    const d=ev.target.closest?.('[data-pose-key]');if(!d||ev.button!==0||!key)return;
+    const row=d.parentElement.getBoundingClientRect();ev.preventDefault();ev.stopPropagation();
+    kd={el:d,t:Number(d.dataset.poseKey),x:ev.clientX,width:row.width,left:row.left,now:null};
+  },true);
+  document.addEventListener('pointermove',ev=>{
+    if(!kd||(kd.now===null&&Math.abs(ev.clientX-kd.x)<3))return;const T=seconds()||1;
+    let t=Math.max(0,Math.min(T,(ev.clientX-kd.left)/kd.width*T));t=ev.shiftKey?t:Math.round(t*20)/20;
+    kd.now=t;kd.el.style.left=t/T*100+'%';status(`Key ${fmt(kd.t)} → ${fmt(t)} s`);
+  },true);
+  document.addEventListener('pointerup',ev=>{
+    const d=kd;kd=null;if(!d)return;ev.stopPropagation();kdSuppress=performance.now()+300;
+    if(d.now===null){selT=d.t;seek(d.t);rerender();status(`Key at ${fmt(d.t)} s: drag to retime, Delete removes it, Ease out sets how it leaves.`);return;}
+    retime(d.t,d.now);
+  },true);
+  document.addEventListener('click',ev=>{if(performance.now()<kdSuppress&&ev.target.closest?.('[data-pose-key]')){ev.preventDefault();ev.stopPropagation();}},true);
+  return {enter,exit,tick,panel,action,changed,setMode,personAt,active:()=>key,joint:()=>joint,jointLabel:()=>joint?label(joint):'',resetJoint:()=>reset('joint'),ready:()=>!!rigOf(),
+    keyLane,sync,keyNow,deleteKey,selectedKey:()=>selT,autoKey:()=>autoKey};
 }
