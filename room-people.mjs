@@ -61,6 +61,8 @@ const gazeM = new THREE.Matrix4(), gazeW = new THREE.Vector3();
 // behind the keyboard's centre it is wherever the keyboard really sits (tray or desktop).
 const REACH = { sit: 945, wheel: 935, stand: 890 };
 const BEHIND_KEYS = { sit: 470, wheel: 460, stand: 415 };
+// Seconds a change of posture on the spot takes (solveChange): 1.4, up to 2.4 where the hips rise or sink (getting up, sitting down).
+const changeLength = (rig, from, to) => 1.4 + THREE.MathUtils.clamp(Math.abs(to.wp[rig.b.pelvis].y - from.wp[rig.b.pelvis].y) / .3, 0, 1);
 const HEIGHT_FIT = 1.4;                       // inches either side of the height a desk pose was built for
 const LIVELY = 4;                             // Studio, the old way (lively=0): the 4 nearest to the camera move, every frame
 export const LIVELY_DEFAULT = 12;             // Studio: how many people besides the desk user move: the largest in the picture
@@ -1713,6 +1715,7 @@ export class RoomPeople {
             for (const actor of this.actors) this.recast(actor);
             for (const pair of this.pairs) if (pair.live) { const a = this.people.find(o => o.userData.person === pair.from), b = this.people.find(o => o.userData.person === pair.to); if (a && b) this.endChange(pair, a, b); }
             this.pairs = this.pairUp();
+            this.readySteps();
         }
         this.lifeClock = time !== null ? time : this.lifeClock + Math.min(.1, Math.max(0, dt));
         const changing = this.changing(time, mode);
@@ -1720,6 +1723,7 @@ export class RoomPeople {
         // desk belongs to at this height when the cast has more than one (the nearest built height wins)
         const there = actor => Math.max(0, ...actor.members.map(m => this.present(m.object.userData.person, time)));
         const driven = this.actors.filter(a => a.members.length && there(a) > 0);   // (a film hands the desk from one person to the next with `when`: who is not there yet is no rival)
+        const steps = this.stepOuts(time, state, driven);   // (before the actors are driven for this second: it drives them at the steps' ends)
         for (const actor of driven) {
             actor.drive({ height, target: state?.target, tilt: state?.tilt, time, track: state?.track || null, dt, life: this.filter?.life === false ? false : undefined, taps: time !== null || dt < .05 });
             const sign = actor.state.tau.toFixed(3) + '|' + actor.state.k.toFixed(3) + '|' + actor.shown?.id; if (sign !== actor.drawnAs) { actor.drawnAs = sign; this.dirty = true; }
@@ -1739,6 +1743,7 @@ export class RoomPeople {
             // model, stand-wait, is an older cut's stand-in for the gap: the desk user fills that gap themselves, below.)
             actor.away = 0;
             if (time !== null) for (const o of this.people) {
+                const step = steps.get(o); if (step) { if (step.actor === actor && step.phase) actor.away = 1; continue; }   // (stepped out: whole, no dissolve)
                 const s = o.userData.person; if (!s.extra || s.desk || o.userData.personMissing || !this.allowed(s) || !this.filter?.when?.[this.keyOf(s)]) continue;
                 const person = this.library.entry(s.id)?.person; if (person && person.pose !== 'stand-wait' && person.character === actor.character) actor.away = Math.max(actor.away, this.present(s, time));
             }
@@ -1754,6 +1759,9 @@ export class RoomPeople {
             const actor = object.userData.personDriven ? object.userData.personActor : null, change = changing.get(object);
             // changing posture on the spot: one of the two models, whole, with the bones on their way
             if (change) { on = !object.userData.personMissing && this.allowed(spec) && change.shown === object; object.userData.personAmount = 1; }
+            // stepped out from the desk (stepOuts): there, whole, for the steps and the time between them, and nowhere else
+            const step = steps.get(object);
+            if (step) { on = !!step.phase; object.userData.personAmount = 1; this.drawStep(object, step); }
             // an older cut's stand-in for the gap (a standing-by model of the desk user, cast by hand for the seconds the
             // desk moves): the desk user fills that gap themselves now
             if (on && !spec.desk && spec.extra && driven.length && this.filter?.when?.[this.keyOf(spec)]) {
@@ -1844,7 +1852,7 @@ export class RoomPeople {
                 const life = object.userData.personLife, on = chosen.includes(object);
                 if (life === undefined) { if (on) { object.userData.personLife = null; this.later(this.enliven(object)); } continue; }
                 if (!life || !object.userData.personRig || (!on && !life.live)) continue;
-                this.moveOne(object, life, on, on ? 1 : 0, film, time, dt, hold, turning);
+                this.moveOne(object, life, on, on ? object.userData.personStepLife ?? 1 : 0, film, time, dt, hold, turning);   // (stepped out: the life comes in after the step, stepOuts)
             }
         }
         for (const crank of this.cranks) if (!turning.has(crank)) { if (crank.name === 'Bike crank') this.turnCrank(crank, 0); else { crank.rotation.y = 0; this.dirty = true; } this.cranks.delete(crank); }      // (nobody on it any more: as the room built it)
@@ -2071,7 +2079,7 @@ export class RoomPeople {
         const path = change.to.walk?.path; if (path?.length > 1) change.homeTo.turn = Math.atan2(path[1][0] - path[0][0], path[1][1] - path[0][1]);
         // a turn the short way round
         change.homeTo.turn = change.homeFrom.turn + THREE.MathUtils.euclideanModulo(change.homeTo.turn - change.homeFrom.turn + Math.PI, Math.PI * 2) - Math.PI;
-        change.length = 1.4 + THREE.MathUtils.clamp(Math.abs(change.keyTo.wp[rig.b.pelvis].y - change.keyFrom.wp[rig.b.pelvis].y) / .3, 0, 1);
+        change.length = changeLength(rig, change.keyFrom, change.keyTo);
         change.ready = true;
     }
     // After a change both models are as built again, each where it belongs.
@@ -2080,6 +2088,77 @@ export class RoomPeople {
             solveChange(change.rig, key, key, 0); drawPose(change.rig, o.userData.personRig, 0, o.userData.person.pose || null);
             o.position.copy(home.position); o.rotation.y = home.turn; o.userData.personChanging = false;
         }
+        this.dirty = true;
+    }
+    // ---- stepping out from the desk and back (film): a placement with `fromDesk`
+    // A film's own placement of the featured desk's user (same character, not at a desk, timed with `when`) marked
+    // `fromDesk: true` is that person stepping away from the keys for its window (Maya stretching in the gym between
+    // getting up and working standing). Instead of a dissolve (the desk user fading out as the placement fades in, `away`),
+    // they are one model whose bones change (solveChange) from where the desk user is as the window opens to the
+    // placement's posture, centred on the window's start, and back to where the desk user is as it ends, centred on its
+    // end; meanwhile they go from the desk user's spot to the placement's spot (and back). Fades in `when` are not used
+    // for it. The window should open after the desk user is up and close after their hands would be back on the keys
+    // (each end is posed from the desk user at that second, hands and all), and last at least one change.
+    // Without the skeletons (no rig data, a model that did not rig) it is the dissolve as before.
+    readySteps() {
+        for (const o of this.people) {
+            const s = o.userData.person; if (!s.fromDesk || s.desk || !this.filter?.when?.[this.keyOf(s)]) continue;
+            o.userData.personStepHome = null;   // (where the cast has put them: taken again on the next frame)
+            this.later(this.rig(o).then(d => { if (d.userData.personRig && d.userData.personLife === undefined) { d.userData.personLife = null; return this.enliven(d); } }));
+        }
+    }
+    // The steps of this second: Map object -> { actor, phase: 'out' | 'hold' | 'in' | null, w, from, to, dz, desk, life }.
+    // Every placement that steps out is in it (phase null outside its windows: not there).
+    stepOuts(time, state, driven) {
+        const out = new Map(); if (time === null || !state?.pose || !this.filter?.when) return out;
+        for (const o of this.people) {
+            const s = o.userData.person, spans = s.fromDesk && !s.desk ? this.filter.when[this.keyOf(s)] : null;
+            if (!spans || o.userData.personMissing || !this.allowed(s) || !o.userData.personRig) continue;
+            const actor = driven.find(a => a.mobile && a.character === this.character(o)), up = actor && (actor.keys.wait || actor.keys.stand[0]);
+            if (!up || !actor.rig.has(s.id)) continue;
+            o.userData.personStepHome ||= { position: o.position.clone(), turn: o.rotation.y };
+            const step = { actor, phase: null, life: 1 }; out.set(o, step);
+            const length = changeLength(actor.rig, up, actor.rig.key(s.id));
+            for (const [t0, t1] of spans) {
+                const start = t0 - length / 2, end = t1 + length / 2; if (time < start || time > end) continue;
+                if (time < t0 + length / 2) {
+                    const desk = this.deskUserAt(actor, start, state);
+                    Object.assign(step, { phase: 'out', w: (time - start) / length, from: desk.key, to: actor.rig.key(s.id, desk.key.dz), dz: desk.key.dz, desk: desk.spot });
+                } else if (time > t1 - length / 2) {
+                    const desk = this.deskUserAt(actor, end, state);
+                    Object.assign(step, { phase: 'in', w: (time - (t1 - length / 2)) / length, from: actor.rig.key(s.id, desk.key.dz), to: desk.key, dz: desk.key.dz, desk: desk.spot });
+                } else Object.assign(step, { phase: 'hold', to: actor.rig.key(s.id), life: THREE.MathUtils.smoothstep(time, t0 + length / 2, t0 + length / 2 + 1) * (1 - THREE.MathUtils.smoothstep(time, t1 - length / 2 - 1, t1 - length / 2)) });
+                break;
+            }
+        }
+        return out;
+    }
+    // The desk user as they are at second `at` of the film: their solved pose as a key (the drawn model's frame, `dz`) and
+    // where that model stands. (Drives the actor at that second: update() drives it again for the second it is at.)
+    deskUserAt(actor, at, state) {
+        const track = state.track || null, height = track ? track.heightAt(at) : state.height ?? 28;
+        actor.drive({ height, target: height, tilt: track?.tiltAt ? track.tiltAt(at) : state.tilt, time: at, track, dt: 0, life: this.filter?.life === false ? false : undefined, taps: true });
+        const r = actor.rig, spec = actor.shown?.object.userData.person, yaw = state.pose.yaw || 0, front = frontOf(yaw), keys = state.keyboard;
+        const key = { id: 'desk@' + at, pose: null, q: r.lq.map(q => q.clone()), root: r.lp[r.b.Root].clone(), pelvis: r.lp[r.b.pelvis].clone(), wp: r.wp.map(v => v.clone()), wq: r.wq.map(q => q.clone()), dz: actor.shown?.dz ?? 0 };
+        const short = spec ? (spec.reach ?? REACH[spec.desk]) - REACH[spec.desk] : 0, role = spec?.desk || 'stand';
+        const position = keys ? new THREE.Vector3(keys.x, 0, keys.z).addScaledVector(front, BEHIND_KEYS[role] + short) : new THREE.Vector3(state.pose.x - 6, 0, state.pose.z).addScaledVector(front, REACH[role] + short);
+        return { key, spot: { position, turn: yaw + Math.PI } };
+    }
+    // One stepping-out placement this frame: posed by the change while one is under way, at its own spot otherwise.
+    drawStep(object, step) {
+        const home = object.userData.personStepHome, changing = step.phase === 'out' || step.phase === 'in';
+        object.userData.personChanging = changing; object.userData.personStepLife = step.phase === 'hold' ? step.life : 0;
+        if (!changing) {
+            object.position.copy(home.position); object.rotation.y = home.turn;
+            // (between the steps: the posture as built, which liven() then brings to life; scrubbed into, nothing is left over)
+            if (step.phase === 'hold') { solveChange(step.actor.rig, step.to, step.to, 1); drawPose(step.actor.rig, object.userData.personRig, 0, object.userData.person.pose || null); }
+            return;
+        }
+        solveChange(step.actor.rig, step.from, step.to, step.w);
+        const [a, z] = step.phase === 'out' ? [step.desk, home] : [home, step.desk], ease = THREE.MathUtils.smoothstep(step.w, 0, .72);
+        object.position.lerpVectors(a.position, z.position, ease);
+        object.rotation.y = a.turn + (THREE.MathUtils.euclideanModulo(z.turn - a.turn + Math.PI, Math.PI * 2) - Math.PI) * ease;   // (the short way round)
+        drawPose(step.actor.rig, object.userData.personRig, step.dz, object.userData.person.pose || null);
         this.dirty = true;
     }
     // A film's walker (a placement with `walk`): at the start of the path until `start`, then walking it, then standing
