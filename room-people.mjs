@@ -2272,9 +2272,9 @@ export class RoomPeople {
                 const shoes = this.soleOf(object, life, life.plan); life.plan = plan(shoes);
                 life.plan = plan({ ...shoes, land: this.landOf(object, life, life.plan) });
             }
-            life.endTurn = life.plan && time !== null ? this.walkEndTurn(object, life, walk) : null;
         }
         if (!life.plan) return;
+        if (life.endSign !== life.walkSign) { life.endSign = life.walkSign; life.endTurn = time !== null ? this.walkEndTurn(object, life, walk) : null; }
         const g = life.plan.at(time === null ? 0 : Math.max(0, time - (walk.start || 0))), root = solveWalk(life.rig, life.plan, g);
         drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold);
         // (handing over to the same person standing where the path ends: they turn to face the way that placement does
