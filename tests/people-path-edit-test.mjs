@@ -73,4 +73,49 @@ e=P.setField(kai,'radius','512.6');assert.equal(e.roll.radius,513);assert.equal(
 assert.equal(P.setField(kai,'pace','2'),kai,'a walk field on a roll changes nothing');
 for(const [k,fields] of Object.entries(P.FIELDS))for(const name of Object.keys(fields))assert.ok(['start','pace','step','turn','speed','radius','ease'].includes(name),`${k}.${name} is a field the film reads`);
 assert.equal(JSON.stringify([andre,kai]),frozen,'the entries given are never changed');
+
+// ---- continuity on the real casts (review-cut.json): oilers (Noah, Kai) and storage (Andre)
+{
+  const fs=await import('node:fs'),path=await import('node:path'),url=await import('node:url');
+  const root=path.resolve(path.dirname(url.fileURLToPath(import.meta.url)),'..'),cut=JSON.parse(fs.readFileSync(path.join(root,'exports/cinematic-intro-cut-cine/review-cut.json'),'utf8'));
+  const people=id=>structuredClone(cut.shots.find(s=>s.id===id).people),by=(cast,k)=>cast.find(e=>e.key===k);
+  const o=people('oilers'),before=JSON.stringify(o);
+  // Noah's walk: its last point moves; pull, tap and watch stood there: they follow; Noah talking (at the start) stays
+  const steps=by(o.cast,'noah-steps'),Q=P.endsOf(steps).end,Q2=[Q[0]+300,Q[1]-200];
+  let moved=P.movePoint(steps,P.pathOf(steps).length-1,Q2),cast=o.cast.map(e=>e.key==='noah-steps'?moved:e);
+  let r=P.linkedMove(cast,o.when,'noah-steps',Q,Q2);
+  assert.deepEqual(r.followed.map(f=>f.key).sort(),['noah-pulls','noah-taps','noah-watches'],'the end of Noah\'s walk takes pull, tap and watch with it');
+  for(const k of ['noah-pulls','noah-taps','noah-watches'])assert.deepEqual(by(r.cast,k).at,Q2,k+' at the new spot');
+  assert.deepEqual(by(r.cast,'noah-talks').at,by(o.cast,'noah-talks').at,'Noah talking (at the start) stays');
+  assert.ok(r.cast.filter(e=>!/^noah/.test(e.key)).every(e=>JSON.stringify(e)===JSON.stringify(by(o.cast,e.key))),'nobody else changes');
+  // its start: Noah talking follows, the others not
+  const P0=P.endsOf(steps).start,P1=[P0[0]-150,P0[1]+90];moved=P.movePoint(steps,0,P1);
+  r=P.linkedMove(o.cast.map(e=>e.key==='noah-steps'?moved:e),o.when,'noah-steps',P0,P1);
+  assert.deepEqual(r.followed.map(f=>f.key),['noah-talks']);assert.deepEqual(by(r.cast,'noah-talks').at,P1);assert.deepEqual(moved.at,P1,'the walk\'s own placement with its start');
+  // a STANDING placement moved (noah-pulls with the gizmo): the walk's end and the two after follow, down the chain
+  r=P.linkedMove(o.cast,o.when,'noah-pulls',Q,Q2);
+  assert.deepEqual(r.followed.map(f=>f.key).sort(),['noah-steps','noah-taps','noah-watches']);
+  assert.deepEqual(P.endsOf(by(r.cast,'noah-steps')).end,Q2,'the walk now ends where they stand');assert.deepEqual(P.endsOf(by(r.cast,'noah-steps')).start,P0,'and starts where it did');
+  assert.deepEqual(r.followed.find(f=>f.key==='noah-steps').ends,['end']);
+  // Kai: the end of kai-rolls is where kai-docks starts; that start (and its placement) follows, kai (at the dock) not
+  const kr=by(o.cast,'kai-rolls'),W0=P.endsOf(kr).end,W1=[W0[0]+100,W0[1]];
+  r=P.linkedMove(o.cast.map(e=>e.key==='kai-rolls'?P.movePoint(kr,P.pathOf(kr).length-1,W1):e),o.when,'kai-rolls',W0,W1);
+  assert.deepEqual(r.followed.map(f=>f.key),['kai-docks']);const kd=by(r.cast,'kai-docks');assert.deepEqual(kd.at,W1);assert.deepEqual(kd.roll.path[0],W1);assert.deepEqual(P.endsOf(kd).end,P.endsOf(by(o.cast,'kai-docks')).end,'the dock stays');
+  assert.equal(JSON.stringify(o),before,'the cast given is never changed');
+  // storage: Andre's walk end -> phone out, up, presses, watches; its start -> nobody (he steps off from another spot)
+  const st=people('storage'),aw=by(st.cast,'andre-steps-back'),E0=P.endsOf(aw).end,E1=[E0[0],E0[1]+250];
+  r=P.linkedMove(st.cast,st.when,'andre-steps-back',E0,E1);assert.deepEqual(r.followed.map(f=>f.key).sort(),['andre-phone-out','andre-phone-up','andre-presses','andre-watches']);
+  assert.deepEqual(P.linkedMove(st.cast,st.when,'andre-steps-back',P.endsOf(aw).start,[0,0]).followed,[],'nobody stood where his walk starts');
+  // ---- arrival against the hand-over
+  let a=P.arrival(steps,1.2,o.cast,o.when);assert.equal(a.deadline,5.4);assert.equal(a.next,'noah-pulls');assert.ok(Math.abs(a.arrive-5.2)<1e-9&&a.late===0,'on time');
+  a=P.arrival(steps,2.1,o.cast,o.when);assert.ok(Math.abs(a.late-.7)<1e-9,'0.7 s late');
+  const fast=P.fixFaster(steps,a,{seconds:2.1});assert.ok(Math.abs(fast.walk.pace-2.2*2.1/1.4)<.011,'faster: pace scaled to the room left');
+  assert.ok((fast.walk.start)===steps.walk.start&&Math.abs(P.arrival(fast,2.1*steps.walk.pace/fast.walk.pace,o.cast,o.when).late)<.01,'and then on time');
+  const early=P.fixEarlier(steps,a,{seconds:2.1});assert.equal(early.walk.start,3.3,'earlier: from 4.0 back to 3.3 (not before its window)');
+  const ka=P.arrival(kr,P.routeInfo(kr,{rollPlan}).seconds,o.cast,o.when);assert.equal(ka.deadline,9.4);assert.equal(ka.late,0);
+  const late=P.arrival(kr,9.5,o.cast,o.when);const kf=P.fixFaster(kr,late,{seconds:9.5,length:P.routeInfo(kr,{rollPlan}).length});assert.ok(kf.roll.speed>.5&&kf.roll.speed<1,'a roll: the speed to arrive at 9.4 s');
+  assert.equal(P.fixEarlier(kr,late,{seconds:9.5}).roll.start,0,'a roll starts at most back to its window');
+}
+// toes: only when the choice differs from what the entry resolves to
+assert.equal(P.setField({at:[0,0],walk:{path:[[0,0],[0,1]]}},'toes','bend').walk.toes,undefined,'bend is what no toes means: nothing written');
 console.log('PASS people-path-edit: move / add / remove waypoints, the start with the placement, floor picking, the planner\'s route, the fields');

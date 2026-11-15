@@ -126,11 +126,77 @@ export const TOES=[['bend','Toes bend (natural)'],['stiff','Stiff (the foot pitc
 export function setField(e,name,value){
   const kind=motionOf(e);if(!kind)return e;const out=clone(e),m=out[kind];
   if(name==='then'){if(kind!=='walk')return e;if(!value)delete m.then;else if(/^people-[a-z0-9][a-z0-9._-]{0,90}$/i.test(value))m.then=value;else throw Error('Not a posture of this library.');return out;}
-  if(name==='toes'){if(kind!=='walk')return e;if(value==='stiff')m.toes='stiff';else m.toes='bend';return out;}
+  if(name==='toes'){if(kind!=='walk')return e;const want=value==='stiff'?'stiff':'bend';if(want===(e.walk.toes==='stiff'?'stiff':'bend'))return e;m.toes=want;return out;}   // (written only when the choice differs from what the entry resolves to)
   const f=FIELDS[kind][name];if(!f)return e;
   const text=String(value??'').trim();
   if(text===''){if(f.clear){delete m[name];return out;}throw Error('Type a number.');}
   let v=Number(text);if(!finite(v))throw Error('Type a number.');
   v=Math.min(f.max,Math.max(f.min,v));m[name]=f.int?Math.round(v):Math.round(v*1000)/1000;
   return out;
+}
+
+// ---- continuity: one character, several placements handing over at a spot
+// In a film chapter one character is several placements: Noah talks at P, walks P -> Q (noah-steps), then pulls, taps
+// and watches at Q, each in a `when` window that starts as the one before ends. A spot that moves must take the
+// placements that meet there with it, or the character jumps at the hand-over.
+export const characterOf=id=>String(id||'').replace(/^people-/,'').split('-')[0];
+// The two ends of a placement: where it starts (at, or its path's first point) and where it ends (its path's last
+// point, or at for someone who stays).
+export function endsOf(e){const pts=pathOf(e);return {start:pts?pts[0]:Array.isArray(e?.at)?e.at:null,end:pts?pts[pts.length-1]:Array.isArray(e?.at)?e.at:null};}
+const spansOf=(when,key)=>Array.isArray(when?.[key])&&when[key].length?when[key]:[[0,Infinity]];
+// Two placements' seconds meet: one starts as the other ends (within `tol` s), or they overlap.
+export function touches(when,a,b,tol=.1){return spansOf(when,a).some(([a0,a1])=>spansOf(when,b).some(([b0,b1])=>a0<=b1+tol&&b0<=a1+tol));}
+// Every other placement of the same character that met `key` (and so on down the chain, through the seconds) at the
+// spot `from` follows it to `to`: its `at` / path start or its path end, whichever was there (within `tol` mm).
+// cast: the cast as it is (the entry `key` may already be moved: its own spot is not touched here); when: the chapter's.
+// Returns { cast: a new cast array (followers replaced by new entries), followed: [{ key, id, ends: ['start'|'end'] }] }.
+export function linkedMove(cast,when,key,from,to,{tol=1}={}){
+  const me=cast.find(e=>e.key===key);if(!me||!from||!to||same(from,to,0))return {cast,followed:[]};
+  const who=characterOf(me.id),out=cast.slice(),seen=new Set([key]),queue=[key],followed=[];
+  while(queue.length){
+    const k=queue.shift();
+    for(let i=0;i<out.length;i++){
+      const x=out[i];if(seen.has(x.key)||characterOf(x.id)!==who||!touches(when,k,x.key))continue;
+      const ends=endsOf(cast.find(c=>c.key===x.key)),hit=[];
+      if(ends.start&&same(ends.start,from,tol))hit.push('start');if(ends.end&&same(ends.end,from,tol)&&(pathOf(x)||!hit.length))hit.push('end');
+      if(!hit.length)continue;
+      let n=x;const pts=pathOf(x);
+      if(pts){const p=pts.map(q=>[...q]);if(hit.includes('start'))p[0]=[...to];if(hit.includes('end'))p[p.length-1]=[...to];n=withPath(x,p);if(hit.includes('start')&&Array.isArray(n.at)&&same(n.at,from,tol))n={...n,at:round(to)};}
+      else n={...clone(x),at:round(to)};
+      out[i]=n;seen.add(x.key);queue.push(x.key);followed.push({key:x.key,id:x.id,ends:pts?hit:['start','end']});
+    }
+  }
+  return {cast:out,followed};
+}
+
+// ---- arrival against the hand-over
+// When the walk / roll ends (start + seconds: the planner's, or the stage's plan for a walk), and the second it has to:
+// this placement's `when` end, or the start of the next placement of the character that takes over at the path's end.
+// { arrive, deadline, late (s, > 0: cut mid-stride), next: key | null, by: 'window' | 'next' } or null.
+export function arrival(e,seconds,cast,when){
+  const kind=motionOf(e);if(!kind||!Number.isFinite(seconds))return null;
+  const arrive=(e[kind].start||0)+seconds,mine=spansOf(when,e.key),end=Math.max(...mine.map(s=>s[1])),begin=Math.min(...mine.map(s=>s[0]));
+  let deadline=end,by='window',next=null,nextAt=Infinity;const spot=endsOf(e).end;
+  for(const x of cast||[]){
+    if(x.key===e.key||characterOf(x.id)!==characterOf(e.id)||!spot||!endsOf(x).start||!same(endsOf(x).start,spot,1))continue;
+    const t0=Math.min(...spansOf(when,x.key).map(s=>s[0]).filter(t=>t>begin+1e-6));if(!Number.isFinite(t0))continue;
+    if(!next||t0<nextAt){next=x.key;nextAt=t0;}
+  }
+  if(nextAt<deadline-1e-6){deadline=nextAt;by='next';}
+  if(!Number.isFinite(deadline))return {arrive,deadline:null,late:0,next,by,begin};
+  return {arrive,deadline,late:Math.max(0,arrive-deadline),next,by,begin};
+}
+// The two one-click fixes for a late arrival (new entries; null where it cannot be done):
+//   faster: a walk's pace (seconds go as 1 / pace) or a roll's speed (seconds = length / speed + ease), to arrive at the
+//   deadline (clamped to the field's range: it may still be late); earlier: start sooner, not before this placement's
+//   `when` start.
+export function fixFaster(e,a,{seconds,length=null}={}){
+  const kind=motionOf(e);if(!kind||!a?.late)return null;const m=e[kind],room=a.deadline-(m.start||0);if(!(room>0))return null;
+  if(kind==='walk'){const pace=(m.pace||1.8)*seconds/room;return setField(e,'pace',String(Math.ceil(Math.min(FIELDS.walk.pace.max,pace)*100)/100));}
+  const ease=Math.max(.05,m.ease??1.2);if(!(length>0)||room<=ease+.05)return null;
+  return setField(e,'speed',String(Math.ceil(Math.min(FIELDS.roll.speed.max,(length/1000)/(room-ease))*100)/100));
+}
+export function fixEarlier(e,a,{seconds}={}){
+  const kind=motionOf(e);if(!kind||!a?.late)return null;const start=Math.max(a.begin||0,a.deadline-seconds);
+  if(start>=(e[kind].start||0)-1e-6)return null;return setField(e,'start',String(Math.floor(start*100)/100));
 }

@@ -2,6 +2,8 @@
 // the Cinematographer's cut, Andre's walk. Select him: his path is drawn on the floor with a handle per point. Drag a
 // point: the cast entry's walk.path changes and the stage re-solves (his place at the playhead moves). Add a point (the
 // + on a leg), delete it (Delete), undo; a field of the path section (pace) writes walk.pace. Then the oilers chapter,
+// Noah's walk: drag its end, the placements that hand over there follow (one undo); Alt: they do not. CASES=walk,roll,linked.
+// Then (roll)
 // Kai's roll at 8 s: handles on the rounded route, drag a waypoint (roll.path, Kai moves), radius / speed fields, undo.
 //   CHROME=".../chrome.exe" SHOTS=<dir> node tests/director-people-path-e2e.mjs       (run under the GPU lock)
 import assert from 'node:assert/strict';
@@ -9,7 +11,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {openDirectorBrowser,openChapter,seek,wait,root} from './director-e2e-harness.mjs';
-const CUT='exports/cinematic-intro-cut-cine',KEY='andre-steps-back',T=6.0;
+const CASES=(process.env.CASES||'walk,roll,linked').split(','),CUT='exports/cinematic-intro-cut-cine',KEY='andre-steps-back',T=6.0;
 const chapter=JSON.parse(fs.readFileSync(path.join(root,CUT,'director-chapters.json'),'utf8')).chapters.find(c=>c.id==='storage');
 chapter.page=chapter.page.replace(/\\/g,'/');
 const film=JSON.parse(fs.readFileSync(path.join(root,CUT,'director-film/storage.json'),'utf8'));
@@ -30,6 +32,7 @@ const drawn=()=>page.evaluate(()=>{const g=document.getElementById('stage').cont
 const pointsInPanel=()=>page.$$eval('#director-panel .people-path-point',l=>l.length);
 const dragFrom=async(a,b,steps=12,shot=null)=>{await page.mouse.move(a.x,a.y);await page.mouse.down();for(let i=1;i<=steps;i++){await page.mouse.move(a.x+(b.x-a.x)*i/steps,a.y+(b.y-a.y)*i/steps);await wait(30);}if(shot){await wait(700);await snap(shot);}await page.mouse.up();await wait(400);};
 try{
+  if(CASES.includes('walk')){
   await openChapter(page,base,chapter);
   await page.evaluate(()=>document.querySelector('#director-panel [data-inspector-tab="people"]').click());
   await seek(page,T);await wait(1200);
@@ -87,8 +90,9 @@ try{
     const e=await until(async()=>{const x=await mine();return x&&x.at[0]!==pre.at[0]?x:null;},'the body move lands');
     check(e.at[0]-pre.at[0]===300&&e.at[1]-pre.at[1]===200&&e.walk.path[0][0]===e.at[0]&&e.walk.path[0][1]===e.at[1]&&JSON.stringify(e.walk.path.slice(1))===JSON.stringify(pre.walk.path.slice(1)),'on release: `at` and the path start moved by the drag (300, 200 mm), the rest of the path as it was');
   }
+  }
   // ---- a roll: Kai in oilers at 8 s (the roll is over: he waits at the end of the path)
-  {
+  if(CASES.includes('roll')){
     const RK='kai-rolls',ch=JSON.parse(fs.readFileSync(path.join(root,CUT,'director-chapters.json'),'utf8')).chapters.find(c=>c.id==='oilers');ch.page=ch.page.split('\\').join('/');
     const rc=castOf(JSON.parse(fs.readFileSync(path.join(root,CUT,'director-film/oilers.json'),'utf8'))),ri=rc.findIndex(e=>e.key===RK),r0=rc[ri].roll.path;
     await openChapter(page,base,ch);
@@ -128,6 +132,51 @@ try{
     await page.evaluate(()=>document.querySelector('#director-panel [data-action="undo"]').click());
     await until(async()=>JSON.stringify((await mine(RK))?.roll?.path??r0)===JSON.stringify(r0),'undo: path back');
     check(true,'Undo takes back speed, radius and the dragged point, one step each');
+  }
+  // ---- continuity: Noah's walk in oilers ends where he pulls, taps and watches: drag its last point, they follow (one
+  // undo step); with Alt held they do not
+  if(CASES.includes('linked')){
+    const ch=JSON.parse(fs.readFileSync(path.join(root,CUT,'director-chapters.json'),'utf8')).chapters.find(c=>c.id==='oilers');ch.page=ch.page.split('\\').join('/');
+    const oc=castOf(JSON.parse(fs.readFileSync(path.join(root,CUT,'director-film/oilers.json'),'utf8'))),NK='noah-steps',ni=oc.findIndex(e=>e.key===NK),n0=oc[ni].walk.path,Q=n0[n0.length-1],FOL=['noah-pulls','noah-taps','noah-watches'];
+    await openChapter(page,base,ch);
+    await page.evaluate(()=>document.querySelector('#director-panel [data-inspector-tab="people"]').click());
+    await seek(page,4.5);await wait(1000);
+    await until(()=>page.$(`#director-panel .people-row:nth-child(${ni+1}) .people-pick`),'the oilers cast is listed');
+    await page.evaluate(i=>document.querySelector(`#director-panel .people-row:nth-child(${i+1}) .people-pick`).click(),ni);
+    await until(async()=>(await drawn())?.visible,'Noah\u2019s path is drawn');
+    let px=await screen(n0);
+    if(!px[n0.length-1].on){
+      await page.evaluate(p=>{const w=document.getElementById('stage').contentWindow,t=w.ErgoPresentation.three(),root=w.ErgoFlex.workspaceRoom.root,V=root.position.constructor;root.updateWorldMatrix(true,false);
+        const c=new V(p[0],0,p[1]).applyMatrix4(root.matrixWorld),eye=new V(p[0]+1500,2800,p[1]+3200).applyMatrix4(root.matrixWorld);t.camera.position.copy(eye);t.camera.lookAt(c);if(t.controls){t.controls.target.copy(c);t.controls.update();}t.camera.updateMatrixWorld();},Q);
+      await wait(800);px=await screen(n0);console.log('  (camera moved to see the end of Noah\u2019s walk)');
+    }
+    const end=px[n0.length-1];check(end.on,'the end of Noah\u2019s walk is on the screen');
+    const all=async()=>Object.fromEntries(await Promise.all([NK,...FOL,'noah-talks'].map(async k=>[k,await mine(k)])));
+    await dragFrom(end,{x:end.x+60,y:end.y+30},14,'05-linked-drag');
+    const a=await until(async()=>{const x=await all();return x[NK]&&JSON.stringify(x[NK].walk.path)!==JSON.stringify(n0)?x:null;},'the end moved');
+    const Q2=a[NK].walk.path[n0.length-1];
+    check(FOL.every(k=>a[k]?.at?.[0]===Q2[0]&&a[k]?.at?.[1]===Q2[1]),`dragging the end of Noah\u2019s walk to ${Q2}: ${FOL.join(', ')} follow to the same spot`);
+    check(JSON.stringify(a['noah-talks'].at)===JSON.stringify(oc.find(e=>e.key==='noah-talks').at),'Noah talking (at the start) stays');
+    const said=await page.$eval('#director-panel [data-status]',e=>e.textContent);check(/follow/.test(said)&&/pulls/.test(said),'the status says who followed: '+said.trim());
+    // the arrival against the hand-over: if the longer walk is late, the warning and its fix
+    await wait(1500);
+    if(await page.$('#director-panel .people-path-late')){
+      const warn=await page.$eval('#director-panel .people-path-late',e=>e.textContent);console.log('  warning: '+warn);
+      await page.evaluate(()=>document.querySelector('#director-panel [data-action="pe-path-faster"]').click());
+      const f=await until(async()=>{const x=await mine(NK);return x&&x.walk.pace!==a[NK].walk.pace?x:null;},'faster');
+      await until(async()=>!(await page.$('#director-panel .people-path-late')),'the warning goes once it arrives on time',15000).catch(()=>null);
+      check(f.walk.pace>(a[NK].walk.pace||1.8),`late: "${warn.trim()}"; Walk faster sets pace ${f.walk.pace}`);
+      await page.evaluate(()=>document.querySelector('#director-panel [data-action="undo"]').click());await until(async()=>(await mine(NK))?.walk?.pace===a[NK].walk.pace,'undo the pace');
+    }else console.log('  (the longer walk still arrives in time: no warning)');
+    // one undo step takes the end and the three placements back
+    await page.evaluate(()=>document.querySelector('#director-panel [data-action="undo"]').click());
+    const u=await until(async()=>{const x=await all();return !x[NK]||JSON.stringify(x[NK].walk.path)===JSON.stringify(n0)?x:null;},'undo');
+    check(FOL.every(k=>!u[k]||(u[k].at[0]===Q[0]&&u[k].at[1]===Q[1])),'one Undo puts the walk\u2019s end and all three placements back');
+    // Alt held: only the walk
+    px=await screen(n0);await page.keyboard.down('Alt');await dragFrom(px[n0.length-1],{x:px[n0.length-1].x+60,y:px[n0.length-1].y+30},14);await page.keyboard.up('Alt');
+    const b=await until(async()=>{const x=await all();return x[NK]&&JSON.stringify(x[NK].walk.path)!==JSON.stringify(n0)?x:null;},'the Alt drag lands');
+    check(FOL.every(k=>b[k].at[0]===Q[0]&&b[k].at[1]===Q[1]),'with Alt held only the walk\u2019s end moves; pull, tap and watch stay');
+    await snap('06-linked-inspector');
   }
   assert.deepEqual(errors,[],'page errors');
   console.log(`PASS director people path (${passed.length} checks) · shots: ${shots}`);
