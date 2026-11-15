@@ -34,6 +34,9 @@ if(opts.frames)fs.mkdirSync(opts.frames,{recursive:true});
     if(fx)await frame.evaluate(s=>window.__filmFx.install(s),shot);
     await frame.evaluate((w,h)=>{window.__rc=document.createElement('canvas');window.__rc.width=w;window.__rc.height=h;window.ErgoPresentation.beginBake(w,h);},W,H);
     const chapterFrames=Math.max(2,Math.round(shot.seconds*30)),ghosts=[],prev={},fast={};let n=0,pairsSeen=null;
+    // as a film render: the chapter is drawn from its first frame (every 1/30 s up to --from), so whoever shows before
+    // the span has had their frames (a life that starts loading on someone's first frame)
+    for(let s=0;s<from-1e-9;s+=1/30){const t=Math.min(1,s/((chapterFrames-1)/30));await frame.evaluate(async(t,s)=>{const fx=window.__filmFx;if(fx)await fx.frame(t,s,{video:true});try{await window.ErgoPresentation.bakeFrame(t,window.__rc,s);}finally{fx?.after();}},t,s);}
     for(let s=from;s<=to+1e-9;s+=step,n++){
       const t=Math.min(1,s/((chapterFrames-1)/30));
       const r=await frame.evaluate(async(t,s,c,q,want,th)=>{
