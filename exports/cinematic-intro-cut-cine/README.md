@@ -55,6 +55,20 @@
 - **Landing order**: the people commit that builds `people-maya-stand-type-41` (model, index.json, people.json,
   people-rigs/maya.json) must land before or with any branch whose cut casts it; without it Maya is missing standing.
 
+## November 14: wellness, Maya gets up at the desk (stream S16; Vico: "it just goes from sitting to standing")
+
+- Cause: the stretch model `maya-break` (`people-maya-stretch`, same character as the desk user) was timed 6.6-10.35 s
+  at a spot 265 mm behind her. A film placement of the desk user's character makes the desk actor `away`
+  (room-people.mjs), so 0.3 s after she started getting up (the lift sets off at 6.0 s) she dissolved into the stretch
+  there, and at 10.35 s dissolved back already standing at the keys. Rise has no such placement (its `stand-wait`
+  stand-in gives way to the actor), so the actor plays the whole get-up there.
+- Fix: `maya-break` is marked `fromDesk: true`, stands where she stands at the desk (`at` [-421, 85], same facing) and
+  is timed 9.7-12.3 s. The desk actor now plays the same get-up as in rise (hands off at 6.0 s, up by 8.93 s, the chair
+  rolls back and parks aside, `people.chair` unchanged), then her bones change on the spot from that standing pose to the
+  stretch (9.0-10.4 s), she stretches, and they change back to her typing pose at 41 in (11.6-13.0 s); she types to the
+  end. No dissolve. `fromDesk` (room-people.mjs `stepOuts`) is new and only this placement uses it. Chapter length (16 s),
+  lift timing, camera and titles unchanged.
+
 ## November 14 (working cut): awaken and create
 
 - awaken: both titles (ERGOFLEX 3.6-9.2 s, SAFETY 13.2-18.4 s) sit lower left; the keys under them are aimed so the

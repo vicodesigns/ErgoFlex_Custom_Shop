@@ -50389,9 +50389,10 @@
      {
       "key": "maya-break",
       "id": "people-maya-stretch",
+      "fromDesk": true,
       "at": [
        -421,
-       350
+       85
       ],
       "turn": 180,
       "colors": {
@@ -50413,8 +50414,8 @@
     "when": {
      "maya-break": [
       [
-       6.6,
-       10.35,
+       9.7,
+       12.3,
        0.3,
        0.35
       ]
