@@ -44886,6 +44886,118 @@
      ],
      "label": "Task chair that stood in front of Kai's wheelchair in the second shot",
      "hide": true
+    },
+    {
+     "match": "^Student work table$",
+     "near": [
+      0.75,
+      -0.11,
+      0.3
+     ],
+     "position": [
+      0,
+      0,
+      -0.22
+     ],
+     "label": "S9 aisle: Student work table at (0.75, -0.11)"
+    },
+    {
+     "match": "^Student investigation & work in progress",
+     "near": [
+      0.75,
+      -0.11,
+      0.3
+     ],
+     "position": [
+      0,
+      0,
+      -0.22
+     ],
+     "label": "S9 aisle: Student investigation & work in progress at (0.75, -0.11)"
+    },
+    {
+     "match": "^Prop:calculator$",
+     "near": [
+      0.585,
+      0.615,
+      0.3
+     ],
+     "position": [
+      0,
+      0,
+      -0.22
+     ],
+     "label": "S9 aisle: Prop:calculator at (0.585, 0.615)"
+    },
+    {
+     "match": "^Task chair$",
+     "near": [
+      1.61,
+      0.35,
+      0.3
+     ],
+     "position": [
+      0,
+      0,
+      -0.22
+     ],
+     "label": "S9 aisle: Task chair at (1.61, 0.35)"
+    },
+    {
+     "match": "^Student work table$",
+     "near": [
+      0.75,
+      3.13,
+      0.3
+     ],
+     "position": [
+      0.45,
+      0,
+      0.1
+     ],
+     "label": "S9 aisle: Student work table at (0.75, 3.13)"
+    },
+    {
+     "match": "^Student investigation & work in progress",
+     "near": [
+      0.75,
+      3.13,
+      0.3
+     ],
+     "position": [
+      0.45,
+      0,
+      0.1
+     ],
+     "label": "S9 aisle: Student investigation & work in progress at (0.75, 3.13)"
+    },
+    {
+     "match": "^Task chair$",
+     "near": [
+      1.61,
+      2.66,
+      0.3
+     ],
+     "position": [
+      0.45,
+      0,
+      0.1
+     ],
+     "label": "S9 aisle: Task chair at (1.61, 2.66)"
+    },
+    {
+     "match": "^Task chair$",
+     "near": [
+      1.61,
+      3.6,
+      0.3
+     ],
+     "position": [
+      0.45,
+      0,
+      0.1
+     ],
+     "label": "S9 aisle: Task chair at (1.61, 3.6)"
     }
    ],
    "clock": {
@@ -45009,23 +45121,23 @@
       "key": "kai-rolls",
       "id": "people-kai-wheel-roll",
       "at": [
-       -693,
+       -961,
        1300
       ],
       "turn": 0,
       "roll": {
        "path": [
         [
-         -693,
+         -961,
          1300
         ],
         [
-         -693,
-         -205
+         -961,
+         -265
         ],
         [
          -3757,
-         -205
+         -265
         ],
         [
          -3757,
@@ -45087,10 +45199,10 @@
       "key": "noah-talks",
       "id": "people-noah-stand-talk",
       "at": [
-       -2728,
-       -780
+       -2681,
+       -1248
       ],
-      "turn": 40,
+      "turn": 43,
       "look": [
        "kai-rolls",
        "kai-docks"
@@ -45100,15 +45212,19 @@
       "key": "noah-steps",
       "id": "people-noah-stand-wait",
       "at": [
-       -2728,
-       -780
+       -2681,
+       -1248
       ],
-      "turn": 40,
+      "turn": 43,
       "walk": {
        "path": [
         [
-         -2728,
-         -780
+         -2681,
+         -1248
+        ],
+        [
+         -2818,
+         -914
         ],
         [
          -2930,

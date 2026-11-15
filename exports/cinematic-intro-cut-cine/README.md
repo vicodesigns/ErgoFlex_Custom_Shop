@@ -228,3 +228,11 @@ and left from 1.5 s so Kai stays readable over the near table; the insert is two
 pull (5.3-7.0 s) and face-on from the screen's user's place for the tap (7.0-9.0 s); the third shot is further back
 and higher (Kai from the chest up, Noah whole). S6's monitor clips (cine-oilers-*.mp4) were timed
 for the 14 s chapter with the lift at 8-11 s: their 'Lowering to Kai's height' readout now runs ahead of the desk.
+
+Round 3 (the aisle, Vico: 'he rolls right through them'): for this chapter only (sceneEdits labelled 'S9 aisle' in
+`build-oilers-story.py`; the Studio room is unchanged) the two student work tables at the window end are moved apart
+with their chairs (Leo, Nia and Finn sit on them and follow) and what lies on them; Kai's route runs between them and
+down a cross-aisle to the desk; Noah greets him from 0.3 m right of the desk's corner and steps round. Proof: an
+overhead frame every 0.25 s of his roll with the chair's footprint (wheels, handrims, footplate, elbows: 716 x 940 mm)
+against the furniture's boxes (outside the repo: C:\work\cine-pics\s9ound3-aisle, clearance-table.txt): minimum
+clearance 110 mm, minimum clear width across his way 1107 mm, minimum gap to Noah 109 mm (with a 300 mm body radius).
