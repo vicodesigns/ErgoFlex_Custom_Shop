@@ -53,6 +53,7 @@ def main():
     load = lambda f: json.loads(open(f, 'rb').read().replace(b'\r\n', b'\n'))
     cut = load(os.path.join(HERE, 'review-cut.json'))['shots']
     shots = [(s['id'], s, None) for s in cut]
+    byid = {s['id']: s for s in cut}
     # the finale's versions only play inside their sub-shot window (each version's 'subshot' letter in hero.subshots)
     hero = next((s for s in cut if s['id'] == 'hero'), {}); wins = hero.get('subshots') or {}
     sub = os.path.join(HERE, 'shots', '13-subshots.json')
@@ -74,7 +75,8 @@ def main():
             car = os.path.splitext(p)[0] + '.capture.json'
             if not why and os.path.isfile(car):
                 c = json.load(open(car, encoding='utf-8'))
-                if c.get('motion') and c['motion'] != motion_key(s): why = 'STALE: the desk moves changed since the capture (re-capture)'
+                src_shot = byid.get(c.get('shot'), s)   # the chapter it was captured from (the finale reuses oilers' quiz)
+                if c.get('motion') and c['motion'] != motion_key(src_shot): why = 'STALE: the desk moves changed since the capture (re-capture)'
                 elif c.get('audio') and not c.get('tempo'): why = 'music captured without the score tempo map (fallback 115.2 BPM)'
             elif not why and sid == 'music' and '/cine-music-' in src: why = 'no capture sidecar: tempo unknown (re-capture)'
             d = _dur.get(p)
