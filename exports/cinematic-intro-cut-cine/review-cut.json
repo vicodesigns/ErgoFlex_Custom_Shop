@@ -69257,7 +69257,8 @@
      "person": "andre",
      "src": "exports/cinematic-intro-cut-cine/screens/cine-storage-phone.mp4",
      "offset": 0,
-     "loop": false
+     "loop": false,
+     "flipX": true
     }
    ]
   },
