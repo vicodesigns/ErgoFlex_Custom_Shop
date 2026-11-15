@@ -175,12 +175,12 @@ export const LOOK_YAW = .7, LOOK_PITCH = .42;      // radians the neck and head 
 // Turns the neck (.4) and the head (.6) so that the face points `amount` of the way to `target` (a point in the
 // model's frame), within LOOK_YAW / LOOK_PITCH of where the posture has it looking: small turns, never a broken neck.
 // fk() must be current; it is current afterwards.
-export function lookToward(rig, target, amount) {
+export function lookToward(rig, target, amount, pitchOnly = false) {
     if (!target || !(amount > 0)) return;
     const b = rig.b, face = faceOf(rig), from = v7.copy(rig.wp[b.head]); from.y += .07;      // (the eyes: a little above the head bone)
     gazeV.copy(face).applyQuaternion(rig.wq[b.head]); lookV.copy(target).sub(from); if (lookV.lengthSq() < 1e-6) return; lookV.normalize();
     const wrap = a => Math.atan2(Math.sin(a), Math.cos(a)), clamp = THREE.MathUtils.clamp;
-    const yaw = clamp(wrap(Math.atan2(lookV.x, lookV.z) - Math.atan2(gazeV.x, gazeV.z)), -LOOK_YAW, LOOK_YAW) * amount;
+    const yaw = pitchOnly ? 0 : clamp(wrap(Math.atan2(lookV.x, lookV.z) - Math.atan2(gazeV.x, gazeV.z)), -LOOK_YAW, LOOK_YAW) * amount;
     const pitch = clamp(Math.asin(clamp(lookV.y, -1, 1)) - Math.asin(clamp(gazeV.y, -1, 1)), -LOOK_PITCH, LOOK_PITCH) * amount;
     for (const [bone, share] of [[b.neck_01, .4], [b.head, .6]]) {
         rig.turnWorld(bone, lookTurn.setFromAxisAngle(Y, yaw * share)); rig.fk();
@@ -975,8 +975,17 @@ export function solveTread(rig, plan, time, begin = 0) {
 // follow, the arms come last; where the hips rise or sink (sitting down, getting up) the trunk leans in on the way;
 // feet that end somewhere else step there one after the other, and feet that stay are pinned. Exactly `from` at 0
 // and `to` at 1. Pure. Returns { model: 'from' | 'to' } (which of the two built models to draw: they bend alike).
-export function solveChange(rig, from, to, w) {
-    const b = rig.b, t = clamp01(w), hips = ss(0, .72, t), spine = ss(.08, .82, t), head = ss(.15, .92, t), arms = ss(.22, 1, t);
+// `arms`: the part of the change (0..1) in which the arms go from the one posture to the other, [.22, 1] when not given
+// (the workshop film: hands off a shelf before he turns away, a placement's `change.arms`, room-people.mjs).
+// `shift`: { x, z, yaw, e } when the model itself moves and turns during the change (metres in the first spot's frame,
+// from the first spot to the second, the turn between them in radians, and the share of both done now): each foot stays
+// on the floor where it was and then steps (lifted, turned with the step) to where it goes, first the foot on the side
+// it turns to (the left when it does not turn: a step back from a desk), instead of sliding or spinning with the model.
+// `line`: the hands go straight from where they were to where they go (two-bone reach along the line, the elbows as the
+// turns put them), not along the arc the turned shoulders and elbows draw: hands that leave a shelf over a desk come back
+// over it instead of swinging down through it (the workshop film, `change.hands: 'line'`).
+export function solveChange(rig, from, to, w, arms0 = null, shift = null, line = false) {
+    const b = rig.b, t = clamp01(w), hips = ss(0, .72, t), spine = ss(.08, .82, t), head = ss(.15, .92, t), arms = arms0 ? ss(arms0[0], arms0[1], t) : ss(.22, 1, t);
     if (t <= 0 || t >= 1) { rig.load(t <= 0 ? from : to); rig.fk(); return { model: t <= 0 ? 'from' : 'to' }; }
     const part = new Float32Array(rig.n).fill(hips);
     for (const i of [b.spine_01, b.spine_02, b.spine_03]) part[i] = spine;
@@ -993,12 +1002,34 @@ export function solveChange(rig, from, to, w) {
     for (const s of ['l', 'r']) {
         const [thigh, calf, foot] = rig.side[s].leg, far = from.wp[foot].distanceTo(to.wp[foot]);
         // the feet move while the weight is in the seat: before getting up, after sitting down
+        if (shift) {
+            const yaw = shift.yaw || 0, first = yaw >= 0 ? 'l' : 'r', step = ss(...(s === first ? [.04, .42] : [.36, .76]), t), e = shift.e;
+            // where it is and where it goes, in the first spot's frame (the second spot's footprint turned and moved there)
+            v1.copy(to.wp[foot]).applyAxisAngle(Y, yaw); v1.x += shift.x; v1.z += shift.z;
+            const reach = Math.hypot(v1.x - from.wp[foot].x, v1.z - from.wp[foot].z);
+            awayAt.lerpVectors(from.wp[foot], v1, step); awayAt.y += Math.min(.035, reach * .3) * Math.sin(Math.PI * step);
+            // into the model's frame now (it has moved e of the way and turned e of the turn)
+            awayAt.x -= shift.x * e; awayAt.z -= shift.z * e; awayAt.applyAxisAngle(Y, -yaw * e);
+            footQ.slerpQuaternions(from.wq[foot], turn.setFromAxisAngle(Y, yaw).multiply(to.wq[foot]), step).premultiply(turn2.setFromAxisAngle(Y, -yaw * e));
+            rig.reach(thigh, calf, foot, awayAt); rig.reach(thigh, calf, foot, awayAt); rig.setWorld(foot, footQ);
+            continue;
+        }
         const window = rising ? (s === 'l' ? [.02, .3] : [.2, .48]) : (s === 'l' ? [.52, .8] : [.7, .98]), step = far < .004 ? hips : ss(window[0], window[1], t);
         awayAt.lerpVectors(from.wp[foot], to.wp[foot], step); awayAt.y += Math.min(.035, far * .3) * Math.sin(Math.PI * step);
         footQ.slerpQuaternions(from.wq[foot], to.wq[foot], step);
         rig.reach(thigh, calf, foot, awayAt); rig.reach(thigh, calf, foot, awayAt); rig.setWorld(foot, footQ);
     }
     rig.fk();
+    if (line) {
+        const a = arms0 ? ss(arms0[0], arms0[1], t) : ss(.22, 1, t), yaw = shift?.yaw || 0, e = shift?.e || 0;
+        for (const s of ['l', 'r']) {
+            const [, upper, lower, hand] = rig.side[s].arm;
+            // (where it was, carried with the body as it steps; where it goes, in the model's frame now)
+            const goes = to.wp[hand].clone(); if (shift) { goes.applyAxisAngle(Y, yaw); goes.x += shift.x * (1 - e); goes.z += shift.z * (1 - e); goes.applyAxisAngle(Y, -yaw * e); }
+            const at = from.wp[hand].clone().lerp(goes, a), q = rig.wq[hand].clone();
+            rig.reach(upper, lower, hand, at); rig.reach(upper, lower, hand, at); rig.setWorld(hand, q); rig.fk();
+        }
+    }
     return { model: t < .5 ? 'from' : 'to' };
 }
 
@@ -1008,21 +1039,74 @@ export function solveChange(rig, from, to, w) {
 // the legs follow by IK), so feet cannot slide. From standing (posture `from`) to standing (`to`; the same posture
 // when not given), facing along the path at both ends.
 //   path: [[x, z], ...] metres in the room's floor plane (two points or more; corners are walked as given)
-//   options: { step: metres (default from the leg length), pace: steps a second (default 1.8) }
+//   options: { step: metres (default from the leg length), pace: steps a second (default 1.8), toes: 'bend' (the
+//              default: the toes stay flat on the floor while the heel is up) | 'stiff' (the foot pitches whole),
+//              sole: [left, right] (metres the drawn soles stand above the floor in the posture: below),
+//              heels: [[y, z], [y, z]] (the drawn heels' first contact from the ankles), tilt: [left, right] (radians
+//              the drawn soles are toes-down: the landing lifts the toes as much more), land: [left, right] (metres
+//              the drawn heels stand off the floor as a foot lands: below), startYaw / endYaw (radians, about y, 0
+//              facing +z: the way they face where the walk starts and ends; along the first and last leg when not given) }
 // Returns { length, seconds, prints, at(seconds) -> g } where g counts steps (the gait clock).
+// A walk starts and ends standing: a built walking posture (`walk`, mid-stride, feet pitched, hips low: the film's
+// walkers are cast in it for its model, a backpack on some) is taken as the character's standing-by posture
+// (walkStance), so the gait is laid out from feet flat on the floor (S19, Nov 14: walks from the mid-stride posture
+// sank the front foot 30-69 mm into the floor, floated the back one, crouched and marched).
+const WALKING = new Set(['walk']);
+export const TURN_RATE = 115;      // degrees a second a walker's body turns at most (chingon: 120 near the lens)
+export function walkStance(rig, key) {
+    if (!key || !WALKING.has(key.pose)) return key;
+    const id = [`people-${rig.character}-stand-wait`, `people-${rig.character}-kid-stand-wait`].find(i => rig.has(i));
+    return id ? rig.key(id, key.dz || 0) : key;
+}
+// The drawn shoes, from points of the skinned model in the model's frame with the rig posed as the walk starts (solveWalk
+// at 0): points [[x, y, z, side 0 left | 1 right], ...] (room-people.mjs walkAlong; the tests from the GLBs). Returns
+// walkPlan's options: sole (how far each sole stands above the floor), tilt (how far the sole is toes-down, radians)
+// and heels (the point behind the ankle that meets the floor first as that foot lands, toes up GAIT.land + tilt).
+export function shoeFit(rig, points) {
+    const sole = [Infinity, Infinity], heels = [null, null], tilt = [0, 0], ankles = ['l', 'r'].map(s => rig.wp[rig.side[s].leg[2]]);
+    const heel = [null, null], toe = [null, null];
+    for (const [x, y, z, k] of points) {
+        if (!(k === 0 || k === 1) || y > .12) continue; const dz = z - ankles[k].z;
+        if (y < sole[k]) sole[k] = y;
+        if (dz < -.02 && (!heel[k] || y < heel[k][0])) heel[k] = [y, dz];
+        if (dz > .04 && (!toe[k] || y < toe[k][0])) toe[k] = [y, dz];
+    }
+    for (const k of [0, 1]) {
+        if (heel[k] && toe[k]) tilt[k] = THREE.MathUtils.clamp(Math.atan2(heel[k][0] - toe[k][0], toe[k][1] - heel[k][1]), 0, .35);
+        const a = ankles[k], c = Math.cos(GAIT.land + tilt[k]), s = Math.sin(GAIT.land + tilt[k]); let best = Infinity;
+        for (const [x, y, z, side] of points) {
+            if (side !== k || y > .12) continue; const dy = y - a.y, dz = z - a.z; if (dz >= 0) continue;      // (behind the ankle: a heel)
+            const up = dy * c + dz * s; if (up < best) { best = up; heels[k] = [dy, dz]; }
+        }
+    }
+    return { sole: sole.map(v => Number.isFinite(v) ? v : 0), tilt, heels };
+}
 const hermite = (p0, p1, m0, m1, t) => { const t2 = t * t, t3 = t2 * t; return (2 * t3 - 3 * t2 + 1) * p0 + (t3 - 2 * t2 + t) * m0 + (-2 * t3 + 3 * t2) * p1 + (t3 - t2) * m1; };
 export function walkPlan(rig, from, to, path, options = {}) {
-    to ||= from;
+    from = walkStance(rig, from); to = walkStance(rig, to || from);
     const points = path.map(([x, z]) => new THREE.Vector2(x, z)), legs = [], L = rig.side.l, R = rig.side.r;
     let length = 0; for (let i = 1; i < points.length; i++) { const d = points[i].distanceTo(points[i - 1]); legs.push({ a: points[i - 1], b: points[i], s0: length, d }); length += d; }
     // where the path is and which way it heads at a distance along it (yaw about y: 0 faces +z)
     const along = s => { const leg = legs.find(l => s <= l.s0 + l.d) || legs[legs.length - 1], t = leg.d > 0 ? clamp01((s - leg.s0) / leg.d) : 0; return { x: lerp(leg.a.x, leg.b.x, t), z: lerp(leg.a.y, leg.b.y, t), yaw: Math.atan2(leg.b.x - leg.a.x, leg.b.y - leg.a.y) }; };
     // the heading turns over 0.35 m either side of a corner, not at once
-    const heading = s => { const a = along(Math.max(0, s - .35)), b = along(Math.min(length, s + .35)); return Math.hypot(b.x - a.x, b.z - a.z) > 1e-6 ? Math.atan2(b.x - a.x, b.z - a.z) : a.yaw; };
+    const curve = s => { const a = along(Math.max(0, s - .35)), b = along(Math.min(length, s + .35)); return Math.hypot(b.x - a.x, b.z - a.z) > 1e-6 ? Math.atan2(b.x - a.x, b.z - a.z) : a.yaw; };
+    // (at the two ends exactly the way asked: options.startYaw / endYaw, radians, or along the first and the last leg,
+    // reached over up to 0.6 m (half the path at most): a short last leg, or a placement that stands turned from the
+    // path, is faced in full when the walk ends, not snapped to at the next change)
+    const wrap = a => Math.atan2(Math.sin(a), Math.cos(a)), yawOf = l => l ? Math.atan2(l.b.x - l.a.x, l.b.y - l.a.y) : 0;
+    const startYaw = Number.isFinite(options.startYaw) ? options.startYaw : yawOf(legs.find(l => l.d > 1e-6)), endYaw = Number.isFinite(options.endYaw) ? options.endYaw : yawOf([...legs].reverse().find(l => l.d > 1e-6)), span = Math.max(1e-3, Math.min(.6, length / 2));
+    const heading = s => { let h = curve(s); h += wrap(endYaw - h) * ss(length - span, length, s); h += wrap(startYaw - h) * (1 - ss(0, span, s)); return h; };
     const leg = rig.offset[L.leg[1]].length() + rig.offset[L.leg[2]].length(), want = options.step || leg * .64, strides = Math.max(1, Math.round(length / want)), step = length / strides;
     // footprints: where each ankle is while that foot is on the floor. Both feet start in `from` and end in `to`.
-    const place = (key, foot, s) => { const at = along(s), yaw = heading(s), p = key.wp[foot], c = Math.cos(yaw), sn = Math.sin(yaw); return { x: at.x + p.x * c + p.z * sn, z: at.z - p.x * sn + p.z * c, y: p.y, yaw, s }; };
-    const side = (foot, s) => { const at = along(s), yaw = heading(s), w = (from.wp[foot].x + to.wp[foot].x) / 2 * .8, c = Math.cos(yaw), sn = Math.sin(yaw); return { x: at.x + w * c, z: at.z - w * sn, y: Math.min(from.wp[foot].y, to.wp[foot].y), yaw, s }; };
+    // (options.sole: [left, right] metres the drawn model's soles are above the floor with the feet flat where the
+    // posture puts the ankles: the model of another posture, skinned to this one, room-people.mjs walkAlong; the
+    // footprints are that much lower, so the shoes stand on the floor, not a few millimetres over it)
+    const sole = Array.isArray(options.sole) ? options.sole.map(v => Number.isFinite(v) ? THREE.MathUtils.clamp(v, -.03, .03) : 0) : [0, 0], drop = foot => foot === L.leg[2] ? sole[0] : sole[1];
+    const place = (key, foot, s) => { const at = along(s), yaw = heading(s), p = key.wp[foot], c = Math.cos(yaw), sn = Math.sin(yaw); return { x: at.x + p.x * c + p.z * sn, z: at.z - p.x * sn + p.z * c, y: p.y - drop(foot), yaw, s }; };
+    // (walking, the feet go nearer the line of travel than they stand: a step width of about the hip joints' spacing
+    // times 0.6, 0.10-0.12 m between the ankles, not the stance's 0.23 m, which waddles)
+    const hipX = (Math.abs(from.wp[L.leg[0]].x) + Math.abs(from.wp[R.leg[0]].x)) / 2;
+    const side = (foot, s) => { const at = along(s), yaw = heading(s), mid = (from.wp[foot].x + to.wp[foot].x) / 2, w = Math.sign(mid) * Math.min(Math.abs(mid) * .8, hipX * .6), c = Math.cos(yaw), sn = Math.sin(yaw); return { x: at.x + w * c, z: at.z - w * sn, y: Math.min(from.wp[foot].y, to.wp[foot].y) - drop(foot), yaw, s }; };
     const feet = [L.leg[2], R.leg[2]], prints = [[place(from, feet[0], 0)], [place(from, feet[1], 0)]], steps = [], knots = [[0, 0]];
     // step j (from 1) lands half a step, then whole steps further on; the last two bring both feet to the end
     for (let j = 1; j <= strides + 2; j++) {
@@ -1037,58 +1121,139 @@ export function walkPlan(rig, from, to, path, options = {}) {
     const slope = i => i <= 0 || i >= knots.length - 1 ? 0 : (knots[i + 1][1] - knots[i - 1][1]) / (knots[i + 1][0] - knots[i - 1][0]);
     const travel = g => { g = Math.min(steps.length, Math.max(0, g)); let i = 1; while (i < knots.length - 1 && g > knots[i][0]) i++; const [g0, s0] = knots[i - 1], [g1, s1] = knots[i], h = g1 - g0; return Math.min(s1, Math.max(s0, hermite(s0, s1, slope(i - 1) * h, slope(i) * h, (g - g0) / h))); };
     const pace = options.pace || 1.8;
-    return { length, step, steps, prints, along, heading, travel, from, to, pace, seconds: steps.length / pace, at: seconds => clamp01(seconds * pace / steps.length) * steps.length };
+    // (options.heels: [[y, z], [y, z]] metres from each ankle to the point of the drawn shoe's heel that meets the floor
+    // first when the toes are up, as room-people.mjs measures it; without: the floor 5 cm behind the ankle)
+    const heels = [0, 1].map(i => { const h = options.heels?.[i]; return Array.isArray(h) && h.length === 2 && h.every(Number.isFinite) ? new THREE.Vector3(0, h[0], h[1]) : new THREE.Vector3(0, -from.wp[i ? R.leg[2] : L.leg[2]].y, -.05); });
+    // (options.land: [left, right] metres the drawn heel still stands above the floor as the foot lands, the toes up
+    // GAIT.land: the shoe's heel is skinned partly to the shin, so it does not turn with the foot; measured by
+    // room-people.mjs as well, and taken off the ankle's height in proportion as the toes are up)
+    const land = [0, 1].map(i => Number.isFinite(options.land?.[i]) ? THREE.MathUtils.clamp(options.land[i], -.03, .04) : 0);
+    // (options.tilt: [left, right] radians the drawn sole is toes-down with the foot as the posture has it, shoeFit)
+    const tilt = [0, 1].map(i => Number.isFinite(options.tilt?.[i]) ? THREE.MathUtils.clamp(options.tilt[i], 0, .35) : 0);
+    // (the way the body faces, by the clock: the path's heading where the walker is, turning at most TURN_RATE degrees a
+    // second, chingon's rule for people near the lens (the two-tap shutter doubles a fast turn); the two ends kept
+    // exactly. A walk too short for its turn at that rate turns as fast as it must: plan.turnRate says how fast.)
+    const total = steps.length, n = Math.max(2, Math.ceil(total / pace * 60) + 1), dt = total / pace / (n - 1), raw = new Float64Array(n);      // (about 60 a second, the last at the end)
+    for (let i = 0; i < n; i++) { const h = heading(travel(Math.min(total, i * dt * pace))); raw[i] = i ? raw[i - 1] + wrap(h - raw[i - 1]) : h; }
+    const most = THREE.MathUtils.degToRad(TURN_RATE) * dt, fastest = a => { let m = 0; for (let i = 1; i < a.length; i++) m = Math.max(m, Math.abs(a[i] - a[i - 1])); return m; };
+    // (no faster than `most` a frame both ways round, which keeps the two ends; then softened, which keeps the limit)
+    // (both ends exact: when the turn does not fit at that rate, the cap rises until it does, and turnRate says so)
+    const body = Float64Array.from(raw);
+    for (let cap = most * .9; ; cap *= 1.1) {
+        const step1 = (x, to) => x + THREE.MathUtils.clamp(to - x, -cap, cap);
+        body[0] = raw[0]; for (let i = 1; i < n; i++) body[i] = step1(body[i - 1], raw[i]);
+        body[n - 1] = raw[n - 1]; for (let i = n - 2; i >= 0; i--) body[i] = step1(body[i + 1], body[i]);
+        if (Math.abs(body[0] - raw[0]) < 1e-6 || cap > Math.PI) break;
+    }
+    for (let pass = 0; pass < 6; pass++) { const prev = Float64Array.from(body); for (let i = 1; i < n - 1; i++) { const r = Math.min(3, i, n - 1 - i); let sum = 0; for (let k = -r; k <= r; k++) sum += prev[i + k]; body[i] = sum / (2 * r + 1); } }
+    const bodyYaw = g => { const x = Math.min(n - 1, Math.max(0, g / pace / dt)), i = Math.min(n - 2, Math.floor(x)); return lerp(body[i], body[i + 1], x - i); };
+    return { length, step, steps, prints, along, heading, travel, bodyYaw, turnRate: THREE.MathUtils.radToDeg(fastest(body) / dt), from, to, pace, heels, land, tilt, toes: options.toes !== 'stiff', seconds: steps.length / pace, at: seconds => clamp01(seconds * pace / steps.length) * steps.length };
 }
 // The pose at gait clock g (plan.at(seconds)): rig.lq / rig.lp in the model's frame. Returns where the model stands:
 // { x, z, yaw } (metres, radians; the room's frame).
-const printAt = V(), pivot = V(), rootAt = { x: 0, z: 0, yaw: 0 };
+// The gait (S19, Nov 14, measured against people walking at 0.8-1.4 m/s): the hips as high as the legs on the floor let
+// them be with the knee GAIT.knee degrees bent (about 10 at mid-stance; lower with both feet down, the bob of 20-40 mm
+// coming from the step itself), never so high that a planted leg cannot reach its footprint; the heel comes up GAIT.heel
+// radians over the ball before the foot leaves, the toes flat on the floor (plan.toes); the swinging foot clears the
+// floor by GAIT.clear metres at heel and ball; the trunk GAIT.trunk degrees forward of upright; the eyes on the floor
+// a few metres ahead.
+const GAIT = { knee: 10, hard: 1, heel: .7, land: .2, clear: .024, swing: .05, trunk: 3, arm: 2, elbow: 22 };
+const pivot = V(), rootAt = { x: 0, z: 0, yaw: 0 }, aims = [V(), V()], aimQ = [Q(), Q()], offA = V(), offB = V(), lookAt = V();
+const bends = [0, 0], contacts = [0, 0], faces = [0, 0];
+const kneeSpan = (a, b, deg) => Math.sqrt(a * a + b * b + 2 * a * b * Math.cos(THREE.MathUtils.degToRad(deg)));      // hip to ankle with the knee bent so
 export function solveWalk(rig, plan, g) {
-    const { steps, from, to } = plan, b = rig.b, total = steps.length, s = plan.travel(g), at = plan.along(s), yaw = plan.heading(s), c = Math.cos(yaw), sn = Math.sin(yaw);
+    const { steps, from, to } = plan, b = rig.b, total = steps.length, s = plan.travel(g), at = plan.along(s), yaw = plan.bodyYaw ? plan.bodyYaw(g) : plan.heading(s), c = Math.cos(yaw), sn = Math.sin(yaw);
     const blend = ss(0, 1, g / total), walking = ss(0, .8, g) * (1 - ss(total - .9, total, g));      // how much of the walk's own carriage is in the pose
+    faceOf(rig);      // (before the pose: reading a posture loads it; a walker who looks at someone, room-people.mjs, needs it after)
     for (let i = 0; i < rig.n; i++) rig.lq[i].slerpQuaternions(from.q[i], to.q[i], blend);
     rig.lp[b.Root].lerpVectors(from.root, to.root, blend);
-    // which foot is in the air, and how far through its step
-    let swing = null; for (const st of steps) if (g > st.g0 && g < st.g1) swing = st;
-    const u = swing ? (g - swing.g0) / (swing.g1 - swing.g0) : 0, phase = g - Math.floor(g), odd = Math.floor(g) % 2 === 0 ? 1 : -1;      // odd: +1 while the left foot steps
-    // hips: lowest with both feet down, highest over the standing leg; a little to the side of it; turned with the stride
-    const bob = -.03 * walking - .014 * walking * Math.cos(phase * Math.PI * 2), lateral = -.018 * walking * odd * Math.sin(phase * Math.PI);
-    spot.lerpVectors(from.wp[b.pelvis], to.wp[b.pelvis], blend); spot.x += lateral; spot.y += bob; spot.z += .01 * walking;
-    rig.placePelvis(spot); rig.fk();
-    const stride = Math.sin(phase * Math.PI) * odd * walking;      // + while the left leg swings forward
-    rig.turnWorld(b.pelvis, turn.setFromAxisAngle(Y, .07 * Math.cos(phase * Math.PI) * odd * walking).multiply(turn2.setFromAxisAngle(Z, -.035 * stride))); rig.fk();
-    rig.turnWorld(b.spine_01, turn.setFromAxisAngle(X, .035 * walking)); rig.fk();
-    rig.turnWorld(b.spine_03, turn.setFromAxisAngle(Y, -.11 * Math.cos(phase * Math.PI) * odd * walking).multiply(turn2.setFromAxisAngle(Z, .03 * stride))); rig.fk();
-    rig.turnWorld(b.head, turn.setFromAxisAngle(Y, .04 * Math.cos(phase * Math.PI) * odd * walking)); rig.fk();
-    // legs: a foot on the floor stays on its footprint; the other goes heel-off, through, heel-first to the next
+    const phase = g - Math.floor(g), odd = Math.floor(g) % 2 === 0 ? 1 : -1;      // odd: +1 while the left foot steps
+    // ---- the feet first (they do not depend on the hips): a foot on the floor stays on its footprint; the other goes
+    // heel-off, through, heel-first to the next
     for (const [which, s2] of [[0, 'l'], [1, 'r']]) {
-        const [thigh, calf, foot, ball] = rig.side[s2].leg, list = plan.prints[which];
+        const [, , foot, ball] = rig.side[s2].leg, list = plan.prints[which];
         let print = list[0], next = null, air = 0; for (const st of steps) { if (st.which !== which) continue; if (g >= st.g1) print = st.to; else if (g > st.g0) { print = st.from; next = st.to; air = (g - st.g0) / (st.g1 - st.g0); } }
         // heel-off before the foot leaves: the ankle rises over the ball of the foot while the hips go on ahead
-        const coming = steps.find(st => st.which === which && st.g0 >= g), lift = coming && coming.from === print ? ss(coming.g0 - .5, coming.g0, g) * walking : 0;
-        let x = print.x, z = print.z, y = print.y, face = print.yaw, pitch = lift * .62;
+        const coming = steps.find(st => st.which === which && st.g0 >= g), lift = coming && coming.from === print ? ss(coming.g0 - .62, coming.g0, g) * walking : 0;
+        // (the toes up as the foot lands: GAIT.land, more for a shoe the posture has toes-down, plan.tilt, so it lands on the heel)
+        const landing = GAIT.land + (plan.tilt?.[which] || 0);
+        let x = print.x, z = print.z, y = print.y, face = print.yaw, pitch = lift * GAIT.heel, floor = print.y;
         if (next) {
             const e = air * air * (3 - 2 * air), far = Math.hypot(next.x - print.x, next.z - print.z);
-            x = lerp(print.x, next.x, e); z = lerp(print.z, next.z, e); y = lerp(print.y, next.y, e) + Math.min(.04, .015 + far * .05) * Math.sin(Math.PI * Math.min(1, air * 1.15)) ** 1.3;
+            x = lerp(print.x, next.x, e); z = lerp(print.z, next.z, e); floor = lerp(print.y, next.y, e); y = floor + .006 * Math.sin(Math.PI * air);
+            // (early in the swing the heel comes up behind, the knee bending to about 60 degrees, not the thigh up in front)
+            y += GAIT.swing * walking * clamp01(far / .6) * Math.sin(Math.PI * Math.min(1, air / .6)) ** 1.2;
             face = print.yaw + (THREE.MathUtils.euclideanModulo(next.yaw - print.yaw + Math.PI, Math.PI * 2) - Math.PI) * e;
-            pitch = lerp(.62 * walking, -.2 * walking * clamp01(far / .3), ss(.1, .8, air));
-        } else { const landed = steps.filter(st => st.which === which && st.to === print).pop(); if (landed) pitch += -.2 * walking * (1 - ss(landed.g1, landed.g1 + .16, g)) * clamp01(Math.hypot(landed.to.x - landed.from.x, landed.to.z - landed.from.z) / .3); }
+            pitch = lerp(GAIT.heel * walking, -landing * walking * clamp01(far / .3), ss(.1, .85, air));
+        } else { const landed = steps.filter(st => st.which === which && st.to === print).pop(); if (landed) pitch += -landing * walking * (1 - ss(landed.g1, landed.g1 + .16, g)) * clamp01(Math.hypot(landed.to.x - landed.from.x, landed.to.z - landed.from.z) / .3); }
         // pitched about the ball (heel up) or the heel (toes up): the ankle moves with it, the ball or the heel stays
+        const heelOff = offB.copy(plan.heels?.[which] || offB.set(0, -from.wp[foot].y, -.05));      // (the heel's floor point from the ankle)
         if (Math.abs(pitch) > 1e-5) {
-            if (pitch > 0) pivot.copy(from.wp[foot]).sub(from.wp[ball]); else pivot.set(0, from.wp[foot].y, .05);
+            if (pitch > 0) pivot.copy(from.wp[foot]).sub(from.wp[ball]); else pivot.copy(heelOff).negate();
             v1.copy(pivot).applyQuaternion(turn.setFromAxisAngle(X, pitch)).sub(pivot).applyQuaternion(turn2.setFromAxisAngle(Y, face));
             x += v1.x; y += v1.y; z += v1.z;
         }
+        if (pitch < 0 && plan.land) y -= plan.land[which] * clamp01(-pitch / landing);
+        // in the air the heel and the ball (the toes, flat with it) keep clear of the floor
+        if (next) {
+            const want = GAIT.clear * walking * ss(.06, .3, air) * (1 - ss(.72, .97, air)), r = turn.setFromAxisAngle(X, pitch);
+            offA.copy(from.wp[ball]).sub(from.wp[foot]);
+            const ballUp = y + v2.copy(offA).applyQuaternion(r).y - (floor + offA.y), heelUp = y + v2.copy(heelOff).applyQuaternion(r).y - (floor + heelOff.y);
+            y += Math.max(0, want - Math.min(ballUp, heelUp));
+        }
         // into the model's frame (it stands at the hips' place on the path, facing along it)
-        const dx = x - at.x, dz = z - at.z; printAt.set(dx * c - dz * sn, y, dx * sn + dz * c);
-        rig.reach(thigh, calf, foot, printAt); rig.reach(thigh, calf, foot, printAt);
-        footQ.slerpQuaternions(from.wq[foot], to.wq[foot], blend); rig.setWorld(foot, turn.setFromAxisAngle(Y, face - yaw).multiply(turn2.setFromAxisAngle(X, pitch)).multiply(footQ));
+        const dx = x - at.x, dz = z - at.z; aims[which].set(dx * c - dz * sn, y, dx * sn + dz * c);
+        footQ.slerpQuaternions(from.wq[foot], to.wq[foot], blend); aimQ[which].copy(turn.setFromAxisAngle(Y, face - yaw)).multiply(turn2.setFromAxisAngle(X, pitch)).multiply(footQ);
+        faces[which] = face - yaw;
+        bends[which] = plan.toes && pitch > 0 ? (next ? 1 - ss(.15, .5, air) : 1) : 0;
+        contacts[which] = next ? ss(.6, .95, air) : 1 - .85 * lift;      // (how much the hips keep this leg's knee near GAIT.knee: less as its heel comes up)
+    }
+    // ---- hips: a little to the side of the standing leg, turned with the stride, and as high as the legs allow
+    const lateral = -.018 * walking * odd * Math.sin(phase * Math.PI), thighA = rig.offset[rig.side.l.leg[1]].length(), shinA = rig.offset[rig.side.l.leg[2]].length();
+    spot.lerpVectors(from.wp[b.pelvis], to.wp[b.pelvis], blend); spot.x += lateral; spot.z += .01 * walking;
+    rig.placePelvis(spot); rig.fk();
+    const stride = Math.sin(phase * Math.PI) * odd * walking;      // + while the left leg swings forward
+    rig.turnWorld(b.pelvis, turn.setFromAxisAngle(Y, .07 * Math.cos(phase * Math.PI) * odd * walking).multiply(turn2.setFromAxisAngle(Z, -.035 * stride))); rig.fk();
+    // how far the hips may rise (+) or must come down (-) for each leg: with the knee GAIT.knee bent (soft: the feet on
+    // the floor, the swinging one less and less), and so that a leg reaches its foot at all (hard: both, always)
+    let soft = Infinity, hard = Infinity;
+    for (const [which, s2] of [[0, 'l'], [1, 'r']]) {
+        const hip = rig.wp[rig.side[s2].leg[0]], A = aims[which], h2 = (A.x - hip.x) ** 2 + (A.z - hip.z) ** 2, rise = deg => A.y + Math.sqrt(Math.max(0, kneeSpan(thighA, shinA, deg) ** 2 - h2)) - hip.y;
+        soft = Math.min(soft, rise(GAIT.knee) + (1 - contacts[which]) * .3); hard = Math.min(hard, rise(GAIT.hard * walking));      // (straight as built where the walk has not begun)
+    }
+    const lift = Math.min(walking * Math.min(soft, -.004), hard);
+    if (Math.abs(lift) > 1e-7) { spot.y += lift; rig.placePelvis(spot); rig.fk(); }
+    rig.turnWorld(b.spine_03, turn.setFromAxisAngle(Y, -.11 * Math.cos(phase * Math.PI) * odd * walking).multiply(turn2.setFromAxisAngle(Z, .03 * stride))); rig.fk();
+    if (walking > 0) {
+        // the trunk upright over the hips (GAIT.trunk forward), whatever the postures at the ends lean
+        const tr = v4.copy(rig.wp[b.neck_01]).sub(rig.wp[b.pelvis]), lean = THREE.MathUtils.clamp(THREE.MathUtils.degToRad(GAIT.trunk) - Math.atan2(tr.z, tr.y), -.2, .2) * walking;
+        for (const [bone, share] of [[b.spine_01, .5], [b.spine_02, .5]]) { rig.turnWorld(bone, turn.setFromAxisAngle(X, lean * share)); rig.fk(); }
+        // and the eyes ahead, on the floor three metres on (not on a desktop, as someone standing by has them)
+        lookAt.copy(rig.wp[b.head]); lookAt.y -= .45; lookAt.z += 3; lookToward(rig, lookAt, .8 * walking, true);      // (up or down only: a turn of the head as the walk ends would be a fast one)
+    }
+    rig.turnWorld(b.head, turn.setFromAxisAngle(Y, .04 * Math.cos(phase * Math.PI) * odd * walking)); rig.fk();
+    // ---- legs to the feet
+    for (const [which, s2] of [[0, 'l'], [1, 'r']]) {
+        const [thigh, calf, foot, ball] = rig.side[s2].leg;
+        rig.reach(thigh, calf, foot, aims[which]); rig.reach(thigh, calf, foot, aims[which]); rig.setWorld(foot, aimQ[which]);
+        // (plan.toes: the toes bend at the ball while the heel is up, flat on the floor instead of through it, until the
+        // foot is well off the floor)
+        if (bends[which] > 0) { rig.fk(); footQ.slerpQuaternions(from.wq[ball], to.wq[ball], blend).premultiply(turn.setFromAxisAngle(Y, faces[which])); rig.setWorld(ball, tq.slerpQuaternions(rig.wq[ball], footQ, bends[which])); }
     }
     rig.fk();
-    // arms swing against the legs from the shoulder, the elbow giving a little on the way forward
+    // arms swing against the legs from the shoulder, the elbow giving a little on the way forward; the swing is about
+    // an upper arm that hangs straight down (GAIT.arm forward), not about the standing-by posture's, which hangs some
+    // 20 degrees back (and on a backpack's strap)
     for (const s2 of ['l', 'r']) {
         const [, upper, lower] = rig.side[s2].arm, forward = (s2 === 'l' ? 1 : -1) * Math.cos(phase * Math.PI) * odd * walking;
-        rig.turnWorld(upper, turn.setFromAxisAngle(X, -.26 * forward)); rig.fk();
-        rig.turnWorld(lower, turn.setFromAxisAngle(X, -(.1 + .14 * Math.max(0, forward)) * walking)); rig.fk();
+        const d = v4.copy(rig.wp[lower]).sub(rig.wp[upper]), hang = THREE.MathUtils.clamp(THREE.MathUtils.degToRad(GAIT.arm) - Math.atan2(d.z, -d.y), -.4, .4) * walking;
+        // (behind the hips the arm swings a little less and a little out, past the hip and a backpack's strap)
+        const back = Math.max(0, -forward);
+        rig.turnWorld(upper, turn.setFromAxisAngle(X, -.26 * Math.max(0, forward) + .2 * back - hang).premultiply(turn2.setFromAxisAngle(Z, (s2 === 'l' ? 1 : -1) * .06 * back))); rig.fk();
+        // the elbow loose: about GAIT.elbow degrees, more on the way forward (the standing-by posture's 40-60 is a forearm
+        // held out in front)
+        const hand = rig.side[s2].arm[3], bend = v4.copy(rig.wp[lower]).sub(rig.wp[upper]).angleTo(v5.copy(rig.wp[hand]).sub(rig.wp[lower]));
+        rig.turnWorld(lower, turn.setFromAxisAngle(X, -(THREE.MathUtils.degToRad(GAIT.elbow + 16 * Math.max(0, forward)) - bend) * walking)); rig.fk();
     }
     rig.fk();
     rootAt.x = at.x; rootAt.z = at.z; rootAt.yaw = yaw; return rootAt;
@@ -1124,13 +1289,14 @@ export function rollPlan(path, options = {}) {
     if (P.length < 2) { const p = P[0] || { x: 0, z: 0 }; P.push({ x: p.x, z: p.z + 1e-6 }); }
     // the path as a dense polyline: straight runs, and circular arcs where it turns (tangent lengths at most half of
     // either leg, so neighbouring corners never overlap)
-    const dense = [P[0]], seg = (a, b) => { const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / .01)); for (let i = 1; i <= n; i++) dense.push({ x: lerp(a.x, b.x, i / n), z: lerp(a.z, b.z, i / n) }); };
+    const tight = [], dense = [P[0]], seg = (a, b) => { const n = Math.max(1, Math.ceil(Math.hypot(b.x - a.x, b.z - a.z) / .01)); for (let i = 1; i <= n; i++) dense.push({ x: lerp(a.x, b.x, i / n), z: lerp(a.z, b.z, i / n) }); };
     let from = P[0];
     for (let i = 1; i < P.length - 1; i++) {
         const a = P[i - 1], c = P[i], b = P[i + 1], l1 = Math.hypot(c.x - a.x, c.z - a.z), l2 = Math.hypot(b.x - c.x, b.z - c.z);
         const d1 = { x: (c.x - a.x) / l1, z: (c.z - a.z) / l1 }, d2 = { x: (b.x - c.x) / l2, z: (b.z - c.z) / l2 }, cross = d1.x * d2.z - d1.z * d2.x, turn = Math.acos(THREE.MathUtils.clamp(d1.x * d2.x + d1.z * d2.z, -1, 1));
         if (turn < 1e-4 || turn > Math.PI - 1e-3) { seg(from, c); from = c; continue; }
         const tl = Math.min(R * Math.tan(turn / 2), l1 / 2, l2 / 2), r = tl / Math.tan(turn / 2), sign = cross < 0 ? -1 : 1;
+        if (r < R * .9) tight.push({ corner: i, radius: R, fits: r });      // (a leg too short for the radius asked: the turn is tighter; plan.tight)
         // (the centre is on the inside of the turn, r from where the arc leaves the first leg)
         const A = { x: c.x - d1.x * tl, z: c.z - d1.z * tl }, B = { x: c.x + d2.x * tl, z: c.z + d2.z * tl }, n = { x: -sign * d1.z, z: sign * d1.x }, C = { x: A.x + n.x * r, z: A.z + n.z * r };
         seg(from, A);
@@ -1179,7 +1345,7 @@ export function rollPlan(path, options = {}) {
     };
     const e = along(length);
     return {
-        length, seconds, speed: v, pushes, along,
+        length, seconds, speed: v, pushes, along, tight,
         end: { x: e.x, z: e.z, yaw: wrapAngle(e.heading) },
         at(t) { const s = travel(t), p = along(s); return { x: p.x, z: p.z, yaw: p.heading, s, v: speedAt(t), wheel: wheelAt(s), push: pushAt(s, t) }; }
     };

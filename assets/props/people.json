@@ -1821,6 +1821,12 @@
    "desk": false,
    "seat": 0
   },
+  "stand-robot-lift": {
+   "label": "Lifting the robot toward the desk shelf",
+   "stance": "standing",
+   "desk": false,
+   "seat": 0
+  },
   "stand-robot-shelf": {
    "label": "Setting the robot on the desk shelf",
    "stance": "standing",
@@ -11912,6 +11918,12 @@
    "character": "noah",
    "pose": "stand-screen-pull",
    "name": "Noah: drawing the desk's touchscreen out",
+   "aids": []
+  },
+  "people-andre-stand-robot-lift": {
+   "character": "andre",
+   "pose": "stand-robot-lift",
+   "name": "Andre: lifting the robot toward the desk shelf",
    "aids": []
   }
  }

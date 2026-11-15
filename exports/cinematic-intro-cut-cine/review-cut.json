@@ -62222,7 +62222,7 @@
       0.181
      ],
      "show": {
-      "from": 2.534,
+      "from": 2.548,
       "to": 24.978,
       "fadeIn": 0,
       "fadeOut": 0
@@ -69662,45 +69662,78 @@
       "id": "people-andre-stand-robot-work",
       "at": [
        100,
-       1560
+       1600
       ],
       "turn": 180
+     },
+     {
+      "key": "andre-lift",
+      "id": "people-andre-stand-robot-lift",
+      "at": [
+       100,
+       1600
+      ],
+      "turn": 180,
+      "change": {
+       "seconds": 1.0
+      }
      },
      {
       "key": "andre-shelf",
       "id": "people-andre-stand-robot-shelf",
       "at": [
        100,
-       1560
+       1600
       ],
-      "turn": 180
+      "turn": 180,
+      "change": {
+       "seconds": 1.0
+      }
+     },
+     {
+      "key": "andre-lets-go",
+      "id": "people-andre-stand-wait",
+      "at": [
+       100,
+       1810
+      ],
+      "turn": 194,
+      "swap": 0.06,
+      "change": {
+       "seconds": 0.8,
+       "arms": [
+        0.6,
+        1
+       ],
+       "turn": [
+        0,
+        0.6
+       ],
+       "step": true,
+       "hands": "line"
+      }
      },
      {
       "key": "andre-steps-back",
       "id": "people-andre-walk",
       "at": [
-       100,
-       1560
+       60,
+       1935
       ],
       "turn": 180,
-      "swap": 0.08,
       "walk": {
        "path": [
         [
-         100,
-         1560
+         60,
+         1935
         ],
         [
-         -107,
-         1948
+         -250,
+         2107
         ],
         [
-         -201,
-         2080
-        ],
-        [
-         -327,
-         2181
+         -345,
+         2200
         ],
         [
          -476,
@@ -69763,10 +69796,23 @@
          1538
         ]
        ],
-       "start": 3.9,
-       "pace": 2.1,
+       "start": 4.7,
+       "pace": 2.33,
        "step": 450,
-       "then": "people-andre-stand-phone-pull"
+       "then": "people-andre-stand-phone-pull",
+       "toes": "bend"
+      },
+      "change": {
+       "seconds": 1.4,
+       "arms": [
+        0.1,
+        0.6
+       ],
+       "turn": [
+        0,
+        1
+       ],
+       "step": true
       }
      },
      {
@@ -69811,22 +69857,38 @@
      "andre-robot": [
       [
        0,
-       1.7,
+       1.0,
+       0,
+       0
+      ]
+     ],
+     "andre-lift": [
+      [
+       1.0,
+       2.0,
        0,
        0
       ]
      ],
      "andre-shelf": [
       [
-       1.7,
-       3.15,
+       2.0,
+       2.9,
+       0,
+       0
+      ]
+     ],
+     "andre-lets-go": [
+      [
+       2.9,
+       4.0,
        0,
        0
       ]
      ],
      "andre-steps-back": [
       [
-       3.15,
+       4.0,
        7.71,
        0,
        0

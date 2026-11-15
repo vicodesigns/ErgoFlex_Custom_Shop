@@ -27,6 +27,23 @@
   seat, leaning into the game as his posture does, with his hips on the cushion (3 mm) and his thighs, calves and feet
   clear of it; feet on the floor; coffee table 183 mm from his feet (was 226).
 
+## November 15: storage, Andre clear of the desk (S17)
+
+- Andre no longer passes through the featured desk (measured on the stage's own meshes): he stands at 100, 1600 (40 mm
+  further back: his belly was in the cutout's edge), works with the right elbow out and up (it lay in the desktop),
+  lifts the robot straight up off the desktop in front of the top shelf (`people-andre-stand-robot-lift`), sets it down
+  with the elbows level with the hands (the forearms crossed the shelf board), lets go and steps back 210 mm with his
+  feet planted into `people-andre-stand-wait` (`change.step`; the hands come back in a straight line, `change.hands:
+  'line'`, instead of swinging down through the desktop), then turns away over 1.4 s (peak head yaw about 113
+  deg/s, in the wide after the 3.6 s cut; 0-3.6 s under 75 deg/s) with stepping feet, and walks off on a first leg that
+  leaves the desktop's front wings (his forearms went through them). Phone-out at 7.71 s, tap, fold and camera unchanged;
+  chapter length unchanged. New placement options in room-people.mjs (opt-in, storage only): `change: { seconds, arms,
+  turn, step, hands }` and walk `toes: 'bend'`.
+- tools/people/cast.py's ROBOT_DESK, ROBOT_LIFT and ROBOT_SHELF are now in his frame at 1600 (ROBOT_SHELF 40 mm further:
+  the shelf robot is where it was in the room). The older cuts that cast him at 100, 1560 with the earlier robot postures
+  (exports/cinematic-intro-20261110-people storage, tools/experience/build-alt-cut.py ANDRE_DESK, director-film/storage.json)
+  are not written (Vico's rule); were they rendered with the rebuilt models his hands would sit 40 mm off the robot there.
+
 ## November 14: commons and coast (Vico's notes 6, 6b and 7)
 
 - **commons**: the desk starts at 39 in (was 43.5) and Yara types at it as `people-yara-stand-mid` (built for 39 in;
@@ -300,3 +317,17 @@ down a cross-aisle to the desk; Noah greets him from 0.3 m right of the desk's c
 overhead frame every 0.25 s of his roll with the chair's footprint (wheels, handrims, footplate, elbows: 716 x 940 mm)
 against the furniture's boxes (outside the repo: C:/work/cine-pics/s9/round3-aisle, clearance-table.txt): minimum
 clearance 110 mm, minimum clear width across his way 1107 mm, minimum gap to Noah 109 mm (with a 300 mm body radius).
+
+## Walks (S19, Nov 15)
+
+Vico noticed the workshop guy's feet looked funny while he walked. chingon saw Andre take long marching strides
+leaning forward, and Yara walk crouched with her arms out. The fix is in the walk system (room-people-motion.mjs
+walkPlan/solveWalk, room-people.mjs walkAlong), not in this cut's data: every walker (Andre in storage, Yara and Zoe
+in commons, Noah in oilers) now starts and ends standing, plants each foot flat on its footprint and rolls heel to
+toe. The hips ride as the legs allow (knee about 10 deg in mid-stance), the trunk is about 3 deg forward, the arms
+hang loose, the body turns at most 115 deg/s, and the walk ends facing the next placement's turn. Measured with the
+stage's own models (skin against the floor, per frame), before -> after:
+- Skin under the floor: Andre 69 -> 3.8 mm, Yara 44 -> 3.6, Zoe 54 -> 0, Noah 26 -> 2.2.
+- A planted foot off the floor: up to 156-163 mm -> at most 7-11 mm.
+- Walk timings: unchanged.
+Numbers: C:/work/cine-pics/s19/walk-numbers.json.
