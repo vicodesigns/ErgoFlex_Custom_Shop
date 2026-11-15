@@ -2129,7 +2129,7 @@ export class RoomPeople {
         // (a posture whose action has moved it, the hand that drew the screen out, changes from where the action left it)
         // (as the action has it when the change begins: a film's change is centred on change.at, the length as below)
         if (change.from.act && Number.isFinite(change.at)) {
-            const length = 1.4 + THREE.MathUtils.clamp(Math.abs(change.keyTo.wp[rig.b.pelvis].y - change.keyFrom.wp[rig.b.pelvis].y) / .3, 0, 1);
+            const length = changeLength(rig, change.keyFrom, change.keyTo);
             const act = this.actOf({ userData: { person: change.from }, rotation: { y: change.homeFrom.turn } }, {}, change.at - length / 2);
             if (act) change.keyFrom = actedKey(rig, change.keyFrom, act);
         }
