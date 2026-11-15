@@ -28,18 +28,21 @@ sha256 and `check OK`. Run it on the desk, where the film is frozen: `score/scor
 ## How it fits the music to a chapter
 
 - **Chapter starts.** Every chapter starts on a bar line inside its dissolve: within 0.3 s of the dissolve's centre.
-- **Whole bars.** Every chapter gets whole 4/4 bars. A chapter that gets longer or shorter gains or loses bars, and its tempo moves by at most 3 %. When nothing else fits, a chapter ends on one 2/4 bar (the cue sheet says so).
-- **Steady tempo.** A tempo step between neighbouring chapters is costed (`JUMP_WEIGHT`), not forbidden: today the largest step is 2.4 %, and the cue sheet's section map shows each chapter's tempo.
-- **Cuts on the beat.** A hard cut inside a chapter is pulled onto a beat where the tempo allows it. The cue sheet's "Picture sync" table lists each cut as on the beat, or how far off it is.
-- **Finale.** Each desk version gets its own chord. The last version goes IV, Vsus, V into the logo.
-- **Movement sounds.** They follow the cut's `ledStatus`:
+- **Whole bars.** Every chapter gets whole 4/4 bars. A chapter that gets longer or shorter gains or loses bars, and its tempo moves by at most 3 %. Only when nothing else fits does a chapter end on one 2/4 bar (the cue sheet says so).
+- **Steady tempo (v2).** No tempo step anywhere is larger than 1.5 % (`STEP_CAP`): not between chapters, not at title B, not inside a chapter. A steady groove comes before cutting on the beat.
+- **Cuts on the beat.** A hard cut inside a chapter is pulled onto a beat only when that keeps every step under the cap (a knot). The cue sheet's "Picture sync" table lists each cut as on the beat, or how far off it is.
+- **Finale (v2).** The finale is a whole number of 2-bar phrases with one chord each (`HERO_CYCLE`: D/F#, Gmaj9, Em9, Bm9, repeating), ending Gmaj9, Asus4, A into the logo. A desk version change lands on a phrase line only where the cap allows. The finale's timing comes from `shots/13-subshots.json`, so a reordered finale needs only a re-run.
+- **Echo (v2).** The dotted-eighth echo follows the local tempo, so its repeats stay on the beat where the tempo bends.
+- **Movement sounds (v2).** They follow the cut's `ledStatus`, and play only while the desk really moves that way (the chapter's motion clip of the same lane):
   - the opener: lift, tilt and wheels;
   - the library and awareness chapters: wheels;
   - the workshop: fold, roll and lift.
-- **Mix.** The movement sounds sit 14 dB (lift, tilt) and 17 dB (wheels) under the music.
+
+  Each sound is re-keyed (resampled) by the shift that puts the most of its pitch energy into the score's key, D major.
+- **Mix (v2).** The movement sounds sit 22 dB (lift, tilt) and 25 dB (wheels) under the music, 8 dB lower than v1.
 
 To change any of these rules, edit the knobs at the top of `tools/experience/build-cine-score.py` and re-run:
-`DISSOLVE_SLACK`, `MAX_BEND`, `CUT_WEIGHT`, `LOOK_CHORDS`, `SFX_RULES`, `SFX_DB`.
+`DISSOLVE_SLACK`, `MAX_BEND`, `STEP_CAP`, `CUT_WEIGHT`, `HERO_CYCLE`, `HERO_CADENCE`, `SFX_RULES`, `SFX_DB`, `SCORE_KEY`.
 
 ## The check
 
