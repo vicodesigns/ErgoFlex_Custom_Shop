@@ -6,11 +6,12 @@ const SCREENS = '/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-2026103
 // target = the harness screen target from INVENTORY.md
 
 // ---- The cine cut (exports/cinematic-intro-cut-cine, the working cut since Nov 14 2026): each clip samples its chapter
-// of review-cut.json by id (shot), is chapter seconds + 1 s long, plays at offset 0 (loop:false) and is written to
+// of review-cut.json by id (shot), is chapter seconds + 1 s long (create: 23.5 s exactly, S3's wiring contract), plays at offset 0 (loop:false) and is written to
 // exports/cinematic-intro-cut-cine/screens/<id>.mp4. Proposal: docs/cine-screens-20261114/SCREENS-PROPOSAL.md.
-// CREATE_ACTS: create's three ranges (S3): digital painting 0..A, architecture A..B, oil painting B..end.
-export const CREATE_ACTS = {A: 6.8, B: 16.9};
-// COAST_PERSON: who uses coast's featured suite (S4 decides; provisional)
+// CREATE_ACTS: create's three ranges (S3, Nov 14): digital painting 0..A, architecture A..B, natural landscapes B..end
+// (the drafting kit fades in 7.0-7.4 s, the board tilts to 55 deg for the oil painting from 16.9 s).
+export const CREATE_ACTS = {A: 7.0, B: 16.9};
+// COAST_PERSON: who uses coast's featured suite (Ava: S4's decision, Nov 14)
 export const COAST_PERSON = 'Ava';
 const CINE_OUT = 'exports/cinematic-intro-cut-cine/screens';
 const cine = (shot, chapter, rest) => ({chapter, shot, out: CINE_OUT, ...rest});
@@ -19,9 +20,9 @@ const CINE = [
   cine('rise', 2, {id: 'cine-rise-portrait', target: 'main-portrait', role: 'Maya: wellness height app', w: 1080, h: 1856, scene: 'ch02p',
     opts: {name: 'Maya', initials: 'M', evening: true, ck: [[0, 480], [4, 512], [8, 655], [12, 840], [15, 1000], [18, 1050]]}}),
   cine('rise', 2, {id: 'cine-rise-curved', target: 'main-landscape', role: 'Maya: the workday, the evening summary', w: 2560, h: 1072, scene: 'ch02l',
-    opts: {name: 'Maya', colleague: 'Rosa Kim', ck: [[0, 480], [4, 512], [8, 655], [12, 840], [15, 1000], [18, 1050]], toast: [14.6, 99, '3h 10m standing · 4 stand breaks']}}),
-  cine('create', 3, {id: 'cine-create-landscape', target: 'main-landscape', role: 'Lin: painting -> house model -> meadow reference', w: 1920, h: 1120, scene: 'c03l', opts: {...CREATE_ACTS, name: 'Lin'}}),
-  cine('create', 3, {id: 'cine-create-portrait', target: 'main-portrait', role: 'Lin: references -> floor plan -> creek reference', w: 1080, h: 1856, scene: 'c03p', opts: {...CREATE_ACTS, name: 'Lin'}}),
+    opts: {name: 'Maya', colleague: 'Rosa Kim', ck: [[0, 480], [4, 512], [8, 655], [12, 840], [15, 1000], [18, 1050]], toast: [14.6, 99, '3h 10m standing · 9 stand breaks']}}),
+  cine('create', 3, {id: 'cine-create-landscape', target: 'main-landscape', role: 'Lin: painting -> house model -> meadow reference', w: 1920, h: 1120, scene: 'c03l', frames: 705, opts: {...CREATE_ACTS, name: 'Lin'}}),
+  cine('create', 3, {id: 'cine-create-portrait', target: 'main-portrait', role: 'Lin: references -> floor plan -> creek reference', w: 1082, h: 1856, scene: 'c03p', frames: 705, opts: {...CREATE_ACTS, name: 'Lin'}}),
   cine('create', 3, {id: 'cine-create-floor-plan', target: 'texture:Architect floor plan', role: 'the drafting paper relabelled as a home (PNG)', w: 1600, h: 1000, scene: 'cplan', still: true}),
   cine('commons', 4, {id: 'cine-commons-reservation', target: 'main-landscape', role: 'the booking ends (Yara), the next turn (Mia), the team notes', w: 1920, h: 800, scene: 'c04r',
     opts: {prev: 'Yara', next: 'Mia', team: ['Mia', 'Kai', 'Sofia']}}),
@@ -42,16 +43,17 @@ const CINE = [
     ['tv', 'tv', 1920, 1080, 'ch09c']].map(([n, target, w, h, scene]) => cine('music', 9, {id: 'cine-music-' + n, target, role: 'gaming room ' + n + ' on the score', w, h, scene, audio: true,
     opts: {handle: 'neonrunner', rename: {nova_kai: 'novaflux'}, burst: [6.3, ['desk lights synced', 'the desk moves with the game??', 'LEDs on the beat']]},
     ...(n === 'tv' ? {videos: [{key: 'montage', src: 'exports/cinematic-intro-20261030/screens/09-game-montage.mp4', t: 16, scale: '854:-2'}]} : {})})),
-  cine('storage', 11, {id: 'cine-storage-phone', target: 'texture:Held.phone screen (andre)', role: 'the phone in the hand of Andre: one button, then the steps', w: 540, h: 1160, scene: 'c11p', opts: {tap: 11.14}}),
+  cine('storage', 11, {id: 'cine-storage-phone', target: 'texture:Held.phone screen (andre)', role: 'the phone in the hand of Andre: one button, then the steps', w: 540, h: 1160, scene: 'c11p', opts: {tap: 11.14, flip: true}}),
   // hero, the office version (financial analyst): its window is 12.5-21.9 s and the shot plays these at offset -13.1, so 10 s
   // (300 frames) reach past its end (the hq12 clips were 8 s: their last frame held 0.8 s into the dissolve)
   cine('hero', 12, {id: 'cine-hero-office-wide', target: 'main-landscape', role: 'finale office version: markets, DCF model', w: 2560, h: 1072, scene: 'ch13w', frames: 300}),
   cine('hero', 12, {id: 'cine-hero-office-portrait', target: 'main-portrait', role: 'finale office version: portfolio', w: 1080, h: 1856, scene: 'ch13p', frames: 300}),
   // hero: one 48 s home per desk version (shots/13-subshots.json), greeting that version's chapter person
-  ...[['gaming', 'Kai', 'Game night', [['Lights', 'Sync', '', 'pink', .8, 'LEDs on the game'], ['Height', '47.0', 'in', 'blue2', .7, 'Play height'], ['Tonight', '2h 10m', '', 'violet', .6, 'Session'], ['Tilt', '5°', '', 'cyan', .3, 'Screen angle']]],
+  // gaming: no name (chingon, Nov 14: Kai's identity across the rooms is open with Vico)
+  ...[['gaming', '', 'Game night', [['Lights', 'Sync', '', 'pink', .8, 'LEDs on the game'], ['Height', '47.0', 'in', 'blue2', .7, 'Play height'], ['Tonight', '2h 10m', '', 'violet', .6, 'Session'], ['Tilt', '5°', '', 'cyan', .3, 'Screen angle']]],
     ['artist', 'Lin', 'Studio day', [['Canvas', 'Saved', '', 'pink', .9, 'Lakeside dusk'], ['Surface', '55°', '', 'violet', .6, 'Easel'], ['Model', 'House A', '', 'cyan', .7, 'A-101 synced'], ['Studio', '4h 30m', '', 'amber', .75, 'Today']]],
     ['hbhs', 'Kai', 'Period 2 done', [['Quiz', '+100', '', 'green', 1, 'Mercury ✓'], ['Height', '31.0', 'in', 'blue2', .25, 'His preset'], ['Class', '68%', '', 'teal', .68, 'got it right'], ['Next', 'Lab', '', 'amber', .4, 'Period 3']]],
-    ['occ', COAST_PERSON, 'Edit suite', [['Export', '100%', '', 'green', 1, 'COAST_final_4K'], ['Suite', '38.0', 'in', 'blue2', .4, 'Standing edit'], ['Review', '5', 'films', 'coral', .8, 'Portfolio'], ['Grade', 'Teal', '', 'amber', .6, '& Amber']]],
+    ['occ', COAST_PERSON, 'Edit suite', [['Export', '100%', '', 'green', 1, 'COAST_final_4K'], ['Suite', '39.0', 'in', 'blue2', .4, 'Standing edit'], ['Review', '5', 'films', 'coral', .8, 'Portfolio'], ['Grade', 'Teal', '', 'amber', .6, '& Amber']]],
     ['home', '', 'Your desk is ready', null],
   ].map(([v, name, sub, tiles]) => cine('hero', 12, {id: 'cine-hero-' + v, target: 'main-landscape', role: `finale ${v} version home`, w: 1920, h: 800, scene: 'ch12', opts: {homeUntil: 1e3, name, sub, ...(tiles ? {tiles} : {})}})),
 ];

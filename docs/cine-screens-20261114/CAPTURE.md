@@ -5,6 +5,11 @@ the merge the desk (`C:\work\ergoflex-cine`, Git Bash) captures them. Everything
 SwiftShader); one clip at a time is fine on a 12 GB machine (one Chrome page plus one ffmpeg, about 1 GB). Only the
 optional twin video in step 1 uses the GPU.
 
+Create's two clips are 23.5 s exactly (S3's wiring: offset 0, rate 1, loop false); the portrait is 1082x1856, not
+S3's 1083: H.264 4:2:0 needs an even width, and the 0.1 % aspect difference disappears in the screen's cover fit.
+The cut's own `hero` entry (cine-hero-home) is checked, but the finale renders from the six versions in
+`shots/13-subshots.json`; cine-hero-home only shows if the cut's hero shot is rendered on its own.
+
 Every cine clip is defined in `tools/experience/screens/clips.mjs` (the `cine-*` entries). It samples its chapter of
 `exports/cinematic-intro-cut-cine/review-cut.json` by id, is chapter seconds + 1 s long (the office finale clips:
 10 s), and is written to `exports/cinematic-intro-cut-cine/screens/<id>.mp4` (the floor plan is a `.png`). After a
@@ -14,9 +19,14 @@ chapter's owner changes its desk moves, re-capture that chapter's clips: the rea
 
 ```bash
 cd /c/work/ergoflex-cine
-# 0. the cut points at the clips (only the screens fields; coast only when named, after S4)
+# 0. the cut points at the clips (only the screens fields). Opt-in per chapter: without --only it writes S6's own and
+#    the landed chapters (OWNED_LANDED in build-screens.py: storage, hero, coast); after each owner lands, name them:
 python exports/cinematic-intro-cut-cine/build-screens.py
-python exports/cinematic-intro-cut-cine/build-screens.py --only coast
+python exports/cinematic-intro-cut-cine/build-screens.py --only rise,wellness          # after S8 (Maya, 41 in)
+python exports/cinematic-intro-cut-cine/build-screens.py --only awaken,create           # after S3
+python exports/cinematic-intro-cut-cine/build-screens.py --only commons                 # after S4
+python exports/cinematic-intro-cut-cine/build-screens.py --only oilers,music            # after S5 (music: and S7)
+python exports/cinematic-intro-cut-cine/build-screens.py --only awareness
 
 # 1. awaken: the twin card's real 3D desk, from the cut's own awaken moves (GPU render, optional:
 #    without TWIN the card draws the 2D side view). The render server must be running (render-server.cjs 3017).
@@ -46,7 +56,9 @@ done
 node tools/experience/screens/capture.mjs cine-music
 #    (it prints the tempo it used, e.g. "23 beats from 0.825 s, ~112.941 BPM"; no score.wav: no spectrum, beat kept)
 
-# 4. check: fails on a missing clip or one shorter than its chapter, and on a clip the freeze list does not carry
+# 4. check, always with --freeze: fails on a missing clip, one shorter than its chapter, one the freeze list does not
+#    carry, a clip whose desk moves changed since its capture (STALE, from the <clip>.capture.json sidecar capture.mjs
+#    writes), and a music clip captured without the score's tempo map
 python exports/cinematic-intro-cut-cine/check-screens.py --freeze
 ```
 

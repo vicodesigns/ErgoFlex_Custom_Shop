@@ -68,6 +68,9 @@ function cineShot(id) {
   if (!shot || shot.id !== id) throw new Error(`no shot '${id}' in ${path.relative(ROOT, file)}`);
   return shot;
 }
+// the same key as check-screens.py motion_key(): sha1 of {motion, seconds} with sorted keys, compact
+function sortKeys(v) { return Array.isArray(v) ? v.map(sortKeys) : v && typeof v === 'object' ? Object.fromEntries(Object.keys(v).sort().map(k => [k, sortKeys(v[k])])) : v; }
+function motionKey(id) { const s = cineShot(id); return crypto.createHash('sha1').update(JSON.stringify(sortKeys({motion: s.motion ?? null, seconds: s.seconds ?? null}))).digest('hex').slice(0, 16); }
 function shotData(chapter, clip = {}) {
   const nn = String(chapter).padStart(2, '0');
   const shot = clip.shot ? cineShot(clip.shot) : JSON.parse(fs.readFileSync(process.env.CAPTURE_SHOT ? path.resolve(ROOT, process.env.CAPTURE_SHOT) : path.join(EXPORT, 'shots', nn + '.json'), 'utf8'));
@@ -216,6 +219,10 @@ async function renderClip(clip) {
     ff.stdin.end();
     await ffDone;
     fs.renameSync(tmp, out);
+    // sidecar: what the clip was captured from (check-screens.py compares it with the cut: stale moves, missing tempo)
+    if (clip.shot) fs.writeFileSync(out.replace(/\.mp4$/, '.capture.json'), JSON.stringify({id: clip.id, shot: clip.shot, frames,
+      motion: motionKey(clip.shot), audio: !!clip.audio, tempo: tempo ? {beats: tempo.beats?.length || 0, first: tempo.first, bpm: tempo.bpm, source: tempo.source || null} : null,
+      spectrum: audio ? (audio.filmStart ?? true) : null, twin: TWIN && clip.scene === 'ch01' ? path.relative(ROOT, TWIN) : null, at: new Date().toISOString()}, null, 1));
     console.log(`${clip.id}: ${frames} frames ${clip.w}x${clip.h} -> ${path.relative(ROOT, out)} (${((Date.now() - t0) / 1000).toFixed(0)}s)`);
   } finally {
     if (ff && ff.exitCode === null && !ff.stdin.writableEnded) ff.stdin.end();

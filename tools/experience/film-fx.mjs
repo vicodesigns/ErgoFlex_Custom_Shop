@@ -78,7 +78,7 @@
 import * as THREE from 'three';
 import { sampleScreenColours } from '../../led-screen-sampler.mjs';
 import { accessory } from '../../catalog.mjs';
-import { isTextureTarget, installTextureScreens } from './film-texture-screens.mjs';
+import { isTextureTarget, installTextureScreens, matches as textureMatches } from './film-texture-screens.mjs';
 
 const api = window.ErgoFlex;
 const sceneRoot = () => { let s = api.loadedModel; while (s?.parent) s = s.parent; return s; };
@@ -273,7 +273,12 @@ export function listScreens(shot, { samples = 9, outW = 1920, outH = 1080 } = {}
       position: f.centre.toArray().map(x => +x.toFixed(3)), widthM: +f.width.toFixed(4), heightM: +f.height.toFixed(4), aspect: +f.aspect.toFixed(4),
       orientation: f.aspect >= 1 ? 'landscape' : 'portrait', curved: f.curved, sagM: +f.sag.toFixed(4), facingYawDeg: +yaw.toFixed(1), facingPitchDeg: +pitch.toFixed(1),
       visibleSamples: st.seen + '/' + samples, maxOnScreenPx: [Math.round(st.maxW), Math.round(st.maxH)] };
-  });
+  }).concat((shot.screens || []).filter(isTextureTarget).map(sc => {   // texture targets: what each one matches here
+    const base = sc.within === 'desk' ? api.loadedModel : sceneRoot(), hits = base ? textureMatches(base, sc) : [];
+    return { id: 'texture:' + (sc.mesh || sc.material) + (sc.person ? ' (' + sc.person + ')' : ''), alias: null, label: 'texture target', source: 'texture', position: [0, 0, 0], facingYawDeg: 0, facingPitchDeg: 0, curved: false,
+      path: hits.map(([m]) => pathOf(m, sceneRoot())).join(' | '), mesh: hits.map(([m]) => m.name).join(', '), matches: hits.length, orientation: 'texture',
+      aspect: 0, widthM: 0, heightM: 0, visibleSamples: '-', maxOnScreenPx: [0, 0] };
+  }));
 }
 
 // ---------- live screens ----------
@@ -981,7 +986,7 @@ export async function install(shot) {
   const list = active.list = discover(shot);
   active.screens = await installScreens(shot, list);
   const texSpecs = (shot.screens || []).filter(isTextureTarget);
-  if (texSpecs.length) active.texScreens = installTextureScreens(sceneRoot(), texSpecs, await Promise.all(texSpecs.map(sc => loadMedia(sc.src))));
+  if (texSpecs.length) active.texScreens = installTextureScreens(sceneRoot(), texSpecs, await Promise.all(texSpecs.map(sc => loadMedia(sc.src))), { desk: api.loadedModel });
   if (shot.ledMode === 'media') {
     active.led = await makeLed(shot, active.screens, list);
     api.setLedEffect({ mode: 'solid', period: 6 }, false);

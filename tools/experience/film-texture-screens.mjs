@@ -1,9 +1,10 @@
 // Texture screens: a screens entry that paints a clip (or a still) into an existing material's own picture instead of
-// fitting a new picture mesh over a glass. Film-only (render harness, through film-fx.mjs); a shot without such an entry
-// never reaches this module, and everything it changes is put back by restore().
+// fitting a new picture mesh over a glass. Film-only (render harness, through film-fx.mjs; the Director's live preview
+// runs film-fx too, so it shows there as well); a shot without such an entry never reaches this module, and everything
+// it changes is put back by restore().
 //
 //   screens:[{target:'texture', src, mesh?:'<regex on the mesh name>', material?:'<regex on the material name>',
-//             person?:'<who>', offset=0, rate=1, loop=true}]
+//             person?:'<who>', within?:'desk', offset=0, rate=1, loop=true}]
 //
 // The matching materials get the clip as their colour map, and as their emissive map when they had one (a lit screen
 // stays lit), with the original map's UV settings (flipY, wrap, repeat, offset, rotation), so a picture authored at the
@@ -11,6 +12,10 @@
 // Matching runs every frame (people are rigged and swapped while the shot plays: each posture is its own GLB with its
 // own phone); a material is swapped the first time it is seen and restored at the end.
 //   person: only meshes under a person whose people id starts with people-<who>- (userData.person.id, room-people.mjs).
+//   within:'desk': only meshes of the featured desk (the drafting sheet of its own kit, not another kit in the room).
+// The matches are cached and looked up again every RESCAN frames (people's postures are separate GLBs, all built when
+// the shot is prepared; a rig swap hands a posture a new mesh) or when a cached mesh has left the scene. A spec that
+// has matched nothing after its first look-up logs a warning (once); match counts are in items[].matched.
 // Uses (Nov 14 2026, stream S6):
 //   - the phone in Andre's hand (storage): {target:'texture', material:'^Held\\.phone screen', person:'andre', src:'…/11-phone.mp4'}
 //   - the drafting board's paper (create): {target:'texture', mesh:'^Architect floor plan$', src:'…/03-floor-plan.png'}
@@ -48,9 +53,12 @@ function textureFor(canvas, like) {
 
 // specs: the shot's texture entries; media: their loaded media (video / image), in the same order.
 // makeCanvas(w, h) lets the test run without a DOM.
-export function installTextureScreens(root, specs, media, { makeCanvas = (w, h) => Object.assign(document.createElement('canvas'), { width: w, height: h }) } = {}) {
+export const RESCAN = 30;
+const inScene = (o, root) => { for (let p = o; p; p = p.parent) if (p === root) return true; return false; };
+export function installTextureScreens(root, specs, media, { makeCanvas = (w, h) => Object.assign(document.createElement('canvas'), { width: w, height: h }), desk = null, warn = m => console.warn(m) } = {}) {
   if (!specs?.length) return null;
-  const items = specs.map((spec, i) => ({ spec, media: media[i], canvas: null, ctx: null, texture: null, drawn: false, swapped: new Map() }));
+  const items = specs.map((spec, i) => ({ spec, media: media[i], canvas: null, ctx: null, texture: null, drawn: false, swapped: new Map(), hits: [], matched: 0, warned: false }));
+  let frames = 0;
   const size = (item, like) => {
     const img = like?.image, sw = item.media.videoWidth || item.media.naturalWidth || item.media.width || 1024, sh = item.media.videoHeight || item.media.naturalHeight || item.media.height || 1024;
     const aw = img?.width || sw, ah = img?.height || sh, long = Math.min(2048, Math.max(512, Math.max(sw, sh)));
@@ -77,8 +85,15 @@ export function installTextureScreens(root, specs, media, { makeCanvas = (w, h) 
     items,
     // seekTo(media, seconds): the caller's frame-exact seek (film-fx seek()); not called for stills.
     async frame(chapterSeconds, seekTo) {
+      const look = frames++ % RESCAN === 0;
       for (const item of items) {
-        for (const [mesh, slot] of matches(root, item.spec)) swap(item, mesh, slot);
+        const base = item.spec.within === 'desk' ? desk : root;
+        if (look || item.hits.some(([m]) => !inScene(m, root))) {
+          item.hits = base ? matches(base, item.spec) : [];
+          item.matched = item.hits.length;
+          if (!item.matched && !item.warned) { item.warned = true; warn(`[film-fx] texture screen matches nothing: ${JSON.stringify({mesh: item.spec.mesh, material: item.spec.material, person: item.spec.person, within: item.spec.within})}`); }
+        }
+        for (const [mesh, slot] of item.hits) swap(item, mesh, slot);
         if (!item.texture) continue;
         const v = item.media, isVideo = Number.isFinite(v.duration) && v.duration > 0;
         if (!isVideo) { if (!item.drawn) paint(item); continue; }
@@ -92,6 +107,8 @@ export function installTextureScreens(root, specs, media, { makeCanvas = (w, h) 
       for (const item of items) {
         for (const [m, was] of item.swapped) { m.map = was.map; m.emissiveMap = was.emissiveMap; m.needsUpdate = true; }
         item.swapped.clear(); item.texture?.dispose(); item.texture = null;
+        const v = item.media;   // release a clip's decoder (film-fx's own screens do the same on clear)
+        if (v && typeof v.removeAttribute === 'function' && Number.isFinite(v.duration)) { v.removeAttribute('src'); v.load?.(); }
       }
     },
   };
