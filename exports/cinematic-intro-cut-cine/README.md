@@ -85,6 +85,27 @@ cut on purpose: a Director pass would copy his oilers keys back into review-cut.
 **Result at hand-off (against the new source, 9aef44f): OK, identical outside the camera; camera changed in 11
 chapters, hero unchanged.**
 
+## November 15: titles clear of the desk and of people (S12)
+
+Vico: "the title shouldn't overlap the desk". The title block sits lower left (about x 0.07-0.43, y 0.70-0.92 of the
+frame). Checked on stills with the titles burned in at each title's in (+0.7 s), middle and out (-0.3 s).
+
+- Camera only (`frame(key, dx, dy, fov)` in build-cine-cut.py: the aim turned so the frame's content sits `dx` of the
+  width further right and `dy` of the height higher, the lens `fov` degrees wider): rise (4.3-9.45 s keys), commons
+  (the two shots under the title), coast (the three keys under it, 3-4 degrees wider), awareness (the drive shot,
+  5 degrees wider, and the floor-level profile raised), music (the high shot and the front view), media (the first
+  shot), storage (the walk-round wide).
+- Timing (titles-src.json): storage's title plays on the walk-round wide only, 3.85-8.8 s (was 2.75-9.75 s, over the
+  desk at the hand-over and the phone insert); create's TILT title ends at 9.2 s (was 9.6) before the stool comes
+  under its last line. The score does not depend on these (it reads awaken's two titles and the logo only):
+  build-cine-score.py's input digest is unchanged.
+- create: the stool is drawn only until 19.5 s (`show`): from the cut, Lin (people-lin-stand-paint at [-200, -130])
+  stands where it was; side and top stills showed her legs through its seat.
+- Not changed here: wellness (the frame is full: Kai's bike, Maya, her chair and the desk span the width; a wider or
+  turned lens brings the cyclist under the title; it needs the block placed elsewhere, see the S12 hand-back), oilers
+  (S9 retimes it), hero (its camera is also the six sub-shot cameras in shots/13-subshots.json; a near-touch only at
+  about 37 s).
+
 ## Score and EDL (Nov 14, S7)
 
 This cut has its own `edl.json` (real chapter lengths: storage 24.978 s, the film 244.828 s) and its own score in `score/`,

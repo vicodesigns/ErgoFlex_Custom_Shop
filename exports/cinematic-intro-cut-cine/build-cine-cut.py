@@ -71,6 +71,23 @@ def frame_right(k, dx):
     return k
 
 
+def frame(k, dx=0, dy=0, fov=0):
+    """frame_right by `dx` of the width, then the aim pitched so what it frames sits `dy` of the frame height higher
+    (+), and the lens `fov` degrees wider. Title placement pass (Nov 15): the lower-left title block is kept clear of
+    the desk and of people's bodies."""
+    import math
+    k = frame_right(k, dx) if dx else dict(k)
+    if fov: k['fov'] = round(k['fov'] + fov, 2)
+    if dy:
+        p, t = k['position'], k['target']
+        v = [t[i] - p[i] for i in range(3)]
+        hz = math.hypot(v[0], v[2]); el = math.atan2(v[1], hz)
+        el -= math.atan(2 * dy * math.tan(math.radians(k['fov']) / 2))   # aim lower: the frame's content rises
+        n = math.sqrt(sum(x * x for x in v))
+        k['target'] = [round(p[0] + v[0] / hz * math.cos(el) * n, 4), round(p[1] + math.sin(el) * n, 4), round(p[2] + v[2] / hz * math.cos(el) * n, 4)]
+    return k
+
+
 CHAPTERS = {}
 def chapter(fn): CHAPTERS[fn.__name__] = fn; return fn
 
@@ -106,9 +123,10 @@ def rise(s):
     # rising column stand side by side against the clock wall; an arc to the front three-quarter while it lowers,
     # window behind her; and a slow widening into the evening room, a calm frame for the dissolve.
     cam(s, his('rise', 0, 2) + [
-        key(4.3, (1.55, 1.62, 2.5), (-0.6, 1.3, 0.35), 54, 'Back off the notes to the front three-quarter: Maya up, the readout climbs'),
-        key(7.6, (1.6, 1.72, 2.5), (-0.6, 1.42, 0.35), 54, 'Standing height on the readout, Maya beside the column'),
-        key(9.45, (1.7, 1.7, 2.5), (-0.58, 1.42, 0.3), 54, 'Midday: it starts down'),
+        # (Nov 15, titles: keys under the title, 3.6-9.4 s, aimed so the desk base clears the lower-left block)
+        frame(key(4.3, (1.55, 1.62, 2.5), (-0.6, 1.3, 0.35), 54, 'Back off the notes to the front three-quarter: Maya up, the readout climbs'), 0.14),
+        frame(key(7.6, (1.6, 1.72, 2.5), (-0.6, 1.42, 0.35), 54, 'Standing height on the readout, Maya beside the column'), 0.1),
+        frame(key(9.45, (1.7, 1.7, 2.5), (-0.58, 1.42, 0.3), 54, 'Midday: it starts down'), 0.06),
         key(12.65, (2.3, 1.4, 2.75), (-0.4, 1.2, 0.15), 46, 'Front three-quarter: seated again, the window behind'),
         key(18, (1.45, 1.5, 1.95), (-0.6, 1.35, 0.4), 44, 'Evening: in toward the screens and the summary of the day'),
     ])
@@ -157,10 +175,11 @@ def commons(s):
     cam(s, [
         key(0, (3.0, 22, -5.6), (3.0, 0, -5.85), 40, 'Overhead: the whole commons as the night runs out'),
         key(2.4, (1.8, 15.5, -6.9), (1.8, 0, -7.25), 40, 'Craning down over the tables toward the desk'),
-        key(2.45, (0.5, 2.15, -8.3), (-2.55, 1.5, -12.0), 44, 'Front three-quarter: Yara at the desk, the booking clock racing to 8:00', cut=True),
-        key(5.2, (0.0, 2.1, -8.75), (-2.6, 1.48, -12.05), 42, 'Slow push: time is up'),
-        key(5.25, (-6.4, 1.55, -6.9), (-3.0, 1.05, -11.1), 48, 'Low from the room: Yara takes her bag and walks toward the lens', cut=True),
-        key(8.25, (-6.1, 1.65, -7.3), (-2.2, 1.0, -11.5), 46, 'The desk lowers and turns off the wall behind her'),
+        # (Nov 15, titles: the two shots under the title, 2.65-8.45 s, aimed so Yara and the desk stand right of it)
+        frame(key(2.45, (0.5, 2.15, -8.3), (-2.55, 1.5, -12.0), 44, 'Front three-quarter: Yara at the desk, the booking clock racing to 8:00', cut=True), 0.15),
+        frame(key(5.2, (0.0, 2.1, -8.75), (-2.6, 1.48, -12.05), 42, 'Slow push: time is up'), 0.15),
+        frame(key(5.25, (-6.4, 1.55, -6.9), (-3.0, 1.05, -11.1), 48, 'Low from the room: Yara takes her bag and walks toward the lens', cut=True), 0.1),
+        frame(key(8.25, (-6.1, 1.65, -7.3), (-2.2, 1.0, -11.5), 46, 'The desk lowers and turns off the wall behind her'), 0.12),
         key(8.3, (-0.6, 4.6, -2.4), (-1.0, 0.8, -11.6), 38, 'High over the tables: the desk drives along the cork wall', cut=True),
         key(12.4, (1.3, 3.5, -6.5), (2.2, 1.1, -11.5), 40, 'Dollying in as it drives across the cork wall to Mia'),
         key(12.45, (5.7, 1.75, -7.5), (3.9, 0.95, -11.9), 52, 'Front: the desk docks at Mia in her wheelchair', cut=True),
@@ -178,9 +197,10 @@ def coast(s):
     # of her shoulder to the desktop with the Orange Coast College mark, at about 25 degrees a second (review: the first
     # version swept 83 degrees in 1.85 s), and pushes in slowly through the 1.5 s dissolve into oilers.
     cam(s, [
-        key(0, (0.55, 2.25, 1.55), (-2.3, 1.35, 4.95), 40, 'Ava edits seated at the free suite, the bays beyond'),
-        key(3.6, (0.35, 2.2, 1.95), (-2.35, 1.4, 4.95), 40, 'She gets up as the suite sets off'),
-        key(7.6, (0.05, 2.3, 2.6), (-2.5, 1.6, 5.0), 40, 'The suite arrives at her standing height'),
+        # (Nov 15, titles: under the title, 2.65-7.95 s, a little wider and aimed so Ava and the suite stand right of it)
+        frame(key(0, (0.55, 2.25, 1.55), (-2.3, 1.35, 4.95), 40, 'Ava edits seated at the free suite, the bays beyond'), 0.18, 0, 4),
+        frame(key(3.6, (0.35, 2.2, 1.95), (-2.35, 1.4, 4.95), 40, 'She gets up as the suite sets off'), 0.2, 0, 4),
+        frame(key(7.6, (0.05, 2.3, 2.6), (-2.5, 1.6, 5.0), 40, 'The suite arrives at her standing height'), 0.16, 0, 3),
         key(9.6, (0.61, 2.35, 4.56), (-2.6, 1.5, 4.9), 40, 'Round behind her, wide of her shoulder'),
         key(12.2, (-0.21, 2.15, 6.76), (-2.9, 1.45, 4.72), 42, 'She works standing; the Orange Coast College mark on the desktop'),
         key(14.5, (-0.5, 2.08, 6.77), (-2.9, 1.45, 4.72), 42, 'A slow push into the dissolve (no cut after 7.6 s)'),
@@ -238,10 +258,11 @@ def awareness(s):
     cam(s, [
         key(0, (-2.3, 1.75, 2.6), (2.8, 0.5, -0.2), 40, "Over the desk's shoulder: the dog ahead"),
         key(1.95, (-2.2, 1.73, 2.6), (2.8, 0.5, -0.2), 40, 'Over the shoulder: slow push'),
-        key(2.0, (3.0, 2.38, 5.27), (0.59, 1.11, -0.16), 36, 'Cut: three-quarter, the desk drives at the dog, rings on the floor', cut=True),
-        key(5.35, (2.75, 2.25, 4.85), (0.9, 1.0, -0.1), 36, 'Rolling toward it'),
-        key(5.4, (1.4, 0.35, 4.9), (1.4, 0.55, 0.0), 36, 'Floor level, side on: it stops short, amber', cut=True),
-        key(9.4, (1.45, 0.42, 4.4), (1.45, 0.6, 0.0), 36, 'The gap holds'),
+        # (Nov 15, titles: under the title, 3.6-9.8 s, wider and aimed so desk and dog clear the block)
+        frame(key(2.0, (3.0, 2.38, 5.27), (0.59, 1.11, -0.16), 36, 'Cut: three-quarter, the desk drives at the dog, rings on the floor', cut=True), 0.08, 0.1, 5),
+        frame(key(5.35, (2.75, 2.25, 4.85), (0.9, 1.0, -0.1), 36, 'Rolling toward it'), 0.08, 0.1, 5),
+        frame(key(5.4, (1.4, 0.35, 4.9), (1.4, 0.55, 0.0), 36, 'Floor level, side on: it stops short, amber', cut=True), 0, 0.05),
+        frame(key(9.4, (1.45, 0.42, 4.4), (1.45, 0.6, 0.0), 36, 'The gap holds'), 0, 0.05),
     ] + his('awareness', 12))
 
 
@@ -255,9 +276,10 @@ def music(s):
     # his armchair answering it, craning down the whole time; a cut at 5.0 s to a front view (Kai just out of the left
     # edge) that pushes in through the rise and tilt to his symmetric frame.
     cam(s, [
-        key(0, (2.9, 3.75, -1.0), (0.2, 0.55, 1.0), 52, 'High over the room: the floor light plays, Kai in his armchair'),
-        key(4.95, (2.95, 3.05, -0.55), (-0.1, 0.85, 0.8), 50, 'Craning down the whole time'),
-        key(5.0, (4.0, 2.5, -0.95), (-0.73, 1.4, 0.0), 38, 'Cut: front view, it rises and tilts with the game (Kai out of the frame edge)', cut=True),
+        # (Nov 15, titles: under the title, 2.65-8.25 s, Kai and the desk aimed right of and above the block)
+        frame(key(0, (2.9, 3.75, -1.0), (0.2, 0.55, 1.0), 52, 'High over the room: the floor light plays, Kai in his armchair'), 0.2, 0.12),
+        frame(key(4.95, (2.95, 3.05, -0.55), (-0.1, 0.85, 0.8), 50, 'Craning down the whole time'), 0.2, 0.12),
+        frame(key(5.0, (4.0, 2.5, -0.95), (-0.73, 1.4, 0.0), 38, 'Cut: front view, it rises and tilts with the game (Kai out of the frame edge)', cut=True), 0.1, 0.1),
     ] + his('music', 10.65, 12.5))
 
 
@@ -270,8 +292,9 @@ def media(s):
     # front three-quarter from the window side, desk and Omar whole, slow push; a cut at 9.0 s to his front view
     # (lens a little longer at the cut so Omar stays out of the frame edge) pushing on to the end.
     cam(s, [
-        key(0, (1.6, 1.45, 3.1), (-0.4, 1.15, -0.8), 52, 'Window side: the desk and Omar, the film lighting the room'),
-        key(8.95, (1.4, 1.45, 2.7), (-0.4, 1.15, -0.8), 51, 'Slow push'),
+        # (Nov 15, titles: under the title, 2.75-8.35 s, the desk raised above the block and moved a little right)
+        frame(key(0, (1.6, 1.45, 3.1), (-0.4, 1.15, -0.8), 52, 'Window side: the desk and Omar, the film lighting the room'), 0.07, 0.14),
+        frame(key(8.95, (1.4, 1.45, 2.7), (-0.4, 1.15, -0.8), 51, 'Slow push'), 0.07, 0.14),
         key(9.0, (2.75, 1.41, 0.24), (-0.75, 1.26, 0.34), 35, 'Cut: his front view, the LED colours on the desktop', cut=True),
         key(11, (2.5, 1.39, 0.2), (-0.75, 1.26, 0.26), 35, 'His push on the ultrawide'),
         key(17, (2.32, 1.38, 0.17), (-0.75, 1.27, 0.18), 35.5, 'Pushing on into the dissolve'),
@@ -296,8 +319,9 @@ def storage(s):
     cam(s, [
         key(0, W(-1650, 2050, 1350), W(50, 1150, 1150), 36, 'High from his left: Andre at the desk with the robot'),
         key(2.9, W(-1550, 1950, 1320), W(40, 1330, 1080), 37, 'He sets it on the top shelf (slow push)'),
-        key(3.6, W(1800, 1650, 3200), W(-800, 950, 1750), 46, 'Cut to the front-right: he walks round to the left', cut=True),
-        key(8.4, W(1650, 1650, 3100), W(-1000, 950, 1650), 44, 'He stops, facing the desk, and takes out his phone'),
+        # (Nov 15, titles: the title now plays on this shot only, 3.85-8.8 s; aimed so Andre keeps above and right of it)
+        frame(key(3.6, W(1800, 1650, 3200), W(-800, 950, 1750), 46, 'Cut to the front-right: he walks round to the left', cut=True), 0.1, 0.06),
+        frame(key(8.4, W(1650, 1650, 3100), W(-1000, 950, 1650), 44, 'He stops, facing the desk, and takes out his phone'), 0.1, 0.06),
         key(8.95, W(-591, 1993, 1206), W(-855, 1286, 1405), 30, 'Insert from in front and above, over the tip of the phone: the one button', cut=True),
         key(11.4, W(-605, 1957, 1216), W(-855, 1286, 1405), 30, 'The tap: the button lights'),
         key(11.45, (4.3, 1.8, -3.4), (2.65, 1.15, 0.1), 42, 'Side three-quarter: the board folds', cut=True),
