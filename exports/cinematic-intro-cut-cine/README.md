@@ -302,3 +302,17 @@ down a cross-aisle to the desk; Noah greets him from 0.3 m right of the desk's c
 overhead frame every 0.25 s of his roll with the chair's footprint (wheels, handrims, footplate, elbows: 716 x 940 mm)
 against the furniture's boxes (outside the repo: C:/work/cine-pics/s9/round3-aisle, clearance-table.txt): minimum
 clearance 110 mm, minimum clear width across his way 1107 mm, minimum gap to Noah 109 mm (with a 300 mm body radius).
+
+## Walks (S19, Nov 15)
+
+Vico noticed the workshop guy's feet looked funny while he walked. chingon saw Andre take long marching strides
+leaning forward, and Yara walk crouched with her arms out. The fix is in the walk system (room-people-motion.mjs
+walkPlan/solveWalk, room-people.mjs walkAlong), not in this cut's data: every walker (Andre in storage, Yara and Zoe
+in commons, Noah in oilers) now starts and ends standing, plants each foot flat on its footprint and rolls heel to
+toe. The hips ride as the legs allow (knee about 10 deg in mid-stance), the trunk is about 3 deg forward, the arms
+hang loose, the body turns at most 115 deg/s, and the walk ends facing the next placement's turn. Measured with the
+stage's own models (skin against the floor, per frame), before -> after:
+- Skin under the floor: Andre 69 -> 3.8 mm, Yara 44 -> 3.6, Zoe 54 -> 0, Noah 26 -> 2.2.
+- A planted foot off the floor: up to 156-163 mm -> at most 7-11 mm.
+- Walk timings: unchanged.
+Numbers: C:/work/cine-pics/s19/walk-numbers.json.
