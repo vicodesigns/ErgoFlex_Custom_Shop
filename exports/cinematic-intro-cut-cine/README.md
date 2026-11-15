@@ -344,6 +344,17 @@ a real walk). Proof (50 overhead frames, every 0.25 s of the roll-in, the wait a
 he stands, a 300 mm body radius where he walks): minimum clearance 225 mm (furniture and seated students), minimum
 clear width across his way 1240 mm, minimum gap to Noah 226 mm (C:/work/cine-pics/s9/round4-aisle).
 
+Round 5 (the reviewer of 217890f9 and chingon): the Nia/Finn table and its chairs 431 mm toward the back (was 365);
+Kai's turns are real arcs (0.52 m into the cross-aisle, 0.7 m into the desk's line; `check_roll_radius` in
+build-oilers-story.py stops the build when rollPlan would clamp a corner, tests/oilers-roll-radius-test.py); he waits
+at the top of the cross-aisle (room x -1500) and rolls in from 8.0 s, docking 60 mm to the window side (room x -3817).
+Noah greets him from the cross-aisle facing him, turns (at most 116 degrees a second) and walks to the corner on a last
+leg of 0.4 m, so he arrives facing the screen; after the tap he straightens up there turned 16 degrees to his right
+and watches Kai (`look`). Proof every frame (30 a second, the reviewer's scripts): Kai's chair footprint at least
+217 mm from every low object (furniture, seated students), clear width at least 1240 mm, at least 216 mm from Noah's
+skeleton (torso 170 mm, limbs 55 mm); Kai turns at most 136 degrees a second (in the class view, far from the lens),
+Noah at most 116.
+
 ## Walks (S19, Nov 15)
 
 Vico noticed the workshop guy's feet looked funny while he walked. chingon saw Andre take long marching strides
