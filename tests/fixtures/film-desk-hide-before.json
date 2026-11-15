@@ -774,8 +774,7 @@
    "mergePeople": {},
    "filmPeople": {
     "only": [
-     "people-maya-sit-type",
-     "people-maya-stand-type"
+     "people-maya-sit-type"
     ],
     "chair": {
      "back": 300,
@@ -783,6 +782,12 @@
      "turn": -42
     },
     "cast": [
+     {
+      "key": "maya-stand",
+      "id": "people-maya-stand-type-41",
+      "desk": "stand",
+      "reach": 850
+     },
      {
       "key": "maya-waits",
       "id": "people-maya-stand-wait",
@@ -1229,11 +1234,21 @@
    "filmPeople": {
     "only": [
      "people-maya-sit-type",
-     "people-maya-stand-type",
      "people-priya-stretch",
      "kai-bike"
     ],
     "cast": [
+     {
+      "key": "maya-stand",
+      "id": "people-maya-stand-type-41",
+      "desk": "stand",
+      "reach": 850,
+      "colors": {
+       "top": "#2d7d8a",
+       "bottom": "#1f2228",
+       "shoes": "#ececec"
+      }
+     },
      {
       "key": "maya-break",
       "id": "people-maya-stretch",
