@@ -25,11 +25,11 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
   const kindOf=e=>PE.motionOf(e);
   // ---- the planner (rollPlan), from the stage window: room-people-motion.mjs needs the stage's three
   function loadPlanner(){
-    const w=win();if(planner||!w)return planner;if(w.__peoplePlanner)return planner=w.__peoplePlanner;
-    if(!plannerLoading&&w.document){plannerLoading=true;const s=w.document.createElement('script');s.type='module';s.textContent="import('/room-people-motion.mjs').then(m=>{window.__peoplePlanner={rollPlan:m.rollPlan};},e=>console.warn('[people paths]',e));";w.document.head.append(s);}
+    const w=win();if(!w)return planner;if(w.__peoplePlanner)return planner=w.__peoplePlanner;
+    if(plannerLoading!==w&&w.document){plannerLoading=w;const s=w.document.createElement('script');s.type='module';s.textContent="import('/room-people-motion.mjs').then(m=>{window.__peoplePlanner={rollPlan:m.rollPlan};},e=>console.warn('[people paths]',e));";w.document.head.append(s);}
     return null;
   }
-  const P=()=>planner||loadPlanner()||{};
+  const P=()=>loadPlanner()||{};   // (the stage window's: a new stage window loads it again)
   const active=()=>{const k=selected(),e=k&&entry(k);return !!(k&&e&&kindOf(e)&&PE.pathOf(e)&&tools()&&editing()&&!lightsShowing()&&!posing());};
   const room=()=>win()?.ErgoFlex?.workspaceRoom?.root||null;
   // ---- the three.js objects
@@ -128,13 +128,28 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
     dom.addEventListener('pointermove',ev=>{if(!drag||ev.pointerId!==drag.id)return;grab(ev);move(ev);},true);
     const up=ev=>{if(!drag||ev.pointerId!==drag.id)return;grab(ev);finish();};
     dom.addEventListener('pointerup',up,true);dom.addEventListener('pointercancel',ev=>{if(drag&&ev.pointerId===drag.id)cancel();},true);
-    // the person's own gizmo: where they were when its drag began, and where it has them (the stage puts a walker
-    // back on their path each frame, so the gizmo's own last place is kept)
+    // the person's own gizmo (W) on someone with a path: where they were when its drag began and where it has them now.
+    // While it drags, the stage's walk / roll is held off them: each stage frame (people.update) the person is put back
+    // where the gizmo has them, not re-solved onto the old path, so the two never fight. The new placement and path start
+    // land on release (scene-people-editor endDrag -> bodyMoved), one undo step, and the stage re-solves from there.
     const g=tools().gizmo;
-    g?.addEventListener('dragging-changed',ev=>{const o=g.object,k=selected();if(ev.value&&o&&k){const e=entry(k);body={key:k,from:[o.position.x,o.position.z],to:null,entry:e&&kindOf(e)?structuredClone(e):null};}});
-    g?.addEventListener('objectChange',()=>{const o=g.object;if(body&&o&&g.mode==='translate'){body.to=[o.position.x,o.position.z];if(body.entry)preview(body.key,PE.moveStart(body.entry,[body.to[0]-body.from[0],body.to[1]-body.from[1]]));}});
+    g?.addEventListener('dragging-changed',ev=>{
+      const o=g.object,k=selected();
+      if(ev.value&&o&&k){const e=entry(k);body={key:k,from:[o.position.x,o.position.z],to:null,entry:e&&kindOf(e)?structuredClone(e):null};if(body.entry&&g.mode==='translate')hold(o);}
+      else unhold();
+    });
+    g?.addEventListener('objectChange',()=>{const o=g.object;if(body&&o&&g.mode==='translate'){body.to=[o.position.x,o.position.z];if(held)held.at.copy(o.position);}});
     void w;
   }
+  // (held: { people, update (the instance's own, put back on release), object, at, turn })
+  let held=null;
+  function hold(o){
+    const people=stagePeople();if(!people||held)return;
+    held={people,own:Object.prototype.hasOwnProperty.call(people,'update')?people.update:null,object:o,at:o.position.clone(),turn:o.rotation.y};
+    const update=people.update;
+    people.update=function(...a){const r=update.apply(this,a);if(held?.object){held.object.position.x=held.at.x;held.object.position.z=held.at.z;held.object.rotation.y=held.turn;}return r;};
+  }
+  function unhold(){if(!held)return;const {people,own}=held;if(own)people.update=own;else delete people.update;held=null;people.dirty=true;}
   function start(ev,points,index,added){
     const {t}=tools(),w=win(),k=selected();
     drag={id:ev.pointerId,key:k,index,points:points.map(p=>[...p]),added,moved:added,x:ev.clientX,y:ev.clientY,orbit:t.controls?.enabled,was:structuredClone(entry(k))};
