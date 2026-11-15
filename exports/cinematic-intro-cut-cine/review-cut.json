@@ -736,7 +736,9 @@
    "screens": [
     {
      "target": "main-landscape",
-     "src": "exports/cinematic-intro-20261104-hq14/screens/01-main.mp4"
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-awaken-main.mp4",
+     "offset": 0,
+     "loop": false
     }
    ],
    "camera": {
@@ -19724,7 +19726,9 @@
    "screens": [
     {
      "target": "main-landscape",
-     "src": "exports/cinematic-intro-20261104-hq14/screens/02-curved.mp4",
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-rise-curved.mp4",
+     "offset": 0,
+     "loop": false,
      "brightness": [
       [
        0,
@@ -19738,13 +19742,13 @@
        1.0,
        1
       ]
-     ],
-     "offset": -0.0,
-     "loop": false
+     ]
     },
     {
      "target": "main-portrait",
-     "src": "exports/cinematic-intro-20261104-hq14/screens/02-portrait.mp4",
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-rise-portrait.mp4",
+     "offset": 0,
+     "loop": false,
      "brightness": [
       [
        0,
@@ -19758,9 +19762,7 @@
        1.0,
        1
       ]
-     ],
-     "offset": -0.0,
-     "loop": false
+     ]
     },
     {
      "target": "phone",
@@ -27332,23 +27334,21 @@
    "screens": [
     {
      "target": "main-landscape",
-     "src": "exports/cinematic-intro-20261102/screens/03-landscape.mp4",
-     "base": {
-      "offset": 0,
-      "loop": true
-     },
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-create-landscape.mp4",
      "offset": 0,
      "loop": false
     },
     {
      "target": "main-portrait",
-     "src": "exports/cinematic-intro-20261030/screens/03-portrait.mp4",
-     "base": {
-      "offset": 0,
-      "loop": true
-     },
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-create-portrait.mp4",
      "offset": 0,
      "loop": false
+    },
+    {
+     "target": "texture",
+     "mesh": "^Architect floor plan$",
+     "within": "desk",
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-create-floor-plan.png"
     }
    ],
    "sceneEdits": [
@@ -34776,14 +34776,10 @@
    "screens": [
     {
      "target": "main-landscape",
-     "src": "exports/cinematic-intro-20261110-people/screens/04-reservation.mp4",
-     "brightness": 0.75,
-     "base": {
-      "offset": 0,
-      "loop": true
-     },
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-commons-reservation.mp4",
      "offset": 0,
-     "loop": false
+     "loop": false,
+     "brightness": 0.75
     }
    ],
    "ledStatus": [
@@ -44602,32 +44598,20 @@
    "screens": [
     {
      "target": "main-landscape",
-     "src": "exports/cinematic-intro-20261030/screens/06-curved.mp4",
-     "base": {
-      "offset": 0,
-      "loop": true
-     },
-     "offset": -2,
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-oilers-curved.mp4",
+     "offset": 0,
      "loop": false
     },
     {
      "target": "main-portrait",
-     "src": "exports/cinematic-intro-20261030/screens/06-portrait.mp4",
-     "base": {
-      "offset": 0,
-      "loop": true
-     },
-     "offset": -2,
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-oilers-portrait.mp4",
+     "offset": 0,
      "loop": false
     },
     {
      "target": "main-landscape-2",
-     "src": "exports/cinematic-intro-20261030/screens/06-laptop.mp4",
-     "base": {
-      "offset": 0,
-      "loop": true
-     },
-     "offset": -2,
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-oilers-laptop.mp4",
+     "offset": 0,
      "loop": false
     }
    ],
@@ -50215,22 +50199,14 @@
    "screens": [
     {
      "target": "main-landscape",
-     "src": "exports/cinematic-intro-20261030/screens/07-main.mp4",
-     "base": {
-      "offset": 0,
-      "loop": true
-     },
-     "offset": -3,
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-wellness-main.mp4",
+     "offset": 0,
      "loop": false
     },
     {
      "target": "tablet",
-     "src": "exports/cinematic-intro-20261030/screens/07-tablet.mp4",
-     "base": {
-      "offset": 0,
-      "loop": true
-     },
-     "offset": -3,
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-wellness-tablet.mp4",
+     "offset": 0,
      "loop": false
     }
    ],
@@ -58044,20 +58020,28 @@
     },
     {
      "target": "arcade",
-     "src": "exports/cinematic-intro-20261030/screens/09-arcade.mp4",
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-music-arcade.mp4",
+     "offset": 0,
+     "loop": false,
      "brightness": 0.55
     },
     {
      "target": "marquee",
-     "src": "exports/cinematic-intro-20261030/screens/09-marquee.mp4"
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-music-marquee.mp4",
+     "offset": 0,
+     "loop": false
     },
     {
      "target": "atelier-gaming-streamdeck-cyber/gaming-macro-key-display",
-     "src": "exports/cinematic-intro-20261030/screens/09-streamdeck.mp4"
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-music-streamdeck.mp4",
+     "offset": 0,
+     "loop": false
     },
     {
      "target": "tv",
-     "src": "exports/cinematic-intro-20261030/screens/09-tv.mp4"
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-music-tv.mp4",
+     "offset": 0,
+     "loop": false
     }
    ],
    "sceneEdits": [
