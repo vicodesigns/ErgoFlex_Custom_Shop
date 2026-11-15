@@ -463,6 +463,15 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
             assert.ok(Math.min(...trunk) > 0 && Math.max(...trunk) < 6, `${who}: the trunk ${Math.min(...trunk).toFixed(1)}-${Math.max(...trunk).toFixed(1)} deg forward`);
         }
     }
+    // relaxed arms (Vico/chingon: Yara's arms held out): in the steady walk the elbow is loose, 15-45 degrees, and the
+    // forearm never comes up in front past 60 degrees from hanging
+    for (const who of ['andre', 'yara', 'zoe', 'dina']) {
+        const rig = rigOf(who), k = rig.key(`people-${who}-walk`), plan = walkPlan(rig, k, k, [[0, 0], [0, 5]]), sag = (a, b) => { const d = rig.wp[b].clone().sub(rig.wp[a]); return deg(Math.atan2(d.z, -d.y)); };
+        for (let g = 2; g < plan.steps.length - 2; g += .05) {
+            solveWalk(rig, plan, g);
+            for (const s of ['l', 'r']) { const [, u, l, h] = rig.side[s].arm, elbow = sag(l, h) - sag(u, l); assert.ok(elbow > 15 && elbow < 45 && sag(l, h) < 60, `${who}: the ${s} arm hangs loose at ${g.toFixed(2)} (elbow ${elbow.toFixed(0)}, forearm ${sag(l, h).toFixed(0)} deg)`); }
+        }
+    }
     // chingon's rule (S20): nobody near the lens turns faster than about 120 deg/s, body or head: the walks' corners and
     // end turns are spread out (TURN_RATE), Andre's U-turn behind the desk and Noah's short walk to the screen included
     for (const [who, fromId, toId, route, options] of walkers) {

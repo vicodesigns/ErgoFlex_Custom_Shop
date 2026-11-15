@@ -1095,7 +1095,7 @@ export function walkPlan(rig, from, to, path, options = {}) {
 // radians over the ball before the foot leaves, the toes flat on the floor (plan.toes); the swinging foot clears the
 // floor by GAIT.clear metres at heel and ball; the trunk GAIT.trunk degrees forward of upright; the eyes on the floor
 // a few metres ahead.
-const GAIT = { knee: 10, hard: 1, heel: .7, land: .2, clear: .024, swing: .05, trunk: 3, arm: 2 };
+const GAIT = { knee: 10, hard: 1, heel: .7, land: .2, clear: .024, swing: .05, trunk: 3, arm: 2, elbow: 22 };
 const pivot = V(), rootAt = { x: 0, z: 0, yaw: 0 }, aims = [V(), V()], aimQ = [Q(), Q()], offA = V(), offB = V(), lookAt = V();
 const bends = [0, 0], contacts = [0, 0], faces = [0, 0];
 const kneeSpan = (a, b, deg) => Math.sqrt(a * a + b * b + 2 * a * b * Math.cos(THREE.MathUtils.degToRad(deg)));      // hip to ankle with the knee bent so
@@ -1186,7 +1186,10 @@ export function solveWalk(rig, plan, g) {
         // (behind the hips the arm swings a little less and a little out, past the hip and a backpack's strap)
         const back = Math.max(0, -forward);
         rig.turnWorld(upper, turn.setFromAxisAngle(X, -.26 * Math.max(0, forward) + .2 * back - hang).premultiply(turn2.setFromAxisAngle(Z, (s2 === 'l' ? 1 : -1) * .06 * back))); rig.fk();
-        rig.turnWorld(lower, turn.setFromAxisAngle(X, -(.1 + .14 * Math.max(0, forward)) * walking)); rig.fk();
+        // the elbow loose: about GAIT.elbow degrees, more on the way forward (the standing-by posture's 40-60 is a forearm
+        // held out in front)
+        const hand = rig.side[s2].arm[3], bend = v4.copy(rig.wp[lower]).sub(rig.wp[upper]).angleTo(v5.copy(rig.wp[hand]).sub(rig.wp[lower]));
+        rig.turnWorld(lower, turn.setFromAxisAngle(X, -(THREE.MathUtils.degToRad(GAIT.elbow + 16 * Math.max(0, forward)) - bend) * walking)); rig.fk();
     }
     rig.fk();
     rootAt.x = at.x; rootAt.z = at.z; rootAt.yaw = yaw; return rootAt;
