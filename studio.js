@@ -3665,12 +3665,15 @@ function setFilmTouchscreen(film) {
     if (!film) {
         if (!touchscreenBeforeFilm) return;
         const before = touchscreenBeforeFilm; touchscreenBeforeFilm = null; filmTouchscreen = null;
+        if (before.progress !== screenProgress) presentationShadowDirty = true;
         screenTarget = before.target; setScreenProgress(before.progress); updateTouchscreenDisplay();
         return;
     }
     if (!touchscreenBeforeFilm) touchscreenBeforeFilm = { progress: screenProgress, target: screenTarget };
     const progress = THREE.MathUtils.clamp(Number(film.progress) || 0, 0, 1);
     filmTouchscreen = film.screen && typeof film.screen === 'object' ? film.screen : null;
+    // (the stowed screen's own parts are part of the desk and may cast shadows: a film frame redraws them when it moves)
+    if (progress !== screenProgress) presentationShadowDirty = true;
     screenTarget = progress; setScreenProgress(progress); updateTouchscreenDisplay();
 }
 

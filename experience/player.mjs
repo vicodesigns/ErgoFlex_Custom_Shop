@@ -117,7 +117,9 @@ async function prepareStage(next){
   const shot=liveFilmShot(setup,next);fx.beforePrepare(shot);
   // The stage casts the room from the shot it prepares: the film's people with the Director's cast over them.
   fxPeople=JSON.stringify(shot.people??null);
-  let result;try{result=await stage().prepare(shot.people?{...next,people:shot.people}:next);}finally{fx.unhookPreset();}
+  // (and its onboard touchscreen: the Director's if the chapter has one, else the film's)
+  let staged=shot.people?{...next,people:shot.people}:next;const touchscreen=next.touchscreen??shot.touchscreen;if(touchscreen!==undefined&&staged.touchscreen!==touchscreen)staged={...staged,touchscreen};
+  let result;try{result=await stage().prepare(staged);}finally{fx.unhookPreset();}
   fxError=null;try{await fx.install(shot);liveFx=fx;fxShot=next.id;fxAt=-1;fxLights=lightsKey(next);director?.filmApplied?.();}catch(error){console.error('[film fx]',error);fx.clear();fxError=error.message;director?.setStatus('The film setup could not be applied: '+error.message);}
   return result;
 }

@@ -235,6 +235,9 @@ def apply(n, cid, f, dc, log):
         motion = dict(motion); motion['initial'] = start_pose(motion.get('initial') or {'height': 30, 'tilt': 0, 'x': 0, 'z': 0, 'yaw': 0}, dc['initial'], log)
 
     def put(s, seconds):
+        # (a chapter's touchscreen keys are not retimed with its clips: say so when the length changes)
+        if s.get('touchscreen') and abs(float(s.get('seconds', seconds)) - seconds) > 1e-6:
+            log('    WARNING: touchscreen keys (open / screen at) left as they were for %s -> %s s: retime them by hand' % (s.get('seconds'), seconds))
         s['seconds'] = seconds; s['cameraPlan'] = copy.deepcopy(plan); s['camera'] = copy.deepcopy(camera)
         if motion is not None: s['motion'] = copy.deepcopy(motion)
         if status is not None: s['ledStatus'] = copy.deepcopy(status)

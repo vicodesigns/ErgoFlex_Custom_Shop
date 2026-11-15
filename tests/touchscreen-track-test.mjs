@@ -50,14 +50,15 @@ for (const fps of [24, 30, 60]) {
 assert.deepEqual([...samples].reverse().map(at).reverse(), first, 'scrubbing backwards gives the same values');
 assert.deepEqual(samples.map(at), first, 'sampling again gives the same values');
 
-// ---- the face: the screen key in force, with `since`
+// ---- the face: the screen key in force (no clock in it: the face is redrawn only when it changes)
 const face = { screen: [{ at: 4, mode: 'prompt', title: 'Kai is here', button: "Lower to Kai's height" }, { at: 6.25, mode: 'prompt', button: "Lower to Kai's height", pressed: true }, { at: 6.5, mode: 'moving', target: 31, from: 43.5 }, { at: 12, mode: 'app' }] };
 assert.equal(screenContentAt(face, 3.9), null, 'the app screen before the first key');
-assert.deepEqual(screenContentAt(face, 5), { mode: 'prompt', title: 'Kai is here', button: "Lower to Kai's height", since: 1 });
+assert.deepEqual(screenContentAt(face, 5), { mode: 'prompt', title: 'Kai is here', button: "Lower to Kai's height" });
+assert.equal(JSON.stringify(screenContentAt(face, 4.2)), JSON.stringify(screenContentAt(face, 6.2)), 'the same key, the same state: no redraw per frame');
 assert.equal(screenContentAt(face, 6.3).pressed, true);
-assert.deepEqual(screenContentAt(face, 7), { mode: 'moving', target: 31, from: 43.5, since: .5 });
+assert.deepEqual(screenContentAt(face, 7), { mode: 'moving', target: 31, from: 43.5 });
 assert.equal(screenContentAt(face, 13), null, "mode 'app': the app's own screen again");
-assert.deepEqual(touchscreenAt({ ...film, ...face }, 7), { progress: 1, screen: { mode: 'moving', target: 31, from: 43.5, since: .5 } });
+assert.deepEqual(touchscreenAt({ ...film, ...face }, 7), { progress: 1, screen: { mode: 'moving', target: 31, from: 43.5 } });
 assert.deepEqual(touchscreenAt(face, 7).progress, 0, 'a face without open keys: the screen stays stowed');
 
 // ---- inert where a chapter has no field (source checks on the two call sites; pixels: the display test below)
@@ -80,7 +81,7 @@ function recorder() {
     return log;
 }
 const state = { theme: 'light', height: 43.5, tilt: 0, guard: false, sound: true, leds: true, alert: null, heightSpeed: 'Medium', glideSpeed: 'Medium', tiltSpeed: 'Fast', heightJog: 0, phase: 'morning', moving: false };
-const base = (() => { try { return execFileSync('git', ['-C', ROOT, 'merge-base', 'HEAD', 'origin/video/cinematic-intro-hq'], { encoding: 'utf8' }).trim(); } catch { return '04f24e0f'; } })();
+const base = '4ddf6038';      // (the commit before the film modes: pinned, so the comparison holds after a merge)
 const before = path.join(os.tmpdir(), `touchscreen-display-before-${process.pid}.mjs`);
 fs.writeFileSync(before, execFileSync('git', ['-C', ROOT, 'show', `${base}:touchscreen-display.mjs`], { encoding: 'utf8' }));
 try {
@@ -97,8 +98,35 @@ try {
     }
     const unknown = recorder(); new New().update({ ...state, film: { mode: 'no-such-mode' } });
     assert.equal(JSON.stringify(unknown), JSON.stringify(plain), 'an unknown mode shows the app screen');
+    for (const mode of ['constructor', 'toString', '__proto__', 'hasOwnProperty']) { const log = recorder(); new New().update({ ...state, film: { mode } }); assert.equal(JSON.stringify(log), JSON.stringify(plain), mode + ' is not a mode'); }
+    const bare = recorder(); new New().update({ ...state, height: 36.25, film: { mode: 'moving', target: 31 } });
+    assert.ok(!bare.some(([k, a]) => k === 'roundRect' && a[0] === 70 && a[1] === 640), 'moving without `from`: no bar (it could not fill)');
+    const filled = recorder(); new New().update({ ...state, height: 37.25, film: { mode: 'moving', target: 31, from: 43.5 } });
+    assert.ok(filled.some(([k, a]) => k === 'roundRect' && a[0] === 70 && a[1] === 640 && Math.abs(a[2] - 570) < 1), 'with `from` the bar is half full half way down');
     // the moving mode shows the real height it is given, to a tenth
     const moving = recorder(); new New().update({ ...state, height: 36.25, film: { mode: 'moving', target: 31, from: 43.5 } });
     assert.ok(moving.some(([k, a]) => k === 'fillText' && a[0] === '36.3'), 'the live height');
 } finally { fs.rmSync(before, { force: true }); }
+
+// ---- keys: dur null is the default speed, a string level is no key
+near(screenProgressAt({ open: [{ at: 0, to: 1, dur: null }] }, SCREEN_TRAVEL / 2), .5, 'dur null: the app speed, not a jump');
+assert.equal(cleanTouchscreen({ open: [{ at: 0, to: '1' }] }), null, "a string level ('1') is not a key");
+near(screenProgressAt({ open: [{ at: 0, to: 'open' }, { at: 1, to: 1, dur: 0 }] }, .5), 0, 'and is dropped, not taken as 0');
+
+// ---- the cut keeps the field (cuts.mjs cleanShot: the Director's load, import, export, links, and the bake key)
+const { cleanShot } = await import('../experience/cuts.mjs');
+const { bakeKey, bakeDefinition } = await import('../experience/bake.mjs');
+const shot = { id: 'oilers', room: 'highschool', kind: 'room', seconds: 15, touchscreen: { open: [{ at: 4.8, to: 1, dur: 1.4, junk: 3 }], screen: [{ at: 4.8, mode: 'prompt', button: "Lower to Kai's height", pressed: false, nested: { x: 1 }, 'bad key': 1 }], extra: 1 } };
+const kept = cleanShot(shot).touchscreen;
+assert.deepEqual(kept, { from: 0, open: [{ at: 4.8, to: 1, dur: 1.4, easing: 'smooth' }], screen: [{ at: 4.8, mode: 'prompt', button: "Lower to Kai's height", pressed: false }] }, 'cleaned: numbers and known names; a mode keeps its plain fields');
+assert.deepEqual(cleanShot({ ...shot, touchscreen: kept }).touchscreen, kept, 'cleaning again changes nothing');
+assert.equal(cleanShot({ ...shot, touchscreen: undefined }).touchscreen, undefined, 'absent stays absent');
+assert.ok(!('touchscreen' in cleanShot({ id: 'x', room: 'product' })), 'a chapter without it has no key');
+assert.match(bakeDefinition(shot), /"touchscreen"/);
+const k1 = await bakeKey(shot, ''), k2 = await bakeKey({ ...shot, touchscreen: { ...shot.touchscreen, open: [{ at: 5, to: 1 }] } }, ''), k0 = await bakeKey({ ...shot, touchscreen: undefined }, '');
+assert.ok(k1 !== k2 && k1 !== k0, 'the bake key changes with the field');
+// the Director's live stage and its bakes get it (player.mjs prepareStage: the chapter's own, else the film's)
+const player = fs.readFileSync(path.join(ROOT, 'experience/player.mjs'), 'utf8');
+assert.match(player, /const touchscreen=next\.touchscreen\?\?shot\.touchscreen;if\(touchscreen!==undefined&&staged\.touchscreen!==touchscreen\)staged=\{\.\.\.staged,touchscreen\};/);
+assert.match(player, /result=await stage\(\)\.prepare\(staged\)/);
 console.log('touchscreen track and display: ok');
