@@ -148,19 +148,20 @@ def commons(s):
 
 @chapter
 def coast(s):
-    # OCC media lab. The free, featured edit suite stands at (-2.78, 0, 4.98) facing +x, at the end of the row of
-    # bays (Maya edits at the centre bay, z 0; Andre at z -5); the aisle runs along +x of them. His opening had a
-    # student cut by the right edge and the small tilt happened during a fast swing in; his ending (from 11.25 s, the
-    # desktop and the Orange Coast College mark large) is the chapter's brand moment. Here: down the aisle to Maya at
-    # her bay, no window at the frame edge; a cut past her to a close three-quarter, the suite at half the frame or
-    # more as it rises; then his ending from 11.25 s, without his 2 s hold (one slow push to the end).
+    # OCC media lab, the story of November 14 (Vico's note 6b: a jump from a seated student to the empty suite, then a
+    # student who appeared for a second). The featured edit suite stands at (-2.78, 0, 4.98) facing +x, at the end of
+    # the row of bays (Maya edits at her own bay, z 0, outside this camera). One person, one continuous camera, no cut:
+    # Ava edits seated at the suite at 28 in, gets up as it rises to 39 in (3.6-7.6 s) and works standing, about
+    # (-1.44, 5.0). The camera opens on her from the front three-quarter, follows the rise, then rounds behind her wide
+    # of her shoulder to the desktop with the Orange Coast College mark, at about 25 degrees a second (review: the first
+    # version swept 83 degrees in 1.85 s), and pushes in slowly through the 1.5 s dissolve into oilers.
     cam(s, [
         key(0, (0.55, 2.25, 1.55), (-2.3, 1.35, 4.95), 40, 'Ava edits seated at the free suite, the bays beyond'),
         key(3.6, (0.35, 2.2, 1.95), (-2.35, 1.4, 4.95), 40, 'She gets up as the suite sets off'),
         key(7.6, (0.05, 2.3, 2.6), (-2.5, 1.6, 5.0), 40, 'The suite arrives at her standing height'),
-        key(9.4, (0.55, 2.35, 4.3), (-2.6, 1.5, 4.9), 40, 'Round behind her, wide of her shoulder'),
-        key(11.25, (-0.45, 2.1, 7.1), (-2.9, 1.45, 4.72), 42, 'She works standing; the Orange Coast College mark on the desktop'),
-        key(14.5, (-0.62, 2.06, 6.95), (-2.9, 1.45, 4.72), 42, 'A slow push into the dissolve (no cut after 9 s)'),
+        key(9.6, (0.61, 2.35, 4.56), (-2.6, 1.5, 4.9), 40, 'Round behind her, wide of her shoulder'),
+        key(12.2, (-0.21, 2.15, 6.76), (-2.9, 1.45, 4.72), 42, 'She works standing; the Orange Coast College mark on the desktop'),
+        key(14.5, (-0.5, 2.08, 6.77), (-2.9, 1.45, 4.72), 42, 'A slow push into the dissolve (no cut after 7.6 s)'),
     ])
 
 
