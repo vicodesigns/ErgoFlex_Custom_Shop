@@ -9,12 +9,12 @@ Rewrites, in place, these fields of the oilers chapter of review-cut.json and no
 ledStatus, touchscreen, and Kai's and Noah's placements in people (cast and when; everyone else kept). 15 s:
   0.0- 1.5  the dissolve from coast; the class view (no cut before 1.5 s). Kai rolls in down the aisle (from 0.3 s)
             and stops half a metre short of the desk; Noah, at its right end, turns to him and greets him (stand-talk)
-  4.3- 5.6  Noah turns to the desk and steps to its front-right corner
-  5.6- 8.2  (insert over his right shoulder) his hand draws the touchscreen out, it turns up and asks
+  3.3- 5.4  Noah turns round to the desk and steps to its front-right corner
+  5.3- 8.2  (the insert) his hand draws the touchscreen out (5.4-6.5), it turns up and asks
             'Lower to Kai's height'; his index finger lands on the button at TAP and it lights
   TAP+0.3   the desk starts down, 43.5 to 31 in over 3 s, the live height counting down on the screen
   9.4-11.8  Kai rolls the last half metre in under the desk and docks (wheel-type-31 from 12.75)
-  10-15     Noah steps back and watches; Kai starts the quiz
+  9.4-15    Noah straightens up and watches; Kai starts the quiz
 Placements in room millimetres (room-people.mjs); the touchscreen field: experience/touchscreen-track.mjs.
 """
 import json, math, os
@@ -30,14 +30,15 @@ WAIT = [DOCK[0], DOCK[1] + 500]             # where he stops, half a metre short
 # Down the room: along the aisle between the two rows of tables (room x -693), then toward the window between the
 # tables and the featured desk (room z -205, clear of Nia's table and of Mia's chair and desk), then in toward the desk
 # along its front (the line of the dock), stopping half a metre short of it (measured on an overhead still)
-AISLE = [[-693, 1700], [-693, -205], [WAIT[0], -205], WAIT]
+AISLE = [[-693, 1300], [-693, -205], [WAIT[0], -205], WAIT]
 ROLL1_AT, ROLL2_AT = .3, 9.4                # rolling in; the last metre as the desk comes down
 NOAH_AT, NOAH_TURN = [-2930, -1080], -146   # at the front-right corner, facing the screen (cast.py SCREEN_*)
 # where he greets Kai: 362 mm behind the corner spot, so the step there ends facing the screen
-NOAH_TALK, NOAH_TALK_TURN = [round(NOAH_AT[0] + .559 * 362), round(NOAH_AT[1] + .829 * 362)], 10
-NOAH_BACK = [round(NOAH_AT[0] + .559 * 200), round(NOAH_AT[1] + .829 * 200)]    # 200 mm back from it: watching
-STEP_AT = 4.3                               # he sets off toward the corner (after turning, the change at 3.6)
-PULL_AT, PULL_FOR = 5.9, 1.1                # his hand takes the edge and draws the screen out (its slide: 120 mm)
+NOAH_TALK, NOAH_TALK_TURN = [round(NOAH_AT[0] + .559 * 362), round(NOAH_AT[1] + .829 * 362)], 40      # (turned to Kai coming down the aisle)
+NOAH_BACK = NOAH_AT                         # (round 2: he straightens up and watches where he stands: a change of posture
+                                            # 200 mm back slid him there without a step)
+STEP_AT = 4.0                               # he sets off toward the corner (after turning round, the change at 3.3; 1.36 s of steps)
+PULL_AT, PULL_FOR = 5.4, 1.1                # his hand takes the edge and draws the screen out (its slide: 120 mm)
 DOCKED = 12.75                              # Kai at the keys (the change centred here: he has come to rest by 12.05)
 
 
@@ -59,6 +60,8 @@ def main():
                    {'at': round(LIFT_AT - .05, 3), 'mode': 'moving', 'title': "Lowering to Kai's height", 'from': 43.5, 'target': 31, 'done': "At Kai's height"}]}
     p = s['people']
     keep = [c for c in p['cast'] if not (c['key'].startswith('kai') or c['key'].startswith('noah'))]
+    assert STEP_AT + 1.36 <= PULL_AT, 'his steps end before his hand takes the screen'
+    assert PULL_AT + PULL_FOR <= 7.2 - .7, 'the screen is out before the change into the tap begins'
     assert ROLL2_AT + max(.5 / .7, 1.2) + 1.2 <= DOCKED - .7, 'Kai comes to rest before the change into typing begins'
     toward_noah = ['noah-talks', 'noah-steps', 'noah-pulls', 'noah-taps', 'noah-watches']
     cast = [
@@ -74,8 +77,8 @@ def main():
     when = {k: v for k, v in p['when'].items() if not (k.startswith('kai') or k.startswith('noah'))}
     when.update({
         'kai-rolls': [[0, ROLL2_AT, 0, 0]], 'kai-docks': [[ROLL2_AT, DOCKED, 0, 0]], 'kai': [[DOCKED, 99, 0, 0]],
-        'noah-talks': [[0, 3.6, 0, 0]], 'noah-steps': [[3.6, PULL_AT - .15, 0, 0]], 'noah-pulls': [[PULL_AT - .15, 7.3, 0, 0]],
-        'noah-taps': [[7.3, 9.4, 0, 0]], 'noah-watches': [[9.4, 99, 0, 0]],
+        'noah-talks': [[0, 3.3, 0, 0]], 'noah-steps': [[3.3, PULL_AT, 0, 0]], 'noah-pulls': [[PULL_AT, 7.2, 0, 0]],
+        'noah-taps': [[7.2, 9.4, 0, 0]], 'noah-watches': [[9.4, 99, 0, 0]],
     })
     # (Kai's when keys first, then Noah's, then everyone else's, as the cut had them)
     p['cast'] = keep[:1] + cast + keep[1:]

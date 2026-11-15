@@ -60,13 +60,24 @@ const onEighth = (a, msg) => assert.ok(Math.abs(a / EIGHTH - Math.round(a / EIGH
         const now = plan.at(t);
         for (const s of ['l', 'r']) {
             assert.ok(Math.abs(now.push[s].turn - prev.push[s].turn) < .12, `${s} hand does not jump at ${t.toFixed(2)} s`);
-            if (now.push.grip && prev.push.grip && now.push[s].lift === 0 && prev.push[s].lift === 0) { assert.ok(Math.abs((now.push[s].turn - prev.push[s].turn) - (now.wheel[s] - prev.wheel[s])) < 1e-9, 'gripping: the hand goes with the rim'); gripped++; }
+            if (now.push.grip && prev.push.grip && now.push[s].lift === 0 && prev.push[s].lift === 0 && now.push[s].turn < .4 - 1e-9) { assert.ok(Math.abs((now.push[s].turn - prev.push[s].turn) - (now.wheel[s] - prev.wheel[s])) < 1e-9, 'gripping: the hand goes with the rim'); gripped++; }
         }
         prev = now;
     }
     assert.ok(gripped > 60 && plan.pushes >= 5, 'it pushes all the way');
     for (let t = 0; t <= plan.seconds; t += .1) { const b = plan.at(t).push.bend; assert.ok(b >= 0 && b <= .45, 'the trunk leans in, within reason'); }
     assert.equal(plan.at(0).push.bend, 0); assert.equal(plan.at(plan.seconds).push.bend, 0, 'upright at rest');
+    // the hands stay within the measured reach (-0.2 to 0.4 rad about the axle from the built grip), the first push too
+    let lo = 0, hi = 0; for (let t = 0; t <= plan.seconds; t += 1 / 60) { const p = plan.at(t).push; for (const s of ['l', 'r']) { lo = Math.min(lo, p[s].turn); hi = Math.max(hi, p[s].turn); } }
+    assert.ok(lo >= -.2 - 1e-6 && hi <= .4 + 1e-6, `pushes within reach (${lo.toFixed(2)}..${hi.toFixed(2)} rad)`);
+    { let first = 0; for (let t = 0; t <= 1.5; t += 1 / 60) first = Math.max(first, plan.at(t).push.l.turn); assert.ok(first <= .4 + 1e-6, 'the first push lets go at 0.4 rad (' + first.toFixed(3) + ')'); }
+    // a path too short for a push: no push, no spin
+    for (const len of [.0, .1, .15]) {
+        const tiny = rollPlan([[0, 0], [0, len]]); let most = 0, w = tiny.at(0).wheel.l;
+        for (let t = 0; t <= tiny.seconds; t += 1 / 60) { const x = tiny.at(t); assert.equal(x.push.l.turn, 0, 'hands on the rims for a ' + len + ' m roll'); most = Math.max(most, Math.abs(x.wheel.l - w) * 60); w = x.wheel.l; }
+        assert.ok(most <= 2.5 * Math.max(.0001, tiny.speed) / .3 + 1e-6, 'the wheel never spins faster than it rolls (' + len + ' m)');
+    }
+    { const short = rollPlan([[0, 0], [0, .25]]), e = short.at(short.seconds).push; assert.ok(short.pushes === 1 && e.l.turn === 0 && e.l.lift === 0, 'a short roll with one push ends with the hands back on the grip'); }
     // frame-deterministic: the same second gives the same answer however it is reached
     const once = JSON.stringify(plan.at(3.21)); plan.at(9); plan.at(.4); assert.equal(JSON.stringify(plan.at(3.21)), once);
 }

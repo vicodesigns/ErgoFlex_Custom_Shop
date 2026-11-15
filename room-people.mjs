@@ -2113,7 +2113,12 @@ export class RoomPeople {
         // (the walker is not placed on its path yet when the skeletons load: it still faces the way it was cast)
         const path = change.to.walk?.path; if (path?.length > 1) change.homeTo.turn = Math.atan2(path[1][0] - path[0][0], path[1][1] - path[0][1]);
         // (a posture whose action has moved it, the hand that drew the screen out, changes from where the action left it)
-        if (change.from.act) { const act = this.actOf({ userData: { person: change.from }, rotation: { y: change.homeFrom.turn } }, {}, Infinity); if (act) change.keyFrom = actedKey(rig, change.keyFrom, act); }
+        // (as the action has it when the change begins: a film's change is centred on change.at, the length as below)
+        if (change.from.act && Number.isFinite(change.at)) {
+            const length = 1.4 + THREE.MathUtils.clamp(Math.abs(change.keyTo.wp[rig.b.pelvis].y - change.keyFrom.wp[rig.b.pelvis].y) / .3, 0, 1);
+            const act = this.actOf({ userData: { person: change.from }, rotation: { y: change.homeFrom.turn } }, {}, change.at - length / 2);
+            if (act) change.keyFrom = actedKey(rig, change.keyFrom, act);
+        }
         const rolls = change.to.roll && this.rollPath(rb, change.to.roll); if (rolls) change.homeTo.turn = rollPlan(rolls, this.rollOptions(change.to.roll)).at(0).yaw;
         // a turn the short way round
         change.homeTo.turn = change.homeFrom.turn + THREE.MathUtils.euclideanModulo(change.homeTo.turn - change.homeFrom.turn + Math.PI, Math.PI * 2) - Math.PI;
@@ -2163,6 +2168,7 @@ export class RoomPeople {
         if (life.rollSign !== sign) { const path = this.rollPath(object, roll); life.rollSign = sign; life.roll = path ? rollPlan(path, this.rollOptions(roll)) : null; }
         if (!life.roll) return;
         const t = time === null ? 0 : Math.max(0, time - (roll.start || 0)), r = life.roll.at(t), gaze = this.gazeOf(object, life);
+        if (!(life.roll.length > 1e-3)) r.yaw = THREE.MathUtils.degToRad(object.userData.person.turn || 0);      // (no path to face along: the way it was placed)
         solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: 1, roll: r, look: gaze?.at, lookAmount: gaze?.amount });
         drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold);
         turnWheels(object.userData.personRig, r.wheel);

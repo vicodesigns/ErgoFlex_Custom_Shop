@@ -1155,19 +1155,26 @@ export function rollPlan(path, options = {}) {
     const speedAt = t => t <= 0 || t >= seconds ? 0 : v * Math.min(ss(0, 1, t / ease), ss(0, 1, (seconds - t) / ease));
     // the wheels: the distance each rolls, scaled (by under 2 % on a path of a few metres) so each ends on an eighth of a turn
     const turned = (s, side) => { const d = along(s).heading - H[0]; return (s - (side === 'l' ? 1 : -1) * track * d) / wheelR; };
-    const eighth = Math.PI / 4, fit = side => { const end = turned(length, side); return Math.abs(end) > 1e-6 ? Math.max(1, Math.round(Math.abs(end) / eighth)) * eighth / Math.abs(end) : 1; };
+    // (a wheel that would turn less than half an eighth comes to rest where it was: it does not turn, rather than spin)
+    const eighth = Math.PI / 4, fit = side => { const end = turned(length, side); return Math.abs(end) > 1e-6 ? Math.round(Math.abs(end) / eighth) * eighth / Math.abs(end) : 1; };
     const k = { l: fit('l'), r: fit('r') }, wheelAt = s => ({ l: turned(s, 'l') * k.l, r: turned(s, 'r') * k.r });
     // the pushes: push n starts at n * stroke (none after length - coast); while gripping, the hand turns about the axle
     // exactly as its wheel does (from where it took hold: the built grip for the first push, PUSH_FROM after); then it
     // lets go and comes back over the rim to take hold again, or, after the last push, to the built grip
-    const grip = Math.min(.95, PUSH_ARC * wheelR / stroke), pushes = Math.max(1, Math.floor(Math.max(0, length - coast) / stroke) + 1);
+    // (the first push takes hold at the built grip, 0, and lets go where the others do, PUSH_FROM + PUSH_ARC: the wrist
+    // stays within its reach; a path too short for a push, under a stroke's grip, has none: the hands stay on the rims)
+    const grip = Math.min(.95, PUSH_ARC * wheelR / stroke), grip0 = grip * (PUSH_FROM + PUSH_ARC) / PUSH_ARC;
+    const pushes = length < grip0 * stroke + .05 ? 0 : Math.max(1, Math.floor(Math.max(0, length - coast) / stroke) + 1);
     const under = t => Math.min(1, speedAt(t) / Math.max(1e-6, v * .5));      // (how much the trunk takes part: none at rest)
     const lean = (out, t) => { out.bend = under(t) * THREE.MathUtils.clamp(LEAN + LEAN_TURN * (out.l.turn + out.r.turn) / 2, 0, LEAN_MAX); return out; };
     const pushAt = (s, t) => {
-        const n = Math.min(pushes - 1, Math.floor(s / stroke)), s0 = n * stroke, u = (s - s0) / stroke, w0 = wheelAt(s0), start = n === 0 ? 0 : PUSH_FROM, out = {};
-        if (u <= grip) { const w = wheelAt(s); for (const side of ['l', 'r']) out[side] = { turn: start + w[side] - w0[side], lift: 0 }; out.grip = true; return lean(out, t); }
-        const w1 = wheelAt(s0 + grip * stroke), last = n === pushes - 1, back = last ? ss(0, 1, (s - s0 - grip * stroke) / Math.max(.05, length - s0 - grip * stroke - .05)) : ss(0, 1, (u - grip) / (1 - grip));
-        for (const side of ['l', 'r']) { const end = start + w1[side] - w0[side], to = last ? 0 : PUSH_FROM; out[side] = { turn: lerp(end, to, back), lift: back < 1 ? Math.sin(Math.PI * back) : 0 }; }
+        if (!pushes) return lean({ l: { turn: 0, lift: 0 }, r: { turn: 0, lift: 0 }, grip: false }, t);
+        const n = Math.min(pushes - 1, Math.floor(s / stroke)), s0 = n * stroke, u = (s - s0) / stroke, w0 = wheelAt(s0), start = n === 0 ? 0 : PUSH_FROM, g = n === 0 ? grip0 : grip, out = {};
+        // (in a turn the outer wheel runs ahead of the other: its hand lets the rim run on at the end of its reach)
+        const most = PUSH_FROM + PUSH_ARC;
+        if (u <= g) { const w = wheelAt(s); for (const side of ['l', 'r']) out[side] = { turn: Math.min(most, start + w[side] - w0[side]), lift: 0 }; out.grip = true; return lean(out, t); }
+        const w1 = wheelAt(s0 + g * stroke), last = n === pushes - 1, back = last ? ss(0, 1, (s - s0 - g * stroke) / Math.max(.05, length - s0 - g * stroke - .05)) : ss(0, 1, (u - g) / (1 - g));
+        for (const side of ['l', 'r']) { const end = Math.min(most, start + w1[side] - w0[side]), to = last ? 0 : PUSH_FROM; out[side] = { turn: lerp(end, to, back), lift: back < 1 ? Math.sin(Math.PI * back) : 0 }; }
         out.grip = false; return lean(out, t);
     };
     const e = along(length);
