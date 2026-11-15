@@ -7,3 +7,8 @@ after_grid-sheenAB.jpg: roller sheen A (rows 1 and the first two of row 3: rough
 (row 2 and the second / fourth of row 3: roughness 0.8, no clearcoat). Row 1 / 2: product white, blue, red, artist studio.
 Row 3: gaming night blue A, blue B, red A, red B.
 The connector-front / -rear angles and the gaming room and sheen pictures have no before_ counterparts.
+
+Round 3 (cine/s1-r2 21b92b3d): the wheels are LED receivers at gain 8. after_grid-wheels-gain1-vs-gain8.jpg: top row the
+previous round (gain 1), bottom row now: product stage white, blue, red; gaming room at night blue, red. The wheel close-ups
+after_product-wheel-* and after_gaming-night-wheel-blue / -red are the new ones; the other after_* stills are round 2 (the
+wheels there are at gain 1). after_page-studio / after_page-product-demo: the live pages load (Studio, product demo).
