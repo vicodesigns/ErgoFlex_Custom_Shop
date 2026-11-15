@@ -26,7 +26,8 @@ const cut = JSON.parse(read(path.join(CUTDIR, 'review-cut.json'))), ids = new Se
 
 // 1. the manifest
 const cine = CLIPS.filter(c => c.shot);
-assert(cine.length >= 25, 'the cine clips are in the manifest');
+assert.equal(cine.length, 30, 'the cine clips are in the manifest (29 + the rise phone)');
+assert(cine.some(c => c.id === 'cine-rise-phone' && c.target === 'phone' && c.opts.name === 'Maya'), 'the rise phone is a cine clip');
 assert.equal(new Set(CLIPS.map(c => c.id)).size, CLIPS.length, 'clip ids are unique');
 for (const c of cine) {
   assert(/^cine-/.test(c.id), c.id + ': cine- prefix');
@@ -76,7 +77,7 @@ for (const s of [...after.shots, ...sub.shots.map(v => ({...v, version: true}))]
 const music = byId(after, 'music').screens, main = music.find(x => x.target === 'main-landscape');
 assert(/09-game-montage\.mp4$/.test(main.src) && main.brightness === .55, 'music keeps the game montage on the main monitor');
 assert.equal(music.find(x => x.target === 'arcade').brightness, .55, 'brightness carries over');
-assert(/02-phone\.mp4$/.test(byId(after, 'rise').screens.find(x => x.target === 'phone').src), 'rise keeps the phone on the charger');
+assert(/cine-rise-phone\.mp4$/.test(byId(after, 'rise').screens.find(x => x.target === 'phone').src), 'rise: the phone on the charger plays its cine clip');
 const tex = [...byId(after, 'create').screens, ...byId(after, 'storage').screens].filter(x => x.target === 'texture');
 assert.equal(tex.length, 2, 'the drafting paper and the phone in hand are texture targets');
 assert(tex.some(x => x.mesh === '^Architect floor plan$') && tex.some(x => x.person === 'andre' && x.material === '^Held\\.phone screen'));

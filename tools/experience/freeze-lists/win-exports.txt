@@ -65,6 +65,7 @@ exports/cinematic-intro-20261110-people/screens/04-reservation.mp4
 exports/cinematic-intro-cut-cine/screens/cine-awaken-main.mp4
 exports/cinematic-intro-cut-cine/screens/cine-rise-portrait.mp4
 exports/cinematic-intro-cut-cine/screens/cine-rise-curved.mp4
+exports/cinematic-intro-cut-cine/screens/cine-rise-phone.mp4
 exports/cinematic-intro-cut-cine/screens/cine-create-landscape.mp4
 exports/cinematic-intro-cut-cine/screens/cine-create-portrait.mp4
 exports/cinematic-intro-cut-cine/screens/cine-create-floor-plan.png

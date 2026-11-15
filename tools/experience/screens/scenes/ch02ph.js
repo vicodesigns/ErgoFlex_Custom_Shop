@@ -9,8 +9,9 @@
 (function () {
   // The monitors' workday clock (ch02.js): 8:00 AM at t=0. The lock screen holds 8:00 while it is the hero, then the
   // always-on clock runs at the monitors' pace from there.
-  const CK = [[0, 480], [4, 512], [8, 655], [12, 840], [15, 1040], [17, 1080]];
-  const workday = t => { for (let i = 1; i < CK.length; i++) if (t <= CK[i][0]) { const [a, ma] = CK[i - 1], [b, mb] = CK[i]; return lerp(ma, mb, (t - a) / (b - a)); } return 1080; };
+  // (clip opts.ck: the cine cut's Maya keys, the same as the portrait and curved monitors)
+  let CK = [[0, 480], [4, 512], [8, 655], [12, 840], [15, 1040], [17, 1080]];
+  const workday = t => { for (let i = 1; i < CK.length; i++) if (t <= CK[i][0]) { const [a, ma] = CK[i - 1], [b, mb] = CK[i]; return lerp(ma, mb, (t - a) / (b - a)); } return CK[CK.length - 1][1]; };
   // 8:00 through the reveal; once it is dim it runs at the workday's pace from 8:00.
   const phoneMin = t => 480 + Math.max(0, workday(t) - workday(T_DIM1));
   const T_RING = .1, T_FULL = .95, T_LOCK = 1.2, T_CARD = 1.55, T_DIM0 = 2.35, T_DIM1 = 3.4;
@@ -85,7 +86,8 @@
   }
 
   SCENES.ch02ph = {
-    draw(t) {
+    draw(t, o = {}) {
+      if (o.ck) CK = o.ck;
       g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
       const d = disp(), lock = sm(seg(t, T_LOCK, T_LOCK + .55)), dim = sm(seg(t, T_DIM0, T_DIM1));
       // whole-display level: full for the reveal, an always-on glow after (the shot's brightness keys taper it more)
@@ -105,15 +107,16 @@
             const hm = fmtClock(phoneMin(t), false);
             T(hm, cx, top + 230, 300, {w: 600, a: 'center', c: '#f3f7ff', glow: hexA(C.blue2, .35), glowR: 40});
             T('Friday, November 6', cx, top + 318, 56, {w: 500, a: 'center', c: hexA('#e8eef7', .85)});
+            if (o.name) T('Good morning, ' + o.name, cx, top + 372, 44, {w: 500, a: 'center', c: hexA('#cfe0ff', .9)});
             // charged pill
             const pa = sm(seg(t, T_LOCK + .25, T_LOCK + .65));
             alpha(pa, () => {
-              const label = 'Charged overnight · 100%', pw = tw(label, 44, 600) + 160, px = cx - pw / 2, py = top + 380;
+              const label = 'Charged overnight · 100%', pw = tw(label, 44, 600) + 160, px = cx - pw / 2, py = top + (o.name ? 404 : 380);
               fillR(px, py, pw, 92, 46, hexA(C.green, .18)); strokeR(px, py, pw, 92, 46, hexA(C.green, .45), 2);
               g.save(); g.shadowColor = C.green; g.shadowBlur = 18; icon('bolt', px + 56, py + 46, 54, C.green); g.restore();
               T(label, px + 100, py + 62, 44, {w: 600, c: '#c9f7dc'});
             });
-            notesCard(t, d, top + 540, 1);
+            notesCard(t, d, top + (o.name ? 564 : 540), 1);
             // bottom: torch / camera buttons and the home bar
             const by = d.y + d.h - 230;
             [[d.x + 150, 'sun'], [d.x + d.w - 150, 'cam']].forEach(([bx, ic]) => { circle(bx, by, 62, 'rgba(255,255,255,0.12)'); icon(ic, bx, by, 64, hexA('#ffffff', .85), 5); });
