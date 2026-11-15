@@ -71,6 +71,8 @@ try:
     q = json.load(open(f'{R}/exports/render-queue/queue.json')); j2 = q['jobs'][1]
     check(len(q['jobs']) == 2 and j2['id'] > j['id'] and j2['scope'] == 'film' and j2['height'] == 2160 and j2['shots'] == 'all', 'second job appended after the first, 4K film')
     check(json.load(open(f"{R}/{j2['cut']}")) == review, 'film cut = the whole review-cut.json')
+    film_blur = json.load(open(f'{WT}/tools/experience/film-render.json'))['FILM_BLUR']
+    check(j.get('blur') == film_blur and j2.get('blur') == film_blur, f'chapter and film jobs carry blur = FILM_BLUR ({film_blur})')
     # chapter cache keys: computed from the frozen copy, at the job's resolution, 12 for a film / 1 for a chapter; force defaults to false
     import importlib.util
     sp = importlib.util.spec_from_file_location('ck', f'{WT}/tools/experience/chapter-keys.py'); ck = importlib.util.module_from_spec(sp); sp.loader.exec_module(ck)

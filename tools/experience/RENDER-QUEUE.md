@@ -28,6 +28,7 @@ Every **60 s** `GET <base>/exports/render-queue/queue.json` (`Cache-Control: no-
   "chapterKeys": {"awaken": "48155a97…", …},   // chapter id -> cache key (all 12 for scope film, only the chapter for scope chapter); see 3b
   "epoch": "1",                                // render-epoch.txt when the keys were computed (already inside every key)
   "force": false,                              // true = "Re-render every chapter": ignore the cache for this job (still store the renders)
+  "blur": 4,                                   // render-cut.cjs --blur for every chapter (tools/experience/film-render.json FILM_BLUR); jobs before 2026-11-15 have none: 4
   "warning": "…",                              // only if set: the freeze may lack the export he sent (see 5)
   "status": "queued"
 }]}
@@ -63,7 +64,12 @@ With your existing pipeline, from the clone with the overlay, at the job's resol
 | 480p | 854x480 | |
 | 720p | 1280x720 | |
 | 1080p | 1920x1080 | |
-| 4K | 3840x2160 | `--ss 1.5 --blur 4`, as the HQ14t 4K film |
+| 4K | 3840x2160 | `--ss 1.5`, as the HQ14t 4K film |
+
+Every resolution renders with `--blur <job.blur>` (4 when the job has no `blur`). render-cut.cjs bakes only the sub-frames
+its 180-degree shutter blends (round(blur/2) a frame: tools/experience/render-shutter.cjs), so `blur` 8 (4 taps over
+12.5 ms) costs what `--blur 4` cost before 2026-11-15. `blur` is not in the chapter keys: render-epoch.txt is bumped
+whenever FILM_BLUR changes, so chapters cached at the old value are not reused.
 
 * **scope chapter**: `job.cut` is a one-shot cut (`shots` has one entry, the chapter). Render it with
   `render-cut.cjs --cut <job.cut> --shots 0 --video --size <WxH> --quality hq13 --storage exports/cinematic-intro-20261104-hq14/post/<seed>.json --state-keys ergoflex.sceneAssets.v1`

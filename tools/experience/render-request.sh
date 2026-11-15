@@ -10,6 +10,7 @@
 #      files, same filter as the manual flow), and the cut the render PC renders: <freeze>/request/cut.json (chapter scope:
 #      a one-shot cut, shots[chapterIndex] of review-cut.json; film scope: all of review-cut.json) plus request.json,
 #      both listed in the manifest,
+#      The job carries blur (render-cut.cjs --blur for every chapter: FILM_BLUR in tools/experience/film-render.json).
 #      The job also carries chapterKeys (chapter id -> cache key, all 12 for a film, one for a chapter; chapter-keys.py over the
 #      FROZEN film data at the job's resolution), epoch (render-epoch.txt) and force (the request's "force": true = ignore the
 #      render PC's chapter cache). Without keys (chapter-keys.py failed) the render PC renders everything.
@@ -228,6 +229,10 @@ job = {'id': jid, 'created': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
        'resolution': res, 'height': H[res], 'note': req.get('note') or '', 'manifest': mp, 'cut': cutp, 'shots': '0' if scope == 'chapter' else 'all',
        'requestCreated': req.get('created'), 'clientSignature': req.get('signature'), 'requestSha': request_sha, 'force': req.get('force') is True, 'status': 'queued'}
 if cutdir != hq: job['cutDir'] = cutdir; job['cutName'] = json.load(open(f'{cutdir}/cut.json')).get('name', '')
+# the film's shutter: render-cut.cjs --blur for every chapter of this job (tools/experience/film-render.json FILM_BLUR)
+blur = json.load(open(os.path.join(os.environ['RENDER_REQ_HERE'], 'film-render.json')))['FILM_BLUR']
+if blur not in (1, 2, 4, 8, 16): sys.exit(f'film-render.json FILM_BLUR must be 1, 2, 4, 8 or 16, not {blur!r}')
+job['blur'] = blur
 # chapter cache keys from the frozen copy of the film data (the freeze overlays the repo: freeze file first, live file otherwise)
 import subprocess
 kp = subprocess.run([sys.executable, os.path.join(os.environ['RENDER_REQ_HERE'], 'chapter-keys.py'), hq, '--root', root, '--overlay', F,
