@@ -34,8 +34,9 @@ const pk = keys.find(k => k.mode === 'presetPrompt'), mk = keys.find(k => k.mode
 
 { const { texts, boxes, ui: u } = ui(); TouchscreenDisplay.modes.presetPrompt(u, { height: 43.5 }, pk);
   for (const s of [pk.title, pk.text, pk.button, pk.sub, 'Sitting', 'Stool', 'Standing', 'Kai', '31.0', '43.5']) assert(has(texts, s), 'prompt shows ' + s);
-  assert(!has(texts, 'Now 43.5'), "the built-in prompt's 'Now' line is left out (the HEIGHT tile shows it)");
-  assert(boxes.some(([x, y, w, h]) => x === FILM_BUTTON.x && y === FILM_BUTTON.y && w === FILM_BUTTON.w && h === FILM_BUTTON.h), 'the button where the finger lands (FILM_BUTTON)'); }
+  assert(boxes.some(([x, y, w, h]) => x === FILM_BUTTON.x && y === FILM_BUTTON.y && w === FILM_BUTTON.w && h === FILM_BUTTON.h), 'the button where the finger lands (FILM_BUTTON)');
+  const label = texts.find(x => x.label === pk.button);
+  assert(label.x >= FILM_BUTTON.x && label.x < FILM_BUTTON.x + FILM_BUTTON.w / 2, "the label starts in the button's left half, beside the fingertip (S9: centre, hand from the right)"); }
 { const { texts, ui: u } = ui(); TouchscreenDisplay.modes.presetMoving(u, { height: 37.2 }, mk);
   assert(has(texts, '37.2') && has(texts, mk.title) && !has(texts, mk.done), 'on its way: the live height and the title'); }
 { const { texts, ui: u } = ui(); TouchscreenDisplay.modes.presetMoving(u, { height: 31.0 }, mk);

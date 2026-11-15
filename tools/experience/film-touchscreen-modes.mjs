@@ -5,9 +5,10 @@
 // own screen (touchscreen-display.mjs: an unknown mode). Stream S15 (Nov 14 2026), the high school chapter: Noah lowers
 // the desk for Kai.
 //   'presetPrompt' { title, text, button, sub, pressed, person, preset }   a person's saved height as a question: the
-//                  title and line on the left, the HEIGHT tile on the right, the big button where TouchscreenDisplay's
-//                  'prompt' puts it (FILM_BUTTON: the same drawing, so the finger lands on it), the preset row below
-//                  with the person's preset; pressed: the button pushed in and lit, the person's preset lit with it
+//                  title and line on the left, the HEIGHT tile on the right, the big button on FILM_BUTTON (where
+//                  the finger lands: its centre, the hand from the right, S9) with its label and a down-arrow badge
+//                  in the LEFT half so the press reads beside the fingertip, the preset row below with the person's
+//                  preset; pressed: the button pushed in, lit and its badge filled, the person's preset lit with it
 //   'presetMoving' { title, from, target, done, person }   the desk on its way to the preset: the live height large in
 //                  the HEIGHT tile (state.height: the desk's real height, so the number counts with the desk), the
 //                  progress bar, the person's tile; within 0.05 in of the target `done` with a tick
@@ -40,13 +41,25 @@ function heightTile(ui, state, x, y, w, h, size) {
 const modes = {
     presetPrompt(ui, state, f) {
         const { c, text, muted, ink } = ui, p = f.pressed === true ? 1 : Math.max(0, Math.min(1, Number(f.pressed) || 0));
-        // the button and its pushed / lit look: TouchscreenDisplay's own prompt (FILM_BUTTON), title and line ours
-        TouchscreenDisplay.modes.prompt({ ...ui, text: (label, x, y, ...rest) => (y === 330 ? null : ui.text(label, x, y, ...rest)) }, state, { button: f.button, sub: f.sub, pressed: f.pressed });
+        // the button on FILM_BUTTON, the app's prompt colours: raised, then pushed in (a little smaller, darker) with a
+        // ring of light round it; the label and the badge in its left half, clear of the fingertip at its centre
+        const b = FILM_BUTTON, dark = ui.dark, cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+        c.save(); const k = 1 - .025 * p; c.translate(cx, cy); c.scale(k, k); c.translate(-cx, -cy);
+        if (p > 0) { c.save(); c.shadowColor = '#5aa8ffcc'; c.shadowBlur = 46 * p; c.fillStyle = '#5aa8ff'; c.globalAlpha = .55 * p; c.beginPath(); c.roundRect(b.x - 10, b.y - 10, b.w + 20, b.h + 20, 58); c.fill(); c.restore(); }
+        const hex = s => [1, 3, 5].map(i => parseInt(s.slice(i, i + 2), 16)), mix = (a, z) => { const x = hex(a), y = hex(z); return '#' + x.map((v, i) => Math.round(v + (y[i] - v) * p).toString(16).padStart(2, '0')).join(''); };
+        ui.box(b.x, b.y, b.w, b.h, 48, mix(dark ? '#2f7cf0' : '#3a46b8', dark ? '#1450b8' : '#1f2a86'), p < .5);
+        const bx = b.x + 62, by = cy;   // the badge: a ring, filled and lit when pressed
+        c.save(); c.beginPath(); c.arc(bx, by, 34, 0, Math.PI * 2); c.lineWidth = 6; c.strokeStyle = '#ffffff'; c.stroke();
+        if (p > 0) { c.globalAlpha = p; c.shadowColor = '#ffffff'; c.shadowBlur = 18; c.fillStyle = '#ffffff'; c.fill(); }
+        c.restore();
+        c.save(); c.fillStyle = p > .5 ? (dark ? '#1450b8' : '#1f2a86') : '#ffffff'; c.beginPath(); c.moveTo(bx - 15, by - 6); c.lineTo(bx + 15, by - 6); c.lineTo(bx, by + 14); c.closePath(); c.fill(); c.fillRect(bx - 5, by - 22, 10, 18); c.restore();
+        text(String(f.button || 'OK'), b.x + 118, cy + (f.sub ? 6 : 20), 54, '#ffffff', '700');
+        if (f.sub) text(String(f.sub), b.x + 120, cy + 56, 28, '#d8e2ff', '600');
+        c.restore();
         if (f.title) text(String(f.title), 70, 190, 60, ink, '700');
         if (f.text) text(String(f.text), 72, 258, 32, muted, '400');
         heightTile(ui, state, 934, 105, 320, 250, 84);
         presetRow(ui, f, p);
-        void c; void FILM_BUTTON;
     },
     presetMoving(ui, state, f) {
         const { c, text, box, ink, muted, blue, dark } = ui, h = state.height, target = Number(f.target), from = Number.isFinite(Number(f.from)) ? Number(f.from) : null;
