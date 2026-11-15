@@ -740,6 +740,61 @@ def stand_phone_watch(k):
             'foot_l': {'at': _s(k, .12, .0, .07 / k), 'toes': (.3, -1, 0)}, 'foot_r': {'at': _s(k, -.12, .03, .07 / k), 'toes': (-.35, -1, 0)}}
 
 
+# ---- the high school film (oilers): Noah lowers the desk for Kai with its onboard touchscreen ----------------------------
+# Measured on the featured desk of the high school (60x30, the wide screen) at 43.5 in, in the room's millimetres
+# (tools: the stage's own geometry, the screen's face found through its UVs): the stowed screen's front edge at the
+# right end 1030 mm up, 1532 mm toward the back wall (room z -1532), sliding 120 mm out to -1412 (screen progress 0.5),
+# then turning up; open, the canvas point of the 'prompt' button (touchscreen-display.mjs FILM_BUTTON: 640, 495) at
+# (-3161.4, 1078.8, -1423.7) with the face looking up and out (0, .848, .53). Noah stands at (-2930, -1080) turned -146
+# degrees (room-people placement), at the desk's front-right corner, facing the screen; in his frame (metres; faces -Y,
+# his left +X):
+SCREEN_EDGE = (-.112, -.47, 1.03)             # the stowed screen's front edge where the right hand takes it
+SCREEN_SLIDE = (.559, .829, 0.)               # the way it slides out (toward him and to his left), 0.12 m
+SCREEN_BUTTON = (0., -.414, 1.079)            # the button on the glass, open
+SCREEN_FACE = (.296, .439, .848)              # out of the glass
+NOAH_ANKLE = .091                             # (his ankle as built standing: these postures are built where they stand)
+
+
+def _noah_feet():
+    return {'foot_l': {'at': (.12, .02, NOAH_ANKLE), 'toes': (.25, -1, 0)}, 'foot_r': {'at': (-.11, .07, NOAH_ANKLE), 'toes': (-.3, -1, 0)}}
+
+
+def stand_screen_pull(k):
+    """At the desk's front-right corner, leaning in a little: the right hand at the front edge of the stowed
+    touchscreen under the desktop, fingers hooked round it, about to draw it out (room-people-motion.mjs SCREEN_ACTS
+    moves the hand with the screen); eyes on it."""
+    e, s = SCREEN_EDGE, SCREEN_SLIDE
+    wrist = (e[0] + s[0] * .132, e[1] + s[1] * .132, e[2] - .02)      # (the wrist before the edge, the finger tips 2 cm round it: measured in a first build)
+    return {'pelvis_offset': (0, .02, -.01), 'spine': (5, 8, 7), 'spine_twist': -4, 'neck': 14, 'head': 16, 'head_yaw': -6,
+            'hand_r': {'at': wrist, 'fingers': (-s[0], -s[1], -.35), 'palm': (-s[0] * .35, -s[1] * .35, 1), 'elbow': (-.3, .25, -.25), 'curl': .7, 'thumb': .35},
+            'hand_l': _hang(k, 'l', -.02), **_noah_feet()}
+
+
+def _screen_tap(k, touch):
+    # The right index over the button, `touch` metres off the glass (0: on it), the other fingers curled; the wrist back
+    # along the finger from its tip, corrected by where the tip landed in a first build.
+    n, b = SCREEN_FACE, SCREEN_BUTTON
+    tip = tuple(b[i] + n[i] * (touch + .006) for i in range(3))
+    d = (-n[0] * .8, -n[1] * .8 - .35, -n[2] * .8); m = sum(v * v for v in d) ** .5; d = tuple(v / m for v in d)
+    fix = SCREEN_TIP_FIX
+    return {'pelvis_offset': (0, .01, -.005), 'spine': (3, 5, 5), 'spine_twist': -3, 'neck': 16, 'head': 18, 'head_yaw': -4,
+            'hand_r': {'at': tuple(t - .18 * x + c for t, x, c in zip(tip, d, fix)), 'fingers': d, 'palm': (.15, .3, -1), 'elbow': (-.3, .15, -.3), 'curl': .85, 'thumb': .5, 'each': {'index': .03}},
+            'hand_l': _hang(k, 'l', -.02), **_noah_feet()}
+
+
+SCREEN_TIP_FIX = (-.0434, -.0123, .0223)      # (where the tip landed against where it was asked to, in a first build, the other way)
+
+
+def stand_screen_tap(k):
+    """At the desk's front-right corner, the right index finger 25 mm over the touchscreen's button (hover)."""
+    return _screen_tap(k, .025)
+
+
+def stand_screen_press(k):
+    """The same, the right index on the button."""
+    return _screen_tap(k, 0)
+
+
 def stand_wait(k):
     """Standing where the desk user stands, arms loose, eyes on the desktop: on their feet while the desk moves."""
     return {'spine': (1, 2, 2), 'neck': 7, 'head': 8, 'head_yaw': -4,
@@ -1301,6 +1356,9 @@ POSES = {
     'stand-phone-up': stand_phone_up,
     'stand-phone-press': stand_phone_press,
     'stand-phone-watch': stand_phone_watch,
+    'stand-screen-pull': stand_screen_pull,
+    'stand-screen-tap': stand_screen_tap,
+    'stand-screen-press': stand_screen_press,
     'stand-present': stand_present,
     'stand-present-left': stand_present_left,
     'walk': walk,
@@ -1476,13 +1534,18 @@ POSE_INFO = {
     'stand-phone-up': ('Phone up, about to tap', 'standing', '', 0, [('phone', {'side': 'r', 'grip': 'hold', 'screen': 'ready'})]),
     'stand-phone-press': ('Tapping the one button on the phone', 'standing', '', 0, [('phone', {'side': 'r', 'grip': 'hold', 'screen': 'pressed'})]),
     'stand-phone-watch': ('Phone lowered, watching the desk go', 'standing', '', 0, [('phone', {'side': 'r', 'grip': 'hold', 'screen': 'running'})]),
+    # (the high school film: the desk's onboard touchscreen, measured for Noah at the featured desk)
+    'stand-screen-pull': ("Drawing the desk's touchscreen out", 'standing', '', 0, []),
+    'stand-screen-tap': ("A finger over the desk's touchscreen", 'standing', '', 0, []),
+    'stand-screen-press': ("Tapping the desk's touchscreen", 'standing', '', 0, []),
 }
 # The roles' postures: built for the characters that list them ('postures'), for anyone else on request.
 ROLE_POSES = {'stand-brief', 'stand-radio', 'stand-chart', 'push-cart', 'lie-bed', 'sit-microscope', 'stand-counter',
               'gym-cycle', 'gym-pullup', 'gym-box', 'gym-press', 'gym-curl', 'sit-pottery', 'power-phone', 'power-type',
-              'stand-robot-work', 'stand-robot-shelf', 'stand-phone-pull', 'stand-phone-up', 'stand-phone-press', 'stand-phone-watch'}      # (the gym's: built for those who train there, ALSO below)
+              'stand-robot-work', 'stand-robot-shelf', 'stand-phone-pull', 'stand-phone-up', 'stand-phone-press', 'stand-phone-watch',
+              'stand-screen-pull', 'stand-screen-tap', 'stand-screen-press'}      # (the gym's: built for those who train there, ALSO below)
 # Built where the pose puts them, not dropped until something touches the floor (a body lying on a bed has nothing on it).
-RAISED = {'lie-bed', 'sit-microscope', 'gym-cycle', 'gym-pullup', 'gym-press', 'power-phone', 'power-type', 'stand-robot-work', 'stand-robot-shelf'}       # (feet on a stool's ring, on pedals or off the floor under a bar are not on the floor either)
+RAISED = {'lie-bed', 'sit-microscope', 'gym-cycle', 'gym-pullup', 'gym-press', 'power-phone', 'power-type', 'stand-robot-work', 'stand-robot-shelf', 'stand-screen-pull', 'stand-screen-tap', 'stand-screen-press'}       # (feet on a stool's ring, on pedals or off the floor under a bar are not on the floor either)
 DESK_HEIGHTS = {'sit-type': (28, 30), 'stand-type': (43.5,), 'stand-type-low': (28, 30), 'wheel-type': (28, 31), 'power-type': (32,), 'sit-coffee': (28, 30), 'stand-coffee': (43.5,), 'stand-low': (35.5,), 'stand-mid': (39,), 'kid-stand-desk': (28,), 'kid-sit-desk': (28,)}
 # Who a posture is for: adult poses are built on adult furniture, child poses on child furniture.
 CHILD_POSES = {p for p in POSE_INFO if p.startswith('kid-')}
@@ -1509,7 +1572,9 @@ ALSO = ['people-sam-sit-type', 'people-sam-sit-type-30', 'people-grace-lie-bed',
         # the workshop film (storage): Andre works on the robot, sets it on the desk's top shelf, takes out his phone and
         # starts the desk's Groove with one tap
         'people-andre-stand-robot-work', 'people-andre-stand-robot-shelf', 'people-andre-stand-phone-pull', 'people-andre-stand-phone-up',
-        'people-andre-stand-phone-press', 'people-andre-stand-phone-watch']
+        'people-andre-stand-phone-press', 'people-andre-stand-phone-watch',
+        # the high school film (oilers): Noah draws the desk's touchscreen out and taps 'Lower to Kai's height'
+        'people-noah-stand-screen-pull', 'people-noah-stand-screen-tap', 'people-noah-stand-screen-press']
 # A posture nudged for one person (metres added to a hand's or a foot's place): the clipboard lies as the left hand
 # holds it, and on Yusuf's broader chest it tips into the writing hand.
 NUDGE = {('yusuf', 'stand-chart'): {'hand_r': (.02, .0, .035)},
