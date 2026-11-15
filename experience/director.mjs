@@ -162,7 +162,7 @@ export function mountDirector(bridge,catalog,initial){
     const line=timeline.querySelector('[data-track-playhead]');if(line)line.style.left=(playhead*100)+'%';
     const label=timeline.querySelector('[data-track-time]');if(label)label.textContent=(playhead*shot().seconds).toFixed(2)+'s / '+shot().seconds+'s';
     for(const line of timeline.querySelectorAll('[data-shared-playhead]'))line.style.left=playhead*100+'%';
-    syncLightNow();syncNow();titleEditor.sync();deskVersions.sync(playhead);if(playhead!==pokedAt){pokedAt=playhead;filmLook?.poke();}
+    syncLightNow();syncNow();titleEditor.sync();scenePeople.poseSync();deskVersions.sync(playhead);if(playhead!==pokedAt){pokedAt=playhead;filmLook?.poke();}
     const ruler=timeline.querySelector('.time-ruler');if(ruler)ruler.setAttribute('aria-valuenow',(playhead*shot().seconds).toFixed(2));
     const exact=timeline.querySelector('[name="timeline-seconds"]');if(exact&&document.activeElement!==exact)exact.value=(playhead*shot().seconds).toFixed(2);
   }
@@ -464,7 +464,7 @@ export function mountDirector(bridge,catalog,initial){
     return `<div class="lane-group-head" data-lane-group="${g}"><span class="desk-lane-label"><button data-action="group-toggle" data-index="${['motion','lighting','titles','props'].indexOf(g)}" aria-expanded="${!groupClosed(g)}" title="${groupClosed(g)?'Show':'Hide'} the ${g} lanes${g==='lighting'?' (Shift+L jumps here)':''}">${groupClosed(g)?'▸':'▾'} ${g.toUpperCase()}</button></span><div class="lane-group-summary">${groupClosed(g)?ticks.map(t=>`<i style="left:${t/s*100}%"></i>`).join(''):''}</div></div>`;
   }
   // PROPS: the chapter's edited props as chips (hidden ones struck through), click one to select it.
-  function propsGroup(){if(!filmShot())return '';return `${laneGroupHead('props')}<div class="lane-group-body desk-lanes prop-lanes" data-lane-body="props" ${groupClosed('props')?'hidden':''}>${propsLaneRow()}<div class="desk-lane-row ${scenePeople.count()?'':'empty'}" data-lane-color="people" style="${peopleLaneStyle(4)}"><span class="desk-lane-label" title="The people in this chapter and the seconds each one is in the room (click a bar to select them)">People <small data-people-count>${scenePeople.count()||''}</small></span><div class="desk-lane people-lane" data-people-lane style="${peopleLaneStyle(0)}">${scenePeople.lane()}</div></div></div>`;}
+  function propsGroup(){if(!filmShot())return '';return `${laneGroupHead('props')}<div class="lane-group-body desk-lanes prop-lanes" data-lane-body="props" ${groupClosed('props')?'hidden':''}>${propsLaneRow()}<div class="desk-lane-row ${scenePeople.count()?'':'empty'}" data-lane-color="people" style="${peopleLaneStyle(4)}"><span class="desk-lane-label" title="The people in this chapter and the seconds each one is in the room (click a bar to select them)">People <small data-people-count>${scenePeople.count()||''}</small></span><div class="desk-lane people-lane" data-people-lane style="${peopleLaneStyle(0)}">${scenePeople.lane()}</div></div><div class="desk-lane-row ${scenePeople.posing()?'':'empty'}" data-lane-color="people" data-pose-keys-row><span class="desk-lane-label" title="The pose keys of the person in pose mode: click a diamond to go there, drag it to retime, Delete removes it">Pose keys</span><div class="desk-lane key-lane pose-keys-lane" data-pose-keys-lane>${scenePeople.poseKeyLane()}</div></div><div class="people-track-rows" data-people-track-rows>${scenePeople.trackRows()}</div></div>`;}
   // The Props lane: a bar per desk item, added prop and edited prop over the seconds it is on screen (scene-prop-editor.mjs
   // lane()); as tall as its rows, scrolling past nine.
   function propsLaneRow(){
@@ -622,10 +622,12 @@ export function mountDirector(bridge,catalog,initial){
   // People (scene-people-editor.mjs): the chapter's cast; click a person in the view, gizmo, People tab; per chapter only.
   function renderPeople(soft=false){
     const box=panel.querySelector('[data-scene-people]');if(box&&!(soft&&typing())){const active=box.contains(document.activeElement)?document.activeElement.name:null,top=box.closest('.director-scroll,[data-inspector-page]')?.scrollTop;box.innerHTML=filmShot()?scenePeople.panel():'';if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});}
+    const trackRows=timeline.querySelector('[data-people-track-rows]');if(trackRows)trackRows.innerHTML=scenePeople.trackRows();
+    const keysLane=timeline.querySelector('[data-pose-keys-lane]');if(keysLane){keysLane.innerHTML=scenePeople.poseKeyLane();keysLane.closest('.desk-lane-row')?.classList.toggle('empty',!scenePeople.posing());}
     const lane=timeline.querySelector('[data-people-lane]');if(lane){lane.innerHTML=scenePeople.lane();const n=timeline.querySelector('[data-people-count]');if(n)n.textContent=scenePeople.count()||'';lane.closest('.desk-lane-row')?.classList.toggle('empty',!scenePeople.count());sizePeopleLane();}
     syncSelectedHeader();
   }
-  const scenePeople=createScenePeopleEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:()=>renderPeople(),time:()=>playhead*shot().seconds,lightsShowing:()=>sceneLights.showing(),
+  const scenePeople=createScenePeopleEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:()=>renderPeople(),time:()=>playhead*shot().seconds,seek:t=>seekCamera(t/(shot()?.seconds||1)),lightsShowing:()=>sceneLights.showing(),
     onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();sceneProps.deselect();deskSel.deselect();renderTimeline();reveal('person');}});
   // Layers (layers-panel.mjs): the chapter's props and desk items as an outliner, named layers (select, hide, lock); shot.propLayers.
   // The Studio's show / hide (Layers phase 3; ?layers=0 or localStorage 'ergoflex.layers.ui' = '0': the tab as before):
@@ -1183,6 +1185,8 @@ export function mountDirector(bridge,catalog,initial){
     else if(k==='r'){event.preventDefault();action('render-still');}
     else if(k==='\\'){event.preventDefault();if(!event.repeat)still.peek(true);}
     else if(k==='l'){event.preventDefault();sceneLights.toggleShow().then(on=>status(on?'Lights shown: click a marker to select it, W move, E aim.':'Lights hidden.'));}
+    else if((k==='delete'||k==='backspace')&&scenePeople.posing()&&scenePeople.poseKeySelected()&&!event.target.closest?.('input,select,textarea')){event.preventDefault();scenePeople.remove();}
+    else if(k==='i'&&scenePeople.posing()){event.preventDefault();scenePeople.keyNow(event.shiftKey?'limb':'all');}
     else if((k==='w'||k==='e'||k==='t')&&scenePeople.selected()){event.preventDefault();scenePeople.setMode(k==='w'?'translate':k==='e'?'rotate':'scale');}
     else if((k==='delete'||k==='backspace')&&scenePeople.selected()&&!picked()&&!timeline.contains(event.target)&&!panel.contains(event.target)&&!document.querySelector('dialog[open]')){event.preventDefault();scenePeople.remove();}
     else if((k==='w'||k==='e'||k==='t')&&sceneProps.selected()){event.preventDefault();sceneProps.setMode(k==='w'?'translate':k==='e'?'rotate':'scale');syncLightTools();}

@@ -635,3 +635,20 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 .studio-adopt-list li em{font-style:normal;font-size:11px;color:#ffcf8a;margin-left:6px}
 .studio-adopt-list li small{color:#a9c3d2}
 .studio-adopt-list li .director-check{display:flex;gap:8px;align-items:center;margin-top:5px}
+/* S31 pose keys: the selected person's keys as diamonds (pose panel row and the timeline's Pose keys row) */
+.pose-keys-lane{position:relative}
+.pose-key{position:absolute;top:50%;width:11px;height:11px;margin:-6px 0 0 -6px;padding:0;border:1px solid #fff8;background:#ff9bd2;transform:rotate(45deg);border-radius:2px;cursor:grab;touch-action:none;z-index:2}
+.pose-key:hover{background:#ffc4e5}.pose-key.selected{background:#fff;border-color:#ff9bd2;box-shadow:0 0 0 2px #ff9bd2aa}
+.pose-keys-empty{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:10px;color:#9fb3bd;white-space:nowrap}
+.pose-key-row{position:relative;height:22px;margin:4px 0 6px;border-radius:4px;background:#ffffff0d;border:1px solid #ffffff1a}
+.pose-key-playhead{position:absolute;top:0;bottom:0;width:2px;background:#f3fcff;pointer-events:none}
+.pose-autokey[aria-pressed="true"]{color:#ff5c6c;border-color:#ff5c6c88}
+.pose-autokey[aria-pressed="false"]{color:#9fb3bd}
+/* S31 People track: a row per person, the programmed diamonds (people-track.mjs) */
+.people-track-rows{display:contents}
+.people-track-row.selected .desk-lane-label{color:#ff9bd2}
+.people-track-lane{position:relative}
+.pt-key{position:absolute;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;padding:0;border:1px solid #0006;transform:rotate(45deg);border-radius:1px;cursor:grab;touch-action:none;z-index:2;background:#c9d4da}
+.pt-key.mine{box-shadow:0 0 0 2px #ff9bd2}
+.pt-in,.pt-out{background:#9fe0a8}.pt-change{background:#ffd36b}.pt-walk{background:#7fd7ff}.pt-roll{background:#b79bff}.pt-act{background:#ff8a5c}
+.pt-walk-point,.pt-roll-point,.pt-act-end{width:7px;height:7px;margin:-4px 0 0 -4px;opacity:.85}
