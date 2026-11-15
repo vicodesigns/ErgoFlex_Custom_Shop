@@ -767,6 +767,7 @@ def run_pages(ids, downloads):
 
 
 TITLE_TEXT = (('eyebrow', 60), ('title', 140), ('detail', 260))
+TITLE_PLACES = ('top-left', 'top-right')   # titles-src 'place' (absent = lower-left; film-titles.mjs PLACES)
 
 
 def clean_shadow(v):
@@ -806,6 +807,8 @@ def import_titles(cid, titles, seconds, log):
         else: e.pop('shadow', None)
         if d.get('timed'): e['director_timing'] = True
         else: e.pop('director_timing', None)
+        if d.get('place') in TITLE_PLACES: e['place'] = d['place']
+        else: e.pop('place', None)
         new.append(e); was.append(mine.get(d.get('id'), {}))
     if [src['titles'][i] for i in old_idx] == new: return []
     at = old_idx[0] if old_idx else len(src['titles'])
@@ -818,7 +821,7 @@ def import_titles(cid, titles, seconds, log):
     gone = len(old_idx) - sum(1 for o in was if o)
     if gone > 0: log(f'    {gone} title(s) of {cid} no longer in the export: removed')
     for e, old in zip(new, was):
-        what = [k for k in ('rel_in', 'rel_out', 'eyebrow', 'title', 'detail', 'shadow') if old.get(k) != e.get(k)]
+        what = [k for k in ('rel_in', 'rel_out', 'eyebrow', 'title', 'detail', 'shadow', 'place') if old.get(k) != e.get(k)]
         log(f'    title {e["rel_in"]:g}-{e["rel_out"]:g} s {e["title"]!r}: {", ".join(what) or "unchanged"}{" (timing set in Director)" if e.get("director_timing") else ""}')
     return [f'titles-src.json (backup titles-src.pre-{tag}.json)']
 
