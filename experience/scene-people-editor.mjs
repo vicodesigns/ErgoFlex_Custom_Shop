@@ -429,7 +429,8 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(x.now===null){seek(x.d.t);select(x.d.key,{announce:false});status(`${x.d.key}: ${KIND_TITLE[x.d.kind]||x.d.label} at ${x.d.t.toFixed(2)} s. Drag the diamond to retime it.`);return;}
     retime(x.d,x.now);
   },true);
-  document.addEventListener('click',ev=>{if(performance.now()<tdSuppress&&ev.target.closest?.('[data-pt-index]')){ev.preventDefault();ev.stopPropagation();}},true);
+  document.addEventListener('click',ev=>{const b=ev.target.closest?.('[data-pt-index]');if(!b)return;ev.preventDefault();ev.stopPropagation();if(performance.now()<tdSuppress)return;
+    const d=trackList[Number(b.dataset.ptIndex)];if(d){seek(d.t);select(d.key,{announce:false});}},true);
   // The timeline's People lane: one bar per person over the seconds they are in the room. People who are there at the
   // same time get rows of their own (lane-rows.mjs); the lane grows past two rows so every bar keeps its name.
   let laneRows=1;
