@@ -235,8 +235,10 @@ def oilers(s):
         key(6.95, W(-3440, 920, -1110), W(edge[0], edge[1], edge[2] + 40), 42, 'The screen slides out'),
         key(7.0, W(-3350, 1500, -1150), W(btn[0] + 10, btn[1] - 20, btn[2] - 10), 31, "Cut: the screen's user's view, face-on: it turns up and asks 'Lower to Kai's height'", cut=True),
         key(8.95, W(-3345, 1480, -1170), W(btn[0] + 10, btn[1] - 20, btn[2] - 10), 30, 'His finger on the button, it lights; the height starts down'),
-        key(9.0, (0.6, 2.25, 7.2), (-2.6, 1.4, 5.5), 50, 'Cut: front three-quarter from the window side: the desk coming down to Kai, Noah beside it', cut=True),
-        key(11.5, (0.5, 2.25, 7.25), (-2.65, 1.38, 5.5), 50, 'At his height: Kai rolls in under it'),
+        # (round 5: Kai rolls in along the cross-aisle on the lens's right: the aim starts on him and follows him to the desk)
+        key(9.0, (0.6, 2.25, 7.2), (-2.2, 1.4, 4.9), 52, 'Cut: front three-quarter from the window side: Kai rolling in, the desk coming down, Noah at its corner', cut=True),
+        key(10.4, (0.55, 2.25, 7.22), (-2.35, 1.4, 5.1), 51, 'Kai turns in toward the desk'),
+        key(11.5, (0.5, 2.25, 7.25), (-2.6, 1.38, 5.45), 50, 'At his height: Kai rolls in under it'),
         key(15, (0.35, 2.28, 7.3), (-2.7, 1.38, 5.5), 50, 'He starts the quiz; Noah watches'),
     ])
 
