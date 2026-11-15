@@ -11,6 +11,10 @@ const SCREENS = '/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-2026103
 // CREATE_ACTS: create's three ranges (S3, Nov 14): digital painting 0..A, architecture A..B, natural landscapes B..end
 // (the drafting kit fades in 7.0-7.4 s, the board tilts to 55 deg for the oil painting from 16.9 s).
 export const CREATE_ACTS = {A: 7.0, B: 16.9};
+// WELLNESS_BEATS (S16's stretch, Nov 14): the desk rises 6.0-11.0 s to 41 in as Maya gets up (the cut's lift clip); she
+// stands with the chair aside, stretches 9.0-11.6 s and types again by 13 s. 'Time to move' at nudge, the shoulder
+// squeeze stretch..stretchEnd beside the live height (41.0 in), 'Reset done' at reset, the report back by work.
+export const WELLNESS_BEATS = {nudge: 8.4, stretch: 9.0, stretchEnd: 11.6, reset: 11.8, work: 13.0};
 // COAST_PERSON: who uses coast's featured suite (Ava: S4's decision, Nov 14)
 export const COAST_PERSON = 'Ava';
 const CINE_OUT = 'exports/cinematic-intro-cut-cine/screens';
@@ -33,8 +37,8 @@ const CINE = [
   cine('oilers', 6, {id: 'cine-oilers-portrait', target: 'main-portrait', role: 'quiz -> lowering to Kai -> Kai +100 -> class', w: 1080, h: 1856, scene: 'c06p', opts: {name: 'Kai', class: ['Fern', 'Noah', 'Nia', 'Finn', 'Zoe', 'Mia', 'Leo', 'Sofia']}}),
   cine('oilers', 6, {id: 'cine-oilers-laptop', target: 'main-landscape-2', role: 'the answer pad (Kai)', w: 1280, h: 776, scene: 'c06k', opts: {name: 'Kai'}}),
   cine('wellness', 7, {id: 'cine-wellness-main', target: 'main-landscape', role: 'Maya: report -> time to move -> the stretch + height -> standing', w: 1920, h: 1080, scene: 'c07l',
-    opts: {name: 'Maya'}, videos: [{key: 'shoulder', src: 'app-reference/demo_media/seated_scapular_squeeze_01_demo.mp4', t: 17, scale: '1280:-2'}]}),
-  cine('wellness', 7, {id: 'cine-wellness-tablet', target: 'tablet', role: 'focus -> breathing with the stretch -> nice reset', w: 1620, h: 1080, scene: 'c07t', opts: {name: 'Maya'}}),
+    opts: {...WELLNESS_BEATS, name: 'Maya'}, videos: [{key: 'shoulder', src: 'app-reference/demo_media/seated_scapular_squeeze_01_demo.mp4', t: 17, scale: '1280:-2'}]}),
+  cine('wellness', 7, {id: 'cine-wellness-tablet', target: 'tablet', role: 'focus -> breathing with the stretch -> nice reset', w: 1620, h: 1080, scene: 'c07t', opts: {...WELLNESS_BEATS, name: 'Maya'}}),
   cine('awareness', 8, {id: 'cine-awareness-main', target: 'main-landscape', role: 'radar on the roll of the cut: the pet, stopped short', w: 1920, h: 800, scene: 'c08', opts: {gap: 16, label: 'Pet'}}),
   // coast (written LAST: COAST_PERSON is S4's decision of who uses the featured suite; Maya is at the centre bay)
   cine('coast', 5, {id: 'cine-coast-main', target: 'main-landscape', role: 'the featured suite: sign-in, height, colour, export', w: 1920, h: 1120, scene: 'c05m', opts: {name: COAST_PERSON, sign: -1}}),

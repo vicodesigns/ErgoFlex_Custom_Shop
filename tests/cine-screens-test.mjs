@@ -16,7 +16,7 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCR = path.join(ROOT, 'tools/experience/screens'), CUTDIR = path.join(ROOT, 'exports/cinematic-intro-cut-cine');
-const {CLIPS, CREATE_ACTS, COAST_PERSON} = await import(pathToFileURL(path.join(SCR, 'clips.mjs')).href);
+const {CLIPS, CREATE_ACTS, COAST_PERSON, WELLNESS_BEATS} = await import(pathToFileURL(path.join(SCR, 'clips.mjs')).href);
 const read = p => fs.readFileSync(p, 'utf8').replace(/\r\n/g, '\n');
 const page = read(path.join(SCR, 'page.html'));
 const loaded = [...page.matchAll(/src="(scenes\/[^"]+)"/g)].map(m => m[1]);
@@ -38,6 +38,12 @@ for (const c of cine) {
 }
 assert(CREATE_ACTS.A > 0 && CREATE_ACTS.B > CREATE_ACTS.A, 'create acts in order');
 assert(typeof COAST_PERSON === 'string' && COAST_PERSON, 'the coast person is named');
+// wellness (S16's stretch): the beats in order inside the chapter, the stretch after the desk has started up
+{
+  const wel = cut.shots.find(x => x.id === 'wellness'), lift = wel.motion.clips.find(c => c.lane === 'lift'), B = WELLNESS_BEATS;
+  assert(lift.start <= B.nudge && B.nudge < B.stretch && B.stretch < B.stretchEnd && B.stretchEnd <= B.reset && B.reset < B.work && B.work + .5 <= wel.seconds, 'wellness beats in order, inside the chapter');
+  for (const id of ['cine-wellness-main', 'cine-wellness-tablet']) assert.equal(cine.find(c => c.id === id).opts.stretch, B.stretch, id + ' gets the beats');
+}
 const kai = cine.find(c => c.id === 'cine-music-tv');
 assert(!JSON.stringify(kai.opts).match(/kai/i) || kai.opts.rename?.nova_kai, 'the gaming room names no Kai (neutral handle, nova_kai renamed)');
 assert(!/kai/i.test(kai.opts.handle), 'the stream handle is neutral');
