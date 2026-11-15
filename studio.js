@@ -1291,6 +1291,7 @@ let sharedPolishedAluminumMaterial = null;
 let sharedBlackPlasticMaterial = null;
 let sharedBlackMetalMaterial = null;
 let sharedWheelRollerMaterial = null;
+let sharedWheelPlateMaterial = null;
 
 const gltfLoader = new GLTFLoader();
 const textureLoader = new THREE.TextureLoader();
@@ -1308,6 +1309,9 @@ const BLACK_METAL_COLORS = ["7c5f5f", "75b4bd"];
 // in no current model; it is kept with a38c8c as that checkpoint and the film's wheel code paired them. Matched before
 // the aluminium list, so an older frozen studio.js list cannot win.
 const WHEEL_ROLLER_COLORS = ["a38c8c", "5e4343"];
+// The wheels' side plates, hub and pins (7c5f5f): their own dark metal, a step lighter than the black metal of the motors,
+// so the wheel reads as rollers on plates (variant C, Nov 14).
+const WHEEL_PLATE_COLORS = ["7c5f5f"];
 
 const canvas = document.getElementById('model-canvas');
 const loader = document.getElementById('loader');
@@ -1433,7 +1437,7 @@ const glossy = m => m?.isMeshStandardMaterial && !m.envMap && (m.metalness >= .4
 // supposed to be like a aluminum gray, and they're white right now"), and against the studio's dark environment its
 // flat faces (the connector discs) read black. At this level it is grey aluminium from any angle (Vico's older video,
 // docs/reference/cine-notes-20261114 img56 to img58). The product stage keeps the studio, as for every other metal.
-const DESK_HARDWARE_GLOSS = .5;
+const DESK_HARDWARE_GLOSS = .2;      // variant C (round 3: 0.5): mid-grey aluminium, clearly darker than a white frame
 const deskHardware = m => m?.userData?.deskHardware === true && m.isMeshStandardMaterial;
 function roomGlossPass(now = false) {
     const g = roomGloss; if (!g.env) return;
@@ -1451,10 +1455,10 @@ function roomGlossPass(now = false) {
                 if (g.touched.has(m)) seen.add(m);
                 // a copy of one of ours (a film's fade clones the material with whatever level it had that frame)
                 else if (m.envMap === g.env) { g.touched.set(m, m.userData.roomGlossBase ?? 1); seen.add(m); }
-                else if (glossy(m)) {
+                else if (glossy(m) || (deskHardware(m) && !m.envMap)) {      // the wheels' rubber too (variant C)
                     // roomGlossOwn: the material's own level, put back on the product stage (the hardware's room level is lower)
                     m.userData.roomGlossOwn = m.envMapIntensity ?? 1;
-                    m.userData.roomGlossBase = m.userData.roomGlossOwn * (deskHardware(m) ? DESK_HARDWARE_GLOSS : 1);
+                    m.userData.roomGlossBase = m.userData.roomGlossOwn * (deskHardware(m) ? (m.userData.roomGlossLevel ?? DESK_HARDWARE_GLOSS) : 1);
                     g.touched.set(m, m.userData.roomGlossBase); m.envMap = g.env; m.needsUpdate = true; seen.add(m);
                 }
             }
@@ -4138,10 +4142,10 @@ function addLedUprightSpill(surface, strip, receiver, direction, minY, maxY, opt
 // The wheels' gain on that receiver (chingon's decision, Nov 14: Vico's request authorizes it). It is well above every
 // other receiver's (the columns 1, the actuators 1.5, the crossbar 2) and works by driving the shader into its own cap
 // (alpha 0.55) near the foot strip; the falloff still shapes it away from the strip. At gain 1, with the film's cut
-// setting ledSurfaces.baseStrength 36 (the app's default is 54), the wheels took about 0.2/255 of the LED: a black
-// silhouette in a blue or red pool. At 8 the rollers' and mounts' sides towards the strip take its colour; 16 looked
-// the same (the cap), so 8 keeps more of the falloff.
-const WHEEL_LED_GAIN = 8;
+// setting ledSurfaces.baseStrength 36 (the app's default is 54), the wheels took about 0.2/255 of the LED. Round 3 used
+// 8: the colour showed, but white LEDs turned the rubber silver. Variant C: 4, with the rubber taking the room's light
+// itself (WHEEL_ROLLER roomGlossLevel), so the wheel reads as grey rubber and the LED tints its side towards the strip.
+const WHEEL_LED_GAIN = 4;
 function addWheelLedReceivers() {
     const foot = ledParts[38]?.part;
     const wheelPart = obj => {
@@ -4422,6 +4426,7 @@ function loadModel() {
         sharedBlackPlasticMaterial = null;
         sharedBlackMetalMaterial = null;
         sharedWheelRollerMaterial = null;
+        sharedWheelPlateMaterial = null;
 
         movingObjects = [];
         liftObjects.clear();
@@ -4461,6 +4466,7 @@ function loadModel() {
                     let newMaterial = mat;
 
                     if (WHEEL_ROLLER_COLORS.includes(colorHex)) newMaterial = getOrCreateWheelRollerMaterial();
+                    else if (WHEEL_PLATE_COLORS.includes(colorHex)) newMaterial = getOrCreateWheelPlateMaterial();
                     else if (BIRCH_COLORS.includes(colorHex)) newMaterial = getOrCreateWoodMaterial(woodRoleFor(child));
                     else if (BASE_PAINT_COLORS.includes(colorHex)) newMaterial = getOrCreateBasePaintMaterial();
                     else if (POLISHED_ALUMINUM_COLORS.includes(colorHex)) newMaterial = getOrCreatePolishedAluminumMaterial();
@@ -7423,14 +7429,34 @@ function getOrCreateWheelRollerMaterial() {
     if (!sharedWheelRollerMaterial) {
         sharedWheelRollerMaterial = new THREE.MeshPhysicalMaterial({
             name: 'Wheel roller rubber',
-            color: new THREE.Color("#47484c"),
+            color: new THREE.Color("#66676c"),
             metalness: 0,
             roughness: 0.45,
             clearcoat: 0.3,
             clearcoatRoughness: 0.25
         });
     }
+    // Variant C: in a room the rubber takes the room's light as the other desk hardware does (its own room
+    // environment, at 1.4 times the room level: a grey rubber wheel in a lit room, not a hole).
+    sharedWheelRollerMaterial.userData.deskHardware = true;
+    sharedWheelRollerMaterial.userData.roomGlossLevel = 1.4;
     return sharedWheelRollerMaterial;
+}
+
+function getOrCreateWheelPlateMaterial() {
+    if (!sharedWheelPlateMaterial) {
+        sharedWheelPlateMaterial = new THREE.MeshPhysicalMaterial({
+            name: 'Wheel plate metal',
+            color: new THREE.Color("#7a7e84"),
+            metalness: 0.85,
+            roughness: 0.35,
+            ior: 1.8,
+            envMapIntensity: 1.2
+        });
+        sharedWheelPlateMaterial.userData.deskHardware = true;      // roomGlossPass: the room reflection, at its own level
+        sharedWheelPlateMaterial.userData.roomGlossLevel = 1;
+    }
+    return sharedWheelPlateMaterial;
 }
 
 function populateFinishOptions() {
