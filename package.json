@@ -30,6 +30,7 @@
     "test:room-life": "node tests/room-life-test.cjs",
     "test:room-people": "node tests/room-people-test.mjs",
     "test:room-people-motion": "node tests/room-people-motion-test.mjs",
+    "test:room-people-ghost": "node tests/room-people-ghost-test.mjs",
     "build:people": "python3 tools/people/build.py",
     "build:window-vistas": "python3 tools/rooms/build-window-vistas.py",
     "test:scene-desk-styles": "node tests/room-desk-styles-test.cjs",
