@@ -38,5 +38,13 @@ try:
     check(r.returncode != 0 and 'rubber' in (r.stdout + r.stderr), 'a studio.js listing the rollers as aluminium is refused')
 finally:
     shutil.rmtree(d, ignore_errors=True)
+for label, text in (('without WHEEL_ROLLER_COLORS', src.replace('const WHEEL_ROLLER_COLORS', 'const WHEEL_ROLLERS_GONE', 1)),
+                    ('without a matching POLISHED_ALUMINUM_COLORS', src.replace('const POLISHED_ALUMINUM_COLORS = [', 'const POLISHED_ALUMINUM_COLORS=[', 1))):
+    d = freeze(text)
+    try:
+        r = subprocess.run([sys.executable, SCRIPT, d], capture_output=True, text=True, env={**os.environ, 'PYTHONUTF8': '1'})
+        check(r.returncode != 0, 'a studio.js ' + label + ' is refused')
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
 print('FAILED: ' + '; '.join(fails) if fails else 'all passed')
 sys.exit(1 if fails else 0)

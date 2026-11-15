@@ -4127,17 +4127,20 @@ function addLedUprightSpill(surface, strip, receiver, direction, minY, maxY, opt
 
 // The wheels and their mounts receive the desk's LEDs above them (Vico, Nov 14: "the lighting should be reflected on
 // the wheels ... the bottom of the desktop ... illuminate right above them"): the omni wheels' rollers and side discs,
-// the motor brackets and the motors. Two receivers each, both the lift columns' upright receiver (same shader, falloff
+// the motor brackets (not the motors: 10,761 triangles each, dark, and not visibly helped; the reviewer's cost note).
+// Three overlays each (the foot strip, and the centre strip of both desktop sizes), all the lift columns' upright receiver (same shader, falloff
 // and reach 12 to 28; gain WHEEL_LED_GAIN): the foot strip under the footrest (ledParts[38], the strip that also lays the LED
 // pool on the floor around the wheels, a few inches above them) and the desktop's centre underside strip, which is
 // some forty inches up and adds little, as on the columns' feet; it grows as the desk comes down. Each overlay is a
 // child of its mesh, so it turns with the wheel. The pins and screws are left out (too small to show it, and the
-// overlay count would pass four hundred).
-// The wheels' gain on that receiver (chingon's decision, Nov 14: Vico's request authorizes it). At the columns' gain (1)
-// and the film's base level (baseStrength 36) the wheels took about 0.2/255 of the LED: a black silhouette in a blue or
-// red pool. At 8 the rollers' and mounts' sides towards the foot strip take its colour; 16 looked the same (the
-// shader's own cap, alpha 0.55, is reached near the strip), so 8 keeps more of the falloff. The cap and the falloff
-// bound it: a lit side towards the strip, not a flat tint.
+// overlay count would pass four hundred). Known, as for every receiver: a film fade's material clone freezes the
+// overlay's light frame, and the scene-desk rig bakes skip ShaderMaterials (the room's other desks get no wheel light).
+// The wheels' gain on that receiver (chingon's decision, Nov 14: Vico's request authorizes it). It is well above every
+// other receiver's (the columns 1, the actuators 1.5, the crossbar 2) and works by driving the shader into its own cap
+// (alpha 0.55) near the foot strip; the falloff still shapes it away from the strip. At gain 1, with the film's cut
+// setting ledSurfaces.baseStrength 36 (the app's default is 54), the wheels took about 0.2/255 of the LED: a black
+// silhouette in a blue or red pool. At 8 the rollers' and mounts' sides towards the strip take its colour; 16 looked
+// the same (the cap), so 8 keeps more of the falloff.
 const WHEEL_LED_GAIN = 8;
 function addWheelLedReceivers() {
     const foot = ledParts[38]?.part;
@@ -4149,7 +4152,7 @@ function addWheelLedReceivers() {
         return (b.max.x - b.min.x) * (b.max.y - b.min.y) > 4;      // the two side discs (3.8 x 3.8 authored inches)
     };
     for (const { obj } of partRegistry.values()) {
-        if (!obj.isMesh || !(wheelPart(obj) || /^(Brackets|Nema_17_Motors)(?:_\d+)?$/.test(obj.name))) continue;
+        if (!obj.isMesh || !(wheelPart(obj) || /^Brackets(?:_\d+)?$/.test(obj.name))) continue;
         if (foot) addLedUprightSpill(obj, foot, 'base', -1, -1000, 1000,
             { underside: true, uprightOnly: false, gain: WHEEL_LED_GAIN, minReach: 12, maxReach: 28 });
         for (const group of [ledStandardStrips, ledExtendedStrips]) {

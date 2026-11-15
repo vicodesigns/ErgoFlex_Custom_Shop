@@ -20,8 +20,12 @@ elif text.count('applyGlideOffset(directorAnchor.offset.clone().add(new THREE.Ve
 # The wheel rollers (a38c8c, 5e4343) are rubber (studio.js WHEEL_ROLLER_COLORS). This script used to write them into
 # the aluminium list of every frozen studio.js (white mirror rollers in the film; Vico, Nov 14); it must not.
 aluminium = re.search(r'const POLISHED_ALUMINUM_COLORS = \[([^\]]*)\];', text)
-if aluminium and re.search(r'"(a38c8c|5e4343)"', aluminium.group(1)):
+if not aluminium:
+    raise SystemExit('frozen studio.js: POLISHED_ALUMINUM_COLORS not found; review the wheel roller check before queueing')
+if re.search(r'"(a38c8c|5e4343)"', aluminium.group(1)):
     raise SystemExit('frozen studio.js lists the wheel rollers (a38c8c / 5e4343) as polished aluminium; they are rubber')
+if not re.search(r'const WHEEL_ROLLER_COLORS = \[[^\]]*"a38c8c"[^\]]*\];', text):
+    raise SystemExit('frozen studio.js has no WHEEL_ROLLER_COLORS with a38c8c: its rollers would render as the rough pink metal of the GLB')
 
 old_finish = "const set=createSceneAccessorySet(r.rig.mounts,config,()=>r.group.children.find(obj=>obj.isMesh&&String(obj.material?.userData?.sceneDeskMaterial).startsWith('wood:'))?.material);"
 new_finish = "const set=createSceneAccessorySet(r.rig.mounts,config,()=>(r.id===sceneDesks.selected&&woodMaterials.get('desktop'))||r.group.children.find(obj=>obj.isMesh&&String(obj.material?.userData?.sceneDeskMaterial).startsWith('wood:'))?.material);"
