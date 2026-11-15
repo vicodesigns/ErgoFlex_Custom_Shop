@@ -95,9 +95,13 @@ export async function auditChapter(shot, { step = 1 / 120, threshold = .02, rigs
         const edges = Object.values(filter.when || {}).flat().flatMap(([t0, t1]) => [t0, t1]).filter(t => t >= 0 && t <= seconds);
         const fine = edges.flatMap(e => [e - 1 / 240, e, e + 1 / 240]).filter(t => t >= 0 && t <= seconds).map(t => round(t, 5));
         const times = [...new Set([...grid, ...fine])].sort((a, b) => a - b);
-        for (let pass = 0; pass < 3; pass++) { for (const t of times) people.update(state(t)); await people.settled(); await new Promise(r => setTimeout(r, 5)); if (!people.pending.size && pass) break; }
+        // as the film's export: the chapter is prepared at its first second and warmed (settled()), then its frames are
+        // drawn in order; whatever starts loading on a frame (a life for someone who first shows mid-chapter) lands
+        // before the next frame, not before this one
+        people.update(state(times[0] ?? 0)); await people.settled();
         const samples = [], heads = new Map(), pops = [], moves = new Map();
         for (const t of times) {
+            if (people.pending.size) await people.settled();
             people.update(state(t));
             const by = new Map();
             for (const o of people.people) {
