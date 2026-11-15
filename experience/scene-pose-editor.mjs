@@ -351,7 +351,8 @@ export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,
     if(d.now===null){selT=d.t;seek(d.t);rerender();status(`Key at ${fmt(d.t)} s: drag to retime, Delete removes it, Ease out sets how it leaves.`);return;}
     retime(d.t,d.now);
   },true);
-  document.addEventListener('click',ev=>{if(performance.now()<kdSuppress&&ev.target.closest?.('[data-pose-key]')){ev.preventDefault();ev.stopPropagation();}},true);
+  document.addEventListener('click',ev=>{const d=ev.target.closest?.('[data-pose-key]');if(!d)return;ev.preventDefault();ev.stopPropagation();if(performance.now()<kdSuppress||!key)return;
+    const t=Number(d.dataset.poseKey);selT=t;seek(t);rerender();status(`Key at ${fmt(t)} s: drag to retime, Delete removes it, Ease out sets how it leaves.`);},true);      // (a keyboard Enter or a script's click)
   return {enter,exit,tick,panel,action,changed,setMode,personAt,active:()=>key,joint:()=>joint,jointLabel:()=>joint?label(joint):'',resetJoint:()=>reset('joint'),ready:()=>!!rigOf(),
     keyLane,sync,keyNow,deleteKey,selectedKey:()=>selT,autoKey:()=>autoKey};
 }

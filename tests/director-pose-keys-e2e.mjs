@@ -32,6 +32,7 @@ try{
   await seek(page,6);await set('pe-rx',-10);await wait(600);
   assert.deepEqual(await diamonds(),[3.2,6],'a second key at 6 s');
   // drag the 6 s diamond to about 8 s
+  await page.$eval('[data-pose-keys-lane]',e=>e.scrollIntoView({block:'center'}));await wait(300);
   const d=await page.$('[data-pose-keys-lane] [data-pose-key="6"]'),box=await d.boundingBox(),lane=await (await page.$('[data-pose-keys-lane]')).boundingBox();
   const x8=lane.x+lane.width*8/c.seconds;
   await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();await page.mouse.move(box.x+20,box.y+box.height/2,{steps:4});await page.mouse.move(x8,box.y+box.height/2,{steps:8});await page.mouse.up();await wait(700);
