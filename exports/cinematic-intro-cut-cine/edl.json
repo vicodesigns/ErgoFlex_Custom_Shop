@@ -1,7 +1,7 @@
 {
  "fps": 30,
  "dissolve": 1.5,
- "total": 245.828,
+ "total": 219.161,
  "chapters": [
   {
    "index": 1,
@@ -83,9 +83,9 @@
   {
    "index": 12,
    "id": "hero",
-   "duration": 48,
+   "duration": 21.3333,
    "start": 197.828,
-   "end": 245.828
+   "end": 219.161
   }
  ],
  "beats": [
@@ -98,11 +98,11 @@
    "what": "awaken title B: Safe for everyone around it."
   },
   {
-   "at": 239.368,
+   "at": 213.595,
    "what": "end card: ErgoFlex wordmark"
   },
   {
-   "at": 245.828,
+   "at": 219.161,
    "what": "cut to black / onboarding"
   }
  ],

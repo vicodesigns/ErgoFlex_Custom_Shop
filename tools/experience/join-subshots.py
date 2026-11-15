@@ -12,7 +12,7 @@ Any number of sub-shots (the finale's desk versions: six in the film, more or fe
 removes one); a single sub-shot is the chapter as it is. --plan prints what would be joined (inputs, each
 dissolve's [duration, offset], the chapter's seconds) as JSON and renders nothing.
 """
-import json, os, subprocess, sys
+import json, math, os, subprocess, sys
 cut, rdir, out = sys.argv[1:4]
 trans = sys.argv[sys.argv.index('--transition') + 1] if '--transition' in sys.argv else 'fade'
 subs = json.load(open(cut))['shots']
@@ -21,7 +21,9 @@ for k, s in enumerate(subs):
     inputs += ['-i', os.path.join(rdir, f'{k + 1:02d}.mkv')]
 for k in range(1, len(subs)):
     a, b = subs[k - 1]['renderRange'], subs[k]['renderRange']
-    dur, off = round(a[1] - b[0], 4), round(b[0] - subs[0]['renderRange'][0], 4)
+    # offset floored to the millisecond: rounded up past a frame time, a one-frame xfade (a hard cut) starts after the
+    # outgoing clip's last frame and xfade drops the rest of the chain (S26 finale reel)
+    dur, off = round(a[1] - b[0], 4), math.floor((b[0] - subs[0]['renderRange'][0]) * 1000 + 1e-6) / 1000
     assert dur > 0, 'sub-shots must overlap'
     fades.append([dur, off])
     f.append(f'{prev}[{k}:v]xfade=transition={trans}:duration={dur}:offset={off}[x{k}]'); prev = f'[x{k}]'

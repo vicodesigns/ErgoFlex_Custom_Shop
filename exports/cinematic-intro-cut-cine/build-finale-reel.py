@@ -16,8 +16,9 @@ Writes:
   review-cut.json          hero only: seconds, motion, cameraPlan + camera, sceneEdits tracks, subshots map, presets.
   titles-src.json          hero only: the closing title, logo and cta times (wording untouched).
 One desk move and one camera are still shared by every sub-shot and the cut's hero (as the Director import expects):
-  - motion: the desk jumps to the next desk's pose in the last 0.02 s before each cut (lift and tilt clips 0.02 s
-    long), so every sub-shot shows its own desk at its own pose for its whole block;
+  - motion: the desk jumps to the next desk's pose just after the cut frame (lift and tilt clips 0.005-0.025 s after
+    it). join-subshots.py's one-frame xfade shows the outgoing sub-shot on the cut frame and the incoming one from
+    the next frame on, so every desk is seen only at its own pose (the cut lands 1/30 s after the beat);
   - camera: one spline with a 'cut' key at every desk change (camera-spline.mjs). Each block pushes in from its
     own angle. The cut keys also put the cuts on beats in the score (build-cine-score.py reads cameraPlan cuts).
 Timing is in beats of 60/112 s from the bar line at the centre of the dissolve from storage (0.75 s). Every
@@ -96,12 +97,22 @@ def cam_keys(starts, ends, red, logo, T):
         if i: k0['cut'] = True
         keys += [k0, dict(at=round(t1 - 0.04, 4), position=pos(az + 3, el, d1, y), target=tgt, fov=fov, label=f'{d[0]}: push')]
     # the red desk: lands three-quarter front-right, eases round and back to the end card framing by the wordmark
-    land = dict(at=red, position=pos(42, 8, 7.0, 1.05), target=[DESK_C[0], 1.05, DESK_C[1]], fov=27, cut=True, label='red desk lands')
+    # under the closing title (lower left) the desk stands right of centre (frame_right), clear of the headline
+    land = frame_right(dict(at=red, position=pos(42, 8, 7.0, 1.05), target=[DESK_C[0], 1.05, DESK_C[1]], fov=27, cut=True, label='red desk lands'), 0.14)
     keys += [land,
-             dict(at=round((red + logo) / 2, 4), position=pos(10, 9, 8.2, 0.8), target=[-0.05, 0.75, 0.3], fov=27.8, label='red desk: round to the front'),
+             frame_right(dict(at=round((red + logo) / 2, 4), position=pos(10, 9, 8.2, 0.8), target=[-0.05, 0.75, 0.3], fov=27.8, label='red desk: round to the front'), 0.12),
              dict(at=logo, **copy.deepcopy(END_KEY), label='end card: desk at rest, frontal 3/4'),
              dict(at=T, position=[8.6, 2.04, -4.15], target=[0.157, 0.54, 0.076], fov=28.5, label='end')]
     return keys
+
+
+def frame_right(k, dx):
+    """build-cine-cut.py's frame_right: the aim turned left about the vertical so the subject sits dx of the width right."""
+    k = dict(k); p, t = k['position'], k['target']
+    h = 2 * math.atan(math.tan(math.radians(k['fov']) / 2) * 16 / 9)
+    a = math.atan(2 * dx * math.tan(h / 2)); vx, vz = t[0] - p[0], t[2] - p[2]; c, s = math.cos(a), math.sin(a)
+    k['target'] = [round(p[0] + vx * c + vz * s, 4), t[1], round(p[2] - vx * s + vz * c, 4)]
+    return k
 
 
 def spline(seconds, plan):
@@ -113,13 +124,13 @@ def spline(seconds, plan):
 
 
 def pose_clips(starts):
-    """Jump to the next desk's pose in the 0.02 s before each cut (the shared desk move)."""
+    """Jump to the next desk's pose just after each cut frame (the shared desk move)."""
     clips, prev = [], DESKS[0][2]
     for i, d in enumerate(DESKS[1:]):
         t = starts[i + 1]
         for lane, j in (('lift', 0), ('tilt', 1)):
             if d[2][j] == prev[j]: continue
-            clips.append({'id': f'{chr(66 + i).lower()}-{lane}', 'lane': lane, 'kind': lane, 'start': round(t - 0.02, 4), 'duration': 0.02,
+            clips.append({'id': f'{chr(66 + i).lower()}-{lane}', 'lane': lane, 'kind': lane, 'start': round(t + 0.005, 4), 'duration': 0.02,
                           'easing': 'linear', 'label': '', 'target': d[2][j],
                           'path': [{'time': 0, 'pose': {('height' if lane == 'lift' else 'tilt'): prev[j]}},
                                    {'time': 1, 'pose': {('height' if lane == 'lift' else 'tilt'): d[2][j]}}]})
