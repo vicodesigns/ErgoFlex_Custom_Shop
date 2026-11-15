@@ -463,6 +463,19 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
             assert.ok(Math.min(...trunk) > 0 && Math.max(...trunk) < 6, `${who}: the trunk ${Math.min(...trunk).toFixed(1)}-${Math.max(...trunk).toFixed(1)} deg forward`);
         }
     }
+    // chingon's rule (S20): nobody near the lens turns faster than about 120 deg/s, body or head: the walks' corners and
+    // end turns are spread out (TURN_RATE), Andre's U-turn behind the desk and Noah's short walk to the screen included
+    for (const [who, fromId, toId, route, options] of walkers) {
+        const rig = rigOf(who); if (!rig.has(fromId) || !rig.has(toId)) continue;
+        const plan = walkPlan(rig, rig.key(fromId), rig.key(toId), route, who === 'andre' ? { ...options, endYaw: THREE.MathUtils.degToRad(117) } : options), dt = 1 / 120, wrapped = a => Math.atan2(Math.sin(a), Math.cos(a));
+        let body = null, head = null, fastest = 0, fastestHead = 0;
+        for (let t = 0; t <= plan.seconds + 1e-9; t += dt) {
+            const root = { ...solveWalk(rig, plan, plan.at(t)) }, f = new THREE.Vector3(0, 0, 1).applyQuaternion(rig.wq[rig.b.head]), h = root.yaw + Math.atan2(f.x, f.z);
+            if (body !== null) { fastest = Math.max(fastest, Math.abs(wrapped(root.yaw - body)) / dt); fastestHead = Math.max(fastestHead, Math.abs(wrapped(h - head)) / dt); }
+            body = root.yaw; head = h;
+        }
+        assert.ok(deg(fastest) <= 120 && deg(fastestHead) <= 120, `${who}: turns at most 120 deg/s (body ${deg(fastest).toFixed(0)}, head ${deg(fastestHead).toFixed(0)})`);
+    }
     // the end of a walk faces exactly the way asked (endYaw: the next placement's turn), or along the last leg however
     // short it is (S9's reviewer: Noah's 0.2 m last leg left him 47 degrees off, then a snap at the change)
     {

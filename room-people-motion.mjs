@@ -175,12 +175,12 @@ export const LOOK_YAW = .7, LOOK_PITCH = .42;      // radians the neck and head 
 // Turns the neck (.4) and the head (.6) so that the face points `amount` of the way to `target` (a point in the
 // model's frame), within LOOK_YAW / LOOK_PITCH of where the posture has it looking: small turns, never a broken neck.
 // fk() must be current; it is current afterwards.
-export function lookToward(rig, target, amount) {
+export function lookToward(rig, target, amount, pitchOnly = false) {
     if (!target || !(amount > 0)) return;
     const b = rig.b, face = faceOf(rig), from = v7.copy(rig.wp[b.head]); from.y += .07;      // (the eyes: a little above the head bone)
     gazeV.copy(face).applyQuaternion(rig.wq[b.head]); lookV.copy(target).sub(from); if (lookV.lengthSq() < 1e-6) return; lookV.normalize();
     const wrap = a => Math.atan2(Math.sin(a), Math.cos(a)), clamp = THREE.MathUtils.clamp;
-    const yaw = clamp(wrap(Math.atan2(lookV.x, lookV.z) - Math.atan2(gazeV.x, gazeV.z)), -LOOK_YAW, LOOK_YAW) * amount;
+    const yaw = pitchOnly ? 0 : clamp(wrap(Math.atan2(lookV.x, lookV.z) - Math.atan2(gazeV.x, gazeV.z)), -LOOK_YAW, LOOK_YAW) * amount;
     const pitch = clamp(Math.asin(clamp(lookV.y, -1, 1)) - Math.asin(clamp(gazeV.y, -1, 1)), -LOOK_PITCH, LOOK_PITCH) * amount;
     for (const [bone, share] of [[b.neck_01, .4], [b.head, .6]]) {
         rig.turnWorld(bone, lookTurn.setFromAxisAngle(Y, yaw * share)); rig.fk();
@@ -1020,6 +1020,7 @@ export function solveChange(rig, from, to, w) {
 // (walkStance), so the gait is laid out from feet flat on the floor (S19, Nov 14: walks from the mid-stride posture
 // sank the front foot 30-69 mm into the floor, floated the back one, crouched and marched).
 const WALKING = new Set(['walk']);
+export const TURN_RATE = 115;      // degrees a second a walker's body turns at most (chingon: 120 near the lens)
 export function walkStance(rig, key) {
     if (!key || !WALKING.has(key.pose)) return key;
     const id = [`people-${rig.character}-stand-wait`, `people-${rig.character}-kid-stand-wait`].find(i => rig.has(i));
@@ -1072,7 +1073,19 @@ export function walkPlan(rig, from, to, path, options = {}) {
     // GAIT.land: the shoe's heel is skinned partly to the shin, so it does not turn with the foot; measured by
     // room-people.mjs as well, and taken off the ankle's height in proportion as the toes are up)
     const land = [0, 1].map(i => Number.isFinite(options.land?.[i]) ? THREE.MathUtils.clamp(options.land[i], -.03, .04) : 0);
-    return { length, step, steps, prints, along, heading, travel, from, to, pace, heels, land, toes: options.toes !== 'stiff', seconds: steps.length / pace, at: seconds => clamp01(seconds * pace / steps.length) * steps.length };
+    // (the way the body faces, by the clock: the path's heading where the walker is, turning at most TURN_RATE degrees a
+    // second, chingon's rule for people near the lens (the two-tap shutter doubles a fast turn); the two ends kept
+    // exactly. A walk too short for its turn at that rate turns as fast as it must: plan.turnRate says how fast.)
+    const total = steps.length, n = Math.max(2, Math.ceil(total / pace * 60) + 1), dt = total / pace / (n - 1), raw = new Float64Array(n);      // (about 60 a second, the last at the end)
+    for (let i = 0; i < n; i++) { const h = heading(travel(Math.min(total, i * dt * pace))); raw[i] = i ? raw[i - 1] + wrap(h - raw[i - 1]) : h; }
+    const most = THREE.MathUtils.degToRad(TURN_RATE) * dt, fastest = a => { let m = 0; for (let i = 1; i < a.length; i++) m = Math.max(m, Math.abs(a[i] - a[i - 1])); return m; };
+    // (no faster than `most` a frame both ways round, which keeps the two ends; then softened, which keeps the limit)
+    const body = Float64Array.from(raw), cap = most * .9, step1 = (x, to) => x + THREE.MathUtils.clamp(to - x, -cap, cap);
+    for (let i = 1; i < n; i++) body[i] = step1(body[i - 1], raw[i]);
+    body[n - 1] = raw[n - 1]; for (let i = n - 2; i >= 0; i--) body[i] = step1(body[i + 1], body[i]);
+    for (let pass = 0; pass < 6; pass++) { const prev = Float64Array.from(body); for (let i = 1; i < n - 1; i++) { const r = Math.min(3, i, n - 1 - i); let sum = 0; for (let k = -r; k <= r; k++) sum += prev[i + k]; body[i] = sum / (2 * r + 1); } }
+    const bodyYaw = g => { const x = Math.min(n - 1, Math.max(0, g / pace / dt)), i = Math.min(n - 2, Math.floor(x)); return lerp(body[i], body[i + 1], x - i); };
+    return { length, step, steps, prints, along, heading, travel, bodyYaw, turnRate: THREE.MathUtils.radToDeg(fastest(body) / dt), from, to, pace, heels, land, toes: options.toes !== 'stiff', seconds: steps.length / pace, at: seconds => clamp01(seconds * pace / steps.length) * steps.length };
 }
 // The pose at gait clock g (plan.at(seconds)): rig.lq / rig.lp in the model's frame. Returns where the model stands:
 // { x, z, yaw } (metres, radians; the room's frame).
@@ -1087,7 +1100,7 @@ const pivot = V(), rootAt = { x: 0, z: 0, yaw: 0 }, aims = [V(), V()], aimQ = [Q
 const bends = [0, 0], contacts = [0, 0], faces = [0, 0];
 const kneeSpan = (a, b, deg) => Math.sqrt(a * a + b * b + 2 * a * b * Math.cos(THREE.MathUtils.degToRad(deg)));      // hip to ankle with the knee bent so
 export function solveWalk(rig, plan, g) {
-    const { steps, from, to } = plan, b = rig.b, total = steps.length, s = plan.travel(g), at = plan.along(s), yaw = plan.heading(s), c = Math.cos(yaw), sn = Math.sin(yaw);
+    const { steps, from, to } = plan, b = rig.b, total = steps.length, s = plan.travel(g), at = plan.along(s), yaw = plan.bodyYaw ? plan.bodyYaw(g) : plan.heading(s), c = Math.cos(yaw), sn = Math.sin(yaw);
     const blend = ss(0, 1, g / total), walking = ss(0, .8, g) * (1 - ss(total - .9, total, g));      // how much of the walk's own carriage is in the pose
     faceOf(rig);      // (before the pose: reading a posture loads it; a walker who looks at someone, room-people.mjs, needs it after)
     for (let i = 0; i < rig.n; i++) rig.lq[i].slerpQuaternions(from.q[i], to.q[i], blend);
@@ -1152,7 +1165,7 @@ export function solveWalk(rig, plan, g) {
         const tr = v4.copy(rig.wp[b.neck_01]).sub(rig.wp[b.pelvis]), lean = THREE.MathUtils.clamp(THREE.MathUtils.degToRad(GAIT.trunk) - Math.atan2(tr.z, tr.y), -.2, .2) * walking;
         for (const [bone, share] of [[b.spine_01, .5], [b.spine_02, .5]]) { rig.turnWorld(bone, turn.setFromAxisAngle(X, lean * share)); rig.fk(); }
         // and the eyes ahead, on the floor three metres on (not on a desktop, as someone standing by has them)
-        lookAt.copy(rig.wp[b.head]); lookAt.y -= .45; lookAt.z += 3; lookToward(rig, lookAt, .8 * walking);
+        lookAt.copy(rig.wp[b.head]); lookAt.y -= .45; lookAt.z += 3; lookToward(rig, lookAt, .8 * walking, true);      // (up or down only: a turn of the head as the walk ends would be a fast one)
     }
     rig.turnWorld(b.head, turn.setFromAxisAngle(Y, .04 * Math.cos(phase * Math.PI) * odd * walking)); rig.fk();
     // ---- legs to the feet
