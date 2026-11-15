@@ -1642,3 +1642,60 @@ def all_outputs():
                 ids.add(mid); out.append(o)
     return out + [output(mid) for mid in ALSO if mid not in ids]
 
+
+
+# ---- S23: Lin drawing at the artist's desk (the film's create chapter) ----------------------------------------------
+# Two desk postures built on the drawing surface as the film sets it, measured in the creative room (the 60x30 desk,
+# the oak pen display, the room's artist stool). A surface: its near edge in the person's frame (y: metres ahead of
+# where they stand, negative; z: metres up) and its slope (degrees, rising away from them). Things on it are placed
+# by `along` (metres up the slope from that edge), `x` (to her left) and `lift` (metres off the surface, square to it).
+#   sit-draw (desk at 30 in, top at 7 degrees): on the stool, the stylus on the pen display (its own stand adds 13).
+#   stand-draw (desk at 40 in, top at 40 degrees): standing, the pencil on the board, the left hand resting on it.
+DRAW_SURFACES = {'sit-draw': {'edge': (-.20, .80), 'slope': 20.2, 'seat': .57},
+                 'stand-draw': {'edge': (-.22, 1.02), 'slope': 40.}}
+# Where the hands go on it, (along, x, lift) for the wrist, and how the drawing hand is turned (flat-table directions).
+H = {'sit-r': (.16, -.07, .03), 'sit-r-fingers': (.3, -1, -.2), 'sit-r-palm': (.5, .1, -.85), 'sit-r-curl': .6, 'sit-l': (.10, .19, .02),
+     'stand-r': (.18, -.08, .03), 'stand-r-fingers': (.3, -1, -.2), 'stand-r-palm': (.5, .1, -.85), 'stand-r-curl': .6, 'stand-l': (.16, .2, .02)}
+import os as _os, json as _json; H.update({k: tuple(v) if isinstance(v, list) else v for k, v in _json.loads(_os.environ.get('S23_H', '{}')).items()}); DRAW_SURFACES.update(_json.loads(_os.environ.get('S23_S', '{}')))  # S23-TEMP
+
+
+def _slope(surface):
+    t = math.radians(surface['slope']); c, s = math.cos(t), math.sin(t)
+    def on(along, x, lift=0.):
+        return (x, surface['edge'][0] - along * c + lift * s, surface['edge'][1] + along * s + lift * c)
+    def turn(v):      # a direction posed for a flat table, tipped onto the slope (down becomes into the surface)
+        return (v[0], v[1] * c + v[2] * s, -v[1] * s + v[2] * c)
+    return on, turn
+
+
+def sit_draw(inches=30):
+    """On the artist stool at the desk, drawing with the stylus on the pen display: leaning in, the stylus tip on the
+    display, the left hand resting on its edge, eyes on the tip; the feet on the stool's ring."""
+    surface = DRAW_SURFACES['sit-draw']; on, turn = _slope(surface); seat = surface['seat']
+    def pose(k):
+        return {'pelvis': (0, .0, seat + .085), 'pelvis_pitch': 8, 'spine': (6, 8, 7), 'neck': H.get('sit-neck', 14), 'head': H.get('sit-head', 16), 'head_yaw': H.get('sit-head-yaw', -5),
+                'hand_r': {'at': on(*H['sit-r']), 'fingers': turn(H['sit-r-fingers']), 'palm': turn(H['sit-r-palm']), 'elbow': (-.3, .15, -.25), 'curl': H['sit-r-curl'], 'thumb': .55, 'each': H.get('sit-r-each', {})},
+                'hand_l': {'at': on(*H['sit-l']), 'fingers': turn(H.get('l-fingers', (-.3, -1, 0))), 'palm': turn((0, 0, -1)), 'elbow': (.3, .15, -.25), 'curl': H.get('l-curl', .05), 'thumb': .1, 'spread': .25},
+                'foot_l': {'at': (.1, -.16, .26), 'toes': (.15, -1, -.25)}, 'foot_r': {'at': (-.1, -.13, .26), 'toes': (-.15, -1, -.25)}}
+    return pose
+
+
+def stand_draw(inches=40):
+    """Standing at the desk tilted to a 40 degree drafting board: the pencil on the board, the left hand resting flat on
+    it, weight a little forward, eyes on the pencil."""
+    surface = DRAW_SURFACES['stand-draw']; on, turn = _slope(surface)
+    def pose(k):
+        return {'spine': H.get('stand-spine', (4, 5, 4)), 'neck': H.get('stand-neck', 12), 'head': H.get('stand-head', 12), 'head_yaw': H.get('stand-head-yaw', -6),
+                'hand_r': {'at': on(*H['stand-r']), 'fingers': turn(H['stand-r-fingers']), 'palm': turn(H['stand-r-palm']), 'elbow': (-.3, .2, -.3), 'curl': H['stand-r-curl'], 'thumb': .55, 'each': H.get('stand-r-each', {})},
+                'hand_l': {'at': on(*H['stand-l']), 'fingers': turn(H.get('l-fingers', (-.3, -1, 0))), 'palm': turn((0, 0, -1)), 'elbow': (.3, .2, -.3), 'curl': H.get('l-curl', .05), 'thumb': .1, 'spread': .25},
+                'foot_l': {'at': (.11, .0, .07), 'toes': (.25, -1, 0)}, 'foot_r': {'at': (-.12, .06, .07), 'toes': (-.3, -1, 0)}}
+    return pose
+
+
+DESK_POSES.update({'sit-draw': sit_draw, 'stand-draw': stand_draw})
+DESK_HEIGHTS.update({'sit-draw': (30,), 'stand-draw': (40,)})
+POSE_INFO.update({'sit-draw': ('Drawing with a stylus at the desk, on the stool', 'seated', 'desk', 570, [('stylus', {'side': 'r', 'tilt': H.get('sit-tilt', -35), 'reach': H.get('sit-reach', .11)})]),
+                  'stand-draw': ('Drafting at the tilted desk, standing', 'standing', 'desk', 0, [('stylus', {'side': 'r', 'color': (.71, .6, .43), 'tip': (.2, .2, .22), 'tilt': H.get('stand-tilt', -35), 'reach': H.get('stand-reach', .11)})])})
+ROLE_POSES |= {'sit-draw', 'stand-draw'}       # (built for this one desk and surface: Lin's two models only)
+RAISED |= {'sit-draw'}                         # (her feet are on the stool's ring)
+ALSO += ['people-lin-sit-draw', 'people-lin-stand-draw']

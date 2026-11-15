@@ -2284,6 +2284,7 @@ export class RoomPeople {
         const out = actor.out.chair, park = this.filter?.chair, parked = park ? THREE.MathUtils.smoothstep(actor.state.tau, 1.75, 2.6) : 0, back = out.back * 1000;
         chair.position.copy(home).addScaledVector(front, park ? back + ((park.back ?? 620) - back) * parked : back).addScaledVector(side, (park?.side ?? 0) * parked);
         chair.rotation.y = yaw + Math.PI + THREE.MathUtils.degToRad(park ? (park.turn ?? 0) * parked : out.turn);
+        if (chair.userData.seatY !== undefined) { chair.position.y = chair.userData.seatY; chair.rotation.y += chair.userData.seatTurn; }   // (the room's own seat under an adult desk user: seatChildren)
         this.chairSpot = chair.position; this.chairHome = home;
     }
     // The room's own chairs make way wherever someone is working at a desk (they brought the chair the pose fits,
@@ -2350,7 +2351,11 @@ export class RoomPeople {
         for (const person of this.people) {
             const spec = person.userData.person; if (!ownSeat(spec)) continue;
             // (keyed by the placement, not the object: a person drawn again with a skeleton is a new object in the same seat)
-            const key = this.keyOf(spec) + '|' + spec.id, on = person.visible && (person.userData.personFade === undefined || person.userData.personFade > .5); let seat = seats.get(key);
+            // (S23: Lin drawing on the artist's stool, people-lin-sit-draw, gets up from it: the seat is hers while any of
+            // her models is drawn, and chairOf rolls it back and parks it with her, as an adult's task chair. Children keep
+            // theirs where they sit.)
+            const actor = person.userData.personDriven && /-sit-draw(-[\d_]+)?$/.test(spec.id) ? person.userData.personActor : null;
+            const key = this.keyOf(spec) + '|' + spec.id, on = actor ? actor.objects.some(o => o.visible) || actor.away > 0 : person.visible && (person.userData.personFade === undefined || person.userData.personFade > .5); let seat = seats.get(key);
             if (!on) continue;
             if (!seat || seat.mode !== this.modeNow || !seat.source.parent) {
                 if (seat) { seat.copy.removeFromParent(); seats.delete(key); }
@@ -2369,6 +2374,7 @@ export class RoomPeople {
             if (seat.copy.parent !== person.parent) person.parent.add(seat.copy);
             // the room's own chair is out while its copy is under the child, however far the room has pushed it back
             if (!this.hidden.has(seat.source)) { this.hidden.set(seat.source, ownVisible(seat.source)); seat.source.visible = false; }
+            if (actor) { if (actor.chair !== seat.copy) { actor.chair = seat.copy; seat.copy.userData.seatY = seat.y; seat.copy.userData.seatTurn = seat.turn; } continue; }   // chairOf moves it
             seat.copy.visible = true; seat.copy.position.set(person.position.x, seat.y, person.position.z); seat.copy.rotation.set(0, person.rotation.y + seat.turn, 0);
         }
         for (const [key, seat] of seats) if (!live.has(key)) seat.copy.visible = false;

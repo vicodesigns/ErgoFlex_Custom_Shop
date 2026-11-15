@@ -43,9 +43,13 @@ const SIT_UPRIGHT = 7;                 // degrees the back comes up from the bui
 // ---- driver --------------------------------------------------------------------------------------------------
 // desc: { sit: { lo, hi } | null, stand: { lo, hi } | null }: the desk heights (inches) at which the seated and
 // the standing posture reach the keys. With both, the person changes between them; with one they keep it.
-export function deskDescription(sitHeights, standHeights, lowStand = false) {
+// sitDraws: the seated posture draws on the top (a stylus on a pen display, people-*-sit-draw): seated, the hands stay
+// on it up to DRAW_TILT instead of TILT_FLAT (the standing posture keeps TILT_FLAT). Absent for every other desk user.
+export function deskDescription(sitHeights, standHeights, lowStand = false, sitDraws = false) {
     const range = (list, down, up) => list.length ? { lo: Math.min(...list) - down, hi: Math.max(...list) + up } : null;
-    return { sit: range(sitHeights, HANDS_FIT, SIT_REACH_UP), stand: range(standHeights, lowStand ? HANDS_FIT : STAND_REACH_DOWN, HANDS_FIT) };
+    const desc = { sit: range(sitHeights, HANDS_FIT, SIT_REACH_UP), stand: range(standHeights, lowStand ? HANDS_FIT : STAND_REACH_DOWN, HANDS_FIT) };
+    if (sitDraws) desc.sitTilt = DRAW_TILT;
+    return desc;
 }
 const within = (h, r) => !!r && h >= r.lo - 1e-6 && h <= r.hi + 1e-6;
 // What the person wants at this height, with the desk travelling to `dest` (inches; null or the height itself when it
@@ -55,7 +59,7 @@ export function deskWants(desc, state, height, dest, tilt = 0) {
     let stand = !desc.sit;
     if (desc.sit && desc.stand) stand = goal > desc.sit.hi || height > desc.sit.hi + (lowering ? LEAD : 0);
     const settled = stand ? state.tau >= STAND_UP - 1e-6 : state.tau <= 1e-6, reach = stand ? desc.stand : desc.sit;
-    const hands = settled && Math.abs(tilt || 0) <= TILT_FLAT && within(height, reach) && within(goal, reach) && (!!state.on || Math.abs(goal - height) <= NEAR);
+    const hands = settled && Math.abs(tilt || 0) <= (!stand && desc.sitTilt ? desc.sitTilt : TILT_FLAT) && within(height, reach) && within(goal, reach) && (!!state.on || Math.abs(goal - height) <= NEAR);
     return { stand, hands };
 }
 export function settleDesk(desc, height, tilt = 0) {
@@ -384,7 +388,7 @@ export class DeskActor {
         const sit = this.members.filter(m => m.role !== 'stand').map(key).sort(byHeight), stand = this.members.filter(m => m.role === 'stand').map(key).sort(byHeight);
         const up = this.members.find(m => m.role === 'stand');
         this.keys = { sit, stand, wait: this.rig.key(`people-${this.character}-stand-wait`, up ? up.dz : 0) || this.rig.key(`people-${this.character}-kid-stand-wait`, up ? up.dz : 0) };   // (children have their own standing-by posture)
-        this.desc = deskDescription(sit.map(k => k.deskHeight), stand.map(k => k.deskHeight), stand.some(k => k.pose === 'stand-type-low'));
+        this.desc = deskDescription(sit.map(k => k.deskHeight), stand.map(k => k.deskHeight), stand.some(k => k.pose === 'stand-type-low'), sit.length > 0 && sit.every(k => k.pose === 'sit-draw'));
         // the same models as before (a film re-placing someone else): the person carries on from where they are
         this.draws = this.members.length > 0 && this.members.every(m => /-kid-(stand|sit)-desk/.test(m.id));
         const sign = this.members.map(m => m.id + ':' + m.role).join();

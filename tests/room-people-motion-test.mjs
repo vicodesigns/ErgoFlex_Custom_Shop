@@ -67,6 +67,15 @@ for (const who of characters) {
     // short stature at the low setting: standing throughout, hands off above her reach
     const lowStand = deskDescription([], [28, 30], true);
     assert.deepEqual([settleDesk(lowStand, 29).tau, settleDesk(lowStand, 29).k, settleDesk(lowStand, 40).tau, settleDesk(lowStand, 40).k], [STAND_UP, 1, STAND_UP, 0]);
+    // S23: a seated stylus posture (sit-draw) keeps the hands on a top tilted up to 12 degrees while seated; standing,
+    // and every desk user without it, still lets go past 4 degrees (the flag is absent from their description)
+    assert.equal('sitTilt' in deskDescription([28, 30], [43.5]), false, 'no seated drawing tilt unless asked for');
+    const draw = deskDescription([30], [39], false, true);
+    assert.equal(deskWants(draw, settleDesk(draw, 30), 30, 30, 7).hands, true, 'stylus on a 7 degree top, seated');
+    assert.equal(settleDesk(draw, 30, 7).k, 1);
+    assert.equal(deskWants(draw, settleDesk(draw, 30), 30, 30, 13).hands, false, 'past 12 degrees the stylus leaves it');
+    assert.equal(deskWants(draw, settleDesk(draw, 39), 39, 39, 7).hands, false, 'standing at a 7 degree top: hands off as before');
+    assert.equal(deskWants(desc, settleDesk(desc, 28), 28, 28, 7).hands, false, 'a typist at a 7 degree top: hands off as before');
 }
 
 // ---- a child drawing at the desk: hands stay on a top tilted for drawing, leave it past 12 degrees, in the Studio and on a film's track

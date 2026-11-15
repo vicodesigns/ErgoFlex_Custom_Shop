@@ -497,3 +497,15 @@ def build(rig, items):
     out = []
     for kind, kw in items: out += BUILDERS[kind](rig, **kw)
     return out
+
+
+# ---- S23: a stylus or a pencil held to draw on a surface (Lin at the artist's desk) -----------------------------------
+# Like `pen`, but the point is the end that goes down to the surface (in `pen` the far end from the point does) and
+# the shaft is steeper in the hand, so the point reaches past the curled fingers. `tilt` turns it in the palm.
+def stylus(rig, side, color=(.13, .13, .14), tip=(.72, .72, .74), tilt=-62, reach=.11, length=.15):
+    w = hand_frame(rig, side, .005) @ T(.035, .055, .012) @ R('X', tilt) @ R('Y', 18)
+    return [tube('stylus', .0045, (0, 0, reach - length), (0, 0, reach - .014), material('stylus ' + str(color), color, .4), w, 10),
+            tube('stylus point', .0045, (0, 0, reach - .014), (0, 0, reach), material('stylus point ' + str(tip), tip, .35), w, 10, radius2=.0007)]
+
+
+BUILDERS['stylus'] = stylus
