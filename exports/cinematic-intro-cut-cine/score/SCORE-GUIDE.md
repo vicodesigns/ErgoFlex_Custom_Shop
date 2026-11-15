@@ -13,7 +13,7 @@ sha256 and `check OK`. Run it on the desk, where the film is frozen: `score/scor
 
 | file | what the score takes from it |
 |---|---|
-| `review-cut.json` | each chapter's length (`seconds`); the hard cuts inside chapters (camera keys with `cut`); the desk's `ledStatus` events (the movement sounds) |
+| `review-cut.json` | each chapter's length (`seconds`); the hard cuts inside chapters (camera keys with `cut`); the desk's `ledStatus` events and `motion` clips (the movement sounds play only while the motion clip of their lane runs; both are hashed for the four chapters with sounds) |
 | `titles-src.json` | title A and title B (the opener's two cards) and the logo (`logo.rel_in`): the bloom, the lift and the logo hit land on them |
 | `shots/13-subshots.json` | the finale's desk versions: the chord changes with each version |
 | `edl.json` | **generated** from the two files above by the same command (chapter starts, total length, dissolves). Do not edit it by hand. Its dissolve lengths and types (`transitions`) are the one part kept from the file, so change those there and re-run |
@@ -28,10 +28,10 @@ sha256 and `check OK`. Run it on the desk, where the film is frozen: `score/scor
 ## How it fits the music to a chapter
 
 - **Chapter starts.** Every chapter starts on a bar line inside its dissolve: within 0.3 s of the dissolve's centre.
-- **Whole bars.** Every chapter gets whole 4/4 bars. A chapter that gets longer or shorter gains or loses bars, and its tempo moves by at most 3 %. Only when nothing else fits does a chapter end on one 2/4 bar (the cue sheet says so).
+- **Whole bars.** Every chapter gets whole 4/4 bars. A chapter that gets longer or shorter gains or loses bars, and its tempo moves by at most 3 %. A 2/4 bar is a last resort (`HALF_BAR_COST`), used only if no whole-bar length fits under the step cap; the cue sheet says so. On today's cut there is none: the whole film runs at about 111-114 BPM, slower than v1's 114-117, which is what lets media take whole bars.
 - **Steady tempo (v2).** No tempo step anywhere is larger than 1.5 % (`STEP_CAP`): not between chapters, not at title B, not inside a chapter. A steady groove comes before cutting on the beat.
 - **Cuts on the beat.** A hard cut inside a chapter is pulled onto a beat only when that keeps every step under the cap (a knot). The cue sheet's "Picture sync" table lists each cut as on the beat, or how far off it is.
-- **Finale (v2).** The finale is a whole number of 2-bar phrases with one chord each (`HERO_CYCLE`: D/F#, Gmaj9, Em9, Bm9, repeating), ending Gmaj9, Asus4, A into the logo. A desk version change lands on a phrase line only where the cap allows. The finale's timing comes from `shots/13-subshots.json`, so a reordered finale needs only a re-run.
+- **Finale (v2.1).** Each desk-version change aims at a bar line; it lands exactly on one (a knot) where the cap allows. The chords move in even 2-bar steps (`HERO_CYCLE`: D/F#, Gmaj9, Em9, Bm9), restarting at every version change, so each version brings a chord change; a version that lasts an odd number of bars ends on a 1-bar chord. The last 4 bars are Gmaj9, Asus4, A into the logo. The logo hit lands within 0.1 s of the wordmark's first frame (`LOGO_SLACK`). The finale's timing comes from `shots/13-subshots.json`, so a reordered finale needs only a re-run.
 - **Echo (v2).** The dotted-eighth echo follows the local tempo, so its repeats stay on the beat where the tempo bends.
 - **Movement sounds (v2).** They follow the cut's `ledStatus`, and play only while the desk really moves that way (the chapter's motion clip of the same lane):
   - the opener: lift, tilt and wheels;
@@ -39,7 +39,7 @@ sha256 and `check OK`. Run it on the desk, where the film is frozen: `score/scor
   - the workshop: fold, roll and lift.
 
   Each sound is re-keyed (resampled) by the shift that puts the most of its pitch energy into the score's key, D major.
-- **Mix (v2).** The movement sounds sit 22 dB (lift, tilt) and 25 dB (wheels) under the music, 8 dB lower than v1.
+- **Mix (v2).** `SFX_DB` (-22 dB lift and tilt, -25 dB wheels) is a gain on the raw sound file, relative to the master's gain: 8 dB lower than v1. Measured at the cues, that puts the sounds about 23-33 dB under the music. The sounds are re-keyed by the shift with the most energy in D major; shifts within `KEY_TIE` of the best count as a tie, and the smallest shift wins.
 
 To change any of these rules, edit the knobs at the top of `tools/experience/build-cine-score.py` and re-run:
 `DISSOLVE_SLACK`, `MAX_BEND`, `STEP_CAP`, `CUT_WEIGHT`, `HERO_CYCLE`, `HERO_CADENCE`, `SFX_RULES`, `SFX_DB`, `SCORE_KEY`.

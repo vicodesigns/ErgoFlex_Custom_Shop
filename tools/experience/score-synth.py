@@ -1191,16 +1191,17 @@ def make_delay_ir(delay_s, fb=0.38, taps=8):
 
 
 def local_delay(x, grid, fb, n_out, taps=8):
-    """make_delay_ir's dotted-eighth ping-pong echo, but each repeat k lands k x 0.75 of the LOCAL beat after the
-    sound (the beat length at the output time, from the tempo map), so the echoes stay on the grid where the tempo
-    bends. Same tap gains, ping-pong channels and Gaussian smearing as make_delay_ir."""
+    """make_delay_ir's dotted-eighth ping-pong echo, but repeat k sounds exactly 0.75 k beats (of the tempo map) after
+    its source, so the echoes stay on the grid where the tempo bends, and the read position moves smoothly through
+    every tempo step. Same tap gains, ping-pong channels and Gaussian smearing as make_delay_ir."""
     n = min(len(x), n_out)
     t = np.arange(n) / SR
     ts, bs = grid.ts, grid.bs
-    i = np.clip(np.searchsorted(ts, t, side='right') - 1, 0, len(ts) - 2)
-    beat_len = (ts[i + 1] - ts[i]) / (bs[i + 1] - bs[i])
-    beat_len = np.where((t < ts[0]) | (t >= ts[-1]), grid.beat, beat_len)
-    d = 0.75 * beat_len * SR
+    # the beat position of every output sample (the map extrapolated at the nominal beat outside it); repeat k is read
+    # where the beat was 0.75 k beats earlier: continuous through anchors and knots, so no jump (click) at a tempo step
+    b = np.interp(t, ts, bs)
+    b = np.where(t < ts[0], bs[0] + (t - ts[0]) / grid.beat, b)
+    b = np.where(t > ts[-1], bs[-1] + (t - ts[-1]) / grid.beat, b)
     out = np.zeros((2, n_out))
     src = np.arange(len(x))
     for k in range(1, taps + 1):
@@ -1208,7 +1209,7 @@ def local_delay(x, grid, fb, n_out, taps=8):
         w = int(4 * sigma)
         g = np.exp(-0.5 * (np.arange(-w, w + 1) / sigma) ** 2); g /= g.sum()
         xs = np.convolve(x, g, mode='same')
-        out[k % 2, :n] += (fb ** (k - 1)) * np.interp(np.arange(n) - k * d, src, xs, left=0.0, right=0.0)
+        out[k % 2, :n] += (fb ** (k - 1)) * np.interp(grid.t(b - 0.75 * k) * SR, src, xs, left=0.0, right=0.0)
     return out
 
 
