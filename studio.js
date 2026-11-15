@@ -1301,10 +1301,12 @@ const BASE_PAINT_COLORS = ["4fa5bd", "51b8d3", "51d0ef", "d4b3e6", "ffbbff", "68
 const POLISHED_ALUMINUM_COLORS = ["e8e800", "7ec7f9", "ce8ca4", "000000", "4db6c1", "e7e7e7", "00ffff", "ff0000", "6288aa", "bbffe0", "babb95", "a5f1d0"];
 const BLACK_PLASTIC_COLORS = ["0000ff", "e6dabd"];
 const BLACK_METAL_COLORS = ["7c5f5f", "75b4bd"];
-// The omni wheels' rollers (each wheel's barrel rollers; 7c5f5f is its side plates and pins). Dull dark rubber, as
-// the desk always had (Vico, Nov 14: "they're made out of like a rubber, dull plastic"). The 2026-11-10 checkpoint
-// put these two colours in POLISHED_ALUMINUM_COLORS (white mirror rollers); tools/experience/render-source-fixes.py
-// still writes them back into that list in frozen render inputs, so they are matched before the aluminium list.
+// The omni wheels' rollers (each wheel's barrel rollers; 7c5f5f is its side plates and pins): rubber (Vico, Nov 14:
+// "they're made out of like a rubber, dull plastic"). Until 2026-11-10 the app left them the GLB's own material (a38c8c
+// with glTF's default metalness 1 and roughness 1: a rough dark pink-grey metal); only the film made them dark rubber,
+// through a scene edit. The 2026-11-10 checkpoint put them in POLISHED_ALUMINUM_COLORS (white mirror rollers). 5e4343 is
+// in no current model; it is kept with a38c8c as that checkpoint and the film's wheel code paired them. Matched before
+// the aluminium list, so an older frozen studio.js list cannot win.
 const WHEEL_ROLLER_COLORS = ["a38c8c", "5e4343"];
 
 const canvas = document.getElementById('model-canvas');
@@ -1425,13 +1427,13 @@ function createRoomGlossEnvironment() {
     return env;
 }
 const glossy = m => m?.isMeshStandardMaterial && !m.envMap && (m.metalness >= .45 || /acrylic|plexi/i.test(m.name || ''));
-// The desk's own hardware (its aluminium: tilt actuators, side connectors, brackets, wheel mounts; and the wheels'
-// dark metal) keeps the studio's reflections in a room as well, as it had in every room before 2026-11-04 (the film's
-// approved look: Vico's older video, docs/reference/cine-notes-20261114 img55 to img58). The bright, even room above
-// turned the polished aluminium white (Vico, Nov 14: the tilt actuators "are supposed to be like a aluminum gray, and
-// they're white right now"). It is set as the material's own environment, so the film's room capture
-// (film-quality.mjs, which skips materials that have one) leaves it alone too; the level is three's own for
-// scene.environment (scene.environmentIntensity), so a room's light and a film's environmentScale still dim it.
+// The desk's own hardware (its aluminium: tilt actuators, side connector discs, motor brackets; and the wheels' dark
+// metal) reflects the same room, at DESK_HARDWARE_GLOSS of its level. Its aluminium is a white, polished, fully
+// metallic material (as in the visualizer): at the full room level it read white (Vico, Nov 14: the tilt actuators "are
+// supposed to be like a aluminum gray, and they're white right now"), and against the studio's dark environment its
+// flat faces (the connector discs) read black. At this level it is grey aluminium from any angle (Vico's older video,
+// docs/reference/cine-notes-20261114 img56 to img58). The product stage keeps the studio, as for every other metal.
+const DESK_HARDWARE_GLOSS = .5;
 const deskHardware = m => m?.userData?.deskHardware === true && m.isMeshStandardMaterial;
 function roomGlossPass(now = false) {
     const g = roomGloss; if (!g.env) return;
@@ -1448,9 +1450,13 @@ function roomGlossPass(now = false) {
                 if (!m) continue;
                 if (g.touched.has(m)) seen.add(m);
                 // a copy of one of ours (a film's fade clones the material with whatever level it had that frame)
-                else if (m.envMap === g.env || (deskHardware(m) && m.envMap && m.envMap === scene.environment)) { g.touched.set(m, m.userData.roomGlossBase ?? 1); seen.add(m); }
-                else if (deskHardware(m) && !m.envMap && scene.environment) { m.userData.roomGlossOwn = m.envMapIntensity ?? 1; m.userData.roomGlossBase = 1; g.touched.set(m, 1); m.envMap = scene.environment; m.needsUpdate = true; seen.add(m); }
-                else if (glossy(m)) { m.userData.roomGlossBase = m.envMapIntensity ?? 1; g.touched.set(m, m.userData.roomGlossBase); m.envMap = g.env; m.needsUpdate = true; seen.add(m); }
+                else if (m.envMap === g.env) { g.touched.set(m, m.userData.roomGlossBase ?? 1); seen.add(m); }
+                else if (glossy(m)) {
+                    // roomGlossOwn: the material's own level, put back on the product stage (the hardware's room level is lower)
+                    m.userData.roomGlossOwn = m.envMapIntensity ?? 1;
+                    m.userData.roomGlossBase = m.userData.roomGlossOwn * (deskHardware(m) ? DESK_HARDWARE_GLOSS : 1);
+                    g.touched.set(m, m.userData.roomGlossBase); m.envMap = g.env; m.needsUpdate = true; seen.add(m);
+                }
             }
         });
         for (const m of g.touched.keys()) if (!seen.has(m)) g.touched.delete(m);
@@ -4119,6 +4125,34 @@ function addLedUprightSpill(surface, strip, receiver, direction, minY, maxY, opt
     ledSpillMaterials.push({ material, receiver, minReach, maxReach, strip });
 }
 
+// The wheels and their mounts receive the desk's LEDs above them (Vico, Nov 14: "the lighting should be reflected on
+// the wheels ... the bottom of the desktop ... illuminate right above them"): the omni wheels' rollers and side discs,
+// the motor brackets and the motors. Two receivers each, both the lift columns' upright receiver unchanged (shader,
+// falloff, gain 1, reach 12 to 28): the foot strip under the footrest (ledParts[38], the strip that also lays the LED
+// pool on the floor around the wheels, a few inches above them) and the desktop's centre underside strip, which is
+// some forty inches up and adds little, as on the columns' feet; it grows as the desk comes down. Each overlay is a
+// child of its mesh, so it turns with the wheel. The pins and screws are left out (too small to show it, and the
+// overlay count would pass four hundred).
+function addWheelLedReceivers() {
+    const foot = ledParts[38]?.part;
+    const wheelPart = obj => {
+        if (!/^Wheel_[FR]_[LR]/.test(obj.name)) return false;
+        if (obj.material === sharedWheelRollerMaterial) return true;
+        obj.geometry.computeBoundingBox();
+        const b = obj.geometry.boundingBox;
+        return (b.max.x - b.min.x) * (b.max.y - b.min.y) > 4;      // the two side discs (3.8 x 3.8 authored inches)
+    };
+    for (const { obj } of partRegistry.values()) {
+        if (!obj.isMesh || !(wheelPart(obj) || /^(Brackets|Nema_17_Motors)(?:_\d+)?$/.test(obj.name))) continue;
+        if (foot) addLedUprightSpill(obj, foot, 'base', -1, -1000, 1000,
+            { underside: true, uprightOnly: false, gain: 1, minReach: 12, maxReach: 28 });
+        for (const group of [ledStandardStrips, ledExtendedStrips]) {
+            addLedUprightSpill(obj, group.children[2], 'base', -1, -1000, 49,
+                { underside: true, uprightOnly: false, gain: 1, minReach: 12, maxReach: 28 });
+        }
+    }
+}
+
 function addFootLedFloorGlow(parent) {
     // ShadowMaterial catches shadows but cannot display the LED color. Place a
     // separate transparent pool just above the floor and parent it to the
@@ -4328,6 +4362,7 @@ async function loadLedOverlay() {
                     { actuator: true, uprightOnly: false, gain: 1.5, minReach: 12, maxReach: 28 });
             }
         }
+        addWheelLedReceivers();
         addFootLedFloorGlow(roots.base);
         // All LED receivers use the mesh-aligned light fields above. Three.js
         // selects lights by the camera's layers, not each receiving mesh's
@@ -7338,7 +7373,7 @@ function getOrCreatePolishedAluminumMaterial() {
             ior: 2.5,
             envMapIntensity: 1.35
         });
-        sharedPolishedAluminumMaterial.userData.deskHardware = true;      // roomGlossPass: studio reflections in a room
+        sharedPolishedAluminumMaterial.userData.deskHardware = true;      // roomGlossPass: the room reflection at DESK_HARDWARE_GLOSS
     }
     return sharedPolishedAluminumMaterial;
 }
@@ -7366,18 +7401,20 @@ function getOrCreateBlackMetalMaterial() {
             ior: 1.8,
             envMapIntensity: 1.2
         });
-        sharedBlackMetalMaterial.userData.deskHardware = true;      // roomGlossPass: studio reflections in a room
+        sharedBlackMetalMaterial.userData.deskHardware = true;      // roomGlossPass: the room reflection at DESK_HARDWARE_GLOSS
     }
     return sharedBlackMetalMaterial;
 }
 
-// The wheels' rollers: dark rubber (dielectric, so they take the room's light, not a mirrored environment). The values are the film's approved roller look (the wheel scene edit the opener and
-// the proximity chapter carried until 2026-11-13, which stopped matching once the rollers turned to aluminium).
+// The wheels' rollers: dark grey rubber (dielectric, so they take the room's light, not a mirrored environment), light
+// enough that their shape reads on the dark product stage and the under-desk LEDs show on them (their receivers:
+// addWheelLedReceivers). Sheen: the film's earlier roller edit (roughness 0.45, clearcoat 0.3); option B for Vico is
+// roughness 0.8 without clearcoat.
 function getOrCreateWheelRollerMaterial() {
     if (!sharedWheelRollerMaterial) {
         sharedWheelRollerMaterial = new THREE.MeshPhysicalMaterial({
             name: 'Wheel roller rubber',
-            color: new THREE.Color("#2a2a2e"),
+            color: new THREE.Color("#47484c"),
             metalness: 0,
             roughness: 0.45,
             clearcoat: 0.3,
