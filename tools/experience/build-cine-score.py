@@ -26,14 +26,16 @@ picture instead of to the EDL alone:
     the steps, and an inside cut is pulled onto a beat (a knot) only when every step stays under the cap;
   * v2: the finale's desk-version changes (shots/13-subshots.json) aim at bar lines (knots where the cap allows), and
     the chords move in 2-bar steps (HERO_CYCLE) that restart at each version change, then HERO_CADENCE into the logo;
-  * the one 2/4 bar: under the cap a chapter with no whole-bar length near its neighbours' tempo ends on a 2/4 bar
-    (HALF_BAR_COST); on the cut of Nov 14 that is media (30 beats), before the fade to black into the workshop;
-  * v2: the echo follows the local tempo (score-synth.local_delay);
+  * a 2/4 bar is the last resort (HALF_BAR_COST): only a chapter with no whole-bar length near its neighbours' tempo
+    gets one; the cut of Nov 14 has none (media is 28 beats, the film at about 111-114 BPM);
+  * v2.1: the echo follows the tempo map (score-synth.local_delay): repeat k sounds 0.75 k beats after its source,
+    read continuously through every tempo step (no click); for up to 0.75 k beats after a step a repeat plays up to
+    about 1.4 % (24 cents) off pitch;
   * the title A bloom lands on title A, the logo hit within LOGO_SLACK of the wordmark's first frame;
   * the desk's movement sounds (assets/led/audio) follow this cut's ledStatus (SFX_RULES), only while the motion clip
     of that lane runs, clipped to what the chapter shows, re-keyed into the score's key (SCORE_KEY), mixed before the
     master at SFX_DB: a gain on the raw asset relative to the master's gain, 8 dB lower than v1, which measures about
-    23-33 dB under the music at the cue. This is the one layer the master's score.wav has on top of score-synth.py
+    23-40 dB under the music at the cue (the workshop's short fold and lift about 40). This is the one layer the master's score.wav has on top of score-synth.py
     (build-round6-audio.py's pass with the cut of Nov 9). The safety, status and HQ8 splices left with the status
     chapter.
 Deterministic: same cut and code in, same samples out (seeded noise and dither); the WAV's sha256 is printed and stored.
@@ -73,7 +75,7 @@ SOUND = {'lift-up': 'movement_lift_up', 'lift-down': 'movement_lift_down', 'tilt
 LANE = {'lift-up': 'lift', 'lift-down': 'lift', 'tilt-extend': 'tilt', 'tilt-retract': 'tilt', 'wheels': 'wheels'}
 SFX_RULES = {'awaken': set(SOUND), 'commons': {'wheels'}, 'awareness': {'wheels'}, 'storage': set(SOUND)}   # storage: the one-button sequence
 SFX_DB = {'wheels': -25.0}; SFX_DB_DEFAULT = -22.0   # gain on the raw asset in the mastered mix (8 dB under HQ11's);
-                                                     # it measures about 23-33 dB under the music at the cue
+                                                     # it measures about 23-40 dB under the music at the cue
 SFX_FADE_IN, SFX_FADE_OUT = 0.3, 0.25
 SCORE_KEY = {2, 4, 6, 7, 9, 11, 1}   # D major (= B minor, G Lydian): every section of the score uses these pitch classes
 KEY_TIE = 0.01             # re-keying: shifts this close to the best in-key share are a tie; the smallest shift wins
@@ -190,10 +192,11 @@ def picture(cut_dir, edl):
                 t0, t1 = max(a, e['at'], c0), min(b, e['at'] + e['dur'], c1)
                 if t1 - t0 > 0.2: sfx.append([round(s0 + t0, 3), round(t1 - t0, 3), e['kind']])
     merged = []
-    for at, dur, kind in sorted(sfx):       # touching or overlapping events of one sound play as one cue
-        if merged and merged[-1][2] == kind and at <= merged[-1][0] + merged[-1][1] + 0.05:
+    for at, dur, kind in sorted(sfx, key=lambda c: (c[2], c[0], c[1])):   # per sound: touching or overlapping events
+        if merged and merged[-1][2] == kind and at <= merged[-1][0] + merged[-1][1] + 0.05:   # play as one cue
             merged[-1][1] = round(max(merged[-1][0] + merged[-1][1], at + dur) - merged[-1][0], 3)
         else: merged.append([at, dur, kind])
+    merged.sort()
     return dict(cuts=cuts, dissolves=dissolves, looks=looks, title_a=start[ch[0]['id']] + aw[0]['rel_in'],
                 title_b=start[ch[0]['id']] + aw[1]['rel_in'], logo=logo_at, led_on=led_on, sfx=merged, win=win)
 
