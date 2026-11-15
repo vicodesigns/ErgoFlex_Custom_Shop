@@ -57,6 +57,18 @@ PULL_AT, PULL_FOR = 5.4, 1.1                # his hand takes the edge and draws 
 DOCKED = 12.75                              # Kai at the keys (the change centred here: he has come to rest by 12.05)
 
 
+# The face (stream S15 owns these strings): the app's own look (tools/experience/film-touchscreen-modes.mjs). Key 0 is
+# TouchscreenDisplay's built-in prompt while the screen is stowed, so the face never caches the app screen before the
+# film modes are registered; the app-look prompt is up before the screen comes out (FACE_AT), the button answers the
+# finger at TAP, and from just before the lift the HEIGHT tile counts the desk's real height down to Kai's 31.0 in.
+FACE_AT = 5.0
+PROMPT = {'title': "Kai's here", 'text': 'Lower the desk to his saved height', 'button': "Lower to Kai's height", 'sub': '31.0 in · saved for Kai', 'person': 'Kai', 'preset': 31}
+SCREEN = [{'at': 0, 'mode': 'prompt', 'title': PROMPT['title'], 'text': PROMPT['text'], 'button': PROMPT['button'], 'sub': PROMPT['sub'], 'pressed': False},
+          {'at': FACE_AT, 'mode': 'presetPrompt', **PROMPT, 'pressed': False},
+          {'at': TAP, 'mode': 'presetPrompt', **PROMPT, 'pressed': True},
+          {'at': round(LIFT_AT - .05, 3), 'mode': 'presetMoving', 'title': "Lowering to Kai's height", 'from': 43.5, 'target': 31, 'done': "At Kai's height", 'person': 'Kai'}]
+
+
 def main():
     with open(CUT, 'rb') as f: raw = f.read()
     cut = json.loads(raw)
@@ -70,9 +82,7 @@ def main():
     s['touchscreen'] = {
         'from': 0,
         'open': [{'at': PULL_AT, 'to': .5, 'dur': PULL_FOR, 'easing': 'smooth'}, {'at': PULL_AT + PULL_FOR, 'to': 1, 'dur': 1.1, 'easing': 'smooth'}],
-        'screen': [{'at': 0, 'mode': 'prompt', 'title': 'Kai is here', 'text': 'Desk at 43.5 in', 'button': "Lower to Kai's height", 'sub': '31.0 in', 'pressed': False},
-                   {'at': TAP, 'mode': 'prompt', 'title': 'Kai is here', 'text': 'Desk at 43.5 in', 'button': "Lower to Kai's height", 'sub': '31.0 in', 'pressed': True},
-                   {'at': round(LIFT_AT - .05, 3), 'mode': 'moving', 'title': "Lowering to Kai's height", 'from': 43.5, 'target': 31, 'done': "At Kai's height"}]}
+        'screen': SCREEN}
     # the aisle: the room's furniture moved apart (sceneEdits labelled 'S9 aisle', replaced on every run)
     s['sceneEdits'] = [e for e in s['sceneEdits'] if not str(e.get('label', '')).startswith('S9 aisle')] + [
         {'match': m, 'near': [at[0], at[1], 0.3], 'position': list(by), 'label': 'S9 aisle: ' + m.strip('^$') + ' at (%g, %g)' % at} for m, at, by in AISLE_MOVES]

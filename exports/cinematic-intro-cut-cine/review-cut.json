@@ -45405,28 +45405,42 @@
      {
       "at": 0,
       "mode": "prompt",
-      "title": "Kai is here",
-      "text": "Desk at 43.5 in",
+      "title": "Kai's here",
+      "text": "Lower the desk to his saved height",
       "button": "Lower to Kai's height",
-      "sub": "31.0 in",
+      "sub": "31.0 in \u00b7 saved for Kai",
+      "pressed": false
+     },
+     {
+      "at": 5.0,
+      "mode": "presetPrompt",
+      "title": "Kai's here",
+      "text": "Lower the desk to his saved height",
+      "button": "Lower to Kai's height",
+      "sub": "31.0 in \u00b7 saved for Kai",
+      "person": "Kai",
+      "preset": 31,
       "pressed": false
      },
      {
       "at": 8.2,
-      "mode": "prompt",
-      "title": "Kai is here",
-      "text": "Desk at 43.5 in",
+      "mode": "presetPrompt",
+      "title": "Kai's here",
+      "text": "Lower the desk to his saved height",
       "button": "Lower to Kai's height",
-      "sub": "31.0 in",
+      "sub": "31.0 in \u00b7 saved for Kai",
+      "person": "Kai",
+      "preset": 31,
       "pressed": true
      },
      {
       "at": 8.45,
-      "mode": "moving",
+      "mode": "presetMoving",
       "title": "Lowering to Kai's height",
       "from": 43.5,
       "target": 31,
-      "done": "At Kai's height"
+      "done": "At Kai's height",
+      "person": "Kai"
      }
     ]
    }

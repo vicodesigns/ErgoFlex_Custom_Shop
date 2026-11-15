@@ -16,7 +16,7 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCR = path.join(ROOT, 'tools/experience/screens'), CUTDIR = path.join(ROOT, 'exports/cinematic-intro-cut-cine');
-const {CLIPS, CREATE_ACTS, COAST_PERSON, WELLNESS_BEATS} = await import(pathToFileURL(path.join(SCR, 'clips.mjs')).href);
+const {CLIPS, CREATE_ACTS, COAST_PERSON, WELLNESS_BEATS, OILERS_BEATS} = await import(pathToFileURL(path.join(SCR, 'clips.mjs')).href);
 const read = p => fs.readFileSync(p, 'utf8').replace(/\r\n/g, '\n');
 const page = read(path.join(SCR, 'page.html'));
 const loaded = [...page.matchAll(/src="(scenes\/[^"]+)"/g)].map(m => m[1]);
@@ -43,6 +43,15 @@ assert(typeof COAST_PERSON === 'string' && COAST_PERSON, 'the coast person is na
   const wel = cut.shots.find(x => x.id === 'wellness'), lift = wel.motion.clips.find(c => c.lane === 'lift'), B = WELLNESS_BEATS;
   assert(B.nudge < lift.start && lift.start < B.stretch && B.stretch < B.stretchEnd && B.stretchEnd <= B.breatheEnd && B.breatheEnd <= B.reset && B.reset + 1 <= wel.seconds, 'wellness beats in order, inside the chapter');
   for (const id of ['cine-wellness-main', 'cine-wellness-tablet']) assert.equal(cine.find(c => c.id === id).opts.stretch, B.stretch, id + ' gets the beats');
+}
+// oilers (S9's 15 s chapter): the beats sit where the story puts them, against the cut's own lift and Kai's typing
+{
+  const oil = cut.shots.find(x => x.id === 'oilers'), lift = oil.motion.clips.find(c => c.lane === 'lift'), landed = lift.start + lift.duration;
+  const typing = (oil.people.when.kai || [[99]])[0][0];
+  const B = OILERS_BEATS;
+  assert(B.dock >= landed && B.tap >= typing && B.reveal > B.tap && B.dash > B.reveal && B.dash + .8 <= oil.seconds, 'oilers beats in order, inside the chapter');
+  assert(B.reveal >= landed + 1, 'the reveal comes at least 1 s after the desk lands at 31 in');
+  for (const id of ['cine-oilers-portrait', 'cine-oilers-laptop']) assert.deepEqual(Object.fromEntries(Object.keys(B).map(k => [k, cine.find(c => c.id === id).opts[k]])), B, id + ' gets the beats');
 }
 const kai = cine.find(c => c.id === 'cine-music-tv');
 assert(!JSON.stringify(kai.opts).match(/kai/i) || kai.opts.rename?.nova_kai, 'the gaming room names no Kai (neutral handle, nova_kai renamed)');

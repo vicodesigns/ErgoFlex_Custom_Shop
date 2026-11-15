@@ -979,6 +979,8 @@ export async function install(shot) {
   }
   if (active.desk.added.length || active.desk.toggled.length || shot.deskObjects) await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   const list = active.list = discover(shot);
+  // the onboard touchscreen's film face modes in the app's look (film-touchscreen-modes.mjs), for a shot that poses it
+  if (shot.touchscreen) await import('./film-touchscreen-modes.mjs');
   active.screens = await installScreens(shot, list);
   const texSpecs = (shot.screens || []).filter(isTextureTarget);
   if (texSpecs.length) active.texScreens = installTextureScreens(sceneRoot(), texSpecs, await Promise.all(texSpecs.map(sc => loadMedia(sc.src))), { desk: api.loadedModel });
