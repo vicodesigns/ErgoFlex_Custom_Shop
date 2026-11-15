@@ -497,6 +497,12 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
         // scrubbing gives the same bones; outside the window the stretch is at its own spot again, unseen
         seen(6); const a6 = bones(stretch()); seen(10); seen(13.9); seen(6); assert.ok(sameBones(bones(stretch()), a6, 1e-6), 'same second, same pose');
         seen(13.9); assert.ok(!stretch().visible && stretch().position.distanceTo(stretch().userData.personStepHome.position) < 1e-6);
+        // a second placement stepping out at the same time is left out (one of her), with one warning
+        const warn = console.warn, warned = []; console.warn = m => warned.push(m);
+        p3.setFilter({ only: [], cast: [...cast, { key: 'break', id: 'people-maya-stretch', fromDesk: true, at: [60, 260], turn: 180 }, { key: 'break2', id: 'people-maya-stretch-2', fromDesk: true, at: [60, 260], turn: 180 }], when: { break: [[5.5, 12.5]], break2: [[8, 10]] }, life: false, chair: park }); await p3.setEnabled(true);
+        seen(0); await p3.settled(); seen(0);
+        for (const t of [7, 9, 11]) for (let i = 0; i < 2; i++) assert.deepEqual(seen(t).map(o => o.userData.person.id), ['people-maya-stretch'], 'one of her at ' + t + ' s');
+        console.warn = warn; assert.equal(warned.filter(m => /break2/.test(m)).length, 1, 'warned once');
         await p3.setEnabled(false);
     }
     // Studio path: the live height, stepped; a jump of the desk is taken as it stands
@@ -648,6 +654,9 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
             assert.ok(out.tau >= STAND_UP - 1e-3 && out.k < 1e-3, `${shot.id}: ${c.key} steps out at ${(t0 - length / 2).toFixed(2)} s once ${who} is up, hands off the keys (tau ${out.tau.toFixed(2)}, k ${out.k.toFixed(2)})`);
             assert.ok(back.tau >= STAND_UP - 1e-3 && back.k > 1 - 1e-3, `${shot.id}: ${c.key} is back at the keys, hands on, at ${(t1 + length / 2).toFixed(2)} s (k ${back.k.toFixed(2)})`);
             assert.ok(t1 - t0 >= length && t1 + length / 2 <= shot.seconds, `${shot.id}: ${c.key}'s window holds both steps inside the chapter`);
+            // nobody else of hers away from the desk meanwhile (another step out, an older placement that dissolves in): one of her
+            for (const d of shot.people.cast.filter(d => d !== c && !d.desk && shot.people.when?.[d.key] && byId.get(d.id)?.person?.character === who && byId.get(d.id)?.person?.pose !== 'stand-wait'))
+                for (const [u0, u1] of shot.people.when[d.key]) assert.ok(u1 + (d.fromDesk ? length / 2 : 0) < t0 - length / 2 || u0 - (d.fromDesk ? length / 2 : 0) > t1 + length / 2, `${shot.id}: ${d.key} is not away from the desk while ${c.key} is`);
             checked++;
         }
     }
