@@ -42,8 +42,12 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   // ---- the cut
   const own=()=>cleanPeople(shot()?.peopleEdits);
   // What the film shows before any edit here, as plain entries.
+  // S31: a film chapter with a `people` object of its own (the Cinematographer's cut: walks, rolls, acts, seats, only /
+  // except / place) is copied VERBATIM as peopleEdits v2 (people-edits.mjs): nothing the film has is lost by an edit.
   function seed(){
-    const f=film()?.people,live=stagePeople()?.resolved?.()||[];
+    const f=film()?.people;
+    if(f&&typeof f==='object'&&!Array.isArray(f)&&Array.isArray(f.cast))return {v:2,...structuredClone(f)};
+    const live=stagePeople()?.resolved?.()||[];
     return {cast:live,when:f&&typeof f==='object'?structuredClone(f.when||{}):{},...(f?.chair?{chair:f.chair}:{}),...(f?.fade!==undefined?{fade:f.fade}:{})};
   }
   const cast=()=>(own()||seed()).cast;

@@ -27,6 +27,14 @@
 """
 import base64, json, math, sys
 
+_open = open
+def open(file, mode='r', *a, **k):
+    """UTF-8 and LF whatever the platform (Windows' default code page garbled the cut's labels: S31)."""
+    if 'b' not in mode:
+        k.setdefault('encoding', 'utf-8')
+        if 'w' in mode or 'a' in mode: k.setdefault('newline', chr(10))
+    return _open(file, mode, *a, **k)
+
 args = sys.argv[1:]
 def opt(name, default=None):
     if name in args:
@@ -76,16 +84,23 @@ elif cmd == 'import':
     if plan_path:
         for i, k in enumerate(sorted(load_shot(plan_path, shot_id)['cameraPlan']['keys'], key=lambda k: k['at'])): old[f'plan-{i:02d}'] = k
     keys = []
+    # S31: a key the Director did not change (same place, aim, lens and time as the plan's key of its id, within the
+    # page's rounding) comes back as the plan's key itself, every field and its exact time kept, so an export with no
+    # camera edit gives the film the plan it had (build-round8-director.py then keeps the baked camera as it is).
+    same = lambda a, b: len(a) == len(b) and all(abs(float(x) - float(y)) <= 1e-9 for x, y in zip(a, b))
     for k in sorted(s['camera']['keys'], key=lambda k: k['time']):
         v = k['view']; o = old.get(k['id'], {})
+        if o and abs(o['at'] - k['time'] * T) <= max(5e-4, T * 1e-6) and same(o['position'], v['position']) and same(o['target'], v['target']) \
+                and abs(float(o.get('fov', 35)) - float(v.get('fov', 35))) <= 1e-9 and (o.get('label') or '').startswith(k.get('label') or ''):      # (the Director keeps 60 characters of a label, trimmed)
+            keys.append(json.loads(json.dumps(o))); continue
         # at: rounded like the Director's Render still (film-render.mjs filmCamera: Math.round(time*seconds*1000)/1000).
         e = {'at': math.floor(k['time'] * T * 1000 + .5) / 1000, 'position': v['position'], 'target': v['target'], 'fov': v.get('fov', 35)}
-        if k.get('label'): e['label'] = k['label']
+        if k.get('label'): e['label'] = o['label'] if o.get('label') and o['label'].startswith(k['label']) else k['label']
         if 'hold' in o: e['hold'] = o['hold']
         if o.get('cut'): e['cut'] = o['cut']
         keys.append(e)
     clips = (s.get('motion') or {}).get('clips') or []
-    json.dump({'source': args[0], 'seconds': T, 'keys': keys, 'clips': clips}, open(out, 'w'), indent=1)
+    json.dump({'source': args[0], 'seconds': T, 'keys': keys, 'clips': clips}, open(out, 'w', newline=chr(10)), indent=1)
     print(f'{len(keys)} camera keys and {len(clips)} movement clips from Director Mode -> {out}')
 else:
     sys.exit(__doc__)

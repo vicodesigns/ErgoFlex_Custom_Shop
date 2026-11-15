@@ -18,6 +18,14 @@ Run under flock /tmp/claude-1000/hq14-cut.lock when a Director import may be run
 """
 import glob, json, os, re, shutil, subprocess, sys, time
 
+_open = open
+def open(file, mode='r', *a, **k):
+    """UTF-8 and LF whatever the platform (Windows' default code page garbled the cut's labels: S31)."""
+    if 'b' not in mode:
+        k.setdefault('encoding', 'utf-8')
+        if 'w' in mode or 'a' in mode: k.setdefault('newline', chr(10))
+    return _open(file, mode, *a, **k)
+
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE))
 MASTER = 'exports/cinematic-intro-20261104-hq14'
 DIRECTOR = os.path.join(HERE, 'build-round8-director.py')
