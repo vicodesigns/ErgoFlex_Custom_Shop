@@ -74,7 +74,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     }
     const {THREE,TransformControls}=w.__directorThree,group=new THREE.Group();group.name='Director people tools';group.userData.directorTools=true;t.scene.add(group);
     const box=new THREE.BoxHelper(undefined,0xff9bd2);box.material.depthTest=false;box.material.transparent=true;box.renderOrder=998;box.visible=false;group.add(box);
-    const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;w.__directorPeopleGizmo=gizmo;gizmo.setSize(1.2);gizmo.setSpace('world');gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
+    const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;w.__directorPeopleGizmo=gizmo;w.__directorPeoplePaths=paths;gizmo.setSize(1.2);gizmo.setSpace('world');gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
     let orbit=true;
     gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){orbit=t.controls.enabled;t.controls.enabled=false;dragFrom=gizmo.object?read(gizmo.object):null;}else{t.controls.enabled=orbit;endDrag();}});
     gizmo.addEventListener('objectChange',()=>{const e=sel&&entry(sel);if(e)status(`${mode==='translate'?'Moving':mode==='rotate'?'Turning':'Scaling'} ${personName(e)}…`);});
