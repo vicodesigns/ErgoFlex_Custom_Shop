@@ -58752,12 +58752,12 @@
      },
      "id": "mkch",
      "match": "^Added prop:armchair-poppi#mkch$",
-     "label": "Kai's armchair, turned to the desk",
+     "label": "Kai's armchair, turned to the desk (120 mm further back than S5's, 3% taller: seat 435 mm)",
      "parent": "room",
      "position": [
-      -1.8858,
+      -1.9736,
       0,
-      2.1332
+      2.2915
      ],
      "rotation": [
       0,
@@ -58766,7 +58766,7 @@
      ],
      "scale": [
       1,
-      1,
+      1.03,
       1
      ]
     },
@@ -58803,8 +58803,8 @@
     "place": {
      "people-kai-sit-controller": {
       "at": [
-       -1260,
-       1431
+       -1214,
+       1348
       ],
       "turn": 151
      }

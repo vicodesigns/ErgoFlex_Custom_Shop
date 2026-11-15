@@ -14,6 +14,19 @@
 >
 > The text below describes the camera-only round of November 13 and is kept as its record.
 
+## November 15: music, Kai's seat (Vico on the 22:12 render: "he's sitting inside of it, his legs are clipping")
+
+- Measured (Kai's posed `people-kai-sit-controller` vertices against a 5 mm height field of `armchair-poppi`, in the
+  chair's frame): the Poppi's seat is about 560 mm deep (back cushion face to front edge) and Kai's hip to knee is
+  about 340 mm, so sat at the chair's middle his knees ended 210 mm short of the front edge and his calves and feet
+  went down through the front of the cushion (up to 362 mm deep; thighs 35 mm into the cushion). Arms, back and the
+  controller were clear.
+- Fix (music entry only): Kai 95 mm forward along his facing (`people.place` at -1214, 1348; turn 151 unchanged, he
+  still faces the desk's screen) and the armchair 120 mm back along its own axis (`mkch` position -1.9736, 0, 2.2915;
+  61 mm from the -x wall) and 3% taller (`scale` [1, 1.03, 1]: seat about 435 mm), so he perches on the front of the
+  seat, leaning into the game as his posture does, with his hips on the cushion (3 mm) and his thighs, calves and feet
+  clear of it; feet on the floor; coffee table 183 mm from his feet (was 226).
+
 ## November 14: commons and coast (Vico's notes 6, 6b and 7)
 
 - **commons**: the desk starts at 39 in (was 43.5) and Yara types at it as `people-yara-stand-mid` (built for 39 in;
