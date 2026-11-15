@@ -100,7 +100,9 @@ run('--only', ALL); assert.equal(fs.readFileSync(CUT, 'utf8'), once, 'idempotent
 const subKeys = s => s.shots.map(({screens, ...r}) => r);
 assert.deepEqual(subKeys(sub), subKeys(subBefore), 'the finale versions: only screens changes');
 run('--only', 'coast');
-assert(sub.shots.find(v => v.preset === 'hbhs').screens.some(x => x.target === 'main-portrait' && /cine-oilers-portrait/.test(x.src) && x.offset === -20.3), 'hbhs version plays oilers own quiz at its offset');
+{ // the hbhs version's portrait plays oilers' own quiz: its window maps into the votes (clip 1.0-7.4 s), offset kept by build-screens
+  const v = sub.shots.find(v => v.preset === 'hbhs'), q = v.screens.find(x => x.target === 'main-portrait' && /cine-oilers-portrait/.test(x.src));
+  assert(q && q.offset + v.renderRange[0] >= 1.0 - 1e-6 && q.offset + v.renderRange[1] <= 7.4 + 1e-6, 'hbhs version plays oilers own quiz at its offset'); }
 assert(byId(after, 'create').screens.some(x => x.target === 'texture' && x.within === 'desk'), 'the drafting sheet is scoped to the featured desk');
 const coast = byId(JSON.parse(fs.readFileSync(CUT, 'utf8')), 'coast').screens;
 assert.equal(coast.filter(x => /cine-coast-/.test(x.src)).length, 4, 'coast lands when named');

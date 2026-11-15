@@ -445,8 +445,8 @@
   },
   {
    "chapter": "hero",
-   "rel_in": 34.47,
-   "rel_out": 39.78,
+   "rel_in": 12.0,
+   "rel_out": 15.0,
    "eyebrow": "CUSTOM SHOP",
    "title": "One desk. Every part of your day.",
    "detail": ""
@@ -454,12 +454,12 @@
  ],
  "cta": {
   "chapter": "hero",
-  "rel_in": 42.96,
+  "rel_in": 17.3667,
   "rel_out": null,
   "text": "Let\u2019s build yours."
  },
  "logo": {
   "chapter": "hero",
-  "rel_in": 41.54
+  "rel_in": 15.7667
  }
 }
