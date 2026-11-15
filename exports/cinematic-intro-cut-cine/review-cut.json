@@ -54120,8 +54120,8 @@
    "screens": [
     {
      "target": "main-landscape",
-     "src": "exports/cinematic-intro-20261030/screens/08-main.mp4",
-     "offset": 1.3,
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-awareness-main.mp4",
+     "offset": 0,
      "loop": false
     }
    ],
