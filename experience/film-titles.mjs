@@ -1,5 +1,5 @@
 // Film titles (the chapter title cards burned into the intro by tools/experience/finish-intro.py) in the Director.
-// Source: <hq>/titles-src.json titles[] {chapter, rel_in, rel_out, eyebrow, title, detail, scrim?, shadow?, director_timing?},
+// Source: <hq>/titles-src.json titles[] {chapter, rel_in, rel_out, eyebrow, title, detail, scrim?, shadow?, director_timing?, place?},
 // times chapter-relative (= the chapter render's own clock, the Director playhead). Everything here mirrors
 // finish-intro.py's ASS overlay on the 1920 x 1080 grid, so the Director preview and the film agree.
 //
@@ -18,6 +18,15 @@ export const LINES=[
   {key:'title',label:'Headline',family:'Poppins SemiBold',weight:600,size:86,spacing:-.6,border:26,y:912,delay:140,rise:14,color:'#ffffff',shadow:2,shadowAlpha:1-0xA0/255},
   {key:'detail',label:'Supporting text',family:'Poppins',weight:400,size:40,spacing:.2,border:20,y:970,delay:380,rise:10,color:'#d6dee6',shadow:1.5,shadowAlpha:1-0xA0/255}];
 export const BOX_BLUR=18,BOX_OPACITY=1-0xB0/255;          // finish-intro BOX_A 'B0' (31% black), BOX_BLUR 18
+// Placement (titles-src 'place'; absent = lower-left, the film's standing layout). The block keeps its type sizes, line
+// spacing and safe margins: top-* puts the eyebrow's top as far from the top edge (110 px) as the supporting line's
+// bottom is from the bottom edge lower left; *-right sets each line flush right at FILM_W - X0 (finish-intro: \an3).
+// Top placements sit over bright skies and windows more often, so their fitted boxes are darker (BOX_A_TOP '70').
+// A custom shadow path is relative to its title's placed anchor (the headline's left edge, or right edge when right).
+export const PLACE_DY=110-(812-28),BOX_OPACITY_TOP=1-0x70/255;
+export const PLACES={'lower-left':{x:128,dy:0,align:'left'},'top-left':{x:128,dy:PLACE_DY,align:'left'},'top-right':{x:1920-128,dy:PLACE_DY,align:'right'}};
+export function placeOf(t){const key=Object.hasOwn(PLACES,t?.place)?t.place:'lower-left',P=PLACES[key];
+  return {key,x:P.x,dy:P.dy,align:P.align,anchor:[P.x,912+P.dy],boxOpacity:key==='lower-left'?BOX_OPACITY:BOX_OPACITY_TOP};}
 export const FADE_IN=.65,FADE_OUT=.42,RISE_TIME=.9,TEXT_BLUR=5,TEXT_BLUR_TIME=.7;
 export const BLUR_SIGMA=2/Math.sqrt(Math.log(256));        // libass: Gaussian sigma = \blur x 0.849 (measured on its output)
 export const LEAD=1.5,TAIL=.8,MIN_ON=3.5;                   // titles-after-cut.py
@@ -71,6 +80,7 @@ export function cleanTitle(t,seconds=90){
   const out={id:typeof t?.id==='string'&&/^[A-Za-z0-9_-]{1,80}$/.test(t.id)?t.id:'title',rel_in:r3(Math.min(a,b-.2)),rel_out:r3(Math.max(b,a+.2)),
     eyebrow:text(t?.eyebrow,60),title:text(t?.title,140),detail:text(t?.detail,260)};
   if(t?.timed)out.timed=true;
+  if(t?.place&&t.place!=='lower-left'&&Object.hasOwn(PLACES,t.place))out.place=t.place;
   const s=cleanShadow(t?.shadow);if(s)out.shadow=s;
   return out;
 }
@@ -83,22 +93,24 @@ export function cleanFilmTitles(list,seconds=90){
 // measure(line, text) -> the line's advance width in film pixels as libass sets it (the Director measures with
 // the same Poppins files). Fitted box: from the text's left edge - padding to its advance + padding; from the
 // baseline - ascender - padding to the baseline + descender + padding (bottom = the line's y + padding).
-export function fittedBox(line,width){
+export function fittedBox(line,width,align='left'){
   const L=lineOf(line)||line,[ax,ay]=ANCHOR;
+  if(align==='right')return {x0:-width-L.border,x1:L.border,y0:L.y-L.size-L.border-ay,y1:L.y+L.border-ay};
   return {x0:X0-L.border-ax,x1:X0+width+L.border-ax,y0:L.y-L.size-L.border-ay,y1:L.y+L.border-ay};
 }
 const rect=({x0,y0,x1,y1})=>[{x:x0,y:y0},{x:x1,y:y0},{x:x1,y:y1},{x:x0,y:y1}].map(p=>({x:r2(p.x),y:r2(p.y)}));
 export function fittedPaths(title,measure){
-  return LINES.filter(L=>title[L.key]).map(L=>({line:L.key,points:rect(fittedBox(L,measure(L,title[L.key])))}));
+  const {align}=placeOf(title);return LINES.filter(L=>title[L.key]).map(L=>({line:L.key,points:rect(fittedBox(L,measure(L,title[L.key]),align))}));
 }
 export function shadowOf(title,measure){
   const s=title.shadow||{};
-  return {blur:s.blur??BOX_BLUR,opacity:s.opacity??BOX_OPACITY,custom:!!s.paths,paths:s.paths?structuredClone(s.paths):fittedPaths(title,measure)};
+  return {blur:s.blur??BOX_BLUR,opacity:s.opacity??placeOf(title).boxOpacity,custom:!!s.paths,paths:s.paths?structuredClone(s.paths):fittedPaths(title,measure)};
 }
 // The text block's own extents (left/right/top/bottom) relative to the anchor.
 export function textBounds(title,measure){
   const lines=LINES.filter(L=>title[L.key]);if(!lines.length)return null;const [ax,ay]=ANCHOR;
-  return {x0:X0-ax,x1:Math.max(...lines.map(L=>X0+measure(L,title[L.key])))-ax,y0:Math.min(...lines.map(L=>L.y-L.size))-ay,y1:Math.max(...lines.map(L=>L.y))-ay};
+  const w=Math.max(...lines.map(L=>measure(L,title[L.key]))),y0=Math.min(...lines.map(L=>L.y-L.size))-ay,y1=Math.max(...lines.map(L=>L.y))-ay;
+  return placeOf(title).align==='right'?{x0:-w,x1:0,y0,y1}:{x0:X0-ax,x1:X0+w-ax,y0,y1};
 }
 
 // ---- timing (finish-intro: \fad(650,420), \move rise over 900 ms, text \blur5 -> 0 over 700 ms) --------------
@@ -184,5 +196,5 @@ export const pointCount=paths=>paths.reduce((n,p)=>n+p.points.length,0);
 // The title as the film's titles-src entry (for the Director export and the import).
 export function srcEntry(chapter,t){
   const e={chapter,rel_in:t.rel_in,rel_out:t.rel_out,eyebrow:t.eyebrow,title:t.title,detail:t.detail};
-  if(t.shadow)e.shadow=structuredClone(t.shadow);if(t.timed)e.director_timing=true;return e;
+  if(t.shadow)e.shadow=structuredClone(t.shadow);if(t.timed)e.director_timing=true;if(t.place)e.place=t.place;return e;
 }
