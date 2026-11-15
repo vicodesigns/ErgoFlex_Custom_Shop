@@ -16,7 +16,7 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const SCR = path.join(ROOT, 'tools/experience/screens'), CUTDIR = path.join(ROOT, 'exports/cinematic-intro-cut-cine');
-const {CLIPS, CREATE_ACTS, COAST_PERSON} = await import(pathToFileURL(path.join(SCR, 'clips.mjs')).href);
+const {CLIPS, CREATE_ACTS, COAST_PERSON, OILERS_BEATS} = await import(pathToFileURL(path.join(SCR, 'clips.mjs')).href);
 const read = p => fs.readFileSync(p, 'utf8').replace(/\r\n/g, '\n');
 const page = read(path.join(SCR, 'page.html'));
 const loaded = [...page.matchAll(/src="(scenes\/[^"]+)"/g)].map(m => m[1]);
@@ -37,6 +37,15 @@ for (const c of cine) {
 }
 assert(CREATE_ACTS.A > 0 && CREATE_ACTS.B > CREATE_ACTS.A, 'create acts in order');
 assert(typeof COAST_PERSON === 'string' && COAST_PERSON, 'the coast person is named');
+// oilers (S9's 15 s chapter): the beats sit where the story puts them, against the cut's own lift and Kai's typing
+{
+  const oil = cut.shots.find(x => x.id === 'oilers'), lift = oil.motion.clips.find(c => c.lane === 'lift'), landed = lift.start + lift.duration;
+  const typing = (oil.people.when.kai || [[99]])[0][0];
+  const B = OILERS_BEATS;
+  assert(B.dock >= landed && B.tap >= typing && B.reveal > B.tap && B.dash > B.reveal && B.dash + .8 <= oil.seconds, 'oilers beats in order, inside the chapter');
+  assert(B.reveal >= landed + 1, 'the reveal comes at least 1 s after the desk lands at 31 in');
+  for (const id of ['cine-oilers-portrait', 'cine-oilers-laptop']) assert.deepEqual(Object.fromEntries(Object.keys(B).map(k => [k, cine.find(c => c.id === id).opts[k]])), B, id + ' gets the beats');
+}
 const kai = cine.find(c => c.id === 'cine-music-tv');
 assert(!JSON.stringify(kai.opts).match(/kai/i) || kai.opts.rename?.nova_kai, 'the gaming room names no Kai (neutral handle, nova_kai renamed)');
 assert(!/kai/i.test(kai.opts.handle), 'the stream handle is neutral');

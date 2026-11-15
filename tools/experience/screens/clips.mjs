@@ -11,6 +11,11 @@ const SCREENS = '/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-2026103
 // CREATE_ACTS: create's three ranges (S3, Nov 14): digital painting 0..A, architecture A..B, natural landscapes B..end
 // (the drafting kit fades in 7.0-7.4 s, the board tilts to 55 deg for the oil painting from 16.9 s).
 export const CREATE_ACTS = {A: 7.0, B: 16.9};
+// OILERS_BEATS (S9's 15 s oilers, Nov 14): Noah taps the desk's touchscreen at 8.2 s, the desk lowers 43.5 -> 31 in over
+// 8.5-11.5 s (the cut's lift clip: the readout follows it), Kai docks by 11.8 s and types from 12.75 s. On the screens:
+// his answer pad wakes when he has docked, he taps A at `tap`, the reveal 'Mercury ✓ · Kai +100' at `reveal` (at least
+// 1 s after the lift lands, so 31.0 in reads on its own first; it stays up), the class dashboard at `dash`.
+export const OILERS_BEATS = {dock: 11.8, tap: 12.8, reveal: 13.1, dash: 14.2};
 // COAST_PERSON: who uses coast's featured suite (Ava: S4's decision, Nov 14)
 export const COAST_PERSON = 'Ava';
 const CINE_OUT = 'exports/cinematic-intro-cut-cine/screens';
@@ -27,8 +32,8 @@ const CINE = [
   cine('commons', 4, {id: 'cine-commons-reservation', target: 'main-landscape', role: 'the booking ends (Yara), the next turn (Mia), the team notes', w: 1920, h: 800, scene: 'c04r',
     opts: {prev: 'Yara', next: 'Mia', team: ['Mia', 'Kai', 'Sofia']}}),
   cine('oilers', 6, {id: 'cine-oilers-curved', target: 'main-landscape', role: 'orbit lesson with the teacher cursor', w: 1920, h: 800, scene: 'ch06l', opts: {teacher: 'Hale · teacher'}}),
-  cine('oilers', 6, {id: 'cine-oilers-portrait', target: 'main-portrait', role: 'quiz -> lowering to Kai -> Kai +100 -> class', w: 1080, h: 1856, scene: 'c06p', opts: {name: 'Kai', class: ['Fern', 'Noah', 'Nia', 'Finn', 'Zoe', 'Mia', 'Leo', 'Sofia']}}),
-  cine('oilers', 6, {id: 'cine-oilers-laptop', target: 'main-landscape-2', role: 'the answer pad (Kai)', w: 1280, h: 776, scene: 'c06k', opts: {name: 'Kai'}}),
+  cine('oilers', 6, {id: 'cine-oilers-portrait', target: 'main-portrait', role: 'quiz -> lowering to Kai -> Kai +100 -> class', w: 1080, h: 1856, scene: 'c06p', opts: {...OILERS_BEATS, name: 'Kai', class: ['Fern', 'Noah', 'Nia', 'Finn', 'Zoe', 'Mia', 'Leo', 'Sofia']}}),
+  cine('oilers', 6, {id: 'cine-oilers-laptop', target: 'main-landscape-2', role: 'the answer pad (Kai)', w: 1280, h: 776, scene: 'c06k', opts: {...OILERS_BEATS, name: 'Kai'}}),
   cine('wellness', 7, {id: 'cine-wellness-main', target: 'main-landscape', role: 'Maya: report -> time to move -> the stretch + height -> standing', w: 1920, h: 1080, scene: 'c07l',
     opts: {name: 'Maya'}, videos: [{key: 'shoulder', src: 'app-reference/demo_media/seated_scapular_squeeze_01_demo.mp4', t: 17, scale: '1280:-2'}]}),
   cine('wellness', 7, {id: 'cine-wellness-tablet', target: 'tablet', role: 'focus -> breathing with the stretch -> nice reset', w: 1620, h: 1080, scene: 'c07t', opts: {name: 'Maya'}}),
