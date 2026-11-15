@@ -1290,6 +1290,7 @@ let sharedBasePaintMaterial = null;
 let sharedPolishedAluminumMaterial = null;
 let sharedBlackPlasticMaterial = null;
 let sharedBlackMetalMaterial = null;
+let sharedWheelRollerMaterial = null;
 
 const gltfLoader = new GLTFLoader();
 const textureLoader = new THREE.TextureLoader();
@@ -1297,9 +1298,14 @@ textureLoader.setCrossOrigin('anonymous');
 
 const BIRCH_COLORS = ["eaeda2", "ebee87", "ffff00", "bbff00"];
 const BASE_PAINT_COLORS = ["4fa5bd", "51b8d3", "51d0ef", "d4b3e6", "ffbbff", "689bad"];
-const POLISHED_ALUMINUM_COLORS = ["e8e800", "7ec7f9", "ce8ca4", "000000", "4db6c1", "e7e7e7", "00ffff", "ff0000", "6288aa", "bbffe0", "babb95", "a5f1d0", "a38c8c", "5e4343"];
+const POLISHED_ALUMINUM_COLORS = ["e8e800", "7ec7f9", "ce8ca4", "000000", "4db6c1", "e7e7e7", "00ffff", "ff0000", "6288aa", "bbffe0", "babb95", "a5f1d0"];
 const BLACK_PLASTIC_COLORS = ["0000ff", "e6dabd"];
 const BLACK_METAL_COLORS = ["7c5f5f", "75b4bd"];
+// The omni wheels' rollers (each wheel's barrel rollers; 7c5f5f is its side plates and pins). Dull dark rubber, as
+// the desk always had (Vico, Nov 14: "they're made out of like a rubber, dull plastic"). The 2026-11-10 checkpoint
+// put these two colours in POLISHED_ALUMINUM_COLORS (white mirror rollers); tools/experience/render-source-fixes.py
+// still writes them back into that list in frozen render inputs, so they are matched before the aluminium list.
+const WHEEL_ROLLER_COLORS = ["a38c8c", "5e4343"];
 
 const canvas = document.getElementById('model-canvas');
 const loader = document.getElementById('loader');
@@ -1419,10 +1425,18 @@ function createRoomGlossEnvironment() {
     return env;
 }
 const glossy = m => m?.isMeshStandardMaterial && !m.envMap && (m.metalness >= .45 || /acrylic|plexi/i.test(m.name || ''));
+// The desk's own hardware (its aluminium: tilt actuators, side connectors, brackets, wheel mounts; and the wheels'
+// dark metal) keeps the studio's reflections in a room as well, as it had in every room before 2026-11-04 (the film's
+// approved look: Vico's older video, docs/reference/cine-notes-20261114 img55 to img58). The bright, even room above
+// turned the polished aluminium white (Vico, Nov 14: the tilt actuators "are supposed to be like a aluminum gray, and
+// they're white right now"). It is set as the material's own environment, so the film's room capture
+// (film-quality.mjs, which skips materials that have one) leaves it alone too; the level is three's own for
+// scene.environment (scene.environmentIntensity), so a room's light and a film's environmentScale still dim it.
+const deskHardware = m => m?.userData?.deskHardware === true && m.isMeshStandardMaterial;
 function roomGlossPass(now = false) {
     const g = roomGloss; if (!g.env) return;
     if (selectedRoomScene === 'product') {      // back to the studio's reflections
-        if (g.touched.size) { for (const [m, base] of g.touched) { m.envMap = null; m.envMapIntensity = base; delete m.userData.roomGlossBase; m.needsUpdate = true; } g.touched.clear(); }
+        if (g.touched.size) { for (const [m, base] of g.touched) { m.envMap = null; m.envMapIntensity = m.userData.roomGlossOwn ?? base; delete m.userData.roomGlossBase; delete m.userData.roomGlossOwn; m.needsUpdate = true; } g.touched.clear(); }
         return;
     }
     // (what loads later is found within a third of a second; a film's bake looks every frame, so a still and the
@@ -1434,7 +1448,8 @@ function roomGlossPass(now = false) {
                 if (!m) continue;
                 if (g.touched.has(m)) seen.add(m);
                 // a copy of one of ours (a film's fade clones the material with whatever level it had that frame)
-                else if (m.envMap === g.env) { g.touched.set(m, m.userData.roomGlossBase ?? 1); seen.add(m); }
+                else if (m.envMap === g.env || (deskHardware(m) && m.envMap && m.envMap === scene.environment)) { g.touched.set(m, m.userData.roomGlossBase ?? 1); seen.add(m); }
+                else if (deskHardware(m) && !m.envMap && scene.environment) { m.userData.roomGlossOwn = m.envMapIntensity ?? 1; m.userData.roomGlossBase = 1; g.touched.set(m, 1); m.envMap = scene.environment; m.needsUpdate = true; seen.add(m); }
                 else if (glossy(m)) { m.userData.roomGlossBase = m.envMapIntensity ?? 1; g.touched.set(m, m.userData.roomGlossBase); m.envMap = g.env; m.needsUpdate = true; seen.add(m); }
             }
         });
@@ -4362,6 +4377,7 @@ function loadModel() {
         sharedPolishedAluminumMaterial = null;
         sharedBlackPlasticMaterial = null;
         sharedBlackMetalMaterial = null;
+        sharedWheelRollerMaterial = null;
 
         movingObjects = [];
         liftObjects.clear();
@@ -4400,7 +4416,8 @@ function loadModel() {
                     const colorHex = mat.color ? mat.color.getHexString().toLowerCase() : 'ffffff';
                     let newMaterial = mat;
 
-                    if (BIRCH_COLORS.includes(colorHex)) newMaterial = getOrCreateWoodMaterial(woodRoleFor(child));
+                    if (WHEEL_ROLLER_COLORS.includes(colorHex)) newMaterial = getOrCreateWheelRollerMaterial();
+                    else if (BIRCH_COLORS.includes(colorHex)) newMaterial = getOrCreateWoodMaterial(woodRoleFor(child));
                     else if (BASE_PAINT_COLORS.includes(colorHex)) newMaterial = getOrCreateBasePaintMaterial();
                     else if (POLISHED_ALUMINUM_COLORS.includes(colorHex)) newMaterial = getOrCreatePolishedAluminumMaterial();
                     else if (BLACK_PLASTIC_COLORS.includes(colorHex)) newMaterial = getOrCreateBlackPlasticMaterial();
@@ -7321,6 +7338,7 @@ function getOrCreatePolishedAluminumMaterial() {
             ior: 2.5,
             envMapIntensity: 1.35
         });
+        sharedPolishedAluminumMaterial.userData.deskHardware = true;      // roomGlossPass: studio reflections in a room
     }
     return sharedPolishedAluminumMaterial;
 }
@@ -7339,17 +7357,34 @@ function getOrCreateBlackPlasticMaterial() {
 
 function getOrCreateBlackMetalMaterial() {
     if (!sharedBlackMetalMaterial) {
+        // The visualizer's (desk_viewer/desk-viewer.js materials.metal) and this desk's until the 2026-11-10
+        // checkpoint, which made it a light grey (#525862) clear-coated metal: the wheels' side plates read silver.
         sharedBlackMetalMaterial = new THREE.MeshPhysicalMaterial({
-            color: new THREE.Color("#525862"),
-            metalness: 0.52,
-            roughness: 0.24,
-            clearcoat: 0.48,
-            clearcoatRoughness: 0.16,
+            color: new THREE.Color("#2a2a2a"),
+            metalness: 0.85,
+            roughness: 0.3,
             ior: 1.8,
-            envMapIntensity: 1.55
+            envMapIntensity: 1.2
         });
+        sharedBlackMetalMaterial.userData.deskHardware = true;      // roomGlossPass: studio reflections in a room
     }
     return sharedBlackMetalMaterial;
+}
+
+// The wheels' rollers: dark rubber (dielectric, so they take the room's light, not a mirrored environment). The values are the film's approved roller look (the wheel scene edit the opener and
+// the proximity chapter carried until 2026-11-13, which stopped matching once the rollers turned to aluminium).
+function getOrCreateWheelRollerMaterial() {
+    if (!sharedWheelRollerMaterial) {
+        sharedWheelRollerMaterial = new THREE.MeshPhysicalMaterial({
+            name: 'Wheel roller rubber',
+            color: new THREE.Color("#2a2a2e"),
+            metalness: 0,
+            roughness: 0.45,
+            clearcoat: 0.3,
+            clearcoatRoughness: 0.25
+        });
+    }
+    return sharedWheelRollerMaterial;
 }
 
 function populateFinishOptions() {
