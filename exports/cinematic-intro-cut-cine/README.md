@@ -163,6 +163,8 @@ camera travels, the chapter cuts instead.
 | storage (workshop) | skimmed the desktop at 1.5 s; saw the fold face-on (angle read late); desk filled the frame during the roll | a top-down opening on the desktop and its robots (Andre out of frame through his fade-in) instead of his skim; **cut at 2.5 s** (fold starts) to a side three-quarter from the far side: the 65° fold in profile, Andre whole with his phone; **cut at 8.9 s** on the roll to the outside view along the wall; his tracking and parking keys from 17.3 s | the fold needs profile; Andre is out of frame during his fade-in (1.0-1.5 s); cuts instead of panning him off the edge |
 | hero (finale, product) | one continuous slow 48 s arc as six desk versions crossfade (sub-shots A-F) | **his, unchanged** | it already meets the rules: the desk is 0.6-0.8 of the frame height from 0 to 40 s and about half in the end card (40-48 s, room for the title), the camera never holds, and the single unbroken move is what makes six versions read as one desk. Changing it would also mean rewriting the six identical sub-shot cameras in shots/13-subshots.json for no gain |
 
+Andre's phone (storage insert): the Groove card is turned a half turn (flipY of the texture, not mirrored): it reads upside down to the insert camera on the far side and the right way up to Andre, who holds the phone toward himself.
+
 Shot sizes across the film: macro (awaken, rise), low hero (awaken lift, awareness), profiles and side
 three-quarters (awaken tilt, create, oilers, awareness floor level, storage), high angles (awaken turn, commons,
 wellness, music, oilers), deep/long lens (create, coast), over-the-shoulder (awareness, media), group (commons end).
