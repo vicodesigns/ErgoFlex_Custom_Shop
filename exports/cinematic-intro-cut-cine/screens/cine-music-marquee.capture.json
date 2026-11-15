@@ -5,12 +5,12 @@
  "motion": "824e5db57f71cfb2",
  "audio": true,
  "tempo": {
-  "beats": 24,
-  "first": 1.025,
-  "bpm": 115.108,
+  "beats": 23,
+  "first": 1.05,
+  "bpm": 111.369,
   "source": "exports\\cinematic-intro-cut-cine\\score\\tempo-map.json"
  },
- "spectrum": 146.85,
+ "spectrum": 147.85,
  "twin": null,
- "at": "2026-11-15T01:41:25.058Z"
+ "at": "2026-11-15T16:34:59.986Z"
 }
