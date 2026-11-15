@@ -26,8 +26,9 @@ assert.ok(diamonds.some(d=>d.key==='noah-steps'&&d.kind==='walk-start'&&d.t===4)
 // retimes
 const only=(a,b,what)=>{const diff=[];for(let i=0;i<a.cast.length;i++)if(JSON.stringify(a.cast[i])!==JSON.stringify(b.cast[i]))diff.push(a.cast[i].key);if(JSON.stringify(a.when)!==JSON.stringify(b.when))diff.push('when');assert.deepEqual(diff,what);};
 const d=k=>diamonds.find(x=>x.key===k[0]&&x.kind===k[1]);
-let p=retimeDiamond(oilers.people,d(['kai-rolls','change']),9.8,T);only(p,oilers.people,['when']);
+let p=retimeDiamond(oilers.people,d(['kai-rolls','change']),9.8,T);only(p,oilers.people,['kai-docks','when']);
 assert.deepEqual([p.when['kai-rolls'][0][1],p.when['kai-docks'][0][0]],[9.8,9.8],'a change moves both edges');
+assert.equal(p.cast.find(e=>e.key==='kai-docks').roll.start,9.8,'the docking roll starts with its window');assert.ok(!diamonds.some(x=>x.key==='kai-docks'&&x.kind==='roll-start'),'merged into the change diamond');
 p=retimeDiamond(oilers.people,d(['noah-steps','walk-start']),4.5,T);only(p,oilers.people,['noah-steps']);assert.equal(p.cast.find(e=>e.key==='noah-steps').walk.start,4.5);
 p=retimeDiamond(oilers.people,d(['noah-taps','act']),8.6,T);only(p,oilers.people,['noah-taps']);assert.equal(p.cast.find(e=>e.key==='noah-taps').act.at,8.6);
 p=retimeDiamond(oilers.people,d(['kai-rolls','roll-end']),end.t+1,T);only(p,oilers.people,['kai-rolls']);

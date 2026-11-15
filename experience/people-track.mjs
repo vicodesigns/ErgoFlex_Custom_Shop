@@ -7,7 +7,8 @@
 //   act, act-end  an action (a screen pull, a tap): act { at, dur }
 // Dragging a diamond retimes it (retimeDiamond). What is linked:
 //   in / out      that edge of the placement's window; change: the end of the one AND the start of the next (they stay
-//                 one cut, no gap, no overlap)
+//                 one cut, no gap, no overlap); a walk or roll that starts as that placement comes in starts with it
+//                 (its own start diamond is then the change's: "posture change, starts rolling")
 //   walk-start / roll-start   walk.start / roll.start: the whole walk or roll moves with it (its waypoints and arrival)
 //   walk-end / roll-end / a waypoint   the pace (walk) or speed (roll) so that point is reached at the new second; the
 //                 start stays (a waypoint before the start cannot be dragged before it)
@@ -84,7 +85,10 @@ export function programmedDiamonds(people,seconds,opts={}){
     });
     for(const kind of ['walk','roll']){
       const m=motionTimes(e,kind,opts);if(!m)continue;
-      push(e,kind+'-start',m.start,kind==='walk'?'starts walking':'starts rolling');
+      // (a walk or roll that starts as its placement takes over is that change's diamond: dragging it moves both)
+      const merged=out.find(d=>(d.kind==='change'&&d.next===(e.key||e.id)||d.kind==='in'&&d.key===(e.key||e.id))&&Math.abs(d.t-m.start)<1e-3);
+      if(merged)merged.label+=kind==='walk'?', starts walking':', starts rolling';
+      else push(e,kind+'-start',m.start,kind==='walk'?'starts walking':'starts rolling');
       m.points.slice(1,-1).forEach((t,i)=>push(e,kind+'-point',t,'waypoint '+(i+2),{index:i+1}));
       push(e,kind+'-end',m.end,'arrives',{index:m.points.length-1});
     }
@@ -101,9 +105,11 @@ export function retimeDiamond(people,d,t,seconds=Infinity,opts={}){
   const spans=k=>p.when?.[k];
   if(d.kind==='in'||d.kind==='out'||d.kind==='change'){
     const s=spans(d.key)?.[d.span];if(!s)return null;
-    if(d.kind==='in'){if(t>=s[1]-.05)return null;s[0]=t;return p;}
+    // the placement that comes in here: a walk or roll that started as it came in starts with it at the new second
+    const follow=x=>{for(const kind of ['walk','roll']){const m=x?.[kind];if(m&&finite(m.start)&&Math.abs(m.start-(d.kind==='in'?s[0]:s[1]))<1e-3)m.start=t;}};
+    if(d.kind==='in'){if(t>=s[1]-.05)return null;follow(e);s[0]=t;return p;}
     if(t<=s[0]+.05)return null;
-    if(d.kind==='change'){const n=spans(d.next)?.find(x=>Math.abs(x[0]-s[1])<1e-3);if(!n||t>=n[1]-.05)return null;n[0]=t;}
+    if(d.kind==='change'){const n=spans(d.next)?.find(x=>Math.abs(x[0]-s[1])<1e-3);if(!n||t>=n[1]-.05)return null;follow(p.cast.find(x=>(x.key||x.id)===d.next));n[0]=t;}
     s[1]=t;return p;
   }
   if(d.kind==='act'){e.act.at=t;return p;}
