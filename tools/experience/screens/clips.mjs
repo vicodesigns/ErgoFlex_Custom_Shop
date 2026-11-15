@@ -11,10 +11,11 @@ const SCREENS = '/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-2026103
 // CREATE_ACTS: create's three ranges (S3, Nov 14): digital painting 0..A, architecture A..B, natural landscapes B..end
 // (the drafting kit fades in 7.0-7.4 s, the board tilts to 55 deg for the oil painting from 16.9 s).
 export const CREATE_ACTS = {A: 7.0, B: 16.9};
-// WELLNESS_BEATS (S16's stretch, Nov 14): the desk rises 6.0-11.0 s to 41 in as Maya gets up (the cut's lift clip); she
-// stands with the chair aside, stretches 9.0-11.6 s and types again by 13 s. 'Time to move' at nudge, the shoulder
-// squeeze stretch..stretchEnd beside the live height (41.0 in), 'Reset done' at reset, the report back by work.
-export const WELLNESS_BEATS = {nudge: 8.4, stretch: 9.0, stretchEnd: 11.6, reset: 11.8, work: 13.0};
+// WELLNESS_BEATS (S16's stretch, Nov 14; the S16 reviewer's spans): the desk rises 6.0-11.0 s to 41 in as Maya gets up
+// (the cut's lift clip); she is up by 8.9 s, changes into the stretch 9.0-10.4 s, holds it to 11.6 s, types again at 13 s.
+// 'Time to move' + 3-2-1 from nudge to the lift, the desk rising (no demo) to stretch, the shoulder squeeze
+// stretch..stretchEnd, the report back after it, the breathing coach to breatheEnd, 'Reset done' at reset.
+export const WELLNESS_BEATS = {nudge: 3.0, stretch: 8.9, stretchEnd: 12.0, breatheEnd: 12.4, reset: 13.0};
 // COAST_PERSON: who uses coast's featured suite (Ava: S4's decision, Nov 14)
 export const COAST_PERSON = 'Ava';
 const CINE_OUT = 'exports/cinematic-intro-cut-cine/screens';
