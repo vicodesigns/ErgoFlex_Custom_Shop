@@ -663,9 +663,10 @@ def stand_phone(k):
 # story turns it 8 degrees).
 ROBOT_DESK = ((.06, -.37, 1.1045), 8.)
 ROBOT_SHELF = ((.1163, -.6056, 1.3638), 8.)
-# On the way up (stand-robot-lift): held over the shelf's front edge (0.478 m in front of him, the board's top 1.359 m) and
-# 60 mm above it, so the hands carry it over the edge and set it down, not through the board.
-ROBOT_LIFT = ((.1163, -.42, 1.42), 8.)
+# On the way up (stand-robot-lift): lifted straight up from the desktop, 120 mm in front of the shelf's front edge (0.478 m
+# in front of him, the board's top 1.359 m) and 100 mm above it, so the hands (fingers round its back) rise clear of the
+# board and then carry it over the edge and set it down.
+ROBOT_LIFT = ((.1163, -.36, 1.46), 8.)
 # These two postures are built where they stand (RAISED: not dropped to the floor afterwards), so the robot is exactly
 # at these heights: the ankles are posed at Andre's own ankle height in his shoes.
 ANDRE_ANKLE = .097      # (less what each posture's foot pitch leaves under the sole: work .013, shelf .005)
@@ -717,8 +718,8 @@ def stand_robot_release(k):
     """The robot left on the shelf: the hands open and drawn back toward the chest, above the desktop, before they come
     down (so they do not drop through the desk on the way)."""
     return {'pelvis_offset': (0, .0, -.008), 'spine': (2, 3, 3), 'neck': 6, 'head': 8,
-            'hand_r': {'at': (-.12, -.13, 1.19), 'fingers': (.15, -.6, .8), 'palm': (1, .1, .1), 'elbow': (-.3, .3, -.3), 'curl': .3, 'thumb': .3},
-            'hand_l': {'at': (.12, -.13, 1.19), 'fingers': (-.15, -.6, .8), 'palm': (-1, .1, .1), 'elbow': (.3, .3, -.3), 'curl': .3, 'thumb': .3},
+            'hand_r': {'at': (-.12, -.13, 1.27), 'fingers': (.15, -.6, .8), 'palm': (1, .1, .1), 'elbow': (-.3, .3, -.3), 'curl': .3, 'thumb': .3},
+            'hand_l': {'at': (.12, -.13, 1.27), 'fingers': (-.15, -.6, .8), 'palm': (-1, .1, .1), 'elbow': (.3, .3, -.3), 'curl': .3, 'thumb': .3},
             'foot_l': {'at': (.11 * k, .0, ANDRE_ANKLE - .005), 'toes': (.22, -1, 0)}, 'foot_r': {'at': (-.12 * k, .03 * k, ANDRE_ANKLE - .005), 'toes': (-.28, -1, 0)}}
 
 
