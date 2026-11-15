@@ -90,21 +90,35 @@ chapters, hero unchanged.**
 Vico: "the title shouldn't overlap the desk". The title block sits lower left (about x 0.07-0.43, y 0.70-0.92 of the
 frame). Checked on stills with the titles burned in at each title's in (+0.7 s), middle and out (-0.3 s).
 
-- Camera only (`frame(key, dx, dy, fov)` in build-cine-cut.py: the aim turned so the frame's content sits `dx` of the
-  width further right and `dy` of the height higher, the lens `fov` degrees wider): rise (4.3-9.45 s keys), commons
-  (the two shots under the title), coast (the three keys under it, 3-4 degrees wider), awareness (the drive shot,
-  5 degrees wider, and the floor-level profile raised), music (the high shot and the front view), media (the first
-  shot), storage (the walk-round wide).
-- Timing (titles-src.json): storage's title plays on the walk-round wide only, 3.85-8.8 s (was 2.75-9.75 s, over the
-  desk at the hand-over and the phone insert); create's TILT title ends at 9.2 s (was 9.6) before the stool comes
-  under its last line. The score does not depend on these (it reads awaken's two titles and the logo only):
+- Camera only (`frame(key, dx, dy, fov)` in build-cine-cut.py: the lens `fov` degrees wider, then the aim turned so
+  the frame's content sits `dx` of the (widened) width further right and `dy` of the height higher): rise (4.3-9.45 s
+  keys), commons (the two shots under the title), coast (the three keys under it, 3-4 degrees wider), awareness (the
+  drive shot, 5 degrees wider, and the floor-level profile raised), music (the high shot and the front view), media
+  (the first shot). Storage's camera is as it was (a turn of its walk-round wide opened the room's open left edge,
+  the void, and Andre walks through the lower left there from 5.3 to 6.6 s).
+- Timing (titles-src.json): storage's title plays on the fold shot, 11.75-14.75 s (was 2.75-9.75 s, over the desk at
+  the hand-over and Andre in the phone insert): the floor in front of the folding desk is clear, and the line it
+  carries ("One tap: fold to 65 degrees, roll to the wall") is what that shot shows; 3.0 s on screen, under the 3.5 s
+  guide (the Director only notes it). create's TILT title ends at 9.2 s (was 9.6) before the stool comes under its
+  last line.
+- hero: `frame-hero-title.py` turns the aim of the one sub-shot on screen under the closing title (the architect desk,
+  shots/13-subshots.json, 33.2-48 s) by up to 0.05 of the width, eased in over 34.2-34.8 s and out over 39.4-40.4 s,
+  so the near leg clears the end of "day." at about 37 s; the other sub-shots and review-cut.json's hero camera are
+  unchanged (none is on screen then).
+- Title placement option (for wellness; the cut does not use it yet): a title's `place` in titles-src.json,
+  `top-left` or `top-right` (absent or `lower-left` = the standing layout, drawn byte for byte as before:
+  tests/cinematic-titles-test.mjs against tests/fixtures/titles-lower-left). Same type sizes, line spacing and safe
+  margins: the eyebrow's top 110 px from the top edge (as the supporting line's bottom is from the bottom lower left),
+  right placements flush right at 1792; the fitted boxes behind a top title are darker (56% black, for skies and
+  windows). Honoured by finish-intro.py, the Director's title overlay and editor (experience/film-titles.mjs,
+  title-editor.mjs) and the Director import (build-round8-director.py); a custom shadow shape is relative to the
+  placed anchor. The score does not depend on these (it reads awaken's two titles and the logo only):
   build-cine-score.py's input digest is unchanged.
 - create: the stool is drawn only until 19.5 s (`show`): from the cut, Lin (people-lin-stand-paint at [-200, -130])
   stands where it was; side and top stills showed her legs through its seat.
 - Not changed here: wellness (the frame is full: Kai's bike, Maya, her chair and the desk span the width; a wider or
-  turned lens brings the cyclist under the title; it needs the block placed elsewhere, see the S12 hand-back), oilers
-  (S9 retimes it), hero (its camera is also the six sub-shot cameras in shots/13-subshots.json; a near-touch only at
-  about 37 s).
+  turned lens brings the cyclist under the title; the placement option above is for it, Vico picks), oilers (S9
+  retimes it).
 
 ## Score and EDL (Nov 14, S7)
 
