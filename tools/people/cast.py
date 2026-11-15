@@ -1356,7 +1356,7 @@ OUTPUTS = [
     {'id': 'people-kai-sit-write', 'character': 'kai', 'pose': 'sit-write', 'name': 'Kai, writing at a table', 'held': [('pen', {'side': 'r'})]},
     {'id': 'people-kai-sit-controller', 'character': 'kai', 'pose': 'sit-controller', 'name': 'Kai, on the sofa with a controller', 'held': [('gamepad', {})]},
     {'id': 'people-kai-wheel-type', 'character': 'kai', 'pose': 'wheel-type', 'height': 28, 'name': 'Kai, at the desk (wheelchair)', 'held': [('wheelchair', {'color': (.1, .35, .7)})]},
-    {'id': 'people-kai-wheel-roll', 'character': 'kai', 'pose': 'wheel-roll', 'name': 'Kai, rolling (wheelchair)', 'held': [('wheelchair', {'color': (.1, .35, .7)})]},
+    {'id': 'people-kai-wheel-roll', 'character': 'kai', 'pose': 'wheel-roll', 'name': 'Kai, rolling (wheelchair)', 'held': [('wheelchair', {'color': (.1, .35, .7), 'wheels': True})]},
     # (his own blue chair in his other wheelchair postures too: made up from their ids they had the red default)
     {'id': 'people-kai-wheel-type-31', 'character': 'kai', 'pose': 'wheel-type', 'height': 31, 'name': 'Kai: typing at the desk, in a wheelchair (desk at 31 in)', 'held': [('wheelchair', {'color': (.1, .35, .7)})]},
     {'id': 'people-kai-wheel-watch', 'character': 'kai', 'pose': 'wheel-watch', 'name': 'Kai: watching a screen, in a wheelchair', 'held': [('wheelchair', {'color': (.1, .35, .7)})]},
@@ -1429,7 +1429,7 @@ POSE_INFO = {
     'sit-raise': ('Hand raised', 'seated', '', 450, []),
     'sit-phone': ('Seated, phone in hand', 'seated', '', 420, [('phone', {'side': 'r'})]),
     'sit-controller': ('On a sofa with a game controller', 'seated', '', 420, [('gamepad', {})]),
-    'wheel-roll': ('Rolling, in a wheelchair', 'wheelchair', '', 0, [('wheelchair', {})]),
+    'wheel-roll': ('Rolling, in a wheelchair', 'wheelchair', '', 0, [('wheelchair', {'wheels': True})]),      # (wheels that turn: room-people.mjs rollAlong)
     'wheel-watch': ('Watching a screen, in a wheelchair', 'wheelchair', '', 0, [('wheelchair', {})]),
     'power-phone': ('In the power wheelchair, phone in hand', 'wheelchair', '', 470, [('phone', {'side': 'r'})]),      # (the room's chair, not held)
     'power-type': ('Typing at the desk, in the power wheelchair', 'wheelchair', 'desk', 470, []),

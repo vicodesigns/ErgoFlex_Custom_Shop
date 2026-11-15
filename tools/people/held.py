@@ -373,8 +373,11 @@ def torus(name, major, minor, mat, world, seg=40, ring=8):
     return o
 
 
-def wheelchair(rig, seat=.5, color=(.75, .1, .08)):
-    """An active manual wheelchair under a seated person (character frame: faces -Y, pelvis over the origin)."""
+def wheelchair(rig, seat=.5, color=(.75, .1, .08), wheels=False):
+    """An active manual wheelchair under a seated person (character frame: faces -Y, pelvis over the origin).
+    wheels: each rear wheel (tyre, rim, handrim, hub, spokes) on a bone of its own, wheel_l / wheel_r, from the hub
+    along the axle, so a rolling model can turn its wheels (room-people.mjs rollAlong); the object property 'bone'
+    names it and 'axle' holds the hub and the axle's direction (build_people.py makes the bones)."""
     frame = material('chair frame ' + str(color), color, .35, .6); black = material('chair black', (.03, .03, .035), .7)
     steel = material('chair steel', (.7, .71, .73), .3, 1.); tyre = material('chair tyre', (.05, .05, .05), .9); W = Matrix.Identity(4); out = []
     half, r, axle_y = .215, .3, .07
@@ -394,10 +397,14 @@ def wheelchair(rig, seat=.5, color=(.75, .1, .08)):
                 box('chair side guard', (.006, .26, .15), black, W, at=(s * (half + .012), .02, seat + .07), bevel=.002)]
         # Rear wheel: tyre, handrim, hub and spokes, with a little camber.
         wheel = W @ T(s * (half + .055), axle_y, r) @ R('Y', -s * 3) @ R('Y', 90)
-        out += [torus('chair tyre', r - .014, .014, tyre, wheel), torus('chair rim', r - .034, .008, steel, wheel), torus('chair handrim', r - .05, .007, steel, wheel @ T(0, 0, s * .03)),
-                tube('chair hub', .022, (0, 0, -.03), (0, 0, .03), steel, wheel, 12)]
+        parts = [torus('chair tyre', r - .014, .014, tyre, wheel), torus('chair rim', r - .034, .008, steel, wheel), torus('chair handrim', r - .05, .007, steel, wheel @ T(0, 0, s * .03)),
+                 tube('chair hub', .022, (0, 0, -.03), (0, 0, .03), steel, wheel, 12)]
         for i in range(16):
-            ang = math.tau * i / 16; out.append(tube('chair spoke', .0018, (0, 0, .012 if i % 2 else -.012), (math.cos(ang) * (r - .038), math.sin(ang) * (r - .038), 0), steel, wheel, 5))
+            ang = math.tau * i / 16; parts.append(tube('chair spoke', .0018, (0, 0, .012 if i % 2 else -.012), (math.cos(ang) * (r - .038), math.sin(ang) * (r - .038), 0), steel, wheel, 5))
+        if wheels:
+            axle = wheel.to_3x3() @ Vector((0, 0, 1))
+            for o in parts: o['bone'] = 'wheel_l' if s > 0 else 'wheel_r'; o['axle'] = (*wheel.translation, *axle.normalized())
+        out += parts
         caster = W @ T(s * .17, -.32, .065) @ R('Y', 90)
         out += [torus('chair caster', .05, .015, tyre, caster, 20, 6), tube('chair caster hub', .04, (0, 0, -.012), (0, 0, .012), steel, caster, 12)]
     out += [tube('chair axle', .013, (-half - .04, axle_y, r), (half + .04, axle_y, r), frame, W, 10), tube('chair cross', .012, (-half, -.24, seat - .03), (half, -.24, seat - .03), frame, W, 10),

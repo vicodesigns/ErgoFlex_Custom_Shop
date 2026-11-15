@@ -19,6 +19,10 @@ const index = JSON.parse(fs.readFileSync(path.join(PROPS, 'index.json'), 'utf8')
 const people = index.props.filter(p => p.category === 'people' && p.person?.character && (!only.length || only.includes(p.person.character)));
 const gltf = file => { const d = fs.readFileSync(file), len = d.readUInt32LE(12); return JSON.parse(d.subarray(20, 20 + len).toString('utf8')); };
 const r = (v, n) => Math.round(v * 10 ** n) / 10 ** n;
+// Bones of a thing a model holds that turns on its own (a wheelchair's rear wheels: tools/people/held.py wheelchair
+// wheels=True) are not the character's skeleton: room-people.mjs turns them on the drawn model. Left out here, so a
+// model with them shares the skeleton of the others.
+const PROP_BONES = /^wheel_[lr]$/;
 
 fs.mkdirSync(OUT, { recursive: true });
 const by = new Map(); for (const p of people) { if (!by.has(p.person.character)) by.set(p.person.character, []); by.get(p.person.character).push(p); }
@@ -27,7 +31,8 @@ for (const [who, models] of by) {
     let bones = null, parents = null, offsets = null; const postures = {};
     for (const model of models.sort((a, b) => a.id.localeCompare(b.id))) {
         const file = path.join(ROOT, model.file); if (!fs.existsSync(file)) { console.warn('missing ' + model.file); continue; }
-        const g = gltf(file), skin = g.skins?.[0]; if (!skin) { console.warn('no skeleton in ' + model.id); continue; }
+        const g = gltf(file), skin0 = g.skins?.[0]; if (!skin0) { console.warn('no skeleton in ' + model.id); continue; }
+        const skin = { ...skin0, joints: skin0.joints.filter(i => !PROP_BONES.test(g.nodes[i].name)) };
         const parentOf = new Map(); g.nodes.forEach((n, i) => (n.children || []).forEach(c => parentOf.set(c, i)));
         const names = skin.joints.map(i => g.nodes[i].name);
         if (!bones) {
