@@ -2240,9 +2240,9 @@ export class RoomPeople {
         if (life.walkSign !== sign) {
             const path = (walk.path || [walk.from || [object.position.x, object.position.z], walk.to]).map(([x, z]) => [x / 1000, z / 1000]);
             life.walkSign = sign; life.plan = path.length > 1 && path.every(p => p.every(Number.isFinite)) ? walkPlan(life.rig, life.key, (walk.then && life.rig.key(walk.then)) || life.key, path, { pace: walk.pace, step: walk.step ? walk.step / 1000 : undefined }) : null;
-            life.endTurn = life.plan && time !== null ? this.walkEndTurn(object, life, walk) : null;
         }
         if (!life.plan) return;
+        if (life.endSign !== life.walkSign) { life.endSign = life.walkSign; life.endTurn = time !== null ? this.walkEndTurn(object, life, walk) : null; }
         const g = life.plan.at(time === null ? 0 : Math.max(0, time - (walk.start || 0))), root = solveWalk(life.rig, life.plan, g);
         drawPose(life.rig, object.userData.personRig, 0, object.userData.person.pose || null, hold);
         // (handing over to the same person standing where the path ends: they turn to face the way that placement does
