@@ -19160,6 +19160,30 @@
    "scenes": [],
    "converter": "people-generator",
    "collection": "people"
+  },
+  {
+   "id": "people-noah-stand-screen-pull",
+   "name": "Noah: drawing the desk's touchscreen out",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-noah-stand-screen-tap",
+   "name": "Noah: a finger over the desk's touchscreen",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-noah-stand-screen-press",
+   "name": "Noah: tapping the desk's touchscreen",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
   }
  ],
  "screens": [

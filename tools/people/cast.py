@@ -766,7 +766,7 @@ def stand_screen_pull(k):
     e, s = SCREEN_EDGE, SCREEN_SLIDE
     wrist = (e[0] + s[0] * .132, e[1] + s[1] * .132, e[2] - .02)      # (the wrist before the edge, the finger tips 2 cm round it: measured in a first build)
     return {'pelvis_offset': (0, .02, -.01), 'spine': (5, 8, 7), 'spine_twist': -4, 'neck': 14, 'head': 16, 'head_yaw': -6,
-            'hand_r': {'at': wrist, 'fingers': (-s[0], -s[1], -.35), 'palm': (-s[0] * .35, -s[1] * .35, 1), 'elbow': (-.3, .25, -.25), 'curl': .7, 'thumb': .35},
+            'hand_r': {'at': wrist, 'fingers': (-s[0], -s[1], -.35), 'palm': (-s[0] * .35, -s[1] * .35, 1), 'elbow': (-.3, .25, -.25), 'curl': 1.05, 'thumb': .5},      # (round 2: the fingers curled up round the edge)
             'hand_l': _hang(k, 'l', -.02), **_noah_feet()}
 
 
@@ -1404,6 +1404,10 @@ OUTPUTS = [
     {'id': 'people-maya-stand-type', 'character': 'maya', 'pose': 'stand-type', 'height': 43.5, 'name': 'Maya, typing at the desk (standing)'},
     # (her own standing height: elbows at 90 degrees and level forearms at 41 in; 43.5 in fits someone about 1.85 m tall)
     {'id': 'people-maya-stand-type-41', 'character': 'maya', 'pose': 'stand-type', 'height': 41, 'name': 'Maya, typing at the desk at 41 in (standing)'},
+    # the high school film (oilers): Noah draws the desk's touchscreen out and taps 'Lower to Kai's height'
+    {'id': 'people-noah-stand-screen-pull', 'character': 'noah', 'pose': 'stand-screen-pull', 'name': "Noah: drawing the desk's touchscreen out", 'ground': False},
+    {'id': 'people-noah-stand-screen-tap', 'character': 'noah', 'pose': 'stand-screen-tap', 'name': "Noah: a finger over the desk's touchscreen", 'ground': False},
+    {'id': 'people-noah-stand-screen-press', 'character': 'noah', 'pose': 'stand-screen-press', 'name': "Noah: tapping the desk's touchscreen", 'ground': False},
     {'id': 'people-maya-stand-wait', 'character': 'maya', 'pose': 'stand-wait', 'name': 'Maya, on her feet while the desk moves'},
     {'id': 'people-andre-sit-type', 'character': 'andre', 'pose': 'sit-type', 'height': 28, 'name': 'Andre, typing at the desk (seated)'},
     {'id': 'people-andre-sit-type-30', 'character': 'andre', 'pose': 'sit-type', 'height': 30, 'name': 'Andre, typing at the desk at 30 in (seated)'},
@@ -1572,9 +1576,7 @@ ALSO = ['people-sam-sit-type', 'people-sam-sit-type-30', 'people-grace-lie-bed',
         # the workshop film (storage): Andre works on the robot, sets it on the desk's top shelf, takes out his phone and
         # starts the desk's Groove with one tap
         'people-andre-stand-robot-work', 'people-andre-stand-robot-shelf', 'people-andre-stand-phone-pull', 'people-andre-stand-phone-up',
-        'people-andre-stand-phone-press', 'people-andre-stand-phone-watch',
-        # the high school film (oilers): Noah draws the desk's touchscreen out and taps 'Lower to Kai's height'
-        'people-noah-stand-screen-pull', 'people-noah-stand-screen-tap', 'people-noah-stand-screen-press']
+        'people-andre-stand-phone-press', 'people-andre-stand-phone-watch']
 # A posture nudged for one person (metres added to a hand's or a foot's place): the clipboard lies as the left hand
 # holds it, and on Yusuf's broader chest it tips into the writing hand.
 NUDGE = {('yusuf', 'stand-chart'): {'hand_r': (.02, .0, .035)},
