@@ -317,6 +317,13 @@ down a cross-aisle to the desk; Noah greets him from 0.3 m right of the desk's c
 overhead frame every 0.25 s of his roll with the chair's footprint (wheels, handrims, footplate, elbows: 716 x 940 mm)
 against the furniture's boxes (outside the repo: C:/work/cine-pics/s9/round3-aisle, clearance-table.txt): minimum
 clearance 110 mm, minimum clear width across his way 1107 mm, minimum gap to Noah 109 mm (with a 300 mm body radius).
+Round 4 (at least 200 mm everywhere): Leo's table 278 mm toward the board (was 146) with both its chairs, the Nia/Finn
+table 365 mm toward the back of the room (was 298) and 66 mm toward the board side; Kai's cross-aisle runs at room
+z -150 and eases onto a line 0.1 m to the window side of the desk's front line, where he waits 0.6 m short (clear of
+Noah at the corner), then docks on an easy S (9.6-12.0 s); Noah steps back out of Kai's way after the tap (10.1-11.6 s,
+a real walk). Proof (50 overhead frames, every 0.25 s of the roll-in, the wait and the dock, Noah's own footprint where
+he stands, a 300 mm body radius where he walks): minimum clearance 225 mm (furniture and seated students), minimum
+clear width across his way 1240 mm, minimum gap to Noah 226 mm (C:/work/cine-pics/s9/round4-aisle).
 
 ## Walks (S19, Nov 15)
 
