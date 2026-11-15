@@ -72,12 +72,13 @@ def frame_right(k, dx):
 
 
 def frame(k, dx=0, dy=0, fov=0):
-    """frame_right by `dx` of the width, then the aim pitched so what it frames sits `dy` of the frame height higher
-    (+), and the lens `fov` degrees wider. Title placement pass (Nov 15): the lower-left title block is kept clear of
-    the desk and of people's bodies."""
+    """The lens `fov` degrees wider, then frame_right by `dx` of the (widened) frame's width, then the aim pitched so
+    what it frames sits `dy` of the frame height higher (+). Title placement pass (Nov 15): the lower-left title block
+    is kept clear of the desk and of people's bodies."""
     import math
-    k = frame_right(k, dx) if dx else dict(k)
+    k = dict(k)
     if fov: k['fov'] = round(k['fov'] + fov, 2)
+    if dx: k = frame_right(k, dx)
     if dy:
         p, t = k['position'], k['target']
         v = [t[i] - p[i] for i in range(3)]
@@ -124,7 +125,7 @@ def rise(s):
     # window behind her; and a slow widening into the evening room, a calm frame for the dissolve.
     cam(s, his('rise', 0, 2) + [
         # (Nov 15, titles: keys under the title, 3.6-9.4 s, aimed so the desk base clears the lower-left block)
-        frame(key(4.3, (1.55, 1.62, 2.5), (-0.6, 1.3, 0.35), 54, 'Back off the notes to the front three-quarter: Maya up, the readout climbs'), 0.14),
+        frame(key(4.3, (1.55, 1.62, 2.5), (-0.6, 1.3, 0.35), 54, 'Back off the notes to the front three-quarter: Maya up, the readout climbs'), 0.08, 0.05),
         frame(key(7.6, (1.6, 1.72, 2.5), (-0.6, 1.42, 0.35), 54, 'Standing height on the readout, Maya beside the column'), 0.1),
         frame(key(9.45, (1.7, 1.7, 2.5), (-0.58, 1.42, 0.3), 54, 'Midday: it starts down'), 0.06),
         key(12.65, (2.3, 1.4, 2.75), (-0.4, 1.2, 0.15), 46, 'Front three-quarter: seated again, the window behind'),
@@ -319,9 +320,8 @@ def storage(s):
     cam(s, [
         key(0, W(-1650, 2050, 1350), W(50, 1150, 1150), 36, 'High from his left: Andre at the desk with the robot'),
         key(2.9, W(-1550, 1950, 1320), W(40, 1330, 1080), 37, 'He sets it on the top shelf (slow push)'),
-        # (Nov 15, titles: the title now plays on this shot only, 3.85-8.8 s; aimed so Andre keeps above and right of it)
-        frame(key(3.6, W(1800, 1650, 3200), W(-800, 950, 1750), 46, 'Cut to the front-right: he walks round to the left', cut=True), 0.1, 0.06),
-        frame(key(8.4, W(1650, 1650, 3100), W(-1000, 950, 1650), 44, 'He stops, facing the desk, and takes out his phone'), 0.1, 0.06),
+        key(3.6, W(1800, 1650, 3200), W(-800, 950, 1750), 46, 'Cut to the front-right: he walks round to the left', cut=True),
+        key(8.4, W(1650, 1650, 3100), W(-1000, 950, 1650), 44, 'He stops, facing the desk, and takes out his phone'),
         key(8.95, W(-591, 1993, 1206), W(-855, 1286, 1405), 30, 'Insert from in front and above, over the tip of the phone: the one button', cut=True),
         key(11.4, W(-605, 1957, 1216), W(-855, 1286, 1405), 30, 'The tap: the button lights'),
         key(11.45, (4.3, 1.8, -3.4), (2.65, 1.15, 0.1), 42, 'Side three-quarter: the board folds', cut=True),
