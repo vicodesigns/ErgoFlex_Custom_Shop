@@ -28,7 +28,7 @@ import { RoomInteractions } from './room-interactions.mjs?v=polish-20261111f';
 import { RenderPacing, pruneTinyCasters } from './render-pacing.mjs?v=render-pacing-vsm-20261015';
 import { SceneTour, tourEnabled } from './scene-tour.mjs?v=highschool-setting-20261104';
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
-import { TouchscreenDisplay } from './touchscreen-display.mjs?v=room-safety-20261006';
+import { TouchscreenDisplay } from './touchscreen-display.mjs?v=film-touchscreen-20261114';
 import { roomPolishLighting } from './room-polish.mjs?v=polish-20261111f';
 import { roomViewBounds } from './room-view-bounds.mjs?v=table-clearance-20261021';
 import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle, roomDeskStyle } from './room-desk-styles.mjs?v=polish-20261111f';
@@ -122,6 +122,10 @@ const WIDE_SCREEN_REST_TURN = SCREEN_TURN + THREE.MathUtils.degToRad(12);
 let screenAssembly = null;
 let screenProgress = 0;
 let screenTarget = 0;
+// A film chapter's touchscreen (setFilmTouchscreen): what the face shows (a TouchscreenDisplay film mode, or null for
+// the app's own screen) and where the screen was before the film took it over.
+let filmTouchscreen = null;
+let touchscreenBeforeFilm = null;
 let ledParts = [];
 let ledDesktopFit = null;
 let ledDesktopRoot = null;
@@ -3584,7 +3588,8 @@ function updateTouchscreenDisplay() {
         heightSpeed:document.querySelector('#lift-speed option:checked')?.textContent?.trim()||'Medium',
         glideSpeed:document.querySelector('#glide-speed option:checked')?.textContent?.trim()||'Medium',
         tiltSpeed:document.querySelector('#tilt-speed option:checked')?.textContent?.trim()||'Fast',
-        heightJog:Math.round(liftJog*10)/10,phase:mode||'Workspace',moving:!!(glideInput.lengthSq()||yawCommand||liftJog||tiltJog||glideActive||Math.abs(targetLift-currentLift)>.001)});
+        heightJog:Math.round(liftJog*10)/10,phase:mode||'Workspace',moving:!!(glideInput.lengthSq()||yawCommand||liftJog||tiltJog||glideActive||Math.abs(targetLift-currentLift)>.001),
+        ...(filmTouchscreen?{film:filmTouchscreen}:{})});
     if(changed&&touchscreenTexture)touchscreenTexture.needsUpdate=true;
 }
 
@@ -3650,6 +3655,23 @@ function setScreenProgress(value) {
         moving.position.x = pivot.x - SCREEN_SLIDE * (1 - slide);
         moving.rotation.z = SCREEN_TURN * turn;
     }
+}
+
+// A film chapter poses the touchscreen from its own clock (experience/stage.mjs, experience/touchscreen-track.mjs):
+// film = { progress: 0..1, screen: { mode, ... } | null }. The target follows the pose, so the app's dt easing (the
+// render loop) has nothing to do. null hands the screen back as it was before the film took it (a chapter without the
+// field: nothing changes, it was never taken).
+function setFilmTouchscreen(film) {
+    if (!film) {
+        if (!touchscreenBeforeFilm) return;
+        const before = touchscreenBeforeFilm; touchscreenBeforeFilm = null; filmTouchscreen = null;
+        screenTarget = before.target; setScreenProgress(before.progress); updateTouchscreenDisplay();
+        return;
+    }
+    if (!touchscreenBeforeFilm) touchscreenBeforeFilm = { progress: screenProgress, target: screenTarget };
+    const progress = THREE.MathUtils.clamp(Number(film.progress) || 0, 0, 1);
+    filmTouchscreen = film.screen && typeof film.screen === 'object' ? film.screen : null;
+    screenTarget = progress; setScreenProgress(progress); updateTouchscreenDisplay();
 }
 
 function setTouchscreenOpen(open) {
@@ -12671,6 +12693,7 @@ function initStudio() {
 window.ErgoFlex = {
     get sceneScreens(){return sceneScreens;},
     setTouchscreenOpen,
+    setFilmTouchscreen,
     get touchscreenOpen() { return screenTarget > 0.5; },
     get touchscreenProgress() { return screenProgress; },
     get touchscreenReady() { return !!screenAssembly; },
