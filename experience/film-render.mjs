@@ -44,7 +44,7 @@ export function createStillRenderer({width=1280,height=720,src='/?view=product&p
     document.body.append(frame);
     const until=Date.now()+180000;while(!win()?.ErgoPresentation){if(Date.now()>until)throw Error('The film stage did not start.');await new Promise(r=>setTimeout(r,250));}
     const w=win();
-    await new Promise((resolve,reject)=>{w.__filmFxDone=resolve;w.__filmFxFail=reject;const s=w.document.createElement('script');s.type='module';s.textContent="import('/tools/experience/film-fx.mjs').then(m=>{window.__filmFx=m;window.__filmFxDone();},e=>window.__filmFxFail(e));";w.document.head.append(s);});
+    await new Promise((resolve,reject)=>{w.__filmFxDone=resolve;w.__filmFxFail=reject;const s=w.document.createElement('script');s.type='module';s.textContent="import('/tools/experience/film-fx.mjs?v=20261114-cine-s1-wheels').then(m=>{window.__filmFx=m;window.__filmFxDone();},e=>window.__filmFxFail(e));";w.document.head.append(s);});
   }
   let queue=Promise.resolve();
   const render=(shot,t)=>(queue=queue.then(()=>renderNow(shot,t),()=>renderNow(shot,t)));
