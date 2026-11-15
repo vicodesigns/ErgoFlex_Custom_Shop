@@ -24,13 +24,16 @@ picture instead of to the EDL alone:
     dissolve's middle (DISSOLVE_SLACK), so every chapter gets whole 4/4 bars at a tempo within MAX_BEND of the film's;
   * v2: no tempo step anywhere (chapter joins, knots, title B) is larger than STEP_CAP (1.5 %). The fit costs and caps
     the steps, and an inside cut is pulled onto a beat (a knot) only when every step stays under the cap;
-  * v2: the finale is whole 2-bar phrases, one chord each (HERO_CYCLE, then HERO_CADENCE into the logo); its desk
-    versions (shots/13-subshots.json) land on phrase lines where the cap allows;
+  * v2: the finale's desk-version changes (shots/13-subshots.json) aim at bar lines (knots where the cap allows), and
+    the chords move in 2-bar steps (HERO_CYCLE) that restart at each version change, then HERO_CADENCE into the logo;
+  * the one 2/4 bar: under the cap a chapter with no whole-bar length near its neighbours' tempo ends on a 2/4 bar
+    (HALF_BAR_COST); on the cut of Nov 14 that is media (30 beats), before the fade to black into the workshop;
   * v2: the echo follows the local tempo (score-synth.local_delay);
-  * the title A bloom lands on title A, the logo hit on the wordmark's first frame;
+  * the title A bloom lands on title A, the logo hit within LOGO_SLACK of the wordmark's first frame;
   * the desk's movement sounds (assets/led/audio) follow this cut's ledStatus (SFX_RULES), only while the motion clip
-    of that lane runs, clipped to what the chapter shows, re-keyed into the score's key (SCORE_KEY), 8 dB lower than
-    v1 (SFX_DB), mixed before the master. This is the one layer the master's score.wav has on top of score-synth.py
+    of that lane runs, clipped to what the chapter shows, re-keyed into the score's key (SCORE_KEY), mixed before the
+    master at SFX_DB: a gain on the raw asset relative to the master's gain, 8 dB lower than v1, which measures about
+    23-33 dB under the music at the cue. This is the one layer the master's score.wav has on top of score-synth.py
     (build-round6-audio.py's pass with the cut of Nov 9). The safety, status and HQ8 splices left with the status
     chapter.
 Deterministic: same cut and code in, same samples out (seeded noise and dither); the WAV's sha256 is printed and stored.
@@ -59,19 +62,22 @@ MAX_BEND = 0.03            # a chapter's tempo stays within 3 % of the film's
 STEP_CAP = 0.015           # no tempo step anywhere (chapter joins, knots, title B) larger than 1.5 % (v2)
 CUT_WEIGHT = 4.0           # cost of a hard cut inside a chapter half a beat off the grid (1.0 = a 1 % tempo bend); v2:
                            # a steady groove comes first, an inside cut gets a knot only when it stays under STEP_CAP
-LOOK_WEIGHT = 16.0         # cost of a finale desk-version change half a phrase unit (2 bars) off a phrase line
+LOOK_WEIGHT = 16.0         # cost of a finale desk-version change half a bar off a bar line
 JUMP_WEIGHT = 2.0          # cost of a 1 % tempo step between neighbouring chapters (squared), under the hard STEP_CAP
-HALF_BAR_COST = 200.0      # a chapter that ends on a 2/4 bar (only when whole bars cannot fit)
-HERO_UNIT = 8              # beats: the finale moves in 2-bar phrases (one chord each), so it is a whole number of them
-HERO_CYCLE = ['D/F#', 'Gmaj9', 'Em9', 'Bm9']   # 2 bars each from the finale's first bar ...
+HALF_BAR_COST = 200.0     # a chapter that ends on a 2/4 bar (only when whole bars cannot fit)
+HERO_UNIT = 4              # beats: every desk-version change of the finale aims at a bar line (its chords then move in 2-bar steps)
+HERO_CYCLE = ['D/F#', 'Gmaj9', 'Em9', 'Bm9']   # 2 bars each, restarting the 2-bar step at every desk-version change ...
 HERO_CADENCE = ['Gmaj9', 'Gmaj9', 'Asus4', 'A']  # ... and its last 4 bars: IV, Vsus V into the logo (D)
 SOUND = {'lift-up': 'movement_lift_up', 'lift-down': 'movement_lift_down', 'tilt-extend': 'movement_tilt_extend',
          'tilt-retract': 'movement_tilt_retract', 'wheels': 'movement_wheels'}
 LANE = {'lift-up': 'lift', 'lift-down': 'lift', 'tilt-extend': 'tilt', 'tilt-retract': 'tilt', 'wheels': 'wheels'}
 SFX_RULES = {'awaken': set(SOUND), 'commons': {'wheels'}, 'awareness': {'wheels'}, 'storage': set(SOUND)}   # storage: the one-button sequence
-SFX_DB = {'wheels': -25.0}; SFX_DB_DEFAULT = -22.0   # v2: 8 dB under HQ11's levels, relative to the mastered music
+SFX_DB = {'wheels': -25.0}; SFX_DB_DEFAULT = -22.0   # gain on the raw asset in the mastered mix (8 dB under HQ11's);
+                                                     # it measures about 23-33 dB under the music at the cue
 SFX_FADE_IN, SFX_FADE_OUT = 0.3, 0.25
 SCORE_KEY = {2, 4, 6, 7, 9, 11, 1}   # D major (= B minor, G Lydian): every section of the score uses these pitch classes
+KEY_TIE = 0.01             # re-keying: shifts this close to the best in-key share are a tie; the smallest shift wins
+LOGO_SLACK = 0.10          # s: the logo hit lands at most this long after the wordmark's first frame (0.35 if it cannot)
 
 
 def load_synth():
@@ -184,9 +190,9 @@ def picture(cut_dir, edl):
                 t0, t1 = max(a, e['at'], c0), min(b, e['at'] + e['dur'], c1)
                 if t1 - t0 > 0.2: sfx.append([round(s0 + t0, 3), round(t1 - t0, 3), e['kind']])
     merged = []
-    for at, dur, kind in sorted(sfx):       # back-to-back events of one sound play as one cue
-        if merged and merged[-1][2] == kind and abs(merged[-1][0] + merged[-1][1] - at) < 0.05:
-            merged[-1][1] = round(at + dur - merged[-1][0], 3)
+    for at, dur, kind in sorted(sfx):       # touching or overlapping events of one sound play as one cue
+        if merged and merged[-1][2] == kind and at <= merged[-1][0] + merged[-1][1] + 0.05:
+            merged[-1][1] = round(max(merged[-1][0] + merged[-1][1], at + dur) - merged[-1][0], 3)
         else: merged.append([at, dur, kind])
     return dict(cuts=cuts, dissolves=dissolves, looks=looks, title_a=start[ch[0]['id']] + aw[0]['rel_in'],
                 title_b=start[ch[0]['id']] + aw[1]['rel_in'], logo=logo_at, led_on=led_on, sfx=merged, win=win)
@@ -207,11 +213,11 @@ def max_step(pts, bpm_wake):
     return max(abs(b / a - 1) for a, b in zip(T[:-1], T[1:]))
 
 
-def fit_tempo(synth, edl, pic, cap=STEP_CAP):
+def fit_tempo(synth, edl, pic, cap=STEP_CAP, logo_hi=LOGO_SLACK):
     base, owners, cidx = synth.plan_anchors(edl)
     A = [pic['title_b']] + [pic['dissolves'][i][0] for i in cidx] + [pic['logo']]
     lo = [-0.05] + [-min(DISSOLVE_SLACK, 0.45 * pic['dissolves'][i][1]) for i in cidx] + [0.0]
-    hi = [0.05] + [min(DISSOLVE_SLACK, 0.45 * pic['dissolves'][i][1]) for i in cidx] + [0.35]
+    hi = [0.05] + [min(DISSOLVE_SLACK, 0.45 * pic['dissolves'][i][1]) for i in cidx] + [logo_hi]
     D = [np.round(np.arange(l, h + 1e-9, 0.025), 3) for l, h in zip(lo, hi)]
     K = len(A) - 1
     tg = [[] for _ in range(K)]                  # (time, beats per unit, weight) targets inside each segment
@@ -229,8 +235,8 @@ def fit_tempo(synth, edl, pic, cap=STEP_CAP):
         for k in range(K):
             ta = A[k] + D[k][:, None, None]; tb = A[k + 1] + D[k + 1][None, :, None]
             L = tb - ta; s_ = (A[k + 1] - A[k]) / beat
-            if k == K - 1:     # the finale: whole 2-bar phrases
-                u = HERO_UNIT; ns = sorted({max(u, u * math.floor(s_ / u)), u * math.floor(s_ / u) + u})
+            if k == K - 1:     # the finale: whole bars
+                ns = sorted({max(4, 4 * math.floor(s_ / 4)), 4 * math.floor(s_ / 4) + 4, 4 * math.floor(s_ / 4) + 8})
             else:
                 ns = sorted({max(4, 4 * math.floor(s_ / 4)), 4 * math.floor(s_ / 4) + 4, max(2, 2 * round(s_ / 2))})
             ns += [ns[-1]] * (3 - len(ns))
@@ -271,9 +277,12 @@ def fit_tempo(synth, edl, pic, cap=STEP_CAP):
         idx = idx[::-1]
         best = (score, float(bpm), [round(A[k] + float(D[k][idx[k]]), 3) for k in range(K + 1)], nsel)
     if not best:
+        if logo_hi < 0.35:
+            print(f'  no tempo map puts the logo hit within {logo_hi} s of the wordmark: allowing 0.35 s')
+            return fit_tempo(synth, edl, pic, cap, 0.35)
         if cap < MAX_BEND:
             print(f'  no tempo map with steps under {100 * cap:.2f} %: trying {100 * (cap + 0.0025):.2f} %')
-            return fit_tempo(synth, edl, pic, cap + 0.0025)
+            return fit_tempo(synth, edl, pic, cap + 0.0025, LOGO_SLACK)
         sys.exit('no tempo map within MAX_BEND fits this cut; raise MAX_BEND or DISSOLVE_SLACK')
     _, bpm, anchors, seg = best
     bs = np.concatenate([[0], np.cumsum(seg)]).astype(float)
@@ -285,7 +294,7 @@ def fit_tempo(synth, edl, pic, cap=STEP_CAP):
         P = sorted(pts); i = max(j for j in range(len(P)) if P[j][0] <= t)
         (t0, b0), (t1, b1) = P[i], P[i + 1]
         x = b0 + (t - t0) / (t1 - t0) * (b1 - b0)
-        ref = bs[0] if unit == 1 else bs[k]          # phrase units count from the section's first bar
+        ref = bs[0] if unit == 1 else bs[k]          # finale bar lines count from the section's first bar
         kk = ref + unit * round((x - ref) / unit)
         off = (x - kk) / unit
         ok = False
@@ -300,14 +309,24 @@ def fit_tempo(synth, edl, pic, cap=STEP_CAP):
 
 
 def hero_chords(plan, pic):
-    """Even phrases: one chord per 2 bars from the finale's first bar (HERO_CYCLE), the last 4 bars the cadence."""
+    """Even steps: a new chord every 2 bars (HERO_CYCLE), the step restarting at each desk-version change, so every
+    version change brings a chord change; a version that lasts an odd number of bars ends on one 1-bar chord. The last
+    4 bars are the cadence into the logo (HERO_CADENCE)."""
     hero = plan['sections'][-2]
     assert hero['style'] in ('finale', 'hero'), hero['style']
-    n = len(hero['bars'])
-    tail = HERO_CADENCE[-min(n, len(HERO_CADENCE)):]
-    body = [HERO_CYCLE[(i // 2) % len(HERO_CYCLE)] for i in range(n - len(tail))]
-    hero['chords'] = body + tail
-    return hero['chords']
+    g = plan['grid']
+    starts = [float(g.t(b)) for b, _ in hero['bars']]
+    half_bar = 120 / plan['bpm']      # a version change belongs to the bar line nearest to it
+    block = [sum(1 for c in pic['looks'] if c <= t + half_bar) for t in starts]
+    out, idx, run = [], -1, 0
+    for i, bl in enumerate(block):
+        if i == 0 or bl != block[i - 1]: run = 0
+        if run % 2 == 0: idx += 1
+        out.append(HERO_CYCLE[idx % len(HERO_CYCLE)]); run += 1
+    n = len(out); tail = HERO_CADENCE[-min(n, len(HERO_CADENCE)):]
+    out[n - len(tail):] = tail
+    hero['chords'] = out
+    return out
 
 
 # ---------------------------------------------------------------------------------------------------------------------
@@ -329,7 +348,10 @@ def key_fit(y):
     pc = np.round(12 * np.log2(f[sel] / 440.0) + 69).astype(int) % 12
     E = np.bincount(pc, weights=X[sel], minlength=12); E = E / E.sum()
     share = lambda s: float(sum(E[p] for p in range(12) if (p + s) % 12 in SCORE_KEY))
-    best = max(range(-6, 6), key=lambda s: (round(share(s), 3), -abs(s)))
+    top = max(share(s) for s in range(-6, 6))
+    # every shift within KEY_TIE of the best share counts as equally good: the smallest shift wins (down before up),
+    # so a small edit to an asset cannot move a sound by 7 semitones (and change its length by half)
+    best = min((s for s in range(-6, 6) if share(s) >= top - KEY_TIE), key=lambda s: (abs(s), s))
     return best, share(0), share(best)
 
 
@@ -376,8 +398,9 @@ def code_digest(path):
 def inputs_digest(cut_dir, edl_bytes):
     """Exactly what the score depends on, nothing else (so a title text or an LED edit elsewhere does not refuse a
     request): the EDL's chapters, dissolves and beats; title A, title B and the logo from titles-src.json; every chapter's
-    length and hard cuts; the ledStatus of the chapters that have movement sounds (SFX_RULES) and the opener's 'off'
-    (the wake); the finale's desk-version changes (join-subshots.py --plan); the music code (code_digest)."""
+    length and hard cuts; the ledStatus and the motion clips (all lanes) of the chapters that have movement sounds
+    (SFX_RULES) and the opener's 'off' (the wake); the finale's desk-version changes (join-subshots.py --plan); the music
+    code (code_digest)."""
     edl = json.loads(edl_bytes.decode('utf-8'))
     cut = J(os.path.join(cut_dir, 'review-cut.json')); src = J(os.path.join(cut_dir, 'titles-src.json'))
     first = cut['shots'][0]['id']
