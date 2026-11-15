@@ -822,7 +822,34 @@
    "filmPeople": {
     "only": [
      "lin-at-wheel"
-    ]
+    ],
+    "cast": [
+     {
+      "key": "lin-desk",
+      "id": "people-lin-stand-paint",
+      "at": [
+       -200,
+       -130
+      ],
+      "turn": 180
+     }
+    ],
+    "when": {
+     "lin-desk": [
+      [
+       19.5,
+       99,
+       0,
+       0
+      ]
+     ],
+     "lin-at-wheel": [
+      [
+       0,
+       14
+      ]
+     ]
+    }
    }
   },
   "review-cut.json#commons": {
