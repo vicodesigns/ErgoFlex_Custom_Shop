@@ -637,10 +637,11 @@ const FLOOR_SEGS = 4, FLOOR_STEPS = 24;
 // Each rendered frame this adds the difference to the same formula in the desk's own frame (the step rotated by
 // -yaw), so all four wheels roll forward together. Steps that change the yaw are the app's turn spin and are left alone.
 // The app (studio.js) is unchanged; restore() puts the render back. shot.wheelFix:false turns it off.
+// The wheels keep the desk's own materials (studio.js: rubber rollers, dark metal side plates). Until 2026-11-14 this
+// also swapped them for its own pair, and took the rollers (a38c8c) for hub plates: near-white chrome rollers in every
+// chapter with motion (Vico, Nov 14: "the wheels are just too white ... and those wheels are too shiny").
 function installWheelFix(shot) {
-  const desk = api.loadedModel, LAT = { Wheel_F_L: 1, Wheel_F_R: -1, Wheel_R_L: -1, Wheel_R_R: 1 }, rigs = [], matUndo = [];
-  const hubMat = new THREE.MeshPhysicalMaterial({ color: 0xf4f7fb, metalness: 0.92, roughness: 0.16, clearcoat: 0.35, clearcoatRoughness: 0.12, ior: 2.4, envMapIntensity: 1.6 });
-  const rollerMat = new THREE.MeshPhysicalMaterial({ color: 0x525862, metalness: 0.52, roughness: 0.24, clearcoat: 0.48, clearcoatRoughness: 0.16, ior: 1.8, envMapIntensity: 1.55 });
+  const desk = api.loadedModel, LAT = { Wheel_F_L: 1, Wheel_F_R: -1, Wheel_R_L: -1, Wheel_R_R: 1 }, rigs = [];
   desk.traverse(o => {
     const m = /^wheelRig_(Wheel_[FR]_[LR])$/.exec(o.name); if (!m) return;
     // The app's radius: half the world height of the largest disc, measured unspun.
@@ -651,15 +652,11 @@ function installWheelFix(shot) {
       c.geometry.computeBoundingBox();
       const b = c.geometry.boundingBox, a = (b.max.x - b.min.x) * (b.max.y - b.min.y);
       if (a > area) { area = a; hub = c; }
-      const mat = c.material, hex = mat?.color?.getHexString?.()?.toLowerCase?.() || '';
-      const isHubPlate = hex === 'a38c8c' || hex === '5e4343' || hex === 'ffffff' || (mat?.roughness >= 0.9 && mat?.metalness >= 0.9);
-      matUndo.push({ mesh: c, mat });
-      c.material = isHubPlate ? hubMat : rollerMat;
     }
     const hb = hub ? new THREE.Box3().setFromObject(hub) : null; o.rotation.z = z; o.updateMatrixWorld(true);
     if (hb) rigs.push({ o, name: m[1], lat: LAT[m[1]], r: Math.max(.02, (hb.max.y - hb.min.y) / 2), corr: 0, base: z, written: z });
   });
-  if (!rigs.length) { hubMat.dispose(); rollerMat.dispose(); return null; }
+  if (!rigs.length) return null;
   const renderer = api.renderer, direct = renderer.render, log = shot.wheelFixDebug ? [] : null;
   let prev = null;
   const apply = () => {
@@ -685,8 +682,6 @@ function installWheelFix(shot) {
     count: rigs.length,
     restore() {
       renderer.render = direct;
-      for (const u of matUndo) u.mesh.material = u.mat;
-      hubMat.dispose(); rollerMat.dispose();
       if (log?.length > 1) console.error('[film-fx] wheels app/fixed spin on travel steps: ' + rigs.map(g => g.name.slice(6) + ' ' + (g.dApp || 0).toFixed(2) + '/' + (g.dFix || 0).toFixed(2)).join(', '));
     }
   };
