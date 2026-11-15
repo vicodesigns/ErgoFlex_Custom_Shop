@@ -1484,7 +1484,7 @@ def write_cue_sheet(path, plan, events, meas, rep, edl_path, out_wav):
     lines.append(f'python3 tools/experience/score-synth.py {os.path.relpath(edl_path, os.getcwd())} {os.path.relpath(out_wav, os.getcwd())}')
     lines.append('```')
     lines.append('')
-    with open(path, 'w') as f:
+    with open(path, 'w', encoding='utf-8', newline='\n') as f:
         f.write('\n'.join(lines))
 
 
@@ -1622,7 +1622,7 @@ def main():
     ap.add_argument('--stems', action='store_true', help='also write per-bus stems (float, pre-master) for debugging')
     args = ap.parse_args()
 
-    with open(args.edl) as f:
+    with open(args.edl, encoding='utf-8') as f:
         edl = json.load(f)
     plan = build_plan(edl)
     print(f'tempo {plan["bpm"]:.2f} BPM; segments (beats) {plan["seg_beats"]}; max bend '
@@ -1645,7 +1645,7 @@ def main():
     rep['ffmpeg'] = meas
     rep['tempo'] = dict(bpm=plan['bpm'], seg_beats=plan['seg_beats'], max_bend_pct=round(100 * float(np.max(plan['devs'])), 2))
     d = os.path.dirname(args.out)
-    with open(os.path.join(d, 'score-analysis.json'), 'w') as f:
+    with open(os.path.join(d, 'score-analysis.json'), 'w', encoding='utf-8', newline='\n') as f:
         json.dump(rep, f, indent=1)
     write_cue_sheet(os.path.join(d, 'CUE-SHEET.md'), plan, events, meas, rep, os.path.abspath(args.edl),
                     os.path.abspath(args.out))
