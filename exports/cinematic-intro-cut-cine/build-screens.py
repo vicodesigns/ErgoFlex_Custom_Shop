@@ -25,7 +25,7 @@ SCR = 'exports/cinematic-intro-cut-cine/screens/'
 # chapter -> {target: clip id}; 'texture' entries are film texture targets (tools/experience/film-texture-screens.mjs)
 PLAN = {
     'awaken': {'main-landscape': 'cine-awaken-main'},
-    'rise': {'main-landscape': 'cine-rise-curved', 'main-portrait': 'cine-rise-portrait'},
+    'rise': {'main-landscape': 'cine-rise-curved', 'main-portrait': 'cine-rise-portrait', 'phone': 'cine-rise-phone'},
     'create': {'main-landscape': 'cine-create-landscape', 'main-portrait': 'cine-create-portrait'},
     'commons': {'main-landscape': 'cine-commons-reservation'},
     'oilers': {'main-landscape': 'cine-oilers-curved', 'main-portrait': 'cine-oilers-portrait', 'main-landscape-2': 'cine-oilers-laptop'},

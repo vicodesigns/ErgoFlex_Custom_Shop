@@ -21,6 +21,9 @@ const CINE = [
     opts: {name: 'Maya', initials: 'M', evening: true, ck: [[0, 480], [4, 512], [8, 655], [12, 840], [15, 1000], [18, 1050]]}}),
   cine('rise', 2, {id: 'cine-rise-curved', target: 'main-landscape', role: 'Maya: the workday, the evening summary', w: 2560, h: 1072, scene: 'ch02l',
     opts: {name: 'Maya', colleague: 'Rosa Kim', ck: [[0, 480], [4, 512], [8, 655], [12, 840], [15, 1000], [18, 1050]], toast: [14.6, 99, '3h 10m standing · 9 stand breaks']}}),
+  // the phone on the desk's charger (the film's own 'phone' target; a whole-glass clip like 02-phone, 720x1516): charge ring, Maya's lock screen, then the dim always-on clock of her workday
+  cine('rise', 2, {id: 'cine-rise-phone', target: 'phone', role: 'Maya: the phone on the charger, charged overnight, the workday clock', w: 720, h: 1516, scene: 'ch02ph',
+    opts: {name: 'Maya', ck: [[0, 480], [4, 512], [8, 655], [12, 840], [15, 1000], [18, 1050]]}}),
   cine('create', 3, {id: 'cine-create-landscape', target: 'main-landscape', role: 'Lin: painting -> house model -> meadow reference', w: 1920, h: 1120, scene: 'c03l', frames: 705, opts: {...CREATE_ACTS, name: 'Lin'}}),
   cine('create', 3, {id: 'cine-create-portrait', target: 'main-portrait', role: 'Lin: references -> floor plan -> creek reference', w: 1082, h: 1856, scene: 'c03p', frames: 705, opts: {...CREATE_ACTS, name: 'Lin'}}),
   cine('create', 3, {id: 'cine-create-floor-plan', target: 'texture:Architect floor plan', role: 'the drafting paper relabelled as a home (PNG)', w: 1600, h: 1000, scene: 'cplan', still: true}),

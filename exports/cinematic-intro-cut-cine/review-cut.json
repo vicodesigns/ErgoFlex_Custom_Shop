@@ -19766,10 +19766,9 @@
     },
     {
      "target": "phone",
-     "src": "exports/cinematic-intro-20261104-hq14/screens/02-phone.mp4",
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-rise-phone.mp4",
      "offset": 0,
      "loop": false,
-     "blend": "add",
      "brightness": [
       [
        0,
@@ -19783,7 +19782,8 @@
        5,
        0.6
       ]
-     ]
+     ],
+     "blend": "add"
     }
    ],
    "clock": {
