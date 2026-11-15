@@ -114,8 +114,8 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(!from){rerender();return;}
     const dx=now.at[0]-from.at[0],dz=now.at[1]-from.at[1],dy=now.y-from.y,dt=now.turn-from.turn;
     if(mode==='translate'&&Math.hypot(dx,dz)<.5&&Math.abs(dy)<.5){rerender();return;}
-    edit(sel,p=>{
-      if(mode==='translate'){const at=Array.isArray(p.at)?p.at:from.at;p.at=[Math.round(at[0]+dx),Math.round(at[1]+dz)];if(Math.abs(dy)>=.5)p.y=Math.max(-2000,Math.round((p.y||0)+dy));paths.bodyMoved(p);/* S31 M3 hook: a walker's path start goes with them */}
+    edit(sel,(p,all)=>{
+      if(mode==='translate'){const at=Array.isArray(p.at)?p.at:from.at;p.at=[Math.round(at[0]+dx),Math.round(at[1]+dz)];if(Math.abs(dy)>=.5)p.y=Math.max(-2000,Math.round((p.y||0)+dy));paths.bodyMoved(p,all);/* S31 M3 hook: a walker's path start goes with them */}
       else if(mode==='rotate')p.turn=r1((((p.turn||0)+dt+180)%360+360)%360-180);
       else p.scale=Math.min(3,Math.max(.2,now.scale));},
       mode==='translate'?`Moved ${name} by ${Math.round(Math.hypot(dx,dz))} mm.`:mode==='rotate'?`Turned ${name} by ${r1(dt)}°.`:`${name} is now ${Math.round(now.scale*100)} % of their built size.`);
@@ -132,7 +132,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   const pose=createPoseEditor({win,three,tools:()=>tools,stagePeople,entry,edit:(...a)=>edit(...a),status,rerender,personName:e=>e?personName(e):'',editing,saved:e=>savedHTML(e),time,seek,seconds});
   const poseEditor=pose;     // swap() has a `pose` argument of its own
   // S31 M3 hook: a walker's / roller's path on the floor and in the People tab (people-path-gizmo.mjs)
-  const paths=createPathGizmo({win,three,tools:()=>tools,stagePeople,entry,edit:(...a)=>edit(...a),status,editing,lightsShowing,selected:()=>sel,posing:()=>pose.active(),personName:e=>e?personName(e):'',objectOf:k=>objectOf(k),cast:()=>cast(),modelOf:id=>modelOf(id),poseOf:id=>poseOf(id),seconds});
+  const paths=createPathGizmo({win,three,tools:()=>tools,stagePeople,entry,edit:(...a)=>edit(...a),status,editing,lightsShowing,selected:()=>sel,posing:()=>pose.active(),personName:e=>e?personName(e):'',objectOf:k=>objectOf(k),cast:()=>cast(),modelOf:id=>modelOf(id),poseOf:id=>poseOf(id),seconds,spans:k=>spans(k)});
   // ---- selection
   function select(key,{announce=true}={}){
     const e=entry(key);if(!e){deselect();return;}
