@@ -16,9 +16,9 @@ Writes:
   review-cut.json          hero only: seconds, motion, cameraPlan + camera, sceneEdits tracks, subshots map, presets.
   titles-src.json          hero only: the closing title, logo and cta times (wording untouched).
 One desk move and one camera are still shared by every sub-shot and the cut's hero (as the Director import expects):
-  - motion: the desk jumps to the next desk's pose just after the cut frame (lift and tilt clips 0.005-0.025 s after
-    it). join-subshots.py's one-frame xfade shows the outgoing sub-shot on the cut frame and the incoming one from
-    the next frame on, so every desk is seen only at its own pose (the cut lands 1/30 s after the beat);
+  - motion: the desk jumps to the next desk's pose between the cut frame and the next frame (as render-cut samples
+    them). join-subshots.py's one-frame xfade shows the outgoing sub-shot on the cut frame and the incoming one from
+    the next frame on, so every desk is seen only at its own pose and angle (the cut lands 1/30 s after the beat);
   - camera: one spline with a 'cut' key at every desk change (camera-spline.mjs). Each block pushes in from its
     own angle. The cut keys also put the cuts on beats in the score (build-cine-score.py reads cameraPlan cuts).
 Timing is in beats of 60/112 s from the bar line at the centre of the dissolve from storage (0.75 s). Every
@@ -93,12 +93,12 @@ def cam_keys(starts, ends, red, logo, T):
     for i, d in enumerate(DESKS[:-1]):
         az, el, d0, d1, y, fov = d[3]; t0, t1 = starts[i], ends[i]
         tgt = [DESK_C[0], y, DESK_C[1]]
-        k0 = dict(at=t0, position=pos(az, el, d0, y), target=tgt, fov=fov, label=f'{d[0]}: cut in')
+        k0 = dict(at=round(t0, 4), position=pos(az, el, d0, y), target=tgt, fov=fov, label=f'{d[0]}: cut in')
         if i: k0['cut'] = True
         keys += [k0, dict(at=round(t1 - 0.04, 4), position=pos(az + 3, el, d1, y), target=tgt, fov=fov, label=f'{d[0]}: push')]
     # the red desk: lands three-quarter front-right, eases round and back to the end card framing by the wordmark
     # under the closing title (lower left) the desk stands right of centre (frame_right), clear of the headline
-    land = frame_right(dict(at=red, position=pos(42, 8, 7.0, 1.05), target=[DESK_C[0], 1.05, DESK_C[1]], fov=27, cut=True, label='red desk lands'), 0.14)
+    land = frame_right(dict(at=round(red, 4), position=pos(42, 8, 7.0, 1.05), target=[DESK_C[0], 1.05, DESK_C[1]], fov=27, cut=True, label='red desk lands'), 0.14)
     keys += [land,
              frame_right(dict(at=round((red + logo) / 2, 4), position=pos(10, 9, 8.2, 0.8), target=[-0.05, 0.75, 0.3], fov=27.8, label='red desk: round to the front'), 0.12),
              dict(at=logo, **copy.deepcopy(END_KEY), label='end card: desk at rest, frontal 3/4'),
@@ -123,14 +123,14 @@ def spline(seconds, plan):
     os.unlink(name); return cam
 
 
-def pose_clips(starts):
+def pose_clips(starts, D):
     """Jump to the next desk's pose just after each cut frame (the shared desk move)."""
     clips, prev = [], DESKS[0][2]
     for i, d in enumerate(DESKS[1:]):
         t = starts[i + 1]
         for lane, j in (('lift', 0), ('tilt', 1)):
             if d[2][j] == prev[j]: continue
-            clips.append({'id': f'{chr(66 + i).lower()}-{lane}', 'lane': lane, 'kind': lane, 'start': round(t + 0.005, 4), 'duration': 0.02,
+            clips.append({'id': f'{chr(66 + i).lower()}-{lane}', 'lane': lane, 'kind': lane, 'start': round(t - 0.2 * D, 4), 'duration': round(0.4 * D, 4),
                           'easing': 'linear', 'label': '', 'target': d[2][j],
                           'path': [{'time': 0, 'pose': {('height' if lane == 'lift' else 'tilt'): prev[j]}},
                                    {'time': 1, 'pose': {('height' if lane == 'lift' else 'tilt'): d[2][j]}}]})
@@ -153,11 +153,17 @@ def main():
     cuts, red, logo = timeline()
     T = fr(logo + TAIL)
     starts = [0.0] + cuts; ends = cuts + [T]
-    plan_keys = cam_keys(starts, ends, red, logo, T)
+    # render-cut.cjs samples output frame n at chapter time n * T / (N - 1) (N frames, the last one at T), not n / 30.
+    # The camera cut and the pose jump go halfway between the samples of the cut frame k and frame k + 1. On frame k
+    # (shown from the outgoing sub-shot by the one-frame xfade) the old desk is in its own pose and angle; from frame k + 1 on
+    # the new desk is in its own.
+    N = round(T * FPS); D = T / (N - 1)
+    sw = [0.0] + [(round(t * FPS) + 0.5) * D for t in cuts]
+    plan_keys = cam_keys(sw, sw[1:] + [T], sw[-1], logo, T)
     hero = next(s for s in cut['shots'] if s['id'] == 'hero')
     plan = {'easeIn': False, 'easeOut': True, 'keys': plan_keys}
     camera = spline(T, plan)
-    motion = pose_clips(starts)
+    motion = pose_clips(sw, D)
     grid = [{'match': '@grid', 'opacity': [[0, 0.35], [red, 0.25], [fr(logo - 0.6), 0]], 'radialFade': [3, 8]},
             {'match': '@pulse', 'opacity': [[0, 1], [red, 0.6], [fr(logo - 0.6), 0]]}]
     old = sub['shots']
@@ -172,7 +178,7 @@ def main():
         s['subshot'] = chr(65 + i)
         t0, t1 = starts[i], ends[i]
         s['renderRange'] = [t0, T if i == len(DESKS) - 1 else round(t1 + FRAME, 4)]
-        s['lights'] = key_light(b['lights'], t0, red)
+        s['lights'] = key_light(b['lights'], round(sw[i], 4), round(sw[-1], 4))
         s['sceneEdits'] = grid + [e for e in b['sceneEdits'] if e.get('match') not in ('@grid', '@pulse')]
         s['screens'] = [{'target': tg, 'src': src, 'offset': 0 if at is None else round(at - t0, 4), 'loop': False} for tg, src, at in screens]
         if preset == 'gaming': s['ledGlow'] = 0.35
