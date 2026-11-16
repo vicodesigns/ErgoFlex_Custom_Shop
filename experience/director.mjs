@@ -36,6 +36,7 @@ import {makeOpeningShot} from './opening.mjs';
 import {showcaseShots,showcaseViews} from './showcase.mjs';
 import {BAKE_PROFILE} from './bake.mjs';
 import {resolveCameraKeys,moveCameraKey,CAMERA_EASINGS} from './camera-track.mjs';
+import {createSelection,markSelection,centreIn} from './director-selection.mjs';
 import {CutLibrary,makeCut,cleanCut,cleanShot,sceneShot,generateCut,encodeCut,KINDS,PRESET_IDS,defaultPreset} from './cuts.mjs';
 
 const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -70,11 +71,31 @@ export function mountDirector(bridge,catalog,initial){
   const shot=()=>project.shots[selected];
   const keys=()=>resolveCameraKeys(shot().camera,automaticCameras.get(shot().id)||[]);
   const selectedKey=()=>keys().find(k=>k.id===keyId);
+  // B2: ONE selection across the Director (director-selection.mjs). The prop, person or room desk selected now is marked
+  // `b2-selected` wherever it shows (Props lane bars, Layers rows, People lane / list / sheet row, Desks list, the desk
+  // lanes' header) and, when it changes, centred on the timeline; a tab opened later centres it there too.
+  const b2sel=createSelection(),SEL_HOME={prop:'props',person:'people',desk:'desks'};
+  function selectionNow(){
+    try{const p=sceneProps.selected();if(p)return {kind:'prop',key:p};const h=scenePeople.selected();if(h)return {kind:'person',key:h};const d=deskSel.selected();if(d)return {kind:'desk',key:d};}catch{}   // (before the editors exist: nothing)
+    return null;
+  }
+  function syncSelection(){
+    const changed=b2sel.set(selectionNow());let desk='';try{desk=choreo.desk()||'';}catch{}
+    for(const el of timeline.querySelectorAll('.desk-track-toolbar,.choreo-pick'))el.dataset.deskOf=desk;
+    markSelection([panel,timeline],b2sel.get());
+    if(changed&&b2sel.get())requestAnimationFrame(()=>requestAnimationFrame(()=>centreSelection(timeline)));
+  }
+  // Centre the selection's first visible mark under root (the timeline, or a tab page in the inspector).
+  function centreSelection(root){
+    const el=[...root.querySelectorAll('.b2-selected')].find(e=>e.getClientRects().length&&!e.closest('[hidden]'));
+    if(el)centreIn(el,root===timeline?timeline:panel);
+  }
   function showInspector(tab,selection=false,unhide=true){
-    inspector=tab;if(unhide)document.body.classList.remove('inspector-hidden');if(tab==='lighting')queueMicrotask(()=>syncNow());if(tab==='render')queueMicrotask(()=>renderRequest?.refresh());if(tab==='layers')queueMicrotask(()=>renderLayers());
+    const newTab=inspector!==tab;inspector=tab;if(unhide)document.body.classList.remove('inspector-hidden');if(tab==='lighting')queueMicrotask(()=>syncNow());if(tab==='render')queueMicrotask(()=>renderRequest?.refresh());if(tab==='layers')queueMicrotask(()=>renderLayers());
     for(const page of panel.querySelectorAll('[data-inspector-page]'))page.hidden=page.dataset.inspectorPage!==tab;
     for(const button of panel.querySelectorAll('[data-inspector-tab]'))button.setAttribute('aria-pressed',String(button.dataset.inspectorTab===tab));
     panel.scrollTop=0;
+    const sel=b2sel.get();if(newTab&&sel&&SEL_HOME[sel.kind]!==tab)requestAnimationFrame(()=>{syncSelection();const page=panel.querySelector(`[data-inspector-page="${tab}"]`);if(page&&!page.hidden)centreSelection(page);});
   }
   // Selecting anything opens its home in the inspector: the tab its settings live in, that section open, scrolled
   // to and outlined for ~1.5 s. [tab, lighting section id or a selector in the tab's page]. Never moves focus, and
@@ -319,7 +340,7 @@ export function mountDirector(bridge,catalog,initial){
     const desk=deskSel.header();if(desk)return row('▭','Desk · '+desk.name,desk.detail);
     return '';
   }
-  function syncSelectedHeader(){const el=panel.querySelector('[data-selected-header]');if(el)el.innerHTML=selectedHeader();}
+  function syncSelectedHeader(){const el=panel.querySelector('[data-selected-header]');if(el)el.innerHTML=selectedHeader();syncSelection();}
   function clearSelection(){for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;titleEditor.clear();deskEditor.clearSelection();sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();deskSel.deselect();render();status('Selection cleared.');}
   // Delete every picked item (lanes keep at least one white / time-of-day key); one undo step.
   function deletePicks(){
@@ -335,7 +356,7 @@ export function mountDirector(bridge,catalog,initial){
   document.addEventListener('keydown',event=>{
     if(event.key!=='Escape'||!open||picked()||document.querySelector('dialog[open]')||event.target.closest?.('input,select,textarea'))return;
     if(titleEditor.editing())return;
-    if(!(lightSel||keyId||deskEditor.selectedId()||sceneLights.selected()||sceneProps.selected()||deskSel.selected()||titleEditor.selectedId()))return;
+    if(!(lightSel||keyId||deskEditor.selectedId()||sceneLights.selected()||sceneProps.selected()||scenePeople.selected()||deskSel.selected()||titleEditor.selectedId()))return;
     event.preventDefault();event.stopImmediatePropagation();clearSelection();
   },true);
   // Ctrl+Shift+A: every item in the lane under the pointer.
@@ -674,7 +695,7 @@ export function mountDirector(bridge,catalog,initial){
   function renderLayers(){
     const box=panel.querySelector('[data-scene-layers]');if(!box||inspector!=='layers')return;
     const active=box.contains(document.activeElement)?document.activeElement.name:null;if(active==='ly-search'&&typing())return;
-    box.innerHTML=layers.panel();if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});
+    box.innerHTML=layers.panel();if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});syncSelection();
   }
   // Desks (scene-desk-editor.mjs): every other ErgoFlex desk in the room: the Desks tab, a click in the view, size / place / start; per chapter only.
   function renderSceneDesks(soft=false){
@@ -738,6 +759,13 @@ export function mountDirector(bridge,catalog,initial){
   const floorShowing=()=>open&&(sceneLights.showing()||inspector==='lighting'&&!document.body.classList.contains('inspector-hidden')&&!!panel.querySelector('[data-light-section="room"]')?.open&&!!panel.querySelector('[data-floor-section]')?.open);
   const floorRefl=createFloorReflectionEditor({bridge,shot,film:filmShot,commit,status,visible:floorShowing,rerender:()=>{if(inspector==='lighting'&&!typing())renderPanel();else syncSelectedHeader();},
     onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();deskSel.deselect();delete lightSectionsShut.room;const r=panel.querySelector('[data-light-section="room"]');if(r)r.open=true;renderTimeline();reveal('floor');}});
+  // B2: a timeline row's name selects what the row stands for (a People sheet character, an "Other desks" row).
+  timeline.addEventListener('click',event=>{
+    const label=event.target.closest?.('.desk-lane-label');if(!label||event.target.closest('button,select,input'))return;
+    const row=label.closest('[data-person-keys],[data-choreo-row]');if(!row)return;
+    if(row.dataset.personKeys){const keys=row.dataset.personKeys.split(' ').filter(Boolean);if(keys.length&&!keys.includes(scenePeople.selected()))scenePeople.select(keys[0]);return;}
+    const id=row.dataset.choreoRow;if(id)deskSel.select(id);else deskSel.deselect();
+  });
   panel.addEventListener('toggle',event=>{if(event.target.matches?.('[data-floor-section]'))floorRefl.setExpanded(event.target.open);},true);
   // Render still: the playhead frame with the film look, rendered in a hidden stage of its own.
   // Render still: the playhead frame with the film look, shown inside the frame with a history strip.
@@ -885,6 +913,7 @@ export function mountDirector(bridge,catalog,initial){
     branding.mount(panel.querySelector('[data-scene-branding]'));
     showInspector(inspector,false,false);deskEditor.sync();syncTransport();
     if(!revealWant)panel.scrollTop=scroll;
+    syncSelection();
     const replacement=activeName?field(activeName):null;if(replacement){replacement.focus({preventScroll:true});if(selection&&replacement.setSelectionRange)try{replacement.setSelectionRange(...selection);}catch{}}
     repulse();
   }
@@ -908,7 +937,7 @@ export function mountDirector(bridge,catalog,initial){
       <label class="timeline-pan" ${zoom===1?'hidden':''}><span>Pan view</span><input name="timeline-pan" type="range" min="0" max="100" step=".1" value="0" aria-label="Timeline horizontal position"></label>
       <div class="timeline-footer"><span data-bake-summary class="timeline-bake-summary" role="status"></span><span data-timeline-status role="status">Click ruler to scrub · Drag empty lanes to select several · Shift/Ctrl-click adds · Ctrl+A all · Alt: bypass snap · Space: play</span><output data-track-time>${(playhead*s.seconds).toFixed(2)}s / ${s.seconds}s</output></div>`;
     timeline.querySelector('.timeline-viewport').scrollLeft=scroll;
-    syncTransport();syncPlayhead();syncPan();syncPicks();
+    syncTransport();syncPlayhead();syncPan();syncPicks();syncSelection();
   }
   async function load(){
     const token=++loadToken,position=playhead;status('Loading this chapter…');
@@ -1546,7 +1575,7 @@ export function mountDirector(bridge,catalog,initial){
     if(event.key!=='Escape'||!open)return;event.preventDefault();event.stopImmediatePropagation();
     if(still.open){still.close();return;}
     if(picked()){clearPicks();groupStatus();return;}
-    if(lightSel||keyId||deskEditor.selectedId()||sceneLights.selected()||sceneProps.selected()||deskSel.selected()||titleEditor.selectedId())clearSelection();
+    if(lightSel||keyId||deskEditor.selectedId()||sceneLights.selected()||sceneProps.selected()||scenePeople.selected()||deskSel.selected()||titleEditor.selectedId())clearSelection();
   }
   preview?.addEventListener('load',bindPreviewHistory);bindPreviewHistory();
   addEventListener('pagehide',()=>{deskEditor.stop();draft();});

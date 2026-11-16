@@ -696,3 +696,8 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 .ps-menu button:hover:not(:disabled){background:#ffffff14}.ps-menu button[aria-checked=true]{color:#ffcf4a}
 .ps-menu button:disabled{opacity:.45;cursor:default}
 .ps-menu small{padding:4px 6px;color:#9fb7c6;font-size:10.5px;line-height:1.35}
+/* B2: the one Director selection, wherever it shows (director-selection.mjs marks it b2-selected) */
+#director-timeline .desk-lane-row.b2-selected,#director-timeline .b2-selected.desk-track-toolbar{box-shadow:inset 3px 0 0 #fff,inset 0 0 0 1px rgba(255,255,255,.45)}
+#director-timeline .prop-bar.b2-selected,#director-timeline .people-bar.b2-selected{box-shadow:0 0 0 2px #fff}
+#director-timeline .choreo-pick.b2-selected select{outline:2px solid #fff;outline-offset:1px}
+#director-panel .b2-selected:not(.desk-row){outline:2px solid #fff;outline-offset:-2px;border-radius:6px}

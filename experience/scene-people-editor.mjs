@@ -392,7 +392,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   function panel(){
     if(!catalog)loadCatalog();
     const list=cast(),mine=!!own(),T=seconds();rowKeys=list.map(e=>e.key);const e=sel&&entry(sel);
-    const row=(x,i)=>`<div class="people-row ${x.key===sel?'selected':''} ${x.hide?'off':''}"><button type="button" class="people-pick" data-action="pe-row" data-index="${i}" title="Select ${escape(personName(x))}"><img src="${thumb(x.id)}" alt="" loading="lazy"><span><strong>${escape(personName(x))}</strong><small>${escape(doing(x))}</small><small>${escape(x.desk?(x.station?'at a room desk':'at the film desk'):'free spot')} · ${escape(spanText(spans(x.key),T))}</small></span></button><button type="button" class="people-eye" data-action="pe-eye" data-index="${i}" aria-pressed="${!x.hide}" title="${x.hide?'Bring back into the chapter':'Take out of the chapter (keeps the entry)'}">${x.hide?'○':'●'}</button></div>`;
+    const row=(x,i)=>`<div class="people-row ${x.key===sel?'selected':''} ${x.hide?'off':''}" data-person-key="${escape(x.key)}"><button type="button" class="people-pick" data-action="pe-row" data-index="${i}" title="Select ${escape(personName(x))}"><img src="${thumb(x.id)}" alt="" loading="lazy"><span><strong>${escape(personName(x))}</strong><small>${escape(doing(x))}</small><small>${escape(x.desk?(x.station?'at a room desk':'at the film desk'):'free spot')} · ${escape(spanText(spans(x.key),T))}</small></span></button><button type="button" class="people-eye" data-action="pe-eye" data-index="${i}" aria-pressed="${!x.hide}" title="${x.hide?'Bring back into the chapter':'Take out of the chapter (keeps the entry)'}">${x.hide?'○':'●'}</button></div>`;
     return `<div class="director-heading"><div><span class="director-kicker">PEOPLE</span><h3>${list.length?`${count()} in this chapter`:'Nobody in this chapter'}</h3></div></div>
       <div class="director-actions"><button type="button" data-action="pe-add">+ Add person</button>${list.length?'':'<button type="button" data-action="pe-room">Bring in the room\'s people</button>'}${mine?'<button type="button" data-action="pe-reset" title="Back to the cast the film has for this chapter">Reset to the film</button>':''}</div>
       <p class="director-hint">${mine?'This chapter has its own cast.':list.length?'This is the film\'s cast. Your first change copies it into the chapter.':'Add people from the library, or bring in the people who live in this room.'} Click a person in the view or in the list.</p>
@@ -427,7 +427,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     return rows.map(r=>{
       const open=twirls.has(r.row),on=r.entries.includes(sel);
       const summary=`${r.bars.map(b=>`<i class="ps-onscreen" style="left:${pct(b.t0)};width:calc(${pct(b.t1)} - ${pct(b.t0)})"></i>`).join('')}${r.summary.map(t=>`<i class="ps-dot" style="left:${pct(t)}"></i>`).join('')}`;
-      let html=sheetRow(`ps-char ${on?'selected':''}`,`${twirl(r.row,open,r.label+'\'s properties')}<b>${escape(r.label)}</b>`,summary,`data-ps-row="${escape(r.row)}"`);
+      let html=sheetRow(`ps-char ${on?'selected':''}`,`${twirl(r.row,open,r.label+'\'s properties')}<b>${escape(r.label)}</b>`,summary,`data-ps-row="${escape(r.row)}" data-person-keys="${escape(r.entries.join(' '))}"`);
       if(!open)return html;
       const P=r.props,poseOpen=twirls.has(r.row+'|pose'),nav=NAV;
       html+=sheetRow('ps-prop',`<span class="ps-name">On screen</span>${nav}`,`${r.bars.map(b=>`<span class="ps-bar ps-place" style="left:${pct(b.t0)};width:calc(${pct(b.t1)} - ${pct(b.t0)})" title="${escape(b.entry)}: ${escape(b.label)} · ${b.t0.toFixed(2)}–${b.t1.toFixed(2)} s">${escape(b.label)}</span>`).join('')}${P.screen.map(keyBtn).join('')}`,`data-ps-prop="screen" data-ps-of="${escape(r.row)}"`);
@@ -659,7 +659,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const items=list.flatMap((e,i)=>(spans(e.key)||[[0,T]]).map(([a,b],k)=>({id:i+':'+k,i,e,start:Math.max(0,a),end:Math.max(Math.max(0,a)+.01,Math.min(b,T))})));
     const layers=stackRows(items);laneRows=layers.count;const step=laneRows<=2?36/laneRows:ROW,h=Math.floor(step)-2;
     return items.map(it=>{const e=it.e,x=it.start/T*100,w=Math.max(.6,(it.end-it.start)/T*100);
-      return `<button type="button" class="people-bar ${e.key===sel?'selected':''} ${spans(e.key)?'':'whole'}" data-action="pe-lane" data-index="${it.i}" style="left:${x}%;width:${w}%;top:${1+layers.row.get(it.id)*step}px;height:${h}px" title="${escape(personName(e))}: ${escape(doing(e))} · ${escape(spanText(spans(e.key),T))}">${escape(personName(e))}</button>`;}).join('');
+      return `<button type="button" class="people-bar ${e.key===sel?'selected':''} ${spans(e.key)?'':'whole'}" data-action="pe-lane" data-index="${it.i}" data-person-key="${escape(e.key)}" style="left:${x}%;width:${w}%;top:${1+layers.row.get(it.id)*step}px;height:${h}px" title="${escape(personName(e))}: ${escape(doing(e))} · ${escape(spanText(spans(e.key),T))}">${escape(personName(e))}</button>`;}).join('');
   }
   // A bar's ends drag to set when the person comes in and goes out; its middle drags the whole stay along the chapter
   // (snapped to a tenth of a second). A bar pulled back to the whole chapter loses its span again.
