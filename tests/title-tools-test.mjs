@@ -7,7 +7,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {newTitle,duplicateTitle,newTitleId,spanAt,cleanFilmTitles,chapterTitles,srcEntry,DEFAULT_COPY,NEW_TITLE_SECONDS,MAX_TITLES} from '../experience/film-titles.mjs';
+import {newTitle,duplicateTitle,newTitleId,spanAt,cleanFilmTitles,chapterTitles,srcEntry,DEFAULT_COPY,NEW_TITLE_SECONDS,MAX_TITLES,titleLines,lineGaps,withGap,GAPS,cleanTypography,fittedBox,fittedPaths,LINES} from '../experience/film-titles.mjs';
 import {cleanShot,cleanCut} from '../experience/cuts.mjs';
 import {filmRenderShot} from '../experience/film-render.mjs';
 import {liveFilmShot} from '../experience/film-chapters.mjs';
@@ -93,4 +93,37 @@ try{
   assert.match(py(path.join(X,'finish-intro.py'),H,'--chapter-titles','rise',vin,vout),/rise has no titles: plain copy/);
   assert.ok(log.trim()==='rise');
 }finally{fs.rmSync(H,{recursive:true,force:true});}
-console.log('Title tools: + Title / Duplicate / Delete (ids, span inside the chapter, copy keeps layout + shadow), draft and Export cut keep the list ([] included), filmTitles never in the render shot, import adds / removes titles-src entries (other chapters untouched), titles.ass + --chapter-titles burn show the new title, delete-all import verified.');
+
+// ---- M2: per-line offsets and line spacing (defaults = the film's layout) ----
+{
+  const plain={id:'rise-0',rel_in:3.6,rel_out:9.4,eyebrow:'A',title:'B',detail:'C'};
+  assert.deepEqual(titleLines(plain).map(L=>[L.key,L.y,L.dx]),[['eyebrow',812,0],['title',912,0],['detail',970,0]],'no typography: the film\'s lines');
+  assert.deepEqual(titleLines(plain).map(L=>L.spacing),[6,0,.2],'the headline\'s Style -0.6 is what libass burns: 0');
+  assert.equal(titleLines({typography:{title:{spacing:-1}}})[1].spacing,-1,'a spacing he sets is kept (\\fsp honours negatives)');
+  assert.deepEqual(lineGaps(plain),{top:100,bottom:58});assert.deepEqual(GAPS,{top:100,bottom:58});
+  const g=withGap(plain,'top',80);assert.deepEqual(g,{eyebrow:{dy:20}});assert.deepEqual(lineGaps({...plain,typography:g}),{top:80,bottom:58});
+  const g2=withGap({...plain,typography:{title:{dy:-10}}},'bottom',70);assert.deepEqual(g2,{title:{dy:-10},detail:{dy:2}},'gaps are measured from the headline wherever it is');
+  assert.equal(withGap(plain,'top',100),undefined,'the film\'s gap again: nothing stored');
+  assert.deepEqual(cleanTypography({eyebrow:{dx:3.456,dy:0,size:30},detail:{dx:5000}}),{eyebrow:{size:30,dx:3.46},detail:{dx:1000}});
+  const L0=titleLines({typography:{eyebrow:{dx:10,dy:-5}}})[0],b0=fittedBox(LINES[0],100),b1=fittedBox(L0,100);
+  assert.deepEqual([b1.x0-b0.x0,b1.x1-b0.x1,b1.y0-b0.y0,b1.y1-b0.y1],[10,10,-5,-5],'a moved line\'s fitted box moves with it');
+  const fit=fittedPaths({...plain,typography:{detail:{dy:12}}},(L,t)=>50);assert.equal(fit[2].points[0].y-fittedPaths(plain,(L,t)=>50)[2].points[0].y,12);
+  // the burn: offsets only move \move (no type tags), defaults byte-identical
+  const H2=fs.mkdtempSync(path.join(os.tmpdir(),'ergoflex-title-lines-'));
+  try{
+    const edl={fps:30,dissolve:1.5,total:60,chapters:[{index:1,id:'awaken',duration:44.85,start:0,end:44.85},{index:2,id:'rise',duration:16,start:43.35,end:59.35}],transitions:[.8]};
+    const run=entry=>{fs.writeFileSync(path.join(H2,'edl.json'),JSON.stringify(edl));fs.writeFileSync(path.join(H2,'titles-src.json'),JSON.stringify({titles:[{chapter:'rise',rel_in:3.6,rel_out:9.4,eyebrow:'SIT',title:'Head',detail:'Sub',...entry}],cta:{chapter:'rise',rel_in:15,rel_out:null,text:''},logo:{chapter:'rise',rel_in:15}}));
+      py(path.join(X,'finish-intro.py'),H2,'--titles-only');return fs.readFileSync(path.join(H2,'final','titles.ass'),'utf8').split('\n').filter(l=>/,(Box)?(Eyebrow|Title|Detail),/.test(l));};
+    const base=run({}),moved=run({typography:{eyebrow:{dx:6,dy:-24},detail:{dy:18}}});
+    assert.ok(base.find(l=>/,Eyebrow,/.test(l)).includes('{\\an1\\move(128,822,128,812,0,900)'),'default eyebrow as before');
+    assert.ok(moved.find(l=>/,Eyebrow,/.test(l)).includes('{\\an1\\move(134,798,134,788,0,900)'),'eyebrow moved 6 right, 24 up, no type tags');
+    assert.ok(moved.find(l=>/,BoxEyebrow,/.test(l)).includes('\\move(134,798,134,788,0,900)'),'its box moves with it');
+    assert.ok(moved.find(l=>/,Detail,/.test(l)).includes('\\move(128,998,128,988,0,900)'),'supporting line 18 down');
+    assert.deepEqual(moved.filter(l=>/,(Box)?Title,/.test(l)),base.filter(l=>/,(Box)?Title,/.test(l)),'the headline is untouched');
+    const scaled=run({scale:1.5,typography:{eyebrow:{dy:-20}}});
+    assert.ok(scaled.find(l=>/,Eyebrow,/.test(l)).includes('\\move(128,'+(912+(792-912)*1.5+15)+',128,'+(912+(792-912)*1.5)+',0,900)'),'offsets scale with the title (about the headline baseline)');
+    const styled=run({typography:{title:{color:'#ff0000'}}});
+    assert.ok(styled.find(l=>/,Title,/.test(l)).includes('\\fs86\\fsp0\\b600'),'a restyled headline keeps the spacing libass burnt before (0, not -0.6)');
+  }finally{fs.rmSync(H2,{recursive:true,force:true});}
+}
+console.log('Title tools: + Title / Duplicate / Delete (ids, span inside the chapter, copy keeps layout + shadow), draft and Export cut keep the list ([] included), filmTitles never in the render shot, import adds / removes titles-src entries (other chapters untouched), titles.ass + --chapter-titles burn show the new title, delete-all import verified; M2 per-line offsets / line spacing in the model, fitted boxes and the burn (defaults unchanged).');

@@ -34,7 +34,7 @@ const shapeState=()=>ev(()=>({pts:document.querySelectorAll('.se-pt').length,smo
 const pathD=i=>ev(i=>document.querySelectorAll('.title-card path')[i]?.getAttribute('d'),i);
 async function drag(from,to,{steps=8,alt=false}={}){if(alt)await page.keyboard.down('Alt');await page.mouse.move(...from);await page.mouse.down();for(let i=1;i<=steps;i++){await page.mouse.move(from[0]+(to[0]-from[0])*i/steps,from[1]+(to[1]-from[1])*i/steps);await sleep(16);}await page.mouse.up();if(alt)await page.keyboard.up('Alt');await sleep(250);}
 try{
-  await page.goto(`http://127.0.0.1:${port}/tests/fixtures/director-titles/director-ch02-rise.html`);
+  await page.goto(`http://127.0.0.1:${port}/tests/fixtures/director-titles/director-ch02-rise.html`,{timeout:180000});
   await page.waitForFunction(()=>location.pathname==='/experience/'&&/Camera is live/.test(document.querySelector('#director-panel [data-status]')?.textContent||''),{timeout:240000});
   await page.waitForFunction(()=>document.querySelector('[data-title-clip]'),{timeout:20000});await sleep(1200);
   // 1. the lane

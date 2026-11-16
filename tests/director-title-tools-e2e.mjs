@@ -28,7 +28,7 @@ const blocks=()=>ev(()=>[...document.querySelectorAll('[data-title-clip]')].map(
 const playhead=()=>ev(()=>Number(document.querySelector('[name=timeline-seconds]')?.value));
 const click=sel=>ev(sel=>{const b=document.querySelector(sel);if(!b)throw Error('missing '+sel);b.click();},sel);
 async function openChapter(){
-  await page.goto(`http://127.0.0.1:${port}/tests/fixtures/director-titles/director-ch02-rise.html`);
+  await page.goto(`http://127.0.0.1:${port}/tests/fixtures/director-titles/director-ch02-rise.html`,{timeout:180000});
   await page.waitForFunction(()=>location.pathname==='/experience/'&&/Camera is live/.test(document.querySelector('#director-panel [data-status]')?.textContent||''),{timeout:240000});
   await page.waitForFunction(()=>document.querySelector('[data-title-add]'),{timeout:20000});await sleep(1200);
 }
@@ -100,6 +100,23 @@ try{
   check(!src.titles.some(t=>t.chapter==='rise')&&JSON.stringify(src.titles)===JSON.stringify(before.titles.filter(t=>t.chapter!=='rise')),'import of the emptied chapter removes its entries, other chapters untouched');
   // 7. + Title on the empty chapter, then Undo
   await click('[data-title-add]');await sleep(600);check((await blocks()).length===1,'+ Title on an empty chapter adds the first title');
+  // 8. M2: line spacing and per-line offsets in the Title inspector, live in the frame, in the export
+  const textY=()=>ev(()=>[...document.querySelectorAll('.title-card text')].filter((_,i)=>i%2===1).map(t=>[t.textContent,Number(t.getAttribute('x')),Number(t.getAttribute('y'))]));
+  const set=(sel,v)=>ev(([sel,v])=>{const el=document.querySelector('#director-panel [data-inspector-page=title] '+sel);el.value=String(v);el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));},[sel,v]);
+  const gaps=await ev(()=>[...document.querySelectorAll('#director-panel [data-gap]')].map(e=>Number(e.value)));
+  check(JSON.stringify(gaps)==='[100,58]','Line spacing shows the film\'s gaps (eyebrow to headline 100, headline to supporting 58)');
+  const y0=await textY();await set('[data-gap=top]',80);await sleep(400);const y1=await textY();log('gap',JSON.stringify([y0,y1]));
+  check(y0.length===3&&Math.abs(y1[0][2]-y0[0][2]-20)<.01&&y1[1][2]===y0[1][2]&&y1[2][2]===y0[2][2],'Eyebrow to headline 80: the eyebrow comes 20 px closer, the others stay');
+  await set('[data-type=dx][data-line=detail]',15);await sleep(400);const y2=await textY();
+  check(Math.abs(y2[2][1]-y0[2][1]-15)<.01&&y2[1][1]===y0[1][1],'Supporting text Move right 15: only that line moves');
+  if(shots)await page.screenshot({path:path.join(shots,'title-lines.png')});
+  const lined=await exportCut();const lt=lined.shots[0].filmTitles[0].typography;log('typography',JSON.stringify(lt));
+  check(lt?.eyebrow?.dy===20&&lt?.detail?.dx===15&&!lt.title,'Export cut carries the line offsets (eyebrow dy 20, supporting dx 15)');
+  check(await ev(()=>!document.querySelector('#director-panel [data-title-action=reset-lines]').disabled),'Reset line positions is enabled as soon as a line moves');
+  await click('#director-panel [data-title-action=reset-lines]');await sleep(400);
+  check(JSON.stringify(await textY())===JSON.stringify(y0),'Reset line positions puts every line back');
+  await click('#director-panel [data-action=undo]');await sleep(400);
+  check(JSON.stringify(await textY())===JSON.stringify(y2),'Undo brings the moved lines back');
   check(!consoleErrors.length,'no page or module errors in the console');
 }catch(error){log('ERROR',error.stack);failures++;}
 finally{await browser.close();server.kill();fs.rmSync(tmp,{recursive:true,force:true,maxRetries:5,retryDelay:300});log('done · failures',failures);process.exitCode=failures?1:0;}

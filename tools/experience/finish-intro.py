@@ -107,30 +107,37 @@ def title_dialogues(titles):
         if SCRIM_BLOCK: ass.append(f'Dialogue: 0,{ts(a - .2)},{ts(b + .2)},Scrim,,0,0,0,,{{\\an7\\pos(0,0)\\p1\\1c&H000000&\\1a&HFF&\\blur90\\t(0,900,\\1a&H{t.get('scrim') or '90'}&)\\t({int((b - a) * 1000 - 300)},{int((b - a) * 1000 + 400)},\\1a&HFF&)}}m 0 730 l 1300 730 1300 1080 0 1080{{\\p0}}')
         def type_tags(style, box=False):
             key = {'Eyebrow': 'eyebrow', 'Title': 'title', 'Detail': 'detail'}[style]
-            cfg = typography.get(key) or {}
+            cfg = {k: v for k, v in (typography.get(key) or {}).items() if k not in ('dx', 'dy')}   # dx / dy: position only (\move)
             if not cfg and scale == 1: return ''
             size, weight, spacing, border, shadow = {'Eyebrow': (28,600,6,16,1.2), 'Title': (86,600,-.6,26,2), 'Detail': (40,400,.2,20,1.5)}[style]
-            tags = f"\\fs{ass_num(float(cfg.get('size', size))*scale)}\\fsp{ass_num(float(cfg.get('spacing', spacing))*scale)}\\b{int(cfg.get('weight', weight))}\\i{1 if cfg.get('italic') else 0}\\bord{ass_num(border*scale if box else 0)}\\shad{ass_num(0 if box else shadow*scale)}"
+            # spacing default: the Style's as libass applies it (it ignores a negative Style Spacing; a \fsp override is honoured)
+            tags = f"\\fs{ass_num(float(cfg.get('size', size))*scale)}\\fsp{ass_num(float(cfg.get('spacing', max(0, spacing)))*scale)}\\b{int(cfg.get('weight', weight))}\\i{1 if cfg.get('italic') else 0}\\bord{ass_num(border*scale if box else 0)}\\shad{ass_num(0 if box else shadow*scale)}"
             family = {400: 'Poppins', 500: 'Poppins Medium', 600: 'Poppins SemiBold', 700: 'Poppins'}[int(cfg.get('weight', weight))]
             tags += '\\fn' + family
             color = cfg.get('color')
             if color and not box: tags += '\\1c&H' + color[5:7] + color[3:5] + color[1:3] + '&'
             return tags
+        # Director Mode's per-line offsets (typography.<line>.dx / dy, film px before the title's scale): that line alone moves.
+        def offset(style):
+            c = typography.get({'Eyebrow': 'eyebrow', 'Title': 'title', 'Detail': 'detail'}[style]) or {}
+            return float(c.get('dx', 0)), float(c.get('dy', 0))
         def line(layer, style, y, text, delay, rise=14):
-            y = 912 + (y-912)*scale
+            dx, dy = offset(style)
+            y = 912 + (y + dy - 912)*scale; x = X0 + dx*scale if dx else X0
             rise *= scale
             dur = int((b - a) * 1000)
             return (f'Dialogue: {layer},{ts(a + delay / 1000)},{ts(b)},{style},,0,0,0,,'
-                    f'{{{type_tags(style)}\\an{AN}\\move({X0},{y + DY + rise},{X0},{y + DY},0,900)\\fad(650,420)\\blur5\\t(0,700,\\blur0)}}{text}')
+                    f'{{{type_tags(style)}\\an{AN}\\move({ass_num(x)},{ass_num(y + DY + rise)},{ass_num(x)},{ass_num(y + DY)},0,900)\\fad(650,420)\\blur5\\t(0,700,\\blur0)}}{text}')
         # Director Mode's shadow: blur / opacity restyle the boxes; paths replace them (one drawing each, timed like its line).
         sh = t['shadow']; blur = ass_num(float(sh.get('blur', BOX_BLUR))*scale)
         alpha = f"{max(0, min(255, round(255 * (1 - float(sh['opacity']))))):02X}" if 'opacity' in sh else (BOX_PLACE or BOX_A)
         tint = f'\\3a&H{alpha}&' if alpha != BOX_A else ''
         def box(style, y, text, delay, rise=14):
-            y = 912 + (y-912)*scale
+            dx, dy = offset(style)
+            y = 912 + (y + dy - 912)*scale; x = X0 + dx*scale if dx else X0
             rise *= scale
             return (f'Dialogue: 0,{ts(a + delay / 1000)},{ts(b)},Box{style},,0,0,0,,'
-                    f'{{{type_tags(style, True)}\\an{AN}\\move({X0},{y + DY + rise},{X0},{y + DY},0,900)\\fad(650,420){tint}\\blur{blur}}}{text}')
+                    f'{{{type_tags(style, True)}\\an{AN}\\move({ass_num(x)},{ass_num(y + DY + rise)},{ass_num(x)},{ass_num(y + DY)},0,900)\\fad(650,420){tint}\\blur{blur}}}{text}')
         for p in sh.get('paths') or []:
             if scale != 1:
                 p = {**p, 'points': [{**q, 'x': q['x']*scale, 'y': q['y']*scale, **{k: [v*scale for v in q[k]] for k in ('in','out') if k in q}} for q in p['points']]}
@@ -230,8 +237,9 @@ def main():
         at = start[v.split(':')[0]] + float(v.split(':')[1]) if ':' in v else float(v)
         bg, png = sys.argv[sys.argv.index('--bg') + 1], sys.argv[sys.argv.index('--out') + 1]
         fp = (lambda p: os.path.relpath(p).replace(os.sep, '/')) if os.name == 'nt' else (lambda p: p)
+        # format=yuv444p: libass burns onto the film's YUV frames; on an RGB frame ffmpeg's blend writes white as 235.
         run(['ffmpeg', '-v', 'error', '-y', '-loop', '1', '-framerate', str(fps), '-i', bg, '-vf',
-             f"scale={W}:{H}:flags=lanczos,setpts=PTS+{at:.4f}/TB,subtitles=filename={fp(os.path.join(out, 'titles.ass'))}:fontsdir={fp(FONTS)}",
+             f"scale={W}:{H}:flags=lanczos,format=yuv444p,setpts=PTS+{at:.4f}/TB,subtitles=filename={fp(os.path.join(out, 'titles.ass'))}:fontsdir={fp(FONTS)}",
              '-frames:v', '1', png])
         return
     if '--titles-only' in sys.argv: return

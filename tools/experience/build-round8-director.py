@@ -843,6 +843,25 @@ TITLE_TEXT = (('eyebrow', 60), ('title', 140), ('detail', 260))
 TITLE_PLACES = ('top-left', 'top-right')   # titles-src 'place' (absent = lower-left; film-titles.mjs PLACES)
 
 
+def clean_typography(v):
+    """Director Mode's per-line type and offsets (film-titles.mjs cleanTypography): size, spacing, weight, colour, italic, dx / dy."""
+    if not isinstance(v, dict): return None
+    num = lambda x: isinstance(x, (int, float)) and not isinstance(x, bool) and abs(x) < float('inf')
+    out = {}
+    for key in ('eyebrow', 'title', 'detail'):
+        a, b = v.get(key), {}
+        if not isinstance(a, dict): continue
+        for k, lo, hi in (('size', 8, 300), ('spacing', -10, 40)):
+            if num(a.get(k)): b[k] = max(lo, min(hi, a[k]))
+        for k in ('dx', 'dy'):
+            if num(a.get(k)) and abs(a[k]) >= .005: b[k] = round(max(-1000, min(1000, a[k])), 2)
+        if a.get('weight') in (400, 500, 600, 700): b['weight'] = a['weight']
+        if isinstance(a.get('color'), str) and re.fullmatch(r'#[0-9a-fA-F]{6}', a['color']): b['color'] = a['color']
+        if isinstance(a.get('italic'), bool): b['italic'] = a['italic']
+        if b: out[key] = b
+    return out or None
+
+
 def clean_shadow(v):
     """Director Mode's title shadow: {blur?, opacity?, paths?: [{line?, points: [{x, y, in?, out?, smooth?}]}]} (film-titles.mjs)."""
     if not isinstance(v, dict): return None
@@ -877,9 +896,12 @@ def import_titles(cid, titles, seconds, log):
         for k, n in TITLE_TEXT: e[k] = str(d.get(k) or '')[:n]
         if isinstance(d.get('position'), dict) and all(isinstance(d['position'].get(k), (int, float)) and abs(d['position'][k]) < float('inf') for k in ('x', 'y')): e['position'] = {k: max(-4000, min(4000, d['position'][k])) for k in ('x', 'y')}
         else: e.pop('position', None)
-        for field in ('scale', 'typography'):
-            if field in d: e[field] = copy.deepcopy(d[field])
-            else: e.pop(field, None)
+        sc = d.get('scale')
+        if isinstance(sc, (int, float)) and not isinstance(sc, bool) and abs(sc) < float('inf'): e['scale'] = max(.1, min(5, sc))
+        else: e.pop('scale', None)
+        typ = clean_typography(d.get('typography'))
+        if typ: e['typography'] = typ
+        else: e.pop('typography', None)
         sh = clean_shadow(d.get('shadow'))
         if sh: e['shadow'] = sh
         else: e.pop('shadow', None)

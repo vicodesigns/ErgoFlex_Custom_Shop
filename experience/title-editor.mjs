@@ -1,4 +1,4 @@
-import {titleLines,LINES,ANCHOR,FILM_W,FONT_REAL,DESC,BOX_BLUR,BOX_OPACITY,BLUR_SIGMA,chapterTitles,cutRule,timingNotes,cleanFilmTitles,shadowOf,fittedPaths,textBounds,lineState,pathTiming,restTime,svgPath,bounds,nearestOnPath,insertPoint,deletePoint,toggleSmooth,moveHandle,movePoint,transformPaths,pointCount,placeOf,newTitle,duplicateTitle,MAX_TITLES,NEW_TITLE_SECONDS} from './film-titles.mjs';
+import {titleLines,LINES,ANCHOR,FILM_W,FONT_REAL,DESC,BOX_BLUR,BOX_OPACITY,BLUR_SIGMA,chapterTitles,cutRule,timingNotes,cleanFilmTitles,shadowOf,fittedPaths,textBounds,lineState,pathTiming,restTime,svgPath,bounds,nearestOnPath,insertPoint,deletePoint,toggleSmooth,moveHandle,movePoint,transformPaths,pointCount,placeOf,newTitle,duplicateTitle,MAX_TITLES,NEW_TITLE_SECONDS,lineGaps,withGap,GAPS,SKEW_ITALIC,cleanTypography,FALLBACK,ASC} from './film-titles.mjs';
 import {stackRows,rowVar} from './lane-rows.mjs';
 // Film titles in Director Mode: the TITLES lane (one block per title card: drag to move, edges to trim), the Title
 // inspector (copy, timing, shadow) and the title overlay in the 16:9 frame, drawn as finish-intro.py burns it in.
@@ -25,11 +25,23 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   // ---- fonts + measuring (libass sizes Poppins by its full height; no kerning, like the ASS overlay) -----------
   const canvas=document.createElement('canvas').getContext('2d'),widths=new Map();
   const fontsLoaded=Promise.all(FONT_FILES.map(async([file,w])=>{const f=new FontFace(FAMILY[w],`url(${FONT_URL}${file})`);await f.load();document.fonts.add(f);})).then(()=>{fontsReady=true;widths.clear();lastKey='';sync();if(selected)render();}).catch(error=>console.warn('[titles] fonts',error.message));
+  // Runs of the text: Poppins, or the fallback font (glyphs Poppins lacks; FALLBACK) at its own size, like libass.
+  const covered=new Map();
+  function inPoppins(ch,w){
+    const k=w+ch;if(covered.has(k))return covered.get(k);if(!fontsReady)return true;
+    const width=f=>{canvas.font=`${w} 40px "${FAMILY[w]}", ${f}`;return canvas.measureText(ch).width;};
+    const v=/\s/.test(ch)||width('monospace')===width('cursive');covered.set(k,v);return v;
+  }
+  function runs(L,text){const out=[];for(const ch of text){const fb=!inPoppins(ch,L.weight);if(out.length&&out.at(-1).fb===fb)out.at(-1).text+=ch;else out.push({text:ch,fb});}return out;}
+  const fontOf=(L,fb,k=1)=>fb?`${L.weight} ${L.size/FALLBACK.real*k}px "${FALLBACK.family}", sans-serif`:`${L.weight} ${L.size/FONT_REAL*k}px "${FAMILY[L.weight]}", Poppins, sans-serif`;
   function measure(L,text){
     const key=JSON.stringify(L)+'|'+text+'|'+fontsReady;let w=widths.get(key);if(w!==undefined)return w;
-    canvas.font=`${L.italic?'italic ':''}${L.weight} ${L.size/FONT_REAL}px "${FAMILY[L.weight]}", Poppins, sans-serif`;try{canvas.fontKerning='none';canvas.letterSpacing='0px';}catch{}
-    w=canvas.measureText(text).width+Math.max(0,L.spacing)*[...text].length;widths.set(key,w);return w;
+    try{canvas.fontKerning='none';canvas.letterSpacing='0px';}catch{}
+    w=0;for(const r of runs(L,text)){canvas.font=fontOf(L,r.fb,8);w+=canvas.measureText(r.text).width/8;}   // at 8x: no hinting, like libass
+    w+=L.spacing*[...text].length;widths.set(key,w);return w;      // libass: spacing after every glyph (negative too, via \fsp)
   }
+  // The line box grows when a fallback glyph's ascender reaches higher than Poppins' (libass BorderStyle 3).
+  measure.rise=(L,text)=>runs(L,text).some(r=>r.fb)?L.size*Math.max(0,FALLBACK.asc-ASC):0;
   // ---- data -------------------------------------------------------------------------------------------------
   // Every film chapter (titles-src.json loaded) has the Titles lane and the Title tab, with or without titles (+ Title).
   const has=()=>!!source;
@@ -155,8 +167,17 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
       <label>Supporting text<textarea name="ft-detail" data-title-id="${t.id}" rows="2" maxlength="260">${escape(t.detail)}</textarea></label>
       <div class="title-list">${list()}</div></div>`;
   }
-  function typeControls(t,key){const L=titleLines(t).find(l=>l.key===key);return `<div class="director-grid"><label>Font<select data-type="weight" data-line="${key}">${[[400,'Regular'],[500,'Medium'],[600,'Semibold'],[700,'Bold']].map(([w,n])=>`<option value="${w}" ${w===L.weight?'selected':''}>Poppins ${n}</option>`).join('')}</select></label><label>Font size<input type="number" min="8" max="300" data-type="size" data-line="${key}" value="${L.size}"></label><label>Letter spacing<input type="number" min="-10" max="40" step=".1" data-type="spacing" data-line="${key}" value="${L.spacing}"></label><label>Text color<input type="color" data-type="color" data-line="${key}" value="${L.color}"></label><label>Style<select data-type="italic" data-line="${key}"><option value="false" ${!L.italic?'selected':''}>Normal</option><option value="true" ${L.italic?'selected':''}>Italic</option></select></label></div>`;}
-  panel.addEventListener('input',event=>{const el=event.target;if(!el.dataset.type)return;event.stopPropagation();const key=el.dataset.type,value=key==='color'?el.value:key==='italic'?el.value==='true':Number(el.value);if(el.value===''||(typeof value==='number'&&!Number.isFinite(value)))return;try{put(t=>{t.typography={...t.typography,[el.dataset.line]:{...t.typography?.[el.dataset.line],[key]:value}};return t;},{key:'type-'+selected+el.dataset.line+key,renderAll:false});}catch(error){status(error.message,true);}},true);
+  function typeControls(t,key){const L=titleLines(t).find(l=>l.key===key);return `<div class="director-grid"><label>Font<select data-type="weight" data-line="${key}">${[[400,'Regular'],[500,'Medium'],[600,'Semibold'],[700,'Bold']].map(([w,n])=>`<option value="${w}" ${w===L.weight?'selected':''}>Poppins ${n}</option>`).join('')}</select></label><label>Font size<input type="number" min="8" max="300" data-type="size" data-line="${key}" value="${L.size}"></label><label>Letter spacing<input type="number" min="-10" max="40" step=".1" data-type="spacing" data-line="${key}" value="${L.spacing}"></label><label>Text color<input type="color" data-type="color" data-line="${key}" value="${L.color}"></label><label>Style<select data-type="italic" data-line="${key}"><option value="false" ${!L.italic?'selected':''}>Normal</option><option value="true" ${L.italic?'selected':''}>Italic</option></select></label><label>Move right (px)<input type="number" step="1" data-type="dx" data-line="${key}" value="${L.dx}" title="Moves this line alone, in film pixels (0 = the film's place)"></label><label>Move down (px)<input type="number" step="1" data-type="dy" data-line="${key}" value="${r2(L.y-LINES.find(l=>l.key===key).y)}" title="Moves this line alone, in film pixels (0 = the film's place)"></label></div>`;}
+  panel.addEventListener('input',event=>{const el=event.target;if(!el.dataset.type)return;event.stopPropagation();const key=el.dataset.type,value=key==='color'?el.value:key==='italic'?el.value==='true':Number(el.value);if(el.value===''||(typeof value==='number'&&!Number.isFinite(value)))return;try{put(t=>{t.typography={...t.typography,[el.dataset.line]:{...t.typography?.[el.dataset.line],[key]:value}};return t;},{key:'type-'+selected+el.dataset.line+key,renderAll:false});if(key==='dx'||key==='dy')syncLineFields();}catch(error){status(error.message,true);}},true);
+  // Line spacing: baseline to baseline, eyebrow -> headline (the eyebrow moves) and headline -> supporting (it moves).
+  const linesMoved=t=>titleLines(t).some(L=>L.dx||L.y!==LINES.find(l=>l.key===L.key).y);
+  // After a live (no re-render) spacing / offset edit: the gap fields and Reset line positions follow.
+  function syncLineFields(){const t=item();if(!t)return;const g=lineGaps(t);for(const [k,v] of Object.entries(g)){const el=panel.querySelector(`[data-gap="${k}"]`);if(el&&document.activeElement!==el)el.value=String(v);}
+    const b=panel.querySelector('[data-title-action=reset-lines]');if(b)b.disabled=!linesMoved(t);}
+  function spacingControls(t){const g=lineGaps(t),moved=linesMoved(t);
+    return `<details open class="title-spacing"><summary>Line spacing</summary><div class="director-grid"><label>Eyebrow to headline (px)<input type="number" step="1" min="-400" max="600" data-gap="top" value="${g.top}" title="Baseline to baseline; the film's is ${GAPS.top}"></label><label>Headline to supporting (px)<input type="number" step="1" min="-400" max="600" data-gap="bottom" value="${g.bottom}" title="Baseline to baseline; the film's is ${GAPS.bottom}"></label></div><div class="director-actions"><button data-title-action="reset-lines" ${moved?'':'disabled'} title="Every line back to the film's place (${GAPS.top} / ${GAPS.bottom} px)">Reset line positions</button></div></details>`;}
+  panel.addEventListener('input',event=>{const el=event.target;if(!el.dataset.gap)return;event.stopPropagation();const v=Number(el.value);if(el.value===''||!Number.isFinite(v))return;
+    try{put(t=>{const typ=withGap(t,el.dataset.gap,Math.max(-400,Math.min(600,v)));if(typ)t.typography=typ;else delete t.typography;return t;},{key:'gap-'+selected+el.dataset.gap,renderAll:false});syncLineFields();status(`${el.dataset.gap==='top'?'Eyebrow to headline':'Headline to supporting text'}: ${v} px (the film's is ${GAPS[el.dataset.gap]}).`);}catch(error){status(error.message,true);}},true);
   function panelHtml(){
     if(!has())return '<p class="director-hint">This chapter has no film titles.</p>';
     const t=item(),full=titles().length>=MAX_TITLES,addBtn=`<button data-title-action="add" ${full?'disabled':''} title="A new title at the playhead with placeholder copy">+ Add title</button>`;
@@ -166,7 +187,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     const short=S.custom&&tb&&bb&&(tb.x1>bb.x1+2||tb.x0<bb.x0-2);
     return `<div data-reveal="title"><h3>Film title ${n} <span class="inspector-subtitle">of ${titles().length} in this chapter</span></h3><div class="title-list">${titles().length>1?list():''}</div>
       <div class="director-actions title-list-actions">${addBtn}<button data-title-action="duplicate" ${full?'disabled':''} title="A copy of this title (copy, layout, shadow) right after it (Ctrl+D)">Duplicate</button><button data-title-action="delete" title="Delete this title (Delete); Undo brings it back">Delete</button></div>
-      <label>Title scale (%)<input name="ft-scale" type="number" min="10" max="500" step="1" value="${Math.round((t.scale??1)*100)}"></label><div class="director-grid"><label>X (film pixels)<input name="ft-x" type="number" step="1" value="${placeOf(t).x}"></label><label>Y (headline baseline)<input name="ft-y" type="number" step="1" value="${placeOf(t).anchor[1]}"></label></div><div class="director-actions"><button data-title-action="copy-layout">Copy layout</button><button data-title-action="paste-layout" ${copiedLayout?'':'disabled'}>Paste layout</button></div><details open><summary>Text layers</summary><details open><summary>Eyebrow</summary><label>Eyebrow<input name="ft-eyebrow" maxlength="60" value="${escape(t.eyebrow)}"></label>${typeControls(t,'eyebrow')}</details>
+      <label>Title scale (%)<input name="ft-scale" type="number" min="10" max="500" step="1" value="${Math.round((t.scale??1)*100)}"></label><div class="director-grid"><label>X (film pixels)<input name="ft-x" type="number" step="1" value="${placeOf(t).x}"></label><label>Y (headline baseline)<input name="ft-y" type="number" step="1" value="${placeOf(t).anchor[1]}"></label></div><div class="director-actions"><button data-title-action="copy-layout">Copy layout</button><button data-title-action="paste-layout" ${copiedLayout?'':'disabled'}>Paste layout</button></div>${spacingControls(t)}<details open><summary>Text layers</summary><details open><summary>Eyebrow</summary><label>Eyebrow<input name="ft-eyebrow" maxlength="60" value="${escape(t.eyebrow)}"></label>${typeControls(t,'eyebrow')}</details>
       <details open><summary>Headline</summary><label>Headline<input name="ft-title" maxlength="140" value="${escape(t.title)}"></label>${typeControls(t,'title')}</details>
       <details open><summary>Supporting text</summary><label>Supporting text<textarea name="ft-detail" rows="2" maxlength="260">${escape(t.detail)}</textarea></label>${typeControls(t,'detail')}</details>
       </details><div class="director-grid"><label>Comes in (seconds)<input name="ft-in" type="number" min="0" max="${shot().seconds}" step=".05" value="${r2(t.rel_in)}"></label><label>Goes out (seconds)<input name="ft-out" type="number" min="0" max="${shot().seconds}" step=".05" value="${r2(t.rel_out)}"></label></div>
@@ -214,6 +235,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     const t=item();if(!t)return;
     if(name==='duplicate'){duplicateSelected();return;}
     if(name==='delete'){deleteSelected();return;}
+    if(name==='reset-lines'){put(x=>{for(const k of Object.keys(x.typography||{})){delete x.typography[k].dx;delete x.typography[k].dy;}const typ=cleanTypography(x.typography);if(typ)x.typography=typ;else delete x.typography;return x;},{message:'Every line is back in the film\'s place.'});return;}
     if(name==='copy-layout'){copiedLayout=structuredClone({position:{x:placeOf(t).x,y:placeOf(t).anchor[1]},scale:t.scale,typography:t.typography,place:t.place,shadow:t.shadow});render();status('Title layout copied. Select another title and paste layout.');return;}
     if(name==='paste-layout'&&copiedLayout){put(x=>({...x,...structuredClone(copiedLayout)}),{message:'Title layout pasted.'});return;}
     if(name==='go'){seek(restTime(t)/shot().seconds);return;}
@@ -232,7 +254,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   const embeddedFonts=()=>fontCss||=Promise.all(FONT_FILES.map(async([file,w])=>{
     const r=await fetch(FONT_URL+file);if(!r.ok)throw Error('title font unavailable');return `@font-face{font-family:"${FAMILY[w]}";font-weight:${w};src:url(data:font/ttf;base64,${b64(await r.arrayBuffer())}) format("truetype");}`;})).then(a=>a.join(''),e=>{fontCss=null;throw e;});
   function stillTitles(seconds){return shown&&has()?titles().filter(x=>seconds>=x.rel_in&&seconds<x.rel_out):[];}
-  async function compositeStill(url,seconds){
+  async function compositeStill(url,seconds,type='image/jpeg'){
     const list=stillTitles(seconds);if(!list.length)return url;
     await fontsLoaded;const css=await embeddedFonts();let defs='',body='';
     for(const x of list){const c=cardSvg(x,seconds,false);defs+=c.defs;body+=`<g class="title-card">${c.body}</g>`;}
@@ -242,7 +264,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     try{
       const [still,layer]=await Promise.all([load(url),load(blob)]);
       const c=document.createElement('canvas');c.width=still.naturalWidth;c.height=still.naturalHeight;const g=c.getContext('2d');
-      g.drawImage(still,0,0);g.drawImage(layer,0,0,c.width,c.height);return c.toDataURL('image/jpeg',.92);
+      g.drawImage(still,0,0);g.drawImage(layer,0,0,c.width,c.height);return c.toDataURL(type,.92);
     }finally{URL.revokeObjectURL(blob);}
   }
   // ---- overlay (the 16:9 frame) -----------------------------------------------------------------------------
@@ -260,8 +282,14 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     // text (layer 1), with its drop shadow
     for(const L of titleLines(t)){const s=t[L.key];if(!s)continue;const st=rest?{on:true,alpha:1,dy:0,blur:0}:lineState(t,L.delay,L.rise,at);if(!st.on||st.alpha<=0)continue;
       const fid=st.blur>.05?`tt-${t.id}-${n++}`:null;if(fid)defs.push(blurFilter(fid,st.blur));
-      const y=L.y+P.dy-L.size*DESC+st.dy,attrs=`font-family="${FAMILY[L.weight]}" font-weight="${L.weight}" font-style="${L.italic?'italic':'normal'}" font-size="${(L.size/FONT_REAL).toFixed(3)}" letter-spacing="${L.spacing}"${P.align==='right'?' text-anchor="end"':''} style="font-kerning:none;white-space:pre"`;
-      parts.push(`<g ${fid?`filter="url(#${fid})"`:''} opacity="${st.alpha.toFixed(4)}"><text x="${P.x+L.shadow}" y="${(y+L.shadow).toFixed(2)}" ${attrs} fill="#000" fill-opacity="${L.shadowAlpha.toFixed(3)}">${escape(s)}</text><text x="${P.x}" y="${y.toFixed(2)}" ${attrs} fill="${L.color}">${escape(s)}</text></g>`);}
+      // italic: libass shears the upright glyphs (faux italic, 12 deg) about each line's baseline; the overlay does the same
+      // (the shadow copy is the same sheared glyphs, offset), so the advance and every edge land where the burn puts them.
+      // textLength: Chrome hints glyph advances at small sizes (a 40 px supporting line comes out ~1.5% wider than libass,
+      // which does not hint); the line is laid out to its unhinted advance (measure), as libass sets it.
+      const x=P.x+L.dx,y=L.y+P.dy-L.size*DESC+st.dy,attrs=`font-family="${FAMILY[L.weight]}" font-weight="${L.weight}" font-size="${(L.size/FONT_REAL).toFixed(3)}" letter-spacing="${L.spacing}" textLength="${measure(L,s).toFixed(2)}" lengthAdjust="spacing"${P.align==='right'?' text-anchor="end"':''} style="font-kerning:none;white-space:pre"`;
+      const body=runs(L,s).map(r=>r.fb?`<tspan font-family="${FALLBACK.family}" font-size="${(L.size/FALLBACK.real).toFixed(3)}">${escape(r.text)}</tspan>`:escape(r.text)).join('');
+      const shear=(tx,ty)=>L.italic?` transform="translate(${tx} ${ty.toFixed(2)}) skewX(${(-SKEW_ITALIC).toFixed(4)}) translate(${-tx} ${(-ty).toFixed(2)})"`:'';
+      parts.push(`<g ${fid?`filter="url(#${fid})"`:''} opacity="${st.alpha.toFixed(4)}"><text x="${x+L.shadow}" y="${(y+L.shadow).toFixed(2)}"${shear(x+L.shadow,y+L.shadow)} ${attrs} fill="#000" fill-opacity="${L.shadowAlpha.toFixed(3)}">${body}</text><text x="${x}" y="${y.toFixed(2)}"${shear(x,y)} ${attrs} fill="${L.color}">${body}</text></g>`);}
     const scale=cardDrag?.id===t.id?(cardDrag.scale??t.scale??1):(t.scale??1);
     return {defs:defs.join(''),body:`<g transform="translate(${P.x} ${P.anchor[1]}) scale(${scale}) translate(${-P.x} ${-P.anchor[1]})">${parts.join('')}</g>`};
   }

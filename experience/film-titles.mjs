@@ -17,11 +17,29 @@ export const LINES=[
   {key:'eyebrow',label:'Eyebrow',family:'Poppins SemiBold',weight:600,size:28,spacing:6,border:16,y:812,delay:0,rise:10,color:'#1388ec',shadow:1.2,shadowAlpha:1-0xB4/255},
   {key:'title',label:'Headline',family:'Poppins SemiBold',weight:600,size:86,spacing:-.6,border:26,y:912,delay:140,rise:14,color:'#ffffff',shadow:2,shadowAlpha:1-0xA0/255},
   {key:'detail',label:'Supporting text',family:'Poppins',weight:400,size:40,spacing:.2,border:20,y:970,delay:380,rise:10,color:'#d6dee6',shadow:1.5,shadowAlpha:1-0xA0/255}];
-export function titleLines(t){return LINES.map(L=>({...L,...t?.typography?.[L.key]}));}
+// A title's lines with its typography on top. Per-line offsets (typography.<line>.dx / dy, film pixels, before the
+// title's scale) move that line alone: y is the line's own baseline (LINES y + dy), dx shifts it sideways. No offsets =
+// the film's standing layout (eyebrow 812, headline 912, supporting 970).
+// spacing: libass ignores a negative Spacing in a Style line (the headline's -0.6 burns as 0) but honours \fsp, so the
+// line's effective spacing is its own typography value when set, else the style's clamped at 0.
+export function titleLines(t){return LINES.map(L=>{const a=t?.typography?.[L.key]||{};return {...L,...a,spacing:Number.isFinite(a.spacing)?a.spacing:Math.max(0,L.spacing),dx:Number(a.dx)||0,y:L.y+(Number(a.dy)||0)};});}
+// Line spacing (baseline to baseline): eyebrow -> headline and headline -> supporting text. Film: 100 and 58.
+export const GAPS={top:912-812,bottom:970-912};
+export function lineGaps(t){const [E,T,D]=titleLines(t);return {top:r2(T.y-E.y),bottom:r2(D.y-T.y)};}
+// The typography with a gap set: the eyebrow (top) or the supporting line (bottom) moves; the headline stays.
+export function withGap(t,which,px){
+  const typ=structuredClone(t?.typography||{}),[,T]=titleLines(t),key=which==='top'?'eyebrow':'detail',L=LINES.find(l=>l.key===key);
+  const y=which==='top'?T.y-px:T.y+px;typ[key]={...typ[key],dy:r2(y-L.y)};return cleanTypography(typ);
+}
+// Glyphs Poppins lacks (the film's ″): libass on Windows falls back to Arial (DirectWrite) and sizes it by Arial's own
+// full height (winAscent 1854 + winDescent 434 per 2048 em), as it sizes Poppins by its own.
+export const FALLBACK={family:'Arial',real:2288/2048,asc:1854/2288};
+export const SKEW_ITALIC=Math.atan(0x366A/0x10000)*180/Math.PI;  // libass faux italic: FT_GlyphSlot_Oblique's 0x366A shear (12.0 deg)
 export function cleanTypography(v){
   if(!v||typeof v!=='object')return undefined;const out={};
   for(const L of LINES){const a=v[L.key];if(!a||typeof a!=='object')continue;const b={};
     for(const [k,lo,hi] of [['size',8,300],['spacing',-10,40]])if(Number.isFinite(a[k]))b[k]=Math.max(lo,Math.min(hi,a[k]));
+    for(const k of ['dx','dy'])if(Number.isFinite(a[k])&&Math.abs(a[k])>=.005)b[k]=r2(Math.max(-1000,Math.min(1000,a[k])));
     if([400,500,600,700].includes(a.weight))b.weight=a.weight;
     if(/^#[0-9a-f]{6}$/i.test(a.color))b.color=a.color;
     if(typeof a.italic==='boolean')b.italic=a.italic;
@@ -134,14 +152,15 @@ export function duplicateTitle(t,chapter,seconds,taken=[]){
 // measure(line, text) -> the line's advance width in film pixels as libass sets it (the Director measures with
 // the same Poppins files). Fitted box: from the text's left edge - padding to its advance + padding; from the
 // baseline - ascender - padding to the baseline + descender + padding (bottom = the line's y + padding).
-export function fittedBox(line,width,align='left'){
-  const L=typeof line==='string'?lineOf(line):line,[ax,ay]=ANCHOR;
-  if(align==='right')return {x0:-width-L.border,x1:L.border,y0:L.y-L.size-L.border-ay,y1:L.y+L.border-ay};
-  return {x0:X0-L.border-ax,x1:X0+width+L.border-ax,y0:L.y-L.size-L.border-ay,y1:L.y+L.border-ay};
+// up: extra height above the line when a fallback font with a taller ascender is in it (libass's line box grows).
+export function fittedBox(line,width,align='left',up=0){
+  const L=typeof line==='string'?lineOf(line):line,[ax,ay]=ANCHOR,dx=L.dx||0;
+  if(align==='right')return {x0:dx-width-L.border,x1:dx+L.border,y0:L.y-L.size-up-L.border-ay,y1:L.y+L.border-ay};
+  return {x0:X0+dx-L.border-ax,x1:X0+dx+width+L.border-ax,y0:L.y-L.size-up-L.border-ay,y1:L.y+L.border-ay};
 }
 const rect=({x0,y0,x1,y1})=>[{x:x0,y:y0},{x:x1,y:y0},{x:x1,y:y1},{x:x0,y:y1}].map(p=>({x:r2(p.x),y:r2(p.y)}));
 export function fittedPaths(title,measure){
-  const {align}=placeOf(title);return titleLines(title).filter(L=>title[L.key]).map(L=>({line:L.key,points:rect(fittedBox(L,measure(L,title[L.key]),align))}));
+  const {align}=placeOf(title);return titleLines(title).filter(L=>title[L.key]).map(L=>({line:L.key,points:rect(fittedBox(L,measure(L,title[L.key]),align,measure.rise?.(L,title[L.key])||0))}));
 }
 export function shadowOf(title,measure){
   const s=title.shadow||{};
@@ -150,8 +169,9 @@ export function shadowOf(title,measure){
 // The text block's own extents (left/right/top/bottom) relative to the anchor.
 export function textBounds(title,measure){
   const lines=titleLines(title).filter(L=>title[L.key]);if(!lines.length)return null;const [ax,ay]=ANCHOR;
-  const w=Math.max(...lines.map(L=>measure(L,title[L.key]))),y0=Math.min(...lines.map(L=>L.y-L.size))-ay,y1=Math.max(...lines.map(L=>L.y))-ay;
-  return placeOf(title).align==='right'?{x0:-w,x1:0,y0,y1}:{x0:X0-ax,x1:X0+w-ax,y0,y1};
+  const y0=Math.min(...lines.map(L=>L.y-L.size))-ay,y1=Math.max(...lines.map(L=>L.y))-ay,right=placeOf(title).align==='right';
+  const xs=lines.map(L=>{const w=measure(L,title[L.key]);return right?[L.dx-w,L.dx]:[X0-ax+L.dx,X0-ax+L.dx+w];});
+  return {x0:Math.min(...xs.map(x=>x[0])),x1:Math.max(...xs.map(x=>x[1])),y0,y1};
 }
 
 // ---- timing (finish-intro: \fad(650,420), \move rise over 900 ms, text \blur5 -> 0 over 700 ms) --------------
