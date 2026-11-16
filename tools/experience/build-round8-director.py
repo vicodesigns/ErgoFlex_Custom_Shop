@@ -342,7 +342,7 @@ PROP_DESK = re.compile(r'^[a-z0-9-]{1,40}$')
 
 
 def clean_show(v):
-    """A prop's time on screen (experience/prop-edits.mjs cleanShow): {from, to, fadeIn?, fadeOut?} seconds; None if not one."""
+    """A prop's time on screen (experience/prop-edits.mjs cleanShow): {from, to, fadeIn?, fadeOut?, ease?} seconds; None if not one."""
     num = lambda x: isinstance(x, (int, float)) and not isinstance(x, bool) and x == x and abs(x) != float('inf')
     if not isinstance(v, dict) or not num(v.get('from')) or not num(v.get('to')): return None
     a, b = max(0, round(v['from'], 2)), min(100000, round(v['to'], 2))
@@ -350,6 +350,7 @@ def clean_show(v):
     out = {'from': a, 'to': b}
     for k in ('fadeIn', 'fadeOut'):
         if num(v.get(k)) and v[k] > 0: out[k] = min(round(v[k], 2), round(b - a, 2))
+    if v.get('ease') == 'smooth' and ('fadeIn' in out or 'fadeOut' in out): out['ease'] = 'smooth'
     return out
 
 
