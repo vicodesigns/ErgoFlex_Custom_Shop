@@ -67,18 +67,25 @@ try{
     // the per-frame sampler (stage window): every room desk and every person, sampled AS EACH FRAME IS DRAWN (the stage
     // renderer's render() of the room's scene is wrapped: one sample per drawn frame, so a held frame is not a sample and a
     // state that is never drawn is never flagged). dp.mark names the phase of the step (act / settle).
-    window.__sampler=()=>{const w=W(),t=w.ErgoPresentation?.three?.(),R=t?.renderer;if(!R||R.__dp)return;const dp=w.__dp={frames:[],mark:''};R.__dp=true;
+    window.__sampler=()=>{const w=W(),t=w.ErgoPresentation?.three?.(),R=t?.renderer;if(window.__HOMES)w.__homes=window.__HOMES;if(!R||R.__dp)return;const dp=w.__dp={frames:[],mark:''};R.__dp=true;
       const orig=R.render;let last=-1;
       const capture=()=>{const d=w.ErgoFlex?.sceneDesks;if(!d)return;const f={n:R.info?.render?.frame??-1,m:dp.mark,d:{},p:{}};
         for(const [id,r] of d.records){const g=r.group;if(g)g.updateMatrixWorld?.();f.d[id]=g?[Math.round(g.position.x),Math.round(g.position.z),Math.round(g.rotation.y*1800/Math.PI)/10,__drawn(g)?1:0,g.uuid.slice(0,8),r.state.size]:null;}
         for(const p of w.ErgoFlex?.workspaceRoom?.people?.list?.()||[]){if(!p.visible&&f.p[p.key])continue;f.p[p.key]=[p.at[0],p.at[1],p.y,p.visible?1:0,p.variant||p.id];}
         if(dp.frames.length<20000)dp.frames.push(f);};
+      // who puts a desk back at its home while it stands elsewhere (w.__homes: set by the test): the stack, for the report
+      const d0=w.ErgoFlex?.sceneDesks;dp.places=[];if(d0&&!d0.__dpPlace){d0.__dpPlace=true;const place=d0.place.bind(d0);d0.place=function(r){try{const h=w.__homes?.[r?.id],g=r?.group;if(h&&g&&Math.hypot(r.state.pose.x-h.x,r.state.pose.z-h.z)<100&&Math.hypot(g.position.x-h.x,g.position.z-h.z)>100)dp.places.push(`${r.id} (${dp.mark}) from ${Math.round(g.position.x)},${Math.round(g.position.z)}: ${new Error().stack.split('\n').slice(2,8).map(x=>x.trim().replace(/https?:\/\/[^/]+/,'').replace(/\?v=[^:]*/,'')).join(' < ')}`);}catch{}return place(r);};}
+      // (playback can draw through another path: while the mark is 'playing', every animation frame is a sample too)
+      const raf=()=>{try{if(/playing/.test(dp.mark)&&w.performance.now()-last>12){last=w.performance.now();capture();}}catch{}w.requestAnimationFrame(raf);};w.requestAnimationFrame(raf);
       R.render=function(scene,camera){try{const now=w.performance.now();if(scene===w.ErgoPresentation.three().scene&&now-last>4){last=now;capture();}}catch{}return orig.call(this,scene,camera);};};
     window.__mark=m=>{const w=W();if(w.__dp)w.__dp.mark=m;};
     window.__take=()=>{const w=W();const f=w.__dp?.frames||[];if(w.__dp)w.__dp.frames=[];return f;};
+    window.__places=()=>{const w=W();const p=w.__dp?.places||[];if(w.__dp)w.__dp.places=[];return p;};
   },DRAFT,PROJECT);
 
   const panelClick=sel=>page.evaluate(s=>{const b=document.querySelector(s);if(!b||b.disabled)return false;b.click();return true;},sel);
+  // the chapter transport (Play chapter / Space): playing while its button shows the pause glyph
+  const playing=()=>page.evaluate(()=>/❚❚|Pause/i.test(document.querySelector('#director-timeline [data-action="chapter-toggle"]')?.textContent||''));
   const seek=async s=>{await page.evaluate(t=>{const el=document.querySelector('#director-timeline [name="timeline-seconds"]');el.value=String(t);el.dispatchEvent(new Event('change',{bubbles:true}));},s);await wait(700);};
   // the film layers applied again at the same chapter time (a seek away and back: nothing in the film itself moves between them)
   const settle=async()=>{await wait(500);await seek(1.05);await wait(700);await seek(1);await wait(1100);};
@@ -98,10 +105,12 @@ try{
     const editOf=id=>ctx.edits.find(e=>e.desk===id);
     for(const id of Object.keys(ref.d)){
       const h=HOME[id];if(!h)continue;
-      let homeDrawn=0,hidDrawn=0,moved=0,vis=0,rebuilt=0,first=null;const touched=ctx.touched.has(id);
+      let homeDrawn=0,hidDrawn=0,moved=0,vis=0,rebuilt=0,first=null,left=false;const touched=ctx.touched.has(id);
       for(let i=0;i<drawn.length;i++){const s=drawn[i].d[id],r=ref.d[id];if(!s||!r)continue;
         const e=editOf(id),away=e?.pose&&Math.hypot(e.pose.x-h.x,e.pose.z-h.z)>150;
-        if(away&&s[3]&&Math.hypot(s[0]-h.x,s[1]-h.z)<100&&!ctx.allowHome?.has(id)){homeDrawn++;first??=`frame ${drawn[i].n} (${drawn[i].m}) at ${s[0]},${s[1]}`;}
+        // (a desk moved or Redone off its home starts the step there: only a return to it after it has left is a glitch)
+        const atHome=Math.hypot(s[0]-h.x,s[1]-h.z)<100;if(!atHome)left=true;
+        if(away&&s[3]&&atHome&&(left||!touched)&&!ctx.allowHome?.has(id)){homeDrawn++;first??=`frame ${drawn[i].n} (${drawn[i].m}) at ${s[0]},${s[1]}`;}
         if(ctx.hiddenBefore.has(id)&&ctx.hiddenAfter.has(id)&&s[3]){hidDrawn++;first??=`frame ${drawn[i].n} (${drawn[i].m}) drawn`;}
         if(!touched){if(Math.abs(s[0]-r[0])>3||Math.abs(s[1]-r[1])>3||Math.abs(s[2]-r[2])>.3){moved++;first??=`frame ${drawn[i].n} (${drawn[i].m}) at ${s[0]},${s[1]} ${s[2]}deg, was ${r[0]},${r[1]} ${r[2]}deg`;}if(s[3]!==r[3]){vis++;first??=`frame ${drawn[i].n} (${drawn[i].m}) ${s[3]?'drawn':'not drawn'}`;}if(s[4]!==r[4])rebuilt++;}
         else if(s[4]!==r[4]&&s[5]===r[5])rebuilt++;
@@ -140,12 +149,14 @@ try{
   const hidden=edits=>new Set(edits.filter(e=>e.hide).map(e=>e.desk));
   // one step: act, sample every frame through it and its settle, then check
   async function step(label,act,{touched=[],movers=[],users=[],allowHome=[],settleAfter=true,cut=true}={}){
-    const e0=await editsNow();await page.evaluate(()=>__take());await page.evaluate(()=>__mark('act'));
+    const e0=await editsNow();await page.evaluate(()=>{__sampler();__take();__mark('act');});
     await act();await page.evaluate(()=>__mark('settle'));if(settleAfter)await settle();else await wait(400);
     const frames=await page.evaluate(()=>__take()),e1=await editsNow(),state=await all();
     // the people at a touched desk go where it goes
     const followers=Object.values(state.people).filter(p=>p.station&&touched.includes('station-'+String(p.station).replace(/^station-/,''))).map(p=>p.key);
     const f=analyse(label,frames,{touched:new Set(touched),hiddenBefore:hidden(e0),hiddenAfter:hidden(e1),edits:e1,movers:new Set(movers),users:new Set([...users,...followers]),allowHome:new Set(allowHome)});
+    // (who placed a desk at its home: reported with a finding that a desk was drawn there; an Undo puts a desk home on purpose)
+    const pl=await page.evaluate(()=>__places());if(pl.length&&f.some(x=>/ROOM'S OWN/.test(x)))f.push(`placed at home: ${pl.slice(0,3).join(' || ')}`);
     for(const x of f)findings.push(`${label}: ${x}`);
     check(!f.length,`${label}: sampler, ${frames.length} frames${f.length?': '+f.join('; '):' clean'}`);
     if(cut){const m=matchesCut(state,e1);check(!m.length,`${label}: the stage matches the chapter's desk edits${m.length?': '+m.join('; '):''}`);}
@@ -166,13 +177,14 @@ try{
   const s0=await all();
   // the room's own place of every desk: where the film puts it before any desk edit (deskEditWas), else where it stands
   for(const [id,d] of Object.entries(s0.desks))HOME[id]=d.was?{x:d.was.x,z:d.was.z,yaw:d.was.yaw*180/Math.PI,vis:true}:{x:d.x,z:d.z,yaw:d.yaw,vis:d.vis};
+  await page.evaluate(h=>{window.__HOMES=h;document.getElementById('stage').contentWindow.__homes=h;},HOME);
   const e00=await editsNow();
   const roomDesks=Object.entries(s0.desks).filter(([,d])=>!d.featured).map(([id])=>id);
   note(`${CHAPTER}: ${roomDesks.length} room desks (${roomDesks.join(', ')}); desk edits at open: ${JSON.stringify(e00.map(e=>[e.desk,e.hide?'hide':e.pose?[Math.round(e.pose.x),Math.round(e.pose.z)]:'-']))}`);
   const people0=Object.values(s0.people).filter(p=>p.visible);
   note(`people on the stage: ${people0.map(p=>`${p.key}${p.station?'@'+p.station:''}`).join(' ')}`);
   CAST0=people0.map(p=>p.key);
-  check(roomDesks.length>=6,`0. ${roomDesks.length} room desks in ${CHAPTER} (enough for the workflow)`);
+  check(roomDesks.length>=5,`0. ${roomDesks.length} room desks in ${CHAPTER} (enough for the workflow)`);
   {const m=matchesCut(s0,e00);check(!m.length,`0. on open the stage matches the chapter's desk edits${m.length?': '+m.join('; '):''}`);}
   {const st=await page.$eval('#director-panel [data-status]',e=>e.textContent).catch(()=>'');const sp=(await page.evaluate(()=>__draftShot()?.propEdits))||[];
    const deskProps=sp.filter(e=>/ErgoFlex desk/.test(e.match||''));check(!deskProps.length,`0. no prop edit moves a room desk after the fold (${deskProps.length} left)${/Desks tab/.test(st)?'; status: '+st.slice(0,160):''}`);}
@@ -215,7 +227,8 @@ try{
   const isStation=id=>id.startsWith('station-');
   const hideable=roomDesks.filter(id=>isStation(id)&&!hiddenAtOpen.has(id));
   const free=hideable.filter(id=>!(users[id]||[]).length),sat=hideable.filter(id=>(users[id]||[]).some(k=>!movers.has(k)));
-  const toHide=free.slice(0,4).length===4?free.slice(0,4):[...free,...hideable.filter(id=>!free.includes(id)&&!sat.includes(id))].slice(0,4);
+  // up to 4 desks, the free ones first, never the one kept for the sitter case (oilers has only 4 visible room desks)
+  const toHide=[...free,...hideable.filter(id=>!free.includes(id))].filter(id=>id!==sat[0]).slice(0,4);
   note(`hide: ${toHide.join(', ')}; with a sitter: ${sat[0]||'none'} (${(users[sat[0]]||[]).join(',')})`);
   const vis=async(label,id,wantShown,extra={})=>{
     await selectDesk(id);
@@ -245,15 +258,16 @@ try{
   }else check(false,'2.7 no desk with a seated user to hide in this chapter');
   // hide while people move: playback runs, Kai rolls, Noah walks; the hide is clicked mid-play
   {
-    const id=hideable.find(x=>!toHide.includes(x)&&x!==sat[0]&&!(users[x]||[]).some(k=>movers.has(k)))||toHide[2];
+    const id=hideable.find(x=>!toHide.includes(x)&&x!==sat[0]&&!(users[x]||[]).some(k=>movers.has(k)))||toHide.slice(0,2).find(x=>!(users[x]||[]).some(k=>movers.has(k)))||toHide[0];
     await selectDesk(id);await seek(0);
-    const playing=()=>page.evaluate(()=>/Pause/i.test(document.querySelector('[data-action="play"]')?.textContent+document.querySelector('[data-action="play"]')?.getAttribute('aria-label')));
+    
     const r=await step(`2.8 Hide ${id} while playing`,async()=>{
-      await panelClick('[data-action="play"]');await wait(Math.min(4000,SECONDS*300));
+      await panelClick('#director-timeline [data-action="chapter-toggle"]');const t0=Date.now();await until(()=>playing(),'playback',90000);note(`2.8 playback started after ${((Date.now()-t0)/1000).toFixed(1)} s`);
+      await page.evaluate(()=>{__sampler();__mark('playing');});await wait(Math.min(4000,SECONDS*300));
       const p0=await all();await panelClick('#director-panel [data-action="dk-visibility"]');await wait(2500);const p1=await all();
       const roll=[...movers].map(k=>`${k} ${p0.people[k]&&p1.people[k]?Math.round(Math.hypot(p1.people[k].at[0]-p0.people[k].at[0],p1.people[k].at[1]-p0.people[k].at[1])):'?'} mm`);
       note(`2.8 while playing: ${roll.join(', ')} in 2.5 s; still playing: ${await playing()}`);
-      await wait(1500);if(await playing())await panelClick('[data-action="play"]');await wait(800);
+      await wait(1500);if(await playing())await panelClick('#director-timeline [data-action="chapter-toggle"]');await wait(800);await page.evaluate(()=>__mark('act'));
     },{touched:[id],movers:[...movers],users:users[id]||[]});
     check(!r.state.desks[id].vis,`2.8 ${id} hidden while playing`);
     const lost=[...movers].filter(k=>s0.people[k]?.visible&&!r.state.people[k]?.visible);check(!lost.length,`2.8 Kai / Noah still in the scene${lost.length?' (gone: '+lost.join(',')+')':''}`);
@@ -263,10 +277,10 @@ try{
 
   // ---- 5: play from 0 and scrub
   {
-    const e=await editsNow();await seek(0);await page.evaluate(()=>__take());
-    await panelClick('[data-action="play"]');await wait((SECONDS+1.5)*1000);
-    if(await page.evaluate(()=>/Pause/i.test(document.querySelector('[data-action="play"]')?.textContent||'')))await panelClick('[data-action="play"]');
-    await wait(600);const frames=await page.evaluate(()=>__take());
+    const e=await editsNow();await seek(0);await page.evaluate(()=>{__sampler();__take();__mark('play');});
+    await panelClick('#director-timeline [data-action="chapter-toggle"]');await until(()=>playing(),'playback',90000);await page.evaluate(()=>{__sampler();__mark('playing');});await wait((SECONDS+1.5)*1000);
+    if(await playing())await panelClick('#director-timeline [data-action="chapter-toggle"]');
+    await wait(600);const frames=await page.evaluate(()=>{__mark('');return __take();});
     const f=analyse('5.1 play',frames,{touched:new Set(),hiddenBefore:hidden(e),hiddenAfter:hidden(e),edits:e,movers:new Set(Object.keys(s0.people)),users:new Set()}).filter(x=>!/MOVED|SHOWN\/HIDDEN|REBUILT/.test(x)||/hidden but|ROOM'S OWN/.test(x));
     // during play the film's own desk moves may run: only the hidden / room's-own-place / rebuilt findings count
     const f2=analyse('5.1 play',frames,{touched:new Set(),hiddenBefore:hidden(e),hiddenAfter:hidden(e),edits:e,movers:new Set(Object.keys(s0.people)),users:new Set()});
