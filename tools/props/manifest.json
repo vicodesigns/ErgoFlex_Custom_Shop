@@ -2794,8 +2794,8 @@
    "source": "Oscilloscope_U1602B.usdz",
    "category": "electronics",
    "fit": {
-    "axis": "x",
-    "mm": 300
+    "axis": "y",
+    "mm": 211
    },
    "scenes": [
     "workshop",
