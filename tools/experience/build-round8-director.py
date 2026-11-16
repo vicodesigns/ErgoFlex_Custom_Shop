@@ -935,6 +935,12 @@ def run_import(export):
     # Props: the export's list ([] = he reset them all); an export without the field keeps the earlier import's.
     if isinstance(shot.get('propEdits'), list): dc['props'] = [{k: v for k, v in e.items() if k != 'director'} for e in clean_props(shot['propEdits'])]
     elif 'props' in before: dc['props'] = before['props']
+    # S32: room desks are the Desks tab's (the Director folds prop moves on them into their desk edits when a chapter opens);
+    # an export that still moves one as a prop is kept as it is (its offset is in world metres, this script cannot turn it
+    # into a desk pose) but said out loud.
+    for e in dc.get('props', []) if isinstance(shot.get('propEdits'), list) else []:
+        if str(e.get('match', '')).rstrip('$').endswith('ErgoFlex desk') or ':station:' in str(e.get('asset', '')):
+            print(f'{cid}: WARNING a prop edit moves the room desk {e.get("label") or e.get("match")}: open the chapter in the Director once (it folds it into the desk edit) and export again', file=sys.stderr)
     # People: the export's cast (People tab); an export without the field keeps the earlier import's.
     if clean_people(shot.get('peopleEdits')) is not None: dc['people'] = clean_people(shot['peopleEdits'])
     elif 'people' in before: dc['people'] = before['people']

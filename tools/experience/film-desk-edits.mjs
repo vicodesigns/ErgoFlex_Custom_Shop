@@ -103,6 +103,41 @@ export function installDeskEdits(list, api) {
     hides: deskHideReport(list, entries, desks),
     ready: Promise.all(entries.map(e => e.pending).filter(Boolean)),
     frame(seconds) { for (const e of entries) frameDesk(ctx, e, seconds); choreo.apply(seconds); },
+    // S32: the Director changed only places, turns, starts or hides (the same desks, sizes, builds and clips): applied in
+    // place, without the restore + re-install. That cycle put each desk back to the ROOM's own state first (the Studio's
+    // saved place, size and height: a 60x30 at 43.5 in where the film has a 48x30 at 28), rebuilt it, then rebuilt it again:
+    // the desk vanished, showed at the Studio's place with its sitter standing, and came back later (Vico, Nov 15).
+    // Returns false when it cannot (the caller then restores and installs as before).
+    update(next) {
+      const list = next || [], same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+      if (missing.length) return false;
+      const pairs = list.map(edit => [edit, entries.find(e => e.edit.desk === edit.desk)]);
+      const gone = entries.filter(e => !list.some(edit => edit.desk === e.edit.desk));
+      // a desk that gets its first edit (a hide, a move) or loses its last one is fine too, as long as no size or build
+      // changes on the way (those rebuild the desk: the caller does that the old way)
+      for (const [edit, e] of pairs) {
+        if (e) { if (desks.records.get(edit.desk) !== e.record || (edit.size || e.was.size) !== (e.edit.size || e.was.size) || !same(edit.build, e.edit.build) || !same(edit.clips, e.edit.clips)) return false; continue; }
+        const r = desks.records.get(edit.desk); if (!r || r.id === desks.selected || r.product || (edit.size && edit.size !== r.state.size) || edit.build || edit.clips?.length) return false;
+      }
+      if (gone.some(e => e.edit.build || e.edit.clips?.length || e.record.state.size !== e.was.size || desks.records.get(e.record.id) !== e.record)) return false;
+      for (const e of gone) {
+        if (e.hidden) unhideDesk(e); const r = e.record, prior = clone(e.was.state); delete r.deskEditWas;
+        r.state.pose = prior.pose; desks.place(r); setRecordPose(desks, r, prior.height, prior.tilt); entries.splice(entries.indexOf(e), 1);
+      }
+      for (const [edit, e] of pairs) {
+        // (its own place now: the group, whose prop edits film-fx has just unwound; r.state.pose can still hold a place a prop
+        // edit gave it on the stage, which Reset desk and Undo would then return to)
+        if (!e) { const r = desks.records.get(edit.desk); if (!r.rig) desks.ensureRig(r); const was = { state: clone(r.state), size: r.state.size }, entry = { edit, record: r, was };
+          if (r.group) was.state.pose = { x: r.group.position.x, z: r.group.position.z, yaw: r.group.rotation.y }; r.deskEditWas = was; applyDesk(ctx, entry); entries.push(entry); continue; }
+        const r = e.record, was = e.edit; e.edit = edit; if (!r.rig) desks.ensureRig(r);
+        if (!same(edit.pose, was.pose)) { r.state.pose = { ...(edit.pose || e.was.state.pose) }; desks.place(r); }
+        if (!same(edit.initial, was.initial)) { const p = edit.initial ? clampStartPose(edit.initial, r.state.size) : { height: e.was.state.height, tilt: e.was.state.tilt }; setRecordPose(desks, r, p.height, p.tilt); }
+        if (edit.hide === true) hideDesk(e); else unhideDesk(e);
+      }
+      choreo.set(entries.map(e => e.edit));
+      this.hides = deskHideReport(list, entries, desks);
+      return true;
+    },
     restore() {
       choreo.restore();   // each desk back to its start pose first, then the rest of the edit below
       for (const e of entries.reverse()) {

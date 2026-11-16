@@ -23,7 +23,7 @@ import {timelineTicks,snapTimelineTime,adjacentEdit,TIMELINE_ZOOMS} from './time
 import {createDeskEditor} from './desk-editor.mjs';
 import {stackRows,rowVar} from './lane-rows.mjs';
 import {createChoreoTarget,validateDeskEdits} from './desk-choreo.mjs';
-import {effectiveDeskEdits} from './desk-edits.mjs';
+import {effectiveDeskEdits,cleanDeskEdit} from './desk-edits.mjs';
 import {createStartPose} from './start-pose.mjs';
 import {createRenderRequest} from './render-request.mjs';
 import {createSceneDeskEditor} from './scene-desk-editor.mjs';
@@ -622,7 +622,7 @@ export function mountDirector(bridge,catalog,initial){
     const id=shot().id,film=filmShot(),drop=p=>{for(const s of p.shots){if(s.id!==id)continue;const list=s.propEdits??(filmPropEdits(film).some(e=>keys.has(propKey(e)))?filmPropEdits(film):null);if(list)s.propEdits=list.filter(e=>!keys.has(propKey(e)));}};
     drop(project);for(const p of [...undo,...redo])drop(p);changed();render();
   }
-  const sceneProps=createScenePropEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:renderSceneProps,lightsShowing:()=>sceneLights.showing(),fold:foldProps,person:o=>scenePeople.pickObject(o),blocked:()=>!!scenePeople.posing(),
+  const sceneProps=createScenePropEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:renderSceneProps,roomDesk:p=>openRoomDeskFromProps(p),lightsShowing:()=>sceneLights.showing(),fold:foldProps,person:o=>scenePeople.pickObject(o),blocked:()=>!!scenePeople.posing(),
     scope:()=>{const s=shot();return s&&deskVersionsNow().length?bridge.deskVersion?.(s.id)||null:null;},versions:deskVersionsNow,seconds:()=>shot()?.seconds||0,time:()=>playhead*(shot()?.seconds||0),seek:t=>seekCamera(t/(shot()?.seconds||1)),
     onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();deskSel.deselect();renderTimeline();renderSceneProps();if(inspector!=='layers')reveal('prop');}});
   // People (scene-people-editor.mjs): the chapter's cast; click a person in the view, gizmo, People tab; per chapter only.
@@ -651,7 +651,21 @@ export function mountDirector(bridge,catalog,initial){
     // from the room, by the film's only / except lists) is not touched here.
     const own=s.peopleEdits,fp=f?.people,seed=own?.v===2?own:(!own&&fp&&typeof fp==='object'&&!Array.isArray(fp)&&Array.isArray(fp.cast)?{v:2,...structuredClone(fp)}:studioSync.peopleSeed?.()||{cast:[]}),plan=deskHidePlan({stationId,hide,featured:stageFeatured(),items:sceneProps.items(),deskEdits:effectiveDeskEdits(f,s),propEdits:layersPropEdits(f,s),cast:seed.cast||[]});
     if(!plan.ok){status(plan.why,true);return;}
-    commit(()=>{const x=shot();x.deskEdits=plan.deskEdits;x.propEdits=plan.propEdits;if(plan.cast){const people=layersCleanPeople({...seed,cast:plan.cast});if(people)x.peopleEdits=people;}},{render:true});
+    // v2 (the film's own people, verbatim): a user of that desk who is one of the ROOM's own people (not in the cast) is
+    // taken out with the film's `except` (or `only`), as the film itself does; nobody else is touched.
+    let roomOnly=null;
+    if(seed.v===2){
+      const keys=new Set((seed.cast||[]).map(e=>e.key||e.id)),live=(()=>{try{return document.getElementById('stage')?.contentWindow?.ErgoFlex?.workspaceRoom?.people?.resolved?.()||[];}catch{return [];}})();
+      const mine=live.filter(p=>p.station===stationId&&!keys.has(p.key)).map(p=>p.key);
+      if(mine.length){
+        roomOnly={except:Array.isArray(seed.except)?[...seed.except]:seed.only?null:[],only:Array.isArray(seed.only)?[...seed.only]:null};
+        const filmExcept=Array.isArray(fp?.except)?fp.except:[],filmOnly=Array.isArray(fp?.only)?fp.only:null;   // (Show takes back only what a hide here added: the film's own lists stay)
+        for(const k of mine){if(roomOnly.except){const has=roomOnly.except.includes(k);if(hide&&!has)roomOnly.except.push(k);if(!hide&&has&&!filmExcept.includes(k))roomOnly.except=roomOnly.except.filter(x=>x!==k);}
+          if(roomOnly.only){const has=roomOnly.only.includes(k);if(!hide&&!has&&(!filmOnly||filmOnly.includes(k)))roomOnly.only.push(k);if(hide&&has)roomOnly.only=roomOnly.only.filter(x=>x!==k);}}
+        plan.users.push(...mine);
+      }
+    }
+    commit(()=>{const x=shot();x.deskEdits=plan.deskEdits;x.propEdits=plan.propEdits;if(plan.cast||roomOnly){const next={...seed,cast:plan.cast||seed.cast};if(roomOnly?.except)next.except=roomOnly.except;if(roomOnly?.only)next.only=roomOnly.only;const people=layersCleanPeople(next);if(people)x.peopleEdits=people;}},{render:true});
     status(`${hide?'Hid':'Showed'} ${item.name.replace(/ · ErgoFlex desk$/,'')}${plan.belongings.length?' with '+plan.belongings.length+' thing'+(plan.belongings.length===1?'':'s')+' of its own':''}${plan.users.length?' and '+plan.users.join(', '):''} in this chapter.${plan.unnamed.length?' Not on the stage (left as they are): '+plan.unnamed.join(', ')+'.':''} One Undo brings ${hide?'them back':'the hide back'}.`);
   }
   const layersStudio={on:()=>layersOn(),setting:()=>chapterSetting(shot()),featured:stageFeatured,hideDesk:layersHideDesk,
@@ -669,6 +683,48 @@ export function mountDirector(bridge,catalog,initial){
   }
   // The ONE place a room desk selection arrives (Desks list, click on a desk in the view, Esc, empty click, Featured desk):
   // id = the api.sceneDesks record id, null = back to the featured desk. Add `choreo.pick(id)` on the marked line.
+  // ---- S32: a room desk has ONE owner, the Desks editor (Vico, Nov 15: a room desk moved in the Props tab carried a prop
+  // offset on top of its desk edit; the two fought and the desk landed elsewhere). The Props tab hands a room desk to the
+  // Desks tab, and a chapter that still has prop moves / turns / hides on room desks gets them folded into those desks'
+  // desk edits when it opens (one undo step): the desk stays exactly where it stands.
+  const STATION=/:station:([a-z0-9][a-z0-9-]*)$/i;
+  const stageDesks=()=>{try{return document.getElementById('stage')?.contentWindow?.ErgoFlex?.sceneDesks||null;}catch{return null;}};
+  // The room desk (scene desk record) a prop edit or a picked object stands for: its asset key names the station, or its
+  // match is the desk group's name, or the object is (inside) that group. Never the featured desk.
+  function roomDeskOf({obj=null,edit=null}={}){
+    const sd=stageDesks(),recs=[...(sd?.records?.values()||[])],featured=sd?.selected??null;if(!recs.length)return null;
+    const st=String(edit?.asset||obj?.userData?.sceneAssetKey||'').match(STATION),byId=st?recs.find(r=>r.id==='station-'+st[1]):null;
+    let r=byId;
+    if(!r&&edit?.match&&/· ErgoFlex desk\$$/.test(edit.match)){try{const re=new RegExp(edit.match,'i');r=recs.find(x=>re.test(x.group?.name||''));}catch{}}
+    if(!r&&obj)for(let o=obj;o&&!r;o=o.parent)r=recs.find(x=>x.group===o)||null;
+    return r&&r.id!==featured?r:null;
+  }
+  function openRoomDeskFromProps(p){
+    const r=roomDeskOf(p);if(!r)return false;
+    sceneProps.deselect?.();deskSel.select(r.id,{announce:false});reveal('desk');
+    status(`${r.state?.name||'This desk'} is a room desk: it is moved, turned and hidden in the Desks tab (the round handle, the arrows, the ring, Hide desk).`);
+    return true;
+  }
+  const foldedDesks=new Set();
+  function foldDeskProps(){
+    const s=shot(),f=filmShot(),sd=stageDesks();if(!open||!s||!f||!sd?.records?.size)return;
+    const key=project.id+'|'+s.id;if(foldedDesks.has(key))return;
+    const props=layersPropEdits(f,s)||[],hits=props.map(e=>[e,roomDeskOf({edit:e})]).filter(([e,r])=>r&&!e.add);
+    foldedDesks.add(key);if(!hits.length)return;
+    const desks=effectiveDeskEdits(f,s),notes=[],names=[];
+    for(const [e,r] of hits){
+      const i=desks.findIndex(d=>d.desk===r.id),ed={...(i>=0?desks[i]:{desk:r.id,name:r.state?.name||'ErgoFlex desk'})};
+      // where it stands now (its pose with the prop offset and turn on top): that becomes the desk's own place
+      if(e.position||(e.rotation&&Math.abs(e.rotation[1]||0)>1e-6)){const g=r.group;ed.pose={x:Math.round(g.position.x*10)/10,z:Math.round(g.position.z*10)/10,yaw:Math.round(g.rotation.y*1e4)/1e4};}
+      if(e.rotation&&(Math.abs(e.rotation[0]||0)>1e-6||Math.abs(e.rotation[2]||0)>1e-6))notes.push(`${r.state?.name||r.id}: its tilt (${[e.rotation[0],e.rotation[2]].map(v=>Math.round((v||0)*10)/10).join(' / ')}°) is dropped`);
+      if(e.scale&&e.scale.some(v=>Math.abs(v-1)>1e-4))notes.push(`${r.state?.name||r.id}: its scale is dropped`);
+      if(e.hide===true)ed.hide=true;
+      const clean=cleanDeskEdit(ed);if(clean){if(i>=0)desks[i]=clean;else desks.push(clean);}names.push(r.state?.name||r.id);
+    }
+    const rest=props.filter(e=>!hits.some(([h])=>h===e));
+    commit(()=>{const x=shot();x.deskEdits=desks;x.propEdits=rest;},{render:true});
+    status(`Room desks are edited in the Desks tab now: the Props-tab move${hits.length===1?'':'s'} of ${[...new Set(names)].join(', ')} became ${hits.length===1?'its':'their'} desk edit${hits.length===1?'':'s'}, ${hits.length===1?'it stays':'they stay'} where ${hits.length===1?'it stands':'they stand'}${notes.length?' ('+notes.join('; ')+')':''}. Undo puts it back.`);
+  }
   function selectRoomDesk(id){
     // One selection drives everything: the Groove timeline (every room desk has its own Lift / Tilt lanes), the Build tab's desk and the
     // Branding tab's shown desk read deskSel.selected() (null = the featured desk) through their `selection` options.
@@ -1497,7 +1553,7 @@ export function mountDirector(bridge,catalog,initial){
   // A film chapter is a one-chapter cut: its timeline space goes to the lanes (Chapters shows the strip).
   if(film)timeline.classList.add('chapters-hidden');
   render();panel.hidden=timeline.hidden=true;
-  return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,transportChanged:()=>{syncTransport();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;if(p)orbitBase=null;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;syncPlayhead();},scrubbing:()=>!!scrub||!!groupDrag,filmApplied:()=>{if(inspector==='build'&&open)renderPanel();sceneLights.applied();sceneProps.applied();scenePeople.applied();if(open)renderPeople(true);floorRefl.applied();deskSel.applied();if(open){renderSceneProps(true);renderSceneDesks(true);renderBranding(true);}},
+  return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,transportChanged:()=>{syncTransport();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;if(p)orbitBase=null;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;syncPlayhead();},scrubbing:()=>!!scrub||!!groupDrag,filmApplied:()=>{setTimeout(()=>{try{foldDeskProps();}catch(error){console.warn('[desk fold]',error);}},300);if(inspector==='build'&&open)renderPanel();sceneLights.applied();sceneProps.applied();scenePeople.applied();if(open)renderPeople(true);floorRefl.applied();deskSel.applied();if(open){renderSceneProps(true);renderSceneDesks(true);renderBranding(true);}},
     // Selection -> inspector home (HOMES): for lanes and tools outside this module (the Titles lane: reveal('title')).
     reveal,revealHomes:()=>({...structuredClone(HOMES),title:homeOf('title')})};
 }

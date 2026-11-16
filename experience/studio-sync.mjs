@@ -189,6 +189,9 @@ export function createStudioSync({bridge,project,index,shot,film,commit,status,r
   function peopleSeed(){
     const own=cleanPeople(shot()?.peopleEdits);if(own)return own;
     const f=film()?.people;
+    // S32: a film chapter with a `people` object of its own: its whole cast VERBATIM as peopleEdits v2, as the People tab
+    // seeds it (scene-people-editor.mjs), so a Layers / Hide desk write keeps walks, rolls, acts, seats and only / except.
+    if(f&&typeof f==='object'&&!Array.isArray(f)&&Array.isArray(f.cast))return cleanPeople({v:2,...structuredClone(f)})||{v:2,...structuredClone(f),cast:[...f.cast]};
     return cleanPeople({cast:api()?.workspaceRoom?.people?.resolved?.()||[],when:f?.when||{},...(f?.chair?{chair:f.chair}:{}),...(f?.fade!==undefined?{fade:f.fade}:{})})||{cast:[]};
   }
   function html(){

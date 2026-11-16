@@ -28,7 +28,7 @@ const r3=v=>Math.round(v*1000)/1000,r1=v=>Math.round(v*10)/10;
 const wrapDeg=d=>{d=((d+180)%360+360)%360-180;return Math.abs(d)<1e-6?0:d;};
 const MODES={translate:'Move',rotate:'Rotate',scale:'Scale'},VERB={translate:'Moved',rotate:'Rotated',scale:'Scaled'};
 const STATE_KEY='ergoflex.sceneAssets.v1';
-export function createScenePropEditor({bridge,shot,film,commit,status,open,rerender,onSelect=()=>{},lightsShowing=()=>false,fold=()=>{},person=()=>false,blocked=()=>false,
+export function createScenePropEditor({bridge,shot,film,commit,status,open,rerender,roomDesk=()=>false,onSelect=()=>{},lightsShowing=()=>false,fold=()=>{},person=()=>false,blocked=()=>false,
   scope=()=>null,versions=()=>[],seconds=()=>0,time=()=>0,seek=()=>{}}){
   let sel=null,others=[],lockedKeys=()=>new Set(),itemsCache=null,itemsAt=0,flash=null,pivotAt=0,pivotDirty=true,mode='translate',tools=null,booting=null,drag=null,snapping=false,pending=null,dialogPlan=null,placing=false;
   const snaps=new Map(),frame=()=>document.getElementById('stage'),win=()=>frame()?.contentWindow;
@@ -398,6 +398,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function select(key,{how='replace'}={}){
     if(!tools){ensure().then(()=>select(key,{how})).catch(error=>status(error.message,true));return;}
     const e=editOfKey(key),o=find(key);if(!e&&!o)return;
+    if(roomDesk({obj:o,edit:e||items().find(i=>i.key===key)?.target||null,key}))return;   // S32 hook (A): a room desk is the Desks tab's (director.mjs openRoomDeskFromProps)
     const entry={key,target:e?propTarget(e):items().find(i=>i.key===key)?.target||sel?.target,obj:o};
     if(how==='toggle'&&isSel(key))setMembers(members().filter(m=>m.key!==key));
     else setMembers(how==='replace'?[entry]:[...members().filter(m=>m.key!==key),entry]);

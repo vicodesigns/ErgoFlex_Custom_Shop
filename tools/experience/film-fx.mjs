@@ -1063,13 +1063,16 @@ export async function update(shot, { onSlow } = {}) {
     await active.branding?.restore(); active.branding = null;
     if (shot.sceneBranding) { active.branding = (await import('../../experience/branding-live.mjs')).installBranding(shot.sceneBranding, window); await active.branding.ready; }
   }
-  const slow = globals || tail === 0; if (slow) onSlow?.();
+  let slowCalled = false; const slow = globals || tail === 0; if (slow) { slowCalled = true; onSlow?.(); }
   for (let i = TAIL.length - 1; i >= tail; i--) { active[TAIL[i]]?.restore(); active[TAIL[i]] = null; }
   if (globals && active.globals) { active.globals.exposureCell?.undo(); active.globals.scene.environmentIntensity = active.globals.env; api.renderer.toneMappingExposure = active.globals.exposure; active.globals = null; }
   if (status) { active.status?.clear(); active.status = null; }
   active.shot = shot;
   // sceneDeskEdits (the Director's desk edits): restore and re-apply on the room's desks, in place.
-  if (changed('sceneDeskEdits')) {
+  if (changed('sceneDeskEdits') && !active.deskEdits?.update?.(shot.sceneDeskEdits)) {   // (in place when only places / turns / starts / hides changed: film-desk-edits.mjs update)
+    // a size, build or clip change: restore + install, which rebuilds desks through the room's own state; the stage holds
+    // its last frame meanwhile (the caller's onSlow), so that state is never drawn
+    if (!slowCalled) { slowCalled = true; onSlow?.(); }
     active.deskEdits?.restore(); active.deskEdits = null;
     if (shot.sceneDeskEdits?.length) { active.deskEdits = (await import('./film-desk-edits.mjs')).installDeskEdits(shot.sceneDeskEdits, api); await active.deskEdits.ready; }
   }
