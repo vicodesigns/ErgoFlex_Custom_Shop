@@ -84,6 +84,10 @@ export function unhideDesk(entry) { const h = entry.hidden; if (!h) return false
 
 export function installDeskEdits(list, api) {
   const desks = api.sceneDesks, ctx = { api, desks }, entries = [], missing = [], choreo = createDeskChoreo(api);
+  // Every room desk's own state as the film set it up (before any desk edit, before the scene's prop edits, before a drag):
+  // what a desk that gets its FIRST edit later goes back to on Undo / Reset desk. (Read from the group at that moment, it
+  // was the place the drag had already moved it to: Undo left the desk where it had been dropped. Desk-proof, Nov 15.)
+  const own = new Map([...(desks?.records?.values() || [])].map(r => [r.id, { record: r, state: clone(r.state) }]));
   for (const edit of list || []) {
     const r = desks?.records?.get(edit.desk);
     if (!r || r.id === desks.selected || r.product) { missing.push(edit.desk); continue; }
@@ -127,8 +131,8 @@ export function installDeskEdits(list, api) {
       for (const [edit, e] of pairs) {
         // (its own place now: the group, whose prop edits film-fx has just unwound; r.state.pose can still hold a place a prop
         // edit gave it on the stage, which Reset desk and Undo would then return to)
-        if (!e) { const r = desks.records.get(edit.desk); if (!r.rig) desks.ensureRig(r); const was = { state: clone(r.state), size: r.state.size }, entry = { edit, record: r, was };
-          if (r.group) was.state.pose = { x: r.group.position.x, z: r.group.position.z, yaw: r.group.rotation.y }; r.deskEditWas = was; applyDesk(ctx, entry); entries.push(entry); continue; }
+        if (!e) { const r = desks.records.get(edit.desk); if (!r.rig) desks.ensureRig(r); const o = own.get(r.id), was = o?.record === r ? { state: clone(o.state), size: o.state.size } : { state: clone(r.state), size: r.state.size }, entry = { edit, record: r, was };
+          if (o?.record !== r && r.group) was.state.pose = { x: r.group.position.x, z: r.group.position.z, yaw: r.group.rotation.y }; r.deskEditWas = was; applyDesk(ctx, entry); entries.push(entry); continue; }
         const r = e.record, was = e.edit; e.edit = edit; if (!r.rig) desks.ensureRig(r);
         if (!same(edit.pose, was.pose)) { r.state.pose = { ...(edit.pose || e.was.state.pose) }; desks.place(r); }
         if (!same(edit.initial, was.initial)) { const p = edit.initial ? clampStartPose(edit.initial, r.state.size) : { height: e.was.state.height, tilt: e.was.state.tilt }; setRecordPose(desks, r, p.height, p.tilt); }
