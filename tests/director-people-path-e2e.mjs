@@ -2,8 +2,8 @@
 // the Cinematographer's cut, Andre's walk. Select him: his path is drawn on the floor with a handle per point. Drag a
 // point: the cast entry's walk.path changes and the stage re-solves (his place at the playhead moves). Add a point (the
 // + on a leg), delete it (Delete), undo; a field of the path section (pace) writes walk.pace. Then the oilers chapter,
-// Noah's walk: drag its end, the placements that hand over there follow (one undo); Alt: they do not; Kai's WAIT point
-// (end of kai-rolls = start of kai-docks) moves both rolls. CASES=walk,roll,linked.
+// Noah's walk: drag its end, the placements that hand over there follow (one undo); Alt: they do not; Kai's dock point
+// (end of kai-rolls = where kai types) moves both. CASES=walk,roll,linked.
 // Then (roll)
 // Kai's roll at 8 s: handles on the rounded route, drag a waypoint (roll.path, Kai moves), radius / speed fields, undo.
 //   CHROME=".../chrome.exe" SHOTS=<dir> node tests/director-people-path-e2e.mjs       (run under the GPU lock)
@@ -102,9 +102,13 @@ try{
     await until(()=>page.$(`#director-panel .people-row:nth-child(${ri+1}) .people-pick`),'the oilers cast is listed');
     await page.evaluate(i=>document.querySelector(`#director-panel .people-row:nth-child(${i+1}) .people-pick`).click(),ri);
     await until(async()=>(await drawn())?.visible,'the roll path is drawn');
-    const roundAt=()=>page.evaluate(c=>{const g=document.getElementById('stage').contentWindow.ErgoPresentation.three().scene.getObjectByName('Director path tools'),m=g.children.find(o=>o.isMesh&&o.geometry.index),a=m.geometry.attributes.position;let best=Infinity;for(let i=0;i<a.count;i+=2){const x=(a.getX(i)+a.getX(i+1))/2,z=(a.getZ(i)+a.getZ(i+1))/2;best=Math.min(best,Math.hypot(x-c[0],z-c[1]));}return best;},r0[1]);
-    let round=0;try{round=await until(async()=>{const v=await roundAt();return v>60?v:null;},'the rounded route (the planner from the stage)',8000);}catch{round=await roundAt();console.log('  planner: '+await page.evaluate(()=>String(!!document.getElementById('stage').contentWindow.__peoplePlanner)));}
-    check(round>60&&round<250,`the roll's route is drawn round its corners (${Math.round(round)} mm inside corner 1, radius ${rc[ri].roll.radius} mm)`);
+    // (the sharpest corner of the path: S9's rolls write their arcs as points, a few degrees each; its expected inset is
+    // R (1 / cos(turn / 2) - 1) for the roll's radius R)
+    const turnAt=k=>{const a=r0[k-1],b=r0[k],c=r0[k+1],u=Math.atan2(b[0]-a[0],b[1]-a[1]),v=Math.atan2(c[0]-b[0],c[1]-b[1]);return Math.abs(Math.atan2(Math.sin(v-u),Math.cos(v-u)));};
+    const K1=r0.slice(1,-1).map((_,i)=>i+1).reduce((m,k)=>turnAt(k)>turnAt(m)?k:m,1),INSET=rc[ri].roll.radius*(1/Math.cos(turnAt(K1)/2)-1);
+    const roundAt=()=>page.evaluate(c=>{const g=document.getElementById('stage').contentWindow.ErgoPresentation.three().scene.getObjectByName('Director path tools'),m=g.children.find(o=>o.isMesh&&o.geometry.index),a=m.geometry.attributes.position;let best=Infinity;for(let i=0;i<a.count;i+=2){const x=(a.getX(i)+a.getX(i+1))/2,z=(a.getZ(i)+a.getZ(i+1))/2;best=Math.min(best,Math.hypot(x-c[0],z-c[1]));}return best;},r0[K1]);
+    let round=0;try{round=await until(async()=>{const v=await roundAt();return v>Math.min(60,INSET/2)?v:null;},'the rounded route (the planner from the stage)',8000);}catch{round=await roundAt();console.log('  planner: '+await page.evaluate(()=>String(!!document.getElementById('stage').contentWindow.__peoplePlanner)));}
+    check(round>Math.min(60,INSET/2)&&round<Math.max(250,INSET*2),`the roll's route is drawn round its corners (${Math.round(round)} mm inside corner ${K1}, ${Math.round(INSET)} mm expected, radius ${rc[ri].roll.radius} mm)`);
     check((await drawn()).handles>=r0.length&&await pointsInPanel()===r0.length,`a handle per point (${r0.length}) and the Roll path section`);
     // (a playhead in 8-9.4 s, while kai-rolls is in, where the film camera sees a point of his path: the last one first)
     let px=null,idx;
@@ -178,28 +182,27 @@ try{
     const b=await until(async()=>{const x=await all();return x[NK]&&JSON.stringify(x[NK].walk.path)!==JSON.stringify(n0)?x:null;},'the Alt drag lands');
     check(FOL.every(k=>b[k].at[0]===Q[0]&&b[k].at[1]===Q[1]),'with Alt held only the walk\u2019s end moves; pull, tap and watch stay');
     await snap('06-linked-inspector');
-    // Kai: the WAIT point is the end of kai-rolls and the start of kai-docks: dragging it moves both
+    // Kai (S9 round 6: one roll, all the way in): the end of kai-rolls is the dock where 'kai' types: dragging it moves both
     {
-      const KR='kai-rolls',KD='kai-docks',ki=oc.findIndex(e=>e.key===KR),k0=oc[ki].roll.path,W=k0[k0.length-1],d0=oc.find(e=>e.key===KD);
+      const KR='kai-rolls',KT='kai',ki=oc.findIndex(e=>e.key===KR),k0=oc[ki].roll.path,W=k0[k0.length-1],t0=oc.find(e=>e.key===KT);
       await seek(page,8);await wait(800);
       await page.evaluate(i=>document.querySelector(`#director-panel .people-row:nth-child(${i+1}) .people-pick`).click(),ki);
-      await until(async()=>(await page.$$('#director-panel .people-path-point')).length===k0.length,'Kai\u2019s roll section');
+      await until(async()=>(await page.$$('#director-panel .people-path-point')).length===k0.length,'Kai’s roll section');
       let kp=await screen(k0);
       if(!kp[k0.length-1].on){
         await page.evaluate(p=>{const w=document.getElementById('stage').contentWindow,t=w.ErgoPresentation.three(),root=w.ErgoFlex.workspaceRoom.root,V=root.position.constructor;root.updateWorldMatrix(true,false);
           const c=new V(p[0],0,p[1]).applyMatrix4(root.matrixWorld),eye=new V(p[0]+1500,3000,p[1]+3400).applyMatrix4(root.matrixWorld);t.camera.position.copy(eye);t.camera.lookAt(c);if(t.controls){t.controls.target.copy(c);t.controls.update();}t.camera.updateMatrixWorld();},W);
         await wait(800);kp=await screen(k0);
       }
-      check(kp[k0.length-1].on,'the WAIT point (end of kai-rolls) is on the screen');
-      const before=await mine(KD)||d0;
-      await dragFrom(kp[k0.length-1],{x:kp[k0.length-1].x-50,y:kp[k0.length-1].y+35},14,'07-kai-wait-drag');
+      check(kp[k0.length-1].on,'the dock point (end of kai-rolls) is on the screen');
+      await dragFrom(kp[k0.length-1],{x:kp[k0.length-1].x-50,y:kp[k0.length-1].y+35},14,'07-kai-dock-drag');
       const r=await until(async()=>{const x=await mine(KR);return x&&JSON.stringify(x.roll.path)!==JSON.stringify(k0)?x:null;},'kai-rolls end moved');
-      const W2=r.roll.path[k0.length-1],d=await mine(KD);
-      check(d.at[0]===W2[0]&&d.at[1]===W2[1]&&d.roll.path[0][0]===W2[0]&&d.roll.path[0][1]===W2[1]&&JSON.stringify(d.roll.path.slice(1))===JSON.stringify(before.roll.path.slice(1)),`moving the WAIT point to ${W2}: kai-docks' placement and roll start follow (its dock end stays)`);
-      check(/Kai \(docks\) follows/.test(await page.$eval('#director-panel [data-status]',e=>e.textContent)),'the status says Kai (docks) follows');
+      const W2=r.roll.path[k0.length-1],d=await mine(KT);
+      check(d.at[0]===W2[0]&&d.at[1]===W2[1]&&JSON.stringify(r.roll.path.slice(0,-1))===JSON.stringify(k0.slice(0,-1)),`moving the dock point to ${W2}: Kai's typing placement follows (the rest of the roll stays)`);
+      check(/follows/.test(await page.$eval('#director-panel [data-status]',e=>e.textContent)),'the status says who follows');
       await page.evaluate(()=>document.querySelector('#director-panel [data-action="undo"]').click());
-      const u=await until(async()=>{const x=await mine(KR);return x&&JSON.stringify(x.roll.path)===JSON.stringify(k0)?x:null;},'undo the WAIT move');
-      const du=await mine(KD);check(du.at[0]===W[0]&&du.at[1]===W[1]&&du.roll.path[0][0]===W[0],'one Undo puts both rolls back');void u;
+      await until(async()=>{const x=await mine(KR);return x&&JSON.stringify(x.roll.path)===JSON.stringify(k0)?x:null;},'undo the dock move');
+      const du=await mine(KT);check(du.at[0]===t0.at[0]&&du.at[1]===t0.at[1],'one Undo puts the roll and the typing placement back');
     }
   }
   assert.deepEqual(errors,[],'page errors');

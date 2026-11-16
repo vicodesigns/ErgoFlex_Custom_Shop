@@ -9,6 +9,7 @@ to <dir>/standin/NN.* for pipeline tests), <dir>/score/score.wav (optional),
   master-textless.mkv     graded, dissolved, end-card logo, near-lossless
   ErgoFlex-Intro-1080p.mp4 / -textless.mp4, ErgoFlex-Intro-720p.mp4 / -textless.mp4
   titles.json (absolute in/out for app overlays), titles.ass, poster.jpg
+--chapter-titles <chapter id> <in> <out>: burn only that chapter's titles (titles-src, chapter seconds) onto a chapter video.
 --draft renders a fast 960×540 preview (final/draft.mp4) instead.
 --title-still T --bg IMG --out PNG renders one titled frame (T: film seconds, or <chapter>:<chapter seconds>) over IMG
   with the same titles.ass (pairs with --draft for 960x540), e.g. to compare a title against a Director Mode still.
@@ -18,10 +19,17 @@ Title shadows: a title's optional 'shadow' {blur, opacity, paths} (Director Mode
 --size 2560x1440 masters at that size (chapter renders must match); the HQ file is ErgoFlex-Intro-<H>p.mp4 with the
   bitrate cap scaled by pixel count. Titles stay authored on the 1920×1080 grid (libass scales PlayRes to the frame).
 """
-import json, os, subprocess, sys, glob
+import json, os, subprocess, sys, glob, shutil, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-FONTS = os.path.join(ROOT, 'app-reference/assets/google_fonts')
+def _fonts_dir():
+    # app-reference/ is git-ignored: a git worktree has none, so fall back to the desk's / the main checkout's copy.
+    for base in (os.environ.get('ERGO_FONTS'), ROOT, r'F:\ErgoFlex_Render\ErgoFlex_Custom_Shop', r'C:\work\ergoflex-cine'):
+        if not base: continue
+        f = base if os.path.exists(os.path.join(base, 'Poppins-SemiBold.ttf')) else os.path.join(base, 'app-reference/assets/google_fonts')
+        if os.path.exists(os.path.join(f, 'Poppins-SemiBold.ttf')): return f
+    return os.path.join(ROOT, 'app-reference/assets/google_fonts')
+FONTS = _fonts_dir()
 BLUE = '&H00EC8813&'
 BOX_A, BOX_BLUR, SCRIM_BLOCK = 'B0', 18, False   # title line boxes: alpha B0 = 31% black, soft edge (HQ20 F); SCRIM_BLOCK True = the old block scrim  # #1388ec as ASS BGR
 
@@ -49,7 +57,7 @@ def ass_drawing(path, anchor=ANCHOR):
         out.append(f"b {xy(p['x'] + o[0], p['y'] + o[1])} {xy(q['x'] + n[0], q['y'] + n[1])} {xy(q['x'], q['y'])}")
     return ' '.join(out)
 
-def run(cmd):
+def run(cmd, cwd=None):
     print('$', ' '.join(c if len(c) < 120 else c[:117] + '…' for c in cmd), flush=True)
     if cmd[0] == 'ffmpeg':
         # Bound decoder/filter concurrency for 12-input films on desktop machines.
@@ -60,13 +68,104 @@ def run(cmd):
             if arg == '-i': bounded += ['-threads', '2']
             bounded.append(arg)
         cmd = bounded[:-1] + ['-threads', threads, bounded[-1]]
-    subprocess.run(cmd, check=True)
+    subprocess.run(cmd, check=True, cwd=cwd)
 
 def ts(t):
     t = max(0, t); h = int(t // 3600); m = int(t % 3600 // 60); s = t % 60
     return f'{h}:{m:02d}:{s:05.2f}'
 
+ASS_HEAD = [
+    '[Script Info]', 'ScriptType: v4.00+', 'PlayResX: 1920', 'PlayResY: 1080', 'WrapStyle: 2', 'ScaledBorderAndShadow: yes', '',
+    '[V4+ Styles]',
+    'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding',
+    'Style: Eyebrow,Poppins SemiBold,28,' + BLUE + ',&H00FFFFFF,&H00000000,&HB4000000,0,0,0,0,100,100,6,0,1,0,1.2,1,0,0,0,1',
+    'Style: Title,Poppins SemiBold,86,&H00FFFFFF,&H00FFFFFF,&H00000000,&HA0000000,0,0,0,0,100,100,-0.6,0,1,0,2,1,0,0,0,1',
+    'Style: Detail,Poppins,40,&H00E6DED6,&H00FFFFFF,&H00000000,&HA0000000,0,0,0,0,100,100,0.2,0,1,0,1.5,1,0,0,0,1',
+    'Style: Scrim,Poppins,20,&HFF000000,&HFF000000,&HFF000000,&HFF000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1',
+    # HQ20 (Vico: the title scrim was "a giant box ... it should be fitting to the background of the text"; picked F):
+    # each line gets its own soft box sized to its own text (BorderStyle 3: an opaque box from the line's glyph extents,
+    # Outline = padding, OutlineColour = 30% black), same font / size / spacing as the line it sits behind.
+    f'Style: BoxEyebrow,Poppins SemiBold,28,&HFF000000,&HFF000000,&H{BOX_A}000000,&H{BOX_A}000000,0,0,0,0,100,100,6,0,3,16,0,1,0,0,0,1',
+    f'Style: BoxTitle,Poppins SemiBold,86,&HFF000000,&HFF000000,&H{BOX_A}000000,&H{BOX_A}000000,0,0,0,0,100,100,-0.6,0,3,26,0,1,0,0,0,1',
+    f'Style: BoxDetail,Poppins,40,&HFF000000,&HFF000000,&H{BOX_A}000000,&H{BOX_A}000000,0,0,0,0,100,100,0.2,0,3,20,0,1,0,0,0,1',
+    'Style: CTA,Poppins Medium,46,&H00FFFFFF,&H00FFFFFF,&H00000000,&HA0000000,0,0,0,0,100,100,1.5,0,1,0,1.5,5,0,0,0,1', '',
+    '[Events]', 'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text']
+
+def title_dialogues(titles):
+    """ASS Dialogue lines for titles carrying absolute 'start' / 'end' seconds (the film's burn-in look, shared with --chapter-titles)."""
+    ass = []
+    for t in titles:
+        a, b = t['start'], t['end']
+        X0, DY, AN, BOX_PLACE = PLACES[t.get('place', 'lower-left')]
+        # (Until HQ20: one soft, blurred 1300 x 350 scrim behind the text block, per-title 'scrim' alpha; now fitted line boxes.)
+        if SCRIM_BLOCK: ass.append(f'Dialogue: 0,{ts(a - .2)},{ts(b + .2)},Scrim,,0,0,0,,{{\\an7\\pos(0,0)\\p1\\1c&H000000&\\1a&HFF&\\blur90\\t(0,900,\\1a&H{t.get('scrim') or '90'}&)\\t({int((b - a) * 1000 - 300)},{int((b - a) * 1000 + 400)},\\1a&HFF&)}}m 0 730 l 1300 730 1300 1080 0 1080{{\\p0}}')
+        def line(layer, style, y, text, delay, rise=14):
+            dur = int((b - a) * 1000)
+            return (f'Dialogue: {layer},{ts(a + delay / 1000)},{ts(b)},{style},,0,0,0,,'
+                    f'{{\\an{AN}\\move({X0},{y + DY + rise},{X0},{y + DY},0,900)\\fad(650,420)\\blur5\\t(0,700,\\blur0)}}{text}')
+        # Director Mode's shadow: blur / opacity restyle the boxes; paths replace them (one drawing each, timed like its line).
+        sh = t['shadow']; blur = ass_num(sh.get('blur', BOX_BLUR))
+        alpha = f"{max(0, min(255, round(255 * (1 - float(sh['opacity']))))):02X}" if 'opacity' in sh else (BOX_PLACE or BOX_A)
+        tint = f'\\3a&H{alpha}&' if alpha != BOX_A else ''
+        def box(style, y, text, delay, rise=14):
+            return (f'Dialogue: 0,{ts(a + delay / 1000)},{ts(b)},Box{style},,0,0,0,,'
+                    f'{{\\an{AN}\\move({X0},{y + DY + rise},{X0},{y + DY},0,900)\\fad(650,420){tint}\\blur{blur}}}{text}')
+        for p in sh.get('paths') or []:
+            delay, rise = LINE_TIMING.get(p.get('line'), (0, 10))
+            ass.append(f'Dialogue: 0,{ts(a + delay / 1000)},{ts(b)},Scrim,,0,0,0,,{{\\an7\\move(0,{rise},0,0,0,900)\\fad(650,420)\\p1\\bord0\\shad0'
+                       f'\\1c&H000000&\\1a&H{alpha}&\\blur{blur}}}{ass_drawing(p, (X0, ANCHOR[1] + DY))}{{\\p0}}')
+        for style, y, key, delay, rise in (('Eyebrow', 812, 'eyebrow', 0, 10), ('Title', 912, 'title', 140, 14), ('Detail', 970, 'detail', 380, 10)):
+            if not SCRIM_BLOCK and not sh.get('paths'): ass.append(box(style, y, t[key], delay, rise))
+            ass.append(line(1, style, y, t[key], delay, rise))
+    return ass
+
+def chapter_titles(argv):
+    """--chapter-titles <chapter id> <in video> <out video>: burn ONE chapter's titles (titles-src.json, chapter seconds, no film
+    offset) onto a chapter file with the film's own ASS look. No dissolves, end card, wordmark or CTA (those belong to the film).
+    Video re-encoded like the watcher's PhoneCopy (x264 slow, two-pass, same bitrate rule), audio copied, duration / fps kept."""
+    i = argv.index('--chapter-titles'); pos = [a for a in argv[1:i] + argv[i + 1:] if not a.startswith('--')]
+    if len(pos) != 4: sys.exit('usage: finish-intro.py <cut dir> --chapter-titles <chapter id> <in video> <out video>')
+    d, cid, vin, vout = pos[0], pos[1], os.path.abspath(pos[2]), os.path.abspath(pos[3])
+    d = os.path.abspath(d)
+    try: src = json.load(open(os.path.join(d, 'titles-src.json'), encoding='utf-8'))
+    except (OSError, ValueError) as e: sys.exit(f'chapter-titles: cannot read {os.path.join(d, "titles-src.json")}: {e}')
+    known = {t['chapter'] for t in src['titles']} | {src.get('cta', {}).get('chapter'), src.get('logo', {}).get('chapter')}
+    if os.path.exists(os.path.join(d, 'edl.json')):
+        known |= {c['id'] for c in json.load(open(os.path.join(d, 'edl.json'), encoding='utf-8'))['chapters']}
+    known.discard(None)
+    if cid not in known: sys.exit(f'chapter-titles: unknown chapter id {cid!r} (known: {", ".join(sorted(known))}); nothing written')
+    if not os.path.isfile(vin): sys.exit(f'chapter-titles: input video missing: {vin}; nothing written')
+    mine = [t for t in src['titles'] if t['chapter'] == cid]     # hero: its own entries only; the CTA / wordmark stay film-only
+    os.makedirs(os.path.dirname(vout) or '.', exist_ok=True)
+    part = vout + '.part.mp4'
+    if not mine:
+        print(f'chapter-titles: {cid} has no titles: plain copy'); shutil.copyfile(vin, part); os.replace(part, vout); return
+    titles = [dict(chapter=cid, start=float(t['rel_in']), end=float(t['rel_out']), eyebrow=t['eyebrow'], title=t['title'], detail=t['detail'],
+                   scrim=t.get('scrim'), shadow=t.get('shadow') or {}, **({'place': t['place']} if t.get('place') in PLACES else {})) for t in mine]
+    tmp = tempfile.mkdtemp(prefix='chtitles-')
+    try:
+        assf = os.path.join(tmp, 'titles.ass'); open(assf, 'w', encoding='utf-8').write('\n'.join(ASS_HEAD + title_dialogues(titles)) + '\n')
+        # Windows: no drive colons in a filtergraph, so ffmpeg runs inside tmp with the .ass and the Poppins files beside it.
+        for f in glob.glob(os.path.join(FONTS, 'Poppins-*.ttf')): shutil.copy(f, tmp)
+        subs = 'subtitles=filename=titles.ass:fontsdir=.'
+        pr = subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', vin], capture_output=True, text=True)
+        dur = float(pr.stdout.strip() or 0)
+        if dur <= 0: sys.exit(f'chapter-titles: cannot read the duration of {vin}')
+        kb = int(min(6000, 27.5 * 8192 / dur - 128)); pl = 'pp'   # the watcher's PhoneCopy bitrate rule
+        enc = ['-c:v', 'libx264', '-preset', 'slow', '-b:v', f'{kb}k', '-pix_fmt', 'yuv420p']
+        run(['ffmpeg', '-v', 'error', '-y', '-i', vin, '-vf', subs, *enc, '-pass', '1', '-passlogfile', pl, '-an', '-f', 'null', os.devnull], cwd=tmp)
+        run(['ffmpeg', '-v', 'error', '-y', '-i', vin, '-vf', subs, *enc, '-pass', '2', '-passlogfile', pl, '-map', '0:v', '-map', '0:a?',
+             '-c:a', 'copy', '-movflags', '+faststart', '-f', 'mp4', part], cwd=tmp)
+        os.replace(part, vout)
+    except subprocess.CalledProcessError as e:
+        if os.path.exists(part): os.remove(part)
+        sys.exit(f'chapter-titles: ffmpeg failed ({e.returncode}); nothing written')
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    print(f'chapter-titles: {cid}: {len(mine)} title(s) -> {vout}')
+
 def main():
+    if '--chapter-titles' in sys.argv: return chapter_titles(sys.argv)
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     draft = '--draft' in sys.argv
     wip = '--wip' in sys.argv  # full-res, fast encode, one titled MP4 for review
@@ -96,47 +195,9 @@ def main():
     size = sys.argv[sys.argv.index('--size') + 1] if '--size' in sys.argv else '1920x1080'
     W, H = (960, 540) if draft else tuple(int(v) for v in size.split('x'))
     px = W * H / (1920 * 1080)
-    ass = [
-        '[Script Info]', 'ScriptType: v4.00+', 'PlayResX: 1920', 'PlayResY: 1080', 'WrapStyle: 2', 'ScaledBorderAndShadow: yes', '',
-        '[V4+ Styles]',
-        'Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding',
-        'Style: Eyebrow,Poppins SemiBold,28,' + BLUE + ',&H00FFFFFF,&H00000000,&HB4000000,0,0,0,0,100,100,6,0,1,0,1.2,1,0,0,0,1',
-        'Style: Title,Poppins SemiBold,86,&H00FFFFFF,&H00FFFFFF,&H00000000,&HA0000000,0,0,0,0,100,100,-0.6,0,1,0,2,1,0,0,0,1',
-        'Style: Detail,Poppins,40,&H00E6DED6,&H00FFFFFF,&H00000000,&HA0000000,0,0,0,0,100,100,0.2,0,1,0,1.5,1,0,0,0,1',
-        'Style: Scrim,Poppins,20,&HFF000000,&HFF000000,&HFF000000,&HFF000000,0,0,0,0,100,100,0,0,1,0,0,7,0,0,0,1',
-        # HQ20 (Vico: the title scrim was "a giant box ... it should be fitting to the background of the text"; picked F):
-        # each line gets its own soft box sized to its own text (BorderStyle 3: an opaque box from the line's glyph extents,
-        # Outline = padding, OutlineColour = 30% black), same font / size / spacing as the line it sits behind.
-        f'Style: BoxEyebrow,Poppins SemiBold,28,&HFF000000,&HFF000000,&H{BOX_A}000000,&H{BOX_A}000000,0,0,0,0,100,100,6,0,3,16,0,1,0,0,0,1',
-        f'Style: BoxTitle,Poppins SemiBold,86,&HFF000000,&HFF000000,&H{BOX_A}000000,&H{BOX_A}000000,0,0,0,0,100,100,-0.6,0,3,26,0,1,0,0,0,1',
-        f'Style: BoxDetail,Poppins,40,&HFF000000,&HFF000000,&H{BOX_A}000000,&H{BOX_A}000000,0,0,0,0,100,100,0.2,0,3,20,0,1,0,0,0,1',
-        'Style: CTA,Poppins Medium,46,&H00FFFFFF,&H00FFFFFF,&H00000000,&HA0000000,0,0,0,0,100,100,1.5,0,1,0,1.5,5,0,0,0,1', '',
-        '[Events]', 'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text']
-    X0 = 128
+    ass = list(ASS_HEAD)
     CTA_Y = 904
-    for t in titles:
-        a, b = t['start'], t['end']
-        X0, DY, AN, BOX_PLACE = PLACES[t.get('place', 'lower-left')]
-        # (Until HQ20: one soft, blurred 1300 x 350 scrim behind the text block, per-title 'scrim' alpha; now fitted line boxes.)
-        if SCRIM_BLOCK: ass.append(f'Dialogue: 0,{ts(a - .2)},{ts(b + .2)},Scrim,,0,0,0,,{{\\an7\\pos(0,0)\\p1\\1c&H000000&\\1a&HFF&\\blur90\\t(0,900,\\1a&H{t.get('scrim') or '90'}&)\\t({int((b - a) * 1000 - 300)},{int((b - a) * 1000 + 400)},\\1a&HFF&)}}m 0 730 l 1300 730 1300 1080 0 1080{{\\p0}}')
-        def line(layer, style, y, text, delay, rise=14):
-            dur = int((b - a) * 1000)
-            return (f'Dialogue: {layer},{ts(a + delay / 1000)},{ts(b)},{style},,0,0,0,,'
-                    f'{{\\an{AN}\\move({X0},{y + DY + rise},{X0},{y + DY},0,900)\\fad(650,420)\\blur5\\t(0,700,\\blur0)}}{text}')
-        # Director Mode's shadow: blur / opacity restyle the boxes; paths replace them (one drawing each, timed like its line).
-        sh = t['shadow']; blur = ass_num(sh.get('blur', BOX_BLUR))
-        alpha = f"{max(0, min(255, round(255 * (1 - float(sh['opacity']))))):02X}" if 'opacity' in sh else (BOX_PLACE or BOX_A)
-        tint = f'\\3a&H{alpha}&' if alpha != BOX_A else ''
-        def box(style, y, text, delay, rise=14):
-            return (f'Dialogue: 0,{ts(a + delay / 1000)},{ts(b)},Box{style},,0,0,0,,'
-                    f'{{\\an{AN}\\move({X0},{y + DY + rise},{X0},{y + DY},0,900)\\fad(650,420){tint}\\blur{blur}}}{text}')
-        for p in sh.get('paths') or []:
-            delay, rise = LINE_TIMING.get(p.get('line'), (0, 10))
-            ass.append(f'Dialogue: 0,{ts(a + delay / 1000)},{ts(b)},Scrim,,0,0,0,,{{\\an7\\move(0,{rise},0,0,0,900)\\fad(650,420)\\p1\\bord0\\shad0'
-                       f'\\1c&H000000&\\1a&H{alpha}&\\blur{blur}}}{ass_drawing(p, (X0, ANCHOR[1] + DY))}{{\\p0}}')
-        for style, y, key, delay, rise in (('Eyebrow', 812, 'eyebrow', 0, 10), ('Title', 912, 'title', 140, 14), ('Detail', 970, 'detail', 380, 10)):
-            if not SCRIM_BLOCK and not sh.get('paths'): ass.append(box(style, y, t[key], delay, rise))
-            ass.append(line(1, style, y, t[key], delay, rise))
+    ass += title_dialogues(titles)
     ass.append(f'Dialogue: 1,{ts(cta["start"])},{ts(total)},CTA,,0,0,0,,{{\\an5\\move(960,{CTA_Y + 10},960,{CTA_Y},0,1100)\\fad(900,1400)\\blur4\\t(0,800,\\blur0)}}{cta["text"]}')
     open(os.path.join(out, 'titles.ass'), 'w', encoding='utf-8').write('\n'.join(ass) + '\n')
 
