@@ -358,3 +358,17 @@ export function setJointAngles(people,k,bone,angles){
   const p=structuredClone(people),e=entryOf(p,k.entry);if(!e||!angles.every(finite))return null;
   putKeys(e,setPoseKey(e,k.t,bone,anglesTurn(angles)));return p;
 }
+
+// ---- S33a2: how a cast entry is placed (room-people.mjs): only a person at a spot of their own (`at`) is moved by
+// hand (the gizmo, X / Z); the others follow what places them: the film desk, a room desk, a seat or a piece of furniture.
+export const SEAT_FIELDS=['on','near','face','by','reach','around','toward','along','depth','seat','clear'];
+export function placementOf(e){
+  if(!e||typeof e!=='object')return 'none';
+  if(e.desk)return e.station?'station':'desk';
+  if(Array.isArray(e.beside))return 'beside';
+  if(e.on!==undefined||Array.isArray(e.near))return 'seat';
+  if(e.by!==undefined||Array.isArray(e.around))return 'furniture';
+  if(Array.isArray(e.at)&&e.at.length>=2&&e.at.every(v=>typeof v==='number'&&Number.isFinite(v)))return 'spot';
+  return 'none';
+}
+export const freeSpot=e=>placementOf(e)==='spot';

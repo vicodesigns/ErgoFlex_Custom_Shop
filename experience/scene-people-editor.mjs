@@ -1,7 +1,7 @@
 import {cleanPeople,effectivePeople,newKey,spanText,PARTS} from './people-edits.mjs';
 import {createPoseEditor,JOINTS} from './scene-pose-editor.mjs';
 import {stackRows} from './lane-rows.mjs';
-import {sheet,sheetKeys,EASE_SHAPES,NO_EASE,pick,neighborTime,shiftKeys,deleteKeys,copyKeys,pasteKeys,setEase,toggleKeyAt,turnAngles,setJointAngles,waypointOf,setWaypoint} from './people-track.mjs';
+import {placementOf,freeSpot,SEAT_FIELDS,sheet,sheetKeys,EASE_SHAPES,NO_EASE,pick,neighborTime,shiftKeys,deleteKeys,copyKeys,pasteKeys,setEase,toggleKeyAt,turnAngles,setJointAngles,waypointOf,setWaypoint} from './people-track.mjs';
 import {loadSavedPoses,storeSavedPoses,addSavedPose} from './saved-poses.mjs';
 import {createPathGizmo} from './people-path-gizmo.mjs';   // S31 M3 path editing (hook)
 // Director "People": who is in the chapter. The People tab lists the cast; click a person in the view (or a row) to
@@ -89,7 +89,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   }
   const ensure=()=>booting||=boot().catch(error=>{booting=null;throw error;});
   const objectOf=key=>stagePeople()?.byKey?.(key)||null;
-  const free=e=>!!e&&!e.desk&&!e.beside;
+  const free=e=>freeSpot(e);   // S33a2: only a person at a spot of their own (`at`); a seated one follows their seat
   function tick(){
     if(!tools)return;requestAnimationFrame(tick);
     pose.tick();paths.tick();   // S31 M3 hook
@@ -269,8 +269,9 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(name?.startsWith('pe-color-')){const part=name.slice(9);if(!PARTS.includes(part)||!/^#[0-9a-f]{6}$/i.test(el.value))return;edit(sel,x=>{(x.colors||={})[part]=el.value.toLowerCase();},`${who}: ${part} recoloured.`,{undoKey:'people-color-'+part+sel});return;}
     if(name==='pe-anchor'){
       if(el.value==='free'){const o=objectOf(sel),spot=o&&tools?read(o):floorSpot(),shown=o?.userData?.person,as=shown?.variant&&modelOf(shown.id)?shown.id:null;   // they stay as they are now: in the posture the desk has them in
-        edit(sel,x=>{if(as&&as!==x.id){x.id=as;delete x.pose;}delete x.desk;delete x.station;delete x.reach;delete x.beside;x.at=spot.at;x.turn=spot.turn;},`${who} stays where they are now and no longer follows the desk.`);}
-      else{const p=poseOf(e.id);edit(sel,x=>{delete x.at;delete x.turn;delete x.y;delete x.beside;x.desk=p?.stance==='seated'?'sit':p?.stance==='wheelchair'?'wheel':'stand';},`${who} is at the film desk and follows it.`);}
+        edit(sel,x=>{if(as&&as!==x.id){x.id=as;delete x.pose;}delete x.desk;delete x.station;delete x.reach;delete x.beside;for(const f of SEAT_FIELDS)delete x[f];x.at=spot.at;x.turn=spot.turn;},`${who} stays where they are now and no longer follows the desk.`);}
+      else if(el.value==='seat')return;
+      else{const p=poseOf(e.id);edit(sel,x=>{for(const f of SEAT_FIELDS)delete x[f];delete x.at;delete x.turn;delete x.y;delete x.beside;x.desk=p?.stance==='seated'?'sit':p?.stance==='wheelchair'?'wheel':'stand';},`${who} is at the film desk and follows it.`);}
       return;
     }
     if(name==='pe-x'||name==='pe-z'){const i=name==='pe-x'?0:1,mm=num(-100000,100000);edit(sel,x=>{if(x.at)x.at[i]=Math.round(mm);},`Moved ${who}.`,{undoKey:'people-'+name+sel});return;}
@@ -347,7 +348,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   const field=(label,name,value,{step=1,min='',max='',unit='',disabled=false,title=''}={})=>`<label title="${escape(title)}">${escape(label)}<input type="number" name="${name}" value="${escape(value)}" step="${step}" ${min!==''?`min="${min}"`:''} ${max!==''?`max="${max}"`:''} ${disabled?'disabled':''}>${unit?`<small>${escape(unit)}</small>`:''}</label>`;
   const select_=(name,value,options)=>`<select name="${name}">${options.map(([v,l])=>`<option value="${escape(v)}" ${v===value?'selected':''}>${escape(l)}</option>`).join('')}</select>`;
   function selectedPanel(e){
-    const c=who(e.id),p=poseOf(e.id),m=modelOf(e.id),s=spans(e.key)?.[0]||null,T=seconds(),o=objectOf(e.key),isFree=free(e);
+    const c=who(e.id),p=poseOf(e.id),m=modelOf(e.id),s=spans(e.key)?.[0]||null,T=seconds(),o=objectOf(e.key),isFree=free(e),placed=placementOf(e);
     if(!catalog)return '<p class="director-hint">Loading the people catalog…</p>';
     const chars=Object.entries(catalog.characters).filter(([,x])=>(filters.sex==='all'||sexIs(x.sex,filters.sex))&&(filters.age==='all'||x.age===filters.age)&&(filters.heritage==='all'||x.heritage===filters.heritage));
     charIds=chars.map(([id])=>id);
@@ -374,9 +375,9 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       <div class="director-actions"><button type="button" data-action="pe-pose-enter" title="Turn joints and drag hands and feet to get the posture just right (or double-click the person in the view)">Fine-tune pose…</button><span class="director-hint people-tuned">${tuned?`${tuned} joint${tuned===1?'':'s'} adjusted`:'or double-click them in the view'}</span></div>
       ${loadSavedPoses(store()).length?`<h4>Saved poses</h4>${savedHTML(e)}`:''}
       <h4>Place</h4>
-      ${select_('pe-anchor',isFree?'free':'desk',[['free','Free spot (move by hand)'],['desk',e.station?'At a desk in the room':'At the film desk (follows it)']])}
+      ${select_('pe-anchor',isFree?'free':placed==='seat'||placed==='furniture'?'seat':'desk',[['free','Free spot (move by hand)'],['desk',e.station?'At a desk in the room':'At the film desk (follows it)'],...(placed==='seat'||placed==='furniture'?[['seat',placed==='seat'?'On a seat in the room (as the film has it)':'By furniture in the room (as the film has it)']]:[])])}
       ${isFree?`<div class="director-row people-fields">${field('X',`pe-x`,e.at[0],{step:10,unit:'mm'})}${field('Z','pe-z',e.at[1],{step:10,unit:'mm'})}${field('Turn','pe-turn',e.turn||0,{step:5,min:-360,max:360,unit:'°'})}${field('Lift','pe-y',e.y||0,{step:5,unit:'mm',title:'Raises a seated person onto a seat, or anyone onto a step'})}</div>
-      <div class="director-actions people-modes">${Object.entries(MODES).map(([k,l])=>`<button type="button" data-action="pe-mode-${k}" aria-pressed="${mode===k}">${l}</button>`).join('')}<button type="button" data-action="pe-face-desk">Face the desk</button><button type="button" data-action="pe-face-camera">Face the camera</button></div>`:'<p class="director-hint">They work at the desk and move with it, and they sit or stand as its height changes: seated at 28 to 30 in, standing at 43.5 in, out of the way while it travels between.</p>'}
+      <div class="director-actions people-modes">${Object.entries(MODES).map(([k,l])=>`<button type="button" data-action="pe-mode-${k}" aria-pressed="${mode===k}">${l}</button>`).join('')}<button type="button" data-action="pe-face-desk">Face the desk</button><button type="button" data-action="pe-face-camera">Face the camera</button></div>`:placed==='seat'||placed==='furniture'?`<p class="director-hint">${placed==='seat'?'They sit on a seat in the room':'They stand or sit by a piece of furniture in the room'}${typeof e.on==='string'?` (${escape(e.on)})`:''} and stay with it. Choose “Free spot” to place them by hand.</p>`:'<p class="director-hint">They work at the desk and move with it, and they sit or stand as its height changes: seated at 28 to 30 in, standing at 43.5 in, out of the way while it travels between.</p>'}
       ${paths.panel(e)/* S31 M3 hook */}
       <div class="director-row people-fields">${field('Size','pe-scale',Math.round((e.scale||1)*100),{step:1,min:20,max:300,unit:'%',title:'100 % is the size the character was built at'})}</div>
       <h4>Clothes and hair</h4>
@@ -499,8 +500,9 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(dir){const t=jump(n.keys.map(k=>k.t),dir);if(t!==undefined&&t!==null){const k=n.keys.find(k=>Math.abs(k.t-t)<1e-6);if(k)setPicked(pick(picked,[k.id]),{focus:k.id});}return;}
     toggleAtPlayhead(n);
   },true);
-  // J / K: the previous / next key of the sheet (every key showing), as After Effects. Esc: no key selected.
-  document.addEventListener('keydown',ev=>{
+  // J / K: the previous / next key of the sheet (every key showing), as After Effects. Esc: no key selected (first; the
+  // next Esc clears the person, director.mjs). On window, capture: before the Director's own keys on the document.
+  addEventListener('keydown',ev=>{
     if(!open()||ev.target.closest?.('input,select,textarea,[contenteditable]')||document.querySelector('dialog[open]'))return;
     if(keyCommand(ev))return;
     if(ev.ctrlKey||ev.metaKey||ev.altKey)return;
@@ -648,7 +650,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     menu.hidden=false;menu.style.left=Math.min(ev.clientX,innerWidth-230)+'px';menu.style.top=Math.max(8,Math.min(ev.clientY,innerHeight-menu.offsetHeight-8))+'px';
   },true);
   document.addEventListener('pointerdown',ev=>{if(!menu.hidden&&!menu.contains(ev.target))closeMenu();},true);
-  document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&!menu.hidden){ev.stopImmediatePropagation();closeMenu();}},true);
+  addEventListener('keydown',ev=>{if(ev.key==='Escape'&&!menu.hidden){ev.stopImmediatePropagation();closeMenu();}},true);
   menu.addEventListener('click',ev=>{const b=ev.target.closest('[data-ps-ease]');if(!b||b.disabled)return;closeMenu();setInterp(pickedKeys(),b.dataset.psEase);});
   // The timeline's People lane: one bar per person over the seconds they are in the room. People who are there at the
   // same time get rows of their own (lane-rows.mjs); the lane grows past two rows so every bar keeps its name.
