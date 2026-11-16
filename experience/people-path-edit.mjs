@@ -26,7 +26,7 @@ export function pathOf(e){
 // when they were one spot.
 export function withPath(e,points){
   const kind=motionOf(e);if(!kind)return e;
-  const out=clone(e),m=out[kind],was=pathOf(e),pts=points.map(p=>round([Math.max(-LIMIT,Math.min(LIMIT,p[0])),Math.max(-LIMIT,Math.min(LIMIT,p[1]))]));
+  const out=clone(e),m=out[kind],was=pathOf(e),pts=points.map(p=>(was||[]).some(q=>q[0]===p[0]&&q[1]===p[1])?[p[0],p[1]]:round([Math.max(-LIMIT,Math.min(LIMIT,p[0])),Math.max(-LIMIT,Math.min(LIMIT,p[1]))]));   // (a point the edit did not touch keeps its value exactly: the film's paths have tenths of a millimetre)
   if(Array.isArray(out.at)&&was&&same(out.at,was[0])&&!same(pts[0],was[0],0))out.at=[...pts[0]];
   m.path=pts;delete m.to;delete m.from;
   return out;
@@ -50,7 +50,7 @@ export function moveStart(e,by){
   if(!Array.isArray(e?.at)||!by?.every?.(finite))return e;
   const out=clone(e),kind=motionOf(e),pts=pathOf(e);
   out.at=round([e.at[0]+by[0],e.at[1]+by[1]]);
-  if(kind&&pts&&same(e.at,pts[0])){pts[0]=[...out.at];const m=out[kind];m.path=pts.map(round);delete m.to;delete m.from;}
+  if(kind&&pts&&same(e.at,pts[0])){pts[0]=[...out.at];const m=out[kind];m.path=pts;delete m.to;delete m.from;}
   return out;
 }
 // Snap a floor point to a grid (mm).

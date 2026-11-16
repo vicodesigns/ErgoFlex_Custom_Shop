@@ -25,7 +25,11 @@ const until=async(fn,what,ms=30000)=>{const end=Date.now()+ms;for(;;){const v=aw
 const snap=(name,el)=>(el||page).screenshot({path:path.join(shots,name+'.png')});
 const live=(key=KEY)=>page.evaluate(k=>{const x=document.getElementById('stage').contentWindow.ErgoFlex.workspaceRoom?.people?.list().find(x=>x.key===k);return x?{at:x.at,visible:x.visible}:null;},key);
 // Andre's entry in the chapter's peopleEdits, as the Director's draft has it
-const mine=(key=KEY)=>page.evaluate(k=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));const cut=v.drafts?.[v.active]||v.cuts.find(c=>c.id===v.active);for(const s of cut.shots){const e=s.peopleEdits?.cast?.find(e=>e.key===k);if(e)return e;}}catch{}return null;},key);
+// the entry in the Director's draft: a film chapter keeps it in ergoflex.director.filmDrafts.v1 (film-fresh.mjs: the
+// Cinematographer's cut's pages), a client cut in the cut library (ergoflex.clientCuts.v1). Reading only the second
+// made this test time out on 46181cb5+ although the drag commits.
+const mine=(key=KEY)=>page.evaluate(k=>{const cuts=[];try{for(const d of Object.values(JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')))if(d?.cut)cuts.push(d.cut);}catch{}try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1')||'null');if(v)cuts.push(v.drafts?.[v.active]||v.cuts.find(c=>c.id===v.active));}catch{}
+  for(const cut of cuts)for(const s of cut?.shots||[]){const e=s.peopleEdits?.cast?.find(e=>e.key===k);if(e)return e;}return null;},key);
 // path points (room mm) on the page, in pixels
 const screen=pts=>page.evaluate(pts=>{const f=document.getElementById('stage'),w=f.contentWindow,t=w.ErgoPresentation.three(),root=w.ErgoFlex.workspaceRoom.root,V=root.position.constructor,r=f.getBoundingClientRect();root.updateWorldMatrix(true,false);
   return pts.map(p=>{const q=new V(p[0],0,p[1]).applyMatrix4(root.matrixWorld).project(t.camera);return {x:r.left+(q.x+1)/2*r.width,y:r.top+(1-q.y)/2*r.height,on:Math.abs(q.x)<.85&&Math.abs(q.y)<.85&&q.z<1};});},pts);
