@@ -1,4 +1,4 @@
-import {titleLines,LINES,ANCHOR,FILM_W,FONT_REAL,DESC,BOX_BLUR,BOX_OPACITY,BLUR_SIGMA,chapterTitles,cutRule,timingNotes,cleanFilmTitles,shadowOf,fittedPaths,textBounds,lineState,pathTiming,restTime,svgPath,bounds,nearestOnPath,insertPoint,deletePoint,toggleSmooth,moveHandle,movePoint,transformPaths,pointCount,placeOf} from './film-titles.mjs';
+import {titleLines,LINES,ANCHOR,FILM_W,FONT_REAL,DESC,BOX_BLUR,BOX_OPACITY,BLUR_SIGMA,chapterTitles,cutRule,timingNotes,cleanFilmTitles,shadowOf,fittedPaths,textBounds,lineState,pathTiming,restTime,svgPath,bounds,nearestOnPath,insertPoint,deletePoint,toggleSmooth,moveHandle,movePoint,transformPaths,pointCount,placeOf,newTitle,duplicateTitle,MAX_TITLES,NEW_TITLE_SECONDS} from './film-titles.mjs';
 import {stackRows,rowVar} from './lane-rows.mjs';
 // Film titles in Director Mode: the TITLES lane (one block per title card: drag to move, edges to trim), the Title
 // inspector (copy, timing, shadow) and the title overlay in the 16:9 frame, drawn as finish-intro.py burns it in.
@@ -31,7 +31,8 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     w=canvas.measureText(text).width+Math.max(0,L.spacing)*[...text].length;widths.set(key,w);return w;
   }
   // ---- data -------------------------------------------------------------------------------------------------
-  const has=()=>!!source&&(titles().length>0);
+  // Every film chapter (titles-src.json loaded) has the Titles lane and the Title tab, with or without titles (+ Title).
+  const has=()=>!!source;
   function titles(){
     const s=shot();if(s.filmTitles)return s.filmTitles;if(!source)return [];
     let list=fromFilm.get(s.id);if(!list){list=cleanFilmTitles(chapterTitles(source.src,s.id),s.seconds)||[];fromFilm.set(s.id,list);}return list;
@@ -43,6 +44,26 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     ready();const list=titles().map(t=>t.id===selected?change(structuredClone(t)):t);
     commit(()=>{const s=shot();s.filmTitles=cleanFilmTitles(list,s.seconds);const first=s.filmTitles[0];if(first){s.title=first.title||s.title;s.detail=first.detail;}},{render:renderAll,key});
     lastKey='';sync();if(message)status(message);
+  }
+  // Add / duplicate / delete: the chapter's whole list in one undo step (shot.filmTitles; [] = every title deleted).
+  function putList(list,{select:id=null}={}){
+    ready();commit(()=>{const s=shot();s.filmTitles=cleanFilmTitles(list,s.seconds);const first=s.filmTitles[0];if(first){s.title=first.title||s.title;s.detail=first.detail;}},{render:true});
+    selected=id&&titles().some(t=>t.id===id)?id:null;if(!selected&&editing)setEditing(false,false);lastKey='';sync();
+  }
+  function addTitle(){
+    const s=shot(),list=titles();if(list.length>=MAX_TITLES)throw Error(`A chapter holds ${MAX_TITLES} titles; delete one first.`);
+    const t=newTitle(s.id,time()*s.seconds,s.seconds,list.map(x=>x.id));onSelect();
+    putList([...list,t],{select:t.id});const message=`Title added at ${r2(t.rel_in)}–${r2(t.rel_out)} s. Type its copy in Title; Undo removes it.`;
+    showInspector('title',true);try{seek(restTime(t)/s.seconds);}catch{}render();status(message);return t.id;
+  }
+  function duplicateSelected(){
+    const s=shot(),list=titles(),t=item();if(!t)throw Error('Select a title to duplicate.');if(list.length>=MAX_TITLES)throw Error(`A chapter holds ${MAX_TITLES} titles; delete one first.`);
+    const c=duplicateTitle(t,s.id,s.seconds,list.map(x=>x.id));
+    putList([...list,c],{select:c.id});showInspector('title',true);try{seek(restTime(c)/s.seconds);}catch{}render();status(`Title duplicated at ${r2(c.rel_in)}–${r2(c.rel_out)} s.`);return c.id;
+  }
+  function deleteSelected(){
+    const t=item();if(!t)throw Error('Select a title to delete.');const rest=titles().filter(x=>x.id!==t.id);
+    putList(rest,{});render();status(`Title “${t.title||t.eyebrow||'untitled'}” deleted.${rest.length?'':' This chapter now has no titles.'} Undo brings it back.`);
   }
   function putTiming(id,a,b,message){
     ready();const s=shot(),list=titles().map(t=>t.id===id?{...t,rel_in:a,rel_out:b,timed:true}:t);
@@ -72,7 +93,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     const mark=R?.earliest!==undefined?`<span class="title-rule" data-title-rule style="left:${R.earliest/s*100}%" title="1.5 s after the cut (${r2(R.earliest)} s): the film's titles come in from here"><i>1.5 s after cut</i></span>`:'';
     const layers=stackRows(list.map(t=>({id:t.id,start:t.rel_in,end:t.rel_out}))),blocks=list.map(t=>{const notes=timingNotes(t,R),early=R?.earliest!==undefined&&t.rel_in<R.earliest-1e-6,custom=!!t.shadow?.paths;
       return `<button class="desk-clip title-clip ${selected===t.id?'selected':''} ${early?'early':''}" data-title-clip="${t.id}" style="${rowVar(layers,t.id)}left:${t.rel_in/s*100}%;width:${(t.rel_out-t.rel_in)/s*100}%" aria-pressed="${selected===t.id}" aria-label="Title ${escape(t.title)}, ${r2(t.rel_in)} to ${r2(t.rel_out)} seconds" title="${escape([t.eyebrow,t.title].filter(Boolean).join(' · '))} · ${r2(t.rel_in)}–${r2(t.rel_out)}s${custom?' · custom shadow':''}${notes.length?' · '+escape(notes.join(' ')):''} (drag to move, edges to trim)"><span class="clip-resize" data-resize="start" title="Trim the title's in point"></span><strong>${t.eyebrow?`<em>${escape(t.eyebrow)}</em> `:''}${escape(t.title||'(no headline)')}</strong><small>${r2(t.rel_in)}–${r2(t.rel_out)}s${custom?' · custom shadow':''}${early?' · before the 1.5 s mark':''}</small><span class="clip-resize" data-resize="end" title="Trim the title's out point"></span></button>`;}).join('');
-    return `<div class="desk-lane-row ${layers.count>1?'layered':''}" data-lane-color="titles" style="--rows:${layers.count}"><span class="desk-lane-label" title="The film's title cards (titles-src.json): drag a block to move it, its edges to trim, click it to edit the copy and the shadow">Titles${edited()?' <small>edited</small>':''}</span><div class="desk-lane title-lane" data-title-lane role="group" aria-label="Film titles timeline"><div class="desk-lane-line"></div>${zone}${mark}${blocks}<div class="camera-track-playhead" data-shared-playhead style="left:${time()*100}%"></div></div></div>`;
+    return `<div class="desk-lane-row ${layers.count>1?'layered':''}" data-lane-color="titles" style="--rows:${layers.count}"><span class="desk-lane-label" title="The film's title cards (titles-src.json): drag a block to move it, its edges to trim, click it to edit the copy and the shadow">Titles${edited()?' <small>edited</small>':''} <button class="title-add" data-title-add type="button" title="Add a title at the playhead (placeholder copy, ${NEW_TITLE_SECONDS} s)" aria-label="Add a title at the playhead" ${list.length>=MAX_TITLES?'disabled':''}>+ Title</button></span><div class="desk-lane title-lane" data-title-lane role="group" aria-label="Film titles timeline"><div class="desk-lane-line"></div>${zone}${mark}${blocks}<div class="camera-track-playhead" data-shared-playhead style="left:${time()*100}%"></div></div></div>`;
   }
   function snapTargets(exclude){
     const out=[];for(const t of titles())if(t.id!==exclude)out.push([t.rel_in,`${t.title||'title'} in`],[t.rel_out,`${t.title||'title'} out`]);
@@ -109,12 +130,14 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   }
   timeline.addEventListener('pointerup',endDrag);timeline.addEventListener('pointercancel',endDrag);
   timeline.addEventListener('click',event=>{
+    if(event.target.closest('[data-title-add]')){event.preventDefault();event.stopPropagation();try{addTitle();}catch(error){status(error.message,true);}return;}
     if(event.target.closest('[data-title-clip]')){if(performance.now()<suppress){event.preventDefault();event.stopPropagation();}return;}
     const rail=event.target.closest('[data-title-lane]');if(!rail)return;try{const r=rail.getBoundingClientRect();seek(Math.max(0,Math.min(1,(event.clientX-r.left)/r.width)));}catch(error){status(error.message,true);}
   });
   timeline.addEventListener('keydown',event=>{
-    const el=event.target.closest('[data-title-clip]');if(!el||!['ArrowLeft','ArrowRight','Enter'].includes(event.key))return;event.preventDefault();
+    const el=event.target.closest('[data-title-clip]');if(!el||!['ArrowLeft','ArrowRight','Enter','Delete','Backspace'].includes(event.key))return;event.preventDefault();
     if(event.key==='Enter'){select(el.dataset.titleClip);return;}
+    if(event.key==='Delete'||event.key==='Backspace'){event.stopPropagation();try{selected=el.dataset.titleClip;deleteSelected();}catch(error){status(error.message,true);}return;}
     try{const t=titles().find(x=>x.id===el.dataset.titleClip),s=shot().seconds,d=(event.shiftKey?1:.1)*(event.key==='ArrowLeft'?-1:1),dd=Math.max(-t.rel_in,Math.min(s-t.rel_out,d));
       putTiming(t.id,Math.round((t.rel_in+dd)*1000)/1000,Math.round((t.rel_out+dd)*1000)/1000,`Title nudged to ${r2(t.rel_in+dd)}–${r2(t.rel_out+dd)} s.`);timeline.querySelector(`[data-title-clip="${t.id}"]`)?.focus();}catch(error){status(error.message,true);}
   });
@@ -125,7 +148,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   }
   // The Chapter tab's Headline / Supporting text: the chapter's first film title (the card the film shows).
   function chapterFields(){
-    if(!has())return null;const all=titles(),t=all[0];
+    if(!has()||!titles().length)return null;const all=titles(),t=all[0];
     return `<div class="film-title-fields"><p class="director-hint">${all.length>1?`The film shows ${all.length} titles in this chapter; these fields are title 1. Pick a title below (or on the Titles lane) for the others, its timing and its shadow.`:'The film title of this chapter (titles-src.json). Its timing and shadow: select it on the Titles lane.'}</p>
       <label>Eyebrow<input name="ft-eyebrow" data-title-id="${t.id}" maxlength="60" value="${escape(t.eyebrow)}"></label>
       <label>Headline<input name="ft-title" data-title-id="${t.id}" maxlength="140" value="${escape(t.title)}"></label>
@@ -136,11 +159,13 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   panel.addEventListener('input',event=>{const el=event.target;if(!el.dataset.type)return;event.stopPropagation();const key=el.dataset.type,value=key==='color'?el.value:key==='italic'?el.value==='true':Number(el.value);if(el.value===''||(typeof value==='number'&&!Number.isFinite(value)))return;try{put(t=>{t.typography={...t.typography,[el.dataset.line]:{...t.typography?.[el.dataset.line],[key]:value}};return t;},{key:'type-'+selected+el.dataset.line+key,renderAll:false});}catch(error){status(error.message,true);}},true);
   function panelHtml(){
     if(!has())return '<p class="director-hint">This chapter has no film titles.</p>';
-    const t=item();
-    if(!t)return `<div data-reveal="title"><h3>Film titles</h3><p class="director-hint">Select a title on the Titles lane, or here, to edit its copy, timing and the shadow behind it.</p><div class="title-list">${list()}</div></div>`;
+    const t=item(),full=titles().length>=MAX_TITLES,addBtn=`<button data-title-action="add" ${full?'disabled':''} title="A new title at the playhead with placeholder copy">+ Add title</button>`;
+    if(!titles().length)return `<div data-reveal="title"><h3>Film titles</h3><p class="director-hint">This chapter has no titles. Add one at the playhead, then type its copy.</p><div class="director-actions title-list-actions">${addBtn}</div></div>`;
+    if(!t)return `<div data-reveal="title"><h3>Film titles</h3><p class="director-hint">Select a title on the Titles lane, or here, to edit its copy, timing and the shadow behind it.</p><div class="director-actions title-list-actions">${addBtn}</div><div class="title-list">${list()}</div></div>`;
     const R=rule(),notes=timingNotes(t,R),S=shadowOf(t,measure),n=titles().indexOf(t)+1,tb=textBounds(t,measure),bb=bounds(S.paths);
     const short=S.custom&&tb&&bb&&(tb.x1>bb.x1+2||tb.x0<bb.x0-2);
     return `<div data-reveal="title"><h3>Film title ${n} <span class="inspector-subtitle">of ${titles().length} in this chapter</span></h3><div class="title-list">${titles().length>1?list():''}</div>
+      <div class="director-actions title-list-actions">${addBtn}<button data-title-action="duplicate" ${full?'disabled':''} title="A copy of this title (copy, layout, shadow) right after it (Ctrl+D)">Duplicate</button><button data-title-action="delete" title="Delete this title (Delete); Undo brings it back">Delete</button></div>
       <label>Title scale (%)<input name="ft-scale" type="number" min="10" max="500" step="1" value="${Math.round((t.scale??1)*100)}"></label><div class="director-grid"><label>X (film pixels)<input name="ft-x" type="number" step="1" value="${placeOf(t).x}"></label><label>Y (headline baseline)<input name="ft-y" type="number" step="1" value="${placeOf(t).anchor[1]}"></label></div><div class="director-actions"><button data-title-action="copy-layout">Copy layout</button><button data-title-action="paste-layout" ${copiedLayout?'':'disabled'}>Paste layout</button></div><details open><summary>Text layers</summary><details open><summary>Eyebrow</summary><label>Eyebrow<input name="ft-eyebrow" maxlength="60" value="${escape(t.eyebrow)}"></label>${typeControls(t,'eyebrow')}</details>
       <details open><summary>Headline</summary><label>Headline<input name="ft-title" maxlength="140" value="${escape(t.title)}"></label>${typeControls(t,'title')}</details>
       <details open><summary>Supporting text</summary><label>Supporting text<textarea name="ft-detail" rows="2" maxlength="260">${escape(t.detail)}</textarea></label>${typeControls(t,'detail')}</details>
@@ -185,7 +210,10 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   });
   function titleAction(name,id){
     if(name==='pick'){select(id);return;}
+    if(name==='add'){addTitle();return;}
     const t=item();if(!t)return;
+    if(name==='duplicate'){duplicateSelected();return;}
+    if(name==='delete'){deleteSelected();return;}
     if(name==='copy-layout'){copiedLayout=structuredClone({position:{x:placeOf(t).x,y:placeOf(t).anchor[1]},scale:t.scale,typography:t.typography,place:t.place,shadow:t.shadow});render();status('Title layout copied. Select another title and paste layout.');return;}
     if(name==='paste-layout'&&copiedLayout){put(x=>({...x,...structuredClone(copiedLayout)}),{message:'Title layout pasted.'});return;}
     if(name==='go'){seek(restTime(t)/shot().seconds);return;}
@@ -347,11 +375,21 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     else return;
     saveShapeKeyed(S.paths);
   },true);
+  // A selected title (not editing its shape): Delete removes it, Ctrl/Cmd+D duplicates it (registered before
+  // director.mjs's history shortcuts, so Ctrl+D lands here first).
+  document.addEventListener('keydown',event=>{
+    if(editing||!open()||!item()||event.defaultPrevented||document.querySelector('dialog[open]'))return;
+    const target=event.target;if(target.closest?.('input,select,textarea,[contenteditable]'))return;
+    if(target!==document.body&&!timeline.contains(target)&&!box.contains(target)&&!panel.contains(target))return;
+    const dup=(event.ctrlKey||event.metaKey)&&!event.shiftKey&&!event.altKey&&event.key.toLowerCase()==='d',del=!event.ctrlKey&&!event.metaKey&&(event.key==='Delete'||event.key==='Backspace');
+    if(!dup&&!del)return;event.preventDefault();event.stopImmediatePropagation();if(event.repeat)return;
+    try{if(dup)duplicateSelected();else deleteSelected();}catch(error){status(error.message,true);}
+  },true);
   function saveShapeKeyed(paths){put(t=>{t.shadow={...t.shadow,paths:structuredClone(paths)};return t;},{key:'ft-nudge'+selected,renderAll:false,message:'Nudged (Shift ×10).'});}
   addEventListener('resize',()=>{lastKey='';sync();});
   return {
     setSource(v){source=v;fromFilm.clear();lastKey='';},has,titles,ticks,lane,snapTargets,panel:panelHtml,chapterFields,header,
-    selectedId:()=>selected,select,clear,editing:()=>editing,editHint:()=>editing?SHAPE_HINT:null,sync,fontsLoaded,measure,
+    selectedId:()=>selected,select,clear,add:addTitle,duplicate:duplicateSelected,remove:deleteSelected,editing:()=>editing,editHint:()=>editing?SHAPE_HINT:null,sync,fontsLoaded,measure,
     toggleShown(){shown=!shown;lastKey='';sync();return shown;},shown:()=>shown,compositeStill,stillTitles:seconds=>stillTitles(seconds).length,
     fitted:t=>fittedPaths(t,measure),
   };

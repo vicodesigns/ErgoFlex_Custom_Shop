@@ -99,9 +99,35 @@ export function cleanTitle(t,seconds=90){
   const s=cleanShadow(t?.shadow);if(s)out.shadow=s;
   return out;
 }
+export const MAX_TITLES=8;
 export function cleanFilmTitles(list,seconds=90){
   if(!Array.isArray(list))return undefined;const seen=new Set();
-  return list.slice(0,8).map(t=>cleanTitle(t,seconds)).filter(t=>!seen.has(t.id)&&seen.add(t.id)).sort((a,b)=>a.rel_in-b.rel_in);
+  return list.slice(0,MAX_TITLES).map(t=>cleanTitle(t,seconds)).filter(t=>!seen.has(t.id)&&seen.add(t.id)).sort((a,b)=>a.rel_in-b.rel_in);
+}
+
+// ---- add / duplicate (Director Mode's + Title, Duplicate) -----------------------------------------------------
+// New ids never take the "<chapter>-<n>" form: build-round8-director.py --import reads that form as "the n-th title
+// of the chapter in titles-src.json" and would start from that entry; any other id becomes a new entry there.
+export const DEFAULT_COPY={eyebrow:'EYEBROW',title:'New headline',detail:'Supporting text'};
+export const NEW_TITLE_SECONDS=5;
+export function newTitleId(chapter,taken=[]){
+  const ids=new Set(taken),stem=String(chapter||'title').replace(/[^A-Za-z0-9_-]/g,'').slice(0,60)||'title';
+  for(let n=1;;n++){const id=`${stem}-new${n}`;if(!ids.has(id))return id;}
+}
+// The span a new title takes: from `at` (the playhead) for NEW_TITLE_SECONDS, kept inside the chapter (moved
+// earlier when the playhead is too close to the end).
+export function spanAt(at,seconds,length=NEW_TITLE_SECONDS){
+  const len=Math.max(.2,Math.min(length,seconds)),a=Math.max(0,Math.min(Number(at)||0,seconds-len));
+  return [r3(a),r3(Math.min(seconds,a+len))];
+}
+export function newTitle(chapter,at,seconds,taken=[]){
+  const [a,b]=spanAt(at,seconds);
+  return cleanTitle({id:newTitleId(chapter,taken),rel_in:a,rel_out:b,...DEFAULT_COPY,timed:true},seconds);
+}
+// A copy of t (copy, layout, shadow) right after it when it fits in the chapter, else at the same time (it stacks).
+export function duplicateTitle(t,chapter,seconds,taken=[]){
+  const len=t.rel_out-t.rel_in,fits=t.rel_out+len<=seconds+1e-6,a=fits?t.rel_out:t.rel_in;
+  return cleanTitle({...structuredClone(t),id:newTitleId(chapter,taken),rel_in:a,rel_out:a+len,timed:true},seconds);
 }
 
 // ---- layout (film pixels) ------------------------------------------------------------------------------------
