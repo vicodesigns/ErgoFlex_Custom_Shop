@@ -1922,8 +1922,8 @@ export class RoomPeople {
             }
             for (const object of pool) {
                 const life = object.userData.personLife, on = chosen.includes(object);
-                if (life === undefined) { if (on) { object.userData.personLife = null; this.later(this.enliven(object)); } continue; }
-                if (!life || !object.userData.personRig || (!on && !life.live)) continue;
+                if (life === undefined) { if (on) { object.userData.personLife = null; this.later(this.enliven(object)); } if (film && on) this.rollRoot(object, time); continue; }
+                if (!life || !object.userData.personRig || (!on && !life.live)) { if (film && on && (!life || !object.userData.personRig)) this.rollRoot(object, time); continue; }
                 const step = object.userData.personStepLife ?? 1, pair = object.userData.personPairLife ?? 1;   // (stepped out: the life comes in after the step, stepOuts; round a change of posture: changing)
                 this.moveOne(object, life, on, on ? step * pair : 0, film, time, dt, hold, turning, on ? step : 0);
             }
@@ -2376,6 +2376,19 @@ export class RoomPeople {
     // A film's wheelchair user rolling along a path (a placement with `roll`): at its start until `start`, then rolling
     // it, then at its end. Planned once per path; the wheels of the drawn model (bones wheel_l / wheel_r, where the
     // model has them: tools/people/build_people.py) turn with it.
+    // Someone who rolls in the film but has no life yet (just built: a cast edit that changes who is in the cast rebuilds
+    // everyone, and enliven is async) stands where the roll has them at this moment, not at its start: without this Kai
+    // was drawn for a frame at his cast spot, 237 mm to 2 m from where he was rolling, when a desk with a sitter was
+    // hidden, its Undo and its Redo (desk-proof, oilers). Only the root: the posture comes with the life.
+    rollRoot(object, time) {
+        const roll = object.userData.person.roll; if (!roll || time === null) return;
+        const sign = JSON.stringify(roll) + '|' + JSON.stringify(object.userData.person.at || null);
+        let c = object.userData.personRollRoot;
+        if (c?.sign !== sign) { const path = this.rollPath(object, roll); c = object.userData.personRollRoot = { sign, plan: path ? rollPlan(path, this.rollOptions(roll)) : null }; }
+        if (!(c.plan?.length > 1e-3)) return;
+        const r = c.plan.at(Math.max(0, time - (roll.start || 0)));
+        object.position.x = r.x * 1000; object.position.z = r.z * 1000; object.rotation.y = r.yaw; this.dirty = true;
+    }
     rollAlong(object, life, roll, time, hold) {
         const sign = JSON.stringify(roll) + '|' + JSON.stringify(object.userData.person.at || null);
         if (life.rollSign !== sign) {
