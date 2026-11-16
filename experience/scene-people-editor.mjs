@@ -1,7 +1,7 @@
 import {cleanPeople,effectivePeople,newKey,spanText,PARTS} from './people-edits.mjs';
 import {createPoseEditor,JOINTS} from './scene-pose-editor.mjs';
 import {stackRows} from './lane-rows.mjs';
-import {sheet,sheetKeys,EASE_SHAPES} from './people-track.mjs';
+import {sheet,sheetKeys,EASE_SHAPES,NO_EASE,pick,neighborTime,shiftKeys,deleteKeys,copyKeys,pasteKeys,setEase,toggleKeyAt,turnAngles,setJointAngles,waypointOf,setWaypoint} from './people-track.mjs';
 import {loadSavedPoses,storeSavedPoses,addSavedPose} from './saved-poses.mjs';
 import {createPathGizmo} from './people-path-gizmo.mjs';   // S31 M3 path editing (hook)
 // Director "People": who is in the chapter. The People tab lists the cast; click a person in the view (or a row) to
@@ -20,7 +20,7 @@ const r1=v=>Math.round(v*10)/10;
 const MODES={translate:'Move',rotate:'Turn',scale:'Scale'};
 const STANCES=['standing','seated','wheelchair','walking'];
 const thumb=id=>`/assets/props/thumbs/${encodeURIComponent(id)}.png`;
-export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rerender,time=()=>0,seek=()=>{},onSelect=()=>{},lightsShowing=()=>false}){
+export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rerender,time=()=>0,seek=()=>{},onSelect=()=>{},lightsShowing=()=>false,snap=null}){
   let sel=null,catalog=null,loading=null,tools=null,booting=null,mode='translate',busy=null,rowKeys=[],laneKeys=[],charIds=[],shown=[];
   const filters={sex:'all',age:'all',heritage:'all'},lib={query:'',sex:'all',stance:'all',aid:'all'};
   const frame=()=>document.getElementById('stage'),win=()=>frame()?.contentWindow,three=()=>bridge.stage()?.three?.();
@@ -258,6 +258,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       'Timing updated.',{undoKey:'people-when-'+key});
   }
   async function changed(el){
+    if(keyChanged(el))return;   // S33: the selected key's Inspector
     if(pose.changed(el))return;
     if(paths.changed(el))return;   // S31 M3 hook
     const name=el.name,e=sel&&entry(sel),v=Number(el.value);
@@ -283,6 +284,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(name==='pe-fout'){const t=num(0,5);setSpan(sel,s=>{s[3]=t;});return;}
   }
   async function action(name,index){
+    if(keyAction(name))return;   // S33: the selected key's Inspector
     if(pose.action(name,index))return;
     if(paths.action(name,index))return;   // S31 M3 hook
     if(name==='pe-pose-enter'){if(sel){await ensure();await enterPose(sel);}return;}
@@ -394,7 +396,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     return `<div class="director-heading"><div><span class="director-kicker">PEOPLE</span><h3>${list.length?`${count()} in this chapter`:'Nobody in this chapter'}</h3></div></div>
       <div class="director-actions"><button type="button" data-action="pe-add">+ Add person</button>${list.length?'':'<button type="button" data-action="pe-room">Bring in the room\'s people</button>'}${mine?'<button type="button" data-action="pe-reset" title="Back to the cast the film has for this chapter">Reset to the film</button>':''}</div>
       <p class="director-hint">${mine?'This chapter has its own cast.':list.length?'This is the film\'s cast. Your first change copies it into the chapter.':'Add people from the library, or bring in the people who live in this room.'} Click a person in the view or in the list.</p>
-      <div class="people-list">${list.map(row).join('')}</div>${e?selectedPanel(e):''}`;
+      ${keyInspector()}<div class="people-list">${list.map(row).join('')}</div>${e?selectedPanel(e):''}`;
   }
   // ---- the People KEYFRAME SHEET (S33 A2; people-track.mjs sheet): After Effects' twirl-down / Blender's dope sheet.
   // A row per character: collapsed, a small diamond wherever any of its properties has a key and a thin bar while
@@ -440,6 +442,214 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const b=ev.target.closest?.('[data-ps-twirl]');if(!b)return;ev.preventDefault();ev.stopPropagation();
     const id=b.dataset.psTwirl;if(twirls.has(id))twirls.delete(id);else twirls.add(id);saveTwirls();rerender();
   },true);
+  // ---- selecting keys (M-b): click selects, Shift+click adds or takes out, a drag on empty row space is a marquee.
+  // The key's person becomes the selected person, so the People tab shows the key's Inspector.
+  const pickedKeys=()=>[...picked].map(id=>sheetMap.get(id)).filter(Boolean);
+  const rowOf=k=>sheetRows.find(r=>r.row===k.row);
+  function setPicked(next,{focus=null}={}){
+    picked=next;const k=focus&&sheetMap.get(focus)||pickedKeys()[0];
+    if(k&&k.kind==='joint')skJoint=k.bone;else if(k&&k.kind==='pose'&&!k.bones.includes(skJoint))skJoint=k.bones[0]||null;
+    if(k&&sel!==k.entry&&entry(k.entry)){select(k.entry,{announce:false});return;}
+    if(k)onSelect();rerender();
+  }
+  const peopleChanged=(next,text)=>write(p=>{for(const key of Object.keys(p))delete p[key];Object.assign(p,structuredClone(next));},text);
+  const cur=()=>own()||seed();
+  let press=null,box=null;
+  document.addEventListener('pointerdown',ev=>{
+    if(ev.button!==0)return;
+    const keyEl=ev.target.closest?.('[data-sk]'),laneEl=!keyEl&&ev.target.closest?.('.ps-row .ps-lane');
+    if(!keyEl&&!laneEl)return;
+    ev.preventDefault();ev.stopPropagation();
+    if(keyEl){const lane=keyEl.parentElement.getBoundingClientRect();press={id:keyEl.dataset.sk,x:ev.clientX,y:ev.clientY,shift:ev.shiftKey,left:lane.left,width:lane.width,moved:false};return;}
+    box={x:ev.clientX,y:ev.clientY,add:ev.shiftKey,base:new Set(picked),el:null};
+  },true);
+  document.addEventListener('pointermove',ev=>{
+    if(box){
+      if(!box.el){if(Math.hypot(ev.clientX-box.x,ev.clientY-box.y)<5)return;box.el=document.createElement('div');box.el.className='timeline-marquee';document.body.append(box.el);}
+      const l=Math.min(box.x,ev.clientX),r=Math.max(box.x,ev.clientX),t=Math.min(box.y,ev.clientY),b=Math.max(box.y,ev.clientY);
+      Object.assign(box.el.style,{left:l+'px',top:t+'px',width:r-l+'px',height:b-t+'px'});
+      const hits=[...document.querySelectorAll('.ps-row [data-sk]')].filter(e=>{const q=e.getBoundingClientRect();return q.right>=l&&q.left<=r&&q.bottom>=t&&q.top<=b;}).map(e=>e.dataset.sk);
+      box.hits=hits;const now=pick(box.base,hits,{add:box.add});for(const e of document.querySelectorAll('.ps-row [data-sk]'))e.classList.toggle('selected',now.has(e.dataset.sk));box.el.dataset.count=String(now.size);
+      return;
+    }
+    if(press)dragMove(ev);
+  },true);
+  document.addEventListener('pointerup',ev=>{
+    if(box){const b=box;box=null;b.el?.remove();
+      if(b.el){setPicked(pick(b.base,b.hits||[],{add:b.add}));status(`${picked.size} key${picked.size===1?'':'s'} selected.`);}
+      else if(!b.add&&picked.size){picked=new Set();rerender();}
+      return;}
+    if(!press)return;const p=press;press=null;ev.stopPropagation();
+    if(p.moved){dragEnd(p,ev);return;}
+    setPicked(p.shift?pick(picked,[p.id],{toggle:true}):pick(picked,[p.id]),{focus:p.id});
+    const k=sheetMap.get(p.id);if(k)status(`${keyTitle(k)}. Drag to move${picked.size>1?' the selected keys':''} · J / K previous / next key · Delete removes it.`);
+  },true);
+  document.addEventListener('pointercancel',()=>{box?.el?.remove();box=null;if(press?.moved)rerender();press=null;},true);
+  document.addEventListener('click',ev=>{if(ev.target.closest?.('[data-sk],.ps-row .ps-lane')){ev.preventDefault();ev.stopPropagation();}},true);
+  // ◀ ◆ ▶ of a property row
+  function rowOfNav(el){
+    const r=el.closest('[data-ps-prop]'),row=sheetRows.find(x=>x.row===r?.dataset.psOf);if(!row)return null;
+    const prop=r.dataset.psProp,bone=r.dataset.psBone||null;
+    return {row,prop,bone,keys:prop==='joint'?row.joints.find(j=>j.bone===bone)?.keys||[]:row.props[prop]};
+  }
+  function jump(times,dir){const t=neighborTime(times,time(),dir);if(t===undefined){status(dir<0?'No key before the playhead.':'No key after the playhead.');return null;}seek(t);return t;}
+  document.addEventListener('click',ev=>{
+    const b=ev.target.closest?.('[data-ps-nav]');if(!b)return;ev.preventDefault();ev.stopPropagation();
+    const n=rowOfNav(b);if(!n)return;const dir=Number(b.dataset.psNav);
+    if(dir){const t=jump(n.keys.map(k=>k.t),dir);if(t!==undefined&&t!==null){const k=n.keys.find(k=>Math.abs(k.t-t)<1e-6);if(k)setPicked(pick(picked,[k.id]),{focus:k.id});}return;}
+    toggleAtPlayhead(n);
+  },true);
+  // J / K: the previous / next key of the sheet (every key showing), as After Effects. Esc: no key selected.
+  document.addEventListener('keydown',ev=>{
+    if(!open()||ev.target.closest?.('input,select,textarea,[contenteditable]')||document.querySelector('dialog[open]'))return;
+    if(keyCommand(ev))return;
+    if(ev.ctrlKey||ev.metaKey||ev.altKey)return;
+    const k=ev.key.toLowerCase();
+    if((k==='j'||k==='k')&&document.querySelector('.ps-row')){ev.preventDefault();ev.stopImmediatePropagation();jump([...document.querySelectorAll('.ps-row [data-sk]')].map(e=>sheetMap.get(e.dataset.sk)?.t).filter(t=>t!==undefined),k==='j'?-1:1);return;}
+    if(!picked.size)return;
+    if(ev.key==='Escape'){ev.preventDefault();ev.stopImmediatePropagation();picked=new Set();rerender();status('No key selected.');}
+  },true);
+  // ---- the Inspector for the selected key(s) (top of the People tab)
+  const PROP_NAME={screen:'On screen',path:'Path',actions:'Actions',pose:'Pose',joint:'Pose'};
+  const fx=v=>Number((Math.round(v*1000)/1000).toFixed(3));
+  const numField=(label,name,value,step,unit,extra='')=>`<label>${label}<input type="number" name="${name}" value="${value}" step="${step}" ${extra}>${unit?`<small>${unit}</small>`:''}</label>`;
+  function easeField(keys){
+    const eased=keys.filter(k=>k.ease),same=eased.length&&eased.every(k=>k.ease===eased[0].ease)?eased[0].ease:'';
+    if(!eased.length)return `<label title="${escape(NO_EASE)}">Interpolation<select name="pe-sk-ease" disabled><option>Linear (time key)</option></select></label><p class="director-hint ps-why">${escape(NO_EASE)}</p>`;
+    return `<label>Interpolation<select name="pe-sk-ease">${same?'':'<option value="" selected>Mixed</option>'}${[['linear','Linear ◆'],['smooth','Smooth (ease) ●'],['hold','Hold ■']].map(([v,l])=>`<option value="${v}" ${v===same?'selected':''}>${l}</option>`).join('')}</select></label>`;
+  }
+  function keyInspector(){
+    const keys=pickedKeys();if(!keys.length)return '';
+    const people=cur();
+    if(keys.length>1){
+      const who=[...new Set(keys.map(k=>k.row))].map(r=>sheetRows.find(x=>x.row===r)?.label||r).join(', ');
+      return `<section class="ps-inspector" data-ps-inspector data-reveal="person"><div class="director-heading"><div><span class="director-kicker">KEYS</span><h3>${keys.length} keys selected</h3></div></div>
+        <p class="director-hint">${escape(who)} · ${fx(Math.min(...keys.map(k=>k.t)))}–${fx(Math.max(...keys.map(k=>k.t)))} s</p>
+        <div class="director-row people-fields">${numField('Move by','pe-sk-dt',0,.05,'s','title="Shifts every selected key by this many seconds (one undo step)"')}${easeField(keys)}</div>
+        <div class="director-actions"><button type="button" data-action="pe-sk-delete" class="danger">Delete keys</button></div></section>`;
+    }
+    const k=keys[0],row=rowOf(k),e=entry(k.entry),what=k.kind==='joint'?`Pose › ${jointName(k.bone)}`:PROP_NAME[k.prop];
+    let values='';
+    if(k.kind==='pose'||k.kind==='joint'){
+      const at=(e?.poseKeys||[]).find(x=>Math.abs(x.t-k.t)<1e-6),bone=k.kind==='joint'?k.bone:(k.bones.includes(skJoint)?skJoint:k.bones[0]),a=turnAngles(at?.pose?.[bone]);
+      values=`${k.kind==='pose'?`<label>Joint<select name="pe-sk-joint">${k.bones.map(b=>`<option value="${escape(b)}" ${b===bone?'selected':''}>${escape(jointName(b))}</option>`).join('')}</select></label>`:''}
+        <div class="director-row people-fields pose-angles">${['Bend','Twist','Side'].map((l,i)=>numField(l,'pe-sk-r'+'xyz'[i],a[i],1,'°','min="-180" max="180"')).join('')}</div>`;
+    }else if(k.prop==='path'){
+      const w=waypointOf(people,k);
+      values=w?`<div class="director-row people-fields">${numField('X','pe-sk-x',w[0],10,'mm')}${numField('Z','pe-sk-z',w[1],10,'mm')}</div>`:'<p class="director-hint">This point is where they stand (their place in the People tab).</p>';
+    }else if(k.prop==='screen'){
+      const placed=entry(k.kind==='change'?k.d.next:k.entry),p=placed&&poseOf(placed.id),m=placed&&modelOf(placed.id),kid=catalog?.characters?.[m?.character]?.age==='child';
+      values=placed&&catalog?`<label>Posture ${k.kind==='change'?'from here':k.kind==='in'?'coming in':'going out'}<select name="pe-sk-posture">${Object.entries(catalog.poses).filter(([id])=>/^kid-/.test(id)===kid).map(([id,x])=>`<option value="${id}" ${id===p?.id?'selected':''}>${escape(x.label)}</option>`).join('')}</select></label>`:'';
+    }
+    return `<section class="ps-inspector" data-ps-inspector data-reveal="person"><div class="director-heading"><div><span class="director-kicker">KEY · ${escape(what.toUpperCase())}</span><h3>${escape(row?.label||k.entry)} · ${escape(k.kind==='joint'?jointName(k.bone):KIND_TITLE[k.kind]||k.label)}</h3></div></div>
+      <p class="director-hint">${escape(k.entry)}${k.linked?' · the placement edge this set-off starts with':''}</p>
+      <div class="director-row people-fields">${numField('Time','pe-sk-t',fx(k.t),.05,'s',`min="0" max="${seconds()}"`)}${easeField([k])}</div>${values}
+      <div class="director-actions"><button type="button" data-action="pe-sk-prev" title="Previous key of this row (J: of the sheet)">◀ Previous</button><button type="button" data-action="pe-sk-next" title="Next key of this row">Next ▶</button><button type="button" class="danger" data-action="pe-sk-delete" title="Delete">Delete</button></div></section>`;
+  }
+  function stepKey(dir){
+    const k=pickedKeys()[0];if(!k)return;const r=rowOf(k),list=k.kind==='joint'?r.joints.find(j=>j.bone===k.bone)?.keys||[]:r.props[k.prop];
+    const t=neighborTime(list.map(x=>x.t),k.t,dir),n=t!==undefined&&list.find(x=>Math.abs(x.t-t)<1e-6);if(!n){status(dir<0?'The first key of this row.':'The last key of this row.');return;}
+    seek(n.t);setPicked(new Set([n.id]),{focus:n.id});
+  }
+  function keyAction(name){
+    if(name==='pe-sk-prev'){stepKey(-1);return true;}
+    if(name==='pe-sk-next'){stepKey(1);return true;}
+    if(name==='pe-sk-delete'){deletePicked();return true;}
+    return false;
+  }
+  function keyChanged(el){
+    const name=el.name,keys=pickedKeys();if(!name?.startsWith('pe-sk-'))return false;if(!keys.length)return true;
+    const v=Number(el.value),k=keys[0],num=()=>{if(el.value.trim()===''||!Number.isFinite(v))throw Error('Type a number.');return v;};
+    if(name==='pe-sk-joint'){skJoint=el.value;rerender();return true;}
+    if(name==='pe-sk-t'){moveKeys(keys,num()-k.t);return true;}
+    if(name==='pe-sk-dt'){moveKeys(keys,num());return true;}
+    if(name==='pe-sk-ease'){setInterp(keys,el.value);return true;}
+    if(/^pe-sk-r[xyz]$/.test(name)){
+      const at=(entry(k.entry)?.poseKeys||[]).find(x=>Math.abs(x.t-k.t)<1e-6),bone=k.kind==='joint'?k.bone:(k.bones.includes(skJoint)?skJoint:k.bones[0]),a=turnAngles(at?.pose?.[bone]);
+      a['xyz'.indexOf(name.slice(-1))]=Math.max(-180,Math.min(180,num()));const next=setJointAngles(cur(),k,bone,a);
+      if(next)peopleChanged(next,`${personName(entry(k.entry))}: ${jointName(bone).toLowerCase()} at ${fx(k.t)} s, bend ${a[0]}° twist ${a[1]}° side ${a[2]}°.`);return true;
+    }
+    if(name==='pe-sk-x'||name==='pe-sk-z'){
+      const w=waypointOf(cur(),k);if(!w)return true;const x=name==='pe-sk-x'?num():w[0],z=name==='pe-sk-z'?num():w[1],next=setWaypoint(cur(),k,x,z);
+      if(next)peopleChanged(next,`${k.entry}: ${KIND_TITLE[k.kind]} at ${Math.round(x)}, ${Math.round(z)} mm.`);return true;
+    }
+    if(name==='pe-sk-posture'){const key=k.kind==='change'?k.d.next:k.entry;swap(key,null,el.value);return true;}
+    return true;
+  }
+  // ---- moving, copy / paste, delete, ◆ at the playhead, interpolation: every one is one write() = one undo step.
+  // A drag moves every selected key by the same seconds (the timeline's Snap and Magnet apply; Alt: free).
+  const snapT=(t,ev,width)=>snap?snap(t,{pixels:width,bypass:ev.altKey}):ev.altKey?t:Math.round(t*20)/20;
+  const plural=(n,w)=>`${n} ${w}${n===1?'':'s'}`;
+  function dragMove(ev){
+    const p=press;if(!p.moved&&Math.abs(ev.clientX-p.x)<3)return;
+    if(!p.moved){
+      if(!editing()){status('Stop the playback to move keys.',true);press=null;return;}
+      p.moved=true;if(!picked.has(p.id))picked=p.shift?pick(picked,[p.id],{add:true}):new Set([p.id]);
+      p.keys=pickedKeys();p.anchor=sheetMap.get(p.id);p.els=[...document.querySelectorAll('.ps-row [data-sk]')].filter(e=>picked.has(e.dataset.sk));
+      for(const e of document.querySelectorAll('.ps-row [data-sk]'))e.classList.toggle('selected',picked.has(e.dataset.sk));
+    }
+    const T=seconds()||1,t=Math.max(0,Math.min(T,snapT(p.anchor.t+(ev.clientX-p.x)/p.width*T,ev,p.width)));p.dt=Math.round((t-p.anchor.t)*1000)/1000;
+    for(const e of p.els){const k=sheetMap.get(e.dataset.sk);if(k)e.style.left=pct(k.t+p.dt);}
+    const r=shiftKeys(cur(),p.keys,p.dt,seconds(),{walkSeconds});p.error=r.error||null;for(const e of p.els)e.classList.toggle('invalid',!!r.error);
+    status(r.error||`${p.keys.length>1?plural(p.keys.length,'key'):keyTitle(p.anchor)} ${p.dt>=0?'+':''}${p.dt.toFixed(2)} s${ev.altKey?' (free)':''}`,!!r.error);
+  }
+  function dragEnd(p){
+    if(!p.dt){rerender();return;}
+    if(p.error){rerender();status(p.error,true);return;}
+    moveKeys(p.keys,p.dt);
+  }
+  function moveKeys(keys,dt){
+    if(!keys.length||!dt){rerender();return;}
+    const r=shiftKeys(cur(),keys,dt,seconds(),{walkSeconds});if(r.error){rerender();status(r.error,true);return;}
+    picked=new Set([...picked].map(id=>r.ids.get(id)||id));
+    peopleChanged(r.people,`${keys.length>1?plural(keys.length,'key'):keyTitle(keys[0]).replace(/ at [\d.]+ s.*/,'')} moved ${dt>0?'+':''}${fx(dt)} s.`);
+  }
+  function deletePicked(){
+    const keys=pickedKeys();if(!keys.length)return;const r=deleteKeys(cur(),keys);
+    if(!r.removed){status(`Not deleted: ${r.skipped.length===1?keyTitle(r.skipped[0]).replace(/ at [\d.]+ s.*/,'')+' is':'these are'} the programmed motion's own timing: drag ${r.skipped.length===1?'it':'them'} instead (only pose keys and waypoints are deleted).`,true);return;}
+    picked=new Set(r.skipped.map(k=>k.id));peopleChanged(r.people,`${plural(r.removed,'key')} deleted${r.skipped.length?` (${r.skipped.length} kept: the motion's own timing, drag them instead)`:''}. Undo brings ${r.removed===1?'it':'them'} back.`);
+  }
+  let clip=null;
+  function copyPicked(){
+    const keys=pickedKeys(),c=copyKeys(cur(),keys);
+    if(!c.items.length){status('Only pose keys are copied: a set-off, waypoint, edge or action is a moment of the motion itself (drag it instead).',true);return;}
+    clip=c;status(`Copied ${plural(c.items.length,'pose key')}${c.skipped?` (${c.skipped} time key${c.skipped===1?'':'s'} left out)`:''}. Ctrl+V pastes at the playhead.`);
+  }
+  function pastePicked(){
+    if(!clip){status('Copy a pose key first (Ctrl+C).',true);return;}
+    const from=[...new Set(clip.items.map(i=>i.entry))],to=from.length===1&&sel&&sel!==from[0]&&entry(sel)?sel:null,t=time();
+    const r=pasteKeys(cur(),clip,t,seconds(),{to});if(!r.ids.length){status('Nothing pasted: the keys would fall outside the chapter.',true);return;}
+    picked=new Set(r.ids);peopleChanged(r.people,`${plural(r.ids.length,'pose key')} pasted at ${fx(t)} s${to?' on '+personName(entry(to)):''}.`);
+  }
+  function setInterp(keys,ease){
+    if(!ease)return;const r=setEase(cur(),keys,ease);if(!r.n){status(NO_EASE,true);rerender();return;}
+    peopleChanged(r.people,`${plural(r.n,'pose key')}: ${ease==='hold'?'hold (steps to the next key)':ease==='linear'?'linear':'smooth (ease)'}.`);
+  }
+  function toggleAtPlayhead(n){
+    if(!editing()){status('Stop the playback to add or remove keys.',true);return;}
+    const r=toggleKeyAt(cur(),n.row,n.prop,time(),seconds(),{bone:n.bone,walkSeconds});if(r.error){status(r.error,true);return;}
+    picked=r.did==='added'?new Set([r.id]):new Set();peopleChanged(r.people,`${n.row.label}: ${n.prop==='joint'?jointName(n.bone).toLowerCase()+' key':n.prop==='path'?'waypoint':'pose key'} ${r.did} at ${fx(time())} s.`);
+  }
+  function keyCommand(ev){
+    const k=ev.key.toLowerCase(),mod=ev.ctrlKey||ev.metaKey;
+    if(!mod&&(ev.key==='Delete'||ev.key==='Backspace')&&picked.size){ev.preventDefault();ev.stopImmediatePropagation();deletePicked();return true;}
+    if(mod&&!ev.shiftKey&&!ev.altKey&&k==='c'&&picked.size){ev.preventDefault();ev.stopImmediatePropagation();copyPicked();return true;}
+    if(mod&&!ev.shiftKey&&!ev.altKey&&k==='v'&&clip){ev.preventDefault();ev.stopImmediatePropagation();pastePicked();return true;}
+    return false;
+  }
+  // Right-click a key: its interpolation (After Effects' Keyframe Interpolation); time keys show why there is none.
+  const menu=document.createElement('div');menu.className='ps-menu';menu.hidden=true;menu.setAttribute('role','menu');document.body.append(menu);
+  const closeMenu=()=>{menu.hidden=true;};
+  document.addEventListener('contextmenu',ev=>{
+    const el=ev.target.closest?.('[data-sk]');if(!el)return;ev.preventDefault();ev.stopPropagation();
+    const id=el.dataset.sk;if(!picked.has(id))setPicked(new Set([id]),{focus:id});
+    const keys=pickedKeys(),eased=keys.filter(k=>k.ease),now=eased.length&&eased.every(k=>k.ease===eased[0].ease)?eased[0].ease:null;
+    menu.innerHTML=`<strong>Interpolation · ${plural(keys.length,'key')}</strong>${[['linear','◆ Linear'],['smooth','● Smooth (ease)'],['hold','■ Hold']].map(([v,l])=>`<button type="button" role="menuitemradio" data-ps-ease="${v}" aria-checked="${v===now}" ${eased.length?'':'disabled'}>${l}</button>`).join('')}${eased.length?'':`<small>${escape(NO_EASE)}</small>`}`;
+    menu.hidden=false;menu.style.left=Math.min(ev.clientX,innerWidth-230)+'px';menu.style.top=Math.max(8,Math.min(ev.clientY,innerHeight-menu.offsetHeight-8))+'px';
+  },true);
+  document.addEventListener('pointerdown',ev=>{if(!menu.hidden&&!menu.contains(ev.target))closeMenu();},true);
+  document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&!menu.hidden){ev.stopImmediatePropagation();closeMenu();}},true);
+  menu.addEventListener('click',ev=>{const b=ev.target.closest('[data-ps-ease]');if(!b||b.disabled)return;closeMenu();setInterp(pickedKeys(),b.dataset.psEase);});
   // The timeline's People lane: one bar per person over the seconds they are in the room. People who are there at the
   // same time get rows of their own (lane-rows.mjs); the lane grows past two rows so every bar keeps its name.
   let laneRows=1;
