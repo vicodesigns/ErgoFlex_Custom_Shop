@@ -1795,9 +1795,9 @@
    "asset": "workshop:house:room:3:oscilloscope",
    "label": "Prop:oscilloscope",
    "scale": [
-    0.35,
-    0.35,
-    0.35
+    0.898,
+    0.898,
+    0.898
    ],
    "director": true
   },

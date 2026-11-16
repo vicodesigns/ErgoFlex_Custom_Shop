@@ -1059,16 +1059,44 @@
   "review-cut.json#oilers": {
    "film": [
     {
-     "desk": "station-project-review",
-     "name": "APA set and costume design review desk",
+     "desk": "station-demonstration-desk",
+     "name": "Wave and energy demonstration desk",
+     "size": "60x30",
+     "pose": {
+      "x": 2700,
+      "z": -2100,
+      "yaw": 2.35619
+     },
+     "initial": {
+      "height": 43.5,
+      "tilt": 0
+     }
+    },
+    {
+     "desk": "station-accessible-student",
+     "name": "Accessible student desk",
      "size": "48x30",
      "pose": {
-      "x": -4080,
-      "z": 5308,
+      "x": -4300,
+      "z": 1750,
       "yaw": 0
      },
      "initial": {
       "height": 28,
+      "tilt": 0
+     }
+    },
+    {
+     "desk": "station-window-research",
+     "name": "Coastal research nook",
+     "size": "48x30",
+     "pose": {
+      "x": -4300,
+      "z": 4500,
+      "yaw": 0
+     },
+     "initial": {
+      "height": 43.5,
       "tilt": 0
      }
     }
@@ -1076,16 +1104,44 @@
    "clean": {
     "deskEdits": [
      {
-      "desk": "station-project-review",
-      "name": "APA set and costume design review desk",
+      "desk": "station-demonstration-desk",
+      "name": "Wave and energy demonstration desk",
+      "size": "60x30",
+      "pose": {
+       "x": 2700,
+       "z": -2100,
+       "yaw": 2.35619
+      },
+      "initial": {
+       "height": 43.5,
+       "tilt": 0
+      }
+     },
+     {
+      "desk": "station-accessible-student",
+      "name": "Accessible student desk",
       "size": "48x30",
       "pose": {
-       "x": -4080,
-       "z": 5308,
+       "x": -4300,
+       "z": 1750,
        "yaw": 0
       },
       "initial": {
        "height": 28,
+       "tilt": 0
+      }
+     },
+     {
+      "desk": "station-window-research",
+      "name": "Coastal research nook",
+      "size": "48x30",
+      "pose": {
+       "x": -4300,
+       "z": 4500,
+       "yaw": 0
+      },
+      "initial": {
+       "height": 43.5,
        "tilt": 0
       }
      }
@@ -1116,127 +1172,116 @@
       "key": "kai-rolls",
       "id": "people-kai-wheel-roll",
       "at": [
-       -930,
-       1300
+       -850,
+       500
       ],
       "turn": 0,
       "roll": {
        "path": [
         [
-         -930,
-         1300
+         -850,
+         500
         ],
         [
-         -930,
-         220
+         -850,
+         72
         ],
         [
-         -940,
-         119
+         -860,
+         -29
         ],
         [
-         -970,
-         21
+         -890,
+         -127
         ],
         [
-         -1018,
-         -69
+         -938,
+         -217
         ],
         [
-         -1082,
-         -148
+         -1002,
+         -296
         ],
         [
-         -1161,
-         -212
+         -1081,
+         -360
         ],
         [
-         -1251,
-         -260
+         -1171,
+         -408
         ],
         [
-         -1349,
-         -290
+         -1269,
+         -438
         ],
         [
-         -1450,
-         -300
+         -1370,
+         -448
         ],
         [
-         -1500,
-         -300
+         -3372,
+         -448.1
+        ],
+        [
+         -3440.6,
+         -453.1
+        ],
+        [
+         -3507.7,
+         -467.7
+        ],
+        [
+         -3572.1,
+         -491.9
+        ],
+        [
+         -3632.4,
+         -524.9
+        ],
+        [
+         -3687.3,
+         -566.3
+        ],
+        [
+         -3735.8,
+         -615
+        ],
+        [
+         -3776.8,
+         -670.2
+        ],
+        [
+         -3809.5,
+         -730.7
+        ],
+        [
+         -3833.2,
+         -795.3
+        ],
+        [
+         -3847.5,
+         -862.5
+        ],
+        [
+         -3852,
+         -931.1
+        ],
+        [
+         -3846.6,
+         -999.7
+        ],
+        [
+         -3831.5,
+         -1066.8
+        ],
+        [
+         -3807,
+         -1131
         ]
        ],
-       "start": 0.3,
+       "start": 0.2,
        "speed": 1,
-       "radius": 468
-      },
-      "look": [
-       "noah-talks",
-       "noah-steps",
-       "noah-pulls",
-       "noah-taps",
-       "noah-watches"
-      ]
-     },
-     {
-      "key": "kai-docks",
-      "id": "people-kai-wheel-roll",
-      "at": [
-       -1500,
-       -300
-      ],
-      "turn": 180,
-      "roll": {
-       "path": [
-        [
-         -1500,
-         -300
-        ],
-        [
-         -3117,
-         -300
-        ],
-        [
-         -3254,
-         -313
-        ],
-        [
-         -3385,
-         -353
-        ],
-        [
-         -3506,
-         -418
-        ],
-        [
-         -3612,
-         -505
-        ],
-        [
-         -3699,
-         -611
-        ],
-        [
-         -3764,
-         -732
-        ],
-        [
-         -3804,
-         -863
-        ],
-        [
-         -3817,
-         -1000
-        ],
-        [
-         -3817,
-         -1110
-        ]
-       ],
-       "start": 8,
-       "speed": 1.1,
-       "radius": 630
+       "radius": 432
       },
       "look": [
        "noah-talks",
@@ -1250,48 +1295,43 @@
       "key": "kai",
       "id": "people-kai-wheel-type-31",
       "at": [
-       -3817,
-       -1110
+       -3807,
+       -1131
       ],
-      "turn": 180
+      "turn": 155
      },
      {
       "key": "noah-talks",
       "id": "people-noah-stand-talk",
       "at": [
-       -2800,
-       -300
+       -2250,
+       -1600
       ],
-      "turn": 90,
+      "turn": 20,
       "look": [
-       "kai-rolls",
-       "kai-docks"
+       "kai-rolls"
       ]
      },
      {
       "key": "noah-steps",
       "id": "people-noah-stand-wait",
       "at": [
-       -2800,
-       -300
+       -2250,
+       -1600
       ],
-      "turn": 90,
+      "turn": 20,
       "walk": {
        "path": [
         [
-         -2800,
-         -300
+         -2250,
+         -1600
         ],
         [
-         -2706,
-         -748
-        ],
-        [
-         -2930,
-         -1080
+         -3016,
+         -729
         ]
        ],
-       "start": 3.6,
+       "start": 3.9,
        "pace": 2.8,
        "then": "people-noah-stand-screen-pull"
       }
@@ -1300,10 +1340,10 @@
       "key": "noah-pulls",
       "id": "people-noah-stand-screen-pull",
       "at": [
-       -2930,
-       -1080
+       -3016,
+       -729
       ],
-      "turn": -146,
+      "turn": -171,
       "act": {
        "at": 5.4,
        "dur": 1.1,
@@ -1318,10 +1358,10 @@
       "key": "noah-taps",
       "id": "people-noah-stand-screen-tap",
       "at": [
-       -2930,
-       -1080
+       -3016,
+       -729
       ],
-      "turn": -146,
+      "turn": -171,
       "act": {
        "at": 8.2
       }
@@ -1330,10 +1370,10 @@
       "key": "noah-watches",
       "id": "people-noah-stand-wait",
       "at": [
-       -2930,
-       -1080
+       -3016,
+       -729
       ],
-      "turn": -162
+      "turn": -187
      },
      {
       "key": "nia-class",
@@ -1362,14 +1402,6 @@
      "kai-rolls": [
       [
        0,
-       8,
-       0,
-       0
-      ]
-     ],
-     "kai-docks": [
-      [
-       8,
        12.75,
        0,
        0
@@ -1386,14 +1418,14 @@
      "noah-talks": [
       [
        0,
-       2.9,
+       3.2,
        0,
        0
       ]
      ],
      "noah-steps": [
       [
-       2.9,
+       3.2,
        5.4,
        0,
        0

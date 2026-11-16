@@ -23,18 +23,25 @@ except SystemExit as e:
 story.check_roll_radius('long legs', [[0, 0], [0, 1000], [1000, 1000]], 500)
 story.check_roll_radius('straight', [[0, 0], [0, 1000], [0, 2000]], 500)
 # the chapter's own rolls pass
-story.check_roll_radius('Kai rolling in', story.AISLE, round(story.R1 * story.ROUND))
-story.check_roll_radius('Kai docking', story.DOCK_PATH, round(story.R2 * story.ROUND))
+story.check_roll_radius('Kai rolling in', story.AISLE, round(story.R2 * story.ROUND))
 # and the cut carries them as written
 cut = json.load(open(os.path.join(ROOT, 'exports', 'cinematic-intro-cut-cine', 'review-cut.json'), encoding='utf-8'))
 cast = {c['key']: c for c in next(s for s in cut['shots'] if s['id'] == 'oilers')['people']['cast']}
-assert cast['kai-rolls']['roll']['path'] == story.AISLE and cast['kai-rolls']['roll']['radius'] == round(story.R1 * story.ROUND)
-assert cast['kai-docks']['roll']['path'] == story.DOCK_PATH and cast['kai-docks']['roll']['radius'] == round(story.R2 * story.ROUND)
-for key in ('kai-rolls', 'kai-docks'):
+assert cast['kai-rolls']['roll']['path'] == story.AISLE and cast['kai-rolls']['roll']['radius'] == round(story.R2 * story.ROUND)
+assert 'kai-docks' not in cast   # (round 6: one roll, all the way in)
+for key in ('kai-rolls',):
     r = cast[key]['roll']; story.check_roll_radius(key, r['path'], r['radius'])
-# Noah's walk to the corner ends on a leg longer than walkPlan's 0.35 m heading blend, along the way the pull faces
+# Kai docks heading the desk: the roll ends on the featured desk's own heading (turned with it, round 6), and the
+# typing placement stands turned that way
 import math
-w = cast['noah-steps']['walk']['path']; last = math.dist(w[-2], w[-1])
-assert last > 350, last
-assert abs(math.degrees(math.atan2(w[-1][0] - w[-2][0], w[-1][1] - w[-2][1])) - cast['noah-pulls']['turn']) < .5
+d = cast['kai-rolls']['roll']['path']
+assert abs(math.degrees(math.atan2(d[-1][0] - d[-2][0], d[-1][1] - d[-2][1])) - cast['kai']['turn']) < 5, (d[-2:], cast['kai']['turn'])
+assert cast['kai']['turn'] == 180 + story.MAIN[2] and cast['kai']['at'] == story.DOCK
+# Noah's walk ends where (and, by walkPlan's endYaw from the next placement, room-people.mjs walkEnd, as) he pulls
+w = cast['noah-steps']['walk']
+assert w['path'][-1] == cast['noah-pulls']['at'] and w['then'] == cast['noah-pulls']['id']
+# the room's desks where Vico saved them (rev 3478), and none of the stale Director offsets
+shot = next(s for s in cut['shots'] if s['id'] == 'oilers')
+assert shot['motion']['initial']['yaw'] == story.MAIN[2] and shot['sceneDeskEdits'] == story.ROOM_DESKS
+assert not [e for e in shot['sceneEdits'] if story.stale(e)]
 print('oilers roll radius: ok')

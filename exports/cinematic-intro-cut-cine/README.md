@@ -355,6 +355,30 @@ and watches the desk come down to Kai (no `look`: Kai is outside the gaze cone u
 skeleton (torso 170 mm, limbs 55 mm); Kai turns at most 122 degrees a second (in the class view, far from the lens),
 Noah at most 116.
 
+Round 6 (Vico, Nov 15: 'the high school room is still not his room'): the room is now his Studio room as saved
+(studio-state rev 3478, highschool:house; compare C:/work/cine-pics/s30/studio-top-downs-20261115/highschool). Two
+causes: (1) a film render overlays only `ergoflex.sceneAssets.v1` of the Studio state, so the room's desks stood where
+institutional-education.mjs puts them, not where he saved them (`ergoflex.sceneDesksBySizeV2`): this chapter now puts
+them there itself, the featured desk with `motion.initial` (x 17.724 in, z 4.146 in, yaw -25: (-3350, -1950) turned
+toward the board) and three station desks with `sceneDeskEdits` (the white demonstration desk in the front-right corner
+at 45 degrees, the white accessible desk and the black window desk along the window: featured desk, clear floor, white,
+black); (2) Director offsets copied from his cut with people before his Nov 13 rework moved his desks and chairs off his
+places: dropped (build-oilers-story.py `STALE`, with an old 'fp3' hide of the back table by the window). Kept: the
+film's front wall, lockers and their trophies, the planter swap, the window and LED tweaks, the art easel hide; and
+three 'S9 story' hides: his task chair at the featured desk (Kai docks where it stands), the books on the window desk
+and the tumbler on the featured desk. The only change to his layout is the aisle: the middle and right-hand columns of
+student tables, each with its chairs, students and things, 380 mm toward the right-hand wall (six 'S9 aisle' edits;
+nothing moves toward the window; Zoe's desk stays). The story is the same, re-fitted: Kai rolls down the aisle from
+0.2 s, along the cross-aisle in front of the first row and round a 0.48 m arc into the turned desk (at rest by 5.6 s,
+before Noah reaches its corner: the corner now stands in his way along the cross-aisle); Noah greets him from beside
+the desk's right end and walks to the corner (3.9-5.33 s, ending facing the screen: walkPlan's endYaw); the insert is
+one face-on view over Kai's shoulder (5.3-9.0 s); the closing shot is a front three-quarter from the window corner.
+Positions near the featured desk (Kai's dock, Noah at the screen, the insert's lenses) are the old ones carried with the
+desk (`at_main`). Proof every frame (30 a second, from the stage's own object listing of this chapter): Kai's chair
+footprint at least 231 mm from every low object, clear width across his way at least 1280 mm, at least 208 mm from
+Noah's skeleton; at least 788 mm free behind every student chair; Kai turns at most 133 degrees a second (in the class
+view, far from the lens), Noah at most 104.
+
 ## Walks (S19, Nov 15)
 
 Vico noticed the workshop guy's feet looked funny while he walked. chingon saw Andre take long marching strides

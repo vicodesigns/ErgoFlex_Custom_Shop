@@ -224,22 +224,29 @@ def oilers(s):
     # lenses are clear of the desk and of Kai (he waits half a metre short of the desk, to their left). Cut at 9.0 s to
     # the front three-quarter from the window side, further back and higher than before: Kai from the chest up while the
     # desk comes down to him, Noah whole beside it, then Kai rolls in and starts the quiz.
-    btn = (-3161.4, 1078.8, -1423.7)                               # the button on the open screen, room mm
-    edge = (-3110, 1040, -1470)                                    # the screen's front edge, drawn half out
+    # (round 6: the featured desk stands where Vico saved it, turned 25 degrees toward the board: the insert's lenses
+    # and aims, set against the desk where the film's stage had it, ride with the desk: D())
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('oilers_story', os.path.join(HERE, 'build-oilers-story.py'))
+    story = importlib.util.module_from_spec(spec); spec.loader.exec_module(story)
+    D = lambda x, y, z: (*story.at_main([x, z])[:1], y, story.at_main([x, z])[1])
+    btn = D(-3161.4, 1078.8, -1423.7)                              # the button on the open screen, room mm
+    edge = D(-3110, 1040, -1470)                                   # the screen's front edge, drawn half out
     cam(s, [
         key(0, (6.4, 2.6, 3.2), (-2.5, 1.0, 5.2), 46, 'Over the class from the back: Kai rolls in, Noah at the desk (the dissolve from coast lands here)'),
         key(1.5, (6.33, 2.6, 3.19), (-2.48, 1.0, 5.17), 46, 'The dissolve is over: the same view'),
         key(3.4, (4.2, 5.0, 1.75), (-1.0, 0.75, 4.45), 46, 'Craned up and to the left over the class: Kai whole in the aisle beside the near table'),
         key(5.25, (4.05, 4.95, 1.8), (-1.15, 0.75, 4.6), 46, 'Kai rolls toward the desk, Noah steps to its corner'),
-        key(5.3, W(-3450, 900, -1100), W(*edge), 42, "Cut: low from Kai's side, under the desk's edge band: Noah's hand draws the screen out", cut=True),
-        key(6.95, W(-3440, 920, -1110), W(edge[0], edge[1], edge[2] + 40), 42, 'The screen slides out'),
-        key(7.0, W(-3350, 1500, -1150), W(btn[0] + 10, btn[1] - 20, btn[2] - 10), 31, "Cut: the screen's user's view, face-on: it turns up and asks 'Lower to Kai's height'", cut=True),
-        key(8.95, W(-3345, 1480, -1170), W(btn[0] + 10, btn[1] - 20, btn[2] - 10), 30, 'His finger on the button, it lights; the height starts down'),
-        # (round 5: Kai rolls in along the cross-aisle on the lens's right: the aim starts on him and follows him to the desk)
-        key(9.0, (0.6, 2.25, 7.2), (-2.2, 1.4, 4.9), 52, 'Cut: front three-quarter from the window side: Kai rolling in, the desk coming down, Noah at its corner', cut=True),
-        key(10.4, (0.55, 2.25, 7.22), (-2.35, 1.4, 5.1), 51, 'Kai turns in toward the desk'),
-        key(11.5, (0.5, 2.25, 7.25), (-2.6, 1.38, 5.45), 50, 'At his height: Kai rolls in under it'),
-        key(15, (0.35, 2.28, 7.3), (-2.7, 1.38, 5.5), 50, 'He starts the quiz; Noah watches'),
+        # (round 6: Kai is at the desk before Noah reaches its corner, so the insert is one face-on view over his right
+        # shoulder: a little wide while the hand draws the screen out, pushing in as it turns up and asks)
+        key(5.3, W(*D(-3330, 1560, -1080)), W(*edge), 38, "Cut: over Kai's shoulder, face-on: Noah's hand draws the screen out", cut=True),
+        key(7.0, W(*D(-3350, 1500, -1150)), W(*D(-3151.4, 1058.8, -1433.7)), 31, "The screen's user's view: it turns up and asks 'Lower to Kai's height'"),
+        key(8.95, W(*D(-3345, 1480, -1170)), W(*D(-3151.4, 1058.8, -1433.7)), 30, 'His finger on the button, it lights; the height starts down'),
+        # (round 6: the desk turned toward the board, the window-side view saw Kai from behind: the front three-quarter is
+        # from the front corner by the window, past the desk's left end: Kai's face, the desk coming down to him, Noah
+        # beside him, the class behind)
+        key(9.0, W(-4650, 1450, -2350), W(-3650, 1000, -1050), 50, 'Cut: front three-quarter from the window corner: Kai at the desk, the desk coming down, Noah at its corner', cut=True),
+        key(15, W(-4600, 1400, -2250), W(-3600, 1000, -1050), 46, 'At his height he starts the quiz; Noah watches (slow push)'),
     ])
 
 
