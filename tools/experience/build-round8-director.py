@@ -904,6 +904,13 @@ def run_import(export):
         name = os.path.basename(export)
         cid = next((c for c in sorted(known, key=len, reverse=True) if name.startswith(f'Film-chapter-{c}')), None)
     if cid not in known: sys.exit(f'{export}: not a film chapter')
+    # Never import a named film-cut export into a different cut directory.
+    meta_path = os.path.join(H, 'cut.json')
+    if str(d.get('id', '')).startswith('film-'):
+        target = load(meta_path).get('id') if os.path.isfile(meta_path) else None
+        expected = f'film-{target}-{cid}' if target else f'film-{cid}'
+        if d['id'] != expected:
+            sys.exit(f'{export}: belongs to {d["id"]}, not {expected}; import stopped')
     n, f = known[cid]
     before = load(director_file(cid)) if os.path.exists(director_file(cid)) else {}
     cmd = ['python3', BRIDGE, 'import', export, director_file(cid), '--shot', cid, '--plan', plan_source(cid, f)]

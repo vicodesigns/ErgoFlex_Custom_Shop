@@ -73,11 +73,13 @@ function writeDrafts(storage,drafts){try{storage.setItem(DRAFTS,JSON.stringify(d
 export function createFilmFresh(film,project,hooks){
   const state=film?filmFresh.state:null,id=project.shots.length===1?project.shots[0].id:null,on=!!(state&&id===state.chapter.id);
   if(!on)return {on,initialDraft:()=>null,noteDraft(){},noticeHTML:()=>'',choose(){},exported(){},guardExport:async()=>false};
+  const draftKey=project.id; // Each film cut has its own chapter project id.
   let base={cut:structuredClone(project),version:state.stamp.version},filmCut=structuredClone(project),exportedAt='',wrote=false;
   let notice=state.newer?{text:loadedText(state.stamp)}:null;
   const dialog=document.createElement('dialog');dialog.id='film-stale';dialog.setAttribute('aria-labelledby','film-stale-title');document.body.append(dialog);
-  const forget=()=>{const all=readDrafts(hooks.storage);if(id in all){delete all[id];writeDrafts(hooks.storage,all);}};
-  const storedDraft=()=>{const d=readDrafts(hooks.storage)[id];if(!d?.cut)return null;try{return {cut:cleanCut(d.cut,hooks.catalog),at:d.at||''};}catch{return null;}};
+  const belongs=d=>d?.cut?.id===draftKey;
+  const forget=()=>{const all=readDrafts(hooks.storage);let changed=false;for(const key of [draftKey,id])if(belongs(all[key])){delete all[key];changed=true;}if(changed)writeDrafts(hooks.storage,all);};
+  const storedDraft=()=>{const all=readDrafts(hooks.storage),d=belongs(all[draftKey])?all[draftKey]:(belongs(all[id])?all[id]:null);if(!d?.cut)return null;try{return {cut:cleanCut(d.cut,hooks.catalog),at:d.at||''};}catch{return null;}};
   // An unexported draft of this chapter from an earlier load: offered when it differs from both the hash's cut and
   // the film's; loaded at once when it is newer than the film's latest import, else the film's version stays.
   function initialDraft(){
@@ -91,8 +93,8 @@ export function createFilmFresh(film,project,hooks){
   function noteDraft(cut,unexported){
     if(!unexported){if(wrote){forget();wrote=false;}return;}   // only a draft this tab wrote (an offered one stays until he picks)
     wrote=true;
-    const all=readDrafts(hooks.storage),prev=all[id],c=structuredClone(cut),edited=(()=>{try{return JSON.stringify(cleanCut(prev.cut,hooks.catalog).shots)!==JSON.stringify(cleanCut(c,hooks.catalog).shots);}catch{return true;}})();
-    all[id]={cut:c,at:edited?new Date().toISOString():prev.at,base:base.version};writeDrafts(hooks.storage,all);
+    const all=readDrafts(hooks.storage),prev=belongs(all[draftKey])?all[draftKey]:(belongs(all[id])?all[id]:null),c=structuredClone(cut),edited=(()=>{try{return JSON.stringify(cleanCut(prev.cut,hooks.catalog).shots)!==JSON.stringify(cleanCut(c,hooks.catalog).shots);}catch{return true;}})();
+    all[draftKey]={cut:c,at:edited?new Date().toISOString():prev.at,base:base.version};if(belongs(all[id]))delete all[id];writeDrafts(hooks.storage,all);
   }
   function noticeHTML(){
     if(!notice)return '';const d=notice.draft,e=hooks.escape;

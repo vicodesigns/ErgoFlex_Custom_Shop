@@ -46,6 +46,7 @@ export async function mountStage(ctx) {
   document.head.append(style);
   ctx.controls.enabled=false;
   ctx.renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+  function previewQuality(low){ctx.renderer.setPixelRatio(low ? Math.min(devicePixelRatio,0.5) : Math.min(devicePixelRatio,1.5));wake();}
   const extras = new THREE.Group(); extras.name='Cinematic effects'; ctx.scene.add(extras);
   const ringAt = new THREE.Vector3();
   let shot=null, start=null, media=null, video=null, hidden=[], grid=null, pylons=[], sweep=null, light=null, pulse=null, floorCenter=null, trace=null, ringHome=null, reach=null, sonar=null, sonarTries=0, pings=[], obstacles=[], pingStop=0, echo=null;
@@ -398,7 +399,7 @@ export async function mountStage(ctx) {
   window.ErgoPresentation={prepare:async next=>{preparing=true;try{return await prepare(next);}finally{preparing=false;}},tick,sound,pause,receive,
     // Refresh from Studio (studio-sync.mjs): the app reads Studio's props and desks again from this frame's storage; the next prepare builds the room from them.
     reloadStudio:()=>ctx.reloadStudioState?.(),
-    catalog:()=>ctx.catalog(),edit,seek,captureCamera,beginBake,bakeFrame,endBake,
+    catalog:()=>ctx.catalog(),edit,seek,captureCamera,beginBake,bakeFrame,endBake,previewQuality,
     // Director scene-light tools (markers, gizmo) work on the live scene, camera and orbit controls.
     three:()=>({scene:ctx.scene,camera:ctx.camera,renderer:ctx.renderer,controls:ctx.controls}),hold,wake:ms=>wake(ms),sleeping:()=>sleeping,
     motionDefaults:()=>{

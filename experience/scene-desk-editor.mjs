@@ -18,7 +18,7 @@ const r1=v=>Math.round(v*10)/10,IN=25.4,rad=d=>d*Math.PI/180,deg=r=>r*180/Math.P
 const wrapDeg=d=>{d=((d%360)+540)%360-180;return Math.abs(d)<1e-9?0:d;};
 const sizeLabel=s=>s?String(s).slice(0,2)+'″':'';
 const MUTED=Symbol('director-desks');
-export function createSceneDeskEditor({bridge,shot,film,commit,status,open,rerender,onSelect=()=>{},onPick=()=>{},lightsShowing=()=>false,inTab=()=>false,showFeatured=()=>{}}){
+export function createSceneDeskEditor({bridge,shot,film,commit,status,open,rerender,onSelect=()=>{},onPick=()=>{},lightsShowing=()=>false,inTab=()=>false,showFeatured=()=>{},toggleVisibility=()=>{}}){
   let sel=null,tools=null,booting=null,drag=null,gz=null,turning=null,hover=null,gesture=0,shotId=null;
   const frame=()=>document.getElementById('stage'),win=()=>frame()?.contentWindow;
   const api=()=>win()?.ErgoFlex,desks=()=>api()?.sceneDesks,three=()=>bridge.stage()?.three?.();
@@ -337,6 +337,7 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     if(act==='dk-reset-all'){resetAll();return;}
     if(act==='dk-permanent'){openPermanent();return;}
     if(!sel)return;
+    if(act==='dk-visibility'){await toggleVisibility(sel,editOf(sel)?.hide!==true,name(rec(sel)));rerender();return;}
     if(act==='dk-size'){setSize(sel,String(arg));return;}
     if(act==='dk-nudge'){const [axis,by]=String(arg).split(':');nudge(sel,axis,Number(by));return;}
     if(act==='dk-preset'){const p=START_PRESETS[arg];if(p){const v=view(sel),c=clampStartPose(p,v.size);put(sel,{initial:c},`${name(rec(sel))} starts ${arg==='sitting'?'sitting':'standing'}: ${c.height}″, ${c.tilt}°.`);}return;}
@@ -363,7 +364,7 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     const n=editedCount(),fid=featured(),st=permanentState();
     const rows=list.map(r=>{
       const e=editOf(r.id),isF=r.id===fid,on=r.id===sel;
-      return `<li><button data-action="${isF?'dk-featured':'dk-select'}" data-section="${escape(r.id)}" class="desk-row ${isF?'is-featured':''} ${e?'is-edited':''}" aria-pressed="${on}" title="${escape(r.id)}"><span class="desk-star">${isF?'★':e?'●':'○'}</span><span class="desk-name">${escape(name(r))}</span><small>${sizeLabel(r.state.size)}${isF?' · featured desk':e?' · edited':''}</small></button></li>`;
+      return `<li><button data-action="${isF?'dk-featured':'dk-select'}" data-section="${escape(r.id)}" class="desk-row ${isF?'is-featured':''} ${e?'is-edited':''}" aria-pressed="${on}" title="${escape(r.id)}"><span class="desk-star">${isF?'★':e?'●':'○'}</span><span class="desk-name">${escape(name(r))}</span><small>${sizeLabel(r.state.size)}${isF?' · featured desk':e?.hide?' · hidden':e?' · edited':''}</small></button></li>`;
     }).join('');
     const head=`<h3>Desks</h3><p class="director-hint">Click a desk in the view, or pick one here. The featured desk (★) is the chapter's hero desk: its moves and starting position are in the Groove tab. Edits stay in this chapter.</p>
       <ul class="desk-list" data-desk-list>${rows}</ul>
@@ -374,6 +375,7 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     const nudgeRow=(axis,list)=>`<span class="desk-nudge">${list.map(b=>`<button data-action="dk-nudge" data-section="${axis}:${b}" title="${b>0?'+':''}${b}${axis==='yaw'?'°':'″'}">${b>0?'+':'−'}${Math.abs(b)}</button>`).join('')}</span>`;
     const row=(f,label,min,max,step,unit,value)=>`<div class="start-pose-row"><label for="dk-${f}-n">${label}</label><input name="dk-${f}" type="range" min="${min}" max="${max}" step="${step}" value="${value}" aria-label="${label} slider"><input id="dk-${f}-n" name="dk-${f}-n" type="number" min="${min}" max="${max}" step="${step}" value="${value}"><span class="start-pose-unit">${unit}</span></div>`;
     return head+`<div class="movement-inspector desk-inspector" data-reveal="desk"><h4 title="${escape(sel)}">${escape(name(r))}</h4>
+      <div class="director-actions"><button data-action="dk-visibility" ${sel.startsWith('station-')?'':'disabled'} title="${sel.startsWith('station-')?'Hide or show this desk and its linked items in this chapter':'This room desk cannot be hidden individually'}">${e?.hide?'Show desk':'Hide desk'}</button></div>
       <p class="director-hint">${e?escape(describeDeskEdit(e,was(r))):'As the film has it.'}</p>
       <div class="director-actions desk-size" role="group" aria-label="Desk size">${['48x30','60x30'].map(s=>`<button data-action="dk-size" data-section="${s}" aria-pressed="${v.size===s}" title="${sizeLabel(s)} wide ErgoFlex desk">${sizeLabel(s)}</button>`).join('')}</div>
       <div class="desk-pos">${num('dk-x','Position X',r1(p.x/IN),1,'in')}${nudgeRow('x',[-12,-1,1,12])}${num('dk-z','Position Z',r1(p.z/IN),1,'in')}${nudgeRow('z',[-12,-1,1,12])}${num('dk-yaw','Rotate',yaw,1,'°')}${nudgeRow('yaw',[-15,-5,5,15])}</div>

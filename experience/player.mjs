@@ -15,6 +15,9 @@ const $=id=>document.getElementById(id), frame=$('stage'), query=new URLSearchPa
 let cut=query.get('cut')==='social'?'social':'full',shots=score(cut),index=-1,playing=true,busy=true,finished=false,generation=0,sound=false,app=null,preparation=Promise.resolve(),hasFrame=false,lastUI=0;
 const clock=new ShotClock(),cover=$('transition-frame');
 let director=null,directorOpen=false,previewOnly=false,clientCut=null,preparedShot=null,previewRange=null,loopPreview=false;
+let lowPreview=false;try{lowPreview=localStorage.getItem('ergoflex.director.lowPreview')==='1';}catch{}
+function updatePreviewQuality(){const b=$('preview-quality');b.hidden=!directorOpen;b.setAttribute('aria-pressed',String(lowPreview));b.textContent=lowPreview?'Low resolution on':'Low resolution off';stage()?.previewQuality?.(directorOpen&&lowPreview);}
+$('preview-quality').onclick=()=>{lowPreview=!lowPreview;try{localStorage.setItem('ergoflex.director.lowPreview',lowPreview?'1':'0');}catch{}updatePreviewQuality();};
 try{const linked=linkQuery.get('cut');if(linked){clientCut=decodeCut(linked);cut='client';shots=clientCut.shots;}}
 catch(error){$('cut-error').hidden=false;$('cut-error').textContent=error.message;}
 // A film chapter tab reloaded after an import takes the film's newer cut, not the one its hash was opened with
@@ -409,7 +412,7 @@ async function openDirector(){
       const blob=await bakeArchive(cut,records),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='ergoflex-intro-bakes.zip';a.click();setTimeout(()=>URL.revokeObjectURL(url),120000);
     },
     async downloadBake(){const {record}=await cachedBake(shots[index]);if(!record)throw Error('Bake this chapter first.');const url=URL.createObjectURL(record.blob),a=document.createElement('a');a.href=url;a.download='ergoflex-'+shots[index].id+'.webm';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);},
-    editMode(on){if(bakeController)return;directorOpen=on;stage().reduced(reduced.matches&&!on);if(!on)previewOnly=false;playing=false;clock.setRunning(false,performance.now());stage().edit(on);stage().pause(true);frame.inert=!on;$('pause').textContent='Play';$('director').textContent=on?'Close editor':'Director Mode';syncAudio();},
+    editMode(on){if(bakeController)return;directorOpen=on;updatePreviewQuality();stage().reduced(reduced.matches&&!on);if(!on)previewOnly=false;playing=false;clock.setRunning(false,performance.now());stage().edit(on);stage().pause(true);frame.inert=!on;$('pause').textContent='Play';$('director').textContent=on?'Close editor':'Director Mode';syncAudio();},
     update(value){stage()?.wake?.();const position=index>=0?clock.progress(performance.now(),shots[index].seconds):0;applyClient(value);
       {const s=shots[index],setup=s&&filmSetup(s.id);if(setup){const cast=liveFilmShot(setup,s).people??null,pk=JSON.stringify(cast);if(pk!==fxPeople){fxPeople=pk;stage().peopleTrack?.(cast,s.id);}}}
       if(fxShot&&shots[index]?.id===fxShot){const key=lightsKey(shots[index]);if(key!==fxLights){fxLights=key;cancelAnimationFrame(fxTimer);fxTimer=requestAnimationFrame(()=>refreshFilmLights());}}clearTimeout(bakeRefreshTimer);bakeRefreshTimer=setTimeout(refreshBakeStatus,200);if(activeBake){liveAt(position);return;}if(shots[index]){stage().secondsTrack?.(shots[index].seconds,shots[index].id);stage().cameraTrack(shots[index].camera,shots[index].id);stage().motionTrack(shots[index].motion,shots[index].id);stage().deskEditsTrack?.(effectiveDeskEdits(filmSetup(shots[index].id),shots[index]),shots[index].id);}if(directorOpen){playing=false;clock.setRunning(false,performance.now());stage().edit(true);frame.inert=false;$('pause').textContent='Play';syncAudio();}},

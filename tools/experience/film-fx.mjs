@@ -1019,7 +1019,9 @@ export async function install(shot) {
 // shape change re-captured the room: onSlow() ran first so the caller can hold the frame) or 'full' (a field
 // that needs install: the caller runs clear() + install()).
 // sceneEdits too (the Director's prop edits): the edits layer and everything chained after it re-install in place.
-const LIVE_FIELDS = ['lights', 'lightEdits', 'ledStatus', 'ledNeutral', 'ledColor', 'sceneGlobals', 'timeOfDay', 'obstacles', 'sceneEdits', 'sceneBranding', 'sceneDeskEdits', 'featuredBuild'];
+// People are updated independently by the stage; treating them as a film-layer change
+// forced a full scene reinstall when a desk's assigned person was hidden or shown.
+const LIVE_FIELDS = ['people', 'lights', 'lightEdits', 'ledStatus', 'ledNeutral', 'ledColor', 'sceneGlobals', 'timeOfDay', 'obstacles', 'sceneEdits', 'sceneBranding', 'sceneDeskEdits', 'featuredBuild'];
 const TAIL = ['tod', 'edits', 'lights', 'roomLight', 'roomSpill', 'lightEdits'];
 export async function update(shot, { onSlow } = {}) {
   if (!active) return 'full';
@@ -1048,7 +1050,10 @@ export async function update(shot, { onSlow } = {}) {
     const seq = x => [...(x || [])].sort((a, b) => a.at - b.at).map(k => k.mode).join();
     if (!(active.tod?.retime && prev.timeOfDay?.length && shot.timeOfDay?.length && seq(prev.timeOfDay) === seq(shot.timeOfDay) && active.tod.retime(shot.timeOfDay))) tail = 0;
   }
-  if (changed('sceneEdits')) tail = Math.min(tail, 1);
+  // Scene edits can target desk groups. Unwind them before changing desks, then
+  // reapply in the same order as the initial install; otherwise restoring a desk
+  // can erase or compound an existing object transform on that desk.
+  if (changed('sceneEdits') || changed('sceneDeskEdits')) tail = Math.min(tail, 1);
   if (changed('lights')) tail = Math.min(tail, 2);
   if (gChanged('roomLight')) tail = Math.min(tail, 3);
   if ((gChanged('ledRoomSpill') || gChanged('ledWallGlow') || gChanged('ledFloorGlow')) && !(tail > 4 && active.roomSpill?.retune(g1))) tail = Math.min(tail, 4);
