@@ -1,0 +1,11 @@
+# S33a (A2) plan: People keyframe sheet (AE twirl-down / Blender dope sheet), same data, no format change
+1. Pure model in experience/people-track.mjs: sheet(people,T) -> per character: summary times + on-screen spans; property rows On screen (placement bars, in/out/change keys), Path (set off, waypoints, arrival), Actions (act bars + ends), Pose (pose keys; per-joint sub rows). Stable key ids ("kind|entry|n"), descriptors reuse retimeDiamond.
+2. Pure edits (node tests, tests/people-track-test.mjs + tests/people-sheet-test.mjs): shiftKeys (multi move, dependency order, all-or-nothing), deleteKeys, copy/paste (pose keys), addOrRemoveAt (◆), setEase, prev/next key, quaternion <-> Bend/Twist/Side (three's XYZ Euler).
+3. M-a (~2.5 h): scene-people-editor trackRows() renders the sheet in the People group (character row collapsed = 10 px diamonds + on-screen bar; twirl -> property rows; Pose twirl -> joint rows); the big diamonds and the timeline "Pose keys" row go (pose mode's Keys strip stays). director.mjs: only the peopleGroup markup line + render hook.
+4. M-b (~2 h): selection set (click / Shift+click / marquee on empty row space), Inspector block on the People tab for the selected key(s); J / K and the ◀ ◆ ▶ buttons per property row.
+5. M-c (~3 h): drag moves all selected keys (director snapTime passed in; Alt = free), Ctrl+C / Ctrl+V at the playhead, Delete, ◆ add/remove at playhead; each one write() = one undo step.
+6. M-d (~1.5 h): key shapes by interpolation (diamond linear, circle smooth, square hold; time/path keys stay diamonds), right-click menu, Inspector Interpolation (disabled + reason where no ease exists).
+7. e2e (real Chrome, own scratch server, GPU lock 'S33a'): tests/director-people-sheet-e2e.mjs on oilers + storage (+ media pose keys for Omar): select, marquee, move, copy/paste, delete, interpolation, inspector edit, undo; export checks only the intended fields changed.
+8. Old e2e (director-people-track-e2e, director-pose-keys-e2e) are moved onto the sheet's selectors.
+9. Every milestone: node tests + e2e green, push cine/s33a ff-only, report branch/head/tests. Screenshots at the end to s33/.
+10. Risks: director.mjs overlap with B (keep to People lines), keyboard conflicts (Delete removing the person: sheet keys handled first in capture).
