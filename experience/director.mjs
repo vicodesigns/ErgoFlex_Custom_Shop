@@ -864,7 +864,8 @@ export function mountDirector(bridge,catalog,initial){
   // Studio <-> Director (studio-sync.mjs): the "Studio changed" badge, Refresh from Studio, Adopt Studio's version.
   function renderStudioSync(){for(const el of panel.querySelectorAll('[data-studio-sync]'))el.innerHTML=studioSync.html();}
   const studioSync=createStudioSync({bridge,project:()=>project,index:()=>selected,shot,film:filmShot,commit,status,rerender:renderStudioSync,render:()=>render(),stageItems:()=>{try{return sceneProps.items();}catch{return [];}}});
-  function loadProject(value,keepDraft=true){if(keepDraft)draft();project=cleanCut(value,catalog);for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId=null;playhead=0;undo=[];redo=[];undoLabels=[];redoLabels=[];labelPending=null;group=null;changed();render();load();}
+  function loadProject(value,keepDraft=true){if(keepDraft)draft();project=cleanCut(value,catalog);foldedDesks.clear();   // (a cut loaded now, e.g. Keep my unexported changes, gets its room-desk prop moves folded too)
+for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId=null;playhead=0;undo=[];redo=[];undoLabels=[];redoLabels=[];labelPending=null;group=null;changed();render();load();}
   function render(){renderPanel();renderTimeline();}
   function renderPanel(){
     const scroll=panel.scrollTop,active=panel.contains(document.activeElement)?document.activeElement:null;
