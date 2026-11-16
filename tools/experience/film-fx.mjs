@@ -1064,6 +1064,10 @@ export async function update(shot, { onSlow } = {}) {
     if (shot.sceneBranding) { active.branding = (await import('../../experience/branding-live.mjs')).installBranding(shot.sceneBranding, window); await active.branding.ready; }
   }
   let slowCalled = false; const slow = globals || tail === 0; if (slow) { slowCalled = true; onSlow?.(); }
+  // The scene edits (prop moves, hides, adds) are unwound below and installed again after an await (prepareAdds loads the
+  // added props): frames drawn in between showed the room without them, and the people seated at moved tables 380 mm off
+  // and back on every desk move / Undo / Redo (Vico's high school, desk-proof). The stage holds its last frame meanwhile.
+  else if (tail <= TAIL.indexOf('edits') && (prev.sceneEdits || shot.sceneEdits)) { slowCalled = true; onSlow?.(); }
   for (let i = TAIL.length - 1; i >= tail; i--) { active[TAIL[i]]?.restore(); active[TAIL[i]] = null; }
   if (globals && active.globals) { active.globals.exposureCell?.undo(); active.globals.scene.environmentIntensity = active.globals.env; api.renderer.toneMappingExposure = active.globals.exposure; active.globals = null; }
   if (status) { active.status?.clear(); active.status = null; }
