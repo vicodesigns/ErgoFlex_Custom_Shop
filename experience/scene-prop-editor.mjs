@@ -750,7 +750,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const stowed=(row,span)=>{if(!tiltAt||!span.desk||row.e?.show)return null;
       const text=`${row.id||''} ${row.name||''} ${row.target?.match||''} ${row.target?.path||''}`.replace(/\\/g,'');
       try{return stowWindow(text,span.desk,tiltAt,span.lo,span.hi);}catch{return null;}};
-    const push=(span,row)=>{const s=onScreen(row.e,span),nat=stowed(row,span),from=nat?nat.from:s.from,to=nat?nat.to:s.to;out.push({id:row.key+'|'+(span.n||''),...row,span,start:from,end:Math.max(from+.01,to),timed:s.timed,fadeIn:s.fadeIn,fadeOut:s.fadeOut,stowed:!!nat});};
+    const push=(span,row)=>{const s=onScreen(row.e,span),nat=stowed(row,span),from=nat?nat.from:s.from,to=nat?nat.to:s.to;out.push({...row,id:row.key+'|'+(span.n||''),span,start:from,end:Math.max(from+.01,to),timed:s.timed,fadeIn:s.fadeIn,fadeOut:s.fadeOut,stowed:!!nat});};
     const spans=vs.length?vs.map(v=>({t0:v.start,lo:v.from,hi:Math.min(T,v.to),n:v.n,label:v.label,desk:v.preset})):[chapter];
     for(const span of spans){
       const rows=new Map(),known=seen.get(seenKey(span.desk));
