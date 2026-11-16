@@ -34,7 +34,7 @@
 //   the same module instance and GLB cache as the app), named 'Added prop:<asset>#<id>', removed by restore().
 //   desk:'<preset id>' (Director edits in a chapter rendered as sub-shots): the edit is skipped unless the shot's
 //   preset is that desk, so each desk of the finale keeps its own props (experience/prop-edits.mjs).
-//   show:{from, to, fadeIn, fadeOut} (seconds; chapter seconds, or with desk: seconds after the sub-shot's
+//   show:{from, to, fadeIn, fadeOut, ease?} (seconds; chapter seconds, or with desk: seconds after the sub-shot's
 //   renderRange start): the matched objects (or the added prop) are drawn only from…to, their opacity ramped over
 //   fadeIn / fadeOut inside the window (materials are copied only while a fade runs).
 //   director:true marks the Director's own prop edits (experience/prop-edits.mjs): offsets from the film's
@@ -158,7 +158,8 @@ export function showFactor(edit, shot, s) {
   const t = s - (edit.desk ? shot?.renderRange?.[0] || 0 : 0);
   if (t < w.from - 1e-6 || t > w.to + 1e-6) return 0;
   let f = 1; if (w.fadeIn > 0) f = Math.min(f, (t - w.from) / w.fadeIn); if (w.fadeOut > 0) f = Math.min(f, (w.to - t) / w.fadeOut);
-  return Math.max(0, Math.min(1, f));
+  f = Math.max(0, Math.min(1, f));
+  return w.ease === 'smooth' ? f * f * (3 - 2 * f) : f;   // ease:'smooth' eases in and out (smoothstep); absent: a straight line, as before
 }
 let lastSeconds = 0;   // the last chapter time applied: a timed prop installed while paused is right before the next frame
 // A timed edit on its objects: not drawn outside the window (a getter over whatever else sets visible; inside it a prop
