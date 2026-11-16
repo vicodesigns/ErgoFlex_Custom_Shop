@@ -1,0 +1,3 @@
+s32-desk-1-selected.png: oilers, the review desk selected in the Desks tab (round handle, gumball, ring) after the fold of its prop move
+s32-desk-2-dragged.png: after three handle drags, a gumball slide and a ring turn: it stands where it was dropped
+s32-desk-3-hidden.png: Hide desk on the review desk: it and Fern are out, nothing else moved
