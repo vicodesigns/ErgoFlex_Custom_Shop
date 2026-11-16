@@ -1239,6 +1239,9 @@ const frontOf = yaw => new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
 // A chair's own visibility, to put back later: under the Studio's Layers hide (studio-layers-panel.mjs) `visible` reads
 // false, so read what was set underneath it (layersRawVisible; absent everywhere else, the film included).
 export const ownVisible = o => typeof o?.layersRawVisible === 'boolean' ? o.layersRawVisible : o.visible;
+// What of a placement a change of posture is made from (readyChange): all of it but how it looks (colours, its fine-
+// tuned joints, drawn every frame) and the room's own bookkeeping.
+function changeSign(spec) { const { colors, pose, poseKeys, extra, ...rest } = spec || {}; return rest; }
 export class RoomPeople {
     constructor(room, library) {
         this.room = room; this.library = library; this.enabled = false; this.built = null; this.people = []; this.hidden = new Map(); this.filter = null;
@@ -1773,10 +1776,14 @@ export class RoomPeople {
                 object.position.set(spot.at[0], spot.y ?? 0, spot.at[1]); object.rotation.y = THREE.MathUtils.degToRad(spot.turn || 0); object.userData.personMissing = false;
                 if (Number.isFinite(spot.scale)) this.resize(object, { scale: spot.scale });
             }
-            for (const object of this.people) object.userData.personChanging = false;   // a re-placed cast is not half way through a change of posture
+            for (const object of this.people) object.userData.personChanging = false;   // (changing() marks who is changing again this frame)
             for (const actor of this.actors) this.recast(actor);
-            for (const pair of this.pairs) if (pair.live) { const a = this.people.find(o => o.userData.person === pair.from), b = this.people.find(o => o.userData.person === pair.to); if (a && b) this.endChange(pair, a, b); }
-            this.pairs = this.pairUp();
+            // A change of posture whose two placements the edit left as they were (a colour, a pose key, someone else
+            // moved) goes on as it was: ended and built again it would wait for its skeletons, and its first frame would
+            // jump (S33a3: Kai changing into typing jumped 237 mm when the Director re-applied the cast). Only the
+            // changes the edit did change, or that are gone, end here.
+            const old = this.pairs; this.pairs = this.pairUp(old);
+            for (const pair of old) if (pair.live && !this.pairs.includes(pair)) { const byKey = spec => this.people.find(o => this.keyOf(o.userData.person) === this.keyOf(spec)), a = byKey(pair.from), b = byKey(pair.to); if (a && b) this.endChange(pair, a, b); }
             this.readySteps();
             this.readyLives(time);
         }
@@ -2101,7 +2108,7 @@ export class RoomPeople {
         for (const until = performance.now() + limit; this.pending.size && performance.now() < until;) await Promise.race([Promise.all(this.pending), new Promise(done => setTimeout(done, 250))]);
     }
     free(object) { const s = object.userData.person; return !s.desk && !s.station && !object.userData.personMissing && this.allowed(s); }
-    pairUp() {
+    pairUp(old = []) {
         const pairs = [], when = this.filter?.when; if (!this.library.rigData || this.filter?.motion === false) return pairs;
         const free = this.people.filter(o => this.free(o) && this.character(o)), modes = o => o.userData.person.modes;
         for (const a of free) for (const b of free) {
@@ -2112,8 +2119,18 @@ export class RoomPeople {
             // cast for different dayparts: a change waiting for the daypart to change
             else if (modes(a) && modes(b) && modes(a).some(m => !modes(b).includes(m)) && modes(b).some(m => !modes(a).includes(m))) pairs.push({ from: a.userData.person, to: b.userData.person, at: null, start: null });
         }
-        for (const pair of pairs) this.later(this.readyChange(pair));
-        return pairs;
+        // (the change one already made between the same two placements: that one goes on, ready as it
+        // is; when the edit changed what it is made from, it is made again meanwhile and takes the new one when that is
+        // ready: until then it is drawn as it was, not left without one)
+        const same = (x, y) => JSON.stringify(changeSign(x)) === JSON.stringify(changeSign(y));
+        return pairs.map(pair => {
+            const was = old.find(p => p.ready && (p.at === null) === (pair.at === null) && this.keyOf(p.from) === this.keyOf(pair.from) && this.keyOf(p.to) === this.keyOf(pair.to));
+            if (!was) { this.later(this.readyChange(pair)); return pair; }
+            const changed = !same(was.from, pair.from) || !same(was.to, pair.to) || was.at !== pair.at;
+            was.from = pair.from; was.to = pair.to; if (pair.at !== null) was.at = pair.at;   // (retimed: at its new moment from now on)
+            if (changed) this.later(this.readyChange(pair).then(() => { if (pair.ready && this.pairs.includes(was)) { for (const k of ['rig', 'keyFrom', 'keyTo', 'homeFrom', 'homeTo', 'length', 'wheels']) was[k] = pair[k]; this.dirty = true; } }));
+            return was;
+        });
     }
     // Who is changing now: Map object -> { shown } for both models of each change under way.
     changing(time, mode) {
