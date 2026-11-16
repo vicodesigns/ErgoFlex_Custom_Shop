@@ -875,6 +875,11 @@ def import_titles(cid, titles, seconds, log):
         if not (0 <= a < b <= seconds + 1e-6): sys.exit(f'{cid}: title {d.get("title")!r} {a}-{b} s lies outside the {seconds:g} s chapter')
         e['rel_in'], e['rel_out'] = a, b
         for k, n in TITLE_TEXT: e[k] = str(d.get(k) or '')[:n]
+        if isinstance(d.get('position'), dict) and all(isinstance(d['position'].get(k), (int, float)) and abs(d['position'][k]) < float('inf') for k in ('x', 'y')): e['position'] = {k: max(-4000, min(4000, d['position'][k])) for k in ('x', 'y')}
+        else: e.pop('position', None)
+        for field in ('scale', 'typography'):
+            if field in d: e[field] = copy.deepcopy(d[field])
+            else: e.pop(field, None)
         sh = clean_shadow(d.get('shadow'))
         if sh: e['shadow'] = sh
         else: e.pop('shadow', None)
