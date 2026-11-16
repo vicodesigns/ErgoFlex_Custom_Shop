@@ -68,7 +68,6 @@ Dissolve swells peak exactly on each dissolve centre (moved by at most 0.3 s ins
 | 90.150 | cut | -0.44 beat |
 | 94.300 | cut | 0.25 beat |
 | 114.650 | cut | on a beat (knot) |
-| 116.350 | cut | 0.14 beat |
 | 118.350 | cut | -0.16 beat |
 | 139.350 | cut | 0.11 beat |
 | 142.750 | cut | 0.48 beat |
