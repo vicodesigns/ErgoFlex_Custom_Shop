@@ -209,7 +209,8 @@
       // "Digital twin synced" moment in the longest hold between moves. Over the real desk it sits small at the
       // card's bottom right instead of across the middle.
       const [s0, s1] = B.synced, tw_ = win(t, s0, s1, .6), twin = twinOn();
-      alpha(tw_ * (1 - endLogo), () => {
+      // (the cine opener, opts.checklist, has no 'Twin synced' badge: it showed up over the boot logo; Vico, Nov 16 2026)
+      if (!o.checklist) alpha(tw_ * (1 - endLogo), () => {
         const k = eo(seg(t, s0, s0 + .8));
         at(twin ? W - Math.min(1000, W * .42) - 70 - 216 : 40 + (W - 1110) / 2, twin ? 130 + 640 - 74 : 480, lerp(.9, 1, k) * (twin ? .62 : 1), () => {
           fillR(-300, -70, 600, 140, 70, 'rgba(6,14,28,0.82)'); strokeR(-300, -70, 600, 140, 70, hexA(C.blue2, .6), 3);
