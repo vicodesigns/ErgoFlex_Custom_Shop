@@ -104,4 +104,29 @@ assert.match(src, /active\.texScreens\?\.restore\(\);/, 'restored on clear');
   assert(fy1.calls.includes(`1,0,0,-1,0,${fy1.h}`), 'flipY mirrors up/down');
   assert(r180.calls.includes(`-1,0,0,-1,${r180.w},${r180.h}`), 'rotate:180 turns it half a turn');
 }
+// Graphics timeline windows restore the original picture outside the clip and seek from its start.
+{
+  const {screenTiming}=await import('../tools/experience/screen-timing.mjs');
+  assert.deepEqual(screenTiming({offset:3,rate:2},4),{visible:true,seconds:11});
+  assert.deepEqual(screenTiming({start:5,end:10,offset:3,rate:2},6),{visible:true,seconds:5});
+  assert.equal(screenTiming({start:5,end:10},10).visible,false);
+  const rig=person('people-andre-timeline'),seeks=[];
+  const timed=installTextureScreens(scene,[{...phone,start:5,end:10,offset:3,rate:2}],[video],{makeCanvas,warn(){}});
+  await timed.frame(2,t=>seeks.push(t));assert.equal(rig.screen.map,rig.pic,'original before the clip');
+  await timed.frame(6,async(v,t)=>seeks.push(t));assert.notEqual(rig.screen.map,rig.pic,'graphic appears at the clip start');
+  assert.ok(Math.abs(seeks.at(-1)-5.0015)<.00001,'source time is relative to clip start');
+  await timed.frame(10,async()=>{});assert.equal(rig.screen.map,rig.pic,'original returns at the out point');
+  await timed.frame(7,async()=>{});assert.notEqual(rig.screen.map,rig.pic,'scrubbing back reactivates the graphic');
+  timed.restore();scene.remove(rig.g);
+}
+// Two cut pieces on one material must switch cleanly when scrubbing in either direction.
+{
+  const rig=person('people-andre-split');
+  const cut=installTextureScreens(scene,[{...phone,start:0,end:5},{...phone,start:5,end:10,offset:2}],[video,video],{makeCanvas,warn(){}});
+  await cut.frame(2,async()=>{});const left=rig.screen.map;
+  await cut.frame(6,async()=>{});const right=rig.screen.map;assert.notEqual(left,right);
+  await cut.frame(2,async()=>{});assert.equal(rig.screen.map,left,'backward cut selects the left picture');
+  await cut.frame(6,async()=>{});assert.equal(rig.screen.map,right,'forward cut selects the right picture');
+  cut.restore();assert.equal(rig.screen.map,rig.pic);scene.remove(rig.g);
+}
 console.log('film texture screens: inert unless named, person and desk scoped, warns when unmatched, later postures, stills once, restore + release: OK');
