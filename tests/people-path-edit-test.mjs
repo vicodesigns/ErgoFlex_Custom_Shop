@@ -118,6 +118,10 @@ assert.equal(JSON.stringify([andre,kai]),frozen,'the entries given are never cha
   const lateS=KD-kr.roll.start+.5,late=P.arrival(kr,lateS,o.cast,o.when);const kf=P.fixFaster(kr,late,{seconds:lateS,length:P.routeInfo(kr,{rollPlan}).length});assert.ok(kf.roll.speed>0&&kf.roll.speed<kr.roll.speed,'a roll: the speed to arrive by its deadline');
   assert.equal(P.fixEarlier(kr,late,{seconds:lateS}).roll.start,0,'a roll starts at most back to its window');
 }
+// a point the edit does not touch keeps its exact value (the film's paths have tenths of a millimetre)
+{const fine={key:'k',id:'people-kai-wheel-roll',at:[0,0],turn:0,roll:{path:[[0,0],[-3372.0,-448.1],[-3507.7,-460.3]]}};
+ const m=P.movePoint(fine,2,[-3600.4,-470]);assert.deepEqual(m.roll.path,[[0,0],[-3372.0,-448.1],[-3600,-470]],'only the moved point is rounded');
+ assert.deepEqual(P.moveStart(fine,[10,0]).roll.path.slice(1),fine.roll.path.slice(1));assert.deepEqual(P.insertPoint(fine,0,[-1000,-200]).roll.path[2],[-3372.0,-448.1]);}
 // toes: only when the choice differs from what the entry resolves to
 assert.equal(P.setField({at:[0,0],walk:{path:[[0,0],[0,1]]}},'toes','bend').walk.toes,undefined,'bend is what no toes means: nothing written');
 console.log('PASS people-path-edit: move / add / remove waypoints, the start with the placement, floor picking, the planner\'s route, the fields');
