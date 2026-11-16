@@ -54,11 +54,11 @@ try{
   await set('pe-joint','lowerarm_l');await wait(300);await set('pe-rx',25);await wait(700);
   await page.$eval('[data-action="pe-key-auto"]',e=>e.click());await wait(300);
   await seek(page,9.5);await set('pe-joint','lowerarm_r');await wait(300);await set('pe-rx',-20);await wait(700);
-  const keys=await page.$$eval('[data-pose-keys-lane] [data-pose-key]',l=>l.map(e=>Number(e.dataset.poseKey)));assert.deepEqual(keys,[9.5],'auto-key wrote a key at 9.5 s');
+  const keys=await page.$$eval('[data-pose-key-row] [data-pose-key]',l=>l.map(e=>Number(e.dataset.poseKey)));assert.deepEqual(keys,[9.5],'auto-key wrote a key at 9.5 s');
   await shot(page,'s31-combined-pose.png');
-  await page.$eval('[data-pose-keys-lane] [data-pose-key]',e=>e.click());await wait(400);
-  await page.$eval('[data-pose-keys-lane]',e=>e.focus?.());await page.keyboard.press('Delete');await wait(700);
-  assert.deepEqual(await page.$$eval('[data-pose-keys-lane] [data-pose-key]',l=>l.length),0,'Delete removed the key');
+  await page.$eval('[data-pose-key-row] [data-pose-key]',e=>e.click());await wait(400);
+  await page.$eval('[data-pose-key-row]',e=>e.focus?.());await page.keyboard.press('Delete');await wait(700);
+  assert.deepEqual(await page.$$eval('[data-pose-key-row] [data-pose-key]',l=>l.length),0,'Delete removed the key');
   await page.$eval('[data-action="pe-key-auto"]',e=>e.click());     // (leave auto-key off)
   // ---- 4. export, import, pass
   const text=await page.evaluate(()=>new Promise(r=>{const was=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){HTMLAnchorElement.prototype.click=was;fetch(this.href).then(x=>x.text()).then(r);};document.querySelector('#director-panel [data-action="save-export"]').click();}));

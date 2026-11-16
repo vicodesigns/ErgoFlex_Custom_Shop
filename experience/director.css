@@ -644,11 +644,30 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 .pose-key-playhead{position:absolute;top:0;bottom:0;width:2px;background:#f3fcff;pointer-events:none}
 .pose-autokey[aria-pressed="true"]{color:#ff5c6c;border-color:#ff5c6c88}
 .pose-autokey[aria-pressed="false"]{color:#9fb3bd}
-/* S31 People track: a row per person, the programmed diamonds (people-track.mjs) */
+/* S33 People keyframe sheet (scene-people-editor.mjs trackRows; people-track.mjs sheet): AE twirl-down / dope sheet */
 .people-track-rows{display:contents}
-.people-track-row.selected .desk-lane-label{color:#ff9bd2}
-.people-track-lane{position:relative}
-.pt-key{position:absolute;top:50%;width:10px;height:10px;margin:-5px 0 0 -5px;padding:0;border:1px solid #0006;transform:rotate(45deg);border-radius:1px;cursor:grab;touch-action:none;z-index:2;background:#c9d4da}
-.pt-key.mine{box-shadow:0 0 0 2px #ff9bd2}
-.pt-in,.pt-out{background:#9fe0a8}.pt-change{background:#ffd36b}.pt-walk{background:#7fd7ff}.pt-roll{background:#b79bff}.pt-act{background:#ff8a5c}
-.pt-walk-point,.pt-roll-point,.pt-act-end{width:7px;height:7px;margin:-4px 0 0 -4px;opacity:.85}
+#director-timeline .timeline-content .ps-row{height:22px}
+#director-timeline .timeline-content .ps-row .desk-lane{height:22px;cursor:default}
+#director-timeline .timeline-content .ps-char{height:24px;border-top:1px solid #ff9bd226}
+#director-timeline .timeline-content .ps-char .desk-lane{height:24px}
+#director-timeline .timeline-content .ps-row .desk-lane-label{flex-direction:row!important;align-items:center;justify-content:flex-start;gap:3px;padding:0 4px 0 8px!important;font-size:11px}
+#director-timeline .timeline-content .ps-prop .desk-lane-label{padding-left:22px!important;color:#c8b3c0;font-weight:400}
+#director-timeline .timeline-content .ps-joint .desk-lane-label{padding-left:36px!important;color:#a8939f;font-size:10.5px}
+.ps-char.selected .desk-lane-label b{color:#ff9bd2}
+.ps-name{overflow:hidden;text-overflow:ellipsis}
+#director-timeline .ps-twirl{min-height:16px;height:16px;min-width:14px;width:14px;padding:0;border:0;background:none;color:#ffc4e5;font-size:10px;line-height:16px}
+.ps-twirl-gap{display:inline-block;width:14px}
+.ps-onscreen{position:absolute;top:50%;height:4px;margin-top:-2px;border-radius:2px;background:#ff9bd255}
+.ps-dot{position:absolute;top:50%;width:7px;height:7px;margin:-4px 0 0 -4px;transform:rotate(45deg);background:#ffd6ec;border:1px solid #0007;pointer-events:none}
+.ps-bar{position:absolute;top:4px;bottom:4px;border-radius:3px;box-sizing:border-box;font-size:9px;line-height:12px;padding:0 6px;color:#ffe3f3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+.ps-place{background:#ff9bd22e;border:1px solid #ff9bd266}
+.ps-act{background:#ff8a5c33;border:1px solid #ff8a5c88;min-width:2px}
+.ps-empty{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:9.5px;color:#7f97a6;white-space:nowrap;pointer-events:none}
+/* keys: the shape is the interpolation (After Effects): diamond linear, circle smooth (ease), square hold */
+#director-timeline .sk{position:absolute;top:50%;width:11px;height:11px;min-height:0;min-width:0;margin:-6px 0 0 -6px;padding:0;border:1px solid #000a;background:#e9d3df;border-radius:1px;cursor:pointer;touch-action:none;z-index:2;box-shadow:none}
+#director-timeline .sk-diamond{transform:rotate(45deg) scale(.88)}
+#director-timeline .sk-circle{border-radius:50%}
+#director-timeline .sk-square{border-radius:1px;transform:scale(.85)}
+#director-timeline .sk-screen{background:#9fe0a8}#director-timeline .sk-path{background:#7fd7ff}#director-timeline .sk-actions{background:#ff8a5c}#director-timeline .sk-pose,#director-timeline .sk-joint{background:#ff9bd2}
+#director-timeline .sk:hover{filter:brightness(1.25)}
+#director-timeline .sk.selected{background:#fff;border-color:#ffcf4a;box-shadow:0 0 0 2px #ffcf4a}

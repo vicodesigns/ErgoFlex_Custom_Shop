@@ -27,7 +27,7 @@ try{
   await set(page,'pe-joint','lowerarm_l');await wait(300);
   await page.$eval('[data-action="pe-key-limb"]',e=>e.click());await wait(500);         // 3 s: the arm as it is (as built)
   await seek(page,9);await set(page,'pe-rx',90);await wait(700);                         // 9 s: the elbow bent 60
-  const keys=await page.$$eval('[data-pose-keys-lane] [data-pose-key]',l=>l.map(e=>Number(e.dataset.poseKey)));assert.deepEqual(keys,[3,9]);
+  const keys=await page.$$eval('[data-pose-key-row] [data-pose-key]',l=>l.map(e=>Number(e.dataset.poseKey)));assert.deepEqual(keys,[3,9]);
   await page.$eval('[data-action="pe-pose-done"]',e=>e.click());await wait(800);
   const at={};
   for(const t of [3,6,9,12]){await seek(page,t);await wait(1500);at[t]=await elbow();if(shots){fs.mkdirSync(shots,{recursive:true});await page.screenshot({path:path.join(shots,`s31-posekey-stage-${t}s.png`)});}}

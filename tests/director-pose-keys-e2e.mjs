@@ -14,7 +14,7 @@ const {base,page,errors,close}=await openDirectorBrowser();
 const shoot=async name=>{if(shots){fs.mkdirSync(shots,{recursive:true});await page.screenshot({path:path.join(shots,name)});}};
 const click=sel=>page.$eval(sel,e=>e.click());
 const set=(name,value)=>page.evaluate((n,v)=>{const e=document.querySelector(`#director-panel [name="${n}"]`);e.value=String(v);e.dispatchEvent(new Event('change',{bubbles:true}));},name,value);
-const diamonds=()=>page.$$eval('[data-pose-keys-lane] [data-pose-key]',l=>l.map(e=>Number(e.dataset.poseKey)));
+const diamonds=()=>page.$$eval('[data-pose-key-row] [data-pose-key]',l=>l.map(e=>Number(e.dataset.poseKey)));
 const until=async(fn,what,ms=60000)=>{const end=Date.now()+ms;for(;;){const v=await fn();if(v)return v;if(Date.now()>end)throw Error('timed out: '+what);await wait(250);}};
 try{
   await openChapter(page,base,c);
@@ -32,17 +32,17 @@ try{
   await seek(page,6);await set('pe-rx',-10);await wait(600);
   assert.deepEqual(await diamonds(),[3.2,6],'a second key at 6 s');
   // drag the 6 s diamond to about 8 s
-  await page.$eval('[data-pose-keys-lane]',e=>e.scrollIntoView({block:'center'}));await wait(300);
-  const d=await page.$('[data-pose-keys-lane] [data-pose-key="6"]'),box=await d.boundingBox(),lane=await (await page.$('[data-pose-keys-lane]')).boundingBox();
+  await page.$eval('[data-pose-key-row]',e=>e.scrollIntoView({block:'center'}));await wait(300);
+  const d=await page.$('[data-pose-key-row] [data-pose-key="6"]'),box=await d.boundingBox(),lane=await (await page.$('[data-pose-key-row]')).boundingBox();
   const x8=lane.x+lane.width*8/c.seconds;
   await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();await page.mouse.move(box.x+20,box.y+box.height/2,{steps:4});await page.mouse.move(x8,box.y+box.height/2,{steps:8});await page.mouse.up();await wait(700);
   const after=await diamonds();assert.equal(after.length,2);assert.ok(Math.abs(after[1]-8)<.1,'dragged to about 8 s: '+after);
   await shoot('s31-posekey-2-dragged.png');
   // select it (click), ease = hold
-  await click(`[data-pose-keys-lane] [data-pose-key="${after[1]}"]`);await wait(500);
+  await click(`[data-pose-key-row] [data-pose-key="${after[1]}"]`);await wait(500);
   await set('pe-key-ease','hold');await wait(400);
   // copy the 3.2 s key and paste it at 11 s
-  await click('[data-pose-keys-lane] [data-pose-key="3.2"]');await wait(500);await click('[data-action="pe-key-copy"]');
+  await click('[data-pose-key-row] [data-pose-key="3.2"]');await wait(500);await click('[data-action="pe-key-copy"]');
   await seek(page,11);await click('[data-action="pe-key-paste"]');await wait(500);
   assert.equal((await diamonds()).length,3,'pasted at 11 s');
   await shoot('s31-posekey-3-three-keys.png');

@@ -1,7 +1,7 @@
 import {cleanPeople,effectivePeople,newKey,spanText,PARTS} from './people-edits.mjs';
-import {createPoseEditor} from './scene-pose-editor.mjs';
+import {createPoseEditor,JOINTS} from './scene-pose-editor.mjs';
 import {stackRows} from './lane-rows.mjs';
-import {programmedDiamonds,retimeDiamond} from './people-track.mjs';
+import {sheet,sheetKeys,EASE_SHAPES} from './people-track.mjs';
 import {loadSavedPoses,storeSavedPoses,addSavedPose} from './saved-poses.mjs';
 import {createPathGizmo} from './people-path-gizmo.mjs';   // S31 M3 path editing (hook)
 // Director "People": who is in the chapter. The People tab lists the cast; click a person in the view (or a row) to
@@ -396,41 +396,50 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       <p class="director-hint">${mine?'This chapter has its own cast.':list.length?'This is the film\'s cast. Your first change copies it into the chapter.':'Add people from the library, or bring in the people who live in this room.'} Click a person in the view or in the list.</p>
       <div class="people-list">${list.map(row).join('')}</div>${e?selectedPanel(e):''}`;
   }
-  // ---- the People track (S31 M4): a row per person (a character's placements share it) with a diamond at every
-  // change already programmed (people-track.mjs): comes in / goes out, posture change, walk or roll start, waypoints,
-  // arrival, actions. Click: the playhead goes there and that placement is selected. Drag: retime (what is linked:
-  // people-track.mjs). One undo step per drag.
-  let trackList=[],td=null,tdSuppress=0;
+  // ---- the People KEYFRAME SHEET (S33 A2; people-track.mjs sheet): After Effects' twirl-down / Blender's dope sheet.
+  // A row per character: collapsed, a small diamond wherever any of its properties has a key and a thin bar while
+  // they are on screen; twirled open (▸), its property rows On screen / Path / Actions / Pose; Pose twirls open to a
+  // row per keyed joint. A key's shape is its interpolation (pose keys: diamond linear, circle smooth, square hold;
+  // the programmed motion's time keys are diamonds).
+  const SHEET_OPEN='ergoflex.director.peopleSheet';
+  const twirls=(()=>{try{return new Set(JSON.parse(globalThis.localStorage?.getItem(SHEET_OPEN)||'[]'));}catch{return new Set();}})();
+  const saveTwirls=()=>{try{localStorage.setItem(SHEET_OPEN,JSON.stringify([...twirls]));}catch{}};
+  let sheetRows=[],sheetMap=new Map(),picked=new Set(),skJoint=null;
   const walkSeconds=k=>stagePeople()?.byKey?.(k)?.userData?.personLife?.plan?.seconds;
-  function track(){const p=own()||seed();return programmedDiamonds(p,seconds(),{walkSeconds});}
-  const KIND_TITLE={'in':'comes in','out':'goes out','change':'posture change','walk-start':'starts walking','walk-point':'walk waypoint','walk-end':'arrives (walk)','roll-start':'starts rolling','roll-point':'roll waypoint','roll-end':'arrives (roll)','act':'action','act-end':'action ends'};
+  const jointName=b=>JOINTS.find(j=>j[0]===b)?.[1]||b;
+  const posture=e=>poseOf(e.id)?.label||e.id.replace(/^people-[a-z]+-/,'').replace(/-/g,' ');
+  function track(){const p=own()||seed();sheetRows=sheet(p,seconds(),{walkSeconds,label:posture,jointOrder:JOINTS.map(j=>j[0])});sheetMap=sheetKeys(sheetRows);for(const id of picked)if(!sheetMap.has(id))picked.delete(id);return sheetRows;}
+  const KIND_TITLE={'in':'comes in','out':'goes out','change':'posture change','walk-start':'sets off (walk)','walk-point':'walk waypoint','walk-end':'arrives (walk)','roll-start':'sets off (roll)','roll-point':'roll waypoint','roll-end':'arrives (roll)','act':'action','act-end':'action ends','pose':'pose key','joint':'joint key'};
+  const keyTitle=k=>`${k.entry}: ${k.kind==='joint'?jointName(k.bone)+' key':KIND_TITLE[k.kind]||k.label} at ${k.t.toFixed(2)} s${k.ease?' · '+k.ease:''}${k.linked?' (the placement edge it starts with)':''}`;
+  const shapeOf=k=>k.ease?EASE_SHAPES[k.ease]||'circle':'diamond';
+  const pct=t=>`${Math.max(0,Math.min(100,t/(seconds()||1)*100))}%`;
+  const keyBtn=k=>`<button type="button" class="sk sk-${shapeOf(k)} sk-${k.prop} ${picked.has(k.id)?'selected':''}" data-sk="${escape(k.id)}" style="left:${pct(k.t)}" title="${escape(keyTitle(k))}" aria-label="${escape(keyTitle(k))}"></button>`;
+  const playheadLine=()=>`<div class="camera-track-playhead" data-shared-playhead style="left:${pct(time())}"></div>`;
+  const sheetRow=(cls,label,lane,attrs='')=>`<div class="desk-lane-row ps-row ${cls}" data-lane-color="people" ${attrs}><span class="desk-lane-label">${label}</span><div class="desk-lane ps-lane">${lane}${playheadLine()}</div></div>`;
+  const twirl=(id,open,what)=>`<button type="button" class="ps-twirl" data-ps-twirl="${escape(id)}" aria-expanded="${open}" title="${open?'Fold':'Show'} ${escape(what)}">${open?'▾':'▸'}</button>`;
+  // ◀ ◆ ▶ at the left of each property row: the previous key of the row, add / remove a key at the playhead, the next.
+  const NAV='<span class="ps-nav"><button type="button" data-ps-nav="-1" title="Previous key of this row (J: of the sheet)">◀</button><button type="button" data-ps-nav="0" title="Add or remove a key of this row at the playhead">◆</button><button type="button" data-ps-nav="1" title="Next key of this row (K: of the sheet)">▶</button></span>';
   function trackRows(){
     if(!film()?.people&&!own())return '';
-    const {rows,diamonds}=track(),T=seconds()||1;trackList=diamonds;
-    return rows.map(r=>{const mine=diamonds.map((d,i)=>[d,i]).filter(([d])=>d.row===r.row),on=r.keys.includes(sel);
-      return `<div class="desk-lane-row people-track-row ${on?'selected':''}" data-lane-color="people"><span class="desk-lane-label" title="${escape(r.label)}: what is programmed for them (click a diamond: go there and select; drag: retime)">${escape(r.label)}</span><div class="desk-lane key-lane people-track-lane">${mine.map(([d,i])=>`<button type="button" class="pt-key pt-${d.kind.split('-')[0]} pt-${d.kind} ${d.key===sel?'mine':''}" data-pt-index="${i}" style="left:${d.t/T*100}%" title="${escape(d.key)}: ${escape(KIND_TITLE[d.kind]||d.label)} at ${d.t.toFixed(2)} s · drag to retime" aria-label="${escape(d.key)} ${escape(KIND_TITLE[d.kind]||d.label)} at ${d.t.toFixed(2)} s"></button>`).join('')}<div class="camera-track-playhead" data-shared-playhead style="left:${time()/T*100}%"></div></div></div>`;}).join('');
+    const rows=track();
+    return rows.map(r=>{
+      const open=twirls.has(r.row),on=r.entries.includes(sel);
+      const summary=`${r.bars.map(b=>`<i class="ps-onscreen" style="left:${pct(b.t0)};width:calc(${pct(b.t1)} - ${pct(b.t0)})"></i>`).join('')}${r.summary.map(t=>`<i class="ps-dot" style="left:${pct(t)}"></i>`).join('')}`;
+      let html=sheetRow(`ps-char ${on?'selected':''}`,`${twirl(r.row,open,r.label+'\'s properties')}<b>${escape(r.label)}</b>`,summary,`data-ps-row="${escape(r.row)}"`);
+      if(!open)return html;
+      const P=r.props,poseOpen=twirls.has(r.row+'|pose'),nav=NAV;
+      html+=sheetRow('ps-prop',`<span class="ps-name">On screen</span>${nav}`,`${r.bars.map(b=>`<span class="ps-bar ps-place" style="left:${pct(b.t0)};width:calc(${pct(b.t1)} - ${pct(b.t0)})" title="${escape(b.entry)}: ${escape(b.label)} · ${b.t0.toFixed(2)}–${b.t1.toFixed(2)} s">${escape(b.label)}</span>`).join('')}${P.screen.map(keyBtn).join('')}`,`data-ps-prop="screen" data-ps-of="${escape(r.row)}"`);
+      html+=sheetRow('ps-prop',`<span class="ps-name">Path</span>${nav}`,P.path.length?P.path.map(keyBtn).join(''):'<span class="ps-empty">no walk or roll</span>',`data-ps-prop="path" data-ps-of="${escape(r.row)}"`);
+      html+=sheetRow('ps-prop',`<span class="ps-name">Actions</span>${nav}`,P.actions.length?`${r.actBars.map(b=>`<span class="ps-bar ps-act" style="left:${pct(b.t0)};width:calc(${pct(b.t1)} - ${pct(b.t0)})"></span>`).join('')}${P.actions.map(keyBtn).join('')}`:'<span class="ps-empty">no actions</span>',`data-ps-prop="actions" data-ps-of="${escape(r.row)}"`);
+      html+=sheetRow('ps-prop',`${r.joints.length?twirl(r.row+'|pose',poseOpen,'a row per keyed joint'):'<span class="ps-twirl-gap"></span>'}<span class="ps-name">Pose</span>${nav}`,P.pose.length?P.pose.map(keyBtn).join(''):'<span class="ps-empty">no pose keys · double-click the person to pose</span>',`data-ps-prop="pose" data-ps-of="${escape(r.row)}"`);
+      if(poseOpen)for(const j of r.joints)html+=sheetRow('ps-prop ps-joint',`<span class="ps-name" title="${escape(jointName(j.bone))}">${escape(jointName(j.bone))}</span>${nav}`,j.keys.map(keyBtn).join(''),`data-ps-prop="joint" data-ps-bone="${escape(j.bone)}" data-ps-of="${escape(r.row)}"`);
+      return html;
+    }).join('');
   }
-  function retime(d,t){
-    const T=seconds(),cur=own()||seed(),next=retimeDiamond(cur,d,t,T,{walkSeconds});
-    if(!next){status(d.kind.endsWith('-end')||d.kind.endsWith('-point')?'It cannot arrive before it sets off.':'That would leave no time in that window.',true);rerender();return;}
-    write(p=>{for(const k of Object.keys(p))delete p[k];Object.assign(p,next);},`${d.key}: ${KIND_TITLE[d.kind]||d.label} ${d.t.toFixed(2)} → ${t.toFixed(2)} s.`);
-  }
-  document.addEventListener('pointerdown',ev=>{
-    const b=ev.target.closest?.('[data-pt-index]');if(!b||ev.button!==0||!editing())return;const d=trackList[Number(b.dataset.ptIndex)];if(!d)return;
-    const lane=b.parentElement.getBoundingClientRect();ev.preventDefault();ev.stopPropagation();td={b,d,x:ev.clientX,left:lane.left,width:lane.width,now:null};
+  document.addEventListener('click',ev=>{
+    const b=ev.target.closest?.('[data-ps-twirl]');if(!b)return;ev.preventDefault();ev.stopPropagation();
+    const id=b.dataset.psTwirl;if(twirls.has(id))twirls.delete(id);else twirls.add(id);saveTwirls();rerender();
   },true);
-  document.addEventListener('pointermove',ev=>{
-    if(!td||(td.now===null&&Math.abs(ev.clientX-td.x)<3))return;const T=seconds()||1;
-    let t=Math.max(0,Math.min(T,(ev.clientX-td.left)/td.width*T));if(!ev.shiftKey)t=Math.round(t*20)/20;
-    td.now=t;td.b.style.left=t/T*100+'%';status(`${td.d.key}: ${KIND_TITLE[td.d.kind]||td.d.label} ${td.d.t.toFixed(2)} → ${t.toFixed(2)} s`);
-  },true);
-  document.addEventListener('pointerup',ev=>{
-    const x=td;td=null;if(!x)return;ev.stopPropagation();tdSuppress=performance.now()+300;
-    if(x.now===null){seek(x.d.t);select(x.d.key,{announce:false});status(`${x.d.key}: ${KIND_TITLE[x.d.kind]||x.d.label} at ${x.d.t.toFixed(2)} s. Drag the diamond to retime it.`);return;}
-    retime(x.d,x.now);
-  },true);
-  document.addEventListener('click',ev=>{const b=ev.target.closest?.('[data-pt-index]');if(!b)return;ev.preventDefault();ev.stopPropagation();if(performance.now()<tdSuppress)return;
-    const d=trackList[Number(b.dataset.ptIndex)];if(d){seek(d.t);select(d.key,{announce:false});}},true);
   // The timeline's People lane: one bar per person over the seconds they are in the room. People who are there at the
   // same time get rows of their own (lane-rows.mjs); the lane grows past two rows so every bar keeps its name.
   let laneRows=1;
@@ -472,5 +481,5 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   const header=()=>{const e=sel&&entry(sel);return e?{name:personName(e),detail:pose.active()===sel?'Pose mode'+(pose.joint()?' · '+pose.jointLabel():''):doing(e)}:null;};
   // After the film setup is (re)applied or the cut changes: the selection may be gone.
   function applied(){if(sel&&!entry(sel)){pose.exit();sel=null;}ensure().catch(()=>null);}
-  return {panel,lane,laneHeight,action,changed,select,deselect,selected:()=>sel,header,pickObject,setMode,mode:()=>mode,count,remove:k=>{if(k===undefined&&pose.active()){if(pose.selectedKey()!==null){pose.deleteKey();return;}pose.resetJoint();return;}if(k===undefined&&paths.removeSelected())return;/* S31 M3 hook */remove(k);},posing:()=>pose.active(),trackRows,retimeDiamond:retime,poseKeyLane:()=>pose.keyLane(),poseKeySelected:()=>pose.selectedKey()!==null,poseSync:()=>pose.sync(),keyNow:w=>pose.keyNow(w),applied,openLibrary,effective:()=>effectivePeople(film(),shot())};
+  return {panel,lane,laneHeight,action,changed,select,deselect,selected:()=>sel,header,pickObject,setMode,mode:()=>mode,count,remove:k=>{if(k===undefined&&pose.active()){if(pose.selectedKey()!==null){pose.deleteKey();return;}pose.resetJoint();return;}if(k===undefined&&paths.removeSelected())return;/* S31 M3 hook */remove(k);},posing:()=>pose.active(),trackRows,poseKeyLane:()=>pose.keyLane(),poseKeySelected:()=>pose.selectedKey()!==null,poseSync:()=>pose.sync(),keyNow:w=>pose.keyNow(w),applied,openLibrary,effective:()=>effectivePeople(film(),shot())};
 }
