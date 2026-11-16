@@ -20,7 +20,7 @@ const CUT='exports/cinematic-intro-cut-cine',shots=process.argv[2]||null;
 const chapter=id=>JSON.parse(fs.readFileSync(path.join(root,CUT,'director-chapters.json'),'utf8')).chapters.find(x=>x.id===id);
 const filmShot=id=>JSON.parse(fs.readFileSync(path.join(root,CUT,'review-cut.json'),'utf8')).shots.find(s=>s.id===id);
 const {base,page,errors,close}=await openDirectorBrowser();
-const shoot=async name=>{if(shots){fs.mkdirSync(shots,{recursive:true});await page.screenshot({path:path.join(shots,name)});}};
+const shoot=async(name,row)=>{if(!shots)return;fs.mkdirSync(shots,{recursive:true});if(row)await page.evaluate(r=>{const e=document.querySelector(`[data-ps-row="${r}"]`),v=e?.closest('.timeline-viewport');if(e&&v)v.scrollTop+=e.getBoundingClientRect().top-v.getBoundingClientRect().top-30;},row);await wait(300);await page.screenshot({path:path.join(shots,name)});};
 const twirl=async id=>{await page.$eval(`[data-ps-twirl="${id}"]`,e=>e.click());await wait(300);};
 const rowKeys=(row,prop)=>page.$$eval(`[data-ps-of="${row}"][data-ps-prop="${prop}"] [data-sk]`,l=>l.map(e=>e.dataset.sk));
 const selected=()=>page.$$eval('.ps-row .sk.selected',l=>l.map(e=>e.dataset.sk).sort());
@@ -53,7 +53,7 @@ try{
   for(const r of want.filter(r=>r.row==='kai'||r.row==='noah'))for(const prop of ['screen','path','actions','pose'])
     assert.deepEqual(await rowKeys(r.row,prop),r.props[prop].map(k=>k.id),`${r.label} ${prop}`);
   assert.equal(await page.$$eval('[data-ps-of="kai"][data-ps-prop="screen"] .ps-place',l=>l.length),2,'a bar per placement');
-  await shoot('s33-ma-sheet.png');
+  await shoot('s33-ma-sheet.png','kai');
   await twirl('kai');assert.equal(await page.$$eval('[data-ps-of="kai"]',l=>l.length),0,'folded again');
   console.log('M-a ok');
   // ---- M-b: click, Shift+click, marquee, Inspector, J / K, ◀ ▶, Esc
@@ -71,7 +71,7 @@ try{
    const y=lane.y+lane.h/2,x0=lane.x+lane.w*5/T,x1=lane.x+lane.w*7/T;
    await page.mouse.move(x0,y-8);await page.mouse.down();await page.mouse.move(x0+20,y,{steps:3});await page.mouse.move(x1,y+8,{steps:6});await page.mouse.up();await wait(500);}
   assert.deepEqual(await selected(),[PULLEND,PULL].sort(),'marquee selects the keys inside it');
-  await shoot('s33-mb-marquee.png');
+  await shoot('s33-mb-marquee.png','noah');
   await page.keyboard.press('Escape');await wait(400);assert.deepEqual(await selected(),[],'Esc clears');
   await seek(page,0);await page.$eval('[data-ps-of="noah"][data-ps-prop="actions"] [data-ps-nav="1"]',e=>e.click());await wait(500);
   assert.ok(Math.abs(await playhead()-5.4)<.02,'▶ goes to the next key of the row');assert.deepEqual(await selected(),[PULL]);
@@ -109,7 +109,7 @@ try{
   // right-click a time key: the menu's interpolations are disabled with the reason (M-d)
   await click(TAP,{button:'right'});assert.ok(await page.$eval('.ps-menu',m=>!m.hidden&&[...m.querySelectorAll('button')].every(b=>b.disabled)&&/only pose keys/.test(m.textContent)),'time key: no interpolation, and why');
   await page.keyboard.press('Escape');await wait(200);
-  await shoot('s33-mc-moved.png');
+  await shoot('s33-mc-moved.png','noah');
   const pe=JSON.parse(await exportCut()).shots[0].peopleEdits;assert.equal(pe.v,2);
   const exp=structuredClone(film.people);exp.cast.find(e=>e.key==='noah-taps').act.at=pe.cast.find(e=>e.key==='noah-taps').act.at;
   assert.ok(Math.abs(exp.cast.find(e=>e.key==='noah-taps').act.at-8.6)<.03);const {v,...rest}=pe;assert.deepEqual(rest,exp,'oilers export: only the tap moved');
@@ -147,7 +147,7 @@ try{
   await click('pose|omar|3.2');await set('pe-sk-joint','lowerarm_l');await wait(300);
   assert.ok(Math.abs(await page.$eval('#director-panel [name="pe-sk-rx"]',e=>Number(e.value))-35)<.6,'Bend shows the key\'s 35°');
   await set('pe-sk-rx',50);await wait(600);
-  await shoot('s33-md-pose-keys.png');
+  await shoot('s33-md-pose-keys.png','omar');
   const mp=JSON.parse(await exportCut()).shots[0].peopleEdits,om=mp.cast.find(e=>e.key==='omar');
   assert.deepEqual(om.poseKeys.map(k=>[Math.round(k.t*10)/10,Object.keys(k.pose).sort().join(),k.ease||'smooth']),[[3.2,'lowerarm_l','smooth'],[6,'lowerarm_l','hold'],[8,'head','smooth'],[11,'lowerarm_l','smooth']]);
   assert.ok(Math.abs(turnAngles(om.poseKeys[0].pose.lowerarm_l)[0]-50)<.6,'Bend 50 written');
