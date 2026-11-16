@@ -11,6 +11,7 @@ export const DESK_SURFACES={desktop:'Desktop',shelf:'Top shelf','lower-shelf':'L
 const phases=['morning','afternoon','evening','night','party'];
 const plain=o=>({p:{x:o.position.x,y:o.position.y,z:o.position.z},q:{x:o.quaternion.x,y:o.quaternion.y,z:o.quaternion.z,w:o.quaternion.w},s:{x:o.scale.x,y:o.scale.y,z:o.scale.z}});
 const apply=(o,t)=>{o.position.set(t.p.x,t.p.y,t.p.z);o.quaternion.set(t.q.x,t.q.y,t.q.z,t.q.w);if(Math.abs(o.quaternion.lengthSq()-1)>1e-9)o.quaternion.normalize();o.scale.set(t.s.x,t.s.y,t.s.z);o.updateMatrixWorld(true);};
+export const dayKitRecordStale=(rec,name)=>rec.label!==name||['x','y','z'].some(a=>!(Math.abs(rec.transform?.s?.[a])<100));
 const shown=o=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;};
 
 // Local transforms belong to a desk surface, never to the room or live CAD.
@@ -30,7 +31,9 @@ export class SceneDeskObjects {
             const identity=obj.userData.deskObject;
             const id=identity?.desk===r.id?identity.id:'default-'+role+'-'+i;
             const name=this.manager.ctx.objectName?.(obj)||obj.name||'Desk object';
-            const previous=highschool && !identity ? matchingHighschoolDefault(previousDefaults,claimed,id,role,name) : r.state.objects[id];
+            let previous=highschool && !identity ? matchingHighschoolDefault(previousDefaults,claimed,id,role,name) : r.state.objects[id];
+            // Index-keyed records can outlive a reordered mount. The millimetre-unit daily kit must never inherit another object's record (a metre-unit prop saved at scale 1000 puts it 22 m up).
+            if(previous&&obj.userData.dayKit&&dayKitRecordStale(previous,name))previous=null;
             const saved=previous||{role,added:false,removed:false,label:name,transform:plain(obj)};
             this.register(r,id,obj,saved,obj.scale.clone());
         }
