@@ -153,4 +153,12 @@ const rigData = JSON.parse(fs.readFileSync(path.join(root, 'assets/props/people-
     assert.ok(Math.hypot(at.position.x - mid.x * 1000, at.position.z - mid.z * 1000) < 1 && Math.abs(wrap(at.rotation.y - mid.yaw)) < 1e-6, 'on the path, facing along it');
     people.dispose();
 }
+// ---- a corner whose legs are too short for the radius asked turns tighter, and says so (plan.tight: S9's reviewer,
+// a 500 mm radius on a 160 mm leg is 89 mm; room-people.mjs warns with the placement's key)
+{
+    const tight = rollPlan([[0, 0], [0, 1.2], [.16, 1.2]], { radius: .5 }), wide = rollPlan([[0, 0], [0, 2], [2, 2]], { radius: .5 });
+    assert.equal(tight.tight.length, 1, 'the short-legged corner is reported');
+    assert.ok(tight.tight[0].fits < .1 && tight.tight[0].radius === .5, `it turns on ${tight.tight[0].fits.toFixed(3)} m, not 0.5`);
+    assert.equal(wide.tight.length, 0, 'a corner with room for its radius is not');
+}
 console.log('PASS room people roll: path maths (ease, corners, heading, determinism), wheels with the distance and at rest on an eighth, pushes in time with the rims, the hand-off into the desk posture at the path\'s end.');

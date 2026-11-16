@@ -18,6 +18,14 @@ Run under flock /tmp/claude-1000/hq14-cut.lock when a Director import may be run
 """
 import glob, json, os, re, shutil, subprocess, sys, time
 
+_open = open
+def open(file, mode='r', *a, **k):
+    """UTF-8 and LF whatever the platform (Windows' default code page garbled the cut's labels: S31)."""
+    if 'b' not in mode:
+        k.setdefault('encoding', 'utf-8')
+        if 'w' in mode or 'a' in mode: k.setdefault('newline', chr(10))
+    return _open(file, mode, *a, **k)
+
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(os.path.dirname(HERE))
 MASTER = 'exports/cinematic-intro-20261104-hq14'
 DIRECTOR = os.path.join(HERE, 'build-round8-director.py')
@@ -27,7 +35,7 @@ DATA = ('shots/*.json', 'director-camera.json', 'director-camera-*.json', 'previ
 SUPPORT = ('shots/13-subshots.json', 'post/finale-seed.json', 'titles-src.json')
 
 
-def rel(d): return os.path.relpath(os.path.abspath(d if os.path.isabs(d) else os.path.join(ROOT, d)), ROOT).strip('/')
+def rel(d): return os.path.relpath(os.path.abspath(d if os.path.isabs(d) else os.path.join(ROOT, d)), ROOT).replace(os.sep, '/').strip('/')
 def full(d): return os.path.join(ROOT, rel(d))
 def slug(s): return re.sub(r'-+', '-', re.sub(r'[^a-z0-9]+', '-', s.lower())).strip('-')[:40] or 'cut'
 def info(d):

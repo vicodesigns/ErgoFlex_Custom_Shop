@@ -1,7 +1,9 @@
 import {cleanPeople,effectivePeople,newKey,spanText,PARTS} from './people-edits.mjs';
 import {createPoseEditor} from './scene-pose-editor.mjs';
 import {stackRows} from './lane-rows.mjs';
+import {programmedDiamonds,retimeDiamond} from './people-track.mjs';
 import {loadSavedPoses,storeSavedPoses,addSavedPose} from './saved-poses.mjs';
+import {createPathGizmo} from './people-path-gizmo.mjs';   // S31 M3 path editing (hook)
 // Director "People": who is in the chapter. The People tab lists the cast; click a person in the view (or a row) to
 // select them, then move / turn / scale them with the gizmo (W / E / T) or the fields, change who they are
 // (character) and what they are doing (posture), set the seconds they are in the room, duplicate or remove them, and
@@ -18,7 +20,7 @@ const r1=v=>Math.round(v*10)/10;
 const MODES={translate:'Move',rotate:'Turn',scale:'Scale'};
 const STANCES=['standing','seated','wheelchair','walking'];
 const thumb=id=>`/assets/props/thumbs/${encodeURIComponent(id)}.png`;
-export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rerender,time=()=>0,onSelect=()=>{},lightsShowing=()=>false}){
+export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rerender,time=()=>0,seek=()=>{},onSelect=()=>{},lightsShowing=()=>false}){
   let sel=null,catalog=null,loading=null,tools=null,booting=null,mode='translate',busy=null,rowKeys=[],laneKeys=[],charIds=[],shown=[];
   const filters={sex:'all',age:'all',heritage:'all'},lib={query:'',sex:'all',stance:'all',aid:'all'};
   const frame=()=>document.getElementById('stage'),win=()=>frame()?.contentWindow,three=()=>bridge.stage()?.three?.();
@@ -42,8 +44,12 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   // ---- the cut
   const own=()=>cleanPeople(shot()?.peopleEdits);
   // What the film shows before any edit here, as plain entries.
+  // S31: a film chapter with a `people` object of its own (the Cinematographer's cut: walks, rolls, acts, seats, only /
+  // except / place) is copied VERBATIM as peopleEdits v2 (people-edits.mjs): nothing the film has is lost by an edit.
   function seed(){
-    const f=film()?.people,live=stagePeople()?.resolved?.()||[];
+    const f=film()?.people;
+    if(f&&typeof f==='object'&&!Array.isArray(f)&&Array.isArray(f.cast))return {v:2,...structuredClone(f)};
+    const live=stagePeople()?.resolved?.()||[];
     return {cast:live,when:f&&typeof f==='object'?structuredClone(f.when||{}):{},...(f?.chair?{chair:f.chair}:{}),...(f?.fade!==undefined?{fade:f.fade}:{})};
   }
   const cast=()=>(own()||seed()).cast;
@@ -68,9 +74,9 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     }
     const {THREE,TransformControls}=w.__directorThree,group=new THREE.Group();group.name='Director people tools';group.userData.directorTools=true;t.scene.add(group);
     const box=new THREE.BoxHelper(undefined,0xff9bd2);box.material.depthTest=false;box.material.transparent=true;box.renderOrder=998;box.visible=false;group.add(box);
-    const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;gizmo.setSize(1.2);gizmo.setSpace('world');gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
+    const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;w.__directorPeopleGizmo=gizmo;w.__directorPeoplePaths=paths;gizmo.setSize(1.2);gizmo.setSpace('world');gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
     let orbit=true;
-    gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){orbit=t.controls.enabled;t.controls.enabled=false;}else{t.controls.enabled=orbit;endDrag();}});
+    gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){orbit=t.controls.enabled;t.controls.enabled=false;dragFrom=gizmo.object?read(gizmo.object):null;}else{t.controls.enabled=orbit;endDrag();}});
     gizmo.addEventListener('objectChange',()=>{const e=sel&&entry(sel);if(e)status(`${mode==='translate'?'Moving':mode==='rotate'?'Turning':'Scaling'} ${personName(e)}…`);});
     // Double-click a person: pose mode (the first click of the pair has selected them). Double-click elsewhere leaves it.
     t.renderer.domElement.addEventListener('dblclick',ev=>{
@@ -86,7 +92,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   const free=e=>!!e&&!e.desk&&!e.beside;
   function tick(){
     if(!tools)return;requestAnimationFrame(tick);
-    pose.tick();
+    pose.tick();paths.tick();   // S31 M3 hook
     if(pose.active()){tools.box.visible=false;if(tools.gizmo.object&&!tools.gizmo.dragging)tools.gizmo.detach();tools.gizmo.visible=tools.gizmo.enabled=false;return;}
     const {box,gizmo}=tools,e=sel&&entry(sel),o=e&&objectOf(sel),on=!!o&&o.visible&&editing()&&!lightsShowing();
     box.visible=on;if(on)box.setFromObject(o);
@@ -100,10 +106,19 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const {THREE}=tools,dir=new THREE.Vector3(0,0,1).applyQuaternion(o.quaternion),base=o.userData.personBase;
     return {at:[Math.round(o.position.x),Math.round(o.position.z)],y:Math.round(o.position.y),turn:r1(THREE.MathUtils.radToDeg(Math.atan2(dir.x,dir.z))),scale:base?Math.round(o.scale.y/base.y*1000)/1000:1};
   }
+  // S31: the drag is applied as a CHANGE to the placement (moved by, turned by), not as where the model is drawn now:
+  // someone walking, rolling or seated is drawn away from their `at`, and only their placement moves, nothing else.
+  let dragFrom=null;
   function endDrag(){
-    const o=tools?.gizmo.object,e=sel&&entry(sel);if(!o||!e)return;const now=read(o),name=personName(e);
-    edit(sel,p=>{if(mode==='translate'){p.at=now.at;p.y=Math.max(-2000,now.y);}else if(mode==='rotate')p.turn=now.turn;else p.scale=Math.min(3,Math.max(.2,now.scale));},
-      mode==='translate'?`Moved ${name}.`:mode==='rotate'?`Turned ${name} to ${now.turn}°.`:`${name} is now ${Math.round(now.scale*100)} % of their built size.`);
+    const o=tools?.gizmo.object,e=sel&&entry(sel),from=dragFrom;dragFrom=null;if(!o||!e)return;const now=read(o),name=personName(e);
+    if(!from){rerender();return;}
+    const dx=now.at[0]-from.at[0],dz=now.at[1]-from.at[1],dy=now.y-from.y,dt=now.turn-from.turn;
+    if(mode==='translate'&&Math.hypot(dx,dz)<.5&&Math.abs(dy)<.5){rerender();return;}
+    edit(sel,p=>{
+      if(mode==='translate'){const at=Array.isArray(p.at)?p.at:from.at;p.at=[Math.round(at[0]+dx),Math.round(at[1]+dz)];if(Math.abs(dy)>=.5)p.y=Math.max(-2000,Math.round((p.y||0)+dy));paths.bodyMoved(p);/* S31 M3 hook: a walker's path start goes with them */}
+      else if(mode==='rotate')p.turn=r1((((p.turn||0)+dt+180)%360+360)%360-180);
+      else p.scale=Math.min(3,Math.max(.2,now.scale));},
+      mode==='translate'?`Moved ${name} by ${Math.round(Math.hypot(dx,dz))} mm.`:mode==='rotate'?`Turned ${name} by ${r1(dt)}°.`:`${name} is now ${Math.round(now.scale*100)} % of their built size.`);
   }
   // Where a new person goes: on the floor in the lower middle of the view, facing the camera.
   function floorSpot(){
@@ -114,8 +129,10 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     return {at:[Math.round(p.x),Math.round(p.z)],turn:r1(THREE.MathUtils.radToDeg(Math.atan2(eye.x-p.x,eye.z-p.z)))};
   }
   // ---- pose mode (scene-pose-editor.mjs)
-  const pose=createPoseEditor({win,three,tools:()=>tools,stagePeople,entry,edit:(...a)=>edit(...a),status,rerender,personName:e=>e?personName(e):'',editing,saved:e=>savedHTML(e)});
+  const pose=createPoseEditor({win,three,tools:()=>tools,stagePeople,entry,edit:(...a)=>edit(...a),status,rerender,personName:e=>e?personName(e):'',editing,saved:e=>savedHTML(e),time,seek,seconds});
   const poseEditor=pose;     // swap() has a `pose` argument of its own
+  // S31 M3 hook: a walker's / roller's path on the floor and in the People tab (people-path-gizmo.mjs)
+  const paths=createPathGizmo({win,three,tools:()=>tools,stagePeople,entry,edit:(...a)=>edit(...a),status,editing,lightsShowing,selected:()=>sel,posing:()=>pose.active(),personName:e=>e?personName(e):'',objectOf:k=>objectOf(k),cast:()=>cast(),modelOf:id=>modelOf(id),poseOf:id=>poseOf(id),seconds});
   // ---- selection
   function select(key,{announce=true}={}){
     const e=entry(key);if(!e){deselect();return;}
@@ -242,6 +259,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   }
   async function changed(el){
     if(pose.changed(el))return;
+    if(paths.changed(el))return;   // S31 M3 hook
     const name=el.name,e=sel&&entry(sel),v=Number(el.value);
     if(name==='pe-sex'||name==='pe-age'||name==='pe-heritage'){filters[name.slice(3)]=el.value;rerender();return;}
     if(!e)return;
@@ -266,6 +284,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   }
   async function action(name,index){
     if(pose.action(name,index))return;
+    if(paths.action(name,index))return;   // S31 M3 hook
     if(name==='pe-pose-enter'){if(sel){await ensure();await enterPose(sel);}return;}
     if(name==='pe-pose-save'){savePose();return;}
     if(name==='pe-pose-apply'){await applySaved(index);return;}
@@ -356,6 +375,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       ${select_('pe-anchor',isFree?'free':'desk',[['free','Free spot (move by hand)'],['desk',e.station?'At a desk in the room':'At the film desk (follows it)']])}
       ${isFree?`<div class="director-row people-fields">${field('X',`pe-x`,e.at[0],{step:10,unit:'mm'})}${field('Z','pe-z',e.at[1],{step:10,unit:'mm'})}${field('Turn','pe-turn',e.turn||0,{step:5,min:-360,max:360,unit:'°'})}${field('Lift','pe-y',e.y||0,{step:5,unit:'mm',title:'Raises a seated person onto a seat, or anyone onto a step'})}</div>
       <div class="director-actions people-modes">${Object.entries(MODES).map(([k,l])=>`<button type="button" data-action="pe-mode-${k}" aria-pressed="${mode===k}">${l}</button>`).join('')}<button type="button" data-action="pe-face-desk">Face the desk</button><button type="button" data-action="pe-face-camera">Face the camera</button></div>`:'<p class="director-hint">They work at the desk and move with it, and they sit or stand as its height changes: seated at 28 to 30 in, standing at 43.5 in, out of the way while it travels between.</p>'}
+      ${paths.panel(e)/* S31 M3 hook */}
       <div class="director-row people-fields">${field('Size','pe-scale',Math.round((e.scale||1)*100),{step:1,min:20,max:300,unit:'%',title:'100 % is the size the character was built at'})}</div>
       <h4>Clothes and hair</h4>
       <div class="people-colors">${PARTS.map((part,i)=>{const mine=e.colors?.[part],was=asBuilt?.[part]||c?.colors?.[part]||'#8a8f96';return `<label title="${mine?'Recoloured':'As built'}: ${part}">${cap(part)}<span><input type="color" name="pe-color-${part}" value="${escape(mine||was)}">${mine?`<button type="button" data-action="pe-color-reset" data-index="${i}" title="Back to the colour the character was built with">↺</button>`:''}</span></label>`;}).join('')}</div>
@@ -376,6 +396,41 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       <p class="director-hint">${mine?'This chapter has its own cast.':list.length?'This is the film\'s cast. Your first change copies it into the chapter.':'Add people from the library, or bring in the people who live in this room.'} Click a person in the view or in the list.</p>
       <div class="people-list">${list.map(row).join('')}</div>${e?selectedPanel(e):''}`;
   }
+  // ---- the People track (S31 M4): a row per person (a character's placements share it) with a diamond at every
+  // change already programmed (people-track.mjs): comes in / goes out, posture change, walk or roll start, waypoints,
+  // arrival, actions. Click: the playhead goes there and that placement is selected. Drag: retime (what is linked:
+  // people-track.mjs). One undo step per drag.
+  let trackList=[],td=null,tdSuppress=0;
+  const walkSeconds=k=>stagePeople()?.byKey?.(k)?.userData?.personLife?.plan?.seconds;
+  function track(){const p=own()||seed();return programmedDiamonds(p,seconds(),{walkSeconds});}
+  const KIND_TITLE={'in':'comes in','out':'goes out','change':'posture change','walk-start':'starts walking','walk-point':'walk waypoint','walk-end':'arrives (walk)','roll-start':'starts rolling','roll-point':'roll waypoint','roll-end':'arrives (roll)','act':'action','act-end':'action ends'};
+  function trackRows(){
+    if(!film()?.people&&!own())return '';
+    const {rows,diamonds}=track(),T=seconds()||1;trackList=diamonds;
+    return rows.map(r=>{const mine=diamonds.map((d,i)=>[d,i]).filter(([d])=>d.row===r.row),on=r.keys.includes(sel);
+      return `<div class="desk-lane-row people-track-row ${on?'selected':''}" data-lane-color="people"><span class="desk-lane-label" title="${escape(r.label)}: what is programmed for them (click a diamond: go there and select; drag: retime)">${escape(r.label)}</span><div class="desk-lane key-lane people-track-lane">${mine.map(([d,i])=>`<button type="button" class="pt-key pt-${d.kind.split('-')[0]} pt-${d.kind} ${d.key===sel?'mine':''}" data-pt-index="${i}" style="left:${d.t/T*100}%" title="${escape(d.key)}: ${escape(KIND_TITLE[d.kind]||d.label)} at ${d.t.toFixed(2)} s · drag to retime" aria-label="${escape(d.key)} ${escape(KIND_TITLE[d.kind]||d.label)} at ${d.t.toFixed(2)} s"></button>`).join('')}<div class="camera-track-playhead" data-shared-playhead style="left:${time()/T*100}%"></div></div></div>`;}).join('');
+  }
+  function retime(d,t){
+    const T=seconds(),cur=own()||seed(),next=retimeDiamond(cur,d,t,T,{walkSeconds});
+    if(!next){status(d.kind.endsWith('-end')||d.kind.endsWith('-point')?'It cannot arrive before it sets off.':'That would leave no time in that window.',true);rerender();return;}
+    write(p=>{for(const k of Object.keys(p))delete p[k];Object.assign(p,next);},`${d.key}: ${KIND_TITLE[d.kind]||d.label} ${d.t.toFixed(2)} → ${t.toFixed(2)} s.`);
+  }
+  document.addEventListener('pointerdown',ev=>{
+    const b=ev.target.closest?.('[data-pt-index]');if(!b||ev.button!==0||!editing())return;const d=trackList[Number(b.dataset.ptIndex)];if(!d)return;
+    const lane=b.parentElement.getBoundingClientRect();ev.preventDefault();ev.stopPropagation();td={b,d,x:ev.clientX,left:lane.left,width:lane.width,now:null};
+  },true);
+  document.addEventListener('pointermove',ev=>{
+    if(!td||(td.now===null&&Math.abs(ev.clientX-td.x)<3))return;const T=seconds()||1;
+    let t=Math.max(0,Math.min(T,(ev.clientX-td.left)/td.width*T));if(!ev.shiftKey)t=Math.round(t*20)/20;
+    td.now=t;td.b.style.left=t/T*100+'%';status(`${td.d.key}: ${KIND_TITLE[td.d.kind]||td.d.label} ${td.d.t.toFixed(2)} → ${t.toFixed(2)} s`);
+  },true);
+  document.addEventListener('pointerup',ev=>{
+    const x=td;td=null;if(!x)return;ev.stopPropagation();tdSuppress=performance.now()+300;
+    if(x.now===null){seek(x.d.t);select(x.d.key,{announce:false});status(`${x.d.key}: ${KIND_TITLE[x.d.kind]||x.d.label} at ${x.d.t.toFixed(2)} s. Drag the diamond to retime it.`);return;}
+    retime(x.d,x.now);
+  },true);
+  document.addEventListener('click',ev=>{const b=ev.target.closest?.('[data-pt-index]');if(!b)return;ev.preventDefault();ev.stopPropagation();if(performance.now()<tdSuppress)return;
+    const d=trackList[Number(b.dataset.ptIndex)];if(d){seek(d.t);select(d.key,{announce:false});}},true);
   // The timeline's People lane: one bar per person over the seconds they are in the room. People who are there at the
   // same time get rows of their own (lane-rows.mjs); the lane grows past two rows so every bar keeps its name.
   let laneRows=1;
@@ -417,5 +472,5 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   const header=()=>{const e=sel&&entry(sel);return e?{name:personName(e),detail:pose.active()===sel?'Pose mode'+(pose.joint()?' · '+pose.jointLabel():''):doing(e)}:null;};
   // After the film setup is (re)applied or the cut changes: the selection may be gone.
   function applied(){if(sel&&!entry(sel)){pose.exit();sel=null;}ensure().catch(()=>null);}
-  return {panel,lane,laneHeight,action,changed,select,deselect,selected:()=>sel,header,pickObject,setMode,mode:()=>mode,count,remove:k=>{if(k===undefined&&pose.active()){pose.resetJoint();return;}remove(k);},posing:()=>pose.active(),applied,openLibrary,effective:()=>effectivePeople(film(),shot())};
+  return {panel,lane,laneHeight,action,changed,select,deselect,selected:()=>sel,header,pickObject,setMode,mode:()=>mode,count,remove:k=>{if(k===undefined&&pose.active()){if(pose.selectedKey()!==null){pose.deleteKey();return;}pose.resetJoint();return;}if(k===undefined&&paths.removeSelected())return;/* S31 M3 hook */remove(k);},posing:()=>pose.active(),trackRows,retimeDiamond:retime,poseKeyLane:()=>pose.keyLane(),poseKeySelected:()=>pose.selectedKey()!==null,poseSync:()=>pose.sync(),keyNow:w=>pose.keyNow(w),applied,openLibrary,effective:()=>effectivePeople(film(),shot())};
 }

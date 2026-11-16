@@ -96,6 +96,7 @@ assert(/cine-rise-phone\.mp4$/.test(byId(after, 'rise').screens.find(x => x.targ
 const tex = [...byId(after, 'create').screens, ...byId(after, 'storage').screens].filter(x => x.target === 'texture');
 assert.equal(tex.length, 2, 'the drafting paper and the phone in hand are texture targets');
 assert(tex.some(x => x.mesh === '^Architect floor plan$') && tex.some(x => x.person === 'andre' && x.material === '^Held\\.phone screen'));
+assert(byId(after, 'storage').screens.some(x => x.target === 'texture' && x.flipY === true && !x.flipX && !x.rotate), 'the phone Andre holds toward himself is turned a half turn (flipY of the flipped-authored texture), not mirrored: upside down to the insert camera, upright to him');
 run('--only', ALL); assert.equal(fs.readFileSync(CUT, 'utf8'), once, 'idempotent'); assert.equal(fs.readFileSync(SUB, 'utf8'), subOnce, 'idempotent (versions)');
 const subKeys = s => s.shots.map(({screens, ...r}) => r);
 assert.deepEqual(subKeys(sub), subKeys(subBefore), 'the finale versions: only screens changes');
@@ -120,5 +121,25 @@ assert.match(read(path.join(SCR, 'scenes/ch09.js')), /TM\?\.first \?\? \.75/, 'a
 // 4. the render PC gets every clip
 const listed = new Set(read(path.join(ROOT, 'tools/experience/freeze-lists/win-exports.txt')).split('\n').map(l => l.trim()));
 for (const src of new Set(named)) assert(listed.has(src), src + ' is in freeze-lists/win-exports.txt');
+// 5. check-screens flags a music clip captured with another tempo map than the cut's current one (S27)
+{
+  const CHK = path.join(ROOT, 'exports/cinematic-intro-cut-cine/check-screens.py'), TMF = path.join(ROOT, 'exports/cinematic-intro-cut-cine/score/tempo-map.json');
+  if (fs.existsSync(TMF)) {
+    const m = JSON.parse(fs.readFileSync(TMF, 'utf8')).chapters.music;
+    const side = (o = {}) => ({id: 'cine-music-tv', shot: 'music', audio: true, spectrum: m.start,
+      tempo: {beats: m.beats_rel.length, first: m.music_from, bpm: m.bpm, source: 'score/tempo-map.json'}, ...o});
+    const probe = c => execFileSync(process.env.PYTHON || (process.platform === 'win32' ? 'python' : 'python3'), ['-I', '-c',
+      ['import importlib.util,json,sys', 'sp=importlib.util.spec_from_file_location("cs",sys.argv[1]);m=importlib.util.module_from_spec(sp);sp.loader.exec_module(m)',
+        'print(json.dumps(m.tempo_problem(json.loads(sys.argv[2]),json.load(open(sys.argv[3])))))'].join(String.fromCharCode(10)),
+      CHK, JSON.stringify(c), TMF], {encoding: 'utf8'}).trim();
+    assert.equal(probe(side()), 'null', 'a clip captured with the current tempo map passes');
+    const old = probe(side({spectrum: 146.85, tempo: {beats: 24, first: 1.025, bpm: 115.108, source: 'score/tempo-map.json'}}));
+    assert(/STALE/.test(old) && /115\.108/.test(old) && /bpm/.test(old) && /music_from/.test(old) && /beats 24/.test(old) && /spectrum/.test(old), 'the old 115 BPM clip is flagged STALE: ' + old);
+    assert(/STALE/.test(probe(side({spectrum: 146.85}))), 'a spectrum cut from another chapter start is flagged');
+    assert(/without the score tempo map/.test(probe(side({tempo: null}))), 'no recorded tempo is flagged');
+    assert.equal(probe(side({spectrum: null})), 'null', 'no spectrum (no score.wav) is not a tempo mismatch');
+  }
+}
+
 fs.rmSync(tmp, {recursive: true, force: true});
 console.log(`cine screens: ${cine.length} clips, build-screens opt-in per chapter, writes only screens (idempotent), defaults kept, freeze list complete: OK`);

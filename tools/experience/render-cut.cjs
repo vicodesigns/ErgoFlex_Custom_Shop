@@ -52,12 +52,14 @@
 //   studio-state.json: the shared editing state every studio browser saves to)
 // Options: --screen exports/…/screen-film.mp4 (replace the media clip)
 // --size 1920x1080  --fps 30  --blur 4 (sub-frames per output frame,
-// 180° shutter: half of them are averaged)  --ss 1.5 (supersample, then
+// 180° shutter: the last half of them are averaged, and only those are baked:
+// tools/experience/render-shutter.cjs)  --ss 1.5 (supersample, then
 // Lanczos down)  --at 0,0.25,1 (exact chapter fractions for stills)
 // Uses a plain static server (no live reload, so writes under exports/ can't
 // reload the stage mid-render, and Range works for media seeks):
 //   node tools/experience/render-server.cjs 3017
 const puppeteer=require('puppeteer-core'),fs=require('fs'),path=require('path'),{spawn,execFileSync}=require('child_process');
+const {shutterPlan}=require('./render-shutter.cjs');
 
 const opts={listScreens:false,cut:null,shots:'all',out:'.',stills:0,at:null,video:false,size:'1920x1080',fps:30,blur:1,ss:1,server:'http://127.0.0.1:3017'};
 for(let i=2;i<process.argv.length;i++){
@@ -146,20 +148,22 @@ async function renderShot(frame,i){
     // shot.renderRange [t0,t1] (chapter seconds): render only that span, end
     // exclusive, still on the chapter clock (for sub-shots joined in post).
     const range=Array.isArray(shot.renderRange)?shot.renderRange.map(Number):null;
-    const outFrames=range?Math.max(2,Math.round((range[1]-range[0])*fps)):Math.max(2,Math.round(shot.seconds*fps)),sub=blur,total=(outFrames-1)*sub+1;
+    const outFrames=range?Math.max(2,Math.round((range[1]-range[0])*fps)):Math.max(2,Math.round(shot.seconds*fps));
+    // The shutter (render-shutter.cjs): only the sub-frames an output frame blends are baked (`open` of every `sub`).
+    const {sub,open,order,vf}=shutterPlan(outFrames,blur);
     const n0=range?Math.round(range[0]*fps)*sub:0,chapterFrames=Math.max(2,Math.round(shot.seconds*fps));
-    const vf=[];if(sub>1){const open=Math.max(1,Math.round(sub/2));vf.push(`tmix=frames=${open}:weights=${Array(open).fill(1).join(' ')}`,`select=not(mod(n\\,${sub}))`);}
     if(ss>1)vf.push(`scale=${W}:${H}:flags=lanczos`);
     vf.push('setpts=N/('+fps+'*TB)');
     const file=path.join(opts.out,tag+'.mkv');
-    const ff=spawn('ffmpeg',['-v','error','-y','-f','image2pipe','-framerate',String(fps*sub),'-c:v','mjpeg','-i','-','-vf',vf.join(','),'-r',String(fps),'-c:v','libx264','-preset','medium','-crf','8','-pix_fmt','yuv444p','-color_primaries','bt709','-color_trc','bt709','-colorspace','bt709',file],{stdio:['pipe','inherit','inherit']});
+    const ff=spawn('ffmpeg',['-v','error','-y','-f','image2pipe','-framerate',String(fps*open),'-c:v','mjpeg','-i','-','-vf',vf.join(','),'-r',String(fps),'-c:v','libx264','-preset','medium','-crf','8','-pix_fmt','yuv444p','-color_primaries','bt709','-color_trc','bt709','-colorspace','bt709',file],{stdio:['pipe','inherit','inherit']});
     const done=new Promise((res,rej)=>ff.on('close',c=>c===0?res():rej(Error('ffmpeg exited '+c))));
-    for(let n=0;n<total;n++){
-      // Same sampling as the in-browser bake: t spans 0…1 across the chapter.
-      const seconds=(n0+n)/(fps*sub),t=Math.min(1,seconds/((chapterFrames-1)/fps));
-      const jpg=await grab(frame,t,seconds+off,.97,seconds,true);
+    let lastN=-1,jpg=null;
+    for(let i=0;i<order.length;i++){
+      const n=order[i];
+      // Same sampling as the in-browser bake: t spans 0…1 across the chapter. A repeated sub-frame (frame 0's group) is not baked again.
+      if(n!==lastN){const seconds=(n0+n)/(fps*sub),t=Math.min(1,seconds/((chapterFrames-1)/fps));jpg=await grab(frame,t,seconds+off,.97,seconds,true);lastN=n;}
       if(!ff.stdin.write(jpg))await new Promise(r=>ff.stdin.once('drain',r));
-      if(n%(fps*sub*2)===0)process.stdout.write(`\r${tag} ${shot.id}: ${Math.round(n/total*100)}%   `);
+      if(i%(fps*open*2)===0)process.stdout.write(`\r${tag} ${shot.id}: ${Math.round(i/order.length*100)}%   `);
     }
     ff.stdin.end();await done;
     console.log(`\r${tag} ${shot.id}: ${outFrames} frames → ${file} (${((Date.now()-started)/1000).toFixed(0)}s)`);

@@ -7,8 +7,8 @@
    "seconds": 44.85,
    "page": "/exports/cinematic-intro-cut-cine/director-ch01.html",
    "shot": "/exports/cinematic-intro-cut-cine/director-film/awaken.json",
-   "version": "36ed8a2fdf73",
-   "updated": "2026-11-13T20:32:08Z"
+   "version": "3d85da53ba09",
+   "updated": "2026-11-15T20:37:08Z"
   },
   {
    "n": 2,
@@ -17,8 +17,8 @@
    "seconds": 18.0,
    "page": "/exports/cinematic-intro-cut-cine/director-ch02-rise.html",
    "shot": "/exports/cinematic-intro-cut-cine/director-film/rise.json",
-   "version": "233ae8c227fd",
-   "updated": "2026-11-13T20:32:08Z"
+   "version": "21430d47b340",
+   "updated": "2026-11-15T20:37:08Z"
   },
   {
    "n": 3,
@@ -27,8 +27,8 @@
    "seconds": 23.5,
    "page": "/exports/cinematic-intro-cut-cine/director-ch03-create.html",
    "shot": "/exports/cinematic-intro-cut-cine/director-film/create.json",
-   "version": "d6cc1ea7cf96",
-   "updated": "2026-11-13T20:32:08Z"
+   "version": "7e26e6de8852",
+   "updated": "2026-11-15T20:37:08Z"
   },
   {
    "n": 4,
@@ -37,8 +37,8 @@
    "seconds": 16.0,
    "page": "/exports/cinematic-intro-cut-cine/director-ch04-commons.html",
    "shot": "/exports/cinematic-intro-cut-cine/director-film/commons.json",
-   "version": "f1c9964261da",
-   "updated": "2026-11-14T01:51:06Z"
+   "version": "faf63aa8e41a",
+   "updated": "2026-11-15T20:37:08Z"
   },
   {
    "n": 5,
@@ -47,18 +47,18 @@
    "seconds": 14.5,
    "page": "/exports/cinematic-intro-cut-cine/director-ch05-coast.html",
    "shot": "/exports/cinematic-intro-cut-cine/director-film/coast.json",
-   "version": "8a99df0ca72b",
-   "updated": "2026-11-13T20:32:08Z"
+   "version": "7a612d0bafa7",
+   "updated": "2026-11-15T20:37:08Z"
   },
   {
    "n": 6,
    "id": "oilers",
    "title": "Space to discover.",
-   "seconds": 14.0,
+   "seconds": 15.0,
    "page": "/exports/cinematic-intro-cut-cine/director-ch06-oilers.html",
    "shot": "/exports/cinematic-intro-cut-cine/director-film/oilers.json",
-   "version": "b328c97644e9",
-   "updated": "2026-11-14T02:49:00Z"
+   "version": "0972732b4101",
+   "updated": "2026-11-15T20:37:08Z"
   },
   {
    "n": 7,
@@ -67,8 +67,8 @@
    "seconds": 16.0,
    "page": "/exports/cinematic-intro-cut-cine/director-ch07-wellness.html",
    "shot": "/exports/cinematic-intro-cut-cine/director-film/wellness.json",
-   "version": "80655e025977",
-   "updated": "2026-11-13T20:32:08Z"
+   "version": "f855df423a28",
+   "updated": "2026-11-15T20:37:08Z"
   },
   {
    "n": 8,
@@ -77,8 +77,8 @@
    "seconds": 12.0,
    "page": "/exports/cinematic-intro-cut-cine/director-ch08-awareness.html",
    "shot": "/exports/cinematic-intro-cut-cine/director-film/awareness.json",
-   "version": "42cccf5febff",
-   "updated": "2026-11-13T20:32:08Z"
+   "version": "4fe43968df4d",
+   "updated": "2026-11-15T20:37:09Z"
   },
   {
    "n": 9,
@@ -87,8 +87,8 @@
    "seconds": 12.5,
    "page": "/exports/cinematic-intro-cut-cine/director-ch09-music.html",
    "shot": "/exports/cinematic-intro-cut-cine/director-film/music.json",
-   "version": "665151763a7e",
-   "updated": "2026-11-13T20:32:08Z"
+   "version": "07b7cf6c3ddf",
+   "updated": "2026-11-15T20:37:09Z"
   },
   {
    "n": 10,
@@ -97,8 +97,8 @@
    "seconds": 17.0,
    "page": "/exports/cinematic-intro-cut-cine/director-ch10-media.html",
    "shot": "/exports/cinematic-intro-cut-cine/director-film/media.json",
-   "version": "10026d73f9a8",
-   "updated": "2026-11-13T20:32:08Z"
+   "version": "640b709e7845",
+   "updated": "2026-11-15T20:37:09Z"
   },
   {
    "n": 11,
@@ -107,8 +107,8 @@
    "seconds": 24.978,
    "page": "/exports/cinematic-intro-cut-cine/director-ch11-storage.html",
    "shot": "/exports/cinematic-intro-cut-cine/director-film/storage.json",
-   "version": "0d4123a03ea6",
-   "updated": "2026-11-14T07:38:18Z"
+   "version": "c95f450d2375",
+   "updated": "2026-11-15T20:37:09Z"
   },
   {
    "n": 12,
@@ -117,8 +117,8 @@
    "seconds": 48.0,
    "page": "/exports/cinematic-intro-cut-cine/director-ch12-hero.html",
    "shot": "/exports/cinematic-intro-cut-cine/director-film/hero.json",
-   "version": "63582c084512",
-   "updated": "2026-11-13T23:48:48Z"
+   "version": "b94475b887ee",
+   "updated": "2026-11-15T20:37:09Z"
   }
  ]
 }

@@ -85493,22 +85493,22 @@
    "file": "assets/props/people-andre-stand-robot-work.glb",
    "anchor": "floor",
    "size": [
-    637.2,
+    710.2,
     1698.6,
-    593.8
+    541.5
    ],
    "min": [
-    -272.7,
+    -310.4,
     0.1,
     -129.7
    ],
    "max": [
-    364.5,
+    399.8,
     1698.7,
-    464.1
+    411.8
    ],
-   "tris": 40196,
-   "bytes": 1179812,
+   "tris": 40316,
+   "bytes": 1180704,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -85526,22 +85526,22 @@
    "file": "assets/props/people-andre-stand-robot-shelf.glb",
    "anchor": "floor",
    "size": [
-    576.4,
+    615.4,
     1754.2,
-    845
+    885
    ],
    "min": [
-    -254.9,
+    -254.4,
     0,
     -140.7
    ],
    "max": [
-    321.5,
+    361,
     1754.2,
-    704.3
+    744.3
    ],
-   "tris": 40400,
-   "bytes": 1180092,
+   "tris": 40374,
+   "bytes": 1179644,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -85881,6 +85881,39 @@
    "person": {
     "character": "noah",
     "pose": "stand-screen-press"
+   }
+  },
+  {
+   "id": "people-andre-stand-robot-lift",
+   "name": "Andre: lifting the robot toward the desk shelf",
+   "category": "people",
+   "scenes": [],
+   "file": "assets/props/people-andre-stand-robot-lift.glb",
+   "anchor": "floor",
+   "size": [
+    748.9,
+    1751.2,
+    519.3
+   ],
+   "min": [
+    -282.3,
+    -0.4,
+    -130.6
+   ],
+   "max": [
+    466.6,
+    1750.8,
+    388.7
+   ],
+   "tris": 40330,
+   "bytes": 1179680,
+   "source": "tools/people/cast.py",
+   "license": "CC0 (MakeHuman / MPFB assets)",
+   "attribution": null,
+   "collection": "people",
+   "person": {
+    "character": "andre",
+    "pose": "stand-robot-lift"
    }
   }
  ],

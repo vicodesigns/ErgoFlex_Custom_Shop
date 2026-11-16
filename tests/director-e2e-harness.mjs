@@ -34,7 +34,7 @@ export async function openDirectorBrowser({width=VIEW?Number(VIEW[1]):1600,heigh
   if(!base){
     const port=await freePort(),state=path.join(fs.mkdtempSync(path.join(os.tmpdir(),'director-e2e-')),'studio-state.json');stateFile=state;
     const plan=harnessServer({root,port,stateFile:state,shared});
-    if(plan.copyState&&fs.existsSync(path.join(root,'studio-state.json')))fs.copyFileSync(path.join(root,'studio-state.json'),state);
+    {const from=process.env.STATE_FROM||path.join(root,'studio-state.json');if(plan.copyState&&fs.existsSync(from))fs.copyFileSync(from,state);}   // (STATE_FROM: a saved state to start the scratch copy from)
     server=spawn(process.execPath,plan.args,{cwd:root,stdio:['ignore','pipe','pipe']});
     await new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(Error('studio server did not start')),20000);server.stdout.on('data',d=>{if(/studio server/.test(d)){clearTimeout(t);resolve();}});server.once('exit',c=>reject(Error('studio server exited '+c)));});
     base=`http://127.0.0.1:${port}`;
@@ -52,7 +52,7 @@ export async function openDirectorBrowser({width=VIEW?Number(VIEW[1]):1600,heigh
   });
   page.on('pageerror',e=>errors.push(e.message));
   page.on('console',m=>{const t=m.text();if(/not exported|does not provide an export|SyntaxError/.test(t))errors.push(t);});
-  const close=async()=>{await browser.close().catch(()=>{});server?.kill();fs.rmSync(profile,{recursive:true,force:true});};
+  const close=async()=>{await browser.close().catch(()=>{});server?.kill();try{fs.rmSync(profile,{recursive:true,force:true,maxRetries:5,retryDelay:300});}catch{}};
   return {base,browser,page,errors,close,stateFile,shared};
 }
 // A chapter page (director-chNN-*.html) up to "Camera is live".

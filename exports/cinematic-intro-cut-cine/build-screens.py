@@ -43,8 +43,8 @@ TEXTURES = {
     # the drafting board's paper, relabelled as a home (a still: the same plan as the left monitor and the 3D house);
     # within 'desk': only the featured desk's kit (another drafting kit in the room keeps its sheet)
     'create': [{'target': 'texture', 'mesh': '^Architect floor plan$', 'within': 'desk', 'src': SCR + 'cine-create-floor-plan.png'}],
-    # the phone in Andre's hand; flipX: the clip is authored upright, the texture turned so the insert's camera (far side of Andre) reads it (every phone posture of his is its own GLB; all of them show the clip)
-    'storage': [{'target': 'texture', 'material': '^Held\\.phone screen', 'person': 'andre', 'src': SCR + 'cine-storage-phone.mp4', 'offset': 0, 'loop': False, 'flipX': True}],
+    # the phone in Andre's hand; flipY (a half turn, not mirrored): the clip is authored upright and Andre holds the phone toward himself, so it reads upside down to the insert's camera (far side of Andre) and upright to him (every phone posture of his is its own GLB; all of them show the clip)
+    'storage': [{'target': 'texture', 'material': '^Held\\.phone screen', 'person': 'andre', 'src': SCR + 'cine-storage-phone.mp4', 'offset': 0, 'loop': False, 'flipY': True}],
 }
 HERO_VERSIONS = {'gaming': {'main-landscape': 'cine-hero-gaming'}, 'artist': {'main-landscape': 'cine-hero-artist'},
                  # hbhs: its portrait plays oilers' own quiz (Kai's chapter) at the version's offset (-20.3: the votes,
@@ -81,6 +81,7 @@ def main():
     only = set(args[args.index('--only') + 1].split(',')) if '--only' in args else None
     dry = '--dry-run' in args
     cut = json.loads(open(CUT, 'rb').read().replace(b'\r\n', b'\n'))
+    before = json.loads(json.dumps(cut))
     changed = []
     for s in cut['shots']:
         cid = s['id']
@@ -100,6 +101,7 @@ def main():
             if new != old: changed.append('hero:' + v['preset']); v['screens'] = new
     for c in changed: print('screens:', c)
     if dry or not changed: print('(nothing written)' if not changed else '(dry run)'); return
+    sys.path.insert(0, HERE); from director_guard import guard; guard(before, cut, args, who='build-screens.py')   # (a chapter whose screens were edited in the Director is his)
     open(CUT, 'w', encoding='utf-8', newline='\n').write(json.dumps(cut, indent=1))
     open(SUB, 'w', encoding='utf-8', newline='\n').write(json.dumps(sub))
 

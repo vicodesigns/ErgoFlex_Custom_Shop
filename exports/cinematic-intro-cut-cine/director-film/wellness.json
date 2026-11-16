@@ -28,7 +28,7 @@
     "duration": 5.0,
     "easing": "smooth",
     "label": "Stand and reset",
-    "target": 43.5
+    "target": 41
    }
   ]
  },
@@ -5378,22 +5378,14 @@
  "screens": [
   {
    "target": "main-landscape",
-   "src": "exports/cinematic-intro-20261030/screens/07-main.mp4",
-   "base": {
-    "offset": 0,
-    "loop": true
-   },
-   "offset": -3,
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-wellness-main.mp4",
+   "offset": 0,
    "loop": false
   },
   {
    "target": "tablet",
-   "src": "exports/cinematic-intro-20261030/screens/07-tablet.mp4",
-   "base": {
-    "offset": 0,
-    "loop": true
-   },
-   "offset": -3,
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-wellness-tablet.mp4",
+   "offset": 0,
    "loop": false
   }
  ],
@@ -5547,17 +5539,28 @@
  "people": {
   "only": [
    "people-maya-sit-type",
-   "people-maya-stand-type",
    "people-priya-stretch",
    "kai-bike"
   ],
   "cast": [
    {
+    "key": "maya-stand",
+    "id": "people-maya-stand-type-41",
+    "desk": "stand",
+    "reach": 850,
+    "colors": {
+     "top": "#2d7d8a",
+     "bottom": "#1f2228",
+     "shoes": "#ececec"
+    }
+   },
+   {
     "key": "maya-break",
     "id": "people-maya-stretch",
+    "fromDesk": true,
     "at": [
      -421,
-     350
+     85
     ],
     "turn": 180,
     "colors": {
@@ -5579,8 +5582,8 @@
   "when": {
    "maya-break": [
     [
-     6.6,
-     10.35,
+     9.7,
+     12.3,
      0.3,
      0.35
     ]

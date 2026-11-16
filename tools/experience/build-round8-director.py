@@ -60,6 +60,14 @@
       onto the chapter's film shot as 'sceneDeskEdits' (tools/experience/film-desk-edits.mjs installs them).
 """
 import base64, copy, glob, hashlib, html, json, math, os, re, subprocess, sys, tempfile, time
+
+_open = open
+def open(file, mode='r', *a, **k):
+    """UTF-8 and LF whatever the platform (Windows' default code page garbled the cut's labels: S31)."""
+    if 'b' not in mode:
+        k.setdefault('encoding', 'utf-8')
+        if 'w' in mode or 'a' in mode: k.setdefault('newline', chr(10))
+    return _open(file, mode, *a, **k)
 root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # the repo
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -88,7 +96,8 @@ def load(p): return json.load(open(p))
 def dump(p, d, indent=1):
     """Write only when the content changes (keeps untouched files byte-identical)."""
     if os.path.exists(p) and load(p) == d: return False
-    json.dump(d, open(p, 'w'), indent=indent); return True
+    with open(p, 'w', newline=chr(10)) as f: json.dump(d, f, indent=indent)      # (LF on Windows too: the cut's own format)
+    return True
 
 
 def chapters():
@@ -119,9 +128,29 @@ def bake(seconds, plan):
 def r4(x): return round(float(x), 4)
 
 
+def same_value(a, b):
+    """Equal as JSON, numbers within 1e-4 (the Director rounds clip times to 4 decimals)."""
+    if isinstance(a, bool) or isinstance(b, bool): return a == b
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)): return abs(a - b) <= 1e-4
+    if isinstance(a, list) and isinstance(b, list): return len(a) == len(b) and all(same_value(x, y) for x, y in zip(a, b))
+    if isinstance(a, dict) and isinstance(b, dict): return a.keys() == b.keys() and all(same_value(a[k], b[k]) for k in a)
+    return a == b
+
+
+def clip_same(d, mine):
+    """The Director's clip d says what the film's clip says (its label: the Director keeps the first 60 characters)."""
+    return all((isinstance(v, str) and isinstance(mine.get(k), str) and mine[k].startswith(v)) if k == 'label' else same_value(v, mine.get(k)) for k, v in d.items() if k in CLIP_FIELDS)
+
+
 def merge_clips(old, new):
-    mine = {c['id']: c for c in old}; out = []
+    """S31: a clip the Director did not change (every field it sends equal to the film's, within its rounding) stays the
+    film's clip as it is; when none changed and none was added or deleted, the film's list comes back untouched."""
+    mine = {c['id']: c for c in old}
+    if len(new) == len(old) and all(d.get('id') in mine and clip_same(d, mine[d['id']]) for d in new):
+        return copy.deepcopy(old)
+    out = []
     for d in sorted(new, key=lambda c: (c['start'], c.get('lane', ''))):
+        if d.get('id') in mine and clip_same(d, mine[d['id']]): out.append(copy.deepcopy(mine[d['id']])); continue
         c = copy.deepcopy(mine.get(d['id'], {}))
         c.update({k: copy.deepcopy(v) for k, v in d.items() if k in CLIP_FIELDS})
         c['start'], c['duration'] = r4(c['start']), r4(c['duration'])
@@ -214,7 +243,12 @@ def apply(n, cid, f, dc, log):
     plan = dict(src.get('cameraPlan') or {}); plan['keys'] = dc['keys']
     bad = [k['at'] for k in dc['keys'] if not -1e-6 <= k['at'] <= new_T + 1e-6]
     if bad: sys.exit(f'{cid}: camera keys at {bad} lie outside the {new_T} s chapter')
-    camera = bake(new_T, plan)
+    # S31: the camera keys came back as the plan's own (director-bridge.py import: no key changed) and the length is
+    # the same: the film keeps its plan and its baked camera exactly (no re-bake, nothing thinned or rounded).
+    srt = lambda ks: sorted(ks, key=lambda k: k['at'])
+    if abs(new_T - old_T) < 1e-9 and src.get('camera') and srt((src.get('cameraPlan') or {}).get('keys') or []) == dc['keys']:
+        plan = copy.deepcopy(src['cameraPlan']); camera = copy.deepcopy(src['camera']); new_T = src['seconds']; kept = True
+    else: camera = bake(new_T, plan); kept = False
     motion, status = src.get('motion'), src.get('ledStatus')
     old_initial = copy.deepcopy((motion or {}).get('initial'))
     if 'clips' in dc and (motion or dc['clips']):
@@ -238,7 +272,8 @@ def apply(n, cid, f, dc, log):
         # (a chapter's touchscreen keys are not retimed with its clips: say so when the length changes)
         if s.get('touchscreen') and abs(float(s.get('seconds', seconds)) - seconds) > 1e-6:
             log('    WARNING: touchscreen keys (open / screen at) left as they were for %s -> %s s: retime them by hand' % (s.get('seconds'), seconds))
-        s['seconds'] = seconds; s['cameraPlan'] = copy.deepcopy(plan); s['camera'] = copy.deepcopy(camera)
+        s['seconds'] = seconds
+        if not kept: s['cameraPlan'] = copy.deepcopy(plan); s['camera'] = copy.deepcopy(camera)      # (kept: each copy keeps its own, hero's sub-shots included)
         if motion is not None: s['motion'] = copy.deepcopy(motion)
         if status is not None: s['ledStatus'] = copy.deepcopy(status)
         rr, m = s.get('renderRange'), s.get('subshots')      # hero: the last sub-shot follows a length change
@@ -393,8 +428,13 @@ def apply_props(cid, f, props):
 
 
 def clean_people(v):
-    """Director Mode's cast for a chapter (experience/people-edits.mjs cleanPeople): {cast: [...], when, chair, fade}; None if not one."""
+    """Director Mode's cast for a chapter (experience/people-edits.mjs cleanPeople): {cast: [...], when, chair, fade}; None if not one.
+    v2 ({"v": 2, ...}, S31): the film's whole `people` object VERBATIM (only, except, place, chair, fade, when, cast with
+    every field, known or not): a deep copy; a cast entry that is not an object with a string id is dropped."""
     if not isinstance(v, dict) or not isinstance(v.get('cast'), list): return None
+    if v.get('v') == 2:
+        out = copy.deepcopy(v); out['cast'] = [e for e in out['cast'] if isinstance(e, dict) and isinstance(e.get('id'), str)]
+        return out
     num = lambda x: isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
     cast, seen = [], set()
     for e in v['cast'][:80]:
@@ -434,12 +474,19 @@ def apply_people(cid, f, people):
     """The chapter's `people` (room-people.mjs filter): nobody of the room's own cast, the Director's cast instead."""
     mine = clean_people(people)
     if mine is None: return []
-    cast = [{k: v for k, v in e.items() if k != 'hide'} for e in mine['cast'] if not e.get('hide')]; keys = {e['key'] for e in cast}
-    film = {'only': [], 'cast': cast}
-    when = {k: v for k, v in (mine.get('when') or {}).items() if k in keys}
-    if when: film['when'] = when
-    for k in ('chair', 'fade'):
-        if k in mine: film[k] = mine[k]
+    if mine.get('v') == 2:      # the film's `people` as the Director has it: minus "v", minus hidden entries and their when
+        film = {k: v for k, v in mine.items() if k != 'v'}
+        hidden = {e.get('key') or e['id'] for e in film['cast'] if e.get('hide') is True}
+        film['cast'] = [e for e in film['cast'] if e.get('hide') is not True]
+        if isinstance(film.get('when'), dict) and hidden: film['when'] = {k: w for k, w in film['when'].items() if k not in hidden}
+    else: film = None
+    cast = [] if film else  [{k: v for k, v in e.items() if k != 'hide'} for e in mine['cast'] if not e.get('hide')]; keys = {e['key'] for e in cast}
+    if film is None:
+        film = {'only': [], 'cast': cast}
+        when = {k: v for k, v in (mine.get('when') or {}).items() if k in keys}
+        if when: film['when'] = when
+        for k in ('chair', 'fade'):
+            if k in mine: film[k] = mine[k]
     wrote = []
     for p in [CUT] + ([f] if f else []):
         if not os.path.exists(p): continue
@@ -604,7 +651,28 @@ def apply_versions(cid, f, versions):
     return wrote
 
 
+def mark_edited(before):
+    """S31: a chapter whose review-cut.json entry this pass changed carries directorEdited: {at, fields} (fields: every
+    top-level field the Director ever changed there, kept across passes). The cut's generator scripts refuse to overwrite
+    a chapter that has it unless told to (see the cut's README). A pass that changes nothing marks nothing."""
+    cut = load(CUT); now = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()); marked = []
+    for s in cut['shots']:
+        b = before.get(s['id'])
+        if b is None: continue
+        changed = sorted(k for k in set(s) | set(b) if k != 'directorEdited' and s.get(k) != b.get(k))
+        if not changed: continue
+        old = (b.get('directorEdited') or {}).get('fields') or []
+        s['directorEdited'] = {'at': now, 'fields': sorted(set(old) | set(changed))}; marked.append(f"{s['id']} ({', '.join(changed)})")
+    if marked and dump(CUT, cut): print('directorEdited: ' + '; '.join(marked))
+
+
 def run_pass():
+    before = {s['id']: copy.deepcopy(s) for s in load(CUT)['shots']}
+    run_pass_chapters()
+    mark_edited(before)
+
+
+def run_pass_chapters():
     for n, cid, f in chapters():
         p = director_file(cid)
         if os.path.exists(p) and load(p).get('lighting'):
@@ -633,7 +701,7 @@ def run_pass():
             w = apply_versions(cid, f, clean_versions(load(p)['versions']))
             print(f'ch{n:02d} {cid}: Director desk versions -> {", ".join(w) or "no change"}')
     for n, cid, f in chapters():
-        if cid == 'awaken': continue
+        if cid == 'awaken' and not os.path.exists(os.path.join(H, 'cut.json')): continue     # (the master: build-round8-opener.py takes it)
         p = director_file(cid)
         if not os.path.exists(p): continue
         dc = load(p); lines = []
@@ -666,7 +734,7 @@ def film_list(rows):
     full = {s['id']: s for s in load(CUT)['shots']}
     v5 = os.path.join(H, 'previews', 'awaken-v5-cut.json')
     if os.path.exists(v5): full['awaken'] = load(v5)['shots'][0]
-    base, items = '/' + os.path.relpath(os.path.abspath(H), root).strip('/'), []
+    base, items = '/' + os.path.relpath(os.path.abspath(H), root).replace(os.sep, '/').strip('/'), []
     cl = os.path.join(H, 'director-chapters.json')
     before = {c.get('id'): c for c in load(cl).get('chapters', [])} if os.path.exists(cl) else {}
     for n, cid, page, js, src, cs, mine in rows:

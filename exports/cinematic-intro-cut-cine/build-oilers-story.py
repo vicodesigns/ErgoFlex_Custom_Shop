@@ -17,7 +17,7 @@ ledStatus, touchscreen, and Kai's and Noah's placements in people (cast and when
   9.4-15    Noah straightens up and watches; Kai starts the quiz
 Placements in room millimetres (room-people.mjs); the touchscreen field: experience/touchscreen-track.mjs.
 """
-import json, math, os
+import json, math, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 CUT = os.path.join(HERE, 'review-cut.json')
@@ -112,6 +112,7 @@ def main():
     p['cast'] = keep[:1] + cast + keep[1:]
     p['when'] = {**{k: when[k] for k in ('kai-rolls', 'kai-docks', 'kai', 'noah-talks', 'noah-steps', 'noah-pulls', 'noah-taps', 'noah-watches')}, **{k: v for k, v in when.items() if not (k.startswith('kai') or k.startswith('noah'))}}
     out = json.dumps(cut, indent=1).encode()
+    sys.path.insert(0, HERE); from director_guard import guard; guard(json.loads(raw), cut, who='build-oilers-story.py')   # (a chapter edited in the Director is his)
     if out != raw:
         with open(CUT, 'wb') as f: f.write(out)
     print('oilers story written:', SECONDS, 's, tap', TAP, 'lift', LIFT_AT, '-', LIFT_AT + LIFT_FOR)

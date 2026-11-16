@@ -14,6 +14,55 @@
 >
 > The text below describes the camera-only round of November 13 and is kept as its record.
 
+## The Director on this cut (S31, Nov 15): review-cut.json is the source of truth
+
+- Pages: `director-ch*.html`, `director-chapters.json`, `director-film/*.json` are built from the current review-cut.json
+  with `python3 tools/experience/film-cuts.py pages exports/cinematic-intro-cut-cine` (on a machine with every screen
+  clip: a clip missing there is left out of the Director's copy; `tests/director-cine-roundtrip-test.mjs` fails when they
+  are stale). Rebuild them after any change to review-cut.json.
+- Round trip: Export cut from the Director, then `build-round8-director.py exports/cinematic-intro-cut-cine --import
+  <export>` and `build-round8-director.py exports/cinematic-intro-cut-cine` (the pass). An export with no edit changes
+  nothing (byte-identical). Camera keys the Director did not move come back as the plan's own keys and the baked camera
+  is kept (no thinning, no re-bake); only an edited chapter's camera is re-baked from its keys. People come back as
+  `peopleEdits` v2 (the film's whole `people`, every field), so walks, rolls, acts, seats, only / except / when survive.
+- A chapter the pass changed gets `directorEdited: {at, fields}` in review-cut.json. The generator scripts
+  (`build-cine-cut.py`, `build-oilers-story.py`, `build-screens.py`: `director_guard.py`) refuse to overwrite a field in
+  `fields` unless run with `--overwrite-director-edits`.
+- The People track (timeline): one row per person with a diamond at every change already programmed (in / out, posture
+  change, walk / roll start, waypoints, arrival, actions). Dragging one retimes it; what follows is in
+  `experience/people-track.mjs` (a posture change moves both windows' edge; a start moves the whole walk / roll; an
+  arrival or waypoint sets the pace / speed; an action moves with its length kept). Pose keys: pose mode, Auto-key.
+
+## November 15: music, Kai's seat (Vico on the 22:12 render: "he's sitting inside of it, his legs are clipping")
+
+- Measured (Kai's posed `people-kai-sit-controller` vertices against a 5 mm height field of `armchair-poppi`, in the
+  chair's frame): the Poppi's seat is about 560 mm deep (back cushion face to front edge) and Kai's hip to knee is
+  about 340 mm, so sat at the chair's middle his knees ended 210 mm short of the front edge and his calves and feet
+  went down through the front of the cushion (up to 362 mm deep; thighs 35 mm into the cushion). Arms, back and the
+  controller were clear.
+- Fix (music entry only): Kai 95 mm forward along his facing (`people.place` at -1214, 1348; turn 151 unchanged, he
+  still faces the desk's screen) and the armchair 120 mm back along its own axis (`mkch` position -1.9736, 0, 2.2915;
+  61 mm from the -x wall) and 3% taller (`scale` [1, 1.03, 1]: seat about 435 mm), so he perches on the front of the
+  seat, leaning into the game as his posture does, with his hips on the cushion (3 mm) and his thighs, calves and feet
+  clear of it; feet on the floor; coffee table 183 mm from his feet (was 226).
+
+## November 15: storage, Andre clear of the desk (S17)
+
+- Andre no longer passes through the featured desk (measured on the stage's own meshes): he stands at 100, 1600 (40 mm
+  further back: his belly was in the cutout's edge), works with the right elbow out and up (it lay in the desktop),
+  lifts the robot straight up off the desktop in front of the top shelf (`people-andre-stand-robot-lift`), sets it down
+  with the elbows level with the hands (the forearms crossed the shelf board), lets go and steps back 210 mm with his
+  feet planted into `people-andre-stand-wait` (`change.step`; the hands come back in a straight line, `change.hands:
+  'line'`, instead of swinging down through the desktop), then turns away over 1.4 s (peak head yaw about 113
+  deg/s, in the wide after the 3.6 s cut; 0-3.6 s under 75 deg/s) with stepping feet, and walks off on a first leg that
+  leaves the desktop's front wings (his forearms went through them). Phone-out at 7.71 s, tap, fold and camera unchanged;
+  chapter length unchanged. New placement options in room-people.mjs (opt-in, storage only): `change: { seconds, arms,
+  turn, step, hands }` and walk `toes: 'bend'`.
+- tools/people/cast.py's ROBOT_DESK, ROBOT_LIFT and ROBOT_SHELF are now in his frame at 1600 (ROBOT_SHELF 40 mm further:
+  the shelf robot is where it was in the room). The older cuts that cast him at 100, 1560 with the earlier robot postures
+  (exports/cinematic-intro-20261110-people storage, tools/experience/build-alt-cut.py ANDRE_DESK, director-film/storage.json)
+  are not written (Vico's rule); were they rendered with the rebuilt models his hands would sit 40 mm off the robot there.
+
 ## November 14: commons and coast (Vico's notes 6, 6b and 7)
 
 - **commons**: the desk starts at 39 in (was 43.5) and Yara types at it as `people-yara-stand-mid` (built for 39 in;
@@ -163,6 +212,8 @@ camera travels, the chapter cuts instead.
 | storage (workshop) | skimmed the desktop at 1.5 s; saw the fold face-on (angle read late); desk filled the frame during the roll | a top-down opening on the desktop and its robots (Andre out of frame through his fade-in) instead of his skim; **cut at 2.5 s** (fold starts) to a side three-quarter from the far side: the 65° fold in profile, Andre whole with his phone; **cut at 8.9 s** on the roll to the outside view along the wall; his tracking and parking keys from 17.3 s | the fold needs profile; Andre is out of frame during his fade-in (1.0-1.5 s); cuts instead of panning him off the edge |
 | hero (finale, product) | one continuous slow 48 s arc as six desk versions crossfade (sub-shots A-F) | **his, unchanged** | it already meets the rules: the desk is 0.6-0.8 of the frame height from 0 to 40 s and about half in the end card (40-48 s, room for the title), the camera never holds, and the single unbroken move is what makes six versions read as one desk. Changing it would also mean rewriting the six identical sub-shot cameras in shots/13-subshots.json for no gain |
 
+Andre's phone (storage insert): the Groove card is turned a half turn (flipY of the texture, not mirrored): it reads upside down to the insert camera on the far side and the right way up to Andre, who holds the phone toward himself.
+
 Shot sizes across the film: macro (awaken, rise), low hero (awaken lift, awareness), profiles and side
 three-quarters (awaken tilt, create, oilers, awareness floor level, storage), high angles (awaken turn, commons,
 wellness, music, oilers), deep/long lens (create, coast), over-the-shoulder (awareness, media), group (commons end).
@@ -285,3 +336,20 @@ down a cross-aisle to the desk; Noah greets him from 0.3 m right of the desk's c
 overhead frame every 0.25 s of his roll with the chair's footprint (wheels, handrims, footplate, elbows: 716 x 940 mm)
 against the furniture's boxes (outside the repo: C:/work/cine-pics/s9/round3-aisle, clearance-table.txt): minimum
 clearance 110 mm, minimum clear width across his way 1107 mm, minimum gap to Noah 109 mm (with a 300 mm body radius).
+
+## Walks (S19, Nov 15)
+
+Vico noticed the workshop guy's feet looked funny while he walked. chingon saw Andre take long marching strides
+leaning forward, and Yara walk crouched with her arms out. The fix is in the walk system (room-people-motion.mjs
+walkPlan/solveWalk, room-people.mjs walkAlong), not in this cut's data: every walker (Andre in storage, Yara and Zoe
+in commons, Noah in oilers) now starts and ends standing, plants each foot flat on its footprint and rolls heel to
+toe. The hips ride as the legs allow (knee about 10 deg in mid-stance), the trunk is about 3 deg forward, the arms
+hang loose, the body turns at most 115 deg/s, and the walk ends facing the next placement's turn. Measured with the
+stage's own models (skin against the floor, per frame), before -> after:
+- Skin under the floor: Andre 69 -> 3.8 mm, Yara 44 -> 3.6, Zoe 54 -> 0, Noah 26 -> 2.2.
+- A planted foot off the floor: up to 156-163 mm -> at most 7-11 mm.
+- Walk timings: unchanged.
+Numbers: C:/work/cine-pics/s19/walk-numbers.json.
+
+## Director: editing a walker's or a roller's path (S31 M3)
+Select someone with a `walk` or `roll` in the People tab: their path is drawn on the stage floor (a chair's corners rounded as `rollPlan` rounds them, a walker's footprints from the stage's plan) with a handle per point; the green one is the start, their placement `at`. Drag a handle to move that point (Shift snaps to 5 cm), drag the line or a + to add a point, Ctrl+click the floor to add a last one; select a handle and press Delete (or right-click it, or Alt+click) to remove it. The person re-solves live; every step is one undo. The People tab's Walk / Roll path section has the fields (walk: start, pace, stride, end turn, then, toes; roll: start, speed, corner radius, ease) and the points in room mm; only the film's own fields are written. Moving the person with W moves `at` and the path's start together. Code: experience/people-path-edit.mjs (pure; tests/people-path-edit-test.mjs), experience/people-path-gizmo.mjs; smoke: tests/director-people-path-e2e.mjs.
