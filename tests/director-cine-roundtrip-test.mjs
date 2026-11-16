@@ -25,13 +25,17 @@ for(const s of cut.shots){
   if(JSON.stringify(f)!==JSON.stringify(want))stale.push(s.id);
 }
 assert.deepEqual(stale,[],`director-film is stale for ${stale.join(', ')}: run python3 tools/experience/film-cuts.py pages ${CUT}`);
+// A cut's chapter opens in the Director as a project of its own, film-<cut>-<chapter> (build-round8-director.py marks
+// the page so); the importer refuses an export that belongs to another cut (two cuts share their chapter ids).
+const cutId=fs.existsSync(path.join(H0,'cut.json'))?JSON.parse(fs.readFileSync(path.join(H0,'cut.json'),'utf8')).id:null;
+const mark=(c,id)=>{if(cutId)c.id=`film-${cutId}-${id}`;return c;};
 // 2. open, export with no edit, import, pass: identical
 const results=[];
 for(const s of cut.shots){
   const H=path.join(tmp,s.id);fs.mkdirSync(path.join(H,'shots'),{recursive:true});
   for(const f of ['review-cut.json','titles-src.json','shots/13-subshots.json','cut.json'])if(fs.existsSync(path.join(H0,f)))fs.copyFileSync(path.join(H0,f),path.join(H,f));
   const page=path.join(tmp,s.id+'-page.json');py(path.join(tools,'director-bridge.py'),'link',path.join(H,'review-cut.json'),'--shot',s.id,'--json',page);
-  const exported=cleanCut(JSON.parse(fs.readFileSync(page,'utf8')));
+  const exported=mark(cleanCut(JSON.parse(fs.readFileSync(page,'utf8'))),s.id);
   const ex=path.join(tmp,`Film-chapter-${s.id}.json`);fs.writeFileSync(ex,JSON.stringify(exported,null,2));
   py(path.join(tools,'build-round8-director.py'),H,'--import',ex);
   py(path.join(tools,'build-round8-director.py'),H);
@@ -54,7 +58,7 @@ assert.ok(results.every(r=>r.endsWith('identical')),'a chapter changed in the no
     for(const f of ['review-cut.json','titles-src.json','shots/13-subshots.json','cut.json'])if(fs.existsSync(path.join(H0,f)))fs.copyFileSync(path.join(H0,f),path.join(H,f));
     for(const f of fs.readdirSync(H))if(/^director-camera/.test(f))fs.rmSync(path.join(H,f));
     const page=path.join(tmp,'p-page.json');py(path.join(tools,'director-bridge.py'),'link',path.join(H,'review-cut.json'),'--shot',s.id,'--json',page);
-    const exported=cleanCut(JSON.parse(fs.readFileSync(page,'utf8')));exported.shots[0].peopleEdits=people;
+    const exported=mark(cleanCut(JSON.parse(fs.readFileSync(page,'utf8'))),s.id);exported.shots[0].peopleEdits=people;
     const ex=path.join(tmp,'Film-chapter-oilers.json');fs.writeFileSync(ex,JSON.stringify(exported));
     py(path.join(tools,'build-round8-director.py'),H,'--import',ex);py(path.join(tools,'build-round8-director.py'),H);
     return fs.readFileSync(path.join(H,'review-cut.json'));
@@ -68,4 +72,14 @@ assert.ok(results.every(r=>r.endsWith('identical')),'a chapter changed in the no
   console.log(`people v2: unchanged -> identical; ${walker.key}'s walk start +0.5 s -> only people changed, directorEdited ${JSON.stringify(after.directorEdited.fields)}`);
 }
 fs.rmSync(tmp,{recursive:true,force:true});
+// 4. an export of another cut's chapter is refused, and nothing is written
+if(cutId){
+  const s=cut.shots.find(x=>x.id==='oilers')||cut.shots[0],H=path.join(tmp,'other');fs.mkdirSync(path.join(H,'shots'),{recursive:true});
+  for(const f of ['review-cut.json','titles-src.json','shots/13-subshots.json','cut.json'])if(fs.existsSync(path.join(H0,f)))fs.copyFileSync(path.join(H0,f),path.join(H,f));
+  const page=path.join(tmp,'o-page.json');py(path.join(tools,'director-bridge.py'),'link',path.join(H,'review-cut.json'),'--shot',s.id,'--json',page);
+  const other=cleanCut(JSON.parse(fs.readFileSync(page,'utf8')));other.id=`film-some-other-cut-${s.id}`;
+  const ex=path.join(tmp,`Film-chapter-${s.id}-other.json`);fs.writeFileSync(ex,JSON.stringify(other));
+  assert.throws(()=>py(path.join(tools,'build-round8-director.py'),H,'--import',ex),/belongs to film-some-other-cut/,'an export of another cut is refused');
+  assert.ok(fs.readFileSync(path.join(H,'review-cut.json')).equals(src),'and the cut is untouched');
+}
 console.log(`Director round trip (${CUT}): director-film = review-cut.json; ${cut.shots.length} chapters opened and exported with no edit leave review-cut.json byte-identical.`);
