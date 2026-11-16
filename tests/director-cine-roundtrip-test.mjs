@@ -54,11 +54,11 @@ assert.ok(results.every(r=>r.endsWith('identical')),'a chapter changed in the no
 // desk's people-edits.mjs cleanPeople keeps v2 verbatim.)
 {
   const s=cut.shots.find(x=>x.id==='oilers'),H=path.join(tmp,'people');fs.mkdirSync(path.join(H,'shots'),{recursive:true});
-  const run=people=>{
+  const run=(people,more=null)=>{
     for(const f of ['review-cut.json','titles-src.json','shots/13-subshots.json','cut.json'])if(fs.existsSync(path.join(H0,f)))fs.copyFileSync(path.join(H0,f),path.join(H,f));
     for(const f of fs.readdirSync(H))if(/^director-camera/.test(f))fs.rmSync(path.join(H,f));
     const page=path.join(tmp,'p-page.json');py(path.join(tools,'director-bridge.py'),'link',path.join(H,'review-cut.json'),'--shot',s.id,'--json',page);
-    const exported=mark(cleanCut(JSON.parse(fs.readFileSync(page,'utf8'))),s.id);exported.shots[0].peopleEdits=people;
+    const exported=mark(cleanCut(JSON.parse(fs.readFileSync(page,'utf8'))),s.id);if(people)exported.shots[0].peopleEdits=people;if(more)Object.assign(exported.shots[0],more);
     const ex=path.join(tmp,'Film-chapter-oilers.json');fs.writeFileSync(ex,JSON.stringify(exported));
     py(path.join(tools,'build-round8-director.py'),H,'--import',ex);py(path.join(tools,'build-round8-director.py'),H);
     return fs.readFileSync(path.join(H,'review-cut.json'));
@@ -69,6 +69,24 @@ assert.ok(results.every(r=>r.endsWith('identical')),'a chapter changed in the no
   assert.deepEqual(after.people,want,'oilers: v2 people written verbatim with the one change');
   assert.deepEqual(after.directorEdited?.fields,['people'],'oilers: marked directorEdited for people');
   const rest=Object.keys(s).filter(k=>k!=='people'&&k!=='directorEdited');assert.deepEqual(Object.fromEntries(rest.map(k=>[k,after[k]])),Object.fromEntries(rest.map(k=>[k,s[k]])),'oilers: nothing else changed');
+  // A desk hidden in the Director (Desks tab Hide desk, a Layers eye) stays hidden in the film: the import dropped
+  // `hide` (2026-11-15), so the desk came back. With a film cast member at that desk hidden in the v2 people
+  // (director.mjs layersHideDesk): that person and their seconds leave the film's cast, everyone else is word for word.
+  {
+    const film=(s.sceneDeskEdits||[]).map(e=>structuredClone(e)),hidden='station-research-desk';
+    const d=JSON.parse(run(null,{deskEdits:[...film.filter(e=>e.desk!==hidden),{desk:hidden,hide:true}]})).shots.find(x=>x.id==='oilers');
+    assert.deepEqual(d.sceneDeskEdits.find(e=>e.desk===hidden),{desk:hidden,hide:true},'oilers: a desk hide reaches the film shot');
+    assert.deepEqual(d.sceneDeskEdits.filter(e=>e.desk!==hidden),film.filter(e=>e.desk!==hidden),'oilers: the other desk edits are as they were');
+    assert.deepEqual(d.people,s.people,'oilers: a desk hide without a user leaves the people alone');
+    const user=s.people.cast.find(e=>e.station);
+    if(user){
+      const q={v:2,...structuredClone(s.people)};q.cast.find(e=>e.key===user.key).hide=true;
+      const h=JSON.parse(run(q)).shots.find(x=>x.id==='oilers'),want=structuredClone(s.people);
+      want.cast=want.cast.filter(e=>e.key!==user.key);if(want.when)delete want.when[user.key];
+      assert.deepEqual(h.people.cast,want.cast,`oilers: ${user.key} hidden with their desk is out of the film's cast, the others word for word (walks, rolls, actions)`);
+    }
+    console.log(`desk hide: ${hidden} hide reaches sceneDeskEdits; ${user?user.key+' hidden with a desk leaves the cast, the rest verbatim':'no cast member at a desk'}`);
+  }
   console.log(`people v2: unchanged -> identical; ${walker.key}'s walk start +0.5 s -> only people changed, directorEdited ${JSON.stringify(after.directorEdited.fields)}`);
 }
 fs.rmSync(tmp,{recursive:true,force:true});

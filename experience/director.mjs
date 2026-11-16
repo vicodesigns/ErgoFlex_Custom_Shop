@@ -639,7 +639,13 @@ export function mountDirector(bridge,catalog,initial){
   // A room desk's eye: the desk edit, its chair and props as prop hide edits, its user out of the cast: one undo step.
   function layersHideDesk(item,stationId,hide){
     const s=shot(),f=filmShot();if(!s)return;
-    const seed=studioSync.peopleSeed?.()||{cast:[]},plan=deskHidePlan({stationId,hide,featured:stageFeatured(),items:sceneProps.items(),deskEdits:effectiveDeskEdits(f,s),propEdits:layersPropEdits(f,s),cast:seed.cast||[]});
+    // The cast a hide works on: the chapter's own people edits when they are the film's whole people object (v: 2, as the
+    // People tab writes them), else the FILM's people verbatim as v: 2 (people-edits.mjs). Never the stage's resolved
+    // cast: that is where each person stands now, without their walk, roll, actions or seat, and writing it as the
+    // chapter's cast froze everyone who moves (Vico's high school draft, 2026-11-15: Kai stopped rolling, Noah walking).
+    // A chapter that already has the older cast (no v) keeps it. A room person who is not in the film's cast (they come
+    // from the room, by the film's only / except lists) is not touched here.
+    const own=s.peopleEdits,fp=f?.people,seed=own?.v===2?own:(!own&&fp&&typeof fp==='object'&&!Array.isArray(fp)&&Array.isArray(fp.cast)?{v:2,...structuredClone(fp)}:studioSync.peopleSeed?.()||{cast:[]}),plan=deskHidePlan({stationId,hide,featured:stageFeatured(),items:sceneProps.items(),deskEdits:effectiveDeskEdits(f,s),propEdits:layersPropEdits(f,s),cast:seed.cast||[]});
     if(!plan.ok){status(plan.why,true);return;}
     commit(()=>{const x=shot();x.deskEdits=plan.deskEdits;x.propEdits=plan.propEdits;if(plan.cast){const people=layersCleanPeople({...seed,cast:plan.cast});if(people)x.peopleEdits=people;}},{render:true});
     status(`${hide?'Hid':'Showed'} ${item.name.replace(/ · ErgoFlex desk$/,'')}${plan.belongings.length?' with '+plan.belongings.length+' thing'+(plan.belongings.length===1?'':'s')+' of its own':''}${plan.users.length?' and '+plan.users.join(', '):''} in this chapter.${plan.unnamed.length?' Not on the stage (left as they are): '+plan.unnamed.join(', ')+'.':''} One Undo brings ${hide?'them back':'the hide back'}.`);

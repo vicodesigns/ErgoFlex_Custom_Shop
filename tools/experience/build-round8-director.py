@@ -541,7 +541,7 @@ DESK_SIZES = ('48x30', '60x30')
 
 def clean_desks(desks):
     """Director Mode's desk edits (experience/desk-edits.mjs cleanDeskEdit) as the film shot's sceneDeskEdits. Size, pose and
-    initial are checked here; clips (DeskChoreo) and build (DeskBuild) pass through as the Director cleaned them."""
+    initial are checked here; clips (DeskChoreo) and build (DeskBuild) pass through as the Director cleaned them; hide: true is kept."""
     num = lambda x: isinstance(x, (int, float)) and not isinstance(x, bool) and x == x and abs(x) != float('inf')
     out = {}
     for e in desks if isinstance(desks, list) else []:
@@ -555,6 +555,7 @@ def clean_desks(desks):
         if isinstance(i, dict) and all(num(i.get(k)) for k in ('height', 'tilt')): d['initial'] = {k: i[k] for k in ('height', 'tilt')}
         if isinstance(e.get('clips'), list) and e['clips'] and all(isinstance(c, dict) for c in e['clips']): d['clips'] = copy.deepcopy(e['clips'])
         if isinstance(e.get('build'), dict) and e['build']: d['build'] = copy.deepcopy(e['build'])
+        if e.get('hide') is True: d['hide'] = True   # the Desks tab's Hide desk / a Layers eye (film-desk-edits.mjs hideDesk): it was dropped here, so a hidden desk came back in the film
         if any(k not in ('desk', 'name') for k in d): out[d['desk']] = d
     return list(out.values())
 
