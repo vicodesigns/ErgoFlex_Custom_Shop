@@ -9,7 +9,7 @@
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import net from 'node:net';
 import {spawn,execFileSync} from 'node:child_process';import {fileURLToPath} from 'node:url';
 const root=path.dirname(path.dirname(fileURLToPath(import.meta.url)));
-const {default:puppeteer}=await import(path.join(root,'node_modules/puppeteer-core/lib/esm/puppeteer/puppeteer-core.js'));
+const {default:puppeteer}=await import('puppeteer-core');
 const {assDrawing}=await import('../experience/film-titles.mjs');
 const shots=process.argv.includes('--shots')?process.argv[process.argv.indexOf('--shots')+1]:null;
 const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'ergoflex-titles-e2e-')),downloads=path.join(tmp,'downloads');fs.mkdirSync(downloads);
@@ -20,7 +20,7 @@ const port=await new Promise(res=>{const s=net.createServer();s.listen(0,'127.0.
 fs.copyFileSync(path.join(root,'studio-state.json'),path.join(tmp,'state.json'));
 const server=spawn('node',[path.join(root,'tools/studio-server.mjs'),'--port',String(port),'--host','127.0.0.1','--state',path.join(tmp,'state.json')],{cwd:root,stdio:'ignore'});
 for(let i=0;i<100;i++){try{if((await fetch(`http://127.0.0.1:${port}/experience/`)).ok)break;}catch{}await sleep(100);}
-const browser=await puppeteer.launch({executablePath:'/usr/bin/google-chrome',headless:'new',defaultViewport:{width:1920,height:1080},args:['--no-sandbox','--disable-gpu','--mute-audio']});
+const browser=await puppeteer.launch({executablePath:process.env.CHROME||'/usr/bin/google-chrome',headless:'new',defaultViewport:{width:1920,height:1080},args:['--no-sandbox','--disable-gpu','--mute-audio']});
 const page=await browser.newPage();const cdp=await page.createCDPSession();await cdp.send('Browser.setDownloadBehavior',{behavior:'allowAndName',downloadPath:downloads,eventsEnabled:true});
 const done=[];cdp.on('Browser.downloadProgress',e=>{if(e.state==='completed')done.push(path.join(downloads,e.guid));});
 const consoleErrors=[];page.on('pageerror',e=>{log('pageerror',e.message);consoleErrors.push(e.message);});page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource/.test(m.text())){consoleErrors.push(m.text());log('console error',m.text().slice(0,200));}});
