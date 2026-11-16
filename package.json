@@ -10,6 +10,7 @@
     "test:institutions": "node tests/institutional-room-test.cjs",
     "test:scene-assets": "node tests/scene-assets-test.cjs",
     "test:people-pose-keys": "node tests/people-pose-keys-test.mjs",
+    "test:director-desk-drag": "node tests/director-desk-drag-test.mjs",
     "test:cine-director-guard": "python3 tests/cine-director-guard-test.py",
     "test:render-cut-taps": "node tests/render-cut-taps-test.mjs",
     "test:gaming": "node tests/gaming-room-test.cjs",

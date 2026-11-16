@@ -1,4 +1,4 @@
-import {cleanDeskEdit,effectiveDeskEdits,describeDeskEdit} from './desk-edits.mjs';
+import {cleanDeskEdit,effectiveDeskEdits,describeDeskEdit,deskDragPose} from './desk-edits.mjs';
 import {clampStartPose,startPoseLimits,START_PRESETS} from './start-pose.mjs';
 import {writeSceneDesks,DESKS_KEY,noteStudioValue} from './studio-sync.mjs';
 // Director "Desks": every ErgoFlex desk in the room, not only the featured one (the chapter's hero desk, edited in the
@@ -170,13 +170,26 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     if(text&&hover){tip.textContent=text;tip.style.display='block';tip.style.left=Math.max(4,Math.min(hover.x+16,win().innerWidth-tip.offsetWidth-6))+'px';tip.style.top=(hover.y+18)+'px';}else tip.style.display='none';
     if(drag||gz||turning||hover?.on)bridge.stage()?.wake?.(300);
   }
+  // A drag works on the desk's OWN place: its edit's pose, else the film's (r.state.pose as film-fx left it). The group
+  // on the stage may stand somewhere else as well: a prop edit on the same desk (the Props tab moves a room desk too)
+  // adds its offset and its turn on top of the pose. So a drag takes the pose it started from and adds what the group
+  // has moved since; it never reads the group's position back as the pose (that folded the prop offset into the pose,
+  // and film-fx then added the offset again: the desk landed away from where it was dropped, further with every drag).
+  // While something is dragged r.state.pose shows the new place (the tip reads it); when the drag ends it goes back to
+  // what it was and the edit is written: film-fx then takes `was` (what Reset desk returns to) from the film's own
+  // place, not from the drag. A cancelled drag puts the GROUP back where it stood (not desks.place: that would drop
+  // the prop offset).
+  const poseOf=r=>({x:r.state.pose.x,z:r.state.pose.z,yaw:r.state.pose.yaw});
+  const groupOf=r=>({x:r.group.position.x,z:r.group.position.z,yaw:r.group.rotation.y});
+  const moved=(r,base,from)=>deskDragPose(base,from,r.group.position);
+  const back=(r,base,from)=>{r.state.pose={...base};if(r.group){r.group.position.x=from.x;r.group.position.z=from.z;r.group.rotation.y=from.yaw;r.group.updateMatrixWorld(true);}};
   // ---- dragging the handle: the desk follows the floor point; the edit is written when the pointer lets go
   function startDrag(ev){
     const r=rec(sel),{THREE,t,ray,group}=tools;if(!r?.group)return;
     const y=r.group.getWorldPosition(new THREE.Vector3()).y,plane=new THREE.Plane(new THREE.Vector3(0,1,0),-y),point=new THREE.Vector3();
     if(!ray.ray.intersectPlane(plane,point))return;
     const w=win();w.__directorDragging=true;
-    drag={pointer:ev.pointerId,id:sel,plane,last:point.clone(),controls:t.controls.enabled,changed:false,start:{x:r.state.pose.x,z:r.state.pose.z}};
+    drag={pointer:ev.pointerId,id:sel,plane,last:point.clone(),controls:t.controls.enabled,changed:false,base:poseOf(r),from:groupOf(r)};
     t.controls.enabled=false;try{t.renderer.domElement.setPointerCapture(ev.pointerId);}catch{}
     status(`Moving ${name(r)}…`);
   }
@@ -186,7 +199,7 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     const parent=r.group.parent;if(!parent)return;parent.updateWorldMatrix(true,false);
     const a=parent.worldToLocal(drag.last.clone()),b=parent.worldToLocal(point.clone());
     r.group.position.x+=b.x-a.x;r.group.position.z+=b.z-a.z;r.group.updateMatrixWorld(true);drag.last.copy(point);drag.changed=true;
-    r.state.pose={x:r.group.position.x,z:r.group.position.z,yaw:r.group.rotation.y};
+    r.state.pose=moved(r,drag.base,drag.from);
     status(`Moving ${name(r)}: x ${r1(r.state.pose.x/IN)}″, z ${r1(r.state.pose.z/IN)}″.`);
   }
   function endDrag(ev,cancel=false){
@@ -194,8 +207,8 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     try{t.renderer.domElement.releasePointerCapture(d.pointer);}catch{}
     t.controls.enabled=d.controls;w.__directorDragging=false;
     const r=rec(d.id);if(!r)return;
-    if(cancel||!d.changed){r.state.pose={x:d.start.x,z:d.start.z,yaw:r.state.pose.yaw};desks()?.place(r);return;}
-    const p=r.state.pose;
+    if(cancel||!d.changed){back(r,d.base,d.from);return;}
+    const p=r.group?moved(r,d.base,d.from):r.state.pose;r.state.pose={...d.base};
     put(d.id,{pose:{x:Math.round(p.x*10)/10,z:Math.round(p.z*10)/10,yaw:p.yaw}},`${name(r)} moved to x ${r1(p.x/IN)}″, z ${r1(p.z/IN)}″.`);
   }
   // The selection can go while something is being dragged (Esc, playback starting, the chapter changing). The drag ends there:
@@ -210,17 +223,18 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
   // ---- the gumball's arrows and square (TransformControls on the proxy): the desk follows; the edit is written on release
   function startGizmo(){
     const r=rec(sel),{t}=tools,w=win();if(!r?.group)return;w.__directorDragging=true;
-    gz={id:sel,controls:t.controls.enabled,changed:false,start:{x:r.group.position.x,z:r.group.position.z},from:{x:tools.proxy.position.x,z:tools.proxy.position.z}};t.controls.enabled=false;status(`Moving ${name(r)}…`);
+    gz={id:sel,controls:t.controls.enabled,changed:false,start:{x:r.group.position.x,z:r.group.position.z},from:{x:tools.proxy.position.x,z:tools.proxy.position.z},base:poseOf(r),group:groupOf(r)};t.controls.enabled=false;status(`Moving ${name(r)}…`);
   }
   function moveGizmo(){
     if(!gz)return;const r=rec(gz.id),{proxy}=tools;if(!r?.group)return;
     r.group.position.x=gz.start.x+proxy.position.x-gz.from.x;r.group.position.z=gz.start.z+proxy.position.z-gz.from.z;r.group.updateMatrixWorld(true);gz.changed=true;
-    r.state.pose={x:r.group.position.x,z:r.group.position.z,yaw:r.group.rotation.y};
+    r.state.pose=moved(r,gz.base,gz.group);
     status(`Moving ${name(r)}: x ${r1(r.state.pose.x/IN)}″, z ${r1(r.state.pose.z/IN)}″.`);
   }
   function endGizmo(){
     const d=gz;gz=null;if(!d)return;const {t}=tools;t.controls.enabled=d.controls;win().__directorDragging=false;
-    const r=rec(d.id);if(!r||!d.changed)return;const p=r.state.pose;
+    const r=rec(d.id);if(!r)return;if(!d.changed){r.state.pose={...d.base};return;}
+    const p=r.group?moved(r,d.base,d.group):r.state.pose;r.state.pose={...d.base};
     put(d.id,{pose:{x:Math.round(p.x*10)/10,z:Math.round(p.z*10)/10,yaw:p.yaw}},`${name(r)} moved to x ${r1(p.x/IN)}″, z ${r1(p.z/IN)}″.`);
   }
   // ---- the turn ring: the desk turns by the angle the pointer has swept round it on the floor (Shift: 15° steps)
@@ -229,14 +243,14 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     const r=rec(sel),{THREE,t,ray}=tools;if(!r?.group?.parent)return;
     const y=r.group.getWorldPosition(new THREE.Vector3()).y,plane=new THREE.Plane(new THREE.Vector3(0,1,0),-y),point=new THREE.Vector3();
     if(!ray.ray.intersectPlane(plane,point))return;r.group.parent.updateWorldMatrix(true,false);
-    win().__directorDragging=true;turning={pointer:ev.pointerId,id:sel,plane,from:sweep(r,point),yaw:r.state.pose.yaw,controls:t.controls.enabled,changed:false};
+    win().__directorDragging=true;turning={pointer:ev.pointerId,id:sel,plane,from:sweep(r,point),yaw:r.state.pose.yaw,controls:t.controls.enabled,changed:false,base:poseOf(r),group:groupOf(r)};
     t.controls.enabled=false;try{t.renderer.domElement.setPointerCapture(ev.pointerId);}catch{}status(`Turning ${name(r)}…`);
   }
   function moveTurn(ev){
     const {THREE,ray,pointer}=tools,r=rec(turning.id);if(!r?.group?.parent)return;pointer(ev);
     const point=new THREE.Vector3();if(!ray.ray.intersectPlane(turning.plane,point))return;
     let yaw=turning.yaw+(sweep(r,point)-turning.from);if(ev.shiftKey)yaw=rad(Math.round(deg(yaw)/15)*15);yaw=rad(wrapDeg(deg(yaw)));
-    r.group.rotation.y=yaw;r.group.updateMatrixWorld(true);r.state.pose={...r.state.pose,yaw};turning.changed=true;
+    r.group.rotation.y=turning.group.yaw+(yaw-turning.yaw);r.group.updateMatrixWorld(true);r.state.pose={...turning.base,yaw};turning.changed=true;
     status(`Turning ${name(r)}: ${r1(wrapDeg(deg(yaw)))}°.`);
   }
   function endTurn(ev,cancel=false){
@@ -244,8 +258,8 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     try{t.renderer.domElement.releasePointerCapture(d.pointer);}catch{}
     t.controls.enabled=d.controls;win().__directorDragging=false;
     const r=rec(d.id);if(!r)return;
-    if(cancel||!d.changed){r.state.pose={...r.state.pose,yaw:d.yaw};desks()?.place(r);return;}
-    const p=r.state.pose;put(d.id,{pose:{x:p.x,z:p.z,yaw:Math.round(p.yaw*1e4)/1e4}},`${name(r)} turned to ${r1(wrapDeg(deg(p.yaw)))}°.`);
+    if(cancel||!d.changed){back(r,d.base,d.group);return;}
+    const p=r.state.pose;r.state.pose={...d.base};put(d.id,{pose:{x:d.base.x,z:d.base.z,yaw:Math.round(p.yaw*1e4)/1e4}},`${name(r)} turned to ${r1(wrapDeg(deg(p.yaw)))}°.`);
   }
   // ---- the panel's controls
   function nudge(id,axis,by){

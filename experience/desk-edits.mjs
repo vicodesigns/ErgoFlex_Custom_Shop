@@ -44,6 +44,11 @@ export const effectiveDeskEdits=(film,shot)=>Array.isArray(shot?.deskEdits)?stru
 export const mergeDeskEdits=(film,shot)=>Array.isArray(shot?.deskEdits)?{sceneDeskEdits:structuredClone(shot.deskEdits)}:{};
 // "60″ → 48″, moved, turned 90°, starts at 40″ / 0°".
 const inch=mm=>Math.round(mm/25.4*10)/10,deg=r=>Math.round(r*180/Math.PI*10)/10;
+// The pose a desk drag in the Desks tab writes: the pose the drag started from (`base`: the desk's edit, else the film's)
+// plus what the desk's group has moved on the stage since (`from` -> `now`: {x, z} of the group). The group may stand
+// away from its pose: a prop edit on the same desk adds an offset on top, every time the film layers are applied. Reading
+// the group's position back as the pose folded that offset into the pose, and it was then added again.
+export const deskDragPose=(base,from,now)=>({x:base.x+now.x-from.x,z:base.z+now.z-from.z,yaw:base.yaw});
 export function describeDeskEdit(e,was={}){
   const parts=[];
   if(e.size&&e.size!==was.size)parts.push((was.size?was.size.slice(0,2)+'″ → ':'')+e.size.slice(0,2)+'″');
