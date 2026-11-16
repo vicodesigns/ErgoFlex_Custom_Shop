@@ -1,0 +1,105 @@
+S30 Studio top-down stills, studio-state rev 3478, pass 1 = MORNING only (afternoon/evening/night/party not rendered: parked).
+SUPERSEDES the earlier push b08293f0 (those stills did not apply the saved desks).
+Method: the Studio's own desk path (setMeasuredRoomLayout + #size-select change): saved desks, heights, tilts per size from ergoflex.sceneDesksBySizeV2; no film edits, no preset, no cast changes; people ON (room default cast).
+Camera: straight down (perspective, fov 40, whole room architecture in frame), ceiling hidden. Orientation: the room's FRONT (the wall the main desk faces) is at the TOP, snapped to the room axes, same for both sizes.
+Label burned bottom-left: environment | layout | size | mode | rev 3478. 1600 px on the long side where the room is not wider than 1:2.6 (wide rooms are 1600 wide).
+Driver-only workaround: desk-detail kit props (e.g. Reading plan, Build plan, Work journal) that the Studio path places 7-22 m high (a stale saved slot-4 record with scale 1000, org is fixing it) are hidden in these stills; per-still list in meta.jsonl.
+Not applied: Layers hides (ergoflex.sceneLayers.v1 is not in rev 3478), film screens (screens show the Studio default).
+
+file | pixels | people (count from the stage) | 48x30 vs 60x30
+creative/apartment/48x30__morning.jpg | 1600x1600 | 15 | differs from 60x30
+creative/apartment/60x30__morning.jpg | 1600x1600 | 15 | 
+creative/executive/48x30__morning.jpg | 1600x1600 | 16 | differs from 60x30
+creative/executive/60x30__morning.jpg | 1600x1600 | 16 | 
+creative/house/48x30__morning.jpg | 1600x1600 | 14 | differs from 60x30
+creative/house/60x30__morning.jpg | 1600x1600 | 14 | 
+creative/premium/48x30__morning.jpg | 1600x1600 | 16 | differs from 60x30
+creative/premium/60x30__morning.jpg | 1600x1600 | 16 | 
+creative/spacious/48x30__morning.jpg | 1600x1600 | 14 | differs from 60x30
+creative/spacious/60x30__morning.jpg | 1600x1600 | 14 | 
+gaming/apartment/48x30__morning.jpg | 1600x1600 | 16 | differs from 60x30
+gaming/apartment/60x30__morning.jpg | 1600x1600 | 16 | 
+gaming/executive/48x30__morning.jpg | 1600x1600 | 14 | differs from 60x30
+gaming/executive/60x30__morning.jpg | 1600x1600 | 14 | 
+gaming/house/48x30__morning.jpg | 1600x1600 | 12 | differs from 60x30
+gaming/house/60x30__morning.jpg | 1600x1600 | 12 | 
+gaming/premium/48x30__morning.jpg | 1600x1600 | 14 | differs from 60x30
+gaming/premium/60x30__morning.jpg | 1600x1600 | 14 | 
+gaming/spacious/48x30__morning.jpg | 1600x1600 | 12 | differs from 60x30
+gaming/spacious/60x30__morning.jpg | 1600x1600 | 12 | 
+gym/apartment/48x30__morning.jpg | 1600x1600 | 12 | differs from 60x30
+gym/apartment/60x30__morning.jpg | 1600x1600 | 12 | 
+gym/executive/48x30__morning.jpg | 1600x1600 | 22 | differs from 60x30
+gym/executive/60x30__morning.jpg | 1600x1600 | 22 | 
+gym/house/48x30__morning.jpg | 1600x1600 | 14 | differs from 60x30
+gym/house/60x30__morning.jpg | 1600x1600 | 14 | 
+gym/premium/48x30__morning.jpg | 1600x1600 | 22 | differs from 60x30
+gym/premium/60x30__morning.jpg | 1600x1600 | 22 | 
+gym/spacious/48x30__morning.jpg | 1600x1600 | 22 | differs from 60x30
+gym/spacious/60x30__morning.jpg | 1600x1600 | 22 | 
+highschool/house/48x30__morning.jpg | 1600x1600 | 64 | differs from 60x30
+highschool/house/60x30__morning.jpg | 1600x1600 | 64 | 
+home/apartment/48x30__morning.jpg | 1600x1600 | 11 | differs from 60x30
+home/apartment/60x30__morning.jpg | 1600x1600 | 11 | 
+home/executive/48x30__morning.jpg | 1600x1600 | 14 | differs from 60x30
+home/executive/60x30__morning.jpg | 1600x1600 | 14 | 
+home/house/48x30__morning.jpg | 1600x1600 | 12 | differs from 60x30
+home/house/60x30__morning.jpg | 1600x1600 | 12 | 
+home/premium/48x30__morning.jpg | 1600x1600 | 14 | differs from 60x30
+home/premium/60x30__morning.jpg | 1600x1600 | 14 | 
+home/spacious/48x30__morning.jpg | 1600x1600 | 12 | differs from 60x30
+home/spacious/60x30__morning.jpg | 1600x1600 | 12 | 
+library/apartment/48x30__morning.jpg | 1600x1600 | 19 | differs from 60x30
+library/apartment/60x30__morning.jpg | 1600x1600 | 19 | 
+library/executive/48x30__morning.jpg | 1600x1600 | 30 | differs from 60x30
+library/executive/60x30__morning.jpg | 1600x1600 | 30 | 
+library/house/48x30__morning.jpg | 1600x1600 | 21 | differs from 60x30
+library/house/60x30__morning.jpg | 1600x1600 | 21 | 
+library/humboldt/48x30__morning.jpg | 1600x615 | 68 | differs from 60x30
+library/humboldt/60x30__morning.jpg | 1600x615 | 68 | 
+library/premium/48x30__morning.jpg | 1600x1600 | 27 | differs from 60x30
+library/premium/60x30__morning.jpg | 1600x1600 | 27 | 
+library/spacious/48x30__morning.jpg | 1600x1600 | 24 | differs from 60x30
+library/spacious/60x30__morning.jpg | 1600x1600 | 24 | 
+music/apartment/48x30__morning.jpg | 1600x1600 | 10 | differs from 60x30
+music/apartment/60x30__morning.jpg | 1600x1600 | 10 | 
+music/executive/48x30__morning.jpg | 1600x1600 | 12 | differs from 60x30
+music/executive/60x30__morning.jpg | 1600x1600 | 12 | 
+music/house/48x30__morning.jpg | 1600x1600 | 10 | differs from 60x30
+music/house/60x30__morning.jpg | 1600x1600 | 10 | 
+music/premium/48x30__morning.jpg | 1600x1600 | 12 | differs from 60x30
+music/premium/60x30__morning.jpg | 1600x1600 | 12 | 
+music/spacious/48x30__morning.jpg | 1600x1600 | 10 | differs from 60x30
+music/spacious/60x30__morning.jpg | 1600x1600 | 10 | 
+occmedialab/apartment/48x30__morning.jpg | 1600x1600 | 41 | differs from 60x30
+occmedialab/apartment/60x30__morning.jpg | 1600x1600 | 41 | 
+occmedialab/executive/48x30__morning.jpg | 1600x1600 | 78 | differs from 60x30
+occmedialab/executive/60x30__morning.jpg | 1600x1600 | 78 | 
+occmedialab/house/48x30__morning.jpg | 1600x1600 | 40 | differs from 60x30
+occmedialab/house/60x30__morning.jpg | 1600x1600 | 40 | 
+occmedialab/premium/48x30__morning.jpg | 1600x1600 | 68 | differs from 60x30
+occmedialab/premium/60x30__morning.jpg | 1600x1600 | 68 | 
+occmedialab/spacious/48x30__morning.jpg | 1600x1600 | 58 | differs from 60x30
+occmedialab/spacious/60x30__morning.jpg | 1600x1600 | 58 | 
+product/(none)/48x30__none.jpg | 1600x1600 | 0 | same object positions as 60x30 (render differs)
+product/(none)/60x30__none.jpg | 1600x1600 | 0 | 
+study/apartment/48x30__morning.jpg | 1600x1600 | 5 | differs from 60x30
+study/apartment/60x30__morning.jpg | 1600x1600 | 5 | 
+study/executive/48x30__morning.jpg | 1600x1600 | 7 | differs from 60x30
+study/executive/60x30__morning.jpg | 1600x1600 | 7 | 
+study/house/48x30__morning.jpg | 1600x1600 | 6 | differs from 60x30
+study/house/60x30__morning.jpg | 1600x1600 | 6 | 
+study/premium/48x30__morning.jpg | 1600x1600 | 7 | differs from 60x30
+study/premium/60x30__morning.jpg | 1600x1600 | 7 | 
+study/spacious/48x30__morning.jpg | 1600x1600 | 6 | differs from 60x30
+study/spacious/60x30__morning.jpg | 1600x1600 | 6 | 
+workshop/apartment/48x30__morning.jpg | 1600x1600 | 12 | differs from 60x30
+workshop/apartment/60x30__morning.jpg | 1600x1600 | 12 | 
+workshop/executive/48x30__morning.jpg | 1600x1600 | 17 | differs from 60x30
+workshop/executive/60x30__morning.jpg | 1600x1600 | 17 | 
+workshop/house/48x30__morning.jpg | 1600x1600 | 12 | differs from 60x30
+workshop/house/60x30__morning.jpg | 1600x1600 | 12 | 
+workshop/premium/48x30__morning.jpg | 1600x1600 | 17 | differs from 60x30
+workshop/premium/60x30__morning.jpg | 1600x1600 | 17 | 
+workshop/spacious/48x30__morning.jpg | 1600x1600 | 17 | differs from 60x30
+workshop/spacious/60x30__morning.jpg | 1600x1600 | 17 | 
