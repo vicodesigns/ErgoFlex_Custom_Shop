@@ -73,9 +73,10 @@ try{
   await seek(page,to-.5);await wait(700);const s1=await onStage();
   await seek(page,to-.75);await wait(700);const s2=await onStage();
   await seek(page,to+.2);await wait(600);const s3=await opacity(TAB);
-  // KNOWN (S33 B1, not yet understood): the Director's live stage does not install the Director's timed edit on this item
-  // (no __filmFxEdits on it), so its fade is not drawn in the preview; reported here, not asserted.
-  console.log((s0.vis&&s0.v===1&&Math.abs(s1.v-.5)<.06&&Math.abs(s2.v-.84375)<.05&&s3&&!s3.vis?'  ok: ':'  KNOWN: ')+`a smooth 1 s fade on the stage: ${s0.v.toFixed(2)} before, ${s1.v.toFixed(3)} at its midpoint, ${s2.v.toFixed(3)} a quarter in (linear would be 0.75), gone after`);
+  // (S33c: this needs the film's screen clips, exports/cinematic-intro-cut-cine/screens/*.mp4, which git ignores: without
+  // them film-fx install throws "Could not load …mp4" and player.mjs prepareStage clears the whole film layer, so no
+  // sceneEdits, and no fade, reach the live stage. In a scratch worktree link screens/ to the render checkout's.)
+  check(s0.vis&&s0.v===1&&Math.abs(s1.v-.5)<.06&&Math.abs(s2.v-.84375)<.05&&s3&&!s3.vis,`a smooth 1 s fade on the stage: ${s0.v.toFixed(2)} before, ${s1.v.toFixed(3)} at its midpoint, ${s2.v.toFixed(3)} a quarter in (linear would be 0.75), gone after${s1.v===1?' (1.0 at the midpoint: is screens/ missing? see above)':''}`);
   await seek(page,to-.5);await wait(600);await page.evaluate(()=>document.querySelector('#director-panel [data-prop-timing]')?.scrollIntoView({block:'center'}));await wait(300);
   await snap('02-inspector-curve');
   await seek(page,8);await wait(500);const b2=await bar(TK);check(b2.smooth,'the ramps on the bar are drawn eased');
