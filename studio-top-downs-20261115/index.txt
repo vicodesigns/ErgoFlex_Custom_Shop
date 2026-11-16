@@ -83,16 +83,6 @@ occmedialab/spacious/48x30__morning.jpg | 1600x1600 | 58 | differs from 60x30
 occmedialab/spacious/60x30__morning.jpg | 1600x1600 | 58 | 
 product/(none)/48x30__none.jpg | 1600x1600 | 0 | same object positions as 60x30 (render differs)
 product/(none)/60x30__none.jpg | 1600x1600 | 0 | 
-study/apartment/48x30__morning.jpg | 1600x1600 | 5 | differs from 60x30
-study/apartment/60x30__morning.jpg | 1600x1600 | 5 | 
-study/executive/48x30__morning.jpg | 1600x1600 | 7 | differs from 60x30
-study/executive/60x30__morning.jpg | 1600x1600 | 7 | 
-study/house/48x30__morning.jpg | 1600x1600 | 6 | differs from 60x30
-study/house/60x30__morning.jpg | 1600x1600 | 6 | 
-study/premium/48x30__morning.jpg | 1600x1600 | 7 | differs from 60x30
-study/premium/60x30__morning.jpg | 1600x1600 | 7 | 
-study/spacious/48x30__morning.jpg | 1600x1600 | 6 | differs from 60x30
-study/spacious/60x30__morning.jpg | 1600x1600 | 6 | 
 workshop/apartment/48x30__morning.jpg | 1600x1600 | 12 | differs from 60x30
 workshop/apartment/60x30__morning.jpg | 1600x1600 | 12 | 
 workshop/executive/48x30__morning.jpg | 1600x1600 | 17 | differs from 60x30
