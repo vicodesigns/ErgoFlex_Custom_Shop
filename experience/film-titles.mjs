@@ -17,6 +17,17 @@ export const LINES=[
   {key:'eyebrow',label:'Eyebrow',family:'Poppins SemiBold',weight:600,size:28,spacing:6,border:16,y:812,delay:0,rise:10,color:'#1388ec',shadow:1.2,shadowAlpha:1-0xB4/255},
   {key:'title',label:'Headline',family:'Poppins SemiBold',weight:600,size:86,spacing:-.6,border:26,y:912,delay:140,rise:14,color:'#ffffff',shadow:2,shadowAlpha:1-0xA0/255},
   {key:'detail',label:'Supporting text',family:'Poppins',weight:400,size:40,spacing:.2,border:20,y:970,delay:380,rise:10,color:'#d6dee6',shadow:1.5,shadowAlpha:1-0xA0/255}];
+export function titleLines(t){return LINES.map(L=>({...L,...t?.typography?.[L.key]}));}
+export function cleanTypography(v){
+  if(!v||typeof v!=='object')return undefined;const out={};
+  for(const L of LINES){const a=v[L.key];if(!a||typeof a!=='object')continue;const b={};
+    for(const [k,lo,hi] of [['size',8,300],['spacing',-10,40]])if(Number.isFinite(a[k]))b[k]=Math.max(lo,Math.min(hi,a[k]));
+    if([400,500,600,700].includes(a.weight))b.weight=a.weight;
+    if(/^#[0-9a-f]{6}$/i.test(a.color))b.color=a.color;
+    if(typeof a.italic==='boolean')b.italic=a.italic;
+    if(Object.keys(b).length)out[L.key]=b;
+  }return Object.keys(out).length?out:undefined;
+}
 export const BOX_BLUR=18,BOX_OPACITY=1-0xB0/255;          // finish-intro BOX_A 'B0' (31% black), BOX_BLUR 18
 // Placement (titles-src 'place'; absent = lower-left, the film's standing layout). The block keeps its type sizes, line
 // spacing and safe margins: top-* puts the eyebrow's top as far from the top edge (110 px) as the supporting line's
@@ -26,7 +37,8 @@ export const BOX_BLUR=18,BOX_OPACITY=1-0xB0/255;          // finish-intro BOX_A 
 export const PLACE_DY=110-(812-28),BOX_OPACITY_TOP=1-0x70/255;
 export const PLACES={'lower-left':{x:128,dy:0,align:'left'},'top-left':{x:128,dy:PLACE_DY,align:'left'},'top-right':{x:1920-128,dy:PLACE_DY,align:'right'}};
 export function placeOf(t){const key=Object.hasOwn(PLACES,t?.place)?t.place:'lower-left',P=PLACES[key];
-  return {key,x:P.x,dy:P.dy,align:P.align,anchor:[P.x,912+P.dy],boxOpacity:key==='lower-left'?BOX_OPACITY:BOX_OPACITY_TOP};}
+  const x=Number.isFinite(t?.position?.x)?t.position.x:P.x,dy=Number.isFinite(t?.position?.y)?t.position.y-912:P.dy;
+  return {key,x,dy,align:P.align,anchor:[x,912+dy],boxOpacity:key==='lower-left'?BOX_OPACITY:BOX_OPACITY_TOP};}
 export const FADE_IN=.65,FADE_OUT=.42,RISE_TIME=.9,TEXT_BLUR=5,TEXT_BLUR_TIME=.7;
 export const BLUR_SIGMA=2/Math.sqrt(Math.log(256));        // libass: Gaussian sigma = \blur x 0.849 (measured on its output)
 export const LEAD=1.5,TAIL=.8,MIN_ON=3.5;                   // titles-after-cut.py
@@ -80,6 +92,9 @@ export function cleanTitle(t,seconds=90){
   const out={id:typeof t?.id==='string'&&/^[A-Za-z0-9_-]{1,80}$/.test(t.id)?t.id:'title',rel_in:r3(Math.min(a,b-.2)),rel_out:r3(Math.max(b,a+.2)),
     eyebrow:text(t?.eyebrow,60),title:text(t?.title,140),detail:text(t?.detail,260)};
   if(t?.timed)out.timed=true;
+  if(Number.isFinite(t?.scale))out.scale=num(t.scale,.1,5,1);
+  const typography=cleanTypography(t?.typography);if(typography)out.typography=typography;
+  if(Number.isFinite(t?.position?.x)&&Number.isFinite(t?.position?.y))out.position={x:r2(num(t.position.x,-4000,4000,128)),y:r2(num(t.position.y,-4000,4000,912))};
   if(t?.place&&t.place!=='lower-left'&&Object.hasOwn(PLACES,t.place))out.place=t.place;
   const s=cleanShadow(t?.shadow);if(s)out.shadow=s;
   return out;
@@ -94,13 +109,13 @@ export function cleanFilmTitles(list,seconds=90){
 // the same Poppins files). Fitted box: from the text's left edge - padding to its advance + padding; from the
 // baseline - ascender - padding to the baseline + descender + padding (bottom = the line's y + padding).
 export function fittedBox(line,width,align='left'){
-  const L=lineOf(line)||line,[ax,ay]=ANCHOR;
+  const L=typeof line==='string'?lineOf(line):line,[ax,ay]=ANCHOR;
   if(align==='right')return {x0:-width-L.border,x1:L.border,y0:L.y-L.size-L.border-ay,y1:L.y+L.border-ay};
   return {x0:X0-L.border-ax,x1:X0+width+L.border-ax,y0:L.y-L.size-L.border-ay,y1:L.y+L.border-ay};
 }
 const rect=({x0,y0,x1,y1})=>[{x:x0,y:y0},{x:x1,y:y0},{x:x1,y:y1},{x:x0,y:y1}].map(p=>({x:r2(p.x),y:r2(p.y)}));
 export function fittedPaths(title,measure){
-  const {align}=placeOf(title);return LINES.filter(L=>title[L.key]).map(L=>({line:L.key,points:rect(fittedBox(L,measure(L,title[L.key]),align))}));
+  const {align}=placeOf(title);return titleLines(title).filter(L=>title[L.key]).map(L=>({line:L.key,points:rect(fittedBox(L,measure(L,title[L.key]),align))}));
 }
 export function shadowOf(title,measure){
   const s=title.shadow||{};
@@ -108,7 +123,7 @@ export function shadowOf(title,measure){
 }
 // The text block's own extents (left/right/top/bottom) relative to the anchor.
 export function textBounds(title,measure){
-  const lines=LINES.filter(L=>title[L.key]);if(!lines.length)return null;const [ax,ay]=ANCHOR;
+  const lines=titleLines(title).filter(L=>title[L.key]);if(!lines.length)return null;const [ax,ay]=ANCHOR;
   const w=Math.max(...lines.map(L=>measure(L,title[L.key]))),y0=Math.min(...lines.map(L=>L.y-L.size))-ay,y1=Math.max(...lines.map(L=>L.y))-ay;
   return placeOf(title).align==='right'?{x0:-w,x1:0,y0,y1}:{x0:X0-ax,x1:X0+w-ax,y0,y1};
 }
@@ -196,5 +211,7 @@ export const pointCount=paths=>paths.reduce((n,p)=>n+p.points.length,0);
 // The title as the film's titles-src entry (for the Director export and the import).
 export function srcEntry(chapter,t){
   const e={chapter,rel_in:t.rel_in,rel_out:t.rel_out,eyebrow:t.eyebrow,title:t.title,detail:t.detail};
+  if(t.scale!==undefined)e.scale=t.scale;if(t.typography)e.typography=structuredClone(t.typography);
+  if(t.position)e.position=structuredClone(t.position);
   if(t.shadow)e.shadow=structuredClone(t.shadow);if(t.timed)e.director_timing=true;if(t.place)e.place=t.place;return e;
 }

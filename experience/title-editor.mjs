@@ -1,4 +1,4 @@
-import {LINES,ANCHOR,FILM_W,FONT_REAL,DESC,BOX_BLUR,BOX_OPACITY,BLUR_SIGMA,chapterTitles,cutRule,timingNotes,cleanFilmTitles,shadowOf,fittedPaths,textBounds,lineState,pathTiming,restTime,svgPath,bounds,nearestOnPath,insertPoint,deletePoint,toggleSmooth,moveHandle,movePoint,transformPaths,pointCount,placeOf} from './film-titles.mjs';
+import {titleLines,LINES,ANCHOR,FILM_W,FONT_REAL,DESC,BOX_BLUR,BOX_OPACITY,BLUR_SIGMA,chapterTitles,cutRule,timingNotes,cleanFilmTitles,shadowOf,fittedPaths,textBounds,lineState,pathTiming,restTime,svgPath,bounds,nearestOnPath,insertPoint,deletePoint,toggleSmooth,moveHandle,movePoint,transformPaths,pointCount,placeOf} from './film-titles.mjs';
 import {stackRows,rowVar} from './lane-rows.mjs';
 // Film titles in Director Mode: the TITLES lane (one block per title card: drag to move, edges to trim), the Title
 // inspector (copy, timing, shadow) and the title overlay in the 16:9 frame, drawn as finish-intro.py burns it in.
@@ -9,7 +9,8 @@ import {stackRows,rowVar} from './lane-rows.mjs';
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const r2=v=>Number((+v).toFixed(2));
 const FONT_URL=new URL('../app-reference/assets/google_fonts/',import.meta.url).href;
-const FAMILY={600:'EF Film Poppins SemiBold',400:'EF Film Poppins'};
+const FAMILY={700:'EF Film Poppins Bold',600:'EF Film Poppins SemiBold',500:'EF Film Poppins Medium',400:'EF Film Poppins'};
+const FONT_FILES=[['Poppins-Bold.ttf',700],['Poppins-SemiBold.ttf',600],['Poppins-Medium.ttf',500],['Poppins-Regular.ttf',400]];
 const NS='http://www.w3.org/2000/svg';
 export async function loadTitleSource(filmList,base=location.href,fetcher=globalThis.fetch){
   const url=new URL(filmList,base),get=async name=>{const r=await fetcher(new URL(name,url).href,{cache:'no-store'});if(!r.ok)throw Error(`${name} unavailable (${r.status})`);return r.json();};
@@ -18,14 +19,15 @@ export async function loadTitleSource(filmList,base=location.href,fetcher=global
   return {src,edl};
 }
 export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,render,renderTimeline,showInspector,onSelect,snapDelta,dragFeedback,endDragFeedback,ready,open}){
+  let copiedLayout=null,cardDrag=null;
   let source=null,selected=null,editing=false,shown=true,fontsReady=false,drag=null,suppress=0,lastKey='';
   const fromFilm=new Map();
   // ---- fonts + measuring (libass sizes Poppins by its full height; no kerning, like the ASS overlay) -----------
   const canvas=document.createElement('canvas').getContext('2d'),widths=new Map();
-  const fontsLoaded=Promise.all([['Poppins-SemiBold.ttf',600],['Poppins-Regular.ttf',400]].map(async([file,w])=>{const f=new FontFace(FAMILY[w],`url(${FONT_URL}${file})`);await f.load();document.fonts.add(f);})).then(()=>{fontsReady=true;widths.clear();lastKey='';sync();if(selected)render();}).catch(error=>console.warn('[titles] fonts',error.message));
+  const fontsLoaded=Promise.all(FONT_FILES.map(async([file,w])=>{const f=new FontFace(FAMILY[w],`url(${FONT_URL}${file})`);await f.load();document.fonts.add(f);})).then(()=>{fontsReady=true;widths.clear();lastKey='';sync();if(selected)render();}).catch(error=>console.warn('[titles] fonts',error.message));
   function measure(L,text){
-    const key=L.key+'|'+text+'|'+fontsReady;let w=widths.get(key);if(w!==undefined)return w;
-    canvas.font=`${L.weight} ${L.size/FONT_REAL}px "${FAMILY[L.weight]}", Poppins, sans-serif`;try{canvas.fontKerning='none';canvas.letterSpacing='0px';}catch{}
+    const key=JSON.stringify(L)+'|'+text+'|'+fontsReady;let w=widths.get(key);if(w!==undefined)return w;
+    canvas.font=`${L.italic?'italic ':''}${L.weight} ${L.size/FONT_REAL}px "${FAMILY[L.weight]}", Poppins, sans-serif`;try{canvas.fontKerning='none';canvas.letterSpacing='0px';}catch{}
     w=canvas.measureText(text).width+Math.max(0,L.spacing)*[...text].length;widths.set(key,w);return w;
   }
   // ---- data -------------------------------------------------------------------------------------------------
@@ -130,6 +132,8 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
       <label>Supporting text<textarea name="ft-detail" data-title-id="${t.id}" rows="2" maxlength="260">${escape(t.detail)}</textarea></label>
       <div class="title-list">${list()}</div></div>`;
   }
+  function typeControls(t,key){const L=titleLines(t).find(l=>l.key===key);return `<div class="director-grid"><label>Font<select data-type="weight" data-line="${key}">${[[400,'Regular'],[500,'Medium'],[600,'Semibold'],[700,'Bold']].map(([w,n])=>`<option value="${w}" ${w===L.weight?'selected':''}>Poppins ${n}</option>`).join('')}</select></label><label>Font size<input type="number" min="8" max="300" data-type="size" data-line="${key}" value="${L.size}"></label><label>Letter spacing<input type="number" min="-10" max="40" step=".1" data-type="spacing" data-line="${key}" value="${L.spacing}"></label><label>Text color<input type="color" data-type="color" data-line="${key}" value="${L.color}"></label><label>Style<select data-type="italic" data-line="${key}"><option value="false" ${!L.italic?'selected':''}>Normal</option><option value="true" ${L.italic?'selected':''}>Italic</option></select></label></div>`;}
+  panel.addEventListener('input',event=>{const el=event.target;if(!el.dataset.type)return;event.stopPropagation();const key=el.dataset.type,value=key==='color'?el.value:key==='italic'?el.value==='true':Number(el.value);if(el.value===''||(typeof value==='number'&&!Number.isFinite(value)))return;try{put(t=>{t.typography={...t.typography,[el.dataset.line]:{...t.typography?.[el.dataset.line],[key]:value}};return t;},{key:'type-'+selected+el.dataset.line+key,renderAll:false});}catch(error){status(error.message,true);}},true);
   function panelHtml(){
     if(!has())return '<p class="director-hint">This chapter has no film titles.</p>';
     const t=item();
@@ -137,14 +141,14 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     const R=rule(),notes=timingNotes(t,R),S=shadowOf(t,measure),n=titles().indexOf(t)+1,tb=textBounds(t,measure),bb=bounds(S.paths);
     const short=S.custom&&tb&&bb&&(tb.x1>bb.x1+2||tb.x0<bb.x0-2);
     return `<div data-reveal="title"><h3>Film title ${n} <span class="inspector-subtitle">of ${titles().length} in this chapter</span></h3><div class="title-list">${titles().length>1?list():''}</div>
-      <label>Eyebrow<input name="ft-eyebrow" maxlength="60" value="${escape(t.eyebrow)}"></label>
-      <label>Headline<input name="ft-title" maxlength="140" value="${escape(t.title)}"></label>
-      <label>Supporting text<textarea name="ft-detail" rows="2" maxlength="260">${escape(t.detail)}</textarea></label>
-      <div class="director-grid"><label>Comes in (seconds)<input name="ft-in" type="number" min="0" max="${shot().seconds}" step=".05" value="${r2(t.rel_in)}"></label><label>Goes out (seconds)<input name="ft-out" type="number" min="0" max="${shot().seconds}" step=".05" value="${r2(t.rel_out)}"></label></div>
+      <label>Title scale (%)<input name="ft-scale" type="number" min="10" max="500" step="1" value="${Math.round((t.scale??1)*100)}"></label><div class="director-grid"><label>X (film pixels)<input name="ft-x" type="number" step="1" value="${placeOf(t).x}"></label><label>Y (headline baseline)<input name="ft-y" type="number" step="1" value="${placeOf(t).anchor[1]}"></label></div><div class="director-actions"><button data-title-action="copy-layout">Copy layout</button><button data-title-action="paste-layout" ${copiedLayout?'':'disabled'}>Paste layout</button></div><details open><summary>Text layers</summary><details open><summary>Eyebrow</summary><label>Eyebrow<input name="ft-eyebrow" maxlength="60" value="${escape(t.eyebrow)}"></label>${typeControls(t,'eyebrow')}</details>
+      <details open><summary>Headline</summary><label>Headline<input name="ft-title" maxlength="140" value="${escape(t.title)}"></label>${typeControls(t,'title')}</details>
+      <details open><summary>Supporting text</summary><label>Supporting text<textarea name="ft-detail" rows="2" maxlength="260">${escape(t.detail)}</textarea></label>${typeControls(t,'detail')}</details>
+      </details><div class="director-grid"><label>Comes in (seconds)<input name="ft-in" type="number" min="0" max="${shot().seconds}" step=".05" value="${r2(t.rel_in)}"></label><label>Goes out (seconds)<input name="ft-out" type="number" min="0" max="${shot().seconds}" step=".05" value="${r2(t.rel_out)}"></label></div>
       <p class="director-hint title-rule-note">${R?.earliest!==undefined?`Film rule: titles come in at least 1.5 s after the cut, here from <b>${r2(R.earliest)} s</b>.`:'This chapter opens the film: no cut before it.'}${t.timed?' Your timing is kept as you set it.':''}</p>
       ${notes.map(x=>`<p class="title-warning" role="note">${escape(x)} The film keeps your timing.</p>`).join('')}
       <div class="director-actions">${R?.earliest!==undefined?`<button data-title-action="to-rule" title="Move the title so it comes in exactly at the 1.5 s-after-cut mark">Start at the 1.5 s mark</button>`:''}<button data-title-action="go" title="Move the playhead to where the whole title is in">Show title</button></div>
-      <fieldset class="title-shadow"><legend>Shadow behind the text</legend>
+      <details open><summary>Shadow layer</summary><fieldset class="title-shadow"><legend>Shadow behind the text</legend>
       <p class="director-hint" data-title-shape-note>${S.custom?`Your own shape: ${S.paths.length} part${S.paths.length===1?'':'s'}, ${pointCount(S.paths)} points.`:'Fitted to each line of text, as the film has it now.'}</p>
       ${short?'<p class="title-warning" role="note">The text runs past the shadow shape. Widen the shape, or Reset to fitted.</p>':''}
       <div class="director-actions"><button data-title-action="edit-shadow" class="primary" aria-pressed="${editing}">${editing?'Done editing shape':'Edit shadow shape'}</button><button data-title-action="reset-shadow" ${t.shadow?'':'disabled'} title="Back to the boxes fitted to each line, with the film's softness and darkness">Reset to fitted</button></div>
@@ -152,7 +156,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
       <label>Darkness <output data-title-opacity>${Math.round(S.opacity*100)}%</output><span class="global-slider"><input name="ft-opacity" type="range" min="0" max="100" step="1" value="${Math.round(S.opacity*100)}"><input name="ft-opacity-n" type="number" min="0" max="100" step="1" value="${Math.round(S.opacity*100)}"></span></label>
       ${editing?`<div class="director-actions title-point-tools"><button data-title-action="pt-smooth" ${shape.pt?'':'disabled'}>Make point smooth</button><button data-title-action="pt-sharp" ${shape.pt?'':'disabled'}>Make point sharp</button><button data-title-action="pt-delete" ${shape.pt?'':'disabled'}>Delete point</button></div>
       <p class="director-hint title-shape-help">Click a point to select it, then drag it. Drag its handles to curve the edge; Alt-drag a handle to break it. Double-click a point for smooth or sharp. Click an edge to add a point; Delete removes the selected point. Drag inside a shape to move it; the corner and edge squares make it bigger or smaller (Shift keeps proportions, Alt from the centre). Arrows nudge 1 px (Shift 10). Ctrl+A selects every part. Esc when done.</p>`:''}
-      </fieldset></div>`;
+      </fieldset></details></div>`;
   }
   // Copy / timing / shadow fields (live, one undo step per field edit or slider drag).
   panel.addEventListener('input',event=>{
@@ -160,6 +164,8 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     try{
       const id=el.dataset.titleId||selected;if(!id)return;const prev=selected;selected=id;
       if(['ft-eyebrow','ft-title','ft-detail'].includes(name)){const k=name.slice(3);put(t=>{t[k]=el.value;return t;},{key:name+id,renderAll:false});selected=prev;renderTimeline();return;}
+      if(name==='ft-scale'){const v=Number(el.value);if(el.value===''||!Number.isFinite(v))return;put(t=>({...t,scale:v/100}),{key:name+id,renderAll:false});return;}
+      if(name==='ft-x'||name==='ft-y'){const v=Number(el.value);if(el.value===''||!Number.isFinite(v))return;put(t=>{const P=placeOf(t);t.position={x:P.x,y:P.anchor[1],[name==='ft-x'?'x':'y']:v};return t;},{key:name+id,renderAll:false});return;}
       if(name==='ft-blur'||name==='ft-blur-n'){const v=Number(el.value);if(el.value===''||!Number.isFinite(v))return;put(t=>{t.shadow={...t.shadow,blur:Math.max(0,Math.min(80,v))};return t;},{key:'ft-blur'+id,renderAll:false});const o=panel.querySelector('[data-title-blur]');if(o)o.textContent=String(v);const twin=panel.querySelector(`[name="${name==='ft-blur'?'ft-blur-n':'ft-blur'}"]`);if(twin)twin.value=String(v);status(`Shadow softness ${v} (the film's is ${BOX_BLUR}).`);return;}
       if(name==='ft-opacity'||name==='ft-opacity-n'){const v=Number(el.value);if(el.value===''||!Number.isFinite(v))return;put(t=>{t.shadow={...t.shadow,opacity:Math.max(0,Math.min(100,v))/100};return t;},{key:'ft-opacity'+id,renderAll:false});const o=panel.querySelector('[data-title-opacity]');if(o)o.textContent=Math.round(v)+'%';const twin=panel.querySelector(`[name="${name==='ft-opacity'?'ft-opacity-n':'ft-opacity'}"]`);if(twin)twin.value=String(v);status(`Shadow darkness ${Math.round(v)}% (the film's is ${Math.round(BOX_OPACITY*100)}%).`);return;}
     }catch(error){status(error.message,true);}
@@ -180,6 +186,8 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   function titleAction(name,id){
     if(name==='pick'){select(id);return;}
     const t=item();if(!t)return;
+    if(name==='copy-layout'){copiedLayout=structuredClone({position:{x:placeOf(t).x,y:placeOf(t).anchor[1]},scale:t.scale,typography:t.typography,place:t.place,shadow:t.shadow});render();status('Title layout copied. Select another title and paste layout.');return;}
+    if(name==='paste-layout'&&copiedLayout){put(x=>({...x,...structuredClone(copiedLayout)}),{message:'Title layout pasted.'});return;}
     if(name==='go'){seek(restTime(t)/shot().seconds);return;}
     if(name==='to-rule'){const R=rule();if(R?.earliest===undefined)return;const on=t.rel_out-t.rel_in,a=R.earliest,b=Math.min(shot().seconds,a+on);putTiming(t.id,a,Math.round(b*1000)/1000,`Title now comes in at the 1.5 s mark (${r2(a)} s).`);return;}
     if(name==='edit-shadow'){setEditing(!editing);if(editing)seek(restTime(t)/shot().seconds);render();return;}
@@ -193,7 +201,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   // No titles (none at that time, or the toolbar's Titles off): the still comes back as it is.
   let fontCss=null;
   const b64=buf=>{const u=new Uint8Array(buf);let out='';for(let i=0;i<u.length;i+=32768)out+=String.fromCharCode(...u.subarray(i,i+32768));return btoa(out);};
-  const embeddedFonts=()=>fontCss||=Promise.all([['Poppins-SemiBold.ttf',600],['Poppins-Regular.ttf',400]].map(async([file,w])=>{
+  const embeddedFonts=()=>fontCss||=Promise.all(FONT_FILES.map(async([file,w])=>{
     const r=await fetch(FONT_URL+file);if(!r.ok)throw Error('title font unavailable');return `@font-face{font-family:"${FAMILY[w]}";font-weight:${w};src:url(data:font/ttf;base64,${b64(await r.arrayBuffer())}) format("truetype");}`;})).then(a=>a.join(''),e=>{fontCss=null;throw e;});
   function stillTitles(seconds){return shown&&has()?titles().filter(x=>seconds>=x.rel_in&&seconds<x.rel_out):[];}
   async function compositeStill(url,seconds){
@@ -215,29 +223,37 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   const shape={pt:null,sel:new Set(),draft:null};let lastPt=null;
   const blurFilter=(id,b)=>`<filter id="${id}" filterUnits="userSpaceOnUse" x="-400" y="-400" width="2720" height="1880"><feGaussianBlur stdDeviation="${(b*BLUR_SIGMA).toFixed(3)}"/></filter>`;
   function cardSvg(t,at,rest){
+    if(cardDrag&&cardDrag.id===t.id)t={...t,position:cardDrag.next};
     const S=shapeFor(t),P=placeOf(t),defs=[],parts=[];let n=0;
     // shadow (layer 0): each path its own soft shape, timed like its line (finish-intro: one Dialogue each)
     if(S.blur>0)defs.push(blurFilter('tb-'+t.id,S.blur));
     S.paths.forEach(p=>{const [delay,rise]=pathTiming(p),st=rest?{on:true,alpha:1,dy:0}:lineState(t,delay,rise,at);if(!st.on||st.alpha<=0)return;
       parts.push(`<path d="${svgPath(p,P.anchor)}" fill="#000" fill-opacity="${(S.opacity*st.alpha).toFixed(4)}" transform="translate(0 ${st.dy.toFixed(2)})" ${S.blur>0?`filter="url(#tb-${t.id})"`:''}/>`);});
     // text (layer 1), with its drop shadow
-    for(const L of LINES){const s=t[L.key];if(!s)continue;const st=rest?{on:true,alpha:1,dy:0,blur:0}:lineState(t,L.delay,L.rise,at);if(!st.on||st.alpha<=0)continue;
+    for(const L of titleLines(t)){const s=t[L.key];if(!s)continue;const st=rest?{on:true,alpha:1,dy:0,blur:0}:lineState(t,L.delay,L.rise,at);if(!st.on||st.alpha<=0)continue;
       const fid=st.blur>.05?`tt-${t.id}-${n++}`:null;if(fid)defs.push(blurFilter(fid,st.blur));
-      const y=L.y+P.dy-L.size*DESC+st.dy,attrs=`font-family="${FAMILY[L.weight]}" font-weight="${L.weight}" font-size="${(L.size/FONT_REAL).toFixed(3)}" letter-spacing="${L.spacing}"${P.align==='right'?' text-anchor="end"':''} style="font-kerning:none;white-space:pre"`;
+      const y=L.y+P.dy-L.size*DESC+st.dy,attrs=`font-family="${FAMILY[L.weight]}" font-weight="${L.weight}" font-style="${L.italic?'italic':'normal'}" font-size="${(L.size/FONT_REAL).toFixed(3)}" letter-spacing="${L.spacing}"${P.align==='right'?' text-anchor="end"':''} style="font-kerning:none;white-space:pre"`;
       parts.push(`<g ${fid?`filter="url(#${fid})"`:''} opacity="${st.alpha.toFixed(4)}"><text x="${P.x+L.shadow}" y="${(y+L.shadow).toFixed(2)}" ${attrs} fill="#000" fill-opacity="${L.shadowAlpha.toFixed(3)}">${escape(s)}</text><text x="${P.x}" y="${y.toFixed(2)}" ${attrs} fill="${L.color}">${escape(s)}</text></g>`);}
-    return {defs:defs.join(''),body:parts.join('')};
+    const scale=cardDrag?.id===t.id?(cardDrag.scale??t.scale??1):(t.scale??1);
+    return {defs:defs.join(''),body:`<g transform="translate(${P.x} ${P.anchor[1]}) scale(${scale}) translate(${-P.x} ${-P.anchor[1]})">${parts.join('')}</g>`};
   }
   function shapeFor(t){const S=shadowOf(t,measure);if(editing&&t.id===selected&&shape.draft)S.paths=shape.draft;return S;}
   function sync(){
     const visible=open()&&shown&&has()&&document.body.classList.contains('film-frame');box.hidden=!visible;if(!visible){lastKey='';return;}
     const at=time()*shot().seconds,t=item(),list=editing&&t?[t]:titles().filter(x=>at>=x.rel_in&&at<x.rel_out);
-    const key=JSON.stringify([at.toFixed(3),list,editing,shape.pt,[...shape.sel],shape.draft,fontsReady,svg.clientWidth]);if(key===lastKey)return;lastKey=key;
-    let defs='',body='';for(const x of list){const c=cardSvg(x,at,editing&&x.id===selected);defs+=c.defs;body+=`<g class="title-card" data-title-card="${x.id}">${c.body}</g>`;}
-    svg.innerHTML=`<defs>${defs}</defs>${body}${editing&&t?editLayer(t):t&&list.includes(t)?hintLayer(t,at):''}`;
+    const key=JSON.stringify([at.toFixed(3),list,editing,shape.pt,[...shape.sel],shape.draft,cardDrag?.next,cardDrag?.scale,fontsReady,svg.clientWidth]);if(key===lastKey)return;lastKey=key;
+    let defs='',body='';for(const x of list){const c=cardSvg(x,at,editing&&x.id===selected);defs+=c.defs;const bb=bounds(shadowOf(x,measure).paths),P=placeOf(x),scale=cardDrag?.id===x.id?(cardDrag.scale??x.scale??1):(x.scale??1),pos=cardDrag?.id===x.id?cardDrag.next:{x:P.x,y:P.anchor[1]};body+=`<g class="title-card" data-title-card="${x.id}">${c.body}${!editing&&bb?`<rect data-card-move x="${bb.x0*scale+pos.x}" y="${bb.y0*scale+pos.y}" width="${(bb.x1-bb.x0)*scale}" height="${(bb.y1-bb.y0)*scale}" fill="transparent" style="pointer-events:all;cursor:move"/>`:''}</g>`;}
+    svg.innerHTML=`<defs>${defs}</defs>${body}${editing&&t?editLayer(t):t&&list.includes(t)?titleFrame(t):''}`;
   }
   // A selected title shows its shadow's outline (dashed); clicking the shape starts editing it.
+  function titleFrame(t){
+    const b=bounds(shadowOf(t,measure).paths);if(!b)return '';const P=placeOf(t),scale=cardDrag?.id===t.id?(cardDrag.scale??t.scale??1):(t.scale??1),pos=cardDrag?.id===t.id?cardDrag.next:{x:P.x,y:P.anchor[1]},h=6*px();
+    const x0=pos.x+b.x0*scale,y0=pos.y+b.y0*scale,x1=pos.x+b.x1*scale,y1=pos.y+b.y1*scale;
+    return `<g><rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="none" stroke="#5bd6f5" stroke-width="${px()}" style="pointer-events:none"/>${[['nw',x0,y0],['ne',x1,y0],['se',x1,y1],['sw',x0,y1]].map(([corner,x,y])=>`<rect data-card-scale="${corner}" x="${x-h}" y="${y-h}" width="${h*2}" height="${h*2}" fill="#5bd6f5" stroke="white" stroke-width="${px()}" style="pointer-events:all;cursor:${corner==='nw'||corner==='se'?'nwse':'nesw'}-resize"><title>Scale title proportionally</title></rect>`).join('')}</g>`;
+  }
   function hintLayer(t,at){
-    const S=shadowOf(t,measure);return `<g class="shape-hint">${S.paths.map(p=>{const [delay,rise]=pathTiming(p),st=lineState(t,delay,rise,at);return st.on?`<path data-hint d="${svgPath(p,placeOf(t).anchor)}" transform="translate(0 ${st.dy.toFixed(2)})"><title>Click to edit the shadow shape</title></path>`:'';}).join('')}</g>`;
+    if(cardDrag?.id===t.id)t={...t,position:cardDrag.next};
+    const S=shadowOf(t,measure);return `<g class="shape-hint">${S.paths.map(p=>{const [delay,rise]=pathTiming(p),st=lineState(t,delay,rise,at);return st.on?`<path data-hint d="${svgPath(p,placeOf(t).anchor)}" transform="translate(0 ${st.dy.toFixed(2)})"><title>Drag to move the whole title; use Shadow layer to edit its shape</title></path>`:'';}).join('')}</g>`;
   }
   // ---- shadow shape editing ---------------------------------------------------------------------------------
   const anchorOf=t=>placeOf(t).anchor,px=()=>FILM_W/Math.max(1,svg.getBoundingClientRect().width);
@@ -252,9 +268,9 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     if(shape.pt){const [pi,j]=shape.pt,p=S.paths[pi]?.points[j];if(p)for(const w of ['in','out'])if(p[w]){const hx=p.x+p[w][0]+AX,hy=p.y+p[w][1]+AY;parts.push(`<line class="se-hline" x1="${p.x+AX}" y1="${p.y+AY}" x2="${hx}" y2="${hy}"/><circle class="se-handle" data-h="${pi}:${j}:${w}" cx="${hx}" cy="${hy}" r="${h*.9}"><title>Drag to curve · Alt-drag breaks the handle</title></circle>`);}}
     S.paths.forEach((p,pi)=>p.points.forEach((q,j)=>{const on=shape.pt&&shape.pt[0]===pi&&shape.pt[1]===j,smooth=!!(q.in||q.out);
       parts.push(smooth?`<circle class="se-pt ${on?'on':''}" data-pt="${pi}:${j}" cx="${q.x+AX}" cy="${q.y+AY}" r="${h}"><title>Smooth point · drag to move · double-click: sharp</title></circle>`:`<rect class="se-pt ${on?'on':''}" data-pt="${pi}:${j}" x="${q.x+AX-h}" y="${q.y+AY-h}" width="${2*h}" height="${2*h}"><title>Sharp point · drag to move · double-click: smooth</title></rect>`);}));
-    return `<g class="shape-edit">${parts.join('')}</g>`;
+    return `<g class="shape-edit" transform="translate(${AX} ${AY}) scale(${t.scale??1}) translate(${-AX} ${-AY})">${parts.join('')}</g>`;
   }
-  const filmPoint=event=>{const m=svg.getScreenCTM();if(!m)return [0,0];const p=new DOMPoint(event.clientX,event.clientY).matrixTransform(m.inverse()),[AX,AY]=anchorOf(item());return [p.x-AX,p.y-AY];};
+  const filmPoint=event=>{const m=svg.getScreenCTM();if(!m)return [0,0];const p=new DOMPoint(event.clientX,event.clientY).matrixTransform(m.inverse()),[AX,AY]=anchorOf(item());return [(p.x-AX)/(item().scale??1),(p.y-AY)/(item().scale??1)];};
   function saveShape(paths,message){
     put(t=>{t.shadow={...t.shadow,paths:structuredClone(paths)};return t;},{message});shape.draft=null;lastKey='';sync();
   }
@@ -262,8 +278,14 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     const t=item();if(!t||!shape.pt)return status('Select a point first (click it).');const [pi,k]=shape.pt,S=shadowOf(t,measure);
     S.paths[pi]=deletePoint(S.paths[pi],k);shape.pt=null;saveShape(S.paths,'Point deleted. Undo brings it back.');
   }
+  const menu=document.createElement('div');menu.className='director-panel';menu.hidden=true;menu.style.cssText='position:fixed;z-index:10000;padding:10px;background:#151f28;color:#fff;border:1px solid #5bd6f5;border-radius:8px';document.body.append(menu);
+  svg.addEventListener('contextmenu',event=>{const id=event.target.closest('[data-title-card]')?.dataset.titleCard;if(id&&id!==selected)select(id,{reveal:false});if(!item())return;event.preventDefault();menu.innerHTML='<button data-layout="copy-layout">Copy title layout</button> <button data-layout="paste-layout" '+(copiedLayout?'':'disabled')+'>Paste title layout</button>';menu.style.left=Math.min(event.clientX,innerWidth-300)+'px';menu.style.top=Math.min(event.clientY,innerHeight-70)+'px';menu.hidden=false;});
+  menu.addEventListener('click',event=>{const action=event.target.dataset.layout;if(action)try{titleAction(action);}catch(error){status(error.message,true);}menu.hidden=true;});
+  document.addEventListener('pointerdown',event=>{if(!menu.contains(event.target))menu.hidden=true;});
   svg.addEventListener('pointerdown',event=>{
-    if(!editing&&event.button===0&&event.target.closest?.('[data-hint]')&&item()){event.preventDefault();event.stopPropagation();try{ready();setEditing(true);seek(restTime(item())/shot().seconds);render();}catch(error){status(error.message,true);}return;}
+    if(!editing&&event.button===0&&(event.target.closest?.('[data-card-move]')||event.target.closest?.('[data-card-scale]')||event.target.closest?.('[data-hint]'))){
+      const id=event.target.closest('[data-title-card]')?.dataset.titleCard;if(id&&id!==selected)select(id,{reveal:false});if(!item())return;
+      event.preventDefault();event.stopPropagation();try{ready();const t=item(),P=placeOf(t);cardDrag={id:t.id,x:event.clientX,y:event.clientY,base:{x:P.x,y:P.anchor[1]},next:{x:P.x,y:P.anchor[1]}};const corner=event.target.dataset.cardScale;if(corner){const b=bounds(shadowOf(t,measure).paths),scale=t.scale??1,r=svg.getBoundingClientRect();cardDrag.scale=scale;cardDrag.initialScale=scale;cardDrag.fixed=[P.x+(corner.includes('w')?b.x1:b.x0)*scale,P.anchor[1]+(corner.includes('n')?b.y1:b.y0)*scale];cardDrag.pointer=[(event.clientX-r.left)*FILM_W/r.width,(event.clientY-r.top)*1080/r.height];}svg.setPointerCapture(event.pointerId);}catch(error){status(error.message,true);}return;}
     if(!editing||event.button!==0)return;const t=item();if(!t)return;event.preventDefault();event.stopPropagation();
     try{ready();}catch(error){status(error.message,true);return;}
     const el=event.target,S=shadowOf(t,measure),at=filmPoint(event),base=structuredClone(S.paths);
@@ -281,6 +303,8 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     if(d.type==='point'||d.type==='handle')renderPanelTools();
   });
   svg.addEventListener('pointermove',event=>{
+    if(cardDrag?.fixed){const d=cardDrag,r=svg.getBoundingClientRect(),p=[(event.clientX-r.left)*FILM_W/r.width,(event.clientY-r.top)*1080/r.height],v=d.pointer.map((x,i)=>x-d.fixed[i]),u=p.map((x,i)=>x-d.fixed[i]);let ratio=(v[0]*u[0]+v[1]*u[1])/(v[0]*v[0]+v[1]*v[1]);d.scale=Math.max(.1,Math.min(5,d.initialScale*ratio));ratio=d.scale/d.initialScale;d.next={x:r2(d.fixed[0]+(d.base.x-d.fixed[0])*ratio),y:r2(d.fixed[1]+(d.base.y-d.fixed[1])*ratio)};lastKey='';sync();return;}
+    if(cardDrag){const r=svg.getBoundingClientRect();cardDrag.next={x:r2(cardDrag.base.x+(event.clientX-cardDrag.x)*FILM_W/r.width),y:r2(cardDrag.base.y+(event.clientY-cardDrag.y)*1080/r.height)};lastKey='';sync();return;}
     const d=drag;if(!d||!editing||!d.base)return;if(Math.hypot(event.clientX-d.ox,event.clientY-d.oy)>2){d.moved=true;lastPt=null;}if(!d.moved)return;
     const [fx,fy]=filmPoint(event),dx=fx-d.start[0],dy=fy-d.start[1],next=structuredClone(d.base);
     if(d.type==='point'){const p=d.base[d.pi].points[d.k];next[d.pi]=movePoint(d.base[d.pi],d.k,p.x+dx,p.y+dy);}
@@ -299,6 +323,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     status(d.type==='scale'?`Scaling ${Math.round(d.scaleBy[0]*100)}% × ${Math.round(d.scaleBy[1]*100)}%${event.shiftKey?' (proportional)':''}`:d.type==='body'?`Moving the shape ${r2(dx)}, ${r2(dy)} px`:d.type==='handle'?(event.altKey?'Handle broken: the two sides curve on their own.':'Curving the edge (Alt breaks the handle)'):`Point at ${r2(fx)}, ${r2(fy)} px from the headline's corner`);
   });
   function endShape(event){
+    if(cardDrag){const d=cardDrag;cardDrag=null;if(event.type!=='pointercancel'&&(d.next.x!==d.base.x||d.next.y!==d.base.y||d.scale!==undefined&&d.scale!==d.initialScale))put(t=>({...t,position:d.next,...(d.scale!==undefined?{scale:d.scale}:{})}),{message:'Title moved.'});lastKey='';sync();return;}
     const d=drag;if(!d||!d.base)return;drag=null;
     if(event.type==='pointercancel'){shape.draft=null;lastKey='';sync();return;}
     if(d.inserted&&!d.moved){saveShape(shape.draft,'Point added. Drag it to reshape the edge; Delete removes it.');return;}

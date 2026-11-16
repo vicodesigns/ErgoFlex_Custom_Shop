@@ -3,11 +3,11 @@
 
   1. a cut WITHOUT its own score (and without a generated edl.json) freezes byte-identical inputs to the render-request.sh
      of 04f24e0f (before cuts could carry a score): same manifest lines (sha, size, path; the freeze folder's name aside);
-  2. a cut with a generated edl.json but no score is rejected (exit 2, "out of step"), and so is one whose score was built
-     from other inputs;
+  2. a cut with a generated edl.json but no score is rebuilt automatically, as is one whose score was built
+     from other inputs; invalid title timing is still rejected;
   3. a cut whose score is in step has it laid over the master's score/score.wav (sha, size, a stored copy in render-blobs).
 
-    python3 tests/render-request-score-test.py      (Linux desk: flock, rsync; ~2 min)
+    python3 tests/render-request-score-test.py      (Linux desk: flock, rsync; two full score builds)
 """
 import hashlib, importlib.util, json, os, re, shutil, subprocess, sys, tempfile
 WT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -58,20 +58,33 @@ try:
     check(not diff, f'a cut without a score freezes byte-identical inputs ({len(m_new)} lines, {len(diff)} differ){": " + diff[0] if diff else ""}')
     os.remove(f'{R}/tools/experience/render-request-old.sh')
 
-    # 2. a generated edl.json without a score, then a score from other inputs: rejected
+    # 2. a generated edl.json without a score, then changed title timing: rebuilt
     g = sh(sys.executable, f'{R}/tools/experience/build-cine-score.py', f'{R}/{d}', '--edl-only'); check(g.returncode == 0, 'edl.json generated from the cut')
     p = sh(f'{R}/{SH}', req(d), R, env=env)
-    check(p.returncode == 2 and 'out of step' in p.stderr and 'no score/score.wav' in p.stderr, 'a generated edl.json without a score is rejected')
+    check(p.returncode == 0 and 'regenerating' in p.stdout, 'a generated edl.json without a score is rebuilt and queued: ' + p.stderr[-300:])
     os.makedirs(f'{R}/{d}/score', exist_ok=True); wav = f'{R}/{d}/score/score.wav'; open(wav, 'wb').write(b'RIFF cut score stand-in ' + os.urandom(64))
     json.dump({'edl': 'cut', 'inputs_sha256': '0' * 64, 'wav_sha256': hashlib.sha256(open(wav, 'rb').read()).hexdigest()}, open(f'{R}/{d}/score/tempo-map.json', 'w'))
+    titles_path = f'{R}/{d}/titles-src.json'
+    titles = json.load(open(titles_path)); titles['titles'][0]['rel_in'] += .1
+    json.dump(titles, open(titles_path, 'w'))
     p = sh(f'{R}/{SH}', req(d), R, env=env)
-    check(p.returncode == 2 and 'other inputs' in p.stderr, 'a score built from other inputs is rejected')
+    check(p.returncode == 0 and 'regenerating' in p.stdout, 'a title edit rebuilds stale EDL and score, then queues: ' + p.stderr[-300:])
+    c = sh(sys.executable, f'{R}/tools/experience/build-cine-score.py', f'{R}/{d}', '--check')
+    check(c.returncode == 0, 'rebuilt score passes verification after title edit')
+    titles['titles'][0]['rel_out'] = 9999
+    json.dump(titles, open(titles_path, 'w'))
+    count = len(json.load(open(f'{R}/exports/render-queue/queue.json'))['jobs'])
+    p = sh(f'{R}/{SH}', req(d), R, env=env)
+    check(p.returncode == 2 and 'invalid title timing' in p.stderr and 'regenerating' not in p.stdout, 'an out-of-bounds title is rejected before rebuilding')
+    check(len(json.load(open(f'{R}/exports/render-queue/queue.json'))['jobs']) == count, 'invalid title timing queues nothing')
+    titles['titles'][0]['rel_out'] = titles['titles'][0]['rel_in'] + 2
+    json.dump(titles, open(titles_path, 'w'))
 
     # 3. in step: laid over the master's score
     spec = importlib.util.spec_from_file_location('bcs', f'{R}/tools/experience/build-cine-score.py'); m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
     json.dump({'edl': 'cut', 'inputs_sha256': m.inputs_digest(f'{R}/{d}', open(f'{R}/{d}/edl.json', 'rb').read()), 'wav_sha256': m.sha_file(wav)}, open(f'{R}/{d}/score/tempo-map.json', 'w'))
     c = sh(sys.executable, f'{R}/tools/experience/build-cine-score.py', f'{R}/{d}', '--check'); check(c.returncode == 0, 'the check passes: ' + c.stdout.strip()[-200:])
-    p = sh(f'{R}/{SH}', req(d), R, env=env); check(p.returncode == 0, 'the request for the cut with its score is queued: ' + p.stderr.strip()[-300:])
+    p = sh(f'{R}/{SH}', req(d), R, env=env); check(p.returncode == 0 and 'regenerating' not in p.stdout, 'the request reuses the current score: ' + p.stderr.strip()[-300:])
     rows = [l.split(' ') for l in open(f"{R}/{last_job()['manifest']}").read().strip().split('\n')[1:]]
     row = next((l for l in rows if l[2] == f'{HQ}/score/score.wav'), None)
     sha = hashlib.sha256(open(wav, 'rb').read()).hexdigest()

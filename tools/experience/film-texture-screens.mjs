@@ -1,3 +1,4 @@
+import {screenTiming} from './screen-timing.mjs';
 // Texture screens: a screens entry that paints a clip (or a still) into an existing material's own picture instead of
 // fitting a new picture mesh over a glass. Film-only (render harness, through film-fx.mjs; the Director's live preview
 // runs film-fx too, so it shows there as well); a shot without such an entry never reaches this module, and everything
@@ -92,9 +93,17 @@ export function installTextureScreens(root, specs, media, { makeCanvas = (w, h) 
     // seekTo(media, seconds): the caller's frame-exact seek (film-fx seek()); not called for stills.
     async frame(chapterSeconds, seekTo) {
       const look = frames++ % RESCAN === 0;
+      for(const item of [...items].reverse())if(!screenTiming(item.spec,chapterSeconds).visible){
+        for(const [m,was] of item.swapped){m.map=was.map;m.emissiveMap=was.emissiveMap;m.needsUpdate=true;}item.swapped.clear();
+      }
       for (const item of items) {
+        const clip=screenTiming(item.spec,chapterSeconds);
+        if(!clip.visible){
+          for(const [m,was] of item.swapped){m.map=was.map;m.emissiveMap=was.emissiveMap;m.needsUpdate=true;}
+          item.swapped.clear();continue;
+        }
         const base = item.spec.within === 'desk' ? desk : root;
-        if (look || item.hits.some(([m]) => !inScene(m, root))) {
+        if (look || !item.hits.length || item.hits.some(([m]) => !inScene(m, root))) {
           item.hits = base ? matches(base, item.spec) : [];
           item.matched = item.hits.length;
           if (!item.matched && !item.warned) { item.warned = true; warn(`[film-fx] texture screen matches nothing: ${JSON.stringify({mesh: item.spec.mesh, material: item.spec.material, person: item.spec.person, within: item.spec.within})}`); }
@@ -103,7 +112,7 @@ export function installTextureScreens(root, specs, media, { makeCanvas = (w, h) 
         if (!item.texture) continue;
         const v = item.media, isVideo = Number.isFinite(v.duration) && v.duration > 0;
         if (!isVideo) { if (!item.drawn) paint(item); continue; }
-        const rate = Number(item.spec.rate ?? 1), raw = chapterSeconds * rate + (Number(item.spec.offset) || 0), d = v.duration;
+        const raw = clip.seconds, d = v.duration;
         const time = item.spec.loop === false ? Math.min(Math.max(raw, 0), Math.max(0, d - .02)) : ((raw % d) + d) % d;
         if (seekTo) await seekTo(v, Math.min(time + .0015, Math.max(0, d - .001)));
         paint(item);

@@ -1,3 +1,4 @@
+import {screenTiming} from './screen-timing.mjs';
 // Render-harness-only film effects. render-cut.cjs imports this module inside
 // the presentation stage iframe (it shares the page's import map, so 'three'
 // is the app's own instance). Nothing in the app imports it; every change it
@@ -345,9 +346,10 @@ async function installScreens(shot, list) {
 }
 async function updateScreens(screens, chapterSeconds) {
   await Promise.all(screens.map(async sc => {
+    const clip=screenTiming(sc.spec,chapterSeconds);sc.mesh.visible=clip.visible;if(!clip.visible)return;
     if (Array.isArray(sc.spec.brightness)) sc.mesh.material.color.setScalar(keyAt(sc.spec.brightness, chapterSeconds) * (Number(active?.shot?.screenGain) || 1));
     const v = sc.media; if (!(v instanceof HTMLVideoElement)) return;
-    const rate = Number(sc.spec.rate ?? 1), raw = chapterSeconds * rate + (Number(sc.spec.offset) || 0), d = v.duration;
+    const raw = clip.seconds, d = v.duration;
     const time = sc.spec.loop === false ? THREE.MathUtils.clamp(raw, 0, Math.max(0, d - .02)) : ((raw % d) + d) % d;
     // +1.5 ms: land inside the target frame (an exact n/fps boundary can resolve to frame n−1).
     await seek(v, Math.min(time + .0015, Math.max(0, d - .001))); draw(sc);
@@ -368,11 +370,11 @@ async function ledSource(shot, screens, list) {
   const src = shot.ledSource;
   if (src !== undefined) {
     const sc = Number.isInteger(src) ? screens[src] : screens.find(s => s.spec.target === src || s.target.id === src || s.target.alias === src);
-    if (sc) return { media: sc.media };
+    if (sc) return { media: sc.media, screenTarget: sc.target.id };
     const t = resolve(list, src); if (t?.obj.material?.map?.image instanceof HTMLCanvasElement) return { media: t.obj.material.map.image };
     throw Error('ledSource does not name a screen: ' + src);
   }
-  if (screens.length) return { media: screens[0].media };
+  if (screens.length) return { media: screens[0].media, screenTarget: screens[0].target.id };
   if (shot.kind === 'media') {
     const video = await loadMedia(shot.__stageClip || 'app-reference/assets/desk_viewer/media/ambient-clip.mp4');
     return { media: video, sampler: true, offset: Number(shot.screenOffset) || 0 };
@@ -388,8 +390,9 @@ async function makeLed(shot, screens, list) {
 }
 async function sampleLed(led, seconds, video) {
   const src = led.source;
+  if(src.screenTarget!==undefined)src.media=active?.screens.find(sc=>sc.target.id===src.screenTarget&&screenTiming(sc.spec,seconds).visible)?.media??null;
   if (src.sampler) { const d = src.media.duration; await seek(src.media, Math.min(((seconds + src.offset) % d + d) % d + .0015, d - .001)); }
-  led.c.save(); led.c.translate(160, 0); led.c.scale(-1, 1); led.c.drawImage(src.media, 0, 0, 160, 90); led.c.restore(); // flipped: screen-left lights the desk's left strip end
+  led.c.save(); led.c.translate(160, 0); led.c.scale(-1, 1); src.media?led.c.drawImage(src.media, 0, 0, 160, 90):led.c.clearRect(0,0,160,90); led.c.restore(); // flipped: screen-left lights the desk's left strip end
   const image = led.c.getImageData(0, 0, 160, 90); sampleScreenColours(led.target, image, { mode: led.mode });
   // Continuous playback eases like the app; a jump (stills, first frame) snaps.
   const dt = led.at === null ? Infinity : seconds - led.at, blend = video && dt > 0 && dt <= .25 ? 1 - Math.exp(-dt * 1000 / 150) : 1;

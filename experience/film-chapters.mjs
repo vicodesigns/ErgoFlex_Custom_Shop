@@ -43,6 +43,7 @@ export async function loadFilmShot(url,id,fetcher=globalThis.fetch){
 // Live preview: the film setup with the Director's story edits; GPU quality passes stay off.
 export function liveFilmShot(film,shot){
   const next={...film,id:shot.id,seconds:shot.seconds},lit=exportLighting(shot);if(shot.motion)next.motion=shot.motion;delete next.quality;
+  if(Array.isArray(shot.screens))next.screens=structuredClone(shot.screens);
   // Lighting edited in the Director (ledStatus present) replaces the film's.
   if(lit.ledStatus){next.ledStatus=lit.ledStatus;if(lit.ledNeutral)next.ledNeutral=lit.ledNeutral;else delete next.ledNeutral;if(lit.ledColor)next.ledColor=lit.ledColor;}
   if(lit.sceneGlobals)next.sceneGlobals={...next.sceneGlobals,...lit.sceneGlobals};

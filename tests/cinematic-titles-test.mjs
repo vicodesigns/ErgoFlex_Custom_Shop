@@ -19,6 +19,13 @@ assert.deepEqual(timingNotes({rel_in:3.6,rel_out:9.4},R),[]);
 assert.match(timingNotes({rel_in:1,rel_out:6},R)[0],/1\.3 s before the 1\.5 s-after-cut mark \(2\.3 s\)/);
 assert.match(timingNotes({rel_in:4,rel_out:6},R)[0],/under the usual 3\.5 s/);
 
+// Arbitrary title placement survives saving and export, keeping shadow coordinates relative.
+const moved=cleanFilmTitles([{...aw[0],position:{x:344.5,y:620}}],20)[0];
+assert.deepEqual(placeOf(moved).anchor,[344.5,620]);
+assert.deepEqual(srcEntry('awaken',moved).position,moved.position);
+const styled=cleanFilmTitles([{...moved,scale:1.5,typography:{title:{size:110,weight:700,color:'#ff0000',spacing:2,italic:true}}}],20)[0];
+assert.equal(styled.scale,1.5);assert.equal(styled.typography.title.size,110);assert.deepEqual(srcEntry('awaken',styled).typography,styled.typography);
+assert.deepEqual(cleanShot({...moved,id:'awaken',seconds:20,filmTitles:[moved]}).filmTitles[0].position,moved.position);
 // ---- cleaning ----
 const t0=cleanFilmTitles([{id:'rise-0',rel_in:5,rel_out:2,title:'x'.repeat(300),shadow:{blur:500,opacity:-1,paths:[{line:'title',points:[{x:1,y:2},{x:3,y:4}]}]}}],16)[0];
 assert.ok(t0.rel_out>t0.rel_in&&t0.title.length===140);assert.deepEqual(t0.shadow,{blur:80,opacity:0});
@@ -101,6 +108,14 @@ try{
   assert.ok(drawing[0].startsWith('Dialogue: 0,0:00:44.69,')&&drawing[0].includes('\\move(0,14,0,0,0,900)'),'the path keeps its line\'s timing (headline: +140 ms, 14 px rise)');
   const riseBoxes=ass.filter(l=>/Box(Eyebrow|Title|Detail)/.test(l)&&l.includes('0:00:44'));assert.equal(riseBoxes.length,0);
   assert.equal(ass.filter(l=>/,BoxTitle,/.test(l)).length,2,'the other titles keep their fitted boxes');
+  const styledSource=JSON.parse(fs.readFileSync(path.join(H,'titles-src.json'),'utf8'));
+  styledSource.titles[2].scale=1.5;styledSource.titles[2].typography={title:{size:110,weight:700,color:'#ff0000',spacing:2,italic:true}};
+  fs.writeFileSync(path.join(H,'titles-src.json'),JSON.stringify(styledSource));
+  execFileSync('python3',[path.join(X,'finish-intro.py'),H,'--titles-only'],{stdio:'ignore'});
+  const styledAss=fs.readFileSync(path.join(H,'final','titles.ass'),'utf8');
+  assert.ok(styledAss.includes('\\fs165\\fsp3\\b700\\i1'),'film uses scaled font size, spacing, weight and italic');
+  assert.ok(styledAss.includes('\\1c&H0000ff&'),'film uses the selected text color');
+
 }finally{fs.rmSync(H,{recursive:true,force:true});}
 
 // ---- placement ('place': lower-left (absent) | top-left | top-right) ----

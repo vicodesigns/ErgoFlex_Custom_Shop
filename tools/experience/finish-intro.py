@@ -97,21 +97,45 @@ def title_dialogues(titles):
     for t in titles:
         a, b = t['start'], t['end']
         X0, DY, AN, BOX_PLACE = PLACES[t.get('place', 'lower-left')]
+        if t.get('position'):
+            X0 = float(t['position']['x'])
+            DY = float(t['position']['y']) - 912
+        scale = max(.1, min(5, float(t.get('scale', 1))))
+        if scale == 1: scale = 1
+        typography = t.get('typography') or {}
         # (Until HQ20: one soft, blurred 1300 x 350 scrim behind the text block, per-title 'scrim' alpha; now fitted line boxes.)
         if SCRIM_BLOCK: ass.append(f'Dialogue: 0,{ts(a - .2)},{ts(b + .2)},Scrim,,0,0,0,,{{\\an7\\pos(0,0)\\p1\\1c&H000000&\\1a&HFF&\\blur90\\t(0,900,\\1a&H{t.get('scrim') or '90'}&)\\t({int((b - a) * 1000 - 300)},{int((b - a) * 1000 + 400)},\\1a&HFF&)}}m 0 730 l 1300 730 1300 1080 0 1080{{\\p0}}')
+        def type_tags(style, box=False):
+            key = {'Eyebrow': 'eyebrow', 'Title': 'title', 'Detail': 'detail'}[style]
+            cfg = typography.get(key) or {}
+            if not cfg and scale == 1: return ''
+            size, weight, spacing, border, shadow = {'Eyebrow': (28,600,6,16,1.2), 'Title': (86,600,-.6,26,2), 'Detail': (40,400,.2,20,1.5)}[style]
+            tags = f"\\fs{ass_num(float(cfg.get('size', size))*scale)}\\fsp{ass_num(float(cfg.get('spacing', spacing))*scale)}\\b{int(cfg.get('weight', weight))}\\i{1 if cfg.get('italic') else 0}\\bord{ass_num(border*scale if box else 0)}\\shad{ass_num(0 if box else shadow*scale)}"
+            family = {400: 'Poppins', 500: 'Poppins Medium', 600: 'Poppins SemiBold', 700: 'Poppins'}[int(cfg.get('weight', weight))]
+            tags += '\\fn' + family
+            color = cfg.get('color')
+            if color and not box: tags += '\\1c&H' + color[5:7] + color[3:5] + color[1:3] + '&'
+            return tags
         def line(layer, style, y, text, delay, rise=14):
+            y = 912 + (y-912)*scale
+            rise *= scale
             dur = int((b - a) * 1000)
             return (f'Dialogue: {layer},{ts(a + delay / 1000)},{ts(b)},{style},,0,0,0,,'
-                    f'{{\\an{AN}\\move({X0},{y + DY + rise},{X0},{y + DY},0,900)\\fad(650,420)\\blur5\\t(0,700,\\blur0)}}{text}')
+                    f'{{{type_tags(style)}\\an{AN}\\move({X0},{y + DY + rise},{X0},{y + DY},0,900)\\fad(650,420)\\blur5\\t(0,700,\\blur0)}}{text}')
         # Director Mode's shadow: blur / opacity restyle the boxes; paths replace them (one drawing each, timed like its line).
-        sh = t['shadow']; blur = ass_num(sh.get('blur', BOX_BLUR))
+        sh = t['shadow']; blur = ass_num(float(sh.get('blur', BOX_BLUR))*scale)
         alpha = f"{max(0, min(255, round(255 * (1 - float(sh['opacity']))))):02X}" if 'opacity' in sh else (BOX_PLACE or BOX_A)
         tint = f'\\3a&H{alpha}&' if alpha != BOX_A else ''
         def box(style, y, text, delay, rise=14):
+            y = 912 + (y-912)*scale
+            rise *= scale
             return (f'Dialogue: 0,{ts(a + delay / 1000)},{ts(b)},Box{style},,0,0,0,,'
-                    f'{{\\an{AN}\\move({X0},{y + DY + rise},{X0},{y + DY},0,900)\\fad(650,420){tint}\\blur{blur}}}{text}')
+                    f'{{{type_tags(style, True)}\\an{AN}\\move({X0},{y + DY + rise},{X0},{y + DY},0,900)\\fad(650,420){tint}\\blur{blur}}}{text}')
         for p in sh.get('paths') or []:
+            if scale != 1:
+                p = {**p, 'points': [{**q, 'x': q['x']*scale, 'y': q['y']*scale, **{k: [v*scale for v in q[k]] for k in ('in','out') if k in q}} for q in p['points']]}
             delay, rise = LINE_TIMING.get(p.get('line'), (0, 10))
+            rise *= scale
             ass.append(f'Dialogue: 0,{ts(a + delay / 1000)},{ts(b)},Scrim,,0,0,0,,{{\\an7\\move(0,{rise},0,0,0,900)\\fad(650,420)\\p1\\bord0\\shad0'
                        f'\\1c&H000000&\\1a&H{alpha}&\\blur{blur}}}{ass_drawing(p, (X0, ANCHOR[1] + DY))}{{\\p0}}')
         for style, y, key, delay, rise in (('Eyebrow', 812, 'eyebrow', 0, 10), ('Title', 912, 'title', 140, 14), ('Detail', 970, 'detail', 380, 10)):
@@ -141,7 +165,7 @@ def chapter_titles(argv):
     if not mine:
         print(f'chapter-titles: {cid} has no titles: plain copy'); shutil.copyfile(vin, part); os.replace(part, vout); return
     titles = [dict(chapter=cid, start=float(t['rel_in']), end=float(t['rel_out']), eyebrow=t['eyebrow'], title=t['title'], detail=t['detail'],
-                   scrim=t.get('scrim'), shadow=t.get('shadow') or {}, **({'place': t['place']} if t.get('place') in PLACES else {})) for t in mine]
+                   scrim=t.get('scrim'), shadow=t.get('shadow') or {}, **({k: t[k] for k in ('position', 'scale', 'typography') if k in t}), **({'place': t['place']} if t.get('place') in PLACES else {})) for t in mine]
     tmp = tempfile.mkdtemp(prefix='chtitles-')
     try:
         assf = os.path.join(tmp, 'titles.ass'); open(assf, 'w', encoding='utf-8').write('\n'.join(ASS_HEAD + title_dialogues(titles)) + '\n')
@@ -181,7 +205,7 @@ def main():
     # ---- titles.json (absolute) + ASS -------------------------------------
     titles = [dict(id=f"{t['chapter']}-{i}", chapter=t['chapter'], start=round(start[t['chapter']] + t['rel_in'], 3),
                    end=round(start[t['chapter']] + t['rel_out'], 3), eyebrow=t['eyebrow'], title=t['title'], detail=t['detail'], scrim=t.get('scrim'),
-                   shadow=t.get('shadow') or {}, **({'place': t['place']} if t.get('place') in PLACES and t['place'] != 'lower-left' else {}))
+                   shadow=t.get('shadow') or {}, **({k: t[k] for k in ('position', 'scale', 'typography') if k in t}), **({'place': t['place']} if t.get('place') in PLACES and t['place'] != 'lower-left' else {}))
               for i, t in enumerate(src['titles'])]
     logo_at = start[src['logo']['chapter']] + src['logo']['rel_in']
     cta = dict(id='cta', chapter=src['cta']['chapter'], start=round(start[src['cta']['chapter']] + src['cta']['rel_in'], 3),

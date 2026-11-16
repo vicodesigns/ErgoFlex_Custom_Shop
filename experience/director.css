@@ -701,3 +701,15 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 #director-timeline .prop-bar.b2-selected,#director-timeline .people-bar.b2-selected{box-shadow:0 0 0 2px #fff}
 #director-timeline .choreo-pick.b2-selected select{outline:2px solid #fff;outline-offset:1px}
 #director-panel .b2-selected:not(.desk-row){outline:2px solid #fff;outline-offset:-2px;border-radius:6px}
+
+/* Timeline timing cards and the contextual shortcut guide. */
+.timeline-tooltip{position:fixed;z-index:10050;max-width:min(390px,calc(100vw - 16px));padding:11px 14px;border:1px solid #4a7b8c;border-radius:8px;background:#101c26f7;color:#e8f3fa;box-shadow:0 5px 24px #0008;font:12px/1.55 system-ui,sans-serif;pointer-events:none;overflow-wrap:anywhere}
+.timeline-tooltip[hidden]{display:none!important}
+.timeline-tooltip strong{display:block;color:#71dcfa;margin-bottom:4px}
+.timeline-tooltip-change{border-top:1px solid #ffffff25;margin-top:5px;padding-top:4px;color:#ffe1a0}
+.timeline-rich-drag .drag-chip{visibility:hidden}
+.timeline-shortcuts{position:relative;font:12px/1.5 system-ui,sans-serif}
+.timeline-shortcuts summary{cursor:pointer;list-style:none;border:1px solid #ffffff26;border-radius:6px;padding:6px 10px;color:#d5e9f5}
+.timeline-shortcuts summary:focus-visible{outline:2px solid #60d5f5;outline-offset:2px}
+.timeline-shortcuts-card{position:absolute;right:0;bottom:calc(100% + 8px);width:340px;max-width:80vw;max-height:60vh;overflow:auto;padding:16px;border:1px solid #4a7b8c;border-radius:8px;background:#101c26;color:#e8f3fa;box-shadow:0 5px 24px #0008;z-index:90;white-space:normal}
+.timeline-shortcuts-card p{margin:6px 0 12px}.timeline-shortcuts-card b{color:#71dcfa}.timeline-shortcuts-card small{display:block;color:#b0c2cf}

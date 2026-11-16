@@ -55,6 +55,7 @@ export function cleanShot(v={},catalog){
   // Clips: lift / tilt only, valid and non-overlapping (desk-choreo.mjs).
   if(shot.deskEdits)shot.deskEdits=cleanDeskChoreo({deskEdits:shot.deskEdits},shot.seconds).deskEdits;
   // Film titles edited in the Director (absent until then): copy, timing, shadow shape.
+  if(Array.isArray(v.screens))shot.screens=structuredClone(v.screens);
   const titles=cleanFilmTitles(v.filmTitles,shot.seconds);if(titles?.length)shot.filmTitles=titles;
   // The desk's onboard touchscreen posed from chapter time (touchscreen-track.mjs), absent unless the film gives it.
   const touchscreen=cleanTouchscreenField(v.touchscreen);if(touchscreen)shot.touchscreen=touchscreen;

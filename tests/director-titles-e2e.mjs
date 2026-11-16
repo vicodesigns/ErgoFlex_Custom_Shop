@@ -53,7 +53,7 @@ try{
   check(await ev(()=>{const p=document.querySelector('#director-panel [data-inspector-page=title] [data-reveal=title]');return !!p&&(p.classList.contains('reveal-pulse')||!!p.closest('.reveal-pulse'))&&!p.closest('[hidden]');}),'selecting a title reveals the Title tab (reveal pulse on the Title inspector, not the Chapter Headline)');
   check(await ev(()=>{const h=document.querySelector('#director-panel [data-inspector-page=title] [data-reveal=title]');return h&&document.querySelector('[data-inspector-tab=title]').getAttribute('aria-pressed')==='true';}),'reveal(\'title\') home is the Title tab on film chapters');
   check(sel.overlay&&sel.paths===3&&sel.texts.includes('Your height. Your rhythm.')&&Number(sel.time)>5,'the frame shows the title with its 3 fitted shadow boxes at a time it is fully in');
-  check(await ev(()=>document.querySelectorAll('.shape-hint path[data-hint]').length)===3,'the selected title shows its shadow outline (dashed) in the frame');
+  check(await ev(()=>document.querySelectorAll('[data-card-scale]').length)===4,'the selected title shows four proportional scale handles');
   if(shots)await page.screenshot({path:path.join(shots,'titles-lane.png')});
   // 3. drag (move) with undo / redo
   await drag([b0.cx,b0.y],[b0.cx+b0.lane*(1/16),b0.y]);
@@ -119,8 +119,11 @@ try{
   check(/Your own shape: 3 parts, 12 points/.test(look.note),'the inspector names the custom shape');
   await page.keyboard.press('Escape');await sleep(300);
   check(!(await ev(()=>document.body.classList.contains('title-shape-editing')))&&await ev(()=>!!document.querySelector('[data-title-clip].selected')),'Esc finishes editing the shape (the title stays selected)');
-  const hint=await ev(()=>{const r=document.querySelectorAll('.shape-hint path')[1].getBoundingClientRect();return [r.x+12,r.y+r.height/2];});await page.mouse.click(...hint);await sleep(400);
-  check(await ev(()=>document.body.classList.contains('title-shape-editing')),'clicking the dashed shadow outline starts editing it');
+  const hint=await ev(()=>{const r=document.querySelector('[data-card-move]').getBoundingClientRect();return [r.x+12,r.y+r.height/2];});await drag(hint,[hint[0]+30,hint[1]-20]);await sleep(400);
+  check(await ev(()=>Number(document.querySelector('[name=ft-x]').value)>128),'dragging the title moves its anchor');
+  await ev(()=>document.querySelector('[data-action=undo]').click());await sleep(300);
+  await ev(()=>document.querySelector('[data-title-action=edit-shadow]').click());await sleep(400);
+  check(await ev(()=>document.body.classList.contains('title-shape-editing')),'the shadow layer button starts point editing');
   await page.keyboard.press('Enter');await sleep(300);check(!(await ev(()=>document.body.classList.contains('title-shape-editing'))),'Enter finishes editing');
   check(/^\d+ chapters? · \d+ seconds$/.test(await statusText()),'editing done: the message line is back to the normal one: '+await statusText());
   // 7. Export cut -> import -> titles-src -> finish-intro

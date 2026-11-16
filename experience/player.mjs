@@ -95,7 +95,7 @@ function perfNote(kind,ms){if(kind==='seek'){perfSum.seek+=ms;perfSum.n++;}else{
 let fxLast=0,fxScreensAt=0,fxScrubbed=false,liveFx=null,fxShot=null,fxAt=-1,fxPending=null,fxLights=null,fxTimer=null;
 // Film layers the Director edits in place (film-fx update): lighting and its prop edits.
 let fxPeople='null';
-const lightsKey=s=>{const l=exportLighting(s);return JSON.stringify([l.ledStatus,l.ledNeutral,l.ledColor,l.sceneGlobals,l.lights,l.lightEdits,l.timeOfDay,l.propEdits,l.brandingEdits,l.deskEdits,l.deskBuild]);};
+const lightsKey=s=>{const l=exportLighting(s);return JSON.stringify([l.ledStatus,l.ledNeutral,l.ledColor,l.sceneGlobals,l.lights,l.lightEdits,l.timeOfDay,l.propEdits,l.brandingEdits,l.deskEdits,l.deskBuild,l.screens]);};
 // film-fx resolves 'three' through the stage page's import map, so it loads inside the stage frame.
 async function stageFx(){
   const win=frame.contentWindow;if(win.__filmFx)return win.__filmFx;
@@ -153,7 +153,7 @@ function filmFrame(){
   const s=shots[index],at=clock.progress(performance.now(),s.seconds)*s.seconds,fx=liveFx,now=performance.now(),scrubbing=director?.scrubbing?.();
   if(scrubbing&&now-fxLast<100)return;if(!scrubbing&&fxScrubbed){fxScrubbed=false;fxAt=-1;}if(scrubbing)fxScrubbed=true;
   if(Math.abs(at-fxAt)<1/30)return;fxLast=now;stage()?.wake?.();
-  const drawScreens=!scrubbing&&(!playing||now-fxScreensAt>=250);if(drawScreens)fxScreensAt=now;
+  const drawScreens=!playing||now-fxScreensAt>=250;if(drawScreens)fxScreensAt=now;
   fxAt=at;const fxStart=performance.now(),timing=perf?{}:null;fxPending=fx.frame(at,at,{video:false,screens:drawScreens,timing}).then(()=>{fx.after();if(perf){perfNote('fx',performance.now()-fxStart);for(const [k,v] of Object.entries(timing))perfSum['fx:'+k]=(perfSum['fx:'+k]||0)+v;}}).catch(error=>console.warn('[film fx]',error.message)).finally(()=>{fxPending=null;});
 }
 requestAnimationFrame(filmFrame);

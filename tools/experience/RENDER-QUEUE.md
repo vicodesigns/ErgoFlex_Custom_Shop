@@ -128,6 +128,12 @@ the hand-run `freeze.sh` / `pin.py`, parameterised by the repo root; the two fil
 and appends the job. If the export never shows up in `director-exports/` within 4 min the job is queued anyway with a `warning`:
 the render then lacks his latest edits, so say so in the caption. Tests: `python3 tests/render-request-test.py`.
 
+For alternate cuts that carry a score or a generated EDL, the request checks music sync after import, while holding the
+same cut lock. Missing or stale EDL/score data is regenerated with `build-cine-score.py <cut> --no-extras` and verified
+before freezing; unchanged scores are reused. Titles outside their chapter still require a Director correction.
+Regeneration failures queue nothing and remain retryable. Requests are deduplicated by their original file hash.
+Score-flow tests: `python3 tests/render-request-score-test.py`.
+
 ## 6. Later: a Taildrop return path
 
 Not built yet. When Tailscale file sharing is set up, Win additionally `tailscale file cp <mp4> <desk>:` and the desk side lands it in
