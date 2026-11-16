@@ -97,24 +97,26 @@ assert.equal(JSON.stringify([andre,kai]),frozen,'the entries given are never cha
   assert.deepEqual(r.followed.map(f=>f.key).sort(),['noah-steps','noah-taps','noah-watches']);
   assert.deepEqual(P.endsOf(by(r.cast,'noah-steps')).end,Q2,'the walk now ends where they stand');assert.deepEqual(P.endsOf(by(r.cast,'noah-steps')).start,P0,'and starts where it did');
   assert.deepEqual(r.followed.find(f=>f.key==='noah-steps').ends,['end']);
-  // Kai: the end of kai-rolls is where kai-docks starts; that start (and its placement) follows, kai (at the dock) not
+  // Kai (S9 round 6: one roll, all the way to the dock): the end of kai-rolls is where kai types; that placement follows
   const kr=by(o.cast,'kai-rolls'),W0=P.endsOf(kr).end,W1=[W0[0]+100,W0[1]];
   r=P.linkedMove(o.cast.map(e=>e.key==='kai-rolls'?P.movePoint(kr,P.pathOf(kr).length-1,W1):e),o.when,'kai-rolls',W0,W1);
-  assert.deepEqual(r.followed.map(f=>f.key),['kai-docks']);const kd=by(r.cast,'kai-docks');assert.deepEqual(kd.at,W1);assert.deepEqual(kd.roll.path[0],W1);assert.deepEqual(P.endsOf(kd).end,P.endsOf(by(o.cast,'kai-docks')).end,'the dock stays');
+  assert.deepEqual(r.followed.map(f=>f.key),['kai']);assert.deepEqual(by(r.cast,'kai').at,W1);assert.deepEqual(P.endsOf(by(r.cast,'kai-rolls')).start,P.endsOf(kr).start,'the roll starts where it did');
   assert.equal(JSON.stringify(o),before,'the cast given is never changed');
   // storage: Andre's walk end -> phone out, up, presses, watches; its start -> nobody (he steps off from another spot)
   const st=people('storage'),aw=by(st.cast,'andre-steps-back'),E0=P.endsOf(aw).end,E1=[E0[0],E0[1]+250];
   r=P.linkedMove(st.cast,st.when,'andre-steps-back',E0,E1);assert.deepEqual(r.followed.map(f=>f.key).sort(),['andre-phone-out','andre-phone-up','andre-presses','andre-watches']);
   assert.deepEqual(P.linkedMove(st.cast,st.when,'andre-steps-back',P.endsOf(aw).start,[0,0]).followed,[],'nobody stood where his walk starts');
   // ---- arrival against the hand-over
-  let a=P.arrival(steps,1.2,o.cast,o.when);assert.equal(a.deadline,5.4);assert.equal(a.next,'noah-pulls');assert.ok(Math.abs(a.arrive-5.2)<1e-9&&a.late===0,'on time');
-  a=P.arrival(steps,2.1,o.cast,o.when);assert.ok(Math.abs(a.late-.7)<1e-9,'0.7 s late');
-  const fast=P.fixFaster(steps,a,{seconds:2.1});assert.ok(Math.abs(fast.walk.pace-2.2*2.1/1.4)<.011,'faster: pace scaled to the room left');
-  assert.ok((fast.walk.start)===steps.walk.start&&Math.abs(P.arrival(fast,2.1*steps.walk.pace/fast.walk.pace,o.cast,o.when).late)<.01,'and then on time');
-  const early=P.fixEarlier(steps,a,{seconds:2.1});assert.equal(early.walk.start,3.3,'earlier: from 4.0 back to 3.3 (not before its window)');
-  const ka=P.arrival(kr,P.routeInfo(kr,{rollPlan}).seconds,o.cast,o.when);assert.equal(ka.deadline,9.4);assert.equal(ka.late,0);
-  const late=P.arrival(kr,9.5,o.cast,o.when);const kf=P.fixFaster(kr,late,{seconds:9.5,length:P.routeInfo(kr,{rollPlan}).length});assert.ok(kf.roll.speed>.5&&kf.roll.speed<1,'a roll: the speed to arrive at 9.4 s');
-  assert.equal(P.fixEarlier(kr,late,{seconds:9.5}).roll.start,0,'a roll starts at most back to its window');
+  // (S9 round 6 retimed the walk and the roll: the times here are the cut's own)
+  const S0=steps.walk.start,DL=o.when['noah-pulls'][0][0],room=DL-S0;
+  let a=P.arrival(steps,room-.2,o.cast,o.when);assert.equal(a.deadline,DL);assert.equal(a.next,'noah-pulls');assert.ok(Math.abs(a.arrive-(DL-.2))<1e-9&&a.late===0,'on time');
+  a=P.arrival(steps,room+.7,o.cast,o.when);assert.ok(Math.abs(a.late-.7)<1e-9,'0.7 s late');
+  const fast=P.fixFaster(steps,a,{seconds:room+.7});assert.ok(Math.abs(fast.walk.pace-Math.min(P.FIELDS.walk.pace.max,steps.walk.pace*(room+.7)/room))<.011,'faster: pace scaled to the room left (up to its limit)');
+  if(steps.walk.pace*(room+.7)/room<=P.FIELDS.walk.pace.max)assert.ok((fast.walk.start)===steps.walk.start&&Math.abs(P.arrival(fast,(room+.7)*steps.walk.pace/fast.walk.pace,o.cast,o.when).late)<.01,'and then on time');
+  const win=o.when['noah-steps'][0][0],early=P.fixEarlier(steps,a,{seconds:room+.7});assert.ok(Math.abs(early.walk.start-Math.max(win,DL-(room+.7)))<1e-9,'earlier: back by the lateness (not before its window)');
+  const KD=o.when['kai-rolls'][0][1],ks=P.routeInfo(kr,{rollPlan}).seconds,ka=P.arrival(kr,ks,o.cast,o.when);assert.equal(ka.deadline,KD);assert.equal(ka.late,0);
+  const lateS=KD-kr.roll.start+.5,late=P.arrival(kr,lateS,o.cast,o.when);const kf=P.fixFaster(kr,late,{seconds:lateS,length:P.routeInfo(kr,{rollPlan}).length});assert.ok(kf.roll.speed>0&&kf.roll.speed<kr.roll.speed,'a roll: the speed to arrive by its deadline');
+  assert.equal(P.fixEarlier(kr,late,{seconds:lateS}).roll.start,0,'a roll starts at most back to its window');
 }
 // toes: only when the choice differs from what the entry resolves to
 assert.equal(P.setField({at:[0,0],walk:{path:[[0,0],[0,1]]}},'toes','bend').walk.toes,undefined,'bend is what no toes means: nothing written');
