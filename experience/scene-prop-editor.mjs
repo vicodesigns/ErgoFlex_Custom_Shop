@@ -1,6 +1,6 @@
 import {noteStudioValue} from './studio-sync.mjs';
 import {layersOn,splitPermanent,writePermanentLayers,permanentCells,foldDeskHides,LAYERS_KEY} from './layers-exchange.mjs';
-import {cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,propTarget,DESK_SURFACES,onDesk,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets} from './prop-edits.mjs';
+import {cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,propTarget,DESK_SURFACES,onDesk,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets,keyedFadeWindow,filmFadeKeys,combineFilmFade,showOverFilm} from './prop-edits.mjs';
 import {stackRows} from './lane-rows.mjs';
 import {stowWindow,EASEL_ANGLE} from './prop-stow-window.mjs';
 import {legacyMotionToClips,sampleClipMotion} from './desk-clips.mjs';
@@ -58,19 +58,29 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   // An edit's time on screen within its span, in chapter seconds.
   function onScreen(e,span){
     const w=e?.show,clamp=x=>Math.max(span.lo,Math.min(span.hi,x));
-    return {from:w?clamp(span.t0+w.from):span.lo,to:w?clamp(span.t0+w.to):span.hi,fadeIn:w?.fadeIn||0,fadeOut:w?.fadeOut||0,timed:!!w};
+    return {from:w?clamp(span.t0+w.from):span.lo,to:w?clamp(span.t0+w.to):span.hi,fadeIn:w?.fadeIn||0,fadeOut:w?.fadeOut||0,ease:w?.ease==='smooth'?'smooth':null,timed:!!w};
   }
+  // B1 (S33): the film's own fade of an item (a hand-made film edit with a keyed opacity, prop-edits.mjs keyedFadeWindow):
+  // the drafting kit in create fades in at 7.0 s and out from 16.9 to 18.7 s. Before, the Props lane did not know it:
+  // the bar ran the whole chapter with no ramps, and dragging its end wrote show:{to} with NO fade, so the prop was cut
+  // off at the new end (or in the middle of the film's own fade) instead of fading. Now the bar is that window with its
+  // ramps, a retime keeps its fades, and a Director window is drawn as it combines with the film's.
+  function filmFade(target,span){
+    const keys=filmFadeKeys(film(),target?.match);return keys?keyedFadeWindow(keys,span.lo,span.hi):null;
+  }
+  // An item's time on screen as the stage draws it: the Director's window, within the film's own fade when it has one.
+  const screenOf=(e,target,span)=>combineFilmFade(onScreen(e,span),filmFade(target||e,span),!!e?.show);
   // The show for chapter seconds from…to in a span: an end on the span's edge stays open; the whole time is no show.
-  function showFor(span,{from,to,fadeIn=0,fadeOut=0}){
+  function showFor(span,{from,to,fadeIn=0,fadeOut=0,ease=null}){
     const atLo=from<=span.lo+.05,atHi=to>=span.hi-.05;
     if(atLo&&atHi&&!fadeIn&&!fadeOut)return undefined;
-    return {from:atLo&&!fadeIn?0:r2(Math.max(0,from-span.t0)),to:atHi&&!fadeOut?END:r2(to-span.t0),...(fadeIn?{fadeIn:r2(fadeIn)}:{}),...(fadeOut?{fadeOut:r2(fadeOut)}:{})};
+    return {from:atLo&&!fadeIn?0:r2(Math.max(0,from-span.t0)),to:atHi&&!fadeOut?END:r2(to-span.t0),...(fadeIn?{fadeIn:r2(fadeIn)}:{}),...(fadeOut?{fadeOut:r2(fadeOut)}:{}),...(ease==='smooth'&&(fadeIn||fadeOut)?{ease:'smooth'}:{})};
   }
   const timeText=(s,span)=>s.from<=span.lo+.05&&s.to>=span.hi-.05?(span.desk?'the whole time its desk is on screen':'the whole chapter'):`${r1(s.from)}–${r1(s.to)} s`;
   // Writes a prop's time on screen (m: {key, target}); next in chapter seconds.
   function writeShow(m,next,span,name){
-    const e=editOfKey(m.key),show=showFor(span,next),edit={...m.target,...(e||{}),show};if(show===undefined)delete edit.show;
-    const fades=[next.fadeIn?`fades in ${r1(next.fadeIn)} s`:'',next.fadeOut?`fades out ${r1(next.fadeOut)} s`:''].filter(Boolean).join(', ');
+    const e=editOfKey(m.key),nat=filmFade(m.target||e,span),show=showFor(span,nat?showOverFilm(nat,span.lo,span.hi,next):next),edit={...m.target,...(e||{}),show};if(show===undefined)delete edit.show;
+    const fades=[next.fadeIn?`fades in ${r1(next.fadeIn)} s`:'',next.fadeOut?`fades out ${r1(next.fadeOut)} s`:'',(next.fadeIn||next.fadeOut)?(next.ease==='smooth'?'smooth':'linear'):''].filter(Boolean).join(', ');
     write(m.key,edit,`${name}: on screen ${timeText(next,span)}${fades?', '+fades:''}.`);
   }
   // Every prop write: seeds shot.propEdits from the film's earlier-exported entries first (like camera keys).
@@ -438,6 +448,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function resetAll(){const n=editedCount();if(!n){status('No prop edits in this chapter: the props are the film\'s.');return;}const a=edits().filter(isAddEdit).length;commit(()=>{shot().propEdits=[];},{render:false});if(sel&&a)sel=null;status(`All props back to the film (${n} edit${n===1?'':'s'} cleared${a?`, ${a} added prop${a===1?'':'s'} removed`:''}). Undo brings them back.`);rerender();}
   async function changed(el){
     await ensure();if(group()){groupChanged(el);return;}
+    if(sel&&el.name==='pp-t-curve'){setCurve(el.value);return;}
     if(sel&&/^pp-t-/.test(el.name)){changedTiming(el.name,el.value===''?NaN:Number(el.value));return;}
     const o=current();if(!sel||!o)return;const name=el.name,v=Number(el.value);
     if(sel.blocked){status(`${CANT_SAVE}: ${sel.blocked}`,true);rerender();return;}
@@ -634,20 +645,23 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   const selName=()=>{const o=current(),e=sel&&editOfKey(sel.key);return o?label(o):nice(e?.label||sel?.target.label||'');};
   const selSpan=()=>{const e=editOfKey(sel.key);return spanOf((e||sel.target).desk);};
   function timingHtml(){
-    const e=editOfKey(sel.key),span=selSpan(),s=onScreen(e,span);
+    const e=editOfKey(sel.key),span=selSpan(),s=screenOf(e,sel.target,span),curve=!(s.fadeIn||s.fadeOut)?'cut':s.ease==='smooth'?'smooth':'linear';
     const num=(name,text,value,extra='')=>`<label>${text}<input name="${name}" type="number" step=".1" min="0" value="${value}" ${extra}></label>`;
     const where=span.missing?`Its desk (${escape(span.desk)}) is not in this chapter now, so it does not show.`:span.desk?`Belongs to Desk ${escape(span.n)} · ${escape(span.label)}, on screen ${r1(span.lo)}–${r1(span.hi)} s. It follows that desk if you reorder the desks.`:`The chapter runs 0–${r1(span.hi)} s.`;
     return `<div class="prop-timing" data-prop-timing><h5>On screen <small>${escape(timeText(s,span))}</small></h5>
       <div class="director-grid">${num('pp-t-from','Appears at (s)',r2(s.from))}${num('pp-t-to','Leaves at (s)',r2(s.to))}${num('pp-t-fin','Fade in (s)',s.fadeIn,'max="30"')}${num('pp-t-fout','Fade out (s)',s.fadeOut,'max="30"')}</div>
+      <div class="director-grid prop-curve"><label>Curve<select name="pp-t-curve" title="How the fades run: Cut (no fade), Linear (a straight ramp) or Smooth (eased in and out)"><option value="cut" ${curve==='cut'?'selected':''}>Cut (0 s)</option><option value="linear" ${curve==='linear'?'selected':''}>Linear</option><option value="smooth" ${curve==='smooth'?'selected':''}>Smooth (ease in-out)</option></select></label>
+      <span class="prop-fade-presets" role="group" aria-label="Fade length">${[['fast','Fast',.2],['medium','Medium',.5],['slow','Slow',1]].map(([k,l,v])=>`<button data-action="pp-t-${k}" title="Fade in and out ${v} s" aria-pressed="${s.fadeIn===v&&s.fadeOut===v}">${l} ${v} s</button>`).join('')}</span></div>
+      ${s.film?`<p class="director-hint">The film fades it itself (${r1(s.film.from)}–${r1(s.film.to)} s${s.film.fadeIn?`, in ${r1(s.film.fadeIn)} s`:''}${s.film.fadeOut?`, out ${r1(s.film.fadeOut)} s`:''}): retimed, it keeps those fades; it can appear later and leave sooner than that, not outside it.</p>`:''}
       <div class="director-actions"><button data-action="pp-t-from-now" title="It appears at the playhead">Appear at playhead</button><button data-action="pp-t-to-now" title="It leaves at the playhead">Leave at playhead</button><button data-action="pp-t-all" ${s.timed?'':'disabled'} title="On screen the whole time again, no fades">Whole time</button></div>
       <p class="director-hint">${where} You can also drag the ends of its bar in the timeline's Props lane.</p></div>`;
   }
   function setTiming(change){
     if(!sel)return;if(sel.blocked){status(`${CANT_SAVE}: ${sel.blocked}`,true);return;}
     const span=selSpan();if(span.missing){status('Its desk is not in this chapter now: nothing to time.',true);return;}
-    const s=onScreen(editOfKey(sel.key),span),next={from:s.from,to:s.to,fadeIn:s.fadeIn,fadeOut:s.fadeOut,...change};
-    if('from' in change)next.from=Math.max(span.lo,Math.min(change.from,next.to-.1));
-    if('to' in change)next.to=Math.min(span.hi,Math.max(change.to,next.from+.1));
+    const s=screenOf(editOfKey(sel.key),sel.target,span),lo=s.film?Math.max(span.lo,s.film.from):span.lo,hi=s.film?Math.min(span.hi,s.film.to):span.hi,next={from:s.from,to:s.to,fadeIn:s.fadeIn,fadeOut:s.fadeOut,ease:s.ease,...change};
+    if('from' in change)next.from=Math.max(lo,Math.min(change.from,next.to-.1));
+    if('to' in change)next.to=Math.min(hi,Math.max(change.to,next.from+.1));
     if(next.to-next.from<.1){status('It needs at least a tenth of a second on screen.',true);rerender();return;}
     const len=next.to-next.from;next.fadeIn=Math.min(next.fadeIn,len);next.fadeOut=Math.min(next.fadeOut,len);
     writeShow(sel,next,span,selName());
@@ -656,6 +670,12 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     if(!Number.isFinite(v)||v<0)throw Error('Enter seconds, 0 or more.');
     if(name==='pp-t-from')setTiming({from:v});else if(name==='pp-t-to')setTiming({to:v});
     else if(name==='pp-t-fin')setTiming({fadeIn:Math.min(30,v)});else if(name==='pp-t-fout')setTiming({fadeOut:Math.min(30,v)});
+  }
+  // Curve: Cut = no fades; Linear / Smooth keep the fades (Medium 0.5 s each when there were none).
+  function setCurve(curve){
+    const s=screenOf(editOfKey(sel.key),sel.target,selSpan()),none=!(s.fadeIn||s.fadeOut);
+    if(curve==='cut')setTiming({fadeIn:0,fadeOut:0,ease:null});
+    else setTiming({ease:curve==='smooth'?'smooth':null,...(none?{fadeIn:.5,fadeOut:.5}:{})});
   }
   function panel(){
     if(!three()?.scene)return '<h3>Props</h3><p class="director-hint">Loading the chapter…</p>';
@@ -720,6 +740,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     if(name==='pp-t-from-now'){setTiming({from:r2(time())});return;}
     if(name==='pp-t-to-now'){setTiming({to:r2(time())});return;}
     if(name==='pp-t-all'){setTiming({from:-1,to:END,fadeIn:0,fadeOut:0});return;}
+    if(name==='pp-t-fast'||name==='pp-t-medium'||name==='pp-t-slow'){const v={'pp-t-fast':.2,'pp-t-medium':.5,'pp-t-slow':1}[name];setTiming({fadeIn:v,fadeOut:v});return;}
     if(name==='pp-unsel'){setMembers(members().filter(m=>m.key!==arg));return;}
     if(name==='pp-clear'){deselect();onSelect();status('Selection cleared.');return;}
     if(name==='pp-reset-all'){resetAll();return;}
@@ -751,7 +772,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const stowed=(row,span)=>{if(!tiltAt||!span.desk||row.e?.show)return null;
       const text=`${row.id||''} ${row.name||''} ${row.target?.match||''} ${row.target?.path||''}`.replace(/\\/g,'');
       try{return stowWindow(text,span.desk,tiltAt,span.lo,span.hi);}catch{return null;}};
-    const push=(span,row)=>{const s=onScreen(row.e,span),nat=stowed(row,span),from=nat?nat.from:s.from,to=nat?nat.to:s.to;out.push({...row,id:row.key+'|'+(span.n||''),span,start:from,end:Math.max(from+.01,to),timed:s.timed,fadeIn:s.fadeIn,fadeOut:s.fadeOut,stowed:!!nat});};
+    const push=(span,row)=>{const s=screenOf(row.e,row.target,span),nat=s.film?null:stowed(row,span),from=nat?nat.from:s.from,to=nat?nat.to:s.to;out.push({...row,id:row.key+'|'+(span.n||''),span,start:from,end:Math.max(from+.01,to),timed:s.timed||!!s.film,fadeIn:s.fadeIn,fadeOut:s.fadeOut,ease:s.ease,film:s.film||null,stowed:!!nat});};
     const spans=vs.length?vs.map(v=>({t0:v.start,lo:v.from,hi:Math.min(T,v.to),n:v.n,label:v.label,desk:v.preset})):[chapter];
     for(const span of spans){
       const rows=new Map(),known=seen.get(seenKey(span.desk));
@@ -773,7 +794,9 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       if(it.ghost)return `<button type="button" class="prop-bar ghost" data-action="pp-lane" data-index="${i}" style="left:${x}%;width:${w}%;top:${top}px;height:${ROW-2}px" title="Go to this desk: its items are listed here once it has been on stage">${escape(it.name)}</button>`;
       const hiddenBar=e?.hide===true,added=isAddEdit(e),fi=it.fadeIn>0?Math.min(100,it.fadeIn/(it.end-it.start)*100):0,fo=it.fadeOut>0?Math.min(100,it.fadeOut/(it.end-it.start)*100):0;
       const tip=`${it.name}${it.span.desk?` · Desk ${it.span.n} · ${it.span.label}`:''} · on screen ${timeText({from:it.start,to:it.end},it.span)}${e?' · '+describePropEdit(e):' · as the film has it'}${hiddenBar?' · hidden: click, then untick Hide to bring it back':''}${it.stowed?` · the desk puts it away once its tilt crosses ${EASEL_ANGLE}°`:''} · click to select, drag an end to set when it appears or leaves${it.timed?', drag the middle to move it':''}`;
-      return `<button type="button" class="prop-bar ${e?'prop-chip':'film'} ${hiddenBar?'prop-hidden':''} ${added?'prop-added':''} ${it.timed?'timed':''} ${isSel(it.key)?'selected':''}" data-action="pp-lane" data-index="${i}" style="left:${x}%;width:${w}%;top:${top}px;height:${ROW-2}px;--fade-in:${fi}%;--fade-out:${fo}%" title="${escape(tip)}">${added?'<b aria-label="added">+</b>':''}${escape(it.name)}</button>`;}).join('');
+      // (the fade ramps: drawn on the bar, a small handle at the inner end of each drags its length)
+      const ramps=`<i class="prop-ramp in ${it.ease==='smooth'?'smooth':''}" style="width:${fi}%"></i><i class="prop-ramp out ${it.ease==='smooth'?'smooth':''}" style="width:${fo}%"></i><i class="prop-fade-h" data-fade="in" style="left:${fi}%" title="Drag: fade in ${r1(it.fadeIn)} s"></i><i class="prop-fade-h" data-fade="out" style="left:${100-fo}%" title="Drag: fade out ${r1(it.fadeOut)} s"></i>`;
+      return `<button type="button" class="prop-bar ${e?'prop-chip':'film'} ${hiddenBar?'prop-hidden':''} ${added?'prop-added':''} ${it.timed?'timed':''} ${isSel(it.key)?'selected':''}" data-action="pp-lane" data-index="${i}" data-prop-key="${escape(it.key)}" style="left:${x}%;width:${w}%;top:${top}px;height:${ROW-2}px;--fade-in:${fi}%;--fade-out:${fo}%" title="${escape(tip)}">${ramps}${added?'<b aria-label="added">+</b>':''}${escape(it.name)}</button>`;}).join('');
   }
   const laneHeight=()=>Math.min(MAX_ROWS,Math.max(2,laneRows))*ROW+4;
   // A click on a bar: the playhead goes into its seconds when it is outside them (so its desk comes on stage), then
@@ -791,12 +814,19 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   document.addEventListener('pointerdown',ev=>{
     const bar=ev.target.closest?.('.prop-bar');if(!bar||bar.classList.contains('ghost')||ev.button!==0||!editing())return;
     const it=laneList[Number(bar.dataset.index)],T=seconds(),r=bar.getBoundingClientRect(),box=bar.parentElement.getBoundingClientRect();if(!it||!T||!box.width)return;
-    const grip=Math.min(8,r.width/3),edge=ev.clientX-r.left<grip?'in':r.right-ev.clientX<grip?'out':'move';
-    barDrag={it,bar,edge,x:ev.clientX,width:box.width,T,from:[it.start,it.end],now:null};
+    const handle=ev.target.closest?.('.prop-fade-h'),grip=Math.min(8,r.width/3),edge=handle?'f'+handle.dataset.fade:ev.clientX-r.left<grip?'in':r.right-ev.clientX<grip?'out':'move';
+    if(handle){ev.preventDefault();ev.stopPropagation();}
+    barDrag={it,bar,edge,x:ev.clientX,width:box.width,T,from:[it.start,it.end],fades:[it.fadeIn,it.fadeOut],now:null};
   },true);
   document.addEventListener('pointermove',ev=>{
     const d=barDrag;if(!d||(!d.now&&Math.abs(ev.clientX-d.x)<3))return;
-    const dt=(ev.clientX-d.x)/d.width*d.T,snap=v=>Math.round(v*10)/10,{lo,hi}=d.it.span;let [a,b]=d.from;
+    const dt=(ev.clientX-d.x)/d.width*d.T,snap=v=>Math.round(v*10)/10,lo=Math.max(d.it.span.lo,d.it.film?.from??-Infinity),hi=Math.min(d.it.span.hi,d.it.film?.to??Infinity);let [a,b]=d.from;
+    if(d.edge==='fin'||d.edge==='fout'){
+      const len=b-a,k=d.edge==='fin'?0:1,v=Math.max(0,Math.min(len,Math.round((d.fades[k]+(k?-dt:dt))*20)/20));
+      d.now=[a,b];d.fade=[k?d.fades[0]:v,k?v:d.fades[1]];d.bar.style.setProperty(k?'--fade-out':'--fade-in',v/len*100+'%');
+      const ramp=d.bar.querySelector(`.prop-ramp.${k?'out':'in'}`);if(ramp)ramp.style.width=v/len*100+'%';const h=d.bar.querySelector(`.prop-fade-h[data-fade="${k?'out':'in'}"]`);if(h)h.style.left=(k?100-v/len*100:v/len*100)+'%';
+      status(`${d.it.name}: fade ${k?'out':'in'} ${r2(v)} s${d.it.ease==='smooth'?' (smooth)':''}.`);return;
+    }
     if(d.edge==='in')a=Math.max(lo,Math.min(b-.2,snap(a+dt)));
     else if(d.edge==='out')b=Math.min(hi,Math.max(a+.2,snap(b+dt)));
     else if(d.it.timed){const len=b-a;a=Math.max(lo,Math.min(hi-len,snap(a+dt)));b=a+len;}
@@ -806,8 +836,8 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   },true);
   const endBar=()=>{
     const d=barDrag;barDrag=null;if(!d?.now)return;barSuppress=performance.now()+350;
-    const [a,b]=d.now,it=d.it;if(Math.abs(a-d.from[0])<1e-6&&Math.abs(b-d.from[1])<1e-6){rerender();return;}
-    const len=b-a;writeShow(it,{from:a,to:b,fadeIn:Math.min(it.fadeIn,len),fadeOut:Math.min(it.fadeOut,len)},it.span,it.name);
+    const [a,b]=d.now,it=d.it,fades=d.fade||d.fades;if(Math.abs(a-d.from[0])<1e-6&&Math.abs(b-d.from[1])<1e-6&&fades[0]===d.fades[0]&&fades[1]===d.fades[1]){rerender();return;}
+    const len=b-a;writeShow(it,{from:a,to:b,fadeIn:Math.min(fades[0],len),fadeOut:Math.min(fades[1],len),ease:it.ease},it.span,it.name);
   };
   document.addEventListener('pointerup',endBar,true);document.addEventListener('pointercancel',()=>{if(barDrag?.now)rerender();barDrag=null;},true);
   // After film-fx (re)installs: objects may be new; folded-in props keep their Studio place on the stage.

@@ -19,9 +19,11 @@
 // A desk of its own (chapters the film renders as sub-shots, the finale): desk:'<preset id>' keeps an edit to the sub-shot
 //   whose desk is that model ('office'), wherever it stands in the order and each time it appears; without it the edit
 //   holds for every desk of the chapter. film-edits.mjs skips an edit whose desk is not the shot's preset.
-// On screen for part of the time: show:{from, to, fadeIn?, fadeOut?} in seconds: chapter seconds, or for an edit with a
+// On screen for part of the time: show:{from, to, fadeIn?, fadeOut?, ease?} in seconds: chapter seconds, or for an edit with a
 //   desk, seconds after that desk's sub-shot begins (its renderRange start), so the timing follows the desk when the
-//   desks are reordered. Outside from…to the prop is not drawn; fadeIn / fadeOut ramp its opacity inside the window.
+//   desks are reordered. Outside from…to the prop is not drawn; fadeIn / fadeOut ramp its opacity inside the window,
+//   in a straight line, or with ease:'smooth' eased in and out (smoothstep: an animation program's ease in-out). Absent
+//   ease is linear, so every entry written before it draws exactly as it did.
 // Nothing here touches Studio: "Make permanent in Studio" (scene-prop-editor.mjs) writes Studio's room state
 // through the studio server, only when Vico confirms it.
 const finite=v=>typeof v==='number'&&Number.isFinite(v);
@@ -35,19 +37,62 @@ const zero=v=>!v||v.every(n=>Math.abs(n)<1e-4),one=v=>!v||v.every(n=>Math.abs(n-
 export const isNoop=e=>zero(e.position)&&zero(e.rotation)&&one(e.scale)&&e.hide===undefined&&!e.show;
 const ASSET=/^[a-z0-9][a-z0-9._-]{0,119}$/i,ADD_ID=/^[a-z0-9]{1,16}$/i,DESK=/^[a-z0-9-]{1,40}$/;
 const r2=v=>Math.round(v*100)/100;
-// {from, to, fadeIn?, fadeOut?}: 0 <= from < to, at least 0.1 s long, fades no longer than the window.
+// {from, to, fadeIn?, fadeOut?, ease?}: 0 <= from < to, at least 0.1 s long, fades no longer than the window; ease only
+// 'smooth' (kept only with a fade to ease).
 export function cleanShow(v){
   if(!v||typeof v!=='object'||!finite(v.from)||!finite(v.to))return undefined;
   const from=Math.max(0,r2(v.from)),to=Math.min(100000,r2(v.to));if(!(to-from>=.1-1e-9))return undefined;
   const out={from,to},fade=x=>finite(x)&&x>0?Math.min(r2(x),r2(to-from)):0,a=fade(v.fadeIn),b=fade(v.fadeOut);
-  if(a>0)out.fadeIn=a;if(b>0)out.fadeOut=b;return out;
+  if(a>0)out.fadeIn=a;if(b>0)out.fadeOut=b;if(v.ease==='smooth'&&(a>0||b>0))out.ease='smooth';return out;
 }
 const cleanDesk=v=>typeof v==='string'&&DESK.test(v)?v:undefined;
 // Opacity (0…1) of a timed prop at `seconds` (film-edits.mjs draws with the same rule); 1 without a window.
 export function showFactor(show,seconds){
   if(!show)return 1;if(seconds<show.from-1e-6||seconds>show.to+1e-6)return 0;
   let f=1;if(show.fadeIn>0)f=Math.min(f,(seconds-show.from)/show.fadeIn);if(show.fadeOut>0)f=Math.min(f,(show.to-seconds)/show.fadeOut);
-  return Math.max(0,Math.min(1,f));
+  return showEase(show,Math.max(0,Math.min(1,f)));
+}
+// The fade's curve on a linear 0…1 ramp (film-edits.mjs uses the same): smooth = smoothstep (half way at its midpoint,
+// flat at both ends), else as it is.
+export const showEase=(show,f)=>show?.ease==='smooth'?f*f*(3-2*f):f;
+// ---- the film's own fades. A hand-made film edit can fade an item with a keyed opacity (create: the drafting kit
+// [[7.0,0],[7.4,1],[16.9,1],[18.7,0]]): the item is on screen 7.0–18.7 s, fading in 0.4 s and out 1.8 s. The Props lane
+// draws and retimes that window (a retime keeps those fades): {from, to, fadeIn, fadeOut} in chapter seconds within
+// lo…hi, or null (no keyed opacity, or not one that rises from 0 and/or falls to 0 once).
+export function keyedFadeWindow(keys,lo=0,hi=Infinity){
+  if(!Array.isArray(keys)||keys.length<2||!keys.every(k=>Array.isArray(k)&&k.length===2&&finite(k[0])&&finite(k[1])))return null;
+  const top=Math.max(...keys.map(k=>k[1]));if(!(top>0))return null;
+  const peak=keys.findIndex(k=>k[1]>=top-1e-6),last=keys.length-1-[...keys].reverse().findIndex(k=>k[1]>=top-1e-6);
+  // up to the first peak it only rises, after the last one it only falls, between it stays (a fade, not a flicker)
+  for(let i=1;i<=peak;i++)if(keys[i][1]<keys[i-1][1]-1e-6)return null;for(let i=last+1;i<keys.length;i++)if(keys[i][1]>keys[i-1][1]+1e-6)return null;
+  for(let i=peak;i<=last;i++)if(keys[i][1]<top-1e-6)return null;
+  let from=lo,fadeIn=0,to=hi,fadeOut=0;
+  if(keys[0][1]<=1e-6&&peak>0){let z=0;while(z+1<peak&&keys[z+1][1]<=1e-6)z++;from=keys[z][0];fadeIn=keys[peak][0]-from;}
+  if(keys[keys.length-1][1]<=1e-6&&last<keys.length-1){let z=keys.length-1;while(z-1>last&&keys[z-1][1]<=1e-6)z--;to=keys[z][0];fadeOut=to-keys[last][0];}
+  if(fadeIn<=0&&fadeOut<=0)return null;
+  from=Math.max(lo,from);to=Math.min(hi,to);if(!(to-from>=.1-1e-9))return null;
+  return {from:r2(from),to:r2(to),fadeIn:r2(Math.max(0,fadeIn)),fadeOut:r2(Math.max(0,fadeOut))};
+}
+// An item's time on screen as the stage draws it (s: the Director's window in chapter seconds {from, to, fadeIn, fadeOut,
+// ease}, nat: the film's own fade window or null, timed: the Director gave it a window): within the film's window, a
+// side the Director left open keeps the film's fade. {..., timed, film: nat}.
+export function combineFilmFade(s,nat,timed){
+  if(!nat)return s;if(!timed)return {...nat,ease:null,timed:false,film:nat};
+  const from=Math.max(s.from,nat.from),to=Math.min(s.to,nat.to);
+  return {from,to:Math.max(from+.1,to),fadeIn:s.from>nat.from+1e-3?s.fadeIn:Math.max(s.fadeIn,nat.fadeIn),fadeOut:s.to<nat.to-1e-3?s.fadeOut:Math.max(s.fadeOut,nat.fadeOut),ease:s.ease,timed:true,film:nat};
+}
+// The Director's window (chapter seconds) for an item the film fades, from the one asked for (next): a side left where
+// the film has it stays open to lo / hi (the film's keyed opacity fades it there; a second ramp on top would double
+// it); a moved side gets the fade asked for (a retime keeps the fade the bar had).
+export function showOverFilm(nat,lo,hi,next){
+  const fromMoved=Math.abs(next.from-nat.from)>1e-3||Math.abs((next.fadeIn||0)-nat.fadeIn)>1e-3,toMoved=Math.abs(next.to-nat.to)>1e-3||Math.abs((next.fadeOut||0)-nat.fadeOut)>1e-3;
+  return {...next,from:fromMoved?next.from:lo,fadeIn:fromMoved?next.fadeIn:0,to:toMoved?next.to:hi,fadeOut:toMoved?next.fadeOut:0};
+}
+// The keyed opacity a film's hand-made edit gives the item `match` (the same match string), if any.
+export function filmFadeKeys(film,match){
+  if(typeof match!=='string')return null;
+  for(const e of film?.sceneEdits||[])if(!e?.director&&e.match===match&&Array.isArray(e.opacity)&&Array.isArray(e.opacity[0]))return e.opacity;
+  return null;
 }
 export const isAddEdit=e=>!!e?.add;
 // The featured desk's surfaces an added prop can ride ('desk' = the desktop), and how the Director names them.
