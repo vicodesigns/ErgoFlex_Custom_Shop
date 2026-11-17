@@ -1,0 +1,2650 @@
+[
+  {
+    "id": "rise",
+    "frames": [
+      {
+        "t": 0,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ]
+        ],
+        "shown": [
+          "people-maya-sit-type"
+        ],
+        "objects": [
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "people-maya-stand-coffee",
+            "visible": false,
+            "hash": "26d86b0e804f79283436dca2ac7937d931945296203d590b522619b0984f5d04"
+          },
+          {
+            "id": "people-maya-sit-coffee",
+            "key": "people-maya-sit-coffee",
+            "visible": false,
+            "hash": "329b7753cae28fb321369cc022d91bd7b6005b47ecbe16c61a5d21ad9aa5b13a"
+          },
+          {
+            "id": "people-maya-sit-coffee-30",
+            "key": "people-maya-sit-coffee-30",
+            "visible": false,
+            "hash": "cc60dd71e29602c904236ab7629fa451a983ec11926a8ab012166886ade6513f"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": true,
+            "hash": "007ccb355270a553026cd84b28bf6f86f7a6acb380946414b5ef77cddb513453"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "maya-night-stand",
+            "visible": false,
+            "hash": "3eb3d45404a7ea7b9bc45ffa8b9a77dbb95fc2cfd0a9d94e647b8a82329d47f2"
+          },
+          {
+            "id": "people-grace-sit-read",
+            "key": "people-grace-sit-read",
+            "visible": false,
+            "hash": "4a110f9d618838c697ba65a15fa0f8cd9a11aa466917349aecdfe9486a9c83db"
+          },
+          {
+            "id": "people-grace-sit-chat",
+            "key": "people-grace-sit-chat",
+            "visible": false,
+            "hash": "0b1255730de76d7e8257b349ccb19789eb65d14a4ef047e4c072d08cbfc3ce12"
+          },
+          {
+            "id": "people-maya-stand-talk",
+            "key": "people-maya-stand-talk",
+            "visible": false,
+            "hash": "6e31bd5e7225e81857763b8bec6a48116cef156554d8251a3c3545f7bc7df900"
+          },
+          {
+            "id": "people-noah-stand-drink",
+            "key": "people-noah-stand-drink",
+            "visible": false,
+            "hash": "d2ca2fb6eb4a5c90b477c842354a29088ecc49504800f1dd3f0b8a06c30acf4a"
+          },
+          {
+            "id": "people-zoe-stand-drink",
+            "key": "people-zoe-stand-drink",
+            "visible": false,
+            "hash": "4e950840549a734ce41bf6ac1404a89543e8eefdbf64b5c9a1cc9047b376fef9"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": false,
+            "hash": "77c6a22bf59467fac482061dd4f39a59e7aabb978b550318df79ad37b368b4d3"
+          },
+          {
+            "id": "people-maya-stand-wait",
+            "key": "maya-waits",
+            "visible": false,
+            "hash": "000a241b9f140279c8be4a39b4c934842ef80e297aa12ba5bf4cd86fa7ec9036"
+          }
+        ]
+      },
+      {
+        "t": 3.4,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ]
+        ],
+        "shown": [
+          "people-maya-sit-type"
+        ],
+        "objects": [
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "people-maya-stand-coffee",
+            "visible": false,
+            "hash": "26d86b0e804f79283436dca2ac7937d931945296203d590b522619b0984f5d04"
+          },
+          {
+            "id": "people-maya-sit-coffee",
+            "key": "people-maya-sit-coffee",
+            "visible": false,
+            "hash": "329b7753cae28fb321369cc022d91bd7b6005b47ecbe16c61a5d21ad9aa5b13a"
+          },
+          {
+            "id": "people-maya-sit-coffee-30",
+            "key": "people-maya-sit-coffee-30",
+            "visible": false,
+            "hash": "cc60dd71e29602c904236ab7629fa451a983ec11926a8ab012166886ade6513f"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": true,
+            "hash": "2a5047f206a359121204a90d65a6540e0f184aa3ae794fa973cd10591d4ebcc6"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "maya-night-stand",
+            "visible": false,
+            "hash": "3eb3d45404a7ea7b9bc45ffa8b9a77dbb95fc2cfd0a9d94e647b8a82329d47f2"
+          },
+          {
+            "id": "people-grace-sit-read",
+            "key": "people-grace-sit-read",
+            "visible": false,
+            "hash": "4a110f9d618838c697ba65a15fa0f8cd9a11aa466917349aecdfe9486a9c83db"
+          },
+          {
+            "id": "people-grace-sit-chat",
+            "key": "people-grace-sit-chat",
+            "visible": false,
+            "hash": "0b1255730de76d7e8257b349ccb19789eb65d14a4ef047e4c072d08cbfc3ce12"
+          },
+          {
+            "id": "people-maya-stand-talk",
+            "key": "people-maya-stand-talk",
+            "visible": false,
+            "hash": "6e31bd5e7225e81857763b8bec6a48116cef156554d8251a3c3545f7bc7df900"
+          },
+          {
+            "id": "people-noah-stand-drink",
+            "key": "people-noah-stand-drink",
+            "visible": false,
+            "hash": "d2ca2fb6eb4a5c90b477c842354a29088ecc49504800f1dd3f0b8a06c30acf4a"
+          },
+          {
+            "id": "people-zoe-stand-drink",
+            "key": "people-zoe-stand-drink",
+            "visible": false,
+            "hash": "4e950840549a734ce41bf6ac1404a89543e8eefdbf64b5c9a1cc9047b376fef9"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": false,
+            "hash": "77c6a22bf59467fac482061dd4f39a59e7aabb978b550318df79ad37b368b4d3"
+          },
+          {
+            "id": "people-maya-stand-wait",
+            "key": "maya-waits",
+            "visible": false,
+            "hash": "000a241b9f140279c8be4a39b4c934842ef80e297aa12ba5bf4cd86fa7ec9036"
+          }
+        ]
+      },
+      {
+        "t": 4,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ]
+        ],
+        "shown": [
+          "people-maya-sit-type"
+        ],
+        "objects": [
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "people-maya-stand-coffee",
+            "visible": false,
+            "hash": "26d86b0e804f79283436dca2ac7937d931945296203d590b522619b0984f5d04"
+          },
+          {
+            "id": "people-maya-sit-coffee",
+            "key": "people-maya-sit-coffee",
+            "visible": false,
+            "hash": "329b7753cae28fb321369cc022d91bd7b6005b47ecbe16c61a5d21ad9aa5b13a"
+          },
+          {
+            "id": "people-maya-sit-coffee-30",
+            "key": "people-maya-sit-coffee-30",
+            "visible": false,
+            "hash": "cc60dd71e29602c904236ab7629fa451a983ec11926a8ab012166886ade6513f"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": true,
+            "hash": "63e8c688d8da43b577ffcbf73f5591be0fcd4e1b9353b681b8793d48b4dcf377"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "maya-night-stand",
+            "visible": false,
+            "hash": "3eb3d45404a7ea7b9bc45ffa8b9a77dbb95fc2cfd0a9d94e647b8a82329d47f2"
+          },
+          {
+            "id": "people-grace-sit-read",
+            "key": "people-grace-sit-read",
+            "visible": false,
+            "hash": "4a110f9d618838c697ba65a15fa0f8cd9a11aa466917349aecdfe9486a9c83db"
+          },
+          {
+            "id": "people-grace-sit-chat",
+            "key": "people-grace-sit-chat",
+            "visible": false,
+            "hash": "0b1255730de76d7e8257b349ccb19789eb65d14a4ef047e4c072d08cbfc3ce12"
+          },
+          {
+            "id": "people-maya-stand-talk",
+            "key": "people-maya-stand-talk",
+            "visible": false,
+            "hash": "6e31bd5e7225e81857763b8bec6a48116cef156554d8251a3c3545f7bc7df900"
+          },
+          {
+            "id": "people-noah-stand-drink",
+            "key": "people-noah-stand-drink",
+            "visible": false,
+            "hash": "d2ca2fb6eb4a5c90b477c842354a29088ecc49504800f1dd3f0b8a06c30acf4a"
+          },
+          {
+            "id": "people-zoe-stand-drink",
+            "key": "people-zoe-stand-drink",
+            "visible": false,
+            "hash": "4e950840549a734ce41bf6ac1404a89543e8eefdbf64b5c9a1cc9047b376fef9"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": false,
+            "hash": "77c6a22bf59467fac482061dd4f39a59e7aabb978b550318df79ad37b368b4d3"
+          },
+          {
+            "id": "people-maya-stand-wait",
+            "key": "maya-waits",
+            "visible": false,
+            "hash": "56992fc8558856ec3a3f21c3b3616378743f01814e8116d976053361181b1adc"
+          }
+        ]
+      },
+      {
+        "t": 5.2,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ]
+        ],
+        "shown": [
+          "people-maya-stand-type-41"
+        ],
+        "objects": [
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "people-maya-stand-coffee",
+            "visible": false,
+            "hash": "26d86b0e804f79283436dca2ac7937d931945296203d590b522619b0984f5d04"
+          },
+          {
+            "id": "people-maya-sit-coffee",
+            "key": "people-maya-sit-coffee",
+            "visible": false,
+            "hash": "329b7753cae28fb321369cc022d91bd7b6005b47ecbe16c61a5d21ad9aa5b13a"
+          },
+          {
+            "id": "people-maya-sit-coffee-30",
+            "key": "people-maya-sit-coffee-30",
+            "visible": false,
+            "hash": "cc60dd71e29602c904236ab7629fa451a983ec11926a8ab012166886ade6513f"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": false,
+            "hash": "0e00fdd209b51a44d927479cc9808c29615db71a397c624f30170bf565aedb01"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "maya-night-stand",
+            "visible": false,
+            "hash": "3eb3d45404a7ea7b9bc45ffa8b9a77dbb95fc2cfd0a9d94e647b8a82329d47f2"
+          },
+          {
+            "id": "people-grace-sit-read",
+            "key": "people-grace-sit-read",
+            "visible": false,
+            "hash": "4a110f9d618838c697ba65a15fa0f8cd9a11aa466917349aecdfe9486a9c83db"
+          },
+          {
+            "id": "people-grace-sit-chat",
+            "key": "people-grace-sit-chat",
+            "visible": false,
+            "hash": "0b1255730de76d7e8257b349ccb19789eb65d14a4ef047e4c072d08cbfc3ce12"
+          },
+          {
+            "id": "people-maya-stand-talk",
+            "key": "people-maya-stand-talk",
+            "visible": false,
+            "hash": "6e31bd5e7225e81857763b8bec6a48116cef156554d8251a3c3545f7bc7df900"
+          },
+          {
+            "id": "people-noah-stand-drink",
+            "key": "people-noah-stand-drink",
+            "visible": false,
+            "hash": "d2ca2fb6eb4a5c90b477c842354a29088ecc49504800f1dd3f0b8a06c30acf4a"
+          },
+          {
+            "id": "people-zoe-stand-drink",
+            "key": "people-zoe-stand-drink",
+            "visible": false,
+            "hash": "4e950840549a734ce41bf6ac1404a89543e8eefdbf64b5c9a1cc9047b376fef9"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": true,
+            "hash": "5abd481eb004dd1e4d7115bc6b94ed4b617e5932b29e4d3b630ae089834463fc"
+          },
+          {
+            "id": "people-maya-stand-wait",
+            "key": "maya-waits",
+            "visible": false,
+            "hash": "b43e647ee698a4ea6c16d481b9f2f9264e791fad349eb569ff1655bed7fa68a2"
+          }
+        ]
+      },
+      {
+        "t": 6,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ]
+        ],
+        "shown": [
+          "people-maya-stand-type-41"
+        ],
+        "objects": [
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "people-maya-stand-coffee",
+            "visible": false,
+            "hash": "26d86b0e804f79283436dca2ac7937d931945296203d590b522619b0984f5d04"
+          },
+          {
+            "id": "people-maya-sit-coffee",
+            "key": "people-maya-sit-coffee",
+            "visible": false,
+            "hash": "329b7753cae28fb321369cc022d91bd7b6005b47ecbe16c61a5d21ad9aa5b13a"
+          },
+          {
+            "id": "people-maya-sit-coffee-30",
+            "key": "people-maya-sit-coffee-30",
+            "visible": false,
+            "hash": "cc60dd71e29602c904236ab7629fa451a983ec11926a8ab012166886ade6513f"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": false,
+            "hash": "0e00fdd209b51a44d927479cc9808c29615db71a397c624f30170bf565aedb01"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "maya-night-stand",
+            "visible": false,
+            "hash": "3eb3d45404a7ea7b9bc45ffa8b9a77dbb95fc2cfd0a9d94e647b8a82329d47f2"
+          },
+          {
+            "id": "people-grace-sit-read",
+            "key": "people-grace-sit-read",
+            "visible": false,
+            "hash": "4a110f9d618838c697ba65a15fa0f8cd9a11aa466917349aecdfe9486a9c83db"
+          },
+          {
+            "id": "people-grace-sit-chat",
+            "key": "people-grace-sit-chat",
+            "visible": false,
+            "hash": "0b1255730de76d7e8257b349ccb19789eb65d14a4ef047e4c072d08cbfc3ce12"
+          },
+          {
+            "id": "people-maya-stand-talk",
+            "key": "people-maya-stand-talk",
+            "visible": false,
+            "hash": "6e31bd5e7225e81857763b8bec6a48116cef156554d8251a3c3545f7bc7df900"
+          },
+          {
+            "id": "people-noah-stand-drink",
+            "key": "people-noah-stand-drink",
+            "visible": false,
+            "hash": "d2ca2fb6eb4a5c90b477c842354a29088ecc49504800f1dd3f0b8a06c30acf4a"
+          },
+          {
+            "id": "people-zoe-stand-drink",
+            "key": "people-zoe-stand-drink",
+            "visible": false,
+            "hash": "4e950840549a734ce41bf6ac1404a89543e8eefdbf64b5c9a1cc9047b376fef9"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": true,
+            "hash": "7107f06f71b90e841a905466f95cc454198c0027c8cd288369d672bacbdef19f"
+          },
+          {
+            "id": "people-maya-stand-wait",
+            "key": "maya-waits",
+            "visible": false,
+            "hash": "b43e647ee698a4ea6c16d481b9f2f9264e791fad349eb569ff1655bed7fa68a2"
+          }
+        ]
+      },
+      {
+        "t": 7.6,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ]
+        ],
+        "shown": [
+          "people-maya-stand-type-41"
+        ],
+        "objects": [
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "people-maya-stand-coffee",
+            "visible": false,
+            "hash": "26d86b0e804f79283436dca2ac7937d931945296203d590b522619b0984f5d04"
+          },
+          {
+            "id": "people-maya-sit-coffee",
+            "key": "people-maya-sit-coffee",
+            "visible": false,
+            "hash": "329b7753cae28fb321369cc022d91bd7b6005b47ecbe16c61a5d21ad9aa5b13a"
+          },
+          {
+            "id": "people-maya-sit-coffee-30",
+            "key": "people-maya-sit-coffee-30",
+            "visible": false,
+            "hash": "cc60dd71e29602c904236ab7629fa451a983ec11926a8ab012166886ade6513f"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": false,
+            "hash": "0e00fdd209b51a44d927479cc9808c29615db71a397c624f30170bf565aedb01"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "maya-night-stand",
+            "visible": false,
+            "hash": "3eb3d45404a7ea7b9bc45ffa8b9a77dbb95fc2cfd0a9d94e647b8a82329d47f2"
+          },
+          {
+            "id": "people-grace-sit-read",
+            "key": "people-grace-sit-read",
+            "visible": false,
+            "hash": "4a110f9d618838c697ba65a15fa0f8cd9a11aa466917349aecdfe9486a9c83db"
+          },
+          {
+            "id": "people-grace-sit-chat",
+            "key": "people-grace-sit-chat",
+            "visible": false,
+            "hash": "0b1255730de76d7e8257b349ccb19789eb65d14a4ef047e4c072d08cbfc3ce12"
+          },
+          {
+            "id": "people-maya-stand-talk",
+            "key": "people-maya-stand-talk",
+            "visible": false,
+            "hash": "6e31bd5e7225e81857763b8bec6a48116cef156554d8251a3c3545f7bc7df900"
+          },
+          {
+            "id": "people-noah-stand-drink",
+            "key": "people-noah-stand-drink",
+            "visible": false,
+            "hash": "d2ca2fb6eb4a5c90b477c842354a29088ecc49504800f1dd3f0b8a06c30acf4a"
+          },
+          {
+            "id": "people-zoe-stand-drink",
+            "key": "people-zoe-stand-drink",
+            "visible": false,
+            "hash": "4e950840549a734ce41bf6ac1404a89543e8eefdbf64b5c9a1cc9047b376fef9"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": true,
+            "hash": "de4862403d39451a33be2201413be782860750708d36f835e630bad3ab4cceb8"
+          },
+          {
+            "id": "people-maya-stand-wait",
+            "key": "maya-waits",
+            "visible": false,
+            "hash": "000a241b9f140279c8be4a39b4c934842ef80e297aa12ba5bf4cd86fa7ec9036"
+          }
+        ]
+      },
+      {
+        "t": 8,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ]
+        ],
+        "shown": [
+          "people-maya-stand-type-41"
+        ],
+        "objects": [
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "people-maya-stand-coffee",
+            "visible": false,
+            "hash": "26d86b0e804f79283436dca2ac7937d931945296203d590b522619b0984f5d04"
+          },
+          {
+            "id": "people-maya-sit-coffee",
+            "key": "people-maya-sit-coffee",
+            "visible": false,
+            "hash": "329b7753cae28fb321369cc022d91bd7b6005b47ecbe16c61a5d21ad9aa5b13a"
+          },
+          {
+            "id": "people-maya-sit-coffee-30",
+            "key": "people-maya-sit-coffee-30",
+            "visible": false,
+            "hash": "cc60dd71e29602c904236ab7629fa451a983ec11926a8ab012166886ade6513f"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": false,
+            "hash": "0e00fdd209b51a44d927479cc9808c29615db71a397c624f30170bf565aedb01"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "maya-night-stand",
+            "visible": false,
+            "hash": "3eb3d45404a7ea7b9bc45ffa8b9a77dbb95fc2cfd0a9d94e647b8a82329d47f2"
+          },
+          {
+            "id": "people-grace-sit-read",
+            "key": "people-grace-sit-read",
+            "visible": false,
+            "hash": "4a110f9d618838c697ba65a15fa0f8cd9a11aa466917349aecdfe9486a9c83db"
+          },
+          {
+            "id": "people-grace-sit-chat",
+            "key": "people-grace-sit-chat",
+            "visible": false,
+            "hash": "0b1255730de76d7e8257b349ccb19789eb65d14a4ef047e4c072d08cbfc3ce12"
+          },
+          {
+            "id": "people-maya-stand-talk",
+            "key": "people-maya-stand-talk",
+            "visible": false,
+            "hash": "6e31bd5e7225e81857763b8bec6a48116cef156554d8251a3c3545f7bc7df900"
+          },
+          {
+            "id": "people-noah-stand-drink",
+            "key": "people-noah-stand-drink",
+            "visible": false,
+            "hash": "d2ca2fb6eb4a5c90b477c842354a29088ecc49504800f1dd3f0b8a06c30acf4a"
+          },
+          {
+            "id": "people-zoe-stand-drink",
+            "key": "people-zoe-stand-drink",
+            "visible": false,
+            "hash": "4e950840549a734ce41bf6ac1404a89543e8eefdbf64b5c9a1cc9047b376fef9"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": true,
+            "hash": "6ee7e39f2df53a303df0f63b5cf8e885c741c42a5f2898510bac8cc8b02c365d"
+          },
+          {
+            "id": "people-maya-stand-wait",
+            "key": "maya-waits",
+            "visible": false,
+            "hash": "000a241b9f140279c8be4a39b4c934842ef80e297aa12ba5bf4cd86fa7ec9036"
+          }
+        ]
+      },
+      {
+        "t": 9.45,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ]
+        ],
+        "shown": [
+          "people-maya-stand-type-41"
+        ],
+        "objects": [
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "people-maya-stand-coffee",
+            "visible": false,
+            "hash": "26d86b0e804f79283436dca2ac7937d931945296203d590b522619b0984f5d04"
+          },
+          {
+            "id": "people-maya-sit-coffee",
+            "key": "people-maya-sit-coffee",
+            "visible": false,
+            "hash": "329b7753cae28fb321369cc022d91bd7b6005b47ecbe16c61a5d21ad9aa5b13a"
+          },
+          {
+            "id": "people-maya-sit-coffee-30",
+            "key": "people-maya-sit-coffee-30",
+            "visible": false,
+            "hash": "cc60dd71e29602c904236ab7629fa451a983ec11926a8ab012166886ade6513f"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": false,
+            "hash": "0e00fdd209b51a44d927479cc9808c29615db71a397c624f30170bf565aedb01"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "maya-night-stand",
+            "visible": false,
+            "hash": "3eb3d45404a7ea7b9bc45ffa8b9a77dbb95fc2cfd0a9d94e647b8a82329d47f2"
+          },
+          {
+            "id": "people-grace-sit-read",
+            "key": "people-grace-sit-read",
+            "visible": false,
+            "hash": "4a110f9d618838c697ba65a15fa0f8cd9a11aa466917349aecdfe9486a9c83db"
+          },
+          {
+            "id": "people-grace-sit-chat",
+            "key": "people-grace-sit-chat",
+            "visible": false,
+            "hash": "0b1255730de76d7e8257b349ccb19789eb65d14a4ef047e4c072d08cbfc3ce12"
+          },
+          {
+            "id": "people-maya-stand-talk",
+            "key": "people-maya-stand-talk",
+            "visible": false,
+            "hash": "6e31bd5e7225e81857763b8bec6a48116cef156554d8251a3c3545f7bc7df900"
+          },
+          {
+            "id": "people-noah-stand-drink",
+            "key": "people-noah-stand-drink",
+            "visible": false,
+            "hash": "d2ca2fb6eb4a5c90b477c842354a29088ecc49504800f1dd3f0b8a06c30acf4a"
+          },
+          {
+            "id": "people-zoe-stand-drink",
+            "key": "people-zoe-stand-drink",
+            "visible": false,
+            "hash": "4e950840549a734ce41bf6ac1404a89543e8eefdbf64b5c9a1cc9047b376fef9"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": true,
+            "hash": "aaa40fe687866d99459ff54d13003ffc5af69db482af1bdf0fca9c89c0023e40"
+          },
+          {
+            "id": "people-maya-stand-wait",
+            "key": "maya-waits",
+            "visible": false,
+            "hash": "000a241b9f140279c8be4a39b4c934842ef80e297aa12ba5bf4cd86fa7ec9036"
+          }
+        ]
+      },
+      {
+        "t": 10.2,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ]
+        ],
+        "shown": [
+          "people-maya-stand-type-41"
+        ],
+        "objects": [
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "people-maya-stand-coffee",
+            "visible": false,
+            "hash": "26d86b0e804f79283436dca2ac7937d931945296203d590b522619b0984f5d04"
+          },
+          {
+            "id": "people-maya-sit-coffee",
+            "key": "people-maya-sit-coffee",
+            "visible": false,
+            "hash": "329b7753cae28fb321369cc022d91bd7b6005b47ecbe16c61a5d21ad9aa5b13a"
+          },
+          {
+            "id": "people-maya-sit-coffee-30",
+            "key": "people-maya-sit-coffee-30",
+            "visible": false,
+            "hash": "cc60dd71e29602c904236ab7629fa451a983ec11926a8ab012166886ade6513f"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": false,
+            "hash": "0e00fdd209b51a44d927479cc9808c29615db71a397c624f30170bf565aedb01"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "maya-night-stand",
+            "visible": false,
+            "hash": "3eb3d45404a7ea7b9bc45ffa8b9a77dbb95fc2cfd0a9d94e647b8a82329d47f2"
+          },
+          {
+            "id": "people-grace-sit-read",
+            "key": "people-grace-sit-read",
+            "visible": false,
+            "hash": "4a110f9d618838c697ba65a15fa0f8cd9a11aa466917349aecdfe9486a9c83db"
+          },
+          {
+            "id": "people-grace-sit-chat",
+            "key": "people-grace-sit-chat",
+            "visible": false,
+            "hash": "0b1255730de76d7e8257b349ccb19789eb65d14a4ef047e4c072d08cbfc3ce12"
+          },
+          {
+            "id": "people-maya-stand-talk",
+            "key": "people-maya-stand-talk",
+            "visible": false,
+            "hash": "6e31bd5e7225e81857763b8bec6a48116cef156554d8251a3c3545f7bc7df900"
+          },
+          {
+            "id": "people-noah-stand-drink",
+            "key": "people-noah-stand-drink",
+            "visible": false,
+            "hash": "d2ca2fb6eb4a5c90b477c842354a29088ecc49504800f1dd3f0b8a06c30acf4a"
+          },
+          {
+            "id": "people-zoe-stand-drink",
+            "key": "people-zoe-stand-drink",
+            "visible": false,
+            "hash": "4e950840549a734ce41bf6ac1404a89543e8eefdbf64b5c9a1cc9047b376fef9"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": true,
+            "hash": "a18645b76068ab38714aad1c31dd35cd4e76c64ed9ba70aaf9a3b7fdb3fc2b4d"
+          },
+          {
+            "id": "people-maya-stand-wait",
+            "key": "maya-waits",
+            "visible": false,
+            "hash": "b43e647ee698a4ea6c16d481b9f2f9264e791fad349eb569ff1655bed7fa68a2"
+          }
+        ]
+      },
+      {
+        "t": 11.1,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ]
+        ],
+        "shown": [
+          "people-maya-stand-type-41"
+        ],
+        "objects": [
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "people-maya-stand-coffee",
+            "visible": false,
+            "hash": "26d86b0e804f79283436dca2ac7937d931945296203d590b522619b0984f5d04"
+          },
+          {
+            "id": "people-maya-sit-coffee",
+            "key": "people-maya-sit-coffee",
+            "visible": false,
+            "hash": "329b7753cae28fb321369cc022d91bd7b6005b47ecbe16c61a5d21ad9aa5b13a"
+          },
+          {
+            "id": "people-maya-sit-coffee-30",
+            "key": "people-maya-sit-coffee-30",
+            "visible": false,
+            "hash": "cc60dd71e29602c904236ab7629fa451a983ec11926a8ab012166886ade6513f"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": false,
+            "hash": "0e00fdd209b51a44d927479cc9808c29615db71a397c624f30170bf565aedb01"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "maya-night-stand",
+            "visible": false,
+            "hash": "3eb3d45404a7ea7b9bc45ffa8b9a77dbb95fc2cfd0a9d94e647b8a82329d47f2"
+          },
+          {
+            "id": "people-grace-sit-read",
+            "key": "people-grace-sit-read",
+            "visible": false,
+            "hash": "4a110f9d618838c697ba65a15fa0f8cd9a11aa466917349aecdfe9486a9c83db"
+          },
+          {
+            "id": "people-grace-sit-chat",
+            "key": "people-grace-sit-chat",
+            "visible": false,
+            "hash": "0b1255730de76d7e8257b349ccb19789eb65d14a4ef047e4c072d08cbfc3ce12"
+          },
+          {
+            "id": "people-maya-stand-talk",
+            "key": "people-maya-stand-talk",
+            "visible": false,
+            "hash": "6e31bd5e7225e81857763b8bec6a48116cef156554d8251a3c3545f7bc7df900"
+          },
+          {
+            "id": "people-noah-stand-drink",
+            "key": "people-noah-stand-drink",
+            "visible": false,
+            "hash": "d2ca2fb6eb4a5c90b477c842354a29088ecc49504800f1dd3f0b8a06c30acf4a"
+          },
+          {
+            "id": "people-zoe-stand-drink",
+            "key": "people-zoe-stand-drink",
+            "visible": false,
+            "hash": "4e950840549a734ce41bf6ac1404a89543e8eefdbf64b5c9a1cc9047b376fef9"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": true,
+            "hash": "9c3453d758e6164be1938615e8ccae5bb653f0e605a56604610ff6fc431be464"
+          },
+          {
+            "id": "people-maya-stand-wait",
+            "key": "maya-waits",
+            "visible": false,
+            "hash": "b43e647ee698a4ea6c16d481b9f2f9264e791fad349eb569ff1655bed7fa68a2"
+          }
+        ]
+      },
+      {
+        "t": 12.65,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ]
+        ],
+        "shown": [
+          "people-maya-sit-type"
+        ],
+        "objects": [
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "people-maya-stand-coffee",
+            "visible": false,
+            "hash": "26d86b0e804f79283436dca2ac7937d931945296203d590b522619b0984f5d04"
+          },
+          {
+            "id": "people-maya-sit-coffee",
+            "key": "people-maya-sit-coffee",
+            "visible": false,
+            "hash": "329b7753cae28fb321369cc022d91bd7b6005b47ecbe16c61a5d21ad9aa5b13a"
+          },
+          {
+            "id": "people-maya-sit-coffee-30",
+            "key": "people-maya-sit-coffee-30",
+            "visible": false,
+            "hash": "cc60dd71e29602c904236ab7629fa451a983ec11926a8ab012166886ade6513f"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": true,
+            "hash": "de42dc97c30a135796f1e5765d6022de147ae25960c24778fc52c258e881b5a8"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "maya-night-stand",
+            "visible": false,
+            "hash": "3eb3d45404a7ea7b9bc45ffa8b9a77dbb95fc2cfd0a9d94e647b8a82329d47f2"
+          },
+          {
+            "id": "people-grace-sit-read",
+            "key": "people-grace-sit-read",
+            "visible": false,
+            "hash": "4a110f9d618838c697ba65a15fa0f8cd9a11aa466917349aecdfe9486a9c83db"
+          },
+          {
+            "id": "people-grace-sit-chat",
+            "key": "people-grace-sit-chat",
+            "visible": false,
+            "hash": "0b1255730de76d7e8257b349ccb19789eb65d14a4ef047e4c072d08cbfc3ce12"
+          },
+          {
+            "id": "people-maya-stand-talk",
+            "key": "people-maya-stand-talk",
+            "visible": false,
+            "hash": "6e31bd5e7225e81857763b8bec6a48116cef156554d8251a3c3545f7bc7df900"
+          },
+          {
+            "id": "people-noah-stand-drink",
+            "key": "people-noah-stand-drink",
+            "visible": false,
+            "hash": "d2ca2fb6eb4a5c90b477c842354a29088ecc49504800f1dd3f0b8a06c30acf4a"
+          },
+          {
+            "id": "people-zoe-stand-drink",
+            "key": "people-zoe-stand-drink",
+            "visible": false,
+            "hash": "4e950840549a734ce41bf6ac1404a89543e8eefdbf64b5c9a1cc9047b376fef9"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": false,
+            "hash": "2fcbe466e095ecee1aa060f830f0a0edd6457a97ac8cc62ea37ed15e6c3c5fd5"
+          },
+          {
+            "id": "people-maya-stand-wait",
+            "key": "maya-waits",
+            "visible": false,
+            "hash": "000a241b9f140279c8be4a39b4c934842ef80e297aa12ba5bf4cd86fa7ec9036"
+          }
+        ]
+      },
+      {
+        "t": 16.6,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ]
+        ],
+        "shown": [
+          "people-maya-sit-type"
+        ],
+        "objects": [
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "people-maya-stand-coffee",
+            "visible": false,
+            "hash": "26d86b0e804f79283436dca2ac7937d931945296203d590b522619b0984f5d04"
+          },
+          {
+            "id": "people-maya-sit-coffee",
+            "key": "people-maya-sit-coffee",
+            "visible": false,
+            "hash": "329b7753cae28fb321369cc022d91bd7b6005b47ecbe16c61a5d21ad9aa5b13a"
+          },
+          {
+            "id": "people-maya-sit-coffee-30",
+            "key": "people-maya-sit-coffee-30",
+            "visible": false,
+            "hash": "cc60dd71e29602c904236ab7629fa451a983ec11926a8ab012166886ade6513f"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": true,
+            "hash": "b6d3702086f53f7041ccc0a0935143a34cab8d68417d8a6966c78e2bdae8219b"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-stand-coffee",
+            "key": "maya-night-stand",
+            "visible": false,
+            "hash": "3eb3d45404a7ea7b9bc45ffa8b9a77dbb95fc2cfd0a9d94e647b8a82329d47f2"
+          },
+          {
+            "id": "people-grace-sit-read",
+            "key": "people-grace-sit-read",
+            "visible": false,
+            "hash": "4a110f9d618838c697ba65a15fa0f8cd9a11aa466917349aecdfe9486a9c83db"
+          },
+          {
+            "id": "people-grace-sit-chat",
+            "key": "people-grace-sit-chat",
+            "visible": false,
+            "hash": "0b1255730de76d7e8257b349ccb19789eb65d14a4ef047e4c072d08cbfc3ce12"
+          },
+          {
+            "id": "people-maya-stand-talk",
+            "key": "people-maya-stand-talk",
+            "visible": false,
+            "hash": "6e31bd5e7225e81857763b8bec6a48116cef156554d8251a3c3545f7bc7df900"
+          },
+          {
+            "id": "people-noah-stand-drink",
+            "key": "people-noah-stand-drink",
+            "visible": false,
+            "hash": "d2ca2fb6eb4a5c90b477c842354a29088ecc49504800f1dd3f0b8a06c30acf4a"
+          },
+          {
+            "id": "people-zoe-stand-drink",
+            "key": "people-zoe-stand-drink",
+            "visible": false,
+            "hash": "4e950840549a734ce41bf6ac1404a89543e8eefdbf64b5c9a1cc9047b376fef9"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": false,
+            "hash": "2fcbe466e095ecee1aa060f830f0a0edd6457a97ac8cc62ea37ed15e6c3c5fd5"
+          },
+          {
+            "id": "people-maya-stand-wait",
+            "key": "maya-waits",
+            "visible": false,
+            "hash": "000a241b9f140279c8be4a39b4c934842ef80e297aa12ba5bf4cd86fa7ec9036"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "wellness",
+    "frames": [
+      {
+        "t": 0,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ],
+          []
+        ],
+        "shown": [
+          "people-maya-sit-type",
+          null
+        ],
+        "objects": [
+          {
+            "id": "people-priya-stretch",
+            "key": "people-priya-stretch",
+            "visible": true,
+            "hash": "c9714784940e49fa05c9fe5ccb6d19b617544b12c9d0f861a966e314aa358fff"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": true,
+            "hash": "007ccb355270a553026cd84b28bf6f86f7a6acb380946414b5ef77cddb513453"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-noah-sit-type",
+            "key": "people-noah-sit-type",
+            "visible": false,
+            "hash": "b99b6a6b7ce3101357f3174a2728f4241c9fdc4bfbe9202c5b1cfb4b691e5a08"
+          },
+          {
+            "id": "people-noah-sit-type-30",
+            "key": "people-noah-sit-type-30",
+            "visible": false,
+            "hash": "74870b02165c3be6b3935f848cb76c2d4c452dd297a51aa985c5ff1a0923a42d"
+          },
+          {
+            "id": "people-noah-stand-type",
+            "key": "people-noah-stand-type",
+            "visible": false,
+            "hash": "f267086b5e11799e4b5bfbb728f07ecb86fb18b2a9d117b46af742be67bb7ae0"
+          },
+          {
+            "id": "people-priya-sit-floor",
+            "key": "people-priya-sit-floor",
+            "visible": false,
+            "hash": "67919d425d7e39ed85aec1c3ee3b952e9d1fcddd808aa4e0dad832283a862cb5"
+          },
+          {
+            "id": "people-priya-floor-stretch",
+            "key": "people-priya-floor-stretch",
+            "visible": false,
+            "hash": "78ef3a4b342c6ba2ed2e66ba726ee4cd6ab0508316000cfbb12e637c0b96340c"
+          },
+          {
+            "id": "people-priya-stretch",
+            "key": "priya-circuit",
+            "visible": false,
+            "hash": "d0076ab22e7093ca735bb2fe5985ea26e492ee56b46b72b72d36495a51f68b1c"
+          },
+          {
+            "id": "people-zoe-stretch-open",
+            "key": "people-zoe-stretch-open",
+            "visible": false,
+            "hash": "338bfaf671034c1f76f0e8fedb7352d7d5d69b94c64eb4f95ffca6df56f6e642"
+          },
+          {
+            "id": "people-kai-floor-stretch",
+            "key": "people-kai-floor-stretch",
+            "visible": false,
+            "hash": "211762015a140a5f5140eb68f5b0c630581f0d734a15970ffdb47a79752b43f5"
+          },
+          {
+            "id": "people-kai-gym-cycle",
+            "key": "kai-bike",
+            "visible": true,
+            "hash": "a62348096573922ddd7abc509b5b7f674f049bb0b84b59cbe35188ba9de99178"
+          },
+          {
+            "id": "people-zoe-gym-cycle",
+            "key": "zoe-bike",
+            "visible": false,
+            "hash": "96b88c808fb0140c4a7360d136b0a685bd5bd72c46b9db399016caa4ec941750"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": false,
+            "hash": "ba68dd5f37bf54bcfd073e179f51a6249af4da544d059d73fa74e0da561d0f78"
+          },
+          {
+            "id": "people-maya-stretch",
+            "key": "maya-break",
+            "visible": false,
+            "hash": "501fd5df3a7aa2304a48e381ca9e11f3a8d2adb828c3166ab40ef09a4ace2005"
+          }
+        ]
+      },
+      {
+        "t": 3.4,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ],
+          []
+        ],
+        "shown": [
+          "people-maya-sit-type",
+          null
+        ],
+        "objects": [
+          {
+            "id": "people-priya-stretch",
+            "key": "people-priya-stretch",
+            "visible": true,
+            "hash": "bfe8f17bc97cc8d92f0e7d25327622b681e59760e77c2a9920128b49e03a475f"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": true,
+            "hash": "dc3834c6c0c12a170230eba93bea615504f799e5108562deeb9e765246295890"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-noah-sit-type",
+            "key": "people-noah-sit-type",
+            "visible": false,
+            "hash": "b99b6a6b7ce3101357f3174a2728f4241c9fdc4bfbe9202c5b1cfb4b691e5a08"
+          },
+          {
+            "id": "people-noah-sit-type-30",
+            "key": "people-noah-sit-type-30",
+            "visible": false,
+            "hash": "74870b02165c3be6b3935f848cb76c2d4c452dd297a51aa985c5ff1a0923a42d"
+          },
+          {
+            "id": "people-noah-stand-type",
+            "key": "people-noah-stand-type",
+            "visible": false,
+            "hash": "f267086b5e11799e4b5bfbb728f07ecb86fb18b2a9d117b46af742be67bb7ae0"
+          },
+          {
+            "id": "people-priya-sit-floor",
+            "key": "people-priya-sit-floor",
+            "visible": false,
+            "hash": "67919d425d7e39ed85aec1c3ee3b952e9d1fcddd808aa4e0dad832283a862cb5"
+          },
+          {
+            "id": "people-priya-floor-stretch",
+            "key": "people-priya-floor-stretch",
+            "visible": false,
+            "hash": "78ef3a4b342c6ba2ed2e66ba726ee4cd6ab0508316000cfbb12e637c0b96340c"
+          },
+          {
+            "id": "people-priya-stretch",
+            "key": "priya-circuit",
+            "visible": false,
+            "hash": "d0076ab22e7093ca735bb2fe5985ea26e492ee56b46b72b72d36495a51f68b1c"
+          },
+          {
+            "id": "people-zoe-stretch-open",
+            "key": "people-zoe-stretch-open",
+            "visible": false,
+            "hash": "338bfaf671034c1f76f0e8fedb7352d7d5d69b94c64eb4f95ffca6df56f6e642"
+          },
+          {
+            "id": "people-kai-floor-stretch",
+            "key": "people-kai-floor-stretch",
+            "visible": false,
+            "hash": "211762015a140a5f5140eb68f5b0c630581f0d734a15970ffdb47a79752b43f5"
+          },
+          {
+            "id": "people-kai-gym-cycle",
+            "key": "kai-bike",
+            "visible": true,
+            "hash": "bcce656f981e2f72d5405c632d7efeef74cf74e430e671290ea09a2805dcb42d"
+          },
+          {
+            "id": "people-zoe-gym-cycle",
+            "key": "zoe-bike",
+            "visible": false,
+            "hash": "96b88c808fb0140c4a7360d136b0a685bd5bd72c46b9db399016caa4ec941750"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": false,
+            "hash": "ba68dd5f37bf54bcfd073e179f51a6249af4da544d059d73fa74e0da561d0f78"
+          },
+          {
+            "id": "people-maya-stretch",
+            "key": "maya-break",
+            "visible": false,
+            "hash": "501fd5df3a7aa2304a48e381ca9e11f3a8d2adb828c3166ab40ef09a4ace2005"
+          }
+        ]
+      },
+      {
+        "t": 4,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ],
+          []
+        ],
+        "shown": [
+          "people-maya-sit-type",
+          null
+        ],
+        "objects": [
+          {
+            "id": "people-priya-stretch",
+            "key": "people-priya-stretch",
+            "visible": true,
+            "hash": "553afa3db562bd3bcf6e18aba25474883b4f045fc61183339c0038c143cea3cb"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": true,
+            "hash": "6b67be781c5fdcc4e2569c8339a36803c28fed97a66b51f8608025cabd5e2cd0"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-noah-sit-type",
+            "key": "people-noah-sit-type",
+            "visible": false,
+            "hash": "b99b6a6b7ce3101357f3174a2728f4241c9fdc4bfbe9202c5b1cfb4b691e5a08"
+          },
+          {
+            "id": "people-noah-sit-type-30",
+            "key": "people-noah-sit-type-30",
+            "visible": false,
+            "hash": "74870b02165c3be6b3935f848cb76c2d4c452dd297a51aa985c5ff1a0923a42d"
+          },
+          {
+            "id": "people-noah-stand-type",
+            "key": "people-noah-stand-type",
+            "visible": false,
+            "hash": "f267086b5e11799e4b5bfbb728f07ecb86fb18b2a9d117b46af742be67bb7ae0"
+          },
+          {
+            "id": "people-priya-sit-floor",
+            "key": "people-priya-sit-floor",
+            "visible": false,
+            "hash": "67919d425d7e39ed85aec1c3ee3b952e9d1fcddd808aa4e0dad832283a862cb5"
+          },
+          {
+            "id": "people-priya-floor-stretch",
+            "key": "people-priya-floor-stretch",
+            "visible": false,
+            "hash": "78ef3a4b342c6ba2ed2e66ba726ee4cd6ab0508316000cfbb12e637c0b96340c"
+          },
+          {
+            "id": "people-priya-stretch",
+            "key": "priya-circuit",
+            "visible": false,
+            "hash": "d0076ab22e7093ca735bb2fe5985ea26e492ee56b46b72b72d36495a51f68b1c"
+          },
+          {
+            "id": "people-zoe-stretch-open",
+            "key": "people-zoe-stretch-open",
+            "visible": false,
+            "hash": "338bfaf671034c1f76f0e8fedb7352d7d5d69b94c64eb4f95ffca6df56f6e642"
+          },
+          {
+            "id": "people-kai-floor-stretch",
+            "key": "people-kai-floor-stretch",
+            "visible": false,
+            "hash": "211762015a140a5f5140eb68f5b0c630581f0d734a15970ffdb47a79752b43f5"
+          },
+          {
+            "id": "people-kai-gym-cycle",
+            "key": "kai-bike",
+            "visible": true,
+            "hash": "50d08632ecd0428a703d3609d263d286132442ba516837b1d3e38e2c78b53da9"
+          },
+          {
+            "id": "people-zoe-gym-cycle",
+            "key": "zoe-bike",
+            "visible": false,
+            "hash": "96b88c808fb0140c4a7360d136b0a685bd5bd72c46b9db399016caa4ec941750"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": false,
+            "hash": "ba68dd5f37bf54bcfd073e179f51a6249af4da544d059d73fa74e0da561d0f78"
+          },
+          {
+            "id": "people-maya-stretch",
+            "key": "maya-break",
+            "visible": false,
+            "hash": "501fd5df3a7aa2304a48e381ca9e11f3a8d2adb828c3166ab40ef09a4ace2005"
+          }
+        ]
+      },
+      {
+        "t": 5.2,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ],
+          []
+        ],
+        "shown": [
+          "people-maya-sit-type",
+          null
+        ],
+        "objects": [
+          {
+            "id": "people-priya-stretch",
+            "key": "people-priya-stretch",
+            "visible": true,
+            "hash": "91725737d4b5922304a6a128b32b1ab5a8e8000fe6df15a821a9f8c92205a7f8"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": true,
+            "hash": "a2d7404e0dd2d60b154b063ba2446174ce6744c4c1d0880d766ecb8553e14d06"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-noah-sit-type",
+            "key": "people-noah-sit-type",
+            "visible": false,
+            "hash": "b99b6a6b7ce3101357f3174a2728f4241c9fdc4bfbe9202c5b1cfb4b691e5a08"
+          },
+          {
+            "id": "people-noah-sit-type-30",
+            "key": "people-noah-sit-type-30",
+            "visible": false,
+            "hash": "74870b02165c3be6b3935f848cb76c2d4c452dd297a51aa985c5ff1a0923a42d"
+          },
+          {
+            "id": "people-noah-stand-type",
+            "key": "people-noah-stand-type",
+            "visible": false,
+            "hash": "f267086b5e11799e4b5bfbb728f07ecb86fb18b2a9d117b46af742be67bb7ae0"
+          },
+          {
+            "id": "people-priya-sit-floor",
+            "key": "people-priya-sit-floor",
+            "visible": false,
+            "hash": "67919d425d7e39ed85aec1c3ee3b952e9d1fcddd808aa4e0dad832283a862cb5"
+          },
+          {
+            "id": "people-priya-floor-stretch",
+            "key": "people-priya-floor-stretch",
+            "visible": false,
+            "hash": "78ef3a4b342c6ba2ed2e66ba726ee4cd6ab0508316000cfbb12e637c0b96340c"
+          },
+          {
+            "id": "people-priya-stretch",
+            "key": "priya-circuit",
+            "visible": false,
+            "hash": "d0076ab22e7093ca735bb2fe5985ea26e492ee56b46b72b72d36495a51f68b1c"
+          },
+          {
+            "id": "people-zoe-stretch-open",
+            "key": "people-zoe-stretch-open",
+            "visible": false,
+            "hash": "338bfaf671034c1f76f0e8fedb7352d7d5d69b94c64eb4f95ffca6df56f6e642"
+          },
+          {
+            "id": "people-kai-floor-stretch",
+            "key": "people-kai-floor-stretch",
+            "visible": false,
+            "hash": "211762015a140a5f5140eb68f5b0c630581f0d734a15970ffdb47a79752b43f5"
+          },
+          {
+            "id": "people-kai-gym-cycle",
+            "key": "kai-bike",
+            "visible": true,
+            "hash": "8fca1aa257e7d9bcdc954cd3a114b5147d4d5e7e53335689128b13a90adb0c08"
+          },
+          {
+            "id": "people-zoe-gym-cycle",
+            "key": "zoe-bike",
+            "visible": false,
+            "hash": "96b88c808fb0140c4a7360d136b0a685bd5bd72c46b9db399016caa4ec941750"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": false,
+            "hash": "ba68dd5f37bf54bcfd073e179f51a6249af4da544d059d73fa74e0da561d0f78"
+          },
+          {
+            "id": "people-maya-stretch",
+            "key": "maya-break",
+            "visible": false,
+            "hash": "501fd5df3a7aa2304a48e381ca9e11f3a8d2adb828c3166ab40ef09a4ace2005"
+          }
+        ]
+      },
+      {
+        "t": 6,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ],
+          []
+        ],
+        "shown": [
+          "people-maya-sit-type",
+          null
+        ],
+        "objects": [
+          {
+            "id": "people-priya-stretch",
+            "key": "people-priya-stretch",
+            "visible": true,
+            "hash": "31cc9fb8f2878c7a82160b7c2c5297d8a2d6462658d801eb43ecbb5f706c2b96"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": true,
+            "hash": "a21319447a79d8cac615e004898a20b678683135937ee8629f50bf57aed74712"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-noah-sit-type",
+            "key": "people-noah-sit-type",
+            "visible": false,
+            "hash": "b99b6a6b7ce3101357f3174a2728f4241c9fdc4bfbe9202c5b1cfb4b691e5a08"
+          },
+          {
+            "id": "people-noah-sit-type-30",
+            "key": "people-noah-sit-type-30",
+            "visible": false,
+            "hash": "74870b02165c3be6b3935f848cb76c2d4c452dd297a51aa985c5ff1a0923a42d"
+          },
+          {
+            "id": "people-noah-stand-type",
+            "key": "people-noah-stand-type",
+            "visible": false,
+            "hash": "f267086b5e11799e4b5bfbb728f07ecb86fb18b2a9d117b46af742be67bb7ae0"
+          },
+          {
+            "id": "people-priya-sit-floor",
+            "key": "people-priya-sit-floor",
+            "visible": false,
+            "hash": "67919d425d7e39ed85aec1c3ee3b952e9d1fcddd808aa4e0dad832283a862cb5"
+          },
+          {
+            "id": "people-priya-floor-stretch",
+            "key": "people-priya-floor-stretch",
+            "visible": false,
+            "hash": "78ef3a4b342c6ba2ed2e66ba726ee4cd6ab0508316000cfbb12e637c0b96340c"
+          },
+          {
+            "id": "people-priya-stretch",
+            "key": "priya-circuit",
+            "visible": false,
+            "hash": "d0076ab22e7093ca735bb2fe5985ea26e492ee56b46b72b72d36495a51f68b1c"
+          },
+          {
+            "id": "people-zoe-stretch-open",
+            "key": "people-zoe-stretch-open",
+            "visible": false,
+            "hash": "338bfaf671034c1f76f0e8fedb7352d7d5d69b94c64eb4f95ffca6df56f6e642"
+          },
+          {
+            "id": "people-kai-floor-stretch",
+            "key": "people-kai-floor-stretch",
+            "visible": false,
+            "hash": "211762015a140a5f5140eb68f5b0c630581f0d734a15970ffdb47a79752b43f5"
+          },
+          {
+            "id": "people-kai-gym-cycle",
+            "key": "kai-bike",
+            "visible": true,
+            "hash": "59ae5fbea1abbfae6c8ae22d88c89068be8bf8df1e1fd74215e3c0f15cc218fe"
+          },
+          {
+            "id": "people-zoe-gym-cycle",
+            "key": "zoe-bike",
+            "visible": false,
+            "hash": "96b88c808fb0140c4a7360d136b0a685bd5bd72c46b9db399016caa4ec941750"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": false,
+            "hash": "ba68dd5f37bf54bcfd073e179f51a6249af4da544d059d73fa74e0da561d0f78"
+          },
+          {
+            "id": "people-maya-stretch",
+            "key": "maya-break",
+            "visible": false,
+            "hash": "501fd5df3a7aa2304a48e381ca9e11f3a8d2adb828c3166ab40ef09a4ace2005"
+          }
+        ]
+      },
+      {
+        "t": 7.6,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ],
+          []
+        ],
+        "shown": [
+          "people-maya-sit-type",
+          null
+        ],
+        "objects": [
+          {
+            "id": "people-priya-stretch",
+            "key": "people-priya-stretch",
+            "visible": true,
+            "hash": "ab64023c36a7aab51da0b1404afc44859bc4fbddba51fe59df654368a4d83fe0"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": true,
+            "hash": "600bff0ef0fb0476a83c7a19daa30ac8f1574ccbe93a517631674cc7dd2de30a"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-noah-sit-type",
+            "key": "people-noah-sit-type",
+            "visible": false,
+            "hash": "b99b6a6b7ce3101357f3174a2728f4241c9fdc4bfbe9202c5b1cfb4b691e5a08"
+          },
+          {
+            "id": "people-noah-sit-type-30",
+            "key": "people-noah-sit-type-30",
+            "visible": false,
+            "hash": "74870b02165c3be6b3935f848cb76c2d4c452dd297a51aa985c5ff1a0923a42d"
+          },
+          {
+            "id": "people-noah-stand-type",
+            "key": "people-noah-stand-type",
+            "visible": false,
+            "hash": "f267086b5e11799e4b5bfbb728f07ecb86fb18b2a9d117b46af742be67bb7ae0"
+          },
+          {
+            "id": "people-priya-sit-floor",
+            "key": "people-priya-sit-floor",
+            "visible": false,
+            "hash": "67919d425d7e39ed85aec1c3ee3b952e9d1fcddd808aa4e0dad832283a862cb5"
+          },
+          {
+            "id": "people-priya-floor-stretch",
+            "key": "people-priya-floor-stretch",
+            "visible": false,
+            "hash": "78ef3a4b342c6ba2ed2e66ba726ee4cd6ab0508316000cfbb12e637c0b96340c"
+          },
+          {
+            "id": "people-priya-stretch",
+            "key": "priya-circuit",
+            "visible": false,
+            "hash": "d0076ab22e7093ca735bb2fe5985ea26e492ee56b46b72b72d36495a51f68b1c"
+          },
+          {
+            "id": "people-zoe-stretch-open",
+            "key": "people-zoe-stretch-open",
+            "visible": false,
+            "hash": "338bfaf671034c1f76f0e8fedb7352d7d5d69b94c64eb4f95ffca6df56f6e642"
+          },
+          {
+            "id": "people-kai-floor-stretch",
+            "key": "people-kai-floor-stretch",
+            "visible": false,
+            "hash": "211762015a140a5f5140eb68f5b0c630581f0d734a15970ffdb47a79752b43f5"
+          },
+          {
+            "id": "people-kai-gym-cycle",
+            "key": "kai-bike",
+            "visible": true,
+            "hash": "21e93db72f1f40924d7db1dd9f4cc237174b0f2423998610fb88161bc2c2750e"
+          },
+          {
+            "id": "people-zoe-gym-cycle",
+            "key": "zoe-bike",
+            "visible": false,
+            "hash": "96b88c808fb0140c4a7360d136b0a685bd5bd72c46b9db399016caa4ec941750"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": false,
+            "hash": "ba68dd5f37bf54bcfd073e179f51a6249af4da544d059d73fa74e0da561d0f78"
+          },
+          {
+            "id": "people-maya-stretch",
+            "key": "maya-break",
+            "visible": false,
+            "hash": "501fd5df3a7aa2304a48e381ca9e11f3a8d2adb828c3166ab40ef09a4ace2005"
+          }
+        ]
+      },
+      {
+        "t": 8,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ],
+          []
+        ],
+        "shown": [
+          "people-maya-stand-type-41",
+          null
+        ],
+        "objects": [
+          {
+            "id": "people-priya-stretch",
+            "key": "people-priya-stretch",
+            "visible": true,
+            "hash": "fa7834869b98e0176bb3df96efff64528d2c57f1850f91ca58efc2de8fed44c4"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": false,
+            "hash": "464c9753815fdc8825f61d1c3c2aafeb96d22f5d4da57a28569bdf8746343abe"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-noah-sit-type",
+            "key": "people-noah-sit-type",
+            "visible": false,
+            "hash": "b99b6a6b7ce3101357f3174a2728f4241c9fdc4bfbe9202c5b1cfb4b691e5a08"
+          },
+          {
+            "id": "people-noah-sit-type-30",
+            "key": "people-noah-sit-type-30",
+            "visible": false,
+            "hash": "74870b02165c3be6b3935f848cb76c2d4c452dd297a51aa985c5ff1a0923a42d"
+          },
+          {
+            "id": "people-noah-stand-type",
+            "key": "people-noah-stand-type",
+            "visible": false,
+            "hash": "f267086b5e11799e4b5bfbb728f07ecb86fb18b2a9d117b46af742be67bb7ae0"
+          },
+          {
+            "id": "people-priya-sit-floor",
+            "key": "people-priya-sit-floor",
+            "visible": false,
+            "hash": "67919d425d7e39ed85aec1c3ee3b952e9d1fcddd808aa4e0dad832283a862cb5"
+          },
+          {
+            "id": "people-priya-floor-stretch",
+            "key": "people-priya-floor-stretch",
+            "visible": false,
+            "hash": "78ef3a4b342c6ba2ed2e66ba726ee4cd6ab0508316000cfbb12e637c0b96340c"
+          },
+          {
+            "id": "people-priya-stretch",
+            "key": "priya-circuit",
+            "visible": false,
+            "hash": "d0076ab22e7093ca735bb2fe5985ea26e492ee56b46b72b72d36495a51f68b1c"
+          },
+          {
+            "id": "people-zoe-stretch-open",
+            "key": "people-zoe-stretch-open",
+            "visible": false,
+            "hash": "338bfaf671034c1f76f0e8fedb7352d7d5d69b94c64eb4f95ffca6df56f6e642"
+          },
+          {
+            "id": "people-kai-floor-stretch",
+            "key": "people-kai-floor-stretch",
+            "visible": false,
+            "hash": "211762015a140a5f5140eb68f5b0c630581f0d734a15970ffdb47a79752b43f5"
+          },
+          {
+            "id": "people-kai-gym-cycle",
+            "key": "kai-bike",
+            "visible": true,
+            "hash": "0f84c0b5fef8f04da68fc5699bd2c558bfbba67ef2225006f1854ec514474c9c"
+          },
+          {
+            "id": "people-zoe-gym-cycle",
+            "key": "zoe-bike",
+            "visible": false,
+            "hash": "96b88c808fb0140c4a7360d136b0a685bd5bd72c46b9db399016caa4ec941750"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": true,
+            "hash": "ebf2a2b8dc3449e5bcb7a544903c3b311071535a17000ab7987548c41d71a869"
+          },
+          {
+            "id": "people-maya-stretch",
+            "key": "maya-break",
+            "visible": false,
+            "hash": "501fd5df3a7aa2304a48e381ca9e11f3a8d2adb828c3166ab40ef09a4ace2005"
+          }
+        ]
+      },
+      {
+        "t": 9.45,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ],
+          []
+        ],
+        "shown": [
+          "people-maya-stand-type-41",
+          null
+        ],
+        "objects": [
+          {
+            "id": "people-priya-stretch",
+            "key": "people-priya-stretch",
+            "visible": true,
+            "hash": "276f606a8ad7c5ff3bd4b4af3e8fc0bd6562a75fb2f84d5ff4a3ec5f013b5bc7"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": false,
+            "hash": "464c9753815fdc8825f61d1c3c2aafeb96d22f5d4da57a28569bdf8746343abe"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-noah-sit-type",
+            "key": "people-noah-sit-type",
+            "visible": false,
+            "hash": "b99b6a6b7ce3101357f3174a2728f4241c9fdc4bfbe9202c5b1cfb4b691e5a08"
+          },
+          {
+            "id": "people-noah-sit-type-30",
+            "key": "people-noah-sit-type-30",
+            "visible": false,
+            "hash": "74870b02165c3be6b3935f848cb76c2d4c452dd297a51aa985c5ff1a0923a42d"
+          },
+          {
+            "id": "people-noah-stand-type",
+            "key": "people-noah-stand-type",
+            "visible": false,
+            "hash": "f267086b5e11799e4b5bfbb728f07ecb86fb18b2a9d117b46af742be67bb7ae0"
+          },
+          {
+            "id": "people-priya-sit-floor",
+            "key": "people-priya-sit-floor",
+            "visible": false,
+            "hash": "67919d425d7e39ed85aec1c3ee3b952e9d1fcddd808aa4e0dad832283a862cb5"
+          },
+          {
+            "id": "people-priya-floor-stretch",
+            "key": "people-priya-floor-stretch",
+            "visible": false,
+            "hash": "78ef3a4b342c6ba2ed2e66ba726ee4cd6ab0508316000cfbb12e637c0b96340c"
+          },
+          {
+            "id": "people-priya-stretch",
+            "key": "priya-circuit",
+            "visible": false,
+            "hash": "d0076ab22e7093ca735bb2fe5985ea26e492ee56b46b72b72d36495a51f68b1c"
+          },
+          {
+            "id": "people-zoe-stretch-open",
+            "key": "people-zoe-stretch-open",
+            "visible": false,
+            "hash": "338bfaf671034c1f76f0e8fedb7352d7d5d69b94c64eb4f95ffca6df56f6e642"
+          },
+          {
+            "id": "people-kai-floor-stretch",
+            "key": "people-kai-floor-stretch",
+            "visible": false,
+            "hash": "211762015a140a5f5140eb68f5b0c630581f0d734a15970ffdb47a79752b43f5"
+          },
+          {
+            "id": "people-kai-gym-cycle",
+            "key": "kai-bike",
+            "visible": true,
+            "hash": "e6bf225d5f69b682164294ffdb7ca40793e8650b2cee98ff81145ddef99747f7"
+          },
+          {
+            "id": "people-zoe-gym-cycle",
+            "key": "zoe-bike",
+            "visible": false,
+            "hash": "96b88c808fb0140c4a7360d136b0a685bd5bd72c46b9db399016caa4ec941750"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": false,
+            "hash": "82cb972a63ed0f80e4840f24e42117bea03ef2b92a14ed85a4e901432f00dad4"
+          },
+          {
+            "id": "people-maya-stretch",
+            "key": "maya-break",
+            "visible": true,
+            "hash": "b03e2916e47726fca66c0a720caf8370f07673cdf065384098be0a64400ef205"
+          }
+        ]
+      },
+      {
+        "t": 10.2,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ],
+          []
+        ],
+        "shown": [
+          "people-maya-stand-type-41",
+          null
+        ],
+        "objects": [
+          {
+            "id": "people-priya-stretch",
+            "key": "people-priya-stretch",
+            "visible": true,
+            "hash": "2084209a08d0ad53026df7f35ba25005fa8817d2efab7f9d6b1ef6d8df113bc9"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": false,
+            "hash": "464c9753815fdc8825f61d1c3c2aafeb96d22f5d4da57a28569bdf8746343abe"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-noah-sit-type",
+            "key": "people-noah-sit-type",
+            "visible": false,
+            "hash": "b99b6a6b7ce3101357f3174a2728f4241c9fdc4bfbe9202c5b1cfb4b691e5a08"
+          },
+          {
+            "id": "people-noah-sit-type-30",
+            "key": "people-noah-sit-type-30",
+            "visible": false,
+            "hash": "74870b02165c3be6b3935f848cb76c2d4c452dd297a51aa985c5ff1a0923a42d"
+          },
+          {
+            "id": "people-noah-stand-type",
+            "key": "people-noah-stand-type",
+            "visible": false,
+            "hash": "f267086b5e11799e4b5bfbb728f07ecb86fb18b2a9d117b46af742be67bb7ae0"
+          },
+          {
+            "id": "people-priya-sit-floor",
+            "key": "people-priya-sit-floor",
+            "visible": false,
+            "hash": "67919d425d7e39ed85aec1c3ee3b952e9d1fcddd808aa4e0dad832283a862cb5"
+          },
+          {
+            "id": "people-priya-floor-stretch",
+            "key": "people-priya-floor-stretch",
+            "visible": false,
+            "hash": "78ef3a4b342c6ba2ed2e66ba726ee4cd6ab0508316000cfbb12e637c0b96340c"
+          },
+          {
+            "id": "people-priya-stretch",
+            "key": "priya-circuit",
+            "visible": false,
+            "hash": "d0076ab22e7093ca735bb2fe5985ea26e492ee56b46b72b72d36495a51f68b1c"
+          },
+          {
+            "id": "people-zoe-stretch-open",
+            "key": "people-zoe-stretch-open",
+            "visible": false,
+            "hash": "338bfaf671034c1f76f0e8fedb7352d7d5d69b94c64eb4f95ffca6df56f6e642"
+          },
+          {
+            "id": "people-kai-floor-stretch",
+            "key": "people-kai-floor-stretch",
+            "visible": false,
+            "hash": "211762015a140a5f5140eb68f5b0c630581f0d734a15970ffdb47a79752b43f5"
+          },
+          {
+            "id": "people-kai-gym-cycle",
+            "key": "kai-bike",
+            "visible": true,
+            "hash": "fac85da009f0d847b8f1600e37762ec1986f9626b0c7a4a6e6ab2fecbeba4997"
+          },
+          {
+            "id": "people-zoe-gym-cycle",
+            "key": "zoe-bike",
+            "visible": false,
+            "hash": "96b88c808fb0140c4a7360d136b0a685bd5bd72c46b9db399016caa4ec941750"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": false,
+            "hash": "82cb972a63ed0f80e4840f24e42117bea03ef2b92a14ed85a4e901432f00dad4"
+          },
+          {
+            "id": "people-maya-stretch",
+            "key": "maya-break",
+            "visible": true,
+            "hash": "1f0900e635809018ea3a29b74ac7442064860c1d0e54da69e057f63597642ec0"
+          }
+        ]
+      },
+      {
+        "t": 11.1,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ],
+          []
+        ],
+        "shown": [
+          "people-maya-stand-type-41",
+          null
+        ],
+        "objects": [
+          {
+            "id": "people-priya-stretch",
+            "key": "people-priya-stretch",
+            "visible": true,
+            "hash": "59bcd4967a36ba7b06036456e373c7bd3186e37fc2a4f456a08094b3c283878d"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": false,
+            "hash": "464c9753815fdc8825f61d1c3c2aafeb96d22f5d4da57a28569bdf8746343abe"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-noah-sit-type",
+            "key": "people-noah-sit-type",
+            "visible": false,
+            "hash": "b99b6a6b7ce3101357f3174a2728f4241c9fdc4bfbe9202c5b1cfb4b691e5a08"
+          },
+          {
+            "id": "people-noah-sit-type-30",
+            "key": "people-noah-sit-type-30",
+            "visible": false,
+            "hash": "74870b02165c3be6b3935f848cb76c2d4c452dd297a51aa985c5ff1a0923a42d"
+          },
+          {
+            "id": "people-noah-stand-type",
+            "key": "people-noah-stand-type",
+            "visible": false,
+            "hash": "f267086b5e11799e4b5bfbb728f07ecb86fb18b2a9d117b46af742be67bb7ae0"
+          },
+          {
+            "id": "people-priya-sit-floor",
+            "key": "people-priya-sit-floor",
+            "visible": false,
+            "hash": "67919d425d7e39ed85aec1c3ee3b952e9d1fcddd808aa4e0dad832283a862cb5"
+          },
+          {
+            "id": "people-priya-floor-stretch",
+            "key": "people-priya-floor-stretch",
+            "visible": false,
+            "hash": "78ef3a4b342c6ba2ed2e66ba726ee4cd6ab0508316000cfbb12e637c0b96340c"
+          },
+          {
+            "id": "people-priya-stretch",
+            "key": "priya-circuit",
+            "visible": false,
+            "hash": "d0076ab22e7093ca735bb2fe5985ea26e492ee56b46b72b72d36495a51f68b1c"
+          },
+          {
+            "id": "people-zoe-stretch-open",
+            "key": "people-zoe-stretch-open",
+            "visible": false,
+            "hash": "338bfaf671034c1f76f0e8fedb7352d7d5d69b94c64eb4f95ffca6df56f6e642"
+          },
+          {
+            "id": "people-kai-floor-stretch",
+            "key": "people-kai-floor-stretch",
+            "visible": false,
+            "hash": "211762015a140a5f5140eb68f5b0c630581f0d734a15970ffdb47a79752b43f5"
+          },
+          {
+            "id": "people-kai-gym-cycle",
+            "key": "kai-bike",
+            "visible": true,
+            "hash": "9b2c100070dc93366d38468bb4b7a927f221a155945da9451a67ec045ff355f1"
+          },
+          {
+            "id": "people-zoe-gym-cycle",
+            "key": "zoe-bike",
+            "visible": false,
+            "hash": "96b88c808fb0140c4a7360d136b0a685bd5bd72c46b9db399016caa4ec941750"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": false,
+            "hash": "82cb972a63ed0f80e4840f24e42117bea03ef2b92a14ed85a4e901432f00dad4"
+          },
+          {
+            "id": "people-maya-stretch",
+            "key": "maya-break",
+            "visible": true,
+            "hash": "3d665ee340701e463b320d75151123a58bfea7341b53528564ba8459e59a6bcc"
+          }
+        ]
+      },
+      {
+        "t": 12.65,
+        "members": [
+          [
+            [
+              "people-maya-sit-type",
+              "sit",
+              470,
+              0
+            ],
+            [
+              "people-maya-stand-type-41",
+              "stand",
+              375,
+              0.095
+            ]
+          ],
+          []
+        ],
+        "shown": [
+          "people-maya-stand-type-41",
+          null
+        ],
+        "objects": [
+          {
+            "id": "people-priya-stretch",
+            "key": "people-priya-stretch",
+            "visible": true,
+            "hash": "edceb769934feb569a14a271dc056baf1d6dc99ae0b05ffd8a92770ca15a49cd"
+          },
+          {
+            "id": "people-maya-stand-type",
+            "key": "people-maya-stand-type",
+            "visible": false,
+            "hash": "bc5e1249e81eccfa33de8ae079594301a282441e6c629c19f4d17dced73b2c7b"
+          },
+          {
+            "id": "people-maya-sit-type",
+            "key": "people-maya-sit-type",
+            "visible": false,
+            "hash": "464c9753815fdc8825f61d1c3c2aafeb96d22f5d4da57a28569bdf8746343abe"
+          },
+          {
+            "id": "people-maya-sit-type-30",
+            "key": "people-maya-sit-type-30",
+            "visible": false,
+            "hash": "290c2d40dd878e812192268c6752a0ed9488f217b2055982f401868582e31d6f"
+          },
+          {
+            "id": "people-noah-sit-type",
+            "key": "people-noah-sit-type",
+            "visible": false,
+            "hash": "b99b6a6b7ce3101357f3174a2728f4241c9fdc4bfbe9202c5b1cfb4b691e5a08"
+          },
+          {
+            "id": "people-noah-sit-type-30",
+            "key": "people-noah-sit-type-30",
+            "visible": false,
+            "hash": "74870b02165c3be6b3935f848cb76c2d4c452dd297a51aa985c5ff1a0923a42d"
+          },
+          {
+            "id": "people-noah-stand-type",
+            "key": "people-noah-stand-type",
+            "visible": false,
+            "hash": "f267086b5e11799e4b5bfbb728f07ecb86fb18b2a9d117b46af742be67bb7ae0"
+          },
+          {
+            "id": "people-priya-sit-floor",
+            "key": "people-priya-sit-floor",
+            "visible": false,
+            "hash": "67919d425d7e39ed85aec1c3ee3b952e9d1fcddd808aa4e0dad832283a862cb5"
+          },
+          {
+            "id": "people-priya-floor-stretch",
+            "key": "people-priya-floor-stretch",
+            "visible": false,
+            "hash": "78ef3a4b342c6ba2ed2e66ba726ee4cd6ab0508316000cfbb12e637c0b96340c"
+          },
+          {
+            "id": "people-priya-stretch",
+            "key": "priya-circuit",
+            "visible": false,
+            "hash": "d0076ab22e7093ca735bb2fe5985ea26e492ee56b46b72b72d36495a51f68b1c"
+          },
+          {
+            "id": "people-zoe-stretch-open",
+            "key": "people-zoe-stretch-open",
+            "visible": false,
+            "hash": "338bfaf671034c1f76f0e8fedb7352d7d5d69b94c64eb4f95ffca6df56f6e642"
+          },
+          {
+            "id": "people-kai-floor-stretch",
+            "key": "people-kai-floor-stretch",
+            "visible": false,
+            "hash": "211762015a140a5f5140eb68f5b0c630581f0d734a15970ffdb47a79752b43f5"
+          },
+          {
+            "id": "people-kai-gym-cycle",
+            "key": "kai-bike",
+            "visible": true,
+            "hash": "d7c7ac002d83ffa5c865c6641e3b60cb4ab4df5f200a887a13615d152de18c52"
+          },
+          {
+            "id": "people-zoe-gym-cycle",
+            "key": "zoe-bike",
+            "visible": false,
+            "hash": "96b88c808fb0140c4a7360d136b0a685bd5bd72c46b9db399016caa4ec941750"
+          },
+          {
+            "id": "people-maya-stand-type-41",
+            "key": "maya-stand",
+            "visible": false,
+            "hash": "82cb972a63ed0f80e4840f24e42117bea03ef2b92a14ed85a4e901432f00dad4"
+          },
+          {
+            "id": "people-maya-stretch",
+            "key": "maya-break",
+            "visible": true,
+            "hash": "eca144947cd7f1cc476d10dba40b66500bfb4e2a09eb40c9a282025ee8363e50"
+          }
+        ]
+      }
+    ]
+  }
+]

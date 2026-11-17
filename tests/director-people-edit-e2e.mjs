@@ -75,7 +75,7 @@ try{
   if(shots)await page.screenshot({path:path.join(shots,'s31-check-2-pose.png')});
   const changed2=onlyPeopleChanged(importExport(await exportText(page),'pose'),'pose');
   assert.equal(changed2.length,1,'one cast entry changed: '+JSON.stringify(changed2.map(x=>x[1].key)));
-  const [w2,n2]=changed2[0];assert.equal(n2.key,'noah-talks');const {pose,...rest}=n2;assert.deepEqual(rest,w2,'noah-talks: only pose added');assert.ok(pose.lowerarm_l,'the elbow turned');
+  const [w2,n2]=changed2[0];assert.equal(n2.key,'noah-talks');const {postures,...rest}=n2,pose=postures[n2.id].pose;assert.deepEqual(rest,w2,'noah-talks: only posture store added');assert.ok(pose.lowerarm_l,'the elbow turned');
   console.log(`2. noah-talks posed: only pose added (${Object.keys(pose).join(', ')})`);
   assert.deepEqual(errors,[],'page errors');
   console.log('PASS director people edit: gizmo move of a walker and a pose on a standing person change only that entry');

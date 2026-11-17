@@ -53,7 +53,7 @@ export function cleanPoseKeys(v) {
     }
     return out.length ? out.slice(0, MAX_KEYS) : null;
 }
-export const keyTimes = entry => (Array.isArray(entry?.poseKeys) ? entry.poseKeys : []).map(k => k.t);
+export const keyTimes = entry => (Array.isArray(entry?.poseKeys) ? entry.poseKeys : []).map(k => k.t).sort((a,b)=>a-b);
 // The bones any key names.
 export function keyedBones(entry) { const out = new Set(); for (const k of entry?.poseKeys || []) for (const name of Object.keys(k.pose || {})) out.add(name); return [...out]; }
 
@@ -80,7 +80,12 @@ export function poseAt(entry, time, into = null) {
     const before = new Map(), after = new Map();
     for (const key of keys) {
         const late = key.t > time + 1e-9;
-        for (const name of Object.keys(key.pose)) { if (!late) before.set(name, key); else if (!after.has(name)) after.set(name, key); }
+        for (const name of Object.keys(key.pose)) {
+            // Archives retain their original key order. Find temporal neighbours
+            // without sorting or rewriting that data (sorted input is identical).
+            if (!late) { if (!before.has(name) || key.t >= before.get(name).t) before.set(name, key); }
+            else if (!after.has(name) || key.t < after.get(name).t) after.set(name, key);
+        }
     }
     for (const name of new Set([...before.keys(), ...after.keys()])) {
         const a = before.get(name), b = after.get(name);

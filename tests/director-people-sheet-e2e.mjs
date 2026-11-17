@@ -22,14 +22,17 @@ const filmShot=id=>JSON.parse(fs.readFileSync(path.join(root,CUT,'review-cut.jso
 const {base,page,errors,close}=await openDirectorBrowser();
 const shoot=async(name,row)=>{if(!shots)return;fs.mkdirSync(shots,{recursive:true});if(row)await page.evaluate(r=>{const e=document.querySelector(`[data-ps-row="${r}"]`),v=e?.closest('.timeline-viewport');if(e&&v)v.scrollTop+=e.getBoundingClientRect().top-v.getBoundingClientRect().top-30;},row);await wait(300);await page.screenshot({path:path.join(shots,name)});};
 const twirl=async id=>{await page.$eval(`[data-ps-twirl="${id}"]`,e=>e.click());await wait(300);};
-const rowKeys=(row,prop)=>page.$$eval(`[data-ps-of="${row}"][data-ps-prop="${prop}"] [data-sk]`,l=>l.map(e=>e.dataset.sk));
-const selected=()=>page.$$eval('.ps-row .sk.selected',l=>l.map(e=>e.dataset.sk).sort());
+let omarModel=null;
+const modernId=id=>omarModel?id.replace(/^pose\|omar\|/,'pose|omar|'+omarModel+'|'):id;
+const legacyId=id=>id.replace(/^pose\|omar\|people-[^|]+\|/,'pose|omar|');
+const rowKeys=async(row,prop)=>[...new Set((await page.$$eval(`[data-ps-of="${row}"][data-ps-prop="${prop}"] [data-sk]`,l=>l.map(e=>e.dataset.sk))).map(legacyId))];
+const selected=async()=>[...new Set((await page.$$eval('.ps-row .sk.selected',l=>l.map(e=>e.dataset.sk))).map(legacyId))].sort();
 const playhead=()=>page.$eval('#director-timeline [name="timeline-seconds"]',e=>Number(e.value));
 const inspector=()=>page.$eval('[data-ps-inspector]',e=>e.textContent.replace(/\s+/g,' ')).catch(()=>'');
 const set=(name,value)=>page.evaluate((n,v)=>{const e=document.querySelector(`#director-panel [name="${n}"]`);e.value=String(v);e.dispatchEvent(new Event('change',{bubbles:true}));},name,value);
 const until=async(fn,what,ms=60000)=>{const end=Date.now()+ms;for(;;){const v=await fn();if(v)return v;if(Date.now()>end)throw Error('timed out: '+what);await wait(250);}};
 const keyTime=async id=>Number((await page.$eval(`[data-sk="${id}"]`,e=>e.getAttribute('aria-label'))).match(/at ([\d.]+) s/)[1]);
-async function at(id){await page.$eval(`[data-sk="${id}"]`,e=>e.scrollIntoView({block:'center'}));await wait(150);return page.$eval(`[data-sk="${id}"]`,e=>{const r=e.getBoundingClientRect(),l=e.parentElement.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2,left:l.x,width:l.width};});}
+async function at(id){id=modernId(id);await page.$eval(`[data-sk="${id}"]`,e=>e.scrollIntoView({block:'center'}));await wait(150);return page.$eval(`[data-sk="${id}"]`,e=>{const r=e.getBoundingClientRect(),l=e.parentElement.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2,left:l.x,width:l.width};});}
 async function click(id,{shift=false,button='left'}={}){const p=await at(id);if(shift)await page.keyboard.down('Shift');await page.mouse.click(p.x,p.y,{button});if(shift)await page.keyboard.up('Shift');await wait(400);}
 async function drag(id,seconds,T,{alt=true}={}){
   const p=await at(id),x=p.left+p.width*seconds/T;if(alt)await page.keyboard.down('Alt');
@@ -119,7 +122,7 @@ try{
   await openChapter(page,base,m);
   await page.$eval('[data-inspector-tab="people"]',e=>e.click());await until(()=>page.$('[data-action="pe-row"]'),'the People list');
   await page.$eval('[data-action="pe-row"][data-index="0"]',e=>e.click());await wait(800);
-  await seek(page,3.2);await page.$eval('[data-action="pe-pose-enter"]',e=>e.click());
+  await seek(page,3.2);omarModel=await page.evaluate(()=>document.getElementById('stage').contentWindow.ErgoFlex.workspaceRoom.people.byKey('omar').userData.person.id);await page.$eval('[data-action="pe-pose-enter"]',e=>e.click());
   await until(()=>page.$eval('#director-panel',p=>/Pose mode/.test(p.textContent)&&!/Loading the skeleton/.test(p.textContent)).catch(()=>false),'the skeleton',120000);
   if(await page.$eval('[data-action="pe-key-auto"]',e=>e.getAttribute('aria-pressed'))!=='true')await page.$eval('[data-action="pe-key-auto"]',e=>e.click());
   await set('pe-joint','lowerarm_l');await wait(300);await set('pe-rx',35);await wait(600);
@@ -127,9 +130,9 @@ try{
   await set('pe-joint','head');await wait(300);await set('pe-ry',20);await wait(600);
   await page.$eval('[data-action="pe-pose-done"]',e=>e.click());await wait(600);
   await twirl('omar');assert.deepEqual(await rowKeys('omar','pose'),['pose|omar|3.2','pose|omar|6']);
-  await twirl('omar|pose');assert.deepEqual(await page.$$eval('[data-ps-of="omar"][data-ps-prop="joint"]',l=>l.map(e=>e.dataset.psBone)),['head','lowerarm_l'],'a row per keyed joint');
+  await twirl('omar|pose');await twirl('omar|pose|'+omarModel);assert.deepEqual(await page.$$eval('[data-ps-of="omar"][data-ps-prop="joint"]',l=>l.map(e=>e.dataset.psBone)),['head','lowerarm_l'],'a row per keyed joint');
   assert.deepEqual(await rowKeys('omar','joint'),['pose|omar|6|head','pose|omar|3.2|lowerarm_l','pose|omar|6|lowerarm_l']);
-  assert.equal(await page.$eval('[data-sk="pose|omar|3.2"]',e=>e.classList.contains('sk-circle')),true,'smooth = circle');
+  assert.equal(await page.$eval(`[data-sk="${modernId('pose|omar|3.2')}"]`,e=>e.classList.contains('sk-circle')),true,'smooth = circle');
   // copy 3.2, paste at 11, Delete, undo
   await click('pose|omar|3.2');ins=await inspector();assert.ok(/KEY · POSE/.test(ins),ins);
   await key('Control+c');await seek(page,11);await key('Control+v');
@@ -140,18 +143,18 @@ try{
   await drag('pose|omar|6|head',8,MT);{const j=await rowKeys('omar','joint');assert.equal(j.length,4);assert.ok(/^pose\|omar\|(7\.9\d*|8(\.0\d*)?)\|head$/.test(j[0])&&j.slice(1).join()==='pose|omar|3.2|lowerarm_l,pose|omar|6|lowerarm_l,pose|omar|11|lowerarm_l','the head key alone moved (Alt: free, about 8 s): '+j);}
   // M-d: right-click 6: Hold -> square; Inspector Interpolation: Linear -> diamond (one undo step each)
   await click('pose|omar|6',{button:'right'});await page.$eval('.ps-menu [data-ps-ease="hold"]',e=>e.click());await wait(600);
-  assert.ok(await page.$eval('[data-sk="pose|omar|6"]',e=>e.classList.contains('sk-square')),'hold = square');
-  await click('pose|omar|6');await set('pe-sk-ease','linear');await wait(600);assert.ok(await page.$eval('[data-sk="pose|omar|6"]',e=>e.classList.contains('sk-diamond')),'linear = diamond');
-  await key('Control+z');assert.ok(await page.$eval('[data-sk="pose|omar|6"]',e=>e.classList.contains('sk-square')),'undo: hold again');
+  assert.ok(await page.$eval(`[data-sk="${modernId('pose|omar|6')}"]`,e=>e.classList.contains('sk-square')),'hold = square');
+  await click('pose|omar|6');await set('pe-sk-ease','linear');await wait(600);assert.ok(await page.$eval(`[data-sk="${modernId('pose|omar|6')}"]`,e=>e.classList.contains('sk-diamond')),'linear = diamond');
+  await key('Control+z');assert.ok(await page.$eval(`[data-sk="${modernId('pose|omar|6')}"]`,e=>e.classList.contains('sk-square')),'undo: hold again');
   // Inspector: the elbow's Bend at 3.2 typed
   await click('pose|omar|3.2');await set('pe-sk-joint','lowerarm_l');await wait(300);
   assert.ok(Math.abs(await page.$eval('#director-panel [name="pe-sk-rx"]',e=>Number(e.value))-35)<.6,'Bend shows the key\'s 35°');
   await set('pe-sk-rx',50);await wait(600);
   await shoot('s33-md-pose-keys.png','omar');
-  const mp=JSON.parse(await exportCut()).shots[0].peopleEdits,om=mp.cast.find(e=>e.key==='omar');
+  const mp=JSON.parse(await exportCut()).shots[0].peopleEdits,rawOm=mp.cast.find(e=>e.key==='omar'),om={...rawOm,...rawOm.postures[omarModel]};
   assert.deepEqual(om.poseKeys.map(k=>[Math.round(k.t*10)/10,Object.keys(k.pose).sort().join(),k.ease||'smooth']),[[3.2,'lowerarm_l','smooth'],[6,'lowerarm_l','hold'],[8,'head','smooth'],[11,'lowerarm_l','smooth']]);
   assert.ok(Math.abs(turnAngles(om.poseKeys[0].pose.lowerarm_l)[0]-50)<.6,'Bend 50 written');
-  for(const e of mfilm.people.cast){const {poseKeys,...r}=mp.cast.find(x=>x.key===e.key);assert.deepEqual(r,e,`${e.key}: everything else as the film has it`);}
+  for(const e of mfilm.people.cast){const {poseKeys,postures,...r}=mp.cast.find(x=>x.key===e.key);assert.deepEqual(r,e,`${e.key}: everything else as the film has it`);}
   assert.deepEqual(errors,[],'page errors');
   console.log('PASS people sheet: M-a rows / twirl, M-b select / marquee / Inspector / J K / ◀ ▶, M-c move / multi / snap / Time / ◆ / Delete / copy-paste / undo, M-d shapes / right-click / Interpolation; exports change only what was edited');
 }finally{await close();}

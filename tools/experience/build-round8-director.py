@@ -428,6 +428,40 @@ def apply_props(cid, f, props):
     return wrote
 
 
+_fin = lambda x: isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
+
+
+def archived_pose(v):
+    """A pose's shape only (a bone name, four finite numbers not all zero); the numbers are kept exactly."""
+    if not isinstance(v, dict): return None
+    out = {k: list(q) for k, q in v.items() if re.fullmatch(r'[A-Za-z][A-Za-z0-9_]{0,39}', str(k)) and isinstance(q, list) and len(q) == 4 and all(_fin(x) for x in q) and math.hypot(*q) > 1e-6}
+    return out or None
+
+
+def archived_keys(v):
+    if not isinstance(v, list): return None
+    out = [k for k in v if isinstance(k, dict) and _fin(k.get('t')) and 0 <= k['t'] <= 36000 and archived_pose(k.get('pose'))
+           and len(k['pose']) == len(archived_pose(k['pose']))]
+    return out or None
+
+
+def archived_postures(e):
+    """The same checks as people-postures.mjs validateArchivedKeys, on one cast entry (changed in place)."""
+    if 'postures' in e:
+        if isinstance(e['postures'], dict):
+            e['postures'] = {k: r for k, r in e['postures'].items() if re.fullmatch(r'people-[a-z0-9][a-z0-9._-]{0,90}', str(k), re.I) and isinstance(r, dict)}
+        else: del e['postures']
+    for r in [e, *(e.get('postures') or {}).values()]:
+        if r.get('pose') is not None:
+            p = archived_pose(r['pose'])
+            if p: r['pose'] = p
+            else: del r['pose']
+        if 'poseKeys' in r and r['poseKeys'] is not None:
+            k = archived_keys(r['poseKeys'])
+            if k: r['poseKeys'] = k
+            else: del r['poseKeys']
+
+
 def clean_people(v):
     """Director Mode's cast for a chapter (experience/people-edits.mjs cleanPeople): {cast: [...], when, chair, fade}; None if not one.
     v2 ({"v": 2, ...}, S31): the film's whole `people` object VERBATIM (only, except, place, chair, fade, when, cast with
@@ -459,6 +493,11 @@ def clean_people(v):
         # pose fine tuning (experience/people-edits.mjs cleanPose): bone -> quaternion, as the Director cleaned it
         pose = {k: [round(float(x), 4) for x in q] for k, q in (e.get('pose') or {}).items() if re.fullmatch(r'[A-Za-z][A-Za-z0-9_]{0,39}', k) and isinstance(q, list) and len(q) == 4 and all(num(x) and abs(x) <= 1.0001 for x in q)} if isinstance(e.get('pose'), dict) else {}
         if pose: out['pose'] = dict(list(pose.items())[:80])
+        # Pose stores and legacy corrections must survive without rounding (people-postures.mjs: only the shape is checked,
+        # the numbers stay exactly as they are). Model availability is not a reason to discard an archived posture record.
+        for field in ('pose', 'poseKeys', 'postures', 'poseBindings', 'poseSource'):
+            if field in e: out[field] = copy.deepcopy(e[field])
+        archived_postures(out)
         seen.add(key); cast.append(out)
     res = {'cast': cast}; when = {}
     for key, spans in (v.get('when') or {}).items() if isinstance(v.get('when'), dict) else []:

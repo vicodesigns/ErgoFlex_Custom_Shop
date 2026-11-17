@@ -62,7 +62,7 @@ const ID = [0, 0, 0, 1];
 }
 {   // The Director's people data. Field by field (no v): the film's own fields are no longer dropped.
     const walker = { key: 'noah-steps', id: 'people-noah-stand-wait', at: [-2681, -1248], turn: 43, walk: { path: [[-2681, -1248], [-2818, -914]], start: 4, pace: 2.2, then: 'people-noah-stand-screen-pull' }, look: ['kai'], poseKeys: [{ t: 4.5, pose: { head: turnY(12) } }] };
-    assert.deepEqual(cleanPerson(walker), { ...walker, poseKeys: cleanPoseKeys(walker.poseKeys) });
+    assert.deepEqual(cleanPerson(walker), walker, 'legacy key precision survives a read');
     const roller = { key: 'kai-rolls', id: 'people-kai-wheel-roll', at: [-961, 1300], turn: 0, roll: { path: [[-961, 1300], [-961, -265]], start: .3, speed: 1, radius: 350 } };
     assert.deepEqual(cleanPerson(roller), roller);
     const actor = { key: 'noah-taps', id: 'people-noah-stand-screen-tap', at: [-2930, -1080], turn: -146, act: { at: 8.2 } }; assert.deepEqual(cleanPerson(actor), actor);
@@ -88,7 +88,7 @@ const ID = [0, 0, 0, 1];
     assert.ok(!film.cast.some(c => c.key === 'fern' || c.key === 'noah-taps') && film.when['noah-taps'] === undefined && film.when['noah-pulls'], 'a hidden person and their times are not in the film');
     assert.deepEqual(film.except, oilers.except, 'except / only / place stay');
     const keyed = structuredClone(oilers); keyed.cast[0].poseKeys = [{ t: 2, pose: { head: [0, 0, 0, -1] } }, { t: 1, pose: { head: turnY(10) } }, { t: 'x' }];
-    assert.deepEqual(cleanPeople({ v: 2, ...keyed }).cast[0].poseKeys.map(k => k.t), [1, 2], 'pose keys are stored clean');
+    assert.deepEqual(cleanPeople({ v: 2, ...keyed }).cast[0].poseKeys, keyed.cast[0].poseKeys.slice(0,2), 'valid archived keys keep their order, precision, and quaternion sign');
     assert.equal(cleanPeople({ v: 2, cast: [{ id: 'not a person' }, 7, { id: 'people-kai-wheel-roll', anything: { kept: true } }] }).cast.length, 1);
 }
 {   // The stage: a keyed joint at this second of the chapter, for someone nothing else moves, and back with the time.

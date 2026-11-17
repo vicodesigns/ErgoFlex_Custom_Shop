@@ -1,0 +1,230 @@
+[
+  {
+    "id": "rise",
+    "room": "home",
+    "layout": "house",
+    "mode": "morning",
+    "seconds": 18,
+    "motion": {
+      "version": 2,
+      "initial": {
+        "height": 28,
+        "tilt": 0,
+        "x": 0,
+        "z": 0,
+        "yaw": 0
+      },
+      "clips": [
+        {
+          "id": "comfortable-standing",
+          "lane": "lift",
+          "kind": "lift",
+          "start": 3.4,
+          "duration": 4.2,
+          "easing": "smooth",
+          "label": "Rise to comfortable standing",
+          "target": 39
+        },
+        {
+          "id": "27f6834b-b946-4f74-bbf5-629e95a3f1bf",
+          "lane": "tilt",
+          "kind": "tilt",
+          "start": 6.4,
+          "duration": 1.2,
+          "easing": "linear",
+          "label": "",
+          "target": -5
+        },
+        {
+          "id": "full-height",
+          "lane": "lift",
+          "kind": "lift",
+          "start": 9.45,
+          "duration": 3.2,
+          "easing": "smooth",
+          "label": "Back to sitting",
+          "target": 28
+        },
+        {
+          "id": "2ddd39af-db54-4716-8878-0e89f21c3f42",
+          "lane": "tilt",
+          "kind": "tilt",
+          "start": 11.364,
+          "duration": 1.286,
+          "easing": "linear",
+          "label": "",
+          "target": 0
+        }
+      ]
+    },
+    "people": {
+      "only": [
+        "people-maya-sit-type"
+      ],
+      "chair": {
+        "back": 300,
+        "side": 760,
+        "turn": -42
+      },
+      "cast": [
+        {
+          "key": "maya-stand",
+          "id": "people-maya-stand-type-41",
+          "desk": "stand",
+          "reach": 850,
+          "pose": {
+            "upperarm_l": [
+              0.14690371355150492,
+              -0.03732203427202023,
+              0.05408950946408292,
+              0.9869653943621886
+            ],
+            "lowerarm_l": [
+              -0.02210594874625814,
+              -2.09392174137929e-8,
+              0.0011855970659346796,
+              0.999754930665323
+            ],
+            "hand_l": [
+              -0.12330310313529139,
+              0.014468864627722636,
+              0.0846558445532394,
+              -0.9886457326548121
+            ],
+            "upperarm_r": [
+              0.10813197388625959,
+              0.04639718939106359,
+              -0.08322678024789257,
+              0.9895595384258798
+            ],
+            "lowerarm_r": [
+              0.01590259982262351,
+              -1.9788315401211842e-8,
+              0.0008529375669013434,
+              0.9998731818667745
+            ],
+            "hand_r": [
+              0.13886925746575282,
+              0.043211538873889815,
+              0.0766642511248137,
+              0.9863927639832587
+            ]
+          }
+        },
+        {
+          "key": "maya-waits",
+          "id": "people-maya-stand-wait",
+          "at": [
+            -167,
+            405
+          ],
+          "turn": 180
+        }
+      ],
+      "when": {
+        "maya-waits": [
+          [
+            3.75,
+            7.4,
+            0.4,
+            0.4
+          ],
+          [
+            9.65,
+            12.5,
+            0.4,
+            0.4
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id": "wellness",
+    "room": "gym",
+    "layout": "house",
+    "mode": "morning",
+    "seconds": 16,
+    "motion": {
+      "version": 2,
+      "initial": {
+        "height": 28,
+        "tilt": 0,
+        "x": 0,
+        "z": 0,
+        "yaw": 0
+      },
+      "clips": [
+        {
+          "id": "stand-break",
+          "lane": "lift",
+          "kind": "lift",
+          "start": 6,
+          "duration": 5,
+          "easing": "smooth",
+          "label": "Stand and reset",
+          "target": 41
+        }
+      ]
+    },
+    "people": {
+      "only": [
+        "people-maya-sit-type",
+        "people-priya-stretch",
+        "kai-bike"
+      ],
+      "cast": [
+        {
+          "key": "maya-stand",
+          "id": "people-maya-stand-type-41",
+          "desk": "stand",
+          "reach": 850,
+          "colors": {
+            "top": "#2d7d8a",
+            "bottom": "#1f2228",
+            "shoes": "#ececec"
+          }
+        },
+        {
+          "key": "maya-break",
+          "id": "people-maya-stretch",
+          "fromDesk": true,
+          "at": [
+            -421,
+            85
+          ],
+          "turn": 180,
+          "colors": {
+            "top": "#2d7d8a",
+            "bottom": "#1f2228",
+            "shoes": "#ececec"
+          }
+        }
+      ],
+      "place": {
+        "people-priya-stretch": {
+          "at": [
+            1250,
+            -1000
+          ],
+          "turn": 180
+        }
+      },
+      "when": {
+        "maya-break": [
+          [
+            9.7,
+            12.3,
+            0.3,
+            0.35
+          ]
+        ]
+      },
+      "chair": {
+        "back": 100,
+        "side": -700,
+        "turn": 60
+      }
+    }
+  }
+]

@@ -26,6 +26,7 @@
 // (build-round8-director.py) does the same on its side: the film's `people` is this object minus `v` and minus the cast
 // entries with hide: true (and their `when`). Without `v` it is the first form above (cleaned field by field).
 import {cleanPoseKeys} from '../people-pose-keys.mjs';
+import {migratePostures,validateArchivedKeys} from '../people-postures.mjs';
 export {cleanPoseKeys,poseAt,setPoseKey,removePoseKey,moveKey,setKeyEase,copyKey,pasteKey,keyTimes,keyedBones,EASES,KEY_SNAP} from '../people-pose-keys.mjs';
 const finite=v=>typeof v==='number'&&Number.isFinite(v);
 const r1=v=>Math.round(v*10)/10,r3=v=>Math.round(v*1000)/1000;
@@ -71,8 +72,11 @@ export function cleanPerson(e){
   const colors={};for(const part of PARTS)if(typeof e.colors?.[part]==='string'&&/^#[0-9a-f]{6}$/i.test(e.colors[part]))colors[part]=e.colors[part].toLowerCase();
   if(Object.keys(colors).length)out.colors=colors;
   const pose=cleanPose(e.pose);if(pose)out.pose=pose;
+  // Existing correction values are archival data, not new editor input. Preserve
+  // their precision and unknown model records through the legacy whitelist too.
+  for(const k of ['pose','poseKeys','postures','poseBindings','poseSource'])if(e[k]!==undefined&&plain(e[k]))out[k]=structuredClone(e[k]);
   const look=[].concat(e.look??[]).filter(k=>typeof k==='string'&&KEY.test(k)).slice(0,4);if(look.length)out.look=look;
-  return out;
+  return validateArchivedKeys(out);
 }
 export function cleanSpans(v,seconds=Infinity){
   if(!Array.isArray(v))return null;
@@ -87,10 +91,11 @@ export function cleanSpans(v,seconds=Infinity){
 // v: 2: the film's whole people object as it is (see the top); only a cast entry that is not a person is dropped.
 function cleanPeopleV2(v){
   let out;try{out=JSON.parse(JSON.stringify(v));}catch{return null;}
-  out.cast=out.cast.filter(e=>e&&typeof e==='object'&&typeof e.id==='string'&&MODEL.test(e.id));
-  for(const e of out.cast){if(e.poseKeys!==undefined){const keys=cleanPoseKeys(e.poseKeys);if(keys)e.poseKeys=keys;else delete e.poseKeys;}}
+  out.cast=out.cast.filter(e=>e&&typeof e==='object'&&typeof e.id==='string'&&MODEL.test(e.id)).map(validateArchivedKeys);
   return out;
 }
+// Called at a deliberate write/export boundary, never as a side effect of read.
+export const canonicalPeople = p => ({...p,cast:p.cast.map(migratePostures)});
 export function cleanPeople(v){
   if(!v||typeof v!=='object'||!Array.isArray(v.cast))return null;
   if(v.v===2)return cleanPeopleV2(v);

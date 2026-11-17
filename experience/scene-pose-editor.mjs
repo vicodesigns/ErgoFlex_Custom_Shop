@@ -6,10 +6,11 @@
 //                 hand or foot keeps facing the way it did. E turns the wrist or ankle itself.
 // Fingers open and close a step at a time; one side can be copied to the other; a joint, a limb or the whole pose
 // goes back to the posture as built. Every change is one undo step and lives in the chapter's cast as
-// cast[i].pose = { '<bone>': [x, y, z, w] } (people-edits.mjs), so the live stage, Render still and the film show it.
+// cast[i].postures[modelId].pose = { '<bone>': [x, y, z, w] }, so the live stage and film show it.
+// The People controller supplies an active-posture view and routes writes to that record.
 import {poseAt,setPoseKey,removePoseKey,moveKey,setKeyEase,copyKey,pasteKey,keyTimes,EASES,KEY_SNAP} from '../people-pose-keys.mjs';
 // Pose KEYS (S31, Blender's way): with Auto-key on (the red dot; off until turned on, then remembered) every adjustment writes a key at the playhead
-// for the bones it changed (cast[i].poseKeys: [{t, pose, ease}], people-pose-keys.mjs); between keys each bone eases from
+// for the bones it changed (the active posture record’s poseKeys: [{t, pose, ease}], people-pose-keys.mjs); between keys each bone eases from
 // key to key on top of what is programmed (desk arms, the walk, the roll, the acts). Key all (I) / Key limb key
 // the bones as they are now. The selected person's keys are diamonds on their row (the People tab while posing, and the
 // timeline's Pose keys row): click one = the playhead goes there, drag = retime, Delete = remove it; the selected key's
@@ -36,7 +37,7 @@ const ARM=/^(clavicle|upperarm|lowerarm|hand|thumb_\d+|index_\d+|middle_\d+|ring
 const limbOf=bone=>ARM.test(bone)?ARM:LEG.test(bone)?LEG:null;
 
 export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,rerender,personName,editing,saved=null,time=()=>0,seek=()=>{},seconds=()=>0}){
-  let key=null,joint=null,gmode='rotate',h=null,rigging=false,drag=null,listening=false,orbit=true,selT=null,clip=null,hinted=false;
+  let key=null,joint=null,gmode='rotate',h=null,rigging=false,drag=null,listening=false,orbit=true,selT=null,clip=null,hinted=false,switching=false;
   const AUTO='ergoflex.director.autoKey';
   let autoKey=(()=>{try{return globalThis.localStorage?.getItem(AUTO)==='1';}catch{return false;}})();      // (off until turned on, as in Blender: then remembered)
   const now=()=>Math.round(time()*1000)/1000;
@@ -80,7 +81,7 @@ export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,
     const people=stagePeople(),t=three();if(!people||!t||!tools())return null;const {THREE}=tools(),dom=t.renderer.domElement,r=dom.getBoundingClientRect(),ray=new THREE.Raycaster();
     ray.setFromCamera(new THREE.Vector2((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1),t.camera);
     const hit=ray.intersectObjects(people.people.filter(o=>o.visible),true)[0];if(!hit)return null;
-    for(let p=hit.object;p;p=p.parent)if(p.userData?.person)return people.keyOf(p.userData.person);
+    for(let p=hit.object;p;p=p.parent)if(p.userData?.person)return people.editKeyOf(p.userData.person);
     return null;
   }
   function listen(){
@@ -95,8 +96,13 @@ export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,
     if(!o||!entry(key)){exit();return;}
     // Not in the scene at this moment (the playhead is outside this placement's bar): say why there are no dots.
     if(editing()&&!o.visible){if(!hinted){hinted=true;status(`${personName(entry(key))} is not in the scene at this moment, so there are no dots: move the playhead into one of their bars on the People lane.`);}}else hinted=false;
-    // someone at a desk changes posture with its height: the joints here belong to the posture pose mode was opened on
-    if(o.userData.person?.variant&&o.userData.person.id!==entry(key).id){exit();status('The desk has them in another posture now: pose mode is closed, the pose is kept.');return;}
+    // A desk can change the displayed model while posing: rebind the tools without writing a correction.
+    if(h&&h.object.userData.person.id!==o.userData.person.id){
+      // Cancel an unfinished drag rather than commit it to another model.
+      switching=true;drag=null;selT=null;kd=null;dispose();switching=false;win().__directorDragging=false;
+      tools().t.controls.enabled=orbit;
+      status('Pose mode follows the displayed posture. Each posture keeps its own adjustments and keys.');rerender();
+    }
     if(!o.userData.personRig){if(!rigging){rigging=true;people.rig(o).catch(()=>null).finally(()=>{rigging=false;});}if(h)h.group.visible=false;return;}
     if(!h||h.object!==o){const first=!h;build(o);if(first)rerender();}      // (the panel said 'Loading the skeleton…' until now)
     const {THREE,t}=tools(),on=o.visible&&editing();h.group.visible=on;
@@ -136,7 +142,7 @@ export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,
     c.updateWorldMatrix(false,true);
   }
   function startDrag(){const b=bone(joint);drag={end:moving()&&b?b.getWorldQuaternion(new (T().Quaternion)()):null};}
-  function endDrag(){drag=null;if(!key||!joint)return;commit(`${personName(entry(key))}: ${label(joint).toLowerCase()} adjusted.`);}
+  function endDrag(){drag=null;if(switching||!key||!joint||h?.object.userData.person.id!==entry(key)?.id)return;commit(`${personName(entry(key))}: ${label(joint).toLowerCase()} adjusted.`);}
   // ---- the cut
   function read(){
     const rig=rigOf(),out={};if(!rig)return out;
@@ -276,7 +282,7 @@ export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,
   function panel(head){
     const e=entry(key),ready=!!rigOf(),groups=[...new Set(JOINTS.map(j=>j[2]))],a=angles(),side=joint&&sideOf(joint),adjusted=Object.keys(e?.pose||{}).length;
     return `<section class="people-selected people-pose" data-reveal="person">${head}
-      <div class="people-pose-bar"><strong>Pose mode</strong><span>${adjusted?`${adjusted} joint${adjusted===1?'':'s'} adjusted`:'as built'}</span><button type="button" class="primary" data-action="pe-pose-done">Done</button></div>
+      <div class="people-pose-bar"><strong>Pose mode · ${escape(e?.id?.replace(/^people-[a-z]+-/,'')||'')}</strong><span>${adjusted?`${adjusted} joint${adjusted===1?'':'s'} adjusted`:'as built'}</span><button type="button" class="primary" data-action="pe-pose-done">Done</button></div>
       ${ready?'':'<p class="director-hint people-busy">Loading the skeleton…</p>'}
       <p class="director-hint">Click a dot on the body. <b class="pose-fk">Blue</b> dots turn a joint. <b class="pose-ik">Orange</b> dots (hands, feet) drag the whole arm or leg. Undo steps back one adjustment.</p>
       ${keysPanel(e)}

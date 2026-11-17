@@ -1,3 +1,4 @@
+import {postureRecord,postureRecords,editPosture} from '../people-postures.mjs';
 // The People track's PROGRAMMED diamonds (S31 M4): what a chapter's `people` already makes happen, derived for the
 // Director's timeline (one row per person: the placements of one character share a row). Pure; no three.js.
 //   in / out      a placement comes in (its `when` window starts after 0) or goes out (ends before the chapter does)
@@ -135,9 +136,11 @@ export function retimeDiamond(people,d,t,seconds=Infinity,opts={}){
 //   screen    'On screen': a bar per placement (its posture); keys at its edges: in / out / change (retimeDiamond links)
 //   path      'Path': set off, each waypoint, arrival (a set-off merged with a placement edge is that edge's key)
 //   actions   'Actions': a bar per action (act.at .. + dur); keys act / act-end
-//   pose      'Pose': the pose keys (cast[i].poseKeys); twirled again, a row per keyed joint ('joint' keys)
-// Every key has a stable id: kind|entry|n  (n: the span, the point index; pose keys: the time, joint keys: time|bone).
+//   pose      'Pose': keys per postures[modelId] (legacy: entry.poseKeys); posture/joint subrows
+// Canonical pose keys include model identity: pose|entry|modelId|time[|bone].
+// Legacy keys keep their stable id: kind|entry|n  (n: the span, the point index; pose keys: the time, joint keys: time|bone).
 // Only pose keys have an interpolation (their ease); the time keys of the programmed motion have none.
+export const poseKeyId=(key,t,bone=null,posture=null)=>`pose|${key}|${posture?posture+'|':''}${t}${bone?'|'+bone:''}`;
 export const SHEET_PROPS=[['screen','On screen'],['path','Path'],['actions','Actions'],['pose','Pose']];
 const motionOf=(e,kind)=>{const m=e?.[kind];return m&&typeof m==='object'?m:null;};
 export function sheet(people,seconds,opts={}){
@@ -164,16 +167,17 @@ export function sheet(people,seconds,opts={}){
         if(merged)path.push({id:`${kind}-start|${key}|0`,row:r.row,entry:key,kind:kind+'-start',t:merged.t,label:merged.label,d:merged,prop:'path',linked:true});
       }
       if(e.act&&finite(e.act.at))actBars.push({entry:key,t0:e.act.at,t1:e.act.at+(finite(e.act.dur)&&e.act.dur>0?e.act.dur:0)});
-      for(const pk of Array.isArray(e.poseKeys)?e.poseKeys:[]){
-        if(!finite(pk.t))continue;const bones=Object.keys(pk.pose||{}),ease=pk.ease||'smooth';
-        pose.push({id:`pose|${key}|${pk.t}`,row:r.row,entry:key,kind:'pose',prop:'pose',t:pk.t,ease,bones,label:`pose key (${bones.length} joint${bones.length===1?'':'s'})`});
-        for(const b of bones){if(!joints.has(b))joints.set(b,[]);joints.get(b).push({id:`pose|${key}|${pk.t}|${b}`,row:r.row,entry:key,kind:'joint',prop:'joint',bone:b,t:pk.t,ease,label:b});}
+      for(const [posture,record] of e.postures?postureRecords(e):[[null,e]])for(const pk of Array.isArray(record.poseKeys)?record.poseKeys:[]){
+        if(!finite(pk.t))continue;const bones=Object.keys(pk.pose||{}),ease=pk.ease||'smooth',tag=posture?{posture}:{};
+        const label=posture?(opts.label?.({...e,id:posture})||posture):'';
+        pose.push({id:poseKeyId(key,pk.t,null,posture),row:r.row,entry:key,...tag,kind:'pose',prop:'pose',t:pk.t,ease,bones,label:`${label} pose key (${bones.length} joints)`});
+        for(const b of bones){const group=(posture||'')+'|'+b;if(!joints.has(group))joints.set(group,{bone:b,...tag,label,keys:[]});joints.get(group).keys.push({id:poseKeyId(key,pk.t,b,posture),row:r.row,entry:key,...tag,kind:'joint',prop:'joint',bone:b,t:pk.t,ease,label:b});}
       }
     }
     const byT=(a,b)=>a.t-b.t;for(const l of [screen,path,actions,pose])l.sort(byT);
     const summary=[...new Set([...screen,...path,...actions,...pose].map(k=>k.t))].sort((a,b)=>a-b);
     return {row:r.row,label:r.label,entries:r.keys,summary,bars,actBars,
-      props:{screen,path,actions,pose},joints:[...joints.entries()].sort((a,b)=>rank(a[0])-rank(b[0])||a[0].localeCompare(b[0])).map(([bone,keys])=>({bone,keys:keys.sort(byT)}))};
+      props:{screen,path,actions,pose},joints:[...joints.values()].sort((a,b)=>(a.posture||'').localeCompare(b.posture||'')||rank(a.bone)-rank(b.bone)||a.bone.localeCompare(b.bone)).map(j=>({...j,keys:j.keys.sort(byT)}))};
   });
 }
 // Every key of the sheet by id (joint keys included).
@@ -194,6 +198,8 @@ export function neighborTime(times,t,dir){
   return dir<0?s.reverse().find(x=>x<t-1e-3):s.find(x=>x>t+1e-3);
 }
 const entryOf=(p,key)=>p.cast.find(x=>(x.key||x.id)===key);
+const readSlot=(p,k)=>{const e=entryOf(p,k.entry);return k.posture?postureRecord(e,k.posture):e;};
+const writeSlot=(p,k)=>{const e=entryOf(p,k.entry);if(!e)return null;if(!k.posture)return e;editPosture(e,k.posture,()=>{});return e.postures[k.posture];};
 const poseKind=k=>k.kind==='pose'||k.kind==='joint';
 const nearKey=(l,t)=>(l||[]).find(k=>Math.abs(k.t-t)<KEY_SNAP-1e-9);
 const putKeys=(e,n)=>{if(n.poseKeys)e.poseKeys=n.poseKeys;else delete e.poseKeys;};
@@ -235,11 +241,11 @@ export function shiftKeys(people,keys,dt,seconds,opts={}){
     if(!next)return {error:`${k.entry}: ${k.label} cannot go to ${want.toFixed(2)} s (${k.kind.endsWith('-end')||k.kind.endsWith('-point')?'it cannot arrive before it sets off':'that would leave no time in that window'}).`};
     p=next;
   }
-  const byEntry=new Map();for(const k of keys.filter(poseKind)){if(!byEntry.has(k.entry))byEntry.set(k.entry,[]);byEntry.get(k.entry).push(k);}
-  for(const [key,list] of byEntry){
-    const e=entryOf(p,key);if(!e)return {error:`${key} is not in the cast.`};
+  const byEntry=new Map();for(const k of keys.filter(poseKind)){const group=k.entry+'|'+(k.posture||'');if(!byEntry.has(group))byEntry.set(group,[]);byEntry.get(group).push(k);}
+  for(const list of byEntry.values()){
+    const first=list[0],key=first.entry,e=writeSlot(p,first);if(!e)return {error:`${key} is not in the cast.`};
     if(!shiftPose(e,list.map(k=>({t:k.t,bone:k.kind==='joint'?k.bone:null})),dt,T))return {error:'A pose key would leave the chapter.'};
-    for(const k of list){const t=(nearKey(e.poseKeys,r3(k.t+dt))?.t)??r3(k.t+dt);ids.set(k.id,k.kind==='joint'?`pose|${key}|${t}|${k.bone}`:`pose|${key}|${t}`);}
+    for(const k of list){const t=(nearKey(e.poseKeys,r3(k.t+dt))?.t)??r3(k.t+dt);ids.set(k.id,poseKeyId(key,t,k.kind==='joint'?k.bone:null,k.posture));}
   }
   return {people:p,ids};
 }
@@ -248,7 +254,7 @@ export function shiftKeys(people,keys,dt,seconds,opts={}){
 export function deleteKeys(people,keys){
   const p=structuredClone(people);let removed=0;const skipped=[],points=new Map();
   for(const k of keys){
-    if(poseKind(k)){const e=entryOf(p,k.entry);if(!e)continue;const before=JSON.stringify(e.poseKeys||null);putKeys(e,removePoseKey(e,k.t,k.kind==='joint'?k.bone:null));if(JSON.stringify(e.poseKeys||null)!==before)removed++;continue;}
+    if(poseKind(k)){const e=writeSlot(p,k);if(!e)continue;const before=JSON.stringify(e.poseKeys||null);putKeys(e,removePoseKey(e,k.t,k.kind==='joint'?k.bone:null));if(JSON.stringify(e.poseKeys||null)!==before)removed++;continue;}
     if(k.kind==='walk-point'||k.kind==='roll-point'){const m=motionOf(entryOf(p,k.entry),k.kind.split('-')[0]);if(Array.isArray(m?.path)){const id=k.entry+'|'+k.kind;if(!points.has(id))points.set(id,{m,idx:[]});points.get(id).idx.push(k.d.index);continue;}}
     skipped.push(k);
   }
@@ -260,20 +266,20 @@ export function deleteKeys(people,keys){
 export function copyKeys(people,keys){
   const pk=keys.filter(poseKind),t0=Math.min(...pk.map(k=>k.t)),items=[];
   for(const k of pk){
-    const at=nearKey(entryOf(people,k.entry)?.poseKeys,k.t);if(!at)continue;
-    if(k.kind==='joint'&&pk.some(x=>x.kind==='pose'&&x.entry===k.entry&&x.t===k.t))continue;   // (its whole key is copied)
+    const at=nearKey(readSlot(people,k)?.poseKeys,k.t);if(!at)continue;
+    if(k.kind==='joint'&&pk.some(x=>x.kind==='pose'&&x.entry===k.entry&&x.posture===k.posture&&x.t===k.t))continue;   // (its whole key is copied)
     const pose=k.kind==='joint'?(at.pose[k.bone]?{[k.bone]:at.pose[k.bone]}:null):at.pose;if(!pose)continue;
-    items.push({entry:k.entry,dt:r3(k.t-t0),pose:structuredClone(pose),...(k.kind==='pose'&&at.ease?{ease:at.ease}:{}),whole:k.kind==='pose'});
+    items.push({entry:k.entry,...(k.posture?{posture:k.posture}:{}),dt:r3(k.t-t0),pose:structuredClone(pose),...(k.kind==='pose'&&at.ease?{ease:at.ease}:{}),whole:k.kind==='pose'});
   }
   return {items,skipped:keys.length-pk.length};
 }
-export function pasteKeys(people,clip,t,seconds,{to=null}={}){
+export function pasteKeys(people,clip,t,seconds,{to=null,posture=null}={}){
   const p=structuredClone(people),ids=[],T=finite(seconds)?seconds:Infinity;
   for(const it of clip?.items||[]){
-    const key=to||it.entry,e=entryOf(p,key),at=r3(t+it.dt);if(!e||at<0||at>T+1e-6)continue;
+    const key=to||it.entry,target=posture||(to&&it.posture?entryOf(p,key)?.id:it.posture),e=writeSlot(p,{entry:key,posture:target}),at=r3(t+it.dt);if(!e||at<0||at>T+1e-6)continue;
     putKeys(e,setPoseKey(e,at,it.pose,undefined,it.whole?{ease:it.ease??'smooth'}:{}));
     const kt=nearKey(e.poseKeys,at)?.t??at;
-    if(it.whole)ids.push(`pose|${key}|${kt}`);else for(const b of Object.keys(it.pose))ids.push(`pose|${key}|${kt}|${b}`);
+    if(it.whole)ids.push(poseKeyId(key,kt,null,target));else for(const b of Object.keys(it.pose))ids.push(poseKeyId(key,kt,b,target));
   }
   return {people:p,ids:[...new Set(ids)]};
 }
@@ -283,7 +289,7 @@ export const EASE_SHAPES={linear:'diamond',smooth:'circle',hold:'square'};
 export const NO_EASE='Set off, waypoints, arrivals, edges and actions keep the motion\'s own pace: only pose keys have an interpolation.';
 export function setEase(people,keys,ease){
   const p=structuredClone(people);let n=0;
-  for(const k of keys.filter(poseKind)){const at=nearKey(entryOf(p,k.entry)?.poseKeys,k.t);if(!at)continue;if(ease==='smooth')delete at.ease;else at.ease=ease;n++;}
+  for(const k of keys.filter(poseKind)){const at=nearKey(writeSlot(p,k)?.poseKeys,k.t);if(!at)continue;if(ease==='smooth')delete at.ease;else at.ease=ease;n++;}
   return {people:p,n};
 }
 // The placement of the character on screen at t (its entry key), else its first.
@@ -295,17 +301,17 @@ export function entryAt(people,entries,t){
 // joint) as they are at t. Path: a waypoint where the person is at t, on the stretch they are on (the walk keeps its
 // length; a point on a straight stretch is not rounded), or the waypoint there is taken out. {people, did, id} or
 // {error}.
-export function toggleKeyAt(people,row,prop,t,seconds,{bone=null,entry=null,...opts}={}){
+export function toggleKeyAt(people,row,prop,t,seconds,{bone=null,entry=null,posture=null,...opts}={}){
   const p=structuredClone(people);t=r3(t);
   if(prop==='pose'||prop==='joint'){
-    const key=entry||entryAt(p,row.entries,t),e=entryOf(p,key);if(!e)return {error:'Nobody to key here.'};
+    const key=entry||entryAt(p,row.entries,t),model=posture||(entryOf(p,key)?.postures?entryOf(p,key)?.id:null),e=writeSlot(p,{entry:key,posture:model});if(!e)return {error:'Nobody to key here.'};
     const at=nearKey(e.poseKeys,t);
-    if(at&&(!bone||at.pose[bone])){putKeys(e,removePoseKey(e,at.t,bone));return {people:p,did:'removed',id:bone?`pose|${key}|${at.t}|${bone}`:`pose|${key}|${at.t}`};}
+    if(at&&(!bone||at.pose[bone])){putKeys(e,removePoseKey(e,at.t,bone));return {people:p,did:'removed',id:poseKeyId(key,at.t,bone,model)};}
     const bones=bone?[bone]:[...new Set((e.poseKeys||[]).flatMap(k=>Object.keys(k.pose)))];
     if(!bones.length)return {error:'Nothing keyed yet for them: pose them first (double-click the person, Auto-key on).'};
     const now=poseAt(e,t)||{},map=Object.fromEntries(bones.map(b=>[b,now[b]||[0,0,0,1]]));
     putKeys(e,setPoseKey(e,t,map));const kt=nearKey(e.poseKeys,t)?.t??t;
-    return {people:p,did:'added',id:bone?`pose|${key}|${kt}|${bone}`:`pose|${key}|${kt}`};
+    return {people:p,did:'added',id:poseKeyId(key,kt,bone,model)};
   }
   if(prop==='path'){
     const here=row.props.path.find(k=>k.kind.endsWith('-point')&&Math.abs(k.t-t)<.05);
@@ -355,7 +361,7 @@ export function anglesTurn([a,b,c]){
 }
 // A joint's turn in a pose key, from Bend / Twist / Side.
 export function setJointAngles(people,k,bone,angles){
-  const p=structuredClone(people),e=entryOf(p,k.entry);if(!e||!angles.every(finite))return null;
+  const p=structuredClone(people),e=writeSlot(p,k);if(!e||!angles.every(finite))return null;
   putKeys(e,setPoseKey(e,k.t,bone,anglesTurn(angles)));return p;
 }
 

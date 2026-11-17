@@ -1,7 +1,8 @@
-import {cleanPeople,effectivePeople,newKey,spanText,PARTS} from './people-edits.mjs';
+import {postureView,editPosture,migratePostures,editablePeople,postureRecord} from '../people-postures.mjs';
+import {cleanPeople,canonicalPeople,effectivePeople,newKey,spanText,PARTS} from './people-edits.mjs';
 import {createPoseEditor,JOINTS} from './scene-pose-editor.mjs';
 import {stackRows} from './lane-rows.mjs';
-import {placementOf,freeSpot,SEAT_FIELDS,sheet,sheetKeys,EASE_SHAPES,NO_EASE,pick,neighborTime,shiftKeys,deleteKeys,copyKeys,pasteKeys,setEase,toggleKeyAt,turnAngles,setJointAngles,waypointOf,setWaypoint} from './people-track.mjs';
+import {placementOf,freeSpot,SEAT_FIELDS,sheet,sheetKeys,EASE_SHAPES,NO_EASE,pick,neighborTime,shiftKeys,deleteKeys,copyKeys,pasteKeys,setEase,toggleKeyAt,entryAt,turnAngles,setJointAngles,waypointOf,setWaypoint} from './people-track.mjs';
 import {loadSavedPoses,storeSavedPoses,addSavedPose} from './saved-poses.mjs';
 import {createPathGizmo} from './people-path-gizmo.mjs';   // S31 M3 path editing (hook)
 // Director "People": who is in the chapter. The People tab lists the cast; click a person in the view (or a row) to
@@ -49,15 +50,20 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   function seed(){
     const f=film()?.people;
     if(f&&typeof f==='object'&&!Array.isArray(f)&&Array.isArray(f.cast))return {v:2,...structuredClone(f)};
+    // (a chapter whose film has no cast of its own: the room's people as plain entries, so the first edit copies them in and
+    // each one can be moved, hidden, recoloured or posed; they are the chapter's from then on)
     const live=stagePeople()?.resolved?.()||[];
     return {cast:live,when:f&&typeof f==='object'?structuredClone(f.when||{}):{},...(f?.chair?{chair:f.chair}:{}),...(f?.fade!==undefined?{fade:f.fade}:{})};
   }
-  const cast=()=>(own()||seed()).cast;
+  // The cast the tabs work on. Only a cast that keeps the film's own people (v2: the room's crew in `only` is still the
+  // room's) gets the room's people as pose-only entries (poseSource); a copied-in cast has them as real entries already.
+  const currentPeople=()=>{const base=own()||seed();return base.v===2?editablePeople(base,stagePeople()?.resolved?.({editable:true})||[]):base;};
+  const cast=()=>currentPeople().cast;
   const entry=key=>cast().find(e=>e.key===key)||null;
   const spans=key=>(own()?own().when:film()?.people?.when)?.[key]||null;
   const count=()=>cast().filter(e=>!e.hide).length;
   function write(change,text,{undoKey=null}={}){
-    const next=structuredClone(own()||seed());change(next);const clean=cleanPeople(next);
+    const next=currentPeople();change(next);const clean=cleanPeople(canonicalPeople(next));
     if(!clean){status('That would not be a cast the film can keep.',true);rerender();return;}
     commit(()=>{shot().peopleEdits=clean;},{key:undoKey,render:false});status(text);rerender();
   }
@@ -89,6 +95,9 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   }
   const ensure=()=>booting||=boot().catch(error=>{booting=null;throw error;});
   const objectOf=key=>stagePeople()?.byKey?.(key)||null;
+  const activeModel=key=>objectOf(key)?.userData?.person?.id||entry(key)?.id;
+  const poseEntry=key=>postureView(entry(key),activeModel(key));
+  const poseEdit=(key,change,text,options)=>{const id=activeModel(key);edit(key,x=>editPosture(x,id,change),text,options);};
   const free=e=>freeSpot(e);   // S33a2: only a person at a spot of their own (`at`); a seated one follows their seat
   function tick(){
     if(!tools)return;requestAnimationFrame(tick);
@@ -129,7 +138,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     return {at:[Math.round(p.x),Math.round(p.z)],turn:r1(THREE.MathUtils.radToDeg(Math.atan2(eye.x-p.x,eye.z-p.z)))};
   }
   // ---- pose mode (scene-pose-editor.mjs)
-  const pose=createPoseEditor({win,three,tools:()=>tools,stagePeople,entry,edit:(...a)=>edit(...a),status,rerender,personName:e=>e?personName(e):'',editing,saved:e=>savedHTML(e),time,seek,seconds});
+  const pose=createPoseEditor({win,three,tools:()=>tools,stagePeople,entry:poseEntry,edit:poseEdit,status,rerender,personName:e=>e?personName(e):'',editing,saved:e=>savedHTML(e),time,seek,seconds});
   const poseEditor=pose;     // swap() has a `pose` argument of its own
   // S31 M3 hook: a walker's / roller's path on the floor and in the People tab (people-path-gizmo.mjs)
   const paths=createPathGizmo({win,three,tools:()=>tools,stagePeople,entry,edit:(...a)=>edit(...a),status,editing,lightsShowing,selected:()=>sel,posing:()=>pose.active(),personName:e=>e?personName(e):'',objectOf:k=>objectOf(k),cast:()=>cast(),modelOf:id=>modelOf(id),poseOf:id=>poseOf(id),seconds,spans:k=>spans(k)});
@@ -148,7 +157,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   function pickObject(o){
     const people=stagePeople();
     for(let p=o;p;p=p.parent)if(p.userData?.person){
-      const key=people.keyOf(p.userData.person),now=performance.now(),twice=key===lastPick.key&&now-lastPick.t<450;lastPick={key,t:now};
+      const key=people.editKeyOf(p.userData.person),now=performance.now(),twice=key===lastPick.key&&now-lastPick.t<450;lastPick={key,t:now};
       select(key,{announce:!twice});
       if(twice&&entry(key))ensure().then(()=>{if(sel===key&&!pose.active())return enterPose(key);}).catch(error=>status(error.message,true));
       return true;
@@ -163,10 +172,10 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(!savedList.length)return '<p class="director-hint">No saved poses yet. Adjust the pose, name it and press Save pose: it can then be put on anyone as a starting point.</p>';
     const order=savedList.map((x,i)=>[x,i]).sort((a,b)=>(b[0].posture===p?.id)-(a[0].posture===p?.id));
     return `<div class="pose-saved" role="list" aria-label="Saved poses">${order.map(([x,i])=>{const same=x.posture===p?.id,label=catalog?.poses[x.posture]?.label||x.posture,n=Object.keys(x.joints).length;
-      return `<span class="pose-saved-item ${same?'':'other'}" role="listitem"><button type="button" data-action="pe-pose-apply" data-index="${i}" title="${escape(`${label} with ${n} joint${n===1?'':'s'} adjusted${x.from?' · made on '+x.from:''}${same?'':' · changes the posture to this one'}`)}">${escape(x.name)}</button><button type="button" class="pose-saved-x" data-action="pe-pose-delete" data-index="${i}" aria-label="Delete the saved pose ${escape(x.name)}" title="Delete this saved pose (people who have it keep it)">×</button></span>`;}).join('')}</div>`;
+      return `<span class="pose-saved-item ${same?'':'other'}" role="listitem"><button type="button" data-action="pe-pose-apply" data-index="${i}" ${e.poseSource&&!same?'disabled':''} title="${escape(`${label} with ${n} joint${n===1?'':'s'} adjusted${x.from?' · made on '+x.from:''}${same?'':' · changes the posture to this one'}`)}">${escape(x.name)}</button><button type="button" class="pose-saved-x" data-action="pe-pose-delete" data-index="${i}" aria-label="Delete the saved pose ${escape(x.name)}" title="Delete this saved pose (people who have it keep it)">×</button></span>`;}).join('')}</div>`;
   }
   function savePose(){
-    const e=sel&&entry(sel),p=e&&poseOf(e.id);if(!e||!p)return;
+    const e=sel&&poseEntry(sel),p=e&&poseOf(e.id);if(!e||!p)return;
     if(!e.pose){status('Adjust a joint first: there is nothing to save yet.',true);return;}
     const typed=document.querySelector('#director-panel [name="pe-pose-name"]')?.value||'';
     try{const {poses,saved}=addSavedPose(loadSavedPoses(store()),{name:typed.trim()||p.label,posture:p.id,joints:e.pose,from:personName(e)});storeSavedPoses(store(),poses);
@@ -175,9 +184,11 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   }
   async function applySaved(index){
     const x=savedList[index],e=sel&&entry(sel);if(!x||!e||!catalog)return;
+    if(e.poseSource&&poseOf(activeModel(sel))?.id!==x.posture){status('Choose a saved pose for the posture showing at the playhead.',true);return;}
     if(!catalog.poses[x.posture]){status('That saved pose was made on a posture this library no longer has.',true);return;}
-    await swap(sel,null,x.posture,x.joints);
-    if(entry(sel)?.pose)status(`${personName(entry(sel))}: saved pose “${x.name}”. Fine-tune from here; the saved pose stays as it is.`);
+    if(poseOf(activeModel(sel))?.id===x.posture)poseEdit(sel,p=>{p.pose=structuredClone(x.joints);},`${personName(e)}: saved pose “${x.name}”.`);
+    else await swap(sel,null,x.posture,x.joints);
+    if(poseEntry(sel)?.pose)status(`${personName(entry(sel))}: saved pose “${x.name}”. Fine-tune from here; the saved pose stays as it is.`);
   }
   function deleteSaved(index){
     const x=savedList[index];if(!x)return;
@@ -185,17 +196,8 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     rerender();
   }
   // ---- changes
-  // Someone at a desk sits and stands with it, so the desk may have them in another of their desk postures than the one chosen
-  // here. Fine tuning is for the posture that is showing: that one becomes the chosen posture first.
-  async function enterPose(key){
-    const e=entry(key),shown=objectOf(key)?.userData?.person;
-    if(e&&shown?.variant&&shown.id!==e.id&&modelOf(shown.id)){
-      const label=poseOf(shown.id)?.label?.toLowerCase()||'this posture';
-      edit(key,x=>{x.id=shown.id;x.desk=shown.desk;delete x.pose;},`${personName(e)}: fine-tuning ${label}, the posture the desk has them in now.${e.pose&&Object.keys(e.pose).length?' The fine tuning of their other posture is set aside (Undo brings it back).':''}`);
-      for(let i=0;i<40;i++){const now=objectOf(key)?.userData?.person;if(now&&now.id===shown.id&&!now.variant)break;await new Promise(r=>setTimeout(r,150));}
-    }
-    poseEditor.enter(key);
-  }
+  // Entering pose mode is read-only: editing targets the model showing now.
+  async function enterPose(key){if(entry(key))poseEditor.enter(key);}
   async function swap(key,character,pose,joints=null){
     const e=entry(key),m=e&&modelOf(e.id);if(!e||!catalog)return;
     const c=character||m?.character;let p=pose||m?.pose;if(!c||!p)return;
@@ -213,8 +215,9 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const info=catalog.poses[p],name=catalog.characters[c]?.name||cap(c);
     if(p!==m?.pose)poseEditor.exit();
     edit(key,x=>{
-      x.id=id;if(p!==m?.pose)delete x.pose;      // fine tuning belongs to the posture it was made on
-      if(joints)x.pose=structuredClone(joints);  // a saved pose: its posture and its joints in one step
+      const archived=migratePostures(x);delete x.pose;delete x.poseKeys;if(archived.postures)x.postures=archived.postures;
+      delete x.poseSource;delete x.poseBindings;x.id=id;
+      if(joints)editPosture(x,id,p=>{p.pose=structuredClone(joints);});  // a saved pose: its posture and its joints in one step
       if(info.desk){const role=info.stance==='seated'?'sit':info.stance==='wheelchair'?'wheel':'stand';if(!x.desk){x.desk=role;delete x.at;delete x.turn;delete x.y;delete x.beside;}else x.desk=role;}
       else if(x.desk){const o=objectOf(key),spot=o&&tools?read(o):floorSpot();delete x.desk;delete x.station;delete x.reach;x.at=spot.at;x.turn=spot.turn;}
     },`${name}: ${info.label.toLowerCase()}.`);
@@ -237,7 +240,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       `Added ${m.name}${info?.desk?' at the film desk':' in front of the camera'}. Undo takes them out again.`);
     sel=key;onSelect();rerender();
   }
-  function remove(key=sel){const e=entry(key);if(!e)return;write(p=>{p.cast=p.cast.filter(x=>x.key!==key);if(p.when)delete p.when[key];},`Removed ${personName(e)} from this chapter. Undo brings them back.`);if(sel===key)sel=null;rerender();}
+  function remove(key=sel){const e=entry(key);if(!e)return;if(e.poseSource){status('This person belongs to the room’s cast. Use the room’s People controls to remove them.');return;}write(p=>{p.cast=p.cast.filter(x=>x.key!==key);if(p.when)delete p.when[key];},`Removed ${personName(e)} from this chapter. Undo brings them back.`);if(sel===key)sel=null;rerender();}
   function duplicate(){
     const e=sel&&entry(sel);if(!e)return;const key=newKey(e.id,new Set(cast().map(x=>x.key)));
     write(p=>{const copy={...structuredClone(e),key};if(copy.at)copy.at=[copy.at[0]+600,copy.at[1]];p.cast.push(copy);const s=p.when?.[e.key];if(s)(p.when||={})[key]=structuredClone(s);},`Duplicated ${personName(e)}${e.at?', 60 cm to the side':''}.`);
@@ -269,7 +272,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(name?.startsWith('pe-color-')){const part=name.slice(9);if(!PARTS.includes(part)||!/^#[0-9a-f]{6}$/i.test(el.value))return;edit(sel,x=>{(x.colors||={})[part]=el.value.toLowerCase();},`${who}: ${part} recoloured.`,{undoKey:'people-color-'+part+sel});return;}
     if(name==='pe-anchor'){
       if(el.value==='free'){const o=objectOf(sel),spot=o&&tools?read(o):floorSpot(),shown=o?.userData?.person,as=shown?.variant&&modelOf(shown.id)?shown.id:null;   // they stay as they are now: in the posture the desk has them in
-        edit(sel,x=>{if(as&&as!==x.id){x.id=as;delete x.pose;}delete x.desk;delete x.station;delete x.reach;delete x.beside;for(const f of SEAT_FIELDS)delete x[f];x.at=spot.at;x.turn=spot.turn;},`${who} stays where they are now and no longer follows the desk.`);}
+        edit(sel,x=>{if(as&&as!==x.id){const old=migratePostures(x);delete x.pose;delete x.poseKeys;if(old.postures)x.postures=old.postures;x.id=as;}delete x.desk;delete x.station;delete x.reach;delete x.beside;for(const f of SEAT_FIELDS)delete x[f];x.at=spot.at;x.turn=spot.turn;},`${who} stays where they are now and no longer follows the desk.`);}
       else if(el.value==='seat')return;
       else{const p=poseOf(e.id);edit(sel,x=>{for(const f of SEAT_FIELDS)delete x[f];delete x.at;delete x.turn;delete x.y;delete x.beside;x.desk=p?.stance==='seated'?'sit':p?.stance==='wheelchair'?'wheel':'stand';},`${who} is at the film desk and follows it.`);}
       return;
@@ -350,6 +353,11 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   function selectedPanel(e){
     const c=who(e.id),p=poseOf(e.id),m=modelOf(e.id),s=spans(e.key)?.[0]||null,T=seconds(),o=objectOf(e.key),isFree=free(e),placed=placementOf(e);
     if(!catalog)return '<p class="director-hint">Loading the people catalog…</p>';
+    if(e.poseSource){
+      const view=poseEntry(e.key),head=`<div class="people-head"><strong>${escape(personName(e))}</strong><small>${escape(doing(view))}</small></div>`;
+      if(pose.active()===e.key)return pose.panel(head);
+      return `<section class="people-selected">${head}<p class="director-hint">Part of the room’s cast. Fine-tune the posture showing at the playhead.</p><button type="button" data-action="pe-pose-enter">Fine-tune pose…</button>${savedHTML(view)}</section>`;
+    }
     const chars=Object.entries(catalog.characters).filter(([,x])=>(filters.sex==='all'||sexIs(x.sex,filters.sex))&&(filters.age==='all'||x.age===filters.age)&&(filters.heritage==='all'||x.heritage===filters.heritage));
     charIds=chars.map(([id])=>id);
     const face_=id=>{const any=Object.entries(catalog.models).find(([,x])=>x.character===id);return any?thumb(any[0]):'';};
@@ -361,7 +369,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const here=!o?'Loading the model…':o.visible?'':s&&!isFree?'':s?`Not in the room at ${r1(time())} s.`:isFree?'':'Not showing now: the desk is between sitting and standing height, where nobody works at it.';
     const head=`<div class="people-head"><img src="${thumb(e.id)}" alt=""><div><strong>${escape(c?.name||personName(e))}</strong><small>${escape(c?[c.sex,c.age,c.height?Math.round(c.height*(e.scale||1))+' cm':''].filter(Boolean).join(' · '):e.id)}</small><small>${escape(doing(e))}${m?.aids?.length?' · '+escape(m.aids.join(', ')):''}</small></div></div>`;
     if(pose.active()===e.key)return pose.panel(head);
-    const tuned=Object.keys(e.pose||{}).length;
+    const tuned=Object.keys(poseEntry(e.key)?.pose||{}).length;
     // the colours the model really has (read from its textures on the stage), and whether its outfit is one piece
     const asBuilt=o?stagePeople()?.partColors?.(e.key):null,onePiece=(c?.outfit||[]).every(g=>!/pants|skirt|jeans|shorts|trousers/i.test(g));
     return `<section class="people-selected" data-reveal="person">
@@ -393,7 +401,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   function panel(){
     if(!catalog)loadCatalog();
     const list=cast(),mine=!!own(),T=seconds();rowKeys=list.map(e=>e.key);const e=sel&&entry(sel);
-    const row=(x,i)=>`<div class="people-row ${x.key===sel?'selected':''} ${x.hide?'off':''}" data-person-key="${escape(x.key)}"><button type="button" class="people-pick" data-action="pe-row" data-index="${i}" title="Select ${escape(personName(x))}"><img src="${thumb(x.id)}" alt="" loading="lazy"><span><strong>${escape(personName(x))}</strong><small>${escape(doing(x))}</small><small>${escape(x.desk?(x.station?'at a room desk':'at the film desk'):'free spot')} · ${escape(spanText(spans(x.key),T))}</small></span></button><button type="button" class="people-eye" data-action="pe-eye" data-index="${i}" aria-pressed="${!x.hide}" title="${x.hide?'Bring back into the chapter':'Take out of the chapter (keeps the entry)'}">${x.hide?'○':'●'}</button></div>`;
+    const row=(x,i)=>`<div class="people-row ${x.key===sel?'selected':''} ${x.hide?'off':''}" data-person-key="${escape(x.key)}"><button type="button" class="people-pick" data-action="pe-row" data-index="${i}" title="Select ${escape(personName(x))}"><img src="${thumb(x.id)}" alt="" loading="lazy"><span><strong>${escape(personName(x))}</strong><small>${escape(doing(x))}</small><small>${escape(x.desk?(x.station?'at a room desk':'at the film desk'):'free spot')} · ${escape(spanText(spans(x.key),T))}</small></span></button><button type="button" class="people-eye" ${x.poseSource?'disabled':''} data-action="pe-eye" data-index="${i}" aria-pressed="${!x.hide}" title="${x.hide?'Bring back into the chapter':'Take out of the chapter (keeps the entry)'}">${x.hide?'○':'●'}</button></div>`;
     return `<div class="director-heading"><div><span class="director-kicker">PEOPLE</span><h3>${list.length?`${count()} in this chapter`:'Nobody in this chapter'}</h3></div></div>
       <div class="director-actions"><button type="button" data-action="pe-add">+ Add person</button>${list.length?'':'<button type="button" data-action="pe-room">Bring in the room\'s people</button>'}${mine?'<button type="button" data-action="pe-reset" title="Back to the cast the film has for this chapter">Reset to the film</button>':''}</div>
       <p class="director-hint">${mine?'This chapter has its own cast.':list.length?'This is the film\'s cast. Your first change copies it into the chapter.':'Add people from the library, or bring in the people who live in this room.'} Click a person in the view or in the list.</p>
@@ -411,9 +419,9 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   const walkSeconds=k=>stagePeople()?.byKey?.(k)?.userData?.personLife?.plan?.seconds;
   const jointName=b=>JOINTS.find(j=>j[0]===b)?.[1]||b;
   const posture=e=>poseOf(e.id)?.label||e.id.replace(/^people-[a-z]+-/,'').replace(/-/g,' ');
-  function track(){const p=own()||seed();sheetRows=sheet(p,seconds(),{walkSeconds,label:posture,jointOrder:JOINTS.map(j=>j[0])});sheetMap=sheetKeys(sheetRows);for(const id of picked)if(!sheetMap.has(id))picked.delete(id);return sheetRows;}
+  function track(){const p=currentPeople();sheetRows=sheet(p,seconds(),{walkSeconds,label:posture,jointOrder:JOINTS.map(j=>j[0])});sheetMap=sheetKeys(sheetRows);for(const id of picked)if(!sheetMap.has(id))picked.delete(id);return sheetRows;}
   const KIND_TITLE={'in':'comes in','out':'goes out','change':'posture change','walk-start':'sets off (walk)','walk-point':'walk waypoint','walk-end':'arrives (walk)','roll-start':'sets off (roll)','roll-point':'roll waypoint','roll-end':'arrives (roll)','act':'action','act-end':'action ends','pose':'pose key','joint':'joint key'};
-  const keyTitle=k=>`${k.entry}: ${k.kind==='joint'?jointName(k.bone)+' key':KIND_TITLE[k.kind]||k.label} at ${k.t.toFixed(2)} s${k.ease?' · '+k.ease:''}${k.linked?' (the placement edge it starts with)':''}`;
+  const keyTitle=k=>`${k.entry}${k.posture?' · '+posture({id:k.posture}):''}: ${k.kind==='joint'?jointName(k.bone)+' key':KIND_TITLE[k.kind]||k.label} at ${k.t.toFixed(2)} s${k.ease?' · '+k.ease:''}${k.linked?' (the placement edge it starts with)':''}`;
   const shapeOf=k=>k.ease?EASE_SHAPES[k.ease]||'circle':'diamond';
   const pct=t=>`${Math.max(0,Math.min(100,t/(seconds()||1)*100))}%`;
   const keyBtn=k=>`<button type="button" class="sk sk-${shapeOf(k)} sk-${k.prop} ${picked.has(k.id)?'selected':''}" data-sk="${escape(k.id)}" style="left:${pct(k.t)}" title="${escape(keyTitle(k))}" aria-label="${escape(keyTitle(k))}"></button>`;
@@ -435,7 +443,14 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       html+=sheetRow('ps-prop',`<span class="ps-name">Path</span>${nav}`,P.path.length?P.path.map(keyBtn).join(''):'<span class="ps-empty">no walk or roll</span>',`data-ps-prop="path" data-ps-of="${escape(r.row)}"`);
       html+=sheetRow('ps-prop',`<span class="ps-name">Actions</span>${nav}`,P.actions.length?`${r.actBars.map(b=>`<span class="ps-bar ps-act" style="left:${pct(b.t0)};width:calc(${pct(b.t1)} - ${pct(b.t0)})"></span>`).join('')}${P.actions.map(keyBtn).join('')}`:'<span class="ps-empty">no actions</span>',`data-ps-prop="actions" data-ps-of="${escape(r.row)}"`);
       html+=sheetRow('ps-prop',`${r.joints.length?twirl(r.row+'|pose',poseOpen,'a row per keyed joint'):'<span class="ps-twirl-gap"></span>'}<span class="ps-name">Pose</span>${nav}`,P.pose.length?P.pose.map(keyBtn).join(''):'<span class="ps-empty">no pose keys · double-click the person to pose</span>',`data-ps-prop="pose" data-ps-of="${escape(r.row)}"`);
-      if(poseOpen)for(const j of r.joints)html+=sheetRow('ps-prop ps-joint',`<span class="ps-name" title="${escape(jointName(j.bone))}">${escape(jointName(j.bone))}</span>${nav}`,j.keys.map(keyBtn).join(''),`data-ps-prop="joint" data-ps-bone="${escape(j.bone)}" data-ps-of="${escape(r.row)}"`);
+      if(poseOpen){
+        const models=[...new Set(P.pose.map(k=>k.posture||''))];
+        for(const model of models){
+          const group=r.row+'|pose|'+model,expanded=!model||twirls.has(group),keys=P.pose.filter(k=>(k.posture||'')===model);
+          if(model)html+=sheetRow('ps-prop',`${twirl(group,expanded,'keyed joints')}<span class="ps-name">${escape(posture({id:model}))}</span>${nav}`,keys.map(keyBtn).join(''),`data-ps-prop="pose" data-ps-posture="${escape(model)}" data-ps-of="${escape(r.row)}"`);
+          if(expanded)for(const j of r.joints.filter(j=>(j.posture||'')===model))html+=sheetRow('ps-prop ps-joint',`<span class="ps-name" title="${escape(jointName(j.bone))}">${escape(jointName(j.bone))}</span>${nav}`,j.keys.map(keyBtn).join(''),`data-ps-prop="joint" data-ps-posture="${escape(model)}" data-ps-bone="${escape(j.bone)}" data-ps-of="${escape(r.row)}"`);
+        }
+      }
       return html;
     }).join('');
   }
@@ -454,7 +469,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(k)onSelect();rerender();
   }
   const peopleChanged=(next,text)=>write(p=>{for(const key of Object.keys(p))delete p[key];Object.assign(p,structuredClone(next));},text);
-  const cur=()=>own()||seed();
+  const cur=()=>currentPeople();
   let press=null,box=null;
   document.addEventListener('pointerdown',ev=>{
     if(ev.button!==0)return;
@@ -490,8 +505,8 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   // ◀ ◆ ▶ of a property row
   function rowOfNav(el){
     const r=el.closest('[data-ps-prop]'),row=sheetRows.find(x=>x.row===r?.dataset.psOf);if(!row)return null;
-    const prop=r.dataset.psProp,bone=r.dataset.psBone||null;
-    return {row,prop,bone,keys:prop==='joint'?row.joints.find(j=>j.bone===bone)?.keys||[]:row.props[prop]};
+    const prop=r.dataset.psProp,bone=r.dataset.psBone||null,posture=r.dataset.psPosture||null;
+    return {row,prop,bone,posture,keys:prop==='joint'?row.joints.find(j=>j.bone===bone&&(j.posture||null)===posture)?.keys||[]:row.props[prop].filter(k=>!posture||k.posture===posture)};
   }
   function jump(times,dir){const t=neighborTime(times,time(),dir);if(t===undefined){status(dir<0?'No key before the playhead.':'No key after the playhead.');return null;}seek(t);return t;}
   document.addEventListener('click',ev=>{
@@ -533,7 +548,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const k=keys[0],row=rowOf(k),e=entry(k.entry),what=k.kind==='joint'?`Pose › ${jointName(k.bone)}`:PROP_NAME[k.prop];
     let values='';
     if(k.kind==='pose'||k.kind==='joint'){
-      const at=(e?.poseKeys||[]).find(x=>Math.abs(x.t-k.t)<1e-6),bone=k.kind==='joint'?k.bone:(k.bones.includes(skJoint)?skJoint:k.bones[0]),a=turnAngles(at?.pose?.[bone]);
+      const at=(postureRecord(e,k.posture||e?.id).poseKeys||[]).find(x=>Math.abs(x.t-k.t)<1e-6),bone=k.kind==='joint'?k.bone:(k.bones.includes(skJoint)?skJoint:k.bones[0]),a=turnAngles(at?.pose?.[bone]);
       values=`${k.kind==='pose'?`<label>Joint<select name="pe-sk-joint">${k.bones.map(b=>`<option value="${escape(b)}" ${b===bone?'selected':''}>${escape(jointName(b))}</option>`).join('')}</select></label>`:''}
         <div class="director-row people-fields pose-angles">${['Bend','Twist','Side'].map((l,i)=>numField(l,'pe-sk-r'+'xyz'[i],a[i],1,'°','min="-180" max="180"')).join('')}</div>`;
     }else if(k.prop==='path'){
@@ -567,7 +582,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(name==='pe-sk-dt'){moveKeys(keys,num());return true;}
     if(name==='pe-sk-ease'){setInterp(keys,el.value);return true;}
     if(/^pe-sk-r[xyz]$/.test(name)){
-      const at=(entry(k.entry)?.poseKeys||[]).find(x=>Math.abs(x.t-k.t)<1e-6),bone=k.kind==='joint'?k.bone:(k.bones.includes(skJoint)?skJoint:k.bones[0]),a=turnAngles(at?.pose?.[bone]);
+      const at=(postureRecord(entry(k.entry),k.posture||entry(k.entry)?.id).poseKeys||[]).find(x=>Math.abs(x.t-k.t)<1e-6),bone=k.kind==='joint'?k.bone:(k.bones.includes(skJoint)?skJoint:k.bones[0]),a=turnAngles(at?.pose?.[bone]);
       a['xyz'.indexOf(name.slice(-1))]=Math.max(-180,Math.min(180,num()));const next=setJointAngles(cur(),k,bone,a);
       if(next)peopleChanged(next,`${personName(entry(k.entry))}: ${jointName(bone).toLowerCase()} at ${fx(k.t)} s, bend ${a[0]}° twist ${a[1]}° side ${a[2]}°.`);return true;
     }
@@ -620,7 +635,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   function pastePicked(){
     if(!clip){status('Copy a pose key first (Ctrl+C).',true);return;}
     const from=[...new Set(clip.items.map(i=>i.entry))],to=from.length===1&&sel&&sel!==from[0]&&entry(sel)?sel:null,t=time();
-    const r=pasteKeys(cur(),clip,t,seconds(),{to});if(!r.ids.length){status('Nothing pasted: the keys would fall outside the chapter.',true);return;}
+    const r=pasteKeys(cur(),clip,t,seconds(),{to,posture:to?activeModel(to):null});if(!r.ids.length){status('Nothing pasted: the keys would fall outside the chapter.',true);return;}
     picked=new Set(r.ids);peopleChanged(r.people,`${plural(r.ids.length,'pose key')} pasted at ${fx(t)} s${to?' on '+personName(entry(to)):''}.`);
   }
   function setInterp(keys,ease){
@@ -629,7 +644,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   }
   function toggleAtPlayhead(n){
     if(!editing()){status('Stop the playback to add or remove keys.',true);return;}
-    const r=toggleKeyAt(cur(),n.row,n.prop,time(),seconds(),{bone:n.bone,walkSeconds});if(r.error){status(r.error,true);return;}
+    const r=toggleKeyAt(cur(),n.row,n.prop,time(),seconds(),{bone:n.bone,entry:n.posture?n.keys[0]?.entry:null,posture:n.posture||activeModel(entryAt(cur(),n.row.entries,time())),walkSeconds});if(r.error){status(r.error,true);return;}
     picked=r.did==='added'?new Set([r.id]):new Set();peopleChanged(r.people,`${n.row.label}: ${n.prop==='joint'?jointName(n.bone).toLowerCase()+' key':n.prop==='path'?'waypoint':'pose key'} ${r.did} at ${fx(time())} s.`);
   }
   function keyCommand(ev){
