@@ -99,7 +99,7 @@ Decisions the plan must make and justify:
 `room-people-motion.mjs` (`DeskActor`, `solveDesk`, `solveStill`, `solveWorkout`, `drawPose`),
 `experience/people-edits.mjs`, `people-pose-keys.mjs`, `experience/people-track.mjs`,
 `experience/scene-pose-editor.mjs`, `experience/scene-people-editor.mjs`, `experience/saved-poses.mjs`,
-`tools/people/cast.py`, `tools/experience/build-round8-director.py`, `tools/experience/film-chapters.mjs` (people passes through).
+`tools/people/cast.py`, `tools/experience/build-round8-director.py`, `experience/film-chapters.mjs` (people passes through).
 Tests to extend: `tests/people-pose-keys-test.mjs`, `people-track-test.mjs`, `people-sheet-test.mjs`,
 `room-people-test.mjs`, `room-people-motion-test.mjs`, `director-people-*-e2e.mjs`.
 Ownership during the Nov 15 streams: people-track / scene-pose-editor / scene-people-editor were engineer A's, scene-prop-editor
@@ -138,3 +138,34 @@ do not collide.
 - Undo/redo, Export cut, reload and re-import all keep both poses.
 - A cut made before the change opens and renders exactly as before.
 - Exercise postures can be fine-tuned the same way (even if the in-scene exercise sequences are tomorrow's work).
+
+## 9. Plan review (org, 2026-11-16): approved, with these changes
+
+The engineer's plan (postures keyed by exact model id under one stable cast key; migration exposing legacy `pose` /
+`poseKeys` as the record for `entry.id`; an editing overlay binding room-owned people to that store; no change to
+`deskFamily()`; per-posture keys with the posture in every key id; M1-M4 as in section 7) is approved. Changes and
+additions:
+
+1. **Verbatim, not re-cleaned.** Untouched records are copied byte-for-byte. Only the record being edited is passed
+   through `cleanPose` / `cleanPoseKeys` (4-decimal rounding). Otherwise the first edit of anyone re-rounds every
+   other posture and moves pixels for an unrelated edit. `cleanPeopleV2` re-cleans `poseKeys` on every write today: make
+   it skip records it was not asked to change.
+2. **Use the existing audit as the identity harness.** `tools/experience/people-ghost-audit.mjs` (`auditChapter`,
+   `auditCut`, `makeRoom`, `library`) already runs every chapter of a cut through the production people code in node with
+   the real skeletons. Extend it (or a sibling) to dump actor members, the drawn model id and the solved bone transforms
+   per frame, run it before and after M1 over **all chapters of the cine cut and of a scratch copy of Vico's cut**, and
+   require exact equality. That is the M1 proof; it needs no render.
+3. **Pixels.** One small frame comparison on Windows (Rise, one frame at 8 s and one at 16.6 s, 480p) is enough, and
+   only after M2. It needs Vico's word first: ask "org", do not start it. No stills, no full renders.
+4. **Pose tools bind to the model on show.** For a desk person the drawn model is the DeskActor's `shown` object, which
+   changes at the sit/stand swap (SWAP 1.45 s into the move). Pose mode, the dots, the gizmo and an active drag must
+   rebind on that swap (end the drag first), and `window.__directorDragging` / `hold` in `drawPose` must be released.
+5. **Transition blending uses the desk's `tau`, not the model swap**, so a correction fades with the body and does not
+   pop when the model changes. Legacy chapters (one record) must run the old code path bit-for-bit.
+6. **Both people-edit paths and the Python import** keep `postures` verbatim (v1 `cleanPerson` whitelists fields, so add
+   it there; v2 passes through). Add a JS/Python fixture comparison.
+7. **Stable key ids.** The sheet/undo/expanded-row ids today are `pose|<key>|<t>|<bone>`: they gain the posture, and any
+   stored UI state or undo key using the old form must still resolve (read both, write the new one).
+8. **Corrections are static deltas on the solver's pose.** If the desk height or tilt of the chapter changes later, a
+   correction measured at the old height can sit off the keys again (what happened to Maya at 39 in). Out of scope; list
+   it under known limits and show the posture's desk height in the Pose panel if cheap.
