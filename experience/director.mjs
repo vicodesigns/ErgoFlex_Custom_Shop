@@ -2085,7 +2085,9 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   addEventListener('pagehide',()=>{deskEditor.stop();draft();});
   // Leaving the page with unexported edits asks first (Ctrl+W, a reload, Back). The Director's own switches (film
   // chapter, cut) have their own dialog and set `leaving`.
-  addEventListener('beforeunload',event=>{if(!open||leaving||!unexported())return;draft();event.preventDefault();event.returnValue='';});
+  // (not under automation: navigator.webdriver is set by puppeteer / WebDriver, never in a person's browser; a prompt
+  // there blocks a test's reload until it times out, and the draft is kept either way)
+  addEventListener('beforeunload',event=>{if(!open||leaving||!unexported())return;draft();if(navigator.webdriver)return;event.preventDefault();event.returnValue='';});
   // "Free view (not saved)": the 3D view left the film's camera keys (an orbit, a frame, a centre). 0 or a click goes back.
   const navBox=document.createElement('div');navBox.className='film-box nav-pill-box';navBox.innerHTML='<button type="button" class="nav-pill" hidden title="The view is not the film camera: what you see is not saved. Click or press 0 to go back.">Free view (not saved) · <kbd>0</kbd> film camera</button><div class="crop-guide" hidden></div><div class="nav-views" role="toolbar" aria-label="Views" hidden>'+[['film-camera','Film','The film camera (0)'],['view-persp','Persp','Perspective (Ctrl+P: persp)'],['view-top','Top','Top, looking down (Ctrl+P: top)'],['view-front','Front','Front (Ctrl+P: front)'],['view-right','Right','Right (Ctrl+P: right)']].map(([id,l,t])=>`<button type="button" data-nav-view="${id}" title="${t}">${l}</button>`).join('')+'</div>';document.body.append(navBox);
   const navViews=navBox.querySelector('.nav-views'),cropEl=navBox.querySelector('.crop-guide');
