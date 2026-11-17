@@ -25,7 +25,7 @@ try{
     return {world:[...camera.matrixWorld.elements],proj:[...camera.projectionMatrix.elements],fov:camera.fov,aspect:camera.aspect};
   },which);
   const state=()=>page.evaluate(()=>{
-    let draft=null;try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();draft=JSON.stringify(((v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].camera)??null);}catch{}
+    let draft=null;try{const v=(()=>{const b=document.body.dataset;if(b.draftStore!=='film')return JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=f[b.cutId]?.cut;return {active:'film',drafts:d?{film:d}:{},cuts:[]};})();draft=JSON.stringify(((v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].camera)??null);}catch{}
     return {keys:JSON.stringify(document.getElementById('stage').contentWindow.ErgoPresentation.cameraKeys()),draft,undo:!document.querySelector('#director-appbar [data-action=undo]').disabled};
   });
   const diff=(a,b)=>({world:Math.max(...a.world.map((v,i)=>Math.abs(v-b.world[i]))),fov:Math.abs(a.fov-b.fov),proj5:Math.abs(a.proj[5]-b.proj[5]),proj0:Math.abs(a.proj[0]/b.proj[0]-1)});

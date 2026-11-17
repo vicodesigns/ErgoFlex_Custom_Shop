@@ -17,7 +17,7 @@ const failures=[],check=(ok,what)=>{console.log(`${ok?'ok  ':'FAIL'} ${what}`);i
 try{
   await openChapter(page,base,chapter);
   const click=async sel=>{await page.evaluate(s=>{const el=document.querySelector(s);if(!el)throw Error('no '+s);el.click();},sel);await wait(600);};
-  const draftShot=async()=>{await wait(1100);return page.evaluate(()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}});};
+  const draftShot=async()=>{await wait(1100);return page.evaluate(()=>{try{const v=(()=>{const b=document.body.dataset;if(b.draftStore!=='film')return JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=f[b.cutId]?.cut;return {active:'film',drafts:d?{film:d}:{},cuts:[]};})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}});};
   const wheels=()=>page.$$eval('#director-timeline [data-desk-lane=wheels] [data-desk-clip]',c=>c.map(e=>({id:e.dataset.deskClip,top:e.offsetTop,height:e.offsetHeight,text:e.innerText.replace(/\s+/g,' ')})));
   const laneHeight=()=>page.$eval('#director-timeline [data-desk-lane=wheels]',e=>e.offsetHeight);
   const rowsAttr=()=>page.$eval('#director-timeline [data-desk-lane=wheels]',e=>e.parentElement.dataset.rows);

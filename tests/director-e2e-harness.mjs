@@ -67,8 +67,9 @@ export async function seek(page,seconds){
   await wait(500);
 }
 
-// Film chapters keep their unexported draft in 'ergoflex.director.filmDrafts.v1' ({'film-<chapter>': {cut, at, base}},
-// experience/film-fresh.mjs, since 6 Nov 2026), not in the cut library 'ergoflex.clientCuts.v1'. Tests read "the active cut" through
+// Film chapters keep their unexported draft in 'ergoflex.director.filmDrafts.v1' ({'<cut id>': {cut, at, base}},
+// experience/film-fresh.mjs, since 6 Nov 2026), not in the cut library 'ergoflex.clientCuts.v1'. The Director stamps
+// <body data-cut-id data-draft-store="film|library"> (director.mjs stampDraft), so tests read "the active cut" through
 // this expression (inline in their page.evaluate code: puppeteer sends the function's text to the page), shaped like
-// the library ({active, drafts, cuts}) so `v.drafts[v.active]` still finds it; a client cut falls back to the library.
-export const FILM_DRAFT_READER="(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})()";
+// the library ({active, drafts, cuts}) so `v.drafts[v.active]` still finds it; no film draft yet reads as none.
+export const FILM_DRAFT_READER="(()=>{const b=document.body.dataset;if(b.draftStore!=='film')return JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=f[b.cutId]?.cut;return {active:'film',drafts:d?{film:d}:{},cuts:[]};})()";

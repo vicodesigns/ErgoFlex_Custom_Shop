@@ -43,7 +43,7 @@ await page.evaluateOnNewDocument(()=>{
     const path=[];for(let p=o;p&&p!==sc;p=p.parent)path.unshift(p.name||p.type);o.updateWorldMatrix(true,false);const v=o.getWorldPosition(o.position.clone()),pw=o.parent.getWorldPosition(o.position.clone());
     return {name:o.name,path:path.join(' > '),w:v.toArray(),parentW:pw.toArray(),s:o.getWorldScale(o.position.clone()).toArray()};};
   window.__screen=o=>{const {t,T}=__t(),f=document.getElementById('stage'),c=new T.Box3().setFromObject(o).getCenter(new T.Vector3()).project(t.camera),r=t.renderer.domElement.getBoundingClientRect(),fr=f.getBoundingClientRect();return {x:fr.left+r.left+(c.x+1)/2*r.width,y:fr.top+r.top+(1-c.y)/2*r.height,ndc:[c.x,c.y,c.z]};};
-  window.__draft=()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].propEdits||null;}catch{return null;}};
+  window.__draft=()=>{try{const v=(()=>{const b=document.body.dataset;if(b.draftStore!=='film')return JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=f[b.cutId]?.cut;return {active:'film',drafts:d?{film:d}:{},cuts:[]};})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].propEdits||null;}catch{return null;}};
 });
 const draft=()=>page.evaluate(()=>__draft());
 const addsOf=async asset=>((await draft())||[]).filter(e=>e.add?.asset===asset);

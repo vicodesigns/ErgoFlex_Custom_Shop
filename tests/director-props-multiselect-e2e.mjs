@@ -32,7 +32,7 @@ await page.evaluateOnNewDocument(()=>{
       const hit=ray.intersectObject(t.scene,true).find(h=>h.object.isMesh&&(()=>{for(let p=h.object;p;p=p.parent)if(!p.visible||p.isTransformControls||p.userData?.directorTools)return false;return true})());
       if(hit&&inside(hit.object)&&(!best||away>best.away)){const px=f.left+r.left+(x+1)/2*r.width,py=f.top+r.top+(1-y)/2*r.height;if(document.elementFromPoint(px,py)===document.getElementById('stage'))best={away,x:px,y:py};}}
     return best;};
-  window.__draft=()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}};
+  window.__draft=()=>{try{const v=(()=>{const b=document.body.dataset;if(b.draftStore!=='film')return JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=f[b.cutId]?.cut;return {active:'film',drafts:d?{film:d}:{},cuts:[]};})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}};
 });
 const draft=()=>page.evaluate(()=>__draft());
 const pose=n=>page.evaluate(x=>__pose(x),n);

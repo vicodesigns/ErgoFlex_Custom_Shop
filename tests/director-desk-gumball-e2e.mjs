@@ -18,7 +18,7 @@ try{
   await page.evaluateOnNewDocument(()=>{
     window.__t=()=>{const w=document.getElementById('stage').contentWindow,t=w.ErgoPresentation.three();return {w,t,T:w.__directorThree?.THREE,desks:w.ErgoFlex.sceneDesks};};
     window.__rec=id=>{const r=__t().desks.records.get(id);return r?{x:r.group.position.x,z:r.group.position.z,yaw:r.group.rotation.y}:null;};
-    window.__draft=()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].deskEdits||null;}catch{return null;}};
+    window.__draft=()=>{try{const v=(()=>{const b=document.body.dataset;if(b.draftStore!=='film')return JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=f[b.cutId]?.cut;return {active:'film',drafts:d?{film:d}:{},cuts:[]};})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].deskEdits||null;}catch{return null;}};
     window.__cam=()=>{const {t}=__t();return [...t.camera.position.toArray(),...t.controls.target.toArray()].map(v=>Math.round(v*1e4)/1e4).join(',');};
     window.__screen=v=>{const {t}=__t(),p=v.clone().project(t.camera),f=document.getElementById('stage').getBoundingClientRect(),c=t.renderer.domElement.getBoundingClientRect();return {x:f.left+c.left+(p.x+1)/2*c.width,y:f.top+c.top+(1-p.y)/2*c.height};};
     window.__frame=id=>{const {t,T,desks}=__t(),r=desks.records.get(id),b=new T.Box3().setFromObject(r.group),c=b.getCenter(new T.Vector3());const look=c.clone().setY(c.y+.9);t.camera.position.set(c.x+.6,c.y+3.6,c.z+4.2);t.controls.target.copy(look);t.camera.lookAt(look);t.controls.update();};   // the desk low in the frame: the gumball over it stays clear of the stage's toolbar
@@ -39,7 +39,7 @@ try{
       const factor=at.distanceTo(t.camera.position)*Math.min(1.9*Math.tan(Math.PI*t.camera.fov/360)/t.camera.zoom,7)*g.size/4;
       const dir=new T.Vector3(axis==='X'?1:0,0,axis==='Z'?1:0).transformDirection(g.object.matrixWorld);return __screen(at.clone().addScaledVector(dir,.42*factor));};
     window.__knob=()=>{const {t,T}=__t();let g=null;t.scene.traverse(o=>{if(o.name==='Director desk tools')g=o;});if(!g?.visible)return null;const turn=g.children.filter(o=>o.isGroup)[1];return __screen(turn.children[2].getWorldPosition(new T.Vector3()));};
-    window.__tip=()=>{const d=[...document.getElementById('stage').contentDocument.body.children].find(e=>e.style?.pointerEvents==='none'&&e.style.position==='fixed'&&e.style.borderColor);return d&&d.style.display!=='none'?d.textContent:'';};
+    window.__tip=()=>{const d=[...document.getElementById('stage').contentDocument.body.children].find(e=>e.style?.pointerEvents==='none'&&e.style.position==='fixed'&&e.style.borderColor&&!e.classList.contains('gumball-tip'));return d&&d.style.display!=='none'?d.textContent:'';};
   });
   await openChapter(page,base,chapter);
   const until=async(fn,what,ms=30000)=>{const end=Date.now()+ms;for(;;){const v=await fn();if(v)return v;if(Date.now()>end)throw Error('timed out: '+what);await wait(150);}};

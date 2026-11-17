@@ -26,7 +26,7 @@ try{
   await openChapter(page,base,chapter);
   const status=()=>statusOf(page);
   const stage=()=>page.evaluate(()=>{const s=document.getElementById('stage').contentWindow.ErgoPresentation.snapshot();return {height:s.height,tilt:s.tilt};});
-  const draftShot=()=>page.evaluate(()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}});
+  const draftShot=()=>page.evaluate(()=>{try{const v=(()=>{const b=document.body.dataset;if(b.draftStore!=='film')return JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=f[b.cutId]?.cut;return {active:'film',drafts:d?{film:d}:{},cuts:[]};})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}});
   const fields=()=>page.evaluate(()=>Object.fromEntries(['start-height','start-height-n','start-tilt','start-tilt-n'].map(n=>[n,Number(document.querySelector(`#director-panel [name="${n}"]`)?.value)])));
   const click=async sel=>{await page.evaluate(s=>document.querySelector(s).click(),sel);await wait(700);};
   const until=async(fn,what,ms=20000)=>{const end=Date.now()+ms;for(;;){const v=await fn();if(v)return v;if(Date.now()>end)throw Error('timed out: '+what);await wait(150);}};
