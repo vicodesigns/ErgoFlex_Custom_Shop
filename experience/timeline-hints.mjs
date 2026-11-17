@@ -1,3 +1,4 @@
+import {shortcutsCardHtml} from './shortcuts.mjs';
 const draggableSelector='[data-graphic-clip],[data-title-clip],[data-desk-clip],[data-key],[data-light-clip],[data-light-key],[data-tod-key],[data-sk]';
 const itemSelector='[data-graphic-clip],[data-title-clip],[data-desk-clip],[data-key],[data-light-clip],[data-light-key],[data-tod-key],[data-sk],[data-prop-key],[data-person-key],[data-choreo-clip]';
 const n=v=>Number(v.toFixed(2)),seconds=v=>`${n(v)} s`;
@@ -30,8 +31,8 @@ export function timelineHint(el,{seconds:duration,graphic}={},title=''){
   if(!lines.length)lines.push('Click to '+(el.textContent.trim()||'use this control').toLowerCase()+'.');
   return {heading:kind||el.getAttribute('aria-label')||el.textContent.trim()||'Timeline control',lines};
 }
-export const timelineShortcuts=()=>`<details class="timeline-shortcuts"><summary title="Timeline shortcuts and editing gestures">⌨ Shortcuts</summary><div class="timeline-shortcuts-card"><b>Timeline shortcuts</b><p>Space · Play / pause chapter<br>+ / − · Timeline zoom<br>Ctrl/Cmd+Z · Undo<br>Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y · Redo</p><b>Editing clips</b><p>Drag a block · Move<br>Drag an edge · Trim or resize<br>Alt + drag · Bypass snapping<br>Graphics: Ctrl/Cmd+K · Split selected clip at playhead<br>Camera / motion / titles: ←/→ · Nudge 0.1 s; Shift · 1 s</p><b>Navigation and selection</b><p>Ruler · Click or drag to seek<br>Blank timeline focus: ←/→ · One frame; Shift · One second<br>Home / End · Chapter boundaries<br>Shift+L · Reveal Lighting<br>Camera / motion / lighting: Shift/Ctrl/Cmd+click · Group selection</p><small>Shortcuts apply when the timeline or clip has focus. Hover an item for its own controls. Esc closes this guide.</small></div></details>`;
-export function createTimelineHints({root,context=()=>({})}){
+export const timelineShortcuts=()=>`<details class="timeline-shortcuts"><summary title="Keyboard shortcuts (press ?)">⌨ Shortcuts</summary><div class="timeline-shortcuts-card">${shortcutsCardHtml()}</div></details>`;
+export function createTimelineHints({root,context=()=>({}),active=()=>new Set()}){
   const tip=document.createElement('div');tip.className='timeline-tooltip';tip.id='timeline-tooltip-'+Math.random().toString(36).slice(2);tip.setAttribute('role','tooltip');tip.hidden=true;document.body.append(tip);
   let current=null,drag=null,timer=null,point={x:0,y:0},restore=[],described=null,frame=0;
   function hide(){clearTimeout(timer);tip.hidden=true;for(const [el,title] of restore)el.setAttribute('title',title);restore=[];if(described){const ids=(described.getAttribute('aria-describedby')||'').split(' ').filter(id=>id&&id!==tip.id);if(ids.length)described.setAttribute('aria-describedby',ids.join(' '));else described.removeAttribute('aria-describedby');described=null;}}
@@ -57,7 +58,7 @@ export function createTimelineHints({root,context=()=>({})}){
   function finish(){cancelAnimationFrame(frame);drag=null;document.body.classList.remove('timeline-rich-drag');hide();}
   document.addEventListener('pointerup',finish,true);document.addEventListener('pointercancel',finish,true);addEventListener('blur',finish);
   document.addEventListener('keydown',event=>{if(event.key==='Escape'){finish();for(const el of root.querySelectorAll('.timeline-shortcuts[open]'))el.open=false;}},true);
-  root.addEventListener('toggle',event=>{const guide=event.target;if(!guide.matches?.('.timeline-shortcuts')||!guide.open)return;hide();const card=guide.querySelector('.timeline-shortcuts-card'),r=guide.querySelector('summary').getBoundingClientRect();card.style.position='fixed';card.style.bottom='auto';const b=card.getBoundingClientRect();card.style.left=Math.max(8,Math.min(innerWidth-b.width-8,r.right-b.width))+'px';card.style.top=Math.max(8,Math.min(innerHeight-b.height-8,r.top>=b.height+16?r.top-b.height-8:r.bottom+8))+'px';},true);
+  root.addEventListener('toggle',event=>{const guide=event.target;if(!guide.matches?.('.timeline-shortcuts')||!guide.open)return;hide();const card=guide.querySelector('.timeline-shortcuts-card');card.innerHTML=shortcutsCardHtml(active());card.scrollTop=0;card.style.maxHeight=Math.round(innerHeight*.8)+'px';const r=guide.querySelector('summary').getBoundingClientRect();card.style.position='fixed';card.style.bottom='auto';const b=card.getBoundingClientRect();card.style.left=Math.max(8,Math.min(innerWidth-b.width-8,r.right-b.width))+'px';card.style.top=Math.max(8,Math.min(innerHeight-b.height-8,r.top>=b.height+16?r.top-b.height-8:r.bottom+8))+'px';},true);
   root.addEventListener('scroll',event=>{if(event.target.closest?.('.timeline-shortcuts-card'))return;if(!drag)hide();for(const el of root.querySelectorAll('.timeline-shortcuts[open]'))el.open=false;},true);
   return {hide:finish};
 }

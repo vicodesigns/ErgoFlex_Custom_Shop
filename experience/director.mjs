@@ -1293,6 +1293,42 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     else if((k==='w'||k==='e')&&sceneLights.selected()){event.preventDefault();sceneLights.setMode(k==='w'?'move':'aim');status(k==='w'?'Gizmo: move.':'Gizmo: aim.');}
     else if((k==='delete'||k==='backspace')&&sceneProps.selected()&&!picked()&&!timeline.contains(event.target)&&!panel.contains(event.target)&&!document.querySelector('dialog[open]')){event.preventDefault();sceneProps.hide(true);}}
   document.addEventListener('keydown',viewKeys);
+  // Which of the shortcut sheet's item sections are live: whatever is selected right now (shortcuts.mjs).
+  function activeShortcuts(){
+    const a=new Set();
+    try{
+      if(keyId)a.add('camera');
+      if(deskEditor.selectedId())a.add('desk-clip');
+      if(titleEditor.selectedId())a.add(titleEditor.editing()?'shape':'title');
+      if(inspector==='graphics'&&timeline.querySelector('[data-graphic-clip]'))a.add('graphic');
+      if(lightSel)a.add('light-clip');
+      if(sceneLights.selected())a.add('light');
+      if(sceneProps.selected())a.add('prop');
+      if(scenePeople.selected()){a.add('person');if(document.querySelector('.ps-row'))a.add('person-keys');}
+      if(scenePeople.posing())a.add('pose');
+      if(picked())a.add('group');
+      if(still.open)a.add('still');
+    }catch{}
+    return a;
+  }
+  // The keys that work anywhere in the Director when nothing is being typed into: ? opens the shortcut sheet; with nothing
+  // focused (the page itself) the arrows step the playhead, Up/Down jump between camera views, PgUp/PgDn change chapter, C adds
+  // a camera view. (Space already plays/pauses: player.mjs.) Item keys live with their editors and are listed in shortcuts.mjs.
+  function globalKeys(event){
+    if(!open||composing||event.defaultPrevented||event.isComposing||event.altKey||event.ctrlKey||event.metaKey)return;
+    const t=event.target;if(t.closest?.('input,select,textarea,[contenteditable]:not([contenteditable="false"])')||document.querySelector('dialog[open]'))return;
+    if(event.key==='?'){event.preventDefault();const card=timeline.querySelector('.timeline-shortcuts');if(card)card.open=!card.open;return;}
+    if(event.key==='Escape'){const card=timeline.querySelector('.timeline-shortcuts[open]');if(card)card.open=false;return;}
+    if(t!==document.body||bridge.bakeState().baking)return;
+    try{
+      const seconds=shot().seconds,k=event.key;
+      if(k==='ArrowLeft'||k==='ArrowRight'||k==='Home'||k==='End'){event.preventDefault();const at=k==='Home'?0:k==='End'?seconds:playhead*seconds+(event.shiftKey?1:1/30)*(k==='ArrowLeft'?-1:1);seekCamera(Math.max(0,Math.min(1,at/seconds)));}
+      else if((k==='ArrowUp'||k==='ArrowDown')&&!event.shiftKey){event.preventDefault();action('edit-'+(k==='ArrowUp'?'prev':'next'));}
+      else if(k==='PageUp'||k==='PageDown'){event.preventDefault();const i=selected+(k==='PageUp'?-1:1);if(i>=0&&i<project.shots.length)action('select',i);}
+      else if((k==='c'||k==='C')&&!event.shiftKey){event.preventDefault();action('key-add');}
+    }catch(error){status(error.message,true);}
+  }
+  document.addEventListener('keydown',globalKeys);
   const peekUp=e=>{if(e.key==='\\')still.peek(false);};document.addEventListener('keyup',peekUp);
   // With the still view open: Esc closes it, ←/→ step through the history (before the timeline's own keys).
   addEventListener('keydown',event=>{
@@ -1559,7 +1595,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     if(event.repeat||bridge.bakeState().baking)return;
     if(!deskEditor.flush())return;
     if(command==='duplicate-selection'){
-      if(keyId)action('key-duplicate');else if(deskEditor.hasSelection())deskEditor.duplicate();else status('Select a camera view or Groove movement to duplicate.');
+      if(keyId)action('key-duplicate');else if(deskEditor.hasSelection())deskEditor.duplicate();else if(scenePeople.selected()&&!scenePeople.posing())scenePeople.action('pe-duplicate').catch(error=>status(error.message,true));else status('Select a camera view, a Groove movement, a title or a person to duplicate.');
       return;
     }
     action(command);
@@ -1568,9 +1604,9 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   const preview=document.getElementById('stage');let previewDocument;
   function bindPreviewHistory(){
     const next=preview?.contentDocument;if(!next||next===previewDocument)return;
-    previewDocument?.removeEventListener('keydown',historyShortcut,true);previewDocument?.removeEventListener('keydown',viewKeys);
+    previewDocument?.removeEventListener('keydown',historyShortcut,true);previewDocument?.removeEventListener('keydown',viewKeys);previewDocument?.removeEventListener('keydown',globalKeys);
     previewDocument?.removeEventListener('keydown',stageEscape,true);
-    previewDocument=next;previewDocument.addEventListener('keydown',historyShortcut,true);previewDocument.addEventListener('keydown',viewKeys);previewDocument.addEventListener('keyup',peekUp);previewDocument.addEventListener('keydown',stageEscape,true);
+    previewDocument=next;previewDocument.addEventListener('keydown',historyShortcut,true);previewDocument.addEventListener('keydown',viewKeys);previewDocument.addEventListener('keydown',globalKeys);previewDocument.addEventListener('keyup',peekUp);previewDocument.addEventListener('keydown',stageEscape,true);
   }
   // Esc with the 3D view focused (after clicking a prop or a light): the Director's Esc (close the still, clear the
   // selection), never the stage page's own, which leaves its full-frame tour view and re-sizes the camera (the live
@@ -1585,7 +1621,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   addEventListener('pagehide',()=>{deskEditor.stop();draft();});
   // A film chapter is a one-chapter cut: its timeline space goes to the lanes (Chapters shows the strip).
   if(film)timeline.classList.add('chapters-hidden');
-  createTimelineHints({root:timeline,context:el=>({seconds:shot().seconds,graphic:el.dataset.graphicClip!==undefined?graphics.screens()[Number(el.dataset.graphicClip)]:null})});
+  createTimelineHints({root:timeline,active:activeShortcuts,context:el=>({seconds:shot().seconds,graphic:el.dataset.graphicClip!==undefined?graphics.screens()[Number(el.dataset.graphicClip)]:null})});
   render();panel.hidden=timeline.hidden=true;
   return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,transportChanged:()=>{syncTransport();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;if(p)orbitBase=null;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;syncPlayhead();},scrubbing:()=>!!scrub||!!groupDrag,filmApplied:()=>{setTimeout(()=>{try{foldDeskProps();}catch(error){console.warn('[desk fold]',error);}},300);if(inspector==='build'&&open)renderPanel();sceneLights.applied();sceneProps.applied();scenePeople.applied();if(open)renderPeople(true);floorRefl.applied();deskSel.applied();if(open){renderSceneProps(true);renderSceneDesks(true);renderBranding(true);}},
     // Selection -> inspector home (HOMES): for lanes and tools outside this module (the Titles lane: reveal('title')).
