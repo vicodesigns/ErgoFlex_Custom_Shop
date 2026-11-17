@@ -1,3 +1,5 @@
+/* The player's dark top/bottom shade (experience.css .shade) is for the viewer's cinematic look: it is never in a render (the bake draws only the 3D canvas), and in the Director it darkened a zoomed-out view (Vico, Nov 16). */
+body.directing .shade{display:none}
 #director-panel,#director-timeline,#scene-picker{color:#edf6fc;background:#0d1924f5;border:1px solid #8bc5df30;box-shadow:0 20px 80px #0006;font-size:13px;line-height:1.45}
 #director-panel{position:fixed;left:16px;top:94px;bottom:192px;width:352px;z-index:12;border-radius:18px;padding:20px;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin}
 #director-panel[hidden],#director-timeline[hidden]{display:none}
