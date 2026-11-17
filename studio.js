@@ -964,7 +964,7 @@ function initSceneDeskEditing() {
         disposeDress:r=>{for(const m of Object.values(r.rig?.mounts||{}))for(const child of [...m.children]){unregisterSceneAsset(child);disposeWorkspaceObject(child);}},
         loadProp:async id=>{await PROP_LIBRARY.loadIndex();return loadDeskProp(id);},propEntry:id=>PROP_LIBRARY.entry(id),
         // The finish an added object can match (side-shelving.mjs): this desk's wood material and trim colour.
-        deskFinish:r=>({wood:(r.id===sceneDesks.selected&&woodMaterials.get('desktop'))||r.group.children.find(obj=>obj.isMesh&&String(obj.material?.userData?.sceneDeskMaterial).startsWith('wood:'))?.material,trim:r.group.userData?.deskStyle?.trimColor||(r.id===sceneDesks.selected?trimColor:undefined)}),
+        deskFinish:r=>{try{return {wood:(r.id===sceneDesks?.selected&&woodMaterials.get('desktop'))||r.group?.children?.find(obj=>obj.isMesh&&String(obj.material?.userData?.sceneDeskMaterial).startsWith('wood:'))?.material,trim:r.group?.userData?.deskStyle?.trimColor||(r.id===sceneDesks?.selected?trimColor:undefined)};}catch{return null;}},
         createHeadphoneHook:cloneHeadphoneHook,headphoneRecovery:()=>PROP_LIBRARY.headphoneRecovery,
         objectName:obj=>accessory(obj.userData.accessoryId)?.name||PROP_LIBRARY.entry(obj.userData.propId)?.name||obj.name||sceneAssetName(obj),disposeObject:disposeWorkspaceObject,unregisterProp:unregisterSceneAsset,loadPropIndex:()=>PROP_LIBRARY.loadIndex(),
         halt:()=>haltAllMotion(),dragLive:(x,z)=>{if(roomSafety.alert)return;applyGlideOffset(glideOffset.clone().add(new THREE.Vector3(x,0,z)),{collide:true});glideTarget.copy(glideOffset);workspaceAccessories.update();},

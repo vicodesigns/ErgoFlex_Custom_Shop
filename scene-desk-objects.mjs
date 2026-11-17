@@ -104,7 +104,7 @@ export class SceneDeskObjects {
         const mode=this.manager.ctx.phase(),index=phases.indexOf(mode);
         const finish=this.manager.ctx.deskFinish?.(r);
         for(const item of r.objects?.values()||[]){const o=item.obj;
-            if(finish&&o.userData.propId&&isSideShelving(o.userData.propId))syncDeskMatch(o,finish);
+            if(finish&&o.userData.propId&&isSideShelving(o.userData.propId)){try{syncDeskMatch(o,finish);}catch(error){console.warn('[side shelving]',error.message);}}
             o.visible=!item.saved.removed&&(!o.userData.dressPhases||o.userData.dressPhases.includes(mode))&&(!o.userData.dailyInput||![2,4].includes(index));
             if(o.userData.dayKit)o.children.forEach((c,i)=>c.visible=i===index);
             const canvas=o.getObjectByName('Artist painting');
