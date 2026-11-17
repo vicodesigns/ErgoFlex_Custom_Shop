@@ -3,6 +3,7 @@ import {resolve as resolveKey,targetKind,changedHint,effectiveActions} from './d
 import {createPalette} from './command-palette.mjs';
 import {appBarHtml,statusBarHtml,wireMenus} from './director-appbar.mjs';
 import {setSpaceAll,spaceNow} from './gumball.mjs';
+import {enhanceNumberFields} from './number-fields.mjs';
 import {chapterScore,staleness,snapTimes,snapTo,waveColumns,createScorePlayer} from './score-track.mjs';
 import {createActionLog,captureErrors,reportBody,createReportDialog,sendReport} from './director-report.mjs';
 import {createKeysPanel,loadUi,saveUi} from './keys-panel.mjs';
@@ -81,6 +82,7 @@ export function mountDirector(bridge,catalog,initial){
   const appbar=document.createElement('header');appbar.id='director-appbar';appbar.hidden=true;appbar.setAttribute('aria-label','Director');
   const classic=()=>new URLSearchParams(location.search).get('shell')==='classic'||loadUi().shell==='classic',shellOn=()=>!classic();
   document.body.append(appbar,panel,timeline,picker,file);
+  enhanceNumberFields(panel);   // P5: drag a label to scrub, Esc puts the value back
   const field=name=>panel.querySelector(`[name="${name}"]`);
   const shot=()=>project.shots[selected];
   const keys=()=>resolveCameraKeys(shot().camera,automaticCameras.get(shot().id)||[]);
@@ -110,6 +112,8 @@ export function mountDirector(bridge,catalog,initial){
     const el=[...root.querySelectorAll('.b2-selected')].find(e=>e.getClientRects().length&&!e.closest('[hidden]'));
     if(el)centreIn(el,root===timeline?timeline:panel);
   }
+  // P5: the tabs' names in the calm shell (the ids stay: tests and links use them); Classic keeps the old ones
+  function tabLabel(tab){if(!shellOn())return tab==='version'?'Desk version':tab[0].toUpperCase()+tab.slice(1);return {project:'Cut',groove:'Desk moves',version:'Desk swaps',render:'Final render',desks:'Room desks'}[tab]||tab[0].toUpperCase()+tab.slice(1);}
   function showInspector(tab,selection=false,unhide=true){
     const newTab=inspector!==tab;inspector=tab;if(unhide)document.body.classList.remove('inspector-hidden');if(tab==='lighting')queueMicrotask(()=>syncNow());if(tab==='render')queueMicrotask(()=>renderRequest?.refresh());if(tab==='layers')queueMicrotask(()=>renderLayers());
     for(const page of panel.querySelectorAll('[data-inspector-page]'))page.hidden=page.dataset.inspectorPage!==tab;
@@ -913,7 +917,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     panel.innerHTML=(shellOn()?'':`
       <div class="director-heading"><div><span class="director-kicker">DIRECTOR MODE</span><h2>Director studio.</h2></div><button data-action="ab-classic" class="calm-back" title="The new layout: one app bar, one timeline row (the classic one stays one click away)">New layout</button><button data-action="inspector" aria-label="Hide inspector" title="Hide inspector; keep the timeline open">‹</button></div>
       <div class="inspector-global"><button data-action="save-export" class="primary" title="Download this cut (the film picks it up from Downloads); also keeps a copy in this browser when there is room">Export cut</button><button data-action="undo" title="Undo (Ctrl/Cmd+Z)" ${undo.length?'':'disabled'}>Undo</button><button data-action="redo" title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)" ${redo.length?'':'disabled'}>Redo</button><span class="studio-sync" data-studio-sync>${studioSync.html()}</span><span class="saved-indicator" data-saved title="Draft kept in this browser"></span></div>${filmPicker()}`)+`
-      <nav class="inspector-tabs" aria-label="Inspector sections">${['project','chapter',...(titleEditor.has()?['title']:[]),'camera','groove',...(lighting()||timeOfDay()||filmShot()?['lighting']:[]),...(filmShot()?['graphics','props','people','layers','desks']:[]),...(filmShot()&&branding.available()?['branding']:[]),...(filmShot()&&deskBuild.shows()?['build']:[]),...(filmShot()&&deskVersions.has()?['version']:[]),...(film?['render']:[])].map(tab=>`<button data-inspector-tab="${tab}" aria-pressed="${inspector===tab}">${tab==='version'?'Desk version':tab[0].toUpperCase()+tab.slice(1)}</button>`).join('')}<button data-action="inspector" aria-label="Hide inspector" title="Hide inspector">×</button></nav><div class="selected-header" data-selected-header>${selectedHeader()}</div>
+      <nav class="inspector-tabs" aria-label="Inspector sections">${['project','chapter',...(titleEditor.has()?['title']:[]),'camera','groove',...(lighting()||timeOfDay()||filmShot()?['lighting']:[]),...(filmShot()?['graphics','props','people','layers','desks']:[]),...(filmShot()&&branding.available()?['branding']:[]),...(filmShot()&&deskBuild.shows()?['build']:[]),...(filmShot()&&deskVersions.has()?['version']:[]),...(film?['render']:[])].map(tab=>`<button data-inspector-tab="${tab}" aria-pressed="${inspector===tab}" ${shellOn()&&['graphics','branding'].includes(tab)?'class="tab-group-start"':''}>${tabLabel(tab)}</button>`).join('')}<button data-action="inspector" aria-label="Hide inspector" title="Hide inspector">×</button></nav><div class="selected-header" data-selected-header>${selectedHeader()}</div>
       <p data-status role="status" class="director-status">${escape(titleEditor.editHint?.()||`${project.shots.length} chapters · ${Math.round(duration(project.shots))} seconds`)}</p>
       <div data-inspector-page="project">
       <div class="director-actions"><button data-action="new">New cut</button><button data-action="clone">Duplicate cut</button></div>

@@ -39,7 +39,7 @@ try{
 
   // ---- click D: the Desk version panel
   await page.evaluate(()=>document.querySelector('#director-timeline [data-desk-version="D"]').click());await wait(500);
-  check(await page.$eval('#director-panel [data-inspector-tab="version"]',b=>b.getAttribute('aria-pressed')==='true'&&b.textContent==='Desk version').catch(()=>false),'the Desk version tab opens on click');
+  check(await page.$eval('#director-panel [data-inspector-tab="version"]',b=>b.getAttribute('aria-pressed')==='true'&&b.textContent==='Desk swaps').catch(()=>false),'the Desk version tab opens on click');
   const opts=await page.$$eval('#director-panel [name="dv-model"] option',o=>o.map(x=>x.value));
   check(['music','gaming','artist','office','hbhs','occ','architect','library'].every(m=>opts.includes(m)),'Model lists '+opts.join(', '));
   check(await page.$eval('#director-panel [name="dv-model"]',s=>s.value)==='hbhs'&&await page.$eval('#director-panel [name="dv-name"]',s=>s.placeholder)==='HBHS','Model HBHS, name defaults to HBHS');

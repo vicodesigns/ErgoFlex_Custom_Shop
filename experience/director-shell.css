@@ -211,3 +211,13 @@ body.df-shell #director-panel .director-hint:hover,body.df-shell #director-panel
 /* keyframe shapes say the interpolation (After Effects: ◆ linear, ⧗ Easy Ease, ■ hold); the segment words only on hover */
 body.df-shell .camera-segment i{opacity:0;transition:opacity .15s}body.df-shell .camera-segment:hover i{opacity:1}
 body.df-shell .camera-segment.ease-hold{background-image:repeating-linear-gradient(90deg,#ffffff18 0 6px,transparent 6px 12px)}
+
+/* ---- P5 inspector (17 Nov 2026): tab groups, the scope of each page, scrubbable number fields ---- */
+body.df-shell .inspector-tabs .tab-group-start{margin-left:10px;position:relative}
+body.df-shell .inspector-tabs .tab-group-start::before{content:"";position:absolute;left:-6px;top:20%;bottom:20%;width:1px;background:var(--df-border-2,#ffffff1c)}
+body.df-shell [data-inspector-page]:not([hidden])::before{content:"This chapter";display:inline-block;margin:0 0 6px;padding:1px 7px;border-radius:8px;border:1px solid var(--df-border-2,#ffffff1c);color:var(--df-text-3,#8a97a6);font:600 10px/16px var(--df-font,system-ui)}
+body.df-shell [data-inspector-page="project"]:not([hidden])::before{content:"Whole cut";color:#9be6fb;border-color:#5cd3f655}
+body.df-shell [data-inspector-page="render"]:not([hidden])::before{content:"Whole film · render PC"}
+#director-panel label:has(>input[type=number]:not([disabled])){cursor:ew-resize}
+#director-panel label:has(>input[type=number]) input{cursor:text}
+.nf-scrubbing{outline:1px solid var(--df-accent,#5cd3f6)}
