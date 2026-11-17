@@ -1079,7 +1079,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       if(name==='scene-desk-pick'){deskSel.select(index);return;}
       if(name==='sel-tool'){const t=index,ctxOf=sceneProps.selected()?'prop':scenePeople.selected()?'person':null;
         if(t==='dup'){runKey('duplicate');return;}if(t==='frame'){runKey('frame-selection');return;}if(t==='zoom'){zoomToSelection();return;}if(t==='reset'){runKey('reset-film',null,ctxOf);return;}
-        if(t==='delete'){if(keyId){await action('key-delete');return;}const target=bridge.stage()?.three?.()?.renderer?.domElement?.ownerDocument||document;for(const d of [document,target])d.dispatchEvent(new KeyboardEvent('keydown',{key:'Delete',code:'Delete',bubbles:true,cancelable:true}));return;}
+        if(t==='delete'){if(keyId){await action('key-delete');return;}if(scenePeople.selected()){scenePeople.remove();return;}if(sceneProps.selected()){sceneProps.hide(true);return;}document.dispatchEvent(new KeyboardEvent('keydown',{key:'Delete',code:'Delete',bubbles:true,cancelable:true}));return;}
         return;}
       if(name==='lamp-pick'){await sceneLights.changed({name:'sl-select',value:index});renderTimeline();return;}
       if(name==='white-preset'){editLight({color:index});const k=lightItem();if(k)status(`${whiteName(index)} ${index} at ${r2(k[0])} s.`);return;}
@@ -1639,6 +1639,18 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     if(event.repeat&&!row.repeat)return;
     try{runKey(row.id,event,row.ctx);actionLog.add(row.id,row.label,'key');keysPanel.flash(row.id);keyHint(event,state,row);}catch(error){status(error.message,true);}
   }
+  // Delete in the 3D view and on the page (not in the timeline, the panel, a field or a dialog): the selected pose key
+  // (or joint) in pose mode, the selected person (a selected path point first), the selected prop (a room prop is
+  // hidden in this chapter). Each editor's own Delete (titles, graphics, timeline picks, keys) keeps working: those act
+  // in the timeline. (These branches were the old view key handler's; keys drop 1 dropped them, 17 Nov 2026.)
+  function viewDelete(event){
+    if(!open||event.defaultPrevented||event.ctrlKey||event.metaKey||event.altKey||!['Delete','Backspace'].includes(event.key))return;
+    const t=event.target;if(t?.closest?.('input,select,textarea,[contenteditable]')||timeline.contains(t)||panel.contains(t)||document.querySelector('dialog[open]'))return;
+    if(scenePeople.posing()&&scenePeople.poseKeySelected()){event.preventDefault();scenePeople.remove();return;}
+    if(scenePeople.selected()&&!picked()){event.preventDefault();scenePeople.remove();return;}
+    if(sceneProps.selected()&&!picked()){event.preventDefault();sceneProps.hide(true);}
+  }
+  document.addEventListener('keydown',viewDelete);
   // "R is now Scale…": for two weeks after the keys changed, once per key per session.
   const hinted=new Set(),hintEl=Object.assign(document.createElement('div'),{className:'key-hint'});hintEl.setAttribute('role','status');document.body.append(hintEl);
   let hintTimer=0;
@@ -2021,9 +2033,9 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   function bindPreviewHistory(){
     const next=preview?.contentDocument;if(!next||next===previewDocument)return;
     previewDocument?.removeEventListener('keydown',dispatchKey,true);previewDocument?.removeEventListener('keyup',peekUp);
-    previewDocument?.removeEventListener('keydown',stageEscape,true);
+    previewDocument?.removeEventListener('keydown',stageEscape,true);previewDocument?.removeEventListener('keydown',viewDelete);
     // the 3D view's own page: the same dispatcher (capture, before the stage's keys), the hold key's release, Esc, focus
-    previewDocument=next;previewDocument.addEventListener('keydown',dispatchKey,true);previewDocument.addEventListener('keyup',peekUp);previewDocument.addEventListener('keydown',stageEscape,true);
+    previewDocument=next;previewDocument.addEventListener('keydown',dispatchKey,true);previewDocument.addEventListener('keyup',peekUp);previewDocument.addEventListener('keydown',stageEscape,true);previewDocument.addEventListener('keydown',viewDelete);
     previewDocument.addEventListener('pointerdown',()=>setFocus('view'),true);preview.contentWindow?.addEventListener('blur',()=>still.peek(false));nav.refresh();
   }
   // Esc with the 3D view focused (after clicking a prop or a light): the Director's Esc (close the still, clear the
