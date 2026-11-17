@@ -15,8 +15,10 @@ import draco3d from 'draco3dgltf';
 const root=path.resolve(import.meta.dirname,'../..'),SRC=path.join(root,'models/ergoflex-supplied/shelving'),INCH=.0254;
 const SCENES=['office','home','creative','gaming','music','coworking','educational','library','highschool'];
 // Role of a source material: by colour (the CAD files colour the parts: black plate, teal cubby, yellow cups).
-const roleOf=(file,c)=>{
-  if(/^Cup_Holder/.test(file))return 'acrylic';
+// Cup_Holder.glb: face groups 0-31 are the milled plate (with the hole's wall), 32 the ring on top of the hole and 33-38
+// the cup: only the ring and the cup are acrylic (Vico, Nov 16); the plate is the desk's wood.
+const roleOf=(file,c,n)=>{
+  if(/^Cup_Holder/.test(file))return n>=32?'acrylic':'wood';
   if(/Cup_Container/.test(file)){const [r,g,b]=c;return r+g+b<.1?'wood':b>.4&&r<.3?'print':'acrylic';}
   return 'wood';
 };
@@ -38,12 +40,12 @@ const mul=(m,v)=>[m[0]*v[0]+m[4]*v[1]+m[8]*v[2]+m[12],m[1]*v[0]+m[5]*v[1]+m[9]*v
 const mulN=(m,v)=>{const x=m[0]*v[0]+m[4]*v[1]+m[8]*v[2],y=m[1]*v[0]+m[5]*v[1]+m[9]*v[2],z=m[2]*v[0]+m[6]*v[1]+m[10]*v[2],l=Math.hypot(x,y,z)||1;return [x/l,y/l,z/l];};
 for(const [file,id,name] of JOBS){
   if(only&&!only.has(id))continue;
-  const doc=await io.read(path.join(SRC,file)),parts={wood:[],acrylic:[],print:[]};
+  const doc=await io.read(path.join(SRC,file)),parts={wood:[],acrylic:[],print:[]}; let faceGroup=0;
   for(const node of doc.getRoot().listNodes()){
     const mesh=node.getMesh();if(!mesh)continue;const m=node.getWorldMatrix();
     for(const prim of mesh.listPrimitives()){
       const pos=prim.getAttribute('POSITION'),nor=prim.getAttribute('NORMAL'),idx=prim.getIndices(),c=prim.getMaterial()?.getBaseColorFactor()||[1,1,1,1];
-      const role=roleOf(file,c),n=pos.getCount(),P=[],N=[],I=[];
+      const role=roleOf(file,c,faceGroup++),n=pos.getCount(),P=[],N=[],I=[];
       for(let i=0;i<n;i++){const v=mul(m,pos.getElement(i,[])),w=nor?mulN(m,nor.getElement(i,[])):[0,1,0];P.push(v);N.push(w);}
       const count=idx?idx.getCount():n;for(let i=0;i<count;i++)I.push(idx?idx.getScalar(i):i);
       parts[role].push({P,N,I});

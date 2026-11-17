@@ -86124,7 +86124,7 @@
     197.495
    ],
    "tris": 2696,
-   "bytes": 90804
+   "bytes": 91652
   },
   {
    "id": "ergoflex-side-shelf-large-cubby",
@@ -86250,6 +86250,6 @@
    ]
   }
  ],
- "generated": "2026-11-17T02:48:40.927Z",
+ "generated": "2026-11-17T03:38:25.030Z",
  "provenance": "Every model in assets/props is converted from a file in models/, supplied by the project owner. All 102 USDZ sources are Sketchfab exports and the 3DM sources are Rhino files. Per-model licence terms and required attribution are unconfirmed: see docs/scene-assets.md before shipping any of this publicly."
 }

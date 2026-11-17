@@ -6,7 +6,7 @@ import {NodeIO} from '@gltf-transform/core';
 import {isSideShelving,styleSideShelving,syncDeskMatch} from '../side-shelving.mjs';
 const root=path.resolve(import.meta.dirname,'..'),index=JSON.parse(fs.readFileSync(path.join(root,'assets/props/index.json'))).props;
 const want={'ergoflex-side-shelf-large':['wood'],'ergoflex-side-shelf-small':['wood'],'ergoflex-side-shelf-large-pair':['wood'],'ergoflex-side-shelf-small-pair':['wood'],
-  'ergoflex-side-cup-holder':['acrylic'],'ergoflex-side-shelf-large-cubby':['wood','acrylic','print'],'ergoflex-side-shelf-small-cubby':['wood','acrylic','print']};
+  'ergoflex-side-cup-holder':['wood','acrylic'],'ergoflex-side-shelf-large-cubby':['wood','acrylic','print'],'ergoflex-side-shelf-small-cubby':['wood','acrylic','print']};
 const io=new NodeIO();
 for(const [id,roles] of Object.entries(want)){
   const e=index.find(p=>p.id===id);assert(e,id+' is in the library index');assert.equal(e.category,'shelving');assert(isSideShelving(id));

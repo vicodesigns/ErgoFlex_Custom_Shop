@@ -220,6 +220,21 @@ export function addParent(kind) {
   }
   const root = api.workspaceRoom?.root; return root && inScene(root, scene) && shownTree(root) ? root : scene;
 }
+// Side shelving (assets/props/ergoflex-side-*, side-shelving.mjs) takes the desk's own finish: the wood plate its desktop
+// material (the room desk's, else the product desk's Desktop_3), the printed cubby its trim colour. Inline, not imported:
+// this file is frozen for the render PC and an extra import path would have to be frozen with it.
+function matchDeskFinish(o, asset) {
+  if (!/^ergoflex-side-/.test(asset || '')) return;
+  let wood = null, trim = null;
+  try { const r = api.sceneDesks?.active, fin = r && api.sceneDesks.ctx?.deskFinish?.(r); wood = fin?.wood || null; trim = fin?.trim || null; } catch (error) { console.warn('[film-fx] side shelving finish', error); }
+  if (!wood) api.loadedModel?.traverse?.(m => { if (!wood && m.isMesh && m.name === 'Desktop_3' && m.material) wood = [].concat(m.material).find(x => x?.isMeshPhysicalMaterial) || null; });
+  trim ||= api.currentConfig?.trimColor;
+  o.traverse(m => {
+    if (!m.isMesh) return;
+    if (wood && m.userData?.artistShelfWood && m.material?.isMeshPhysicalMaterial) { m.material.copy(wood); m.material.name = 'Side shelf wood'; m.material.userData.sharedTextures = true; m.material.needsUpdate = true; }
+    if (trim && m.userData?.deskTrimPlastic) m.material.color.set(trim);
+  });
+}
 // Scene units per millimetre (a library instance is in millimetres at scale 1000 under a millimetre parent).
 export const mmScale = () => api.workspaceAccessories?.scale || api.workspaceRoom?.scale || .001;
 function installAdd(edit, n, undo) {
@@ -230,7 +245,7 @@ function installAdd(edit, n, undo) {
   o.name = `Added prop:${asset}#${edit.id}`; o.userData.directorAdd = { asset, id: edit.id, label: edit.label || asset, parent: Object.hasOwn(DESK_SURFACES, edit.parent) ? edit.parent : 'room' };
   const p = edit.position || [0, 0, 0], r = edit.rotation || [0, 0, 0], s = edit.scale || [1, 1, 1], d = THREE.MathUtils.degToRad;
   o.position.set(p[0] / k, p[1] / k, p[2] / k); o.rotation.set(d(r[0]), d(r[1]), d(r[2])); o.scale.set(base * s[0], base * s[1], base * s[2]);
-  parent.add(o); o.updateMatrixWorld(true);
+  parent.add(o); o.updateMatrixWorld(true); matchDeskFinish(o, asset);
   (o.userData.__filmFxEdits ||= []).push(edit); edit.__count = 1;
   undo.push(() => { o.removeFromParent(); delete o.userData.__filmFxEdits; prepared.delete(edit); });
   return o;
