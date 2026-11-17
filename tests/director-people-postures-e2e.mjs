@@ -27,7 +27,7 @@ try{
   assert.ok(await page.evaluate(()=>{const w=document.getElementById('stage').contentWindow,g=w.ErgoPresentation.three().scene.getObjectByName('Director pose tools');return g?.children.some(c=>c.userData?.joint==='hand_l');}),'seated hand dot');
   if(await page.$eval('[data-action="pe-key-auto"]',e=>e.getAttribute('aria-pressed'))==='true')await click('[data-action="pe-key-auto"]');
   await set('pe-joint','hand_l');await set('pe-rx',15);await click('[data-action="pe-key-all"]');await wait(800);
-  const entry=stores(await exported());assert.equal(entry.id,STAND);assert.deepEqual(entry.postures[STAND].pose,originalPose);assert.ok(entry.postures[SIT].poseKeys.some(k=>Math.abs(k.t-16.6)<.001&&k.pose.hand_l));
+  const entry=stores(await exported());assert.equal(entry.id,STAND);assert.deepEqual(entry.postures?.[STAND]?.pose,originalPose);   // (a cut whose maya-stand has no pose of its own, like the cine cut, has no standing record: both undefined)assert.ok(entry.postures[SIT].poseKeys.some(k=>Math.abs(k.t-16.6)<.001&&k.pose.hand_l));
   await click('#director-appbar [data-action="undo"]');await wait(500);assert.match(await page.$eval('#director-panel',p=>p.textContent),/none yet/);
   await click('#director-appbar [data-action="redo"]');await wait(500);assert.match(await page.$eval('#director-panel',p=>p.textContent),/1 key/);
   await seek(page,8);assert.equal(await showing(),STAND);await seek(page,16.6);assert.equal(await showing(),SIT);
