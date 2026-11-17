@@ -19,7 +19,7 @@
 //   aliases  what the command search (Ctrl+P) also finds it by: Rhino's command names (m, ro, sc, zs, ze, top…).
 // Vico's own keys (the panel's Edit keys) are kept as { id: [spec...] } (keys-panel.mjs, ui store) and laid over this
 // table by effectiveActions(); only rows the Director runs can be rebound, never to a RESERVED key.
-export const LIVE_PHASES = new Set(['1a', '1a2', '1b', '2']);
+export const LIVE_PHASES = new Set(['1a', '1a2', '1b', '2', '3']);
 
 const R = (id, label, keys, ctx, more = {}) => ({ id, label, keys, ctx, phase: '1a', owner: 'director', ...more });
 const E = (id, label, keys, ctx, more = {}) => R(id, label, keys, ctx, { owner: 'editor', ...more });
@@ -65,6 +65,8 @@ export const ACTIONS = [
   R('zoom-in', 'Timeline zoom in', ['=', '+'], 'timeline', { repeat: true, origin: 'Premiere' }),
   R('zoom-out', 'Timeline zoom out', ['-'], 'timeline', { repeat: true, origin: 'Premiere' }),
   R('zoom-fit', 'Fit the chapter in the timeline', ['Shift+Z'], 'timeline', { origin: 'Director' }),
+  R('groups-collapse', 'Fold every lane group (Alt-click a group: all of them)', ['{'], 'timeline', { phase: '3', origin: 'After Effects' }),
+  R('groups-expand', 'Unfold every lane group', ['}'], 'timeline', { phase: '3', origin: 'After Effects' }),
   R('group-1', 'Jump to Titles & graphics (opens the group)', ['1'], 'timeline', { origin: 'Director' }),
   R('group-2', 'Jump to the Camera lane', ['2'], 'timeline', { origin: 'Director' }),
   R('group-3', 'Jump to the featured desk (Lift, Tilt, Wheels)', ['3'], 'timeline', { origin: 'Director' }),
@@ -95,6 +97,10 @@ export const ACTIONS = [
   R('still', 'Still image of this frame', ['Shift+R'], 'view', { origin: 'Director' }),
   R('peek', 'Peek at the live view under a still (hold)', ['\\'], 'view', { hold: true, origin: 'Director' }),
   R('light-markers', 'Show / hide the light markers', ['Shift+L'], 'view', { origin: 'Director' }),
+  G('gumball-type', 'Exact value: while dragging a gizmo (or just after), type 12, 12in, 30cm, 45°, 150% and press Enter', 'Type during a drag', 'view', { phase: '3', origin: 'Rhino' }),
+  G('gumball-shift', 'Constrain a free or plane move to its main axis', 'Shift while dragging', 'view', { phase: '3', origin: 'Rhino' }),
+  G('gumball-ctrl', 'Snap (5 cm, 15°, 10 %); inverts while held', 'Ctrl while dragging', 'view', { phase: '3', origin: 'Rhino' }),
+  R('gizmo-space', 'Gizmo frame: World / Object (the room desk keeps its own)', [], 'view', { phase: '3', origin: 'Rhino', aliases: ['world', 'object', 'local', 'space'] }),
   G('orbit', 'Orbit', 'Right-drag', 'view', { origin: 'Rhino' }),
   G('pan', 'Pan', 'Shift + right-drag, or middle-drag', 'view', { origin: 'Rhino' }),
   G('zoom-drag', 'Zoom', 'Ctrl + right-drag', 'view', { origin: 'Rhino' }),
@@ -177,6 +183,7 @@ export const CHANGED = [
   { spec: 'ArrowRight', was: 'Nudge a focused view, move or title 0.1 s', now: '←/→ now always step the playhead. Nudge the selection: Alt+←/→ (one frame, Shift ×10).' },
   { spec: 'Ctrl+S', was: '(nothing)', now: 'Ctrl+S saves in this browser. Export the cut for the film: Ctrl+M.' },
   { gesture: 'Right-click a path point', was: 'Remove the point', now: 'Right-drag now orbits. Remove a path point: select it, then Delete.' },
+  { gesture: 'Shift while dragging a prop', was: 'Snap to 5 cm / 15°', now: 'Shift now holds the main axis (Rhino). Snapping: hold Ctrl.' },
   { gesture: 'Left-drag in the 3D view', was: 'Orbit', now: 'Left-drag now draws a box (props). Orbit: right-drag · Pan: Shift+right-drag · Zoom: wheel.' },
 ];
 

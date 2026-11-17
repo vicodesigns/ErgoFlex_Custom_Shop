@@ -20,7 +20,7 @@ ok('selectors: props (lane bar, Layers row), people (lane / list, sheet row), de
   assert.deepEqual(selectionSelectors({kind:'prop',key:'["a",1]'}),['.prop-bar[data-prop-key="[\\"a\\",1]"]','[data-ly-item="[\\"a\\",1]"]']);
   assert.deepEqual(selectionSelectors({kind:'person',key:'kai'}),['[data-person-key="kai"]','[data-person-keys~="kai"]']);
   assert.ok(selectionSelectors({kind:'desk',key:'station-3'}).some(x=>x.includes('data-desk-of="station-3"')));
-  assert.deepEqual(selectionSelectors(null),[]);assert.deepEqual(selectionSelectors({kind:'light',key:'x'}),[]);
+  assert.deepEqual(selectionSelectors(null),[]);assert.deepEqual(selectionSelectors({kind:'nothing-yet',key:'x'}),[]);   // (P3: lights and every other kind have marks now)
 });
 ok('centreScroll: centres, clamps at both ends, keeps a fully visible item when nearest',()=>{
   // view 200 px at scroll 100; item 300..320 below the fold (start relative to the view = 300)

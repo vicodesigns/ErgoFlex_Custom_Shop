@@ -1,3 +1,4 @@
+import {enhanceGizmo,mmPerUnitOf} from './gumball.mjs';
 import {postureView,editPosture,migratePostures,editablePeople,postureRecord} from '../people-postures.mjs';
 import {cleanPeople,canonicalPeople,effectivePeople,newKey,spanText,PARTS} from './people-edits.mjs';
 import {createPoseEditor,JOINTS} from './scene-pose-editor.mjs';
@@ -88,6 +89,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const {THREE,TransformControls}=w.__directorThree,group=new THREE.Group();group.name='Director people tools';group.userData.directorTools=true;t.scene.add(group);
     const box=new THREE.BoxHelper(undefined,0xff9bd2);box.material.depthTest=false;box.material.transparent=true;box.renderOrder=998;box.visible=false;group.add(box);
     const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;w.__directorPeopleGizmo=gizmo;w.__directorPeoplePaths=paths;gizmo.setSize(1.2);gizmo.setSpace('world');gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
+    enhanceGizmo(gizmo,{win:w,THREE,mmPerUnit:()=>mmPerUnitOf(w,THREE),status:t=>status(t)});   // P3: Rhino's Gumball (gumball.mjs)
     let orbit=true;
     gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){orbit=t.controls.enabled;t.controls.enabled=false;dragFrom=gizmo.object?read(gizmo.object):null;const e=sel&&entry(sel);if(dragFrom&&e?.desk&&!free(e)){dragFrom.stance=seatedDesk(gizmo.object.userData?.person?.desk??e.desk)?'sit':'stand';dragFrom.reach=reachOfStance(e,dragFrom.stance);}}else{t.controls.enabled=orbit;endDrag();}});
     gizmo.addEventListener('objectChange',()=>{const e=sel&&entry(sel);if(!e)return;

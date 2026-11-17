@@ -1,3 +1,4 @@
+import {enhanceGizmo,mmPerUnitOf} from './gumball.mjs';
 import {ADDED_TYPES,sceneLightList,applyLightEdit,snapshotLight,restoreLight} from './light-edits.mjs';
 // Director "Scene lights": the live stage's THREE lights after the film setup (room lamps, sun /
 // sky, the film rig, the Director's own), billboard markers, a move / aim gizmo and an inspector.
@@ -110,6 +111,7 @@ export function createSceneLightEditor({bridge,shot,film,commit,status,open,rere
     const c=win.document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.fillStyle='#fff';g.beginPath();g.arc(32,32,13,0,7);g.fill();g.strokeStyle='#fff';g.lineWidth=4;for(let i=0;i<8;i++){const a=i*Math.PI/4;g.beginPath();g.moveTo(32+Math.cos(a)*19,32+Math.sin(a)*19);g.lineTo(32+Math.cos(a)*29,32+Math.sin(a)*29);g.stroke();}
     const icon=new THREE.CanvasTexture(c);icon.colorSpace=THREE.SRGBColorSpace;
     const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;gizmo.setSize(.75);gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
+    enhanceGizmo(gizmo,{win:win,THREE,mmPerUnit:()=>mmPerUnitOf(win,THREE),status:t=>status(t)});   // P3: Rhino's Gumball (gumball.mjs)
     gizmo.addEventListener('dragging-changed',ev=>{win.__directorDragging=ev.value;if(ev.value){drag={enabled:t.controls.enabled};t.controls.enabled=false;startDrag();}else{t.controls.enabled=drag?.enabled??true;endDrag();}});
     gizmo.addEventListener('objectChange',()=>onDrag());
     const raycaster=new THREE.Raycaster();

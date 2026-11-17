@@ -53,6 +53,8 @@ Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl als
 | = / + | Timeline zoom in | Premiere |
 | - | Timeline zoom out | Premiere |
 | Shift+Z | Fit the chapter in the timeline | Director |
+| { | Fold every lane group (Alt-click a group: all of them) | After Effects |
+| } | Unfold every lane group | After Effects |
 | 1 | Jump to Titles & graphics (opens the group) | Director |
 | 2 | Jump to the Camera lane | Director |
 | 3 | Jump to the featured desk (Lift, Tilt, Wheels) | Director |
@@ -86,6 +88,10 @@ Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl als
 | Shift+R | Still image of this frame | Director |
 | \ | Peek at the live view under a still (hold) | Director |
 | Shift+L | Show / hide the light markers | Director |
+| Type during a drag | Exact value: while dragging a gizmo (or just after), type 12, 12in, 30cm, 45°, 150% and press Enter | Rhino |
+| Shift while dragging | Constrain a free or plane move to its main axis | Rhino |
+| Ctrl while dragging | Snap (5 cm, 15°, 10 %); inverts while held | Rhino |
+| Ctrl+P: world, object, local, space | Gizmo frame: World / Object (the room desk keeps its own) | Rhino |
 | Right-drag | Orbit | Rhino |
 | Shift + right-drag, or middle-drag | Pan | Rhino |
 | Ctrl + right-drag | Zoom | Rhino |
@@ -205,4 +211,5 @@ Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl als
 | → | Nudge a focused view, move or title 0.1 s | ←/→ now always step the playhead. Nudge the selection: Alt+←/→ (one frame, Shift ×10). |
 | Ctrl+S | (nothing) | Ctrl+S saves in this browser. Export the cut for the film: Ctrl+M. |
 | Right-click a path point | Remove the point | Right-drag now orbits. Remove a path point: select it, then Delete. |
+| Shift while dragging a prop | Snap to 5 cm / 15° | Shift now holds the main axis (Rhino). Snapping: hold Ctrl. |
 | Left-drag in the 3D view | Orbit | Left-drag now draws a box (props). Orbit: right-drag · Pan: Shift+right-drag · Zoom: wheel. |

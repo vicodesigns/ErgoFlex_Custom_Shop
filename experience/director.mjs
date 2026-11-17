@@ -2,6 +2,7 @@ import {createTimelineHints,timelineShortcuts} from './timeline-hints.mjs';
 import {resolve as resolveKey,targetKind,changedHint,effectiveActions} from './director-actions.mjs';
 import {createPalette} from './command-palette.mjs';
 import {appBarHtml,statusBarHtml,wireMenus} from './director-appbar.mjs';
+import {setSpaceAll,spaceNow} from './gumball.mjs';
 import {chapterScore,staleness,snapTimes,snapTo,waveColumns,createScorePlayer} from './score-track.mjs';
 import {createActionLog,captureErrors,reportBody,createReportDialog,sendReport} from './director-report.mjs';
 import {createKeysPanel,loadUi,saveUi} from './keys-panel.mjs';
@@ -45,7 +46,7 @@ import {makeOpeningShot} from './opening.mjs';
 import {showcaseShots,showcaseViews} from './showcase.mjs';
 import {BAKE_PROFILE} from './bake.mjs';
 import {resolveCameraKeys,moveCameraKey,CAMERA_EASINGS} from './camera-track.mjs';
-import {createSelection,markSelection,centreIn} from './director-selection.mjs';
+import {createSelection,markSelection,centreIn,GROUP_OF} from './director-selection.mjs';
 import {CutLibrary,makeCut,cleanCut,cleanShot,sceneShot,generateCut,encodeCut,KINDS,PRESET_IDS,defaultPreset} from './cuts.mjs';
 
 const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -89,14 +90,20 @@ export function mountDirector(bridge,catalog,initial){
   // lanes' header) and, when it changes, centred on the timeline; a tab opened later centres it there too.
   const b2sel=createSelection(),SEL_HOME={prop:'props',person:'people',desk:'desks'};
   function selectionNow(){
-    try{const p=sceneProps.selected();if(p)return {kind:'prop',key:p};const h=scenePeople.selected();if(h)return {kind:'person',key:h};const d=deskSel.selected();if(d)return {kind:'desk',key:d};}catch{}   // (before the editors exist: nothing)
+    try{const p=sceneProps.selected();if(p)return {kind:'prop',key:p};const h=scenePeople.selected();if(h)return {kind:'person',key:h};const d=deskSel.selected();if(d)return {kind:'desk',key:d};
+      // P3: every other kind, in the order a click leaves them (the editors clear each other)
+      if(keyId)return {kind:'camera',key:keyId};const c=deskEditor.selectedId();if(c)return {kind:'clip',key:c};const t=titleEditor.selectedId?.();if(t)return {kind:'title',key:t};
+      const g=graphics.selected?.();if(g!==null&&g!==undefined&&g!==-1)return {kind:'graphic',key:g};if(lightSel)return {kind:'lightkey',key:lightSel.id};const l=sceneLights.selected();if(l)return {kind:'light',key:l};}catch{}   // (before the editors exist: nothing)
     return null;
   }
   function syncSelection(){
     const changed=b2sel.set(selectionNow());let desk='';try{desk=choreo.desk()||'';}catch{}
     for(const el of timeline.querySelectorAll('.desk-track-toolbar,.choreo-pick'))el.dataset.deskOf=desk;
-    markSelection([panel,timeline],b2sel.get());
-    if(changed&&b2sel.get())requestAnimationFrame(()=>requestAnimationFrame(()=>centreSelection(timeline)));
+    const sel=b2sel.get();
+    // the selection's lane group opens when it is folded (Vico: "the right layer pops up")
+    if(changed&&sel){const g=GROUP_OF[sel.kind];if(g&&groupClosed(g)&&timeline.querySelector(`[data-lane-group="${g}"]`)){laneGroups[g]=false;saveGroups();renderTimeline();return;}}
+    markSelection([panel,timeline],sel);
+    if(changed&&sel)requestAnimationFrame(()=>requestAnimationFrame(()=>centreSelection(timeline)));
   }
   // Centre the selection's first visible mark under root (the timeline, or a tab page in the inspector).
   function centreSelection(root){
@@ -541,6 +548,10 @@ export function mountDirector(bridge,catalog,initial){
   }
   function titlesGroup(){if(!titleEditor.has())return '';return `${laneGroupHead('titles')}<div class="lane-group-body desk-lanes title-lanes" data-lane-body="titles" ${groupClosed('titles')?'hidden':''}>${titleEditor.lane()}</div>`;}
   function revealLighting(){const v=timeline.querySelector('.timeline-viewport'),head=timeline.querySelector('[data-lane-group="lighting"]');if(!v||!head)return;if(groupClosed('lighting')){laneGroups.lighting=false;saveGroups();renderTimeline();return revealLighting();}const top=head.offsetTop-timeline.querySelector('.time-ruler-row').offsetHeight;if(top<v.scrollTop||top+head.parentElement.offsetHeight>v.scrollTop+v.clientHeight)v.scrollTop=top;}
+  const ALL_GROUPS=['motion','lighting','titles','props','people','graphics','sound'];
+  function setAllGroups(closed){for(const g of ALL_GROUPS)laneGroups[g]=closed;saveGroups();renderTimeline();status(closed?'Every lane group folded: } unfolds them.':'Every lane group unfolded.');}
+  // Alt-click a group's twirl: fold or unfold every group (After Effects)
+  timeline.addEventListener('click',event=>{const b=event.target.closest('[data-action="group-toggle"]');if(!b||!event.altKey)return;event.preventDefault();event.stopImmediatePropagation();setAllGroups(b.getAttribute('aria-expanded')==='true');},true);
   function saveGroups(){try{localStorage.setItem('ergoflex.director.laneGroups',JSON.stringify(laneGroups));}catch{}}
   // Fit: the timeline tall enough for every lane (capped by the layout); film chapters open fitted.
   let timelineFitted=false;
@@ -1409,7 +1420,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     const st=bridge.playback(),body=document.body.classList;let free=false;try{free=freeView();}catch{}
     const posing=scenePeople.posing?.(),auto=posing&&(()=>{try{return localStorage.getItem('ergoflex.director.autoKey')==='1';}catch{return false;}})();
     const pills=[{id:'snap',label:magnet?`Snap ${typeof snapStep==='string'?snapStep:snapStep?snapStep+' s':'edges'}`:'Snap off',on:magnet,always:true,title:'Snapping (S): click to turn it '+(magnet?'off':'on')},
-      {id:'loop',label:'Loop',on:!!st.loop,title:'Loop is on (L)'},{id:'free',label:'Free view',on:free,warn:true,title:'Not the film camera (0 goes back)'},
+      {id:'loop',label:'Loop',on:!!st.loop,title:'Loop is on (L)'},{id:'space',label:spaceNow()==='local'?'Gizmo: Object':'Gizmo: World',on:spaceNow()==='local',always:true,title:'The move gizmo\'s frame: click for '+(spaceNow()==='local'?'World':'Object')},{id:'free',label:'Free view',on:free,warn:true,title:'Not the film camera (0 goes back)'},
       {id:'auto',label:'● Auto-key',on:!!auto,warn:true,title:'Pose mode: every change keys the pose (Shift+K)'},
       {id:'lowres',label:'Low-res',on:pressed('preview-quality'),title:'The preview runs at a lower resolution'},{id:'muted',label:'Muted',on:!pressed('sound'),title:'Sound is off (Shift+M)'},
       {id:'inspector',label:'Side column hidden',on:body.contains('inspector-hidden'),title:'Tab brings it back'},{id:'timeline',label:'Timeline hidden',on:body.contains('timeline-hidden'),title:'Shift+Tab brings it back'}];
@@ -1418,7 +1429,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   }
   timeline.addEventListener('click',event=>{
     const p=event.target.closest('[data-sb-pill]');if(!p)return;event.stopPropagation();
-    const id=p.dataset.sbPill;try{({snap:()=>action('magnet'),loop:()=>action('preview-loop'),free:()=>runKey('film-camera'),auto:()=>runKey('pose-auto-key'),lowres:()=>document.getElementById('preview-quality')?.click(),muted:()=>document.getElementById('sound')?.click(),inspector:()=>action('inspector'),timeline:()=>action('ab-timeline')})[id]?.();}catch(error){status(error.message,true);}
+    const id=p.dataset.sbPill;try{({snap:()=>action('magnet'),loop:()=>action('preview-loop'),free:()=>runKey('film-camera'),space:()=>runKey('gizmo-space'),auto:()=>runKey('pose-auto-key'),lowres:()=>document.getElementById('preview-quality')?.click(),muted:()=>document.getElementById('sound')?.click(),inspector:()=>action('inspector'),timeline:()=>action('ab-timeline')})[id]?.();}catch(error){status(error.message,true);}
     setTimeout(()=>{renderPills();renderAppBar();},0);
   },true);
   // Review mode (Ctrl+`): the film frame alone, the whole window, playing; Esc or Ctrl+` comes back.
@@ -1494,6 +1505,8 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       case 'keys-panel':case 'keys-panel-anywhere':keysPanel.toggle();return;
       case 'keys-panel-close':keysPanel.close();return;
       case 'palette':palette.toggle();return;
+      case 'gizmo-space':{const next=spaceNow()==='local'?'world':'local';setSpaceAll(next);renderPills();status(next==='local'?'Gizmo: Object frame (it turns with the item).':'Gizmo: World frame (the room\'s axes).');return;}
+      case 'groups-collapse':case 'groups-expand':setAllGroups(id==='groups-collapse');return;
       case 'toggle-inspector':action('inspector');return;
       case 'toggle-timeline':action('ab-timeline');return;
       case 'maximise':maximise();return;

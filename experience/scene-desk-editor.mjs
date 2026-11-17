@@ -1,3 +1,4 @@
+import {enhanceGizmo,mmPerUnitOf} from './gumball.mjs';
 import {cleanDeskEdit,effectiveDeskEdits,describeDeskEdit,deskDragPose} from './desk-edits.mjs';
 import {clampStartPose,startPoseLimits,START_PRESETS} from './start-pose.mjs';
 import {writeSceneDesks,DESKS_KEY,noteStudioValue} from './studio-sync.mjs';
@@ -96,6 +97,7 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     // desk moves by as much as the proxy has.
     const proxy=new THREE.Object3D();proxy.userData.directorTools=true;
     const gizmo=new TransformControls(t.camera,dom);gizmo.userData.directorTools=true;gizmo.setSize(1.35);gizmo.setSpace('local');gizmo.setMode('translate');gizmo.showY=false;gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
+    gizmo.userData.fixedSpace=true;enhanceGizmo(gizmo,{win:w,THREE,mmPerUnit:()=>mmPerUnitOf(w,THREE),status:t=>status(t)});   // P3: Rhino's Gumball (gumball.mjs)
     gizmo.addEventListener('dragging-changed',ev=>{if(ev.value)startGizmo();else endGizmo();});
     gizmo.addEventListener('objectChange',()=>moveGizmo());
     // The turn ring: a thin ring around the desk on the floor with a knob on the user's side; `grab` is its wider, unseen pick area.

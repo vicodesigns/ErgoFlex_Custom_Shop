@@ -1,3 +1,4 @@
+import {enhanceGizmo,mmPerUnitOf} from './gumball.mjs';
 import {noteStudioValue} from './studio-sync.mjs';
 import {layersOn,splitPermanent,writePermanentLayers,permanentCells,foldDeskHides,LAYERS_KEY} from './layers-exchange.mjs';
 import {cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,propTarget,DESK_SURFACES,onDesk,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets,keyedFadeWindow,filmFadeKeys,combineFilmFade,showOverFilm} from './prop-edits.mjs';
@@ -280,6 +281,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const {THREE,TransformControls}=w.__directorThree,group=new THREE.Group();group.name='Director prop tools';group.userData.directorTools=true;t.scene.add(group);
     const box=new THREE.BoxHelper(undefined,0x63d8f5);box.material.depthTest=false;box.material.transparent=true;box.renderOrder=998;box.visible=false;group.add(box);
     const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;gizmo.setSize(1.35);gizmo.setSpace('world');gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
+    enhanceGizmo(gizmo,{win:w,THREE,mmPerUnit:()=>mmPerUnitOf(w,THREE),status:t=>status(t),setSnap:on=>{snapping=on;syncSnap();}});   // P3: Rhino's Gumball (gumball.mjs)
     gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){drag={enabled:t.controls.enabled,obj:gizmo.object};t.controls.enabled=false;startDrag();}else{t.controls.enabled=drag?.enabled??true;endDrag();}});
     gizmo.addEventListener('objectChange',()=>{if(drag?.grp){moveGroupLive();status(`${mode==='translate'?'Moving ':'Turning '}${drag.grp.items.length} items together…`+(snapping?' (snapping)':' · Shift snaps'));return;}const o=current();if(o&&sel?.blocked){status(`${CANT_SAVE}: ${sel.blocked} It goes back when you let go.`,true);return;}if(o)status((mode==='translate'?'Moving ':mode==='rotate'?'Rotating ':'Scaling ')+label(o)+'…'+(snapping?' (snapping)':' · Shift snaps'));});
     const raycaster=new THREE.Raycaster(),dom=t.renderer.domElement;let down=null;
@@ -297,8 +299,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       if(!o){if(sel&&how==='replace'){deselect();status('Nothing to edit there: click a prop (furniture, lamps, desk items). Esc deselects.');}return;}
       pick(o,{how});
     },true);
-    const keys=e=>{const on=e.shiftKey;if(on!==snapping){snapping=on;syncSnap();}};
-    for(const doc of [document,w.document]){doc.addEventListener('keydown',keys,true);doc.addEventListener('keyup',keys,true);}
+    // (snapping: hold Ctrl, gumball.mjs; Shift constrains since 17 Nov 2026, it used to snap)
     // End: drop the selected prop onto the surface below it (Shift+End: drop flat, Alt+End: align to the surface).
     const endKey=e=>{if(e.key!=='End'||e.ctrlKey||e.metaKey||!sel||!editing()||lightsShowing()||e.target?.closest?.('input,select,textarea,[contenteditable],#director-timeline')||document.querySelector('dialog[open]'))return;
       e.preventDefault();e.stopPropagation();dropSelected(e.altKey?'align':e.shiftKey?'flat':'drop').catch(error=>status(error.message,true));};

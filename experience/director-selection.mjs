@@ -4,6 +4,8 @@
 // a change event, and the places that show it: every element that stands for the selected thing, in the inspector tabs
 // and on the timeline, gets the class `b2-selected`, and on a change the timeline scrolls to centre it.
 export const SELECTED_CLASS='b2-selected';
+// The lane group each kind lives in (a selection opens its group when it is folded: P3).
+export const GROUP_OF={camera:'motion',clip:'motion',title:'titles',graphic:'graphics',light:'lighting',lightkey:'lighting',prop:'props',person:'people'};
 export const sameSelection=(a,b)=>(!a&&!b)||(!!a&&!!b&&a.kind===b.kind&&a.key===b.key);
 export function createSelection(){
   let now=null;const subs=new Set();
@@ -24,6 +26,13 @@ export function selectionSelectors(sel){
   if(sel.kind==='prop')return [`.prop-bar[data-prop-key="${k}"]`,`[data-ly-item="${k}"]`];
   if(sel.kind==='person')return [`[data-person-key="${k}"]`,`[data-person-keys~="${k}"]`];
   if(sel.kind==='desk')return [`.desk-row[data-section="${k}"]`,`[data-choreo-row="${k}"]`,`[data-desk-of="${k}"]`];
+  // P3 (17 Nov 2026): every other kind the Director selects, where it shows on the timeline
+  if(sel.kind==='camera')return [`.camera-key[data-key="${k}"]`];
+  if(sel.kind==='clip')return [`[data-desk-clip="${k}"]`];
+  if(sel.kind==='title')return [`[data-title-clip="${k}"]`,`[data-title-card="${k}"]`,`[data-title-id="${k}"]`];
+  if(sel.kind==='graphic')return [`[data-graphic-clip="${k}"]`,`[data-graphic-index="${k}"]`,`[data-screen-index="${k}"]`];
+  if(sel.kind==='light')return [`.lamp-chip[data-section="${k}"]`];
+  if(sel.kind==='lightkey')return [`[data-light-key="${k}"]`,`[data-tod-key="${k}"]`,`[data-status-key="${k}"]`];
   return [];
 }
 // The scroll offset that centres an item [start, start+size) (relative to the view's visible start) in a view of `view`

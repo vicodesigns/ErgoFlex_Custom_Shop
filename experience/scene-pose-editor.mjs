@@ -8,6 +8,7 @@
 // goes back to the posture as built. Every change is one undo step and lives in the chapter's cast as
 // cast[i].postures[modelId].pose = { '<bone>': [x, y, z, w] }, so the live stage and film show it.
 // The People controller supplies an active-posture view and routes writes to that record.
+import {enhanceGizmo,mmPerUnitOf} from './gumball.mjs';
 import {poseAt,setPoseKey,removePoseKey,moveKey,setKeyEase,copyKey,pasteKey,keyTimes,EASES,KEY_SNAP} from '../people-pose-keys.mjs';
 // Pose KEYS (S31, Blender's way): with Auto-key on (the red dot; off until turned on, then remembered) every adjustment writes a key at the playhead
 // for the bones it changed (the active posture record’s poseKeys: [{t, pose, ease}], people-pose-keys.mjs); between keys each bone eases from
@@ -64,6 +65,7 @@ export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,
     }
     const target=new THREE.Object3D();group.add(target);
     const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;gizmo.setSize(.75);gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
+    enhanceGizmo(gizmo,{win:w,THREE,mmPerUnit:()=>mmPerUnitOf(w,THREE),status:t=>status(t)});   // P3: Rhino's Gumball (gumball.mjs)
     gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){orbit=t.controls.enabled;t.controls.enabled=false;startDrag();}else{t.controls.enabled=orbit;endDrag();}});
     gizmo.addEventListener('objectChange',()=>{if(moving())solve();status(`${moving()?'Moving':'Turning'} ${personName(entry(key))}'s ${label(joint).toLowerCase()}…`);});
     h={object:o,group,dots,target,gizmo,geo};listen();
