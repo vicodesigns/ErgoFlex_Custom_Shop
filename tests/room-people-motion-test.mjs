@@ -874,4 +874,39 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
     }
     assert.ok(flatter > 10, 'toes: the toes are flatter while the heel is up (' + flatter + ' samples)');
 }
+// ---- swing: 'path' (Nov 17, storage's Andre: his legs crossed on the tight turn round the desk's end): the swinging
+// foot goes along the path on its own side of it, not on the straight line between its footprints. The same walk on a
+// straight path; on a tight turn the shins stay apart and the feet never cross under the body.
+{
+    const rig = rigOf('andre'), key = rig.key('people-andre-stand-wait'), walk = rig.key('people-andre-walk');
+    const straight = [[0, 0], [0, 3]], a = walkPlan(rig, walk, key, straight), b = walkPlan(rig, walk, key, straight, { swing: 'path' });
+    assert.equal(a.swing, false); assert.equal(b.swing, true);
+    for (let g = 0; g <= a.steps.length; g += 1 / 30) { solveWalk(rig, a, g); const pa = snapshot(rig); solveWalk(rig, b, g); assert.ok(snapshot(rig).every((v, i) => Math.abs(v - pa[i]) < 1e-9), 'swing path: a straight walk as before at ' + g.toFixed(2)); }
+    // the old storage route (a 0.37 m U-turn behind the desk's end, 0.49 m steps) and the cut's route now
+    const mm = list => list.map(([x, z]) => [x / 1000, z / 1000]);
+    const old = mm([[60, 1935], [-250, 2107], [-345, 2200], [-476, 2245], [-636, 2267], [-1136, 2267], [-1232, 2254], [-1321, 2216], [-1397, 2155], [-1454, 2077], [-1487, 1986], [-1496, 1890], [-1478, 1794], [-1436, 1707], [-1372, 1635], [-1291, 1582], [-1199, 1552], [-1120, 1538]]);
+    const cut = JSON.parse(fs.readFileSync(path.join(root, 'exports/cinematic-intro-cut-cine/review-cut.json'), 'utf8')), w = cut.shots.find(s => s.id === 'storage').people.cast.find(c => c.key === 'andre-steps-back').walk;
+    const legsOf = (r, from, to, route, options) => {
+        const plan = walkPlan(r, from, to, route, { endYaw: THREE.MathUtils.degToRad(117), ...options }); let shins = Infinity, across = Infinity;
+        for (let g = 0; g <= plan.steps.length; g += 1 / 60) {
+            solveWalk(r, plan, g); const [, c1, f1] = r.side.l.leg, [, c2, f2] = r.side.r.leg;
+            for (let u = 0; u <= 10; u++) for (let v = 0; v <= 10; v++) shins = Math.min(shins, r.wp[c1].clone().lerp(r.wp[f1], u / 10).distanceTo(r.wp[c2].clone().lerp(r.wp[f2], v / 10)));
+            across = Math.min(across, r.wp[f1].x - r.wp[f2].x);      // (the model's frame: + the left ankle on his left)
+        }
+        return { shins, across };
+    };
+    const pull = rig.key('people-andre-stand-phone-pull'), opts = { pace: w.pace, step: w.step / 1000 };
+    const before = legsOf(rig, walk, pull, old, { pace: 2.33, step: .45 }), now = legsOf(rig, walk, pull, mm(w.path), { ...opts, swing: w.swing });
+    assert.ok(before.shins < .05 && before.across < -.1, `the old route crossed his legs (shins ${(before.shins * 1000).toFixed(0)} mm apart, ankles ${(before.across * 1000).toFixed(0)} mm)`);
+    assert.equal(w.swing, 'path', 'the storage walk follows its path with the swinging foot');
+    assert.ok(now.shins > .1 && now.across > .02, `the cut's route: shins ${(now.shins * 1000).toFixed(0)} mm apart at the closest, ankles never crossed (${(now.across * 1000).toFixed(0)} mm)`);
+    // the same route with straight swings still crosses: the option, not the route alone, keeps them apart
+    const straightSwing = legsOf(rig, walk, pull, mm(w.path), opts);
+    assert.ok(straightSwing.shins < now.shins - .05, `straight swings on that route: shins ${(straightSwing.shins * 1000).toFixed(0)} mm`);
+    // another man in the slot (the walk travels with the placement): the same route keeps his legs apart too
+    for (const who of ['ben', 'noah']) {
+        const r2 = rigOf(who), got = legsOf(r2, r2.key(`people-${who}-walk`), r2.key(`people-${who}-stand-wait`), mm(w.path), { ...opts, swing: 'path' });
+        assert.ok(got.shins > .1 && got.across > .02, `${who} on Andre's route: shins ${(got.shins * 1000).toFixed(0)} mm apart, ankles ${(got.across * 1000).toFixed(0)} mm`);
+    }
+}
 console.log('PASS room people motion: rig files, the desk driver (rise, lower, stop, turn back, tilt, wheelchair, short stature), exact end poses, planted feet, knees, keyboard following, determinism, life, the person in the room (film and Studio paths, chair, pose adjustments on top), posture changes in a shot and with the daypart, a walk along a path, stepping out from the desk and back.');

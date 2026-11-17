@@ -28,7 +28,7 @@ for(const r of rows)for(const l of Object.values(r.props))for(const k of l)asser
 const st=shot('storage'),sr=sheet(st.people,st.seconds),andre=sr.find(r=>r.row==='andre');
 assert.ok(andre.props.path.some(k=>k.kind==='walk-start')&&andre.props.path.some(k=>k.kind==='walk-end'),'Andre walks');
 {const L=structuredClone(st.people),e=L.cast.find(x=>x.key==='andre-steps-back');e.walk.start=L.when['andre-steps-back'][0][0];
- const so=sheet(L,st.seconds).find(r=>r.row==='andre').props.path.find(k=>k.kind==='walk-start');assert.ok(so?.linked&&so.d.kind==='change'&&so.t===4,'a set-off at the change is that change, linked');}
+ const so=sheet(L,st.seconds).find(r=>r.row==='andre').props.path.find(k=>k.kind==='walk-start');assert.ok(so?.linked&&so.d.kind==='change'&&so.t===L.when['andre-steps-back'][0][0],'a set-off at the change is that change, linked');}
 assert.equal(andre.bars.length,9,'nine placements on screen');
 // ---- selection
 let s=pick(new Set(),['a']);s=pick(s,['b'],{toggle:true});assert.deepEqual([...s],['a','b']);s=pick(s,['a'],{toggle:true});assert.deepEqual([...s],['b']);
