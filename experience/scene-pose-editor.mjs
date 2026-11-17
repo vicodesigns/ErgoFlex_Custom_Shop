@@ -37,7 +37,7 @@ const sideOf=bone=>/_l$/.test(bone)?'l':/_r$/.test(bone)?'r':null;
 const ARM=/^(clavicle|upperarm|lowerarm|hand|thumb_\d+|index_\d+|middle_\d+|ring_\d+|pinky_\d+)_[lr]$/,LEG=/^(thigh|calf|foot|ball)_[lr]$/;
 const limbOf=bone=>ARM.test(bone)?ARM:LEG.test(bone)?LEG:null;
 
-export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,rerender,personName,editing,saved=null,time=()=>0,seek=()=>{},seconds=()=>0}){
+export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,edit,status,rerender,personName,editing,saved=null,time=()=>0,seek=()=>{},seconds=()=>0}){
   let key=null,joint=null,gmode='rotate',h=null,rigging=false,drag=null,listening=false,orbit=true,selT=null,clip=null,hinted=false,switching=false;
   const AUTO='ergoflex.director.autoKey';
   let autoKey=(()=>{try{return globalThis.localStorage?.getItem(AUTO)==='1';}catch{return false;}})();      // (off until turned on, as in Blender: then remembered)
@@ -107,7 +107,7 @@ export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,
     }
     if(!o.userData.personRig){if(!rigging){rigging=true;people.rig(o).catch(()=>null).finally(()=>{rigging=false;});}if(h)h.group.visible=false;return;}
     if(!h||h.object!==o){const first=!h;build(o);if(first)rerender();}      // (the panel said 'Loading the skeleton…' until now)
-    const {THREE,t}=tools(),on=o.visible&&editing();h.group.visible=on;
+    const {THREE,t}=tools(),on=o.visible&&editing();if(h.group.visible!==on||!h.drawn){h.drawn=true;wake();}h.group.visible=on;   // (the view draws on demand: the dots need a frame of their own, 17 Nov 2026)
     const p=new THREE.Vector3(),cam=t.camera.getWorldPosition(new THREE.Vector3()),k=Math.tan(THREE.MathUtils.degToRad(t.camera.fov||40)/2);
     for(const [name,m] of h.dots){
       bone(name).getWorldPosition(p);m.position.copy(p);
@@ -272,7 +272,7 @@ export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,
     commit(`${personName(entry(key))}: ${side==='l'?'left':'right'} hand ${v>.95?'in a fist':v>0?'closed '+Math.round(v*100)+' %':v<0?'opened':'as built'}.`,'pose-grip-'+key+side);
   }
   // ---- mode
-  function pick(name){if(!info(name))return;joint=name;gmode=info(name)[3]?'translate':'rotate';status(`${label(name)}: ${info(name)[3]?'drag the arrows to move the whole limb (W), or turn the joint itself (E).':'turn it with the rings, or type Bend / Twist / Side.'}`);rerender();}
+  function pick(name){if(!info(name))return;joint=name;wake();gmode=info(name)[3]?'translate':'rotate';status(`${label(name)}: ${info(name)[3]?'drag the arrows to move the whole limb (W), or turn the joint itself (E).':'turn it with the rings, or type Bend / Twist / Side.'}`);rerender();}
   function enter(k){
     const e=entry(k);if(!e)return;key=k;joint=null;gmode='rotate';
     status(`Pose mode: ${personName(e)}. Click a dot on the body: blue turns a joint, orange (hands, feet) moves the whole limb. Esc or Done leaves.`);rerender();

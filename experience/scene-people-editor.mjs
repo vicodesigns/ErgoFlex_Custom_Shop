@@ -158,7 +158,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     return {at:[Math.round(p.x),Math.round(p.z)],turn:r1(THREE.MathUtils.radToDeg(Math.atan2(eye.x-p.x,eye.z-p.z)))};
   }
   // ---- pose mode (scene-pose-editor.mjs)
-  const pose=createPoseEditor({win,three,tools:()=>tools,stagePeople,entry:poseEntry,edit:poseEdit,status,rerender,personName:e=>e?personName(e):'',editing,saved:e=>savedHTML(e),time,seek,seconds});
+  const pose=createPoseEditor({wake:()=>bridge.stage()?.wake?.(600),win,three,tools:()=>tools,stagePeople,entry:poseEntry,edit:poseEdit,status,rerender,personName:e=>e?personName(e):'',editing,saved:e=>savedHTML(e),time,seek,seconds});
   const poseEditor=pose;     // swap() has a `pose` argument of its own
   // S31 M3 hook: a walker's / roller's path on the floor and in the People tab (people-path-gizmo.mjs)
   const paths=createPathGizmo({win,three,tools:()=>tools,stagePeople,entry,edit:(...a)=>edit(...a),status,editing,lightsShowing,selected:()=>sel,posing:()=>pose.active(),personName:e=>e?personName(e):'',objectOf:k=>objectOf(k),cast:()=>cast(),modelOf:id=>modelOf(id),poseOf:id=>poseOf(id),seconds,spans:k=>spans(k),time});
