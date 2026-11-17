@@ -3,6 +3,8 @@ import {cleanPeople,canonicalPeople,effectivePeople,newKey,spanText,PARTS} from 
 import {createPoseEditor,JOINTS} from './scene-pose-editor.mjs';
 import {stackRows} from './lane-rows.mjs';
 import {withSpan} from './people-spans.mjs';
+import {reachAt as reachAtTime} from '../people-reach.mjs';
+import {endsOf,characterOf} from './people-path-edit.mjs';
 import {placementOf,freeSpot,SEAT_FIELDS,sheet,sheetKeys,EASE_SHAPES,NO_EASE,pick,neighborTime,shiftKeys,deleteKeys,copyKeys,pasteKeys,setEase,toggleKeyAt,entryAt,turnAngles,setJointAngles,waypointOf,setWaypoint} from './people-track.mjs';
 import {loadSavedPoses,storeSavedPoses,addSavedPose} from './saved-poses.mjs';
 import {createPathGizmo} from './people-path-gizmo.mjs';   // S31 M3 path editing (hook)
@@ -21,6 +23,10 @@ const cap=s=>s?s[0].toUpperCase()+s.slice(1):s;
 const r1=v=>Math.round(v*10)/10;
 const MODES={translate:'Move',rotate:'Turn',scale:'Scale'};
 const STANCES=['standing','seated','wheelchair','walking'];
+// A desk user's distance from the keys' front edge as the film places them (room-people.mjs REACH, mm; their `reach`),
+// and the chair's roll on the way up (room-people-motion.mjs ROLL, SCOOT, mm; their chairRoll, chairScoot).
+export const DESK_REACH={sit:945,wheel:935,stand:890},CHAIR_ROLL=265,CHAIR_SCOOT=90;
+const IN=25.4,inch=mm=>Math.round(mm/IN*10)/10;
 const thumb=id=>`/assets/props/thumbs/${encodeURIComponent(id)}.png`;
 export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rerender,time=()=>0,seek=()=>{},onSelect=()=>{},lightsShowing=()=>false,snap=null}){
   let sel=null,catalog=null,loading=null,tools=null,booting=null,mode='translate',busy=null,rowKeys=[],laneKeys=[],charIds=[],shown=[];
@@ -83,8 +89,10 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const box=new THREE.BoxHelper(undefined,0xff9bd2);box.material.depthTest=false;box.material.transparent=true;box.renderOrder=998;box.visible=false;group.add(box);
     const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;w.__directorPeopleGizmo=gizmo;w.__directorPeoplePaths=paths;gizmo.setSize(1.2);gizmo.setSpace('world');gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
     let orbit=true;
-    gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){orbit=t.controls.enabled;t.controls.enabled=false;dragFrom=gizmo.object?read(gizmo.object):null;}else{t.controls.enabled=orbit;endDrag();}});
-    gizmo.addEventListener('objectChange',()=>{const e=sel&&entry(sel);if(e)status(`${mode==='translate'?'Moving':mode==='rotate'?'Turning':'Scaling'} ${personName(e)}…`);});
+    gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){orbit=t.controls.enabled;t.controls.enabled=false;dragFrom=gizmo.object?read(gizmo.object):null;const e=sel&&entry(sel);if(dragFrom&&e?.desk&&!free(e)){dragFrom.stance=seatedDesk(gizmo.object.userData?.person?.desk??e.desk)?'sit':'stand';dragFrom.reach=reachOfStance(e,dragFrom.stance);}}else{t.controls.enabled=orbit;endDrag();}});
+    gizmo.addEventListener('objectChange',()=>{const e=sel&&entry(sel);if(!e)return;
+      if(dragFrom?.reach!==undefined&&gizmo.object){const r=reachOf(dragFrom,read(gizmo.object));previewReach(sel,r);status(`${personName(e)}: ${inch(r)} in from the desk (was ${inch(dragFrom.reach)} in)…`);return;}
+      status(`${mode==='translate'?'Moving':mode==='rotate'?'Turning':'Scaling'} ${personName(e)}…`);});
     // Double-click a person: pose mode (the first click of the pair has selected them). Double-click elsewhere leaves it.
     t.renderer.domElement.addEventListener('dblclick',ev=>{
       if(!editing()||lightsShowing())return;const k=pose.personAt(ev);
@@ -107,9 +115,12 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const {box,gizmo}=tools,e=sel&&entry(sel),o=e&&objectOf(sel),on=!!o&&o.visible&&editing()&&!lightsShowing();
     box.visible=on;if(on)box.setFromObject(o);
     const grab=on&&free(e)&&!busy;
-    if(grab){if(gizmo.object!==o)gizmo.attach(o);gizmo.setMode(mode);gizmo.showX=gizmo.showZ=mode!=='rotate';gizmo.showY=true;}
+    // at the film desk: one arrow, toward and away from the desk (their distance from it, `reach`)
+    const deskGrab=on&&!grab&&!busy&&!!e.desk&&!e.station&&!e.poseSource;
+    if(grab){if(gizmo.object!==o)gizmo.attach(o);gizmo.space='world';gizmo.setMode(mode);gizmo.showX=gizmo.showZ=mode!=='rotate';gizmo.showY=true;}
+    else if(deskGrab){if(gizmo.object!==o)gizmo.attach(o);gizmo.space='local';gizmo.setMode('translate');gizmo.showX=gizmo.showY=false;gizmo.showZ=true;}
     else if(gizmo.object&&!gizmo.dragging)gizmo.detach();
-    gizmo.visible=gizmo.enabled=grab;
+    gizmo.visible=gizmo.enabled=grab||deskGrab;
   }
   // The dragged model's place, in the room's millimetres: where it stands, its lift, the way it faces, its size.
   function read(o){
@@ -119,9 +130,15 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   // S31: the drag is applied as a CHANGE to the placement (moved by, turned by), not as where the model is drawn now:
   // someone walking, rolling or seated is drawn away from their `at`, and only their placement moves, nothing else.
   let dragFrom=null;
+  // A desk user dragged toward or away from the desk: their new `reach` (mm), from how far the drag went along the way
+  // they face (the model faces the desk; `reach` grows away from it).
+  function reachOf(from,now){const a=from.turn*Math.PI/180,d=-((now.at[0]-from.at[0])*Math.sin(a)+(now.at[1]-from.at[1])*Math.cos(a));return Math.round(Math.max(0,Math.min(3000,from.reach+d)));}
+  // the stage's models of that person stand there while the drag goes on (every posture of theirs at the desk)
+  function previewReach(key,r){const o=tools?.gizmo?.object,spec=o?.userData?.person;if(!spec)return;spec.reach=r;const people=stagePeople();if(people)people.dirty=true;}
   function endDrag(){
     const o=tools?.gizmo.object,e=sel&&entry(sel),from=dragFrom;dragFrom=null;if(!o||!e)return;const now=read(o),name=personName(e);
     if(!from){rerender();return;}
+    if(from.reach!==undefined){const r=reachOf(from,now);if(Math.abs(r-from.reach)<1){rerender();return;}setReach(sel,r,from.stance);return;}
     const dx=now.at[0]-from.at[0],dz=now.at[1]-from.at[1],dy=now.y-from.y,dt=now.turn-from.turn;
     if(mode==='translate'&&Math.hypot(dx,dz)<.5&&Math.abs(dy)<.5){rerender();return;}
     edit(sel,(p,all)=>{
@@ -142,7 +159,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   const pose=createPoseEditor({win,three,tools:()=>tools,stagePeople,entry:poseEntry,edit:poseEdit,status,rerender,personName:e=>e?personName(e):'',editing,saved:e=>savedHTML(e),time,seek,seconds});
   const poseEditor=pose;     // swap() has a `pose` argument of its own
   // S31 M3 hook: a walker's / roller's path on the floor and in the People tab (people-path-gizmo.mjs)
-  const paths=createPathGizmo({win,three,tools:()=>tools,stagePeople,entry,edit:(...a)=>edit(...a),status,editing,lightsShowing,selected:()=>sel,posing:()=>pose.active(),personName:e=>e?personName(e):'',objectOf:k=>objectOf(k),cast:()=>cast(),modelOf:id=>modelOf(id),poseOf:id=>poseOf(id),seconds,spans:k=>spans(k)});
+  const paths=createPathGizmo({win,three,tools:()=>tools,stagePeople,entry,edit:(...a)=>edit(...a),status,editing,lightsShowing,selected:()=>sel,posing:()=>pose.active(),personName:e=>e?personName(e):'',objectOf:k=>objectOf(k),cast:()=>cast(),modelOf:id=>modelOf(id),poseOf:id=>poseOf(id),seconds,spans:k=>spans(k),time});
   // ---- selection
   function select(key,{announce=true}={}){
     const e=entry(key);if(!e){deselect();return;}
@@ -219,9 +236,15 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       const archived=migratePostures(x);delete x.pose;delete x.poseKeys;if(archived.postures)x.postures=archived.postures;
       delete x.poseSource;delete x.poseBindings;x.id=id;
       if(joints)editPosture(x,id,p=>{p.pose=structuredClone(joints);});  // a saved pose: its posture and its joints in one step
-      if(info.desk){const role=info.stance==='seated'?'sit':info.stance==='wheelchair'?'wheel':'stand';if(!x.desk){x.desk=role;delete x.at;delete x.turn;delete x.y;delete x.beside;}else x.desk=role;}
+      if(info.desk){const role=info.stance==='seated'?'sit':info.stance==='wheelchair'?'wheel':'stand';if(!x.desk){x.desk=role;delete x.at;delete x.turn;delete x.y;delete x.beside;}else{swapReach(x,role);x.desk=role;}}
       else if(x.desk){const o=objectOf(key),spot=o&&tools?read(o):floorSpot();delete x.desk;delete x.station;delete x.reach;x.at=spot.at;x.turn=spot.turn;}
     },`${name}: ${info.label.toLowerCase()}.`);
+  }
+  // Sitting down or getting up at the desk keeps both distances: `reach` is always the posture they are in now.
+  function swapReach(x,role){
+    const was=seatedDesk(x.desk),now=seatedDesk(role);if(was===now)return;
+    const own=x.reach,other=x[now?'sitReach':'standReach'];delete x.reach;delete x.sitReach;delete x.standReach;
+    if(other!==undefined)x.reach=other;if(own!==undefined)x[was?'sitReach':'standReach']=own;
   }
   // A character in a posture nobody has built yet: the studio server builds it (where it can).
   async function build(id){
@@ -261,6 +284,19 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     write(p=>{(p.when||={})[key]=withSpan(p.when[key],k,change,T);},
       'Timing updated.',{undoKey:'people-when-'+key+'-'+k});
   }
+  // At the film desk: how far from it they sit or stand (mm; the film's default for the posture clears it).
+  // stance 'sit' | 'stand': their own posture's distance is `reach`; the other one's (the same person's other models at
+  // the desk, the room's included) is sitReach / standReach (room-people.mjs deskReach).
+  const seatedDesk=d=>d!=='stand';
+  const reachField=(e,stance)=>seatedDesk(e.desk)===(stance==='sit')?'reach':stance==='sit'?'sitReach':'standReach';
+  const reachDefault=(e,stance)=>stance==='sit'?(e.desk==='wheel'?DESK_REACH.wheel:DESK_REACH.sit):DESK_REACH.stand;
+  const reachOfStance=(e,stance)=>e[reachField(e,stance)]??reachDefault(e,stance);
+  function setReach(key,mm,stance){const e=entry(key);if(!e?.desk)return;stance||=seatedDesk(e.desk)?'sit':'stand';const f=reachField(e,stance),d=reachDefault(e,stance),r=Math.round(Math.max(0,Math.min(3000,mm)));
+    edit(key,x=>{if(Math.abs(r-d)<1.5)delete x[f];else x[f]=r;},`${personName(e)}${stance==='sit'?' seated':' standing'}: ${inch(r)} in from the desk${Math.abs(r-d)<1.5?' (the film\'s distance)':` (${r<d?'closer':'further'} than the film's ${inch(d)} in by ${inch(Math.abs(r-d))} in)`}.${stance==='sit'?' Their chair goes with them.':''}`,{undoKey:'people-reach-'+stance+key});}
+  // where they are at film second t (their own reach, rolled in or out by reachKeys)
+  const reachAt=(e,t)=>reachAtTime(reachOfStance(e,'sit'),e.reachKeys,t);
+  function reachKeysOf(e){return Array.isArray(e?.reachKeys)?e.reachKeys:[];}
+  function setReachKeys(key,change,text,undoKey=null){edit(key,x=>{const list=reachKeysOf(x).map(k=>({...k}));change(list,x);list.sort((a,b)=>a.at-b.at);if(list.length)x.reachKeys=list.slice(0,16);else delete x.reachKeys;},text,undoKey?{undoKey}:undefined);}
   async function changed(el){
     if(keyChanged(el))return;   // S33: the selected key's Inspector
     if(pose.changed(el))return;
@@ -279,14 +315,36 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       return;
     }
     if(name==='pe-x'||name==='pe-z'){const i=name==='pe-x'?0:1,mm=num(-100000,100000);edit(sel,x=>{if(x.at)x.at[i]=Math.round(mm);},`Moved ${who}.`,{undoKey:'people-'+name+sel});return;}
+    if(name==='pe-reach-sit'||name==='pe-reach-stand'){setReach(sel,num(0,118)*IN,name.slice(9));return;}
+    if(name==='pe-chair-roll'||name==='pe-chair-scoot'){const f=name==='pe-chair-roll'?'chairRoll':'chairScoot',d=f==='chairRoll'?CHAIR_ROLL:CHAIR_SCOOT,hi=f==='chairRoll'?800:300,mm=Math.round(num(0,hi/IN)*IN);
+      edit(sel,x=>{if(Math.abs(mm-d)<1.5)delete x[f];else x[f]=Math.min(hi,mm);},f==='chairRoll'?`${who}: the chair rolls back ${inch(mm)} in before they stand (the film's ${inch(d)} in).`:`${who}: slides ${inch(mm)} in to the front of the seat as they lean in (the film's ${inch(d)} in).`,{undoKey:'people-'+f+sel});return;}
+    const rk=name?.match(/^pe-rk-(at|dur|to|ease)-(\d+)$/);
+    if(rk){const i=Number(rk[2]),f=rk[1];const v=f==='ease'?el.value:f==='to'?Math.round(num(0,118)*IN):num(0,f==='at'?Math.max(1,seconds()):30);
+      setReachKeys(sel,list=>{if(!list[i])return;if(f==='ease'){if(v==='linear')list[i].ease='linear';else delete list[i].ease;}else list[i][f]=f==='to'?v:Math.round(v*1000)/1000;},`${who}: roll ${i+1} ${f==='at'?'starts at '+r1(v)+' s':f==='dur'?'takes '+r1(v)+' s':f==='to'?'ends '+inch(v)+' in from the desk':v==='linear'?'moves at an even speed':'eases in and out'}.`,'people-rk-'+f+i+sel);return;}
     if(name==='pe-y'){const mm=num(-2000,5000);edit(sel,x=>{x.y=Math.round(mm);},`${who}: lifted ${Math.round(mm)} mm.`,{undoKey:'people-y'+sel});return;}
     if(name==='pe-turn'){const d=num(-360,360);edit(sel,x=>{x.turn=d;},`Turned ${who} to ${r1(d)}°.`,{undoKey:'people-turn'+sel});return;}
     if(name==='pe-scale'){const pc=num(20,300);edit(sel,x=>{x.scale=pc/100;},`${who} is now ${Math.round(pc)} % of their built size.`,{undoKey:'people-scale'+sel});return;}
     if(name==='pe-whole'){if(el.checked)write(p=>{if(p.when)delete p.when[sel];},`${who} is in the room for the whole chapter.`);else{setSpan(sel,s=>{s[0]=Math.min(Math.max(0,time()),seconds()-.5);});status(`${who} now has seconds of their own: set In and Out below.`);}return;}
-    if(name==='pe-in'){const t=num(0,seconds());setSpan(sel,s=>{s[0]=Math.min(t,s[1]-.05);});return;}
-    if(name==='pe-out'){const t=num(0,seconds());setSpan(sel,s=>{s[1]=Math.max(t,s[0]+.05);});return;}
-    if(name==='pe-fin'){const t=num(0,5);setSpan(sel,s=>{s[2]=t;});return;}
-    if(name==='pe-fout'){const t=num(0,5);setSpan(sel,s=>{s[3]=t;});return;}
+    const sp=name?.match(/^pe-(in|out|fin|fout)(?:-(\d+))?$/);
+    if(sp){const k=Number(sp[2]||0),f=sp[1];
+      if(f==='in'){const t=num(0,seconds());setSpan(sel,s=>{s[0]=Math.min(t,s[1]-.05);},k);}
+      else if(f==='out'){const t=num(0,seconds());setSpan(sel,s=>{s[1]=Math.max(t,s[0]+.05);},k);}
+      else{const t=num(0,5);setSpan(sel,s=>{s[f==='fin'?2:3]=t;},k);}
+      return;}
+    if(name==='pe-look'){const v=el.value;edit(sel,x=>{if(v)x.look=[v];else delete x.look;},v?`${who} looks at ${personName(entry(v)||{id:v})}.`:`${who} looks where their posture looks.`);return;}
+    if(name==='pe-act-at'||name==='pe-act-dur'){const f=name.slice(7),t=f==='at'?num(0,Math.max(1,seconds())):num(.1,30);edit(sel,x=>{if(x.act)x.act[f]=Math.round(t*1000)/1000;},`${who}: the action ${f==='at'?'at '+r1(t)+' s':'takes '+r1(t)+' s'}.`,{undoKey:'people-act-'+f+sel});return;}
+    const by=name?.match(/^pe-act-by-(\d)$/);
+    if(by){const i=Number(by[1]),mm=Math.round(num(-1000,1000));edit(sel,x=>{if(Array.isArray(x.act?.by))x.act.by[i]=mm;},`${who}: the hand pulls ${['across','up','out'][i]} ${mm} mm.`,{undoKey:'people-act-by'+i+sel});return;}
+    const ch=name?.match(/^pe-ch-(seconds|arms|turn|step|line)(?:-(\d))?$/);
+    if(ch){const f=ch[1];
+      edit(sel,x=>{const c=x.change&&typeof x.change==='object'?x.change:{};
+        if(f==='seconds'){if(el.value.trim()==='')delete c.seconds;else c.seconds=Math.round(num(.2,10)*100)/100;}
+        else if(f==='step'){if(el.checked)c.step=true;else delete c.step;}
+        else if(f==='line'){if(el.checked)c.hands='line';else delete c.hands;}
+        else{const d=f==='arms'?[.22,1]:[0,.72],pair=[...(c[f]??d)],i=Number(ch[2]);pair[i]=Math.round(num(0,1)*100)/100;if(pair[0]>pair[1])pair[1-i]=pair[i];c[f]=pair;}
+        if(Object.keys(c).length)x.change=c;else delete x.change;},
+        f==='seconds'?`${who}: the change of posture takes ${el.value.trim()===''?'the film\'s time':r1(Number(el.value))+' s'}.`:f==='step'?`${who}: ${el.checked?'planted steps':'a glide'} into the new spot.`:f==='line'?`${who}: the hands ${el.checked?'go straight':'follow the arms\' arc'}.`:`${who}: ${f==='arms'?'the arms move':'the body turns'} in that part of the change.`,{undoKey:'people-change-'+f+sel});
+      return;}
   }
   async function action(name,index){
     if(keyAction(name))return;   // S33: the selected key's Inspector
@@ -305,10 +363,31 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(name==='pe-remove'){remove();return;}
     if(name==='pe-color-reset'){const part=PARTS[index],e=sel&&entry(sel);if(e?.colors?.[part])edit(sel,x=>{delete x.colors[part];if(!Object.keys(x.colors).length)delete x.colors;},`${personName(e)}: ${part} as built.`);return;}
     if(name==='pe-duplicate'){duplicate();return;}
+    if(name==='pe-reach-reset'){const e=sel&&entry(sel);if(e?.desk)write(p=>{const x=p.cast.find(x=>x.key===sel);if(x){delete x.reach;delete x.sitReach;delete x.standReach;}},`${personName(e)} is at the film's distance from the desk again.`);return;}
+    if(name==='pe-rk-add'){const e=sel&&entry(sel);if(!e?.desk)return;const now=reachAt(e,time()),t=Math.round(time()*10)/10;
+      setReachKeys(sel,list=>{list.push({at:t,dur:1.5,to:Math.round(now+(list.length%2?50:-50))});},`${personName(e)} rolls ${reachKeysOf(e).length%2?'out':'in'} 2 in from ${r1(t)} s. Set where to and how long below.`);return;}
+    if(name==='pe-rk-remove'){const e=sel&&entry(sel);if(!e)return;setReachKeys(sel,list=>{list.splice(index,1);},`${personName(e)}: roll ${index+1} removed.`);return;}
     if(name==='pe-face-camera'){face('camera');return;}
     if(name==='pe-face-desk'){face('desk');return;}
-    if(name==='pe-in-now'){if(sel)setSpan(sel,s=>{s[0]=Math.min(time(),s[1]-.05);});return;}
-    if(name==='pe-out-now'){if(sel)setSpan(sel,s=>{s[1]=Math.max(time(),s[0]+.05);});return;}
+    if(name==='pe-in-now'){if(sel)setSpan(sel,s=>{s[0]=Math.min(time(),s[1]-.05);},spanAtPlayhead(sel));return;}
+    if(name==='pe-out-now'){if(sel)setSpan(sel,s=>{s[1]=Math.max(time(),s[0]+.05);},spanAtPlayhead(sel));return;}
+    if(name==='pe-span-add'||name==='pe-span-split'||name==='pe-span-remove'){
+      const e=sel&&entry(sel);if(!e)return;const T=seconds(),t=time(),who=personName(e);
+      write(p=>{const l=(p.when?.[sel]||[]).map(s=>[...s]);
+        if(name==='pe-span-remove'){l.splice(index,1);}
+        else if(name==='pe-span-split'){const i=l.findIndex(s=>t>s[0]+.5&&t<s[1]-.5);if(i<0)return;const s=l[i];l.splice(i,1,[s[0],t-.5,s[2]??.5,.5],[t+.5,s[1],.5,s[3]??.5]);}
+        else{const end=l.length?Math.max(...l.map(s=>Math.min(s[1],T))):0,a=Math.min(Math.max(t,end+.5),T-1);if(a<0)return;l.push([Math.round(a*10)/10,Math.min(T+1,a+3),.5,.5]);l.sort((x,y)=>x[0]-y[0]);}
+        if(l.length>8)l.length=8;(p.when||={})[sel]=l;if(!l.length)delete p.when[sel];},
+        name==='pe-span-remove'?`${who}: stay ${index+1} removed.`:name==='pe-span-split'?`${who}: the stay is cut at ${r1(t)} s (out half a second before, back half a second after).`:`${who}: one more stay, from ${r1(Math.max(t,0))} s. Set In and Out.`);
+      return;}
+    if(name==='pe-ch-reset'){const e=sel&&entry(sel);if(e?.change)edit(sel,x=>{delete x.change;},`${personName(e)}: the change of posture takes the film's timing.`);return;}
+    if(name==='pe-ch-closer'||name==='pe-ch-walk'||name==='pe-ch-face'){
+      const e=sel&&entry(sel),prev=e&&handoverFrom(e),g=prev&&changeGap(prev,e);if(!g)return;const who=personName(e);
+      if(name==='pe-ch-face'){const turn=prev.walk?.turn??prev.turn??0;edit(sel,x=>{x.turn=turn;},`${who} faces the way they did before the change (${r1(turn)}°).`);return;}
+      if(name==='pe-ch-closer'){const k=200/g.mm,at=[Math.round(g.from[0]+(e.at[0]-g.from[0])*k),Math.round(g.from[1]+(e.at[1]-g.from[1])*k)];edit(sel,x=>{x.at=at;},`${who}: moved to 20 cm from where the change starts, so the two postures blend.`);return;}
+      const t0=(spans(e.key)||[[0]])[0][0],start=Math.max(0,Math.round((t0-g.mm/1100-.8)*10)/10);
+      write(p=>{const o=p.cast.find(x=>x.key===prev.key);if(o)o.walk={path:[[...o.at],[...e.at]],start};},`${personName(prev)} walks ${r1(g.mm/1000)} m to the new spot from ${r1(start)} s, so the change starts where they arrive. Check the arrival under Walk path.`);
+      return;}
     if(name==='pe-mode-translate'||name==='pe-mode-rotate'||name==='pe-mode-scale'){setMode(name.slice(8));return;}
     if(name==='pe-room'){
       await bridge.stage()?.peopleTrack?.(true,shot().id);const live=stagePeople()?.resolved?.()||[];
@@ -386,18 +465,72 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       <h4>Place</h4>
       ${select_('pe-anchor',isFree?'free':placed==='seat'||placed==='furniture'?'seat':'desk',[['free','Free spot (move by hand)'],['desk',e.station?'At a desk in the room':'At the film desk (follows it)'],...(placed==='seat'||placed==='furniture'?[['seat',placed==='seat'?'On a seat in the room (as the film has it)':'By furniture in the room (as the film has it)']]:[])])}
       ${isFree?`<div class="director-row people-fields">${field('X',`pe-x`,e.at[0],{step:10,unit:'mm'})}${field('Z','pe-z',e.at[1],{step:10,unit:'mm'})}${field('Turn','pe-turn',e.turn||0,{step:5,min:-360,max:360,unit:'°'})}${field('Lift','pe-y',e.y||0,{step:5,unit:'mm',title:'Raises a seated person onto a seat, or anyone onto a step'})}</div>
-      <div class="director-actions people-modes">${Object.entries(MODES).map(([k,l])=>`<button type="button" data-action="pe-mode-${k}" aria-pressed="${mode===k}">${l}</button>`).join('')}<button type="button" data-action="pe-face-desk">Face the desk</button><button type="button" data-action="pe-face-camera">Face the camera</button></div>`:placed==='seat'||placed==='furniture'?`<p class="director-hint">${placed==='seat'?'They sit on a seat in the room':'They stand or sit by a piece of furniture in the room'}${typeof e.on==='string'?` (${escape(e.on)})`:''} and stay with it. Choose “Free spot” to place them by hand.</p>`:'<p class="director-hint">They work at the desk and move with it, and they sit or stand as its height changes: seated at 28 to 30 in, standing at 43.5 in, out of the way while it travels between.</p>'}
-      ${paths.panel(e)/* S31 M3 hook */}
+      <div class="director-actions people-modes">${Object.entries(MODES).map(([k,l])=>`<button type="button" data-action="pe-mode-${k}" aria-pressed="${mode===k}">${l}</button>`).join('')}<button type="button" data-action="pe-face-desk">Face the desk</button><button type="button" data-action="pe-face-camera">Face the camera</button></div>`:placed==='seat'||placed==='furniture'?`<p class="director-hint">${placed==='seat'?'They sit on a seat in the room':'They stand or sit by a piece of furniture in the room'}${typeof e.on==='string'?` (${escape(e.on)})`:''} and stay with it. Choose “Free spot” to place them by hand.</p>`:'<p class="director-hint">They work at the desk and move with it, and they sit or stand as its height changes: seated at 28 to 30 in, standing at 43.5 in, out of the way while it travels between.</p>'+seatPanel(e)}
+      ${paths.panel(e)/* S31 M3 hook */}${motionPanel(e)}
       <div class="director-row people-fields">${field('Size','pe-scale',Math.round((e.scale||1)*100),{step:1,min:20,max:300,unit:'%',title:'100 % is the size the character was built at'})}</div>
       <h4>Clothes and hair</h4>
       <div class="people-colors">${PARTS.map((part,i)=>{const mine=e.colors?.[part],was=asBuilt?.[part]||c?.colors?.[part]||'#8a8f96';return `<label title="${mine?'Recoloured':'As built'}: ${part}">${cap(part)}<span><input type="color" name="pe-color-${part}" value="${escape(mine||was)}">${mine?`<button type="button" data-action="pe-color-reset" data-index="${i}" title="Back to the colour the character was built with">↺</button>`:''}</span></label>`;}).join('')}</div>
       <p class="director-hint">Outfit: ${escape((c?.outfit||[]).map(g=>g.replace(/^[a-z]+_/,'').replace(/[_-]+/g,' ').replace(/\d+$/,'').trim()).join(', ')||'as built')}. ${onePiece?' It is one piece: Top colours it above the waist, Bottom below.':''} A colour keeps the fabric's folds and weave.</p>
       <h4>In the room</h4>
-      <label class="director-check"><input type="checkbox" name="pe-whole" ${s?'':'checked'}>The whole chapter</label>
-      ${s?`<div class="director-row people-fields">${field('In','pe-in',s[0],{step:.1,min:0,max:T,unit:'s'})}${field('Out','pe-out',Math.min(s[1],T),{step:.1,min:0,max:T,unit:'s'})}${field('Fade in','pe-fin',s[2]??.5,{step:.1,min:0,max:5,unit:'s'})}${field('Fade out','pe-fout',s[3]??.5,{step:.1,min:0,max:5,unit:'s'})}</div>
-      <div class="director-actions"><button type="button" data-action="pe-in-now">In at the playhead</button><button type="button" data-action="pe-out-now">Out at the playhead</button></div>`:''}
+      ${spansPanel(e)}
       <div class="director-actions people-end"><button type="button" data-action="pe-duplicate">Duplicate</button><button type="button" class="danger" data-action="pe-remove">Remove from the chapter</button></div>
     </section>`;
+  }
+  // At the film desk: how far from it they are, how far their chair rolls, and rolling in or out during the shot.
+  function seatPanel(e){
+    if(!e.desk||e.station)return '';
+    const chair=e.desk!=='wheel'&&e.chair!==false,keys=reachKeysOf(e),T=Math.max(1,seconds()),changed=['reach','sitReach','standReach'].some(f=>e[f]!==undefined);
+    const dist=stance=>field(stance==='sit'?(e.desk==='wheel'?'In the wheelchair':'Seated'):'Standing','pe-reach-'+stance,inch(reachOfStance(e,stance)),{step:.5,min:0,max:118,unit:'in',title:`${stance==='sit'?'Seated':'Standing'}: their distance from the keyboard's front edge (the film's ${inch(reachDefault(e,stance))} in).${stance==='sit'?' The chair moves with them.':''} Or drag the arrow in the view.`});
+    const rows=keys.map((k,i)=>`<div class="people-rk"><span>${i+1}</span>${field('At','pe-rk-at-'+i,k.at,{step:.1,min:0,max:T,unit:'s',title:'The chapter second the roll starts'})}${field('Over','pe-rk-dur-'+i,k.dur??1.5,{step:.1,min:0,max:30,unit:'s',title:'How long it takes'})}${field('To','pe-rk-to-'+i,inch(k.to),{step:.5,min:0,max:118,unit:'in',title:'Their distance from the desk at the end'})}${select_('pe-rk-ease-'+i,k.ease==='linear'?'linear':'smooth',[['smooth','Ease in and out'],['linear','Even speed']])}<button type="button" class="pose-saved-x" data-action="pe-rk-remove" data-index="${i}" aria-label="Remove roll ${i+1}" title="Remove this roll">×</button></div>`).join('');
+    return `<h4>Seat and chair</h4>
+      <p class="director-hint">Distance from the desk</p>
+      <div class="director-row people-fields">${dist('sit')}${e.desk!=='wheel'?dist('stand'):''}${changed?`<button type="button" data-action="pe-reach-reset" title="Back to the film's distances">↺</button>`:''}</div>
+      ${chair?`<div class="director-row people-fields">${field('Chair rolls back','pe-chair-roll',inch(e.chairRoll??CHAIR_ROLL),{step:.5,min:0,max:31,unit:'in',title:`How far the chair rolls back before they stand, and in again as they sit (the film's ${inch(CHAIR_ROLL)} in)`})}${field('Slide to the seat front','pe-chair-scoot',inch(e.chairScoot??CHAIR_SCOOT),{step:.5,min:0,max:11.8,unit:'in',title:`How far they slide forward on the seat as they lean in to stand (the film's ${inch(CHAIR_SCOOT)} in)`})}</div>`:''}
+      <h4>Roll in / out <small>seated</small></h4>
+      ${rows||'<p class="director-hint">They stay at that distance. Add a roll to have them roll their chair in or out during the shot.</p>'}
+      <div class="director-actions"><button type="button" data-action="pe-rk-add" ${keys.length>=16?'disabled title="16 rolls at most"':''}>+ Roll in / out at the playhead</button></div>`;
+  }
+  // Every stay of theirs in the chapter (the film keeps 8 at most: people-edits.mjs cleanSpans and the import).
+  function spansPanel(e){
+    const list=spans(e.key)||[],T=seconds();
+    if(!list.length)return `<label class="director-check"><input type="checkbox" name="pe-whole" checked>The whole chapter</label>`;
+    const row=(sp,k)=>`<div class="people-span" data-span-row="${k}"><span>${k+1}</span>${field('In','pe-in-'+k,sp[0],{step:.1,min:0,max:T,unit:'s'})}${field('Out','pe-out-'+k,Math.min(sp[1],T),{step:.1,min:0,max:T,unit:'s'})}${field('Fade in','pe-fin-'+k,sp[2]??.5,{step:.1,min:0,max:5,unit:'s'})}${field('Fade out','pe-fout-'+k,sp[3]??.5,{step:.1,min:0,max:5,unit:'s'})}${list.length>1?`<button type="button" class="pose-saved-x" data-action="pe-span-remove" data-index="${k}" aria-label="Remove stay ${k+1}" title="Remove this stay">×</button>`:''}</div>`;
+    return `<label class="director-check"><input type="checkbox" name="pe-whole">The whole chapter</label>${list.map(row).join('')}
+      <div class="director-actions"><button type="button" data-action="pe-in-now">In at the playhead</button><button type="button" data-action="pe-out-now">Out at the playhead</button></div>
+      <div class="director-actions"><button type="button" data-action="pe-span-add" ${list.length>=8?'disabled title="8 stays at most (the film keeps 8)"':''}>+ Stay</button><button type="button" data-action="pe-span-split" ${list.length>=8?'disabled':''} title="Cut the stay under the playhead in two, a second apart">Split at the playhead</button>${list.length>=8?'<span class="director-hint">8 stays at most.</span>':''}</div>`;
+  }
+  // The stay under the playhead (or the first): what In / Out at the playhead change.
+  function spanAtPlayhead(key){const l=spans(key)||[],t=time();const i=l.findIndex(s=>t>=s[0]-.05&&t<=s[1]+.05);return i<0?0:i;}
+  // The placement of the same character whose stay ends as this one's starts: the two make a change of posture
+  // (room-people.mjs pairUp / sameSpot: windows within .75 s; the spots within 220 mm and 17°, or it is a cross-fade).
+  function handoverFrom(e){
+    const c=characterOf(e.id),mine=spans(e.key);if(!mine?.length)return null;const t0=mine[0][0];if(!(t0>0))return null;
+    return cast().find(o=>o.key!==e.key&&!o.hide&&characterOf(o.id)===c&&(spans(o.key)||[]).some(s=>Math.abs(s[1]-t0)<.75))||null;
+  }
+  function changeGap(prev,e){
+    const a=endsOf(prev).end,b=Array.isArray(e.at)?e.at:null;if(!a||!b)return null;
+    const turn=Math.abs((((prev.walk?.turn??prev.turn??0)-(e.turn??0)+540)%360)-180);
+    return {mm:Math.round(Math.hypot(b[0]-a[0],b[1]-a[1])),turn:Math.round(turn),from:a};
+  }
+  function motionPanel(e){
+    const others=cast().filter(o=>o.key!==e.key&&!o.hide),look=[].concat(e.look??[])[0]||'',out=[];
+    out.push(`<div class="director-row people-fields"><label class="people-wide">Looks at${select_('pe-look',look,[['','Where the posture looks'],...others.map(o=>[o.key,`${personName(o)} · ${o.key}`]),...(look&&!others.some(o=>o.key===look)?[[look,look]]:[])])}</label></div>`);
+    if(e.act&&typeof e.act==='object'){
+      const by=Array.isArray(e.act.by)?e.act.by:null;
+      out.push(`<h4>Action</h4><div class="director-row people-fields">${field('At','pe-act-at',e.act.at??0,{step:.1,min:0,max:Math.max(1,seconds()),unit:'s',title:'The chapter second the action happens'})}${field('Takes','pe-act-dur',e.act.dur??1,{step:.1,min:.1,max:30,unit:'s'})}</div>
+        ${by?`<div class="director-row people-fields">${['X','Y','Z'].map((l,i)=>field('Pull '+l,'pe-act-by-'+i,by[i]??0,{step:5,min:-1000,max:1000,unit:'mm',title:'How far the hand draws the touchscreen out (desk frame: X across, Y up, Z toward them)'})).join('')}</div>`:''}`);
+    }
+    const prev=handoverFrom(e);
+    if(e.change||prev){
+      const c=e.change||{},g=prev&&changeGap(prev,e),far=g&&(g.mm>220||g.turn>17);
+      out.push(`<h4>Posture change${prev?` <small>from ${escape(personName(prev))} · ${escape(prev.key)}</small>`:''}</h4>
+        ${far?`<p class="people-path-late" role="alert">${g.mm>220?`The two spots are ${g.mm} mm apart`:`They turn ${g.turn}° between the two`}: too far to blend, so they will cross-fade (220 mm and 17° at most).</p><div class="director-actions">${g.mm>220?'<button type="button" data-action="pe-ch-closer">Bring closer</button>':''}${g.mm>220&&!prev.walk&&!prev.roll&&Array.isArray(prev.at)?'<button type="button" data-action="pe-ch-walk">Make it a walk</button>':''}${g.turn>17?'<button type="button" data-action="pe-ch-face">Face the same way</button>':''}</div>`:''}
+        <div class="director-row people-fields">${field('Takes','pe-ch-seconds',c.seconds??'',{step:.1,min:.2,max:10,unit:'s',title:'How long the change takes (empty: 1.4 s, 2.4 s to get up or sit down)'})}${field('Arms from','pe-ch-arms-0',(c.arms??[.22,1])[0],{step:.05,min:0,max:1,title:'The part of the change (0 to 1) in which the arms move'})}${field('to','pe-ch-arms-1',(c.arms??[.22,1])[1],{step:.05,min:0,max:1})}${field('Turn from','pe-ch-turn-0',(c.turn??[0,.72])[0],{step:.05,min:0,max:1,title:'The part of the change in which the body turns and moves to the new spot'})}${field('to','pe-ch-turn-1',(c.turn??[0,.72])[1],{step:.05,min:0,max:1})}</div>
+        <label class="director-check"><input type="checkbox" name="pe-ch-step" ${c.step?'checked':''}>Planted steps (left, then right)</label>
+        <label class="director-check"><input type="checkbox" name="pe-ch-line" ${c.hands==='line'?'checked':''}>Hands go straight</label>
+        ${e.change?'<div class="director-actions"><button type="button" data-action="pe-ch-reset">↺ Film\'s timing</button></div>':''}`);
+    }
+    return out.join('');
   }
   function panel(){
     if(!catalog)loadCatalog();

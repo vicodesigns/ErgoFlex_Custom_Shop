@@ -50,3 +50,15 @@ body.directing.film-frame[data-df-focus="view"] #stage{outline-color:color-mix(i
 .key-hint.shown{opacity:1}
 .timeline-shortcuts{border:1px solid #ffffff26;border-radius:6px;padding:6px 10px;background:transparent;color:#d5e9f5;font:12px/1.2 system-ui,sans-serif;cursor:pointer}
 .timeline-shortcuts:hover{background:var(--df-surface-3,#1c2631)}
+
+/* People motion (17 Nov 2026): roll in / out rows and the list of stays, in the People tab */
+.people-rk,.people-span{display:grid;gap:6px;align-items:end;margin-bottom:4px}
+.people-rk{grid-template-columns:16px 1fr 1fr 1fr minmax(0,1.3fr) 24px}
+.people-span{grid-template-columns:16px repeat(4,1fr) 24px}
+.people-rk>span,.people-span>span{font-size:10.5px;color:#7f97a6;padding-bottom:7px;text-align:center}
+.people-rk label,.people-span label{display:grid;gap:2px;font-size:10.5px;color:#9fb7c6;position:relative;min-width:0}
+.people-rk label small,.people-span label small{position:absolute;right:6px;bottom:7px;color:#7f97a6;pointer-events:none}
+.people-rk input,.people-span input,.people-rk select{width:100%;box-sizing:border-box;min-width:0;padding-right:22px}
+.people-rk select{padding-right:4px}
+.people-selected h4 small{font-weight:400;color:#7f97a6;margin-left:4px}
+.people-wide{display:grid;gap:2px;width:100%;font-size:10.5px;color:#9fb7c6}.people-wide select{width:100%}

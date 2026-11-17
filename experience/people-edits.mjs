@@ -49,6 +49,19 @@ export function cleanPose(v){
 }
 const PLACED=['on','near','by','around'];
 const KEPT=[...PLACED,'seat','along','depth','rise','toward','face','clear','walk','roll','act','change','toes','tread'];
+// sitReach / standReach: the person's distance from the desk in their other stance (mm; `reach` is their own model's),
+// which the room's models of the same person at the featured desk take too (room-people.mjs deskReach).
+// A desk user's own chair roll: chairRoll (mm the chair rolls back before they stand, the film's 265) and chairScoot
+// (mm they slide to the seat's front as they lean in, the film's 90). room-people-motion.mjs ROLL / SCOOT.
+export const CHAIR_FIELDS=[['chairRoll',800],['chairScoot',300]];
+export const REACH_EASES=['smooth','linear'];
+// reachKeys: [{at, dur, to, ease?}] the chair rolled in or out during the shot (room-people-motion.mjs reachAt): seconds,
+// seconds, mm from the keys like `reach`; at most 16, in time order.
+export function cleanReachKeys(v){
+  if(!Array.isArray(v))return null;
+  const out=v.slice(0,16).filter(k=>k&&finite(k.at)&&finite(k.to)&&k.at>=0&&k.at<=600&&k.to>=0&&k.to<=3000).map(k=>{const o={at:r3(k.at),dur:r3(finite(k.dur)?Math.max(0,Math.min(30,k.dur)):1.5),to:Math.round(k.to)};if(k.ease==='linear')o.ease='linear';return o;}).sort((a,b)=>a.at-b.at);
+  return out.length?out:null;
+}
 const plain=v=>{try{return JSON.stringify(v)!==undefined;}catch{return false;}};
 export function cleanPerson(e){
   if(!e||typeof e!=='object'||typeof e.id!=='string'||!MODEL.test(e.id))return null;
@@ -67,6 +80,8 @@ export function cleanPerson(e){
   // extra is still one after an edit in the People tab
   for(const k of KEPT)if(e[k]!==undefined&&plain(e[k]))out[k]=structuredClone(e[k]);
   if(e.chair===false)out.chair=false;
+  // at the desk: their own chair roll (mm) and timed roll in / out (reachKeys); build-round8-director.py clean_people checks the same
+  if(out.desk){for(const k of ['sitReach','standReach'])if(finite(e[k])&&e[k]>=0&&e[k]<=3000)out[k]=Math.round(e[k]);for(const [k,hi] of CHAIR_FIELDS)if(finite(e[k])&&e[k]>=0&&e[k]<=hi)out[k]=Math.round(e[k]);const rk=cleanReachKeys(e.reachKeys);if(rk)out.reachKeys=rk;}
   const keys=cleanPoseKeys(e.poseKeys);if(keys)out.poseKeys=keys;
   if(finite(e.scale)&&e.scale>=.2&&e.scale<=3&&Math.abs(e.scale-1)>1e-3)out.scale=r3(e.scale);
   const colors={};for(const part of PARTS)if(typeof e.colors?.[part]==='string'&&/^#[0-9a-f]{6}$/i.test(e.colors[part]))colors[part]=e.colors[part].toLowerCase();

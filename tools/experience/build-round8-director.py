@@ -482,6 +482,13 @@ def clean_people(v):
             out['desk'] = e['desk']
             if isinstance(e.get('station'), str) and re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,60}', e['station']): out['station'] = e['station']
             if num(e.get('reach')) and 0 <= e['reach'] <= 3000: out['reach'] = round(e['reach'])
+            # their own chair roll and timed roll in / out (experience/people-edits.mjs CHAIR_FIELDS, cleanReachKeys)
+            for k, hi in (('sitReach', 3000), ('standReach', 3000), ('chairRoll', 800), ('chairScoot', 300)):
+                if num(e.get(k)) and 0 <= e[k] <= hi: out[k] = round(e[k])
+            if isinstance(e.get('reachKeys'), list):
+                rk = sorted(({'at': round(float(k['at']), 3), 'dur': round(float(max(0, min(30, k['dur']))) if num(k.get('dur')) else 1.5, 3), 'to': round(k['to']), **({'ease': 'linear'} if k.get('ease') == 'linear' else {})}
+                             for k in e['reachKeys'][:16] if isinstance(k, dict) and num(k.get('at')) and num(k.get('to')) and 0 <= k['at'] <= 600 and 0 <= k['to'] <= 3000), key=lambda k: k['at'])
+                if rk: out['reachKeys'] = rk
         elif isinstance(e.get('at'), list) and len(e['at']) == 2 and all(num(x) and abs(x) <= 100000 for x in e['at']):
             out['at'] = [round(x) for x in e['at']]; out['turn'] = round(float(e['turn']), 1) if num(e.get('turn')) else 0
             if num(e.get('y')) and .5 <= abs(e['y']) <= 5000: out['y'] = round(e['y'])

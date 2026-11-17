@@ -35,10 +35,13 @@ const DRAW_TILT = 12;                  // … and beyond which a child drawing o
 const LEAD = 3.2;                      // sitting down starts when a lowering desk is this far above sitting height
 const NEAR = 1.3;                      // the hands go back to the keys when the desk is this close to where it stops
 const ROLL = .265;                     // metres the chair rolls back before its user stands (their feet end under them)
+//   (a person's own chairRoll / chairScoot, in mm on the placement, replace ROLL and SCOOT: DeskActor.chairRoll, metres)
 const SWAP = 1.45;                     // seconds into standing up at which the standing model takes over from the seated one
 const SCOOT = .09;                     // they slide to the front of the seat as they lean in (the chair's base clears their heels)
 const NUDGE = .15;                     // and how much further the calves push it as the knees straighten
 const SIT_UPRIGHT = 7;                 // degrees the back comes up from the built seated postures while they sit at the keys (life on)
+
+export { reachAt } from './people-reach.mjs';   // (a desk user's distance from the desk over time: reachKeys)
 
 // ---- driver --------------------------------------------------------------------------------------------------
 // desc: { sit: { lo, hi } | null, stand: { lo, hi } | null }: the desk heights (inches) at which the seated and
@@ -255,7 +258,7 @@ export function solveDesk(rig, keys, input) {
     const pelvis = spot;
     // (up off the seat first, then forward over the feet: the hips leave the seat upward, never forward past its edge
     // while still low; sitting down it is the other way round, back over the seat first and then down onto it)
-    if (seat && feet) pelvis.set(lerp(seat.x, feet.x, ss(0, 1, rise)), lerp(seat.y, feet.y, ss(0, .8, rise)), lerp(seat.z - ROLL * roll, feet.z, ss(.12, .9, rise)));
+    if (seat && feet) pelvis.set(lerp(seat.x, feet.x, ss(0, 1, rise)), lerp(seat.y, feet.y, ss(0, .8, rise)), lerp(seat.z - (input.chairRoll ?? ROLL) * roll, feet.z, ss(.12, .9, rise)));
     else pelvis.copy(seat || feet);
     // life: a slow shift of weight from foot to foot while standing, a small settling in the seat
     const upright = seat && feet ? ss(.8, 1, rise) : feet ? 1 : 0;
@@ -366,7 +369,7 @@ export function solveDesk(rig, keys, input) {
             rig.turnWorld(b.head, turn.setFromAxisAngle(X, -.07 * ss(.6, 1, w))); rig.fk();
         }
     }
-    return { stance: standing ? 'stand' : 'sit', chair: { back: ROLL * roll + SCOOT * ss(.55, 1.1, tau) + NUDGE * ss(1.4, 2.3, tau), turn: 0 }, lean };
+    return { stance: standing ? 'stand' : 'sit', chair: { back: (input.chairRoll ?? ROLL) * roll + (input.chairScoot ?? SCOOT) * ss(.55, 1.1, tau) + NUDGE * ss(1.4, 2.3, tau), turn: 0 }, lean };
 }
 
 // ---- one person at the featured desk, over one or more of their models ---------------------------------------------
@@ -413,7 +416,7 @@ export class DeskActor {
             this.life += dt; this.clock = this.life; state = this.state;
         }
         this.height = height;
-        this.out = solveDesk(this.rig, this.keys, { tau: state.tau, k: state.k, height, time: input.life === false ? null : this.clock, seed: this.seed, taps: input.taps });
+        this.out = solveDesk(this.rig, this.keys, { tau: state.tau, k: state.k, height, time: input.life === false ? null : this.clock, seed: this.seed, taps: input.taps, chairRoll: this.chairRoll, chairScoot: this.chairScoot });
         // the model that is drawn: the one built for this stance, nearest this desk height
         const stance = !this.mobile ? this.out.stance : state.tau >= this.swapAt ? 'stand' : 'sit', of = this.members.filter(m => (m.role === 'stand') === (stance === 'stand'));
         this.shown = of.sort((a, b) => Math.abs((a.key.deskHeight ?? height) - height) - Math.abs((b.key.deskHeight ?? height) - height))[0] || null;

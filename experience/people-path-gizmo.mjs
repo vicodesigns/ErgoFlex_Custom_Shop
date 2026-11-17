@@ -12,7 +12,8 @@ const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>'
 const r1=v=>Math.round(v*10)/10;
 const COLOR={walk:0x7fd7ff,roll:0xffb44a,start:0x5fe08a,sel:0xffffff,plus:0xff9bd2};
 const SNAP=50;
-export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,editing,lightsShowing,selected,posing,personName,objectOf,cast,modelOf,poseOf,seconds,spans=()=>null}){
+export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,editing,lightsShowing,selected,posing,personName,objectOf,cast,modelOf,poseOf,seconds,spans=()=>null,time=()=>0}){
+  let aim=null;   // + Walk to… / + Roll to…: {key, kind} while the next click on the floor picks where they go
   let h=null,picked=null,drag=null,planner=null,plannerLoading=null,lastKey=null,body=null,listening=false,alt=false;
   // the chapter's `when` for the cast (people-edits): who is in the room when, for the hand-overs
   const whenNow=()=>Object.fromEntries(cast().map(e=>[e.key,spans(e.key)]).filter(([,v])=>Array.isArray(v)&&v.length));
@@ -134,6 +135,7 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
   function listen(){
     if(listening||!tools())return;listening=true;const {t}=tools(),dom=t.renderer.domElement,w=win();
     dom.addEventListener('pointerdown',ev=>{
+      if(aim&&ev.button===0&&!drag){const f=floorAt(ev);if(f){grab(ev);w.__directorDragging=true;setTimeout(()=>{w.__directorDragging=false;},0);aimAt(f.at);}return;}
       if(!active()||drag||tools().gizmo?.dragging)return;
       // (a handle or a + wins over the person's own gizmo, which walks with them over their path; the line and the floor do not)
       const x=hit(ev);if(!x||tools().gizmo?.axis&&ev.button===0&&x.kind!=='point'&&x.kind!=='plus')return;const e=entry(selected()),pts=PE.pathOf(e);
@@ -146,7 +148,7 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
     },true);
     // (17 Nov 2026: right-click no longer removes a point; right-drag orbits the view now. Select a point, then Delete.)
     dom.addEventListener('pointermove',ev=>{alt=ev.altKey;if(!drag||ev.pointerId!==drag.id)return;grab(ev);move(ev);},true);
-    for(const d of [w.document,document])for(const type of ['keydown','keyup'])d.addEventListener(type,ev=>{if(ev.key==='Alt')alt=type==='keydown';},true);
+    for(const d of [w.document,document])for(const type of ['keydown','keyup'])d.addEventListener(type,ev=>{if(ev.key==='Alt')alt=type==='keydown';if(type==='keydown'&&ev.key==='Escape'&&aim){ev.preventDefault();ev.stopImmediatePropagation();cancelAim();}},true);
     const up=ev=>{alt=ev.altKey;if(!drag||ev.pointerId!==drag.id)return;grab(ev);finish();};
     dom.addEventListener('pointerup',up,true);dom.addEventListener('pointercancel',ev=>{if(drag&&ev.pointerId===drag.id)cancel();},true);
     // the person's own gizmo (W) on someone with a path: where they were when its drag began and where it has them now.
@@ -229,7 +231,7 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
   // ---- the People tab section
   const field=(label,name,value,{step=1,min='',max='',unit='',title='',placeholder=''}={})=>`<label title="${escape(title)}">${escape(label)}<input type="number" name="${name}" value="${escape(value)}" step="${step}" ${min!==''?`min="${min}"`:''} ${max!==''?`max="${max}"`:''} ${placeholder?`placeholder="${escape(placeholder)}"`:''}>${unit?`<small>${escape(unit)}</small>`:''}</label>`;
   function panel(e){
-    const kind=kindOf(e),pts=PE.pathOf(e);if(!kind||!pts)return '';const m=e[kind],F=PE.FIELDS[kind],o=objectOf(e.key);
+    const kind=kindOf(e),pts=PE.pathOf(e);if(!kind||!pts)return goPanel(e);const m=e[kind],F=PE.FIELDS[kind],o=objectOf(e.key);
     const info=PE.routeInfo(e,P()),plan=kind==='walk'?o?.userData?.personLife?.plan:null,secs=kind==='roll'?info?.seconds:plan?.seconds;
     const facts=[`${pts.length} points`,info?`${r1(info.length/1000)} m`:'',Number.isFinite(secs)?`${r1(secs)} s, there at ${r1((m.start||0)+secs)} s`:''].filter(Boolean).join(' · ');
     const num=(name,ph)=>field(F[name].label,'pe-path-'+name,m[name]??'',{step:F[name].step,min:F[name].min,max:name==='start'?Math.max(1,seconds()):F[name].max,unit:F[name].unit,title:F[name].title,placeholder:ph});
@@ -239,7 +241,7 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
       for(const x of others)if(!seen.has(x.id)){seen.add(x.id);opts.push([x.id,`${poseOf(x.id)?.label||x.id} · ${x.key}`]);}
       if(m.then&&!seen.has(m.then))opts.push([m.then,poseOf(m.then)?.label||m.then]);
       fields=`<div class="director-row people-fields">${num('start')}${num('pace','1.8')}${num('step','auto')}${num('turn','auto')}</div>
-        <div class="director-row people-fields people-path-ends"><label>Then<select name="pe-path-then" title="The posture they take at the end of the path: the person's other placements">${opts.map(([v,l])=>`<option value="${escape(v)}" ${v===(m.then||'')?'selected':''}>${escape(l)}</option>`).join('')}</select></label><label>Toes<select name="pe-path-toes">${PE.TOES.map(([v,l])=>`<option value="${v}" ${v===(m.toes==='stiff'?'stiff':'bend')?'selected':''}>${escape(l)}</option>`).join('')}</select></label></div>`;
+        <div class="director-row people-fields people-path-ends"><label>Then<select name="pe-path-then" title="The posture they take at the end of the path: the person's other placements">${opts.map(([v,l])=>`<option value="${escape(v)}" ${v===(m.then||'')?'selected':''}>${escape(l)}</option>`).join('')}</select></label><label>Toes<select name="pe-path-toes">${PE.TOES.map(([v,l])=>`<option value="${v}" ${v===(m.toes==='stiff'?'stiff':'bend')?'selected':''}>${escape(l)}</option>`).join('')}</select></label><label title="Normal: a swinging foot goes straight to its next footprint. Follow the path: it swings along the path on its own side, for tight turns without crossed legs">Foot swing<select name="pe-path-swing">${PE.SWINGS.map(([v,l])=>`<option value="${v}" ${v===(m.swing==='path'?'path':'')?'selected':''}>${escape(l)}</option>`).join('')}</select></label></div>`;
     }else fields=`<div class="director-row people-fields">${num('start')}${num('speed','0.8')}${num('radius','450')}${num('ease','1.2')}</div><p class="director-hint">A chair ends facing along its last leg.${info?.tight?.length?` ${info.tight.length} corner${info.tight.length===1?'':'s'} turn tighter than the radius (a leg next to it is short).`:''}</p>`;
     const rows=pts.map((p,i)=>`<div class="people-path-point ${i===picked?'selected':''}"><button type="button" data-action="pe-path-pick" data-index="${i}" title="${i===0?'The start: where they stand (their placement)':'Select this point (Delete removes it)'}">${i===0?'Start':i}</button>${field('X','pe-path-x-'+i,p[0],{step:10,unit:'mm'})}${field('Z','pe-path-z-'+i,p[1],{step:10,unit:'mm'})}<button type="button" class="pose-saved-x" data-action="pe-path-remove" data-index="${i}" ${PE.canRemove(e,i)?'':'disabled'} aria-label="Remove point ${i}" title="Remove this point">×</button></div>`).join('');
     const a=arrivalOf(e),late=a&&a.late>.05?a:null,until=late?.next?`${personName(e)}'s next pose starts`:'their time in the room ends at';
@@ -250,17 +252,35 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
       ${fields}
       <details class="people-path-points"${pts.length<=6?' open':''}><summary>Points (room mm)</summary>${rows}<div class="director-actions"><button type="button" data-action="pe-path-append">+ Point at the end</button></div></details>`;
   }
+  // ---- + Walk to… / + Roll to…: a person at a spot of their own who has no path yet (a modal tool: the next click on
+  // the floor is where they go; Esc cancels). They set off at the playhead.
+  const canGo=e=>!!e&&!kindOf(e)&&Array.isArray(e.at)&&!e.desk;
+  const goKind=e=>{const p=poseOf(e.id);return p?.id==='wheel-roll'||/-wheel-roll$/.test(e.id)?'roll':p?.stance==='standing'||p?.stance==='walking'?'walk':null;};
+  function beginAim(){const k=selected(),e=k&&entry(k),kind=e&&goKind(e);if(!canGo(e)||!kind)return false;listen();aim={key:k,kind};
+    status(`Click the floor where ${personName(e)} ${kind==='walk'?'walks':'rolls'} to (they set off at ${r1(time())} s). Esc cancels.`);return true;}
+  function cancelAim(){if(!aim)return false;aim=null;status('No path added.');return true;}
+  function aimAt(at){
+    const {key,kind}=aim;aim=null;const e=entry(key);if(!canGo(e))return;const to=at.map(Math.round),start=Math.max(0,Math.round(time()*10)/10);
+    if(Math.hypot(to[0]-e.at[0],to[1]-e.at[1])<PE.MIN_GAP){status('That is where they stand already: click further away.',true);return;}
+    picked=1;put(key,{...structuredClone(e),[kind]:{path:[[...e.at],to],start}},`${personName(e)} ${kind==='walk'?'walks':'rolls'} ${r1(Math.hypot(to[0]-e.at[0],to[1]-e.at[1])/1000)} m from ${r1(start)} s. Drag the points on the floor; Ctrl+click adds one.`);
+  }
+  function goPanel(e){
+    const kind=goKind(e);if(!canGo(e)||!kind)return '';
+    return `<h4>${kind==='walk'?'Walk':'Roll'}</h4><div class="director-actions"><button type="button" data-action="pe-path-go" aria-pressed="${!!aim}" title="Then click the floor where they go; they set off at the playhead (Esc cancels)">+ ${kind==='walk'?'Walk':'Roll'} to…</button>${aim?'<span class="director-hint">Click the floor…</span>':''}</div>`;
+  }
   function changed(el){
     const name=el?.name||'';if(!name.startsWith('pe-path-'))return false;
     const k=selected(),e=k&&entry(k);if(!e||!kindOf(e))return true;const who=personName(e),f=name.slice(8),xy=f.match(/^([xz])-(\d+)$/);
     if(xy){const i=Number(xy[2]),pts=PE.pathOf(e),v=Number(el.value);if(!pts?.[i]||el.value.trim()===''||!Number.isFinite(v))throw Error('Type a number.');const p=[...pts[i]];p[xy[1]==='x'?0:1]=v;put(k,PE.movePoint(e,i,p),`Moved point ${i+1} of ${who}'s path.`,false,{undoKey:'people-path-'+name+k});return true;}
     const next=PE.setField(e,f,el.value),m=next[kindOf(e)],F=PE.FIELDS[kindOf(e)][f];
-    const said=f==='then'?(m.then?`${who} ends the walk as ${poseOf(m.then)?.label?.toLowerCase()||m.then}.`:`${who} ends the walk in the posture they walked in.`):f==='toes'?`${who}: ${m.toes==='stiff'?'stiff feet':'toes bend'} on the walk.`
+    const said=f==='swing'?`${who}: ${m.swing==='path'?'the swinging foot follows the path':'the swinging foot goes straight to its footprint'}.`:f==='then'?(m.then?`${who} ends the walk as ${poseOf(m.then)?.label?.toLowerCase()||m.then}.`:`${who} ends the walk in the posture they walked in.`):f==='toes'?`${who}: ${m.toes==='stiff'?'stiff feet':'toes bend'} on the walk.`
       :m[f]===undefined?`${who}: ${F.label.toLowerCase()} back to the film's default.`:`${who}: ${F.label.toLowerCase()} ${m[f]} ${F.unit}.`;
     put(k,next,said,false,{undoKey:'people-path-'+f+k});return true;
   }
   function action(name,index){
-    if(!name?.startsWith('pe-path-'))return false;const k=selected(),e=k&&entry(k);if(!e||!kindOf(e))return true;
+    if(!name?.startsWith('pe-path-'))return false;const k=selected(),e=k&&entry(k);
+    if(name==='pe-path-go'){if(aim)cancelAim();else if(!beginAim())status('Only someone standing or in a wheelchair, at a spot of their own, can be given a path.',true);return true;}
+    if(!e||!kindOf(e))return true;
     if(name==='pe-path-pick'){pick(index);status(`Point ${index===0?'Start':index} of ${personName(e)}'s path selected${index===0?'':': Delete removes it'}.`);return true;}
     if(name==='pe-path-remove'){removeAt(index);return true;}
     if(name==='pe-path-faster'||name==='pe-path-earlier'){
@@ -272,7 +292,7 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
     if(name==='pe-path-append'){const pts=PE.pathOf(e),a=pts[pts.length-2],b=pts[pts.length-1],l=Math.hypot(b[0]-a[0],b[1]-a[1])||1;picked=pts.length;put(k,PE.insertPoint(e,pts.length-1,[b[0]+(b[0]-a[0])/l*1000,b[1]+(b[1]-a[1])/l*1000]),`Added a point a metre past the end of ${personName(e)}'s path.`);return true;}
     return true;
   }
-  return {tick,panel,changed,action,removeSelected,bodyMoved,picked:()=>picked,dispose,arrival:()=>{const k=selected(),e=k&&entry(k);return e&&kindOf(e)?arrivalOf(e):null;},
+  return {aiming:()=>!!aim,cancelAim,beginAim,tick,panel,changed,action,removeSelected,bodyMoved,picked:()=>picked,dispose,arrival:()=>{const k=selected(),e=k&&entry(k);return e&&kindOf(e)?arrivalOf(e):null;},
     // (tests) the handle points on the screen: [{ x, y }] in the stage frame's pixels
     screenPoints(){const k=selected(),e=k&&entry(k),root=room();if(!e||!root||!tools())return null;const {THREE,t}=tools(),r=t.renderer.domElement.getBoundingClientRect();return PE.pathOf(e).map(p=>{const q=new THREE.Vector3(p[0],0,p[1]).applyMatrix4(root.matrixWorld).project(t.camera);return {x:r.left+(q.x+1)/2*r.width,y:r.top+(1-q.y)/2*r.height};});}};
 }

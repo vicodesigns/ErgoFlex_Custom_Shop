@@ -121,11 +121,13 @@ export const FIELDS={
   }
 };
 export const TOES=[['bend','Toes bend (natural)'],['stiff','Stiff (the foot pitches whole)']];
+export const SWINGS=[['','Normal'],['path','Follow the path (tight turns)']];
 // A new entry with motion field `name` set to `value` (a string from an input: '' clears where the field may be
 // cleared). Throws with a message for a value that cannot be.
 export function setField(e,name,value){
   const kind=motionOf(e);if(!kind)return e;const out=clone(e),m=out[kind];
   if(name==='then'){if(kind!=='walk')return e;if(!value)delete m.then;else if(/^people-[a-z0-9][a-z0-9._-]{0,90}$/i.test(value))m.then=value;else throw Error('Not a posture of this library.');return out;}
+  if(name==='swing'){if(kind!=='walk')return e;if(value==='path')m.swing='path';else delete m.swing;return out;}
   if(name==='toes'){if(kind!=='walk')return e;const want=value==='stiff'?'stiff':'bend';if(want===(e.walk.toes==='stiff'?'stiff':'bend'))return e;m.toes=want;return out;}   // (written only when the choice differs from what the entry resolves to)
   const f=FIELDS[kind][name];if(!f)return e;
   const text=String(value??'').trim();
