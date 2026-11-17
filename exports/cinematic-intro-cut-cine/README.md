@@ -33,7 +33,19 @@
   `experience/people-track.mjs` (a posture change moves both windows' edge; a start moves the whole walk / roll; an
   arrival or waypoint sets the pace / speed; an action moves with its length kept). Pose keys: pose mode, Auto-key.
 
-## November 17: storage, Andre's walk round the desk (Vico: "his legs totally clip and walk incorrectly")
+## November 17 (2): storage, Andre's feet (Vico: "his shoes, his feet look pretty awkward when he's walking")
+
+- Measured on his shoe vertices (material `shoes04`, skinned from the GLBs, the stage's sole fit reproduced), 3.3-8.4 s
+  at 1/120 s. The turn away from the desk stepped 108 deg in one step a foot: the first foot was planted up to 72 deg
+  out from the body. In the walk the footprints faced the path's heading half a stride ahead of the body (planted feet
+  -28..+80 deg from it). He walked in the `walk` model, whose right shoe, built mid-stride and skinned to standing,
+  stood with its heel 20 mm up and floated 6-10 mm during the turn, then dropped 10 mm as the walk began (5.0 s).
+- Fix (room-people-motion.mjs, both opt-in, storage only): `change.step` turns over 60 deg in two steps a foot, round
+  the turn (STEP_TURN); walk `swing: 'path'` also faces each footprint the way the body faces while the foot is on it
+  and pivots the foot on its ball as the heel comes up. Data: the walker is drawn with `people-andre-stand-wait`.
+- After: turn feet at most 44 deg from the body (was 72), flat and on the floor (float 2 mm, was 8); walk planted feet
+  -30..+33 deg (was -28..+80; 48 at most in the last stance as he turns to the desk), every landing heel first (one was
+  toes first), planted heel up 12 mm on average (17), no drop at 5.0 s. Ben and Noah in the slot measure the same.
 
 - Measured (his skinned vertices from the GLBs, posed by the production people code at 1/60 s, against the stage's own
   desk and room meshes, a 10 mm distance grid): his legs never entered the desk; they went through each other. On

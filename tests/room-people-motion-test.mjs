@@ -848,8 +848,21 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
             if (last) for (const k of [0, 1]) assert.ok(f[k].distanceTo(last[k]) < .03, 'turning step: no foot jumps at ' + w.toFixed(3));
             last = f;
         }
-        // the foot that steps second is still on its print while the first steps (left first: a turn to his left)
-        const e = ease(.3); solveChange(rig, go, walkKey, .3, [.1, .6], { ...d, yaw, e }); assert.ok(room(rig.wp[fr], e).distanceTo(room(go.wp[fr], 0)) < .003, 'turning step: the right foot planted while the left steps');
+        // over 60 deg the turn is two steps each, the feet taking turns (left first: a turn to his left): each foot is
+        // planted while the other steps, and no foot is ever turned much further round than the body over it (one step
+        // each had the left foot 70-80 deg out from the body, Nov 17)
+        { const e = ease(.15); solveChange(rig, go, walkKey, .15, [.1, .6], { ...d, yaw, e }); assert.ok(room(rig.wp[fr], e).distanceTo(room(go.wp[fr], 0)) < .003, 'turning step: the right foot planted while the left steps'); }
+        { const e0 = ease(.3), e1 = ease(.4); solveChange(rig, go, walkKey, .3, [.1, .6], { ...d, yaw, e: e0 }); const l0 = room(rig.wp[fl], e0); solveChange(rig, go, walkKey, .4, [.1, .6], { ...d, yaw, e: e1 });
+            assert.ok(room(rig.wp[fl], e1).distanceTo(l0) < .003 && room(rig.wp[fr], e1).distanceTo(room(go.wp[fr], 0)) > .02, 'turning step: the left foot planted half way round while the right steps'); }
+        const ankleYaw = (r, k, f) => { const [, , foot, ball] = r.side[f].leg, v = k.wp[ball].clone().sub(k.wp[foot]); return Math.atan2(v.x, v.z); };
+        let most = 0;
+        for (let w = 0; w <= 1.0001; w += 1 / 60) { const e = ease(w); solveChange(rig, go, walkKey, w, [.1, .6], { ...d, yaw, e }); for (const s of ['l', 'r']) { const [, , foot, ball] = rig.side[s].leg, v = rig.wp[ball].clone().sub(rig.wp[foot]); most = Math.max(most, Math.abs(THREE.MathUtils.radToDeg(Math.atan2(Math.sin(Math.atan2(v.x, v.z) - ankleYaw(rig, go, s)), Math.cos(Math.atan2(v.x, v.z) - ankleYaw(rig, go, s)))))); } }
+        assert.ok(most < 50, `turning step: a foot at most ${most.toFixed(0)} deg round from the body (as it stands)`);
+        solveChange(rig, go, walkKey, 1, [.1, .6], { ...d, yaw, e: 1 }); assert.ok(worst(rig, walkKey) < 1e-9, 'turning step: ends as built');
+        // a turn under 60 deg is one step each, as before
+        const small = THREE.MathUtils.degToRad(14), es = ease(.3); solveChange(rig, go, walkKey, .3, [.1, .6], { ...d, yaw: small, e: es });
+        const rs = (v, e) => new THREE.Vector3(v.x, v.y, v.z).applyAxisAngle(new THREE.Vector3(0, 1, 0), small * e).add(new THREE.Vector3(d.x * e, 0, d.z * e));
+        assert.ok(rs(rig.wp[fr], es).distanceTo(rs(go.wp[fr], 0)) < .003, 'a small turn: the right foot planted while the left makes its one step');
     }
     // the workshop film's chain of postures pairs into skeleton blends with margin: one spot (< 215 mm, < 0.27 rad apart)
     // and windows that meet, so no step of it falls back to a dissolve (sameSpot: 220 mm, 0.3 rad)
@@ -907,6 +920,27 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
     for (const who of ['ben', 'noah']) {
         const r2 = rigOf(who), got = legsOf(r2, r2.key(`people-${who}-walk`), r2.key(`people-${who}-stand-wait`), mm(w.path), { ...opts, swing: 'path' });
         assert.ok(got.shins > .1 && got.across > .02, `${who} on Andre's route: shins ${(got.shins * 1000).toFixed(0)} mm apart, ankles ${(got.across * 1000).toFixed(0)} mm`);
+    }
+    // the feet on the turn (Nov 17, Vico: "his shoes, his feet look pretty awkward"): with swing: 'path' a footprint faces
+    // the way the body does while the foot is on it, and the foot pivots on its ball before it leaves, so a planted foot
+    // is never turned far from the body (heading-laid footprints had them up to 69 deg out); the ankles move smoothly
+    // through the pivot (no jump), for any man's rig
+    for (const who of ['andre', 'ben', 'noah']) {
+        const r = rigOf(who), key = r.key(`people-${who}-stand-wait`), route = mm(w.path), axis = (k, s) => { const [, , foot, ball] = r.side[s].leg, v = k.wp[ball].clone().sub(k.wp[foot]); return Math.atan2(v.x, v.z); };
+        const base = { l: axis(key, 'l'), r: axis(key, 'r') }, Yv = new THREE.Vector3(0, 1, 0);
+        const turned = options => {
+            const plan = walkPlan(r, key, key, route, { ...opts, endYaw: THREE.MathUtils.degToRad(117), ...options }); let most = 0, jump = 0, last = null;
+            for (let g = 0; g <= plan.steps.length; g += 1 / 120) {
+                const root = { ...solveWalk(r, plan, g) }, now = ['l', 'r'].map(s => r.wp[r.side[s].leg[2]].clone().applyAxisAngle(Yv, root.yaw).add(new THREE.Vector3(root.x, 0, root.z)));
+                if (last) jump = Math.max(jump, ...now.map((p, i) => p.distanceTo(last[i]))); last = now;
+                ['l', 'r'].forEach((s, k) => { if (plan.steps.some(st => st.which === k && g > st.g0 && g < st.g1)) return; const a = axis(r, s) - base[s]; most = Math.max(most, Math.abs(Math.atan2(Math.sin(a), Math.cos(a)))); });
+            }
+            return { most: THREE.MathUtils.radToDeg(most), jump };
+        };
+        const laid = turned({}), faced = turned({ swing: 'path' });
+        assert.ok(laid.most > 60, `${who}: footprints along the path's heading: a planted foot ${laid.most.toFixed(0)} deg from the body`);
+        assert.ok(faced.most < 52, `${who}: footprints facing with the body: a planted foot at most ${faced.most.toFixed(0)} deg from it`);
+        assert.ok(faced.jump < .02, `${who}: no ankle jumps through the pivots (${(faced.jump * 1000).toFixed(1)} mm a 1/120 step)`);
     }
 }
 console.log('PASS room people motion: rig files, the desk driver (rise, lower, stop, turn back, tilt, wheelchair, short stature), exact end poses, planted feet, knees, keyboard following, determinism, life, the person in the room (film and Studio paths, chair, pose adjustments on top), posture changes in a shot and with the daypart, a walk along a path, stepping out from the desk and back.');

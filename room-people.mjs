@@ -48,7 +48,8 @@
 //                                                     (a walking posture, `walk`, starts and ends standing: walkStance;
 //                                                     `toes: 'stiff'`: the foot pitches whole, the toes not bending;
 //                                                     `swing: 'path'`: a swinging foot follows the path on its own side,
-//                                                     not the straight line between footprints (tight turns: no crossed legs);
+//                                                     not the straight line between footprints (tight turns: no crossed legs),
+//                                                     and the feet face and pivot with the body on a turn;
 //                                                     `turn`: degrees they face at the end, else the `then` placement's
 //                                                     there, else along the last leg; `look` is honoured on the way)
 //   change: { seconds, arms: [a, b], turn: [a, b], step: true }
@@ -56,7 +57,8 @@
 //                                                     posture (see sameSpot below): how long it takes (default 1.4 s, more
 //                                                     when getting up), the parts of it (0..1) in which the arms move and
 //                                                     the body turns and moves to the new spot (default [.22, 1], [0, .72]),
-//                                                     `step`: that move is a step (feet planted, left then right), and
+//                                                     `step`: that move is a step (feet planted, left then right; a turn
+//                                                     over 60 deg in two steps each, round the turn), and
 //                                                     `hands: 'line'`: the hands go straight, not along the arms' arc
 //   look: '<key>' | ['<key>', ...]                    whom they look at, whatever their posture (whichever of them is there,
 //                                                     in front within 9 m): a listener who turns to the talker
@@ -81,7 +83,7 @@ import * as THREE from 'three';
 import {updateSkinnedBounds} from './skinned-bounds.mjs';
 import {poseAt} from './people-pose-keys.mjs';
 import {postureRecord,postureRecords,hasPosturePose,poseOwner,sourceOf,roomEditKey,blendPosturePoses} from './people-postures.mjs';
-import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, shoeFit, solveWalk, lookToward, solveTread, rollPlan, actedKey, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=andre-walk-20261117';
+import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, shoeFit, solveWalk, lookToward, solveTread, rollPlan, actedKey, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=andre-feet-20261117';
 // who looks at whom (RoomPeople.gazeOf)
 const GAZE_TALK = /^(stand-talk|sit-chat|stand-drink|stand-mug|stand-coffee|sit-coffee)$/, GAZE_IDLE = /^(stand-wait|wheel-roll|wheel-watch|cane-stand|white-cane|sit-listen)$/;
 const GAZE_DESK = /^stand-phone-watch$/;      // watching the featured desk go (the workshop film): the head follows it
