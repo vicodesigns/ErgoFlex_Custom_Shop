@@ -360,7 +360,7 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
       <select name="pe-joint" aria-label="Joint"><option value="">Choose a joint…</option>${groups.map(g=>`<optgroup label="${escape(g)}">${JOINTS.filter(j=>j[2]===g).map(j=>`<option value="${j[0]}" ${j[0]===joint?'selected':''}>${escape(j[1])}${e?.pose?.[j[0]]?' •':''}</option>`).join('')}</optgroup>`).join('')}</select>
       ${joint?`${(()=>{const mv=moveOf(joint),title=mv.kind==='ik'?'Drag the hand or foot; the limb follows (W)':mv.kind==='mid'?'Drag the joint; the hand or foot stays where it is (W)':mv.kind?'Drag the joint; the bones above it turn to follow (W)':mv.why;
         return `<div class="director-actions people-modes"><button type="button" data-action="pe-pose-move" aria-pressed="${gmode==='translate'&&!!mv.kind}" ${mv.kind?'':'disabled'} title="${escape(title)}">${mv.kind==='ik'?'Move limb':'Move joint'}</button><button type="button" data-action="pe-pose-turn" aria-pressed="${gmode==='rotate'||!mv.kind}" title="Turn the joint (E)">Turn joint</button></div>${mv.kind?'':`<p class="director-hint">${escape(mv.why)}</p>`}`;})()}
-      <div class="director-row people-fields pose-angles">${num('Bend','pe-rx',a[0])}${num('Twist','pe-ry',a[1])}${num('Side','pe-rz',a[2])}</div>
+      <div class="director-row people-fields pose-angles">${num('Bend','pe-rx',a[0])}${num('Twist','pe-ry',a[1])}${num('Side','pe-rz',a[2])}${keyDiamond(e)}</div>
       <div class="director-actions"><button type="button" data-action="pe-pose-reset-joint" title="This joint back to the posture as built (Delete)">Reset joint</button><button type="button" data-action="pe-pose-reset-limb">Reset ${escape(info(joint)[2].toLowerCase())}</button>${side&&limbOf(joint)?`<button type="button" data-action="pe-pose-mirror" title="Copy this side's adjustments to the other side, mirrored">Copy to the ${side==='l'?'right':'left'} side</button>`:''}</div>`:''}
       <h4>Fingers</h4>
       <div class="pose-grip">${['l','r'].map(sd=>`<label>${sd==='l'?'Left hand':'Right hand'}<input type="range" name="pe-grip-${sd}" min="-100" max="100" step="5" value="${ready?gripValue(sd):0}" ${ready?'':'disabled'} aria-label="${sd==='l'?'Left':'Right'} hand: open to fist"></label>`).join('')}<small>open</small><small>as built</small><small>fist</small></div>
@@ -382,7 +382,19 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
   }
   // The playhead moved: the panel's time readout.
   function sync(){const at=document.querySelector('[data-pose-at]');if(at)at.textContent=fmt(now());}
+  // P6 key diamond (After Effects' stopwatch, Blender's dot) by the joint's fields: ◇ not keyed, ◈ keyed at other
+  // times, ◆ a key here. A click keys the joint as it is now at the playhead, or (◆) takes it out of that key.
+  function jointKeyState(e){const t=now(),keys=Array.isArray(e?.poseKeys)?e.poseKeys:[],here=keys.find(k=>Math.abs(k.t-t)<=KEY_SNAP/2+1e-9&&k.pose?.[joint]);return here?{kind:'here',t:here.t}:keys.some(k=>k.pose?.[joint])?{kind:'elsewhere'}:{kind:'none'};}
+  function keyDiamond(e){if(!joint||!e)return '';const st=jointKeyState(e),label_=label(joint).toLowerCase();
+    const [glyph,title]=st.kind==='here'?['◆',`The ${label_} has a key at ${fmt(now())} s: click to take it out of the key`]:st.kind==='elsewhere'?['◈',`The ${label_} is keyed at other times: click to key it here too`]:['◇',`Key the ${label_} at ${fmt(now())} s`];
+    return `<button type="button" class="pose-key-diamond pose-key-${st.kind}" data-action="pe-key-joint" title="${escape(title)}" aria-label="${escape(title)}">${glyph}</button>`;}
+  function keyJoint(){
+    const e=entry(key),rig=rigOf();if(!e||!joint||!rig)return;const st=jointKeyState(e),t=now(),name=label(joint);
+    if(st.kind==='here'){selT=st.t;edit(key,x=>takeKeys(x,removePoseKey(x,st.t,joint)),`${name}: out of the key at ${fmt(st.t)} s.`);return;}
+    const v=read()[joint]||IDENT;selT=t;edit(key,x=>takeKeys(x,setPoseKey(x,t,joint,v)),`${name}: keyed at ${fmt(t)} s.`);
+  }
   function action(name,index){
+    if(name==='pe-key-joint'){keyJoint();return true;}
     if(name==='pe-key-auto'){autoKey=!autoKey;try{localStorage.setItem(AUTO,autoKey?'1':'0');}catch{}status(autoKey?'Auto-key on: each adjustment keys the bones it changes at the playhead.':'Auto-key off: adjustments change the pose for the whole chapter.');rerender();return true;}
     if(!key)return false;
     const e=entry(key);

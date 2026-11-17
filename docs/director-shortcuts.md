@@ -55,7 +55,7 @@ Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl als
 | = / + | Timeline zoom in | Premiere |
 | - | Timeline zoom out | Premiere |
 | Shift+Z | Fit the chapter in the timeline | Director |
-| Shift+U | Lanes: all → only those with something → only the selection's (After Effects U / UU) | After Effects |
+| Shift+U | Lanes: all → with something → the selection's → changed from the film (After Effects U / UU) | After Effects |
 | Z | Zoom to the selection | Premiere |
 | Ctrl + wheel | Zoom at the pointer · Shift+wheel: pan | Premiere |
 | M | Add a marker at the playhead (on a marker: remove it) | Premiere |

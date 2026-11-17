@@ -67,7 +67,7 @@ export const ACTIONS = [
   R('zoom-in', 'Timeline zoom in', ['=', '+'], 'timeline', { repeat: true, origin: 'Premiere' }),
   R('zoom-out', 'Timeline zoom out', ['-'], 'timeline', { repeat: true, origin: 'Premiere' }),
   R('zoom-fit', 'Fit the chapter in the timeline', ['Shift+Z'], 'timeline', { origin: 'Director' }),
-  R('lane-filter', 'Lanes: all → only those with something → only the selection\'s (After Effects U / UU)', ['Shift+U'], 'timeline', { phase: '4', origin: 'After Effects', aliases: ['filter', 'solo lanes'] }),
+  R('lane-filter', 'Lanes: all → with something → the selection\'s → changed from the film (After Effects U / UU)', ['Shift+U'], 'timeline', { phase: '4', origin: 'After Effects', aliases: ['filter', 'solo lanes'] }),
   R('zoom-selection', 'Zoom to the selection', ['Z'], 'timeline', { phase: '4', origin: 'Premiere' }),
   G('zoom-wheel', 'Zoom at the pointer · Shift+wheel: pan', 'Ctrl + wheel', 'timeline', { phase: '4', origin: 'Premiere' }),
   R('marker', 'Add a marker at the playhead (on a marker: remove it)', ['M'], 'timeline', { phase: '4', origin: 'Premiere' }),

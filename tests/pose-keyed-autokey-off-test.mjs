@@ -60,5 +60,13 @@ try{
   assert.match(messages.at(-1),/keyed at other times: turn Auto-key on/,'the status says why: '+messages.at(-1));
   // ... while an unkeyed joint at 17 s still goes into the static pose (only it)
   await turn('neck_01','pe-ry',6);assert.deepEqual(Object.keys(rec().pose||{}).sort(),['head','neck_01','spine_03']);
+  // the key diamond by the joint's fields: the neck (static only) shows ◇; a click keys it at 17 s (◆); again takes it out
+  await editor.changed({name:'pe-joint',value:'neck_01'});await tick();
+  assert.match(editor.panel(),/pose-key-none" data-action="pe-key-joint"/,'◇ for a joint without keys');
+  await editor.action('pe-key-joint');await tick();
+  assert.ok(rec().poseKeys.some(k=>Math.abs(k.t-17)<1e-6&&k.pose.neck_01),'a click keys the neck at 17 s');
+  assert.match(editor.panel(),/pose-key-here"/,'◆ now');
+  await editor.action('pe-key-joint');await tick();assert.ok(!rec().poseKeys.some(k=>k.pose.neck_01),'again: out of the key');
+  await editor.changed({name:'pe-joint',value:'lowerarm_l'});await tick();assert.match(editor.panel(),/pose-key-elsewhere"/,'◈ for the elbow keyed at 15 s, seen from 17 s');
   console.log('PASS pose, Auto-key off with keys: only touched bones written; a key at the playhead updated in place; keyed-elsewhere refused with a reason');
 }finally{people.dispose();}

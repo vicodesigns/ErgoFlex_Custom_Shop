@@ -255,3 +255,11 @@ body.df-filter-sel #director-timeline :is(.desk-lane-row,.camera-lane-row):not(.
 body.directing.df-shell #director-panel{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent)}
 /* lanes scroll under the sticky ruler: a shadow shows they pass beneath it */
 body.df-shell #director-timeline .time-ruler-row{box-shadow:0 5px 8px -4px #000c}
+
+/* P5 changed from the film: the field's label, its ↺, the lane groups' ● and Shift+U's "changed" step */
+#director-panel label.field-changed{color:var(--df-select-text,#ffd88a)}
+.field-reset{margin-left:6px;padding:0 5px;height:18px;border:1px solid var(--df-border-2,#ffffff1c);border-radius:5px;background:transparent;color:var(--df-select-text,#ffd88a);font-size:11px;cursor:pointer;vertical-align:middle}
+.changed-dot{font-style:normal;color:var(--df-select-text,#ffd88a);font-size:9px}
+body.df-filter-changed #director-timeline :is(.lane-group-head,.lane-group-body):not(.group-changed){display:none}
+.pose-key-diamond{align-self:end;width:26px;height:26px;margin-bottom:1px;border:1px solid var(--df-border-2,#ffffff1c);border-radius:6px;background:transparent;color:var(--df-text-3,#8a97a6);font-size:14px;line-height:1;cursor:pointer}
+.pose-key-diamond.pose-key-here{color:#ffd166;border-color:#ffd16688}.pose-key-diamond.pose-key-elsewhere{color:#ffd166aa}
