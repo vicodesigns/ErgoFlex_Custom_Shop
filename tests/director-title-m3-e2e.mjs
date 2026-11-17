@@ -57,10 +57,10 @@ try{
   check(a2.x===a0[2].x&&a2.y>a0[2].y+20,'the line snaps back to the title\'s left edge (x unchanged) while it moves down');
   check(guides>=1&&/snapped to the title edge/.test(st),'a guide shows while it snaps, the message line names it');
   // 4. arrows nudge the picked line (Shift 10), Esc goes back to the whole title
-  await key('ArrowRight');await key('ArrowRight');await key('ArrowUp',['Shift']);
+  await key('ArrowRight',['Alt']);await key('ArrowRight',['Alt']);await key('ArrowUp',['Shift','Alt']);   // Alt+arrows nudge in the frame (17 Nov 2026)
   const a3=await lineAttr(2);check(Math.abs(a3.x-a2.x-2)<.01&&Math.abs(a3.y-a2.y+10)<.01,'arrows nudge the line 1 px, Shift+arrow 10 px');
   await key('Escape');check(await ev(()=>!document.querySelector('[data-line-frame]'))&&await ev(()=>!!document.querySelector('[data-title-clip].selected')),'Esc goes back to the whole title (still selected)');
-  const p0=await ev(()=>Number(document.querySelector('[name=ft-x]').value));await key('ArrowLeft',['Shift']);
+  const p0=await ev(()=>Number(document.querySelector('[name=ft-x]').value));await key('ArrowLeft',['Shift','Alt']);
   check(await ev(()=>Number(document.querySelector('[name=ft-x]').value))===p0-10,'with no line picked, arrows nudge the whole title');
   if(shots)await page.screenshot({path:path.join(shots,'m3-lines.png')});
   // 5. multi-select: + Title, Ctrl-click the first block, drag one: both move

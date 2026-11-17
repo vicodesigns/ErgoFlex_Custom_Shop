@@ -248,7 +248,7 @@ export function createSceneLightEditor({bridge,shot,film,commit,status,open,rere
     const parts=[n('Room')&&`${n('Room')} lamp${n('Room')===1?'':'s'}`,suns&&'1 sun',suns>1&&`${suns-1} fill${suns===2?'':'s'}`,n('Film rig')&&`${n('Film rig')} rig`,n('Added')&&`${n('Added')} added`].filter(Boolean);
     return parts.join(', ')+(edited?` · ${edited} edited`:'');
   }
-  return {panel,action,input,changed,select,lanes,summary,mixerChange,editedCount,selected:()=>selected,
+  return {panel,action,input,changed,select,lanes,summary,mixerChange,editedCount,selected:()=>selected,object:()=>entry()?.light||null,
     deselect(){if(selected===null)return;selected=null;rerender();},
     toggleShow:async()=>{show=!show;if(show)await ensure();rerender();return show;},setMode:m=>{mode=m;rerender();},showing:()=>show,
     // Called after film-fx (re)installs: the light objects are new, the list and markers follow.

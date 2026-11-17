@@ -1,0 +1,368 @@
+{
+ "note": "The shortcut sheet as it was at 14397a53 / 43d6b528 (experience/shortcuts.mjs, retired 17 Nov 2026 for experience/director-actions.mjs). director-actions-test checks every key here is kept or listed as changed.",
+ "sections": [
+  [
+   "director",
+   [
+    [
+     "?",
+     "This sheet (Esc closes it)"
+    ],
+    [
+     "Space",
+     "Play / pause the chapter"
+    ],
+    [
+     "← →",
+     "Step one frame (Shift: one second)"
+    ],
+    [
+     "Home End",
+     "Chapter start / end"
+    ],
+    [
+     "↑ ↓",
+     "Previous / next camera view (edit point)"
+    ],
+    [
+     "PgUp PgDn",
+     "Previous / next chapter"
+    ],
+    [
+     "+ −",
+     "Timeline zoom in / out"
+    ],
+    [
+     "C",
+     "Add a camera view at the playhead"
+    ],
+    [
+     "Ctrl/Cmd+Z",
+     "Undo"
+    ],
+    [
+     "Ctrl/Cmd+Y  Ctrl/Cmd+Shift+Z",
+     "Redo"
+    ],
+    [
+     "Ctrl/Cmd+D",
+     "Duplicate the selected camera view, movement, title or person"
+    ],
+    [
+     "Ctrl/Cmd+A",
+     "Select every key and clip in the chapter"
+    ],
+    [
+     "Ctrl/Cmd+Shift+A",
+     "Select everything in the lane under the pointer"
+    ],
+    [
+     "Esc",
+     "Deselect (one level at a time); closes the sheet, a menu or the still view"
+    ]
+   ]
+  ],
+  [
+   "view",
+   [
+    [
+     "F",
+     "Live / Film look / Split"
+    ],
+    [
+     "G",
+     "Thirds and title-safe guides"
+    ],
+    [
+     "S",
+     "Magnet: snap drags to edges, keys and the playhead"
+    ],
+    [
+     "R",
+     "Render a still of this frame"
+    ],
+    [
+     "~\\ (hold)",
+     "Peek at the still view"
+    ],
+    [
+     "L",
+     "Show / hide the light markers"
+    ],
+    [
+     "Shift+L",
+     "Jump to the lighting lanes"
+    ],
+    [
+     "~Alt + drag",
+     "Bypass snapping while dragging"
+    ]
+   ]
+  ],
+  [
+   "camera",
+   [
+    [
+     "← →",
+     "Nudge 0.1 s (Shift: 1 s)"
+    ],
+    [
+     "Delete",
+     "Remove the view"
+    ],
+    [
+     "Ctrl/Cmd+D",
+     "Duplicate it at the playhead"
+    ]
+   ]
+  ],
+  [
+   "desk-clip",
+   [
+    [
+     "← →",
+     "Nudge 0.1 s (Shift: 1 s)"
+    ],
+    [
+     "Delete",
+     "Remove the movement"
+    ],
+    [
+     "Ctrl/Cmd+D",
+     "Duplicate it"
+    ],
+    [
+     "~Drag an edge",
+     "Resize"
+    ]
+   ]
+  ],
+  [
+   "title",
+   [
+    [
+     "Enter",
+     "Open its inspector"
+    ],
+    [
+     "← →",
+     "Nudge 0.1 s on the lane (Shift: 1 s); with the focus elsewhere, nudge the title or the picked line 1 px (Shift: 10 px)"
+    ],
+    [
+     "~Click a line, drag",
+     "Move that line alone; it snaps (Alt: no snapping); Esc drops the line first"
+    ],
+    [
+     "~Ctrl/Shift+click, marquee",
+     "Pick several titles; drag moves them all"
+    ],
+    [
+     "Ctrl/Cmd+K",
+     "Split at the playhead"
+    ],
+    [
+     "Ctrl/Cmd+C  Ctrl/Cmd+V",
+     "Copy / paste at the playhead (works across chapters)"
+    ],
+    [
+     "Delete",
+     "Remove the title (or all picked)"
+    ],
+    [
+     "Ctrl/Cmd+D",
+     "Duplicate it (or all picked)"
+    ]
+   ]
+  ],
+  [
+   "shape",
+   [
+    [
+     "← ↑ ↓ →",
+     "Nudge the point or shape 1 px (Shift: 10)"
+    ],
+    [
+     "Delete",
+     "Remove the point"
+    ],
+    [
+     "Ctrl/Cmd+A",
+     "Select every part"
+    ],
+    [
+     "Enter",
+     "Finish editing"
+    ],
+    [
+     "Esc",
+     "Deselect the point; again to finish"
+    ]
+   ]
+  ],
+  [
+   "graphic",
+   [
+    [
+     "Ctrl/Cmd+K",
+     "Split at the playhead"
+    ],
+    [
+     "Enter",
+     "Select / open its inspector"
+    ],
+    [
+     "~Drag an edge",
+     "Trim or extend"
+    ]
+   ]
+  ],
+  [
+   "light-clip",
+   [
+    [
+     "Delete",
+     "Remove it"
+    ],
+    [
+     "~Shift + “+ Light”",
+     "Add a colour key instead of a light state"
+    ]
+   ]
+  ],
+  [
+   "light",
+   [
+    [
+     "W",
+     "Move"
+    ],
+    [
+     "E",
+     "Aim"
+    ]
+   ]
+  ],
+  [
+   "prop",
+   [
+    [
+     "W E T",
+     "Move / rotate / scale"
+    ],
+    [
+     "~Shift (held)",
+     "Snap the gizmo"
+    ],
+    [
+     "End",
+     "Drop onto the surface below (Shift: flat, Alt: align)"
+    ],
+    [
+     "Delete",
+     "Hide it"
+    ],
+    [
+     "~Click",
+     "Select · Shift+click adds · Ctrl/Cmd+click toggles · Alt+click picks the part underneath"
+    ]
+   ]
+  ],
+  [
+   "person",
+   [
+    [
+     "W E T",
+     "Move / rotate / scale"
+    ],
+    [
+     "Ctrl/Cmd+D",
+     "Duplicate (60 cm to the side)"
+    ],
+    [
+     "Delete",
+     "Remove from the chapter"
+    ],
+    [
+     "Esc",
+     "Deselect"
+    ]
+   ]
+  ],
+  [
+   "person-keys",
+   [
+    [
+     "J K",
+     "Previous / next key"
+    ],
+    [
+     "Ctrl/Cmd+C  Ctrl/Cmd+V",
+     "Copy / paste the picked keys at the playhead"
+    ],
+    [
+     "Delete",
+     "Delete the picked keys"
+    ],
+    [
+     "~Right-click",
+     "Interpolation: linear, smooth, hold"
+    ],
+    [
+     "Esc",
+     "No key selected"
+    ]
+   ]
+  ],
+  [
+   "pose",
+   [
+    [
+     "I",
+     "Key every joint at the playhead"
+    ],
+    [
+     "Shift+I",
+     "Key just the selected limb"
+    ],
+    [
+     "Delete",
+     "Delete the selected key, or reset the joint"
+    ],
+    [
+     "W E",
+     "Move / rotate the selected joint"
+    ]
+   ]
+  ],
+  [
+   "group",
+   [
+    [
+     "← →",
+     "Nudge all of them (Shift: ×10)"
+    ],
+    [
+     "Delete",
+     "Delete all of them"
+    ],
+    [
+     "Esc",
+     "Clear the selection"
+    ]
+   ]
+  ],
+  [
+   "still",
+   [
+    [
+     "← →",
+     "Step through the stills (older / newer)"
+    ],
+    [
+     "Esc",
+     "Close the still view"
+    ]
+   ]
+  ]
+ ]
+}

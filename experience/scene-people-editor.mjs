@@ -148,7 +148,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const e=entry(key);if(!e){deselect();return;}
     if(pose.active()&&pose.active()!==key)pose.exit();
     sel=key;onSelect();ensure().catch(error=>status(error.message,true));loadCatalog();
-    if(announce)status(`${personName(e)} selected: ${free(e)?'W moves, E turns, T scales; Delete removes.':'they follow the desk. Choose “Free spot” in the People tab to move them by hand.'}`);
+    if(announce)status(`${personName(e)} selected: ${free(e)?'W moves, E turns, R scales; Delete removes.':'they follow the desk. Choose “Free spot” in the People tab to move them by hand.'}`);
     rerender();
   }
   function deselect(){pose.exit();if(!sel)return;sel=null;rerender();}
@@ -709,5 +709,5 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   const header=()=>{const e=sel&&entry(sel);return e?{name:personName(e),detail:pose.active()===sel?'Pose mode'+(pose.joint()?' · '+pose.jointLabel():''):doing(e)}:null;};
   // After the film setup is (re)applied or the cut changes: the selection may be gone.
   function applied(){if(sel&&!entry(sel)){pose.exit();sel=null;}ensure().catch(()=>null);}
-  return {panel,lane,laneHeight,action,changed,select,deselect,selected:()=>sel,header,pickObject,setMode,mode:()=>mode,count,remove:k=>{if(k===undefined&&pose.active()){if(pose.selectedKey()!==null){pose.deleteKey();return;}pose.resetJoint();return;}if(k===undefined&&paths.removeSelected())return;/* S31 M3 hook */remove(k);},posing:()=>pose.active(),trackRows,poseKeyLane:()=>pose.keyLane(),poseKeySelected:()=>pose.selectedKey()!==null,poseSync:()=>pose.sync(),keyNow:w=>pose.keyNow(w),applied,openLibrary,effective:()=>effectivePeople(film(),shot())};
+  return {panel,lane,laneHeight,action,changed,select,deselect,selected:()=>sel,object:()=>sel?objectOf(sel):null,header,pickObject,setMode,mode:()=>mode,count,remove:k=>{if(k===undefined&&pose.active()){if(pose.selectedKey()!==null){pose.deleteKey();return;}pose.resetJoint();return;}if(k===undefined&&paths.removeSelected())return;/* S31 M3 hook */remove(k);},posing:()=>pose.active(),trackRows,poseKeyLane:()=>pose.keyLane(),poseKeySelected:()=>pose.selectedKey()!==null,poseSync:()=>pose.sync(),keyNow:w=>pose.keyNow(w),applied,openLibrary,effective:()=>effectivePeople(film(),shot())};
 }

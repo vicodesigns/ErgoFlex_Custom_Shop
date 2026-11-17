@@ -5,7 +5,7 @@
 //   placement) and a + on each leg.
 //   Drag a handle: that point moves on the floor (Shift snaps to 5 cm); the person re-solves live and the change is one
 //   undo step when the button comes up. Drag the line or a + : a new point there. Ctrl+click the floor: a new last point.
-//   Select a handle and press Delete, Alt+click it or right-click it: that point goes (the start and the last two stay).
+//   Select a handle and press Delete, or Alt+click it: that point goes (the start and the last two stay).
 //   The person's own gizmo (W) still moves them: their placement and the path's start move together.
 import * as PE from './people-path-edit.mjs';
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -137,14 +137,14 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
       if(!active()||drag||tools().gizmo?.dragging)return;
       // (a handle or a + wins over the person's own gizmo, which walks with them over their path; the line and the floor do not)
       const x=hit(ev);if(!x||tools().gizmo?.axis&&ev.button===0&&x.kind!=='point'&&x.kind!=='plus')return;const e=entry(selected()),pts=PE.pathOf(e);
-      if(ev.button===2){if(x.kind==='point'){grab(ev);}return;}      // (right-click on a handle: contextmenu removes it; not a pan)
+      if(ev.button===2)return;      // right-drag orbits the view, even from a handle (17 Nov 2026)
       if(ev.button!==0)return;
       if(x.kind==='point'){grab(ev);pick(x.index);start(ev,pts,x.index,false);return;}
       if(x.kind==='plus'){grab(ev);const n=[...pts];n.splice(x.index+1,0,x.at);picked=x.index+1;start(ev,n,x.index+1,true);return;}
       if(x.kind==='segment'){grab(ev);const n=[...pts];n.splice(x.index+1,0,x.at);picked=x.index+1;start(ev,n,x.index+1,true);return;}
       if(x.kind==='floor'&&(ev.ctrlKey||ev.metaKey)){grab(ev);const n=[...pts,x.f.at.map(Math.round)];picked=n.length-1;start(ev,n,n.length-1,true);return;}
     },true);
-    dom.addEventListener('contextmenu',ev=>{if(!active())return;const x=hit(ev);if(x?.kind==='point'){ev.preventDefault();ev.stopImmediatePropagation();pick(x.index);removeAt(x.index);}},true);
+    // (17 Nov 2026: right-click no longer removes a point; right-drag orbits the view now. Select a point, then Delete.)
     dom.addEventListener('pointermove',ev=>{alt=ev.altKey;if(!drag||ev.pointerId!==drag.id)return;grab(ev);move(ev);},true);
     for(const d of [w.document,document])for(const type of ['keydown','keyup'])d.addEventListener(type,ev=>{if(ev.key==='Alt')alt=type==='keydown';},true);
     const up=ev=>{alt=ev.altKey;if(!drag||ev.pointerId!==drag.id)return;grab(ev);finish();};
@@ -246,7 +246,7 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
     const warn=late?`<p class="people-path-late" role="alert">Arrives ${r1(late.arrive)} s, but ${escape(until)} ${r1(late.deadline)} s: ${r1(late.late)} s late (cut mid-${kind==='walk'?'stride':'roll'}).</p>
       <div class="director-actions"><button type="button" data-action="pe-path-faster">${kind==='walk'?'Walk':'Roll'} faster to arrive on time</button><button type="button" data-action="pe-path-earlier" ${PE.fixEarlier(e,late,{seconds:late.seconds})?'':'disabled title="It already starts as its time in the room begins"'}>Start earlier</button></div>`:'';
     return `<h4>${kind==='walk'?'Walk':'Roll'} path</h4>${warn}
-      <p class="director-hint">${escape(facts)}. On the floor: drag a point (Shift snaps to 5 cm), drag the line or a + to add one, Ctrl+click the floor to add a last point; select a point and press Delete, or right-click it, to remove it. The start and the end take the placements that hand over there along (hold Alt: only this one).</p>
+      <p class="director-hint">${escape(facts)}. On the floor: drag a point (Shift snaps to 5 cm), drag the line or a + to add one, Ctrl+click the floor to add a last point; select a point and press Delete to remove it. The start and the end take the placements that hand over there along (hold Alt: only this one).</p>
       ${fields}
       <details class="people-path-points"${pts.length<=6?' open':''}><summary>Points (room mm)</summary>${rows}<div class="director-actions"><button type="button" data-action="pe-path-append">+ Point at the end</button></div></details>`;
   }

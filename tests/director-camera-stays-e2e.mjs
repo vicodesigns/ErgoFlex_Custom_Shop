@@ -78,7 +78,7 @@ async function dragHandle(axes,dir){
 async function setField(name,value){await page.evaluate((n,v)=>{const el=document.querySelector(`#director-panel [name="${n}"]`);el.value=String(v);el.dispatchEvent(new Event('change',{bubbles:true}));},name,value);await wait(900);}
 async function stillOf(file){
   const before=await page.$$eval('.still-strip img, .still-view img, [data-still] img',l=>l.length).catch(()=>0);
-  await page.keyboard.press('r');
+  await page.keyboard.down('Shift');await page.keyboard.press('KeyR');await page.keyboard.up('Shift'); /* Shift+R: still image (17 Nov 2026) */
   await until(async()=>/Still rendered/.test(await status()),'Render still',240000);
   const url=await page.evaluate(()=>document.querySelector('#film-still img.still-main')?.src||null);
   if(url&&file)fs.writeFileSync(file,Buffer.from(url.split(',')[1],'base64'));

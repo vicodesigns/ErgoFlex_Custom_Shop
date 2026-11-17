@@ -89,7 +89,7 @@ export function createPropLibrary({load,room,roomName=()=>room(),onPick,status=(
   // Clicks on the backdrop close it.
   dialog.addEventListener('pointerdown',event=>{if(event.target===dialog){const r=dialog.getBoundingClientRect();if(event.clientX<r.left||event.clientX>r.right||event.clientY<r.top||event.clientY>r.bottom)dialog.close();}});
   dialog.addEventListener('keydown',event=>{
-    event.stopPropagation();   // keys inside the browser never reach the Director (Delete, W/E/T, R…)
+    event.stopPropagation();   // keys inside the browser never reach the Director (Delete, W/E/R, Shift+R…)
     const input=dialog.querySelector('[name=pl-search]');
     if(['ArrowRight','ArrowLeft','ArrowDown','ArrowUp'].includes(event.key)||((event.key==='Home'||event.key==='End')&&event.target!==input)){
       if((event.key==='ArrowLeft'||event.key==='ArrowRight')&&event.target===input&&input.value&&!(event.key==='ArrowRight'&&input.selectionStart===input.value.length))return;   // caret moves in the text

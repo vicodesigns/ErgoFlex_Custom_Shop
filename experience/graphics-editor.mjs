@@ -41,5 +41,5 @@ export function createGraphicsEditor({panel,timeline,shot,filmShot,showInspector
       if(key==='start'||key==='end'){const [a,b]=graphicRange(sc);list=editGraphic(list,Number(el.dataset.screenIndex),key==='start'?value:a,key==='end'?value:b,shot().seconds,{trimStart:key==='start'});}else sc[key]=value;selectedGraphic=Number(el.dataset.screenIndex);commit(()=>{shot().screens=list;},{render:true});status('Monitor graphic updated.');
     }catch(error){renderPanel();status(error.message,true);}
   },true);
-  return {panel:screenLayers,lane:graphicsGroup,screens:graphicScreens};
+  return {panel:screenLayers,lane:graphicsGroup,screens:graphicScreens,selected:()=>selectedGraphic,range:i=>{const sc=graphicScreens()[i];return sc?graphicRange(sc):null;}};
 }

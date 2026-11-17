@@ -175,6 +175,9 @@ export function createDeskEditor({panel,timeline,bridge,shot,time,seek,commit,re
 
   function palette(){return [['lift','lift','Lift'],['tilt','tilt','Tilt'],['wheels','rotate','Turn'],['wheels','travel','Travel'],['wheels','hold','Hold']].filter(([lane])=>laneNames().includes(lane)).map(([lane,kind,label])=>`<button data-desk-action="add-${lane}" data-desk-add="${lane}" data-desk-kind="${kind}" draggable="false" title="Add ${label.toLowerCase()} movement">+ ${label}</button>`).join('');}
   return {
+    // the Director's keys (director-actions.mjs): Alt+←/→ nudges the selected move; Shift+Space plays just it.
+    nudge(delta){if(!clip())return false;guarded(()=>{const c=clip(),start=Math.round((c.start+delta)*1000)/1000;if(start<0||start+c.duration>shot().seconds+.00001)throw Error('Keep the whole movement inside the chapter.');update({start});});return true;},
+    preview(){if(!clip())return false;guarded(()=>action('preview'));return true;},
     flush, motion, featuredMotion:()=>motionOf(choreo?.real()||shot()), selectedId:()=>clip()?.id||null, select:id=>guarded(()=>select(id)), duplicate(){if(clip())guarded(()=>action('duplicate'));}, hasSelection:()=>!!clip(), tools:palette, count:()=>motion().clips.length, boundaries:(exclude)=>motion().clips.filter(c=>c.id!==exclude).flatMap(c=>[c.start,clipEnd(c)]), clearSelection(){selected=null;},
     ready(){if(!shot().motion)captureAutomatic();if(!motion().clips.some(c=>c.id===selected))selected=null;},stop:stopRecord,sync,
     panel(){const m=motion(),c=clip(),from=c?sampleClipMotion(m,c.start):m.initial,speed=c?clipDistance(m,c)/c.duration:0,direction=c&&(c.kind==='lift'||c.kind==='tilt')?(c.target>=from[c.kind==='lift'?'height':'tilt']?'up':'down'):c?.direction;

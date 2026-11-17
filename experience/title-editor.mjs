@@ -530,6 +530,10 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   addEventListener('resize',()=>{lastKey='';sync();});
   return {
     setSource(v){source=v;fromFilm.clear();lastKey='';},has,titles,ticks,lane,snapTargets,panel:panelHtml,chapterFields,header,
+    // the Director's keys: Alt+arrows nudge the selected title (or its picked line) in the frame, or one step in time.
+    nudgeFrame:d=>{if(!item())return false;nudge(d);return true;},
+    nudgeTime(delta){const t=item();if(!t)return false;const s=shot().seconds,dd=Math.max(-t.rel_in,Math.min(s-t.rel_out,delta));putTiming(t.id,Math.round((t.rel_in+dd)*1000)/1000,Math.round((t.rel_out+dd)*1000)/1000,`Title nudged to ${r2(t.rel_in+dd)}–${r2(t.rel_out+dd)} s.`);return true;},
+    range:()=>{const t=item();return t?[t.rel_in,t.rel_out]:null;},
     selectedId:()=>selected,select,clear,add:addTitle,duplicate:duplicateSelected,remove:deleteSelected,split:splitSelected,copy:copySelected,paste:pasteAtPlayhead,picked:()=>picked().map(t=>t.id),lineSelected:()=>lineSel,editing:()=>editing,editHint:()=>editing?SHAPE_HINT:null,sync,fontsLoaded,measure,
     toggleShown(){shown=!shown;lastKey='';sync();return shown;},shown:()=>shown,compositeStill,stillTitles:seconds=>stillTitles(seconds).length,
     fitted:t=>fittedPaths(t,measure),

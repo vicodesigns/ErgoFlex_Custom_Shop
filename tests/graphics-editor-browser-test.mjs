@@ -79,9 +79,9 @@ try{
     await ev(sel=>document.querySelector(sel).focus(),selector);
     check(await ev(text=>{const tip=document.querySelector('[role=tooltip]');return !tip.hidden&&tip.textContent.includes(text);},expected),'focused '+selector+' has the correct contextual hint');
   }
-  await ev(()=>document.querySelector('.timeline-shortcuts').open=true);await sleep(60);
-  check(await ev(()=>{const r=document.querySelector('.timeline-shortcuts-card').getBoundingClientRect();return r.top>=0&&r.left>=0&&r.right<=innerWidth&&r.bottom<=innerHeight;}),'shortcut guide fits inside the viewport');
+  await ev(()=>document.querySelector('.timeline-shortcuts').click());await sleep(60);
+  check(await ev(()=>{const p=document.getElementById('director-keys'),r=p.getBoundingClientRect();return !p.hidden&&r.top>=0&&r.left>=0&&r.right<=innerWidth&&r.bottom<=innerHeight;}),'shortcut panel fits inside the viewport');
   await page.keyboard.press('Escape');
-  check(await ev(()=>!document.querySelector('.timeline-shortcuts').open&&document.querySelector('[role=tooltip]').hidden),'Escape dismisses tooltip and shortcut guide');
+  check(await ev(()=>document.getElementById('director-keys').hidden&&document.querySelector('[role=tooltip]').hidden),'Escape dismisses tooltip and shortcut panel');
 } catch(error){console.error(error);failures++;} finally {await browser.close();server.kill();fs.rmSync(tmp,{recursive:true,force:true});}
 process.exitCode=failures?1:0;

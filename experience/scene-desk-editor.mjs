@@ -400,7 +400,7 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
         <p class="director-hint">${sizeLabel(v.size)} desk: ${L.heightMin}–${L.heightMax}″, ${L.tiltMin}° to ${L.tiltMax}°. Full ${L.tiltMax}° needs ${L.fullTiltHeight}″ or more.</p></fieldset>
       <div class="director-actions"><button data-action="dk-reset" ${e?'':'disabled'} title="This desk back to the film: its size, place and start">Reset desk</button><button data-action="dk-featured" title="Back to the featured desk (Esc)">Featured desk</button></div></div>`;
   }
-  return {panel,action,changed,select,deselect,selected,header,reset,resetAll,editedCount,edits,ensure,permanentPlan:plan,
+  return {panel,action,changed,select,deselect,selected,object:()=>{const id=selected();try{return id?rec(id)?.group||null:null;}catch{return null;}},header,reset,resetAll,editedCount,edits,ensure,permanentPlan:plan,
     applied:()=>{if(open()&&film()&&!tools)ensure().catch(e=>console.warn("[desk tools]",e));},
     ids:()=>records().map(r=>r.id),featuredId:featured};
 }

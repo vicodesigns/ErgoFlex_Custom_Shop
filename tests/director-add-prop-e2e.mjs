@@ -70,7 +70,7 @@ async function dragHandle(axes,dir){
   await page.mouse.move(x,y);await page.mouse.down();for(let i=1;i<=6;i++){await page.mouse.move(x+dx*i/6,y+dy*i/6);await wait(30);}await page.mouse.up();await wait(900);return best.axis;
 }
 async function stillAt(sec,file){
-  await seekTo(sec);await page.keyboard.press('r');
+  await seekTo(sec);await page.keyboard.down('Shift');await page.keyboard.press('KeyR');await page.keyboard.up('Shift'); /* Shift+R: still image (17 Nov 2026) */
   await until(async()=>/Still rendered/.test(await status()),'Render still',240000);
   const url=await page.evaluate(()=>document.querySelector('#film-still img.still-main')?.src||null);if(url&&file)fs.writeFileSync(file,Buffer.from(url.split(',')[1],'base64'));
   const out={still:await added(PHONE,'still'),live:null};await page.keyboard.press('Escape');await wait(500);out.live=await added(PHONE);return out;

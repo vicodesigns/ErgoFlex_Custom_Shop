@@ -82,7 +82,7 @@ async function dragHandle(axes,dir){
 async function setField(name,value){await page.evaluate((n,v)=>{const el=document.querySelector(`#director-panel [name="${n}"]`);el.value=String(v);el.dispatchEvent(new Event('change',{bubbles:true}));},name,value);await wait(900);}
 async function stillOf(file){
   const before=await page.$$eval('.still-strip img, .still-view img, [data-still] img',l=>l.length).catch(()=>0);
-  await page.keyboard.press('r');
+  await page.keyboard.down('Shift');await page.keyboard.press('KeyR');await page.keyboard.up('Shift'); /* Shift+R: still image (17 Nov 2026) */
   await until(async()=>/Still rendered/.test(await status()),'Render still',240000);
   const url=await page.evaluate(()=>document.querySelector('#film-still img.still-main')?.src||null);
   if(url&&file)fs.writeFileSync(file,Buffer.from(url.split(',')[1],'base64'));
@@ -114,7 +114,7 @@ try{
   await page.keyboard.press('e');await wait(200);check(await page.evaluate(()=>__gizmo()?.mode==='rotate'),'E: rotate gizmo');
   await dragHandle(['Y'],'tangent');check(/^Rotated /.test(await status()),'gizmo rotate drag');
   d=await until(async()=>{const x=await draft();return x?.[0]?.rotation&&x;},'draft rotation');check(Math.abs(d[0].rotation[1])>.5&&Math.abs(d[0].rotation[0])<1&&Math.abs(d[0].rotation[2])<1,'a turn about y is stored as a turn about y: '+d[0].rotation.join(', ')+'°');
-  await page.keyboard.press('t');await wait(200);check(await page.evaluate(()=>__gizmo()?.mode==='scale'),'T: scale gizmo (R stays Render still)');
+  await page.keyboard.press('r');await wait(200);check(await page.evaluate(()=>__gizmo()?.mode==='scale'),'R: scale gizmo (still image is Shift+R)');
   await dragHandle(['Y','X','Z'],'radial');check(/^Scaled /.test(await status()),'gizmo scale drag');
   d=await until(async()=>{const x=await draft();return x?.[0]?.scale&&x;},'draft scale');
   // ---- inspector numbers

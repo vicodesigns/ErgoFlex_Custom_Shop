@@ -8,7 +8,7 @@ export function createFilmLook({render,resting,status=()=>{},onStill=null}){
   const box=document.createElement('div');box.className='film-box film-look';box.setAttribute('aria-hidden','true');
   box.innerHTML='<img alt="" draggable="false"><div class="film-guides"></div><span class="film-look-badge"></span><span class="film-wipe" title="Drag to move the wipe"></span>';
   const tools=document.createElement('div');tools.className='film-box film-tools';
-  tools.innerHTML=`<div class="film-tools-row">${onStill?'<button data-action="render-still" class="render-still" title="Render the frame at the playhead with the film look: status lights, screens, quality (R)">Render still</button>':''}<button data-film-guides aria-pressed="false" title="Thirds and title-safe guides (G)">Guides</button><button data-film-mode title="Live / Film look / Split (F)">Live</button></div>`;
+  tools.innerHTML=`<div class="film-tools-row">${onStill?'<button data-action="render-still" class="render-still" title="Render the frame at the playhead with the film look: status lights, screens, quality (Shift+R)">Render still</button>':''}<button data-film-guides aria-pressed="false" title="Thirds and title-safe guides (G)">Guides</button><button data-film-mode title="Live / Film look / Split (V)">Live</button></div>`;
   document.body.append(box,tools);
   const img=box.querySelector('img'),badge=box.querySelector('.film-look-badge'),handle=box.querySelector('.film-wipe');
   function sync(){

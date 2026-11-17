@@ -103,7 +103,7 @@ try{
   check(/^This item can't be saved in the film yet: Studio's room editing moved it/.test(await status()),'a Studio-side move says it can\'t be saved in the film');
   // ---- Render still = live
   if(process.env.STILLS!=='0'){
-    await page.keyboard.press('Escape');await page.keyboard.press('r');await until(async()=>/Still rendered/.test(await status()),'Render still',240000);
+    await page.keyboard.press('Escape');await page.keyboard.down('Shift');await page.keyboard.press('KeyR');await page.keyboard.up('Shift'); /* Shift+R: still image (17 Nov 2026) */await until(async()=>/Still rendered/.test(await status()),'Render still',240000);
     const both=await page.evaluate((ck,lk,pk)=>{const still=[...document.querySelectorAll('iframe')].find(f=>f.title==='Film still renderer').contentWindow,s=(()=>{let x=still.ErgoFlex.loadedModel;while(x.parent)x=x.parent;return x;})();
       const P=o=>{o.updateWorldMatrix(true,false);const v=new still.ErgoFlex.loadedModel.position.constructor();let shown=true;for(let p=o;p;p=p.parent)if(!p.visible)shown=false;return {p:o.getWorldPosition(v).toArray(),r:o.rotation.toArray().slice(0,3),shown};};
       return {chair:P(__byKey(ck,s)),lamp:P(__byKey(lk,s)),plant:P(__byKey(pk,s))};},CHAIR,LAMP,PLANT);

@@ -1,4 +1,3 @@
-import {shortcutsCardHtml} from './shortcuts.mjs';
 const draggableSelector='[data-graphic-clip],[data-title-clip],[data-desk-clip],[data-key],[data-light-clip],[data-light-key],[data-tod-key],[data-sk]';
 const itemSelector='[data-graphic-clip],[data-title-clip],[data-desk-clip],[data-key],[data-light-clip],[data-light-key],[data-tod-key],[data-sk],[data-prop-key],[data-person-key],[data-choreo-clip]';
 const n=v=>Number(v.toFixed(2)),seconds=v=>`${n(v)} s`;
@@ -12,9 +11,9 @@ export function timelineHint(el,{seconds:duration,graphic}={},title=''){
     if(graphic){const rate=Number(graphic.rate??1),offset=Number(graphic.offset)||0;lines.push(`Source ${seconds(offset)} → ${seconds(offset+(b-a)*rate)} (before loop/hold) · ${rate}× · ${graphic.loop===false?'Hold at source end':'Loop'}`);}
   }
   if(el.matches('[data-graphic-clip]'))lines.push('Drag: move · Edges: trim / extend · Ctrl/Cmd+K: split at playhead');
-  else if(el.matches('[data-title-clip]'))lines.push('Drag: move · Edges: trim · ←/→: nudge 0.1 s · Shift: 1 s · Enter: inspector');
-  else if(el.matches('[data-desk-clip]'))lines.push('Drag: move · Edges: resize · ←/→: nudge 0.1 s · Shift: 1 s · Delete: remove');
-  else if(el.matches('[data-key]'))lines.push('Drag: retime · ←/→: nudge 0.1 s · Shift: 1 s · Delete: remove');
+  else if(el.matches('[data-title-clip]'))lines.push('Drag: move · Edges: trim · Alt+←/→: nudge one frame · Shift: ×10 · Enter: inspector');
+  else if(el.matches('[data-desk-clip]'))lines.push('Drag: move · Edges: resize · Alt+←/→: nudge one frame · Shift: ×10 · Delete: remove');
+  else if(el.matches('[data-key]'))lines.push('Drag: retime · Alt+←/→: nudge one frame · Shift: ×10 · Delete: remove');
   else if(el.matches('[data-light-clip]'))lines.push('Click: inspector · Drag: move · Edges: trim · Delete: remove');
   else if(el.matches('[data-light-key],[data-tod-key]'))lines.push('Click: inspector · Drag: retime · Delete: remove');
   else if(el.matches('[data-prop-key],[data-person-key]'))lines.push('Click: select and open inspector');
@@ -31,7 +30,8 @@ export function timelineHint(el,{seconds:duration,graphic}={},title=''){
   if(!lines.length)lines.push('Click to '+(el.textContent.trim()||'use this control').toLowerCase()+'.');
   return {heading:kind||el.getAttribute('aria-label')||el.textContent.trim()||'Timeline control',lines};
 }
-export const timelineShortcuts=()=>`<details class="timeline-shortcuts"><summary title="Keyboard shortcuts (press ?)">⌨ Shortcuts</summary><div class="timeline-shortcuts-card">${shortcutsCardHtml()}</div></details>`;
+// The timeline's ⌨ button opens the Director's shortcut panel (keys-panel.mjs; also ?, F1 or Ctrl+Alt+K).
+export const timelineShortcuts=()=>`<button type="button" class="timeline-shortcuts" data-action="keys-panel" title="Every key and mouse gesture (?)">⌨ Shortcuts</button>`;
 export function createTimelineHints({root,context=()=>({}),active=()=>new Set()}){
   const tip=document.createElement('div');tip.className='timeline-tooltip';tip.id='timeline-tooltip-'+Math.random().toString(36).slice(2);tip.setAttribute('role','tooltip');tip.hidden=true;document.body.append(tip);
   let current=null,drag=null,timer=null,point={x:0,y:0},restore=[],described=null,frame=0;
@@ -57,8 +57,7 @@ export function createTimelineHints({root,context=()=>({}),active=()=>new Set()}
   document.addEventListener('pointermove',event=>{point={x:event.clientX,y:event.clientY};if(drag&&Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>3){document.body.classList.add('timeline-rich-drag');cancelAnimationFrame(frame);frame=requestAnimationFrame(()=>drag&&show(drag.el,true));}else if(!tip.hidden&&!drag)position();},true);
   function finish(){cancelAnimationFrame(frame);drag=null;document.body.classList.remove('timeline-rich-drag');hide();}
   document.addEventListener('pointerup',finish,true);document.addEventListener('pointercancel',finish,true);addEventListener('blur',finish);
-  document.addEventListener('keydown',event=>{if(event.key==='Escape'){finish();for(const el of root.querySelectorAll('.timeline-shortcuts[open]'))el.open=false;}},true);
-  root.addEventListener('toggle',event=>{const guide=event.target;if(!guide.matches?.('.timeline-shortcuts')||!guide.open)return;hide();const card=guide.querySelector('.timeline-shortcuts-card');card.innerHTML=shortcutsCardHtml(active());card.scrollTop=0;card.style.maxHeight=Math.round(innerHeight*.8)+'px';const r=guide.querySelector('summary').getBoundingClientRect();card.style.position='fixed';card.style.bottom='auto';const b=card.getBoundingClientRect();card.style.left=Math.max(8,Math.min(innerWidth-b.width-8,r.right-b.width))+'px';card.style.top=Math.max(8,Math.min(innerHeight-b.height-8,r.top>=b.height+16?r.top-b.height-8:r.bottom+8))+'px';},true);
-  root.addEventListener('scroll',event=>{if(event.target.closest?.('.timeline-shortcuts-card'))return;if(!drag)hide();for(const el of root.querySelectorAll('.timeline-shortcuts[open]'))el.open=false;},true);
+  document.addEventListener('keydown',event=>{if(event.key==='Escape')finish();},true);
+  root.addEventListener('scroll',()=>{if(!drag)hide();},true);
   return {hide:finish};
 }
