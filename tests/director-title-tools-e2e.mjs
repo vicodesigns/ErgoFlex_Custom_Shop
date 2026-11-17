@@ -117,6 +117,17 @@ try{
   check(JSON.stringify(await textY())===JSON.stringify(y0),'Reset line positions puts every line back');
   await click('#director-panel [data-action=undo]');await sleep(400);
   check(JSON.stringify(await textY())===JSON.stringify(y2),'Undo brings the moved lines back');
+  // 9. A real reload of the film draft (film-fresh on): delete the chapter's titles, reload the page; the draft comes back
+  // at once, or film-fresh offers it (Keep my unexported changes); either way the chapter stays without titles.
+  for(let i=0;i<5&&(await blocks()).length;i++){const id=(await blocks())[0].id;await ev(id=>document.querySelector(`[data-title-clip="${id}"]`).focus(),id);await page.keyboard.press('Delete');await sleep(500);}
+  check((await blocks()).length===0,'before the reload: no titles');await sleep(1500);
+  await page.reload({timeout:180000});
+  await page.waitForFunction(()=>/Camera is live/.test(document.querySelector('#director-panel [data-status]')?.textContent||''),{timeout:240000});
+  await page.waitForFunction(()=>document.querySelector('[data-title-add]'),{timeout:20000});await sleep(1500);
+  const notice=await ev(()=>({fresh:!!document.querySelector('[data-film-fresh]'),text:document.querySelector('[data-film-fresh]')?.textContent||'',keep:!!document.querySelector('[data-action=film-keep-draft]'),pressed:document.querySelector('[data-action=film-keep-draft]')?.getAttribute('aria-pressed')}));
+  log('after reload',JSON.stringify({notice,blocks:await blocks()}));
+  if(notice.keep&&notice.pressed!=='true'){await click('[data-action=film-keep-draft]');await sleep(1200);}
+  check((await blocks()).length===0,`after a real reload the chapter is still without titles (${notice.keep?'film-fresh offered the draft: '+(notice.pressed==='true'?'already loaded':'Keep my unexported changes'):'draft loaded at once'})`);
   check(!consoleErrors.length,'no page or module errors in the console');
 }catch(error){log('ERROR',error.stack);failures++;}
 finally{await browser.close();server.kill();fs.rmSync(tmp,{recursive:true,force:true,maxRetries:5,retryDelay:300});log('done · failures',failures);process.exitCode=failures?1:0;}
