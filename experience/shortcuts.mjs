@@ -44,9 +44,13 @@ const ITEMS = [
   ]],
   ['title', 'Title', [
     ['Enter', 'Open its inspector'],
-    ['← →', 'Nudge 0.1 s (Shift: 1 s)'],
-    ['Delete', 'Remove the title'],
-    ['Ctrl/Cmd+D', 'Duplicate it']
+    ['← →', 'Nudge 0.1 s on the lane (Shift: 1 s); with the focus elsewhere, nudge the title or the picked line 1 px (Shift: 10 px)'],
+    ['~Click a line, drag', 'Move that line alone; it snaps (Alt: no snapping); Esc drops the line first'],
+    ['~Ctrl/Shift+click, marquee', 'Pick several titles; drag moves them all'],
+    ['Ctrl/Cmd+K', 'Split at the playhead'],
+    ['Ctrl/Cmd+C  Ctrl/Cmd+V', 'Copy / paste at the playhead (works across chapters)'],
+    ['Delete', 'Remove the title (or all picked)'],
+    ['Ctrl/Cmd+D', 'Duplicate it (or all picked)']
   ]],
   ['shape', 'Title shadow (while editing its shape)', [
     ['← ↑ ↓ →', 'Nudge the point or shape 1 px (Shift: 10)'],
