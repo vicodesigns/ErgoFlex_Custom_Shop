@@ -1,8 +1,10 @@
 // Absolute time keeps motion continuous when browser refresh rates vary.
 export class ShotClock {
-  constructor() { this.reset(0); }
+  constructor() { this.rate = 1; this.reset(0); }
   reset(now, running = false) { this.elapsed = 0; this.at = now; this.running = running; }
-  seconds(now) { return this.elapsed + (this.running ? Math.max(0, now - this.at) / 1000 : 0); }
+  seconds(now) { return this.elapsed + (this.running ? Math.max(0, now - this.at) / 1000 * this.rate : 0); }
+  // the Director's play speed (P6: ½×, ¼×): the clock runs slower from now on
+  setRate(rate, now) { this.elapsed = this.seconds(now); this.at = now; this.rate = rate > 0 ? rate : 1; }
   setRunning(running, now) {
     this.elapsed = this.seconds(now); this.at = now; this.running = running;
   }

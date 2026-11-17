@@ -389,7 +389,8 @@ async function openDirector(){
       if(fxError)throw Error('the film setup could not be applied: '+fxError);
       return true;
     },
-    playback:()=>({playing,busy,index,range:previewRange,loop:loopPreview}),toggleChapter,
+    playback:()=>({playing,busy,index,range:previewRange,loop:loopPreview,rate:clock.rate}),toggleChapter,
+    setRate(r){clock.setRate(r,performance.now());bakedVideo.defaultPlaybackRate=bakedVideo.playbackRate=clock.rate;director?.transportChanged();},
     setPreviewLoop(on){loopPreview=!!on;director?.transportChanged();},
     async previewRange(value,i,range){
       if(busy)throw Error('Wait for this chapter to finish loading.');

@@ -37,6 +37,8 @@ Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl als
 | Ctrl+Shift+A | Select everything in the lane under the pointer | Director |
 | Enter | Open the selection in the inspector | Director |
 | Shift+M | Sound on / off | Director |
+| < | Play slower: ½×, ¼× | Director |
+| > | Play faster again (up to normal speed) | Director |
 | Tab | Hide / show the side column | Unreal |
 | Shift+Tab | Hide / show the timeline | Director |
 | ` | Maximise the panel under the pointer (again: back) | Premiere |
@@ -53,6 +55,7 @@ Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl als
 | = / + | Timeline zoom in | Premiere |
 | - | Timeline zoom out | Premiere |
 | Shift+Z | Fit the chapter in the timeline | Director |
+| Shift+U | Lanes: all → only those with something → only the selection's (After Effects U / UU) | After Effects |
 | Z | Zoom to the selection | Premiere |
 | Ctrl + wheel | Zoom at the pointer · Shift+wheel: pan | Premiere |
 | M | Add a marker at the playhead (on a marker: remove it) | Premiere |
@@ -76,7 +79,7 @@ Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl als
 | Alt+← / Alt+Shift+← | Nudge the selection one frame earlier (Shift: 10 frames) | Premiere |
 | Alt+→ / Alt+Shift+→ | Nudge the selection one frame later (Shift: 10 frames) | Premiere |
 | Click or drag the ruler | Move the playhead |  |
-| Alt + drag | Bypass snapping while dragging (until the Gumball phase) |  |
+| Alt + drag | Bypass snapping while dragging a block or a key |  |
 | Drag an edge | Trim or resize a block |  |
 | Shift / Ctrl+click, or drag over empty lane | Pick several (group) |  |
 
@@ -89,6 +92,8 @@ Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl als
 | R | Scale (gizmo) | Rhino |
 | F | Frame the selection | Rhino |
 | Shift+F | Frame the whole room | Rhino |
+| / | Isolate: only the selection in the view (again, or Esc: everything back) | Blender |
+| Ctrl+P: lock, lock camera | Lock camera to view: moving the view updates the selected camera view | Blender |
 | Shift+G | Social crop guide over the frame: 9:16 → 1:1 → 4:5 → off | Premiere |
 | Shift+O | Overlays menu (guides, crop, film look, light markers, titles) | Director |
 | Ctrl+P: persp, perspective | Perspective view (from above, at an angle) | Rhino |
@@ -193,7 +198,8 @@ Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl als
 |---|---|---|
 | Alt+R | Reset to the film | Director |
 | End / Shift+End / Alt+End | Drop onto the surface below (Shift: flat, Alt: align) | Director |
-| Shift (held) | Snap the gizmo (until the Gumball phase) |  |
+| Alt + drag the gizmo | Copy a prop you added: the copy stays where it was, you move the original | Rhino |
+| Ctrl (held) | Snap the gizmo (5 cm, 15°); Shift holds the main axis |  |
 | Alt+click | Pick the part underneath |  |
 
 ## Person

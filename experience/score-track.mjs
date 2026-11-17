@@ -58,7 +58,7 @@ export function waveColumns(p, a, b, columns) {
 // ---- playback ------------------------------------------------------------------------------------------------
 // base: the cut's folder URL ('/exports/<cut>'); clipOf(id) -> 'score/preview/<id>.opus'. All times chapter seconds.
 export function createScorePlayer({ base, AudioContextClass = globalThis.AudioContext }) {
-  let ctx = null, gain = null, analyser = null, buffer = null, bufferFor = null, loading = null, source = null, startedAt = 0, offset = 0, t0 = 0, volume = .8;
+  let ctx = null, gain = null, analyser = null, buffer = null, bufferFor = null, loading = null, source = null, startedAt = 0, offset = 0, t0 = 0, volume = .8, rate = 1;
   function context() {
     if (!ctx) { ctx = new AudioContextClass(); gain = ctx.createGain(); gain.gain.value = volume; gain.connect(ctx.destination); }
     return ctx;
@@ -74,17 +74,18 @@ export function createScorePlayer({ base, AudioContextClass = globalThis.AudioCo
   function play(t, dur = null) {
     if (!buffer) return; const c = context(); c.resume?.(); stop();
     const at = Math.max(0, t - t0); if (at >= buffer.duration) return;
-    source = c.createBufferSource(); source.buffer = buffer; source.connect(gain);
+    source = c.createBufferSource(); source.buffer = buffer; source.playbackRate.value = rate; source.connect(gain);
     if (dur) { const g = c.createGain(); source.disconnect(); source.connect(g); g.connect(gain); g.gain.setValueAtTime(1, c.currentTime); g.gain.linearRampToValueAtTime(0, c.currentTime + dur); }
     source.start(0, at, dur || undefined); startedAt = c.currentTime; offset = t;
   }
   // where the score is now (chapter seconds), or null when it is not playing
-  const position = () => source && ctx ? offset + (ctx.currentTime - startedAt) : null;
+  const position = () => source && ctx ? offset + (ctx.currentTime - startedAt) * rate : null;
   return {
     load, stop, play, position, playing: () => !!source,
     grain: t => play(t, GRAIN),
     // keep in step with the playhead: restart when off by more than DRIFT
     follow(t) { const p = position(); if (p === null || Math.abs(p - t) > DRIFT) play(t); },
+    setRate(r) { const p = position(); rate = r > 0 ? r : 1; if (p !== null) play(p); },
     setVolume(v) { volume = Math.max(0, Math.min(1, v)); if (gain) gain.gain.value = volume; },
     volume: () => volume,
     meter() {   // the level now, 0..1 (peak of the last few ms), for the lane header's meter

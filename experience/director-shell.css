@@ -228,3 +228,21 @@ body.df-shell [data-inspector-page="render"]:not([hidden])::before{content:"Whol
 .crop-guide[hidden]{display:none}
 .crop-guide::after{content:attr(data-label);position:absolute;left:6px;top:6px;padding:1px 6px;border-radius:6px;background:#000a;color:#fff;font:600 11px var(--df-font,system-ui)}
 .lens-mm{color:var(--df-text-3,#8a97a6);font-weight:500}
+.tl-bake{position:absolute;left:0;right:0;bottom:0;height:3px;pointer-events:none}
+.tl-bake.ok{background:#7ee08a}.tl-bake.stale{background:#ffb547}.tl-bake.none{background:transparent}
+.df-ctx{position:fixed;z-index:90;min-width:220px}
+.df-ctx hr{border:0;border-top:1px solid var(--df-border-1,#ffffff10);margin:4px 2px}
+.df-ctx-title{margin:4px 10px 6px;color:var(--df-text-3,#8a97a6);font:600 11px var(--df-font,system-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+body.df-filter-busy #director-timeline .desk-lane-row.empty{display:none}
+body.df-filter-sel #director-timeline :is(.desk-lane-row,.camera-lane-row):not(.lane-has-sel){display:none}
+.lane-lock{margin-left:auto;padding:0 3px;border:0;background:transparent;font-size:10px;opacity:.25;cursor:pointer}
+.desk-lane-label:hover .lane-lock,.track-heading:hover .lane-lock,.lane-locked .lane-lock{opacity:.9}
+.lane-locked>:not(.desk-lane-label):not(.track-heading){background-image:repeating-linear-gradient(135deg,#ffffff0d 0 6px,transparent 6px 12px);opacity:.6}
+/* P5 Scene list */
+.scene-list{margin:0 0 8px;padding:4px 6px;border-radius:8px;background:var(--df-surface-2,#151d26)}
+.scene-list summary{cursor:pointer;font:600 12px var(--df-font,system-ui);padding:3px 2px}.scene-list summary small{color:var(--df-text-3,#8a97a6);font-weight:500;margin-left:4px}
+.scene-list-rows{display:flex;flex-direction:column;gap:1px;max-height:180px;overflow:auto;padding:2px 0}
+.scene-list-rows button{display:flex;gap:6px;align-items:center;padding:3px 6px;border:0;border-radius:5px;background:transparent;color:inherit;font:inherit;font-size:12px;text-align:left;cursor:pointer}
+.scene-list-rows button:hover{background:var(--df-surface-3,#1c2631)}.scene-list-rows button.b2-selected{background:color-mix(in srgb,var(--df-select,#ffc85c) 18%,transparent)}
+.scene-list-rows i{width:8px;height:8px;border-radius:50%;flex:none}.scene-list-rows .desk-dot{background:#9aa7b3;border-radius:2px}
+.scene-list-rows small{color:var(--df-text-3,#8a97a6)}.scene-list-more{color:var(--df-accent-text,#9be6fb)!important}

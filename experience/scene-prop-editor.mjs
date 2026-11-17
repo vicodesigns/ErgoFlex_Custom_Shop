@@ -1,4 +1,5 @@
 import {enhanceGizmo,mmPerUnitOf} from './gumball.mjs';
+let altHeld=false;   // Alt held as a prop drag starts: Alt+drag copies (P3)
 import {noteStudioValue} from './studio-sync.mjs';
 import {layersOn,splitPermanent,writePermanentLayers,permanentCells,foldDeskHides,LAYERS_KEY} from './layers-exchange.mjs';
 import {cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,propTarget,DESK_SURFACES,onDesk,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets,keyedFadeWindow,filmFadeKeys,combineFilmFade,showOverFilm} from './prop-edits.mjs';
@@ -299,7 +300,8 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       if(!o){if(sel&&how==='replace'){deselect();status('Nothing to edit there: click a prop (furniture, lamps, desk items). Esc deselects.');}return;}
       pick(o,{how});
     },true);
-    // (snapping: hold Ctrl, gumball.mjs; Shift constrains since 17 Nov 2026, it used to snap)
+    // (snapping: hold Ctrl, gumball.mjs; Shift constrains since 17 Nov 2026, it used to snap; Alt+drag copies)
+    const altKey=e=>{if(e.key==='Alt')altHeld=e.type==='keydown';};for(const d of [w,w.parent].filter(Boolean)){d.addEventListener('keydown',altKey,true);d.addEventListener('keyup',altKey,true);d.addEventListener('blur',()=>{altHeld=false;});}
     // End: drop the selected prop onto the surface below it (Shift+End: drop flat, Alt+End: align to the surface).
     const endKey=e=>{if(e.key!=='End'||e.ctrlKey||e.metaKey||!sel||!editing()||lightsShowing()||e.target?.closest?.('input,select,textarea,[contenteditable],#director-timeline')||document.querySelector('dialog[open]'))return;
       e.preventDefault();e.stopPropagation();dropSelected(e.altKey?'align':e.shiftKey?'flat':'drop').catch(error=>status(error.message,true));};
@@ -373,10 +375,13 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     else return;
     const g=beginGroup();applyDelta(g,D);endGroup(g,text);
   }
-    function startDrag(){const o=drag?.obj;if(!o)return;if(o===tools.pivot){drag.grp=beginGroup();return;}if(!snaps.has(o))snaps.set(o,{position:o.position.clone(),quaternion:o.quaternion.clone(),scale:o.scale.clone()});drag.base=base(o);}
+    function startDrag(){const o=drag?.obj;if(!o)return;drag.copy=altHeld&&!group()?structuredClone(editOfKey(sel?.key)):null;if(o===tools.pivot){drag.grp=beginGroup();return;}if(!snaps.has(o))snaps.set(o,{position:o.position.clone(),quaternion:o.quaternion.clone(),scale:o.scale.clone()});drag.base=base(o);}
   function endDrag(){
     if(drag?.grp){const g=drag.grp;drag=null;pivotDirty=true;endGroup(g,mode==='translate'?'Moved':'Turned');return;}
-    const o=drag?.obj,b=drag?.base;drag=null;if(!o||!b||!sel)return;
+    const o=drag?.obj,b=drag?.base,was=drag?.copy;drag=null;if(!o||!b||!sel)return;
+    // P3 Alt+drag (Rhino / Blender): a prop you added leaves a copy where it was; you moved the original
+    if(was&&isAddEdit(was)){try{const e=editOfKey(sel.key)||was;write(sel.key,addFrom(o,e),`${VERB[mode]} ${label(o)}.`);const copy=cleanAddEdit({...was,id:newAddId()});if(copy)write(propKey(copy),copy,`Copied ${label(o)}: the copy stays where it was. Undo takes the copy away.`);}catch(error){status(error.message,true);}return;}
+    if(was&&!isAddEdit(was))status('Alt+drag copies the props you added; a room prop moves as usual (+ Prop adds another).');
     if(sel.blocked){const s=snaps.get(o);if(s){o.position.copy(s.position);o.quaternion.copy(s.quaternion);o.scale.copy(s.scale);o.updateMatrixWorld(true);bridge.stage()?.wake?.(300);}status(`${CANT_SAVE}: ${sel.blocked} It is back where the film puts it.`,true);return;}
     try{const e=editOfKey(sel.key)||sel.target;
       if(isAddEdit(e)){write(sel.key,addFrom(o,e),`${VERB[mode]} ${label(o)}.`);return;}

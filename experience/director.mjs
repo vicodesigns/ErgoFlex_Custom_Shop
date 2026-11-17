@@ -4,6 +4,7 @@ import {createPalette} from './command-palette.mjs';
 import {appBarHtml,statusBarHtml,wireMenus} from './director-appbar.mjs';
 import {setSpaceAll,spaceNow} from './gumball.mjs';
 import {enhanceNumberFields} from './number-fields.mjs';
+import {createContextMenu} from './context-menu.mjs';
 import {chapterScore,staleness,snapTimes,snapTo,waveColumns,createScorePlayer} from './score-track.mjs';
 import {createActionLog,captureErrors,reportBody,createReportDialog,sendReport} from './director-report.mjs';
 import {createKeysPanel,loadUi,saveUi} from './keys-panel.mjs';
@@ -104,7 +105,7 @@ export function mountDirector(bridge,catalog,initial){
     const sel=b2sel.get();
     // the selection's lane group opens when it is folded (Vico: "the right layer pops up")
     if(changed&&sel){const g=GROUP_OF[sel.kind];if(g&&groupClosed(g)&&timeline.querySelector(`[data-lane-group="${g}"]`)){laneGroups[g]=false;saveGroups();renderTimeline();return;}}
-    markSelection([panel,timeline],sel);
+    const hits=markSelection([panel,timeline],sel);for(const r of timeline.querySelectorAll('.lane-has-sel'))r.classList.remove('lane-has-sel');for(const el of hits)el.closest?.('.desk-lane-row,.camera-lane-row')?.classList.add('lane-has-sel');
     if(changed&&sel)requestAnimationFrame(()=>requestAnimationFrame(()=>centreSelection(timeline)));
   }
   // Centre the selection's first visible mark under root (the timeline, or a tab page in the inspector).
@@ -113,6 +114,17 @@ export function mountDirector(bridge,catalog,initial){
     if(el)centreIn(el,root===timeline?timeline:panel);
   }
   // P5: the tabs' names in the calm shell (the ids stay: tests and links use them); Classic keeps the old ones
+  // P5 Scene list: what has no lane of its own (scene lights, the room's desks), at the top of the side column; props
+  // are in the Layers tab's outliner. Folded or not is kept in this browser.
+  function sceneListHtml(){
+    let lights=[],desks=[];try{lights=sceneLights.lanes();}catch{}try{desks=deskSel.ids().filter(id=>id!==deskSel.featuredId?.());}catch{}
+    const selDesk=(()=>{try{return deskSel.selected();}catch{return null;}})();
+    return `<details class="scene-list" data-scene-list ${loadUi().sceneList===false?'':'open'}><summary>Scene <small>${lights.length} light${lights.length===1?'':'s'} · ${desks.length} room desk${desks.length===1?'':'s'}</small></summary>
+      <div class="scene-list-rows">${lights.map(l=>`<button type="button" data-action="lamp-pick" data-section="${escape(l.path)}" class="${l.selected?'b2-selected':''}" title="${escape(l.label)}${l.edited?' · edited':''}"><i style="background:${escape(l.color)}"></i>${escape(l.label)}${l.edited?' <small>edited</small>':''}</button>`).join('')}
+      ${desks.map(id=>`<button type="button" data-action="scene-desk-pick" data-section="${escape(id)}" class="desk-row ${selDesk===id?'b2-selected':''}" title="Room desk ${escape(id)}"><i class="desk-dot"></i>${escape(id)}</button>`).join('')}
+      <button type="button" data-inspector-tab="layers" class="scene-list-more">Props and layers →</button></div></details>`;
+  }
+  panel.addEventListener('toggle',event=>{if(event.target.matches?.('[data-scene-list]'))saveUi({sceneList:event.target.open});},true);
   function tabLabel(tab){if(!shellOn())return tab==='version'?'Desk version':tab[0].toUpperCase()+tab.slice(1);return {project:'Cut',groove:'Desk moves',version:'Desk swaps',render:'Final render',desks:'Room desks'}[tab]||tab[0].toUpperCase()+tab.slice(1);}
   function showInspector(tab,selection=false,unhide=true){
     const newTab=inspector!==tab;inspector=tab;if(unhide)document.body.classList.remove('inspector-hidden');if(tab==='lighting')queueMicrotask(()=>syncNow());if(tab==='render')queueMicrotask(()=>renderRequest?.refresh());if(tab==='layers')queueMicrotask(()=>renderLayers());
@@ -200,6 +212,7 @@ export function mountDirector(bridge,catalog,initial){
     }
     if(bake.baking)for(const root of [appbar,panel,timeline])for(const el of root.querySelectorAll('button,input,select,textarea'))if(!['bake','bake-all'].includes(el.dataset.action))el.disabled=true;
     if(composing)for(const root of [appbar,panel,timeline])for(const el of root.querySelectorAll('button,input,select,textarea'))el.disabled=true;
+    {const b=timeline.querySelector('[data-tl-bake]');if(b){const st=bake.available?(bake.state==='stale'?'stale':'ok'):bake.state==='stale'?'stale':'none';b.className='tl-bake '+st;b.title=st==='ok'?'Preview video is current: playback uses it':st==='stale'?'Preview video is out of date: bake again (Render ▾)':'No preview video for this chapter';}}
     deskEditor.sync();
     const cameraPreview=panel.querySelector('[data-action=key-preview]');if(cameraPreview)cameraPreview.textContent=state.playing&&state.range?.id==='camera-'+keyId?'❚❚ Pause camera move':'▶ Preview camera move';
   }
@@ -896,7 +909,31 @@ export function mountDirector(bridge,catalog,initial){
     const set=(vt,on,pressed)=>{const b=lightTools.querySelector(`[data-vt=${vt}]`);b.disabled=!on;b.setAttribute('aria-pressed',String(!!(on&&pressed)));};
     set('w',light||prop,prop&&m==='translate');set('e',light,false);set('pe',prop,m==='rotate');set('t',prop,m==='scale');};
   let orbitHooked=false,pokedAt=-1,pokedPlaying=false;
-  function hookOrbit(){if(orbitHooked||!filmLook)return;const dom=bridge.stage()?.three?.()?.renderer?.domElement;if(!dom)return;const poke=()=>filmLook.poke(),start=()=>{if(!orbitBase&&!bridge.playback().playing)orbitBase=bridge.stage()?.captureCamera()||null;poke();};dom.addEventListener('pointerdown',start,true);dom.addEventListener('pointermove',e=>{if(e.buttons)poke();},true);dom.addEventListener('wheel',start,{capture:true,passive:true});orbitHooked=true;}
+  function hookOrbit(){if(orbitHooked||!filmLook)return;const dom=bridge.stage()?.three?.()?.renderer?.domElement;if(!dom)return;const poke=()=>filmLook.poke(),start=()=>{if(!orbitBase&&!bridge.playback().playing)orbitBase=bridge.stage()?.captureCamera()||null;poke();};dom.addEventListener('pointerdown',start,true);dom.addEventListener('pointermove',e=>{if(e.buttons)poke();},true);dom.addEventListener('wheel',start,{capture:true,passive:true});
+    // P6 Lock camera to view (Blender): orbiting, panning or zooming updates the selected camera view on release
+    let lockMoved=false,lockTimer=0;const lockDone=()=>{if(!lockCamera||!keyId||!lockMoved)return;lockMoved=false;try{action('key-update');}catch(error){status(error.message,true);}};
+    dom.addEventListener('pointermove',e=>{if(e.buttons&&lockCamera)lockMoved=true;},true);dom.addEventListener('pointerup',()=>setTimeout(lockDone,0),true);
+    dom.addEventListener('wheel',()=>{if(!lockCamera)return;lockMoved=true;clearTimeout(lockTimer);lockTimer=setTimeout(lockDone,350);},{capture:true,passive:true});
+    orbitHooked=true;}
+  var lockCamera=false;
+  // P4 lane locks: a 🔒 in each lane's label; a locked lane takes no clicks or drags (its items stay selectable from the
+  // inspector), kept in this browser.
+  function laneId(row){return row.classList.contains('camera-lane-row')?'camera':row.dataset.laneColor||row.querySelector('[data-desk-lane]')?.dataset.deskLane||null;}
+  function lockedLanes(){return new Set(loadUi().laneLocks||[]);}
+  function decorateLocks(){
+    const locked=lockedLanes();
+    for(const row of timeline.querySelectorAll('.desk-lane-row,.camera-lane-row')){
+      const id=laneId(row),label=row.querySelector('.desk-lane-label,.track-heading');if(!id||!label)continue;
+      row.classList.toggle('lane-locked',locked.has(id));
+      if(!label.querySelector('.lane-lock'))label.insertAdjacentHTML('beforeend',`<button type="button" class="lane-lock" data-lane-lock="${escape(id)}" aria-pressed="${locked.has(id)}" title="${locked.has(id)?'Unlock this lane':'Lock this lane: no clicks or drags in it'}">${locked.has(id)?'🔒':'🔓'}</button>`);
+    }
+  }
+  timeline.addEventListener('click',event=>{const b=event.target.closest('[data-lane-lock]');if(!b)return;event.preventDefault();event.stopImmediatePropagation();const set=lockedLanes(),id=b.dataset.laneLock;if(set.has(id))set.delete(id);else set.add(id);saveUi({laneLocks:[...set]});renderTimeline();status(set.has(id)?`Lane locked: ${id}.`:`Lane unlocked: ${id}.`);},true);
+  timeline.addEventListener('pointerdown',event=>{const row=event.target.closest('.lane-locked');if(!row||event.target.closest('.desk-lane-label,.track-heading'))return;event.preventDefault();event.stopImmediatePropagation();status('This lane is locked: 🔒 in its label unlocks it.');},true);
+  // P4 lane filter (After Effects' U / UU, here Shift+U): every lane → only lanes with something → only the selection's lanes
+  var laneFilter='';
+  function setLaneFilter(f){laneFilter=f;document.body.classList.toggle('df-filter-busy',f==='busy');document.body.classList.toggle('df-filter-sel',f==='sel');renderPills();
+    status(f==='busy'?'Lanes: only those with something in them (Shift+U again: only the selection\'s).':f==='sel'?(b2sel.get()?'Lanes: only the selection\'s (Shift+U again: every lane).':'Lanes: only the selection\'s, and nothing is selected (Shift+U: every lane).'):'Every lane shown.');}
   // The still stage is created on demand to avoid loading a second full scene while editing.
   function commit(fn,{render=false,key=null}={}){
     if(!key||group!==key){const before=copy(project);undo.push(before);undo=undo.slice(-40);undoLabels.push({before,after:null,text:null});undoLabels=undoLabels.slice(-40);redo=[];redoLabels=[];}
@@ -917,7 +954,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     panel.innerHTML=(shellOn()?'':`
       <div class="director-heading"><div><span class="director-kicker">DIRECTOR MODE</span><h2>Director studio.</h2></div><button data-action="ab-classic" class="calm-back" title="The new layout: one app bar, one timeline row (the classic one stays one click away)">New layout</button><button data-action="inspector" aria-label="Hide inspector" title="Hide inspector; keep the timeline open">‹</button></div>
       <div class="inspector-global"><button data-action="save-export" class="primary" title="Download this cut (the film picks it up from Downloads); also keeps a copy in this browser when there is room">Export cut</button><button data-action="undo" title="Undo (Ctrl/Cmd+Z)" ${undo.length?'':'disabled'}>Undo</button><button data-action="redo" title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)" ${redo.length?'':'disabled'}>Redo</button><span class="studio-sync" data-studio-sync>${studioSync.html()}</span><span class="saved-indicator" data-saved title="Draft kept in this browser"></span></div>${filmPicker()}`)+`
-      <nav class="inspector-tabs" aria-label="Inspector sections">${['project','chapter',...(titleEditor.has()?['title']:[]),'camera','groove',...(lighting()||timeOfDay()||filmShot()?['lighting']:[]),...(filmShot()?['graphics','props','people','layers','desks']:[]),...(filmShot()&&branding.available()?['branding']:[]),...(filmShot()&&deskBuild.shows()?['build']:[]),...(filmShot()&&deskVersions.has()?['version']:[]),...(film?['render']:[])].map(tab=>`<button data-inspector-tab="${tab}" aria-pressed="${inspector===tab}" ${shellOn()&&['graphics','branding'].includes(tab)?'class="tab-group-start"':''}>${tabLabel(tab)}</button>`).join('')}<button data-action="inspector" aria-label="Hide inspector" title="Hide inspector">×</button></nav><div class="selected-header" data-selected-header>${selectedHeader()}</div>
+      ${shellOn()&&filmShot()?sceneListHtml():''}<nav class="inspector-tabs" aria-label="Inspector sections">${['project','chapter',...(titleEditor.has()?['title']:[]),'camera','groove',...(lighting()||timeOfDay()||filmShot()?['lighting']:[]),...(filmShot()?['graphics','props','people','layers','desks']:[]),...(filmShot()&&branding.available()?['branding']:[]),...(filmShot()&&deskBuild.shows()?['build']:[]),...(filmShot()&&deskVersions.has()?['version']:[]),...(film?['render']:[])].map(tab=>`<button data-inspector-tab="${tab}" aria-pressed="${inspector===tab}" ${shellOn()&&['graphics','branding'].includes(tab)?'class="tab-group-start"':''}>${tabLabel(tab)}</button>`).join('')}<button data-action="inspector" aria-label="Hide inspector" title="Hide inspector">×</button></nav><div class="selected-header" data-selected-header>${selectedHeader()}</div>
       <p data-status role="status" class="director-status">${escape(titleEditor.editHint?.()||`${project.shots.length} chapters · ${Math.round(duration(project.shots))} seconds`)}</p>
       <div data-inspector-page="project">
       <div class="director-actions"><button data-action="new">New cut</button><button data-action="clone">Duplicate cut</button></div>
@@ -981,7 +1018,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       <label class="timeline-pan" ${zoom===1?'hidden':''}><span>Pan view</span><input name="timeline-pan" type="range" min="0" max="100" step=".1" value="0" aria-label="Timeline horizontal position"></label>
       <div class="timeline-footer"><span data-bake-summary class="timeline-bake-summary" role="status"></span><span data-timeline-status role="status">Click ruler to scrub · Drag empty lanes to select several · Shift/Ctrl-click adds · Ctrl+A all · Alt: bypass snap · Space: play</span><span class="sb-pills" data-sb-pills></span><output data-track-time>${(playhead*s.seconds).toFixed(2)}s / ${s.seconds}s</output></div>`;
     timeline.querySelector('.timeline-viewport').scrollLeft=scroll;
-    renderPills();drawScore();
+    renderPills();drawScore();decorateLocks();
     if(debugTimeline){const ms=performance.now()-t0,el=timeline.querySelector('[data-track-time]');if(el)el.title=`renderTimeline ${ms.toFixed(1)} ms · ${timeline.getElementsByTagName('*').length} elements`;const f=timeline.querySelector('.timeline-footer');if(f)f.dataset.debug=`${ms.toFixed(1)} ms · ${timeline.getElementsByTagName('*').length} el`;}
     syncTransport();syncPlayhead();syncPan();syncPicks();syncSelection();
   }
@@ -1036,6 +1073,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       if(name==='ab-classic'){const now=!classic();saveUi({shell:now?'classic':'calm'});document.body.classList.toggle('df-shell',open&&!now);render();status(now?'Classic layout. ⋯ → Calm layout brings the new one back.':'Calm layout.');return;}
       if(name==='cut-settings'){if(document.body.classList.contains('inspector-hidden'))document.body.classList.remove('inspector-hidden');showInspector('project');return;}
       if(name==='final-render'){if(document.body.classList.contains('inspector-hidden'))document.body.classList.remove('inspector-hidden');showInspector('render');return;}
+      if(name==='scene-desk-pick'){deskSel.select(index);return;}
       if(name==='lamp-pick'){await sceneLights.changed({name:'sl-select',value:index});renderTimeline();return;}
       if(name==='white-preset'){editLight({color:index});const k=lightItem();if(k)status(`${whiteName(index)} ${index} at ${r2(k[0])} s.`);return;}
       if(name==='now-go'){const id=index;const el=panel.querySelector(`[data-light-section="${id}"]`);if(el){el.open=true;delete lightSectionsShut[id];el.scrollIntoView({block:'start',behavior:'smooth'});}return;}
@@ -1387,7 +1425,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   function loopRange(){return loopRanges?.get(markKey())||null;}
   function rulerMarksHtml(){
     const s=shot().seconds,r=loopRange();
-    return (r?`<div class="tl-loop" style="left:${r.start/s*100}%;width:${(r.end-r.start)/s*100}%" title="Loop range ${r.start.toFixed(2)}–${r.end.toFixed(2)} s (B / N set it, Alt+X clears it; with Loop on, Space plays it)"></div>`:'')
+    return '<div class="tl-bake" data-tl-bake title="Preview video"></div>'+(r?`<div class="tl-loop" style="left:${r.start/s*100}%;width:${(r.end-r.start)/s*100}%" title="Loop range ${r.start.toFixed(2)}–${r.end.toFixed(2)} s (B / N set it, Alt+X clears it; with Loop on, Space plays it)"></div>`:'')
       +markers().map(t=>`<i class="tl-marker" style="left:${t/s*100}%" title="Marker at ${t.toFixed(2)} s (M on it removes it; Shift+↑/↓ jump)"></i>`).join('');
   }
   function playLoopRange(){const r=loopRange();if(!r||!bridge.playback().loop)return false;bridge.previewRange(project,selected,{start:r.start,end:r.end,id:'loop-range',label:'Loop range'}).catch(error=>status(error.message,true));return true;}
@@ -1403,6 +1441,49 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   var EASES=['smooth','linear','hold'];
   function setKeyEasing(next){const k=selectedKey();if(!k)throw Error('Select a camera view first.');const e=next||EASES[(EASES.indexOf(k.easing)+1)%EASES.length];commit(()=>{const x=ensureKeys().find(x=>x.id===keyId);if(x)x.easing=e;},{render:true});status(`Camera view: ${({smooth:'smooth move (Easy Ease)',linear:'linear move',hold:'hold, then cut'})[e]} to the next view.`);}
   var debugTimeline=new URLSearchParams(location.search).get('debug')==='timeline';
+  // ---- P6 Isolate (/): only the selection in the view (Rhino's Isolate). The other props of the room are hidden in
+  // this view only, kept hidden while it is on (the room may redraw them), and all come back on /, Esc or a chapter
+  // change. People stay (the film's cast moves on its own clock). The film and the cut are not affected.
+  var isolated=null,isolateTimer=0;
+  function isolate(on){
+    const w=bridge.stage()?.window?.()||document.getElementById('stage')?.contentWindow,room=w?.ErgoFlex?.workspaceRoom;
+    if(!on){clearInterval(isolateTimer);if(isolated)for(const [o,v] of isolated)o.visible=v;isolated=null;renderPills();bridge.stage()?.wake?.(300);status('Isolate off: everything is back.');return;}
+    const keep=nav&&(sceneProps.object?.()||scenePeople.object?.()||sceneLights.object?.()||deskSel.object?.());if(!keep||!room?.assets){status('Select a prop, a person, a light or a desk, then / shows it alone.');return;}
+    const inKeep=o=>{for(let p=o;p;p=p.parent)if(p===keep)return true;for(let p=keep;p;p=p.parent)if(p===o)return true;return false;};
+    isolated=new Map();const hide=()=>{for(const o of room.assets())if(!inKeep(o)){if(!isolated.has(o))isolated.set(o,o.visible);o.visible=false;}bridge.stage()?.wake?.(200);};
+    hide();isolateTimer=setInterval(hide,250);renderPills();status('Isolated: only the selection is shown (/ or Esc brings the rest back).');
+  }
+  addEventListener('keydown',e=>{if(e.key==='Escape'&&isolated&&!e.target?.closest?.('input,textarea,select'))isolate(false);});
+  // ---- right-click menus on the timeline (P4): camera views, desk moves, the ruler, lane groups
+  const ctx=createContextMenu();
+  const safe=fn=>()=>{try{const r=fn();if(r?.catch)r.catch(error=>status(error.message,true));}catch(error){status(error.message,true);}};
+  timeline.addEventListener('contextmenu',event=>{
+    if(event.target.closest('[data-sk],input,select,textarea'))return;
+    const k=event.target.closest('.camera-key[data-key]'),c=event.target.closest('[data-desk-clip]'),r=event.target.closest('.time-ruler'),g=event.target.closest('.lane-group-head');
+    if(!k&&!c&&!r&&!g)return;event.preventDefault();const x=event.clientX,y=event.clientY;
+    if(k){
+      if(keyId!==k.dataset.key)selectKey(k.dataset.key);const key=selectedKey();if(!key)return;
+      ctx.open(x,y,[{label:'Go to this view',run:safe(()=>action('key-go'))},{label:'Update from the 3D view',hint:'U',run:safe(()=>action('key-update'))},{label:'Preview the move to the next',run:safe(()=>action('key-preview'))},'-',
+        ...['smooth','linear','hold'].map(e=>({label:{smooth:'⧗ Smooth (Easy Ease)',linear:'◆ Linear',hold:'■ Hold, then cut'}[e],checked:key.easing===e,hint:e==='smooth'?'F9':'',run:safe(()=>setKeyEasing(e))})),'-',
+        {label:'Move to the playhead',hint:'[',run:safe(()=>toPlayhead('start'))},{label:'Duplicate',hint:'Ctrl+D',run:safe(()=>action('key-duplicate'))},{label:'Zoom to it',hint:'Z',run:safe(zoomToSelection)},'-',{label:'Delete',hint:'Delete',run:safe(()=>action('key-delete'))}],key.label);
+      return;
+    }
+    if(c){
+      if(deskEditor.selectedId()!==c.dataset.deskClip)deskEditor.select(c.dataset.deskClip);
+      ctx.open(x,y,[{label:'Play this move',hint:'Shift+Space',run:safe(()=>deskEditor.preview())},'-',{label:'Start at the playhead',hint:'[',run:safe(()=>toPlayhead('start'))},{label:'End at the playhead',hint:']',run:safe(()=>toPlayhead('end'))},
+        {label:'Nudge a frame earlier',hint:'Alt+←',run:safe(()=>nudgeSelection(-1,false))},{label:'Nudge a frame later',hint:'Alt+→',run:safe(()=>nudgeSelection(1,false))},'-',
+        {label:'Duplicate',hint:'Ctrl+D',run:safe(()=>deskEditor.duplicate())},{label:'Zoom to it',hint:'Z',run:safe(zoomToSelection)}],'Desk move');
+      return;
+    }
+    if(r){
+      const box=r.getBoundingClientRect(),t=Math.max(0,Math.min(shot().seconds,(x-box.left)/box.width*shot().seconds)),near=markers().find(m=>Math.abs(m-t)<shot().seconds*6/box.width);
+      ctx.open(x,y,[{label:'Move the playhead here',run:safe(()=>seekCamera(t/shot().seconds))},near!==undefined?{label:`Remove the marker at ${near.toFixed(2)} s`,run:safe(()=>setMarkers(markers().filter(m=>m!==near)))}:{label:'Add a marker here',hint:'M',run:safe(()=>setMarkers([...markers(),Math.round(t*1000)/1000].sort((a,b)=>a-b)))},'-',
+        {label:'Loop from here',hint:'B',run:safe(()=>{loopRanges.set(markKey(),setLoopEnd(loopRange(),'start',t,shot().seconds));renderTimeline();})},{label:'Loop to here',hint:'N',run:safe(()=>{loopRanges.set(markKey(),setLoopEnd(loopRange(),'end',t,shot().seconds));renderTimeline();})},
+        {label:'Clear the loop range',hint:'Alt+X',disabled:!loopRange(),run:safe(()=>runKey('loop-clear'))},'-',{label:'Fit the chapter',hint:'Shift+Z',run:safe(()=>action('zoom-fit'))}],`${t.toFixed(2)} s`);
+      return;
+    }
+    ctx.open(x,y,[{label:'Fold every group',hint:'{',run:safe(()=>setAllGroups(true))},{label:'Unfold every group',hint:'}',run:safe(()=>setAllGroups(false))}]);
+  });
   // ---- SOUND (P2, score-track.mjs): the film cut's score under the lanes; it plays with the playhead when Sound is on
   var score=null,scoreFor=null,scoreCache=null;
   var scorePlayer=cutDir?createScorePlayer({base:cutDir}):null;
@@ -1483,7 +1564,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     const st=bridge.playback(),body=document.body.classList;let free=false;try{free=freeView();}catch{}
     const posing=scenePeople.posing?.(),auto=posing&&(()=>{try{return localStorage.getItem('ergoflex.director.autoKey')==='1';}catch{return false;}})();
     const pills=[{id:'snap',label:magnet?`Snap ${typeof snapStep==='string'?snapStep:snapStep?snapStep+' s':'edges'}`:'Snap off',on:magnet,always:true,title:'Snapping (S): click to turn it '+(magnet?'off':'on')},
-      {id:'loop',label:'Loop',on:!!st.loop,title:'Loop is on (L)'},{id:'space',label:spaceNow()==='local'?'Gizmo: Object':'Gizmo: World',on:spaceNow()==='local',always:true,title:'The move gizmo\'s frame: click for '+(spaceNow()==='local'?'World':'Object')},{id:'free',label:'Free view',on:free,warn:true,title:'Not the film camera (0 goes back)'},
+      {id:'loop',label:'Loop',on:!!st.loop,title:'Loop is on (L)'},{id:'space',label:spaceNow()==='local'?'Gizmo: Object':'Gizmo: World',on:spaceNow()==='local',always:true,title:'The move gizmo\'s frame: click for '+(spaceNow()==='local'?'World':'Object')},{id:'free',label:'Free view',on:free,warn:true,title:'Not the film camera (0 goes back)'},{id:'filter',label:laneFilter==='busy'?'Lanes: with something':'Lanes: selection only',on:!!laneFilter,warn:true,title:'Shift+U: click to show every lane'},{id:'isolate',label:'Isolated',on:!!isolated,warn:true,title:'Only the selection is shown: click to bring the rest back'},{id:'lock',label:'🔒 Camera locked to view',on:!!lockCamera,warn:true,title:'Moving the view updates the selected camera view: click to unlock'},{id:'speed',label:(st.rate===.5?'½':st.rate===.25?'¼':'1')+'× speed',on:(st.rate||1)!==1,warn:true,title:'Play speed: click for normal'},
       {id:'auto',label:'● Auto-key',on:!!auto,warn:true,title:'Pose mode: every change keys the pose (Shift+K)'},
       {id:'lowres',label:'Low-res',on:pressed('preview-quality'),title:'The preview runs at a lower resolution'},{id:'muted',label:'Muted',on:!pressed('sound'),title:'Sound is off (Shift+M)'},
       {id:'inspector',label:'Side column hidden',on:body.contains('inspector-hidden'),title:'Tab brings it back'},{id:'timeline',label:'Timeline hidden',on:body.contains('timeline-hidden'),title:'Shift+Tab brings it back'}];
@@ -1492,7 +1573,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   }
   timeline.addEventListener('click',event=>{
     const p=event.target.closest('[data-sb-pill]');if(!p)return;event.stopPropagation();
-    const id=p.dataset.sbPill;try{({snap:()=>action('magnet'),loop:()=>action('preview-loop'),free:()=>runKey('film-camera'),space:()=>runKey('gizmo-space'),auto:()=>runKey('pose-auto-key'),lowres:()=>document.getElementById('preview-quality')?.click(),muted:()=>document.getElementById('sound')?.click(),inspector:()=>action('inspector'),timeline:()=>action('ab-timeline')})[id]?.();}catch(error){status(error.message,true);}
+    const id=p.dataset.sbPill;try{({snap:()=>action('magnet'),loop:()=>action('preview-loop'),free:()=>runKey('film-camera'),space:()=>runKey('gizmo-space'),speed:()=>{bridge.setRate?.(1);scorePlayer?.setRate(1);},isolate:()=>isolate(false),filter:()=>setLaneFilter(''),lock:()=>runKey('lock-camera'),auto:()=>runKey('pose-auto-key'),lowres:()=>document.getElementById('preview-quality')?.click(),muted:()=>document.getElementById('sound')?.click(),inspector:()=>action('inspector'),timeline:()=>action('ab-timeline')})[id]?.();}catch(error){status(error.message,true);}
     setTimeout(()=>{renderPills();renderAppBar();},0);
   },true);
   // Review mode (Ctrl+`): the film frame alone, the whole window, playing; Esc or Ctrl+` comes back.
@@ -1569,6 +1650,10 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       case 'keys-panel-close':keysPanel.close();return;
       case 'palette':palette.toggle();return;
       case 'crop-cycle':cycleCrop();return;
+      case 'lane-filter':{const F=['','busy','sel'],next=F[(F.indexOf(laneFilter)+1)%F.length];setLaneFilter(next);return;}
+      case 'lock-camera':lockCamera=!lockCamera;renderPills();status(lockCamera?(keyId?'Lock camera to view: orbit, pan or zoom and the selected camera view follows (one undo step each).':'Lock camera to view is on: select a camera view, then move the view.'):'Camera no longer locked to the view.');return;
+      case 'isolate':isolate(!isolated);return;
+      case 'speed-down':case 'speed-up':{const R=[.25,.5,1],now=bridge.playback().rate||1,i=Math.max(0,R.findIndex(r=>Math.abs(r-now)<1e-6)),next=R[Math.max(0,Math.min(R.length-1,i+(id==='speed-up'?1:-1)))];bridge.setRate?.(next);scorePlayer?.setRate(next);renderPills();status(next===1?'Normal speed.':`Playing at ${next===.5?'½':'¼'} speed (> back up).`);return;}
       case 'overlays':{const b=appbar.querySelector('[data-ab-open="overlays"]');need(b&&!appbar.hidden,'The Overlays menu is in the app bar (the calm layout).');b.click();return;}
       case 'gizmo-space':{const next=spaceNow()==='local'?'world':'local';setSpaceAll(next);renderPills();status(next==='local'?'Gizmo: Object frame (it turns with the item).':'Gizmo: World frame (the room\'s axes).');return;}
       case 'groups-collapse':case 'groups-expand':setAllGroups(id==='groups-collapse');return;
