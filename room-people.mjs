@@ -1344,6 +1344,8 @@ export class RoomPeople {
     // Pose keys (spec.poseKeys): the turns each keyed person has at this second of the chapter, for everything that
     // draws them this frame (poseNow). Someone nothing moves this frame (no life, not at a moving desk) is posed here.
     keyPoses(time) {
+        // (the Director's pose mode drags a bone: stand back from the skeleton while it does, or the drag snaps back)
+        const held = typeof window !== 'undefined' && !!window.__directorDragging;
         for (const object of this.people) {
             const spec = object.userData.person, owner = this.poseOwner(spec);
             const stored = owner?.postures;
@@ -1353,7 +1355,7 @@ export class RoomPeople {
                 // has no live solver to redraw their uncorrected skeleton.
                 if (object.userData.personPostureApplied) {
                     spec.poseNow = poseAt(spec,time);
-                    if(object.userData.personRig&&!object.userData.personDriven&&!object.userData.personLife?.live)this.pose(object,spec);
+                    if(!held&&object.userData.personRig&&!object.userData.personDriven&&!object.userData.personLife?.live)this.pose(object,spec);
                     delete object.userData.personPostureApplied;
                 }
                 if(spec && spec.poseNow !== undefined)delete spec.poseNow;
@@ -1365,7 +1367,7 @@ export class RoomPeople {
                 object.userData.personPoseLoading = true;
                 this.later(this.rig(object).finally(() => { object.userData.personPoseLoading = false; }));
             }
-            if (object.userData.personRig && !object.userData.personLife?.live && !object.userData.personDriven) this.pose(object, spec);
+            if (!held && object.userData.personRig && !object.userData.personLife?.live && !object.userData.personDriven) this.pose(object, spec);
         }
     }
     actorPose(actor, time) {

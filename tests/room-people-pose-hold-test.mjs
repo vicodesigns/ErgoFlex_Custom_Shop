@@ -21,5 +21,10 @@ src.forEach((line, i) => {
         assert.ok(NEVER_DRAGGED.some(re => re.test(line)), `room-people.mjs:${i + 1} draws a pose without hold: ${line.trim().slice(0, 140)}`);
     }
 });
+// The skeleton is also posed directly (RoomPeople.pose) from keyPoses for people no solver draws: it must stand back too.
+const kp = src.slice(src.findIndex(l => l.includes('keyPoses(time) {')), src.findIndex(l => l.includes('actorPose(actor, time) {')));
+const poseCalls = kp.filter(l => /this\.pose\(object, ?spec\)/.test(l));
+assert.ok(poseCalls.length >= 2, 'found the keyPoses pose calls');
+for (const l of poseCalls) assert.ok(/!held/.test(l), 'keyPoses pose call without the drag hold: ' + l.trim().slice(0, 120));
 assert.ok(seen >= 8, 'found the drawPose calls (' + seen + ')');
 console.log('PASS room people pose hold: every pose draw stands back while a bone is dragged (' + seen + ' draws)');
