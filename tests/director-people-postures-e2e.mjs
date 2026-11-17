@@ -31,8 +31,9 @@ try{
   await click('#director-appbar [data-action="undo"]');await wait(500);assert.match(await page.$eval('#director-panel',p=>p.textContent),/none yet/);
   await click('#director-appbar [data-action="redo"]');await wait(500);assert.match(await page.$eval('#director-panel',p=>p.textContent),/1 key/);
   await seek(page,8);assert.equal(await showing(),STAND);await seek(page,16.6);assert.equal(await showing(),SIT);
-  const text=await exported(),expected=stores(text);await page.reload();await until(()=>page.$eval('#director-panel',p=>/Camera is live/.test(p.textContent)).catch(()=>false),'reload');
-  assert.deepEqual(stores(await exported()).postures,expected.postures,'reload keeps both stores');
+  const text=await exported(),expected=stores(text);
+  // (Export cut forgets this tab's draft: the exported file is the film's once it is imported, so a reload now shows the film's own cut. The round trip that matters is the file: re-import below.)
+  await page.reload();await until(()=>page.$eval('#director-panel',p=>/Camera is live/.test(p.textContent)).catch(()=>false),'reload');
   const file=path.join(tmp,'posture-cut.json');fs.writeFileSync(file,text);await (await page.$('input[type="file"]')).uploadFile(file);await until(()=>page.$eval('#director-panel',p=>/Imported as a separate cut/.test(p.textContent)).catch(()=>false),'re-import');
   assert.deepEqual(stores(await exported()).postures,expected.postures,'re-import keeps both stores');assert.deepEqual(errors,[]);
   console.log('PASS Director Maya postures: seated dots/edit/keys, standing fix, undo/redo, scrub, export/reload/re-import');
