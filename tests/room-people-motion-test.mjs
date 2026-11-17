@@ -82,7 +82,8 @@ for (const who of characters) {
     const at = t => { nora.drive({ height: 28, time: t, track }); return nora.state.k; };
     assert.equal(at(2), 1); assert.equal(at(6), 1, 'a 10 degree drawing tilt in a film keeps the hands on'); assert.ok(at(11.5) < .05, 'a 30 degree tilt takes them off');
     const maya = new DeskActor(rigOf('maya')); maya.configure(crew('maya')); assert.equal(maya.draws, false);
-    maya.state = null; maya.drive({ height: 28, tilt: 8, time: null, dt: 0 }); assert.equal(maya.state.k, 0, 'an adult typist still takes the hands off a tilted top');
+    maya.state = null; maya.drive({ height: 28, tilt: 15, time: null, dt: 0 }); assert.equal(maya.state.k, 0, 'an adult typist still takes the hands off a tilted top');
+    maya.state = null; maya.drive({ height: 28, tilt: -5, time: null, dt: 0 }); assert.equal(maya.state.k, 1, 'a slight ergonomic tilt (5 degrees) keeps the typist on the keys');
     nora.configure([member('people-nora-kid-stand-wait', 'stand', 415)]); assert.equal(nora.draws, false, 'recomputed when the cast changes');
 }
 
