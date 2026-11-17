@@ -875,6 +875,31 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
             assert.equal(st.when[a.key][0][1], st.when[b.key][0][0], `${a.key} -> ${b.key}: the windows meet`);
         }
     }
+    // the robot postures as built, whoever is in them: the hands out at the robot (on the workbench mat, then lifting it),
+    // not at the chest, and no wrist turned past what a forearm turns from the arm hanging (stand-wait): the hand bone
+    // carries all of it (no twist bones), so more pinches the wrist (Nov 17: the left at 132 deg, both hands 1 cm in
+    // front of the shoulders; the lift's wrists 120-145 deg)
+    {
+        // (the hand's turn about the forearm's length: the hand bone's turn in the forearm's frame, about its y)
+        const twist = (rig, k, s) => { const [, , lower, hand] = rig.side[s].arm, q = k.wq[lower].clone().invert().multiply(k.wq[hand]); return THREE.MathUtils.radToDeg(2 * Math.atan2(q.y, q.w)); };
+        const apart = (a, b) => Math.abs(THREE.MathUtils.euclideanModulo(a - b + 180, 360) - 180);
+        let robots = 0; const rigs = new URL('../assets/props/people-rigs/', import.meta.url);   // (`path` is this block's walk path below)
+        for (const file of fs.readdirSync(rigs).filter(f => f.endsWith('.json'))) {
+            const who = file.slice(0, -5), data = JSON.parse(fs.readFileSync(new URL(file, rigs), 'utf8'));
+            const ids = Object.keys(data.postures).filter(id => /^stand-robot-/.test(data.postures[id].pose)); if (!ids.length) continue;
+            const rig = rigOf(who), hang = rig.key(`people-${who}-stand-wait`);
+            for (const id of ids) {
+                const k = rig.key(id);
+                for (const s of ['l', 'r']) {
+                    const [, upper, , hand] = rig.side[s].arm, out = k.wp[hand].z - k.wp[upper].z;
+                    assert.ok(out > .2, `${id}: the ${s} hand ${(out * 1000).toFixed(0)} mm in front of the shoulder (out at the robot, not at the chest)`);
+                    if (hang) { const d = apart(twist(rig, k, s), twist(rig, hang, s)); assert.ok(d < 110, `${id}: the ${s} wrist turned ${d.toFixed(0)} deg from hanging (a pinch at the wrist)`); }
+                }
+                robots++;
+            }
+        }
+        assert.ok(robots >= 3, 'the workshop robot postures are checked');
+    }
     // toes: 'bend': while a heel is up the toes stay level (the ball bone flat), and the walk is otherwise the same
     const key = rig.key('people-andre-stand-wait'), path = [[0, 0], [0, 3]], a = walkPlan(rig, key, key, path, { toes: 'stiff' }), b = walkPlan(rig, key, key, path, { toes: 'bend' }), ball = rig.side.l.leg[3];
     assert.equal(a.toes, false); assert.equal(b.toes, true);

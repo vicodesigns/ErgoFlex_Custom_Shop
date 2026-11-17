@@ -661,12 +661,16 @@ def stand_phone(k):
 # at 43.5 in (desktop top 1.100 m, top shelf 1.359 m; the shelf's middle 0.233 m behind the desk's centre, the cutout's
 # edge 0.332 m in front of it) with him 0.17 m behind the cutout's edge (0.13 m before Nov 14: his belly was in its edge). Turn: degrees about the vertical (the toy
 # story turns it 8 degrees).
-ROBOT_DESK = ((.06, -.25, 1.1045), 8.)
+# On the desktop it sits on the workbench mat, at its cradle (Nov 17: measured in the film, the mat's middle 0.379 m and
+# the cradle 0.387 m in front of him; it was 0.25 m before, 18 cm short of the mat, so both hands worked against his
+# chest and the left wrist was turned 160 degrees to reach it; Vico's pose fix in the Director moved it here).
+ROBOT_DESK = ((.058, -.429, 1.1045), 8.)
 ROBOT_SHELF = ((.1163, -.6056, 1.3638), 8.)
-# On the way up (stand-robot-lift): lifted up and toward him off the desktop, 230 mm in front of the shelf's front edge (0.478 m
-# in front of him, the board's top 1.359 m) and 60 mm above it, so the hands (the right fingers curled round its back,
-# _GRIP_R) rise clear of the board and then carry it over the edge and set it down (below his eyes, not in front of his face).
-ROBOT_LIFT = ((.1163, -.25, 1.42), 8.)
+# On the way up (stand-robot-lift): lifted straight up off the mat and a little toward him, 78 mm short of the shelf's
+# front edge (0.478 m in front of him, the board's top 1.359 m; its far side 37 mm clear of the edge) and 60 mm above the
+# board, so the hands (the right fingers curled round its back, _GRIP_R) rise clear of the board and then carry it over
+# the edge and set it down (below his eyes; Nov 17: 0.25 m before, the robot at his chin and the wrists turned 145 degrees).
+ROBOT_LIFT = ((.1163, -.40, 1.42), 8.)
 # These two postures are built where they stand (RAISED: not dropped to the floor afterwards), so the robot is exactly
 # at these heights: the ankles are posed at Andre's own ankle height in his shoes.
 ANDRE_ANKLE = .097      # (less what each posture's foot pitch leaves under the sole: work .013, shelf .005)
@@ -688,20 +692,23 @@ _GRIP_L = dict(at=(.057, .029, .08), fingers=(-.05, -1, -.2), palm=(-1, 0, 0), c
 
 
 def stand_robot_work(k):
-    """At the desk, working on the robot that sits on the desktop: the right hand steadies it by its side (the elbow out
-    and up, clear of the desktop: it lay in it before Nov 14), the left works at its open chest; leaning in, eyes on it."""
+    """At the desk, working on the robot that sits on the workbench mat: the right hand steadies it by its side (the elbow
+    out, clear of the desktop), the left works at its other side, the fingers forward round it and the palm toward it
+    (thumb up: the forearm turned no further than it is hanging; Nov 17, from Vico's pose fix: palm-down and pulled back
+    toward him it was turned 160 degrees, a pinch at the wrist); leaning in, eyes on it."""
     return {'pelvis_offset': (0, .015, -.021), 'spine': (7, 9, 7), 'neck': 14, 'head': 18, 'head_yaw': 4,
-            'hand_r': _robot_hand(ROBOT_DESK, elbow=(-.5, .05, .35), **_GRIP_R),
-            'hand_l': _robot_hand(ROBOT_DESK, (.085, .125, .1), (-.5, -.75, -.45), (.25, -.35, -1), (.3, .25, -.3), curl=.5, thumb=.35),
+            'hand_r': _robot_hand(ROBOT_DESK, elbow=(-.17, -.07, -.03), **_GRIP_R),
+            'hand_l': _robot_hand(ROBOT_DESK, (.1885, .0483, .0864), (-.437, -.853, -.286), (-.899, .417, .131), (.14, .15, -.11), curl=.5, thumb=.35),
             'foot_l': {'at': (.11 * k, .0, ANDRE_ANKLE - .013), 'toes': (.22, -1, 0)}, 'foot_r': {'at': (-.12 * k, .03 * k, ANDRE_ANKLE - .013), 'toes': (-.28, -1, 0)}}
 
 
 def stand_robot_lift(k):
-    """Lifting the robot off the desktop toward the top shelf: both hands at its sides, held up just in front of the
-    shelf's edge, elbows out (the forearms clear of the board, as in stand-robot-shelf)."""
+    """Lifting the robot off the desktop toward the top shelf: both hands at its sides, held up just short of the
+    shelf's edge, the elbows out a little and down (the forearms short of the board; palms in, thumbs up: the forearms
+    turned about as far as hanging, Nov 17)."""
     return {'pelvis_offset': (0, .025, -.019), 'pelvis_pitch': 3, 'spine': (5, 7, 5), 'neck': 2, 'head': 4,
-            'hand_r': _robot_hand(ROBOT_LIFT, elbow=(-.45, .1, -.05), **_GRIP_R),
-            'hand_l': _robot_hand(ROBOT_LIFT, elbow=(.45, .1, -.05), **_GRIP_L),
+            'hand_r': _robot_hand(ROBOT_LIFT, elbow=(-.3, .1, -.25), **_GRIP_R),
+            'hand_l': _robot_hand(ROBOT_LIFT, elbow=(.3, .1, -.25), **_GRIP_L),
             'foot_l': {'at': (.11 * k, .0, ANDRE_ANKLE - .009), 'toes': (.22, -1, 0)}, 'foot_r': {'at': (-.12 * k, .03 * k, ANDRE_ANKLE - .009), 'toes': (-.28, -1, 0)}}
 
 

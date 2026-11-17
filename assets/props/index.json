@@ -85493,22 +85493,22 @@
    "file": "assets/props/people-andre-stand-robot-work.glb",
    "anchor": "floor",
    "size": [
-    710.2,
+    692.6,
     1698.6,
-    541.5
+    678.2
    ],
    "min": [
-    -310.4,
+    -315,
     0.1,
     -129.7
    ],
    "max": [
-    399.8,
+    377.6,
     1698.7,
-    411.8
+    548.5
    ],
-   "tris": 40316,
-   "bytes": 1180704,
+   "tris": 40392,
+   "bytes": 1180184,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -85891,22 +85891,22 @@
    "file": "assets/props/people-andre-stand-robot-lift.glb",
    "anchor": "floor",
    "size": [
-    748.9,
+    654.7,
     1751.2,
-    519.3
+    669.3
    ],
    "min": [
-    -282.3,
+    -256.9,
     -0.4,
     -130.6
    ],
    "max": [
-    466.6,
+    397.8,
     1750.8,
-    388.7
+    538.7
    ],
-   "tris": 40330,
-   "bytes": 1179680,
+   "tris": 40394,
+   "bytes": 1179964,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
