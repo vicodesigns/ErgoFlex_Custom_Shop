@@ -89,6 +89,8 @@ Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl als
 | R | Scale (gizmo) | Rhino |
 | F | Frame the selection | Rhino |
 | Shift+F | Frame the whole room | Rhino |
+| Shift+G | Social crop guide over the frame: 9:16 → 1:1 → 4:5 → off | Premiere |
+| Shift+O | Overlays menu (guides, crop, film look, light markers, titles) | Director |
 | Ctrl+P: persp, perspective | Perspective view (from above, at an angle) | Rhino |
 | Ctrl+P: top, plan | Top view (looking straight down) | Rhino |
 | Ctrl+P: front | Front view | Rhino |

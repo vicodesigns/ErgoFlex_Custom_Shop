@@ -32,6 +32,13 @@ export function appBarHtml(s) {
       item('bake-all', 'Preview video, every chapter', '1080p'),
       ...(s.film ? [item('final-render', 'Final render…', 'on the render PC')] : []),
     ])}
+    ${s.overlays ? menu('overlays', 'Overlays ▾', 'What is drawn over the frame (Shift+O)', [
+      check('ov-guides', 'Thirds and title-safe guides', s.overlays.guides, 'G'),
+      item('ov-crop', 'Crop guide: ' + (s.overlays.crop || 'off'), 'Shift+G · 9:16 · 1:1 · 4:5'),
+      item('ov-look', 'Film look: ' + (s.overlays.look || 'live'), 'V · Live / Film look / Split'),
+      check('ov-lights', 'Light markers', s.overlays.lights, 'Shift+L'),
+      check('titles', 'Titles in the frame', s.titles),
+    ]) : ''}
     ${menu('more', '⋯', 'Cut settings, history, layout, report a problem', [
       item('cut-settings', 'Cut settings…', 'name, versions, import / export'),
       `<div class="ab-sub" role="group" aria-label="History"><p>History${history.length ? '' : ': nothing yet'}</p>${history.map((h, i) => `<button type="button" role="menuitem" data-ab-undo="${i + 1}" title="Undo back to before this step">${esc(h || 'Edit')}</button>`).join('')}</div>`,

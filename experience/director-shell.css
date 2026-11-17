@@ -221,3 +221,10 @@ body.df-shell [data-inspector-page="render"]:not([hidden])::before{content:"Whol
 #director-panel label:has(>input[type=number]:not([disabled])){cursor:ew-resize}
 #director-panel label:has(>input[type=number]) input{cursor:text}
 .nf-scrubbing{outline:1px solid var(--df-accent,#5cd3f6)}
+
+/* ---- P6 polish (17 Nov 2026): social crop guides, the lens in mm ---- */
+.nav-pill-box{overflow:hidden}
+.crop-guide{position:absolute;top:0;bottom:0;left:50%;transform:translateX(-50%);box-shadow:0 0 0 100vmax #000a;outline:1px dashed #ffffffaa;pointer-events:none}
+.crop-guide[hidden]{display:none}
+.crop-guide::after{content:attr(data-label);position:absolute;left:6px;top:6px;padding:1px 6px;border-radius:6px;background:#000a;color:#fff;font:600 11px var(--df-font,system-ui)}
+.lens-mm{color:var(--df-text-3,#8a97a6);font-weight:500}

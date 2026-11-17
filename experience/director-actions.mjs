@@ -19,7 +19,7 @@
 //   aliases  what the command search (Ctrl+P) also finds it by: Rhino's command names (m, ro, sc, zs, ze, top…).
 // Vico's own keys (the panel's Edit keys) are kept as { id: [spec...] } (keys-panel.mjs, ui store) and laid over this
 // table by effectiveActions(); only rows the Director runs can be rebound, never to a RESERVED key.
-export const LIVE_PHASES = new Set(['1a', '1a2', '1b', '2', '3', '4']);
+export const LIVE_PHASES = new Set(['1a', '1a2', '1b', '2', '3', '4', '6']);
 
 const R = (id, label, keys, ctx, more = {}) => ({ id, label, keys, ctx, phase: '1a', owner: 'director', ...more });
 const E = (id, label, keys, ctx, more = {}) => R(id, label, keys, ctx, { owner: 'editor', ...more });
@@ -98,6 +98,8 @@ export const ACTIONS = [
   R('tool-scale', 'Scale (gizmo)', ['R'], 'view', { origin: 'Rhino', aliases: ['sc', 'scale'] }),
   R('frame-selection', 'Frame the selection', ['F'], 'view', { origin: 'Rhino', aliases: ['zs', 'zoom selected'] }),
   R('frame-room', 'Frame the whole room', ['Shift+F'], 'view', { origin: 'Rhino', aliases: ['ze', 'zoom extents'] }),
+  R('crop-cycle', 'Social crop guide over the frame: 9:16 → 1:1 → 4:5 → off', ['Shift+G'], 'view', { phase: '6', origin: 'Premiere', aliases: ['crop', '9:16', 'square', 'reel'] }),
+  R('overlays', 'Overlays menu (guides, crop, film look, light markers, titles)', ['Shift+O'], 'view', { phase: '6', origin: 'Director', aliases: ['overlays'] }),
   R('view-persp', 'Perspective view (from above, at an angle)', [], 'view', { phase: '1a2', origin: 'Rhino', aliases: ['persp', 'perspective'] }),
   R('view-top', 'Top view (looking straight down)', [], 'view', { phase: '1a2', origin: 'Rhino', aliases: ['top', 'plan'] }),
   R('view-front', 'Front view', [], 'view', { phase: '1a2', origin: 'Rhino', aliases: ['front'] }),
