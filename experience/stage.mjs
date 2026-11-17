@@ -49,6 +49,8 @@ export async function mountStage(ctx) {
   function previewQuality(low){ctx.renderer.setPixelRatio(low ? Math.min(devicePixelRatio,0.5) : Math.min(devicePixelRatio,1.5));wake();}
   const extras = new THREE.Group(); extras.name='Cinematic effects'; ctx.scene.add(extras);
   const ringAt = new THREE.Vector3();
+  // Where the shelf centre is now: its place in the desk's frame, carried by the desk's current transform (roll and turn).
+  const ringCentre=()=>{ctx.loadedModel.updateWorldMatrix(true,false);return ringAt.copy(ringHome.local).applyMatrix4(ctx.loadedModel.matrixWorld);};
   let shot=null, start=null, media=null, video=null, hidden=[], grid=null, pylons=[], sweep=null, light=null, pulse=null, floorCenter=null, trace=null, ringHome=null, reach=null, sonar=null, sonarTries=0, pings=[], obstacles=[], pingStop=0, echo=null;
   let reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   let paused=false, sounds=false, mirror=null, sequence=-1, session=null, preparing=false,lastProgress=0;
@@ -127,7 +129,11 @@ export async function mountStage(ctx) {
     if(pulse){pulse.removeFromParent();pulse.geometry.dispose();pulse.material.dispose();}
     pulse=ringMesh(new THREE.RingGeometry(w*.5,w*.51,96),0x27c6ff,.8,b.min.y+.003);pulse.position.x=c.x;pulse.position.z=c.z;
     // The rings are the desk's: they stay centred under it when it rolls (ringHome: the centre and the desk's place at the start).
-    ringHome={c:c.clone(),p:ctx.loadedModel.getWorldPosition(new THREE.Vector3())};
+    // The shelf centre is kept in the desk's own frame (local), so it follows a roll AND a turn: the rings were moved by the
+    // desk origin's displacement alone, which is the shelf centre's only when the desk is not turned; turning 100 degrees
+    // (the awaken chapter, 25.6 s) swung the circle to another part of the floor (Vico, Nov 16: "travels to some random location").
+    ctx.loadedModel.updateWorldMatrix(true,false);
+    ringHome={c:c.clone(),p:ctx.loadedModel.getWorldPosition(new THREE.Vector3()),local:ctx.loadedModel.worldToLocal(c.clone())};
     light=new THREE.PointLight(0x46ceff,w*2,w*5,2);light.position.set(c.x+w,b.min.y+w,c.z+w);extras.add(light);
     ctx.scene.background=new THREE.Color('#050a10');
     return {b,w,c};
@@ -141,7 +147,7 @@ export async function mountStage(ctx) {
     if(!found.length||!ringHome)return null;
     if(shot.motion?.clips)ctx.placeDirector(sampleClipMotion(shot.motion,shot.seconds));
     scene.updateMatrixWorld(true);
-    const at=ctx.loadedModel.getWorldPosition(new THREE.Vector3()),cx=ringHome.c.x+at.x-ringHome.p.x,cz=ringHome.c.z+at.z-ringHome.p.z,b=new THREE.Box3();let best=Infinity;
+    const at=ringCentre(),cx=at.x,cz=at.z,b=new THREE.Box3();let best=Infinity;
     obstacles=[];
     for(const o of found){b.setFromObject(o);if(b.isEmpty())continue;obstacles.push(b.clone());best=Math.min(best,Math.hypot(Math.max(b.min.x-cx,0,cx-b.max.x),Math.max(b.min.z-cz,0,cz-b.max.z)));}
     return Number.isFinite(best)&&best>0?best:null;
@@ -312,10 +318,10 @@ export async function mountStage(ctx) {
     }
     if(kind==='wellness'&&!shot.motion)ctx.pose(28+15.5*ease((t-.25)/.45),0);
     if(shot.motion){const p=shot.motion.clips?sampleClipMotion(shot.motion,t*shot.seconds):sampleDeskTracks(shot.motion.tracks,t);ctx.pose(p.height,p.tilt);ctx.placeDirector(p);}
-    if(ringHome&&(pulse||sweep)){const d=ctx.loadedModel.getWorldPosition(ringAt).sub(ringHome.p);for(const ring of [pulse,sweep,reach,echo,...pings])if(ring){ring.position.x=ringHome.c.x+d.x;ring.position.z=ringHome.c.z+d.z;}
+    if(ringHome&&(pulse||sweep)){const d=ringCentre();for(const ring of [pulse,sweep,reach,echo,...pings])if(ring){ring.position.x=d.x;ring.position.z=d.z;}
       if(sonar&&pings.length){
         // the reach in this frame: from the desk's centre where it is now to the nearest obstacle's near edge
-        const cx=ringHome.c.x+d.x,cz=ringHome.c.z+d.z;let far=Infinity;
+        const cx=d.x,cz=d.z;let far=Infinity;
         for(const o of obstacles)far=Math.min(far,Math.hypot(Math.max(o.min.x-cx,0,cx-o.max.x),Math.max(o.min.z-cz,0,cz-o.max.z)));
         if(!Number.isFinite(far)||far<=0)far=sonar;
         // A slow sonar: a ping leaves the centre every 2.4 s and runs outward at one steady speed (the speed that takes
