@@ -246,3 +246,6 @@ body.df-filter-sel #director-timeline :is(.desk-lane-row,.camera-lane-row):not(.
 .scene-list-rows button:hover{background:var(--df-surface-3,#1c2631)}.scene-list-rows button.b2-selected{background:color-mix(in srgb,var(--df-select,#ffc85c) 18%,transparent)}
 .scene-list-rows i{width:8px;height:8px;border-radius:50%;flex:none}.scene-list-rows .desk-dot{background:#9aa7b3;border-radius:2px}
 .scene-list-rows small{color:var(--df-text-3,#8a97a6)}.scene-list-more{color:var(--df-accent-text,#9be6fb)!important}
+.sel-tools{display:inline-flex;gap:2px;margin-left:auto}
+.sel-tools button{width:24px;height:22px;padding:0;border:1px solid var(--df-border-2,#ffffff1c);border-radius:5px;background:transparent;color:inherit;font-size:12px;cursor:pointer}
+.sel-tools button:hover{background:var(--df-surface-3,#1c2631)}

@@ -376,16 +376,19 @@ export function mountDirector(bridge,catalog,initial){
     if(n){const c=(v,one,many)=>v?`${v} ${v===1?one:many}`:'',parts=[c(picks.keys.size,'camera view','camera views'),c(picks.clips.size,'move','moves'),c(picks.lights.size,'status light','status lights'),c(picks.neutrals.size,'white key','white keys'),c(picks.tods.size,'time-of-day key','time-of-day keys')].filter(Boolean).join(', ');
       return `<div class="sel-row"><span class="sel-icon">▦</span><span class="sel-name"><b>${n} items</b><small>${parts}</small></span><button data-action="sel-clear" title="Deselect (Esc)" aria-label="Deselect">×</button></div><div class="sel-batch"><label>Move by<input name="sel-move" type="number" step=".1" value="1"> s</label><button data-action="sel-move">Move</button><button data-action="sel-align" title="Move the selection so its first item starts at the playhead">Align to playhead</button><button data-action="sel-delete" title="Delete the selection (Delete)">Delete</button></div>`;}
     const th=titleEditor.header();if(th)return th;
-    const row=(icon,name,detail)=>`<div class="sel-row"><span class="sel-icon">${icon}</span><span class="sel-name"><b>${escape(name)}</b><small>${escape(detail)}</small></span><button data-action="sel-clear" title="Deselect (Esc)" aria-label="Deselect">×</button></div>`;
+    // P5: every selection's header ends with the same tools (Duplicate · Frame / Zoom to · Reset to the film · Delete)
+    const TOOLS={dup:['⧉','Duplicate (Ctrl+D)'],frame:['⌖','Frame it in the view (F)'],zoom:['↔','Zoom the timeline to it (Z)'],reset:['↺','Reset to the film (Alt+R)'],delete:['🗑','Delete (Delete)']};
+    const tools=list=>shellOn()&&list?.length?`<span class="sel-tools">${list.map(t=>`<button type="button" data-action="sel-tool" data-section="${t}" title="${TOOLS[t][1]}" aria-label="${TOOLS[t][1]}">${TOOLS[t][0]}</button>`).join('')}</span>`:'';
+    const row=(icon,name,detail,list=null)=>`<div class="sel-row"><span class="sel-icon">${icon}</span><span class="sel-name"><b>${escape(name)}</b><small>${escape(detail)}</small></span>${tools(list)}<button data-action="sel-clear" title="Deselect (Esc)" aria-label="Deselect">×</button></div>`;
     const item=lightItem(),s=shot();
     if(item&&lightSel?.kind==='lights')return row('▬','Desk status · '+kindLabel(item.kind),`${r2(item.at)}–${r2(item.at+item.dur)} s`);
     if(item&&lightSel?.kind==='neutrals')return row('◆','Desk white · '+whiteName(item[1]),`${r2(item[0])} s · ${Math.round(lightnessOf(item[1]))}% bright`);
     if(item&&lightSel?.kind==='tods')return row('◆','Time of day · '+(roomModes().find(m=>m.id===item.mode)?.label||item.mode),`${r2(item.at)} s`);
-    const k=selectedKey();if(k)return row('◆','Camera view · '+k.label,`${r2(k.time*s.seconds)} s`);
-    const clipId=deskEditor.selectedId(),clip=clipId&&deskEditor.motion().clips.find(c=>c.id===clipId);if(clip)return row('▬','Desk move · '+clipSummary(clip),`${r2(clip.start)}–${r2(clipEnd(clip))} s`);
-    const light=sceneLights.selected()&&sceneLights.lanes().find(x=>x.path===sceneLights.selected());if(light)return row('✺','Scene light · '+light.label,light.edited?'edited':'from the film');
-    const prop=sceneProps.header();if(prop)return row('▣','Prop · '+prop.name,prop.detail);
-    const person=scenePeople.header();if(person)return row('☻','Person · '+person.name,person.detail);
+    const k=selectedKey();if(k)return row('◆','Camera view · '+k.label,`${r2(k.time*s.seconds)} s`,['dup','zoom','delete']);
+    const clipId=deskEditor.selectedId(),clip=clipId&&deskEditor.motion().clips.find(c=>c.id===clipId);if(clip)return row('▬','Desk move · '+clipSummary(clip),`${r2(clip.start)}–${r2(clipEnd(clip))} s`,['dup','zoom','delete']);
+    const light=sceneLights.selected()&&sceneLights.lanes().find(x=>x.path===sceneLights.selected());if(light)return row('✺','Scene light · '+light.label,light.edited?'edited':'from the film',['frame']);
+    const prop=sceneProps.header();if(prop)return row('▣','Prop · '+prop.name,prop.detail,['frame','reset','delete']);
+    const person=scenePeople.header();if(person)return row('☻','Person · '+person.name,person.detail,['dup','frame','reset','delete']);
     const desk=deskSel.header();if(desk)return row('▭','Desk · '+desk.name,desk.detail);
     return '';
   }
@@ -1074,6 +1077,10 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       if(name==='cut-settings'){if(document.body.classList.contains('inspector-hidden'))document.body.classList.remove('inspector-hidden');showInspector('project');return;}
       if(name==='final-render'){if(document.body.classList.contains('inspector-hidden'))document.body.classList.remove('inspector-hidden');showInspector('render');return;}
       if(name==='scene-desk-pick'){deskSel.select(index);return;}
+      if(name==='sel-tool'){const t=index,ctxOf=sceneProps.selected()?'prop':scenePeople.selected()?'person':null;
+        if(t==='dup'){runKey('duplicate');return;}if(t==='frame'){runKey('frame-selection');return;}if(t==='zoom'){zoomToSelection();return;}if(t==='reset'){runKey('reset-film',null,ctxOf);return;}
+        if(t==='delete'){if(keyId){await action('key-delete');return;}const target=bridge.stage()?.three?.()?.renderer?.domElement?.ownerDocument||document;for(const d of [document,target])d.dispatchEvent(new KeyboardEvent('keydown',{key:'Delete',code:'Delete',bubbles:true,cancelable:true}));return;}
+        return;}
       if(name==='lamp-pick'){await sceneLights.changed({name:'sl-select',value:index});renderTimeline();return;}
       if(name==='white-preset'){editLight({color:index});const k=lightItem();if(k)status(`${whiteName(index)} ${index} at ${r2(k[0])} s.`);return;}
       if(name==='now-go'){const id=index;const el=panel.querySelector(`[data-light-section="${id}"]`);if(el){el.open=true;delete lightSectionsShut[id];el.scrollIntoView({block:'start',behavior:'smooth'});}return;}
