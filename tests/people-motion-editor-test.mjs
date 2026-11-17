@@ -93,5 +93,12 @@ try{
   editor.select('maya-waits');await tick();await editor.changed({name:'pe-scale',value:'110'});await editor.changed({name:'pe-color-top',value:'#336699'});await tick();
   assert.ok(editor.copyAttrs());editor.select('maya-after');await tick();assert.ok(editor.pasteAttrs());await tick();
   const pasted=shot.peopleEdits.cast.find(e=>e.key==='maya-after');assert.equal(pasted.scale,1.1);assert.equal(pasted.colors.top,'#336699');
+  // Delete on a selected person (director.mjs viewDelete -> scenePeople.remove()): one undo step, and undo restores them
+  editor.select('maya-after');await tick();const castBefore=structuredClone(shot.peopleEdits.cast),whenBefore=structuredClone(shot.peopleEdits.when),steps=history.length;
+  editor.remove();await tick();
+  assert.ok(!shot.peopleEdits.cast.some(e=>e.key==='maya-after'),'Delete removes the person from the chapter');assert.equal(history.length,steps+1,'one undo step');
+  shot=history.pop();apply();await tick();
+  assert.deepEqual(shot.peopleEdits.cast,castBefore,'undo brings them back exactly');assert.deepEqual(shot.peopleEdits.when,whenBefore,'and their stays');
+  // (the stage is not checked here: after the posture swap above this harness cannot load her seated model, see above)
   editor.deselect();console.log('PASS people motion controls: distance from the desk (kept across postures, moves the model), chair roll on the stage actor, roll in / out over time, every stay, looks at, + Walk to, posture change timing and the 220 mm warning');
 }finally{people.dispose();for(const [k,v] of Object.entries(oldGlobals)){if(v===undefined)delete globalThis[k];else globalThis[k]=v;}}
