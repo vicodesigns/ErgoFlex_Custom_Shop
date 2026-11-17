@@ -2,6 +2,7 @@ import {postureView,editPosture,migratePostures,editablePeople,postureRecord} fr
 import {cleanPeople,canonicalPeople,effectivePeople,newKey,spanText,PARTS} from './people-edits.mjs';
 import {createPoseEditor,JOINTS} from './scene-pose-editor.mjs';
 import {stackRows} from './lane-rows.mjs';
+import {withSpan} from './people-spans.mjs';
 import {placementOf,freeSpot,SEAT_FIELDS,sheet,sheetKeys,EASE_SHAPES,NO_EASE,pick,neighborTime,shiftKeys,deleteKeys,copyKeys,pasteKeys,setEase,toggleKeyAt,entryAt,turnAngles,setJointAngles,waypointOf,setWaypoint} from './people-track.mjs';
 import {loadSavedPoses,storeSavedPoses,addSavedPose} from './saved-poses.mjs';
 import {createPathGizmo} from './people-path-gizmo.mjs';   // S31 M3 path editing (hook)
@@ -254,11 +255,11 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const turn=r1(THREE.MathUtils.radToDeg(Math.atan2(p.x-o.position.x,p.z-o.position.z)));
     edit(sel,x=>{x.turn=turn;},`${personName(e)} faces the ${target==='camera'?'camera':'desk'}.`);
   }
-  function setSpan(key,change){
+  // Span k (default the first) of a person's stays in the chapter: changed in place, every other span kept as it was.
+  function setSpan(key,change,k=0){
     const T=seconds();
-    // A span that runs to the chapter's end is kept a second past it, so the person does not fade out under the dissolve.
-    write(p=>{const cur=(p.when?.[key]?.[0])||[0,T+1,.5,.5],s=[cur[0],Math.min(cur[1],T),cur[2]??.5,cur[3]??.5];change(s);if(s[1]>=T-.001)s[1]=T+1;(p.when||={})[key]=[s];},
-      'Timing updated.',{undoKey:'people-when-'+key});
+    write(p=>{(p.when||={})[key]=withSpan(p.when[key],k,change,T);},
+      'Timing updated.',{undoKey:'people-when-'+key+'-'+k});
   }
   async function changed(el){
     if(keyChanged(el))return;   // S33: the selected key's Inspector
@@ -673,10 +674,10 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   const ROW=16;
   function lane(){
     const T=seconds()||1,list=cast().filter(e=>!e.hide);laneKeys=list.map(e=>e.key);laneRows=1;if(!list.length)return '';
-    const items=list.flatMap((e,i)=>(spans(e.key)||[[0,T]]).map(([a,b],k)=>({id:i+':'+k,i,e,start:Math.max(0,a),end:Math.max(Math.max(0,a)+.01,Math.min(b,T))})));
+    const items=list.flatMap((e,i)=>(spans(e.key)||[[0,T]]).map(([a,b],k)=>({id:i+':'+k,i,k,e,start:Math.max(0,a),end:Math.max(Math.max(0,a)+.01,Math.min(b,T))})));
     const layers=stackRows(items);laneRows=layers.count;const step=laneRows<=2?36/laneRows:ROW,h=Math.floor(step)-2;
     return items.map(it=>{const e=it.e,x=it.start/T*100,w=Math.max(.6,(it.end-it.start)/T*100);
-      return `<button type="button" class="people-bar ${e.key===sel?'selected':''} ${spans(e.key)?'':'whole'}" data-action="pe-lane" data-index="${it.i}" data-person-key="${escape(e.key)}" style="left:${x}%;width:${w}%;top:${1+layers.row.get(it.id)*step}px;height:${h}px" title="${escape(personName(e))}: ${escape(doing(e))} · ${escape(spanText(spans(e.key),T))}">${escape(personName(e))}</button>`;}).join('');
+      return `<button type="button" class="people-bar ${e.key===sel?'selected':''} ${spans(e.key)?'':'whole'}" data-action="pe-lane" data-index="${it.i}" data-span="${it.k}" data-person-key="${escape(e.key)}" style="left:${x}%;width:${w}%;top:${1+layers.row.get(it.id)*step}px;height:${h}px" title="${escape(personName(e))}: ${escape(doing(e))} · ${escape(spanText(spans(e.key),T))}">${escape(personName(e))}</button>`;}).join('');
   }
   // A bar's ends drag to set when the person comes in and goes out; its middle drags the whole stay along the chapter
   // (snapped to a tenth of a second). A bar pulled back to the whole chapter loses its span again.
@@ -684,8 +685,8 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   document.addEventListener('pointerdown',ev=>{
     const bar=ev.target.closest?.('.people-bar');if(!bar||ev.button!==0||!editing())return;
     const key=laneKeys[Number(bar.dataset.index)],T=seconds(),r=bar.getBoundingClientRect(),lane=bar.parentElement.getBoundingClientRect();if(!key||!T||!lane.width)return;
-    const s=spans(key)?.[0]||[0,T],grip=Math.min(8,r.width/3),edge=ev.clientX-r.left<grip?'in':r.right-ev.clientX<grip?'out':'move';
-    barDrag={key,bar,edge,x:ev.clientX,width:lane.width,T,from:[Math.max(0,s[0]),Math.min(s[1],T)],now:null,whole:!spans(key)};
+    const k=Number(bar.dataset.span)||0,all=spans(key),s=all?.[k]||[0,T],grip=Math.min(8,r.width/3),edge=ev.clientX-r.left<grip?'in':r.right-ev.clientX<grip?'out':'move';
+    barDrag={key,bar,edge,x:ev.clientX,width:lane.width,T,from:[Math.max(0,s[0]),Math.min(s[1],T)],now:null,whole:!all,k,many:(all?.length||0)>1};
   },true);
   document.addEventListener('pointermove',ev=>{
     const d=barDrag;if(!d||(!d.now&&Math.abs(ev.clientX-d.x)<3))return;
@@ -699,8 +700,8 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   const endBar=()=>{
     const d=barDrag;barDrag=null;if(!d?.now)return;barSuppress=performance.now()+350;
     const [a,b]=d.now,name=personName(entry(d.key));
-    if(a<=.001&&b>=d.T-.001){if(d.whole)rerender();else write(p=>{if(p.when)delete p.when[d.key];},`${name} is in the room for the whole chapter.`);return;}
-    setSpan(d.key,s=>{s[0]=a;s[1]=b;});status(`${name}: in the room from ${r1(a)} to ${r1(b)} s. Drag the bar's ends to change it.`);
+    if(!d.many&&a<=.001&&b>=d.T-.001){if(d.whole)rerender();else write(p=>{if(p.when)delete p.when[d.key];},`${name} is in the room for the whole chapter.`);return;}
+    setSpan(d.key,s=>{s[0]=a;s[1]=b;},d.k);status(`${name}: in the room from ${r1(a)} to ${r1(b)} s. Drag the bar's ends to change it.`);
   };
   document.addEventListener('pointerup',endBar,true);document.addEventListener('pointercancel',()=>{if(barDrag?.now)rerender();barDrag=null;},true);
   // Inline heights for the lane and its row (empty string while two rows fit the standard lane).
