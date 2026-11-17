@@ -202,3 +202,12 @@ body.df-shell #director-panel .director-hint:hover,body.df-shell #director-panel
 .sfx-block.sfx-lift{--sfx:#5cd3f6}.sfx-block.sfx-tilt{--sfx:#ffb547}.sfx-block.sfx-wheels{--sfx:#7ee08a}
 .sfx-block:hover{filter:brightness(1.25)}
 .lane-empty{margin:0;padding:4px 8px;font-size:11px;color:var(--df-text-3,#8a97a6)}
+
+/* ---- P4 timeline (17 Nov 2026): markers, the loop range, the film timecode, the debug readout ---- */
+.tl-marker{position:absolute;top:0;width:0;height:0;margin-left:-5px;border:5px solid transparent;border-top:7px solid #ffd166;pointer-events:none}
+.tl-loop{position:absolute;top:0;bottom:0;background:#7ee08a22;border-left:2px solid #7ee08a;border-right:2px solid #7ee08a;pointer-events:none}
+.timeline-timecode small{margin-left:6px;color:var(--df-text-3,#8a97a6);font:500 10.5px var(--df-mono,ui-monospace,monospace);white-space:nowrap}
+.timeline-footer[data-debug]::after{content:attr(data-debug);margin-left:8px;color:#ffd79a;font:600 10px var(--df-mono,monospace)}
+/* keyframe shapes say the interpolation (After Effects: ◆ linear, ⧗ Easy Ease, ■ hold); the segment words only on hover */
+body.df-shell .camera-segment i{opacity:0;transition:opacity .15s}body.df-shell .camera-segment:hover i{opacity:1}
+body.df-shell .camera-segment.ease-hold{background-image:repeating-linear-gradient(90deg,#ffffff18 0 6px,transparent 6px 12px)}

@@ -53,6 +53,16 @@ Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl als
 | = / + | Timeline zoom in | Premiere |
 | - | Timeline zoom out | Premiere |
 | Shift+Z | Fit the chapter in the timeline | Director |
+| Z | Zoom to the selection | Premiere |
+| Ctrl + wheel | Zoom at the pointer · Shift+wheel: pan | Premiere |
+| M | Add a marker at the playhead (on a marker: remove it) | Premiere |
+| Shift+↑ | Previous marker | Premiere |
+| Shift+↓ | Next marker | Premiere |
+| B | Loop range starts at the playhead | Director |
+| N | Loop range ends at the playhead | Director |
+| Alt+X | Clear the loop range | Premiere |
+| [ | The selection starts at the playhead | Premiere |
+| ] | The selection ends at the playhead | Premiere |
 | { | Fold every lane group (Alt-click a group: all of them) | After Effects |
 | } | Unfold every lane group | After Effects |
 | 1 | Jump to Titles & graphics (opens the group) | Director |
@@ -134,6 +144,8 @@ Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl als
 | Keys | Action | Same as |
 |---|---|---|
 | U | Update this view from what the 3D view shows | Director |
+| T | Interpolation to the next view: Smooth → Linear → Hold | After Effects |
+| F9 | Smooth (Easy Ease) to the next view | After Effects |
 | , | Wider view (field of view 24° → 35° → 50°) | Director |
 | . | Closer view (field of view 50° → 35° → 24°) | Director |
 

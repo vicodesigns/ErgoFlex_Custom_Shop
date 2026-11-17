@@ -29,7 +29,7 @@ import {createFilmLook} from './film-look.mjs';
 import {createStillStrip} from './still-strip.mjs';
 import {filmLink,loadFilmChapters,filmChapterLabel,filmChapterIndex} from './film-chapters.mjs';
 import {createFilmFresh} from './film-fresh.mjs';
-import {timelineTicks,snapTimelineTime,adjacentEdit,TIMELINE_ZOOMS} from './timeline-ui.mjs';
+import {timelineTicks,snapTimelineTime,adjacentEdit,TIMELINE_ZOOMS,clampZoom,maxZoom,filmTimecode,nextMarker,toggleMarker,setLoopEnd} from './timeline-ui.mjs';
 import {createDeskEditor} from './desk-editor.mjs';
 import {stackRows,rowVar} from './lane-rows.mjs';
 import {createChoreoTarget,validateDeskEdits} from './desk-choreo.mjs';
@@ -212,6 +212,7 @@ export function mountDirector(bridge,catalog,initial){
     syncLightNow();syncNow();titleEditor.sync();scenePeople.poseSync();deskVersions.sync(playhead);if(playhead!==pokedAt){pokedAt=playhead;filmLook?.poke();}
     const ruler=timeline.querySelector('.time-ruler');if(ruler)ruler.setAttribute('aria-valuenow',(playhead*shot().seconds).toFixed(2));
     const exact=timeline.querySelector('[name="timeline-seconds"]');if(exact&&document.activeElement!==exact)exact.value=(playhead*shot().seconds).toFixed(2);
+    const tc=timeline.querySelector('[data-film-tc]');if(tc)tc.textContent=timecodeNow();
   }
   function syncPan(){const viewport=timeline.querySelector('.timeline-viewport'),range=timeline.querySelector('[name="timeline-pan"]');if(viewport&&range&&document.activeElement!==range)range.value=viewport.scrollLeft/Math.max(1,viewport.scrollWidth-viewport.clientWidth)*100;}
   function selectKey(id){keyId=id;lightSel=null;sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();deskSel.deselect();titleEditor.clear();const k=selectedKey();if(!k)return;deskEditor.clearSelection();reveal('camera');seekCamera(k.time);renderPanel();renderTimeline();}
@@ -956,10 +957,10 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     repulse();
   }
   function renderTimeline(){
-    const scroll=timeline.querySelector('.timeline-viewport')?.scrollLeft||0,s=shot();
+    const t0=performance.now(),scroll=timeline.querySelector('.timeline-viewport')?.scrollLeft||0,s=shot();
     const ticks=timelineTicks(s.seconds,Math.max(300,(timeline.clientWidth-150)*zoom));
     const shell=shellOn(),transportHtml=`<div class="timeline-transport">${shell?'':`<button data-action="undo" aria-label="Undo edit" title="Undo (Ctrl/Cmd+Z)">↶</button><button data-action="redo" aria-label="Redo edit" title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)">↷</button>`}<button data-action="edit-prev" aria-label="Previous edit" title="Previous camera view or movement edge (↑)">|‹</button><button data-action="preview-loop" aria-pressed="${!!bridge.playback().loop}" title="Repeat the chapter or selected camera / Groove preview (L)">${bridge.playback().loop?'Loop on':'Loop off'}</button><button data-action="preview" aria-label="Restart chapter" title="Restart chapter">↻</button><button data-action="chapter-toggle" class="chapter-transport">▶ Play chapter</button><button data-action="edit-next" aria-label="Next edit" title="Next camera view or movement edge (↓)">›|</button>
-      <label class="timeline-timecode"><input name="timeline-seconds" aria-label="Chapter playhead seconds" type="number" min="0" max="${s.seconds}" step=".033333" value="${(playhead*s.seconds).toFixed(2)}"><span>/ ${s.seconds}s</span></label></div>`;
+      <label class="timeline-timecode"><input name="timeline-seconds" aria-label="Chapter playhead seconds" type="number" min="0" max="${s.seconds}" step=".033333" value="${(playhead*s.seconds).toFixed(2)}"><span>/ ${s.seconds}s</span><small data-film-tc>${escape(timecodeNow())}</small></label></div>`;
     timeline.innerHTML=`<div class="timeline-resize" role="separator" aria-label="Resize timeline" aria-orientation="horizontal" tabindex="0"><span></span></div>
       ${shell?'':`<div class="timeline-toolbar"><div class="timeline-project"><strong>${escape(project.name)}</strong><span>${project.shots.length} chapters · ${Math.round(duration(project.shots))}s</span></div>${filmPicker()}
       ${transportHtml}
@@ -968,15 +969,16 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       <div class="workbench-toolbar">${shell?transportHtml:''}<strong title="${escape(s.title)}"><span>CHAPTER ${String(selected+1).padStart(2,'0')}</span> ${escape(s.title)}</strong><span class="workbench-count">${keys().length} views · ${deskEditor.count()} moves</span>${deskEditor.picker()}
       <div class="track-palette">${timelineShortcuts()}<button data-action="key-add">+ Camera view</button>${deskEditor.tools()}${lighting()?'<button data-action="light-add" class="light-add" title="Add a light state at the playhead (Shift-click: a neutral colour key)">+ Light</button>':''}${filmShot()?'<button data-action="pp-add" class="prop-add" title="Add a prop from the library to this chapter (on the desk or the floor in front of the camera)">+ Prop</button>':''}</div>
       <button data-action="magnet" class="magnet" aria-pressed="${magnet}" title="Magnet: snap to movement edges, keys, the playhead and the chapter ends (S); Alt bypasses">Magnet</button><label class="snap-control">Snap <select name="timeline-snap" aria-label="Timeline snapping">${[[0,'Off'],[.1,'0.1s'],[.5,'0.5s'],[1,'1s'],...(scoreModel()?[['beat','Beat'],['bar','Bar']]:[])].map(([v,label])=>option(v,label,snapStep)).join('')}</select></label>
-      <div class="timeline-zoom"><button data-action="zoom-out" aria-label="Zoom timeline out" ${zoom===1?'disabled':''}>−</button><button data-action="zoom-fit" aria-label="Fit chapter to timeline" title="Fit the whole chapter">${zoom===1?'Fit':'Fit · '+zoom+'×'}</button><button data-action="zoom-in" aria-label="Zoom timeline in" ${zoom===8?'disabled':''}>+</button></div></div>
+      <div class="timeline-zoom"><button data-action="zoom-out" aria-label="Zoom timeline out" ${zoom===1?'disabled':''}>−</button><button data-action="zoom-fit" aria-label="Fit chapter to timeline" title="Fit the whole chapter (Shift+Z) · Z: zoom to the selection · Ctrl+wheel zooms at the pointer">${zoom===1?'Fit':'Fit · '+(Math.round(zoom*10)/10)+'×'}</button><button data-action="zoom-in" aria-label="Zoom timeline in" ${zoom>=zoomMax()-1e-6?'disabled':''}>+</button></div></div>
       <div class="timeline-viewport" tabindex="0" aria-label="Camera and desk timeline"><div class="timeline-content" style="width:${zoom*100}%;--timeline-grid:${(ticks[1]||s.seconds)/s.seconds*100}%">
-      <div class="time-ruler-row"><span class="track-heading">SECONDS</span><div class="time-ruler" role="slider" aria-label="Chapter timeline scrubber" aria-valuemin="0" aria-valuemax="${s.seconds}" aria-valuenow="${(playhead*s.seconds).toFixed(2)}" tabindex="0">${ticks.map(t=>`<span style="left:${t/s.seconds*100}%">${Number(t.toFixed(2))}</span>`).join('')}${scoreHitsHtml()}<div class="ruler-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div><button class="chapter-end-handle" data-chapter-end type="button" aria-label="Chapter length: drag to change" title="Drag to change the chapter length (snaps to 0.5 s, Alt: free). Nothing already placed moves; the camera holds its last view."><i></i></button></div>
-      ${deskVersions.lane()}${titlesGroup()}${graphics.lane()}${laneGroupHead('motion')}<div class="lane-group-body" data-lane-body="motion" ${groupClosed('motion')?'hidden':''}><div class="camera-lane-row"><span class="track-heading"><b>◆ Camera</b><small>${s.camera?'Custom views':'Original views'}</small></span><div class="camera-track" role="group" aria-label="Camera keyframe timeline"><div class="camera-track-line"></div>${keys().slice(0,-1).map((k,i)=>`<span class="camera-segment" style="left:${k.time*100}%;width:${(keys()[i+1].time-k.time)*100}%"><i>${({smooth:'Smooth move',linear:'Linear move',hold:'Hold / cut'})[k.easing]}</i></span>`).join('')}<div class="camera-track-playhead" data-track-playhead style="left:${playhead*100}%"></div>${keys().map(k=>`<button class="camera-key ${keyId===k.id?'selected':''} ${shot().camera?'':'automatic'}" style="left:${k.time*100}%" data-key="${k.id}" aria-label="Camera keyframe: ${escape(k.label)} at ${(k.time*shot().seconds).toFixed(2)} seconds" aria-pressed="${keyId===k.id}" title="${escape(k.label)} · ${(k.time*shot().seconds).toFixed(2)}s"><span>◆</span><small>${(k.time*shot().seconds).toFixed(1)}s</small></button>`).join('')}<span class="camera-track-zero">0s</span><span class="camera-track-end">${shot().seconds}s</span></div></div>
+      <div class="time-ruler-row"><span class="track-heading">SECONDS</span><div class="time-ruler" role="slider" aria-label="Chapter timeline scrubber" aria-valuemin="0" aria-valuemax="${s.seconds}" aria-valuenow="${(playhead*s.seconds).toFixed(2)}" tabindex="0">${ticks.map(t=>`<span style="left:${t/s.seconds*100}%">${Number(t.toFixed(2))}</span>`).join('')}${scoreHitsHtml()}${rulerMarksHtml()}<div class="ruler-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div><button class="chapter-end-handle" data-chapter-end type="button" aria-label="Chapter length: drag to change" title="Drag to change the chapter length (snaps to 0.5 s, Alt: free). Nothing already placed moves; the camera holds its last view."><i></i></button></div>
+      ${deskVersions.lane()}${titlesGroup()}${graphics.lane()}${laneGroupHead('motion')}<div class="lane-group-body" data-lane-body="motion" ${groupClosed('motion')?'hidden':''}><div class="camera-lane-row"><span class="track-heading"><b>◆ Camera</b><small>${s.camera?'Custom views':'Original views'}</small></span><div class="camera-track" role="group" aria-label="Camera keyframe timeline"><div class="camera-track-line"></div>${keys().slice(0,-1).map((k,i)=>`<span class="camera-segment ease-${k.easing}" style="left:${k.time*100}%;width:${(keys()[i+1].time-k.time)*100}%"><i>${({smooth:'Smooth move',linear:'Linear move',hold:'Hold / cut'})[k.easing]}</i></span>`).join('')}<div class="camera-track-playhead" data-track-playhead style="left:${playhead*100}%"></div>${keys().map(k=>`<button class="camera-key ${keyId===k.id?'selected':''} ${shot().camera?'':'automatic'}" style="left:${k.time*100}%" data-key="${k.id}" aria-label="Camera keyframe: ${escape(k.label)} at ${(k.time*shot().seconds).toFixed(2)} seconds" aria-pressed="${keyId===k.id}" title="${escape(k.label)} · ${(k.time*shot().seconds).toFixed(2)}s · ${({smooth:'smooth',linear:'linear',hold:'hold'})[k.easing]||k.easing} to the next (T)" data-ease="${k.easing}"><span>${({smooth:'⧗',linear:'◆',hold:'■'})[k.easing]||'◆'}</span><small>${(k.time*shot().seconds).toFixed(1)}s</small></button>`).join('')}<span class="camera-track-zero">0s</span><span class="camera-track-end">${shot().seconds}s</span></div></div>
       ${deskEditor.timeline()}</div>${lightLane()}${peopleGroup()}${propsGroup()}${soundGroup()}</div></div>
       <label class="timeline-pan" ${zoom===1?'hidden':''}><span>Pan view</span><input name="timeline-pan" type="range" min="0" max="100" step=".1" value="0" aria-label="Timeline horizontal position"></label>
       <div class="timeline-footer"><span data-bake-summary class="timeline-bake-summary" role="status"></span><span data-timeline-status role="status">Click ruler to scrub · Drag empty lanes to select several · Shift/Ctrl-click adds · Ctrl+A all · Alt: bypass snap · Space: play</span><span class="sb-pills" data-sb-pills></span><output data-track-time>${(playhead*s.seconds).toFixed(2)}s / ${s.seconds}s</output></div>`;
     timeline.querySelector('.timeline-viewport').scrollLeft=scroll;
     renderPills();drawScore();
+    if(debugTimeline){const ms=performance.now()-t0,el=timeline.querySelector('[data-track-time]');if(el)el.title=`renderTimeline ${ms.toFixed(1)} ms · ${timeline.getElementsByTagName('*').length} elements`;const f=timeline.querySelector('.timeline-footer');if(f)f.dataset.debug=`${ms.toFixed(1)} ms · ${timeline.getElementsByTagName('*').length} el`;}
     syncTransport();syncPlayhead();syncPan();syncPicks();syncSelection();
   }
   async function load(){
@@ -1036,7 +1038,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       if(name==='titles'){if(film&&titleEditor.has()){const on=titleEditor.toggleShown();timeline.querySelector('[data-action=titles]')?.setAttribute('aria-pressed',String(on));status(on?'Film titles shown in the frame.':'Film titles hidden in the frame.');return;}document.body.classList.toggle('preview-titles');timeline.querySelector('[data-action=titles]')?.setAttribute('aria-pressed',String(document.body.classList.contains('preview-titles')));return;}
       if(name==='chapters'){timeline.classList.toggle('chapters-hidden');timeline.querySelector('[data-action=chapters]')?.setAttribute('aria-pressed',String(!timeline.classList.contains('chapters-hidden')));return;}
       if(name.startsWith('zoom-')){
-        const i=TIMELINE_ZOOMS.indexOf(zoom);zoom=name==='zoom-fit'?1:TIMELINE_ZOOMS[Math.max(0,Math.min(TIMELINE_ZOOMS.length-1,i+(name==='zoom-in'?1:-1)))];renderTimeline();
+        zoom=name==='zoom-fit'?1:clampZoom(zoom*(name==='zoom-in'?1.5:1/1.5),shot().seconds,laneWidth());if(zoom<1.02)zoom=1;renderTimeline();
         const viewport=timeline.querySelector('.timeline-viewport');viewport.scrollLeft=zoom===1?0:Math.max(0,playhead*(viewport.scrollWidth-130)-(viewport.clientWidth-130)/2);return;
       }
       if(name==='edit-prev'||name==='edit-next'){seekCamera(adjacentEdit(editTimes(),playhead*shot().seconds,name==='edit-prev'?-1:1,shot().seconds)/shot().seconds);return;}
@@ -1341,13 +1343,68 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     }catch{}
     return a;
   }
+  // ---- P4 timeline (timeline-ui.mjs): continuous zoom, Ctrl+wheel at the pointer, zoom to the selection, the playhead
+  // followed page by page, the film timecode, markers (M) and the loop range (B / N, Alt+X), [ / ] to the playhead,
+  // T / F9 the camera key's interpolation, and ?debug=timeline (the real renderTimeline time in the foot).
+  function laneWidth(){return Math.max(300,(timeline.clientWidth||1200)-150);}
+  function zoomMax(){return maxZoom(shot().seconds,laneWidth());}
+  function setZoom(next,anchorPx=null){
+    const v=timeline.querySelector('.timeline-viewport');if(!v)return;const was=zoom,width=v.scrollWidth,px=anchorPx??v.clientWidth/2,frac=(v.scrollLeft+px)/Math.max(1,width);
+    zoom=clampZoom(next,shot().seconds,laneWidth());if(zoom<1.02)zoom=1;if(Math.abs(zoom-was)<1e-6)return;renderTimeline();
+    const n=timeline.querySelector('.timeline-viewport');n.scrollLeft=Math.max(0,frac*n.scrollWidth-px);syncPan();
+  }
+  timeline.addEventListener('wheel',event=>{
+    const v=event.target.closest('.timeline-viewport');if(!v)return;
+    if(event.ctrlKey||event.metaKey){event.preventDefault();setZoom(zoom*Math.exp(-event.deltaY*.0025),event.clientX-v.getBoundingClientRect().left);return;}
+    if(event.shiftKey&&!event.deltaX){event.preventDefault();v.scrollLeft+=event.deltaY;syncPan();}
+  },{passive:false});
+  function selectionRange(){
+    const s=shot().seconds;if(keyId){const k=selectedKey();if(k)return [k.time*s-1,k.time*s+1];}
+    const c=deskEditor.selectedId()&&deskEditor.motion().clips.find(x=>x.id===deskEditor.selectedId());if(c)return [c.start,c.start+c.duration];
+    const t=titleEditor.range?.();if(t)return t;const g=graphics.selected?.();if(g!==null&&g!==undefined&&g!==-1){const r=graphics.range?.(g);if(r)return r;}
+    return null;
+  }
+  function zoomToSelection(){
+    const r=selectionRange();if(!r){status('Select a camera view, a move, a title or a graphic first: Z zooms to it.');return;}
+    const s=shot().seconds,len=Math.max(.5,r[1]-r[0]);zoom=clampZoom(s/(len*1.4),s,laneWidth());renderTimeline();
+    const v=timeline.querySelector('.timeline-viewport');v.scrollLeft=Math.max(0,((r[0]+r[1])/2)/s*v.scrollWidth-v.clientWidth/2);syncPan();
+  }
+  function followPage(){
+    if(zoom<=1||!bridge.playback().playing)return;const v=timeline.querySelector('.timeline-viewport');if(!v)return;
+    const x=playhead*v.scrollWidth;if(x>v.scrollLeft+v.clientWidth-30||x<v.scrollLeft+150){v.scrollLeft=Math.max(0,x-170);syncPan();}
+  }
+  function timecodeNow(){const m=scoreModel();return m?filmTimecode(playhead*shot().seconds,{start:m.start,bars:m.bars,beats:m.beats}):'';}
+  // markers and the loop range: Vico's aids, kept in this browser per cut and chapter (never in the cut)
+  function markKey(){return `${cutDir||project.id}:${shot().id}`;}
+  function markers(){return loadUi().markers?.[markKey()]||[];}
+  function setMarkers(list){const all={...(loadUi().markers||{})};all[markKey()]=list;saveUi({markers:all});renderTimeline();}
+  var loopRanges=new Map();
+  function loopRange(){return loopRanges?.get(markKey())||null;}
+  function rulerMarksHtml(){
+    const s=shot().seconds,r=loopRange();
+    return (r?`<div class="tl-loop" style="left:${r.start/s*100}%;width:${(r.end-r.start)/s*100}%" title="Loop range ${r.start.toFixed(2)}–${r.end.toFixed(2)} s (B / N set it, Alt+X clears it; with Loop on, Space plays it)"></div>`:'')
+      +markers().map(t=>`<i class="tl-marker" style="left:${t/s*100}%" title="Marker at ${t.toFixed(2)} s (M on it removes it; Shift+↑/↓ jump)"></i>`).join('');
+  }
+  function playLoopRange(){const r=loopRange();if(!r||!bridge.playback().loop)return false;bridge.previewRange(project,selected,{start:r.start,end:r.end,id:'loop-range',label:'Loop range'}).catch(error=>status(error.message,true));return true;}
+  // [ / ]: the selection's start / end to the playhead
+  function toPlayhead(edge){
+    const s=shot().seconds,t=playhead*s;
+    if(keyId){requireReady();const list=moveCameraKey(keys(),keyId,playhead);commit(()=>{shot().camera={keys:copy(list)};},{render:true,key:'key-to-playhead'});status('Camera view moved to the playhead.');return;}
+    const c=deskEditor.selectedId()&&deskEditor.motion().clips.find(x=>x.id===deskEditor.selectedId());
+    if(c){deskEditor.nudge(edge==='start'?t-c.start:t-(c.start+c.duration));return;}
+    const r=titleEditor.range?.();if(r&&titleEditor.nudgeTime(edge==='start'?t-r[0]:t-r[1]))return;
+    status('Select a camera view, a move or a title: [ puts its start on the playhead, ] its end.');
+  }
+  var EASES=['smooth','linear','hold'];
+  function setKeyEasing(next){const k=selectedKey();if(!k)throw Error('Select a camera view first.');const e=next||EASES[(EASES.indexOf(k.easing)+1)%EASES.length];commit(()=>{const x=ensureKeys().find(x=>x.id===keyId);if(x)x.easing=e;},{render:true});status(`Camera view: ${({smooth:'smooth move (Easy Ease)',linear:'linear move',hold:'hold, then cut'})[e]} to the next view.`);}
+  var debugTimeline=new URLSearchParams(location.search).get('debug')==='timeline';
   // ---- SOUND (P2, score-track.mjs): the film cut's score under the lanes; it plays with the playhead when Sound is on
-  let score=null,scoreFor=null,scoreCache=null;
-  const scorePlayer=cutDir?createScorePlayer({base:cutDir}):null;
+  var score=null,scoreFor=null,scoreCache=null;
+  var scorePlayer=cutDir?createScorePlayer({base:cutDir}):null;
   if(cutDir)Promise.all(['tempo-map','peaks','inputs'].map(n=>fetch(`${cutDir}/score/${n}.json`).then(r=>r.ok?r.json():null).catch(()=>null))).then(([tempo,peaks,inputs])=>{if(!tempo)return;score={tempo,peaks,inputs};scoreFor=null;if(open)renderTimeline();});
   function scoreModel(){if(!score||!film)return null;const id=shot()?.id;if(scoreFor!==id){scoreFor=id;scoreCache=chapterScore(score.tempo,id,{peaks:score.peaks,inputs:score.inputs});}return scoreCache;}
   try{const v=Number(loadUi().scoreVolume);if(Number.isFinite(v)&&scorePlayer)scorePlayer.setVolume(v);}catch{}
-  const SFX_LANE={'lift-up':'lift','lift-down':'lift','tilt-extend':'tilt','tilt-retract':'tilt',wheels:'wheels'},SFX_NAME={'lift-up':'Lift up','lift-down':'Lift down','tilt-extend':'Tilt out','tilt-retract':'Tilt in',wheels:'Wheels'};
+  var SFX_LANE={'lift-up':'lift','lift-down':'lift','tilt-extend':'tilt','tilt-retract':'tilt',wheels:'wheels'},SFX_NAME={'lift-up':'Lift up','lift-down':'Lift down','tilt-extend':'Tilt out','tilt-retract':'Tilt in',wheels:'Wheels'};
   function soundGroup(){
     const m=scoreModel();if(!m)return '';const s=shot().seconds,pct=t=>(t/s*100).toFixed(3)+'%',stale=staleness(score.inputs,m.id,{seconds:s})||(score.inputs?.wav_sha256&&score.tempo.wav_sha256&&score.inputs.wav_sha256!==score.tempo.wav_sha256?'The score was rebuilt after its preview: run tools/experience/build-score-preview.py on this cut':null);
     const section=m.sections.find(x=>x.t0<=playhead*s&&x.t1>playhead*s)||m.sections[0],vol=Math.round((scorePlayer?.volume()??.8)*100);
@@ -1375,7 +1432,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     g.fillStyle='#ffffff55';for(const t of m.bars)if(t>=0&&t<=s)g.fillRect(Math.round(x(t)),0,1,h);
   }
   // follow the playhead (Sound on, this chapter playing); a seek while paused plays a grain
-  const soundOn=()=>open&&!!scorePlayer&&!!scoreModel()?.peaks&&document.getElementById('sound')?.getAttribute('aria-pressed')==='true';
+  function soundOn(){return open&&!!scorePlayer&&!!scoreModel()?.peaks&&document.getElementById('sound')?.getAttribute('aria-pressed')==='true';}
   function scoreSync(){
     if(!scorePlayer)return;const st=bridge.playback(),m=scoreModel();
     if(!soundOn()||!st.playing||st.index!==selected){scorePlayer.stop();return;}
@@ -1393,7 +1450,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   addEventListener('resize',()=>{if(open)drawScore();});
   // ---- the app bar and the mode pills (P1b, director-appbar.mjs)
   const closeMenus=wireMenus(appbar);
-  const pressed=id=>document.getElementById(id)?.getAttribute('aria-pressed')==='true';
+  function pressed(id){return document.getElementById(id)?.getAttribute('aria-pressed')==='true';}
   function renderAppBar(){
     if(!shellOn()||!open){appbar.hidden=true;return;}appbar.hidden=false;
     if(appbar.querySelector('.ab-pop:not([hidden])')||appbar.contains(document.activeElement)&&document.activeElement.matches('select'))return;   // (not while a menu or a select is open)
@@ -1493,7 +1550,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   let hintTimer=0;
   function keyHint(event,state,row=null){
     if(state?.target==='text'||state?.target==='field')return;
-    const c=changedHint(event);if(!c||hinted.has(c.spec))return;if(row&&c.spec==='Ctrl+S')return;
+    const c=changedHint(event);if(!c||hinted.has(c.spec))return;if(row&&(c.spec==='Ctrl+S'||row.id.startsWith('key-ease')))return;
     const ui=loadUi(),since=ui.keysSince||new Date().toISOString().slice(0,10);if(!ui.keysSince)saveUi({keysSince:since});
     if(Date.now()-Date.parse(since)>14*864e5)return;
     hinted.add(c.spec);hintEl.textContent=c.now+' (? lists every key)';hintEl.classList.add('shown');clearTimeout(hintTimer);hintTimer=setTimeout(()=>hintEl.classList.remove('shown'),4200);
@@ -1507,6 +1564,14 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       case 'palette':palette.toggle();return;
       case 'gizmo-space':{const next=spaceNow()==='local'?'world':'local';setSpaceAll(next);renderPills();status(next==='local'?'Gizmo: Object frame (it turns with the item).':'Gizmo: World frame (the room\'s axes).');return;}
       case 'groups-collapse':case 'groups-expand':setAllGroups(id==='groups-collapse');return;
+      case 'zoom-selection':zoomToSelection();return;
+      case 'marker':setMarkers(toggleMarker(markers(),playhead*shot().seconds));status('Marker '+(markers().some(t=>Math.abs(t-playhead*shot().seconds)<1/30)?'added':'removed')+' at '+(playhead*shot().seconds).toFixed(2)+' s.');return;
+      case 'marker-prev':case 'marker-next':{const t=nextMarker(markers(),playhead*shot().seconds,id==='marker-prev'?-1:1);need(t!==undefined,id==='marker-prev'?'No marker before the playhead (M adds one).':'No marker after the playhead (M adds one).');seekCamera(t/shot().seconds);return;}
+      case 'loop-start':case 'loop-end':{const s=shot().seconds;loopRanges.set(markKey(),setLoopEnd(loopRange(),id==='loop-start'?'start':'end',playhead*s,s));renderTimeline();const r=loopRange();status(`Loop range ${r.start.toFixed(2)}–${r.end.toFixed(2)} s${bridge.playback().loop?' · Space plays it':' · L turns loop on'}.`);return;}
+      case 'loop-clear':loopRanges.delete(markKey());renderTimeline();status('Loop range cleared.');return;
+      case 'to-playhead-start':case 'to-playhead-end':toPlayhead(id==='to-playhead-start'?'start':'end');return;
+      case 'key-ease-cycle':setKeyEasing(null);return;
+      case 'key-ease-smooth':setKeyEasing('smooth');return;
       case 'toggle-inspector':action('inspector');return;
       case 'toggle-timeline':action('ab-timeline');return;
       case 'maximise':maximise();return;
@@ -1516,7 +1581,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       case 'view-persp':case 'view-top':case 'view-front':case 'view-right':{
         if(!orbitBase&&!bridge.playback().playing)orbitBase=bridge.stage()?.captureCamera()||null;
         need(nav.setView(id.slice(5)),'The 3D view is not ready yet.');status(`${{persp:'Perspective',top:'Top',front:'Front',right:'Right'}[id.slice(5)]} view (free view: 0 goes back to the film camera).`);return;}
-      case 'play':action('chapter-toggle');return;
+      case 'play':if(!bridge.playback().playing&&playLoopRange())return;action('chapter-toggle');return;
       case 'step-back':case 'step-forward':{const seconds=shot().seconds;seekCamera(Math.max(0,Math.min(1,(playhead*seconds+(shift?1:1/30)*(id==='step-back'?-1:1))/seconds)));return;}
       case 'go-start':seekCamera(0);return;
       case 'go-end':seekCamera(1);return;
@@ -1884,7 +1949,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   if(film)timeline.classList.add('chapters-hidden');
   createTimelineHints({root:timeline,active:activeShortcuts,context:el=>({seconds:shot().seconds,graphic:el.dataset.graphicClip!==undefined?graphics.screens()[Number(el.dataset.graphicClip)]:null})});
   render();panel.hidden=timeline.hidden=true;
-  return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,ownsSound:()=>soundOn(),transportChanged:()=>{syncTransport();scoreSync();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;if(p)orbitBase=null;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;if(scorePlayer?.playing()||soundOn())scoreSync();syncPlayhead();},scrubbing:()=>!!scrub||!!groupDrag,filmApplied:()=>{setTimeout(()=>{try{foldDeskProps();}catch(error){console.warn('[desk fold]',error);}},300);if(inspector==='build'&&open)renderPanel();sceneLights.applied();sceneProps.applied();scenePeople.applied();if(open)renderPeople(true);floorRefl.applied();deskSel.applied();if(open){renderSceneProps(true);renderSceneDesks(true);renderBranding(true);}},
+  return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,ownsSound:()=>soundOn(),transportChanged:()=>{syncTransport();scoreSync();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;if(p)orbitBase=null;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;followPage();if(scorePlayer?.playing()||soundOn())scoreSync();syncPlayhead();},scrubbing:()=>!!scrub||!!groupDrag,filmApplied:()=>{setTimeout(()=>{try{foldDeskProps();}catch(error){console.warn('[desk fold]',error);}},300);if(inspector==='build'&&open)renderPanel();sceneLights.applied();sceneProps.applied();scenePeople.applied();if(open)renderPeople(true);floorRefl.applied();deskSel.applied();if(open){renderSceneProps(true);renderSceneDesks(true);renderBranding(true);}},
     // Selection -> inspector home (HOMES): for lanes and tools outside this module (the Titles lane: reveal('title')).
     reveal,revealHomes:()=>({...structuredClone(HOMES),title:homeOf('title')})};
 }

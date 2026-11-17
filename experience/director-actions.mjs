@@ -19,7 +19,7 @@
 //   aliases  what the command search (Ctrl+P) also finds it by: Rhino's command names (m, ro, sc, zs, ze, top…).
 // Vico's own keys (the panel's Edit keys) are kept as { id: [spec...] } (keys-panel.mjs, ui store) and laid over this
 // table by effectiveActions(); only rows the Director runs can be rebound, never to a RESERVED key.
-export const LIVE_PHASES = new Set(['1a', '1a2', '1b', '2', '3']);
+export const LIVE_PHASES = new Set(['1a', '1a2', '1b', '2', '3', '4']);
 
 const R = (id, label, keys, ctx, more = {}) => ({ id, label, keys, ctx, phase: '1a', owner: 'director', ...more });
 const E = (id, label, keys, ctx, more = {}) => R(id, label, keys, ctx, { owner: 'editor', ...more });
@@ -65,6 +65,16 @@ export const ACTIONS = [
   R('zoom-in', 'Timeline zoom in', ['=', '+'], 'timeline', { repeat: true, origin: 'Premiere' }),
   R('zoom-out', 'Timeline zoom out', ['-'], 'timeline', { repeat: true, origin: 'Premiere' }),
   R('zoom-fit', 'Fit the chapter in the timeline', ['Shift+Z'], 'timeline', { origin: 'Director' }),
+  R('zoom-selection', 'Zoom to the selection', ['Z'], 'timeline', { phase: '4', origin: 'Premiere' }),
+  G('zoom-wheel', 'Zoom at the pointer · Shift+wheel: pan', 'Ctrl + wheel', 'timeline', { phase: '4', origin: 'Premiere' }),
+  R('marker', 'Add a marker at the playhead (on a marker: remove it)', ['M'], 'timeline', { phase: '4', origin: 'Premiere' }),
+  R('marker-prev', 'Previous marker', ['Shift+ArrowUp'], 'timeline', { phase: '4', origin: 'Premiere' }),
+  R('marker-next', 'Next marker', ['Shift+ArrowDown'], 'timeline', { phase: '4', origin: 'Premiere' }),
+  R('loop-start', 'Loop range starts at the playhead', ['B'], 'timeline', { phase: '4', origin: 'Director' }),
+  R('loop-end', 'Loop range ends at the playhead', ['N'], 'timeline', { phase: '4', origin: 'Director' }),
+  R('loop-clear', 'Clear the loop range', ['Alt+X'], 'timeline', { phase: '4', origin: 'Premiere' }),
+  R('to-playhead-start', 'The selection starts at the playhead', ['['], 'timeline', { phase: '4', origin: 'Premiere' }),
+  R('to-playhead-end', 'The selection ends at the playhead', [']'], 'timeline', { phase: '4', origin: 'Premiere' }),
   R('groups-collapse', 'Fold every lane group (Alt-click a group: all of them)', ['{'], 'timeline', { phase: '3', origin: 'After Effects' }),
   R('groups-expand', 'Unfold every lane group', ['}'], 'timeline', { phase: '3', origin: 'After Effects' }),
   R('group-1', 'Jump to Titles & graphics (opens the group)', ['1'], 'timeline', { origin: 'Director' }),
@@ -111,6 +121,8 @@ export const ACTIONS = [
 
   // ---- items (live while selected)
   R('camera-update', 'Update this view from what the 3D view shows', ['U'], 'camera', { origin: 'Director' }),
+  R('key-ease-cycle', 'Interpolation to the next view: Smooth → Linear → Hold', ['T'], 'camera', { phase: '4', origin: 'After Effects' }),
+  R('key-ease-smooth', 'Smooth (Easy Ease) to the next view', ['F9'], 'camera', { phase: '4', origin: 'After Effects' }),
   R('lens-prev', 'Wider view (field of view 24° → 35° → 50°)', [','], 'camera', { origin: 'Director' }),
   R('lens-next', 'Closer view (field of view 50° → 35° → 24°)', ['.'], 'camera', { origin: 'Director' }),
   R('play-selection', 'Play just this move', ['Shift+Space'], 'desk-clip', { origin: 'Premiere' }),
@@ -139,7 +151,7 @@ export const ACTIONS = [
   R('keys-panel-close', 'Close this panel', ['Escape'], 'keys-panel', { shadows: ['escape'], origin: 'Director' }),
   E('still-step', 'Older / newer still', ['ArrowLeft', 'ArrowRight'], 'still', { shadows: ['step-back','step-forward'], origin: 'Director' }),
   E('still-close', 'Close the still view', ['Escape'], 'still', { shadows: ['escape'], origin: 'Director' }),
-  E('shape-nudge', 'Nudge the point or shape 1 px (Shift: 10)', ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Shift+ArrowLeft', 'Shift+ArrowRight', 'Shift+ArrowUp', 'Shift+ArrowDown'], 'shape', { shadows: ['step-back','step-forward','edit-prev','edit-next'], origin: 'Director' }),
+  E('shape-nudge', 'Nudge the point or shape 1 px (Shift: 10)', ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Shift+ArrowLeft', 'Shift+ArrowRight', 'Shift+ArrowUp', 'Shift+ArrowDown'], 'shape', { shadows: ['step-back','step-forward','edit-prev','edit-next','marker-prev','marker-next'], origin: 'Director' }),
   E('shape-delete', 'Remove the point', ['Delete', 'Backspace'], 'shape', { shadows: ['delete'], origin: 'Director' }),
   E('shape-all', 'Select every part', ['Ctrl+A'], 'shape', { shadows: ['select-all'], origin: 'Director' }),
   E('shape-done', 'Finish editing the shape', ['Enter'], 'shape', { shadows: ['open-inspector'], origin: 'Director' }),
