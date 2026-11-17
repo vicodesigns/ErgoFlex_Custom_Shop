@@ -17,7 +17,7 @@ const log=(...a)=>console.log(new Date().toISOString().slice(11,19),...a);
 let failures=0;const check=(ok,label)=>{log(ok?'PASS':'FAIL',label);if(!ok)failures++;};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const port=await new Promise(res=>{const s=net.createServer();s.listen(0,'127.0.0.1',()=>{const p=s.address().port;s.close(()=>res(p));});});
-fs.copyFileSync(path.join(root,'studio-state.json'),path.join(tmp,'state.json'));
+{const st=JSON.parse(fs.readFileSync(path.join(root,'studio-state.json'),'utf8'));delete st.keys?.['ergoflex.director.filmDrafts.v1'];fs.writeFileSync(path.join(tmp,'state.json'),JSON.stringify(st));}   // (no film drafts from other sessions: tests start clean)
 const server=spawn('node',[path.join(root,'tools/studio-server.mjs'),'--port',String(port),'--host','127.0.0.1','--state',path.join(tmp,'state.json')],{cwd:root,stdio:'ignore'});
 for(let i=0;i<100;i++){try{if((await fetch(`http://127.0.0.1:${port}/experience/`)).ok)break;}catch{}await sleep(100);}
 const browser=await puppeteer.launch({executablePath:process.env.CHROME||'/usr/bin/google-chrome',headless:'new',defaultViewport:{width:1920,height:1080},args:['--no-sandbox','--ignore-gpu-blocklist','--use-angle=vulkan','--enable-features=Vulkan','--mute-audio']});

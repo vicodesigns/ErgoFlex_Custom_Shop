@@ -17,7 +17,7 @@ const log=(...a)=>console.log(new Date().toISOString().slice(11,19),...a);
 let failures=0;const check=(ok,label)=>{log(ok?'PASS':'FAIL',label);if(!ok)failures++;};
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const port=await new Promise(res=>{const s=net.createServer();s.listen(0,'127.0.0.1',()=>{const p=s.address().port;s.close(()=>res(p));});});
-fs.copyFileSync(path.join(root,'studio-state.json'),path.join(tmp,'state.json'));
+{const st=JSON.parse(fs.readFileSync(path.join(root,'studio-state.json'),'utf8'));delete st.keys?.['ergoflex.director.filmDrafts.v1'];fs.writeFileSync(path.join(tmp,'state.json'),JSON.stringify(st));}   // (no film drafts from other sessions: tests start clean)
 const server=spawn('node',[path.join(root,'tools/studio-server.mjs'),'--port',String(port),'--host','127.0.0.1','--state',path.join(tmp,'state.json')],{cwd:root,stdio:'ignore'});
 for(let i=0;i<100;i++){try{if((await fetch(`http://127.0.0.1:${port}/experience/`)).ok)break;}catch{}await sleep(100);}
 const browser=await puppeteer.launch({executablePath:process.env.CHROME||'/usr/bin/google-chrome',headless:'new',defaultViewport:{width:1920,height:1080},args:['--no-sandbox','--disable-gpu','--mute-audio']});
@@ -34,7 +34,7 @@ const shapeState=()=>ev(()=>({pts:document.querySelectorAll('.se-pt').length,smo
 const pathD=i=>ev(i=>document.querySelectorAll('.title-card path')[i]?.getAttribute('d'),i);
 async function drag(from,to,{steps=8,alt=false}={}){if(alt)await page.keyboard.down('Alt');await page.mouse.move(...from);await page.mouse.down();for(let i=1;i<=steps;i++){await page.mouse.move(from[0]+(to[0]-from[0])*i/steps,from[1]+(to[1]-from[1])*i/steps);await sleep(16);}await page.mouse.up();if(alt)await page.keyboard.up('Alt');await sleep(250);}
 try{
-  await page.setRequestInterception(true);page.on('request',r=>r.url().endsWith('/graphics-test.html')?r.respond({status:200,contentType:'text/html',body:'<html><head><link rel="stylesheet" href="/experience/director.css"></head><body><div id="panel"></div><div id="timeline" style="width:1000px"></div></body></html>'}):r.continue());
+  await page.setRequestInterception(true);page.on('request',r=>r.url().endsWith('/graphics-test.html')?r.respond({status:200,contentType:'text/html',body:'<html><head><link rel="stylesheet" href="/experience/director.css"><link rel="stylesheet" href="/experience/director-shell.css"></head><body><div id="panel"></div><div id="timeline" style="width:1000px"></div></body></html>'}):r.continue());
   await page.goto(`http://127.0.0.1:${port}/graphics-test.html`);
   await ev(async()=>{
     const {createGraphicsEditor}=await import('/experience/graphics-editor.mjs');

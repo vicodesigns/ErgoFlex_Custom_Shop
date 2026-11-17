@@ -25,7 +25,7 @@ const commons=chapterList()?.find(c=>c.id==='commons'),oilers=chapterList()?.fin
 if(!commons||!oilers||!fs.existsSync(path.join(root,commons.page))){console.log(`Studio sync e2e: skipped (${HQ} has no chapter pages in this checkout).`);process.exit(0);}
 const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'studio-sync-e2e-')),shots=process.env.SHOTS||path.join(tmp,'shots');fs.mkdirSync(shots,{recursive:true});
 // The scratch state: the checkout's, without the autosave ring and the saved cuts (several MB of browser storage).
-const stateFile=path.join(tmp,'studio-state.json');{const st=JSON.parse(fs.readFileSync(path.join(root,'studio-state.json'),'utf8'));for(const k of ['ergoflexProjectAutosaveV1','ergoflex.clientCuts.v1'])delete st.keys[k];fs.writeFileSync(stateFile,JSON.stringify(st));}
+const stateFile=path.join(tmp,'studio-state.json');{const st=JSON.parse(fs.readFileSync(path.join(root,'studio-state.json'),'utf8'));for(const k of ['ergoflexProjectAutosaveV1','ergoflex.clientCuts.v1','ergoflex.director.filmDrafts.v1'])delete st.keys[k];fs.writeFileSync(stateFile,JSON.stringify(st));}
 const port=await new Promise(r=>{const s=net.createServer().listen(0,'127.0.0.1',()=>{const p=s.address().port;s.close(()=>r(p));});}),BASE=`http://127.0.0.1:${port}`;
 const server=spawn(process.execPath,[path.join(root,'tools/studio-server.mjs'),'--port',String(port),'--host','127.0.0.1','--state',stateFile,'--root',root,'--no-watch'],{cwd:root,stdio:['ignore','pipe','pipe']});
 await new Promise((ok,fail)=>{const t=setTimeout(()=>fail(Error('studio server did not start')),20000);server.stdout.on('data',d=>{if(/studio server/.test(d)){clearTimeout(t);ok();}});server.once('exit',c=>fail(Error('studio server exited '+c)));});
