@@ -1047,8 +1047,10 @@ export function solveChange(rig, from, to, w, arms0 = null, shift = null, line =
 //              sole: [left, right] (metres the drawn soles stand above the floor in the posture: below),
 //              heels: [[y, z], [y, z]] (the drawn heels' first contact from the ankles), tilt: [left, right] (radians
 //              the drawn soles are toes-down: the landing lifts the toes as much more), land: [left, right] (metres
-//              the drawn heels stand off the floor as a foot lands: below), startYaw / endYaw (radians, about y, 0
-//              facing +z: the way they face where the walk starts and ends; along the first and last leg when not given) }
+//              the drawn heels stand off the floor as a foot lands: below), swing: 'path' (solveWalk: the swinging
+//              foot follows the path on its own side, not the straight line between footprints), startYaw / endYaw
+//              (radians, about y, 0 facing +z: the way they face where the walk starts and ends; along the first and
+//              last leg when not given) }
 // Returns { length, seconds, prints, at(seconds) -> g } where g counts steps (the gait clock).
 // A walk starts and ends standing: a built walking posture (`walk`, mid-stride, feet pitched, hips low: the film's
 // walkers are cast in it for its model, a backpack on some) is taken as the character's standing-by posture
@@ -1150,7 +1152,11 @@ export function walkPlan(rig, from, to, path, options = {}) {
     }
     for (let pass = 0; pass < 6; pass++) { const prev = Float64Array.from(body); for (let i = 1; i < n - 1; i++) { const r = Math.min(3, i, n - 1 - i); let sum = 0; for (let k = -r; k <= r; k++) sum += prev[i + k]; body[i] = sum / (2 * r + 1); } }
     const bodyYaw = g => { const x = Math.min(n - 1, Math.max(0, g / pace / dt)), i = Math.min(n - 2, Math.floor(x)); return lerp(body[i], body[i + 1], x - i); };
-    return { length, step, steps, prints, along, heading, travel, bodyYaw, turnRate: THREE.MathUtils.radToDeg(fastest(body) / dt), from, to, pace, heels, land, tilt, toes: options.toes !== 'stiff', seconds: steps.length / pace, at: seconds => clamp01(seconds * pace / steps.length) * steps.length };
+    // (options.swing === 'path': each footprint also as where it stands from the path, { s, f: metres ahead, w: metres to
+    // the left, at heading(s) }: solveWalk carries a swinging foot along the path that way, see there)
+    const swing = options.swing === 'path';
+    if (swing) for (const list of prints) for (const p of list) { const at = along(p.s), h = heading(p.s), dx = p.x - at.x, dz = p.z - at.z; p.f = dx * Math.sin(h) + dz * Math.cos(h); p.w = dx * Math.cos(h) - dz * Math.sin(h); }
+    return { length, step, steps, prints, along, heading, travel, bodyYaw, turnRate: THREE.MathUtils.radToDeg(fastest(body) / dt), from, to, pace, heels, land, tilt, toes: options.toes !== 'stiff', swing, seconds: steps.length / pace, at: seconds => clamp01(seconds * pace / steps.length) * steps.length };
 }
 // The pose at gait clock g (plan.at(seconds)): rig.lq / rig.lp in the model's frame. Returns where the model stands:
 // { x, z, yaw } (metres, radians; the room's frame).
@@ -1184,6 +1190,14 @@ export function solveWalk(rig, plan, g) {
         if (next) {
             const e = air * air * (3 - 2 * air), far = Math.hypot(next.x - print.x, next.z - print.z);
             x = lerp(print.x, next.x, e); z = lerp(print.z, next.z, e); floor = lerp(print.y, next.y, e); y = floor + .006 * Math.sin(Math.PI * air);
+            // (plan.swing, walk `swing: 'path'`: the foot goes along the path on its own side of it, as far ahead and to the
+            // side of where the path is then as it stood at both footprints, not on the straight line between them: on a
+            // tight turn the straight line runs inside the other foot and the legs cross (storage's Andre, Nov 17). The
+            // same at both footprints and on a straight path.)
+            if (plan.swing && Number.isFinite(print.f) && Number.isFinite(next.f)) {
+                const ps = lerp(print.s, next.s, e), on = plan.along(ps), h = plan.heading(ps), f = lerp(print.f, next.f, e), w = lerp(print.w, next.w, e);
+                x = on.x + f * Math.sin(h) + w * Math.cos(h); z = on.z + f * Math.cos(h) - w * Math.sin(h);
+            }
             // (early in the swing the heel comes up behind, the knee bending to about 60 degrees, not the thigh up in front)
             y += GAIT.swing * walking * clamp01(far / .6) * Math.sin(Math.PI * Math.min(1, air / .6)) ** 1.2;
             face = print.yaw + (THREE.MathUtils.euclideanModulo(next.yaw - print.yaw + Math.PI, Math.PI * 2) - Math.PI) * e;

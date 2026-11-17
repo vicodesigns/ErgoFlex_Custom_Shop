@@ -33,6 +33,23 @@
   `experience/people-track.mjs` (a posture change moves both windows' edge; a start moves the whole walk / roll; an
   arrival or waypoint sets the pace / speed; an action moves with its length kept). Pose keys: pose mode, Auto-key.
 
+## November 17: storage, Andre's walk round the desk (Vico: "his legs totally clip and walk incorrectly")
+
+- Measured (his skinned vertices from the GLBs, posed by the production people code at 1/60 s, against the stage's own
+  desk and room meshes, a 10 mm distance grid): his legs never entered the desk; they went through each other. On
+  the old route's 0.37 m U-turn west of the desk with 0.49 m steps the swinging foot went straight from footprint to
+  footprint, across the other leg: shins 24 mm apart at the closest, ankles crossed by up to 206 mm (6.5-7.0 s; the
+  first corner 5.7-5.8 s nearly so, 36 mm), and a hand went through the air compressor (14 mm, 6.55-6.77 s).
+- Fix: a new route, one arc of 0.575 m round the desk's front-left corner and down its left side to the same spot
+  (-1120, 1538, facing 117: phone beats unchanged), 1.68 m instead of 2.43; the walk `swing: 'path'` (new, opt-in,
+  room-people-motion.mjs: the swinging foot follows the path on its own side; the same as before on a straight path);
+  0.425 m steps at 2.25 a second from 5.0 s (arrives 7.67 s, phone 7.71 s as before); the turn away 1.6 s (was 1.4,
+  peak 120 deg/s, now 104), the let-go held to 4.2 s.
+- After: shins 116 mm apart at the closest, ankles never crossed (31 mm at the least), planted feet slide 0-3 mm in
+  the walk, legs at least 164 mm and hands 122 mm from the desk and props from 3.3 s on, nothing inside anything.
+  0-3.3 s (robot, lift, shelf, let-go) unchanged. Ghost audit: no ghosting, no pops. Swapping him for another man
+  keeps it (docs/cinematic-intro/PEOPLE-SWAP-20261117.md).
+
 ## November 15: music, Kai's seat (Vico on the 22:12 render: "he's sitting inside of it, his legs are clipping")
 
 - Measured (Kai's posed `people-kai-sit-controller` vertices against a 5 mm height field of `armchair-poppi`, in the

@@ -47,6 +47,8 @@
 //                                                     the posture of `then` if given; they face along the path at both ends
 //                                                     (a walking posture, `walk`, starts and ends standing: walkStance;
 //                                                     `toes: 'stiff'`: the foot pitches whole, the toes not bending;
+//                                                     `swing: 'path'`: a swinging foot follows the path on its own side,
+//                                                     not the straight line between footprints (tight turns: no crossed legs);
 //                                                     `turn`: degrees they face at the end, else the `then` placement's
 //                                                     there, else along the last leg; `look` is honoured on the way)
 //   change: { seconds, arms: [a, b], turn: [a, b], step: true }
@@ -79,7 +81,7 @@ import * as THREE from 'three';
 import {updateSkinnedBounds} from './skinned-bounds.mjs';
 import {poseAt} from './people-pose-keys.mjs';
 import {postureRecord,postureRecords,hasPosturePose,poseOwner,sourceOf,roomEditKey,blendPosturePoses} from './people-postures.mjs';
-import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, shoeFit, solveWalk, lookToward, solveTread, rollPlan, actedKey, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=roll-walk-20261115-s17';
+import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, shoeFit, solveWalk, lookToward, solveTread, rollPlan, actedKey, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=andre-walk-20261117';
 // who looks at whom (RoomPeople.gazeOf)
 const GAZE_TALK = /^(stand-talk|sit-chat|stand-drink|stand-mug|stand-coffee|sit-coffee)$/, GAZE_IDLE = /^(stand-wait|wheel-roll|wheel-watch|cane-stand|white-cane|sit-listen)$/;
 const GAZE_DESK = /^stand-phone-watch$/;      // watching the featured desk go (the workshop film): the head follows it
@@ -2355,11 +2357,11 @@ export class RoomPeople {
         const sign = JSON.stringify(walk) + '|' + JSON.stringify(object.userData.person.at || null);
         if (life.walkSign !== sign) {
             const path = (walk.path || [walk.from || [object.position.x, object.position.z], walk.to]).map(([x, z]) => [x / 1000, z / 1000]);
-            life.walkSign = sign; life.plan = path.length > 1 && path.every(p => p.every(Number.isFinite)) ? walkPlan(life.rig, life.key, (walk.then && life.rig.key(walk.then)) || life.key, path, { pace: walk.pace, step: walk.step ? walk.step / 1000 : undefined, toes: walk.toes }) : null;
+            life.walkSign = sign; life.plan = path.length > 1 && path.every(p => p.every(Number.isFinite)) ? walkPlan(life.rig, life.key, (walk.then && life.rig.key(walk.then)) || life.key, path, { pace: walk.pace, step: walk.step ? walk.step / 1000 : undefined, toes: walk.toes, swing: walk.swing }) : null;
             // (the model drawn is the walking posture's, skinned to standing: its soles, a few millimetres off the floor
             // that way, are measured once and the footprints lowered by as much)
             if (life.plan) {
-                const endYaw = this.walkEnd(walk, path), plan = options => walkPlan(life.rig, life.key, (walk.then && life.rig.key(walk.then)) || life.key, path, { pace: walk.pace, step: walk.step ? walk.step / 1000 : undefined, toes: walk.toes, endYaw, ...options });
+                const endYaw = this.walkEnd(walk, path), plan = options => walkPlan(life.rig, life.key, (walk.then && life.rig.key(walk.then)) || life.key, path, { pace: walk.pace, step: walk.step ? walk.step / 1000 : undefined, toes: walk.toes, swing: walk.swing, endYaw, ...options });
                 const shoes = this.soleOf(object, life, life.plan); life.plan = plan(shoes);
                 life.plan = plan({ ...shoes, land: this.landOf(object, life, life.plan) });
             }
