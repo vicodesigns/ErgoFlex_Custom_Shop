@@ -2251,7 +2251,7 @@ export class RoomPeople {
             const { model } = solveChange(pair.rig, pair.keyFrom, pair.keyTo, w, part('arms'), shift, plan?.hands === 'line'), cut = Number.isFinite(pair.to?.swap) ? THREE.MathUtils.clamp(pair.to.swap, .02, .98) : null;
             const shown = (cut === null ? model === 'from' : w < cut) ? a : b;
             shown.position.lerpVectors(pair.homeFrom.position, pair.homeTo.position, ease); shown.rotation.y = pair.homeFrom.turn + (pair.homeTo.turn - pair.homeFrom.turn) * ease;
-            drawPose(pair.rig, shown.userData.personRig, 0, poseNow(shown.userData.person));
+            drawPose(pair.rig, shown.userData.personRig, 0, poseNow(shown.userData.person), typeof window !== 'undefined' && !!window.__directorDragging);   // (hold: the Director's pose mode drags a bone of someone in the middle of a change)
             if (shown === a && pair.wheels) turnWheels(shown.userData.personRig, pair.wheels);
             a.userData.personChanging = b.userData.personChanging = true; pair.live = true; this.dirty = true; out.set(a, { shown }); out.set(b, { shown });
         }
@@ -2359,14 +2359,14 @@ export class RoomPeople {
         if (!changing) {
             object.position.copy(home.position); object.rotation.y = home.turn;
             // (between the steps: the posture as built, which liven() then brings to life; scrubbed into, nothing is left over)
-            if (step.phase === 'hold') { solveChange(step.actor.rig, step.to, step.to, 1); drawPose(step.actor.rig, object.userData.personRig, 0, poseNow(object.userData.person)); }
+            if (step.phase === 'hold') { solveChange(step.actor.rig, step.to, step.to, 1); drawPose(step.actor.rig, object.userData.personRig, 0, poseNow(object.userData.person), typeof window !== 'undefined' && !!window.__directorDragging); }
             return;
         }
         solveChange(step.actor.rig, step.from, step.to, step.w);
         const [a, z] = step.phase === 'out' ? [step.desk, home] : [home, step.desk], ease = THREE.MathUtils.smoothstep(step.w, 0, .72);
         object.position.lerpVectors(a.position, z.position, ease);
         object.rotation.y = a.turn + (THREE.MathUtils.euclideanModulo(z.turn - a.turn + Math.PI, Math.PI * 2) - Math.PI) * ease;   // (the short way round)
-        drawPose(step.actor.rig, object.userData.personRig, step.dz, poseNow(object.userData.person));
+        drawPose(step.actor.rig, object.userData.personRig, step.dz, poseNow(object.userData.person), typeof window !== 'undefined' && !!window.__directorDragging);
         this.dirty = true;
     }
     // A film's walker (a placement with `walk`): at the start of the path until `start`, then walking it, then standing
