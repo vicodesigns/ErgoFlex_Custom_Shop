@@ -13,5 +13,6 @@
 chapter commons 4
 chapter awaken 2
 chapter awareness 1
-chapter storage 1
+chapter storage 2
 # awaken 2 (2026-11-16, Vico: "Yes, bump awaken to 2"): the floor circle follows the desk through its 100 degree turn instead of swinging off (stage.mjs ringHome.local).
+# storage 2 (2026-11-17, Vico: "His walk looks much better ... bump it"): Andre's walk round the desk without his legs crossing (swing: 'path', a new route, 3.3-7.7 s).
