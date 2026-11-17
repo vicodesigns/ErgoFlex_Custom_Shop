@@ -9,7 +9,7 @@
 // cast[i].postures[modelId].pose = { '<bone>': [x, y, z, w] }, so the live stage and film show it.
 // The People controller supplies an active-posture view and routes writes to that record.
 import {enhanceGizmo,mmPerUnitOf} from './gumball.mjs';
-import {poseAt,setPoseKey,removePoseKey,moveKey,setKeyEase,copyKey,pasteKey,keyTimes,EASES,KEY_SNAP} from '../people-pose-keys.mjs';
+import {poseAt,setPoseKey,removePoseKey,moveKey,setKeyEase,copyKey,pasteKey,keyTimes,keyedBones,EASES,KEY_SNAP} from '../people-pose-keys.mjs';
 // Pose KEYS (S31, Blender's way): with Auto-key on (the red dot; off until turned on, then remembered) every adjustment writes a key at the playhead
 // for the bones it changed (the active posture record’s poseKeys: [{t, pose, ease}], people-pose-keys.mjs); between keys each bone eases from
 // key to key on top of what is programmed (desk arms, the walk, the roll, the acts). Key all (I) / Key limb key
@@ -67,6 +67,7 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
   const rigOf=()=>h?.object.userData.personRig||null;
   const bone=name=>rigOf()?.bones.get(name)||null;
   const label=name=>info(name)?.[1]||name;
+  const cap=s=>s?s[0].toUpperCase()+s.slice(1):s;
   const limb=()=>joint&&info(joint)?.[3]||null;
   const moving=()=>gmode==='translate'&&!!joint&&!!moveOf(joint).kind;
   function dispose(){
@@ -213,7 +214,23 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
       if(!Object.keys(map).length){rerender();return;}
       selT=t;edit(key,x=>takeKeys(x,setPoseKey(x,t,map)),`${text} Key at ${fmt(t)} s (auto-key).`,{undoKey:undoKey&&undoKey+'@'+t});return;
     }
-    edit(key,x=>{if(Object.keys(pose).length)x.pose=pose;else delete x.pose;},text,{undoKey});
+    // Auto-key off (17 Nov 2026): only the bones this step changed (against what shows at the playhead) are written,
+    // never the others' keyed values. A bone with no keys goes into the static pose; a bone with a key AT the playhead
+    // changes that key; a bone keyed only at other times is left as it is, and the status line says why (its keys
+    // would win on screen, so writing it to the static pose looked like a snap-back).
+    if(!e){edit(key,x=>{if(Object.keys(pose).length)x.pose=pose;else delete x.pose;},text,{undoKey});return;}
+    const t=now(),was=poseAt(e,t)||{},changed={};
+    for(const b of new Set([...Object.keys(pose),...Object.keys(was)]))if(!sameQ(pose[b],was[b]))changed[b]=pose[b]||IDENT;
+    if(!Object.keys(changed).length){rerender();return;}
+    const keyed=new Set(keyedBones(e)),kt=keyAt(e,t),toKey={},toStatic={},blocked=[];
+    for(const [b,q] of Object.entries(changed)){if(!keyed.has(b))toStatic[b]=q;else if(kt!==undefined)toKey[b]=q;else blocked.push(b);}
+    const names=l=>l.map(b=>label(b).toLowerCase()).join(', '),why=blocked.length?`${cap(names(blocked))} ${blocked.length===1?'is':'are'} keyed at other times: turn Auto-key on to key ${blocked.length===1?'it':'them'} here, or delete ${blocked.length===1?'its':'their'} keys.`:'';
+    if(!Object.keys(toKey).length&&!Object.keys(toStatic).length){status(why,true);rerender();return;}
+    if(Object.keys(toKey).length)selT=kt;
+    edit(key,x=>{
+      if(Object.keys(toStatic).length){const p={...(x.pose||{})};for(const [b,q] of Object.entries(toStatic)){if(sameQ(q,IDENT))delete p[b];else p[b]=q;}if(Object.keys(p).length)x.pose=p;else delete x.pose;}
+      if(Object.keys(toKey).length)takeKeys(x,setPoseKey(x,kt,toKey));
+    },`${text}${Object.keys(toKey).length?` Key at ${fmt(kt)} s updated.`:''}${why?' '+why:''}`,{undoKey});
   }
   // Key all / Key limb (I): the bones as they are now, at the playhead (a bone as built is keyed as identity).
   function keyNow(which){
