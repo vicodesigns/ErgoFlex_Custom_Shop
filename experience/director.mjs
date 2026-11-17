@@ -1650,6 +1650,8 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       case 'keys-panel-close':keysPanel.close();return;
       case 'palette':palette.toggle();return;
       case 'crop-cycle':cycleCrop();return;
+      case 'copy-attrs':(ctx==='person'?scenePeople:sceneProps).copyAttrs();return;
+      case 'paste-attrs':(ctx==='person'?scenePeople:sceneProps).pasteAttrs();return;
       case 'lane-filter':{const F=['','busy','sel'],next=F[(F.indexOf(laneFilter)+1)%F.length];setLaneFilter(next);return;}
       case 'lock-camera':lockCamera=!lockCamera;renderPills();status(lockCamera?(keyId?'Lock camera to view: orbit, pan or zoom and the selected camera view follows (one undo step each).':'Lock camera to view is on: select a camera view, then move the view.'):'Camera no longer locked to the view.');return;
       case 'isolate':isolate(!isolated);return;

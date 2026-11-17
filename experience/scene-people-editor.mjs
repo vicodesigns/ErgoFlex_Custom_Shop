@@ -401,6 +401,11 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       commit(()=>{delete shot().peopleEdits;},{render:false});sel=null;status('People reset: the chapter shows the film\'s cast again. Undo brings your cast back.');rerender();return;
     }
   }
+  // P5 paste attributes (Ctrl+C / Ctrl+Alt+V on a person): clothes and hair colours, size and whom they look at
+  let attrClip=null;
+  function copyAttrs(){const e=sel&&entry(sel);if(!e){status('Select a person first: Ctrl+C copies their colours, size and gaze.');return false;}attrClip={colors:e.colors?{...e.colors}:null,scale:e.scale??null,look:e.look?[...[].concat(e.look)]:null,name:personName(e)};status(`Copied ${attrClip.name}'s colours, size and gaze: Ctrl+Alt+V pastes them onto another person.`);return true;}
+  function pasteAttrs(){const e=sel&&entry(sel);if(!attrClip){status('Copy a person\'s look first (Ctrl+C on them).');return false;}if(!e){status('Select the person to paste onto.');return false;}
+    edit(sel,x=>{if(attrClip.colors)x.colors={...attrClip.colors};else delete x.colors;if(attrClip.scale)x.scale=attrClip.scale;else delete x.scale;const look=(attrClip.look||[]).filter(k=>k!==x.key);if(look.length)x.look=look;else delete x.look;},`${personName(e)}: the colours, size and gaze of ${attrClip.name}. Undo puts them back.`);return true;}
   function setMode(m){if(pose.active()){pose.setMode(m);return;}if(!MODES[m])return;mode=m;rerender();status(`People gizmo: ${MODES[m]}.`);}
   // ---- the library dialog
   const dialog=document.createElement('dialog');dialog.id='people-library';dialog.className='people-library';dialog.setAttribute('aria-labelledby','people-library-title');document.body.append(dialog);
@@ -844,5 +849,5 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   const header=()=>{const e=sel&&entry(sel);return e?{name:personName(e),detail:pose.active()===sel?'Pose mode'+(pose.joint()?' · '+pose.jointLabel():''):doing(e)}:null;};
   // After the film setup is (re)applied or the cut changes: the selection may be gone.
   function applied(){if(sel&&!entry(sel)){pose.exit();sel=null;}ensure().catch(()=>null);}
-  return {panel,lane,laneHeight,action,changed,select,deselect,selected:()=>sel,object:()=>sel?objectOf(sel):null,header,pickObject,setMode,mode:()=>mode,count,remove:k=>{if(k===undefined&&pose.active()){if(pose.selectedKey()!==null){pose.deleteKey();return;}pose.resetJoint();return;}if(k===undefined&&paths.removeSelected())return;/* S31 M3 hook */remove(k);},posing:()=>pose.active(),trackRows,poseKeyLane:()=>pose.keyLane(),poseKeySelected:()=>pose.selectedKey()!==null,poseSync:()=>pose.sync(),keyNow:w=>pose.keyNow(w),applied,openLibrary,effective:()=>effectivePeople(film(),shot())};
+  return {copyAttrs,pasteAttrs,panel,lane,laneHeight,action,changed,select,deselect,selected:()=>sel,object:()=>sel?objectOf(sel):null,header,pickObject,setMode,mode:()=>mode,count,remove:k=>{if(k===undefined&&pose.active()){if(pose.selectedKey()!==null){pose.deleteKey();return;}pose.resetJoint();return;}if(k===undefined&&paths.removeSelected())return;/* S31 M3 hook */remove(k);},posing:()=>pose.active(),trackRows,poseKeyLane:()=>pose.keyLane(),poseKeySelected:()=>pose.selectedKey()!==null,poseSync:()=>pose.sync(),keyNow:w=>pose.keyNow(w),applied,openLibrary,effective:()=>effectivePeople(film(),shot())};
 }

@@ -877,7 +877,20 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       pending=null;bridge.stage()?.wake?.(300);
     }
   }
-  return {panel,lane,laneHeight,action,changed,select,deselect,hide,reset,setMode,applied,editedCount,ensure,learn,boxPick,object:()=>{try{return current();}catch{return null;}},
+  // P5 paste attributes (Ctrl+C / Ctrl+Alt+V on a prop): its turn and size onto another prop of the same kind (a room
+  // prop's are changes from the film, an added prop's are its own)
+  let attrClip=null;
+  function copyAttrs(){if(!sel){status('Select a prop first: Ctrl+C copies its turn and size.');return false;}const e=editOfKey(sel.key),add=isAddEdit(e),o=current();
+    attrClip={add,rotation:[...(e?.rotation||[0,0,0])],scale:[...(e?.scale||[1,1,1])],label:o?label(o):'the prop'};status(`Copied the turn and size of ${attrClip.label}: Ctrl+Alt+V pastes them onto another prop.`);return true;}
+  function pasteAttrs(){
+    if(!attrClip){status('Copy a prop\'s turn and size first (Ctrl+C on it).');return false;}if(!sel){status('Select the prop to paste onto.');return false;}
+    const e=editOfKey(sel.key),add=isAddEdit(e),o=current(),name=o?label(o):'the prop';
+    if(add!==attrClip.add){status(attrClip.add?'Those are an added prop\'s own turn and size: paste them onto another prop you added.':'Those are a room prop\'s changes from the film: paste them onto another room prop.',true);return false;}
+    if(sel.blocked){status(`${CANT_SAVE}: ${sel.blocked}`,true);return false;}
+    const next=add?cleanAddEdit({...e,rotation:[...attrClip.rotation],scale:[...attrClip.scale]}):{...sel.target,...(e||{}),rotation:[...attrClip.rotation],scale:[...attrClip.scale]};
+    write(sel.key,next,`${name}: the turn and size of ${attrClip.label}. Undo puts it back.`);return true;
+  }
+  return {copyAttrs,pasteAttrs,panel,lane,laneHeight,action,changed,select,deselect,hide,reset,setMode,applied,editedCount,ensure,learn,boxPick,object:()=>{try{return current();}catch{return null;}},
     selected:()=>sel?.key||null,selectedKeys:()=>members().map(m=>m.key),selectKeys,items,hideItems:(keys,on,also)=>hideItems(keys.map(k=>{const i=items().find(x=>x.key===k);return i?{key:k,target:i.target,obj:i.obj}:{key:k};}),on,also),
     flashKey,setLocked:fn=>{lockedKeys=fn;},isHidden:key=>{const e=editOfKey(key);if(e)return e.hide===true;const i=items().find(x=>x.key===key);return !!i&&i.hidden;},selectedName:()=>sel?(current()?.name||sel.target.label):null,mode:()=>mode,
     addProp,dropSelected,dropObject,writeLive,openLibrary:()=>library.open(),library:()=>library,

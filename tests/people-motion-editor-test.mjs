@@ -89,5 +89,9 @@ try{
   assert.deepEqual(shot.peopleEdits.cast.find(e=>e.key==='maya-after').change,{seconds:2,step:true,arms:[.4,1]});
   await editor.action('pe-ch-closer');await tick();assert.equal(Math.round(shot.peopleEdits.cast.find(e=>e.key==='maya-after').at[0]-waits.at[0]),200);
   assert.doesNotMatch(editor.panel(),/mm apart/);
+  // paste attributes: Maya (waiting)'s size and colour onto the other Maya placement
+  editor.select('maya-waits');await tick();await editor.changed({name:'pe-scale',value:'110'});await editor.changed({name:'pe-color-top',value:'#336699'});await tick();
+  assert.ok(editor.copyAttrs());editor.select('maya-after');await tick();assert.ok(editor.pasteAttrs());await tick();
+  const pasted=shot.peopleEdits.cast.find(e=>e.key==='maya-after');assert.equal(pasted.scale,1.1);assert.equal(pasted.colors.top,'#336699');
   editor.deselect();console.log('PASS people motion controls: distance from the desk (kept across postures, moves the model), chair roll on the stage actor, roll in / out over time, every stay, looks at, + Walk to, posture change timing and the 220 mm warning');
 }finally{people.dispose();for(const [k,v] of Object.entries(oldGlobals)){if(v===undefined)delete globalThis[k];else globalThis[k]=v;}}

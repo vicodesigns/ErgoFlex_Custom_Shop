@@ -19,7 +19,7 @@
 //   aliases  what the command search (Ctrl+P) also finds it by: Rhino's command names (m, ro, sc, zs, ze, top…).
 // Vico's own keys (the panel's Edit keys) are kept as { id: [spec...] } (keys-panel.mjs, ui store) and laid over this
 // table by effectiveActions(); only rows the Director runs can be rebound, never to a RESERVED key.
-export const LIVE_PHASES = new Set(['1a', '1a2', '1b', '2', '3', '4', '6']);
+export const LIVE_PHASES = new Set(['1a', '1a2', '1b', '2', '3', '4', '5', '6']);
 
 const R = (id, label, keys, ctx, more = {}) => ({ id, label, keys, ctx, phase: '1a', owner: 'director', ...more });
 const E = (id, label, keys, ctx, more = {}) => R(id, label, keys, ctx, { owner: 'editor', ...more });
@@ -145,9 +145,13 @@ export const ACTIONS = [
   R('light-solo', 'Solo this light (preview only)', ['Alt+S'], 'light', { origin: 'Director' }),
   R('reset-film', 'Reset to the film', ['Alt+R'], 'prop', { origin: 'Director' }),
   E('prop-drop', 'Drop onto the surface below (Shift: flat, Alt: align)', ['End', 'Shift+End', 'Alt+End'], 'prop', { shadows: ['go-end'], origin: 'Director' }),
+  R('copy-attrs', 'Copy this prop\'s turn and size', ['Ctrl+C'], 'prop', { phase: '5', origin: 'Premiere' }),
+  R('paste-attrs', 'Paste the copied turn and size (paste attributes)', ['Ctrl+Alt+V'], 'prop', { phase: '5', origin: 'Premiere' }),
   G('prop-copy', 'Copy a prop you added: the copy stays where it was, you move the original', 'Alt + drag the gizmo', 'prop', { phase: '3', origin: 'Rhino' }),
   G('prop-snap', 'Snap the gizmo (5 cm, 15°); Shift holds the main axis', 'Ctrl (held)', 'prop'),
   G('prop-inside', 'Pick the part underneath', 'Alt+click', 'prop'),
+  R('copy-attrs', 'Copy this person\'s colours, size and gaze', ['Ctrl+C'], 'person', { phase: '5', origin: 'Premiere' }),
+  R('paste-attrs', 'Paste the copied colours, size and gaze (paste attributes)', ['Ctrl+Alt+V'], 'person', { phase: '5', origin: 'Premiere' }),
   R('pose-mode', 'Pose mode', ['P'], 'person', { origin: 'Director' }),
   R('reset-film', 'Reset to the film', ['Alt+R'], 'person', { origin: 'Director' }),
   G('person-pose', 'Pose mode', 'Double-click the person', 'person'),
