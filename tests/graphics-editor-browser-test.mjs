@@ -46,6 +46,11 @@ try{
     timeline.querySelector('[data-graphic-lane]').style.width='800px';
     createTimelineHints({root:timeline,context:el=>({seconds:20,graphic:el.dataset.graphicClip===undefined?null:(testShot.screens??[{target:'main',src:'clip.mp4',start:2,end:8,offset:3}])[Number(el.dataset.graphicClip)]})});
     window.shortcutMarkup=timelineShortcuts();
+    // the ⌨ Shortcuts button opens the Director's keys panel (keys-panel.mjs, since keys drop 1): wired here as the
+    // Director wires it (its button's data-action="keys-panel"; Esc closes the panel)
+    const {createKeysPanel}=await import('/experience/keys-panel.mjs');const kp=createKeysPanel({run:()=>{}});
+    timeline.addEventListener('click',e=>{if(e.target.closest('[data-action="keys-panel"]'))kp.toggle();});
+    addEventListener('keydown',e=>{if(e.key==='Escape')kp.close();});
   });
   const clip=await ev(()=>{const r=document.querySelector('[data-graphic-clip]').getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2];});
   await page.mouse.click(...clip);

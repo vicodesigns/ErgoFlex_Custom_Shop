@@ -38,7 +38,9 @@ try{
   await expectHome('camera key',click('#director-timeline [data-key]:nth-of-type(2)'),'camera','[data-reveal="camera-key"]');
   await expectHome('lift clip',click('#director-timeline [data-desk-clip]'),'groove','[data-inspector-page="groove"] .movement-inspector');
   await expectHome('time-of-day key',click('#director-timeline [data-tod-key]'),'lighting','[data-light-section="tod"] .movement-inspector');
-  await expectHome('Room line',async()=>{const b=await page.$eval('#director-timeline [data-room-line="exposureScale"]',e=>{const r=e.getBoundingClientRect();return [r.left+r.width*.3,r.top+r.height/2];});await page.mouse.click(...b);},'lighting','[data-light-section="room"]');
+  // (a press ON the line: the middle of its bounding box is often off a curved line; pressed where the polyline passes at
+  // 30 % of its width, from its own points)
+  await expectHome('Room line',async()=>{const b=await page.$eval('#director-timeline [data-room-line="exposureScale"]',e=>{const svg=e.ownerSVGElement,pts=[...e.points],p=pts[Math.round(pts.length*.3)],m=e.getScreenCTM();const q=svg.createSVGPoint();q.x=p.x;q.y=p.y;const s=q.matrixTransform(m);return [s.x,s.y];});await page.mouse.click(...b);},'lighting','[data-light-section="room"]');
   await expectHome('Desk white key',click('#director-timeline [data-light-key]'),'lighting','[data-light-section="white"] .light-inspector');
   await expectHome('Desk status block',click('#director-timeline [data-light-clip]'),'lighting','[data-light-section="status"] .light-inspector');
   // A light marker in the view: Lights on, click the marker of a room light where the camera sees it.
