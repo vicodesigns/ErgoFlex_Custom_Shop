@@ -158,7 +158,8 @@ export function mountDirector(bridge,catalog,initial){
     const {section,target}=revealTarget(type);if(!target)return;
     if(section&&!section.open){section.open=true;delete lightSectionsShut[section.dataset.lightSection];}
     const top=target.getBoundingClientRect().top-panel.getBoundingClientRect().top+panel.scrollTop;
-    panel.scrollTo({top:Math.max(0,top-Math.min(120,panel.clientHeight*.15)),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
+    const tabsH=panel.querySelector('.inspector-tabs')?.getBoundingClientRect().height||0;   // (the tab bar is sticky: the target shows below it)
+    panel.scrollTo({top:Math.max(0,top-Math.max(tabsH+16,Math.min(120,panel.clientHeight*.15))),behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'});
     pulse={type,at:performance.now()};repulse();
   }
   // The outline survives re-renders of the panel within its 1.5 s (it resumes where it was).
@@ -1200,7 +1201,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       if(name==='import'){file.click();return;}
       if(name==='link'){const url=new URL('./',location.href);url.search='';url.hash='cut='+encodeCut(project);await navigator.clipboard.writeText(url.href);status('Presentation link copied. It includes this cut’s settings.');return;}
       if(name==='delete-cut'){clearTimeout(draftTimer);library.remove(project.id);loadProject(makeCut('New client cut'),false);return;}
-      if(name==='undo'||name==='redo'){
+      if(name==='undo'||name==='redo'){toast?.classList.remove('shown');
         const source=name==='undo'?undo:redo,target=name==='undo'?redo:undo;if(!source.length)return;
         const before=project.shots[selected];target.push(copy(project));project=source.pop();selected=Math.min(selected,project.shots.length-1);
         const moved=(name==='undo'?undoLabels:redoLabels).pop();if(moved)(name==='undo'?redoLabels:undoLabels).push(moved);labelPending=null;group=null;

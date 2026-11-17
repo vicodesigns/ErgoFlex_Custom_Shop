@@ -177,8 +177,10 @@ body.df-shell #director-panel h4{text-transform:none;letter-spacing:0;font-size:
 body.df-shell #director-panel .director-hint{font-size:11.5px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 body.df-shell #director-panel .director-hint:hover,body.df-shell #director-panel .director-hint:focus-within{-webkit-line-clamp:unset;display:block}
 .calm-back{font-size:11px;padding:3px 8px}
-.df-toast{position:fixed;left:50%;bottom:calc(var(--timeline-space,400px) + 40px);transform:translate(-50%,20px);z-index:70;display:flex;gap:12px;align-items:center;padding:8px 10px 8px 14px;border-radius:10px;background:var(--df-surface-1,#0f151c);border:1px solid var(--df-border-2,#ffffff1c);box-shadow:0 12px 32px #000a;font-size:12.5px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
-.df-toast.shown{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.df-toast{position:fixed;right:24px;bottom:calc(var(--timeline-space,400px) + 72px);transform:translate(0,20px);z-index:70;display:flex;gap:12px;align-items:center;padding:8px 10px 8px 14px;border-radius:10px;background:var(--df-surface-1,#0f151c);border:1px solid var(--df-border-2,#ffffff1c);box-shadow:0 12px 32px #000a;font-size:12.5px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
+.df-toast.shown{opacity:1;transform:translate(0,0)}
+/* (only its Undo button takes clicks: the toast must never catch a click meant for a title or the view) */
+.df-toast.shown button{pointer-events:auto}
 .df-toast button{height:26px;padding:0 10px;border-radius:6px;border:1px solid var(--df-accent,#5cd3f6);background:transparent;color:var(--df-accent-text,#9be6fb);font:600 12px var(--df-font,system-ui);cursor:pointer}
 
 /* ---- P2 Sound (17 Nov 2026): the score under the lanes ---- */
@@ -249,3 +251,8 @@ body.df-filter-sel #director-timeline :is(.desk-lane-row,.camera-lane-row):not(.
 .sel-tools{display:inline-flex;gap:2px;margin-left:auto}
 .sel-tools button{width:24px;height:22px;padding:0;border:1px solid var(--df-border-2,#ffffff1c);border-radius:5px;background:transparent;color:inherit;font-size:12px;cursor:pointer}
 .sel-tools button:hover{background:var(--df-surface-3,#1c2631)}
+
+/* the side column fades at its bottom edge, so a line cut by the edge reads as "more below" (it scrolls) */
+body.directing.df-shell #director-panel{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent)}
+/* lanes scroll under the sticky ruler: a shadow shows they pass beneath it */
+body.df-shell #director-timeline .time-ruler-row{box-shadow:0 5px 8px -4px #000c}
