@@ -26,11 +26,11 @@ try{
   await openChapter(page,base,chapter);
   const status=()=>statusOf(page);
   const stage=()=>page.evaluate(()=>{const s=document.getElementById('stage').contentWindow.ErgoPresentation.snapshot();return {height:s.height,tilt:s.tilt};});
-  const draftShot=()=>page.evaluate(()=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}});
+  const draftShot=()=>page.evaluate(()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}});
   const fields=()=>page.evaluate(()=>Object.fromEntries(['start-height','start-height-n','start-tilt','start-tilt-n'].map(n=>[n,Number(document.querySelector(`#director-panel [name="${n}"]`)?.value)])));
   const click=async sel=>{await page.evaluate(s=>document.querySelector(s).click(),sel);await wait(700);};
   const until=async(fn,what,ms=20000)=>{const end=Date.now()+ms;for(;;){const v=await fn();if(v)return v;if(Date.now()>end)throw Error('timed out: '+what);await wait(150);}};
-  const undoOn=()=>page.$eval('#director-panel [data-action=undo]',b=>!b.disabled);
+  const undoOn=()=>page.$eval('#director-appbar [data-action=undo]',b=>!b.disabled);
 
   await click('#director-panel [data-inspector-tab=chapter]');
   const labels=await page.$$eval('#director-panel [data-start-pose-box] button',l=>l.map(b=>b.textContent.trim()));
@@ -65,12 +65,12 @@ try{
   if(T1){await seek(page,T1.start+T1.duration+.05);const t=await stage();check(near(t.tilt,T1.target),`first tilt reaches its target ${T1.target}° (${t.tilt.toFixed(2)}°)`);}
 
   // ---- one undo step per click; a slider drag is one step
-  await click('#director-panel [data-action=undo]');
+  await click('#director-appbar [data-action=undo]');
   await seek(page,0);const u=await stage();d=await draftShot();
   const tiltWasMax=f0['start-tilt']===65;
   check(tiltWasMax?near(u.height,f0['start-height'])&&d.motion.initial.height===f0['start-height']:d.motion.initial.tilt===f0['start-tilt']&&d.motion.initial.height===52.5,`one Undo takes back one click (${d.motion.initial.height}″ / ${d.motion.initial.tilt}°; stage ${u.height.toFixed(2)}″)`);
   if(tiltWasMax){check(!(await undoOn())===!hadUndo,'Max tilt on a desk already at 65° made no undo step');}
-  await click('#director-panel [data-action=redo]');if(!tiltWasMax)await click('#director-panel [data-action=redo]');
+  await click('#director-appbar [data-action=redo]');if(!tiltWasMax)await click('#director-appbar [data-action=redo]');
   d=await draftShot();check(d.motion.initial.height===52.5&&d.motion.initial.tilt===65,'Redo brings back 52.5 / 65');
   await click('#director-panel [data-inspector-tab=chapter]');
   await page.evaluate(async()=>{const el=document.querySelector('#director-panel [name="start-height"]');el.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));for(const v of [51,49,47,45.5]){el.value=String(v);el.dispatchEvent(new Event('input',{bubbles:true}));await new Promise(r=>setTimeout(r,60));}el.dispatchEvent(new Event('change',{bubbles:true}));});
@@ -78,12 +78,12 @@ try{
   check(dragged.height===45.5&&dragged.tilt===65,`slider drag to 45.5″ keeps 65° (above the 60″ desk's 42.5″ clearance): ${dragged.height}″ / ${dragged.tilt}°`);
   await page.evaluate(()=>{const el=document.querySelector('#director-panel [name="start-height-n"]');el.value='30';el.dispatchEvent(new Event('change',{bubbles:true}));});await wait(600);
   d=await draftShot();check(d.motion.initial.height===30&&d.motion.initial.tilt<65&&d.motion.initial.tilt>=39,`typing 30″ lowers the tilt to the desk's clearance (${d.motion.initial.tilt}°)`);
-  await click('#director-panel [data-action=undo]');d=await draftShot();check(d.motion.initial.height===45.5&&d.motion.initial.tilt===65,'Undo the typed height');
-  await click('#director-panel [data-action=undo]');d=await draftShot();check(d.motion.initial.height===52.5&&d.motion.initial.tilt===65,'one Undo takes back the whole slider drag');
+  await click('#director-appbar [data-action=undo]');d=await draftShot();check(d.motion.initial.height===45.5&&d.motion.initial.tilt===65,'Undo the typed height');
+  await click('#director-appbar [data-action=undo]');d=await draftShot();check(d.motion.initial.height===52.5&&d.motion.initial.tilt===65,'one Undo takes back the whole slider drag');
   await seek(page,0);const s2=await stage();check(near(s2.height,52.5)&&near(s2.tilt,65),`stage back at 52.5″ / 65° (${s2.height.toFixed(2)} / ${s2.tilt.toFixed(2)})`);
 
   // ---- Export cut -> --import + pass (temp hq copy): review-cut, shots/13.json and every sub-shot
-  await page.evaluate(()=>document.querySelector('#director-panel [data-action=save-export]').click());
+  await page.evaluate(()=>document.querySelector('#director-appbar [data-action=save-export]').click());
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download');
   const exported=JSON.parse(fs.readFileSync(path.join(downloads,file),'utf8')),es=exported.shots[0];
   check(es.motion?.initial?.height===52.5&&es.motion.initial.tilt===65,'Export cut carries motion.initial 52.5 / 65');

@@ -32,7 +32,7 @@ await page.evaluateOnNewDocument(()=>{
       const hit=ray.intersectObject(t.scene,true).find(h=>h.object.isMesh&&(()=>{for(let p=h.object;p;p=p.parent)if(!p.visible||p.isTransformControls||p.userData?.directorTools)return false;return true})());
       if(hit&&inside(hit.object)&&(!best||away>best.away)){const px=f.left+r.left+(x+1)/2*r.width,py=f.top+r.top+(1-y)/2*r.height;if(document.elementFromPoint(px,py)===document.getElementById('stage'))best={away,x:px,y:py};}}
     return best;};
-  window.__draft=()=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}};
+  window.__draft=()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}};
 });
 const draft=()=>page.evaluate(()=>__draft());
 const pose=n=>page.evaluate(x=>__pose(x),n);
@@ -79,30 +79,30 @@ try{
     check(up.a[1]-dn.a[1]>inch5*.5&&up.m[1]-dn.m[1]>inch5*.5,`Drop with two selected: both came down (arm -${((up.a[1]-dn.a[1])/25.4/mm).toFixed(1)}\u2033, monitor -${((up.m[1]-dn.m[1])/25.4/mm).toFixed(1)}\u2033)`);
     check(/^Dropped 2 items/.test(await status()),'one message for the pair: '+await status());
     d=await draft();check(d.propEdits?.length===2,'still one edit per item after the drop');
-    await click('#director-panel [data-action=undo]');await wait(3500);
+    await click('#director-appbar [data-action=undo]');await wait(3500);
     const ud={a:(await pose(ARM)).p,m:(await pose(MON)).p};check(dist(ud.a,up.a)<1e-3&&dist(ud.m,up.m)<1e-3,'one Undo puts the pair back up');
-    await click('#director-panel [data-action=undo]');await wait(3500);
+    await click('#director-appbar [data-action=undo]');await wait(3500);
     const u2={a:(await pose(ARM)).p,m:(await pose(MON)).p};check(dist(u2.a,b.a)<1e-3&&dist(u2.m,b.m)<1e-3,'another Undo takes back the raise');
     await view();await wait(500);
   }
   // turn about the centre keeps the pair rigid
   await setField('pp-gry',90);await wait(1500);
   const arm2=(await pose(ARM)).p,mon2=(await pose(MON)).p;check(Math.abs(dist(arm1,mon1)-dist(arm2,mon2))<1e-3&&dist(arm1,arm2)>1e-3,'turning 90° about the centre keeps their distance');
-  await click('#director-panel [data-action=undo]');await wait(3500);
+  await click('#director-appbar [data-action=undo]');await wait(3500);
   const arm3=(await pose(ARM)).p,mon3=(await pose(MON)).p;check(dist(arm3,arm1)<1e-3&&dist(mon3,mon1)<1e-3,'one Undo takes back the whole turn');
   await view();await wait(500);
   // Ctrl+click toggles
   await clickOn(MON,'Control');check(!/selected$/.test(await heading())&&/arm/i.test(await heading()),'Ctrl+click removes the monitor from the selection ("'+await heading()+'")');
   await clickOn(MON,'Control');check(/^2 selected/.test(await heading()),'Ctrl+click adds it back');
-  await click('#director-panel [data-action=undo]');await wait(3500);
+  await click('#director-appbar [data-action=undo]');await wait(3500);
   const arm4=(await pose(ARM)).p,mon4=(await pose(MON)).p;check(dist(arm4,arm0)<1e-3&&dist(mon4,mon0)<1e-3,'Undo (one step) puts both back where they were');
-  await click('#director-panel [data-action=redo]');await wait(1200);
+  await click('#director-appbar [data-action=redo]');await wait(1200);
   const arm5=(await pose(ARM)).p;check(dist(arm5,arm1)<1e-3,'Redo moves both again');
   // a real gizmo drag on the pair: the pivot sits at the centre; drag it a little and both follow
   await page.screenshot({path:path.join(shots,'multiselect-props.png')});
 
   // ---- Export cut carries both edits
-  await click('#director-panel [data-action=save-export]');
+  await click('#director-appbar [data-action=save-export]');
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download');
   const exported=JSON.parse(fs.readFileSync(path.join(downloads,file),'utf8')).shots[0];fs.renameSync(path.join(downloads,file),path.join(tmp,'export1.json'));
   check(exported.propEdits.length===2&&exported.propEdits.every(e=>e.position&&e.space==='local'||e.position),'Export cut carries both edits ('+exported.propEdits.map(e=>e.match).join(', ')+')');
@@ -125,14 +125,14 @@ try{
   await click('#director-panel [data-action=ly-eye]');await wait(1500);
   check(!(await pose(ARM)).visible&&!(await pose(MON)).visible,'hiding the layer hides both on the stage');
   d=await draft();check(d.propLayers[0].hidden===true&&d.propEdits.filter(e=>e.hide===true).length===2,'hide edits written for both (the film matches)');
-  await click('#director-panel [data-action=save-export]');
+  await click('#director-appbar [data-action=save-export]');
   const f2=await until(()=>fs.readdirSync(downloads).filter(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')).find(Boolean),'second export download');
   const ex2=JSON.parse(fs.readFileSync(path.join(downloads,f2),'utf8')).shots[0];
   check(ex2.propEdits.filter(e=>e.hide===true).length===2&&ex2.propLayers?.[0]?.hidden===true,'Export cut carries the hide edits and the layer');
   await page.screenshot({path:path.join(shots,'layers-tab-hidden.png')});
-  await click('#director-panel [data-action=undo]');await wait(1500);
+  await click('#director-appbar [data-action=undo]');await wait(1500);
   check((await pose(ARM)).visible&&(await pose(MON)).visible,'one Undo shows the layer again');
-  await click('#director-panel [data-action=redo]');await wait(1200);
+  await click('#director-appbar [data-action=redo]');await wait(1200);
   await click('#director-panel [data-action=ly-eye]');await wait(1500);
   check((await pose(ARM)).visible&&(await pose(MON)).visible,'the eye shows the layer again');
   // lock: the view can't pick it

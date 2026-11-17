@@ -39,7 +39,7 @@ try{
   bar=await page.evaluateHandle(()=>document.querySelector('[data-props-lane] .prop-bar.selected'));await bar.evaluate(b=>b.scrollIntoView({block:'center'}));await wait(300);bb=await bar.boundingBox();
   const lane=await (await page.$('[data-props-lane]')).boundingBox(),px=lane.width/T,y=bb.y+bb.height/2,want=cross+2.4;
   await page.mouse.move(bb.x+bb.width-2,y);await page.mouse.down();await page.mouse.move(bb.x+bb.width-2+px*2.4,y,{steps:8});await page.mouse.up();await wait(1500);
-  const e=await page.evaluate(()=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1')),c=v.drafts?.[v.active]||v.cuts.find(c=>c.id===v.active);return (c.shots.find(s=>s.id==='hero')||c.shots[0]).propEdits?.find(x=>/artist-easel/.test(x.match))||null;}catch{return null;}});
+  const e=await page.evaluate(()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})(),c=v.drafts?.[v.active]||v.cuts.find(c=>c.id===v.active);return (c.shots.find(s=>s.id==='hero')||c.shots[0]).propEdits?.find(x=>/artist-easel/.test(x.match))||null;}catch{return null;}});
   check(e?.show&&e.desk==='artist','the drag wrote a time on screen for the easel: '+JSON.stringify(e?.show));
   const leaves=4.7+e.show.to;
   await go(cross+.8);check(await page.evaluate(()=>__shownLike(/artist-easel|Artist painting/i))===true,'past the old stow time ('+(cross+.8).toFixed(1)+' s) the easel stays up: the window wins');

@@ -20,7 +20,7 @@ const until=async(fn,what,ms=30000)=>{const end=Date.now()+ms;for(;;){const v=aw
 const snap=name=>page.screenshot({path:path.join(shots,name+'.png')});
 // The stage's people (room-people.mjs) and the Director's cut shot.
 const live=()=>page.evaluate(()=>{const p=document.getElementById('stage').contentWindow.ErgoFlex.workspaceRoom?.people;return p?p.list().filter(x=>x.allowed&&!x.missing):[];});
-const edits=()=>page.evaluate(()=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].peopleEdits||null;}catch{return null;}});
+const edits=()=>page.evaluate(()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].peopleEdits||null;}catch{return null;}});
 const click=sel=>page.evaluate(s=>{const el=document.querySelector(s);if(!el)throw Error('no '+s);el.click();},sel);
 const setField=(name,value)=>page.evaluate((n,v)=>{const el=document.querySelector(`#director-panel [name="${n}"]`);if(!el)throw Error('no field '+n);if(el.type==='checkbox'){el.checked=v;}else el.value=String(v);el.dispatchEvent(new Event('change',{bubbles:true}));},name,value);
 try{
@@ -117,7 +117,7 @@ try{
   passed.push('the eye takes a person out of the chapter and keeps the entry');
   await snap('05-end');
   // ---- Export cut -> import -> the film chapter's `people` (temp copy of the chapter)
-  await page.evaluate(()=>document.querySelector('#director-panel [data-action=save-export]').click());
+  await page.evaluate(()=>document.querySelector('#director-appbar [data-action=save-export]').click());
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download');
   const mine=await edits();     // the draft, saved by the export
   const exported=JSON.parse(fs.readFileSync(path.join(downloads,file),'utf8'));check(JSON.stringify(exported.shots[0].peopleEdits)===JSON.stringify(mine),'Export cut carries the cast');

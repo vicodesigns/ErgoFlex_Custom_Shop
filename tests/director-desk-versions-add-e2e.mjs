@@ -24,7 +24,7 @@ const until=async(fn,what,ms=120000)=>{const end=Date.now()+ms;for(;;){const v=a
 const lane=()=>page.$$eval('#director-timeline [data-desk-version]',b=>b.map(x=>({n:x.dataset.deskVersion,text:x.querySelector('strong').textContent,left:parseFloat(x.style.left),width:parseFloat(x.style.width),picked:x.classList.contains('picked')})));
 const laneText=async()=>(await lane()).map(x=>x.text).join(', ');
 const badge=()=>page.$eval('.desk-version-badge',e=>e.hidden?'':e.textContent).catch(()=>'');
-const draft=()=>page.evaluate(()=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}});
+const draft=()=>page.evaluate(()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}});
 const versions=async()=>(await draft())?.deskVersions||null;
 const wood=()=>page.evaluate(()=>document.getElementById('stage').contentWindow.ErgoFlex.currentConfig.woodFinish);
 const settled=()=>page.evaluate(()=>!document.body.classList.contains('loading')&&!/^Switching/.test(document.querySelector('#director-panel [data-status]')?.textContent||''));
@@ -82,8 +82,8 @@ try{
   check(!/could not/.test(await statusOf(page)),'status: '+await statusOf(page));
 
   // ---- Undo / Redo: one step
-  await click('#director-panel [data-action=undo]');check((await lane()).length===6&&!(await versions()),'Undo takes the new desk back in one step');
-  await click('#director-panel [data-action=redo]');check((await laneText()).endsWith('F · Architect, G · Gaming'),'Redo brings it back: '+await laneText());
+  await click('#director-appbar [data-action=undo]');check((await lane()).length===6&&!(await versions()),'Undo takes the new desk back in one step');
+  await click('#director-appbar [data-action=redo]');check((await laneText()).endsWith('F · Architect, G · Gaming'),'Redo brings it back: '+await laneText());
 
   // ---- Duplicate: a copy of B right after it; then Undo
   await pick('B');
@@ -93,7 +93,7 @@ try{
   check((await laneText()).startsWith('A · Gaming, B · Artist, H · Artist, C · Office')&&dv[1].end===9.2&&dv[2].start===8.6&&dv[2].end===13.1,`Duplicate: ${await laneText()} (B ${dv[1].start}–${dv[1].end}, H ${dv[2].start}–${dv[2].end})`);
   check(/^Desk H · Artist added after Desk B, a copy of Desk B/.test(await until(async()=>await settled()&&await statusOf(page),'status')),'status: '+await statusOf(page));
   await page.screenshot({path:path.join(shots,'3-eight.png')});
-  await click('#director-panel [data-action=undo]');check((await lane()).length===7,'Undo: seven again');
+  await click('#director-appbar [data-action=undo]');check((await lane()).length===7,'Undo: seven again');
 
   // ---- reorder the longer lane: the last desk to the front and back to the end; the slots (letters, windows) stay
   const mid=(L,s)=>({x:L.x+(s.left+s.width/2)/100*L.w,y:L.y+L.h/2});
@@ -122,7 +122,7 @@ try{
 
   // ---- Export cut: seven versions
   const cdp=await page.createCDPSession();await cdp.send('Browser.setDownloadBehavior',{behavior:'allow',downloadPath:downloads});
-  await click('#director-panel [data-action=save-export]');
+  await click('#director-appbar [data-action=save-export]');
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download',30000);
   const exFile=path.join(downloads,file),exShot=JSON.parse(fs.readFileSync(exFile,'utf8')).shots[0],ex=exShot.deskVersions;
   check(Array.isArray(ex)&&ex.length===7&&ex.map(v=>v.n).join('')==='ABCDEFG'&&ex[6].preset==='gaming'&&ex[6].name==='Gaming finale'&&exShot.deskVersionsLast==='G','Export cut: shot.deskVersions '+JSON.stringify(ex?.map(v=>`${v.n} ${v.preset} ${v.start}-${v.end}`)));
@@ -155,7 +155,7 @@ try{
   check(/^Desk G · Gaming finale removed: Desk F · Architect now shows 33\.7–48 s\./.test(await until(async()=>await settled()&&await statusOf(page),'status')),'status: '+await statusOf(page));
   await until(async()=>await settled()&&await badge()==='Desk F · Architect'&&await wood()===architect,'F at the playhead, on the stage');
   check(await badge()==='Desk F · Architect'&&await wood()===architect,'the architect is back on the stage where G was');
-  await click('#director-panel [data-action=undo]');check((await lane()).length===7,'Undo brings G back in one step');await click('#director-panel [data-action=redo]');
+  await click('#director-appbar [data-action=undo]');check((await lane()).length===7,'Undo brings G back in one step');await click('#director-appbar [data-action=redo]');
   await pick('C');
   await click('#director-panel [data-dv-remove]');
   await until(async()=>(await lane()).length===5,'five segments');

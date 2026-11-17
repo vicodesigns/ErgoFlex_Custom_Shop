@@ -60,7 +60,7 @@ await page.evaluateOnNewDocument(()=>{
   window.__find=(test,scene)=>{let o=null;(scene||__t().t.scene).traverse(x=>{if(!o&&test(x))o=x;});return o;};
   window.__screen=o=>{const {t,T}=__t(),f=document.getElementById('stage'),c=new T.Box3().setFromObject(o).getCenter(new T.Vector3()).project(t.camera),r=t.renderer.domElement.getBoundingClientRect(),fr=f.getBoundingClientRect();return {x:fr.left+r.left+(c.x+1)/2*r.width,y:fr.top+r.top+(1-c.y)/2*r.height};};
   window.__pose=o=>{const {T}=__t();o.updateWorldMatrix(true,false);return {p:o.getWorldPosition(new T.Vector3()).toArray(),q:o.getWorldQuaternion(new T.Quaternion()).toArray(),s:o.getWorldScale(new T.Vector3()).toArray(),visible:(()=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;})()};};
-  window.__draft=()=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].propEdits||null;}catch{return null;}};
+  window.__draft=()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].propEdits||null;}catch{return null;}};
 });
 const draft=()=>page.evaluate(()=>__draft());
 const CHAIR='Prop:steelcase-leap-v2',MONITOR='Prop:ergoflex-wide-monitor';
@@ -167,9 +167,9 @@ try{
   if(process.env.STILLS!=='0'){
     await page.click('[data-title-clip]');await wait(400);await page.evaluate(()=>document.querySelector('[data-title-action=go]').click());await wait(900);
     const on=await stillOf(path.join(shots,'still-title-on.jpg')),noteOn=await page.$eval('#film-still .still-caption',e=>e.textContent);
-    await page.evaluate(()=>document.querySelector('#director-timeline [data-action=titles]').click());await wait(400);
+    await page.evaluate(()=>document.querySelector('#director-appbar [data-action=titles]').click());await wait(400);
     const off=await stillOf(path.join(shots,'still-title-off.jpg'));
-    await page.evaluate(()=>document.querySelector('#director-timeline [data-action=titles]').click());await wait(400);
+    await page.evaluate(()=>document.querySelector('#director-appbar [data-action=titles]').click());await wait(400);
     // Mean |difference| inside the title block (film grid x 128-1100, y 760-1000) and outside it.
     const diff=await page.evaluate(async(a,b)=>{const img=src=>new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src=src;});const [A,B]=await Promise.all([img(a),img(b)]);
       const px=I=>{const c=document.createElement('canvas');c.width=I.naturalWidth;c.height=I.naturalHeight;const g=c.getContext('2d');g.drawImage(I,0,0);return g.getImageData(0,0,c.width,c.height);};
@@ -183,7 +183,7 @@ try{
   }
   // ---- Export cut -> import -> review-cut sceneEdits (temp copy of the chapter)
   const mine=await draft();
-  await page.evaluate(()=>document.querySelector('#director-panel [data-action=save-export]').click());
+  await page.evaluate(()=>document.querySelector('#director-appbar [data-action=save-export]').click());
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download');
   const exported=JSON.parse(fs.readFileSync(path.join(downloads,file),'utf8'));check(JSON.stringify(exported.shots[0].propEdits)===JSON.stringify(mine),'Export cut carries the prop edits');
   const H=path.join(tmp,'hq');fs.mkdirSync(path.join(H,'shots'),{recursive:true});
@@ -259,7 +259,7 @@ try{
   check([3,8].every(s=>dist(atT[s].still,atT[s].live)<1e-3),'Render still places the moved notebook exactly as the live view at 3 s and 8 s '+JSON.stringify(atT));
   check([3,8].every(s=>Math.abs(dist(atT[s].still,atT[s].base)-.1)<2e-3&&Math.abs(atT[s].still[1]-atT[s].base[1])<1e-3),'Render still at 3 s and 8 s: 10 cm from the film\'s spot, on the desktop (same height as the film\'s notebook) through the lift');
   // Export cut -> build-round8-director --import + pass, against a scratch copy: the chapter's sceneEdits get it.
-  const had=new Set(fs.readdirSync(downloads));await page.evaluate(()=>document.querySelector('#director-panel [data-action=save-export]').click());
+  const had=new Set(fs.readdirSync(downloads));await page.evaluate(()=>document.querySelector('#director-appbar [data-action=save-export]').click());
   const riseFile=await until(()=>fs.readdirSync(downloads).find(f=>!had.has(f)&&f.endsWith('.json')),'rise export download');
   const H2=path.join(tmp,'hq-rise');fs.mkdirSync(path.join(H2,'shots'),{recursive:true});fs.copyFileSync(path.join(root,HQ,'review-cut.json'),path.join(H2,'review-cut.json'));
   for(const f of fs.readdirSync(path.join(root,HQ,'shots')))if(/^\d\d\.json$/.test(f)&&JSON.parse(fs.readFileSync(path.join(root,HQ,'shots',f),'utf8')).id==='rise')fs.copyFileSync(path.join(root,HQ,'shots',f),path.join(H2,'shots',f));

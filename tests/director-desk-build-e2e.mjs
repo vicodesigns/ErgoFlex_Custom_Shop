@@ -39,9 +39,9 @@ const setRoom=async room=>{
 const stageDesk=id=>page.evaluate(id=>{const api=document.getElementById('stage').contentWindow.ErgoFlex,r=api.sceneDesks.records.get(id);if(!r)return null;
   return {style:r.state.style,accessories:[...(r.state.accessories||[])],placed:Object.fromEntries([...r.objects.entries()].filter(([k,v])=>k.startsWith('accessory-')&&!v.saved.removed).map(([k,v])=>[k.slice(10),{role:v.saved.role,mount:v.obj.parent?.name,visible:v.obj.visible}])),
     featured:{id:api.sceneDesks.selected,wood:api.currentConfig.woodFinish,base:api.currentConfig.baseFinish,trim:api.currentConfig.trimColor}};},id);
-const shotDraft=()=>page.evaluate(()=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}});
+const shotDraft=()=>page.evaluate(()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}});
 const buildOf=async()=>(await shotDraft())?.deskEdits?.find(e=>e.desk===DESK)?.build||null;
-const undoOn=()=>page.$eval('#director-panel [data-action=undo]',b=>!b.disabled);
+const undoOn=()=>page.$eval('#director-appbar [data-action=undo]',b=>!b.disabled);
 const pick=(kind,value)=>click(`#director-panel [data-build-pick=${kind}][data-value="${value}"]`);
 try{
   await openChapter(page,base,chapter);
@@ -92,10 +92,10 @@ try{
   await page.screenshot({path:path.join(shots,'build-tab.png')});
 
   // ---- undo
-  await click('#director-panel [data-action=undo]');
+  await click('#director-appbar [data-action=undo]');
   const undone=await until(async()=>{const d=await stageDesk(DESK);return d.accessories.includes('logitech-mx-master')&&d.placed['logitech-mx-master']&&d.placed['ergo-keyboard']?.role==='base-shelf'?d:null;},'undo brings the mouse back').catch(()=>null);
   check(!!undone&&undone.placed['ergo-keyboard']?.role==='base-shelf','Undo: the mouse is back, the keyboard stays on the base shelf');
-  await click('#director-panel [data-action=redo]');
+  await click('#director-appbar [data-action=redo]');
   check(!!await until(async()=>{const d=await stageDesk(DESK);return !d.accessories.includes('logitech-mx-master')?d:null;},'redo removes it again'),'Redo: the mouse is removed again');
 
   // ---- reload keeps it (the draft: an exported cut is the film's, so the draft is dropped once it is exported)
@@ -111,7 +111,7 @@ try{
 
   // ---- export
   const cdp=await page.createCDPSession();await cdp.send('Browser.setDownloadBehavior',{behavior:'allow',downloadPath:downloads});
-  await click('#director-panel [data-action=save-export]');
+  await click('#director-appbar [data-action=save-export]');
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download',30000);
   const exported=JSON.parse(fs.readFileSync(path.join(downloads,file),'utf8')),entry=exported.shots[0].deskEdits?.find(e=>e.desk===DESK);
   check(entry?.build?.woodFinish==='Coast Navy'&&entry.build.baseFinish==='Terracotta'&&entry.build.trimColor==='#f99239','Export cut: shot.deskEdits[].build carries the finishes');

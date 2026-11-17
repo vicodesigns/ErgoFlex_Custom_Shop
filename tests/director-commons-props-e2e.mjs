@@ -46,7 +46,7 @@ await page.evaluateOnNewDocument(()=>{
   window.__byKey=(key,scene)=>__find(x=>x.userData.sceneAssetKey===key,scene);
   window.__screen=o=>{const {t,T}=__t(),f=document.getElementById('stage'),c=new T.Box3().setFromObject(o).getCenter(new T.Vector3()).project(t.camera),r=t.renderer.domElement.getBoundingClientRect(),fr=f.getBoundingClientRect();return {x:fr.left+r.left+(c.x+1)/2*r.width,y:fr.top+r.top+(1-c.y)/2*r.height,on:Math.abs(c.x)<.95&&Math.abs(c.y)<.95&&c.z<1};};
   window.__pose=o=>{const {T}=__t();o.updateWorldMatrix(true,false);return {p:o.getWorldPosition(new T.Vector3()).toArray(),r:o.rotation.toArray().slice(0,3),visible:(()=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;})()};};
-  window.__draft=()=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].propEdits||null;}catch{return null;}};
+  window.__draft=()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].propEdits||null;}catch{return null;}};
   // A screen point where a click's first hit lies inside o (the camera can see it there).
   window.__clickPoint=o=>{const {t,T}=__t(),f=document.getElementById('stage'),r=t.renderer.domElement.getBoundingClientRect(),fr=f.getBoundingClientRect(),rc=new T.Raycaster(),box=new T.Box3().setFromObject(o);
     const inside=x=>{for(let p=x;p;p=p.parent)if(p===o)return true;return false;},shown=x=>{for(let p=x;p;p=p.parent)if(!p.visible)return false;return true;};
@@ -120,7 +120,7 @@ try{
   const shown=await until(async()=>{const v=await page.evaluate((ck,lk,pk)=>({chair:__pose(__byKey(ck)),lamp:__pose(__byKey(lk)),plant:__pose(__byKey(pk))}),CHAIR,LAMP,PLANT);return ok(v)&&v;},'edits on the stage after reload').catch(async()=>{console.log('after reload',JSON.stringify(await page.evaluate((ck,lk,pk)=>({chair:__pose(__byKey(ck)),lamp:__pose(__byKey(lk)),plant:__pose(__byKey(pk))}),CHAIR,LAMP,PLANT)),'expected',JSON.stringify({c1,lamp1}));return null;});
   check(!!shown,'after a reload the stage shows them (chair moved, lamp turned, ficus hidden)');
   // ---- Export cut
-  await page.evaluate(()=>document.querySelector('#director-panel [data-action=save-export]').click());
+  await page.evaluate(()=>document.querySelector('#director-appbar [data-action=save-export]').click());
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download');
   const exported=JSON.parse(fs.readFileSync(path.join(downloads,file),'utf8'));
   check(exported.shots[0].id==='commons'&&JSON.stringify(exported.shots[0].propEdits)===JSON.stringify(mine)&&mine.length===3,'Export cut carries the 3 commons prop edits');

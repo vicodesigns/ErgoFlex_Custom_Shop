@@ -21,10 +21,10 @@ const done=[];cdp.on('Browser.downloadProgress',e=>{if(e.state==='completed')don
 const consoleErrors=[];page.on('pageerror',e=>{log('pageerror',e.message);consoleErrors.push(e.message);});page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource|\[film fx\]/.test(m.text())){consoleErrors.push(m.text());log('console error',m.text().slice(0,200));}});
 const ev=(fn,...a)=>page.evaluate(fn,...a);
 const statusText=()=>ev(()=>document.querySelector('#director-panel [data-status]')?.textContent||'');
-async function exportCut(){const n=done.length;await page.$eval('#director-panel [data-action=save-export]',b=>b.click());for(let i=0;i<200&&done.length===n;i++)await sleep(100);return JSON.parse(fs.readFileSync(done.at(-1),'utf8'));}
+async function exportCut(){const n=done.length;await page.$eval('#director-appbar [data-action=save-export]',b=>b.click());for(let i=0;i<200&&done.length===n;i++)await sleep(100);return JSON.parse(fs.readFileSync(done.at(-1),'utf8'));}
 const blocks=()=>ev(()=>[...document.querySelectorAll('[data-title-clip]')].map(b=>({id:b.dataset.titleClip,text:b.querySelector('strong').textContent,time:b.querySelector('small').textContent,selected:b.classList.contains('selected')})));
 const click=sel=>ev(sel=>{const b=document.querySelector(sel);if(!b)throw Error('missing '+sel);b.click();},sel);
-const undo=async()=>{await click('#director-panel [data-action=undo]');await sleep(450);};
+const undo=async()=>{await click('#director-appbar [data-action=undo]');await sleep(450);};
 const key=async(k,mods=[])=>{await ev(()=>document.activeElement?.blur());for(const m of mods)await page.keyboard.down(m);await page.keyboard.press(k);for(const m of mods.reverse())await page.keyboard.up(m);await sleep(450);};
 const seekTo=sec=>ev(sec=>{const r=document.querySelector('[data-title-lane]').getBoundingClientRect(),x=r.left+r.width*sec/16,y=r.top+3;document.elementFromPoint(x,y).dispatchEvent(new MouseEvent('click',{bubbles:true,clientX:x,clientY:y}));},sec);
 // the main (not shadow) text of a line, its screen centre, and the line's typography in the shot

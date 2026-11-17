@@ -24,7 +24,7 @@ try{
       lights:rows('[data-light-clip]').map(e=>({id:e.dataset.lightClip,at:pct(e,'left'),dur:pct(e,'width')})),
       tods:rows('[data-tod-key]').map(e=>({id:e.dataset.todKey,at:pct(e,'left')}))};});
   const click=async sel=>{await page.evaluate(s=>document.querySelector(s).click(),sel);await wait(900);};
-  const undo=()=>click('#director-panel [data-action=undo]');
+  const undo=()=>click('#director-appbar [data-action=undo]');
   const same=(a,b,get,what)=>a.every(x=>{const y=b.find(v=>v.id===x.id);return y&&get(x).every((v,i)=>near(v,get(y)[i]));})&&check(true,what)||check(false,what);
 
   // Make the draft hold every camera view/clip explicitly: give the camera a first edit-free baseline via a no-op seek.

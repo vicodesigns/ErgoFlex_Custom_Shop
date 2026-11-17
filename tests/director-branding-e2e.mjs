@@ -26,7 +26,7 @@ try{
   await openChapter(page,base,chapter);
   const status=()=>statusOf(page);
   const until=async(fn,what,ms=30000)=>{const end=Date.now()+ms;for(;;){const v=await fn();if(v)return v;if(Date.now()>end)throw Error('timed out: '+what);await wait(150);}};
-  const draftShot=()=>page.evaluate(()=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}});
+  const draftShot=()=>page.evaluate(()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}});
   const click=async sel=>{await page.evaluate(s=>document.querySelector(s).click(),sel);await wait(500);};
   // Every room desk's logo on a surface: the record state's artwork (what Studio's rigs draw), per desk.
   const desks=()=>page.evaluate(()=>{const sd=document.getElementById('stage').contentWindow.ErgoFlex.sceneDesks;
@@ -84,7 +84,7 @@ try{
   const moved=await desks();
   check(moved.filter(x=>layer(x,'upper-shelf','logo')).length===branded.length&&moved.every(x=>!layer(x,'desktop','logo')),'the lettering is on the top shelf of every desk (off the desktop)');
   await page.screenshot({path:path.join(shots,'branding-shelf.png')});
-  await click('#director-panel [data-action=undo]');await wait(1500);
+  await click('#director-appbar [data-action=undo]');await wait(1500);
   d=await draftShot();check(d.brandingEdits.artwork.surfaces.desktop.logo.surface===undefined&&(await desks()).every(x=>!layer(x,'upper-shelf','logo')),'Undo takes the surface move back (one step) on every desk');
   await setField('br-surface','desktop');   // a no-op change keeps the edit on the desktop
 
@@ -99,7 +99,7 @@ try{
   check(after===15,'the Branding tab reads the edit back (turn 15°)');
   // ---- Export cut -> importer -> review-cut sceneBranding (temp copy of the chapter)
   await click('#director-panel [data-inspector-tab=chapter]');
-  await page.evaluate(()=>document.querySelector('#director-panel [data-action=save-export]').click());
+  await page.evaluate(()=>document.querySelector('#director-appbar [data-action=save-export]').click());
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download');
   const exported=JSON.parse(fs.readFileSync(path.join(downloads,file),'utf8'));
   check(JSON.stringify(exported.shots[0].brandingEdits)===JSON.stringify(mine),'Export cut carries brandingEdits');

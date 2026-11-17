@@ -60,7 +60,7 @@ try{
   director=await tab('director');studio=await tab('studio');
   const status=()=>director.$eval('#director-panel [data-status]',e=>e.textContent).catch(()=>'');
   const refreshLabel=()=>director.$eval('[data-studio-refresh]',e=>e.textContent).catch(()=>'');
-  const undoOn=()=>director.$eval('#director-panel [data-action=undo]',b=>!b.disabled);
+  const undoOn=()=>director.$eval('#director-appbar [data-action=undo]',b=>!b.disabled);
   // A background tab gets no animation frames: whichever tab is being driven is in front, as it is for a person.
   async function openChapter(chapter){
     await director.bringToFront();await director.goto(BASE+chapter.page);
@@ -75,7 +75,7 @@ try{
     // Studio's own transform of a prop: local under its parent, without the room's daily staging (as the Props dialog writes it).
     window.__canon=o=>{const {T}=__t();o.updateWorldMatrix(true,false);o.parent.updateWorldMatrix(true,false);const M=new T.Matrix4().copy(o.parent.matrixWorld).invert().multiply(o.matrixWorld),d=o.userData.dailyDelta;if(d)M.premultiply(new T.Matrix4().fromArray(d).invert());
       const p=new T.Vector3(),q=new T.Quaternion(),s=new T.Vector3();M.decompose(p,q,s);return {p:{x:p.x,y:p.y,z:p.z},q:{x:q.x,y:q.y,z:q.z,w:q.w},s:{x:s.x,y:s.y,z:s.z},world:o.getWorldPosition(new T.Vector3()).toArray(),scale:o.parent.getWorldScale(new T.Vector3()).x};};
-    window.__draft=()=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}};
+    window.__draft=()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}};
     window.__rec=id=>{const r=__t().api.sceneDesks.records.get(id);return r?{size:r.state.size,x:r.group.position.x,z:r.group.position.z,yaw:r.group.rotation.y,name:r.state.name}:null;};
   });
 
@@ -116,10 +116,10 @@ try{
   check(await director.evaluate(()=>JSON.stringify(__draft().propEdits))===edit0&&!(await chair()).shown,'keeping the chapter\'s edit changes nothing: still hidden, the edit as it was');
   check(/^Refresh from Studio$/.test(await refreshLabel()),'the badge is gone after the Refresh');
   check(await undoOn(),'the undo history survived the Refresh');
-  await director.click('#director-panel [data-action=undo]');await until(async()=>(await chair()).shown,'Undo shows the chair again');
+  await director.click('#director-appbar [data-action=undo]');await until(async()=>(await chair()).shown,'Undo shows the chair again');
   const c1=await chair();
   check(Math.abs(c1.p.x-x1)<2e-3/c0.scale&&Math.abs(c1.world[0]-c0.world[0])+Math.abs(c1.world[2]-c0.world[2])>.2,`Undo after a Refresh works, and the chair is where Studio moved it (${(Math.hypot(c1.world[0]-c0.world[0],c1.world[2]-c0.world[2])).toFixed(2)} m from before)`);
-  await director.click('#director-panel [data-action=redo]');await until(async()=>!(await chair()).shown,'Redo hides it again');
+  await director.click('#director-appbar [data-action=redo]');await until(async()=>!(await chair()).shown,'Redo hides it again');
   // Studio moves it again: this time take Studio's.
   const x2=await studioMove(.3/c0.scale);
   await until(async()=>/^Studio changed: 1 edit · Refresh$/.test(await refreshLabel()),'the second badge',15000);
@@ -132,10 +132,10 @@ try{
   // The draft is written a moment after an edit, and the stage settles a frame or two after the film layers re-install.
   await until(async()=>!/steelcase/.test(await director.evaluate(()=>JSON.stringify(__draft().propEdits)))&&Math.abs((await chair()).p.x-x2)<2e-3/c0.scale,'the chair at Studio\'s place without the chapter\'s edit');
   check(true,'taking Studio\'s drops the chapter\'s edit: the chair is where Studio has it');
-  await director.click('#director-panel [data-action=undo]');await until(async()=>!(await chair()).shown,'one Undo hides the chair again');
+  await director.click('#director-appbar [data-action=undo]');await until(async()=>!(await chair()).shown,'one Undo hides the chair again');
   await until(async()=>await director.evaluate(()=>JSON.stringify(__draft().propEdits))===edit0,'the draft has the chapter\'s edit again');
   check(true,'one Undo brings the chapter\'s edit back');
-  await director.click('#director-panel [data-action=redo]');await wait(500);
+  await director.click('#director-appbar [data-action=redo]');await wait(500);
   check(eventSources.length===sources0,'two Refreshes and an Adopt opened no EventSource');
 
   // ================================================================ desks (Oilers)
@@ -192,7 +192,7 @@ try{
   const o1=await until(async()=>{const r=await director.evaluate(id=>__rec(id),OTHER);return Math.abs(r.x-studioDesk.x)<1?r:null;},'the stage desk goes to Studio\'s place',30000);
   await until(async()=>(await director.evaluate(()=>__draft().deskEdits)).some(e=>e.desk===OTHER&&Math.abs(e.pose.x-studioDesk.x)<1),'the chapter desk edit with Studio\'s place');
   check(!!o1,'taking Studio\'s desk makes it a chapter desk edit and moves the stage desk');
-  await director.click('#director-panel [data-action=undo]');
+  await director.click('#director-appbar [data-action=undo]');
   await until(async()=>Math.abs((await director.evaluate(id=>__rec(id),OTHER)).x-o0.x)<1,'Undo puts the film\'s desk back',30000);
   check(true,'one Undo puts the film\'s desk back');
   check(eventSources.length===sources1,'a desk Refresh and Adopt opened no EventSource');

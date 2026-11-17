@@ -17,7 +17,7 @@ await (await page.createCDPSession()).send('Browser.setDownloadBehavior',{behavi
 const passed=[],check=(ok,what)=>{assert.ok(ok,what);passed.push(what);};
 const until=async(fn,what,ms=30000)=>{const end=Date.now()+ms;for(;;){const v=await fn();if(v)return v;if(Date.now()>end)throw Error('timed out: '+what+' · status: '+await status(page));await wait(200);}};
 const snap=name=>page.screenshot({path:path.join(shots,name+'.png')});
-const edits=()=>page.evaluate(()=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].peopleEdits||null;}catch{return null;}});
+const edits=()=>page.evaluate(()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].peopleEdits||null;}catch{return null;}});
 const click=sel=>page.evaluate(s=>{const el=document.querySelector(s);if(!el)throw Error('no '+s);el.click();},sel);
 const setField=(name,value)=>page.evaluate((n,v)=>{const el=document.querySelector(`#director-panel [name="${n}"]`);if(!el)throw Error('no field '+n);el.value=String(v);el.dispatchEvent(new Event('change',{bubbles:true}));},name,value);
 // The stage's person under a key: bounds (room mm), whether skinned, a bone's world position and turn from rest.
@@ -129,7 +129,7 @@ try{
   check((await edits()).cast.find(c=>c.key===key).pose.lowerarm_l,'deleting a saved pose leaves the people who have it alone');
   await wait(300);await snap('04-done');
   // ---- Export cut -> import -> the film chapter's people carry the pose
-  await page.evaluate(()=>document.querySelector('#director-panel [data-action=save-export]').click());
+  await page.evaluate(()=>document.querySelector('#director-appbar [data-action=save-export]').click());
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download');
   const mine=await edits();
   const H=path.join(tmp,'hq');fs.mkdirSync(path.join(H,'shots'),{recursive:true});fs.copyFileSync(path.join(root,HQ,'review-cut.json'),path.join(H,'review-cut.json'));

@@ -13,7 +13,7 @@ await page.evaluateOnNewDocument(()=>{
   window.__find=n=>{let o=null;__t().t.scene.traverse(x=>{if(!o&&x.name===n)o=x;});return o;};
   window.__shown=n=>{const o=__find(n);if(!o)return null;for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;};
   window.__screen=o=>{const {t,T}=__t(),f=document.getElementById('stage'),c=new T.Box3().setFromObject(o).getCenter(new T.Vector3()).project(t.camera),r=t.renderer.domElement.getBoundingClientRect(),fr=f.getBoundingClientRect();return {x:fr.left+r.left+(c.x+1)/2*r.width,y:fr.top+r.top+(1-c.y)/2*r.height};};
-  window.__props=()=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1')),c=v.drafts?.[v.active]||v.cuts.find(c=>c.id===v.active);return (c.shots.find(s=>s.id==='hero')||c.shots[0]).propEdits||null;}catch{return null;}};
+  window.__props=()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})(),c=v.drafts?.[v.active]||v.cuts.find(c=>c.id===v.active);return (c.shots.find(s=>s.id==='hero')||c.shots[0]).propEdits||null;}catch{return null;}};
 });
 const bars=()=>page.$$eval('[data-props-lane] .prop-bar',l=>l.map(b=>({text:b.textContent,cls:b.className,left:parseFloat(b.style.left),width:parseFloat(b.style.width)})));
 const props=()=>page.evaluate(()=>__props());

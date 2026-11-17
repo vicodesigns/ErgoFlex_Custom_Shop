@@ -30,7 +30,7 @@ try{
   }
   await openChapter(page,base,chapter);
   const box=await page.$eval('#stage',e=>{const r=e.getBoundingClientRect();return {x:r.left+r.width*.5,y:r.top+r.height*.55};});
-  async function drag(dx,dy){await page.mouse.move(box.x,box.y);await page.mouse.down();for(let i=1;i<=8;i++){await page.mouse.move(box.x+dx*i/8,box.y+dy*i/8);await wait(25);}await page.mouse.up();}
+  async function drag(dx,dy){await page.mouse.move(box.x,box.y);await page.mouse.down({button:'right'});for(let i=1;i<=8;i++){await page.mouse.move(box.x+dx*i/8,box.y+dy*i/8);await wait(25);}await page.mouse.up({button:'right'});}   // (right-drag orbits in the Director since 17 Nov 2026; left-drag draws a box)
 
   // Select the camera key nearest 2.4 s (its diamond seeks there) and turn Film look on.
   await page.evaluate(()=>document.querySelector('[data-inspector-tab=camera]').click());await wait(300);

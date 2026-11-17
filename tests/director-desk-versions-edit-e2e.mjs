@@ -21,7 +21,7 @@ const until=async(fn,what,ms=120000)=>{const end=Date.now()+ms;for(;;){const v=a
 const lane=()=>page.$$eval('#director-timeline [data-desk-version]',b=>b.map(x=>({n:x.dataset.deskVersion,text:x.querySelector('strong').textContent,left:parseFloat(x.style.left),width:parseFloat(x.style.width)})));
 const laneText=async()=>(await lane()).map(x=>x.text).join(', ');
 const badge=()=>page.$eval('.desk-version-badge',e=>e.hidden?'':e.textContent).catch(()=>'');
-const draft=()=>page.evaluate(()=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}});
+const draft=()=>page.evaluate(()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}});
 const stage=()=>page.evaluate(()=>{const c=document.getElementById('stage').contentWindow.ErgoFlex.currentConfig,a=c.artwork?.surfaces||{};
   let layers=0,enabled=0;for(const s of Object.values(a))for(const l of Object.values(s)){layers++;if(l&&l.enabled!==false)enabled++;}
   return {wood:c.woodFinish,trim:c.trimColor,accessories:[...c.accessories],layers,enabled};});
@@ -91,11 +91,11 @@ try{
 
   // ---- undo is one step per edit
   const count=async()=>JSON.stringify((await draft())?.deskVersions||null);
-  const withEnd=await count();await click('#director-panel [data-action=undo]');check(await count()!==withEnd,'Undo steps back one edit');await click('#director-panel [data-action=redo]');
+  const withEnd=await count();await click('#director-appbar [data-action=undo]');check(await count()!==withEnd,'Undo steps back one edit');await click('#director-appbar [data-action=redo]');
 
   // ---- export
   const cdp=await page.createCDPSession();await cdp.send('Browser.setDownloadBehavior',{behavior:'allow',downloadPath:downloads});
-  await click('#director-panel [data-action=save-export]');
+  await click('#director-appbar [data-action=save-export]');
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download',30000);
   const exFile=path.join(downloads,file),ex=JSON.parse(fs.readFileSync(exFile,'utf8')).shots[0].deskVersions;
   check(Array.isArray(ex)&&ex.length===6&&ex.map(v=>v.n).join('')==='ABCDEF'&&ex[3].preset==='music'&&ex[3].name==='Studio music room'&&ex[1].preset==='office'&&ex[2].preset==='artist','Export cut: shot.deskVersions '+JSON.stringify(ex?.map(v=>v.n+v.preset)));

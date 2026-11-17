@@ -43,7 +43,7 @@ await page.evaluateOnNewDocument(()=>{
     const path=[];for(let p=o;p&&p!==sc;p=p.parent)path.unshift(p.name||p.type);o.updateWorldMatrix(true,false);const v=o.getWorldPosition(o.position.clone()),pw=o.parent.getWorldPosition(o.position.clone());
     return {name:o.name,path:path.join(' > '),w:v.toArray(),parentW:pw.toArray(),s:o.getWorldScale(o.position.clone()).toArray()};};
   window.__screen=o=>{const {t,T}=__t(),f=document.getElementById('stage'),c=new T.Box3().setFromObject(o).getCenter(new T.Vector3()).project(t.camera),r=t.renderer.domElement.getBoundingClientRect(),fr=f.getBoundingClientRect();return {x:fr.left+r.left+(c.x+1)/2*r.width,y:fr.top+r.top+(1-c.y)/2*r.height,ndc:[c.x,c.y,c.z]};};
-  window.__draft=()=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].propEdits||null;}catch{return null;}};
+  window.__draft=()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].propEdits||null;}catch{return null;}};
 });
 const draft=()=>page.evaluate(()=>__draft());
 const addsOf=async asset=>((await draft())||[]).filter(e=>e.add?.asset===asset);
@@ -198,7 +198,7 @@ try{
   check(dist(copy,fi.w)<2e-3,'Studio\'s ficus stands where he put it on the stage');
   // ---- Export cut -> import -> pass -> review-cut (a scratch copy of the hq dir)
   const mine=await draft();
-  await page.evaluate(()=>document.querySelector('#director-panel [data-action=save-export]').click());
+  await page.evaluate(()=>document.querySelector('#director-appbar [data-action=save-export]').click());
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download');
   const exported=JSON.parse(fs.readFileSync(path.join(downloads,file),'utf8'));check(JSON.stringify(exported.shots[0].propEdits)===JSON.stringify(mine),'Export cut carries the added phone');
   const H=path.join(tmp,'hq');fs.mkdirSync(path.join(H,'shots'),{recursive:true});fs.copyFileSync(path.join(root,HQ,'review-cut.json'),path.join(H,'review-cut.json'));

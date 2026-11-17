@@ -23,7 +23,7 @@ const tabs=()=>page.$$eval('#director-panel [data-inspector-tab]',b=>b.map(x=>x.
 const stage=()=>page.evaluate(()=>{const api=document.getElementById('stage').contentWindow.ErgoFlex,c=api.currentConfig,o=api.sceneDesks.active.objects;
   return {wood:c.woodFinish,base:c.baseFinish,trim:c.trimColor,accessories:[...c.accessories],
     placed:Object.fromEntries([...o.entries()].filter(([k,v])=>k.startsWith('accessory-')&&!v.saved.removed).map(([k,v])=>[k.slice(10),{role:v.saved.role,mount:v.obj.parent?.name,visible:v.obj.visible}]))};});
-const draft=()=>page.evaluate(()=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}});
+const draft=()=>page.evaluate(()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}});
 const pick=(kind,value)=>click(`#director-panel [data-build-pick=${kind}][data-value="${value}"]`);
 try{
   await openChapter(page,base,chapter);
@@ -52,7 +52,7 @@ try{
 
   // ---- export, then the film's importer
   const cdp=await page.createCDPSession();await cdp.send('Browser.setDownloadBehavior',{behavior:'allow',downloadPath:downloads});
-  await click('#director-panel [data-action=save-export]');
+  await click('#director-appbar [data-action=save-export]');
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download',30000);
   const exFile=path.join(downloads,file),exported=JSON.parse(fs.readFileSync(exFile,'utf8')),eb=exported.shots[0].deskBuild;
   check(eb?.woodFinish==='Coast Navy'&&eb.baseFinish==='Terracotta'&&eb.trimColor==='#f99239'&&eb.accessories?.some(a=>a.id==='drawing-tablet'&&a.slot==='lower-shelf'),'Export cut: shot.deskBuild carries finishes and the tablet slot');

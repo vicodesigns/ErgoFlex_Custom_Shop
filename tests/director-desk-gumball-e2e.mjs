@@ -18,7 +18,7 @@ try{
   await page.evaluateOnNewDocument(()=>{
     window.__t=()=>{const w=document.getElementById('stage').contentWindow,t=w.ErgoPresentation.three();return {w,t,T:w.__directorThree?.THREE,desks:w.ErgoFlex.sceneDesks};};
     window.__rec=id=>{const r=__t().desks.records.get(id);return r?{x:r.group.position.x,z:r.group.position.z,yaw:r.group.rotation.y}:null;};
-    window.__draft=()=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].deskEdits||null;}catch{return null;}};
+    window.__draft=()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].deskEdits||null;}catch{return null;}};
     window.__cam=()=>{const {t}=__t();return [...t.camera.position.toArray(),...t.controls.target.toArray()].map(v=>Math.round(v*1e4)/1e4).join(',');};
     window.__screen=v=>{const {t}=__t(),p=v.clone().project(t.camera),f=document.getElementById('stage').getBoundingClientRect(),c=t.renderer.domElement.getBoundingClientRect();return {x:f.left+c.left+(p.x+1)/2*c.width,y:f.top+c.top+(1-p.y)/2*c.height};};
     window.__frame=id=>{const {t,T,desks}=__t(),r=desks.records.get(id),b=new T.Box3().setFromObject(r.group),c=b.getCenter(new T.Vector3());const look=c.clone().setY(c.y+.9);t.camera.position.set(c.x+.6,c.y+3.6,c.z+4.2);t.controls.target.copy(look);t.camera.lookAt(look);t.controls.update();};   // the desk low in the frame: the gumball over it stays clear of the stage's toolbar
@@ -87,8 +87,8 @@ try{
   check(Math.min(m,15-m)<.05&&Math.abs(deg(a4.yaw-a3.yaw))>1,`with Shift it lands on a 15° step: ${deg(a4.yaw).toFixed(2)}°`);
   const e2=(await draft())?.find(e=>e.desk===ID);check(!!e2&&Math.abs(e2.pose.yaw-a4.yaw)<1e-3&&Math.abs(e2.pose.z-a4.z)<.2,'the chapter keeps place and turn: '+JSON.stringify(e2?.pose));
   await page.screenshot({path:path.join(shots,'gumball-moved.png')});
-  // ---- the camera is still free: an orbit drag on empty floor turns it, and it rests afterwards
-  const c0=await page.evaluate(()=>__cam());await page.mouse.move(stage.x+stage.w*.12,stage.y+stage.h*.9);await page.mouse.down();await page.mouse.move(stage.x+stage.w*.2,stage.y+stage.h*.9,{steps:6});await page.mouse.up();
+  // ---- the camera is still free: an orbit drag (right button since 17 Nov 2026) on empty floor turns it, and it rests afterwards
+  const c0=await page.evaluate(()=>__cam());await page.mouse.move(stage.x+stage.w*.12,stage.y+stage.h*.9);await page.mouse.down({button:'right'});await page.mouse.move(stage.x+stage.w*.2,stage.y+stage.h*.9,{steps:6});await page.mouse.up({button:'right'});
   let c1=await page.evaluate(()=>__cam());for(let i=0;i<40;i++){await wait(250);const now=await page.evaluate(()=>__cam());if(now===c1)break;c1=now;}   // the orbit's damping runs out
   for(let i=0;i<8;i++){await page.mouse.move(stage.x+stage.w*(.3+.04*i),stage.y+stage.h*.5);await wait(50);}await wait(400);
   const c2=await page.evaluate(()=>__cam()),still=(a,b)=>a.split(',').every((v,i)=>Math.abs(v-b.split(',')[i])<.01);   // a stuck orbit turns it by tenths; the last of the damping by less than a thousandth
@@ -99,7 +99,7 @@ try{
   await page.keyboard.press('Escape');await wait(400);await page.mouse.up();await wait(600);
   const free=await page.evaluate(()=>{const {w,t}=__t();return {dragging:!!w.__directorDragging,controls:t.controls.enabled,gum:!!__gum()?.visible,gumDragging:!!__gum()?.dragging};});
   check(!free.dragging&&free.controls&&!free.gum&&!free.gumDragging,'Esc during an arrow drag ends it and frees the camera: '+JSON.stringify(free));
-  const d0=await page.evaluate(()=>__cam());await page.mouse.move(stage.x+stage.w*.12,stage.y+stage.h*.9);await page.mouse.down();await page.mouse.move(stage.x+stage.w*.22,stage.y+stage.h*.9,{steps:6});await page.mouse.up();await wait(600);
+  const d0=await page.evaluate(()=>__cam());await page.mouse.move(stage.x+stage.w*.12,stage.y+stage.h*.9);await page.mouse.down({button:'right'});await page.mouse.move(stage.x+stage.w*.22,stage.y+stage.h*.9,{steps:6});await page.mouse.up({button:'right'});await wait(600);
   check(d0!==await page.evaluate(()=>__cam()),'and the camera orbits again afterwards');
 }catch(e){if(!e.done){failures.push(e.message);console.log('FAIL',e.message);}}
 finally{if(errors.length){failures.push('page errors');console.log('page errors:',errors.slice(0,5));}await close();}

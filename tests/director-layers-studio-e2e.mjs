@@ -44,7 +44,7 @@ async function api(method,p,body){
 const LAYERS='ergoflex.sceneLayers.v1',ASSETS='ergoflex.sceneAssets.v1',ROOM='highschool:house';
 const part=async(name,fn)=>{try{await fn();}catch(error){check(false,name,error.message);}};
 const until=async(fn,ms=30000)=>{const t0=Date.now();let v;for(;;){v=await fn().catch(e=>({ok:false,error:e.message}));if(v?.ok||Date.now()-t0>ms)return v||{ok:false};await wait(300);}};
-const draft=()=>page.evaluate(()=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots.find(s=>s.id==='oilers')||null;}catch{return null;}});
+const draft=()=>page.evaluate(()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots.find(s=>s.id==='oilers')||null;}catch{return null;}});
 // the stage at one room desk: drawn?, what belongs to it, who sits at it (shown)
 const stageAt=station=>page.evaluate(st=>{
   const E=document.getElementById('stage')?.contentWindow?.ErgoFlex,shown=o=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;};

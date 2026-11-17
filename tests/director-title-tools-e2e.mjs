@@ -23,7 +23,7 @@ const done=[];cdp.on('Browser.downloadProgress',e=>{if(e.state==='completed')don
 const consoleErrors=[];page.on('pageerror',e=>{log('pageerror',e.message);consoleErrors.push(e.message);});page.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource|\[film fx\]/.test(m.text())){consoleErrors.push(m.text());log('console error',m.text().slice(0,200));}});
 const ev=(fn,...a)=>page.evaluate(fn,...a);
 const statusText=()=>ev(()=>document.querySelector('#director-panel [data-status]')?.textContent||'');
-async function exportCut(){const n=done.length;await page.$eval('#director-panel [data-action=save-export]',b=>b.click());for(let i=0;i<200&&done.length===n;i++)await sleep(100);return JSON.parse(fs.readFileSync(done.at(-1),'utf8'));}
+async function exportCut(){const n=done.length;await page.$eval('#director-appbar [data-action=save-export]',b=>b.click());for(let i=0;i<200&&done.length===n;i++)await sleep(100);return JSON.parse(fs.readFileSync(done.at(-1),'utf8'));}
 const blocks=()=>ev(()=>[...document.querySelectorAll('[data-title-clip]')].map(b=>({id:b.dataset.titleClip,text:b.querySelector('strong').textContent,time:b.querySelector('small').textContent,selected:b.classList.contains('selected')})));
 const playhead=()=>ev(()=>Number(document.querySelector('[name=timeline-seconds]')?.value));
 const click=sel=>ev(sel=>{const b=document.querySelector(sel);if(!b)throw Error('missing '+sel);b.click();},sel);
@@ -51,9 +51,9 @@ try{
   // type its copy
   await ev(()=>{const el=document.querySelector('#director-panel [data-inspector-page=title] [name=ft-title]');el.value='Made in Director';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));});await sleep(300);
   // 2. Undo / Redo
-  await click('#director-panel [data-action=undo]');await sleep(400);await click('#director-panel [data-action=undo]');await sleep(500);
+  await click('#director-appbar [data-action=undo]');await sleep(400);await click('#director-appbar [data-action=undo]');await sleep(500);
   check((await blocks()).length===1,'Undo (twice: copy, then add) removes the added title');
-  await click('#director-panel [data-action=redo]');await sleep(400);await click('#director-panel [data-action=redo]');await sleep(500);
+  await click('#director-appbar [data-action=redo]');await sleep(400);await click('#director-appbar [data-action=redo]');await sleep(500);
   b=await blocks();check(b.length===2&&b.some(x=>/Made in Director/.test(x.text)),'Redo brings it back with its copy');
   // 3. Duplicate (button) the film title
   const orig=b.find(x=>/Your height/.test(x.text));
@@ -115,7 +115,7 @@ try{
   check(await ev(()=>!document.querySelector('#director-panel [data-title-action=reset-lines]').disabled),'Reset line positions is enabled as soon as a line moves');
   await click('#director-panel [data-title-action=reset-lines]');await sleep(400);
   check(JSON.stringify(await textY())===JSON.stringify(y0),'Reset line positions puts every line back');
-  await click('#director-panel [data-action=undo]');await sleep(400);
+  await click('#director-appbar [data-action=undo]');await sleep(400);
   check(JSON.stringify(await textY())===JSON.stringify(y2),'Undo brings the moved lines back');
   // 9. A real reload of the film draft (film-fresh on): delete the chapter's titles, reload the page; the draft comes back
   // at once, or film-fresh offers it (Keep my unexported changes); either way the chapter stays without titles.

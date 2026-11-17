@@ -26,7 +26,7 @@ try{
   await page.evaluateOnNewDocument(()=>{window.__exports=[];const make=URL.createObjectURL;URL.createObjectURL=function(b){if(b instanceof Blob&&b.type==='application/json')b.text().then(t=>window.__exports.push(JSON.parse(t)));return make.call(this,b);};});
   await openChapter(page,base,chapter);
   const status=()=>statusOf(page);
-  const readDraft=()=>page.evaluate(()=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}});
+  const readDraft=()=>page.evaluate(()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}});
   // The draft is written a moment after an edit.
   const draftShot=async()=>{await wait(1100);for(let i=0;i<20;i++){const v=await readDraft();if(v)return v;await wait(250);}return null;};
   const stageDesk=id=>page.evaluate(id=>{const r=document.getElementById('stage').contentWindow.ErgoFlex.sceneDesks.records.get(id);return r?{h:r.state.height,t:r.state.tilt}:null;},id);
@@ -130,7 +130,7 @@ try{
   check(near(a.h,50)&&near(b.h,40),`reloaded stage at t=3: A ${a.h.toFixed(1)}″, B ${b.h.toFixed(1)}″`);
 
   // ---- Export cut carries the clips
-  await page.evaluate(()=>document.querySelector('#director-panel [data-action=save-export]').click());
+  await page.evaluate(()=>document.querySelector('#director-appbar [data-action=save-export]').click());
   const exported=await until(()=>page.evaluate(()=>window.__exports.at(-1)),'export');
   const es=exported.shots[0],ea=es.deskEdits?.find(e=>e.desk===A),eb2=es.deskEdits?.find(e=>e.desk===B);
   check(es.deskEdits?.length===2&&ea?.clips.length===2&&eb2?.clips.length===2,'Export cut: shot.deskEdits has both desks, two clips each');
@@ -140,10 +140,10 @@ try{
   // ---- undo is one step; clearing a desk puts it back and drops its entry
   await addClip('lift',8);
   d=await draftShot();check(d.deskEdits.find(e=>e.desk===A).clips.length===3,'a third move on desk A (a lift at 8 s)');
-  await click('#director-panel [data-action=undo]');
+  await click('#director-appbar [data-action=undo]');
   d=await draftShot();
   check(d.deskEdits.find(e=>e.desk===A).clips.length===2,'one Undo takes back that move');
-  await click('#director-panel [data-action=redo]');
+  await click('#director-appbar [data-action=redo]');
   d=await draftShot();check(d.deskEdits.find(e=>e.desk===A).clips.length===3,'Redo puts it back');
   await click('#director-panel [data-desk-action=clear]');
   d=await draftShot();

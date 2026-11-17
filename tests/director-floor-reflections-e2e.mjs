@@ -20,7 +20,7 @@ try{
     // A world point on the stage canvas, in page pixels.
     screen:(xyz)=>{const w=window.__fr.w(),t=w.ErgoPresentation.three(),v=new t.camera.position.constructor(...xyz).project(t.camera),r=t.renderer.domElement.getBoundingClientRect(),f=document.getElementById('stage').getBoundingClientRect();return {x:f.left+r.left+(v.x+1)/2*r.width,y:f.top+r.top+(1-v.y)/2*r.height};},
     group:()=>{let g=null;window.__fr.w().ErgoPresentation.three().scene.traverse(o=>{if(o.name==='Director floor reflections')g=o;});return g&&{visible:g.visible,lines:g.children.filter(c=>c.isLine&&c.visible&&/^pool:/.test(c.name)).length,strips:g.children.filter(c=>c.isLine&&c.visible&&/^strip:/.test(c.name)).length};},
-    draft:()=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].sceneGlobals?.ledFloorSources??null;}catch{return 'none';}},
+    draft:()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].sceneGlobals?.ledFloorSources??null;}catch{return 'none';}},
   };});
   const pools=()=>page.evaluate(()=>__fr.pools()),group=()=>page.evaluate(()=>__fr.group()),draft=()=>page.evaluate(()=>__fr.draft());
   // The sub-section: in Lighting > Room, under LED glow on the floor.

@@ -28,7 +28,7 @@ try{
   await page.evaluateOnNewDocument(()=>{
     window.__t=()=>{const w=document.getElementById('stage').contentWindow,t=w.ErgoPresentation.three();return {w,t,T:w.__directorThree?.THREE,desks:w.ErgoFlex.sceneDesks};};
     window.__rec=id=>{const {desks}=__t(),r=desks.records.get(id);return r?{size:r.state.size,x:r.group.position.x,z:r.group.position.z,yaw:r.group.rotation.y,height:r.state.height,tilt:r.state.tilt,poseAt:r.poseAt}:null;};
-    window.__draft=()=>{try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].deskEdits||null;}catch{return null;}};
+    window.__draft=()=>{try{const v=(()=>{let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=Object.values(f).filter(x=>x?.cut).sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')))[0];return d?{active:'film',drafts:{film:d.cut},cuts:[d.cut]}:JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].deskEdits||null;}catch{return null;}};
     // The screen point of a desk's bare body (not a prop riding on it): scan the desk's box for a ray that hits it.
     window.__deskPoint=id=>{const {w,t,T,desks}=__t(),r=desks.records.get(id),box=new T.Box3().setFromObject(r.group),f=document.getElementById('stage').getBoundingClientRect(),c=t.renderer.domElement.getBoundingClientRect(),ray=new T.Raycaster();
       const ours=o=>{for(let p=o;p;p=p.parent)if(p.userData?.directorTools||p.userData?.filmFx)return true;return false;};
@@ -177,10 +177,10 @@ try{
   await live(async()=>near((await rec('station-window-research')).x,untouched.x+30*IN,1),'second desk moved');
   check((await draft()).length===2,'two desks edited: '+(await draft()).map(e=>e.desk).join(', '));
   // undo is one step per edit
-  await click('#director-panel [data-action=undo]');
+  await click('#director-appbar [data-action=undo]');
   await live(async()=>near((await rec('station-window-research')).x,untouched.x,1),'undo');
   check((await draft()).length===1,'Undo takes the second desk\'s edit back');
-  await click('#director-panel [data-action=redo]');await live(async()=>(await draft())?.length===2,'redo');
+  await click('#director-appbar [data-action=redo]');await live(async()=>(await draft())?.length===2,'redo');
   await page.keyboard.press('Escape');await wait(300);
 
   const mine=await draft();
@@ -193,7 +193,7 @@ try{
   check((await rows()).filter(r=>/edited/.test(r.text)).length===2,'the list marks the two edited desks');
 
   // ---- Export cut carries deskEdits; the importer writes sceneDeskEdits into the film
-  await page.evaluate(()=>document.querySelector('#director-panel [data-action=save-export]').click());
+  await page.evaluate(()=>document.querySelector('#director-appbar [data-action=save-export]').click());
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download');
   const exported=JSON.parse(fs.readFileSync(path.join(downloads,file),'utf8'));
   check(JSON.stringify(exported.shots[0].deskEdits)===JSON.stringify(mine),'Export cut carries shot.deskEdits ('+mine.length+' desks)');

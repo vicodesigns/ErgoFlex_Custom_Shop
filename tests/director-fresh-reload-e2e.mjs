@@ -99,7 +99,7 @@ try{
 
   // ---- 3. Export cut from a tab the film moved past
   await wait(1100);importEdit(9.45,-.2);const v3=rise();
-  await click('#director-panel [data-action=save-export]');
+  await click('#director-appbar [data-action=save-export]');
   await until(()=>page.$eval('#film-stale',d=>d.open).catch(()=>false),'stale-export warning');
   const warn=await page.$eval('#film-stale [data-stale-text]',e=>e.textContent),list=await page.$$eval('#film-stale [data-stale-list] li',l=>l.map(x=>x.textContent));
   check(warn===`This tab is older than the film (exported ${hhmm(v3.updated)}). Exporting will overwrite:`,`warning: "${warn}"`);
@@ -108,15 +108,15 @@ try{
   await click('#film-stale [data-stale=export]');await until(async()=>await exports()===1,'export anyway');
   const sent=await page.evaluate(()=>window.__exports[0].shots[0].motion.clips.find(c=>c.id==='full-height').start);
   check(sent===9,`Export anyway exports the tab's values (clip at ${sent} s)`);
-  await click('#director-panel [data-action=save-export]');await until(async()=>await exports()===2,'second export');
+  await click('#director-appbar [data-action=save-export]');await until(async()=>await exports()===2,'second export');
   check(!await page.$eval('#film-stale',d=>d.open),'exporting again after Export anyway does not warn again');
   await wait(1100);importEdit(9.2,.1);const v4=rise();
-  await click('#director-panel [data-action=save-export]');
+  await click('#director-appbar [data-action=save-export]');
   await until(()=>page.$eval('#film-stale',d=>d.open).catch(()=>false),'stale-export warning after import 3');
   await click('#film-stale [data-stale=latest]');await until(async()=>/9\.2 to 12\.4/.test(await clip()),'latest loaded',60000);
   check((await hashCut()).filmVersion===v4.version,'Load the latest: the clip and the hash are the film\'s newest');
   check(await notice()===`Loaded the latest film version of this chapter (your export from ${hhmm(v4.updated)}).`&&await exports()===2,`Load the latest: notice "${await notice()}", nothing exported`);
-  await click('#director-panel [data-action=save-export]');await until(async()=>await exports()===3,'export after load latest');
+  await click('#director-appbar [data-action=save-export]');await until(async()=>await exports()===3,'export after load latest');
   check(!await page.$eval('#film-stale',d=>d.open),'Export cut after Load the latest does not warn');
   const errs=errors.filter(e=>!/WebGL|GPU stall/i.test(e));
   check(!errs.length,`no page or "not exported" errors${errs.length?': '+errs.join(' | '):''}`);
