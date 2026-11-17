@@ -34,7 +34,7 @@ export function spaceNow() { for (const g of all) if (!g.userData.fixedSpace) re
 // gizmo: a TransformControls; win: the stage window; THREE: its three.js; mmPerUnit(): mm per world unit;
 // snap: { t: world units, r: degrees, s: factor } for Ctrl; ownSnap: the editor snaps by itself (Ctrl then inverts it
 // through the editor's setSnap(bool)); status(text).
-export function enhanceGizmo(gizmo, { win, THREE, mmPerUnit = () => 1000, snap = { t: .05, r: 15, s: .1 }, setSnap = null, status = () => {} }) {
+export function enhanceGizmo(gizmo, { win, THREE, mmPerUnit = () => 1000, snap = { t: .05, r: 15, s: .1 }, setSnap = null, status = () => {}, readout = true }) {
   all.add(gizmo);
   const doc = win.document, tip = doc?.createElement?.('div') || { style: {}, remove() {} }; tip.className = 'gumball-tip';
   Object.assign(tip.style, { position: 'fixed', zIndex: 99999, pointerEvents: 'none', padding: '3px 7px', borderRadius: '6px', background: '#0b1118e6', border: '1px solid #ffffff22', color: '#e8eef4', font: '600 11px/1.3 system-ui,sans-serif', whiteSpace: 'nowrap', display: 'none' });
@@ -42,7 +42,7 @@ export function enhanceGizmo(gizmo, { win, THREE, mmPerUnit = () => 1000, snap =
   let start = null, last = null, typed = '', px = 0, py = 0, ctrl = false, shift = false;
   const o = () => gizmo.object;
   const take = obj => ({ p: obj.position.clone(), q: obj.quaternion.clone(), s: obj.scale.clone(), wp: obj.getWorldPosition(new THREE.Vector3()) });
-  function readout() {
+  function reading() {
     const obj = o(); if (!obj || !start) return '';
     if (gizmo.mode === 'rotate') { const a = 2 * Math.acos(Math.min(1, Math.abs(start.q.clone().invert().multiply(obj.quaternion).w))); return `${(a * 180 / Math.PI).toFixed(1)}°`; }
     if (gizmo.mode === 'scale') return `${Math.round(obj.scale.x / (start.s.x || 1) * 100)} %`;
@@ -50,7 +50,7 @@ export function enhanceGizmo(gizmo, { win, THREE, mmPerUnit = () => 1000, snap =
     return fmtLen(mm) + (gizmo.axis && gizmo.axis.length === 1 ? ` (${gizmo.axis})` : '');
   }
   function show() {
-    const text = readout(); if (!text && !typed) { tip.style.display = 'none'; return; }
+    const text = readout && !typed ? reading() : typed ? reading() : ''; if (!text && !typed) { tip.style.display = 'none'; return; }   // (readout false: an editor with its own tooltip, the room desk: only what is typed shows)
     tip.textContent = typed ? `${text} → ${typed}▏ Enter` : text + (gizmo.dragging ? ' · type a value' : '');
     Object.assign(tip.style, { display: 'block', left: px + 14 + 'px', top: py + 14 + 'px' });
   }

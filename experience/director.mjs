@@ -254,7 +254,9 @@ export function mountDirector(bridge,catalog,initial){
   }
   const status=(message,error=false)=>{if(!error&&open&&message&&/\bUndo (brings|puts|restores|takes)/.test(message)&&undo.length)undoToast(message);if(labelPending&&!error&&message){labelPending.text=message.split(/\.(\s|$)/)[0];labelPending=null;}for(const el of [panel.querySelector('[data-status]'),timeline.querySelector('[data-timeline-status]')])if(el){el.textContent=message;el.title=message;el.classList.toggle('error',error);}};
   function saved(text,title){const el=document.querySelector('#director-appbar:not([hidden]) [data-saved]')||panel.querySelector('[data-saved]');if(el){el.textContent=text;el.title=title;}}
-  function draft(){clearTimeout(draftTimer);fresh.noteDraft(project,unexported());try{if(!fresh.on)library.draft(project);saved('Saved ✓','Draft kept in this browser · Export cut sends it to the film');}catch{saved('Not saved','Browser storage is full, so no draft copy · Export cut sends it to the film');}}
+  // (for the e2e tests and Report a problem: which cut is open and where its draft is kept)
+  function stampDraft(){document.body.dataset.cutId=project.id;document.body.dataset.draftStore=fresh?.on?'film':'library';}
+  function draft(){clearTimeout(draftTimer);stampDraft();fresh.noteDraft(project,unexported());try{if(!fresh.on)library.draft(project);saved('Saved ✓','Draft kept in this browser · Export cut sends it to the film');}catch{saved('Not saved','Browser storage is full, so no draft copy · Export cut sends it to the film');}}
   function changed(){filmLook?.poke();bridge.update(project);clearTimeout(draftTimer);draftTimer=setTimeout(draft,250);renderTimeline();syncCameraOptions();syncFilm();for(const [name,stack]of [['undo',undo],['redo',redo]]){const b=panel.querySelector(`[data-action="${name}"]`);if(b)b.disabled=!stack.length;}renderAppBar();}
   // Film chapters: a dropdown that reloads this tab with another chapter's page.
   const filmIndex=()=>filmChapterIndex(filmChapters,project.shots.map(s=>s.id));
@@ -950,7 +952,7 @@ export function mountDirector(bridge,catalog,initial){
   const studioSync=createStudioSync({bridge,project:()=>project,index:()=>selected,shot,film:filmShot,commit,status,rerender:renderStudioSync,render:()=>render(),stageItems:()=>{try{return sceneProps.items();}catch{return [];}}});
   function loadProject(value,keepDraft=true){if(keepDraft)draft();project=cleanCut(value,catalog);foldedDesks.clear();   // (a cut loaded now, e.g. Keep my unexported changes, gets its room-desk prop moves folded too)
 for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId=null;playhead=0;undo=[];redo=[];undoLabels=[];redoLabels=[];labelPending=null;group=null;changed();render();load();}
-  function render(){renderPanel();renderTimeline();}
+  function render(){stampDraft();renderPanel();renderTimeline();}
   function renderPanel(){
     const scroll=panel.scrollTop,active=panel.contains(document.activeElement)?document.activeElement:null;
     const activeName=active?.name,selection=active?.selectionStart==null?null:[active.selectionStart,active.selectionEnd];
