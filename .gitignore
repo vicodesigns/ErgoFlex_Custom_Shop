@@ -20,6 +20,10 @@ exports/**/*.webm
 exports/**/*.mkv
 exports/**/*.mov
 exports/**/*.wav
+# the Director's Sound lane, cut from score.wav (tools/experience/build-score-preview.py): built where the wav is
+exports/**/score/preview/
+exports/**/score/peaks.json
+exports/**/score/inputs.json
 exports/**/*.mp3
 exports/**/frames/
 exports/cinematic-intro-*/review/**/*.jpg

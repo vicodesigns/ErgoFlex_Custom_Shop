@@ -19,7 +19,7 @@
 //   aliases  what the command search (Ctrl+P) also finds it by: Rhino's command names (m, ro, sc, zs, ze, top…).
 // Vico's own keys (the panel's Edit keys) are kept as { id: [spec...] } (keys-panel.mjs, ui store) and laid over this
 // table by effectiveActions(); only rows the Director runs can be rebound, never to a RESERVED key.
-export const LIVE_PHASES = new Set(['1a', '1a2', '1b']);
+export const LIVE_PHASES = new Set(['1a', '1a2', '1b', '2']);
 
 const R = (id, label, keys, ctx, more = {}) => ({ id, label, keys, ctx, phase: '1a', owner: 'director', ...more });
 const E = (id, label, keys, ctx, more = {}) => R(id, label, keys, ctx, { owner: 'editor', ...more });
@@ -72,6 +72,7 @@ export const ACTIONS = [
   R('group-5', 'Jump to Props', ['5'], 'timeline', { origin: 'Director' }),
   R('group-6', 'Jump to World (time of day, room light)', ['6'], 'timeline', { origin: 'Director' }),
   R('group-7', 'Jump to Lights (desk white, status, lamps)', ['7'], 'timeline', { origin: 'Director' }),
+  R('group-8', 'Jump to Sound (the score and the movement sounds)', ['8'], 'timeline', { phase: '2', origin: 'Director' }),
   R('nudge-back', 'Nudge the selection one frame earlier (Shift: 10 frames)', ['Alt+ArrowLeft', 'Shift+Alt+ArrowLeft'], 'timeline', { repeat: true, origin: 'Premiere' }),
   R('nudge-forward', 'Nudge the selection one frame later (Shift: 10 frames)', ['Alt+ArrowRight', 'Shift+Alt+ArrowRight'], 'timeline', { repeat: true, origin: 'Premiere' }),
   G('drag-ruler', 'Move the playhead', 'Click or drag the ruler', 'timeline'),

@@ -60,6 +60,7 @@ Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl als
 | 5 | Jump to Props | Director |
 | 6 | Jump to World (time of day, room light) | Director |
 | 7 | Jump to Lights (desk white, status, lamps) | Director |
+| 8 | Jump to Sound (the score and the movement sounds) | Director |
 | Alt+← / Alt+Shift+← | Nudge the selection one frame earlier (Shift: 10 frames) | Premiere |
 | Alt+→ / Alt+Shift+→ | Nudge the selection one frame later (Shift: 10 frames) | Premiere |
 | Click or drag the ruler | Move the playhead |  |

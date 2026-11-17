@@ -78,7 +78,7 @@ async function refreshBakeStatus(){
 async function liveAt(position){playing=false;await playShot(index,{position,forceLive:true});}
 let synth;
 function chime(final=false){
-  if(!sound)return;
+  if(!sound||(directorOpen&&director?.ownsSound?.()))return;
   try{synth ||= new AudioContext();synth.resume();const now=synth.currentTime;
     for(const [i,hz]of (final?[130.81,196,261.63,392]:[261.63,523.25]).entries()){
       const oscillator=synth.createOscillator(),gain=synth.createGain();oscillator.type='sine';oscillator.frequency.value=hz;
@@ -240,7 +240,8 @@ async function playShot(i,{position=0,forceLive=false,range=null}={}){
 function syncAudio(){
   director?.transportChanged();
   if(activeBake){if(playing&&!busy&&!document.hidden)bakedVideo.play().catch(error=>{bakeStatus={state:'error',available:false,error:error.message};liveAt(clock.progress(performance.now(),shots[index].seconds));});else bakedVideo.pause();}
-  if(sound&&playing&&!busy&&!finished&&!document.hidden){track.play().catch(()=>{sound=false;$('sound').textContent='Sound off';});}else track.pause();
+  // (a film cut in the Director plays its own score, score-track.mjs, in place of the demo bed)
+  if(directorOpen&&director?.ownsSound?.()){track.pause();}else if(sound&&playing&&!busy&&!finished&&!document.hidden){track.play().catch(()=>{sound=false;$('sound').textContent='Sound off';});}else track.pause();
   // The gaming chapter uses the viewer's own analyser and music transport.
   if(shots[index]?.kind==='music'&&sound&&!activeBake)track.pause();
   stage()?.sound(sound&&playing&&!busy&&!activeBake).catch(()=>{});

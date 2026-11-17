@@ -2,6 +2,7 @@ import {createTimelineHints,timelineShortcuts} from './timeline-hints.mjs';
 import {resolve as resolveKey,targetKind,changedHint,effectiveActions} from './director-actions.mjs';
 import {createPalette} from './command-palette.mjs';
 import {appBarHtml,statusBarHtml,wireMenus} from './director-appbar.mjs';
+import {chapterScore,staleness,snapTimes,snapTo,waveColumns,createScorePlayer} from './score-track.mjs';
 import {createActionLog,captureErrors,reportBody,createReportDialog,sendReport} from './director-report.mjs';
 import {createKeysPanel,loadUi,saveUi} from './keys-panel.mjs';
 import {createViewNav} from './view-nav.mjs';
@@ -145,8 +146,12 @@ export function mountDirector(bridge,catalog,initial){
     setTimeout(()=>{target.classList.remove('reveal-pulse');target.style.animationDelay='';},1500-age);
   }
   function editTimes(){return [...keys().map(k=>k.time*shot().seconds),...deskEditor.boundaries()];}
+  // (Snap Beat / Bar: the score's grid, scoreModel(); a number: that step in seconds)
+  const numStep=()=>typeof snapStep==='number'?snapStep:.1;
   function snapTime(value,{pixels=1000,bypass=false,excludeClip,excludeKey,excludePlayhead=false}={}){
-    return snapTimelineTime(value,{seconds:shot().seconds,step:snapStep,bypass,targets:[0,shot().seconds,...(excludePlayhead?[]:[playhead*shot().seconds]),...keys().filter(k=>k.id!==excludeKey).map(k=>k.time*shot().seconds),...deskEditor.boundaries(excludeClip)],tolerance:8*shot().seconds/pixels});
+    const grid=typeof snapStep==='string'?snapTimes(scoreModel(),snapStep):null;
+    if(grid?.length&&!bypass){const tol=8*shot().seconds/pixels,edges=[0,shot().seconds,...(excludePlayhead?[]:[playhead*shot().seconds]),...keys().filter(k=>k.id!==excludeKey).map(k=>k.time*shot().seconds),...deskEditor.boundaries(excludeClip)];const near=snapTo(value,edges,tol);return Math.max(0,Math.min(shot().seconds,near!==value?near:snapTo(value,grid,Infinity)));}
+    return snapTimelineTime(value,{seconds:shot().seconds,step:numStep(),bypass,targets:[0,shot().seconds,...(excludePlayhead?[]:[playhead*shot().seconds]),...keys().filter(k=>k.id!==excludeKey).map(k=>k.time*shot().seconds),...deskEditor.boundaries(excludeClip)],tolerance:8*shot().seconds/pixels});
   }
   let orbitBase=null;   // see liveView (Film look follows an orbit)
   // A live orbit can still be coasting (OrbitControls damping): spend what is left at once, so the next seek puts the
@@ -501,9 +506,9 @@ export function mountDirector(bridge,catalog,initial){
   let laneGroups={};try{laneGroups=JSON.parse(localStorage.getItem('ergoflex.director.laneGroups')||'{}')||{};}catch{}
   const groupClosed=g=>!!laneGroups[g];
   function laneGroupHead(g){
-    const s=shot().seconds,L=lighting(),T=timeOfDay(),ticks=g==='graphics'?graphics.screens().map(sc=>sc.start??0):g==='motion'?[...keys().map(k=>k.time*s),...deskEditor.motion().clips.map(c=>c.start)]:g==='titles'?titleEditor.ticks():g==='props'||g==='people'?[]:[...(T?.keys||[]).map(k=>k.at),...(L?.neutral||[]).map(k=>k[0]),...(L?.status||[]).map(e=>e.at)];
-    if(g==='lighting'&&!L&&!T)return '';if(g==='titles'&&!titleEditor.has())return '';if((g==='props'||g==='people')&&!filmShot())return '';
-    return `<div class="lane-group-head" data-lane-group="${g}"><span class="desk-lane-label"><button data-action="group-toggle" data-index="${['motion','lighting','titles','props','people','graphics'].indexOf(g)}" aria-expanded="${!groupClosed(g)}" title="${groupClosed(g)?'Show':'Hide'} the ${g} lanes${g==='lighting'?' (6 and 7 jump here)':''}">${groupClosed(g)?'▸':'▾'} ${g.toUpperCase()}</button></span><div class="lane-group-summary">${groupClosed(g)?ticks.map(t=>`<i style="left:${t/s*100}%"></i>`).join(''):''}</div></div>`;
+    const s=shot().seconds,L=lighting(),T=timeOfDay(),ticks=g==='graphics'?graphics.screens().map(sc=>sc.start??0):g==='motion'?[...keys().map(k=>k.time*s),...deskEditor.motion().clips.map(c=>c.start)]:g==='titles'?titleEditor.ticks():g==='sound'?(scoreModel()?.sfx||[]).map(x=>x.t):g==='props'||g==='people'?[]:[...(T?.keys||[]).map(k=>k.at),...(L?.neutral||[]).map(k=>k[0]),...(L?.status||[]).map(e=>e.at)];
+    if(g==='lighting'&&!L&&!T)return '';if(g==='sound'&&!scoreModel())return '';if(g==='titles'&&!titleEditor.has())return '';if((g==='props'||g==='people')&&!filmShot())return '';
+    return `<div class="lane-group-head" data-lane-group="${g}"><span class="desk-lane-label"><button data-action="group-toggle" data-index="${['motion','lighting','titles','props','people','graphics','sound'].indexOf(g)}" aria-expanded="${!groupClosed(g)}" title="${groupClosed(g)?'Show':'Hide'} the ${g} lanes${g==='lighting'?' (6 and 7 jump here)':''}">${groupClosed(g)?'▸':'▾'} ${g.toUpperCase()}</button></span><div class="lane-group-summary">${groupClosed(g)?ticks.map(t=>`<i style="left:${t/s*100}%"></i>`).join(''):''}</div></div>`;
   }
   // PROPS: the chapter's edited props as chips (hidden ones struck through), click one to select it.
   function propsGroup(){if(!filmShot())return '';return `${laneGroupHead('props')}<div class="lane-group-body desk-lanes prop-lanes" data-lane-body="props" ${groupClosed('props')?'hidden':''}>${propsLaneRow()}</div>`;}
@@ -710,7 +715,7 @@ export function mountDirector(bridge,catalog,initial){
   }
   const layersStudio={on:()=>layersOn(),setting:()=>chapterSetting(shot()),featured:stageFeatured,hideDesk:layersHideDesk,
     hiddenHere:()=>{try{const s=shot();return s?studioHiddenHere(localStorage.getItem(LAYERS_KEY),s,chapterRooms(s,stageLayout()),sceneProps.items()):new Map();}catch(error){console.warn('[layers]',error);return new Map();}}};
-  const graphics=createGraphicsEditor({panel,timeline,shot,filmShot,showInspector,renderPanel,renderTimeline,status,commit,groupHead:laneGroupHead,groupClosed,time:()=>playhead,snapStep:()=>snapStep,magnet:()=>magnet});
+  const graphics=createGraphicsEditor({panel,timeline,shot,filmShot,showInspector,renderPanel,renderTimeline,status,commit,groupHead:laneGroupHead,groupClosed,time:()=>playhead,snapStep:()=>numStep(),magnet:()=>magnet});
   const layers=createLayersPanel({root:panel,shot,commit,status,props:sceneProps,rerender:()=>renderLayers(),studio:layersStudio});
   function renderLayers(){
     const box=panel.querySelector('[data-scene-layers]');if(!box||inspector!=='layers')return;
@@ -951,16 +956,16 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       <div class="chapter-cards">${project.shots.map((s,i)=>`<div class="chapter-card ${i===selected?'selected':''}" draggable="true" data-index="${i}"><button data-action="select" data-index="${i}" aria-current="${i===selected}" aria-label="Edit chapter ${i+1}: ${escape(s.title)}"><span>${String(i+1).padStart(2,'0')} · ${s.seconds}s</span><strong>${escape(s.title)}</strong><small>${escape(catalog.find(r=>r.id===s.room)?.name||s.room)} · ${escape((catalog.find(r=>r.id===s.room)?.layouts.find(l=>l.id===s.layout)?.modes||catalog.find(r=>r.id===s.room)?.modes||[]).find(m=>m.id===s.mode)?.label||'Studio')}</small></button><div><button data-action="up" data-index="${i}" aria-label="Move chapter ${i+1} earlier" ${i===0?'disabled':''}>←</button><button data-action="down" data-index="${i}" aria-label="Move chapter ${i+1} later" ${i===project.shots.length-1?'disabled':''}>→</button></div></div>`).join('')}</div>
       <div class="workbench-toolbar">${shell?transportHtml:''}<strong title="${escape(s.title)}"><span>CHAPTER ${String(selected+1).padStart(2,'0')}</span> ${escape(s.title)}</strong><span class="workbench-count">${keys().length} views · ${deskEditor.count()} moves</span>${deskEditor.picker()}
       <div class="track-palette">${timelineShortcuts()}<button data-action="key-add">+ Camera view</button>${deskEditor.tools()}${lighting()?'<button data-action="light-add" class="light-add" title="Add a light state at the playhead (Shift-click: a neutral colour key)">+ Light</button>':''}${filmShot()?'<button data-action="pp-add" class="prop-add" title="Add a prop from the library to this chapter (on the desk or the floor in front of the camera)">+ Prop</button>':''}</div>
-      <button data-action="magnet" class="magnet" aria-pressed="${magnet}" title="Magnet: snap to movement edges, keys, the playhead and the chapter ends (S); Alt bypasses">Magnet</button><label class="snap-control">Snap <select name="timeline-snap" aria-label="Timeline snapping">${[[0,'Off'],[.1,'0.1s'],[.5,'0.5s'],[1,'1s']].map(([v,label])=>option(v,label,snapStep)).join('')}</select></label>
+      <button data-action="magnet" class="magnet" aria-pressed="${magnet}" title="Magnet: snap to movement edges, keys, the playhead and the chapter ends (S); Alt bypasses">Magnet</button><label class="snap-control">Snap <select name="timeline-snap" aria-label="Timeline snapping">${[[0,'Off'],[.1,'0.1s'],[.5,'0.5s'],[1,'1s'],...(scoreModel()?[['beat','Beat'],['bar','Bar']]:[])].map(([v,label])=>option(v,label,snapStep)).join('')}</select></label>
       <div class="timeline-zoom"><button data-action="zoom-out" aria-label="Zoom timeline out" ${zoom===1?'disabled':''}>−</button><button data-action="zoom-fit" aria-label="Fit chapter to timeline" title="Fit the whole chapter">${zoom===1?'Fit':'Fit · '+zoom+'×'}</button><button data-action="zoom-in" aria-label="Zoom timeline in" ${zoom===8?'disabled':''}>+</button></div></div>
       <div class="timeline-viewport" tabindex="0" aria-label="Camera and desk timeline"><div class="timeline-content" style="width:${zoom*100}%;--timeline-grid:${(ticks[1]||s.seconds)/s.seconds*100}%">
-      <div class="time-ruler-row"><span class="track-heading">SECONDS</span><div class="time-ruler" role="slider" aria-label="Chapter timeline scrubber" aria-valuemin="0" aria-valuemax="${s.seconds}" aria-valuenow="${(playhead*s.seconds).toFixed(2)}" tabindex="0">${ticks.map(t=>`<span style="left:${t/s.seconds*100}%">${Number(t.toFixed(2))}</span>`).join('')}<div class="ruler-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div><button class="chapter-end-handle" data-chapter-end type="button" aria-label="Chapter length: drag to change" title="Drag to change the chapter length (snaps to 0.5 s, Alt: free). Nothing already placed moves; the camera holds its last view."><i></i></button></div>
+      <div class="time-ruler-row"><span class="track-heading">SECONDS</span><div class="time-ruler" role="slider" aria-label="Chapter timeline scrubber" aria-valuemin="0" aria-valuemax="${s.seconds}" aria-valuenow="${(playhead*s.seconds).toFixed(2)}" tabindex="0">${ticks.map(t=>`<span style="left:${t/s.seconds*100}%">${Number(t.toFixed(2))}</span>`).join('')}${scoreHitsHtml()}<div class="ruler-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div><button class="chapter-end-handle" data-chapter-end type="button" aria-label="Chapter length: drag to change" title="Drag to change the chapter length (snaps to 0.5 s, Alt: free). Nothing already placed moves; the camera holds its last view."><i></i></button></div>
       ${deskVersions.lane()}${titlesGroup()}${graphics.lane()}${laneGroupHead('motion')}<div class="lane-group-body" data-lane-body="motion" ${groupClosed('motion')?'hidden':''}><div class="camera-lane-row"><span class="track-heading"><b>◆ Camera</b><small>${s.camera?'Custom views':'Original views'}</small></span><div class="camera-track" role="group" aria-label="Camera keyframe timeline"><div class="camera-track-line"></div>${keys().slice(0,-1).map((k,i)=>`<span class="camera-segment" style="left:${k.time*100}%;width:${(keys()[i+1].time-k.time)*100}%"><i>${({smooth:'Smooth move',linear:'Linear move',hold:'Hold / cut'})[k.easing]}</i></span>`).join('')}<div class="camera-track-playhead" data-track-playhead style="left:${playhead*100}%"></div>${keys().map(k=>`<button class="camera-key ${keyId===k.id?'selected':''} ${shot().camera?'':'automatic'}" style="left:${k.time*100}%" data-key="${k.id}" aria-label="Camera keyframe: ${escape(k.label)} at ${(k.time*shot().seconds).toFixed(2)} seconds" aria-pressed="${keyId===k.id}" title="${escape(k.label)} · ${(k.time*shot().seconds).toFixed(2)}s"><span>◆</span><small>${(k.time*shot().seconds).toFixed(1)}s</small></button>`).join('')}<span class="camera-track-zero">0s</span><span class="camera-track-end">${shot().seconds}s</span></div></div>
-      ${deskEditor.timeline()}</div>${lightLane()}${peopleGroup()}${propsGroup()}</div></div>
+      ${deskEditor.timeline()}</div>${lightLane()}${peopleGroup()}${propsGroup()}${soundGroup()}</div></div>
       <label class="timeline-pan" ${zoom===1?'hidden':''}><span>Pan view</span><input name="timeline-pan" type="range" min="0" max="100" step=".1" value="0" aria-label="Timeline horizontal position"></label>
       <div class="timeline-footer"><span data-bake-summary class="timeline-bake-summary" role="status"></span><span data-timeline-status role="status">Click ruler to scrub · Drag empty lanes to select several · Shift/Ctrl-click adds · Ctrl+A all · Alt: bypass snap · Space: play</span><span class="sb-pills" data-sb-pills></span><output data-track-time>${(playhead*s.seconds).toFixed(2)}s / ${s.seconds}s</output></div>`;
     timeline.querySelector('.timeline-viewport').scrollLeft=scroll;
-    renderPills();
+    renderPills();drawScore();
     syncTransport();syncPlayhead();syncPan();syncPicks();syncSelection();
   }
   async function load(){
@@ -1016,7 +1021,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       if(name==='lamp-pick'){await sceneLights.changed({name:'sl-select',value:index});renderTimeline();return;}
       if(name==='white-preset'){editLight({color:index});const k=lightItem();if(k)status(`${whiteName(index)} ${index} at ${r2(k[0])} s.`);return;}
       if(name==='now-go'){const id=index;const el=panel.querySelector(`[data-light-section="${id}"]`);if(el){el.open=true;delete lightSectionsShut[id];el.scrollIntoView({block:'start',behavior:'smooth'});}return;}
-      if(name==='group-toggle'){const g=['motion','lighting','titles','props','people','graphics'][index]||'lighting';laneGroups[g]=!groupClosed(g);saveGroups();renderTimeline();return;}
+      if(name==='group-toggle'){const g=['motion','lighting','titles','props','people','graphics','sound'][index]||'lighting';laneGroups[g]=!groupClosed(g);saveGroups();renderTimeline();return;}
       if(name==='titles'){if(film&&titleEditor.has()){const on=titleEditor.toggleShown();timeline.querySelector('[data-action=titles]')?.setAttribute('aria-pressed',String(on));status(on?'Film titles shown in the frame.':'Film titles hidden in the frame.');return;}document.body.classList.toggle('preview-titles');timeline.querySelector('[data-action=titles]')?.setAttribute('aria-pressed',String(document.body.classList.contains('preview-titles')));return;}
       if(name==='chapters'){timeline.classList.toggle('chapters-hidden');timeline.querySelector('[data-action=chapters]')?.setAttribute('aria-pressed',String(!timeline.classList.contains('chapters-hidden')));return;}
       if(name.startsWith('zoom-')){
@@ -1182,7 +1187,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   // A hint that is cut says so on hover (it was an unmarked "…": the click-to-read-all was undiscoverable).
   panel.addEventListener('pointerover',event=>{const h=event.target.closest?.('.director-hint');if(h&&!h.classList.contains('expanded')&&h.scrollHeight>h.clientHeight+1)h.title='Click to read all of it';else if(h&&h.title==='Click to read all of it'&&h.classList.contains('expanded'))h.removeAttribute('title');});
   timeline.addEventListener('change',event=>{
-    if(event.target.name==='timeline-snap'){snapStep=Number(event.target.value);return;}
+    if(event.target.name==='timeline-snap'){const v=event.target.value;snapStep=v==='beat'||v==='bar'?v:Number(v);renderPills();return;}
     if(event.target.name==='film-chapter'){switchFilm(Number(event.target.value));return;}
     if(event.target.name==='film-cut'){switchCut(event.target.value);return;}
     if(event.target.name==='timeline-seconds'){try{if(event.target.value!=='')seekCamera(Number(event.target.value)/shot().seconds);}catch(error){status(error.message,true);}}
@@ -1325,6 +1330,56 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     }catch{}
     return a;
   }
+  // ---- SOUND (P2, score-track.mjs): the film cut's score under the lanes; it plays with the playhead when Sound is on
+  let score=null,scoreFor=null,scoreCache=null;
+  const scorePlayer=cutDir?createScorePlayer({base:cutDir}):null;
+  if(cutDir)Promise.all(['tempo-map','peaks','inputs'].map(n=>fetch(`${cutDir}/score/${n}.json`).then(r=>r.ok?r.json():null).catch(()=>null))).then(([tempo,peaks,inputs])=>{if(!tempo)return;score={tempo,peaks,inputs};scoreFor=null;if(open)renderTimeline();});
+  function scoreModel(){if(!score||!film)return null;const id=shot()?.id;if(scoreFor!==id){scoreFor=id;scoreCache=chapterScore(score.tempo,id,{peaks:score.peaks,inputs:score.inputs});}return scoreCache;}
+  try{const v=Number(loadUi().scoreVolume);if(Number.isFinite(v)&&scorePlayer)scorePlayer.setVolume(v);}catch{}
+  const SFX_LANE={'lift-up':'lift','lift-down':'lift','tilt-extend':'tilt','tilt-retract':'tilt',wheels:'wheels'},SFX_NAME={'lift-up':'Lift up','lift-down':'Lift down','tilt-extend':'Tilt out','tilt-retract':'Tilt in',wheels:'Wheels'};
+  function soundGroup(){
+    const m=scoreModel();if(!m)return '';const s=shot().seconds,pct=t=>(t/s*100).toFixed(3)+'%',stale=staleness(score.inputs,m.id,{seconds:s})||(score.inputs?.wav_sha256&&score.tempo.wav_sha256&&score.inputs.wav_sha256!==score.tempo.wav_sha256?'The score was rebuilt after its preview: run tools/experience/build-score-preview.py on this cut':null);
+    const section=m.sections.find(x=>x.t0<=playhead*s&&x.t1>playhead*s)||m.sections[0],vol=Math.round((scorePlayer?.volume()??.8)*100);
+    const sections=m.sections.map(x=>`<span class="score-section" style="left:${pct(Math.max(0,x.t0))};width:${pct(Math.min(s,x.t1)-Math.max(0,x.t0))}" title="${escape(x.name)}${x.bpm?' · '+x.bpm+' BPM':''}${x.chords?' · '+x.chords.join(' '):''}">${escape(x.name)}</span>`).join('');
+    const sync=m.sync.map(p=>`<i class="score-sync ${Math.abs(p.off)>.25&&!p.knot?'off':''}" style="left:${pct(p.t)}" title="${escape(p.kind)} at ${p.t.toFixed(2)} s: ${p.knot?'on the grid (knot)':p.off+' beat off the grid'}"></i>`).join('');
+    const sfx=m.sfx.map((x,i)=>`<button type="button" class="sfx-block sfx-${escape(SFX_LANE[x.kind]||'other')}" data-sfx="${i}" style="left:${pct(Math.max(0,x.t))};width:${pct(Math.min(s,x.t+x.dur)-Math.max(0,x.t))}" title="${escape(SFX_NAME[x.kind]||x.kind)}: ${x.t.toFixed(2)}–${(x.t+x.dur).toFixed(2)} s · click: the movement that makes it">${escape(SFX_NAME[x.kind]||x.kind)}</button>`).join('');
+    return `${laneGroupHead('sound')}<div class="lane-group-body desk-lanes sound-lanes" data-lane-body="sound" ${groupClosed('sound')?'hidden':''}>
+      <div class="desk-lane-row score-row" data-lane-color="sound"><span class="desk-lane-label" title="The film's score for this chapter (preview only: the film is not affected)">Music <small>${escape(section?section.name:'')}${m.bpm?' · '+Math.round(m.bpm*10)/10+' BPM':''}</small><span class="score-tools"><canvas class="score-meter" data-score-meter width="6" height="18" title="Level"></canvas><input type="range" name="score-volume" min="0" max="100" value="${vol}" aria-label="Preview volume (not in the film)" title="Preview volume ${vol} % (preview only, not in the film)"></span>${stale?`<em class="score-stale" title="${escape(stale)}">stale</em>`:''}</span>
+        <div class="desk-lane score-lane" data-score-lane>${m.peaks?'<canvas data-score-wave></canvas>':'<p class="lane-empty">No waveform yet: run tools/experience/build-score-preview.py on this cut.</p>'}${sections}${sync}${m.musicFrom!=null?`<i class="score-from" style="left:${pct(m.musicFrom)}" title="The music starts at ${m.musicFrom} s"></i>`:''}<div class="camera-track-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div></div>
+      <div class="desk-lane-row sfx-row ${m.sfx.length?'':'empty'}" data-lane-color="sfx"><span class="desk-lane-label" title="The desk's movement sounds in the score, where its moves are in the picture">Movement sounds <small>${m.sfx.length||''}</small></span><div class="desk-lane sfx-lane">${sfx||'<p class="lane-empty">No movement sounds in this chapter (film rule).</p>'}<div class="camera-track-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div></div>
+      ${stale?`<p class="score-stale-note" role="status">${escape(stale)}</p>`:''}</div>`;
+  }
+  function scoreHitsHtml(){const m=scoreModel();if(!m)return '';const s=shot().seconds;return m.hits.map(h=>`<i class="score-hit" style="left:${(h.t/s*100).toFixed(3)}%" title="Music hit: ${escape(h.name.replace('_',' '))} at ${h.t.toFixed(2)} s"></i>`).join('');}
+  // the waveform, bar lines, beat ticks (12 px apart at least) and the dissolves, drawn for the lane's width
+  function drawScore(){
+    const m=scoreModel(),c=timeline.querySelector('[data-score-wave]');if(!m||!c)return;
+    const w=Math.max(1,Math.round(c.clientWidth)),h=Math.max(1,Math.round(c.clientHeight)),dpr=devicePixelRatio||1;c.width=w*dpr;c.height=h*dpr;
+    const g=c.getContext('2d');g.scale(dpr,dpr);const s=shot().seconds,x=t=>t/s*w;
+    for(const d of [m.head,m.tail])if(d){const a=x(d[0]-d[1]/2),b=x(d[0]+d[1]/2);g.fillStyle='#ffffff10';g.fillRect(a,0,b-a,h);g.strokeStyle='#ffffff26';g.beginPath();for(let k=a-h;k<b;k+=6){g.moveTo(Math.max(a,k),Math.min(h,h-(Math.max(a,k)-k)));g.lineTo(Math.min(b,k+h),Math.max(0,h-(Math.min(b,k+h)-k)));}g.stroke();}
+    const cols=waveColumns(m.peaks,0,s,w),mid=h/2;
+    g.fillStyle='#5cd3f655';cols.forEach((v,i)=>{const y=v.peak*mid;g.fillRect(i,mid-y,1,y*2);});
+    g.fillStyle='#5cd3f6bb';cols.forEach((v,i)=>{const y=v.rms*mid;g.fillRect(i,mid-y,1,y*2);});
+    const beatPx=m.bpm?60/m.bpm/s*w:0;
+    if(beatPx>=12){g.fillStyle='#ffffff30';for(const b of m.beats)if(b.t>=0&&b.t<=s)g.fillRect(Math.round(x(b.t)),h-5,1,5);}
+    g.fillStyle='#ffffff55';for(const t of m.bars)if(t>=0&&t<=s)g.fillRect(Math.round(x(t)),0,1,h);
+  }
+  // follow the playhead (Sound on, this chapter playing); a seek while paused plays a grain
+  const soundOn=()=>open&&!!scorePlayer&&!!scoreModel()?.peaks&&document.getElementById('sound')?.getAttribute('aria-pressed')==='true';
+  function scoreSync(){
+    if(!scorePlayer)return;const st=bridge.playback(),m=scoreModel();
+    if(!soundOn()||!st.playing||st.index!==selected){scorePlayer.stop();return;}
+    scorePlayer.load(m).then(()=>{const now=bridge.playback();if(soundOn()&&now.playing)scorePlayer.follow(playhead*shot().seconds);meterLoop();}).catch(error=>status(error.message,true));
+  }
+  let grainAt=0;function scoreGrain(){if(!soundOn()||bridge.playback().playing)return;const now=performance.now();if(now-grainAt<70)return;grainAt=now;const m=scoreModel();scorePlayer.load(m).then(()=>scorePlayer.grain(playhead*shot().seconds)).catch(()=>{});}
+  let metering=false;function meterLoop(){if(metering)return;metering=true;const step=()=>{const c=timeline.querySelector('[data-score-meter]');if(!scorePlayer?.playing()){metering=false;if(c)c.getContext('2d').clearRect(0,0,c.width,c.height);return;}if(c){const g=c.getContext('2d'),v=Math.min(1,scorePlayer.meter()*1.4);g.clearRect(0,0,c.width,c.height);g.fillStyle=v>.9?'#ff6b6b':'#7ee08a';g.fillRect(0,c.height*(1-v),c.width,c.height*v);}requestAnimationFrame(step);};requestAnimationFrame(step);}
+  document.getElementById('sound')?.addEventListener('click',()=>setTimeout(scoreSync,0));
+  timeline.addEventListener('input',event=>{if(event.target.name!=='score-volume')return;const v=Number(event.target.value)/100;scorePlayer?.setVolume(v);saveUi({scoreVolume:v});event.target.title=`Preview volume ${Math.round(v*100)} % (preview only, not in the film)`;});
+  timeline.addEventListener('click',event=>{
+    const b=event.target.closest('[data-sfx]');if(!b)return;const m=scoreModel(),x=m?.sfx[Number(b.dataset.sfx)];if(!x)return;
+    const lane=SFX_LANE[x.kind],clip=deskEditor.motion().clips.filter(c=>c.lane===lane).sort((a,c)=>Math.abs(a.start-x.t)-Math.abs(c.start-x.t))[0];
+    try{if(clip){deskEditor.select(clip.id);reveal('clip');}seekCamera(Math.max(0,x.t)/shot().seconds);status(clip?`${SFX_NAME[x.kind]||x.kind}: the movement that makes this sound is selected.`:`${SFX_NAME[x.kind]||x.kind} at ${x.t.toFixed(2)} s.`);}catch(error){status(error.message,true);}
+  });
+  addEventListener('resize',()=>{if(open)drawScore();});
   // ---- the app bar and the mode pills (P1b, director-appbar.mjs)
   const closeMenus=wireMenus(appbar);
   const pressed=id=>document.getElementById(id)?.getAttribute('aria-pressed')==='true';
@@ -1353,7 +1408,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     const host=timeline.querySelector('[data-sb-pills]');if(!host)return;
     const st=bridge.playback(),body=document.body.classList;let free=false;try{free=freeView();}catch{}
     const posing=scenePeople.posing?.(),auto=posing&&(()=>{try{return localStorage.getItem('ergoflex.director.autoKey')==='1';}catch{return false;}})();
-    const pills=[{id:'snap',label:magnet?`Snap ${snapStep?snapStep+' s':'edges'}`:'Snap off',on:magnet,always:true,title:'Snapping (S): click to turn it '+(magnet?'off':'on')},
+    const pills=[{id:'snap',label:magnet?`Snap ${typeof snapStep==='string'?snapStep:snapStep?snapStep+' s':'edges'}`:'Snap off',on:magnet,always:true,title:'Snapping (S): click to turn it '+(magnet?'off':'on')},
       {id:'loop',label:'Loop',on:!!st.loop,title:'Loop is on (L)'},{id:'free',label:'Free view',on:free,warn:true,title:'Not the film camera (0 goes back)'},
       {id:'auto',label:'● Auto-key',on:!!auto,warn:true,title:'Pose mode: every change keys the pose (Shift+K)'},
       {id:'lowres',label:'Low-res',on:pressed('preview-quality'),title:'The preview runs at a lower resolution'},{id:'muted',label:'Muted',on:!pressed('sound'),title:'Sound is off (Shift+M)'},
@@ -1484,7 +1539,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       case 'still':action('render-still');return;
       case 'peek':if(event)still.peek(true);return;
       case 'light-markers':sceneLights.toggleShow().then(on=>status(on?'Lights shown: click a marker to select it, W move, E aim.':'Lights hidden.'));return;
-      case 'group-1':case 'group-2':case 'group-3':case 'group-4':case 'group-5':case 'group-6':case 'group-7':revealGroup(Number(id.slice(6)));return;
+      case 'group-1':case 'group-2':case 'group-3':case 'group-4':case 'group-5':case 'group-6':case 'group-7':case 'group-8':revealGroup(Number(id.slice(6)));return;
       case 'camera-update':action('key-update');return;
       case 'lens-prev':case 'lens-next':{const k=selectedKey();need(k,'Select a camera view first.');const f=k.view.fov,next=id==='lens-prev'?FOVS.find(v=>v>f+.5):[...FOVS].reverse().find(v=>v<f-.5);if(next)action('lens-'+next);else status(`The lens is already at ${f}°.`);return;}
       case 'play-selection':{
@@ -1524,7 +1579,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   }
   // 1–7: a lane group, opened and scrolled into view.
   function revealGroup(n){
-    const groupOf={1:'titles',2:'motion',3:'motion',4:'people',5:'props',6:'lighting',7:'lighting'}[n],v=timeline.querySelector('.timeline-viewport');
+    const groupOf={1:'titles',2:'motion',3:'motion',4:'people',5:'props',6:'lighting',7:'lighting',8:'sound'}[n],v=timeline.querySelector('.timeline-viewport');
     if(!groupOf||!v)return;
     if(groupClosed(groupOf)){laneGroups[groupOf]=false;if(n===1)laneGroups.graphics=false;saveGroups();renderTimeline();}
     const lane={2:'.camera-lane-row',3:'[data-desk-lane]',6:'[data-tod-lane],[data-light-lane]',7:'[data-light-lane]'}[n];
@@ -1548,7 +1603,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   let scrubWant=null,scrubFrame=0;
   function scrubRuler(event){
     const box=scrub.getBoundingClientRect();scrubWant=snapTime((event.clientX-box.left)/box.width*shot().seconds,{pixels:box.width,bypass:event.altKey,excludePlayhead:true})/shot().seconds;
-    if(!scrubFrame)scrubFrame=requestAnimationFrame(()=>{scrubFrame=0;if(scrubWant===null)return;const t=scrubWant;scrubWant=null;try{seekCamera(t);}catch(error){status(error.message,true);}});
+    if(!scrubFrame)scrubFrame=requestAnimationFrame(()=>{scrubFrame=0;if(scrubWant===null)return;const t=scrubWant;scrubWant=null;try{seekCamera(t);scoreGrain();}catch(error){status(error.message,true);}});
   }
   timeline.addEventListener('pointerdown',event=>{
     if(event.button!==0)return;
@@ -1645,7 +1700,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     snapDelta:({raw,edges,width,seconds,alt,exclude})=>{
       const tol=8/width*seconds;
       if(magnet&&!alt){let best=null;const all=snapTargets({titles:new Set([exclude])});for(const [t,name] of all)for(const e of edges){const delta=t-e,off=Math.abs(delta-raw);if(off<=tol&&(!best||off<best.off))best={delta,off,t,name};}if(best)return {delta:best.delta,snap:best};}
-      return {delta:snapGroupDelta(raw,snapStep,alt),snap:null};
+      return {delta:snapGroupDelta(raw,numStep(),alt),snap:null};
     },
     dragFeedback:(d,event)=>dragFeedback(d,event),endDragFeedback:d=>endDragFeedback(d)});
   if(film)loadTitleSource(film.film).then(v=>{titleEditor.setSource(v);render();},error=>console.warn('[titles]',error.message));
@@ -1678,11 +1733,11 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     if(groupDrag){
       const d=groupDrag;if(Math.abs(event.clientX-d.start)>3)d.moved=true;if(!d.moved)return;
       const [lo,hi]=groupRange(d.base,d.set),raw=(event.clientX-d.start)/d.width*d.base.seconds,m=event.altKey?null:magnetDelta(d,raw);d.snap=m;
-      d.delta=Math.max(lo,Math.min(hi,m?m.delta:snapGroupDelta(raw,snapStep,event.altKey)));previewGroup(d);dragFeedback(d,event);return;
+      d.delta=Math.max(lo,Math.min(hi,m?m.delta:snapGroupDelta(raw,numStep(),event.altKey)));previewGroup(d);dragFeedback(d,event);return;
     }
     if(lightTrim){
       const d=lightTrim,s=d.base.seconds;if(Math.abs(event.clientX-d.start)>3)d.moved=true;if(!d.moved)return;
-      const o=d.original,end=o.at+o.dur,raw=(event.clientX-d.start)/d.width*s,edgeT=d.edge==='start'?o.at:end,tol=8/d.width*s;let delta=snapGroupDelta(raw,snapStep,event.altKey);
+      const o=d.original,end=o.at+o.dur,raw=(event.clientX-d.start)/d.width*s,edgeT=d.edge==='start'?o.at:end,tol=8/d.width*s;let delta=snapGroupDelta(raw,numStep(),event.altKey);
       if(magnet&&!event.altKey){let best=null;for(const [t] of snapTargets({lights:new Set([o.id])})){const off=Math.abs(t-edgeT-raw);if(off<=tol&&(!best||off<best[0]))best=[off,t-edgeT];}if(best)delta=best[1];}
       const at=d.edge==='start'?Math.max(0,Math.min(end-.05,o.at+delta)):o.at,dur=d.edge==='start'?end-at:Math.max(.05,Math.min(s-o.at,o.dur+delta));
       d.candidate={...o,at:Math.round(at*1e6)/1e6,dur:Math.round(dur*1e6)/1e6};d.item.style.left=d.candidate.at/s*100+'%';d.item.style.width=d.candidate.dur/s*100+'%';
@@ -1816,7 +1871,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   if(film)timeline.classList.add('chapters-hidden');
   createTimelineHints({root:timeline,active:activeShortcuts,context:el=>({seconds:shot().seconds,graphic:el.dataset.graphicClip!==undefined?graphics.screens()[Number(el.dataset.graphicClip)]:null})});
   render();panel.hidden=timeline.hidden=true;
-  return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,transportChanged:()=>{syncTransport();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;if(p)orbitBase=null;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;syncPlayhead();},scrubbing:()=>!!scrub||!!groupDrag,filmApplied:()=>{setTimeout(()=>{try{foldDeskProps();}catch(error){console.warn('[desk fold]',error);}},300);if(inspector==='build'&&open)renderPanel();sceneLights.applied();sceneProps.applied();scenePeople.applied();if(open)renderPeople(true);floorRefl.applied();deskSel.applied();if(open){renderSceneProps(true);renderSceneDesks(true);renderBranding(true);}},
+  return {open:()=>setOpen(true),close:()=>setOpen(false),isOpen:()=>open,project:()=>copy(project),select:i=>{selected=i;render();},setStatus:status,ownsSound:()=>soundOn(),transportChanged:()=>{syncTransport();scoreSync();const p=!!bridge.playback().playing;if(p!==pokedPlaying){pokedPlaying=p;if(p)orbitBase=null;filmLook?.poke();}},toggleChapter:()=>{deskEditor.stop();return action('chapter-toggle');},progress:t=>{playhead=t;if(scorePlayer?.playing()||soundOn())scoreSync();syncPlayhead();},scrubbing:()=>!!scrub||!!groupDrag,filmApplied:()=>{setTimeout(()=>{try{foldDeskProps();}catch(error){console.warn('[desk fold]',error);}},300);if(inspector==='build'&&open)renderPanel();sceneLights.applied();sceneProps.applied();scenePeople.applied();if(open)renderPeople(true);floorRefl.applied();deskSel.applied();if(open){renderSceneProps(true);renderSceneDesks(true);renderBranding(true);}},
     // Selection -> inspector home (HOMES): for lanes and tools outside this module (the Titles lane: reveal('title')).
     reveal,revealHomes:()=>({...structuredClone(HOMES),title:homeOf('title')})};
 }
