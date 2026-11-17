@@ -9,7 +9,7 @@ const want={'ergoflex-side-shelf-large':['wood'],'ergoflex-side-shelf-small':['w
   'ergoflex-side-cup-holder':['acrylic'],'ergoflex-side-shelf-large-cubby':['wood','acrylic','print'],'ergoflex-side-shelf-small-cubby':['wood','acrylic','print']};
 const io=new NodeIO();
 for(const [id,roles] of Object.entries(want)){
-  const e=index.find(p=>p.id===id);assert(e,id+' is in the library index');assert.equal(e.category,'desk');assert(isSideShelving(id));
+  const e=index.find(p=>p.id===id);assert(e,id+' is in the library index');assert.equal(e.category,'shelving');assert(isSideShelving(id));
   assert(e.size[1]<100&&e.size[0]>100,id+' size in mm: '+e.size);
   const doc=await io.read(path.join(root,e.file)),names=doc.getRoot().listMaterials().map(m=>m.getName());
   for(const r of roles)assert(names.includes('Side shelf '+r),id+' has the '+r+' role: '+names);

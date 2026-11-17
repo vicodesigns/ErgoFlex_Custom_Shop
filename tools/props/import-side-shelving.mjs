@@ -69,7 +69,7 @@ for(const [file,id,name] of JOBS){
   }
   const fileOut=`assets/props/${id}.glb`,full=path.join(root,fileOut);await io.write(full,out);
   const size=[0,1,2].map(k=>Math.round((hi[k]-lo[k])*INCH*1e5)/100),min=[-size[0]/2,0,-size[2]/2],max=[size[0]/2,size[1],size[2]/2];
-  const spec={id,name,category:'desk',collection:'ErgoFlex Collection',scenes:SCENES,anchor:'floor',source:'ergoflex-supplied/shelving/'+file,converter:'side-shelving-import',license:'user-provided',attribution:'Owner-supplied side shelving CAD (Nov 16 2026)',sizeNote:'CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.',deskMatch:true};
+  const spec={id,name,category:'shelving',collection:'ErgoFlex Collection',scenes:SCENES,anchor:'floor',source:'ergoflex-supplied/shelving/'+file,converter:'side-shelving-import',license:'user-provided',attribution:'Owner-supplied side shelving CAD (Nov 16 2026)',sizeNote:'CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.',deskMatch:true};
   jobs.set(id,spec);entries.set(id,{...spec,source:'models/ergoflex-supplied/shelving/'+file,file:fileOut,size,min,max,tris,bytes:fs.statSync(full).size});
   console.log(id,size.join(' × ')+' mm',tris+' triangles',Math.round(fs.statSync(full).size/1024)+' KB',Object.entries(parts).filter(([,l])=>l.length).map(([r,l])=>r+':'+l.length).join(' '));
 }
