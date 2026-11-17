@@ -9,4 +9,8 @@
 6
 # Per-chapter epoch: this chapter alone re-renders (its key changes); the global epoch above stays.
 # commons 3 (2026-11-11): architecture pass in the library (balcony, piers, doors, datum rails) moved its pixels.
-chapter commons 3
+# commons 4, awaken 1, awareness 1, storage 1 (2026-11-16, Vico: "bump those 4 chapters only"): on Move forward / Move back the foot rest's light breathes (the firmware's pulse, as the app's visualizer shows it) instead of running the wings' comet, which read as a strafe to the left (film-status.mjs footComet is opt-in now).
+chapter commons 4
+chapter awaken 1
+chapter awareness 1
+chapter storage 1

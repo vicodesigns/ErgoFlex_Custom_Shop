@@ -220,9 +220,10 @@ export function installStatus(shot) {
           sampleMovementInto(wings, { ...m, reverseRotation: false, elapsedMs: t * 1000 });
           frame[5].set(wings[5]); frame[6].set(wings[6]);
         }
-        if (ev.kind === 'wheels' && (ev.mode === 3 || ev.mode === 4) && ev.footComet !== false) {
-          // Vico (HQ14c): on forward/back the firmware gives the foot rest a slow red pulse that starts dark and read
-          // as off, so it runs the wings' comet there (sampled at the foot's own length). Other modes keep the firmware's.
+        if (ev.kind === 'wheels' && (ev.mode === 3 || ev.mode === 4) && ev.footComet === true) {
+          // Opt-in (footComet:true). Until 2026-11-16 this was the default: HQ14c had the foot rest run the wings' comet on
+          // forward/back because the firmware's slow red pulse starts dark and read as off. Vico, Nov 16: it showed as a
+          // strafe to the left along the bottom shelf; the app's visualizer is right, the foot rest breathes (firmware).
           const foot = counts.map((n, i) => new Uint8Array((i === 5 ? counts[7] : 1) * 4));
           sampleMovementInto(foot, { ...m, reverseRotation: false, elapsedMs: t * 1000 });
           frame[7].set(foot[5]);
