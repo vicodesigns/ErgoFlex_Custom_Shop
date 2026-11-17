@@ -221,6 +221,31 @@ export async function mountStage(ctx) {
       api.sceneDesks.objects.change({x:position.x,y:position.y,z:position.z,rotation:THREE.MathUtils.radToDeg(angles.y),tilt:THREE.MathUtils.radToDeg(angles.x),roll:THREE.MathUtils.radToDeg(angles.z),scale:scale.x*100});
       api.sceneDesks.objects.select(null);
     }
+    // Chapter 1 (awaken): the OBSBOT Tiny 2 webcam on top of the monitor, centred (Vico, Nov 16). Same pattern as the
+    // keyboard above: a presentation-only override that leaves the Gaming preset and its saved builds alone. The camera
+    // starts on the top shelf like the monitor (both are shelf accessories), so it is moved by the monitor's own top: the
+    // monitor's highest vertices (its panel, not its foot) give the centre; the camera's bottom-centre goes there.
+    if(next.id==='awaken'&&next.room==='product'&&api.currentConfig.accessories.includes('wide-monitor')&&!api.currentConfig.accessories.includes('obsbot-tiny-2')){
+      try{
+      api.toggleAccessory('obsbot-tiny-2');
+      await api.workspaceAccessories.ready;await api.sceneDesks.objects.ready;
+      api.sceneDesks.objects.syncAccessories();
+      const objects=api.sceneDesks.active.objects,mon=objects.get('accessory-wide-monitor')?.obj,cam=objects.get('accessory-obsbot-tiny-2')?.obj;
+      if(mon&&cam&&cam.parent){
+        ctx.scene.updateMatrixWorld(true);
+        const whole=new THREE.Box3().setFromObject(mon),top=new THREE.Box3(),v=new THREE.Vector3(),cut=whole.max.y-(whole.max.y-whole.min.y)*.04;
+        mon.traverse(o=>{const p=o.isMesh&&o.geometry?.attributes?.position;if(!p)return;for(let i=0;i<p.count;i++){v.fromBufferAttribute(p,i).applyMatrix4(o.matrixWorld);if(v.y>=cut)top.expandByPoint(v);}});
+        const cb=new THREE.Box3().setFromObject(cam);
+        if(!whole.isEmpty()&&!top.isEmpty()&&!cb.isEmpty()){
+          const target=new THREE.Vector3((top.min.x+top.max.x)/2,whole.max.y,(top.min.z+top.max.z)/2),foot=new THREE.Vector3((cb.min.x+cb.max.x)/2,cb.min.y,(cb.min.z+cb.max.z)/2);
+          const at=cam.getWorldPosition(new THREE.Vector3()),local=cam.parent.worldToLocal(at.clone().add(target).sub(foot));
+          api.sceneDesks.objects.select('accessory-obsbot-tiny-2');
+          api.sceneDesks.objects.change({x:local.x,y:local.y,z:local.z});
+          api.sceneDesks.objects.select(null);
+        }
+      }
+      }catch(error){console.warn('[stage] webcam on the monitor skipped:',error?.message||error);}
+    }
     const recipe=ctx.captureRecipe();
     api.setTilt('tilting',0);api.setHeight(next.kind==='tilt'?43.5:30);
     if(next.layout){ctx.clearRoomRecipe(next.room,next.layout);api.setMeasuredRoomLayout(next.room,next.layout,{defaultDesktop:false});}
