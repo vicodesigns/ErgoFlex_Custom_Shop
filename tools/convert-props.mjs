@@ -92,6 +92,12 @@ if(artistProps.length){
     if(res.status!==0)throw new Error(`Artist gear generation failed\n${res.stderr}`);
     process.stdout.write(res.stdout);artistProps.forEach(p=>directConverted.add(p.id));
 }
+const shelvingProps=selected.filter(prop=>prop.converter==='side-shelving-import');
+if(shelvingProps.length){
+    const res=run(process.execPath,[join(root,'tools/props/import-side-shelving.mjs'),'--only',shelvingProps.map(p=>p.id).join(',')],'Side shelving');
+    if(res.status!==0)throw new Error(`Side shelving import failed\n${res.stderr}`);
+    process.stdout.write(res.stdout);shelvingProps.forEach(p=>directConverted.add(p.id));
+}
 const conferenceProps=selected.filter(prop=>prop.converter==='conference-chair-import');
 if(conferenceProps.length){
     const res=run(process.execPath,[join(root,'tools/props/import-conference-chairs.mjs'),'--only',conferenceProps.map(p=>p.id).join(',')],'Conference chairs');

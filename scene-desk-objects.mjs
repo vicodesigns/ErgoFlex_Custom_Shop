@@ -6,6 +6,7 @@ import { dropToSurface as dropShared } from './experience/drop-to-surface.mjs';
 import { notebookTransform } from './notebook-transform.mjs';
 import { matchingHighschoolDefault } from './hbhs-design.mjs';
 import { DeskAutoStow } from './desk-auto-stow.mjs?v=middle-shelf-stow-20261026';
+import {isSideShelving,syncDeskMatch} from './side-shelving.mjs';
 
 export const DESK_SURFACES={desktop:'Desktop',shelf:'Top shelf','lower-shelf':'Lower shelf','base-shelf':'Base shelf'};
 const phases=['morning','afternoon','evening','night','party'];
@@ -101,7 +102,9 @@ export class SceneDeskObjects {
     }
     phase(r){
         const mode=this.manager.ctx.phase(),index=phases.indexOf(mode);
+        const finish=this.manager.ctx.deskFinish?.(r);
         for(const item of r.objects?.values()||[]){const o=item.obj;
+            if(finish&&o.userData.propId&&isSideShelving(o.userData.propId))syncDeskMatch(o,finish);
             o.visible=!item.saved.removed&&(!o.userData.dressPhases||o.userData.dressPhases.includes(mode))&&(!o.userData.dailyInput||![2,4].includes(index));
             if(o.userData.dayKit)o.children.forEach((c,i)=>c.visible=i===index);
             const canvas=o.getObjectByName('Artist painting');

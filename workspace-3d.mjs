@@ -42,6 +42,7 @@ import { buildGymRoom, gymLayoutForSize, gymLayoutById } from './gym-room.mjs?v=
 import { themedGymLayout } from './gym-theme.mjs?v=polish-20261111f';
 import { buildKitchenRoom, kitchenLayoutForSize, kitchenLayoutById } from './kitchen-room.mjs?v=polish-20261113b';
 import { buildLoungeRoom, loungeLayoutForSize, loungeLayoutById } from './lounge-room.mjs?v=polish-20261113b';
+import {isSideShelving,styleSideShelving} from './side-shelving.mjs';
 
 // Original geometry in millimetres: X is user-right, Z is toward the user.
 // The CAD desk uses X for depth and Z for width. Only the mounting layer maps
@@ -188,6 +189,7 @@ export const PROP_LIBRARY = {
             obj.material=obj.material.clone(); obj.material.userData.sharedTextures=true;
             obj.ownedMaterials=[obj.material]; obj.name='monitor-screen'; obj.userData.sceneDisplay='theme'; obj.userData.screenFront=1;
         });
+        if (isSideShelving(id)) styleSideShelving(clone);
         if (id === 'ergoflex-painter-shelf') clone.traverse(obj => {
             if (!obj.isMesh) return;
             const materials = [].concat(obj.material).map(m => {

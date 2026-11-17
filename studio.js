@@ -963,6 +963,8 @@ function initSceneDeskEditing() {
         copyMainDress:mounts=>{for(const [role,m] of workspaceAccessories.mounts)if(m.dress&&mounts[role])for(const obj of m.dress.children){unregisterSceneAsset(obj);const copy=obj.clone(true);copy.traverse(o=>{o.userData={...o.userData,sharedProp:true,sceneAsset:false};delete o.userData.editorId;});mounts[role].add(copy);}},
         disposeDress:r=>{for(const m of Object.values(r.rig?.mounts||{}))for(const child of [...m.children]){unregisterSceneAsset(child);disposeWorkspaceObject(child);}},
         loadProp:async id=>{await PROP_LIBRARY.loadIndex();return loadDeskProp(id);},propEntry:id=>PROP_LIBRARY.entry(id),
+        // The finish an added object can match (side-shelving.mjs): this desk's wood material and trim colour.
+        deskFinish:r=>({wood:(r.id===sceneDesks.selected&&woodMaterials.get('desktop'))||r.group.children.find(obj=>obj.isMesh&&String(obj.material?.userData?.sceneDeskMaterial).startsWith('wood:'))?.material,trim:r.group.userData?.deskStyle?.trimColor||(r.id===sceneDesks.selected?trimColor:undefined)}),
         createHeadphoneHook:cloneHeadphoneHook,headphoneRecovery:()=>PROP_LIBRARY.headphoneRecovery,
         objectName:obj=>accessory(obj.userData.accessoryId)?.name||PROP_LIBRARY.entry(obj.userData.propId)?.name||obj.name||sceneAssetName(obj),disposeObject:disposeWorkspaceObject,unregisterProp:unregisterSceneAsset,loadPropIndex:()=>PROP_LIBRARY.loadIndex(),
         halt:()=>haltAllMotion(),dragLive:(x,z)=>{if(roomSafety.alert)return;applyGlideOffset(glideOffset.clone().add(new THREE.Vector3(x,0,z)),{collide:true});glideTarget.copy(glideOffset);workspaceAccessories.update();},

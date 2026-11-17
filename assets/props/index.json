@@ -27779,7 +27779,7 @@
     "archetype": "bleacher",
     "component": "complete",
     "lightAnchor": [
-     -2.086162576020456e-09,
+     -2.086162576020456e-9,
      2.1700000211715698,
      0.3479570914100172
     ]
@@ -28032,7 +28032,7 @@
     "archetype": "bleacher",
     "component": "complete",
     "lightAnchor": [
-     -2.086162576020456e-09,
+     -2.086162576020456e-9,
      2.1700000211715698,
      0.3479570914100172
     ]
@@ -28284,7 +28284,7 @@
     "archetype": "bleacher",
     "component": "complete",
     "lightAnchor": [
-     -2.086162576020456e-09,
+     -2.086162576020456e-9,
      2.1700000211715698,
      0.3479570914100172
     ]
@@ -28539,7 +28539,7 @@
     "archetype": "bleacher",
     "component": "complete",
     "lightAnchor": [
-     -2.086162576020456e-09,
+     -2.086162576020456e-9,
      2.1700000211715698,
      0.3479570914100172
     ]
@@ -85915,6 +85915,300 @@
     "character": "andre",
     "pose": "stand-robot-lift"
    }
+  },
+  {
+   "id": "ergoflex-side-shelf-large",
+   "name": "Side shelf \u00b7 large",
+   "category": "desk",
+   "collection": "ErgoFlex Collection",
+   "scenes": [
+    "office",
+    "home",
+    "creative",
+    "gaming",
+    "music",
+    "coworking",
+    "educational",
+    "library",
+    "highschool"
+   ],
+   "anchor": "floor",
+   "source": "models/ergoflex-supplied/shelving/Large_Side_Shelve.glb",
+   "converter": "side-shelving-import",
+   "license": "user-provided",
+   "attribution": "Owner-supplied side shelving CAD (Nov 16 2026)",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "deskMatch": true,
+   "file": "assets/props/ergoflex-side-shelf-large.glb",
+   "size": [
+    324.06,
+    18.09,
+    211.19
+   ],
+   "min": [
+    -162.03,
+    0,
+    -105.595
+   ],
+   "max": [
+    162.03,
+    18.09,
+    105.595
+   ],
+   "tris": 1248,
+   "bytes": 41948
+  },
+  {
+   "id": "ergoflex-side-shelf-small",
+   "name": "Side shelf \u00b7 small",
+   "category": "desk",
+   "collection": "ErgoFlex Collection",
+   "scenes": [
+    "office",
+    "home",
+    "creative",
+    "gaming",
+    "music",
+    "coworking",
+    "educational",
+    "library",
+    "highschool"
+   ],
+   "anchor": "floor",
+   "source": "models/ergoflex-supplied/shelving/Small_Side_Shelve.glb",
+   "converter": "side-shelving-import",
+   "license": "user-provided",
+   "attribution": "Owner-supplied side shelving CAD (Nov 16 2026)",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "deskMatch": true,
+   "file": "assets/props/ergoflex-side-shelf-small.glb",
+   "size": [
+    182.71,
+    17.82,
+    204.57
+   ],
+   "min": [
+    -91.355,
+    0,
+    -102.285
+   ],
+   "max": [
+    91.355,
+    17.82,
+    102.285
+   ],
+   "tris": 1478,
+   "bytes": 48992
+  },
+  {
+   "id": "ergoflex-side-shelf-large-pair",
+   "name": "Side shelves \u00b7 large pair",
+   "category": "desk",
+   "collection": "ErgoFlex Collection",
+   "scenes": [
+    "office",
+    "home",
+    "creative",
+    "gaming",
+    "music",
+    "coworking",
+    "educational",
+    "library",
+    "highschool"
+   ],
+   "anchor": "floor",
+   "source": "models/ergoflex-supplied/shelving/Double_Large_Side_Shelve.glb",
+   "converter": "side-shelving-import",
+   "license": "user-provided",
+   "attribution": "Owner-supplied side shelving CAD (Nov 16 2026)",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "deskMatch": true,
+   "file": "assets/props/ergoflex-side-shelf-large-pair.glb",
+   "size": [
+    324.06,
+    18.09,
+    1410.81
+   ],
+   "min": [
+    -162.03,
+    0,
+    -705.405
+   ],
+   "max": [
+    162.03,
+    18.09,
+    705.405
+   ],
+   "tris": 2486,
+   "bytes": 82348
+  },
+  {
+   "id": "ergoflex-side-shelf-small-pair",
+   "name": "Side shelves \u00b7 small pair",
+   "category": "desk",
+   "collection": "ErgoFlex Collection",
+   "scenes": [
+    "office",
+    "home",
+    "creative",
+    "gaming",
+    "music",
+    "coworking",
+    "educational",
+    "library",
+    "highschool"
+   ],
+   "anchor": "floor",
+   "source": "models/ergoflex-supplied/shelving/Double_Small_Side_Shelve.glb",
+   "converter": "side-shelving-import",
+   "license": "user-provided",
+   "attribution": "Owner-supplied side shelving CAD (Nov 16 2026)",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "deskMatch": true,
+   "file": "assets/props/ergoflex-side-shelf-small-pair.glb",
+   "size": [
+    182.71,
+    17.82,
+    1434.65
+   ],
+   "min": [
+    -91.355,
+    0,
+    -717.325
+   ],
+   "max": [
+    91.355,
+    17.82,
+    717.325
+   ],
+   "tris": 2962,
+   "bytes": 97044
+  },
+  {
+   "id": "ergoflex-side-cup-holder",
+   "name": "Side cup holder \u00b7 acrylic",
+   "category": "desk",
+   "collection": "ErgoFlex Collection",
+   "scenes": [
+    "office",
+    "home",
+    "creative",
+    "gaming",
+    "music",
+    "coworking",
+    "educational",
+    "library",
+    "highschool"
+   ],
+   "anchor": "floor",
+   "source": "models/ergoflex-supplied/shelving/Cup_Holder.glb",
+   "converter": "side-shelving-import",
+   "license": "user-provided",
+   "attribution": "Owner-supplied side shelving CAD (Nov 16 2026)",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "deskMatch": true,
+   "file": "assets/props/ergoflex-side-cup-holder.glb",
+   "size": [
+    148.89,
+    68.89,
+    394.99
+   ],
+   "min": [
+    -74.445,
+    0,
+    -197.495
+   ],
+   "max": [
+    74.445,
+    68.89,
+    197.495
+   ],
+   "tris": 2696,
+   "bytes": 90804
+  },
+  {
+   "id": "ergoflex-side-shelf-large-cubby",
+   "name": "Side shelf \u00b7 large, cubby and cups",
+   "category": "desk",
+   "collection": "ErgoFlex Collection",
+   "scenes": [
+    "office",
+    "home",
+    "creative",
+    "gaming",
+    "music",
+    "coworking",
+    "educational",
+    "library",
+    "highschool"
+   ],
+   "anchor": "floor",
+   "source": "models/ergoflex-supplied/shelving/Large_Side_Shelve_Cup_Container.glb",
+   "converter": "side-shelving-import",
+   "license": "user-provided",
+   "attribution": "Owner-supplied side shelving CAD (Nov 16 2026)",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "deskMatch": true,
+   "file": "assets/props/ergoflex-side-shelf-large-cubby.glb",
+   "size": [
+    381,
+    83.84,
+    420.39
+   ],
+   "min": [
+    -190.5,
+    0,
+    -210.195
+   ],
+   "max": [
+    190.5,
+    83.84,
+    210.195
+   ],
+   "tris": 11072,
+   "bytes": 388748
+  },
+  {
+   "id": "ergoflex-side-shelf-small-cubby",
+   "name": "Side shelf \u00b7 small, cubby and cups",
+   "category": "desk",
+   "collection": "ErgoFlex Collection",
+   "scenes": [
+    "office",
+    "home",
+    "creative",
+    "gaming",
+    "music",
+    "coworking",
+    "educational",
+    "library",
+    "highschool"
+   ],
+   "anchor": "floor",
+   "source": "models/ergoflex-supplied/shelving/Small_Side_Shelve_Cup_Container.glb",
+   "converter": "side-shelving-import",
+   "license": "user-provided",
+   "attribution": "Owner-supplied side shelving CAD (Nov 16 2026)",
+   "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
+   "deskMatch": true,
+   "file": "assets/props/ergoflex-side-shelf-small-cubby.glb",
+   "size": [
+    381,
+    83.84,
+    318.83
+   ],
+   "min": [
+    -190.5,
+    0,
+    -159.415
+   ],
+   "max": [
+    190.5,
+    83.84,
+    159.415
+   ],
+   "tris": 11188,
+   "bytes": 391844
   }
  ],
  "screens": [
@@ -85956,6 +86250,6 @@
    ]
   }
  ],
- "generated": "2026-10-16T00:11:41.391Z",
+ "generated": "2026-11-17T02:40:06.403Z",
  "provenance": "Every model in assets/props is converted from a file in models/, supplied by the project owner. All 102 USDZ sources are Sketchfab exports and the 3DM sources are Rhino files. Per-model licence terms and required attribution are unconfirmed: see docs/scene-assets.md before shipping any of this publicly."
 }
