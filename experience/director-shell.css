@@ -116,3 +116,67 @@ body.keys-open:has(.keys-panel.kp-keyboard) #director-timeline{right:12px}
 .df-report textarea{width:100%;box-sizing:border-box;margin:8px 0;padding:8px;border-radius:6px;border:1px solid var(--df-border-2,#ffffff1c);background:var(--df-input,#0a1017);color:inherit;font:inherit}
 .df-report menu{display:flex;justify-content:flex-end;gap:8px;padding:0;margin:10px 0 0}
 .df-report p{color:var(--df-text-3,#8a97a6);font-size:12.5px}
+
+/* ---- P1b calm shell (17 Nov 2026): the app bar replaces the website header and the duplicated rows ---- */
+body.directing.df-shell>header{display:none}
+#director-appbar{position:fixed;left:16px;right:16px;top:12px;height:46px;z-index:20;display:flex;align-items:center;gap:8px;padding:0 10px;box-sizing:border-box;border-radius:12px;background:var(--df-surface-1,#0f151c);border:1px solid var(--df-border-1,#ffffff10);font:500 12.5px/1 var(--df-font,system-ui);color:var(--df-text-1,#e8eef4)}
+#director-appbar[hidden],body:not(.directing) #director-appbar{display:none}
+@media(min-width:2200px) and (min-height:1200px){#director-appbar{zoom:var(--ui)}}
+.ab-brand{font-size:13px;color:var(--df-accent-text,#9be6fb);white-space:nowrap;margin-right:4px}.ab-brand b{color:var(--df-text-1,#e8eef4);font-weight:650}
+.ab-film{min-width:0;display:flex;align-items:center}
+.ab-film .film-chapter-picker{display:flex!important;gap:6px;align-items:center;margin:0;padding:0;background:none;border:0;flex-wrap:nowrap}
+.ab-film .film-chapter-picker label{display:flex;gap:4px;align-items:center;margin:0}.ab-film .film-chapter-picker label>span{display:none}
+.ab-film select{max-width:220px;height:28px}
+.ab-name{max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ab-spacer{flex:1}
+.ab-group{display:inline-flex;gap:2px}
+.ab-btn{height:30px;padding:0 10px;border:1px solid var(--df-border-2,#ffffff1c);border-radius:8px;background:var(--df-surface-2,#151d26);color:inherit;font:inherit;cursor:pointer;white-space:nowrap}
+.ab-btn:hover:not([disabled]){background:var(--df-surface-3,#1c2631)}.ab-btn[disabled]{opacity:.4;cursor:default}
+.ab-btn.ab-icon{width:32px;padding:0;font-size:16px}
+.ab-btn.primary{background:var(--df-accent,#5cd3f6);border-color:transparent;color:#05202a;font-weight:650}
+.ab-btn[aria-pressed="true"]{border-color:color-mix(in srgb,var(--df-accent,#5cd3f6) 60%,transparent)}
+.ab-play{min-width:128px}
+.ab-menu{position:relative}
+.ab-pop{position:absolute;right:0;top:36px;min-width:250px;max-height:70vh;overflow:auto;padding:4px;border-radius:10px;background:var(--df-surface-1,#0f151c);border:1px solid var(--df-border-2,#ffffff1c);box-shadow:0 18px 48px #000b;z-index:30}
+.ab-pop[hidden]{display:none}
+.ab-pop button{display:flex;justify-content:space-between;gap:12px;width:100%;padding:7px 10px;border:0;border-radius:6px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer;white-space:pre}
+.ab-pop button:hover,.ab-pop button:focus-visible{background:var(--df-surface-3,#1c2631);outline:none}
+.ab-pop small{color:var(--df-text-3,#8a97a6);font-size:11px;white-space:nowrap}
+.ab-sub{margin:4px 0;padding:4px 0;border-top:1px solid var(--df-border-1,#ffffff10);border-bottom:1px solid var(--df-border-1,#ffffff10)}
+.ab-sub p{margin:2px 10px 4px;color:var(--df-text-3,#8a97a6);font-size:11px}
+.ab-sub button{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:12px;color:var(--df-text-2,#b7c3cf)}
+#director-appbar .studio-sync:empty,#director-appbar .saved-indicator:empty{display:none}
+#director-appbar .saved-indicator{color:var(--df-text-3,#8a97a6);font-size:11.5px;white-space:nowrap}
+/* the panel starts under the app bar; the inspector loses its own heading and global row */
+body.directing.df-shell #director-panel{top:70px}
+body.directing.df-shell.film-frame{--frame-top:70px}
+@media(min-width:2200px) and (min-height:1200px){body.directing.df-shell.film-frame{--frame-top:80px}}
+/* the timeline: one row (transport · chapter · counts · + Add · Snap · zoom) */
+body.df-shell #director-timeline .workbench-toolbar{flex-wrap:nowrap;overflow:hidden}
+body.df-shell #director-timeline .workbench-toolbar .timeline-transport{display:flex;gap:3px;align-items:center;flex:none}
+body.df-shell #director-timeline .workbench-toolbar .timeline-transport .chapter-transport{min-width:0}
+body.df-shell #director-timeline .workbench-toolbar>strong{min-width:0;overflow:hidden;text-overflow:ellipsis}
+body.df-shell #director-timeline .track-palette{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+/* the mode pills in the timeline's foot */
+.sb-pills{display:inline-flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+.sb-pill{height:18px;padding:0 7px;border-radius:9px;border:1px solid var(--df-border-2,#ffffff1c);background:transparent;color:var(--df-text-3,#8a97a6);font:600 10.5px/1 var(--df-font,system-ui);cursor:pointer}
+.sb-pill.on{color:var(--df-text-1,#e8eef4);border-color:color-mix(in srgb,var(--df-accent,#5cd3f6) 50%,transparent);background:color-mix(in srgb,var(--df-accent,#5cd3f6) 14%,transparent)}
+.sb-pill.on.warn{color:#ffd79a;border-color:#ffb54788;background:#ffb5471a}
+.timeline-footer{display:flex;gap:10px;align-items:center}
+/* Shift+Tab: no timeline (the frame takes its room); ` over the timeline: taller */
+body.directing.timeline-hidden{--timeline-space:0px}
+body.directing.timeline-hidden #director-timeline{display:none}
+body.directing.timeline-hidden #director-panel{bottom:16px}
+body.directing.df-max-timeline{--timeline-space:min(78dvh,calc(100dvh - 160px))}
+/* review mode: the film alone */
+body.directing.df-review{--timeline-space:0px}
+body.directing.df-review #director-appbar,body.directing.df-review #director-panel,body.directing.df-review #director-timeline,body.directing.df-review .keys-panel,body.directing.df-review .nav-pill-box,body.directing.df-review>header{display:none!important}
+body.directing.film-frame.df-review{--frame-left:0px;--frame-top:0px;--frame-aw:100vw;--frame-ah:100dvh}
+/* readability: sentence-case headers, quieter help text (hover or focus shows it whole) */
+body.df-shell #director-panel h4{text-transform:none;letter-spacing:0;font-size:12px}
+body.df-shell #director-panel .director-hint{font-size:11.5px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+body.df-shell #director-panel .director-hint:hover,body.df-shell #director-panel .director-hint:focus-within{-webkit-line-clamp:unset;display:block}
+.calm-back{font-size:11px;padding:3px 8px}
+.df-toast{position:fixed;left:50%;bottom:calc(var(--timeline-space,400px) + 40px);transform:translate(-50%,20px);z-index:70;display:flex;gap:12px;align-items:center;padding:8px 10px 8px 14px;border-radius:10px;background:var(--df-surface-1,#0f151c);border:1px solid var(--df-border-2,#ffffff1c);box-shadow:0 12px 32px #000a;font-size:12.5px;opacity:0;pointer-events:none;transition:opacity .18s,transform .18s}
+.df-toast.shown{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.df-toast button{height:26px;padding:0 10px;border-radius:6px;border:1px solid var(--df-accent,#5cd3f6);background:transparent;color:var(--df-accent-text,#9be6fb);font:600 12px var(--df-font,system-ui);cursor:pointer}

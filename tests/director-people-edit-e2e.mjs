@@ -35,7 +35,7 @@ function onlyPeopleChanged(after,tag){
   assert.equal(p.cast.length,f.cast.length);
   return p.cast.flatMap((e,i)=>JSON.stringify(e)===JSON.stringify(f.cast[i])?[]:[[f.cast[i],e]]);
 }
-const exportText=page=>page.evaluate(()=>new Promise(r=>{const was=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){HTMLAnchorElement.prototype.click=was;fetch(this.href).then(x=>x.text()).then(r);};document.querySelector('#director-panel [data-action="save-export"]').click();}));
+const exportText=page=>page.evaluate(()=>new Promise(r=>{const was=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){HTMLAnchorElement.prototype.click=was;fetch(this.href).then(x=>x.text()).then(r);};document.querySelector('#director-appbar [data-action="save-export"]').click();}));
 const where=page=>page.evaluate(()=>Object.fromEntries((document.getElementById('stage').contentWindow.ErgoFlex?.workspaceRoom?.people?.list?.()||[]).filter(p=>p.visible).map(p=>[p.key,p.at])));
 async function selectRow(page,key){
   await page.$eval('[data-inspector-tab="people"]',e=>e.click());await until(()=>page.$('[data-action="pe-row"]'),'the People list');

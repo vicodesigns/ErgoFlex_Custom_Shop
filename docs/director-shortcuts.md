@@ -37,6 +37,10 @@ Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl als
 | Ctrl+Shift+A | Select everything in the lane under the pointer | Director |
 | Enter | Open the selection in the inspector | Director |
 | Shift+M | Sound on / off | Director |
+| Tab | Hide / show the side column | Unreal |
+| Shift+Tab | Hide / show the timeline | Director |
+| ` | Maximise the panel under the pointer (again: back) | Premiere |
+| Ctrl+` | Review mode: the film alone, the whole window, playing (Esc: back) | Director |
 | Esc | Deselect, one level at a time; closes a menu, the still view or this panel | Premiere |
 | Delete / ⌫ | Delete the selection (a room prop is hidden, not deleted) | Premiere |
 

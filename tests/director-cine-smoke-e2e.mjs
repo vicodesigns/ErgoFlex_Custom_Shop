@@ -26,7 +26,7 @@ try{
     assert.ok(a.length>0,id+': nobody visible on the stage');
     if(movers.length){const k=movers[0].key,pa=a.find(p=>p.key===k),pb=b.find(p=>p.key===k);assert.ok(pa&&pb,`${id}: ${k} on the stage`);const d=Math.hypot(pa.at[0]-pb.at[0],pa.at[1]-pb.at[1]);assert.ok(d>200,`${id}: ${k} moves along their path as the playhead moves (${Math.round(d)} mm)`);console.log(`${id}: ${a.length} people on the stage; ${k} moved ${Math.round(d)} mm between the two playhead times`);}
     // Export cut, no edit: capture the download
-    const text=await page.evaluate(()=>new Promise(r=>{const was=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){HTMLAnchorElement.prototype.click=was;fetch(this.href).then(x=>x.text()).then(r);};document.querySelector('#director-panel [data-action="save-export"]').click();}));
+    const text=await page.evaluate(()=>new Promise(r=>{const was=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){HTMLAnchorElement.prototype.click=was;fetch(this.href).then(x=>x.text()).then(r);};document.querySelector('#director-appbar [data-action="save-export"]').click();}));
     const H=path.join(tmp,id);fs.mkdirSync(path.join(H,'shots'),{recursive:true});
     for(const f of ['review-cut.json','titles-src.json','shots/13-subshots.json','cut.json'])if(fs.existsSync(path.join(H0,f)))fs.copyFileSync(path.join(H0,f),path.join(H,f));
     const ex=path.join(tmp,`Film-chapter-${id}.json`);fs.writeFileSync(ex,text);

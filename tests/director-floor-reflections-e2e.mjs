@@ -43,10 +43,10 @@ try{
   {const st=await status(page);check(/Moved the left side strip's floor reflection/.test(st),'the drag is named in the status line: '+st.slice(0,120));}
   const after=await until(async()=>{const p=(await pools()).find(p=>p.key==='left');return Math.hypot(p.c[0]-L.c[0],p.c[2]-L.c[2])>1e-3&&p;},'live pool moved');
   check(!!after,`the live pool moved (${JSON.stringify(moved.left)})`);
-  await page.click('#director-panel [data-action="undo"]');await wait(900);
+  await page.click('#director-appbar [data-action="undo"]');await wait(900);
   check(!(await draft())?.left,'undo puts it back');
   const back=(await pools()).find(p=>p.key==='left');check(Math.hypot(back.c[0]-L.c[0],back.c[2]-L.c[2])<1e-3,'and the live pool with it');
-  await page.click('#director-panel [data-action="redo"]');await wait(900);
+  await page.click('#director-appbar [data-action="redo"]');await wait(900);
   check(JSON.stringify((await draft())?.left)===JSON.stringify(moved.left),'redo moves it again');
   // The spread slider (live, one step), then its number.
   await page.evaluate(()=>{const el=document.querySelector('#director-panel [name="fr-spread"]');el.value='2';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));});await wait(900);

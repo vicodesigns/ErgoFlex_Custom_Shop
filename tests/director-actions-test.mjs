@@ -92,7 +92,7 @@ for (const [sec, list] of old) for (const [k] of list) {
 }
 // the Director marks only contexts the table has (activeShortcuts in director.mjs)
 const src = readFileSync(new URL('../experience/director.mjs', import.meta.url), 'utf8');
-const fn = src.slice(src.indexOf('function activeShortcuts()'), src.indexOf('const keysPanel='));
+const fnAt = src.indexOf('function activeShortcuts()'), fn = src.slice(fnAt, Math.min(...['const keysPanel=', '// ---- the app bar and the mode pills'].map(m => src.indexOf(m, fnAt)).filter(i => i > 0)));
 const used = [...fn.matchAll(/a\.add\('([a-z-]+)'\)|\?'([a-z-]+)':'([a-z-]+)'/g)].flatMap(m => m.slice(1).filter(Boolean));
 assert.ok(used.length >= 10, 'activeShortcuts found');
 for (const u of used) assert.ok(SECTIONS.some(([s]) => s === u), `director marks "${u}", the table has no such context`);

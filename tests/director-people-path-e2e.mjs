@@ -134,11 +134,11 @@ try{
     const set=(n,v)=>page.evaluate((n,v)=>{const el=document.querySelector(`#director-panel [name="${n}"]`);el.value=v;el.dispatchEvent(new Event('change',{bubbles:true}));},n,v);
     await set('pe-path-radius','520');await until(async()=>(await mine(RK))?.roll?.radius===520,'radius written');
     await set('pe-path-speed','1.3');await until(async()=>(await mine(RK))?.roll?.speed===1.3,'speed written');check(true,'the Corner radius and Speed fields write roll.radius 520 and roll.speed 1.3');
-    await page.evaluate(()=>document.querySelector('#director-panel [data-action="undo"]').click());
+    await page.evaluate(()=>document.querySelector('#director-appbar [data-action="undo"]').click());
     await until(async()=>(await mine(RK))?.roll?.speed===rc[ri].roll.speed,'undo: speed back');
-    await page.evaluate(()=>document.querySelector('#director-panel [data-action="undo"]').click());
+    await page.evaluate(()=>document.querySelector('#director-appbar [data-action="undo"]').click());
     await until(async()=>(await mine(RK))?.roll?.radius===rc[ri].roll.radius,'undo: radius back');
-    await page.evaluate(()=>document.querySelector('#director-panel [data-action="undo"]').click());
+    await page.evaluate(()=>document.querySelector('#director-appbar [data-action="undo"]').click());
     await until(async()=>JSON.stringify((await mine(RK))?.roll?.path??r0)===JSON.stringify(r0),'undo: path back');
     check(true,'Undo takes back speed, radius and the dragged point, one step each');
   }
@@ -175,10 +175,10 @@ try{
       const f=await until(async()=>{const x=await mine(NK);return x&&x.walk.pace!==a[NK].walk.pace?x:null;},'faster');
       await until(async()=>!(await page.$('#director-panel .people-path-late')),'the warning goes once it arrives on time',15000).catch(()=>null);
       check(f.walk.pace>(a[NK].walk.pace||1.8),`late: "${warn.trim()}"; Walk faster sets pace ${f.walk.pace}`);
-      await page.evaluate(()=>document.querySelector('#director-panel [data-action="undo"]').click());await until(async()=>(await mine(NK))?.walk?.pace===a[NK].walk.pace,'undo the pace');
+      await page.evaluate(()=>document.querySelector('#director-appbar [data-action="undo"]').click());await until(async()=>(await mine(NK))?.walk?.pace===a[NK].walk.pace,'undo the pace');
     }else console.log('  (the longer walk still arrives in time: no warning)');
     // one undo step takes the end and the three placements back
-    await page.evaluate(()=>document.querySelector('#director-panel [data-action="undo"]').click());
+    await page.evaluate(()=>document.querySelector('#director-appbar [data-action="undo"]').click());
     const u=await until(async()=>{const x=await all();return !x[NK]||JSON.stringify(x[NK].walk.path)===JSON.stringify(n0)?x:null;},'undo');
     check(FOL.every(k=>!u[k]||(u[k].at[0]===Q[0]&&u[k].at[1]===Q[1])),'one Undo puts the walk\u2019s end and all three placements back');
     // Alt held: only the walk
@@ -204,7 +204,7 @@ try{
       const W2=r.roll.path[k0.length-1],d=await mine(KT);
       check(d.at[0]===W2[0]&&d.at[1]===W2[1]&&JSON.stringify(r.roll.path.slice(0,-1))===JSON.stringify(k0.slice(0,-1)),`moving the dock point to ${W2}: Kai's typing placement follows (the rest of the roll stays)`);
       check(/follows/.test(await page.$eval('#director-panel [data-status]',e=>e.textContent)),'the status says who follows');
-      await page.evaluate(()=>document.querySelector('#director-panel [data-action="undo"]').click());
+      await page.evaluate(()=>document.querySelector('#director-appbar [data-action="undo"]').click());
       await until(async()=>{const x=await mine(KR);return x&&JSON.stringify(x.roll.path)===JSON.stringify(k0)?x:null;},'undo the dock move');
       const du=await mine(KT);check(du.at[0]===t0.at[0]&&du.at[1]===t0.at[1],'one Undo puts the roll and the typing placement back');
     }

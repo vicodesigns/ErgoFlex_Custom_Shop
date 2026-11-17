@@ -93,8 +93,8 @@ try{
   const tab=async t=>{await panelClick(`#director-panel [data-inspector-tab=${t}]`);await wait(700);};
   const selectDesk=async id=>{await tab('desks');await page.evaluate(id=>document.querySelector(`#director-panel [data-action="dk-select"][data-section="${id}"]`)?.click(),id);await wait(700);};
   const drag=async(from,dx,dy)=>{await page.mouse.move(from.x,from.y);await wait(200);await page.mouse.down();await page.mouse.move(from.x+dx/2,from.y+dy/2,{steps:6});await page.mouse.move(from.x+dx,from.y+dy,{steps:6});await wait(150);await page.mouse.up();await wait(800);};
-  const undo=async()=>{await panelClick('#director-panel [data-action="undo"]');await wait(1500);};
-  const redo=async()=>{await panelClick('#director-panel [data-action="redo"]');await wait(1500);};
+  const undo=async()=>{await panelClick('#director-appbar [data-action="undo"]');await wait(1500);};
+  const redo=async()=>{await panelClick('#director-appbar [data-action="redo"]');await wait(1500);};
   const editsNow=async()=>(await page.evaluate(()=>__draftShot()?.deskEdits))||[];
   let HOME={},CAST0=null;
 

@@ -18,7 +18,7 @@ const until=async(fn,what)=>{const end=Date.now()+120000;while(Date.now()<end){i
 const click=selector=>page.$eval(selector,e=>e.click());
 const set=(name,value)=>page.evaluate((n,v)=>{const e=document.querySelector(`#director-panel [name="${n}"]`);if(!e)throw Error('Missing field '+n);e.value=String(v);e.dispatchEvent(new Event('change',{bubbles:true}));},name,value);
 const select=async()=>{await click('[data-inspector-tab="people"]');await until(()=>page.$('[data-person-key="maya-stand"]'),'Maya row');await click('[data-person-key="maya-stand"] .people-pick');};
-const exported=()=>page.evaluate(()=>new Promise((resolve,reject)=>{const previous=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){HTMLAnchorElement.prototype.click=previous;fetch(this.href).then(r=>r.text()).then(resolve,reject);};document.querySelector('#director-panel [data-action="save-export"]').click();}));
+const exported=()=>page.evaluate(()=>new Promise((resolve,reject)=>{const previous=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){HTMLAnchorElement.prototype.click=previous;fetch(this.href).then(r=>r.text()).then(resolve,reject);};document.querySelector('#director-appbar [data-action="save-export"]').click();}));
 const showing=()=>page.evaluate(()=>document.getElementById('stage').contentWindow.ErgoFlex.workspaceRoom.people.byKey('maya-stand')?.userData.person.id);
 const stores=text=>JSON.parse(text).shots.find(s=>s.id==='rise').peopleEdits.cast.find(e=>e.key==='maya-stand');
 try{
@@ -28,8 +28,8 @@ try{
   if(await page.$eval('[data-action="pe-key-auto"]',e=>e.getAttribute('aria-pressed'))==='true')await click('[data-action="pe-key-auto"]');
   await set('pe-joint','hand_l');await set('pe-rx',15);await click('[data-action="pe-key-all"]');await wait(800);
   const entry=stores(await exported());assert.equal(entry.id,STAND);assert.deepEqual(entry.postures[STAND].pose,originalPose);assert.ok(entry.postures[SIT].poseKeys.some(k=>Math.abs(k.t-16.6)<.001&&k.pose.hand_l));
-  await click('#director-panel [data-action="undo"]');await wait(500);assert.match(await page.$eval('#director-panel',p=>p.textContent),/none yet/);
-  await click('#director-panel [data-action="redo"]');await wait(500);assert.match(await page.$eval('#director-panel',p=>p.textContent),/1 key/);
+  await click('#director-appbar [data-action="undo"]');await wait(500);assert.match(await page.$eval('#director-panel',p=>p.textContent),/none yet/);
+  await click('#director-appbar [data-action="redo"]');await wait(500);assert.match(await page.$eval('#director-panel',p=>p.textContent),/1 key/);
   await seek(page,8);assert.equal(await showing(),STAND);await seek(page,16.6);assert.equal(await showing(),SIT);
   const text=await exported(),expected=stores(text);await page.reload();await until(()=>page.$eval('#director-panel',p=>/Camera is live/.test(p.textContent)).catch(()=>false),'reload');
   assert.deepEqual(stores(await exported()).postures,expected.postures,'reload keeps both stores');

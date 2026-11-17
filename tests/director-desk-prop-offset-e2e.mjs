@@ -69,11 +69,11 @@ try{
   const exp0=await page.evaluate(()=>new Promise(r=>{const was=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){HTMLAnchorElement.prototype.click=was;fetch(this.href).then(x=>x.text()).then(r);};document.querySelector('#director-panel [data-action="export"]').click();}));
   const sh0=JSON.parse(exp0).shots[0],deskProps=(sh0.propEdits||[]).filter(e=>/ErgoFlex desk/.test(e.match||''));
   check(Array.isArray(sh0.propEdits)&&!deskProps.length,`0. no prop edit moves a room desk any more (${deskProps.length}); desk edits: ${JSON.stringify((sh0.deskEdits||[]).map(e=>[e.desk,e.pose&&[e.pose.x,e.pose.z,Math.round(e.pose.yaw*573)/10]]))}`);
-  await page.evaluate(()=>document.querySelector('#director-panel [data-action="undo"]').click());await wait(2500);
+  await page.evaluate(()=>document.querySelector('#director-appbar [data-action="undo"]').click());await wait(2500);
   await page.evaluate(()=>{const el=document.querySelector('#director-timeline [name="timeline-seconds"]');el.value='1';el.dispatchEvent(new Event('change',{bubbles:true}));});await wait(2500);
   const u0=await page.evaluate(()=>__all());const du=Object.keys(OFF).filter(id=>Math.abs(u0[id].x-s1[id].x)>3||Math.abs(u0[id].z-s1[id].z)>3).map(id=>`${id} ${(u0[id].x-s1[id].x).toFixed(0)},${(u0[id].z-s1[id].z).toFixed(0)} mm`);
   check(!du.length,`0. Undo of the fold: the prop edits are back and the desks still stand there${du.length?' (moved: '+du.join(', ')+')':''}`);
-  await page.evaluate(()=>document.querySelector('#director-panel [data-action="redo"]').click());await wait(2500);
+  await page.evaluate(()=>document.querySelector('#director-appbar [data-action="redo"]').click());await wait(2500);
   // the Props tab hands a room desk to the Desks tab
   await page.evaluate(()=>document.querySelector('#director-panel [data-inspector-tab=props]').click());await wait(1000);
   const lane=await page.evaluate(()=>{const b=[...document.querySelectorAll('[data-action="pp-lane"]')].find(e=>/review desk/i.test(e.textContent+e.title));b?.click();return !!b;});
@@ -120,7 +120,7 @@ try{
   // (Reset desk: the film's own place; the prop offset the chapter had was the Director's own edit, folded into the desk edit)
   await step('3 Reset desk',async()=>{await page.evaluate(()=>document.querySelector('#director-panel [data-action="dk-reset"]').click());await wait(1200);},{expect:()=>s0[REVIEW]});
   // 4. Hide / Show a desk with a user and a chair; one Undo each
-  const undo=async()=>{await page.evaluate(()=>document.querySelector('#director-panel [data-action="undo"]').click());await wait(1500);};
+  const undo=async()=>{await page.evaluate(()=>document.querySelector('#director-appbar [data-action="undo"]').click());await wait(1500);};
   const hideStep=async(label,act,wantVis)=>{
     statuses.length=0;const before=await page.evaluate(()=>__all());await act();await wait(1200);
     const sawPreparing=await page.evaluate(()=>/Preparing/.test(document.querySelector('#director-panel [data-status]')?.textContent||''));await settle();const after=await page.evaluate(()=>__all());

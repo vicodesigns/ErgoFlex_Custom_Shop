@@ -61,7 +61,7 @@ try{
   assert.deepEqual(await page.$$eval('[data-pose-key-row] [data-pose-key]',l=>l.length),0,'Delete removed the key');
   await page.$eval('[data-action="pe-key-auto"]',e=>e.click());     // (leave auto-key off)
   // ---- 4. export, import, pass
-  const text=await page.evaluate(()=>new Promise(r=>{const was=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){HTMLAnchorElement.prototype.click=was;fetch(this.href).then(x=>x.text()).then(r);};document.querySelector('#director-panel [data-action="save-export"]').click();}));
+  const text=await page.evaluate(()=>new Promise(r=>{const was=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){HTMLAnchorElement.prototype.click=was;fetch(this.href).then(x=>x.text()).then(r);};document.querySelector('#director-appbar [data-action="save-export"]').click();}));
   const H=path.join(tmp,'H');fs.mkdirSync(path.join(H,'shots'),{recursive:true});
   for(const f of ['review-cut.json','titles-src.json','shots/13-subshots.json','cut.json'])if(fs.existsSync(path.join(H0,f)))fs.copyFileSync(path.join(H0,f),path.join(H,f));
   const ex=path.join(tmp,'Film-chapter-storage.json');fs.writeFileSync(ex,text);

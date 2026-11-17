@@ -86,7 +86,7 @@ try{
   assert.equal(await count(),0,'Reset all: no edited lights left');
   assert.equal(await page.$('#director-timeline [data-action="sl-reset-all"]'),null,'Reset all: its chip goes with the edits');
   assert.ok(await page.$eval('#director-panel [data-action="sl-reset-all"]',b=>b.disabled),'Reset all: the inspector button is disabled with nothing to reset');
-  await page.click('#director-panel [data-action="undo"]');await wait(800);
+  await page.click('#director-appbar [data-action="undo"]');await wait(800);
   assert.equal(await count(),before,'Undo brings every light edit back in one step');
   done.push('Reset all lights to the film: one undo step');
 }finally{await close();}

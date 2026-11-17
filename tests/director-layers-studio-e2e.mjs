@@ -91,7 +91,7 @@ try{
     }else check(JSON.stringify(d.peopleEdits??null)===peopleBefore,'nobody at that desk: no peopleEdits written',`before ${peopleBefore.slice(0,80)}, after ${JSON.stringify(d.peopleEdits??null).slice(0,80)}`);
     const s1=await until(async()=>{const s=await stageAt(station);return {ok:!s.desk&&!s.users.length&&Object.values(s.items).every(v=>!v),s};});
     check(s1.ok,'the stage draws neither the desk nor its things nor its person',JSON.stringify(s1.s));
-    await click('#director-panel [data-action="undo"]');
+    await click('#director-appbar [data-action="undo"]');
     const s2=await until(async()=>{const s=await stageAt(station);return {ok:s.desk&&users0.every(u=>s.users.includes(u))&&own.every(id=>s.items[id]===s0.items[id]),s};});
     check(s2.ok,'one Undo brings them all back',`expected the desk, ${users0.join('+')||'nobody'} and ${own.join(', ')||'nothing'} as before; now ${JSON.stringify(s2.s)}`);
   });

@@ -50,7 +50,7 @@ try{
   await click('[data-action="pe-key-delete"]');await wait(400);assert.equal((await diamonds()).length,2,'deleted');
   await page.keyboard.down('Control');await page.keyboard.press('z');await page.keyboard.up('Control');await wait(600);
   assert.equal((await diamonds()).length,3,'undo brings the key back');
-  const text=await page.evaluate(()=>new Promise(r=>{const was=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){HTMLAnchorElement.prototype.click=was;fetch(this.href).then(x=>x.text()).then(r);};document.querySelector('#director-panel [data-action="save-export"]').click();}));
+  const text=await page.evaluate(()=>new Promise(r=>{const was=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){HTMLAnchorElement.prototype.click=was;fetch(this.href).then(x=>x.text()).then(r);};document.querySelector('#director-appbar [data-action="save-export"]').click();}));
   const pe=JSON.parse(text).shots[0].peopleEdits;assert.equal(pe?.v,2,'peopleEdits v2');
   const keyed=pe.cast.find(e=>e.poseKeys);assert.ok(keyed,'a cast entry with poseKeys');
   const ts=keyed.poseKeys.map(k=>k.t);assert.equal(ts.length,3);assert.ok(Math.abs(ts[0]-3.2)<1e-6&&Math.abs(ts[1]-8)<.1&&Math.abs(ts[2]-11)<.05,'key times '+ts);

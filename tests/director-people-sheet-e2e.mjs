@@ -39,7 +39,7 @@ async function drag(id,seconds,T,{alt=true}={}){
   await page.mouse.move(p.x,p.y);await page.mouse.down();await page.mouse.move(p.x+6,p.y,{steps:2});await page.mouse.move(x,p.y,{steps:8});await page.mouse.up();if(alt)await page.keyboard.up('Alt');await wait(700);
 }
 const key=async combo=>{const [m,k]=combo.includes('+')?combo.split('+'):[null,combo];if(m)await page.keyboard.down(m);await page.keyboard.press(k);if(m)await page.keyboard.up(m);await wait(600);};
-const exportCut=()=>page.evaluate(()=>new Promise(r=>{const was=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){HTMLAnchorElement.prototype.click=was;fetch(this.href).then(x=>x.text()).then(r);};document.querySelector('#director-panel [data-action="save-export"]').click();}));
+const exportCut=()=>page.evaluate(()=>new Promise(r=>{const was=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){HTMLAnchorElement.prototype.click=was;fetch(this.href).then(x=>x.text()).then(r);};document.querySelector('#director-appbar [data-action="save-export"]').click();}));
 try{
   await page.evaluateOnNewDocument(()=>localStorage.removeItem('ergoflex.director.peopleSheet'));
   // ======== oilers

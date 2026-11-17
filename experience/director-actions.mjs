@@ -19,7 +19,7 @@
 //   aliases  what the command search (Ctrl+P) also finds it by: Rhino's command names (m, ro, sc, zs, ze, top…).
 // Vico's own keys (the panel's Edit keys) are kept as { id: [spec...] } (keys-panel.mjs, ui store) and laid over this
 // table by effectiveActions(); only rows the Director runs can be rebound, never to a RESERVED key.
-export const LIVE_PHASES = new Set(['1a', '1a2']);
+export const LIVE_PHASES = new Set(['1a', '1a2', '1b']);
 
 const R = (id, label, keys, ctx, more = {}) => ({ id, label, keys, ctx, phase: '1a', owner: 'director', ...more });
 const E = (id, label, keys, ctx, more = {}) => R(id, label, keys, ctx, { owner: 'editor', ...more });
@@ -52,6 +52,10 @@ export const ACTIONS = [
   R('select-lane', 'Select everything in the lane under the pointer', ['Ctrl+Shift+A'], 'global', { origin: 'Director' }),
   R('open-inspector', 'Open the selection in the inspector', ['Enter'], 'global', { onButton: false, origin: 'Director' }),
   R('sound', 'Sound on / off', ['Shift+M'], 'global', { origin: 'Director' }),
+  R('toggle-inspector', 'Hide / show the side column', ['Tab'], 'global', { phase: '1b', onButton: false, origin: 'Unreal' }),
+  R('toggle-timeline', 'Hide / show the timeline', ['Shift+Tab'], 'global', { phase: '1b', onButton: false, origin: 'Director' }),
+  R('maximise', 'Maximise the panel under the pointer (again: back)', ['`'], 'global', { phase: '1b', origin: 'Premiere' }),
+  R('review', 'Review mode: the film alone, the whole window, playing (Esc: back)', ['Ctrl+`'], 'global', { phase: '1b', inField: true, origin: 'Director', aliases: ['review', 'fullscreen'] }),
   E('escape', 'Deselect, one level at a time; closes a menu, the still view or this panel', ['Escape'], 'global', { origin: 'Premiere' }),
   E('delete', 'Delete the selection (a room prop is hidden, not deleted)', ['Delete', 'Backspace'], 'global', { origin: 'Premiere' }),
 

@@ -33,7 +33,7 @@ try{
   for(const t of [3,6,9,12]){await seek(page,t);await wait(1500);at[t]=await elbow();if(shots){fs.mkdirSync(shots,{recursive:true});await page.screenshot({path:path.join(shots,`s31-posekey-stage-${t}s.png`)});}}
   console.log('elbow turn from rest on the stage:',JSON.stringify(Object.fromEntries(Object.entries(at).map(([k,v])=>[k,v&&Math.round(v*10)/10]))));
   assert.ok(at[3]!==null&&at[3]<3,'3 s: as built');assert.ok(Math.abs(at[9]-90)<3,'9 s: 90 degrees');assert.ok(Math.abs(at[6]-45)<5,'6 s: half way (smooth: 45)');assert.ok(Math.abs(at[12]-90)<3,'12 s: held after the last key');
-  if(process.env.EXPORT_OUT){const text=await page.evaluate(()=>new Promise(r=>{const was=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){HTMLAnchorElement.prototype.click=was;fetch(this.href).then(x=>x.text()).then(r);};document.querySelector('#director-panel [data-action="save-export"]').click();}));fs.writeFileSync(process.env.EXPORT_OUT,text);}
+  if(process.env.EXPORT_OUT){const text=await page.evaluate(()=>new Promise(r=>{const was=HTMLAnchorElement.prototype.click;HTMLAnchorElement.prototype.click=function(){HTMLAnchorElement.prototype.click=was;fetch(this.href).then(x=>x.text()).then(r);};document.querySelector('#director-appbar [data-action="save-export"]').click();}));fs.writeFileSync(process.env.EXPORT_OUT,text);}
   assert.deepEqual(errors,[],'page errors');
   console.log(`PASS pose keys on the stage: ${key}'s elbow ${at[3].toFixed(1)} / ${at[6].toFixed(1)} / ${at[9].toFixed(1)} / ${at[12].toFixed(1)} degrees at 3 / 6 / 9 / 12 s`);
 }finally{await close();}

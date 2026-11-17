@@ -86,7 +86,7 @@ try{
   await snap('03-dragging-fade-handle');await page.mouse.up();
   const e4=await until(async()=>{const e=await edit(TAB);return e?.show&&e.show.fadeOut>1.3?e:null;},'the handle sets the fade');
   check(Math.abs(e4.show.fadeOut-1.6)<.15&&Math.abs(e4.show.to-to)<1e-6,`dragging the fade-out handle: fade out ${e4.show.fadeOut} s, the end stays at ${e4.show.to} s`);
-  await page.evaluate(()=>document.querySelector('#director-panel [data-action="undo"]').click());
+  await page.evaluate(()=>document.querySelector('#director-appbar [data-action="undo"]').click());
   await until(async()=>(await edit(TAB))?.show?.fadeOut===1,'undo the handle');check(true,'Undo puts the fade back');
   // ---- the Props lane in a chapter with desk versions (hero) and in oilers: no two bars overlap in a row
   for(const id of ['hero','oilers']){
