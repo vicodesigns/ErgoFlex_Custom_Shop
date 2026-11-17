@@ -107,7 +107,7 @@ body.keys-open:has(.keys-panel.kp-keyboard) #director-timeline{right:12px}
 .df-palette li kbd{font:600 11px var(--df-mono,ui-monospace,monospace);color:var(--df-text-2,#b7c3cf)}
 .df-palette li.df-palette-off{opacity:.45}
 .df-palette-foot{margin:0;padding:6px 14px;border-top:1px solid var(--df-border-1,#ffffff10);color:var(--df-text-3,#8a97a6);font-size:11px}
-.nav-views{position:absolute;right:10px;top:10px;display:flex;gap:2px;padding:2px;border-radius:7px;background:#0b1118d9;border:1px solid var(--df-border-2,#ffffff1c);pointer-events:auto}
+.nav-views{position:absolute;right:10px;bottom:10px;display:flex;gap:2px;padding:2px;border-radius:7px;background:#0b1118d9;border:1px solid var(--df-border-2,#ffffff1c);pointer-events:auto}
 .nav-views[hidden]{display:none}
 .nav-views button{height:22px;padding:0 7px;border:0;border-radius:5px;background:transparent;color:var(--df-text-2,#b7c3cf);font:600 11px var(--df-font,system-ui);cursor:pointer}
 .nav-views button:hover{background:var(--df-surface-3,#1c2631);color:var(--df-text-1,#e8eef4)}
@@ -148,15 +148,15 @@ body.directing.df-shell>header{display:none}
 #director-appbar .studio-sync:empty,#director-appbar .saved-indicator:empty{display:none}
 #director-appbar .saved-indicator{color:var(--df-text-3,#8a97a6);font-size:11.5px;white-space:nowrap}
 /* the panel starts under the app bar; the inspector loses its own heading and global row */
-body.directing.df-shell #director-panel{top:70px}
+body.directing.df-shell #director-panel{top:70px;padding-bottom:28px;scroll-padding-bottom:28px}
 body.directing.df-shell.film-frame{--frame-top:70px}
 @media(min-width:2200px) and (min-height:1200px){body.directing.df-shell.film-frame{--frame-top:80px}}
 /* the timeline: one row (transport · chapter · counts · + Add · Snap · zoom) */
-body.df-shell #director-timeline .workbench-toolbar{flex-wrap:nowrap;overflow:hidden}
+body.df-shell #director-timeline .workbench-toolbar{flex-wrap:wrap;row-gap:4px}
 body.df-shell #director-timeline .workbench-toolbar .timeline-transport{display:flex;gap:3px;align-items:center;flex:none}
 body.df-shell #director-timeline .workbench-toolbar .timeline-transport .chapter-transport{min-width:0}
 body.df-shell #director-timeline .workbench-toolbar>strong{min-width:0;overflow:hidden;text-overflow:ellipsis}
-body.df-shell #director-timeline .track-palette{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+body.df-shell #director-timeline .track-palette{flex-wrap:nowrap;flex:none}
 /* the mode pills in the timeline's foot */
 .sb-pills{display:inline-flex;gap:4px;flex-wrap:wrap;margin-left:auto}
 .sb-pill{height:18px;padding:0 7px;border-radius:9px;border:1px solid var(--df-border-2,#ffffff1c);background:transparent;color:var(--df-text-3,#8a97a6);font:600 10.5px/1 var(--df-font,system-ui);cursor:pointer}
@@ -215,8 +215,7 @@ body.df-shell .camera-segment i{opacity:0;transition:opacity .15s}body.df-shell 
 body.df-shell .camera-segment.ease-hold{background-image:repeating-linear-gradient(90deg,#ffffff18 0 6px,transparent 6px 12px)}
 
 /* ---- P5 inspector (17 Nov 2026): tab groups, the scope of each page, scrubbable number fields ---- */
-body.df-shell .inspector-tabs .tab-group-start{margin-left:10px;position:relative}
-body.df-shell .inspector-tabs .tab-group-start::before{content:"";position:absolute;left:-6px;top:20%;bottom:20%;width:1px;background:var(--df-border-2,#ffffff1c)}
+body.df-shell .inspector-tabs:has([data-inspector-tab]) button{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11.5px;gap:4px}
 body.df-shell [data-inspector-page]:not([hidden])::before{content:"This chapter";display:inline-block;margin:0 0 6px;padding:1px 7px;border-radius:8px;border:1px solid var(--df-border-2,#ffffff1c);color:var(--df-text-3,#8a97a6);font:600 10px/16px var(--df-font,system-ui)}
 body.df-shell [data-inspector-page="project"]:not([hidden])::before{content:"Whole cut";color:#9be6fb;border-color:#5cd3f655}
 body.df-shell [data-inspector-page="render"]:not([hidden])::before{content:"Whole film · render PC"}
@@ -237,7 +236,7 @@ body.df-shell [data-inspector-page="render"]:not([hidden])::before{content:"Whol
 .df-ctx-title{margin:4px 10px 6px;color:var(--df-text-3,#8a97a6);font:600 11px var(--df-font,system-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
 body.df-filter-busy #director-timeline .desk-lane-row.empty{display:none}
 body.df-filter-sel #director-timeline :is(.desk-lane-row,.camera-lane-row):not(.lane-has-sel){display:none}
-.lane-lock{margin-left:auto;padding:0 3px;border:0;background:transparent;font-size:10px;opacity:.25;cursor:pointer}
+.lane-lock{position:absolute;right:2px;top:2px;width:14px;height:14px;padding:0;border:0;background:transparent;font:10px/14px system-ui;opacity:.25;cursor:pointer;overflow:hidden}
 .desk-lane-label:hover .lane-lock,.track-heading:hover .lane-lock,.lane-locked .lane-lock{opacity:.9}
 .lane-locked>:not(.desk-lane-label):not(.track-heading){background-image:repeating-linear-gradient(135deg,#ffffff0d 0 6px,transparent 6px 12px);opacity:.6}
 /* P5 Scene list */
