@@ -2,7 +2,7 @@
 // that every key of the old sheet (shortcuts.mjs, 14397a53) is kept or listed as changed, and the generated docs.
 import assert from 'node:assert/strict';
 import {readFileSync, existsSync} from 'node:fs';
-import {ACTIONS, RESERVED, CHANGED, SECTIONS, LIVE_PHASES, parseSpec, matchSpec, resolve, targetKind, markdown, keyText, stackOf} from '../experience/director-actions.mjs';
+import {ACTIONS, RESERVED, CHANGED, SECTIONS, LIVE_PHASES, parseSpec, matchSpec, resolve, targetKind, markdown, keyText, stackOf, effectiveActions, specOf, bindCheck, rebind, searchActions} from '../experience/director-actions.mjs';
 
 const ev = (spec, more = {}) => { const s = parseSpec(spec); return { key: s.kind === 'code' ? (s.shift ? s.base.toUpperCase() : s.base.toLowerCase()) : s.base === 'Space' ? ' ' : s.base, code: s.code || (s.base === 'Space' ? 'Space' : ''), ctrlKey: s.ctrl, shiftKey: s.shift, altKey: s.alt, metaKey: false, ...more }; };
 const id = (spec, state = {}, more) => resolve(ev(spec, more), state)?.id ?? null;
@@ -76,7 +76,7 @@ for (const r of ACTIONS.filter(a => !['global', 'timeline', 'view'].includes(a.c
 for (const r of ACTIONS) for (const k of r.keys) assert.ok(!RESERVED.includes(k), `${r.id} binds reserved ${k}`);
 // every row is well formed
 for (const r of ACTIONS) { assert.ok(r.id && r.label && r.ctx && r.phase, JSON.stringify(r)); assert.ok(SECTIONS.some(([s]) => s === r.ctx), `${r.id}: unknown ctx ${r.ctx}`);
-  assert.ok(r.owner === 'gesture' ? !!r.gesture : r.keys.length, `${r.id}: keys or a gesture`); }
+  assert.ok(r.owner === 'gesture' ? !!r.gesture : r.keys.length || r.aliases?.length, `${r.id}: keys, aliases or a gesture`); }
 // every key of the old sheet (shortcuts.mjs at 43d6b528, kept as a fixture) is still in the table, or listed as changed
 const old = JSON.parse(readFileSync(new URL('./fixtures/shortcut-sheet-14397a53.json', import.meta.url), 'utf8')).sections;
 const caps = new Set(ACTIONS.flatMap(a => a.keys.map(keyText)).concat(CHANGED.filter(c => c.spec).map(c => keyText(c.spec))));
@@ -106,4 +106,32 @@ const doc = new URL('../docs/director-shortcuts.md', import.meta.url);
 if (existsSync(doc)) assert.equal(readFileSync(doc, 'utf8'), md, 'docs/director-shortcuts.md is stale: node tools/experience/director-shortcuts-doc.mjs');
 assert.deepEqual(stackOf({ items: new Set(['prop', 'pose']) }).slice(0, 2), ['pose', 'prop']);
 assert.ok(ACTIONS.every(a => LIVE_PHASES.has(a.phase)));
+// ---- drop 2: Vico's own keys, the command search
+const kev = (key, code, m = {}) => ({ key, code, ctrlKey: !!m.ctrl, shiftKey: !!m.shift, altKey: !!m.alt, metaKey: false });
+assert.equal(specOf(kev('k', 'KeyK', { ctrl: true, shift: true })), 'Ctrl+Shift+K');
+assert.equal(specOf(kev('?', 'Slash', { shift: true })), '?', 'a symbol: the character, Shift in it');
+assert.equal(specOf(kev('ArrowLeft', 'ArrowLeft', { alt: true })), 'Alt+ArrowLeft');
+assert.equal(specOf(kev(' ', 'Space')), 'Space');assert.equal(specOf(kev('Shift', 'ShiftLeft', { shift: true })), null);
+for (const k of ['A', 'Ctrl+Shift+K', 'Alt+ArrowLeft', '?', 'F9']) { const s = parseSpec(k); assert.ok(matchSpec(k, kev(s.kind === 'code' ? s.base.toLowerCase() : s.base, s.code || s.base, s)), k + ' round trips'); }
+assert.ok(bindCheck('loop', 'Ctrl+W').reserved, 'a browser key is refused');
+assert.ok(bindCheck('loop', 'Ctrl+1').reserved);
+assert.ok(bindCheck('loop', 'Escape').reserved, 'Esc stays the way out');
+assert.equal(bindCheck('loop', 'C').clash?.id, 'camera-add', 'a taken key names its action');
+assert.ok(bindCheck('loop', 'Ctrl+J').ok);
+assert.ok(bindCheck('escape', 'J').fixed, 'an editor\'s key is not the Director\'s to change');
+assert.throws(() => rebind({}, 'loop', 'Ctrl+T'), /browser/);
+assert.throws(() => rebind({}, 'loop', 'S'), /Snapping/);
+const mine = rebind({}, 'loop', 'Ctrl+J'), t2 = effectiveActions(mine);
+assert.deepEqual(mine, { loop: ['Ctrl+J'] });
+assert.equal(resolve(kev('j', 'KeyJ', { ctrl: true }), { items: new Set(), actions: t2 })?.id, 'loop', 'the new key runs it');
+assert.equal(resolve(kev('l', 'KeyL'), { items: new Set(), actions: t2 }), null, 'the old one no longer does');
+assert.equal(resolve(kev('l', 'KeyL'), { items: new Set() })?.id, 'loop', 'the default table is untouched');
+assert.ok(bindCheck('snap', 'Ctrl+J', mine).clash, 'a key of his own counts as taken');
+assert.deepEqual(rebind(mine, 'loop', null), {}, 'reset');
+assert.deepEqual(effectiveActions({ loop: [] }).find(r => r.id === 'loop').keys, [], 'unbound');
+assert.equal(effectiveActions({ escape: ['J'] }).find(r => r.id === 'escape').keys[0], 'Escape', 'an editor row keeps its keys');
+assert.equal(resolve(kev('p', 'KeyP', { ctrl: true }), { items: new Set(), target: 'text' })?.id, 'palette', 'Ctrl+P: the command search, even while typing');
+for (const [q, id] of [['m', 'tool-move'], ['ro', 'tool-rotate'], ['sc', 'tool-scale'], ['zs', 'frame-selection'], ['ze', 'frame-room'], ['top', 'view-top'], ['persp', 'view-persp'], ['front', 'view-front'], ['right', 'view-right'], ['film', 'film-camera'], ['export', 'export'], ['undo', 'undo'], ['bug', 'report']])
+  assert.equal(searchActions(q)[0]?.id, id, `the search finds ${id} by "${q}"`);
+assert.ok(!searchActions('').some(r => r.id === 'palette' || r.owner !== 'director'), 'the search lists only what it can run');
 console.log(`director-actions-test: ok (${ACTIONS.length} rows)`);

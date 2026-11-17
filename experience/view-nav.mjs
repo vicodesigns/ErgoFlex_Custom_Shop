@@ -130,5 +130,25 @@ export function createViewNav({ three, selectionObject = () => null, boxPick = (
     const fov = (cam.fov || 40) * Math.PI / 180, dist = b.radius / Math.sin(fov / 2) * 1.15 / Math.min(1, cam.aspect || 1);
     glide(b.centre, dist); return true;
   }
-  return { setActive, refresh, centre, frame, active: () => active };
+  // Rhino's named views around the orbit pivot, the zoom distance kept: top (straight down; a hair off so the orbit
+  // keeps its up), front (from +Z), right (from +X), persp (from the front right, above). The room's own frame: the
+  // stage's room root, so "front" faces the room the way the Studio does.
+  const DIRS = { top: [0, 1, 1e-3], front: [0, .02, 1], right: [1, .02, 0], persp: [.62, .5, .62] };
+  function setView(name) {
+    const s = t(), c = s?.controls, cam = s?.camera, d = DIRS[name]; if (!c || !cam || !d) return false;
+    stopTween();
+    const V = cam.position.constructor, dist = cam.position.distanceTo(c.target), w = s.renderer.domElement.ownerDocument.defaultView;
+    const root = w.ErgoFlex?.workspaceRoom?.root, dir = new V(...d).normalize();
+    if (root) { root.updateWorldMatrix?.(true, false); const q = root.getWorldQuaternion?.(cam.quaternion.clone()); if (q) dir.applyQuaternion(q); }
+    const fromP = cam.position.clone(), toP = c.target.clone().addScaledVector(dir, dist), start = performance.now();
+    const step = now => {
+      const k = Math.min(1, (now - start) / EASE_MS), e = k < .5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+      // (along an arc round the pivot, so the view never passes through it)
+      const a = fromP.clone().sub(c.target), b = toP.clone().sub(c.target), v = a.clone().lerp(b, e); if (v.lengthSq() < 1e-8) v.set(0, 1, 0); v.setLength(a.length() + (b.length() - a.length()) * e);
+      cam.position.copy(c.target).add(v); cam.lookAt(c.target); c.update?.(); wake();
+      tween = k < 1 ? w.requestAnimationFrame(step) : 0;
+    };
+    tween = w.requestAnimationFrame(step); return true;
+  }
+  return { setActive, refresh, centre, frame, setView, active: () => active };
 }

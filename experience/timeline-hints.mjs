@@ -31,7 +31,7 @@ export function timelineHint(el,{seconds:duration,graphic}={},title=''){
   return {heading:kind||el.getAttribute('aria-label')||el.textContent.trim()||'Timeline control',lines};
 }
 // The timeline's ⌨ button opens the Director's shortcut panel (keys-panel.mjs; also ?, F1 or Ctrl+Alt+K).
-export const timelineShortcuts=()=>`<button type="button" class="timeline-shortcuts" data-action="keys-panel" title="Every key and mouse gesture (?)">⌨ Shortcuts</button>`;
+export const timelineShortcuts=()=>`<button type="button" class="timeline-shortcuts" data-action="keys-panel" title="Every key and mouse gesture (?)">⌨ Shortcuts</button><button type="button" class="timeline-shortcuts timeline-report" data-action="report-problem" title="Something wrong? Send Claude a screenshot, the selection and your last actions">Report a problem</button>`;
 export function createTimelineHints({root,context=()=>({}),active=()=>new Set()}){
   const tip=document.createElement('div');tip.className='timeline-tooltip';tip.id='timeline-tooltip-'+Math.random().toString(36).slice(2);tip.setAttribute('role','tooltip');tip.hidden=true;document.body.append(tip);
   let current=null,drag=null,timer=null,point={x:0,y:0},restore=[],described=null,frame=0;

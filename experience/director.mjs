@@ -1,5 +1,7 @@
 import {createTimelineHints,timelineShortcuts} from './timeline-hints.mjs';
-import {resolve as resolveKey,targetKind,changedHint} from './director-actions.mjs';
+import {resolve as resolveKey,targetKind,changedHint,effectiveActions} from './director-actions.mjs';
+import {createPalette} from './command-palette.mjs';
+import {createActionLog,captureErrors,reportBody,createReportDialog,sendReport} from './director-report.mjs';
 import {createKeysPanel,loadUi,saveUi} from './keys-panel.mjs';
 import {createViewNav} from './view-nav.mjs';
 import {createGraphicsEditor} from './graphics-editor.mjs';
@@ -954,6 +956,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   function exportCut(){const text=JSON.stringify(((c)=>({...c,shots:c.shots.map(s=>exportLighting(s.peopleEdits?{...s,peopleEdits:canonicalPeople(s.peopleEdits)}:s))}))(cleanCut(project,catalog)),null,2),url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=(project.name.replace(/[^a-z0-9]+/gi,'-')||'client-cut')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);exported=signature();fresh.exported(project);syncFilm();status('Cut exported. Import it in Director Mode on another browser.');return text;}
   async function action(name,index){
     if(name==='keys-panel'){keysPanel.toggle();return;}
+    if(name==='report-problem'){reportDialog.open();return;}
     try{
       if(composing)return;
       group=null;
@@ -1306,7 +1309,23 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   // director-actions.mjs says what a key means now (the selected item, a modal tool, what has focus); the rows it owns
   // run here (runKey); an editor's own rows (Delete, Esc, J/K, End, the shape keys…) are left to that editor's handler.
   // Keys work whatever was clicked last (a button no longer swallows Space or the arrows); typing is left alone.
-  const keysPanel=createKeysPanel({run:(id,ctx)=>{try{runKey(id,null,ctx);}catch(error){status(error.message,true);}},active:()=>liveContexts()});
+  // Vico's own keys (the panel's Edit keys), laid over the table; the action log (the last 50, for repeat and reports)
+  let bindings=loadUi().keys||{},boundTable=effectiveActions(bindings);
+  const table=()=>boundTable,setBindings=next=>{bindings=next||{};boundTable=effectiveActions(bindings);saveUi({keys:bindings});};
+  const actionLog=createActionLog(),pageErrors=captureErrors(window);
+  const labelOf=id=>boundTable.find(r=>r.id===id)?.label||id;
+  function runLogged(id,via,ctx){try{runKey(id,null,ctx);actionLog.add(id,labelOf(id),via);keysPanel.flash(id);}catch(error){status(error.message,true);}}
+  const keysPanel=createKeysPanel({run:(id,ctx)=>runLogged(id,'panel',ctx),active:()=>liveContexts(),table,bindings:()=>bindings,setBindings,
+    resolveAt:ev=>resolveKey(ev,{items:liveContexts(),target:'other',actions:boundTable})});
+  const palette=createPalette({table,live:()=>liveContexts(),run:id=>runLogged(id,'search'),last:()=>actionLog.last()});
+  const reportDialog=createReportDialog({status,send:body=>sendReport(body,{download:b=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(b,null,2)],{type:'application/json'}));a.download=`director-report-${b.at.replace(/[:.]/g,'-')}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000);}}),
+    collect:async({note,shot})=>{
+      let screenshot=null;if(shot){try{const t=bridge.stage()?.three?.();if(t){t.renderer.render(t.scene,t.camera);screenshot=t.renderer.domElement.toDataURL('image/jpeg',.85);}}catch{}}
+      let view=null;try{view=bridge.stage()?.captureCamera?.()||null;}catch{}
+      return reportBody({note,url:location.href,screenshot,view,log:actionLog.list(),errors:pageErrors(),version:document.querySelector('meta[name=director-version]')?.content||null,
+        selection:{chapter:shot()?.id||null,time:Math.round(playhead*shot().seconds*1000)/1000,inspector,cameraKey:keyId||null,deskClip:deskEditor.selectedId?.()||null,title:titleEditor.selectedId?.()||null,
+          graphic:graphics.selected?.()??null,prop:sceneProps.selected?.()||null,person:scenePeople.selected?.()||null,light:sceneLights.selected?.()||null,contexts:[...liveContexts()],focus:focusPanel,freeView:(()=>{try{return freeView();}catch{return null;}})()}});
+    }});
   const nav=createViewNav({three:()=>bridge.stage()?.three?.(),selectionObject:()=>sceneProps.object?.()||scenePeople.object?.()||sceneLights.object?.()||deskSel.object?.()||null,
     boxPick:(rect,o)=>sceneProps.boxPick(rect,o),editing:()=>open&&!sceneLights.selected()&&!scenePeople.posing(),status:t=>status(t),wake:()=>bridge.stage()?.wake?.(400)});
   const liveContexts=()=>{const a=activeShortcuts();if(keysPanel.isOpen())a.add('keys-panel');return a;};
@@ -1314,7 +1333,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   document.addEventListener('pointerdown',ev=>setFocus(timeline.contains(ev.target)?'timeline':panel.contains(ev.target)?'panel':keysPanel.element.contains(ev.target)?focusPanel:'view'),true);
   function keyState(event){
     const el=event.target;let target=targetKind(el);if(el?.closest?.('.timeline-resize'))target='range';
-    return {items:liveContexts(),target,dialog:!!document.querySelector('dialog[open]'),baking:!!bridge.bakeState().baking};
+    return {items:liveContexts(),target,dialog:!!document.querySelector('dialog[open]'),baking:!!bridge.bakeState().baking,actions:boundTable};
   }
   function dispatchKey(event){
     if(!open||composing||event.isComposing)return;
@@ -1323,7 +1342,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     if(row.owner!=='director')return;
     event.preventDefault();event.stopImmediatePropagation();
     if(event.repeat&&!row.repeat)return;
-    try{runKey(row.id,event,row.ctx);keysPanel.flash(row.id);keyHint(event,state,row);}catch(error){status(error.message,true);}
+    try{runKey(row.id,event,row.ctx);actionLog.add(row.id,row.label,'key');keysPanel.flash(row.id);keyHint(event,state,row);}catch(error){status(error.message,true);}
   }
   // "R is now Scale…": for two weeks after the keys changed, once per key per session.
   const hinted=new Set(),hintEl=Object.assign(document.createElement('div'),{className:'key-hint'});hintEl.setAttribute('role','status');document.body.append(hintEl);
@@ -1341,6 +1360,12 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     switch(id){
       case 'keys-panel':case 'keys-panel-anywhere':keysPanel.toggle();return;
       case 'keys-panel-close':keysPanel.close();return;
+      case 'palette':palette.toggle();return;
+      case 'repeat-last':{const l=actionLog.last();need(l,'Nothing to repeat yet.');runKey(l,null);status(`Again: ${labelOf(l)}.`);return;}
+      case 'report':reportDialog.open();return;
+      case 'view-persp':case 'view-top':case 'view-front':case 'view-right':{
+        if(!orbitBase&&!bridge.playback().playing)orbitBase=bridge.stage()?.captureCamera()||null;
+        need(nav.setView(id.slice(5)),'The 3D view is not ready yet.');status(`${{persp:'Perspective',top:'Top',front:'Front',right:'Right'}[id.slice(5)]} view (free view: 0 goes back to the film camera).`);return;}
       case 'play':action('chapter-toggle');return;
       case 'step-back':case 'step-forward':{const seconds=shot().seconds;seekCamera(Math.max(0,Math.min(1,(playhead*seconds+(shift?1:1/30)*(id==='step-back'?-1:1))/seconds)));return;}
       case 'go-start':seekCamera(0);return;
@@ -1699,10 +1724,11 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   // chapter, cut) have their own dialog and set `leaving`.
   addEventListener('beforeunload',event=>{if(!open||leaving||!unexported())return;draft();event.preventDefault();event.returnValue='';});
   // "Free view (not saved)": the 3D view left the film's camera keys (an orbit, a frame, a centre). 0 or a click goes back.
-  const navBox=document.createElement('div');navBox.className='film-box nav-pill-box';navBox.innerHTML='<button type="button" class="nav-pill" hidden title="The view is not the film camera: what you see is not saved. Click or press 0 to go back.">Free view (not saved) · <kbd>0</kbd> film camera</button>';document.body.append(navBox);
+  const navBox=document.createElement('div');navBox.className='film-box nav-pill-box';navBox.innerHTML='<button type="button" class="nav-pill" hidden title="The view is not the film camera: what you see is not saved. Click or press 0 to go back.">Free view (not saved) · <kbd>0</kbd> film camera</button><div class="nav-views" role="toolbar" aria-label="Views" hidden>'+[['film-camera','Film','The film camera (0)'],['view-persp','Persp','Perspective (Ctrl+P: persp)'],['view-top','Top','Top, looking down (Ctrl+P: top)'],['view-front','Front','Front (Ctrl+P: front)'],['view-right','Right','Right (Ctrl+P: right)']].map(([id,l,t])=>`<button type="button" data-nav-view="${id}" title="${t}">${l}</button>`).join('')+'</div>';document.body.append(navBox);
+  const navViews=navBox.querySelector('.nav-views');navViews.addEventListener('click',ev=>{const b=ev.target.closest('[data-nav-view]');if(!b)return;runLogged(b.dataset.navView,'click');b.blur();});
   const navPill=navBox.firstChild;navPill.addEventListener('click',()=>{try{runKey('film-camera');}catch(error){status(error.message,true);}navPill.blur();});
   const freeView=()=>{if(!orbitBase)return false;const v=bridge.stage()?.captureCamera?.();if(!v)return false;const a=viewNums(v),b=viewNums(orbitBase);return a.some((x,i)=>Math.abs(x-b[i])>1e-4);};
-  setInterval(()=>{if(!open){navPill.hidden=true;return;}nav.refresh();try{navPill.hidden=!freeView();}catch{navPill.hidden=true;}keysPanel.refresh();},400);
+  setInterval(()=>{navViews.hidden=!open;if(!open){navPill.hidden=true;return;}nav.refresh();try{navPill.hidden=!freeView();}catch{navPill.hidden=true;}keysPanel.refresh();},400);
   // A film chapter is a one-chapter cut: its timeline space goes to the lanes (Chapters shows the strip).
   if(film)timeline.classList.add('chapters-hidden');
   createTimelineHints({root:timeline,active:activeShortcuts,context:el=>({seconds:shot().seconds,graphic:el.dataset.graphicClip!==undefined?graphics.screens()[Number(el.dataset.graphicClip)]:null})});

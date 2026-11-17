@@ -16,7 +16,10 @@
 //   repeat   runs again while the key is held (nudges, steps); hold: has a key-up half (released on blur too).
 //   shadows  always-on actions this row hides while its context is live (declared on purpose; the test fails on any other).
 //   origin   the app it matches: Premiere, After Effects, Rhino, Blender, Unreal, Director (ours).
-export const LIVE_PHASES = new Set(['1a']);
+//   aliases  what the command search (Ctrl+P) also finds it by: Rhino's command names (m, ro, sc, zs, ze, top…).
+// Vico's own keys (the panel's Edit keys) are kept as { id: [spec...] } (keys-panel.mjs, ui store) and laid over this
+// table by effectiveActions(); only rows the Director runs can be rebound, never to a RESERVED key.
+export const LIVE_PHASES = new Set(['1a', '1a2']);
 
 const R = (id, label, keys, ctx, more = {}) => ({ id, label, keys, ctx, phase: '1a', owner: 'director', ...more });
 const E = (id, label, keys, ctx, more = {}) => R(id, label, keys, ctx, { owner: 'editor', ...more });
@@ -36,7 +39,10 @@ export const ACTIONS = [
   R('chapter-prev', 'Previous chapter', ['PageUp'], 'global', { origin: 'Director' }),
   R('chapter-next', 'Next chapter', ['PageDown'], 'global', { origin: 'Director' }),
   R('camera-add', 'Add a camera view at the playhead', ['C'], 'global', { origin: 'Director' }),
-  R('film-camera', 'Back to the film camera (leave free view)', ['0'], 'global', { origin: 'Blender' }),
+  R('film-camera', 'Back to the film camera (leave free view)', ['0'], 'global', { origin: 'Blender', aliases: ['film', 'cam', 'camera'] }),
+  R('palette', 'Command search: type an action or a Rhino command (Enter on an empty search repeats the last)', ['Ctrl+P'], 'global', { phase: '1a2', inField: true, inText: true, origin: 'Rhino' }),
+  R('repeat-last', 'Repeat the last command', [], 'global', { phase: '1a2', origin: 'Rhino', aliases: ['again', 'repeat'] }),
+  R('report', 'Report a problem (a screenshot, the selection and your last 50 actions, for Claude)', [], 'global', { phase: '1a2', origin: 'Director', aliases: ['bug', 'problem', 'report'] }),
   R('undo', 'Undo', ['Ctrl+Z'], 'global', { inField: true, repeat: true, baking: false, origin: 'Premiere' }),
   R('redo', 'Redo', ['Ctrl+Y', 'Ctrl+Shift+Z'], 'global', { inField: true, repeat: true, origin: 'Premiere' }),
   R('save', 'Save in this browser (the cut library)', ['Ctrl+S'], 'global', { inField: true, inText: true, origin: 'Premiere' }),
@@ -70,11 +76,15 @@ export const ACTIONS = [
   G('pick-several', 'Pick several (group)', 'Shift / Ctrl+click, or drag over empty lane', 'timeline'),
 
   // ---- the 3D view (always on)
-  R('tool-move', 'Move (gizmo)', ['W'], 'view', { origin: 'Rhino' }),
-  R('tool-rotate', 'Rotate (gizmo; aims a selected light)', ['E'], 'view', { origin: 'Rhino' }),
-  R('tool-scale', 'Scale (gizmo)', ['R'], 'view', { origin: 'Rhino' }),
-  R('frame-selection', 'Frame the selection', ['F'], 'view', { origin: 'Rhino' }),
-  R('frame-room', 'Frame the whole room', ['Shift+F'], 'view', { origin: 'Rhino' }),
+  R('tool-move', 'Move (gizmo)', ['W'], 'view', { origin: 'Rhino', aliases: ['m', 'move'] }),
+  R('tool-rotate', 'Rotate (gizmo; aims a selected light)', ['E'], 'view', { origin: 'Rhino', aliases: ['ro', 'rotate'] }),
+  R('tool-scale', 'Scale (gizmo)', ['R'], 'view', { origin: 'Rhino', aliases: ['sc', 'scale'] }),
+  R('frame-selection', 'Frame the selection', ['F'], 'view', { origin: 'Rhino', aliases: ['zs', 'zoom selected'] }),
+  R('frame-room', 'Frame the whole room', ['Shift+F'], 'view', { origin: 'Rhino', aliases: ['ze', 'zoom extents'] }),
+  R('view-persp', 'Perspective view (from above, at an angle)', [], 'view', { phase: '1a2', origin: 'Rhino', aliases: ['persp', 'perspective'] }),
+  R('view-top', 'Top view (looking straight down)', [], 'view', { phase: '1a2', origin: 'Rhino', aliases: ['top', 'plan'] }),
+  R('view-front', 'Front view', [], 'view', { phase: '1a2', origin: 'Rhino', aliases: ['front'] }),
+  R('view-right', 'Right view', [], 'view', { phase: '1a2', origin: 'Rhino', aliases: ['right', 'side'] }),
   R('film-look', 'Live / Film look / Split', ['V'], 'view', { origin: 'Director' }),
   R('guides', 'Thirds and title-safe guides', ['G'], 'view', { origin: 'Director' }),
   R('still', 'Still image of this frame', ['Shift+R'], 'view', { origin: 'Director' }),
@@ -148,7 +158,7 @@ const ITEM_ORDER = ['group', 'person-keys', 'camera', 'desk-clip', 'title', 'gra
 export const RESERVED = ['Ctrl+W', 'Ctrl+T', 'Ctrl+N', 'Ctrl+Shift+T', 'Ctrl+Shift+N', 'Ctrl+Tab', 'Ctrl+Shift+Tab',
   ...'123456789'.split('').map(d => 'Ctrl+' + d), ...'12345678'.split('').map(d => 'Alt+' + d), 'Ctrl+L', 'Alt+D', 'Alt+F', 'Alt+E',
   'F5', 'F11', 'F12', 'Ctrl+Shift+I', 'Ctrl+Shift+J', 'Ctrl+Shift+C', 'Ctrl+Alt+ArrowLeft', 'Ctrl+Alt+ArrowRight',
-  'Ctrl+Alt+ArrowUp', 'Ctrl+Alt+ArrowDown', 'Ctrl+Space', 'Alt+Space', 'Alt+Tab', 'Alt+F4', 'Ctrl+F4', 'Ctrl+R', 'Ctrl+F', 'Ctrl+P'];
+  'Ctrl+Alt+ArrowUp', 'Ctrl+Alt+ArrowDown', 'Ctrl+Space', 'Alt+Space', 'Alt+Tab', 'Alt+F4', 'Ctrl+F4', 'Ctrl+R', 'Ctrl+F', 'Ctrl+Shift+R'];
 
 // Keys that meant something else before 17 Nov 2026: the panel lists them, and pressing one shows the hint once in a
 // while for two weeks. `spec` is the old key; `ctx`: only when that item is selected (null: always).
@@ -196,10 +206,10 @@ export function stackOf(state) {
 // dispatcher lets those through); a key no row claims returns null.
 export function resolve(ev, state = {}) {
   if (ev.isComposing || ['Shift', 'Control', 'Alt', 'Meta', 'AltGraph', 'CapsLock'].includes(ev.key)) return null;
-  const phases = state.phases || LIVE_PHASES, target = state.target || 'other';
+  const phases = state.phases || LIVE_PHASES, target = state.target || 'other', table = state.actions || ACTIONS;
   if (state.dialog && !(ev.ctrlKey || ev.metaKey)) return null;
   for (const ctx of stackOf(state)) {
-    for (const row of ACTIONS) {
+    for (const row of table) {
       if (row.ctx !== ctx || row.owner === 'gesture' || !phases.has(row.phase)) continue;
       if (!row.keys.some(k => matchSpec(k, ev))) continue;
       if (target === 'text' && !row.inText) continue;
@@ -211,6 +221,56 @@ export function resolve(ev, state = {}) {
     }
   }
   return null;
+}
+// ---- Vico's own keys ----------------------------------------------------------------------------------------------
+// The table with his bindings laid over it ({ id: [spec...] }; an empty list unbinds). Rows that are not the
+// Director's to run keep their keys.
+export function effectiveActions(bindings = {}) {
+  return ACTIONS.map(r => r.owner === 'director' && Array.isArray(bindings?.[r.id]) ? { ...r, keys: bindings[r.id].filter(k => typeof k === 'string'), rebound: true } : r);
+}
+const normal = spec => keyText(spec).toLowerCase();
+// The spec a key press means ('Ctrl+Shift+K', 'Alt+ArrowLeft', '?'), or null for a modifier on its own.
+export function specOf(ev) {
+  if (['Shift', 'Control', 'Alt', 'Meta', 'AltGraph', 'CapsLock'].includes(ev.key)) return null;
+  const code = String(ev.code || ''), letter = code.match(/^Key([A-Z])$/)?.[1], digit = code.match(/^Digit(\d)$/)?.[1];
+  let base = letter || digit || (ev.key === ' ' ? 'Space' : NAMED.has(ev.key) ? ev.key : null), char = false;
+  if (!base) { base = ev.key; char = true; }
+  if (!base || base.length > 12) return null;
+  return [(ev.ctrlKey || ev.metaKey) && 'Ctrl', ev.altKey && 'Alt', ev.shiftKey && !char && 'Shift', base].filter(Boolean).join('+');
+}
+// May `spec` be one of row `id`'s keys? { ok } | { reserved } | { clash: row } | { fixed } (not the Director's to run).
+// A clash is another row with that key in the same context, or where one of the two is always on (it would hide the
+// other without saying so).
+export function bindCheck(id, spec, bindings = {}) {
+  const row = ACTIONS.find(r => r.id === id); if (!row || row.owner !== 'director') return { fixed: true };
+  if (RESERVED.some(k => normal(k) === normal(spec))) return { reserved: true };
+  if (/^(Ctrl\+)?(Alt\+)?(Shift\+)?(Escape|Tab)$/.test(spec)) return { reserved: true };
+  const clash = effectiveActions(bindings).find(r => r.id !== id && r.owner !== 'gesture' && LIVE_PHASES.has(r.phase) && r.keys.some(k => normal(k) === normal(spec))
+    && (r.ctx === row.ctx || ALWAYS.has(r.ctx) || ALWAYS.has(row.ctx)) && !(row.shadows || []).includes(r.id) && !(r.shadows || []).includes(id));
+  return clash ? { clash } : { ok: true };
+}
+// The bindings with `spec` as row `id`'s only key (or `spec` null: back to the default).
+export function rebind(bindings, id, spec) {
+  const next = { ...(bindings || {}) };
+  if (spec === null) { delete next[id]; return next; }
+  const check = bindCheck(id, spec, next); if (!check.ok) throw Object.assign(Error(check.reserved ? `${keyText(spec)} belongs to the browser.` : check.clash ? `${keyText(spec)} is already “${check.clash.label}”.` : 'That one is not yours to change.'), check);
+  next[id] = [spec]; return next;
+}
+// The command search (Ctrl+P): rows the Director runs, best match first, for `query` (a label word, a Rhino alias, a key).
+export function searchActions(query, table = ACTIONS, phases = LIVE_PHASES) {
+  const q = String(query || '').trim().toLowerCase(), rows = table.filter(r => r.owner === 'director' && phases.has(r.phase) && !['palette', 'keys-panel-close'].includes(r.id));
+  if (!q) return rows;
+  const score = r => {
+    const aliases = r.aliases || [], label = r.label.toLowerCase();
+    if (aliases.includes(q)) return 0;
+    if (r.keys.some(k => normal(k) === q)) return 1;
+    if (aliases.some(a => a.startsWith(q))) return 2;
+    if (label.startsWith(q)) return 3;
+    if (label.split(/[^a-z0-9]+/).some(w => w.startsWith(q))) return 4;
+    if (label.includes(q) || r.id.includes(q)) return 5;
+    return 9;
+  };
+  return rows.map(r => [score(r), r]).filter(([s]) => s < 9).sort((a, b) => a[0] - b[0]).map(([, r]) => r);
 }
 // What a focused element means for keys.
 export function targetKind(el) {
@@ -248,7 +308,7 @@ export function markdown(phases = LIVE_PHASES) {
   const out = ['# Director keyboard and mouse', '', 'Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl also means Cmd.', ''];
   for (const s of panelSections(phases)) {
     out.push(`## ${s.title}`, '', '| Keys | Action | Same as |', '|---|---|---|');
-    for (const r of s.rows) out.push(`| ${r.owner === 'gesture' ? r.gesture : r.keys.map(keyText).join(' / ')} | ${r.label} | ${r.origin || ''} |`);
+    for (const r of s.rows) out.push(`| ${r.owner === 'gesture' ? r.gesture : r.keys.length ? r.keys.map(keyText).join(' / ') : 'Ctrl+P: ' + (r.aliases || [r.id]).join(', ')} | ${r.label} | ${r.origin || ''} |`);
     out.push('');
   }
   out.push('## Keys that changed (17 Nov 2026)', '', '| Key | Was | Now |', '|---|---|---|');

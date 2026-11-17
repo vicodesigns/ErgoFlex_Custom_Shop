@@ -119,6 +119,24 @@ async function handle(req, res) {
       return json(res, 200, { id: cut.id, name: cut.name, dir: '/' + dir, chapters: '/' + dir + '/director-chapters.json' });
     } catch (e) { return json(res, 500, { error: String(e.message).slice(0, 400) }); }
   }
+  //   POST /__director/report   {v, at, note, url, selection, log, errors, view, version, screenshot: data URL | null}
+  //   -> { dir }   The Director's Report a problem (experience/director-report.mjs): written to
+  // exports/director-reports/<time>/report.json (+ screenshot.png / .jpg), for Claude to read. Only from this machine;
+  // writes exports/ only (not watched).
+  if (p === '/__director/report' && req.method === 'POST') {
+    if (!['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress)) return json(res, 403, { error: 'Reports are made from the desk machine only.' });
+    let body; try { body = JSON.parse(await readBody(req, 24 << 20)); } catch (e) { return json(res, 400, { error: String(e.message) }); }
+    if (!body || typeof body !== 'object' || body.v !== 1) return json(res, 400, { error: 'Not a Director report.' });
+    const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\..*$/, ''), rel = path.join('exports', 'director-reports', stamp + '-' + Math.random().toString(36).slice(2, 6)), dir = path.join(root, rel);
+    fs.mkdirSync(dir, { recursive: true });
+    const shot = typeof body.screenshot === 'string' ? body.screenshot.match(/^data:image\/(png|jpeg);base64,([A-Za-z0-9+/=]+)$/) : null;
+    if (shot) fs.writeFileSync(path.join(dir, 'screenshot.' + (shot[1] === 'png' ? 'png' : 'jpg')), Buffer.from(shot[2], 'base64'));
+    fs.writeFileSync(path.join(dir, 'report.json'), JSON.stringify({ ...body, screenshot: shot ? 'screenshot.' + (shot[1] === 'png' ? 'png' : 'jpg') : null }, null, 2) + '\n');
+    const md = [`# Director report ${body.at || stamp}`, '', body.note || '(no note)', '', `Selection: \`${JSON.stringify(body.selection ?? null)}\``, '', '## Last actions', ...(Array.isArray(body.log) ? body.log.slice(-50).map(e => `- ${e.at} ${e.via || ''} ${e.id}: ${e.label || ''}`) : []), '', '## Errors', ...(Array.isArray(body.errors) && body.errors.length ? body.errors.map(e => `- ${e.at} ${e.text}`) : ['(none)'])];
+    fs.writeFileSync(path.join(dir, 'README.md'), md.join('\n') + '\n');
+    console.log('[studio server] Director report:', rel);
+    return json(res, 200, { dir: rel });
+  }
   if (p === '/__studio/sync.js') { res.writeHead(200, { 'content-type': 'text/javascript', 'cache-control': 'no-store' }); return res.end(CLIENT_JS); }
   if (p === '/__studio/reload.js') { res.writeHead(200, { 'content-type': 'text/javascript', 'cache-control': 'no-store' }); return res.end(RELOAD_JS); }
   if (p === '/__studio/events') {

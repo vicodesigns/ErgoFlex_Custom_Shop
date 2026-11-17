@@ -25,6 +25,9 @@ Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl als
 | PgDn | Next chapter | Director |
 | C | Add a camera view at the playhead | Director |
 | 0 | Back to the film camera (leave free view) | Blender |
+| Ctrl+P | Command search: type an action or a Rhino command (Enter on an empty search repeats the last) | Rhino |
+| Ctrl+P: again, repeat | Repeat the last command | Rhino |
+| Ctrl+P: bug, problem, report | Report a problem (a screenshot, the selection and your last 50 actions, for Claude) | Director |
 | Ctrl+Z | Undo | Premiere |
 | Ctrl+Y / Ctrl+Shift+Z | Redo | Premiere |
 | Ctrl+S | Save in this browser (the cut library) | Premiere |
@@ -69,6 +72,10 @@ Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl als
 | R | Scale (gizmo) | Rhino |
 | F | Frame the selection | Rhino |
 | Shift+F | Frame the whole room | Rhino |
+| Ctrl+P: persp, perspective | Perspective view (from above, at an angle) | Rhino |
+| Ctrl+P: top, plan | Top view (looking straight down) | Rhino |
+| Ctrl+P: front | Front view | Rhino |
+| Ctrl+P: right, side | Right view | Rhino |
 | V | Live / Film look / Split | Director |
 | G | Thirds and title-safe guides | Director |
 | Shift+R | Still image of this frame | Director |
