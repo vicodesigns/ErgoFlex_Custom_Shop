@@ -36,6 +36,25 @@ const sideOf=bone=>/_l$/.test(bone)?'l':/_r$/.test(bone)?'r':null;
 // The bones of an arm or a leg on one side (fingers with the arm).
 const ARM=/^(clavicle|upperarm|lowerarm|hand|thumb_\d+|index_\d+|middle_\d+|ring_\d+|pinky_\d+)_[lr]$/,LEG=/^(thigh|calf|foot|ball)_[lr]$/;
 const limbOf=bone=>ARM.test(bone)?ARM:LEG.test(bone)?LEG:null;
+// How a joint MOVES (Vico, 17 Nov 2026: "joints should also be movable … a gumball option to just move them"):
+//   ik     a hand or foot: the whole arm or leg follows (two-bone IK), as before
+//   mid    an elbow or knee: the upper bone and the lower one turn so the joint goes where it is dragged (round the
+//          line from shoulder to hand) and the hand or foot stays exactly where it is, facing the same way
+//   girdle a collarbone: it turns so the shoulder at its end moves as far as the dot was dragged
+//   aim    the shoulder (the collarbone turns), the neck (the chest turns), the head (the neck turns): the bone above
+//          turns so the joint goes toward the pointer
+//   spine  the chest: the waist and the upper back bend, half each
+//   null   the hips, the waist and the hip joints move with the whole body: { why } says so
+export const MOVES={hand_l:{kind:'ik'},hand_r:{kind:'ik'},foot_l:{kind:'ik'},foot_r:{kind:'ik'},
+  lowerarm_l:{kind:'mid',chain:['upperarm_l','lowerarm_l','hand_l']},lowerarm_r:{kind:'mid',chain:['upperarm_r','lowerarm_r','hand_r']},
+  calf_l:{kind:'mid',chain:['thigh_l','calf_l','foot_l']},calf_r:{kind:'mid',chain:['thigh_r','calf_r','foot_r']},
+  clavicle_l:{kind:'girdle',tip:'upperarm_l'},clavicle_r:{kind:'girdle',tip:'upperarm_r'},
+  upperarm_l:{kind:'aim',by:['clavicle_l']},upperarm_r:{kind:'aim',by:['clavicle_r']},
+  neck_01:{kind:'aim',by:['spine_03']},head:{kind:'aim',by:['neck_01']},spine_03:{kind:'spine',by:['spine_01','spine_02']},
+  pelvis:{kind:null,why:'The hips carry the whole body: move the person with W outside Pose mode, or turn the hips here (E).'},
+  spine_01:{kind:null,why:'The waist sits on the hips: turn it (E), or move the chest and the waist bends with it.'},
+  thigh_l:{kind:null,why:'The hip joint moves with the hips: turn it (E), or move the foot and the leg follows.'},thigh_r:{kind:null,why:'The hip joint moves with the hips: turn it (E), or move the foot and the leg follows.'}};
+export const moveOf=name=>MOVES[name]||{kind:null,why:'This joint turns only (E).'};
 
 export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,edit,status,rerender,personName,editing,saved=null,time=()=>0,seek=()=>{},seconds=()=>0}){
   let key=null,joint=null,gmode='rotate',h=null,rigging=false,drag=null,listening=false,orbit=true,selT=null,clip=null,hinted=false,switching=false;
@@ -49,7 +68,7 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
   const bone=name=>rigOf()?.bones.get(name)||null;
   const label=name=>info(name)?.[1]||name;
   const limb=()=>joint&&info(joint)?.[3]||null;
-  const moving=()=>gmode==='translate'&&!!limb();
+  const moving=()=>gmode==='translate'&&!!joint&&!!moveOf(joint).kind;
   function dispose(){
     if(!h)return;h.gizmo.detach();h.gizmo.removeFromParent();h.gizmo.dispose?.();h.group.removeFromParent();h.geo.dispose();for(const m of h.dots.values())m.material.dispose();h=null;
   }
@@ -67,7 +86,7 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
     const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;gizmo.setSize(.75);gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
     enhanceGizmo(gizmo,{win:w,THREE,mmPerUnit:()=>mmPerUnitOf(w,THREE),status:t=>status(t)});   // P3: Rhino's Gumball (gumball.mjs)
     gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){orbit=t.controls.enabled;t.controls.enabled=false;startDrag();}else{t.controls.enabled=orbit;endDrag();}});
-    gizmo.addEventListener('objectChange',()=>{if(moving())solve();status(`${moving()?'Moving':'Turning'} ${personName(entry(key))}'s ${label(joint).toLowerCase()}…`);});
+    gizmo.addEventListener('objectChange',()=>{if(moving()){if(moveOf(joint).kind==='ik')solve();else solveMove();}status(`${moving()?'Moving':'Turning'} ${personName(entry(key))}'s ${label(joint).toLowerCase()}…`);});
     h={object:o,group,dots,target,gizmo,geo};listen();
   }
   function pickDot(ev){
@@ -143,7 +162,39 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
     if(drag?.end)c.quaternion.copy(c.parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(drag.end)).normalize();
     c.updateWorldMatrix(false,true);
   }
-  function startDrag(){const b=bone(joint);drag={end:moving()&&b?b.getWorldQuaternion(new (T().Quaternion)()):null};}
+  function startDrag(){const b=bone(joint),m=moving()&&moveOf(joint);drag={end:m&&m.kind==='ik'&&b?b.getWorldQuaternion(new (T().Quaternion)()):null};
+    if(m&&m.kind!=='ik')drag.snap=snapshot(m);}
+  // ---- moving a joint that is not a hand or a foot (MOVES): solved from the drag's start every time it changes
+  function snapshot(m){
+    const THREE=T(),names=[...(m.chain||[]),...(m.by||[]),...(m.kind==='girdle'?[joint]:[])],v=()=>new THREE.Vector3();h.object.updateWorldMatrix(true,true);
+    const snap={q:new Map(names.map(n=>[n,bone(n)?.quaternion.clone()])),at:bone(joint).getWorldPosition(v())};
+    if(m.kind==='mid'){const [a,,c]=m.chain.map(bone);snap.A=a.getWorldPosition(v());snap.C=bone(m.chain[2]).getWorldPosition(v());snap.cq=c.getWorldQuaternion(new THREE.Quaternion());}
+    if(m.kind==='girdle')snap.tip=bone(m.tip).getWorldPosition(v());
+    return snap;
+  }
+  // turn bone `b` (in the world) so that the world point `from` goes toward `to` (about b's own origin), by `k` (0..1)
+  function aimBone(b,from,to,k=1){
+    const THREE=T(),o=b.getWorldPosition(new THREE.Vector3()),u=from.clone().sub(o),w=to.clone().sub(o);if(u.lengthSq()<1e-12||w.lengthSq()<1e-12)return;
+    let q=new THREE.Quaternion().setFromUnitVectors(u.normalize(),w.normalize());if(k<1)q=new THREE.Quaternion().slerp(q,k);
+    const wq=b.getWorldQuaternion(new THREE.Quaternion()).premultiply(q),pq=b.parent.getWorldQuaternion(new THREE.Quaternion());
+    b.quaternion.copy(pq.invert().multiply(wq)).normalize();b.updateWorldMatrix(false,true);
+  }
+  function solveMove(){
+    const m=moveOf(joint),s=drag?.snap;if(!s||!h)return;const THREE=T(),v=()=>new THREE.Vector3(),want=h.target.getWorldPosition(v());
+    for(const [n,q] of s.q)if(q)bone(n).quaternion.copy(q);h.object.updateWorldMatrix(true,true);
+    if(m.kind==='mid'){
+      const [a,b,c]=m.chain.map(bone),A=s.A,C=s.C,l1=b.getWorldPosition(v()).distanceTo(A),l2=c.getWorldPosition(v()).distanceTo(b.getWorldPosition(v())),ac=C.clone().sub(A),d=ac.length();if(d<1e-6)return;
+      const axis=ac.clone().normalize(),x=(l1*l1-l2*l2+d*d)/(2*d),r2=l1*l1-x*x;if(r2<=0)return;   // (the arm is straight: the elbow has nowhere to go)
+      const centre=A.clone().addScaledVector(axis,x),side=want.clone().sub(centre);side.addScaledVector(axis,-side.dot(axis));if(side.lengthSq()<1e-12)return;
+      const B=centre.addScaledVector(side.normalize(),Math.sqrt(r2));
+      aimBone(a,b.getWorldPosition(v()),B);aimBone(b,c.getWorldPosition(v()),C);
+      c.quaternion.copy(c.parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(s.cq)).normalize();c.updateWorldMatrix(false,true);   // (the hand keeps facing the way it did)
+      return;
+    }
+    if(m.kind==='girdle'){const b=bone(joint);aimBone(b,bone(m.tip).getWorldPosition(v()),s.tip.clone().add(want.clone().sub(s.at)));return;}
+    if(m.kind==='aim'){aimBone(bone(m.by[0]),bone(joint).getWorldPosition(v()),want);return;}
+    if(m.kind==='spine'){aimBone(bone(m.by[0]),bone(joint).getWorldPosition(v()),want,.5);aimBone(bone(m.by[1]),bone(joint).getWorldPosition(v()),want);}
+  }
   function endDrag(){drag=null;if(switching||!key||!joint||h?.object.userData.person.id!==entry(key)?.id)return;commit(`${personName(entry(key))}: ${label(joint).toLowerCase()} adjusted.`);}
   // ---- the cut
   function read(){
@@ -272,13 +323,13 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
     commit(`${personName(entry(key))}: ${side==='l'?'left':'right'} hand ${v>.95?'in a fist':v>0?'closed '+Math.round(v*100)+' %':v<0?'opened':'as built'}.`,'pose-grip-'+key+side);
   }
   // ---- mode
-  function pick(name){if(!info(name))return;joint=name;wake();gmode=info(name)[3]?'translate':'rotate';status(`${label(name)}: ${info(name)[3]?'drag the arrows to move the whole limb (W), or turn the joint itself (E).':'turn it with the rings, or type Bend / Twist / Side.'}`);rerender();}
+  function pick(name){if(!info(name))return;joint=name;wake();gmode=info(name)[3]?'translate':'rotate';status(`${label(name)}: ${info(name)[3]?'drag the arrows to move the whole limb (W), or turn the joint itself (E).':moveOf(name).kind?'turn it with the rings (E) or type Bend / Twist / Side; W moves the joint itself.':'turn it with the rings, or type Bend / Twist / Side.'}`);rerender();}
   function enter(k){
     const e=entry(k);if(!e)return;key=k;joint=null;gmode='rotate';
     status(`Pose mode: ${personName(e)}. Click a dot on the body: blue turns a joint, orange (hands, feet) moves the whole limb. Esc or Done leaves.`);rerender();
   }
   function exit(){if(!key)return;key=null;joint=null;drag=null;selT=null;dispose();rerender();}
-  function setMode(m){if(!key)return false;if(m==='translate'&&!limb()){status('Only hands and feet move (the limb follows). Other joints turn: E.');return true;}if(m==='translate'||m==='rotate'){gmode=m;rerender();}return true;}
+  function setMode(m){if(!key)return false;if(m==='translate'&&!moveOf(joint).kind){status(moveOf(joint).why||'This joint turns only (E).');return true;}if(m==='translate'||m==='rotate'){gmode=m;rerender();}return true;}
   // ---- the People tab while posing
   const num=(labelText,name,value)=>`<label>${labelText}<input type="number" name="${name}" value="${value}" step="2" min="-180" max="180"><small>°</small></label>`;
   function panel(head){
@@ -290,7 +341,8 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
       ${keysPanel(e)}
       <h4>Joint</h4>
       <select name="pe-joint" aria-label="Joint"><option value="">Choose a joint…</option>${groups.map(g=>`<optgroup label="${escape(g)}">${JOINTS.filter(j=>j[2]===g).map(j=>`<option value="${j[0]}" ${j[0]===joint?'selected':''}>${escape(j[1])}${e?.pose?.[j[0]]?' •':''}</option>`).join('')}</optgroup>`).join('')}</select>
-      ${joint?`${limb()?`<div class="director-actions people-modes"><button type="button" data-action="pe-pose-move" aria-pressed="${gmode==='translate'}" title="Drag the hand or foot; the limb follows (W)">Move limb</button><button type="button" data-action="pe-pose-turn" aria-pressed="${gmode==='rotate'}" title="Turn the wrist or ankle itself (E)">Turn joint</button></div>`:''}
+      ${joint?`${(()=>{const mv=moveOf(joint),title=mv.kind==='ik'?'Drag the hand or foot; the limb follows (W)':mv.kind==='mid'?'Drag the joint; the hand or foot stays where it is (W)':mv.kind?'Drag the joint; the bones above it turn to follow (W)':mv.why;
+        return `<div class="director-actions people-modes"><button type="button" data-action="pe-pose-move" aria-pressed="${gmode==='translate'&&!!mv.kind}" ${mv.kind?'':'disabled'} title="${escape(title)}">${mv.kind==='ik'?'Move limb':'Move joint'}</button><button type="button" data-action="pe-pose-turn" aria-pressed="${gmode==='rotate'||!mv.kind}" title="Turn the joint (E)">Turn joint</button></div>${mv.kind?'':`<p class="director-hint">${escape(mv.why)}</p>`}`;})()}
       <div class="director-row people-fields pose-angles">${num('Bend','pe-rx',a[0])}${num('Twist','pe-ry',a[1])}${num('Side','pe-rz',a[2])}</div>
       <div class="director-actions"><button type="button" data-action="pe-pose-reset-joint" title="This joint back to the posture as built (Delete)">Reset joint</button><button type="button" data-action="pe-pose-reset-limb">Reset ${escape(info(joint)[2].toLowerCase())}</button>${side&&limbOf(joint)?`<button type="button" data-action="pe-pose-mirror" title="Copy this side's adjustments to the other side, mirrored">Copy to the ${side==='l'?'right':'left'} side</button>`:''}</div>`:''}
       <h4>Fingers</h4>
