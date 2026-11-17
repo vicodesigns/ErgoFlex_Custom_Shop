@@ -36,7 +36,7 @@ const ARM=/^(clavicle|upperarm|lowerarm|hand|thumb_\d+|index_\d+|middle_\d+|ring
 const limbOf=bone=>ARM.test(bone)?ARM:LEG.test(bone)?LEG:null;
 
 export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,rerender,personName,editing,saved=null,time=()=>0,seek=()=>{},seconds=()=>0}){
-  let key=null,joint=null,gmode='rotate',h=null,rigging=false,drag=null,listening=false,orbit=true,selT=null,clip=null;
+  let key=null,joint=null,gmode='rotate',h=null,rigging=false,drag=null,listening=false,orbit=true,selT=null,clip=null,hinted=false;
   const AUTO='ergoflex.director.autoKey';
   let autoKey=(()=>{try{return globalThis.localStorage?.getItem(AUTO)==='1';}catch{return false;}})();      // (off until turned on, as in Blender: then remembered)
   const now=()=>Math.round(time()*1000)/1000;
@@ -93,6 +93,8 @@ export function createPoseEditor({win,three,tools,stagePeople,entry,edit,status,
     if(!key)return;
     const people=stagePeople(),o=people?.byKey?.(key);
     if(!o||!entry(key)){exit();return;}
+    // Not in the scene at this moment (the playhead is outside this placement's bar): say why there are no dots.
+    if(editing()&&!o.visible){if(!hinted){hinted=true;status(`${personName(entry(key))} is not in the scene at this moment, so there are no dots: move the playhead into one of their bars on the People lane.`);}}else hinted=false;
     // someone at a desk changes posture with its height: the joints here belong to the posture pose mode was opened on
     if(o.userData.person?.variant&&o.userData.person.id!==entry(key).id){exit();status('The desk has them in another posture now: pose mode is closed, the pose is kept.');return;}
     if(!o.userData.personRig){if(!rigging){rigging=true;people.rig(o).catch(()=>null).finally(()=>{rigging=false;});}if(h)h.group.visible=false;return;}
