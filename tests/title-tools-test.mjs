@@ -7,7 +7,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {newTitle,duplicateTitle,newTitleId,spanAt,cleanFilmTitles,chapterTitles,srcEntry,DEFAULT_COPY,NEW_TITLE_SECONDS,MAX_TITLES,titleLines,lineGaps,withGap,GAPS,cleanTypography,fittedBox,fittedPaths,LINES} from '../experience/film-titles.mjs';
+import {newTitle,duplicateTitle,newTitleId,spanAt,cleanFilmTitles,chapterTitles,srcEntry,DEFAULT_COPY,NEW_TITLE_SECONDS,MAX_TITLES,titleLines,lineGaps,withGap,GAPS,cleanTypography,fittedBox,fittedPaths,LINES,splitTitle,pasteTitles,shiftTitles,withLine} from '../experience/film-titles.mjs';
 import {cleanShot,cleanCut} from '../experience/cuts.mjs';
 import {filmRenderShot} from '../experience/film-render.mjs';
 import {liveFilmShot} from '../experience/film-chapters.mjs';
@@ -126,4 +126,22 @@ try{
     assert.ok(styled.find(l=>/,Title,/.test(l)).includes('\\fs86\\fsp0\\b600'),'a restyled headline keeps the spacing libass burnt before (0, not -0.6)');
   }finally{fs.rmSync(H2,{recursive:true,force:true});}
 }
-console.log('Title tools: + Title / Duplicate / Delete (ids, span inside the chapter, copy keeps layout + shadow), draft and Export cut keep the list ([] included), filmTitles never in the render shot, import adds / removes titles-src entries (other chapters untouched), titles.ass + --chapter-titles burn show the new title, delete-all import verified; M2 per-line offsets / line spacing in the model, fitted boxes and the burn (defaults unchanged).');
+
+// ---- M3: split at the playhead, paste at the playhead, move several, one line moved ----
+{
+  const t={id:'rise-0',rel_in:3.6,rel_out:9.4,eyebrow:'E',title:'H',detail:'D',scale:1.2,shadow:{blur:30}};
+  const [a,b]=splitTitle(t,6,'rise',16,['rise-0']);
+  assert.deepEqual([a.id,a.rel_in,a.rel_out,b.id,b.rel_in,b.rel_out],['rise-0',3.6,6,'rise-new1',6,9.4]);
+  assert.ok(a.timed&&b.timed&&b.scale===1.2&&b.shadow.blur===30&&b.title==='H','both pieces keep copy, layout and shadow');
+  assert.throws(()=>splitTitle(t,3.7,'rise',16),/at least 0\.2 s/);assert.throws(()=>splitTitle(t,12,'rise',16),/inside the title/);
+  const clip=[{id:'x-0',rel_in:1,rel_out:4,title:'A'},{id:'x-1',rel_in:3,rel_out:8,title:'B'}];
+  let p=pasteTitles(clip,2,'rise',16,['rise-0']);assert.deepEqual(p.map(x=>[x.id,x.rel_in,x.rel_out]),[['rise-new1',2,5],['rise-new2',4,9]],'pasted at the playhead, offsets kept');
+  p=pasteTitles(clip,10,'rise',16,[]);assert.deepEqual(p.map(x=>[x.rel_in,x.rel_out]),[[9,12],[11,16]],'near the end: the group moves earlier to fit');
+  assert.ok(p.every(x=>x.timed));assert.deepEqual(pasteTitles([],3,'rise',16),[]);
+  const list=[{id:'a',rel_in:1,rel_out:3},{id:'b',rel_in:5,rel_out:7},{id:'c',rel_in:10,rel_out:15}];
+  let r=shiftTitles(list,['a','c'],4,16);assert.equal(r.delta,1,'clamped: c may only move 1 s');assert.deepEqual(r.list.map(x=>[x.rel_in,x.rel_out]),[[2,4],[5,7],[11,16]]);
+  r=shiftTitles(list,['a','b'],-3,16);assert.equal(r.delta,-1);assert.equal(r.list[2].rel_in,10,'unpicked titles stay');
+  assert.deepEqual(withLine(t,'detail',{dx:12.345,dy:-7}).typography,{detail:{dx:12.35,dy:-7}});
+  assert.equal(withLine({...t,typography:{detail:{dx:5}}},'detail',{dx:0,dy:0}).typography,undefined,'back at its place: nothing stored');
+}
+console.log('Title tools: + Title / Duplicate / Delete (ids, span inside the chapter, copy keeps layout + shadow), draft and Export cut keep the list ([] included), filmTitles never in the render shot, import adds / removes titles-src entries (other chapters untouched), titles.ass + --chapter-titles burn show the new title, delete-all import verified; M2 per-line offsets / line spacing in the model, fitted boxes and the burn (defaults unchanged); M3 split / paste / group move / line move.');

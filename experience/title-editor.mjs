@@ -1,4 +1,4 @@
-import {titleLines,LINES,ANCHOR,FILM_W,FONT_REAL,DESC,BOX_BLUR,BOX_OPACITY,BLUR_SIGMA,chapterTitles,cutRule,timingNotes,cleanFilmTitles,shadowOf,fittedPaths,textBounds,lineState,pathTiming,restTime,svgPath,bounds,nearestOnPath,insertPoint,deletePoint,toggleSmooth,moveHandle,movePoint,transformPaths,pointCount,placeOf,newTitle,duplicateTitle,MAX_TITLES,NEW_TITLE_SECONDS,lineGaps,withGap,GAPS,SKEW_ITALIC,cleanTypography,FALLBACK,ASC} from './film-titles.mjs';
+import {titleLines,LINES,ANCHOR,FILM_W,FONT_REAL,DESC,BOX_BLUR,BOX_OPACITY,BLUR_SIGMA,chapterTitles,cutRule,timingNotes,cleanFilmTitles,shadowOf,fittedPaths,textBounds,lineState,pathTiming,restTime,svgPath,bounds,nearestOnPath,insertPoint,deletePoint,toggleSmooth,moveHandle,movePoint,transformPaths,pointCount,placeOf,newTitle,duplicateTitle,MAX_TITLES,NEW_TITLE_SECONDS,lineGaps,withGap,GAPS,SKEW_ITALIC,cleanTypography,FALLBACK,ASC,splitTitle,pasteTitles,shiftTitles,withLine,newTitleId} from './film-titles.mjs';
 import {stackRows,rowVar} from './lane-rows.mjs';
 // Film titles in Director Mode: the TITLES lane (one block per title card: drag to move, edges to trim), the Title
 // inspector (copy, timing, shadow) and the title overlay in the 16:9 frame, drawn as finish-intro.py burns it in.
@@ -20,6 +20,12 @@ export async function loadTitleSource(filmList,base=location.href,fetcher=global
 }
 export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,render,renderTimeline,showInspector,onSelect,snapDelta,dragFeedback,endDragFeedback,ready,open}){
   let copiedLayout=null,cardDrag=null;
+  // M3: several titles picked on the lane (multi, with `selected` the one the inspector shows), the line picked in the
+  // frame (lineSel: 'eyebrow' | 'title' | 'detail'), a line being dragged, and the titles clipboard (Ctrl+C / Ctrl+V).
+  const multi=new Set();let lineSel=null,lineDrag=null,clipboard=null;
+  const CLIP_KEY='ergoflex.director.titleClipboard.v1';
+  try{clipboard=JSON.parse(localStorage.getItem(CLIP_KEY)||'null');}catch{}
+  const LINE_LABEL={eyebrow:'Eyebrow',title:'Headline',detail:'Supporting text'};
   let source=null,selected=null,editing=false,shown=true,fontsReady=false,drag=null,suppress=0,lastKey='';
   const fromFilm=new Map();
   // ---- fonts + measuring (libass sizes Poppins by its full height; no kerning, like the ASS overlay) -----------
@@ -69,13 +75,37 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     showInspector('title',true);try{seek(restTime(t)/s.seconds);}catch{}render();status(message);return t.id;
   }
   function duplicateSelected(){
+    if(picked().length>1)return duplicateMany();
     const s=shot(),list=titles(),t=item();if(!t)throw Error('Select a title to duplicate.');if(list.length>=MAX_TITLES)throw Error(`A chapter holds ${MAX_TITLES} titles; delete one first.`);
     const c=duplicateTitle(t,s.id,s.seconds,list.map(x=>x.id));
     putList([...list,c],{select:c.id});showInspector('title',true);try{seek(restTime(c)/s.seconds);}catch{}render();status(`Title duplicated at ${r2(c.rel_in)}–${r2(c.rel_out)} s.`);return c.id;
   }
+  function duplicateMany(){
+    const s=shot(),list=titles(),src=picked();if(list.length+src.length>MAX_TITLES)throw Error(`A chapter holds ${MAX_TITLES} titles; delete some first.`);
+    const ids=list.map(x=>x.id),copies=src.map(t=>{const c=duplicateTitle(t,s.id,s.seconds,ids);ids.push(c.id);return c;});
+    putList([...list,...copies],{select:copies[0].id});for(const c of copies)multi.add(c.id);render();renderTimeline();status(`${copies.length} titles duplicated.`);return copies.map(c=>c.id);
+  }
   function deleteSelected(){
+    if(picked().length>1){const gone=new Set(picked().map(t=>t.id)),rest=titles().filter(x=>!gone.has(x.id));multi.clear();putList(rest,{});render();status(`${gone.size} titles deleted. Undo brings them back.`);return;}
     const t=item();if(!t)throw Error('Select a title to delete.');const rest=titles().filter(x=>x.id!==t.id);
     putList(rest,{});render();status(`Title “${t.title||t.eyebrow||'untitled'}” deleted.${rest.length?'':' This chapter now has no titles.'} Undo brings it back.`);
+  }
+  function splitSelected(){
+    const s=shot(),t=item();if(!t)throw Error('Select a title to split.');const at=time()*s.seconds,list=titles();
+    if(list.length>=MAX_TITLES)throw Error(`A chapter holds ${MAX_TITLES} titles; delete one first.`);
+    const [a,b]=splitTitle(t,at,s.id,s.seconds,list.map(x=>x.id));multi.clear();
+    putList([...list.filter(x=>x.id!==t.id),a,b],{select:b.id});render();status(`Title split at ${r2(at)} s: ${r2(a.rel_in)}–${r2(a.rel_out)} s and ${r2(b.rel_in)}–${r2(b.rel_out)} s. Undo joins them again.`);return b.id;
+  }
+  function copySelected(){
+    const list=picked();if(!list.length)throw Error('Select a title to copy.');clipboard=structuredClone(list);try{localStorage.setItem(CLIP_KEY,JSON.stringify(clipboard));}catch{}
+    render();status(`${list.length} title${list.length===1?'':'s'} copied. Ctrl+V pastes at the playhead (in any chapter).`);
+  }
+  function pasteAtPlayhead(){
+    if(!clipboard?.length)throw Error('Copy a title first (Ctrl+C).');const s=shot(),list=titles();
+    if(list.length+clipboard.length>MAX_TITLES)throw Error(`A chapter holds ${MAX_TITLES} titles; delete some first.`);
+    const add=pasteTitles(clipboard,time()*s.seconds,s.id,s.seconds,list.map(x=>x.id));onSelect();multi.clear();
+    putList([...list,...add],{select:add[0].id});for(const t of add)multi.add(t.id);showInspector('title',true);render();renderTimeline();
+    status(`${add.length} title${add.length===1?'':'s'} pasted at ${r2(add[0].rel_in)} s.`);return add.map(t=>t.id);
   }
   function putTiming(id,a,b,message){
     ready();const s=shot(),list=titles().map(t=>t.id===id?{...t,rel_in:a,rel_out:b,timed:true}:t);
@@ -83,12 +113,14 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     const t=item(),notes=t?timingNotes(t,rule()):[];status(message+(notes.length?' Note: '+notes[0]+' The film keeps your timing.':''));
   }
   // ---- selection --------------------------------------------------------------------------------------------
-  function select(id,{reveal=true}={}){
-    onSelect();selected=id;const t=item();if(!t)return;showInspector('title',true);
+  function select(id,{reveal=true,keepMulti=false}={}){
+    onSelect();if(id!==selected)lineSel=null;selected=id;if(!keepMulti)multi.clear();const t=item();if(!t)return;showInspector('title',true);
     if(reveal){try{seek(restTime(t)/shot().seconds);}catch{}}
     render();status('Title selected. Drag its block to move it, its edges to trim, or edit its copy and shadow in Title.');
   }
-  function clear(){if(!selected&&!editing)return false;selected=null;setEditing(false,false);return true;}
+  function clear(){if(!selected&&!editing&&!multi.size)return false;selected=null;multi.clear();lineSel=null;setEditing(false,false);return true;}
+  // The picked titles: the lane's multi-selection plus the inspector's title, in film order.
+  function picked(){const ids=new Set(multi);if(selected)ids.add(selected);return titles().filter(t=>ids.has(t.id));}
   // While the shape is edited, the inspector's message line keeps this hint (director.mjs renders it there).
   const SHAPE_HINT='Editing the shadow: drag points · double-click smooth/sharp · Alt-drag breaks a handle · Enter when done';
   function setEditing(on,announce=true){
@@ -104,7 +136,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     const zone=R?.cutDone!==undefined?`<span class="title-cut-zone" style="width:${Math.min(100,R.cutDone/s*100)}%" title="The transition from the previous chapter (done at ${r2(R.cutDone)} s)"></span>`:'';
     const mark=R?.earliest!==undefined?`<span class="title-rule" data-title-rule style="left:${R.earliest/s*100}%" title="1.5 s after the cut (${r2(R.earliest)} s): the film's titles come in from here"><i>1.5 s after cut</i></span>`:'';
     const layers=stackRows(list.map(t=>({id:t.id,start:t.rel_in,end:t.rel_out}))),blocks=list.map(t=>{const notes=timingNotes(t,R),early=R?.earliest!==undefined&&t.rel_in<R.earliest-1e-6,custom=!!t.shadow?.paths;
-      return `<button class="desk-clip title-clip ${selected===t.id?'selected':''} ${early?'early':''}" data-title-clip="${t.id}" style="${rowVar(layers,t.id)}left:${t.rel_in/s*100}%;width:${(t.rel_out-t.rel_in)/s*100}%" aria-pressed="${selected===t.id}" aria-label="Title ${escape(t.title)}, ${r2(t.rel_in)} to ${r2(t.rel_out)} seconds" title="${escape([t.eyebrow,t.title].filter(Boolean).join(' · '))} · ${r2(t.rel_in)}–${r2(t.rel_out)}s${custom?' · custom shadow':''}${notes.length?' · '+escape(notes.join(' ')):''} (drag to move, edges to trim)"><span class="clip-resize" data-resize="start" title="Trim the title's in point"></span><strong>${t.eyebrow?`<em>${escape(t.eyebrow)}</em> `:''}${escape(t.title||'(no headline)')}</strong><small>${r2(t.rel_in)}–${r2(t.rel_out)}s${custom?' · custom shadow':''}${early?' · before the 1.5 s mark':''}</small><span class="clip-resize" data-resize="end" title="Trim the title's out point"></span></button>`;}).join('');
+      return `<button class="desk-clip title-clip ${selected===t.id||multi.has(t.id)?'selected':''} ${early?'early':''}" data-title-clip="${t.id}" style="${rowVar(layers,t.id)}left:${t.rel_in/s*100}%;width:${(t.rel_out-t.rel_in)/s*100}%" aria-pressed="${selected===t.id||multi.has(t.id)}" aria-label="Title ${escape(t.title)}, ${r2(t.rel_in)} to ${r2(t.rel_out)} seconds" title="${escape([t.eyebrow,t.title].filter(Boolean).join(' · '))} · ${r2(t.rel_in)}–${r2(t.rel_out)}s${custom?' · custom shadow':''}${notes.length?' · '+escape(notes.join(' ')):''} (drag to move, edges to trim)"><span class="clip-resize" data-resize="start" title="Trim the title's in point"></span><strong>${t.eyebrow?`<em>${escape(t.eyebrow)}</em> `:''}${escape(t.title||'(no headline)')}</strong><small>${r2(t.rel_in)}–${r2(t.rel_out)}s${custom?' · custom shadow':''}${early?' · before the 1.5 s mark':''}</small><span class="clip-resize" data-resize="end" title="Trim the title's out point"></span></button>`;}).join('');
     return `<div class="desk-lane-row ${layers.count>1?'layered':''}" data-lane-color="titles" style="--rows:${layers.count}"><span class="desk-lane-label" title="The film's title cards (titles-src.json): drag a block to move it, its edges to trim, click it to edit the copy and the shadow">Titles${edited()?' <small>edited</small>':''} <button class="title-add" data-title-add type="button" title="Add a title at the playhead (placeholder copy, ${NEW_TITLE_SECONDS} s)" aria-label="Add a title at the playhead" ${list.length>=MAX_TITLES?'disabled':''}>+ Title</button></span><div class="desk-lane title-lane" data-title-lane role="group" aria-label="Film titles timeline"><div class="desk-lane-line"></div>${zone}${mark}${blocks}<div class="camera-track-playhead" data-shared-playhead style="left:${time()*100}%"></div></div></div>`;
   }
   function snapTargets(exclude){
@@ -117,14 +149,27 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     event.preventDefault();event.stopPropagation();
     try{ready();}catch(error){status(error.message,true);return;}
     const t=titles().find(x=>x.id===el.dataset.titleClip);if(!t)return;
+    if(event.shiftKey||event.ctrlKey||event.metaKey){togglePick(t.id);suppress=performance.now()+300;return;}
     const lane=el.closest('[data-title-lane]'),edge=event.target.closest('[data-resize]')?.dataset.resize||null;
     drag={id:t.id,kind:'titles',edge,el,start:event.clientX,width:lane.getBoundingClientRect().width,base:{seconds:shot().seconds,titles:structuredClone(titles())},original:t,delta:0,set:{},moved:false,candidate:null};
+    if(!edge&&multi.size>1&&multi.has(t.id))drag.group=picked().map(x=>x.id);
     el.setPointerCapture(event.pointerId);el.focus({preventScroll:true});
   });
+  function togglePick(id){
+    if(!multi.size&&selected)multi.add(selected);if(multi.has(id))multi.delete(id);else multi.add(id);
+    const keep=selected&&multi.has(selected)?selected:[...multi][0]||null;onSelect();selected=keep;lineSel=null;
+    if(selected)showInspector('title',true);render();renderTimeline();lastKey='';sync();
+    status(multi.size>1?`${multi.size} titles selected: drag one to move them together; Delete, Ctrl+D, Ctrl+C work on all.`:selected?'Title selected.':'Selection cleared.');
+  }
+  function pickMany(ids){if(!ids.length)return;onSelect();multi.clear();for(const id of ids)multi.add(id);selected=ids[0];lineSel=null;showInspector('title',true);render();renderTimeline();lastKey='';sync();
+    status(`${ids.length} title${ids.length===1?'':'s'} selected.`);}
   timeline.addEventListener('pointermove',event=>{
     if(!drag)return;const d=drag,s=d.base.seconds,o=d.original;if(Math.abs(event.clientX-d.start)>3)d.moved=true;if(!d.moved)return;
     const raw=(event.clientX-d.start)/d.width*s,edges=d.edge==='start'?[o.rel_in]:d.edge==='end'?[o.rel_out]:[o.rel_in,o.rel_out];
     const {delta,snap}=snapDelta({raw,edges,width:d.width,seconds:s,alt:event.altKey,exclude:o.id});d.snap=snap;
+    if(d.group){const {delta:dd,list}=shiftTitles(d.base.titles,d.group,delta,s);d.candidate=list;d.delta=dd;
+      for(const x of list)if(d.group.includes(x.id)){const b=timeline.querySelector(`[data-title-clip="${x.id}"]`);if(b){b.style.left=x.rel_in/s*100+'%';const sm=b.querySelector('small');if(sm)sm.textContent=`${r2(x.rel_in)}–${r2(x.rel_out)}s`;}}
+      dragFeedback(d,event);status(`${d.group.length} titles ${dd>=0?'+':''}${r2(dd)} s${snap?' · snapped to '+snap.name:''} · Alt: bypass snap`);return;}
     let a=o.rel_in,b=o.rel_out;
     if(d.edge==='start')a=Math.max(0,Math.min(b-.5,o.rel_in+delta));else if(d.edge==='end')b=Math.max(a+.5,Math.min(s,o.rel_out+delta));
     else{const dd=Math.max(-o.rel_in,Math.min(s-o.rel_out,delta));a=o.rel_in+dd;b=o.rel_out+dd;}
@@ -137,10 +182,20 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   function endDrag(event){
     if(!drag)return;const d=drag;drag=null;endDragFeedback(d);suppress=performance.now()+300;
     if(event.type==='pointercancel'){renderTimeline();return;}
+    if(d.group&&d.moved&&d.candidate){const keep=[...multi];putList(d.candidate,{select:d.id});for(const id of keep)multi.add(id);renderTimeline();status(`${d.group.length} titles moved ${d.delta>=0?'+':''}${r2(d.delta)} s.`);return;}
     if(!d.moved||!d.candidate){select(d.id);return;}
     onSelect();selected=d.id;showInspector('title',true);putTiming(d.id,d.candidate[0],d.candidate[1],d.edge?`Title ${d.edge==='start'?'in point':'out point'} trimmed: ${r2(d.candidate[0])}–${r2(d.candidate[1])} s.`:`Title moved to ${r2(d.candidate[0])}–${r2(d.candidate[1])} s.`);
   }
   timeline.addEventListener('pointerup',endDrag);timeline.addEventListener('pointercancel',endDrag);
+  // Marquee (drag on empty lanes, director.mjs's own gesture): title blocks it crosses are picked as well, after the
+  // director's own selection settles. Shift / Ctrl add to the picked titles.
+  let band=null;
+  timeline.addEventListener('pointerdown',event=>{band=null;if(event.button!==0||event.target.closest('[data-title-clip],button,select,input,label,.time-ruler,.lane-group-head,.desk-lane-label')||!event.target.closest('.timeline-content'))return;
+    band={x:event.clientX,y:event.clientY,add:event.shiftKey||event.ctrlKey||event.metaKey};},true);
+  addEventListener('pointerup',event=>{const b=band;band=null;if(!b||Math.hypot(event.clientX-b.x,event.clientY-b.y)<5)return;
+    const r={x0:Math.min(b.x,event.clientX),x1:Math.max(b.x,event.clientX),y0:Math.min(b.y,event.clientY),y1:Math.max(b.y,event.clientY)};
+    const hit=[...timeline.querySelectorAll('[data-title-clip]')].filter(el=>{const q=el.getBoundingClientRect();return q.right>=r.x0&&q.left<=r.x1&&q.bottom>=r.y0&&q.top<=r.y1;}).map(el=>el.dataset.titleClip);
+    if(!hit.length)return;const prior=b.add?picked().map(t=>t.id):[];setTimeout(()=>pickMany([...new Set([...prior,...hit])]),0);},true);
   timeline.addEventListener('click',event=>{
     if(event.target.closest('[data-title-add]')){event.preventDefault();event.stopPropagation();try{addTitle();}catch(error){status(error.message,true);}return;}
     if(event.target.closest('[data-title-clip]')){if(performance.now()<suppress){event.preventDefault();event.stopPropagation();}return;}
@@ -186,7 +241,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     const R=rule(),notes=timingNotes(t,R),S=shadowOf(t,measure),n=titles().indexOf(t)+1,tb=textBounds(t,measure),bb=bounds(S.paths);
     const short=S.custom&&tb&&bb&&(tb.x1>bb.x1+2||tb.x0<bb.x0-2);
     return `<div data-reveal="title"><h3>Film title ${n} <span class="inspector-subtitle">of ${titles().length} in this chapter</span></h3><div class="title-list">${titles().length>1?list():''}</div>
-      <div class="director-actions title-list-actions">${addBtn}<button data-title-action="duplicate" ${full?'disabled':''} title="A copy of this title (copy, layout, shadow) right after it (Ctrl+D)">Duplicate</button><button data-title-action="delete" title="Delete this title (Delete); Undo brings it back">Delete</button></div>
+      <div class="director-actions title-list-actions">${addBtn}<button data-title-action="duplicate" ${full?'disabled':''} title="A copy of this title (copy, layout, shadow) right after it (Ctrl+D)">Duplicate</button><button data-title-action="delete" title="Delete this title (Delete); Undo brings it back">Delete</button><button data-title-action="split" title="Split this title at the playhead into two (Ctrl/Cmd+K)">Split at playhead</button><button data-title-action="copy" title="Copy this title (Ctrl/Cmd+C)">Copy</button><button data-title-action="paste" ${clipboard?.length?'':'disabled'} title="Paste the copied title(s) at the playhead (Ctrl/Cmd+V)">Paste</button></div>${lineSel?`<p class="director-hint" data-line-hint>${LINE_LABEL[lineSel]} selected in the frame: drag it to move this line alone (it snaps to the other lines, the film's place and the safe margins; Alt: no snapping); arrows nudge 1 px (Shift 10). Esc goes back to the whole title.</p>`:''}
       <label>Title scale (%)<input name="ft-scale" type="number" min="10" max="500" step="1" value="${Math.round((t.scale??1)*100)}"></label><div class="director-grid"><label>X (film pixels)<input name="ft-x" type="number" step="1" value="${placeOf(t).x}"></label><label>Y (headline baseline)<input name="ft-y" type="number" step="1" value="${placeOf(t).anchor[1]}"></label></div><div class="director-actions"><button data-title-action="copy-layout">Copy layout</button><button data-title-action="paste-layout" ${copiedLayout?'':'disabled'}>Paste layout</button></div>${spacingControls(t)}<details open><summary>Text layers</summary><details open><summary>Eyebrow</summary><label>Eyebrow<input name="ft-eyebrow" maxlength="60" value="${escape(t.eyebrow)}"></label>${typeControls(t,'eyebrow')}</details>
       <details open><summary>Headline</summary><label>Headline<input name="ft-title" maxlength="140" value="${escape(t.title)}"></label>${typeControls(t,'title')}</details>
       <details open><summary>Supporting text</summary><label>Supporting text<textarea name="ft-detail" rows="2" maxlength="260">${escape(t.detail)}</textarea></label>${typeControls(t,'detail')}</details>
@@ -232,9 +287,12 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   function titleAction(name,id){
     if(name==='pick'){select(id);return;}
     if(name==='add'){addTitle();return;}
+    if(name==='paste'){pasteAtPlayhead();return;}
     const t=item();if(!t)return;
     if(name==='duplicate'){duplicateSelected();return;}
     if(name==='delete'){deleteSelected();return;}
+    if(name==='split'){splitSelected();return;}
+    if(name==='copy'){copySelected();return;}
     if(name==='reset-lines'){put(x=>{for(const k of Object.keys(x.typography||{})){delete x.typography[k].dx;delete x.typography[k].dy;}const typ=cleanTypography(x.typography);if(typ)x.typography=typ;else delete x.typography;return x;},{message:'Every line is back in the film\'s place.'});return;}
     if(name==='copy-layout'){copiedLayout=structuredClone({position:{x:placeOf(t).x,y:placeOf(t).anchor[1]},scale:t.scale,typography:t.typography,place:t.place,shadow:t.shadow});render();status('Title layout copied. Select another title and paste layout.');return;}
     if(name==='paste-layout'&&copiedLayout){put(x=>({...x,...structuredClone(copiedLayout)}),{message:'Title layout pasted.'});return;}
@@ -293,19 +351,49 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     const scale=cardDrag?.id===t.id?(cardDrag.scale??t.scale??1):(t.scale??1);
     return {defs:defs.join(''),body:`<g transform="translate(${P.x} ${P.anchor[1]}) scale(${scale}) translate(${-P.x} ${-P.anchor[1]})">${parts.join('')}</g>`};
   }
+  // Each line's box in the frame (film px, the title's scale and place applied): x across its text, y from the line's
+  // top (baseline - full size above the box bottom) to its box bottom (the line's y).
+  function lineBoxes(t){
+    const P=placeOf(t),s=t.scale??1,AX=P.x,AY=P.anchor[1],sx=x=>AX+(x-AX)*s,sy=y=>AY+(y-AY)*s;
+    return titleLines(t).filter(L=>t[L.key]).map(L=>{const w=measure(L,t[L.key]),x0=P.x+L.dx-(P.align==='right'?w:0),y1=L.y+P.dy;
+      return {key:L.key,x0:sx(x0),x1:sx(x0+w),y0:sy(y1-L.size),y1:sy(y1)};});
+  }
+  const svgPoint=event=>{const m=svg.getScreenCTM();if(!m)return [0,0];const p=new DOMPoint(event.clientX,event.clientY).matrixTransform(m.inverse());return [p.x,p.y];};
+  const lineAt=(t,[x,y])=>lineBoxes(t).find(b=>x>=b.x0-4&&x<=b.x1+4&&y>=b.y0-4&&y<=b.y1+4)?.key||null;
+  const SAFE={action:[96,54],title:[192,108]};           // 5% / 10% of 1920 x 1080
+  // The dragged line's dx / dy with snapping (Alt: none): its left edge to the title's edge, the other lines' edges and
+  // the safe margins; its box bottom to the film's place, the other lines (and other titles on screen) and the safe
+  // margins; its top to the top safe margins. Returns the guides to draw (film px).
+  function snapLine(t,key,dx,dy,alt){
+    const P=placeOf(t),s=t.scale??1,AX=P.x,AY=P.anchor[1],L=LINES.find(l=>l.key===key),tol=7*px()/s,guides=[];if(alt)return {dx,dy,guides};
+    const others=titleLines(t).filter(l=>l.key!==key&&t[l.key]),absX=d=>AX+d*s,absY=d=>AY+(L.y+d-912)*s,fromY=Y=>(Y-AY)/s+912-L.y;
+    const xs=[[0,'the title edge'],...others.map(o=>[o.dx,LINE_LABEL[o.key]]),[(SAFE.action[0]-AX)/s,'action-safe'],[(SAFE.title[0]-AX)/s,'title-safe'],[(FILM_W-SAFE.title[0]-AX)/s,'title-safe right'],[(FILM_W-SAFE.action[0]-AX)/s,'action-safe right']];
+    const list=titles().filter(x=>x.id!==t.id&&time()*shot().seconds>=x.rel_in&&time()*shot().seconds<x.rel_out);
+    const ys=[[0,`the film's place`],...others.map(o=>[fromY(AY+(o.y-912)*s),LINE_LABEL[o.key]]),...list.flatMap(x=>lineBoxes(x).map(b=>[fromY(b.y1),'another title'])),
+      [fromY(1080-SAFE.title[1]),'title-safe bottom'],[fromY(1080-SAFE.action[1]),'action-safe bottom'],[fromY(SAFE.title[1]+L.size*s),'title-safe top'],[fromY(SAFE.action[1]+L.size*s),'action-safe top']];
+    const best=(v,c)=>c.reduce((b,[t,n])=>Math.abs(t-v)<=tol&&(!b||Math.abs(t-v)<Math.abs(b[0]-v))?[t,n]:b,null);
+    const bx=best(dx,xs),by=best(dy,ys);
+    if(bx){dx=bx[0];guides.push({x:absX(bx[0]),name:bx[1]});}
+    if(by){dy=by[0];guides.push({y:absY(by[0]),name:by[1]});}
+    return {dx,dy,guides};
+  }
+  const lineView=x=>lineDrag&&lineDrag.id===x.id?withLine(x,lineDrag.key,lineDrag.next):x;
   function shapeFor(t){const S=shadowOf(t,measure);if(editing&&t.id===selected&&shape.draft)S.paths=shape.draft;return S;}
   function sync(){
     const visible=open()&&shown&&has()&&document.body.classList.contains('film-frame');box.hidden=!visible;if(!visible){lastKey='';return;}
-    const at=time()*shot().seconds,t=item(),list=editing&&t?[t]:titles().filter(x=>at>=x.rel_in&&at<x.rel_out);
-    const key=JSON.stringify([at.toFixed(3),list,editing,shape.pt,[...shape.sel],shape.draft,cardDrag?.next,cardDrag?.scale,fontsReady,svg.clientWidth]);if(key===lastKey)return;lastKey=key;
+    const at=time()*shot().seconds,t0=item(),t=t0&&lineView(t0),list=(editing&&t0?[t0]:titles().filter(x=>at>=x.rel_in&&at<x.rel_out)).map(lineView);
+    const key=JSON.stringify([at.toFixed(3),list,editing,shape.pt,[...shape.sel],shape.draft,cardDrag?.next,cardDrag?.scale,lineSel,lineDrag?.next,lineDrag?.guides,fontsReady,svg.clientWidth]);if(key===lastKey)return;lastKey=key;
     let defs='',body='';for(const x of list){const c=cardSvg(x,at,editing&&x.id===selected);defs+=c.defs;const bb=bounds(shadowOf(x,measure).paths),P=placeOf(x),scale=cardDrag?.id===x.id?(cardDrag.scale??x.scale??1):(x.scale??1),pos=cardDrag?.id===x.id?cardDrag.next:{x:P.x,y:P.anchor[1]};body+=`<g class="title-card" data-title-card="${x.id}">${c.body}${!editing&&bb?`<rect data-card-move x="${bb.x0*scale+pos.x}" y="${bb.y0*scale+pos.y}" width="${(bb.x1-bb.x0)*scale}" height="${(bb.y1-bb.y0)*scale}" fill="transparent" style="pointer-events:all;cursor:move"/>`:''}</g>`;}
-    svg.innerHTML=`<defs>${defs}</defs>${body}${editing&&t?editLayer(t):t&&list.includes(t)?titleFrame(t):''}`;
+    const guides=(lineDrag?.guides||[]).map(g=>g.x!==undefined?`<line class="title-guide" x1="${g.x}" y1="0" x2="${g.x}" y2="1080" stroke="#ff4fd8" stroke-width="${px()}" stroke-dasharray="${6*px()} ${4*px()}" style="pointer-events:none"/>`:`<line class="title-guide" x1="0" y1="${g.y}" x2="${FILM_W}" y2="${g.y}" stroke="#ff4fd8" stroke-width="${px()}" stroke-dasharray="${6*px()} ${4*px()}" style="pointer-events:none"/>`).join('');
+    svg.innerHTML=`<defs>${defs}</defs>${body}${editing&&t?editLayer(t):t&&list.some(x=>x.id===t.id)?titleFrame(t):''}${guides}`;
   }
   // A selected title shows its shadow's outline (dashed); clicking the shape starts editing it.
   function titleFrame(t){
     const b=bounds(shadowOf(t,measure).paths);if(!b)return '';const P=placeOf(t),scale=cardDrag?.id===t.id?(cardDrag.scale??t.scale??1):(t.scale??1),pos=cardDrag?.id===t.id?cardDrag.next:{x:P.x,y:P.anchor[1]},h=6*px();
     const x0=pos.x+b.x0*scale,y0=pos.y+b.y0*scale,x1=pos.x+b.x1*scale,y1=pos.y+b.y1*scale;
-    return `<g><rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="none" stroke="#5bd6f5" stroke-width="${px()}" style="pointer-events:none"/>${[['nw',x0,y0],['ne',x1,y0],['se',x1,y1],['sw',x0,y1]].map(([corner,x,y])=>`<rect data-card-scale="${corner}" x="${x-h}" y="${y-h}" width="${h*2}" height="${h*2}" fill="#5bd6f5" stroke="white" stroke-width="${px()}" style="pointer-events:all;cursor:${corner==='nw'||corner==='se'?'nwse':'nesw'}-resize"><title>Scale title proportionally</title></rect>`).join('')}</g>`;
+    const lb=lineSel&&t.id===selected&&!cardDrag?lineBoxes(t).find(b=>b.key===lineSel):null,lp=3*px();
+    const line=lb?`<rect data-line-frame="${lineSel}" x="${lb.x0-lp}" y="${lb.y0-lp}" width="${lb.x1-lb.x0+2*lp}" height="${lb.y1-lb.y0+2*lp}" fill="none" stroke="#ffd400" stroke-width="${1.5*px()}" stroke-dasharray="${5*px()} ${3*px()}" style="pointer-events:none"/>`:'';
+    return `<g>${line}<rect x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" fill="none" stroke="#5bd6f5" stroke-width="${px()}" style="pointer-events:none"/>${[['nw',x0,y0],['ne',x1,y0],['se',x1,y1],['sw',x0,y1]].map(([corner,x,y])=>`<rect data-card-scale="${corner}" x="${x-h}" y="${y-h}" width="${h*2}" height="${h*2}" fill="#5bd6f5" stroke="white" stroke-width="${px()}" style="pointer-events:all;cursor:${corner==='nw'||corner==='se'?'nwse':'nesw'}-resize"><title>Scale title proportionally</title></rect>`).join('')}</g>`;
   }
   function hintLayer(t,at){
     if(cardDrag?.id===t.id)t={...t,position:cardDrag.next};
@@ -340,8 +428,11 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   document.addEventListener('pointerdown',event=>{if(!menu.contains(event.target))menu.hidden=true;});
   svg.addEventListener('pointerdown',event=>{
     if(!editing&&event.button===0&&(event.target.closest?.('[data-card-move]')||event.target.closest?.('[data-card-scale]')||event.target.closest?.('[data-hint]'))){
-      const id=event.target.closest('[data-title-card]')?.dataset.titleCard;if(id&&id!==selected)select(id,{reveal:false});if(!item())return;
-      event.preventDefault();event.stopPropagation();try{ready();const t=item(),P=placeOf(t);cardDrag={id:t.id,x:event.clientX,y:event.clientY,base:{x:P.x,y:P.anchor[1]},next:{x:P.x,y:P.anchor[1]}};const corner=event.target.dataset.cardScale;if(corner){const b=bounds(shadowOf(t,measure).paths),scale=t.scale??1,r=svg.getBoundingClientRect();cardDrag.scale=scale;cardDrag.initialScale=scale;cardDrag.fixed=[P.x+(corner.includes('w')?b.x1:b.x0)*scale,P.anchor[1]+(corner.includes('n')?b.y1:b.y0)*scale];cardDrag.pointer=[(event.clientX-r.left)*FILM_W/r.width,(event.clientY-r.top)*1080/r.height];}svg.setPointerCapture(event.pointerId);}catch(error){status(error.message,true);}return;}
+      const id=event.target.closest('[data-title-card]')?.dataset.titleCard,was=!!id&&id===selected;if(id&&id!==selected)select(id,{reveal:false});if(!item())return;
+      const hit=!event.target.dataset.cardScale?lineAt(item(),svgPoint(event)):null;
+      if(was&&hit&&hit===lineSel){event.preventDefault();event.stopPropagation();try{ready();const t=item(),L=titleLines(t).find(l=>l.key===hit),base={dx:L.dx,dy:L.y-LINES.find(l=>l.key===hit).y};
+        lineDrag={id:t.id,key:hit,start:svgPoint(event),base,next:{...base},guides:[],moved:false,scale:t.scale??1};svg.setPointerCapture(event.pointerId);}catch(error){status(error.message,true);}return;}
+      event.preventDefault();event.stopPropagation();try{ready();const t=item(),P=placeOf(t);cardDrag={id:t.id,x:event.clientX,y:event.clientY,base:{x:P.x,y:P.anchor[1]},next:{x:P.x,y:P.anchor[1]},hit:was?hit:null,was};const corner=event.target.dataset.cardScale;if(corner){const b=bounds(shadowOf(t,measure).paths),scale=t.scale??1,r=svg.getBoundingClientRect();cardDrag.scale=scale;cardDrag.initialScale=scale;cardDrag.fixed=[P.x+(corner.includes('w')?b.x1:b.x0)*scale,P.anchor[1]+(corner.includes('n')?b.y1:b.y0)*scale];cardDrag.pointer=[(event.clientX-r.left)*FILM_W/r.width,(event.clientY-r.top)*1080/r.height];}svg.setPointerCapture(event.pointerId);}catch(error){status(error.message,true);}return;}
     if(!editing||event.button!==0)return;const t=item();if(!t)return;event.preventDefault();event.stopPropagation();
     try{ready();}catch(error){status(error.message,true);return;}
     const el=event.target,S=shadowOf(t,measure),at=filmPoint(event),base=structuredClone(S.paths);
@@ -359,6 +450,9 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     if(d.type==='point'||d.type==='handle')renderPanelTools();
   });
   svg.addEventListener('pointermove',event=>{
+    if(lineDrag){const d=lineDrag,[fx,fy]=svgPoint(event);if(Math.hypot(fx-d.start[0],fy-d.start[1])>2*px())d.moved=true;if(!d.moved)return;
+      const r=snapLine(item(),d.key,d.base.dx+(fx-d.start[0])/d.scale,d.base.dy+(fy-d.start[1])/d.scale,event.altKey);d.next={dx:r2(r.dx),dy:r2(r.dy)};d.guides=r.guides;lastKey='';sync();
+      status(`${LINE_LABEL[d.key]} ${d.next.dx>=0?'+':''}${d.next.dx}, ${d.next.dy>=0?'+':''}${d.next.dy} px${r.guides.length?' · snapped to '+r.guides.map(g=>g.name).join(' and '):''} · Alt: no snapping`);return;}
     if(cardDrag?.fixed){const d=cardDrag,r=svg.getBoundingClientRect(),p=[(event.clientX-r.left)*FILM_W/r.width,(event.clientY-r.top)*1080/r.height],v=d.pointer.map((x,i)=>x-d.fixed[i]),u=p.map((x,i)=>x-d.fixed[i]);let ratio=(v[0]*u[0]+v[1]*u[1])/(v[0]*v[0]+v[1]*v[1]);d.scale=Math.max(.1,Math.min(5,d.initialScale*ratio));ratio=d.scale/d.initialScale;d.next={x:r2(d.fixed[0]+(d.base.x-d.fixed[0])*ratio),y:r2(d.fixed[1]+(d.base.y-d.fixed[1])*ratio)};lastKey='';sync();return;}
     if(cardDrag){const r=svg.getBoundingClientRect();cardDrag.next={x:r2(cardDrag.base.x+(event.clientX-cardDrag.x)*FILM_W/r.width),y:r2(cardDrag.base.y+(event.clientY-cardDrag.y)*1080/r.height)};lastKey='';sync();return;}
     const d=drag;if(!d||!editing||!d.base)return;if(Math.hypot(event.clientX-d.ox,event.clientY-d.oy)>2){d.moved=true;lastPt=null;}if(!d.moved)return;
@@ -379,7 +473,11 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     status(d.type==='scale'?`Scaling ${Math.round(d.scaleBy[0]*100)}% × ${Math.round(d.scaleBy[1]*100)}%${event.shiftKey?' (proportional)':''}`:d.type==='body'?`Moving the shape ${r2(dx)}, ${r2(dy)} px`:d.type==='handle'?(event.altKey?'Handle broken: the two sides curve on their own.':'Curving the edge (Alt breaks the handle)'):`Point at ${r2(fx)}, ${r2(fy)} px from the headline's corner`);
   });
   function endShape(event){
-    if(cardDrag){const d=cardDrag;cardDrag=null;if(event.type!=='pointercancel'&&(d.next.x!==d.base.x||d.next.y!==d.base.y||d.scale!==undefined&&d.scale!==d.initialScale))put(t=>({...t,position:d.next,...(d.scale!==undefined?{scale:d.scale}:{})}),{message:'Title moved.'});lastKey='';sync();return;}
+    if(lineDrag){const d=lineDrag;lineDrag=null;if(event.type!=='pointercancel'&&d.moved&&(d.next.dx!==d.base.dx||d.next.dy!==d.base.dy))put(x=>withLine(x,d.key,d.next),{message:`${LINE_LABEL[d.key]} moved to ${d.next.dx>=0?'+':''}${d.next.dx}, ${d.next.dy>=0?'+':''}${d.next.dy} px from its place. Undo puts it back.`});lastKey='';sync();return;}
+    if(cardDrag){const d=cardDrag;cardDrag=null;const moved=d.next.x!==d.base.x||d.next.y!==d.base.y||d.scale!==undefined&&d.scale!==d.initialScale;
+      if(event.type!=='pointercancel'&&moved)put(t=>({...t,position:d.next,...(d.scale!==undefined?{scale:d.scale}:{})}),{message:'Title moved.'});
+      else if(event.type!=='pointercancel'&&d.was&&d.hit!==lineSel){lineSel=d.hit;render();status(lineSel?`${LINE_LABEL[lineSel]} selected: drag it to move this line alone; arrows nudge it (Shift 10 px); Esc for the whole title.`:'Whole title selected: drag to move it.');}
+      lastKey='';sync();return;}
     const d=drag;if(!d||!d.base)return;drag=null;
     if(event.type==='pointercancel'){shape.draft=null;lastKey='';sync();return;}
     if(d.inserted&&!d.moved){saveShape(shape.draft,'Point added. Drag it to reshape the edge; Delete removes it.');return;}
@@ -405,19 +503,34 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   },true);
   // A selected title (not editing its shape): Delete removes it, Ctrl/Cmd+D duplicates it (registered before
   // director.mjs's history shortcuts, so Ctrl+D lands here first).
-  document.addEventListener('keydown',event=>{
-    if(editing||!open()||!item()||event.defaultPrevented||document.querySelector('dialog[open]'))return;
+  // (window, capture: before director.mjs's document-level Esc / history keys, so Esc first drops a picked line)
+  addEventListener('keydown',event=>{
+    if(editing||!open()||!has()||event.defaultPrevented||document.querySelector('dialog[open]'))return;
     const target=event.target;if(target.closest?.('input,select,textarea,[contenteditable]'))return;
     if(target!==document.body&&!timeline.contains(target)&&!box.contains(target)&&!panel.contains(target))return;
-    const dup=(event.ctrlKey||event.metaKey)&&!event.shiftKey&&!event.altKey&&event.key.toLowerCase()==='d',del=!event.ctrlKey&&!event.metaKey&&(event.key==='Delete'||event.key==='Backspace');
-    if(!dup&&!del)return;event.preventDefault();event.stopImmediatePropagation();if(event.repeat)return;
-    try{if(dup)duplicateSelected();else deleteSelected();}catch(error){status(error.message,true);}
+    const mod=(event.ctrlKey||event.metaKey)&&!event.shiftKey&&!event.altKey,k=event.key.toLowerCase(),sel=!!item();
+    const act=mod&&k==='v'&&clipboard?.length?'paste':!sel?null:mod&&k==='d'?'dup':mod&&k==='c'?'copy':mod&&k==='k'?'split':!event.ctrlKey&&!event.metaKey&&(event.key==='Delete'||event.key==='Backspace')?'del'
+      :event.key==='Escape'&&lineSel?'unline':!event.ctrlKey&&!event.metaKey&&!event.altKey&&/^Arrow/.test(event.key)&&!timeline.contains(target)?'nudge':null;
+    if(!act)return;event.preventDefault();event.stopImmediatePropagation();if(event.repeat&&act!=='nudge')return;
+    try{
+      if(act==='paste')pasteAtPlayhead();else if(act==='dup')duplicateSelected();else if(act==='copy')copySelected();else if(act==='split')splitSelected();else if(act==='del')deleteSelected();
+      else if(act==='unline'){lineSel=null;lastKey='';sync();render();status('Back to the whole title.');}
+      else nudge({ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]}[event.key].map(v=>v*(event.shiftKey?10:1)));
+    }catch(error){status(error.message,true);}
   },true);
+  // Arrow nudges: the picked line (typography dx / dy) or, with no line picked, the whole title (position).
+  function nudge([dx,dy]){
+    const t=item();if(!t)return;
+    if(lineSel){const L=titleLines(t).find(l=>l.key===lineSel),base=LINES.find(l=>l.key===lineSel);
+      put(x=>withLine(x,lineSel,{dx:L.dx+dx,dy:L.y-base.y+dy}),{key:'nudge-line-'+t.id+lineSel,renderAll:false});syncLineFields();lastKey='';sync();status(`${LINE_LABEL[lineSel]} nudged ${dx?`${dx>0?'right':'left'} ${Math.abs(dx)}`:`${dy>0?'down':'up'} ${Math.abs(dy)}`} px (Shift ×10).`);return;}
+    const P=placeOf(t);put(x=>({...x,position:{x:r2(P.x+dx),y:r2(P.anchor[1]+dy)}}),{key:'nudge-title-'+t.id,renderAll:false});
+    for(const [n,v] of [['ft-x',P.x+dx],['ft-y',P.anchor[1]+dy]]){const el=panel.querySelector(`[name=${n}]`);if(el)el.value=String(r2(v));}status(`Title nudged to ${r2(P.x+dx)}, ${r2(P.anchor[1]+dy)} (Shift ×10).`);
+  }
   function saveShapeKeyed(paths){put(t=>{t.shadow={...t.shadow,paths:structuredClone(paths)};return t;},{key:'ft-nudge'+selected,renderAll:false,message:'Nudged (Shift ×10).'});}
   addEventListener('resize',()=>{lastKey='';sync();});
   return {
     setSource(v){source=v;fromFilm.clear();lastKey='';},has,titles,ticks,lane,snapTargets,panel:panelHtml,chapterFields,header,
-    selectedId:()=>selected,select,clear,add:addTitle,duplicate:duplicateSelected,remove:deleteSelected,editing:()=>editing,editHint:()=>editing?SHAPE_HINT:null,sync,fontsLoaded,measure,
+    selectedId:()=>selected,select,clear,add:addTitle,duplicate:duplicateSelected,remove:deleteSelected,split:splitSelected,copy:copySelected,paste:pasteAtPlayhead,picked:()=>picked().map(t=>t.id),lineSelected:()=>lineSel,editing:()=>editing,editHint:()=>editing?SHAPE_HINT:null,sync,fontsLoaded,measure,
     toggleShown(){shown=!shown;lastKey='';sync();return shown;},shown:()=>shown,compositeStill,stillTitles:seconds=>stillTitles(seconds).length,
     fitted:t=>fittedPaths(t,measure),
   };

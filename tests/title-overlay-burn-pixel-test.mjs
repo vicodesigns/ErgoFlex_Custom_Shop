@@ -25,6 +25,8 @@ const CASES=[
   ['default',{...base,id:'rise-0'}],
   ['lines moved + spacing',{...base,id:'rise-1',typography:{eyebrow:{dy:-24,dx:6},detail:{dy:18,dx:-10}}}],
   ['placed, scaled, bold, colour',{...base,id:'rise-2',position:{x:400,y:640},scale:1.2,typography:{title:{weight:700,color:'#ffcc00'},eyebrow:{weight:500,dy:-12}}}],
+  // a line dragged in the frame (M3): fractional offsets as a drag leaves them, on a scaled, placed title
+  ['dragged lines',{...base,id:'rise-4',position:{x:210,y:700},scale:1.1,typography:{detail:{dx:2,dy:61.42},eyebrow:{dx:-13.7,dy:7.25}}}],
   ['italic supporting + medium headline',{...base,id:'rise-3',typography:{detail:{italic:true,size:44},title:{weight:500,spacing:1}}}],
 ];
 const port=await new Promise(res=>{const s=net.createServer();s.listen(0,'127.0.0.1',()=>{const p=s.address().port;s.close(()=>res(p));});});

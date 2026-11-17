@@ -142,6 +142,32 @@ export function newTitle(chapter,at,seconds,taken=[]){
   const [a,b]=spanAt(at,seconds);
   return cleanTitle({id:newTitleId(chapter,taken),rel_in:a,rel_out:b,...DEFAULT_COPY,timed:true},seconds);
 }
+// Split at `at` (chapter seconds): t keeps [in, at], a new title (same copy, layout, shadow) takes [at, out].
+export const MIN_PIECE=.2;
+export function splitTitle(t,at,chapter,seconds,taken=[]){
+  if(!(at>t.rel_in+MIN_PIECE-1e-9&&at<t.rel_out-MIN_PIECE+1e-9))throw Error(`Put the playhead inside the title, at least ${MIN_PIECE} s from its ends, to split it.`);
+  const a=r3(at);
+  return [cleanTitle({...structuredClone(t),rel_out:a,timed:true},seconds),cleanTitle({...structuredClone(t),id:newTitleId(chapter,taken),rel_in:a,timed:true},seconds)];
+}
+// Paste copied titles at `at`: the earliest comes in there, the others keep their offsets; the group moves earlier when
+// it would run past the chapter's end; new ids, Director timing.
+export function pasteTitles(clip,at,chapter,seconds,taken=[]){
+  if(!clip?.length)return [];const a0=Math.min(...clip.map(t=>t.rel_in)),b1=Math.max(...clip.map(t=>t.rel_out));
+  let shift=Math.max(0,Number(at)||0)-a0;if(b1+shift>seconds)shift=seconds-b1;if(a0+shift<0)shift=-a0;
+  const ids=[...taken];return clip.map(t=>{const id=newTitleId(chapter,ids);ids.push(id);
+    return cleanTitle({...structuredClone(t),id,rel_in:r3(t.rel_in+shift),rel_out:r3(t.rel_out+shift),timed:true},seconds);});
+}
+// Move several titles in time together (the lane's multi-selection): the delta is clamped so all stay in the chapter.
+export function shiftTitles(list,ids,delta,seconds){
+  const set=new Set(ids),moving=list.filter(t=>set.has(t.id));if(!moving.length)return {list,delta:0};
+  const lo=-Math.min(...moving.map(t=>t.rel_in)),hi=seconds-Math.max(...moving.map(t=>t.rel_out)),d=r3(Math.max(lo,Math.min(hi,delta)));
+  return {delta:d,list:list.map(t=>set.has(t.id)?{...t,rel_in:r3(t.rel_in+d),rel_out:r3(t.rel_out+d),timed:true}:t)};
+}
+// One line moved (typography.<line>.dx / dy), as the frame's line drag and arrow nudges set it.
+export function withLine(t,key,{dx,dy}){
+  const typ=cleanTypography({...t?.typography,[key]:{...t?.typography?.[key],dx:r2(dx),dy:r2(dy)}}),out={...t};
+  if(typ)out.typography=typ;else delete out.typography;return out;
+}
 // A copy of t (copy, layout, shadow) right after it when it fits in the chapter, else at the same time (it stacks).
 export function duplicateTitle(t,chapter,seconds,taken=[]){
   const len=t.rel_out-t.rel_in,fits=t.rel_out+len<=seconds+1e-6,a=fits?t.rel_out:t.rel_in;
