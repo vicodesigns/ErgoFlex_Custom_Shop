@@ -18,7 +18,7 @@ export function when(iso, now = new Date()) {
 // field ('length', 'title'…). (Not against the film's own shot: its camera is the baked spline, never the editor's keys.)
 const PARTS = { camera: ['camera'], desk: ['motion', 'deskEdits', 'deskBuild'], lighting: ['lighting', 'timeOfDay', 'ledStatus', 'ledColor', 'ledGlow', 'ledSurfaces', 'sceneGlobals', 'sceneLights', 'lightEdits'],
   props: ['propEdits', 'sceneEdits', 'propLayers'], people: ['peopleEdits'], graphics: ['screens'], titles: ['titles', 'titleEdits'], branding: ['brandingEdits'] };
-const FIELDS = { seconds: 'length', title: 'headline', detail: 'detail', transition: 'transition', room: 'room', layout: 'layout', mode: 'time of day', size: 'desk size', preset: 'desk' };
+const FIELDS = { seconds: 'length', title: 'headline', detail: 'detail', transition: 'transition', room: 'room', layout: 'layout', look: 'room look', mode: 'time of day', size: 'desk size', preset: 'desk' };
 export function changesSince(base, cur) {
   if (!cur) return [];
   const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null), out = [];

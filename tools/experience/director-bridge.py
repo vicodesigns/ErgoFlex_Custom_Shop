@@ -62,7 +62,7 @@ if cmd == 'link':
              'easing': 'smooth' if i in (0, len(plan) - 1) else 'linear',
              'view': {'position': list(k['position']), 'target': list(k['target']), 'fov': k.get('fov', 35), 'aspect': aspect}}
             for i, k in enumerate(plan)]
-    s = {k: shot[k] for k in ('id', 'room', 'kind', 'seconds', 'title', 'detail', 'preset', 'transition', 'size', 'layout', 'mode') if k in shot}
+    s = {k: shot[k] for k in ('id', 'room', 'kind', 'seconds', 'title', 'detail', 'preset', 'transition', 'size', 'layout', 'look', 'mode') if k in shot}
     s['seconds'] = min(90, s['seconds'])
     if shot.get('motion'): s['motion'] = shot['motion']
     s['camera'] = {'keys': keys}

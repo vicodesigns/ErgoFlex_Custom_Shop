@@ -248,6 +248,8 @@ export async function mountStage(ctx) {
     }
     const recipe=ctx.captureRecipe();
     api.setTilt('tilting',0);api.setHeight(next.kind==='tilt'?43.5:30);
+    // The chapter's room look (room-looks.mjs; absent = the room's default), for the room load just below.
+    api.setRoomLook?.(next.room,next.look??null);
     if(next.layout){ctx.clearRoomRecipe(next.room,next.layout);api.setMeasuredRoomLayout(next.room,next.layout,{defaultDesktop:false});}
     else await api.setRoomScene(next.room,false,{preserveDesk:true});
     await api.workspaceRoom?.ready;

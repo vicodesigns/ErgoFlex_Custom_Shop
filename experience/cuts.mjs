@@ -16,6 +16,7 @@ import {cleanDeskBuildField} from './desk-build.mjs';
 import {cleanDeskVersionsField} from './desk-versions-edit.mjs';
 import {cleanFilmTitles} from './film-titles.mjs';
 import {cleanTouchscreenField} from './touchscreen-track.mjs';
+import {cleanLook} from '../room-looks.mjs';
 export const CUTS_KEY='ergoflex.clientCuts.v1';
 export const KINDS=[['room','Explore the room'],['hero','Desk showcase'],['glide','Omni-wheel movement'],['lift','Sit to stand'],['tilt','Drafting / easel'],['group','Group-work Groove'],['storage','Storage Groove'],['wellness','Movement break'],['proximity','Proximity demo'],['music','Music lighting'],['media','Curved-screen media']];
 export const PRESET_IDS=['office','artist','gaming','music','library','compact','creative','architect','occ','hbhs'];
@@ -45,6 +46,8 @@ export function cleanShot(v={},catalog){
     preset:PRESET_IDS.includes(v.preset)?v.preset:defaultPreset(room,kind),transition:number(v.transition,0,3,.8),size:['48x30','60x30'].includes(v.size)?v.size:'60x30'};
   if(catalog){if(layout)shot.layout=layout.id;if(mode)shot.mode=mode.id;}
   else {if(/^[a-z0-9-]{1,64}$/.test(v.layout||''))shot.layout=v.layout;if(/^[a-z0-9-]{1,64}$/.test(v.mode||''))shot.mode=v.mode;}
+  // The room's look (room-looks.mjs): kept when the room has it (an explicit default too); absent = the room's default.
+  const look=cleanLook(room,v.look);if(look)shot.look=look;
   if(Array.isArray(v.motion?.clips))shot.motion=cleanClipMotion(v.motion,shot.seconds);
   else if(v.motion){const tracks=cleanDeskTracks(v.motion.tracks);shot.motion=Object.values(tracks).some(a=>a.length)?{tracks}:{from:cleanPose(v.motion.from),to:cleanPose(v.motion.to)};}
   const from=cleanCamera(v.camera?.from),to=cleanCamera(v.camera?.to);

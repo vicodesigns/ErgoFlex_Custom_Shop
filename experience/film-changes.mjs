@@ -2,7 +2,8 @@
 // by each one) and the lane groups that do (their ● and Shift+U's "changed" step). cut: the cut's shot; film: the
 // film's shot (bridge.filmShot). Pure (node test).
 import {cleanClipMotion} from './desk-clips.mjs';
-export const CHAPTER_FIELDS = ['title', 'detail', 'seconds', 'transition', 'room', 'layout', 'mode', 'kind', 'preset', 'size'];
+import {lookOf} from '../room-looks.mjs';
+export const CHAPTER_FIELDS = ['title', 'detail', 'seconds', 'transition', 'room', 'layout', 'look', 'mode', 'kind', 'preset', 'size'];
 export const GROUP_KEYS = { motion: ['camera', 'motion'], lighting: ['lighting', 'timeOfDay', 'ledStatus', 'ledColor', 'ledGlow', 'ledSurfaces', 'sceneGlobals'], props: ['propEdits', 'sceneEdits'], people: ['peopleEdits'], graphics: ['screens'], titles: ['titles', 'titleEdits'] };
 const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 // The desk's moves against the film's as the Director cleans them when a chapter opens (cuts.mjs cleanShot ->
@@ -13,8 +14,9 @@ export function motionChanged(cut, film) {
   if (Array.isArray(film?.motion?.clips)) { try { return !same(cut.motion, cleanClipMotion(film.motion, Number(cut.seconds ?? film.seconds))); } catch {} }
   return true;
 }
-export const filmValue = (film, name) => film && Object.prototype.hasOwnProperty.call(film, name) ? film[name] : undefined;
-export function fieldChanged(cut, film, name) { const v = filmValue(film, name); return v !== undefined && !same(cut?.[name], v); }
+// (look: a film shot without one shows its room's default look, room-looks.mjs; a room without looks has none)
+export const filmValue = (film, name) => name === 'look' ? (film ? lookOf(film.room, film.look) ?? undefined : undefined) : film && Object.prototype.hasOwnProperty.call(film, name) ? film[name] : undefined;
+export function fieldChanged(cut, film, name) { const v = filmValue(film, name); return v !== undefined && !same(name === 'look' ? lookOf(cut?.room, cut?.look) : cut?.[name], v); }
 export function changedFields(cut, film) { return CHAPTER_FIELDS.filter(n => fieldChanged(cut, film, n)); }
 // The camera against the film's STORY keys (cameraPlan, as a chapter page gets them: director-bridge.py link, plan-NN at
 // time = at / seconds), not its baked spline (camera.keys: spline-*), which never equals the editor's keys: the ● on

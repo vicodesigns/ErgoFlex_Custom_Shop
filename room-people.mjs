@@ -85,6 +85,12 @@ import {poseAt} from './people-pose-keys.mjs';
 import {applyHeld} from './people-held.mjs';
 import {postureRecord,postureRecords,hasPosturePose,poseOwner,sourceOf,roomEditKey,blendPosturePoses} from './people-postures.mjs';
 import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, shoeFit, solveWalk, lookToward, solveTread, rollPlan, reachAt, actedKey, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=people-motion-20261117';
+// Room looks (room-looks.mjs): the Nov 17 pass's cast finishes (own materials, hair / shirt maps) are the refreshed Create
+// room's and the Commons'; Create's Classic look keeps the cast as it was, and its people move as they did then
+// (rig.classicMotion: room-people-motion.mjs's painting, pottery and page-turn strokes from before the pass).
+const classicCreate = room => room?.id === 'creative' && room.look === 'classic';
+const refreshedCast = room => (room?.id === 'creative' && !classicCreate(room)) || !!room?.roomLayout?.humboldt;
+const classicRig = (rig, room) => { rig.classicMotion = classicCreate(room); return rig; };
 // who looks at whom (RoomPeople.gazeOf)
 const GAZE_TALK = /^(stand-talk|sit-chat|stand-drink|stand-mug|stand-coffee|sit-coffee)$/, GAZE_IDLE = /^(stand-wait|wheel-roll|wheel-watch|cane-stand|white-cane|sit-listen)$/;
 const GAZE_DESK = /^stand-phone-watch$/;      // watching the featured desk go (the workshop film): the head follows it
@@ -1526,7 +1532,7 @@ export class RoomPeople {
             object.name = 'Person:' + spec.id; object.userData.person = spec; object.userData.personFit = this.library.entry(spec.id)?.person?.deskHeight ?? null; object.visible = false;
             if (chair) { chair.name = 'Person chair:' + spec.id; chair.visible = false; root.add(chair); object.userData.personChair = chair; }
             if (hairEdgeEnabled()) hairEdges(object, true);      // (before ownMaterials: its copies keep it)
-            if (room.id === 'creative' || room.roomLayout?.humboldt || spec.desk || this.filter?.when?.[this.keyOf(spec)]) this.ownMaterials(object);
+            if (refreshedCast(room) || spec.desk || this.filter?.when?.[this.keyOf(spec)]) this.ownMaterials(object);
             root.add(object); this.people.push(object); this.resize(object, spec); this.recolor(object, spec);
             // The Studio may load people after the room's first asset hydration. Their editor identity must
             // follow the placement, not the order in which models and posture variants finish loading.
@@ -1560,7 +1566,7 @@ export class RoomPeople {
         }
         for (const [who, objects] of groups) {
             const data = await this.library.rigData(who).catch(() => null); if (generation !== this.generation) return; if (!data) continue;
-            const rig = new PersonRig(data); if (objects.some(o => !rig.has(o.userData.person.id))) continue;
+            const rig = classicRig(new PersonRig(data), this.room); if (objects.some(o => !rig.has(o.userData.person.id))) continue;
             const drawn = await Promise.all(objects.map(o => this.rig(o)));
             if (generation !== this.generation) return;
             if (token !== this.room.token || root !== this.room.root || drawn.some(o => !o.userData.personRig || !this.people.includes(o))) continue;
@@ -1606,7 +1612,7 @@ export class RoomPeople {
         object.traverse(o => {
             if (o.isMesh) o.material = Array.isArray(o.material) ? o.material.map(copy) : copy(o.material);
         });
-        if (this.room.id === 'creative' || this.room.roomLayout?.humboldt) {
+        if (refreshedCast(this.room)) {
             // These are private material copies for this placement, including its animated replacement.
             for (const m of object.userData.personMaterials) {
                 const part = partOf(m.name);
@@ -2304,7 +2310,7 @@ export class RoomPeople {
     async readyChange(change) {
         const find = spec => this.people.find(o => o.userData.person === spec), first = find(change.from); if (!first) return;
         const who = this.character(first), data = await this.library.rigData(who).catch(() => null); if (!data) return;
-        if (!this.rigsOf.has(who)) this.rigsOf.set(who, new PersonRig(data));
+        if (!this.rigsOf.has(who)) this.rigsOf.set(who, classicRig(new PersonRig(data), this.room));
         const rig = this.rigsOf.get(who), a = find(change.from), b = find(change.to); if (!a || !b || !rig.has(change.from.id) || !rig.has(change.to.id)) return;
         const [ra, rb] = await Promise.all([this.rig(a), this.rig(b)]); if (!ra.userData.personRig || !rb.userData.personRig) return;
         const home = o => ({ position: o.position.clone(), turn: o.rotation.y });
@@ -2568,7 +2574,7 @@ export class RoomPeople {
         const spec = object.userData.person, person = this.library.entry(spec.id)?.person, still = o => { o.userData.personStill = true; };
         if (!person || !(livelyPose(person.pose) || (person.pose === 'walk' && (spec.walk ? !!this.filter : !this.filter)))) return still(object);      // (a Studio walker strolls: stroll(); a film's walker with a path walks it)
         const data = await this.library.rigData(person.character).catch(() => null); if (!data) return still(object);
-        if (!this.rigsOf.has(person.character)) this.rigsOf.set(person.character, new PersonRig(data));
+        if (!this.rigsOf.has(person.character)) this.rigsOf.set(person.character, classicRig(new PersonRig(data), this.room));
         const rig = this.rigsOf.get(person.character); if (!rig.has(spec.id)) return still(object);
         const drawn = await this.rig(object); if (!drawn.userData.personRig) return still(drawn);
         drawn.userData.personLife = { rig, key: rig.key(spec.id), seed: seedOf(this.keyOf(spec)), live: false };

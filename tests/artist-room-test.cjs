@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
 const puppeteer = require('puppeteer');
-const root = path.resolve(__dirname, '..'), out = '/tmp/ef-artist-review';
+const root = path.resolve(__dirname, '..'), out = '/tmp/ef-artist-review' + (process.env.ROOM_LOOK ? '-' + process.env.ROOM_LOOK : '');
 fs.mkdirSync(out, { recursive: true });
 const server = http.createServer((req, res) => {
     const file = path.join(root, new URL(req.url, 'http://localhost').pathname.replace(/^\/$/, '/index.html'));
@@ -22,7 +22,9 @@ const server = http.createServer((req, res) => {
         page.setDefaultNavigationTimeout(120000); // software WebGL loads slowly under load
         page.on('pageerror', e => errors.push(e.message));
         await page.setViewport({ width: 1500, height: 1200 });
-        const url = `http://127.0.0.1:${server.address().port}/?room=creative&view=room`;
+        // ROOM_LOOK=classic: the same checks in Create's Classic look (room-looks.mjs; absent = the default, Studio refresh)
+        const look = process.env.ROOM_LOOK || '';
+        const url = `http://127.0.0.1:${server.address().port}/?room=creative&view=room${look ? '&look=' + encodeURIComponent(look) : ''}`;
         await page.goto(url);
         await page.waitForFunction(() => window.ErgoFlex?.wheelRigs.length === 4 && getComputedStyle(document.querySelector('#loader')).display === 'none', { timeout: 120000 });
         await page.evaluate(async () => { ErgoFlex.renderer.setPixelRatio(.5); ErgoFlex.renderer.shadowMap.enabled = false; await ErgoFlex.workspaceRoom.ready; });
@@ -30,6 +32,8 @@ const server = http.createServer((req, res) => {
         assert.equal(await page.$eval('#creative-room-controls', p => p.hidden), false);
         assert.equal(await page.$eval('#home-office-controls', p => p.hidden), true);
         assert.equal(await page.evaluate(() => ErgoFlex.artistMode), 'afternoon');
+        assert.equal(await page.evaluate(() => ErgoFlex.workspaceRoom.look), look || 'refresh', 'the room is built in the asked look');
+        assert.equal(await page.evaluate(() => !!ErgoFlex.workspaceRoom.root.getObjectByName('Oiled oak studio floor')), (look || 'refresh') === 'refresh', 'the floor of the look');
         const measure = () => page.evaluate(async () => {
             const THREE = await import('three'), room = ErgoFlex.workspaceRoom;
             room.root.updateMatrixWorld(true);

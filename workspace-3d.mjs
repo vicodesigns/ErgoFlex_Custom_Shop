@@ -35,6 +35,8 @@ import { buildHomeOffice, homeLayoutForSize, homeLayoutById, HOME_MODES, migrate
 import { buildGamingRoom, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=polish-20261113b';
 import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboard } from './music-room.mjs?v=polish-20261113b';
 import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=polish-20261113b';
+import { buildArtistRoom as buildArtistRoomClassic } from './artist-room-classic.mjs';
+import { lookOf } from './room-looks.mjs';
 import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=polish-20261113b';
 
 import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=polish-20261113b';
@@ -177,9 +179,10 @@ export const PROP_LIBRARY = {
         return clone;
     },
     // A fresh instance in millimetres, ready to be parented into a room.
-    async instance(id, roomId = null, layoutId = null) {
+    // (look: the room's look, room-looks.mjs; Create's Classic look keeps the library's own bamboo)
+    async instance(id, roomId = null, layoutId = null, look = null) {
         let file = null;
-        if (roomId === 'creative' && id === 'decor-bamboo') file = 'assets/rooms/artist/bamboo.glb';
+        if (roomId === 'creative' && id === 'decor-bamboo' && lookOf(roomId, look) !== 'classic') file = 'assets/rooms/artist/bamboo.glb';
         if (roomId === 'library' && layoutId === 'humboldt' && (id === 'ergoflex-plant-1' || id === 'ficus'))
             file = 'assets/rooms/library/bay-planter.glb';
         const source = await this.load(id, file);
@@ -504,9 +507,26 @@ function prepareArtistPainting(root) {
     weave.wrapS = weave.wrapT = THREE.RepeatWrapping;
     weave.repeat.set(96, 96 * sheet.height / sheet.width); weave.generateMipmaps = true;
     weave.minFilter = THREE.LinearMipmapLinearFilter; weave.magFilter = THREE.LinearFilter;
-    weave.anisotropy = texture.anisotropy = 8; weave.needsUpdate = true;
-    canvas.material = material('#ffffff', { map: texture, bumpMap: weave, bumpScale: .00028, roughness: .8 });
+    weave.anisotropy = 8; weave.needsUpdate = true;
+    // (Create's Classic look, room-looks.mjs: the painting as it was before the weave, its texture's own anisotropy)
+    canvas.userData.paintingLooks = { anisotropy: texture.anisotropy, classic: material('#ffffff', { map: texture, roughness: .88 }),
+        refresh: material('#ffffff', { map: texture, bumpMap: weave, bumpScale: .00028, roughness: .8 }) };
+    canvas.replacedMaterials = [canvas.userData.paintingLooks.classic, canvas.userData.paintingLooks.refresh];
     canvas.name = 'Artist painting'; canvas.paintingTexture = texture; canvas.ownedTextures = [texture, weave];
+    paintingLook(canvas); easelPaintings.add(new WeakRef(canvas));
+}
+// The easel accessory's painting follows the Studio's open room's look (studio.js setRoomScene, after its room's set):
+// Create's Classic look shows it without the canvas weave, every other room as now. Paintings already on a desk switch in place.
+let easelLook = null;
+const easelPaintings = new Set();
+function paintingLook(canvas) {
+    const looks = canvas.userData.paintingLooks, classic = easelLook === 'classic', next = classic ? looks.classic : looks.refresh;
+    if (canvas.material === next) return;
+    canvas.material = next; canvas.paintingTexture.anisotropy = classic ? looks.anisotropy : 8; canvas.paintingTexture.needsUpdate = true;
+}
+export function setEaselLook(look) {
+    easelLook = look;
+    for (const ref of easelPaintings) { const canvas = ref.deref(); if (canvas) paintingLook(canvas); else easelPaintings.delete(ref); }   // (weak: a removed accessory goes)
 }
 
 function prepareShelfOrganizer(root) {
@@ -1378,6 +1398,8 @@ export class WorkspaceRoom {
         disposeTree([...(this.campusRetired || []), ...(this.root ? [this.root] : [])]);
         this.campusRetired=[];this.campusFixtures=[];
         this.id = id; this.root = null; this.walls = []; this.missingProps = [];
+        // The room's look (room-looks.mjs): options.look, else the room's default; null for a room with one look.
+        this.look = lookOf(id, options.look);
         this.atelierGamingGlows = []; this.atelierDecorGlows = []; this.atelierBedGlows = []; this.atelierLamps = []; this.atelierLampPhase = ['afternoon',1];
         this.decorateStation = null;
         this.homeAtmosphere = null; this.roomAtmosphere = null; this.decorateProp = null; this.migrateSavedTransform = null; this.migrateSavedAssets = null; this.propReplacements = null;
@@ -1450,7 +1472,7 @@ export class WorkspaceRoom {
         }
         else if (id === 'gaming') buildGamingRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
         else if (id === 'music') buildMusicRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
-        else if (id === 'creative') buildArtistRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
+        else if (id === 'creative') (this.look === 'classic' ? buildArtistRoomClassic : buildArtistRoom)(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
         else if (id === 'study') buildStudyRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
         else if (id === 'childroom') buildChildRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
         else if (id === 'bedroom') buildBedroomRoom(this, root, this.roomLayout, { material, mesh, box, rod, sphere, markSceneAsset });
@@ -1718,7 +1740,7 @@ export class WorkspaceRoom {
                     object.name=decor.entry.name;object.userData={sharedProp:true,propId:placement.id,sceneAssetName:decor.entry.name,decorUpgrade:decor.id,atelierDecor:decor.entry.atelierDecor};
                     return {placement,object,decor};
                 }
-                const object = await PROP_LIBRARY.instance(supplied || placement.id, this.id, this.roomLayout?.id);
+                const object = await PROP_LIBRARY.instance(supplied || placement.id, this.id, this.roomLayout?.id, this.look);
                 if (supplied) {
                     const old = PROP_LIBRARY.entry(placement.id), next = PROP_LIBRARY.entry(supplied);
                     if (placement.id === 'decor-plant2') {
@@ -1793,7 +1815,7 @@ export class WorkspaceRoom {
     async addAsset(propId, key, position = [0, 0, 800]) {
         const token = this.token;
         await PROP_LIBRARY.loadIndex();
-        const object = await PROP_LIBRARY.instance(propId, this.id, this.roomLayout?.id);
+        const object = await PROP_LIBRARY.instance(propId, this.id, this.roomLayout?.id, this.look);
         if (token !== this.token) return null;
         object.position.set(...position);
         object.userData.propAnchor = PROP_LIBRARY.entry(propId)?.anchor;
