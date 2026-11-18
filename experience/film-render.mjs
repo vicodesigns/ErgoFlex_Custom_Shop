@@ -5,6 +5,7 @@ import {mergePropEdits} from './prop-edits.mjs';
 import {mergeBranding} from './branding-edits.mjs';
 import {mergeDeskEdits} from './desk-edits.mjs';
 import {mergeFeaturedBuild} from './desk-build.mjs';
+import {mergePeople} from './people-edits.mjs';
 // The shot a film render gets: the full built film shot with the Director's edits on top.
 // Camera: filmCamera below.
 export function filmRenderShot(film,shot,keys){
@@ -19,7 +20,9 @@ export function filmRenderShot(film,shot,keys){
   if(lit.timeOfDay)next.timeOfDay=structuredClone(lit.timeOfDay);
   const filmed=filmCamera(film,keys,seconds);
   if(filmed){next.cameraPlan=filmed.cameraPlan;next.camera=filmed.camera;}
-  delete next.lights;Object.assign(next,mergeSceneLights(film,shot),mergePropEdits(film,shot),mergeBranding(film,shot),mergeDeskEdits(film,shot),mergeFeaturedBuild(film,shot));
+  // (people: the Director's cast over the film's, as the live stage shows it: film-chapters.mjs liveFilmShot; 18 Nov 2026:
+  // Render still and Film look showed the film's own cast until an Export cut brought his People edits in)
+  delete next.lights;Object.assign(next,mergeSceneLights(film,shot),mergePropEdits(film,shot),mergePeople(film,shot),mergeBranding(film,shot),mergeDeskEdits(film,shot),mergeFeaturedBuild(film,shot));
   if(next.quality===undefined)next.quality='hq13';
   return next;
 }
