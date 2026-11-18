@@ -47,7 +47,7 @@ export function cleanShot(v={},catalog){
   if(catalog){if(layout)shot.layout=layout.id;if(mode)shot.mode=mode.id;}
   else {if(/^[a-z0-9-]{1,64}$/.test(v.layout||''))shot.layout=v.layout;if(/^[a-z0-9-]{1,64}$/.test(v.mode||''))shot.mode=v.mode;}
   // The room's look (room-looks.mjs): kept when the room has it (an explicit default too); absent = the room's default.
-  const look=cleanLook(room,v.look);if(look)shot.look=look;
+  const look=cleanLook(room,v.look,shot.layout);if(look)shot.look=look;   // (a layout's own looks, the Commons': checked against shot.layout)
   if(Array.isArray(v.motion?.clips))shot.motion=cleanClipMotion(v.motion,shot.seconds);
   else if(v.motion){const tracks=cleanDeskTracks(v.motion.tracks);shot.motion=Object.values(tracks).some(a=>a.length)?{tracks}:{from:cleanPose(v.motion.from),to:cleanPose(v.motion.to)};}
   const from=cleanCamera(v.camera?.from),to=cleanCamera(v.camera?.to);

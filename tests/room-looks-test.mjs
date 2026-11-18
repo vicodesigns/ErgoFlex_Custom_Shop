@@ -1,6 +1,7 @@
 // Room looks (room-looks.mjs, 18 Nov 2026): the Create room's Classic look is the artist room from before the Nov 17 pass
 // (a59560ee), Studio refresh the room after it, and a chapter keeps its look through the Director's cut, autosave, the film
-// field checks and the film import (build-round8-director.py, director-bridge.py).
+// field checks and the film import (build-round8-director.py, director-bridge.py). The Commons (room 'library', layout
+// 'humboldt': a layout's own looks) has the same pair: Classic = the Commons before a59560ee and 713d22ff.
 //   1. the look list and its cleaning
 //   2. the frozen Classic modules are the 9644d030 files (only the header and one import line differ)
 //   3. both looks build: Classic has the old floor, wall, plants and painting cards, Refresh the pass's
@@ -28,27 +29,59 @@ assert.equal(cleanLook('home', 'classic'), null, 'a look of another room is drop
 assert.equal(lookOf('creative', null), 'refresh');
 assert.equal(lookOf('home', 'classic'), null, 'a room without looks has none');
 assert.equal(lookName('creative', 'classic'), 'Classic');
+// the Commons: one layout of the library has looks, the library's other layouts none
+assert.deepEqual(looksOf('library', 'humboldt').map(l => l.id), ['refresh', 'classic']);
+assert.deepEqual(looksOf('library', 'reading-room'), [], 'another library layout has no looks');
+assert.deepEqual(looksOf('library'), [], 'no layout given: no Look selector for the library as a whole');
+assert.equal(defaultLook('library', 'humboldt'), 'refresh', 'absent = what the Commons builds today (713d22ff)');
+assert.equal(cleanLook('library', 'classic', 'humboldt'), 'classic');
+assert.equal(cleanLook('library', 'classic', 'reading-room'), null, 'a look the layout does not have is dropped');
+assert.equal(cleanLook('library', 'classic'), 'classic', 'no layout (the Studio\'s setRoomLook): kept when one of the room\'s layouts has it');
+assert.equal(cleanLook('library', 'bogus'), null);
+assert.equal(lookOf('library', null, 'humboldt'), 'refresh');
+assert.equal(lookOf('library', 'classic', 'reading-room'), null);
+assert.equal(lookOf('creative', 'classic', 'house'), 'classic', 'a room\'s own looks hold for every layout of it');
+assert.equal(lookName('library', 'classic', 'humboldt'), 'Classic');
 for (const [room, list] of Object.entries(ROOM_LOOKS)) assert(list.every(l => /^[a-z0-9-]{1,40}$/.test(l.id) && l.name), room + ': look ids fit the film import (build-round8-director.py LOOK)');
 
 // ---- 2. frozen copies
 let git = null;
-try { git = f => execFileSync('git', ['show', '9644d030:' + f], { cwd: root, encoding: 'utf8', maxBuffer: 1 << 26 }); git('artist-room.mjs'); } catch { git = null; }
+// (line ends dropped on both sides: a Windows checkout with core.autocrlf has CRLF files, git show gives the LF blob)
+try { git = f => execFileSync('git', ['show', '9644d030:' + f], { cwd: root, encoding: 'utf8', maxBuffer: 1 << 26 }).replace(/\r/g, ''); git('artist-room.mjs'); } catch { git = null; }
 if (git) {
   // (the frozen copies start with a comment header; the 9644d030 files start with their imports)
-  const body = f => { const lines = fs.readFileSync(path.join(root, f), 'utf8').split('\n'); return lines.slice(lines.findIndex(l => !l.startsWith('//'))); };
+  const body = f => { const lines = fs.readFileSync(path.join(root, f), 'utf8').replace(/\r/g, '').split('\n'); return lines.slice(lines.findIndex(l => !l.startsWith('//'))); };
   const roomOld = git('artist-room.mjs').split('\n'), room = body('artist-room-classic.mjs');
   assert.equal(room.length, roomOld.length, 'artist-room-classic.mjs: the 9644d030 file and its header');
   const diff = room.map((l, i) => l === roomOld[i] ? null : i).filter(i => i !== null);
   assert.deepEqual(diff, [4], 'artist-room-classic.mjs differs from 9644d030 only in its artist-studio-detail import');
   assert.equal(room[4], roomOld[4].replace("'./artist-studio-detail.mjs?v=artist-studio-20261025'", "'./artist-studio-detail-classic.mjs'"));
   assert.deepEqual(body('artist-studio-detail-classic.mjs'), git('artist-studio-detail.mjs').split('\n'), 'artist-studio-detail-classic.mjs is the 9644d030 file');
+  // the Commons: the builder differs only in its two imports and its window scenery's classic: true
+  const comOld = git('library-humboldt-commons.mjs').split('\n'), com = body('library-humboldt-commons-classic.mjs');
+  assert.equal(com.length, comOld.length, 'library-humboldt-commons-classic.mjs: the 9644d030 file and its header');
+  const comDiff = com.map((l, i) => l === comOld[i] ? null : i).filter(i => i !== null);
+  assert.equal(comDiff.length, 3, 'library-humboldt-commons-classic.mjs differs from 9644d030 in three lines only: ' + comDiff.map(i => com[i]).join(' | '));
+  assert.deepEqual(comDiff.map(i => com[i]), comDiff.map(i => comOld[i]
+    .replace("'./library-humboldt-life.mjs?v=polish-20261111f'", "'./library-humboldt-life-classic.mjs'")
+    .replace("'./humboldt-commons-detail.mjs?v=commons-home-comfort-20261024'", "'./humboldt-commons-detail-classic.mjs'")
+    .replace("{ floor: -glassBack.y1 / 2, seed: 7130 }", "{ floor: -glassBack.y1 / 2, seed: 7130, classic: true }")));
+  for (const f of ['library-humboldt-life', 'humboldt-commons-detail']) assert.deepEqual(body(f + '-classic.mjs'), git(f + '.mjs').split('\n'), f + '-classic.mjs is the 9644d030 file');
+  // the window scenery's classic Humboldt scene and ferns are the 9644d030 functions, renamed
+  const fn = (src, name) => { const a = src.indexOf('\nfunction ' + name + '('); assert(a >= 0, name); return src.slice(a + 1, src.indexOf('\n}\n', a) + 2); };
+  const wssOld = git('window-scenery-scenes.mjs'), wss = fs.readFileSync(path.join(root, 'window-scenery-scenes.mjs'), 'utf8').replace(/\r/g, '');
+  assert.equal(fn(wss, 'fernClassic'), fn(wssOld, 'fern').replace('function fern(', 'function fernClassic('), 'fernClassic is 9644d030\'s fern');
+  assert.equal(fn(wss, 'humboldtClassic'), fn(wssOld, 'humboldt').replace('function humboldt(', 'function humboldtClassic(').replace(/(?<![A-Za-z_.])fern\(/g, 'fernClassic('), 'humboldtClassic is 9644d030\'s humboldt (with its ferns)');
+  assert.match(wss, /function humboldt\(k, ctx\) \{\n    if \(ctx\.classic\) return humboldtClassic\(k, ctx\);/);
 } else console.log('room-looks-test: (no git object 9644d030 here: the frozen-copy check skipped)');
 
 // ---- 3. both looks build (no GPU: canvases are stubs, image and model loads never arrive)
-const context = () => new Proxy({ createLinearGradient: () => ({ addColorStop() {} }), createRadialGradient: () => ({ addColorStop() {} }), createPattern: () => ({}), measureText: s => ({ width: s.length * 7 }), getImageData: (x, y, w, h) => ({ data: new Uint8ClampedArray(w * h * 4) }) }, { get: (o, k) => k in o ? o[k] : () => {} });
+const context = () => new Proxy({ createLinearGradient: () => ({ addColorStop() {} }), createRadialGradient: () => ({ addColorStop() {} }), createPattern: () => ({}), measureText: s => ({ width: s.length * 7 }), getImageData: (x, y, w, h) => ({ data: new Uint8ClampedArray(w * h * 4) }), createImageData: (w, h) => ({ width: w, height: h, data: new Uint8ClampedArray(w * h * 4) }) }, { get: (o, k) => k in o ? o[k] : () => {} });
 const element = () => ({ width: 512, height: 512, style: {}, getContext: context, addEventListener() {}, removeEventListener() {}, setAttribute() {} });
 globalThis.document = { createElement: element, createElementNS: element };
 globalThis.fetch = async () => { throw Error('no network in this test'); };
+globalThis.Image = class { addEventListener() {} set src(v) {} };
+globalThis.localStorage ??= { getItem: () => null, setItem() {}, removeItem() {} };
 const material = (color, extra = {}) => new THREE.MeshStandardMaterial({ color, ...extra });
 const mesh = (p, g, m, at = [0, 0, 0]) => { const o = new THREE.Mesh(g, m); o.position.set(...at); p.add(o); return o; };
 const box = (p, size, at, m, r = 0) => mesh(p, r ? new RoundedBoxGeometry(...size, 2, r) : new THREE.BoxGeometry(...size), m, at);
@@ -76,14 +109,36 @@ for (const layout of Object.values(ARTIST_LAYOUTS)) {
   for (const n of ['Artist gallery wall', 'Artist materials wall', 'Artist paper lantern', 'Artist hanging planter']) assert(classic.names.has(n) && fresh.names.has(n), `${layout.id}: both looks have ${n}`);
 }
 
+// the Commons, both looks (library-room.mjs picks the builder on room.look)
+{
+  const { LIBRARY_LAYOUTS, buildLibraryRoom } = await import('../library-room.mjs');
+  const layout = LIBRARY_LAYOUTS.humboldt, names = look => { const r = new THREE.Group(); r.scale.setScalar(.001);
+    const room = { id: 'library', look, root: r, roomLayout: layout, walls: [], propSupports: [], missingProps: [], windowViewReady: Promise.resolve(), token: 0 };
+    buildLibraryRoom(room, r, layout, helpers); const n = new Set(); r.traverse(o => n.add(o.name)); return { room, n }; };
+  const fresh = names(null), classic = names('classic');
+  for (const n of ['Potted fern', 'Pressed fern study', 'Woven solar shades', 'North Coast field guides', 'Redwoods in coastal fog']) {
+    assert(fresh.n.has(n), `Commons Studio refresh: ${n}`); assert(!classic.n.has(n), `Commons Classic has no ${n}`);
+  }
+  assert(classic.n.has('Framed landscape print') && !fresh.n.has('Framed landscape print'), 'Commons Classic keeps its framed landscape print');
+  assert(fresh.room.root.commonsTextiles && !classic.room.root.commonsTextiles, 'the knit / twill cloth maps are the refresh\'s only');
+  let cut = false; classic.room.root.traverse(o => { if (o.userData.cutawayHeightMm != null || o.material?.map?.userData?.staticArtwork) cut = true; });
+  assert(!cut, 'Commons Classic sets no ceiling cutaway heights and flags no static artwork (workspace-3d / film-tod act as before)');
+  for (const n of ['Ceiling gallery tracks', 'Ceiling light frames', 'Ceiling Humboldt sloped ceiling']) assert(classic.n.has(n) && fresh.n.has(n), `Commons: both looks have ${n}`);
+}
+
 // ---- the room code picks the look (workspace-3d.mjs needs a browser: its dispatch is read from the source)
 const ws = fs.readFileSync(path.join(root, 'workspace-3d.mjs'), 'utf8');
 assert.match(ws, /import \{ buildArtistRoom as buildArtistRoomClassic \} from '\.\/artist-room-classic\.mjs';/);
 assert.match(ws, /this\.look = lookOf\(id, options\.look\)/);
 assert.match(ws, /else if \(id === 'creative'\) \(this\.look === 'classic' \? buildArtistRoomClassic : buildArtistRoom\)\(this, root/);
 assert.match(ws, /id === 'decor-bamboo' && lookOf\(roomId, look\) !== 'classic'/, 'Classic keeps the library bamboo');
+assert.match(ws, /\(id === 'ergoflex-plant-1' \|\| id === 'ficus'\) && lookOf\(roomId, look, layoutId\) !== 'classic'\)/, 'Commons Classic keeps the library plant and ficus (no bay planter)');
+assert.match(ws, /if \(this\.roomLayout\?\.id\) this\.look = lookOf\(id, options\.look, this\.roomLayout\.id\);/, 'the room\'s look is checked against its layout');
+assert.match(fs.readFileSync(path.join(root, 'library-room.mjs'), 'utf8'), /if \(layout\.humboldt\) return \(room\.look === 'classic' \? buildHumboldtCommonsClassic : buildHumboldtCommons\)\(room, root, layout, helpers\);/);
 const people = fs.readFileSync(path.join(root, 'room-people.mjs'), 'utf8');
 assert.equal((people.match(/room\.id === 'creative'|this\.room\.id === 'creative'/g) || []).length, 0, 'room-people.mjs gates the pass\'s cast finishes on the look (refreshedCast), not on the room alone');
+assert.match(people, /const refreshedCast = room => \(room\?\.id === 'creative' && !classicCreate\(room\)\) \|\| \(!!room\?\.roomLayout\?\.humboldt && !classicCommons\(room\)\);/);
+assert.match(people, /rig\.classicMotion = classicCreate\(room\) \|\| classicCommons\(room\)/, 'the Commons\' Classic cast moves as before too');
 assert.match(fs.readFileSync(path.join(root, 'experience', 'stage.mjs'), 'utf8'), /api\.setRoomLook\?\.\(next\.room,next\.look\?\?null\);\s*\n\s*if\(next\.layout\)/, 'the stage sets the look before it loads the room');
 
 // ---- 4. the shot field
@@ -94,6 +149,10 @@ assert.equal(cleanShot({ ...base, look: 'refresh' }).look, 'refresh', 'an explic
 assert.equal('look' in cleanShot(base), false, 'absent stays absent: no existing chapter key changes');
 assert.equal('look' in cleanShot({ ...base, look: 'bogus' }), false);
 assert.equal('look' in cleanShot({ ...base, room: 'home', layout: 'house', look: 'classic' }), false);
+const commons = { ...base, id: 'commons', room: 'library', layout: 'humboldt' };
+assert.equal(cleanShot({ ...commons, look: 'classic' }).look, 'classic', 'the Commons keeps its look');
+assert.equal('look' in cleanShot({ ...commons, layout: 'reading-room', look: 'classic' }), false, 'another library layout drops it');
+assert.equal('look' in cleanShot(commons), false);
 const cut = cleanCut({ schema: 'ergoflex.client-cut', version: 1, id: 'c', name: 'n', shots: [{ ...base, look: 'classic' }] });
 assert.equal(cleanCut(JSON.parse(JSON.stringify(cut))).shots[0].look, 'classic', 'a cut round trip keeps it');
 const { CHAPTER_FIELDS, fieldChanged, filmValue } = await import('../experience/film-changes.mjs');
@@ -105,6 +164,10 @@ assert.equal(fieldChanged({ ...base, look: 'refresh' }, film, 'look'), false);
 assert.equal(fieldChanged({ ...base, look: 'classic' }, film, 'look'), true, 'the ↺ by Room look when it is not the film\'s');
 assert.equal(fieldChanged({ ...base, look: 'classic' }, { ...film, look: 'classic' }, 'look'), false);
 assert.equal(fieldChanged({ id: 'x', room: 'home' }, { id: 'x', room: 'home' }, 'look'), false);
+const comFilm = { id: 'commons', room: 'library', layout: 'humboldt' };
+assert.equal(filmValue(comFilm, 'look'), 'refresh');
+assert.equal(fieldChanged({ ...commons, look: 'classic' }, comFilm, 'look'), true);
+assert.equal(fieldChanged({ ...commons }, comFilm, 'look'), false);
 const { changesSince } = await import('../experience/director-autosave.mjs');
 assert.deepEqual(changesSince({ shots: [base] }, { shots: [{ ...base, look: 'classic' }] }), ['room look']);
 const { filmRenderShot } = await import('../experience/film-render.mjs');
@@ -125,7 +188,7 @@ try {
   assert.equal(JSON.parse(fs.readFileSync(link, 'utf8')).shots[0].look, 'classic', 'the chapter page carries the film\'s look');
   // build-round8-director.py: its import keeps the export's look, its pass writes it onto the film shot
   const src = fs.readFileSync(path.join(root, 'tools/experience/build-round8-director.py'), 'utf8');
-  assert.match(src, /if isinstance\(shot\.get\('look'\), str\) and LOOK\.fullmatch\(shot\['look'\]\): dc\['look'\] = shot\['look'\]\n\s*elif 'look' in before: dc\['look'\] = before\['look'\]/);
+  assert.match(src, /if isinstance\(shot\.get\('look'\), str\) and LOOK\.fullmatch\(shot\['look'\]\): dc\['look'\] = shot\['look'\]\r?\n\s*elif 'look' in before: dc\['look'\] = before\['look'\]/);
   const probe = path.join(tmp, 'probe.py');
   fs.writeFileSync(probe, `import sys, json, types, re\nsrc = open(sys.argv[1]).read()\nstart = src.index("LOOK = re.compile"); end = src.index("_fin = lambda")\nns = {'re': re, 'os': __import__('os'), 'json': json, 'H': sys.argv[2], 'CUT': sys.argv[2] + '/review-cut.json'}\nns['load'] = lambda p: json.load(open(p))\ndef dump(p, d, indent=1):\n    if ns['load'](p) == d: return False\n    json.dump(d, open(p, 'w')); return True\nns['dump'] = dump\nexec(src[start:end], ns)\nprint(json.dumps(ns['apply_look']('create', None, 'classic')))\nprint(json.dumps(ns['apply_look']('create', None, 'classic')))\n`);
   const out = execFileSync(PY, [probe, path.join(root, 'tools/experience/build-round8-director.py'), tmp], { encoding: 'utf8' }).trim().split('\n');
@@ -133,4 +196,4 @@ try {
   assert.equal(JSON.parse(fs.readFileSync(path.join(tmp, 'review-cut.json'), 'utf8')).shots[0].look, 'classic');
 } finally { fs.rmSync(tmp, { recursive: true, force: true }); }
 
-console.log('room-looks-test: ok (look list, frozen Classic = 9644d030, both looks build, shot field round trip, film import and pass)');
+console.log('room-looks-test: ok (look list, Create and Commons: frozen Classic = 9644d030, both looks build, shot field round trip, film import and pass)');
