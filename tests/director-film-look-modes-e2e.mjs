@@ -69,7 +69,9 @@ try{
   const left=await diff(S,L1,0,w-.04),right=await diff(S,F,w+.04,1),leftFilm=await diff(S,F,0,w-.04);
   notes.split={left,right,leftFilm};
   check(left.mean<=Math.max(2,noise.mean*2+1),`Split, left of the wipe = Live (mean ${left.mean})`);
-  check(right.mean<=1&&right.off<=.002,`Split, right of the wipe = Film look (mean ${right.mean}, ${(right.off*100).toFixed(2)} % off)`);
+  // (the same <img>, only clipped: a clip-path puts it on its own compositing layer, which scales it with slightly different
+// filtering. Windows: mean 0.43, 0.63 % of pixels over 24, against Film look vs Live at mean 11.4 / 10 %.)
+  check(right.mean<=1&&right.off<=.01,`Split, right of the wipe = Film look (mean ${right.mean}, ${(right.off*100).toFixed(2)} % off)`);
   check(leftFilm.mean>Math.max(2,noise.mean*4),`Split's left half is not the film's (mean ${leftFilm.mean}): the two sides really differ`);
   // ---- Live again: the overlay off at once
   await modeTo('Live');await wait(300);
