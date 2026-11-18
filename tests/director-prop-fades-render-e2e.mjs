@@ -39,7 +39,8 @@ const setField=(n,v)=>page.evaluate((n,v)=>{const el=document.querySelector(`#di
 const press=a=>page.evaluate(a=>{const b=document.querySelector(`#director-panel [data-action="${a}"]`);if(!b||b.disabled)return false;b.click();return true;},a);
 const specOf=key=>{const k=JSON.parse(key);return {match:k[0],...(k[1]?{asset:k[1]}:{}),...(k[2]?{path:k[2]}:{}),...(k[3]?{near:k[3]}:{})};};
 const opacity=key=>page.evaluate(spec=>{const w=document.getElementById('stage').contentWindow,E=w.__filmEdits;let list=[];try{list=E?.editTargets?E.editTargets(spec):[];}catch{}
-  const o=list[0];if(!o)return null;let v=1,vis=true;for(let p=o;p;p=p.parent)if(!p.visible)vis=false;o.traverse(m=>{for(const mat of [].concat(m.material||[]))v=Math.min(v,mat.opacity);});return {v,vis};},specOf(key));
+  // (v: the faintest of its meshes' materials, hi: the brightest, the film's own screen picture under a monitor included)
+  const o=list[0];if(!o)return null;let v=1,hi=0,vis=true;for(let p=o;p;p=p.parent)if(!p.visible)vis=false;o.traverse(m=>{for(const mat of [].concat(m.material||[])){v=Math.min(v,mat.opacity);hi=Math.max(hi,mat.opacity);}});return {v,hi,vis};},specOf(key));
 // every whole-chapter film item the stage has exactly once, and its box on a 16:9 frame of the stage camera now
 const inView=()=>page.evaluate(async()=>{const w=document.getElementById('stage').contentWindow,E=w.__filmEdits,{camera}=w.ErgoPresentation.three(),THREE=await w.eval('import("three")');
   const cam=camera.clone();cam.aspect=16/9;cam.updateProjectionMatrix();cam.updateMatrixWorld(true);const out=[];
@@ -113,7 +114,8 @@ async function runItem(best){
     console.log(`  ${K} ${v.id}: wants ${want.toFixed(3)} at ${ts} s · live opacity ${live.v.toFixed(3)} ${live.vis?'drawn':'not drawn'} · in the still's draw: ${JSON.stringify(probe)}`);
   }
   // (1) live: the materials' opacity is the rule's (as a share of its whole opacity: some materials are see-through as built; 0 = not drawn)
-  for(const r of Object.values(rows)){const v=r.live.v/rows.F.live.v;check(r.want===0?!r.live.vis:r.live.vis&&Math.abs(v-r.want)<.02,`${K}: live stage, ${r.label}: opacity ${r.live.vis?v.toFixed(3):'not drawn'} of its own (rule ${r.want.toFixed(3)})`);}
+  // (every mesh: the faintest and the brightest both follow the rule, so a part the fade skips, e.g. a screen picture, shows)
+  for(const r of Object.values(rows)){const v=r.live.v/rows.F.live.v,hi=r.live.hi/rows.F.live.hi;check(r.want===0?!r.live.vis:r.live.vis&&Math.abs(v-r.want)<.02&&Math.abs(hi-r.want)<.02,`${K}: live stage, ${r.label}: opacity ${r.live.vis?`${v.toFixed(3)} (faintest) / ${hi.toFixed(3)} (brightest)`:'not drawn'} of its own (rule ${r.want.toFixed(3)})`);}
   // (2) the Director's stills, in pixels
   const left={};
   for(const r of Object.values(rows)){if(r.id==='F'||r.id==='G')continue;const m=await measure(r.url,rows.F.url,rows.G.url,best.box);left[r.id]={still:m.left,px:m.px};}
