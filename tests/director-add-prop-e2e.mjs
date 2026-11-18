@@ -188,7 +188,8 @@ try{
   await page.evaluate(()=>document.querySelector('[data-inspector-tab=props]').click());await wait(400);
   await page.click('#director-panel [data-action=pp-permanent]');await wait(500);
   const rows=await page.$$eval('#prop-permanent li',l=>l.map(li=>({t:li.textContent.replace(/\s+/g,' ').trim(),off:li.querySelector('input').disabled})));
-  const fRow=rows.findIndex(r=>/^Ficus/i.test(r.t)),pRow=rows.findIndex(r=>/^Smartphone/.test(r.t));
+  // (the added ficus: rise's film has its own Director edit on the room's ficus too, "Ficus · moved 0.05 m (z +0.05)")
+  const fRow=rows.findIndex(r=>/^Ficus/i.test(r.t)&&/added to the room/.test(r.t)),pRow=rows.findIndex(r=>/^Smartphone/.test(r.t));
   check(fRow>=0&&!rows[fRow].off&&/added to the room → a new item in the room in Studio/.test(rows[fRow].t),'confirm panel: the ficus can be added to Studio: '+rows[fRow]?.t);
   check(pRow>=0&&rows[pRow].off&&/travels with the desk/.test(rows[pRow].t),'the desk-attached phone is blocked with the reason: '+rows[pRow]?.t);
   await page.screenshot({path:path.join(shots,'add-prop-permanent.png')});
