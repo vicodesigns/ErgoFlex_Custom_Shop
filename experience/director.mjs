@@ -1484,7 +1484,11 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   try{previewHides.load(loadUi().previewHides||[]);}catch{}
   function layerHidden(g){return g==='titles'?!!titleEditor&&!titleEditor.shown():!!previewHides?.has(g);}
   function eyeButton(id,hidden,what){return `<button type="button" class="lane-eye" data-hide-layer="${escape(id)}" aria-pressed="${hidden}" title="${hidden?`Show ${escape(what)} in the preview again`:`Hide ${escape(what)} in the preview (nothing is deleted; the film is not affected)`}">👁</button>`;}
-  function hiddenNames(){if(!previewHides)return [];const n=[];if(layerHidden('titles'))n.push('Titles');for(const id of previewHides.list())n.push(HIDE_LABELS[id]||null);const people=previewHides.list().filter(id=>id.startsWith('p:')).length;return [...new Set(n.filter(Boolean))].concat(people?[people===1?'1 person':people+' people']:[]);}
+  function hiddenNames(){if(!previewHides)return [];const n=[];if(layerHidden('titles'))n.push('Titles');for(const id of previewHides.list())n.push(HIDE_LABELS[id]||null);// people by name (a row's keys are one person); keys whose row isn't drawn are counted
+    const keys=new Set(previewHides.list().filter(id=>id.startsWith('p:')).map(id=>id.slice(2))),who=[];
+    for(const row of timeline.querySelectorAll('[data-ps-row][data-person-keys]')){const ks=row.dataset.personKeys.split(' ').filter(Boolean);if(ks.length&&ks.every(k=>keys.has(k))){who.push(row.querySelector('b')?.textContent||'1 person');ks.forEach(k=>keys.delete(k));}}
+    if(keys.size)who.push(keys.size===1?'1 more person':keys.size+' more people');
+    return [...new Set(n.filter(Boolean))].concat(who.slice(0,3),who.length>3?['+'+(who.length-3)]:[]);}
   // each person's row in the People group: one eye for every key of the row
   function decorateEyes(){
     if(!previewHides)return;
