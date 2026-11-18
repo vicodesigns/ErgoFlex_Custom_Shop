@@ -65,7 +65,11 @@ import { layersSwitch, UI_SWITCH_KEY as LAYERS_UI_SWITCH_KEY, frameView, project
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=polish-20261111f';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY } from './workspace-3d.mjs?v=polish-20261113b';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY, setEaselLook } from './workspace-3d.mjs?v=polish-20261113b';
+import { cleanLook, lookOf } from './room-looks.mjs';
+// The look each room builds (room-looks.mjs), by room id; none = the room's default. Not saved: the Studio always opens a
+// room in its default look unless a Director chapter asks for another (setRoomLook).
+const roomLooks = {};
 import { seedScenePeripherals, seedSceneSizeWithPeripherals, isLegacyScenePeripheral, peripheralReference } from './scene-peripheral-layouts.mjs?v=20261110-stationary-organizer';
 import { HOME_MODES, HOME_LAYOUTS, homeLayoutForSize, homeLayoutById } from './home-office.mjs?v=polish-20261113b';
 import { GAMING_MODES, GAMING_LAYOUTS, gamingLayoutForSize, gamingLayoutById } from './gaming-room.mjs?v=polish-20261113b';
@@ -1143,6 +1147,8 @@ try {
 } catch {}
 function selectedStudyLayout() { return studyLayoutId ? studyLayoutById(studyLayoutId) : studyLayoutForSize(currentConfig.size); }
 let officeMode = 'afternoon', officeLayoutId = null;
+// ?room=creative&look=classic opens the room in that look (room-looks.mjs; tests and stills: tests/artist-room-test.cjs ROOM_LOOK)
+try { const query = new URLSearchParams(location.search), look = cleanLook(query.get('room'), query.get('look')); if (look) roomLooks[query.get('room')] = look; } catch {}
 try {
     const layout = localStorage.getItem('ergoflex.officeLayout'), mode = localStorage.getItem('ergoflex.officeMode');
     if (OFFICE_LAYOUTS[layout]) officeLayoutId = layout;
@@ -6276,11 +6282,12 @@ async function sceneCopyPrototype(source) {
     const current = source.origin.room === selectedRoomScene && source.origin.layout === workspaceRoom.roomLayout?.id;
     const existing = current && (sceneCopyDefaults.get(source.sourceId) || sceneAssetRegistry.get(source.sourceId)?.obj);
     if (existing) return existing;
-    if (PROP_LIBRARY.entry(source.propId)) return PROP_LIBRARY.instance(source.propId, source.origin.room, source.origin.layout);
-    const key = JSON.stringify(source.origin);
+    const look = roomLooks[source.origin.room] || null;   // (the copy comes from the room as it looks now: room-looks.mjs)
+    if (PROP_LIBRARY.entry(source.propId)) return PROP_LIBRARY.instance(source.propId, source.origin.room, source.origin.layout, look);
+    const key = JSON.stringify([source.origin, look]);
     if (!copyPrototypeRooms.has(key)) copyPrototypeRooms.set(key, (async () => {
         const r = new WorkspaceRoom(new THREE.Scene(), workspaceRoom.scale);
-        r.set(source.origin.room, { layout: source.origin.layout, size: source.origin.size }); await r.ready;
+        r.set(source.origin.room, { layout: source.origin.layout, size: source.origin.size, look }); await r.ready;
         r.roomAtmosphere?.(source.origin.phase); r.life?.apply(source.origin.phase); return r;
     })());
     const prototype = await copyPrototypeRooms.get(key), object = prototype.assets().find(o => sceneAssetEditorId(o) === source.sourceId);
@@ -11478,6 +11485,13 @@ function setLoungeLayout(id) { setMeasuredRoomLayout('lounge', id); }
 function setKitchenLayout(id) { setMeasuredRoomLayout('kitchen', id); }
 function setGymLayout(id) { setMeasuredRoomLayout('gym', id); }
 function setStudyLayout(id) { setMeasuredRoomLayout('study', id); }
+// Room looks (room-looks.mjs; roomLooks is declared with the imports): set by the Director's chapters (stage.mjs) for the
+// next room load. Returns whether it changed.
+function setRoomLook(sceneId, look) {
+    const next = cleanLook(sceneId, look), changed = (roomLooks[sceneId] || null) !== next;
+    if (next) roomLooks[sceneId] = next; else delete roomLooks[sceneId];
+    return changed;
+}
 function setMeasuredRoomLayout(sceneId, id, options = {}) {
     if(sceneId==='childroom'&&CHILD_ALL_LAYOUTS[id]){childAgeId=childLayoutById(id).ageStage;try{localStorage.setItem('ergoflex.childroomAge',childAgeId);}catch{}}
     if (!(sceneId==='lounge'?LOUNGE_LAYOUTS:measuredRoomProfile(sceneId)?.layouts)?.[id]) return;
@@ -11681,8 +11695,9 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
         homeScale = reference.widthUnits > 0 ? reference.widthUnits / (reference.nominalWidth * 25.4) : 1 / (reference.metersPerUnit * 1000);
     }
     roomInteractions?.end();roomInteractions?.select(null);roomLedSpill.dispose();roomCollisionBlocked=false;roomSafety.reset();syncSafetyUI();
-    workspaceRoom?.set(choice.id, { size: currentConfig.size, scale: homeScale, layout: measured?.layout.id, gymTheme,
+    workspaceRoom?.set(choice.id, { size: currentConfig.size, scale: homeScale, layout: measured?.layout.id, gymTheme, look: roomLooks[choice.id] || null,
         createStation: (['office', 'coworking'].includes(choice.id) || INSTITUTIONAL_ROOMS[choice.id]) && loadedModel ? spec => captureOfficeStation(spec, homeScale, measured.layout.stations.indexOf(spec)) : null });
+    setEaselLook(choice.id === 'creative' ? workspaceRoom?.look : null);   // (the easel accessory's painting: room-looks.mjs)
     workspaceRoom?.setCeilingEnabled(ceilingPreviewEnabled);
     syncRoomPeople();
     const ceilingControl = document.getElementById('room-ceiling-control');
@@ -12746,6 +12761,8 @@ window.ErgoFlex = {
     get roomScene() { return selectedRoomScene; },
     roomScenes: ROOM_SCENES,
     setMeasuredRoomLayout,
+    setRoomLook,
+    roomLook: sceneId => lookOf(sceneId, roomLooks[sceneId]),
     setMeasuredRoomMode,
     setChildAgeStage,
     get childAgeStage(){return childAgeId;},
