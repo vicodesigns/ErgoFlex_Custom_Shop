@@ -125,7 +125,9 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
     const pinned=!!pin&&(performance.now()<pin.until||Math.abs(time()-pin.t)<=.002);if(pin&&!pinned)pin=null;
     if(editing()&&!o.visible&&!pinned){const next=siblings(key).find(k=>k!==key&&entry(k)&&people.byKey?.(k)?.visible);if(next){rebind(next);return;}}
     // Not in the scene at this moment (the playhead is outside this placement's bar): say why there are no dots.
-    if(editing()&&!o.visible){if(!hinted){hinted=true;if(pinned&&selT!==null)status(`${personName(entry(key))}: pose key at ${fmt(selT)} s selected (this placement is not drawn on this frame, so there are no dots: Delete, ease and copy act on the key; move the playhead into the bar to pose).`);else status(`${personName(entry(key))} is not in the scene at this moment, so there are no dots: move the playhead into one of their bars on the People lane.`);}}else hinted=false;
+    // (not while a clicked key's seek is still on its way: the frame before it lands says nothing about the key's frame)
+    const landing=pinned&&Math.abs(time()-pin.t)>.002;
+    if(editing()&&!o.visible&&!landing){if(!hinted){hinted=true;if(pinned&&selT!==null)status(`${personName(entry(key))}: pose key at ${fmt(selT)} s selected (this placement is not drawn on this frame, so there are no dots: Delete, ease and copy act on the key; move the playhead into the bar to pose).`);else status(`${personName(entry(key))} is not in the scene at this moment, so there are no dots: move the playhead into one of their bars on the People lane.`);}}else hinted=false;
     // A desk can change the displayed model while posing: rebind the tools without writing a correction.
     if(h&&h.object.userData.person.id!==o.userData.person.id){
       // Cancel an unfinished drag rather than commit it to another model.
