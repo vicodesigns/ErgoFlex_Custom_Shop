@@ -339,6 +339,7 @@ def apply_lighting(cid, f, lighting):
 
 PROP_FIELDS = ('match', 'asset', 'path', 'near', 'label', 'space', 'position', 'rotation', 'scale', 'hide')
 PROP_DESK = re.compile(r'^[a-z0-9-]{1,40}$')
+FOLLOW = ('room', 'base-shelf', 'lift', 'desk', 'shelf', 'lower-shelf')
 
 
 def clean_show(v):
@@ -402,8 +403,14 @@ def clean_props(props):
         for k in ('asset', 'path', 'label'):
             if k in d and not isinstance(d[k], str): d.pop(k)
         if d.get('space') != 'local' or 'position' not in d: d.pop('space', None)
+        # "Travels with" (prop-edits.mjs cleanPlace, film-edits.mjs follow): the surface and its own transform there
+        pl = e.get('place') if isinstance(e.get('place'), dict) else None
+        pv = lambda v, lim: isinstance(v, list) and len(v) == 3 and all(isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) and abs(x) < lim for x in v)
+        if e.get('follow') in FOLLOW and pl and pv(pl.get('position'), 1e6) and pv(pl.get('rotation'), 721) and pv(pl.get('scale'), 1e6) and all(abs(x) > 1e-6 for x in pl['scale']):
+            for k in ('position', 'rotation', 'scale', 'space'): d.pop(k, None)
+            d['follow'] = e['follow']; d['place'] = {k: list(pl[k]) for k in ('position', 'rotation', 'scale')}
         desk_and_show(e, d)
-        if not any(k in d for k in ('position', 'rotation', 'scale', 'hide', 'show')): continue
+        if not any(k in d for k in ('position', 'rotation', 'scale', 'hide', 'show', 'follow')): continue
         d['director'] = True; out.append(d)
     return out
 

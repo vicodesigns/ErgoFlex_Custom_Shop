@@ -47,6 +47,7 @@ await page.evaluateOnNewDocument(()=>{
 });
 const draft=()=>page.evaluate(()=>__draft());
 const body=name=>page.evaluate(n=>__body(n),name);
+const toM=async u=>{const k=await page.evaluate(()=>{const e=document.getElementById('stage').contentWindow.ErgoFlex,sc=e?.workspaceRoom?.scale||e?.workspaceAccessories?.scale;return sc>0?1/(sc*1000):1;});return Number((u*k).toFixed(5));};   // (the Props fields are real metres; the stage is in scene units)
 async function setField(name,value){const n0=(await draft())?.length;await page.evaluate((n,v)=>{const el=document.querySelector(`#director-panel [name="${n}"]`);el.value=String(v);el.dispatchEvent(new Event('change',{bubbles:true}));},name,value);await wait(1800);if(process.env.LOG)console.log('field',name,value,JSON.stringify((await draft()).filter(e=>/steelcase|monitor/.test(e.match||''))));}
 const click=async sel=>{await page.click(sel);await wait(1000);};
 const undo=async()=>{await page.keyboard.down('Control');await page.keyboard.press('z');await page.keyboard.up('Control');await wait(900);};
@@ -76,7 +77,7 @@ try{
   await page.mouse.move(5,5);await page.evaluate(()=>document.activeElement?.blur());
   await click('#director-panel [data-action=pp-drop]');
   check(/already rests/.test(await status()),'resting prop: "'+await status()+'"');
-  await setField('pp-py',c0.p[1]+10*INCH);
+  await setField('pp-py',await toM(c0.p[1]+10*INCH));
   const t0=Date.now(),up=await until(async()=>{const b=await body(CHAIR);return Math.abs(b.minY-c0.minY-10*INCH)<2e-3&&b;},'live chair follows the typed height',15000).catch(async()=>body(CHAIR));console.log('live update took',Date.now()-t0,'ms');check(Math.abs(up.minY-c0.minY-10*INCH)<2e-3,'raised 10 inches above the floor ('+JSON.stringify([c0,up,await status()])+')');
   await click('#director-panel [data-action=pp-drop]');
   const c1=await body(CHAIR);check(rests(c1.minY,c0.minY),`Drop to surface: box bottom within 1 mm of the floor (off by ${((c1.minY-c0.minY)*1000).toFixed(2)} mm)`);
@@ -87,26 +88,27 @@ try{
   await page.keyboard.down('Control');await page.keyboard.press('y');await page.keyboard.up('Control');await wait(900);
   check(rests((await body(CHAIR)).minY,c0.minY),'Redo drops it again');
   // End key, from raised again
-  await setField('pp-py',c0.p[1]+6*INCH);await page.mouse.move(5,5);await page.evaluate(()=>document.activeElement?.blur());
+  await setField('pp-py',await toM(c0.p[1]+6*INCH));await page.mouse.move(5,5);await page.evaluate(()=>document.activeElement?.blur());
   await page.keyboard.press('End');await wait(1000);
   check(rests((await body(CHAIR)).minY,c0.minY)&&/^Dropped 6\.0″/.test(await status()),'End key drops it: '+await status());
   // tilt 20 degrees, raise, Drop flat
-  await setField('pp-rx',20);await setField('pp-py',c0.p[1]+8*INCH);
+  await setField('pp-rx',20);await setField('pp-py',await toM(c0.p[1]+8*INCH));
   const tilted=await body(CHAIR);check(tilted.tilt>15,`tilted ${tilted.tilt.toFixed(1)}°`);
   await click('#director-panel [data-action=pp-drop-flat]');
   const flat=await body(CHAIR);check(flat.tilt<.3,`Drop flat: tilt ${flat.tilt.toFixed(2)}°`);check(rests(flat.minY,c0.minY),`Drop flat: resting on the floor (off by ${((flat.minY-c0.minY)*1000).toFixed(2)} mm)`);
   check(/^(Dropped|Raised) [\d.]+″ onto .*upright/.test(await status()),'status: '+await status());
   d=(await draft()).filter(e=>/steelcase/.test(e.match));check(Math.abs(d[0].rotation?.[0]||0)<.2&&Math.abs(d[0].rotation?.[2]||0)<.2,'the edit\'s turn is yaw only: '+JSON.stringify(d[0].rotation));
   // Align to surface on the flat floor: stays upright
-  await setField('pp-py',c0.p[1]+4*INCH);await click('#director-panel [data-action=pp-drop-align]');
+  await setField('pp-py',await toM(c0.p[1]+4*INCH));await click('#director-panel [data-action=pp-drop-align]');
   const al=await body(CHAIR);check(al.tilt<.3&&rests(al.minY,c0.minY),'Align to surface on the floor: upright, resting');
   // nothing below: far out of the room
-  const before=await body(CHAIR);await setField('pp-px',900);const far=await body(CHAIR);
+  const before=await body(CHAIR);await setField('pp-px',900);   // (900 m: far out of the room)
+const far=await body(CHAIR);
   await click('#director-panel [data-action=pp-drop]');
   const after=await body(CHAIR);
   check(Math.hypot(after.p[0]-far.p[0],after.p[1]-far.p[1],after.p[2]-far.p[2])<1e-6,'nothing below: it does not move');
   check(/Nothing below/.test(await status()),'message: "'+await status()+'"');
-  await setField('pp-px',before.p[0]);
+  await setField('pp-px',await toM(before.p[0]));
   // ---- a desk item: the library Smartphone added on chapter 2's desk (rides the lift)
   const chairEdit=(await draft()).filter(e=>/steelcase/.test(e.match));
   await openChapter('rise');
@@ -121,14 +123,14 @@ try{
   await until(()=>page.evaluate(()=>/^Added prop:ergoflex-phone#/.test(__gizmo()?.object?.name||'')),'the phone is selected',30000);await wait(800);
   const m0=await body(PH);
   await page.mouse.move(5,5);await page.evaluate(()=>document.activeElement?.blur());
-  await setField('pp-py',m0.p[1]+10*INCH);
+  await setField('pp-py',await toM(m0.p[1]+10*INCH));
   const mUp=await until(async()=>{const b=await body(PH);return Math.abs(b.minY-m0.minY-10*INCH)<2e-3&&b;},'phone follows the typed height',15000).catch(()=>null);
   check(!!mUp,'phone (desk item) raised 10 inches');
   await click('#director-panel [data-action=pp-drop]');
   const m1=await body(PH),surf=await page.evaluate(n=>__surfaceY(n),PH);
   check(surf!==null&&rests(m1.minY,surf,2e-3),`phone: box bottom within 2 mm of the surface under it (off by ${((m1.minY-surf)*1000).toFixed(2)} mm; ${await status()})`);
   check(/^(Dropped|Raised) [\d.]+\u2033 onto /.test(await status()),'phone status: '+await status());
-  await setField('pp-rx',20);await setField('pp-py',m0.p[1]+5*INCH);
+  await setField('pp-rx',20);await setField('pp-py',await toM(m0.p[1]+5*INCH));
   await click('#director-panel [data-action=pp-drop-flat]');
   const m2=await body(PH),surf2=await page.evaluate(n=>__surfaceY(n),PH);check(m2.tilt<.3&&surf2!==null&&rests(m2.minY,surf2,2e-3),`phone Drop flat: upright (${m2.tilt.toFixed(2)}\u00b0) and resting on the surface (${((m2.minY-surf2)*1000).toFixed(2)} mm)`);
   await page.screenshot({path:path.join(shots,'drop-phone.png')});

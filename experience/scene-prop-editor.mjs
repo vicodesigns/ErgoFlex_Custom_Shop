@@ -2,7 +2,7 @@ import {enhanceGizmo,mmPerUnitOf} from './gumball.mjs';
 let altHeld=false;   // Alt held as a prop drag starts: Alt+drag copies (P3)
 import {noteStudioValue} from './studio-sync.mjs';
 import {layersOn,splitPermanent,writePermanentLayers,permanentCells,foldDeskHides,LAYERS_KEY} from './layers-exchange.mjs';
-import {cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,propTarget,DESK_SURFACES,onDesk,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets,keyedFadeWindow,filmFadeKeys,combineFilmFade,showOverFilm} from './prop-edits.mjs';
+import {FOLLOW_LABELS,cleanPlace,cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,propTarget,DESK_SURFACES,onDesk,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets,keyedFadeWindow,filmFadeKeys,combineFilmFade,showOverFilm} from './prop-edits.mjs';
 import {stackRows} from './lane-rows.mjs';
 import {stowWindow,EASEL_ANGLE,filmVisibleKeys,keyedWindow} from './prop-stow-window.mjs';
 import {legacyMotionToClips,sampleClipMotion} from './desk-clips.mjs';
@@ -200,9 +200,78 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     return cleanAddEdit({...e,position:position||o.position.toArray().map(v=>r3(v*k)),rotation:rotation||[o.rotation.x,o.rotation.y,o.rotation.z].map(v=>r1(wrapDeg(deg(v)))),
       scale:scale||[o.scale.x/b,o.scale.y/b,o.scale.z/b].map(v=>Math.round(Math.min(100,Math.max(.01,Math.abs(v)))*1e4)/1e4)});
   }
+  // ---- "Travels with" (film-edits.mjs follow / place): the surface a prop follows, chosen here; it stays where it is on
+  // screen at the moment of choosing and follows that surface from then on. Its edit holds its own transform there.
+  const isFollow=e=>!!(e&&!isAddEdit(e)&&e.follow&&e.place);
+  // metres per scene unit (the desk is scaled to the scene, about 0.62 m a unit): the inspector shows real metres
+  const metresPerUnit=()=>{const w=win()?.ErgoFlex,sc=w?.workspaceRoom?.scale||w?.workspaceAccessories?.scale;return sc>0?1/(sc*1000):1;};
+  function placeFrom(o){const deg=tools.THREE.MathUtils.radToDeg;return cleanPlace({position:o.position.toArray(),rotation:[o.rotation.x,o.rotation.y,o.rotation.z].map(v=>wrapDeg(deg(v))),scale:o.scale.toArray()});}
+  // the surface a prop is on now: the nearest frame among its parents (for the select's "as the film places it")
+  function surfaceNow(o){const E=win()?.__filmEdits;if(!E?.followFrame)return null;for(let p=o.parent;p;p=p.parent){if(p.userData?.filmFxLift)return 'lift';for(const k of ['desk','shelf','lower-shelf','base-shelf'])if(E.followFrame(k)===p)return k;}return 'room';}
+  // the desktop shelf unit: the shelf the prop is over (its lowest surface below it, within the shelf's size)
+  function shelfOf(o){
+    const E=win().__filmEdits,{THREE}=tools,w=o.getWorldPosition(new THREE.Vector3());let best='shelf',bestY=Infinity;
+    for(const k of ['shelf','lower-shelf']){const f=E.followFrame(k);if(!f)continue;f.updateWorldMatrix(true,false);const p=f.worldToLocal(w.clone()),sz=f.userData.surfaceSize||{width:2000,depth:1000};
+      const over=Math.abs(p.x)<=sz.depth/2+80&&Math.abs(p.z)<=sz.width/2+80,y=p.y>=-30?p.y:1e6+Math.abs(p.y);if(over&&y<bestY){bestY=y;best=k;}}
+    return best;
+  }
+  // The frame a prop will follow, measured once the stage has drawn the desk where it is now (17 Nov, Windows: picked
+  // right after a change the shelf's frame was still at an old pose, y 0, so the place was 1.4 m off and the controller
+  // floated over the shelf from the next frame on). The playhead is re-applied and the frame read until two frames agree.
+  async function settledFrame(kind){
+    const E=win()?.__filmEdits,w=win();if(!E?.followMatrix)return null;
+    try{seek(time());}catch{}bridge.stage()?.wake?.(600);
+    const frame=()=>new Promise(r=>{let done=false;const go=()=>{if(!done){done=true;r();}};try{w.requestAnimationFrame(go);}catch{}setTimeout(go,60);});
+    let last=null;
+    for(let i=0;i<40;i++){
+      await frame();const F=E.followMatrix(kind);if(!F)return null;
+      if(i>=3&&last&&F.elements.every((v,k)=>Math.abs(v-last.elements[k])<1e-7))return F;last=F;
+    }
+    return last;
+  }
+  const placeIn=(F,W)=>{const {THREE}=tools,local=F.clone().invert().multiply(W),p=new THREE.Vector3(),q=new THREE.Quaternion(),sc=new THREE.Vector3();local.decompose(p,q,sc);
+    const r=new THREE.Euler().setFromQuaternion(q),deg=THREE.MathUtils.radToDeg;return cleanPlace({position:p.toArray(),rotation:[r.x,r.y,r.z].map(v=>wrapDeg(deg(v))),scale:sc.toArray()});};
+  // After the film has re-installed a new follow: the prop must still be where it was picked (W, world); if the frame had
+  // moved on since, the place is measured again (the same undo step).
+  let followCheck=null;
+  async function checkFollow(){
+    const c=followCheck;if(!c||performance.now()>c.until){followCheck=null;return;}
+    const o=current();if(!o||sel?.key!==c.key){followCheck=null;return;}const e=editOfKey(c.key);if(!isFollow(e)||e.follow!==c.kind){followCheck=null;return;}
+    if(o.parent!==win()?.__filmEdits?.followFrame?.(c.kind))return;   // not re-installed on its frame yet: the next time
+    followCheck=null;
+    const F=await settledFrame(c.kind);if(!F||current()!==o)return;o.updateWorldMatrix(true,false);
+    const {THREE}=tools,a=new THREE.Vector3().setFromMatrixPosition(o.matrixWorld),b=new THREE.Vector3().setFromMatrixPosition(c.W);
+    if(a.distanceTo(b)*metresPerUnit()<.002)return;
+    console.warn('[props] travels with: re-measured',c.kind,'off by',(a.distanceTo(b)*metresPerUnit()).toFixed(3),'m');
+    write(c.key,{...e,place:placeIn(F,c.W)},`${label(o)} travels with ${FOLLOW_LABELS[c.kind].replace(/ \(.*\)$/,'').toLowerCase()} (measured again once the desk was drawn).`,{undoKey:'follow:'+c.key});
+  }
+  async function setFollow(kind){
+    const o=current();if(!sel||!o)return;const e=editOfKey(sel.key);if(isAddEdit(e)){status('A prop you added goes where its own "on" says; move it with the Gumball.',true);return;}
+    if(!kind){if(!isFollow(e)){rerender();return;}const next={...sel.target,...e};delete next.follow;delete next.place;write(sel.key,next,`${label(o)} is back on the surface the film puts it on.`);return;}
+    const key=sel.key,target=sel.target;o.updateWorldMatrix(true,false);const W=o.matrixWorld.clone();
+    if(kind==='unit'){if(!await settledFrame('shelf')&&!await settledFrame('lower-shelf')){status('That surface is not in this chapter.',true);rerender();return;}kind=shelfOf(o);}
+    status(`Measuring where ${label(o)} sits on ${FOLLOW_LABELS[kind].replace(/ \(.*\)$/,'').toLowerCase()}…`);
+    const F=await settledFrame(kind);if(!F){status('That surface is not in this chapter.',true);rerender();return;}
+    if(sel?.key!==key){status('The selection changed: Travels with not set.',true);return;}
+    const next={...target,...(editOfKey(key)||{}),follow:kind,place:placeIn(F,W)};delete next.position;delete next.rotation;delete next.scale;delete next.space;
+    followCheck={key,kind,W,until:performance.now()+15000};
+    write(key,next,`${label(o)} now travels with ${FOLLOW_LABELS[kind].replace(/ \(.*\)$/,'').toLowerCase()}, from where it is now. Undo puts it back.`,{undoKey:'follow:'+key});
+  }
+  function followSelect(o,e){
+    const now=isFollow(e)?e.follow:'',unit=now==='shelf'||now==='lower-shelf',was=!now&&surfaceNow(o);
+    const opt=(v,t)=>`<option value="${v}" ${(v==='unit'?unit:v===now)?'selected':''}>${escape(t)}</option>`;
+    return `<label class="prop-follow" title="What the prop moves with as the desk lifts and tilts. It stays where it is on screen now and follows that from then on.">Travels with<select name="pp-follow">
+      <option value="" ${now?'':'selected'}>As the film places it${was?' ('+escape((FOLLOW_LABELS[was]||was).replace(/ \(.*\)$/,'').toLowerCase())+')':''}</option>${opt('room','Room (stays)')}${opt('base-shelf','Base shelf (stays with the base)')}${opt('lift','Desk lift (rises, never tilts)')}${opt('desk','Desktop (rises and tilts)')}${opt('unit','Desktop shelf unit')}</select></label>
+      ${unit?`<label class="prop-follow">Shelf<select name="pp-follow-shelf"><option value="shelf" ${now==='shelf'?'selected':''}>Top shelf</option><option value="lower-shelf" ${now==='lower-shelf'?'selected':''}>Lower shelf</option></select></label>`:''}`;
+  }
+  function changedFollow(o,e,name,v){
+    if(!/^pp-p[xyz]$/.test(name)){status('Turn and size it with the Gumball (E rotate, R scale): it travels with a surface.',true);rerender();return;}
+    if(Math.abs(v)>1000)throw Error('Positions run from -1000 to 1000 m.');const {THREE}=tools,w=o.getWorldPosition(new THREE.Vector3());w.setComponent('xyz'.indexOf(name[4]),v/metresPerUnit());
+    o.position.copy(o.parent?o.parent.worldToLocal(w):w);o.updateMatrixWorld(true);write(sel.key,{...e,place:placeFrom(o)},`Moved ${label(o)}.`);
+  }
   function changedAdd(o,e,name,v){
     let next=null,verb='Moved';
-    if(/^pp-p[xyz]$/.test(name)){if(Math.abs(v)>1000)throw Error('Positions run from -1000 to 1000 m.');const {THREE}=tools,w=o.getWorldPosition(new THREE.Vector3());w.setComponent('xyz'.indexOf(name[4]),v);
+    if(/^pp-p[xyz]$/.test(name)){if(Math.abs(v)>1000)throw Error('Positions run from -1000 to 1000 m.');const {THREE}=tools,w=o.getWorldPosition(new THREE.Vector3());w.setComponent('xyz'.indexOf(name[4]),v/metresPerUnit());
       const local=o.parent?o.parent.worldToLocal(w):w,k=parentK(o);next={position:local.toArray().map(x=>r3(x*k))};}
     else if(/^pp-r[xyz]$/.test(name)){const r=e.rotation.slice();r['xyz'.indexOf(name[4])]=r1(wrapDeg(v));next={rotation:r};verb='Rotated';}
     else if(name==='pp-s'){if(v<.01||v>100)throw Error('Scale runs from 0.01 to 100.');next={scale:[v,v,v]};verb='Scaled';}
@@ -391,6 +460,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     if(sel.blocked){const s=snaps.get(o);if(s){o.position.copy(s.position);o.quaternion.copy(s.quaternion);o.scale.copy(s.scale);o.updateMatrixWorld(true);bridge.stage()?.wake?.(300);}status(`${CANT_SAVE}: ${sel.blocked} It is back where the film puts it.`,true);return;}
     try{const e=editOfKey(sel.key)||sel.target;
       if(isAddEdit(e)){write(sel.key,addFrom(o,e),`${VERB[mode]} ${label(o)}.`);return;}
+      if(isFollow(e)){write(sel.key,{...e,place:placeFrom(o)},`${VERB[mode]} ${label(o)} (it travels with ${FOLLOW_LABELS[e.follow].replace(/ \(.*\)$/,'').toLowerCase()}).`);return;}
       const next={...sel.target,...(e||{}),...editFrom(o,b)};
       if(JSON.stringify(cleanPropEdit(next))===JSON.stringify(e?cleanPropEdit(e):null)){status(label(o)+' did not move.');return;}
       write(sel.key,next,`${VERB[mode]} ${label(o)}. Undo puts it back; Render still shows the film look.`);}
@@ -483,12 +553,14 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const o=current();if(!sel||!o)return;const name=el.name,v=Number(el.value);
     if(sel.blocked){status(`${CANT_SAVE}: ${sel.blocked}`,true);rerender();return;}
     if(name==='pp-hide'){hide(el.checked);return;}
+    if(name==='pp-follow'||name==='pp-follow-shelf'){setFollow(el.value).catch(error=>{status('Travels with not set: '+error.message,true);rerender();});return;}
     if(el.value===''||!Number.isFinite(v))throw Error('Enter a number.');
     const added=editOfKey(sel.key);if(isAddEdit(added)){changedAdd(o,added,name,v);return;}
+    if(isFollow(added)){changedFollow(o,added,name,v);return;}
     const b=base(o),{THREE}=tools,st=installed(o),world=st.position.clone();if(o.parent){o.parent.updateMatrixWorld(true);o.parent.localToWorld(world);}
     const e=editOfKey(sel.key)||{},rotNow=new THREE.Euler(b.rot.x,b.rot.y,b.rot.z,b.rot.order),turn=(e.rotation||[0,0,0]).slice(),fac=(e.scale||[1,1,1]).slice();
     let verb='Moved';
-    if(/^pp-p[xyz]$/.test(name)){if(Math.abs(v)>1000)throw Error('Positions run from -1000 to 1000 m.');world.setComponent('xyz'.indexOf(name[4]),v);}
+    if(/^pp-p[xyz]$/.test(name)){if(Math.abs(v)>1000)throw Error('Positions run from -1000 to 1000 m.');world.setComponent('xyz'.indexOf(name[4]),v/metresPerUnit());}
     else if(/^pp-r[xyz]$/.test(name)){turn['xyz'.indexOf(name[4])]=wrapDeg(v);verb='Rotated';}
     else if(name==='pp-s'){if(v<.01||v>100)throw Error('Scale runs from 0.01 to 100.');fac[0]=fac[1]=fac[2]=v;verb='Scaled';}
     else if(/^pp-s[xyz]$/.test(name)){if(v<.01||v>100)throw Error('Scale runs from 0.01 to 100.');fac['xyz'.indexOf(name[4])]=v;verb='Scaled';}
@@ -543,6 +615,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function writeLive(o,b,text){
     const e=editOfKey(sel.key)||sel.target;
     if(isAddEdit(e)){write(sel.key,addFrom(o,e),text);return true;}
+    if(isFollow(e)){write(sel.key,{...e,place:placeFrom(o)},text);return true;}
     const next={...sel.target,...(e||{}),...editFrom(o,b)};
     if(JSON.stringify(cleanPropEdit(next))===JSON.stringify(e?cleanPropEdit(e):null)){status(text);return false;}
     write(sel.key,next,text);return true;
@@ -593,8 +666,9 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function plan(){
     const room=studioRoom(),{THREE}=tools||{};
     return edits().map((e,i)=>{
-      const key=propKey(e),o=tools&&find(key),raw=e.label||o?.name||'',name=isAddEdit(e)?(e.label||nice(e.add.asset)):nice(raw),row={edit:e,key,name,raw,change:describePropEdit(e),obj:o};
+      const key=propKey(e),o=tools&&find(key),raw=e.label||o?.name||'',name=isAddEdit(e)?(e.label||nice(e.add.asset)):nice(raw),row={edit:e,key,name,raw,change:describePropEdit(e,{mpu:metresPerUnit()}),obj:o};
       if(isAddEdit(e))return addPlan(row,e,o,room,i);
+      if(isFollow(e))return {...row,ok:false,why:'it travels with a surface of the desk in this chapter (Travels with is a Director setting)'};
       if(o&&onDeskItself(o))return {...row,ok:false,why:ON_DESK};
       if(room.reason)return {...row,ok:false,why:room.reason};
       if(!o)return {...row,ok:false,why:'Not in the room right now: the film setup did not find it.'};
@@ -719,12 +793,13 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     if(!sel)return head+'<p class="director-hint">No prop selected. Shift+click adds to the selection, Ctrl+click adds or removes.</p>';
     if(group())return head+groupPanelHtml({members:members().map(m=>({key:m.key,name:nice(m.target.label||''),desk:!!(objOf(m)&&(onDeskItself(objOf(m))||ridesDesk(objOf(m)))),hidden:editOfKey(m.key)?.hide===true||(!!objOf(m)&&!shown(objOf(m))),blocked:m.blocked,missing:!objOf(m)})),mode,escape,edited:members().some(m=>editOfKey(m.key)),extra:dropButtons()});
     if(!o)return head+`<div class="movement-inspector prop-inspector" data-reveal="prop"><h4 title="${escape(sel.target.label||'')}">${escape(nice(sel.target.label))}</h4><p class="director-hint">${(e||sel.target).desk&&(e||sel.target).desk!==deskNow()?.preset?'It belongs to another desk of this chapter: click its bar in the Props lane to go to that desk.':'Not in the room right now (the film setup did not find it).'}</p>${timingHtml()}<div class="director-actions"><button data-action="pp-reset" ${e?'':'disabled'}>Reset to the film</button></div></div>`;
-    if(!tools)return head;if(isAddEdit(e))return head+addPanel(o,e);const b=base(o),{THREE}=tools,pos=o.getWorldPosition(new THREE.Vector3()).toArray(),turn=e?.rotation||[0,0,0],fac=e?.scale||[1,1,1],uniform=Math.abs(fac[0]-fac[1])<1e-4&&Math.abs(fac[1]-fac[2])<1e-4;
+    if(!tools)return head;if(isAddEdit(e))return head+addPanel(o,e);if(isFollow(e))return head+followPanel(o,e);const b=base(o),{THREE}=tools,pos=o.getWorldPosition(new THREE.Vector3()).toArray(),turn=e?.rotation||[0,0,0],fac=e?.scale||[1,1,1],uniform=Math.abs(fac[0]-fac[1])<1e-4&&Math.abs(fac[1]-fac[2])<1e-4;
     const num=(name,text,value,step,extra='')=>`<label>${text}<input name="${name}" type="number" step="${step}" value="${value}" ${extra}></label>`;
     const studio=plan().find(r=>r.key===sel.key),hidden=e?.hide===true||!shown(o),moved=b?o.getWorldPosition(new THREE.Vector3()).distanceTo(b.world):0;
     return head+`<div class="movement-inspector prop-inspector" data-reveal="prop"><h4>${escape(propName(o.name))}</h4><p class="director-hint prop-name">${escape(o.name||'Unnamed')}${o.userData.sceneAssetKey?' · Studio item':''}</p>
       <div class="director-actions prop-modes">${Object.entries(MODES).map(([m,t])=>`<button data-action="pp-mode-${m}" aria-pressed="${mode===m}" title="${t} (${m==='translate'?'W':m==='rotate'?'E':'T'})">${t}</button>`).join('')}${meaningful(o.parent||o)?'<button data-action="pp-parent" title="Select what it sits on (Alt-click in the view)">Select what it sits on</button>':''}</div>
-      <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-p'+k,'Position '+k+' (m)',r3(pos[i]),.01)).join('')}</div>${e?.position?`<p class="director-hint">Moved ${r3(moved)} m from the film's place.</p>`:''}
+      ${followSelect(o,e)}
+      <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-p'+k,'Position '+k+' (m)',r3(pos[i]*metresPerUnit()),.01)).join('')}</div>${e?.position?`<p class="director-hint">Moved ${r3(moved*metresPerUnit())} m from the film's place.</p>`:''}
       <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-r'+k,'Turn '+k+' (°)',r1(turn[i]),1)).join('')}</div>
       <label>Scale ×<input name="pp-s" type="number" min=".01" max="100" step=".05" value="${uniform?Number(fac[0].toFixed(3)):''}" placeholder="mixed"></label>
       <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-s'+k,'Scale '+k+' ×',Number(fac[i].toFixed(3)),.05,'min=".01" max="100"')).join('')}</div>
@@ -734,12 +809,24 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       <div class="director-actions"><button data-action="pp-reset" ${e?'':'disabled'} title="This prop back to where the film puts it">Reset to the film</button></div>
       <p class="director-hint" data-studio-note>${studio?(studio.ok?'Studio: can be made permanent.':'Studio: '+escape(studio.why)):onDeskItself(o)?'Studio: '+escape(ON_DESK):'Studio: unchanged (edit the prop to make it permanent later).'}</p></div>`;
   }
+  function followPanel(o,e){
+    const {THREE}=tools,pos=o.getWorldPosition(new THREE.Vector3()).toArray(),num=(name,text,value,step)=>`<label>${text}<input name="${name}" type="number" step="${step}" value="${value}"></label>`;
+    return `<div class="movement-inspector prop-inspector prop-follows" data-reveal="prop"><h4>${escape(propName(o.name))}</h4><p class="director-hint prop-name">${escape(o.name||'Unnamed')} · travels with ${escape(FOLLOW_LABELS[e.follow].replace(/ \(.*\)$/,'').toLowerCase())}</p>
+      <div class="director-actions prop-modes">${Object.entries(MODES).map(([m,t])=>`<button data-action="pp-mode-${m}" aria-pressed="${mode===m}" title="${t} (${m==='translate'?'W':m==='rotate'?'E':'T'})">${t}</button>`).join('')}</div>
+      ${followSelect(o,e)}
+      <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-p'+k,'Position '+k+' (m)',r3(pos[i]*metresPerUnit()),.01)).join('')}</div>
+      <p class="director-hint">It keeps its place on that surface as the desk lifts and tilts. Move, turn and size it with the Gumball (W / E / R); the numbers move it in the room.</p>
+      ${dropButtons()}
+      ${timingHtml()}
+      <label class="director-check"><input type="checkbox" name="pp-hide" ${e?.hide===true?'checked':''}>Hide in this chapter</label>
+      <div class="director-actions"><button data-action="pp-reset" title="This prop back to where the film puts it">Reset to the film</button></div></div>`;
+  }
   function addPanel(o,e){
     const {THREE}=tools,pos=o.getWorldPosition(new THREE.Vector3()).toArray(),fac=e.scale,uniform=Math.abs(fac[0]-fac[1])<1e-4&&Math.abs(fac[1]-fac[2])<1e-4,studio=plan().find(r=>r.key===sel.key);
     const num=(name,text,value,step,extra='')=>`<label>${text}<input name="${name}" type="number" step="${step}" value="${value}" ${extra}></label>`;
     return `<div class="movement-inspector prop-inspector prop-added" data-reveal="prop"><h4>${escape(label(o))}</h4><p class="director-hint prop-name">+ Added in this chapter · ${escape(e.add.asset)} · ${onDesk(e.parent)?`on ${DESK_SURFACES[e.parent]} (rides lift and tilt)`:'in the room'}</p>
       <div class="director-actions prop-modes">${Object.entries(MODES).map(([m,t])=>`<button data-action="pp-mode-${m}" aria-pressed="${mode===m}" title="${t} (${m==='translate'?'W':m==='rotate'?'E':'T'})">${t}</button>`).join('')}</div>
-      <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-p'+k,'Position '+k+' (m)',r3(pos[i]),.01)).join('')}</div>
+      <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-p'+k,'Position '+k+' (m)',r3(pos[i]*metresPerUnit()),.01)).join('')}</div>
       <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-r'+k,'Turn '+k+' (°)',r1(e.rotation[i]),1)).join('')}</div>
       <label>Scale ×<input name="pp-s" type="number" min=".01" max="100" step=".05" value="${uniform?Number(fac[0].toFixed(3)):''}" placeholder="mixed"></label>
       <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-s'+k,'Scale '+k+' ×',Number(fac[i].toFixed(3)),.05,'min=".01" max="100"')).join('')}</div>
@@ -832,7 +919,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       const e=it.e,x=it.start/T*100,w=Math.max(.5,(it.end-it.start)/T*100),top=1+layers.row.get(it.id)*ROW;
       if(it.ghost)return `<button type="button" class="prop-bar ghost" data-action="pp-lane" data-index="${i}" style="left:${x}%;width:${w}%;top:${top}px;height:${ROW-2}px" title="Go to this desk: its items are listed here once it has been on stage">${escape(it.name)}</button>`;
       const hiddenBar=e?.hide===true,added=isAddEdit(e),fi=it.fadeIn>0?Math.min(100,it.fadeIn/(it.end-it.start)*100):0,fo=it.fadeOut>0?Math.min(100,it.fadeOut/(it.end-it.start)*100):0;
-      const tip=`${it.name}${it.span.desk?` · Desk ${it.span.n} · ${it.span.label}`:''} · on screen ${timeText({from:it.start,to:it.end},it.span)}${e?' · '+describePropEdit(e):' · as the film has it'}${hiddenBar?' · hidden: click, then untick Hide to bring it back':''}${it.stowed?` · the desk puts it away once its tilt crosses ${EASEL_ANGLE}°`:it.film?.keyed?' · the film shows and hides it itself':''} · click to select, drag an end to set when it appears or leaves${it.timed?', drag the middle to move it':''}`;
+      const tip=`${it.name}${it.span.desk?` · Desk ${it.span.n} · ${it.span.label}`:''} · on screen ${timeText({from:it.start,to:it.end},it.span)}${e?' · '+describePropEdit(e,{mpu:metresPerUnit()}):' · as the film has it'}${hiddenBar?' · hidden: click, then untick Hide to bring it back':''}${it.stowed?` · the desk puts it away once its tilt crosses ${EASEL_ANGLE}°`:it.film?.keyed?' · the film shows and hides it itself':''} · click to select, drag an end to set when it appears or leaves${it.timed?', drag the middle to move it':''}`;
       // (the fade ramps: drawn on the bar, a small handle at the inner end of each drags its length)
       const ramps=`<i class="prop-ramp in ${it.ease==='smooth'?'smooth':''}" style="width:${fi}%"></i><i class="prop-ramp out ${it.ease==='smooth'?'smooth':''}" style="width:${fo}%"></i><i class="prop-fade-h" data-fade="in" style="left:${fi}%" title="Drag: fade in ${r1(it.fadeIn)} s"></i><i class="prop-fade-h" data-fade="out" style="left:${100-fo}%" title="Drag: fade out ${r1(it.fadeOut)} s"></i>`;
       return `<button type="button" class="prop-bar ${e?'prop-chip':'film'} ${hiddenBar?'prop-hidden':''} ${added?'prop-added':''} ${it.timed?'timed':''} ${isSel(it.key)?'selected':''}" data-action="pp-lane" data-index="${i}" data-prop-key="${escape(it.key)}" style="left:${x}%;width:${w}%;top:${top}px;height:${ROW-2}px;--fade-in:${fi}%;--fade-out:${fo}%" title="${escape(tip)}">${ramps}${added?'<b aria-label="added">+</b>':''}${escape(it.name)}</button>`;}).join('');
@@ -883,6 +970,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function applied(){
     found=null;itemsCache=null;pivotDirty=true;for(const m of members())if(m.obj&&!inScene(m.obj))m.obj=null;
     learn();
+    if(followCheck)checkFollow().catch(error=>console.warn('[props] travels with check',error));
     // A bar clicked for a desk that was not on stage: its prop is picked up now that it is.
     if(wanted&&performance.now()<wanted.until&&sel?.key===wanted.key){const o=tools&&find(wanted.key,wanted.target);if(o){sel.obj=o;wanted=null;status(`${label(o)} selected · W move · E rotate · R scale · drag its bar's ends to set when it shows.`);}}else wanted=null;
     if(pending&&!edits().some(e=>pending.keys.has(propKey(e)))){
@@ -909,5 +997,5 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     selected:()=>sel?.key||null,selectedKeys:()=>members().map(m=>m.key),selectKeys,items,hideItems:(keys,on,also)=>hideItems(keys.map(k=>{const i=items().find(x=>x.key===k);return i?{key:k,target:i.target,obj:i.obj}:{key:k};}),on,also),
     flashKey,setLocked:fn=>{lockedKeys=fn;},isHidden:key=>{const e=editOfKey(key);if(e)return e.hide===true;const i=items().find(x=>x.key===key);return !!i&&i.hidden;},selectedName:()=>sel?(current()?.name||sel.target.label):null,mode:()=>mode,
     addProp,dropSelected,dropObject,writeLive,openLibrary:()=>library.open(),library:()=>library,
-    header:()=>group()?{name:`${members().length} selected`,detail:'moving, turning and hiding together'}:sel?{name:current()?label(current()):nice(sel.target.label),detail:(editOfKey(sel.key)?describePropEdit(editOfKey(sel.key)):'from the film')}:null};
+    header:()=>group()?{name:`${members().length} selected`,detail:'moving, turning and hiding together'}:sel?{name:current()?label(current()):nice(sel.target.label),detail:(editOfKey(sel.key)?describePropEdit(editOfKey(sel.key),{mpu:metresPerUnit()}):'from the film')}:null};
 }
