@@ -2,6 +2,7 @@
 // Reading legacy data is a view; only an explicit write migrates it. In particular,
 // do not pass existing quaternions/keys through the lossy editor cleaners here.
 import {poseAt} from './people-pose-keys.mjs';
+import {archivedHeld} from './people-held-data.mjs';
 
 const own = (o, k) => Object.prototype.hasOwnProperty.call(o || {}, k);
 export function postureRecord(entry, id = entry?.id) {
@@ -9,7 +10,8 @@ export function postureRecord(entry, id = entry?.id) {
     const legacy = id === entry?.id && !entry?.variant ? entry : null;
     return {
         ...(own(record, 'pose') ? {pose: record.pose} : legacy?.pose !== undefined ? {pose: legacy.pose} : {}),
-        ...(own(record, 'poseKeys') ? {poseKeys: record.poseKeys} : legacy?.poseKeys !== undefined ? {poseKeys: legacy.poseKeys} : {})
+        ...(own(record, 'poseKeys') ? {poseKeys: record.poseKeys} : legacy?.poseKeys !== undefined ? {poseKeys: legacy.poseKeys} : {}),
+        ...(own(record, 'held') ? {held: record.held} : {})      // (moved held things: people-held.mjs)
     };
 }
 // Validation at import boundaries without the editor cleaner's quantization,
@@ -35,6 +37,7 @@ export function validateArchivedKeys(entry) {
     for(const record of [entry,...Object.values(entry.postures||{})]) {
         if(!record||typeof record!=='object')continue;
         if(record.pose!==undefined&&record.pose!==null){const pose=archivedPose(record.pose);if(pose)record.pose=pose;else delete record.pose;}
+        if(record!==entry&&record.held!==undefined){const held=archivedHeld(record.held);if(held)record.held=held;else delete record.held;}
         if(record.poseKeys===undefined||record.poseKeys===null)continue;
         const keys=archivedPoseKeys(record.poseKeys);
         if(keys)record.poseKeys=keys;else delete record.poseKeys;
@@ -69,7 +72,7 @@ export function postureRecords(entry) {
     if (entry?.pose !== undefined || entry?.poseKeys !== undefined) ids.add(entry.id);
     return [...ids].map(id => [id, postureRecord(entry, id)]);
 }
-export const hasPosturePose = entry => postureRecords(entry).some(([, p]) => p.pose && Object.keys(p.pose).length || p.poseKeys?.length);
+export const hasPosturePose = entry => postureRecords(entry).some(([, p]) => p.pose && Object.keys(p.pose).length || p.poseKeys?.length || p.held);
 export const sourceOf = spec => ({key: spec.key || spec.variant || spec.id, id: spec.id, ...(spec.station ? {station: spec.station} : {})});
 export const matchesSource = (source, spec) => !!source && source.key === (spec.key || spec.variant || spec.id) && (source.id === spec.id || source.key === spec.variant) && (source.station || '') === (spec.station || '');
 export function roomEditKey(source) {

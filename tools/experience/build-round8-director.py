@@ -460,6 +460,26 @@ def archived_postures(e):
             k = archived_keys(r['poseKeys'])
             if k: r['poseKeys'] = k
             else: del r['poseKeys']
+    for r in (e.get('postures') or {}).values():
+        if 'held' in r:
+            h = archived_held(r['held'])
+            if h: r['held'] = h
+            else: del r['held']
+
+
+def archived_held(v):
+    """people-held-data.mjs archivedHeld: { bone: {at: [3 metres within 2], turn: [3 degrees within 360], scale: .1..10} }, numbers kept."""
+    if not isinstance(v, dict): return None
+    num = lambda x, lo, hi: isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) and lo <= x <= hi
+    out = {}
+    for bone, h in v.items():
+        if not re.fullmatch(r'[A-Za-z][A-Za-z0-9_]{0,39}', str(bone)) or not isinstance(h, dict): continue
+        one = {}
+        if isinstance(h.get('at'), list) and len(h['at']) == 3 and all(num(x, -2, 2) for x in h['at']): one['at'] = list(h['at'])
+        if isinstance(h.get('turn'), list) and len(h['turn']) == 3 and all(num(x, -360, 360) for x in h['turn']): one['turn'] = list(h['turn'])
+        if num(h.get('scale'), .1, 10): one['scale'] = h['scale']
+        if any(abs(x) > 1e-9 for x in one.get('at', [])) or any(abs(x) > 1e-9 for x in one.get('turn', [])) or abs(one.get('scale', 1) - 1) > 1e-9: out[bone] = one
+    return out or None
 
 
 def clean_people(v):

@@ -82,6 +82,7 @@
 import * as THREE from 'three';
 import {updateSkinnedBounds} from './skinned-bounds.mjs';
 import {poseAt} from './people-pose-keys.mjs';
+import {applyHeld} from './people-held.mjs';
 import {postureRecord,postureRecords,hasPosturePose,poseOwner,sourceOf,roomEditKey,blendPosturePoses} from './people-postures.mjs';
 import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, shoeFit, solveWalk, lookToward, solveTread, rollPlan, reachAt, actedKey, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=people-motion-20261117';
 // who looks at whom (RoomPeople.gazeOf)
@@ -1274,7 +1275,7 @@ export class RoomPeople {
         // someone already in the room who now has a pose gets their skeleton before anyone waiting on `built` goes on
         if (this.built && (filter?.cast || []).some(hasPosturePose)) this.built = this.built.then(() => this.rigPosed());
     }
-    posed(spec) { const p=postureRecord(spec);return !!(p.pose && Object.keys(p.pose).length || p.poseKeys?.length); }
+    posed(spec) { const p=postureRecord(spec);return !!(p.pose && Object.keys(p.pose).length || p.poseKeys?.length || p.held); }
     // (asked for every person on every frame: kept per filter cast, and only once the library knows the person's model, as
     // the match reads their character)
     poseOwner(spec) {
@@ -1359,11 +1360,14 @@ export class RoomPeople {
                     delete object.userData.personPostureApplied;
                 }
                 if(spec && spec.poseNow !== undefined)delete spec.poseNow;
+                if(object.userData.heldSig)applyHeld(object,null);
                 continue;
             }
             if(stored)object.userData.personPostureApplied=true;
             spec.poseNow = poseAt(record, time, object.userData.personKeyed ||= {});
-            if ((record.pose || record.poseKeys?.length) && !object.userData.personRig && !object.userData.personPoseLoading) {
+            // (a held thing moved on its own: people-held.mjs, on the skeleton)
+            if (object.userData.personRig && !held) applyHeld(object, record.held || null);   // (not during a Director drag: it previews the held thing itself)
+            if ((record.pose || record.poseKeys?.length || record.held) && !object.userData.personRig && !object.userData.personPoseLoading) {
                 object.userData.personPoseLoading = true;
                 this.later(this.rig(object).finally(() => { object.userData.personPoseLoading = false; }));
             }

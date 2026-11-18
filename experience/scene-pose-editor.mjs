@@ -9,6 +9,7 @@
 // cast[i].postures[modelId].pose = { '<bone>': [x, y, z, w] }, so the live stage and film show it.
 // The People controller supplies an active-posture view and routes writes to that record.
 import {enhanceGizmo,mmPerUnitOf} from './gumball.mjs';
+import {heldItems,isIdentity as heldIdentity} from '../people-held-data.mjs';
 import {poseAt,setPoseKey,removePoseKey,moveKey,setKeyEase,copyKey,pasteKey,keyTimes,keyedBones,EASES,KEY_SNAP} from '../people-pose-keys.mjs';
 // Pose KEYS (S31, Blender's way): with Auto-key on (the red dot; off until turned on, then remembered) every adjustment writes a key at the playhead
 // for the bones it changed (the active posture record’s poseKeys: [{t, pose, ease}], people-pose-keys.mjs); between keys each bone eases from
@@ -86,8 +87,8 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
     const target=new THREE.Object3D();group.add(target);
     const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;gizmo.setSize(.75);gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
     enhanceGizmo(gizmo,{win:w,THREE,mmPerUnit:()=>mmPerUnitOf(w,THREE),status:t=>status(t)});   // P3: Rhino's Gumball (gumball.mjs)
-    gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){orbit=t.controls.enabled;t.controls.enabled=false;startDrag();}else{t.controls.enabled=orbit;endDrag();}});
-    gizmo.addEventListener('objectChange',()=>{if(moving()){if(moveOf(joint).kind==='ik')solve();else solveMove();}status(`${moving()?'Moving':'Turning'} ${personName(entry(key))}'s ${label(joint).toLowerCase()}…`);});
+    gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){orbit=t.controls.enabled;t.controls.enabled=false;if(heldSel)heldDragStart();else startDrag();}else{t.controls.enabled=orbit;if(heldSel)heldDragEnd();else endDrag();}});
+    gizmo.addEventListener('objectChange',()=>{if(heldSel){heldDragMove();return;}if(moving()){if(moveOf(joint).kind==='ik')solve();else solveMove();}status(`${moving()?'Moving':'Turning'} ${personName(entry(key))}'s ${label(joint).toLowerCase()}…`);});
     h={object:o,group,dots,target,gizmo,geo};listen();
   }
   function pickDot(ev){
@@ -148,7 +149,10 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
       m.material.color.setHex(sel?0xffffff:ik?0xffb44a:0x7fd7ff);
     }
     const g=h.gizmo,b=joint&&bone(joint);
-    if(on&&b){
+    if(on&&heldSel&&bone(heldSel)){
+      if(!g.dragging)heldBaseWorld(h.target.position);
+      if(g.object!==h.target)g.attach(h.target);g.setMode('translate');g.setSpace('world');g.visible=g.enabled=true;
+    }else if(on&&b){
       const obj=moving()?h.target:b;
       if(moving()&&!g.dragging)b.getWorldPosition(h.target.position);
       if(g.object!==obj)g.attach(obj);
@@ -353,7 +357,7 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
     commit(`${personName(entry(key))}: ${side==='l'?'left':'right'} hand ${v>.95?'in a fist':v>0?'closed '+Math.round(v*100)+' %':v<0?'opened':'as built'}.`,'pose-grip-'+key+side);
   }
   // ---- mode
-  function pick(name){if(!info(name))return;joint=name;wake();gmode=info(name)[3]?'translate':'rotate';status(`${label(name)}: ${info(name)[3]?'drag the arrows to move the whole limb (W), or turn the joint itself (E).':moveOf(name).kind?'turn it with the rings (E) or type Bend / Twist / Side; W moves the joint itself.':'turn it with the rings, or type Bend / Twist / Side.'}`);rerender();}
+  function pick(name){if(!info(name))return;heldSel=null;joint=name;wake();gmode=info(name)[3]?'translate':'rotate';status(`${label(name)}: ${info(name)[3]?'drag the arrows to move the whole limb (W), or turn the joint itself (E).':moveOf(name).kind?'turn it with the rings (E) or type Bend / Twist / Side; W moves the joint itself.':'turn it with the rings, or type Bend / Twist / Side.'}`);rerender();}
   function enter(k){
     const e=entry(k);if(!e)return;key=k;joint=null;gmode='rotate';
     status(`Pose mode: ${personName(e)}. Click a dot on the body: blue turns a joint, orange (hands, feet) moves the whole limb. Esc or Done leaves.`);rerender();
@@ -368,7 +372,7 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
     if(!key)return;const e=entry(key);selT=e&&keyAt(e,t)!==undefined?keyAt(e,t):t;pin={t,until:performance.now()+1500};rerender();   // (the timeline's key: before the seek lands the model shown can be another posture of the placement, without it)
     status(`${personName(entry(key))}: pose key at ${fmt(selT)} s selected. Click a dot to change the pose there · drag the diamond to retime · Delete removes it.`);
   }
-  function exit(){if(!key)return;key=null;joint=null;drag=null;selT=null;dispose();rerender();}
+  function exit(){if(!key)return;key=null;joint=null;heldSel=null;drag=null;selT=null;dispose();rerender();}
   function setMode(m){if(!key)return false;if(m==='translate'&&!moveOf(joint).kind){status(moveOf(joint).why||'This joint turns only (E).');return true;}if(m==='translate'||m==='rotate'){gmode=m;rerender();}return true;}
   // ---- the People tab while posing
   const num=(labelText,name,value)=>`<label>${labelText}<input type="number" name="${name}" value="${value}" step="2" min="-180" max="180"><small>°</small></label>`;
@@ -387,6 +391,7 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
       <div class="director-actions"><button type="button" data-action="pe-pose-reset-joint" title="This joint back to the posture as built (Delete)">Reset joint</button><button type="button" data-action="pe-pose-reset-limb">Reset ${escape(info(joint)[2].toLowerCase())}</button>${side&&limbOf(joint)?`<button type="button" data-action="pe-pose-mirror" title="Copy this side's adjustments to the other side, mirrored">Copy to the ${side==='l'?'right':'left'} side</button>`:''}</div>`:''}
       <h4>Fingers</h4>
       <div class="pose-grip">${['l','r'].map(sd=>`<label>${sd==='l'?'Left hand':'Right hand'}<input type="range" name="pe-grip-${sd}" min="-100" max="100" step="5" value="${ready?gripValue(sd):0}" ${ready?'':'disabled'} aria-label="${sd==='l'?'Left':'Right'} hand: open to fist"></label>`).join('')}<small>open</small><small>as built</small><small>fist</small></div>
+      ${heldPanel(e)}
       <h4>Save this pose</h4>
       <div class="pose-save"><input type="text" name="pe-pose-name" maxlength="44" placeholder="Name, for example: Leaning in" autocomplete="off" spellcheck="false" aria-label="Name for the saved pose"><button type="button" data-action="pe-pose-save" ${adjusted?'':'disabled'} title="Keeps this pose under that name; it never replaces another saved pose">Save pose</button></div>
       ${saved?saved(e):''}
@@ -403,6 +408,47 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
       ${sel!==null?`<div class="director-row people-fields pose-key-fields"><label>Key at<input type="number" name="pe-key-t" value="${fmt(sel)}" step="0.05" min="0" max="${seconds()}"><small>s</small></label><label>Ease out<select name="pe-key-ease">${EASES.map(x=>`<option value="${x}" ${x===ease?'selected':''}>${EASE_LABEL[x]||x}</option>`).join('')}</select></label></div>`:''}
       ${!autoKey?'<p class="director-hint">Auto-key is off: adjustments change the pose for the whole chapter.</p>':''}`;
   }
+  // ---- held things (people-held.mjs): what the model holds, moved / turned / resized on its own; it still follows the hand.
+  // Stored on this posture (postures[model].held[bone]); not keyed: the same all chapter.
+  const HELD_FIELDS=[['x','Right','cm',h=>-(h.at?.[0]||0)*100,(h,v)=>{h.at=[...(h.at||[0,0,0])];h.at[0]=-v/100;}],['y','Up','cm',h=>(h.at?.[1]||0)*100,(h,v)=>{h.at=[...(h.at||[0,0,0])];h.at[1]=v/100;}],
+    ['z','Forward','cm',h=>(h.at?.[2]||0)*100,(h,v)=>{h.at=[...(h.at||[0,0,0])];h.at[2]=v/100;}],['ry','Turn','°',h=>h.turn?.[1]||0,(h,v)=>{h.turn=[...(h.turn||[0,0,0])];h.turn[1]=v;}],
+    ['rx','Tip','°',h=>h.turn?.[0]||0,(h,v)=>{h.turn=[...(h.turn||[0,0,0])];h.turn[0]=v;}],['rz','Lean','°',h=>h.turn?.[2]||0,(h,v)=>{h.turn=[...(h.turn||[0,0,0])];h.turn[2]=v;}],
+    ['s','Size','%',h=>(h.scale??1)*100,(h,v)=>{h.scale=v/100;}]];
+  const HELD_RANGE={x:[-100,100],y:[-100,100],z:[-100,100],ry:[-180,180],rx:[-180,180],rz:[-180,180],s:[10,400]};
+  const SIDE={hand_r:'right hand',hand_l:'left hand'};
+  const r2=v=>Math.round(v*100)/100;
+  function heldPanel(e){
+    const items=h?.object&&rigOf()?heldItems(h.object):[];if(!items.length)return '';
+    return `<h4>Held <small class="director-hint">moves with the hand · this posture, the whole chapter</small></h4>${items.map(it=>{const v=e?.held?.[it.bone]||{},moved=!heldIdentity(v);
+      return `<div class="pose-held" data-held="${escape(it.bone)}"><p class="director-hint"><b>${escape(it.label.replace(/^\w/,c=>c.toUpperCase()))}</b> · ${escape(SIDE[it.bone]||it.bone.replace(/_/g,' '))}${moved?' · moved':''}</p>
+        <div class="director-row people-fields pose-held-fields">${HELD_FIELDS.map(([f,lab,unit,get])=>`<label>${lab}<input type="number" name="pe-held-${escape(it.bone)}-${f}" value="${r2(get(v))}" step="${unit==='cm'?0.5:unit==='%'?5:2}" min="${HELD_RANGE[f][0]}" max="${HELD_RANGE[f][1]}"><small>${unit}</small></label>`).join('')}</div>
+        <div class="director-actions"><button type="button" data-action="pe-held-gizmo" data-section="${escape(it.bone)}" aria-pressed="${heldSel===it.bone}" title="Move it with the Gumball in the view (W)">Gumball</button><button type="button" data-action="pe-held-reset" data-section="${escape(it.bone)}" ${moved?'':'disabled'} title="Back where the model holds it">Reset ${escape(it.label)}</button></div></div>`;}).join('')}`;
+  }
+  function setHeld(bone,f,value){
+    const e=entry(key),field=HELD_FIELDS.find(x=>x[0]===f);if(!e||!field)return;
+    const [lo,hi]=HELD_RANGE[f],v=Math.max(lo,Math.min(hi,value)),lab=heldItems(h?.object||{traverse(){}}).find(x=>x.bone===bone)?.label||'held thing';
+    edit(key,x=>{const all={...(x.held||{})},one=structuredClone(all[bone]||{});field[4](one,v);if(heldIdentity(one))delete all[bone];else all[bone]=one;if(Object.keys(all).length)x.held=all;else delete x.held;},
+      `${personName(e)}: ${lab} ${field[1].toLowerCase()} ${r2(v)} ${field[2]}.`,{undoKey:'held:'+bone+':'+f});
+  }
+  // The Gumball on a held thing (W): it sits on the thing's base; a drag moves the thing live and is one undo step.
+  //   bind frame -> world now: the hand's world matrix x its bone inverse (the offset itself adds `at` to the base)
+  let heldSel=null,heldDrag=null;
+  function heldFrame(name){const sk=heldSkeleton(name),j=sk?sk.bones.findIndex(b=>b.name===name):-1;if(j<0)return null;const hand=sk.bones[j];hand.updateMatrixWorld(true);return new (T().Matrix4)().multiplyMatrices(hand.matrixWorld,sk.boneInverses[j]);}
+  function heldMeshes(name){const out=[];h?.object.traverse(o=>{if(o.isSkinnedMesh&&[].concat(o.material).some(m=>/^Held\./.test(m?.name||''))){const sk=o.userData.heldOriginal||o.skeleton,j=o.geometry.getAttribute('skinIndex')?.getComponent(0,0);if(sk.bones[j]?.name===name)out.push(o);}});return out;}
+  function heldSkeleton(name){const m=heldMeshes(name)[0];return m?(m.userData.heldOriginal||m.skeleton):null;}
+  function heldBase(name){const box=new (T().Box3)(),b=new (T().Box3)();for(const m of heldMeshes(name)){m.geometry.boundingBox||m.geometry.computeBoundingBox();box.union(b.copy(m.geometry.boundingBox).applyMatrix4(m.bindMatrix));}if(box.isEmpty())return null;const c=box.getCenter(new (T().Vector3)());c.y=box.min.y;return c;}
+  function heldBaseWorld(out){const F=heldFrame(heldSel),c=heldBase(heldSel);if(!F||!c)return out;const at=entry(key)?.held?.[heldSel]?.at||[0,0,0];return out.set(c.x+at[0],c.y+at[1],c.z+at[2]).applyMatrix4(F);}
+  // the stage's own people-held.mjs (the preview while dragging: room-people.mjs leaves held things alone during a drag)
+  let stageHeld=null;function stageHeldModule(){const w=win();if(!stageHeld&&w)stageHeld=new w.Function('return import("/people-held.mjs")')().catch(()=>null);return stageHeld;}
+  function heldDragStart(){const F=heldFrame(heldSel),c=heldBase(heldSel);heldDrag=F&&c?{inv:F.clone().invert(),c,start:structuredClone(entry(key)?.held||{})}:null;stageHeldModule();}
+  function heldAtNow(){const d=heldDrag;if(!d)return null;const p=h.target.position.clone().applyMatrix4(d.inv);return [p.x-d.c.x,p.y-d.c.y,p.z-d.c.z].map(v=>Math.round(v*1e4)/1e4);}
+  function heldDragMove(){const at=heldAtNow();if(!at)return;const all={...heldDrag.start,[heldSel]:{...(heldDrag.start[heldSel]||{}),at}};stageHeldModule()?.then(m=>m?.applyHeld(h.object,all));wake();
+    status(`Moving ${personName(entry(key))}'s ${heldItems(h.object).find(x=>x.bone===heldSel)?.label||'held thing'}: ${(-at[0]*100).toFixed(1)} cm right, ${(at[1]*100).toFixed(1)} up, ${(at[2]*100).toFixed(1)} forward.`);}
+  function heldDragEnd(){const at=heldAtNow(),bone_=heldSel;heldDrag=null;if(!at||!key)return;const e=entry(key),lab=heldItems(h.object).find(x=>x.bone===bone_)?.label||'held thing';
+    edit(key,x=>{const all={...(x.held||{})},one={...(all[bone_]||{}),at};if(heldIdentity(one))delete all[bone_];else all[bone_]=one;if(Object.keys(all).length)x.held=all;else delete x.held;},`${personName(e)}: ${lab} moved (it still follows the hand).`);}
+  function selectHeld(name){if(!h||!heldMeshes(name).length)return;heldSel=heldSel===name?null:name;joint=heldSel?null:joint;wake();rerender();
+    status(heldSel?`${heldItems(h.object).find(x=>x.bone===name)?.label||'Held thing'}: drag the arrows to move it (it still follows the hand); turn and size it in the fields.`:'Gumball off the held thing.');}
+  function resetHeld(bone){const e=entry(key);if(!e?.held?.[bone])return;edit(key,x=>{const all={...(x.held||{})};delete all[bone];if(Object.keys(all).length)x.held=all;else delete x.held;},`${personName(e)}: the held thing is back where the model holds it.`);}
   // The playhead moved: the panel's time readout.
   function sync(){const at=document.querySelector('[data-pose-at]');if(at)at.textContent=fmt(now());}
   // P6 key diamond (After Effects' stopwatch, Blender's dot) by the joint's fields: ◇ not keyed, ◈ keyed at other
@@ -435,6 +481,8 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
     if(name==='pe-pose-reset-joint'){reset('joint');return true;}
     if(name==='pe-pose-reset-limb'){reset('limb');return true;}
     if(name==='pe-pose-mirror'){mirror();return true;}
+    if(name==='pe-held-reset'){if(typeof index==='string')resetHeld(index);return true;}
+    if(name==='pe-held-gizmo'){if(typeof index==='string')selectHeld(index);return true;}
     return false;
   }
   function changed(el){
@@ -444,6 +492,7 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
     if(el.name==='pe-joint'){if(el.value)pick(el.value);else{joint=null;rerender();}return true;}
     if(el.name==='pe-grip-l'||el.name==='pe-grip-r'){setGrip(el.name.slice(-1),Number(el.value)||0);return true;}
     if(el.name==='pe-pose-name')return true;      // read when Save pose is pressed
+    {const m=/^pe-held-([A-Za-z][A-Za-z0-9_]*)-(x|y|z|rx|ry|rz|s)$/.exec(el.name);if(m){const v=Number(el.value);if(el.value.trim()===''||!Number.isFinite(v))throw Error('Type a number.');setHeld(m[1],m[2],v);return true;}}
     const axis=['pe-rx','pe-ry','pe-rz'].indexOf(el.name);
     if(axis>=0){const v=Number(el.value);if(el.value.trim()===''||!Number.isFinite(v))throw Error('Type a number of degrees.');setAngle(axis,Math.max(-180,Math.min(180,v)));return true;}
     return false;
