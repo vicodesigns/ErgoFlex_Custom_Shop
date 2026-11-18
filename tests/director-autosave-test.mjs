@@ -52,6 +52,7 @@ assert.match(when('2026-11-17T22:14:00',new Date('2026-11-17T23:00:00')),/^22:14
   await s.save('edit');assert.equal(posts.length,1,'unchanged: not sent again');
   p=project(1);s.poke();assert.equal(s.state().kind,'pending');s.closing();assert.equal(posts.length,2);assert.equal(posts[1].body.reason,'close');assert.equal(posts[1].opt.keepalive,true);
   status=404;p=project(2);await s.save('edit');assert.equal(s.state().kind,'off');assert.match(s.text().text,/restart the studio server/);assert.ok(s.text().warn);
+  {const was=s.state().since;s.poke();assert.equal(s.state().kind,'off','an older server: no retry within 30 s');}
   status=500;await s.save('edit');assert.equal(s.state().kind,'error');}
 // ---- the routes, on a scratch server
 const port=31000+Math.floor(Math.random()*900),srv=spawn(process.execPath,[new URL('../tools/studio-server.mjs',import.meta.url).pathname,'--root',root,'--port',String(port),'--host','127.0.0.1','--state','state.json','--no-watch'],{stdio:['ignore','pipe','pipe']});

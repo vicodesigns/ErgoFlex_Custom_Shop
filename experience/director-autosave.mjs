@@ -57,7 +57,7 @@ export function createAutosave({ place, project, groups = () => [], escape, onSt
     set({ kind: 'saving', at: state.at });
     inflight = (async () => {
       const r = await fetcher('/__director/autosave', { method: 'POST', headers: { 'content-type': 'application/json' }, body: b });
-      if (r.status === 404 || r.status === 405) { set({ kind: 'off' }); return state; }
+      if (r.status === 404 || r.status === 405) { set({ kind: 'off', since: Date.now() }); return state; }
       let v = null; try { v = await r.json(); } catch {}
       if (!r.ok) throw Error(v?.error || `the server said ${r.status}`);
       last = b.replace(/"reason":"[a-z]+",/, ''); set({ kind: 'saved', at: v?.at || new Date().toISOString(), file: v?.file }); return state;
@@ -66,7 +66,7 @@ export function createAutosave({ place, project, groups = () => [], escape, onSt
   }
   // a change: saved once things are quiet, or after MAX_WAIT of steady editing
   function poke() {
-    if (state.kind === 'off') return;
+    if (state.kind === 'off' && Date.now() - (state.since || 0) < 30000) return;   // (an older server: tried again every 30 s, so a restart is picked up without a reload)
     const now = Date.now(); if (!first) first = now;
     clearTimeout(timer); timer = setTimeout(() => save('edit'), Math.max(0, Math.min(QUIET, first + MAX_WAIT - now)));
     if (state.kind !== 'saving') set({ ...state, kind: 'pending' });
