@@ -46,7 +46,7 @@ assert.deepEqual(placeOf(null,{id:'abc 1',shots:[{},{}]}),{cut:'library-abc-1',c
   assert.deepEqual(changesSince(base,structuredClone(base)),[]);}
 assert.match(when('2026-11-17T22:14:00',new Date('2026-11-17T23:00:00')),/^22:14$/);
 {const posts=[];let p=project(0),status=200;
-  const fetcher=async(url,opt)=>{posts.push({url,opt,body:opt?.body&&JSON.parse(opt.body)});return {status,ok:status===200,json:async()=>status===200?{at:'2026-11-17T22:14:00.000Z',file:'x'}:{error:'no'}};};
+  const fetcher=async(url,opt)=>{posts.push({url,opt,body:opt?.body&&JSON.parse(opt.body)});return {status,ok:status===200,json:async()=>status===200?{at:new Date().toISOString(),file:'x'}:{error:'no'}};};   // (today: the label shows a time only for today's)
   const states=[];const s=createAutosave({place:()=>({cut:'c',chapter:'storage'}),project:()=>p,groups:()=>['motion'],escape:x=>x,status(){},restore(){},onState:x=>states.push(x.kind),fetcher});
   await s.save('edit');assert.equal(posts.length,1);assert.deepEqual(posts[0].body.groups,['motion']);assert.equal(posts[0].body.v,1);assert.match(s.text().text,/^Autosaved \d\d:\d\d ✓$/);
   await s.save('edit');assert.equal(posts.length,1,'unchanged: not sent again');

@@ -58,6 +58,10 @@
       room's other ErgoFlex desks, experience/desk-edits.mjs; later per-desk moves and builds) keeps them in
       director-camera-<id>.json as 'desks' (an export without the field keeps the earlier import's). The pass writes them
       onto the chapter's film shot as 'sceneDeskEdits' (tools/experience/film-desk-edits.mjs installs them).
+      Room look: an export whose shot has 'look' (Director Mode's Room look: a version of the chapter's room, room-looks.mjs)
+      keeps it in director-camera-<id>.json as 'look' (an export without the field keeps the earlier import's). The pass
+      writes it onto the chapter's film shot (review-cut.json, the chapter's shot file, hero's sub-shots) as 'look', which
+      stage.mjs builds; chapter-keys.py hashes the whole shot, so a set look is part of that chapter's key only.
 """
 import base64, copy, glob, hashlib, html, json, math, os, re, subprocess, sys, tempfile, time
 
@@ -435,6 +439,24 @@ def apply_props(cid, f, props):
     return wrote
 
 
+LOOK = re.compile(r'[a-z0-9-]{1,40}')
+
+
+def apply_look(cid, f, look):
+    """The chapter's room look (room-looks.mjs) on its film shot: review-cut.json, its shot file, awaken's preview cut and
+    hero's sub-shots, like apply_props. stage.mjs builds it (an id the room does not have = its default look)."""
+    paths = [CUT] + ([f] if f else []) + ([os.path.join(H, 'previews', 'awaken-v5-cut.json')] if cid == 'awaken' else [])
+    if cid == 'hero': paths.append(os.path.join(H, 'shots', '13-subshots.json'))
+    wrote = []
+    for p in paths:
+        if not os.path.exists(p): continue
+        d = load(p)
+        for s in (d['shots'] if 'shots' in d else [d]):
+            if s.get('id') == cid: s['look'] = look
+        if dump(p, d, **({'indent': None} if p.endswith('13-subshots.json') else {})): wrote.append(os.path.relpath(p, H))
+    return wrote
+
+
 _fin = lambda x: isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
 
 
@@ -762,6 +784,9 @@ def run_pass_chapters():
         if os.path.exists(p) and 'branding' in load(p):
             w = apply_branding(cid, f, load(p)['branding'])
             print(f'ch{n:02d} {cid}: Director branding -> {", ".join(w) or "no change"}')
+        if os.path.exists(p) and isinstance(load(p).get('look'), str) and LOOK.fullmatch(load(p)['look']):
+            w = apply_look(cid, f, load(p)['look'])
+            print(f'ch{n:02d} {cid}: Director room look {load(p)["look"]} -> {", ".join(w) or "no change"}')
         if os.path.exists(p) and 'desks' in load(p):
             w = apply_desks(cid, f, load(p)['desks'])
             print(f'ch{n:02d} {cid}: Director desks ({len(clean_desks(load(p)["desks"]))}) -> {", ".join(w) or "no change"}')
@@ -1059,6 +1084,9 @@ def run_import(export):
         if clean_build(shot['deskBuild']): dc['build'] = clean_build(shot['deskBuild'])
         else: dc.pop('build', None)
     elif 'build' in before: dc['build'] = before['build']
+    # Room look: the export's; an export without the field keeps the earlier import's.
+    if isinstance(shot.get('look'), str) and LOOK.fullmatch(shot['look']): dc['look'] = shot['look']
+    elif 'look' in before: dc['look'] = before['look']
     # Desk versions (chapter 12's Desk version panel and lane): the export's list; an export without it keeps the earlier import's.
     if 'deskVersions' in shot:
         if clean_versions(shot['deskVersions']): dc['versions'] = clean_versions(shot['deskVersions'])
@@ -1067,6 +1095,7 @@ def run_import(export):
     if 'versionLibrary' in before: dc['versionLibrary'] = before['versionLibrary']      # the pass's (apply_versions): dropped film desks' bundles
     dump(director_file(cid), dc)
     if 'versions' in dc: print(f'{cid}: Director desk versions ({" ".join(v["n"] + "=" + v["preset"] for v in dc["versions"])}) kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
+    if 'look' in dc: print(f'{cid}: Director room look {dc["look"]} kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
     if 'build' in dc: print(f'{cid}: Director featured desk build kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
     if 'branding' in dc: print(f'{cid}: Director branding -> {sum(len(v) for v in dc["branding"]["artwork"]["surfaces"].values())} graphic edit(s) kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
     if 'desks' in dc: print(f'{cid}: Director desks -> {len(dc["desks"])} desk edit(s) kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
