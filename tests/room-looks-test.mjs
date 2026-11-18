@@ -188,7 +188,7 @@ try {
   assert.equal(JSON.parse(fs.readFileSync(link, 'utf8')).shots[0].look, 'classic', 'the chapter page carries the film\'s look');
   // build-round8-director.py: its import keeps the export's look, its pass writes it onto the film shot
   const src = fs.readFileSync(path.join(root, 'tools/experience/build-round8-director.py'), 'utf8');
-  assert.match(src, /if isinstance\(shot\.get\('look'\), str\) and LOOK\.fullmatch\(shot\['look'\]\): dc\['look'\] = shot\['look'\]\n\s*elif 'look' in before: dc\['look'\] = before\['look'\]/);
+  assert.match(src, /if isinstance\(shot\.get\('look'\), str\) and LOOK\.fullmatch\(shot\['look'\]\): dc\['look'\] = shot\['look'\]\r?\n\s*elif 'look' in before: dc\['look'\] = before\['look'\]/);
   const probe = path.join(tmp, 'probe.py');
   fs.writeFileSync(probe, `import sys, json, types, re\nsrc = open(sys.argv[1]).read()\nstart = src.index("LOOK = re.compile"); end = src.index("_fin = lambda")\nns = {'re': re, 'os': __import__('os'), 'json': json, 'H': sys.argv[2], 'CUT': sys.argv[2] + '/review-cut.json'}\nns['load'] = lambda p: json.load(open(p))\ndef dump(p, d, indent=1):\n    if ns['load'](p) == d: return False\n    json.dump(d, open(p, 'w')); return True\nns['dump'] = dump\nexec(src[start:end], ns)\nprint(json.dumps(ns['apply_look']('create', None, 'classic')))\nprint(json.dumps(ns['apply_look']('create', None, 'classic')))\n`);
   const out = execFileSync(PY, [probe, path.join(root, 'tools/experience/build-round8-director.py'), tmp], { encoding: 'utf8' }).trim().split('\n');
