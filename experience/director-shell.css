@@ -189,6 +189,10 @@ body.df-shell #director-panel .director-hint:hover,body.df-shell #director-panel
 .score-tools{display:flex;gap:5px;align-items:center}
 .score-tools input[type=range]{width:72px;height:12px}
 .score-meter{width:6px;height:18px;border-radius:2px;background:#ffffff12}
+.lane-mute{width:18px;height:16px;padding:0;border:1px solid #ffffff2e;border-radius:3px;background:#ffffff0d;color:#cfd8e3;font:600 10px/14px system-ui;cursor:pointer}
+.lane-mute:hover{border-color:#ffffff66}
+.lane-mute[aria-pressed="true"]{background:#f0b429;border-color:#f0b429;color:#1b1f24}
+.lane-muted>.desk-lane{opacity:.35;filter:grayscale(.8)}
 .score-stale{font-style:normal;font-size:10px;color:#ffd79a;border:1px solid #ffb54788;border-radius:8px;padding:0 5px}
 .score-stale-note{margin:2px 0 4px 150px;font-size:11px;color:#ffd79a}
 .score-lane{position:relative;height:54px;overflow:hidden;border-radius:6px;background:#0a1219}

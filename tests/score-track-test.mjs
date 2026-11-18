@@ -2,7 +2,7 @@
 // stale warning and the waveform columns, on the cine cut's real tempo map.
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import {chapterScore,staleness,snapTimes,snapTo,waveColumns} from '../experience/score-track.mjs';
+import {chapterScore,staleness,snapTimes,snapTo,waveColumns,createScorePlayer} from '../experience/score-track.mjs';
 const tempo=JSON.parse(fs.readFileSync(new URL('../exports/cinematic-intro-cut-cine/score/tempo-map.json',import.meta.url),'utf8'));
 const inputs={chapters:{rise:{start:43.35,seconds:18,head:[-.35,.8],tail:[17.65,.8]}},hits:tempo.hits};
 const peaks={rate:200,chapters:{rise:{t0:41.85,t1:62.85,clip:'preview/rise.opus',min:Array(4200).fill(-64),max:Array(4200).fill(64),rms:Array(4200).fill(20)}}};
@@ -30,4 +30,10 @@ assert.equal(staleness(inputs,'rise',{seconds:18}),null);
 assert.equal(staleness(inputs,'rise',{seconds:20}),'Rise is 20 s; the score was built for 18 s · it is rebuilt at render');
 // the waveform folds to the lane's width, log-scaled
 const cols=waveColumns(m.peaks,0,18,100);assert.equal(cols.length,100);assert.ok(cols.every(c=>c.peak>0&&c.peak<=1&&c.rms<c.peak));
+// the lane's mute (M): silent while muted, the volume kept for unmuting
+{let g=null;class Ctx{constructor(){this.destination={};}createGain(){return g={gain:{value:1},connect(){}};}async decodeAudioData(){return {duration:1};}}
+const fetch0=globalThis.fetch;globalThis.fetch=async()=>({ok:true,arrayBuffer:async()=>new ArrayBuffer(0)});
+const pl=createScorePlayer({base:'x',AudioContextClass:Ctx});pl.setVolume(.6);pl.setMuted(true);await pl.load({id:'rise',peaks:{clip:'c.opus',t0:0}});
+assert.equal(g.gain.value,0);assert.equal(pl.volume(),.6);pl.setVolume(.4);assert.equal(g.gain.value,0);
+pl.setMuted(false);assert.equal(g.gain.value,.4);assert.equal(pl.muted(),false);globalThis.fetch=fetch0;}
 console.log('score-track-test: ok');

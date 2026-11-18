@@ -58,9 +58,10 @@ export function waveColumns(p, a, b, columns) {
 // ---- playback ------------------------------------------------------------------------------------------------
 // base: the cut's folder URL ('/exports/<cut>'); clipOf(id) -> 'score/preview/<id>.opus'. All times chapter seconds.
 export function createScorePlayer({ base, AudioContextClass = globalThis.AudioContext }) {
-  let ctx = null, gain = null, analyser = null, buffer = null, bufferFor = null, loading = null, source = null, startedAt = 0, offset = 0, t0 = 0, volume = .8, rate = 1;
+  let ctx = null, gain = null, analyser = null, buffer = null, bufferFor = null, loading = null, source = null, startedAt = 0, offset = 0, t0 = 0, volume = .8, muted = false, rate = 1;
+  const level = () => muted ? 0 : volume;
   function context() {
-    if (!ctx) { ctx = new AudioContextClass(); gain = ctx.createGain(); gain.gain.value = volume; gain.connect(ctx.destination); }
+    if (!ctx) { ctx = new AudioContextClass(); gain = ctx.createGain(); gain.gain.value = level(); gain.connect(ctx.destination); }
     return ctx;
   }
   async function load(model) {
@@ -86,8 +87,11 @@ export function createScorePlayer({ base, AudioContextClass = globalThis.AudioCo
     // keep in step with the playhead: restart when off by more than DRIFT
     follow(t) { const p = position(); if (p === null || Math.abs(p - t) > DRIFT) play(t); },
     setRate(r) { const p = position(); rate = r > 0 ? r : 1; if (p !== null) play(p); },
-    setVolume(v) { volume = Math.max(0, Math.min(1, v)); if (gain) gain.gain.value = volume; },
+    setVolume(v) { volume = Math.max(0, Math.min(1, v)); if (gain) gain.gain.value = level(); },
     volume: () => volume,
+    // the lane's mute (Premiere's M): silent, the volume kept for unmuting; it keeps playing so unmuting is instant
+    setMuted(m) { muted = !!m; if (gain) gain.gain.value = level(); },
+    muted: () => muted,
     meter() {   // the level now, 0..1 (peak of the last few ms), for the lane header's meter
       if (!ctx || !source) return 0;
       if (!analyser) { analyser = ctx.createAnalyser(); analyser.fftSize = 512; gain.connect(analyser); }

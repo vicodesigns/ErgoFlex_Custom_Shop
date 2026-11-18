@@ -52,6 +52,7 @@ export const ACTIONS = [
   R('select-lane', 'Select everything in the lane under the pointer', ['Ctrl+Shift+A'], 'global', { origin: 'Director' }),
   R('open-inspector', 'Open the selection in the inspector', ['Enter'], 'global', { onButton: false, origin: 'Director' }),
   R('sound', 'Sound on / off', ['Shift+M'], 'global', { origin: 'Director' }),
+  R('music-mute', 'Mute / unmute the Music lane (its volume is kept)', ['Alt+M'], 'global', { phase: '2', origin: 'Premiere', aliases: ['mute', 'mute music', 'mute track'] }),
   R('speed-down', 'Play slower: ½×, ¼×', ['<'], 'global', { phase: '6', origin: 'Director', aliases: ['slow', 'half speed'] }),
   R('speed-up', 'Play faster again (up to normal speed)', ['>'], 'global', { phase: '6', origin: 'Director', aliases: ['normal speed'] }),
   R('toggle-inspector', 'Hide / show the side column', ['Tab'], 'global', { phase: '1b', onButton: false, origin: 'Unreal' }),
