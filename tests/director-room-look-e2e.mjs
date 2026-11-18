@@ -32,9 +32,15 @@ try{
   check(!r1.oak&&!r1.brick&&r1.ferns===0&&r1.studio==='classic','Classic: the room as before the pass (no oak floor, brick or ferns), in '+((Date.now()-t0)/1000).toFixed(1)+' s');
   check((await select()).value==='classic'&&/Classic/.test(await card()),'the selector and the card follow');
   // ---- the flip button and Undo
-  await page.click('#director-panel [data-action="look-flip"]');
-  await until(async()=>(await room())?.look==='refresh'&&await live(),'⇄ flips back to the refresh');
+  // (a real pointer press: the button must be enabled and on top, not under the still strip, a hint or the panel's edge)
+  const hit=await until(()=>page.evaluate(()=>{const b=document.querySelector('#director-panel [data-action="look-flip"]');if(!b)return null;b.scrollIntoView({block:'center'});const r=b.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2,top=document.elementFromPoint(x,y);
+    return !b.disabled&&r.width>0&&(top===b||b.contains(top))?{x,y}:null;}),'the ⇄ Other look button enabled and on top',60000).catch(async e=>{
+    const why=await page.evaluate(()=>{const b=document.querySelector('#director-panel [data-action="look-flip"]');if(!b)return 'no button';const r=b.getBoundingClientRect(),top=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return `disabled=${b.disabled} rect=${[r.left,r.top,r.width,r.height].map(Math.round)} on top: ${top?.tagName}.${top?.className} ${top?.closest('[id]')?.id||''} · viewport ${innerWidth}x${innerHeight}`;});
+    throw Error(e.message+' · '+why);});
+  await page.mouse.click(hit.x,hit.y);
+  await until(async()=>(await room())?.look==='refresh'&&await live(),'⇄ flips back to the refresh (status after the press: '+await status(page)+')');
   check((await room()).oak,'⇄ Other look: back to the refresh');
+  await until(live,'the refresh restage done');await page.evaluate(()=>document.activeElement?.blur());
   await page.keyboard.down('Control');await page.keyboard.press('z');await page.keyboard.up('Control');
   await until(async()=>(await select())?.value==='classic','Undo puts Classic back in the selector');
   check(true,'Undo puts the last look back');

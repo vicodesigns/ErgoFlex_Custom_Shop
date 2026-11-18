@@ -725,4 +725,4 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 .timeline-shortcuts-card kbd{font:600 11px/1.5 ui-monospace,monospace;padding:0 5px;border:1px solid #ffffff3a;border-bottom-width:2px;border-radius:4px;background:#ffffff12;color:#fff}
 /* Room looks (room-looks.mjs): the chapter card's tag and the Room inspector's Look row */
 .chapter-card .chapter-look{font-style:normal;font-size:8px;letter-spacing:.04em;text-transform:uppercase;padding:0 4px;margin-left:4px;border-radius:3px;border:1px solid #81cee855;color:#bfe6f5}.chapter-card .chapter-look.look-classic{border-color:#e7c27a88;color:#f1d79e}
-.room-look{align-items:end}.room-look button{white-space:nowrap}
+.room-look{display:flex;gap:8px;align-items:flex-end;min-width:0}.room-look label{flex:1;min-width:0}.room-look select{width:100%}.room-look button{flex:none;white-space:nowrap}
