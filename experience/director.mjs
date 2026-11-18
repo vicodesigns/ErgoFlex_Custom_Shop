@@ -912,6 +912,8 @@ export function mountDirector(bridge,catalog,initial){
   // Film look (V): the real render crossfaded over the 16:9 frame whenever the view rests.
   const filmLook=film?createFilmLook({status,onStill:()=>action('render-still'),
     resting:()=>open&&bridge.ready()&&!bridge.playback().playing&&!scrub&&!keyDrag&&!groupDrag&&!marquee&&!stillBusy&&!composing&&!bridge.bakeState().baking,
+    // what it waits for (the badge says it: "FILM LOOK · waits for playback to pause")
+    busy:()=>!open?'the Director':!bridge.ready()?'the chapter to load':bridge.playback().playing?'playback to pause':scrub||keyDrag||groupDrag||marquee?'the drag to end':stillBusy?'the Render still':composing?'the cut to compose':bridge.bakeState().baking?'the bake':'',
     async render(){
       const s=shot(),t=playhead,view=liveView(),job=deskVersions.renderShot(filmShot(),s,keys(),t*s.seconds);
       // Orbited away from the keys: the film look shows the user's view (held for the whole chapter), not the saved one.

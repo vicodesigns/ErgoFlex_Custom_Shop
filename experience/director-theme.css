@@ -326,7 +326,7 @@ body.directing.film-frame .desk-version-badge:not([hidden]){display:block;positi
 .film-tools .render-still:hover{background:var(--df-accent-hover)!important}
 .film-tools .render-still:disabled{background:var(--df-surface-3);color:var(--df-text-4);cursor:progress}
 .still-opener button{position:absolute;top:auto;right:8px;bottom:8px;background:var(--df-overlay);border-color:var(--df-border-2)}
-.film-look-badge{background:var(--df-overlay);color:var(--df-select-text);font:650 var(--df-fs-xs) var(--df-font);border:1px solid var(--df-border-2)}
+.film-look-badge,.film-live-tag{background:var(--df-overlay);color:var(--df-select-text);font:650 var(--df-fs-xs) var(--df-font);border:1px solid var(--df-border-2)}
 /* Still strip */
 .still-strip{height:66px;gap:6px;padding:5px 8px;background:#06090ddd;border-top:1px solid var(--df-border-2);scrollbar-width:thin;scrollbar-color:#3a4857 transparent}
 .still-thumb{border-radius:var(--df-r-1);outline:1px solid var(--df-border-3);outline-offset:0;transition:outline-color .12s}

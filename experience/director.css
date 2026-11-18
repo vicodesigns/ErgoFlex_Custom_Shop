@@ -288,7 +288,11 @@ body.directing.film-frame .film-box{display:block}
 .film-look img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .12s ease}
 .film-look.shown img{opacity:1}
 .film-look-badge{position:absolute;left:10px;bottom:10px;padding:3px 8px;border-radius:6px;background:#000a;color:#ffe7a8;font:600 11px system-ui;letter-spacing:.05em;opacity:0;transition:opacity .12s}
-.film-look.shown .film-look-badge{opacity:1}
+.film-look.shown .film-look-badge,.film-look.pending .film-look-badge{opacity:1}
+/* Split: LIVE on the left, the film badge on the right (film side) */
+.film-live-tag{display:none;position:absolute;left:10px;bottom:10px;padding:3px 8px;border-radius:6px;background:#000a;color:#bfe9ff;font:600 11px system-ui;letter-spacing:.05em}
+body.film-look-split .film-look .film-live-tag{display:block}
+body.film-look-split .film-look .film-look-badge{left:auto;right:10px}
 .film-wipe{display:none;position:absolute;top:0;bottom:0;width:14px;margin-left:-7px;cursor:ew-resize;pointer-events:auto;background:linear-gradient(90deg,transparent 6px,#ffe7a8 6px,#ffe7a8 8px,transparent 8px)}
 body.film-look-split .film-look.shown .film-wipe{display:block}
 .film-guides{display:none;position:absolute;inset:0;background:linear-gradient(90deg,transparent calc(33.333% - .5px),#ffffff55 calc(33.333% - .5px),#ffffff55 calc(33.333% + .5px),transparent calc(33.333% + .5px),transparent calc(66.666% - .5px),#ffffff55 calc(66.666% - .5px),#ffffff55 calc(66.666% + .5px),transparent calc(66.666% + .5px)),linear-gradient(transparent calc(33.333% - .5px),#ffffff55 calc(33.333% - .5px),#ffffff55 calc(33.333% + .5px),transparent calc(33.333% + .5px),transparent calc(66.666% - .5px),#ffffff55 calc(66.666% - .5px),#ffffff55 calc(66.666% + .5px),transparent calc(66.666% + .5px))}
