@@ -168,5 +168,9 @@ py(script,H,'--import',exportOf([]));py(script,H);assert.deepEqual(edits().map(e
   assert.deepEqual(filmPropEdits(read('review-cut.json').shots[0]),[mine[0],add],'and reopens as the same Director edits');
   py(script,H,'--import',exportOf([]));py(script,H);}
 fs.rmSync(tmp,{recursive:true,force:true});
+// a renamed scene asset key reads as the new one (the workshop robot and dock edits in the storage chapter)
+assert.equal(cleanPropEdit({match:'^Smart robot figure · Robo-Pal$',asset:'workshop:toy-story:robo-pal',rotation:[0,47,0]}).asset,'workshop:toy-story:desktop-robo-pal');
+assert.equal(cleanPropEdit({match:'^Robot diagnostic test dock$',asset:'workshop:toy-story:test-dock',position:[0,0,-.133]}).asset,'workshop:toy-story:desktop-dock');
+assert.equal(cleanPropEdit({match:'^Lamp$',asset:'room:3:lamp',rotation:[0,10,0]}).asset,'room:3:lamp');
 console.log('Added props: cleaning, the library filters, film-edits install on the desk / in the room (riding the lift, restored), Make permanent as a Studio item, the round trip.');
 console.log('Director props: cleaning and the cut, the merge after the film\'s hand-made sceneEdits for the live stage and Render still, film-edits world offsets / turns / per-axis scale / hide and show / Studio asset targets / full restore, the Studio write, and the film round trip (import, pass, builders\' edits kept, keep / reset) all verified.');

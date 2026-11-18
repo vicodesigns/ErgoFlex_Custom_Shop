@@ -110,11 +110,15 @@ export function cleanAddEdit(e){
   const desk=cleanDesk(e.desk),show=cleanShow(e.show);if(desk)out.desk=desk;if(show)out.show=show;
   return out;
 }
+// Scene asset keys a room's code renamed after a cut was edited: an edit naming the old key matches nothing (the film
+// skips it and the Director says the prop is not in the room), so the old key reads as the new one. Nov 2026: the
+// workshop's toy-story desk got a stowed copy of each piece, and its desk pieces became desktop-*.
+export const RENAMED_ASSETS={'workshop:toy-story:robo-pal':'workshop:toy-story:desktop-robo-pal','workshop:toy-story:test-dock':'workshop:toy-story:desktop-dock'};
 export function cleanPropEdit(e){
   if(isAddEdit(e))return cleanAddEdit(e);
   const match=text(e?.match,300);if(match===undefined||!validRegex(match))return null;
   const out={match},path=text(e.path,400),asset=text(e.asset,200),label=text(e.label,120);
-  if(asset)out.asset=asset;if(path&&validRegex(path))out.path=path;
+  if(asset)out.asset=RENAMED_ASSETS[asset]||asset;if(path&&validRegex(path))out.path=path;
   const near=vec(e.near);if(near&&near[2]>0)out.near=near;
   if(label)out.label=label;
   const position=vec(e.position),rotation=vec(e.rotation),scale=Array.isArray(e.scale)?vec(e.scale,n=>n>=.001&&n<=1000):finite(e.scale)&&e.scale>=.001&&e.scale<=1000?[e.scale,e.scale,e.scale].map(r4):undefined;
