@@ -53,7 +53,7 @@ const inView=()=>page.evaluate(async()=>{const w=document.getElementById('stage'
     if(behind)continue;const cx0=Math.max(-1,x0),cx1=Math.min(1,x1),cy0=Math.max(-1,y0),cy1=Math.min(1,y1);if(cx1<=cx0||cy1<=cy0)continue;
     const area=(cx1-cx0)*(cy1-cy0)/4,whole=(x1-x0)*(y1-y0)/4;
     const DESK=/(^|> )(Desk dressing|Accessory mount|Accessory:)/;let desk=DESK.test(k[2]||'');for(let p=n[0];p;p=p.parent)if(DESK.test(p.name||''))desk=true;
-    out.push({key:b.dataset.propKey,match:k[0],name:b.textContent.trim(),kind:desk?'desk':'room',area,inside:area/whole,box:{x0:(cx0+1)/2,x1:(cx1+1)/2,y0:(1-cy1)/2,y1:(1-cy0)/2}});}
+    out.push({key:b.dataset.propKey,match:k[0],name:b.textContent.trim(),kind:desk?'desk':'room',propId:n[0].userData.propId||n[0].userData.decorUpgrade||'',area,inside:area/whole,box:{x0:(cx0+1)/2,x1:(cx1+1)/2,y0:(1-cy1)/2,y1:(1-cy0)/2}});}
   return out;});
 // how much of the prop is left in A, from F (whole) and G (gone): linear light, the pixels of its box where F and G differ
 const measure=(A,F,G,box)=>page.evaluate(async(A,F,G,box)=>{
@@ -154,12 +154,13 @@ try{
   await openChapter(page,base,chapter);
   await page.evaluate(()=>document.querySelector('#director-panel [data-inspector-tab="props"]')?.click());
   await page.evaluate(()=>{for(const b of document.querySelectorAll('#director-timeline [data-action="titles"][aria-pressed="true"]'))b.click();});   // (film titles off: the stills are the 3D frame)
-  // ---- per kind: the biggest whole-chapter film item of that kind in view, and the moment
-  const kinds=(process.env.FADE_KINDS||'room').split(',').map(k=>k.trim()).filter(Boolean),best={};
-  for(let t=2;t<=T-2;t+=2){await seek(page,t);await wait(900);for(const c of await inView())if(kinds.includes(c.kind)&&c.inside>.8&&c.area>(c.kind==='desk'?.001:.004)&&c.area<.5&&(!best[c.kind]||c.area>best[c.kind].area))best[c.kind]={...c,t};}
-  for(const k of kinds)need(!!best[k],`${k}: a whole-chapter film item in view: ${best[k]?.name} at ${best[k]?.t} s (${((best[k]?.area||0)*100).toFixed(2)} % of the frame)`);
+  // ---- per kind: whole-chapter film items of that kind in view (each at the moment it is biggest), biggest first
+  const kinds=(process.env.FADE_KINDS||'room').split(',').map(k=>k.trim()).filter(Boolean),cands={};
+  for(let t=2;t<=T-2;t+=2){await seek(page,t);await wait(900);for(const c of await inView()){if(!kinds.includes(c.kind)||!(c.inside>.8&&c.area>(c.kind==='desk'?.001:.004)&&c.area<.5))continue;
+    const list=cands[c.kind]||=[],had=list.find(x=>x.key===c.key);if(!had)list.push({...c,t});else if(c.area>had.area)Object.assign(had,{...c,t});}}
+  for(const k of kinds){(cands[k]||[]).sort((a,b)=>b.area-a.area);cands[k]=(cands[k]||[]).slice(0,6);need(cands[k].length>0,`${k}: whole-chapter film items in view: ${cands[k].map(c=>`${c.name} [${c.propId}] at ${c.t} s (${(c.area*100).toFixed(2)} %)`).join('; ')}`);}
   // the first still boots the still stage; from then on every still's shot is kept
-  await seek(page,best[kinds[0]].t);await wait(600);await still();
+  await seek(page,cands[kinds[0]][0].t);await wait(600);await still();
   await page.evaluate(async()=>{const f=[...document.querySelectorAll('iframe')].find(x=>x.title==='Film still renderer'),w=f.contentWindow,m=w.__filmFx;
     const keep=fn=>async s=>{window.__stillJob=JSON.stringify(s);return fn(s);};w.__filmFx={...m,install:keep(m.install),update:keep(m.update)};
     // the probe: what the timed prop's meshes wear at the moment the still is drawn (the canvas render, not a pass into a target)
@@ -167,6 +168,19 @@ try{
     r.render=function(sc,cam){if(w.__probeSpec&&this.getRenderTarget()===null){try{const list=E.editTargets(w.__probeSpec),o=list[0],out={targets:list.length,chain:true,meshes:0,copies:0,minOpacity:1,opaque:0,hidden:0,kinds:{}};
       if(o){for(let p=o;p;p=p.parent)if(!p.visible)out.chain=false;o.traverse(x=>{if(!x.isMesh)return;out.meshes++;if(!x.visible)out.hidden++;for(const mm of [].concat(x.material||[])){if(mm.userData?.filmFxCopy)out.copies++;out.minOpacity=Math.min(out.minOpacity,mm.opacity);if(!mm.transparent)out.opaque++;out.kinds[mm.type]=(out.kinds[mm.type]||0)+1;}});}
       w.__probeLog=out;}catch(e){w.__probeLog={error:String(e)};}}return prev.call(this,sc,cam);};});
+  // the item the still stage really draws: the first candidate whose meshes are all shown in the still's own draw
+  // (a still / live disagreement on one is reported, not timed: e.g. a room chair the people code puts away in one stage only)
+  const best={};report.mismatches=[];
+  for(const k of kinds)for(const c of cands[k]){
+    await seek(page,c.t);await wait(700);const live=await opacity(c.key);
+    await page.evaluate(spec=>{const w=[...document.querySelectorAll('iframe')].find(x=>x.title==='Film still renderer').contentWindow;w.__probeSpec=spec;w.__probeLog=null;},specOf(c.key));
+    await still();const probe=await page.evaluate(()=>{const w=[...document.querySelectorAll('iframe')].find(x=>x.title==='Film still renderer').contentWindow,l=w.__probeLog;w.__probeLog=null;return l;});
+    if(probe?.targets===1&&probe.chain&&probe.meshes>0&&!probe.hidden){best[k]=c;console.log(`  ${k}: timing ${c.name} [${c.propId}] at ${c.t} s (drawn in the still: ${JSON.stringify(probe)})`);break;}
+    const note={kind:k,name:c.name,propId:c.propId,key:c.key,t:c.t,live,still:probe};report.mismatches.push(note);fs.writeFileSync(path.join(shots,'fades.json'),JSON.stringify(report,null,1));
+    console.log(`  ${k}: NOT timed: ${c.name} [${c.propId}] at ${c.t} s is ${live?.vis?'drawn':'not drawn'} live but in the still's draw ${JSON.stringify(probe)}`);
+  }
+  for(const k of kinds)need(!!best[k],`${k}: an item the still stage draws (${report.mismatches.filter(m=>m.kind===k).length} skipped: see fades.json mismatches)`);
+  for(const m of report.mismatches)if(m.live?.vis)console.log(`  NOTE still vs live: ${m.name} [${m.propId}] at ${m.t} s is drawn live and hidden in the Director's still`);
   for(const k of kinds)await runItem(best[k]);
   check(!errors.length,'no page errors: '+errors.join(' | '));
   if(failed.length)throw Error(`${failed.length} check(s) failed:\n  - `+failed.join('\n  - '));
