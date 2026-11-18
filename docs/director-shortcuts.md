@@ -38,6 +38,7 @@ Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl als
 | Enter | Open the selection in the inspector | Director |
 | Shift+M | Sound on / off | Director |
 | Alt+M | Mute / unmute the Music lane (its volume is kept) | Premiere |
+| Alt+H | Show every layer hidden with its 👁 (titles, graphics, people, props) | Director |
 | < | Play slower: ½×, ¼× | Director |
 | > | Play faster again (up to normal speed) | Director |
 | Tab | Hide / show the side column | Unreal |

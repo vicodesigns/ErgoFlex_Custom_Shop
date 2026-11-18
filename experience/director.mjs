@@ -10,6 +10,7 @@ import {chapterScore,staleness,snapTimes,snapTo,waveColumns,createScorePlayer} f
 import {createActionLog,captureErrors,reportBody,createReportDialog,sendReport} from './director-report.mjs';
 import {createKeysPanel,loadUi,saveUi} from './keys-panel.mjs';
 import {createViewNav} from './view-nav.mjs';
+import {createPreviewHides,HIDE_LABELS} from './preview-hides.mjs';
 import {createGraphicsEditor} from './graphics-editor.mjs';
 import {addCameraHolds} from './camera-holds.mjs';
 import {cinematicViews,polishMovement,openingSwoop} from './cinematography.mjs';
@@ -545,7 +546,7 @@ export function mountDirector(bridge,catalog,initial){
   function laneGroupHead(g){
     const s=shot().seconds,L=lighting(),T=timeOfDay(),ticks=g==='graphics'?graphics.screens().map(sc=>sc.start??0):g==='motion'?[...keys().map(k=>k.time*s),...deskEditor.motion().clips.map(c=>c.start)]:g==='titles'?titleEditor.ticks():g==='sound'?(scoreModel()?.sfx||[]).map(x=>x.t):g==='props'||g==='people'?[]:[...(T?.keys||[]).map(k=>k.at),...(L?.neutral||[]).map(k=>k[0]),...(L?.status||[]).map(e=>e.at)];
     if(g==='lighting'&&!L&&!T)return '';if(g==='sound'&&!scoreModel())return '';if(g==='titles'&&!titleEditor.has())return '';if((g==='props'||g==='people')&&!filmShot())return '';
-    return `<div class="lane-group-head" data-lane-group="${g}"><span class="desk-lane-label"><button data-action="group-toggle" data-index="${['motion','lighting','titles','props','people','graphics','sound'].indexOf(g)}" aria-expanded="${!groupClosed(g)}" title="${groupClosed(g)?'Show':'Hide'} the ${g} lanes${g==='lighting'?' (6 and 7 jump here)':''}">${groupClosed(g)?'▸':'▾'} ${g.toUpperCase()}</button></span><div class="lane-group-summary">${groupClosed(g)?ticks.map(t=>`<i style="left:${t/s*100}%"></i>`).join(''):''}</div></div>`;
+    return `<div class="lane-group-head" data-lane-group="${g}"><span class="desk-lane-label"><button data-action="group-toggle" data-index="${['motion','lighting','titles','props','people','graphics','sound'].indexOf(g)}" aria-expanded="${!groupClosed(g)}" title="${groupClosed(g)?'Show':'Hide'} the ${g} lanes${g==='lighting'?' (6 and 7 jump here)':''}">${groupClosed(g)?'▸':'▾'} ${g.toUpperCase()}</button>${HIDE_LABELS[g]?eyeButton(g,layerHidden(g),HIDE_LABELS[g]):''}</span><div class="lane-group-summary">${groupClosed(g)?ticks.map(t=>`<i style="left:${t/s*100}%"></i>`).join(''):''}</div></div>`;
   }
   // PROPS: the chapter's edited props as chips (hidden ones struck through), click one to select it.
   function propsGroup(){if(!filmShot())return '';return `${laneGroupHead('props')}<div class="lane-group-body desk-lanes prop-lanes" data-lane-body="props" ${groupClosed('props')?'hidden':''}>${propsLaneRow()}</div>`;}
@@ -715,7 +716,7 @@ export function mountDirector(bridge,catalog,initial){
   // People (scene-people-editor.mjs): the chapter's cast; click a person in the view, gizmo, People tab; per chapter only.
   function renderPeople(soft=false){
     const box=panel.querySelector('[data-scene-people]');if(box&&!(soft&&typing())){const active=box.contains(document.activeElement)?document.activeElement.name:null,top=box.closest('.director-scroll,[data-inspector-page]')?.scrollTop;box.innerHTML=filmShot()?scenePeople.panel():'';if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});}
-    const trackRows=timeline.querySelector('[data-people-track-rows]');if(trackRows)trackRows.innerHTML=scenePeople.trackRows();
+    const trackRows=timeline.querySelector('[data-people-track-rows]');if(trackRows){trackRows.innerHTML=scenePeople.trackRows();decorateEyes();}
     const lane=timeline.querySelector('[data-people-lane]');if(lane){lane.innerHTML=scenePeople.lane();const n=timeline.querySelector('[data-people-count]');if(n)n.textContent=scenePeople.count()||'';lane.closest('.desk-lane-row')?.classList.toggle('empty',!scenePeople.count());sizePeopleLane();}
     syncSelectedHeader();
   }
@@ -1031,7 +1032,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       <label class="timeline-pan" ${zoom===1?'hidden':''}><span>Pan view</span><input name="timeline-pan" type="range" min="0" max="100" step=".1" value="0" aria-label="Timeline horizontal position"></label>
       <div class="timeline-footer"><span data-bake-summary class="timeline-bake-summary" role="status"></span><span data-timeline-status role="status">Click ruler to scrub · Drag empty lanes to select several · Shift/Ctrl-click adds · Ctrl+A all · Alt: bypass snap · Space: play</span><span class="sb-pills" data-sb-pills></span><output data-track-time>${(playhead*s.seconds).toFixed(2)}s / ${s.seconds}s</output></div>`;
     timeline.querySelector('.timeline-viewport').scrollLeft=scroll;
-    renderPills();drawScore();decorateLocks();decorateGroups();
+    renderPills();drawScore();decorateLocks();decorateGroups();decorateEyes();
     if(debugTimeline){const ms=performance.now()-t0,el=timeline.querySelector('[data-track-time]');if(el)el.title=`renderTimeline ${ms.toFixed(1)} ms · ${timeline.getElementsByTagName('*').length} elements`;const f=timeline.querySelector('.timeline-footer');if(f)f.dataset.debug=`${ms.toFixed(1)} ms · ${timeline.getElementsByTagName('*').length} el`;}
     syncTransport();syncPlayhead();syncPan();syncPicks();syncSelection();
   }
@@ -1196,11 +1197,11 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       if(name==='bake-all'){
         if(bridge.bakeState().batch){bridge.cancelBake();return;}
         deskEditor.stop();draft();
-        let complete;try{complete=await bridge.bakeAll(project);}catch(error){await load();throw error;}
+        let complete;bakingNow=true;previewHides.suspend();try{complete=await bridge.bakeAll(project);}catch(error){await load();throw error;}finally{bakingNow=false;}
         if(complete){setOpen(false);bridge.play(project);}else{await load();status('Bake stopped. Finished chapters are kept; Bake full intro resumes the remaining work.');}
         return;
       }
-      if(name==='bake'){if(bridge.bakeState().batch){bridge.cancelBake();return;}await bridge.bake(project,selected);syncTransport();return;}
+      if(name==='bake'){if(bridge.bakeState().batch){bridge.cancelBake();return;}bakingNow=true;previewHides.suspend();try{await bridge.bake(project,selected);}finally{bakingNow=false;}syncTransport();return;}
       if(name==='bake-download'){await bridge.downloadBake();status('Downloaded baked 3D footage as WebM. Captions and audio remain in the presentation.');return;}
       if(name==='preview-loop'){bridge.setPreviewLoop(!bridge.playback().loop);status(bridge.playback().loop?'Loop preview on. Play a chapter, camera move or Groove clip to repeat it.':'Loop preview off. Playback stops at the end of the current preview.');return;}
       if(name==='chapter-toggle'){await bridge.toggleChapter(project,selected);const state=bridge.playback();status(state.playing?'Playing this chapter only. Pause to inspect or edit.':'Chapter paused. Play resumes from this position.');syncTransport();return;}
@@ -1462,6 +1463,46 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   // ---- P6 Isolate (/): only the selection in the view (Rhino's Isolate). The other props of the room are hidden in
   // this view only, kept hidden while it is on (the room may redraw them), and all come back on /, Esc or a chapter
   // change. People stay (the film's cast moves on its own clock). The film and the cut are not affected.
+  // ---- preview hides (preview-hides.mjs): the 👁 in the Titles, Graphics, People and Props heads and in each person's row
+  var bakingNow=false;
+  function stageRoom(){const w=bridge.stage()?.window?.()||document.getElementById('stage')?.contentWindow;return w?.ErgoFlex?.workspaceRoom||null;}
+  function hideTargets(id){
+    const people=stageRoom()?.people;
+    if(id==='people')return people?.people||[];
+    if(id.startsWith('p:')){const o=people?.byKey?.(id.slice(2));return o?[o]:[];}
+    if(id==='props'){try{return sceneProps.items().map(i=>i.obj).filter(Boolean);}catch{return [];}}
+    if(id==='graphics'){const out=[],scene=bridge.stage()?.three?.()?.scene;scene?.traverse(o=>{if(o.userData?.filmFx&&/^Film screen/.test(o.name||''))out.push(o);});return out;}
+    return [];
+  }
+  var previewHides=createPreviewHides({targets:hideTargets,paused:()=>bakingNow||!!bridge.bakeState?.().baking,wake:()=>bridge.stage()?.wake?.(200)});
+  try{previewHides.load(loadUi().previewHides||[]);}catch{}
+  function layerHidden(g){return g==='titles'?!!titleEditor&&!titleEditor.shown():!!previewHides?.has(g);}
+  function eyeButton(id,hidden,what){return `<button type="button" class="lane-eye" data-hide-layer="${escape(id)}" aria-pressed="${hidden}" title="${hidden?`Show ${escape(what)} in the preview again`:`Hide ${escape(what)} in the preview (nothing is deleted; the film is not affected)`}">👁</button>`;}
+  function hiddenNames(){if(!previewHides)return [];const n=[];if(layerHidden('titles'))n.push('Titles');for(const id of previewHides.list())n.push(HIDE_LABELS[id]||null);const people=previewHides.list().filter(id=>id.startsWith('p:')).length;return [...new Set(n.filter(Boolean))].concat(people?[people===1?'1 person':people+' people']:[]);}
+  // each person's row in the People group: one eye for every key of the row
+  function decorateEyes(){
+    if(!previewHides)return;
+    for(const row of timeline.querySelectorAll('[data-ps-row][data-person-keys]')){
+      const keys=row.dataset.personKeys.split(' ').filter(Boolean),label=row.querySelector('.desk-lane-label');if(!keys.length||!label||label.querySelector('.lane-eye'))continue;
+      const hidden=keys.every(k=>previewHides.has('p:'+k));row.classList.toggle('layer-hidden',hidden||previewHides.has('people'));
+      label.insertAdjacentHTML('beforeend',eyeButton('p:'+keys.join(' '),hidden,row.querySelector('b')?.textContent||'this person'));
+    }
+    for(const g of Object.keys(HIDE_LABELS))timeline.querySelector(`[data-lane-body="${g}"]`)?.classList.toggle('layer-hidden',layerHidden(g));
+  }
+  function toggleLayer(id){
+    let hidden;
+    if(id==='titles'){if(!titleEditor?.has()){status('No titles in this chapter.');return;}hidden=!titleEditor.toggleShown();}
+    else if(id.startsWith('p:')){const keys=id.slice(2).split(' ');hidden=!keys.every(k=>previewHides.has('p:'+k));for(const k of keys)previewHides.set('p:'+k,hidden);}
+    else hidden=previewHides.toggle(id);
+    saveUi({previewHides:previewHides.list()});renderTimeline();renderPills();
+    const what=id.startsWith('p:')?(timeline.querySelector(`[data-person-keys="${CSS.escape(id.slice(2))}"] b`)?.textContent||'This person'):HIDE_LABELS[id]||id;
+    status(hidden?`${what} hidden in the preview (👁 or Alt+H shows it again; nothing is deleted and the film is not affected).`:`${what} shown again.`);
+  }
+  function showAllLayers(){
+    const any=previewHides.list().length||layerHidden('titles');if(!any){status('Nothing is hidden.');return;}
+    previewHides.clear();if(layerHidden('titles'))titleEditor.toggleShown();saveUi({previewHides:[]});renderTimeline();renderPills();status('Every hidden layer is shown again.');
+  }
+  timeline.addEventListener('click',event=>{const b=event.target.closest('[data-hide-layer]');if(!b)return;event.preventDefault();event.stopPropagation();toggleLayer(b.dataset.hideLayer);});
   var isolated=null,isolateTimer=0;
   function isolate(on){
     const w=bridge.stage()?.window?.()||document.getElementById('stage')?.contentWindow,room=w?.ErgoFlex?.workspaceRoom;
@@ -1612,14 +1653,14 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     const pills=[{id:'snap',label:magnet?`Snap ${typeof snapStep==='string'?snapStep:snapStep?snapStep+' s':'edges'}`:'Snap off',on:magnet,always:true,title:'Snapping (S): click to turn it '+(magnet?'off':'on')},
       {id:'loop',label:'Loop',on:!!st.loop,title:'Loop is on (L)'},{id:'space',label:spaceNow()==='local'?'Gizmo: Object':'Gizmo: World',on:spaceNow()==='local',always:true,title:'The move gizmo\'s frame: click for '+(spaceNow()==='local'?'World':'Object')},{id:'free',label:'Free view',on:free,warn:true,title:'Not the film camera (0 goes back)'},{id:'filter',label:laneFilter==='busy'?'Lanes: with something':laneFilter==='changed'?'Lanes: changed':'Lanes: selection only',on:!!laneFilter,warn:true,title:'Shift+U: click to show every lane'},{id:'isolate',label:'Isolated',on:!!isolated,warn:true,title:'Only the selection is shown: click to bring the rest back'},{id:'lock',label:'🔒 Camera locked to view',on:!!lockCamera,warn:true,title:'Moving the view updates the selected camera view: click to unlock'},{id:'speed',label:(st.rate===.5?'½':st.rate===.25?'¼':'1')+'× speed',on:(st.rate||1)!==1,warn:true,title:'Play speed: click for normal'},
       {id:'auto',label:'● Auto-key',on:!!auto,warn:true,title:'Pose mode: every change keys the pose (Shift+K)'},
-      {id:'lowres',label:'Low-res',on:pressed('preview-quality'),title:'The preview runs at a lower resolution'},{id:'muted',label:'Muted',on:!pressed('sound'),title:'Sound is off (Shift+M)'},{id:'music-muted',label:'Music muted',on:pressed('sound')&&musicMuted(),title:'The Music lane is muted (Alt+M)'},
+      {id:'lowres',label:'Low-res',on:pressed('preview-quality'),title:'The preview runs at a lower resolution'},{id:'muted',label:'Muted',on:!pressed('sound'),title:'Sound is off (Shift+M)'},{id:'hidden',label:(()=>{const n=hiddenNames();return n.length?'Hidden: '+n.join(', '):'';})(),on:hiddenNames().length>0,warn:true,title:'Left out of the preview only (Alt+H, or click: show everything again)'},{id:'music-muted',label:'Music muted',on:pressed('sound')&&musicMuted(),title:'The Music lane is muted (Alt+M)'},
       {id:'inspector',label:'Side column hidden',on:body.contains('inspector-hidden'),title:'Tab brings it back'},{id:'timeline',label:'Timeline hidden',on:body.contains('timeline-hidden'),title:'Shift+Tab brings it back'}];
     const sig=JSON.stringify(pills.map(p=>[p.label,p.on]));if(host.dataset.sig===sig)return;host.dataset.sig=sig;
     host.innerHTML=statusBarHtml('',pills).replace(/^<span class="sb-text"[^>]*><\/span>/,'');
   }
   timeline.addEventListener('click',event=>{
     const p=event.target.closest('[data-sb-pill]');if(!p)return;event.stopPropagation();
-    const id=p.dataset.sbPill;try{({snap:()=>action('magnet'),loop:()=>action('preview-loop'),free:()=>runKey('film-camera'),space:()=>runKey('gizmo-space'),speed:()=>{bridge.setRate?.(1);scorePlayer?.setRate(1);},isolate:()=>isolate(false),filter:()=>setLaneFilter(''),lock:()=>runKey('lock-camera'),auto:()=>runKey('pose-auto-key'),lowres:()=>document.getElementById('preview-quality')?.click(),muted:()=>document.getElementById('sound')?.click(),'music-muted':()=>toggleMusicMute(),inspector:()=>action('inspector'),timeline:()=>action('ab-timeline')})[id]?.();}catch(error){status(error.message,true);}
+    const id=p.dataset.sbPill;try{({snap:()=>action('magnet'),loop:()=>action('preview-loop'),free:()=>runKey('film-camera'),space:()=>runKey('gizmo-space'),speed:()=>{bridge.setRate?.(1);scorePlayer?.setRate(1);},isolate:()=>isolate(false),filter:()=>setLaneFilter(''),lock:()=>runKey('lock-camera'),auto:()=>runKey('pose-auto-key'),lowres:()=>document.getElementById('preview-quality')?.click(),muted:()=>document.getElementById('sound')?.click(),'music-muted':()=>toggleMusicMute(),hidden:()=>showAllLayers(),inspector:()=>action('inspector'),timeline:()=>action('ab-timeline')})[id]?.();}catch(error){status(error.message,true);}
     setTimeout(()=>{renderPills();renderAppBar();},0);
   },true);
   // Review mode (Ctrl+`): the film frame alone, the whole window, playing; Esc or Ctrl+` comes back.
@@ -1754,6 +1795,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       case 'open-inspector':openSelection();return;
       case 'sound':document.getElementById('sound')?.click();return;
       case 'music-mute':toggleMusicMute();return;
+      case 'show-hidden':showAllLayers();return;
       case 'loop':action('preview-loop');return;
       case 'snap':action('magnet');return;
       case 'zoom-in':case 'zoom-out':case 'zoom-fit':action(id);return;

@@ -193,6 +193,12 @@ body.df-shell #director-panel .director-hint:hover,body.df-shell #director-panel
 .lane-mute:hover{border-color:#ffffff66}
 .lane-mute[aria-pressed="true"]{background:#f0b429;border-color:#f0b429;color:#1b1f24}
 .lane-muted>.desk-lane{opacity:.35;filter:grayscale(.8)}
+.lane-eye{min-width:16px;height:16px;padding:0 2px;margin-left:4px;border:0;background:transparent;font:11px/16px system-ui;opacity:.45;cursor:pointer;color:#cfd8e3}
+.lane-eye:hover,.lane-eye[aria-pressed="true"]{opacity:1}
+.lane-eye[aria-pressed="true"]{background:linear-gradient(135deg,transparent 44%,#f0b429 44% 56%,transparent 56%)}
+#director-timeline .lane-group-head .lane-eye{min-height:16px;height:16px;padding:0 2px;font-size:11px;letter-spacing:0}
+.ps-row .desk-lane-label .lane-eye{position:absolute;right:18px;top:2px;margin:0}
+.layer-hidden .desk-lane,.layer-hidden.desk-lane-row>.desk-lane{opacity:.35}
 .score-stale{font-style:normal;font-size:10px;color:#ffd79a;border:1px solid #ffb54788;border-radius:8px;padding:0 5px}
 .score-stale-note{margin:2px 0 4px 150px;font-size:11px;color:#ffd79a}
 .score-lane{position:relative;height:54px;overflow:hidden;border-radius:6px;background:#0a1219}
