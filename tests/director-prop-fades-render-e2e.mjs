@@ -9,6 +9,8 @@
 // The create chapter of the Cinematographer's cut: a film item the stage has once, in view at some moment t*.
 //   CHROME=".../chrome.exe" SHOTS=<dir> node tests/director-prop-fades-render-e2e.mjs        (run under the GPU lock)
 //   SEED=<storage seed json> also passes --storage to render-still (absent: none; the measure is relative, so either works)
+//   FADE_KINDS=room,desk (default room): the kinds of prop timed, each its own item and moment: room = a film item of the
+//   room, desk = an accessory on the featured desk (it rides the desk: Desk dressing / Accessory mount)
 import assert from 'node:assert/strict';
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';
 import {execFileSync} from 'node:child_process';
@@ -42,7 +44,8 @@ const inView=()=>page.evaluate(async()=>{const w=document.getElementById('stage'
     for(const c of [0,1,2,3,4,5,6,7]){const v=new THREE.Vector3(c&1?box.max.x:box.min.x,c&2?box.max.y:box.min.y,c&4?box.max.z:box.min.z).project(cam);if(v.z>1||v.z<-1)behind=true;x0=Math.min(x0,v.x);x1=Math.max(x1,v.x);y0=Math.min(y0,v.y);y1=Math.max(y1,v.y);}
     if(behind)continue;const cx0=Math.max(-1,x0),cx1=Math.min(1,x1),cy0=Math.max(-1,y0),cy1=Math.min(1,y1);if(cx1<=cx0||cy1<=cy0)continue;
     const area=(cx1-cx0)*(cy1-cy0)/4,whole=(x1-x0)*(y1-y0)/4;
-    out.push({key:b.dataset.propKey,match:k[0],name:b.textContent.trim(),area,inside:area/whole,box:{x0:(cx0+1)/2,x1:(cx1+1)/2,y0:(1-cy1)/2,y1:(1-cy0)/2}});}
+    let desk=false;for(let p=n[0];p;p=p.parent)if(/^(Desk dressing|Accessory mount|Accessory:)/.test(p.name||''))desk=true;
+    out.push({key:b.dataset.propKey,match:k[0],name:b.textContent.trim(),kind:desk?'desk':'room',area,inside:area/whole,box:{x0:(cx0+1)/2,x1:(cx1+1)/2,y0:(1-cy1)/2,y1:(1-cy0)/2}});}
   return out;});
 // how much of the prop is left in A, from F (whole) and G (gone): linear light, the pixels of its box where F and G differ
 const measure=(A,F,G,box)=>page.evaluate(async(A,F,G,box)=>{
@@ -54,25 +57,22 @@ const measure=(A,F,G,box)=>page.evaluate(async(A,F,G,box)=>{
   const thr=Math.max(.03,peak*.2);for(const [dg,da] of d)if(dg>thr){num+=da;den+=dg;n++;}
   return {left:den?1-num/den:NaN,px:n,size:[W,H]};
 },A,F,G,box);
-// the Director's Render still (Shift+R) at the playhead: its image
+// the Director's Render still (Shift+R) at the playhead: its image. (The status line is cleared first and the still is
+// done when it says "Still rendered" again: two stills of the same pixels, e.g. a cut before it leaves and the whole time,
+// are the same data URL, and the strip keeps 12 thumbnails captioned to the minute, so neither tells a new still.)
 async function still(){
-  const before=await page.evaluate(()=>document.querySelector('#film-still img.still-main')?.src||'');
-  await page.evaluate(()=>document.activeElement?.blur());
+  // (the panel's and the timeline's status lines both carry it; a panel re-render shows its default hint, never "Still rendered")
+  const said=()=>page.evaluate(()=>['#director-panel [data-status]','#director-timeline [data-timeline-status]'].map(q=>document.querySelector(q)?.textContent||'').join(' | '));
+  await page.evaluate(()=>{document.activeElement?.blur();for(const q of ['#director-panel [data-status]','#director-timeline [data-timeline-status]']){const s=document.querySelector(q);if(s)s.textContent='(e2e: waiting for the still)';}});
   await page.keyboard.down('Shift');await page.keyboard.press('KeyR');await page.keyboard.up('Shift');
-  return until(async()=>{const s=await page.evaluate(()=>document.querySelector('#film-still img.still-main')?.src||'');return s&&s!==before&&/Still rendered/.test(await status(page))?s:null;},'Render still',300000);
+  await until(async()=>/Still rendered/.test(await said()),'Render still',300000);
+  return page.evaluate(()=>document.querySelector('#film-still img.still-main')?.src||null);
 }
-
-try{
-  await openChapter(page,base,chapter);
-  await page.evaluate(()=>document.querySelector('#director-panel [data-inspector-tab="props"]')?.click());
-  await page.evaluate(()=>{for(const b of document.querySelectorAll('#director-timeline [data-action="titles"][aria-pressed="true"]'))b.click();});   // (film titles off: the stills are the 3D frame)
-  // ---- the item and the moment: the biggest whole-chapter film item in view
-  let best=null;
-  for(let t=2;t<=T-2;t+=2){await seek(page,t);await wait(900);for(const c of await inView())if(c.inside>.8&&c.area>.004&&c.area<.5&&(!best||c.area>best.area))best={...c,t};}
-  check(!!best,`a whole-chapter film item in view: ${best?.name} at ${best?.t} s (${((best?.area||0)*100).toFixed(1)} % of the frame)`);
-  const ts=best.t,M=best.match;
+const SPEED={fast:.2,medium:.5,slow:1},report={};
+async function runItem(best){
+  const ts=best.t,M=best.match,K=best.kind,rows={},jobs=[];
   await until(()=>clickBar(best.key),'its bar');await until(()=>page.$('#director-panel [name="pp-t-to"]'),'the inspector\'s On screen fields');
-  // ---- the variants: F whole, G gone, then the fades (to: where it leaves; ts is the moment measured)
+  // the variants: F whole, G gone, then the fades (to: where it leaves; ts is the moment measured)
   const V=[
     {id:'G',label:'gone (left at ts-1, a cut)',to:ts-1},
     {id:'F',label:'whole (the whole time)',whole:true},
@@ -82,7 +82,6 @@ try{
     {id:'smooth-slow',label:'Smooth Slow, a quarter in',to:ts+.75,curve:'smooth',speed:'slow'},
     {id:'smooth-fast',label:'Smooth Fast, a quarter in',to:ts+.15,curve:'smooth',speed:'fast'},
   ];
-  const SPEED={fast:.2,medium:.5,slow:1},rows={};let jobs=null;
   for(const v of V){
     // back to the whole time, then its leaving time, curve and speed through the inspector
     await clickBar(best.key);await until(()=>page.$('#director-panel [name="pp-t-to"]'),'the inspector');
@@ -93,43 +92,55 @@ try{
       if(v.speed){await press('pp-t-'+v.speed);await until(async()=>(await edit(M))?.show?.fadeOut===SPEED[v.speed],'speed '+v.speed);}
     }
     const show=(await edit(M))?.show||null,want=factor(show,ts);
-    if(v.curve)check(v.curve==='cut'?!show.fadeOut:show.fadeOut===SPEED[v.speed]&&(v.curve==='smooth')===(show.ease==='smooth'),`${v.label}: written ${JSON.stringify(show)}`);
+    if(v.curve)check(v.curve==='cut'?!show.fadeOut:show.fadeOut===SPEED[v.speed]&&(v.curve==='smooth')===(show.ease==='smooth'),`${K}: ${v.label}: written ${JSON.stringify(show)}`);
     // (1) the live stage
     await page.evaluate(()=>document.querySelector('#director-panel [data-action="pp-clear"]')?.click());
     await seek(page,ts);await wait(900);const live=await until(()=>opacity(M),'it on the stage');
-    // (2) the Director's still; the first one boots the still stage, then every still's shot is kept (the exact shot it rendered)
+    // (2) the Director's still, and the exact shot it rendered (kept from its film-fx install / update)
     await page.evaluate(()=>{window.__stillJob=null;});const url=await still();
-    if(!jobs){jobs=[];await page.evaluate(()=>{const f=[...document.querySelectorAll('iframe')].find(x=>x.title==='Film still renderer'),w=f.contentWindow,m=w.__filmFx;
-      const keep=fn=>async s=>{window.__stillJob=JSON.stringify(s);return fn(s);};w.__filmFx={...m,install:keep(m.install),update:keep(m.update)};});
-      // (re-render this one through the kept shot: G is set again after F)
-      V.push({...v,again:true});}
-    const job=await page.evaluate(()=>window.__stillJob||null);if(jobs.length||rows.G)assert.ok(job||!rows.G,v.id+': the still renderer took a new shot');if(!v.again&&rows.G&&job)jobs.push({id:v.id,job:JSON.parse(job)});
-    if(v.again&&job){jobs.push({id:'G',job:JSON.parse(job)});rows.G.url=url;}
-    else rows[v.id]={...v,show,want,live,url};
-    fs.writeFileSync(path.join(shots,`still-${v.id}${v.again?'-2':''}.jpg`),Buffer.from(url.split(',')[1],'base64'));
-    console.log(`  ${v.id}: wants ${want.toFixed(3)} at ${ts} s · live opacity ${live.v.toFixed(3)} ${live.vis?'drawn':'not drawn'}`);
+    const job=await page.evaluate(()=>window.__stillJob||null);assert.ok(job,`${K} ${v.id}: the still renderer took the new shot`);
+    jobs.push({id:v.id,job:JSON.parse(job)});rows[v.id]={...v,show,want,live,url};
+    fs.writeFileSync(path.join(shots,`${K}-still-${v.id}.jpg`),Buffer.from(url.split(',')[1],'base64'));
+    console.log(`  ${K} ${v.id}: wants ${want.toFixed(3)} at ${ts} s · live opacity ${live.v.toFixed(3)} ${live.vis?'drawn':'not drawn'}`);
   }
-  // (1) live: the materials' opacity is the rule's (0 = not drawn)
-  // (as a share of its whole opacity: some of its materials are see-through as built)
-  for(const r of Object.values(rows)){const v=r.live.v/rows.F.live.v;check(r.want===0?!r.live.vis:r.live.vis&&Math.abs(v-r.want)<.02,`live stage, ${r.label}: opacity ${r.live.vis?v.toFixed(3):'not drawn'} of its own (rule ${r.want.toFixed(3)})`);}
+  // (1) live: the materials' opacity is the rule's (as a share of its whole opacity: some materials are see-through as built; 0 = not drawn)
+  for(const r of Object.values(rows)){const v=r.live.v/rows.F.live.v;check(r.want===0?!r.live.vis:r.live.vis&&Math.abs(v-r.want)<.02,`${K}: live stage, ${r.label}: opacity ${r.live.vis?v.toFixed(3):'not drawn'} of its own (rule ${r.want.toFixed(3)})`);}
   // (2) the Director's stills, in pixels
   const left={};
   for(const r of Object.values(rows)){if(r.id==='F'||r.id==='G')continue;const m=await measure(r.url,rows.F.url,rows.G.url,best.box);left[r.id]={still:m.left,px:m.px};}
-  for(const [id,m] of Object.entries(left))check(m.px>150&&Math.abs(m.still-rows[id].want)<.12,`Director still, ${rows[id].label}: ${(m.still*100).toFixed(0)} % of it left over ${m.px} px (rule ${(rows[id].want*100).toFixed(0)} %)`);
-  check(left['lin-med'].still<left['lin-slow'].still&&left['lin-slow'].still<left['smooth-slow'].still+.03,'the stills order like the curves: linear midpoint < linear quarter <= smooth quarter');
+  for(const [id,m] of Object.entries(left))check(m.px>150&&Math.abs(m.still-rows[id].want)<.12,`${K}: Director still, ${rows[id].label}: ${(m.still*100).toFixed(0)} % of it left over ${m.px} px (rule ${(rows[id].want*100).toFixed(0)} %)`);
+  check(left['lin-med'].still<left['lin-slow'].still&&left['lin-slow'].still<left['smooth-slow'].still+.03,`${K}: the stills order like the curves: linear midpoint < linear quarter <= smooth quarter`);
   // (3) render-still.cjs on the stills' own shots, same moment, 1280x720
-  const cutFile=path.join(shots,'fades-cut.json'),out=path.join(shots,'render-still');fs.mkdirSync(out,{recursive:true});
+  const cutFile=path.join(shots,K+'-fades-cut.json'),out=path.join(shots,K+'-render-still');fs.mkdirSync(out,{recursive:true});
   const order=jobs.map(j=>j.id);fs.writeFileSync(cutFile,JSON.stringify({schema:'ergoflex.client-cut',version:1,id:'prop-fades-render',name:'prop fades',shots:jobs.map(j=>j.job)}));
   const at=String(ts/jobs[0].job.seconds);
   const args=[path.join(root,'tools/experience/render-still.cjs'),'--cut',cutFile,'--shots','all','--at',at,'--size','1280x720','--ss','1','--out',out,'--server',base,...(process.env.SEED?['--storage',process.env.SEED]:[])];
-  console.log('  render-still: '+order.join(', ')+' at '+ts+' s');
+  console.log(`  ${K} render-still: ${order.join(', ')} at ${ts} s`);
   execFileSync(process.execPath,args,{stdio:'inherit',env:{...process.env,CHROME_PATH:process.env.CHROME_PATH||process.env.CHROME||''},timeout:1800000});
   const png=i=>{const f=fs.readdirSync(out).find(n=>n.startsWith(String(i+1).padStart(2,'0')+'-still-1280x720-'));assert.ok(f,'render-still wrote shot '+(i+1));return 'data:image/png;base64,'+fs.readFileSync(path.join(out,f)).toString('base64');};
   const R=Object.fromEntries(order.map((id,i)=>[id,png(i)]));
   for(const id of order){if(id==='F'||id==='G')continue;const m=await measure(R[id],R.F,R.G,best.box);left[id].film=m.left;
-    check(m.px>150&&Math.abs(m.left-rows[id].want)<.12&&Math.abs(m.left-left[id].still)<.06,`render-still, ${rows[id].label}: ${(m.left*100).toFixed(0)} % left over ${m.px} px (rule ${(rows[id].want*100).toFixed(0)} %, Director still ${(left[id].still*100).toFixed(0)} %)`);}
-  fs.writeFileSync(path.join(shots,'fades.json'),JSON.stringify({item:best.name,match:M,t:ts,box:best.box,rows:Object.fromEntries(Object.entries(rows).map(([k,r])=>[k,{show:r.show,want:r.want,live:r.live,left:left[k]}]))},null,1));
+    check(m.px>150&&Math.abs(m.left-rows[id].want)<.12&&Math.abs(m.left-left[id].still)<.06,`${K}: render-still, ${rows[id].label}: ${(m.left*100).toFixed(0)} % left over ${m.px} px (rule ${(rows[id].want*100).toFixed(0)} %, Director still ${(left[id].still*100).toFixed(0)} %)`);}
+  report[K]={item:best.name,match:M,t:ts,box:best.box,rows:Object.fromEntries(Object.entries(rows).map(([k,r])=>[k,{show:r.show,want:r.want,live:r.live,left:left[k]}]))};
+  fs.writeFileSync(path.join(shots,'fades.json'),JSON.stringify(report,null,1));
+  // leave it as the film had it
+  await clickBar(best.key);if((await edit(M))?.show){await press('pp-t-all');await until(async()=>!(await edit(M))?.show,'the whole time again');}
+}
+
+try{
+  await openChapter(page,base,chapter);
+  await page.evaluate(()=>document.querySelector('#director-panel [data-inspector-tab="props"]')?.click());
+  await page.evaluate(()=>{for(const b of document.querySelectorAll('#director-timeline [data-action="titles"][aria-pressed="true"]'))b.click();});   // (film titles off: the stills are the 3D frame)
+  // ---- per kind: the biggest whole-chapter film item of that kind in view, and the moment
+  const kinds=(process.env.FADE_KINDS||'room').split(',').map(k=>k.trim()).filter(Boolean),best={};
+  for(let t=2;t<=T-2;t+=2){await seek(page,t);await wait(900);for(const c of await inView())if(kinds.includes(c.kind)&&c.inside>.8&&c.area>(c.kind==='desk'?.001:.004)&&c.area<.5&&(!best[c.kind]||c.area>best[c.kind].area))best[c.kind]={...c,t};}
+  for(const k of kinds)check(!!best[k],`${k}: a whole-chapter film item in view: ${best[k]?.name} at ${best[k]?.t} s (${((best[k]?.area||0)*100).toFixed(2)} % of the frame)`);
+  // the first still boots the still stage; from then on every still's shot is kept
+  await seek(page,best[kinds[0]].t);await wait(600);await still();
+  await page.evaluate(()=>{const f=[...document.querySelectorAll('iframe')].find(x=>x.title==='Film still renderer'),w=f.contentWindow,m=w.__filmFx;
+    const keep=fn=>async s=>{window.__stillJob=JSON.stringify(s);return fn(s);};w.__filmFx={...m,install:keep(m.install),update:keep(m.update)};});
+  for(const k of kinds)await runItem(best[k]);
   assert.deepEqual(errors,[],'page errors');
-  console.log(`PASS director prop fades rendered (${passed.length} checks) · stills and numbers: ${shots}`);
+  console.log(`PASS director prop fades rendered (${passed.length} checks, ${kinds.join(' + ')}) · stills and numbers: ${shots}`);
 }catch(error){console.error('FAIL after: '+passed.join('; '));console.error(error.message);console.error('status: '+await status(page));console.error('errors: '+errors.join(' | '));process.exitCode=1;}
 finally{await close();}
