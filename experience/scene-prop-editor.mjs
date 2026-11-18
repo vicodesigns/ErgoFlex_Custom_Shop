@@ -210,15 +210,47 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       const over=Math.abs(p.x)<=sz.depth/2+80&&Math.abs(p.z)<=sz.width/2+80,y=p.y>=-30?p.y:1e6+Math.abs(p.y);if(over&&y<bestY){bestY=y;best=k;}}
     return best;
   }
-  function setFollow(kind){
+  // The frame a prop will follow, measured once the stage has drawn the desk where it is now (17 Nov, Windows: picked
+  // right after a change the shelf's frame was still at an old pose, y 0, so the place was 1.4 m off and the controller
+  // floated over the shelf from the next frame on). The playhead is re-applied and the frame read until two frames agree.
+  async function settledFrame(kind){
+    const E=win()?.__filmEdits,w=win();if(!E?.followMatrix)return null;
+    try{seek(time());}catch{}bridge.stage()?.wake?.(600);
+    const frame=()=>new Promise(r=>{let done=false;const go=()=>{if(!done){done=true;r();}};try{w.requestAnimationFrame(go);}catch{}setTimeout(go,60);});
+    let last=null;
+    for(let i=0;i<40;i++){
+      await frame();const F=E.followMatrix(kind);if(!F)return null;
+      if(i>=3&&last&&F.elements.every((v,k)=>Math.abs(v-last.elements[k])<1e-7))return F;last=F;
+    }
+    return last;
+  }
+  const placeIn=(F,W)=>{const {THREE}=tools,local=F.clone().invert().multiply(W),p=new THREE.Vector3(),q=new THREE.Quaternion(),sc=new THREE.Vector3();local.decompose(p,q,sc);
+    const r=new THREE.Euler().setFromQuaternion(q),deg=THREE.MathUtils.radToDeg;return cleanPlace({position:p.toArray(),rotation:[r.x,r.y,r.z].map(v=>wrapDeg(deg(v))),scale:sc.toArray()});};
+  // After the film has re-installed a new follow: the prop must still be where it was picked (W, world); if the frame had
+  // moved on since, the place is measured again (the same undo step).
+  let followCheck=null;
+  async function checkFollow(){
+    const c=followCheck;if(!c||performance.now()>c.until){followCheck=null;return;}
+    const o=current();if(!o||sel?.key!==c.key){followCheck=null;return;}const e=editOfKey(c.key);if(!isFollow(e)||e.follow!==c.kind){followCheck=null;return;}
+    if(o.parent!==win()?.__filmEdits?.followFrame?.(c.kind))return;   // not re-installed on its frame yet: the next time
+    followCheck=null;
+    const F=await settledFrame(c.kind);if(!F||current()!==o)return;o.updateWorldMatrix(true,false);
+    const {THREE}=tools,a=new THREE.Vector3().setFromMatrixPosition(o.matrixWorld),b=new THREE.Vector3().setFromMatrixPosition(c.W);
+    if(a.distanceTo(b)*metresPerUnit()<.002)return;
+    console.warn('[props] travels with: re-measured',c.kind,'off by',(a.distanceTo(b)*metresPerUnit()).toFixed(3),'m');
+    write(c.key,{...e,place:placeIn(F,c.W)},`${label(o)} travels with ${FOLLOW_LABELS[c.kind].replace(/ \(.*\)$/,'').toLowerCase()} (measured again once the desk was drawn).`,{undoKey:'follow:'+c.key});
+  }
+  async function setFollow(kind){
     const o=current();if(!sel||!o)return;const e=editOfKey(sel.key);if(isAddEdit(e)){status('A prop you added goes where its own "on" says; move it with the Gumball.',true);return;}
     if(!kind){if(!isFollow(e)){rerender();return;}const next={...sel.target,...e};delete next.follow;delete next.place;write(sel.key,next,`${label(o)} is back on the surface the film puts it on.`);return;}
-    if(kind==='unit')kind=shelfOf(o);
-    const E=win().__filmEdits,F=E.followMatrix?.(kind);if(!F){status('That surface is not in this chapter.',true);rerender();return;}
-    const {THREE}=tools;o.updateWorldMatrix(true,false);const local=F.clone().invert().multiply(o.matrixWorld),p=new THREE.Vector3(),q=new THREE.Quaternion(),sc=new THREE.Vector3();local.decompose(p,q,sc);
-    const r=new THREE.Euler().setFromQuaternion(q),deg=THREE.MathUtils.radToDeg,place=cleanPlace({position:p.toArray(),rotation:[r.x,r.y,r.z].map(v=>wrapDeg(deg(v))),scale:sc.toArray()});
-    const next={...sel.target,...(e||{}),follow:kind,place};delete next.position;delete next.rotation;delete next.scale;delete next.space;
-    write(sel.key,next,`${label(o)} now travels with ${FOLLOW_LABELS[kind].replace(/ \(.*\)$/,'').toLowerCase()}, from where it is now. Undo puts it back.`);
+    const key=sel.key,target=sel.target;o.updateWorldMatrix(true,false);const W=o.matrixWorld.clone();
+    if(kind==='unit'){if(!await settledFrame('shelf')&&!await settledFrame('lower-shelf')){status('That surface is not in this chapter.',true);rerender();return;}kind=shelfOf(o);}
+    status(`Measuring where ${label(o)} sits on ${FOLLOW_LABELS[kind].replace(/ \(.*\)$/,'').toLowerCase()}…`);
+    const F=await settledFrame(kind);if(!F){status('That surface is not in this chapter.',true);rerender();return;}
+    if(sel?.key!==key){status('The selection changed: Travels with not set.',true);return;}
+    const next={...target,...(editOfKey(key)||{}),follow:kind,place:placeIn(F,W)};delete next.position;delete next.rotation;delete next.scale;delete next.space;
+    followCheck={key,kind,W,until:performance.now()+15000};
+    write(key,next,`${label(o)} now travels with ${FOLLOW_LABELS[kind].replace(/ \(.*\)$/,'').toLowerCase()}, from where it is now. Undo puts it back.`,{undoKey:'follow:'+key});
   }
   function followSelect(o,e){
     const now=isFollow(e)?e.follow:'',unit=now==='shelf'||now==='lower-shelf',was=!now&&surfaceNow(o);
@@ -515,7 +547,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const o=current();if(!sel||!o)return;const name=el.name,v=Number(el.value);
     if(sel.blocked){status(`${CANT_SAVE}: ${sel.blocked}`,true);rerender();return;}
     if(name==='pp-hide'){hide(el.checked);return;}
-    if(name==='pp-follow'||name==='pp-follow-shelf'){setFollow(el.value);return;}
+    if(name==='pp-follow'||name==='pp-follow-shelf'){setFollow(el.value).catch(error=>{status('Travels with not set: '+error.message,true);rerender();});return;}
     if(el.value===''||!Number.isFinite(v))throw Error('Enter a number.');
     const added=editOfKey(sel.key);if(isAddEdit(added)){changedAdd(o,added,name,v);return;}
     if(isFollow(added)){changedFollow(o,added,name,v);return;}
@@ -923,6 +955,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function applied(){
     found=null;itemsCache=null;pivotDirty=true;for(const m of members())if(m.obj&&!inScene(m.obj))m.obj=null;
     learn();
+    if(followCheck)checkFollow().catch(error=>console.warn('[props] travels with check',error));
     // A bar clicked for a desk that was not on stage: its prop is picked up now that it is.
     if(wanted&&performance.now()<wanted.until&&sel?.key===wanted.key){const o=tools&&find(wanted.key,wanted.target);if(o){sel.obj=o;wanted=null;status(`${label(o)} selected · W move · E rotate · R scale · drag its bar's ends to set when it shows.`);}}else wanted=null;
     if(pending&&!edits().some(e=>pending.keys.has(propKey(e)))){

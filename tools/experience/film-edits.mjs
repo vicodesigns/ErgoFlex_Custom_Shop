@@ -238,7 +238,10 @@ export function followFrame(kind) {
   if (kind === 'lift') { const b = addParent('base-shelf'); return b ? liftFrame(b) : null; }
   return addParent(kind);
 }
-export function followMatrix(kind) { const f = followFrame(kind); if (!f) return null; f.updateMatrix?.(); f.updateWorldMatrix(true, false); return f.matrixWorld.clone(); }
+// (Only the lift frame recomposes its matrix here: a desk mount sets .matrix itself with matrixAutoUpdate off, and
+// updateMatrix() would rebuild it from its identity position, putting the shelf at the rig's origin, y 0, until the next
+// frame: 17 Nov, the place measured against that put the RC controller 1.4 m over the shelf.)
+export function followMatrix(kind) { const f = followFrame(kind); if (!f) return null; if (f.matrixAutoUpdate || f.userData.filmFxLift) f.updateMatrix(); f.updateWorldMatrix(true, false); return f.matrixWorld.clone(); }
 export function addParent(kind) {
   const scene = sceneRoot(), role = Object.hasOwn(DESK_SURFACES, kind) ? DESK_SURFACES[kind] : null;
   if (role) {

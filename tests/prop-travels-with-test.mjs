@@ -30,5 +30,15 @@ const w0=at(),parent0=rc.parent,p0=rc.position.clone(),s0=rc.scale.clone();
 // picked while the desk is up: the place still puts it there, and it lands in the same spot when installed at another height
 {window.ErgoFlex.heightInches=36;const w=at(),e=pick('lift');window.ErgoFlex.heightInches=28;const fx=E.installEdits({sceneEdits:[{...e,director:true}]});
   near(at(),w.clone().sub(new THREE.Vector3(0,8*25.4*.001,0)),'installed lower: 8 in lower');window.ErgoFlex.heightInches=36;near(at(),w,'at 36 in again: where it was picked');window.ErgoFlex.heightInches=28;fx.restore();}
+// THE BUG (Windows, 17 Nov): the real desk mounts set .matrix themselves with matrixAutoUpdate off (workspace-3d.mjs
+// WorkspaceAccessories.update, scene-desk-rig.mjs updatePose); followMatrix's updateMatrix() rebuilt it from the identity
+// position, so the pick measured the shelf at the desk's origin (y 0) and the controller floated 1.4 m over it.
+{const posed=new THREE.Group();posed.name='Desk dressing:lower-shelf';posed.matrixAutoUpdate=false;desk.add(posed);
+  posed.matrix.compose(new THREE.Vector3(.3,.95,-.1),new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),.4),new THREE.Vector3(.001,.001,.001));posed.matrixWorldNeedsUpdate=true;
+  window.ErgoFlex.sceneDesks.active.rig.mounts['lower-shelf']=posed;const before=posed.matrix.clone(),w=at(),e=pick('lower-shelf');
+  assert.ok(posed.matrix.equals(before),'measuring the frame leaves the mount\'s own matrix alone');
+  assert.ok(Math.abs(e.place.scale[0]-850)<.01,'the place is in the shelf\'s millimetres: scale '+e.place.scale[0]+' (850 here, the controller\'s size over the frame\'s)');
+  const fx=E.installEdits({sceneEdits:[{...e,director:true}]});assert.equal(rc.parent,posed);near(at(),w,'lower shelf (a posed mount): kept where it was at the pick');
+  fx.restore();window.ErgoFlex.sceneDesks.active.rig.mounts['lower-shelf']=lower;desk.remove(posed);}
 assert.equal(cleanPlace({position:[1,2],rotation:[0,0,0],scale:[1,1,1]}),null);assert.equal(cleanPropEdit({match:'x',follow:'nowhere',place:{position:[0,0,0],rotation:[0,0,0],scale:[1,1,1]}}),null,'an unknown surface is no edit');
 console.log('prop-travels-with-test: ok (kept at the pick; shelf unit, desktop tilt, lift; restore; cleaning)');
