@@ -4,7 +4,7 @@ import {noteStudioValue} from './studio-sync.mjs';
 import {layersOn,splitPermanent,writePermanentLayers,permanentCells,foldDeskHides,LAYERS_KEY} from './layers-exchange.mjs';
 import {cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,propTarget,DESK_SURFACES,onDesk,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets,keyedFadeWindow,filmFadeKeys,combineFilmFade,showOverFilm} from './prop-edits.mjs';
 import {stackRows} from './lane-rows.mjs';
-import {EASEL_ANGLE,STOW_ANGLE,hasStowRule,filmVisibleKeys,shownStretches,keyedWindow} from './prop-stow-window.mjs';
+import {stowWindow,EASEL_ANGLE,filmVisibleKeys,keyedWindow} from './prop-stow-window.mjs';
 import {legacyMotionToClips,sampleClipMotion} from './desk-clips.mjs';
 import {createPropLibrary,deskItem} from './prop-library.mjs';
 import {groupPanelHtml,groupCentreDelta,pickMode} from './prop-selection.mjs';
@@ -62,47 +62,19 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const w=e?.show,clamp=x=>Math.max(span.lo,Math.min(span.hi,x));
     return {from:w?clamp(span.t0+w.from):span.lo,to:w?clamp(span.t0+w.to):span.hi,fadeIn:w?.fadeIn||0,fadeOut:w?.fadeOut||0,ease:w?.ease==='smooth'?'smooth':null,timed:!!w};
   }
-  // The desk's own items as the stage has shown them (the Props lane, below), kept for the session.
-  const seen=new Map(),seenKey=desk=>`${shot()?.id||''}|${desk||''}`;
-  try{for(const [k,v] of Object.entries(JSON.parse(sessionStorage.getItem('directorPropItems')||'{}')))if(Array.isArray(v))seen.set(k,v);}catch{}
   // B1 (S33): the film's own fade of an item (a hand-made film edit with a keyed opacity, prop-edits.mjs keyedFadeWindow):
   // the drafting kit in create fades in at 7.0 s and out from 16.9 to 18.7 s. Before, the Props lane did not know it:
   // the bar ran the whole chapter with no ramps, and dragging its end wrote show:{to} with NO fade, so the prop was cut
   // off at the new end (or in the middle of the film's own fade) instead of fading. Now the bar is that window with its
   // ramps, a retime keeps its fades, and a Director window is drawn as it combines with the film's.
-  // 17 Nov 2026: and the film's own visible keys of a desk accessory (film-fx accessories.add[].visible: the painter shelf
-  // in create is held hidden until 12.6 s), as a window with cut ends (within the keyed fade when it has one too).
+  // 17 Nov 2026 (Vico, create: the painter shelf "really comes in at 12.7" while the lane said "the whole chapter"): and
+  // the film's own visible keys of a desk accessory (film-fx accessories.add[].visible, the shelf held hidden until
+  // 12.6 s), as a window with cut ends (within the keyed fade when it has one too). Not in a chapter of sub-shots.
   function filmFade(target,span){
     const keys=filmFadeKeys(film(),target?.match),op=keys?keyedFadeWindow(keys,span.lo,span.hi):null;
-    const vk=versions().length?null:filmVisibleKeys(film()?.accessories,idText(null,target));
+    const vk=versions().length?null:filmVisibleKeys(film()?.accessories,`${target?.match||''} ${String(target?.path||'').split('>').pop()} ${target?.label||''}`);
     return (vk&&keyedWindow(vk,op,span.lo,span.hi))||op;
   }
-  // An item's ids and names, for the film's keys and the desk's tilt rule: what the stage learned of it, its target.
-  function idText(key,target){
-    const k=key||(target?propKey(target):''),known=[...seen.values()].flat().find(x=>x.key===k);
-    const last=String(target?.path||'').split('>').pop();
-    return `${known?.id||''} ${known?.name||''} ${target?.match||''} ${last} ${target?.label||''}`;
-  }
-  // The stretches the stage draws an item in when the Director has not timed it, where that is more than one window
-  // or not what the film's window says: the film's keys where they hold, else the desk's tilt rule (desk-auto-stow.mjs:
-  // the easel and painter shelf are put away while the tilt is between 9 and 50 deg). [{from, to, fadeIn, fadeOut}] or null.
-  function stowStretches(key,target,e,span,s){
-    if(e?.show||span.missing)return null;
-    const text=idText(key,target),keys=versions().length?null:filmVisibleKeys(film()?.accessories,text);
-    let tiltAt=null;
-    try{const sh=shot(),m=sh?.motion?legacyMotionToClips(sh.motion,sh.seconds):null;if(m)tiltAt=t=>sampleClipMotion(m,t).tilt;}catch{}
-    if(!keys&&!(tiltAt&&hasStowRule(text)))return null;
-    let st;try{st=shownStretches({text,recipe:span.desk||shot()?.preset||'',tiltAt,keys,lo:span.lo,hi:span.hi});}catch{return null;}
-    // within the film's keyed fade, its ramps on the stretch ends it shares
-    st=st.map(x=>({from:Math.max(x.from,s.from),to:Math.min(x.to,s.to)})).filter(x=>x.to-x.from>=.05)
-      .map(x=>({...x,fadeIn:x.from<=s.from+.01?s.fadeIn:0,fadeOut:x.to>=s.to-.01?s.fadeOut:0}));
-    if(!st.length)return null;
-    if(st.length===1&&Math.abs(st[0].from-s.from)<.15&&Math.abs(st[0].to-s.to)<.15)return null;
-    return st;
-  }
-  const stretchText=st=>st.map(x=>`${r1(x.from)}–${r1(x.to)} s`).join(' and ');
-  // The stretch the inspector's fields stand for: the one under the playhead, else the nearest.
-  const stretchNow=st=>{const t=time(),gap=x=>t>=x.from-1e-3&&t<=x.to+1e-3?0:Math.min(Math.abs(t-x.from),Math.abs(t-x.to));return [...st].sort((a,b)=>gap(a)-gap(b))[0];};
   // An item's time on screen as the stage draws it: the Director's window, within the film's own fade when it has one.
   const screenOf=(e,target,span)=>combineFilmFade(onScreen(e,span),filmFade(target||e,span),!!e?.show);
   // The show for chapter seconds from…to in a span: an end on the span's edge stays open; the whole time is no show.
@@ -702,30 +674,21 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   const selName=()=>{const o=current(),e=sel&&editOfKey(sel.key);return o?label(o):nice(e?.label||sel?.target.label||'');};
   const selSpan=()=>{const e=editOfKey(sel.key);return spanOf((e||sel.target).desk);};
   function timingHtml(){
-    const e=editOfKey(sel.key),span=selSpan(),s=selScreen(e,span),st=s.stretches,curve=!(s.fadeIn||s.fadeOut)?'cut':s.ease==='smooth'?'smooth':'linear';
+    const e=editOfKey(sel.key),span=selSpan(),s=screenOf(e,sel.target,span),curve=!(s.fadeIn||s.fadeOut)?'cut':s.ease==='smooth'?'smooth':'linear';
     const num=(name,text,value,extra='')=>`<label>${text}<input name="${name}" type="number" step=".1" min="0" value="${value}" ${extra}></label>`;
     const where=span.missing?`Its desk (${escape(span.desk)}) is not in this chapter now, so it does not show.`:span.desk?`Belongs to Desk ${escape(span.n)} · ${escape(span.label)}, on screen ${r1(span.lo)}–${r1(span.hi)} s. It follows that desk if you reorder the desks.`:`The chapter runs 0–${r1(span.hi)} s.`;
-    return `<div class="prop-timing" data-prop-timing><h5>On screen <small>${escape(st?stretchText(st):timeText(s,span))}</small></h5>
+    return `<div class="prop-timing" data-prop-timing><h5>On screen <small>${escape(timeText(s,span))}</small></h5>
       <div class="director-grid">${num('pp-t-from','Appears at (s)',r2(s.from))}${num('pp-t-to','Leaves at (s)',r2(s.to))}${num('pp-t-fin','Fade in (s)',s.fadeIn,'max="30"')}${num('pp-t-fout','Fade out (s)',s.fadeOut,'max="30"')}</div>
       <div class="director-grid prop-curve"><label>Curve<select name="pp-t-curve" title="How the fades run: Cut (no fade), Linear (a straight ramp) or Smooth (eased in and out)"><option value="cut" ${curve==='cut'?'selected':''}>Cut (0 s)</option><option value="linear" ${curve==='linear'?'selected':''}>Linear</option><option value="smooth" ${curve==='smooth'?'selected':''}>Smooth (ease in-out)</option></select></label>
       <span class="prop-fade-presets" role="group" aria-label="Fade length">${[['fast','Fast',.2],['medium','Medium',.5],['slow','Slow',1]].map(([k,l,v])=>`<button data-action="pp-t-${k}" title="Fade in and out ${v} s" aria-pressed="${s.fadeIn===v&&s.fadeOut===v}">${l} ${v} s</button>`).join('')}</span></div>
-      ${st?`<p class="director-hint">Drawn ${escape(stretchText(st))}: ${s.film?.keyed&&!hasStowRule(idText(sel.key,sel.target))?'the film shows and hides it itself':`the desk puts it away while its tilt is between ${STOW_ANGLE}° and ${EASEL_ANGLE}°${s.film?.keyed?', and the film shows and hides it itself':''}`}. The fields are the stretch at the playhead (${r1(s.from)}–${r1(s.to)} s). Setting when it appears or leaves gives it that one time on screen of its own: inside it the desk no longer puts it away, outside it it is not drawn (${st.length>1?'the other stretch goes; ':''}Whole time brings this back). Its place, turn, size and other settings stay as they are.</p>`:''}
-      ${s.film&&!st?`<p class="director-hint">The film ${s.film.keyed&&!s.film.fadeIn&&!s.film.fadeOut?'shows it':'fades it'} itself (${r1(s.film.from)}–${r1(s.film.to)} s${s.film.fadeIn?`, in ${r1(s.film.fadeIn)} s`:''}${s.film.fadeOut?`, out ${r1(s.film.fadeOut)} s`:''}): retimed, it keeps those fades; it can appear later and leave sooner than that, not outside it.</p>`:''}
+      ${s.film?`<p class="director-hint">The film ${s.film.keyed&&!s.film.fadeIn&&!s.film.fadeOut?'shows it':'fades it'} itself (${r1(s.film.from)}–${r1(s.film.to)} s${s.film.fadeIn?`, in ${r1(s.film.fadeIn)} s`:''}${s.film.fadeOut?`, out ${r1(s.film.fadeOut)} s`:''}): retimed, it keeps those fades; it can appear later and leave sooner than that, not outside it.</p>`:''}
       <div class="director-actions"><button data-action="pp-t-from-now" title="It appears at the playhead">Appear at playhead</button><button data-action="pp-t-to-now" title="It leaves at the playhead">Leave at playhead</button><button data-action="pp-t-all" ${s.timed?'':'disabled'} title="On screen the whole time again, no fades">Whole time</button></div>
       <p class="director-hint">${where} You can also drag the ends of its bar in the timeline's Props lane.</p></div>`;
   }
-  // The selected prop's time on screen for the inspector: when the stage draws it in several stretches (and the
-  // Director has not timed it), the stretch at the playhead, with them all in .stretches.
-  function selScreen(e,span){
-    const s=screenOf(e,sel.target,span),st=stowStretches(sel.key,sel.target,e,span,s);if(!st)return s;
-    const x=stretchNow(st);return {...s,from:x.from,to:x.to,fadeIn:x.fadeIn,fadeOut:x.fadeOut,stretches:st};
-  }
-  // Not drawn at the playhead because the film's keys or the desk's stow time it (not a hide): the Hide box stays clear.
-  const timedByStage=()=>{try{const e=editOfKey(sel.key);return !!filmFade(sel.target||e,selSpan())?.keyed||hasStowRule(idText(sel.key,sel.target));}catch{return false;}};
   function setTiming(change){
     if(!sel)return;if(sel.blocked){status(`${CANT_SAVE}: ${sel.blocked}`,true);return;}
     const span=selSpan();if(span.missing){status('Its desk is not in this chapter now: nothing to time.',true);return;}
-    const s=selScreen(editOfKey(sel.key),span),lo=s.film?Math.max(span.lo,s.film.from):span.lo,hi=s.film?Math.min(span.hi,s.film.to):span.hi,next={from:s.from,to:s.to,fadeIn:s.fadeIn,fadeOut:s.fadeOut,ease:s.ease,...change};
+    const s=screenOf(editOfKey(sel.key),sel.target,span),lo=s.film?Math.max(span.lo,s.film.from):span.lo,hi=s.film?Math.min(span.hi,s.film.to):span.hi,next={from:s.from,to:s.to,fadeIn:s.fadeIn,fadeOut:s.fadeOut,ease:s.ease,...change};
     if('from' in change)next.from=Math.max(lo,Math.min(change.from,next.to-.1));
     if('to' in change)next.to=Math.min(hi,Math.max(change.to,next.from+.1));
     if(next.to-next.from<.1){status('It needs at least a tenth of a second on screen.',true);rerender();return;}
@@ -739,7 +702,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   }
   // Curve: Cut = no fades; Linear / Smooth keep the fades (Medium 0.5 s each when there were none).
   function setCurve(curve){
-    const s=selScreen(editOfKey(sel.key),selSpan()),none=!(s.fadeIn||s.fadeOut);
+    const s=screenOf(editOfKey(sel.key),sel.target,selSpan()),none=!(s.fadeIn||s.fadeOut);
     if(curve==='cut')setTiming({fadeIn:0,fadeOut:0,ease:null});
     else setTiming({ease:curve==='smooth'?'smooth':null,...(none?{fadeIn:.5,fadeOut:.5}:{})});
   }
@@ -762,7 +725,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-s'+k,'Scale '+k+' ×',Number(fac[i].toFixed(3)),.05,'min=".01" max="100"')).join('')}</div>
       ${dropButtons()}
       ${timingHtml()}
-      <label class="director-check"><input type="checkbox" name="pp-hide" ${e?.hide===true||(!shown(o)&&!e?.show&&!timedByStage())?'checked':''}>Hide in this chapter</label>
+      <label class="director-check"><input type="checkbox" name="pp-hide" ${e?.hide===true||(!shown(o)&&!e?.show&&!filmFade(sel.target||e,selSpan())?.keyed)?'checked':''}>Hide in this chapter</label>
       <div class="director-actions"><button data-action="pp-reset" ${e?'':'disabled'} title="This prop back to where the film puts it">Reset to the film</button></div>
       <p class="director-hint" data-studio-note>${studio?(studio.ok?'Studio: can be made permanent.':'Studio: '+escape(studio.why)):onDeskItself(o)?'Studio: '+escape(ON_DESK):'Studio: unchanged (edit the prop to make it permanent later).'}</p></div>`;
   }
@@ -819,7 +782,8 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   // ---- the timeline's Props lane: bars over the seconds each prop is on screen
   // The desk's own items are learned from the stage (they differ per desk in a sub-shot chapter) and kept for the
   // session, so every desk's bars are there once it has been on stage.
-  // (seen, seenKey: the desk items the stage has shown, declared with the film's timing above)
+  const seen=new Map(),seenKey=desk=>`${shot()?.id||''}|${desk||''}`;
+  try{for(const [k,v] of Object.entries(JSON.parse(sessionStorage.getItem('directorPropItems')||'{}')))if(Array.isArray(v))seen.set(k,v);}catch{}
   function learn(){
     if(!tools||!three()?.scene)return;const d=deskNow();if(versions().length&&!d)return;
     const list=items().filter(i=>i.desk&&!i.obj?.userData?.directorAdd&&(!i.hidden||editOfKey(i.key))).map(i=>({key:i.key,target:i.target,name:i.name,id:`${i.obj?.userData?.accessoryId||''} ${i.obj?.userData?.propId||''} ${i.obj?.name||''}`.trim()}));
@@ -831,13 +795,13 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   let laneList=[],laneRows=1,barDrag=null,barSuppress=0,wanted=null;const ROW=17,MAX_ROWS=9;
   function laneItems(){
     const T=seconds()||1,vs=versions(),out=[],chapter={t0:0,lo:0,hi:T},all=edits();
-    // A film item the desk puts away (easel and painter shelf while the tilt is between 9 and 50 deg) or the film times
-    // with its own keys: one bar for each stretch it is drawn in.
-    const push=(span,row)=>{
-      const s=screenOf(row.e,row.target,span),st=stowStretches(row.key,row.target,row.e,span,s);
-      const bars=st||[{from:s.from,to:s.to,fadeIn:s.fadeIn,fadeOut:s.fadeOut}];
-      bars.forEach((b,i)=>out.push({...row,id:row.key+'|'+(span.n||'')+(i?'|'+i:''),span,start:b.from,end:Math.max(b.from+.01,b.to),timed:s.timed||!!s.film,fadeIn:b.fadeIn,fadeOut:b.fadeOut,ease:s.ease,film:s.film||null,stowed:!!st,stretches:st}));
-    };
+    let tiltAt=null;
+    try{const sh=shot(),m=sh?.motion?legacyMotionToClips(sh.motion,sh.seconds):null;if(m)tiltAt=t=>sampleClipMotion(m,t).tilt;}catch{}
+    // A film item the desk puts away (easel and painter shelf under 50 deg of tilt): its bar ends where the stow hides it.
+    const stowed=(row,span)=>{if(!tiltAt||!span.desk||row.e?.show)return null;
+      const text=`${row.id||''} ${row.name||''} ${row.target?.match||''} ${row.target?.path||''}`.replace(/\\/g,'');
+      try{return stowWindow(text,span.desk,tiltAt,span.lo,span.hi);}catch{return null;}};
+    const push=(span,row)=>{const s=screenOf(row.e,row.target,span),nat=s.film?null:stowed(row,span),from=nat?nat.from:s.from,to=nat?nat.to:s.to;out.push({...row,id:row.key+'|'+(span.n||''),span,start:from,end:Math.max(from+.01,to),timed:s.timed||!!s.film,fadeIn:s.fadeIn,fadeOut:s.fadeOut,ease:s.ease,film:s.film||null,stowed:!!nat});};
     const spans=vs.length?vs.map(v=>({t0:v.start,lo:v.from,hi:Math.min(T,v.to),n:v.n,label:v.label,desk:v.preset})):[chapter];
     for(const span of spans){
       const rows=new Map(),known=seen.get(seenKey(span.desk));
@@ -858,7 +822,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       const e=it.e,x=it.start/T*100,w=Math.max(.5,(it.end-it.start)/T*100),top=1+layers.row.get(it.id)*ROW;
       if(it.ghost)return `<button type="button" class="prop-bar ghost" data-action="pp-lane" data-index="${i}" style="left:${x}%;width:${w}%;top:${top}px;height:${ROW-2}px" title="Go to this desk: its items are listed here once it has been on stage">${escape(it.name)}</button>`;
       const hiddenBar=e?.hide===true,added=isAddEdit(e),fi=it.fadeIn>0?Math.min(100,it.fadeIn/(it.end-it.start)*100):0,fo=it.fadeOut>0?Math.min(100,it.fadeOut/(it.end-it.start)*100):0;
-      const tip=`${it.name}${it.span.desk?` · Desk ${it.span.n} · ${it.span.label}`:''} · on screen ${it.stretches?stretchText(it.stretches):timeText({from:it.start,to:it.end},it.span)}${e?' · '+describePropEdit(e):' · as the film has it'}${hiddenBar?' · hidden: click, then untick Hide to bring it back':''}${it.stowed?` · the desk puts it away while its tilt is between ${STOW_ANGLE}° and ${EASEL_ANGLE}°`:it.film?.keyed?' · the film times it itself':''} · click to select, drag an end to set when it appears or leaves${it.timed?', drag the middle to move it':''}`;
+      const tip=`${it.name}${it.span.desk?` · Desk ${it.span.n} · ${it.span.label}`:''} · on screen ${timeText({from:it.start,to:it.end},it.span)}${e?' · '+describePropEdit(e):' · as the film has it'}${hiddenBar?' · hidden: click, then untick Hide to bring it back':''}${it.stowed?` · the desk puts it away once its tilt crosses ${EASEL_ANGLE}°`:it.film?.keyed?' · the film shows and hides it itself':''} · click to select, drag an end to set when it appears or leaves${it.timed?', drag the middle to move it':''}`;
       // (the fade ramps: drawn on the bar, a small handle at the inner end of each drags its length)
       const ramps=`<i class="prop-ramp in ${it.ease==='smooth'?'smooth':''}" style="width:${fi}%"></i><i class="prop-ramp out ${it.ease==='smooth'?'smooth':''}" style="width:${fo}%"></i><i class="prop-fade-h" data-fade="in" style="left:${fi}%" title="Drag: fade in ${r1(it.fadeIn)} s"></i><i class="prop-fade-h" data-fade="out" style="left:${100-fo}%" title="Drag: fade out ${r1(it.fadeOut)} s"></i>`;
       return `<button type="button" class="prop-bar ${e?'prop-chip':'film'} ${hiddenBar?'prop-hidden':''} ${added?'prop-added':''} ${it.timed?'timed':''} ${isSel(it.key)?'selected':''}" data-action="pp-lane" data-index="${i}" data-prop-key="${escape(it.key)}" style="left:${x}%;width:${w}%;top:${top}px;height:${ROW-2}px;--fade-in:${fi}%;--fade-out:${fo}%" title="${escape(tip)}">${ramps}${added?'<b aria-label="added">+</b>':''}${escape(it.name)}</button>`;}).join('');
