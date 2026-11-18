@@ -190,6 +190,8 @@ async function listShot(frame,i){
     dirty=execFileSync('git',['-C',root,'status','--porcelain','--untracked-files=no']).toString().trim()?'+dirty':'';}catch{}
    let rev='?';try{rev=JSON.parse(fs.readFileSync(path.join(root,'studio-state.json'),'utf8')).rev;}catch{}
    console.log(`[provenance] git ${sha}${dirty} studio-state rev ${rev} host ${require('os').hostname()} ${process.platform} ${new Date().toISOString()}`);}
+  // the checkout the server serves, if not this one (server-provenance.cjs; a warning, never a stop)
+  try{await require('./server-provenance.cjs').report(opts.server,path.resolve(__dirname,'..','..'));}catch(error){console.log('[provenance] server check skipped: '+error.message);}
   // Windows render box: CHROME_PATH overrides the binary, ANGLE the backend (d3d11 on Windows, vulkan on Linux).
   const win=process.platform==='win32',angle=process.env.ANGLE||(win?'d3d11':'vulkan');
   const browser=await puppeteer.launch({executablePath:process.env.CHROME_PATH||(win?'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe':'/usr/bin/google-chrome'),headless:'new',defaultViewport:{width:1280,height:720},
