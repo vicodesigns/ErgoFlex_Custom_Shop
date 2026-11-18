@@ -86,7 +86,11 @@ export function combineFilmFade(s,nat,timed){
 // it); a moved side gets the fade asked for (a retime keeps the fade the bar had).
 export function showOverFilm(nat,lo,hi,next){
   const fromMoved=Math.abs(next.from-nat.from)>1e-3||Math.abs((next.fadeIn||0)-nat.fadeIn)>1e-3,toMoved=Math.abs(next.to-nat.to)>1e-3||Math.abs((next.fadeOut||0)-nat.fadeOut)>1e-3;
-  return {...next,from:fromMoved?next.from:lo,fadeIn:fromMoved?next.fadeIn:0,to:toMoved?next.to:hi,fadeOut:toMoved?next.fadeOut:0};
+  // A window the film's own visible keys give (nat.keyed: the painter shelf in create, hidden until 12.6 s) is written
+  // closed at the film's end: an open side would let film-edits installShow keep the item up where the desk's stow hides
+  // it, before the film's key shows it (the shelf would pop in at 7.3 s as the tilt passes 9 deg).
+  const lo2=nat.keyed?nat.from:lo,hi2=nat.keyed?nat.to:hi;
+  return {...next,from:fromMoved?next.from:lo2,fadeIn:fromMoved?next.fadeIn:0,to:toMoved?next.to:hi2,fadeOut:toMoved?next.fadeOut:0};
 }
 // The keyed opacity a film's hand-made edit gives the item `match` (the same match string), if any.
 export function filmFadeKeys(film,match){
