@@ -131,8 +131,13 @@ const items = {
             .cyl(M, 30, 30, 30, [0, 253, 0], ZERO, sw(col === 'bottleWhite' ? 'charcoal' : 'steel'), 12).box(M, [40, 8, 6], [0, 272, 0], ZERO, sw('charcoal'));
     },
     cup(b, M, col = 'kraft') {
-        b.cyl(M, 42, 32, 150, [0, 75, 0], ZERO, sw(col === 'kraft' ? 'lidWhite' : col), 12).cyl(M, 43.5, 40, 50, [0, 80, 0], ZERO, sw('kraft'), 12)
-            .cyl(M, 44, 44, 14, [0, 157, 0], ZERO, sw(col === 'kraft' ? 'lidWhite' : 'charcoal'), 12).box(M, [16, 6, 10], [0, 166, 30], ZERO, sw('lidWhite'));
+        const lid=sw(col === 'kraft' ? 'lidWhite' : 'charcoal');
+        b.cyl(M,42,32,150,[0,75,0],ZERO,sw(col === 'kraft' ? 'lidWhite' : col),24)
+            .cyl(M,40.8,36.8,53,[0,79,0],ZERO,sw('kraft'),24);
+        const rim=[[0,149],[43,149],[45,151],[45,155],[43,157],[38,157],[36,164],[33,166],[29,166],[27,162],[0,162]];
+        b.add(new THREE.LatheGeometry(rim.map(p=>new THREE.Vector2(...p)),32),M,[0,0,0],ZERO,lid);
+        const sip=new THREE.CircleGeometry(1,14); sip.scale(6,1.8,1);
+        b.add(sip,M,[0,166.2,31],FLAT,sw('coffee'));
     },
     mug(b, M) { b.cyl(M, 40, 36, 95, [0, 47.5, 0], ZERO, sw('ceramic'), 12).cyl(M, 36, 36, 2, [0, 94, 0], ZERO, sw('coffee'), 12).box(M, [12, 55, 30], [46, 50, 0], ZERO, sw('ceramic')); },
     openBook(b, M, { cover = 'cobalt', page = 'bkText', w = 440, d = 265 } = {}) {
@@ -161,7 +166,26 @@ const items = {
         for (const s of [-1, 1]) b.cyl(M, 45, 45, 35, [s * 80, 17.5, 0], ZERO, sw('charcoal'), 12);
         b.box(M, [70, 10, 40], [0, 30, -70], ZERO, sw('charcoal')).box(M, [60, 10, 40], [-62, 30, -45], [0, -.6, 0], sw('charcoal')).box(M, [60, 10, 40], [62, 30, -45], [0, .6, 0], sw('charcoal'));
     },
-    snack(b, M) { b.box(M, [150, 230, 90], [0, 115, 0], ZERO, sw('kraft')).box(M, [110, 10, 35], [150, 5, 40], [0, .4, 0], sw('wrapper')).ball(M, 38, [-130, 38, 60], sw('apple')); },
+    snack(b, M) {
+        // Folded lunch sack, with its side gussets pinched in under the rolled top.
+        const rings = [[0,66,37,0],[20,74,44,5],[122,73,41,14],[178,71,27,19],[207,69,6,2]];
+        const points=[], triangles=[];
+        for (const [y,x,z,fold] of rings)
+            points.push(-x,y,z, x,y,z, x-fold,y,0, x,y,-z, -x,y,-z, -x+fold,y,0);
+        for (let level=0; level<rings.length-1; level++) for (let i=0; i<6; i++) {
+            const a=level*6+i, next=level*6+(i+1)%6;
+            triangles.push(a,next,next+6,a,next+6,a+6);
+        }
+        const bag=new THREE.BufferGeometry();
+        bag.setAttribute('position',new THREE.Float32BufferAttribute(points,3));
+        bag.setAttribute('uv',new THREE.Float32BufferAttribute(new Float32Array(points.length/3*2),2));
+        bag.setIndex(triangles);
+        const creased=bag.toNonIndexed(); bag.dispose(); creased.computeVertexNormals();
+        b.add(creased,M,[0,0,0],ZERO,sw('kraft'));
+        b.box(M,[138,16,14],[0,207,0],[.24,0,0],sw('kraft'));
+        b.box(M,[39,18,2],[0,203,8],[.24,0,0],sw('paper'));
+        b.box(M,[110,10,35],[150,5,40],[0,.4,0],sw('wrapper')).ball(M,38,[-130,38,60],sw('apple'));
+    },
     poster(b, M, [w, d] = [600, 450]) { b.box(M, [w, 1, d], [0, .5, 0], ZERO, sw('paper')).plane(M, [w, d], [0, 1.1, 0], FLAT, tileUV('mindmap')); },
     pizza(b, M) { b.box(M, [400, 45, 400], [0, 22.5, 0], ZERO, sw('kraft')).box(M, [400, 45, 400], [10, 67.5, 8], [0, .2, 0], sw('kraft')).plane(M, [400, 400], [10, 90.2, 8], [-Math.PI / 2, 0, .2], tileUV('pizza')); },
     tent(b, M, tile) { for (const s of [-1, 1]) b.box(M, [140, 100, 1.5], [0, 48, s * 15], [s * .3, 0, 0], tileUV(tile)); },

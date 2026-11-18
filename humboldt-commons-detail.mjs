@@ -4,23 +4,31 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 // A room-owned chair family in actual millimetres. Each instance reuses four
 // geometry/material batches and retains its original editable placement root.
-export function humboldtStudyChairs(room, layout, canvasMap) {
-    const grain = canvasMap((c,w,h)=>{
-        c.fillStyle='#b4946f';c.fillRect(0,0,w,h);
-        for(let i=0;i<150;i++){const x=i*w/150;c.strokeStyle=i%3?'#6f4b2b28':'#e5c59344';c.lineWidth=.6+i%3*.3;c.beginPath();c.moveTo(x,0);c.bezierCurveTo(x+Math.sin(i)*7,h/3,x-Math.cos(i)*5,h*.7,x,h);c.stroke();}
-    },256,512);
+export function humboldtStudyChairs(room, layout, canvasMap, oakMap) {
+    const grain = oakMap.clone();
+    grain.center.set(.5,.5);
+    grain.rotation = Math.PI / 2;
+    grain.repeat.set(.65,.8);
     const weave=canvasMap((c,w,h)=>{
         c.fillStyle='#e8e6df';c.fillRect(0,0,w,h);
         for(let y=0;y<h;y+=4)for(let x=0;x<w;x+=4){c.fillStyle=(x+y)%8?'#b8b9b2':'#fffdf3';c.fillRect(x,y,3,1);c.fillRect(x,y+1,1,3);}
     },128,128);weave.wrapS=weave.wrapT=THREE.RepeatWrapping;weave.repeat.set(4,4);
+    weave.userData.staticArtwork = true;
     const make=(name,color,roughness,extra={})=>{const m=new THREE.MeshStandardMaterial({name,color,roughness,...extra});m.userData.roomPaletteLocked=true;m.userData.roomFinishLocked=true;return m;};
     const oak=make('Oiled natural oak','#ffffff',.5,{map:grain}),glides=make('Graphite felt glides','#363a36',.92);
     const palettes={forest:'#3d5e51',lichen:'#838975',oat:'#b9b09b',clay:'#9a7a67'};
-    const textiles=Object.fromEntries(Object.entries(palettes).map(([k,c])=>[k,make('Woven wool · '+k,c,.92,{map:weave,bumpMap:weave,bumpScale:.16*room.root.scale.x})]));
+    const twill = room.root.commonsTextiles.twill;
+    const textiles=Object.fromEntries(Object.entries(palettes).map(([k,c])=>[k,make('Woven wool · '+k,c,.94,{
+        map:weave,normalMap:twill.normal,normalScale:new THREE.Vector2(.43,.43),
+        roughnessMap:twill.orm,aoMap:twill.orm,aoMapIntensity:.58
+    })]));
     const piping=Object.fromEntries(Object.entries(palettes).map(([k,c])=>[k,make('Upholstery welt · '+k,new THREE.Color(c).multiplyScalar(.77),.9)]));
     oak.bumpMap=grain.clone();oak.bumpMap.colorSpace=THREE.NoColorSpace;oak.bumpScale=.08*room.root.scale.x;
-    for(const m of Object.values(textiles)){m.bumpMap=weave.clone();m.bumpMap.colorSpace=THREE.NoColorSpace;}
-    oak.userData.roomSurface='wood';Object.values(textiles).forEach(m=>m.userData.roomSurface='fabric');
+    oak.userData.roomSurface='wood';
+    for (const m of Object.values(textiles)) {
+        m.userData.roomSurface='fabric';
+        m.userData.roomDetailAuthored=true;
+    }
     const parts={oak:[],fabric:[],welt:[],glides:[]};
     const add=(kind,g,at=[0,0,0],rot=[0,0,0])=>{const n=g.index?g.toNonIndexed():g; if(n!==g)g.dispose();n.applyMatrix4(new THREE.Matrix4().compose(new THREE.Vector3(...at),new THREE.Quaternion().setFromEuler(new THREE.Euler(...rot)),new THREE.Vector3(1,1,1)));parts[kind].push(n);};
     const rounded=(kind,size,at,r)=>add(kind,new RoundedBoxGeometry(...size,3,r),at);
@@ -30,6 +38,12 @@ export function humboldtStudyChairs(room, layout, canvasMap) {
         add('glides',new THREE.CylinderGeometry(18.5,18.5,9,12),[x*242,4.5,z*228]);
     }
     for(const x of [-1,1])add('oak',new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(x*205,392,-184),new THREE.Vector3(x*212,640,-181),new THREE.Vector3(x*217,753,-196)]),12,20,10,false));
+    // Side stretchers tie each pair of splayed legs together. Stop below the seat lip.
+    for (const side of [-1,1]) {
+        rail([side*213,320,-194],[side*213,320,194],11,11);
+        rail([side*228,320,-194],[side*234,320,-194],6,6);
+        rail([side*228,320,194],[side*234,320,194],6,6);
+    }
     rounded('oak',[506,24,480],[0,405,8],12);
     rounded('fabric',[486,56,458],[0,442,12],27);
     // Bowed back with a softly rounded timber edge and an inset upholstered pad.
@@ -58,18 +72,35 @@ export function humboldtStudyChairs(room, layout, canvasMap) {
 // rhythm. They use small emissive lenses and table pools, not extra real lights.
 export function humboldtReadingDetails(room, layout, h) {
     const {mesh,material,markSceneAsset}=h,root=room.root,lamps=[];
-    const body=material('#716b59',{roughness:.42,metalness:.65}),ceramic=material('#d9d0bb',{roughness:.36}),lens=material('#f2dfbd',{emissive:'#ffd7a1',emissiveIntensity:0,roughness:.5});
-    body.userData.roomPaletteLocked=ceramic.userData.roomPaletteLocked=true;body.userData.roomFinishLocked=ceramic.userData.roomFinishLocked=true;
-    const shadeGeo=new THREE.LatheGeometry([[0,0],[59,0],[65,5],[61,16],[37,60],[29,65],[0,65]].map(v=>new THREE.Vector2(...v)),32);
+    const body=material('#82715b',{roughness:.36,metalness:.65}),ceramic=material('#d9d0bb',{roughness:.36});
+    const opal=material('#f1ead9',{emissive:'#ffdfad',emissiveIntensity:0,roughness:.32});
+    for (const finish of [body,ceramic,opal]) finish.userData.roomPaletteLocked=finish.userData.roomFinishLocked=true;
+    const turned = profile => new THREE.LatheGeometry(profile.map(pair=>new THREE.Vector2(...pair)),40);
+    const shadeGeo=turned([[0,0],[65,0],[71,2],[74,5],[74,11],[72,20],[68,30],[61,41],[52,51],[40,59],[26,65],[13,68],[0,69]]);
+    // The diffuser is brightest around the bulb, with a cooler, thicker crown.
+    const diffuser = document.createElement('canvas');
+    diffuser.width = 4; diffuser.height = 64;
+    const dc = diffuser.getContext('2d'), band = dc.createLinearGradient(0,0,0,64);
+    band.addColorStop(0,'#8d8171'); band.addColorStop(.45,'#d7cab8');
+    band.addColorStop(.78,'#ffedcc'); band.addColorStop(1,'#c9b598');
+    dc.fillStyle = band; dc.fillRect(0,0,4,64);
+    opal.emissiveMap = new THREE.CanvasTexture(diffuser);
+    opal.emissiveMap.colorSpace = THREE.SRGBColorSpace;
+    opal.emissiveMap.userData.staticArtwork = true;
+    const footGeo=turned([[0,0],[50,0],[54,2],[54,6],[52,9],[43,12],[24,14],[13,18],[11,23],[0,23]]);
+    const stemGeoLamp=turned([[0,18],[9,18],[7,24],[6,30],[6,157],[10,161],[10,167],[31,172],[33,179],[0,179]]);
+    const finialGeo=turned([[0,0],[9,0],[9,3],[6,6],[0,6]]);
     const c=document.createElement('canvas');c.width=c.height=64;const ctx=c.getContext('2d'),fade=ctx.createRadialGradient(32,32,0,32,32,32);fade.addColorStop(0,'#ffffff');fade.addColorStop(.3,'#ffffff88');fade.addColorStop(1,'#ffffff00');ctx.fillStyle=fade;ctx.fillRect(0,0,64,64);const poolMap=new THREE.CanvasTexture(c);
+    poolMap.userData.staticArtwork = true;
     const add=(table,at,index,cafe)=>{
         const g=new THREE.Group();g.name='Commons reading lamp';g.position.set(...at);table.add(g);g.userData.humboldtReadingLamp=true;
         markSceneAsset(g,{key:`library:humboldt:fixture:reading-lamp-${index}`});
-        mesh(g,new THREE.CylinderGeometry(49,54,12,32),body,[0,6,0]);mesh(g,new THREE.CylinderGeometry(7,9,170,16),body,[0,95,0]);
-        mesh(g,shadeGeo,ceramic,[0,177,0]);const m=lens.clone();mesh(g,new THREE.CylinderGeometry(55,55,2,32),m,[0,176,0]);
+        mesh(g,footGeo,body); mesh(g,stemGeoLamp,body);
+        mesh(g,finialGeo,body,[0,245,0]);
+        mesh(g,shadeGeo,opal,[0,177,0]);
         const glow=new THREE.MeshBasicMaterial({color:'#ffd8a9',map:poolMap,transparent:true,opacity:0,blending:THREE.AdditiveBlending,depthWrite:false});
-        const pool=mesh(g,new THREE.PlaneGeometry(300,300),glow,[0,.8,0]);pool.rotation.x=-Math.PI/2;pool.castShadow=pool.receiveShadow=false;pool.userData.presentationOnly=true;pool.userData.lightPool=true;
-        lamps.push({g,m,glow,cafe,index});
+        const pool=mesh(g,new THREE.PlaneGeometry(cafe || !at[0] ? 440 : 278,cafe || !at[2] ? 440 : 278),glow,[0,.8,0]);pool.rotation.x=-Math.PI/2;pool.castShadow=pool.receiveShadow=false;pool.userData.presentationOnly=true;pool.userData.lightPool=true;
+        lamps.push({glow,cafe});
     };
     layout.tables.forEach((t,i)=>{const table=root.children.find(o=>o.userData.humboldtTable===t.id);const along=t.size[0]>=t.size[1];add(table,along?[t.size[0]/2-140,750,0]:[0,750,t.size[1]/2-140],i,false);});
     layout.cafe.forEach((p,i)=>{if(i%2===0){const table=root.children.find(o=>o.userData.propId===`humboldt-cafe-${i}`);add(table,[0,750,0],7+i,true);}});
@@ -85,7 +116,8 @@ export function humboldtReadingDetails(room, layout, h) {
     layout.cafe.forEach((p,i)=>{if(i%2){const table=root.children.find(o=>o.userData.propId===`humboldt-cafe-${i}`),vase=new THREE.Group();vase.name='Stoneware greenery vase';vase.position.y=750;table.add(vase);markSceneAsset(vase,{key:`library:humboldt:fixture:botanical-vase-${i}`});mesh(vase,vaseGeo,ceramic);mesh(vase,stemGeo,stemMat);mesh(vase,leafGeo,leafMat);}});
     return phase=>{
         const power={morning:.08,afternoon:.12,evening:.85,night:.03,party:.65}[phase]??.12;
-        for(const l of lamps){l.m.emissiveIntensity=power*(l.cafe?1:.8);l.glow.opacity=phase==='night'?0:power*.13;}
+        opal.emissiveIntensity=power*.8;
+        for(const l of lamps) l.glow.opacity = phase === 'night' ? 0 : power * (l.cafe ? .20 : .16);
         root.userData.humboldtReadingDetail={phase,lamps:lamps.length,vases:5,power};
     };
 }

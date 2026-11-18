@@ -18,6 +18,23 @@ const report=await page.evaluate(async()=>{
   check(track.visible===visible,'Gallery track cutaway at '+height);
  }
  check(!r.missingProps.length,'Missing library materials or props');
+ const cloth=r.root.commonsTextiles;
+ for(const fabric of [cloth.stockinette,cloth.twill]){
+  for(const map of [fabric.normal,fabric.orm])check(map.image?.width===512 && map.colorSpace===T.NoColorSpace,'Missing linear textile data');
+ }
+ const shades=r.root.getObjectByName('Woven solar shades');
+ shades.geometry.computeBoundingBox();
+ check(shades.geometry.boundingBox.min.y>2000 && shades.parent===r.root.getObjectByName('Café roller hardware').parent,'Shades obstruct the seated view or do not follow the glazing');
+ const opal=lamps[0].children.find(o=>o.material?.emissiveMap)?.material;
+ check(!!opal?.emissiveMap?.userData.staticArtwork,'Opal diffuser map is missing');
+ const floorWash=r.root.getObjectByName('Humboldt architectural light').children.find(o=>o.material.map?.isDataTexture);
+ check(!!floorWash,'No fixed falloff for the Commons lighting');
+ if(floorWash){
+  const {width,data}=floorWash.material.map.image;
+  const alpha=x=>data[4*(Math.floor(width/2)*width+x)+3];
+  check(alpha(width/2)>245 && alpha(width/4)>40 && alpha(width/4)<125 && alpha(1)<2,'Floor wash has a hard rim');
+  check(floorWash.material.opacity>0 && floorWash.material.opacity<.5,'Floor wash overwhelms the night exposure');
+ }
  const geometry=new Set(),finishes=new Set(),rootInv=()=>r.root.matrixWorld.clone().invert();
  for(const chair of chairs){const model=chair.getObjectByName('Humboldt oak study chair');check(!!model,'Missing chair geometry');model.traverse(o=>{if(o.geometry)geometry.add(o.geometry);});finishes.add(chair.userData.humboldtChair.finish);const b=new T.Box3().setFromObject(model).applyMatrix4(rootInv()),d=b.getSize(new T.Vector3());check(d.y>780&&d.y<830,'Chair height distorted');check(Math.abs(b.min.y)<.1,'Chair off floor');}
  check(geometry.size===4,'Chair geometry duplicated');check(finishes.size===4,'Missing coordinated finishes');
@@ -27,6 +44,7 @@ const report=await page.evaluate(async()=>{
  const signatures=[];
  for(const phase of ['morning','afternoon','evening','night','party']){
   r.roomAtmosphere(phase);r.life.apply(phase);r.life.lightActivity();r.root.updateWorldMatrix(true,true);
+  if(opal)check(Math.abs(opal.emissiveIntensity-r.root.userData.humboldtReadingDetail.power*.8)<1e-5,'Reading lamp emission does not match '+phase);
   const shapes=chairs.map(rectangle),collisions=[];
   for(let i=0;i<chairs.length;i++)for(let j=i+1;j<chairs.length;j++)if(overlap(shapes[i],shapes[j]))collisions.push({a:chairs[i].userData.sceneAssetKey,b:chairs[j].userData.sceneAssetKey,at:chairs[i].position.toArray(),bt:chairs[j].position.toArray()});
   check(!collisions.length,'Chair collision in '+phase);

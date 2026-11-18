@@ -272,9 +272,18 @@ function humboldt(k, ctx) {
         if (z > near - 1800) return out.copy(duff).lerp(moss, .4).multiplyScalar(.9 + r() * .12);
         if (z > near - 4200) return out.copy(conc).multiplyScalar(Math.abs((x % 1800 + 1800) % 1800) < 40 ? .7 : .95 + r() * .06);
         const p = Math.sin(x / 2300) * Math.sin(z / 1900) * .5 + .5; return out.copy(lawnC).lerp(moss, p * .4).multiplyScalar(.9 + r() * .1); });
-    for (let x = ctx.left - 1500; x < ctx.right + 1500; x += 700 + r() * 700) { const z = near - 1500 - r() * 700;
-        if (r() < .3) shrub(b, r, x, ground, z, 700 + r() * 300, pick(r, ['#3f5a3c', '#47603f']), { size: 110 }); else fern(b, r, x, ground, z, 600 + r() * 300);
-        if (r() < .12) flowers(b, r, x, ground + 1000, z, 650, 40, ['#b86a7e', '#c98a9a', '#a85a6e'], 32); }
+    for (let x = ctx.left - 1500; x < ctx.right + 1500; x += 700 + r() * 700) {
+        const z = near - 1500 - r() * 700;
+        if (r() < .3) {
+            const radius = 700 + r() * 300;
+            shrub(b, r, x, ground, z, radius, pick(r, ['#3f5a3c', '#47603f']), { size: 110 });
+            if (r() < .4) flowers(b, r, x, ground + radius * .85, z, radius * .62, 35, ['#b86a7e', '#c98a9a', '#a85a6e'], 24);
+        } else fern(b, r, x, ground, z, 600 + r() * 300);
+    }
+    // A raised weathering-steel edge separates the planting from scored concrete.
+    b.box([R-L,85,10], [(L+R)/2,ground+39,near-2280], '#6c5747');
+    for (let x = L; x < R; x += 1820)
+        b.box([1810,24,1900], [x+905,ground+12,near-3240], '#aba99e');
     for (let x = ctx.left; x < ctx.right; x += 12000) pathLight(k, x + 3000, ground, near - 4600);
     // the lawn's trees: young redwoods and a big-leaf maple or two
     for (let x = ctx.left - 4000; x < ctx.right + 4000; x += 11000 + r() * 5000) {
@@ -284,7 +293,22 @@ function humboldt(k, ctx) {
     // the building across the lawn: concrete frame, timber infill, lit after dark
     const by = -36000;
     for (let x = ctx.left - 6000; x < ctx.right + 6000; x += 30000) {
-        building(k, r, x + 12000, ground, by, { width: 26000, depth: 16000, floors: 3, storey: 3800, wall: '#a9a59c', glass: '#36424a', frame: '#9b9890', shops: false, litRate: .3, warm: .6, cornice: false, bays: 8, style: 'band', fins: '#7a5e48', roof: '#5f5b55' });
+        const height = building(k, r, x + 12000, ground, by, { width: 26000, depth: 16000, floors: 3, storey: 3800, wall: '#a9a59c', glass: '#36424a', frame: '#9b9890', shops: false, litRate: .3, warm: .6, cornice: false, bays: 8, style: 'band', fins: '#7a5e48', roof: '#5f5b55' });
+        if (!height) continue;
+        const face = by + 8000;
+        for (let f = 0; f < 3; f++) {
+            const sill = ground + 3800 * f + 800;
+            b.box([25900,105,360], [x+12000,sill-52,face+155], '#8e8b80');
+            for (let i = 1; i < 16; i++)
+                b.box([68,2370,110], [x-1000+1625*i,sill+1185,face+78], '#5e635d');
+        }
+        // A timber entrance canopy meets the path below the ribbon windows.
+        b.box([9500,200,3200], [x+3900,ground+3300,face+1580], '#78664e');
+        b.box([9200,85,3040], [x+3900,ground+3159,face+1580], '#a78b68');
+        for (const dx of [-370,3950,8180]) {
+            b.box([170,3118,170], [x+dx,ground+1559,face+2950], '#8b7359');
+            b.box([210,160,210], [x+dx,ground+80,face+2950], '#746f66');
+        }
         b.box([26000, 400, 1600], [x + 12000, ground + 11500, by + 8600], '#8d8a83');
     }
     for (let x = ctx.left - 8000; x < ctx.right + 8000; x += 9000) streetLamp(k, x, ground, -26000, { height: 4500, reach: 300, power: .8 });

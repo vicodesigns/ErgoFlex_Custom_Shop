@@ -1618,6 +1618,10 @@ export class RoomPeople {
                 const part = partOf(m.name);
                 if (part === 'hair') {
                     m.roughness = .61;
+                    if (this.room.root.commonsTextiles && m.map && !m.bumpMap && !m.normalMap) {
+                        m.bumpMap = m.map;
+                        m.bumpScale = .00014;
+                    }
                     if (m.name.endsWith('blunt_bob_with_bangs') && this.room.root.artistHair) {
                         m.map = m.bumpMap = this.room.root.artistHair;
                         m.bumpScale = .00016;
@@ -1630,7 +1634,18 @@ export class RoomPeople {
                     if (m.name.includes('basic_tucked_t-shirt') && object.userData.person?.id.startsWith('people-lin-') && this.room.root.artistWorkshirt) {
                         m.map = this.room.root.artistWorkshirt;
                     }
-                    if (m.map && !m.normalMap) { m.bumpMap = m.map; m.bumpScale = .00048; }
+                    const cloth = this.room.root.commonsTextiles;
+                    if (cloth && m.map && !m.normalMap) {
+                        const knit = /sweater|cardigan/i.test(m.name);
+                        const fabric = knit ? cloth.stockinette : cloth.twill;
+                        m.bumpMap = null;
+                        m.normalMap = fabric.normal;
+                        m.normalScale.setScalar(knit ? .58 : .31);
+                        m.roughnessMap ||= fabric.orm;
+                        if (!m.aoMap) { m.aoMap = fabric.orm; m.aoMapIntensity = knit ? .66 : .38; }
+                    } else if (m.map && !m.normalMap) {
+                        m.bumpMap = m.map; m.bumpScale = .00048;
+                    }
                     m.roughness = /wool|sweater/.test(m.name) ? .96 : .86;
                 }
             }

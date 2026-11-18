@@ -413,6 +413,21 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     };
     const honeyOakMap = repeating(finishMap('honey-oak'), 8);
     const mapleMap = repeating(finishMap('staved-maple'), 8);
+    const fabricData = (name, repeat) => {
+        const map = repeating(finishMap(name), 4);
+        map.colorSpace = THREE.NoColorSpace;
+        map.flipY = false;
+        map.repeat.set(repeat, repeat);
+        (root.ownedTextures ||= []).push(map);
+        return map;
+    };
+    root.commonsTextiles = {};
+    for (const [name, repeat] of [['stockinette', 5], ['twill', 7]]) {
+        root.commonsTextiles[name] = {
+            normal: fabricData(name + '-normal', repeat),
+            orm: fabricData(name + '-orm', repeat)
+        };
+    }
     const honeyOak = tag(own(material('#ffffff', { map: honeyOakMap, roughness: .51 })), 'wood');
     // Café and side tables: maple tops with honey-oak bases in one draw. The parts carry
     // vertex colours (white top, HONEY base) over the shared maple map.
@@ -715,9 +730,18 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     // Where the two meet: the clerestory return across x 2200–4800, and the 600 mm drop.
     box(soffit, [SOFFIT_X - CAFE_SOFFIT_X, h - SOFFIT, 80], [(SOFFIT_X + CAFE_SOFFIT_X) / 2, (h + SOFFIT) / 2, STEP_Z - 40], paint('#ebeae5', SOFFIT_X - CAFE_SOFFIT_X, h - SOFFIT)).castShadow = false;
     box(soffit, [HALL_XR - SOFFIT_X, SOFFIT - CAFE_SOFFIT, 80], [(HALL_XR + SOFFIT_X) / 2, (SOFFIT + CAFE_SOFFIT) / 2, STEP_Z + 40], whiteFlat).castShadow = false;
-    const grilles = kit(); for (const z of [-3000, 2000, 7000]) grilles.box([10, 400, 600], [SOFFIT_X - 85, 5600, z]);
-    for (const z of [13000, 18000, 23000]) grilles.box([10, 400, 600], [CAFE_SOFFIT_X - 85, 5600, z]);
-    baked(soffit, grilles, own(material('#d8d8d4', { roughness: .7 })), false);
+    const grilles = kit();
+    for (const z of [-3000, 2000, 7000, 13000, 18000, 23000]) {
+        const x = (z < STEP_Z ? SOFFIT_X : CAFE_SOFFIT_X) - 85;
+        grilles.box([10, 400, 600], [x, 5600, z], { color: '#666961' });
+        for (const side of [-1, 1]) {
+            grilles.box([18, 16, 612], [x - 8, 5600 + side * 197, z]);
+            grilles.box([18, 390, 14], [x - 8, 5600, z + side * 299]);
+        }
+        for (let dy = -155; dy <= 160; dy += 45)
+            grilles.box([23, 16, 582], [x - 14, 5600 + dy, z], { rot: [0, 0, -.35] });
+    }
+    baked(soffit, grilles, own(material('#d8d8d4', { roughness: .7, vertexColors: true })), false);
     room.walls.push({ obj: soffit, axis: 'y', limit: (SOFFIT - 50) * s, sign: -1 });
 
     // ---------- Glazing with graded North Coast views ----------
@@ -768,6 +792,42 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     };
     const frontPane = run(XR, GLASS_Z, STEP_Z, SOFFIT, 0), hallPane = run(HALL_XR, STEP_Z + 600, SOLID_Z, CAFE_SOFFIT, 0);
     baked(right, curtain, alu, false); baked(right, sills, plinthWhite, false); baked(right,seals,rubber,false);
+    // Each roller spans one clear lite. The drop leaves the view open at seated eye level.
+    const shades = [
+        [XR, GLASS_Z + 1500, SOFFIT, 760],
+        [HALL_XR, STEP_Z + 600, CAFE_SOFFIT, 615],
+        [HALL_XR, STEP_Z + 3600, CAFE_SOFFIT, 865],
+        [HALL_XR, STEP_Z + 6600, CAFE_SOFFIT, 440]
+    ];
+    const shadeCloth = kit(), shadeHardware = kit();
+    for (const [x, start, top, drop] of shades) {
+        const mid = start + 750, y = top - 78;
+        shadeHardware.cyl(35, 35, 1416, [x - 157, y, mid], { rot: [Math.PI / 2, 0, 0], seg: 24 });
+        for (const side of [-1, 1])
+            shadeHardware.box([114, 73, 15], [x - 126, y, mid + side * 709]);
+        shadeHardware.box([15, 16, 1398], [x - 177, y - drop, mid]);
+        const g = new THREE.PlaneGeometry(1396, drop, 1, 12);
+        const pos = g.attributes.position, uv = g.attributes.uv;
+        for (let i = 0; i < pos.count; i++) {
+            const v = uv.getY(i);
+            pos.setZ(i, 13 * Math.sin(Math.PI * v) + 14 * v);
+            uv.setXY(i, uv.getX(i) * 1396 / 96, v * drop / 96);
+        }
+        g.computeVertexNormals();
+        shadeCloth.add(g, [x - 177, y - drop / 2, mid], { rot: [0, -Math.PI / 2, 0] });
+    }
+    const screenWeave = repeating(canvasMap((c, w, h) => {
+        c.fillStyle = '#d7cdb8'; c.fillRect(0, 0, w, h);
+        for (let i = 0; i < w; i += 4) {
+            c.fillStyle = '#b4a996'; c.fillRect(i, 0, 1, h);
+            c.fillStyle = '#ebe1cd'; c.fillRect(0, i, w, 1);
+        }
+    }, 96, 96));
+    screenWeave.userData.staticArtwork = true;
+    const linen = own(material('#ffffff', { map: screenWeave, roughness: .93, side: THREE.DoubleSide, transparent: true, opacity: .73, depthWrite: false }));
+    linen.userData.roomFinishLocked = linen.userData.roomPaletteLocked = true;
+    baked(right, shadeCloth, linen, false).name = 'Woven solar shades';
+    baked(right, shadeHardware, alu, false).name = 'Café roller hardware';
     // Behind the storefront: the outdoor view a short vestibule away, so the entry reads by day and dusk.
     const vestibule = pane(frontWall, [DOOR[1] - DOOR[0], TRANSOM], [(DOOR[0] + DOOR[1]) / 2, TRANSOM / 2, front + 600], Math.PI); vestibule.material = frontGlass;
     // Or the campus modelled behind all the glass (window-scenery.mjs): one world per side, every pane of a side an opening into it.
@@ -838,8 +898,8 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
         const legs = kit(); tableLegs(legs, sx, sz); if (!t.light) legs.box([sx - 160, 90, 22], [0, 670, -sz / 2 + 80]).box([sx - 160, 90, 22], [0, 670, sz / 2 - 80]);
         baked(g, legs, t.light ? steelGrey : honeyOak);
         const topMat = t.light ? laminate : mapleTop.clone(); if (!t.light) { topMat.map = mapleMap.clone(); topMat.map.center.set(.5, .5); topMat.map.repeat.set(Math.max(sx, sz) / 1800, Math.min(sx, sz) / 450); own(topMat); }
-        const top = box(g, [sx, 30, sz], [0, 735, 0], topMat); if (!t.light && sz > sx) top.material.map.rotation = Math.PI / 2;
-        box(g, [sx + 6, 28, sz + 6], [0, 734, 0], honeyOak).castShadow = false;
+        const top = box(g, [sx, 19, sz], [0, 740.5, 0], topMat, 5); if (!t.light && sz > sx) top.material.map.rotation = Math.PI / 2;
+        box(g, [sx - 9, 15, sz - 9], [0, 724, 0], honeyOak, 4).castShadow = false;
         g.userData.roomSupportHeights = [750];
     }
     for (const [i, [x, z]] of layout.cafe.entries()) {
@@ -847,7 +907,10 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
         k.cyl(520, 520, 30, [0, 735, 0], { seg: 64 });
         k.add(new THREE.TorusGeometry(520,5,8,64),[0,735,0],{rot:[Math.PI/2,0,0]});
         baked(g,k,cafeWood);
-        const base=kit();base.cyl(275,290,16,[0,8,0],{seg:48}).cyl(54,70,693,[0,362.5,0],{seg:24}).cyl(225,90,14,[0,716,0],{seg:32});
+        const base = kit();
+        const pedestal = [[0,0],[278,0],[288,4],[288,11],[280,16],[197,23],[107,36],
+            [70,48],[62,64],[54,68],[54,84],[46,88],[46,678],[55,682],[59,698],[150,709],[188,717],[188,721],[0,721]];
+        base.add(new THREE.LatheGeometry(pedestal.map(([r,y]) => new THREE.Vector2(r,y)),48), [0,0,0]);
         baked(g,base,bronze);g.userData.roomSupportHeights = [750];
     }
     const side = group('humboldt-side-table', 'Round oak side table', [layout.sideTable[0], 0, layout.sideTable[1]]), sk = kit();
@@ -910,7 +973,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
 
     // Student life: table and café dressings, per daypart (library-humboldt-life.mjs).
     const life = buildHumboldtLife({ room, root, layout, helpers, kit, group, baked, own, tag, canvasMap, PHASE, materials: { pilotGreen, pilotGold, ink, paper, honeyOak, cafeOak } });
-    const studyChair = humboldtStudyChairs(room, layout, canvasMap);
+    const studyChair = humboldtStudyChairs(room, layout, canvasMap, honeyOakMap);
     const readingDetails = humboldtReadingDetails(room, layout, helpers);
     const campusLife = addCampusLife({ room, root, layout, asset: group, byId: id => {
         let found; root.traverse(o => { if (o.userData.propId === id || o.userData.humboldtTable === id) found = o; }); return found;
@@ -1096,7 +1159,21 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     queueMicrotask(() => root.traverse(o => { if (!o.isMesh) return; for (const m of [].concat(o.material)) if (m?.userData?.humboldtRoughness) m.roughness = m.userData.humboldtRoughness; }));
 
     // ---------- Light pools: scallops, floor pools, cork and desk accents ----------
-    const pools = createPoolLayer(root, 'Humboldt architectural light');
+    // A diffuse wash whose value and slope reach zero before the quad ends.
+    // Keep the alpha in an immutable texture while Director blends the light colours.
+    const poolSize = 128, rgba = new Uint8Array(poolSize * poolSize * 4).fill(255);
+    for (let y = 0; y < poolSize; y++) for (let x = 0; x < poolSize; x++) {
+        const dx = (2*x + 1)/poolSize - 1, dy = (2*y + 1)/poolSize - 1;
+        const r2 = dx*dx + dy*dy;
+        rgba[(y*poolSize+x)*4+3] = Math.round(255 * Math.max(0, 1-r2)**2 * Math.exp(-2.2*r2));
+    }
+    const diffusePool = new THREE.DataTexture(rgba, poolSize, poolSize);
+    diffusePool.magFilter = THREE.LinearFilter;
+    diffusePool.minFilter = THREE.LinearMipmapLinearFilter;
+    diffusePool.generateMipmaps = true;
+    diffusePool.needsUpdate = true;
+    (root.ownedTextures ||= []).push(diffusePool);
+    const pools = createPoolLayer(root, 'Humboldt architectural light', diffusePool);
     const merged = (quads, face) => { const k = kit(); for (const [size, at] of quads) k.plane(size, at, { rot: face }); return k.build(); };
     const FLOOR = [-Math.PI / 2, 0, 0], BACKF = [0, 0, 0], RIGHTF = [0, -Math.PI / 2, 0], LEFTF = [0, Math.PI / 2, 0];
     const addMerged = (parent, quads, face, color, levels) => pools.add(parent, [0, 0, 0], [1, 1], color, levels, [0, 0, 0], merged(quads, face));
@@ -1122,8 +1199,8 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     pools.add(right, [XR - 6, SOFFIT - 520, DESK[1]], [780, 600], T4000, [.05, .045, .14, .17, .13], 'right');
     pools.add(right, [XR - 6, SOFFIT - 1300, DESK[1]], [1300, 2100], T4000, [.025, .02, .07, .09, .07], 'right');
     // Tackboard: three scallops across the panel; cork is dark, so it takes more.
-    addMerged(tack, [-350, 800, 1950].map(z => [[900, 620], [XR - 50, 3400 - 250, z]]), RIGHTF, T3500, [.06, .05, .16, .16, .18]);
-    addMerged(tack, [-350, 800, 1950].map(z => [[1300, 2100], [XR - 50, 3400 - 1250, z]]), RIGHTF, T3500, [.04, .04, .12, .12, .13]);
+    addMerged(tack, [-350, 800, 1950].map(z => [[1480, 830], [XR - 50, 3400 - 330, z]]), RIGHTF, T3500, [.06, .05, .16, .16, .18]);
+    addMerged(tack, [-350, 800, 1950].map(z => [[1820, 2400], [XR - 50, 3400 - 1250, z]]), RIGHTF, T3500, [.04, .04, .12, .12, .13]);
     // Top grazer down the high right wall.
     // Clerestory grazers: one ramp per wall, brightest at the top lens (commons face x 4720, hall face x 2120).
     const grazeMap = rampMap(edges, [[0, .05], [.35, .18], [.65, .45], [.88, .85], [1, 1]]);
@@ -1139,15 +1216,15 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     const lidPool = circuit => { const k = kit(); for (const f of frames.filter(f => f.circuit === circuit)) k.plane([f.size[0] + 4200, f.size[1] + 4200], [f.c[0], slopeY(f.c[1]) - 8, f.c[1]], { rot: [Math.PI / 2 - (f.c[1] < SLOPE_Z ? SLOPE : 0), 0, 0] }); return k.build(); };
     pools.add(lid, [0, 0, 0], [1, 1], T3500, [.06, .05, .13, .12, .15], [0, 0, 0], lidPool('A'));
     pools.add(lid, [0, 0, 0], [1, 1], T3500, [.06, .05, .13, 0, .15], [0, 0, 0], lidPool('B'));
-    const frameFloor = circuit => frames.filter(f => f.circuit === circuit).map(f => [[f.size[0] + 1600, f.size[1] + 1600], [f.c[0], 3, f.c[1]]]);
+    const frameFloor = circuit => frames.filter(f => f.circuit === circuit).map(f => [[f.size[0] + 3600, f.size[1] + 2800], [f.c[0], 3, f.c[1]]]);
     addMerged(root, frameFloor('A'), FLOOR, T3500, [.05, .05, .15, .13, .17]);
     addMerged(root, frameFloor('B'), FLOOR, T3500, [.05, .05, .15, 0, .17]);
-    addMerged(root, cans.filter(([, , z]) => Math.abs(z - DESK[1]) > 700 && z < GLASS_Z).map(([x, , z]) => [[2200, 2200], [x, 3, z]]), FLOOR, T3500, [.04, .04, .11, .02, .1]);
+    addMerged(root, cans.filter(([, , z]) => Math.abs(z - DESK[1]) > 700 && z < GLASS_Z).map(([x, , z]) => [[2200, 3000], [x, 3, z]]), FLOOR, T3500, [.04, .04, .11, .02, .1]);
     // Café cans sit near the hall glass, so their pools stay small enough to end at the floor edge.
-    addMerged(root, cans.filter(([, , z]) => z > GLASS_Z && z < STEP_Z).map(([x, , z]) => [[1500, 1500], [x, 3, z]]), FLOOR, T3500, [.03, .03, .09, .015, .09]);
+    addMerged(root, cans.filter(([, , z]) => z > GLASS_Z && z < STEP_Z).map(([x, , z]) => [[2300, 2600], [x, 3, z]]), FLOOR, T3500, [.03, .03, .09, .015, .09]);
     // The café reads warmer than the study zone: a 3000 K can over each table, a cooler circulation row.
-    addMerged(root, cans.filter(([x, , z]) => z > STEP_Z && x > 4000).map(([x, , z]) => [[1900, 1900], [x, 3, z]]), FLOOR, T3000, [.02, .02, .11, .015, .16]);
-    addMerged(root, cans.filter(([x, , z]) => z > STEP_Z && x < 4000).map(([x, , z]) => [[1500, 1500], [x, 3, z]]), FLOOR, '#fff0de', [.02, .02, .07, .02, .06]);
+    addMerged(root, cans.filter(([x, , z]) => z > STEP_Z && x > 4000).map(([x, , z]) => [[2700, 3300], [x, 3, z]]), FLOOR, T3000, [.02, .02, .11, .015, .16]);
+    addMerged(root, cans.filter(([x, , z]) => z > STEP_Z && x < 4000).map(([x, , z]) => [[2400, 3000], [x, 3, z]]), FLOOR, '#fff0de', [.02, .02, .07, .02, .06]);
     pools.add(root, [DESK[0] - 300, 3, DESK[1]], [2000, 1700], T3500, [.03, .03, .1, .13, .09]);
     pools.add(root, [2800, 3, -5000], [5200, 4200], '#e6edf0', [.16, .2, .04, 0, 0]);
     // A broad, restrained work pool follows the new collaborative zone.
@@ -1156,7 +1233,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     pools.add(root, [8050, 3, -3900], [1900, 2000], '#e6edf0', [.12, .14, .03, 0, 0]);
     // Marine-layer daylight: one soft band along each run of glass.
     const glassBands = [[[2800, STEP_Z - GLASS_Z], [XR - 1400, 3, (GLASS_Z + STEP_Z) / 2]], [[2600, SOLID_Z - STEP_Z], [HALL_XR - 1300, 3, (STEP_Z + SOLID_Z) / 2]], [[4400, 2800], [(DOOR[0] + DOOR[1]) / 2, 3, front - 1400]]];
-    addMerged(root, glassBands, FLOOR, '#e3ebf0', [.16, .20, 0, 0, 0]);
+    addMerged(root, glassBands, FLOOR, '#e3ebf0', [.16, .15, 0, 0, 0]);
     // Blue hour: cool at the glass, warm inside.
     addMerged(root, glassBands, FLOOR, '#9fb2d4', [0, 0, .04, 0, .015]);
     // Sun through the junction and hall curtain walls once the marine layer
@@ -1166,7 +1243,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     // A short, high, near-white patch in the afternoon; at dusk faint, soft,
     // red-amber bars of the last sun that cross the café and reach the gallery wall.
     // Morning stays overcast. One floor and one wall overlay, redrawn per daypart.
-    const SUN = { afternoon: { elevation: 1.45, sweep: .12, color: '#fff0d8', level: .22 }, evening: { elevation: .32, sweep: .48, color: '#ffb98a', level: .1 } };
+    const SUN = { afternoon: { elevation: 1.45, sweep: .12, color: '#fff0d8', level: .16 }, evening: { elevation: .32, sweep: .48, color: '#ffb98a', level: .1 } };
     const sunRuns = [{ x: XR, z0: GLASS_Z, z1: STEP_Z, top: SOFFIT }, { x: HALL_XR, z0: STEP_Z + 600, z1: SOLID_Z, top: CAFE_SOFFIT }];
     const sunColumns = [[HALL_XR - 250, 12500, 250], [HALL_XR - 250, 18500, 250]];
     const SUN_F = { x0: XL, x1: XR, z0: GLASS_Z - 4200, z1: SOLID_Z + 600 }, SUN_W = { z0: GLASS_Z - 4200, z1: SOLID_Z + 600, y1: 3600 };
@@ -1205,6 +1282,13 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
         }
         // Hall columns stand inside the glass: their shadows cut the bars.
         for (const c of [fc, wc]) c.globalCompositeOperation = 'destination-out';
+        fc.fillStyle = wc.fillStyle = 'rgba(0,0,0,.57)';
+        for (const [x, start, top, drop] of shades) {
+            const y = top - 78, z = start + 52, end = start + 1448;
+            const corners = [[x,y,z],[x,y,end],[x,y-drop,end],[x,y-drop,z]];
+            quad(fc, corners.map(p => fp(onFloor(...p))));
+            if (x === HALL_XR) quad(wc, corners.map(p => wp(onWall(...p))));
+        }
         fc.fillStyle = wc.fillStyle = '#000';
         for (const [x, z, r] of sunColumns) {
             const far = 30000; quad(fc, [[x, z - r], [x, z + r], [x - ca * far, z + r - sa * far], [x - ca * far, z - r - sa * far]].map(fp));
@@ -1318,7 +1402,11 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     // VSM shadow maps also draw shadow *receivers*, so a non-casting fixture that
     // still receives (frames, soffits, glass, trim) would print onto the floor.
     // The floors keep receiving: they sit below everything.
-    pools.group.children.forEach(o => { o.material.dithering = true; });
+    pools.group.children.forEach(o => {
+        o.material.dithering = true;
+        // Applied after tone mapping: a dim fixture stays a subtle fill over a dark floor.
+        if (o.material.map === diffusePool) o.material.opacity = .34;
+    });
     root.traverse(o => { if (o.isMesh && !o.castShadow && !o.userData.humboldtFloor && !o.userData.lightPool) o.receiveShadow = false; });
     // The shell stays out of the shadow pass entirely: daylight reads as
     // entering through the glass bay and clerestory rather than the 7.2 m back
