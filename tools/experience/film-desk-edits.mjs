@@ -67,7 +67,9 @@ export function hideDesk(entry) {
   const g = entry.record?.group; if (!g || entry.hidden?.group === g) return false;
   unhideDesk(entry);
   const own = Object.getOwnPropertyDescriptor(g, 'visible'); let raw = g.visible;
-  Object.defineProperty(g, 'visible', { configurable: true, enumerable: true, get: () => false, set: v => { raw = v; own?.set?.call(g, v); } });
+  // (a false written while hidden is the getter's own answer echoed back, e.g. by GTAO's visibility cache under film quality:
+  // not the desk's own state, or Undo of the hide left it missing in the Director's Render still / Film look)
+  Object.defineProperty(g, 'visible', { configurable: true, enumerable: true, get: () => false, set: v => { if (v === false) return; raw = v; own?.set?.call(g, v); } });
   entry.hidden = { group: g, restore: () => { delete g.visible; if (own && (own.get || own.set)) Object.defineProperty(g, 'visible', own); else g.visible = raw; } };
   return true;
 }
