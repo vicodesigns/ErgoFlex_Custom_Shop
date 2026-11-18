@@ -168,7 +168,9 @@ const len=v=>Math.hypot(...v),deg=v=>Number(v.toFixed(1)),m=v=>Number(v.toFixed(
 // "on screen 2–6.5 s after its desk comes in, fades in 0.4 s".
 export function describeShow(e){
   const s=e.show;if(!s)return '';
-  return `on screen ${m(s.from)}–${m(s.to)} s${e.desk?' after its desk comes in':''}${s.fadeIn?`, fades in ${m(s.fadeIn)} s`:''}${s.fadeOut?`, fades out ${m(s.fadeOut)} s`:''}`;
+  // (to at or past 10000 s is "until the end": the Director writes 100000 for an end left open)
+  const open=!(s.to<1e4),when=open?(s.from>0?`from ${m(s.from)} s`:'the whole time'):`${m(s.from)}–${m(s.to)} s`;
+  return `on screen ${when}${e.desk?' after its desk comes in':''}${s.fadeIn?`, fades in ${m(s.fadeIn)} s`:''}${s.fadeOut?`, fades out ${m(s.fadeOut)} s`:''}`;
 }
 // "moved 0.32 m (x +0.20, z −0.25), turned 15° about y, scaled ×1.2, hidden".
 export function describePropEdit(e,{mpu=1}={}){   // mpu: metres per scene unit (the Director passes the stage's), so 'moved … m' is real metres

@@ -55,6 +55,10 @@ try{
 
   // ---- multi-select on the stage
   const arm0=(await pose(ARM)).p,mon0=(await pose(MON)).p;
+  // Frame the arm and the monitor (the chapter's opening camera changes with the cut: in hq14 the arm is not clickable
+  // from it): the camera comes along its own line of sight to 1.2 units from their midpoint, aimed at it.
+  await page.evaluate((a,m)=>{const {t,T}=__t(),c=new T.Vector3(...a).add(new T.Vector3(...m)).multiplyScalar(.5),dir=t.camera.position.clone().sub(c).normalize();
+    t.camera.position.copy(c).addScaledVector(dir,1.2);t.camera.lookAt(c);if(t.controls?.target){t.controls.target.copy(c);t.controls.update?.();}t.camera.updateMatrixWorld(true);__t().w.ErgoPresentation?.wake?.(600);},arm0,mon0);await wait(800);
   // Undo re-applies the chapter's camera; put the test's view back so the monitor is on screen again.
   const cam0=await page.evaluate(()=>{const {t}=__t();return {p:t.camera.position.toArray(),q:t.camera.quaternion.toArray(),c:t.controls?.target?.toArray()};});
   const view=()=>page.evaluate(c=>{const {t}=__t();t.camera.position.fromArray(c.p);t.camera.quaternion.fromArray(c.q);if(c.c&&t.controls){t.controls.target.fromArray(c.c);t.controls.update?.();}t.camera.updateMatrixWorld(true);__t().w.ErgoPresentation?.wake?.();},cam0);

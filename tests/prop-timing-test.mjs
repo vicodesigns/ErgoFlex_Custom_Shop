@@ -110,3 +110,5 @@ fs.rmSync(tmp,{recursive:true,force:true});
 // the live stage's merge: the sub-shot's hand-made edits, then every Director edit (film-edits skips the other desks')
 {const setup=sub('B','office',[9.7,20]),m=mergePropEdits(setup,{propEdits:mine}).sceneEdits;assert.equal(m.length,4);assert.deepEqual(m.slice(1).map(e=>e.desk||null),['office','gaming',null]);}
 console.log('Props with a desk of their own and a time on screen: cleaning, keys and layers, the stage (another desk\'s edit skipped, drawn only in its window, fade copies, restore), and the importer writing them into every sub-shot.');
+// an end left open (100000) reads "from … s", not "1–100000 s" (17 Nov: the Make permanent panel said "on screen 3–100000 s")
+assert.match(describePropEdit(add),/on screen from 1 s after its desk comes in, fades in 0\.3 s/);assert.match(describePropEdit(cleanPropEdit({match:'^a$',show:{from:0,to:100000,fadeOut:1}})),/on screen the whole time, fades out 1 s/);
