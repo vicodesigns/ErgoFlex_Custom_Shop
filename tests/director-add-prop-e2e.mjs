@@ -49,6 +49,7 @@ const draft=()=>page.evaluate(()=>__draft());
 const addsOf=async asset=>((await draft())||[]).filter(e=>e.add?.asset===asset);
 const PHONE='^Added prop:ergoflex-phone#',FICUS='^Added prop:ficus#';
 const added=(re,where='live')=>page.evaluate((r,w)=>__added(r,w),re,where);
+const toM=async u=>{const k=await page.evaluate(()=>{const e=document.getElementById('stage').contentWindow.ErgoFlex,sc=e?.workspaceRoom?.scale||e?.workspaceAccessories?.scale;return sc>0?1/(sc*1000):1;});return Number((u*k).toFixed(5));};   // (the Props fields are real metres; the stage is in scene units)
 const near=(a,b,eps=2e-3)=>a.length===b.length&&a.every((v,i)=>Math.abs(v-b[i])<=eps);
 const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
 const key=async(k,mod)=>{if(mod)await page.keyboard.down(mod);await page.keyboard.press(k);if(mod)await page.keyboard.up(mod);await wait(900);};
@@ -125,7 +126,7 @@ try{
   const a1=await until(async()=>{const x=(await addsOf('ergoflex-phone'))[0];return x&&!near(x.position,a0.position,1e-4)&&x;},'drag stored');
   const p1=await until(async()=>{const p=(await added(PHONE)).w;return dist(p,p0)>.01&&p;},'the phone moved on the stage');
   check(Math.abs(p1[1]-p0[1])<2e-3,'dragged along the desktop, still on it');
-  await setField('pp-px',(p1[0]+.05).toFixed(3));
+  await setField('pp-px',await toM(p1[0]+.05));
   const p2=await until(async()=>{const p=(await added(PHONE)).w;return Math.abs(p[0]-(p1[0]+.05))<2e-3&&p;},'typed x');check(true,'Position x typed moves it there');
   const a2=(await addsOf('ergoflex-phone'))[0];check(a2.parent==='desk'&&!near(a2.position,a1.position,1e-4),'the add entry holds the new place (desk frame)');
   // ---- rides the lift: 3 s and 8 s, live and Render still

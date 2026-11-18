@@ -65,6 +65,7 @@ await page.evaluateOnNewDocument(()=>{
 const draft=()=>page.evaluate(()=>__draft());
 const CHAIR='Prop:steelcase-leap-v2',MONITOR='Prop:ergoflex-wide-monitor';
 const pose=name=>page.evaluate(n=>__pose(__find(x=>x.name===n)),name);
+const toM=async u=>{const k=await page.evaluate(()=>{const e=document.getElementById('stage').contentWindow.ErgoFlex,sc=e?.workspaceRoom?.scale||e?.workspaceAccessories?.scale;return sc>0?1/(sc*1000):1;});return Number((u*k).toFixed(5));};   // (the Props fields are real metres; the stage is in scene units)
 const near=(a,b,eps=2e-3)=>a.length===b.length&&a.every((v,i)=>Math.abs(v-b[i])<=eps);
 // A real drag on the gizmo: find the handle (axis) by hovering, then drag it.
 async function dragHandle(axes,dir){
@@ -118,7 +119,7 @@ try{
   await dragHandle(['Y','X','Z'],'radial');check(/^Scaled /.test(await status()),'gizmo scale drag');
   d=await until(async()=>{const x=await draft();return x?.[0]?.scale&&x;},'draft scale');
   // ---- inspector numbers
-  const x0=(await pose(CHAIR)).p[0];await setField('pp-px',(x0+.25).toFixed(3));
+  const x0=(await pose(CHAIR)).p[0];await setField('pp-px',await toM(x0+.25));
   await until(async()=>Math.abs((await pose(CHAIR)).p[0]-(x0+.25))<2e-3,'position x typed');check(true,'Position x typed moves it there');
   await setField('pp-ry',30);d=await draft();check(d[0].rotation[1]===30&&/^Rotated /.test(await status()),'Turn y typed: 30°');
   await setField('pp-s',1.25);d=await draft();check(near(d[0].scale,[1.25,1.25,1.25],1e-4),'uniform scale typed: ×1.25');
@@ -247,10 +248,10 @@ try{
   await page.mouse.click(hitAt.x,hitAt.y);await wait(900);
   check(await page.evaluate(()=>__gizmo()?.object?.name)===BOOK,`clicking the notebook on the desk selects the notebook itself ("${BOOK}", not one page mesh)`);
   const note=await page.$eval('[data-studio-note]',e=>e.textContent);check(/sits on the desk and travels with it/.test(note),'Make permanent stays blocked for it: '+note);
-  const bx=Number(await page.$eval('#director-panel [name=pp-px]',e=>e.value));await setField('pp-px',(bx+.1).toFixed(3));
+  const bx=Number(await page.$eval('#director-panel [name=pp-px]',e=>e.value));const step=await toM(.1);await setField('pp-px',(bx+step).toFixed(5));   // (0.1 scene units, typed in real metres)
   d=await until(async()=>{const x=await draft();return x?.find(e=>e.label===BOOK)&&x;},'notebook edit');const bookEdit=d.find(e=>e.label===BOOK);
   check(bookEdit.space==='local'&&Math.abs(Math.hypot(...bookEdit.position)-.1)<2e-3&&KIT.test(bookEdit.path.replace(/^\^|\$$/g,'').replace(/\\/g,'')),'the 10 cm move is kept in the desk\'s own frame, targeted by its path: '+JSON.stringify(bookEdit));
-  check(/moved 0\.1 m on the desk/.test(await page.$eval('[data-selected-header]',e=>e.textContent)),'Selected header: "moved 0.1 m on the desk"');
+  check(new RegExp('moved '+String(Number(step.toFixed(2))).replace('.','\\.')+' m on the desk').test(await page.$eval('[data-selected-header]',e=>e.textContent)),'Selected header: "moved '+Number(step.toFixed(2))+' m on the desk" (real metres)');
   const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
   const atT={};for(const sec of [3,8]){
     await seekTo(sec);await stillOf(path.join(shots,`rise-notebook-${sec}s.jpg`));
