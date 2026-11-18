@@ -1,9 +1,12 @@
 // Director "Starting position" (Chapter tab, experience/start-pose.mjs) end to end (real GPU Chrome; not one of the
-// quick tests/cinematic-* checks). Chapter 12 (hero): Max height + Max tilt set the chapter's motion.initial and the
-// live stage's desk at 0 s; the first lift leaves the new start without a jump and still reaches its target; each
-// click is one undo step, a slider drag is one undo step; Export cut carries it; build-round8-director --import + the
-// pass (in a temp copy of the hq dir) write it into review-cut.json, shots/13.json and every sub-shot of
-// shots/13-subshots.json, keeping the film's x / z / yaw and every clip.
+// quick tests/cinematic-* checks). Chapter 5 (coast: a 60x30 desk starting at 30" / -5 deg, one featured desk all the
+// way, no desk swaps): Max height + Max tilt set the chapter's motion.initial and the live stage's desk at 0 s; the
+// first lift (4.4 s, down to 38") leaves the new start without a jump and still reaches its target; each click is
+// one undo step, a slider drag is one undo step; Export cut carries it; build-round8-director --import + the pass (in
+// a temp copy of the hq dir) write it into review-cut.json, the chapter's shots/NN.json and director-camera-coast.json,
+// keeping the film's x / z / yaw and every clip.
+//   (Retargeted from hero on 18 Nov 2026: hero now starts at Max height / Max tilt already and its finale swaps desks,
+//   so neither the buttons' change nor the stage's featured desk could be measured there.)
 //
 //   node tests/director-start-pose-e2e.mjs        (BASE=http://127.0.0.1:3108 to use a running server)
 // SHOTS=<dir> keeps the screenshot of the control (control.png). Downloads go to a temp folder (never ~/Downloads).
@@ -14,8 +17,8 @@ import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {root,HQ,chapterList,wait,openDirectorBrowser,openChapter,status as statusOf,seek} from './director-e2e-harness.mjs';
 
-const chapter=chapterList()?.find(c=>c.id==='hero');
-if(!chapter||!fs.existsSync(path.join(root,chapter.page))){console.log(`Director start pose e2e: skipped (${HQ} has no hero chapter page in this checkout).`);process.exit(0);}
+const ID='coast',chapter=chapterList()?.find(c=>c.id===ID);
+if(!chapter||!fs.existsSync(path.join(root,chapter.page))){console.log(`Director start pose e2e: skipped (${HQ} has no ${ID} chapter page in this checkout).`);process.exit(0);}
 const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'director-start-pose-e2e-')),downloads=path.join(tmp,'downloads'),shots=process.env.SHOTS||path.join(tmp,'shots');
 fs.mkdirSync(downloads);fs.mkdirSync(shots,{recursive:true});
 const {base,page,errors,close}=await openDirectorBrowser();
@@ -91,24 +94,20 @@ try{
   check(es.motion?.initial?.height===52.5&&es.motion.initial.tilt===65,'Export cut carries motion.initial 52.5 / 65');
   const H=path.join(tmp,'hq');fs.mkdirSync(path.join(H,'shots'),{recursive:true});
   fs.copyFileSync(path.join(root,HQ,'review-cut.json'),path.join(H,'review-cut.json'));
-  let heroFile=null;for(const f of fs.readdirSync(path.join(root,HQ,'shots')))if(/^\d\d\.json$/.test(f)&&JSON.parse(fs.readFileSync(path.join(root,HQ,'shots',f),'utf8')).id==='hero'){heroFile=f;fs.copyFileSync(path.join(root,HQ,'shots',f),path.join(H,'shots',f));}
-  fs.copyFileSync(path.join(root,HQ,'shots','13-subshots.json'),path.join(H,'shots','13-subshots.json'));
+  let shotFile=null;for(const f of fs.readdirSync(path.join(root,HQ,'shots')))if(/^\d\d\.json$/.test(f)&&JSON.parse(fs.readFileSync(path.join(root,HQ,'shots',f),'utf8')).id===ID){shotFile=f;fs.copyFileSync(path.join(root,HQ,'shots',f),path.join(H,'shots',f));}
   const read=f=>JSON.parse(fs.readFileSync(path.join(H,f),'utf8'));
-  const old=read('review-cut.json').shots.find(s=>s.id==='hero').motion,oldSubs=read('shots/13-subshots.json').shots.map(s=>s.motion);
-  const ex=path.join(tmp,'Film-chapter-hero-e2e.json');fs.copyFileSync(path.join(downloads,file),ex);
+  const old=read('review-cut.json').shots.find(s=>s.id===ID).motion;
+  const ex=path.join(tmp,`Film-chapter-${ID}-e2e.json`);fs.copyFileSync(path.join(downloads,file),ex);
   const tool=path.join(root,'tools/experience/build-round8-director.py');
   execFileSync('python3',[tool,H,'--import',ex],{stdio:'ignore'});const log=execFileSync('python3',[tool,H],{encoding:'utf8'});
-  check(/starting position 43\.5" \/ 65 deg -> 52\.5" \/ 65 deg/.test(log),'the pass logs the new starting position');
-  check(read('director-camera-hero.json').initial?.height===52.5,'director-camera-hero.json keeps initial {height: 52.5, tilt: 65}');
+  check(log.includes(`starting position ${old.initial.height}" / ${old.initial.tilt} deg -> 52.5" / 65 deg`),`the pass logs the new starting position (${old.initial.height}" / ${old.initial.tilt} deg -> 52.5" / 65 deg)`);
+  check(read(`director-camera-${ID}.json`).initial?.height===52.5,`director-camera-${ID}.json keeps initial {height: 52.5, tilt: 65}`);
   const same=(a,b)=>a.x===b.x&&a.z===b.z&&a.yaw===b.yaw;
-  const rc=read('review-cut.json').shots.find(s=>s.id==='hero').motion;
-  check(rc.initial.height===52.5&&rc.initial.tilt===65&&same(rc.initial,old.initial),`review-cut.json hero motion.initial ${JSON.stringify(rc.initial)}`);
-  check(JSON.stringify(rc.clips.map(c=>[c.id,c.target,c.start,c.duration]))===JSON.stringify(old.clips.map(c=>[c.id,c.target,c.start,c.duration])),'review-cut.json hero clips unchanged (ids, targets, timing)');
-  if(heroFile){const sh=read('shots/'+heroFile).motion;check(sh.initial.height===52.5&&sh.initial.tilt===65,`shots/${heroFile} motion.initial ${sh.initial.height} / ${sh.initial.tilt}`);}
-  const subs=read('shots/13-subshots.json').shots;
-  check(subs.length===6&&subs.every((s,i)=>s.motion.initial.height===52.5&&s.motion.initial.tilt===65&&same(s.motion.initial,oldSubs[i].initial)),`every sub-shot of 13-subshots.json (${subs.map(s=>s.subshot).join('')}) starts at 52.5 / 65`);
-  check(subs.every((s,i)=>JSON.stringify(s.renderRange)===JSON.stringify(read('shots/13-subshots.json').shots[i].renderRange)),'sub-shot renderRanges kept');
-  check(!fs.readdirSync(path.join(os.homedir(),'Downloads')).some(f=>/^Film-chapter-hero/.test(f)&&fs.statSync(path.join(os.homedir(),'Downloads',f)).mtimeMs>Date.now()-600000),'nothing written to ~/Downloads');
+  const rc=read('review-cut.json').shots.find(s=>s.id===ID).motion;
+  check(rc.initial.height===52.5&&rc.initial.tilt===65&&same(rc.initial,old.initial),`review-cut.json ${ID} motion.initial ${JSON.stringify(rc.initial)}`);
+  check(JSON.stringify(rc.clips.map(c=>[c.id,c.target,c.start,c.duration]))===JSON.stringify(old.clips.map(c=>[c.id,c.target,c.start,c.duration])),`review-cut.json ${ID} clips unchanged (ids, targets, timing)`);
+  if(shotFile){const sh=read('shots/'+shotFile).motion;check(sh.initial.height===52.5&&sh.initial.tilt===65,`shots/${shotFile} motion.initial ${sh.initial.height} / ${sh.initial.tilt}`);}
+  check(!fs.readdirSync(path.join(os.homedir(),'Downloads')).some(f=>new RegExp('^Film-chapter-'+ID).test(f)&&fs.statSync(path.join(os.homedir(),'Downloads',f)).mtimeMs>Date.now()-600000),'nothing written to ~/Downloads');
   check(errors.length===0,'no page errors'+(errors.length?': '+errors.slice(0,3).join(' | '):''));
 }catch(error){failures.push(error.message);console.log('FAIL',error.stack);}
 finally{await close();}
