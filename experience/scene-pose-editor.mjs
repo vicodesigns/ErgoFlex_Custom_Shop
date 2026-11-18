@@ -56,7 +56,7 @@ export const MOVES={hand_l:{kind:'ik'},hand_r:{kind:'ik'},foot_l:{kind:'ik'},foo
   thigh_l:{kind:null,why:'The hip joint moves with the hips: turn it (E), or move the foot and the leg follows.'},thigh_r:{kind:null,why:'The hip joint moves with the hips: turn it (E), or move the foot and the leg follows.'}};
 export const moveOf=name=>MOVES[name]||{kind:null,why:'This joint turns only (E).'};
 
-export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,edit,status,rerender,personName,editing,saved=null,time=()=>0,seek=()=>{},seconds=()=>0}){
+export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,edit,status,rerender,personName,editing,saved=null,time=()=>0,seek=()=>{},seconds=()=>0,siblings=k=>[k],follow=()=>{}}){
   let key=null,joint=null,gmode='rotate',h=null,rigging=false,drag=null,listening=false,orbit=true,selT=null,clip=null,hinted=false,switching=false;
   const AUTO='ergoflex.director.autoKey';
   let autoKey=(()=>{try{return globalThis.localStorage?.getItem(AUTO)==='1';}catch{return false;}})();      // (off until turned on, as in Blender: then remembered)
@@ -116,6 +116,10 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
     if(!key)return;
     const people=stagePeople(),o=people?.byKey?.(key);
     if(!o||!entry(key)){exit();return;}
+    // One person in several placements (cast entries of one row: Andre with the robot, at the lift, at the shelf): off
+    // screen here, the placement of theirs that is on screen takes over, keys and all (17 Nov 2026: the dots went away
+    // at Andre's second key, as pose mode stayed on a placement that had left).
+    if(editing()&&!o.visible){const next=siblings(key).find(k=>k!==key&&entry(k)&&people.byKey?.(k)?.visible);if(next){rebind(next);return;}}
     // Not in the scene at this moment (the playhead is outside this placement's bar): say why there are no dots.
     if(editing()&&!o.visible){if(!hinted){hinted=true;status(`${personName(entry(key))} is not in the scene at this moment, so there are no dots: move the playhead into one of their bars on the People lane.`);}}else hinted=false;
     // A desk can change the displayed model while posing: rebind the tools without writing a correction.
@@ -345,6 +349,12 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
     const e=entry(k);if(!e)return;key=k;joint=null;gmode='rotate';
     status(`Pose mode: ${personName(e)}. Click a dot on the body: blue turns a joint, orange (hands, feet) moves the whole limb. Esc or Done leaves.`);rerender();
   }
+  function rebind(next){
+    switching=true;drag=null;selT=null;kd=null;dispose();switching=false;const w=win();if(w)w.__directorDragging=false;const t=tools()?.t;if(t)t.controls.enabled=orbit;
+    key=next;follow(next);status(`Pose mode follows ${personName(entry(next))} to the placement on screen now. Each placement and posture keeps its own keys.`);rerender();
+  }
+  // a key picked on the person's timeline row: it is the selected key (Delete, ease, copy) at the playhead
+  function focusKey(t){if(!key)return;const e=entry(key);selT=e&&keyAt(e,t)!==undefined?keyAt(e,t):null;rerender();}
   function exit(){if(!key)return;key=null;joint=null;drag=null;selT=null;dispose();rerender();}
   function setMode(m){if(!key)return false;if(m==='translate'&&!moveOf(joint).kind){status(moveOf(joint).why||'This joint turns only (E).');return true;}if(m==='translate'||m==='rotate'){gmode=m;rerender();}return true;}
   // ---- the People tab while posing
@@ -444,6 +454,6 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
   },true);
   document.addEventListener('click',ev=>{const d=ev.target.closest?.('[data-pose-key]');if(!d)return;ev.preventDefault();ev.stopPropagation();if(performance.now()<kdSuppress||!key)return;
     const t=Number(d.dataset.poseKey);selT=t;seek(t);rerender();status(`Key at ${fmt(t)} s: drag to retime, Delete removes it, Ease out sets how it leaves.`);},true);      // (a keyboard Enter or a script's click)
-  return {enter,exit,tick,panel,action,changed,setMode,personAt,active:()=>key,joint:()=>joint,jointLabel:()=>joint?label(joint):'',resetJoint:()=>reset('joint'),ready:()=>!!rigOf(),
+  return {enter,exit,tick,panel,action,changed,setMode,personAt,focusKey,active:()=>key,joint:()=>joint,jointLabel:()=>joint?label(joint):'',resetJoint:()=>reset('joint'),ready:()=>!!rigOf(),
     keyLane,sync,keyNow,deleteKey,selectedKey:()=>selT,autoKey:()=>autoKey};
 }

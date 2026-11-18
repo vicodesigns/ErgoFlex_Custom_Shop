@@ -158,7 +158,8 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     return {at:[Math.round(p.x),Math.round(p.z)],turn:r1(THREE.MathUtils.radToDeg(Math.atan2(eye.x-p.x,eye.z-p.z)))};
   }
   // ---- pose mode (scene-pose-editor.mjs)
-  const pose=createPoseEditor({wake:()=>bridge.stage()?.wake?.(600),win,three,tools:()=>tools,stagePeople,entry:poseEntry,edit:poseEdit,status,rerender,personName:e=>e?personName(e):'',editing,saved:e=>savedHTML(e),time,seek,seconds});
+  const pose=createPoseEditor({wake:()=>bridge.stage()?.wake?.(600),win,three,tools:()=>tools,stagePeople,entry:poseEntry,edit:poseEdit,status,rerender,personName:e=>e?personName(e):'',editing,saved:e=>savedHTML(e),time,seek,seconds,
+    siblings:k=>(sheetRows.length?sheetRows:track()).find(r=>r.entries.includes(k))?.entries||[k],follow:k=>{if(sel!==k){sel=k;onSelect();}}});
   const poseEditor=pose;     // swap() has a `pose` argument of its own
   // S31 M3 hook: a walker's / roller's path on the floor and in the People tab (people-path-gizmo.mjs)
   const paths=createPathGizmo({win,three,tools:()=>tools,stagePeople,entry,edit:(...a)=>edit(...a),status,editing,lightsShowing,selected:()=>sel,posing:()=>pose.active(),personName:e=>e?personName(e):'',objectOf:k=>objectOf(k),cast:()=>cast(),modelOf:id=>modelOf(id),poseOf:id=>poseOf(id),seconds,spans:k=>spans(k),time});
@@ -639,7 +640,11 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(!press)return;const p=press;press=null;ev.stopPropagation();
     if(p.moved){dragEnd(p,ev);return;}
     setPicked(p.shift?pick(picked,[p.id],{toggle:true}):pick(picked,[p.id]),{focus:p.id});
-    const k=sheetMap.get(p.id);if(k)status(`${keyTitle(k)}. Drag to move${picked.size>1?' the selected keys':''} · J / K previous / next key · Delete removes it.`);
+    const k=sheetMap.get(p.id);if(!k)return;
+    // a plain click also takes the playhead to the key (as the pose panel's diamonds do); a pose key opens pose mode on
+    // its placement there, with that key selected, ready for the dots (17 Nov 2026, Vico)
+    if(!p.shift&&editing()){seek(k.t);if((k.kind==='pose'||k.kind==='joint')&&entry(k.entry)){if(pose.active()!==k.entry)enterPose(k.entry);pose.focusKey(k.t);}}
+    status(`${keyTitle(k)}. Drag to move${picked.size>1?' the selected keys':''} · J / K previous / next key · Delete removes it.`);
   },true);
   document.addEventListener('pointercancel',()=>{box?.el?.remove();box=null;if(press?.moved)rerender();press=null;},true);
   document.addEventListener('click',ev=>{if(ev.target.closest?.('[data-sk],.ps-row .ps-lane')){ev.preventDefault();ev.stopPropagation();}},true);
