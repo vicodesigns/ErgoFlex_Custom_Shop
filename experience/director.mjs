@@ -1469,7 +1469,13 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   function hideTargets(id){
     const people=stageRoom()?.people;
     if(id==='people')return people?.people||[];
-    if(id.startsWith('p:')){const o=people?.byKey?.(id.slice(2));return o?[o]:[];}
+    // a person: every model of theirs on stage (a seated, standing or stretching posture is a model of its own), found by
+    // the row's key and then by the same character
+    if(id.startsWith('p:')){if(!people?.people)return [];const key=id.slice(2),spec=o=>o.userData.person||{},
+      char=o=>people.library?.entry?.(spec(o).id)?.person?.character||null,
+      mine=people.people.filter(o=>{try{return people.keyOf(spec(o))===key||people.editKeyOf?.(spec(o))===key;}catch{return false;}});
+      const one=people.byKey?.(key);if(one&&!mine.includes(one))mine.push(one);
+      const chars=new Set(mine.map(char).filter(Boolean));return chars.size?people.people.filter(o=>mine.includes(o)||chars.has(char(o))):mine;}
     if(id==='props'){try{return sceneProps.items().map(i=>i.obj).filter(Boolean);}catch{return [];}}
     if(id==='graphics'){const out=[],scene=bridge.stage()?.three?.()?.scene;scene?.traverse(o=>{if(o.userData?.filmFx&&/^Film screen/.test(o.name||''))out.push(o);});return out;}
     return [];
