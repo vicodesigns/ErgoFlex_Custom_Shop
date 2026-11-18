@@ -12762,7 +12762,7 @@ window.ErgoFlex = {
     roomScenes: ROOM_SCENES,
     setMeasuredRoomLayout,
     setRoomLook,
-    roomLook: sceneId => lookOf(sceneId, roomLooks[sceneId]),
+    roomLook: sceneId => lookOf(sceneId, roomLooks[sceneId], workspaceRoom?.id === sceneId ? workspaceRoom.roomLayout?.id : undefined),
     setMeasuredRoomMode,
     setChildAgeStage,
     get childAgeStage(){return childAgeId;},

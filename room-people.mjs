@@ -88,9 +88,11 @@ import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, sh
 // Room looks (room-looks.mjs): the Nov 17 pass's cast finishes (own materials, hair / shirt maps) are the refreshed Create
 // room's and the Commons'; Create's Classic look keeps the cast as it was, and its people move as they did then
 // (rig.classicMotion: room-people-motion.mjs's painting, pottery and page-turn strokes from before the pass).
+// The Commons' Classic look ('library/humboldt') keeps its cast and their motion as they were too.
 const classicCreate = room => room?.id === 'creative' && room.look === 'classic';
-const refreshedCast = room => (room?.id === 'creative' && !classicCreate(room)) || !!room?.roomLayout?.humboldt;
-const classicRig = (rig, room) => { rig.classicMotion = classicCreate(room); return rig; };
+const classicCommons = room => !!room?.roomLayout?.humboldt && room.look === 'classic';
+const refreshedCast = room => (room?.id === 'creative' && !classicCreate(room)) || (!!room?.roomLayout?.humboldt && !classicCommons(room));
+const classicRig = (rig, room) => { rig.classicMotion = classicCreate(room) || classicCommons(room); return rig; };
 // who looks at whom (RoomPeople.gazeOf)
 const GAZE_TALK = /^(stand-talk|sit-chat|stand-drink|stand-mug|stand-coffee|sit-coffee)$/, GAZE_IDLE = /^(stand-wait|wheel-roll|wheel-watch|cane-stand|white-cane|sit-listen)$/;
 const GAZE_DESK = /^stand-phone-watch$/;      // watching the featured desk go (the workshop film): the head follows it

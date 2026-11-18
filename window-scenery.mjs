@@ -293,11 +293,11 @@ function world(panes, name, scene, options) {
     const defines = { OPENINGS: openings.length }, tex = sharedTextures();
     // the scene, built in the window's frame (or taken from the ones already built)
     const seed = (options.seed ?? 20261113) + options.facing * 7919, round = x => Math.round(x / 10) * 10;
-    const ctx = { openings: openings.map(o => ({ x: o.at.x, y: o.at.y, z: o.at.z, w: o.half.x * 2, h: o.half.y * 2 })), floor: options.floor, facing: options.facing, variant: options.variant, seed, storey: options.storey ?? scene.storey ?? 0 };
+    const ctx = { openings: openings.map(o => ({ x: o.at.x, y: o.at.y, z: o.at.z, w: o.half.x * 2, h: o.half.y * 2 })), floor: options.floor, facing: options.facing, variant: options.variant, seed, storey: options.storey ?? scene.storey ?? 0, ...(options.classic ? { classic: true } : {}) };   // (classic: a room's Classic look, room-looks.mjs)
     ctx.left = Math.min(...ctx.openings.map(o => o.x - o.w / 2)); ctx.right = Math.max(...ctx.openings.map(o => o.x + o.w / 2));
     ctx.bottom = Math.min(...ctx.openings.map(o => o.y - o.h / 2)); ctx.top = Math.max(...ctx.openings.map(o => o.y + o.h / 2)); ctx.near = Math.min(...ctx.openings.map(o => o.z));
     ctx.width = ctx.right - ctx.left; ctx.height = ctx.top - ctx.bottom; ctx.ground = ctx.floor - ctx.storey;
-    const key = [name, options.variant, seed, ctx.storey, round(ctx.floor), ...ctx.openings.flatMap(o => [round(o.x), round(o.y), round(o.z), round(o.w), round(o.h)])].join('|');
+    const key = [name, options.variant, seed, ctx.storey, round(ctx.floor), ...ctx.openings.flatMap(o => [round(o.x), round(o.y), round(o.z), round(o.w), round(o.h)])].join('|') + (ctx.classic ? '|classic' : '');
     const entry = built(key, () => {
         const k = { land: new Builder(), lights: new Builder(), halos: new Halos(), r: rand(seed) };
         k.leaves = k.land.leaves = new Leaves(k.land);

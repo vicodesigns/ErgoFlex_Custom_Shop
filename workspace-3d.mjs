@@ -179,11 +179,12 @@ export const PROP_LIBRARY = {
         return clone;
     },
     // A fresh instance in millimetres, ready to be parented into a room.
-    // (look: the room's look, room-looks.mjs; Create's Classic look keeps the library's own bamboo)
+    // (look: the room's look, room-looks.mjs; Create's Classic look keeps the library's own bamboo, the Commons' Classic
+    // look the library's own plant and ficus)
     async instance(id, roomId = null, layoutId = null, look = null) {
         let file = null;
         if (roomId === 'creative' && id === 'decor-bamboo' && lookOf(roomId, look) !== 'classic') file = 'assets/rooms/artist/bamboo.glb';
-        if (roomId === 'library' && layoutId === 'humboldt' && (id === 'ergoflex-plant-1' || id === 'ficus'))
+        if (roomId === 'library' && layoutId === 'humboldt' && (id === 'ergoflex-plant-1' || id === 'ficus') && lookOf(roomId, look, layoutId) !== 'classic')
             file = 'assets/rooms/library/bay-planter.glb';
         const source = await this.load(id, file);
         const clone = source.clone(true);
@@ -1460,6 +1461,7 @@ export class WorkspaceRoom {
             this.roomLayout = options.layout ? studyLayoutById(options.layout) : studyLayoutForSize(options.size);
             scene = { ...scene, props: this.roomLayout.props, physical: true };
         }
+        if (this.roomLayout?.id) this.look = lookOf(id, options.look, this.roomLayout.id);   // (a layout's own looks: the Commons')
         const root = this.root = new THREE.Group(); root.name = `Room:${id}`;
         root.rotation.y = Math.PI / 2;
         // Use the measured nominal desktop width for measured rooms' metre

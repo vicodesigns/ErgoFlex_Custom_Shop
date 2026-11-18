@@ -6,6 +6,7 @@ import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-202
 import { attachVista } from './window-vista.mjs?v=polish-20261112f';
 import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113b';
 import { makeHumboldtLayout, buildHumboldtCommons } from './library-humboldt-commons.mjs?v=polish-20261113b';
+import { buildHumboldtCommons as buildHumboldtCommonsClassic } from './library-humboldt-commons-classic.mjs';
 
 // Campus-library concepts, not a survey of the Humboldt pilot site.
 // Architecture and furniture coordinates are millimetres.
@@ -176,7 +177,8 @@ function plasterUrn(k, [x, y, z]) {
     k.box([190, 60, 170], [x, y + 30, z], { color: '#4c3a2c' }).add(new THREE.LatheGeometry(profile, 18), [x, y + 60, z], { color: '#e9e3d4' });
 }
 export function buildLibraryRoom(room, root, layout, helpers) {
-    if (layout.humboldt) return buildHumboldtCommons(room, root, layout, helpers);
+    // (the Commons' Classic look, room-looks.mjs: the frozen modules as they were at 9644d030)
+    if (layout.humboldt) return (room.look === 'classic' ? buildHumboldtCommonsClassic : buildHumboldtCommons)(room, root, layout, helpers);
     const { material, mesh, box, rod, markSceneAsset } = helpers;
     const { width: w, depth: d, height: h, back: bz, index } = layout, front = bz + d;
     const modern = index >= 2, carpeted = modern;

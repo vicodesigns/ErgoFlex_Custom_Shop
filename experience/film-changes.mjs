@@ -15,8 +15,8 @@ export function motionChanged(cut, film) {
   return true;
 }
 // (look: a film shot without one shows its room's default look, room-looks.mjs; a room without looks has none)
-export const filmValue = (film, name) => name === 'look' ? (film ? lookOf(film.room, film.look) ?? undefined : undefined) : film && Object.prototype.hasOwnProperty.call(film, name) ? film[name] : undefined;
-export function fieldChanged(cut, film, name) { const v = filmValue(film, name); return v !== undefined && !same(name === 'look' ? lookOf(cut?.room, cut?.look) : cut?.[name], v); }
+export const filmValue = (film, name) => name === 'look' ? (film ? lookOf(film.room, film.look, film.layout) ?? undefined : undefined) : film && Object.prototype.hasOwnProperty.call(film, name) ? film[name] : undefined;
+export function fieldChanged(cut, film, name) { const v = filmValue(film, name); return v !== undefined && !same(name === 'look' ? lookOf(cut?.room, cut?.look, cut?.layout) : cut?.[name], v); }
 export function changedFields(cut, film) { return CHAPTER_FIELDS.filter(n => fieldChanged(cut, film, n)); }
 // The camera against the film's STORY keys (cameraPlan, as a chapter page gets them: director-bridge.py link, plan-NN at
 // time = at / seconds), not its baked spline (camera.keys: spline-*), which never equals the editor's keys: the ● on
