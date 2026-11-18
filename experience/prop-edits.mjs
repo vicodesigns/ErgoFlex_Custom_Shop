@@ -34,7 +34,14 @@ export const escapeRegex=s=>String(s).replace(/[.*+?^${}()|[\]\\\/]/g,'\\$&');
 const validRegex=s=>{try{new RegExp(s,'i');return true;}catch{return false;}};
 // No change at all (back where the film puts it).
 const zero=v=>!v||v.every(n=>Math.abs(n)<1e-4),one=v=>!v||v.every(n=>Math.abs(n-1)<1e-4);
-export const isNoop=e=>zero(e.position)&&zero(e.rotation)&&one(e.scale)&&e.hide===undefined&&!e.show;
+export const isNoop=e=>zero(e.position)&&zero(e.rotation)&&one(e.scale)&&e.hide===undefined&&!e.show&&!e.follow;
+// "Travels with" (film-edits.mjs follow / place): the surface a prop follows, and its own transform there.
+export const FOLLOW_LABELS={room:'Room (stays)','base-shelf':'Base shelf (stays with the base)',lift:'Desk lift (rises, never tilts)',desk:'Desktop (rises and tilts)',shelf:'Desktop shelf unit · top shelf','lower-shelf':'Desktop shelf unit · lower shelf'};
+const placeVec=(v,ok=()=>true)=>Array.isArray(v)&&v.length===3&&v.every(n=>finite(n)&&Math.abs(n)<1e6&&ok(n))?v.map(n=>Math.round(n*1e5)/1e5):undefined;
+export function cleanPlace(p){
+  if(!p||typeof p!=='object')return null;const position=placeVec(p.position),rotation=placeVec(p.rotation,n=>Math.abs(n)<=720),scale=placeVec(p.scale,n=>Math.abs(n)>1e-6);
+  return position&&rotation&&scale?{position,rotation,scale}:null;
+}
 const ASSET=/^[a-z0-9][a-z0-9._-]{0,119}$/i,ADD_ID=/^[a-z0-9]{1,16}$/i,DESK=/^[a-z0-9-]{1,40}$/;
 const r2=v=>Math.round(v*100)/100;
 // {from, to, fadeIn?, fadeOut?, ease?}: 0 <= from < to, at least 0.1 s long, fades no longer than the window; ease only
@@ -122,7 +129,9 @@ export function cleanPropEdit(e){
   const near=vec(e.near);if(near&&near[2]>0)out.near=near;
   if(label)out.label=label;
   const position=vec(e.position),rotation=vec(e.rotation),scale=Array.isArray(e.scale)?vec(e.scale,n=>n>=.001&&n<=1000):finite(e.scale)&&e.scale>=.001&&e.scale<=1000?[e.scale,e.scale,e.scale].map(r4):undefined;
-  if(!zero(position)){if(e.space==='local')out.space='local';out.position=position;}if(!zero(rotation))out.rotation=rotation;if(!one(scale))out.scale=scale;
+  const place=FOLLOW_LABELS[e.follow]?cleanPlace(e.place):null;
+  if(place){out.follow=e.follow;out.place=place;}   // (its own transform on that surface: the offsets do not apply)
+  else{if(!zero(position)){if(e.space==='local')out.space='local';out.position=position;}if(!zero(rotation))out.rotation=rotation;if(!one(scale))out.scale=scale;}
   if(typeof e.hide==='boolean')out.hide=e.hide;
   const desk=cleanDesk(e.desk),show=cleanShow(e.show);if(desk)out.desk=desk;if(show)out.show=show;
   return isNoop(out)?null:out;
@@ -158,12 +167,13 @@ export function describeShow(e){
   return `on screen ${m(s.from)}–${m(s.to)} s${e.desk?' after its desk comes in':''}${s.fadeIn?`, fades in ${m(s.fadeIn)} s`:''}${s.fadeOut?`, fades out ${m(s.fadeOut)} s`:''}`;
 }
 // "moved 0.32 m (x +0.20, z −0.25), turned 15° about y, scaled ×1.2, hidden".
-export function describePropEdit(e){
+export function describePropEdit(e,{mpu=1}={}){   // mpu: metres per scene unit (the Director passes the stage's), so 'moved … m' is real metres
   if(isAddEdit(e)){const s=e.scale||[1,1,1],k=Math.abs(s[0]-s[1])<1e-4&&Math.abs(s[1]-s[2])<1e-4?s[0]:null;return `added ${e.parent==='desk'?'on the desk':onDesk(e.parent)?'on '+DESK_SURFACES[e.parent]:'to the room'}${k!==null&&Math.abs(k-1)>1e-4?`, scaled ×${Number(k.toFixed(3))}`:k===null?`, scaled ×${s.map(n=>Number(n.toFixed(3))).join(' / ')} (x / y / z)`:''}${e.show?', '+describeShow(e):''}`;}
   const parts=[],axes=v=>v.map((n,i)=>Math.abs(n)<5e-4?'':`${'xyz'[i]} ${n>0?'+':'−'}${m(Math.abs(n))}`).filter(Boolean).join(', ');
-  if(e.position)parts.push(`moved ${m(len(e.position))} m${e.space==='local'?' on the desk':''} (${axes(e.position)})`);
+  if(e.position)parts.push(`moved ${m(len(e.position)*mpu)} m${e.space==='local'?' on the desk':''} (${axes(e.position.map(n=>n*mpu))})`);
   if(e.rotation){const r=e.rotation.map((n,i)=>Math.abs(n)<.05?'':`${deg(n)}° about ${'xyz'[i]}`).filter(Boolean);parts.push('turned '+r.join(', '));}
   if(e.scale){const [x,y,z]=e.scale;parts.push(Math.abs(x-y)<1e-4&&Math.abs(y-z)<1e-4?`scaled ×${Number(x.toFixed(3))}`:`scaled ×${e.scale.map(n=>Number(n.toFixed(3))).join(' / ')} (x / y / z)`);}
+  if(e.follow&&FOLLOW_LABELS[e.follow])parts.push('travels with '+FOLLOW_LABELS[e.follow].replace(/ \(.*\)$/,'').toLowerCase());
   if(e.hide===true)parts.push('hidden');if(e.hide===false)parts.push('shown (the film hides it)');
   if(e.show)parts.push(describeShow(e));
   return parts.join(', ')||'no change';

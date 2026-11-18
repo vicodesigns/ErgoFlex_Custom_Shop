@@ -37,6 +37,12 @@
 //   show:{from, to, fadeIn, fadeOut, ease?} (seconds; chapter seconds, or with desk: seconds after the sub-shot's
 //   renderRange start): the matched objects (or the added prop) are drawn only from…to, their opacity ramped over
 //   fadeIn / fadeOut inside the window (materials are copied only while a fade runs).
+//   follow:'room'|'base-shelf'|'lift'|'desk'|'shelf'|'lower-shelf' with place:{position, rotation (deg), scale} (a
+//   Director edit, 17 Nov 2026, "Travels with"): the matched object is moved under that frame and given place as its
+//   own transform there (the frame's units: a desk mount's are millimetres), instead of the position / rotation / scale
+//   offsets: base-shelf stays with the desk's base, lift rises with the desk and never tilts (the base shelf raised by
+//   the desk's height above 28 in), desk rides lift and tilt, shelf / lower-shelf ride the desktop shelf unit (wherever
+//   the desk's rig puts it), room stays in the room. restore() puts it back under its own parent.
 //   director:true marks the Director's own prop edits (experience/prop-edits.mjs): offsets from the film's
 //   placement, applied after every hand-made edit; build-round8-director.py replaces them on import.
 //   lightType:'<regex on light type>' (PointLight|SpotLight|HemisphereLight|
@@ -211,6 +217,28 @@ const inScene = (o, scene) => { for (let p = o; p; p = p.parent) if (p === scene
 // (a scene desk's dressing, else the product desk's accessory mount: it rides the surface through lift and tilt);
 // 'room' = the room's asset root, else the stage.
 export const DESK_SURFACES = { desk: 'desktop', shelf: 'shelf', 'lower-shelf': 'lower-shelf', 'base-shelf': 'base-shelf' };
+// "Travels with" (follow): the frame an object follows, and its world matrix now (the Director computes `place` from it).
+export const FOLLOW = ['room', 'base-shelf', 'lift', 'desk', 'shelf', 'lower-shelf'];
+const HEIGHT_REST = 28;   // inches: the desk's lowest height (studio.js HEIGHT_MIN), where the lift frame sits on the base shelf
+export function deskInches() {
+  const r = api.sceneDesks?.active;
+  const h = r && !r.product && Number.isFinite(r.state?.height) ? r.state.height : api.heightInches;
+  return Number.isFinite(h) ? h : HEIGHT_REST;
+}
+const liftFrames = new WeakMap();
+function liftFrame(base) {
+  if (liftFrames.has(base)) { const f = liftFrames.get(base); if (f.parent === base) return f; }
+  const f = new THREE.Group(); f.name = 'Desk lift frame (film)'; f.userData.filmFx = true; f.userData.filmFxLift = true;
+  // rises with the desk every frame it is drawn: the base shelf's own frame is in millimetres, its y is up
+  f.updateMatrix = function () { this.position.set(0, (deskInches() - HEIGHT_REST) * 25.4, 0); THREE.Object3D.prototype.updateMatrix.call(this); };
+  base.add(f); liftFrames.set(base, f); return f;
+}
+export function followFrame(kind) {
+  if (!FOLLOW.includes(kind)) return null;
+  if (kind === 'lift') { const b = addParent('base-shelf'); return b ? liftFrame(b) : null; }
+  return addParent(kind);
+}
+export function followMatrix(kind) { const f = followFrame(kind); if (!f) return null; f.updateMatrix?.(); f.updateWorldMatrix(true, false); return f.matrixWorld.clone(); }
 export function addParent(kind) {
   const scene = sceneRoot(), role = Object.hasOwn(DESK_SURFACES, kind) ? DESK_SURFACES[kind] : null;
   if (role) {
@@ -283,9 +311,15 @@ export function installEdits(shot) {
         o.userData.__filmFxRawVisible = () => raw;
         undo.push(() => { delete o.visible; if (own?.get || own?.set) Object.defineProperty(o, 'visible', own); else o.visible = raw; if (prior) o.userData.__filmFxRawVisible = prior; else delete o.userData.__filmFxRawVisible; });
       }
-      if (edit.position && edit.space === 'local') { const p = o.position.clone(), s = o.parent ? (o.parent.updateWorldMatrix(true, false), o.parent.getWorldScale(new THREE.Vector3())) : new THREE.Vector3(1, 1, 1); o.position.add(new THREE.Vector3(...edit.position).divide(s)); undo.push(() => o.position.copy(p)); }
-      else if (edit.position) { const p = o.position.clone(), w = o.getWorldPosition(new THREE.Vector3()), to = w.clone().add(new THREE.Vector3(...edit.position)); if (o.parent) { o.parent.worldToLocal(w); o.parent.worldToLocal(to); } o.position.add(to.sub(w)); undo.push(() => o.position.copy(p)); }
-      if (edit.rotation) { const r = o.rotation.clone(); o.rotation.x += THREE.MathUtils.degToRad(edit.rotation[0] || 0); o.rotation.y += THREE.MathUtils.degToRad(edit.rotation[1] || 0); o.rotation.z += THREE.MathUtils.degToRad(edit.rotation[2] || 0); undo.push(() => o.rotation.copy(r)); }
+      const followed = edit.follow && edit.place && followFrame(edit.follow);
+      if (followed) {
+        const was = { parent: o.parent, p: o.position.clone(), q: o.quaternion.clone(), s: o.scale.clone() }, pl = edit.place, d = THREE.MathUtils.degToRad;
+        followed.add(o); o.position.fromArray(pl.position); o.rotation.set(d(pl.rotation[0]), d(pl.rotation[1]), d(pl.rotation[2])); o.scale.fromArray(pl.scale); o.updateMatrixWorld(true);
+        undo.push(() => { if (was.parent) was.parent.add(o); else o.removeFromParent(); o.position.copy(was.p); o.quaternion.copy(was.q); o.scale.copy(was.s); });
+      }
+      if (!followed && edit.position && edit.space === 'local') { const p = o.position.clone(), s = o.parent ? (o.parent.updateWorldMatrix(true, false), o.parent.getWorldScale(new THREE.Vector3())) : new THREE.Vector3(1, 1, 1); o.position.add(new THREE.Vector3(...edit.position).divide(s)); undo.push(() => o.position.copy(p)); }
+      else if (!followed && edit.position) { const p = o.position.clone(), w = o.getWorldPosition(new THREE.Vector3()), to = w.clone().add(new THREE.Vector3(...edit.position)); if (o.parent) { o.parent.worldToLocal(w); o.parent.worldToLocal(to); } o.position.add(to.sub(w)); undo.push(() => o.position.copy(p)); }
+      if (edit.rotation && !followed) { const r = o.rotation.clone(); o.rotation.x += THREE.MathUtils.degToRad(edit.rotation[0] || 0); o.rotation.y += THREE.MathUtils.degToRad(edit.rotation[1] || 0); o.rotation.z += THREE.MathUtils.degToRad(edit.rotation[2] || 0); undo.push(() => o.rotation.copy(r)); }
       if (o.isLight && edit.intensity !== undefined) {
         // Multiplier on whatever the room/app writes (mode switches, time of day).
         const cell = { value: sample(edit.intensity, 0) }; wrap(o, 'intensity', () => cell.value);
@@ -293,7 +327,8 @@ export function installEdits(shot) {
       }
       if (o.isLight && edit.color) { const c = o.color.clone(); o.color.set(edit.color); undo.push(() => o.color.copy(c)); }
       if (o.isLight && edit.recolor) for (const k of ['color', 'groundColor']) if (o[k]?.isColor) recolorColor(o[k], recolorFn(edit.recolor), undo);
-      if (Number.isFinite(edit.scale)) { const s = o.scale.clone(); o.scale.multiplyScalar(edit.scale); undo.push(() => o.scale.copy(s)); }
+      if (followed) {}
+      else if (Number.isFinite(edit.scale)) { const s = o.scale.clone(); o.scale.multiplyScalar(edit.scale); undo.push(() => o.scale.copy(s)); }
       else if (Array.isArray(edit.scale) && edit.scale.length === 3 && edit.scale.every(Number.isFinite)) { const s = o.scale.clone(); o.scale.multiply(new THREE.Vector3(...edit.scale)); undo.push(() => o.scale.copy(s)); }
       if (edit.dropFaces) {
         // Cut triangles out of a supplied model: those whose three corners lie in the box {min,max}, in the mesh's
