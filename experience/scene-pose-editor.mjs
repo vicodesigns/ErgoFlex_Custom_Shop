@@ -119,7 +119,9 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
     // One person in several placements (cast entries of one row: Andre with the robot, at the lift, at the shelf): off
     // screen here, the placement of theirs that is on screen takes over, keys and all (17 Nov 2026: the dots went away
     // at Andre's second key, as pose mode stayed on a placement that had left).
-    if(editing()&&!o.visible){const next=siblings(key).find(k=>k!==key&&entry(k)&&people.byKey?.(k)?.visible);if(next){rebind(next);return;}}
+    // (a key clicked on the timeline pins its placement until the playhead has got there: the seek lands a frame or two later)
+    const pinned=!!pin&&performance.now()<pin.until&&Math.abs(time()-pin.t)>.002;if(pin&&!pinned)pin=null;
+    if(editing()&&!o.visible&&!pinned){const next=siblings(key).find(k=>k!==key&&entry(k)&&people.byKey?.(k)?.visible);if(next){rebind(next);return;}}
     // Not in the scene at this moment (the playhead is outside this placement's bar): say why there are no dots.
     if(editing()&&!o.visible){if(!hinted){hinted=true;status(`${personName(entry(key))} is not in the scene at this moment, so there are no dots: move the playhead into one of their bars on the People lane.`);}}else hinted=false;
     // A desk can change the displayed model while posing: rebind the tools without writing a correction.
@@ -354,7 +356,11 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
     key=next;follow(next);status(`Pose mode follows ${personName(entry(next))} to the placement on screen now. Each placement and posture keeps its own keys.`);rerender();
   }
   // a key picked on the person's timeline row: it is the selected key (Delete, ease, copy) at the playhead
-  function focusKey(t){if(!key)return;const e=entry(key);selT=e&&keyAt(e,t)!==undefined?keyAt(e,t):null;rerender();}
+  let pin=null;
+  function focusKey(t){
+    if(!key)return;const e=entry(key);selT=e&&keyAt(e,t)!==undefined?keyAt(e,t):null;pin={t,until:performance.now()+1500};rerender();
+    if(selT!==null)status(`${personName(entry(key))}: pose key at ${fmt(selT)} s selected. Click a dot to change the pose there · drag the diamond to retime · Delete removes it.`);
+  }
   function exit(){if(!key)return;key=null;joint=null;drag=null;selT=null;dispose();rerender();}
   function setMode(m){if(!key)return false;if(m==='translate'&&!moveOf(joint).kind){status(moveOf(joint).why||'This joint turns only (E).');return true;}if(m==='translate'||m==='rotate'){gmode=m;rerender();}return true;}
   // ---- the People tab while posing

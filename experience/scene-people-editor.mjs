@@ -566,7 +566,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   const keyTitle=k=>`${k.entry}${k.posture?' · '+posture({id:k.posture}):''}: ${k.kind==='joint'?jointName(k.bone)+' key':KIND_TITLE[k.kind]||k.label} at ${k.t.toFixed(2)} s${k.ease?' · '+k.ease:''}${k.linked?' (the placement edge it starts with)':''}`;
   const shapeOf=k=>k.ease?EASE_SHAPES[k.ease]||'circle':'diamond';
   const pct=t=>`${Math.max(0,Math.min(100,t/(seconds()||1)*100))}%`;
-  const keyBtn=k=>`<button type="button" class="sk sk-${shapeOf(k)} sk-${k.prop} ${picked.has(k.id)?'selected':''}" data-sk="${escape(k.id)}" style="left:${pct(k.t)}" title="${escape(keyTitle(k))}" aria-label="${escape(keyTitle(k))}"></button>`;
+  const keyBtn=k=>`<button type="button" class="sk sk-${shapeOf(k)} sk-${k.prop} ${picked.has(k.id)?'selected':''}" data-sk="${escape(k.id)}" style="left:clamp(6px,${pct(k.t)},calc(100% - 6px))" title="${escape(keyTitle(k))}" aria-label="${escape(keyTitle(k))}"></button>`;
   const playheadLine=()=>`<div class="camera-track-playhead" data-shared-playhead style="left:${pct(time())}"></div>`;
   const sheetRow=(cls,label,lane,attrs='')=>`<div class="desk-lane-row ps-row ${cls}" data-lane-color="people" ${attrs}><span class="desk-lane-label">${label}</span><div class="desk-lane ps-lane">${lane}${playheadLine()}</div></div>`;
   const twirl=(id,open,what)=>`<button type="button" class="ps-twirl" data-ps-twirl="${escape(id)}" aria-expanded="${open}" title="${open?'Fold':'Show'} ${escape(what)}">${open?'▾':'▸'}</button>`;
@@ -752,7 +752,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       for(const e of document.querySelectorAll('.ps-row [data-sk]'))e.classList.toggle('selected',picked.has(e.dataset.sk));
     }
     const T=seconds()||1,t=Math.max(0,Math.min(T,snapT(p.anchor.t+(ev.clientX-p.x)/p.width*T,ev,p.width)));p.dt=Math.round((t-p.anchor.t)*1000)/1000;
-    for(const e of p.els){const k=sheetMap.get(e.dataset.sk);if(k)e.style.left=pct(k.t+p.dt);}
+    for(const e of p.els){const k=sheetMap.get(e.dataset.sk);if(k)e.style.left=`clamp(6px,${pct(k.t+p.dt)},calc(100% - 6px))`;}
     const r=shiftKeys(cur(),p.keys,p.dt,seconds(),{walkSeconds});p.error=r.error||null;for(const e of p.els)e.classList.toggle('invalid',!!r.error);
     status(r.error||`${p.keys.length>1?plural(p.keys.length,'key'):keyTitle(p.anchor)} ${p.dt>=0?'+':''}${p.dt.toFixed(2)} s${ev.altKey?' (free)':''}`,!!r.error);
   }
