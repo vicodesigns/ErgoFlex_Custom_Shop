@@ -213,11 +213,11 @@ try{
   const strip=l=>l.map(({name,...e})=>e);
   check(JSON.stringify(strip((built.sceneDeskEdits||[]).filter(e=>MINE.has(e.desk))))===JSON.stringify(strip(mine)),'review-cut.json oilers sceneDeskEdits = the export\'s deskEdits');
   const dc=JSON.parse(fs.readFileSync(path.join(H,'director-camera-oilers.json'),'utf8'));
-  check(Array.isArray(dc.desks)&&dc.desks.length===2,'director-camera-oilers.json keeps them as "desks"');
+  check(Array.isArray(dc.desks)&&dc.desks.filter(e=>MINE.has(e.desk)).length===2,'director-camera-oilers.json keeps them as "desks"');   // (with oilers' three folded desks)
   // a later export without the field keeps the earlier import's (like props)
   const bare=JSON.parse(fs.readFileSync(ex,'utf8'));delete bare.shots[0].deskEdits;const ex2=path.join(tmp,'Film-chapter-oilers-e2e2.json');fs.writeFileSync(ex2,JSON.stringify(bare));
   execFileSync('python3',[py,H,'--import',ex2],{stdio:'ignore'});
-  check(JSON.parse(fs.readFileSync(path.join(H,'director-camera-oilers.json'),'utf8')).desks?.length===2,'an export without deskEdits keeps the earlier import\'s');
+  check((JSON.parse(fs.readFileSync(path.join(H,'director-camera-oilers.json'),'utf8')).desks||[]).filter(e=>MINE.has(e.desk)).length===2,'an export without deskEdits keeps the earlier import\'s');
   // ...and an empty list clears them
   const empty=JSON.parse(fs.readFileSync(ex,'utf8'));empty.shots[0].deskEdits=[];const ex3=path.join(tmp,'Film-chapter-oilers-e2e3.json');fs.writeFileSync(ex3,JSON.stringify(empty));
   execFileSync('python3',[py,H,'--import',ex3],{stdio:'ignore'});execFileSync('python3',[py,H],{stdio:'ignore'});
