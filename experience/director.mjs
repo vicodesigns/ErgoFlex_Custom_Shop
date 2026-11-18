@@ -1384,7 +1384,10 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     try{if(marker){selectKey(marker.dataset.key);return;}const rail=event.target.closest('.camera-track');if(rail){const box=rail.getBoundingClientRect();seekCamera((event.clientX-box.left)/box.width);}}catch(error){status(error.message,true);}
   });
   timeline.addEventListener('pointerdown',event=>{
-    const marker=event.target.closest('[data-key]');if(!marker||event.button!==0)return;
+    let marker=event.target.closest('[data-key]');if(!marker||event.button!==0)return;
+    // close keys overlap (wellness 15.3 / 15.6 %): the press goes to the key whose centre is nearest, not to the one on top
+    {const rail=marker.closest('.camera-track'),centre=m=>{const r=m.getBoundingClientRect();return (r.left+r.right)/2;};
+      if(rail)for(const m of rail.querySelectorAll('[data-key]')){const r=m.getBoundingClientRect();if(event.clientX>=r.left&&event.clientX<=r.right&&Math.abs(centre(m)-event.clientX)<Math.abs(centre(marker)-event.clientX))marker=m;}}
     try{requireReady();const rail=marker.closest('.camera-track');keyDrag={id:marker.dataset.key,rail,marker,start:event.clientX,original:keys().find(k=>k.id===marker.dataset.key).time,time:0,moved:false};rail.setPointerCapture(event.pointerId);event.preventDefault();}catch(error){status(error.message,true);}
   });
   timeline.addEventListener('pointermove',event=>{
