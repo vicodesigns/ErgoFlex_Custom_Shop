@@ -87,6 +87,8 @@ try{
 
   // dragging a block times it like the featured desk's
   const before=eb.clips.find(c=>c.lane==='lift').start;
+  // (the lanes scroll: the block is brought into view first, or its box centre can lie under the timeline's foot)
+  await page.$eval('#director-timeline [data-desk-lane=lift] [data-desk-clip]',e=>e.scrollIntoView({block:'center',inline:'nearest'}));await wait(300);
   const box=await (await page.$('#director-timeline [data-desk-lane=lift] [data-desk-clip]')).boundingBox();
   await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();await page.mouse.move(box.x+box.width/2+60,box.y+box.height/2,{steps:6});await page.mouse.up();await wait(900);
   d=await draftShot();const moved=d.deskEdits.find(e=>e.desk===B).clips.find(c=>c.lane==='lift');

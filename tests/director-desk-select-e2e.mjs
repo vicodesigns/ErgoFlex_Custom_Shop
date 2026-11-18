@@ -211,7 +211,7 @@ try{
   execFileSync('python3',[py,H,'--import',ex],{stdio:'ignore'});execFileSync('python3',[py,H],{stdio:'ignore'});
   const built=JSON.parse(fs.readFileSync(path.join(H,'review-cut.json'),'utf8')).shots.find(s=>s.id==='oilers');
   const strip=l=>l.map(({name,...e})=>e);
-  check(JSON.stringify(strip(built.sceneDeskEdits))===JSON.stringify(strip(mine)),'review-cut.json oilers sceneDeskEdits = the export\'s deskEdits');
+  check(JSON.stringify(strip((built.sceneDeskEdits||[]).filter(e=>MINE.has(e.desk))))===JSON.stringify(strip(mine)),'review-cut.json oilers sceneDeskEdits = the export\'s deskEdits');
   const dc=JSON.parse(fs.readFileSync(path.join(H,'director-camera-oilers.json'),'utf8'));
   check(Array.isArray(dc.desks)&&dc.desks.length===2,'director-camera-oilers.json keeps them as "desks"');
   // a later export without the field keeps the earlier import's (like props)

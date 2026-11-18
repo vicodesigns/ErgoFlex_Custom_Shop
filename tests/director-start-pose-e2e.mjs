@@ -65,7 +65,9 @@ try{
   await seek(page,L1.start+.05);const into=await stage();
   check(near(pre.height,52.5)&&Math.abs(into.height-52.5)<=Math.abs(L1.target-52.5)*.1+.05,`first lift (${L1.start}s → ${L1.target}″) leaves 52.5″ smoothly: ${pre.height.toFixed(2)} → ${into.height.toFixed(2)}″`);
   await seek(page,L1.start+L1.duration+.05);const done=await stage();
-  check(near(done.height,L1.target),`first lift reaches its target ${L1.target}″ (${done.height.toFixed(2)}″)`);
+  // (tilted to 65° the 60″ top keeps 42.5″ of clearance: a lift aimed lower stops there until the top comes down)
+  const want=near(s1.tilt,65)?Math.max(L1.target,42.5):L1.target;
+  check(near(done.height,want),`first lift reaches ${want===L1.target?'its target':'the tilted top\'s clearance'} ${want}″ (aimed at ${L1.target}″; ${done.height.toFixed(2)}″)`);
   const T1=d.motion.clips.filter(c=>c.lane==='tilt').sort((a,b)=>a.start-b.start)[0];
   if(T1){await seek(page,T1.start+T1.duration+.05);const t=await stage();check(near(t.tilt,T1.target),`first tilt reaches its target ${T1.target}° (${t.tilt.toFixed(2)}°)`);}
 
