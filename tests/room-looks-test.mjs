@@ -46,10 +46,11 @@ for (const [room, list] of Object.entries(ROOM_LOOKS)) assert(list.every(l => /^
 
 // ---- 2. frozen copies
 let git = null;
-try { git = f => execFileSync('git', ['show', '9644d030:' + f], { cwd: root, encoding: 'utf8', maxBuffer: 1 << 26 }); git('artist-room.mjs'); } catch { git = null; }
+// (line ends dropped on both sides: a Windows checkout with core.autocrlf has CRLF files, git show gives the LF blob)
+try { git = f => execFileSync('git', ['show', '9644d030:' + f], { cwd: root, encoding: 'utf8', maxBuffer: 1 << 26 }).replace(/\r/g, ''); git('artist-room.mjs'); } catch { git = null; }
 if (git) {
   // (the frozen copies start with a comment header; the 9644d030 files start with their imports)
-  const body = f => { const lines = fs.readFileSync(path.join(root, f), 'utf8').split('\n'); return lines.slice(lines.findIndex(l => !l.startsWith('//'))); };
+  const body = f => { const lines = fs.readFileSync(path.join(root, f), 'utf8').replace(/\r/g, '').split('\n'); return lines.slice(lines.findIndex(l => !l.startsWith('//'))); };
   const roomOld = git('artist-room.mjs').split('\n'), room = body('artist-room-classic.mjs');
   assert.equal(room.length, roomOld.length, 'artist-room-classic.mjs: the 9644d030 file and its header');
   const diff = room.map((l, i) => l === roomOld[i] ? null : i).filter(i => i !== null);
@@ -68,7 +69,7 @@ if (git) {
   for (const f of ['library-humboldt-life', 'humboldt-commons-detail']) assert.deepEqual(body(f + '-classic.mjs'), git(f + '.mjs').split('\n'), f + '-classic.mjs is the 9644d030 file');
   // the window scenery's classic Humboldt scene and ferns are the 9644d030 functions, renamed
   const fn = (src, name) => { const a = src.indexOf('\nfunction ' + name + '('); assert(a >= 0, name); return src.slice(a + 1, src.indexOf('\n}\n', a) + 2); };
-  const wssOld = git('window-scenery-scenes.mjs'), wss = fs.readFileSync(path.join(root, 'window-scenery-scenes.mjs'), 'utf8');
+  const wssOld = git('window-scenery-scenes.mjs'), wss = fs.readFileSync(path.join(root, 'window-scenery-scenes.mjs'), 'utf8').replace(/\r/g, '');
   assert.equal(fn(wss, 'fernClassic'), fn(wssOld, 'fern').replace('function fern(', 'function fernClassic('), 'fernClassic is 9644d030\'s fern');
   assert.equal(fn(wss, 'humboldtClassic'), fn(wssOld, 'humboldt').replace('function humboldt(', 'function humboldtClassic(').replace(/(?<![A-Za-z_.])fern\(/g, 'fernClassic('), 'humboldtClassic is 9644d030\'s humboldt (with its ferns)');
   assert.match(wss, /function humboldt\(k, ctx\) \{\n    if \(ctx\.classic\) return humboldtClassic\(k, ctx\);/);
