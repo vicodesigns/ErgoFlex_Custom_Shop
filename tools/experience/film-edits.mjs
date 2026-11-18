@@ -181,7 +181,8 @@ function installShow(edit, objects, shot, undo, live) {
     const keep = edit.hide !== true && !o.userData.__filmFxRawVisible;
     Object.defineProperty(o, 'visible', { configurable: true, enumerable: true, get: () => cell.f > 0 && (get() || (keep && o.userData.stowHidden === true)), set });
     undo.push(() => { delete o.visible; if (own && !('value' in own)) Object.defineProperty(o, 'visible', own); else o.visible = raw; });
-    o.traverse(mesh => { if (mesh.material && !mesh.userData.filmFx) fades.push({ mesh, orig: null, copy: null }); });
+    // (the film's own meshes are left out, except a screen picture on the prop: film-fx.mjs installScreens, filmScreen)
+    o.traverse(mesh => { if (mesh.material && (!mesh.userData.filmFx || mesh.userData.filmScreen)) fades.push({ mesh, orig: null, copy: null }); });
   }
   const endFade = x => { if (!x.copy) return; if (x.mesh.material === x.copy) x.mesh.material = x.orig; for (const m of [].concat(x.copy)) m.dispose(); x.orig = x.copy = null; };
   const tick = s => {
