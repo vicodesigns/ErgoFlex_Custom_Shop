@@ -179,7 +179,9 @@ function installShow(edit, objects, shot, undo, live) {
     // A prop given its own time on screen stays up for that window even where the desk's auto-stow would put it away
     // (the artist desk's easel under 50 deg of tilt): the window is the Director's word. A film hide or hide:true still wins.
     const keep = edit.hide !== true && !o.userData.__filmFxRawVisible;
-    Object.defineProperty(o, 'visible', { configurable: true, enumerable: true, get: () => cell.f > 0 && (get() || (keep && o.userData.stowHidden === true)), set });
+    // (a hide written while the window holds it hidden is the getter's own false echoed back, e.g. three's GTAOPass caching
+    // and restoring every object's visible around its normal pass: taken as the prop's own state, it never came back)
+    Object.defineProperty(o, 'visible', { configurable: true, enumerable: true, get: () => cell.f > 0 && (get() || (keep && o.userData.stowHidden === true)), set: v => { if (cell.f <= 0 && v === false) return; set(v); } });
     undo.push(() => { delete o.visible; if (own && !('value' in own)) Object.defineProperty(o, 'visible', own); else o.visible = raw; });
     // (the film's own meshes are left out, except a screen picture on the prop: film-fx.mjs installScreens, filmScreen)
     o.traverse(mesh => { if (mesh.material && (!mesh.userData.filmFx || mesh.userData.filmScreen)) fades.push({ mesh, orig: null, copy: null }); });
