@@ -41,7 +41,7 @@ function importEdit(start,dx){
 }
 const decode=enc=>JSON.parse(Buffer.from(enc,'base64url').toString('utf8'));
 const port=Number(process.env.PORT||3200),state=path.join(tmp,'studio-state.json');
-if(fs.existsSync(path.join(root,'studio-state.json'))){const st=JSON.parse(fs.readFileSync(path.join(root,'studio-state.json'),'utf8'));delete st.keys?.['ergoflex.director.filmDrafts.v1'];fs.writeFileSync(state,JSON.stringify(st));}   // (no film drafts from other sessions: tests start clean)
+if(fs.existsSync(path.join(root,'studio-state.json'))){const st=JSON.parse(fs.readFileSync(path.join(root,'studio-state.json'),'utf8'));delete st.keys?.['ergoflex.director.filmDrafts.v1'];delete st.keys?.['ergoflex.director.ui.v1'];fs.writeFileSync(state,JSON.stringify(st));}   // (no film drafts from other sessions: tests start clean)
 const server=spawn(process.execPath,[path.join(root,'tools/studio-server.mjs'),'--port',String(port),'--host','127.0.0.1','--state',state,'--root',site],{cwd:site,stdio:['ignore','pipe','pipe']});
 await new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(Error('studio server did not start')),20000);server.stdout.on('data',d=>{if(/studio server/.test(d)){clearTimeout(t);resolve();}});server.once('exit',c=>reject(Error('studio server exited '+c)));});
 process.env.BASE=`http://127.0.0.1:${port}`;

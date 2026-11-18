@@ -26,7 +26,7 @@ try{
   await page.evaluateOnNewDocument(()=>{window.__exports=[];const make=URL.createObjectURL;URL.createObjectURL=function(b){if(b instanceof Blob&&b.type==='application/json')b.text().then(t=>window.__exports.push(JSON.parse(t)));return make.call(this,b);};});
   await openChapter(page,base,chapter);
   const status=()=>statusOf(page);
-  const readDraft=()=>page.evaluate(()=>{try{const v=(()=>{const b=document.body.dataset;if(b.draftStore!=='film')return JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=f[b.cutId]?.cut;return {active:'film',drafts:d?{film:d}:{},cuts:[]};})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}});
+  const readDraft=()=>page.evaluate(()=>window.__directorShot?.()||null);   // the chapter as the Director holds it (a draft is dropped when the cut is back to its export)
   // The draft is written a moment after an edit.
   const draftShot=async()=>{await wait(1100);for(let i=0;i<20;i++){const v=await readDraft();if(v)return v;await wait(250);}return null;};
   const stageDesk=id=>page.evaluate(id=>{const r=document.getElementById('stage').contentWindow.ErgoFlex.sceneDesks.records.get(id);return r?{h:r.state.height,t:r.state.tilt}:null;},id);

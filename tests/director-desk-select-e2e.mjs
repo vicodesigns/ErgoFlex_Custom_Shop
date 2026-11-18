@@ -28,7 +28,7 @@ try{
   await page.evaluateOnNewDocument(()=>{
     window.__t=()=>{const w=document.getElementById('stage').contentWindow,t=w.ErgoPresentation.three();return {w,t,T:w.__directorThree?.THREE,desks:w.ErgoFlex.sceneDesks};};
     window.__rec=id=>{const {desks}=__t(),r=desks.records.get(id);return r?{size:r.state.size,x:r.group.position.x,z:r.group.position.z,yaw:r.group.rotation.y,height:r.state.height,tilt:r.state.tilt,poseAt:r.poseAt}:null;};
-    window.__draft=()=>{try{const v=(()=>{const b=document.body.dataset;if(b.draftStore!=='film')return JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=f[b.cutId]?.cut;return {active:'film',drafts:d?{film:d}:{},cuts:[]};})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0].deskEdits||null;}catch{return null;}};
+    window.__draft=()=>{try{return window.__directorShot?.().deskEdits||null;}catch{return null;}};   // the chapter as the Director holds it
     // The screen point of a desk's bare body (not a prop riding on it): scan the desk's box for a ray that hits it.
     window.__deskPoint=id=>{const {w,t,T,desks}=__t(),r=desks.records.get(id),box=new T.Box3().setFromObject(r.group),f=document.getElementById('stage').getBoundingClientRect(),c=t.renderer.domElement.getBoundingClientRect(),ray=new T.Raycaster();
       const ours=o=>{for(let p=o;p;p=p.parent)if(p.userData?.directorTools||p.userData?.filmFx)return true;return false;};
@@ -57,8 +57,11 @@ try{
   const rec=id=>page.evaluate(i=>__rec(i),id);
   // (oilers folds its Props-tab desk moves into desk edits when it opens (director.mjs foldDeskProps): those are set
   // aside once, below, so the counts here are this test's own edits)
-  const draftAll=()=>page.evaluate(()=>__draft());let folded=null;
-  const draft=async()=>{const d=await draftAll();return d&&folded?d.filter(e=>!folded.has(e.desk)):d;};
+  // (the desks this test edits; oilers also folds its Props-tab desk moves into desk edits of three other desks when it
+  // opens, director.mjs foldDeskProps, a moment after the stage is ready: those are not this test's)
+  const MINE=new Set([ID,'station-window-research']);
+  const draftAll=()=>page.evaluate(()=>__draft());
+  const draft=async()=>{const d=await draftAll();return d?d.filter(e=>MINE.has(e.desk)):d;};
   const header=()=>page.$eval('#director-panel [data-selected-header]',e=>e.textContent.replace(/\s+/g,' ').trim()).catch(()=>'');
   const setField=async(name,value)=>{await page.evaluate((n,v)=>{const el=document.querySelector(`#director-panel [name="${n}"]`);el.value=String(v);el.dispatchEvent(new Event('change',{bubbles:true}));},name,value);await wait(900);};
   const tab=()=>page.$eval('#director-panel [data-inspector-tab][aria-pressed=true]',b=>b.dataset.inspectorTab);
@@ -73,7 +76,6 @@ try{
   check(ids.length>=5&&list.length===ids.length&&list.every((r,i)=>r.id===ids[i]),`the list has every record of the room (${list.length}): ${list.map(r=>r.id).join(', ')}`);
   check(list.filter(r=>r.featured).length===1&&list.find(r=>r.featured).id==='main'&&list.find(r=>r.featured).text.includes(FEATURED_NAME)&&/featured/.test(list.find(r=>r.featured).text),'the featured desk is marked and named by state.name: '+list.find(r=>r.featured).text);
   check(list.some(r=>r.id===ID&&/Surf forecast standing desk/.test(r.text)&&/48″/.test(r.text)),'a room desk is named by its state.name with its size: '+list.find(r=>r.id===ID)?.text);
-  folded=new Set(((await draftAll())||[]).map(e=>e.desk).filter(id=>id!==ID));if(folded.size)console.log('  folded on open (set aside): '+[...folded].join(', '));
   check(await draft()===null||(await draft()).length===0,'no desk edits yet (besides those folded in on open)');
   const orig=await rec(ID);
 
@@ -194,13 +196,13 @@ try{
   const re=await live(async()=>{const r=await rec(ID);return r?.size==='60x30'?r:null;},'the stage re-applies after reload').catch(async e=>{console.log('reload state',JSON.stringify(await rec(ID)),await status());throw e;});
   check(re.size==='60x30'&&near(re.x,mine.find(e=>e.desk===ID).pose.x,2)&&near(re.height,38,.1)&&near(re.tilt,25,.1),`after reload the desk is 60″ at its place and start (${re.height}″ / ${re.tilt}°)`);
   await click('#director-panel [data-inspector-tab=desks]');
-  check((await rows()).filter(r=>/edited/.test(r.text)).length===2,'the list marks the two edited desks');
+  check((await rows()).filter(r=>MINE.has(r.id)&&/edited/.test(r.text)).length===2,'the list marks the two edited desks');
 
   // ---- Export cut carries deskEdits; the importer writes sceneDeskEdits into the film
   await page.evaluate(()=>document.querySelector('#director-appbar [data-action=save-export]').click());
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download');
   const exported=JSON.parse(fs.readFileSync(path.join(downloads,file),'utf8'));
-  check(JSON.stringify(exported.shots[0].deskEdits)===JSON.stringify(mine),'Export cut carries shot.deskEdits ('+mine.length+' desks)');
+  check(JSON.stringify((exported.shots[0].deskEdits||[]).filter(e=>MINE.has(e.desk)))===JSON.stringify(mine),'Export cut carries shot.deskEdits ('+mine.length+' desks)');
   const H=path.join(tmp,'hq');fs.mkdirSync(path.join(H,'shots'),{recursive:true});
   fs.copyFileSync(path.join(root,HQ,'review-cut.json'),path.join(H,'review-cut.json'));
   for(const f of fs.readdirSync(path.join(root,HQ,'shots')))if(/^\d\d\.json$/.test(f)&&JSON.parse(fs.readFileSync(path.join(root,HQ,'shots',f),'utf8')).id==='oilers')fs.copyFileSync(path.join(root,HQ,'shots',f),path.join(H,'shots',f));

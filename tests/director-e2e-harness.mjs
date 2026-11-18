@@ -34,7 +34,7 @@ export async function openDirectorBrowser({width=VIEW?Number(VIEW[1]):1600,heigh
   if(!base){
     const port=await freePort(),state=path.join(fs.mkdtempSync(path.join(os.tmpdir(),'director-e2e-')),'studio-state.json');stateFile=state;
     const plan=harnessServer({root,port,stateFile:state,shared});
-    {const from=process.env.STATE_FROM||path.join(root,'studio-state.json');if(plan.copyState&&fs.existsSync(from)){const st=JSON.parse(fs.readFileSync(from,'utf8'));delete st.keys?.['ergoflex.director.filmDrafts.v1'];fs.writeFileSync(state,JSON.stringify(st));}}   // (without anyone's film drafts: a chapter opens as the film has it)   // (STATE_FROM: a saved state to start the scratch copy from)
+    {const from=process.env.STATE_FROM||path.join(root,'studio-state.json');if(plan.copyState&&fs.existsSync(from)){const st=JSON.parse(fs.readFileSync(from,'utf8'));delete st.keys?.['ergoflex.director.filmDrafts.v1'];delete st.keys?.['ergoflex.director.ui.v1'];fs.writeFileSync(state,JSON.stringify(st));}}   // (without anyone's film drafts: a chapter opens as the film has it)   // (STATE_FROM: a saved state to start the scratch copy from)
     server=spawn(process.execPath,plan.args,{cwd:root,stdio:['ignore','pipe','pipe']});
     await new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(Error('studio server did not start')),20000);server.stdout.on('data',d=>{if(/studio server/.test(d)){clearTimeout(t);resolve();}});server.once('exit',c=>reject(Error('studio server exited '+c)));});
     base=`http://127.0.0.1:${port}`;
