@@ -19,7 +19,8 @@ const status=()=>page.$eval('#director-panel [data-status]',e=>e.textContent).ca
 const until=async(fn,what,ms=20000)=>{const end=Date.now()+ms;for(;;){const v=await fn();if(v)return v;if(Date.now()>end)throw Error('timed out: '+what);await wait(150);}};
 await page.evaluateOnNewDocument(()=>{
   window.__t=()=>{const w=document.getElementById('stage').contentWindow,t=w.ErgoPresentation.three();return {w,t,T:w.__directorThree.THREE};};
-  window.__find=name=>{let o=null;__t().t.scene.traverse(x=>{if(!o&&x.name===name)o=x;});return o;};
+  // (the drawn one: a desk accessory is in the scene twice, the other copy under the always-hidden "Accessory mount:desktop")
+  window.__find=name=>{const all=[];__t().t.scene.traverse(x=>{if(x.name===name)all.push(x);});const shown=x=>{for(let p=x;p;p=p.parent)if(!p.visible)return false;return true;};return all.find(shown)||all[0]||null;};
   window.__pose=name=>{const {T}=__t(),o=__find(name);o.updateWorldMatrix(true,false);const v={p:o.getWorldPosition(new T.Vector3()).toArray(),visible:true};for(let p=o;p;p=p.parent)if(!p.visible)v.visible=false;return v;};
   // A screen point where a ray hits this object (not something in front of it).
   window.__clickPoint=name=>{const {t,T}=__t(),o=__find(name),f=document.getElementById('stage').getBoundingClientRect(),r=t.renderer.domElement.getBoundingClientRect(),ray=new T.Raycaster();
