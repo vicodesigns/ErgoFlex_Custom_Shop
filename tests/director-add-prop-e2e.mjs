@@ -98,13 +98,17 @@ try{
   await page.click('#prop-library [name=pl-fits]');await wait(300);const fitN=Number(/^(\d+) of/.exec(await page.$eval('[data-pl-count]',e=>e.textContent))[1]);
   check(fitN>0&&fitN<total,`Fits this room: ${fitN} of ${total}`);await page.click('#prop-library [name=pl-fits]');await wait(300);
   // type to search (focus back in the search box after the clicks), arrows, Enter
-  // ("smartphone": the library grew to ~500 models and "phone" now also finds headphones, microphones… over 100 cards)
-  await page.keyboard.type('smartphone');await wait(500);
-  const cards=await page.$$eval('#prop-library .pl-card',l=>l.map(c=>c.title));
-  check(cards.some(t=>/ergoflex-phone/.test(t))&&cards.length<20&&cards.every(t=>/phone/i.test(t)),`search "smartphone": ${cards.length} models, the Smartphone among them`);
+  // "phone" (the library grew to ~500 models: over 100 cards, headphones, microphones… so several rows for the arrows),
+  // then "smartphone" to pick the Smartphone out
+  await page.keyboard.type('phone');await wait(500);
+  let cards=await page.$$eval('#prop-library .pl-card',l=>l.map(c=>c.title));
+  check(cards.some(t=>/ergoflex-phone/.test(t))&&cards.length>1,`search "phone": ${cards.length} models, the Smartphone among them`);
   await page.screenshot({path:path.join(shots,'add-prop-library.png')});
   await page.keyboard.press('ArrowDown');const down=await page.$eval('#prop-library .pl-card[aria-selected=true]',e=>Number(e.dataset.plIndex));await page.keyboard.press('ArrowUp');
   check(down>1&&await page.$eval('#prop-library .pl-card[aria-selected=true]',e=>e.dataset.plIndex)==='0','ArrowDown moves a row (to card '+down+'), ArrowUp back');
+  await page.$eval('#prop-library [name=pl-search]',e=>{e.focus();e.select();});await page.keyboard.type('smartphone');await wait(500);
+  cards=await page.$$eval('#prop-library .pl-card',l=>l.map(c=>c.title));
+  check(cards.some(t=>/ergoflex-phone/.test(t))&&cards.length<20&&cards.every(t=>/phone/i.test(t)),`search "smartphone": ${cards.length} models, the Smartphone among them`);
   const idx=cards.findIndex(t=>/ergoflex-phone/.test(t));for(let i=0;i<idx;i++)await page.keyboard.press('ArrowRight');
   check(/ergoflex-phone/.test(await page.$eval('#prop-library .pl-card[aria-selected=true]',e=>e.title)),'arrows move to the Smartphone');
   await page.keyboard.press('Enter');
