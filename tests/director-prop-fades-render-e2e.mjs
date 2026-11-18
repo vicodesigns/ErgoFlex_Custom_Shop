@@ -27,24 +27,28 @@ const until=async(fn,what,ms=30000)=>{const end=Date.now()+ms;for(;;){const v=aw
 const factor=(show,t)=>{if(!show)return 1;if(t<show.from-1e-6||t>show.to+1e-6)return 0;let f=1;if(show.fadeIn>0)f=Math.min(f,(t-show.from)/show.fadeIn);if(show.fadeOut>0)f=Math.min(f,(show.to-t)/show.fadeOut);f=Math.max(0,Math.min(1,f));return show.ease==='smooth'?f*f*(3-2*f):f;};
 
 // ---- page helpers (the Props editor's draft, its bars, the stage object)
-const edit=match=>page.evaluate(m=>{const cuts=[];try{for(const d of Object.values(JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')))if(d?.cut)cuts.push(d.cut);}catch{}try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1')||'null');if(v)cuts.push(v.drafts?.[v.active]||v.cuts.find(c=>c.id===v.active));}catch{}
-  for(const cut of cuts)for(const s of cut?.shots||[])for(const e of s.propEdits||[])if(e.match===m)return e;return null;},match);
+// (by the bar's prop key, prop-edits.mjs propKey: [match, asset, path, near, desk?]: a film item can share its match with others)
+const edit=key=>page.evaluate(key=>{const want=JSON.parse(key),same=e=>JSON.stringify([e.match||'',e.asset||'',e.path||'',e.near||null])===JSON.stringify(want.slice(0,4));const cuts=[];try{for(const d of Object.values(JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')))if(d?.cut)cuts.push(d.cut);}catch{}try{const v=JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1')||'null');if(v)cuts.push(v.drafts?.[v.active]||v.cuts.find(c=>c.id===v.active));}catch{}
+  // (the exact key, else the one edit of that match: in case the Director writes it without the film's path)
+  for(const cut of cuts)for(const s of cut?.shots||[]){const list=s.propEdits||[],hit=list.find(same)||(list.filter(e=>e.match===want[0]).length===1?list.find(e=>e.match===want[0]):null);if(hit)return hit;}return null;},key);
 const clickBar=key=>page.evaluate(k=>{const b=[...document.querySelectorAll('#director-timeline .prop-bar')].find(b=>b.dataset.propKey===k);if(!b)return false;b.scrollIntoView({block:'nearest'});b.click();return true;},key);
 const setField=(n,v)=>page.evaluate((n,v)=>{const el=document.querySelector(`#director-panel [name="${n}"]`);if(!el)return false;el.value=String(v);el.dispatchEvent(new Event('change',{bubbles:true}));return true;},n,v);
 const press=a=>page.evaluate(a=>{const b=document.querySelector(`#director-panel [data-action="${a}"]`);if(!b||b.disabled)return false;b.click();return true;},a);
-const opacity=match=>page.evaluate(N=>{const w=document.getElementById('stage').contentWindow,E=w.__filmEdits;let list=[];try{list=E?.editTargets?E.editTargets({match:N}):[];}catch{}
-  const o=list[0];if(!o)return null;let v=1,vis=true;for(let p=o;p;p=p.parent)if(!p.visible)vis=false;o.traverse(m=>{for(const mat of [].concat(m.material||[]))v=Math.min(v,mat.opacity);});return {v,vis};},match);
+const specOf=key=>{const k=JSON.parse(key);return {match:k[0],...(k[1]?{asset:k[1]}:{}),...(k[2]?{path:k[2]}:{}),...(k[3]?{near:k[3]}:{})};};
+const opacity=key=>page.evaluate(spec=>{const w=document.getElementById('stage').contentWindow,E=w.__filmEdits;let list=[];try{list=E?.editTargets?E.editTargets(spec):[];}catch{}
+  const o=list[0];if(!o)return null;let v=1,vis=true;for(let p=o;p;p=p.parent)if(!p.visible)vis=false;o.traverse(m=>{for(const mat of [].concat(m.material||[]))v=Math.min(v,mat.opacity);});return {v,vis};},specOf(key));
 // every whole-chapter film item the stage has exactly once, and its box on a 16:9 frame of the stage camera now
 const inView=()=>page.evaluate(async()=>{const w=document.getElementById('stage').contentWindow,E=w.__filmEdits,{camera}=w.ErgoPresentation.three(),THREE=await w.eval('import("three")');
   const cam=camera.clone();cam.aspect=16/9;cam.updateProjectionMatrix();cam.updateMatrixWorld(true);const out=[];
   for(const b of document.querySelectorAll('#director-timeline .prop-bar.film')){let k;try{k=JSON.parse(b.dataset.propKey);}catch{continue;}
-    if(parseFloat(b.style.left)>.5||parseFloat(b.style.width)<99||!k[0]||k[2])continue;let n=[];try{n=E.editTargets({match:k[0]});}catch{}if(n.length!==1)continue;
+    if(parseFloat(b.style.left)>.5||parseFloat(b.style.width)<99||!k[0])continue;const spec={match:k[0],...(k[1]?{asset:k[1]}:{}),...(k[2]?{path:k[2]}:{}),...(k[3]?{near:k[3]}:{})};
+    let n=[];try{n=E.editTargets(spec);}catch{}if(n.length!==1)continue;
     let vis=true;for(let p=n[0];p;p=p.parent)if(!p.visible)vis=false;if(!vis)continue;
     const box=new THREE.Box3().setFromObject(n[0]);if(box.isEmpty())continue;let x0=1,y0=1,x1=-1,y1=-1,behind=false;
     for(const c of [0,1,2,3,4,5,6,7]){const v=new THREE.Vector3(c&1?box.max.x:box.min.x,c&2?box.max.y:box.min.y,c&4?box.max.z:box.min.z).project(cam);if(v.z>1||v.z<-1)behind=true;x0=Math.min(x0,v.x);x1=Math.max(x1,v.x);y0=Math.min(y0,v.y);y1=Math.max(y1,v.y);}
     if(behind)continue;const cx0=Math.max(-1,x0),cx1=Math.min(1,x1),cy0=Math.max(-1,y0),cy1=Math.min(1,y1);if(cx1<=cx0||cy1<=cy0)continue;
     const area=(cx1-cx0)*(cy1-cy0)/4,whole=(x1-x0)*(y1-y0)/4;
-    let desk=false;for(let p=n[0];p;p=p.parent)if(/^(Desk dressing|Accessory mount|Accessory:)/.test(p.name||''))desk=true;
+    const DESK=/(^|> )(Desk dressing|Accessory mount|Accessory:)/;let desk=DESK.test(k[2]||'');for(let p=n[0];p;p=p.parent)if(DESK.test(p.name||''))desk=true;
     out.push({key:b.dataset.propKey,match:k[0],name:b.textContent.trim(),kind:desk?'desk':'room',area,inside:area/whole,box:{x0:(cx0+1)/2,x1:(cx1+1)/2,y0:(1-cy1)/2,y1:(1-cy0)/2}});}
   return out;});
 // how much of the prop is left in A, from F (whole) and G (gone): linear light, the pixels of its box where F and G differ
@@ -70,7 +74,7 @@ async function still(){
 }
 const SPEED={fast:.2,medium:.5,slow:1},report={};
 async function runItem(best){
-  const ts=best.t,M=best.match,K=best.kind,rows={},jobs=[];
+  const ts=best.t,M=best.key,K=best.kind,rows={},jobs=[];
   await until(()=>clickBar(best.key),'its bar');await until(()=>page.$('#director-panel [name="pp-t-to"]'),'the inspector\'s On screen fields');
   // the variants: F whole, G gone, then the fades (to: where it leaves; ts is the moment measured)
   const V=[
