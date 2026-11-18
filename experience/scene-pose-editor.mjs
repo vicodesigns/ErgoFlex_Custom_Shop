@@ -127,7 +127,10 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
     // Not in the scene at this moment (the playhead is outside this placement's bar): say why there are no dots.
     // (not while a clicked key's seek is still on its way: the frame before it lands says nothing about the key's frame)
     const landing=pinned&&Math.abs(time()-pin.t)>.002;
-    if(editing()&&!o.visible&&!landing){if(!hinted){hinted=true;if(pinned&&selT!==null)status(`${personName(entry(key))}: pose key at ${fmt(selT)} s selected (this placement is not drawn on this frame, so there are no dots: Delete, ease and copy act on the key; move the playhead into the bar to pose).`);else status(`${personName(entry(key))} is not in the scene at this moment, so there are no dots: move the playhead into one of their bars on the People lane.`);}}else hinted=false;
+    // (and only once the model has stayed undrawn for a moment: on the frame the playhead lands, the stage has not drawn
+    // the new second yet, so a model that is about to show still reads hidden)
+    if(o.visible||landing)undrawnSince=0;else if(!undrawnSince)undrawnSince=performance.now();
+    if(editing()&&!o.visible&&!landing&&performance.now()-undrawnSince>350){if(!hinted){hinted=true;if(pinned&&selT!==null)status(`${personName(entry(key))}: pose key at ${fmt(selT)} s selected (this placement is not drawn on this frame, so there are no dots: Delete, ease and copy act on the key; move the playhead into the bar to pose).`);else status(`${personName(entry(key))} is not in the scene at this moment, so there are no dots: move the playhead into one of their bars on the People lane.`);}}else hinted=false;
     // A desk can change the displayed model while posing: rebind the tools without writing a correction.
     if(h&&h.object.userData.person.id!==o.userData.person.id){
       // Cancel an unfinished drag rather than commit it to another model.
@@ -360,7 +363,7 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
     key=next;follow(next);status(`Pose mode follows ${personName(entry(next))} to the placement on screen now. Each placement and posture keeps its own keys.`);rerender();
   }
   // a key picked on the person's timeline row: it is the selected key (Delete, ease, copy) at the playhead
-  let pin=null;
+  let pin=null,undrawnSince=0;
   function focusKey(t){
     if(!key)return;const e=entry(key);selT=e&&keyAt(e,t)!==undefined?keyAt(e,t):t;pin={t,until:performance.now()+1500};rerender();   // (the timeline's key: before the seek lands the model shown can be another posture of the placement, without it)
     status(`${personName(entry(key))}: pose key at ${fmt(selT)} s selected. Click a dot to change the pose there · drag the diamond to retime · Delete removes it.`);
