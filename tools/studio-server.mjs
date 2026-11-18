@@ -22,6 +22,7 @@ import { execFile } from 'node:child_process';
 import chokidar from 'chokidar';
 import { SPECS, SHARED_KEY, mergeWrite, changedEntries } from './studio-state/merge.mjs';
 import { load, write } from './studio-state/file.mjs';
+import { writeAutosave, listAutosaves, readAutosave } from './studio-state/autosave-store.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const arg = (name, fallback) => { const i = process.argv.indexOf('--' + name); return i > 0 ? process.argv[i + 1] : fallback; };
@@ -136,6 +137,25 @@ async function handle(req, res) {
     fs.writeFileSync(path.join(dir, 'README.md'), md.join('\n') + '\n');
     console.log('[studio server] Director report:', rel);
     return json(res, 200, { dir: rel });
+  }
+  // The Director's autosaves (experience/director-autosave.mjs; store: tools/studio-state/autosave-store.mjs). Only from
+  // this machine; writes exports/director-autosaves/ only (not watched, never a cut's own folder).
+  //   POST /__director/autosave   {v:1, cut, chapter, reason, groups, project}   -> {file, at, skipped?, kept, pruned}
+  //   GET  /__director/autosaves?cut=<cut>[&chapter=<id>]                      -> {list: [{chapter, file, at, reason, groups, bytes}]}
+  //   GET  /__director/autosave?cut=&chapter=&file=                             -> the project
+  if (p === '/__director/autosave' || p === '/__director/autosaves') {
+    if (!['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress)) return json(res, 403, { error: 'Autosaves are kept on the desk machine only.' });
+    try {
+      if (p === '/__director/autosave' && req.method === 'POST') {
+        const body = JSON.parse(await readBody(req, 32 << 20));
+        if (!body || body.v !== 1) return json(res, 400, { error: 'Not a Director autosave.' });
+        return json(res, 200, writeAutosave(root, body));
+      }
+      if (req.method !== 'GET') return json(res, 405, { error: 'GET or POST.' });
+      const q = k => url.searchParams.get(k) || '';
+      if (p === '/__director/autosaves') return json(res, 200, { list: listAutosaves(root, q('cut'), q('chapter') || null) });
+      return json(res, 200, readAutosave(root, q('cut'), q('chapter'), q('file')));
+    } catch (e) { return json(res, 400, { error: String(e.message).slice(0, 300) }); }
   }
   if (p === '/__studio/sync.js') { res.writeHead(200, { 'content-type': 'text/javascript', 'cache-control': 'no-store' }); return res.end(CLIENT_JS); }
   if (p === '/__studio/reload.js') { res.writeHead(200, { 'content-type': 'text/javascript', 'cache-control': 'no-store' }); return res.end(RELOAD_JS); }

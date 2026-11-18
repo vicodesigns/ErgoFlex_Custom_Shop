@@ -275,3 +275,16 @@ body.df-filter-changed #director-timeline :is(.lane-group-head,.lane-group-body)
 .pose-key-diamond.pose-key-here{color:#ffd166;border-color:#ffd16688}.pose-key-diamond.pose-key-elsewhere{color:#ffd166aa}
 /* the mode pills live in the timeline's foot; an older rule hides the foot's spans (all but the bake summary) */
 #director-timeline .timeline-footer>span.sb-pills{display:inline-flex;flex-wrap:nowrap;overflow:hidden}
+/* Autosaves (director-autosave.mjs): the indicator's warning, the list of earlier versions */
+#director-appbar .saved-indicator.warn{color:#f0b429}
+#director-autosaves{position:fixed;width:min(640px,94vw);max-height:80vh;overflow:auto;border-radius:18px;padding:22px;color:#edf6fc;background:#0d1924f8;border:1px solid #8bc5df40;box-shadow:0 20px 80px #000a;font-size:13px;line-height:1.5;zoom:var(--ui,1)}
+#director-autosaves::backdrop{background:#020a11a8;backdrop-filter:blur(6px)}
+#director-autosaves .director-heading{display:flex;justify-content:space-between;align-items:flex-start}
+#director-autosaves h2{margin:4px 0 8px;font-size:20px}
+#director-autosaves button{min-height:28px;border-radius:8px;padding:4px 10px;font-size:12px}
+.autosave-list{list-style:none;margin:8px 0;padding:0;display:grid;gap:4px}
+.autosave-row{display:grid;grid-template-columns:5.5em 9em 1fr auto auto;gap:10px;align-items:center;padding:5px 8px;border-radius:8px;background:#ffffff08}
+.autosave-row.other{opacity:.7}.autosave-row small{color:#8a97a6}
+.autosave-time{font-variant-numeric:tabular-nums;font-weight:600}.autosave-why{color:#9fc3d3}
+.autosave-groups{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#cfd8e3}
+.autosave-others summary{cursor:pointer;color:#9fc3d3;margin-top:8px}

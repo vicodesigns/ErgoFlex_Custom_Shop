@@ -5,12 +5,13 @@ import {appBarHtml,statusBarHtml,wireMenus} from './director-appbar.mjs';
 import {setSpaceAll,spaceNow} from './gumball.mjs';
 import {enhanceNumberFields} from './number-fields.mjs';
 import {createContextMenu} from './context-menu.mjs';
-import {CHAPTER_FIELDS,fieldChanged as filmFieldChanged,filmValue as filmFieldValue,groupChanged as filmGroupChanged} from './film-changes.mjs';
+import {CHAPTER_FIELDS,fieldChanged as filmFieldChanged,filmValue as filmFieldValue,groupChanged as filmGroupChanged,changedGroups as filmChangedGroups} from './film-changes.mjs';
 import {chapterScore,staleness,snapTimes,snapTo,waveColumns,createScorePlayer} from './score-track.mjs';
 import {createActionLog,captureErrors,reportBody,createReportDialog,sendReport} from './director-report.mjs';
 import {createKeysPanel,loadUi,saveUi} from './keys-panel.mjs';
 import {createViewNav} from './view-nav.mjs';
 import {createPreviewHides,HIDE_LABELS} from './preview-hides.mjs';
+import {createAutosave,placeOf} from './director-autosave.mjs';
 import {createGraphicsEditor} from './graphics-editor.mjs';
 import {addCameraHolds} from './camera-holds.mjs';
 import {cinematicViews,polishMovement,openingSwoop} from './cinematography.mjs';
@@ -74,8 +75,8 @@ export function mountDirector(bridge,catalog,initial){
   const film=filmLink(location.hash),signature=()=>JSON.stringify([project.name,project.client,project.volume,project.shots]);
   let filmChapters=null,filmCuts=null,filmError='',exported=signature();
   // A film chapter reloaded after an import: the film's newer cut, an unexported draft to keep or drop, stale-export warning.
-  const fresh=createFilmFresh(film,project,{storage,catalog,escape,render:()=>renderFilm(),status:m=>status(m),load:(cut,asExported)=>{loadProject(cut,false);if(asExported)exported=signature();syncFilm();}});
-  {const d=fresh.initialDraft();if(d)project=cleanCut(d,catalog);}
+  const fresh=createFilmFresh(film,project,{storage,catalog,escape,render:()=>renderFilm(),status:m=>status(m),load:(cut,asExported)=>{autosave?.save('replace');loadProject(cut,false);if(asExported)exported=signature();syncFilm();}});
+  var reopenedDraft=false;{const d=fresh.initialDraft();if(d){project=cleanCut(d,catalog);reopenedDraft=true;}}
   const panel=document.createElement('section');panel.id='director-panel';panel.setAttribute('aria-label','Director controls');
   const timeline=document.createElement('section');timeline.id='director-timeline';timeline.setAttribute('aria-label','Chapter timeline');
   const picker=document.createElement('dialog');picker.id='scene-picker';picker.setAttribute('aria-label','Choose client environments');
@@ -255,13 +256,17 @@ export function mountDirector(bridge,catalog,initial){
     toast.firstChild.textContent=message.replace(/\s*Undo[^.]*\.?\s*$/,'');toast.classList.add('shown');clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove('shown'),6000);
   }
   const status=(message,error=false)=>{if(!error&&open&&message&&/\bUndo (brings|puts|restores|takes)/.test(message)&&undo.length)undoToast(message);if(labelPending&&!error&&message){labelPending.text=message.split(/\.(\s|$)/)[0];labelPending=null;}for(const el of [panel.querySelector('[data-status]'),timeline.querySelector('[data-timeline-status]')])if(el){el.textContent=message;el.title=message;el.classList.toggle('error',error);}};
-  function saved(text,title){const el=document.querySelector('#director-appbar:not([hidden]) [data-saved]')||panel.querySelector('[data-saved]');if(el){el.textContent=text;el.title=title;}}
+  function saved(text,title,warn=false){const el=document.querySelector('#director-appbar:not([hidden]) [data-saved]')||panel.querySelector('[data-saved]');if(el){el.textContent=text;el.title=title;el.classList.toggle('warn',!!warn);}}
+  // what the save indicator says: the disk autosave when it has news, else the browser draft
+  var browserSaved={text:'',title:'Draft kept in this browser'};
+  function savedNow(){const a=autosave?.text();return a?.text?a:browserSaved;}
+  function paintSaved(){const s=savedNow();saved(s.text,s.title,s.warn);}
   // (for the e2e tests and Report a problem: which cut is open and where its draft is kept)
   function stampDraft(){document.body.dataset.cutId=project.id;document.body.dataset.draftStore=fresh?.on?'film':'library';}
   // read-only: the open chapter as the Director holds it (tests and diagnostics; a draft is only kept while it differs
   // from what was exported, so a change back to the film's own value leaves no draft to read)
   globalThis.__directorShot=()=>copy(shot());
-  function draft(){clearTimeout(draftTimer);stampDraft();fresh.noteDraft(project,unexported());try{if(!fresh.on)library.draft(project);saved('Saved ✓','Draft kept in this browser · Export cut sends it to the film');}catch{saved('Not saved','Browser storage is full, so no draft copy · Export cut sends it to the film');}}
+  function draft(){clearTimeout(draftTimer);stampDraft();fresh.noteDraft(project,unexported());try{if(!fresh.on)library.draft(project);browserSaved={text:'Saved ✓',title:'Draft kept in this browser · Export cut sends it to the film'};}catch{browserSaved={text:'Not saved',title:'Browser storage is full, so no draft copy · Export cut sends it to the film',warn:true};}if(unexported())autosave?.poke();paintSaved();}
   function changed(){filmLook?.poke();bridge.update(project);clearTimeout(draftTimer);draftTimer=setTimeout(draft,250);renderTimeline();syncCameraOptions();syncFilm();for(const [name,stack]of [['undo',undo],['redo',redo]]){const b=panel.querySelector(`[data-action="${name}"]`);if(b)b.disabled=!stack.length;}renderAppBar();}
   // Film chapters: a dropdown that reloads this tab with another chapter's page.
   const filmIndex=()=>filmChapterIndex(filmChapters,project.shots.map(s=>s.id));
@@ -280,6 +285,12 @@ export function mountDirector(bridge,catalog,initial){
   // Cuts of the film (exports/film-cuts.json, tools/experience/film-cuts.py): switch to the same chapter of another cut,
   // or copy this cut into a new one (the studio server's /__film/duplicate) and go on editing there.
   const cutDir=film?film.film.replace(/\/director-chapters\.json.*$/,''):null,myCut=()=>filmCuts?.find(c=>c.dir===cutDir)||null;
+  // ---- autosave to disk (director-autosave.mjs): exports/director-autosaves/<cut>/<chapter>/
+  var autosave=createAutosave({place:()=>placeOf(cutDir,project),project:()=>cleanCut(project,catalog),escape,status:(m,e)=>status(m,e),
+    groups:()=>{try{const f=filmShot();return f&&project.shots.length===1?filmChangedGroups(shot(),f):[];}catch{return [];}},
+    onState:()=>paintSaved(),restore:v=>{loadProject(v,false);}});
+  addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&unexported())autosave.save('edit');});
+  if(reopenedDraft)setTimeout(()=>autosave.save('reopen'),1500);   // (a browser draft brought back on load goes to disk too)
   function cutPicker(){
     if(!filmCuts?.length)return '';const mine=myCut();
     return `<label class="film-cut" title="${escape(mine?.note||'Which cut of the film this tab is editing')}"><span>Cut</span><select name="film-cut" aria-label="Film cut">${mine?'':'<option value="" selected>This cut</option>'}${filmCuts.map(c=>`<option value="${escape(c.id)}" ${c===mine?'selected':''}>${escape(c.name)}</option>`).join('')}<option value="__new">＋ Duplicate this cut…</option></select></label>`;
@@ -319,7 +330,7 @@ export function mountDirector(bridge,catalog,initial){
     switcher.innerHTML=`<div class="director-heading"><div><span class="director-kicker">${target.cut?'SWITCH CUT':'SWITCH FILM CHAPTER'}</span><h2 id="film-switch-title">Export your edits first?</h2></div></div><p>This chapter changed since the last Export cut. Opening <b>${escape(targetLabel(target))}</b> reloads this tab; unexported edits only stay as a browser draft.</p><div class="director-actions"><button data-switch="export" class="primary">Export cut, then switch</button><button data-switch="go">Switch without exporting</button><button data-switch="cancel">Cancel</button></div>`;
     switcher.showModal();switcher.querySelector('[data-switch=export]').focus();
   }
-  function goFilm(target){deskEditor.stop();status('Opening '+(target.cut?targetLabel(target):'film chapter '+filmChapterLabel(target))+'…');for(const el of document.querySelectorAll('[data-film-picker] button,[data-film-picker] select'))el.disabled=true;(leaving=true,location.assign(target.url));}
+  async function goFilm(target){deskEditor.stop();if(unexported())await Promise.race([autosave.save('chapter'),new Promise(r=>setTimeout(r,2500))]);status('Opening '+(target.cut?targetLabel(target):'film chapter '+filmChapterLabel(target))+'…');for(const el of document.querySelectorAll('[data-film-picker] button,[data-film-picker] select'))el.disabled=true;(leaving=true,location.assign(target.url));}
   switcher.addEventListener('click',async event=>{
     const choice=event.target.closest('[data-switch]')?.dataset.switch;if(!choice)return;
     const target=switchTarget;switchTarget=null;switcher.close();
@@ -1045,6 +1056,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   async function action(name,index){
     if(name==='keys-panel'){keysPanel.toggle();return;}
     if(name==='report-problem'){reportDialog.open();return;}
+    if(name==='autosaves'){autosave.open();return;}
     try{
       if(composing)return;
       group=null;
@@ -1160,7 +1172,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       }
       if(name==='new'){loadProject(makeCut('New client cut',[sceneShot(catalog.find(r=>r.id==='product'))]));return;}
       if(name==='clone'){loadProject({...copy(project),id:crypto.randomUUID(),name:project.name+' · copy',updated:''});return;}
-      if(name==='save-export'){clearTimeout(draftTimer);try{project=library.save(project);}catch{}exportCut();renderPanel();return;}
+      if(name==='save-export'){if(unexported())autosave.save('export');clearTimeout(draftTimer);try{project=library.save(project);}catch{}exportCut();renderPanel();return;}
       if(name==='save'){clearTimeout(draftTimer);project=library.save(project);renderPanel();status('Saved in this browser. Export a copy for a portable backup.');return;}
       if(name==='load'){await load();return;}
       if(name==='frame-desk'||name==='frame-room'){requireReady();bridge.stage().frameSubject(name==='frame-room'?'room':'desk');status('Preview framed. Capture a new camera view or update the selected view to save it.');return;}
@@ -1208,7 +1220,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       if(name==='preview'){status('Restarting this chapter…');await bridge.preview(project,selected);return;}
       if(name==='play'){draft();setOpen(false);bridge.play(project);return;}
       if(name==='scenes'){renderPicker();picker.showModal();return;}
-      if(name==='export'){exportCut();return;}
+      if(name==='export'){if(unexported())autosave.save('export');exportCut();return;}
       if(name==='import'){file.click();return;}
       if(name==='link'){const url=new URL('./',location.href);url.search='';url.hash='cut='+encodeCut(project);await navigator.clipboard.writeText(url.href);status('Presentation link copied. It includes this cut’s settings.');return;}
       if(name==='delete-cut'){clearTimeout(draftTimer);library.remove(project.id);loadProject(makeCut('New client cut'),false);return;}
@@ -1638,7 +1650,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     if(!shellOn()||!open){appbar.hidden=true;return;}appbar.hidden=false;
     if(appbar.querySelector('.ab-pop:not([hidden])')||appbar.contains(document.activeElement)&&document.activeElement.matches('select'))return;   // (not while a menu or a select is open)
     const st=bridge.playback(),q=document.getElementById('preview-quality');
-    appbar.innerHTML=appBarHtml({picker:filmPicker(),name:project.name,undo:{n:undo.length,label:undoLabels.at(-1)?editLabel(undoLabels.at(-1)):''},redo:{n:redo.length,label:redoLabels.at(-1)?editLabel(redoLabels.at(-1)):''},
+    appbar.innerHTML=appBarHtml({saved:savedNow(),picker:filmPicker(),name:project.name,undo:{n:undo.length,label:undoLabels.at(-1)?editLabel(undoLabels.at(-1)):''},redo:{n:redo.length,label:redoLabels.at(-1)?editLabel(redoLabels.at(-1)):''},
       studio:studioSync.html(),playing:st.playing&&st.index===selected,busy:st.busy,sound:pressed('sound'),lowres:q&&!q.hidden?pressed('preview-quality'):null,film:!!film,
       history:[...undoLabels].reverse().map(editLabel),titles:film&&titleEditor.has()?titleEditor.shown():document.body.classList.contains('preview-titles'),chapters:!timeline.classList.contains('chapters-hidden'),
       inspector:!document.body.classList.contains('inspector-hidden'),timeline:!document.body.classList.contains('timeline-hidden'),
@@ -1805,6 +1817,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       case 'open-inspector':openSelection();return;
       case 'sound':document.getElementById('sound')?.click();return;
       case 'music-mute':toggleMusicMute();return;
+      case 'autosaves':autosave.open();return;
       case 'show-hidden':showAllLayers();return;
       case 'loop':action('preview-loop');return;
       case 'snap':action('magnet');return;
@@ -2141,7 +2154,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     if(lightSel||keyId||deskEditor.selectedId()||sceneLights.selected()||sceneProps.selected()||scenePeople.selected()||deskSel.selected()||titleEditor.selectedId())clearSelection();
   }
   preview?.addEventListener('load',bindPreviewHistory);bindPreviewHistory();
-  addEventListener('pagehide',()=>{deskEditor.stop();draft();});
+  addEventListener('pagehide',()=>{deskEditor.stop();draft();autosave.closing();});
   // Leaving the page with unexported edits asks first (Ctrl+W, a reload, Back). The Director's own switches (film
   // chapter, cut) have their own dialog and set `leaving`.
   // (not under automation: navigator.webdriver is set by puppeteer / WebDriver, never in a person's browser; a prompt

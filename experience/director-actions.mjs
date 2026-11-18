@@ -53,6 +53,7 @@ export const ACTIONS = [
   R('open-inspector', 'Open the selection in the inspector', ['Enter'], 'global', { onButton: false, origin: 'Director' }),
   R('sound', 'Sound on / off', ['Shift+M'], 'global', { origin: 'Director' }),
   R('music-mute', 'Mute / unmute the Music lane (its volume is kept)', ['Alt+M'], 'global', { phase: '2', origin: 'Premiere', aliases: ['mute', 'mute music', 'mute track'] }),
+  R('autosaves', 'Autosaves: earlier versions of this chapter, kept on this computer', ['Ctrl+Alt+S'], 'global', { inField: true, origin: 'Director', aliases: ['autosave', 'restore', 'recover', 'history', 'versions'] }),
   R('show-hidden', 'Show every layer hidden with its 👁 (titles, graphics, people, props)', ['Alt+H'], 'global', { phase: '2', origin: 'Director', aliases: ['unhide', 'show all', 'eye'] }),
   R('speed-down', 'Play slower: ½×, ¼×', ['<'], 'global', { phase: '6', origin: 'Director', aliases: ['slow', 'half speed'] }),
   R('speed-up', 'Play faster again (up to normal speed)', ['>'], 'global', { phase: '6', origin: 'Director', aliases: ['normal speed'] }),

@@ -20,7 +20,7 @@ export function appBarHtml(s) {
   return `<span class="ab-brand">ErgoFlex <b>Director</b></span>
     <div class="ab-film">${s.picker || `<strong class="ab-name" title="${esc(s.name)}">${esc(s.name)}</strong>`}</div>
     <div class="ab-group ab-history"><button type="button" class="ab-btn ab-icon" data-action="undo" aria-label="${esc(step('Undo', s.undo?.label))}" title="${esc(step('Undo', s.undo?.label))} (Ctrl+Z)" ${s.undo?.n ? '' : 'disabled'}>↶</button><button type="button" class="ab-btn ab-icon" data-action="redo" aria-label="${esc(step('Redo', s.redo?.label))}" title="${esc(step('Redo', s.redo?.label))} (Ctrl+Y)" ${s.redo?.n ? '' : 'disabled'}>↷</button></div>
-    <span class="studio-sync" data-studio-sync>${s.studio || ''}</span><span class="saved-indicator" data-saved title="Draft kept in this browser"></span>
+    <span class="studio-sync" data-studio-sync>${s.studio || ''}</span><span class="saved-indicator${s.saved?.warn ? ' warn' : ''}" data-saved title="${esc(s.saved?.title || 'Draft kept in this browser')}">${esc(s.saved?.text || '')}</span>
     <span class="ab-spacer"></span>
     <button type="button" class="ab-btn ab-play" data-action="chapter-toggle" aria-pressed="${!!s.playing}" ${s.busy ? 'disabled' : ''} title="Play / pause the chapter (Space)">${s.playing ? '❚❚ Pause chapter' : '▶ Play chapter'}</button>
     <button type="button" class="ab-btn" data-ab-proxy="sound" aria-pressed="${!!s.sound}" title="Sound (Shift+M)">${s.sound ? '🔊 Sound' : '🔈 Muted'}</button>
@@ -40,6 +40,7 @@ export function appBarHtml(s) {
       check('titles', 'Titles in the frame', s.titles),
     ]) : ''}
     ${menu('more', '⋯', 'Cut settings, history, layout, report a problem', [
+      item('autosaves', 'Autosaves…', 'Ctrl+Alt+S · earlier versions, kept on this computer'),
       item('cut-settings', 'Cut settings…', 'name, versions, import / export'),
       `<div class="ab-sub" role="group" aria-label="History"><p>History${history.length ? '' : ': nothing yet'}</p>${history.map((h, i) => `<button type="button" role="menuitem" data-ab-undo="${i + 1}" title="Undo back to before this step">${esc(h || 'Edit')}</button>`).join('')}</div>`,
       check('titles', 'Titles in the frame', s.titles), check('chapters', 'Chapter strip', s.chapters),
