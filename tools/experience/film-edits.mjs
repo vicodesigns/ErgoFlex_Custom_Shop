@@ -313,7 +313,9 @@ export function installEdits(shot) {
       if (typeof edit.hide === 'boolean' && (edit.hide || o.userData.__filmFxRawVisible)) {
         const own = Object.getOwnPropertyDescriptor(o, 'visible'), prior = o.userData.__filmFxRawVisible, hidden = edit.hide;
         let raw = prior ? prior() : o.visible;
-        Object.defineProperty(o, 'visible', { configurable: true, enumerable: true, get: () => hidden ? false : raw, set: v => { raw = v; own?.set?.call(o, v); } });
+        // (while hidden, a false written back is the getter's own answer echoed, e.g. by GTAO's visibility cache under film
+        // quality: not the object's state, or showing it again left it missing in the Director's Render still / Film look)
+        Object.defineProperty(o, 'visible', { configurable: true, enumerable: true, get: () => hidden ? false : raw, set: v => { if (hidden && v === false) return; raw = v; own?.set?.call(o, v); } });
         o.userData.__filmFxRawVisible = () => raw;
         undo.push(() => { delete o.visible; if (own?.get || own?.set) Object.defineProperty(o, 'visible', own); else o.visible = raw; if (prior) o.userData.__filmFxRawVisible = prior; else delete o.userData.__filmFxRawVisible; });
       }
