@@ -10,9 +10,11 @@
 # Per-chapter epoch: this chapter alone re-renders (its key changes); the global epoch above stays.
 # commons 3 (2026-11-11): architecture pass in the library (balcony, piers, doors, datum rails) moved its pixels.
 # commons 4, awaken 1, awareness 1, storage 1 (2026-11-16, Vico: "bump those 4 chapters only"): on Move forward / Move back the foot rest's light breathes (the firmware's pulse, as the app's visualizer shows it) instead of running the wings' comet, which read as a strafe to the left (film-status.mjs footComet is opt-in now).
-chapter commons 4
+chapter commons 5
 chapter awaken 2
+chapter create 1
 chapter awareness 1
 chapter storage 2
 # awaken 2 (2026-11-16, Vico: "Yes, bump awaken to 2"): the floor circle follows the desk through its 100 degree turn instead of swinging off (stage.mjs ringHome.local).
 # storage 2 (2026-11-17, Vico: "His walk looks much better ... bump it"): Andre's walk round the desk without his legs crossing (swing: 'path', a new route, 3.3-7.7 s).
+# create 1, commons 5 (2026-11-18, Vico: "bump it"): the Create and Commons room pass (a59560ee): oak/brick/plaster finishes, Lin's hair and work shirt, coastal study atlas, ferns and the bay planter, the painting weave, cupped leaf blades. The 11:05 Create 4K was frozen before this was committed.
