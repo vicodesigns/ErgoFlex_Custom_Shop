@@ -269,14 +269,15 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   let found=null,foundAt=0;
   function installedIndex(){
     const scene=sceneOf();if(!scene)return new Map();if(found&&performance.now()-foundAt<1000)return found;
-    found=new Map();foundAt=performance.now();scene.traverse(o=>{for(const e of o.userData.__filmFxEdits||[])if(e.director&&!found.has(propKey(e)))found.set(propKey(e),o);});return found;
+    found=new Map();foundAt=performance.now();scene.traverse(o=>{for(const e of o.userData.__filmFxEdits||[])if(e.director){const k=propKey(e),was=found.get(k);if(!was||(!shown(was)&&shown(o)))found.set(k,o);}});return found;
   }
   function find(key,target){
     const scene=sceneOf();if(!scene)return null;const hit=installedIndex().get(key);if(hit&&inScene(hit))return hit;
     const e=editOfKey(key)||target||sel?.target;if(!e||!win()?.__filmEdits)return null;
     // Another desk's prop: the item of that name on stage now belongs to the desk that is showing, not to this edit.
     if(e.desk&&e.desk!==deskNow()?.preset)return null;
-    const f=win().__filmEdits.editTargets(e);return f.length===1?f[0]:null;
+    // (an accessory in the scene twice, one copy under the hidden accessory mount: the drawn one)
+    const f=win().__filmEdits.editTargets(e),live=f.filter(shown);return f.length===1?f[0]:live.length===1?live[0]:null;
   }
   // ---- stage tools: gizmo, selection box, picking
   async function boot(){
@@ -502,8 +503,12 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const seen=new Set(),out=[];
     sceneOf().traverse(x=>{if(!x.isMesh||isOurs(x))return;const o=meaningful(x);if(!o||seen.has(o))return;seen.add(o);
       try{const t=targetOf(o),key=propKey(t);
-        if(out.some(i=>i.key===key))return;
-        out.push({key,target:propTarget({...t,label:t.label||o.name||''}),obj:o,name:label(o),desk:onDeskItself(o)||ridesDesk(o),hidden:!shown(o)||editOfKey(key)?.hide===true,area:areaOf(o)});}catch{}
+        // Two objects under one key (create: the desk's accessories are in the scene twice, a copy under the always
+        // hidden "Accessory mount:desktop" and the drawn one under "Desk dressing:desktop", and the film's opacity edit
+        // names them by name alone): the drawn one stands for the key, so the drafting kit and easel rail get their bars.
+        const item={key,target:propTarget({...t,label:t.label||o.name||''}),obj:o,name:label(o),desk:onDeskItself(o)||ridesDesk(o),hidden:!shown(o)||editOfKey(key)?.hide===true,area:areaOf(o)};
+        const had=out.findIndex(i=>i.key===key);if(had>=0){if(!shown(out[had].obj)&&shown(o))out[had]=item;return;}
+        out.push(item);}catch{}
     });
     itemsAt=performance.now();return itemsCache=out;
   }
@@ -786,7 +791,12 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   try{for(const [k,v] of Object.entries(JSON.parse(sessionStorage.getItem('directorPropItems')||'{}')))if(Array.isArray(v))seen.set(k,v);}catch{}
   function learn(){
     if(!tools||!three()?.scene)return;const d=deskNow();if(versions().length&&!d)return;
-    const list=items().filter(i=>i.desk&&!i.obj?.userData?.directorAdd&&(!i.hidden||editOfKey(i.key))).map(i=>({key:i.key,target:i.target,name:i.name,id:`${i.obj?.userData?.accessoryId||''} ${i.obj?.userData?.propId||''} ${i.obj?.name||''}`.trim()}));
+    // An item hidden when the stage was installed but timed by the film (create at 0 s: the drafting kit, easel rail and
+    // easel, held hidden by their visible keys / opacity until 7 or 17.4 s) is the desk's too; the copies under the
+    // always-hidden accessory mount are not.
+    const timedByFilm=i=>{for(let p=i.obj;p;p=p.parent)if(!p.visible&&/^Accessory mount:/.test(p.name||''))return false;const t=i.target||{};
+      return !!(filmFadeKeys(film(),t.match)||filmVisibleKeys(film()?.accessories,`${t.match||''} ${String(t.path||'').split('>').pop()} ${t.label||''}`));};
+    const list=items().filter(i=>i.desk&&!i.obj?.userData?.directorAdd&&(!i.hidden||editOfKey(i.key)||timedByFilm(i))).map(i=>({key:i.key,target:i.target,name:i.name,id:`${i.obj?.userData?.accessoryId||''} ${i.obj?.userData?.propId||''} ${i.obj?.name||''}`.trim()}));
     const k=seenKey(d?.preset),was=JSON.stringify(seen.get(k)||null);if(JSON.stringify(list)===was)return false;
     seen.set(k,list);try{sessionStorage.setItem('directorPropItems',JSON.stringify(Object.fromEntries(seen)));}catch{}
     return true;
