@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {openDirectorBrowser,openChapter,chapterList,wait} from './director-e2e-harness.mjs';
+import {openDirectorBrowser,openChapter,chapterList,wait,seek} from './director-e2e-harness.mjs';
 
 const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'director-multiselect-e2e-')),downloads=path.join(tmp,'downloads'),shots=process.env.SHOTS||path.join(tmp,'shots');
 fs.mkdirSync(downloads);fs.mkdirSync(shots,{recursive:true});
@@ -54,11 +54,12 @@ try{
   await click('#director-panel [data-inspector-tab=props]');await wait(300);
 
   // ---- multi-select on the stage
+  // A moment whose camera shows the arm and the monitor (awaken opens dark on a close-up, and the opening changes with
+  // the cut): the playhead steps through the chapter until both have a clickable point.
+  const T=Number(await page.$eval('#director-timeline [name="timeline-seconds"]',e=>e.max))||20;let at=null;
+  for(let t=0;t<T&&at===null;t+=1.5){await seek(page,t);await wait(1200);if(await page.evaluate((a,m)=>!!(__clickPoint(a)&&__clickPoint(m)),ARM,MON))at=t;}
+  check(at!==null,'a moment in awaken with the monitor arm and the monitor in view: '+at+' s');
   const arm0=(await pose(ARM)).p,mon0=(await pose(MON)).p;
-  // Frame the arm and the monitor (the chapter's opening camera changes with the cut: in hq14 the arm is not clickable
-  // from it): the camera comes along its own line of sight to 1.2 units from their midpoint, aimed at it.
-  await page.evaluate((a,m)=>{const {t,T}=__t(),c=new T.Vector3(...a).add(new T.Vector3(...m)).multiplyScalar(.5),dir=t.camera.position.clone().sub(c).normalize();
-    t.camera.position.copy(c).addScaledVector(dir,1.2);t.camera.lookAt(c);if(t.controls?.target){t.controls.target.copy(c);t.controls.update?.();}t.camera.updateMatrixWorld(true);__t().w.ErgoPresentation?.wake?.(600);},arm0,mon0);await wait(800);
   // Undo re-applies the chapter's camera; put the test's view back so the monitor is on screen again.
   const cam0=await page.evaluate(()=>{const {t}=__t();return {p:t.camera.position.toArray(),q:t.camera.quaternion.toArray(),c:t.controls?.target?.toArray()};});
   const view=()=>page.evaluate(c=>{const {t}=__t();t.camera.position.fromArray(c.p);t.camera.quaternion.fromArray(c.q);if(c.c&&t.controls){t.controls.target.fromArray(c.c);t.controls.update?.();}t.camera.updateMatrixWorld(true);__t().w.ErgoPresentation?.wake?.();},cam0);
