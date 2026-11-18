@@ -1572,6 +1572,10 @@ ROLE_POSES = {'stand-brief', 'stand-radio', 'stand-chart', 'push-cart', 'lie-bed
               'stand-robot-work', 'stand-robot-lift', 'stand-robot-shelf', 'stand-phone-pull', 'stand-phone-up', 'stand-phone-press', 'stand-phone-watch',
               'stand-screen-pull', 'stand-screen-tap', 'stand-screen-press'}      # (the gym's: built for those who train there, ALSO below)
 # Built where the pose puts them, not dropped until something touches the floor (a body lying on a bed has nothing on it).
+# Postures whose forearm and hand are never under cloth: build_people.py leaves the whole forearm in the model, not cut away
+# under the shirt hem or the trousers beside it (stand-phone-pull: the hand at the front pocket lost half its forearm
+# there, and the arm looked cut off at the wrist when the phone came out, 17 Nov 2026). Postures not named here are baked as before.
+BARE_FOREARMS = {'stand-phone-pull'}
 RAISED = {'lie-bed', 'sit-microscope', 'gym-cycle', 'gym-pullup', 'gym-press', 'power-phone', 'power-type', 'stand-robot-work', 'stand-robot-lift', 'stand-robot-shelf', 'stand-screen-pull', 'stand-screen-tap', 'stand-screen-press'}       # (feet on a stool's ring, on pedals or off the floor under a bar are not on the floor either)
 DESK_HEIGHTS = {'sit-type': (28, 30), 'stand-type': (43.5,), 'stand-type-low': (28, 30), 'wheel-type': (28, 31), 'power-type': (32,), 'sit-coffee': (28, 30), 'stand-coffee': (43.5,), 'stand-low': (35.5,), 'stand-mid': (39,), 'kid-stand-desk': (28,), 'kid-sit-desk': (28,)}
 # Who a posture is for: adult poses are built on adult furniture, child poses on child furniture.

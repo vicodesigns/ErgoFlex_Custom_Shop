@@ -85573,8 +85573,8 @@
     1810,
     276.4
    ],
-   "tris": 35046,
-   "bytes": 1150260,
+   "tris": 35794,
+   "bytes": 1156324,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
