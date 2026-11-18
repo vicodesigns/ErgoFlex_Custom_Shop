@@ -14,6 +14,23 @@ export function when(iso, now = new Date()) {
   return d.toDateString() === now.toDateString() ? time : `${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} ${time}`;
 }
 // where a project's autosaves go: the film cut's folder name and the chapter id, or a library cut's own id
+// What differs from the last export (or what was loaded), by name, for the list: 'camera', 'desk', 'titles', a chapter
+// field ('length', 'title'…). (Not against the film's own shot: its camera is the baked spline, never the editor's keys.)
+const PARTS = { camera: ['camera'], desk: ['motion', 'deskEdits', 'deskBuild'], lighting: ['lighting', 'timeOfDay', 'ledStatus', 'ledColor', 'ledGlow', 'ledSurfaces', 'sceneGlobals', 'sceneLights', 'lightEdits'],
+  props: ['propEdits', 'sceneEdits', 'propLayers'], people: ['peopleEdits'], graphics: ['screens'], titles: ['titles', 'titleEdits'], branding: ['brandingEdits'] };
+const FIELDS = { seconds: 'length', title: 'headline', detail: 'detail', transition: 'transition', room: 'room', layout: 'layout', mode: 'time of day', size: 'desk size', preset: 'desk' };
+export function changesSince(base, cur) {
+  if (!cur) return [];
+  const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null), out = [];
+  const shots = (cur.shots || []), was = new Map((base?.shots || []).map(s => [s.id, s]));
+  for (const s of shots) {
+    const b = was.get(s.id); if (!b) { out.push('new chapter'); continue; }
+    for (const [name, keys] of Object.entries(PARTS)) if (keys.some(k => !same(s[k], b[k]))) out.push(name);
+    for (const [k, name] of Object.entries(FIELDS)) if (!same(s[k], b[k])) out.push(name);
+  }
+  if (shots.length !== (base?.shots || []).length) out.push('chapters');
+  return [...new Set(out)];
+}
 export function placeOf(cutDir, project) {
   const clean = s => String(s || '').replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^[^A-Za-z0-9]+/, '').slice(0, 90);
   const cut = cutDir ? clean(String(cutDir).replace(/\/+$/, '').split('/').pop()) : clean('library-' + (project?.id || 'project'));
@@ -77,7 +94,7 @@ export function createAutosave({ place, project, groups = () => [], escape, onSt
     try { const r = await fetcher(`/__director/autosaves?cut=${encodeURIComponent(cut)}`, { cache: 'no-store' }); if (r.status === 404) throw Error('this studio server is older than autosave: restart it once'); const v = await r.json(); if (!r.ok) throw Error(v.error); list = v.list || []; }
     catch (error) { dialog.querySelector('.director-hint').textContent = 'No autosaves: ' + error.message; return; }
     rows = list; const mine = list.filter(x => x.chapter === chapter), others = list.filter(x => x.chapter !== chapter);
-    const row = (x, i, here) => `<li class="autosave-row ${here ? '' : 'other'}"><span class="autosave-time">${e(when(x.at))}</span><span class="autosave-why">${e(REASON_LABEL[x.reason] || x.reason)}</span><span class="autosave-groups">${x.groups?.length ? e('changed: ' + x.groups.join(', ')) : 'as the film'}</span><small>${Math.max(1, Math.round((x.bytes || 0) / 1024))} KB</small>${here ? `<button type="button" data-autosave-restore="${i}">Restore</button>` : `<small class="autosave-elsewhere">${e(x.chapter)}: open that chapter to restore</small>`}</li>`;
+    const row = (x, i, here) => `<li class="autosave-row ${here ? '' : 'other'}"><span class="autosave-time">${e(when(x.at))}</span><span class="autosave-why">${e(REASON_LABEL[x.reason] || x.reason)}</span><span class="autosave-groups">${x.groups?.length ? e('changed: ' + x.groups.join(', ')) : 'as exported'}</span><small>${Math.max(1, Math.round((x.bytes || 0) / 1024))} KB</small>${here ? `<button type="button" data-autosave-restore="${i}">Restore</button>` : `<small class="autosave-elsewhere">${e(x.chapter)}: open that chapter to restore</small>`}</li>`;
     dialog.innerHTML = `<div class="director-heading"><div><span class="director-kicker">AUTOSAVES</span><h2 id="director-autosaves-title">Earlier versions of this chapter</h2></div><button type="button" data-autosave-close aria-label="Close">✕</button></div>
       <p class="director-hint">Kept on this computer: the last 30, then one an hour for two weeks, then one a day. Restore saves what is open first, then brings the version back as an unexported draft; Export cut sends it to the film.</p>
       ${mine.length ? `<ol class="autosave-list">${mine.map(x => row(x, list.indexOf(x), true)).join('')}</ol>` : '<p class="director-hint">No autosaves of this chapter yet.</p>'}

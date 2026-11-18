@@ -5,13 +5,13 @@ import {appBarHtml,statusBarHtml,wireMenus} from './director-appbar.mjs';
 import {setSpaceAll,spaceNow} from './gumball.mjs';
 import {enhanceNumberFields} from './number-fields.mjs';
 import {createContextMenu} from './context-menu.mjs';
-import {CHAPTER_FIELDS,fieldChanged as filmFieldChanged,filmValue as filmFieldValue,groupChanged as filmGroupChanged,changedGroups as filmChangedGroups} from './film-changes.mjs';
+import {CHAPTER_FIELDS,fieldChanged as filmFieldChanged,filmValue as filmFieldValue,groupChanged as filmGroupChanged} from './film-changes.mjs';
 import {chapterScore,staleness,snapTimes,snapTo,waveColumns,createScorePlayer} from './score-track.mjs';
 import {createActionLog,captureErrors,reportBody,createReportDialog,sendReport} from './director-report.mjs';
 import {createKeysPanel,loadUi,saveUi} from './keys-panel.mjs';
 import {createViewNav} from './view-nav.mjs';
 import {createPreviewHides,HIDE_LABELS} from './preview-hides.mjs';
-import {createAutosave,placeOf} from './director-autosave.mjs';
+import {createAutosave,placeOf,changesSince} from './director-autosave.mjs';
 import {createGraphicsEditor} from './graphics-editor.mjs';
 import {addCameraHolds} from './camera-holds.mjs';
 import {cinematicViews,polishMovement,openingSwoop} from './cinematography.mjs';
@@ -287,7 +287,7 @@ export function mountDirector(bridge,catalog,initial){
   const cutDir=film?film.film.replace(/\/director-chapters\.json.*$/,''):null,myCut=()=>filmCuts?.find(c=>c.dir===cutDir)||null;
   // ---- autosave to disk (director-autosave.mjs): exports/director-autosaves/<cut>/<chapter>/
   var autosave=createAutosave({place:()=>placeOf(cutDir,project),project:()=>cleanCut(project,catalog),escape,status:(m,e)=>status(m,e),
-    groups:()=>{try{const f=filmShot();return f&&project.shots.length===1?filmChangedGroups(shot(),f):[];}catch{return [];}},
+    groups:()=>{try{const [,, ,shots]=JSON.parse(exported);return changesSince({shots},project);}catch{return [];}},
     onState:()=>paintSaved(),restore:v=>{loadProject(v,false);}});
   addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&unexported())autosave.save('edit');});
   if(reopenedDraft)setTimeout(()=>autosave.save('reopen'),1500);   // (a browser draft brought back on load goes to disk too)

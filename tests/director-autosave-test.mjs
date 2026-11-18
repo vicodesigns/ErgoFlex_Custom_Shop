@@ -8,7 +8,7 @@ import os from 'node:os';
 import path from 'node:path';
 import {spawn} from 'node:child_process';
 import {writeAutosave,listAutosaves,readAutosave,keepOf,KEEP_NEWEST} from '../tools/studio-state/autosave-store.mjs';
-import {createAutosave,placeOf,when} from '../experience/director-autosave.mjs';
+import {createAutosave,placeOf,when,changesSince} from '../experience/director-autosave.mjs';
 const root=fs.mkdtempSync(path.join(os.tmpdir(),'autosave-test-'));
 const project=n=>({id:'p1',name:'Cut',shots:[{id:'storage',seconds:12,camera:{keys:[{time:n}]}}]});
 // ---- the store
@@ -39,6 +39,11 @@ assert.throws(()=>readAutosave(root,'cinematic-intro-cut-x','storage','../../rev
 // ---- the client: where, a save, the same content once, the tab closing, the server too old
 assert.deepEqual(placeOf('/exports/cinematic-intro-cut-vicos-2nd-cut',project(0)),{cut:'cinematic-intro-cut-vicos-2nd-cut',chapter:'storage'});
 assert.deepEqual(placeOf(null,{id:'abc 1',shots:[{},{}]}),{cut:'library-abc-1',chapter:'project'});
+// what changed since the export, by name (a headline edit is not 'camera')
+{const base={shots:[{id:'storage',title:'A',seconds:12,camera:{keys:[1]},titles:[{id:'t'}]}]};
+  assert.deepEqual(changesSince(base,{shots:[{...base.shots[0],title:'B'}]}),['headline']);
+  assert.deepEqual(changesSince(base,{shots:[{...base.shots[0],titles:[{id:'t',text:'x'}],motion:{clips:[]}}]}),['desk','titles']);
+  assert.deepEqual(changesSince(base,structuredClone(base)),[]);}
 assert.match(when('2026-11-17T22:14:00',new Date('2026-11-17T23:00:00')),/^22:14$/);
 {const posts=[];let p=project(0),status=200;
   const fetcher=async(url,opt)=>{posts.push({url,opt,body:opt?.body&&JSON.parse(opt.body)});return {status,ok:status===200,json:async()=>status===200?{at:'2026-11-17T22:14:00.000Z',file:'x'}:{error:'no'}};};
