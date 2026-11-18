@@ -405,7 +405,26 @@ def tree_of(o):
     bm = bmesh.new(); bm.from_mesh(o.data); bm.transform(o.matrix_world); t = BVHTree.FromBMesh(bm); bm.free(); return t
 
 
-def cull_under(o, trees, reach, through=.018, corners=False, whole=False, tuck=False):
+DISTAL = ('lowerarm_', 'hand_', 'thumb_', 'index_', 'middle_', 'ring_', 'pinky_')      # (the forearm and the hand: from the elbow out)
+
+
+def distal_test():
+    """A function: is a point of the posed body nearest a bone of the forearm or the hand (not the upper arm, the trunk or a leg)?"""
+    segs = [(pb.name.startswith(DISTAL), rig.matrix_world @ pb.head, rig.matrix_world @ pb.tail) for pb in rig.pose.bones if pb.bone.use_deform]
+    cache = {}
+    def test(p):
+        key = (round(p.x, 4), round(p.y, 4), round(p.z, 4))
+        if key not in cache:
+            best = None
+            for hand, h, t in segs:
+                d = t - h; u = max(0, min(1, (p - h).dot(d) / (d.length_squared or 1e-9))); dist = (h + d * u - p).length
+                if best is None or dist < best[0]: best = (dist, hand)
+            cache[key] = best[1]
+        return cache[key]
+    return test
+
+
+def cull_under(o, trees, reach, through=.018, corners=False, whole=False, tuck=False, bare_arms=False):
     if not trees: return
     bm = bmesh.new(); bm.from_mesh(o.data); bm.transform(o.matrix_world); bm.normal_update()
     # Covered: a layer above lies just outside the face (within `reach`), or the face has pushed out through that
@@ -414,12 +433,17 @@ def cull_under(o, trees, reach, through=.018, corners=False, whole=False, tuck=F
     # tuck (round three, instead of corners): a corner that has come through the layer above is put back under it.
     # Taking the whole face away for one corner left a notch at every hem (a sleeve's end, a sweater's edge); leaving
     # it left a fleck of skin or trouser on the garment. The hands are never under cloth: they are left alone.
+    # bare_arms (cast.BARE_FOREARMS, 17 Nov 2026): a pose whose forearm and hand lie against the hip or in front of a
+    # pocket (stand-phone-pull) has them beside the shirt hem and the trousers, never under them: the forearm is left
+    # whole too, not cut away and tucked in where cloth is near (the arm was torn off at the wrist).
     def behind(p, n, far): return any(t.ray_cast(p - n * .0005, -n, far)[0] is not None for t in trees)
     def under(p, n): return any(t.ray_cast(p + n * .0005, n, reach)[0] is not None or t.ray_cast(p - n * .0005, -n, through)[0] is not None for t in trees)
     weights = bm.verts.layers.deform.active; hand = {g.index for g in o.vertex_groups if g.name.startswith(('hand_', 'thumb_', 'index_', 'middle_', 'ring_', 'pinky_'))}
-    def of_hand(v): return bool(tuck and weights and hand) and sum(w for g, w in v[weights].items() if g in hand) > .5
+    bare = distal_test() if bare_arms else None
+    def of_hand(v): return (bool(bare) and bare(v.co)) or (bool(tuck and weights and hand) and sum(w for g, w in v[weights].items() if g in hand) > .5)
     def hidden(f):
         c = f.calc_center_median()
+        if bare and bare(c): return False
         if tuck and all(of_hand(v) for v in f.verts): return False
         if whole and tuck and behind(c, f.normal, max(through, .03)): return True          # (all of it has pushed out through the layer)
         if whole: return under(c, f.normal) and all(under(v.co, f.normal) for v in f.verts)
@@ -445,7 +469,7 @@ for c in cloth:
 trees = [tree_of(c) for c in cloth]
 made = len(garments.names(who))      # (garments made from the base mesh: smooth shells with cut necklines)
 # (round three: skin goes only where all of a face is covered, so a collar's edge has no notches of missing neck)
-cull_under(body, trees, .035, whole=made > 0 or LOOK >= 3, tuck=LOOK >= 3)
+cull_under(body, trees, .035, whole=made > 0 or LOOK >= 3, tuck=LOOK >= 3, bare_arms=spec['pose'] in cast.BARE_FOREARMS)
 # A garment can push further out through the one over it than skin does (a trouser yoke through the back of a shirt).
 # (what is under a shell shows at every corner that pokes through it)
 # (a headscarf is laid over the clothes as they are: nothing under it needs to go)
