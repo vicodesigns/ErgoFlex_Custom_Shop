@@ -218,7 +218,9 @@ try{
   check(/^Refresh from Studio$/.test(await page.$eval('[data-studio-refresh]',b=>b.textContent)),'the Director\'s own write raises no "Studio changed" badge');
   const beforeRefresh=[JSON.stringify(await draft()),JSON.stringify((await pose(CHAIR)).p)];
   await page.click('[data-studio-refresh]');
-  await until(async()=>/^Studio has nothing new for this stage\./.test(await status()),'Refresh from Studio with nothing new',20000);
+  // (since 6a39945e Refresh reports counts: "Refreshed from Studio: 0 prop, 0 desk, 0 show / hide and 0 character changes…")
+  await until(async()=>/^Refreshed from Studio: 0 prop, 0 desk(, 0 show \/ hide)? and 0 character changes/.test(await status()),'Refresh from Studio with nothing new',20000);
+  check(!(await page.evaluate(()=>document.getElementById('studio-adopt')?.open)),'no Adopt dialog: nothing to choose');
   check(JSON.stringify(await draft())===beforeRefresh[0]&&JSON.stringify((await pose(CHAIR)).p)===beforeRefresh[1],'Refresh from Studio after Make permanent: nothing new, the draft and the stage as they were');
   d=await draft();check(d.length===1&&/wide-monitor/.test(d[0].match),'the chair\'s chapter edit is folded in; the accessory hide stays');
   const chairAfter=await pose(CHAIR);check(near(chairAfter.p,chairBefore.p)&&near(chairAfter.s,chairBefore.s),'the chair stays where he put it on the stage');

@@ -98,9 +98,10 @@ try{
   await page.click('#prop-library [name=pl-fits]');await wait(300);const fitN=Number(/^(\d+) of/.exec(await page.$eval('[data-pl-count]',e=>e.textContent))[1]);
   check(fitN>0&&fitN<total,`Fits this room: ${fitN} of ${total}`);await page.click('#prop-library [name=pl-fits]');await wait(300);
   // type to search (focus back in the search box after the clicks), arrows, Enter
-  await page.keyboard.type('phone');await wait(500);
+  // ("smartphone": the library grew to ~500 models and "phone" now also finds headphones, microphones… over 100 cards)
+  await page.keyboard.type('smartphone');await wait(500);
   const cards=await page.$$eval('#prop-library .pl-card',l=>l.map(c=>c.title));
-  check(cards.some(t=>/ergoflex-phone/.test(t))&&cards.length<20&&cards.every(t=>/phone/i.test(t)),`search "phone": ${cards.length} models, the Smartphone among them`);
+  check(cards.some(t=>/ergoflex-phone/.test(t))&&cards.length<20&&cards.every(t=>/phone/i.test(t)),`search "smartphone": ${cards.length} models, the Smartphone among them`);
   await page.screenshot({path:path.join(shots,'add-prop-library.png')});
   await page.keyboard.press('ArrowDown');const down=await page.$eval('#prop-library .pl-card[aria-selected=true]',e=>Number(e.dataset.plIndex));await page.keyboard.press('ArrowUp');
   check(down>1&&await page.$eval('#prop-library .pl-card[aria-selected=true]',e=>e.dataset.plIndex)==='0','ArrowDown moves a row (to card '+down+'), ArrowUp back');
