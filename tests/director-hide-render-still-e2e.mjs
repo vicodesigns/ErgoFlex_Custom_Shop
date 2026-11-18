@@ -2,9 +2,11 @@
 // still stage's ambient occlusion echoed a hidden thing's "hidden" back as its own state, so after Undo / Show it stayed
 // missing from Render still and Film look (film-desk-edits.mjs hideDesk, film-edits.mjs hide edits; node proof:
 // tests/film-hide-gtao-echo-test.mjs). Vico's two examples, in the Layers tab of the Create chapter:
-//   desk  hide a room desk with its eye (one in the still's view), Render still: it is gone; Undo; Render still = before
 //   prop  hide the potted fern (else the first room prop the still shows) with its eye; Show it again; Render still = before
-// "= before": the same pixels as the still before the hide, within the noise of two stills of an unchanged frame.
+//   desk  hide a room desk with its eye (one in the still's view), Render still: it is gone; Undo; Render still = before
+//         (Create has none to hide: the first other chapter with one, DESK_CHAPTERS=<ids> to choose)
+// "= before": exactly the same pixels as the still before the hide (Render still is deterministic: two stills of one frame
+// are checked identical first). On 713d22ff the stool case left 0.032 % of the frame off: this fails there.
 // CHAPTER=create (default). Writes the stills and hide-stills.json to OUT (default: a temp dir).
 //   flock /tmp/claude-1000/hq12-stills.lock node tests/director-hide-render-still-e2e.mjs
 import assert from 'node:assert/strict';
@@ -37,7 +39,8 @@ const diff=(a,b)=>page.evaluate(async(a,b)=>{
   return {off:+(off/N).toFixed(5),mean:+(sum/N).toFixed(3)};},a,b);
 // the Layers tab's rows: name, key, hidden, whether its eye can act, and whether it is a room desk
 const rows=()=>page.evaluate(()=>[...document.querySelectorAll('#director-panel li[data-ly-item]')].map(li=>{const eye=li.querySelector('.layer-eye');
-  return {key:li.dataset.lyItem,name:li.querySelector('.layer-name')?.textContent||'',hidden:li.classList.contains('is-hidden'),can:!!eye&&!eye.disabled,desk:/· ErgoFlex desk$/.test(li.querySelector('.layer-name')?.textContent||'')};}));
+  // (desk: the eye hides a room desk: layers-panel.mjs marks it data-ly-desk with its station)
+  return {key:li.dataset.lyItem,name:li.querySelector('.layer-name')?.textContent||'',hidden:li.classList.contains('is-hidden'),can:!!eye&&!eye.disabled,desk:!!eye?.dataset.lyDesk};}));
 const eye=key=>page.evaluate(key=>{const b=[...document.querySelectorAll('#director-panel li[data-ly-item] .layer-eye')].find(b=>b.dataset.section===key);if(!b)throw Error('no eye for '+key);b.click();},key);
 const rowOf=async key=>(await rows()).find(r=>r.key===key);
 const layersTab=async()=>{await page.evaluate(()=>document.querySelector('#director-panel [data-inspector-tab="layers"]')?.click());await wait(500);};
@@ -48,8 +51,11 @@ try{
   const list=await until(async()=>{const r=await rows();return r.length?r:null;},'the Layers rows');
   check(list.some(r=>r.can),`the Layers tab lists ${list.length} items with an eye`);
   // ---- the reference and the noise of two stills of the same frame
-  const A=await still('before'),A2=await still('before-again'),noise=await diff(A,A2);report.noise=noise;
-  const same=d=>d.off<=Math.max(.0005,noise.off*3)&&d.mean<=Math.max(.15,noise.mean*3),gone=d=>d.off>=.001;
+  let A=await still('before'),A2=await still('before-again'),noise=await diff(A,A2);report.noise=noise;
+  // Render still is deterministic: two stills of one frame are the same pixels, and a thing brought back must leave none
+  // off (the old code left 0.032 % of the frame, mean 0.018, after the Artist stool came back: the bar is exact)
+  check(noise.off===0&&noise.mean===0,`two stills of the same frame are identical (${JSON.stringify(noise)})`);
+  const same=d=>d.off===0&&d.mean===0,gone=d=>d.off>=.001;
   // one case: hide the row, the still changes; bring it back (Undo or the eye again), the still is the reference again
   async function hideAndBack(kind,cands,back){
     for(const r of cands){
@@ -67,9 +73,21 @@ try{
     check(false,`${kind}: none of ${cands.map(r=>r.name).join(', ')||'(no candidates)'} shows in the still's view`);
   }
   const now=await rows();
-  await hideAndBack('desk',now.filter(r=>r.desk&&r.can&&!r.hidden).slice(0,4),async()=>{await undo();});
   const props=now.filter(r=>!r.desk&&r.can&&!r.hidden),fern=props.filter(r=>/^Potted fern/i.test(r.name));
   await hideAndBack('prop',[...fern,...props.filter(r=>!fern.includes(r))].slice(0,6),async r=>{await eye(r.key);});
+  // the desk: this chapter's room desks, else the first of the other chapters (DESK_CHAPTERS, default all) that has one
+  let desks=now.filter(r=>r.desk&&r.can&&!r.hidden);report.deskChapter=chapter.id;
+  if(!desks.length){
+    const others=(process.env.DESK_CHAPTERS?process.env.DESK_CHAPTERS.split(','):chapterList().map(c=>c.id)).filter(id=>id!==chapter.id);
+    for(const id of others){const c=chapterList().find(c=>c.id===id);if(!c)continue;
+      await openChapter(page,base,c);await layersTab();
+      desks=(await until(async()=>{const r=await rows();return r.length?r:null;},id+': the Layers rows')).filter(r=>r.desk&&r.can&&!r.hidden);
+      console.log(`     (desk: ${chapter.id} has no room desk to hide; ${id}: ${desks.length})`);
+      if(desks.length){report.deskChapter=id;A=await still('desk-before');A2=await still('desk-before-again');noise=await diff(A,A2);report.deskNoise=noise;
+        check(noise.off===0&&noise.mean===0,`${id}: two stills of the same frame are identical (${JSON.stringify(noise)})`);break;}
+    }
+  }
+  await hideAndBack('desk',desks.slice(0,4),async()=>{await undo();});
 }catch(error){failures.push(error.message);console.error('FAIL '+error.message);}
 finally{
   report.status=await statusOf(page).catch(()=>'');fs.writeFileSync(path.join(OUT,'hide-stills.json'),JSON.stringify(report,null,1));console.log('stills and hide-stills.json in '+OUT);
