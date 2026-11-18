@@ -23,9 +23,16 @@ const film=()=>page.evaluate(()=>{const b=document.querySelector('.film-box.film
 const press=()=>page.evaluate(()=>document.querySelector('.film-tools [data-film-mode]').click());
 async function modeTo(label){for(let i=0;i<3;i++){if((await film()).button===label)return;await press();await wait(60);}throw Error('the mode button never said '+label);}
 // The 16:9 frame as the page draws it (stage + overlay), as a data URL
+// (the picture only: the frame's labels and buttons are hidden for the shot. They differ between the modes on purpose:
+// the tool row's mode button says Film look / Split, the badge moves to the film side in Split, the LIVE tag, the wipe
+// line; the first Windows run measured them as a Split right half 3.69 off the Film look's. The labels are checked
+// separately, from their styles.)
+const CHROME='.film-tools,.light-tools,.film-look-badge,.film-live-tag,.film-wipe,.film-guides{visibility:hidden!important}';
 async function frame(name){
   const r=await page.$eval('#stage',e=>{const b=e.getBoundingClientRect();return {x:b.left,y:b.top,width:b.width,height:b.height};});
-  const png=await page.screenshot({clip:r,type:'png'});fs.writeFileSync(path.join(OUT,name+'.png'),png);return 'data:image/png;base64,'+png.toString('base64');
+  await page.evaluate(css=>{const s=document.createElement('style');s.id='e2e-no-chrome';s.textContent=css;document.head.append(s);},CHROME);await wait(50);
+  try{const png=await page.screenshot({clip:r,type:'png'});fs.writeFileSync(path.join(OUT,name+'.png'),png);return 'data:image/png;base64,'+png.toString('base64');}
+  finally{await page.evaluate(()=>document.getElementById('e2e-no-chrome')?.remove());}
 }
 // mean absolute RGB difference (0..255) and the share of pixels off by more than 24, over [x0,x1) of the width
 const diff=(a,b,x0=0,x1=1)=>page.evaluate(async(a,b,x0,x1)=>{
@@ -62,7 +69,7 @@ try{
   const left=await diff(S,L1,0,w-.04),right=await diff(S,F,w+.04,1),leftFilm=await diff(S,F,0,w-.04);
   notes.split={left,right,leftFilm};
   check(left.mean<=Math.max(2,noise.mean*2+1),`Split, left of the wipe = Live (mean ${left.mean})`);
-  check(right.mean<=2,`Split, right of the wipe = Film look (mean ${right.mean})`);
+  check(right.mean<=1&&right.off<=.002,`Split, right of the wipe = Film look (mean ${right.mean}, ${(right.off*100).toFixed(2)} % off)`);
   check(leftFilm.mean>Math.max(2,noise.mean*4),`Split's left half is not the film's (mean ${leftFilm.mean}): the two sides really differ`);
   // ---- Live again: the overlay off at once
   await modeTo('Live');await wait(300);
