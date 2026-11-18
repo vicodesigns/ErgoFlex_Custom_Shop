@@ -263,3 +263,5 @@ body.df-shell #director-timeline .time-ruler-row{box-shadow:0 5px 8px -4px #000c
 body.df-filter-changed #director-timeline :is(.lane-group-head,.lane-group-body):not(.group-changed){display:none}
 .pose-key-diamond{align-self:end;width:26px;height:26px;margin-bottom:1px;border:1px solid var(--df-border-2,#ffffff1c);border-radius:6px;background:transparent;color:var(--df-text-3,#8a97a6);font-size:14px;line-height:1;cursor:pointer}
 .pose-key-diamond.pose-key-here{color:#ffd166;border-color:#ffd16688}.pose-key-diamond.pose-key-elsewhere{color:#ffd166aa}
+/* the mode pills live in the timeline's foot; an older rule hides the foot's spans (all but the bake summary) */
+#director-timeline .timeline-footer>span.sb-pills{display:inline-flex;flex-wrap:nowrap;overflow:hidden}
