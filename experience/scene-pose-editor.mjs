@@ -410,8 +410,9 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
   }
   // ---- held things (people-held.mjs): what the model holds, moved / turned / resized on its own; it still follows the hand.
   // Stored on this posture (postures[model].held[bone]); not keyed: the same all chapter.
-  const HELD_FIELDS=[['x','Right','cm',h=>-(h.at?.[0]||0)*100,(h,v)=>{h.at=[...(h.at||[0,0,0])];h.at[0]=-v/100;}],['y','Up','cm',h=>(h.at?.[1]||0)*100,(h,v)=>{h.at=[...(h.at||[0,0,0])];h.at[1]=v/100;}],
-    ['z','Forward','cm',h=>(h.at?.[2]||0)*100,(h,v)=>{h.at=[...(h.at||[0,0,0])];h.at[2]=v/100;}],['ry','Turn','°',h=>h.turn?.[1]||0,(h,v)=>{h.turn=[...(h.turn||[0,0,0])];h.turn[1]=v;}],
+  // (k: centimetres in the scene per metre of the model, heldCm: the stored metres are the model's, the fields real cm)
+  const HELD_FIELDS=[['x','Right','cm',(h,k)=>-(h.at?.[0]||0)*k,(h,v,k)=>{h.at=[...(h.at||[0,0,0])];h.at[0]=-v/k;}],['y','Up','cm',(h,k)=>(h.at?.[1]||0)*k,(h,v,k)=>{h.at=[...(h.at||[0,0,0])];h.at[1]=v/k;}],
+    ['z','Forward','cm',(h,k)=>(h.at?.[2]||0)*k,(h,v,k)=>{h.at=[...(h.at||[0,0,0])];h.at[2]=v/k;}],['ry','Turn','°',h=>h.turn?.[1]||0,(h,v)=>{h.turn=[...(h.turn||[0,0,0])];h.turn[1]=v;}],
     ['rx','Tip','°',h=>h.turn?.[0]||0,(h,v)=>{h.turn=[...(h.turn||[0,0,0])];h.turn[0]=v;}],['rz','Lean','°',h=>h.turn?.[2]||0,(h,v)=>{h.turn=[...(h.turn||[0,0,0])];h.turn[2]=v;}],
     ['s','Size','%',h=>(h.scale??1)*100,(h,v)=>{h.scale=v/100;}]];
   const HELD_RANGE={x:[-100,100],y:[-100,100],z:[-100,100],ry:[-180,180],rx:[-180,180],rz:[-180,180],s:[10,400]};
@@ -419,15 +420,15 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
   const r2=v=>Math.round(v*100)/100;
   function heldPanel(e){
     const items=h?.object&&rigOf()?heldItems(h.object):[];if(!items.length)return '';
-    return `<h4>Held <small class="director-hint">moves with the hand · this posture, the whole chapter</small></h4>${items.map(it=>{const v=e?.held?.[it.bone]||{},moved=!heldIdentity(v);
+    return `<h4>Held <small class="director-hint">moves with the hand · this posture, the whole chapter</small></h4>${items.map(it=>{const v=e?.held?.[it.bone]||{},moved=!heldIdentity(v),k=heldCm(it.bone);
       return `<div class="pose-held" data-held="${escape(it.bone)}"><p class="director-hint"><b>${escape(it.label.replace(/^\w/,c=>c.toUpperCase()))}</b> · ${escape(SIDE[it.bone]||it.bone.replace(/_/g,' '))}${moved?' · moved':''}</p>
-        <div class="director-row people-fields pose-held-fields">${HELD_FIELDS.map(([f,lab,unit,get])=>`<label>${lab}<input type="number" name="pe-held-${escape(it.bone)}-${f}" value="${r2(get(v))}" step="${unit==='cm'?0.5:unit==='%'?5:2}" min="${HELD_RANGE[f][0]}" max="${HELD_RANGE[f][1]}"><small>${unit}</small></label>`).join('')}</div>
+        <div class="director-row people-fields pose-held-fields">${HELD_FIELDS.map(([f,lab,unit,get])=>`<label>${lab}<input type="number" name="pe-held-${escape(it.bone)}-${f}" value="${r2(get(v,k))}" step="${unit==='cm'?0.5:unit==='%'?5:2}" min="${HELD_RANGE[f][0]}" max="${HELD_RANGE[f][1]}"><small>${unit}</small></label>`).join('')}</div>
         <div class="director-actions"><button type="button" data-action="pe-held-gizmo" data-section="${escape(it.bone)}" aria-pressed="${heldSel===it.bone}" title="Move it with the Gumball in the view (W)">Gumball</button><button type="button" data-action="pe-held-reset" data-section="${escape(it.bone)}" ${moved?'':'disabled'} title="Back where the model holds it">Reset ${escape(it.label)}</button></div></div>`;}).join('')}`;
   }
   function setHeld(bone,f,value){
     const e=entry(key),field=HELD_FIELDS.find(x=>x[0]===f);if(!e||!field)return;
     const [lo,hi]=HELD_RANGE[f],v=Math.max(lo,Math.min(hi,value)),lab=heldItems(h?.object||{traverse(){}}).find(x=>x.bone===bone)?.label||'held thing';
-    edit(key,x=>{const all={...(x.held||{})},one=structuredClone(all[bone]||{});field[4](one,v);if(heldIdentity(one))delete all[bone];else all[bone]=one;if(Object.keys(all).length)x.held=all;else delete x.held;},
+    const k=heldCm(bone);edit(key,x=>{const all={...(x.held||{})},one=structuredClone(all[bone]||{});field[4](one,v,k);if(heldIdentity(one))delete all[bone];else all[bone]=one;if(Object.keys(all).length)x.held=all;else delete x.held;},
       `${personName(e)}: ${lab} ${field[1].toLowerCase()} ${r2(v)} ${field[2]}.`,{undoKey:'held:'+bone+':'+f});
   }
   // The Gumball on a held thing (W): it sits on the thing's base; a drag moves the thing live and is one undo step.
@@ -435,15 +436,17 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
   let heldSel=null,heldDrag=null;
   function heldFrame(name){const sk=heldSkeleton(name),j=sk?sk.bones.findIndex(b=>b.name===name):-1;if(j<0)return null;const hand=sk.bones[j];hand.updateMatrixWorld(true);return new (T().Matrix4)().multiplyMatrices(hand.matrixWorld,sk.boneInverses[j]);}
   function heldMeshes(name){const out=[];h?.object.traverse(o=>{if(o.isSkinnedMesh&&[].concat(o.material).some(m=>/^Held\./.test(m?.name||''))){const sk=o.userData.heldOriginal||o.skeleton,j=o.geometry.getAttribute('skinIndex')?.getComponent(0,0);if(sk.bones[j]?.name===name)out.push(o);}});return out;}
+  // centimetres in the scene per metre of the model (the person is drawn at their own height: Andre about 1.28x)
+  function heldCm(name){const F=heldFrame(name);if(!F)return 100;const sc=win()?.ErgoFlex?.workspaceRoom?.scale,len=new (T().Vector3)().setFromMatrixColumn(F,0).length();return sc>0?len/(sc*10):100;}   // (the room: sc scene units per mm)
   function heldSkeleton(name){const m=heldMeshes(name)[0];return m?(m.userData.heldOriginal||m.skeleton):null;}
   function heldBase(name){const box=new (T().Box3)(),b=new (T().Box3)();for(const m of heldMeshes(name)){m.geometry.boundingBox||m.geometry.computeBoundingBox();box.union(b.copy(m.geometry.boundingBox).applyMatrix4(m.bindMatrix));}if(box.isEmpty())return null;const c=box.getCenter(new (T().Vector3)());c.y=box.min.y;return c;}
   function heldBaseWorld(out){const F=heldFrame(heldSel),c=heldBase(heldSel);if(!F||!c)return out;const at=entry(key)?.held?.[heldSel]?.at||[0,0,0];return out.set(c.x+at[0],c.y+at[1],c.z+at[2]).applyMatrix4(F);}
-  // the stage's own people-held.mjs (the preview while dragging: room-people.mjs leaves held things alone during a drag)
-  let stageHeld=null;function stageHeldModule(){const w=win();if(!stageHeld&&w)stageHeld=new w.Function('return import("/people-held.mjs")')().catch(()=>null);return stageHeld;}
-  function heldDragStart(){const F=heldFrame(heldSel),c=heldBase(heldSel);heldDrag=F&&c?{inv:F.clone().invert(),c,start:structuredClone(entry(key)?.held||{})}:null;stageHeldModule();}
+  // the preview while dragging: the stage's RoomPeople draws it (room-people.mjs leaves held things alone during a drag)
+  const previewHeld=all=>{try{stagePeople()?.previewHeld?.(h.object,all);}catch{}};
+  function heldDragStart(){const F=heldFrame(heldSel),c=heldBase(heldSel);heldDrag=F&&c?{inv:F.clone().invert(),c,start:structuredClone(entry(key)?.held||{})}:null;}
   function heldAtNow(){const d=heldDrag;if(!d)return null;const p=h.target.position.clone().applyMatrix4(d.inv);return [p.x-d.c.x,p.y-d.c.y,p.z-d.c.z].map(v=>Math.round(v*1e4)/1e4);}
-  function heldDragMove(){const at=heldAtNow();if(!at)return;const all={...heldDrag.start,[heldSel]:{...(heldDrag.start[heldSel]||{}),at}};stageHeldModule()?.then(m=>m?.applyHeld(h.object,all));wake();
-    status(`Moving ${personName(entry(key))}'s ${heldItems(h.object).find(x=>x.bone===heldSel)?.label||'held thing'}: ${(-at[0]*100).toFixed(1)} cm right, ${(at[1]*100).toFixed(1)} up, ${(at[2]*100).toFixed(1)} forward.`);}
+  function heldDragMove(){const at=heldAtNow();if(!at)return;const all={...heldDrag.start,[heldSel]:{...(heldDrag.start[heldSel]||{}),at}};previewHeld(all);wake();
+    const k=heldCm(heldSel);status(`Moving ${personName(entry(key))}'s ${heldItems(h.object).find(x=>x.bone===heldSel)?.label||'held thing'}: ${(-at[0]*k).toFixed(1)} cm right, ${(at[1]*k).toFixed(1)} up, ${(at[2]*k).toFixed(1)} forward.`);}
   function heldDragEnd(){const at=heldAtNow(),bone_=heldSel;heldDrag=null;if(!at||!key)return;const e=entry(key),lab=heldItems(h.object).find(x=>x.bone===bone_)?.label||'held thing';
     edit(key,x=>{const all={...(x.held||{})},one={...(all[bone_]||{}),at};if(heldIdentity(one))delete all[bone_];else all[bone_]=one;if(Object.keys(all).length)x.held=all;else delete x.held;},`${personName(e)}: ${lab} moved (it still follows the hand).`);}
   function selectHeld(name){if(!h||!heldMeshes(name).length)return;heldSel=heldSel===name?null:name;joint=heldSel?null:joint;wake();rerender();

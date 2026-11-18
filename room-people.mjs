@@ -1344,6 +1344,8 @@ export class RoomPeople {
     }
     // Pose keys (spec.poseKeys): the turns each keyed person has at this second of the chapter, for everything that
     // draws them this frame (poseNow). Someone nothing moves this frame (no life, not at a moving desk) is posed here.
+    // The Director's Gumball on a held thing: shown where it is dragged until the drag ends (people-held.mjs).
+    previewHeld(object, held) { return applyHeld(object, held); }
     keyPoses(time) {
         // (the Director's pose mode drags a bone: stand back from the skeleton while it does, or the drag snaps back)
         const held = typeof window !== 'undefined' && !!window.__directorDragging;
