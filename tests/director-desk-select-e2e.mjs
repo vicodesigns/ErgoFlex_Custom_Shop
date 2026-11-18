@@ -55,7 +55,10 @@ try{
   const click=async(sel,ms=700)=>{await page.evaluate(s=>document.querySelector(s).click(),sel);await wait(ms);};
   const until=async(fn,what,ms=30000)=>{const end=Date.now()+ms;for(;;){const v=await fn();if(v)return v;if(Date.now()>end)throw Error('timed out: '+what);await wait(150);}};
   const rec=id=>page.evaluate(i=>__rec(i),id);
-  const draft=()=>page.evaluate(()=>__draft());
+  // (oilers folds its Props-tab desk moves into desk edits when it opens (director.mjs foldDeskProps): those are set
+  // aside once, below, so the counts here are this test's own edits)
+  const draftAll=()=>page.evaluate(()=>__draft());let folded=null;
+  const draft=async()=>{const d=await draftAll();return d&&folded?d.filter(e=>!folded.has(e.desk)):d;};
   const header=()=>page.$eval('#director-panel [data-selected-header]',e=>e.textContent.replace(/\s+/g,' ').trim()).catch(()=>'');
   const setField=async(name,value)=>{await page.evaluate((n,v)=>{const el=document.querySelector(`#director-panel [name="${n}"]`);el.value=String(v);el.dispatchEvent(new Event('change',{bubbles:true}));},name,value);await wait(900);};
   const tab=()=>page.$eval('#director-panel [data-inspector-tab][aria-pressed=true]',b=>b.dataset.inspectorTab);
@@ -70,7 +73,8 @@ try{
   check(ids.length>=5&&list.length===ids.length&&list.every((r,i)=>r.id===ids[i]),`the list has every record of the room (${list.length}): ${list.map(r=>r.id).join(', ')}`);
   check(list.filter(r=>r.featured).length===1&&list.find(r=>r.featured).id==='main'&&list.find(r=>r.featured).text.includes(FEATURED_NAME)&&/featured/.test(list.find(r=>r.featured).text),'the featured desk is marked and named by state.name: '+list.find(r=>r.featured).text);
   check(list.some(r=>r.id===ID&&/Surf forecast standing desk/.test(r.text)&&/48″/.test(r.text)),'a room desk is named by its state.name with its size: '+list.find(r=>r.id===ID)?.text);
-  check(await draft()===null||(await draft()).length===0,'no desk edits yet');
+  folded=new Set(((await draftAll())||[]).map(e=>e.desk).filter(id=>id!==ID));if(folded.size)console.log('  folded on open (set aside): '+[...folded].join(', '));
+  check(await draft()===null||(await draft()).length===0,'no desk edits yet (besides those folded in on open)');
   const orig=await rec(ID);
 
   // ---- select via the list

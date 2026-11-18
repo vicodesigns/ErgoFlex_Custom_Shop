@@ -26,7 +26,9 @@ try{
   await openChapter(page,base,chapter);
   const status=()=>statusOf(page);
   const stage=()=>page.evaluate(()=>{const s=document.getElementById('stage').contentWindow.ErgoPresentation.snapshot();return {height:s.height,tilt:s.tilt};});
-  const draftShot=()=>page.evaluate(()=>{try{const v=(()=>{const b=document.body.dataset;if(b.draftStore!=='film')return JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=f[b.cutId]?.cut;return {active:'film',drafts:d?{film:d}:{},cuts:[]};})();return (v.drafts[v.active]||v.cuts.find(c=>c.id===v.active)).shots[0];}catch{return null;}});
+  // the chapter as the Director holds it (__directorShot): the draft is dropped whenever the cut is back to what was
+  // exported, which Max height / Max tilt is on a hero that already starts there (52.5″ / 65°, every cut since Nov 2026)
+  const draftShot=()=>page.evaluate(()=>window.__directorShot?.()||null);
   const fields=()=>page.evaluate(()=>Object.fromEntries(['start-height','start-height-n','start-tilt','start-tilt-n'].map(n=>[n,Number(document.querySelector(`#director-panel [name="${n}"]`)?.value)])));
   const click=async sel=>{await page.evaluate(s=>document.querySelector(s).click(),sel);await wait(700);};
   const until=async(fn,what,ms=20000)=>{const end=Date.now()+ms;for(;;){const v=await fn();if(v)return v;if(Date.now()>end)throw Error('timed out: '+what);await wait(150);}};
@@ -50,7 +52,7 @@ try{
   check(f1['start-height']===52.5&&f1['start-height-n']===52.5&&f1['start-tilt']===65&&f1['start-tilt-n']===65,'fields read 52.5″ / 65° (slider and number)');
   check(near(s1.height,52.5)&&near(s1.tilt,65),`stage at 0 s: ${s1.height.toFixed(2)}″ / ${s1.tilt.toFixed(2)}°`);
   check(/Starting position: Max tilt|unchanged/.test(await status()),'status: '+await status());
-  let d=await draftShot();check(d?.motion?.initial?.height===52.5&&d.motion.initial.tilt===65,'draft keeps motion.initial 52.5 / 65');
+  let d=await draftShot();check(d?.motion?.initial?.height===52.5&&d.motion.initial.tilt===65,'the chapter holds motion.initial 52.5 / 65');
   await page.$eval('#director-panel [data-start-pose-box]',e=>e.scrollIntoView({block:'center'}));await wait(600);
   await (await page.$('#director-panel [data-start-pose-box]')).screenshot({path:path.join(shots,'control.png'),captureBeyondViewport:false});
 
