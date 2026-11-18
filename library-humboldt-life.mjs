@@ -378,14 +378,15 @@ export function buildHumboldtLife(ctx) {
     const XL = layout.left ?? -layout.width / 2, XR = XL + layout.width;
 
     // ---------- Shared atlas material ----------
-    const map = canvasMap(drawAtlas, AT, AT); map.anisotropy = 4;
+    const map = canvasMap(drawAtlas, AT, AT, {willReadFrequently:true}); map.anisotropy = 4;
     const glowCanvas = document.createElement('canvas'); glowCanvas.width = glowCanvas.height = 512;
-    { const g = glowCanvas.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0, 0, 512, 512); g.drawImage(map.image, 0, 0, AT, 320, 0, 0, 512, 160); }
+    { const g = glowCanvas.getContext('2d', {willReadFrequently:true}); g.fillStyle = '#000'; g.fillRect(0, 0, 512, 512); g.drawImage(map.image, 0, 0, AT, 320, 0, 0, 512, 160); }
     const glow = new THREE.CanvasTexture(glowCanvas); glow.colorSpace = THREE.SRGBColorSpace;
-    const ormCanvas = document.createElement('canvas'); ormCanvas.width = ormCanvas.height = 256; drawORM(ormCanvas.getContext('2d'), 256);
+    const ormCanvas = document.createElement('canvas'); ormCanvas.width = ormCanvas.height = 256; drawORM(ormCanvas.getContext('2d', {willReadFrequently:true}), 256);
     const orm = new THREE.CanvasTexture(ormCanvas);
     const lifeMat = own(new THREE.MeshStandardMaterial({ name: 'Humboldt student life atlas', color: '#ffffff', map, emissive: '#ffffff', emissiveMap: glow, emissiveIntensity: .6, roughnessMap: orm, metalnessMap: orm, roughness: 1, metalness: 1 }));
     lifeMat.userData.roomPaletteLocked = true; lifeMat.userData.roomFinishLocked = true;
+    map.userData.staticArtwork = glow.userData.staticArtwork = true;
     const textures = [map, glow, orm];
     const bake = (parent, b, name, cast = true) => {
         const geo = b.build(); if (!geo) return null;
@@ -709,7 +710,7 @@ export function buildHumboldtLife(ctx) {
             if (o.isMesh && o.material?.map) panel.union(box); else if (!o.isMesh) notices.push(box);
         }
         if (!panel.isEmpty()) {
-            flyerMap = canvasMap(drawFlyers, 1024, 1024); flyerMap.anisotropy = 4;
+            flyerMap = canvasMap(drawFlyers, 1024, 1024, {willReadFrequently:true}); flyerMap.anisotropy = 4; flyerMap.userData.staticArtwork = true;
             flyerMat = own(new THREE.MeshStandardMaterial({ name: 'Humboldt tackboard flyers', map: flyerMap, roughness: .9 })); flyerMat.userData.roomPaletteLocked = true; textures.push(flyerMap);
             const faceX = panel.min.x - 1.5, placed = [], pad = 40;
             const hit = (z0, z1, y0, y1) => placed.some(r => z0 < r[1] + 25 && z1 > r[0] - 25 && y0 < r[3] + 25 && y1 > r[2] - 25) || notices.some(n => z0 < n.max.z + pad && z1 > n.min.z - pad && y0 < n.max.y + pad && y1 > n.min.y - pad);

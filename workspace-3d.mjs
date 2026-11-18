@@ -109,12 +109,14 @@ export const PROP_LIBRARY = {
     // After a model was built on request (the Director's People tab): read the index again.
     reloadIndex() { this.indexPromise = fetch(PROP_BASE + 'index.json?t=' + Date.now(), { cache: 'no-store' }).then(r => { if (!r.ok) throw new Error(`${r.status} ${r.statusText}`); return r.json(); }).then(index => { this.index = index; return index; }); return this.indexPromise; },
     entry(id) { return this.index?.props.find(p => p.id === id) || null; },
-    load(id) {
-        if (!this.cache.has(id)) {
+    load(id, file = null) {
+        const cacheKey = file || id;
+        if (!this.cache.has(cacheKey)) {
             if (!this.loader) { this.loader = new GLTFLoader(); this.loader.setMeshoptDecoder(MeshoptDecoder); }
             const entry = this.entry(id);
-            const url = entry ? './' + entry.file + '?v=' + encodeURIComponent(entry.revision || 'prop-unit-scale-20261013') : `${PROP_BASE}${id}.glb?v=prop-unit-scale-20261013`;
-            this.cache.set(id, new Promise((resolve, reject) => this.loader.load(url, gltf => {
+            const path = file || entry?.file || `assets/props/${id}.glb`;
+            const url = './' + path + '?v=' + encodeURIComponent(entry?.revision || 'prop-unit-scale-20261013');
+            this.cache.set(cacheKey, new Promise((resolve, reject) => this.loader.load(url, gltf => {
                 // A model with a skeleton (the people: baked in their pose, which is the skeleton's rest pose) is used as
                 // plain meshes; the skinned original is kept for rigInstance() (the Director's pose fine-tuning).
                 let skinned = false; gltf.scene.traverse(obj => { if (obj.isSkinnedMesh) skinned = true; });
@@ -154,9 +156,9 @@ export const PROP_LIBRARY = {
                     normalized.userData.propUnitCorrection = factor;
                     resolve(normalized);
                 }
-            }, undefined, err => { this.cache.delete(id); this.failures.set(id, err); reject(err); })));
+            }, undefined, err => { this.cache.delete(cacheKey); this.failures.set(cacheKey, err); reject(err); })));
         }
-        return this.cache.get(id);
+        return this.cache.get(cacheKey);
     },
     // The bones of every posture of one character (tools/people/export-rigs.mjs), for moving a person between them
     // (room-people-motion.mjs). Rejects when the character has no such file.
@@ -175,8 +177,12 @@ export const PROP_LIBRARY = {
         return clone;
     },
     // A fresh instance in millimetres, ready to be parented into a room.
-    async instance(id) {
-        const source = await this.load(id);
+    async instance(id, roomId = null, layoutId = null) {
+        let file = null;
+        if (roomId === 'creative' && id === 'decor-bamboo') file = 'assets/rooms/artist/bamboo.glb';
+        if (roomId === 'library' && layoutId === 'humboldt' && (id === 'ergoflex-plant-1' || id === 'ficus'))
+            file = 'assets/rooms/library/bay-planter.glb';
+        const source = await this.load(id, file);
         const clone = source.clone(true);
         clone.name = `Prop:${id}`; clone.userData.sharedProp = true; clone.userData.propId = id;
         clone.traverse(obj => { obj.userData.sharedProp = true; });
@@ -486,8 +492,21 @@ function prepareArtistPainting(root) {
         const image=source.image,scale=Math.max(sheet.width/image.width,sheet.height/image.height);
         ctx.drawImage(image,(sheet.width-image.width*scale)/2,(sheet.height-image.height*scale)/2,image.width*scale,image.height*scale);texture.needsUpdate=true;source.dispose();
     });
-    canvas.material=material('#ffffff',{map:texture,roughness:.88}); canvas.name='Artist painting';
-    canvas.paintingTexture=texture;canvas.ownedTextures=[texture];
+    // A plain-weave ground remains visible on the blank canvas and catches raking light at drafting angles.
+    const pixels = 64, tooth = new Uint8Array(pixels * pixels * 4);
+    for (let y = 0; y < pixels; y++) for (let x = 0; x < pixels; x++) {
+        const warp = Math.cos(x * Math.PI / 4), weft = Math.cos(y * Math.PI / 4);
+        const over = ((x >> 3) + (y >> 3)) % 2;
+        const height = Math.round(132 + 61 * Math.max(over ? warp : weft, (over ? weft : warp) * .45));
+        tooth.set([height, height, height, 255], (y * pixels + x) * 4);
+    }
+    const weave = new THREE.DataTexture(tooth, pixels, pixels);
+    weave.wrapS = weave.wrapT = THREE.RepeatWrapping;
+    weave.repeat.set(96, 96 * sheet.height / sheet.width); weave.generateMipmaps = true;
+    weave.minFilter = THREE.LinearMipmapLinearFilter; weave.magFilter = THREE.LinearFilter;
+    weave.anisotropy = texture.anisotropy = 8; weave.needsUpdate = true;
+    canvas.material = material('#ffffff', { map: texture, bumpMap: weave, bumpScale: .00028, roughness: .8 });
+    canvas.name = 'Artist painting'; canvas.paintingTexture = texture; canvas.ownedTextures = [texture, weave];
 }
 
 function prepareShelfOrganizer(root) {
@@ -1699,7 +1718,7 @@ export class WorkspaceRoom {
                     object.name=decor.entry.name;object.userData={sharedProp:true,propId:placement.id,sceneAssetName:decor.entry.name,decorUpgrade:decor.id,atelierDecor:decor.entry.atelierDecor};
                     return {placement,object,decor};
                 }
-                const object = await PROP_LIBRARY.instance(supplied || placement.id);
+                const object = await PROP_LIBRARY.instance(supplied || placement.id, this.id, this.roomLayout?.id);
                 if (supplied) {
                     const old = PROP_LIBRARY.entry(placement.id), next = PROP_LIBRARY.entry(supplied);
                     if (placement.id === 'decor-plant2') {
@@ -1774,7 +1793,7 @@ export class WorkspaceRoom {
     async addAsset(propId, key, position = [0, 0, 800]) {
         const token = this.token;
         await PROP_LIBRARY.loadIndex();
-        const object = await PROP_LIBRARY.instance(propId);
+        const object = await PROP_LIBRARY.instance(propId, this.id, this.roomLayout?.id);
         if (token !== this.token) return null;
         object.position.set(...position);
         object.userData.propAnchor = PROP_LIBRARY.entry(propId)?.anchor;
@@ -1817,7 +1836,7 @@ export class WorkspaceRoom {
             const below = eye.y < this.roomLayout.height;
             for (const group of this.root.children)
                 if (group === this.ceilingSurface) group.visible = this.ceilingEnabled && below;
-                else if (group === this.ceilingFixture || /^Ceiling /i.test(group.name)) group.visible = below;
+                else if (group === this.ceilingFixture || /^Ceiling /i.test(group.name)) group.visible = eye.y < (group.userData.cutawayHeightMm ?? this.roomLayout.height);
         }
         if (this.people?.enabled) { if (this.root) this.people.eye = this.root.worldToLocal(camera.getWorldPosition(new THREE.Vector3())); this.people.view = camera; this.people.update(this.peopleState?.()); }      // (view: who moves is chosen by size in this camera's picture)
     }

@@ -36,7 +36,7 @@ export function humboldtStudyChairs(room, layout, canvasMap) {
     for(const [kind,size,center,r]of [['oak',[510,272,26],[0,657,-227],61],['fabric',[461,231,36],[0,654,-204],53]]){
         const [w,h,d]=size,shape=new THREE.Shape();shape.moveTo(r,0);shape.lineTo(w-r,0);shape.quadraticCurveTo(w,0,w,r);shape.lineTo(w,h-r);shape.quadraticCurveTo(w,h,w-r,h);shape.lineTo(r,h);shape.quadraticCurveTo(0,h,0,h-r);shape.lineTo(0,r);shape.quadraticCurveTo(0,0,r,0);
         const g=new THREE.ExtrudeGeometry(shape,{depth:d-6,steps:1,bevelEnabled:true,bevelSegments:2,bevelSize:3,bevelThickness:3,curveSegments:10});g.translate(-w/2,-h/2,-d/2+3);const p=g.attributes.position;
-        for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i);p.setZ(i,p.getZ(i)+(x/255)**2*63-y*.15);}
+        for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i);g.attributes.uv.setXY(i,.5+x/w,.5+y/h);p.setZ(i,p.getZ(i)+(x/255)**2*63-y*.15);}
         g.computeVertexNormals();add(kind,g,center);
     }
     const x=237,z=221,r=26,y=443;

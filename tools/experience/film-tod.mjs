@@ -31,7 +31,17 @@ function capture() {
       r.visible = m.visible; if (m.map?.repeat) r.repeat = m.map.repeat.clone();
       if (m.uniforms) { r.uniforms = {}; for (const [k, u] of Object.entries(m.uniforms)) if (typeof u.value === 'number' || u.value?.isColor || u.value?.isVector3) r.uniforms[k] = u.value.clone ? u.value.clone() : u.value; }
       mats.set(m, r);
-      for (const t of [m.map, m.emissiveMap]) { const img = t?.image; if (img instanceof HTMLCanvasElement && !canv.has(img) && !CONTENT_CANVAS.test(r.owner + ' ' + m.name)) { const c = document.createElement('canvas'); c.width = img.width; c.height = img.height; c.getContext('2d').drawImage(img, 0, 0); canv.set(img, { copy: c, textures: new Set([t]) }); } else if (canv.has(img)) canv.get(img).textures.add(t); }
+      for (const t of [m.map, m.emissiveMap]) {
+        const img = t?.image;
+        if (t?.userData.staticArtwork || !(img instanceof HTMLCanvasElement)) continue;
+        if (canv.has(img)) canv.get(img).textures.add(t);
+        else if (!CONTENT_CANVAS.test(r.owner + ' ' + m.name)) {
+          const c = document.createElement('canvas');
+          c.width = img.width; c.height = img.height;
+          c.getContext('2d').drawImage(img, 0, 0);
+          canv.set(img, { copy: c, textures: new Set([t]) });
+        }
+      }
     }
   });
   const g = { exposure: api.renderer.toneMappingExposure, env: scene.environmentIntensity, bgI: scene.backgroundIntensity, bounce: {} };

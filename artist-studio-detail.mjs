@@ -15,34 +15,6 @@ function map(draw, w = 768, h = 192) {
     return t;
 }
 
-// A single still life progresses through the sessions. The same composition
-// stays recognizable in the drawing, block-in, wet painting and final display.
-export function artistStudyMaps(finished) {
-    const results = phases.map((phase, i) => map((c, w, h) => {
-        c.fillStyle = i === 0 ? '#d8d1bf' : '#ac7c5a'; c.fillRect(0, 0, w, h);
-        c.strokeStyle = '#5c5046'; c.lineWidth = 2;
-        c.beginPath(); c.moveTo(0, h * .64); c.lineTo(w, h * .64); c.stroke();
-        c.beginPath(); c.ellipse(w * .42, h * .5, w * .15, h * .17, 0, 0, Math.PI * 2); c.stroke();
-        c.strokeRect(w * .37, h * .26, w * .1, h * .16);
-        c.beginPath(); c.ellipse(w * .42, h * .26, w * .07, h * .02, 0, 0, Math.PI * 2); c.stroke();
-        for (const [x,y] of [[.66,.66],[.75,.7],[.22,.68],[.58,.73]]) {
-            c.beginPath(); c.ellipse(w*x,h*y,w*.065,h*.05,0,0,Math.PI*2); c.stroke();
-        }
-        if (i > 0) {
-            c.save(); c.beginPath(); c.rect(0, 0, w * [0,.61,.91,.96,1][i], h); c.clip();
-            c.drawImage(finished.image,0,0,w,h); c.restore();
-        }
-        // Canvas tooth and light charcoal construction lines, with no shiny overlay.
-        c.strokeStyle = '#62534414'; c.lineWidth = .7;
-        for (let p = 0; p < Math.max(w,h); p += 5) { c.beginPath(); c.moveTo(p,0); c.lineTo(p,h); c.moveTo(0,p); c.lineTo(w,p); c.stroke(); }
-        if (i === 0) {
-            c.strokeStyle = '#685d4930'; c.setLineDash([8,10]);
-            for (const x of [.27,.42,.57]) { c.beginPath(); c.moveTo(w*x,h*.15); c.lineTo(w*x,h*.87); c.stroke(); }
-        }
-    },512,640));
-    finished.dispose(); return results;
-}
-
 export function artistSessionDetails(room, layout, h, { board, storage, canvas, studyMaps, taboret, palettePaint }) {
     const { box, mesh, rod, material, markSceneAsset } = h;
     const paper = material('#ede6d6', { roughness: .96 });

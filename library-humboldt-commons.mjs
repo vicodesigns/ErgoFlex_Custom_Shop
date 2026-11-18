@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { pottedFern } from './room-fern.mjs';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113b';
 import { migrateHumboldtGroupFurniture } from './humboldt-furniture-migration.mjs?v=commons-home-comfort-20261024';
@@ -143,9 +144,9 @@ const HUMBOLDT_CAFE = [[7450, 5500], [7450, 7800], ...[10500, 12950, 15400, 1785
 const PHASE = ['morning', 'afternoon', 'evening', 'night', 'party'];
 const T3500 = '#ffe7cc', T4000 = '#fff0de', T3000 = '#ffdcb4';
 
-export function canvasMap(draw, w = 512, h = 512) {
+export function canvasMap(draw, w = 512, h = 512, contextOptions) {
     const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
-    draw(canvas.getContext('2d'), w, h); const map = new THREE.CanvasTexture(canvas); map.colorSpace = THREE.SRGBColorSpace; return map;
+    draw(canvas.getContext('2d', contextOptions), w, h); const map = new THREE.CanvasTexture(canvas); map.colorSpace = THREE.SRGBColorSpace; return map;
 }
 const repeating = (map, anisotropy = 4) => { map.wrapS = map.wrapT = THREE.RepeatWrapping; map.anisotropy = anisotropy; return map; };
 // Draw at every wrap copy that can touch the canvas, so scatter tiles seamlessly.
@@ -347,7 +348,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     const plank = { mm: 3000, courses: 12, per: 3 };
     const carpetMap = repeating(canvasMap((c, S) => {
         const ph = S / plank.courses, pw = S / plank.per;
-        const tones = ['#53575d', '#4e5257', '#585c61', '#4b4f54', '#5b5e63', '#515559'], flecks = ['#8f979f2c', '#262b3234', '#8a857c1e', '#a39d931a'];
+        const tones = ['#555957', '#515553', '#575a57', '#505451', '#595c59', '#545653'], flecks = ['#8f979f2c', '#262b3234', '#8a857c1e', '#a39d931a'];
         const draw = (x, y, id) => {
             c.save(); c.beginPath(); c.rect(x, y, pw, ph); c.clip();
             c.fillStyle = tones[Math.floor(rnd(id * 3.1) * tones.length)]; c.fillRect(x, y, pw, ph);
@@ -396,25 +397,22 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
             c.fillStyle = 'rgba(214,190,156,.55)'; c.fillRect(x - 1, y - 1, 3, 3); c.fillStyle = 'rgba(38,24,12,.85)'; c.fillRect(x, y, big ? 2 : 1, big ? 2 : 1);
         }
     }), 8);
-    // Wood grain; `staves` adds edge-glued solid-wood staves, each a little different in tone.
-    const oakGrain = (base, dark, light, strength = 1, staves = 0) => repeating(canvasMap((c, Wc, Hc) => {
-        c.fillStyle = base; c.fillRect(0, 0, Wc, Hc);
-        for (let k = 0; k < staves; k++) {
-            const y = k * Hc / staves, warm = rnd(k * 3.3) > .5;
-            c.fillStyle = `rgba(${warm ? '255,244,225' : '110,80,45'},${(.03 + rnd(k * 7.7) * .05).toFixed(3)})`; c.fillRect(0, y, Wc, Hc / staves);
-            c.fillStyle = 'rgba(80,55,30,.10)'; c.fillRect(0, Math.round(y), Wc, 1);
-        }
-        for (let i = 0; i < 140; i++) {
-            const y0 = rnd(i * 3.7) * Hc, k1 = 1 + i % 3, k2 = 3 + i % 5, a1 = 2 + rnd(i) * 6, a2 = .5 + rnd(i * 2) * 1.5, p1 = rnd(i * 5) * 6.2832, p2 = rnd(i * 7) * 6.2832;
-            c.strokeStyle = i % 3 ? dark : light; c.globalAlpha = (.1 + rnd(i * 9) * .14) * strength; c.lineWidth = .6 + rnd(i * 11) * 1.8;
-            for (const oy of [-Hc, 0, Hc]) { c.beginPath(); for (let x = 0; x <= Wc; x += 8) { const y = y0 + oy + a1 * Math.sin(6.2832 * k1 * x / Wc + p1) + a2 * Math.sin(6.2832 * k2 * x / Wc + p2); x ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); }
-        }
-        c.globalAlpha = .18 * strength; c.fillStyle = dark;
-        for (let n = 0; n < 2000; n++) { const len = 2 + rnd(n) * 3; tile(Wc, Hc, rnd(n * 1.3) * Wc, rnd(n * 2.1) * Hc, len, (x, y) => c.fillRect(x, y, len, 1)); }
-        c.globalAlpha = 1;
-    }, 1024, 256));
-    // Maple tops: eight 56 mm staves per 450 mm board (the top repeat is max/1800, min/450).
-    const honeyOakMap = oakGrain('#b38a5a', '#5e3f22', '#e6c996'), mapleMap = oakGrain('#dccaa9', '#a07d55', '#f2e6cf', .7, 8);
+    const finishLoads = [], finishLoader = new THREE.TextureLoader();
+    const finishMap = name => {
+        let texture;
+        const url = new URL('./assets/rooms/library/' + name + '.webp', import.meta.url);
+        finishLoads.push(new Promise(resolve => {
+            texture = finishLoader.load(url.href, resolve, undefined, () => {
+                if (room.root === root) room.missingProps.push(name);
+                resolve();
+            });
+        }));
+        texture.colorSpace = THREE.SRGBColorSpace;
+        texture.anisotropy = 8;
+        return texture;
+    };
+    const honeyOakMap = repeating(finishMap('honey-oak'), 8);
+    const mapleMap = repeating(finishMap('staved-maple'), 8);
     const honeyOak = tag(own(material('#ffffff', { map: honeyOakMap, roughness: .51 })), 'wood');
     // Café and side tables: maple tops with honey-oak bases in one draw. The parts carry
     // vertex colours (white top, HONEY base) over the shared maple map.
@@ -633,17 +631,19 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
         guardCap.box([GX - XL + 40, 50, 80], [(GX + XL) / 2, 5245, z]);
     }
     baked(left, guard, bronze, false); baked(left, guardCap, honeyOak, false);
-    // Generic framed landscape prints and a blank placard on the olive wall, above the canoe.
-    const print = (seed, Wp, Hp) => canvasMap((c, cw, ch) => {
-        const g = c.createLinearGradient(0, 0, 0, ch); g.addColorStop(0, ['#c9d4d6', '#d8cfbd'][seed % 2]); g.addColorStop(1, '#f1ece0'); c.fillStyle = g; c.fillRect(0, 0, cw, ch);
-        for (let band = 0; band < 4; band++) { c.fillStyle = ['#5f735e', '#3f5547', '#8a8f6b', '#2f4038'][(band + seed) % 4]; c.beginPath(); c.moveTo(0, ch); for (let x = 0; x <= cw; x += cw / 16) c.lineTo(x, ch * (.42 + band * .13) + Math.sin(x / cw * 6 + seed + band) * ch * .05); c.lineTo(cw, ch); c.fill(); }
-    }, Wp, Hp);
-    const art = (id, z, size, seed, y = 2050) => {
-        const g = group(id, 'Framed landscape print', [XL + 20, y, z], left);
-        box(g, [30, size[1] + 60, size[0] + 60], [0, 0, 0], own(material('#2b2622', { roughness: .6 })));
-        box(g, [4, size[1], size[0]], [17, 0, 0], own(material('#ffffff', { map: print(seed, 512, Math.round(512 * size[1] / size[0])), roughness: .8 }))).castShadow = false;
+    // A photographic print and a pressed specimen share the oak frames above the canoe.
+    const grove = finishMap('coastal-redwoods'), specimen = finishMap('fern-study');
+    const mount = own(material('#e4dece', {roughness:.93}));
+    const framePrint = (id, title, parent, at, turn, width, height, texture) => {
+        const g = group(id, title, at, parent, turn);
+        box(g, [width+55,height+55,36], [0,0,0], honeyOak, 4);
+        box(g, [width,height,3], [0,0,19], mount);
+        const face = mesh(g, new THREE.PlaneGeometry(width-56,height-56),
+            own(material('#ffffff', {map:texture,roughness:.83})), [0,0,21]);
+        face.castShadow = false;
     };
-    art('humboldt-art-0', 9300, [800, 650], 1, 1750); art('humboldt-art-1', 7400, [350, 450], 2, 1900);
+    framePrint('humboldt-art-0', 'Redwoods in coastal fog', left, [XL+21,1750,9300], Math.PI/2, 800,650,grove);
+    framePrint('humboldt-art-1', 'Pressed fern study', left, [XL+21,1900,7400], Math.PI/2, 350,450,specimen);
     const plaque = own(material('#3a2c1f', { roughness: .55, metalness: .3 })), card = own(material('#f1eee6', { roughness: .9 }));
     box(left, [12, 200, 600], [XL + 6, 1350, 7400], plaque).castShadow = false;
     box(left, [4, 280, 215], [XL + 4, 1450, 10300], card).castShadow = false; box(left, [4, 280, 215], [XL + 4, 1400, 12400], card).castShadow = false;
@@ -652,9 +652,12 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     // Track heads: [x, y, z, lean]. lean > 0 aims toward +x, < 0 toward the wall.
     const track = kit(), trackHeads = kit(), trackLensKit = kit(), TRACK_Y = 3482, HALL_TRACK_Y = 5200;
     const head = (k, lk, x, y, z, lean) => {
-        k.cyl(8, 8, 90, [x, y - 60, z], { seg: 6 });
-        trackHeads.cyl(45, 45, 150, [x + Math.sign(lean) * 55, y - 140, z], { rot: [0, 0, lean], seg: 14 });
-        lk.cyl(38, 38, 4, [x + Math.sign(lean) * 115, y - 185, z], { rot: [0, 0, lean], seg: 14 });
+        k.box([31,22,68], [x,y-25,z]).cyl(7,7,61,[x,y-61,z]);
+        const centre = d => [x + Math.sin(lean)*d, y-108-Math.cos(lean)*d, z];
+        const rot = [0,0,lean];
+        trackHeads.cyl(32,36,102,centre(39),{rot,seg:24});
+        trackHeads.cyl(37,39,16,centre(89),{rot,seg:24,open:true});
+        lk.cyl(31,31,2,centre(91),{rot,seg:24});
     };
     // Under the balcony fascia, aimed out at the canoe.
     track.box([35, 35, 5800], [EDGE - 125, TRACK_Y, 8700]);
@@ -663,7 +666,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     // Down the figure hall two tracks hang from the high ceiling: the gallery run
     // aimed back at the figures, and an aisle run. Hidden with the other
     // 'Ceiling …' groups when the camera rises above the room.
-    const hallTracks = new THREE.Group(); hallTracks.name = 'Ceiling gallery tracks'; root.add(hallTracks);
+    const hallTracks = new THREE.Group(); hallTracks.name = 'Ceiling gallery tracks'; hallTracks.userData.cutawayHeightMm = HALL_TRACK_Y - 320; root.add(hallTracks);
     const hallTrack = kit(), hallLens = kit();
     for (const [x, z0, z1] of [[-2900, HALL_Z, 22800], [-600, HALL_Z + 600, 24000]]) {
         hallTrack.box([35, 35, z1 - z0], [x, HALL_TRACK_Y, (z0 + z1) / 2]);
@@ -720,7 +723,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     // ---------- Glazing with graded North Coast views ----------
     const view = canvasMap(() => {}, 1536, 1024), viewCanvas = view.image, campus = new Image(); let viewMode = 'morning';
     const drawView = modeId => { gradeWindow(viewCanvas.getContext('2d'), campus, modeId, HUMBOLDT_MODES[modeId] || HUMBOLDT_MODES.morning); view.needsUpdate = true; root.userData.humboldtWindow = { mode: modeId, source: 'procedural-north-coast' }; };
-    room.windowViewReady = Promise.resolve();
+    room.windowViewReady = Promise.all(finishLoads);
     const glass = new THREE.MeshBasicMaterial({ map: view }); own(glass);
     // Each pane samples the view at its own aspect, so the tall slot and the long curtain wall are not stretched.
     view.wrapS = THREE.RepeatWrapping;
@@ -742,16 +745,29 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     // The junction's curtain wall (x 9000) and the hall's (x 6000, to z 20000):
     // silver aluminium verticals every 1.5 m, transoms at 900 and 2300, a white
     // heater enclosure along the sill. Dusk glass after dark, not a billboard.
-    const frontGlass = own(glass.clone()), curtain = kit(), sills = kit();
+    const frontGlass = own(glass.clone()), curtain = kit(), sills = kit(), seals = kit();
     const run = (x, z0, z1, top, inward) => {
         const p = pane(right, [z1 - z0, top], [x + 30, top / 2, (z0 + z1) / 2], -Math.PI / 2, rnd(z0 * .001) * .7); p.material = frontGlass;
-        for (let z = z0; z <= z1 + 1; z += 1500) curtain.box([110, top, 50], [x - 55, top / 2, Math.min(Math.max(z, z0 + 25), z1 - 25)]);
-        for (const y of [900, 2300, top - 20]) curtain.box([110, 45, z1 - z0], [x - 55, y, (z0 + z1) / 2]);
-        sills.box([200, 350, z1 - z0], [x - 100 - inward, 175, (z0 + z1) / 2]);
+        const length = z1-z0, mid = (z1+z0)/2;
+        for (let z = z0; z <= z1 + 1; z += 1500) {
+            const post = THREE.MathUtils.clamp(z,z0+25,z1-25);
+            curtain.box([110,top,48], [x-55,top/2,post]);
+            seals.box([24,top,65], [x-36,top/2,post]);
+        }
+        for (const y of [900,2300,top-20]) {
+            curtain.box([110,43,length], [x-55,y,mid]);
+            seals.box([23,58,length], [x-35,y,mid]);
+        }
+        sills.box([200,350,length], [x-100-inward,175,mid]);
+        sills.box([221,13,length], [x-107-inward,356,mid]);
+        for (let z=z0+72; z<z1-72; z+=255) {
+            for (const dx of [78,99,120])
+                seals.box([8,2,216],[x-dx-inward,363,z+38]);
+        }
         return p;
     };
     const frontPane = run(XR, GLASS_Z, STEP_Z, SOFFIT, 0), hallPane = run(HALL_XR, STEP_Z + 600, SOLID_Z, CAFE_SOFFIT, 0);
-    baked(right, curtain, alu, false); baked(right, sills, plinthWhite, false);
+    baked(right, curtain, alu, false); baked(right, sills, plinthWhite, false); baked(right,seals,rubber,false);
     // Behind the storefront: the outdoor view a short vestibule away, so the entry reads by day and dusk.
     const vestibule = pane(frontWall, [DOOR[1] - DOOR[0], TRANSOM], [(DOOR[0] + DOOR[1]) / 2, TRANSOM / 2, front + 600], Math.PI); vestibule.material = frontGlass;
     // Or the campus modelled behind all the glass (window-scenery.mjs): one world per side, every pane of a side an opening into it.
@@ -763,6 +779,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
 
     // ---------- Suspended black light frames (two switching circuits) ----------
     const ceiling = new THREE.Group(); ceiling.name = 'Ceiling light frames'; root.add(ceiling); room.ceilingFixture = ceiling;
+    ceiling.userData.cutawayHeightMm = 4150;
     const frameBody = kit(), lensKitA = kit(), lensKitB = kit(), bottom = 4200, barY = bottom + 150;
     const frames = [
         { id: 'F1', c: [1000, -800], size: [4800, 4800], grid: 2, circuit: 'A' },
@@ -837,6 +854,60 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     sk.cyl(250, 250, 30, [0, 535, 0], { seg: 28 }).cyl(28, 34, 500, [0, 270, 0], { color: HONEY }).cyl(170, 190, 25, [0, 12, 0], { seg: 24, color: HONEY }); baked(side, sk, cafeWood);
     room.propSupports.push({ obj: side, id: 'atelier-lamp-mushroom-warm', at: [-2260, 550, 5130] });
 
+    // A single extra planter in the long café run, sheltered against the glass.
+    const windowFern = pottedFern(174, 2.57, '#7b8173');
+    windowFern.position.set(5560,0,15700); root.add(windowFern);
+    register(windowFern, 'humboldt-window-fern', 'Fern in olive stoneware');
+
+    // Face-out folios on the solid wall just beyond the last bay of glass.
+    const ledge = group('humboldt-field-guides', 'North Coast field guides', [HALL_XR-20,0,21120], right, -Math.PI/2);
+    const joinery = kit(), bindings = kit(), pages = kit();
+    const covers = canvasMap((c,w,h) => {
+        for (const [i,[line1,line2,ground,foil]] of [
+            ['Coastal','botany','#36584d','#c5cf9d'], ['Land &','water','#ece1cb','#799ba1'], ['Forest','ecology','#8a4c3d','#e0bb78']
+        ].entries()) {
+            c.save(); c.translate(i*w/3,0);
+            c.fillStyle=ground; c.fillRect(0,0,w/3,h);
+            c.fillStyle=foil; c.fillRect(12,0,3,h); c.fillRect(26,31,196,2);
+            c.font='15px sans-serif'; c.fillText('NORTH COAST FIELD NOTES',26,58);
+            c.font='44px Georgia'; c.fillText(line1,25,122); c.fillText(line2,25,170);
+            c.strokeStyle=foil; c.lineWidth=1.35;
+            for(let row=0;row<9;row++) {
+                c.beginPath();
+                for(let col=0;col<=44;col++) {
+                    const x=24+col*4.8, y=220+row*7+Math.sin(col*.13+i)*13+Math.cos(col*.29+row*.19)*4;
+                    if(col)c.lineTo(x,y);else c.moveTo(x,y);
+                }
+                c.stroke();
+            }
+            c.restore();
+        }
+    },768,320,{willReadFrequently:true});
+    covers.userData.staticArtwork=true;
+    const coverMat=own(material('#ffffff',{map:covers,roughness:.81}));
+    for(const y of [860,1210]) {
+        joinery.box([1320,24,160],[0,y,78]).box([1320,29,11],[0,y+24,152]);
+        for(const x of [-520,520]) joinery.box([30,94,92],[x,y-55,49]);
+    }
+    const jackets=['#687461','#79534c','#40606a','#a28965','#555754','#9a8055'];
+    let spineStart = -530;
+    for(let i=0;i<19;i++) {
+        const ht=178+29*(i%4), width=26+6*(i%3), x=spineStart+width/2;
+        spineStart += width+3+(i%6===5 ? 11 : 0);
+        bindings.box([width,ht,120], [x,872+ht/2,77], {color:jackets[i%6]});
+        pages.box([width-5,5,109], [x,872+ht-1,78]);
+        pages.box([width-8,16,2], [x,903,138]);
+    }
+    for(let i=0;i<3;i++) {
+        const x=(i-1)*365, ht=276-i*7, width=210-i*5, lean=-.15;
+        const book=new THREE.Group();book.position.set(x,1223,108);book.rotation.x=lean;ledge.add(book);
+        box(book,[width-5,ht-4,18],[0,ht/2,0],paper,2);
+        const jacket=new THREE.PlaneGeometry(width,ht), uv=jacket.attributes.uv;
+        for(let j=0;j<uv.count;j++)uv.setX(j,(i+.004+.992*uv.getX(j))/3);
+        mesh(book,jacket,coverMat,[0,ht/2,10]);
+    }
+    baked(ledge,joinery,honeyOak); baked(ledge,bindings,own(material('#ffffff',{vertexColors:true,roughness:.85}))); baked(ledge,pages,paper);
+
     // Student life: table and café dressings, per daypart (library-humboldt-life.mjs).
     const life = buildHumboldtLife({ room, root, layout, helpers, kit, group, baked, own, tag, canvasMap, PHASE, materials: { pilotGreen, pilotGold, ink, paper, honeyOak, cafeOak } });
     const studyChair = humboldtStudyChairs(room, layout, canvasMap);
@@ -872,7 +943,8 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     const canoe = group('humboldt-canoe', 'Carved redwood canoe on display', [CANOE[0], 0, CANOE[1]], root);
     canoe.userData.noSurfaceDrop = true;
     const PLINTH = 420, R = 500, HALF = 2600, DEPTH = 1.1;
-    box(canoe, [1400, PLINTH, 6000], [0, PLINTH / 2, 0], plinthWhite, 6);
+    box(canoe, [1350, 46, 5950], [0, 23, 0], bronze, 3);
+    box(canoe, [1400, PLINTH-46, 6000], [0, (PLINTH+46)/2, 0], plinthWhite, 6);
     // A plain hand-hewn dugout: half-round shell, lofted toward raised, tapered ends.
     const taper = along => Math.max(.32, Math.cos(along * Math.PI / 2) ** .35), sheer = along => along * along * 220, HULL_Y = PLINTH + 110 + R * DEPTH;
     const hull = (radius, inset) => {
@@ -910,25 +982,42 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     const figure = (base, x, ph, height, seated, turn = 0, tone = null) => {
         const tint = o => ({ ...(o || {}), color: tone }), k = { add: (g, a, o) => base.add(g, a, tint(o)), box: (size, a, o) => base.box(size, a, tint(o)) };
         const c = Math.cos(turn), sn = Math.sin(turn), at = (dx, y, dz) => [x + dx * c + dz * sn, ph + y, -dx * sn + dz * c];
-        const block = (w0, w1, len, dx, y, dz, depth = .7, tilt = 0) => { const g = new THREE.CylinderGeometry(w1 / Math.SQRT2, w0 / Math.SQRT2, len, 4); g.rotateY(Math.PI / 4); k.add(g, at(dx, y, dz), { rot: [tilt, turn, 0], scale: [1, 1, depth] }); };
+        const block = (w0, w1, len, dx, y, dz, depth = .7, tilt = 0) => {
+            // A hewn billet keeps broad planar faces with unequal narrow corner cuts.
+            const section = new THREE.Shape();
+            const corners = [[-.39,-.50],[.37,-.50],[.50,-.36],[.50,.39],[.38,.50],[-.41,.50],[-.50,.38],[-.50,-.34]];
+            corners.forEach(([a,b],i) => i ? section.lineTo(a*w0,b*w0*depth) : section.moveTo(a*w0,b*w0*depth));
+            section.closePath();
+            const g = new THREE.ExtrudeGeometry(section,{depth:len,bevelEnabled:true,bevelSegments:1,bevelSize:3,bevelThickness:3});
+            g.rotateX(-Math.PI/2);
+            const p=g.attributes.position, uv=g.attributes.uv, n=g.attributes.normal;
+            for(let i=0;i<p.count;i++) {
+                const t=p.getY(i)/len, taper=1+t*(w1/w0-1), xx=p.getX(i)*taper, zz=p.getZ(i)*taper;
+                p.setXYZ(i,xx,p.getY(i)-len/2,zz);
+                uv.setXY(i, .5+(Math.abs(n.getX(i))>.6 ? zz : xx)/w0, t);
+            }
+            g.computeVertexNormals();
+            k.add(g, at(dx,y,dz), {rot:[tilt,turn,0]});
+        };
         const head = (y, dz, r) => k.add(new THREE.CapsuleGeometry(r * .8, r * .75, 4, 10), at(0, y, dz), { rot: [0, turn, 0], scale: [.92, 1, 1.05] });
         const H = height, r = H / 19;
         if (seated) {
             // Upright on a cube seat with a vertical slot, lower legs down to the plinth.
             k.box([460, 460, 460], at(0, 230, -60), { rot: [0, turn, 0] }); k.box([30, 300, 470], at(0, 260, -60), { rot: [0, turn, 0] });
             for (const dx of [-82, 82]) { block(150, 140, 470, dx, 235, 235, .9); block(150, 150, 360, dx, 520, 90, 1.1, Math.PI / 2); }
-            block(320, 400, H * .38, 0, 470 + H * .19, -70, .55); for (const dx of [-225, 225]) block(80, 90, H * .32, dx, 480 + H * .17, -55, .75);
+            block(320, 400, H * .38, 0, 470 + H * .19, -70, .55); for (const dx of [-207, 207]) block(80, 90, H * .32, dx, 480 + H * .17, -55, .75);
             block(90, 90, 80, 0, 470 + H * .38 + 40, -70, 1); head(470 + H * .38 + 80 + r * 1.2, -65, r);
         } else {
             for (const dx of [-79, 79]) block(150, 165, H * .47, dx, H * .235, 0, .8);
-            block(330, 420, H * .34, 0, H * .64, 0, .55); for (const dx of [-232, 232]) block(80, 92, H * .37, dx, H * .615, 8, .78);
+            block(330, 420, H * .34, 0, H * .64, 0, .55); for (const dx of [-214, 214]) block(80, 92, H * .37, dx, H * .615, 8, .78);
             block(92, 96, H * .045, 0, H * .832, 0, 1); head(H * .855 + r * 1.2, 4, r);
         }
     };
     const figurePlate = own(material('#5a4a34', { roughness: .4, metalness: .6, vertexColors: true }));
     for (const [i, [z, along, ph, figs]] of FIGURES.entries()) {
         const g = group(`humboldt-sculpture-${i}`, 'Bleached wood figure group on plinth', [XL + 500, 0, z], root, Math.PI / 2), k = kit();
-        box(g, [along, ph, 700], [0, ph / 2, 0], plinthWhite, 4);
+        box(g, [along-46, 38, 654], [0, 19, 0], bronze, 2);
+        box(g, [along, ph-38, 700], [0, (ph+38)/2, 0], plinthWhite, 4);
         const tones = ['#f3eee4', '#ece4d5', '#f5f1e9', '#e7dcc9', '#efe8db'];   // limed, pale: the figures stay the hall's light notes (the film's morning was graded with them white)
         for (const [n, [dz, height, seated, turn]] of figs.entries()) figure(k, -dz, ph, height, seated, turn || 0, tones[(i * 2 + n) % tones.length]);
         baked(g, k, sculptureWhite);
@@ -1142,7 +1231,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     const lights = [
         { at: [DESK[0] - 700, 2600, DESK[1]], power: 4.5, range: 3400, color: T4000, levels: [.45, .5, 1.05, .3, .8] },
         { at: [1000, 3250, -800], power: 11.8, range: 16000, color: T3500, levels: [.35, .4, .72, .1, .6] },
-        { at: [-1400, 3400, 18500], power: 5, range: 9500, color: T3500, levels: [.3, .3, .85, .07, 1] },
+        { at: [-1400, 3400, 18500], windowAt: [5350, 2300, 15700], power: 5, range: 9500, color: T3500, levels: [.73, .92, .85, .07, 1] },
         { at: [-2600, 3600, 9800], power: 4.5, range: 8000, color: T3000, levels: [.35, .4, .85, .06, 1.15] },
         { at: [5900, 2850, 1750], power: 5, range: 4900, color: T4000, levels: [.22, .95, .35, .08, 1.15] }
     ].map(spec => { const light = new THREE.PointLight('#ffe7cc', 0, spec.range * s, 2); light.position.set(...spec.at); light.castShadow = false; root.add(light); return { ...spec, light, power: spec.power * (s * 1000) ** 2 }; });
@@ -1171,6 +1260,13 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     const recolour = (object, key, pick) => object.traverse(o => { if (!o.isMesh) return; const swap = m => { const f = m?.isMeshStandardMaterial && pick(m); return f ? ownCopy(m, key, f) : m; }; o.material = Array.isArray(o.material) ? o.material.map(swap) : swap(o.material); });
     const tint = (color, roughness, metalness = 0, sheen) => m => { m.color.set(color); m.roughness = roughness; m.metalness = metalness; if (m.sheenColor) m.sheenColor.set(sheen || color); };
     room.decorateProp = (object, placement) => {
+        if (placement.id === 'ficus') object.userData.sceneAssetName = 'Bay tree in stoneware';
+        if (placement.id === 'decor-plant1') {
+            const fern = pottedFern(147, .91, '#b19076');
+            object.clear(); fern.scale.setScalar(1/object.scale.x); object.add(fern);
+            object.userData.sceneAssetName = 'Fern in clay stoneware';
+            return;
+        }
         if (placement.id === 'kenney-furniture-chair-modern-cushion') {
             studyChair(object, placement);
             life.decorateProp?.(object, placement);
@@ -1206,7 +1302,12 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
         grazerLens.emissiveIntensity = (.15 + mode.wash * .9) * accent * (night ? .5 : 1);
         drawSun(modeId); pools.apply(modeId, accent);
         const phase = Math.max(0, PHASE.indexOf(modeId));
-        lights.forEach(spec => { spec.light.color.set(spec.color); spec.light.intensity = spec.power * spec.levels[phase] * accent; });
+        lights.forEach(spec => {
+            const daylight = spec.windowAt && phase < 2;
+            spec.light.position.set(...(daylight ? spec.windowAt : spec.at));
+            spec.light.color.set(daylight ? (phase === 0 ? '#d3e2e3' : '#f2e4ce') : spec.color);
+            spec.light.intensity = spec.power * spec.levels[phase] * accent;
+        });
         // Five virtual spots from the aisle track, converted to world space (root carries the scale).
         root.updateWorldMatrix(true, false);
         accentSpots.forEach((sp, i) => { const p = root.localToWorld(new THREE.Vector3(...sp.at)), t = root.localToWorld(new THREE.Vector3(...sp.target)); accentU.efAccPos.value[i].copy(p); accentU.efAccAim.value[i].copy(t.sub(p).normalize()); });

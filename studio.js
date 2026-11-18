@@ -6276,7 +6276,7 @@ async function sceneCopyPrototype(source) {
     const current = source.origin.room === selectedRoomScene && source.origin.layout === workspaceRoom.roomLayout?.id;
     const existing = current && (sceneCopyDefaults.get(source.sourceId) || sceneAssetRegistry.get(source.sourceId)?.obj);
     if (existing) return existing;
-    if (PROP_LIBRARY.entry(source.propId)) return PROP_LIBRARY.instance(source.propId);
+    if (PROP_LIBRARY.entry(source.propId)) return PROP_LIBRARY.instance(source.propId, source.origin.room, source.origin.layout);
     const key = JSON.stringify(source.origin);
     if (!copyPrototypeRooms.has(key)) copyPrototypeRooms.set(key, (async () => {
         const r = new WorkspaceRoom(new THREE.Scene(), workspaceRoom.scale);

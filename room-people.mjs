@@ -1526,7 +1526,7 @@ export class RoomPeople {
             object.name = 'Person:' + spec.id; object.userData.person = spec; object.userData.personFit = this.library.entry(spec.id)?.person?.deskHeight ?? null; object.visible = false;
             if (chair) { chair.name = 'Person chair:' + spec.id; chair.visible = false; root.add(chair); object.userData.personChair = chair; }
             if (hairEdgeEnabled()) hairEdges(object, true);      // (before ownMaterials: its copies keep it)
-            if (spec.desk || this.filter?.when?.[this.keyOf(spec)]) this.ownMaterials(object);
+            if (room.id === 'creative' || room.roomLayout?.humboldt || spec.desk || this.filter?.when?.[this.keyOf(spec)]) this.ownMaterials(object);
             root.add(object); this.people.push(object); this.resize(object, spec); this.recolor(object, spec);
             // The Studio may load people after the room's first asset hydration. Their editor identity must
             // follow the placement, not the order in which models and posture variants finish loading.
@@ -1593,7 +1593,42 @@ export class RoomPeople {
     // The featured desk's people fade with the desk height, so they need materials of their own (textures stay shared).
     ownMaterials(object) {
         const copies = new Map(); object.userData.personMaterials = [];
-        object.traverse(o => { if (!o.isMesh) return; o.material = [].concat(o.material).map(m => { if (!copies.has(m)) { const c = m.clone(); c.userData.sharedTextures = true; c.userData.solid = { transparent: m.transparent, opacity: m.opacity }; copies.set(m, c); object.userData.personMaterials.push(c); } return copies.get(m); })[0]; });
+        const copy = m => {
+            if (!copies.has(m)) {
+                const owned = m.clone();
+                owned.userData.sharedTextures = true;
+                owned.userData.solid = { transparent:m.transparent, opacity:m.opacity };
+                copies.set(m, owned);
+                object.userData.personMaterials.push(owned);
+            }
+            return copies.get(m);
+        };
+        object.traverse(o => {
+            if (o.isMesh) o.material = Array.isArray(o.material) ? o.material.map(copy) : copy(o.material);
+        });
+        if (this.room.id === 'creative' || this.room.roomLayout?.humboldt) {
+            // These are private material copies for this placement, including its animated replacement.
+            for (const m of object.userData.personMaterials) {
+                const part = partOf(m.name);
+                if (part === 'hair') {
+                    m.roughness = .61;
+                    if (m.name.endsWith('blunt_bob_with_bangs') && this.room.root.artistHair) {
+                        m.map = m.bumpMap = this.room.root.artistHair;
+                        m.bumpScale = .00016;
+                    }
+                    if (m.normalMap) m.normalScale.multiplyScalar(.78);
+                } else if (part === 'shoes') {
+                    m.roughness = /boot|flats/i.test(m.name) ? .46 : .72;
+                    if (m.map && !m.normalMap) { m.bumpMap = m.map; m.bumpScale = .00032; }
+                } else if (part === 'bottom' || part === 'top') {
+                    if (m.name.includes('basic_tucked_t-shirt') && object.userData.person?.id.startsWith('people-lin-') && this.room.root.artistWorkshirt) {
+                        m.map = this.room.root.artistWorkshirt;
+                    }
+                    if (m.map && !m.normalMap) { m.bumpMap = m.map; m.bumpScale = .00048; }
+                    m.roughness = /wool|sweater/.test(m.name) ? .96 : .86;
+                }
+            }
+        }
     }
     fade(object, amount) {
         if (object.userData.personFade === amount) return; object.userData.personFade = amount;

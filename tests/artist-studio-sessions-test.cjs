@@ -13,8 +13,14 @@ const report=await page.evaluate(async()=>{
   r.set('creative',{layout,scale:.001});await r.ready;
   const failures=[],check=(v,msg)=>{if(!v)failures.push(msg);},assets=r.assets(),l=r.roomLayout;
   const canvas=r.root.getObjectByName('Artist evolving still life'),brief=r.root.getObjectByName('Artist session brief'),setting=r.root.getObjectByName('Artist daily palette');
+  const ferns=[];r.root.traverse(o=>{if(o.name==='Potted fern')ferns.push(o);});
+  check(ferns.length===(l.large?2:1),'Plant count does not match the layout');
   check(!!canvas&&!!brief,'Missing evolving studio artwork');check(!r.missingProps.length,'Missing props');
   const bounds=(o,frame=r.root)=>{r.root.updateWorldMatrix(true,true);const b=new T.Box3(),inv=frame.matrixWorld.clone().invert();o.traverse(m=>{if(!m.isMesh)return;if(m.isInstancedMesh){m.computeBoundingBox();b.union(m.boundingBox.clone().applyMatrix4(inv.clone().multiply(m.matrixWorld)));}else{m.geometry.computeBoundingBox();b.union(m.geometry.boundingBox.clone().applyMatrix4(inv.clone().multiply(m.matrixWorld)));}});return b;};
+  const gallery=r.root.getObjectByName('Limewashed gallery brickwork'),floor=r.root.getObjectByName('Oiled oak studio floor');
+  check(gallery?.material.bumpMap?.image?.width>1&&floor?.material.bumpMap?.image?.width>1,'Architectural relief unavailable');
+  check(!!r.root.getObjectByName('Aphrodite plaster portrait')?.getObjectByProperty('isMesh',true),'Plaster portrait unavailable');
+  check(canvas.ownedTextures.every(t=>t.image?.width>1),'Session art unavailable on room ready');
   const lights=[],maps=[];
   for(const [i,phase] of ['morning','afternoon','evening','night','party'].entries()){
    r.roomAtmosphere(phase);r.life.apply(phase);r.life.lightActivity();

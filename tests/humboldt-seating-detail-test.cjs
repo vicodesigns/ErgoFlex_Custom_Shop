@@ -10,6 +10,14 @@ const report=await page.evaluate(async()=>{
  const T=await import('three'),{WorkspaceRoom}=await import('./workspace-3d.mjs');const r=new WorkspaceRoom(new T.Scene(),.001);r.set('library',{layout:'humboldt',scale:.001});await r.ready;
  const chairs=r.assets().filter(o=>o.userData.humboldtChair),lamps=r.assets().filter(o=>o.userData.humboldtReadingLamp),checks=[],failures=[],check=(v,msg)=>{if(!v)failures.push(msg);};
  check(chairs.length===r.roomLayout.props.filter(p=>p.id==='kenney-furniture-chair-modern-cushion').length,'A general chair still uses the old model');check(chairs.length>50,'Missing seating');check(lamps.length===12,'Reading lamps missing');
+ const flyers=r.root.getObjectByName('Tackboard flyers').material.map;
+ check(flyers.userData.staticArtwork && flyers.image.getContext('2d').getImageData(100,95,1,1).data[3]===255,'Flyer artwork missing');
+ const track=r.root.getObjectByName('Ceiling gallery tracks'),camera=new T.PerspectiveCamera();
+ for(const [height,visible] of [[1800,true],[5050,false],[1900,true]]){
+  camera.position.copy(r.root.localToWorld(new T.Vector3(0,height,15000)));r.update(camera);
+  check(track.visible===visible,'Gallery track cutaway at '+height);
+ }
+ check(!r.missingProps.length,'Missing library materials or props');
  const geometry=new Set(),finishes=new Set(),rootInv=()=>r.root.matrixWorld.clone().invert();
  for(const chair of chairs){const model=chair.getObjectByName('Humboldt oak study chair');check(!!model,'Missing chair geometry');model.traverse(o=>{if(o.geometry)geometry.add(o.geometry);});finishes.add(chair.userData.humboldtChair.finish);const b=new T.Box3().setFromObject(model).applyMatrix4(rootInv()),d=b.getSize(new T.Vector3());check(d.y>780&&d.y<830,'Chair height distorted');check(Math.abs(b.min.y)<.1,'Chair off floor');}
  check(geometry.size===4,'Chair geometry duplicated');check(finishes.size===4,'Missing coordinated finishes');

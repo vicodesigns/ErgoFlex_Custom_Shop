@@ -205,10 +205,27 @@ function fern(b, r, x, ground, z, size = 700, hex = '#4f6e40') {
     const base = colour(hex), fronds = 9 + Math.floor(r() * 5);
     for (let k = 0; k < fronds; k++) {
         const a = r() * 6.28, rise = .5 + r() * .7, len = size * (.7 + r() * .5), out = V(Math.cos(a), 0, Math.sin(a)), side = V(-Math.sin(a), 0, Math.cos(a)), c = base.clone().offsetHSL(0, 0, (r() - .5) * .08);
-        let prev = V(x, ground, z);
-        for (let i = 1; i <= 5; i++) { const t = i / 5, p = V(x, ground, z).addScaledVector(out, len * t).add(V(0, len * (rise * t - (rise + .4) * t * t * .8) + len * .25 * t, 0)), leaf = len * .16 * (1 - t * .6);
-            for (const s of [-1, 1]) b.tri(prev, p, p.clone().addScaledVector(side, s * leaf).add(V(0, -leaf * .3, 0)), c.clone().multiplyScalar(.82 + .18 * (i % 2)), .5);
-            prev = p; }
+        // Near the glass the daylight shows through the gaps between the pinnae.
+        // A narrower pair of facets per leaflet carries its central fold.
+        const count = Math.abs(z) < 6500 ? 11 : 7;
+        const onFrond = t => V(x, ground + len * ((rise + .82) * t - (rise + .3) * t*t), z).addScaledVector(out,len*t);
+        let prev = onFrond(0);
+        for (let i=1; i<=count; i++) {
+            const t=i/count, p=onFrond(t), rachis=prev.clone().addScaledVector(side,len*.005);
+            b.tri(prev,rachis,p,c);
+            for(const sign of [-1,1]) {
+                const start=prev.clone().lerp(p,.23);
+                const wing=len*(.047+.093*Math.sin(Math.PI*t))*(1-.60*t);
+                const tip=start.clone().addScaledVector(side,sign*wing).addScaledVector(out,wing*.34);
+                tip.y+=wing*(.45-.73*t);
+                const mid=start.clone().lerp(tip,.5); mid.y+=len*.01;
+                const upper=mid.clone().addScaledVector(out,wing*.22);
+                const lower=mid.clone().addScaledVector(out,-wing*.16);
+                b.tri(start,upper,tip,c);
+                b.tri(start,tip,lower,c.clone().multiplyScalar(.82));
+            }
+            prev=p;
+        }
     }
 }
 

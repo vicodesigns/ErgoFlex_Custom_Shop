@@ -15,6 +15,7 @@ HERE=$(cd "$(dirname "$0")" && pwd); S=${FREEZE_LISTS:-$HERE/freeze-lists}
 cd "$1" || exit 1; TAG=$2; shift 2
 REV=$(python3 -c "import json;print(json.load(open('studio-state.json'))['rev'])"); F=exports/cinematic-intro-20261104-$TAG-freeze-rev$REV; [ -e $F ] && { echo "exists $F"; exit 1; }
 MUT=$( { git diff --name-only; git ls-files --others --exclude-standard -- '*.mjs' '*.js' '*.cjs' ':!exports' ':!node_modules' ':!app-reference' ':!divi-editor' ':!docs';
+  git ls-files --others --exclude-standard -- 'assets/rooms/artist/*' 'assets/rooms/library/*';   # finishes and cast used by the live Create and Commons chapters
   git ls-files --others --exclude-standard -- 'assets/props/people-*.glb' 'assets/props/people.json';   # people the Director built on request (not committed yet)
   echo studio-state.json;   # always frozen (it was inside the comment above: a clean studio-state.json made the freeze fail)
   # Also freeze committed code changed since Win's base and the film's JSON: a later commit or Director import here must not

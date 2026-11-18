@@ -568,8 +568,12 @@ function read(rig, key, time, seed, life, period = 10) {
     const across = x < .85 ? x / .85 : 1 - ss(.85, 1, x);
     headTurn(rig, (.045 - .09 * across) * (1 - turning) * life, (-.03 + .07 * page) * (1 - turning) * life);
     if (turning > 0) {
-        const [, upper, lower, hand] = rig.side.r.arm, other = rig.wp[rig.side.l.arm[3]], over = turning ** 2 * life;
-        handQ.copy(rig.wq[hand]); spot.copy(rig.wp[hand]).lerp(other, .5 * over); spot.addScaledVector(Y, .035 * turning * life);
+        const [, upper, lower, hand] = rig.side.r.arm, other = rig.wp[rig.side.l.arm[3]];
+        // Lift the corner first, carry it across the spine, then release the page.
+        const carry = ss(0,.58,u) * (1-ss(.58,1,u)) * life;
+        handQ.copy(rig.wq[hand]).premultiply(turn.setFromAxisAngle(Z, .16 * carry));
+        spot.copy(rig.wp[hand]).lerp(other, .53 * carry);
+        spot.addScaledVector(Y, (.026 * turning + .017 * Math.sin(Math.PI * Math.min(1,u*1.6))) * life);
         rig.reach(upper, lower, hand, spot); rig.setWorld(hand, handQ);
     }
 }
@@ -749,9 +753,16 @@ const ACTS = {
     // at the easel: strokes on the canvas, a dab now and then, the brush back to the palette to load
     'stand-paint'(rig, key, time, seed, life) {
         const hand = rig.side.r.arm[3], other = rig.wp[rig.side.l.arm[3]], load = moment(time, seed, 101, 11, 2.4, .36) * life;
-        handAt.copy(key.wp[hand]); handAt.x += noise(time * .55, seed + 102) * .07 * life; handAt.y += (noise(time * .41 + 5, seed + 103) * .09 + Math.sin(time * 5.2) * .012) * life;
+        const phase = (time * (.72 + .22 * hash(102, seed)) + hash(103, seed)) % 1;
+        const stroke = ss(.04, .6, phase) - ss(.68, .99, phase);
+        const lift = Math.sin(Math.PI * ss(.62, 1, phase));
+        handAt.copy(key.wp[hand]);
+        handAt.x += (noise(time * .34, seed + 102) * .05 + .032 * stroke) * life;
+        handAt.y += (noise(time * .28, seed + 103) * .065 + .021 * stroke) * life;
+        handAt.z -= .018 * lift * life;
         if (load > 0) { spot.copy(other); spot.y += .06; spot.z += .03; spot.x -= .05; handAt.lerp(spot, load); }
-        armTo(rig, 'r', handAt, key.wq[hand]);
+        handQ.copy(key.wq[hand]).premultiply(turn.setFromAxisAngle(Z, (.07 * stroke + .09 * lift) * (1 - load) * life));
+        armTo(rig, 'r', handAt, handQ);
     },
     // presenting: the arm toward the board moves over what is shown, the head goes between the board and the room
     // (every 7 to 12 seconds the arm reaches further out and up to point, and holds it: the shoulders and the head turn to
@@ -941,15 +952,21 @@ export function solveWorkout(rig, key, input) {
     }
     if (pose === 'sit-pottery') {
         // throwing a pot: the wheel turns, the hands ride up the clay and come down again, the body leans in with them
-        const u = time / (5.5 + hash(1, seed) * 2) + begin, w = .5 - .5 * Math.cos(u * Math.PI * 2), squeeze = .5 + .5 * Math.sin(u * Math.PI * 4);
-        for (const [bone, share] of [[b.spine_01, .4], [b.spine_02, .6]]) { rig.turnWorld(bone, turn.setFromAxisAngle(X, .035 * w * share)); rig.fk(); }
-        look(.35);
+        const phase = (time / (6.4 + hash(1, seed) * 1.3) + begin) % 1;
+        // A long pull, a pause at the rim, then a quicker return to the foot.
+        const pull = ss(.08, .67, phase) * (1 - ss(.75, .97, phase));
+        const lean = .036 * pull * life;
+        for (const [bone, share] of [[b.spine_01, .4], [b.spine_02, .6]]) { rig.turnWorld(bone, turn.setFromAxisAngle(X, lean * share)); rig.fk(); }
+        look(.3 * life);
         for (const s of ['l', 'r']) {
-            const [, upper, lower, hand] = rig.side[s].arm, out2 = s === 'l' ? 1 : -1;
-            handAt.copy(key.wp[hand]); handAt.y += -.035 + .075 * w; handAt.x += out2 * (.012 - .02 * squeeze * w);
-            rig.reach(upper, lower, hand, handAt); rig.reach(upper, lower, hand, handAt); rig.setWorld(hand, key.wq[hand]);
+            const hand = rig.side[s].arm[3], side = s === 'l' ? 1 : -1;
+            handAt.copy(key.wp[hand]);
+            handAt.y += (-.031 + (s === 'l' ? .064 : .079) * pull) * life;
+            handAt.x += side * (.008 - .014 * pull) * life;
+            const wrist = turn.setFromAxisAngle(Z, side * .065 * pull * life).multiply(key.wq[hand]);
+            armTo(rig, s, handAt, wrist);
         }
-        rig.fk(); out.wheel = time * Math.PI * 2 * 1.6;
+        out.wheel = time * Math.PI * 2 * 1.25 + .32 * Math.sin(phase * Math.PI * 2);
         return out;
     }
     // gym-box

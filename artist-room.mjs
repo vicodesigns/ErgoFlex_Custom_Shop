@@ -1,8 +1,10 @@
 import * as THREE from 'three';
+import { pottedFern } from './room-fern.mjs';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { attachVista } from './window-vista.mjs?v=polish-20261112f';
 import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113b';
 import { creativeMaterialDetail } from './creative-material-detail.mjs?v=material-realism-20261104';
-import { artistStudyMaps, artistSessionDetails } from './artist-studio-detail.mjs?v=artist-studio-20261025';
+import { artistSessionDetails } from './artist-studio-detail.mjs?v=artist-studio-20261025';
 import { HOME_LAYOUTS } from './home-office.mjs?v=polish-20261113b';
 import { createSunPatch } from './room-sun-patch.mjs?v=polish-20261111f';
 import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
@@ -212,6 +214,11 @@ function studies() {
 
 export function buildArtistRoom(room, root, layout, helpers) {
     const { material, mesh, box, rod, sphere, markSceneAsset } = helpers;
+    room.propReplacements = {
+        'kenney-furniture-potted-plant': { id: 'ficus', scale: .78 },
+        'kenney-furniture-plant-small1': { id: 'ergoflex-plant-3', scale: .54 },
+        monstera: { id: 'monstera', scale: .92 }
+    };
     const { width: w, depth: d, height: h, back: bz, cabinet: [cx, cz] } = layout, front = bz + d;
     const oak = material('#b8996f', { roughness: .78 }), chalk = material('#ebe6da', { roughness: .95 });
     const clay = material('#b06d55', { roughness: .85 }), blue = material('#5f7b81', { roughness: .85 });
@@ -220,7 +227,41 @@ export function buildArtistRoom(room, root, layout, helpers) {
     const sage = material('#7e8c82', { roughness: .7 }), brass = material('#b8975c', { metalness: .75, roughness: .32 });
     const cast = material('#f2eee5', { roughness: .9 });
     const glass = new THREE.MeshPhysicalMaterial({ color: '#d8e3dd', roughness: .16, metalness: 0, transmission: .68, thickness: 8, ior: 1.5 });
-    const studyMaps = artistStudyMaps(painting(1));
+    // Load the room finishes with the props so a Director still at frame zero has the same surfaces as the shop.
+    const pending = [], loader = new THREE.TextureLoader();
+    const loadMap = (file, srgb, repeatX = 1, repeatY = 1) => {
+        const url = new URL('./assets/rooms/artist/' + file + '.webp', import.meta.url);
+        let map;
+        pending.push(new Promise(resolve => {
+            map = loader.load(url.href, resolve, undefined, () => {
+                if (room.root === root) room.missingProps.push(file);
+                const fallback = document.createElement('canvas'); fallback.width = fallback.height = 1;
+                const ctx = fallback.getContext('2d'); ctx.fillStyle = srgb ? '#c7bcab' : '#808080'; ctx.fillRect(0, 0, 1, 1);
+                map.image = fallback; map.needsUpdate = true; resolve();
+            });
+        }));
+        if (srgb) map.colorSpace = THREE.SRGBColorSpace;
+        map.wrapS = map.wrapT = THREE.RepeatWrapping;
+        map.repeat.set(repeatX, repeatY); map.anisotropy = 8;
+        return map;
+    };
+    const bob = loadMap('lin-bob', true);
+    bob.flipY = false;
+    root.artistHair = bob;
+    const workshirt = loadMap('lin-workshirt', true);
+    workshirt.flipY = false; // Same UV pattern as Lin's glTF shirt, including its sewn chest pocket.
+    root.artistWorkshirt = workshirt;
+    const atlas = loadMap('coastal-studies', true);
+    atlas.wrapS = atlas.wrapT = THREE.ClampToEdgeWrapping;
+    const tile = index => {
+        const map = atlas.clone();
+        // Half a texel inside each reproduction keeps its neighbour out of the frame.
+        map.repeat.set(.25 - 1 / 1792, .5 - 1 / 1152);
+        map.offset.set(index % 4 / 4 + .5 / 1792, .5 - Math.floor(index / 4) / 2 + .5 / 1152);
+        return map;
+    };
+    const galleryMaps = [0, 1, 2].map(tile), studyMaps = [3, 4, 5, 6, 7].map(tile);
+    root.ownedTextures = [...(root.ownedTextures || []), bob, workshirt, atlas, ...galleryMaps, ...studyMaps];
     let activeCanvas, paintTaboret, palettePaint;
     const linen = material('#efe7d8', { roughness: 1, side: THREE.DoubleSide });
     // White bases for instanced batches; each instance carries its own colour.
@@ -255,11 +296,32 @@ export function buildArtistRoom(room, root, layout, helpers) {
         const a = new THREE.Vector3(...from), b = new THREE.Vector3(...to), delta = b.clone().sub(a), length = delta.length();
         return { at: a.add(b).multiplyScalar(.5).toArray(), q: new THREE.Quaternion().setFromUnitVectors(up, delta.normalize()), size: [radius, length, radius], color };
     };
-    // Leaves are flattened ellipsoids pointing along their stem direction.
+    // Cupped blades with a central rib; the same small mesh serves each plant's instanced leaves.
+    const blade = new THREE.PlaneGeometry(2, 2, 8, 14), bladePos = blade.attributes.position;
+    for (let i = 0; i < bladePos.count; i++) {
+        const x = bladePos.getX(i), t = (bladePos.getY(i) + 1) * .5;
+        const width = Math.max(.006, Math.sin(Math.PI * t) ** .82) * (1.2 - .4 * t);
+        bladePos.setXYZ(i, x * width, t * 2 - 1, (.65 * (1 - Math.abs(x)) - .28 * x * x) * width - t * t * .6);
+    }
+    blade.computeVertexNormals();
+    leafy.map = texture((c, w, h) => {
+        c.fillStyle = '#dce1cc'; c.fillRect(0, 0, w, h);
+        c.strokeStyle = '#f6eed2'; c.lineWidth = 2.4;
+        c.beginPath(); c.moveTo(w / 2, h); c.lineTo(w / 2, 0); c.stroke();
+        c.strokeStyle = '#eef3d5'; c.lineWidth = 1.2;
+        for (let j = 1; j <= 8; j++) for (const side of [-1, 1]) {
+            const y = h * j / 9;
+            c.beginPath(); c.moveTo(w / 2, y);
+            c.quadraticCurveTo(w * (.5 + side * .31), y - 9, w * (.5 + side * .5), y - 31); c.stroke();
+        }
+    }, 128, 256);
     const GREENS = ['#4f6f45', '#5e7f4f', '#3f5f3d', '#6e8b55', '#47663f'];
     const leaf = (items, base, dir, length, width, color) => {
         const n = new THREE.Vector3(...dir).normalize();
-        items.push({ at: [base[0] + n.x * length / 2, base[1] + n.y * length / 2, base[2] + n.z * length / 2], q: new THREE.Quaternion().setFromUnitVectors(up, n), size: [width / 2, length / 2, 5], color });
+        const across = new THREE.Vector3(-n.z, 0, n.x).normalize();
+        const orientation = new THREE.Matrix4().makeBasis(across, n, across.clone().cross(n));
+        items.push({ at: [base[0] + n.x * length / 2, base[1] + n.y * length / 2, base[2] + n.z * length / 2],
+            q: new THREE.Quaternion().setFromRotationMatrix(orientation), size: [width / 2, length / 2, width * .13], color });
     };
     // Flat artwork cards sampling the shared studies sheet, merged into a
     // single mesh. Each card is cropped to its own aspect ratio.
@@ -297,22 +359,12 @@ export function buildArtistRoom(room, root, layout, helpers) {
         for (let i = 0; i < 2000; i++) { c.fillStyle = i % 2 ? '#8f806609' : '#ffffff22'; c.fillRect(i * 73 % tw, i * 119 % th, 2, 2); }
     }); plaster.repeat.set(3, 2);
     const wallMat = material('#ffffff', { map: plaster, roughness: 1 });
-    // Wide oak boards: staggered end joints, grain, the odd knot and a few
-    // old paint spots from years of use.
-    const floorMap = texture((c, tw, th) => {
-        const rnd = random(7), pw = tw / 6;
-        for (let i = 0; i < 6; i++) {
-            const joint = (i * .37 + .11) % 1 * th, x = i * pw;
-            c.fillStyle = ['#c9ae86', '#bea179', '#d1b78f', '#c4a77f', '#b99c74', '#cdb38b'][i]; c.fillRect(x, 0, pw, joint);
-            c.fillStyle = ['#c2a57d', '#cbb088', '#c0a37b', '#d0b68e', '#c6a982', '#bb9e76'][i]; c.fillRect(x, joint, pw, th - joint);
-            c.strokeStyle = '#6e4f3226'; c.lineWidth = .8;
-            for (let j = 0; j < 16; j++) { const gx = x + 3 + j * (pw - 6) / 16 + rnd() * 2; c.beginPath(); c.moveTo(gx, 0); c.bezierCurveTo(gx + 5 * (rnd() - .5) * 2, th * .3, gx - 5 * (rnd() - .5) * 2, th * .65, gx, th); c.stroke(); }
-            if (rnd() > .4) { const kx = x + pw * (.3 + rnd() * .4), ky = rnd() * th; c.fillStyle = '#7a593a55'; ellipse(c, kx, ky, 4, 9); c.strokeStyle = '#7a593a30'; for (let r = 1; r < 4; r++) { c.beginPath(); c.ellipse(kx, ky, 4 + r * 3, 9 + r * 6, 0, 0, Math.PI * 2); c.stroke(); } }
-            c.fillStyle = '#5c432c66'; c.fillRect(x, 0, 2, th); c.fillRect(x, joint - 1, pw, 2);
-        }
-        for (let i = 0; i < 26; i++) { c.fillStyle = ['#b6503d88', '#3d557788', '#e5c76688', '#f4efe388'][i % 4]; ellipse(c, rnd() * tw, rnd() * th, 1 + rnd() * 3, 1 + rnd() * 3); }
-    }, 512, 1024); floorMap.repeat.set(w / 1300, d / 2000);
-    box(root, [w, 30, d], [0, -15, bz + d / 2], material('#ffffff', { map: floorMap, roughness: .82 }));
+    const floor = material('#ffffff', {
+        map: loadMap('oiled-oak', true, w / 1520, d / 2760),
+        bumpMap: loadMap('oak-relief', false, w / 1520, d / 2760),
+        bumpScale: .00085, roughness: .64
+    });
+    box(root, [w, 30, d], [0, -15, bz + d / 2], floor).name = 'Oiled oak studio floor';
     // Flat-woven wool rug: cream field, rust and indigo bands, diamond motifs.
     const rugMap = texture((c, tw, th) => {
         const rnd = random(11); c.fillStyle = '#e2d7c0'; c.fillRect(0, 0, tw, th);
@@ -345,7 +397,14 @@ export function buildArtistRoom(room, root, layout, helpers) {
     const wainscot = length => { const map = bead.clone(); map.repeat.set(length / 480, 1); map.needsUpdate = true; return material('#98a596', { map, roughness: .62 }); };
 
     const back = new THREE.Group(); back.name = 'Artist gallery wall'; root.add(back);
-    box(back, [w, h, 80], [0, h / 2, bz - 40], wallMat);
+    const brick = material('#fffaf0', {
+        map: loadMap('washed-brick', true, w / 900, h / 900),
+        bumpMap: loadMap('brick-relief', false, w / 900, h / 900), bumpScale: .0036, roughness: .94
+    });
+    box(back, [w, h, 80], [0, h / 2, bz - 40], brick).name = 'Limewashed gallery brickwork';
+    const rail = material('#594e40', { roughness: .54, metalness: .28 });
+    box(back, [w, 55, 62], [0, h - 138, bz + 31], oak, 3);
+    box(back, [w, 12, 70], [0, h - 167, bz + 35], rail, 1);
     box(back, [w, 90, 20], [0, 45, bz + 10], chalk);
     box(back, [w, dado, 12], [0, dado / 2, bz + 6], wainscot(w));
     box(back, [w, 28, 30], [0, dado + 14, bz + 15], chalk, 3);
@@ -362,7 +421,9 @@ export function buildArtistRoom(room, root, layout, helpers) {
         const art = new THREE.Group(); art.name = label; art.position.set(...at); parent.add(art);
         box(art, [width, height, 32], [0, 0, 0], oak, 3);
         const evolving = label === 'Painting in progress' || (layout.compact && seed === 1);
-        const face = box(art, [width - 34, height - 34, 8], [0, 0, 20], material('#ffffff', { map: evolving ? studyMaps[0] : painting(seed), roughness: .94 }));
+        const margin = lit && seed !== 1 ? 60 : 34;
+        if (margin > 34) box(art, [width - 25, height - 25, 3], [0, 0, 17], linen);
+        const face = box(art, [width - margin, height - margin, 8], [0, 0, 20], material('#ffffff', { map: evolving ? studyMaps[0] : galleryMaps[seed] || painting(seed), roughness: .94 }));
         if (evolving) activeCanvas = face;
         if (lit) {
             rod(art, [0, height / 2 - 4, 6], [0, height / 2 + 64, 70], 7, brass);
@@ -379,6 +440,7 @@ export function buildArtistRoom(room, root, layout, helpers) {
     room.walls.push({ obj: back, axis: 'x', limit: bz * root.scale.x });
     const side = new THREE.Group(); side.name = 'Artist materials wall'; root.add(side);
     box(side, [80, h, d], [w / 2 + 40, h / 2, bz + d / 2], wallMat);
+    box(side, [52, 48, d], [w / 2 - 26, h - 138, bz + d / 2], oak, 3);
     box(side, [20, 90, d], [w / 2 - 10, 45, bz + d / 2], chalk);
     box(side, [12, dado, d], [w / 2 - 6, dado / 2, bz + d / 2], wainscot(d));
     box(side, [30, 28, d], [w / 2 - 15, dado + 14, bz + d / 2], chalk, 3);
@@ -400,12 +462,26 @@ export function buildArtistRoom(room, root, layout, helpers) {
     const view = windowView('creative'), windowVista = view === 'photo' ? attachVista(pane, 'studio-garden') : null; if (windowVista) room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     pane.rotation.y = Math.PI / 2; pane.castShadow = pane.receiveShadow = false;
     const scenery = view === 'scenery' ? attachScenery(pane, 'studio-garden', { floor: -(low + wh / 2), seed: 1302 }) : null;
-    for (const z of [a, wz, b]) box(entry, [55, wh + 50, 24], [-w / 2 + 8, low + wh / 2, z], chalk);
+    const sash = material('#47554e', { metalness: .32, roughness: .43 });
+    for (const z of [a, b]) {
+        box(entry, [106, wh + 64, 48], [-w / 2 + 12, low + wh / 2, z], oak, 3);
+        box(entry, [115, 42, 92], [-w / 2 + 16, low + wh + 22, z], chalk, 3);
+    }
+    box(entry, [45, wh, 23], [-w / 2 + 8, low + wh / 2, wz], sash, 2);
+    // A segmental relieving arch above the existing square-headed window.
+    const voussoirs = [], span = ww + 120, rise = 98, count = layout.compact ? 17 : 23;
+    for (let i = 0; i < count; i++) {
+        const z = span * ((i + .5) / count - .5), slope = -8 * rise * z / (span * span);
+        voussoirs.push({ at: [-w / 2 + 15, low + wh + 67 + rise * (1 - (2 * z / span) ** 2), wz + z],
+            size: [62, i === (count - 1) / 2 ? 89 : 74, span / count - 3], rot: [-Math.atan(slope), 0, 0],
+            color: ['#c5ad90', '#cbb499', '#bda48a', '#d3bda0'][i % 4] });
+    }
+    instanced(entry, unit, tint, voussoirs).name = 'Window arch stones';
     for (const y of [low, low + wh]) box(entry, [70, 28, ww + 50], [-w / 2 + 8, y, wz], chalk);
     // Divided lights: the glazing bars throw a soft grid across the floor.
     instanced(entry, unit, tint, [
-        ...[(a + wz) / 2, (wz + b) / 2].map(z => ({ at: [-w / 2 + 8, low + wh / 2, z], size: [30, wh, 14], color: '#ebe6da' })),
-        ...[low + wh * .36, low + wh * .7].map(y => ({ at: [-w / 2 + 8, y, wz], size: [30, 14, ww], color: '#ebe6da' }))
+        ...[(a + wz) / 2, (wz + b) / 2].map(z => ({ at: [-w / 2 + 8, low + wh / 2, z], size: [30, wh, 14], color: '#526158' })),
+        ...[low + wh * .36, low + wh * .7].map(y => ({ at: [-w / 2 + 8, y, wz], size: [30, 14, ww], color: '#526158' }))
     ]);
     box(entry, [180, 30, ww + 80], [-w / 2 + 50, low - 15, wz], oak, 3);
     // Linen roman shade drawn up into the head of the window.
@@ -413,8 +489,12 @@ export function buildArtistRoom(room, root, layout, helpers) {
     rod(entry, [-w / 2 + 52, low + wh - 238, a - 10], [-w / 2 + 52, low + wh - 238, b + 10], 9, oak);
     // Floor-length linen curtains stacked either side of the window.
     const pw = layout.compact ? 220 : 380, ph = h - 190, curtainX = -w / 2 + 168;
-    const drapeGeo = new THREE.PlaneGeometry(pw, ph, 18, 1), drapePos = drapeGeo.attributes.position;
-    for (let i = 0; i < drapePos.count; i++) drapePos.setZ(i, Math.sin((drapePos.getX(i) / pw + .5) * Math.PI * 7) * 22);
+    const drapeGeo = new THREE.PlaneGeometry(pw, ph, 32, 12), drapePos = drapeGeo.attributes.position;
+    for (let i = 0; i < drapePos.count; i++) {
+        const u = drapePos.getX(i) / pw + .5, v = .5 - drapePos.getY(i) / ph;
+        const fold = Math.sin(u * Math.PI * 8 + .42 * v + .18 * Math.sin(v * 5 + u * 2));
+        drapePos.setXYZ(i, (u - .5) * pw * (.79 + .21 * v), drapePos.getY(i) + v ** 3 * (4 * fold - 4), fold * (16 + 10 * v));
+    }
     drapeGeo.computeVertexNormals();
     for (const z of [a - pw / 2 + 50, b + pw / 2 - 50]) { const panel = mesh(entry, drapeGeo, linen, [curtainX, 30 + ph / 2, z]); panel.rotation.y = Math.PI / 2; }
     rod(entry, [curtainX, h - 140, a - pw + 20], [curtainX, h - 140, b + pw - 20], 11, brass);
@@ -427,10 +507,23 @@ export function buildArtistRoom(room, root, layout, helpers) {
         for (let i = 0; i < 16; i++) { const az = i * 2.4, tilt = .2 + rnd() * .9; leaf(sillLeaves, [-w / 2 + 70, low + 100 - p * 14, z], [Math.sin(tilt) * Math.cos(az), Math.cos(tilt), Math.sin(tilt) * Math.sin(az)], 80 + rnd() * 70, 30 + rnd() * 16, GREENS[i % 5]); }
     });
     instanced(entry, new THREE.CylinderGeometry(1, .78, 1, 16), tint, sillPots);
-    instanced(entry, ball, leafy, sillLeaves);
+    instanced(entry, blade, leafy, sillLeaves);
+    const fern = pottedFern(layout.compact ? 48 : 64, 1.4, '#839286');
+    fern.position.set(-w / 2 + 77, low, wz + ww * .25);
+    entry.add(fern);
+    register(fern, 'sill-fern', 'Fern in celadon stoneware');
     // A full-size door: an 810 x 2040 leaf in an 880 x 2110 frame (was a 720 x 1970 leaf).
     const doorFrame = box(entry, [28, 2110, 880], [-w / 2 + 20, 1055, doorZ], oak, 4); doorFrame.name = 'Artist studio door frame';
     box(entry, [18, 2040, 810], [-w / 2 + 43, 1020, doorZ], chalk, 4);
+    const panels = [];
+    for (const [y, height] of [[490, 680], [1475, 760]]) for (const z of [-178, 178]) {
+        for (const sign of [-1, 1]) {
+            panels.push({ at: [-w / 2 + 55, y + sign * height / 2, doorZ + z], size: [11, 17, 302], color: '#d5cebf' });
+            panels.push({ at: [-w / 2 + 55, y, doorZ + z + sign * 143], size: [11, height - 15, 16], color: '#d5cebf' });
+        }
+    }
+    instanced(entry, unit, tint, panels);
+    box(entry, [13, 130, 35], [-w / 2 + 58, 978, doorZ - 315], brass, 4);
     rod(entry, [-w / 2 + 65, 1000, doorZ - 315], [-w / 2 + 65, 1000, doorZ - 225], 8, brass);
     room.walls.push({ obj: entry, axis: 'z', limit: w / 2 * root.scale.x, sign: -1 });
 
@@ -448,16 +541,23 @@ export function buildArtistRoom(room, root, layout, helpers) {
         instanced(cup, tube, tint, handles); instanced(cup, unit, gloss, tips, false);
         return cup;
     };
-    // A plaster cast of a classical head, built from simple solids.
-    const bust = (parent, at, turn = 0, s = 1) => {
-        const g = group(parent, 'Plaster cast bust', at, turn); g.scale.setScalar(s);
-        mesh(g, new THREE.CylinderGeometry(70, 80, 40, 20), cast, [0, 20, 0]);
-        sphere(g, [120, 80, 70], [0, 105, 0], cast);
-        mesh(g, new THREE.CylinderGeometry(32, 40, 80, 14), cast, [0, 185, 0]);
-        sphere(g, [60, 76, 66], [0, 262, 6], cast);
-        sphere(g, [64, 46, 68], [0, 300, -8], cast);
-        box(g, [14, 30, 20], [0, 256, 70], cast);
-        return g;
+    // A 300 mm portrait study cropped from the shop's Aphrodite plaster cast in Blender.
+    const bust = (parent, at, turn = 0, scale = 1) => {
+        const stand = group(parent, 'Plaster cast bust', at, turn);
+        stand.scale.setScalar(scale);
+        mesh(stand, new THREE.CylinderGeometry(78, 85, 25, 40), cast, [0, 12.5, 0]);
+        mesh(stand, new THREE.CylinderGeometry(52, 64, 18, 40), cast, [0, 34, 0]);
+        const url = new URL('./assets/rooms/artist/plaster-study.glb', import.meta.url);
+        pending.push(new GLTFLoader().loadAsync(url.href).then(({ scene }) => {
+            if (room.root !== root) {
+                scene.traverse(o => { o.geometry?.dispose(); o.material?.dispose(); });
+                return;
+            }
+            scene.name = 'Aphrodite plaster portrait'; scene.scale.setScalar(1000); scene.position.y = 43;
+            scene.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
+            stand.add(scene);
+        }).catch(() => { if (room.root === root) room.missingProps.push('plaster-study'); }));
+        return stand;
     };
 
     const storage = new THREE.Group(); storage.name = 'Art materials cabinet'; root.add(storage);
@@ -564,32 +664,60 @@ export function buildArtistRoom(room, root, layout, helpers) {
             leaf(figLeaves, base, [Math.cos(az), .35 + rnd() * .6 + t * .3, Math.sin(az)], 230 + rnd() * 90 - t * 60, 150 + rnd() * 50 - t * 40, GREENS[(i * 3) % 5]);
         }
         instanced(fig, tube, tint, stems);
-        instanced(fig, ball, leafy, figLeaves);
+        instanced(fig, blade, leafy, figLeaves);
     }
 
-    // Trailing pothos in a hanging planter high in the back corner.
+    // Baltic Blue pothos: older blue-green leaves split along the lateral veins; young tips stay whole.
     const hangX = -w / 2 + 300, hangZ = bz + 330, hangY = h - 720;
     const hanger = group(root, 'Artist hanging planter', [hangX, 0, hangZ]);
     mesh(hanger, new THREE.SphereGeometry(110, 18, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), clay, [0, hangY + 60, 0]);
     const cords = [0, 1, 2].map(i => stick([Math.cos(i * 2.094) * 100, hangY + 60, Math.sin(i * 2.094) * 100], [0, h, 0], 2, '#d8c9a8'));
     instanced(hanger, tube, tint, cords, false);
-    const vines = [], vineRnd = random(17);
+    mesh(hanger, new THREE.CylinderGeometry(105,98,9,32), material('#43392d',{roughness:1}), [0,hangY+56,0]);
+    const lip = mesh(hanger, new THREE.TorusGeometry(107,5,8,36), clay, [0,hangY+59,0]);
+    lip.rotation.x=Math.PI/2;
+    const splitBlade=blade.clone(), surface=splitBlade.attributes.position, uv=splitBlade.attributes.uv;
+    for(let i=0;i<surface.count;i++) {
+        const u=uv.getX(i), row=Math.round(uv.getY(i)*14);
+        const notch=(u<.3 && (row===4 || row===8)) || (u>.7 && (row===6 || row===10));
+        if(notch)surface.setX(i,surface.getX(i)*(.27+Math.abs(u-.5)*.48));
+    }
+    splitBlade.computeVertexNormals();
+    const young = [], mature = [], trails = [], vineRnd = random(17);
+    const pothosColors = ['#415f56','#526f60','#45665e','#63816b','#759076'];
     for (let v = 0; v < 6; v++) {
         const az = v * 1.05 + .3;
+        let previous = [Math.cos(az) * 76, hangY + 62, Math.sin(az) * 76];
         for (let j = 0; j < 6 - v % 2; j++) {
             const r = 95 + j * 9, sway = Math.sin(j * .9 + v) * 30;
-            leaf(vines, [Math.cos(az) * r + sway, hangY + 70 - j * 88, Math.sin(az) * r], [Math.cos(az) + (vineRnd() - .5), -.2 - vineRnd() * .5, Math.sin(az) + (vineRnd() - .5)], 85 + vineRnd() * 30, 62, GREENS[(v + j) % 5]);
+            const node = [Math.cos(az) * r + sway, hangY + 70 - j * (layout.compact ? 64 : 85), Math.sin(az) * r];
+            trails.push(stick(previous, node, 2.4, '#67714a')); previous = node;
+            const juvenile = j>2, twist = az + (j%2 ? .62 : -.62);
+            leaf(juvenile ? young : mature, node, [Math.cos(twist), -.24-vineRnd()*.56, Math.sin(twist)],
+                (juvenile ? 91 : 141)+vineRnd()*25, juvenile ? 49 : 73, pothosColors[(j+v)%5]);
         }
     }
-    instanced(hanger, ball, leafy, vines);
+    instanced(hanger, tube, tint, trails, false);
+    instanced(hanger, splitBlade, leafy, mature);
+    instanced(hanger, blade, leafy, young);
 
     // Paper lantern over the open floor (the worktable in the larger suites),
     // glowing from evening on. Hung clear of the camera's line to the desk.
     const paper = material('#f6ecd8', { emissive: '#ffd9a4', emissiveIntensity: .1, roughness: 1 });
     const lanternAt = layout.large ? [layout.table[0], h - 650, layout.table[1]] : [w / 2 - (layout.compact ? 700 : 900), h - 600, front - (layout.compact ? 700 : 900)];
     const lantern = group(root, 'Artist paper lantern', lanternAt);
-    flat(sphere(lantern, [230, 205, 230], [0, 0, 0], paper));
-    instanced(lantern, tube, tint, [-120, 0, 120].map(y => ({ at: [0, y, 0], size: [230 * Math.sqrt(1 - (y / 205) ** 2) + 2, 3, 230 * Math.sqrt(1 - (y / 205) ** 2) + 2], color: '#e6d8bc' })), false);
+    // Washi over a continuous bamboo spiral, with open collars at the two poles.
+    const ribs = [], profile = [];
+    for (let i = 0; i <= 30; i++) {
+        const angle = -.445 * Math.PI + i / 30 * .89 * Math.PI;
+        profile.push(new THREE.Vector2(230 * Math.cos(angle), 205 * Math.sin(angle)));
+    }
+    flat(mesh(lantern, new THREE.LatheGeometry(profile, 48), paper));
+    for (let i = 0; i <= 360; i++) {
+        const t = i / 360, lat = (t - .5) * .89 * Math.PI, az = t * 25 * Math.PI;
+        ribs.push(new THREE.Vector3(230.8 * Math.cos(lat) * Math.sin(az), 205 * Math.sin(lat), 230.8 * Math.cos(lat) * Math.cos(az)));
+    }
+    flat(mesh(lantern, new THREE.TubeGeometry(new THREE.CatmullRomCurve3(ribs), 360, 1.6, 4, false), oak));
     rod(lantern, [0, 200, 0], [0, h - lanternAt[1], 0], 3, metal).castShadow = false;
 
     // Festoon string swagged along the materials wall for open-studio nights.
@@ -612,7 +740,7 @@ export function buildArtistRoom(room, root, layout, helpers) {
         // (the stool is on the room's side, turned a little to the front: the potter faces the rack on the wall)
         const wheel = group(root, 'Artist pottery wheel', [layout.easel[0], 0, layout.easel[1]], Math.PI / 2 - .25);
         register(wheel, 'ceramics-wheel', 'Pottery wheel and stool');
-        const enamel = material('#8c9a94', { roughness: .5, metalness: .15 }), wet = material('#8e7a69', { roughness: .45 }), bisque = material('#dcc7ab', { roughness: .9 }), alu = material('#b9bcbb', { metalness: .7, roughness: .35 });
+        const enamel = material('#8c9a94', { roughness: .5, metalness: .15 }), wet = new THREE.MeshPhysicalMaterial({ color: '#986f58', roughness: .39, clearcoat: .45, clearcoatRoughness: .21 }), bisque = material('#dcc7ab', { roughness: .9 }), alu = material('#b9bcbb', { metalness: .7, roughness: .35 });
         const lathe = (parent, profile, mat, at, name) => { const o = mesh(parent, new THREE.LatheGeometry(profile.map(([r, y]) => new THREE.Vector2(r, y)), 28), mat, at); if (name) o.name = name; return o; };
         for (let i = 0; i < 3; i++) { const a = i * Math.PI * 2 / 3 + .5; rod(wheel, [Math.sin(a) * 190, 0, Math.cos(a) * 190], [Math.sin(a) * 170, 130, Math.cos(a) * 170], 22, metal); }
         mesh(wheel, new THREE.CylinderGeometry(245, 225, 300, 28), enamel, [0, 270, 0]);
@@ -620,7 +748,24 @@ export function buildArtistRoom(room, root, layout, helpers) {
         const head = group(wheel, 'Pottery wheel head');
         mesh(head, new THREE.CylinderGeometry(150, 150, 18, 32), alu, [0, 471, 0]);
         mesh(head, new THREE.CylinderGeometry(32, 32, 50, 16), metal, [0, 440, 0]);
-        lathe(head, [[0, 0], [62, 0], [92, 30], [100, 85], [88, 130], [80, 158], [72, 158], [80, 128], [90, 85], [82, 34], [56, 12], [0, 12]], wet, [0, 480, 0], 'Pot on the wheel');
+        // Finger rings in the wet wall catch the window as it turns. Preserve the lip height and hand contact.
+        const pot = [[0, 0], [58, 0], [61, 3], [61, 9]];
+        for (let y = 11; y < 155; y += 2) {
+            const t = (y - 11) / 144;
+            pot.push([62 + 17 * t + 29 * Math.sin(Math.PI * t) + 1.15 * Math.sin(y * .61), y]);
+        }
+        pot.push([81, 155], [81, 158], [79, 160], [73, 160], [71, 157], [72, 152], [90, 86], [78, 33], [53, 12], [0, 12]);
+        lathe(head, pot, wet, [0, 480, 0], 'Pot on the wheel');
+        const slipMap = texture((c, tw, th) => {
+            const rnd = random(71); c.fillStyle = '#a8aaa4'; c.fillRect(0, 0, tw, th);
+            for (let i = 0; i < 64; i++) {
+                c.beginPath(); c.strokeStyle = i % 3 ? '#796b5840' : '#d9c7ad90'; c.lineWidth = 1 + rnd() * 3;
+                const angle = rnd() * Math.PI * 2;
+                c.arc(tw / 2 + 2, th / 2, 5 + i * 1.9, angle, angle + rnd() * 5); c.stroke();
+            }
+        }, 256, 256);
+        const wheelFace = flat(mesh(head, new THREE.CircleGeometry(149, 48), material('#ffffff', { map: slipMap, metalness: .42, roughness: .42 }), [0, 480.2, 0]));
+        wheelFace.rotation.x = -Math.PI / 2;
         box(wheel, [150, 45, 230], [330, 22, 150], metal, 6).name = 'Pottery wheel pedal';
         lathe(wheel, [[0, 0], [95, 0], [118, 210], [112, 210], [90, 8], [0, 8]], material('#d4d0c6', { roughness: .6, side: THREE.DoubleSide }), [-360, 0, 120], 'Pottery water bucket');
         flat(mesh(wheel, new THREE.CylinderGeometry(104, 92, 6, 24), material('#9aa7a8', { roughness: .15, transparent: true, opacity: .7 }), [-360, 150, 120]));
@@ -698,6 +843,9 @@ export function buildArtistRoom(room, root, layout, helpers) {
         for (const x of [-315, 315]) for (const z of [-660, 660]) box(table, [50, 865, 50], [x, 432.5, z], blue, 2);
         box(table, [670, 22, 1330], [0, 310, 0], oak, 3);
         instanced(table, unit, tint, Array.from({ length: 4 }, (_, i) => ({ at: [0, 356 + i % 2 * 80, -460 + Math.floor(i / 2) * 860], size: [590, 70, 180], color: i % 2 ? '#c8b69c' : '#e4dfd1' })));
+        const shelfFern = pottedFern(92, 3.2, '#ad7055');
+        shelfFern.position.set(132, 321, -40);
+        table.add(shelfFern);
         brushCup(table, [-240, 910, -610], blueGlaze, 'worktable');
         const matMap = texture((c, tw, th) => {
             c.fillStyle = '#3f6b5a'; c.fillRect(0, 0, tw, th); c.strokeStyle = 'rgba(220,235,225,.45)'; c.lineWidth = 1;
@@ -739,8 +887,8 @@ export function buildArtistRoom(room, root, layout, helpers) {
     const lights = [
         { at: [layout.desk[0], h - 320, layout.desk[1] + 260], power: 1.3, range: 3400, task: true },
         { at: [cx - 120, 1450, cz], power: 1.5, range: 2400, channel: 1 },
-        { at: layout.compact ? [lanternAt[0], lanternAt[1] - 240, lanternAt[2]] : [layout.easel[0] + 150, 2200, layout.easel[1] + 150], power: 2.4, range: 3600, task: true },
-        { at: [450, 2200, front - 1350], power: 2.6, range: 4600, channel: 0 }
+        { at: [-w / 2 + 240, low + wh * .58, wz], power: 2.4, range: 4200, window: true },
+        { at: lanternAt, power: 2.6, range: 4600, lantern: true }
     ].map(spec => {
         const light = new THREE.PointLight('#f1e7d8', 0, spec.range * root.scale.x, 2); light.position.set(...spec.at); root.add(light);
         return { ...spec, light, power: spec.power * (root.scale.x * 1000) ** 2 };
@@ -790,7 +938,16 @@ export function buildArtistRoom(room, root, layout, helpers) {
         poolGain.v = accent * (layout.id === 'apartment' ? .45 : 1); pools.apply(modeId); sun.update(modeId);   // the small room's lamps light a small room
         drawSky(skyCanvas.getContext('2d'), mode, modeId); skyMap.needsUpdate = true; windowVista?.setPhase(modeId); scenery?.setHour(modeId);
         glow.forEach(({ mat, channel }) => { mat.color.set(mode.colors[channel]); mat.emissive.set(mode.colors[channel]); mat.emissiveIntensity = .08 + mode.wash * accent; });
-        lights.forEach(spec => { spec.light.color.set(spec.task ? '#f2f4ee' : mode.colors[spec.channel]); spec.light.intensity = spec.power * (spec.task ? mode.practical : mode.wash) * accent; });
+        for (const spec of lights) {
+            let color = mode.colors[spec.channel ?? 0], gain = mode.wash;
+            if (spec.window) {
+                color = mode.fill;
+                gain = { morning: .62, afternoon: .8, evening: .29, night: .035, party: .09 }[modeId] ?? .8;
+            } else if (spec.task || spec.lantern) {
+                color = spec.task ? '#f2f4ee' : '#ffdbad'; gain = mode.practical;
+            }
+            spec.light.color.set(color); spec.light.intensity = spec.power * gain * accent;
+        }
         lamp.emissiveIntensity = .15 + mode.practical * .7;
         // Practicals: picture lights, clamp lamp, lantern and festoon.
         lampGlow.emissiveIntensity = (.15 + mode.practical * 1.5) * accent;
@@ -803,5 +960,6 @@ export function buildArtistRoom(room, root, layout, helpers) {
     for (const [mat, surface] of [[oak, 'wood'], [wallMat, 'plaster'], [clay, 'plaster'], [cast, 'plaster'], [chalk, 'plaster'], [blue, 'powder'], [sage, 'powder'], [metal, 'metal'], [brass, 'metal'], [linen, 'fabric']]) mat.userData.roomSurface = surface;
     creativeMaterialDetail(root, [[oak, 'oak'], [wallMat, 'plaster'], [clay, 'terracotta'], [cast, 'plaster'], [chalk, 'paintedWood'],
         [blue, 'powder'], [blueGlaze, 'ceramic'], [sage, 'paintedWood'], [metal, 'powder'], [brass, 'brushed'], [linen, 'textile']]);
+    room.windowViewReady = Promise.all([room.windowViewReady, ...pending]);
     room.roomAtmosphere('afternoon'); root.userData.dimensionsMm = { width: w, depth: d, height: h };
 }

@@ -207,7 +207,7 @@ export async function prepareAdds(shot, library = null) {   // library: tests pa
   await Promise.all(adds.map(async e => {
     const asset = typeof e.add === 'string' ? e.add : e.add.asset;
     if (!lib.entry(asset)) { console.warn('[film-fx] sceneEdits add: no library prop ' + asset); return; }
-    try { prepared.set(e, await lib.instance(asset)); } catch (error) { console.warn('[film-fx] sceneEdits add: ' + asset + ' could not load', error); }
+    try { prepared.set(e, await lib.instance(asset, shot.room || api?.workspaceRoom?.id, shot.layout || api?.workspaceRoom?.roomLayout?.id)); } catch (error) { console.warn('[film-fx] sceneEdits add: ' + asset + ' could not load', error); }
   }));
   return adds.length;
 }
