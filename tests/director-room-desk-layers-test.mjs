@@ -71,7 +71,7 @@ assert.match(studio,/const picked=sceneDesks\?\.pick\(event\);if\(picked\?\.id&&
 //    window, stopImmediatePropagation), so viewClick never saw them, and the dblclick's own ray came after the redraw
 //    those selects made (the APA desk's neighbour, MMET, or the desk's body: no item). The press always reaches here.
 assert.match(de,/w\.addEventListener\('pointerup',[^]*?ev\.stopImmediatePropagation\(\);ev\.preventDefault\(\);release\(ev\);select\(/,'(the Desks tab keeps the clicks on a selected desk to itself)');
-assert.match(ed,/dom\.addEventListener\('pointerdown',ev=>\{[^\n]*if\(down\)notePress\(ev,down\);\},true\);/,'every press is noted, before any click handler');
+assert.match(ed,/dom\.addEventListener\('pointerdown',ev=>\{gizmoMoved=false;[^]*?\n      down=ev\.button===0\?[^\n]*if\(down\)notePress\(ev,down\);\},true\);/,'every press is noted, before any click handler');
 assert.match(ed,/function notePress\(ev,d\)\{[^]*?if\(p&&!p\.second&&!ev\.altKey&&now-p\.t<600&&Math\.hypot\([^)]*\)<8\)\{p\.second=true;d\.second=true;return;\}[^]*?lastPress=\{t:now,x:ev\.clientX,y:ev\.clientY,hit:raycaster\.intersectObject/,'the hit is read at the press; a double-click\'s second press keeps the first');
 assert.match(ed,/function viewClick[^]*?if\(d\.second\)return;\s*const hits=/,'the second click of a double-click does nothing as a click');
 assert.ok(!/lastClick/.test(ed),'(no click record left)');

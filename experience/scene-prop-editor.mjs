@@ -454,12 +454,21 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const box=new THREE.BoxHelper(undefined,0x63d8f5);box.material.depthTest=false;box.material.transparent=true;box.renderOrder=998;box.visible=false;group.add(box);
     const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;gizmo.setSize(1.35);gizmo.setSpace('world');gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
     enhanceGizmo(gizmo,{win:w,THREE,mmPerUnit:()=>mmPerUnitOf(w,THREE),status:t=>status(t),setSnap:on=>{snapping=on;syncSnap();}});   // P3: Rhino's Gumball (gumball.mjs)
-    gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){drag={enabled:t.controls.enabled,obj:gizmo.object};t.controls.enabled=false;startDrag();}else{t.controls.enabled=drag?.enabled??true;endDrag();}});
-    gizmo.addEventListener('objectChange',()=>{gizmoMoved=true;if(drag)drag.moved=true;if(drag?.grp){moveGroupLive();status(`${mode==='translate'?'Moving ':'Turning '}${drag.grp.items.length} items together…`+(snapping?' (snapping)':' · Shift snaps'));return;}const o=current();if(o&&sel?.blocked){status(`${CANT_SAVE}: ${sel.blocked} It goes back when you let go.`,true);return;}if(o)status((mode==='translate'?'Moving ':mode==='rotate'?'Rotating ':'Scaling ')+label(o)+'…'+(snapping?' (snapping)':' · Shift snaps'));});
+    // (a gizmo drag's start pose: posedAway says it really moved)
+    const poseOf=o=>o?{p:o.position.clone(),q:o.quaternion.clone(),s:o.scale.clone()}:null;
+    const posedAway=(o,f)=>!!o&&(o.position.distanceToSquared(f.p)>1e-12||o.quaternion.angleTo(f.q)>1e-6||o.scale.distanceToSquared(f.s)>1e-12);
+    gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){drag={enabled:t.controls.enabled,obj:gizmo.object,from:poseOf(gizmo.object)};t.controls.enabled=false;startDrag();}else{t.controls.enabled=drag?.enabled??true;endDrag();}});
+    // Moved: the object really is somewhere else (19 Nov 2026: TransformControls says objectChange on any pointermove while
+    // it holds the press, one that goes nowhere too, so a still press on the gizmo counted as a drag: no click through it)
+    gizmo.addEventListener('objectChange',()=>{if(drag&&!drag.moved&&(!drag.from||posedAway(gizmo.object,drag.from)))drag.moved=gizmoMoved=true;if(drag?.grp){moveGroupLive();status(`${mode==='translate'?'Moving ':'Turning '}${drag.grp.items.length} items together…`+(snapping?' (snapping)':' · Shift snaps'));return;}const o=current();if(o&&sel?.blocked){status(`${CANT_SAVE}: ${sel.blocked} It goes back when you let go.`,true);return;}if(o)status((mode==='translate'?'Moving ':mode==='rotate'?'Rotating ':'Scaling ')+label(o)+'…'+(snapping?' (snapping)':' · Shift snaps'));});
     const raycaster=new THREE.Raycaster(),dom=t.renderer.domElement;let down=null;
     // gizmo: the press began on the selected item's gizmo (TransformControls takes it as a drag)
     let gizmoMoved=false;   // (the gizmo moved something since the press: not a click through it)
-    dom.addEventListener('pointerdown',ev=>{gizmoMoved=false;down=ev.button===0?{x:ev.clientX,y:ev.clientY,alt:ev.altKey,gizmo:!placing&&(gizmo.dragging||!!gizmo.axis)}:null;if(down)notePress(ev,down);},true);
+    // On the gizmo: read at the press (its own hover only follows the mouse: after the camera moves under a resting pointer,
+    // or a pick put the gizmo there, it is out of date, and TransformControls, reading it again as it takes the press,
+    // started a drag that swallowed the click; 19 Nov 2026, the APA desk's stacked supplies; scene-desk-editor.mjs does the same)
+    dom.addEventListener('pointerdown',ev=>{gizmoMoved=false;if(ev.button===0&&!placing&&gizmo.enabled&&gizmo.object&&!gizmo.dragging){const r=dom.getBoundingClientRect();gizmo.pointerHover({x:(ev.clientX-r.left)/r.width*2-1,y:-(ev.clientY-r.top)/r.height*2+1,button:ev.button});}
+      down=ev.button===0?{x:ev.clientX,y:ev.clientY,alt:ev.altKey,gizmo:!placing&&(gizmo.dragging||!!gizmo.axis)}:null;if(down)notePress(ev,down);},true);
     // second: the press is a double-click's second (it does nothing as a click; the 'dblclick' acts on the first press)
     function notePress(ev,d){
       const now=performance.now(),p=lastPress;
