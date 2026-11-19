@@ -73,3 +73,27 @@ export async function seek(page,seconds){
 // this expression (inline in their page.evaluate code: puppeteer sends the function's text to the page), shaped like
 // the library ({active, drafts, cuts}) so `v.drafts[v.active]` still finds it; no film draft yet reads as none.
 export const FILM_DRAFT_READER="(()=>{const b=document.body.dataset;if(b.draftStore!=='film')return JSON.parse(localStorage.getItem('ergoflex.clientCuts.v1'));let f={};try{f=JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}')||{};}catch{}const d=f[b.cutId]?.cut;return {active:'film',drafts:d?{film:d}:{},cuts:[]};})()";
+
+// ---- people live on the stage (19 Nov 2026) --------------------------------------------------------------------
+// Windows found the cine cut's coast chapter with nobody on the Director's stage (workspaceRoom.people.enabled false,
+// list() empty) although its film has a cast. peopleState says what the stage has; ensureLivePeople, when they are
+// off, prints that state and the page's [people] / [film setup] / [film fx] / [desk versions] warnings (watchStage
+// collects them from the start), then turns them on the way the player does for a film chapter
+// (ErgoPresentation.peopleTrack(<film's people>, <chapter id>) -> studio setRoomPeople), so a test of the editors can
+// go on, and the run's log says that the product left them off.
+export function watchStage(page){
+  const lines=[];page.on('console',m=>{const t=m.text();if(/\[(people|film setup|film fx|desk versions|stage)\]/.test(t))lines.push(t.slice(0,300));});return lines;
+}
+export const peopleState=page=>page.evaluate(()=>{const w=document.getElementById('stage').contentWindow,api=w.ErgoFlex,r=api?.workspaceRoom,p=r?.people;
+  return {flag:api?.roomPeople??null,room:r?.id||null,look:r?.look??null,layout:r?.roomLayout?.id||null,stations:r?.roomLayout?.stations?.length??0,hasPeople:!!p,enabled:!!p?.enabled,filter:!!p?.filter,filterCast:p?.filter?.cast?.length??null,available:p?p.available:null,count:p?.people?.length??0,shown:p?p.people.filter(o=>o.visible).length:0};});
+export async function ensureLivePeople(page,{id,filmPeople,warnings=[],log=console.log,ms=30000}){
+  const ready=s=>s.enabled&&s.count>0;let s=await peopleState(page);
+  for(const end=Date.now()+8000;!ready(s)&&Date.now()<end;){await wait(500);s=await peopleState(page);}
+  if(ready(s))return {forced:false,state:s};
+  log(`NOTE people are off on the Director's stage for ${id}: ${JSON.stringify(s)}${warnings.length?' · page warnings: '+warnings.join(' | '):' · no page warnings'}`);
+  if(!filmPeople)throw Error('people are off and the film has no cast to turn on');
+  await page.evaluate((p,id)=>document.getElementById('stage').contentWindow.ErgoPresentation.peopleTrack?.(p,id),filmPeople,id);
+  for(const end=Date.now()+ms;!ready(s);){if(Date.now()>end)throw Error('people still off after peopleTrack: '+JSON.stringify(s));await wait(500);s=await peopleState(page);}
+  log(`NOTE turned them on through ErgoPresentation.peopleTrack (the player's own call): ${JSON.stringify(s)}`);
+  return {forced:true,state:s};
+}

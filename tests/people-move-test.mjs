@@ -60,5 +60,8 @@ assert.equal(andre(await staged(f3)).length,0,'and nobody draws him');
 // the editor: everyone but the film desk's user gets the Gumball; the first move is the edit above
 assert.match(ed,/const grab=on&&\(free\(e\)\|\|movable\(e\)\)&&!busy;/);
 assert.match(ed,/const featured=e=>!!e\?\.desk&&!e\.station;\n  const movable=e=>!!e&&!featured\(e\)&&!free\(e\);/);
+// (19 Nov 2026, Windows: a drag of Maya at film-edit-01 changed her distance from the desk: only the film desk's own user
+// drags that; anyone at a room desk is moved to a spot)
+assert.match(ed,/if\(dragFrom&&movable\(e\)\)hold\(gizmo\.object,dragFrom\);if\(dragFrom&&featured\(e\)&&!e\.poseSource&&!free\(e\)\)\{dragFrom\.stance=/,'the distance-from-the-desk drag is the film desk user\'s only');
 assert.match(ed,/function toSpot\(key,spot,text\)\{[^]*?write\(p=>\{const x=p\.cast\.find\(x=>x\.key===key\);if\(!x\)return;takeIn\(p,x\);asShown\(x,as\);unplace\(x\);/);
 console.log('people-move-test: ok (the first move of the room\'s person: except, a spot of their own, a chair, the pose kept; drawn by the film\'s people code)');

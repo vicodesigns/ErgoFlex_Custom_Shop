@@ -82,8 +82,8 @@ try{
   check(await page.$$eval('#director-panel .people-chars button',(l,n)=>l.length>0&&l.length<n,everyone),'the character list filters by sex');
 
   // seconds in the room
-  await setField('pe-whole',false);await until(()=>page.$('#director-panel [name="pe-in"]'),'timing fields');
-  await setField('pe-in',2);await setField('pe-out',9);
+  await setField('pe-whole',false);await until(()=>page.$('#director-panel [name="pe-in-0"]'),'timing fields');   // (one row per stay since 5004949c: pe-in-0, pe-out-0)
+  await setField('pe-in-0',2);await setField('pe-out-0',9);
   const e1=await until(async()=>{const e=await edits();return e?.when&&Object.values(e.when)[0]?.[0]?.[1]===9?e:null;},'the span is in the cut');
   check(Object.values(e1.when)[0][0][0]===2,'a person can be given seconds in the room: '+JSON.stringify(Object.values(e1.when)[0]));
 

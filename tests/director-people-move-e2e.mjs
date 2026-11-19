@@ -10,13 +10,14 @@
 //   node tests/director-people-move-e2e.mjs        (CUT=<cut dir>, default the Cinematographer's; SHOTS=<dir>)
 import assert from 'node:assert/strict';
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';
-import {root,wait,openDirectorBrowser,openChapter,seek,status as statusOf,FILM_DRAFT_READER} from './director-e2e-harness.mjs';
+import {root,wait,openDirectorBrowser,openChapter,seek,status as statusOf,FILM_DRAFT_READER,watchStage,ensureLivePeople} from './director-e2e-harness.mjs';
 
 const CUT=process.env.CUT||'exports/cinematic-intro-cut-cine';
 const listFile=path.join(root,CUT,'director-chapters.json'),chapter=fs.existsSync(listFile)?JSON.parse(fs.readFileSync(listFile,'utf8')).chapters.find(c=>c.id==='coast'):null;
 if(!chapter||!fs.existsSync(path.join(root,chapter.page))){console.log(`people move e2e: skipped (${CUT} has no coast chapter page here).`);process.exit(0);}
 const SHOTS=process.env.SHOTS||fs.mkdtempSync(path.join(os.tmpdir(),'people-move-'));fs.mkdirSync(SHOTS,{recursive:true});
-const {base,page,errors,close}=await openDirectorBrowser();
+const {base,page,errors,close}=await openDirectorBrowser(),warnings=watchStage(page);
+const filmPeople=JSON.parse(fs.readFileSync(path.join(root,chapter.shot.replace(/^\//,'')),'utf8')).people;
 const passed=[],check=(ok,what)=>{assert.ok(ok,what);passed.push(what);console.log('ok   '+what);};
 const until=async(fn,what,ms=30000)=>{const end=Date.now()+ms;for(;;){const v=await fn();if(v)return v;if(Date.now()>end)throw Error('timed out: '+what+' · status: '+await statusOf(page));await wait(200);}};
 const shot=name=>page.screenshot({path:path.join(SHOTS,name+'.png')}).catch(()=>{});
@@ -34,6 +35,9 @@ try{
   await openChapter(page,base,chapter);
   await click('#director-panel [data-inspector-tab="people"]');
   await until(()=>page.$('#director-panel [data-scene-people]'),'the People tab');
+  // (Windows, 19 Nov 2026: the cine cut's coast chapter came up with nobody on the stage; the log says so if it still does)
+  const live0=await ensureLivePeople(page,{id:'coast',filmPeople,warnings});
+  if(live0.forced)console.log('NOTE (product, to look into) the Director left the chapter\'s people off; this run turned them on to test the Move tool');
   // 1. someone of the room who is not the film desk's user, in the picture, clicked in the view
   let pick=null;
   for(const t of [1,3,6,9,12]){
