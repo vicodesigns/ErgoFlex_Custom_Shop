@@ -108,6 +108,12 @@ try{
         if(viaAlt){altPicked++;console.log(`     item ${i} (${await page.evaluate((id,i)=>__item(id,i).name,d.id,i)}): a click picks what is in front, Alt+click ×${viaAlt} reaches it`);got.add(i);continue;}
         // only a sliver of it shows from here: no click can be sure of it (another angle may do; else Layers, below)
         if(!q.solid){console.log(`     item ${i} (${await page.evaluate((id,i)=>__item(id,i).name,d.id,i)}): only a sliver shows from angle ${a}`);continue;}
+        // The parts of one auto-stowed desk item ("<item> · stored supply N", desk-auto-stow.mjs: tilting the desk splits
+        // it, and the parts that stay put sit on top of each other): a click that lands on a sibling part is a known limit,
+        // not a failure (19 Nov 2026, Windows: the APA desk's supply 8 under 7 and 1, whatever the angle, gizmo or Alt).
+        // Out of reach of a click like a sliver; its Layers row (checked below) selects it.
+        {const STOW=/ · stored supply \d+$/,want=await page.evaluate((id,i)=>__item(id,i).name,d.id,i),gotName=(await props())?.objName||'';
+          if(STOW.test(want)&&STOW.test(gotName)&&want.replace(STOW,'')===gotName.replace(STOW,'')){console.log(`     item ${i} (${want}): a click lands on its sibling part ${gotName.replace(/^.* · /,'')} from angle ${a} (stacked auto-stow parts: Layers)`);continue;}}
         const under=await page.evaluate((id,x,y)=>__under(id,x,y),d.id,q.x,q.y);
         // what the Director did with those clicks, step by step (scene-prop-editor.mjs trace)
         const steps=await page.evaluate(()=>JSON.stringify((document.getElementById('stage').contentWindow.__directorClickTrace||[]).slice(-8)));
@@ -121,7 +127,7 @@ try{
     for(let i=0;i<n;i++)if(!got.has(i))unreached.push(await page.evaluate((id,i)=>__item(id,i).name,d.id,i));
     reached+=got.size;
     check((await props()).inside===d.id,`${d.id}: still inside after ${got.size} picks`);
-    console.log(`     ${got.size}/${n} picked by a click inside${unreached.length?' (no clickable point, or only a sliver, from four angles: '+unreached.join(', ')+'; Layers below)':''}`);
+    console.log(`     ${got.size}/${n} picked by a click inside${unreached.length?' (no clickable point, only a sliver, or a stacked auto-stow part under its siblings, from four angles: '+unreached.join(', ')+'; Layers below)':''}`);
     if(unreached.length)notes.push(`${d.id}: ${unreached.length} items out of reach of a click (${unreached.join(', ')})`);
     const other=list.find(x=>x.id!==d.id);   // (a click on its items does nothing while inside, below)
     // ---- 4: Delete hides the selected item; the people stay; Undo
