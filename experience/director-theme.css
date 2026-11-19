@@ -483,7 +483,7 @@ body.directing:not(.inspector-hidden) #director-timeline .film-chapter-picker{di
   #director-timeline{zoom:var(--ui);height:calc(var(--timeline-space,520px) / var(--ui));left:calc(var(--director-inset,461px) / var(--ui))}
   body.directing.inspector-hidden #director-timeline{left:16px}
   body.directing header{zoom:var(--ui)}
-  #people-library,#prop-library,#film-switch,#film-cut-new,#film-stale{zoom:var(--ui)}
+  #people-library,#prop-library,#film-switch,#film-cut-new,#film-stale,#film-draft{zoom:var(--ui)}
 }
 
 /* Lamps & sun / Props: at most two rows of chips, the rest scroll inside the lane (a long list pushed the People lane

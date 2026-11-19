@@ -76,7 +76,7 @@ export function mountDirector(bridge,catalog,initial){
   const film=filmLink(location.hash),signature=()=>JSON.stringify([project.name,project.client,project.volume,project.shots]);
   let filmChapters=null,filmCuts=null,filmError='',exported=signature();
   // A film chapter reloaded after an import: the film's newer cut, an unexported draft to keep or drop, stale-export warning.
-  const fresh=createFilmFresh(film,project,{storage,catalog,escape,render:()=>renderFilm(),status:m=>status(m),load:(cut,asExported)=>{autosave?.save('replace');loadProject(cut,false);if(asExported)exported=signature();syncFilm();}});
+  const fresh=createFilmFresh(film,project,{storage,catalog,escape,render:()=>renderFilm(),status:(m,error)=>status(m,error),current:()=>({cut:project,unexported:unexported()}),load:(cut,asExported)=>{autosave?.save('replace');loadProject(cut,false);if(asExported)exported=signature();syncFilm();}});
   var reopenedDraft=false;{const d=fresh.initialDraft();if(d){project=cleanCut(d,catalog);reopenedDraft=true;}}
   const panel=document.createElement('section');panel.id='director-panel';panel.setAttribute('aria-label','Director controls');
   const timeline=document.createElement('section');timeline.id='director-timeline';timeline.setAttribute('aria-label','Chapter timeline');
@@ -1076,6 +1076,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       group=null;
       if((name==='save-export'||name==='export')&&index!=='stale-ok'&&await fresh.guardExport(project,unexported(),()=>action(name,'stale-ok')))return;
       if(name==='film-keep-draft'||name==='film-use-film'){fresh.choose(name==='film-keep-draft'?'draft':'film');return;}
+      if(name==='film-draft-ask'){fresh.prompt();return;}
       if(name==='magnet'){magnet=!magnet;timeline.querySelector('[data-action=magnet]')?.setAttribute('aria-pressed',String(magnet));status(magnet?'Magnet on: drags snap to edges, keys and the playhead.':'Magnet off: drags snap to the grid only.');return;}
       if(name==='render-still'){await renderStill();return;}
       if(name==='sel-clear'){clearSelection();return;}
