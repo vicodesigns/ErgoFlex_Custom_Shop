@@ -191,7 +191,10 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   function endDrag(){
     const o=tools?.gizmo.object,e=sel&&entry(sel),from=dragFrom;dragFrom=null;if(!o||!e)return;const now=read(o),name=personName(e);
     if(!from){release();rerender();return;}
-    if(from.reach===undefined&&movable(e)){
+    // (a person of the room's own cast (poseSource) is taken in by the move even when the room gave them a spot (`at`):
+    // the relative branch below would add the drag to a stored `at` that is not where they are drawn, and leave the film's
+    // `place` of theirs holding them at its spot: they snapped back, Priya, 19 Nov 2026)
+    if(from.reach===undefined&&(movable(e)||e.poseSource?.key)){
       const to=lastDragged||now;lastDragged=null;
       const moved=mode==='translate'?Math.hypot(to.at[0]-from.at[0],to.at[1]-from.at[1])>=.5||Math.abs(to.y-from.y)>=.5:mode==='rotate'?Math.abs(to.turn-from.turn)>=.05:Math.abs(to.scale-from.scale)>=1e-3;
       if(!moved){release();rerender();return;}
