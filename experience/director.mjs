@@ -809,7 +809,7 @@ export function mountDirector(bridge,catalog,initial){
   }
   function openRoomDeskFromProps(p){
     const r=roomDeskOf(p);if(!r)return false;
-    sceneProps.deselect?.();deskSel.select(r.id,{announce:false});reveal('desk');
+    sceneProps.deselect?.();deskSel.select(r.id,{announce:false});if(!(p.stay&&inspector==='layers'))reveal('desk');   // (leaving a desk from Layers keeps Layers open)
     status(`${r.state?.name||'This desk'} is a room desk: it is moved, turned and hidden in the Desks tab (the round handle, the arrows, the ring, Hide desk). Double-click it to edit the items on it.`);
     return true;
   }

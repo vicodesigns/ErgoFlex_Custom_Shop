@@ -48,7 +48,16 @@ const ed=readFileSync(new URL('../experience/scene-prop-editor.mjs',import.meta.
 assert.match(ed,/addEventListener\('dblclick'[^]*?enterDesk\(rd\)/,'a double-click enters the desk under it');
 assert.match(ed,/function boxPick[^]*?if\(inside&&!inInside\(m\)\)return;/,'box select keeps to the desk entered');
 assert.match(ed,/if\(hit&&inside\)\{\s*if\(!inInside\(hit\.object\)\)/,'a click inside ignores other things');
-assert.match(ed,/const rd=roomDeskGroupOf\(hit\.object\);if\(rd\)\{if\(sel\)deselect\(\);if\(roomDesk\(/,'outside, a click on a room desk (or its item) selects the desk');
+assert.match(ed,/const rd=roomDeskGroupOf\(hit\.object\);if\(rd\)\{if\(underGizmo\)return;lastClick=[^;]*;if\(sel\)deselect\(\);if\(roomDesk\(/,'outside, a click on a room desk (or its item) selects the desk and is remembered for a double-click');
+// 19 Nov 2026 (Windows run): a double-click enters what its FIRST click hit (that click can change the view); a press on
+// the gizmo that never moves is a click on what is under it (the gumball covered the neighbours) and writes no edit;
+// Alt+click inside a desk cycles through the items under the pointer; leaving a desk from Layers keeps Layers open
+assert.match(ed,/const first=lastClick&&performance\.now\(\)-lastClick\.t<800[^;]*;\s*if\(first\?\.rd\)\{enterDesk\(first\.rd\);if\(first\.item&&inScene\(first\.item\)\)pick\(first\.item/,'the double-click uses the first click\'s desk and item');
+assert.match(ed,/if\(d\.gizmo\)\{setTimeout\(\(\)=>\{if\(!gizmo\.dragging&&!w\.__directorDragging&&!gizmoMoved\)viewClick\(ev,d,true\);\},0\);return;\}/,'a gizmo press that never moved clicks what is under it');
+assert.match(ed,/if\(drag&&!drag\.moved\)\{drag=null;return;\}/,'and writes no edit');
+assert.match(ed,/if\(d\.alt\)\{const stack=\[\.\.\.new Set\(hits\.map\(h=>roomDeskItem\(h\.object\)\)/,'Alt+click cycles through the stack inside a desk');
+assert.match(ed,/roomDesk\(\{obj:g,edit:null,key:null,stay:true\}\)/,'leaving asks to stay on the tab');
+assert.match(dir,/if\(!\(p\.stay&&inspector==='layers'\)\)reveal\('desk'\)/,'and the Director keeps Layers open then');
 assert.equal((dir.match(/if\(sceneProps\.insideDesk\?\.\(\)\)\{[^}]*sceneProps\.leaveDesk\(\)/g)||[]).length,2,'Esc leaves the desk first, in the Director and the stage documents');
 assert.match(dir,/createSceneDeskEditor\([^]*?onSelect:\(\)=>\{[^}]*sceneProps\.leaveDesk\?\.\(\{quiet:true\}\)/,'a desk picked in the Desks tab ends it quietly');
 // 4. Studio's click-to-feature a desk is off in the Director (19 Nov 2026: a click on a room desk made it THE featured

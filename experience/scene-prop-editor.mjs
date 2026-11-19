@@ -183,6 +183,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   }
   const isPerson=o=>{for(let p=o;p;p=p.parent)if(p.userData?.person)return true;return false;};
   let inside=null;   // the desk entered: {id, name} (id 'featured': the featured desk)
+  let lastClick=null;   // the last click on a room desk: {t, x, y, rd, item} (a double-click enters what its first click hit)
   const insideGroup=()=>{if(!inside)return null;const sd=win()?.ErgoFlex?.sceneDesks;return inside.id==='featured'?win()?.ErgoFlex?.loadedModel||null:sd?.records?.get(inside.id)?.group||null;};
   const inInside=o=>{if(!inside||!o)return false;if(inside.id==='featured')return !roomDeskGroupOf(o)&&(onDeskItself(o)||ridesDesk(o));return roomDeskGroupOf(o)?.id===inside.id;};
   const chip=Object.assign(document.createElement('div'),{className:'desk-isolate-chip'});chip.hidden=true;chip.setAttribute('role','status');document.body.append(chip);
@@ -204,7 +205,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     if(quiet)return true;
     deselect();
     const g=d.id==='featured'?null:win()?.ErgoFlex?.sceneDesks?.records?.get(d.id)?.group;
-    if(g&&roomDesk({obj:g,edit:null,key:null}))status(`Left ${d.name}: the desk is selected. Esc again deselects it; double-click it to go back in.`);
+    if(g&&roomDesk({obj:g,edit:null,key:null,stay:true}))status(`Left ${d.name}: the desk is selected. Esc again deselects it; double-click it to go back in.`);
     else{onSelect();rerender();status(`Left ${d.name}.`);}
     return true;
   }
@@ -450,28 +451,44 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;gizmo.setSize(1.35);gizmo.setSpace('world');gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
     enhanceGizmo(gizmo,{win:w,THREE,mmPerUnit:()=>mmPerUnitOf(w,THREE),status:t=>status(t),setSnap:on=>{snapping=on;syncSnap();}});   // P3: Rhino's Gumball (gumball.mjs)
     gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){drag={enabled:t.controls.enabled,obj:gizmo.object};t.controls.enabled=false;startDrag();}else{t.controls.enabled=drag?.enabled??true;endDrag();}});
-    gizmo.addEventListener('objectChange',()=>{if(drag?.grp){moveGroupLive();status(`${mode==='translate'?'Moving ':'Turning '}${drag.grp.items.length} items together…`+(snapping?' (snapping)':' · Shift snaps'));return;}const o=current();if(o&&sel?.blocked){status(`${CANT_SAVE}: ${sel.blocked} It goes back when you let go.`,true);return;}if(o)status((mode==='translate'?'Moving ':mode==='rotate'?'Rotating ':'Scaling ')+label(o)+'…'+(snapping?' (snapping)':' · Shift snaps'));});
+    gizmo.addEventListener('objectChange',()=>{gizmoMoved=true;if(drag)drag.moved=true;if(drag?.grp){moveGroupLive();status(`${mode==='translate'?'Moving ':'Turning '}${drag.grp.items.length} items together…`+(snapping?' (snapping)':' · Shift snaps'));return;}const o=current();if(o&&sel?.blocked){status(`${CANT_SAVE}: ${sel.blocked} It goes back when you let go.`,true);return;}if(o)status((mode==='translate'?'Moving ':mode==='rotate'?'Rotating ':'Scaling ')+label(o)+'…'+(snapping?' (snapping)':' · Shift snaps'));});
     const raycaster=new THREE.Raycaster(),dom=t.renderer.domElement;let down=null;
-    dom.addEventListener('pointerdown',ev=>{down=ev.button===0&&(placing||!gizmo.dragging&&!gizmo.axis)?{x:ev.clientX,y:ev.clientY,alt:ev.altKey}:null;},true);
+    // gizmo: the press began on the selected item's gizmo (TransformControls takes it as a drag)
+    let gizmoMoved=false;   // (the gizmo moved something since the press: not a click through it)
+    dom.addEventListener('pointerdown',ev=>{gizmoMoved=false;down=ev.button===0?{x:ev.clientX,y:ev.clientY,alt:ev.altKey,gizmo:!placing&&(gizmo.dragging||!!gizmo.axis)}:null;},true);
     dom.addEventListener('pointerup',ev=>{
-      const d=down;down=null;if(!d||ev.button!==0||Math.hypot(ev.clientX-d.x,ev.clientY-d.y)>5||gizmo.dragging||w.__directorDragging||lightsShowing()||!editing()||blocked())return;
+      const d=down;down=null;if(!d||ev.button!==0||Math.hypot(ev.clientX-d.x,ev.clientY-d.y)>5||lightsShowing()||!editing()||blocked())return;
+      // A press on the gizmo that never moved is a click on what is under it (19 Nov 2026: the gumball of a selected desk
+      // item covers its small neighbours, and clicking one only grabbed the gizmo). After TransformControls lets go.
+      if(d.gizmo){setTimeout(()=>{if(!gizmo.dragging&&!w.__directorDragging&&!gizmoMoved)viewClick(ev,d,true);},0);return;}
+      if(gizmo.dragging||w.__directorDragging)return;
+      viewClick(ev,d,false);
+    },true);
+    // A click in the view. underGizmo: it came through the gizmo: it only picks another prop (never deselects, never a desk).
+    function viewClick(ev,d,underGizmo){
       const r=dom.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1),t.camera);
       if(placing){const now=current(),e=sel&&editOfKey(sel.key);placing=false;
         if(now&&isAddEdit(e)){const h=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object)&&!isAncestor(now,h.object));if(h)placeAt(now,e,h.point,roomDeskGroupOf(h.object)?.id||null);else{status('Nothing there to put it on.',true);rerender();}return;}}
-      const hit=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object));
+      const hits=raycaster.intersectObject(t.scene,true).filter(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object)),hit=hits[0];
       // People are not props: a click on one selects them in the People tab (scene-people-editor.mjs).
-      if(hit&&!placing&&person(hit.object)){if(sel)deselect();return;}
+      if(hit&&!placing&&!underGizmo&&person(hit.object)){if(sel)deselect();return;}
       const how=pickMode(ev);
       // a room desk: one click selects the desk (Desks tab); inside a desk entered, only its items pick
       if(hit&&inside){
-        if(!inInside(hit.object)){status(`Editing ${inside.name}: click one of its items. Esc or a double-click on empty space leaves the desk.`);return;}
+        if(!inInside(hit.object)){if(!underGizmo)status(`Editing ${inside.name}: click one of its items. Esc or a double-click on empty space leaves the desk.`);return;}
         const di=inside.id==='featured'?null:roomDeskItem(hit.object);
-        if(inside.id!=='featured'){if(di)pick(di.obj,{how});else status(`That is ${inside.name} itself: click an item on it. Esc leaves the desk.`);return;}
-      }else if(hit){const rd=roomDeskGroupOf(hit.object);if(rd){if(sel)deselect();if(roomDesk({obj:rd.group,edit:null,key:null}))status(`${rd.name} selected (Desks tab: move, turn, hide it). Double-click it to edit the items on it.`);return;}}
+        if(inside.id!=='featured'){
+          lastClick={t:performance.now(),x:ev.clientX,y:ev.clientY,rd:{id:inside.id,name:inside.name},item:di?.obj||null};
+          // Alt+click: the next item under the pointer, front to back (an item inside or behind another one)
+          if(d.alt){const stack=[...new Set(hits.map(h=>roomDeskItem(h.object)).filter(x=>x&&x.id===inside.id).map(x=>x.obj))];
+            if(stack.length){const i=stack.indexOf(current()),next=stack[(i+1)%stack.length];pick(next,{how:'replace'});status(`${label(next)} · ${stack.indexOf(next)+1} of ${stack.length} under the pointer · Alt+click again for the next one.`);return;}}
+          if(di){if(!(underGizmo&&di.obj===current()))pick(di.obj,{how});}else if(!underGizmo)status(`That is ${inside.name} itself: click an item on it (Alt+click reaches one behind another). Esc leaves the desk.`);return;}
+      }else if(hit){const rd=roomDeskGroupOf(hit.object);if(rd){if(underGizmo)return;lastClick={t:performance.now(),x:ev.clientX,y:ev.clientY,rd,item:roomDeskItem(hit.object)?.obj||null};if(sel)deselect();if(roomDesk({obj:rd.group,edit:null,key:null}))status(`${rd.name} selected (Desks tab: move, turn, hide it). Double-click it to edit the items on it.`);return;}}
       const now=current(),o=hit&&(d.alt&&now&&isAncestor(now,hit.object)?meaningful(hit.object,{above:now}):meaningful(hit.object));
-      if(!o){if(sel&&how==='replace'){deselect();status('Nothing to edit there: click a prop (furniture, lamps, desk items). Esc deselects.');}return;}
+      if(!o){if(sel&&how==='replace'&&!underGizmo){deselect();status('Nothing to edit there: click a prop (furniture, lamps, desk items). Esc deselects.');}return;}
+      if(underGizmo&&o===current())return;
       pick(o,{how});
-    },true);
+    }
     // (snapping: hold Ctrl, gumball.mjs; Shift constrains since 17 Nov 2026, it used to snap; Alt+drag copies)
     const altKey=e=>{if(e.key==='Alt')altHeld=e.type==='keydown';};for(const d of [w,w.parent].filter(Boolean)){d.addEventListener('keydown',altKey,true);d.addEventListener('keyup',altKey,true);d.addEventListener('blur',()=>{altHeld=false;});}
     // End: drop the selected prop onto the surface below it (Shift+End: drop flat, Alt+End: align to the surface).
@@ -487,6 +504,10 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     dom.addEventListener('dblclick',ev=>{
       if(ev.button!==0||!editing()||lightsShowing()||blocked()||placing||gizmo.dragging)return;
       const r=dom.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1),t.camera);
+      // the desk and item the double-click's first click hit: that click may have changed the view under the pointer (it
+      // selects the desk: the panel, the header and the desk tools change), so the second one can land on something else
+      const first=lastClick&&performance.now()-lastClick.t<800&&Math.hypot(ev.clientX-lastClick.x,ev.clientY-lastClick.y)<8?lastClick:null;
+      if(first?.rd){enterDesk(first.rd);if(first.item&&inScene(first.item))pick(first.item,{how:'replace'});return;}
       const hit=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object));
       if(hit&&isPerson(hit.object))return;   // (a person: pose mode, scene-people-editor.mjs)
       const rd=hit&&roomDeskGroupOf(hit.object);
@@ -565,6 +586,8 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   }
     function startDrag(){const o=drag?.obj;if(!o)return;drag.copy=altHeld&&!group()?structuredClone(editOfKey(sel?.key)):null;if(o===tools.pivot){drag.grp=beginGroup();return;}if(!snaps.has(o))snaps.set(o,{position:o.position.clone(),quaternion:o.quaternion.clone(),scale:o.scale.clone()});drag.base=base(o);}
   function endDrag(){
+    // a press on the gizmo that never moved (a click through it, viewClick): no edit
+    if(drag&&!drag.moved){drag=null;return;}
     if(drag?.grp){const g=drag.grp;drag=null;pivotDirty=true;endGroup(g,mode==='translate'?'Moved':'Turned');return;}
     const o=drag?.obj,b=drag?.base,was=drag?.copy;drag=null;if(!o||!b||!sel)return;
     // P3 Alt+drag (Rhino / Blender): a prop you added leaves a copy where it was; you moved the original
