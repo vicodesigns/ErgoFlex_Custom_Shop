@@ -181,7 +181,7 @@ async function installPost(renderer, scene, q, deskWidth, screens, info) {
       }
       const ac = this.autoClear; this.autoClear = false;
       try {
-        if (gtao) { const hid = []; scene.traverse(o => { if (o.userData.windowScenery === true && o.visible) { o.visible = false; hid.push(o); } });   // the scenery outside the window: no AO from it (its shader keeps it to the openings; the AO pass draws it without)
+        if (gtao) { const hid = []; scene.traverse(o => { if (!o.visible) return; const m = o.isMesh && !Array.isArray(o.material) ? o.material : null; if (o.userData.windowScenery === true || (m && m.transparent && !m.depthWrite)) { o.visible = false; hid.push(o); } });   // the scenery outside the window: no AO from it (its shader keeps it to the openings; the AO pass draws it without), and likewise the overlays that never write depth (sun patch, LED floor light, contact shading): the AO pass would draw them as opaque, normal-less planes (19 Nov 2026: a grey rug in Create)
           gtao.camera = cam; gtao.render(this, null, null); for (const o of hid) o.visible = true; this.setRenderTarget(null); aoQuad.render(this); }   // AO multiplied onto the canvas, masked
         if (bloom) { bloom.renderToScreen = false; bloom.render(this, null, glowRT); this.setRenderTarget(null); this.autoClear = false; glowQuad.render(this); }
       } finally { this.autoClear = ac; }
