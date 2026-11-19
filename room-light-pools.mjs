@@ -16,17 +16,35 @@ function poolMap() {
     c.fillStyle = g; c.fillRect(0, 0, 128, 128);
     MAP = new THREE.CanvasTexture(canvas); MAP.colorSpace = THREE.SRGBColorSpace; MAP.wrapS = MAP.wrapT = THREE.ClampToEdgeWrapping; return MAP;
 }
+export function diffusePoolMap(root) {
+    // A diffuse wash whose value and slope reach zero before the quad ends.
+    // Keep the alpha in an immutable texture while Director blends the light colours.
+    const poolSize = 128, rgba = new Uint8Array(poolSize * poolSize * 4).fill(255);
+    for (let y = 0; y < poolSize; y++) for (let x = 0; x < poolSize; x++) {
+        const dx = (2*x + 1)/poolSize - 1, dy = (2*y + 1)/poolSize - 1;
+        const r2 = dx*dx + dy*dy;
+        rgba[(y*poolSize+x)*4+3] = Math.round(255 * Math.max(0, 1-r2)**2 * Math.exp(-2.2*r2));
+    }
+    const diffusePool = new THREE.DataTexture(rgba, poolSize, poolSize);
+    diffusePool.magFilter = THREE.LinearFilter;
+    diffusePool.minFilter = THREE.LinearMipmapLinearFilter;
+    diffusePool.generateMipmaps = true;
+    diffusePool.needsUpdate = true;
+    (root.ownedTextures ||= []).push(diffusePool);
+    return diffusePool;
+}
+
 const noRay = () => {};
 export const POOL_FACES = { floor: [-Math.PI / 2, 0, 0], back: [0, 0, 0], left: [0, Math.PI / 2, 0], right: [0, -Math.PI / 2, 0] };
 export const PHASES = ['morning', 'afternoon', 'evening', 'night', 'party'];
 
-export function createPoolLayer(root, name = 'Light pools') {
+export function createPoolLayer(root, name = 'Light pools', falloff = null) {
     const group = new THREE.Group(); group.name = name; group.userData.grooveMarker = true; group.userData.presentationOnly = true; root.add(group);
     const zero = new THREE.Matrix4().makeScale(0, 0, 0);
     const api = {
         group,
         add(parent, at, [sx, sy], color, levels, face = 'floor', geometry = null) {
-            const m = new THREE.MeshBasicMaterial({ map: poolMap(), color: '#000000', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+            const m = new THREE.MeshBasicMaterial({ map: falloff ?? poolMap(), color: '#000000', transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
             m.userData.sharedTextures = true;
             const o = new THREE.Mesh(geometry || new THREE.PlaneGeometry(1, 1), m); o.name = 'Light pool';
             if (!geometry) o.scale.set(sx, sy, 1);
