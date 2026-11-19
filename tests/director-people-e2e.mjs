@@ -120,7 +120,13 @@ try{
   await page.evaluate(()=>document.querySelector('#director-appbar [data-action=save-export]').click());
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download');
   const mine=await edits();     // the draft, saved by the export
-  const exported=JSON.parse(fs.readFileSync(path.join(downloads,file),'utf8'));check(JSON.stringify(exported.shots[0].peopleEdits)===JSON.stringify(mine),'Export cut carries the cast');
+  const exported=JSON.parse(fs.readFileSync(path.join(downloads,file),'utf8'));
+  // (where the two differ, printed before the check: Windows, 19 Nov 2026, saw them differ with no more to go on)
+  const diff=(a,b,at='',out=[])=>{if(out.length>=12)return out;if(JSON.stringify(a)===JSON.stringify(b))return out;
+    if(a&&b&&typeof a==='object'&&typeof b==='object'&&Array.isArray(a)===Array.isArray(b)){const ka=Object.keys(a),kb=Object.keys(b);if(!Array.isArray(a)&&ka.join()!==kb.join()&&ka.slice().sort().join()===kb.slice().sort().join())out.push(`${at||'.'}: the same keys in another order (${ka.join(',')} / ${kb.join(',')})`);for(const k of new Set([...ka,...kb]))diff(a[k],b[k],`${at}${Array.isArray(a)?`[${k}]`:'.'+k}${Array.isArray(a)&&a[k]?.key?`(${a[k].key})`:''}`,out);return out;}
+    out.push(`${at||'.'}: export ${JSON.stringify(a)?.slice(0,160)} / draft ${JSON.stringify(b)?.slice(0,160)}`);return out;};
+  const differs=diff(exported.shots[0].peopleEdits,mine);if(differs.length)console.log('Export cut vs the draft:\n  '+differs.join('\n  '));
+  check(!differs.length,'Export cut carries the cast');
   const H=path.join(tmp,'hq');fs.mkdirSync(path.join(H,'shots'),{recursive:true});fs.copyFileSync(path.join(root,HQ,'review-cut.json'),path.join(H,'review-cut.json'));
   for(const f of fs.readdirSync(path.join(root,HQ,'shots')))if(/^\d\d\.json$/.test(f)&&JSON.parse(fs.readFileSync(path.join(root,HQ,'shots',f),'utf8')).id==='rise')fs.copyFileSync(path.join(root,HQ,'shots',f),path.join(H,'shots',f));
   const ex=path.join(tmp,'Film-chapter-rise-e2e.json');fs.copyFileSync(path.join(downloads,file),ex);

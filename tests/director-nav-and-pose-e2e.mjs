@@ -18,7 +18,7 @@
 //   node tests/director-nav-and-pose-e2e.mjs        (CUT=<cut dir> with a coast chapter that casts Ava; SHOTS=<dir>)
 import assert from 'node:assert/strict';
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';
-import {root,wait,openDirectorBrowser,openChapter,seek,status as statusOf,FILM_DRAFT_READER,watchStage,ensureLivePeople} from './director-e2e-harness.mjs';
+import {root,wait,openDirectorBrowser,openChapter,seek,status as statusOf,FILM_DRAFT_READER,watchStage,ensureLivePeople,pickInView} from './director-e2e-harness.mjs';
 
 const CUT=process.env.CUT||'exports/cinematic-intro-cut-cine';
 const listFile=path.join(root,CUT,'director-chapters.json'),chapter=fs.existsSync(listFile)?JSON.parse(fs.readFileSync(listFile,'utf8')).chapters.find(c=>c.id==='coast'):null;
@@ -36,10 +36,6 @@ const setField=(name,value)=>page.evaluate((n,v)=>{const el=document.querySelect
 const panelText=()=>page.$eval('#director-panel',e=>e.innerText);
 const live=()=>page.evaluate(()=>document.getElementById('stage').contentWindow.ErgoFlex.workspaceRoom?.people?.list()||[]);
 const edits=()=>page.evaluate(`(()=>{try{const v=${FILM_DRAFT_READER};const c=v.drafts[v.active]||v.cuts.find(c=>c.id===v.active);return c.shots[0].peopleEdits||null;}catch{return null;}})()`);
-const pointOn=(key,up=.9)=>page.evaluate((key,up)=>{
-  const f=document.getElementById('stage'),w=f.contentWindow,t=w.ErgoPresentation.three(),o=w.ErgoFlex.workspaceRoom.people.byKey(key);if(!o||!o.visible)return null;
-  const c=o.getWorldPosition(new o.position.constructor());c.y+=up;c.project(t.camera);const r=f.getBoundingClientRect();
-  return Math.abs(c.x)<.85&&Math.abs(c.y)<.85&&c.z<1?{x:r.left+(c.x+1)/2*r.width,y:r.top+(1-c.y)/2*r.height}:null;},key,up);
 // the view: where the orbit pivot is on screen (NDC), the camera's distance to it, the pivot and the camera
 const view=()=>page.evaluate(()=>{const t=document.getElementById('stage').contentWindow.ErgoPresentation.three(),c=t.controls,cam=t.camera;cam.updateMatrixWorld(true);
   const p=c.target.clone().project(cam);return {ndc:[p.x,p.y],dist:cam.position.distanceTo(c.target),target:c.target.toArray(),cam:cam.position.toArray()};});
@@ -68,10 +64,10 @@ try{
 
   // ---- (i) Ava's pose hints
   const ava=await until(async()=>(await live()).find(p=>p.key===AVA.key&&p.visible&&p.id==='people-ava-sit-type'),'Ava seated at the desk at 0 s');
-  const at=await until(()=>pointOn(ava.key),'Ava in the picture at 0 s');
+  const at=await until(async()=>{const v=await pickInView(page,'person');return v.found?.find(p=>p.key===ava.key&&p.id==='people-ava-sit-type')||null;},'Ava in the picture at 0 s (a ray that meets her)');
   await page.mouse.click(at.x,at.y,{clickCount:2,count:2,delay:40});
   await until(()=>page.$('#director-panel .people-pose-bar'),'pose mode on a double-click on Ava');
-  check(/Pose mode · sit-type\b/.test(await page.$eval('#director-panel .people-pose-bar',e=>e.textContent)),'a double-click on Ava opens pose mode on her 28 in seated model');
+  check(/^Pose mode · sit-type$/.test((await page.$eval('#director-panel .people-pose-bar strong',e=>e.textContent)).trim()),'a double-click on Ava opens pose mode on her 28 in seated model');
   const notes=await until(async()=>{const t=await panelText();return /The film draws this model/.test(t)?t:null;},'the pose mode names the models the film draws',15000).catch(()=>panelText());
   check(/The film draws this model \(typing at the desk, seated \(desk at 28 in\)\) at 0–4\.35 s\./.test(notes),'"The film draws this model (… desk at 28 in) at 0–4.35 s."');
   check(/From 4\.35 s to 5\.35 s the film shows Ava typing at the desk, seated \(desk at 30 in\): it has no correction\./.test(notes),'"From 4.35 s to 5.35 s the film shows Ava … (desk at 30 in): it has no correction."');
@@ -97,26 +93,23 @@ try{
 
   // ---- (ii) the wheel click: a desk item, a person, the room
   const box=await page.$eval('#stage',e=>{const r=e.getBoundingClientRect();return {l:r.left,t:r.top,w:r.width,h:r.height};});
-  // a desk item: an accessory of the film desk whose middle is in the picture and the first thing a ray there meets
-  const item=await page.evaluate(()=>{
-    const f=document.getElementById('stage'),w=f.contentWindow,t=w.ErgoPresentation.three(),T=w.__directorThree?.THREE;if(!T)return {why:'no three for the editors'};
-    const r=f.getBoundingClientRect(),ray=new T.Raycaster(),shown=o=>{for(let a=o;a;a=a.parent)if(!a.visible||a.userData?.directorTools)return false;return true;};
-    const roots=[...(w.ErgoFlex.workspaceAccessories?.mounts?.values?.()||[])].map(m=>m.group).filter(Boolean);
-    for(const g of roots)for(const o of g.children){if(!shown(o))continue;const b=new T.Box3().setFromObject(o);if(b.isEmpty())continue;
-      const c=b.getCenter(new T.Vector3()),p=c.clone().project(t.camera);if(Math.abs(p.x)>.7||Math.abs(p.y)>.7||p.z>1)continue;
-      ray.setFromCamera(new T.Vector2(p.x,p.y),t.camera);const hit=ray.intersectObjects(t.scene.children,true).find(h=>h.object.isMesh&&shown(h.object));
-      let mine=false;for(let a=hit?.object;a;a=a.parent)if(a===o)mine=true;if(!mine)continue;
-      return {name:o.name||o.userData?.propId||'(item)',x:r.left+(p.x+1)/2*r.width,y:r.top+(1-p.y)/2*r.height,min:b.min.toArray(),max:b.max.toArray()};}
-    return {why:'no desk accessory in the picture'};});
+  // a desk item: a thing on one of the desks' mounts that a ray of the stage camera meets first (pickInView; Windows,
+  // 19 Nov 2026: the film desk's accessories at 0 s were not found by their boxes' middles)
+  const items=await until(async()=>{const v=await pickInView(page,'item');return v.why?null:v;},'rays through the view',20000);
+  const item=items.found[0]?{...items.found[0]}:{why:'no ray met a thing on a desk mount (rays met: '+JSON.stringify(items.kinds)+')'};
   if(check(!item.why,`a desk item in the picture${item.why?': '+item.why:': '+item.name}`)){
     const t0=(await page.evaluate(()=>performance.now()));await middleClick(item.x,item.y);
     const {v}=await centred('desk item',t0);
-    check(v.target.every((x,i)=>x>=item.min[i]-.03&&x<=item.max[i]+.03),'desk item: the pivot is on the item');
+    const onIt=await page.evaluate((x,y,piv)=>{const f=document.getElementById('stage'),w=f.contentWindow,t=w.ErgoPresentation.three(),T=w.__directorThree.THREE;   // (the item under the clicked point, its box now)
+      const r=f.getBoundingClientRect(),ray=new T.Raycaster();ray.setFromCamera(new T.Vector2(((x-r.left)/r.width)*2-1,-((y-r.top)/r.height)*2+1),t.camera);
+      const shown=o=>{for(let a=o;a;a=a.parent)if(!a.visible||a.userData?.directorTools||a.isTransformControls)return false;return true;};
+      const hit=ray.intersectObjects(t.scene.children,true).find(h=>h.object.isMesh&&shown(h.object));let it=hit?.object;while(it?.parent&&!/^(Accessory mount|Desk dressing):/.test(it.parent.name||''))it=it.parent;
+      if(!it?.parent)return null;const b=new T.Box3().setFromObject(it).expandByScalar(.03);return b.containsPoint(new T.Vector3(...piv));},item.x,item.y,v.target);
+    check(onIt!==false,'desk item: the pivot is on the item'+(onIt===null?' (the item has moved out from under the point: not checked)':''));
     await shot('04-centre-item');
   }
   // a person, selected: the wheel click centres the selection
-  const someone=(await live()).find(p=>p.visible&&!(p.desk&&!p.station)&&!p.variant)||(await live()).find(p=>p.visible);
-  const sp=someone&&await pointOn(someone.key);
+  const met=(await pickInView(page,'person')).found||[],someone=met.find(p=>!p.featured)||met[0]||null,sp=someone&&{x:someone.x,y:someone.y};
   let personCentred=null;
   if(check(!!sp,`a person in the picture to centre on${someone?': '+someone.id:''}`)){
     await page.mouse.click(sp.x,sp.y);await until(async()=>/Person ·/.test(await page.$eval('#director-panel [data-selected-header]',e=>e.textContent).catch(()=>'')),'the person is selected');
