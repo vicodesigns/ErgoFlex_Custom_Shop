@@ -41,7 +41,7 @@ export const LEVEL = .8;
 // id (home, creative, library, library-humboldt, occmedialab, highschool, gym, gaming, music, workshop, lounge,
 // lounge-contemporary, ...) overrides it for that room, e.g. library: 'photo' to give one room its photograph back.
 // The 3D scenery is the default since Nov 13 2026 (Vico's choice, after seeing it in the Studio).
-export const DEFAULT_VIEW = { '*': 'scenery' };
+export const DEFAULT_VIEW = { '*': 'scenery', occmedialab: 'photo' };
 
 // The hour outside. tint: what the light does to the land's colours. zenith / horizon: the sky. sun: [degrees to the
 // right of straight out, degrees up, colour, strength in the sky] (the moon after dark). light: [how much the sky lights
@@ -226,11 +226,11 @@ void main() {
 // the look before the photographs). Asked for with `?window=scenery` in the address, localStorage
 // `ergoflex.windowView`, or globalThis.__efWindowView (a film or a test); otherwise DEFAULT_VIEW for the room.
 const VIEWS = ['photo', 'scenery', 'painted'];
-export function windowView(room) {
+export function windowView(room, classic = false) {   // (classic: a room's Classic look takes the film's default view, not the room's own pick: the media lab, room-looks.mjs)
     let stored = null; try { stored = globalThis.localStorage?.getItem('ergoflex.windowView'); } catch { /* no storage */ }
     let asked = null; try { asked = new URLSearchParams(globalThis.location?.search || '').get('window'); } catch { /* no address */ }
     const view = globalThis.__efWindowView || asked || stored;
-    return VIEWS.includes(view) ? view : DEFAULT_VIEW[room] ?? DEFAULT_VIEW['*'];
+    return VIEWS.includes(view) ? view : (classic ? DEFAULT_VIEW['*'] : DEFAULT_VIEW[room] ?? DEFAULT_VIEW['*']);
 }
 
 // Built scenes, kept for when the room is rebuilt (switching hours rebuilds rooms in places; building a scene takes a

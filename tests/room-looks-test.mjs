@@ -29,6 +29,11 @@ assert.equal(cleanLook('home', 'classic'), null, 'a look of another room is drop
 assert.equal(lookOf('creative', null), 'refresh');
 assert.equal(lookOf('home', 'classic'), null, 'a room without looks has none');
 assert.equal(lookName('creative', 'classic'), 'Classic');
+// the OCC media lab (room 'occmedialab'): Classic = the room before the Nov 18 pass (cf9c9cc8's institutional-media.mjs)
+assert.deepEqual(looksOf('occmedialab').map(l => l.id), ['refresh', 'classic']);
+assert.equal(defaultLook('occmedialab'), 'refresh', 'absent = what the media lab builds today');
+assert.equal(cleanLook('occmedialab', 'classic', 'house'), 'classic');
+assert.equal(lookOf('occmedialab', null, 'house'), 'refresh');
 // the Commons: one layout of the library has looks, the library's other layouts none
 assert.deepEqual(looksOf('library', 'humboldt').map(l => l.id), ['refresh', 'classic']);
 assert.deepEqual(looksOf('library', 'reading-room'), [], 'another library layout has no looks');
@@ -74,6 +79,11 @@ if (git) {
   assert.equal(fn(wss, 'humboldtClassic'), fn(wssOld, 'humboldt').replace('function humboldt(', 'function humboldtClassic(').replace(/(?<![A-Za-z_.])fern\(/g, 'fernClassic('), 'humboldtClassic is 9644d030\'s humboldt (with its ferns)');
   assert.match(wss, /function humboldt\(k, ctx\) \{\n    if \(ctx\.classic\) return humboldtClassic\(k, ctx\);/);
 } else console.log('room-looks-test: (no git object 9644d030 here: the frozen-copy check skipped)');
+// the media lab's frozen Classic module is cf9c9cc8's institutional-media.mjs, byte for byte
+try {
+  const was = execFileSync('git', ['show', 'cf9c9cc8:institutional-media.mjs'], { cwd: root, encoding: 'utf8', maxBuffer: 1 << 26 }).replace(/\r/g, '');
+  assert.equal(fs.readFileSync(path.join(root, 'institutional-media-classic.mjs'), 'utf8').replace(/\r/g, ''), was, 'institutional-media-classic.mjs is the cf9c9cc8 file');
+} catch (e) { if (e.code === 'ERR_ASSERTION') throw e; console.log('room-looks-test: (no git object cf9c9cc8 here: the media lab frozen-copy check skipped)'); }
 
 // ---- 3. both looks build (no GPU: canvases are stubs, image and model loads never arrive)
 const context = () => new Proxy({ createLinearGradient: () => ({ addColorStop() {} }), createRadialGradient: () => ({ addColorStop() {} }), createPattern: () => ({}), measureText: s => ({ width: s.length * 7 }), getImageData: (x, y, w, h) => ({ data: new Uint8ClampedArray(w * h * 4) }), createImageData: (w, h) => ({ width: w, height: h, data: new Uint8ClampedArray(w * h * 4) }) }, { get: (o, k) => k in o ? o[k] : () => {} });
@@ -126,6 +136,30 @@ for (const layout of Object.values(ARTIST_LAYOUTS)) {
   for (const n of ['Ceiling gallery tracks', 'Ceiling light frames', 'Ceiling Humboldt sloped ceiling']) assert(classic.n.has(n) && fresh.n.has(n), `Commons: both looks have ${n}`);
 }
 
+// the OCC media lab, both looks (institutional-room.mjs picks the module, the window view, the sheets on room.look)
+{
+  const { buildInstitutionalRoom } = await import('../institutional-room.mjs');
+  const { institutionalLayout, institutionalModes, institutionalModule, INSTITUTIONAL_ROOMS } = await import('../institutional-scenes.mjs');
+  const layout = institutionalLayout('occmedialab', 'house');
+  const built = look => { const r = new THREE.Group(); r.scale.setScalar(.001);
+    const room = { id: 'occmedialab', look, root: r, roomLayout: layout, walls: [], propSupports: [], missingProps: [], windowViewReady: Promise.resolve(), token: 0, ownedMaterials: new Set() };
+    buildInstitutionalRoom(room, r, layout, helpers); const n = new Set(); r.traverse(o => n.add(o.name)); return { room, n }; };
+  const fresh = built(null), classic = built('classic');
+  assert(fresh.room.root.mediaTextiles && !classic.room.root.mediaTextiles, 'the knit / twill cloth maps are the media lab refresh\'s only');
+  assert(fresh.n.has('LATE EDIT / CONFORM') && !fresh.n.has('PORTFOLIO CRITIQUE'), 'Studio refresh has the pass\'s sheets');
+  assert(classic.n.has('PORTFOLIO CRITIQUE') && !classic.n.has('LATE EDIT / CONFORM'), 'Classic keeps its old sheets');
+  assert.notEqual(institutionalModule('occmedialab'), institutionalModule('occmedialab', 'classic'), 'the Classic look builds the frozen module');
+  assert.equal(institutionalModule('highschool', 'classic'), institutionalModule('highschool'), 'no other room has a Classic module');
+  assert.equal(institutionalModes('occmedialab', 'classic').morning.ambient, .32, 'Classic keeps its old morning light');
+  assert.equal(institutionalModes('occmedialab', null).morning.ambient, INSTITUTIONAL_ROOMS.occmedialab.modes.morning.ambient);
+  assert.notEqual(institutionalModes('occmedialab', null).morning.ambient, .32, 'Studio refresh lights the morning as the pass did');
+  assert.deepEqual(institutionalModes('highschool', 'classic'), INSTITUTIONAL_ROOMS.highschool.modes, 'other rooms keep their modes');
+  const { drawSceneScreen, SCREEN_THEMES } = await import('../scene-screens.mjs');
+  const titles = look => { const out = []; const c = context(); c.fillText = (t) => out.push(t); drawSceneScreen(c, 960, 540, { scene: 'occmedialab', phase: 'night', look }); return out; };
+  assert(titles('classic').includes('Student reel screening') && !titles(null).includes('Student reel screening'), 'Classic keeps its screens\' task titles');
+  assert(SCREEN_THEMES.occmedialab.tasks[3] === 'Late edit', 'Studio refresh screens carry the pass\'s titles');
+}
+
 // ---- the room code picks the look (workspace-3d.mjs needs a browser: its dispatch is read from the source)
 const ws = fs.readFileSync(path.join(root, 'workspace-3d.mjs'), 'utf8');
 assert.match(ws, /import \{ buildArtistRoom as buildArtistRoomClassic \} from '\.\/artist-room-classic\.mjs';/);
@@ -137,7 +171,9 @@ assert.match(ws, /if \(this\.roomLayout\?\.id\) this\.look = lookOf\(id, options
 assert.match(fs.readFileSync(path.join(root, 'library-room.mjs'), 'utf8'), /if \(layout\.humboldt\) return \(room\.look === 'classic' \? buildHumboldtCommonsClassic : buildHumboldtCommons\)\(room, root, layout, helpers\);/);
 const people = fs.readFileSync(path.join(root, 'room-people.mjs'), 'utf8');
 assert.equal((people.match(/room\.id === 'creative'|this\.room\.id === 'creative'/g) || []).length, 0, 'room-people.mjs gates the pass\'s cast finishes on the look (refreshedCast), not on the room alone');
-assert.match(people, /const refreshedCast = room => \(room\?\.id === 'creative' && !classicCreate\(room\)\) \|\| \(!!room\?\.roomLayout\?\.humboldt && !classicCommons\(room\)\);/);
+assert.match(people, /const refreshedCast = room => \(room\?\.id === 'occmedialab' && !classicMedia\(room\)\) \|\| \(room\?\.id === 'creative' && !classicCreate\(room\)\) \|\| \(!!room\?\.roomLayout\?\.humboldt && !classicCommons\(room\)\);/);
+assert.match(people, /const classicMedia = room => room\?\.id === 'occmedialab' && room\.look === 'classic';/);
+assert.match(people, /rig\.mediaLab = room\?\.id === 'occmedialab' && !classicMedia\(room\);/, 'the editor\'s fader hand is the refresh\'s only');
 assert.match(people, /rig\.classicMotion = classicCreate\(room\) \|\| classicCommons\(room\)/, 'the Commons\' Classic cast moves as before too');
 assert.match(fs.readFileSync(path.join(root, 'experience', 'stage.mjs'), 'utf8'), /api\.setRoomLook\?\.\(next\.room,next\.look\?\?null\);\s*\n\s*if\(next\.layout\)/, 'the stage sets the look before it loads the room');
 

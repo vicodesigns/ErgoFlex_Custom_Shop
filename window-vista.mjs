@@ -24,6 +24,7 @@ export const VISTAS = {
     garden: { day: 'garden', brightness: .92 },
     'studio-garden': { day: 'studio-garden' },
     campus: { day: 'campus' },
+    'media-courtyard': { day: 'media-courtyard', brightness: .84, saturation: .96 },
     yard: { day: 'yard', brightness: .92 },
     coast: { day: 'coast', brightness: .74, saturation: 1.3, contrast: 1.22 },
     city: { day: 'city-day', dusk: 'city-dusk', duskPhases: ['evening', 'night', 'party'], zoom: .8 },

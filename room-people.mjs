@@ -91,8 +91,9 @@ import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, sh
 // The Commons' Classic look ('library/humboldt') keeps its cast and their motion as they were too.
 const classicCreate = room => room?.id === 'creative' && room.look === 'classic';
 const classicCommons = room => !!room?.roomLayout?.humboldt && room.look === 'classic';
-const refreshedCast = room => (room?.id === 'creative' && !classicCreate(room)) || (!!room?.roomLayout?.humboldt && !classicCommons(room));
-const classicRig = (rig, room) => { rig.classicMotion = classicCreate(room) || classicCommons(room); return rig; };
+const classicMedia = room => room?.id === 'occmedialab' && room.look === 'classic';   // (the OCC media lab's Classic look: its cast and motion as before the Nov 18 pass)
+const refreshedCast = room => (room?.id === 'occmedialab' && !classicMedia(room)) || (room?.id === 'creative' && !classicCreate(room)) || (!!room?.roomLayout?.humboldt && !classicCommons(room));
+const classicRig = (rig, room) => { rig.mediaLab = room?.id === 'occmedialab' && !classicMedia(room); rig.classicMotion = classicCreate(room) || classicCommons(room); return rig; };
 // who looks at whom (RoomPeople.gazeOf)
 const GAZE_TALK = /^(stand-talk|sit-chat|stand-drink|stand-mug|stand-coffee|sit-coffee)$/, GAZE_IDLE = /^(stand-wait|wheel-roll|wheel-watch|cane-stand|white-cane|sit-listen)$/;
 const GAZE_DESK = /^stand-phone-watch$/;      // watching the featured desk go (the workshop film): the head follows it
@@ -1616,11 +1617,12 @@ export class RoomPeople {
         });
         if (refreshedCast(this.room)) {
             // These are private material copies for this placement, including its animated replacement.
+            const cloth = this.room.root.mediaTextiles || this.room.root.commonsTextiles;
             for (const m of object.userData.personMaterials) {
                 const part = partOf(m.name);
                 if (part === 'hair') {
                     m.roughness = .61;
-                    if (this.room.root.commonsTextiles && m.map && !m.bumpMap && !m.normalMap) {
+                    if (cloth && m.map && !m.bumpMap && !m.normalMap) {
                         m.bumpMap = m.map;
                         m.bumpScale = .00014;
                     }
@@ -1636,9 +1638,8 @@ export class RoomPeople {
                     if (m.name.includes('basic_tucked_t-shirt') && object.userData.person?.id.startsWith('people-lin-') && this.room.root.artistWorkshirt) {
                         m.map = this.room.root.artistWorkshirt;
                     }
-                    const cloth = this.room.root.commonsTextiles;
                     if (cloth && m.map && !m.normalMap) {
-                        const knit = /sweater|cardigan/i.test(m.name);
+                        const knit = /sweater|cardigan/i.test(m.name) || (!!this.room.root.mediaTextiles && /t-shirt|jersey/i.test(m.name));
                         const fabric = knit ? cloth.stockinette : cloth.twill;
                         m.bumpMap = null;
                         m.normalMap = fabric.normal;

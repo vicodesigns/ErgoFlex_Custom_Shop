@@ -3,6 +3,7 @@ import * as education from './institutional-education.mjs?v=polish-20261111f';
 import * as healthcare from './institutional-healthcare.mjs?v=scene-desk-styling-20261010';
 import * as it from './institutional-it.mjs?v=scene-desk-styling-20261010';
 import * as media from './institutional-media.mjs?v=polish-20261111f';
+import * as mediaClassic from './institutional-media-classic.mjs';   // the media lab's Classic look (room-looks.mjs): the module as it was before the Nov 18 pass; not a scene group of its own
 
 // Measured public service, education and mobile work settings. Units are mm.
 // Scene IDs intentionally contain only letters, matching saved Groove keys.
@@ -12,7 +13,8 @@ import * as media from './institutional-media.mjs?v=polish-20261111f';
 // the smallest layout, five activity labels.
 export const INSTITUTIONAL_MODULES = { government, education, healthcare, it, media };
 const moduleByScene = Object.fromEntries(Object.values(INSTITUTIONAL_MODULES).flatMap(m => m.SCENES.map(id => [id, m])));
-export function institutionalModule(id) { return moduleByScene[id]; }
+// look: the room's look (room-looks.mjs); only the media lab has a Classic one.
+export function institutionalModule(id, look = null) { return look === 'classic' && id === 'occmedialab' ? mediaClassic : moduleByScene[id]; }
 const definitions = [
     ['security', 'Security operations', 'Public service', 'A mobile command position with a clear view.', 'operations', '#273c4b', '#48aeb0', [5800, 6800], ['Shift briefing', 'Active watch', 'Evening watch', 'Night watch', 'Team handover']],
     ['police', 'Police / PD', 'Public service', 'Brief, review and respond from one workspace.', 'police', '#e0e5e9', '#234e72', [6200, 7200], ['Morning briefing', 'Case review', 'Evening shift', 'Night shift', 'Team briefing']],
@@ -102,4 +104,12 @@ export const INSTITUTIONAL_IDS = Object.keys(INSTITUTIONAL_ROOMS);
 export function institutionalLayout(id, layout, size = '48x30') {
     const layouts = INSTITUTIONAL_ROOMS[id]?.layouts;
     return layouts?.[layout] || (EDUCATIONAL_LEVELS[id] ? Object.values(layouts)[0] : layouts?.[size === '60x30' ? 'house' : 'apartment']);
+}
+
+// The room's lighting modes in a look: the media lab's Classic look has the modes it had before the Nov 18 pass.
+export function institutionalModes(id, look = null) {
+    if (look !== 'classic' || id !== 'occmedialab') return INSTITUTIONAL_ROOMS[id]?.modes;
+    const row = definitions.find(r => r[0] === id), override = mediaClassic.sceneOverrides?.[id] || {};
+    const [, , , , kind, , accent, , labels] = row.map((value, i) => override[['id', 'name', 'category', 'caption', 'kind', 'wall', 'accent', 'dimensions', 'labels'][i]] ?? value);
+    return mergeModes(makeModes(labels, accent, kind), override.modes);
 }

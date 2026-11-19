@@ -645,7 +645,15 @@ function socal(k, ctx, kind) {
         for (const [x, z, h, j] of [[-13000, -12000, 8000, 1], [12500, -15000, 8500, 0], [-19000, -19000, 8000, 0], [21000, -18000, 9000, 1], [-27000, -14000, 8500, 0]]) {
             tree(b, r, cx + x, ground, z, { height: h, hex: j ? '#86849a' : '#6e8656', shape: 'spreading', bark: '#6f655c' }); }
         for (let x = L - 20000; x < R + 20000; x += 7000 + r() * 6000) if (Math.abs(x - cx) > 9000 || r() < .3) fanPalm(b, r, x, ground, quadEnd + 3000 + r() * 3000, { height: 14000 + r() * 9000 });
-        campusBlock(k, r, cx - 36000, ground, quadEnd - 4000, { width: 26000, floors: 3 });
+        if (ctx.classic) campusBlock(k, r, cx - 36000, ground, quadEnd - 4000, { width: 26000, floors: 3 });   // (the media lab's Classic look: one block, as it was)
+        else {
+        // A teaching wing across the courtyard and palms on its approaches give
+        // the upstairs editing bays a near and a middle distance in oblique views.
+        campusBlock(k, r, cx - 13400, ground, -22200, { width: 18400, floors: 3, wall:'#ccbaa0', fins:'#b8a589' });
+        campusBlock(k, r, cx + 20200, ground, -24500, { width: 17400, floors: 3, wall:'#d3c2ae' });
+        featherPalm(b, r, cx - 4700, ground, -8600, {height:11300});
+        featherPalm(b, r, cx + 6400, ground, -10500, {height:12600});
+        }
         for (let x = cx + 11000; x < R + 20000; x += 5200 + r() * 1200) if (r() < .6) car(k, r, x, ground, quadEnd - 4000 - Math.floor(r() * 2) * 5000, { turn: Math.PI / 2 });
         floodlight(k, cx + 26000, ground, edge + 3000, 11000);
         coast(k, ctx, edge, 28000, -250000, -140000, -200000);

@@ -64,7 +64,7 @@ import { createStudioLayers, setLayersHidden } from './studio-layers-panel.mjs';
 import { layersSwitch, UI_SWITCH_KEY as LAYERS_UI_SWITCH_KEY, frameView, projectLayers, projectLayersRestore, LAYERS_KEY, personLayerKey, personName, personDesk } from './studio-layers-model.mjs';
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
-import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule } from './institutional-scenes.mjs?v=polish-20261111f';
+import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule, institutionalModes } from './institutional-scenes.mjs?v=polish-20261111f';
 import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY, setEaselLook } from './workspace-3d.mjs?v=polish-20261113b';
 import { cleanLook, lookOf } from './room-looks.mjs';
 // The look each room builds (room-looks.mjs), by room id; none = the room's default. Not saved: the Studio always opens a
@@ -1002,7 +1002,7 @@ function initSceneScreenControls(toolbar) {
     toolbar.append(panel);
     const select=panel.querySelector('#scene-screen-select'),enabled=panel.querySelector('#scene-screens-enabled'),single=panel.querySelector('#scene-screen-enabled');let revision=-1;
     sceneScreens=new SceneScreens({
-        context:()=>{const p=measuredRoomProfile();return {scene:selectedRoomScene,layout:p?.layout.id||'product',phase:p?.mode||'morning',label:p?.modes[p.mode]?.label,preset:activeBuildPreset,accent:selectedRoomScene==='gym'&&GYM_THEMES[gymTheme].screenAccent||undefined,mono:selectedRoomScene==='gym'&&GYM_THEMES[gymTheme].screenMono||undefined};},
+        context:()=>{const p=measuredRoomProfile();return {scene:selectedRoomScene,look:roomLooks[selectedRoomScene]||null,layout:p?.layout.id||'product',phase:p?.mode||'morning',label:p?.modes[p.mode]?.label,preset:activeBuildPreset,accent:selectedRoomScene==='gym'&&GYM_THEMES[gymTheme].screenAccent||undefined,mono:selectedRoomScene==='gym'&&GYM_THEMES[gymTheme].screenMono||undefined};},
         room:()=>workspaceRoom,
         sources:()=>{
             const records=[...sceneDesks?.records.values()||[]],sources=[];
@@ -1274,7 +1274,7 @@ function measuredRoomPanelId(id) { return id === 'home' ? 'home-office-controls'
 function measuredRoomProfile(id = selectedRoomScene) {
     if (INSTITUTIONAL_ROOMS[id]) {
         const p = INSTITUTIONAL_ROOMS[id], state = institutionalState[id];
-        return { id, layouts: p.layouts, modes: p.modes, layout: institutionalLayout(id, state.layout, currentConfig.size), mode: state.mode, prefix: id };
+        return { id, layouts: p.layouts, modes: institutionalModes(id, roomLooks[id] || null), layout: institutionalLayout(id, state.layout, currentConfig.size), mode: state.mode, prefix: id };   // (modes: a room's look has its own, room-looks.mjs)
     }
     if (id === 'library') return { id, layouts: LIBRARY_LAYOUTS, modes: selectedLibraryLayout().modes || LIBRARY_MODES, layout: selectedLibraryLayout(), mode: libraryMode, prefix: 'library' };
     if (id === 'coworking') return { id, layouts: COWORKING_LAYOUTS, modes: COWORKING_MODES, layout: selectedCoworkingLayout(), mode: coworkingMode, prefix: 'coworking' };

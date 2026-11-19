@@ -1,6 +1,7 @@
+import { roomTextiles } from './room-textiles.mjs';
 import * as THREE from 'three';
 import { pottedFern } from './room-fern.mjs';
-import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
+import { diffusePoolMap, createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
 import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113b';
 import { migrateHumboldtGroupFurniture } from './humboldt-furniture-migration.mjs?v=commons-home-comfort-20261024';
 import { buildHumboldtLife } from './library-humboldt-life.mjs?v=polish-20261111f';
@@ -413,21 +414,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     };
     const honeyOakMap = repeating(finishMap('honey-oak'), 8);
     const mapleMap = repeating(finishMap('staved-maple'), 8);
-    const fabricData = (name, repeat) => {
-        const map = repeating(finishMap(name), 4);
-        map.colorSpace = THREE.NoColorSpace;
-        map.flipY = false;
-        map.repeat.set(repeat, repeat);
-        (root.ownedTextures ||= []).push(map);
-        return map;
-    };
-    root.commonsTextiles = {};
-    for (const [name, repeat] of [['stockinette', 5], ['twill', 7]]) {
-        root.commonsTextiles[name] = {
-            normal: fabricData(name + '-normal', repeat),
-            orm: fabricData(name + '-orm', repeat)
-        };
-    }
+    root.commonsTextiles = roomTextiles(root, finishMap);
     const honeyOak = tag(own(material('#ffffff', { map: honeyOakMap, roughness: .51 })), 'wood');
     // Café and side tables: maple tops with honey-oak bases in one draw. The parts carry
     // vertex colours (white top, HONEY base) over the shared maple map.
@@ -1159,20 +1146,7 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     queueMicrotask(() => root.traverse(o => { if (!o.isMesh) return; for (const m of [].concat(o.material)) if (m?.userData?.humboldtRoughness) m.roughness = m.userData.humboldtRoughness; }));
 
     // ---------- Light pools: scallops, floor pools, cork and desk accents ----------
-    // A diffuse wash whose value and slope reach zero before the quad ends.
-    // Keep the alpha in an immutable texture while Director blends the light colours.
-    const poolSize = 128, rgba = new Uint8Array(poolSize * poolSize * 4).fill(255);
-    for (let y = 0; y < poolSize; y++) for (let x = 0; x < poolSize; x++) {
-        const dx = (2*x + 1)/poolSize - 1, dy = (2*y + 1)/poolSize - 1;
-        const r2 = dx*dx + dy*dy;
-        rgba[(y*poolSize+x)*4+3] = Math.round(255 * Math.max(0, 1-r2)**2 * Math.exp(-2.2*r2));
-    }
-    const diffusePool = new THREE.DataTexture(rgba, poolSize, poolSize);
-    diffusePool.magFilter = THREE.LinearFilter;
-    diffusePool.minFilter = THREE.LinearMipmapLinearFilter;
-    diffusePool.generateMipmaps = true;
-    diffusePool.needsUpdate = true;
-    (root.ownedTextures ||= []).push(diffusePool);
+    const diffusePool = diffusePoolMap(root);
     const pools = createPoolLayer(root, 'Humboldt architectural light', diffusePool);
     const merged = (quads, face) => { const k = kit(); for (const [size, at] of quads) k.plane(size, at, { rot: face }); return k.build(); };
     const FLOOR = [-Math.PI / 2, 0, 0], BACKF = [0, 0, 0], RIGHTF = [0, -Math.PI / 2, 0], LEFTF = [0, Math.PI / 2, 0];

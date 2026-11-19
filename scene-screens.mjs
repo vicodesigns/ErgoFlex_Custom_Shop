@@ -32,7 +32,7 @@ export const SCREEN_THEMES = Object.fromEntries([
     ['laboratory','Research instrument demo','metrics','#8fd1c2',['Instrument preparation','Sample experiment','Analysis curves','Instrument watch','Research review']],
     ['hospital','Care workspace demo','care','#a6d6ce',['Rounds planning','Care coordination','Handover checklist','Observation demo','Team review']],
     ['mobileit','Systems workshop demo','metrics','#82bddd',['System checks','Service diagnostics','Maintenance plan','Overnight status','Deployment review']],
-    ['occmedialab','OCC media projects','film','#f5a349',['Storyboard & shot plan','Edit & create','Sound & colour','Student reel screening','Portfolio critique']],
+    ['occmedialab','OCC media projects','film','#f5a349',['Storyboard & shot plan','Edit & create','Sound & colour','Late edit','Screening & wrap']],
     ['product','Desk workspace','plan','#9ed6c1',['Workspace preview','Work in progress','Review notes','Quiet focus','Project collection']]
 ].map(([id,title,kind,accent,tasks])=>[id,{title,kind,accent,tasks}]));
 
@@ -50,14 +50,17 @@ function graph(c,x,y,w,h,phase,color,wave=false){
 }
 // Monochrome UI that keeps only its red accents (the gym's black & red colourway).
 function monoAccent(c,W,H){const img=c.getImageData(0,0,W,H),d=img.data;for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2];if(r>40&&r>g*1.6&&r>b*1.6)continue;d[i]=d[i+1]=d[i+2]=Math.round((.2126*r+.7152*g+.0722*b)*.92);}c.putImageData(img,0,0);}
-export function drawSceneScreen(c,W,H,{scene='office',phase='morning',label,variant=0,role='',preset,accent}={}) {
+// The media lab's Classic look (room-looks.mjs): its screens as they were before the Nov 18 pass.
+const CLASSIC_SCREENS = {occmedialab:{tasks:['Storyboard & shot plan','Edit & create','Sound & colour','Student reel screening','Portfolio critique'],kind:(role,phase,variant)=>/sound/.test(role)?'audio':/art|animation|colour/.test(role)?'art':phase==='night'?'cinema':variant===1?'art':'film'}};
+export function drawSceneScreen(c,W,H,{scene='office',phase='morning',label,variant=0,role='',preset,accent,look=null}={}) {
     const productTheme=({occ:'occmedialab',artist:'creative',architect:'workshop',creative:'creative',library:'library',music:'music',gaming:'gaming',office:'office',compact:'home'})[preset];
     const theme=SCREEN_THEMES[scene==='product'?(productTheme||'product'):scene]||SCREEN_THEMES.office,pi=Math.max(0,PHASES.indexOf(phase)),a=accent||theme.accent;
     let kind=theme.kind;if(scene==='product')kind=({artist:'art',creative:'art',architect:'draft',music:'audio',gaming:'game',library:'read',compact:'plan'})[preset]||'plan';
-    if(scene==='occmedialab')kind=/sound/.test(role)?'audio':/art|animation|colour/.test(role)?'art':phase==='night'?'cinema':variant===1?'art':'film';
+    const classic=look==='classic'?CLASSIC_SCREENS[scene]:null,tasks=classic?.tasks||theme.tasks;
+    if(classic)kind=classic.kind(role,phase,variant);else if(scene==='occmedialab')kind=phase==='party'?'cinema':/sound/.test(role)?'audio':/art|animation|colour/.test(role)||variant===1?'art':'film';
     c.save();c.scale(W/960,H/540);box(c,0,0,960,540,phase==='night'?'#0a1521':'#142431');box(c,0,0,960,52,'#203747');
     text(c,theme.title.toUpperCase(),24,33,18,a,730);text(c,['09:00','14:00','18:30','22:00','16:00'][pi],850,33,17);
-    const title=label&&!['Morning','Afternoon','Evening','Night','Party'].includes(label)?label:theme.tasks[pi];text(c,title,26,96,30,'#ecf3f4',900);
+    const title=label&&!['Morning','Afternoon','Evening','Night','Party'].includes(label)?label:tasks[pi];text(c,title,26,96,30,'#ecf3f4',900);
     text(c,variant?'REFERENCE / REVIEW':'ACTIVE PROJECT',28,126,12,'#9daebc');
     if(['audio','film'].includes(kind)){
         box(c,26,145,610,195,'#0c1824');
@@ -133,9 +136,9 @@ export class SceneScreens {
         this.entries=found;if(!found.some(e=>e.key===this.selected))this.selected=found[0]?.key||'';
     }
     texture(context,entry){
-        const info=entry.info,{scene,phase,label,preset,accent,mono}=context,variant=info.variant||0;
-        const key=[scene,phase,label,preset,info.role,variant,info.portrait,accent,mono].join('|');if(this.cache.has(key))return this.cache.get(key);
-        const canvas=document.createElement('canvas');canvas.width=960;canvas.height=540;drawSceneScreen(canvas.getContext('2d'),960,540,{scene,phase,label,variant,role:info.role,preset,accent});if(mono)monoAccent(canvas.getContext('2d'),960,540);
+        const info=entry.info,{scene,phase,label,preset,accent,mono,look}=context,variant=info.variant||0;
+        const key=[scene,phase,label,preset,info.role,variant,info.portrait,accent,mono,look].join('|');if(this.cache.has(key))return this.cache.get(key);
+        const canvas=document.createElement('canvas');canvas.width=960;canvas.height=540;drawSceneScreen(canvas.getContext('2d'),960,540,{scene,phase,label,variant,role:info.role,preset,accent,look});if(mono)monoAccent(canvas.getContext('2d'),960,540);
         const map=new THREE.CanvasTexture(canvas);map.colorSpace=THREE.SRGBColorSpace;map.userData.sceneScreenContent=true;
         if(info.portrait){map.center.set(.5,.5);map.rotation=-Math.PI/2;}
         this.cache.set(key,map);return map;

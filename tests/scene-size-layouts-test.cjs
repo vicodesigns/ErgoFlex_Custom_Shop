@@ -16,12 +16,13 @@ const server=http.createServer((req,res)=>{const file=path.join(root,new URL(req
   for(const layout of layouts){
    await p.evaluate(async({scene,layout})=>{ErgoFlex.setMeasuredRoomLayout(scene,layout);await ErgoFlex.workspaceRoom.ready;await ErgoFlex.sceneDesks.objects.ready;ErgoFlex.renderer.setAnimationLoop(null)},{scene,layout});
    const result=await p.evaluate(async({scene,layout})=>{
-    const ef=ErgoFlex,m=ef.sceneDesks,{peripheralReference}=await import('/scene-peripheral-layouts.mjs');const failures=[];const check=(ok,msg)=>{if(!ok)failures.push(msg)};const ids=[...m.records.keys()];
+    const ef=ErgoFlex,m=ef.sceneDesks,{peripheralReference}=await import('/scene-peripheral-layouts.mjs'),{seedShelfStation}=await import('/desk-shelf-stations.mjs');const failures=[];const check=(ok,msg)=>{if(!ok)failures.push(msg)};const ids=[...m.records.keys()];
     for(const id of ids){
      m.select(id);
      const keep={};
      for(const size of ['48x30','60x30']){
       m.setSize(size);await m.objects.ready;m.update(0);const r=m.active,ref=peripheralReference(r.state.peripheralRecipe,size);for(const [accessory,obj] of r.peripherals.items){let meshes=0;obj.traverse(o=>{if(o.isMesh)meshes++});check(meshes>0,id+' '+size+' '+accessory+' failed to render');}
+      if(r.state.shelfStation==='shelf-first-v1')seedShelfStation(ref.config);
       check(JSON.stringify(r.state.accessories)===JSON.stringify(ref.config.accessories),id+' '+size+' accessory selection differs from reference');
       for(const [key,obj] of Object.entries(ref.objects)){const live=r.objects.get(key);if(!live||live.saved.removed)continue;check(Math.abs(live.obj.position.x-obj.transform.p.x)<1e-5&&Math.abs(live.obj.position.y-obj.transform.p.y)<1e-5&&Math.abs(live.obj.position.z-obj.transform.p.z)<1e-5,id+' '+size+' '+key+' placement');}
       for(const arm of ['monitor-arm','monitor-arm-2'])for(const link of r.peripherals.items.get(arm)?.userData.armConnections||[])check(link.start.distanceTo(link.end)<2,id+' '+size+' '+arm+' mounting gap');

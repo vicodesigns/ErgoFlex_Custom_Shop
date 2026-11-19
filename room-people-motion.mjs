@@ -222,6 +222,8 @@ const blendW = (out, pair, i) => pair.w > 0 ? out.slerpQuaternions(pair.a.wq[i],
 
 // Typing: in bursts with pauses, one finger of each hand at a time dips onto a key (the two hands half a beat apart).
 function tapKeys(rig, s, time, seed, life) {
+    // During playback the editor rests their fingers on the keys for a beat.
+    if (rig.mediaLab) life *= 1 - moment(time,seed,102,8,2.4);
     const { fingers, arm } = rig.side[s], busy = ss(-.15, .1, noise(time * .31 + (s === 'l' ? 0 : .4), seed + 21)) * life, beat = time * (6.1 + hash(3, seed) * 1.6) + (s === 'l' ? 0 : .5), n = Math.floor(beat), x = beat - n;
     const which = Math.floor(hash(n, seed + (s === 'l' ? 40 : 41)) * 5.99) % 5, tap = Math.sin(Math.PI * x) ** 2 * busy * (hash(n, seed + 50) < .82 ? 1 : 0);
     if (tap <= 0) return;
@@ -316,6 +318,7 @@ export function solveDesk(rig, keys, input) {
     // ---- arms
     const lift = (standing ? type : sit)?.lift ?? 0, keyed = standing ? type : sit, armsDown = !sit ? 1 : !wait ? 0 : ss(1.7, 2.5, tau);   // (the hands push on the thighs until the legs have taken the weight)
     // a drink at the desk (sit-coffee, stand-coffee): one hand holds it and does not type
+    const mixing = rig.mediaLab && keyed?.a.id.includes('-sit-mix');
     const cup = keyed ? CUP_HAND[(keyed.w > .5 ? keyed.b : keyed.a).pose] || null : null;
     for (const s of ['l', 'r']) {
         const arm = rig.side[s].arm, [clavicle, upper, lower, hand] = arm, [thigh, calf] = rig.side[s].leg, fingers = rig.side[s].fingers;
@@ -355,9 +358,10 @@ export function solveDesk(rig, keys, input) {
         // fingers: curled for the keys, looser away from them; typing taps them in bursts
         const loose = wait || keyed.a;
         for (const i of fingers) { rig.lq[i].copy(loose.q[i]); if (ke > 0 && keyed) rig.lq[i].slerp(blendQ(tq, keyed, i), ke); }
-        if (life > 0 && ke > .98 && keyed && input.taps !== false && s !== cup) tapKeys(rig, s, time, seed, life);
+        if (life > 0 && ke > .98 && keyed && !mixing && input.taps !== false && s !== cup) tapKeys(rig, s, time, seed, life);
     }
     rig.fk();
+    if (mixing && life > 0 && ke > .9) rideFader(rig,time,seed,life*ss(.9,1,ke));
     // the drink: held where the posture holds it (it follows the keyboard's height with the other hand), and every 8 to
     // 14 seconds brought to the mouth, tipped and put back (sip), while the other hand types on
     if (cup && life > 0 && ke > .9) {
@@ -486,7 +490,7 @@ export function solveStill(rig, key, input) {
     for (const s of ['l', 'r']) {
         const [, upper, lower, hand] = rig.side[s].arm;
         if (resting.includes(s)) { rig.reach(upper, lower, hand, key.wp[hand]); rig.reach(upper, lower, hand, key.wp[hand]); rig.setWorld(hand, key.wq[hand]); }
-        if (TYPES.has(pose) && input.taps !== false) tapKeys(rig, s, time, seed, life);
+        if (TYPES.has(pose) && !(rig.mediaLab && key.id.includes('-sit-mix')) && input.taps !== false) tapKeys(rig, s, time, seed, life);
     }
     // (a reader turning a page, and every other activity: ACTS below)
     rig.fk();
@@ -494,6 +498,7 @@ export function solveStill(rig, key, input) {
     if (pose === 'wheel-roll' && input.roll) { pushRims(rig, key, input.roll, actLife); rig.fk(); }
     // (an action at a moment of the film: input.act, SCREEN_ACTS)
     else if (input.act && SCREEN_ACTS[pose]) { SCREEN_ACTS[pose](rig, key, input.act, actLife); rig.fk(); }
+    else if (rig.mediaLab && key.id.includes('-sit-mix')) rideFader(rig,time,seed,life);
     else if (ACTS[pose]) { ACTS[pose](rig, key, time, seed, life); rig.fk(); }
 }
 
@@ -536,6 +541,16 @@ const shiftWeight = (rig, key, dx, dip = 0) => {
     rig.turnWorld(rig.b.pelvis, turn.setFromAxisAngle(Z, dx * 2)); rig.fk(); rig.turnWorld(rig.b.spine_02, turn.setFromAxisAngle(Z, -dx * 1.6)); rig.fk();
     feetStay(rig, key);
 };
+// Small signed travel along the fader from the wrist's solved contact point.
+function rideFader(rig, time, seed, weight) {
+    const listen = moment(time, seed, 103, 9, 2.8) * weight;
+    const hand = rig.side.r.arm[3];
+    handAt.copy(rig.wp[hand]);
+    handAt.z += noise(time*.38,seed+51)*.021*(weight-listen);
+    handQ.copy(rig.wq[hand]);
+    armTo(rig,'r',handAt,handQ);
+    headTurn(rig,.14*listen,-.07*listen);
+}
 function write(rig, key, time, seed, life, size = 1) {
     // a line of writing: the pen goes along the line (the writer's left to right), trembling with the letters, lifts and
     // comes back to the start of the next line, and rests now and then; the head follows the pen along the line

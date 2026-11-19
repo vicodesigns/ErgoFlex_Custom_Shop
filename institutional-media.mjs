@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { institutionalMap, detailKit, notebook, books } from './institutional-detail.mjs?v=scene-desk-styling-20261010';
-import { createPoolLayer } from './room-light-pools.mjs?v=environment-expert-20261014';
+import { roomTextiles } from './room-textiles.mjs';
+import { pottedFern } from './room-fern.mjs';
+import { createPoolLayer, diffusePoolMap } from './room-light-pools.mjs?v=environment-expert-20261014';
 
 // OCC lab concept, not an as-built plan. All coordinates are room-local mm.
 // Each tier reserves a front capture/critique zone and a clear right-hand entry.
@@ -31,8 +33,8 @@ export const sceneOverrides = {
         modes:{
             // Daylight with blinds partly down; a dim neutral D65 surround for
             // colour work; a dark house for screening; a warm showcase evening.
-            morning:{description:'Daylight planning · call sheets, shot lists and equipment checkout',power:1.1,ambient:.32,exposure:1.0,height:35,tilt:0,leds:false},
-            afternoon:{description:'Balanced work light · rough cuts, print proofs and shared edit notes',power:1.3,ambient:.35,exposure:1.0,height:28,tilt:0,leds:false},
+            morning:{description:'Daylight planning · call sheets, shot lists and equipment checkout',key:'#fff1d9',fill:'#d5e4ef',power:1.1,ambient:.42,exposure:1.0,height:35,tilt:0,leds:false},
+            afternoon:{description:'Balanced work light · rough cuts, print proofs and shared edit notes',power:1.26,ambient:.4,exposure:1.0,height:28,tilt:0,leds:false},
             evening:{description:'Neutral grading surround · reference swatches, cue sheets and headphone mixing',key:'#e6edf7',fill:'#c9d3df',power:.24,ambient:.22,bounce:.3,practical:.36,exposure:1.0,colors:['#f2f4f7','#9fb2c6'],height:28,tilt:0,color:'#637788',leds:true},
             night:{description:'Late edit · one bay lit by its screens and a task light, the lab dark around it',key:'#8ea6c4',fill:'#7f97b5',power:.06,ambient:.09,bounce:.11,practical:.14,exposure:1.04,height:28,tilt:0,color:'#344653',leds:true},
             party:{description:'Screening & wrap · student reels on the big screen, house lights down, food on the critique table',key:'#ffe2bf',fill:'#d9cbb8',power:.12,ambient:.14,bounce:.2,practical:.8,exposure:1.02,colors:['#ffd9a8','#e3c7a6'],height:35,tilt:0,color:'#f3bd79',leds:true}
@@ -112,6 +114,19 @@ export const options = () => ({trimColor:'#b6c1cd',acousticName:'Navy acoustic a
 function text(c,s,x,y,size=22,color=WHITE,align='left'){
     c.fillStyle=color;c.font=`600 ${size}px "DejaVu Sans", sans-serif`;c.textAlign=align;c.textBaseline='alphabetic';c.fillText(s,x,y);c.textAlign='left';
 }
+// The three widescreen rushes are also the sources for the framed student editions.
+let rushes, rushesReady;
+function loadRushes() {
+    return rushesReady ||= new THREE.ImageLoader().loadAsync(new URL('./assets/rooms/media/coast-dailies.webp', import.meta.url).href)
+        .then(image => { rushes = image; return true; }).catch(() => { rushesReady = null; return false; });
+}
+function filmFrame(c, x, y, w, h, take) {
+    if (!rushes) return coastFrame(c, x, y, w, h, take);
+    const strip = rushes.height / 3, sh = strip - 4;
+    const sw = Math.min(rushes.width, sh * w / h), cropH = Math.min(sh, sw * h / w);
+    const i = take % 3, focus = [.68, .44, .62][i];
+    c.drawImage(rushes, (rushes.width-sw)*focus, i*strip+(strip-cropH)/2, sw, cropH, x,y,w,h);
+}
 function coastFrame(c,x,y,w,h,phase=0){
     const sky=c.createLinearGradient(x,y,x,y+h);
     sky.addColorStop(0,phase===3?'#0f2442':phase===2?'#2c587c':'#3f8eb8');
@@ -143,6 +158,12 @@ function coastFrame(c,x,y,w,h,phase=0){
 }
 export function drawScreen(c,W,H,_spec,variant=0,phase='morning'){
     const p=phaseIndex(phase);
+    if (variant === 3 && phase === 'party') {
+        c.fillStyle = '#06080b'; c.fillRect(0,0,W,H);
+        const height = Math.min(H, W/2.39);
+        filmFrame(c,0,(H-height)/2,W,height,0);
+        return;
+    }
     c.fillStyle='#0d1622';c.fillRect(0,0,W,H);
     c.fillStyle=NAVY;c.fillRect(0,0,W,46);
     c.fillStyle=ORANGE;c.fillRect(0,44,W,3);
@@ -171,7 +192,7 @@ export function drawScreen(c,W,H,_spec,variant=0,phase='morning'){
             if(b<=12+(p%4))c.fillRect(W-48,by,16,9);
         }
     }else if(variant%4===1){
-        coastFrame(c,22,66,W*.53,H*.49,p);
+        filmFrame(c,22,66,W*.53,H*.49,p);
         c.strokeStyle='#ffffff44';c.lineWidth=1;c.strokeRect(22,66,W*.53,H*.49);
         text(c,'RGB PARADE / VECTORSCOPE',W*.59,86,16,'#a9c4df');
         c.fillStyle='#14202e';c.fillRect(W*.59,98,W*.38,H*.38);
@@ -185,7 +206,7 @@ export function drawScreen(c,W,H,_spec,variant=0,phase='morning'){
             c.fillRect(24+n*(W-48)/9,H*.72,(W-68)/9,H*.14);
         }
     }else{
-        coastFrame(c,24,64,W*.66,H*.48,p);
+        filmFrame(c,24,64,W*.66,H*.48,p);
         c.strokeStyle='#ffffff38';c.lineWidth=1.5;c.strokeRect(24,64,W*.66,H*.48);
         // Rule-of-thirds safe-title guides on the program monitor.
         c.strokeStyle='#ffffff1c';c.lineWidth=1;
@@ -205,7 +226,7 @@ export function drawScreen(c,W,H,_spec,variant=0,phase='morning'){
         c.strokeStyle=ORANGE;c.lineWidth=2.5;c.beginPath();c.moveTo(W*(.28+p*.07),H*.61);c.lineTo(W*(.28+p*.07),H*.90);c.stroke();
     }
     c.fillStyle='#152436';c.fillRect(0,H-34,W,34);
-    text(c,['PREP / SHOT LISTS','EDIT / CREATE','SOUND / COLOUR','SCREENING','PORTFOLIO CRITIQUE'][p],22,H-11,15,'#d2e2f0');
+    text(c,['PREP / SHOT LISTS','EDIT / CREATE','SOUND / COLOUR','LATE EDIT / CONFORM','SCREENING / WRAP'][p],22,H-11,15,'#d2e2f0');
     text(c,'OCC FILM & MEDIA ARTS · 24 FPS · D65',W-275,H-11,13,ORANGE);
 }
 export function drawBoard(c,W,H,_spec,variant=0,phase='morning'){
@@ -213,13 +234,13 @@ export function drawBoard(c,W,H,_spec,variant=0,phase='morning'){
         ['Shot list · 24mm','Crew / camera kit','Call sheet 07:30','Coast bluff permit'],
         ['Captured · A-cam','Selects synced','Rough cut v03','Room tone pickup'],
         ['Picture lock','Rec.709 LUT pass','Dialogue + Foley','5.1 stems check'],
-        ['DCP reel ready','Audience cards','Director Q&A notes','Festival master'],
-        ['Student reels','Peer critique','Portfolio selects','Final export']
+        ['Match cut · 18f','Check sync','Conform reel 03','Export review copy'],
+        ['Screening master','House lights down','Peer feedback','Archive selects']
     ][p];
     c.fillStyle='#edf0f2';c.fillRect(0,0,W,H);
     c.fillStyle=NAVY;c.fillRect(0,0,W,56);
     c.fillStyle=ORANGE;c.fillRect(0,54,W,4);
-    text(c,['PRE-PRODUCTION / COAST STORIES','EDIT / REVIEW / REVISE','SOUND + COLOUR / FINISHING','SCREENING / LISTEN + RESPOND','PORTFOLIOS / WORK IN PROGRESS'][p],24,37,22,WHITE);
+    text(c,['PRE-PRODUCTION / COAST STORIES','EDIT / REVIEW / REVISE','SOUND + COLOUR / FINISHING','LATE EDIT / FINAL CONFORM','SCREENING / LISTEN + RESPOND'][p],24,37,22,WHITE);
     text(c,'PROD #OCC-204 · 2.39:1 SCOPE',W-260,36,13,'#bfd4e8');
     for(let n=0;n<4;n++){
         const x=22+n*(W-36)/4,cw=(W-64)/4;
@@ -381,8 +402,38 @@ export function migrateMediaFixtureTransform(obj,saved,layout){
 export function furnish(kit){
     const {layout:l,asset,box,mat,byId,label}=kit,w=kit.w,bz=kit.bz,front=kit.front;
     const dress=kit.dress||mat('#ffffff','powder',{vertexColors:true});
+    const loader = new THREE.TextureLoader(), loads = [];
+    kit.loadFinish = (folder, name) => {
+        const url = new URL('./assets/rooms/'+folder+'/'+name+'.webp', import.meta.url);
+        let map;
+        loads.push(new Promise(resolve => {
+            map = loader.load(url.href, resolve, undefined, () => {
+                if (kit.room.root === kit.root) kit.room.missingProps.push(name);
+                resolve();
+            });
+        }));
+        map.colorSpace = THREE.SRGBColorSpace;
+        map.anisotropy = 4;
+        return map;
+    };
+    kit.finishLoads = loads;
+    kit.root.mediaTextiles = roomTextiles(kit.root, name => kit.loadFinish('library', name));
+    loads.push(loadRushes().then(loaded => {
+        if (kit.room.root !== kit.root) return;
+        if (!loaded) { kit.room.missingProps.push('coast-dailies'); return; }
+        for (const mat of kit.screenMats) {
+            const canvas = mat.map?.image;
+            if (!canvas?.getContext) continue;
+            drawScreen(canvas.getContext('2d'), canvas.width, canvas.height, kit.spec, mat.userData.screenVariant, kit.root.userData.mediaLab?.phase);
+            mat.map.needsUpdate = true;
+        }
+    }));
     kit.room.migrateSavedTransform=(obj,saved)=>migrateMediaFixtureTransform(obj,saved,l);
     kit.room.decorateProp=(object,placement)=>{
+        if (placement.id === 'ergoflex-plant-2') {
+            const fern = pottedFern(152 + l.index*9, .64, '#947b64');
+            object.clear(); fern.scale.setScalar(1/object.scale.x); object.add(fern); return;
+        }
         if(placement.id!=='ergoflex-couch'||object.userData.milanoSofa)return;const copies=new Map();
         object.traverse(o=>{if(!o.isMesh)return;const swap=m=>{if(!/upholstery/i.test(m?.name||''))return m;if(!copies.has(m)){const c=m.clone();c.color.set('#2f3a48');c.userData.roomPaletteLocked=true;kit.room.ownedMaterials?.add(c);copies.set(m,c);}return copies.get(m);};o.material=Array.isArray(o.material)?o.material.map(swap):swap(o.material);});
     };
@@ -495,7 +546,7 @@ export function furnish(kit){
     capture.box([210,10,145],[140,920,cam],CHARCOAL,undefined,'metal');
     capture.box([150,6,110],[145,929,cam],WHITE,undefined,'paper');
     capture.box([150,6,22],[145,933,cam-42],ORANGE,undefined,'metal');
-    const spread=sg.depth===3000?1300:1150,heads=[[-spread,back-650,1750,.8],[spread,back-650,1750,-.8],[-700,cam+500,1600,.6]];
+    const spread=sg.depth===3000?1300:1150,heads=[[-spread,back-650,1750],[spread,back-650,1750],[-700,cam+500,1600]];
     for(const [x,z,hgt] of heads){
         tripod(capture,x,0,z,hgt);
         capture.box([42,330,30],[x,hgt+170,z],INK,undefined,'metal');
@@ -520,12 +571,33 @@ export function furnish(kit){
     capture.build(stage,dress);
     kit.room.propSupports.push({obj:stage,id:'ergoflex-camera',at:[l.media.capture[0],1395,l.media.capture[1]-cam]},{obj:stage,id:'ergoflex-tall-office-chair',at:[l.media.capture[0],0,l.media.capture[1]-back+sg.talent]});
     kit.mediaDiffusers=[];
-    for(const [x,z,hgt,turn] of heads){
-        // Softbox: a black four-sided fabric frustum with a white diffuser face and grid trim.
-        const head=new THREE.Group();head.position.set(x,hgt+150,z);head.rotation.y=turn;stage.add(head);
-        const box4=kit.mesh(head,new THREE.CylinderGeometry(120,340,400,4,1,false),kit.mat('#1b1e22','fabric'),[0,0,-150]);box4.rotation.set(-Math.PI/2,Math.PI/4,0);
-        kit.box(head,[495,495,18],[0,0,46],kit.ink,4);
-        const glow=kit.material('#f3f5ef',{emissive:'#e6efff',emissiveIntensity:.35,roughness:.75});kit.mesh(head,new THREE.PlaneGeometry(465,465),glow,[0,0,56]).castShadow=false;kit.mediaDiffusers.push(glow);
+    for(const [x,z,hgt] of heads){
+        const head=new THREE.Group();
+        head.name='Gridded softbox'; head.position.set(x,hgt+150,z);
+        head.rotation.order='YXZ';
+        head.rotation.y=Math.atan2(-x,back-sg.talent-z);
+        head.rotation.x=Math.atan2(hgt+150-1320,Math.hypot(x,back-sg.talent-z));
+        stage.add(head);
+        // Rotate the square sections about their own axis before tipping the
+        // tapered fabric shell forward. Its perimeter meets the diffuser rim.
+        const shell=new THREE.CylinderGeometry(85,340,285,4,1,false);
+        shell.rotateY(Math.PI/4); shell.rotateX(-Math.PI/2);
+        kit.mesh(head,shell,kit.mat('#2c2d31','fabric'),[0,0,-95]);
+        const hardware=detailKit();
+        for(const side of [-1,1]){
+            hardware.box([481,10,37],[0,side*235,60],INK,undefined,'fabric');
+            hardware.box([10,461,37],[side*235,0,60],INK,undefined,'fabric');
+            hardware.box([11,176,25],[side*150,-110,-120],SILVER,undefined,'metal');
+            hardware.ball(25,[side*153,-30,-120],CHARCOAL,[.5,1,1],undefined,'rubber');
+        }
+        for(let i=-2;i<=2;i++){
+            hardware.box([1.8,461,20],[i*78,0,65],SLATE,undefined,'fabric');
+            hardware.box([461,1.8,20],[0,i*78,65],SLATE,undefined,'fabric');
+        }
+        hardware.build(head,dress);
+        const glow=kit.material('#eeeae0',{emissive:'#fff5e2',emissiveIntensity:.35,roughness:.86});
+        kit.mesh(head,new THREE.PlaneGeometry(465,465),glow,[0,0,51]).castShadow=false;
+        kit.mediaDiffusers.push(glow);
     }
     kit.label(stage,'CAPTURE / LIGHT / ACTION',[1360,96],[0,2265,back+38],NAVY);
     // Keep stage dressing within its fixture; camera cutaway affects ceilings only.
@@ -635,63 +707,14 @@ function pinupMotif(c,x,y,w,h,n){
     }
 }
 function poster(kit,id,title,at,wall,index){
-    const g=kit.asset(id,title,at,wall),m=kit.canvasMat((c,W,H)=>{
-        // Museum mat board & inner bevel border.
-        c.fillStyle='#eceae2';c.fillRect(0,0,W,H);
-        c.strokeStyle='#b8b4a6';c.lineWidth=3;c.strokeRect(18,18,W-36,H-36);
-        c.fillStyle=index%2?'#f7f6f1':NAVY;c.fillRect(28,28,W-56,H-56);
-        c.fillStyle=ORANGE;c.fillRect(28,28,W-56,12);
-        if(index%3===0){
-            // 35mm contact sheet & aspect-ratio study.
-            c.fillStyle=INK;c.fillRect(44,62,W-88,H*.58);
-            for(let n=0;n<3;n++){
-                coastFrame(c,82,84+n*H*.185,W-164,H*.155,n+1);
-                c.strokeStyle='#ffffff55';c.lineWidth=1;c.strokeRect(82,84+n*H*.185,W-164,H*.155);
-                text(c,`24A · ${['2.39:1 SCOPE','1.85:1 FLAT','16:9 HD'][n]}`,90,102+n*H*.185,11,ORANGE);
-            }
-            c.fillStyle='#e8e2d6';
-            for(let n=0;n<15;n++){
-                c.fillRect(52,70+n*H*.037,14,15);
-                c.fillRect(W-66,70+n*H*.037,14,15);
-            }
-        }else if(index%3===1){
-            // Colour science, vectorscope & Kelvin daylight progression.
-            c.fillStyle='#141e28';c.fillRect(44,62,W-88,H*.58);
-            const cx=W/2,cy=62+H*.24,r=H*.18;
-            for(let a=0;a<36;a++){
-                c.fillStyle=`hsl(${a*10},68%,56%)`;
-                c.beginPath();c.moveTo(cx,cy);c.arc(cx,cy,r,a*Math.PI/18,(a+1.05)*Math.PI/18);c.fill();
-            }
-            const grad=c.createRadialGradient(cx,cy,0,cx,cy,r);
-            grad.addColorStop(0,'#ffffffee');grad.addColorStop(1,'#ffffff00');
-            c.fillStyle=grad;c.beginPath();c.arc(cx,cy,r,0,Math.PI*2);c.fill();
-            c.strokeStyle='#ffffff44';c.lineWidth=1.5;c.beginPath();c.arc(cx,cy,r+10,0,Math.PI*2);c.stroke();
-            const kelvins=[['3200K','#f39c4b'],['4300K','#f4c686'],['5600K','#e8f0f2'],['6500K','#9ec5e6']];
-            kelvins.forEach(([lbl,col],k)=>{
-                const kx=58+k*(W-116)/4,kw=(W-140)/4;
-                c.fillStyle=col;c.fillRect(kx,62+H*.46,kw,36);
-                text(c,lbl,kx+8,62+H*.54,12,'#cbd8e4');
-            });
-        }else{
-            // Multi-track sound design & polar pickup pattern.
-            c.fillStyle='#0d1a2a';c.fillRect(44,62,W-88,H*.58);
-            for(let row=0;row<4;row++){
-                c.strokeStyle=['#80c0d1','#f3ad62','#91bb98','#edf0ec'][row];c.lineWidth=2.2;
-                c.beginPath();
-                for(let n=0;n<120;n++){
-                    const v=Math.sin(n*.7+row*2)*Math.sin(n*.13+row)*Math.cos(n*.05);
-                    c.lineTo(54+n*(W-108)/120,105+row*H*.12+v*H*.045);
-                }
-                c.stroke();
-            }
-        }
-        text(c,title.toUpperCase(),44,H-92,26,index%2?NAVY:WHITE);
-        text(c,['CINEMATOGRAPHY & STORY STRUCTURE','COLOR GRADING & DISPLAY CALIBRATION','PRODUCTION SOUND & DOLBY ATMOS MIX'][index%3],44,H-64,12,index%2?'#4a5d70':ORANGE);
-        text(c,'ORANGE COAST COLLEGE · FILM & MEDIA ARTS',44,H-42,12,index%2?NAVY:'#b6cde1');
-    },512,720);
-    kit.box(g,[640,900,26],[0,0,-8],kit.ink,5);
-    kit.box(g,[652,912,14],[0,0,-14],kit.metal,4);
-    kit.mesh(g,new THREE.PlaneGeometry(608,868),m,[0,0,6]);
+    const g=kit.asset(id,title,at,wall);
+    const map=kit.loadFinish('media',['breakwater','wild-track','west-facing'][index]);
+    const paper=kit.material('#ffffff',{map,roughness:.9,emissive:'#ffffff',emissiveMap:map,emissiveIntensity:.12});
+    paper.userData.roomPaletteLocked=paper.userData.roomFinishLocked=true;
+    kit.box(g,[648,912,36],[0,0,0],kit.mat('#48433e','metal'),3);
+    kit.box(g,[630,894,5],[0,0,19],kit.mat('#eee7d8','paper'),1);
+    const print=kit.mesh(g,new THREE.PlaneGeometry(596,852),paper,[0,0,24]);
+    print.name=title; print.castShadow=false;
     // Brushed gallery picture light bar above each framed poster.
     const pk=detailKit();
     pk.box([280,14,55],[0,472,22],CHARCOAL,undefined,'metal');
@@ -741,23 +764,38 @@ export function decorate(kit){
         const rim=clock.children.find(m=>m.geometry?.type==='CylinderGeometry');
         if(rim)rim.material=kit.mat(NAVY,'metal',{metalness:.55,roughness:.35});
     }
-    // Navy acoustic-fabric wainscot with an orange cap replaces the loud accent
-    // band; the right wall continues it either side of the door.
-    const fabric=kit.material('#ffffff',{roughness:.97,map:institutionalMap((c,W,H)=>{c.fillStyle='#0b2f5f';c.fillRect(0,0,W,H);for(let y=0;y<H;y+=3){c.fillStyle=y%6?'#ffffff07':'#00000012';c.fillRect(0,y,W,1);}for(let x=0;x<W;x+=3){c.fillStyle='#00000009';c.fillRect(x,0,1,H);}},256,256)});
-    fabric.map.wrapS=fabric.map.wrapT=THREE.RepeatWrapping;fabric.map.repeat.set(w/600,2);fabric.userData.roomSurface='fabric';
+    // Fabric-faced acoustic panels sit on a recessed plinth. A slim enamel
+    // inlay marks the top rail; each section stops at a window or a door jamb.
     const band=kit.back.children.find(o=>o.isMesh&&o.material===kit.accent&&Math.abs(o.position.y-325)<1);
-    if(band){band.visible=false;}
-    const wk=new THREE.Group();wk.name='Navy acoustic wainscot';wk.userData.presentationOnly=true;kit.back.add(wk);
-    kit.box(wk,[w,1200,14],[0,600,bz+7],fabric,2);kit.box(wk,[w,40,24],[0,1220,bz+12],kit.mat(ORANGE,'powder'),3);
-    const rk=new THREE.Group();rk.name='Navy acoustic wainscot';rk.userData.presentationOnly=true;kit.right.add(rk);
-    const doorA=front-2140,doorB=front-1060;
-    for(const [z0,z1] of [[bz,doorA],[doorB,front]])if(z1-z0>50){const rf=fabric.clone();rf.map=fabric.map.clone();rf.map.repeat.set((z1-z0)/600,2);kit.box(rk,[14,1090,z1-z0],[w/2-25,655,(z0+z1)/2],rf,2);kit.box(rk,[24,40,z1-z0],[w/2-30,1220,(z0+z1)/2],kit.mat(ORANGE,'powder'),3);}
-    const lk=new THREE.Group();lk.name='Navy acoustic wainscot';lk.userData.presentationOnly=true;kit.left.add(lk);
-    const wc=bz+kit.d*.54,wo=kit.d*.48,cap=kit.mat(ORANGE,'powder');
-    for(const [z0,z1,top] of [[bz,wc-wo/2,1200],[wc-wo/2,wc+wo/2,790],[wc+wo/2,front,1200]]){
-        const lf=fabric.clone();lf.map=fabric.map.clone();lf.map.repeat.set((z1-z0)/600,2*top/1200);
-        kit.box(lk,[14,top,z1-z0],[-w/2+7,top/2,(z0+z1)/2],lf,2);kit.box(lk,[24,40,z1-z0],[-w/2+12,top+20,(z0+z1)/2],cap,3);
+    if(band) band.visible=false;
+    function lining(wall, at, yaw, length, height) {
+        const group = new THREE.Group();
+        group.name='Acoustic wall lining'; group.userData.presentationOnly=true; group.position.set(...at); group.rotation.y=yaw; wall.add(group);
+        const trim=detailKit(), panels=Math.ceil(length/1050), pitch=length/panels;
+        trim.box([length,height,12],[0,height/2,6],'#252b30');
+        trim.box([length,83,22],[0,41.5,11],'#41444a',undefined,'rubber');
+        for(let i=0;i<panels;i++) {
+            const x=(i+.5)*pitch-length/2;
+            trim.box([pitch-9,height-108,24],[x,(height+72)/2,21],['#344a5b','#374e60','#3a5060'][i%3],undefined,'fabric');
+        }
+        trim.box([length,27,46],[0,height-13.5,23],'#b59976');
+        trim.box([length,5,3],[0,height-9,47],ORANGE);
+        trim.build(group,dress);
     }
+    const doorA=front-2140,doorB=front-1060;
+    const wc=bz+kit.d*.54,wo=kit.d*.48;
+    lining(kit.back,[0,0,bz+12],0,w,1215);
+    for(const [start,end] of [[bz,doorA],[doorB,front]]) lining(kit.right,[w/2-16,0,(start+end)/2],-Math.PI/2,end-start,1215);
+    for(const [start,end,height] of [[bz,wc-wo/2,1215],[wc-wo/2,wc+wo/2,790],[wc+wo/2,front,1215]])
+        lining(kit.left,[-w/2+5,0,(start+end)/2],Math.PI/2,end-start,height);
+
+    const glazing=detailKit();
+    for(const x of [-wo/2,-wo/4,0,wo/4,wo/2]) {
+        glazing.box([24,1740,48],[x,0,38],'#434c51',undefined,'metal');
+        glazing.box([12,1740,4],[x,0,64],'#b5b7b2',undefined,'metal');
+    }
+    glazing.box([wo+64,28,170],[0,-858,57],'#b8a389');
+    glazing.build(kit.window,dress);
     // Window blinds: partly down for editing, blackout for screening, with top valance & cord ladders.
     const slats=institutionalMap((c,W,H)=>{
         c.fillStyle='#d9dcd8';c.fillRect(0,0,W,H);
@@ -779,9 +817,9 @@ export function decorate(kit){
         for(let t=0;t<4;t++)bmk.add(new THREE.CylinderGeometry(14,14,8,16),[-780+t*52,445,24],t%2?ORANGE:NAVY,[1,1,1],[Math.PI/2,0,0],'metal');
         bmk.build(kit.board,dress);
     }
-    kit.room.mediaArtReady=Promise.all(ready);
+
     // Left rear wall has no window opening: art boards and course work sit here.
-    const frames=['Story / Screen','Light / Colour','Sound / Silence'];
+    const frames=['Breakwater','Wild track','West facing'];
     for(let n=0;n<3;n++){const g=poster(kit,'film-poster-'+n,frames[n],[-w/2+58,1850,bz+450+n*790],kit.left,n);g.rotation.y=Math.PI/2;}
     // Grey absorption and oak slats around the sound area; positioned cleanly between
     // the student pin-up gallery and the storyboard planning board on the right wall.
@@ -803,13 +841,19 @@ export function decorate(kit){
     const soundX=l.index===0?-2460:l.index===1?-2800:-w/2+2350;
     const sound=kit.asset('sound-treatment','Sound corner acoustic diffuser',[soundX,1820,bz+70],kit.back);
     const k=detailKit();
-    k.box([940,780,26],[0,0,-10],CHARCOAL,undefined,'metal');
-    k.box([900,740,22],[0,0,-2],'#7a6044',undefined,'paper');
-    for(let n=0;n<13;n++){
-        const depth=38+((n*3+2)%5)*18;
-        k.box([48,710,depth],[-396+n*66,0,depth/2],n%2?'#c2a37c':'#9e805a',undefined,'paper');
+    // A 13-well quadratic-residue diffuser. The narrow partitions catch the raking
+    // light, and the stepped well bottoms give the finish real self-shadow.
+    const oakMap=kit.loadFinish('library','honey-oak');
+    const oak=kit.mat('#dfc6a0','wood',{map:oakMap,roughness:.62});
+    oak.userData.roomFinishLocked=oak.userData.roomPaletteLocked=true;
+    k.box([940,780,22],[0,0,-11],CHARCOAL,undefined,'metal');
+    for(let n=0;n<13;n++) {
+        const x=(n-6)*70, face=128-((n*n)%13)*9;
+        kit.box(sound,[64,730,12],[x,0,face-6],oak,1);
+        k.box([5,730,139],[x-35,0,69.5],'#b69874',undefined);
     }
-    k.box([940,8,34],[0,-386,4],ORANGE,undefined,'metal');
+    for(const x of [-464,464])k.box([12,780,144],[x,0,72],'#967554',undefined);
+    for(const y of [-381,381])k.box([930,18,144],[0,y,72],'#b29877',undefined);
     k.build(sound,dress);
     kit.label(sound,'LISTEN / MIX',[760,84],[0,455,24],NAVY);
     if(l.index>=1){
@@ -888,13 +932,15 @@ export function decorate(kit){
         screen(kit,display,[1660,940],[0,1450,40],1);
     }
     pools(kit);
+    kit.room.mediaArtReady=Promise.all([...ready,...kit.finishLoads]);
+    kit.room.windowViewReady=Promise.all([kit.room.windowViewReady,kit.room.mediaArtReady]);
 }
 // Daylight through the ocean window: the open part of the glazing (below the
 // blind) projected on the carpet along the shared sun direction
 // (room-refinement DAY_ANGLES), so its place and length follow the hour and
 // the blind. Soft in the morning, a short bright patch in the afternoon, long
 // and warm at dusk, none at night or behind the screening blackout.
-const SUN_DIR={morning:[.62,-.36],afternoon:[1.45,.12],evening:[.32,.48]},SUN_LEVEL={morning:.03,afternoon:.11,evening:.045};   // a read of daylight on the carpet, not a spotlight: the film's morning keeps its mood
+const SUN_DIR={morning:[.62,-.36],afternoon:[1.45,.12],evening:[.32,.48]},SUN_LEVEL={morning:.11,afternoon:.14,evening:.065};   // a read of daylight on the carpet, not a spotlight: the film's morning keeps its mood
 const BLIND_DROP=[.15,.35,.75,.55,1];
 function mediaSun(kit){
     const {w,d,bz,front}=kit,z0=bz+d*.54,half=d*.24;
@@ -917,13 +963,16 @@ function mediaSun(kit){
 }
 // Additive pools for the screen, desk columns and the work wall; no lights.
 function pools(kit){
-    const {w,bz,layout:l}=kit,layer=createPoolLayer(kit.root,'Media lab light pools');kit.mediaPools=layer;
-    layer.add(kit.root,[0,4,bz+1400],[4400,2600],'#6f93c8',[.05,.04,.1,.03,.4]);
+    const {w,bz,layout:l}=kit;
+    kit.taskFalloff=diffusePoolMap(kit.root);
+    const layer=createPoolLayer(kit.root,'Media lab light pools',kit.taskFalloff);
+    kit.mediaPools=layer;
+    layer.add(kit.root,[0,4,bz+1400],[5300,3300],'#6f93c8',[.05,.04,.1,.03,.4]);
     const columns=l.index===0?2:l.index<3?3:4,xs=columns===2?[-w/2+1800,w/2-2100]:Array.from({length:columns},(_,n)=>-w/2+1800+n*(w-3600)/(columns-1));
     // Only occupied workstation slots get a task-light pool.
     // Late edit: only the featured bay is in use; the others are asleep.
-    for(let n=0;n<COUNTS[l.index];n++)layer.add(kit.root,[xs[n%columns],3,bz+2400+Math.floor(n/columns)*4000+300],[1900,1500],'#eef3fb',[.04,.04,.14,n?.012:.3,.05]);
-    layer.add(kit.root,[xs[0]+250,2,bz+2400-150],[1500,1100],'#ffd9ad',[0,0,0,.34,0]);
+    for(let n=0;n<COUNTS[l.index];n++)layer.add(kit.root,[xs[n%columns],3,bz+2400+Math.floor(n/columns)*4000+300],[2450,1900],'#eef3fb',[.04,.04,.14,n?.012:.3,.05]);
+    layer.add(kit.root,[xs[0]+250,2,bz+2400-150],[2050,1500],'#ffd9ad',[0,0,0,.34,0]);
     if(kit.mediaGallery)layer.add(kit.mediaGallery,[0,100,40],[2200,1400],'#ffd6a2',[.03,.03,.05,.04,.6],'back');
     const critique=kit.byId('activity-table');if(critique)layer.add(critique,[0,4,0],[2400,1600],'#ffd9a8',[0,0,.05,.04,.35]);
 }
@@ -976,12 +1025,25 @@ export function atmosphere(phase,gain,kit){
         if(face){const c=face.material.map.image;drawBoard(c.getContext('2d'),c.width,c.height,kit.spec,0,phase);face.material.map.needsUpdate=true;}
         kit.mediaBoardPhase=phase;
     }
-    // Screening: room light 1 becomes the screen's spill. Late edit: it is
-    // the lab's one remaining night light, so the dark bays still read.
-    const spill=kit.lights?.[1];if(spill){
-        spill.userData.authored??={at:spill.position.clone()};
-        if(phase==='party'){spill.position.set(0,1500,kit.bz+1600);spill.color.set('#9fbbe4');spill.intensity=(kit.root.scale.x*1000)**2*3.5*gain;}
-        else{spill.position.copy(spill.userData.authored.at);if(phase==='night')spill.intensity*=.2;}
+    // One indirect source follows the working light: glazing by day,
+    // the grading surround after dusk and the projection during screening.
+    const spill=kit.lights?.[1];
+    if(spill){
+        const base=spill.userData.authored??={at:spill.position.clone(),distance:spill.distance};
+        const roomScale=kit.root.scale.x;
+        spill.distance=base.distance;
+        if(phase==='morning'||phase==='afternoon'){
+            spill.position.set(-kit.w/2-1100,2450,kit.bz+kit.d*.51);
+            spill.distance=(kit.w+4000)*roomScale;
+            spill.color.set(phase==='morning'?'#fff0dd':'#e8f2ff');
+            spill.intensity=(roomScale*1000)**2*(phase==='morning'?14:11)*gain;
+        }else if(phase==='party'){
+            spill.position.set(0,1500,kit.bz+1600);
+            spill.color.set('#9fbbe4');spill.intensity=(roomScale*1000)**2*3.5*gain;
+        }else{
+            spill.position.copy(base.at);
+            if(phase==='night')spill.intensity*=.2;
+        }
     }
     if(kit.sky?.map?.image?.getContext){
         const c=kit.sky.map.image.getContext('2d'),W=c.canvas.width,H=c.canvas.height;
