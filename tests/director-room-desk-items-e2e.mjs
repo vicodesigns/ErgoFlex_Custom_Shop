@@ -42,10 +42,19 @@ await page.evaluateOnNewDocument(()=>{
     const inside=x=>{for(let p=x;p;p=p.parent)if(p===o)return true;return false;};
     const xs=[],ys=[];for(const x of [box.min.x,box.max.x])for(const y of [box.min.y,box.max.y])for(const z of [box.min.z,box.max.z]){const v=new T.Vector3(x,y,z).project(t.camera);xs.push(v.x);ys.push(v.y);}
     const x0=Math.max(-.97,Math.min(...xs)),x1=Math.min(.97,Math.max(...xs)),y0=Math.max(-.97,Math.min(...ys)),y1=Math.min(.97,Math.max(...ys));if(x0>=x1||y0>=y1)return null;
-    for(let i=1;i<20;i++)for(let j=1;j<20;j++){const v={x:x0+(x1-x0)*i/20,y:y0+(y1-y0)*j/20};ray.setFromCamera(new T.Vector2(v.x,v.y),t.camera);
-      const hit=ray.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!ours(h.object));
-      if(hit&&inside(hit.object))return {x:f.left+c.left+(v.x+1)/2*c.width,y:f.top+c.top+(1-v.y)/2*c.height};}
-    return null;};
+    // solid: the item is also in front 2 px to each side (19 Nov 2026, Windows: the first grid point can be a sliver of an
+    // item under another one, the auto-stowed parts of one desk item overlap, and the real click, in whole device pixels at
+    // the PC's display scale, lands beside it). A sliver only when that is all there is: {solid:false}
+    const on=(x,y)=>{ray.setFromCamera(new T.Vector2(x,y),t.camera);const hit=ray.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!ours(h.object));return !!hit&&inside(hit.object);};
+    const ex=4/c.width,ey=4/c.height,at=v=>({x:f.left+c.left+(v.x+1)/2*c.width,y:f.top+c.top+(1-v.y)/2*c.height});let sliver=null;
+    for(let i=1;i<20;i++)for(let j=1;j<20;j++){const v={x:x0+(x1-x0)*i/20,y:y0+(y1-y0)*j/20};if(!on(v.x,v.y))continue;
+      if(on(v.x+ex,v.y)&&on(v.x-ex,v.y)&&on(v.x,v.y+ey)&&on(v.x,v.y-ey))return {...at(v),solid:true};sliver||={...at(v),solid:false};}
+    return sliver;};
+  // the desk's items under a page point, front to back (a failed pick says what the click had to choose from)
+  window.__under=(id,x,y)=>{const {t,T}=__t(),f=document.getElementById('stage').getBoundingClientRect(),c=t.renderer.domElement.getBoundingClientRect(),ray=new T.Raycaster(),items=__allItems(id);
+    ray.setFromCamera(new T.Vector2((x-f.left-c.left)/c.width*2-1,1-(y-f.top-c.top)/c.height*2),t.camera);
+    const of=o=>{for(let p=o;p;p=p.parent){const it=items.find(i=>i===p);if(it)return it.name;}return null;};
+    return [...new Set(ray.intersectObject(t.scene,true).filter(h=>h.object.isMesh).map(h=>of(h.object)||'(not on this desk: '+h.object.name+')'))].slice(0,6);};
   // the camera around a desk: angle a (0..3: front high, right, left, front low for the foot shelf)
   window.__frame=(id,a=0)=>{const {t,T,api}=__t(),g=api.sceneDesks.records.get(id).group,b=new T.Box3().setFromObject(g),c=b.getCenter(new T.Vector3()),s=b.getSize(new T.Vector3()),R=Math.max(s.x,s.z)*1.35+.6;
     const yaw=g.rotation.y+[0,Math.PI/2.4,-Math.PI/2.4,0][a],h=[.9,.6,.6,.12][a]*Math.max(1,s.y),f=new T.Vector3(Math.sin(yaw),0,Math.cos(yaw));
@@ -96,13 +105,16 @@ try{
         // the click picked what is in front (or the gizmo's item): Alt+click goes through the stack under the pointer
         let viaAlt=0;for(let k=1;k<=6&&!viaAlt;k++){const r=await pointAt(d.id,i,a)||q;await page.keyboard.down('Alt');await page.mouse.click(r.x,r.y);await page.keyboard.up('Alt');await wait(400);if(await isItem(d.id,i))viaAlt=k;}
         if(viaAlt){altPicked++;console.log(`     item ${i} (${await page.evaluate((id,i)=>__item(id,i).name,d.id,i)}): a click picks what is in front, Alt+click ×${viaAlt} reaches it`);got.add(i);continue;}
-        const s=await props();check(false,`${d.id}: a click (or Alt+clicks) on item ${i} (${await page.evaluate((id,i)=>__item(id,i).name,d.id,i)}) selects it (got ${s.objName}, inside ${s.inside})`);got.add(i);
+        // only a sliver of it shows from here: no click can be sure of it (another angle may do; else Layers, below)
+        if(!q.solid){console.log(`     item ${i} (${await page.evaluate((id,i)=>__item(id,i).name,d.id,i)}): only a sliver shows from angle ${a}`);continue;}
+        const under=await page.evaluate((id,x,y)=>__under(id,x,y),d.id,q.x,q.y);
+        const s=await props();check(false,`${d.id}: a click (or Alt+clicks) on item ${i} (${await page.evaluate((id,i)=>__item(id,i).name,d.id,i)}) selects it (got ${s.objName}, inside ${s.inside}; under the pointer now: ${under.join(' > ')})`);got.add(i);
       }
     }
     for(let i=0;i<n;i++)if(!got.has(i))unreached.push(await page.evaluate((id,i)=>__item(id,i).name,d.id,i));
     reached+=got.size;
     check((await props()).inside===d.id,`${d.id}: still inside after ${got.size} picks`);
-    console.log(`     ${got.size}/${n} picked by a click inside${unreached.length?' (no clickable point from four angles: '+unreached.join(', ')+'; Layers below)':''}`);
+    console.log(`     ${got.size}/${n} picked by a click inside${unreached.length?' (no clickable point, or only a sliver, from four angles: '+unreached.join(', ')+'; Layers below)':''}`);
     if(unreached.length)notes.push(`${d.id}: ${unreached.length} items out of reach of a click (${unreached.join(', ')})`);
     const other=list.find(x=>x.id!==d.id);   // (a click on its items does nothing while inside, below)
     // ---- 4: Delete hides the selected item; the people stay; Undo
