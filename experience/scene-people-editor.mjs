@@ -30,7 +30,7 @@ const STANCES=['standing','seated','wheelchair','walking'];
 export const DESK_REACH={sit:945,wheel:935,stand:890},CHAIR_ROLL=265,CHAIR_SCOOT=90;
 const IN=25.4,inch=mm=>Math.round(mm/IN*10)/10;
 const thumb=id=>`/assets/props/thumbs/${encodeURIComponent(id)}.png`;
-export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rerender,time=()=>0,seek=()=>{},onSelect=()=>{},lightsShowing=()=>false,snap=null}){
+export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rerender,cameraHeld=()=>false,time=()=>0,seek=()=>{},onSelect=()=>{},lightsShowing=()=>false,snap=null}){
   let sel=null,catalog=null,loading=null,tools=null,booting=null,mode='translate',busy=null,rowKeys=[],laneKeys=[],charIds=[],shown=[];
   const filters={sex:'all',age:'all',heritage:'all'},lib={query:'',sex:'all',stance:'all',aid:'all'};
   const frame=()=>document.getElementById('stage'),win=()=>frame()?.contentWindow,three=()=>bridge.stage()?.three?.();
@@ -219,7 +219,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   }
   // ---- pose mode (scene-pose-editor.mjs)
   const pose=createPoseEditor({wake:()=>bridge.stage()?.wake?.(600),win,three,tools:()=>tools,stagePeople,entry:poseEntry,edit:poseEdit,status,rerender,personName:e=>e?personName(e):'',editing,saved:e=>savedHTML(e),time,seek,seconds,
-    siblings:k=>(sheetRows.length?sheetRows:track()).find(r=>r.entries.includes(k))?.entries||[k],follow:k=>{if(sel!==k){sel=k;onSelect();}},models:k=>modelNotes(k)});
+    siblings:k=>(sheetRows.length?sheetRows:track()).find(r=>r.entries.includes(k))?.entries||[k],follow:k=>{if(sel!==k){sel=k;onSelect();}},models:k=>modelNotes(k),cameraHeld});
   const poseEditor=pose;     // swap() has a `pose` argument of its own
   // Pose mode: which of this person's models the film draws when (people-shown.mjs). Corrections belong to one model
   // each and are never inherited: a desk that rises past the model's height has the film draw another model (Ava's 30 in

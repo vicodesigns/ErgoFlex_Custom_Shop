@@ -292,3 +292,7 @@ body.df-filter-changed #director-timeline :is(.lane-group-head,.lane-group-body)
 .autosave-time{font-variant-numeric:tabular-nums;font-weight:600}.autosave-why{color:#9fc3d3}
 .autosave-groups{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#cfd8e3}
 .autosave-others summary{cursor:pointer;color:#9fc3d3;margin-top:8px}
+/* The Editing camera (editing-camera.mjs): on, it is plain to see in the app bar, on the view and in the pose bar */
+.ab-btn.ab-hold.on{background:#5a3d06;border-color:#ffc977;color:#ffe2a8;font-weight:600}
+.nav-pill.held{background:#5a3d06f2;border-color:#ffc977;color:#ffe2a8}
+.people-pose-bar .pose-held{color:#ffc977;font-size:11px;font-weight:600}

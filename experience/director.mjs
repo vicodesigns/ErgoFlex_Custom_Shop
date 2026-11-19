@@ -10,6 +10,7 @@ import {chapterScore,staleness,snapTimes,snapTo,waveColumns,createScorePlayer} f
 import {createActionLog,captureErrors,reportBody,createReportDialog,sendReport} from './director-report.mjs';
 import {createKeysPanel,loadUi,saveUi} from './keys-panel.mjs';
 import {createViewNav} from './view-nav.mjs';
+import {PREF as HOLD_PREF} from './editing-camera.mjs';
 import {createPreviewHides,HIDE_LABELS} from './preview-hides.mjs';
 import {createAutosave,placeOf,changesSince} from './director-autosave.mjs';
 import {createGraphicsEditor} from './graphics-editor.mjs';
@@ -741,7 +742,7 @@ export function mountDirector(bridge,catalog,initial){
     const lane=timeline.querySelector('[data-people-lane]');if(lane){lane.innerHTML=scenePeople.lane();const n=timeline.querySelector('[data-people-count]');if(n)n.textContent=scenePeople.count()||'';lane.closest('.desk-lane-row')?.classList.toggle('empty',!scenePeople.count());sizePeopleLane();}
     syncSelectedHeader();
   }
-  const scenePeople=createScenePeopleEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:()=>renderPeople(),time:()=>playhead*shot().seconds,seek:t=>seekCamera(t/(shot()?.seconds||1)),lightsShowing:()=>sceneLights.showing(),snap:(t,o)=>snapTime(t,o),
+  const scenePeople=createScenePeopleEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,cameraHeld:()=>held,rerender:()=>renderPeople(),time:()=>playhead*shot().seconds,seek:t=>seekCamera(t/(shot()?.seconds||1)),lightsShowing:()=>sceneLights.showing(),snap:(t,o)=>snapTime(t,o),
     onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();sceneProps.deselect();deskSel.deselect();renderTimeline();reveal('person');}});
   // Layers (layers-panel.mjs): the chapter's props and desk items as an outliner, named layers (select, hide, lock); shot.propLayers.
   // The Studio's show / hide (Layers phase 3; ?layers=0 or localStorage 'ergoflex.layers.ui' = '0': the tab as before):
@@ -953,6 +954,23 @@ export function mountDirector(bridge,catalog,initial){
     dom.addEventListener('wheel',()=>{if(!lockCamera)return;lockMoved=true;clearTimeout(lockTimer);lockTimer=setTimeout(lockDone,350);},{capture:true,passive:true});
     orbitHooked=true;}
   var lockCamera=false;
+  // The Editing camera (editing-camera.mjs; Vico, 19 Nov 2026: "I want to move around without the camera changing on me"):
+  // the view stays where he put it while the chapter plays, scrubs or seeks, people, desks and lights going on as ever.
+  // A Director session state kept per browser (the UI store), never in the cut, the export, the film render or Film look's
+  // own logic. A preview video (bake) would show the keys' camera, so playback stays live while it is on. Off (Shift+C,
+  // 0, the pill or the app bar): the view snaps back to the camera keys at the playhead.
+  var held=!!loadUi()[HOLD_PREF],heldBaked=false;
+  // (only while the Director is open and not in Review mode: the film played for review, or with the Director closed,
+  // always plays on its camera keys)
+  const holdWanted=()=>held&&open&&!document.body.classList.contains('df-review');
+  function syncHold(){const s=bridge.stage?.(),want=holdWanted();if(s?.holdCamera&&s.cameraHeld?.()!==want)s.holdCamera(want);if(want&&bridge.bakeState?.().enabled){heldBaked=true;bridge.useBaked(false);}else if(!want&&heldBaked){heldBaked=false;bridge.useBaked(true);}}
+  function setHold(on,why=''){
+    held=!!on;saveUi({[HOLD_PREF]:held});
+    if(held){if(bridge.bakeState().enabled){heldBaked=true;bridge.useBaked(false);}}else if(heldBaked){heldBaked=false;bridge.useBaked(true);}
+    if(!held)orbitBase=null;bridge.stage()?.holdCamera?.(holdWanted());
+    renderPills();renderAppBar();renderPeople();
+    status(held?'Editing camera on: the view stays where you put it while the chapter plays or scrubs. Shift+C (or 0) goes back to the film camera.':why||'Editing camera off: back to the film camera at the playhead.');
+  }
   // P4 lane locks: a 🔒 in each lane's label; a locked lane takes no clicks or drags (its items stay selectable from the
   // inspector), kept in this browser.
   function laneId(row){return row.classList.contains('camera-lane-row')?'camera':row.dataset.laneColor||row.querySelector('[data-desk-lane]')?.dataset.deskLane||null;}
@@ -1068,6 +1086,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   function move(from,to){if(to<0||to>=project.shots.length)return;commit(()=>{const [s]=project.shots.splice(from,1);project.shots.splice(to,0,s);selected=to;},{render:true});load();}
   function exportCut(){const text=JSON.stringify(((c)=>({...c,shots:c.shots.map(s=>exportLighting(s.peopleEdits?{...s,peopleEdits:canonicalPeople(s.peopleEdits)}:s))}))(cleanCut(project,catalog)),null,2),url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=(project.name.replace(/[^a-z0-9]+/gi,'-')||'client-cut')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);exported=signature();fresh.exported(project);syncFilm();status('Cut exported. Import it in Director Mode on another browser.');return text;}
   async function action(name,index){
+    if(name==='hold-camera'){setHold(!held);return;}   // (the app bar's and the pose bar's button)
     if(name==='keys-panel'){keysPanel.toggle();return;}
     if(name==='report-problem'){reportDialog.open();return;}
     if(name==='autosaves'){autosave.open();return;}
@@ -1192,8 +1211,9 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       if(name==='save'){clearTimeout(draftTimer);project=library.save(project);renderPanel();status('Saved in this browser. Export a copy for a portable backup.');return;}
       if(name==='load'){await load();return;}
       if(name==='frame-desk'||name==='frame-room'){requireReady();bridge.stage().frameSubject(name==='frame-room'?'room':'desk');status('Preview framed. Capture a new camera view or update the selected view to save it.');return;}
-      if(name==='key-go'){const k=selectedKey();if(k)seekCamera(k.time);return;}
+      if(name==='key-go'){const k=selectedKey();if(!k)return;if(held){bridge.stage()?.holdCamera?.(false);seekCamera(k.time);bridge.stage()?.holdCamera?.(true);status('Editing camera: the view went to this camera view and stays there.');return;}seekCamera(k.time);return;}
       if(name==='key-preview'){
+        if(held){status('The Editing camera is on, so the view stays put: Shift+C turns it off to preview the camera move.');return;}
         const list=keys(),i=list.findIndex(k=>k.id===keyId);if(i<0)return;
         const next=list[i+1];if(!next){seekCamera(list[i].time);status('This is the last view. Select an earlier camera view to preview its move.');return;}
         await bridge.previewRange(project,selected,{start:list[i].time*shot().seconds,end:next.time*shot().seconds,id:'camera-'+keyId,label:'Camera move'});return;
@@ -1673,7 +1693,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       studio:studioSync.html(),playing:st.playing&&st.index===selected,busy:st.busy,sound:pressed('sound'),lowres:q&&!q.hidden?pressed('preview-quality'):null,film:!!film,
       history:[...undoLabels].reverse().map(editLabel),titles:film&&titleEditor.has()?titleEditor.shown():document.body.classList.contains('preview-titles'),chapters:!timeline.classList.contains('chapters-hidden'),
       inspector:!document.body.classList.contains('inspector-hidden'),timeline:!document.body.classList.contains('timeline-hidden'),
-      overlays:{guides:!!document.querySelector('.film-look.guides'),crop:CROPS?.[cropAt]?.[0]||null,look:filmLook?.mode?.()||null,lights:!!sceneLights.showing?.()}});
+      held,overlays:{guides:!!document.querySelector('.film-look.guides'),crop:CROPS?.[cropAt]?.[0]||null,look:filmLook?.mode?.()||null,lights:!!sceneLights.showing?.()}});
     syncFilm();
   }
   appbar.addEventListener('click',event=>{
@@ -1692,7 +1712,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     const st=bridge.playback(),body=document.body.classList;let free=false;try{free=freeView();}catch{}
     const posing=scenePeople.posing?.(),auto=posing&&(()=>{try{return localStorage.getItem('ergoflex.director.autoKey')==='1';}catch{return false;}})();
     const pills=[{id:'snap',label:magnet?`Snap ${typeof snapStep==='string'?snapStep:snapStep?snapStep+' s':'edges'}`:'Snap off',on:magnet,always:true,title:'Snapping (S): click to turn it '+(magnet?'off':'on')},
-      {id:'loop',label:'Loop',on:!!st.loop,title:'Loop is on (L)'},{id:'space',label:spaceNow()==='local'?'Gizmo: Object':'Gizmo: World',on:spaceNow()==='local',always:true,title:'The move gizmo\'s frame: click for '+(spaceNow()==='local'?'World':'Object')},{id:'free',label:'Free view',on:free,warn:true,title:'Not the film camera (0 goes back)'},{id:'filter',label:laneFilter==='busy'?'Lanes: with something':laneFilter==='changed'?'Lanes: changed':'Lanes: selection only',on:!!laneFilter,warn:true,title:'Shift+U: click to show every lane'},{id:'isolate',label:'Isolated',on:!!isolated,warn:true,title:'Only the selection is shown: click to bring the rest back'},{id:'lock',label:'🔒 Camera locked to view',on:!!lockCamera,warn:true,title:'Moving the view updates the selected camera view: click to unlock'},{id:'speed',label:(st.rate===.5?'½':st.rate===.25?'¼':'1')+'× speed',on:(st.rate||1)!==1,warn:true,title:'Play speed: click for normal'},
+      {id:'loop',label:'Loop',on:!!st.loop,title:'Loop is on (L)'},{id:'space',label:spaceNow()==='local'?'Gizmo: Object':'Gizmo: World',on:spaceNow()==='local',always:true,title:'The move gizmo\'s frame: click for '+(spaceNow()==='local'?'World':'Object')},{id:'free',label:'Free view',on:free&&!held,warn:true,title:'Not the film camera (0 goes back)'},{id:'held',label:'● Editing camera',on:held,warn:true,title:'The view stays where you put it while the chapter plays or scrubs. Click (or Shift+C, or 0): back to the film camera'},{id:'filter',label:laneFilter==='busy'?'Lanes: with something':laneFilter==='changed'?'Lanes: changed':'Lanes: selection only',on:!!laneFilter,warn:true,title:'Shift+U: click to show every lane'},{id:'isolate',label:'Isolated',on:!!isolated,warn:true,title:'Only the selection is shown: click to bring the rest back'},{id:'lock',label:'🔒 Camera locked to view',on:!!lockCamera,warn:true,title:'Moving the view updates the selected camera view: click to unlock'},{id:'speed',label:(st.rate===.5?'½':st.rate===.25?'¼':'1')+'× speed',on:(st.rate||1)!==1,warn:true,title:'Play speed: click for normal'},
       {id:'auto',label:'● Auto-key',on:!!auto,warn:true,title:'Pose mode: every change keys the pose (Shift+K)'},
       {id:'lowres',label:'Low-res',on:pressed('preview-quality'),title:'The preview runs at a lower resolution'},{id:'muted',label:'Muted',on:!pressed('sound'),title:'Sound is off (Shift+M)'},{id:'hidden',label:(()=>{const n=hiddenNames();return n.length?'Hidden: '+n.join(', '):'';})(),on:hiddenNames().length>0,warn:true,title:'Left out of the preview only (Alt+H, or click: show everything again)'},{id:'music-muted',label:'Music muted',on:pressed('sound')&&musicMuted(),title:'The Music lane is muted (Alt+M)'},
       {id:'inspector',label:'Side column hidden',on:body.contains('inspector-hidden'),title:'Tab brings it back'},{id:'timeline',label:'Timeline hidden',on:body.contains('timeline-hidden'),title:'Shift+Tab brings it back'}];
@@ -1701,11 +1721,12 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   }
   timeline.addEventListener('click',event=>{
     const p=event.target.closest('[data-sb-pill]');if(!p)return;event.stopPropagation();
-    const id=p.dataset.sbPill;try{({snap:()=>action('magnet'),loop:()=>action('preview-loop'),free:()=>runKey('film-camera'),space:()=>runKey('gizmo-space'),speed:()=>{bridge.setRate?.(1);scorePlayer?.setRate(1);},isolate:()=>isolate(false),filter:()=>setLaneFilter(''),lock:()=>runKey('lock-camera'),auto:()=>runKey('pose-auto-key'),lowres:()=>document.getElementById('preview-quality')?.click(),muted:()=>document.getElementById('sound')?.click(),'music-muted':()=>toggleMusicMute(),hidden:()=>showAllLayers(),inspector:()=>action('inspector'),timeline:()=>action('ab-timeline')})[id]?.();}catch(error){status(error.message,true);}
+    const id=p.dataset.sbPill;try{({snap:()=>action('magnet'),loop:()=>action('preview-loop'),free:()=>runKey('film-camera'),held:()=>runKey('hold-camera'),space:()=>runKey('gizmo-space'),speed:()=>{bridge.setRate?.(1);scorePlayer?.setRate(1);},isolate:()=>isolate(false),filter:()=>setLaneFilter(''),lock:()=>runKey('lock-camera'),auto:()=>runKey('pose-auto-key'),lowres:()=>document.getElementById('preview-quality')?.click(),muted:()=>document.getElementById('sound')?.click(),'music-muted':()=>toggleMusicMute(),hidden:()=>showAllLayers(),inspector:()=>action('inspector'),timeline:()=>action('ab-timeline')})[id]?.();}catch(error){status(error.message,true);}
     setTimeout(()=>{renderPills();renderAppBar();},0);
   },true);
   // Review mode (Ctrl+`): the film frame alone, the whole window, playing; Esc or Ctrl+` comes back.
-  function review(on){
+  function review(on){setTimeout(syncHold,0);   // (Review plays the film on its camera keys: no Editing camera)
+
     document.body.classList.toggle('df-review',on);
     if(on){keysPanel.close();palette.close();if(!bridge.playback().playing)action('chapter-toggle');status('Review mode: Esc or Ctrl+` comes back.');}
     window.dispatchEvent(new Event('resize'));
@@ -1825,7 +1846,8 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       case 'edit-prev':case 'edit-next':action(id);return;
       case 'chapter-prev':case 'chapter-next':{const back=id==='chapter-prev';if(film){action(back?'film-prev':'film-next');return;}const i=selected+(back?-1:1);if(i>=0&&i<project.shots.length)action('select',i);return;}
       case 'camera-add':action('key-add');return;
-      case 'film-camera':seekCamera(playhead);status('Back to the film camera.');return;
+      case 'film-camera':if(held){setHold(false,'Editing camera off: back to the film camera.');return;}seekCamera(playhead);status('Back to the film camera.');return;
+      case 'hold-camera':setHold(!held);return;
       case 'undo':case 'redo':if(bridge.bakeState().baking||!deskEditor.flush())return;action(id);return;
       case 'save':action('save');return;
       case 'export':action('save-export');return;
@@ -1993,7 +2015,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       }catch(error){picker.querySelector('[data-picker-status]').textContent=error.message;}
     }
   });
-  function setOpen(value){deskEditor.stop();if(bridge.bakeState().baking&&!value){status('Cancel the bake before closing the editor.');return;}open=value;nav.setActive(open);if(!open){keysPanel.close();review(false);}document.body.classList.toggle('directing',open);document.body.classList.toggle('df-shell',open&&shellOn());appbar.hidden=!open||!shellOn();document.body.classList.toggle('film-frame',open&&!!film);filmLook?.visible(open);panel.hidden=timeline.hidden=!open;bridge.editMode(open);titleEditor.sync();if(open){if(matchMedia('(max-width:700px)').matches)document.body.classList.add('inspector-hidden');render();load().then(()=>{
+  function setOpen(value){deskEditor.stop();if(bridge.bakeState().baking&&!value){status('Cancel the bake before closing the editor.');return;}open=value;nav.setActive(open);syncHold();if(!open){keysPanel.close();review(false);}document.body.classList.toggle('directing',open);document.body.classList.toggle('df-shell',open&&shellOn());appbar.hidden=!open||!shellOn();document.body.classList.toggle('film-frame',open&&!!film);filmLook?.visible(open);panel.hidden=timeline.hidden=!open;bridge.editMode(open);titleEditor.sync();if(open){if(matchMedia('(max-width:700px)').matches)document.body.classList.add('inspector-hidden');render();load().then(()=>{
       const url=new URL(location.href);
       if(open&&url.searchParams.get('cinematic')==='1'&&bridge.ready()){
         url.searchParams.delete('cinematic');history.replaceState(null,'',url);action('cinematic-pass');
@@ -2190,7 +2212,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   function cycleCrop(){cropAt=(cropAt+1)%CROPS.length;const c=CROPS[cropAt];cropEl.hidden=!c;if(c){cropEl.style.width=(c[1]/(16/9)*100).toFixed(3)+'%';cropEl.dataset.label=c[0];}status(c?`Crop guide ${c[0]}: what a ${c[0]} post keeps of the frame (Shift+G next).`:'Crop guide off.');renderAppBar();}navViews.addEventListener('click',ev=>{const b=ev.target.closest('[data-nav-view]');if(!b)return;runLogged(b.dataset.navView,'click');b.blur();});
   const navPill=navBox.firstChild;navPill.addEventListener('click',()=>{try{runKey('film-camera');}catch(error){status(error.message,true);}navPill.blur();});
   const freeView=()=>{if(!orbitBase)return false;const v=bridge.stage()?.captureCamera?.();if(!v)return false;const a=viewNums(v),b=viewNums(orbitBase);return a.some((x,i)=>Math.abs(x-b[i])>1e-4);};
-  setInterval(()=>{navViews.hidden=!open;if(!open){navPill.hidden=true;return;}nav.refresh();renderPills();try{navPill.hidden=!freeView();}catch{navPill.hidden=true;}keysPanel.refresh();},400);
+  setInterval(()=>{syncHold();navViews.hidden=!open;if(!open){navPill.hidden=true;return;}nav.refresh();renderPills();try{navPill.hidden=!(held||freeView());const mode=held?'held':'free';if(navPill.dataset.mode!==mode){navPill.dataset.mode=mode;navPill.classList.toggle('held',held);navPill.innerHTML=held?'● Editing camera · the view stays put · <kbd>Shift+C</kbd> film camera':'Free view (not saved) · <kbd>0</kbd> film camera';navPill.title=held?'The Editing camera is on: playing and scrubbing leave the view where you put it. Click, Shift+C or 0: back to the film camera.':'The view is not the film camera: what you see is not saved. Click or press 0 to go back.';}}catch{navPill.hidden=true;}keysPanel.refresh();},400);
   // A film chapter is a one-chapter cut: its timeline space goes to the lanes (Chapters shows the strip).
   if(film)timeline.classList.add('chapters-hidden');
   createTimelineHints({root:timeline,active:activeShortcuts,context:el=>({seconds:shot().seconds,graphic:el.dataset.graphicClip!==undefined?graphics.screens()[Number(el.dataset.graphicClip)]:null})});

@@ -96,6 +96,7 @@ Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl als
 | F | Frame the selection | Rhino |
 | Shift+F | Frame the whole room | Rhino |
 | / | Isolate: only the selection in the view (again, or Esc: everything back) | Blender |
+| Shift+C | Editing camera: the view stays where you put it while the chapter plays or scrubs (again: back to the film camera) | Director |
 | Ctrl+P: lock, lock camera | Lock camera to view: moving the view updates the selected camera view | Blender |
 | Shift+G | Social crop guide over the frame: 9:16 → 1:1 → 4:5 → off | Premiere |
 | Shift+O | Overlays menu (guides, crop, film look, light markers, titles) | Director |

@@ -8,6 +8,7 @@ import { accessory } from '../catalog.mjs';
 import { SHARED_BUILD_PRESETS } from '../preset-defaults.mjs';
 import { OPENING_VIEWS } from './opening.mjs';
 import {cleanPose,cleanCamera,defaultPreset} from './cuts.mjs';
+import {cameraFollows,poseOf,putPose} from './editing-camera.mjs';
 import {createDeskChoreo,roomDesks} from './desk-choreo.mjs';
 import {touchscreenAt} from './touchscreen-track.mjs';
 
@@ -82,8 +83,9 @@ export async function mountStage(ctx) {
     const distance=span / (2*Math.tan(vertical/2)) / Math.min(1,ctx.camera.aspect) * (wide? 1.06:1.12);
     return {center, distance, aspect:ctx.camera.aspect, angle:wide?.66:.85, height:wide?.85:.42};
   }
+  // The Director's Editing camera (editing-camera.mjs): the camera stays where the user put it; a bake still films the keys.
   function cam(t) {
-    if(!start||editorMode)return;
+    if(!start||editorMode||!cameraFollows({held:cameraHeld,baking:!!bakeSession}))return;
     if((shot?.camera||cameraBake)&&authoredCamera){
       const view=sampleCamera(activeCameraKeys,t);if(!view)return;
       cameraPosition.fromArray(view.position);cameraTarget.fromArray(view.target);
@@ -381,7 +383,7 @@ export async function mountStage(ctx) {
   function captureCamera(){return cleanCamera({position:ctx.camera.position.toArray(),target:ctx.controls.target.toArray(),fov:ctx.camera.fov,aspect:ctx.camera.aspect});}
   // Director orbit: none of the Studio's orbit limits (2 m minimum distance, camera above the target), or every frame's
   // controls.update() would pull a closer or lower film camera off its keys and the live view would not be the film's.
-  function edit(on){wake();editorMode=!!on;ctx.editCamera(editorMode);if(editorMode){Object.assign(ctx.controls,{minDistance:.01,maxDistance:Infinity,minPolarAngle:0,maxPolarAngle:Math.PI});paused=true;ctx.pause(false);}else ctx.pause(paused);}
+  function edit(on){wake();editorMode=!!on;ctx.editCamera(editorMode||cameraHeld);if(editorMode){Object.assign(ctx.controls,{minDistance:.01,maxDistance:Infinity,minPolarAngle:0,maxPolarAngle:Math.PI});paused=true;ctx.pause(false);}else ctx.pause(paused);}
   // Run fn (a seek that re-poses the scene) without it moving the editor's camera.
   function keepView(fn){
     if(!editorMode)return fn();
@@ -389,10 +391,17 @@ export async function mountStage(ctx) {
     try{return fn();}finally{c.position.copy(pos);c.up.copy(up);ctx.controls.target.copy(target);c.lookAt(target);c.fov=fov;c.updateProjectionMatrix();ctx.controls.update?.();}
   }
   function seek(t){wake();const was=paused,editing=editorMode;paused=false;editorMode=false;tick(Math.max(0,Math.min(1,t)));editorMode=editing;paused=was;if(!editing)ctx.pause(paused);}
-  let bakeSession=null;
+  let bakeSession=null,cameraHeld=false,heldBeforeBake=null;
+  // Editing camera on: playing, seeking and preparing leave the view alone, and orbit / pan / zoom work while playing too.
+  // Off: the camera goes back on the keys at once, at the current time (a snap: the playhead's own view).
+  function holdCamera(on){
+    wake();const was=cameraHeld;cameraHeld=!!on;if(!bakeSession)ctx.editCamera(editorMode||cameraHeld);
+    if(was&&!cameraHeld&&shot){const p=paused,e=editorMode;paused=false;editorMode=false;cam(lastProgress);editorMode=e;paused=p;}
+    return cameraHeld;
+  }
   function beginBake(width,height){
     if(bakeSession)throw Error('A bake is already running.');
-    bakeSession={paused,editorMode,videoTime:video?.currentTime||0};window.__ERGO_BAKING__=true;
+    heldBeforeBake=cameraHeld?poseOf(ctx.camera,ctx.controls):null;bakeSession={paused,editorMode,videoTime:video?.currentTime||0};window.__ERGO_BAKING__=true;
     ctx.pause(true);editorMode=false;paused=true;ctx.editCamera(false);ctx.beginBake(width,height);if(video)video.pause();
   }
   async function bakeFrame(t,canvas,seconds){
@@ -407,7 +416,7 @@ export async function mountStage(ctx) {
     ctx.bakeDraw(canvas,seconds);
   }
   function endBake(){
-    if(!bakeSession)return;const saved=bakeSession;bakeSession=null;ctx.endBake();window.__ERGO_BAKING__=false;paused=saved.paused;editorMode=saved.editorMode;ctx.editCamera(editorMode);if(video)video.currentTime=saved.videoTime;
+    if(!bakeSession)return;const saved=bakeSession;bakeSession=null;ctx.endBake();window.__ERGO_BAKING__=false;paused=saved.paused;editorMode=saved.editorMode;ctx.editCamera(editorMode||cameraHeld);if(heldBeforeBake){putPose(ctx.camera,ctx.controls,heldBeforeBake);heldBeforeBake=null;}if(video)video.currentTime=saved.videoTime;
   }
   function receive(message) {
     if(message?.schemaVersion!==2)return;
@@ -429,7 +438,8 @@ export async function mountStage(ctx) {
     lastRendered=now;tick(readProgress());
   });
   // Same-origin parent owns this preview; no arbitrary postMessage action dispatcher.
-  window.ErgoPresentation={prepare:async next=>{preparing=true;try{return await prepare(next);}finally{preparing=false;}},tick,sound,pause,receive,
+  window.ErgoPresentation={prepare:async next=>{preparing=true;const held=cameraHeld?poseOf(ctx.camera,ctx.controls):null;cameraHeld=false;try{return await prepare(next);}finally{preparing=false;if(held){cameraHeld=true;putPose(ctx.camera,ctx.controls,held);ctx.editCamera(editorMode||cameraHeld);}}},tick,   // (a re-prepared chapter keeps an Editing camera's view)
+    holdCamera,cameraHeld:()=>cameraHeld,sound,pause,receive,
     // Refresh from Studio (studio-sync.mjs): the app reads Studio's props and desks again from this frame's storage; the next prepare builds the room from them.
     reloadStudio:()=>ctx.reloadStudioState?.(),
     catalog:()=>ctx.catalog(),edit,seek,captureCamera,beginBake,bakeFrame,endBake,previewQuality,

@@ -25,6 +25,7 @@ export function appBarHtml(s) {
     <button type="button" class="ab-btn ab-play" data-action="chapter-toggle" aria-pressed="${!!s.playing}" ${s.busy ? 'disabled' : ''} title="Play / pause the chapter (Space)">${s.playing ? '❚❚ Pause chapter' : '▶ Play chapter'}</button>
     <button type="button" class="ab-btn" data-ab-proxy="sound" aria-pressed="${!!s.sound}" title="Sound (Shift+M)">${s.sound ? '🔊 Sound' : '🔈 Muted'}</button>
     ${s.lowres === null ? '' : `<button type="button" class="ab-btn" data-ab-proxy="preview-quality" aria-pressed="${!!s.lowres}" title="Reduce the preview resolution for smoother editing (the film is not affected)">${s.lowres ? 'Low-res on' : 'Low-res'}</button>`}
+    <button type="button" class="ab-btn ab-hold${s.held ? ' on' : ''}" data-action="hold-camera" aria-pressed="${!!s.held}" title="Editing camera (Shift+C): ${s.held ? 'ON: the view stays where you put it while the chapter plays or scrubs. Click: back to the film camera' : 'keep the view where you put it while the chapter plays or scrubs'}">${s.held ? '● Editing camera' : 'Editing camera'}</button>
     <button type="button" class="ab-btn primary" data-action="save-export" title="Download this cut for the film (Ctrl+M); also keeps a copy in this browser">Export cut</button>
     ${menu('render', 'Render ▾', 'Still image, preview video, final render', [
       item('render-still', 'Still image', 'Shift+R · this frame, full quality'),

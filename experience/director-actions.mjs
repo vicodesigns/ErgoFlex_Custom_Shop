@@ -105,6 +105,7 @@ export const ACTIONS = [
   R('frame-selection', 'Frame the selection', ['F'], 'view', { origin: 'Rhino', aliases: ['zs', 'zoom selected'] }),
   R('frame-room', 'Frame the whole room', ['Shift+F'], 'view', { origin: 'Rhino', aliases: ['ze', 'zoom extents'] }),
   R('isolate', 'Isolate: only the selection in the view (again, or Esc: everything back)', ['/'], 'view', { phase: '6', origin: 'Blender', aliases: ['isolate', 'hide others'] }),
+  R('hold-camera', 'Editing camera: the view stays where you put it while the chapter plays or scrubs (again: back to the film camera)', ['Shift+C'], 'view', { origin: 'Director', aliases: ['hold camera', 'editing camera', 'hold view', 'camera stays'] }),
   R('lock-camera', 'Lock camera to view: moving the view updates the selected camera view', [], 'view', { phase: '6', origin: 'Blender', aliases: ['lock', 'lock camera'] }),
   R('crop-cycle', 'Social crop guide over the frame: 9:16 → 1:1 → 4:5 → off', ['Shift+G'], 'view', { phase: '6', origin: 'Premiere', aliases: ['crop', '9:16', 'square', 'reel'] }),
   R('overlays', 'Overlays menu (guides, crop, film look, light markers, titles)', ['Shift+O'], 'view', { phase: '6', origin: 'Director', aliases: ['overlays'] }),
