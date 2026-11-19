@@ -1,3 +1,4 @@
+import { prepareMediaCast } from './media-cast-finishes.mjs';
 import * as THREE from 'three';
 import { institutionalOak, drawInstitutionalCampus, enrichInstitutionalRoom, detailKit } from './institutional-detail.mjs?v=scene-desk-styling-20261010';
 import { INSTITUTIONAL_ROOMS, institutionalModule, institutionalModes } from './institutional-scenes.mjs?v=polish-20261111f';
@@ -31,7 +32,7 @@ const defaultOptions = spec => ({
 });
 // What each setting looks out on (window-vista.mjs). Huntington Beach and Costa Mesa are on the coast.
 const WINDOW_VISTAS = {
-    highschool: 'coast', occmedialab: 'media-courtyard', kindergarten: 'garden', elementary: 'garden',
+    highschool: 'coast', occmedialab: 'coast', kindergarten: 'garden', elementary: 'garden',
     hospital: 'city', laboratory: 'city', mobileit: 'city', government: 'city', police: 'city', security: 'city'
 };
 // The settings with a modelled outlook (window-scenery.mjs): Orange Coast College's media lab looks over its quad from a
@@ -202,7 +203,7 @@ export function buildInstitutionalRoom(room, root, layout, h) {
         markSceneAsset(g, { key: `${room.id}:${layout.id}:fixture:${id}` }); return g;
     };
     const canvasMat = (draw, width = 768, height = 384) => {
-        const c = document.createElement('canvas'); c.width = width; c.height = height; draw(c.getContext('2d'), width, height);
+        const c = document.createElement('canvas'); c.width = width; c.height = height; draw(c.getContext('2d', spec.id === 'occmedialab' ? {willReadFrequently:true} : undefined), width, height);
         const map = new THREE.CanvasTexture(c); map.colorSpace = THREE.SRGBColorSpace;
         return material('#ffffff', { map, roughness: .85 });
     };
@@ -342,6 +343,7 @@ export function buildInstitutionalRoom(room, root, layout, h) {
         phaseMover: () => phaseMover(root, room), pivotMove,
         back, right, left, window, door, board, sky, screenMats
     };
+    if(spec.id==='occmedialab')prepareMediaCast(room,root);
     group.furnish(kit);
     if (TILE_CEILINGS.has(spec.id)) {
         // Floor boxes under the stations (towards the back edge of each desk) and the student tables.
@@ -357,7 +359,7 @@ export function buildInstitutionalRoom(room, root, layout, h) {
     // The photographed outlook takes over the daylight pane once it has loaded, whichever material a group module left on it.
     // Or the place modelled behind the glass (window-scenery.mjs), where a setting has a scene, or the painted canvas alone.
     const view = WINDOW_SCENERY[spec.id] ? windowView(spec.id, look === 'classic') : 'photo';
-    const windowVista = view === 'photo' ? attachVista(skyPane, (look === 'classic' && spec.id === 'occmedialab' ? 'coast' : WINDOW_VISTAS[spec.id]) || 'campus') : null; if (windowVista) room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
+    const windowVista = view === 'photo' ? attachVista(skyPane, WINDOW_VISTAS[spec.id] || 'campus') : null; if (windowVista) room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     const scenery = view === 'scenery' ? attachScenery(skyPane, WINDOW_SCENERY[spec.id].scene, { floor: -1700, ...WINDOW_SCENERY[spec.id], ...(look === 'classic' ? { classic: true } : {}) }) : null;
     const campusLife = addCampusLife({ room, root, layout, asset, byId, falloff: kit.taskFalloff, look });
     // Slim linear ceiling fixtures disappear with the camera cutaway.

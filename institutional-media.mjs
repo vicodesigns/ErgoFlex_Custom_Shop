@@ -707,14 +707,63 @@ function pinupMotif(c,x,y,w,h,n){
     }
 }
 function poster(kit,id,title,at,wall,index){
-    const g=kit.asset(id,title,at,wall);
-    const map=kit.loadFinish('media',['breakwater','wild-track','west-facing'][index]);
-    const paper=kit.material('#ffffff',{map,roughness:.9,emissive:'#ffffff',emissiveMap:map,emissiveIntensity:.12});
-    paper.userData.roomPaletteLocked=paper.userData.roomFinishLocked=true;
-    kit.box(g,[648,912,36],[0,0,0],kit.mat('#48433e','metal'),3);
-    kit.box(g,[630,894,5],[0,0,19],kit.mat('#eee7d8','paper'),1);
-    const print=kit.mesh(g,new THREE.PlaneGeometry(596,852),paper,[0,0,24]);
-    print.name=title; print.castShadow=false;
+    const g=kit.asset(id,title,at,wall),m=kit.canvasMat((c,W,H)=>{
+        // Museum mat board & inner bevel border.
+        c.fillStyle='#eceae2';c.fillRect(0,0,W,H);
+        c.strokeStyle='#b8b4a6';c.lineWidth=3;c.strokeRect(18,18,W-36,H-36);
+        c.fillStyle=index%2?'#f7f6f1':NAVY;c.fillRect(28,28,W-56,H-56);
+        c.fillStyle=ORANGE;c.fillRect(28,28,W-56,12);
+        if(index%3===0){
+            // 35mm contact sheet & aspect-ratio study.
+            c.fillStyle=INK;c.fillRect(44,62,W-88,H*.58);
+            for(let n=0;n<3;n++){
+                coastFrame(c,82,84+n*H*.185,W-164,H*.155,n+1);
+                c.strokeStyle='#ffffff55';c.lineWidth=1;c.strokeRect(82,84+n*H*.185,W-164,H*.155);
+                text(c,`24A · ${['2.39:1 SCOPE','1.85:1 FLAT','16:9 HD'][n]}`,90,102+n*H*.185,11,ORANGE);
+            }
+            c.fillStyle='#e8e2d6';
+            for(let n=0;n<15;n++){
+                c.fillRect(52,70+n*H*.037,14,15);
+                c.fillRect(W-66,70+n*H*.037,14,15);
+            }
+        }else if(index%3===1){
+            // Colour science, vectorscope & Kelvin daylight progression.
+            c.fillStyle='#141e28';c.fillRect(44,62,W-88,H*.58);
+            const cx=W/2,cy=62+H*.24,r=H*.18;
+            for(let a=0;a<36;a++){
+                c.fillStyle=`hsl(${a*10},68%,56%)`;
+                c.beginPath();c.moveTo(cx,cy);c.arc(cx,cy,r,a*Math.PI/18,(a+1.05)*Math.PI/18);c.fill();
+            }
+            const grad=c.createRadialGradient(cx,cy,0,cx,cy,r);
+            grad.addColorStop(0,'#ffffffee');grad.addColorStop(1,'#ffffff00');
+            c.fillStyle=grad;c.beginPath();c.arc(cx,cy,r,0,Math.PI*2);c.fill();
+            c.strokeStyle='#ffffff44';c.lineWidth=1.5;c.beginPath();c.arc(cx,cy,r+10,0,Math.PI*2);c.stroke();
+            const kelvins=[['3200K','#f39c4b'],['4300K','#f4c686'],['5600K','#e8f0f2'],['6500K','#9ec5e6']];
+            kelvins.forEach(([lbl,col],k)=>{
+                const kx=58+k*(W-116)/4,kw=(W-140)/4;
+                c.fillStyle=col;c.fillRect(kx,62+H*.46,kw,36);
+                text(c,lbl,kx+8,62+H*.54,12,'#cbd8e4');
+            });
+        }else{
+            // Multi-track sound design & polar pickup pattern.
+            c.fillStyle='#0d1a2a';c.fillRect(44,62,W-88,H*.58);
+            for(let row=0;row<4;row++){
+                c.strokeStyle=['#80c0d1','#f3ad62','#91bb98','#edf0ec'][row];c.lineWidth=2.2;
+                c.beginPath();
+                for(let n=0;n<120;n++){
+                    const v=Math.sin(n*.7+row*2)*Math.sin(n*.13+row)*Math.cos(n*.05);
+                    c.lineTo(54+n*(W-108)/120,105+row*H*.12+v*H*.045);
+                }
+                c.stroke();
+            }
+        }
+        text(c,title.toUpperCase(),44,H-92,26,index%2?NAVY:WHITE);
+        text(c,['CINEMATOGRAPHY & STORY STRUCTURE','COLOR GRADING & DISPLAY CALIBRATION','PRODUCTION SOUND & DOLBY ATMOS MIX'][index%3],44,H-64,12,index%2?'#4a5d70':ORANGE);
+        text(c,'ORANGE COAST COLLEGE · FILM & MEDIA ARTS',44,H-42,12,index%2?NAVY:'#b6cde1');
+    },512,720);
+    kit.box(g,[640,900,26],[0,0,-8],kit.ink,5);
+    kit.box(g,[652,912,14],[0,0,-14],kit.metal,4);
+    kit.mesh(g,new THREE.PlaneGeometry(608,868),m,[0,0,6]);
     // Brushed gallery picture light bar above each framed poster.
     const pk=detailKit();
     pk.box([280,14,55],[0,472,22],CHARCOAL,undefined,'metal');
@@ -819,7 +868,7 @@ export function decorate(kit){
     }
 
     // Left rear wall has no window opening: art boards and course work sit here.
-    const frames=['Breakwater','Wild track','West facing'];
+    const frames=['Story / Screen','Light / Colour','Sound / Silence'];
     for(let n=0;n<3;n++){const g=poster(kit,'film-poster-'+n,frames[n],[-w/2+58,1850,bz+450+n*790],kit.left,n);g.rotation.y=Math.PI/2;}
     // Grey absorption and oak slats around the sound area; positioned cleanly between
     // the student pin-up gallery and the storyboard planning board on the right wall.

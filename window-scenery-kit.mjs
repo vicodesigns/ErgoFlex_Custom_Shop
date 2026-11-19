@@ -357,7 +357,7 @@ export function fanPalm(b, r, x, ground, z, { height = 18000, hex = '#6f8452', s
 }
 
 // A feather palm (queen or Canary palm): arching fronds of leaflets on a shorter, stouter trunk.
-export function featherPalm(b, r, x, ground, z, { height = 7000, hex = '#5f7d48', fronds = 18, trunk = '#8e877c', stout = 1 } = {}) {
+export function featherPalm(b, r, x, ground, z, { height = 7000, hex = '#5f7d48', fronds = 18, trunk = '#8e877c', stout = 1, fine = false } = {}) {
     if (!seen(b, x, z, 8000)) return;
     const top = new THREE.Vector3(x + (r() - .5) * 600, ground + height, z + (r() - .5) * 300), barkC = colour(trunk);
     limb(b, new THREE.Vector3(x, ground - 100, z), top, 170 * stout, barkC);
@@ -366,6 +366,29 @@ export function featherPalm(b, r, x, ground, z, { height = 7000, hex = '#5f7d48'
     for (let k = 0; k < fronds; k++) {
         const a = k / fronds * 6.28 + r() * .3, rise = .3 + r() * .9, len = 2800 + r() * 1200, out = new THREE.Vector3(Math.cos(a), 0, Math.sin(a)), side = new THREE.Vector3(-Math.sin(a), 0, Math.cos(a));
         const c = base.clone().offsetHSL((r() - .5) * .03, 0, (r() - .5) * .09), spine = [];
+        if (fine) {
+            // The palms at the OCC window are close enough to see the way
+            // individual pinnae sweep forward and fold along their midrib.
+            const point = t => top.clone().addScaledVector(out, len*t).setY(top.y+len*(rise*t-(rise+.55)*t*t));
+            const shade = c.clone().multiplyScalar(.71), stem = c.clone().lerp(barkC,.45);
+            const pairs = 23;
+            for (let i=1; i<=pairs; i++) {
+                const t=i/pairs, a=point((i-1)/pairs), p=point(t);
+                b.tri(a,a.clone().addScaledVector(side,22*(1-t)+3),p,stem);
+                for (const sign of [-1,1]) {
+                    const start=a.clone().lerp(p,sign<0?.24:.62);
+                    const length=len*(.035+.18*Math.sin(Math.PI*t)**.72)*(1-.26*t);
+                    const tip=start.clone().addScaledVector(side,sign*length).addScaledVector(out,length*(.36+.41*t));
+                    tip.y-=length*(.45+.36*t);
+                    const joint=start.clone().lerp(tip,.48);joint.y+=length*.14;
+                    const width=25+length*.052;
+                    const upper=joint.clone().addScaledVector(out,width),lower=joint.clone().addScaledVector(out,-width*.68);
+                    b.tri(start,upper,joint,c);b.tri(joint,upper,tip,c);
+                    b.tri(start,joint,lower,shade);b.tri(joint,tip,lower,shade);
+                }
+            }
+            continue;
+        }
         for (let i = 0; i <= 9; i++) { const t = i / 9; spine.push(top.clone().addScaledVector(out, len * t).add(new THREE.Vector3(0, len * (rise * t - (rise + .55) * t * t), 0))); }
         for (let i = 1; i < spine.length; i++) {
             const p = spine[i], prev = spine[i - 1], leaf = len * .2 * Math.sin(Math.PI * Math.min(1, i / 9 * 1.1)) + 120;

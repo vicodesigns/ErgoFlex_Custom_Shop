@@ -146,6 +146,12 @@ for (const layout of Object.values(ARTIST_LAYOUTS)) {
     buildInstitutionalRoom(room, r, layout, helpers); const n = new Set(); r.traverse(o => n.add(o.name)); return { room, n }; };
   const fresh = built(null), classic = built('classic');
   assert(fresh.room.root.mediaTextiles && !classic.room.root.mediaTextiles, 'the knit / twill cloth maps are the media lab refresh\'s only');
+  const { windowView } = await import('../window-scenery.mjs');
+  for (const lab of [fresh, classic]) {
+    assert.equal(windowView('occmedialab', lab === classic), 'scenery');
+    for (const poster of ['Story / Screen', 'Light / Colour', 'Sound / Silence']) assert(lab.n.has(poster), poster);
+    assert(lab.room.root.mediaCast.hair.has('Human.ponytail01'), 'Ava has her fibre maps in either look');
+  }
   assert(fresh.n.has('LATE EDIT / CONFORM') && !fresh.n.has('PORTFOLIO CRITIQUE'), 'Studio refresh has the pass\'s sheets');
   assert(classic.n.has('PORTFOLIO CRITIQUE') && !classic.n.has('LATE EDIT / CONFORM'), 'Classic keeps its old sheets');
   assert.notEqual(institutionalModule('occmedialab'), institutionalModule('occmedialab', 'classic'), 'the Classic look builds the frozen module');

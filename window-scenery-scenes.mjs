@@ -603,7 +603,7 @@ function campusBlock(k, r, x, ground, z, { width = 36000, floors = 3, wall = '#d
 // (stucco blocks and houses under clay-tile roofs, palms), the coast road, a broad beach at `shore` with its wet edge
 // and surf, and the Pacific out to the horizon (k.sea: drawn by its own shader, the sky in it, the sun's glitter low in
 // the evening). Seen from a floor up on the bluff the sea is a band six to ten degrees deep, as in the photograph.
-function coast(k, ctx, edge, drop, shore, townFrom, townTo) {
+function coast(k, ctx, edge, drop, shore, townFrom, townTo, mediaLab = false) {
     const { land: b, r } = k, ground = ctx.ground, low = ground - drop, cx = (ctx.left + ctx.right) / 2, out = new THREE.Color();
     const scrub = colour('#7c8460'), dry = colour('#a39a78'), sand = colour('#d8ccae'), wet = colour('#a8a08a'), road = colour('#55575a');
     const roadZ = townTo - 2500, sandZ = roadZ - 3500;
@@ -620,9 +620,76 @@ function coast(k, ctx, edge, drop, shore, townFrom, townTo) {
     for (let x = cx - 90000; x < cx + 90000; x += 18000 + r() * 12000) streetLamp(k, x, low, roadZ + 2600, { height: 7000, reach: 1400, face: -1, power: .7 });
     for (let x = cx - 90000; x < cx + 90000; x += 9000 + r() * 16000) if (r() < .5) car(k, r, x, low, roadZ + (r() < .5 ? 1100 : -1100), { turn: (r() < .5 ? 0 : Math.PI) });
     for (let i = 0; i < 9; i++) { const x = cx + (r() - .5) * 160000; for (let j = 0; j < 2 + Math.floor(r() * 3); j++) fanPalm(b, r, x + (r() - .5) * 5000, low, sandZ + 2500 + r() * 2500, { height: 15000 + r() * 9000 }); }
+    if (mediaLab) {
+        mediaShore(k, cx, low, shore);
+    } else {
     // the surf: lines of foam on the sea side of the shore
     for (const [dz, w, l] of [[1400, 3200, 1], [8000, 1100, .8], [16000, 700, .6]]) b.add(QUAD, new THREE.Matrix4().compose(V(cx, low - 150, shore - dz), new THREE.Quaternion().setFromAxisAngle(V(1, 0, 0), -Math.PI / 2), V(1400000, w, 1)), () => colour('#eef0ea').multiplyScalar(l));
-    k.sea = { y: low - 300, x0: cx - 1000000, x1: cx + 1000000, z0: -1150000, z1: shore - 1500, color: '#3c7890' };
+    }
+    k.sea = { y: low - 300, x0: cx - 1000000, x1: cx + 1000000, z0: -1150000, z1: shore - 1500, color: mediaLab ? '#17647b' : '#3c7890' };
+}
+// Tidal sand and three discontinuous breaker lines follow the same shoreline.
+function mediaShore(k, cx, sea, shore) {
+    const b=k.land;
+    const waterline=x=>shore-6500-3100*Math.sin(x/49000)-1350*Math.sin(x/16700);
+    function ribbon(start,end,step,edges,color) {
+        const points=[];
+        for(let x=start;x<end;x+=step) {
+            const nx=Math.min(x+step,end),[a,b]=edges(x),[c,d]=edges(nx);
+            points.push(x,a[0],a[1], nx,c[0],c[1], x,b[0],b[1],
+                x,b[0],b[1], nx,c[0],c[1], nx,d[0],d[1]);
+        }
+        const g=new THREE.BufferGeometry();
+        g.setAttribute('position',new THREE.Float32BufferAttribute(points,3));g.computeVertexNormals();
+        const pigment=typeof color==='string'?colour(color):null;
+        b.add(g,M(cx,0,0),pigment?()=>pigment:color,{two:true});g.dispose();
+    }
+    ribbon(-350000,350000,4500,x=>[[sea+80,shore+12000],[sea-120,waterline(x)]],
+        p=>colour('#d7bb92').multiplyScalar(.96+.04*Math.sin(p.x/8300)));
+    ribbon(-350000,350000,3600,x=>[[sea-99,waterline(x)+4900],[sea-126,waterline(x)-1500]],'#ac9983');
+    for(let line=0;line<3;line++){
+        for(let x=-320000;x<320000;){
+            const length=16000+k.r()*36000, gap=4000+k.r()*11000;
+            ribbon(x,x+length,2400,u=>{
+                const t=(u-x)/length, crest=waterline(u)-3200-line*6100+900*Math.sin(u/9200+line);
+                return [[sea-140,crest],[sea-140,crest-(520+line*150)*Math.sin(Math.PI*t)]];
+            },line===0?'#e8eee3':'#b5cfc9');
+            x+=length+gap;
+        }
+    }
+    // A timber pier runs out diagonally from the berm. Piles, cross-bracing,
+    // top rails and the shelter cast distinct silhouettes from the upstairs room.
+    const foot=V(cx-18000,sea+4400,shore+5200), run=V(.32,0,-1).normalize(), side=V(-run.z,0,run.x);
+    const at=(s,y,w)=>foot.clone().addScaledVector(run,s).addScaledVector(side,w).setY(y);
+    const span=6800, bays=26, deck=foot.y, timber=colour('#8e7d67');
+    for(let i=0;i<=bays;i++) {
+        const s=i*span;
+        for(const w of [-1800,1800]){
+            const post=at(s,sea-500,w);pole(b,post.x,post.y,post.z,6200,166,'#655548');
+            if(i===bays)continue;
+            limb(b,at(s,deck+990,w),at(s+span,deck+990,w),78,'#b8aa93');
+            limb(b,at(s,deck-420,w),at(s+span,sea+750,w),110,'#615246');
+        }
+        if(i===bays)break;
+        b.add(BOX_UNIT,M(...at(s+span/2,deck,0).toArray(),4200,380,span+8,-Math.atan2(run.x,-run.z)),()=>timber);
+    }
+    const end=at(bays*span-3300,deck,0);
+    for(const x of [-2100,2100])for(const z of [-2300,2300])pole(b,end.x+x,deck,end.z+z,3000,100,'#978572');
+    b.box([6400,320,6400],[end.x,deck+3070,end.z],'#607d7b');
+    // Low offshore hills in the marine layer. The open horizon continues on the right.
+    const height=x=>Math.max(0, 23500*Math.exp(-(((x+195000)/95000)**2))
+        + 14100*Math.exp(-(((x+97000)/46000)**2)) + 1600*Math.sin(x/16300));
+    for(let x=-440000;x<45000;x+=6000){
+        const profile=u=>{
+            const h=height(u),z=-644000+5900*Math.sin(u/62000);
+            return [V(cx+u,sea-600,z),V(cx+u,sea+h*.37,z-12000),V(cx+u,sea+h,z-27000)];
+        };
+        const a=profile(x),c=profile(x+6000);
+        for(let j=0;j<2;j++){
+            const ink=colour(j?'#596f7a':'#667f86');
+            b.tri(a[j],c[j],c[j+1],ink,1);b.tri(a[j],c[j+1],a[j+1],ink,1);
+        }
+    }
 }
 function socal(k, ctx, kind) {
     const { land: b, r } = k, ground = ctx.ground, cx = (ctx.left + ctx.right) / 2, L = ctx.left - 30000, R = ctx.right + 30000;
@@ -639,24 +706,18 @@ function socal(k, ctx, kind) {
             if (z < quadEnd && z > edge + 2000 && x > cx + 9000) return out.copy(colour('#56585a')).multiplyScalar((Math.abs(((x % 2700) + 2700) % 2700) < 90) ? 1.5 : .95 + r() * .08);
             return out.copy(dry).multiplyScalar(.9 + r() * .1); }, 600);
         for (let x = ctx.left - 6000; x < ctx.right + 6000; x += 900 + r() * 700) { if (r() < .5) agave(b, r, x, ground, -900 - r() * 600, 450 + r() * 300, pick(r, ['#7f9a84', '#8aa48a', '#6f8c7a'])); else shrub(b, r, x, ground, -1000 - r() * 500, 450 + r() * 200, pick(r, ['#5f7a4c', '#6c8452']), { size: 120 }); }
-        for (let x = ctx.left - 12000; x < ctx.right + 12000; x += 9000) { if (Math.abs(x - cx) > ctx.width / 2 + 3000) featherPalm(b, r, x + r() * 2000, ground, -6000 - r() * 1500, { height: 7000 + r() * 2500 }); pathLight(k, x + 4500, ground, -5000); }
+        for (let x = ctx.left - 12000; x < ctx.right + 12000; x += 9000) { if (Math.abs(x - cx) > ctx.width / 2 + 3000) featherPalm(b, r, x + r() * 2000, ground, -6000 - r() * 1500, { height: 7000 + r() * 2500, fine: true }); pathLight(k, x + 4500, ground, -5000); }
         for (let x = ctx.left - 4000; x < ctx.right + 8000; x += 6000 + r() * 4000) bench(b, x, ground, -5200, 0, '#b8b2a6');
         // the quad's trees, kept to its sides (the view down the middle is the sea's): jacarandas, a coral tree
         for (const [x, z, h, j] of [[-13000, -12000, 8000, 1], [12500, -15000, 8500, 0], [-19000, -19000, 8000, 0], [21000, -18000, 9000, 1], [-27000, -14000, 8500, 0]]) {
             tree(b, r, cx + x, ground, z, { height: h, hex: j ? '#86849a' : '#6e8656', shape: 'spreading', bark: '#6f655c' }); }
         for (let x = L - 20000; x < R + 20000; x += 7000 + r() * 6000) if (Math.abs(x - cx) > 9000 || r() < .3) fanPalm(b, r, x, ground, quadEnd + 3000 + r() * 3000, { height: 14000 + r() * 9000 });
-        if (ctx.classic) campusBlock(k, r, cx - 36000, ground, quadEnd - 4000, { width: 26000, floors: 3 });   // (the media lab's Classic look: one block, as it was)
-        else {
-        // A teaching wing across the courtyard and palms on its approaches give
-        // the upstairs editing bays a near and a middle distance in oblique views.
-        campusBlock(k, r, cx - 13400, ground, -22200, { width: 18400, floors: 3, wall:'#ccbaa0', fins:'#b8a589' });
-        campusBlock(k, r, cx + 20200, ground, -24500, { width: 17400, floors: 3, wall:'#d3c2ae' });
-        featherPalm(b, r, cx - 4700, ground, -8600, {height:11300});
-        featherPalm(b, r, cx + 6400, ground, -10500, {height:12600});
-        }
+        campusBlock(k, r, cx-36000,ground,quadEnd-4000,{width:26000,floors:3});
+        featherPalm(b,r,cx-6600,ground,-12200,{height:10500,fine:true});
+        featherPalm(b,r,cx+9800,ground,-14600,{height:11900,fine:true});
         for (let x = cx + 11000; x < R + 20000; x += 5200 + r() * 1200) if (r() < .6) car(k, r, x, ground, quadEnd - 4000 - Math.floor(r() * 2) * 5000, { turn: Math.PI / 2 });
         floodlight(k, cx + 26000, ground, edge + 3000, 11000);
-        coast(k, ctx, edge, 28000, -250000, -140000, -200000);
+        coast(k, ctx, edge, 10000, -142000, -66000, -108000, true);
         return;
     }
     // Huntington Beach High from a classroom a floor up on the bluff: succulents and a walk below, the fence, the school's
@@ -846,6 +907,11 @@ export const SCENES = {
     city: { build: (k, ctx) => city(k, ctx), storey: 3400, hazeFar: 110000, lampLevel: .78, hours: CITY_NIGHT },
     'city-neon': { build: (k, ctx) => city(k, ctx, { neon: true }), storey: 3400, hazeFar: 110000, lampLevel: .78, haloLevel: .8, hours: NEON_NIGHT },
     yard: { build: yard, storey: 0, hazeFar: 80000 },
-    'socal-campus': { build: (k, ctx) => socal(k, ctx, 'campus'), storey: 4200, hazeFar: 140000, hours: SOCAL },
+    'socal-campus': { build: (k, ctx) => socal(k, ctx, 'campus'), storey: 4200, hazeFar: 255000, hours: {
+        ...SOCAL,
+        morning:{zenith:'#527fa6',horizon:'#b4cbd7',air:'#9aafbc',haze:.26,clouds:.27,light:[.64,.84],sun:[-48,16,'#ffe0af',.66]},
+        afternoon:{zenith:'#387cae',horizon:'#a5c8d7',air:'#9db3bc',haze:.23,clouds:.21,light:[.61,.84]},
+        evening:{zenith:'#53698d',horizon:'#d9a38d',air:'#b79389',haze:.34,sun:[32,4,'#ffa66d',.86]}
+    } },
     'beach-school': { build: (k, ctx) => socal(k, ctx, 'field'), storey: 4000, hazeFar: 140000, haloLevel: .8, hours: SOCAL }
 };

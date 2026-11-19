@@ -41,7 +41,7 @@ export const LEVEL = .8;
 // id (home, creative, library, library-humboldt, occmedialab, highschool, gym, gaming, music, workshop, lounge,
 // lounge-contemporary, ...) overrides it for that room, e.g. library: 'photo' to give one room its photograph back.
 // The 3D scenery is the default since Nov 13 2026 (Vico's choice, after seeing it in the Studio).
-export const DEFAULT_VIEW = { '*': 'scenery', occmedialab: 'photo' };
+export const DEFAULT_VIEW = { '*': 'scenery' };
 
 // The hour outside. tint: what the light does to the land's colours. zenith / horizon: the sky. sun: [degrees to the
 // right of straight out, degrees up, colour, strength in the sky] (the moon after dark). light: [how much the sky lights
@@ -164,13 +164,33 @@ vec3 seaAt(vec3 view, vec3 sunDir, vec2 spot) {
     float down = clamp(-view.y, 0., 1.), fres = exp(-down * 12.);
     float day = clamp(dot(zenith, vec3(.3, .59, .11)) * 4., .06, 1.);   // the water's own colour is lit by the day (dark at night)
     vec3 c = mix(seaColor * day * (.55 + .45 * clamp(sunDir.y * 2. + .3, 0., 1.)), mix(horizon, zenith, .45), .16 + .34 * fres);
+    #ifdef MEDIA_COAST
+    // Long swell, wind streaks and the darker troughs between sets. Fade each
+    // frequency as it gets smaller than a pixel in the distant water.
+    vec2 m = spot * .001;
+    // On a grazing ray one pixel can span metres. Bands of deeper water
+    // remain visible after the small capillary ripples have averaged away.
+    vec4 offshore=texture2D(noiseMap,vec2(m.x/280.,m.y/95.));
+    float banks=clamp((offshore.g-.5)*1.8+(offshore.b-.5)*.45,-.55,.55);
+    c=mix(c,seaColor*day, .26) * (1.+.52*banks);
+    float sets=sin(m.y*.145+1.6*sin(m.x*.039+m.y*.008)+4.2*offshore.g);
+    float resolve=1.-smoothstep(.55,3.,fwidth(m.y*.145));
+    float wind=.55+.45*sin(m.x*.025+m.y*.013+offshore.b*4.);
+    c+=vec3(.028,.078,.084)*day*(sets*.5+.5)*resolve*(.25+.75*wind)*(.4+.7*offshore.r);
+    float swell = m.y*.88 + sin(m.x*.13) + .58*sin(m.x*.39+m.y*.07);
+    float crest = .5+.5*sin(swell), detail=1.-smoothstep(.4,2.8,fwidth(swell));
+    float ripple = sin(m.y*3.2+m.x*.29+sin(m.x*.52));
+    float streak = (crest*crest-.38)*detail + ripple*.15*(1.-smoothstep(.35,2.5,fwidth(m.y*3.2)));
+    c *= 1.+.29*streak;
+    c += vec3(.045,.115,.12)*day*detail*pow(crest,6.)*(.5+.5*sin(m.x*.18+m.y*.04));
+    #endif
     vec3 r = reflect(view, vec3(0., 1., 0.)); float s = max(dot(r, sunDir), 0.), s2 = s * s, s6 = s2 * s2 * s2;
     vec2 g = spot / 1800., cell = floor(g), f = fract(g) - .5; float sparkle = step(.55, seaHash(cell)) * (.5 + .5 * seaHash(cell + 3.1)) * smoothstep(.5, .1, length(f));
     float s48 = s6 * s6; s48 *= s48; s48 *= s48;
     c += sunColor * sunPower * (s48 * 1.4 * sparkle + s6 * .12);
     return mix(c, horizon * .92, exp(-down * 220.) * .45);           // into the haze at the horizon
 }`;
-const SEA = `uniform vec3 zenith, horizon, sunLocal, sunColor, wOut, wRight, seaColor; uniform float sunPower, level;
+const SEA = `uniform sampler2D noiseMap; uniform vec3 zenith, horizon, sunLocal, sunColor, wOut, wRight, seaColor; uniform float sunPower, level;
 varying vec3 vWorld;
 ${PORTAL}
 ${SEA_AT}
@@ -290,7 +310,7 @@ function world(panes, name, scene, options) {
         return { pane, at, half }; });
     const group = new THREE.Group(); group.name = 'Window scenery · ' + name + (options.facing ? ' · ' + options.facing : ''); group.position.copy(frame.position); group.quaternion.copy(frame.quaternion); parent.add(group);
     const portal = { portalInv: { value: new THREE.Matrix4() }, openAt: { value: openings.map(o => o.at.clone()) }, openHalf: { value: openings.map(o => o.half.clone()) } };
-    const defines = { OPENINGS: openings.length }, tex = sharedTextures();
+    const defines = { OPENINGS: openings.length, ...(name === 'socal-campus' ? { MEDIA_COAST: 1 } : {}) }, tex = sharedTextures();
     // the scene, built in the window's frame (or taken from the ones already built)
     const seed = (options.seed ?? 20261113) + options.facing * 7919, round = x => Math.round(x / 10) * 10;
     const ctx = { openings: openings.map(o => ({ x: o.at.x, y: o.at.y, z: o.at.z, w: o.half.x * 2, h: o.half.y * 2 })), floor: options.floor, facing: options.facing, variant: options.variant, seed, storey: options.storey ?? scene.storey ?? 0, ...(options.classic ? { classic: true } : {}) };   // (classic: a room's Classic look, room-looks.mjs)
@@ -323,7 +343,7 @@ function world(panes, name, scene, options) {
     const meshes = [[land, ORDER.land], [glow, ORDER.lights], [halos, ORDER.halos], ...(leaves ? [[leaves, ORDER.leaves]] : [])];
     const keep = mesh => { mesh.frustumCulled = false; mesh.castShadow = mesh.receiveShadow = false; mesh.userData.windowScenery = true; mesh.userData.sharedProp = true; mesh.ownedMaterials = [mesh.material]; group.add(mesh); };
     for (const [mesh, order] of meshes) { mesh.renderOrder = order; keep(mesh); }
-    const sky = new THREE.ShaderMaterial({ vertexShader: SKY_VERTEX, fragmentShader: SKY, depthWrite: false, side: frame.material?.side ?? THREE.FrontSide, uniforms: {
+    const sky = new THREE.ShaderMaterial({ defines, vertexShader: SKY_VERTEX, fragmentShader: SKY, depthWrite: false, side: frame.material?.side ?? THREE.FrontSide, uniforms: {
         portalInv: portal.portalInv, nearZ: { value: Math.min(...openings.map(o => o.at.z)) - 5 },
         zenith: { value: new THREE.Color() }, horizon: { value: new THREE.Color() }, sunLocal: { value: new THREE.Vector3(0, 1, 0) }, sunColor: { value: new THREE.Color() }, sunPower: { value: 0 },
         clouds: { value: .4 }, stars: { value: 0 }, level: { value: LEVEL }, drift: { value: 0 }, wOut: { value: new THREE.Vector3(0, 0, -1) }, wRight: { value: new THREE.Vector3(1, 0, 0) },
@@ -331,7 +351,7 @@ function world(panes, name, scene, options) {
     sky.name = 'Window sky · ' + name;
     let sea = null;
     if (entry.sea) {
-        const u = sky.uniforms, seaMaterial = new THREE.ShaderMaterial({ vertexShader: SKY_VERTEX, fragmentShader: SEA, defines, side: THREE.DoubleSide, uniforms: { ...portal,
+        const u = sky.uniforms, seaMaterial = new THREE.ShaderMaterial({ vertexShader: SKY_VERTEX, fragmentShader: SEA, defines, side: THREE.DoubleSide, uniforms: { ...portal, noiseMap: u.noiseMap,
             zenith: u.zenith, horizon: u.horizon, sunLocal: u.sunLocal, sunColor: u.sunColor, sunPower: u.sunPower, wOut: u.wOut, wRight: u.wRight, level: u.level, seaColor: u.seaColor } });
         seaMaterial.name = 'Window sea · ' + name;
         sea = new THREE.Mesh(entry.sea, seaMaterial); sea.name = 'Window scenery sea'; sea.renderOrder = ORDER.sea; keep(sea);

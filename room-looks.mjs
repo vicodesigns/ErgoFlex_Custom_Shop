@@ -19,8 +19,8 @@ export const ROOM_LOOKS = {
     { id: 'classic', name: 'Classic', note: 'the artist room as it was before the Nov 17 pass' },
   ],
   occmedialab: [
-    { id: 'refresh', name: 'Studio refresh', note: 'Nov 18 pass: courtyard window view and teaching wings, the editor\'s fader hand, student reel screening, task-light pools, knit and twill cloth, framed coast editions' },
-    { id: 'classic', name: 'Classic', note: 'the OCC media lab as it was before the Nov 18 pass' },
+    { id: 'refresh', name: 'Studio refresh', note: 'Acoustic wall panels, stepped oak diffuser, knit and twill clothing, fader gestures and reel screening. Modeled beach and cast detail in both looks.' },
+    { id: 'classic', name: 'Classic', note: 'Original OCC interior and course posters, with the shared modeled beach and cast detail' },
   ],
   'library/humboldt': [
     { id: 'refresh', name: 'Studio refresh', note: 'Nov 17-18 passes: finishes and maps, bay planter, ferns, knit and twill cloth, library detail, window scenery' },

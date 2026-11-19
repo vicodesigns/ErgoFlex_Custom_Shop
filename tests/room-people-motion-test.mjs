@@ -29,8 +29,25 @@ for (const who of characters) {
     assert.ok(rig.has(`people-${who}-stand-wait`) || rig.has(`people-${who}-kid-stand-wait`), who + ' has the standing-by posture');
 }
 
-// ---- the driver: a ten second rise, the person up in three
+// OCC edits must scrub to the same frame with wrists still on the keyboard.
 {
+    const rig = rigOf('andre'), key = rig.key('people-andre-sit-type');
+    rig.coastCast = true;
+    const sample = time => {
+        solveStill(rig, key, {time, seed:41});
+        for (const side of ['l','r']) {
+            const wrist = rig.side[side].arm[3];
+            assert.ok(rig.wp[wrist].distanceTo(key.wp[wrist]) < .005, 'editing wrist stays over the keys');
+        }
+        return snapshot(rig);
+    };
+    const edit = sample(2.5);
+    assert.notDeepEqual(sample(5), edit);
+    assert.deepEqual(sample(2.5), edit, 'seeking back reproduces the edit gesture');
+}
+
+{
+    // The driver: a ten second rise, the person up in three.
     const desc = deskDescription([28, 30], [43.5]);
     const rise = t => 28 + 15.5 * Math.min(1, Math.max(0, (t - 1) / 10));
     const sim = simulateDesk(desc, rise, 14);

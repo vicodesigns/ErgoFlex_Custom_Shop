@@ -1,3 +1,4 @@
+import { mediaPersonMaterial } from './media-cast-finishes.mjs';
 // People who live and work in the rooms (Studio "People" toggle, film `people`).
 //
 // The models are posed, static library props (category "people", built by
@@ -93,7 +94,7 @@ const classicCreate = room => room?.id === 'creative' && room.look === 'classic'
 const classicCommons = room => !!room?.roomLayout?.humboldt && room.look === 'classic';
 const classicMedia = room => room?.id === 'occmedialab' && room.look === 'classic';   // (the OCC media lab's Classic look: its cast and motion as before the Nov 18 pass)
 const refreshedCast = room => (room?.id === 'occmedialab' && !classicMedia(room)) || (room?.id === 'creative' && !classicCreate(room)) || (!!room?.roomLayout?.humboldt && !classicCommons(room));
-const classicRig = (rig, room) => { rig.mediaLab = room?.id === 'occmedialab' && !classicMedia(room); rig.classicMotion = classicCreate(room) || classicCommons(room); return rig; };
+const classicRig = (rig, room) => { rig.coastCast = room?.id === 'occmedialab'; rig.mediaLab = room?.id === 'occmedialab' && !classicMedia(room); rig.classicMotion = classicCreate(room) || classicCommons(room); return rig; };
 // who looks at whom (RoomPeople.gazeOf)
 const GAZE_TALK = /^(stand-talk|sit-chat|stand-drink|stand-mug|stand-coffee|sit-coffee)$/, GAZE_IDLE = /^(stand-wait|wheel-roll|wheel-watch|cane-stand|white-cane|sit-listen)$/;
 const GAZE_DESK = /^stand-phone-watch$/;      // watching the featured desk go (the workshop film): the head follows it
@@ -1535,7 +1536,7 @@ export class RoomPeople {
             object.name = 'Person:' + spec.id; object.userData.person = spec; object.userData.personFit = this.library.entry(spec.id)?.person?.deskHeight ?? null; object.visible = false;
             if (chair) { chair.name = 'Person chair:' + spec.id; chair.visible = false; root.add(chair); object.userData.personChair = chair; }
             if (hairEdgeEnabled()) hairEdges(object, true);      // (before ownMaterials: its copies keep it)
-            if (refreshedCast(room) || spec.desk || this.filter?.when?.[this.keyOf(spec)]) this.ownMaterials(object);
+            if (room.root.mediaCast || refreshedCast(room) || spec.desk || this.filter?.when?.[this.keyOf(spec)]) this.ownMaterials(object);
             root.add(object); this.people.push(object); this.resize(object, spec); this.recolor(object, spec);
             // The Studio may load people after the room's first asset hydration. Their editor identity must
             // follow the placement, not the order in which models and posture variants finish loading.
@@ -1604,9 +1605,10 @@ export class RoomPeople {
         const copies = new Map(); object.userData.personMaterials = [];
         const copy = m => {
             if (!copies.has(m)) {
-                const owned = m.clone();
+                const cast = this.room.root?.mediaCast;
+                const owned = cast ? mediaPersonMaterial(m,cast,partOf(m.name)) : m.clone();
                 owned.userData.sharedTextures = true;
-                owned.userData.solid = { transparent:m.transparent, opacity:m.opacity };
+                owned.userData.solid = { transparent:owned.transparent, opacity:owned.opacity };
                 copies.set(m, owned);
                 object.userData.personMaterials.push(owned);
             }
