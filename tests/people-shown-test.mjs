@@ -32,7 +32,7 @@ assert.ok(!heightSibling(models,'people-ava-sit-type','people-ava-sit-type'),'no
 assert.ok(hasCorrection({poseKeys:[{t:0,pose:{hand_l:[0,0,0,1]}}]})&&!hasCorrection({})&&!hasCorrection(null)&&!hasCorrection({pose:{}}));
 // 3
 const ed=readFileSync(new URL('../experience/scene-people-editor.mjs',import.meta.url),'utf8'),pe=readFileSync(new URL('../experience/scene-pose-editor.mjs',import.meta.url),'utf8');
-assert.match(pe,/data-action="pe-pose-done">Done<\/button><\/div>\s*\$\{models\(key\)\}/,'the pose panel shows the notes under its bar');
+assert.match(pe,/data-action="pe-pose-done">Done<\/button>[^\n]*<\/div>\s*\$\{models\(key\)\}/,'the pose panel shows the notes under its bar');
 assert.match(ed,/models:k=>modelNotes\(k\)/);
 assert.match(ed,/it has no correction\./,'a model the film draws without a correction is named');
 assert.match(ed,/if\(name==='pe-pose-copy-model'\)\{copyToModel\(index\);return;\}/,'the copy is the button\'s');
