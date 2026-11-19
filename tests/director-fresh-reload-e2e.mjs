@@ -4,8 +4,9 @@
 // dir (never the real one), chapter 2 (rise):
 //   1. open the page; simulate an import (edit director-camera-rise.json: a lift clip and a camera key, run the
 //      build-round8-director.py pass and --pages rise); reload: the new values, the notice, the hash rewritten;
-//   2. an unexported draft newer than the film loads by default (Use the film's version drops it); one older than the
-//      film leaves the film's version loaded (Keep my unexported changes brings it back);
+//   2. an unexported draft newer than the film loads by default (Use the film's version sets it aside, 19 Nov 2026); one
+//      older than the film leaves the film's version loaded, set aside and asked about in a modal (Keep my unexported
+//      changes brings it back; Use the film's version asks again before it deletes it);
 //   3. a further import, then Export cut from the open tab: the stale-export warning lists what would revert;
 //      Export anyway exports; after one more import, Load the latest loads it in place.
 //
@@ -41,7 +42,7 @@ function importEdit(start,dx){
 }
 const decode=enc=>JSON.parse(Buffer.from(enc,'base64url').toString('utf8'));
 const port=Number(process.env.PORT||3200),state=path.join(tmp,'studio-state.json');
-if(fs.existsSync(path.join(root,'studio-state.json'))){const st=JSON.parse(fs.readFileSync(path.join(root,'studio-state.json'),'utf8'));delete st.keys?.['ergoflex.director.filmDrafts.v1'];delete st.keys?.['ergoflex.director.ui.v1'];fs.writeFileSync(state,JSON.stringify(st));}   // (no film drafts from other sessions: tests start clean)
+if(fs.existsSync(path.join(root,'studio-state.json'))){const st=JSON.parse(fs.readFileSync(path.join(root,'studio-state.json'),'utf8'));delete st.keys?.['ergoflex.director.filmDrafts.v1'];delete st.keys?.['ergoflex.director.filmDrafts.setAside.v1'];delete st.keys?.['ergoflex.director.ui.v1'];fs.writeFileSync(state,JSON.stringify(st));}   // (no film drafts from other sessions: tests start clean)
 const server=spawn(process.execPath,[path.join(root,'tools/studio-server.mjs'),'--port',String(port),'--host','127.0.0.1','--state',state,'--root',site],{cwd:site,stdio:['ignore','pipe','pipe']});
 await new Promise((resolve,reject)=>{const t=setTimeout(()=>reject(Error('studio server did not start')),20000);server.stdout.on('data',d=>{if(/studio server/.test(d)){clearTimeout(t);resolve();}});server.once('exit',c=>reject(Error('studio server exited '+c)));});
 process.env.BASE=`http://127.0.0.1:${port}`;
@@ -90,12 +91,20 @@ try{
   check(await dirty(),'the draft is marked "not exported"');
   await click('#director-panel [data-action=film-use-film]');await until(async()=>/9 to 12\.2/.test(await clip()),'film version');
   check(/9 to 12\.2/.test(await clip())&&!await dirty(),'Use the film\'s version: the film\'s clip, nothing unexported');
-  check(await page.evaluate(()=>!JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}').rise),'Use the film\'s version drops the stored draft');
+  const setAside=()=>page.evaluate(()=>Object.values(JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.setAside.v1')||'{}')).flat().length);
+  check(await page.evaluate(()=>!JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}').rise)&&await setAside()===1,'Use the film\'s version sets the stored draft aside (the slot empty, one set-aside draft)');
   await draftOf(8.5,'2000-01-01T00:00:00Z');await reload();
-  check(/9 to 12\.2/.test(await clip())&&(await pressed())[0]==='Use the film\'s version',`a draft older than the film's import leaves the film's version loaded [${await pressed()}]`);
+  const asked=()=>page.$eval('#film-draft',d=>d.open).catch(()=>false);
+  check(/9 to 12\.2/.test(await clip())&&await asked(),'a draft older than the film\'s import leaves the film\'s version loaded and asks about it in a modal');
+  await click('#film-draft [data-draft=later]');
+  check(!await asked()&&(await pressed())[0]==='Use the film\'s version…'&&await setAside()===1,`Decide later: the strip offers it [${await pressed()}], still set aside (the same draft once)`);
   await click('#director-panel [data-action=film-keep-draft]');await until(async()=>/8\.5 to 11\.7/.test(await clip()),'draft back');
-  check(await dirty(),'Keep my unexported changes: the draft is back, marked "not exported"');
+  check(await dirty()&&await setAside()===0,'Keep my unexported changes: the draft is back, marked "not exported", no longer set aside');
   await click('#director-panel [data-action=film-use-film]');await until(async()=>/9 to 12\.2/.test(await clip()),'film version again');
+  check(await setAside()===1,'Use the film\'s version: set aside again');
+  await click('#director-panel [data-action=film-use-film]');await until(asked,'the question before deleting');
+  await click('#film-draft [data-draft=delete]');await until(async()=>await setAside()===0,'deleted');
+  check(!await asked()&&!await notice(),'Use the film\'s version, Delete: the set-aside draft is gone, no notice');
 
   // ---- 3. Export cut from a tab the film moved past
   await wait(1100);importEdit(9.45,-.2);const v3=rise();

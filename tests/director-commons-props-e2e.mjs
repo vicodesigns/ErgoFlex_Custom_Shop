@@ -113,6 +113,7 @@ try{
   const mine=await draft();
   // ---- reload before exporting: his unexported changes come back (the Keep-my-changes choice) and film-fx re-applies them
   await openChapter('commons');
+  await page.evaluate(()=>{const d=document.getElementById('film-draft');if(d?.open)d.querySelector('[data-draft=keep]')?.click();});   // (19 Nov 2026: a set-aside draft is asked about in a modal; its Keep is the strip's)
   if(await page.$('[data-action=film-keep-draft][aria-pressed=false]')){await page.click('[data-action=film-keep-draft]');await page.waitForFunction(()=>/Camera is live/.test(document.querySelector('#director-panel [data-status]')?.textContent||''),{timeout:300000});await wait(1500);}
   const back=await until(()=>page.evaluate((ck,lk,pk)=>{const c=__byKey(ck),l=__byKey(lk),p=__byKey(pk);if(!c||!l||!p)return null;return {chair:__pose(c),lamp:__pose(l),plant:__pose(p),draft:__draft()};},CHAIR,LAMP,PLANT),'chapter after reload');
   check(JSON.stringify(back.draft)===JSON.stringify(mine),'after a reload the cut still has the 3 edits');

@@ -299,6 +299,7 @@ try{
     const pre=await all(),ePre=await editsNow();
     await page.reload();await until(()=>page.evaluate(()=>/Camera is live/.test(document.querySelector('#director-panel [data-status]')?.textContent||'')),'the chapter after the reload',300000);
     await until(()=>page.evaluate(()=>__t().desks.records.size>1),'the desks after the reload',90000);await wait(2500);
+    await page.evaluate(()=>{const d=document.getElementById('film-draft');if(d?.open)d.querySelector('[data-draft=keep]')?.click();});   // (19 Nov 2026: a set-aside draft is asked about in a modal; its Keep is the strip's)
     const offer=await page.evaluate(()=>{const b=document.querySelector('[data-action="film-keep-draft"]');return b?b.getAttribute('aria-pressed'):'none';});
     if(offer==='false'){await panelClick('[data-action="film-keep-draft"]');await wait(4000);}
     note(`6 after the reload: the draft offer: ${offer==='none'?'none (loaded)':offer==='true'?'loaded':'had to click Keep my unexported changes'}`);
