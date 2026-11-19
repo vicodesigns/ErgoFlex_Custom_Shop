@@ -229,12 +229,19 @@ export function deskInches() {
   return Number.isFinite(h) ? h : HEIGHT_REST;
 }
 const liftFrames = new WeakMap();
-function liftFrame(base) {
+// inches: the desk's height now (the featured desk's by default; a room desk's own, recordInches)
+function liftFrame(base, inches = deskInches) {
   if (liftFrames.has(base)) { const f = liftFrames.get(base); if (f.parent === base) return f; }
   const f = new THREE.Group(); f.name = 'Desk lift frame (film)'; f.userData.filmFx = true; f.userData.filmFxLift = true;
   // rises with the desk every frame it is drawn: the base shelf's own frame is in millimetres, its y is up
-  f.updateMatrix = function () { this.position.set(0, (deskInches() - HEIGHT_REST) * 25.4, 0); THREE.Object3D.prototype.updateMatrix.call(this); };
+  f.updateMatrix = function () { this.position.set(0, (inches() - HEIGHT_REST) * 25.4, 0); THREE.Object3D.prototype.updateMatrix.call(this); };
   base.add(f); liftFrames.set(base, f); return f;
+}
+// A room desk's height now: the pose its rig was last put in (film-desk-edits.mjs / desk-choreo.mjs set r.poseAt
+// 'height:tilt' with every updatePose), else its state's.
+function recordInches(r) {
+  const h = parseFloat(String(r?.poseAt || '').split(':')[0]);
+  return Number.isFinite(h) ? h : Number.isFinite(r?.state?.height) ? r.state.height : HEIGHT_REST;
 }
 export function followFrame(kind) {
   if (!FOLLOW.includes(kind)) return null;
@@ -245,8 +252,21 @@ export function followFrame(kind) {
 // updateMatrix() would rebuild it from its identity position, putting the shelf at the rig's origin, y 0, until the next
 // frame: 17 Nov, the place measured against that put the RC controller 1.4 m over the shelf.)
 export function followMatrix(kind) { const f = followFrame(kind); if (!f) return null; if (f.matrixAutoUpdate || f.userData.filmFxLift) f.updateMatrix(); f.updateWorldMatrix(true, false); return f.matrixWorld.clone(); }
-export function addParent(kind) {
+// on (18 Nov 2026, Director "Add to desks"): one of the room's other desks, by its scene desk record id: its own rig's
+// mounts (Desk dressing:<role>). kind 'lift': level at the desktop's height (the base shelf's frame raised by the lift).
+// Without on, the featured desk's, as before.
+export function addParent(kind, on = null) {
   const scene = sceneRoot(), role = Object.hasOwn(DESK_SURFACES, kind) ? DESK_SURFACES[kind] : null;
+  if (on && (role || kind === 'lift')) {
+    const desks = api.sceneDesks, r = desks?.records?.get(on);
+    if (r && r !== desks.active && on !== desks.selected) {
+      const m = r.rig?.mounts?.[kind === 'lift' ? 'base-shelf' : role];
+      if (!m || !inScene(m, scene)) return null;
+      return kind === 'lift' ? liftFrame(m, () => recordInches(r)) : m;
+    }
+    if (!r) return null;   // (a desk this room does not have: nowhere, never the featured desk by mistake)
+  }
+  if (kind === 'lift') { const b = addParent('base-shelf'); return b ? liftFrame(b) : null; }
   if (role) {
     const rig = api.sceneDesks?.active?.rig?.mounts?.[role]; if (rig && inScene(rig, scene)) return rig;
     const m = api.workspaceAccessories?.mounts?.get(role); if (m?.group && inScene(m.group, scene)) return m.group;
@@ -273,10 +293,10 @@ function matchDeskFinish(o, asset) {
 export const mmScale = () => api.workspaceAccessories?.scale || api.workspaceRoom?.scale || .001;
 function installAdd(edit, n, undo) {
   const o = prepared.get(edit); if (!o) { console.warn(`[film-fx] sceneEdits[${n}] add: ${edit.add?.asset || edit.add} not loaded (prepareAdds first)`); return null; }
-  const parent = addParent(edit.parent); if (!parent) { console.warn(`[film-fx] sceneEdits[${n}] add: no desk to put ${edit.add?.asset || edit.add} on`); return null; }
+  const parent = addParent(edit.parent, edit.on || null); if (!parent) { console.warn(`[film-fx] sceneEdits[${n}] add: no desk${edit.on ? ' ' + edit.on : ''} to put ${edit.add?.asset || edit.add} on`); return null; }
   const asset = typeof edit.add === 'string' ? edit.add : edit.add.asset;
   parent.updateWorldMatrix(true, false); const k = parent.getWorldScale(new THREE.Vector3()).x || 1, base = 1000 * mmScale() / k;
-  o.name = `Added prop:${asset}#${edit.id}`; o.userData.directorAdd = { asset, id: edit.id, label: edit.label || asset, parent: Object.hasOwn(DESK_SURFACES, edit.parent) ? edit.parent : 'room' };
+  o.name = `Added prop:${asset}#${edit.id}`; o.userData.directorAdd = { asset, id: edit.id, label: edit.label || asset, parent: Object.hasOwn(DESK_SURFACES, edit.parent) || edit.parent === 'lift' ? edit.parent : 'room', ...(edit.on ? { on: edit.on } : {}) };
   const p = edit.position || [0, 0, 0], r = edit.rotation || [0, 0, 0], s = edit.scale || [1, 1, 1], d = THREE.MathUtils.degToRad;
   o.position.set(p[0] / k, p[1] / k, p[2] / k); o.rotation.set(d(r[0]), d(r[1]), d(r[2])); o.scale.set(base * s[0], base * s[1], base * s[2]);
   parent.add(o); o.updateMatrixWorld(true); matchDeskFinish(o, asset);

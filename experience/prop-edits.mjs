@@ -10,7 +10,8 @@
 // build-round8-director.py) are the Director's edits. Present (even []): they replace those entries.
 // Added props (the library browser, prop-library.mjs): a prop the film doesn't have, installed by film-edits.mjs
 //   {add:{asset:'<assets/props id>'}, id:'<short id>', match:'^Added prop:<asset>#<id>$' (its object's name on the stage),
-//    label:'<library name>', parent:'desk' | 'shelf' | 'lower-shelf' | 'base-shelf' | 'room', position:[x,y,z],
+//    label:'<library name>', parent:'desk' | 'lift' | 'shelf' | 'lower-shelf' | 'base-shelf' | 'room', position:[x,y,z],
+//    on?:'<scene desk record id>' (18 Nov 2026: on one of the room's other desks, its own mounts; absent: the featured desk),
 //    rotation:[x,y,z] degrees, scale:[sx,sy,sz]}
 //   The transform is the prop's own, in its parent's frame (not an offset): position = scene units along the parent's
 //   axes from its origin (desk: the featured desk's desktop dressing, so it rides lift and tilt; room: the room's
@@ -42,7 +43,7 @@ export function cleanPlace(p){
   if(!p||typeof p!=='object')return null;const position=placeVec(p.position),rotation=placeVec(p.rotation,n=>Math.abs(n)<=720),scale=placeVec(p.scale,n=>Math.abs(n)>1e-6);
   return position&&rotation&&scale?{position,rotation,scale}:null;
 }
-const ASSET=/^[a-z0-9][a-z0-9._-]{0,119}$/i,ADD_ID=/^[a-z0-9]{1,16}$/i,DESK=/^[a-z0-9-]{1,40}$/;
+const ASSET=/^[a-z0-9][a-z0-9._-]{0,119}$/i,ADD_ID=/^[a-z0-9]{1,16}$/i,DESK=/^[a-z0-9-]{1,40}$/,ON=/^[a-z][a-z0-9-]{0,79}$/;
 const r2=v=>Math.round(v*100)/100;
 // {from, to, fadeIn?, fadeOut?, ease?}: 0 <= from < to, at least 0.1 s long, fades no longer than the window; ease only
 // 'smooth' (kept only with a fade to ease).
@@ -107,7 +108,17 @@ export function filmFadeKeys(film,match){
 }
 export const isAddEdit=e=>!!e?.add;
 // The featured desk's surfaces an added prop can ride ('desk' = the desktop), and how the Director names them.
-export const DESK_SURFACES={desk:'the desktop','shelf':'the top shelf','lower-shelf':'the lower shelf','base-shelf':'the base shelf'};
+// 'lift' (18 Nov 2026): level at the desktop's height, riding the lift but not the tilt (film-edits.mjs lift frame).
+export const DESK_SURFACES={desk:'the desktop','shelf':'the top shelf','lower-shelf':'the lower shelf','base-shelf':'the base shelf',lift:'the desktop (level)'};
+// "Add to desks" (prop-library.mjs): the mounts in Vico's words, in his order, and exactly what each follows. Each desk
+// offers only the ones its rig has (film-edits.mjs addParent(kind, on)).
+export const MOUNTS=[
+  {kind:'base-shelf',label:'Foot shelf',tip:'The shelf on the desk\'s base, by your feet: stays on the floor, never rises or tilts.'},
+  {kind:'lift',label:'Desktop',tip:'At the desktop\'s height and level: rises and lowers with the lift, stays level when the top tilts.'},
+  {kind:'desk',label:'Tilt',tip:'On the top surface: rises with the lift and tilts with the top.'},
+  {kind:'shelf',label:'Desktop shelf',tip:'The desktop shelf unit\'s top shelf: goes wherever the unit goes as the desk rises and tilts.'},
+  {kind:'lower-shelf',label:'Desktop shelf (lower)',tip:'The desktop shelf unit\'s lower shelf: goes wherever the unit goes as the desk rises and tilts.'}];
+export const mountLabel=kind=>MOUNTS.find(m=>m.kind===kind)?.label||'';
 export const onDesk=parent=>!!DESK_SURFACES[parent];
 export const addName=(asset,id)=>`Added prop:${asset}#${id}`;
 export const addMatch=(asset,id)=>'^'+escapeRegex(addName(asset,id))+'$';
@@ -119,6 +130,8 @@ export function cleanAddEdit(e){
   out.position=vec(e.position)||[0,0,0];out.rotation=vec(e.rotation)||[0,0,0];
   out.scale=Array.isArray(e.scale)?vec(e.scale,n=>n>=.001&&n<=1000)||[1,1,1]:finite(e.scale)&&e.scale>=.001&&e.scale<=1000?[e.scale,e.scale,e.scale].map(r4):[1,1,1];
   const desk=cleanDesk(e.desk),show=cleanShow(e.show);if(desk)out.desk=desk;if(show)out.show=show;
+  // on: one of the room's other desks (its scene desk record id, desk-edits.mjs DESK_ID); absent: the featured desk
+  if(out.parent!=='room'&&typeof e.on==='string'&&ON.test(e.on))out.on=e.on;
   return out;
 }
 // Scene asset keys a room's code renamed after a cut was edited: an edit naming the old key matches nothing (the film
