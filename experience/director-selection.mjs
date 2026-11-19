@@ -17,6 +17,16 @@ export function createSelection(){
     on(fn){subs.add(fn);return ()=>subs.delete(fn);},
   };
 }
+// What the view's Delete acts on (director.mjs viewDelete and the selection bar's Delete): the selection the Director
+// shows (selectionNow: a prop before a person, as everything marks it), never an editor's leftover selection behind it.
+// 18 Nov 2026: a person stayed selected under a prop picked after them, and Delete removed the person (Vico, High school:
+// a seated woman's cast entry went, and she stood at the main desk). poseKey: a pose key is selected in pose mode;
+// picked: timeline picks are selected (their own Delete).  -> 'pose-key' | 'person' | 'prop' | null
+export function deleteRoute(sel,{poseKey=false,picked=false}={}){
+  if(poseKey)return 'pose-key';
+  if(picked||!sel)return null;
+  return sel.kind==='person'?'person':sel.kind==='prop'?'prop':null;
+}
 const q=v=>String(v).replace(/\\/g,'\\\\').replace(/"/g,'\\"');
 // Where each kind shows: Props lane bars and the Layers outliner (props), the People lane, list and keyframe sheet row
 // (people), the Desks list, the timeline's "Other desks" rows and the desk lanes' header / Desk picker while they edit
