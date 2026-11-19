@@ -1,6 +1,6 @@
 // The media lab's cast finishes and motion in every room with people (media-cast-finishes.mjs, room-people.mjs classicRig
 // and ownMaterials / shareCastDetail, room-people-motion.mjs's rig.castDetail): which rooms and looks get them, that the
-// four maps load once for the page and are shared, that a person without a style or with a hijab degrades to the plain
+// maps (three hair atlases, three sets each, and the skin relief) load once for the page and are shared, that a person without a style or with a hijab degrades to the plain
 // material, that a room's disposal never takes the shared maps, and that the media lab's own cast is what it was.
 //   node tests/room-people-cast-detail-test.mjs
 import assert from 'node:assert/strict';
@@ -11,13 +11,13 @@ import * as THREE from 'three';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const canvas = () => ({ width: 8, height: 8, style: {}, getContext: () => new Proxy({}, { get: () => () => ({}) }), addEventListener() {}, removeEventListener() {}, setAttribute() {} });
-// An image that loads (or fails) a few ms after its src is set; which of the four maps fail is the test's to say.
+// An image that loads (or fails) a few ms after its src is set; which of the maps fail is the test's to say.
 let failing = new Set(), latency = 5, requests = [];
 class FakeImage {
     constructor() { this.listeners = {}; this.width = this.height = 8; }
     addEventListener(type, fn) { (this.listeners[type] ||= []).push(fn); }
     removeEventListener(type, fn) { this.listeners[type] = (this.listeners[type] || []).filter(f => f !== fn); }
-    set src(url) { this._src = url; requests.push(url); const name = /([a-z-]+)\.webp$/.exec(url)?.[1], type = failing.has(name) ? 'error' : 'load'; setTimeout(() => { for (const fn of [...(this.listeners[type] || [])]) fn.call(this, { type }); }, latency); }
+    set src(url) { this._src = url; requests.push(url); const name = /([a-z0-9-]+)\.webp$/.exec(url)?.[1], type = failing.has(name) ? 'error' : 'load'; setTimeout(() => { for (const fn of [...(this.listeners[type] || [])]) fn.call(this, { type }); }, latency); }
     get src() { return this._src; }
 }
 globalThis.document = { createElement: canvas, createElementNS: (ns, tag) => tag === 'img' ? new FakeImage() : canvas() };
@@ -32,7 +32,7 @@ const index = JSON.parse(fs.readFileSync(path.join(root, 'assets/props/index.jso
 const entries = new Map(index.props.map(p => [p.id, p]));
 
 // A person as the library builds one: its materials are the library's, shared by every instance of that model.
-const HAIRS = ['short01', 'afro01', 'cortu_short_messy_hair', 'headscarf_hair', null, 'ponytail01'];
+const HAIRS = ['short01', 'afro01', 'cortu_short_messy_hair', 'headscarf_hair', null, 'ponytail01', 'culturalibre_hair_05', 'toigo_inverted_bob', 'faydaen_hair_1', 'elvs_reverse_french_braid_bun', null];
 const made = new Map();
 const parts = id => {
     if (made.has(id)) return made.get(id);
@@ -62,7 +62,7 @@ const cast = async (room, filter) => { const p = new RoomPeople(room, library); 
 const SKINS = new Set(), seen = { hijab: 0, styled: 0, unstyled: 0, bald: 0 };
 
 // ---- 1. before the maps have loaded, and when one fails: nothing blocks, nobody gets half the detail
-failing = new Set(['hairline']); latency = 3;
+failing = new Set(['hairline-3']); latency = 3;   // (a map of the third hair atlas: the whole cast degrades, not just the cuts on it)
 {
     const room = roomOf('gym', layouts.gym), people = await cast(room);
     assert.ok(people.people.length > 3, 'the gym is cast though a map did not arrive');
@@ -84,11 +84,13 @@ await new Promise(r => setTimeout(r, 4));
 assert.equal(first.root.children.filter(o => o.name.startsWith('Person')).length, 0, 'nobody is shown with half-loaded hair: people wait for the maps');
 const highschool = await pending;
 assert.ok(castDetailCast(), 'loaded');
-assert.equal(requests.length, 4, 'four image requests for the page (hair fibres, hair flow, hairline, skin relief)');
+const { HAIR_ATLASES, HAIR_TILES } = await import('../media-cast-hair-atlas.mjs'), MAPS = HAIR_ATLASES.length * 3 + 1;
+assert.equal(MAPS, 10);
+assert.equal(requests.length, MAPS, 'one image request per map for the page (hair fibres, flow and hairline per atlas, skin relief)');
 const shared = castDetailCast();
 latency = 5;
 const gym = await cast(roomOf('gym', layouts.gym)), home = await cast(roomOf('home', layouts.home));
-assert.equal(requests.length, 4, 'later rooms reuse them: still four requests');
+assert.equal(requests.length, MAPS, 'later rooms reuse them: still the same requests');
 assert.equal(await castDetailEnsure(), shared, 'one cast object for the page');
 
 // ---- 3. rooms and looks
@@ -179,6 +181,46 @@ assert.ok(seen.hijab && seen.styled && seen.unstyled && seen.bald, 'the rooms\' 
     const { execFileSync } = await import('node:child_process');
     let was = null; try { was = execFileSync('git', ['show', '4abe6181:media-cast-finishes.mjs'], { cwd: root, encoding: 'utf8', maxBuffer: 1 << 24 }); } catch { console.log('(no git object 4abe6181 here: the mediaPersonMaterial byte check skipped)'); }
     if (was) { const body = text => text.slice(text.indexOf('export function mediaPersonMaterial'), text.indexOf('\n}\n', text.indexOf('export function mediaPersonMaterial')) + 3); const now = fs.readFileSync(path.join(root, 'media-cast-finishes.mjs'), 'utf8'); assert.ok(body(was).length > 800); assert.equal(body(now), body(was), 'mediaPersonMaterial is unchanged'); }
+}
+
+// ---- 4b. the hair atlases: every hairstyle in the manifest has its own tile, the files are the format the tiles assume, and
+// the cuts without a bake (a solid-colour cap, a tiled-UV cut, a hijab) still get sheen only
+{
+    const webpSize = file => {   // [width, height] from the RIFF header (lossless VP8L, lossy VP8, extended VP8X)
+        const b = fs.readFileSync(file), kind = b.toString('latin1', 12, 16);
+        if (kind === 'VP8L') return [1 + (b.readUInt16LE(21) & 0x3fff), 1 + ((b.readUInt32LE(21) >> 14) & 0x3fff)];
+        if (kind === 'VP8 ') return [b.readUInt16LE(26) & 0x3fff, b.readUInt16LE(28) & 0x3fff];
+        return [1 + b.readUIntLE(24, 3), 1 + b.readUIntLE(27, 3)];
+    };
+    assert.deepEqual(HAIR_ATLASES, ['', '-2', '-3']);
+    for (const suffix of HAIR_ATLASES) for (const name of ['hair-fibres', 'hair-flow', 'hairline']) assert.deepEqual(webpSize(path.join(root, 'assets/rooms/media', name + suffix + '.webp')), [2048, 1024], name + suffix + ' is a 2048 x 1024 atlas');
+    const taken = new Set();
+    for (const [cut, [k, i]] of Object.entries(HAIR_TILES)) {
+        const key = k + ':' + i; assert.ok(!taken.has(key), cut + ' has a tile of its own'); taken.add(key);
+        assert.ok(k < HAIR_ATLASES.length && i >= 0 && i < 8, cut + ' tile in range');
+        const style = hairKey(cut); assert.ok(style, cut + ' has a style');
+        for (const t of [style.normal, style.direction, style.edge]) {
+            assert.ok(Math.abs(t.repeat.x - 504 / 2048) < 1e-9 && Math.abs(t.repeat.y - 504 / 1024) < 1e-9, cut + ' tile size');
+            assert.ok(Math.abs(t.offset.x - ((i % 4) * 512 + 4) / 2048) < 1e-9 && Math.abs(t.offset.y - (Math.floor(i / 4) * 512 + 4) / 1024) < 1e-9, cut + ' tile offset');
+        }
+    }
+    assert.equal(shared.hair.size, Object.keys(HAIR_TILES).length);
+    assert.deepEqual(Object.keys(HAIR_TILES).slice(0, 8), ['ponytail01', 'afro01', 'short01', 'short04', 'braid01', 'short02', 'bob01', 'long01'], 'the first eight keep their tiles in atlas 0');
+    // atlas k's three tiles share one image per map: one decode per atlas, not per cut
+    const sources = new Map(); for (const [cut, [k]] of Object.entries(HAIR_TILES)) { const st = hairKey(cut); (sources.get(k) || sources.set(k, new Set()).get(k)).add(st.normal.source); }
+    for (const set of sources.values()) assert.equal(set.size, 1, 'the cuts of one atlas share its normal image');
+    for (const none of ['culturalibre_hair_05', 'faydaen_hair_1', 'headscarf_hair']) assert.equal(hairKey(none), undefined, none + ' has no strand maps');
+    // how much of the library's cut-out hair is covered (the people GLBs' material names, read from their JSON chunks)
+    const props = path.join(root, 'assets/props'); let slots = 0, covered = 0; const styled = {}, counts = {};
+    for (const f of fs.readdirSync(props)) {
+        if (!/^people-.*\.glb$/.test(f)) continue;
+        const fd = fs.openSync(path.join(props, f), 'r'), head = Buffer.alloc(20); fs.readSync(fd, head, 0, 20, 0);
+        const json = Buffer.alloc(head.readUInt32LE(12)); fs.readSync(fd, json, 0, json.length, 20); fs.closeSync(fd);
+        for (const m of JSON.parse(json.toString()).materials || []) if (partOf(m.name) === 'hair' && m.alphaMode === 'MASK') { slots++; counts[m.name] = (counts[m.name] || 0) + 1; if (shared.hair.has(m.name)) covered++; }
+    }
+    assert.ok(slots > 1400, 'the library has cut-out hair: ' + slots);
+    assert.ok(covered / slots > .93, 'at least 93% of the library\'s cut-out hair has strand maps: ' + covered + ' of ' + slots);
+    for (const [name, n] of Object.entries(counts)) if (!shared.hair.has(name) && n > 20) assert.ok(['Human.culturalibre_hair_05'].includes(name), name + ' (' + n + ' models) has no strand maps and is not a known gap');
 }
 
 // ---- 5. disposal: a room going away never takes the shared maps
