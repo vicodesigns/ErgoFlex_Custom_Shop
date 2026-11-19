@@ -1146,8 +1146,11 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     queueMicrotask(() => root.traverse(o => { if (!o.isMesh) return; for (const m of [].concat(o.material)) if (m?.userData?.humboldtRoughness) m.roughness = m.userData.humboldtRoughness; }));
 
     // ---------- Light pools: scallops, floor pools, cork and desk accents ----------
+    // (19 Nov 2026: this call used to pass diffusePool as a third argument that createPoolLayer ignored, so the Commons' pools have
+    // always used the default pool map, and the opacity rule below (map === diffusePool) never matched. createPoolLayer's falloff
+    // would have made both count and darkened the pools. The Commons keeps the look it has been rendered and approved with.)
     const diffusePool = diffusePoolMap(root);
-    const pools = createPoolLayer(root, 'Humboldt architectural light', diffusePool);
+    const pools = createPoolLayer(root, 'Humboldt architectural light');
     const merged = (quads, face) => { const k = kit(); for (const [size, at] of quads) k.plane(size, at, { rot: face }); return k.build(); };
     const FLOOR = [-Math.PI / 2, 0, 0], BACKF = [0, 0, 0], RIGHTF = [0, -Math.PI / 2, 0], LEFTF = [0, Math.PI / 2, 0];
     const addMerged = (parent, quads, face, color, levels) => pools.add(parent, [0, 0, 0], [1, 1], color, levels, [0, 0, 0], merged(quads, face));
