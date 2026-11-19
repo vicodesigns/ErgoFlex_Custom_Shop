@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { institutionalOak, drawInstitutionalCampus, enrichInstitutionalRoom, detailKit } from './institutional-detail.mjs?v=scene-desk-styling-20261010';
-import { INSTITUTIONAL_ROOMS, institutionalModule } from './institutional-scenes.mjs?v=polish-20261111f';
+import { INSTITUTIONAL_ROOMS, institutionalModule, institutionalModes } from './institutional-scenes.mjs?v=polish-20261111f';
 import { addCampusLife } from './campus-lived-in.mjs?v=polish-20261111f';
 import { attachVista } from './window-vista.mjs?v=polish-20261112f';
 import { attachScenery, windowView } from './window-scenery.mjs?v=polish-20261113b';
@@ -179,7 +179,7 @@ function addPower(kit, floorAt) {
 }
 
 export function buildInstitutionalRoom(room, root, layout, h) {
-    const spec = INSTITUTIONAL_ROOMS[room.id], group = institutionalModule(room.id), { box, mesh, rod, sphere, material, markSceneAsset } = h;
+    const look = room.look, spec = look === 'classic' && room.id === 'occmedialab' ? { ...INSTITUTIONAL_ROOMS[room.id], modes: institutionalModes(room.id, look) } : INSTITUTIONAL_ROOMS[room.id], group = institutionalModule(room.id, look), { box, mesh, rod, sphere, material, markSceneAsset } = h;
     const options = { ...defaultOptions(spec), ...group.options?.(spec) };
     const { width: w, depth: d, height: ceiling, back: bz, index } = layout, front = bz + d;
     const mat = (color, surface, extra = {}) => { const m = material(color, extra); if (surface) m.userData.roomSurface = surface; return m; };
@@ -356,10 +356,10 @@ export function buildInstitutionalRoom(room, root, layout, h) {
     room.decorateProp = (object, placement) => { if (placement.phases) object.userData.propPhases = placement.phases; decorate?.(object, placement); };
     // The photographed outlook takes over the daylight pane once it has loaded, whichever material a group module left on it.
     // Or the place modelled behind the glass (window-scenery.mjs), where a setting has a scene, or the painted canvas alone.
-    const view = WINDOW_SCENERY[spec.id] ? windowView(spec.id) : 'photo';
-    const windowVista = view === 'photo' ? attachVista(skyPane, WINDOW_VISTAS[spec.id] || 'campus') : null; if (windowVista) room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
-    const scenery = view === 'scenery' ? attachScenery(skyPane, WINDOW_SCENERY[spec.id].scene, { floor: -1700, ...WINDOW_SCENERY[spec.id] }) : null;
-    const campusLife = addCampusLife({ room, root, layout, asset, byId, falloff: kit.taskFalloff });
+    const view = WINDOW_SCENERY[spec.id] ? windowView(spec.id, look === 'classic') : 'photo';
+    const windowVista = view === 'photo' ? attachVista(skyPane, (look === 'classic' && spec.id === 'occmedialab' ? 'coast' : WINDOW_VISTAS[spec.id]) || 'campus') : null; if (windowVista) room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
+    const scenery = view === 'scenery' ? attachScenery(skyPane, WINDOW_SCENERY[spec.id].scene, { floor: -1700, ...WINDOW_SCENERY[spec.id], ...(look === 'classic' ? { classic: true } : {}) }) : null;
+    const campusLife = addCampusLife({ room, root, layout, asset, byId, falloff: kit.taskFalloff, look });
     // Slim linear ceiling fixtures disappear with the camera cutaway.
     const ceilingGroup = new THREE.Group(); ceilingGroup.name = 'Ceiling lighting'; root.add(ceilingGroup); room.ceilingFixture = ceilingGroup;
     for (let n = 0; n < 3; n++) {

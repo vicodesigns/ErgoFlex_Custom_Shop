@@ -16,11 +16,14 @@ const CAPTIONS = {
     occmedialab: ['Coast stories / camera + sound', 'Select / trim / review / export', 'Room tone / dialogue / mix notes', 'Sync check / final export', 'Student reel / peer feedback'],
     highschool: ['Prediction / question / sketch', 'Measure / repeat / compare', 'Work it out / explain your method', 'Feedback / next steps / materials', 'Our question / our evidence / our result']
 };
+// The media lab's Classic look (room-looks.mjs): the sheets' titles and captions as they were.
+const CLASSIC_TITLES = { occmedialab: ['CALL SHEET / 07', 'PICTURE EDIT / V03', 'SOUND / COLOUR', 'SCREENING NOTES', 'PORTFOLIO CRITIQUE'] };
+const CLASSIC_CAPTIONS = { occmedialab: ['Coast stories / camera + sound', 'Select / trim / review / export', 'Room tone / dialogue / mix notes', 'What worked? What would you change?', 'Work in progress / peer feedback'] };
 const rand = n => { const x = Math.sin(n * 31.7 + 91.3) * 43173; return x - Math.floor(x); };
 
 // One sheet atlas per room, with five genuinely different documents. Printed
 // matter is matte; only actual lamp diffusers emit light.
-function documentAtlas(kind, accent) {
+function documentAtlas(kind, accent, titles = TITLES[kind], captions = CAPTIONS[kind]) {
     const canvas = document.createElement('canvas'); canvas.width = 1152; canvas.height = 960;
     const c = canvas.getContext('2d'), W = 384, H = 480;
     for (let phase = 0; phase < 5; phase++) {
@@ -28,8 +31,8 @@ function documentAtlas(kind, accent) {
         c.fillStyle = PAPER; c.fillRect(0, 0, W, H);
         for (let n = 0; n < 1800; n++) { c.fillStyle = n % 2 ? '#ffffff12' : '#584c3c08'; c.fillRect(rand(n) * W, rand(n + 9) * H, 1, 2); }
         c.fillStyle = accent; c.fillRect(24, 24, 38, 6);
-        c.font = 'bold 17px sans-serif'; c.fillText(TITLES[kind][phase], 24, 56, W - 48);
-        c.font = '11px sans-serif'; c.fillStyle = '#637373'; c.fillText(CAPTIONS[kind][phase], 24, 76, W - 48);
+        c.font = 'bold 17px sans-serif'; c.fillText(titles[phase], 24, 56, W - 48);
+        c.font = '11px sans-serif'; c.fillStyle = '#637373'; c.fillText(captions[phase], 24, 76, W - 48);
         c.strokeStyle = '#a2aaa140'; c.lineWidth = 1;
         for (let x = 24; x < W - 20; x += 20) { c.beginPath(); c.moveTo(x, 96); c.lineTo(x, 330); c.stroke(); }
         for (let y = 96; y < 335; y += 20) { c.beginPath(); c.moveTo(24, y); c.lineTo(W - 24, y); c.stroke(); }
@@ -62,13 +65,14 @@ function documentAtlas(kind, accent) {
     const map = new THREE.CanvasTexture(canvas); map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 4; return map;
 }
 
-export function addCampusLife({ room, root, layout, asset, byId, kind = room.id, falloff = null }) {
+export function addCampusLife({ room, root, layout, asset, byId, kind = room.id, falloff = null, look = null }) {
     if (!TITLES[kind]) return { apply() {} };
+    const classic = look === 'classic' && CLASSIC_TITLES[kind], titles = classic || TITLES[kind], captions = classic ? CLASSIC_CAPTIONS[kind] : CAPTIONS[kind];
     const accent = { library: '#365e4c', occmedialab: '#174e76', highschool: '#bf642b' }[kind];
     const own = m => { room.ownedMaterials?.add(m); m.userData.roomPaletteLocked = true; m.userData.roomFinishLocked = true; return m; };
     const matte = own(new THREE.MeshStandardMaterial({ name: 'Campus paper, rubber & painted detail', vertexColors: true, roughness: .79, dithering: true }));
     const metal = own(new THREE.MeshStandardMaterial({ name: 'Campus brushed aluminium', vertexColors: true, roughness: .42, metalness: .72, dithering: true }));
-    const printed = own(new THREE.MeshStandardMaterial({ name: 'Annotated activity papers', map: documentAtlas(kind, accent), roughness: .96, side: THREE.DoubleSide }));
+    const printed = own(new THREE.MeshStandardMaterial({ name: 'Annotated activity papers', map: documentAtlas(kind, accent, titles, captions), roughness: .96, side: THREE.DoubleSide }));
     const pools = createPoolLayer(root, 'Campus task light pools', falloff);
     const variants = [], lamps = [], sheets = [];
     const piece = (parent, name, at, draw, finish = matte) => {
@@ -78,7 +82,7 @@ export function addCampusLife({ room, root, layout, asset, byId, kind = room.id,
     const sheet = (parent, phase, at, width = 210, yaw = 0) => {
         const geo = new THREE.PlaneGeometry(width, width * 1.25), uv = geo.attributes.uv;
         for (let n = 0; n < uv.count; n++) uv.setXY(n, (phase % 3 + .004 + uv.getX(n) * .992) / 3, 1 - (Math.floor(phase / 3) + .004 + (1 - uv.getY(n)) * .992) / 2);
-        const o = new THREE.Mesh(geo, printed); o.name = TITLES[kind][phase]; o.position.set(...at); o.rotation.set(-Math.PI / 2, 0, yaw); o.receiveShadow = true; parent.add(o); sheets.push(o); return o;
+        const o = new THREE.Mesh(geo, printed); o.name = titles[phase]; o.position.set(...at); o.rotation.set(-Math.PI / 2, 0, yaw); o.receiveShadow = true; parent.add(o); sheets.push(o); return o;
     };
     const pen = (k, x, z, color = INK) => { k.box([7, 7, 142], [x, 5, z], color, [0, .14, 0]); k.box([8, 8, 22], [x + 8, 5, z + 57], SILVER, [0, .14, 0]); };
     const notebook = (k, x, z, stacked = 0) => {
@@ -218,7 +222,7 @@ export function addCampusLife({ room, root, layout, asset, byId, kind = room.id,
             if (lamp.light) { lamp.light.color.copy(lamp.diffuser.emissive); lamp.light.intensity = (root.scale.x * 1000) ** 2 * lamp.levels[p] * .42 * gain; }
         }
         pools.apply(p, gain);
-        root.userData.campusLife = { version: 1, kind, phase: PHASES[p], activity: TITLES[kind][p], supports: variants.length, lamps: lamps.length, paperCount: sheets.length };
+        root.userData.campusLife = { version: 1, kind, phase: PHASES[p], activity: titles[p], supports: variants.length, lamps: lamps.length, paperCount: sheets.length };
     };
     apply('morning');
     return { apply };

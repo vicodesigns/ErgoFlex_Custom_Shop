@@ -91,8 +91,9 @@ import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, sh
 // The Commons' Classic look ('library/humboldt') keeps its cast and their motion as they were too.
 const classicCreate = room => room?.id === 'creative' && room.look === 'classic';
 const classicCommons = room => !!room?.roomLayout?.humboldt && room.look === 'classic';
-const refreshedCast = room => room?.id === 'occmedialab' || (room?.id === 'creative' && !classicCreate(room)) || (!!room?.roomLayout?.humboldt && !classicCommons(room));
-const classicRig = (rig, room) => { rig.mediaLab = room?.id === 'occmedialab'; rig.classicMotion = classicCreate(room) || classicCommons(room); return rig; };
+const classicMedia = room => room?.id === 'occmedialab' && room.look === 'classic';   // (the OCC media lab's Classic look: its cast and motion as before the Nov 18 pass)
+const refreshedCast = room => (room?.id === 'occmedialab' && !classicMedia(room)) || (room?.id === 'creative' && !classicCreate(room)) || (!!room?.roomLayout?.humboldt && !classicCommons(room));
+const classicRig = (rig, room) => { rig.mediaLab = room?.id === 'occmedialab' && !classicMedia(room); rig.classicMotion = classicCreate(room) || classicCommons(room); return rig; };
 // who looks at whom (RoomPeople.gazeOf)
 const GAZE_TALK = /^(stand-talk|sit-chat|stand-drink|stand-mug|stand-coffee|sit-coffee)$/, GAZE_IDLE = /^(stand-wait|wheel-roll|wheel-watch|cane-stand|white-cane|sit-listen)$/;
 const GAZE_DESK = /^stand-phone-watch$/;      // watching the featured desk go (the workshop film): the head follows it

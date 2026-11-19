@@ -18,6 +18,10 @@ export const ROOM_LOOKS = {
     { id: 'refresh', name: 'Studio refresh', note: 'Nov 17 pass: oiled oak floor, limewashed brick, coastal studies, ferns, Lin\'s bob and work shirt' },
     { id: 'classic', name: 'Classic', note: 'the artist room as it was before the Nov 17 pass' },
   ],
+  occmedialab: [
+    { id: 'refresh', name: 'Studio refresh', note: 'Nov 18 pass: courtyard window view and teaching wings, the editor\'s fader hand, student reel screening, task-light pools, knit and twill cloth, framed coast editions' },
+    { id: 'classic', name: 'Classic', note: 'the OCC media lab as it was before the Nov 18 pass' },
+  ],
   'library/humboldt': [
     { id: 'refresh', name: 'Studio refresh', note: 'Nov 17-18 passes: finishes and maps, bay planter, ferns, knit and twill cloth, library detail, window scenery' },
     { id: 'classic', name: 'Classic', note: 'the Commons as it was before the Nov 17-18 passes' },

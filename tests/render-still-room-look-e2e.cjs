@@ -1,8 +1,9 @@
 // Room looks reach the film render path (18 Nov 2026): the stage render-still.cjs / render-cut.cjs drive (the presentation
-// iframe, ErgoPresentation.prepare, then film-fx install) builds a chapter's room in the shot's look, for Create and the
-// Commons, and in the default look (refresh) when the shot has none.
+// iframe, ErgoPresentation.prepare, then film-fx install) builds a chapter's room in the shot's look, for Create, the
+// Commons and the OCC media lab, and in the default look (refresh) when the shot has none.
 //   Create   classic: no 'Oiled oak studio floor', no 'Potted fern'      refresh: both
 //   Commons  classic: no potted fern / solar shades / field guides, the 'Framed landscape print'   refresh: the reverse
+//   Media lab (chapter 'coast')  classic: the sheet 'PORTFOLIO CRITIQUE'   refresh: 'LATE EDIT / CONFORM'
 // It starts its OWN render-server.cjs from this checkout on a free port and checks that the server serves this checkout's
 // room-looks.mjs: a render server left running from another checkout (e.g. :3017 from main) serves that checkout's code
 // whatever checkout render-still.cjs runs from, and a look its code does not have comes out as no look at all.
@@ -12,11 +13,12 @@ const root=path.resolve(__dirname,'..');
 const CUT=process.env.CUT||path.join(root,'exports/cinematic-intro-cut-cine/review-cut.json');
 if(!fs.existsSync(CUT)){console.log('render-still room look e2e: skipped (no '+path.relative(root,CUT)+' here)');process.exit(0);}
 const cut=JSON.parse(fs.readFileSync(CUT,'utf8'));
-const NAMES=['Oiled oak studio floor','Limewashed gallery brickwork','Potted fern','Woven solar shades','North Coast field guides','Framed landscape print'];
+const NAMES=['Oiled oak studio floor','Limewashed gallery brickwork','Potted fern','Woven solar shades','North Coast field guides','Framed landscape print','LATE EDIT / CONFORM','PORTFOLIO CRITIQUE'];
 const CASES={
   create:{room:'creative',refresh:n=>n['Oiled oak studio floor']&&n['Potted fern'],classic:n=>!n['Oiled oak studio floor']&&!n['Limewashed gallery brickwork']&&!n['Potted fern']},
   commons:{room:'library',refresh:n=>n['Potted fern']&&n['Woven solar shades']&&n['North Coast field guides']&&!n['Framed landscape print'],
     classic:n=>!n['Potted fern']&&!n['Woven solar shades']&&!n['North Coast field guides']&&n['Framed landscape print']},
+  coast:{room:'occmedialab',refresh:n=>n['LATE EDIT / CONFORM']&&!n['PORTFOLIO CRITIQUE'],classic:n=>!n['LATE EDIT / CONFORM']&&n['PORTFOLIO CRITIQUE']},   // (the 'coast' chapter's room: its campus-life sheets by look)
 };
 const freePort=()=>new Promise(r=>{const s=net.createServer().listen(0,'127.0.0.1',()=>{const p=s.address().port;s.close(()=>r(p));});});
 const get=url=>new Promise((res,rej)=>http.get(url,r=>{let b='';r.setEncoding('utf8');r.on('data',d=>b+=d);r.on('end',()=>res({status:r.statusCode,body:b}));}).on('error',rej));
