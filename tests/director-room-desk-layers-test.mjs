@@ -48,11 +48,11 @@ const ed=readFileSync(new URL('../experience/scene-prop-editor.mjs',import.meta.
 assert.match(ed,/addEventListener\('dblclick'[^]*?enterDesk\(rd\)/,'a double-click enters the desk under it');
 assert.match(ed,/function boxPick[^]*?if\(inside&&!inInside\(m\)\)return;/,'box select keeps to the desk entered');
 assert.match(ed,/if\(hit&&inside\)\{\s*if\(!inInside\(hit\.object\)\)/,'a click inside ignores other things');
-assert.match(ed,/const rd=roomDeskGroupOf\(hit\.object\);if\(rd\)\{if\(underGizmo\)return;lastClick=[^;]*;if\(sel\)deselect\(\);if\(roomDesk\(/,'outside, a click on a room desk (or its item) selects the desk and is remembered for a double-click');
+assert.match(ed,/const rd=roomDeskGroupOf\(hit\.object\);if\(rd\)\{if\(underGizmo\)return;if\(sel\)deselect\(\);if\(roomDesk\(/,'outside, a click on a room desk (or its item) selects the desk');
 // 19 Nov 2026 (Windows run): a double-click enters what its FIRST click hit (that click can change the view); a press on
 // the gizmo that never moves is a click on what is under it (the gumball covered the neighbours) and writes no edit;
 // Alt+click inside a desk cycles through the items under the pointer; leaving a desk from Layers keeps Layers open
-assert.match(ed,/const first=lastClick&&performance\.now\(\)-lastClick\.t<800[^;]*;\s*if\(first\?\.rd\)\{enterDesk\(first\.rd\);if\(first\.item&&inScene\(first\.item\)\)pick\(first\.item/,'the double-click uses the first click\'s desk and item');
+assert.match(ed,/const first=lastPress&&performance\.now\(\)-lastPress\.t<800[^;]*;\s*let hit=first\?\.hit&&inScene\(first\.hit\.object\)\?first\.hit:null;/,'the double-click uses what was under its first press');
 assert.match(ed,/if\(d\.gizmo\)\{setTimeout\(\(\)=>\{if\(!gizmo\.dragging&&!w\.__directorDragging&&!gizmoMoved\)viewClick\(ev,d,true\);\},0\);return;\}/,'a gizmo press that never moved clicks what is under it');
 assert.match(ed,/if\(drag&&!drag\.moved\)\{drag=null;return;\}/,'and writes no edit');
 assert.match(ed,/if\(d\.alt\)\{const stack=\[\.\.\.new Set\(hits\.map\(h=>roomDeskItem\(h\.object\)\)/,'Alt+click cycles through the stack inside a desk');
@@ -66,11 +66,15 @@ const de=readFileSync(new URL('../experience/scene-desk-editor.mjs',import.meta.
 for(const [f,src] of [['scene-prop-editor.mjs',ed],['scene-desk-editor.mjs',de]])assert.match(src,/sd\.pick=\(\)=>null/,f+' mutes Studio\'s desk pick');
 const studio=readFileSync(new URL('../studio.js',import.meta.url),'utf8');
 assert.match(studio,/const picked=sceneDesks\?\.pick\(event\);if\(picked\?\.id&&picked\.id!==sceneDesks\.selected\)\{sceneDesks\.select\(picked\.id\)/,'(Studio still features a clicked desk through pick: the mute is what stops it in the Director)');
-// 5. (19 Nov 2026, Windows) the second click of a double-click on a room desk does nothing and keeps the first click's
-//    record (it re-rendered the view, so the second click hit the APA desk's neighbour and lastClick became that desk);
-//    a third click, or an Alt+click, is a click again
-assert.match(ed,/if\(lastClick&&!lastClick\.second&&!d\.alt&&performance\.now\(\)-lastClick\.t<600&&Math\.hypot\([^)]*\)<8\)\{lastClick\.second=true;return;\}\s*const hits=/,'the second click of a double-click is skipped, before anything is hit');
-assert.ok(!/addEventListener\('dblclick'[^]*?lastClick=null/.test(ed),'the dblclick keeps lastClick (a second click deferred through the gizmo still sees it)');
+// 5. (19 Nov 2026, Windows, twice) the double-click reads what was under its FIRST PRESS. Its clicks can't carry it: while
+//    the desk is selected the Desks tab takes the clicks on it (scene-desk-editor.mjs: pointerup in capture on the stage
+//    window, stopImmediatePropagation), so viewClick never saw them, and the dblclick's own ray came after the redraw
+//    those selects made (the APA desk's neighbour, MMET, or the desk's body: no item). The press always reaches here.
+assert.match(de,/w\.addEventListener\('pointerup',[^]*?ev\.stopImmediatePropagation\(\);ev\.preventDefault\(\);release\(ev\);select\(/,'(the Desks tab keeps the clicks on a selected desk to itself)');
+assert.match(ed,/dom\.addEventListener\('pointerdown',ev=>\{[^\n]*if\(down\)notePress\(ev,down\);\},true\);/,'every press is noted, before any click handler');
+assert.match(ed,/function notePress\(ev,d\)\{[^]*?if\(p&&!p\.second&&!ev\.altKey&&now-p\.t<600&&Math\.hypot\([^)]*\)<8\)\{p\.second=true;d\.second=true;return;\}[^]*?lastPress=\{t:now,x:ev\.clientX,y:ev\.clientY,hit:raycaster\.intersectObject/,'the hit is read at the press; a double-click\'s second press keeps the first');
+assert.match(ed,/function viewClick[^]*?if\(d\.second\)return;\s*const hits=/,'the second click of a double-click does nothing as a click');
+assert.ok(!/lastClick/.test(ed),'(no click record left)');
 assert.match(dir,/globalThis\.__directorPropEdits=\(\)=>shot\(\)\?copy\(layersPropEdits\(filmShot\(\),shot\(\)\)/,'the e2e reads the Director\'s edits, the film\'s while the shot has none');
 // 6. The first Director edit of a chapter copies the film's director:true entries into the shot unchanged (the cine
 //    cut's oil room: 5 lockers and a wall, from an earlier Export cut); the merge marks them director:true again

@@ -183,7 +183,11 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   }
   const isPerson=o=>{for(let p=o;p;p=p.parent)if(p.userData?.person)return true;return false;};
   let inside=null;   // the desk entered: {id, name} (id 'featured': the featured desk)
-  let lastClick=null;   // the last click on a room desk: {t, x, y, rd, item} (a double-click enters what its first click hit)
+  // The last press in the view, and what was under it then: {t, x, y, hit}. A double-click acts on its FIRST press (19 Nov
+  // 2026, Windows): the first click selects the desk, and the redraw that follows can change what is under the pointer.
+  // Also, while that desk is selected, the Desks tab takes the clicks on it (scene-desk-editor.mjs, capture on the stage
+  // window) and they never reach viewClick, but the press reaches here.
+  let lastPress=null;
   const insideGroup=()=>{if(!inside)return null;const sd=win()?.ErgoFlex?.sceneDesks;return inside.id==='featured'?win()?.ErgoFlex?.loadedModel||null:sd?.records?.get(inside.id)?.group||null;};
   const inInside=o=>{if(!inside||!o)return false;if(inside.id==='featured')return !roomDeskGroupOf(o)&&(onDeskItself(o)||ridesDesk(o));return roomDeskGroupOf(o)?.id===inside.id;};
   const chip=Object.assign(document.createElement('div'),{className:'desk-isolate-chip'});chip.hidden=true;chip.setAttribute('role','status');document.body.append(chip);
@@ -455,7 +459,15 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const raycaster=new THREE.Raycaster(),dom=t.renderer.domElement;let down=null;
     // gizmo: the press began on the selected item's gizmo (TransformControls takes it as a drag)
     let gizmoMoved=false;   // (the gizmo moved something since the press: not a click through it)
-    dom.addEventListener('pointerdown',ev=>{gizmoMoved=false;down=ev.button===0?{x:ev.clientX,y:ev.clientY,alt:ev.altKey,gizmo:!placing&&(gizmo.dragging||!!gizmo.axis)}:null;},true);
+    dom.addEventListener('pointerdown',ev=>{gizmoMoved=false;down=ev.button===0?{x:ev.clientX,y:ev.clientY,alt:ev.altKey,gizmo:!placing&&(gizmo.dragging||!!gizmo.axis)}:null;if(down)notePress(ev,down);},true);
+    // second: the press is a double-click's second (it does nothing as a click; the 'dblclick' acts on the first press)
+    function notePress(ev,d){
+      const now=performance.now(),p=lastPress;
+      if(p&&!p.second&&!ev.altKey&&now-p.t<600&&Math.hypot(ev.clientX-p.x,ev.clientY-p.y)<8){p.second=true;d.second=true;return;}
+      if(!editing()||placing){lastPress=null;return;}
+      const r=dom.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1),t.camera);
+      lastPress={t:now,x:ev.clientX,y:ev.clientY,hit:raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object))||null};
+    }
     dom.addEventListener('pointerup',ev=>{
       const d=down;down=null;if(!d||ev.button!==0||Math.hypot(ev.clientX-d.x,ev.clientY-d.y)>5||lightsShowing()||!editing()||blocked())return;
       // A press on the gizmo that never moved is a click on what is under it (19 Nov 2026: the gumball of a selected desk
@@ -469,10 +481,8 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       const r=dom.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1),t.camera);
       if(placing){const now=current(),e=sel&&editOfKey(sel.key);placing=false;
         if(now&&isAddEdit(e)){const h=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object)&&!isAncestor(now,h.object));if(h)placeAt(now,e,h.point,roomDeskGroupOf(h.object)?.id||null);else{status('Nothing there to put it on.',true);rerender();}return;}}
-      // The second click of a double-click on a room desk is the double-click's: it does nothing, and lastClick keeps the
-      // first (19 Nov 2026, Windows: the first click selects the desk, and what that re-renders can change what is under
-      // the pointer; the second click landed on the APA desk's neighbour, and the 'dblclick' entered the neighbour)
-      if(lastClick&&!lastClick.second&&!d.alt&&performance.now()-lastClick.t<600&&Math.hypot(ev.clientX-lastClick.x,ev.clientY-lastClick.y)<8){lastClick.second=true;return;}
+      // the second click of a double-click is the double-click's (notePress): it does nothing
+      if(d.second)return;
       const hits=raycaster.intersectObject(t.scene,true).filter(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object)),hit=hits[0];
       // People are not props: a click on one selects them in the People tab (scene-people-editor.mjs).
       if(hit&&!placing&&!underGizmo&&person(hit.object)){if(sel)deselect();return;}
@@ -482,12 +492,11 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
         if(!inInside(hit.object)){if(!underGizmo)status(`Editing ${inside.name}: click one of its items. Esc or a double-click on empty space leaves the desk.`);return;}
         const di=inside.id==='featured'?null:roomDeskItem(hit.object);
         if(inside.id!=='featured'){
-          lastClick={t:performance.now(),x:ev.clientX,y:ev.clientY,rd:{id:inside.id,name:inside.name},item:di?.obj||null};
           // Alt+click: the next item under the pointer, front to back (an item inside or behind another one)
           if(d.alt){const stack=[...new Set(hits.map(h=>roomDeskItem(h.object)).filter(x=>x&&x.id===inside.id).map(x=>x.obj))];
             if(stack.length){const i=stack.indexOf(current()),next=stack[(i+1)%stack.length];pick(next,{how:'replace'});status(`${label(next)} · ${stack.indexOf(next)+1} of ${stack.length} under the pointer · Alt+click again for the next one.`);return;}}
           if(di){if(!(underGizmo&&di.obj===current()))pick(di.obj,{how});}else if(!underGizmo)status(`That is ${inside.name} itself: click an item on it (Alt+click reaches one behind another). Esc leaves the desk.`);return;}
-      }else if(hit){const rd=roomDeskGroupOf(hit.object);if(rd){if(underGizmo)return;lastClick={t:performance.now(),x:ev.clientX,y:ev.clientY,rd,item:roomDeskItem(hit.object)?.obj||null};if(sel)deselect();if(roomDesk({obj:rd.group,edit:null,key:null}))status(`${rd.name} selected (Desks tab: move, turn, hide it). Double-click it to edit the items on it.`);return;}}
+      }else if(hit){const rd=roomDeskGroupOf(hit.object);if(rd){if(underGizmo)return;if(sel)deselect();if(roomDesk({obj:rd.group,edit:null,key:null}))status(`${rd.name} selected (Desks tab: move, turn, hide it). Double-click it to edit the items on it.`);return;}}
       const now=current(),o=hit&&(d.alt&&now&&isAncestor(now,hit.object)?meaningful(hit.object,{above:now}):meaningful(hit.object));
       if(!o){if(sel&&how==='replace'&&!underGizmo){deselect();status('Nothing to edit there: click a prop (furniture, lamps, desk items). Esc deselects.');}return;}
       if(underGizmo&&o===current())return;
@@ -507,12 +516,12 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     // Double-click: enter the desk under the pointer (and pick the item clicked), or leave the one entered (empty space)
     dom.addEventListener('dblclick',ev=>{
       if(ev.button!==0||!editing()||lightsShowing()||blocked()||placing||gizmo.dragging)return;
-      const r=dom.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1),t.camera);
-      // the desk and item the double-click's first click hit: that click may have changed the view under the pointer (it
-      // selects the desk: the panel, the header and the desk tools change), so the second one can land on something else
-      const first=lastClick&&performance.now()-lastClick.t<800&&Math.hypot(ev.clientX-lastClick.x,ev.clientY-lastClick.y)<8?lastClick:null;
-      if(first?.rd){enterDesk(first.rd);if(first.item&&inScene(first.item))pick(first.item,{how:'replace'});return;}
-      const hit=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object));
+      // what was under the double-click's first press (notePress): its first click may have changed the view under the
+      // pointer, so a ray now can land on the neighbouring desk. (No such press, or its object gone since: a ray now.)
+      const first=lastPress&&performance.now()-lastPress.t<800&&Math.hypot(ev.clientX-lastPress.x,ev.clientY-lastPress.y)<8?lastPress:null;
+      let hit=first?.hit&&inScene(first.hit.object)?first.hit:null;
+      if(!hit&&!(first&&!first.hit)){   // (the first press on empty space: empty space, so the double-click leaves)
+        const r=dom.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1),t.camera);hit=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object));}
       if(hit&&isPerson(hit.object))return;   // (a person: pose mode, scene-people-editor.mjs)
       const rd=hit&&roomDeskGroupOf(hit.object);
       if(rd){const di=roomDeskItem(hit.object);enterDesk(rd);if(di)pick(di.obj,{how:'replace'});return;}
