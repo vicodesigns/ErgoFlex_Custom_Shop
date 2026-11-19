@@ -98,40 +98,53 @@ try{
     check((await chip()).includes(d.name),`${d.id}: the chip names the desk: "${await chip()}"`);
     await shot(`${d.id}-1-entered`);
     // ---- 3: inside, every item a click can reach
-    const got=new Set([first]),unreached=[];
+    // Every angle is tried before an item fails: a miss is only noted (missed: the angle and point of its last miss at a
+    // solid point; stacked: an auto-stow part whose click landed on a sibling part at some angle). After the four angles,
+    // for an item no click picked: stacked -> out of reach (Layers); else missed -> the trace, the Esc and double-click
+    // fallback, and a FAIL if that misses too; else (no point, or only a sliver, from any angle) -> out of reach (Layers).
+    const got=new Set([first]),unreached=[],missed=new Map(),stacked=new Map(),failed=new Set();
+    const nameOf=i=>page.evaluate((id,i)=>__item(id,i).name,d.id,i);
+    // The parts of one auto-stowed desk item ("<item> · stored supply N", desk-auto-stow.mjs: tilting the desk splits it,
+    // and the parts that stay put sit on top of each other): a click on one that lands on a sibling part is a known limit,
+    // not a failure (19 Nov 2026, Windows: the APA desk's supply 8 lands on 7 or 1, gizmo or Alt; at another angle a click
+    // there lands on the shelf organizer). Out of reach of a click like a sliver; its Layers row (checked below) selects it.
+    const STOW=/ · stored supply \d+$/,sibling=(want,gotName)=>STOW.test(want)&&STOW.test(gotName)&&want.replace(STOW,'')===gotName.replace(STOW,'');
     for(let a=0;a<4;a++){
       for(let i=0;i<n;i++){if(got.has(i))continue;const q=await pointAt(d.id,i,a);if(!q)continue;
         await page.mouse.click(q.x,q.y);await wait(450);
         if(await isItem(d.id,i)){got.add(i);continue;}
         // the click picked what is in front (or the gizmo's item): Alt+click goes through the stack under the pointer
         let viaAlt=0;for(let k=1;k<=6&&!viaAlt;k++){const r=await pointAt(d.id,i,a)||q;await page.keyboard.down('Alt');await page.mouse.click(r.x,r.y);await page.keyboard.up('Alt');await wait(400);if(await isItem(d.id,i))viaAlt=k;}
-        if(viaAlt){altPicked++;console.log(`     item ${i} (${await page.evaluate((id,i)=>__item(id,i).name,d.id,i)}): a click picks what is in front, Alt+click ×${viaAlt} reaches it`);got.add(i);continue;}
+        if(viaAlt){altPicked++;console.log(`     item ${i} (${await nameOf(i)}): a click picks what is in front, Alt+click ×${viaAlt} reaches it`);got.add(i);continue;}
         // only a sliver of it shows from here: no click can be sure of it (another angle may do; else Layers, below)
-        if(!q.solid){console.log(`     item ${i} (${await page.evaluate((id,i)=>__item(id,i).name,d.id,i)}): only a sliver shows from angle ${a}`);continue;}
-        // The parts of one auto-stowed desk item ("<item> · stored supply N", desk-auto-stow.mjs: tilting the desk splits
-        // it, and the parts that stay put sit on top of each other): a click that lands on a sibling part is a known limit,
-        // not a failure (19 Nov 2026, Windows: the APA desk's supply 8 under 7 and 1, whatever the angle, gizmo or Alt).
-        // Out of reach of a click like a sliver; its Layers row (checked below) selects it.
-        {const STOW=/ · stored supply \d+$/,want=await page.evaluate((id,i)=>__item(id,i).name,d.id,i),gotName=(await props())?.objName||'';
-          if(STOW.test(want)&&STOW.test(gotName)&&want.replace(STOW,'')===gotName.replace(STOW,'')){console.log(`     item ${i} (${want}): a click lands on its sibling part ${gotName.replace(/^.* · /,'')} from angle ${a} (stacked auto-stow parts: Layers)`);continue;}}
-        const under=await page.evaluate((id,x,y)=>__under(id,x,y),d.id,q.x,q.y);
-        // what the Director did with those clicks, step by step (scene-prop-editor.mjs trace)
-        const steps=await page.evaluate(()=>JSON.stringify((document.getElementById('stage').contentWindow.__directorClickTrace||[]).slice(-8)));
-        console.log(`     item ${i}: the click trace ${steps}`);
-        // A known limit (19 Nov 2026, the APA desk's stacked stored supplies): the previous pick's gizmo covers the item.
-        // Deselect (Esc leaves the desk) and double-click the item itself, the way back in that selects what is clicked.
-        {await esc();const r=await pointAt(d.id,i,a);if(r){await dbl(r);if(await isItem(d.id,i)){viaFallback++;console.log(`     item ${i} (${await page.evaluate((id,i)=>__item(id,i).name,d.id,i)}): covered by the last pick's gizmo; Esc and a double-click on it reach it`);got.add(i);continue;}}}
-        const s=await props();check(false,`${d.id}: a click (or Alt+clicks) on item ${i} (${await page.evaluate((id,i)=>__item(id,i).name,d.id,i)}) selects it (got ${s.objName}, inside ${s.inside}; under the pointer now: ${under.join(' > ')})`);got.add(i);
+        if(!q.solid){console.log(`     item ${i} (${await nameOf(i)}): only a sliver shows from angle ${a}`);continue;}
+        const want=await nameOf(i),gotName=(await props())?.objName||'';
+        if(sibling(want,gotName)){stacked.set(i,gotName);console.log(`     item ${i} (${want}): a click lands on its sibling part ${gotName.replace(/^.* · /,'')} from angle ${a} (stacked auto-stow parts: Layers)`);continue;}
+        missed.set(i,{a,q,gotName});console.log(`     item ${i} (${want}): a click from angle ${a} lands on ${gotName||'nothing'}; the other angles first`);
       }
     }
-    for(let i=0;i<n;i++)if(!got.has(i))unreached.push(await page.evaluate((id,i)=>__item(id,i).name,d.id,i));
+    for(let i=0;i<n;i++){if(got.has(i))continue;
+      if(stacked.has(i)){console.log(`     item ${i} (${await nameOf(i)}): a stacked auto-stow part (a click landed on ${stacked.get(i).replace(/^.* · /,'')}): out of reach of a click, Layers below`);continue;}
+      const m=missed.get(i);if(!m)continue;   // (no clickable point from any angle, or only a sliver: out of reach, Layers below)
+      const under=await page.evaluate((id,x,y)=>__under(id,x,y),d.id,m.q.x,m.q.y);
+      // what the Director did with those clicks, step by step (scene-prop-editor.mjs trace)
+      const steps=await page.evaluate(()=>JSON.stringify((document.getElementById('stage').contentWindow.__directorClickTrace||[]).slice(-8)));
+      console.log(`     item ${i}: the click trace ${steps}`);
+      // A known limit (19 Nov 2026): the previous pick's gizmo covers the item. Deselect (Esc leaves the desk) and
+      // double-click the item itself, the way back in that selects what is clicked.
+      {await esc();const r=await pointAt(d.id,i,m.a);if(r){await dbl(r);if(await isItem(d.id,i)){viaFallback++;console.log(`     item ${i} (${await nameOf(i)}): covered by the last pick's gizmo; Esc and a double-click on it reach it`);got.add(i);continue;}}}
+      const s=await props();check(false,`${d.id}: a click (or Alt+clicks) on item ${i} (${await nameOf(i)}) selects it from one of four angles (angle ${m.a}: got ${s.objName}, inside ${s.inside}; under the pointer now: ${under.join(' > ')})`);got.add(i);failed.add(i);
+      // (the fallback may have left the desk: back in with the first item, for the checks that follow)
+      if((await props()).inside!==d.id){const r=await pointAt(d.id,first,a0);if(r)await dbl(r);}
+    }
+    for(let i=0;i<n;i++)if(!got.has(i))unreached.push(await nameOf(i));
     reached+=got.size;
     check((await props()).inside===d.id,`${d.id}: still inside after ${got.size} picks`);
     console.log(`     ${got.size}/${n} picked by a click inside${unreached.length?' (no clickable point, only a sliver, or a stacked auto-stow part under its siblings, from four angles: '+unreached.join(', ')+'; Layers below)':''}`);
     if(unreached.length)notes.push(`${d.id}: ${unreached.length} items out of reach of a click (${unreached.join(', ')})`);
     const other=list.find(x=>x.id!==d.id);   // (a click on its items does nothing while inside, below)
     // ---- 4: Delete hides the selected item; the people stay; Undo
-    {const i=[...got].at(-1);let q=null;for(let a=0;a<4&&!q;a++)q=await pointAt(d.id,i,a);if(q){await page.mouse.click(q.x,q.y);await wait(450);if(!await isItem(d.id,i))for(let k=0;k<6&&!await isItem(d.id,i);k++){await page.keyboard.down('Alt');await page.mouse.click(q.x,q.y);await page.keyboard.up('Alt');await wait(400);}}
+    {const i=[...got].filter(x=>!failed.has(x)).at(-1);let q=null;for(let a=0;a<4&&!q;a++)q=await pointAt(d.id,i,a);if(q){await page.mouse.click(q.x,q.y);await wait(450);if(!await isItem(d.id,i))for(let k=0;k<6&&!await isItem(d.id,i);k++){await page.keyboard.down('Alt');await page.mouse.click(q.x,q.y);await page.keyboard.up('Alt');await wait(400);}}
       const ok=await isItem(d.id,i),before=JSON.stringify(await page.evaluate(()=>__directorPropEdits())),ppl=await page.evaluate(()=>__people()),cast=await page.evaluate(()=>JSON.stringify(__directorShot().people??null));
       check(ok,`${d.id}: item ${i} selected for the Delete`);
       if(ok){
