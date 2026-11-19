@@ -495,6 +495,12 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 #film-stale h2{margin:4px 0 8px;font-size:20px}
 #film-stale ul{margin:0 0 14px;padding-left:18px;color:#ffc977}
 #film-stale button{min-height:34px;border-radius:9px;padding:6px 12px;font-size:12px}
+/* the set-aside draft's question (film-fresh.mjs prompt): the same card as the stale-export one */
+#film-draft{position:fixed;width:min(560px,92vw);border-radius:18px;padding:22px;color:#edf6fc;background:#0d1924f8;border:1px solid #ffc97760;box-shadow:0 20px 80px #000a;font-size:13px;line-height:1.5}
+#film-draft::backdrop{background:#020a11a8;backdrop-filter:blur(6px)}
+#film-draft h2{margin:4px 0 8px;font-size:20px}
+#film-draft .film-draft-warn{color:#ffc977}
+#film-draft button{min-height:34px;border-radius:9px;padding:6px 12px;font-size:12px}
 #film-stale .primary{background:#65dcff;color:#041018;font-weight:700;border:0}
 .chapter-end-handle{position:absolute;right:1px;top:1px;bottom:1px;width:20px;padding:0;border:1px solid #6fd0e8aa;border-radius:4px;background:#12384a;cursor:ew-resize;touch-action:none;display:grid;place-items:center}
 .chapter-end-handle i{width:6px;height:12px;border-left:2px solid #8ee3f7;border-right:2px solid #8ee3f7}
