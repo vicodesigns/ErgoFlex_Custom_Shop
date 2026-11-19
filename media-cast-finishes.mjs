@@ -1,12 +1,13 @@
 import * as THREE from 'three';
+import { HAIR_ATLASES, HAIR_TILES } from './media-cast-hair-atlas.mjs';
 
 // All OCC postures use the same MakeHuman UVs, including the animated models.
-// The eight tiles follow the order used to bake the original MPFB hairstyles.
-const cuts = ['ponytail01', 'afro01', 'short01', 'short04', 'braid01', 'short02', 'bob01', 'long01'];
+// Each hairstyle has one 512 px tile in a hair atlas (media-cast-hair-atlas.mjs: the original eight are atlas 0, the
+// rest follow in hair-*-2.webp, hair-*-3.webp), baked from the MPFB hair assets by tools/people/bake-hair-maps.py.
 
 // ---- the cast's finish maps, loaded once per page ------------------------------------------------------------------------
-// Every room with people uses the same four maps (hair fibres, hair flow, hairline, skin relief) and the same eight
-// tile views of the two hair atlases, so they are made by the first room that asks and kept for the page: a room's
+// Every room with people uses the same maps (hair fibres, flow and hairline atlases, skin relief) and the same tile
+// views of the hair atlases, so they are made by the first room that asks and kept for the page: a room's
 // disposal never touches them (room.root.ownedTextures does not list them, and the person materials that use them
 // carry userData.sharedTextures, which workspace-3d.mjs's disposeTree honours).
 // `ready` resolves when every map has loaded or failed (never rejects). A failed map drops the cache, so the next room
@@ -38,9 +39,9 @@ function castDetailShared() {
         return texture;
     }
 
-    const fibres = map('hair-fibres'), flow = map('hair-flow'), edges = map('hairline');
-    const hair = new Map(cuts.map((cut, i) => ['Human.' + cut, {
-        normal: tile(fibres, i), direction: tile(flow, i), edge: tile(edges, i),
+    const atlases = HAIR_ATLASES.map(suffix => ({ fibres: map('hair-fibres' + suffix), flow: map('hair-flow' + suffix), edges: map('hairline' + suffix) }));
+    const hair = new Map(Object.entries(HAIR_TILES).map(([cut, [k, i]]) => ['Human.' + cut, {
+        normal: tile(atlases[k].fibres, i), direction: tile(atlases[k].flow, i), edge: tile(atlases[k].edges, i),
     }]));
     state.cast = { hair, skin: map('skin-relief') };
     state.ready = Promise.all(loads).then(() => { state.done = true; if (failed.length && castShared === state) castShared = null; });
