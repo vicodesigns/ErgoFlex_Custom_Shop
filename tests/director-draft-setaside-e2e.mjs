@@ -51,9 +51,10 @@ try{
   await page.evaluateOnNewDocument(()=>{window.__exports=[];const make=URL.createObjectURL;URL.createObjectURL=function(b){if(b instanceof Blob&&b.type==='application/json')b.text().then(t=>window.__exports.push(JSON.parse(t)));return make.call(this,b);};});
   const clip=()=>page.$eval('[data-desk-clip="full-height"]',e=>e.getAttribute('aria-label')).catch(()=>'');
   const hashCut=()=>page.evaluate(()=>new URLSearchParams(location.hash.slice(1)).get('cut')).then(decode);
-  const notice=()=>page.$eval('#director-panel [data-film-fresh]',e=>e.textContent).catch(()=>'');
-  const pressed=()=>page.$$eval('#director-panel [data-film-fresh] button[aria-pressed=true]',b=>b.map(x=>x.textContent));
-  const dirty=()=>page.$eval('#director-panel [data-film-dirty]',e=>!e.hidden).catch(()=>null);
+  const notice=()=>page.$eval('[data-film-fresh]',e=>e.textContent).catch(()=>'');
+  const pressed=()=>page.$$eval('[data-film-fresh] button[aria-pressed=true]',b=>b.map(x=>x.textContent));
+  // (the not-exported mark is in the app bar in the calm shell, the default: anywhere on the page)
+  const dirty=()=>page.$eval('[data-film-dirty]',e=>!e.hidden).catch(()=>null);
   const click=sel=>page.evaluate(sel=>document.querySelector(sel).click(),sel);
   const reload=async()=>{await page.reload();await page.waitForFunction(()=>/Camera is live/.test(document.querySelector('#director-panel [data-status]')?.textContent||''),{timeout:300000});await wait(800);};
   const until=async(fn,what,ms=15000)=>{const t=Date.now();for(;;){const v=await fn();if(v)return v;if(Date.now()-t>ms)throw Error('timed out: '+what);await wait(200);}};
@@ -97,7 +98,7 @@ try{
   check(await fov()===B,`3. the newer edit (${B}) loads`);
   check((await aside()).includes(A),`3. the first edit (${A}) is still set aside, and offered`);
   await shot('02-modal-again');
-  await click('#film-draft [data-draft=keep]');await until(async()=>await fov()===A,'Keep brings the first edit back');
+  await click('#film-draft [data-draft=keep]');await until(async()=>await fov()===A&&await dirty(),'Keep brings the first edit back, not exported');
   check(await fov()===A&&await dirty(),`3. Keep: the first edit (${A}) is back in the editor, not exported`);
   check((await aside()).includes(B)&&(await slot()).includes(A),`3. and the second (${B}) is set aside in its turn: nothing lost`);
   check(!!await page.$('[data-action=film-draft-ask]'),'3. the strip offers the set-aside changes (Show them…)');
