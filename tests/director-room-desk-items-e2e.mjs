@@ -34,6 +34,8 @@ await page.evaluateOnNewDocument(()=>{
     r.group.traverse(m=>{if(m!==r.group&&MOUNT.test(m.name||''))for(const c of m.children)if(shown(c)&&!c.userData?.filmFx&&!c.userData?.directorTools){let mesh=false;c.traverse(x=>{if(x.isMesh)mesh=true;});if(mesh)out.push(c);}});
     return out;};
   window.__item=(id,i)=>__items(id)[i];
+  // every item on the desk's mounts, shown or not (a Layers row also stands for one the film hides at this time)
+  window.__allItems=id=>{const {api}=__t(),r=api.sceneDesks.records.get(id),out=[];if(!r?.group)return out;r.group.traverse(m=>{if(m!==r.group&&MOUNT.test(m.name||''))for(const c of m.children)if(!c.userData?.filmFx&&!c.userData?.directorTools)out.push(c);});return out;};
   window.__pointOn=o=>{const {t,T}=__t(),box=new T.Box3().setFromObject(o),f=document.getElementById('stage').getBoundingClientRect(),c=t.renderer.domElement.getBoundingClientRect(),ray=new T.Raycaster();
     const ours=x=>{for(let p=x;p;p=p.parent)if(p.userData?.directorTools||p.userData?.filmFx||p.isTransformControls)return true;return false;};
     const shown=x=>{for(let p=x;p;p=p.parent)if(!p.visible)return false;return true;};
@@ -50,6 +52,10 @@ await page.evaluateOnNewDocument(()=>{
     const eye=c.clone().addScaledVector(f,R).setY(b.min.y+h+(a===3?.15:.5));t.camera.position.copy(eye);t.controls.target.copy(c);t.camera.lookAt(c);t.controls.update();};
   window.__people=()=>{const {T,api}=__t();return (api.workspaceRoom?.people?.people||[]).map(o=>{const p=o.getWorldPosition(new T.Vector3());let s=true;for(let q=o;q;q=q.parent)if(!q.visible)s=false;return [o.userData.person?.id||o.name,s,+p.x.toFixed(2),+p.z.toFixed(2)].join('|');}).sort().join('\n');};
 });
+// The point on item i of desk id with the camera at angle a, framed right before the click: the test sets the camera
+// by hand, and a selection that re-renders the stage can put the Director's own view back (the film camera), so a point
+// worked out before a click is stale after it.
+const pointAt=async(id,i,a)=>{await page.evaluate((id,a)=>__frame(id,a),id,a);await wait(350);return page.evaluate((id,i)=>{const o=__item(id,i);return o?__pointOn(o):null;},id,i);};
 const props=()=>page.evaluate(()=>{const d=window.__directorProps?.();return d?{keys:d.keys,inside:d.inside?.id||null,desk:d.desk,objName:d.object?.name||null}:null;});
 const isItem=(id,i)=>page.evaluate((id,i)=>window.__directorProps?.().object===__item(id,i),id,i);
 const chip=()=>page.evaluate(()=>{const c=document.querySelector('.desk-isolate-chip');return c&&!c.hidden?c.textContent:'';});
@@ -65,17 +71,18 @@ try{
   const desks=await page.evaluate(()=>{const sd=__t().api.sceneDesks;return [...sd.records.values()].filter(r=>r.id!==sd.selected&&r.group&&r.group.visible).map(r=>({id:r.id,name:r.state?.name||r.id}));});
   const list=desks.filter(d=>!ONLY||ONLY.has(d.id));
   check(list.length>0,`the High school has room desks (${desks.map(d=>d.id).join(', ')})`);
-  let total=0,reached=0;
+  let total=0,reached=0,altPicked=0;
   for(const d of list){
     const n=await page.evaluate(id=>__items(id).length,d.id);total+=n;
     console.log(`\n${d.name} (${d.id}): ${n} items`);if(!n){notes.push(`${d.id}: nothing on it`);continue;}
     // ---- 1 + 2: from outside, a click selects the desk, a double-click enters it with the item
-    let first=-1,pt=null;
-    for(let a=0;a<4&&!pt;a++){await page.evaluate((id,a)=>__frame(id,a),d.id,a);await wait(700);for(let i=0;i<n&&!pt;i++){pt=await page.evaluate((id,i)=>__pointOn(__item(id,i)),d.id,i);first=i;}}
+    let first=-1,pt=null,a0=0;
+    for(let a=0;a<4&&!pt;a++){await page.evaluate((id,a)=>__frame(id,a),d.id,a);await wait(700);for(let i=0;i<n&&!pt;i++){pt=await page.evaluate((id,i)=>__pointOn(__item(id,i)),d.id,i);first=i;a0=a;}}
     if(!pt){check(false,`${d.id}: no item can be clicked from any angle`);continue;}
     await page.mouse.click(pt.x,pt.y);await wait(1000);
     let p=await props();
     check(p.desk===d.id&&!p.keys.length,`${d.id}: one click on an item selects the desk (desk ${p.desk}, props ${p.keys.length})`);
+    pt=await pointAt(d.id,first,a0)||pt;
     await dbl(pt);p=await props();
     check(p.inside===d.id&&await isItem(d.id,first),`${d.id}: a double-click enters the desk and selects that item (${p.objName}; inside ${p.inside})`);
     check((await chip()).includes(d.name),`${d.id}: the chip names the desk: "${await chip()}"`);
@@ -83,10 +90,13 @@ try{
     // ---- 3: inside, every item a click can reach
     const got=new Set([first]),unreached=[];
     for(let a=0;a<4;a++){
-      await page.evaluate((id,a)=>__frame(id,a),d.id,a);await wait(700);
-      for(let i=0;i<n;i++){if(got.has(i))continue;const q=await page.evaluate((id,i)=>__pointOn(__item(id,i)),d.id,i);if(!q)continue;
+      for(let i=0;i<n;i++){if(got.has(i))continue;const q=await pointAt(d.id,i,a);if(!q)continue;
         await page.mouse.click(q.x,q.y);await wait(450);
-        if(await isItem(d.id,i))got.add(i);else{const s=await props();check(false,`${d.id}: a click on item ${i} (${await page.evaluate((id,i)=>__item(id,i).name,d.id,i)}) selects it (got ${s.objName}, inside ${s.inside})`);got.add(i);}
+        if(await isItem(d.id,i)){got.add(i);continue;}
+        // the click picked what is in front (or the gizmo's item): Alt+click goes through the stack under the pointer
+        let viaAlt=0;for(let k=1;k<=6&&!viaAlt;k++){const r=await pointAt(d.id,i,a)||q;await page.keyboard.down('Alt');await page.mouse.click(r.x,r.y);await page.keyboard.up('Alt');await wait(400);if(await isItem(d.id,i))viaAlt=k;}
+        if(viaAlt){altPicked++;console.log(`     item ${i} (${await page.evaluate((id,i)=>__item(id,i).name,d.id,i)}): a click picks what is in front, Alt+click ×${viaAlt} reaches it`);got.add(i);continue;}
+        const s=await props();check(false,`${d.id}: a click (or Alt+clicks) on item ${i} (${await page.evaluate((id,i)=>__item(id,i).name,d.id,i)}) selects it (got ${s.objName}, inside ${s.inside})`);got.add(i);
       }
     }
     for(let i=0;i<n;i++)if(!got.has(i))unreached.push(await page.evaluate((id,i)=>__item(id,i).name,d.id,i));
@@ -96,12 +106,16 @@ try{
     if(unreached.length)notes.push(`${d.id}: ${unreached.length} items out of reach of a click (${unreached.join(', ')})`);
     const other=list.find(x=>x.id!==d.id);   // (a click on its items does nothing while inside, below)
     // ---- 4: Delete hides the selected item; the people stay; Undo
-    {const i=[...got].at(-1),q=await page.evaluate((id,i)=>__pointOn(__item(id,i)),d.id,i)||pt;if(q){await page.mouse.click(q.x,q.y);await wait(450);}
+    {const i=[...got].at(-1);let q=null;for(let a=0;a<4&&!q;a++)q=await pointAt(d.id,i,a);if(q){await page.mouse.click(q.x,q.y);await wait(450);if(!await isItem(d.id,i))for(let k=0;k<6&&!await isItem(d.id,i);k++){await page.keyboard.down('Alt');await page.mouse.click(q.x,q.y);await page.keyboard.up('Alt');await wait(400);}}
       const ok=await isItem(d.id,i),before=JSON.stringify(await page.evaluate(()=>__directorShot().propEdits||[])),ppl=await page.evaluate(()=>__people()),cast=await page.evaluate(()=>JSON.stringify(__directorShot().people??null));
+      check(ok,`${d.id}: item ${i} selected for the Delete`);
       if(ok){
         await blur();await page.keyboard.press('Delete');await wait(3500);
-        const after=await page.evaluate(()=>__directorShot().propEdits||[]);
-        check(after.length===JSON.parse(before).length+1&&after.at(-1).hide===true,`${d.id}: Delete gives the item a hide edit (${after.at(-1)?.label||after.at(-1)?.match})`);
+        // one entry new or changed (the item may already have an edit of the film's or the Director's), a hide; nothing else lost
+        const after=await page.evaluate(()=>__directorShot().propEdits||[]),B=JSON.parse(before),same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+        const changed=after.filter(e=>!B.some(b=>same(b,e))),lost=B.filter(b=>!after.some(e=>same(e,b)));
+        const off=await page.evaluate(()=>{const o=window.__directorProps?.().object;if(!o)return null;for(let p=o;p;p=p.parent)if(!p.visible)return true;return false;});
+        check(changed.length===1&&changed[0].hide===true&&lost.length<=1&&(!lost.length||lost[0].match===changed[0].match)&&off!==false,`${d.id}: Delete gives the item a hide edit and nothing else (${changed.map(e=>(e.label||e.match)+(e.hide?' hidden':'')).join(', ')}${lost.length?'; replaced '+lost.length:''}; off the stage ${off})`);
         check(await page.evaluate(()=>JSON.stringify(__directorShot().people??null))===cast&&await page.evaluate(()=>__people())===ppl,`${d.id}: no person changed`);
         await blur();await page.keyboard.down('Control');await page.keyboard.press('z');await page.keyboard.up('Control');await wait(2500);
         check(JSON.stringify(await page.evaluate(()=>__directorShot().propEdits||[]))===before,`${d.id}: Undo brings it back`);
@@ -111,7 +125,7 @@ try{
     await esc();p=await props();
     check(!p.inside&&p.desk===d.id&&!(await chip()),`${d.id}: Esc leaves the desk and selects it (inside ${p.inside}, desk ${p.desk})`);
     await esc();
-    if(other){await page.evaluate((id,a)=>__frame(id,a),d.id,0);await wait(600);const q=await page.evaluate((id,i)=>__pointOn(__item(id,i)),d.id,first);if(q){await dbl(q);
+    if(other){const q=await pointAt(d.id,first,a0);if(q){await dbl(q);
       const op=await page.evaluate(id=>{const items=__items(id);for(const o of items){const p=__pointOn(o);if(p)return p;}return null;},other.id);
       if(op){await page.mouse.click(op.x,op.y);await wait(600);p=await props();check(p.inside===d.id&&await isItem(d.id,first),`${d.id}: inside, a click on ${other.id}'s item does nothing`);}
       // empty space: a double-click on the sky / floor far off leaves
@@ -120,8 +134,8 @@ try{
       await dbl(box);p=await props();check(!p.inside,`${d.id}: a double-click on empty space leaves the desk (inside ${p.inside})`);await esc();}}
   }
   // ---- 6: the Layers tree
-  await tab('layers');
   for(const d of list){
+    await tab('layers');   // (leaving a desk used to switch to the Desks tab; open Layers for every desk anyway)
     const n=await page.evaluate(id=>__items(id).length,d.id);if(!n)continue;
     const rows=await until(()=>page.$$eval(`#director-panel [data-ly-group="room-desk:${d.id}"] [data-ly-item]`,l=>l.map(r=>r.dataset.lyItem)).then(l=>l.length?l:null),`${d.id}'s Layers rows`,20000).catch(()=>[]);
     const want=await page.evaluate(id=>new Set(__items(id).map(o=>o.name)).size,d.id);
@@ -129,13 +143,13 @@ try{
     let ok=0;
     for(const key of rows){
       await page.evaluate(k=>{const r=[...document.querySelectorAll('#director-panel [data-ly-item]')].find(e=>e.dataset.lyItem===k);(r?.querySelector('.layer-name')||r)?.click();},key);await wait(350);
-      const p=await props(),mine=await page.evaluate(id=>{const o=window.__directorProps?.().object;return !!o&&__items(id).includes(o);},d.id);
+      const p=await props(),mine=await page.evaluate(id=>{const o=window.__directorProps?.().object;if(!o)return false;const all=__allItems(id);for(let q=o;q;q=q.parent)if(all.includes(q))return true;return false;},d.id);
       if(p.keys.includes(key)&&p.inside===d.id&&mine)ok++;else check(false,`Layers: the row ${key.slice(0,90)} selects its item inside ${d.id} (keys ${p.keys.length}, inside ${p.inside}, on the desk ${mine})`);
     }
     check(ok===rows.length,`Layers: all ${rows.length} of ${d.name}'s rows select their item and enter the desk`);
     await esc();await esc();
   }
-  console.log(`\n${reached}/${total} items picked by a click inside their desk; every row in Layers.`);
+  console.log(`\n${reached}/${total} items picked by a click inside their desk (${altPicked} of them by Alt+click through the ones in front); every row in Layers.`);
 }catch(error){failures.push(error.message);console.error('FAIL '+error.message);await shot('fail');}
 finally{if(notes.length)console.log('notes:\n  '+notes.join('\n  '));console.log('screenshots in '+SHOTS+' · status: '+await statusOf(page).catch(()=>''));await close();}
 check(!errors.length,'no page errors'+(errors.length?': '+errors.join(' | '):''));
