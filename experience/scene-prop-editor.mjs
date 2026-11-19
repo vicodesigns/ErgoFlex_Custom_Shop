@@ -126,6 +126,11 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       const end=ri.onEditEnd;ri.onEditEnd=edit=>{studioMoved();return end?.(edit);};}
     const ctx=api.sceneDesks?.ctx,objects=api.sceneDesks?.objects;
     if(ctx&&!ctx[MUTED]){ctx[MUTED]=true;try{objects?.endDrag?.();}catch{}ctx.objectsEditable=()=>false;ctx.rearrange=()=>false;}
+    // Studio's canvas click makes the room desk under it THE featured desk (studio.js onCanvasClick -> sceneDesks.select):
+    // in the Director that hid the clicked desk's body under the live model, sent its people to the featured desk's
+    // place and made the Director take the desk for the featured one (19 Nov 2026, Vico: "the desk disappeared, and the
+    // girl again went to the main desk"). The Director picks desks itself (scene-desk-editor.mjs): Studio's pick is off.
+    const sd=api.sceneDesks;if(sd&&!sd[MUTED]){sd[MUTED]=true;sd.pick=()=>null;}
     if(api.itemGizmo?.active)try{api.itemGizmo.close();}catch{}
   }
   function studioMoved(){status(`${CANT_SAVE}: Studio's room editing moved it, not the Director. Undo in Studio or reload the chapter, then click it and use the Director's gizmo.`,true);}
