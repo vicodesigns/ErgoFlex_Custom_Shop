@@ -51,6 +51,8 @@ try{
   while(Date.now()-t0<5200){await wait(200);worst=Math.max(worst,far(await view(),heldView));samples++;}
   await click('#director-appbar [data-action="chapter-toggle"]');await wait(600);
   const t1=await playhead(),h1=await deskHeight();
+  // a seek while held leaves the view too; it also puts the playhead on an exact time for the comparison below
+  const T=5;await seek(page,T);check(far(await view(),heldView)<1e-4,`2. a seek (to ${T} s) leaves the held view alone`);
   check(t1>3.8,`2. the chapter played (the playhead at ${t1.toFixed(2)} s)`);
   check(h1>h0+.2,`2. the desk rose meanwhile (${h0} → ${h1} in)`);
   check(worst<1e-4,`2. the camera stayed on the held view at all ${samples} samples (largest difference ${worst.toExponential(1)})`);
@@ -59,8 +61,10 @@ try{
   await click('#director-appbar [data-action="hold-camera"]');await until(async()=>!await heldNow(),'the hold off');await wait(300);
   const back=await view();
   check(far(back,heldView)>.01,`3. off: the view leaves the held one (${far(back,heldView).toFixed(3)})`);
-  await seek(page,t1);await wait(300);const keyed=await view();
-  check(far(back,keyed)<1e-3,`3. and is the keys' view at the playhead (Δ ${far(back,keyed).toExponential(1)} from a seek to ${t1.toFixed(2)} s)`);
+  // (the same time both ways: the playhead was put on T exactly; Windows, 19 Nov 2026, compared the stage's last frame
+  // with a seek to the field's rounded seconds)
+  await seek(page,T);await wait(300);const keyed=await view();
+  check(far(back,keyed)<1e-3,`3. and is the keys' view at the playhead (Δ ${far(back,keyed).toExponential(1)} from a seek to ${T} s)`);
   check(!await page.$('[data-sb-pill="held"]')&&await page.$eval('#director-appbar [data-action="hold-camera"]',b=>b.getAttribute('aria-pressed')==='false'),'3. its pill is gone, the button off');
   await shot('03-off');
   // ---- 4. the cut untouched; Export cut carries nothing of it

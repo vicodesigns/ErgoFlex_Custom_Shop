@@ -49,6 +49,7 @@ const clean=cleanCut(JSON.parse(JSON.stringify(cut)),null);assert.ok(!('holdCame
 const row=ACTIONS.find(a=>a.id==='hold-camera');assert.deepEqual(row?.keys,['Shift+C'],'Shift+C');
 assert.ok(!ACTIONS.some(a=>a.id!=='hold-camera'&&a.keys.includes('Shift+C')),'nobody else\'s Shift+C');
 assert.match(dir,/case 'hold-camera':setHold\(!held\);return;/);
+assert.match(dir,/if\(!held&&open&&!bridge\.playback\(\)\.playing\)try\{seekCamera\(playhead\);\}catch\{\}/,'off: on the keys at the timeline\'s playhead');
 assert.match(dir,/case 'film-camera':if\(held\)\{setHold\(false,/,'0 (back to the film camera) turns it off');
 assert.match(dir,/if\(name==='key-go'\)\{const k=selectedKey\(\);if\(!k\)return;if\(held\)\{bridge\.stage\(\)\?\.holdCamera\?\.\(false\);seekCamera\(k\.time\);bridge\.stage\(\)\?\.holdCamera\?\.\(true\);/,'Go to this view goes there and holds it');
 assert.match(dir,/if\(name==='key-preview'\)\{\n        if\(held\)\{status\(/,'Preview camera move says why it does not move');

@@ -968,6 +968,7 @@ export function mountDirector(bridge,catalog,initial){
     held=!!on;saveUi({[HOLD_PREF]:held});
     if(held){if(bridge.bakeState().enabled){heldBaked=true;bridge.useBaked(false);}}else if(heldBaked){heldBaked=false;bridge.useBaked(true);}
     if(!held)orbitBase=null;bridge.stage()?.holdCamera?.(holdWanted());
+    if(!held&&open&&!bridge.playback().playing)try{seekCamera(playhead);}catch{}   // (back on the keys at the playhead the timeline shows, not the stage's last frame)
     renderPills();renderAppBar();renderPeople();
     status(held?'Editing camera on: the view stays where you put it while the chapter plays or scrubs. Shift+C (or 0) goes back to the film camera.':why||'Editing camera off: back to the film camera at the playhead.');
   }
