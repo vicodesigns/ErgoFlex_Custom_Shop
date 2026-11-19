@@ -53,9 +53,10 @@ try{
   await page.evaluateOnNewDocument(()=>{window.__exports=[];const make=URL.createObjectURL;URL.createObjectURL=function(b){if(b instanceof Blob&&b.type==='application/json')b.text().then(t=>window.__exports.push(JSON.parse(t)));return make.call(this,b);};});
   const clip=()=>page.$eval('[data-desk-clip="full-height"]',e=>e.getAttribute('aria-label')).catch(()=>'');
   const hashCut=()=>page.evaluate(()=>new URLSearchParams(location.hash.slice(1)).get('cut')).then(decode);
-  const notice=()=>page.$eval('#director-panel [data-film-fresh]',e=>e.textContent).catch(()=>'');
-  const pressed=()=>page.$$eval('#director-panel [data-film-fresh] button[aria-pressed=true]',b=>b.map(x=>x.textContent));
-  const dirty=()=>page.$eval('#director-panel [data-film-dirty]',e=>!e.hidden).catch(()=>null);
+  // (the film notice and its buttons are in the app bar in the calm shell, the default: anywhere on the page)
+  const notice=()=>page.$eval('[data-film-fresh]',e=>e.textContent).catch(()=>'');
+  const pressed=()=>page.$$eval('[data-film-fresh] button[aria-pressed=true]',b=>b.map(x=>x.textContent));
+  const dirty=()=>page.$eval('[data-film-dirty]',e=>!e.hidden).catch(()=>null);
   const click=sel=>page.evaluate(sel=>document.querySelector(sel).click(),sel);
   const reload=async()=>{await page.reload();await page.waitForFunction(()=>/Camera is live/.test(document.querySelector('#director-panel [data-status]')?.textContent||''),{timeout:300000});await wait(800);};
   const until=async(fn,what,ms=15000)=>{const t=Date.now();for(;;){const v=await fn();if(v)return v;if(Date.now()-t>ms)throw Error('timed out: '+what);await wait(200);}};
@@ -89,7 +90,7 @@ try{
   check(/8\.5 to 11\.7/.test(await clip()),`a draft newer than the film loads by default (${await clip()})`);
   check(/You have unexported changes from \d\d:\d\d in this browser\./.test(await notice())&&(await pressed())[0]==='Keep my unexported changes',`draft choice offered: "${await notice()}" [${await pressed()}]`);
   check(await dirty(),'the draft is marked "not exported"');
-  await click('#director-panel [data-action=film-use-film]');await until(async()=>/9 to 12\.2/.test(await clip()),'film version');
+  await click('[data-action=film-use-film]');await until(async()=>/9 to 12\.2/.test(await clip()),'film version');
   check(/9 to 12\.2/.test(await clip())&&!await dirty(),'Use the film\'s version: the film\'s clip, nothing unexported');
   const setAside=()=>page.evaluate(()=>Object.values(JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.setAside.v1')||'{}')).flat().length);
   check(await page.evaluate(()=>!JSON.parse(localStorage.getItem('ergoflex.director.filmDrafts.v1')||'{}').rise)&&await setAside()===1,'Use the film\'s version sets the stored draft aside (the slot empty, one set-aside draft)');
@@ -98,11 +99,11 @@ try{
   check(/9 to 12\.2/.test(await clip())&&await asked(),'a draft older than the film\'s import leaves the film\'s version loaded and asks about it in a modal');
   await click('#film-draft [data-draft=later]');
   check(!await asked()&&(await pressed())[0]==='Use the film\'s version…'&&await setAside()===1,`Decide later: the strip offers it [${await pressed()}], still set aside (the same draft once)`);
-  await click('#director-panel [data-action=film-keep-draft]');await until(async()=>/8\.5 to 11\.7/.test(await clip()),'draft back');
+  await click('[data-action=film-keep-draft]');await until(async()=>/8\.5 to 11\.7/.test(await clip()),'draft back');
   check(await dirty()&&await setAside()===0,'Keep my unexported changes: the draft is back, marked "not exported", no longer set aside');
-  await click('#director-panel [data-action=film-use-film]');await until(async()=>/9 to 12\.2/.test(await clip()),'film version again');
+  await click('[data-action=film-use-film]');await until(async()=>/9 to 12\.2/.test(await clip()),'film version again');
   check(await setAside()===1,'Use the film\'s version: set aside again');
-  await click('#director-panel [data-action=film-use-film]');await until(asked,'the question before deleting');
+  await click('[data-action=film-use-film]');await until(asked,'the question before deleting');
   await click('#film-draft [data-draft=delete]');await until(async()=>await setAside()===0,'deleted');
   check(!await asked()&&!await notice(),'Use the film\'s version, Delete: the set-aside draft is gone, no notice');
 

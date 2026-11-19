@@ -3,12 +3,12 @@
 // it without choosing, reloaded again, and his first edits were gone: the chapter's one draft slot had been written
 // over. Now (experience/film-fresh.mjs) a draft older than the film is set aside under its own key and a modal asks.
 // Against a SCRATCH copy of the hq dir (never the real one), chapter 2 (rise):
-//   1. an edit in the Director (camera key's field of view 31 deg): the draft slot has it
+//   1. an edit in the Director (a camera key's field of view, well away from the film's): the draft slot has it
 //   2. an import updates the film (build-round8-director.py pass + pages); reload: the film's version opens, the modal
-//      names the chapter and its changes; Decide later; another edit (field of view 52 deg) without choosing
-//   3. reload again: the newer edit (52) loads, and the modal offers the first one (31) again: Keep brings 31 back and
-//      sets 52 aside; both are recoverable; "Show them…", Use the film's version, a second question, Delete: 52 is
-//      gone, 31 stays in the editor. Screenshots.
+//      names the chapter and its changes; Decide later; another edit (another field of view) without choosing
+//   3. reload again: the newer edit loads, and the modal offers the first one again: Keep brings it back and sets the
+//      newer one aside; both are recoverable; "Show them…", Use the film's version, a second question, Delete: the
+//      newer one is gone, the first stays in the editor. Screenshots.
 //   node tests/director-draft-setaside-e2e.mjs      SOURCE_HQ=<full hq dir, only read> (default <repo>/$HQ), PORT=3201, SHOTS=<dir>
 import fs from 'node:fs';
 import os from 'node:os';
@@ -73,10 +73,13 @@ try{
     for(const v of Object.values(all))for(const d of [].concat(v))if(d?.cut?.shots?.[0]?.id==='rise')out.push(...d.cut.shots[0].camera.keys.map(k=>k.view?.fov));return out;},key);
   const slot=()=>fovsIn('ergoflex.director.filmDrafts.v1'),aside=()=>fovsIn('ergoflex.director.filmDrafts.setAside.v1');
   const v1=rise();await openChapter(page,base,v1);
-  const film0=await fov();check(Number.isFinite(film0)&&film0!==31&&film0!==52,`the film's field of view at the key: ${film0}`);
+  // two edits far from the film's field of view and from each other (Windows, 19 Nov 2026: the film's is 31.0017 there,
+  // so an edit to 31 was within the Director's 0.01 deg of it and rightly counted as no change at all)
+  const film0=await fov(),A=film0<55?Math.round(film0)+9:Math.round(film0)-9,B=film0<55?Math.round(film0)+21:Math.round(film0)-21;
+  check(Number.isFinite(film0)&&Math.abs(A-film0)>5&&Math.abs(B-film0)>5&&A>=15&&B<=80&&B>=15,`the film's field of view at the key: ${film0}; the edits: ${A}, then ${B}`);
   // ---- 1. an edit; the draft slot has it
-  await setFov(31);await until(async()=>(await slot()).includes(31),'the draft has the edit');
-  check(true,'1. edit (field of view 31): the draft slot has it');
+  await setFov(A);await until(async()=>(await slot()).includes(A),'the draft has the edit');
+  check(true,`1. edit (field of view ${A}): the draft slot has it`);
   // ---- 2. the film moves on; reload; Decide later; edit again without choosing
   await wait(1100);importEdit(9,.25);const v2=rise();check(v2.version!==v1.version,`2. import: the film is newer (${v2.version})`);
   await reload();await until(asked,'the modal on load');
@@ -84,26 +87,26 @@ try{
   check(/^Film chapter: rise[^:]*: \d+ changes? made .+ in this browser and not exported\./.test(text),`2. the modal names the chapter and its changes: "${text}"`);
   check(!!await page.$('#film-draft [data-draft=keep]')&&!!await page.$('#film-draft [data-draft=film]')&&!!await page.$('#film-draft [data-draft=later]'),'2. Keep my unexported changes / Use the film\'s version / Decide later');
   await shot('01-modal-on-load');
-  check((await aside()).includes(31)&&!(await slot()).includes(31),'2. the first edit is set aside (not in the draft slot any more)');
+  check((await aside()).includes(A)&&!(await slot()).includes(A),'2. the first edit is set aside (not in the draft slot any more)');
   await click('#film-draft [data-draft=later]');check(!await asked(),'2. Decide later closes it');
   check(await fov()===film0,'2. the film\'s version is in the editor');
-  await setFov(52);await until(async()=>(await slot()).includes(52),'the second edit is the draft');
-  check((await aside()).includes(31),'2. the second edit (52) did not write over the set-aside one (31)');
+  await setFov(B);await until(async()=>(await slot()).includes(B),'the second edit is the draft');
+  check((await aside()).includes(A),`2. the second edit (${B}) did not write over the set-aside one (${A})`);
   // ---- 3. reload again: both recoverable
   await reload();await until(asked,'the modal on the second reload');
-  check(await fov()===52,'3. the newer edit (52) loads');
-  check((await aside()).includes(31),'3. the first edit (31) is still set aside, and offered');
+  check(await fov()===B,`3. the newer edit (${B}) loads`);
+  check((await aside()).includes(A),`3. the first edit (${A}) is still set aside, and offered`);
   await shot('02-modal-again');
-  await click('#film-draft [data-draft=keep]');await until(async()=>await fov()===31,'Keep brings 31 back');
-  check(await fov()===31&&await dirty(),'3. Keep: the first edit (31) is back in the editor, not exported');
-  check((await aside()).includes(52)&&(await slot()).includes(31),'3. and the second (52) is set aside in its turn: nothing lost');
-  check(!!await page.$('#director-panel [data-action=film-draft-ask]'),'3. the strip offers the set-aside changes (Show them…)');
+  await click('#film-draft [data-draft=keep]');await until(async()=>await fov()===A,'Keep brings the first edit back');
+  check(await fov()===A&&await dirty(),`3. Keep: the first edit (${A}) is back in the editor, not exported`);
+  check((await aside()).includes(B)&&(await slot()).includes(A),`3. and the second (${B}) is set aside in its turn: nothing lost`);
+  check(!!await page.$('[data-action=film-draft-ask]'),'3. the strip offers the set-aside changes (Show them…)');
   await shot('03-kept');
-  await click('#director-panel [data-action=film-draft-ask]');await until(asked,'the modal from the strip');
+  await click('[data-action=film-draft-ask]');await until(asked,'the modal from the strip');
   await click('#film-draft [data-draft=film]');await until(()=>page.$('#film-draft [data-draft=delete]'),'the second question');
   check(/Delete these changes\?/.test(await page.$eval('#film-draft',e=>e.textContent)),'3. Use the film\'s version asks before deleting');
-  await click('#film-draft [data-draft=delete]');await until(async()=>!(await aside()).includes(52),'52 deleted');
-  check(await fov()===31&&!await asked(),'3. Delete: only the set-aside one (52) is gone; the editor keeps 31');
+  await click('#film-draft [data-draft=delete]');await until(async()=>!(await aside()).includes(B),'the second edit deleted');
+  check(await fov()===A&&!await asked(),`3. Delete: only the set-aside one (${B}) is gone; the editor keeps ${A}`);
   const errs=errors.filter(e=>!/WebGL|GPU stall/i.test(e));
   check(!errs.length,`no page errors${errs.length?': '+errs.join(' | '):''}`);
 }catch(error){console.error(error);failures.push(error.message);}

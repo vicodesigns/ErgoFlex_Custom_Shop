@@ -100,4 +100,16 @@ h.edit(.07);assert.equal(key2(slot('rise').cut),.06,'8. an edit never writes ove
 assert.ok(h.statuses.some(([m,e])=>e&&/storage is full/.test(m)),'8. and says why');
 h.click('keep');assert.equal(key2(h.project),.06,'8. Keep brings it back');
 assert.equal(draftChanges(FILM.rise,edited('rise',.02)),1,'(one change: camera key 2)');
+// 9. as the browser has it after an import (Windows, 19 Nov 2026): the page swapped in the newer film and remembers the hash's
+//    (older) cut. A draft that is the old cut but for a change within the Director's tolerance (a field of view 0.0017 deg
+//    off) holds nothing: dropped, no modal. One with a real change is set aside and asked about.
+{store.clear();const newer=edited('rise',.08),oldCut=structuredClone(FILM.rise);
+  const tiny=structuredClone(oldCut);tiny.shots[0].camera.keys[2].view.fov=(oldCut.shots[0].camera.keys[2].view.fov??35)+.0017;
+  const real=structuredClone(oldCut);real.shots[0].camera.keys[2].view.fov=(oldCut.shots[0].camera.keys[2].view.fov??35)+9;
+  const load=async draft=>{store.set(DRAFTS,JSON.stringify({[id.rise]:{cut:draft,at:OLD}}));filmFresh.state={chapter:{id:'rise'},stamp:STAMP,newer:true,hashCut:oldCut};
+    const n=dialogs.length,ed={project:structuredClone(newer)};ed.f=createFilmFresh({film:'x'},ed.project,{storage,catalog:null,escape:s=>String(s),render(){},status(){},current:()=>({cut:ed.project,unexported:false}),load(){}});
+    ed.ask=dialogs[n+1];ed.f.initialDraft();await new Promise(r=>setTimeout(r,5));return ed;};
+  let e=await load(tiny);assert.ok(!e.ask.open&&!e.f.offered()&&slot('rise')===null&&!aside('rise').length,'9. a draft that is the old cut within tolerance: dropped, no modal');
+  e=await load(real);assert.ok(e.ask.open&&e.f.offered()&&aside('rise').length===1,'9. a real change: set aside, the modal asks');
+  assert.match(e.ask.innerHTML,/Film chapter: rise \(18 s\)<\/b>: \d+ changes? made/);}
 console.log('film-draft-setaside-test: ok (older drafts set aside per cut and chapter, offered on every load, never written over; Keep swaps, Delete asks first)');
