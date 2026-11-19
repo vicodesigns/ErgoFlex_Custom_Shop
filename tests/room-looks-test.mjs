@@ -152,6 +152,8 @@ for (const layout of Object.values(ARTIST_LAYOUTS)) {
     for (const poster of ['Story / Screen', 'Light / Colour', 'Sound / Silence']) assert(lab.n.has(poster), poster);
     assert(lab.room.root.mediaCast.hair.has('Human.ponytail01'), 'Ava has her fibre maps in either look');
   }
+  assert.equal(fresh.room.root.mediaCast, classic.room.root.mediaCast, 'both looks (and every other room with people) share one cast of finish maps');
+  assert(!fresh.room.root.ownedTextures?.includes(fresh.room.root.mediaCast.skin), 'the room does not own the shared maps');
   assert(fresh.n.has('LATE EDIT / CONFORM') && !fresh.n.has('PORTFOLIO CRITIQUE'), 'Studio refresh has the pass\'s sheets');
   assert(classic.n.has('PORTFOLIO CRITIQUE') && !classic.n.has('LATE EDIT / CONFORM'), 'Classic keeps its old sheets');
   assert.notEqual(institutionalModule('occmedialab'), institutionalModule('occmedialab', 'classic'), 'the Classic look builds the frozen module');
@@ -181,6 +183,10 @@ assert.match(people, /const refreshedCast = room => \(room\?\.id === 'occmediala
 assert.match(people, /const classicMedia = room => room\?\.id === 'occmedialab' && room\.look === 'classic';/);
 assert.match(people, /rig\.mediaLab = room\?\.id === 'occmedialab' && !classicMedia\(room\);/, 'the editor\'s fader hand is the refresh\'s only');
 assert.match(people, /rig\.classicMotion = classicCreate\(room\) \|\| classicCommons\(room\)/, 'the Commons\' Classic cast moves as before too');
+assert.match(people, /const castDetailRoom = room => !!room && !classicCreate\(room\) && !classicCommons\(room\);/, 'cast detail (hair, skin, finger and audience motion) is every look\'s but Create\'s and the Commons\' frozen Classic casts');
+assert.match(people, /rig\.castDetail = castDetailRoom\(room\); rig\.editorCast = room\?\.id === 'occmedialab';/, 'the editor\'s timeline scan is the media lab\'s only');
+assert.equal((people + fs.readFileSync(path.join(root, 'room-people-motion.mjs'), 'utf8')).includes('coastCast'), false, 'the one media-lab flag was split into castDetail / editorCast / mediaLab');
+
 assert.match(fs.readFileSync(path.join(root, 'experience', 'stage.mjs'), 'utf8'), /api\.setRoomLook\?\.\(next\.room,next\.look\?\?null\);\s*\n\s*if\(next\.layout\)/, 'the stage sets the look before it loads the room');
 
 // ---- 4. the shot field

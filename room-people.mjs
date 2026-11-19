@@ -1,4 +1,4 @@
-import { mediaPersonMaterial } from './media-cast-finishes.mjs';
+import { mediaPersonMaterial, castDetailEnsure, castDetailCast, castDetailVariant, castDetailTouches } from './media-cast-finishes.mjs';
 // People who live and work in the rooms (Studio "People" toggle, film `people`).
 //
 // The models are posed, static library props (category "people", built by
@@ -94,7 +94,11 @@ const classicCreate = room => room?.id === 'creative' && room.look === 'classic'
 const classicCommons = room => !!room?.roomLayout?.humboldt && room.look === 'classic';
 const classicMedia = room => room?.id === 'occmedialab' && room.look === 'classic';   // (the OCC media lab's Classic look: its cast and motion as before the Nov 18 pass)
 const refreshedCast = room => (room?.id === 'occmedialab' && !classicMedia(room)) || (room?.id === 'creative' && !classicCreate(room)) || (!!room?.roomLayout?.humboldt && !classicCommons(room));
-const classicRig = (rig, room) => { rig.coastCast = room?.id === 'occmedialab'; rig.mediaLab = room?.id === 'occmedialab' && !classicMedia(room); rig.classicMotion = classicCreate(room) || classicCommons(room); return rig; };
+// The cast finishes (hair fibre / flow / edge maps, skin relief, eyes; media-cast-finishes.mjs) and the finger, gaze and audience
+// motion that goes with them (rig.castDetail) are every room's and every look's, but the frozen Classic casts of Create and the Commons.
+// rig.editorCast (the editor scanning a timeline) stays the media lab's; rig.mediaLab (the editor's fader hand) its refresh's.
+export const castDetailRoom = room => !!room && !classicCreate(room) && !classicCommons(room);
+export const classicRig = (rig, room) => { rig.castDetail = castDetailRoom(room); rig.editorCast = room?.id === 'occmedialab'; rig.mediaLab = room?.id === 'occmedialab' && !classicMedia(room); rig.classicMotion = classicCreate(room) || classicCommons(room); return rig; };
 // who looks at whom (RoomPeople.gazeOf)
 const GAZE_TALK = /^(stand-talk|sit-chat|stand-drink|stand-mug|stand-coffee|sit-coffee)$/, GAZE_IDLE = /^(stand-wait|wheel-roll|wheel-watch|cane-stand|white-cane|sit-listen)$/;
 const GAZE_DESK = /^stand-phone-watch$/;      // watching the featured desk go (the workshop film): the head follows it
@@ -1340,6 +1344,7 @@ export class RoomPeople {
             for (const k of ['person', 'personFit', 'personChair', 'personChairBase', 'personMissing', 'personAmount', 'sceneAsset', 'sceneAssetKey', 'sceneAssetRole', 'editorId', 'personPlacement']) if (object.userData[k] !== undefined) rigged.userData[k] = object.userData[k];
             rigged.userData.personRig = { bones, rest };
             if (object.userData.personMaterials) { for (const m of object.userData.personMaterials) m.dispose(); this.ownMaterials(rigged); }
+            else this.shareCastDetail(rigged);
             object.parent?.add(rigged); object.removeFromParent(); this.people[at] = rigged;
             const now = this.current(rigged) || spec; this.resize(rigged, now); this.recolor(rigged, now); this.pose(rigged, now);
             this.room.onPersonModel?.(rigged, object);
@@ -1525,9 +1530,10 @@ export class RoomPeople {
     }
     // Loads these placements' models and puts them in the room; false when the cast was replaced meanwhile.
     async bring(specs, token, root, cast) {
-        const room = this.room;
+        const room = this.room, detailReady = castDetailRoom(room) ? castDetailEnsure() : null;      // (the shared finish maps load while the models do)
         const load = async id => { try { return await this.library.instance(id); } catch (error) { console.warn('[people] ' + id + ' did not load:', error?.message || error); return null; } };
         const loaded = await Promise.all(specs.map(async spec => ({ spec, object: await load(spec.id), chair: spec.desk === 'sit' && !ownSeat(spec) ? await load(TASK_CHAIR) : null })));
+        if (detailReady) await detailReady;
         const posed = [];
         // (a cast that was replaced while its models loaded is dropped: its people would stay in the room for good)
         if (token !== room.token || root !== room.root || cast !== this.generation) return false;
@@ -1537,6 +1543,7 @@ export class RoomPeople {
             if (chair) { chair.name = 'Person chair:' + spec.id; chair.visible = false; root.add(chair); object.userData.personChair = chair; }
             if (hairEdgeEnabled()) hairEdges(object, true);      // (before ownMaterials: its copies keep it)
             if (room.root.mediaCast || refreshedCast(room) || spec.desk || this.filter?.when?.[this.keyOf(spec)]) this.ownMaterials(object);
+            else this.shareCastDetail(object);
             root.add(object); this.people.push(object); this.resize(object, spec); this.recolor(object, spec);
             // The Studio may load people after the room's first asset hydration. Their editor identity must
             // follow the placement, not the order in which models and posture variants finish loading.
@@ -1600,13 +1607,20 @@ export class RoomPeople {
         const sitter = used.find(m => m.role === 'sit')?.object.userData.person, mm = v => Number.isFinite(v) ? v / 1000 : undefined;
         actor.chairRoll = mm(actor.lead?.chairRoll ?? sitter?.chairRoll); actor.chairScoot = mm(actor.lead?.chairScoot ?? sitter?.chairScoot);
     }
+    // People without materials of their own (every room but the media lab's, outside the frozen Classic casts) wear the page's
+    // shared finished hair, skin, eyes and brows: one copy per source material (media-cast-finishes.mjs), nothing to dispose.
+    shareCastDetail(object) {
+        const cast = castDetailRoom(this.room) ? castDetailCast() : null; if (!cast) return;
+        const swap = m => castDetailVariant(m, cast, partOf(m.name));
+        object.traverse(o => { if (o.isMesh) o.material = Array.isArray(o.material) ? o.material.map(swap) : swap(o.material); });
+    }
     // The featured desk's people fade with the desk height, so they need materials of their own (textures stay shared).
     ownMaterials(object) {
         const copies = new Map(); object.userData.personMaterials = [];
         const copy = m => {
             if (!copies.has(m)) {
-                const cast = this.room.root?.mediaCast;
-                const owned = cast ? mediaPersonMaterial(m,cast,partOf(m.name)) : m.clone();
+                const media = this.room.root?.mediaCast, cast = media || (castDetailRoom(this.room) ? castDetailCast() : null);
+                const owned = cast && !m.userData.castDetail && (media || castDetailTouches(m, partOf(m.name))) ? mediaPersonMaterial(m,cast,partOf(m.name)) : m.clone();
                 owned.userData.sharedTextures = true;
                 owned.userData.solid = { transparent:owned.transparent, opacity:owned.opacity };
                 copies.set(m, owned);

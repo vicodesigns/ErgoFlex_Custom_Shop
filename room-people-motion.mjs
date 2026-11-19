@@ -196,7 +196,7 @@ function screenFrom(rig, l, r, lift, laptop, out) {
     out.copy(l).add(r).multiplyScalar(.5); out.y += lift + (laptop ? .1 : .36); out.z += laptop ? .14 : .3; return out;
 }
 const screenAt = V();
-// In actor space so the timeline and keyboard stay in the right place as the
+// The media lab's editor (rig.editorCast) scans the timeline on the screen. In actor space so the timeline and keyboard stay in the right place as the
 // editor stands or the desk rises. A laptop has a shorter scan distance.
 function followEditTimeline(target,time,seed,amount) {
     target.x += .14 * noise(time * .28, seed + 76) * amount;
@@ -228,19 +228,19 @@ const blendW = (out, pair, i) => pair.w > 0 ? out.slerpQuaternions(pair.a.wq[i],
 
 // Typing: in bursts with pauses, one finger of each hand at a time dips onto a key (the two hands half a beat apart).
 function tapKeys(rig, s, time, seed, life) {
-    // During playback the editor rests their fingers on the keys for a beat.
-    if (rig.coastCast) life *= 1 - moment(time,seed,102,8,2.4);
+    // Everyone rests their fingers on the keys for a beat now and then (the media lab's editor, during playback).
+    if (rig.castDetail) life *= 1 - moment(time,seed,102,8,2.4);
     const { fingers, arm } = rig.side[s], busy = ss(-.15, .1, noise(time * .31 + (s === 'l' ? 0 : .4), seed + 21)) * life, beat = time * (6.1 + hash(3, seed) * 1.6) + (s === 'l' ? 0 : .5), n = Math.floor(beat), x = beat - n;
     const which = Math.floor(hash(n, seed + (s === 'l' ? 40 : 41)) * 5.99) % 5, tap = Math.sin(Math.PI * x) ** 2 * busy * (hash(n, seed + 50) < .82 ? 1 : 0);
     if (tap <= 0) return;
     fingers.forEach((i, at) => {
         const finger = Math.floor(at / 3), joint = at % 3;
-        if (rig.coastCast && finger === (which+1)%5 && joint===0) {
+        if (rig.castDetail && finger === (which+1)%5 && joint===0) {
             // A neighbouring digit lifts slightly as the typing finger loads the key.
             rig.lq[i].multiply(turn.setFromAxisAngle(X,-.045*tap));
         }
         if (finger !== which) return;
-        if (rig.coastCast) {
+        if (rig.castDetail) {
             // The proximal joint leads, then the fingertip closes and releases.
             const travel=Math.sin(Math.PI*clamp01((x-joint*.075)/(1-joint*.075)))**2;
             const thumb=rig.names[i].startsWith('thumb');
@@ -318,7 +318,7 @@ export function solveDesk(rig, keys, input) {
         if (screenPair) {
             const L = rig.side.l.arm[3], R = rig.side.r.arm[3];
             screenFrom(rig, blendV(v5, screenPair, L), blendV(v6, screenPair, R), screenPair.lift, false, screenAt);
-            if (rig.coastCast) followEditTimeline(screenAt, time, seed, life);
+            if (rig.editorCast) followEditTimeline(screenAt, time, seed, life);
             lookToward(rig, screenAt, .85 * (1 - lean / THREE.MathUtils.degToRad(36)));
         }
         const glance = ss(.62, .8, noise(time * .16 + 31, seed)), yaw = (noise(time * .19, seed + 5) * .07 + noise(time * .053 + 3, seed + 6) * .09) * life, nod = (noise(time * .23 + 11, seed + 7) * .03 + glance * .2 * (1 - ke * .35)) * life;
@@ -500,7 +500,7 @@ export function solveStill(rig, key, input) {
     if (!target && TYPES.has(pose)) {
         const laptop = pose === 'sit-laptop';
         target = screenFrom(rig, key.wp[rig.side.l.arm[3]], key.wp[rig.side.r.arm[3]], 0, laptop, screenAt);
-        if (rig.coastCast) followEditTimeline(target, time, seed, laptop ? .55 : 1);
+        if (rig.editorCast) followEditTimeline(target, time, seed, laptop ? .55 : 1);
         amount = .8;
     }
     if (target) lookToward(rig, target, amount * life);
@@ -524,7 +524,7 @@ export function solveStill(rig, key, input) {
     else if (input.act && SCREEN_ACTS[pose]) { SCREEN_ACTS[pose](rig, key, input.act, actLife); rig.fk(); }
     else if (rig.mediaLab && key.id.includes('-sit-mix')) rideFader(rig,time,seed,life);
     else if (ACTS[pose]) { ACTS[pose](rig, key, time, seed, life); rig.fk(); }
-    if (rig.coastCast && !input.look && !input.act && (pose === 'wheel-watch' || pose === 'sit-listen')) {
+    if (rig.castDetail && !input.look && !input.act && (pose === 'wheel-watch' || pose === 'sit-listen')) {
         // Audience members follow the same movement on the projection, with a
         // small individual reaction delay, then settle on the screen again.
         const glance = held(time - .28 * hash(104,seed), 41, 105, 4.8);
