@@ -22,6 +22,7 @@ const CUT=process.env.CUT||'exports/cinematic-intro-cut-cine';
 const listFile=path.join(root,CUT,'director-chapters.json'),chapter=fs.existsSync(listFile)?JSON.parse(fs.readFileSync(listFile,'utf8')).chapters.find(c=>c.id==='oilers'):null;
 if(!chapter||!fs.existsSync(path.join(root,chapter.page))){console.log(`add to desks e2e: skipped (${CUT} has no oilers chapter page here).`);process.exit(0);}
 const film=JSON.parse(fs.readFileSync(path.join(root,CUT,'review-cut.json'),'utf8')).shots.find(s=>s.id==='oilers');
+const AT=Math.min(4,chapter.seconds/2);   // the playhead (s)
 const SHOTS=process.env.SHOTS||fs.mkdtempSync(path.join(os.tmpdir(),'add-to-desks-'));fs.mkdirSync(SHOTS,{recursive:true});
 const {base,browser,page,errors,close}=await openDirectorBrowser();
 const failures=[],check=(ok,what)=>{console.log(`${ok?'ok  ':'FAIL'} ${what}`);if(!ok)failures.push(what);};
@@ -54,7 +55,7 @@ try{
     // (the edits layer loads with the Props editor: open the tab once)
     await page.evaluate(()=>document.querySelector('#director-panel [data-inspector-tab="props"]')?.click());
     await until(()=>page.evaluate(()=>!!__t().w.__filmEdits),'the film edits layer',60000);});
-  await seek(page,Math.min(4,chapter.seconds/2));await wait(1500);
+  await seek(page,AT);await wait(1500);
   // ---- 1. the library's On desks…
   await page.evaluate(()=>document.querySelector('#director-panel [data-inspector-tab="props"]')?.click());await wait(600);
   await page.evaluate(()=>document.querySelector('#director-panel [data-action=pp-add]').click());
@@ -122,7 +123,9 @@ try{
   await fr.waitForFunction(()=>window.ErgoPresentation,{timeout:180000});
   await fr.evaluate(async()=>{if(!window.__filmFx)window.__filmFx=await import('/tools/experience/film-fx.mjs');});
   await fr.evaluate(async s=>{window.__filmFx?.clear();window.__filmFx?.beforePrepare(s);try{await window.ErgoPresentation.prepare(s);}finally{window.__filmFx?.unhookPreset();}},filmShot);
-  await fr.evaluate(s=>window.__filmFx.install(s),filmShot);await wait(1500);
+  await fr.evaluate(s=>window.__filmFx.install(s),filmShot);
+  // the frame at the Director's playhead, as render-still.cjs renders a still (the props added there show from it on)
+  await fr.evaluate(async(t,T)=>{await window.__filmFx.frame(t,T);},AT,filmShot.seconds);await wait(1500);
   for(const e of adds){const w=await p2.evaluate(n=>__where(document.getElementById('s').contentWindow,n),`Added prop:${e.add.asset}#${e.id}`);
     check(!!w&&w.path===live[e.id].path&&w.shown,`render path: ${e.on||'featured'}'s backpack on the same desk and mount (${w?w.path.split(' > ').slice(-3).join(' > '):'missing'})`);}
   check(await p2.evaluate(p=>__drawn(document.getElementById('s').contentWindow,p),hiddenPath)!=='drawn','render path: the hidden item is not drawn');

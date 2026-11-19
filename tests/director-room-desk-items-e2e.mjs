@@ -56,7 +56,8 @@ const chip=()=>page.evaluate(()=>{const c=document.querySelector('.desk-isolate-
 const blur=()=>page.evaluate(()=>{document.activeElement?.blur?.();window.focus();});
 const tab=async t=>{await page.evaluate(t=>document.querySelector(`#director-panel [data-inspector-tab="${t}"]`)?.click(),t);await wait(500);};
 const dbl=async p=>{await page.mouse.click(p.x,p.y,{count:2,clickCount:2,delay:40});await wait(900);};
-const esc=async()=>{await blur();await page.keyboard.press('Escape');await wait(700);};
+// (Esc with nothing selected closes the whole Director, player.mjs: only pressed while something is selected)
+const esc=async()=>{const d=await page.evaluate(()=>{const p=window.__directorProps?.();return !!p&&(!!p.inside||!!p.desk||p.keys.length>0||!!p.person);});if(!d)return;await blur();await page.keyboard.press('Escape');await wait(700);};
 try{
   await openChapter(page,base,chapter);
   await until(()=>page.evaluate(()=>__t().api.sceneDesks?.records?.size>1),'the High school\'s desks',120000);

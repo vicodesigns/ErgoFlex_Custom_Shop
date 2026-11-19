@@ -51,4 +51,10 @@ assert.match(ed,/if\(hit&&inside\)\{\s*if\(!inInside\(hit\.object\)\)/,'a click 
 assert.match(ed,/const rd=roomDeskGroupOf\(hit\.object\);if\(rd\)\{if\(sel\)deselect\(\);if\(roomDesk\(/,'outside, a click on a room desk (or its item) selects the desk');
 assert.equal((dir.match(/if\(sceneProps\.insideDesk\?\.\(\)\)\{[^}]*sceneProps\.leaveDesk\(\)/g)||[]).length,2,'Esc leaves the desk first, in the Director and the stage documents');
 assert.match(dir,/createSceneDeskEditor\([^]*?onSelect:\(\)=>\{[^}]*sceneProps\.leaveDesk\?\.\(\{quiet:true\}\)/,'a desk picked in the Desks tab ends it quietly');
+// 4. Studio's click-to-feature a desk is off in the Director (19 Nov 2026: a click on a room desk made it THE featured
+//    desk: its body hidden, its people at the featured desk's place; studio.js onCanvasClick -> sceneDesks.pick / select)
+const de=readFileSync(new URL('../experience/scene-desk-editor.mjs',import.meta.url),'utf8').replace(/\r/g,'');
+for(const [f,src] of [['scene-prop-editor.mjs',ed],['scene-desk-editor.mjs',de]])assert.match(src,/sd\.pick=\(\)=>null/,f+' mutes Studio\'s desk pick');
+const studio=readFileSync(new URL('../studio.js',import.meta.url),'utf8');
+assert.match(studio,/const picked=sceneDesks\?\.pick\(event\);if\(picked\?\.id&&picked\.id!==sceneDesks\.selected\)\{sceneDesks\.select\(picked\.id\)/,'(Studio still features a clicked desk through pick: the mute is what stops it in the Director)');
 console.log('director-room-desk-layers-test: ok (room desks\' items under their desk in Layers; an item is not its desk; enter / leave wiring)');

@@ -66,6 +66,8 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     const a=api();if(!a)return;const ri=a.roomInteractions;
     if(ri&&!ri[MUTED]){ri[MUTED]=true;try{ri.end?.();ri.select?.(null);}catch{}ri.enabled=()=>false;}
     const ctx=a.sceneDesks?.ctx;if(ctx&&!ctx[MUTED]){ctx[MUTED]=true;try{a.sceneDesks.objects?.endDrag?.();}catch{}ctx.objectsEditable=()=>false;ctx.rearrange=()=>false;}
+    // (and Studio's click-to-feature a desk: scene-prop-editor.mjs muteStudioEditing says why)
+    const sd=a.sceneDesks;if(sd&&!sd[MUTED]){sd[MUTED]=true;sd.pick=()=>null;}
   }
   // The desk under a click: {id, onItem} | {featured:true, onItem} | null.
   function deskAt(hit){
