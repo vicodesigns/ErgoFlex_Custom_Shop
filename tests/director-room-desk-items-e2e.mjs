@@ -54,7 +54,8 @@ await page.evaluateOnNewDocument(()=>{
   window.__under=(id,x,y)=>{const {t,T}=__t(),f=document.getElementById('stage').getBoundingClientRect(),c=t.renderer.domElement.getBoundingClientRect(),ray=new T.Raycaster(),items=__allItems(id);
     ray.setFromCamera(new T.Vector2((x-f.left-c.left)/c.width*2-1,1-(y-f.top-c.top)/c.height*2),t.camera);
     const of=o=>{for(let p=o;p;p=p.parent){const it=items.find(i=>i===p);if(it)return it.name;}return null;};
-    return [...new Set(ray.intersectObject(t.scene,true).filter(h=>h.object.isMesh).map(h=>of(h.object)||'(not on this desk: '+h.object.name+')'))].slice(0,6);};
+    const tool=o=>{for(let p=o;p;p=p.parent)if(p.userData?.directorTools||p.isTransformControls)return true;return false;};
+    return [...new Set(ray.intersectObject(t.scene,true).filter(h=>h.object.isMesh).map(h=>tool(h.object)?'(the Director\'s gizmo or tools: '+(h.object.name||'unnamed')+')':of(h.object)||'(not on this desk: '+h.object.name+')'))].slice(0,6);};
   // the camera around a desk: angle a (0..3: front high, right, left, front low for the foot shelf)
   window.__frame=(id,a=0)=>{const {t,T,api}=__t(),g=api.sceneDesks.records.get(id).group,b=new T.Box3().setFromObject(g),c=b.getCenter(new T.Vector3()),s=b.getSize(new T.Vector3()),R=Math.max(s.x,s.z)*1.35+.6;
     const yaw=g.rotation.y+[0,Math.PI/2.4,-Math.PI/2.4,0][a],h=[.9,.6,.6,.12][a]*Math.max(1,s.y),f=new T.Vector3(Math.sin(yaw),0,Math.cos(yaw));
