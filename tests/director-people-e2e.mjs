@@ -134,9 +134,14 @@ try{
   const differs=diff(exported.shots[0].peopleEdits,mine);if(differs.length)console.log('Export cut vs the draft:\n  '+differs.join('\n  '));
   check(!differs.length,'Export cut carries the cast');
   const H=path.join(tmp,'hq');fs.mkdirSync(path.join(H,'shots'),{recursive:true});fs.copyFileSync(path.join(root,HQ,'review-cut.json'),path.join(H,'review-cut.json'));
+  // (a named cut, the cine cut: its cut.json too. Its exports are film-<cut>-<chapter> (film-cine-rise), and the import
+  // takes an export only into the cut it belongs to: build-round8-director.py run_import reads the id from cut.json)
+  if(fs.existsSync(path.join(root,HQ,'cut.json')))fs.copyFileSync(path.join(root,HQ,'cut.json'),path.join(H,'cut.json'));
   for(const f of fs.readdirSync(path.join(root,HQ,'shots')))if(/^\d\d\.json$/.test(f)&&JSON.parse(fs.readFileSync(path.join(root,HQ,'shots',f),'utf8')).id==='rise')fs.copyFileSync(path.join(root,HQ,'shots',f),path.join(H,'shots',f));
   const ex=path.join(tmp,'Film-chapter-rise-e2e.json');fs.copyFileSync(path.join(downloads,file),ex);
-  execFileSync('python3',[path.join(root,'tools/experience/build-round8-director.py'),H,'--import',ex],{stdio:'ignore'});execFileSync('python3',[path.join(root,'tools/experience/build-round8-director.py'),H],{stdio:'ignore'});
+  // (the script's own words on a failure: its stderr, not just "Command failed")
+  const build=(...args)=>{try{execFileSync('python3',[path.join(root,'tools/experience/build-round8-director.py'),...args],{encoding:'utf8',stdio:['ignore','pipe','pipe'],maxBuffer:64<<20});}catch(e){throw Error(`build-round8-director.py ${args.map(a=>path.basename(a)).join(' ')} failed: ${String(e.stderr||'').trim().split('\n').slice(-6).join(' / ')||e.message}`);}};
+  build(H,'--import',ex);build(H);
   const built=JSON.parse(fs.readFileSync(path.join(H,'review-cut.json'),'utf8')).shots.find(s=>s.id==='rise');
   check(JSON.stringify(built.people)===JSON.stringify(peopleFilter(mine)),'the film chapter gets the cast as its people: '+built.people.cast.map(e=>e.key).join(', '));
   check(!errors.length,'no page errors: '+errors.join(' | '));
