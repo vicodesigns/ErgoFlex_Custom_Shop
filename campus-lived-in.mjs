@@ -8,12 +8,12 @@ const PHASES = ['morning', 'afternoon', 'evening', 'night', 'party'];
 const PAPER = '#eeeade', INK = '#27343c', SILVER = '#aeb8be';
 const TITLES = {
     library: ['FIELD NOTES', 'RESEARCH TOGETHER', 'READ / REFLECT', 'RETURNS / TOMORROW', 'WATERSHED WORKSHOP'],
-    occmedialab: ['CALL SHEET / 07', 'PICTURE EDIT / V03', 'SOUND / COLOUR', 'SCREENING NOTES', 'PORTFOLIO CRITIQUE'],
+    occmedialab: ['CALL SHEET / 07', 'PICTURE EDIT / V03', 'SOUND / COLOUR', 'LATE EDIT / CONFORM', 'SCREENING NOTES'],
     highschool: ['FIRST BELL / SCIENCE 214', 'WAVE LAB / OBSERVATIONS', 'AFTER SCHOOL / STUDY', 'NEXT LESSON / PREP', 'OILER SHOWCASE']
 };
 const CAPTIONS = {
     library: ['North coast / field journal', 'Compare sources / share evidence', 'Mark a passage / add a question', 'Returned / checked / ready to shelve', 'Map the catchment / compare samples'],
-    occmedialab: ['Coast stories / camera + sound', 'Select / trim / review / export', 'Room tone / dialogue / mix notes', 'What worked? What would you change?', 'Work in progress / peer feedback'],
+    occmedialab: ['Coast stories / camera + sound', 'Select / trim / review / export', 'Room tone / dialogue / mix notes', 'Sync check / final export', 'Student reel / peer feedback'],
     highschool: ['Prediction / question / sketch', 'Measure / repeat / compare', 'Work it out / explain your method', 'Feedback / next steps / materials', 'Our question / our evidence / our result']
 };
 const rand = n => { const x = Math.sin(n * 31.7 + 91.3) * 43173; return x - Math.floor(x); };
@@ -62,14 +62,14 @@ function documentAtlas(kind, accent) {
     const map = new THREE.CanvasTexture(canvas); map.colorSpace = THREE.SRGBColorSpace; map.anisotropy = 4; return map;
 }
 
-export function addCampusLife({ room, root, layout, asset, byId, kind = room.id }) {
+export function addCampusLife({ room, root, layout, asset, byId, kind = room.id, falloff = null }) {
     if (!TITLES[kind]) return { apply() {} };
     const accent = { library: '#365e4c', occmedialab: '#174e76', highschool: '#bf642b' }[kind];
     const own = m => { room.ownedMaterials?.add(m); m.userData.roomPaletteLocked = true; m.userData.roomFinishLocked = true; return m; };
     const matte = own(new THREE.MeshStandardMaterial({ name: 'Campus paper, rubber & painted detail', vertexColors: true, roughness: .79, dithering: true }));
     const metal = own(new THREE.MeshStandardMaterial({ name: 'Campus brushed aluminium', vertexColors: true, roughness: .42, metalness: .72, dithering: true }));
     const printed = own(new THREE.MeshStandardMaterial({ name: 'Annotated activity papers', map: documentAtlas(kind, accent), roughness: .96, side: THREE.DoubleSide }));
-    const pools = createPoolLayer(root, 'Campus task light pools');
+    const pools = createPoolLayer(root, 'Campus task light pools', falloff);
     const variants = [], lamps = [], sheets = [];
     const piece = (parent, name, at, draw, finish = matte) => {
         const g = new THREE.Group(); g.name = name; g.position.set(...at); parent.add(g);

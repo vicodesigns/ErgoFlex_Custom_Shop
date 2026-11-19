@@ -32,7 +32,7 @@ export const SCREEN_THEMES = Object.fromEntries([
     ['laboratory','Research instrument demo','metrics','#8fd1c2',['Instrument preparation','Sample experiment','Analysis curves','Instrument watch','Research review']],
     ['hospital','Care workspace demo','care','#a6d6ce',['Rounds planning','Care coordination','Handover checklist','Observation demo','Team review']],
     ['mobileit','Systems workshop demo','metrics','#82bddd',['System checks','Service diagnostics','Maintenance plan','Overnight status','Deployment review']],
-    ['occmedialab','OCC media projects','film','#f5a349',['Storyboard & shot plan','Edit & create','Sound & colour','Student reel screening','Portfolio critique']],
+    ['occmedialab','OCC media projects','film','#f5a349',['Storyboard & shot plan','Edit & create','Sound & colour','Late edit','Screening & wrap']],
     ['product','Desk workspace','plan','#9ed6c1',['Workspace preview','Work in progress','Review notes','Quiet focus','Project collection']]
 ].map(([id,title,kind,accent,tasks])=>[id,{title,kind,accent,tasks}]));
 
@@ -54,7 +54,7 @@ export function drawSceneScreen(c,W,H,{scene='office',phase='morning',label,vari
     const productTheme=({occ:'occmedialab',artist:'creative',architect:'workshop',creative:'creative',library:'library',music:'music',gaming:'gaming',office:'office',compact:'home'})[preset];
     const theme=SCREEN_THEMES[scene==='product'?(productTheme||'product'):scene]||SCREEN_THEMES.office,pi=Math.max(0,PHASES.indexOf(phase)),a=accent||theme.accent;
     let kind=theme.kind;if(scene==='product')kind=({artist:'art',creative:'art',architect:'draft',music:'audio',gaming:'game',library:'read',compact:'plan'})[preset]||'plan';
-    if(scene==='occmedialab')kind=/sound/.test(role)?'audio':/art|animation|colour/.test(role)?'art':phase==='night'?'cinema':variant===1?'art':'film';
+    if(scene==='occmedialab')kind=phase==='party'?'cinema':/sound/.test(role)?'audio':/art|animation|colour/.test(role)||variant===1?'art':'film';
     c.save();c.scale(W/960,H/540);box(c,0,0,960,540,phase==='night'?'#0a1521':'#142431');box(c,0,0,960,52,'#203747');
     text(c,theme.title.toUpperCase(),24,33,18,a,730);text(c,['09:00','14:00','18:30','22:00','16:00'][pi],850,33,17);
     const title=label&&!['Morning','Afternoon','Evening','Night','Party'].includes(label)?label:theme.tasks[pi];text(c,title,26,96,30,'#ecf3f4',900);

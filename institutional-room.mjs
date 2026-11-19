@@ -31,7 +31,7 @@ const defaultOptions = spec => ({
 });
 // What each setting looks out on (window-vista.mjs). Huntington Beach and Costa Mesa are on the coast.
 const WINDOW_VISTAS = {
-    highschool: 'coast', occmedialab: 'coast', kindergarten: 'garden', elementary: 'garden',
+    highschool: 'coast', occmedialab: 'media-courtyard', kindergarten: 'garden', elementary: 'garden',
     hospital: 'city', laboratory: 'city', mobileit: 'city', government: 'city', police: 'city', security: 'city'
 };
 // The settings with a modelled outlook (window-scenery.mjs): Orange Coast College's media lab looks over its quad from a
@@ -359,7 +359,7 @@ export function buildInstitutionalRoom(room, root, layout, h) {
     const view = WINDOW_SCENERY[spec.id] ? windowView(spec.id) : 'photo';
     const windowVista = view === 'photo' ? attachVista(skyPane, WINDOW_VISTAS[spec.id] || 'campus') : null; if (windowVista) room.windowViewReady = Promise.all([room.windowViewReady, windowVista.ready]);
     const scenery = view === 'scenery' ? attachScenery(skyPane, WINDOW_SCENERY[spec.id].scene, { floor: -1700, ...WINDOW_SCENERY[spec.id] }) : null;
-    const campusLife = addCampusLife({ room, root, layout, asset, byId });
+    const campusLife = addCampusLife({ room, root, layout, asset, byId, falloff: kit.taskFalloff });
     // Slim linear ceiling fixtures disappear with the camera cutaway.
     const ceilingGroup = new THREE.Group(); ceilingGroup.name = 'Ceiling lighting'; root.add(ceilingGroup); room.ceilingFixture = ceilingGroup;
     for (let n = 0; n < 3; n++) {
