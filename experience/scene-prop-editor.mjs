@@ -188,6 +188,10 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   // Also, while that desk is selected, the Desks tab takes the clicks on it (scene-desk-editor.mjs, capture on the stage
   // window) and they never reach viewClick, but the press reaches here.
   let lastPress=null;
+  // The last clicks in the view, step by step (read-only, for the e2e tests and Report a problem: why a click picked what
+  // it did): the stage window's __directorClickTrace, the newest last.
+  const trace=x=>{const w=win();if(!w)return;const a=w.__directorClickTrace||=[];a.push({t:Math.round(performance.now()),...x});if(a.length>16)a.shift();};
+  const nm=o=>o?.name||(o?'(unnamed)':null);
   const insideGroup=()=>{if(!inside)return null;const sd=win()?.ErgoFlex?.sceneDesks;return inside.id==='featured'?win()?.ErgoFlex?.loadedModel||null:sd?.records?.get(inside.id)?.group||null;};
   const inInside=o=>{if(!inside||!o)return false;if(inside.id==='featured')return !roomDeskGroupOf(o)&&(onDeskItself(o)||ridesDesk(o));return roomDeskGroupOf(o)?.id===inside.id;};
   const chip=Object.assign(document.createElement('div'),{className:'desk-isolate-chip'});chip.hidden=true;chip.setAttribute('role','status');document.body.append(chip);
@@ -468,7 +472,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     // or a pick put the gizmo there, it is out of date, and TransformControls, reading it again as it takes the press,
     // started a drag that swallowed the click; 19 Nov 2026, the APA desk's stacked supplies; scene-desk-editor.mjs does the same)
     dom.addEventListener('pointerdown',ev=>{gizmoMoved=false;if(ev.button===0&&!placing&&gizmo.enabled&&gizmo.object&&!gizmo.dragging){const r=dom.getBoundingClientRect();gizmo.pointerHover({x:(ev.clientX-r.left)/r.width*2-1,y:-(ev.clientY-r.top)/r.height*2+1,button:ev.button});}
-      down=ev.button===0?{x:ev.clientX,y:ev.clientY,alt:ev.altKey,gizmo:!placing&&(gizmo.dragging||!!gizmo.axis)}:null;if(down)notePress(ev,down);},true);
+      down=ev.button===0?{x:ev.clientX,y:ev.clientY,alt:ev.altKey,gizmo:!placing&&(gizmo.dragging||!!gizmo.axis)}:null;if(down){notePress(ev,down);trace({e:'down',axis:gizmo.axis,onGizmo:down.gizmo,second:!!down.second,dragging:gizmo.dragging});}},true);
     // second: the press is a double-click's second (it does nothing as a click; the 'dblclick' acts on the first press)
     function notePress(ev,d){
       const now=performance.now(),p=lastPress;
@@ -478,10 +482,11 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       lastPress={t:now,x:ev.clientX,y:ev.clientY,hit:raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object))||null};
     }
     dom.addEventListener('pointerup',ev=>{
-      const d=down;down=null;if(!d||ev.button!==0||Math.hypot(ev.clientX-d.x,ev.clientY-d.y)>5||lightsShowing()||!editing()||blocked())return;
+      const d=down;down=null;if(d)trace({e:'up',onGizmo:d.gizmo,dragging:gizmo.dragging,dd:!!w.__directorDragging,moved:gizmoMoved,far:Math.hypot(ev.clientX-d.x,ev.clientY-d.y)>5});
+      if(!d||ev.button!==0||Math.hypot(ev.clientX-d.x,ev.clientY-d.y)>5||lightsShowing()||!editing()||blocked())return;
       // A press on the gizmo that never moved is a click on what is under it (19 Nov 2026: the gumball of a selected desk
       // item covers its small neighbours, and clicking one only grabbed the gizmo). After TransformControls lets go.
-      if(d.gizmo){setTimeout(()=>{if(!gizmo.dragging&&!w.__directorDragging&&!gizmoMoved)viewClick(ev,d,true);},0);return;}
+      if(d.gizmo){setTimeout(()=>{const go=!gizmo.dragging&&!w.__directorDragging&&!gizmoMoved;trace({e:'through',go,dragging:gizmo.dragging,dd:!!w.__directorDragging,moved:gizmoMoved});if(go)viewClick(ev,d,true);},0);return;}
       if(gizmo.dragging||w.__directorDragging)return;
       viewClick(ev,d,false);
     },true);
@@ -491,15 +496,16 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       if(placing){const now=current(),e=sel&&editOfKey(sel.key);placing=false;
         if(now&&isAddEdit(e)){const h=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object)&&!isAncestor(now,h.object));if(h)placeAt(now,e,h.point,roomDeskGroupOf(h.object)?.id||null);else{status('Nothing there to put it on.',true);rerender();}return;}}
       // the second click of a double-click is the double-click's (notePress): it does nothing
-      if(d.second)return;
+      if(d.second){trace({e:'second-click'});return;}
       const hits=raycaster.intersectObject(t.scene,true).filter(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object)),hit=hits[0];
       // People are not props: a click on one selects them in the People tab (scene-people-editor.mjs).
       if(hit&&!placing&&!underGizmo&&person(hit.object)){if(sel)deselect();return;}
       const how=pickMode(ev);
       // a room desk: one click selects the desk (Desks tab); inside a desk entered, only its items pick
       if(hit&&inside){
-        if(!inInside(hit.object)){if(!underGizmo)status(`Editing ${inside.name}: click one of its items. Esc or a double-click on empty space leaves the desk.`);return;}
+        if(!inInside(hit.object)){trace({e:'not-this-desk',underGizmo,hit:nm(hit.object)});if(!underGizmo)status(`Editing ${inside.name}: click one of its items. Esc or a double-click on empty space leaves the desk.`);return;}
         const di=inside.id==='featured'?null:roomDeskItem(hit.object);
+        trace({e:'inside',underGizmo,hit:nm(hit.object),item:nm(di?.obj),was:nm(current()),alt:!!d.alt,second:!!d.second});
         if(inside.id!=='featured'){
           // Alt+click: the next item under the pointer, front to back (an item inside or behind another one)
           if(d.alt){const stack=[...new Set(hits.map(h=>roomDeskItem(h.object)).filter(x=>x&&x.id===inside.id).map(x=>x.obj))];
@@ -648,7 +654,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     let target;try{target=targetOf(o);}catch(error){if(how==='replace'){sel=null;others=[];onSelect();rerender();}status(`${CANT_SAVE}: ${error.message}`,true);return;}
     const t=propTarget({...target,label:target.label||o.name||''});
     const key=propKey(t);
-    if(lockedKeys().has(key)){status(`${label(o)} is locked in a layer: unlock the layer in Layers to pick it in the view.`,true);return;}
+    if(lockedKeys().has(key)){trace({e:'locked',item:nm(o)});status(`${label(o)} is locked in a layer: unlock the layer in Layers to pick it in the view.`,true);return;}
     const blocked=isAddEdit(filmEdit(o))?'':unrecordable(o,t),entry={key,target:t,obj:o,blocked};
     if(how==='replace')setMembers([entry]);
     else if(how==='toggle'&&isSel(key)){setMembers(members().filter(m=>m.key!==key));status(`${label(o)} removed from the selection (${members().length} selected).`);return;}

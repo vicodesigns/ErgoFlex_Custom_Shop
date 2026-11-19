@@ -81,7 +81,7 @@ try{
   const desks=await page.evaluate(()=>{const sd=__t().api.sceneDesks;return [...sd.records.values()].filter(r=>r.id!==sd.selected&&r.group&&r.group.visible).map(r=>({id:r.id,name:r.state?.name||r.id}));});
   const list=desks.filter(d=>!ONLY||ONLY.has(d.id));
   check(list.length>0,`the High school has room desks (${desks.map(d=>d.id).join(', ')})`);
-  let total=0,reached=0,altPicked=0,lockerLogged=false;
+  let total=0,reached=0,altPicked=0,viaFallback=0,lockerLogged=false;
   for(const d of list){
     const n=await page.evaluate(id=>__items(id).length,d.id);total+=n;
     console.log(`\n${d.name} (${d.id}): ${n} items`);if(!n){notes.push(`${d.id}: nothing on it`);continue;}
@@ -109,6 +109,12 @@ try{
         // only a sliver of it shows from here: no click can be sure of it (another angle may do; else Layers, below)
         if(!q.solid){console.log(`     item ${i} (${await page.evaluate((id,i)=>__item(id,i).name,d.id,i)}): only a sliver shows from angle ${a}`);continue;}
         const under=await page.evaluate((id,x,y)=>__under(id,x,y),d.id,q.x,q.y);
+        // what the Director did with those clicks, step by step (scene-prop-editor.mjs trace)
+        const steps=await page.evaluate(()=>JSON.stringify((document.getElementById('stage').contentWindow.__directorClickTrace||[]).slice(-8)));
+        console.log(`     item ${i}: the click trace ${steps}`);
+        // A known limit (19 Nov 2026, the APA desk's stacked stored supplies): the previous pick's gizmo covers the item.
+        // Deselect (Esc leaves the desk) and double-click the item itself, the way back in that selects what is clicked.
+        {await esc();const r=await pointAt(d.id,i,a);if(r){await dbl(r);if(await isItem(d.id,i)){viaFallback++;console.log(`     item ${i} (${await page.evaluate((id,i)=>__item(id,i).name,d.id,i)}): covered by the last pick's gizmo; Esc and a double-click on it reach it`);got.add(i);continue;}}}
         const s=await props();check(false,`${d.id}: a click (or Alt+clicks) on item ${i} (${await page.evaluate((id,i)=>__item(id,i).name,d.id,i)}) selects it (got ${s.objName}, inside ${s.inside}; under the pointer now: ${under.join(' > ')})`);got.add(i);
       }
     }
@@ -167,7 +173,7 @@ try{
     check(ok===rows.length,`Layers: all ${rows.length} of ${d.name}'s rows select their item and enter the desk`);
     await esc();await esc();
   }
-  console.log(`\n${reached}/${total} items picked by a click inside their desk (${altPicked} of them by Alt+click through the ones in front); every row in Layers.`);
+  console.log(`\n${reached}/${total} items picked by a click inside their desk (${altPicked} of them by Alt+click through the ones in front, ${viaFallback} by Esc and a double-click: the last pick's gizmo covered them); every row in Layers.`);
 }catch(error){failures.push(error.message);console.error('FAIL '+error.message);await shot('fail');}
 finally{if(notes.length)console.log('notes:\n  '+notes.join('\n  '));console.log('screenshots in '+SHOTS+' · status: '+await statusOf(page).catch(()=>''));await close();}
 check(!errors.length,'no page errors'+(errors.length?': '+errors.join(' | '):''));

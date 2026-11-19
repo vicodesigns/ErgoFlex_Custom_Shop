@@ -53,7 +53,7 @@ assert.match(ed,/const rd=roomDeskGroupOf\(hit\.object\);if\(rd\)\{if\(underGizm
 // the gizmo that never moves is a click on what is under it (the gumball covered the neighbours) and writes no edit;
 // Alt+click inside a desk cycles through the items under the pointer; leaving a desk from Layers keeps Layers open
 assert.match(ed,/const first=lastPress&&performance\.now\(\)-lastPress\.t<800[^;]*;\s*let hit=first\?\.hit&&inScene\(first\.hit\.object\)\?first\.hit:null;/,'the double-click uses what was under its first press');
-assert.match(ed,/if\(d\.gizmo\)\{setTimeout\(\(\)=>\{if\(!gizmo\.dragging&&!w\.__directorDragging&&!gizmoMoved\)viewClick\(ev,d,true\);\},0\);return;\}/,'a gizmo press that never moved clicks what is under it');
+assert.match(ed,/if\(d\.gizmo\)\{setTimeout\(\(\)=>\{const go=!gizmo\.dragging&&!w\.__directorDragging&&!gizmoMoved;[^}]*\}\);if\(go\)viewClick\(ev,d,true\);\},0\);return;\}/,'a gizmo press that never moved clicks what is under it');
 assert.match(ed,/if\(drag&&!drag\.moved\)\{drag=null;return;\}/,'and writes no edit');
 assert.match(ed,/if\(d\.alt\)\{const stack=\[\.\.\.new Set\(hits\.map\(h=>roomDeskItem\(h\.object\)\)/,'Alt+click cycles through the stack inside a desk');
 assert.match(ed,/roomDesk\(\{obj:g,edit:null,key:null,stay:true\}\)/,'leaving asks to stay on the tab');
@@ -71,9 +71,9 @@ assert.match(studio,/const picked=sceneDesks\?\.pick\(event\);if\(picked\?\.id&&
 //    window, stopImmediatePropagation), so viewClick never saw them, and the dblclick's own ray came after the redraw
 //    those selects made (the APA desk's neighbour, MMET, or the desk's body: no item). The press always reaches here.
 assert.match(de,/w\.addEventListener\('pointerup',[^]*?ev\.stopImmediatePropagation\(\);ev\.preventDefault\(\);release\(ev\);select\(/,'(the Desks tab keeps the clicks on a selected desk to itself)');
-assert.match(ed,/dom\.addEventListener\('pointerdown',ev=>\{gizmoMoved=false;[^]*?\n      down=ev\.button===0\?[^\n]*if\(down\)notePress\(ev,down\);\},true\);/,'every press is noted, before any click handler');
+assert.match(ed,/dom\.addEventListener\('pointerdown',ev=>\{gizmoMoved=false;[^]*?\n      down=ev\.button===0\?[^\n]*if\(down\)\{notePress\(ev,down\);trace\([^\n]*\}\},true\);/,'every press is noted, before any click handler');
 assert.match(ed,/function notePress\(ev,d\)\{[^]*?if\(p&&!p\.second&&!ev\.altKey&&now-p\.t<600&&Math\.hypot\([^)]*\)<8\)\{p\.second=true;d\.second=true;return;\}[^]*?lastPress=\{t:now,x:ev\.clientX,y:ev\.clientY,hit:raycaster\.intersectObject/,'the hit is read at the press; a double-click\'s second press keeps the first');
-assert.match(ed,/function viewClick[^]*?if\(d\.second\)return;\s*const hits=/,'the second click of a double-click does nothing as a click');
+assert.match(ed,/function viewClick[^]*?if\(d\.second\)\{trace\(\{e:'second-click'\}\);return;\}\s*const hits=/,'the second click of a double-click does nothing as a click');
 assert.ok(!/lastClick/.test(ed),'(no click record left)');
 assert.match(dir,/globalThis\.__directorPropEdits=\(\)=>shot\(\)\?copy\(layersPropEdits\(filmShot\(\),shot\(\)\)/,'the e2e reads the Director\'s edits, the film\'s while the shot has none');
 // 6. The first Director edit of a chapter copies the film's director:true entries into the shot unchanged (the cine

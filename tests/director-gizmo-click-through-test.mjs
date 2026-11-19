@@ -37,4 +37,7 @@ assert.match(ed,/dom\.addEventListener\('pointerdown',ev=>\{gizmoMoved=false;if\
 assert.match(ed,/drag=\{enabled:t\.controls\.enabled,obj:gizmo\.object,from:poseOf\(gizmo\.object\)\}/,'a drag keeps its start pose');
 assert.match(ed,/addEventListener\('objectChange',\(\)=>\{if\(drag&&!drag\.moved&&\(!drag\.from\|\|posedAway\(gizmo\.object,drag\.from\)\)\)drag\.moved=gizmoMoved=true;/,'moved only when it really moved');
 assert.ok(!/gizmoMoved=true;if\(drag\)drag\.moved=true;/.test(ed),'(not on every objectChange)');
+// the click trace (read-only, the stage window's __directorClickTrace): the press, the pointerup, the click through, the pick
+for(const e of ['down','up','through','inside','not-this-desk','second-click','locked'])assert.match(ed,new RegExp(`trace\\(\\{e:'${e}'`),'the trace notes '+e);
+assert.match(ed,/const a=w\.__directorClickTrace\|\|=\[\];[^;]*;if\(a\.length>16\)a\.shift\(\);/,'the last 16 steps');
 console.log('director-gizmo-click-through-test: ok (a still press on the gizmo: hover read at the press, objectChange without a move is no move)');
