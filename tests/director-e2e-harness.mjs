@@ -97,3 +97,43 @@ export async function ensureLivePeople(page,{id,filmPeople,warnings=[],log=conso
   log(`NOTE turned them on through ErgoPresentation.peopleTrack (the player's own call): ${JSON.stringify(s)}`);
   return {forced:true,state:s};
 }
+
+// ---- points in the view that really hit something (19 Nov 2026) ------------------------------------------------------
+// Windows: clicks at a person's projected middle selected nobody on the cine coast (a desk, a monitor or a partition in
+// front of them), and no featured-desk accessory was found by its box. pickInView casts rays through a grid of the
+// stage view (the stage's own camera, the editors' three.js) and keeps the first visible mesh each ray meets, so a point
+// it returns is one a click there reaches. kind: 'person' (an ancestor with userData.person; key / editKey / id /
+// featured: the film desk's user), 'item' (a child of a desk mount: "Accessory mount:*" on the film desk, "Desk
+// dressing:*" on the room's desks), 'room' (neither). Returns { found: [{ ...info, n: rays that met it, x, y: the page
+// point of its ray nearest the middle of its rays }], biggest first, kinds: what the rays met, by count } or { why }.
+export const pickInView=(page,kind,{grid=[24,14]}={})=>page.evaluate((kind,grid)=>{
+  const f=document.getElementById('stage'),w=f.contentWindow,t=w.ErgoPresentation?.three?.(),T=w.__directorThree?.THREE;
+  if(!t||!T)return {why:'the stage or the editors\' three.js is not ready'};
+  const r=f.getBoundingClientRect(),ray=new T.Raycaster(),people=w.ErgoFlex.workspaceRoom?.people;t.scene.updateMatrixWorld(true);
+  const shown=o=>{for(let a=o;a;a=a.parent){if(!a.visible||a.userData?.directorTools||a.isTransformControls)return false;}return true;};
+  const personOf=o=>{for(let a=o;a;a=a.parent)if(a.userData?.person)return a;return null;};
+  const itemOf=o=>{for(let a=o;a&&a.parent;a=a.parent)if(/^(Accessory mount|Desk dressing):/.test(a.parent.name||''))return a;return null;};
+  const found=new Map(),kinds={};
+  for(let i=0;i<grid[0];i++)for(let j=0;j<grid[1];j++){
+    const nx=-.92+1.84*(i+.5)/grid[0],ny=-.92+1.84*(j+.5)/grid[1];ray.setFromCamera(new T.Vector2(nx,ny),t.camera);
+    const hit=ray.intersectObjects(t.scene.children,true).find(h=>h.object.isMesh&&shown(h.object)&&[].concat(h.object.material||[]).some(m=>m&&m.visible!==false));
+    if(!hit)continue;
+    const p=personOf(hit.object),it=!p&&itemOf(hit.object),k=p?'person':it?'item':'room';kinds[k]=(kinds[k]||0)+1;if(k!==kind)continue;
+    const o=p||it||hit.object;let e=found.get(o);
+    if(!e){const s=p?.userData.person;e={n:0,pts:[],name:o.name||o.userData?.propId||'(unnamed)',...(s?{key:people?.keyOf?.(s)??null,editKey:people?.editKeyOf?.(s)??null,id:s.id,featured:!!s.desk&&!s.station,variant:s.variant||null}:{})};found.set(o,e);}
+    e.n++;e.pts.push([r.left+(nx+1)/2*r.width,r.top+(1-ny)/2*r.height]);
+  }
+  const out=[...found.values()].map(({pts,...e})=>{const mx=pts.reduce((a,p)=>a+p[0],0)/pts.length,my=pts.reduce((a,p)=>a+p[1],0)/pts.length,b=pts.sort((a,c)=>Math.hypot(a[0]-mx,a[1]-my)-Math.hypot(c[0]-mx,c[1]-my))[0];return {...e,x:b[0],y:b[1]};}).sort((a,b)=>b.n-a.n);
+  return {found:out,kinds};
+},kind,grid);
+// Aims the Director's free view at a person of the stage (people.byKey(key)): the orbit pivot on their middle, the
+// camera `distance` m away at azimuth `turn` degrees around them, raised `rise` m. Setup for a test whose chapter's film
+// camera never frames anyone but the film desk's user (the cine coast). The view stays where it is put (the Director
+// leaves a free view alone until a seek or playback). Returns the person's middle, or null.
+export const aimAt=(page,key,{turn=0,distance=3,rise=.8}={})=>page.evaluate((key,turn,distance,rise)=>{
+  const w=document.getElementById('stage').contentWindow,t=w.ErgoPresentation?.three?.(),T=w.__directorThree?.THREE,o=w.ErgoFlex.workspaceRoom?.people?.byKey?.(key);
+  if(!t||!T||!o||!o.visible)return null;
+  const b=new T.Box3().setFromObject(o);if(b.isEmpty())return null;const c=b.getCenter(new T.Vector3()),a=turn*Math.PI/180;
+  t.camera.position.set(c.x+Math.sin(a)*distance,c.y+rise,c.z+Math.cos(a)*distance);t.controls.target.copy(c);t.camera.lookAt(c);t.controls.update?.();t.camera.updateMatrixWorld(true);
+  w.ErgoPresentation.wake?.(800);return c.toArray();
+},key,turn,distance,rise);

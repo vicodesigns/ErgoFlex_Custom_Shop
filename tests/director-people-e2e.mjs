@@ -117,14 +117,31 @@ try{
   passed.push('the eye takes a person out of the chapter and keeps the entry');
   await snap('05-end');
   // ---- Export cut -> import -> the film chapter's `people` (temp copy of the chapter)
+  // (the draft is read before Export cut: since film-fresh.mjs, an export makes the exported cut the baseline and forgets
+  // the unexported draft, so after it the draft reads null; Windows, 19 Nov 2026)
+  // (and after the draft's write: director.mjs changed() writes it 250 ms after the last edit, each edit starting the
+  // wait again; the undo and the eye just above were less than that apart, so a read at once had the cast from before
+  // both. Read once nothing has been edited for 600 ms and two reads agree.)
+  let mine=null;for(let i=0;i<20;i++){await wait(600);const a=await edits();if(a&&JSON.stringify(a)===JSON.stringify(mine))break;mine=a;}
+  check(!!mine,'the draft has the cast before the export');
   await page.evaluate(()=>document.querySelector('#director-appbar [data-action=save-export]').click());
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download');
-  const mine=await edits();     // the draft, saved by the export
-  const exported=JSON.parse(fs.readFileSync(path.join(downloads,file),'utf8'));check(JSON.stringify(exported.shots[0].peopleEdits)===JSON.stringify(mine),'Export cut carries the cast');
+  const exported=JSON.parse(fs.readFileSync(path.join(downloads,file),'utf8'));
+  // (where the two differ, printed before the check: Windows, 19 Nov 2026, saw them differ with no more to go on)
+  const diff=(a,b,at='',out=[])=>{if(out.length>=12)return out;if(JSON.stringify(a)===JSON.stringify(b))return out;
+    if(a&&b&&typeof a==='object'&&typeof b==='object'&&Array.isArray(a)===Array.isArray(b)){const ka=Object.keys(a),kb=Object.keys(b);if(!Array.isArray(a)&&ka.join()!==kb.join()&&ka.slice().sort().join()===kb.slice().sort().join())out.push(`${at||'.'}: the same keys in another order (${ka.join(',')} / ${kb.join(',')})`);for(const k of new Set([...ka,...kb]))diff(a[k],b[k],`${at}${Array.isArray(a)?`[${k}]`:'.'+k}${Array.isArray(a)&&a[k]?.key?`(${a[k].key})`:''}`,out);return out;}
+    out.push(`${at||'.'}: export ${JSON.stringify(a)?.slice(0,160)} / draft ${JSON.stringify(b)?.slice(0,160)}`);return out;};
+  const differs=diff(exported.shots[0].peopleEdits,mine);if(differs.length)console.log('Export cut vs the draft:\n  '+differs.join('\n  '));
+  check(!differs.length,'Export cut carries the cast');
   const H=path.join(tmp,'hq');fs.mkdirSync(path.join(H,'shots'),{recursive:true});fs.copyFileSync(path.join(root,HQ,'review-cut.json'),path.join(H,'review-cut.json'));
+  // (a named cut, the cine cut: its cut.json too. Its exports are film-<cut>-<chapter> (film-cine-rise), and the import
+  // takes an export only into the cut it belongs to: build-round8-director.py run_import reads the id from cut.json)
+  if(fs.existsSync(path.join(root,HQ,'cut.json')))fs.copyFileSync(path.join(root,HQ,'cut.json'),path.join(H,'cut.json'));
   for(const f of fs.readdirSync(path.join(root,HQ,'shots')))if(/^\d\d\.json$/.test(f)&&JSON.parse(fs.readFileSync(path.join(root,HQ,'shots',f),'utf8')).id==='rise')fs.copyFileSync(path.join(root,HQ,'shots',f),path.join(H,'shots',f));
   const ex=path.join(tmp,'Film-chapter-rise-e2e.json');fs.copyFileSync(path.join(downloads,file),ex);
-  execFileSync('python3',[path.join(root,'tools/experience/build-round8-director.py'),H,'--import',ex],{stdio:'ignore'});execFileSync('python3',[path.join(root,'tools/experience/build-round8-director.py'),H],{stdio:'ignore'});
+  // (the script's own words on a failure: its stderr, not just "Command failed")
+  const build=(...args)=>{try{execFileSync('python3',[path.join(root,'tools/experience/build-round8-director.py'),...args],{encoding:'utf8',stdio:['ignore','pipe','pipe'],maxBuffer:64<<20});}catch(e){throw Error(`build-round8-director.py ${args.map(a=>path.basename(a)).join(' ')} failed: ${String(e.stderr||'').trim().split('\n').slice(-6).join(' / ')||e.message}`);}};
+  build(H,'--import',ex);build(H);
   const built=JSON.parse(fs.readFileSync(path.join(H,'review-cut.json'),'utf8')).shots.find(s=>s.id==='rise');
   check(JSON.stringify(built.people)===JSON.stringify(peopleFilter(mine)),'the film chapter gets the cast as its people: '+built.people.cast.map(e=>e.key).join(', '));
   check(!errors.length,'no page errors: '+errors.join(' | '));
