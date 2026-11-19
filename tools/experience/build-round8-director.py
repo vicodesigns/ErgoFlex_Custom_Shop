@@ -369,11 +369,13 @@ def desk_and_show(e, d):
 
 ADD_ASSET = re.compile(r'^[A-Za-z0-9][A-Za-z0-9._-]{0,119}$')
 ADD_ID = re.compile(r'^[A-Za-z0-9]{1,16}$')
+ADD_ON = re.compile(r'^[a-z][a-z0-9-]{0,79}$')
 
 
 def clean_add(e):
     """An added library prop (experience/prop-edits.mjs cleanAddEdit): {add: {asset}, id, match, label, parent, position,
-    rotation, scale}, its own transform in the parent's frame (desk: rides the desktop; room: the room)."""
+    rotation, scale, on?}, its own transform in the parent's frame (desk: rides the desktop; lift: level at the desktop's
+    height; room: the room; on: a room desk's own mounts)."""
     add = e.get('add'); asset = add if isinstance(add, str) else add.get('asset') if isinstance(add, dict) else None
     if not isinstance(asset, str) or not ADD_ASSET.match(asset) or not isinstance(e.get('id'), str) or not ADD_ID.match(e['id']): return None
     num = lambda x: isinstance(x, (int, float)) and not isinstance(x, bool)
@@ -381,7 +383,9 @@ def clean_add(e):
     name = f'Added prop:{asset}#{e["id"]}'
     d = {'add': {'asset': asset}, 'id': e['id'], 'match': '^' + re.sub(r'([.*+?^${}()|\[\]\\/])', r'\\\1', name) + '$'}
     if isinstance(e.get('label'), str) and len(e['label']) <= 120: d['label'] = e['label']
-    d['parent'] = e['parent'] if e.get('parent') in ('desk', 'shelf', 'lower-shelf', 'base-shelf') else 'room'
+    d['parent'] = e['parent'] if e.get('parent') in ('desk', 'lift', 'shelf', 'lower-shelf', 'base-shelf') else 'room'
+    # on: one of the room's other desks (its scene desk record id; 18 Nov 2026, Director "Add to desks"); absent: the featured desk
+    if d['parent'] != 'room' and isinstance(e.get('on'), str) and ADD_ON.match(e['on']): d['on'] = e['on']
     d['position'] = vec(e.get('position'), [0, 0, 0]); d['rotation'] = vec(e.get('rotation'), [0, 0, 0])
     sc = vec(e.get('scale'), None)
     d['scale'] = sc if sc and all(.001 <= x <= 1000 for x in sc) else [1, 1, 1]

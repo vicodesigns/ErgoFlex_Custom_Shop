@@ -86,7 +86,7 @@ try{
   check((await bars()).some(b=>b.text==='+Smartphone'&&/prop-added/.test(b.cls)&&/timed/.test(b.cls)&&b.left>30),'its bar starts at the playhead');
   const name=await page.evaluate(()=>{let n=null;__t().t.scene.traverse(o=>{if(!n&&/^Added prop:/.test(o.name))n=o.name;});return n;});
   const put=await page.$$eval('#director-panel .prop-put button',l=>l.map(b=>b.textContent+(b.getAttribute('aria-pressed')==='true'?'*':'')));
-  check(put.includes('Desktop*')&&put.includes('Top shelf'),'the inspector offers the desk\'s surfaces: '+put.join(', '));
+  check(put.includes('Tilt*')&&put.includes('Desktop shelf'),'the inspector offers the desk\'s surfaces (Vico\'s names since 18 Nov 2026: Foot shelf / Desktop / Tilt / Desktop shelf): '+put.join(', '));
   await press('pp-put-shelf');added=(await props()).find(x=>x.add);
   const onShelf=await page.evaluate(n=>{const o=__find(n);return {parent:o?.parent?.name,y:o?o.getWorldPosition(new (__t().T.Vector3)()).y:null};},name);
   check(added.parent==='shelf'&&/^(Accessory mount|Scene dressing|Desk dressing):shelf$/.test(onShelf.parent)&&/top shelf/.test(await status(page)),'Put it on · Top shelf: it rides the shelf now: '+JSON.stringify(onShelf));

@@ -2,7 +2,7 @@ import {enhanceGizmo,mmPerUnitOf} from './gumball.mjs';
 let altHeld=false;   // Alt held as a prop drag starts: Alt+drag copies (P3)
 import {noteStudioValue} from './studio-sync.mjs';
 import {layersOn,splitPermanent,writePermanentLayers,permanentCells,foldDeskHides,LAYERS_KEY} from './layers-exchange.mjs';
-import {FOLLOW_LABELS,cleanPlace,cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,propTarget,DESK_SURFACES,onDesk,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets,keyedFadeWindow,filmFadeKeys,combineFilmFade,showOverFilm} from './prop-edits.mjs';
+import {FOLLOW_LABELS,cleanPlace,cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,propTarget,DESK_SURFACES,MOUNTS,mountLabel,onDesk,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets,keyedFadeWindow,filmFadeKeys,combineFilmFade,showOverFilm} from './prop-edits.mjs';
 import {stackRows} from './lane-rows.mjs';
 import {stowWindow,EASEL_ANGLE,filmVisibleKeys,keyedWindow} from './prop-stow-window.mjs';
 import {legacyMotionToClips,sampleClipMotion} from './desk-clips.mjs';
@@ -351,15 +351,18 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   }
   // Click-to-place: the surface under the cursor. On the featured desk's top it rides the desk; anywhere else it stands
   // in the room at that point (a table, a shelf, the floor), keeping the way it faces.
-  function placeAt(o,e,point){
+  function placeAt(o,e,point,on=null){
     const {THREE}=tools,E=win().__filmEdits;let kind='room',best=40;
-    // The desk surface the point lies on (within 40 mm of its plane and inside its outline): the nearest one wins.
-    for(const s of Object.keys(DESK_SURFACES)){const top=E.addParent(s);if(!top)continue;top.updateWorldMatrix(true,false);const l=top.worldToLocal(point.clone()),size=top.userData.surfaceSize;
+    // The desk surface the point lies on (within 40 mm of its plane and inside its outline): the nearest one wins. on:
+    // the room desk clicked (its own surfaces; 18 Nov 2026), else the featured desk's. (Not the level 'lift' frame: it is
+    // no surface, its origin is the base shelf's raised by the lift.)
+    for(const s of Object.keys(DESK_SURFACES).filter(s=>s!=='lift')){const top=E.addParent(s,on);if(!top)continue;top.updateWorldMatrix(true,false);const l=top.worldToLocal(point.clone()),size=top.userData.surfaceSize;
       if(Math.abs(l.y)<best&&(!size||Math.abs(l.x)<=size.width/2+20&&Math.abs(l.z)<=size.depth/2+20)){best=Math.abs(l.y);kind=s;}}
-    const parent=E.addParent(kind);parent.updateWorldMatrix(true,false);const k=parent.getWorldScale(new THREE.Vector3()).x||1,local=parent.worldToLocal(point.clone());if(onDesk(kind))local.y=0;
+    const at=kind==='room'?null:on,parent=E.addParent(kind,at);parent.updateWorldMatrix(true,false);const k=parent.getWorldScale(new THREE.Vector3()).x||1,local=parent.worldToLocal(point.clone());if(onDesk(kind))local.y=0;
     let rotation=e.rotation;
-    if(kind!==e.parent){const q=parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(o.getWorldQuaternion(new THREE.Quaternion())),r=new THREE.Euler().setFromQuaternion(q);rotation=[r.x,r.y,r.z].map(v=>r1(wrapDeg(v*180/Math.PI)));}
-    write(sel.key,cleanAddEdit({...e,parent:kind,position:local.toArray().map(v=>r3(v*k)),rotation}),`Placed ${label(o)} ${onDesk(kind)?`on ${DESK_SURFACES[kind]} (it rides the desk's lift and tilt)`:'there, in the room'}.`);
+    if(kind!==e.parent||(at||null)!==(e.on||null)){const q=parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(o.getWorldQuaternion(new THREE.Quaternion())),r=new THREE.Euler().setFromQuaternion(q);rotation=[r.x,r.y,r.z].map(v=>r1(wrapDeg(v*180/Math.PI)));}
+    const next={...e,parent:kind,position:local.toArray().map(v=>r3(v*k)),rotation};if(at)next.on=at;else delete next.on;
+    write(sel.key,cleanAddEdit(next),`Placed ${label(o)} ${onDesk(kind)?`on ${DESK_SURFACES[kind]}${at?' of '+deskName(at):''} (it rides the desk's lift and tilt)`:'there, in the room'}.`);
   }
   async function addProp(entry){
     await ensure();if(!editing()){status('Pause the chapter first: props are added on the paused frame.',true);return;}
@@ -373,9 +376,44 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     sel={key,target:propTarget(e),obj:null};onSelect();rerender();
     return e;
   }
-  const library=createPropLibrary({status,room:()=>shot()?.room,roomName:()=>shot()?.room,
+  // ---- Add to desks (18 Nov 2026, Vico: "add a prop and choose which desks it belongs to", and where on each desk:
+  // Foot shelf / Desktop / Tilt / Desktop shelf). The library's "On desks…" (prop-library.mjs) lists the chapter's desks
+  // with the mounts each one really has; the pick becomes one add entry per ticked desk (on: the room desk's id, none for
+  // the featured desk), each in the middle of its mount, all selected together (one nudge moves them all), one undo step.
+  // (the level desktop hangs on the base shelf: asking for it would build its frame, so the base shelf answers for it)
+  const hasMount=(E,kind,on)=>{try{return !!E.addParent(kind==='lift'?'base-shelf':kind,on||null);}catch{return false;}};
+  const deskName=id=>id?win()?.ErgoFlex?.sceneDesks?.records?.get(id)?.state?.name||id:'the featured desk';
+  // the chapter's desks: [{id: null (featured) | record id, name, mounts: [kind, …]}]
+  function chapterDesks(){
+    const E=win()?.__filmEdits,sd=win()?.ErgoFlex?.sceneDesks;if(!E)return [];
+    const all=[{id:null,name:'Featured desk'+(sd?.active?.state?.name?' · '+sd.active.state.name:'')}];
+    for(const r of sd?.records?.values()||[])if(r.id!==sd.selected&&r.group&&!r.layersHidden)all.push({id:r.id,name:r.state?.name||r.id});
+    return all.map(d=>({...d,mounts:MOUNTS.map(m=>m.kind).filter(k=>hasMount(E,k,d.id))})).filter(d=>d.mounts.length);
+  }
+  // the level desktop's middle in the lift frame: the desktop mount's origin, at the desktop's height
+  function levelDesktop(frame,on){
+    const {THREE}=tools,top=win().__filmEdits.addParent('desk',on),v=new THREE.Vector3();if(!top)return v;
+    top.updateWorldMatrix(true,false);frame.updateWorldMatrix(true,false);return frame.worldToLocal(v.setFromMatrixPosition(top.matrixWorld));
+  }
+  async function addToDesks(entry,targets){
+    await ensure();if(!editing()){status('Pause the chapter first: props are added on the paused frame.',true);return [];}
+    const E=win().__filmEdits,{THREE}=tools,d=deskNow(),span=spanOf(d?.preset,d?.n),now=Math.max(span.lo,Math.min(span.hi,time())),late=now-span.lo>.5&&span.hi-now>=.3;
+    const made=[],missed=[];
+    for(const {desk,kind} of targets){
+      const parent=E.addParent(kind,desk||null);if(!parent){missed.push(`${deskName(desk)} (no ${mountLabel(kind).toLowerCase()})`);continue;}
+      parent.updateWorldMatrix(true,false);const k=parent.getWorldScale(new THREE.Vector3()).x||1,local=kind==='lift'?levelDesktop(parent,desk||null):new THREE.Vector3();
+      const e=cleanAddEdit({add:{asset:entry.id},id:newAddId(),label:entry.name,parent:kind,position:local.toArray().map(v=>r3(v*k)),rotation:[0,0,0],scale:[1,1,1],
+        ...(desk?{on:desk}:{}),...(d?.preset?{desk:d.preset}:{}),...(late?{show:showFor(span,{from:r2(now),to:span.hi})}:{})});
+      if(e)made.push(e);
+    }
+    if(!made.length){status(`${entry.name} was not added: ${missed.join(', ')||'tick a desk'}.`,true);return [];}
+    writeMany(made.map(e=>({key:propKey(e),next:e})),`Added ${entry.name} to ${made.length} desk${made.length===1?'':'s'}: ${made.map(e=>`${deskName(e.on)} · ${mountLabel(e.parent)}`).join(', ')}${missed.length?` (not on ${missed.join(', ')})`:''}. They are selected together: W moves them all; double-click a desk to move one on its own.`);
+    setMembers(made.map(e=>({key:propKey(e),target:propTarget(e),obj:null})));
+    return made;
+  }
+  const library=createPropLibrary({status,room:()=>shot()?.room,roomName:()=>shot()?.room,desks:chapterDesks,mounts:MOUNTS,
     load:async()=>{await ensure();return (await win().__filmEdits.propLibrary()).index.props;},
-    onPick:entry=>{addProp(entry).catch(error=>status(error.message,true));}});
+    onPick:(entry,targets)=>{(targets?addToDesks(entry,targets):addProp(entry)).catch(error=>status(error.message,true));}});
   // The object a selected prop is on stage now: none while another desk shows (a same-named item there is that desk's).
   function objOf(m){const d=(editOfKey(m.key)||m.target)?.desk;if(d&&d!==deskNow()?.preset){m.obj=null;return null;}if(m.obj&&!inScene(m.obj))m.obj=null;if(!m.obj&&tools)m.obj=find(m.key,m.target);return m.obj;}
   const current=()=>sel?objOf(sel):null;
@@ -414,7 +452,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       const d=down;down=null;if(!d||ev.button!==0||Math.hypot(ev.clientX-d.x,ev.clientY-d.y)>5||gizmo.dragging||w.__directorDragging||lightsShowing()||!editing()||blocked())return;
       const r=dom.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1),t.camera);
       if(placing){const now=current(),e=sel&&editOfKey(sel.key);placing=false;
-        if(now&&isAddEdit(e)){const h=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object)&&!isAncestor(now,h.object));if(h)placeAt(now,e,h.point);else{status('Nothing there to put it on.',true);rerender();}return;}}
+        if(now&&isAddEdit(e)){const h=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object)&&!isAncestor(now,h.object));if(h)placeAt(now,e,h.point,roomDeskGroupOf(h.object)?.id||null);else{status('Nothing there to put it on.',true);rerender();}return;}}
       const hit=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object));
       // People are not props: a click on one selects them in the People tab (scene-people-editor.mjs).
       if(hit&&!placing&&person(hit.object)){if(sel)deselect();return;}
@@ -902,7 +940,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function addPanel(o,e){
     const {THREE}=tools,pos=o.getWorldPosition(new THREE.Vector3()).toArray(),fac=e.scale,uniform=Math.abs(fac[0]-fac[1])<1e-4&&Math.abs(fac[1]-fac[2])<1e-4,studio=plan().find(r=>r.key===sel.key);
     const num=(name,text,value,step,extra='')=>`<label>${text}<input name="${name}" type="number" step="${step}" value="${value}" ${extra}></label>`;
-    return `<div class="movement-inspector prop-inspector prop-added" data-reveal="prop"><h4>${escape(label(o))}</h4><p class="director-hint prop-name">+ Added in this chapter · ${escape(e.add.asset)} · ${onDesk(e.parent)?`on ${DESK_SURFACES[e.parent]} (rides lift and tilt)`:'in the room'}</p>
+    return `<div class="movement-inspector prop-inspector prop-added" data-reveal="prop"><h4>${escape(label(o))}</h4><p class="director-hint prop-name">+ Added in this chapter · ${escape(e.add.asset)} · ${onDesk(e.parent)?`on ${e.on?escape(deskName(e.on))+' · ':''}${escape(mountLabel(e.parent)||DESK_SURFACES[e.parent])} (${e.parent==='desk'?'rides lift and tilt':escape((MOUNTS.find(m=>m.kind===e.parent)?.tip||'rides lift and tilt').replace(/^[^:]*: /,'').replace(/\.$/,''))})`:'in the room'}</p>
       <div class="director-actions prop-modes">${Object.entries(MODES).map(([m,t])=>`<button data-action="pp-mode-${m}" aria-pressed="${mode===m}" title="${t} (${m==='translate'?'W':m==='rotate'?'E':'T'})">${t}</button>`).join('')}</div>
       <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-p'+k,'Position '+k+' (m)',r3(pos[i]*metresPerUnit()),.01)).join('')}</div>
       <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-r'+k,'Turn '+k+' (°)',r1(e.rotation[i]),1)).join('')}</div>
@@ -915,14 +953,17 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       <p class="director-hint" data-studio-note>${studio?(studio.ok?'Studio: can be added to the room for good (Make permanent in Studio…).':'Studio: '+escape(studio.why)):''}</p></div>`;
   }
   // An added prop: straight onto one of the desk's surfaces (its middle; then move it with the gizmo).
-  const surfaces=()=>{const E=win()?.__filmEdits;return E?Object.keys(DESK_SURFACES).filter(s=>E.addParent(s)):[];};
-  const putButtons=e=>{const list=surfaces();return list.length?`<div class="director-actions prop-put"><span class="director-hint">Put it on</span>${list.map(s=>`<button data-action="pp-put-${s}" aria-pressed="${e.parent===s}" title="Onto ${DESK_SURFACES[s]}: it rides the desk's lift and tilt">${s==='desk'?'Desktop':s==='shelf'?'Top shelf':s==='lower-shelf'?'Lower shelf':'Base shelf'}</button>`).join('')}</div>`:'';};
+  // (its own desk's: a prop added on a room desk (e.on) is put on that desk's mounts; Vico's names, MOUNTS)
+  const surfaces=(on=null)=>{const E=win()?.__filmEdits;return E?MOUNTS.map(m=>m.kind).filter(s=>hasMount(E,s,on)):[];};
+  const putButtons=e=>{const list=surfaces(e.on||null);return list.length?`<div class="director-actions prop-put"><span class="director-hint">Put it on</span>${list.map(s=>`<button data-action="pp-put-${s}" aria-pressed="${e.parent===s}" title="${escape(MOUNTS.find(m=>m.kind===s).tip)}">${escape(mountLabel(s))}</button>`).join('')}</div>`:'';};
   function putOn(kind){
     const o=current(),e=sel&&editOfKey(sel.key);if(!o||!isAddEdit(e)||!DESK_SURFACES[kind])return;
-    const {THREE}=tools,parent=win().__filmEdits.addParent(kind);if(!parent){status(`This desk has no ${DESK_SURFACES[kind].replace('the ','')} to put it on.`,true);return;}
-    // Where it is now, if that is over the surface; else the surface's middle. It keeps the way it faces.
+    const {THREE}=tools,parent=win().__filmEdits.addParent(kind,e.on||null);if(!parent){status(`This desk has no ${mountLabel(kind).toLowerCase()||DESK_SURFACES[kind].replace('the ','')} to put it on.`,true);return;}
+    // Where it is now, if that is over the surface; else the surface's middle. It keeps the way it faces. (The level
+    // desktop frame has no surface: the prop keeps its height, else it goes to the desktop's middle at the desktop's height.)
     parent.updateWorldMatrix(true,false);const local=parent.worldToLocal(o.getWorldPosition(new THREE.Vector3())),size=parent.userData.surfaceSize,k=parent.getWorldScale(new THREE.Vector3()).x||1;
-    if(!size||Math.abs(local.x)>size.width/2||Math.abs(local.z)>size.depth/2)local.set(0,0,0);local.y=0;
+    if(kind==='lift'){if(!onDesk(e.parent)||e.parent==='base-shelf')local.copy(levelDesktop(parent,e.on||null));}
+    else{if(!size||Math.abs(local.x)>size.width/2||Math.abs(local.z)>size.depth/2)local.set(0,0,0);local.y=0;}
     const q=parent.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(o.getWorldQuaternion(new THREE.Quaternion())),r=new THREE.Euler().setFromQuaternion(q);
     write(sel.key,cleanAddEdit({...e,parent:kind,position:local.toArray().map(v=>r3(v*k)),rotation:[0,r1(wrapDeg(r.y*180/Math.PI)),0]}),`Put ${label(o)} on ${DESK_SURFACES[kind]}: it rides the desk's lift and tilt. Move it with the gizmo.`);
   }
@@ -1074,7 +1115,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     write(sel.key,next,`${name}: the turn and size of ${attrClip.label}. Undo puts it back.`);return true;
   }
   return {copyAttrs,pasteAttrs,panel,lane,laneHeight,action,changed,select,deselect,hide,reset,setMode,applied,editedCount,ensure,learn,boxPick,
-    insideDesk:()=>inside?{...inside}:null,leaveDesk,enterDesk:id=>{const sd=win()?.ErgoFlex?.sceneDesks,r=sd?.records?.get(id);if(!r||id===sd.selected)return false;enterDesk({id,name:r.state?.name||'Room desk'});return true;},object:()=>{try{return current();}catch{return null;}},
+    insideDesk:()=>inside?{...inside}:null,leaveDesk,addToDesks,chapterDesks,enterDesk:id=>{const sd=win()?.ErgoFlex?.sceneDesks,r=sd?.records?.get(id);if(!r||id===sd.selected)return false;enterDesk({id,name:r.state?.name||'Room desk'});return true;},object:()=>{try{return current();}catch{return null;}},
     selected:()=>sel?.key||null,selectedKeys:()=>members().map(m=>m.key),selectKeys,items,hideItems:(keys,on,also)=>hideItems(keys.map(k=>{const i=items().find(x=>x.key===k);return i?{key:k,target:i.target,obj:i.obj}:{key:k};}),on,also),
     flashKey,setLocked:fn=>{lockedKeys=fn;},isHidden:key=>{const e=editOfKey(key);if(e)return e.hide===true;const i=items().find(x=>x.key===key);return !!i&&i.hidden;},selectedName:()=>sel?(current()?.name||sel.target.label):null,mode:()=>mode,
     addProp,dropSelected,dropObject,writeLive,openLibrary:()=>library.open(),library:()=>library,

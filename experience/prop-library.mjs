@@ -4,6 +4,9 @@
 // Search box (name, id, category, collection), category chips, "Fits this room" (the entry's scenes), recently used
 // on top. Keyboard: type to search, arrows move, Enter adds, Esc closes. Picking calls onPick(entry); the caller
 // places it (scene-prop-editor.mjs addProp). Styles: prop-library.css (its own file, linked once).
+// "Put it" (18 Nov 2026): As usual (the above), or On desks…: the chapter's desks (desks(): [{id, name, mounts}]), each
+// with a tick and a mount menu in Vico's words (mounts: prop-edits.mjs MOUNTS, a tooltip each saying what it follows),
+// only the mounts that desk has; the pick is then onPick(entry, [{desk, kind}, …]) for the ticked desks.
 const RECENT_KEY='ergoflex.director.recentProps',RECENT_MAX=12;
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const cap=s=>s?s[0].toUpperCase()+s.slice(1):s;
@@ -25,9 +28,11 @@ export function filterEntries(entries,{query='',category='all',room=null,fits=fa
 }
 let linked=false;
 function linkStyles(){if(linked)return;linked=true;const l=document.createElement('link');l.rel='stylesheet';l.href=new URL('./prop-library.css',import.meta.url).href;document.head.append(l);}
-export function createPropLibrary({load,room,roomName=()=>room(),onPick,status=()=>{}}){
+export function createPropLibrary({load,room,roomName=()=>room(),onPick,status=()=>{},desks=()=>[],mounts=[]}){
   linkStyles();
   let entries=null,loading=null,query='',category='all',fits=false,active=0,shown=[];
+  // where it goes: 'usual' | 'desks'; per desk ('' = the featured desk): ticked, and its mount
+  let where='usual',deskList=[];const ticked=new Set(['']),mountOf=new Map();
   const dialog=document.createElement('dialog');dialog.id='prop-library';dialog.setAttribute('aria-labelledby','prop-library-title');document.body.append(dialog);
   const thumb=e=>`/assets/props/thumbs/${encodeURIComponent(e.id)}.png${e.triangleFinish?'?v=table-clearance-20261021':''}`;
   const card=(e,i)=>`<button type="button" class="pl-card" role="option" id="pl-opt-${i}" data-pl-index="${i}" aria-selected="${i===active}" title="${escape(e.name)} · ${escape(e.id)}${e.collection?' · '+escape(e.collection):''}"><img src="${thumb(e)}" alt="" loading="lazy" decoding="async" onerror="this.classList.add('pl-nothumb')"><span class="pl-name">${escape(e.name)}</span><small>${escape(sizeText(e.size))} · ${escape(e.category)}${deskItem(e)?' · on the desk':''}</small></button>`;
@@ -37,8 +42,23 @@ export function createPropLibrary({load,room,roomName=()=>room(),onPick,status=(
       <div class="pl-chips" role="group" aria-label="Category" data-pl-chips></div>
       <p class="director-hint pl-count" data-pl-count aria-live="polite"></p>
       <div class="pl-scroll" id="pl-results" role="listbox" aria-label="Library models" data-pl-results></div>
-      <p class="director-hint pl-keys">Type to search · ←↑→↓ move · Enter adds · Esc closes. Desk-sized items go on the desktop under the screen centre; the rest on the floor in front of the camera.</p>`;
+      <div class="pl-where" data-pl-where></div>
+      <p class="director-hint pl-keys">Type to search · ←↑→↓ move · Enter adds · Esc closes. As usual: desk-sized items go on the desktop under the screen centre, the rest on the floor in front of the camera. On desks: on every desk you tick, where you choose.</p>`;
   }
+  const deskKey=d=>d.id||'';
+  const defaultMount=(d,e)=>{const want=e&&!deskItem(e)?'base-shelf':'desk';return d.mounts.includes(want)?want:d.mounts[0];};
+  function whereHtml(){
+    const box=dialog.querySelector('[data-pl-where]');if(!box)return;
+    deskList=(()=>{try{return desks()||[];}catch{return [];}})();
+    const e=shown[active]||null,label=k=>mounts.find(m=>m.kind===k)?.label||k,tip=k=>mounts.find(m=>m.kind===k)?.tip||'';
+    const rows=deskList.map(d=>{const k=deskKey(d),m=mountOf.get(k)&&d.mounts.includes(mountOf.get(k))?mountOf.get(k):defaultMount(d,e);
+      return `<li class="pl-desk" data-pl-desk="${escape(k)}"><label class="director-check"><input type="checkbox" name="pl-desk" value="${escape(k)}" ${ticked.has(k)?'checked':''}>${escape(d.name)}</label>
+        <select name="pl-mount" data-desk="${escape(k)}" aria-label="Where on ${escape(d.name)}" title="${escape(tip(m))}">${d.mounts.map(x=>`<option value="${escape(x)}" ${x===m?'selected':''} title="${escape(tip(x))}">${escape(label(x))}</option>`).join('')}</select></li>`;}).join('');
+    box.innerHTML=`<div class="pl-where-row" role="radiogroup" aria-label="Where it goes"><span>Put it</span><label class="director-check"><input type="radio" name="pl-where" value="usual" ${where==='usual'?'checked':''}>As usual</label><label class="director-check"><input type="radio" name="pl-where" value="desks" ${where==='desks'?'checked':''} ${deskList.length?'':'disabled'}>On desks…</label></div>`+
+      (where==='desks'?`<ul class="pl-desks" data-pl-desks>${rows||'<li class="director-hint">No desk in this chapter has a mount to put it on.</li>'}</ul>`:'');
+  }
+  // the ticked desks and their mounts: [{desk: null | id, kind}]
+  const targets=()=>deskList.filter(d=>ticked.has(deskKey(d))).map(d=>{const k=deskKey(d),m=mountOf.get(k);return {desk:d.id||null,kind:m&&d.mounts.includes(m)?m:defaultMount(d,shown[active])};});
   function chips(){
     const counts=new Map();for(const e of filterEntries(entries,{room:room(),fits}))counts.set(e.category,(counts.get(e.category)||0)+1);
     const cats=[...counts].sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));if(category!=='all'&&!counts.has(category))cats.push([category,0]);
@@ -71,16 +91,25 @@ export function createPropLibrary({load,room,roomName=()=>room(),onPick,status=(
     }
     sync();
   }
-  function pick(i){const e=shown[i];if(!e)return;pushRecent(e.id);dialog.close();onPick(e);}
+  function pick(i){
+    const e=shown[i];if(!e)return;
+    if(where==='desks'){const t=targets();if(!t.length){status('Tick at least one desk to put it on (or choose As usual).',true);return;}pushRecent(e.id);dialog.close();onPick(e,t);return;}
+    pushRecent(e.id);dialog.close();onPick(e);
+  }
   async function open(){
     if(!entries){status('Loading the prop library…');try{entries=await(loading||=load());}catch(error){loading=null;status('The prop library could not load: '+error.message,true);return;}
       entries=[...entries].sort((a,b)=>a.name.localeCompare(b.name));}
-    query='';active=0;frame();chips();list();
+    query='';active=0;frame();chips();list();whereHtml();
     if(!dialog.open)dialog.showModal();const input=dialog.querySelector('[name=pl-search]');input.focus();
     status(`Prop library: ${entries.length} models. Type to search, arrows to move, Enter adds.`);
   }
   dialog.addEventListener('input',event=>{if(event.target.name==='pl-search'){query=event.target.value.trim();active=0;list();}});
-  dialog.addEventListener('change',event=>{if(event.target.name==='pl-fits'){fits=event.target.checked;active=0;chips();list();dialog.querySelector('[name=pl-search]').focus();}});
+  dialog.addEventListener('change',event=>{
+    if(event.target.name==='pl-fits'){fits=event.target.checked;active=0;chips();list();dialog.querySelector('[name=pl-search]').focus();return;}
+    if(event.target.name==='pl-where'){where=event.target.value;whereHtml();return;}
+    if(event.target.name==='pl-desk'){if(event.target.checked)ticked.add(event.target.value);else ticked.delete(event.target.value);return;}
+    if(event.target.name==='pl-mount'){mountOf.set(event.target.dataset.desk,event.target.value);event.target.title=mounts.find(m=>m.kind===event.target.value)?.tip||'';return;}
+  });
   dialog.addEventListener('click',event=>{
     if(event.target.closest('[data-pl-close]')){dialog.close();return;}
     const chip=event.target.closest('[data-pl-category]');if(chip){category=chip.dataset.plCategory;active=0;chips();list();dialog.querySelector('[name=pl-search]').focus();return;}
@@ -95,11 +124,11 @@ export function createPropLibrary({load,room,roomName=()=>room(),onPick,status=(
       if((event.key==='ArrowLeft'||event.key==='ArrowRight')&&event.target===input&&input.value&&!(event.key==='ArrowRight'&&input.selectionStart===input.value.length))return;   // caret moves in the text
       event.preventDefault();move(event.key);return;
     }
-    if(event.key==='Enter'){if(event.target.closest?.('[data-pl-category],[data-pl-close]'))return;event.preventDefault();const c=event.target.closest?.('.pl-card');pick(c?Number(c.dataset.plIndex):active);return;}
+    if(event.key==='Enter'){if(event.target.closest?.('[data-pl-category],[data-pl-close],[data-pl-where]'))return;event.preventDefault();const c=event.target.closest?.('.pl-card');pick(c?Number(c.dataset.plIndex):active);return;}
     // Type to search from anywhere in the browser.
-    if(event.key.length===1&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&event.target!==input&&event.target.type!=='checkbox'){input.focus();}
+    if(event.key.length===1&&!event.ctrlKey&&!event.metaKey&&!event.altKey&&event.target!==input&&event.target.type!=='checkbox'&&event.target.type!=='radio'&&event.target.tagName!=='SELECT'){input.focus();}
     else if(event.key==='Backspace'&&event.target!==input){input.focus();}
   });
   dialog.addEventListener('keyup',event=>event.stopPropagation());
-  return {open,close:()=>dialog.open&&dialog.close(),isOpen:()=>dialog.open,element:dialog};
+  return {open,close:()=>dialog.open&&dialog.close(),isOpen:()=>dialog.open,element:dialog,targets:()=>where==='desks'?targets():null};
 }
