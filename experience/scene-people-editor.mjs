@@ -141,16 +141,18 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   const featured=e=>!!e?.desk&&!e.station;
   const movable=e=>!!e&&!featured(e)&&!free(e);
   // While the Gumball drags someone the room would put back each frame (a room desk's user follows that desk), the
-  // stage's people filter holds them where they are (filter.place, the film's own "put somewhere by hand"); the edit
-  // that ends the drag replaces the filter, and a drag that moved nothing lets them go again.
+  // stage's people hold them where they are (place, the film's own "put somewhere by hand") through a COPY of the
+  // stage's filter: the filter object the stage was given is the film setup's own `people` (liveFilmShot shares it), and
+  // the first edit seeds the chapter's cast from that object (19 Nov 2026, Windows: a hold written into it went into the
+  // edit, and Maya was drawn back where the drag began). The edit that ends the drag gives the stage a new filter; a drag
+  // that moved nothing, or an edit the stage never re-casts, puts the stage's own filter back.
   function hold(o,spot){
     const people=stagePeople(),f=people?.filter,spec=o?.userData?.person;if(!f||!spec)return;
-    const k=people.keyOf(spec),was=f.place?.[k];f.place={...(f.place||{}),[k]:{at:spot.at,turn:spot.turn,...(spot.y?{y:spot.y}:{})}};held={f,k,was};
+    const k=people.keyOf(spec),copy={...f,place:{...(f.place||{}),[k]:{at:[...spot.at],turn:spot.turn,...(spot.y?{y:spot.y}:{})}}};
+    people.filter=copy;held={people,f,copy};
   }
-  function release(){
-    const h=held;held=null;if(!h)return;const place={...(h.f.place||{})};if(h.was===undefined)delete place[h.k];else place[h.k]=h.was;
-    if(Object.keys(place).length)h.f.place=place;else delete h.f.place;const people=stagePeople();if(people){people.placed=false;people.dirty=true;}
-  }
+  function release(){const h=held;held=null;restore(h);}
+  function restore(h){if(h&&h.people.filter===h.copy){h.people.filter=h.f;h.people.placed=false;h.people.dirty=true;}}
   // A person of the room's own cast (poseSource) becomes one of this chapter's: the room's placement is left out (except,
   // and out of only), their entry keeps its key, so their pose corrections, times (when) and whoever looks at them stay theirs.
   function takeIn(p,x){
@@ -193,7 +195,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       const to=lastDragged||now;lastDragged=null;
       const moved=mode==='translate'?Math.hypot(to.at[0]-from.at[0],to.at[1]-from.at[1])>=.5||Math.abs(to.y-from.y)>=.5:mode==='rotate'?Math.abs(to.turn-from.turn)>=.05:Math.abs(to.scale-from.scale)>=1e-3;
       if(!moved){release();rerender();return;}
-      held=null;   // (the edit replaces the stage's filter, the hold with it)
+      const h=held;held=null;setTimeout(()=>restore(h),3000);   // (the edit gives the stage a new filter; should it not, the stage's own comes back)
       toSpot(sel,{at:to.at,turn:to.turn,y:to.y,...(mode==='scale'?{scale:to.scale}:{})},
         `${mode==='translate'?`Moved ${name} by ${Math.round(Math.hypot(to.at[0]-from.at[0],to.at[1]-from.at[1],to.y-from.y))} mm`:mode==='rotate'?`Turned ${name} by ${r1(to.turn-from.turn)}°`:`${name} is now ${Math.round(to.scale*100)} % of their built size`}: at a spot of their own in this chapter now. Undo puts them back.`);
       return;

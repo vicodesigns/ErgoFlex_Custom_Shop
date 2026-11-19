@@ -57,6 +57,18 @@ const p3=editablePeople({v:2,...structuredClone(film.people)},before.resolved({e
 z.hide=true;p3.except=[...new Set([...(p3.except||[]),z.poseSource.key])];
 const f3=peopleFilter(cleanPeople(canonicalPeople(p3)));assert.ok(!f3.cast.some(e=>e.key===z.key),'his entry is off (the film leaves it out)');
 assert.equal(andre(await staged(f3)).length,0,'and nobody draws him');
+// 4. the hold during a drag (19 Nov 2026, Windows: Maya was drawn back where the drag began): it is a copy of the stage's
+//    filter; the filter object the stage was given (the film setup's own `people`, shared by liveFilmShot, and what the
+//    first edit seeds the chapter's cast from) is never written
+{const h=new Function('stagePeople','tools',`let held=null;${fn('hold')}\n${fn('release')}\n${fn('restore')}\nreturn {hold,release,restore,get:()=>held};`);
+  const filmPeople=structuredClone(film.people),before=JSON.stringify(filmPeople),stage={filter:filmPeople,keyOf:s=>s.key||s.id,placed:true};
+  const H=h(()=>stage),o={userData:{person:{key:'bay-1',id:'people-maya-sit-type',station:'film-edit-01',desk:'sit'}}};
+  H.hold(o,{at:[1200,-300],turn:180,y:0});
+  assert.notEqual(stage.filter,filmPeople,'the stage holds them through a copy');assert.deepEqual(stage.filter.place['bay-1'],{at:[1200,-300],turn:180});
+  assert.equal(JSON.stringify(filmPeople),before,'the film\'s people object is untouched');
+  H.release();assert.equal(stage.filter,filmPeople,'a drag that moved nothing gives the stage its own filter back');
+  H.hold(o,{at:[1,2],turn:0,y:0});const kept=H.get(),next={cast:[]};stage.filter=next;H.restore(kept);
+  assert.equal(stage.filter,next,'once an edit has given the stage a new filter, the hold never puts the old one back');}
 // the editor: everyone but the film desk's user gets the Gumball; the first move is the edit above
 assert.match(ed,/const grab=on&&\(free\(e\)\|\|movable\(e\)\)&&!busy;/);
 assert.match(ed,/const featured=e=>!!e\?\.desk&&!e\.station;\n  const movable=e=>!!e&&!featured\(e\)&&!free\(e\);/);
