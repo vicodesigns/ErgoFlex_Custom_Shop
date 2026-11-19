@@ -119,7 +119,11 @@ try{
   // ---- Export cut -> import -> the film chapter's `people` (temp copy of the chapter)
   // (the draft is read before Export cut: since film-fresh.mjs, an export makes the exported cut the baseline and forgets
   // the unexported draft, so after it the draft reads null; Windows, 19 Nov 2026)
-  const mine=await edits();check(!!mine,'the draft has the cast before the export');
+  // (and after the draft's write: director.mjs changed() writes it 250 ms after the last edit, each edit starting the
+  // wait again; the undo and the eye just above were less than that apart, so a read at once had the cast from before
+  // both. Read once nothing has been edited for 600 ms and two reads agree.)
+  let mine=null;for(let i=0;i<20;i++){await wait(600);const a=await edits();if(a&&JSON.stringify(a)===JSON.stringify(mine))break;mine=a;}
+  check(!!mine,'the draft has the cast before the export');
   await page.evaluate(()=>document.querySelector('#director-appbar [data-action=save-export]').click());
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download');
   const exported=JSON.parse(fs.readFileSync(path.join(downloads,file),'utf8'));
