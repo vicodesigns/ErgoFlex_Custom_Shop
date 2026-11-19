@@ -155,6 +155,54 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function ridesDesk(o){const desk=win()?.ErgoFlex?.loadedModel;for(let p=o?.parent;p;p=p.parent)if(p===desk||p.userData?.dayKit||/^(Scene dressing|Accessory mount|Desk dressing):/.test(p.name))return true;return false;}
   const ON_DESK='It sits on the desk and travels with it, so Studio\'s room layout can\'t hold it. Keep it as a chapter edit.';
   const onDeskItself=o=>{const desk=win()?.ErgoFlex?.loadedModel;for(let p=o;p;p=p.parent)if(p===desk||p.userData?.dayKit)return true;return false;};
+  // ---- room desks: enter a desk to edit what sits on it (18 Nov 2026, Vico: "select the desk, double-click to go into
+  // editing that desk's props"; Illustrator's isolation mode, Figma's double-click into a group). The room's other
+  // ErgoFlex desks (scene desk records, not the featured one) are one thing to a click: it selects the desk (Desks tab).
+  // A double-click on the desk, or on anything on it, enters it: a chip over the view names it, a teal box outlines it,
+  // and clicks (and the box select) pick the items on it one by one, as props (hide, delete, move along the desk's own
+  // axes). Esc, or a double-click on empty space, leaves it and selects the desk again. The Layers tab lists every desk's
+  // items under the desk; a row there enters the desk too. The featured desk's items are picked straight away as before;
+  // a double-click on one enters the featured desk the same way (only its items pick).
+  const MOUNT=/^Desk dressing:|:(desktop|shelf|lower-shelf|base-shelf)$/;
+  // the room desk (not the featured one) o is part of: {id, name, group} | null
+  function roomDeskGroupOf(o){
+    const sd=win()?.ErgoFlex?.sceneDesks;if(!sd?.records)return null;
+    for(let p=o;p;p=p.parent){const id=p.userData?.sceneDeskManaged&&p.userData.sceneDeskId,r=id&&sd.records.get(id);if(r&&r.group===p)return id===sd.selected?null:{id,name:r.state?.name||'Room desk',group:p};}
+    return null;
+  }
+  // the item on a room desk o is part of: a mount's child (or a prop the Director added there): {id, name, group, obj} | null
+  function roomDeskItem(o){
+    const d=roomDeskGroupOf(o);if(!d)return null;
+    for(let p=o;p&&p!==d.group;p=p.parent){if(p.userData?.directorAdd)return {...d,obj:p};if(p.parent&&p.parent!==d.group&&MOUNT.test(p.parent.name||''))return {...d,obj:p};}
+    return null;
+  }
+  const isPerson=o=>{for(let p=o;p;p=p.parent)if(p.userData?.person)return true;return false;};
+  let inside=null;   // the desk entered: {id, name} (id 'featured': the featured desk)
+  const insideGroup=()=>{if(!inside)return null;const sd=win()?.ErgoFlex?.sceneDesks;return inside.id==='featured'?win()?.ErgoFlex?.loadedModel||null:sd?.records?.get(inside.id)?.group||null;};
+  const inInside=o=>{if(!inside||!o)return false;if(inside.id==='featured')return !roomDeskGroupOf(o)&&(onDeskItself(o)||ridesDesk(o));return roomDeskGroupOf(o)?.id===inside.id;};
+  const chip=Object.assign(document.createElement('div'),{className:'desk-isolate-chip'});chip.hidden=true;chip.setAttribute('role','status');document.body.append(chip);
+  addEventListener('resize',()=>{if(inside)syncChip();});
+  function syncChip(){
+    if(!inside){chip.hidden=true;return;}
+    const r=frame()?.getBoundingClientRect();if(r){chip.style.left=Math.round(r.left+12)+'px';chip.style.top=Math.round(r.top+12)+'px';}
+    chip.innerHTML=`<span>Room</span> › <b>${escape(inside.name)}</b> <small>editing its items · Esc or double-click empty space to leave</small>`;chip.hidden=false;
+  }
+  function enterDesk(d){
+    if(inside?.id===d.id)return;inside={id:d.id,name:d.name};
+    if(sel&&!members().every(m=>inInside(objOf(m))))deselect();
+    onSelect();syncChip();rerender();
+    status(`Editing ${d.name}: click an item on it to select it (Shift+click adds), Delete hides it. Esc or a double-click on empty space leaves the desk.`);
+  }
+  // quiet: something else took the selection (the desk was picked in the Desks tab): just end it
+  function leaveDesk({quiet=false}={}){
+    const d=inside;if(!d)return false;inside=null;syncChip();
+    if(quiet)return true;
+    deselect();
+    const g=d.id==='featured'?null:win()?.ErgoFlex?.sceneDesks?.records?.get(d.id)?.group;
+    if(g&&roomDesk({obj:g,edit:null,key:null}))status(`Left ${d.name}: the desk is selected. Esc again deselects it; double-click it to go back in.`);
+    else{onSelect();rerender();status(`Left ${d.name}.`);}
+    return true;
+  }
   // The film target for a prop: its name, plus its Studio key, path or position when others share the name.
   function targetFor(o){
     const E=win().__filmEdits,t={match:'^'+escapeRegex(o.name||'')+'$',label:o.name||'Unnamed prop'},only=x=>{const f=E.editTargets(x);return f.length===1&&f[0]===o;};
@@ -370,8 +418,14 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       const hit=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object));
       // People are not props: a click on one selects them in the People tab (scene-people-editor.mjs).
       if(hit&&!placing&&person(hit.object)){if(sel)deselect();return;}
-      const now=current(),o=hit&&(d.alt&&now&&isAncestor(now,hit.object)?meaningful(hit.object,{above:now}):meaningful(hit.object));
       const how=pickMode(ev);
+      // a room desk: one click selects the desk (Desks tab); inside a desk entered, only its items pick
+      if(hit&&inside){
+        if(!inInside(hit.object)){status(`Editing ${inside.name}: click one of its items. Esc or a double-click on empty space leaves the desk.`);return;}
+        const di=inside.id==='featured'?null:roomDeskItem(hit.object);
+        if(inside.id!=='featured'){if(di)pick(di.obj,{how});else status(`That is ${inside.name} itself: click an item on it. Esc leaves the desk.`);return;}
+      }else if(hit){const rd=roomDeskGroupOf(hit.object);if(rd){if(sel)deselect();if(roomDesk({obj:rd.group,edit:null,key:null}))status(`${rd.name} selected (Desks tab: move, turn, hide it). Double-click it to edit the items on it.`);return;}}
+      const now=current(),o=hit&&(d.alt&&now&&isAncestor(now,hit.object)?meaningful(hit.object,{above:now}):meaningful(hit.object));
       if(!o){if(sel&&how==='replace'){deselect();status('Nothing to edit there: click a prop (furniture, lamps, desk items). Esc deselects.');}return;}
       pick(o,{how});
     },true);
@@ -384,7 +438,21 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     w.__directorPropsRestore=()=>{for(const [o,s] of snaps){o.position.copy(s.position);o.quaternion.copy(s.quaternion);o.scale.copy(s.scale);o.updateMatrixWorld(true);}snaps.clear();};
     const pivot=new THREE.Object3D();pivot.name='Director group pivot';pivot.userData.directorTools=true;group.add(pivot);
     const boxes=[box],fbox=new THREE.BoxHelper(undefined,0xffd166);fbox.material.depthTest=false;fbox.material.transparent=true;fbox.renderOrder=999;fbox.visible=false;group.add(fbox);
-    tools={THREE,group,box,boxes,fbox,pivot,gizmo,t};syncSnap();requestAnimationFrame(tick);return tools;
+    // the desk entered (room desks): a teal outline
+    const dbox=new THREE.BoxHelper(undefined,0x45cfac);dbox.material.depthTest=false;dbox.material.transparent=true;dbox.material.opacity=.7;dbox.renderOrder=997;dbox.visible=false;group.add(dbox);
+    // Double-click: enter the desk under the pointer (and pick the item clicked), or leave the one entered (empty space)
+    dom.addEventListener('dblclick',ev=>{
+      if(ev.button!==0||!editing()||lightsShowing()||blocked()||placing||gizmo.dragging)return;
+      const r=dom.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1),t.camera);
+      const hit=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object));
+      if(hit&&isPerson(hit.object))return;   // (a person: pose mode, scene-people-editor.mjs)
+      const rd=hit&&roomDeskGroupOf(hit.object);
+      if(rd){const di=roomDeskItem(hit.object);enterDesk(rd);if(di)pick(di.obj,{how:'replace'});return;}
+      const o=hit&&meaningful(hit.object);
+      if(o&&(onDeskItself(o)||ridesDesk(o))){enterDesk({id:'featured',name:'the featured desk'});pick(o,{how:'replace'});return;}
+      if(inside)leaveDesk();
+    });
+    tools={THREE,group,box,boxes,fbox,dbox,pivot,gizmo,t};syncSnap();requestAnimationFrame(tick);return tools;
   }
   const isAncestor=(a,o)=>{for(let p=o;p;p=p.parent)if(p===a)return true;return false;};
   const ensure=()=>booting||=boot().then(t=>{learn();rerender();return t;},error=>{booting=null;throw error;});
@@ -405,6 +473,8 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const ms=live?members():[],objs=ms.map(objOf),o=live?current():null;
     syncBoxes(live?objs.map(x=>x||null).filter(Boolean):[]);
     if(live&&flash&&flash.until>performance.now()&&inScene(flash.obj)){fbox.setFromObject(flash.obj);fbox.visible=true;fbox.material.opacity=.45+.55*Math.abs(Math.sin((flash.until-performance.now())/130));bridge.stage()?.wake?.(100);}else{fbox.visible=false;flash=null;}
+    if(inside){const g=insideGroup();if(!g||!inScene(g)){inside=null;syncChip();}}
+    const dg=live&&insideGroup();if(dg){tools.dbox.setFromObject(dg);tools.dbox.visible=true;}else tools.dbox.visible=false;
     if(live&&group()&&mode==='scale')mode='translate';
     const movable=ms.map((m,i)=>m.blocked?null:objs[i]).filter(x=>x&&shown(x));
     if(live&&group()&&movable.length&&!placing){
@@ -474,12 +544,12 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const t=three();if(!t||!tools||!editing()||lightsShowing()||blocked())return 0;
     const {THREE}=tools,r=t.renderer.domElement.getBoundingClientRect(),seen=new Set(),found=[],box=new THREE.Box3(),v=new THREE.Vector3();
     t.scene.traverse(m=>{
-      if(!m.isMesh||!shown(m)||isOurs(m)||person(m))return;const o=meaningful(m);if(!o||seen.has(o))return;seen.add(o);
+      if(!m.isMesh||!shown(m)||isOurs(m)||isPerson(m))return;if(inside&&!inInside(m))return;const o=inside&&inside.id!=='featured'?roomDeskItem(m)?.obj:meaningful(m);if(!o||seen.has(o))return;seen.add(o);
       box.setFromObject(o);if(box.isEmpty())return;let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
       for(let i=0;i<8;i++){v.set(i&1?box.max.x:box.min.x,i&2?box.max.y:box.min.y,i&4?box.max.z:box.min.z).project(t.camera);if(v.z>1||v.z<-1)return;
         const px=r.left+(v.x+1)/2*r.width,py=r.top+(1-v.y)/2*r.height;x0=Math.min(x0,px);x1=Math.max(x1,px);y0=Math.min(y0,py);y1=Math.max(y1,py);}
-      const inside=x0>=rect.left&&x1<=rect.right&&y0>=rect.top&&y1<=rect.bottom,touches=x1>=rect.left&&x0<=rect.right&&y1>=rect.top&&y0<=rect.bottom;
-      if(touch?touches:inside)found.push(o);
+      const within=x0>=rect.left&&x1<=rect.right&&y0>=rect.top&&y1<=rect.bottom,touches=x1>=rect.left&&x0<=rect.right&&y1>=rect.top&&y0<=rect.bottom;
+      if(touch?touches:within)found.push(o);
     });
     if(!found.length){if(how==='replace'&&sel)deselect();return 0;}
     found.forEach((o,i)=>pick(o,{how:i===0?how:how==='toggle'?'toggle':'add'}));
@@ -503,6 +573,10 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   }
   // The selection, last entry = the one the single-prop inspector shows.
   function setMembers(list){
+    // a room desk's item selected (a Layers row, a click inside): that desk is the one entered; anything else leaves it
+    const last=list.at(-1)?.obj,rd=last&&roomDeskGroupOf(last);
+    if(rd&&inside?.id!==rd.id){inside={id:rd.id,name:rd.name};syncChip();}
+    else if(last&&inside&&!inInside(last)){inside=null;syncChip();}
     sel=list.at(-1)||null;others=list.slice(0,-1);pivotDirty=true;if(group()&&mode==='scale')mode='translate';onSelect();rerender();
   }
   function select(key,{how='replace'}={}){
@@ -573,7 +647,11 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function items(){
     if(!tools||!three()?.scene)return [];if(itemsCache&&performance.now()-itemsAt<1500)return itemsCache;
     const seen=new Set(),out=[];
-    sceneOf().traverse(x=>{if(!x.isMesh||isOurs(x))return;const o=meaningful(x);if(!o||seen.has(o))return;seen.add(o);
+    sceneOf().traverse(x=>{if(!x.isMesh||isOurs(x))return;
+      // an item on a room desk: its own row, under its desk (the desk itself keeps its row below)
+      const di=roomDeskItem(x);
+      if(di&&!seen.has(di.obj)){seen.add(di.obj);try{const t=targetOf(di.obj),key=propKey(t);if(!out.some(i=>i.key===key))out.push({key,target:propTarget({...t,label:t.label||di.obj.name||''}),obj:di.obj,name:label(di.obj),desk:false,roomDesk:di.id,deskName:di.name,hidden:!shown(di.obj)||editOfKey(key)?.hide===true,area:''});}catch{}}
+      const o=meaningful(x);if(!o||seen.has(o))return;seen.add(o);
       try{const t=targetOf(o),key=propKey(t);
         // Two objects under one key (create: the desk's accessories are in the scene twice, a copy under the always
         // hidden "Accessory mount:desktop" and the drawn one under "Desk dressing:desktop", and the film's opacity edit
@@ -995,7 +1073,8 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const next=add?cleanAddEdit({...e,rotation:[...attrClip.rotation],scale:[...attrClip.scale]}):{...sel.target,...(e||{}),rotation:[...attrClip.rotation],scale:[...attrClip.scale]};
     write(sel.key,next,`${name}: the turn and size of ${attrClip.label}. Undo puts it back.`);return true;
   }
-  return {copyAttrs,pasteAttrs,panel,lane,laneHeight,action,changed,select,deselect,hide,reset,setMode,applied,editedCount,ensure,learn,boxPick,object:()=>{try{return current();}catch{return null;}},
+  return {copyAttrs,pasteAttrs,panel,lane,laneHeight,action,changed,select,deselect,hide,reset,setMode,applied,editedCount,ensure,learn,boxPick,
+    insideDesk:()=>inside?{...inside}:null,leaveDesk,enterDesk:id=>{const sd=win()?.ErgoFlex?.sceneDesks,r=sd?.records?.get(id);if(!r||id===sd.selected)return false;enterDesk({id,name:r.state?.name||'Room desk'});return true;},object:()=>{try{return current();}catch{return null;}},
     selected:()=>sel?.key||null,selectedKeys:()=>members().map(m=>m.key),selectKeys,items,hideItems:(keys,on,also)=>hideItems(keys.map(k=>{const i=items().find(x=>x.key===k);return i?{key:k,target:i.target,obj:i.obj}:{key:k};}),on,also),
     flashKey,setLocked:fn=>{lockedKeys=fn;},isHidden:key=>{const e=editOfKey(key);if(e)return e.hide===true;const i=items().find(x=>x.key===key);return !!i&&i.hidden;},selectedName:()=>sel?(current()?.name||sel.target.label):null,mode:()=>mode,
     addProp,dropSelected,dropObject,writeLive,openLibrary:()=>library.open(),library:()=>library,

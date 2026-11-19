@@ -267,6 +267,8 @@ export function mountDirector(bridge,catalog,initial){
   // read-only: the open chapter as the Director holds it (tests and diagnostics; a draft is only kept while it differs
   // from what was exported, so a change back to the film's own value leaves no draft to read)
   globalThis.__directorShot=()=>copy(shot());
+  // (for the browser tests: what the Props editor has selected and which desk it is inside, scene-prop-editor.mjs)
+  globalThis.__directorProps=()=>({keys:sceneProps.selectedKeys(),object:sceneProps.object(),inside:sceneProps.insideDesk?.()||null,desk:deskSel.selected?.()||null,person:scenePeople.selected()||null});
   function draft(){clearTimeout(draftTimer);stampDraft();fresh.noteDraft(project,unexported());try{if(!fresh.on)library.draft(project);browserSaved={text:'Saved ✓',title:'Draft kept in this browser · Export cut sends it to the film'};}catch{browserSaved={text:'Not saved',title:'Browser storage is full, so no draft copy · Export cut sends it to the film',warn:true};}if(unexported())autosave?.poke();paintSaved();}
   function changed(){filmLook?.poke();bridge.update(project);clearTimeout(draftTimer);draftTimer=setTimeout(draft,250);renderTimeline();syncCameraOptions();syncFilm();for(const [name,stack]of [['undo',undo],['redo',redo]]){const b=panel.querySelector(`[data-action="${name}"]`);if(b)b.disabled=!stack.length;}renderAppBar();}
   // Film chapters: a dropdown that reloads this tab with another chapter's page.
@@ -430,6 +432,7 @@ export function mountDirector(bridge,catalog,initial){
   document.addEventListener('keydown',event=>{
     if(event.key!=='Escape'||!open||picked()||document.querySelector('dialog[open]')||event.target.closest?.('input,select,textarea'))return;
     if(titleEditor.editing())return;
+    if(sceneProps.insideDesk?.()){event.preventDefault();event.stopImmediatePropagation();sceneProps.leaveDesk();return;}   // (inside a desk: Esc leaves it, the desk selected)
     if(!(lightSel||keyId||deskEditor.selectedId()||sceneLights.selected()||sceneProps.selected()||scenePeople.selected()||deskSel.selected()||titleEditor.selectedId()))return;
     event.preventDefault();event.stopImmediatePropagation();clearSelection();
   },true);
@@ -800,13 +803,14 @@ export function mountDirector(bridge,catalog,initial){
     const st=String(edit?.asset||obj?.userData?.sceneAssetKey||'').match(STATION),byId=st?recs.find(r=>r.id==='station-'+st[1]):null;
     let r=byId;
     if(!r&&edit?.match&&/· ErgoFlex desk\$$/.test(edit.match)){try{const re=new RegExp(edit.match,'i');r=recs.find(x=>re.test(x.group?.name||''));}catch{}}
-    if(!r&&obj)for(let o=obj;o&&!r;o=o.parent)r=recs.find(x=>x.group===o)||null;
+    // (an item riding the desk, on one of its mounts, is not the desk: it is picked inside the desk, scene-prop-editor.mjs)
+    if(!r&&obj)for(let o=obj;o&&!r;o=o.parent){if(o!==obj&&/^Desk dressing:|:(desktop|shelf|lower-shelf|base-shelf)$/.test(o.name||''))return null;r=recs.find(x=>x.group===o)||null;}
     return r&&r.id!==featured?r:null;
   }
   function openRoomDeskFromProps(p){
     const r=roomDeskOf(p);if(!r)return false;
     sceneProps.deselect?.();deskSel.select(r.id,{announce:false});reveal('desk');
-    status(`${r.state?.name||'This desk'} is a room desk: it is moved, turned and hidden in the Desks tab (the round handle, the arrows, the ring, Hide desk).`);
+    status(`${r.state?.name||'This desk'} is a room desk: it is moved, turned and hidden in the Desks tab (the round handle, the arrows, the ring, Hide desk). Double-click it to edit the items on it.`);
     return true;
   }
   const foldedDesks=new Set();
@@ -837,7 +841,7 @@ export function mountDirector(bridge,catalog,initial){
   const deskSel=createSceneDeskEditor({bridge,onPick:selectRoomDesk,shot,film:filmShot,commit,status,open:()=>open,rerender:renderSceneDesks,lightsShowing:()=>sceneLights.showing(),
     inTab:()=>inspector==='desks'&&!document.body.classList.contains('inspector-hidden'),showFeatured:()=>showInspector('groove'),
     toggleVisibility:(id,hide,name)=>layersHideDesk({name},id.slice('station-'.length),hide),
-    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();renderTimeline();reveal('desk');}});
+    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();sceneProps.leaveDesk?.({quiet:true});sceneProps.deselect();scenePeople.deselect();renderTimeline();reveal('desk');}});
   // Floor reflections (floor-reflection-editor.mjs): Lighting > Room, per LED source; outlines and drags in the view.
   const floorShowing=()=>open&&(sceneLights.showing()||inspector==='lighting'&&!document.body.classList.contains('inspector-hidden')&&!!panel.querySelector('[data-light-section="room"]')?.open&&!!panel.querySelector('[data-floor-section]')?.open);
   const floorRefl=createFloorReflectionEditor({bridge,shot,film:filmShot,commit,status,visible:floorShowing,rerender:()=>{if(inspector==='lighting'&&!typing())renderPanel();else syncSelectedHeader();},
@@ -2166,6 +2170,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     if(event.key!=='Escape'||!open)return;event.preventDefault();event.stopImmediatePropagation();
     if(still.open){still.close();return;}
     if(picked()){clearPicks();groupStatus();return;}
+    if(sceneProps.insideDesk?.()){sceneProps.leaveDesk();return;}
     if(lightSel||keyId||deskEditor.selectedId()||sceneLights.selected()||sceneProps.selected()||scenePeople.selected()||deskSel.selected()||titleEditor.selectedId())clearSelection();
   }
   preview?.addEventListener('load',bindPreviewHistory);bindPreviewHistory();
