@@ -57,7 +57,7 @@ export const MOVES={hand_l:{kind:'ik'},hand_r:{kind:'ik'},foot_l:{kind:'ik'},foo
   thigh_l:{kind:null,why:'The hip joint moves with the hips: turn it (E), or move the foot and the leg follows.'},thigh_r:{kind:null,why:'The hip joint moves with the hips: turn it (E), or move the foot and the leg follows.'}};
 export const moveOf=name=>MOVES[name]||{kind:null,why:'This joint turns only (E).'};
 
-export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,edit,status,rerender,personName,editing,saved=null,time=()=>0,seek=()=>{},seconds=()=>0,siblings=k=>[k],follow=()=>{}}){
+export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,edit,status,rerender,personName,editing,saved=null,time=()=>0,seek=()=>{},seconds=()=>0,siblings=k=>[k],follow=()=>{},models=()=>''}){
   let key=null,joint=null,gmode='rotate',h=null,rigging=false,drag=null,listening=false,orbit=true,selT=null,clip=null,hinted=false,switching=false;
   const AUTO='ergoflex.director.autoKey';
   let autoKey=(()=>{try{return globalThis.localStorage?.getItem(AUTO)==='1';}catch{return false;}})();      // (off until turned on, as in Blender: then remembered)
@@ -380,6 +380,7 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
     const e=entry(key),ready=!!rigOf(),groups=[...new Set(JOINTS.map(j=>j[2]))],a=angles(),side=joint&&sideOf(joint),adjusted=Object.keys(e?.pose||{}).length;
     return `<section class="people-selected people-pose" data-reveal="person">${head}
       <div class="people-pose-bar"><strong>Pose mode · ${escape(e?.id?.replace(/^people-[a-z]+-/,'')||'')}</strong><span>${adjusted?`${adjusted} joint${adjusted===1?'':'s'} adjusted`:'as built'}</span><button type="button" class="primary" data-action="pe-pose-done">Done</button></div>
+      ${models(key)}
       ${ready?'':'<p class="director-hint people-busy">Loading the skeleton…</p>'}
       <p class="director-hint">Click a dot on the body. <b class="pose-fk">Blue</b> dots turn a joint. <b class="pose-ik">Orange</b> dots (hands, feet) drag the whole arm or leg. Undo steps back one adjustment.</p>
       ${keysPanel(e)}

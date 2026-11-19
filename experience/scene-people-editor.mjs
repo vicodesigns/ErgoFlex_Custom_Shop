@@ -9,6 +9,7 @@ import {endsOf,characterOf} from './people-path-edit.mjs';
 import {placementOf,freeSpot,SEAT_FIELDS,sheet,sheetKeys,EASE_SHAPES,NO_EASE,pick,neighborTime,shiftKeys,deleteKeys,copyKeys,pasteKeys,setEase,toggleKeyAt,entryAt,turnAngles,setJointAngles,waypointOf,setWaypoint} from './people-track.mjs';
 import {loadSavedPoses,storeSavedPoses,addSavedPose} from './saved-poses.mjs';
 import {createPathGizmo} from './people-path-gizmo.mjs';   // S31 M3 path editing (hook)
+import {shownTimeline,hasCorrection,heightSibling,spansOf,fmt as fmtSec} from './people-shown.mjs';
 // Director "People": who is in the chapter. The People tab lists the cast; click a person in the view (or a row) to
 // select them, then move / turn / scale them with the gizmo (W / E / T) or the fields, change who they are
 // (character) and what they are doing (posture), set the seconds they are in the room, duplicate or remove them, and
@@ -159,8 +160,40 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   }
   // ---- pose mode (scene-pose-editor.mjs)
   const pose=createPoseEditor({wake:()=>bridge.stage()?.wake?.(600),win,three,tools:()=>tools,stagePeople,entry:poseEntry,edit:poseEdit,status,rerender,personName:e=>e?personName(e):'',editing,saved:e=>savedHTML(e),time,seek,seconds,
-    siblings:k=>(sheetRows.length?sheetRows:track()).find(r=>r.entries.includes(k))?.entries||[k],follow:k=>{if(sel!==k){sel=k;onSelect();}}});
+    siblings:k=>(sheetRows.length?sheetRows:track()).find(r=>r.entries.includes(k))?.entries||[k],follow:k=>{if(sel!==k){sel=k;onSelect();}},models:k=>modelNotes(k)});
   const poseEditor=pose;     // swap() has a `pose` argument of its own
+  // Pose mode: which of this person's models the film draws when (people-shown.mjs). Corrections belong to one model
+  // each and are never inherited: a desk that rises past the model's height has the film draw another model (Ava's 30 in
+  // seated model from 4.35 s in the coast chapter, then her standing ones), so the pose mode names each one that has no
+  // correction, and offers an explicit copy to the same posture built for the other height (one edit, Undo takes it back).
+  const timelineOf=key=>{const actor=objectOf(key)?.userData?.personActor;return actor?shownTimeline(actor):[];};
+  const ownerOf=spec=>{const k=spec&&stagePeople()?.editKeyOf?.(spec);return k?entry(k):null;};
+  const modelLabel=id=>{const p=poseOf(id),m=modelOf(id);return `${p?p.label.toLowerCase():id}${m?.deskHeight?` (desk at ${m.deskHeight} in)`:''}`;};
+  function modelNotes(key){
+    const e=entry(key),now=activeModel(key),tl=e&&catalog?timelineOf(key):[];if(tl.length<2)return '';
+    const name=personName(e),out=[],seen=new Set(),T=seconds();
+    if(tl.some(s=>s.id===now))out.push(`<p class="director-hint pose-model-note" data-pose-model="${escape(now)}">The film draws this model (${escape(modelLabel(now))}) at ${spansOf(tl,now)}.</p>`);
+    for(const s of tl){
+      if(s.id===now||seen.has(s.id))continue;seen.add(s.id);
+      const owner=ownerOf(s.member?.object?.userData?.person);if(hasCorrection(owner&&postureRecord(owner,s.id)))continue;
+      const more=tl.filter(x=>x.id===s.id).slice(1).map(x=>`${fmtSec(x.from)}–${fmtSec(x.to)} s`);
+      out.push(`<p class="director-hint pose-model-note pose-model-bare" data-pose-model="${escape(s.id)}">From ${fmtSec(s.from)} s${s.to<T-1e-6?` to ${fmtSec(s.to)} s`:''}${more.length?` (and ${more.join(', ')})`:''} the film shows ${escape(name)} ${escape(modelLabel(s.id))}: it has no correction.</p>`);
+    }
+    if(hasCorrection(postureRecord(e,now)))for(const id of new Set(tl.map(s=>s.id))){
+      const s=tl.find(x=>x.id===id);if(!heightSibling(catalog.models,now,id)||ownerOf(s.member?.object?.userData?.person)?.key!==key)continue;
+      const had=hasCorrection(postureRecord(e,id)),h=modelOf(id).deskHeight;
+      out.push(`<div class="director-actions"><button type="button" data-action="pe-pose-copy-model" data-section="${escape(id)}" title="${escape(`Copies this model's pose, pose keys and held things to the ${h} in model${had?', replacing its own correction':''}. One edit: Undo takes it back. Nothing is copied on its own.`)}">Copy this correction to the ${h} in model (shown ${spansOf(tl,id)})</button></div>`);
+    }
+    return out.join('');
+  }
+  function copyToModel(id){
+    const key=pose.active()||sel,e=key&&entry(key),from=key&&activeModel(key);
+    if(!e||typeof id!=='string'||!heightSibling(catalog?.models,from,id)){status('Copy a correction to the same posture built for another desk height.',true);return;}
+    if(!hasCorrection(postureRecord(e,from))){status('This model has no correction to copy yet.',true);return;}
+    const had=hasCorrection(postureRecord(e,id)),h=modelOf(id).deskHeight;
+    edit(key,x=>{const r=structuredClone(postureRecord(x,from));editPosture(x,id,p=>{delete p.pose;delete p.poseKeys;delete p.held;Object.assign(p,r);});},
+      `${personName(e)}: the ${h} in model has this correction now${had?' (its own was replaced)':''}. Undo takes it back.`);
+  }
   // S31 M3 hook: a walker's / roller's path on the floor and in the People tab (people-path-gizmo.mjs)
   const paths=createPathGizmo({win,three,tools:()=>tools,stagePeople,entry,edit:(...a)=>edit(...a),status,editing,lightsShowing,selected:()=>sel,posing:()=>pose.active(),personName:e=>e?personName(e):'',objectOf:k=>objectOf(k),cast:()=>cast(),modelOf:id=>modelOf(id),poseOf:id=>poseOf(id),seconds,spans:k=>spans(k),time});
   // ---- selection
@@ -355,6 +388,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(paths.action(name,index))return;   // S31 M3 hook
     if(name==='pe-pose-enter'){if(sel){await ensure();await enterPose(sel);}return;}
     if(name==='pe-pose-save'){savePose();return;}
+    if(name==='pe-pose-copy-model'){copyToModel(index);return;}
     if(name==='pe-pose-apply'){await applySaved(index);return;}
     if(name==='pe-pose-delete'){deleteSaved(index);return;}
     if(name==='pe-lane'&&performance.now()<barSuppress)return;
