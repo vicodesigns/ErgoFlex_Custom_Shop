@@ -7,7 +7,8 @@
 # 5 (2026-11-14, Vico: "Let's move forward, bump included"): the desk's wheel rollers back to dark rubber, dark metal at the visualizer's values, the desk's aluminium as grey metal in rooms, and the wheels lit by the under-desk LEDs.
 # 6 (2026-11-15, Vico: "lets go with this ... One epoch bump"): the film shutter blends 4 sub-frames instead of 2 (FILM_BLUR 8, only the kept sub-frames are baked), Andre's reworked workshop postures and walk, the one-frame pairing fixes.
 # 7 (2026-11-18, Vico: "do it bump it"): the ambient-occlusion pass skips overlay planes that never write depth (sun patch, LED floor light, contact shading), so rooms no longer get a grey cast where one lay (the Create rug); Create's grade (exposure 1, sun 1.3, sun patch at half opacity) is data and needed no bump of its own.
-7
+# 8 (2026-11-19, Vico: "YES Bump it!"): every room's people get the media lab's cast detail (hair fibre/flow maps and sheen, skin relief, body clearcoat, the typing finger sequence, the audience head-turn); the frozen Classic looks of Create and Commons keep the old cast. The media lab itself is unchanged.
+8
 # Per-chapter epoch: this chapter alone re-renders (its key changes); the global epoch above stays.
 # commons 3 (2026-11-11): architecture pass in the library (balcony, piers, doors, datum rails) moved its pixels.
 # commons 4, awaken 1, awareness 1, storage 1 (2026-11-16, Vico: "bump those 4 chapters only"): on Move forward / Move back the foot rest's light breathes (the firmware's pulse, as the app's visualizer shows it) instead of running the wings' comet, which read as a strafe to the left (film-status.mjs footComet is opt-in now).
