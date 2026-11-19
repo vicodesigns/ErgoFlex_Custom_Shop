@@ -92,8 +92,8 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;w.__directorPeopleGizmo=gizmo;w.__directorPeoplePaths=paths;gizmo.setSize(1.2);gizmo.setSpace('world');gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
     enhanceGizmo(gizmo,{win:w,THREE,mmPerUnit:()=>mmPerUnitOf(w,THREE),status:t=>status(t)});   // P3: Rhino's Gumball (gumball.mjs)
     let orbit=true;
-    gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){orbit=t.controls.enabled;t.controls.enabled=false;dragFrom=gizmo.object?read(gizmo.object):null;const e=sel&&entry(sel);if(dragFrom&&e?.desk&&!free(e)){dragFrom.stance=seatedDesk(gizmo.object.userData?.person?.desk??e.desk)?'sit':'stand';dragFrom.reach=reachOfStance(e,dragFrom.stance);}}else{t.controls.enabled=orbit;endDrag();}});
-    gizmo.addEventListener('objectChange',()=>{const e=sel&&entry(sel);if(!e)return;
+    gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){orbit=t.controls.enabled;t.controls.enabled=false;dragFrom=gizmo.object?read(gizmo.object):null;lastDragged=null;const e=sel&&entry(sel);if(dragFrom&&movable(e))hold(gizmo.object,dragFrom);if(dragFrom&&e?.desk&&!free(e)){dragFrom.stance=seatedDesk(gizmo.object.userData?.person?.desk??e.desk)?'sit':'stand';dragFrom.reach=reachOfStance(e,dragFrom.stance);}}else{t.controls.enabled=orbit;endDrag();}});
+    gizmo.addEventListener('objectChange',()=>{const e=sel&&entry(sel);if(!e)return;if(dragFrom&&dragFrom.reach===undefined&&gizmo.object)lastDragged=read(gizmo.object);
       if(dragFrom?.reach!==undefined&&gizmo.object){const r=reachOf(dragFrom,read(gizmo.object));previewReach(sel,r);status(`${personName(e)}: ${inch(r)} in from the desk (was ${inch(dragFrom.reach)} in)…`);return;}
       status(`${mode==='translate'?'Moving':mode==='rotate'?'Turning':'Scaling'} ${personName(e)}…`);});
     // Double-click a person: pose mode (the first click of the pair has selected them). Double-click elsewhere leaves it.
@@ -117,11 +117,11 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(pose.active()){tools.box.visible=false;if(tools.gizmo.object&&!tools.gizmo.dragging)tools.gizmo.detach();tools.gizmo.visible=tools.gizmo.enabled=false;return;}
     const {box,gizmo}=tools,e=sel&&entry(sel),o=e&&objectOf(sel),on=!!o&&o.visible&&editing()&&!lightsShowing();
     box.visible=on;if(on)box.setFromObject(o);
-    const grab=on&&free(e)&&!busy;
+    const grab=on&&(free(e)||movable(e))&&!busy;
     // at the film desk: one arrow, toward and away from the desk (their distance from it, `reach`)
     const deskGrab=on&&!grab&&!busy&&!!e.desk&&!e.station&&!e.poseSource;
-    if(grab){if(gizmo.object!==o)gizmo.attach(o);gizmo.space='world';gizmo.setMode(mode);gizmo.showX=gizmo.showZ=mode!=='rotate';gizmo.showY=true;}
-    else if(deskGrab){if(gizmo.object!==o)gizmo.attach(o);gizmo.space='local';gizmo.setMode('translate');gizmo.showX=gizmo.showY=false;gizmo.showZ=true;}
+    if(grab){if(gizmo.object!==o&&!gizmo.dragging)gizmo.attach(o);gizmo.space='world';gizmo.setMode(mode);gizmo.showX=gizmo.showZ=mode!=='rotate';gizmo.showY=true;}
+    else if(deskGrab){if(gizmo.object!==o&&!gizmo.dragging)gizmo.attach(o);gizmo.space='local';gizmo.setMode('translate');gizmo.showX=gizmo.showY=false;gizmo.showZ=true;}
     else if(gizmo.object&&!gizmo.dragging)gizmo.detach();
     gizmo.visible=gizmo.enabled=grab||deskGrab;
   }
@@ -132,7 +132,55 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   }
   // S31: the drag is applied as a CHANGE to the placement (moved by, turned by), not as where the model is drawn now:
   // someone walking, rolling or seated is drawn away from their `at`, and only their placement moves, nothing else.
-  let dragFrom=null;
+  let dragFrom=null,lastDragged=null,held=null;
+  // 19 Nov 2026 (Vico: "I can select a character, but I don't have the tools"): everyone but the film desk's user gets the
+  // Gumball. Someone at a room desk, on a seat, by furniture, beside the desk, or of the room's own cast is moved to a spot
+  // of their own by their first move (toSpot): a seated posture away from a seat gets a task chair of its own there
+  // (room-people.mjs ownChairs), a standing one stands. The film desk's user keeps the one arrow (their distance from the
+  // desk: they follow it as it rises); "Place" puts anyone at the film desk, at one of the room's desks, or at a spot.
+  const featured=e=>!!e?.desk&&!e.station;
+  const movable=e=>!!e&&!featured(e)&&!free(e);
+  // While the Gumball drags someone the room would put back each frame (a room desk's user follows that desk), the
+  // stage's people filter holds them where they are (filter.place, the film's own "put somewhere by hand"); the edit
+  // that ends the drag replaces the filter, and a drag that moved nothing lets them go again.
+  function hold(o,spot){
+    const people=stagePeople(),f=people?.filter,spec=o?.userData?.person;if(!f||!spec)return;
+    const k=people.keyOf(spec),was=f.place?.[k];f.place={...(f.place||{}),[k]:{at:spot.at,turn:spot.turn,...(spot.y?{y:spot.y}:{})}};held={f,k,was};
+  }
+  function release(){
+    const h=held;held=null;if(!h)return;const place={...(h.f.place||{})};if(h.was===undefined)delete place[h.k];else place[h.k]=h.was;
+    if(Object.keys(place).length)h.f.place=place;else delete h.f.place;const people=stagePeople();if(people){people.placed=false;people.dirty=true;}
+  }
+  // A person of the room's own cast (poseSource) becomes one of this chapter's: the room's placement is left out (except,
+  // and out of only), their entry keeps its key, so their pose corrections, times (when) and whoever looks at them stay theirs.
+  function takeIn(p,x){
+    const rk=x.poseSource?.key;if(!rk)return;delete x.poseSource;delete x.poseBindings;
+    if(Array.isArray(p.only))p.only=p.only.filter(k=>k!==rk);
+    p.except=[...new Set([...(Array.isArray(p.except)?p.except:[]),rk])];
+    if(p.when?.[rk]){if(!p.when[x.key])p.when[x.key]=p.when[rk];delete p.when[rk];}
+    if(p.place?.[rk]){delete p.place[rk];if(!Object.keys(p.place).length)delete p.place;}
+    for(const o of p.cast)if(Array.isArray(o.look))o.look=o.look.map(k=>k===rk?x.key:k);
+  }
+  // Off the desk or seat, at a spot: in the posture showing now (a room desk's raised user stands as its standing model).
+  function unplace(x){delete x.desk;delete x.station;delete x.reach;delete x.sitReach;delete x.standReach;delete x.reachKeys;delete x.chairRoll;delete x.chairScoot;delete x.beside;for(const f of SEAT_FIELDS)delete x[f];}
+  function asShown(x,id){if(id&&id!==x.id&&modelOf(id)){const old=migratePostures(x);delete x.pose;delete x.poseKeys;if(old.postures)x.postures=old.postures;x.id=id;}}
+  // The room's other desks (layout.stations), by the name the Desks tab gives them.
+  const stations=()=>stagePeople()?.room?.roomLayout?.stations||[];
+  const deskName=id=>win()?.ErgoFlex?.sceneDesks?.records?.get?.('station-'+id)?.state?.name||id;
+  // "Put on this desk": at the film desk (station null) or at one of the room's desks, following it as it rises; a posture
+  // that is not a desk posture becomes the character's typing one for their stance (seated, standing, wheelchair).
+  function putAtDesk(key,station){
+    const e=entry(key);if(!e||!catalog)return;const p0=poseOf(e.id),m=modelOf(e.id);let id=e.id;
+    if(!p0?.desk){id=modelFor(m?.character,p0?.stance==='wheelchair'?'wheel-type':p0?.stance==='seated'?'sit-type':'stand-type');if(!id){status(`${personName(e)} has no desk posture built yet: choose one under Posture first.`,true);rerender();return;}}
+    const info=poseOf(id),role=info?.stance==='seated'?'sit':info?.stance==='wheelchair'?'wheel':'stand',there=station&&cast().find(x=>x.key!==key&&!x.hide&&x.station===station);
+    write(p=>{const x=p.cast.find(x=>x.key===key);if(!x)return;takeIn(p,x);asShown(x,id);unplace(x);delete x.at;delete x.turn;delete x.y;x.desk=role;if(station)x.station=station;},
+      `${personName(e)} is at ${station?deskName(station):'the film desk'} and follows it${there?` (${personName(there)} is at that desk too: only one of them shows)`:''}. Undo puts them back.`);
+  }
+  function toSpot(key,spot,text){
+    const shown=objectOf(key)?.userData?.person,as=shown?.variant?shown.id:null;
+    write(p=>{const x=p.cast.find(x=>x.key===key);if(!x)return;takeIn(p,x);asShown(x,as);unplace(x);
+      x.at=spot.at;x.turn=spot.turn;if(Math.abs(spot.y||0)>=.5)x.y=Math.max(-2000,Math.round(spot.y));else delete x.y;if(spot.scale!==undefined)x.scale=Math.min(3,Math.max(.2,spot.scale));},text);
+  }
   // A desk user dragged toward or away from the desk: their new `reach` (mm), from how far the drag went along the way
   // they face (the model faces the desk; `reach` grows away from it).
   function reachOf(from,now){const a=from.turn*Math.PI/180,d=-((now.at[0]-from.at[0])*Math.sin(a)+(now.at[1]-from.at[1])*Math.cos(a));return Math.round(Math.max(0,Math.min(3000,from.reach+d)));}
@@ -140,7 +188,16 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   function previewReach(key,r){const o=tools?.gizmo?.object,spec=o?.userData?.person;if(!spec)return;spec.reach=r;const people=stagePeople();if(people)people.dirty=true;}
   function endDrag(){
     const o=tools?.gizmo.object,e=sel&&entry(sel),from=dragFrom;dragFrom=null;if(!o||!e)return;const now=read(o),name=personName(e);
-    if(!from){rerender();return;}
+    if(!from){release();rerender();return;}
+    if(from.reach===undefined&&movable(e)){
+      const to=lastDragged||now;lastDragged=null;
+      const moved=mode==='translate'?Math.hypot(to.at[0]-from.at[0],to.at[1]-from.at[1])>=.5||Math.abs(to.y-from.y)>=.5:mode==='rotate'?Math.abs(to.turn-from.turn)>=.05:Math.abs(to.scale-from.scale)>=1e-3;
+      if(!moved){release();rerender();return;}
+      held=null;   // (the edit replaces the stage's filter, the hold with it)
+      toSpot(sel,{at:to.at,turn:to.turn,y:to.y,...(mode==='scale'?{scale:to.scale}:{})},
+        `${mode==='translate'?`Moved ${name} by ${Math.round(Math.hypot(to.at[0]-from.at[0],to.at[1]-from.at[1],to.y-from.y))} mm`:mode==='rotate'?`Turned ${name} by ${r1(to.turn-from.turn)}°`:`${name} is now ${Math.round(to.scale*100)} % of their built size`}: at a spot of their own in this chapter now. Undo puts them back.`);
+      return;
+    }
     if(from.reach!==undefined){const r=reachOf(from,now);if(Math.abs(r-from.reach)<1){rerender();return;}setReach(sel,r,from.stance);return;}
     const dx=now.at[0]-from.at[0],dz=now.at[1]-from.at[1],dy=now.y-from.y,dt=now.turn-from.turn;
     if(mode==='translate'&&Math.hypot(dx,dz)<.5&&Math.abs(dy)<.5){rerender();return;}
@@ -201,7 +258,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const e=entry(key);if(!e){deselect();return;}
     if(pose.active()&&pose.active()!==key)pose.exit();
     sel=key;onSelect();ensure().catch(error=>status(error.message,true));loadCatalog();
-    if(announce)status(`${personName(e)} selected: ${free(e)?'W moves, E turns, R scales; Delete removes.':'they follow the desk. Choose “Free spot” in the People tab to move them by hand.'}`);
+    if(announce)status(`${personName(e)} selected: ${free(e)?'W moves, E turns, R scales; Delete removes.':featured(e)?'they follow the film desk: drag the arrow to sit or stand nearer or further. Place in the People tab puts them elsewhere.':'W moves, E turns, R scales: their first move puts them at a spot of their own in this chapter. Double-click to pose.'}`);
     rerender();
   }
   function deselect(){pose.exit();if(!sel)return;sel=null;rerender();}
@@ -300,10 +357,21 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       `Added ${m.name}${info?.desk?' at the film desk':' in front of the camera'}. Undo takes them out again.`);
     sel=key;onSelect();rerender();
   }
-  function remove(key=sel){const e=entry(key);if(!e)return;if(e.poseSource){status('This person belongs to the room’s cast. Use the room’s People controls to remove them.');return;}write(p=>{p.cast=p.cast.filter(x=>x.key!==key);if(p.when)delete p.when[key];},`Removed ${personName(e)} from this chapter. Undo brings them back.`);if(sel===key)sel=null;rerender();}
+  function remove(key=sel){const e=entry(key);if(!e)return;if(e.poseSource){setRoomOut(key,true);if(sel===key)sel=null;rerender();return;}write(p=>{p.cast=p.cast.filter(x=>x.key!==key);if(p.when)delete p.when[key];},`Removed ${personName(e)} from this chapter. Undo brings them back.`);if(sel===key)sel=null;rerender();}
+  // The room's own person out of this chapter (Delete, the eye) or back in: their placement in except (and out of only),
+  // their entry kept, marked off, so the list still has them and the eye brings them back.
+  function setRoomOut(key,out){
+    const e=entry(key),rk=e?.poseSource?.key;if(!rk)return;
+    write(p=>{const x=p.cast.find(x=>x.key===key);if(!x)return;
+      if(out){x.hide=true;p.except=[...new Set([...(Array.isArray(p.except)?p.except:[]),rk])];if(Array.isArray(p.only))p.only=p.only.filter(k=>k!==rk);}
+      else{delete x.hide;if(Array.isArray(p.except)){p.except=p.except.filter(k=>k!==rk);if(!p.except.length)delete p.except;}if(Array.isArray(p.only)&&!p.only.includes(rk))p.only.push(rk);}},
+      out?`${personName(e)} is out of this chapter (the room’s cast, kept in the list). Undo or the eye brings them back.`:`${personName(e)} is back in the chapter.`);
+  }
   function duplicate(){
     const e=sel&&entry(sel);if(!e)return;const key=newKey(e.id,new Set(cast().map(x=>x.key)));
-    write(p=>{const copy={...structuredClone(e),key};if(copy.at)copy.at=[copy.at[0]+600,copy.at[1]];p.cast.push(copy);const s=p.when?.[e.key];if(s)(p.when||={})[key]=structuredClone(s);},`Duplicated ${personName(e)}${e.at?', 60 cm to the side':''}.`);
+    // (someone at a room desk, on a seat or of the room's cast: the copy stands at a spot of its own beside them)
+    const o=objectOf(sel),spot=movable(e)&&o&&tools?read(o):null,shown=o?.userData?.person;
+    write(p=>{const copy={...structuredClone(e),key};delete copy.poseSource;delete copy.poseBindings;delete copy.hide;if(spot){asShown(copy,shown?.variant?shown.id:null);unplace(copy);copy.at=spot.at;copy.turn=spot.turn;if(Math.abs(spot.y)>=.5)copy.y=spot.y;else delete copy.y;}if(copy.at)copy.at=[copy.at[0]+600,copy.at[1]];p.cast.push(copy);const s=p.when?.[e.key];if(s)(p.when||={})[key]=structuredClone(s);},`Duplicated ${personName(e)}${e.at?', 60 cm to the side':''}.`);
     sel=key;rerender();
   }
   function face(target){
@@ -344,11 +412,9 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(name==='pe-pose'){await swap(sel,null,el.value);return;}
     if(name?.startsWith('pe-color-')){const part=name.slice(9);if(!PARTS.includes(part)||!/^#[0-9a-f]{6}$/i.test(el.value))return;edit(sel,x=>{(x.colors||={})[part]=el.value.toLowerCase();},`${who}: ${part} recoloured.`,{undoKey:'people-color-'+part+sel});return;}
     if(name==='pe-anchor'){
-      if(el.value==='free'){const o=objectOf(sel),spot=o&&tools?read(o):floorSpot(),shown=o?.userData?.person,as=shown?.variant&&modelOf(shown.id)?shown.id:null;   // they stay as they are now: in the posture the desk has them in
-        edit(sel,x=>{if(as&&as!==x.id){const old=migratePostures(x);delete x.pose;delete x.poseKeys;if(old.postures)x.postures=old.postures;x.id=as;}delete x.desk;delete x.station;delete x.reach;delete x.beside;for(const f of SEAT_FIELDS)delete x[f];x.at=spot.at;x.turn=spot.turn;},`${who} stays where they are now and no longer follows the desk.`);}
-      else if(el.value==='seat')return;
-      else{const p=poseOf(e.id);edit(sel,x=>{for(const f of SEAT_FIELDS)delete x[f];delete x.at;delete x.turn;delete x.y;delete x.beside;x.desk=p?.stance==='seated'?'sit':p?.stance==='wheelchair'?'wheel':'stand';},`${who} is at the film desk and follows it.`);}
-      return;
+      const v=el.value;if(v==='seat'||v==='room')return;
+      if(v==='free'){const o=objectOf(sel),spot=o&&tools?read(o):floorSpot();toSpot(sel,{at:spot.at,turn:spot.turn,y:spot.y||0},`${who} stays where they are now and no longer follows the desk.`);return;}
+      putAtDesk(sel,v.startsWith('station:')?v.slice(8):null);return;
     }
     if(name==='pe-x'||name==='pe-z'){const i=name==='pe-x'?0:1,mm=num(-100000,100000);edit(sel,x=>{if(x.at)x.at[i]=Math.round(mm);},`Moved ${who}.`,{undoKey:'people-'+name+sel});return;}
     if(name==='pe-reach-sit'||name==='pe-reach-stand'){setReach(sel,num(0,118)*IN,name.slice(9));return;}
@@ -395,7 +461,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(name==='pe-add'){openLibrary();return;}
     if(name==='pe-row'){const key=rowKeys[index];if(key)select(key);return;}
     if(name==='pe-lane'){const key=laneKeys[index];if(key)select(key);return;}
-    if(name==='pe-eye'){const key=rowKeys[index],e=key&&entry(key);if(e)edit(key,x=>{if(x.hide)delete x.hide;else x.hide=true;},e.hide?`${personName(e)} is back in the chapter.`:`${personName(e)} is out of this chapter (kept in the list).`);return;}
+    if(name==='pe-eye'){const key=rowKeys[index],e=key&&entry(key);if(e?.poseSource){setRoomOut(key,!e.hide);return;}if(e)edit(key,x=>{if(x.hide)delete x.hide;else x.hide=true;},e.hide?`${personName(e)} is back in the chapter.`:`${personName(e)} is out of this chapter (kept in the list).`);return;}
     if(name==='pe-char'){const c=charIds[index];if(c&&sel)await swap(sel,c,null);return;}
     if(name==='pe-remove'){remove();return;}
     if(name==='pe-color-reset'){const part=PARTS[index],e=sel&&entry(sel);if(e?.colors?.[part])edit(sel,x=>{delete x.colors[part];if(!Object.keys(x.colors).length)delete x.colors;},`${personName(e)}: ${part} as built.`);return;}
@@ -472,13 +538,24 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   // ---- the People tab
   const field=(label,name,value,{step=1,min='',max='',unit='',disabled=false,title=''}={})=>`<label title="${escape(title)}">${escape(label)}<input type="number" name="${name}" value="${escape(value)}" step="${step}" ${min!==''?`min="${min}"`:''} ${max!==''?`max="${max}"`:''} ${disabled?'disabled':''}>${unit?`<small>${escape(unit)}</small>`:''}</label>`;
   const select_=(name,value,options)=>`<select name="${name}">${options.map(([v,l])=>`<option value="${escape(v)}" ${v===value?'selected':''}>${escape(l)}</option>`).join('')}</select>`;
+  const modesHTML=(faces=false)=>`<div class="director-actions people-modes">${Object.entries(MODES).map(([k,l])=>`<button type="button" data-action="pe-mode-${k}" aria-pressed="${mode===k}">${l}</button>`).join('')}${faces?'<button type="button" data-action="pe-face-desk">Face the desk</button><button type="button" data-action="pe-face-camera">Face the camera</button>':''}</div>`;
+  // Place: where the room has them (its own cast), a spot of their own, the film desk, one of the room's desks, or the seat
+  // or furniture the film has them on.
+  function placeSelect(e){
+    const placed=placementOf(e),ids=stations().map(s=>s.id);if(e.station&&!ids.includes(e.station))ids.push(e.station);
+    const value=e.poseSource?'room':free(e)?'free':placed==='seat'||placed==='furniture'?'seat':e.station?'station:'+e.station:'desk';
+    return select_('pe-anchor',value,[...(e.poseSource?[['room','Where the room has them']]:[]),['free','Free spot (move by hand)'],['desk','At the film desk (follows it)'],...ids.map(id=>['station:'+id,`At ${deskName(id)} (follows it)`]),
+      ...(!e.poseSource&&(placed==='seat'||placed==='furniture')?[['seat',placed==='seat'?'On a seat in the room (as the film has it)':'By furniture in the room (as the film has it)']]:[])]);
+  }
   function selectedPanel(e){
     const c=who(e.id),p=poseOf(e.id),m=modelOf(e.id),s=spans(e.key)?.[0]||null,T=seconds(),o=objectOf(e.key),isFree=free(e),placed=placementOf(e);
     if(!catalog)return '<p class="director-hint">Loading the people catalog…</p>';
     if(e.poseSource){
       const view=poseEntry(e.key),head=`<div class="people-head"><strong>${escape(personName(e))}</strong><small>${escape(doing(view))}</small></div>`;
       if(pose.active()===e.key)return pose.panel(head);
-      return `<section class="people-selected">${head}<p class="director-hint">Part of the room’s cast. Fine-tune the posture showing at the playhead.</p><button type="button" data-action="pe-pose-enter">Fine-tune pose…</button>${savedHTML(view)}</section>`;
+      return `<section class="people-selected" data-reveal="person">${head}<p class="director-hint">Part of the room’s cast.${featured(e)?' They follow the film desk.':' Move or turn them with the Gumball (W, E): their first move makes them this chapter’s, at a spot of their own.'} Double-click (or Fine-tune pose) for the posture showing at the playhead.</p><button type="button" data-action="pe-pose-enter">Fine-tune pose…</button>${savedHTML(view)}
+        <h4>Place</h4>${placeSelect(e)}${featured(e)?'':modesHTML()}
+        <div class="director-actions people-end"><button type="button" data-action="pe-duplicate">Duplicate</button><button type="button" class="danger" data-action="pe-remove" title="Leaves the room’s cast out of this chapter (kept in the list: the eye or Undo brings them back)">Remove from the chapter</button></div></section>`;
     }
     const chars=Object.entries(catalog.characters).filter(([,x])=>(filters.sex==='all'||sexIs(x.sex,filters.sex))&&(filters.age==='all'||x.age===filters.age)&&(filters.heritage==='all'||x.heritage===filters.heritage));
     charIds=chars.map(([id])=>id);
@@ -505,9 +582,9 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       <div class="director-actions"><button type="button" data-action="pe-pose-enter" title="Turn joints and drag hands and feet to get the posture just right (or double-click the person in the view)">Fine-tune pose…</button><span class="director-hint people-tuned">${tuned?`${tuned} joint${tuned===1?'':'s'} adjusted`:'or double-click them in the view'}</span></div>
       ${loadSavedPoses(store()).length?`<h4>Saved poses</h4>${savedHTML(e)}`:''}
       <h4>Place</h4>
-      ${select_('pe-anchor',isFree?'free':placed==='seat'||placed==='furniture'?'seat':'desk',[['free','Free spot (move by hand)'],['desk',e.station?'At a desk in the room':'At the film desk (follows it)'],...(placed==='seat'||placed==='furniture'?[['seat',placed==='seat'?'On a seat in the room (as the film has it)':'By furniture in the room (as the film has it)']]:[])])}
+      ${placeSelect(e)}
       ${isFree?`<div class="director-row people-fields">${field('X',`pe-x`,e.at[0],{step:10,unit:'mm'})}${field('Z','pe-z',e.at[1],{step:10,unit:'mm'})}${field('Turn','pe-turn',e.turn||0,{step:5,min:-360,max:360,unit:'°'})}${field('Lift','pe-y',e.y||0,{step:5,unit:'mm',title:'Raises a seated person onto a seat, or anyone onto a step'})}</div>
-      <div class="director-actions people-modes">${Object.entries(MODES).map(([k,l])=>`<button type="button" data-action="pe-mode-${k}" aria-pressed="${mode===k}">${l}</button>`).join('')}<button type="button" data-action="pe-face-desk">Face the desk</button><button type="button" data-action="pe-face-camera">Face the camera</button></div>`:placed==='seat'||placed==='furniture'?`<p class="director-hint">${placed==='seat'?'They sit on a seat in the room':'They stand or sit by a piece of furniture in the room'}${typeof e.on==='string'?` (${escape(e.on)})`:''} and stay with it. Choose “Free spot” to place them by hand.</p>`:'<p class="director-hint">They work at the desk and move with it, and they sit or stand as its height changes: seated at 28 to 30 in, standing at 43.5 in, out of the way while it travels between.</p>'+seatPanel(e)}
+      ${modesHTML(true)}`:placed==='seat'||placed==='furniture'?`<p class="director-hint">${placed==='seat'?'They sit on a seat in the room':'They stand or sit by a piece of furniture in the room'}${typeof e.on==='string'?` (${escape(e.on)})`:''} and stay with it. Move or turn them (W, E) to put them at a spot of their own.</p>${modesHTML()}`:e.station?`<p class="director-hint">At ${escape(deskName(e.station))}: they follow that desk, seated or standing with its height. Move or turn them (W, E) to put them at a spot of their own, or choose another desk above.</p>${modesHTML()}`:placed==='beside'?`<p class="director-hint">Beside the film desk, in its frame. Move or turn them (W, E) to put them at a spot of their own.</p>${modesHTML()}`:'<p class="director-hint">They work at the desk and move with it, and they sit or stand as its height changes: seated at 28 to 30 in, standing at 43.5 in, out of the way while it travels between.</p>'+seatPanel(e)}
       ${paths.panel(e)/* S31 M3 hook */}${motionPanel(e)}
       <div class="director-row people-fields">${field('Size','pe-scale',Math.round((e.scale||1)*100),{step:1,min:20,max:300,unit:'%',title:'100 % is the size the character was built at'})}</div>
       <h4>Clothes and hair</h4>
