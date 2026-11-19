@@ -51,7 +51,7 @@ import {makeOpeningShot} from './opening.mjs';
 import {showcaseShots,showcaseViews} from './showcase.mjs';
 import {BAKE_PROFILE} from './bake.mjs';
 import {resolveCameraKeys,moveCameraKey,CAMERA_EASINGS} from './camera-track.mjs';
-import {createSelection,markSelection,centreIn,GROUP_OF} from './director-selection.mjs';
+import {createSelection,markSelection,centreIn,GROUP_OF,deleteRoute} from './director-selection.mjs';
 import {CutLibrary,makeCut,cleanCut,cleanShot,sceneShot,generateCut,encodeCut,KINDS,PRESET_IDS,defaultPreset} from './cuts.mjs';
 import {looksOf,lookOf,lookName} from '../room-looks.mjs';
 
@@ -724,7 +724,11 @@ export function mountDirector(bridge,catalog,initial){
   }
   const sceneProps=createScenePropEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:renderSceneProps,roomDesk:p=>openRoomDeskFromProps(p),lightsShowing:()=>sceneLights.showing(),fold:foldProps,person:o=>scenePeople.pickObject(o),blocked:()=>!!scenePeople.posing(),
     scope:()=>{const s=shot();return s&&deskVersionsNow().length?bridge.deskVersion?.(s.id)||null:null;},versions:deskVersionsNow,seconds:()=>shot()?.seconds||0,time:()=>playhead*(shot()?.seconds||0),seek:t=>seekCamera(t/(shot()?.seconds||1)),
-    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();deskSel.deselect();renderTimeline();renderSceneProps();if(inspector!=='layers')reveal('prop');}});
+    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();deskSel.deselect();
+      // (18 Nov 2026: a prop picked after a person left the person selected too, and Delete removed the person, not the prop:
+      // Vico's High school woman. Every other editor clears People; now a prop pick does as well.)
+      if(sceneProps.selected())scenePeople.deselect();
+      renderTimeline();renderSceneProps();if(inspector!=='layers')reveal('prop');}});
   // People (scene-people-editor.mjs): the chapter's cast; click a person in the view, gizmo, People tab; per chapter only.
   function renderPeople(soft=false){
     const box=panel.querySelector('[data-scene-people]');if(box&&!(soft&&typing())){const active=box.contains(document.activeElement)?document.activeElement.name:null,top=box.closest('.director-scroll,[data-inspector-page]')?.scrollTop;box.innerHTML=filmShot()?scenePeople.panel():'';if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});}
@@ -1107,7 +1111,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       if(name==='field-reset'){resetField(index);return;}
       if(name==='sel-tool'){const t=index,ctxOf=sceneProps.selected()?'prop':scenePeople.selected()?'person':null;
         if(t==='dup'){runKey('duplicate');return;}if(t==='frame'){runKey('frame-selection');return;}if(t==='zoom'){zoomToSelection();return;}if(t==='reset'){runKey('reset-film',null,ctxOf);return;}
-        if(t==='delete'){if(keyId){await action('key-delete');return;}if(scenePeople.selected()){scenePeople.remove();return;}if(sceneProps.selected()){sceneProps.hide(true);return;}document.dispatchEvent(new KeyboardEvent('keydown',{key:'Delete',code:'Delete',bubbles:true,cancelable:true}));return;}
+        if(t==='delete'){if(keyId){await action('key-delete');return;}const what=deleteRoute(selectionNow(),{poseKey:false});if(what==='person'){scenePeople.remove();return;}if(what==='prop'){sceneProps.hide(true);return;}document.dispatchEvent(new KeyboardEvent('keydown',{key:'Delete',code:'Delete',bubbles:true,cancelable:true}));return;}
         return;}
       if(name==='lamp-pick'){await sceneLights.changed({name:'sl-select',value:index});renderTimeline();return;}
       if(name==='white-preset'){editLight({color:index});const k=lightItem();if(k)status(`${whiteName(index)} ${index} at ${r2(k[0])} s.`);return;}
@@ -1757,9 +1761,11 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   function viewDelete(event){
     if(!open||event.defaultPrevented||event.ctrlKey||event.metaKey||event.altKey||!['Delete','Backspace'].includes(event.key))return;
     const t=event.target;if(t?.closest?.('input,select,textarea,[contenteditable]')||timeline.contains(t)||panel.contains(t)||document.querySelector('dialog[open]'))return;
-    if(scenePeople.posing()&&scenePeople.poseKeySelected()){event.preventDefault();scenePeople.remove();return;}
-    if(scenePeople.selected()&&!picked()){event.preventDefault();scenePeople.remove();return;}
-    if(sceneProps.selected()&&!picked()){event.preventDefault();sceneProps.hide(true);}
+    // Delete acts on what the Director shows as selected (selectionNow, director-selection.mjs deleteRoute), never on an
+    // editor's leftover selection behind it.
+    const what=deleteRoute(selectionNow(),{poseKey:scenePeople.posing()&&scenePeople.poseKeySelected(),picked:!!picked()});
+    if(what==='person'||what==='pose-key'){event.preventDefault();scenePeople.remove();return;}
+    if(what==='prop'){event.preventDefault();sceneProps.hide(true);}
   }
   document.addEventListener('keydown',viewDelete);
   // "R is now Scale…": for two weeks after the keys changed, once per key per session.
