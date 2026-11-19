@@ -469,6 +469,10 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       const r=dom.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1),t.camera);
       if(placing){const now=current(),e=sel&&editOfKey(sel.key);placing=false;
         if(now&&isAddEdit(e)){const h=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object)&&!isAncestor(now,h.object));if(h)placeAt(now,e,h.point,roomDeskGroupOf(h.object)?.id||null);else{status('Nothing there to put it on.',true);rerender();}return;}}
+      // The second click of a double-click on a room desk is the double-click's: it does nothing, and lastClick keeps the
+      // first (19 Nov 2026, Windows: the first click selects the desk, and what that re-renders can change what is under
+      // the pointer; the second click landed on the APA desk's neighbour, and the 'dblclick' entered the neighbour)
+      if(lastClick&&!lastClick.second&&!d.alt&&performance.now()-lastClick.t<600&&Math.hypot(ev.clientX-lastClick.x,ev.clientY-lastClick.y)<8){lastClick.second=true;return;}
       const hits=raycaster.intersectObject(t.scene,true).filter(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object)),hit=hits[0];
       // People are not props: a click on one selects them in the People tab (scene-people-editor.mjs).
       if(hit&&!placing&&!underGizmo&&person(hit.object)){if(sel)deselect();return;}
