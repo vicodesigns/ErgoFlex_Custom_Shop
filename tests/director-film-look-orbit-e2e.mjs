@@ -23,8 +23,9 @@ try{
   // The film look shown for the current view (a fresh still: the badge's shown state follows the latest poke).
   async function shown(){
     for(const until=Date.now()+300000;Date.now()<until;await wait(500)){
-      const [on,st]=await page.evaluate(()=>[!!document.querySelector('.film-box.film-look')?.classList.contains('shown'),document.querySelector('#director-panel [data-status]')?.textContent||'']);
-      if(on){await wait(200);return;}if(/^Film look: (?!pause)/.test(st))throw Error(st);
+      // (an error is a status the Director marks .error: "Film look: <why>"; the mode's own explainer starts with "Film look: " too)
+      const [on,st,bad]=await page.evaluate(()=>{const el=document.querySelector('#director-panel [data-status]');return [!!document.querySelector('.film-box.film-look')?.classList.contains('shown'),el?.textContent||'',!!el?.classList.contains('error')];});
+      if(on){await wait(200);return;}if(bad&&/^Film look: /.test(st))throw Error(st);
     }
     throw Error('Film look still not shown after 300 s: '+await statusOf(page));
   }
