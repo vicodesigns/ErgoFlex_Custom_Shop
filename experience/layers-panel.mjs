@@ -1,8 +1,8 @@
 import {cleanPropLayers,lockedKeys,layerOf} from './prop-layers.mjs';
 import {pickMode} from './prop-selection.mjs';
 import {rowEye,hiddenOnly,showAllKeys} from './layers-exchange.mjs';
-// Director "Layers" tab: an outliner of the chapter's editable things (the featured desk's items, then the room's
-// props by area) with search; click a row to select it and see where it is (a pulsing outline on the stage);
+// Director "Layers" tab: an outliner of the chapter's editable things (the featured desk's items, each room desk's
+// items under that desk (18 Nov 2026), then the room's props by area) with search; click a row to select it and see where it is (a pulsing outline on the stage);
 // Shift+click adds, Ctrl/Cmd+click adds or removes (as in the view). Layers are named groups of those things
 // (shot.propLayers, prop-layers.mjs): select all, show / hide (the ordinary per-chapter hide edits, so the film
 // matches), lock (can't be picked in the view), add the selection, drag rows onto a layer.
@@ -36,10 +36,13 @@ export function createLayersPanel({root,shot,commit,status,props,rerender,studio
     const list=hiddenOnly(all,extras()&&onlyHidden).filter(i=>!q||i.name.toLowerCase().includes(q)||(i.area||'').toLowerCase().includes(q)||layerOf(layers(),i.key).some(l=>l.name.toLowerCase().includes(q)));
     if(!all.length)return '<p class="director-hint">Loading the chapter\'s props…</p>';
     if(!list.length)return '<p class="director-hint">Nothing matches that search.</p>';
-    const byName=(a,b)=>a.name.localeCompare(b.name),desk=list.filter(i=>i.desk).sort(byName),areas=new Map();
-    for(const i of list.filter(i=>!i.desk).sort(byName)){const a=i.area||'In the room';if(!areas.has(a))areas.set(a,[]);areas.get(a).push(i);}
+    const byName=(a,b)=>a.name.localeCompare(b.name),desk=list.filter(i=>i.desk).sort(byName),areas=new Map(),rooms=new Map();
+    // the room desks' items, under their desk (a row selects the item and enters the desk, scene-prop-editor.mjs)
+    for(const i of list.filter(i=>i.roomDesk).sort(byName)){if(!rooms.has(i.roomDesk))rooms.set(i.roomDesk,{name:i.deskName||i.roomDesk,items:[]});rooms.get(i.roomDesk).items.push(i);}
+    for(const i of list.filter(i=>!i.desk&&!i.roomDesk).sort(byName)){const a=i.area||'In the room';if(!areas.has(a))areas.set(a,[]);areas.get(a).push(i);}
     const section=(id,title,items)=>`<details class="layer-group" data-ly-group="${escape(id)}" ${closed.has(id)?'':'open'}><summary>${escape(title)} <small>${items.length}</small></summary><ul>${items.map(i=>row(i,sel,layerOf(layers(),i.key),here)).join('')}</ul></details>`;
-    return (desk.length?section('desk','Desk items (the featured desk)',desk):'')+[...areas].sort(([a],[b])=>a==='In the room'?-1:b==='In the room'?1:a.localeCompare(b)).map(([a,items])=>section('room:'+a,areas.size>1?'Room props · '+a:'Room props',items)).join('');
+    return (desk.length?section('desk','Desk items (the featured desk)',desk):'')
+      +[...rooms].sort(([,a],[,b])=>a.name.localeCompare(b.name)).map(([id,d])=>section('room-desk:'+id,d.name+' · on this desk',d.items)).join('')+[...areas].sort(([a],[b])=>a==='In the room'?-1:b==='In the room'?1:a.localeCompare(b)).map(([a,items])=>section('room:'+a,areas.size>1?'Room props · '+a:'Room props',items)).join('');
   }
   function layerHtml(l){
     const sel=new Set(props.selectedKeys()),n=l.items.filter(k=>sel.has(k)).length;

@@ -48,6 +48,10 @@ body.directing.film-frame[data-df-focus="view"] #stage{outline-color:color-mix(i
 /* a one-line hint for a key that changed meaning (shown for two weeks after 17 Nov 2026) */
 .key-hint{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:70;max-width:min(640px,90vw);padding:8px 14px;border-radius:8px;background:#141c25f2;border:1px solid var(--df-warning,#ffb547);color:var(--df-text-1,#eef3f8);font:13px/1.35 var(--df-font,system-ui);box-shadow:0 8px 30px #0009;pointer-events:none;opacity:0;transition:opacity .15s}
 .key-hint.shown{opacity:1}
+/* a room desk entered (scene-prop-editor.mjs enterDesk): where you are and how to leave */
+.desk-isolate-chip{position:fixed;z-index:40;pointer-events:none;padding:5px 11px;border-radius:8px;background:#0b1720ee;border:1px solid #45cfac;color:var(--df-text-1,#eef3f8);font:13px/1.3 var(--df-font,system-ui,sans-serif);box-shadow:0 4px 14px #0007}
+.desk-isolate-chip span{color:#9fb3c4}.desk-isolate-chip b{color:#7ff0cf}.desk-isolate-chip small{color:#9fb3c4;margin-left:6px}
+.desk-isolate-chip[hidden]{display:none}
 .timeline-shortcuts{border:1px solid #ffffff26;border-radius:6px;padding:6px 10px;background:transparent;color:#d5e9f5;font:12px/1.2 system-ui,sans-serif;cursor:pointer}
 .timeline-shortcuts:hover{background:var(--df-surface-3,#1c2631)}
 
