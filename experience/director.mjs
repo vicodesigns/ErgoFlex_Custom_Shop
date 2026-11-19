@@ -267,6 +267,8 @@ export function mountDirector(bridge,catalog,initial){
   // read-only: the open chapter as the Director holds it (tests and diagnostics; a draft is only kept while it differs
   // from what was exported, so a change back to the film's own value leaves no draft to read)
   globalThis.__directorShot=()=>copy(shot());
+  // (the prop edits the Director holds for the chapter: the shot's own, or while it has none, the film's director:true ones)
+  globalThis.__directorPropEdits=()=>shot()?copy(layersPropEdits(filmShot(),shot())||[]):[];
   // (for the browser tests: what the Props editor has selected and which desk it is inside, scene-prop-editor.mjs)
   globalThis.__directorProps=()=>({keys:sceneProps.selectedKeys(),object:sceneProps.object(),inside:sceneProps.insideDesk?.()||null,desk:deskSel.selected?.()||null,person:scenePeople.selected()||null});
   function draft(){clearTimeout(draftTimer);stampDraft();fresh.noteDraft(project,unexported());try{if(!fresh.on)library.draft(project);browserSaved={text:'Saved ✓',title:'Draft kept in this browser · Export cut sends it to the film'};}catch{browserSaved={text:'Not saved',title:'Browser storage is full, so no draft copy · Export cut sends it to the film',warn:true};}if(unexported())autosave?.poke();paintSaved();}

@@ -71,7 +71,7 @@ try{
   const desks=await page.evaluate(()=>{const sd=__t().api.sceneDesks;return [...sd.records.values()].filter(r=>r.id!==sd.selected&&r.group&&r.group.visible).map(r=>({id:r.id,name:r.state?.name||r.id}));});
   const list=desks.filter(d=>!ONLY||ONLY.has(d.id));
   check(list.length>0,`the High school has room desks (${desks.map(d=>d.id).join(', ')})`);
-  let total=0,reached=0,altPicked=0;
+  let total=0,reached=0,altPicked=0,lockerLogged=false;
   for(const d of list){
     const n=await page.evaluate(id=>__items(id).length,d.id);total+=n;
     console.log(`\n${d.name} (${d.id}): ${n} items`);if(!n){notes.push(`${d.id}: nothing on it`);continue;}
@@ -107,18 +107,23 @@ try{
     const other=list.find(x=>x.id!==d.id);   // (a click on its items does nothing while inside, below)
     // ---- 4: Delete hides the selected item; the people stay; Undo
     {const i=[...got].at(-1);let q=null;for(let a=0;a<4&&!q;a++)q=await pointAt(d.id,i,a);if(q){await page.mouse.click(q.x,q.y);await wait(450);if(!await isItem(d.id,i))for(let k=0;k<6&&!await isItem(d.id,i);k++){await page.keyboard.down('Alt');await page.mouse.click(q.x,q.y);await page.keyboard.up('Alt');await wait(400);}}
-      const ok=await isItem(d.id,i),before=JSON.stringify(await page.evaluate(()=>__directorShot().propEdits||[])),ppl=await page.evaluate(()=>__people()),cast=await page.evaluate(()=>JSON.stringify(__directorShot().people??null));
+      const ok=await isItem(d.id,i),before=JSON.stringify(await page.evaluate(()=>__directorPropEdits())),ppl=await page.evaluate(()=>__people()),cast=await page.evaluate(()=>JSON.stringify(__directorShot().people??null));
       check(ok,`${d.id}: item ${i} selected for the Delete`);
       if(ok){
         await blur();await page.keyboard.press('Delete');await wait(3500);
-        // one entry new or changed (the item may already have an edit of the film's or the Director's), a hide; nothing else lost
-        const after=await page.evaluate(()=>__directorShot().propEdits||[]),B=JSON.parse(before),same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+        // one entry new or changed (the item may already have an edit of the film's or the Director's), a hide; nothing else lost.
+        // The Director's edits, not the shot's own list: before the chapter's first edit the shot has none and the film's
+        // director:true entries (an earlier Export cut: the oil room's lockers and wall in the cine cut) are its edits; the
+        // first edit copies them into the shot as they are (prop-edits.mjs effectivePropEdits; the merge marks them
+        // director:true again), and comparing with the shot's [] counted them as changed (19 Nov 2026, Windows)
+        const after=await page.evaluate(()=>__directorPropEdits()),B=JSON.parse(before),same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
         const changed=after.filter(e=>!B.some(b=>same(b,e))),lost=B.filter(b=>!after.some(e=>same(e,b)));
+        if(!lockerLogged){lockerLogged=true;const one=x=>JSON.stringify(x.find(e=>/#oilm1\$$/.test(e.match||'')&&!e.add)||null);console.log(`  one of the film's Director entries, before / after the Delete: ${one(B)} / ${one(after)}`);}
         const off=await page.evaluate(()=>{const o=window.__directorProps?.().object;if(!o)return null;for(let p=o;p;p=p.parent)if(!p.visible)return true;return false;});
         check(changed.length===1&&changed[0].hide===true&&lost.length<=1&&(!lost.length||lost[0].match===changed[0].match)&&off!==false,`${d.id}: Delete gives the item a hide edit and nothing else (${changed.map(e=>(e.label||e.match)+(e.hide?' hidden':'')).join(', ')}${lost.length?'; replaced '+lost.length:''}; off the stage ${off})`);
         check(await page.evaluate(()=>JSON.stringify(__directorShot().people??null))===cast&&await page.evaluate(()=>__people())===ppl,`${d.id}: no person changed`);
         await blur();await page.keyboard.down('Control');await page.keyboard.press('z');await page.keyboard.up('Control');await wait(2500);
-        check(JSON.stringify(await page.evaluate(()=>__directorShot().propEdits||[]))===before,`${d.id}: Undo brings it back`);
+        check(JSON.stringify(await page.evaluate(()=>__directorPropEdits()))===before,`${d.id}: Undo brings it back`);
       }
     }
     // ---- 5: Esc leaves and selects the desk

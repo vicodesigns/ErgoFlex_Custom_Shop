@@ -66,4 +66,17 @@ const de=readFileSync(new URL('../experience/scene-desk-editor.mjs',import.meta.
 for(const [f,src] of [['scene-prop-editor.mjs',ed],['scene-desk-editor.mjs',de]])assert.match(src,/sd\.pick=\(\)=>null/,f+' mutes Studio\'s desk pick');
 const studio=readFileSync(new URL('../studio.js',import.meta.url),'utf8');
 assert.match(studio,/const picked=sceneDesks\?\.pick\(event\);if\(picked\?\.id&&picked\.id!==sceneDesks\.selected\)\{sceneDesks\.select\(picked\.id\)/,'(Studio still features a clicked desk through pick: the mute is what stops it in the Director)');
+// 5. (19 Nov 2026, Windows) the second click of a double-click on a room desk does nothing and keeps the first click's
+//    record (it re-rendered the view, so the second click hit the APA desk's neighbour and lastClick became that desk);
+//    a third click, or an Alt+click, is a click again
+assert.match(ed,/if\(lastClick&&!lastClick\.second&&!d\.alt&&performance\.now\(\)-lastClick\.t<600&&Math\.hypot\([^)]*\)<8\)\{lastClick\.second=true;return;\}\s*const hits=/,'the second click of a double-click is skipped, before anything is hit');
+assert.ok(!/addEventListener\('dblclick'[^]*?lastClick=null/.test(ed),'the dblclick keeps lastClick (a second click deferred through the gizmo still sees it)');
+assert.match(dir,/globalThis\.__directorPropEdits=\(\)=>shot\(\)\?copy\(layersPropEdits\(filmShot\(\),shot\(\)\)/,'the e2e reads the Director\'s edits, the film\'s while the shot has none');
+// 6. The first Director edit of a chapter copies the film's director:true entries into the shot unchanged (the cine
+//    cut's oil room: 5 lockers and a wall, from an earlier Export cut); the merge marks them director:true again
+{const {filmPropEdits,mergePropEdits}=await import('../experience/prop-edits.mjs');
+  const f=JSON.parse(readFileSync(new URL('../exports/cinematic-intro-cut-cine/director-film/oilers.json',import.meta.url),'utf8')),own=f.sceneEdits.filter(e=>e.director);
+  const copied=filmPropEdits(f);assert.equal(copied.length,own.length);
+  copied.forEach((e,i)=>assert.deepEqual({...e,director:true},own[i],'entry '+i+' as the film has it, but for the director flag'));
+  assert.deepEqual(mergePropEdits(f,{propEdits:copied}).sceneEdits,f.sceneEdits.filter(e=>!e.director).concat(own),'and the film the Director hands on is the same');}
 console.log('director-room-desk-layers-test: ok (room desks\' items under their desk in Layers; an item is not its desk; enter / leave wiring)');
