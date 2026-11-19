@@ -32,7 +32,7 @@ for (const who of characters) {
 // OCC edits must scrub to the same frame with wrists still on the keyboard.
 {
     const rig = rigOf('andre'), key = rig.key('people-andre-sit-type');
-    rig.coastCast = true;
+    rig.castDetail = true; rig.editorCast = true;
     const sample = time => {
         solveStill(rig, key, {time, seed:41});
         for (const side of ['l','r']) {
@@ -44,6 +44,65 @@ for (const who of characters) {
     const edit = sample(2.5);
     assert.notDeepEqual(sample(5), edit);
     assert.deepEqual(sample(2.5), edit, 'seeking back reproduces the edit gesture');
+}
+
+// The cast detail motion (finger travel, resting beat, neighbouring digit, audience reaction) is every room's but the frozen
+// Classic casts; the editor's timeline scan (editorCast) and fader hand (mediaLab) stay the media lab's. The media lab moves
+// exactly as it did when one flag (rig.coastCast) held all of it: both modules solved side by side, bone for bone.
+{
+    const { execFileSync } = await import('node:child_process');
+    let old = null; try { old = execFileSync('git', ['show', '4abe6181:room-people-motion.mjs'], { cwd: root, encoding: 'utf8', maxBuffer: 1 << 26 }); } catch { old = null; }
+    const fresh = (who, flags) => Object.assign(rigOf(who), flags), poses = ['sit-type', 'stand-type', 'wheel-type', 'sit-laptop', 'sit-listen', 'wheel-watch', 'stand-wait', 'sit-mix-30'];
+    const sweep = (make, solve) => {
+        const out = [];
+        for (const who of ['andre', 'ava', 'lin', 'kai', 'maya']) for (const pose of poses) {
+            const probe = rigOf(who), id = `people-${who}-${pose}`; if (!probe.has(id)) continue;
+            for (const time of [0, 1.3, 2.5, 7.1, 13.2]) for (const seed of [41, 5]) {
+                const rig = make(who), key = rig.key(id);
+                solve(rig, key, { time, seed }); out.push(snapshot(rig));
+            }
+        }
+        return out;
+    };
+    const cases = sweep(who => fresh(who, { castDetail: true, editorCast: true }), solveStill);
+    assert.ok(cases.length > 100, 'a sweep of postures, times and seeds');
+    const flat = sweep(who => fresh(who, {}), solveStill);
+    assert.notDeepEqual(cases, flat, 'the cast detail moves the fingers, heads and the audience');
+    const lab = sweep(who => fresh(who, { castDetail: true, editorCast: true, mediaLab: true }), solveStill), labFlat = sweep(who => fresh(who, { mediaLab: true }), solveStill);
+    assert.notDeepEqual(lab, labFlat);
+    if (old) {
+        const file = path.join(root, `.old-motion-${process.pid}.mjs`); fs.writeFileSync(file, old);
+        try {
+            const O = await import(file + '?old');
+            const oldRig = (who, flags) => Object.assign(new O.PersonRig(JSON.parse(fs.readFileSync(path.join(root, 'assets/props/people-rigs', who + '.json'), 'utf8'))), flags);
+            const before = (flags) => sweep(who => oldRig(who, flags), O.solveStill);
+            assert.deepEqual(cases, before({ coastCast: true }), 'media lab Classic: bone for bone what it was');
+            assert.deepEqual(lab, before({ coastCast: true, mediaLab: true }), 'media lab refresh: bone for bone what it was');
+            assert.deepEqual(flat, before({}), 'the frozen Classic casts (no detail flags) move as before');
+            assert.deepEqual(labFlat, before({ mediaLab: true }));
+            // the desk user (solveDesk) too
+            const desk = (M, make) => { const out = []; for (const who of ['maya', 'andre', 'grace']) for (const [tau, k, height, time] of [[0, 1, 28, 3.3], [0, 1, 30, 9.9], [2.6, .4, 36, 14.1], [8, 0, 43.5, 6.2]]) { const rig = make(who), actor = new M.DeskActor(rig); actor.configure(crew(who)); M.solveDesk(rig, actor.keys, { tau, k, height, time, seed: actor.seed }); out.push(snapshot(rig)); } return out; };
+            assert.deepEqual(desk({ DeskActor, solveDesk }, who => fresh(who, { castDetail: true, editorCast: true })), desk(O, who => oldRig(who, { coastCast: true })), 'the media lab\'s desk user: the same');
+            assert.deepEqual(desk({ DeskActor, solveDesk }, who => fresh(who, {})), desk(O, who => oldRig(who, {})), 'a frozen Classic desk user: the same');
+        } finally { fs.rmSync(file, { force: true }); }
+    }
+    // the flags split as they say: a typist anywhere has the finger sequence but not the timeline scan; only the editor scans
+    for (const pose of ['sit-type', 'stand-type', 'wheel-type', 'sit-laptop']) {
+        const who = 'ava', id = `people-${who}-${pose}`; const gaze = flags => { const rig = fresh(who, flags), key = rig.key(id); solveStill(rig, key, { time: 3.7, seed: 41 }); return rig.wq[rig.b.head].toArray(); };
+        const fingers = flags => { const rig = fresh(who, flags), key = rig.key(id); solveStill(rig, key, { time: 3.7, seed: 41 }); return rig.side.l.fingers.concat(rig.side.r.fingers).map(i => rig.lq[i].toArray()).flat(); };
+        assert.deepEqual(gaze({ castDetail: true }), gaze({}), pose + ': detail alone does not scan a timeline');
+        assert.notDeepEqual(gaze({ castDetail: true, editorCast: true }), gaze({ castDetail: true }), pose + ': the editor follows the timeline');
+        assert.deepEqual(fingers({ editorCast: true }), fingers({}), pose + ': the scan alone does not move the fingers');
+    }
+    // every character: typing, laptop and wheelchair postures stay finite and over the keys with the detail on
+    for (const who of characters) for (const pose of ['sit-type', 'stand-type', 'stand-type-low', 'wheel-type', 'sit-laptop', 'sit-listen', 'wheel-watch']) {
+        const probe = rigOf(who), id = `people-${who}-${pose}`; if (!probe.has(id)) continue;
+        for (const time of [0.4, 2.2, 5.9]) {
+            const rig = fresh(who, { castDetail: true }), key = rig.key(id); solveStill(rig, key, { time, seed: 7 });
+            assert.ok(snapshot(rig).every(Number.isFinite), `${id}: finite`);
+            if (pose.includes('type') || pose === 'sit-laptop') for (const side of ['l', 'r']) { const wrist = rig.side[side].arm[3]; assert.ok(rig.wp[wrist].distanceTo(key.wp[wrist]) < .01, `${id}: wrist stays over the keys`); }
+        }
+    }
 }
 
 {

@@ -46,6 +46,8 @@ assert.equal(editablePeople({cast:[bound]},[{...virtual,key:bound.key}]).cast.le
 assert.equal(editablePeople({cast:[]},[virtual]).cast[0].key,virtual.key);
 assert.deepEqual(deskFamily(stand),[],'do not broaden the legacy -41 family');
 // Every model and every bone/placement transform hashes exactly like pre-change HEAD.
+// (The baseline was re-taken when the media lab's finger sequence and audience reaction became every room's, 4abe6181 -> cast/all-rooms:
+// ten typing-hand objects changed; with the cast detail forced off it matched the old file hash for hash.)
 for(const shot of chapters){
   const expected=baseline.find(b=>b.id===shot.id).frames;
   assert.deepEqual(await snapshots(RoomPeople,shot),expected,shot.id+': legacy code path matches pre-change baseline');
