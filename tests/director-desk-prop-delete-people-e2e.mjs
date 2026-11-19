@@ -8,14 +8,30 @@
 //      the stage is where and as they were (shown / hidden, place, turn, posture model).
 //   2. Every item of the featured desk (the Layers tab's "Desk items" rows), one by one: selected, Delete, the people
 //      unchanged, Undo.
-// Before the fix step 1 fails (Fern's cast entry goes). Writes screenshots to SHOTS (default: a temp dir).
+// Self-contained (19 Nov 2026, the first Windows run found no foot-shelf items and no people in the default hq dir):
+// it opens the Cinematographer's cut (CUT, default exports/cinematic-intro-cut-cine: oilers has its cast, Fern among
+// them) with an unexported chapter draft it writes itself before the page loads (the Director's own film-draft store,
+// experience/film-fresh.mjs, so it works on any checkout, before the fix too): the chapter's prop edits plus a backpack
+// added on the featured desk's foot shelf (base shelf) and one on its desktop. The foot-shelf item clicked is an item the
+// film puts there if there is one, else the backpack (else, with no base shelf on this desk, the desktop backpack).
+// Before the fix step 1 fails at Delete (Fern's cast entry goes). Writes screenshots to SHOTS (default: a temp dir).
 //   node tests/director-desk-prop-delete-people-e2e.mjs        (MAX=<n> items in step 2; BASE=… a running server)
 import assert from 'node:assert/strict';
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';
-import {root,HQ,chapterList,wait,openDirectorBrowser,openChapter,seek,status as statusOf} from './director-e2e-harness.mjs';
+import {root,wait,openDirectorBrowser,openChapter,seek,status as statusOf} from './director-e2e-harness.mjs';
+import {filmPropEdits} from '../experience/prop-edits.mjs';
 
-const chapter=chapterList()?.find(c=>c.id==='oilers');
-if(!chapter||!fs.existsSync(path.join(root,chapter.page))){console.log(`desk prop delete e2e: skipped (${HQ} has no oilers chapter page here).`);process.exit(0);}
+const CUT=process.env.CUT||'exports/cinematic-intro-cut-cine';
+const listFile=path.join(root,CUT,'director-chapters.json'),chapter=fs.existsSync(listFile)?JSON.parse(fs.readFileSync(listFile,'utf8')).chapters.find(c=>c.id==='oilers'):null;
+if(!chapter||!fs.existsSync(path.join(root,chapter.page))){console.log(`desk prop delete e2e: skipped (${CUT} has no oilers chapter page here).`);process.exit(0);}
+// the chapter's draft: the page's cut (its #cut= hash) with the two backpacks added to the shot's prop edits
+const enc=/#cut=([A-Za-z0-9_-]+)/.exec(fs.readFileSync(path.join(root,chapter.page),'utf8'))?.[1];
+const project=JSON.parse(Buffer.from(enc.replaceAll('-','+').replaceAll('_','/'),'base64').toString('utf8'));
+const film=JSON.parse(fs.readFileSync(path.join(root,CUT,'review-cut.json'),'utf8')).shots.find(s=>s.id==='oilers');
+const ADDS=[{add:{asset:'backpack'},id:'dpfoot',match:'^Added prop:backpack#dpfoot$',label:'Backpack (foot shelf, test)',parent:'base-shelf',position:[0,0,0],rotation:[0,0,0],scale:[1,1,1]},
+  {add:{asset:'backpack'},id:'dptop',match:'^Added prop:backpack#dptop$',label:'Backpack (desktop, test)',parent:'desk',position:[0,0,0],rotation:[0,0,0],scale:[1,1,1]}];
+{const s=project.shots[0];s.propEdits=[...(Array.isArray(s.propEdits)?s.propEdits:filmPropEdits(film)),...ADDS];}
+const DRAFT={[project.id]:{cut:project,at:new Date(Date.now()+864e5).toISOString(),base:''}};   // (newer than the film's: loaded at once)
 const SHOTS=process.env.SHOTS||fs.mkdtempSync(path.join(os.tmpdir(),'desk-prop-delete-'));fs.mkdirSync(SHOTS,{recursive:true});
 const MAX=Number(process.env.MAX||1e9),WOMAN=process.env.WOMAN||'fern';
 const {base,page,errors,close}=await openDirectorBrowser();
@@ -43,7 +59,10 @@ await page.evaluateOnNewDocument(()=>{
     return null;};
   // the featured desk's foot-shelf (base shelf) items: children of its base-shelf mount
   window.__footShelf=()=>{const {api}=__t(),mounts=[api.sceneDesks?.active?.rig?.mounts?.['base-shelf'],api.workspaceAccessories?.mounts?.get?.('base-shelf')?.group].filter(Boolean);
-    const out=[];for(const m of new Set(mounts))for(const o of m.children)if(o.visible&&!o.userData?.filmFx)out.push(o);return out;};
+    const out=[];for(const m of new Set(mounts))for(const o of m.children)if(o.visible&&!o.userData?.filmFx)out.push(o);
+    // the film's own items first, then the test's backpack
+    return out.sort((a,b)=>/#dpfoot$/.test(a.name)-/#dpfoot$/.test(b.name));};
+  window.__deskTop=()=>{let o=null;__t().t.scene.traverse(x=>{if(!o&&/^Added prop:backpack#dptop$/.test(x.name)&&x.visible)o=x;});return o?[o]:[];};
   window.__frameOn=o=>{const {t,T}=__t(),b=new T.Box3().setFromObject(o),c=b.getCenter(new T.Vector3());t.camera.position.set(c.x+.35,c.y+.55,c.z+1.15);t.controls.target.copy(c);t.camera.lookAt(c);t.controls.update();};
 });
 const people=()=>page.evaluate(()=>__people());
@@ -65,26 +84,35 @@ const tab=async t=>{await page.evaluate(t=>document.querySelector(`#director-pan
 const blur=()=>page.evaluate(()=>{document.activeElement?.blur?.();window.focus();});
 const undo=async()=>{await blur();await page.keyboard.down('Control');await page.keyboard.press('z');await page.keyboard.up('Control');};
 try{
+  // the draft, in the Director's own store, before the chapter page loads
+  await page.goto(base+'/experience/experience.css');
+  await page.evaluate(d=>{localStorage.setItem('ergoflex.director.filmDrafts.v1',JSON.stringify(d));},DRAFT);
   await openChapter(page,base,chapter);
-  await until(()=>page.evaluate(()=>(__t().api.workspaceRoom?.people?.people||[]).length>0&&__t().api.sceneDesks?.records?.size>1),'the High school\'s people and desks',120000);
+  await until(()=>page.evaluate(()=>(__t().api.workspaceRoom?.people?.people||[]).length>0&&__t().api.sceneDesks?.records?.size>1),'the High school\'s people and desks',180000);
+  await until(()=>page.evaluate(()=>{let n=0;__t().t.scene.traverse(x=>{if(/^Added prop:backpack#dp(foot|top)$/.test(x.name))n++;});return n>0;}),'the test\'s backpacks on the stage',60000).catch(()=>null);
+  check(await page.evaluate(()=>(window.__directorShot?.().propEdits||[]).some(e=>e.id==='dptop')),'the chapter opens with the test\'s draft (its backpacks in the prop edits)');
   await seek(page,Math.min(4,chapter.seconds/2));
+  await until(()=>page.evaluate(w=>__people().some(p=>p.key===w||new RegExp('-'+w+'-').test(p.id)),WOMAN),`${WOMAN}'s stage object`,60000).catch(()=>null);
   const P0=await settled(),D0=await draftPeople();
   const woman=P0.find(p=>p.key===WOMAN)||P0.find(p=>new RegExp('-'+WOMAN+'-').test(p.id));
-  check(!!woman&&woman.shown,`${WOMAN} is on the stage, shown (${woman?.id} at ${woman?.station||'?'})`);
+  check(!!woman,`${WOMAN} is on the stage (${woman?.id} at ${woman?.station||'?'}, ${woman?.shown?'shown':'not drawn at this time'})`);
   // ---- 1. Vico's steps
   await tab('people');
   await until(()=>page.$(`#director-panel .people-row[data-person-key="${WOMAN}"] .people-pick`),`${WOMAN} in the People list`);
   await page.evaluate(k=>document.querySelector(`#director-panel .people-row[data-person-key="${k}"] .people-pick`).click(),WOMAN);await wait(900);
   check((await marks()).some(m=>m.person.split(' ').includes(WOMAN)),`${WOMAN} is selected (marked) first`);
-  const n=await page.evaluate(()=>__footShelf().length);
-  check(n>0,`the featured desk has foot-shelf items (${n})`);
+  // the item: on the foot shelf (the film's, else the test's backpack), else (no base shelf here) the desktop backpack
+  const foot=await page.evaluate(()=>__footShelf().length),LIST=foot?'__footShelf':'__deskTop',n=foot||await page.evaluate(()=>__deskTop().length);
+  check(n>0,foot?`the featured desk's foot shelf has items (${foot}: ${await page.evaluate(()=>__footShelf().map(o=>o.name).join(', '))})`:'no base shelf on this desk: the desktop backpack stands in for the foot-shelf item');
+  if(!n)throw Error('nothing on the featured desk to click (the test\'s backpacks did not load)');
+  const pick=(fn,i)=>page.evaluate((fn,i)=>{const o=window[fn]()[i];return o?__pointOn(o):null;},LIST,i);
   let pt=null,which=-1;
-  for(let i=0;i<n&&!pt;i++){pt=await page.evaluate(i=>__pointOn(__footShelf()[i]),i);which=i;}
-  if(!pt){await page.evaluate(()=>__frameOn(__footShelf()[0]));await wait(1200);pt=await page.evaluate(()=>__pointOn(__footShelf()[0]));which=0;}
-  const itemName=await page.evaluate(i=>__footShelf()[i]?.name||'',which);
-  check(!!pt,`a point on the screen where the foot-shelf item "${itemName}" is the first thing a click hits`);
+  for(let i=0;i<n&&!pt;i++){pt=await pick(LIST,i);which=i;}
+  for(let i=0;i<n&&!pt;i++){await page.evaluate((fn,i)=>{const o=window[fn]()[i];if(o)__frameOn(o);},LIST,i);await wait(1200);pt=await pick(LIST,i);which=i;}
+  const itemName=await page.evaluate((fn,i)=>window[fn]()[i]?.name||'',LIST,which),added=/^Added prop:/.test(itemName);
+  check(!!pt,`a point on the screen where "${itemName}" is the first thing a click hits`);
   if(!pt)throw Error('no clickable foot-shelf item');
-  const before=await draftProps(),same0=await page.evaluate(i=>__footShelf().filter(o=>o.name===i).length,itemName);
+  const before=await draftProps(),count=()=>page.evaluate((fn,i)=>window[fn]().filter(o=>o.name===i).length,LIST,itemName),same0=await count();
   await page.mouse.click(pt.x,pt.y);await wait(1200);await shot('1-foot-shelf-picked');
   const m=await marks();
   check(m.some(x=>x.prop),`the click selects the foot-shelf item (a prop is marked: ${m.filter(x=>x.prop).map(x=>x.prop.slice(0,60)).join(' · ')})`);
@@ -95,9 +123,10 @@ try{
   const cast=s=>{try{return JSON.stringify((JSON.parse(s)?.cast||[]).find(c=>c.key===WOMAN)||null);}catch{return 'unreadable';}};
   check(cast(D1)===cast(D0),`${WOMAN}'s cast entry is byte-identical: ${cast(D1).slice(0,120)}`);
   const diff=samePeople(P0,P1);check(!diff,'every person on the stage is where and as they were'+(diff?': '+diff:''));
-  const hid=after.filter(e=>e.hide===true&&!before.some(b=>JSON.stringify(b)===JSON.stringify(e)));
-  check(hid.length===1,`Delete hid the foot-shelf item (one new hide edit: ${hid.map(e=>e.label||e.match).join(', ')})`);
-  const left=await page.evaluate(i=>__footShelf().filter(o=>o.name===i).length,itemName);check(left===same0-1,`the item is off the stage (${same0} foot-shelf items named "${itemName}" shown → ${left})`);
+  if(added){const id=itemName.split('#')[1];check(before.some(e=>e.id===id)&&!after.some(e=>e.id===id)&&after.length===before.length-1,`Delete removed the added ${itemName} (its add entry gone, nothing else)`);}
+  else{const hid=after.filter(e=>e.hide===true&&!before.some(b=>JSON.stringify(b)===JSON.stringify(e)));
+    check(hid.length===1,`Delete hid the foot-shelf item (one new hide edit: ${hid.map(e=>e.label||e.match).join(', ')})`);}
+  const left=await count();check(left===same0-1,`the item is off the stage ("${itemName}": ${same0} shown → ${left})`);
   await undo();await settled();
   check(JSON.stringify(await draftProps())===JSON.stringify(before),'Undo brings the item back (prop edits as before)');
   // ---- 2. every featured-desk item, one by one
