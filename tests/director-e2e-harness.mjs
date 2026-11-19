@@ -126,3 +126,14 @@ export const pickInView=(page,kind,{grid=[24,14]}={})=>page.evaluate((kind,grid)
   const out=[...found.values()].map(({pts,...e})=>{const mx=pts.reduce((a,p)=>a+p[0],0)/pts.length,my=pts.reduce((a,p)=>a+p[1],0)/pts.length,b=pts.sort((a,c)=>Math.hypot(a[0]-mx,a[1]-my)-Math.hypot(c[0]-mx,c[1]-my))[0];return {...e,x:b[0],y:b[1]};}).sort((a,b)=>b.n-a.n);
   return {found:out,kinds};
 },kind,grid);
+// Aims the Director's free view at a person of the stage (people.byKey(key)): the orbit pivot on their middle, the
+// camera `distance` m away at azimuth `turn` degrees around them, raised `rise` m. Setup for a test whose chapter's film
+// camera never frames anyone but the film desk's user (the cine coast). The view stays where it is put (the Director
+// leaves a free view alone until a seek or playback). Returns the person's middle, or null.
+export const aimAt=(page,key,{turn=0,distance=3,rise=.8}={})=>page.evaluate((key,turn,distance,rise)=>{
+  const w=document.getElementById('stage').contentWindow,t=w.ErgoPresentation?.three?.(),T=w.__directorThree?.THREE,o=w.ErgoFlex.workspaceRoom?.people?.byKey?.(key);
+  if(!t||!T||!o||!o.visible)return null;
+  const b=new T.Box3().setFromObject(o);if(b.isEmpty())return null;const c=b.getCenter(new T.Vector3()),a=turn*Math.PI/180;
+  t.camera.position.set(c.x+Math.sin(a)*distance,c.y+rise,c.z+Math.cos(a)*distance);t.controls.target.copy(c);t.camera.lookAt(c);t.controls.update?.();t.camera.updateMatrixWorld(true);
+  w.ErgoPresentation.wake?.(800);return c.toArray();
+},key,turn,distance,rise);

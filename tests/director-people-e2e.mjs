@@ -117,9 +117,11 @@ try{
   passed.push('the eye takes a person out of the chapter and keeps the entry');
   await snap('05-end');
   // ---- Export cut -> import -> the film chapter's `people` (temp copy of the chapter)
+  // (the draft is read before Export cut: since film-fresh.mjs, an export makes the exported cut the baseline and forgets
+  // the unexported draft, so after it the draft reads null; Windows, 19 Nov 2026)
+  const mine=await edits();check(!!mine,'the draft has the cast before the export');
   await page.evaluate(()=>document.querySelector('#director-appbar [data-action=save-export]').click());
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download');
-  const mine=await edits();     // the draft, saved by the export
   const exported=JSON.parse(fs.readFileSync(path.join(downloads,file),'utf8'));
   // (where the two differ, printed before the check: Windows, 19 Nov 2026, saw them differ with no more to go on)
   const diff=(a,b,at='',out=[])=>{if(out.length>=12)return out;if(JSON.stringify(a)===JSON.stringify(b))return out;

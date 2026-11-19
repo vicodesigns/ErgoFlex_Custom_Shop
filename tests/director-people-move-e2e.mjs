@@ -10,7 +10,7 @@
 //   node tests/director-people-move-e2e.mjs        (CUT=<cut dir>, default the Cinematographer's; SHOTS=<dir>)
 import assert from 'node:assert/strict';
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';
-import {root,wait,openDirectorBrowser,openChapter,seek,status as statusOf,FILM_DRAFT_READER,watchStage,ensureLivePeople,pickInView} from './director-e2e-harness.mjs';
+import {root,wait,openDirectorBrowser,openChapter,seek,status as statusOf,FILM_DRAFT_READER,watchStage,ensureLivePeople,pickInView,aimAt} from './director-e2e-harness.mjs';
 
 const CUT=process.env.CUT||'exports/cinematic-intro-cut-cine';
 const listFile=path.join(root,CUT,'director-chapters.json'),chapter=fs.existsSync(listFile)?JSON.parse(fs.readFileSync(listFile,'utf8')).chapters.find(c=>c.id==='coast'):null;
@@ -50,8 +50,28 @@ try{
     }
     if(pick)break;
   }
-  if(!pick)console.log('clicked, none selected: '+(tried.join(', ')||'nobody but the film desk\'s user met by a ray'));
-  check(!!pick,`a click in the view selects someone who is not the film desk's user${pick?`: ${pick.head.trim()} (${pick.id}${pick.station?' at '+pick.station:''}, ${pick.t} s)`:''}`);
+  if(!pick)console.log('clicked at the film camera\'s views, none selected: '+(tried.join(', ')||'nobody but the film desk\'s user met by a ray'));
+  // The cine coast's camera stays on Ava at the film desk (Windows, 19 Nov 2026: no ray met anyone else at 1-12 s): the
+  // room's people are on the stage but out of the picture. Then the free view is aimed at each of them in turn, from
+  // eight sides (a partition or a monitor may hide them), and a click is tried where a ray meets them.
+  if(!pick){
+    const others=(await live()).filter(p=>p.visible&&p.allowed&&!p.missing&&!(p.desk&&!p.station));
+    console.log(`on the stage besides the film desk's user: ${others.map(p=>p.id+(p.station?' at '+p.station:'')).join(', ')||'nobody'}`);
+    for(const p of others){
+      for(const turn of [0,45,90,135,180,225,270,315]){
+        if(!await aimAt(page,p.key,{turn}))break;await wait(500);
+        const v=await pickInView(page,'person'),hit=v.found?.find(x=>x.key===p.key&&!x.featured);if(!hit||hit.n<2)continue;
+        tried.push(`${p.id} (aimed from ${turn}°, ${hit.n} rays)`);
+        await page.mouse.click(hit.x,hit.y);await wait(700);
+        const head=await page.$eval('#director-panel [data-selected-header]',e=>e.textContent).catch(()=>'');
+        if(/Person ·/.test(head)&&await selectedKey()){pick={...p,...hit,listKey:p.key,t:'aimed '+turn+'°',at:{x:hit.x,y:hit.y},key:await selectedKey(),head};break;}
+        await page.keyboard.press('Escape');await wait(300);
+      }
+      if(pick)break;
+    }
+    if(!pick)console.log('aimed at them, none selected: '+(tried.join(', ')||'no ray met any of them'));
+  }
+  check(!!pick,`a click in the view selects someone who is not the film desk's user${pick?`: ${pick.head.trim()} (${pick.id}${pick.station?' at '+pick.station:''}, ${pick.t}${typeof pick.t==='number'?' s':''})`:''}`);
   const g0=await until(async()=>{const g=await gizmo();return g?.shown?g:null;},'the Gumball shows at once',5000).catch(()=>null);
   check(!!g0&&g0.mode==='translate','the Gumball shows at once, in Move');
   await shot('01-selected');
