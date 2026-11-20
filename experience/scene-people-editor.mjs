@@ -431,6 +431,8 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const rk=name?.match(/^pe-rk-(at|dur|to|ease)-(\d+)$/);
     if(rk){const i=Number(rk[2]),f=rk[1];const v=f==='ease'?el.value:f==='to'?Math.round(num(0,118)*IN):num(0,f==='at'?Math.max(1,seconds()):30);
       setReachKeys(sel,list=>{if(!list[i])return;if(f==='ease'){if(v==='linear')list[i].ease='linear';else delete list[i].ease;}else list[i][f]=f==='to'?v:Math.round(v*1000)/1000;},`${who}: roll ${i+1} ${f==='at'?'starts at '+r1(v)+' s':f==='dur'?'takes '+r1(v)+' s':f==='to'?'ends '+inch(v)+' in from the desk':v==='linear'?'moves at an even speed':'eases in and out'}.`,'people-rk-'+f+i+sel);return;}
+    if(name==='pe-park-back'||name==='pe-park-side'||name==='pe-park-turn'){const k=name.slice(8),[label,,def,,lo,hi]=PARK[k],x=num(lo,hi),value=k==='turn'?Math.round(x*2)/2:Math.round(x*IN);
+      write(p=>{p.chair={back:PARK.back[2],side:PARK.side[2],turn:PARK.turn[2],...(p.chair||{}),[k]:value};},`The chair ends up ${k==='turn'?`turned ${value}°`:`${inch(Math.abs(value))} in ${k==='back'?'behind the seat':value<0?'to the sitter\'s left':'to the sitter\'s right'}`} while they stand.`,{undoKey:'people-park-'+k});return;}
     if(name==='pe-y'){const mm=num(-2000,5000);edit(sel,x=>{x.y=Math.round(mm);},`${who}: lifted ${Math.round(mm)} mm.`,{undoKey:'people-y'+sel});return;}
     if(name==='pe-turn'){const d=num(-360,360);edit(sel,x=>{x.turn=d;},`Turned ${who} to ${r1(d)}°.`,{undoKey:'people-turn'+sel});return;}
     if(name==='pe-scale'){const pc=num(20,300);edit(sel,x=>{x.scale=pc/100;},`${who} is now ${Math.round(pc)} % of their built size.`,{undoKey:'people-scale'+sel});return;}
@@ -474,6 +476,9 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(name==='pe-remove'){remove();return;}
     if(name==='pe-color-reset'){const part=PARTS[index],e=sel&&entry(sel);if(e?.colors?.[part])edit(sel,x=>{delete x.colors[part];if(!Object.keys(x.colors).length)delete x.colors;},`${personName(e)}: ${part} as built.`);return;}
     if(name==='pe-duplicate'){duplicate();return;}
+    if(name==='pe-park-on'){write(p=>{p.chair={back:PARK.back[2],side:PARK.side[2],turn:PARK.turn[2]};},'The chair rolls 24.4 in behind the seat while they stand: set where below.');return;}
+    if(name==='pe-park-off'){write(p=>{delete p.chair;},'The chair stays where it rolled back while they stand.');return;}
+    if(name==='pe-park-film'){const f=film()?.people?.chair;write(p=>{if(f)p.chair=structuredClone(f);else delete p.chair;},'The chair is parked where the film parks it.');return;}
     if(name==='pe-reach-reset'){const e=sel&&entry(sel);if(e?.desk)write(p=>{const x=p.cast.find(x=>x.key===sel);if(x){delete x.reach;delete x.sitReach;delete x.standReach;}},`${personName(e)} is at the film's distance from the desk again.`);return;}
     if(name==='pe-rk-add'){const e=sel&&entry(sel);if(!e?.desk)return;const now=reachAt(e,time()),t=Math.round(time()*10)/10;
       setReachKeys(sel,list=>{list.push({at:t,dur:1.5,to:Math.round(now+(list.length%2?50:-50))});},`${personName(e)} rolls ${reachKeysOf(e).length%2?'out':'in'} 2 in from ${r1(t)} s. Set where to and how long below.`);return;}
@@ -562,7 +567,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       const view=poseEntry(e.key),head=`<div class="people-head"><strong>${escape(personName(e))}</strong><small>${escape(doing(view))}</small></div>`;
       if(pose.active()===e.key)return pose.panel(head);
       return `<section class="people-selected" data-reveal="person">${head}<p class="director-hint">Part of the room’s cast.${featured(e)?' They follow the film desk.':' Move or turn them with the Gumball (W, E): their first move makes them this chapter’s, at a spot of their own.'} Double-click (or Fine-tune pose) for the posture showing at the playhead.</p><button type="button" data-action="pe-pose-enter">Fine-tune pose…</button>${savedHTML(view)}
-        <h4>Place</h4>${placeSelect(e)}${featured(e)?'':modesHTML()}
+        <h4>Place</h4>${placeSelect(e)}${featured(e)?'':modesHTML()}${featured(e)&&e.desk!=='wheel'?parkPanel():''}
         <div class="director-actions people-end"><button type="button" data-action="pe-duplicate">Duplicate</button><button type="button" class="danger" data-action="pe-remove" title="Leaves the room’s cast out of this chapter (kept in the list: the eye or Undo brings them back)">Remove from the chapter</button></div></section>`;
     }
     const chars=Object.entries(catalog.characters).filter(([,x])=>(filters.sex==='all'||sexIs(x.sex,filters.sex))&&(filters.age==='all'||x.age===filters.age)&&(filters.heritage==='all'||x.heritage===filters.heritage));
@@ -603,6 +608,21 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       <div class="director-actions people-end"><button type="button" data-action="pe-duplicate">Duplicate</button><button type="button" class="danger" data-action="pe-remove">Remove from the chapter</button></div>
     </section>`;
   }
+  // Where the vacated chair ends up while the film desk's user stands (Vico, 19 Nov 2026: "How can I adjust where this
+  // chair ends up when she stands up?"): the chapter's people.chair {back, side, turn} (mm behind the seat along the
+  // desk's front, mm to the sitter's right, degrees; room-people.mjs chairOf eases it there as they get up and back as
+  // they sit), the chapter's once edited, else the film's; none: the chair stays where it rolled back.
+  const parkNow=()=>{const mine=own();return mine?(mine.chair??null):(film()?.people?.chair??null);};
+  const PARK={back:['Back','pe-park-back',620,'in',0,118,'How far behind the seat it ends up, along the desk\'s front'],side:['Side','pe-park-side',0,'in',-118,118,'To the sitter\'s right (+) or left (−), as they face the desk'],turn:['Turn','pe-park-turn',0,'°',-180,180,'How far it is turned (+ to the left, seen from above)']};
+  function parkPanel(){
+    const park=parkNow(),filmPark=film()?.people?.chair??null,same=JSON.stringify(park)===JSON.stringify(filmPark);
+    if(!park)return `<h4>Where the chair ends up <small>while they stand</small></h4><p class="director-hint">It stays where it rolled back.</p><div class="director-actions"><button type="button" data-action="pe-park-on" title="When they get up, the chair rolls away to a spot you set (and back as they sit)">Park it somewhere when they stand</button>${filmPark?`<button type="button" data-action="pe-park-film">↺ The film's</button>`:''}</div>`;
+    const v=k=>park[k]??PARK[k][2],shown=k=>k==='turn'?Math.round(v(k)*2)/2:inch(v(k));
+    return `<h4>Where the chair ends up <small>while they stand</small></h4>
+      <div class="director-row people-fields">${Object.entries(PARK).map(([k,[label,name,,unit,lo,hi,tip]])=>field(label,name,shown(k),{step:k==='turn'?5:.5,min:lo,max:hi,unit,title:tip})).join('')}</div>
+      <div class="director-actions"><button type="button" data-action="pe-park-off" title="The chair stays where it rolled back">Don't park it</button>${filmPark&&!same?`<button type="button" data-action="pe-park-film" title="Back to where the film parks it">↺ The film's</button>`:''}</div>
+      <p class="director-hint">It eases there as they get up and back as they sit. Scrub to when they stand to see it.</p>`;
+  }
   // At the film desk: how far from it they are, how far their chair rolls, and rolling in or out during the shot.
   function seatPanel(e){
     if(!e.desk||e.station)return '';
@@ -613,6 +633,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       <p class="director-hint">Distance from the desk</p>
       <div class="director-row people-fields">${dist('sit')}${e.desk!=='wheel'?dist('stand'):''}${changed?`<button type="button" data-action="pe-reach-reset" title="Back to the film's distances">↺</button>`:''}</div>
       ${chair?`<div class="director-row people-fields">${field('Chair rolls back','pe-chair-roll',inch(e.chairRoll??CHAIR_ROLL),{step:.5,min:0,max:31,unit:'in',title:`How far the chair rolls back before they stand, and in again as they sit (the film's ${inch(CHAIR_ROLL)} in)`})}${field('Slide to the seat front','pe-chair-scoot',inch(e.chairScoot??CHAIR_SCOOT),{step:.5,min:0,max:11.8,unit:'in',title:`How far they slide forward on the seat as they lean in to stand (the film's ${inch(CHAIR_SCOOT)} in)`})}</div>`:''}
+      ${chair?parkPanel():''}
       <h4>Roll in / out <small>seated</small></h4>
       ${rows||'<p class="director-hint">They stay at that distance. Add a roll to have them roll their chair in or out during the shot.</p>'}
       <div class="director-actions"><button type="button" data-action="pe-rk-add" ${keys.length>=16?'disabled title="16 rolls at most"':''}>+ Roll in / out at the playhead</button></div>`;
