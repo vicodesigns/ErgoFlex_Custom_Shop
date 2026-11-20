@@ -1108,7 +1108,7 @@ export async function update(shot, { onSlow } = {}) {
     // a size, build or clip change: restore + install, which rebuilds desks through the room's own state; the stage holds
     // its last frame meanwhile (the caller's onSlow), so that state is never drawn
     if (!slowCalled) { slowCalled = true; onSlow?.(); }
-    active.deskEdits?.restore(); active.deskEdits = null;
+    await active.deskEdits?.restore(); active.deskEdits = null;   // (the room's own builds in again before the new edits read the desks)
     if (shot.sceneDeskEdits?.length) { active.deskEdits = (await import('./film-desk-edits.mjs')).installDeskEdits(shot.sceneDeskEdits, api); await active.deskEdits.ready; }
   }
   // featuredBuild (the Director's Build tab on the featured desk): swatches and accessories back, then applied again.

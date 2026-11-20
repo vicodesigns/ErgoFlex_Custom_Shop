@@ -208,6 +208,8 @@ export async function applyBuild(api,id,build){
   r.state.accessories=config.accessories;
   set.sync(config);
   await settle(r,set);
+  // restored meanwhile (restoreBuild: an Undo, a new film setup): leave the room's build alone
+  if(r.state.accessories!==config.accessories)return {desk:id,style:true,accessories:false,superseded:true};
   // An accessory the room did not have comes in as the studio's default (role desktop, the store layout's position for
   // its own mount): put it on its real mount at that position.
   const objects=d.objects;let again=false;

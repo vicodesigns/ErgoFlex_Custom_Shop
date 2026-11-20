@@ -136,6 +136,11 @@ import {cleanPropEdit} from '../experience/prop-edits.mjs';
 const doc=JSON.parse(fs.readFileSync(new URL('../docs/oilers-desk-kit.json',import.meta.url),'utf8'));
 for(const e of doc.deskEdits)assert.deepEqual(cleanDeskEdit(e),e,'desk edit is already clean');
 assert.equal(doc.deskEdits[0].desk,'station-project-review');assert.deepEqual(doc.deskEdits[0].initial,{height:43.5,tilt:0});
+// (the front desk as Vico's cut has it, 19 Nov 2026: 48x30 at his place; the build is the 48 in copy, not the 60 in one)
+assert.equal(doc.deskEdits[0].size,'48x30');assert.deepEqual(doc.deskEdits[0].pose,{x:-4080,z:1149.4,yaw:0});
+assert.deepEqual(doc.deskEdits[0].build,copySetup(featured,{size:'48x30',baseFinish:'White',heightIn:43.5,accessories:[]},{finish:'white',eyeMm:eyeOf(1432)}).build,'the build is copySetup for the 48 in desk');
+assert.ok(!doc.propEdits.some(e=>/tall-office-chair/.test(e.match)),'no chair edit (Vico hides that chair himself)');
+assert.match(doc.how,/MERGE, never replace/);
 assert.equal(doc.deskEdits[0].build.accessoryFinishes['ergo-keyboard'],'white');assert.equal(doc.deskEdits[0].build.accessoryFinishes['logitech-mx-master'],'white');
 for(const e of [...doc.propEdits,...doc.propEditsFallbackIfTheRoomHasNoPendulumNames])assert.deepEqual(cleanPropEdit(e),e,'prop edit is already clean: '+e.match);
 assert.ok(doc.propEdits.some(e=>e.hide===true&&new RegExp(e.match,'i').test('Pendulum bob')&&new RegExp(e.match,'i').test('Pendulum string')&&!new RegExp(e.match,'i').test('Pendulum mount')));

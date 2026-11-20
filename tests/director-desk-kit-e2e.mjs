@@ -41,7 +41,11 @@ try{
   await click('#director-panel [data-action=dk-kit-copy]');
   await wait(3500);
   const after=await stageDesk(DESK);
-  for(const id of ['keyboard-tray','monitor-arm','flat-monitor','ergo-keyboard','logitech-mx-master'])check(after.accessories.includes(id),`${id} is on the desk`);
+  // the monitor is the featured desk's own (desk-kit.mjs copySetup: the source's part; the cine cut's featured desk has a curved
+  // ultrawide, Vico's the flat monitor), else the HBHS desk's flat monitor
+  const {isKitAccessory}=await import('../experience/desk-kit.mjs'),isMonitor=id=>isKitAccessory(id)&&!/arm|tray|keyboard|mouse|mx-master/.test(id);
+  const srcMonitor=(await page.evaluate(()=>document.getElementById('stage').contentWindow.ErgoFlex.currentConfig.accessories)).find(isMonitor)||'flat-monitor';
+  for(const id of ['keyboard-tray','monitor-arm',srcMonitor,'ergo-keyboard','logitech-mx-master'])check(after.accessories.includes(id),`${id} is on the desk${id===srcMonitor?' (the featured desk\'s monitor)':''}`);
   check(after.finishes['ergo-keyboard']==='white'&&after.finishes['logitech-mx-master']==='white','the keyboard and the mouse are the WHITE ErgoFlex ones');
   check(after.placed['keyboard-tray']?.role==='desktop'&&after.placed['monitor-arm']?.role==='shelf','tray on the desktop frame, arm on the top shelf frame');
   const people=await page.evaluate(()=>{const api=document.getElementById('stage').contentWindow.ErgoFlex,ps=api.workspaceRoom?.people?.people||[];return ps.filter(o=>o.visible&&/fern/.test(o.userData.person?.id||o.name)).map(o=>o.userData.person.id);});
