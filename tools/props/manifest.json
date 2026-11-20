@@ -19352,6 +19352,22 @@
    "attribution": "Owner-supplied side shelving CAD (Nov 16 2026)",
    "sizeNote": "CAD coordinates treated as inches; dimensions are visualization estimates, not verified mounting specifications.",
    "deskMatch": true
+  },
+  {
+   "id": "people-kai-wheel-type-31",
+   "name": "Kai: typing at the desk, in a wheelchair (desk at 31 in)",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
+  },
+  {
+   "id": "people-kai-wheel-watch",
+   "name": "Kai: watching a screen, in a wheelchair",
+   "category": "people",
+   "scenes": [],
+   "converter": "people-generator",
+   "collection": "people"
   }
  ],
  "screens": [

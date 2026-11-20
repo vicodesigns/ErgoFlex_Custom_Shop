@@ -11902,6 +11902,12 @@
    "name": "Maya, typing at the desk at 41 in (standing)",
    "aids": []
   },
+  "people-noah-stand-screen-pull": {
+   "character": "noah",
+   "pose": "stand-screen-pull",
+   "name": "Noah: drawing the desk's touchscreen out",
+   "aids": []
+  },
   "people-noah-stand-screen-tap": {
    "character": "noah",
    "pose": "stand-screen-tap",
@@ -11914,16 +11920,233 @@
    "name": "Noah: tapping the desk's touchscreen",
    "aids": []
   },
-  "people-noah-stand-screen-pull": {
-   "character": "noah",
-   "pose": "stand-screen-pull",
-   "name": "Noah: drawing the desk's touchscreen out",
-   "aids": []
-  },
   "people-andre-stand-robot-lift": {
    "character": "andre",
    "pose": "stand-robot-lift",
    "name": "Andre: lifting the robot toward the desk shelf",
+   "aids": []
+  },
+  "people-maya-stand-mug": {
+   "character": "maya",
+   "pose": "stand-mug",
+   "name": "Maya: standing with a coffee",
+   "aids": []
+  },
+  "people-maya-stand-drink": {
+   "character": "maya",
+   "pose": "stand-drink",
+   "name": "Maya: standing with a drink, chatting",
+   "aids": []
+  },
+  "people-maya-carry-box": {
+   "character": "maya",
+   "pose": "carry-box",
+   "name": "Maya: carrying a box",
+   "aids": []
+  },
+  "people-maya-kneel-shelf": {
+   "character": "maya",
+   "pose": "kneel-shelf",
+   "name": "Maya: kneeling at a low shelf",
+   "aids": []
+  },
+  "people-maya-floor-stretch": {
+   "character": "maya",
+   "pose": "floor-stretch",
+   "name": "Maya: stretching on a mat",
+   "aids": []
+  },
+  "people-maya-sit-mug": {
+   "character": "maya",
+   "pose": "sit-mug",
+   "name": "Maya: sitting back with a mug",
+   "aids": []
+  },
+  "people-maya-sit-chat": {
+   "character": "maya",
+   "pose": "sit-chat",
+   "name": "Maya: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-kai-sit-coffee": {
+   "character": "kai",
+   "pose": "sit-coffee",
+   "deskHeight": 28,
+   "name": "Kai: coffee at the desk, seated",
+   "aids": []
+  },
+  "people-kai-sit-coffee-30": {
+   "character": "kai",
+   "pose": "sit-coffee",
+   "deskHeight": 30,
+   "name": "Kai: coffee at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-kai-stand-coffee": {
+   "character": "kai",
+   "pose": "stand-coffee",
+   "deskHeight": 43.5,
+   "name": "Kai: coffee at the desk, standing",
+   "aids": []
+  },
+  "people-kai-stand-mug": {
+   "character": "kai",
+   "pose": "stand-mug",
+   "name": "Kai: standing with a coffee",
+   "aids": []
+  },
+  "people-kai-stand-talk": {
+   "character": "kai",
+   "pose": "stand-talk",
+   "name": "Kai: standing, explaining something",
+   "aids": []
+  },
+  "people-kai-carry-box": {
+   "character": "kai",
+   "pose": "carry-box",
+   "name": "Kai: carrying a box",
+   "aids": []
+  },
+  "people-kai-kneel-shelf": {
+   "character": "kai",
+   "pose": "kneel-shelf",
+   "name": "Kai: kneeling at a low shelf",
+   "aids": []
+  },
+  "people-kai-sit-floor": {
+   "character": "kai",
+   "pose": "sit-floor",
+   "name": "Kai: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-kai-sit-mug": {
+   "character": "kai",
+   "pose": "sit-mug",
+   "name": "Kai: sitting back with a mug",
+   "aids": []
+  },
+  "people-lin-sit-coffee": {
+   "character": "lin",
+   "pose": "sit-coffee",
+   "deskHeight": 28,
+   "name": "Lin: coffee at the desk, seated",
+   "aids": []
+  },
+  "people-lin-sit-coffee-30": {
+   "character": "lin",
+   "pose": "sit-coffee",
+   "deskHeight": 30,
+   "name": "Lin: coffee at the desk, seated (desk at 30 in)",
+   "aids": []
+  },
+  "people-lin-carry-box": {
+   "character": "lin",
+   "pose": "carry-box",
+   "name": "Lin: carrying a box",
+   "aids": []
+  },
+  "people-lin-sit-floor": {
+   "character": "lin",
+   "pose": "sit-floor",
+   "name": "Lin: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-lin-floor-stretch": {
+   "character": "lin",
+   "pose": "floor-stretch",
+   "name": "Lin: stretching on a mat",
+   "aids": []
+  },
+  "people-lin-sit-mug": {
+   "character": "lin",
+   "pose": "sit-mug",
+   "name": "Lin: sitting back with a mug",
+   "aids": []
+  },
+  "people-noah-stand-coffee": {
+   "character": "noah",
+   "pose": "stand-coffee",
+   "deskHeight": 43.5,
+   "name": "Noah: coffee at the desk, standing",
+   "aids": []
+  },
+  "people-noah-kneel-shelf": {
+   "character": "noah",
+   "pose": "kneel-shelf",
+   "name": "Noah: kneeling at a low shelf",
+   "aids": []
+  },
+  "people-noah-sit-floor": {
+   "character": "noah",
+   "pose": "sit-floor",
+   "name": "Noah: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-noah-floor-stretch": {
+   "character": "noah",
+   "pose": "floor-stretch",
+   "name": "Noah: stretching on a mat",
+   "aids": []
+  },
+  "people-noah-sit-mug": {
+   "character": "noah",
+   "pose": "sit-mug",
+   "name": "Noah: sitting back with a mug",
+   "aids": []
+  },
+  "people-noah-sit-chat": {
+   "character": "noah",
+   "pose": "sit-chat",
+   "name": "Noah: on a sofa with a drink, chatting",
+   "aids": []
+  },
+  "people-ava-stand-coffee": {
+   "character": "ava",
+   "pose": "stand-coffee",
+   "deskHeight": 43.5,
+   "name": "Ava: coffee at the desk, standing",
+   "aids": []
+  },
+  "people-ava-stand-mug": {
+   "character": "ava",
+   "pose": "stand-mug",
+   "name": "Ava: standing with a coffee",
+   "aids": []
+  },
+  "people-ava-stand-talk": {
+   "character": "ava",
+   "pose": "stand-talk",
+   "name": "Ava: standing, explaining something",
+   "aids": []
+  },
+  "people-ava-carry-box": {
+   "character": "ava",
+   "pose": "carry-box",
+   "name": "Ava: carrying a box",
+   "aids": []
+  },
+  "people-ava-kneel-shelf": {
+   "character": "ava",
+   "pose": "kneel-shelf",
+   "name": "Ava: kneeling at a low shelf",
+   "aids": []
+  },
+  "people-ava-sit-floor": {
+   "character": "ava",
+   "pose": "sit-floor",
+   "name": "Ava: sitting cross-legged on the floor",
+   "aids": []
+  },
+  "people-ava-floor-stretch": {
+   "character": "ava",
+   "pose": "floor-stretch",
+   "name": "Ava: stretching on a mat",
+   "aids": []
+  },
+  "people-ava-sit-mug": {
+   "character": "ava",
+   "pose": "sit-mug",
+   "name": "Ava: sitting back with a mug",
    "aids": []
   }
  }
