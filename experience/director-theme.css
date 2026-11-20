@@ -490,3 +490,8 @@ body.directing:not(.inspector-hidden) #director-timeline .film-chapter-picker{di
    far below the timeline's fold). In a short window the group heads are a little lower too. */
 #director-timeline .timeline-content .desk-lane-row[data-lane-color=lamps]>.lamps-lane,#director-timeline .timeline-content .desk-lane-row[data-lane-color=props]>.lamps-lane{max-height:62px;overflow-y:auto;scrollbar-width:thin;align-content:flex-start}
 @media(max-height:1150px) and (min-width:701px){#director-timeline .lane-group-head{height:20px}}
+
+/* ---------- Graphics tab: Sonar (sonar-editor.mjs) ---------- */
+#director-panel .sonar-row{grid-template-columns:48px minmax(0,1fr) 68px 52px}
+#director-panel .sonar-controls .start-pose-head select{max-width:60%}
+#director-panel .sonar-controls [data-so-action][aria-pressed=true]{border-color:var(--df-accent-text)}
