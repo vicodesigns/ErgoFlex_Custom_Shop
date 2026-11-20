@@ -559,6 +559,12 @@ def clean_people(v):
             if num(e.get('y')) and .5 <= abs(e['y']) <= 5000: out['y'] = round(e['y'])
         elif isinstance(e.get('beside'), list) and len(e['beside']) == 2 and all(num(x) and abs(x) <= 20000 for x in e['beside']): out['beside'] = [round(x) for x in e['beside']]
         else: continue
+        # the film's own motion fields, kept as they are (experience/people-edits.mjs KEPT): a walker, a roll, an action, a
+        # change of posture, something carried (a walk's end facing, walk.turn, with it) stays one after the import
+        for k in ('seat', 'along', 'depth', 'rise', 'toward', 'face', 'clear', 'walk', 'roll', 'act', 'change', 'toes', 'tread', 'carry'):
+            if k in e:
+                try: json.dumps(e[k]); out[k] = copy.deepcopy(e[k])
+                except (TypeError, ValueError): pass
         if num(e.get('scale')) and .2 <= e['scale'] <= 3 and abs(e['scale'] - 1) > 1e-3: out['scale'] = round(e['scale'], 3)
         colors = {k: v.lower() for k, v in (e.get('colors') or {}).items() if k in ('top', 'bottom', 'shoes', 'hair') and isinstance(v, str) and re.fullmatch(r'#[0-9a-fA-F]{6}', v)} if isinstance(e.get('colors'), dict) else {}
         if colors: out['colors'] = colors

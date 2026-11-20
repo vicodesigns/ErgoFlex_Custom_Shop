@@ -1331,6 +1331,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     if(name.startsWith('sl-')){try{sceneLights.input(el);}catch(error){status(error.message,true);}return;}
     if(name.startsWith('dk-')&&el.type==='range'){try{deskSel.changed(el,{live:true});}catch(error){status(error.message,true);}return;}
     if(name.startsWith('fr-')&&el.type==='range'){try{floorRefl.changed(el,{live:true});}catch(error){status(error.message,true);}return;}
+    if(name.startsWith('pe-path-')&&el.type==='range'){try{scenePeople.input(el);}catch(error){status(error.message,true);}return;}   // (a walk's facing slider, live)
     if(name.startsWith('mx-')&&name!=='mx-on'){sceneLights.mixerChange(el,true).catch(error=>status(error.message,true));return;}
     if(/^gn?-/.test(name)){const k=name.replace(/^gn?-/,''),v=Number(el.value),twin=field((name.startsWith('gn-')?'g-':'gn-')+k),out=panel.querySelector(`[data-global-steps="${k}"]`);if(Number.isFinite(v)){if(twin)twin.value=String(v);if(out)out.textContent=k==='exposureScale'?stepsText(v):'×'+v;if(name.startsWith('g-'))try{setGlobal(k,v,{key:name,render:false});}catch(error){status(error.message,true);}}return;}
     // Neutral white sliders and picker edit live; one undo step per drag.

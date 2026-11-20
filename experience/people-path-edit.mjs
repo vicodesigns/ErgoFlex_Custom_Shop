@@ -111,7 +111,7 @@ export const FIELDS={
     start:{label:'Start',unit:'s',step:.1,min:0,max:600,title:'The chapter second they set off (they stand at the start until then)'},
     pace:{label:'Pace',unit:'steps/s',step:.05,min:.5,max:4,clear:true,title:'Steps a second (the film\'s default 1.8; brisk 2.2 to 2.4)'},
     step:{label:'Stride',unit:'mm',step:10,min:200,max:1000,int:true,clear:true,title:'Length of a step (empty: from the leg length)'},
-    turn:{label:'End turn',unit:'°',step:5,min:-360,max:360,clear:true,title:'The way they face when they arrive (empty: the next placement\'s, else along the last leg)'}
+    turn:{label:'Faces at the end',unit:'°',step:1,min:-360,max:360,clear:true,title:'The way they face when they arrive, in the room\'s turn (as a person\'s Turn): empty, the next placement\'s, else along the last leg'}
   },
   roll:{
     start:{label:'Start',unit:'s',step:.1,min:0,max:600,title:'The chapter second the chair sets off'},
@@ -120,6 +120,21 @@ export const FIELDS={
     ease:{label:'Ease',unit:'s',step:.1,min:.05,max:5,clear:true,title:'Seconds to set off and to come to rest (default 1.2 s)'}
   }
 };
+// ---- the way a walker faces at the end (room-people.mjs walkEnd: walk.turn, else the `then` placement's turn when it
+// stands where the path ends, else along the last leg). Degrees in the room's turn, as a person's `turn`: 0 faces +z
+// (room mm), 90 faces +x; -180..180.
+export const wrapTurn=d=>{const v=((d+180)%360+360)%360-180;return Math.round((v===-180?180:v)*10)/10;};
+// The turn that faces from `from` toward `to` (room mm), or null when they are the same spot.
+export function facingToward(from,to){const dx=to[0]-from[0],dz=to[1]-from[1];return Math.hypot(dx,dz)<1?null:wrapTurn(Math.atan2(dx,dz)*180/Math.PI);}
+// The way a walker faces as they arrive: {turn, from: 'set' | 'then' | 'path'}.
+export function endFacing(e,cast=[]){
+  const pts=pathOf(e);if(motionOf(e)!=='walk'||!pts)return null;const w=e.walk,end=pts[pts.length-1];
+  if(finite(w.turn))return {turn:wrapTurn(w.turn),from:'set'};
+  const next=w.then&&cast.find(c=>c.id===w.then&&Array.isArray(c.at)&&finite(c.turn)&&Math.hypot(c.at[0]-end[0],c.at[1]-end[1])<60);
+  if(next)return {turn:wrapTurn(next.turn),from:'then'};
+  for(let i=pts.length-2;i>=0;i--){const t=facingToward(pts[i],end);if(t!==null)return {turn:t,from:'path'};}
+  return {turn:wrapTurn(e.turn||0),from:'path'};
+}
 export const TOES=[['bend','Toes bend (natural)'],['stiff','Stiff (the foot pitches whole)']];
 export const SWINGS=[['','Normal'],['path','Follow the path (tight turns)']];
 // A new entry with motion field `name` set to `value` (a string from an input: '' clears where the field may be
