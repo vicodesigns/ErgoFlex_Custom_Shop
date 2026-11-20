@@ -529,6 +529,7 @@ export function solveStill(rig, key, input) {
     // (along a film's path someone in a wheelchair pushes the rims in time with the wheels: input.roll, pushRims)
     if (pose === 'wheel-roll' && input.roll) { pushRims(rig, key, input.roll, actLife); rig.fk(); }
     // (an action at a moment of the film: input.act, SCREEN_ACTS)
+    else if (input.act?.squat && ON_FEET.has(pose)) { squatAct(rig, key, input.act, actLife); rig.fk(); }
     else if (input.act && SCREEN_ACTS[pose]) { SCREEN_ACTS[pose](rig, key, input.act, actLife); rig.fk(); }
     else if (rig.mediaLab && key.id.includes('-sit-mix')) rideFader(rig,time,seed,life);
     else if (ACTS[pose]) { ACTS[pose](rig, key, time, seed, life); rig.fk(); }
@@ -665,6 +666,22 @@ function waitAbout(rig, key, time, seed, life, quick = 1) {
 }
 const bend = (rig, axis, angle) => { for (const [bone, share] of [[rig.b.spine_01, .3], [rig.b.spine_02, .4], [rig.b.spine_03, .3]]) { rig.turnWorld(bone, turn.setFromAxisAngle(axis, angle * share)); rig.fk(); } };
 const feetStay = (rig, key) => { for (const s of ['l', 'r']) { const [thigh, calf, foot] = rig.side[s].leg; rig.reach(thigh, calf, foot, key.wp[foot]); rig.reach(thigh, calf, foot, key.wp[foot]); rig.setWorld(foot, key.wq[foot]); } rig.fk(); };
+// Desk Squats (the app's exercise desk_squats_01), timed by the film: a placement of a STANDING posture with
+// act: { kind: 'squat', at: chapter seconds of the first descent, dur: seconds for all the reps, reps: 3 }. The feet stay planted
+// where the posture has them (shoulder-width), the pelvis sinks and goes back (the legs fold by themselves under the planted feet),
+// the trunk leans forward and the arms reach forward for balance; between reps she is upright, at the end she is back as built.
+// Pure: the same second is always the same pose. SQUAT: how far the hips go (m) and the trunk's lean (rad) at the bottom.
+export const SQUAT = { down: .34, back: .17, lean: .5, reach: .52 };
+export const squatDepth = (since, dur, reps) => since <= 0 || since >= dur ? 0 : (1 - Math.cos(Math.PI * 2 * reps * since / dur)) / 2;
+function squatAct(rig, key, act, life) {
+    const reps = Math.max(1, act.squat.reps | 0), d = squatDepth(act.since, act.dur, reps) * life, arms = ss(-.7, -.05, act.since) * (1 - ss(act.dur + .05, act.dur + .7, act.since)) * life;
+    spot.copy(key.wp[rig.b.pelvis]); spot.y -= SQUAT.down * d; spot.z -= SQUAT.back * d; rig.placePelvis(spot); rig.fk();
+    bend(rig, X, SQUAT.lean * d); feetStay(rig, key);
+    for (const s of ['l', 'r']) {
+        const [, upper, lower, hand] = rig.side[s].arm; handAt.copy(rig.wp[upper]); handAt.z += SQUAT.reach; handAt.y -= .03;
+        if (arms > 0) { spot.lerpVectors(rig.wp[hand], handAt, arms); armTo(rig, s, spot, handQ.slerpQuaternions(rig.wq[hand], rig.wq[lower], arms)); }   // (the hands in line with the forearms: level, not hanging)
+    }
+}
 // Actions timed by the film (the high school chapter: Noah and the desk's touchscreen). input.act: { since: seconds
 // since the action's moment (negative before it), dur: seconds, by: a Vector3 in the model's frame (metres),
 // press: the key of the pressed posture or null } (room-people.mjs actOf, from the placement's `act`).

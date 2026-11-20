@@ -2601,7 +2601,7 @@ export class RoomPeople {
             by = (life.actBy ||= new THREE.Vector3()).set((x * c - z * s) / 1000, y / 1000, (x * s + z * c) / 1000);
         }
         const id = object.userData.person.id, pressId = /-tap$/.test(id) ? id.replace(/-tap$/, '-press') : null;
-        return { since: time - act.at, dur: Number.isFinite(act.dur) ? act.dur : 1, by, press: pressId && life.rig?.has(pressId) ? life.rig.key(pressId) : null };
+        return { since: time - act.at, dur: Number.isFinite(act.dur) ? act.dur : 1, by, squat: act.kind === 'squat' ? { reps: act.reps > 0 ? act.reps : 3 } : null, press: pressId && life.rig?.has(pressId) ? life.rig.key(pressId) : null };
     }
     // A film's wheelchair user rolling along a path (a placement with `roll`): at its start until `start`, then rolling
     // it, then at its end. Planned once per path; the wheels of the drawn model (bones wheel_l / wheel_r, where the
