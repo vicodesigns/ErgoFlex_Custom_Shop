@@ -10,7 +10,8 @@
 import * as PE from './people-path-edit.mjs';
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const r1=v=>Math.round(v*10)/10;
-const COLOR={walk:0x7fd7ff,roll:0xffb44a,start:0x5fe08a,sel:0xffffff,plus:0xff9bd2};
+const COLOR={walk:0x7fd7ff,roll:0xffb44a,start:0x5fe08a,sel:0xffffff,plus:0xff9bd2,facing:0xffd166};
+const TIP=470;   // mm: the facing arrow's length, its turning handle at the tip
 const SNAP=50;
 export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,editing,lightsShowing,selected,posing,personName,objectOf,cast,modelOf,poseOf,seconds,spans=()=>null,time=()=>0}){
   let aim=null;   // + Walk to… / + Roll to…: {key, kind} while the next click on the floor picks where they go
@@ -61,7 +62,11 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
     const prints=new THREE.Points(new THREE.BufferGeometry(),new THREE.PointsMaterial({color:0xffffff,size:5,sizeAttenuation:false,depthTest:false,transparent:true,opacity:.7}));prints.renderOrder=997;
     const sphere=new THREE.SphereGeometry(1,18,12),ring=new THREE.RingGeometry(1.25,1.6,32);ring.rotateX(-Math.PI/2);
     for(const o of [route,control,prints]){o.userData.directorTools=true;group.add(o);}
-    h={group,route,control,prints,sphere,ring,mat,handles:[],plus:[],sign:'',printsOf:null};
+    // the way they face at the end: a flat arrow on the floor at the path's end (pointing +z, turned to the facing), and a
+    // handle at its tip that turns it (a walk only)
+    const shape=new THREE.Shape([[-28,0],[28,0],[28,330],[80,330],[0,470],[-80,330],[-28,330]].map(([x,y])=>new THREE.Vector2(x,y))),ag=new THREE.ShapeGeometry(shape);ag.rotateX(Math.PI/2);
+    const arrow=new THREE.Mesh(ag,mat(COLOR.facing,{opacity:.85}));arrow.renderOrder=998;arrow.userData.directorTools=true;arrow.position.y=9;group.add(arrow);
+    h={group,route,control,prints,sphere,ring,mat,handles:[],plus:[],sign:'',printsOf:null,arrow};h.tip=handleMesh(COLOR.facing,.8);
   }
   function dispose(){if(!h)return;h.group.removeFromParent();h.group.traverse(o=>{o.geometry?.dispose?.();o.material?.dispose?.();});h=null;}
   const handleMesh=(color,size)=>{const {THREE}=tools(),m=new THREE.Mesh(h.sphere,h.mat(color));m.renderOrder=999;m.userData.directorTools=true;m.userData.size=size;const r=new THREE.Mesh(h.ring,h.mat(color,{opacity:.9}));r.renderOrder=998;r.userData.directorTools=true;m.add(r);h.group.add(m);return m;};
@@ -89,6 +94,10 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
       h.handles.forEach((m,i)=>{m.position.set(pts[i][0],10,pts[i][1]);const c=i===picked?COLOR.sel:i===0?COLOR.start:COLOR[kind];m.material.color.setHex(c);m.children[0].material.color.setHex(c);m.userData.size=i===picked?1.35:i===0?1.15:1;m.children[0].visible=i===0||i===picked;});
       h.plus.forEach((m,i)=>m.position.set((pts[i][0]+pts[i+1][0])/2,10,(pts[i][1]+pts[i+1][1])/2));
     }
+    // the facing arrow at the end of a walk (the drag's turn while it turns)
+    const face=kind==='walk'?(drag?.facing?{turn:drag.turn,from:'set'}:PE.endFacing(preview,cast())):null;h.arrow.visible=h.tip.visible=!!face;
+    if(face){const end=pts[pts.length-1],a=THREE.MathUtils.degToRad(face.turn);h.arrow.position.set(end[0],9,end[1]);h.arrow.rotation.set(0,a,0);h.arrow.material.opacity=face.from==='set'?.9:.45;
+      h.tip.position.set(end[0]+Math.sin(a)*TIP,12,end[1]+Math.cos(a)*TIP);}
     // a walker's footprints, from the plan the stage walks (live while a point is dragged)
     const plan=kind==='walk'?o?.userData?.personLife?.plan:null;
     if(plan!==h.printsOf){h.printsOf=plan;const p=[];if(plan)for(const list of plan.prints)for(const q of list)p.push(q.x*1000,4,q.z*1000);h.prints.geometry.dispose();h.prints.geometry=new THREE.BufferGeometry();h.prints.geometry.setAttribute('position',new THREE.Float32BufferAttribute(p,3));}
@@ -106,7 +115,7 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
     {const a=drag?null:arrivalOf(e);h.route.material.color.setHex(a&&a.late>.05?0xff5a5a:COLOR[kindOf(e)]);}
     // handles a constant size on the screen
     const {THREE,t}=tools(),cam=t.camera.getWorldPosition(new THREE.Vector3()),k2=Math.tan(THREE.MathUtils.degToRad(t.camera.fov||40)/2),scale=root.matrixWorld.getMaxScaleOnAxis()||1,p=new THREE.Vector3();
-    for(const m of [...h.handles,...h.plus]){p.copy(m.position).applyMatrix4(root.matrixWorld);m.scale.setScalar(p.distanceTo(cam)*k2*.016*m.userData.size/scale);}
+    for(const m of [...h.handles,...h.plus,h.tip]){p.copy(m.position).applyMatrix4(root.matrixWorld);m.scale.setScalar(p.distanceTo(cam)*k2*.016*m.userData.size/scale);}
   }
   // ---- the pointer
   const ndc=(ev,dom)=>{const r=dom.getBoundingClientRect();return [(ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1];};
@@ -127,6 +136,7 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
     const screen=p=>{const q=new THREE.Vector3(p[0],0,p[1]).applyMatrix4(root.matrixWorld).project(t.camera);return Math.hypot((q.x+1)/2*r.width-mx,(1-q.y)/2*r.height-my);};
     // (the nearest of the handles and the +s under the pointer)
     let best=null;pts.forEach((p,i)=>{const d=screen(p);if(d<=14&&(!best||d<best.d))best={kind:'point',index:i,d};});
+    const face=kindOf(e)==='walk'&&PE.endFacing(e,cast());if(face){const end=pts[pts.length-1],a=face.turn*Math.PI/180,d=screen([end[0]+Math.sin(a)*TIP,end[1]+Math.cos(a)*TIP]);if(d<=14&&(!best||d<best.d))best={kind:'facing',d};}
     for(let i=0;i<pts.length-1;i++){const m=[(pts[i][0]+pts[i+1][0])/2,(pts[i][1]+pts[i+1][1])/2],d=screen(m);if(d<=11&&(!best||d<best.d))best={kind:'plus',index:i,at:m.map(Math.round),d};}if(best)return {...best,f};
     const s=PE.hitTest(pts,f.at,{pointTol:0,lineTol:Math.max(20,8*f.perPx),drawn:PE.drawnLine(e,P())});
     return s?{...s,f}:{kind:'floor',f};
@@ -141,6 +151,7 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
       const x=hit(ev);if(!x||tools().gizmo?.axis&&ev.button===0&&x.kind!=='point'&&x.kind!=='plus')return;const e=entry(selected()),pts=PE.pathOf(e);
       if(ev.button===2)return;      // right-drag orbits the view, even from a handle (17 Nov 2026)
       if(ev.button!==0)return;
+      if(x.kind==='facing'){grab(ev);startFacing(ev);return;}
       if(x.kind==='point'){grab(ev);pick(x.index);start(ev,pts,x.index,false);return;}
       if(x.kind==='plus'){grab(ev);const n=[...pts];n.splice(x.index+1,0,x.at);picked=x.index+1;start(ev,n,x.index+1,true);return;}
       if(x.kind==='segment'){grab(ev);const n=[...pts];n.splice(x.index+1,0,x.at);picked=x.index+1;start(ev,n,x.index+1,true);return;}
@@ -180,7 +191,21 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
     try{t.renderer.domElement.setPointerCapture(ev.pointerId);}catch{}
     if(added)preview(k,PE.withPath(drag.was,drag.points));
   }
+  // Turning the facing arrow: the turn follows the pointer around the path's end (Shift: 15 degree steps); live on the
+  // stage, one undo step on release.
+  function startFacing(ev){
+    const {t}=tools(),w=win(),k=selected(),e=entry(k);
+    drag={id:ev.pointerId,key:k,facing:true,turn:PE.endFacing(e,cast()).turn,moved:false,x:ev.clientX,y:ev.clientY,orbit:t.controls?.enabled,was:structuredClone(e)};
+    if(t.controls)t.controls.enabled=false;w.__directorDragging=true;try{t.renderer.domElement.setPointerCapture(ev.pointerId);}catch{}
+  }
+  function moveFacing(ev){
+    if(!drag.moved&&Math.hypot(ev.clientX-drag.x,ev.clientY-drag.y)<4)return;drag.moved=true;
+    const f=floorAt(ev),pts=PE.pathOf(drag.was);if(!f)return;let turn=PE.facingToward(pts[pts.length-1],f.at);if(turn===null)return;
+    if(ev.shiftKey)turn=PE.wrapTurn(Math.round(turn/15)*15);drag.turn=turn;previewTurn(drag.key,turn);if(h)h.sign='';
+    status(`${personName(drag.was)} faces ${turn}° at the end of the walk${ev.shiftKey?' (15° steps)':' · Shift: 15° steps'}`);
+  }
   function move(ev){
+    if(drag.facing){moveFacing(ev);return;}
     if(!drag.moved&&Math.hypot(ev.clientX-drag.x,ev.clientY-drag.y)<4)return;drag.moved=true;
     const f=floorAt(ev);if(!f)return;const p=ev.shiftKey?PE.snap(f.at,SNAP):f.at.map(Math.round);
     drag.points[drag.index]=p;preview(drag.key,PE.withPath(drag.was,drag.points));
@@ -192,14 +217,20 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
     spec[kind]={...spec[kind],path:e[kind].path};delete spec[kind].to;delete spec[kind].from;if(Array.isArray(e.at))spec.at=[...e.at];
     const people=stagePeople();if(people)people.dirty=true;
   }
+  // the stage's walker faces `turn` at the end (undefined: the film's rule), before the edit lands
+  function previewTurn(key,turn){
+    const o=objectOf(key),spec=o?.userData?.person;if(!spec?.walk)return;spec.walk={...spec.walk};if(Number.isFinite(turn))spec.walk.turn=turn;else delete spec.walk.turn;
+    const people=stagePeople();if(people)people.dirty=true;
+  }
   function release(){const d=drag;drag=null;const {t}=tools(),w=win();if(t.controls&&d)t.controls.enabled=d.orbit??true;setTimeout(()=>{if(w)w.__directorDragging=false;},0);try{t.renderer.domElement.releasePointerCapture(d.id);}catch{}if(h)h.sign='';return d;}
   function finish(){
     const d=release();if(!d)return;const who=personName(d.was);
+    if(d.facing){if(!d.moved){status(`The arrow is the way ${who} faces at the end: drag its tip to turn it (Shift: 15° steps).`);return;}put(d.key,PE.setField(d.was,'turn',String(d.turn)),`${who} faces ${d.turn}° at the end of the walk.`);return;}
     if(!d.moved){status(`Point ${d.index+1} of ${who}'s path selected: drag it on the floor, Delete removes it${d.index===0?' (the start is where they stand: it stays)':''}.`);return;}
     const next=PE.withPath(d.was,d.points),last=d.index===d.points.length-1;
     put(d.key,next,d.added?`Added a point to ${who}'s path.`:d.index===0?`Moved the start of ${who}'s ${kindOf(d.was)} (and where they stand).`:last?`Moved the end of ${who}'s ${kindOf(d.was)}.`:`Moved point ${d.index+1} of ${who}'s path.`);
   }
-  function cancel(){const d=release();if(d)put(d.key,d.was,null,true);}
+  function cancel(){const d=release();if(!d)return;if(d.facing){previewTurn(d.key,d.was.walk?.turn);return;}put(d.key,d.was,null,true);}
   // the entry becomes `next` (one undo step); fields the walk / roll does not have stay untouched
   // a moved start or end takes the placements that hand over there with it, in the same undo step; Alt held: only this one
   function put(key,next,text,quiet=false,options){
@@ -230,6 +261,18 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
   }
   // ---- the People tab section
   const field=(label,name,value,{step=1,min='',max='',unit='',title='',placeholder=''}={})=>`<label title="${escape(title)}">${escape(label)}<input type="number" name="${name}" value="${escape(value)}" step="${step}" ${min!==''?`min="${min}"`:''} ${max!==''?`max="${max}"`:''} ${placeholder?`placeholder="${escape(placeholder)}"`:''}>${unit?`<small>${escape(unit)}</small>`:''}</label>`;
+  // 'Faces at the end': slider (live) and number, Face the desk, Face along the path (the film's rule again)
+  function facingRow(e){
+    const F=PE.FIELDS.walk.turn,face=PE.endFacing(e,cast()),set=face?.from==='set',v=face?Math.round(face.turn):0;
+    const why=face?.from==='then'?'as the placement they hand over to':'along the path';
+    return `<div class="director-row people-fields people-path-facing" data-walk-facing><label title="${escape(F.title)}">${escape(F.label)}<input type="range" name="pe-path-turn-r" min="-180" max="180" step="1" value="${v}" aria-label="${escape(F.label)} (slider)"><input type="number" name="pe-path-turn" value="${set?escape(face.turn):''}" step="1" min="-360" max="360" placeholder="${v} (${why})"><small>°</small></label>
+      <div class="director-actions"><button type="button" data-action="pe-path-face-desk" title="Turn them to face the film desk (its keyboard) from where the walk ends">Face the desk</button><button type="button" data-action="pe-path-face-path" ${set?'':'disabled'} title="Remove the set facing: they face ${why} again">Face along the path</button></div></div>`;
+  }
+  // Where the film desk is (room mm): the stage's featured desk (its keyboard, else the desk), else the room's desk spot.
+  function deskSpot(){
+    const people=stagePeople(),st=people?.room?.peopleState?.(),k=st?.keyboard,p=st?.pose,d=people?.room?.roomLayout?.desk;
+    return k&&[k.x,k.z].every(Number.isFinite)?[k.x,k.z]:p&&[p.x,p.z].every(Number.isFinite)?[p.x,p.z]:Array.isArray(d)&&d.every(Number.isFinite)?[...d]:null;
+  }
   function panel(e){
     const kind=kindOf(e),pts=PE.pathOf(e);if(!kind||!pts)return goPanel(e);const m=e[kind],F=PE.FIELDS[kind],o=objectOf(e.key);
     const info=PE.routeInfo(e,P()),plan=kind==='walk'?o?.userData?.personLife?.plan:null,secs=kind==='roll'?info?.seconds:plan?.seconds;
@@ -240,7 +283,8 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
       const me=modelOf(e.id)?.character,others=cast().filter(x=>x.key!==e.key&&modelOf(x.id)?.character===me),seen=new Set(),opts=[['','Same posture (stands as they walked)']];
       for(const x of others)if(!seen.has(x.id)){seen.add(x.id);opts.push([x.id,`${poseOf(x.id)?.label||x.id} · ${x.key}`]);}
       if(m.then&&!seen.has(m.then))opts.push([m.then,poseOf(m.then)?.label||m.then]);
-      fields=`<div class="director-row people-fields">${num('start')}${num('pace','1.8')}${num('step','auto')}${num('turn','auto')}</div>
+      fields=`<div class="director-row people-fields">${num('start')}${num('pace','1.8')}${num('step','auto')}</div>
+        ${facingRow(e)}
         <div class="director-row people-fields people-path-ends"><label>Then<select name="pe-path-then" title="The posture they take at the end of the path: the person's other placements">${opts.map(([v,l])=>`<option value="${escape(v)}" ${v===(m.then||'')?'selected':''}>${escape(l)}</option>`).join('')}</select></label><label>Toes<select name="pe-path-toes">${PE.TOES.map(([v,l])=>`<option value="${v}" ${v===(m.toes==='stiff'?'stiff':'bend')?'selected':''}>${escape(l)}</option>`).join('')}</select></label><label title="Normal: a swinging foot goes straight to its next footprint. Follow the path: it swings along the path on its own side, for tight turns without crossed legs">Foot swing<select name="pe-path-swing">${PE.SWINGS.map(([v,l])=>`<option value="${v}" ${v===(m.swing==='path'?'path':'')?'selected':''}>${escape(l)}</option>`).join('')}</select></label></div>`;
     }else fields=`<div class="director-row people-fields">${num('start')}${num('speed','0.8')}${num('radius','450')}${num('ease','1.2')}</div><p class="director-hint">A chair ends facing along its last leg.${info?.tight?.length?` ${info.tight.length} corner${info.tight.length===1?'':'s'} turn tighter than the radius (a leg next to it is short).`:''}</p>`;
     const rows=pts.map((p,i)=>`<div class="people-path-point ${i===picked?'selected':''}"><button type="button" data-action="pe-path-pick" data-index="${i}" title="${i===0?'The start: where they stand (their placement)':'Select this point (Delete removes it)'}">${i===0?'Start':i}</button>${field('X','pe-path-x-'+i,p[0],{step:10,unit:'mm'})}${field('Z','pe-path-z-'+i,p[1],{step:10,unit:'mm'})}<button type="button" class="pose-saved-x" data-action="pe-path-remove" data-index="${i}" ${PE.canRemove(e,i)?'':'disabled'} aria-label="Remove point ${i}" title="Remove this point">×</button></div>`).join('');
@@ -272,6 +316,8 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
     const name=el?.name||'';if(!name.startsWith('pe-path-'))return false;
     const k=selected(),e=k&&entry(k);if(!e||!kindOf(e))return true;const who=personName(e),f=name.slice(8),xy=f.match(/^([xz])-(\d+)$/);
     if(xy){const i=Number(xy[2]),pts=PE.pathOf(e),v=Number(el.value);if(!pts?.[i]||el.value.trim()===''||!Number.isFinite(v))throw Error('Type a number.');const p=[...pts[i]];p[xy[1]==='x'?0:1]=v;put(k,PE.movePoint(e,i,p),`Moved point ${i+1} of ${who}'s path.`,false,{undoKey:'people-path-'+name+k});return true;}
+    if(f==='turn'||f==='turn-r'){if(kindOf(e)!=='walk')return true;const raw=el.value.trim(),next=PE.setField(e,'turn',raw===''?'':String(PE.wrapTurn(Number(raw))));
+      put(k,next,next.walk.turn===undefined?`${who} faces along the path at the end of the walk.`:`${who} faces ${next.walk.turn}° at the end of the walk.`,false,{undoKey:'people-path-turn'+k});return true;}
     const next=PE.setField(e,f,el.value),m=next[kindOf(e)],F=PE.FIELDS[kindOf(e)][f];
     const said=f==='swing'?`${who}: ${m.swing==='path'?'the swinging foot follows the path':'the swinging foot goes straight to its footprint'}.`:f==='then'?(m.then?`${who} ends the walk as ${poseOf(m.then)?.label?.toLowerCase()||m.then}.`:`${who} ends the walk in the posture they walked in.`):f==='toes'?`${who}: ${m.toes==='stiff'?'stiff feet':'toes bend'} on the walk.`
       :m[f]===undefined?`${who}: ${F.label.toLowerCase()} back to the film's default.`:`${who}: ${F.label.toLowerCase()} ${m[f]} ${F.unit}.`;
@@ -289,10 +335,22 @@ export function createPathGizmo({win,three,tools,stagePeople,entry,edit,status,e
       if(!n){status(name==='pe-path-faster'?'There is not enough time left for that: start earlier, or shorten the path.':'It already starts as its time in the room begins.',true);return true;}
       const m=n[kindOf(n)];put(k,n,name==='pe-path-faster'?`${personName(e)}: ${kindOf(n)==='walk'?`pace ${m.pace} steps/s`:`speed ${m.speed} m/s`}, to arrive by ${r1(a.deadline)} s.`:`${personName(e)} sets off at ${m.start} s, to arrive by ${r1(a.deadline)} s.`);return true;
     }
+    if(name==='pe-path-face-desk'){
+      if(kindOf(e)!=='walk')return true;const at=deskSpot(),pts=PE.pathOf(e),turn=at&&PE.facingToward(pts[pts.length-1],at);
+      if(turn===null||turn===undefined){status('No film desk on the stage to face.',true);return true;}
+      put(k,PE.setField(e,'turn',String(turn)),`${personName(e)} faces the desk at the end of the walk (${turn}°).`);return true;
+    }
+    if(name==='pe-path-face-path'){if(kindOf(e)!=='walk'||!Number.isFinite(e.walk.turn))return true;put(k,PE.setField(e,'turn',''),`${personName(e)} faces along the path at the end of the walk again.`);return true;}
     if(name==='pe-path-append'){const pts=PE.pathOf(e),a=pts[pts.length-2],b=pts[pts.length-1],l=Math.hypot(b[0]-a[0],b[1]-a[1])||1;picked=pts.length;put(k,PE.insertPoint(e,pts.length-1,[b[0]+(b[0]-a[0])/l*1000,b[1]+(b[1]-a[1])/l*1000]),`Added a point a metre past the end of ${personName(e)}'s path.`);return true;}
     return true;
   }
-  return {aiming:()=>!!aim,cancelAim,beginAim,tick,panel,changed,action,removeSelected,bodyMoved,picked:()=>picked,dispose,arrival:()=>{const k=selected(),e=k&&entry(k);return e&&kindOf(e)?arrivalOf(e):null;},
+  // The facing slider while it is dragged: the stage's walker and the number follow; the drag's end (change) writes it.
+  function input(el){
+    if(el?.name!=='pe-path-turn-r')return false;const k=selected(),e=k&&entry(k);if(!e||kindOf(e)!=='walk')return true;
+    const v=PE.wrapTurn(Number(el.value));previewTurn(k,v);const n=el.closest?.('[data-walk-facing]')?.querySelector('[name="pe-path-turn"]');if(n)n.value=String(v);if(h)h.sign='';
+    status(`${personName(e)} faces ${v}° at the end of the walk…`);return true;
+  }
+  return {aiming:()=>!!aim,cancelAim,beginAim,tick,panel,changed,input,action,removeSelected,bodyMoved,picked:()=>picked,dispose,arrival:()=>{const k=selected(),e=k&&entry(k);return e&&kindOf(e)?arrivalOf(e):null;},
     // (tests) the handle points on the screen: [{ x, y }] in the stage frame's pixels
     screenPoints(){const k=selected(),e=k&&entry(k),root=room();if(!e||!root||!tools())return null;const {THREE,t}=tools(),r=t.renderer.domElement.getBoundingClientRect();return PE.pathOf(e).map(p=>{const q=new THREE.Vector3(p[0],0,p[1]).applyMatrix4(root.matrixWorld).project(t.camera);return {x:r.left+(q.x+1)/2*r.width,y:r.top+(1-q.y)/2*r.height};});}};
 }
