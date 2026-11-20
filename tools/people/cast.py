@@ -45,6 +45,7 @@ CROWD = ['sit-type', 'stand-low', 'stand-mid', 'stand-type', 'stand-wait', 'stan
 
 CHARACTERS = {
     'maya': {
+        'tailoring': 'home',
         'name': 'Maya', 'phenotype': {'gender': .0, 'age': .42, 'muscle': .45, 'weight': .5, 'height': .61, 'proportions': .6, 'race': race(.55, .2, .25)},
         'skin': 'young_caucasian_female2', 'eyes': 'brown', 'hair': 'ponytail01', 'eyebrows': 'eyebrow001', 'eyelashes': 'eyelashes02',
         # (a softer face: brows a little higher with body, not a drawn line; 'brow_cutoff' build_people.py)
@@ -69,6 +70,7 @@ CHARACTERS = {
         'tint': {'toigo_fisherman_sweater': (.5, .3, .32), 'toigo_wool_pants': (.22, .2, .19), 'toigo_flats': (.12, .1, .1)},
     },
     'kai': {
+        'tailoring': 'polo',
         'name': 'Kai', 'phenotype': {'gender': 1., 'age': .33, 'muscle': .45, 'weight': .45, 'height': .45, 'proportions': .55, 'race': race(.1, 0, .9)},
         'skin': 'young_asian_male', 'eyes': 'brown', 'hair': 'short04', 'eyebrows': 'eyebrow001', 'eyelashes': 'eyelashes01',
         # (a relaxed face: brows up and level where they sat in a scowl, a softer brow edge; 'brow_cutoff' build_people.py)
@@ -88,6 +90,7 @@ CHARACTERS = {
         'clothes': ['male_casualsuit03', 'shoes01', 'spamrakuen_tbm_glasses_frames_01'],
     },
     'lin': {
+        'tailoring': 'studio',
         'name': 'Lin', 'phenotype': {'gender': .0, 'age': .55, 'muscle': .4, 'weight': .45, 'height': .535, 'proportions': .6, 'race': race(.05, 0, .95)},
         'skin': 'young_asian_female', 'eyes': 'brown', 'hair': 'toigo_blunt_bob_with_bangs', 'hair_tint': (.05, .045, .045), 'eyebrows': 'eyebrow005', 'eyelashes': 'eyelashes02',
         'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'toigo_flats'],
@@ -141,6 +144,7 @@ CHARACTERS = {
         'clothes': ['male_casualsuit06', 'shoes04'],
     },
     'noah': {
+        'tailoring': 'polo',
         'name': 'Noah', 'phenotype': {'gender': 1., 'age': .34, 'muscle': .55, 'weight': .45, 'height': .63, 'proportions': .6, 'race': race(.1, .85, .05)},
         'skin': 'young_african_male', 'eyes': 'brown', 'hair': 'afro01', 'eyebrows': 'eyebrow012', 'eyelashes': 'eyelashes01',
         # (a relaxed face: brows up and level where they sat in a scowl; a full brow that reads on dark skin at film distance; 'brow_cutoff' build_people.py)
@@ -149,6 +153,7 @@ CHARACTERS = {
         'tint': {'namuhekam_male_polo_shirt': (.85, .82, .76), 'cortu_cargo_pants': (.16, .18, .22)},
     },
     'ava': {
+        'tailoring': 'edit',
         'name': 'Ava', 'phenotype': {'gender': .0, 'age': .33, 'muscle': .4, 'weight': .42, 'height': .64, 'proportions': .6, 'race': race(.1, 0, .9)},
         'skin': 'young_asian_female', 'eyes': 'brown', 'hair': 'ponytail01', 'hair_tint': (.06, .05, .05), 'eyebrows': 'eyebrow006', 'eyelashes': 'eyelashes02',
         'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'shoes04'],

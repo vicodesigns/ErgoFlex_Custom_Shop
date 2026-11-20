@@ -15,7 +15,7 @@ from mathutils import Vector
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-import cast, pose_lib, held, garments, worn  # noqa: E402
+import cast, pose_lib, held, garments, worn, tailoring  # noqa: E402
 
 argv = sys.argv[sys.argv.index('--') + 1:]
 OUT_ID, OUT_DIR = argv[0], argv[1]
@@ -293,6 +293,14 @@ for o in meshes:
     if faces:
         import bmesh as _bm
         bm = _bm.new(); bm.from_mesh(o.data); bm.faces.ensure_lookup_table(); _bm.ops.delete(bm, geom=[bm.faces[i] for i in faces], context='FACES'); bm.to_mesh(o.data); bm.free()
+
+# Fit in the neutral pose so sewn details follow the existing rig and saved Director poses.
+if who.get('tailoring'):
+    for obj in meshes:
+        garment = obj.name.split('.', 1)[-1]
+        denim_bottom = garment == 'male_casualsuit04' and who.get('parts', {}).get(garment) == 'bottom'
+        if garment in who['clothes'] and (garment in tailoring.GARMENTS or denim_bottom):
+            tailoring.fit(obj, rig, who['tailoring'], garment)
 
 # ---- garments made from the base mesh (a white coat, a gown, socks; gloves are the hands' own faces) ------
 meshes += garments.build(who, base, rig, OUT_DIR, OUT_ID)
