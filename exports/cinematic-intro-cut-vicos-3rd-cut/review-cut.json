@@ -61375,7 +61375,7 @@
       "fromDesk": true,
       "at": [
        -421,
-       685
+       435
       ],
       "turn": 135,
       "colors": {
@@ -61432,8 +61432,8 @@
     },
     "chair": {
      "back": 100,
-     "side": -1200,
-     "turn": 60
+     "side": 1000,
+     "turn": -60
     },
     "except": [
      "people-priya-stretch"

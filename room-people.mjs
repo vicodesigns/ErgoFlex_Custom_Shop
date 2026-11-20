@@ -2520,8 +2520,12 @@ export class RoomPeople {
             if (step.phase === 'hold') { solveChange(step.actor.rig, step.to, step.to, 1); drawPose(step.actor.rig, object.userData.personRig, 0, poseNow(object.userData.person), typeof window !== 'undefined' && !!window.__directorDragging); }
             return;
         }
-        solveChange(step.actor.rig, step.from, step.to, step.w);
         const [a, z] = step.phase === 'out' ? [step.desk, home] : [home, step.desk], ease = THREE.MathUtils.smoothstep(step.w, 0, .72);
+        // (the move is walked, not slid: each foot stays on the floor and steps, first the one on the side it turns to, a step back
+        // from a desk (solveChange's `shift`, as a change with `step: true`); a person who steps out and in no longer floats)
+        const dx = (z.position.x - a.position.x) / 1000, dz = (z.position.z - a.position.z) / 1000, c = Math.cos(a.turn), sn = Math.sin(a.turn);
+        const yaw = THREE.MathUtils.euclideanModulo(z.turn - a.turn + Math.PI, Math.PI * 2) - Math.PI;
+        solveChange(step.actor.rig, step.from, step.to, step.w, null, { x: dx * c - dz * sn, z: dx * sn + dz * c, yaw, e: ease });
         object.position.lerpVectors(a.position, z.position, ease);
         object.rotation.y = a.turn + (THREE.MathUtils.euclideanModulo(z.turn - a.turn + Math.PI, Math.PI * 2) - Math.PI) * ease;   // (the short way round)
         drawPose(step.actor.rig, object.userData.personRig, step.dz, poseNow(object.userData.person), typeof window !== 'undefined' && !!window.__directorDragging);
