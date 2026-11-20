@@ -1,6 +1,7 @@
 import {withScreenLook} from './screen-look.mjs';
 import {withSonar} from './sonar.mjs';
 import {bakeCameraPlan} from './camera-spline-bake.mjs';
+import {planFields} from './camera-transitions.mjs';
 import {exportLighting} from './film-lighting.mjs';
 import {mergeSceneLights} from './light-edits.mjs';
 import {mergePropEdits} from './prop-edits.mjs';
@@ -40,7 +41,9 @@ export function filmCamera(film,keys,seconds){
   if(!keys?.length)return null;
   const old=[...(film?.cameraPlan?.keys||[])].sort((a,b)=>a.at-b.at),plan={...(film?.cameraPlan||{}),keys:keys.map(k=>{
     const o=/^plan-\d+$/.test(k.id)?old[Number(k.id.slice(5))]:null,e={at:Math.round(k.time*seconds*1000)/1000,position:k.view.position,target:k.view.target,fov:k.view.fov??35};
-    if(k.label)e.label=k.label;if(o?.hold!==undefined)e.hold=o.hold;if(o?.cut)e.cut=o.cut;return e;})};
+    if(k.label)e.label=k.label;if(o?.hold!==undefined)e.hold=o.hold;
+    // the key's own transition when it has the field (20 Nov 2026: null = none, even over a plan cut); else the plan's cut
+    if('transition' in k)Object.assign(e,planFields(k.transition));else if(o?.cut)e.cut=o.cut;return e;})};
   return {cameraPlan:plan,camera:{keys:film?.cameraPlan?bakeCameraPlan(plan,seconds):structuredClone(keys)}};
 }
 // Renders single frames with the film look in a hidden stage of its own (the same calls as

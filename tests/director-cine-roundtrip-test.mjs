@@ -10,6 +10,7 @@ import path from 'node:path';
 import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {cleanCut} from '../experience/cuts.mjs';
+import {fromPlan} from '../experience/camera-transitions.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),tools=path.join(root,'tools/experience');
 const CUT=process.env.CUT_DIR||'exports/cinematic-intro-cut-cine',H0=path.join(root,CUT);
 const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'director-cine-rt-'));
@@ -49,6 +50,38 @@ for(const s of cut.shots){
 }
 console.log(results.join('\n'));
 assert.ok(results.every(r=>r.endsWith('identical')),'a chapter changed in the no-edit round trip');
+// 2b. Camera transitions (20 Nov 2026): the same no-edit export with every key carrying its transition as the Director
+// now shows it (camera-transitions.mjs fromPlan: the plan's cut, null elsewhere; the importer takes it as authoritative)
+// leaves review-cut.json byte-identical too; then a cut removed and a dissolve set reach the film's cameraPlan, nothing else.
+const runCamera=(s,edit)=>{
+  const H=path.join(tmp,'tr-'+s.id);fs.rmSync(H,{recursive:true,force:true});fs.mkdirSync(path.join(H,'shots'),{recursive:true});
+  for(const f of ['review-cut.json','titles-src.json','shots/13-subshots.json','cut.json'])if(fs.existsSync(path.join(H0,f)))fs.copyFileSync(path.join(H0,f),path.join(H,f));
+  const page=path.join(tmp,s.id+'-tr-page.json');py(path.join(tools,'director-bridge.py'),'link',path.join(H,'review-cut.json'),'--shot',s.id,'--json',page);
+  const exported=mark(cleanCut(JSON.parse(fs.readFileSync(page,'utf8'))),s.id),plan=[...s.cameraPlan.keys].sort((a,b)=>a.at-b.at),keys=exported.shots[0].camera?.keys||[];
+  keys.forEach((k,i)=>{const n=/^plan-\d+$/.test(k.id)?Number(k.id.slice(5)):-1;k.transition=i&&n>=0?fromPlan(plan[n]):null;});
+  edit?.(keys);exported.shots[0]=cleanCut(exported).shots[0];
+  const ex=path.join(tmp,`Film-chapter-${s.id}-tr.json`);fs.writeFileSync(ex,JSON.stringify(exported,null,2));
+  py(path.join(tools,'build-round8-director.py'),H,'--import',ex);py(path.join(tools,'build-round8-director.py'),H);
+  return fs.readFileSync(path.join(H,'review-cut.json'));
+};
+const trSame=cut.shots.filter(s=>s.cameraPlan?.keys?.length).map(s=>[s.id,runCamera(s).equals(src)]);
+console.log('transitions explicit, no edit: '+trSame.map(([id,ok])=>`${id} ${ok?'identical':'CHANGED'}`).join(', '));
+assert.ok(trSame.every(([,ok])=>ok),'a chapter changed when its keys carry their transitions explicitly');
+{
+  const s=cut.shots.find(x=>(x.cameraPlan?.keys||[]).some(k=>k.cut));
+  if(s){
+    const plan=[...s.cameraPlan.keys].sort((a,b)=>a.at-b.at),ci=plan.findIndex(k=>k.cut),di=plan.findIndex((k,i)=>i>0&&!k.cut);
+    const after=JSON.parse(runCamera(s,keys=>{keys[ci].transition=null;keys[di].transition={type:'dissolve',dur:.8};})).shots.find(x=>x.id===s.id);
+    const got=[...after.cameraPlan.keys].sort((a,b)=>a.at-b.at);
+    assert.equal(got.length,plan.length);
+    assert.ok(!got[ci].cut&&!('transition' in got[ci]),`${s.id}: the removed cut is gone from plan key ${ci}`);
+    assert.deepEqual([got[di].cut,got[di].transition],[true,{type:'dissolve',dur:.8}],`${s.id}: the dissolve is cut: true + transition on plan key ${di}`);
+    const strip=k=>{const {cut:_c,transition:_t,...rest}=k;return rest;};
+    assert.deepEqual(got.map(strip),plan.map(strip),`${s.id}: every key's place, aim, lens, time, hold and label as they were`);
+    got.forEach((k,i)=>{if(i!==ci&&i!==di)assert.deepEqual([k.cut,k.transition],[plan[i].cut,plan[i].transition],`${s.id}: key ${i} keeps its cut`);});
+    console.log(`transitions edited (${s.id}): plan key ${ci}'s cut removed, plan key ${di} a 0.8 s dissolve (cut: true + transition); the camera re-baked`);
+  }else console.log('note: no chapter of this cut has a cut key; the edit check is skipped');
+}
 // 3. People v2 (peopleEdits = the film's whole `people`, {v: 2, ...}): unchanged -> identical; one walk retimed -> only
 // that field of people changes and the chapter gets directorEdited {at, fields: ['people']}. (Set after cleanCut: the
 // desk's people-edits.mjs cleanPeople keeps v2 verbatim.)

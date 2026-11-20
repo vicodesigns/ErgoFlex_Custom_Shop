@@ -1,3 +1,4 @@
+import {cleanTransition} from './camera-transitions.mjs';
 const number=(v,min,max,fallback)=>Number.isFinite(Number(v))?Math.max(min,Math.min(max,Number(v))):fallback;
 export function cleanCamera(v){
   const valid=a=>Array.isArray(a)&&a.length===3&&a.every(n=>typeof n==='number'&&Number.isFinite(n)&&Math.abs(n)<10000);
@@ -14,7 +15,7 @@ export function cleanCameraKeys(value){
     const view=cleanCamera(k?.view);if(!view)return [];
     let id=typeof k.id==='string'&&/^[a-zA-Z0-9_-]{1,80}$/.test(k.id)?k.id:crypto.randomUUID();
     if(seen.has(id))id=crypto.randomUUID();seen.add(id);
-    return [{id,time:clamp(k.time),label:typeof k.label==='string'?k.label.trim().slice(0,60):'Camera view',easing:CAMERA_EASINGS.includes(k.easing)?k.easing:'smooth',...(k.path==='orbit'?{path:'orbit'}:{}),view}];
+    return [{id,time:clamp(k.time),label:typeof k.label==='string'?k.label.trim().slice(0,60):'Camera view',easing:CAMERA_EASINGS.includes(k.easing)?k.easing:'smooth',...(k.path==='orbit'?{path:'orbit'}:{}),...('transition' in k?{transition:cleanTransition(k.transition)}:{}),view}];
   }).sort((a,b)=>a.time-b.time).filter((k,i,a)=>i===a.length-1||a[i+1].time-k.time>.00001);
 }
 export function resolveCameraKeys(camera,defaults=[]){
@@ -23,13 +24,14 @@ export function resolveCameraKeys(camera,defaults=[]){
   const from=camera.from||defaults[0]?.view,to=camera.to||from;
   return [{id:'camera-start',time:0,label:'Start view',easing:'smooth',view:from},{id:'camera-end',time:1,label:'End view',easing:'smooth',view:to}].filter(k=>k.view);
 }
-// Easing belongs to the departure key. Hold cuts to the next view at its time.
+// Easing belongs to the departure key. Hold cuts to the next view at its time; so does a transition into the next view
+// (camera-transitions.mjs: the camera switches at the key; the preview mixes a dissolve or a dip over it).
 export function cameraSegment(keys,time){
   if(!keys.length)return null;
   const t=clamp(time);if(t<=keys[0].time)return {a:keys[0].view,b:keys[0].view,u:0};
   const i=keys.findIndex(k=>k.time>t);if(i<0)return {a:keys.at(-1).view,b:keys.at(-1).view,u:0};
   const a=keys[i-1],b=keys[i],p=(t-a.time)/(b.time-a.time);
-  return {a:a.view,b:b.view,path:a.path||'linear',u:a.easing==='hold'?0:a.easing==='linear'?p:p*p*(3-2*p)};
+  return {a:a.view,b:b.view,path:a.path||'linear',u:a.easing==='hold'||b.transition?.type?0:a.easing==='linear'?p:p*p*(3-2*p)};
 }
 export function sampleCamera(keys,time){
   const segment=cameraSegment(keys,time);if(!segment)return null;

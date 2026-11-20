@@ -17,7 +17,10 @@
       Reads a cut saved with Director Mode's "Export cut" and writes its camera keys back as cameraPlan keys
       (at = time * seconds). Keys keep their 'hold' and 'cut' from the original plan (--plan) when their id is
       unchanged: the same keys Render still bakes (experience/film-render.mjs filmCamera), so the film renders
-      what the Director showed.
+      what the Director showed. A key that carries 'transition' (experience/camera-transitions.mjs, 20 Nov 2026)
+      decides its own cut: null = none (a plan cut removed), {type:'cut'} = cut: true, a dissolve / dip = cut: true
+      plus transition {type, dur} (the render composites it; until then it renders as the cut). Exports without
+      the field keep the plan's cut, as before.
       Its movement clips are written too ('clips', [] when the chapter has none); build-round8-opener.py uses
       <hq>/director-camera.json's keys instead of its own and its clips over its own by id (and retimes the status
       lights from them); build-round8-director.py does the same for <hq>/director-camera-<id>.json (chapters 2-12).
@@ -88,17 +91,28 @@ elif cmd == 'import':
     # page's rounding) comes back as the plan's key itself, every field and its exact time kept, so an export with no
     # camera edit gives the film the plan it had (build-round8-director.py then keeps the baked camera as it is).
     same = lambda a, b: len(a) == len(b) and all(abs(float(x) - float(y)) <= 1e-9 for x, y in zip(a, b))
+    TYPES = ('cut', 'dissolve', 'dip-black', 'dip-white')
+    def plan_fields(t):       # experience/camera-transitions.mjs planFields
+        if not isinstance(t, dict) or t.get('type') not in TYPES: return {}
+        if t['type'] == 'cut': return {'cut': True}
+        d = t.get('dur'); d = float(d) if isinstance(d, (int, float)) and math.isfinite(d) else 0.8
+        return {'cut': True, 'transition': {'type': t['type'], 'dur': round(max(2 / 30, min(3.0, d)), 3)}}
+    def with_transition(e, k):  # the key's own transition when it has the field (authoritative), else e as it is
+        if 'transition' not in k: return e
+        want = plan_fields(k['transition'])
+        if all(e.get(f) == want.get(f) for f in ('cut', 'transition')): return e
+        e = {f: v for f, v in e.items() if f not in ('cut', 'transition')}; e.update(want); return e
     for k in sorted(s['camera']['keys'], key=lambda k: k['time']):
         v = k['view']; o = old.get(k['id'], {})
         if o and abs(o['at'] - k['time'] * T) <= max(5e-4, T * 1e-6) and same(o['position'], v['position']) and same(o['target'], v['target']) \
                 and abs(float(o.get('fov', 35)) - float(v.get('fov', 35))) <= 1e-9 and (o.get('label') or '').startswith(k.get('label') or ''):      # (the Director keeps 60 characters of a label, trimmed)
-            keys.append(json.loads(json.dumps(o))); continue
+            keys.append(with_transition(json.loads(json.dumps(o)), k)); continue
         # at: rounded like the Director's Render still (film-render.mjs filmCamera: Math.round(time*seconds*1000)/1000).
         e = {'at': math.floor(k['time'] * T * 1000 + .5) / 1000, 'position': v['position'], 'target': v['target'], 'fov': v.get('fov', 35)}
         if k.get('label'): e['label'] = o['label'] if o.get('label') and o['label'].startswith(k['label']) else k['label']
         if 'hold' in o: e['hold'] = o['hold']
         if o.get('cut'): e['cut'] = o['cut']
-        keys.append(e)
+        keys.append(with_transition(e, k))
     clips = (s.get('motion') or {}).get('clips') or []
     json.dump({'source': args[0], 'seconds': T, 'keys': keys, 'clips': clips}, open(out, 'w', newline=chr(10)), indent=1)
     print(f'{len(keys)} camera keys and {len(clips)} movement clips from Director Mode -> {out}')

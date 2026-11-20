@@ -3,6 +3,7 @@
 // film's shot (bridge.filmShot). Pure (node test).
 import {cleanClipMotion} from './desk-clips.mjs';
 import {lookOf} from '../room-looks.mjs';
+import {planFields,fromPlan} from './camera-transitions.mjs';
 export const CHAPTER_FIELDS = ['title', 'detail', 'seconds', 'transition', 'room', 'layout', 'look', 'mode', 'kind', 'preset', 'size'];
 export const GROUP_KEYS = { motion: ['camera', 'motion'], lighting: ['lighting', 'timeOfDay', 'ledStatus', 'statusLight', 'ledColor', 'ledGlow', 'ledSurfaces', 'sceneGlobals'], props: ['propEdits', 'sceneEdits'], people: ['peopleEdits'], graphics: ['screens'], titles: ['titles', 'titleEdits'] };
 const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
@@ -31,7 +32,8 @@ export function cameraChanged(cut, film) {
   if (keys.length !== plan.length) return true;
   return keys.some((k, i) => { const p = plan[i];
     return !near(k.time * T, p.at, .005) || !vecNear(k.view?.position, p.position) || !vecNear(k.view?.target, p.target) || !near(k.view?.fov ?? 35, p.fov ?? 35, .01)
-      || (k.easing || 'smooth') !== (i === 0 || i === plan.length - 1 ? 'smooth' : 'linear') || ('hold' in k && !same(k.hold, p.hold)) || ('cut' in k && !same(k.cut, p.cut)); });
+      || (k.easing || 'smooth') !== (i === 0 || i === plan.length - 1 ? 'smooth' : 'linear') || ('hold' in k && !same(k.hold, p.hold)) || ('cut' in k && !same(k.cut, p.cut))
+      || ('transition' in k && !same(planFields(k.transition), planFields(fromPlan(p)))); });   // (camera-transitions.mjs: a cut / dissolve / dip set or removed)
 }
 export function groupChanged(cut, film, group) {
   if (!film || !cut) return false;

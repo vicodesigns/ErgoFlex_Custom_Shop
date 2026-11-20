@@ -495,3 +495,13 @@ body.directing:not(.inspector-hidden) #director-timeline .film-chapter-picker{di
 #director-panel .sonar-row{grid-template-columns:48px minmax(0,1fr) 68px 52px}
 #director-panel .sonar-controls .start-pose-head select{max-width:60%}
 #director-panel .sonar-controls [data-so-action][aria-pressed=true]{border-color:var(--df-accent-text)}
+/* Camera transitions (camera-transitions.mjs, 20 Nov 2026): a band centred on the key it goes into, its edges drag the length */
+#director-timeline .cam-transition{position:absolute;bottom:1px;height:13px;z-index:2;box-sizing:border-box;border:1px solid #5cd3f6aa;border-radius:3px;background:#0e2a35;color:#d9f4ff;font-size:9px;line-height:11px;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer;touch-action:none;user-select:none}
+#director-timeline .cam-transition.dissolve{background:repeating-linear-gradient(135deg,#5cd3f633 0 4px,#0e2a35 4px 8px)}
+#director-timeline .cam-transition.dip-black{background:linear-gradient(90deg,#0e2a35,#000 50%,#0e2a35);border-color:#8aa4b0aa}
+#director-timeline .cam-transition.dip-white{background:linear-gradient(90deg,#0e2a35,#f4f4f4 50%,#0e2a35);color:#102028;border-color:#e8eef0}
+#director-timeline .cam-transition b{font-weight:600;white-space:nowrap;pointer-events:none;padding:0 6px}
+#director-timeline .cam-transition i{position:absolute;top:0;bottom:0;width:6px;cursor:ew-resize;background:#5cd3f6}
+#director-timeline .cam-transition i[data-ct-edge="start"]{left:0}#director-timeline .cam-transition i[data-ct-edge="end"]{right:0}
+#director-timeline .cam-transition:focus-visible{outline:2px solid var(--df-select,#ffd166);outline-offset:1px}
+#director-timeline .cam-cut{position:absolute;bottom:1px;transform:translateX(-50%);z-index:2;font-size:11px;line-height:13px;color:#ffd166;pointer-events:none;text-shadow:0 1px 3px #000}
