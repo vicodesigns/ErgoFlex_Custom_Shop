@@ -1,6 +1,6 @@
 import {enhanceGizmo,mmPerUnitOf} from './gumball.mjs';
 import {postureView,editPosture,migratePostures,editablePeople,postureRecord} from '../people-postures.mjs';
-import {cleanPeople,canonicalPeople,effectivePeople,newKey,spanText,PARTS} from './people-edits.mjs';
+import {cleanPeople,canonicalPeople,effectivePeople,newKey,spanText,PARTS,handoffInto} from './people-edits.mjs';
 import {createPoseEditor,JOINTS} from './scene-pose-editor.mjs';
 import {stackRows} from './lane-rows.mjs';
 import {withSpan} from './people-spans.mjs';
@@ -175,8 +175,10 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const e=entry(key);if(!e||!catalog)return;const p0=poseOf(e.id),m=modelOf(e.id);let id=e.id;
     if(!p0?.desk){id=modelFor(m?.character,p0?.stance==='wheelchair'?'wheel-type':p0?.stance==='seated'?'sit-type':'stand-type');if(!id){status(`${personName(e)} has no desk posture built yet: choose one under Posture first.`,true);rerender();return;}}
     const info=poseOf(id),role=info?.stance==='seated'?'sit':info?.stance==='wheelchair'?'wheel':'stand',there=station&&cast().find(x=>x.key!==key&&!x.hide&&x.station===station);
+    const from=handoffInto(currentPeople(),key,id=>modelOf(id)?.character||null);   // (a roll or walk that changed posture into them: a cut at a desk)
     write(p=>{const x=p.cast.find(x=>x.key===key);if(!x)return;takeIn(p,x);asShown(x,id);unplace(x);delete x.at;delete x.turn;delete x.y;x.desk=role;if(station)x.station=station;},
       `${personName(e)} is at ${station?deskName(station):'the film desk'} and follows it${there?` (${personName(there)} is at that desk too: only one of them shows)`:''}. Undo puts them back.`);
+    if(from)status(`${personName(e)} is at ${station?deskName(station):'the film desk'} now, so the change of posture from “${from.key}” at ${r1(from.at)} s is a cut, not a blend: someone at a desk takes over in one frame. Undo, and keep them at a free spot where “${from.key}” ends, to keep the blend.`,true);
   }
   function toSpot(key,spot,text){
     const shown=objectOf(key)?.userData?.person,as=shown?.variant?shown.id:null;

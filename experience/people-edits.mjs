@@ -154,3 +154,14 @@ export function spanText(spans,seconds){
   const f=v=>Number(v.toFixed(v%1?1:0));
   return spans.map(([a,b])=>a<=.001&&b>=(seconds??Infinity)?'whole chapter':`${f(a)}–${f(Math.min(b,seconds??b))} s`).join(', ');
 }
+// The placement that hands over INTO this one with a change of posture (room-people.mjs pairUp: the same character, not at
+// a desk, its `when` ending within .75 s of this one's start): a roll docking, a walk arriving. pairUp only pairs people
+// who are not at a desk, so putting this one at a desk turns that blend into a cut (19 Nov 2026: Kai's dock in the high
+// school went from a smooth tween to a one-frame jump when "Place: At the film desk" made his typing placement a desk
+// user). The Director says so when it happens. null: no such hand-over.
+export function handoffInto(people,key,character=id=>/^people-([a-z]+)-/.exec(id||'')?.[1]||null){
+  const cast=people?.cast||[],when=people?.when||{},me=cast.find(e=>e.key===key);if(!me||!character(me.id))return null;
+  const starts=(when[key]||[]).map(s=>s[0]);if(!starts.length)return null;
+  const from=cast.find(e=>e.key!==key&&!e.hide&&!e.desk&&character(e.id)===character(me.id)&&(when[e.key]||[]).some(([,t1])=>starts.some(t0=>Math.abs(t1-t0)<=.75)));
+  return from?{key:from.key,at:starts.find(t0=>(when[from.key]||[]).some(([,t1])=>Math.abs(t1-t0)<=.75))}:null;
+}
