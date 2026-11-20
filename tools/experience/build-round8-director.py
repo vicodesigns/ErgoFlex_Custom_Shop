@@ -59,6 +59,10 @@
       experience/screen-look.mjs) keeps it in director-camera-<id>.json as 'screenLook' ({} = he reset it; an export
       without the field keeps the look imported before). The pass writes it onto the chapter's film shot as 'screenLook'
       (an empty look removes it); render-cut passes it to film-fx.
+      Sonar: an export whose shot has 'sonar' (Director Mode's Graphics tab, a proximity chapter's: on / off, size, rings per
+      pulse and the centre's offset, experience/sonar.mjs) keeps it in director-camera-<id>.json as 'sonar' ({} = he put it back
+      to the film's; an export without the field keeps the one imported before). The pass writes it onto the chapter's film shot
+      as 'sonar' (an empty one removes it); stage.mjs reads it from the shot, render-cut / render-still pass the shot whole.
       Desks: an export whose shot has 'deskEdits' (Director Mode's Desks: size, place and starting height / tilt of the
       room's other ErgoFlex desks, experience/desk-edits.mjs; later per-desk moves and builds) keeps them in
       director-camera-<id>.json as 'desks' (an export without the field keeps the earlier import's). The pass writes them
@@ -653,6 +657,49 @@ def apply_screen_look(cid, f, look):
     return wrote
 
 
+# The sonar's fields: (min, max), as experience/sonar.mjs FIELDS; the film's own rings per pulse is 3 (not kept).
+SONAR_RANGE = {'radius': (6, 600), 'x': (-240, 240), 'z': (-240, 240)}
+
+
+def clean_sonar(v):
+    """experience/sonar.mjs cleanSonar: {enabled?: False, radius?, rings?, x?, z?} with only what differs from the film's,
+    clamped, rounded to 0.1 in; {} when nothing does (the film's shot then has no sonar)."""
+    if not isinstance(v, dict): return {}
+    def num(k):
+        n = v.get(k)
+        return None if isinstance(n, bool) or not isinstance(n, (int, float)) or n != n or n in (float('inf'), float('-inf')) else float(n)
+    out = {}
+    if v.get('enabled') is False: out['enabled'] = False
+    n = num('radius')
+    if n is not None: out['radius'] = math.floor(min(600, max(6, n)) * 10 + .5) / 10
+    n = num('rings')
+    if n is not None:
+        c = min(6, max(1, int(math.floor(n + .5))))
+        if c != 3: out['rings'] = c
+    for k in ('x', 'z'):
+        n = num(k)
+        if n is not None:
+            c = math.floor(min(240, max(-240, n)) * 10 + .5) / 10
+            if c != 0: out[k] = c
+    return {k: (int(x) if isinstance(x, float) and x == int(x) else x) for k, x in out.items()}
+
+
+def apply_sonar(cid, f, sonar):
+    """The chapter's film shot gets sonar (stage.mjs reads it); an empty one removes it."""
+    mine = clean_sonar(sonar)
+    paths = [CUT] + ([f] if f else []) + ([os.path.join(H, 'previews', 'awaken-v5-cut.json')] if cid == 'awaken' else [])
+    wrote = []
+    for p in paths:
+        if not os.path.exists(p): continue
+        d = load(p)
+        for s in (d['shots'] if 'shots' in d else [d]):
+            if s.get('id') != cid: continue
+            if mine: s['sonar'] = copy.deepcopy(mine)
+            else: s.pop('sonar', None)
+        if dump(p, d): wrote.append(os.path.relpath(p, H))
+    return wrote
+
+
 def clean_branding(b):
     """Director Mode's branding overlay (experience/branding-edits.mjs cleanBranding): {room, artwork:{version, surfaces}}; None if not one."""
     if not isinstance(b, dict) or not isinstance(b.get('room'), str) or not re.fullmatch(r'[a-z0-9-]{1,40}', b['room']): return None
@@ -844,6 +891,9 @@ def run_pass_chapters():
         if os.path.exists(p) and 'screenLook' in load(p):
             w = apply_screen_look(cid, f, load(p)['screenLook'])
             print(f'ch{n:02d} {cid}: Director screen look -> {", ".join(w) or "no change"}')
+        if os.path.exists(p) and 'sonar' in load(p):
+            w = apply_sonar(cid, f, load(p)['sonar'])
+            print(f'ch{n:02d} {cid}: Director sonar -> {", ".join(w) or "no change"}')
         if os.path.exists(p) and isinstance(load(p).get('look'), str) and LOOK.fullmatch(load(p)['look']):
             w = apply_look(cid, f, load(p)['look'])
             print(f'ch{n:02d} {cid}: Director room look {load(p)["look"]} -> {", ".join(w) or "no change"}')
@@ -1147,6 +1197,9 @@ def run_import(export):
     # Screen look (Graphics tab): the export's ({} = he reset it, kept so the pass removes the film's); without the field, the earlier import's.
     if isinstance(shot.get('screenLook'), dict): dc['screenLook'] = clean_screen_look(shot['screenLook'])
     elif 'screenLook' in before: dc['screenLook'] = before['screenLook']
+    # Sonar (Graphics tab, a proximity chapter's): the export's ({} = he put it back to the film's, kept so the pass removes the film's); without the field, the earlier import's.
+    if isinstance(shot.get('sonar'), dict): dc['sonar'] = clean_sonar(shot['sonar'])
+    elif 'sonar' in before: dc['sonar'] = before['sonar']
     # Desks (the room's other ErgoFlex desks): the export's list ([] = he reset them all); an export without the field keeps the earlier import's.
     if isinstance(shot.get('deskEdits'), list): dc['desks'] = clean_desks(shot['deskEdits'])
     elif 'desks' in before: dc['desks'] = before['desks']
