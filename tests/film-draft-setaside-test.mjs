@@ -9,7 +9,7 @@
 //   4. Keep: the offered draft comes back; what the editor had is set aside in its turn (nothing lost)
 //   5. Use the film's version asks again; Back keeps it; Delete deletes only that one; Decide later keeps it
 //   6. a draft newer than the film loads; "Use the film's version" then sets it aside (never deletes)
-//   7. two chapters keep their own set-aside drafts; Export cut clears the slot, never a set-aside draft
+//   7. two chapters keep their own set-aside drafts; Export cut keeps the slot (until the film has it), never drops a set-aside draft
 //   8. a set-aside draft the film's version already has is dropped (nothing to lose); a draft never written over when
 //      the storage is full (hold)
 //   node tests/film-draft-setaside-test.mjs
@@ -88,7 +88,7 @@ assert.deepEqual(aside('coast').map(d=>key2(d.cut)),[.14],'7. coast\'s draft is 
 assert.deepEqual(aside('rise').map(d=>key2(d.cut)),[.02],'7. rise\'s is still rise\'s');
 assert.ok(Object.keys(read(SET_ASIDE)).every(k=>k===id.rise||k===id.coast)&&id.rise!==id.coast,'7. keyed per cut and chapter: '+Object.keys(read(SET_ASIDE)).join(', '));
 c.edit(.145);c.f.exported(c.project);
-assert.equal(slot('coast'),null,'7. Export cut clears the chapter\'s slot');assert.equal(aside('coast').length,1,'7. never a set-aside draft');
+assert.equal(key2(slot('coast').cut),.145,'7. Export cut keeps the chapter\'s draft (the exported cut) until the film has it (film-export-confirm-test)');assert.equal(aside('coast').length,1,'7. never a set-aside draft');
 assert.match(c.f.noticeHTML(),/set aside/,'7. still offered after the export');
 // 8. one the film already has is dropped; storage full: nothing written over
 store.set(SET_ASIDE,JSON.stringify({...read(SET_ASIDE),[id.coast]:[...aside('coast'),{key:'same',cut:structuredClone(FILM.coast),at:OLD,asideAt:OLD}]}));
