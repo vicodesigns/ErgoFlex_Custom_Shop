@@ -178,6 +178,14 @@ export const LOOK_YAW = .7, LOOK_PITCH = .42;      // radians the neck and head 
 // Turns the neck (.4) and the head (.6) so that the face points `amount` of the way to `target` (a point in the
 // model's frame), within LOOK_YAW / LOOK_PITCH of where the posture has it looking: small turns, never a broken neck.
 // fk() must be current; it is current afterwards.
+// Carrying something held in another posture (room-people.mjs `carry`): the arms, collarbones to fingertips, as that
+// posture's key has them, the rest of the body as solved, so the hands stay on it (Kai's controller as he gets up,
+// walks and stands, 19 Nov 2026). Relative to the chest, so they go where the body goes. fk() after.
+export function holdArms(rig, key) {
+    if (!key) return;
+    for (const s of ['l', 'r']) for (const i of [...rig.side[s].arm, ...rig.side[s].fingers]) if (i >= 0 && key.q[i]) rig.lq[i].copy(key.q[i]);
+    rig.fk();
+}
 export function lookToward(rig, target, amount, pitchOnly = false) {
     if (!target || !(amount > 0)) return;
     const b = rig.b, face = faceOf(rig), from = v7.copy(rig.wp[b.head]); from.y += .07;      // (the eyes: a little above the head bone)

@@ -31,6 +31,10 @@ import { mediaPersonMaterial, castDetailEnsure, castDetailCast, castDetailVarian
 //   scale: n                                          a factor on the model's size (any placement; 1 = as built)
 //   colors: { top, bottom, shoes, hair: '#rrggbb' }   recolours those parts of the model (the fabric's shading is kept)
 //   postures: { '<model id>': {pose, poseKeys} }      corrections per model, independent of model selection
+//   carry: { from: '<model id>' }                    what that model holds (its 'Held.' parts, Kai's controller) is held
+//                                                    in this one too, same hand, same grip, the arms as that model's
+//                                                    posture has them: through a change of posture, a walk and the
+//                                                    stand after it (held offsets: postures[thisModel].held)
 //   pose: { '<bone>': [x, y, z, w] }                  fine tuning: turns that bone of the model's skeleton from the pose it
 //                                                     was built in (a quaternion in the bone's own frame; the Director's
 //                                                     pose mode writes these). Only such a person is drawn skinned.
@@ -85,7 +89,7 @@ import {updateSkinnedBounds} from './skinned-bounds.mjs';
 import {poseAt} from './people-pose-keys.mjs';
 import {applyHeld} from './people-held.mjs';
 import {postureRecord,postureRecords,hasPosturePose,poseOwner,sourceOf,roomEditKey,blendPosturePoses} from './people-postures.mjs';
-import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, shoeFit, solveWalk, lookToward, solveTread, rollPlan, reachAt, actedKey, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=people-motion-20261117';
+import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=people-motion-20261117';
 // Room looks (room-looks.mjs): the Nov 17 pass's cast finishes (own materials, hair / shirt maps) are the refreshed Create
 // room's and the Commons'; Create's Classic look keeps the cast as it was, and its people move as they did then
 // (rig.classicMotion: room-people-motion.mjs's painting, pottery and page-turn strokes from before the pass).
@@ -1347,10 +1351,29 @@ export class RoomPeople {
             else this.shareCastDetail(rigged);
             object.parent?.add(rigged); object.removeFromParent(); this.people[at] = rigged;
             const now = this.current(rigged) || spec; this.resize(rigged, now); this.recolor(rigged, now); this.pose(rigged, now);
+            if (spec.carry) await this.carryHeld(rigged, spec);
             this.room.onPersonModel?.(rigged, object);
             return rigged;
         })();
     }
+    // `carry`: the held parts of another model of theirs (spec.carry.from) on this one, bound to its bones by name (one
+    // character, one skeleton) with their own bind data, so they sit in this hand exactly as they did in that one; a
+    // held offset (postures[id].held, people-held.mjs) then moves them as it moves a model's own.
+    async carryHeld(rigged, spec) {
+        const from = spec.carry?.from; if (typeof from !== 'string' || from === spec.id || rigged.userData.personCarry) return;
+        const source = await this.library.rigInstance?.(from).catch(() => null), bones = rigged.userData.personRig?.bones; if (!source || !bones) return;
+        const parts = []; source.traverse(o => { if (o.isSkinnedMesh && [].concat(o.material).some(m => /^Held\./.test(m?.name || ''))) parts.push(o); });
+        let n = 0;
+        for (const part of parts) {
+            const mapped = part.skeleton.bones.map(b => bones.get(b.name)); if (mapped.some(b => !b)) continue;
+            const mesh = new THREE.SkinnedMesh(part.geometry, part.material); mesh.name = part.name; mesh.castShadow = part.castShadow; mesh.receiveShadow = part.receiveShadow;
+            mesh.bind(new THREE.Skeleton(mapped, part.skeleton.boneInverses.map(m => m.clone())), part.bindMatrix.clone());
+            mesh.frustumCulled = false; mesh.userData.personCarried = from; mesh.userData.sharedProp = true; rigged.add(mesh); n++;
+        }
+        rigged.userData.personCarry = { from, parts: n };
+    }
+    // The arms of someone carrying (`carry`): as the model they carry from has them, on the solver's rig.
+    carryArms(rig, spec) { const from = spec?.carry?.from; if (typeof from === 'string' && rig?.has?.(from)) holdArms(rig, rig.key(from)); }
     // spec.pose on the skeleton: every bone at the pose the model was built in, turned by its entry.
     pose(object, spec) {
         const rig = object.userData.personRig; if (!rig) return;
@@ -2337,6 +2360,7 @@ export class RoomPeople {
             }
             const { model } = solveChange(pair.rig, pair.keyFrom, pair.keyTo, w, part('arms'), shift, plan?.hands === 'line'), cut = Number.isFinite(pair.to?.swap) ? THREE.MathUtils.clamp(pair.to.swap, .02, .98) : null;
             const shown = (cut === null ? model === 'from' : w < cut) ? a : b;
+            if (pair.to?.carry) this.carryArms(pair.rig, pair.to);   // (carrying: the hands stay on it all through the change)
             shown.position.lerpVectors(pair.homeFrom.position, pair.homeTo.position, ease); shown.rotation.y = pair.homeFrom.turn + (pair.homeTo.turn - pair.homeFrom.turn) * ease;
             drawPose(pair.rig, shown.userData.personRig, 0, poseNow(shown.userData.person), typeof window !== 'undefined' && !!window.__directorDragging);   // (hold: the Director's pose mode drags a bone of someone in the middle of a change)
             if (shown === a && pair.wheels) turnWheels(shown.userData.personRig, pair.wheels);
@@ -2519,6 +2543,7 @@ export class RoomPeople {
         if (!life.plan) return;
         if (life.endSign !== life.walkSign) { life.endSign = life.walkSign; life.endTurn = time !== null ? this.walkEndTurn(object, life, walk) : null; }
         const g = life.plan.at(time === null ? 0 : Math.max(0, time - (walk.start || 0))), root = solveWalk(life.rig, life.plan, g);
+        this.carryArms(life.rig, object.userData.person);   // (carrying: no arm swing, the hands on what they carry)
         drawPose(life.rig, object.userData.personRig, 0, poseNow(object.userData.person), hold);
         // (handing over to the same person standing where the path ends: they turn to face the way that placement does
         // as they arrive, not in one frame as the next one takes over)
