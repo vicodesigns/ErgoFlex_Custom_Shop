@@ -1,0 +1,18 @@
+# The Director's Export cut, imported into the film (tools/experience/director-import-watch.py). A user service, like the
+# render-request bridge. Install (Vico's say): cp this to ~/.config/systemd/user/, then
+#   systemctl --user daemon-reload && systemctl --user enable --now ergoflex-director-import.service
+# --baseline-existing: exports already in Downloads when it first starts are taken as done (import a missed one by hand:
+#   tools/experience/director-import-watch.py --once after moving the others aside, or build-round8-director.py --import).
+[Unit]
+Description=ErgoFlex Director: import Export cut files from Downloads into the film cut
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/ergo/ErgoFlex_Custom_Shop
+ExecStart=/usr/bin/python3 /home/ergo/ErgoFlex_Custom_Shop/tools/experience/director-import-watch.py --baseline-existing
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

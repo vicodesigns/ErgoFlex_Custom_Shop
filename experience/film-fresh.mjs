@@ -145,7 +145,7 @@ export function createFilmFresh(film,project,hooks){
   }
   function noteDraft(cut,unexported){
     if(hold)return;                                                            // (a draft that could not be set aside is not written over)
-    if(!unexported){if(wrote){forget();wrote=false;}return;}   // only a draft this tab wrote (an offered one stays until he picks)
+    if(!unexported){if(unconfirmed)return;if(wrote){forget();wrote=false;}return;}   // (an export the film has not confirmed keeps its draft)   // only a draft this tab wrote (an offered one stays until he picks)
     wrote=true;
     const all=readDrafts(hooks.storage),prev=belongs(all[draftKey])?all[draftKey]:(belongs(all[id])?all[id]:null),c=structuredClone(cut),edited=(()=>{try{return JSON.stringify(cleanCut(prev.cut,hooks.catalog).shots)!==JSON.stringify(cleanCut(c,hooks.catalog).shots);}catch{return true;}})();
     all[draftKey]={cut:c,at:edited?new Date().toISOString():prev.at,base:base.version};if(belongs(all[id]))delete all[id];writeDrafts(hooks.storage,all);
@@ -204,7 +204,42 @@ export function createFilmFresh(film,project,hooks){
     if(!offer)return;
     if(which==='draft')keepOffer();else{asking=true;prompt();}
   }
-  function exported(cut){base={...base,cut:structuredClone(cut)};exportedAt=new Date().toISOString();forget();wrote=false;if(notice?.draft||notice?.offer){notice=offer?{text:'',offer,using:'film'}:null;hooks.render();}}
+  // Export cut only downloads a file; the film takes it in with an importer (tools/experience/director-import-watch.py),
+  // which records each export it imported, by the file's sha256, in <cut>/director-exports/imports.json. The chapter's
+  // draft stays in this browser until that record says the film has it (19 Nov 2026: no importer was running, Vico's
+  // Create export never reached the film, and this used to forget his draft at once; a reload showed the old version).
+  // Confirmed: the draft goes (unless he edited since). Failed, or nothing after IMPORT_WAIT: it stays and he is told.
+  let unconfirmed=false,pending=null;
+  const IMPORT_POLL=hooks.importPoll??3000,IMPORT_WAIT=hooks.importWait??10*60000;
+  const importsUrl=()=>{try{return new URL('director-exports/imports.json',new URL(film.film,location.href)).href;}catch{return null;}};
+  async function sha256(text){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');}
+  function exported(cut,text=null){
+    base={...base,cut:structuredClone(cut)};exportedAt=new Date().toISOString();
+    if(notice?.draft||notice?.offer)notice=offer?{text:'',offer,using:'film'}:null;
+    // the chapter's draft is the exported cut until the film confirms it (written now: the editor's own draft write may
+    // still be waiting for its 250 ms)
+    if(!hold){const all=readDrafts(hooks.storage);all[draftKey]={cut:structuredClone(cut),at:exportedAt,base:base.version};if(belongs(all[id]))delete all[id];writeDrafts(hooks.storage,all);wrote=true;}
+    unconfirmed=true;hooks.render();
+    return watchImport(text);
+  }
+  async function watchImport(text){
+    if(pending)clearTimeout(pending.timer);pending=null;
+    const url=importsUrl(),at=exportedAt,say=(t,error=false)=>{notice={...(notice||{}),text:t};hooks.render();if(error)hooks.status(t,true);};
+    if(!text||!url||!globalThis.crypto?.subtle){say(`Exported at ${clock(at)}. Your changes stay in this browser until the film has them.`);return;}
+    const sha=await sha256(text),until=Date.now()+IMPORT_WAIT,mine={sha,at,timer:0};pending=mine;
+    say(`Exported at ${clock(at)}: waiting for the film to take it in. Your changes stay in this browser until it has.`);
+    const look=async()=>{
+      if(pending!==mine)return;
+      let rec=null;try{const r=await fetch(url,{cache:'no-store'});if(r.ok)rec=(await r.json())?.[sha]||null;}catch{}
+      if(pending!==mine)return;
+      if(rec?.ok){pending=null;unconfirmed=false;if(!hooks.current?.().unexported){forget();wrote=false;}say(`The film has your export from ${clock(at)}.`);hooks.status(`The film has taken in your export from ${clock(at)}.`);return;}
+      if(rec){pending=null;say(`The film could not take in your export from ${clock(at)}: ${rec.error||'the import failed'}. Your changes stay in this browser.`,true);return;}
+      if(Date.now()>until){pending=null;say(`The film has not taken in your export from ${clock(at)} (is the Director import watcher running?). Your changes stay in this browser: export again once it is.`,true);return;}
+      mine.timer=setTimeout(look,IMPORT_POLL);
+    };
+    mine.timer=setTimeout(look,IMPORT_POLL);
+    return sha;
+  }
   function adopt(now,cut){base={cut:structuredClone(cut||base.cut),version:now.stamp.version};if(cut)filmCut=structuredClone(cut);if(now.enc)history.replaceState(history.state,'',withCut(location.hash,now.enc));}
   // Export cut from a tab the film has moved past: true when the warning took over (Export anyway / Load the latest).
   async function guardExport(cut,dirty,exportAnyway){
@@ -227,5 +262,5 @@ export function createFilmFresh(film,project,hooks){
     dialog.showModal();dialog.querySelector('[data-stale=latest]').focus();
     return true;
   }
-  return {on,initialDraft,noteDraft,noticeHTML,choose,exported,guardExport,prompt,offered:()=>offer};
+  return {on,initialDraft,noteDraft,noticeHTML,choose,exported,guardExport,prompt,offered:()=>offer,importPending:()=>!!pending,unconfirmed:()=>unconfirmed};
 }
