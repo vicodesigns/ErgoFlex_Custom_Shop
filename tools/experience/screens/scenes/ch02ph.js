@@ -86,6 +86,7 @@
   }
 
   SCENES.ch02ph = {
+    prefetch(t) { const o = (SHOT.clip && SHOT.clip.opts) || {}; return o.stretch ? window.stretchPrefetch(t, o.stretch) : []; },
     draw(t, o = {}) {
       if (o.ck) CK = o.ck;
       g.fillStyle = '#000'; g.fillRect(0, 0, W, H);
@@ -126,6 +127,8 @@
           const ca = 1 - sm(seg(t, T_LOCK - .05, T_LOCK + .4));
           const s = lerp(1, .8, eo(seg(t, T_LOCK - .05, T_LOCK + .4)));
           charging(t, ca, W / 2, lerp(H * .47, H * .40, eo(seg(t, T_LOCK - .05, T_LOCK + .4))), s);
+          // the Overhead Triceps Stretch push (3rd cuts)
+          if (o.stretch) window.stretchPush(t, o.stretch, d);
           // the island
           fillR(W / 2 - 130, d.y + 44, 260, 76, 38, '#000');
         });

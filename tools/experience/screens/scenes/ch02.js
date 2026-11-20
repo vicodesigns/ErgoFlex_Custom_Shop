@@ -34,6 +34,7 @@
     circle(x - 90 * s, y + 14 * s, 14 * s, hexA(col, .8)); circle(x + 90 * s, y + 14 * s, 14 * s, hexA(col, .8));
   }
   SCENES.ch02p = {
+    prefetch(t) { return O.stretch ? window.stretchPrefetch(t, O.stretch) : []; },
     draw(t) {
       backdrop(t, {top: '#0b1424', bot: '#05080f', blobs: [[C.blue, .2], [C.teal, .08]]});
       statusBar(t, clock(t), {h: 72});
@@ -127,7 +128,7 @@
         }
       });
       // D: celebration once standing is reached (round 11: after full height)
-      const c0 = UP2 ? E2 + .1 : E1 + .1, c1 = UP2 ? E2 + 3 : L2.start - .3, cA = win(t, c0, c1, .5);
+      const c0 = UP2 ? E2 + .1 : E1 + .1, c1 = UP2 ? E2 + 3 : Math.min(L2.start - .3, c0 + 1.9), cA = win(t, c0, c1, .5);
       alpha(cA, () => {
         g.fillStyle = 'rgba(3,6,12,0.55)'; g.fillRect(0, 0, W, H);
         const k = back(seg(t, c0, c0 + .6));
@@ -141,6 +142,7 @@
         });
       });
       confetti(t, c0 + .05, W / 2, 840, 90, 620);
+      if (O.stretch) window.stretchCard(t, 40, 1065, W - 80, 770, O.stretch);   // Nov 20: the Overhead Triceps Stretch card (3rd cuts)
       vignette(.35);
     },
   };
