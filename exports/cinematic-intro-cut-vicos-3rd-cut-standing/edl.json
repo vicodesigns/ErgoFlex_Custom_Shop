@@ -1,7 +1,7 @@
 {
  "fps": 30,
  "dissolve": 1.5,
- "total": 250.828,
+ "total": 254.328,
  "chapters": [
   {
    "index": 1,
@@ -48,44 +48,44 @@
   {
    "index": 7,
    "id": "wellness",
-   "duration": 16,
+   "duration": 19.5,
    "start": 128.35,
-   "end": 144.35
+   "end": 147.85
   },
   {
    "index": 8,
    "id": "awareness",
    "duration": 12,
-   "start": 142.85,
-   "end": 154.85
+   "start": 146.35,
+   "end": 158.35
   },
   {
    "index": 9,
    "id": "music",
    "duration": 12.5,
-   "start": 153.35,
-   "end": 165.85
+   "start": 156.85,
+   "end": 169.35
   },
   {
    "index": 10,
    "id": "media",
    "duration": 17,
-   "start": 164.35,
-   "end": 181.35
+   "start": 167.85,
+   "end": 184.85
   },
   {
    "index": 11,
    "id": "storage",
    "duration": 24.978,
-   "start": 179.85,
-   "end": 204.828
+   "start": 183.35,
+   "end": 208.328
   },
   {
    "index": 12,
    "id": "hero",
    "duration": 47.5,
-   "start": 203.328,
-   "end": 250.828
+   "start": 206.828,
+   "end": 254.328
   }
  ],
  "beats": [
@@ -98,11 +98,11 @@
    "what": "awaken title B: Make Room For Possibility"
   },
   {
-   "at": 244.868,
+   "at": 248.368,
    "what": "end card: ErgoFlex wordmark"
   },
   {
-   "at": 250.828,
+   "at": 254.328,
    "what": "cut to black / onboarding"
   }
  ],

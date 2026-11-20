@@ -58,6 +58,13 @@ const CINE = [
   cine('wellness', 7, {id: 'cine-wellness-main', target: 'main-landscape', role: 'Maya: report -> time to move -> the stretch + height -> standing', w: 1920, h: 1080, scene: 'c07l',
     opts: {...WELLNESS_BEATS, name: 'Maya'}, videos: [{key: 'shoulder', src: 'app-reference/demo_media/seated_scapular_squeeze_01_demo.mp4', t: 17, scale: '1280:-2'}]}),
   cine('wellness', 7, {id: 'cine-wellness-tablet', target: 'tablet', role: 'focus -> breathing with the stretch -> nice reset', w: 1620, h: 1080, scene: 'c07t', opts: {...WELLNESS_BEATS, name: 'Maya'}}),
+  // Nov 20 2026, Vico's 3rd cuts (chapter 7, 19.5 s): Desk Squats instead of the shoulder squeeze (opts.squats; the film's act: at 10.2 s, 5.2 s, 3 reps)
+  ...[['b', 'exports/cinematic-intro-cut-vicos-3rd-cut/screens'], ['a', 'exports/cinematic-intro-cut-vicos-3rd-cut-standing/screens']].flatMap(([v, out]) => {
+    const opts = {nudge: 3.0, stretch: 9.7, stretchEnd: 15.6, breatheEnd: 15.9, reset: 16.5, name: 'Maya', squats: {at: 10.2, dur: 5.2, reps: 3}}, videos = [{key: 'squat', src: 'app-reference/demo_media/desk_squats_01_demo.mp4', t: 17, scale: '1280:-2'}];
+    return [
+      {chapter: 7, shot: 'wellness', out, id: 'cine3' + v + '-wellness-main', target: 'main-landscape', role: 'Maya: report -> time to move -> Desk Squats + height -> standing', w: 1920, h: 1080, scene: 'c07l', opts, videos},
+      {chapter: 7, shot: 'wellness', out, id: 'cine3' + v + '-wellness-tablet', target: 'tablet', role: 'focus -> Desk Squats card -> great job', w: 1620, h: 1080, scene: 'c07t', opts, videos}];
+  }),
   cine('awareness', 8, {id: 'cine-awareness-main', target: 'main-landscape', role: 'radar on the roll of the cut: the pet, stopped short', w: 1920, h: 800, scene: 'c08', opts: {gap: 16, label: 'Pet'}}),
   // coast (written LAST: COAST_PERSON is S4's decision of who uses the featured suite; Maya is at the centre bay)
   cine('coast', 5, {id: 'cine-coast-main', target: 'main-landscape', role: 'the featured suite: sign-in, height, colour, export', w: 1920, h: 1120, scene: 'c05m', opts: {name: COAST_PERSON, sign: -1}}),

@@ -1,6 +1,6 @@
 {
  "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-2nd-cut/director-exports/export-e55ae3a99c2b-Film-chapter-wellness-16-s-__8_.json",
- "seconds": 16.0,
+ "seconds": 19.5,
  "keys": [
   {
    "at": 0.0,
@@ -63,7 +63,22 @@
    "label": "The column and desktop climb beside her"
   },
   {
-   "at": 16,
+   "at": 14.5,
+   "position": [
+    1.85,
+    1.55,
+    -1.8
+   ],
+   "target": [
+    -0.95,
+    1.62,
+    0.62
+   ],
+   "fov": 41,
+   "label": "Desk Squats: the view holds on her"
+  },
+  {
+   "at": 19.5,
    "position": [
     1.65,
     1.55,
@@ -274,17 +289,23 @@
    },
    {
     "key": "maya-break",
-    "id": "people-maya-stretch",
+    "id": "people-maya-stand-type",
     "fromDesk": true,
     "at": [
      -421,
      85
     ],
-    "turn": 180,
+    "turn": 0,
     "colors": {
      "top": "#2d7d8a",
      "bottom": "#1f2228",
      "shoes": "#ececec"
+    },
+    "act": {
+     "kind": "squat",
+     "at": 10.2,
+     "dur": 5.2,
+     "reps": 3
     }
    },
    {
@@ -318,7 +339,7 @@
    "maya-break": [
     [
      9.7,
-     12.3,
+     15.8,
      0.3,
      0.35
     ]
