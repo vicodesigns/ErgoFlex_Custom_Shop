@@ -177,16 +177,19 @@ def directions(clips, initial):
 
 
 def start_pose(initial, mine, log):
-    """The Chapter tab's Starting position (Director's motion.initial height / tilt) over the film's start pose; its
-    wheels start (x, z, yaw) is kept. Clips are untouched: each still runs from the pose before it to its target."""
+    """The Chapter tab's Starting position (Director's motion.initial height / tilt, and the wheels start x / z / yaw
+    where the import has them: only those he changed from the film's) over the film's start pose. Clips are untouched:
+    each still runs from the pose before it to its target."""
     out = dict(initial)
-    for k, lo, hi in (('height', 28, 52.5), ('tilt', -5, 65)):
+    for k, lo, hi in (('height', 28, 52.5), ('tilt', -5, 65), ('x', -240, 240), ('z', -240, 240), ('yaw', -3600, 3600)):
         v = mine.get(k)
         if isinstance(v, (int, float)) and not isinstance(v, bool): out[k] = round(min(hi, max(lo, float(v))), 3)
-    for k in ('height', 'tilt'):
+    for k in ('height', 'tilt', 'x', 'z', 'yaw'):
         if isinstance(out.get(k), float) and out[k] == int(out[k]): out[k] = int(out[k])
     if (out.get('height'), out.get('tilt')) != (initial.get('height'), initial.get('tilt')):
         log(f'    starting position {initial.get("height")}" / {initial.get("tilt")} deg -> {out["height"]}" / {out["tilt"]} deg')
+    for k in ('x', 'z', 'yaw'):
+        if out.get(k, 0) != initial.get(k, 0): log(f'    starting {k} {initial.get(k, 0)} -> {out[k]}')
     return out
 
 
@@ -1109,9 +1112,17 @@ def run_import(export):
     for k in GLOBAL_FIELDS:
         if k in (shot.get('sceneGlobals') or {}): lighting[k] = shot['sceneGlobals'][k]
     dc = load(director_file(cid))
-    # Starting position (Chapter tab): the export's motion.initial height / tilt; an export without motion keeps the earlier import's.
+    # Starting position (Chapter tab): the export's motion.initial height / tilt, and its wheels start (x, z, yaw: the Rotate
+    # row) where it differs from the film's (a copy of the film's own is not kept, so a builder's later placement wins);
+    # an export without motion keeps the earlier import's.
     start = (shot.get('motion') or {}).get('initial')
-    if isinstance(start, dict) and any(k in start for k in ('height', 'tilt')): dc['initial'] = {k: start[k] for k in ('height', 'tilt') if k in start}
+    if isinstance(start, dict) and any(k in start for k in ('height', 'tilt')):
+        dc['initial'] = {k: start[k] for k in ('height', 'tilt') if k in start}
+        film_shot = load(f) if f else next((s for s in load(CUT)['shots'] if s.get('id') == cid), {})
+        film_init = (film_shot.get('motion') or {}).get('initial') or {}
+        for k in ('x', 'z', 'yaw'):
+            v = start.get(k)
+            if isinstance(v, (int, float)) and not isinstance(v, bool) and abs(float(v) - float(film_init.get(k) or 0)) > 1e-6: dc['initial'][k] = v
     elif 'initial' in before: dc['initial'] = before['initial']
     if lighting: dc['lighting'] = lighting
     else: dc.pop('lighting', None)

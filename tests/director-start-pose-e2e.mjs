@@ -4,7 +4,8 @@
 // first lift (4.4 s, down to 38") leaves the new start without a jump and still reaches its target; each click is
 // one undo step, a slider drag is one undo step; Export cut carries it; build-round8-director --import + the pass (in
 // a temp copy of the hq dir) write it into review-cut.json, the chapter's shots/NN.json and director-camera-coast.json,
-// keeping the film's x / z / yaw and every clip.
+// keeping the film's x / z and every clip. Rotate (19 Nov 2026): the desk's starting yaw, a slider drag one undo step,
+// carried by Export cut and written into the film's motion.initial.yaw by the import.
 //   (Retargeted from hero on 18 Nov 2026: hero now starts at Max height / Max tilt already and its finale swaps desks,
 //   so neither the buttons' change nor the stage's featured desk could be measured there.)
 //
@@ -89,11 +90,22 @@ try{
   await click('#director-appbar [data-action=undo]');d=await draftShot();check(d.motion.initial.height===52.5&&d.motion.initial.tilt===65,'one Undo takes back the whole slider drag');
   await seek(page,0);const s2=await stage();check(near(s2.height,52.5)&&near(s2.tilt,65),`stage back at 52.5″ / 65° (${s2.height.toFixed(2)} / ${s2.tilt.toFixed(2)})`);
 
+  // ---- Rotate: the desk's starting yaw (a drag is one undo step), into the chapter's motion.initial
+  const yawRange=await page.$eval('#director-panel [name="start-yaw"]',e=>[e.min,e.max,e.step]).catch(()=>null);
+  check(yawRange?.join()==='-180,180,1','Rotate row: slider −180…180°, step 1'+(yawRange?'':' (missing)'));
+  const yaw0=(await draftShot()).motion.initial.yaw??0,Y=yaw0>=0&&yaw0<135?yaw0+45:yaw0-45;
+  await page.evaluate(async y=>{const el=document.querySelector('#director-panel [name="start-yaw"]');el.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true}));for(const v of [y-30,y-15,y]){el.value=String(v);el.dispatchEvent(new Event('input',{bubbles:true}));await new Promise(r=>setTimeout(r,80));}el.dispatchEvent(new Event('change',{bubbles:true}));},Y);
+  await wait(600);d=await draftShot();
+  check(d.motion.initial.yaw===Y&&d.motion.initial.height===52.5&&d.motion.initial.tilt===65,`Rotate drag to ${Y}° (from ${yaw0}°) keeps 52.5″ / 65°: ${JSON.stringify(d.motion.initial)}`);
+  check(new RegExp(`· ${Y<0?'−':''}${Math.abs(Y)}°$`).test(await page.$eval('#director-panel [data-start-map-readout]',e=>e.textContent.trim())),'the readout shows the rotation');
+  check(/Starting rotation: /.test(await status()),'status: '+await status());
+  await click('#director-appbar [data-action=undo]');d=await draftShot();check((d.motion.initial.yaw??0)===yaw0,'one Undo takes back the whole Rotate drag');
+  await click('#director-appbar [data-action=redo]');d=await draftShot();check(d.motion.initial.yaw===Y,'Redo brings it back');
   // ---- Export cut -> --import + pass (temp hq copy): review-cut, shots/13.json and every sub-shot
   await page.evaluate(()=>document.querySelector('#director-appbar [data-action=save-export]').click());
   const file=await until(()=>fs.readdirSync(downloads).find(f=>f.endsWith('.json')&&!f.endsWith('.crdownload')),'export download');
   const exported=JSON.parse(fs.readFileSync(path.join(downloads,file),'utf8')),es=exported.shots[0];
-  check(es.motion?.initial?.height===52.5&&es.motion.initial.tilt===65,'Export cut carries motion.initial 52.5 / 65');
+  check(es.motion?.initial?.height===52.5&&es.motion.initial.tilt===65&&es.motion.initial.yaw===Y,`Export cut carries motion.initial 52.5 / 65 / yaw ${Y}`);
   const H=path.join(tmp,'hq');fs.mkdirSync(path.join(H,'shots'),{recursive:true});
   fs.copyFileSync(path.join(root,HQ,'review-cut.json'),path.join(H,'review-cut.json'));
   let shotFile=null;for(const f of fs.readdirSync(path.join(root,HQ,'shots')))if(/^\d\d\.json$/.test(f)&&JSON.parse(fs.readFileSync(path.join(root,HQ,'shots',f),'utf8')).id===ID){shotFile=f;fs.copyFileSync(path.join(root,HQ,'shots',f),path.join(H,'shots',f));}
@@ -103,10 +115,11 @@ try{
   const tool=path.join(root,'tools/experience/build-round8-director.py');
   execFileSync('python3',[tool,H,'--import',ex],{stdio:'ignore'});const log=execFileSync('python3',[tool,H],{encoding:'utf8'});
   check(log.includes(`starting position ${old.initial.height}" / ${old.initial.tilt} deg -> 52.5" / 65 deg`),`the pass logs the new starting position (${old.initial.height}" / ${old.initial.tilt} deg -> 52.5" / 65 deg)`);
-  check(read(`director-camera-${ID}.json`).initial?.height===52.5,`director-camera-${ID}.json keeps initial {height: 52.5, tilt: 65}`);
-  const same=(a,b)=>a.x===b.x&&a.z===b.z&&a.yaw===b.yaw;
+  check(read(`director-camera-${ID}.json`).initial?.height===52.5&&read(`director-camera-${ID}.json`).initial?.yaw===Y,`director-camera-${ID}.json keeps initial {height: 52.5, tilt: 65, yaw: ${Y}} (x / z left out: the film's)`);
+  check(log.includes(`starting yaw ${old.initial.yaw??0} -> ${Y}`),'the pass logs the new starting yaw');
+  const same=(a,b)=>a.x===b.x&&a.z===b.z;
   const rc=read('review-cut.json').shots.find(s=>s.id===ID).motion;
-  check(rc.initial.height===52.5&&rc.initial.tilt===65&&same(rc.initial,old.initial),`review-cut.json ${ID} motion.initial ${JSON.stringify(rc.initial)}`);
+  check(rc.initial.height===52.5&&rc.initial.tilt===65&&rc.initial.yaw===Y&&same(rc.initial,old.initial),`review-cut.json ${ID} motion.initial ${JSON.stringify(rc.initial)} (yaw ${Y}, the film's x / z)`);
   check(JSON.stringify(rc.clips.map(c=>[c.id,c.target,c.start,c.duration]))===JSON.stringify(old.clips.map(c=>[c.id,c.target,c.start,c.duration])),`review-cut.json ${ID} clips unchanged (ids, targets, timing)`);
   if(shotFile){const sh=read('shots/'+shotFile).motion;check(sh.initial.height===52.5&&sh.initial.tilt===65,`shots/${shotFile} motion.initial ${sh.initial.height} / ${sh.initial.tilt}`);}
   check(!fs.readdirSync(path.join(os.homedir(),'Downloads')).some(f=>new RegExp('^Film-chapter-'+ID).test(f)&&fs.statSync(path.join(os.homedir(),'Downloads',f)).mtimeMs>Date.now()-600000),'nothing written to ~/Downloads');

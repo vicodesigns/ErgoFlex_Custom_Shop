@@ -1,4 +1,5 @@
-// Chapter tab: "Starting position" — the desk's height and tilt at 0 s (the chapter's motion.initial).
+// Chapter tab: "Starting position" — the desk's height and tilt at 0 s (the chapter's motion.initial), and where its
+// wheels stand: X, Z and Rotate (yaw, degrees; the wheels lane's Turn clips run on from it, desk-clips.mjs).
 // Clamped to the real desk: 28–52.5″ for both desk widths, −5° to 65°, and the app's lift/tilt clearance
 // (motion-limits.mjs: full 65° needs 40.5″ on the 48″ desk, 42.5″ on the 60″; at 28″ the most is 39°).
 // A tilt that needs more clearance raises the desk, a height too low for the tilt lowers the tilt, as in the app.
@@ -32,7 +33,7 @@ export function startPoseTarget(name,current,size,{at}={}){
   if(name==='flat')return clampStartPose({...current,tilt:0},size,'tilt');
   if(name==='max-tilt')return clampStartPose({...current,tilt:L.tiltMax},size,'tilt');
   if(START_PRESETS[name])return clampStartPose(START_PRESETS[name],size,'height');
-  if(name==='current'&&at)return clampStartPose(at,size,'height');
+  if(name==='current'&&at)return {...clampStartPose(at,size,'height'),...(Number.isFinite(at.yaw)?{yaw:Math.round(at.yaw*10)/10}:{})};   // (and the way it faces then)
   return null;
 }
 
@@ -45,20 +46,25 @@ export function createStartPose({panel,shot,motion,time,seek,commit,status,ready
     return `${size()==='48x30'?'48″':'60″'} desk: ${L.heightMin}–${L.heightMax}″ · ${deg(L.tiltMin)} to ${deg(L.tiltMax)}. Full ${deg(L.tiltMax)} needs ${L.fullTiltHeight}″ or more; at ${L.heightMin}″ the most is ${deg(L.lowTiltMax)}.`;
   }
   function show(p){
-    for(const [n,v] of [['start-height',p.height],['start-height-n',p.height],['start-tilt',p.tilt],['start-tilt-n',p.tilt],['start-x',p.x],['start-x-n',p.x],['start-z',p.z],['start-z-n',p.z]]){const el=field(n);if(el&&document.activeElement!==el)el.value=String(v);}
+    for(const [n,v] of [['start-height',p.height],['start-height-n',p.height],['start-tilt',p.tilt],['start-tilt-n',p.tilt],['start-x',p.x],['start-x-n',p.x],['start-z',p.z],['start-z-n',p.z],['start-yaw',p.yaw],['start-yaw-n',p.yaw]]){const el=field(n);if(el&&document.activeElement!==el)el.value=String(v);}
     const out=panel.querySelector('[data-start-pose-readout]');if(out)out.textContent=`${p.height}″ · ${deg(p.tilt)}`;
-    const map=panel.querySelector('[data-start-map-readout]');if(map)map.textContent=`X ${r1(p.x)}″ · Z ${r1(p.z)}″`;
+    const map=panel.querySelector('[data-start-map-readout]');if(map)map.textContent=`X ${r1(p.x)}″ · Z ${r1(p.z)}″ · ${deg(p.yaw)}`;
   }
   // One undo step per click, typed value or slider drag (the drag's input events share a commit key).
   function apply(next,{key=null,message}={}){
     ready();const m=motion(),was=cleanPose(m.initial),p={...was,...next};
-    if(['height','tilt','x','z'].every(f=>Math.abs(p[f]-was[f])<1e-6)){show(p);status(message||'Starting position unchanged.');return false;}
+    if(['height','tilt','x','z','yaw'].every(f=>Math.abs(p[f]-was[f])<1e-6)){show(p);status(message||'Starting position unchanged.');return false;}
     commit(()=>{shot().motion={...structuredClone(m),initial:cleanPose(p)};},{key,render:!key});
     if(key)show(p);seek(0);status(message||`Starting position: ${p.height}″, ${deg(p.tilt)}. Movements play on from here.`);return true;
   }
   function typed(el,{drag=false}={}){
-    const n=el.name,f=n.includes('height')?'height':n.includes('tilt')?'tilt':n.includes('-x')?'x':'z',v=Number(el.value);if(el.value===''||!Number.isFinite(v))return;
+    const n=el.name,f=n.includes('height')?'height':n.includes('tilt')?'tilt':n.includes('yaw')?'yaw':n.includes('-x')?'x':'z',v=Number(el.value);if(el.value===''||!Number.isFinite(v))return;
     const was=start();
+    if(f==='yaw'){
+      const p=cleanPose({...was,yaw:Math.round(Math.max(-360,Math.min(360,v))*10)/10});
+      apply(p,{key:drag?'start-pose-'+gesture:null,message:`Starting rotation: ${deg(p.yaw)}. Turn clips play on from here.`});
+      if(!drag)show(p);return;
+    }
     if(f==='x'||f==='z'){
       const p=cleanPose({...was,[f]:Math.max(-120,Math.min(120,v))});
       apply(p,{key:drag?'start-pose-'+gesture:null,message:`Starting map position: X ${r1(p.x)}″, Z ${r1(p.z)}″.`});
@@ -68,9 +74,9 @@ export function createStartPose({panel,shot,motion,time,seek,commit,status,ready
     apply(p,{key:drag?'start-pose-'+gesture:null,message:`Starting position: ${p.height}″, ${deg(p.tilt)}${moved?(f==='tilt'?' (raised for tilt clearance)':' (tilt lowered: the desk is too low for more)'):''}${Math.abs(p[f]-v)>1e-6?` (${f} limit ${f==='height'?p.height+'″':deg(p.tilt)})`:''}.`});
     if(!drag)show(p);
   }
-  panel.addEventListener('pointerdown',e=>{if(e.target.closest?.('[name="start-height"],[name="start-tilt"],[name="start-x"],[name="start-z"]'))gesture++;},true);
-  panel.addEventListener('input',e=>{const n=e.target.name;if(!/^start-(height|tilt|x|z)$/.test(n))return;try{typed(e.target,{drag:true});}catch(error){status(error.message,true);}});
-  panel.addEventListener('change',e=>{const n=e.target.name;if(!/^start-(height|tilt|x|z)(-n)?$/.test(n))return;gesture++;
+  panel.addEventListener('pointerdown',e=>{if(e.target.closest?.('[name="start-height"],[name="start-tilt"],[name="start-x"],[name="start-z"],[name="start-yaw"]'))gesture++;},true);
+  panel.addEventListener('input',e=>{const n=e.target.name;if(!/^start-(height|tilt|x|z|yaw)$/.test(n))return;try{typed(e.target,{drag:true});}catch(error){status(error.message,true);}});
+  panel.addEventListener('change',e=>{const n=e.target.name;if(!/^start-(height|tilt|x|z|yaw)(-n)?$/.test(n))return;gesture++;
     try{if(n.endsWith('-n'))typed(e.target);else show(start());}catch(error){status(error.message,true);show(start());}});
   panel.addEventListener('click',e=>{const b=e.target.closest('[data-start-pose]');if(!b)return;
     try{const name=b.dataset.startPose,at=name==='current'?sampleClipMotion(motion(),time()*shot().seconds):null,p=startPoseTarget(name,start(),size(),{at});if(!p)return;
@@ -85,7 +91,7 @@ export function createStartPose({panel,shot,motion,time,seek,commit,status,ready
       return `<fieldset class="chapter-pacing start-pose" data-start-pose-box><legend>Starting position</legend>
       <p class="start-pose-head"><span>Desk at 0 s</span><output data-start-pose-readout>${p.height}″ · ${deg(p.tilt)}</output></p>
       ${row('height','Height',L.heightMin,L.heightMax,.5,'in',p.height)}${row('tilt','Tilt',L.tiltMin,L.tiltMax,.5,'°',p.tilt)}
-      <div class="start-map-position"><strong>Wheel footprint on the map at 0 s</strong><p class="director-hint">X is left / right; Z is front / back. The wheels lane moves from this starting location.</p>${row('x','X',-120,120,.5,'in',p.x)}${row('z','Z',-120,120,.5,'in',p.z)}<output data-start-map-readout>X ${r1(p.x)}″ · Z ${r1(p.z)}″</output></div>
+      <div class="start-map-position"><strong>Wheel footprint on the map at 0 s</strong><p class="director-hint">X is left / right; Z is front / back. The wheels lane moves from this starting location; Rotate turns the desk (its Turn clips play on from it).</p>${row('x','X',-120,120,.5,'in',p.x)}${row('z','Z',-120,120,.5,'in',p.z)}${row('yaw','Rotate',-180,180,1,'°',p.yaw)}<output data-start-map-readout>X ${r1(p.x)}″ · Z ${r1(p.z)}″ · ${deg(p.yaw)}</output></div>
       <div class="director-actions start-pose-presets">${btn('max-height','Max height',`${L.heightMax}″`,p.height===L.heightMax)}${btn('min-height','Min height',`${L.heightMin}″ (tilt lowers to ${deg(L.lowTiltMax)} if needed)`,p.height===L.heightMin)}${btn('flat','Flat (0°)','Desktop level',p.tilt===0)}${btn('max-tilt','Max tilt',`${deg(L.tiltMax)} (raises the desk to ${L.fullTiltHeight}″ if needed)`,p.tilt===L.tiltMax)}</div>
       <div class="director-actions start-pose-presets start-pose-forms">${btn('sitting','Sitting','The app’s Sitting form: 28″, 0°',p.height===28&&p.tilt===0)}${btn('standing','Standing','The app’s Standing form: 43.5″, −5°',p.height===43.5&&p.tilt===-5)}${btn('current','Use current','Start where the desk is at the playhead')}</div>
       <p class="director-hint">${note()} Movements keep their targets and play on from this start.</p></fieldset>`;
