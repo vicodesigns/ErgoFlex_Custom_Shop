@@ -736,3 +736,10 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 /* Room looks (room-looks.mjs): the chapter card's tag and the Room inspector's Look row */
 .chapter-card .chapter-look{font-style:normal;font-size:8px;letter-spacing:.04em;text-transform:uppercase;padding:0 4px;margin-left:4px;border-radius:3px;border:1px solid #81cee855;color:#bfe6f5}.chapter-card .chapter-look.look-classic{border-color:#e7c27a88;color:#f1d79e}
 .room-look{display:flex;gap:8px;align-items:flex-end;min-width:0}.room-look label{flex:1;min-width:0}.room-look select{width:100%}.room-look button{flex:none;white-space:nowrap}
+/* Graphics tab: Screen look (graphics-editor.mjs, screen-look.mjs) */
+.screen-look{display:grid;gap:6px;margin:0 0 12px;padding:10px;border:1px solid #8bc5df30;border-radius:10px;background:#0b1620}
+.screen-look h4{margin:0}
+.screen-look-row{display:grid;grid-template-columns:8.5em 1fr 6.2em;align-items:center;gap:8px;font-size:11.5px}
+.screen-look-row input[type=range]{width:100%}
+.screen-look-row output{text-align:right;color:#94afbf;font-variant-numeric:tabular-nums}
+.screen-look-row.set span,.screen-look-row.set output{color:#ffc977}

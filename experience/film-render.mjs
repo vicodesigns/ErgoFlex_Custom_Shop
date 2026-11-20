@@ -1,3 +1,4 @@
+import {withScreenLook} from './screen-look.mjs';
 import {bakeCameraPlan} from './camera-spline-bake.mjs';
 import {exportLighting} from './film-lighting.mjs';
 import {mergeSceneLights} from './light-edits.mjs';
@@ -14,6 +15,7 @@ export function filmRenderShot(film,shot,keys){
   if(shot.motion)next.motion=structuredClone(shot.motion);
   const lit=exportLighting(shot);
   if(Array.isArray(shot.screens))next.screens=structuredClone(shot.screens);
+  withScreenLook(next,shot);   // (the Graphics tab's screen look)
   for(const k of ['ledStatus','ledNeutral','ledColor'])if(lit[k]!==undefined)next[k]=structuredClone(lit[k]);
   if(lit.ledStatus&&!lit.ledNeutral)delete next.ledNeutral;
   if(shot.sceneGlobals)next.sceneGlobals={...next.sceneGlobals,...structuredClone(shot.sceneGlobals)};

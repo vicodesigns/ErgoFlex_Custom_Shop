@@ -54,6 +54,11 @@
       every desk in the room, experience/branding-edits.mjs) keeps them in director-camera-<id>.json as 'branding' (an
       export without the field keeps the branding imported before). The pass writes them onto the chapter's film shot
       (review-cut.json and the chapter's shot file) as 'sceneBranding'; render-cut passes it to film-fx.
+      Screen look: an export whose shot has 'screenLook' (Director Mode's Graphics tab: the screens' strength, contrast,
+      black level, saturation, colour temperature, glare and glow spill, for all screens and per screen,
+      experience/screen-look.mjs) keeps it in director-camera-<id>.json as 'screenLook' ({} = he reset it; an export
+      without the field keeps the look imported before). The pass writes it onto the chapter's film shot as 'screenLook'
+      (an empty look removes it); render-cut passes it to film-fx.
       Desks: an export whose shot has 'deskEdits' (Director Mode's Desks: size, place and starting height / tilt of the
       room's other ErgoFlex desks, experience/desk-edits.mjs; later per-desk moves and builds) keeps them in
       director-camera-<id>.json as 'desks' (an export without the field keeps the earlier import's). The pass writes them
@@ -600,6 +605,51 @@ def apply_people(cid, f, people):
 BRANDING_FIELDS = {'surface': str, 'enabled': bool, 'x': (-100, 200), 'y': (-100, 200), 'scale': (5, 300), 'rotation': (-180, 180)}
 
 
+# The screen look's fields: (min, max, today's value), as experience/screen-look.mjs FIELDS.
+SCREEN_LOOK = {'brightness': (.2, 1.5, 1), 'contrast': (.5, 1.5, 1), 'black': (0, .25, 0), 'saturation': (0, 1.5, 1),
+               'warmth': (-1, 1, 0), 'glare': (0, 1, 0), 'spill': (0, 2, 1)}
+SCREEN_TARGET = re.compile(r'^[\w .:/#()+-]{1,80}$')
+
+
+def clean_screen_look(v):
+    """experience/screen-look.mjs cleanScreenLook: {all?, per?: {target: values}} with only the values that differ from
+    today's, each in its range; {} when nothing does (the film's shot then has no screenLook)."""
+    def values(x):
+        if not isinstance(x, dict): return None
+        out = {}
+        for k, (lo, hi, d) in SCREEN_LOOK.items():
+            n = x.get(k)
+            if isinstance(n, bool) or not isinstance(n, (int, float)) or n != n or n in (float('inf'), float('-inf')): continue
+            c = round(min(hi, max(lo, float(n))) * 1000) / 1000
+            if c != d: out[k] = int(c) if c == int(c) else c
+        return out or None
+    if not isinstance(v, dict): return {}
+    out, per = {}, {}
+    a = values(v.get('all'))
+    if a: out['all'] = a
+    for t, x in list((v.get('per') or {}).items())[:40] if isinstance(v.get('per'), dict) else []:
+        c = values(x)
+        if c and isinstance(t, str) and SCREEN_TARGET.fullmatch(t): per[t] = c
+    if per: out['per'] = per
+    return out
+
+
+def apply_screen_look(cid, f, look):
+    """The chapter's film shot gets screenLook (film-fx applies it to the screens); an empty look removes it."""
+    mine = clean_screen_look(look)
+    paths = [CUT] + ([f] if f else []) + ([os.path.join(H, 'previews', 'awaken-v5-cut.json')] if cid == 'awaken' else [])
+    wrote = []
+    for p in paths:
+        if not os.path.exists(p): continue
+        d = load(p)
+        for s in (d['shots'] if 'shots' in d else [d]):
+            if s.get('id') != cid: continue
+            if mine: s['screenLook'] = copy.deepcopy(mine)
+            else: s.pop('screenLook', None)
+        if dump(p, d): wrote.append(os.path.relpath(p, H))
+    return wrote
+
+
 def clean_branding(b):
     """Director Mode's branding overlay (experience/branding-edits.mjs cleanBranding): {room, artwork:{version, surfaces}}; None if not one."""
     if not isinstance(b, dict) or not isinstance(b.get('room'), str) or not re.fullmatch(r'[a-z0-9-]{1,40}', b['room']): return None
@@ -788,6 +838,9 @@ def run_pass_chapters():
         if os.path.exists(p) and 'branding' in load(p):
             w = apply_branding(cid, f, load(p)['branding'])
             print(f'ch{n:02d} {cid}: Director branding -> {", ".join(w) or "no change"}')
+        if os.path.exists(p) and 'screenLook' in load(p):
+            w = apply_screen_look(cid, f, load(p)['screenLook'])
+            print(f'ch{n:02d} {cid}: Director screen look -> {", ".join(w) or "no change"}')
         if os.path.exists(p) and isinstance(load(p).get('look'), str) and LOOK.fullmatch(load(p)['look']):
             w = apply_look(cid, f, load(p)['look'])
             print(f'ch{n:02d} {cid}: Director room look {load(p)["look"]} -> {", ".join(w) or "no change"}')
@@ -1080,6 +1133,9 @@ def run_import(export):
     # Branding: the export's overlay (empty = he reset it); an export without the field keeps the earlier import's.
     if isinstance(shot.get('brandingEdits'), dict) and clean_branding(shot['brandingEdits']): dc['branding'] = clean_branding(shot['brandingEdits'])
     elif 'branding' in before: dc['branding'] = before['branding']
+    # Screen look (Graphics tab): the export's ({} = he reset it, kept so the pass removes the film's); without the field, the earlier import's.
+    if isinstance(shot.get('screenLook'), dict): dc['screenLook'] = clean_screen_look(shot['screenLook'])
+    elif 'screenLook' in before: dc['screenLook'] = before['screenLook']
     # Desks (the room's other ErgoFlex desks): the export's list ([] = he reset them all); an export without the field keeps the earlier import's.
     if isinstance(shot.get('deskEdits'), list): dc['desks'] = clean_desks(shot['deskEdits'])
     elif 'desks' in before: dc['desks'] = before['desks']

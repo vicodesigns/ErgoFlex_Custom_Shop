@@ -17,6 +17,10 @@ import {screenTiming} from './screen-timing.mjs';
 //             blend:'add' draws the picture additively over the glass (black = the glass's own reflections stay),
 //             for a small screen in the frame such as the phone on the desk (target 'phone').
 //   screenGain:1   multiplies every screen's brightness (HQ20: 1.3 with film-quality screenBloom .25, the screens' glow cut to a quarter).
+//   screenLook:{all:{…}, per:{'<target>':{…}}}  the Director's screen look (experience/screen-look.mjs): strength, contrast,
+//             black level, saturation, colour temperature, glare and glow spill, for every screen and per screen. Left
+//             out = today's look and today's shader (pixel-identical); strength multiplies the brightness above, spill the
+//             screen's share of film-quality's bloom.
 //   ledMode:'media'  ledSource=<target or index into screens>  ledPreset='normal'|'calm'|'intense'|'full'
 //   ledGlow:0…1   LED brightness as a fraction of full (stage default .35)
 //   ledSurfaces:{desktopStrength:0…200, floorStrength, shelfStrength, …}  the app's LED surface sliders
@@ -80,6 +84,7 @@ import * as THREE from 'three';
 import { sampleScreenColours } from '../../led-screen-sampler.mjs';
 import { accessory } from '../../catalog.mjs';
 import { isTextureTarget, installTextureScreens, matches as textureMatches } from './film-texture-screens.mjs';
+import { lookFor, uniformsOf, GLSL as LOOK_GLSL, CALL as LOOK_CALL, SHADED as LOOK_SHADED, isToday } from '../../experience/screen-look.mjs';
 
 const api = window.ErgoFlex;
 const sceneRoot = () => { let s = api.loadedModel; while (s?.parent) s = s.parent; return s; };
@@ -302,6 +307,27 @@ function seek(video, time) {
     video.addEventListener('seeked', done, { once: true }); video.addEventListener('error', fail, { once: true }); video.currentTime = time;
   });
 }
+// The chapter's screen look on one film screen: the shader only when the picture itself changes (today's look keeps
+// today's program), spill for film-quality's bloom (mesh.userData.screenSpill). Strength goes into the colour (gainOf).
+function shadeScreen(material, mesh, look) {
+  mesh.userData.screenSpill = look.spill;
+  let u = material.userData.screenLook;
+  if (isToday(look, LOOK_SHADED)) { if (u) { delete material.userData.screenLook; delete material.onBeforeCompile; delete material.customProgramCacheKey; material.needsUpdate = true; } return; }
+  if (!u) {
+    u = material.userData.screenLook = { screenLook: { value: new THREE.Vector4() }, screenTint: { value: new THREE.Vector3(1, 1, 1) } };
+    material.onBeforeCompile = shader => {
+      shader.uniforms.screenLook = u.screenLook; shader.uniforms.screenTint = u.screenTint;
+      shader.fragmentShader = shader.fragmentShader.replace('void main() {', LOOK_GLSL + '\nvoid main() {').replace('#include <map_fragment>', '#include <map_fragment>\n\t' + LOOK_CALL);
+    };
+    material.customProgramCacheKey = () => 'film-screen-look'; material.needsUpdate = true;
+  }
+  const v = uniformsOf(look); u.screenLook.value.set(...v.look); u.screenTint.value.set(...v.tint);
+}
+// A screen's brightness: its own (keyed: at t), x screenGain, x the look's strength.
+const gainOf = (sc, shot, t = null) => (Array.isArray(sc.spec.brightness) ? (t === null ? Number(sc.spec.brightness[0][1]) : keyAt(sc.spec.brightness, t)) : Number(sc.spec.brightness ?? 1)) * (Number(shot?.screenGain) || 1) * (sc.look?.brightness ?? 1);
+function lookScreens(screens, shot) {
+  for (const sc of screens) { sc.look = lookFor(shot.screenLook, sc.key); shadeScreen(sc.mesh.material, sc.mesh, sc.look); sc.mesh.material.color.setScalar(gainOf(sc, shot)); }
+}
 function draw(sc) {
   const { ctx2d, canvas, media, spec } = sc, [il, it, ir, ib] = sc.inset, CW = canvas.width, CH = canvas.height;
   const X0 = Math.round(il * CW), Y0 = Math.round(it * CH), W = CW - X0 - Math.round(ir * CW), H = CH - Y0 - Math.round(ib * CH);
@@ -335,10 +361,10 @@ async function installScreens(shot, list) {
     const clearEdge = inset.some(x => x > 0), add = spec.blend === 'add';
     const material = new THREE.MeshBasicMaterial({ map: texture, toneMapped: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4, transparent: clearEdge || add, alphaTest: clearEdge ? .5 : 0,
       ...(add ? { blending: THREE.AdditiveBlending, depthWrite: false } : {}) });
-    material.color.setScalar((Array.isArray(spec.brightness) ? Number(spec.brightness[0][1]) : Number(spec.brightness ?? 1)) * (Number(shot.screenGain) || 1));
     const mesh = new THREE.Mesh(pictureGeometry(target.obj, f), material); mesh.name = 'Film screen · ' + target.id; mesh.userData.filmFx = true; mesh.userData.filmScreen = true;   // (filmScreen: a timed prop's fade takes its picture too, film-edits.mjs installShow) mesh.castShadow = mesh.receiveShadow = false; mesh.renderOrder = 2;
     target.obj.add(mesh);
-    const sc = { spec, target, inset, media, canvas, ctx2d: canvas.getContext('2d', { willReadFrequently: true }), texture, mesh };
+    const sc = { spec, target, inset, media, canvas, ctx2d: canvas.getContext('2d', { willReadFrequently: true }), texture, mesh, key: String(spec.target ?? i) };
+    lookScreens([sc], shot);   // (its brightness, and the chapter's screen look)
     if (!media.duration) draw(sc);
     out.push(sc);
   }
@@ -347,7 +373,7 @@ async function installScreens(shot, list) {
 async function updateScreens(screens, chapterSeconds) {
   await Promise.all(screens.map(async sc => {
     const clip=screenTiming(sc.spec,chapterSeconds);sc.mesh.visible=clip.visible;if(!clip.visible)return;
-    if (Array.isArray(sc.spec.brightness)) sc.mesh.material.color.setScalar(keyAt(sc.spec.brightness, chapterSeconds) * (Number(active?.shot?.screenGain) || 1));
+    if (Array.isArray(sc.spec.brightness)) sc.mesh.material.color.setScalar(gainOf(sc, active?.shot, chapterSeconds));
     const v = sc.media; if (!(v instanceof HTMLVideoElement)) return;
     const raw = clip.seconds, d = v.duration;
     const time = sc.spec.loop === false ? THREE.MathUtils.clamp(raw, 0, Math.max(0, d - .02)) : ((raw % d) + d) % d;
@@ -1024,7 +1050,7 @@ export async function install(shot) {
 // sceneEdits too (the Director's prop edits): the edits layer and everything chained after it re-install in place.
 // People are updated independently by the stage; treating them as a film-layer change
 // forced a full scene reinstall when a desk's assigned person was hidden or shown.
-const LIVE_FIELDS = ['people', 'lights', 'lightEdits', 'ledStatus', 'ledNeutral', 'ledColor', 'sceneGlobals', 'timeOfDay', 'obstacles', 'sceneEdits', 'sceneBranding', 'sceneDeskEdits', 'featuredBuild'];
+const LIVE_FIELDS = ['screenLook', 'people', 'lights', 'lightEdits', 'ledStatus', 'ledNeutral', 'ledColor', 'sceneGlobals', 'timeOfDay', 'obstacles', 'sceneEdits', 'sceneBranding', 'sceneDeskEdits', 'featuredBuild'];
 const TAIL = ['tod', 'edits', 'lights', 'roomLight', 'roomSpill', 'lightEdits'];
 export async function update(shot, { onSlow } = {}) {
   if (!active) return 'full';
@@ -1061,6 +1087,8 @@ export async function update(shot, { onSlow } = {}) {
   if (gChanged('roomLight')) tail = Math.min(tail, 3);
   if ((gChanged('ledRoomSpill') || gChanged('ledWallGlow') || gChanged('ledFloorGlow')) && !(tail > 4 && active.roomSpill?.retune(g1))) tail = Math.min(tail, 4);
   if (changed('lightEdits')) tail = Math.min(tail, 5);
+  // screenLook (the Director's Graphics tab): the screens' materials, in place.
+  if (changed('screenLook')) lookScreens(active.screens, shot);
   // sceneBranding (the Director's Branding tab) is independent of the lighting chain: re-applied on its own, in place.
   if (changed('sceneBranding')) {
     await active.branding?.restore(); active.branding = null;

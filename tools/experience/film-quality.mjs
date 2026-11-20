@@ -150,9 +150,12 @@ async function installPost(renderer, scene, q, deskWidth, screens, info) {
       // bloomReceivers false: the surface overlays are hidden (not blacked: their own onBeforeRender needs their shader) in the glow pass.
       if (q.bloomReceivers === false && named(o, RECEIVER)) { muted.push(o); return; }
       const isScreen = screenMeshes.has(o) || (m?.isMeshBasicMaterial && m.map && named(o, SCREENISH));
-      if (q.bloom && isScreen && q.screenBloom !== undefined && Number(q.screenBloom) < 1) {
-        if (Number(q.screenBloom) <= 0) { others.push(o); return; }
-        dimmed.push(o); n++; return;
+      // a screen's share of the bloom: the quality's screenBloom x its own glow spill (the Director's screen look,
+      // film-fx shadeScreen: mesh.userData.screenSpill); 1 (both left out) is the glow pass as it always was
+      const share = isScreen ? (q.screenBloom !== undefined && Number(q.screenBloom) < 1 ? Number(q.screenBloom) : 1) * (screenMeshes.has(o) ? Number(o.userData.screenSpill ?? 1) : 1) : 1;   // (a screenBloom of 1 or more counts as 1, as before)
+      if (q.bloom && isScreen && share !== 1) {
+        if (share <= 0) { others.push(o); return; }
+        dimmed.push([o, share]); n++; return;
       }
       const glow = !named(o, NOT_BLOOM) && (screenMeshes.has(o) || named(o, LEDISH) || (m?.isMeshBasicMaterial && m.map && named(o, SCREENISH)) || (m?.emissive && luma(m.emissive) * (m.emissiveIntensity ?? 1) > .3));
       if (glow) n++; else others.push(o); });
@@ -175,7 +178,7 @@ async function installPost(renderer, scene, q, deskWidth, screens, info) {
         for (const o of muted) o.visible = false;
         // screenBloom < 1: the screens draw into the glow set at that fraction of their colour (their own material,
         // toned down for this pass only), so their bloom is that fraction too.
-        const k = Number(q.screenBloom), dimSaved = [...new Set(dimmed.map(o => [].concat(o.material)[0]).filter(mm => mm?.color))].map(mm => { const c = mm.color.clone(); mm.color.multiplyScalar(k); return [mm, c]; });   // once per shared material
+        const dimSaved = [...new Map(dimmed.map(([o, k]) => [[].concat(o.material)[0], k])).entries()].filter(([mm]) => mm?.color).map(([mm, k]) => { const c = mm.color.clone(); mm.color.multiplyScalar(k); return [mm, c]; });   // once per shared material, at its screen's share
         const ac = this.autoClear; this.autoClear = true;
         try { this.setRenderTarget(glowRT); direct.call(this, sc, cam); } finally { others.forEach((o, i) => { o.material = saved[i]; }); muted.forEach((o, i) => { o.visible = shown[i]; }); dimSaved.forEach(([mm, c]) => mm.color.copy(c)); sc.background = bg; this.setRenderTarget(null); this.autoClear = ac; }
       }

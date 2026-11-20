@@ -1,3 +1,4 @@
+import {cleanScreenLookField} from './screen-look.mjs';
 import {cleanClipMotion} from './desk-clips.mjs';
 import {cleanDeskTracks,cleanPose} from './desk-track.mjs';
 export {cleanPose} from './desk-track.mjs';
@@ -54,7 +55,7 @@ export function cleanShot(v={},catalog){
   const keys=cleanCameraKeys(v.camera?.keys);
   if(keys.length)shot.camera={keys};else if(from||to)shot.camera={...(from?{from}:{}),...(to?{to}:{} )};
   // Film lighting edited in the Director (absent until then).
-  Object.assign(shot,cleanLighting(v),cleanSceneLights(v),cleanPropEdits(v),cleanPeopleEdits(v),cleanPropLayers(v),cleanBrandingEdits(v),cleanDeskEdits(v),cleanDeskBuildField(v),cleanDeskVersionsField(v));
+  Object.assign(shot,cleanLighting(v),cleanSceneLights(v),cleanPropEdits(v),cleanPeopleEdits(v),cleanPropLayers(v),cleanBrandingEdits(v),cleanDeskEdits(v),cleanDeskBuildField(v),cleanDeskVersionsField(v),cleanScreenLookField(v));
   // Clips: lift / tilt only, valid and non-overlapping (desk-choreo.mjs).
   if(shot.deskEdits)shot.deskEdits=cleanDeskChoreo({deskEdits:shot.deskEdits},shot.seconds).deskEdits;
   // Film titles edited in the Director (absent until then): copy, timing, shadow shape.
