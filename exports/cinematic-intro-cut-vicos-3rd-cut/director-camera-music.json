@@ -1,0 +1,463 @@
+{
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-2nd-cut/director-exports/export-6976cdf65b2a-Film-chapter-music-12-5-s-__status-light_.json",
+ "seconds": 12.5,
+ "keys": [
+  {
+   "at": 0,
+   "position": [
+    2.9,
+    3.75,
+    -1.0
+   ],
+   "target": [
+    1.2271,
+    0.1811,
+    1.4483
+   ],
+   "fov": 52,
+   "label": "High over the room: the floor light plays, Kai in his armchair"
+  },
+  {
+   "at": 4.95,
+   "position": [
+    2.95,
+    3.05,
+    -0.55
+   ],
+   "target": [
+    0.6764,
+    0.4927,
+    1.5131
+   ],
+   "fov": 50,
+   "label": "Craning down the whole time"
+  },
+  {
+   "at": 5.0,
+   "position": [
+    4.0,
+    2.5,
+    -0.95
+   ],
+   "target": [
+    -0.4969,
+    1.0711,
+    0.5404
+   ],
+   "fov": 38,
+   "label": "Cut: front view, it rises and tilts with the game (Kai out of the frame edge)",
+   "cut": true
+  },
+  {
+   "at": 10.65,
+   "position": [
+    3.0953,
+    2.1937,
+    0.2528
+   ],
+   "target": [
+    -0.7328,
+    1.4731,
+    0.2124
+   ],
+   "fov": 43.501,
+   "label": "The desk plays along: at rest 1.25 s"
+  },
+  {
+   "at": 12.5,
+   "position": [
+    2.0150148987906955,
+    2.351242030901095,
+    0.4234937828396818
+   ],
+   "target": [
+    -0.782003795572293,
+    1.8762266006426516,
+    0.3940174897994141
+   ],
+   "fov": 41.8,
+   "label": "One slow push into the dissolve"
+  }
+ ],
+ "clips": [
+  {
+   "id": "122d4193-3cc9-4b70-96c5-10c0f0c6beb3",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 6.3,
+   "duration": 3,
+   "easing": "linear",
+   "label": "",
+   "target": 47
+  },
+  {
+   "id": "a3ba9010-22a1-48cc-9890-395fc2898545",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 6.3,
+   "duration": 3,
+   "easing": "linear",
+   "label": "",
+   "target": 5
+  },
+  {
+   "id": "036682fe-c3cb-437e-bc83-ead6f14c89c5",
+   "lane": "wheels",
+   "kind": "rotate",
+   "start": 6.5,
+   "duration": 2.7,
+   "easing": "linear",
+   "label": "",
+   "value": 20,
+   "direction": "right"
+  }
+ ],
+ "initial": {
+  "height": 30,
+  "tilt": 0
+ },
+ "lighting": {
+  "statusLight": false
+ },
+ "props": [
+  {
+   "match": "^$",
+   "asset": "gaming:house:placement:0:0:",
+   "label": "Unnamed prop",
+   "position": [
+    -0.374,
+    0,
+    -0.07
+   ]
+  },
+  {
+   "match": "^Prop:ergoflex-plant-2$",
+   "label": "Broad leaf planter (film: swapped)",
+   "hide": true
+  },
+  {
+   "add": {
+    "asset": "ergoflex-plant-1"
+   },
+   "id": "fp9p",
+   "match": "^Added prop:ergoflex-plant-1#fp9p$",
+   "label": "Tall indoor planter",
+   "parent": "room",
+   "position": [
+    -2.308,
+    0,
+    -1.705
+   ],
+   "rotation": [
+    0,
+    15,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "match": "^Prop:headphones$",
+   "path": "^Room:gaming > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:shelf > Prop:headphones$",
+   "label": "Prop:headphones",
+   "space": "local",
+   "position": [
+    0.244,
+    0.075,
+    0.269
+   ],
+   "rotation": [
+    0,
+    -75.1,
+    0
+   ]
+  },
+  {
+   "match": "^Solo strategy$",
+   "path": "^Room:gaming > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Groove tabletop \u00b7 daily materials > Solo strategy$",
+   "label": "Solo strategy",
+   "hide": true
+  },
+  {
+   "match": "^Prop:game-controller$",
+   "path": "^Room:gaming > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Prop:game-controller$",
+   "label": "Prop:game-controller",
+   "space": "local",
+   "position": [
+    0,
+    0.002,
+    0.386
+   ]
+  },
+  {
+   "match": "^Prop:headphones$",
+   "asset": "gaming:house:room:11:headphones",
+   "label": "Prop:headphones",
+   "hide": true
+  },
+  {
+   "match": "^Prop:steelcase-leap-v2$",
+   "asset": "gaming:house:room:0:steelcase-leap-v2",
+   "label": "Prop:steelcase-leap-v2",
+   "position": [
+    1.908,
+    0,
+    -0.478
+   ]
+  },
+  {
+   "match": "^Prop:coffee-table$",
+   "asset": "gaming:house:room:7:coffee-table",
+   "label": "Prop:coffee-table",
+   "position": [
+    0,
+    0,
+    -0.376
+   ]
+  },
+  {
+   "match": "^Coffee \u00b7 daily activity$",
+   "asset": "gaming:house:life:activity",
+   "label": "Coffee \u00b7 daily activity",
+   "position": [
+    0,
+    0,
+    -0.802
+   ]
+  },
+  {
+   "match": "^Atelier gaming \u00b7 Handheld & display dock \u00b7 Carbon \u00b7 cyan & magenta$",
+   "asset": "gaming:house:room:9:handheld-console",
+   "label": "Atelier gaming \u00b7 Handheld & display dock \u00b7 Carbon \u00b7 cyan & magenta",
+   "position": [
+    0,
+    0,
+    -0.251
+   ]
+  },
+  {
+   "match": "^Atelier gaming \u00b7 Wireless pro controller \u00b7 Carbon \u00b7 cyan & magenta$",
+   "asset": "gaming:house:room:8:game-controller",
+   "label": "Atelier gaming \u00b7 Wireless pro controller \u00b7 Carbon \u00b7 cyan & magenta",
+   "position": [
+    0,
+    0,
+    -0.595
+   ]
+  },
+  {
+   "match": "^Added prop:armchair-poppi#mkch$",
+   "label": "Added prop:armchair-poppi#mkch",
+   "position": [
+    0,
+    0,
+    -0.268
+   ]
+  },
+  {
+   "match": "^Accessory:mechanical-keyboard$",
+   "path": "^Room:gaming > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Accessory:mechanical-keyboard$",
+   "label": "Accessory:mechanical-keyboard",
+   "space": "local",
+   "position": [
+    0,
+    0.003,
+    0.035
+   ],
+   "rotation": [
+    0,
+    -0.1,
+    0
+   ]
+  }
+ ],
+ "people": {
+  "v": 2,
+  "only": [],
+  "cast": [
+   {
+    "key": "people-kai-sit-controller",
+    "id": "people-kai-sit-controller",
+    "at": [
+     -1079,
+     1348
+    ],
+    "turn": 151,
+    "postures": {
+     "people-kai-sit-controller": {
+      "held": {
+       "hand_r": {
+        "at": [
+         0.028186164428819008,
+         0.046976940714698344,
+         0.01879077628587934
+        ]
+       }
+      },
+      "poseKeys": [
+       {
+        "t": 0,
+        "pose": {
+         "upperarm_l": [
+          -0.0262,
+          -0.0271,
+          0.0267,
+          0.9989
+         ],
+         "lowerarm_l": [
+          -0.0099,
+          0,
+          -0.001,
+          1
+         ],
+         "hand_l": [
+          0.0152,
+          -0.0472,
+          -0.0164,
+          0.9986
+         ],
+         "upperarm_r": [
+          -0.016,
+          0.0255,
+          -0.022,
+          0.9993
+         ],
+         "lowerarm_r": [
+          -0.0109,
+          0,
+          0.001,
+          0.9999
+         ],
+         "hand_r": [
+          0.0106,
+          0.0384,
+          0.0162,
+          0.9991
+         ]
+        }
+       }
+      ]
+     }
+    }
+   },
+   {
+    "key": "kai-gets-up",
+    "id": "people-kai-walk",
+    "at": [
+     -1079,
+     1348
+    ],
+    "turn": 151,
+    "change": {
+     "seconds": 2.2
+    },
+    "walk": {
+     "path": [
+      [
+       -1079,
+       1348
+      ],
+      [
+       -779,
+       1122
+      ],
+      [
+       -532,
+       1057
+      ],
+      [
+       -193,
+       960
+      ],
+      [
+       -221,
+       712
+      ]
+     ],
+     "start": 8.4,
+     "then": "people-kai-stand-wait"
+    },
+    "carry": {
+     "from": "people-kai-sit-controller"
+    },
+    "postures": {
+     "people-kai-walk": {
+      "held": {
+       "hand_r": {
+        "at": [
+         0.028186164428819008,
+         0.046976940714698344,
+         0.01879077628587934
+        ]
+       }
+      },
+      "poseKeys": [
+       {
+        "t": 0,
+        "pose": {
+         "upperarm_l": [
+          -0.0262,
+          -0.0271,
+          0.0267,
+          0.9989
+         ],
+         "lowerarm_l": [
+          -0.0099,
+          0,
+          -0.001,
+          1
+         ],
+         "hand_l": [
+          0.0152,
+          -0.0472,
+          -0.0164,
+          0.9986
+         ],
+         "upperarm_r": [
+          -0.016,
+          0.0255,
+          -0.022,
+          0.9993
+         ],
+         "lowerarm_r": [
+          -0.0109,
+          0,
+          0.001,
+          0.9999
+         ],
+         "hand_r": [
+          0.0106,
+          0.0384,
+          0.0162,
+          0.9991
+         ]
+        }
+       }
+      ]
+     }
+    }
+   }
+  ],
+  "when": {
+   "people-kai-sit-controller": [
+    [
+     0,
+     7.2,
+     0,
+     0
+    ]
+   ],
+   "kai-gets-up": [
+    [
+     7.2,
+     99,
+     0,
+     0
+    ]
+   ]
+  }
+ }
+}

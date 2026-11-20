@@ -42,8 +42,41 @@
    "dir": "/exports/cinematic-intro-cut-cine",
    "chapters": "/exports/cinematic-intro-cut-cine/director-chapters.json",
    "seconds": 262.33,
-   "updated": "2026-11-15T20:31:51Z",
+   "updated": "2026-11-17T21:05:57Z",
    "created": "2026-11-13T16:10:48Z"
+  },
+  {
+   "id": "vicos-2nd-cut",
+   "name": "Vicos 2nd cut",
+   "note": "A copy of Cinematographer's cut, made November 15, 2026.",
+   "from": "exports/cinematic-intro-cut-cine",
+   "dir": "/exports/cinematic-intro-cut-vicos-2nd-cut",
+   "chapters": "/exports/cinematic-intro-cut-vicos-2nd-cut/director-chapters.json",
+   "seconds": 261.83,
+   "updated": "2026-11-20T06:34:37Z",
+   "created": "2026-11-15T23:54:15Z"
+  },
+  {
+   "id": "vicos-3rd-cut-copy",
+   "name": "Vicos 3rd cut copy",
+   "note": "A copy of Vicos 2nd cut, made November 17, 2026.",
+   "from": "exports/cinematic-intro-cut-vicos-2nd-cut",
+   "dir": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy",
+   "chapters": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-chapters.json",
+   "seconds": 262.33,
+   "updated": "2026-11-18T05:46:24Z",
+   "created": "2026-11-18T06:22:23Z"
+  },
+  {
+   "id": "vicos-3rd-cut",
+   "name": "Vicos 3rd cut",
+   "note": "A copy of Vicos 2nd cut (November 20, 2026) with the wellness stretch added to chapter 2 (Rise): stand, type, overhead triceps stretch, sit.",
+   "from": "exports/cinematic-intro-cut-vicos-2nd-cut",
+   "dir": "/exports/cinematic-intro-cut-vicos-3rd-cut",
+   "chapters": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-chapters.json",
+   "seconds": 261.83,
+   "updated": "2026-11-20T06:34:37Z",
+   "created": "2026-11-20T17:43:58Z"
   }
  ]
 }
