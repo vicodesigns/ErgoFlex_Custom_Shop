@@ -412,6 +412,9 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
         texture.anisotropy = 8;
         return texture;
     };
+    // The shared tileable fibre normal map: loaded once, each user gets a clone repeating one 256 px tile per 60 mm.
+    const fibreBase = finishMap('commons-fibre-normal'); fibreBase.colorSpace = THREE.NoColorSpace; root.ownedTextures = [...(root.ownedTextures || []), fibreBase];
+    const fibreNormal = (wmm, hmm) => { const t = repeating(fibreBase.clone(), 8); t.colorSpace = THREE.NoColorSpace; t.repeat.set(wmm / 60, hmm / 60); return t; };
     const honeyOakMap = repeating(finishMap('honey-oak'), 8);
     const mapleMap = repeating(finishMap('staved-maple'), 8);
     root.commonsTextiles = roomTextiles(root, finishMap);
@@ -461,18 +464,20 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     // study poses without occupying the central gallery / circulation.
     const pilot = group('humboldt-pilot-bay', 'Proposed ErgoFlex pilot · green study bay', [7350, 0, DESK[1]]);
     pilotGreen.bumpMap = carpetMap.clone(); pilotGreen.bumpMap.repeat.set(3200 / plank.mm, 2700 / plank.mm); pilotGreen.bumpScale = .4 * s;
-    const bay = box(pilot, [3200, 2, 2700], [0, 1.2, 0], pilotGreen); bay.castShadow = false;
+    // The bay's own carpet (commons-pilot-carpet.webp, 2048 x 1728: pile variation, tuft rows, a bound edge) over the shared tileable
+    // fibre normal map (one 256 px tile per 60 mm); built by tools/rooms/build-commons-textiles.py. Each material owns its clones.
+    const pilotCarpet = own(material('#ffffff', { map: finishMap('commons-pilot-carpet'), roughness: .96, dithering: true }));
+    pilotCarpet.normalMap = fibreNormal(3200, 2700); pilotCarpet.normalScale.set(.55, .55);
+    const bay = box(pilot, [3200, 2, 2700], [0, 1.2, 0], pilotCarpet); bay.castShadow = false;
     const edging = kit();
     for (const z of [-1335, 1335]) edging.box([3170, 1, 12], [0, 2.7, z]);
     for (const x of [-1585, 1585]) edging.box([12, 1, 2670], [x, 2.7, 0]);
     baked(pilot, edging, pilotGold, false);
     pilot.userData.humboldtPilot = { concept: true, size: [3200, 2700], clearAisleMm: 1800 };
-    const floorText = canvasMap((c, cw, ch) => {
-        c.fillStyle = '#154c3d'; c.fillRect(0, 0, cw, ch); c.fillStyle = '#e1d3a6';
-        c.font = '600 46px sans-serif'; c.textAlign = 'center'; c.fillText('ERGOFLEX  /  PILOT CONCEPT', cw / 2, 65);
-        c.font = '24px sans-serif'; c.fillText('SIT   ·   STAND   ·   TILT   ·   RELOCATE', cw / 2, 111);
-    }, 1024, 160);
-    const floorLegend = mesh(pilot, new THREE.PlaneGeometry(1600, 250), own(material('#ffffff', { map: floorText, roughness: .96 })), [-1150, 3, 0]);
+    // The white lettering is a tufted inlay: a 2048 x 320 cream layer with alpha (commons-pilot-legend.webp), laid over the bay.
+    const legendMat = own(material('#ffffff', { map: finishMap('commons-pilot-legend'), roughness: .96, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+    legendMat.normalMap = fibreNormal(1600, 250); legendMat.normalScale.set(.55, .55);
+    const floorLegend = mesh(pilot, new THREE.PlaneGeometry(1600, 250), legendMat, [-1150, 3, 0]);
     floorLegend.rotation.set(-Math.PI / 2, 0, -Math.PI / 2); floorLegend.castShadow = false;
 
     // ---------- Walls ----------
@@ -541,19 +546,16 @@ vec3 efAccent(vec3 albedo) { vec3 n = normalize(efAccN); float sum = 0.0;
     baked(tack, tackTrim, honeyOak, false);
     // Signs sit flat against the existing wall. No floor-standing display in
     // the chair pullback zone. All text describes a proposed installation.
-    const wallPrint = (parent, id, name, at, size, draw, resolution = [1024, 512]) => {
+    const wallPrint = (parent, id, name, at, size, draw, resolution = [1024, 512], finish) => {
         const g = group(id, name, at, parent, -Math.PI / 2);
         box(g, [size[0] + 30, size[1] + 30, 24], [0, 0, -13], honeyOak).castShadow = false;
-        const map = canvasMap(draw, ...resolution);
-        const face = mesh(g, new THREE.PlaneGeometry(...size), own(material('#ffffff', { map, roughness: .85 })), [0, 0, 1]);
+        const map = finish ? finish.map : canvasMap(draw, ...resolution);
+        const face = mesh(g, new THREE.PlaneGeometry(...size), own(material('#ffffff', { map, roughness: .85, ...(finish && { roughness: .9, bumpMap: finish.bump, bumpScale: .5 * s }) })), [0, 0, 1]);
         face.castShadow = false; return { g, map };
     };
-    wallPrint(right, 'humboldt-pilot-header', 'Flexible study · pilot concept sign', [XR - 65, 2870, DESK[1]], [1800, 500], (c, cw, ch) => {
-        c.fillStyle = '#123f33'; c.fillRect(0, 0, cw, ch); c.fillStyle = '#d3b96f'; c.fillRect(32, 32, 8, ch - 64);
-        c.fillStyle = '#ece8d8'; c.font = '600 76px sans-serif'; c.fillText('FLEXIBLE STUDY', 70, 160);
-        c.font = '42px sans-serif'; c.fillText('ErgoFlex · proposed pilot', 70, 255);
-        c.fillStyle = '#d3b96f'; c.font = '32px sans-serif'; c.fillText('HUMBOLDT-INSPIRED COMMONS', 70, 365);
-    });
+    // The header board is a 2048 x 568 print (true 1800 x 500 aspect, brass frame, matte grain) with a small height map for the raised ink.
+    const signBump = finishMap('commons-pilot-sign-bump'); signBump.colorSpace = THREE.NoColorSpace;
+    wallPrint(right, 'humboldt-pilot-header', 'Flexible study · pilot concept sign', [XR - 65, 2870, DESK[1]], [1800, 500], null, null, { map: finishMap('commons-pilot-sign'), bump: signBump });
     const bulletin = wallPrint(tack, 'humboldt-pilot-notice', 'Pilot daily activity and welcome board', [XR - 72, 2150, 200], [1100, 1450], () => {}, [768, 1024]);
     const agendas = {
         morning: ['OPENING / STAND', 'A fresh start', 'Raise the desk and plan the day.', 'Stand for a short research session.', 'Leave the main commons aisle clear.'],
