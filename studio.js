@@ -13094,8 +13094,13 @@ if (window.__ERGO_PRESENTATION__) {
             })];
         },
         editCamera(on){presentationOrbit=!!on;controls.enabled=!!on;controls.autoRotate=false;},
-        resetProductOrigin(key){
+        resetProductOrigin(key,pose=null){
             if(selectedRoomScene!=='product')return;
+            // A desk version (a film sub-shot: chapter 12's desk lineup) stands where the chapter's desk stands, the
+            // product origin given here, not at its preset's Studio starting pose: Office's is turned 28.9° and 0.5 to
+            // the side, so the Office desk came in turned against the desk before it (Vico, 19 Nov 2026). Not
+            // remembered under the preset's key: the preset's own chapters keep their starting view.
+            if(pose){haltAllMotion();deskYaw=pose.yaw;applyDeskTransform();clampGlidePosition(glideTarget.set(pose.x,0,pose.z));applyGlideOffset(glideTarget.clone());glideTarget.copy(glideOffset);return;}
             // Replaying a chapter must start from the authored desk orientation,
             // rather than saving the last animation sample as its next origin.
             if(!presentationProductOrigins.has(key))presentationProductOrigins.set(key,{offset:glideOffset.clone(),yaw:deskYaw});

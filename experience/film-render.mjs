@@ -11,7 +11,7 @@ import {mergePeople} from './people-edits.mjs';
 // Camera: filmCamera below.
 export function filmRenderShot(film,shot,keys){
   const seconds=shot.seconds,next={...structuredClone(film||{}),id:shot.id,room:shot.room,kind:shot.kind,seconds};
-  for(const k of ['layout','look','mode','preset','size','title','detail'])if(shot[k]!==undefined)next[k]=shot[k];
+  for(const k of ['layout','look','mode','preset','size','title','detail','subshot'])if(shot[k]!==undefined)next[k]=shot[k];
   if(shot.motion)next.motion=structuredClone(shot.motion);
   const lit=exportLighting(shot);
   if(Array.isArray(shot.screens))next.screens=structuredClone(shot.screens);

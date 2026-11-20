@@ -46,7 +46,8 @@ function deskVersionsBase(film,subshots){
 }
 export const versionAt=(list,seconds)=>list.find(v=>seconds<v.to)||list.at(-1)||null;
 // The chapter shot as this sub-shot renders it: its preset and kind (F is 'glide': the ergonomic keyboard swap).
-export const versionShot=(shot,v)=>v?{...shot,preset:v.preset,...(v.kind?{kind:v.kind}:{})}:shot;
+// (subshot: the stage stands every desk version at the product origin, as the film's sub-shot pages do)
+export const versionShot=(shot,v)=>v?{...shot,preset:v.preset,subshot:v.n,...(v.kind?{kind:v.kind}:{})}:shot;
 // Render still / Film look: the sub-shot's film shot with the Director's edits on top (film-render.mjs).
 export const versionRenderShot=(film,shot,keys,v)=>v?filmRenderShot(v.setup||film,versionShot(shot,v),keys):filmRenderShot(film,shot,keys);
 // The sub-shots file next to the chapter's film shot: {shots, storage, library} (storage: the render's --storage seed,

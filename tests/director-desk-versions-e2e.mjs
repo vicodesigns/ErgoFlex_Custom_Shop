@@ -3,7 +3,9 @@
 // build-round8-director.py --pages to director-film/hero-subshots.json). The Director shows them as a lane of 6
 // segments (A · Gaming … F · Architect); seeking into a segment puts that sub-shot's desk on the live stage and names it
 // on the frame (8 s: B · Artist; 30 s: E · OCC); a segment click seeks to where its
-// desk starts; Render still inside a segment renders that desk; no page errors.
+// desk starts; Render still inside a segment renders that desk; no page errors. Every desk version stands where desk A
+// stands (same world yaw and glide position): Office's Studio starting pose is turned 28.9°, and its desk came in
+// turned against the one before it (Vico, 19 Nov 2026; studio.js resetProductOrigin with the product origin).
 //
 //   node tests/director-desk-versions-e2e.mjs        (BASE=http://127.0.0.1:3109 to use a running server;
 //                                                     SHOTS=<dir> also saves frames at 2 8 17 24 30 40 s)
@@ -28,6 +30,9 @@ const MARK={B:'artist-easel',F:'drafting-kit',D:builds?'portrait-monitor':'flat-
 const {base,page,errors,close}=await openDirectorBrowser();
 const failures=[],check=(ok,what)=>{console.log(`${ok?'ok  ':'FAIL'} ${what}`);if(!ok)failures.push(what);};
 const stageDesk=()=>page.evaluate(()=>{const api=document.getElementById('stage').contentWindow.ErgoFlex;return {wood:api.currentConfig.woodFinish,trim:api.currentConfig.trimColor,accessories:[...api.currentConfig.accessories]};});
+// the desk's place on the stage: world yaw (degrees) and the glide offset
+const deskPose=()=>page.evaluate(()=>{const api=document.getElementById('stage').contentWindow.ErgoFlex,q=api.loadedModel.getWorldQuaternion(api.loadedModel.quaternion.clone()),y=2*Math.atan2(q.y,q.w)*180/Math.PI;return {yaw:((y+540)%360)-180,x:api.glidePosition.x,z:api.glidePosition.z};});
+const samePose=(a,b)=>Math.abs(a.yaw-b.yaw)<.1&&Math.abs(a.x-b.x)<1e-4&&Math.abs(a.z-b.z)<1e-4,poseText=p=>`${p.yaw.toFixed(2)}° at ${p.x.toFixed(4)} / ${p.z.toFixed(4)}`;
 const badge=()=>page.$eval('.desk-version-badge',e=>e.hidden?'':e.textContent).catch(()=>'');
 // Seek, then wait until the stage carries the desk of that sub-shot (the switch re-prepares the stage).
 async function seekTo(t,n){
@@ -45,12 +50,14 @@ try{
   check(Math.abs(lane[1].left-4.7/48*100)<.01&&Math.abs(lane[1].left+lane[1].width-13.1/48*100)<.01,'B spans its renderRange 4.7–13.1 s');
   check((await badge())==='Desk A · Gaming',`at 0 s the frame reads "${await badge()}"`);
   check((await stageDesk()).wood===WOOD.A,`at 0 s the stage desk is the gaming build (${(await stageDesk()).wood})`);
+  const poseA=await deskPose();
 
   for(const [t,n,label] of [[8,'B','Artist'],[17,'C','Office']]){
     const took=await seekTo(t,n),desk=await stageDesk();
     check((await badge())===`Desk ${n} · ${label}`,`${t} s: the frame reads "${await badge()}" (${took.toFixed(1)} s to switch)`);
     check(desk.wood===WOOD[n],`${t} s: the stage desk top is ${desk.wood} (${WOOD[n]})`);
     if(n==='C')check(['wide-monitor','portrait-monitor'].every(a=>desk.accessories.includes(a)),'17 s: the office build has both monitors');
+    const pose=await deskPose();check(samePose(pose,poseA),`${t} s: Desk ${n} stands where Desk A stood (${poseText(pose)}; A ${poseText(poseA)})`);
     check(!/film setup could not be applied/.test(await statusOf(page)),`${t} s: the sub-shot's film setup applied`);
     check(!/could not/.test(await statusOf(page)),'status: '+await statusOf(page));
   }

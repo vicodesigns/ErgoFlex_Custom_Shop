@@ -20,8 +20,8 @@ const bare=deskVersions(film,null);assert.equal(bare.length,6);assert.equal(bare
 
 // Stage shot: the chapter with the sub-shot's preset and kind; F keeps glide (the ergonomic keyboard swap).
 const shot={id:'hero',room:'product',kind:'glide',seconds:48,preset:'gaming',size:'60x30'};
-assert.deepEqual(versionShot(shot,v[1]),{...shot,preset:'occ',kind:'hero'});
-assert.deepEqual(versionShot(shot,v[5]),{...shot,preset:'gaming',kind:'glide'});
+assert.deepEqual(versionShot(shot,v[1]),{...shot,preset:'occ',subshot:v[1].n,kind:'hero'});   // (subshot: the stage stands it at the product origin)
+assert.deepEqual(versionShot(shot,v[5]),{...shot,preset:'gaming',subshot:v[5].n,kind:'glide'});
 assert.equal(versionShot(shot,null),shot);
 // Render still: the sub-shot's film shot (its exposure, accessories), the sub-shot's preset over the cut's.
 const job=versionRenderShot(film,shot,null,v[4]);

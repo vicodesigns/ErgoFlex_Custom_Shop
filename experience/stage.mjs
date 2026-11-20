@@ -258,7 +258,8 @@ export async function mountStage(ctx) {
     await api.presetReady;await api.workspaceAccessories?.ready;await api.sceneDesks?.objects?.ready;await nextFrame();await nextFrame();
     if(next.preset||['lift','tilt','wellness','music','media'].includes(next.kind))await ctx.installRecipe(recipe,next.size);
     ctx.pose(next.kind==='tilt'?43.5:30,0);
-    if(next.room==='product')ctx.resetProductOrigin(preset+':'+(next.size||'60x30'));
+    // (a desk version, a sub-shot of the film or the Director's: every desk at the product origin, so a swap keeps the place)
+    if(next.room==='product')ctx.resetProductOrigin(preset+':'+(next.size||'60x30'),typeof next.subshot==='string'?{x:0,z:0,yaw:0}:null);
     api.workspaceRoom?.setCeilingEnabled(false);
     // People in the room (room-people.mjs): shot.people is true, or { only: [ids], except: [ids] }. Off unless the shot asks.
     await api.setRoomPeople?.(!!next.people,next.people&&typeof next.people==='object'?next.people:null);
