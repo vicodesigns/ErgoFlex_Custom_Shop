@@ -5,8 +5,9 @@
 //   editor (a chapter or cut switch, Export cut, the film's newer version, a restore) and when the tab goes away.
 // The browser draft (film-fresh.mjs / the library) stays as it was: this is a second, lasting copy with history.
 // File ▸ Autosaves… lists them; Restore first autosaves what is open, then loads the version as an unexported draft.
+import { editsOf } from './edits-count.mjs';
 const QUIET = 3000, MAX_WAIT = 10000, BEACON_MAX = 60000;
-export const REASON_LABEL = { edit: 'edit', chapter: 'before switching', close: 'tab closed', export: 'before Export cut', replace: 'before the film\'s version', restore: 'before a restore', reopen: 'reopened draft' };
+export const REASON_LABEL = { edit: 'edit', chapter: 'before switching', close: 'tab closed', export: 'before Export cut', replace: 'before the film\'s version', restore: 'before a restore', reopen: 'reopened draft', aside: 'set aside: your unexported changes' };
 const pad = n => String(n).padStart(2, '0');
 export function when(iso, now = new Date()) {
   const d = new Date(iso); if (Number.isNaN(d.getTime())) return '';
@@ -48,7 +49,12 @@ export function createAutosave({ place, project, groups = () => [], escape, onSt
     if (state.kind === 'error') return { text: 'Not autosaved', title: `Autosave failed: ${state.error}. Your edits are still kept as a browser draft.`, warn: true };
     return { text: '', title: '', warn: false };
   }
-  const body = reason => { const p = project(); return JSON.stringify({ v: 1, ...place(), reason, groups: groups(), project: p }); };
+  const body = (reason, other = null, note = '') => { const p = other || project(); return JSON.stringify({ v: 1, ...place(), reason, groups: other ? [] : groups(), project: p, ...(note ? { note } : {}) }); };
+  // A version that is not what is open (a draft set aside for the film's version, film-fresh.mjs): saved as its own entry,
+  // named, kept for good by the store; what is open and its own saving are left as they are.
+  async function keep(cut, reason = 'aside', note = '') {
+    try { const r = await fetcher('/__director/autosave', { method: 'POST', headers: { 'content-type': 'application/json' }, body: body(reason, cut, note) }); return r.ok; } catch { return false; }
+  }
   async function save(reason = 'edit', { force = false } = {}) {
     clearTimeout(timer); timer = 0; first = 0;
     const b = body(reason), same = b.replace(/"reason":"[a-z]+",/, '') === last;
@@ -94,7 +100,7 @@ export function createAutosave({ place, project, groups = () => [], escape, onSt
     try { const r = await fetcher(`/__director/autosaves?cut=${encodeURIComponent(cut)}`, { cache: 'no-store' }); if (r.status === 404) throw Error('this studio server is older than autosave: restart it once'); const v = await r.json(); if (!r.ok) throw Error(v.error); list = v.list || []; }
     catch (error) { dialog.querySelector('.director-hint').textContent = 'No autosaves: ' + error.message; return; }
     rows = list; const mine = list.filter(x => x.chapter === chapter), others = list.filter(x => x.chapter !== chapter);
-    const row = (x, i, here) => `<li class="autosave-row ${here ? '' : 'other'}"><span class="autosave-time">${e(when(x.at))}</span><span class="autosave-why">${e(REASON_LABEL[x.reason] || x.reason)}</span><span class="autosave-groups">${x.groups?.length ? e('changed: ' + x.groups.join(', ')) : 'as exported'}</span><small>${Math.max(1, Math.round((x.bytes || 0) / 1024))} KB</small>${here ? `<button type="button" data-autosave-restore="${i}">Restore</button>` : `<small class="autosave-elsewhere">${e(x.chapter)}: open that chapter to restore</small>`}</li>`;
+    const row = (x, i, here) => `<li class="autosave-row ${here ? '' : 'other'}"><span class="autosave-time">${e(when(x.at))}</span><span class="autosave-why">${e(REASON_LABEL[x.reason] || x.reason)}</span><span class="autosave-groups">${x.note ? `<b class="autosave-note">${e(x.note)}</b> ` : ''}${x.reason === 'aside' ? '' : x.groups?.length ? e('changed: ' + x.groups.join(', ')) : 'as exported'}${Number.isFinite(x.edits) ? ` <small>${x.edits} edit${x.edits === 1 ? '' : 's'}</small>` : ''}</span><small>${Math.max(1, Math.round((x.bytes || 0) / 1024))} KB</small>${here ? `<button type="button" data-autosave-restore="${i}">Restore</button>` : `<small class="autosave-elsewhere">${e(x.chapter)}: open that chapter to restore</small>`}</li>`;
     dialog.innerHTML = `<div class="director-heading"><div><span class="director-kicker">AUTOSAVES</span><h2 id="director-autosaves-title">Earlier versions of this chapter</h2></div><button type="button" data-autosave-close aria-label="Close">✕</button></div>
       <p class="director-hint">Kept on this computer: the last 30, then one an hour for two weeks, then one a day. Restore saves what is open first, then brings the version back as an unexported draft; Export cut sends it to the film.</p>
       ${mine.length ? `<ol class="autosave-list">${mine.map(x => row(x, list.indexOf(x), true)).join('')}</ol>` : '<p class="director-hint">No autosaves of this chapter yet.</p>'}
@@ -104,6 +110,13 @@ export function createAutosave({ place, project, groups = () => [], escape, onSt
     if (event.target.closest('[data-autosave-close]') || event.target === dialog) { dialog.close(); return; }
     const b = event.target.closest('[data-autosave-restore]'); if (!b) return;
     const x = rows[Number(b.dataset.autosaveRestore)]; if (!x) return; const { cut } = place();
+    // (19 Nov 2026: Vico restored an empty autosave over his open work twice; the newest entries looked alike. A version
+    // with far fewer edits than what is open asks once more, on the button itself)
+    const open_ = (() => { try { return editsOf(project()); } catch { return 0; } })();
+    if (Number.isFinite(x.edits) && open_ >= 2 && x.edits < open_ * .5 && b.dataset.sure !== '1') {
+      b.dataset.sure = '1'; b.classList.add('danger'); b.textContent = `Restore ${x.edits} edit${x.edits === 1 ? '' : 's'} over your ${open_}?`;
+      status(`That version holds ${x.edits} edit${x.edits === 1 ? '' : 's'}; what is open holds ${open_}. Click again to restore it anyway (what is open is saved first).`, true); return;
+    }
     b.disabled = true; b.textContent = 'Restoring…';
     try {
       await save('restore', { force: true });
@@ -114,5 +127,5 @@ export function createAutosave({ place, project, groups = () => [], escape, onSt
       status(`Restored the autosave from ${when(x.at)} as an unexported draft. What was open is saved too (File ▸ Autosaves…, “before a restore”).`);
     } catch (error) { b.disabled = false; b.textContent = 'Restore'; status('Not restored: ' + error.message, true); }
   }
-  return { poke, save, closing, open, text, state: () => state };
+  return { poke, save, keep, closing, open, text, state: () => state };
 }

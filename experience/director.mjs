@@ -12,7 +12,7 @@ import {createKeysPanel,loadUi,saveUi} from './keys-panel.mjs';
 import {createViewNav} from './view-nav.mjs';
 import {PREF as HOLD_PREF} from './editing-camera.mjs';
 import {createPreviewHides,HIDE_LABELS} from './preview-hides.mjs';
-import {createAutosave,placeOf,changesSince} from './director-autosave.mjs';
+import {createAutosave,placeOf,changesSince,when as autosaveWhen} from './director-autosave.mjs';
 import {createGraphicsEditor} from './graphics-editor.mjs';
 import {addCameraHolds} from './camera-holds.mjs';
 import {cinematicViews,polishMovement,openingSwoop} from './cinematography.mjs';
@@ -77,7 +77,7 @@ export function mountDirector(bridge,catalog,initial){
   const film=filmLink(location.hash),signature=()=>JSON.stringify([project.name,project.client,project.volume,project.shots]);
   let filmChapters=null,filmCuts=null,filmError='',exported=signature();
   // A film chapter reloaded after an import: the film's newer cut, an unexported draft to keep or drop, stale-export warning.
-  const fresh=createFilmFresh(film,project,{storage,catalog,escape,render:()=>renderFilm(),status:(m,error)=>status(m,error),current:()=>({cut:project,unexported:unexported()}),load:(cut,asExported)=>{autosave?.save('replace');loadProject(cut,false);if(asExported)exported=signature();syncFilm();}});
+  const fresh=createFilmFresh(film,project,{storage,catalog,escape,render:()=>renderFilm(),status:(m,error)=>status(m,error),current:()=>({cut:project,unexported:unexported()}),keep:(cut,at)=>setTimeout(()=>{let c=cut;try{c=cleanCut(cut,catalog);}catch{}autosave?.keep(c,'aside',`your changes from ${autosaveWhen(at)}`);},0),load:(cut,asExported)=>{autosave?.save('replace');loadProject(cut,false);if(asExported)exported=signature();syncFilm();}});
   var reopenedDraft=false;{const d=fresh.initialDraft();if(d){project=cleanCut(d,catalog);reopenedDraft=true;}}
   const panel=document.createElement('section');panel.id='director-panel';panel.setAttribute('aria-label','Director controls');
   const timeline=document.createElement('section');timeline.id='director-timeline';timeline.setAttribute('aria-label','Chapter timeline');
@@ -294,7 +294,7 @@ export function mountDirector(bridge,catalog,initial){
   // ---- autosave to disk (director-autosave.mjs): exports/director-autosaves/<cut>/<chapter>/
   var autosave=createAutosave({place:()=>placeOf(cutDir,project),project:()=>cleanCut(project,catalog),escape,status:(m,e)=>status(m,e),
     groups:()=>{try{const [,, ,shots]=JSON.parse(exported);return changesSince({shots},project);}catch{return [];}},
-    onState:()=>paintSaved(),restore:v=>{loadProject(v,false);}});
+    onState:()=>paintSaved(),restore:v=>{loadProject(v,false);fresh.stamp(project);}});   // (the restored draft is as of now: the next load opens it)
   addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&unexported())autosave.save('edit');});
   if(reopenedDraft)setTimeout(()=>autosave.save('reopen'),1500);   // (a browser draft brought back on load goes to disk too)
   function cutPicker(){

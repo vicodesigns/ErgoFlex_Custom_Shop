@@ -743,3 +743,6 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 .screen-look-row input[type=range]{width:100%}
 .screen-look-row output{text-align:right;color:#94afbf;font-variant-numeric:tabular-nums}
 .screen-look-row.set span,.screen-look-row.set output{color:#ffc977}
+/* film banner: how many more edits the draft has (film-fresh.mjs); the autosave list's notes (director-autosave.mjs) */
+.film-fresh .film-fresh-more{color:#ffe2a8;font-weight:600}
+.autosave-note{color:#ffc977;font-weight:600}

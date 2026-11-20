@@ -1,4 +1,5 @@
 import {cleanCut} from './cuts.mjs';
+import {editsOf} from './edits-count.mjs';
 import {loadFilmChapters} from './film-chapters.mjs';
 // Film chapter freshness. A chapter page bakes its cut into the URL hash, so a reloaded Director tab (F5, a live
 // reload) came back with the cut it was first opened with, and its next Export cut sent those stale values back to
@@ -94,7 +95,7 @@ export function ago(iso,now=Date.now()){
 // unexported}: what the editor has now)}.
 export function createFilmFresh(film,project,hooks){
   const state=film?filmFresh.state:null,id=project.shots.length===1?project.shots[0].id:null,on=!!(state&&id===state.chapter.id);
-  if(!on)return {on,initialDraft:()=>null,noteDraft(){},noticeHTML:()=>'',choose(){},exported(){},guardExport:async()=>false,prompt(){},offered:()=>null};
+  if(!on)return {on,stamp(){},initialDraft:()=>null,noteDraft(){},noticeHTML:()=>'',choose(){},exported(){},guardExport:async()=>false,prompt(){},offered:()=>null};
   const draftKey=project.id; // Each film cut has its own chapter project id.
   let base={cut:structuredClone(project),version:state.stamp.version},filmCut=structuredClone(project),exportedAt='',wrote=false;
   let notice=state.newer?{text:loadedText(state.stamp)}:null;
@@ -113,6 +114,8 @@ export function createFilmFresh(film,project,hooks){
     if(list.some(d=>{const x=belongs(d)&&clean(d.cut);return !!x&&sameCut(x,c);}))return true;    // (already set aside)
     const now=new Date().toISOString();
     all[draftKey]=[...list,{key:Date.now().toString(36)+Math.random().toString(36).slice(2,7),cut:structuredClone(cut),at:at||now,asideAt:now,base:state.stamp.version}];
+    // (and to disk, as its own named autosave, before the film's version takes its place: File ▸ Autosaves lists it)
+    hooks.keep?.(structuredClone(cut),at||now);
     return writeAside(hooks.storage,all);
   }
   function dropAside(key){
@@ -150,6 +153,9 @@ export function createFilmFresh(film,project,hooks){
     const all=readDrafts(hooks.storage),prev=belongs(all[draftKey])?all[draftKey]:(belongs(all[id])?all[id]:null),c=structuredClone(cut),edited=(()=>{try{return JSON.stringify(cleanCut(prev.cut,hooks.catalog).shots)!==JSON.stringify(cleanCut(c,hooks.catalog).shots);}catch{return true;}})();
     all[draftKey]={cut:c,at:edited?new Date().toISOString():prev.at,base:base.version};if(belongs(all[id]))delete all[id];writeDrafts(hooks.storage,all);
   }
+  // A version brought back from File ▸ Autosaves is the chapter's draft as of now (newer than any film version it was
+  // made before), so the next load opens it, never the banner or the film's version (19 Nov 2026, Vico's wellness).
+  function stamp(cut){if(hold)return;const all=readDrafts(hooks.storage);all[draftKey]={cut:structuredClone(cut),at:new Date().toISOString(),base:base.version};if(belongs(all[id]))delete all[id];writeDrafts(hooks.storage,all);wrote=true;}
   // Keep: the offered draft becomes the chapter's draft in the editor. What the editor had (the film's version, maybe
   // edited since) is set aside in its turn when it has unexported changes: nothing is lost either way.
   function keepOffer(){
@@ -188,9 +194,11 @@ export function createFilmFresh(film,project,hooks){
   }
   function noticeHTML(){
     if(!notice)return '';const e=hooks.escape,o=notice.offer;let choice='';
-    if(notice.using==='draft'&&notice.draft)choice=`<span class="film-fresh-draft">You have unexported changes${clock(notice.draft.at)?` from ${clock(notice.draft.at)}`:''} in this browser.</span><span class="film-fresh-choice"><button data-action="film-keep-draft" aria-pressed="true">Keep my unexported changes</button><button data-action="film-use-film" aria-pressed="false" title="Sets these changes aside (nothing is deleted) and opens the film's version">Use the film's version</button></span>`;
+    // (how many more edits a draft holds than the film's version: Keep is the default then, and says so; 19 Nov 2026)
+    const more=c=>{try{return editsOf(c)-editsOf(filmCut);}catch{return 0;}},moreText=n=>n>0?`<span class="film-fresh-more">Your draft has ${n} more edit${n===1?'':'s'} than the film's version.</span>`:'';
+    if(notice.using==='draft'&&notice.draft)choice=`<span class="film-fresh-draft">You have unexported changes${clock(notice.draft.at)?` from ${clock(notice.draft.at)}`:''} in this browser.</span>${moreText(more(notice.draft.cut))}<span class="film-fresh-choice"><button data-action="film-keep-draft" class="primary" aria-pressed="true">Keep my unexported changes</button><button data-action="film-use-film" aria-pressed="false" title="Sets these changes aside (nothing is deleted) and opens the film's version">Use the film's version</button></span>`;
     if(notice.using==='draft'&&notice.draft&&o)choice+=`<span class="film-fresh-draft">Other unexported changes${clock(o.at)?` from ${clock(o.at)}`:''} are set aside.</span><span class="film-fresh-choice"><button data-action="film-draft-ask">Show them…</button></span>`;
-    else if(o)choice=`<span class="film-fresh-draft">Your earlier unexported changes${clock(o.at)?` from ${clock(o.at)}`:''} are set aside.</span><span class="film-fresh-choice"><button data-action="film-keep-draft" aria-pressed="false">Keep my unexported changes</button><button data-action="film-use-film" aria-pressed="true" title="Asks before deleting the set-aside changes">Use the film's version…</button></span>`;
+    else if(o)choice=`<span class="film-fresh-draft">Your earlier unexported changes${clock(o.at)?` from ${clock(o.at)}`:''} are set aside.</span>${moreText(more(o.cut))}<span class="film-fresh-choice"><button data-action="film-keep-draft" class="${more(o.cut)>0?'primary':''}" aria-pressed="false">Keep my unexported changes</button><button data-action="film-use-film" aria-pressed="true" title="Asks before deleting the set-aside changes">Use the film's version…</button></span>`;
     return `<div class="film-fresh" data-film-fresh role="status">${notice.text?`<span>${e(notice.text)}</span>`:''}${choice}</div>`;
   }
   function choose(which){
@@ -262,5 +270,5 @@ export function createFilmFresh(film,project,hooks){
     dialog.showModal();dialog.querySelector('[data-stale=latest]').focus();
     return true;
   }
-  return {on,initialDraft,noteDraft,noticeHTML,choose,exported,guardExport,prompt,offered:()=>offer,importPending:()=>!!pending,unconfirmed:()=>unconfirmed};
+  return {on,initialDraft,noteDraft,noticeHTML,choose,exported,guardExport,prompt,stamp,offered:()=>offer,importPending:()=>!!pending,unconfirmed:()=>unconfirmed};
 }
