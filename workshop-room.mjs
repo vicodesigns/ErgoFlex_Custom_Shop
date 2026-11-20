@@ -551,6 +551,19 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
         for(const s of [-1,1])kcyl(ceiling,[14,14,1210,10],[x+s*55,h-238,z],tubeGlow,[Math.PI/2,0,0]);
         krod(ceiling,[x+90,h-211,z+300],[x+90,h-560,z+300],1.2,silver,4);kball(ceiling,[6,9,6],[x+90,h-566,z+300],silver);
     }
+    // Ceiling deck: painted plaster-board soffit with exposed painted joists, one sheet-metal duct and a conduit run.
+    // Hides with the other 'Ceiling ...' groups when the eye rises above the room height (Studio top views).
+    {
+        const deck=new THREE.Group();deck.name='Ceiling workshop deck and joists';root.add(deck);
+        const deckPaint=material('#e6dcc6',{roughness:.93}),joistPaint=material('#d3c4a6',{roughness:.88}),duct=material('#b9c0bf',{metalness:.55,roughness:.5});
+        part(deck,deckPaint,new THREE.PlaneGeometry(w,d),[0,h,bz+d/2],[Math.PI/2,0,0]);
+        const lightZ=[bz+d*.28,bz+d*.72],step=1200,n=Math.floor(d/step);
+        for(let i=0;i<=n;i++){const z=bz+300+i*((d-600)/n);if(lightZ.some(lz=>Math.abs(z-lz)<760))continue;kbox(deck,[w-40,150,90],[0,h-75,z],joistPaint);}
+        kbox(deck,[w-40,60,160],[0,h-30,bz+10+80],joistPaint);
+        const dz=bz+d*.5;kcyl(deck,[170,170,w-120,20],[0,h-300,dz],duct,[0,0,Math.PI/2]);
+        for(let x=-w/2+700;x<w/2-300;x+=1400){kbox(deck,[40,150,30],[x,h-190,dz],steel);kbox(deck,[70,28,30],[x,h-120,dz],steel);}
+        for(const o of [0,70])krod(deck,[-w/2+20,h-150-o*.3,bz+260+o],[w/2-20,h-150-o*.3,bz+260+o],12,silver,8);
+    }
     // Festoon bulbs zig-zag between the shop lights for evenings and the open workshop.
     {
         const z1=bz+d*.28+628,z2=bz+d*.72-628,y=h-246,hooks=[[-w*.25,z1],[w*.25,z1],[-w*.25,z2],[w*.25,z2]];
@@ -611,6 +624,7 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
         bunting.forEach(g=>g.visible=id==='party');root.userData.atmosphere=id;
     };
     flushKits();
+    root.children.find(g=>g.name==="Ceiling workshop deck and joists")?.traverse(o=>{if(o.isMesh){o.castShadow=false;o.receiveShadow=true;}});
     // Explicit surface roles keep detail off artwork and imported models.
     for (const [mat, surface] of [[plaster, 'plaster'], [paintLow, 'plaster'], [steel, 'metal'], [silver, 'metal'], [orange, 'powder'], [teal, 'powder'], [red, 'powder'], [yellow, 'powder'], [enamel, 'powder'], [rubber, 'rubber'], [ply, 'wood'], [block, 'wood'], [pine, 'wood'], [oak, 'wood'], [walnut, 'wood'], [handle, 'wood'], [slab, 'stone']]) mat.userData.roomSurface = surface;
     creativeMaterialDetail(root, [[plaster, 'plaster'], [paintLow, 'plaster'], [steel, 'powder'], [silver, 'brushed'],
