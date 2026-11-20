@@ -2578,8 +2578,9 @@ const DECOR = {
         }
         const cab = byId('storage'); if (cab) for (const o of cab.children) if (o.isMesh && o.material === kit.accent) o.material = E.M('#2e3236', 'powder', { roughness: .6 });
         // A pendulum model hanging from the ceiling near the window.
-        const px = -w / 2 + 1500, pz = 2500; kit.rod(E.ceiling, [px, kit.ceiling - 10, pz], [px + 120, 1850, pz], 2, kit.ink); kit.mesh(E.ceiling, new THREE.SphereGeometry(70, 18, 12), E.M(HB.orange, 'metal', { metalness: .5, roughness: .35 }), [px + 125, 1780, pz]);
-        kit.box(E.ceiling, [300, 20, 60], [px, kit.ceiling - 10, pz], kit.metal, 3);
+        // (named so a Director prop edit can find them: match '^Pendulum (bob|string)$' with hide:true; the names change no pixel)
+        const px = -w / 2 + 1500, pz = 2500; kit.rod(E.ceiling, [px, kit.ceiling - 10, pz], [px + 120, 1850, pz], 2, kit.ink).name = 'Pendulum string'; kit.mesh(E.ceiling, new THREE.SphereGeometry(70, 18, 12), E.M(HB.orange, 'metal', { metalness: .5, roughness: .35 }), [px + 125, 1780, pz]).name = 'Pendulum bob';
+        kit.box(E.ceiling, [300, 20, 60], [px, kit.ceiling - 10, pz], kit.metal, 3).name = 'Pendulum mount';
     },
     college(kit, E) {
         const { w, bz, d, byId } = kit;

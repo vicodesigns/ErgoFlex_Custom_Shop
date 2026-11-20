@@ -2,12 +2,17 @@ import {enhanceGizmo,mmPerUnitOf} from './gumball.mjs';
 import {cleanDeskEdit,effectiveDeskEdits,describeDeskEdit,deskDragPose} from './desk-edits.mjs';
 import {clampStartPose,startPoseLimits,START_PRESETS} from './start-pose.mjs';
 import {writeSceneDesks,DESKS_KEY,noteStudioValue} from './studio-sync.mjs';
+import {readSetup,FEATURED} from './desk-build.mjs';
+import {copySetup,describeKit,eyeOf,STANDING} from './desk-kit.mjs';
 // Director "Desks": every ErgoFlex desk in the room, not only the featured one (the chapter's hero desk, edited in the
 // Groove tab). Select a desk in the Desks list or by clicking it in the view; its panel sets Size (48″ / 60″), Position
 // X / Z in inches, Rotate in degrees, the starting Height and Tilt (start-pose.mjs clamps them to the real desk), and
 // Reset desk. Edits go to the chapter's cut shot (shot.deskEdits, experience/desk-edits.mjs); film-fx applies them to the
 // live stage, Render still and the film as the film shot's sceneDeskEdits. Studio is written only by "Make permanent in
 // Studio…" (below), row by row, when Vico confirms it; the chapter keeps its edits either way.
+// "Same setup as another desk" (desk-kit.mjs): the keyboard tray, single monitor arm, monitor, keyboard and mouse of the featured
+// (black) desk or of another room desk go onto the selected one, placed for it (white keyboard and mouse on a white desk, the
+// monitor at its user's eye height, optionally the desk standing at 43.5 in); one undo step, kept in shot.deskEdits[].build.
 // Selecting the featured desk (list, click, Esc, empty click) leaves the desk selection: the Groove tab is its editor.
 // The view: a teal box and floor footprint on the selected desk, and a round handle under it: drag it on the floor to
 // move the desk (the numbers follow), a gumball on it (arrows along the room's X and Z, a square for both) and a ring around it
@@ -21,6 +26,7 @@ const sizeLabel=s=>s?String(s).slice(0,2)+'″':'';
 const MUTED=Symbol('director-desks');
 export function createSceneDeskEditor({bridge,shot,film,commit,status,open,rerender,onSelect=()=>{},onPick=()=>{},lightsShowing=()=>false,inTab=()=>false,showFeatured=()=>{},toggleVisibility=()=>{}}){
   let sel=null,tools=null,booting=null,drag=null,gz=null,turning=null,hover=null,gesture=0,shotId=null;
+  const kitUi={src:FEATURED,finish:'auto',stand:false};   // the panel's "Same setup as another desk" choices (kept while the tab is open)
   const frame=()=>document.getElementById('stage'),win=()=>frame()?.contentWindow;
   const api=()=>win()?.ErgoFlex,desks=()=>api()?.sceneDesks,three=()=>bridge.stage()?.three?.();
   const editing=()=>open()&&bridge.ready()&&!bridge.playback().playing&&!bridge.bakeState().baking;
@@ -348,6 +354,30 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     status(`Wrote ${rows.length} desk${rows.length===1?'':'s'} to Studio (${key}): ${rows.map(r=>r.name).join(', ')}. Studio shows ${rows.length===1?'it':'them'} after a reload; the chapter keeps its own edits.`);
     rerender();
   }
+  // ---- Same setup as another desk
+  // Who works at the desk in this chapter (peopleEdits' cast, else the film's): their eye height, from their standing model's height.
+  function userEye(id){
+    const station=String(id).replace(/^station-/,''),cast=shot()?.peopleEdits?.cast||film()?.people?.cast||[],lib=api()?.workspaceRoom?.people?.library;
+    for(const p of cast){
+      if(!p||p.station!==station||p.hide===true)continue;const who=/^people-([a-z]+)-/.exec(p.id||'')?.[1];if(!who)continue;
+      const h=lib?.entry?.(`people-${who}-stand-type`)?.size?.[1];const eye=eyeOf(h);if(eye)return {eye,who};
+    }
+    return null;
+  }
+  function kitSources(){return [{id:FEATURED,label:'Featured desk ★'},...records().filter(r=>r.id!==featured()&&r.id!==sel).map(r=>({id:r.id,label:name(r)}))];}
+  function copyKit(id=sel){
+    const r=rec(id),a=api();if(!r||!a||id===featured())return;
+    const from=kitUi.src===id?FEATURED:kitUi.src,source=readSetup(a,from),mine=readSetup(a,id);
+    if(!source||!mine||!source.accessories.length){status('The source desk is not loaded yet: try again in a moment.',true);return;}
+    const v=view(id),heightIn=kitUi.stand?STANDING.height:v.initial.height,standing=heightIn>=40,user=standing?userEye(id):null;
+    const own=editOf(id)?.build?.accessories||mine.accessories;
+    const res=copySetup(source,{size:v.size,heightIn,baseFinish:mine.baseFinish,accessories:own},{finish:kitUi.finish,eyeMm:user?.eye});
+    if(!res||!res.build){status('Nothing to copy.',true);return;}
+    const patch={build:{...(editOf(id)?.build||{}),...res.build}};
+    if(kitUi.stand)patch.initial=clampStartPose({height:STANDING.height,tilt:STANDING.tilt},v.size);
+    const src=from===FEATURED?'the featured desk':name(rec(from));
+    put(id,patch,`${name(r)}: same setup as ${src}: ${describeKit(res)}${kitUi.stand?'; standing at '+STANDING.height+'″':''}${user?'; monitor at '+user.who[0].toUpperCase()+user.who.slice(1)+'’s eye height':''}. Ctrl+Z undoes it.`);
+  }
   async function action(act,arg){
     sync();
     if(act==='dk-select'){select(String(arg));return;}
@@ -359,9 +389,13 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
     if(act==='dk-size'){setSize(sel,String(arg));return;}
     if(act==='dk-nudge'){const [axis,by]=String(arg).split(':');nudge(sel,axis,Number(by));return;}
     if(act==='dk-preset'){const p=START_PRESETS[arg];if(p){const v=view(sel),c=clampStartPose(p,v.size);put(sel,{initial:c},`${name(rec(sel))} starts ${arg==='sitting'?'sitting':'standing'}: ${c.height}″, ${c.tilt}°.`);}return;}
+    if(act==='dk-kit-copy'){copyKit(sel);return;}
     if(act==='dk-reset'){reset();return;}
   }
   function changed(el,{live=false}={}){
+    if(el.name==='dk-kit-src'){kitUi.src=el.value;return;}
+    if(el.name==='dk-kit-finish'){kitUi.finish=el.value;return;}
+    if(el.name==='dk-kit-stand'){kitUi.stand=!!el.checked;return;}
     if(!sel)return;const n=el.name,v=Number(el.value);if(el.value===''||!Number.isFinite(v)){rerender();return;}
     const pose=view(sel).pose;
     if(n==='dk-x'||n==='dk-z'){const k=n==='dk-x'?'x':'z';put(sel,{pose:{...pose,[k]:v*IN}},`${k==='x'?'x':'z'} ${r1(v)}″.`);return;}
@@ -374,6 +408,16 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
   const showStart=p=>{const box=document.getElementById('director-panel');if(!box)return;for(const [n,val] of [['dk-height',p.height],['dk-height-n',p.height],['dk-tilt',p.tilt],['dk-tilt-n',p.tilt]]){const el=box.querySelector(`[name="${n}"]`);if(el&&document.activeElement!==el)el.value=String(val);}};
   document.addEventListener('pointerdown',ev=>{if(ev.target.closest?.('[name="dk-height"],[name="dk-tilt"]'))gesture++;},true);
   // ---- the inspector
+  function kitPanel(r,e){
+    const list=kitSources(),k=kitUi,user=userEye(r.id),opt=(v,t,cur)=>`<option value="${escape(v)}" ${cur===v?'selected':''}>${escape(t)}</option>`;
+    if(!list.some(x=>x.id===k.src))k.src=FEATURED;
+    return `<fieldset class="chapter-pacing desk-kit" data-desk-kit><legend>Same setup as another desk</legend>
+      <label class="desk-num">Copy from<span><select name="dk-kit-src">${list.map(x=>opt(x.id,x.label,k.src)).join('')}</select></span></label>
+      <label class="desk-num">Keyboard and mouse<span><select name="dk-kit-finish">${opt('auto','Match this desk (white frame: white)',k.finish)}${opt('white','White ErgoFlex',k.finish)}${opt('black','Black',k.finish)}${opt('source','As the source has them',k.finish)}</select></span></label>
+      <label class="director-check"><input type="checkbox" name="dk-kit-stand" ${k.stand?'checked':''}><span>Stand at this desk: raise it to ${STANDING.height}″, flat${user?' (the monitor goes to '+escape(user.who[0].toUpperCase()+user.who.slice(1))+'’s eye height)':''}</span></label>
+      <div class="director-actions"><button data-action="dk-kit-copy" title="Puts the keyboard tray, single monitor arm, monitor, keyboard and mouse on this desk, placed for it. One undo step; Export cut carries it to the film.">Copy the setup onto this desk</button></div>
+      <p class="director-hint">Keyboard tray, single monitor arm, monitor, keyboard and mouse. Everything rides the desk, so it follows the desk's height and tilt. ${e?.build?.objects?'This desk has a copied setup in this chapter.':''}</p></fieldset>`;
+  }
   function panel(){
     sync();
     const list=records();
@@ -402,6 +446,7 @@ export function createSceneDeskEditor({bridge,shot,film,commit,status,open,reren
         ${row('height','Height',L.heightMin,L.heightMax,.5,'in',v.initial.height)}${row('tilt','Tilt',L.tiltMin,L.tiltMax,.5,'°',v.initial.tilt)}
         <div class="director-actions start-pose-presets"><button data-action="dk-preset" data-section="sitting" title="Sitting: 28″, 0°">Sitting</button><button data-action="dk-preset" data-section="standing" title="Standing: 43.5″, −5°">Standing</button></div>
         <p class="director-hint">${sizeLabel(v.size)} desk: ${L.heightMin}–${L.heightMax}″, ${L.tiltMin}° to ${L.tiltMax}°. Full ${L.tiltMax}° needs ${L.fullTiltHeight}″ or more.</p></fieldset>
+      ${kitPanel(r,e)}
       <div class="director-actions"><button data-action="dk-reset" ${e?'':'disabled'} title="This desk back to the film: its size, place and start">Reset desk</button><button data-action="dk-featured" title="Back to the featured desk (Esc)">Featured desk</button></div></div>`;
   }
   return {panel,action,changed,select,deselect,selected,object:()=>{const id=selected();try{return id?rec(id)?.group||null:null;}catch{return null;}},header,reset,resetAll,editedCount,edits,ensure,permanentPlan:plan,
