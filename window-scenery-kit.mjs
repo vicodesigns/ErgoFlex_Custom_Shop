@@ -8,7 +8,7 @@
 // the ground darkens under a car, a tree, at a building's foot); `normal`, which way it faces (the shader lights it with
 // the hour's sun and sky, so the light outside agrees with the sun in the sky at every hour and through the film's
 // time-of-day blend); `glow`, the light the place's own lamps throw on it after dark. A zero normal means "not lit"
-// (glass, signs); a short one (length .6) means a thin thing lit from either side (a frond, a blade of grass).
+// (signs). A length of .4 marks reflective glazing, .6 a thin double-sided surface, and .85 a distant facade.
 // Foliage is its own geometry: cards cut out of a generated leaf texture (leafAtlas), lit as the volume of its crown.
 import * as THREE from 'three';
 
@@ -87,7 +87,7 @@ export function sharedTextures() {
 }
 // the atlas cells: which part of the leaf texture a card shows
 export const LEAF = { broad: 0, needle: 1, small: 2, clump: 3 };
-const CELL = [[0, .5], [.5, .5], [0, 0], [.5, 0]];
+const CELL = [[0, 0], [.5, 0], [0, .5], [.5, .5]];
 
 // Geometry with a colour per vertex. `tone` is the surface's colour (occlusion baked in); `glow` is what the lights after
 // dark put on the surface (added under the hour's `lamp`), from the point lights given with light().
@@ -97,7 +97,7 @@ export class Builder {
     // geometry in place (matrix), coloured by shade(position, normal) -> Color. light: false takes the colour as it is
     // (glass, a sign: not lit by the sun); facet: each triangle faces its own way (rocks, roofs); two: lit from either
     // side (thin things).
-    add(geometry, matrix, shade, { light = true, facet = false, lumps = 0, dapple = 0, seed = 0, two = false, facade = false } = {}) {
+    add(geometry, matrix, shade, { light = true, facet = false, lumps = 0, dapple = 0, seed = 0, two = false, facade = false, glazing = false } = {}) {
         const g = nonIndexed(geometry), p = g.attributes.position, n = g.attributes.normal; normalMatrix.getNormalMatrix(matrix);
         for (let i = 0; i < p.count; i++) {
             point.fromBufferAttribute(p, i); normal.fromBufferAttribute(n, i);
@@ -110,7 +110,8 @@ export class Builder {
             else normal.applyMatrix3(normalMatrix).normalize();
             const c = shade(point, normal), k = 1 + patch * dapple;
             this.position.push(point.x, point.y, point.z); this.tone.push(c.r * k, c.g * k, c.b * k);
-            if (!light) this.normal.push(0, 0, 0); else if (facade && Math.abs(normal.y) < .3) this.normal.push(normal.x * .85, normal.y * .85, normal.z * .85); else if (two) this.normal.push(normal.x * .6, Math.abs(normal.y) * .6, normal.z * .6); else this.normal.push(normal.x, normal.y, normal.z);
+            if (glazing) this.normal.push(normal.x * .4, normal.y * .4, normal.z * .4);
+            else if (!light) this.normal.push(0, 0, 0); else if (facade && Math.abs(normal.y) < .3) this.normal.push(normal.x * .85, normal.y * .85, normal.z * .85); else if (two) this.normal.push(normal.x * .6, Math.abs(normal.y) * .6, normal.z * .6); else this.normal.push(normal.x, normal.y, normal.z);
         }
         return this;
     }
@@ -184,7 +185,7 @@ export class Leaves extends Builder {
             this.position.push(x, y, z); this.tone.push(col.r, col.g, col.b);
             if (centre) { A.set(x - centre.x, y - centre.y, z - centre.z).normalize().multiplyScalar(round).addScaledVector(face, 1 - round).normalize(); this.normal.push(A.x, A.y, A.z); }
             else this.normal.push(face.x, face.y, face.z);
-            this.uv.push(cu + (a * .5 + .5) * .5, cv + (b * .5 + .5) * .5);
+            this.uv.push(cu + (a * .5 + .5) * .5, cv + (.5 - b * .5) * .5);
         }
     }
 }
@@ -255,6 +256,60 @@ export function crown(b, r, cx, cy, cz, rx, ry, rz, hex, { size = spray(cz), den
     }
 }
 
+// Project the nearby crowns onto ground-level receivers at the three daylight
+// sun angles. The land already has a grid of vertices. Three normalized bytes
+// per vertex let the film blend the shadows without another render pass.
+export function bakeCanopyShade(geometry, crowns, suns) {
+    if (!crowns?.length) return false;
+    const pos = geometry.attributes.position,
+        normal = geometry.attributes.normal;
+    const shade = new Uint8Array(pos.count * 3),
+        cell = 6000;
+    suns.forEach(([azimuth, elevation], channel) => {
+        const angle = THREE.MathUtils.degToRad(azimuth);
+        const slope = 1 / Math.tan(THREE.MathUtils.degToRad(elevation));
+        const dx = -Math.sin(angle),
+            dz = Math.cos(angle),
+            bins = new Map();
+        for (const [x, y, z, ground, radius, depth] of crowns) {
+            const cx = x + dx * (y - ground) * slope,
+                cz = z + dz * (y - ground) * slope;
+            const major = Math.hypot(radius, depth * slope),
+                ex = Math.abs(major * dx) + radius,
+                ez = Math.abs(major * dz) + radius;
+            const shape = { cx, cz, ground, minorInv: 1 / radius, majorInv: 1 / major };
+            for (let i = Math.floor((cx - ex) / cell); i <= Math.floor((cx + ex) / cell); i++)
+                for (let j = Math.floor((cz - ez) / cell); j <= Math.floor((cz + ez) / cell); j++) {
+                    const key = i * 65536 + j;
+                    if (!bins.has(key)) bins.set(key, []);
+                    bins.get(key).push(shape);
+                }
+        }
+        for (let i = 0; i < pos.count; i++) {
+            if (normal.getY(i) < 0.48) continue;
+            const x = pos.getX(i),
+                y = pos.getY(i),
+                z = pos.getZ(i);
+            const nearby = bins.get(Math.floor(x / cell) * 65536 + Math.floor(z / cell));
+            if (!nearby) continue;
+            let cover = 0;
+            for (const c of nearby) {
+                const dy = y - c.ground;
+                if (dy < -400 || dy > 1100) continue;
+                const u = x - c.cx,
+                    v = z - c.cz;
+                const across = (u * dz - v * dx) * c.minorInv,
+                    along = (u * dx + v * dz) * c.majorInv;
+                const edge = Math.max(0, Math.min(1, (1 - across * across - along * along) * 2.1));
+                cover = Math.max(cover, edge * edge * (3 - 2 * edge));
+            }
+            shade[i * 3 + channel] = Math.round(cover * 255);
+        }
+    });
+    geometry.setAttribute('canopy', new THREE.BufferAttribute(shade, 3, true));
+    return true;
+}
+
 // A broadleaf tree: a trunk forking into limbs, a crown of several masses (gaps between them), grounded at `ground`
 // (its shade on the grass under it). shape: 'round', 'tall' (narrow, upright), 'spreading' (wide, low), 'ornamental'.
 export function tree(b, r, x, ground, z, { height = 6000, spread, hex = '#62804f', bark = '#5e5046', shape = 'round', density = 1, size } = {}) {
@@ -267,6 +322,7 @@ export function tree(b, r, x, ground, z, { height = 6000, spread, hex = '#62804f
     for (let i = 0; i < masses; i++) {
         const a = i / masses * 6.28 + r() * .9, off = R * (.32 + .22 * r()), rr = R * (.48 + .22 * r()), up = (r() - .35) * R * .55;
         const c = new THREE.Vector3(x + lean + Math.cos(a) * off, cy + up, z + Math.sin(a) * off * .8);
+        if (z > -48000) b.canopies?.push([c.x,c.y,c.z,ground,rr,rr*.76]);
         limb(b, top, new THREE.Vector3().lerpVectors(top, c, .75), trunkR * .5, barkC);
         crown(b, r, c.x, c.y, c.z, rr * 1.05, rr * (shape === 'tall' ? 1.25 : .82), rr, hex, { size: sz, density });
     }
@@ -308,6 +364,7 @@ export function redwood(b, r, x, ground, z, { height = 42000, girth = 1.0, hex =
     // a buttressed foot, the duff dark round it
     land.add(new THREE.ConeGeometry(R0 * 1.55, R0 * 2.2, 10, 1, true).translate(0, R0 * 1.1, 0), M(x, ground - 60, z, 1, 1, 1, seed), () => barkC.clone().multiplyScalar(.82));
     land.shadow(x, ground, z, R0 * 4.5, R0 * 4.5, .5, R0 * 3);
+    if (z > -38000) b.canopies?.push([x,ground+height*.46,z,ground,3800*girth,4300*girth]);
     // sprays high above the window's sight lines are never seen (from a ground floor the view tops out near 40 degrees)
     const base = colour(hex), sz = size ?? spray(z) * 1.2, card = Math.max(sz * 3.6, 700), tiers = Math.round(10 + height / 5000), sightTop = ground + 5000 + Math.abs(z) * .85;
     const centre = new THREE.Vector3(x, ground + height * .6, z);
@@ -453,7 +510,7 @@ export function house(k, r, x, ground, z, { width = 9000, depth = 7000, eaves = 
         if (door) { b.box([1050, 2150, 40], [wx, ground + 1075, face + 20], '#6d5a4c');
             if (porch) { lights.box([140, 200, 40], [wx + 800, ground + 2250, face + 60], '#ffd9a0'); k.halos.add(wx + 800, ground + 2250, face + 120, 650, '#ffcf8f', .55); b.light(wx + 800, ground + 2200, face + 700, '#ffc98a', 3200, .5); }
             n++; continue; }
-        b.box([1350, 1450, 30], [wx, wy, face + 15], frame); b.quad(1190, 1290, [wx, wy, face + 32], colour('#4d5c68').multiplyScalar(.8 + .25 * (level > 2000)));
+        b.box([1350, 1450, 30], [wx, wy, face + 15], frame); b.quad(1190, 1290, [wx, wy, face + 32], colour('#4d5c68').multiplyScalar(.8 + .25 * (level > 2000)), { glazing: true });
         if (lit.includes(n)) { const half = n % 2; lights.quad(1190, 1290 * (half ? .55 : 1), [wx, wy - (half ? 290 : 0), face + 46], colour(half ? '#e8b878' : '#f0cc98').multiplyScalar(.55)); b.light(wx, wy - 400, face + 1500, '#ffd8a0', 2600, .35); }
         n++;
     }
@@ -491,16 +548,16 @@ export function building(k, r, x, ground, z, { width = 16000, depth = 14000, flo
     for (let f = shops ? 1 : 0; f < floors; f++) {
         const y = ground + base + f * storey + storey * .52;
         if (style === 'band') {   // a curtain wall: one band of glass per floor
-            b.quad(width - 400, storey * .62, [x, y, face + 12], glassC.clone().multiplyScalar(.85 + .3 * (f / floors)));
+            b.quad(width - 400, storey * .62, [x, y, face + 12], glassC.clone().multiplyScalar(.85 + .3 * (f / floors)), { glazing: true });
             for (let i = 0; i < n; i++) if (r() < litRate) lights.quad(bay * .8, storey * .5, [x - width / 2 + bay * (i + .5), y, face + 22], colour(litColours[Math.floor(r() * (r() < warm ? 4 : 5))]).multiplyScalar(.3 + r() * .3));
             continue;
         }
         for (let i = 0; i < n; i++) {
             if (skip && r() < skip) continue;
             const wx = x - width / 2 + bay * (i + .5), ww = bay * (make ? wFrac : .52), wh = storey * (make ? hFrac : .56), g = glassC.clone().multiplyScalar(.75 + r() * .4 + .25 * (f / floors));
-            if (make) { b.box([ww + 140, wh + 140, 30], [wx, y, face + 15], reveal); b.quad(ww, wh, [wx, y, face + 34], g);
+            if (make) { b.box([ww + 140, wh + 140, 30], [wx, y, face + 15], reveal); b.quad(ww, wh, [wx, y, face + 34], g, { glazing: true });
                 b.box([ww + 260, 90, 170], [wx, y - wh / 2 - 60, face + 85], trim); if (make.heads) b.box([ww + 240, 170, 60], [wx, y + wh / 2 + 120, face + 30], trim); }
-            else { b.box([ww + 160, wh + 160, 40], [wx, y, face + 20], frame); b.quad(ww, wh, [wx, y, face + 44], g); }
+            else { b.box([ww + 160, wh + 160, 40], [wx, y, face + 20], frame); b.quad(ww, wh, [wx, y, face + 44], g, { glazing: true }); }
             if (r() < litRate) { const curtain = r() < .45, lc = colour(litColours[Math.floor(r() * (r() < warm ? 4 : 5))]).multiplyScalar((.32 + r() * .3) * (curtain ? .6 : 1)); lights.quad(ww, wh * (curtain ? .5 : 1), [wx, y - (curtain ? wh * .25 : 0), face + (make ? 46 : 56)], lc); }
         }
     }
@@ -508,13 +565,13 @@ export function building(k, r, x, ground, z, { width = 16000, depth = 14000, flo
     if (side) { const sx = x + side * width / 2, sideN = Math.max(1, Math.round(depth / 3600));
         for (let f = shops ? 1 : 0; f < floors; f++) for (let i = 0; i < sideN; i++) {
             const y = ground + base + f * storey + storey * .52, wz = z - depth / 2 + depth / sideN * (i + .5);
-            b.add(QUAD, new THREE.Matrix4().compose(at.set(sx + side * 30, y, wz), q.setFromAxisAngle(Y, side * Math.PI / 2), scale.set(depth / sideN * .5, storey * .55, 1)), () => glassC, { light: false });
+            b.add(QUAD, new THREE.Matrix4().compose(at.set(sx + side * 30, y, wz), q.setFromAxisAngle(Y, side * Math.PI / 2), scale.set(depth / sideN * .5, storey * .55, 1)), () => glassC, { glazing: true });
             if (r() < litRate * .8) { const lc = colour('#e0b888').multiplyScalar(.3 + r() * .3); lights.add(QUAD, new THREE.Matrix4().compose(at.set(sx + side * 45, y, wz), q.setFromAxisAngle(Y, side * Math.PI / 2), scale.set(depth / sideN * .5, storey * .55, 1)), () => lc); }
         } }
     if (shops) {   // a ground floor of shopfronts: glass, a fascia with its sign, an awning or a hanging sign, lit after dark
         const sh = 3800;
         for (let i = 0; i < n; i++) { const wx = x - width / 2 + bay * (i + .5), sign = colour(SIGNS[Math.floor(r() * SIGNS.length)]).offsetHSL(0, 0, (r() - .5) * .05);
-            b.quad(bay * .78, sh * .62, [wx, ground + sh * .4, face + 30], glassC.clone().multiplyScalar(.7));
+            b.quad(bay * .78, sh * .62, [wx, ground + sh * .4, face + 30], glassC.clone().multiplyScalar(.7), { glazing: true });
             b.box([bay * .92, 520, 140], [wx, ground + sh * .82, face + 70], make ? sign : frame);
             if (make) b.quad(bay * .5, 220, [wx, ground + sh * .82, face + 142], trim.clone().multiplyScalar(.95));
             if (r() < .45) { const aw = colour(['#7a4b3e', '#3f5a54', '#5a5a6e', '#8a7a52', '#6b6f62'][Math.floor(r() * 5)]);
@@ -539,7 +596,7 @@ export function building(k, r, x, ground, z, { width = 16000, depth = 14000, flo
 export function streetLamp(k, x, ground, z, { height = 6500, reach = 1200, hex = '#ffd6a0', face = 1, power = 1 } = {}) {
     if (!seen(k.land, x, z, 3000)) return;
     const { land: b, lights, halos } = k; pole(b, x, ground, z, height, 70, '#3c3e40');
-    b.box([reach, 70, 70], [x, ground + height, z + face * reach / 2], '#3c3e40');
+    if (reach > 0) b.box([70, 70, reach], [x, ground + height, z + face * reach / 2], '#3c3e40');
     b.box([520, 140, 260], [x, ground + height - 60, z + face * reach], '#2f3133');
     lights.box([440, 30, 200], [x, ground + height - 140, z + face * reach], hex);
     halos.add(x, ground + height - 200, z + face * reach, 1500, hex, .35 * power);

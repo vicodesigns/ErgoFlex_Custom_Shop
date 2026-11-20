@@ -30,7 +30,7 @@
 // occlusion under cars, trees and at buildings' feet baked into its colour; far things go into the air by distance. The
 // geometry is kept and reused when the room is rebuilt.
 import * as THREE from 'three';
-import { Builder, Leaves, Halos, rand, sharedTextures } from './window-scenery-kit.mjs?v=polish-20261113b';
+import { bakeCanopyShade, Builder, Leaves, Halos, rand, sharedTextures } from './window-scenery-kit.mjs?v=polish-20261113b';
 import { SCENES } from './window-scenery-scenes.mjs?v=polish-20261113b';
 export { SCENES };
 
@@ -50,7 +50,7 @@ export const DEFAULT_VIEW = { '*': 'scenery' };
 // A scene may adjust any of these for its place (SCENES[name].hours), e.g. a marine layer or a city's glow.
 // Party is an ordinary late evening outside (the room's own party lights carry the mood; M7 of the November 13 review).
 export const HOURS = {
-    morning:   { tint: [1.0, .95, .86], zenith: '#7aabd2', horizon: '#e6d8c2', sun: [-52, 13, '#ffe2b0', .8], light: [.62, .62], clouds: .42, lamp: 0, haze: .42, air: '#dcd6ca', stars: 0 },
+    morning:   { tint: [1.0, .95, .86], zenith: '#7aabd2', horizon: '#dfd9cc', sun: [-52, 13, '#ffe2b0', .8], light: [.62, .62], clouds: .42, lamp: 0, haze: .34, air: '#cdd2cd', stars: 0 },
     afternoon: { tint: [.98, .99, .97], zenith: '#7aa9cf', horizon: '#dbe3e6', sun: [48, 50, '#fff4e2', .45], light: [.58, .7], clouds: .5, lamp: 0, haze: .34, air: '#d3dbe0', stars: 0 },
     evening:   { tint: [.78, .62, .55], zenith: '#55628c', horizon: '#e49c6c', sun: [38, 5, '#ff9f5c', 1.0], light: [.6, .75], clouds: .55, lamp: .5, haze: .55, air: '#b88a74', stars: 0 },
     night:     { tint: [.11, .135, .21], zenith: '#09101f', horizon: '#1d2a40', sun: [30, 36, '#c9d6f0', .22], light: [.8, .3], clouds: .2, lamp: 1, haze: .45, air: '#151d30', stars: 1 },
@@ -75,11 +75,18 @@ bool throughWindow(vec3 world) {
     return false;
 }`;
 // (position is in the window's frame: the meshes sit in a group that is the frame)
-const VERTEX = `attribute vec3 tone; attribute vec3 glow; varying vec3 vTone; varying vec3 vGlow; varying vec3 vWorld; varying vec3 vFrame; varying vec3 vNormal;
+const VERTEX = `
+#ifdef CANOPY
+attribute vec3 canopy; uniform vec3 shadeHour; varying float vCanopy;
+#endif
+attribute vec3 tone; attribute vec3 glow; varying vec3 vTone; varying vec3 vGlow; varying vec3 vWorld; varying vec3 vFrame; varying vec3 vNormal;
 #ifdef LEAVES
 varying vec2 vUv;
 #endif
 void main() { vTone = tone; vGlow = glow; vFrame = position; vNormal = normal;
+    #ifdef CANOPY
+    vCanopy = dot(canopy,shadeHour);
+    #endif
     #ifdef LEAVES
     vUv = uv;
     #endif
@@ -87,7 +94,11 @@ void main() { vTone = tone; vGlow = glow; vFrame = position; vNormal = normal;
 // The land: its colour lit by the sky (a hemisphere, the ground's bounce below) and the sun (the hour's direction, so
 // shade falls on the side away from the sun in the sky), a grain from the noise on walls and ground, into the air by
 // distance, a little greyer after dark; the lamps' light on top.
-const LAND = `uniform vec3 tint, air, sunDirF, sunLight, skyLight, groundLight; uniform float haze, hazeFar, level, lamp, lampLevel, ambient, sunShare, facadeLit;
+const LAND = `
+#ifdef CANOPY
+varying float vCanopy;
+#endif
+uniform vec3 tint, air, sunDirF, sunLight, skyLight, groundLight; uniform float haze, hazeFar, level, lamp, lampLevel, ambient, sunShare, facadeLit;
 uniform sampler2D noiseMap;
 #ifdef LEAVES
 uniform sampler2D leafMap; varying vec2 vUv;
@@ -111,6 +122,17 @@ void main() {
     #else
     float nl = length(vNormal); vec3 light;
     if (nl < .3) light = tint * (ambient + sunShare * .3);
+    #ifndef LEAVES
+    else if (nl > .38 && nl < .42) {
+        vec3 eye = isOrthographic ? mat3(portalInv) * vec3(viewMatrix[0][2], viewMatrix[1][2], viewMatrix[2][2])
+                                  : (portalInv * vec4(cameraPosition, 1.)).xyz - vFrame;
+        vec3 n = vNormal / nl, ray = reflect(-normalize(eye), n);
+        float grazing = 1. - abs(dot(n, normalize(eye)));
+        float sky = smoothstep(-.17, .42, ray.y + .09 * texture2D(noiseMap, ray.xz * .8).r);
+        tone = mix(tone, air, (.045 + .19 * grazing * grazing + .12 * sky) * (1. - lamp));
+        light = tint * (ambient + sunShare * .34);
+    }
+    #endif
     else {
         vec3 n = vNormal / nl, s = normalize(sunDirF);
         float ndl = dot(n, s);
@@ -128,7 +150,13 @@ void main() {
         vec2 g = abs(n.y) > .6 ? vFrame.xz : vec2(vFrame.x + vFrame.z, vFrame.y);
         tone *= .8 + .4 * dot(texture2D(noiseMap, g / 6400.), vec4(.36, .3, .22, .12));
         #endif
-        light = tint * (ambient * mix(groundLight, skyLight, n.y * .5 + .5) + sunShare * sunLight * ndl);
+        float direct = 1., fill = 1.;
+        #ifdef CANOPY
+        float gaps = texture2D(noiseMap,vFrame.xz / 3800.).g;
+        direct -= vCanopy * (.69 + .25 * gaps);
+        fill -= vCanopy * .12;
+        #endif
+        light = tint * (ambient * fill * mix(groundLight, skyLight, n.y * .5 + .5) + direct * sunShare * sunLight * ndl);
     }
     vec3 day = tone * light;
     day = mix(day, vec3(dot(day, vec3(.3, .59, .11))), lamp * .35);   // after dark colours go grey
@@ -164,7 +192,7 @@ vec3 seaAt(vec3 view, vec3 sunDir, vec2 spot) {
     float down = clamp(-view.y, 0., 1.), fres = exp(-down * 12.);
     float day = clamp(dot(zenith, vec3(.3, .59, .11)) * 4., .06, 1.);   // the water's own colour is lit by the day (dark at night)
     vec3 c = mix(seaColor * day * (.55 + .45 * clamp(sunDir.y * 2. + .3, 0., 1.)), mix(horizon, zenith, .45), .16 + .34 * fres);
-    #ifdef MEDIA_COAST
+    #ifdef PACIFIC_COAST
     // Long swell, wind streaks and the darker troughs between sets. Fade each
     // frequency as it gets smaller than a pixel in the distant water.
     vec2 m = spot * .001;
@@ -235,6 +263,8 @@ void main() {
         float cover = smoothstep(1. - clouds * .62, 1.36 - clouds * .5, n + .3) * smoothstep(-.01, .2, up);
         vec3 grey = vec3(dot(horizon, vec3(.33))), lit = mix(horizon, grey, .35) * 1.04, shade = mix(zenith, horizon, .55) * .86;
         vec3 cloud = mix(shade, lit, smoothstep(.35, .8, n)) + sunColor * sunPower * .2 * s2 * s;
+        float wisps = fbmT(q * vec2(1.8, 8.) + vec2(.41, .76));
+        c = mix(c, lit, smoothstep(.57, .81, wisps) * clouds * .23 * smoothstep(.015, .23, up));
         c = mix(c, cloud, cover * .85);
     }
     gl_FragColor = vec4(c * level, 1.);
@@ -310,7 +340,7 @@ function world(panes, name, scene, options) {
         return { pane, at, half }; });
     const group = new THREE.Group(); group.name = 'Window scenery · ' + name + (options.facing ? ' · ' + options.facing : ''); group.position.copy(frame.position); group.quaternion.copy(frame.quaternion); parent.add(group);
     const portal = { portalInv: { value: new THREE.Matrix4() }, openAt: { value: openings.map(o => o.at.clone()) }, openHalf: { value: openings.map(o => o.half.clone()) } };
-    const defines = { OPENINGS: openings.length, ...(name === 'socal-campus' ? { MEDIA_COAST: 1 } : {}) }, tex = sharedTextures();
+    const defines = { OPENINGS: openings.length, ...((name === 'socal-campus' || name === 'beach-school') ? { PACIFIC_COAST: 1 } : {}) }, tex = sharedTextures();
     // the scene, built in the window's frame (or taken from the ones already built)
     const seed = (options.seed ?? 20261113) + options.facing * 7919, round = x => Math.round(x / 10) * 10;
     const ctx = { openings: openings.map(o => ({ x: o.at.x, y: o.at.y, z: o.at.z, w: o.half.x * 2, h: o.half.y * 2 })), floor: options.floor, facing: options.facing, variant: options.variant, seed, storey: options.storey ?? scene.storey ?? 0, ...(options.classic ? { classic: true } : {}) };   // (classic: a room's Classic look, room-looks.mjs)
@@ -323,17 +353,19 @@ function world(panes, name, scene, options) {
         k.leaves = k.land.leaves = new Leaves(k.land);
         // what the room's cameras can see through the openings: a wedge, wider past 15 m (oblique cameras)
         k.land.view = { cx: (ctx.left + ctx.right) / 2, half: ctx.width / 2 + 3000, slope: 1.6, far: 2.8 };
+        if (!(ctx.classic && name === 'humboldt')) k.land.canopies = [];
         scene.build(k, ctx);
         const e = { land: k.land.geometry(), lights: k.lights.geometry(), halos: k.halos.geometry(), leaves: k.leaves.position.length ? k.leaves.geometry() : null, sea: null, seaSpec: k.sea || null };
+        e.canopy = bakeCanopyShade(e.land, k.land.canopies, ['morning', 'afternoon', 'evening'].map(id => hourOf(name, id).sun));
         if (k.sea) { const { y, x0, x1, z0, z1 } = k.sea; e.sea = new THREE.PlaneGeometry(x1 - x0, z1 - z0, 1, 1).rotateX(-Math.PI / 2).translate((x0 + x1) / 2, y, (z0 + z1) / 2); }
         e.hazeFar = k.hazeFar; e.triangles = k.land.triangles + k.lights.triangles + k.leaves.triangles + k.halos.position.length / 9;
         return e;
     });
-    const shared = { ...portal, tint: { value: new THREE.Vector3(1, 1, 1) }, air: { value: new THREE.Color() }, haze: { value: 0 }, hazeFar: { value: entry.hazeFar ?? scene.hazeFar ?? 52000 }, level: { value: LEVEL }, lamp: { value: 0 },
+    const shared = { ...portal, shadeHour: { value: new THREE.Vector3() }, tint: { value: new THREE.Vector3(1, 1, 1) }, air: { value: new THREE.Color() }, haze: { value: 0 }, hazeFar: { value: entry.hazeFar ?? scene.hazeFar ?? 52000 }, level: { value: LEVEL }, lamp: { value: 0 },
         lampLevel: { value: scene.lampLevel ?? 1 }, haloLevel: { value: scene.haloLevel ?? 1 }, ambient: { value: .6 }, sunShare: { value: .7 }, facadeLit: { value: scene.facadeLit ?? .14 },
         sunDirF: { value: new THREE.Vector3(0, 1, 0) }, sunLight: { value: new THREE.Color(1, 1, 1) }, skyLight: { value: new THREE.Color(1, 1, 1) }, groundLight: { value: new THREE.Color(.5, .5, .5) },
         noiseMap: { value: tex.noise }, leafMap: { value: tex.leaves } };
-    const material = kind => { const m = new THREE.ShaderMaterial({ uniforms: shared, vertexShader: VERTEX, fragmentShader: LAND, defines: kind ? { ...defines, [kind]: 1 } : defines, side: THREE.DoubleSide });
+    const material = kind => { const m = new THREE.ShaderMaterial({ uniforms: shared, vertexShader: VERTEX, fragmentShader: LAND, defines: kind ? { ...defines, [kind]: 1 } : { ...defines, ...(entry.canopy ? { CANOPY: 1 } : {}) }, side: THREE.DoubleSide });
         m.name = 'Window scenery' + (kind ? ' ' + kind.toLowerCase() : ''); return m; };
     const haloMaterial = new THREE.ShaderMaterial({ uniforms: shared, vertexShader: HALO_VERTEX, fragmentShader: HALO, defines, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
     haloMaterial.name = 'Window scenery halos';
@@ -376,6 +408,8 @@ function world(panes, name, scene, options) {
     const lum = c => .3 * c.r + .59 * c.g + .11 * c.b, toneOf = (c, white) => c.multiplyScalar(1 / Math.max(lum(c), 1e-4)).lerp(new THREE.Color(1, 1, 1), white);
     const setHour = id => {
         const h = hourOf(name, id), a = THREE.MathUtils.degToRad(h.sun[0]), e = THREE.MathUtils.degToRad(h.sun[1]), [amb, sun] = h.light || [.6, .7];
+        const shadowStrength = THREE.MathUtils.clamp(h.sun[3] * 1.4, 0, 1);
+        shared.shadeHour.value.set(id === 'morning' ? shadowStrength : 0, id === 'afternoon' ? shadowStrength : 0, id === 'evening' ? shadowStrength : 0);
         shared.tint.value.fromArray(h.tint); shared.air.value.set(h.air); shared.haze.value = h.haze; shared.lamp.value = h.lamp; shared.ambient.value = amb; shared.sunShare.value = sun;
         const s = sky.uniforms; s.zenith.value.set(h.zenith); s.horizon.value.set(h.horizon); s.sunColor.value.set(h.sun[2]); s.sunPower.value = h.sun[3]; s.clouds.value = h.clouds; s.stars.value = h.stars ?? 0;
         s.sunLocal.value.set(Math.sin(a) * Math.cos(e), Math.sin(e), Math.cos(a) * Math.cos(e));

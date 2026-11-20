@@ -3,7 +3,16 @@
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { attachScenery, windowView, HOURS, LEVEL, SCENES, DEFAULT_VIEW, hourOf, ORDER } from '../window-scenery.mjs';
-import { sharedTextures } from '../window-scenery-kit.mjs?v=polish-20261113b';   // (the stamp the scenery module imports it with: one instance)
+import { Builder, Leaves, LEAF, sharedTextures } from '../window-scenery-kit.mjs?v=polish-20261113b';   // (the stamp the scenery module imports it with: one instance)
+
+// Texture rows follow DataTexture storage. A needle card grows away from the stem
+// at row 238 of the upper-right tile.
+for (const cell of Object.values(LEAF)) {
+    const leaves = new Leaves(new Builder());
+    leaves.card(new THREE.Vector3(), 100, new THREE.Vector3(0, 0, 1), 0, cell, new THREE.Color());
+    const u = (cell % 2) / 2, v = Math.floor(cell / 2) / 2;
+    assert.deepEqual(leaves.uv.slice(0, 6), [u, v + .5, u + .5, v + .5, u + .5, v]);
+}
 
 // ---- which view a window shows: the 3D scenery unless asked otherwise, the default in one place
 assert.equal(windowView('home'), 'scenery', 'the default view is the 3D scenery'); assert.equal(windowView(), 'scenery');
@@ -60,8 +69,18 @@ for (const name of Object.keys(SCENES)) {
     // the hours: numbers, colours and vectors that the film's time-of-day blend (film-tod) can carry from one to the next
     const u = land.material.uniforms, s = view.sky.uniforms, snap = () => view.materials.flatMap(m => Object.entries(m.uniforms).map(([k, x]) => [m.name + '.' + k, typeof x.value === 'number' ? x.value : x.value.clone?.()]));
     view.setHour('morning'); const morning = snap();
+    if (name === 'garden') {
+        const canopy = land.geometry.getAttribute('canopy');
+        assert.ok(canopy.normalized && canopy.count === land.geometry.attributes.position.count);
+        assert.ok(canopy.array.some(value => value > 0), 'nearby crowns cast shade');
+        assert.ok(u.shadeHour.value.x > 0 && u.shadeHour.value.y === 0);
+        view.setHour('afternoon');
+        assert.ok(u.shadeHour.value.x === 0 && u.shadeHour.value.y > 0);
+        view.setHour('morning');
+    }
     assert.equal(u.lamp.value, 0, name + ': no lights in the morning'); assert.equal(u.level.value, LEVEL);
     view.setHour('night'); const night = snap();
+    assert.equal(u.shadeHour.value.lengthSq(), 0, 'no sunlight shadows at night');
     assert.ok(u.lamp.value === 1 && u.tint.value.x < .3 && s.zenith.value.r < .1, name + ': at night the land and the sky go dark and the lights come on');
     morning.forEach(([k, a], i) => { const b = night[i][1]; if (typeof a === 'number' ? a === b : a?.equals?.(b) ?? true) return;
         assert.ok(typeof a === 'number' || a.isColor || a.isVector3, name + ': ' + k + ' changes with the hour and is a number, colour or Vector3 (film-tod blends those)'); });

@@ -259,13 +259,143 @@ def scrubs(who, base, rig, out_dir, out_id, color=(.1, .45, .47), name='scrubs',
     return [_robe(who, base, rig, out_dir, out_id, name, color, sleeve='short', neck='v', push=.017, paint=paint, seed=11, flare=.03, length=length, open_v=.64)]
 
 
+def _tailor_gown(o, rig, color):
+    """Cut ease into the skirt and sew a binding, back overlap and ties onto the weighted shell."""
+    from mathutils.bvhtree import BVHTree
+    from mathutils.geometry import closest_point_on_tri
+
+    world = o.matrix_world
+    bm = bmesh.new()
+    bm.from_mesh(o.data)
+    bm.transform(world)
+    waist = _joint(rig, 'spine_02').z
+    shoulder = _joint(rig, 'upperarm_l')
+    hem = min(v.co.z for v in bm.verts)
+    chest = _joint(rig, 'spine_03').z
+    # One split gives the ridges a curved cross-section. BMesh carries the
+    # original UVs and bone weights across the split.
+    bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=1, use_grid_fill=True)
+    smoothstep = lambda t: max(0., min(1., t)) ** 2 * (3 - 2 * max(0., min(1., t)))
+    for v in bm.verts:
+        x, y, z = v.co
+        lower = smoothstep((waist + .08 - z) / max(.15, waist - hem))
+        # The sleeves keep their own shape. Ease opens below the shoulder and
+        # hangs in a few unequal folds, with most of the fullness below the hip.
+        torso = 1 - smoothstep((abs(x) - abs(shoulder.x) * .87) / .085)
+        torso = max(torso, smoothstep((chest - z) / .14))
+        angle = math.atan2(y, x)
+        twist = .24 * (z - waist) + .12 * math.sin(3 * angle + 3 * (z - hem))
+        folds = (.5 + .5 * math.cos(7 * (angle + twist) + .7 * math.sin(2 * angle))) ** 2
+        hip = math.exp(-((z - waist + .085 + .3 * x) / .03) ** 2)
+        rise = smoothstep((shoulder.z - z + .012) / .12)
+        ease = torso * rise * (.003 + lower * .008 + (.008 + .019 * lower) * folds + .007 * hip)
+        radius = max(.04, math.hypot(x, y))
+        v.co.x += ease * x / radius
+        v.co.y += ease * y / radius
+        v.co.z += lower ** 3 * .009 * (folds - .45)
+
+    trim = bpy.data.materials.new('Human.gown_binding')
+    trim.use_nodes = True
+    bsdf = trim.node_tree.nodes['Principled BSDF']
+    bsdf.inputs['Base Color'].default_value = (*[channel * .68 for channel in color], 1)
+    bsdf.inputs['Roughness'].default_value = .87
+    o.data.materials.append(trim)
+    bm.normal_update()
+    deform = bm.verts.layers.deform.verify()
+    def new_vertex(point, sources):
+        v = bm.verts.new(point)
+        weights = v[deform]
+        for source, factor in sources:
+            for group, weight in source[deform].items():
+                weights[group] = weights.get(group, 0.) + weight * factor
+        return v
+
+    def panel(vertices):
+        face = bm.faces.new(vertices)
+        face.smooth = True
+        face.material_index = 1
+
+    # Keep a triangulated reference to the undressed panel for fitting the
+    # tapes. Barycentric weights at each stitch follow the same pose as the fabric.
+    triangles = [[loop.vert for loop in tri] for tri in bm.calc_loop_triangles()]
+    bm.verts.index_update()
+    tree = BVHTree.FromPolygons([v.co.copy() for v in bm.verts],
+                                [[v.index for v in tri] for tri in triangles], all_triangles=True)
+    def stitch(x, z, lift):
+        hit, _, index, _ = tree.ray_cast(Vector((x, .7, z)), Vector((0, -1, 0)), 1.4)
+        if hit is None:
+            raise ValueError('Gown back tape missed the fitted back panel')
+        a, b, c = triangles[index]
+        ab, ac = b.co - a.co, c.co - a.co
+        h = closest_point_on_tri(hit, a.co, b.co, c.co) - a.co
+        normal = ab.cross(ac)
+        divisor = normal.length_squared
+        wb = h.cross(ac).dot(normal) / divisor
+        wc = ab.cross(h).dot(normal) / divisor
+        return new_vertex(hit + Vector((0, lift, 0)), [(a, 1 - wb - wc), (b, wb), (c, wc)])
+
+    # A folded edge sits on the surface and turns under at the opening. Keep
+    # the adjacent cloth's weights at both lips so they bend together.
+    boundary = [edge for edge in bm.edges if edge.is_boundary]
+    edges = {}
+    for edge in boundary:
+        for v in edge.verts:
+            if v in edges:
+                continue
+            into = Vector((0, 0, 0))
+            for f in v.link_faces:
+                into += (f.calc_center_median() - v.co).normalized()
+            into -= v.normal * into.dot(v.normal)
+            into.normalize()
+            width = .015 if v.co.z < hem + .06 else .009
+            edges[v] = [new_vertex(v.co + into * distance + v.normal * lift, [(v, 1.)])
+                        for distance, lift in [(-.001, .0004), (.001, .0025), (width, .0012)]]
+    for edge in boundary:
+        a, b = (edges[v] for v in edge.verts)
+        for j in (0, 1):
+            panel([a[j], b[j], b[j + 1], a[j + 1]])
+
+    def ribbon(points, width):
+        rows = []
+        for i, (x, z, lift) in enumerate(points):
+            prev, nxt = points[max(0, i - 1)], points[min(len(points) - 1, i + 1)]
+            dx, dz = nxt[0] - prev[0], nxt[1] - prev[1]
+            length = max(.0001, math.hypot(dx, dz))
+            row = [stitch(x - dz / length * offset, z + dx / length * offset,
+                          lift + (.0016 if offset == 0 else 0))
+                   for offset in [-width / 2, 0, width / 2]]
+            if rows:
+                for j in (0, 1):
+                    panel([rows[-1][j], row[j], row[j + 1], rows[-1][j + 1]])
+            rows.append(row)
+
+    # A lapped back closure beginning below the nape. Two cotton tape knots
+    # have differently hanging tails and loops raised off the back panel.
+    top = shoulder.z - .018
+    ribbon([(.017 + .01 * t, top + (hem + .043 - top) * t, .003)
+            for t in np.linspace(0, 1, 30)], .017)
+    for z in [top - .046, waist + .035]:
+        for side, length in [(-1, .098), (1, .077)]:
+            loop = [(.021 + side * (.004 + .046 * math.sin(math.pi * t)),
+                     z + .011 * math.sin(2 * math.pi * t), .007 + .014 * math.sin(math.pi * t))
+                    for t in np.linspace(0, 1, 13)]
+            ribbon(loop, .008)
+            ribbon([(.021 + side * (.011 + .033 * t + .009 * math.sin(5 * t)),
+                     z - length * t, .006 + .008 * math.sin(math.pi * t))
+                    for t in np.linspace(0, 1, 10)], .009)
+    bm.transform(world.inverted())
+    bm.to_mesh(o.data)
+    bm.free()
+    o.data.update()
+    return o
+
+
 def gown(who, base, rig, out_dir, out_id, color=(.62, .76, .8), print_color=(.36, .52, .62), hem=-.06, name='gown'):
     def paint(c, at):
         c.scatter(print_color)
-        band = tuple(v * .8 for v in color); c.rect(-SPAN / 2, SPAN / 2, at['hem'], at['hem'] + .015, band); c.rect(-SPAN / 2, SPAN / 2, at['hem'], at['hem'] + .015, band, back=True)
-        c.rect(-.004, .004, at['hem'], at['neck'], band, back=True)          # it ties at the back
-        for z in (at['chest'] + .2, at['hip'] + .1): c.rect(-.05, .05, z - .004, z + .004, band, back=True)
-    return [_robe(who, base, rig, out_dir, out_id, name, color, hem=hem, sleeve='short', neck='round', push=.014, paint=paint, seed=5, flare=.05)]
+    robe = _robe(who, base, rig, out_dir, out_id, name, color, hem=hem, sleeve='short', neck='round',
+                 push=.014, paint=paint, seed=5, flare=.05)
+    return [_tailor_gown(robe, rig, color)]
 
 
 def socks(who, base, rig, out_dir, out_id, color=(.82, .82, .8), name='socks_shoes', height=.11):
