@@ -1951,6 +1951,7 @@ export class RoomPeople {
         const there = actor => Math.max(0, ...actor.members.map(m => this.present(m.object.userData.person, time)));
         const driven = this.actors.filter(a => a.members.length && there(a) > 0);   // (a film hands the desk from one person to the next with `when`: who is not there yet is no rival)
         const steps = this.stepOuts(time, state, driven);   // (before the actors are driven for this second: it drives them at the steps' ends)
+        for (const [o, step] of this.docks(time, state)) steps.set(o, step);   // (a roll that docks into the film desk's user: its change of posture)
         for (const actor of driven) {
             actor.drive({ height, target: state?.target, tilt: state?.tilt, time, track: state?.track || null, dt, life: this.filter?.life === false ? false : undefined, taps: time !== null || dt < .05 });
             const sign = actor.state.tau.toFixed(3) + '|' + actor.state.k.toFixed(3) + '|' + actor.shown?.id; if (sign !== actor.drawnAs) { actor.drawnAs = sign; this.dirty = true; }
@@ -1989,7 +1990,10 @@ export class RoomPeople {
             // stepped out from the desk (stepOuts): there, whole, for the steps and the time between them, and nowhere else
             const step = steps.get(object);
             if (step) { on = !!step.phase; object.userData.personAmount = 1; this.drawStep(object, step); }
-            else if (object.userData.personStepLife !== undefined) delete object.userData.personStepLife;   // (no longer stepping out: life as anyone's)
+            else {
+                if (object.userData.personStepLife !== undefined) delete object.userData.personStepLife;   // (no longer stepping out: life as anyone's)
+                if (object.userData.personDocking) { delete object.userData.personDocking; object.userData.personChanging = false; }   // (scrubbed out of a dock: its roll again)
+            }
             // an older cut's stand-in for the gap (a standing-by model of the desk user, cast by hand for the seconds the
             // desk moves): the desk user fills that gap themselves now
             if (on && !spec.desk && spec.extra && driven.length && this.filter?.when?.[this.keyOf(spec)]) {
@@ -2435,9 +2439,54 @@ export class RoomPeople {
         const position = keys ? new THREE.Vector3(keys.x, 0, keys.z).addScaledVector(front, BEHIND_KEYS[role] + short) : new THREE.Vector3(state.pose.x - 6, 0, state.pose.z).addScaledVector(front, REACH[role] + short);
         return { key, spot: { position, turn: yaw + Math.PI } };
     }
+    // ---- docking into the desk (film): a roll that ends at the film desk's user (Kai in the high school, 19 Nov 2026)
+    // A film placement that is not at a desk (a wheelchair user rolling in, typically) whose `when` window ends as the film
+    // desk user's of the same character begins (within .75 s, as pairUp) docks: for one change of posture centred on that
+    // moment it is one model whose bones go from its own posture to the desk user as the desk user will be when the change
+    // ends (deskUserAt: the solved arms on the keys, with the desk user's own pose correction at that second, so the arms
+    // land where he put them: no overshoot), while it moves from where its roll came to rest to the desk user's seat (their
+    // `reach`) and turns to the desk. The desk user is not drawn meanwhile (stepOuts' 'in' phase does the same for someone
+    // coming back to the desk). pairUp pairs only people who are not at a desk: before this, that hand-over was a cut.
+    docks(time, state) {
+        const out = new Map(), when = this.filter?.when; if (time === null || !state?.pose || !when) return out;
+        for (const o of this.people) {
+            const s = o.userData.person, mine = when[this.keyOf(s)];
+            if (!mine || !s.extra || s.desk || s.station || s.fromDesk || o.userData.personMissing || !this.allowed(s) || !o.userData.personRig) continue;
+            const who = this.character(o); if (!who) continue;
+            for (const actor of this.actors) {
+                if (actor.character !== who || !actor.rig.has(s.id) || !actor.members.length) continue;
+                const lead = actor.members.map(m => m.object.userData.person).find(p => !p.variant && p.desk && !p.station && when[this.keyOf(p)]); if (!lead) continue;
+                const pairs = mine.flatMap(([, t1]) => when[this.keyOf(lead)].filter(([t0]) => Math.abs(t1 - t0) <= .75).map(([t0]) => (t1 + t0) / 2));
+                const member = actor.members.find(m => m.object.userData.person === lead) || actor.members[0];
+                const length = changeLength(actor.rig, actor.rig.key(s.id), actor.rig.key(member.id));
+                const at = pairs.find(a => time >= a - length / 2 && time <= a + length / 2); if (at === undefined) continue;
+                const end = this.deskUserAt(actor, at + length / 2, state); this.withCorrection(actor, end.key, at + length / 2);
+                out.set(o, { actor, phase: 'in', dock: true, w: (time - (at - length / 2)) / length, from: actor.rig.key(s.id, end.key.dz), to: end.key, dz: end.key.dz, desk: end.spot, home: this.restOf(o), life: 1 });
+                break;
+            }
+        }
+        return out;
+    }
+    // Where a placement is at rest: the end of its roll (rollEnd), or where it stands. (Cached per roll.)
+    restOf(object) {
+        const roll = object.userData.person.roll, sign = JSON.stringify([roll, object.userData.person.at, object.userData.person.turn]);
+        if (object.userData.personRest?.sign !== sign) object.userData.personRest = { sign, at: this.rollEnd(object) || { position: object.position.clone(), turn: object.rotation.y } };
+        return object.userData.personRest.at;
+    }
+    // A desk user's own pose correction (poseNow: their pose / pose keys at second t) put onto a key of their solved pose,
+    // bone by bone as drawPose turns them (the solved turn, then the correction).
+    withCorrection(actor, key, t) {
+        const spec = actor.shown?.object.userData.person; if (!spec) return key;
+        const owner = this.poseOwner(spec), record = owner?.postures ? postureRecord(owner, spec.id) : spec, turns = poseAt(record, t);
+        if (!turns) return key;
+        const q = new THREE.Quaternion();
+        actor.rig.names.forEach((name, i) => { const d = turns[name]; if (Array.isArray(d) && d.length === 4 && key.q[i]) key.q[i] = key.q[i].clone().multiply(q.fromArray(d)).normalize(); });
+        return key;
+    }
     // One stepping-out placement this frame: posed by the change while one is under way, at its own spot otherwise.
     drawStep(object, step) {
-        const home = object.userData.personStepHome, changing = step.phase === 'out' || step.phase === 'in';
+        const home = step.home || object.userData.personStepHome, changing = step.phase === 'out' || step.phase === 'in';
+        if (step.dock) object.userData.personDocking = true;
         object.userData.personChanging = changing; object.userData.personStepLife = step.phase === 'hold' ? step.life : 0;
         if (!changing) {
             object.position.copy(home.position); object.rotation.y = home.turn;

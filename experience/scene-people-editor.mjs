@@ -178,7 +178,8 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const from=handoffInto(currentPeople(),key,id=>modelOf(id)?.character||null);   // (a roll or walk that changed posture into them: a cut at a desk)
     write(p=>{const x=p.cast.find(x=>x.key===key);if(!x)return;takeIn(p,x);asShown(x,id);unplace(x);delete x.at;delete x.turn;delete x.y;x.desk=role;if(station)x.station=station;},
       `${personName(e)} is at ${station?deskName(station):'the film desk'} and follows it${there?` (${personName(there)} is at that desk too: only one of them shows)`:''}. Undo puts them back.`);
-    if(from)status(`${personName(e)} is at ${station?deskName(station):'the film desk'} now, so the change of posture from “${from.key}” at ${r1(from.at)} s is a cut, not a blend: someone at a desk takes over in one frame. Undo, and keep them at a free spot where “${from.key}” ends, to keep the blend.`,true);
+    // (the film desk: the placement docks into its user, room-people.mjs docks; a room desk's user takes over in a cut)
+    if(from&&station)status(`${personName(e)} is at ${deskName(station)} now, so the change of posture from “${from.key}” at ${r1(from.at)} s is a cut, not a blend: someone at a room desk takes over in one frame. Undo, and keep them at a free spot where “${from.key}” ends, to keep the blend (at the film desk it docks).`,true);
   }
   function toSpot(key,spot,text){
     const shown=objectOf(key)?.userData?.person,as=shown?.variant?shown.id:null;
