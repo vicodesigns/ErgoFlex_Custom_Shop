@@ -12,7 +12,7 @@ from mathutils.bvhtree import BVHTree
 
 
 GARMENTS = {'toigo_basic_tucked_t-shirt', 'joepal_crude_t-shirt_female',
-            'namuhekam_male_polo_shirt', 'toigo_wool_pants', 'cortu_cargo_pants'}
+            'namuhekam_male_polo_shirt', 'toigo_fisherman_sweater', 'toigo_wool_pants', 'cortu_cargo_pants'}
 
 
 def ramp(low, high, value):
@@ -114,6 +114,21 @@ def sew_panels(bm, shoulder, chest, waist, style):
     patch(yoke, back=True)
 
 
+def workshop_pocket(bm, shoulder, chest):
+    # A narrow stitched pencil division on the mechanic's breast pocket.
+    patch = panel_projector(bm)
+    rows = []
+    for height, fullness in [(0, .001), (.12, .004), (.75, .006), (.92, .008), (1, .004)]:
+        row = []
+        for u in (-1, -.7, -.35, .05, .39, .55, .76, 1):
+            x = abs(shoulder.x) * .52 + u * .052
+            z = chest.z + .028 + height * .108 + (1 - height) * .010 * abs(u)
+            depth = .003 if u == .55 else .003 + fullness * (1 - abs(u) ** 4)
+            row.append((x, z, depth))
+        rows.append(row)
+    patch(rows)
+
+
 def cargo_pockets(bm, hip, knee):
     # Bellows and an overlapping flap sit on the long outer face of each thigh.
     # Lay them out from the leg centreline so both pieces bend with that thigh.
@@ -142,7 +157,7 @@ def cargo_pockets(bm, hip, knee):
 
 
 def fit(obj, rig, style, garment):
-    trousers = garment in ('toigo_wool_pants', 'cortu_cargo_pants', 'male_casualsuit04')
+    trousers = garment in ('toigo_wool_pants', 'cortu_cargo_pants', 'male_casualsuit04', 'female_casualsuit01')
     polo = garment == 'namuhekam_male_polo_shirt'
     deps = bpy.context.evaluated_depsgraph_get()
     # Evaluate the MPFB fitting modifiers in the neutral pose. Reuse the
@@ -171,9 +186,33 @@ def fit(obj, rig, style, garment):
             sleeves[side] = (origin, axis, reach)
     hem_z = min(v.co.z for v in bm.verts)
     knee, ankle = joint('calf_l'), joint('foot_l')
+    knitted = garment == 'toigo_fisherman_sweater'
+    if knitted:
+        # The ribbed cuffs lie on the forearm, farther down than a tee sleeve.
+        forearms = {}
+        for side in ('l', 'r'):
+            elbow, wrist = joint('lowerarm_' + side), joint('hand_' + side)
+            forearms[side] = (elbow, (wrist - elbow).normalized(), (wrist - elbow).length)
+        body_hem = min(v.co.z for v in bm.verts if abs(v.co.x) < abs(shoulder.x) * .78)
     for v in bm.verts:
         x, y, z = v.co
-        if trousers:
+        if knitted:
+            if abs(x) > abs(shoulder.x) * 1.1:
+                elbow, axis, reach = forearms['l' if x * shoulder.x > 0 else 'r']
+                along = (v.co - elbow).dot(axis)
+                # Stacked folds run obliquely out of the inside elbow, then
+                # flatten into the fitted rib at the wrist.
+                bias = .38 * (y - elbow.y)
+                drape = .007 * math.exp(-((along - bias + .015) / .021) ** 2)
+                drape += .005 * math.exp(-((along + bias - .043) / .019) ** 2)
+                drape += .007 * math.exp(-((reach - along - .055) / .014) ** 2)
+            else:
+                depth = z - body_hem - .028 * (x / shoulder.x) ** 2
+                drape = .006 * math.exp(-((depth - .038) / .012) ** 2)
+                drape += .013 * math.exp(-((depth - .087 - .26 * x) / .026) ** 2)
+                drape += .007 * math.exp(-((depth - .14 + .18 * x) / .035) ** 2)
+            v.co += v.normal * drape
+        elif trousers:
             # Breaks of woven wool above the shoe and on either side of the knee.
             side = 1 if x > 0 else -1
             across = abs(x) - abs(knee.x)
@@ -215,6 +254,8 @@ def fit(obj, rig, style, garment):
     bm.normal_update()
     if not trousers and style in ('studio', 'edit'):
         sew_panels(bm, shoulder, chest, waist, style)
+    if polo and style == 'workshop':
+        workshop_pocket(bm, shoulder, chest)
     if garment == 'cortu_cargo_pants':
         cargo_pockets(bm, joint('thigh_l'), knee)
     bm.transform(world.inverted())

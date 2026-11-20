@@ -251,6 +251,7 @@ for o in meshes:
         if o is base: rough = .7 if LOOK >= 3 else .58
         elif 'low-poly' in o.name: rough = .3 if LOOK >= 3 else .12
         elif 'shoes' in o.name or 'boots' in o.name or 'flats' in o.name: rough = .55
+        elif kind == who.get('hair') and who.get('comb'): rough = .73
         elif cut: rough = .5
         else: rough = .82
         for link in list(bsdf.inputs['Roughness'].links): tree.links.remove(link)
@@ -279,6 +280,12 @@ for o in meshes:
                 elif dye: node.image = tone_image(node.image, dye) if o is base else dye_image(node.image, dye, texel_mean(o, node.image, slot))
                 if stripes: node.image = stripe_image(o, node.image, slot, **stripes)
 
+        if kind == who.get('hair') and who.get('comb'):
+            import groom
+            diffuse = tree.nodes.get('diffuseTexture')
+            if diffuse and diffuse.image:
+                diffuse.image = groom.strand_colour(diffuse.image, save_copy)
+
 # ---- glasses as frames only (safety glasses): the faces the texture leaves clear go (cast: 'frames': [glasses, ...])
 for o in meshes:
     if o.name.split('.', 1)[-1] not in who.get('frames', []): continue
@@ -294,11 +301,21 @@ for o in meshes:
         import bmesh as _bm
         bm = _bm.new(); bm.from_mesh(o.data); bm.faces.ensure_lookup_table(); _bm.ops.delete(bm, geom=[bm.faces[i] for i in faces], context='FACES'); bm.to_mesh(o.data); bm.free()
 
+if who.get('comb'):
+    import groom
+    hair = next(o for o in meshes if o.name.split('.', 1)[-1] == who['hair'])
+    groom.comb_layers(hair, rig, who['comb'])
+
+if who.get('taper_curls'):
+    import groom
+    hair = next(o for o in meshes if o.name.split('.', 1)[-1] == who['hair'])
+    groom.cropped_coils(hair, base, rig, OUT_DIR, OUT_ID)
+
 # Fit in the neutral pose so sewn details follow the existing rig and saved Director poses.
 if who.get('tailoring'):
     for obj in meshes:
         garment = obj.name.split('.', 1)[-1]
-        denim_bottom = garment == 'male_casualsuit04' and who.get('parts', {}).get(garment) == 'bottom'
+        denim_bottom = garment in ('male_casualsuit04', 'female_casualsuit01') and who.get('parts', {}).get(garment) == 'bottom'
         if garment in who['clothes'] and (garment in tailoring.GARMENTS or denim_bottom):
             tailoring.fit(obj, rig, who['tailoring'], garment)
 

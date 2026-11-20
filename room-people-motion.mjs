@@ -482,8 +482,8 @@ const RESTING = { 'sit-type': 'lr', 'stand-type': 'lr', 'stand-mid': 'lr', 'stan
     // (the high school film: the hand on the desk's touchscreen, its edge or its glass)
     'stand-screen-pull': 'r', 'stand-screen-tap': 'r', 'stand-screen-press': 'r' };
 const TYPES = new Set(['sit-type', 'stand-type', 'stand-mid', 'stand-type-low', 'wheel-type', 'power-type', 'sit-laptop']);
-const ON_FEET = new Set(['stand-type', 'stand-mid', 'stand-type-low', 'stand-brief', 'stand-radio', 'stand-chart', 'stand-counter', 'stand-wait', 'stand-phone', 'stand-present', 'stand-present-left', 'stand-work', 'stand-paint', 'cane-stand', 'kid-stand', 'kid-stand-wait', 'kid-stand-desk', 'stand-robot-work', 'stand-robot-shelf', 'stand-phone-pull', 'stand-phone-up', 'stand-phone-press', 'stand-phone-watch', 'stand-screen-pull', 'stand-screen-tap', 'stand-screen-press']);
-const INTENT = new Set(['stand-chart', 'sit-microscope', 'stand-radio', 'sit-read', 'sit-phone', 'power-phone', 'stand-phone', 'sit-write', 'stand-work', 'stand-paint', 'sit-controller', 'kid-read-floor', 'kid-sit-desk', 'kid-stand-desk', 'kid-sit-k', 'kid-sit-e', 'kid-kneel-craft', 'kid-play-floor', 'stand-robot-work', 'stand-robot-shelf', 'stand-phone-up', 'stand-phone-press', 'stand-screen-pull', 'stand-screen-tap', 'stand-screen-press']);      // eyes on what the hands hold
+const ON_FEET = new Set(['stand-type', 'stand-mid', 'stand-type-low', 'stand-brief', 'stand-radio', 'stand-chart', 'stand-counter', 'stand-wait', 'stand-phone', 'stand-present', 'stand-present-left', 'stand-work', 'stand-paint', 'cane-stand', 'kid-stand', 'kid-stand-wait', 'kid-stand-desk', 'stand-robot-work', 'stand-robot-lift', 'stand-robot-shelf', 'stand-phone-pull', 'stand-phone-up', 'stand-phone-press', 'stand-phone-watch', 'stand-screen-pull', 'stand-screen-tap', 'stand-screen-press']);
+const INTENT = new Set(['stand-chart', 'sit-microscope', 'stand-radio', 'sit-read', 'sit-phone', 'power-phone', 'stand-phone', 'sit-write', 'stand-work', 'stand-paint', 'sit-controller', 'kid-read-floor', 'kid-sit-desk', 'kid-stand-desk', 'kid-sit-k', 'kid-sit-e', 'kid-kneel-craft', 'kid-play-floor', 'stand-robot-work', 'stand-robot-lift', 'stand-robot-shelf', 'stand-phone-up', 'stand-phone-press', 'stand-screen-pull', 'stand-screen-tap', 'stand-screen-press']);      // eyes on what the hands hold
 export const livelyPose = pose => pose !== 'walk' && pose !== 'white-cane' && pose !== 'push-cart';
 export const WORKOUTS = new Set(['gym-cycle', 'gym-pullup', 'gym-press', 'gym-curl', 'gym-box', 'sit-pottery']);      // postures that work a machine: solveWorkout
 export function solveStill(rig, key, input) {
@@ -719,6 +719,15 @@ const ACTS = {
     },
     'stand-wait': waitAbout, 'kid-stand-wait': (rig, key, time, seed, life) => waitAbout(rig, key, time, seed, life, 1.6),
     'stand-phone': phone, 'sit-phone': phone,
+    'power-phone'(rig, key, time, seed, life) {
+        // The handset rests between both hands. Keep the supporting wrist in
+        // its authored position relative to the moving handset as the thumb scrolls.
+        phone(rig, key, time, seed, life);
+        const right = rig.side.r.arm[3], left = rig.side.l.arm[3];
+        bodyQ.copy(rig.wq[right]).multiply(bodyQ2.copy(key.wq[right]).invert());
+        bodyAt.copy(key.wp[left]).sub(key.wp[right]).applyQuaternion(bodyQ).add(rig.wp[right]);
+        armTo(rig, 'l', bodyAt, bodyQ2.copy(bodyQ).multiply(key.wq[left]));
+    },
     'kid-sit-floor': (rig, key, time, seed, life) => floorSit(rig, key, time, seed, life, 1), 'sit-floor': (rig, key, time, seed, life) => floorSit(rig, key, time, seed, life, .6),
     // a child showing something: the hand with it lifts and turns it, a little bounce at the knees, the head goes from the
     // thing to the one it is shown to
@@ -900,10 +909,27 @@ const ACTS = {
     // its open chest in short bursts (a few millimetres to and fro, the wrist turning), now and then it stops while he
     // looks; the head goes with the work
     'stand-robot-work'(rig, key, time, seed, life) {
-        const hand = rig.side.l.arm[3], busy = (1 - moment(time, seed, 321, 6, 1.6)) * life, w = Math.sin(time * 5.1 + seed) * busy, u = Math.sin(time * 2.3 + seed * .7) * busy;
-        handAt.copy(key.wp[hand]); handAt.x += .01 * w; handAt.y += .006 * u; handAt.z += .006 * Math.sin(time * 3.3 + seed) * busy;
-        armTo(rig, 'l', handAt, handQ.copy(key.wq[hand]).premultiply(turn.setFromAxisAngle(Z, .14 * w)));
-        headTurn(rig, .05 * held(time, seed, 322, 3) * life, .025 * u);
+        // Seat the thumb and index finger, turn the part, then ease the wrist
+        // back out. The eyes follow the working hand just before the turn.
+        const phase = (time / 2.35 + hash(321, seed)) % 1;
+        const grip = (ss(.05, .23, phase) - ss(.62, .85, phase)) * life;
+        const twist = (ss(.23, .53, phase) - ss(.68, .94, phase)) * life;
+        const hand = rig.side.l.arm[3];
+        handAt.copy(key.wp[hand]); handAt.x -= .009 * grip; handAt.y += .004 * twist;
+        armTo(rig, 'l', handAt, handQ.copy(key.wq[hand]).premultiply(turn.setFromAxisAngle(Z, .18 * twist)));
+        for (const [bone, radians] of [['index_02_l', .14], ['thumb_02_l', .09]]) {
+            const joint = rig.index.get(bone);
+            if (joint !== undefined) rig.lq[joint].multiply(turn.setFromAxisAngle(X, radians * grip));
+        }
+        headTurn(rig, .042 * grip, .025 * twist);
+    },
+    'stand-robot-lift'(rig, key, time, seed, life) {
+        // Support the load over the planted foot. Re-solve both grips after
+        // the shoulder adjustment so the robot keeps its authored shelf path.
+        shiftWeight(rig, key, .012 * life, .004 * life);
+        bend(rig, X, -.018 * life);
+        pinHands(rig, key, 'lr');
+        headTurn(rig, .015 * life, -.046 * life);
     },
     // phone lowered, watching the desk go (its head follows the desk: RoomPeople.gazeOf): the weight settles from foot to foot
     'stand-phone-watch'(rig, key, time, seed, life) { shiftWeight(rig, key, .014 * held(time, seed, 331, 6) * life); },
@@ -1205,6 +1231,7 @@ export function shoeFit(rig, points) {
 }
 const hermite = (p0, p1, m0, m1, t) => { const t2 = t * t, t3 = t2 * t; return (2 * t3 - 3 * t2 + 1) * p0 + (t3 - 2 * t2 + t) * m0 + (-2 * t3 + 3 * t2) * p1 + (t3 - t2) * m1; };
 export function walkPlan(rig, from, to, path, options = {}) {
+    const shoulderStrap = from.id === 'people-yara-walk';
     from = walkStance(rig, from); to = walkStance(rig, to || from);
     const points = path.map(([x, z]) => new THREE.Vector2(x, z)), legs = [], L = rig.side.l, R = rig.side.r;
     let length = 0; for (let i = 1; i < points.length; i++) { const d = points[i].distanceTo(points[i - 1]); legs.push({ a: points[i - 1], b: points[i], s0: length, d }); length += d; }
@@ -1282,7 +1309,7 @@ export function walkPlan(rig, from, to, path, options = {}) {
         let sx = 0, sz = 0; for (let k = 0; k <= 8; k++) { const y = bodyYaw(g0 + (g1 - g0) * k / 8); sx += Math.sin(y); sz += Math.cos(y); }
         const y = Math.atan2(sx, sz); st.to.yaw = st.to.yaw + wrap(y - st.to.yaw);
     }
-    return { length, step, steps, prints, along, heading, travel, bodyYaw, turnRate: THREE.MathUtils.radToDeg(fastest(body) / dt), from, to, pace, heels, land, tilt, toes: options.toes !== 'stiff', swing, seconds: steps.length / pace, at: seconds => clamp01(seconds * pace / steps.length) * steps.length };
+    return { length, step, steps, prints, along, heading, travel, bodyYaw, shoulderStrap, turnRate: THREE.MathUtils.radToDeg(fastest(body) / dt), from, to, pace, heels, land, tilt, toes: options.toes !== 'stiff', swing, seconds: steps.length / pace, at: seconds => clamp01(seconds * pace / steps.length) * steps.length };
 }
 // The pose at gait clock g (plan.at(seconds)): rig.lq / rig.lp in the model's frame. Returns where the model stands:
 // { x, z, yaw } (metres, radians; the room's frame).
@@ -1404,6 +1431,20 @@ export function solveWalk(rig, plan, g) {
         // held out in front)
         const hand = rig.side[s2].arm[3], bend = v4.copy(rig.wp[lower]).sub(rig.wp[upper]).angleTo(v5.copy(rig.wp[hand]).sub(rig.wp[lower]));
         rig.turnWorld(lower, turn.setFromAxisAngle(X, -(THREE.MathUtils.degToRad(GAIT.elbow + 16 * Math.max(0, forward)) - bend) * walking)); rig.fk();
+    }
+    if (plan.shoulderStrap) {
+        // As she sets off, she lifts her right hand toward the shoulder strap,
+        // settles the load, then lets both arms swing freely for the walk.
+        const gather = ss(.02, .82, g) * (1 - ss(1.12, 1.98, g)) * walking;
+        if (gather > 0) {
+            const shoulder = rig.side.r.arm[1], hand = rig.side.r.arm[3];
+            const across = v4.copy(rig.wp[rig.side.l.arm[1]]).sub(rig.wp[shoulder]).normalize();
+            const up = v5.copy(rig.wp[b.neck_01]).sub(rig.wp[b.spine_02]).normalize();
+            const front = v6.crossVectors(across, up).normalize();
+            bodyAt.copy(rig.wp[shoulder]).addScaledVector(across, .055).addScaledVector(up, -.15).addScaledVector(front, .16);
+            handAt.copy(rig.wp[hand]).lerp(bodyAt, gather);
+            armTo(rig, 'r', handAt);
+        }
     }
     rig.fk();
     rootAt.x = at.x; rootAt.z = at.z; rootAt.yaw = yaw; return rootAt;

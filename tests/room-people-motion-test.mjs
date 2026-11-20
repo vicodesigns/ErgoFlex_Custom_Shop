@@ -29,6 +29,44 @@ for (const who of characters) {
     assert.ok(rig.has(`people-${who}-stand-wait`) || rig.has(`people-${who}-kid-stand-wait`), who + ' has the standing-by posture');
 }
 
+// In the Commons, Mia supports the phone with both hands. Check the relative
+// wrist transform as she scrolls, and that the chair and footplate contacts stay put.
+{
+    const rig = rigOf('mia'), key = rig.key('people-mia-power-phone');
+    const right = rig.side.r.arm[3], left = rig.side.l.arm[3], thumb = rig.index.get('thumb_01_r');
+    const offset = (points, turns) => points[left].clone().sub(points[right]).applyQuaternion(turns[right].clone().invert());
+    const rest = offset(key.wp, key.wq);
+    const restTurn = key.wq[right].clone().invert().multiply(key.wq[left]);
+    let travel = 0;
+    for (let frame = 0; frame <= 300; frame++) {
+        solveStill(rig, key, { time: frame / 30, seed: 21, life: 1 });
+        assert.ok(offset(rig.wp, rig.wq).distanceTo(rest) < .002, 'supporting wrist stays with the phone');
+        assert.ok(rig.wq[right].clone().invert().multiply(rig.wq[left]).angleTo(restTurn) < .003, 'palms keep their relative turn');
+        for (const i of [rig.b.pelvis, rig.side.l.leg[2], rig.side.r.leg[2]]) {
+            assert.ok(rig.wp[i].distanceTo(key.wp[i]) < .001, 'seated contacts stay on the chair');
+        }
+        travel = Math.max(travel, rig.lq[thumb].angleTo(key.q[thumb]));
+    }
+    assert.ok(travel > .1, 'scrolling moves the thumb');
+}
+
+// Yara briefly gathers the pack strap during the first strides. Compare to
+// the same gait without the pack gesture, including a seek back to mid-reach.
+{
+    const rig = rigOf('yara'), start = rig.key('people-yara-walk'), end = rig.key('people-yara-stand-wait');
+    const plan = walkPlan(rig, start, end, [[0, 0], [0, 6]], { pace: 2 });
+    const ordinary = walkPlan(rig, end, end, [[0, 0], [0, 6]], { pace: 2 });
+    const wrist = rig.side.r.arm[3];
+    for (const g of [0, 1, 2, 1]) {
+        solveWalk(rig, ordinary, g);
+        const y = rig.wp[wrist].y, feet = ['l','r'].map(s => rig.wp[rig.side[s].leg[2]].clone());
+        solveWalk(rig, plan, g);
+        if (g === 1) assert.ok(rig.wp[wrist].y > y + .12, 'the hand lifts toward the strap');
+        else assert.ok(Math.abs(rig.wp[wrist].y - y) < .001, 'the hand returns to its authored swing');
+        for (const [i,s] of ['l','r'].entries()) assert.ok(rig.wp[rig.side[s].leg[2]].distanceTo(feet[i]) < .001, 'the gesture preserves foot placement');
+    }
+}
+
 // OCC edits must scrub to the same frame with wrists still on the keyboard.
 {
     const rig = rigOf('andre'), key = rig.key('people-andre-sit-type');

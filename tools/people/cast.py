@@ -55,6 +55,7 @@ CHARACTERS = {
         'dye': {'joepal_crude_t-shirt_female': (.8, .76, .68)}, 'tint': {'toigo_wool_pants': (.2, .26, .34)},
     },
     'andre': {
+        'tailoring': 'workshop', 'taper_curls': True,
         'name': 'Andre', 'phenotype': {'gender': 1., 'age': .5, 'muscle': .6, 'weight': .52, 'height': .5, 'proportions': .6, 'race': race(.05, .9, .05)},
         'skin': 'young_african_male', 'eyes': 'brown', 'hair': 'short01', 'eyebrows': 'eyebrow012', 'eyelashes': 'eyelashes01',
         # (a relaxed face: brows up and level where they sat in a scowl; a full brow that reads on dark skin at film distance; 'brow_cutoff' build_people.py)
@@ -131,6 +132,7 @@ CHARACTERS = {
         'clothes': ['male_worksuit01', 'shoes02'],
     },
     'mia': {
+        'tailoring': 'commons', 'comb': 'bob',
         'name': 'Mia', 'phenotype': {'gender': .0, 'age': .32, 'muscle': .4, 'weight': .45, 'height': .59, 'proportions': .6, 'race': race(1, 0, 0)},
         'skin': 'young_caucasian_female', 'eyes': 'blue', 'hair': 'toigo_curled_under_bob', 'eyebrows': 'eyebrow001', 'eyelashes': 'eyelashes02',
         # (a softer face: brows a little higher and level with body, not a stern line; 'brow_cutoff' build_people.py)
@@ -478,12 +480,13 @@ CHARACTERS = {
         'dye': {'male_casualsuit02': (.22, .4, .3)}, 'tint': {'cortu_cargo_pants': (.42, .38, .3)}, 'look': 3, 'postures': CROWD + ['sit-raise'],
     },
     'yara': {
+        'tailoring': 'commons', 'comb': 'long',
         'name': 'Yara', 'phenotype': {'gender': .0, 'age': .375, 'muscle': .45, 'weight': .5, 'height': .58, 'proportions': .6, 'race': race(.66, .17, .17)},
         'skin': 'young_caucasian_female', 'skin_tone': (.88, .76, .66), 'eyes': 'brown', 'hair': 'long01', 'hair_tint': (.09, .055, .035), 'eyebrows': 'eyebrow011', 'eyelashes': 'eyelashes03',
         'face': {'head-diamond': .4, 'nose-hump-incr': .25, 'nose-scale-vert-incr': .3, 'lr-cheek-bones-incr': .5, 'eyebrows-angle-up': .3, 'mouth-lowerlip-volume-incr': .4, 'chin-triangle': .3},
         'clothes': ['toigo_fisherman_sweater', 'female_casualsuit01', 'toigo_ankle_boots_female'], 'parts': {'female_casualsuit01': 'bottom'},
         'tint': {'toigo_fisherman_sweater': (.7, .28, .22), 'toigo_ankle_boots_female': (.4, .27, .17)}, 'dye': {'female_casualsuit01': (.12, .15, .22)},
-        'carry': {'walk': [('backpack', {'color': (.6, .5, .3)})]}, 'look': 3, 'postures': CROWD + ['sit-raise'],
+        'carry': {'walk': [('backpack', {'color': (.6, .5, .3), 'webbing': True})]}, 'look': 3, 'postures': CROWD + ['sit-raise'],
     },
     'finn': {
         'name': 'Finn', 'phenotype': {'gender': 1., 'age': .3125, 'muscle': .45, 'weight': .42, 'height': .63, 'proportions': .5, 'race': race(1, 0, 0)},

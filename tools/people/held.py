@@ -274,7 +274,7 @@ def _torso_points(rig, inv):
     return p[keep], trunk[keep]
 
 
-def _fit_backpack(rig, m, p, trunk):
+def _fit_backpack(rig, m, p, trunk, webbing=False):
     """Where the pack and its straps go on this body (frame m, see backpack): (pack centre, [left path, right path]), or
     None where the body gives too little to fit to. Review of Nov 14: the strap hugs the top of the shoulder (the 99th
     percentile of a narrow slab under it, so a collar or the slope up to the neck does not lift it into a loop; the
@@ -284,7 +284,7 @@ def _fit_backpack(rig, m, p, trunk):
     inv = m.inverted(); ua = [inv @ (rig.matrix_world @ rig.pose.bones['upperarm_' + s].head) for s in 'lr']
     xs = .65 * (abs(ua[0].x) + abs(ua[1].x)) / 2          # the strap: between the neck and the shoulder joint
     neck_y = (inv @ (rig.matrix_world @ rig.pose.bones['neck_01'].head)).y
-    R, CLEAR = .014, .008                                 # (the strap's radius and the gap it keeps)
+    R, CLEAR = (.0045, .005) if webbing else (.014, .008)  # strap half-thickness and clearance
     def slab(cx, half=.012): return p[(np.abs(p[:, 0] - cx) < half) & (p[:, 1] < neck_y + .04)]      # (not the head)
     slabs = [slab(s * xs) for s in (-1, 1)]
     if any(len(S) < 20 for S in slabs): return None
@@ -325,7 +325,36 @@ def _fit_backpack(rig, m, p, trunk):
     return (0, cy, cz), paths
 
 
-def backpack(rig, color=(.16, .22, .3)):
+def padded_strap(path, mat, world):
+    # Sweep one flattened, rounded section along the fitted shoulder. Carry its
+    # width around the bend under the arm so the webbing never twists edge-on.
+    points = [Vector(p) for p in path]
+    bm = bmesh.new()
+    width_axis = Vector((1., 0., 0.))
+    last_axis = None
+    rows = []
+    for i, p in enumerate(points):
+        axis = (points[min(i + 1, len(points) - 1)] - points[max(0, i - 1)]).normalized()
+        if last_axis is not None:
+            width_axis = last_axis.rotation_difference(axis) @ width_axis
+        width_axis = (width_axis - axis * width_axis.dot(axis)).normalized()
+        normal = axis.cross(width_axis)
+        width = .012 if i in (0, len(points) - 1) else .022
+        profile = [(-1, 0), (-.86, .8), (0, 1), (.86, .8), (1, 0), (.86, -.8), (0, -1), (-.86, -.8)]
+        row = [bm.verts.new(p + width_axis * (u * width) + normal * (v * .0045)) for u, v in profile]
+        if rows:
+            for k in range(len(row)):
+                n = (k + 1) % len(row)
+                bm.faces.new((rows[-1][k], rows[-1][n], row[n], row[k]))
+        rows.append(row)
+        last_axis = axis
+    bm.faces.new(rows[0])
+    bm.faces.new(rows[-1])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
+    return _obj('padded shoulder strap', bm, mat, world)
+
+
+def backpack(rig, color=(.16, .22, .3), webbing=False):
     """On the back, with straps over the shoulders. Frame: X across, Y up the spine, Z out of the back, origin at the
     chest (spine_03). Fitted to the person (BODY, Nov 14: it hung low and its straps went through the shoulders): the
     pack's top a little under the top of the shoulders, its front against the back, each strap round the top of the
@@ -337,7 +366,7 @@ def backpack(rig, color=(.16, .22, .3)):
     m = Matrix((x, y, back)).transposed().to_4x4(); m.translation = w.translation
     mat = material('backpack ' + str(color), color, .85); strap = material('strap', (.06, .06, .07), .9)
     p, trunk = _torso_points(rig, m.inverted()) if BODY else (None, None)
-    fit = _fit_backpack(rig, m, p, trunk) if p is not None and len(p) >= 100 else None
+    fit = _fit_backpack(rig, m, p, trunk, webbing) if p is not None and len(p) >= 100 else None
     if fit is None:       # (no body to fit, or too little of it where the pack goes)
         c = (0, -.02, .17)
         paths = [[(a + c[0], b + c[1], d + c[2]) for a, b, d in ((s * .09, .19, -.05), (s * .1, .25, -.15), (s * .115, .2, -.27), (s * .13, .03, -.31), (s * .16, -.12, -.2), (s * .13, -.17, -.07))]
@@ -345,8 +374,14 @@ def backpack(rig, color=(.16, .22, .3)):
     else: c, paths = fit
     out = [box('backpack', (.29, .4, .15), mat, m, at=c, bevel=.03), box('backpack pocket', (.2, .17, .05), mat, m, at=(c[0], c[1] - .09, c[2] + .085), bevel=.02),
            tube('backpack handle', .008, (-.04, c[1] + .21, c[2] - .03), (.04, c[1] + .21, c[2] - .03), strap, m, 8)]
-    for path in paths:
-        for a, b in zip(path, path[1:]): out.append(tube('backpack strap', .014, a, b, strap, m, 8))
+    if webbing:
+        out.extend(padded_strap(path, strap, m) for path in paths)
+        # Zipped front compartment; the pull hangs from its closed end.
+        out.append(box('pocket zipper', (.177, .005, .006), strap, m, at=(c[0], c[1] - .042, c[2] + .110), bevel=.002))
+        out.append(box('zipper pull', (.008, .024, .005), strap, m, at=(c[0] + .081, c[1] - .053, c[2] + .114), bevel=.002))
+    else:
+        for path in paths:
+            for a, b in zip(path, path[1:]): out.append(tube('backpack strap', .014, a, b, strap, m, 8))
     return out
 
 
