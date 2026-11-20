@@ -1,0 +1,108 @@
+{
+ "v": 1,
+ "chapter": "music",
+ "about": "Vico's music chapter (Chapter 9, room gaming, layout house, morning): Kai gets up from the armchair at about 7 s, turns the short way (151 -> 158 deg, 7 deg to his left: he stands and steps forward), bends right to 110 deg (the coffee table passes on his right), walks 4 steps (2 strides + 2 to stand) into the middle of the room, round the coffee table, to a spot square in front of the desk (people mm [-370, 705]) and turns left as he arrives to face it (180 deg); the camera flies in over his right shoulder, he fades out (0.13 s, from 9.45 s) as it enters his head, and it ends as his point of view at the end of the chapter. The status-indicator light is off in this chapter (statusLight:false) so the gaming LED look stays on while the desk turns. Apply with tools/studio-state/autosave-patch.mjs.",
+ "groups": [
+  "people",
+  "camera",
+  "lighting"
+ ],
+ "set": {
+  "statusLight": false
+ },
+ "people": {
+  "expect": {
+   "kai-gets-up": {
+    "id": "people-kai-walk",
+    "at": [
+     -1079,
+     1348
+    ]
+   }
+  },
+  "cast": {
+   "kai-gets-up": {
+    "walk": {
+     "path": [
+      [
+       -1079,
+       1348
+      ],
+      [
+       -890,
+       890
+      ],
+      [
+       -370,
+       705
+      ]
+     ],
+     "start": 8.4,
+     "pace": 2,
+     "turn": 180
+    }
+   }
+  },
+  "when": {
+   "kai-gets-up": [
+    [
+     7.2,
+     9.58,
+     0.5,
+     0.13
+    ]
+   ]
+  }
+ },
+ "camera": {
+  "from": 8.4,
+  "hold": true,
+  "keys": [
+   {
+    "at": 9.2,
+    "position": [
+     2.0541,
+     2.0669,
+     1.3099
+    ],
+    "target": [
+     -0.7046,
+     1.5841,
+     0.5582
+    ],
+    "fov": 44,
+    "label": "Kai walks to the middle of the room: the camera comes in over his right shoulder, close to his head"
+   },
+   {
+    "at": 9.6,
+    "position": [
+     1.1695,
+     1.9613,
+     0.8559
+    ],
+    "target": [
+     -0.7046,
+     1.5841,
+     0.5582
+    ],
+    "fov": 46,
+    "label": "Through his head: he fades out as the camera enters it (when ends 9.58 s, fade 0.13 s)"
+   },
+   {
+    "at": 9.9,
+    "position": [
+     0.8072,
+     1.9613,
+     0.5582
+    ],
+    "target": [
+     -0.7046,
+     1.5841,
+     0.5582
+    ],
+    "fov": 48,
+    "label": "His point of view: the desk square on, at 47 in"
+   }
+  ]
+ }
+}

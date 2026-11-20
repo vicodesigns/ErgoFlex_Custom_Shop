@@ -1,6 +1,7 @@
 // Film desk lighting (tools/experience/film-status.mjs reads these shot fields):
 //   ledStatus  [{at, dur, kind, fade, fadeIn?, mode?, reverse?}]  one desk-light state at a time (seconds)
 //   ledNeutral [[seconds, '#hex'], …]  the neutral white over time (smoothstep between keys); else ledColor
+//   statusLight false: no status-indicator light in the chapter (the app's movement cue and ledStatus; film-status-light.mjs)
 //   ledColor   '#hex'  the neutral white;  sceneGlobals.roomLight  the room's own light (its lamps, sky fill and
 //              bounce; film-fx), not the desk's LEDs
 //   sceneGlobals.exposureScale / environmentScale  room brightness / ambient (image) light, and ledWallGlow /
@@ -26,6 +27,8 @@ export function cleanLighting(v={}){
   }).sort((a,b)=>a.at-b.at);
   if(Array.isArray(v.ledNeutral))out.ledNeutral=v.ledNeutral.slice(0,64).flatMap(k=>Array.isArray(k)&&num(k[0],0,90,null)!==null&&hexOk(k[1])?[[num(k[0],0,90,0),k[1].toLowerCase(),unique(k[2])]]:[]).sort((a,b)=>a[0]-b[0]);
   if(hexOk(v.ledColor))out.ledColor=v.ledColor.toLowerCase();
+  // statusLight: false = no status-indicator light in this chapter (tools/experience/film-status-light.mjs); true = the default again
+  if(typeof v.statusLight==='boolean')out.statusLight=v.statusLight;
   // timeOfDay [{at, mode, ease?}]: the room blends from one daypart preset to the next across each gap.
   if(Array.isArray(v.timeOfDay))out.timeOfDay=v.timeOfDay.slice(0,32).flatMap(k=>typeof k?.mode==='string'&&/^[a-z0-9-]{1,40}$/.test(k.mode)&&num(k.at,0,90,null)!==null?[{id:unique(k.id),at:num(k.at,0,90,0),mode:k.mode,...(k.ease==='smooth'||k.ease==='linear'?{ease:k.ease}:{})}]:[]).sort((a,b)=>a.at-b.at);
   const g=v.sceneGlobals||{},globals={},room=num(g.roomLight,0,4,null);if(room!==null)globals.roomLight=room;

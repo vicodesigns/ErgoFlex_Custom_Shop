@@ -95,7 +95,7 @@ function perfNote(kind,ms){if(kind==='seek'){perfSum.seek+=ms;perfSum.n++;}else{
 let fxLast=0,fxScreensAt=0,fxScrubbed=false,liveFx=null,fxShot=null,fxAt=-1,fxPending=null,fxLights=null,fxTimer=null;
 // Film layers the Director edits in place (film-fx update): lighting and its prop edits.
 let fxPeople='null',fxSonar='null';
-const lightsKey=s=>{const l=exportLighting(s);return JSON.stringify([l.ledStatus,l.ledNeutral,l.ledColor,l.sceneGlobals,l.lights,l.lightEdits,l.timeOfDay,l.propEdits,l.brandingEdits,l.deskEdits,l.deskBuild,l.screens,s.screenLook]);};   // (screenLook: the Graphics tab, applied in place by film-fx update)
+const lightsKey=s=>{const l=exportLighting(s);return JSON.stringify([l.ledStatus,l.ledNeutral,l.ledColor,l.sceneGlobals,l.lights,l.lightEdits,l.timeOfDay,s.statusLight,l.propEdits,l.brandingEdits,l.deskEdits,l.deskBuild,l.screens,s.screenLook]);};   // (screenLook: the Graphics tab, applied in place by film-fx update)
 // film-fx resolves 'three' through the stage page's import map, so it loads inside the stage frame.
 async function stageFx(){
   const win=frame.contentWindow;if(win.__filmFx)return win.__filmFx;

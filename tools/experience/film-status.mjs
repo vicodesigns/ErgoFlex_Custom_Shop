@@ -39,6 +39,7 @@
 //     face; x is sideways from the desk's centre. rise eases its scale in.
 import * as THREE from 'three';
 import { sampleMovementInto } from '../../led-movement.mjs';
+import { statusEvents } from './film-status-light.mjs';
 
 const api = window.ErgoFlex;
 const ZERO = [0, 0, 0, 0], RED = [255, 0, 0, 0], BLUE = [0, 0, 255, 0], AMBER = [255, 70, 0, 0], YELLOW = [255, 255, 0, 0], PURPLE = [150, 0, 255, 0];
@@ -101,7 +102,7 @@ vec3 dogMove(vec3 pos) {
 
 export function installStatus(shot) {
   const game = api.ledGameMode, counts = game.counts;
-  const frame = counts.map(n => new Uint8Array(n * 4)), events = (shot.ledStatus || []).map(e => ({ ...e }));
+  const frame = counts.map(n => new Uint8Array(n * 4)), events = statusEvents(shot);   // (none with statusLight:false: film-status-light.mjs)
   const group = new THREE.Group(); group.name = 'Film status'; group.userData.filmFx = true;
   const pylons = [], dogs = [], regular0 = api.ledColor || '#ffffff';
   const rgbOf = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));

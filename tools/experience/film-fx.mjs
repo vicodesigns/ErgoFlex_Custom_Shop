@@ -65,6 +65,10 @@ import {screenTiming} from './screen-timing.mjs';
 //   clock:{from:'08:00', to:'17:30', start=0, end=shot.seconds, ease='linear', second='real'|'clock'|'hide'}
 //   timeOfDay:[{at:seconds, mode:'morning'}, …]  (lighting-only interpolation)
 //   ledStatus:[{at,dur,kind,mode}], obstacles:[{x,ahead,radius,height,rise}]  see film-status.mjs
+//   statusLight:false  no status-indicator light in this chapter (19 Nov 2026, Vico's music chapter: the desk turns while
+//     the gaming LED look, ledMode 'media', must stay on): the app's movement cue (studio.js LedMotion: the red wheels
+//     comet on the wings and foot rest while the desk turns, the lift / tilt colours while it moves) is switched off for
+//     the shot and its ledStatus states are not played (film-status.mjs). Absent or true: as before, nothing changes.
 //   floorLight:{gain, foot, wings, lobe, max, soft, radius, hideApp}  foot + wing strips lighting the
 //     floor (replaces the app's boxed foot glow), see 'floor light' below
 //   ledReceivers:'viewer' | {mode:'viewer', …}  the app visualizer's LED receivers (floor bounce, wing glow down the
@@ -85,6 +89,7 @@ import { sampleScreenColours } from '../../led-screen-sampler.mjs';
 import { accessory } from '../../catalog.mjs';
 import { isTextureTarget, installTextureScreens, matches as textureMatches } from './film-texture-screens.mjs';
 import { lookFor, uniformsOf, GLSL as LOOK_GLSL, CALL as LOOK_CALL, SHADED as LOOK_SHADED, isToday } from '../../experience/screen-look.mjs';
+import { statusLightOff } from './film-status-light.mjs';
 
 const api = window.ErgoFlex;
 const sceneRoot = () => { let s = api.loadedModel; while (s?.parent) s = s.parent; return s; };
@@ -985,7 +990,7 @@ function installGlobals(shot) {
 export async function install(shot) {
   clear();
   unhookPreset();
-  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length || shot.sceneDeskPoses?.length || shot.sceneBranding || shot.sceneDeskEdits?.length || shot.featuredBuild;
+  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length || shot.sceneDeskPoses?.length || shot.sceneBranding || shot.sceneDeskEdits?.length || shot.featuredBuild || shot.statusLight === false;
   if (!wants) return null;
   active = { shot, list: [], screens: [], led: null, clocks: [], tod: null, desk: null, edits: null, lights: null };
   active.desk = await installDeskObjects(shot);
@@ -1024,6 +1029,8 @@ export async function install(shot) {
   if (shot.ledColor) { active.ledColor = api.ledColor; api.setLedColor(shot.ledColor, false); }
   // ledGlow: the app's LED brightness slider as a fraction of full (the stage uses .35).
   if (Number.isFinite(shot.ledGlow)) api.setLedGlow(api.ledFullBrightness * THREE.MathUtils.clamp(shot.ledGlow, 0, 1), false);
+  // statusLight:false: the app's movement cue off for this shot (restored by clear()); film-status.mjs drops the states
+  if (shot.statusLight === false) active.motionCue = statusLightOff(api);
   if (shot.ledStatus || shot.obstacles) { const S = await import('./film-status.mjs'); await S.prepareObstacles(shot); active.status = S.installStatus(shot); }
   if (shot.floorLight) active.floor = installFloorLight(shot);
   if (shot.ledReceivers) active.viewerLeds = (await import('./film-viewer-leds.mjs')).installViewerLeds(shot);   // before wheels: both wrap render
@@ -1194,6 +1201,7 @@ export function clear() {
   active.branding?.restore();   // before the poses go back: it only swaps the desks' artwork
   active.deskEdits?.restore();   // before deskPoses (installed after it)
   active.deskPoses?.restore();
+  active.motionCue?.restore();
   active = null;
 }
 export { discover };

@@ -7,6 +7,7 @@ import {mergePeople} from './people-edits.mjs';
 import {mergeBranding} from './branding-edits.mjs';
 import {mergeDeskEdits} from './desk-edits.mjs';
 import {mergeFeaturedBuild} from './desk-build.mjs';
+import {withStatusLight} from '../tools/experience/film-status-light.mjs';
 // Film chapter switching: a chapter link carries #cut=…&film=<chapter list>&director=1.
 const stripRepoPrefix=s=>typeof s==='string'?s.replace(/^\/home\/ergo\/ErgoFlex_Custom_Shop(?=\/)/,''):s;
 export function filmLink(hash){
@@ -52,6 +53,7 @@ export function liveFilmShot(film,shot){
   if(lit.ledStatus){next.ledStatus=lit.ledStatus;if(lit.ledNeutral)next.ledNeutral=lit.ledNeutral;else delete next.ledNeutral;if(lit.ledColor)next.ledColor=lit.ledColor;}
   if(lit.sceneGlobals)next.sceneGlobals={...next.sceneGlobals,...lit.sceneGlobals};
   if(lit.timeOfDay)next.timeOfDay=lit.timeOfDay;
+  withStatusLight(next,shot);   // (the chapter's status-light switch: tools/experience/film-status-light.mjs)
   delete next.lights;Object.assign(next,mergeSceneLights(film,shot),mergePropEdits(film,shot),mergePeople(film,shot),mergeBranding(film,shot),mergeDeskEdits(film,shot),mergeFeaturedBuild(film,shot));
   // Room desks' lift / tilt clips are the live stage's (it samples shot.deskEdits, else the film's sceneDeskEdits; player.mjs):
   // the film layer keeps the rest of a desk edit (size, pose, build) and does not play the clips a second time.
