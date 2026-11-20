@@ -2199,8 +2199,10 @@ export class RoomPeople {
     // A placement's `look` names whom they look at (a key, or keys: whichever of them is there and in front within 9 m),
     // whatever their posture: someone listening to a classmate who talks to them (the oilers film).
     gazeOf(object, life) {
-        const pose = life.key?.pose || '', talks = GAZE_TALK.test(pose), desk = GAZE_DESK.test(pose), waits = talks || desk || GAZE_IDLE.test(pose);
-        const look = (this.current(object) || object.userData.person)?.look; if (!waits && !look) return null;
+        const pose = life.key?.pose || '', look = (this.current(object) || object.userData.person)?.look;
+        // (a placement with look: ['desk'] watches the featured desk, whatever their posture: Maya doing her squats before its monitor)
+        const talks = GAZE_TALK.test(pose), desk = GAZE_DESK.test(pose) || [].concat(look || []).includes('desk'), waits = talks || desk || GAZE_IDLE.test(pose);
+        if (!waits && !look) return null;
         const root = object.userData.personRig?.bones.get('Root')?.parent; if (!root) return null;
         root.updateWorldMatrix(true, false); gazeM.copy(root.matrixWorld).invert();
         const headOf = o => { const h = o.visible && o !== object && o.userData.personRig?.bones.get('head'); if (!h) return null; h.updateWorldMatrix(true, false); return h.getWorldPosition(gazeW).applyMatrix4(gazeM); };
