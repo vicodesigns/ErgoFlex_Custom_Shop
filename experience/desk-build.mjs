@@ -6,6 +6,13 @@
 //     accessories: the desk's COMPLETE accessory set (catalog ACCESSORIES ids) and where each one goes:
 //     slot 'desktop' | 'shelf' (top shelf) | 'lower-shelf' (second shelf) | 'base-shelf' (the shelf at the base).
 //     Absent = the room's own accessories.
+//     accessoryFinishes?: {<accessory id>: 'white' | 'steel' | ...}   the store's per-accessory finish (catalog finishes; black is the
+//     default and is not written): the white ErgoFlex keyboard and mouse, the steel keyboard tray. Absent = the room's own.
+//     objects?: {'accessory-<id>': {role, transform:{p:{x,y,z}, q:{x,y,z,w}, s:{x,y,z}}}}   where each accessory stands, in
+//     its slot's own frame (millimetres from the middle of that surface, so it rides the desk's lift and tilt; the same
+//     numbers as the Studio's desk objects). Only for accessories the build lists, in the slot the build gives them.
+//     Absent = the store's layout (or the room's own placement for an accessory the room already has in that slot).
+//     "Same setup as another desk" (desk-kit.mjs) writes all three.
 // The same module applies it at runtime to a record of the studio's scene desks (api.sceneDesks, scene-desks.mjs), the
 // way the studio does for a desk that is not the live one (style: SceneDesks ctx.restyle; accessories: the desk's own
 // accessory set r.peripherals, placed by scene-desk-objects.mjs register()). It never writes the studio's files or its
@@ -38,6 +45,26 @@ export function cleanBuildAccessories(list){
     const slot=typeof a==='object'&&SLOT_IDS.includes(a.slot)?a.slot:naturalSlot(id);seen.set(id,slot);}
   return cleanConfig({size:'60x30',accessories:[...seen.keys()]}).accessories.map(id=>({id,slot:seen.get(id)}));
 }
+const FIN=/^[a-z]{3,12}$/,fin3=n=>Math.round(n*1e3)/1e3;
+// accessory finishes the store knows (catalog finishes), not the default black.
+export function cleanBuildFinishes(map){
+  if(!map||typeof map!=='object'||Array.isArray(map))return undefined;
+  const out={};for(const [id,f] of Object.entries(map)){const item=accessory(id);if(item?.finishes?.includes(f)&&FIN.test(f)&&f!=='black')out[id]=f;}
+  return out;
+}
+// Placements: {role, transform:{p,q,s}} per 'accessory-<id>', finite and sane, the quaternion normalised.
+export function cleanBuildObjects(map){
+  if(!map||typeof map!=='object'||Array.isArray(map))return undefined;
+  const out={};
+  for(const [key,v] of Object.entries(map).slice(0,60)){
+    const id=/^accessory-(.+)$/.exec(key)?.[1];if(!id||!accessory(id)||!SLOT_IDS.includes(v?.role))continue;
+    const t=v.transform,ok=(o,ks,lim)=>o&&ks.every(k=>Number.isFinite(o[k])&&Math.abs(o[k])<=lim);
+    if(!t||!ok(t.p,['x','y','z'],1e5)||!ok(t.s,['x','y','z'],1e3)||!ok(t.q,['x','y','z','w'],1))continue;
+    const len=Math.hypot(t.q.x,t.q.y,t.q.z,t.q.w);if(len<1e-3||t.s.x<=0||t.s.y<=0||t.s.z<=0)continue;
+    out[key]={role:v.role,transform:{p:{x:fin3(t.p.x),y:fin3(t.p.y),z:fin3(t.p.z)},q:{x:fin3(t.q.x/len),y:fin3(t.q.y/len),z:fin3(t.q.z/len),w:fin3(t.q.w/len)},s:{x:fin3(t.s.x),y:fin3(t.s.y),z:fin3(t.s.z)}}};
+  }
+  return out;
+}
 export function cleanDeskBuild(b){
   if(!b||typeof b!=='object')return null;
   const out={};
@@ -45,6 +72,12 @@ export function cleanDeskBuild(b){
   if(BASES.includes(b.baseFinish))out.baseFinish=b.baseFinish;
   if(typeof b.trimColor==='string'&&HEX.test(b.trimColor))out.trimColor=b.trimColor.toLowerCase();
   const acc=cleanBuildAccessories(b.accessories);if(acc)out.accessories=acc;
+  // Finishes and placements belong to accessories the build lists (when it lists them); a removed accessory takes its own away.
+  const have=acc?new Set(acc.map(a=>a.id)):null,slotOf=acc?new Map(acc.map(a=>[a.id,a.slot])):null;
+  const fins=cleanBuildFinishes(b.accessoryFinishes);
+  if(fins){for(const id of Object.keys(fins))if(have&&!have.has(id))delete fins[id];if(Object.keys(fins).length)out.accessoryFinishes=fins;}
+  const objs=cleanBuildObjects(b.objects);
+  if(objs){for(const [key,o] of Object.entries(objs)){const id=key.slice(10);if(have&&(!have.has(id)||slotOf.get(id)!==o.role))delete objs[key];}if(Object.keys(objs).length)out.objects=objs;}
   return Object.keys(out).length?out:null;
 }
 // The featured desk's build lives on the shot itself: shot.deskBuild (same fields as a room desk's build). Absent: the film
@@ -101,6 +134,22 @@ export function readDesk(api,id){
   const ids=cleanBuildAccessories((r.state.accessories||[]).map(a=>({id:a,slot:r.objects?.get('accessory-'+a)?.saved.role})))||[];
   return {id,name:r.state.name,size:r.state.size,woodFinish:style?.woodFinish,baseFinish:style?.baseFinish,trimColor:style?.trimColor,accessories:ids,loaded:!!r.peripherals};
 }
+// A desk's complete accessory setup as the stage holds it (what "Same setup as another desk" copies from): the accessories
+// with the slot each is in, their finishes and where each stands. A room desk reads its own record; FEATURED the live
+// featured desk (the store's config and the studio's desk objects of the selected desk).
+export function readSetup(api,id){
+  const objOf=(objs,aid)=>{const s=objs?.get('accessory-'+aid)?.saved;return s&&s.transform?{role:s.role,transform:structuredClone(s.transform)}:null;};
+  if(id===FEATURED){
+    const c=api?.currentConfig,objs=api?.sceneDesks?.active?.objects;if(!c)return null;
+    const accessories=cleanBuildAccessories((c.accessories||[]).map(a=>({id:a,slot:objs?.get('accessory-'+a)?.saved.role})))||[];
+    return {id,size:c.size,accessories,accessoryFinishes:{...(c.accessoryFinishes||{})},objects:Object.fromEntries(accessories.map(a=>[a.id,objOf(objs,a.id)]).filter(x=>x[1]).map(([a,o])=>['accessory-'+a,o])),baseFinish:c.baseFinish,woodFinish:c.woodFinish};
+  }
+  const r=record(api,id);if(!r)return null;
+  const accessories=cleanBuildAccessories((r.state.accessories||[]).map(a=>({id:a,slot:r.objects?.get('accessory-'+a)?.saved.role})))||[];
+  const objects={};for(const a of accessories){const o=objOf(r.objects,a.id)||(r.state.objects?.['accessory-'+a.id]?.transform?{role:r.state.objects['accessory-'+a.id].role,transform:structuredClone(r.state.objects['accessory-'+a.id].transform)}:null);if(o)objects['accessory-'+a.id]=o;}
+  const style=cleanDeskStyle(r.state.style);
+  return {id,size:r.state.size,accessories,accessoryFinishes:{...(r.state.accessoryFinishes||{})},objects,baseFinish:style?.baseFinish,woodFinish:style?.woodFinish};
+}
 // Remember what the room had, once per desk, before the first change.
 function remember(api,r){
   const mem=memory(api);if(mem.has(r.id))return mem.get(r.id);
@@ -136,8 +185,11 @@ export async function applyBuild(api,id,build){
   if(!set){return {desk:id,style:true,accessories:false};}
   const want=build.accessories?build.accessories:null;
   const ids=want?want.map(a=>a.id):orig.accessories;
-  const config=cleanConfig({...api.currentConfig,size:r.state.size,accessories:ids,accessoryFinishes:orig.accessoryFinishes});
+  // (the build's finishes over the room's own; an accessory that is not on the desk takes none)
+  const config=cleanConfig({...api.currentConfig,size:r.state.size,accessories:ids,accessoryFinishes:{...orig.accessoryFinishes,...(build.accessoryFinishes||{})}});
   const kept=new Set(config.accessories);
+  if(config.accessoryFinishes)for(const id of Object.keys(config.accessoryFinishes))if(!kept.has(id))delete config.accessoryFinishes[id];
+  r.state.accessoryFinishes=config.accessoryFinishes?{...config.accessoryFinishes}:{};
   r.state.objects||={};
   // Placement: the room's own where the accessory is already on this desk and stays in its slot; otherwise the store's
   // layout seeds it (fixed up below) or, in another slot than its own, a free spot on that slot's surface.
@@ -145,6 +197,9 @@ export async function applyBuild(api,id,build){
   for(const aid of config.accessories){
     const key='accessory-'+aid,was=orig.objects[key],own=was?.role||naturalSlot(aid),slot=want?.find(a=>a.id===aid)?.slot||own;
     desired.set(aid,slot);
+    // The build's own placement (a copied setup): exactly where it says, in its slot's frame.
+    const planned=build.objects?.[key];
+    if(planned&&planned.role===slot){r.state.objects[key]={...(was?structuredClone(was):{}),role:slot,added:false,removed:false,custom:true,label:was?.label||accessory(aid).name,transform:structuredClone(planned.transform)};continue;}
     if(slot===own){if(was)r.state.objects[key]=structuredClone(was);else delete r.state.objects[key];continue;}
     perSlot[slot]=perSlot[slot]||0;
     r.state.objects[key]={...(was?structuredClone(was):{}),role:slot,added:false,removed:false,label:was?.label||accessory(aid).name,transform:spot(r,slot,perSlot[slot]++)};
@@ -169,7 +224,7 @@ export async function restoreBuild(api,id){
   const r=record(api,id),mem=api?.sceneDesks?.__deskBuild,orig=mem?.get(id);if(!r||!orig)return false;
   mem.delete(id);
   if(orig.style)restyle(api,r,orig.style);
-  r.state.accessories=[...orig.accessories];
+  r.state.accessories=[...orig.accessories];r.state.accessoryFinishes=structuredClone(orig.accessoryFinishes||{});
   for(const k of Object.keys(r.state.objects||{}))if(k.startsWith('accessory-'))delete r.state.objects[k];
   Object.assign(r.state.objects,structuredClone(orig.objects));
   if(r.peripherals){r.peripherals.sync(cleanConfig({...api.currentConfig,size:r.state.size,accessories:orig.accessories,accessoryFinishes:orig.accessoryFinishes}));await settle(r,r.peripherals);}

@@ -55,7 +55,7 @@ export function describeDeskEdit(e,was={}){
   if(e.pose)parts.push('placed at x '+inch(e.pose.x)+'″, z '+inch(e.pose.z)+'″, turned '+deg(e.pose.yaw)+'°');
   if(e.initial)parts.push(`starts at ${e.initial.height}″ / ${e.initial.tilt}°`);
   if(e.clips?.length)parts.push(e.clips.length+' move'+(e.clips.length===1?'':'s'));
-  if(e.build)parts.push('built');
+  if(e.build)parts.push(e.build.objects?'keyboard tray setup':'built');
   if(e.hide)parts.push('hidden in this chapter');
   return parts.join(', ')||'unchanged';
 }

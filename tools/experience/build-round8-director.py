@@ -714,7 +714,7 @@ def clean_desks(desks):
 
 
 def clean_build(b):
-    """A desk build as the Director cleaned it (experience/desk-build.mjs cleanDeskBuild): finishes, trim, [{id, slot}]."""
+    """A desk build as the Director cleaned it (experience/desk-build.mjs cleanDeskBuild): finishes, trim, [{id, slot}], accessory finishes and placements."""
     if not isinstance(b, dict): return None
     out = {}
     for k in ('woodFinish', 'baseFinish'):
@@ -724,6 +724,12 @@ def clean_build(b):
         acc = [{'id': a['id'], 'slot': a['slot']} for a in b['accessories'][:60] if isinstance(a, dict) and isinstance(a.get('id'), str)
                and a.get('slot') in ('desktop', 'shelf', 'lower-shelf', 'base-shelf')]
         out['accessories'] = acc
+    # accessory finishes ({'ergo-keyboard': 'white'}) and placements ({'accessory-id': {role, transform}}): desk-build.mjs
+    # cleanBuildFinishes / cleanBuildObjects; the Director has already cleaned them, they pass through as it wrote them
+    if isinstance(b.get('accessoryFinishes'), dict) and b['accessoryFinishes']:
+        out['accessoryFinishes'] = {k: v for k, v in b['accessoryFinishes'].items() if isinstance(k, str) and isinstance(v, str)}
+    if isinstance(b.get('objects'), dict) and b['objects']:
+        out['objects'] = {k: copy.deepcopy(v) for k, v in b['objects'].items() if isinstance(k, str) and k.startswith('accessory-') and isinstance(v, dict)}
     return out or None
 
 
