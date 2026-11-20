@@ -10,6 +10,11 @@ import {seedSceneDeskSize} from '../../scene-desk-data.mjs';
 import {clampStartPose} from '../../experience/start-pose.mjs';
 import {createDeskChoreo} from '../../experience/desk-choreo.mjs';
 const clone = v => JSON.parse(JSON.stringify(v));
+// desk-build.mjs, kept once loaded: restore() must put a desk's room build back AT ONCE, before the size / pose restore and
+// before the next install reads the record (it ran a tick later through import().then: the e2e's one Undo of "Same setup
+// as another desk" left the kit on the desk, 19 Nov 2026)
+let deskBuild = null;
+const loadBuild = () => deskBuild ? Promise.resolve(deskBuild) : import('../../experience/desk-build.mjs').then(m => (deskBuild = m));
 
 // Rebuild a (not featured) record with another saved state: the model of its size, its dressing carried over.
 // The same steps as SceneDesks.setSize, which only works on the featured desk.
@@ -53,7 +58,7 @@ export function applyDesk(ctx, entry) {
   if (edit.initial) { const p = clampStartPose(edit.initial, r.state.size); setRecordPose(desks, r, p.height, p.tilt); }
   // BUILD HOOK (DeskBuild): edit.build -> wood / base / trim / accessories on this desk (experience/desk-build.mjs). The
   // accessories load a moment later: entry.pending settles when they are in (installDeskEdits().ready).
-  if (edit.build) entry.pending = import('../../experience/desk-build.mjs').then(m => m.applyBuild(ctx.api, r.id, edit.build)).catch(e => console.warn('[film-fx] desk build ' + r.id, e));
+  if (edit.build) entry.pending = loadBuild().then(m => entry.restored ? null : m.applyBuild(ctx.api, r.id, edit.build)).catch(e => console.warn('[film-fx] desk build ' + r.id, e));   // (restored before it loaded: never applied)
   if (edit.hide === true) hideDesk(entry);   // last: after a size rebuild (frameDesk keeps it hidden after a build rebuild)
 }
 // CLIPS HOOK (DeskChoreo): edit.clips sampled at the chapter time (desk-choreo.mjs createDeskChoreo, in installDeskEdits)
@@ -144,16 +149,22 @@ export function installDeskEdits(list, api) {
       this.hides = deskHideReport(list, entries, desks);
       return true;
     },
+    // Returns a promise that settles when the room's own accessories are in again (film-fx's update waits for it; the rest
+    // of the restore is done when it returns).
     restore() {
       choreo.restore();   // each desk back to its start pose first, then the rest of the edit below
-      for (const e of entries.reverse()) {
+      const settling = [];
+      for (const e of [...entries].reverse()) {
         if (e.hidden) unhideDesk(e);   // (only a hidden desk has this)
         const r = e.record; delete r.deskEditWas; if (desks.records.get(r.id) !== r) continue;
-        if (e.edit.build) import('../../experience/desk-build.mjs').then(m => m.restoreBuild(api, r.id));   // before a size rebuild: the room's own style / accessories back
+        // before a size rebuild: the room's own style / accessories back, now (restoreBuild's first part is synchronous);
+        // a build that has not started yet never will (entry.restored)
+        if (e.edit.build) { e.restored = true; if (deskBuild) settling.push(deskBuild.restoreBuild(api, r.id).catch(error => console.warn('[film-fx] desk build restore ' + r.id, error))); }
         const prior = clone(e.was.state);
         if (r.state.size !== e.was.size) rebuildRecord(desks, r, prior);
         else { r.state.pose = prior.pose; desks.place(r); setRecordPose(desks, r, prior.height, prior.tilt); }
       }
+      return Promise.all(settling);
     },
   };
 }
