@@ -4,7 +4,7 @@
 import {cleanClipMotion} from './desk-clips.mjs';
 import {lookOf} from '../room-looks.mjs';
 export const CHAPTER_FIELDS = ['title', 'detail', 'seconds', 'transition', 'room', 'layout', 'look', 'mode', 'kind', 'preset', 'size'];
-export const GROUP_KEYS = { motion: ['camera', 'motion'], lighting: ['lighting', 'timeOfDay', 'ledStatus', 'ledColor', 'ledGlow', 'ledSurfaces', 'sceneGlobals'], props: ['propEdits', 'sceneEdits'], people: ['peopleEdits'], graphics: ['screens'], titles: ['titles', 'titleEdits'] };
+export const GROUP_KEYS = { motion: ['camera', 'motion'], lighting: ['lighting', 'timeOfDay', 'ledStatus', 'statusLight', 'ledColor', 'ledGlow', 'ledSurfaces', 'sceneGlobals'], props: ['propEdits', 'sceneEdits'], people: ['peopleEdits'], graphics: ['screens'], titles: ['titles', 'titleEdits'] };
 const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 // The desk's moves against the film's as the Director cleans them when a chapter opens (cuts.mjs cleanShot ->
 // desk-clips.mjs cleanClipMotion: a travel's path read as its distance and side, a label cut to 60 characters…), so an

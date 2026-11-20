@@ -8,6 +8,7 @@ import {mergeBranding} from './branding-edits.mjs';
 import {mergeDeskEdits} from './desk-edits.mjs';
 import {mergeFeaturedBuild} from './desk-build.mjs';
 import {mergePeople} from './people-edits.mjs';
+import {withStatusLight} from '../tools/experience/film-status-light.mjs';
 // The shot a film render gets: the full built film shot with the Director's edits on top.
 // Camera: filmCamera below.
 export function filmRenderShot(film,shot,keys){
@@ -20,6 +21,7 @@ export function filmRenderShot(film,shot,keys){
   withSonar(next,shot);        // (the Graphics tab's Sonar, a proximity chapter's)
   for(const k of ['ledStatus','ledNeutral','ledColor'])if(lit[k]!==undefined)next[k]=structuredClone(lit[k]);
   if(lit.ledStatus&&!lit.ledNeutral)delete next.ledNeutral;
+  withStatusLight(next,shot);   // (the chapter's status-light switch: false carried, true back to the default)
   if(shot.sceneGlobals)next.sceneGlobals={...next.sceneGlobals,...structuredClone(shot.sceneGlobals)};
   if(lit.timeOfDay)next.timeOfDay=structuredClone(lit.timeOfDay);
   const filmed=filmCamera(film,keys,seconds);

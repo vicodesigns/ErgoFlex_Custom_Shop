@@ -325,7 +325,9 @@ def apply(n, cid, f, dc, log):
     return wrote
 
 
-LIGHT_FIELDS = ('screens', 'ledStatus', 'ledNeutral', 'ledColor', 'lights', 'lightEdits', 'timeOfDay')   # + Scene lights, Time of day (HQ29/32)
+LIGHT_FIELDS = ('screens', 'ledStatus', 'ledNeutral', 'ledColor', 'lights', 'lightEdits', 'timeOfDay', 'statusLight')   # + Scene lights, Time of day (HQ29/32)
+# statusLight (19 Nov 2026, Vico's music chapter): false = no status-indicator light in the chapter (the app's movement cue and
+# ledStatus; tools/experience/film-status-light.mjs); true = back to the default, which is the field's absence.
 # The Lighting tab's Room section: Room's own light / Room brightness / Fill light / LED glow on the walls / LED glow on the floor
 # (ledWallGlow / ledFloorGlow: x the film's approved LED room spill and floor light; film-fx.mjs sceneGlobals).
 GLOBAL_FIELDS = ('roomLight', 'exposureScale', 'environmentScale', 'ledWallGlow', 'ledFloorGlow', 'ledFloorSources')
@@ -346,6 +348,9 @@ def apply_lighting(cid, f, lighting):
                 if k == 'lights':   # the Director's own lights (director-*) are ADDED to the film's; same name replaces
                     mine = copy.deepcopy(lighting['lights']); names = {l.get('name') for l in mine}
                     s['lights'] = [l for l in s.get('lights') or [] if not str(l.get('name', '')).startswith('director-') and l.get('name') not in names] + mine
+                elif k == 'statusLight':
+                    if lighting[k] is False: s[k] = False
+                    else: s.pop(k, None)
                 else: s[k] = copy.deepcopy(lighting[k])
             for k in GLOBAL_FIELDS:
                 if k in lighting: s.setdefault('sceneGlobals', {})[k] = copy.deepcopy(lighting[k])
