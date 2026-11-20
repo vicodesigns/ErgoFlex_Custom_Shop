@@ -92,8 +92,8 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;w.__directorPeopleGizmo=gizmo;w.__directorPeoplePaths=paths;gizmo.setSize(1.2);gizmo.setSpace('world');gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
     enhanceGizmo(gizmo,{win:w,THREE,mmPerUnit:()=>mmPerUnitOf(w,THREE),status:t=>status(t)});   // P3: Rhino's Gumball (gumball.mjs)
     let orbit=true;
-    gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(ev.value){orbit=t.controls.enabled;t.controls.enabled=false;dragFrom=gizmo.object?read(gizmo.object):null;lastDragged=null;const e=sel&&entry(sel);if(dragFrom&&movable(e))hold(gizmo.object,dragFrom);if(dragFrom&&featured(e)&&!e.poseSource&&!free(e)){dragFrom.stance=seatedDesk(gizmo.object.userData?.person?.desk??e.desk)?'sit':'stand';dragFrom.reach=reachOfStance(e,dragFrom.stance);}}else{t.controls.enabled=orbit;endDrag();}});
-    gizmo.addEventListener('objectChange',()=>{const e=sel&&entry(sel);if(!e)return;if(dragFrom&&dragFrom.reach===undefined&&gizmo.object)lastDragged=read(gizmo.object);
+    gizmo.addEventListener('dragging-changed',ev=>{w.__directorDragging=ev.value;if(chairGizmo&&!pose.active()){if(ev.value){orbit=t.controls.enabled;t.controls.enabled=false;chairDragStart();}else{t.controls.enabled=orbit;chairDragEnd();}return;}if(ev.value){orbit=t.controls.enabled;t.controls.enabled=false;dragFrom=gizmo.object?read(gizmo.object):null;lastDragged=null;const e=sel&&entry(sel);if(dragFrom&&movable(e))hold(gizmo.object,dragFrom);if(dragFrom&&featured(e)&&!e.poseSource&&!free(e)){dragFrom.stance=seatedDesk(gizmo.object.userData?.person?.desk??e.desk)?'sit':'stand';dragFrom.reach=reachOfStance(e,dragFrom.stance);}}else{t.controls.enabled=orbit;endDrag();}});
+    gizmo.addEventListener('objectChange',()=>{if(chairGizmo&&!pose.active()){chairDragMove();return;}const e=sel&&entry(sel);if(!e)return;if(dragFrom&&dragFrom.reach===undefined&&gizmo.object)lastDragged=read(gizmo.object);
       if(dragFrom?.reach!==undefined&&gizmo.object){const r=reachOf(dragFrom,read(gizmo.object));previewReach(sel,r);status(`${personName(e)}: ${inch(r)} in from the desk (was ${inch(dragFrom.reach)} in)…`);return;}
       status(`${mode==='translate'?'Moving':mode==='rotate'?'Turning':'Scaling'} ${personName(e)}…`);});
     // Double-click a person: pose mode (the first click of the pair has selected them). Double-click elsewhere leaves it.
@@ -114,6 +114,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   function tick(){
     if(!tools)return;requestAnimationFrame(tick);
     pose.tick();paths.tick();   // S31 M3 hook
+    if(chairGizmo&&!pose.active()&&chairTick())return;
     if(pose.active()){tools.box.visible=false;if(tools.gizmo.object&&!tools.gizmo.dragging)tools.gizmo.detach();tools.gizmo.visible=tools.gizmo.enabled=false;return;}
     const {box,gizmo}=tools,e=sel&&entry(sel),o=e&&objectOf(sel),on=!!o&&o.visible&&editing()&&!lightsShowing();
     box.visible=on;if(on)box.setFromObject(o);
@@ -132,7 +133,35 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   }
   // S31: the drag is applied as a CHANGE to the placement (moved by, turned by), not as where the model is drawn now:
   // someone walking, rolling or seated is drawn away from their `at`, and only their placement moves, nothing else.
-  let dragFrom=null,lastDragged=null,held=null;
+  let dragFrom=null,lastDragged=null,held=null,chairGizmo=false,chairDrag=null;
+  // ---- the parked chair's own gizmo ("Move it in the view"): on the film desk user's chair while it is parked (they
+  // stand); the drag is read as people.chair {back, side, turn} from where the chair is in the desk's frame. While it is
+  // dragged the stage holds that spot through a copy of its filter (chairOf puts the chair at people.chair every frame).
+  const parkedChair=()=>{const people=stagePeople(),a=people?.actors?.find(a=>a.chair&&a.chair.visible);return a?{people,actor:a,chair:a.chair,parked:(a.state?.tau??0)>=2.55}:null;};
+  function chairTick(){
+    const {gizmo,box}=tools,c=parkedChair(),on=!!c&&c.parked&&editing()&&!lightsShowing();
+    box.visible=on;if(on)box.setFromObject(c.chair);
+    if(on){if(gizmo.object!==c.chair&&!gizmo.dragging)gizmo.attach(c.chair);gizmo.space='world';gizmo.setMode(mode==='rotate'?'rotate':'translate');gizmo.showX=gizmo.showZ=mode!=='rotate';gizmo.showY=mode==='rotate';}
+    else if(gizmo.object&&!gizmo.dragging)gizmo.detach();
+    gizmo.visible=gizmo.enabled=on;
+    if(!on&&!chairTick.said){chairTick.said=true;status(c?'The chair is parked only while they stand: scrub to a moment when they are standing.':'There is no chair at the film desk at the playhead.');}
+    if(on)chairTick.said=false;
+    return true;
+  }
+  function parkOf(c){
+    const {THREE}=tools,home=c.people.chairHome,yaw=c.people.room?.peopleState?.()?.pose?.yaw||0;if(!home)return null;
+    const d=new THREE.Vector3().subVectors(c.chair.position,home),front=new THREE.Vector3(Math.sin(yaw),0,Math.cos(yaw)),side=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
+    const turn=THREE.MathUtils.radToDeg(THREE.MathUtils.euclideanModulo(c.chair.rotation.y-(yaw+Math.PI)+Math.PI,Math.PI*2)-Math.PI);
+    return {back:Math.round(d.dot(front)),side:Math.round(d.dot(side)),turn:Math.round(turn*2)/2};
+  }
+  function chairDragStart(){const c=parkedChair(),f=c?.people.filter;if(!c||!f)return;chairDrag={c,f,copy:{...f}};c.people.filter=chairDrag.copy;}
+  function chairDragMove(){const d=chairDrag;if(!d)return;const v=parkOf(d.c);if(!v)return;d.copy.chair=v;d.last=v;status(`The chair: ${inch(v.back)} in back, ${inch(Math.abs(v.side))} in to the sitter's ${v.side<0?'left':'right'}, turned ${v.turn}°…`);}
+  function chairDragEnd(){
+    const d=chairDrag;chairDrag=null;if(!d)return;const v=d.last;
+    setTimeout(()=>{if(d.c.people.filter===d.copy){d.c.people.filter=d.f;d.c.people.dirty=true;}},3000);   // (the edit gives the stage a new filter)
+    if(!v){if(d.c.people.filter===d.copy)d.c.people.filter=d.f;return;}
+    write(p=>{p.chair=v;},`The chair ends up ${inch(v.back)} in behind the seat, ${inch(Math.abs(v.side))} in to the sitter's ${v.side<0?'left':'right'}, turned ${v.turn}°, while they stand.`);
+  }
   // 19 Nov 2026 (Vico: "I can select a character, but I don't have the tools"): everyone but the film desk's user gets the
   // Gumball. Someone at a room desk, on a seat, by furniture, beside the desk, or of the room's own cast is moved to a spot
   // of their own by their first move (toSpot): a seated posture away from a seat gets a task chair of its own there
@@ -265,7 +294,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   function select(key,{announce=true}={}){
     const e=entry(key);if(!e){deselect();return;}
     if(pose.active()&&pose.active()!==key)pose.exit();
-    sel=key;onSelect();ensure().catch(error=>status(error.message,true));loadCatalog();
+    sel=key;chairGizmo=false;onSelect();ensure().catch(error=>status(error.message,true));loadCatalog();
     if(announce)status(`${personName(e)} selected: ${free(e)?'W moves, E turns, R scales; Delete removes.':featured(e)?'they follow the film desk: drag the arrow to sit or stand nearer or further. Place in the People tab puts them elsewhere.':'W moves, E turns, R scales: their first move puts them at a spot of their own in this chapter. Double-click to pose.'}`);
     rerender();
   }
@@ -476,6 +505,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     if(name==='pe-remove'){remove();return;}
     if(name==='pe-color-reset'){const part=PARTS[index],e=sel&&entry(sel);if(e?.colors?.[part])edit(sel,x=>{delete x.colors[part];if(!Object.keys(x.colors).length)delete x.colors;},`${personName(e)}: ${part} as built.`);return;}
     if(name==='pe-duplicate'){duplicate();return;}
+    if(name==='pe-park-gizmo'){chairGizmo=!chairGizmo;chairTick.said=false;if(chairGizmo){await ensure();status('The chair: drag the arrows to move it (Turn: the ring). It is parked only while they stand: scrub there.');}else{if(tools?.gizmo.object&&!tools.gizmo.dragging)tools.gizmo.detach();status('Done moving the chair.');}rerender();return;}
     if(name==='pe-park-on'){write(p=>{p.chair={back:PARK.back[2],side:PARK.side[2],turn:PARK.turn[2]};},'The chair rolls 24.4 in behind the seat while they stand: set where below.');return;}
     if(name==='pe-park-off'){write(p=>{delete p.chair;},'The chair stays where it rolled back while they stand.');return;}
     if(name==='pe-park-film'){const f=film()?.people?.chair;write(p=>{if(f)p.chair=structuredClone(f);else delete p.chair;},'The chair is parked where the film parks it.');return;}
@@ -567,7 +597,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       const view=poseEntry(e.key),head=`<div class="people-head"><strong>${escape(personName(e))}</strong><small>${escape(doing(view))}</small></div>`;
       if(pose.active()===e.key)return pose.panel(head);
       return `<section class="people-selected" data-reveal="person">${head}<p class="director-hint">Part of the room’s cast.${featured(e)?' They follow the film desk.':' Move or turn them with the Gumball (W, E): their first move makes them this chapter’s, at a spot of their own.'} Double-click (or Fine-tune pose) for the posture showing at the playhead.</p><button type="button" data-action="pe-pose-enter">Fine-tune pose…</button>${savedHTML(view)}
-        <h4>Place</h4>${placeSelect(e)}${featured(e)?'':modesHTML()}${featured(e)&&e.desk!=='wheel'?parkPanel():''}
+        <h4>Place</h4>${placeSelect(e)}${featured(e)?'':modesHTML()}
         <div class="director-actions people-end"><button type="button" data-action="pe-duplicate">Duplicate</button><button type="button" class="danger" data-action="pe-remove" title="Leaves the room’s cast out of this chapter (kept in the list: the eye or Undo brings them back)">Remove from the chapter</button></div></section>`;
     }
     const chars=Object.entries(catalog.characters).filter(([,x])=>(filters.sex==='all'||sexIs(x.sex,filters.sex))&&(filters.age==='all'||x.age===filters.age)&&(filters.heritage==='all'||x.heritage===filters.heritage));
@@ -614,14 +644,16 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   // they sit), the chapter's once edited, else the film's; none: the chair stays where it rolled back.
   const parkNow=()=>{const mine=own();return mine?(mine.chair??null):(film()?.people?.chair??null);};
   const PARK={back:['Back','pe-park-back',620,'in',0,118,'How far behind the seat it ends up, along the desk\'s front'],side:['Side','pe-park-side',0,'in',-118,118,'To the sitter\'s right (+) or left (−), as they face the desk'],turn:['Turn','pe-park-turn',0,'°',-180,180,'How far it is turned (+ to the left, seen from above)']};
+  // (a chapter-wide setting: at the top of the People tab whenever the chapter has someone at the film desk who sits;
+  // Vico, 19 Nov 2026, could not find it in one person's panel)
+  const hasFilmDesk=()=>!!(film()?.people?.chair||cast().some(x=>x.desk==='sit'&&!x.station&&!x.hide)||stagePeople()?.actors?.some(a=>a.chair));
   function parkPanel(){
     const park=parkNow(),filmPark=film()?.people?.chair??null,same=JSON.stringify(park)===JSON.stringify(filmPark);
-    if(!park)return `<h4>Where the chair ends up <small>while they stand</small></h4><p class="director-hint">It stays where it rolled back.</p><div class="director-actions"><button type="button" data-action="pe-park-on" title="When they get up, the chair rolls away to a spot you set (and back as they sit)">Park it somewhere when they stand</button>${filmPark?`<button type="button" data-action="pe-park-film">↺ The film's</button>`:''}</div>`;
+    if(!park)return `<p class="director-hint">It stays where it rolled back.</p><div class="director-actions"><button type="button" data-action="pe-park-on" title="When they get up, the chair rolls away to a spot you set (and back as they sit)">Park it somewhere when they stand</button>${filmPark?`<button type="button" data-action="pe-park-film">↺ The film's</button>`:''}</div>`;
     const v=k=>park[k]??PARK[k][2],shown=k=>k==='turn'?Math.round(v(k)*2)/2:inch(v(k));
-    return `<h4>Where the chair ends up <small>while they stand</small></h4>
-      <div class="director-row people-fields">${Object.entries(PARK).map(([k,[label,name,,unit,lo,hi,tip]])=>field(label,name,shown(k),{step:k==='turn'?5:.5,min:lo,max:hi,unit,title:tip})).join('')}</div>
-      <div class="director-actions"><button type="button" data-action="pe-park-off" title="The chair stays where it rolled back">Don't park it</button>${filmPark&&!same?`<button type="button" data-action="pe-park-film" title="Back to where the film parks it">↺ The film's</button>`:''}</div>
-      <p class="director-hint">It eases there as they get up and back as they sit. Scrub to when they stand to see it.</p>`;
+    return `<div class="director-row people-fields">${Object.entries(PARK).map(([k,[label,name,,unit,lo,hi,tip]])=>field(label,name,shown(k),{step:k==='turn'?5:.5,min:lo,max:hi,unit,title:tip})).join('')}</div>
+      <div class="director-actions"><button type="button" data-action="pe-park-gizmo" aria-pressed="${chairGizmo}" title="A move gizmo on the chair in the view (scrub to when they stand): drag it where it should end up">${chairGizmo?'✓ Moving the chair in the view':'Move it in the view'}</button>${chairGizmo?`<button type="button" data-action="pe-mode-translate" aria-pressed="${mode!=='rotate'}">Move</button><button type="button" data-action="pe-mode-rotate" aria-pressed="${mode==='rotate'}">Turn</button>`:''}<button type="button" data-action="pe-park-off" title="The chair stays where it rolled back">Don't park it</button>${filmPark&&!same?`<button type="button" data-action="pe-park-film" title="Back to where the film parks it">↺ The film's</button>`:''}</div>
+      <p class="director-hint">It eases there as they get up and back as they sit. Scrub to when they stand to see it${chairGizmo?', then drag the arrows (Move) or the ring (Turn)':''}.</p>`;
   }
   // At the film desk: how far from it they are, how far their chair rolls, and rolling in or out during the shot.
   function seatPanel(e){
@@ -633,7 +665,6 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       <p class="director-hint">Distance from the desk</p>
       <div class="director-row people-fields">${dist('sit')}${e.desk!=='wheel'?dist('stand'):''}${changed?`<button type="button" data-action="pe-reach-reset" title="Back to the film's distances">↺</button>`:''}</div>
       ${chair?`<div class="director-row people-fields">${field('Chair rolls back','pe-chair-roll',inch(e.chairRoll??CHAIR_ROLL),{step:.5,min:0,max:31,unit:'in',title:`How far the chair rolls back before they stand, and in again as they sit (the film's ${inch(CHAIR_ROLL)} in)`})}${field('Slide to the seat front','pe-chair-scoot',inch(e.chairScoot??CHAIR_SCOOT),{step:.5,min:0,max:11.8,unit:'in',title:`How far they slide forward on the seat as they lean in to stand (the film's ${inch(CHAIR_SCOOT)} in)`})}</div>`:''}
-      ${chair?parkPanel():''}
       <h4>Roll in / out <small>seated</small></h4>
       ${rows||'<p class="director-hint">They stay at that distance. Add a roll to have them roll their chair in or out during the shot.</p>'}
       <div class="director-actions"><button type="button" data-action="pe-rk-add" ${keys.length>=16?'disabled title="16 rolls at most"':''}>+ Roll in / out at the playhead</button></div>`;
@@ -687,6 +718,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     return `<div class="director-heading"><div><span class="director-kicker">PEOPLE</span><h3>${list.length?`${count()} in this chapter`:'Nobody in this chapter'}</h3></div></div>
       <div class="director-actions"><button type="button" data-action="pe-add">+ Add person</button>${list.length?'':'<button type="button" data-action="pe-room">Bring in the room\'s people</button>'}${mine?'<button type="button" data-action="pe-reset" title="Back to the cast the film has for this chapter">Reset to the film</button>':''}</div>
       <p class="director-hint">${mine?'This chapter has its own cast.':list.length?'This is the film\'s cast. Your first change copies it into the chapter.':'Add people from the library, or bring in the people who live in this room.'} Click a person in the view or in the list.</p>
+      ${hasFilmDesk()?`<details class="people-chair-park" data-chair-park open><summary>Where the chair ends up · while they stand</summary>${parkPanel()}</details>`:''}
       ${keyInspector()}<div class="people-list">${list.map(row).join('')}</div>${e?selectedPanel(e):''}`;
   }
   // ---- the People KEYFRAME SHEET (S33 A2; people-track.mjs sheet): After Effects' twirl-down / Blender's dope sheet.
