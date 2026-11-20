@@ -27,6 +27,19 @@ export function deleteRoute(sel,{poseKey=false,picked=false}={}){
   if(picked||!sel)return null;
   return sel.kind==='person'?'person':sel.kind==='prop'?'prop':null;
 }
+// 20 Nov 2026 (Vico: "Delete should delete the selected key, clip or pose key; the Inspector's Delete does nothing"):
+// what Delete / Backspace and the selection header's 🗑 act on, one answer for every kind. Before, most kinds were
+// deleted only by a handler on the item's own button (focus is lost when the timeline re-renders after the click), and
+// the 🗑 sent a synthetic key to the document that those handlers never saw.
+//   poseKey: a pose key selected in pose mode; picked: timeline group picks; sheetKeys: People sheet keys picked.
+//   -> 'pose-key' | 'picks' | 'sheet-keys' | 'camera' | 'clip' | 'title' | 'graphic' | 'lightkey' | 'person' | 'prop' | null
+export const DELETABLE=['camera','clip','title','graphic','lightkey','person','prop'];
+export function deleteTarget(sel,{poseKey=false,picked=false,sheetKeys=false}={}){
+  if(poseKey)return 'pose-key';
+  if(picked)return 'picks';
+  if(sheetKeys)return 'sheet-keys';
+  return sel&&DELETABLE.includes(sel.kind)?sel.kind:null;
+}
 const q=v=>String(v).replace(/\\/g,'\\\\').replace(/"/g,'\\"');
 // Where each kind shows: Props lane bars and the Layers outliner (props), the People lane, list and keyframe sheet row
 // (people), the Desks list, the timeline's "Other desks" rows and the desk lanes' header / Desk picker while they edit

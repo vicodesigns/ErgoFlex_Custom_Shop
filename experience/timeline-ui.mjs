@@ -4,9 +4,18 @@ export function timelineTicks(seconds,pixels=1000){
   const ticks=[];for(let t=0;t<seconds-.00001;t+=step)ticks.push(Number(t.toFixed(3)));
   ticks.push(seconds);return ticks;
 }
-export function snapTimelineTime(value,{seconds,step=.1,targets=[],tolerance=0,bypass=false}={}){
+// The grid step at this zoom (20 Nov 2026): zoomed in far enough that the chosen step is more than GRID_PX apart, the
+// grid gets finer (0.05 s, then the frame), so keys a frame apart can be placed one by one; never finer than a frame.
+export const FRAME=1/30,GRID_PX=48;
+export function zoomStep(step,pxPerSecond){
+  if(!step||!(pxPerSecond>0)||step*pxPerSecond<=GRID_PX)return step;
+  for(const s of [.05,FRAME])if(s<step&&s*pxPerSecond<=GRID_PX)return s;
+  return Math.min(step,FRAME);
+}
+export function snapTimelineTime(value,{seconds,step=.1,targets=[],tolerance=0,bypass=false,pixels=0}={}){
   const clamp=v=>Math.max(0,Math.min(seconds,v));
   if(bypass||!step)return clamp(value);
+  if(pixels>0)step=zoomStep(step,pixels/seconds);
   const near=targets.filter(Number.isFinite).sort((a,b)=>Math.abs(a-value)-Math.abs(b-value))[0];
   if(near!==undefined&&Math.abs(near-value)<=tolerance)return clamp(near);
   return clamp(Math.round(value/step)*step);
@@ -16,8 +25,10 @@ export function adjacentEdit(times,current,direction,seconds){
   return direction<0?(sorted.filter(t=>t<current-.0001).at(-1)??0):(sorted.find(t=>t>current+.0001)??seconds);
 }
 // ---- P4 (17 Nov 2026): continuous zoom, timecode, markers, the loop range ----
-// The most zoom that still means anything: about 20 px a frame (30 fps), at least 8x.
-export const maxZoom=(seconds,viewWidth)=>Math.max(8,seconds*30*20/Math.max(200,viewWidth));
+// The most zoom that still means anything: about 40 px a frame (30 fps; 20 Nov 2026, was 20: a camera key is 30 px wide,
+// so keys a frame apart now separate), at least 8x.
+export const FRAME_PX=40;
+export const maxZoom=(seconds,viewWidth)=>Math.max(8,seconds*30*FRAME_PX/Math.max(200,viewWidth));
 export const clampZoom=(z,seconds,viewWidth)=>Math.max(1,Math.min(maxZoom(seconds,viewWidth),z));
 // The scrollLeft that keeps the time under the pointer where it is when the zoom goes from `from` to `to`.
 // x: the pointer's px from the lanes' left edge (excluding the labels), lane: the lanes' width at zoom 1.

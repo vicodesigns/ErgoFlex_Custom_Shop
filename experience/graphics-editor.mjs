@@ -2,11 +2,13 @@ import {graphicTrack,graphicRange as clipRange,editGraphic,splitGraphic} from '.
 import {FIELDS,KEYS,cleanScreenLook,lookFor} from './screen-look.mjs';
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const r2=v=>Number(v.toFixed(2));
-export function createGraphicsEditor({panel,timeline,shot,filmShot,showInspector,renderPanel,renderTimeline,status,commit,groupHead,groupClosed,time,snapStep,magnet}){
-  let selectedGraphic=0,graphicDrag=null,lookTarget='';
+export function createGraphicsEditor({panel,timeline,shot,filmShot,showInspector,renderPanel,renderTimeline,status,commit,onPick,groupHead,groupClosed,time,snapStep,magnet}){
+  // -1: no graphic selected (20 Nov 2026: it started at 0, so clip 0 counted as the selection whenever nothing else was,
+  // and Delete or a re-render after an edit picked it up)
+  let selectedGraphic=-1,graphicDrag=null,lookTarget='';
   const graphicScreens=()=>shot().screens??filmShot()?.screens??[];
   const graphicRange=sc=>clipRange(sc,shot().seconds);
-  function pickGraphic(index){selectedGraphic=index;showInspector('graphics',true);renderPanel();renderTimeline();status('Graphic selected. Drag the clip to move it; drag either edge to trim.');}
+  function pickGraphic(index){onPick?.();selectedGraphic=index;showInspector('graphics',true);renderPanel();renderTimeline();status('Graphic selected. Drag the clip to move it; drag either edge to trim.');}
   function graphicsGroup(){
     if(!filmShot())return '';const seconds=shot().seconds,list=graphicScreens(),tracks=new Map();
     list.forEach((sc,i)=>{const key=graphicTrack(sc,i);if(!tracks.has(key))tracks.set(key,[]);tracks.get(key).push([sc,i]);});
@@ -15,7 +17,7 @@ export function createGraphicsEditor({panel,timeline,shot,filmShot,showInspector
   }
   function graphicAction(action,index=selectedGraphic){try{
     let list;if(action==='split'){list=splitGraphic(graphicScreens(),index,r2(time()*shot().seconds),shot().seconds);selectedGraphic=index+1;}
-    else if(action==='delete'){list=structuredClone(graphicScreens()).map((sc,i)=>({...sc,target:sc.target??i}));list.splice(index,1);selectedGraphic=Math.max(0,index-1);}else return;
+    else if(action==='delete'){list=structuredClone(graphicScreens()).map((sc,i)=>({...sc,target:sc.target??i}));list.splice(index,1);selectedGraphic=-1;}else return;
     commit(()=>{shot().screens=list;},{render:true});showInspector('graphics',true);renderPanel();renderTimeline();status(action==='split'?'Clip split. Drag either piece to move it, or extend an edge to reveal more of the source.':'Graphic clip deleted. Undo restores it.');
   }catch(error){status(error.message,true);}}
   for(const root of [panel,timeline]){
@@ -73,5 +75,6 @@ export function createGraphicsEditor({panel,timeline,shot,filmShot,showInspector
       if(key==='start'||key==='end'){const [a,b]=graphicRange(sc);list=editGraphic(list,Number(el.dataset.screenIndex),key==='start'?value:a,key==='end'?value:b,shot().seconds,{trimStart:key==='start'});}else sc[key]=value;selectedGraphic=Number(el.dataset.screenIndex);commit(()=>{shot().screens=list;},{render:true});status('Monitor graphic updated.');
     }catch(error){renderPanel();status(error.message,true);}
   },true);
-  return {panel:screenLayers,lane:graphicsGroup,screens:graphicScreens,selected:()=>selectedGraphic,range:i=>{const sc=graphicScreens()[i];return sc?graphicRange(sc):null;}};
+  const live=()=>selectedGraphic>=0&&selectedGraphic<graphicScreens().length?selectedGraphic:-1;
+  return {panel:screenLayers,lane:graphicsGroup,screens:graphicScreens,selected:live,clear(){selectedGraphic=-1;},remove(){const i=live();if(i<0)return false;graphicAction('delete',i);return true;},range:i=>{const sc=graphicScreens()[i];return sc?graphicRange(sc):null;}};
 }
