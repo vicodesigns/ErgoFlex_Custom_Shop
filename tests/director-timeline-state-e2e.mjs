@@ -19,7 +19,7 @@ if(!chapter||!fs.existsSync(path.join(root,chapter.page))){console.log(`timeline
 const SHOTS=process.env.SHOTS||fs.mkdtempSync(path.join(os.tmpdir(),'timeline-state-'));fs.mkdirSync(SHOTS,{recursive:true});
 const {base,page,errors,close}=await openDirectorBrowser();
 const failures=[],check=(ok,what)=>{console.log(`${ok?'ok  ':'FAIL'} ${what}`);if(!ok)failures.push(what);return ok;};
-const until=async(fn,what,ms=20000)=>{const end=Date.now()+ms;for(;;){const v=await fn();if(v)return v;if(Date.now()>end)throw Error('timed out: '+what+' · status: '+await statusOf(page));await wait(150);}};
+const until=async(fn,what,ms=20000)=>{const end=Date.now()+ms;for(;;){const v=await fn();if(v)return v;if(Date.now()>end){await pageState('timed out: '+what);throw Error('timed out: '+what+' · status: '+await statusOf(page));}await wait(150);}};
 const shot=name=>page.screenshot({path:path.join(SHOTS,name)});
 // the timeline as the test sees it
 const view=()=>page.evaluate(()=>{const t=document.getElementById('director-timeline'),v=t.querySelector('.timeline-viewport'),groups={};
@@ -30,7 +30,12 @@ const same=(a,b,what)=>check(JSON.stringify(a.groups)===JSON.stringify(b.groups)
 const clickEl=sel=>page.evaluate(s=>{const el=document.querySelector(s);if(!el)throw Error('no '+s);el.click();},sel);
 const toggle=g=>clickEl(`#director-timeline [data-lane-group="${g}"] [data-action="group-toggle"]`);
 // a real click in the middle of a timeline element (pointer events: what the editors listen to)
-async function press(sel){const box=await page.evaluate(s=>{const el=document.querySelector(s);if(!el)return null;const r=el.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+Math.min(r.height/2,12)};},sel);if(!box)throw Error('no '+sel);await page.mouse.click(box.x,box.y);await wait(500);}
+// (an element the timeline's scroll hides is scrolled to first, and that is said: a click must not land on something else)
+async function press(sel){const box=await page.evaluate(s=>{const el=document.querySelector(s);if(!el)return null;let r=el.getBoundingClientRect(),moved=false;const v=el.closest('.timeline-viewport');
+  if(v){const b=v.getBoundingClientRect(),ruler=v.querySelector('.time-ruler-row')?.offsetHeight||0;if(r.top<b.top+ruler||r.bottom>b.bottom){el.scrollIntoView({block:'center'});r=el.getBoundingClientRect();moved=true;}}
+  const at=document.elementFromPoint(r.left+r.width/2,r.top+Math.min(r.height/2,12));return {x:r.left+r.width/2,y:r.top+Math.min(r.height/2,12),moved,hit:at===el||el.contains(at)};},sel);
+  if(!box)throw Error('no '+sel);if(box.moved)console.log(`note ${sel} was out of the timeline's view: scrolled to it first`);if(!box.hit)console.log(`note the click on ${sel} lands on something on top of it`);
+  await page.mouse.click(box.x,box.y);await wait(500);}
 const blurAll=()=>page.evaluate(()=>{document.activeElement?.blur?.();});
 // a recorder of what moves the timeline's vertical scroll (21 Nov 2026: Windows saw 54 -> 0 around an inspector edit):
 // every scrollTop / scrollTo / scrollIntoView / focus that reaches the viewport, with the value asked for, the value that
@@ -43,10 +48,25 @@ const watchScroll=()=>page.evaluate(()=>{
   Object.defineProperty(Element.prototype,'scrollTop',{configurable:true,get(){return d.get.call(this);},set(v){const was=d.get.call(this);d.set.call(this,v);if(vp(this))log.rows.push({step:log.step,what:'scrollTop=',was,want:Math.round(v),got:d.get.call(this),fresh:!this.__seen,who:who()});this.__seen=true;}});
   for(const [proto,name] of [[Element.prototype,'scrollTo'],[Element.prototype,'scrollIntoView'],[HTMLElement.prototype,'focus']]){const f=proto[name];proto[name]=function(...a){const v=document.querySelector('#director-timeline .timeline-viewport'),was=v?.scrollTop;const r=f.apply(this,a);const got=v?.scrollTop;if(v&&(vp(this)||v.contains(this))&&was!==got)log.rows.push({step:log.step,what:name+(vp(this)?'':' (inside)'),was,got,arg:JSON.stringify(a[0]??null),who:who()});return r;};}
   addEventListener('scroll',e=>{const v=e.target;if(vp(v)&&v.__last!==v.scrollTop){log.rows.push({step:log.step,what:'scroll event',was:v.__last??null,got:v.scrollTop});v.__last=v.scrollTop;}},true);
+  // each frame: which viewport element, its top, its size and whether it is shown (a reset with no event or write shows here)
+  const ids=new WeakMap();let nextId=1;log.last='';
+  const sample=()=>{const v=document.querySelector('#director-timeline .timeline-viewport');if(v&&!ids.has(v))ids.set(v,nextId++);
+    const now=v?`#${ids.get(v)} top ${v.scrollTop} max ${v.scrollHeight-v.clientHeight} h ${v.clientHeight} ${v.getClientRects().length?'shown':'NOT SHOWN'}${v.isConnected?'':' detached'}`:'no viewport';
+    if(now!==log.last){log.rows.push({step:log.step,what:'frame',was:log.last||'(step start)',got:now});log.last=now;}requestAnimationFrame(sample);};requestAnimationFrame(sample);
+  // class / hidden / style changes on the viewport or anything around it (body, the timeline, the lane groups)
+  new MutationObserver(list=>{const v=document.querySelector('#director-timeline .timeline-viewport');for(const m of list){const t=m.target;if(!(t===document.body||t===document.documentElement||(v&&t.contains?.(v))))continue;
+    const name=t.id?'#'+t.id:t===document.body?'body':t===document.documentElement?'html':t.tagName.toLowerCase()+'.'+String(t.className).split(' ')[0];
+    log.rows.push({step:log.step,what:'attr '+m.attributeName+' on '+name,was:String(m.oldValue??'').slice(0,90),got:String(t.getAttribute(m.attributeName)??'').slice(0,90)});}})
+    .observe(document.documentElement,{subtree:true,attributes:true,attributeOldValue:true,attributeFilter:['class','hidden','style']});
 });
-const mark=step=>page.evaluate(s=>{if(window.__tlScroll){window.__tlScroll.step=s;window.__tlScroll.rows=window.__tlScroll.rows.filter(r=>r.step===s);}},step);
+// the page as it is (on a FAIL or a timeout): the focus, open dialogs, the body's classes, and a screenshot
+let failShots=0;
+const pageState=async what=>{const st=await page.evaluate(()=>{const a=document.activeElement;return {focus:a?(a.tagName.toLowerCase()+(a.id?'#'+a.id:'')+(a.name?`[name=${a.name}]`:'')+(a.className&&typeof a.className==='string'?'.'+a.className.split(' ').slice(0,2).join('.'):'')):'none',
+  dialogs:[...document.querySelectorAll('dialog[open]')].map(d=>d.id||d.className||'dialog'),body:document.body.className};}).catch(e=>({error:e.message}));
+  const file=`fail-${String(++failShots).padStart(2,'0')}.png`;await shot(file).catch(()=>{});console.log(`     page: ${JSON.stringify(st)} · screenshot ${path.join(SHOTS,file)}${what?' · '+what:''}`);};
+const mark=step=>page.evaluate(s=>{const l=window.__tlScroll;if(l){l.step=s;l.rows=l.rows.filter(r=>r.step===s);l.last='';}},step);   // (the next frame logs where the step starts)
 const scrollLog=()=>page.evaluate(()=>window.__tlScroll?.rows||[]);
-const sameLogged=async(a,b,what)=>{const ok=same(a,b,what);if(!ok)for(const r of await scrollLog())console.log('     scroll log ['+r.step+'] '+r.what+(r.want!=null?' want '+r.want:'')+(r.arg?' '+r.arg:'')+': '+r.was+' -> '+r.got+(r.fresh?' (new viewport)':'')+(r.who?'  · '+r.who:''));return ok;};
+const sameLogged=async(a,b,what)=>{const ok=same(a,b,what);if(!ok){for(const r of await scrollLog())console.log('     scroll log ['+r.step+'] '+r.what+(r.want!=null?' want '+r.want:'')+(r.arg?' '+r.arg:'')+': '+r.was+' -> '+r.got+(r.fresh?' (new viewport)':'')+(r.who?'  · '+r.who:''));await pageState();}return ok;};
 try{
   await openChapter(page,base,chapter);await watchScroll();
   // ---- 1
@@ -88,9 +108,14 @@ try{
     await page.$eval('#director-panel [name="key-label"]',e=>{e.value='Timeline e2e';e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));}).catch(()=>{});await wait(500);
     check(await page.$eval('#director-timeline .camera-key[aria-pressed="true"]',b=>b.getAttribute('aria-label')).then(t=>t.includes('Timeline e2e')).catch(()=>false),'2. the inspector edit reached the key (its timeline label is "Timeline e2e")');
     await sameLogged(v2,await view(),'2. after an inspector edit');
-    await mark('2. undo');await blurAll();await page.keyboard.down('Control');await page.keyboard.press('KeyZ');await page.keyboard.up('Control');await wait(500);await sameLogged(v2,await view(),'2. after undoing it');
-    await mark('2. redo');await page.keyboard.down('Control');await page.keyboard.press('KeyY');await page.keyboard.up('Control');await wait(500);await sameLogged(v2,await view(),'2. after redoing it');
+    // (each one checked to have happened: the name on the key's timeline label)
+    const named=()=>page.$$eval('#director-timeline .camera-key',bs=>bs.some(b=>b.getAttribute('aria-label').includes('Timeline e2e'))).catch(()=>null);
+    await mark('2. undo');await blurAll();await page.keyboard.down('Control');await page.keyboard.press('KeyZ');await page.keyboard.up('Control');await wait(500);
+    check(await named()===false,'2. Ctrl+Z undid the inspector edit');await sameLogged(v2,await view(),'2. after undoing it');
+    await mark('2. redo');await page.keyboard.down('Control');await page.keyboard.press('KeyY');await page.keyboard.up('Control');await wait(500);
+    check(await named()===true,'2. Ctrl+Y redid it');await sameLogged(v2,await view(),'2. after redoing it');
     await page.keyboard.down('Control');await page.keyboard.press('KeyZ');await page.keyboard.up('Control');await wait(300);
+    check(await named()===false,'2. Ctrl+Z undid it again (the later steps start without the edit)');
   }
   // desk move: Backspace with the focus lost, then undo
   if(v2.clips){

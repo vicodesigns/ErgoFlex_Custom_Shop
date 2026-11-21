@@ -37,4 +37,14 @@ export function scrollToKeep({sameChapter,live,stored}){return sameChapter&&live
 // want {left, top}; got {left, top} = what the viewport shows after setting it. Returns the hold {top, until}, or null.
 export const SCROLL_HOLD_MS=1500;
 export function holdScroll(want,got,now,ms=SCROLL_HOLD_MS){if(!want||Math.abs((got?.top??0)-want.top)<2)return null;return {top:want.top,until:now+ms};}
+// The top the timeline is meant to show (21 Nov 2026, Windows, rise: after Escape / a blur in the inspector the viewport
+// read 0 with no scroll event and no write, so the next rebuild put back 0). Kept from the scroll events; an event that
+// only reports a clamp (the lanes got shorter: the top at its max, below the one meant) keeps the meant top, unless the
+// user is scrolling or clicking in the timeline (then whatever they did is meant).
+export function nextWantTop({want,top,max,user}){if(user||want==null)return top;return top<want-1&&top>=max-1?want:top;}
+// What to set the top to so it shows the meant one (as far as the lanes allow), or null when it already does.
+export function reapplyTop({want,top,max}){if(want==null)return null;const t=Math.max(0,Math.min(want,max));return Math.abs(top-t)<2?null:t;}
+// A rebuild reads the old viewport's top; when that looks lost (0, or clamped at its max) and differs from the meant
+// one, the meant one is put back instead.
+export function lostTop({top,max,want}){return want!=null&&Math.abs(top-want)>=2&&(top<1||top>=max-1);}
 export const inView=(a,b,lo,hi,slack=1)=>a>=lo-slack&&b<=hi+slack;

@@ -55,7 +55,7 @@ import {BAKE_PROFILE} from './bake.mjs';
 import {resolveCameraKeys,moveCameraKey,CAMERA_EASINGS} from './camera-track.mjs?v=camera-transitions-20261120';
 import {TRANSITION_LABELS,DEFAULT_DUR,MIN_DUR,hasLength,fromPlan,matchPlanKeys,segmentInfo,segmentType,setTransition,transitionRoom,transitionBands,dragLength,createTransitionPreview} from './camera-transitions.mjs?v=transitions-fix-20261120';
 import {createSelection,markSelection,centreIn,GROUP_OF,deleteTarget} from './director-selection.mjs?v=timeline-delete-20261120';
-import {viewFor,saveView,isFolded,inView,holdScroll} from './timeline-view.mjs?v=timeline-scroll-hold-20261121';
+import {viewFor,saveView,isFolded,inView,holdScroll,nextWantTop,reapplyTop,lostTop} from './timeline-view.mjs?v=timeline-want-top-20261121';
 import {CutLibrary,makeCut,cleanCut,cleanShot,sceneShot,generateCut,encodeCut,KINDS,PRESET_IDS,defaultPreset} from './cuts.mjs';
 import {looksOf,lookOf,lookName} from '../room-looks.mjs';
 
@@ -680,8 +680,24 @@ export function mountDirector(bridge,catalog,initial){
   let viewTimer=0;
   function saveScroll(){if(!viewKey)return;clearTimeout(viewTimer);const key=viewKey;viewTimer=setTimeout(()=>{const v=timeline.querySelector('.timeline-viewport');if(v&&key===viewKey)saveView(key,{zoom,left:Math.round(v.scrollLeft),top:Math.round(v.scrollTop)});},250);}
   let restoringView=false;
-  timeline.addEventListener('scroll',event=>{if(!event.target.classList?.contains('timeline-viewport')||restoringView||viewWant)return;saveScroll();},true);
-  for(const type of ['wheel','pointerdown','keydown'])timeline.addEventListener(type,event=>{if(event.target.closest?.('.timeline-viewport'))viewWant=null;},{capture:true,passive:true});
+  // The top the timeline is meant to show (timeline-view.mjs nextWantTop), kept from its scroll events. 21 Nov 2026
+  // (Windows, rise): after Escape / a blur in the inspector the viewport read 0 with no scroll event and no write to it,
+  // and every rebuild after that read 0 and put back 0. Now a top lost that way comes back: on the next rebuild, when the
+  // lanes change size (shown again, grown back), and three frames after any key, click or focus change that left it lost.
+  let wantTop=null,userScrollUntil=0,scrollEvents=0;   // wantTop {key, top}
+  const meantTop=()=>wantTop&&wantTop.key===viewKey?wantTop.top:null;
+  timeline.addEventListener('scroll',event=>{const v=event.target;if(!v.classList?.contains('timeline-viewport'))return;scrollEvents++;
+    wantTop={key:viewKey,top:nextWantTop({want:meantTop(),top:v.scrollTop,max:v.scrollHeight-v.clientHeight,user:performance.now()<userScrollUntil})};
+    if(restoringView||viewWant)return;saveScroll();},true);
+  for(const type of ['wheel','pointerdown','keydown'])timeline.addEventListener(type,event=>{if(event.target.closest?.('.timeline-viewport')){viewWant=null;userScrollUntil=performance.now()+800;}},{capture:true,passive:true});
+  function keepTop(){
+    const v=timeline.querySelector('.timeline-viewport');if(!v||viewWant||performance.now()<userScrollUntil||!v.getClientRects().length)return;
+    const t=reapplyTop({want:meantTop(),top:v.scrollTop,max:v.scrollHeight-v.clientHeight});if(t==null)return;restoringView=true;v.scrollTop=t;restoringView=false;
+  }
+  // (three frames: a scroll the app made in a frame has sent its event by the next one; only a top changed with no event is put back)
+  function keepTopSoon(){requestAnimationFrame(()=>requestAnimationFrame(()=>{const n=scrollEvents;requestAnimationFrame(()=>{if(scrollEvents===n)keepTop();});}));}
+  for(const type of ['keyup','pointerup','focusin','focusout','change','input'])document.addEventListener(type,keepTopSoon,{capture:true,passive:true});
+  const topKeeper=typeof ResizeObserver==='function'?new ResizeObserver(()=>keepTop()):null;
   // Put the scroll back after a rebuild: the live one for the same chapter, else the stored one (retried while the lanes
   // are still growing, until it fits or the user scrolls).
   function restoreScroll(viewport,live){
@@ -1148,6 +1164,8 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   }
   function renderTimeline(){
     adoptView();const t0=performance.now(),was=timeline.querySelector('.timeline-viewport'),live=was&&renderedView===viewKey?{left:was.scrollLeft,top:was.scrollTop}:null,s=shot();renderedView=viewKey;
+    // (an old top that looks lost, 0 or clamped, and is not the meant one: the meant one goes back instead)
+    if(live&&performance.now()>=userScrollUntil&&lostTop({top:live.top,max:was.scrollHeight-was.clientHeight,want:meantTop()}))live.top=meantTop();
     const ticks=timelineTicks(s.seconds,Math.max(300,(timeline.clientWidth-150)*zoom));
     const shell=shellOn(),transportHtml=`<div class="timeline-transport">${shell?'':`<button data-action="undo" aria-label="Undo edit" title="Undo (Ctrl/Cmd+Z)">↶</button><button data-action="redo" aria-label="Redo edit" title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)">↷</button>`}<button data-action="edit-prev" aria-label="Previous edit" title="Previous camera view or movement edge (↑)">|‹</button><button data-action="preview-loop" aria-pressed="${!!bridge.playback().loop}" title="Repeat the chapter or selected camera / Groove preview (L)">${bridge.playback().loop?'Loop on':'Loop off'}</button><button data-action="preview" aria-label="Restart chapter" title="Restart chapter">↻</button><button data-action="chapter-toggle" class="chapter-transport">▶ Play chapter</button><button data-action="edit-next" aria-label="Next edit" title="Next camera view or movement edge (↓)">›|</button>
       <label class="timeline-timecode"><input name="timeline-seconds" aria-label="Chapter playhead seconds" type="number" min="0" max="${s.seconds}" step=".033333" value="${(playhead*s.seconds).toFixed(2)}"><span>/ ${s.seconds}s</span><small data-film-tc>${escape(timecodeNow())}</small></label></div>`;
@@ -1167,6 +1185,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       <label class="timeline-pan" ${zoom===1?'hidden':''}><span>Pan view</span><input name="timeline-pan" type="range" min="0" max="100" step=".1" value="0" aria-label="Timeline horizontal position"></label>
       <div class="timeline-footer"><span data-bake-summary class="timeline-bake-summary" role="status"></span><span data-timeline-status role="status">Click ruler to scrub · Drag empty lanes to select several · Shift/Ctrl-click adds · Ctrl+A all · Alt: bypass snap · Space: play</span><span class="sb-pills" data-sb-pills></span><output data-track-time>${(playhead*s.seconds).toFixed(2)}s / ${s.seconds}s</output></div>`;
     restoreScroll(timeline.querySelector('.timeline-viewport'),live);
+    if(topKeeper){topKeeper.disconnect();const v=timeline.querySelector('.timeline-viewport');topKeeper.observe(v);topKeeper.observe(v.querySelector('.timeline-content'));}
     renderPills();drawScore();decorateLocks();decorateGroups();decorateEyes();
     if(debugTimeline){const ms=performance.now()-t0,el=timeline.querySelector('[data-track-time]');if(el)el.title=`renderTimeline ${ms.toFixed(1)} ms · ${timeline.getElementsByTagName('*').length} elements`;const f=timeline.querySelector('.timeline-footer');if(f)f.dataset.debug=`${ms.toFixed(1)} ms · ${timeline.getElementsByTagName('*').length} el`;}
     syncTransport();syncPlayhead();syncPan();syncPicks();syncSelection();

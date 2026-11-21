@@ -7,7 +7,7 @@
 //   node tests/timeline-view-test.mjs
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {VIEW_STORE,VIEW_LIMIT,viewFor,saveView,isFolded,scrollToKeep,inView,readViews,holdScroll,SCROLL_HOLD_MS} from '../experience/timeline-view.mjs';
+import {VIEW_STORE,VIEW_LIMIT,viewFor,saveView,isFolded,scrollToKeep,inView,readViews,holdScroll,SCROLL_HOLD_MS,nextWantTop,reapplyTop,lostTop} from '../experience/timeline-view.mjs';
 import {maxZoom,zoomStep,snapTimelineTime,FRAME,FRAME_PX} from '../experience/timeline-ui.mjs';
 const memory=()=>{const m=new Map();return {getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>m.set(k,String(v)),m};};
 
@@ -53,6 +53,33 @@ const memory=()=>{const m=new Map();return {getItem:k=>m.has(k)?m.get(k):null,se
     for(const [i,max] of frames.entries()){vp.max=max;if(!want)break;vp.set(want.top);if(holdScroll(want,{left:vp.left,top:vp.top},i)===null)want=null;}
     assert.equal(vp.top,54,'the scroll is back once the lanes are tall enough');assert.equal(want,null,'and the hold ends');
   }
+  // the meant top (Windows, rise, 1cbfd180: after Escape / a blur the viewport read 0 with no scroll event, and every
+  // rebuild after it read 0 and put back "want 0")
+  assert.equal(nextWantTop({want:null,top:54,max:300,user:false}),54,'the first event sets it');
+  assert.equal(nextWantTop({want:54,top:120,max:300,user:false}),120,'an app scroll down is meant');
+  assert.equal(nextWantTop({want:54,top:0,max:300,user:false}),0,'an app scroll to the top (a group jump) is meant');
+  assert.equal(nextWantTop({want:54,top:20,max:20,user:false}),54,'a clamp (the lanes got shorter) keeps the meant top');
+  assert.equal(nextWantTop({want:54,top:20,max:20,user:true}),20,'unless the user is scrolling or folding in the timeline');
+  assert.equal(reapplyTop({want:54,top:0,max:300}),54,'lost: put back');
+  assert.equal(reapplyTop({want:54,top:20,max:20}),null,'as far as the lanes allow (already there)');
+  assert.equal(reapplyTop({want:54,top:20,max:40}),40,'grown a bit: as far as they allow now');
+  assert.equal(reapplyTop({want:54,top:55,max:300}),null,'within a pixel or so: nothing');
+  assert.equal(reapplyTop({want:null,top:0,max:300}),null,'nothing meant yet: nothing');
+  assert.equal(lostTop({top:0,max:300,want:54}),true,'a rebuild reading 0 while 54 is meant: lost');
+  assert.equal(lostTop({top:20,max:20,want:54}),true,'clamped at its max: lost');
+  assert.equal(lostTop({top:80,max:300,want:54}),false,'somewhere in the middle: a real position, kept');
+  assert.equal(lostTop({top:0,max:300,want:0}),false,'0 meant: kept');assert.equal(lostTop({top:0,max:300,want:null}),false);
+  // Windows' sequence replayed: scrolled to 54 (event), a silent reset to 0 (no event), then an inspector edit rebuilds
+  {
+    let want=null;const ev=(top,max=300,user=false)=>{want=nextWantTop({want,top,max,user});};
+    ev(54,300,true);                          // the scroll to the camera row
+    const old={top:0,max:300};                // Escape + blur: 0, no event
+    assert.equal(reapplyTop({want,top:old.top,max:old.max}),54,'three frames after the blur: put back');
+    const live={top:old.top};if(lostTop({...old,want}))live.top=want;
+    assert.equal(live.top,54,'or, if the edit came first, the rebuild puts back 54, not 0');
+    ev(0,300,true);assert.equal(want,0,'a wheel to the top by the user is meant, and kept by the next rebuild');
+    assert.equal(lostTop({top:0,max:300,want}),false);
+  }
   assert.equal(inView(100,130,90,400),true);assert.equal(inView(80,130,90,400),false);assert.equal(inView(100,420,90,400),false);
 }
 // ---- 2
@@ -93,6 +120,16 @@ const memory=()=>{const m=new Map();return {getItem:k=>m.has(k)?m.get(k):null,se
   assert.match(src,/if\(name==='undo'\|\|name==='redo'\)\{[^]*?changed\(\);render\(\);/,'undo / redo too');
   assert.match(src,/function render\(\)\{stampDraft\(\);renderPanel\(\);renderTimeline\(\);\}/,'render() as well');
   assert.equal((src.match(/timeline\.innerHTML=/g)||[]).length,1,'renderTimeline is the only rebuild of the timeline');
+  // the meant top: kept from scroll events, put back by a rebuild that reads a lost one, when the lanes change size, and
+  // three frames after a key / click / focus change that left it lost with no scroll event
+  assert.match(src,/wantTop=\{key:viewKey,top:nextWantTop\(\{want:meantTop\(\),top:v\.scrollTop,max:v\.scrollHeight-v\.clientHeight,user:performance\.now\(\)<userScrollUntil\}\)\};/,'every scroll event updates the meant top');
+  assert.match(src,/if\(event\.target\.closest\?\.\('\.timeline-viewport'\)\)\{viewWant=null;userScrollUntil=performance\.now\(\)\+800;\}/,'a wheel, click or key in the timeline is the user\'s');
+  assert.match(render,/if\(live&&performance\.now\(\)>=userScrollUntil&&lostTop\(\{top:live\.top,max:was\.scrollHeight-was\.clientHeight,want:meantTop\(\)\}\)\)live\.top=meantTop\(\);/,'a rebuild that reads a lost top puts back the meant one');
+  assert.ok(render.indexOf('lostTop(')<render.indexOf('restoreScroll('),'before it restores');
+  assert.match(render,/topKeeper\.observe\(v\);topKeeper\.observe\(v\.querySelector\('\.timeline-content'\)\)/,'the lanes changing size put it back');
+  assert.match(src,/for\(const type of \['keyup','pointerup','focusin','focusout','change','input'\]\)document\.addEventListener\(type,keepTopSoon/,'and so does any key, click, focus change or field edit');
+  assert.match(src,/const n=scrollEvents;requestAnimationFrame\(\(\)=>\{if\(scrollEvents===n\)keepTop\(\);\}\)/,'only when no scroll event came (an app scroll is never undone)');
+  assert.match(/function keepTop\(\)\{[^]*?\n  \}/.exec(src)[0],/viewWant\|\|performance\.now\(\)<userScrollUntil/,'never while a restore holds or the user scrolls');
   assert.match(src,/function changed\(\)\{editQuietUntil=performance\.now\(\)\+600;/,'every edit (commit, undo, redo) quiets the selection side effects');
   assert.match(src,/function loadProject\(value,keepDraft=true\)\{editQuietUntil=/,'a re-import too');
   assert.match(src,/const changed=b2sel\.set\(selectionNow\(\)\)&&!editQuiet\(\);/,'no group opens, no scroll, for a selection an edit changed');
