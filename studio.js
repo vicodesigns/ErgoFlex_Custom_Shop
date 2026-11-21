@@ -119,6 +119,11 @@ const LED_COLOR_PRESETS = Object.freeze([
 const SCREEN_PIVOT = new THREE.Vector3(-141.99034318, 49.56108308, 0);
 const WIDE_SCREEN_PIVOT = new THREE.Vector3(-139.79, 49.56108308, 0);
 const SCREEN_SLIDE = 4.7;
+// (inches: how far below the 60x30 top's underside a film's touchscreen rides on that desk; setScreenProgress)
+const FILM_SCREEN_DROP = 0.04;
+// (inches: how much further than SCREEN_SLIDE a film's touchscreen travels on the 60x30 desk, so the opened screen's back
+// clears that top's front edge and trim, which reach about 0.6 in further over its hinge than the 48x30 top's do)
+const FILM_SCREEN_REACH = 0.85;
 const SCREEN_TURN = THREE.MathUtils.degToRad(146.457954);
 // The wide export's open screen face is 12° steeper than the Standard face.
 // Remove that authored difference before applying their shared slide and turn.
@@ -3651,9 +3656,23 @@ function makeTouchscreenFace(gltf, xShift, pivot, turn, material, name) {
 function setScreenProgress(value) {
     screenProgress = THREE.MathUtils.clamp(value, 0, 1);
     if (!screenAssembly) return;
-    const { variants, baseParts } = screenAssembly;
+    const { variants, baseParts, filmShift } = screenAssembly;
     const opened = screenProgress > 0.001;
-    baseParts.forEach(mesh => { mesh.visible = !opened; });
+    // (a film that poses the screen on the 60x30 desk (the high school): the standard screen, inside the right wing panel, is
+    // drawn from under the 60x30 top, which reaches on past the 48x30 top's front edge (filmShift.x, measured
+    // from the two tops at load). The stowed screen, its rails and its whole travel stand that much further forward (the
+    // desk's own x only: across, z, it stays inside the wing panel), so it sits flush with the 60x30 front edge, comes out
+    // its full travel past it (FILM_SCREEN_REACH beyond the stock slide) and turns up clear of the top; and filmShift.y lower, under the 60x30 top's underside,
+    // which has no pocket for it. Any other size, and every non-film use, is as before.)
+    const shift = touchscreenBeforeFilm && currentConfig.size === '60x30' && filmShift ? filmShift : null;
+    baseParts.forEach(mesh => {
+        mesh.visible = !opened;
+        const was = mesh.userData.filmScreenShift || null;
+        if (was || shift) {
+            mesh.position.x += (shift ? shift.x : 0) - (was ? was.x : 0); mesh.position.y += (shift ? shift.y : 0) - (was ? was.y : 0);
+            mesh.userData.filmScreenShift = shift ? { x: shift.x, y: shift.y } : null;
+        }
+    });
     const slide = Math.min(1, screenProgress * 2);
     const turn = Math.max(0, (screenProgress - 0.5) * 2);
     for (const [size, { moving, staticParts, pivot }] of Object.entries(variants)) {
@@ -3663,7 +3682,10 @@ function setScreenProgress(value) {
         const visible = opened && (size === (currentConfig.size === '60x30' && !touchscreenBeforeFilm ? 'wide' : 'standard'));
         moving.visible = visible;
         staticParts.visible = visible;
-        moving.position.x = pivot.x - SCREEN_SLIDE * (1 - slide);
+        const own = size === 'standard' ? shift : null;
+        moving.position.x = pivot.x - SCREEN_SLIDE * (1 - slide) + (own ? own.x + FILM_SCREEN_REACH * slide : 0);
+        moving.position.y = pivot.y + (own ? own.y * (1 - turn) : 0);   // (back up to the built height as it turns up past the edge)
+        staticParts.position.x = own ? own.x : 0; staticParts.position.y = own ? own.y : 0;
         moving.rotation.z = SCREEN_TURN * turn;
     }
 }
@@ -3765,11 +3787,13 @@ async function loadTouchscreenAssembly() {
             wideTopBounds.boundingBox.min.z - standardTopBounds.boundingBox.min.z
         );
         wideMount.add(wideStatic, wideMoving);
+        // A film on the 60x30 desk draws the standard screen this much further forward and lower (setScreenProgress).
+        const filmShift = { x: wideTopBounds.boundingBox.max.x - standardTopBounds.boundingBox.max.x, y: -FILM_SCREEN_DROP };
         root.add(staticParts, moving, wideMount);
         loadedModel.add(root);
         const baseParts = [...partRegistry.values()].map(entry => entry.obj)
             .filter(obj => /^Touch_Screen(?:_|$)/.test(obj.name));
-        screenAssembly = { root, baseParts, variants: {
+        screenAssembly = { root, baseParts, filmShift, variants: {
             standard: { moving, staticParts, pivot: SCREEN_PIVOT },
             wide: { moving: wideMoving, staticParts: wideStatic, pivot: WIDE_SCREEN_PIVOT }
         } };
