@@ -3656,7 +3656,7 @@ function setScreenProgress(value) {
     // (a film that poses the screen (the high school): on the 60x30 desk the screen is drawn out of the wide mount, which
     // sits 91 mm further right and 168 mm nearer the front than where the desk model stows the standard one, so the stowed
     // parts stand at the wide mount too and the screen does not jump when it opens)
-    const shift = touchscreenBeforeFilm && currentConfig.size === '60x30' ? wideMount.position : null;
+    const shift = touchscreenBeforeFilm && currentConfig.size === '60x30' ? { x: wideMount.position.x + (WIDE_SCREEN_PIVOT.x - SCREEN_PIVOT.x), z: wideMount.position.z } : null;
     baseParts.forEach(mesh => {
         mesh.visible = !opened;
         const was = mesh.userData.stowShift || null;
