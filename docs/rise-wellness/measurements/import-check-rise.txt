@@ -1,0 +1,68 @@
+rise: Director titles -> titles-src.json unchanged
+rise: Director props -> 15 prop edit(s) kept in director-camera-rise.json
+ch02 rise: Director props (15) -> no change
+ch02 rise: Director people (2) -> review-cut.json
+ch07 wellness: Director props (10) -> no change
+ch07 wellness: Director people (4) -> no change
+ch02 rise: 9 camera keys, 4 clips, 28.5 s from director-camera-rise.json -> review-cut.json
+ch07 wellness: 6 camera keys, 1 clips, 19.5 s from director-camera-wellness.json -> no change
+directorEdited: rise (camera, cameraPlan, people, seconds)
+ch02 rise: Director props (15) -> no change
+ch02 rise: Director people (2) -> review-cut.json
+ch07 wellness: Director props (10) -> no change
+ch07 wellness: Director people (4) -> no change
+ch02 rise: 10 camera keys, 4 clips, 28.5 s from director-camera-rise.json -> review-cut.json
+ch07 wellness: 6 camera keys, 1 clips, 19.5 s from director-camera-wellness.json -> no change
+directorEdited: rise (camera, cameraPlan, ledStatus, motion, people, seconds)
+--- seated, after the importer + pass:
+rise review-cut.json shot: 5 difference(s)
+  /screens/2/brightness/5/0: 19.8 | 25
+  /screens/2/brightness/6/0: 20.3 | 25.5
+  /timeOfDay/2/at: 16.5 | 21.5
+  /ledNeutral/1/0: 14.9 | 19.9
+  /ledNeutral/2/0: 16.5 | 21.5
+rise director-film/rise.json: 3334 difference(s)
+  /seconds: 23.5 | 28.5
+  /camera/keys/1/time: 0.002857142857142857 | 0.002352941176470588
+  /camera/keys/1/view/position/0: 0.14138999105735556 | 0.14139022375015503
+  /camera/keys/1/view/position/1: 1.5810536027138102 | 1.5810531029753594
+  /camera/keys/1/view/position/2: 1.024244117743715 | 1.0242442550459847
+  /camera/keys/1/view/target/0: -0.47355509605346024 | -0.47355505068945347
+  /camera/keys/1/view/target/1: 1.065297938768525 | 1.0652977950510198
+  /camera/keys/1/view/target/2: 0.9430275812832808 | 0.9430277658634899
+  /camera/keys/1/view/fov: 30.001412289667876 | 30.001408773458294
+  /camera/keys/2/time: 0.005714285714285714 | 0.004705882352941176
+  /camera/keys/2/view/position/0: 0.14111081258274533 | 0.14111174371387647
+  /camera/keys/2/view/position/1: 1.5816497076740965 | 1.5816477308247365
+rise director-camera-rise.json: equal
+--- standing, after the importer + pass:
+rise review-cut.json shot: 5 difference(s)
+  /screens/2/brightness/5/0: 16.2 | 21.4
+  /screens/2/brightness/6/0: 16.7 | 21.9
+  /timeOfDay/2/at: 16.5 | 21.5
+  /ledNeutral/1/0: 14.9 | 19.9
+  /ledNeutral/2/0: 16.5 | 21.5
+rise director-film/rise.json: 3400 difference(s)
+  /seconds: 23.5 | 28.5
+  /motion/clips/2/start: 14.95 | 19.95
+  /motion/clips/3/start: 16.864 | 21.864
+  /camera/keys/1/time: 0.002857142857142857 | 0.002352941176470588
+  /camera/keys/1/view/position/0: 0.14138999105735556 | 0.14139022375015503
+  /camera/keys/1/view/position/1: 1.5810536027138102 | 1.5810531029753594
+  /camera/keys/1/view/position/2: 1.024244117743715 | 1.0242442550459847
+  /camera/keys/1/view/target/0: -0.47355509605346024 | -0.47355505068945347
+  /camera/keys/1/view/target/1: 1.065297938768525 | 1.0652977950510198
+  /camera/keys/1/view/target/2: 0.9430275812832808 | 0.9430277658634899
+  /camera/keys/1/view/fov: 30.001412289667876 | 30.001408773458294
+  /camera/keys/2/time: 0.005714285714285714 | 0.004705882352941176
+rise director-camera-rise.json: equal
+rise: B, 28.5 s, camera keys at [0.0, 2.0, 4.3, 7.6, 9.45, 12.65, 13.1, 22.9, 28.5], 112 pose keys (extras only)
+rise: A, 28.5 s, camera keys at [0.0, 2.0, 4.3, 7.6, 9.45, 10, 19.45, 19.95, 23.15, 28.5], 116 pose keys (extras only)
+--- seated, after apply-rise.py --only-extras:
+rise review-cut.json shot: equal
+rise director-film/rise.json: equal
+rise director-camera-rise.json: equal
+--- standing, after apply-rise.py --only-extras:
+rise review-cut.json shot: equal
+rise director-film/rise.json: equal
+rise director-camera-rise.json: equal

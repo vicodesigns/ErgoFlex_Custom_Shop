@@ -1,0 +1,2 @@
+0..13.1 s: largest difference in camera position / aim 6.15 mm; from 17.9 s (5 s later in the new chapter): 11.65 mm
+0..10 s: largest difference in camera position / aim 1.17 mm; from 14.45 s (5 s later in the new chapter): 1.25 mm

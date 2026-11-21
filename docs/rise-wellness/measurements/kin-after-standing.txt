@@ -1,0 +1,11 @@
+peaks (deg/s for w_, m/s for v), max accel (per s), stops (speed dips below a quarter of the peak between two moves within 0.27 s)
+w_upperarm_l       283     3233   1
+w_lowerarm_l       423     5109   0
+w_hand_l           428     4235   1
+vWl               1.56     5.48   2
+vEl               1.11    11.67   0
+w_upperarm_r       238     2404   1
+w_lowerarm_r       345     3434   0
+w_hand_r           350     1850   0
+vWr               1.32     4.74   4
+vEr               0.93     8.57   0
