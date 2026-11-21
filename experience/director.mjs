@@ -55,7 +55,7 @@ import {BAKE_PROFILE} from './bake.mjs';
 import {resolveCameraKeys,moveCameraKey,CAMERA_EASINGS} from './camera-track.mjs?v=camera-transitions-20261120';
 import {TRANSITION_LABELS,DEFAULT_DUR,MIN_DUR,hasLength,fromPlan,matchPlanKeys,segmentInfo,segmentType,setTransition,transitionRoom,transitionBands,dragLength,createTransitionPreview} from './camera-transitions.mjs?v=transitions-fix-20261120';
 import {createSelection,markSelection,centreIn,GROUP_OF,deleteTarget} from './director-selection.mjs?v=timeline-delete-20261120';
-import {viewFor,saveView,isFolded,inView} from './timeline-view.mjs?v=timeline-view-20261120';
+import {viewFor,saveView,isFolded,inView,holdScroll} from './timeline-view.mjs?v=timeline-scroll-hold-20261121';
 import {CutLibrary,makeCut,cleanCut,cleanShot,sceneShot,generateCut,encodeCut,KINDS,PRESET_IDS,defaultPreset} from './cuts.mjs';
 import {looksOf,lookOf,lookName} from '../room-looks.mjs';
 
@@ -685,9 +685,11 @@ export function mountDirector(bridge,catalog,initial){
   // Put the scroll back after a rebuild: the live one for the same chapter, else the stored one (retried while the lanes
   // are still growing, until it fits or the user scrolls).
   function restoreScroll(viewport,live){
-    const want=viewWant&&performance.now()<viewWant.until?viewWant:live;if(!want)return;
-    restoringView=true;viewport.scrollLeft=want.left;viewport.scrollTop=want.top;restoringView=false;
-    if(want===viewWant){const done=Math.abs(viewport.scrollLeft-want.left)<2&&Math.abs(viewport.scrollTop-want.top)<2;if(done)viewWant=null;else requestAnimationFrame(()=>{const v=timeline.querySelector('.timeline-viewport');if(v&&viewWant===want)restoreScroll(v,null);});}
+    let want=viewWant&&performance.now()<viewWant.until?viewWant:live;if(!want)return;
+    restoringView=true;const left=want.left??live?.left;if(left!=null)viewport.scrollLeft=left;viewport.scrollTop=want.top;restoringView=false;   // (a hold keeps the top only: the left is the live one)
+    // (the live scroll clamped by lanes not yet as tall: its top held and put back each frame for a moment, as a stored one is)
+    if(want===live){const hold=holdScroll(live,{left:viewport.scrollLeft,top:viewport.scrollTop},performance.now());if(!hold)return;want=viewWant=hold;}
+    if(want===viewWant){const done=(want.left==null||Math.abs(viewport.scrollLeft-want.left)<2)&&Math.abs(viewport.scrollTop-want.top)<2;if(done)viewWant=null;else requestAnimationFrame(()=>{const v=timeline.querySelector('.timeline-viewport');if(v&&viewWant===want)restoreScroll(v,null);});}
   }
   // Fit: the timeline tall enough for every lane (capped by the layout); film chapters open fitted.
   let timelineFitted=false;

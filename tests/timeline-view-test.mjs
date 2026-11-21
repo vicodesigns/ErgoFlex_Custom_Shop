@@ -7,7 +7,7 @@
 //   node tests/timeline-view-test.mjs
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {VIEW_STORE,VIEW_LIMIT,viewFor,saveView,isFolded,scrollToKeep,inView,readViews} from '../experience/timeline-view.mjs';
+import {VIEW_STORE,VIEW_LIMIT,viewFor,saveView,isFolded,scrollToKeep,inView,readViews,holdScroll,SCROLL_HOLD_MS} from '../experience/timeline-view.mjs';
 import {maxZoom,zoomStep,snapTimelineTime,FRAME,FRAME_PX} from '../experience/timeline-ui.mjs';
 const memory=()=>{const m=new Map();return {getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>m.set(k,String(v)),m};};
 
@@ -37,6 +37,22 @@ const memory=()=>{const m=new Map();return {getItem:k=>m.has(k)?m.get(k):null,se
   // the scroll to keep after a rebuild
   assert.deepEqual(scrollToKeep({sameChapter:true,live:{left:30,top:400},stored:{left:0,top:0}}),{left:30,top:400});
   assert.deepEqual(scrollToKeep({sameChapter:false,live:{left:30,top:400},stored:{left:5,top:6}}),{left:5,top:6});
+  // a scroll put back after a rebuild that did not take (Windows, rise: 54 -> 0 after an inspector edit and its undo):
+  // held for a moment and put back each frame; one that took needs nothing
+  assert.equal(holdScroll({left:0,top:54},{left:0,top:54},1000),null,'it took: no hold');
+  assert.equal(holdScroll({left:0,top:54},{left:1,top:53},1000),null,'within a pixel or so: no hold');
+  assert.deepEqual(holdScroll({left:0,top:54},{left:0,top:0},1000),{top:54,until:1000+SCROLL_HOLD_MS},'clamped to 0: the top held');
+  assert.equal(holdScroll({left:300,top:0},{left:120,top:0},5),null,'a horizontal clamp is not held (a zoom out sets its own scrollLeft)');
+  assert.equal(holdScroll(null,{left:0,top:0},0),null,'nothing to put back');
+  assert.ok(SCROLL_HOLD_MS>=1000&&SCROLL_HOLD_MS<=3000,'a moment, not the 8 s a chapter open gets');
+  // the same thing played out: lanes that reach their height two frames after the rebuild
+  {
+    // (frame 0: the lanes still short; they reach their height on frame 2)
+    const vp={max:0,top:0,left:0,set(t){this.top=Math.max(0,Math.min(this.max,t));}};let want=null;const frames=[0,20,200];
+    vp.set(54);want=holdScroll({left:0,top:54},{left:vp.left,top:vp.top},0);assert.ok(want,'frame 0: clamped, held');
+    for(const [i,max] of frames.entries()){vp.max=max;if(!want)break;vp.set(want.top);if(holdScroll(want,{left:vp.left,top:vp.top},i)===null)want=null;}
+    assert.equal(vp.top,54,'the scroll is back once the lanes are tall enough');assert.equal(want,null,'and the hold ends');
+  }
   assert.equal(inView(100,130,90,400),true);assert.equal(inView(80,130,90,400),false);assert.equal(inView(100,420,90,400),false);
 }
 // ---- 2
@@ -63,6 +79,20 @@ const memory=()=>{const m=new Map();return {getItem:k=>m.has(k)?m.get(k):null,se
   assert.match(render,/live=was&&renderedView===viewKey\?\{left:was\.scrollLeft,top:was\.scrollTop\}/,'the rebuild reads both scroll axes');
   assert.match(render,/restoreScroll\(timeline\.querySelector\('\.timeline-viewport'\),live\)/,'and puts both back');
   assert.doesNotMatch(render,/\.scrollLeft=scroll;/,'not only scrollLeft as before');
+  // the live scroll is held too when the rebuild clamped it (before: set once, so a clamp to 0 stuck)
+  const restore=/function restoreScroll\(viewport,live\)\{([^]*?)\n  \}/.exec(src)?.[1]||'';assert.ok(restore,'restoreScroll is there');
+  assert.match(restore,/if\(want===live\)\{const hold=holdScroll\(live,\{left:viewport\.scrollLeft,top:viewport\.scrollTop\},performance\.now\(\)\);if\(!hold\)return;want=viewWant=hold;\}/,'a clamped live restore becomes a hold');
+  assert.ok(restore.indexOf('holdScroll')<restore.indexOf('if(want===viewWant)'),'and is then retried each frame like a stored one');
+  assert.match(restore,/const left=want\.left\?\?live\?\.left;if\(left!=null\)viewport\.scrollLeft=left;/,'a hold leaves scrollLeft to the live one (a rebuild during a hold keeps both)');
+  assert.match(restore,/\(want\.left==null\|\|Math\.abs\(viewport\.scrollLeft-want\.left\)<2\)/,'and is done when the top is back');
+  // the paths Windows saw: an inspector edit (the name field commits on input) and undo / redo all rebuild through
+  // changed() -> renderTimeline(), which reads the live scroll and restores it
+  assert.match(src,/if\(name==='key-label'&&selectedKey\(\)\)\{commit\(/,'the name field commits');
+  assert.match(/function commit\([^]*?\n  \}/.exec(src)[0],/changed\(\);/,'a commit goes through changed()');
+  assert.match(/function changed\(\)\{[^\n]*/.exec(src)[0],/renderTimeline\(\);/,'changed() rebuilds through renderTimeline');
+  assert.match(src,/if\(name==='undo'\|\|name==='redo'\)\{[^]*?changed\(\);render\(\);/,'undo / redo too');
+  assert.match(src,/function render\(\)\{stampDraft\(\);renderPanel\(\);renderTimeline\(\);\}/,'render() as well');
+  assert.equal((src.match(/timeline\.innerHTML=/g)||[]).length,1,'renderTimeline is the only rebuild of the timeline');
   assert.match(src,/function changed\(\)\{editQuietUntil=performance\.now\(\)\+600;/,'every edit (commit, undo, redo) quiets the selection side effects');
   assert.match(src,/function loadProject\(value,keepDraft=true\)\{editQuietUntil=/,'a re-import too');
   assert.match(src,/const changed=b2sel\.set\(selectionNow\(\)\)&&!editQuiet\(\);/,'no group opens, no scroll, for a selection an edit changed');

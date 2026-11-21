@@ -31,4 +31,10 @@ export const isFolded=(groups,g)=>groups?.[g]!==false;
 export function scrollToKeep({sameChapter,live,stored}){return sameChapter&&live?{left:live.left,top:live.top}:{left:stored?.left||0,top:stored?.top||0};}
 // Whether an element's box [a, b] lies wholly inside the visible box [lo, hi] (px, any axis): then nothing needs to scroll
 // to show it (a click on a key must not move the timeline).
+// After a rebuild the scroll is put back; when it did not take (the lanes are not as tall yet, so the browser clamped it)
+// the wanted scroll is held for a moment and put back again each frame (21 Nov 2026, Windows: 54 -> 0 after an edit).
+// Vertical only: a horizontal clamp is real after a zoom out, and the zoom then sets its own scrollLeft.
+// want {left, top}; got {left, top} = what the viewport shows after setting it. Returns the hold {top, until}, or null.
+export const SCROLL_HOLD_MS=1500;
+export function holdScroll(want,got,now,ms=SCROLL_HOLD_MS){if(!want||Math.abs((got?.top??0)-want.top)<2)return null;return {top:want.top,until:now+ms};}
 export const inView=(a,b,lo,hi,slack=1)=>a>=lo-slack&&b<=hi+slack;

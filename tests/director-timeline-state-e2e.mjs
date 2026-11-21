@@ -32,8 +32,23 @@ const toggle=g=>clickEl(`#director-timeline [data-lane-group="${g}"] [data-actio
 // a real click in the middle of a timeline element (pointer events: what the editors listen to)
 async function press(sel){const box=await page.evaluate(s=>{const el=document.querySelector(s);if(!el)return null;const r=el.getBoundingClientRect();return {x:r.left+r.width/2,y:r.top+Math.min(r.height/2,12)};},sel);if(!box)throw Error('no '+sel);await page.mouse.click(box.x,box.y);await wait(500);}
 const blurAll=()=>page.evaluate(()=>{document.activeElement?.blur?.();});
+// a recorder of what moves the timeline's vertical scroll (21 Nov 2026: Windows saw 54 -> 0 around an inspector edit):
+// every scrollTop / scrollTo / scrollIntoView / focus that reaches the viewport, with the value asked for, the value that
+// stuck and who asked; a FAIL prints the entries since the last mark
+const watchScroll=()=>page.evaluate(()=>{
+  if(window.__tlScroll)return;const log=window.__tlScroll={step:'',rows:[]};
+  const vp=el=>el?.classList?.contains('timeline-viewport')&&el.closest('#director-timeline');
+  const who=()=>(new Error().stack||'').split('\n').slice(3,8).map(l=>l.trim().replace(/^at /,'').replace(/\?v=[^:)]*/,'').replace(location.origin,'')).join(' < ');
+  const d=Object.getOwnPropertyDescriptor(Element.prototype,'scrollTop');
+  Object.defineProperty(Element.prototype,'scrollTop',{configurable:true,get(){return d.get.call(this);},set(v){const was=d.get.call(this);d.set.call(this,v);if(vp(this))log.rows.push({step:log.step,what:'scrollTop=',was,want:Math.round(v),got:d.get.call(this),fresh:!this.__seen,who:who()});this.__seen=true;}});
+  for(const [proto,name] of [[Element.prototype,'scrollTo'],[Element.prototype,'scrollIntoView'],[HTMLElement.prototype,'focus']]){const f=proto[name];proto[name]=function(...a){const v=document.querySelector('#director-timeline .timeline-viewport'),was=v?.scrollTop;const r=f.apply(this,a);const got=v?.scrollTop;if(v&&(vp(this)||v.contains(this))&&was!==got)log.rows.push({step:log.step,what:name+(vp(this)?'':' (inside)'),was,got,arg:JSON.stringify(a[0]??null),who:who()});return r;};}
+  addEventListener('scroll',e=>{const v=e.target;if(vp(v)&&v.__last!==v.scrollTop){log.rows.push({step:log.step,what:'scroll event',was:v.__last??null,got:v.scrollTop});v.__last=v.scrollTop;}},true);
+});
+const mark=step=>page.evaluate(s=>{if(window.__tlScroll){window.__tlScroll.step=s;window.__tlScroll.rows=window.__tlScroll.rows.filter(r=>r.step===s);}},step);
+const scrollLog=()=>page.evaluate(()=>window.__tlScroll?.rows||[]);
+const sameLogged=async(a,b,what)=>{const ok=same(a,b,what);if(!ok)for(const r of await scrollLog())console.log('     scroll log ['+r.step+'] '+r.what+(r.want!=null?' want '+r.want:'')+(r.arg?' '+r.arg:'')+': '+r.was+' -> '+r.got+(r.fresh?' (new viewport)':'')+(r.who?'  · '+r.who:''));return ok;};
 try{
-  await openChapter(page,base,chapter);
+  await openChapter(page,base,chapter);await watchScroll();
   // ---- 1
   const v0=await view();
   check(Object.keys(v0.groups).length>=2&&Object.values(v0.groups).every(o=>!o),'1. first load: every group folded: '+JSON.stringify(v0.groups));
@@ -56,19 +71,26 @@ try{
   await page.keyboard.down('Control');await page.keyboard.press('KeyZ');await page.keyboard.up('Control');
   const v4=await until(async()=>{const v=await view();return v.keys===v2.keys?v:null;},'Ctrl+Z brings it back').catch(e=>{check(false,'3. '+e.message);return null;});
   if(v4){check(true,'3. Ctrl+Z brought the key back');same(v2,v4,'3. after Ctrl+Z');}
-  // Backspace while typing: the text, never the key
-  await press('#director-timeline .camera-key:nth-of-type(2)');
+  // Backspace while typing: the text, never the key; then a committed inspector edit and its undo. The scroll is
+  // checked after every sub-step (each one rebuilds the timeline by a different path), with the scroll log on a FAIL.
+  await mark('3. click a key');await press('#director-timeline .camera-key:nth-of-type(2)');await sameLogged(v2,await view(),'3. a click on a camera key after the undo');
   const label=await page.$('#director-panel [name="key-label"]');
   if(check(!!label,'3. the camera key\'s name field is in the inspector')){
-    await label.click({clickCount:1});await page.keyboard.press('End');const before=await page.$eval('#director-panel [name="key-label"]',e=>e.value);
-    await page.keyboard.press('Backspace');await wait(400);
+    await mark('3. click the name field');await label.click({clickCount:1});await wait(300);await sameLogged(v2,await view(),'3. a click into the inspector\'s name field');
+    await page.keyboard.press('End');const before=await page.$eval('#director-panel [name="key-label"]',e=>e.value);
+    await mark('3. Backspace in the field');await page.keyboard.press('Backspace');await wait(400);
     const after=await page.$eval('#director-panel [name="key-label"]',e=>e.value).catch(()=>null),v5=await view();
     check(v5.keys===v2.keys&&after===before.slice(0,-1),`3. Backspace in the name field edits the text ("${before}" → "${after}"), the key stays (${v5.keys})`);
-    await page.keyboard.press('Escape');await blurAll();
-    // an inspector edit (the name, committed): the view stays
-    await page.$eval('#director-panel [name="key-label"]',e=>{e.value='Timeline e2e';e.dispatchEvent(new Event('change',{bubbles:true}));}).catch(()=>{});await wait(500);
-    same(v2,await view(),'2. after an inspector edit');
-    await blurAll();await page.keyboard.down('Control');await page.keyboard.press('KeyZ');await page.keyboard.up('Control');await wait(500);same(v2,await view(),'2. after undoing it');
+    await sameLogged(v2,v5,'2. after typing in the inspector (Backspace in the name field)');
+    await mark('3. Escape and blur');await page.keyboard.press('Escape');await blurAll();await wait(300);await sameLogged(v2,await view(),'2. after Escape and a blur');
+    // an inspector edit that commits (the name field commits on input; change as well, as a real edit ends)
+    await mark('2. inspector edit');
+    await page.$eval('#director-panel [name="key-label"]',e=>{e.value='Timeline e2e';e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));}).catch(()=>{});await wait(500);
+    check(await page.$eval('#director-timeline .camera-key[aria-pressed="true"]',b=>b.getAttribute('aria-label')).then(t=>t.includes('Timeline e2e')).catch(()=>false),'2. the inspector edit reached the key (its timeline label is "Timeline e2e")');
+    await sameLogged(v2,await view(),'2. after an inspector edit');
+    await mark('2. undo');await blurAll();await page.keyboard.down('Control');await page.keyboard.press('KeyZ');await page.keyboard.up('Control');await wait(500);await sameLogged(v2,await view(),'2. after undoing it');
+    await mark('2. redo');await page.keyboard.down('Control');await page.keyboard.press('KeyY');await page.keyboard.up('Control');await wait(500);await sameLogged(v2,await view(),'2. after redoing it');
+    await page.keyboard.down('Control');await page.keyboard.press('KeyZ');await page.keyboard.up('Control');await wait(300);
   }
   // desk move: Backspace with the focus lost, then undo
   if(v2.clips){
