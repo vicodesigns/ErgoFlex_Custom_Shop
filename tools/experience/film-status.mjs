@@ -60,8 +60,14 @@ function movement(ev) {
 const obstaclePeople = new WeakMap();
 export async function prepareObstacles(shot) {
   const wanted = (shot.obstacles || []).filter(o => o?.person); if (!wanted.length) return 0;
-  const { propLibrary } = await import('./film-edits.mjs'), library = await propLibrary();
-  await Promise.all(wanted.map(async o => { try { obstaclePeople.set(o, await library.instance(o.person)); } catch (error) { console.warn('[film-status] obstacle person ' + o.person + ' did not load', error); } }));
+  // (bounded: film-fx awaits this before it installs the obstacle and every layer after it, so a library load that never
+  // settles, as can happen on the Director's live stage, must not leave the chapter without its obstacle (and the sonar
+  // without its reach) for good: after 20 s the obstacle stands as the plain pylon, said in the console. 21 Nov 2026)
+  const within = (p, what) => Promise.race([p, new Promise((_, fail) => setTimeout(() => fail(Error(what + ': no answer in 20 s')), 20000))]);
+  let library = null;
+  try { const { propLibrary } = await import('./film-edits.mjs'); library = await within(propLibrary(), 'the prop library'); }
+  catch (error) { console.warn('[film-status] obstacle people: ' + error.message + ': plain pylons instead'); return 0; }
+  await Promise.all(wanted.map(async o => { try { obstaclePeople.set(o, await within(library.instance(o.person), o.person)); } catch (error) { console.warn('[film-status] obstacle person ' + o.person + ' did not load (a plain pylon instead)', error?.message || error); } }));
   return wanted.length;
 }
 
