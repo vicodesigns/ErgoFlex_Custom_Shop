@@ -14,11 +14,11 @@
    "n": 2,
    "id": "rise",
    "title": "Your height. Your rhythm.",
-   "seconds": 23.5,
+   "seconds": 28.5,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-ch02-rise.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-film/rise.json",
-   "version": "95cbfe59a09a",
-   "updated": "2026-11-20T19:21:08Z"
+   "version": "aaa671917cf3",
+   "updated": "2026-11-21T11:58:59Z"
   },
   {
    "n": 3,
@@ -27,8 +27,8 @@
    "seconds": 23.5,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-ch03-create.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-film/create.json",
-   "version": "9c4d62af46d9",
-   "updated": "2026-11-20T17:43:59Z"
+   "version": "db06c84cb1f3",
+   "updated": "2026-11-21T11:05:25Z"
   },
   {
    "n": 4,
@@ -37,8 +37,8 @@
    "seconds": 16.0,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-ch04-commons.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-film/commons.json",
-   "version": "4989a165bfad",
-   "updated": "2026-11-20T17:43:59Z"
+   "version": "c9d67490c448",
+   "updated": "2026-11-21T01:35:28Z"
   },
   {
    "n": 5,
@@ -57,18 +57,18 @@
    "seconds": 15.0,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-ch06-oilers.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-film/oilers.json",
-   "version": "f5d48e4d706f",
-   "updated": "2026-11-20T17:43:59Z"
+   "version": "895b44c0ff48",
+   "updated": "2026-11-21T23:21:21Z"
   },
   {
    "n": 7,
    "id": "wellness",
    "title": "Build movement into your day.",
-   "seconds": 19.5,
+   "seconds": 22.5,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-ch07-wellness.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-film/wellness.json",
-   "version": "f649e9efd961",
-   "updated": "2026-11-20T21:54:09Z"
+   "version": "670cfa86f4cc",
+   "updated": "2026-11-21T21:20:01Z"
   },
   {
    "n": 8,
@@ -114,11 +114,11 @@
    "n": 12,
    "id": "hero",
    "title": "One desk. Every part of your day.",
-   "seconds": 47.5,
+   "seconds": 38.22,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-ch12-hero.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-film/hero.json",
-   "version": "c84d7c3ac633",
-   "updated": "2026-11-20T17:43:59Z"
+   "version": "9e6ea44cf47c",
+   "updated": "2026-11-21T04:21:37Z"
   }
  ]
 }
