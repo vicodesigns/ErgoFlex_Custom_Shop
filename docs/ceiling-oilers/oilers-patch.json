@@ -1,0 +1,10 @@
+{
+  "about": "Oilers (chapter 6), Noah's touchscreen pull, Nov 21 (Vico: he does not pull it out far enough and it clips the desktop). Patch BY KEY on the chapter's people.cast (Vico's latest Oilers exports: seated export-35ebdf7f41cf, standing export-b733a7f0f8ca; both chapters' people are identical). Needs the studio.js commit of this branch: on the 60x30 desk a film's touchscreen now stands 3.805 in (97.3 mm) further forward, flush with the 60x30 top's front edge, and travels 5.55 in (142 mm) instead of 4.7 in. Noah stands 108 mm further back along the pull (room +z = world +x, the direction the screen comes out), between the stowed edge (97 mm) and the opened screen (119 mm), so his hand starts at the stowed edge and taps the opened glass within 11 mm of where his postures were built; his pull reaches 142 mm, the screen's whole travel.",
+  "set": [
+    { "cast": "noah-steps",   "path": "walk.path[2]", "from": [-3098, -1172], "to": [-3098, -1064] },
+    { "cast": "noah-pulls",   "path": "at",           "from": [-3098, -1172], "to": [-3098, -1064] },
+    { "cast": "noah-taps",    "path": "at",           "from": [-3098, -1172], "to": [-3098, -1064] },
+    { "cast": "noah-watches", "path": "at",           "from": [-3098, -1172], "to": [-3098, -1064] },
+    { "cast": "noah-pulls",   "path": "act.by",       "from": [0, 0, 120],    "to": [0, 0, 142] }
+  ]
+}

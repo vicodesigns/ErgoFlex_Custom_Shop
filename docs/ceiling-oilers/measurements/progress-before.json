@@ -1,0 +1,1302 @@
+{
+ "progress": [
+  {
+   "p": 0,
+   "screenBox": [
+    -155.496,
+    43.106,
+    -347.673,
+    -143.565,
+    44.09,
+    -339.603
+   ],
+   "obst": {
+    "Desktop_2": {
+     "hits": 0,
+     "min": 0.155,
+     "hitBy": {}
+    },
+    "Artwork right-panel logo": {
+     "hits": 0,
+     "min": 0.754,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_4": {
+     "hits": 0,
+     "min": 2.315,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_6": {
+     "hits": 0,
+     "min": 1.962,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_7": {
+     "hits": 0,
+     "min": 1.694,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_5": {
+     "hits": 0,
+     "min": 2.198,
+     "hitBy": {}
+    },
+    "": {
+     "hits": 0,
+     "min": 2.412,
+     "hitBy": {}
+    },
+    "Left wing trim": {
+     "hits": 0,
+     "min": 0.199,
+     "hitBy": {}
+    },
+    "Extended desktop": {
+     "hits": 679,
+     "min": 0,
+     "hitBy": {
+      "Touch_Screen_1": 48,
+      "Touch_Screen_4": 202,
+      "Touch_Screen_7": 420,
+      "Touch_Screen": 9
+     }
+    },
+    "Artwork desktop logo": {
+     "hits": 0,
+     "min": 0.662,
+     "hitBy": {}
+    },
+    "Extended desktop trim": {
+     "hits": 0,
+     "min": 1.819,
+     "hitBy": {}
+    },
+    "Linear_Actuators": {
+     "hits": 0,
+     "min": 1.973,
+     "hitBy": {}
+    }
+   },
+   "parts": {
+    "Touch_Screen_1": [
+     -155.49,
+     43.788,
+     -347.58,
+     -148.311,
+     44.051,
+     -347.089
+    ],
+    "Touch_Screen_2": [
+     -151.118,
+     43.645,
+     -340.273,
+     -143.948,
+     43.952,
+     -339.603
+    ],
+    "Touch_Screen_3": [
+     -151.118,
+     43.647,
+     -347.673,
+     -143.947,
+     43.952,
+     -347.003
+    ],
+    "Touch_Screen_4": [
+     -148.709,
+     43.524,
+     -347.54,
+     -143.565,
+     44.09,
+     -339.74
+    ],
+    "Touch_Screen_5": [
+     -148.557,
+     43.106,
+     -347.39,
+     -144.048,
+     43.843,
+     -339.89
+    ],
+    "Touch_Screen_6": [
+     -148.433,
+     43.107,
+     -347.185,
+     -144.17,
+     43.803,
+     -340.095
+    ],
+    "Touch_Screen_7": [
+     -152.258,
+     43.978,
+     -347.538,
+     -146.31,
+     44.058,
+     -339.738
+    ],
+    "Touch_Screen": [
+     -155.496,
+     43.786,
+     -340.183,
+     -148.312,
+     44.043,
+     -339.685
+    ]
+   }
+  },
+  {
+   "p": 0.002,
+   "screenBox": [
+    -155.496,
+    43.053,
+    -347.673,
+    -141.406,
+    44.121,
+    -339.603
+   ],
+   "obst": {
+    "Desktop_2": {
+     "hits": 0,
+     "min": 0.155,
+     "hitBy": {}
+    },
+    "Artwork right-panel logo": {
+     "hits": 0,
+     "min": 0.754,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_4": {
+     "hits": 0,
+     "min": 2.263,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_6": {
+     "hits": 0,
+     "min": 1.936,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_7": {
+     "hits": 0,
+     "min": 1.668,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_5": {
+     "hits": 0,
+     "min": 2.144,
+     "hitBy": {}
+    },
+    "": {
+     "hits": 0,
+     "min": 2.412,
+     "hitBy": {}
+    },
+    "Left wing trim": {
+     "hits": 0,
+     "min": 0.199,
+     "hitBy": {}
+    },
+    "Extended desktop": {
+     "hits": 258,
+     "min": 0,
+     "hitBy": {
+      "": 258
+     }
+    },
+    "Artwork desktop logo": {
+     "hits": 0,
+     "min": 0.631,
+     "hitBy": {}
+    },
+    "Extended desktop trim": {
+     "hits": 0,
+     "min": 0.974,
+     "hitBy": {}
+    },
+    "Linear_Actuators": {
+     "hits": 0,
+     "min": 1.923,
+     "hitBy": {}
+    }
+   },
+   "parts": {
+    "": [
+     -142.096,
+     43.463,
+     -347.21,
+     -141.406,
+     43.619,
+     -346.974
+    ],
+    "#": [
+     -148.397,
+     43.053,
+     -347.185,
+     -144.144,
+     43.168,
+     -340.095
+    ]
+   }
+  },
+  {
+   "p": 0.1,
+   "screenBox": [
+    -155.496,
+    42.972,
+    -347.673,
+    -141.406,
+    44.047,
+    -339.603
+   ],
+   "obst": {
+    "Desktop_2": {
+     "hits": 0,
+     "min": 0.155,
+     "hitBy": {}
+    },
+    "Artwork right-panel logo": {
+     "hits": 0,
+     "min": 0.754,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_4": {
+     "hits": 0,
+     "min": 2.27,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_6": {
+     "hits": 0,
+     "min": 1.936,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_7": {
+     "hits": 0,
+     "min": 1.663,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_5": {
+     "hits": 0,
+     "min": 2.149,
+     "hitBy": {}
+    },
+    "": {
+     "hits": 0,
+     "min": 2.412,
+     "hitBy": {}
+    },
+    "Left wing trim": {
+     "hits": 0,
+     "min": 0.199,
+     "hitBy": {}
+    },
+    "Extended desktop": {
+     "hits": 21,
+     "min": 0,
+     "hitBy": {
+      "": 21
+     }
+    },
+    "Artwork desktop logo": {
+     "hits": 0,
+     "min": 0.706,
+     "hitBy": {}
+    },
+    "Extended desktop trim": {
+     "hits": 0,
+     "min": 0.974,
+     "hitBy": {}
+    },
+    "Linear_Actuators": {
+     "hits": 0,
+     "min": 1.9,
+     "hitBy": {}
+    }
+   },
+   "parts": {
+    "": [
+     -142.096,
+     43.463,
+     -347.21,
+     -141.406,
+     43.619,
+     -346.974
+    ],
+    "#": [
+     -147.479,
+     42.972,
+     -347.185,
+     -143.226,
+     43.088,
+     -340.095
+    ]
+   }
+  },
+  {
+   "p": 0.25,
+   "screenBox": [
+    -155.496,
+    42.849,
+    -347.673,
+    -141.224,
+    44.047,
+    -339.603
+   ],
+   "obst": {
+    "Desktop_2": {
+     "hits": 0,
+     "min": 0.155,
+     "hitBy": {}
+    },
+    "Artwork right-panel logo": {
+     "hits": 0,
+     "min": 0.754,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_4": {
+     "hits": 0,
+     "min": 2.827,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_6": {
+     "hits": 0,
+     "min": 2.386,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_7": {
+     "hits": 0,
+     "min": 2.203,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_5": {
+     "hits": 0,
+     "min": 2.685,
+     "hitBy": {}
+    },
+    "": {
+     "hits": 0,
+     "min": 2.412,
+     "hitBy": {}
+    },
+    "Left wing trim": {
+     "hits": 0,
+     "min": 0.199,
+     "hitBy": {}
+    },
+    "Extended desktop": {
+     "hits": 21,
+     "min": 0,
+     "hitBy": {
+      "": 21
+     }
+    },
+    "Artwork desktop logo": {
+     "hits": 0,
+     "min": 0.706,
+     "hitBy": {}
+    },
+    "Extended desktop trim": {
+     "hits": 0,
+     "min": 0.919,
+     "hitBy": {}
+    },
+    "Linear_Actuators": {
+     "hits": 0,
+     "min": 2.468,
+     "hitBy": {}
+    }
+   },
+   "parts": {
+    "": [
+     -142.096,
+     43.463,
+     -347.21,
+     -141.406,
+     43.619,
+     -346.974
+    ],
+    "#": [
+     -146.074,
+     42.849,
+     -347.185,
+     -141.822,
+     42.965,
+     -340.095
+    ]
+   }
+  },
+  {
+   "p": 0.4,
+   "screenBox": [
+    -155.496,
+    42.727,
+    -347.673,
+    -139.819,
+    44.047,
+    -339.603
+   ],
+   "obst": {
+    "Desktop_2": {
+     "hits": 0,
+     "min": 0.155,
+     "hitBy": {}
+    },
+    "Artwork right-panel logo": {
+     "hits": 0,
+     "min": 0.754,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_4": {
+     "hits": 0,
+     "min": 2.835,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_6": {
+     "hits": 0,
+     "min": 2.386,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_7": {
+     "hits": 0,
+     "min": 2.203,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_5": {
+     "hits": 0,
+     "min": 2.718,
+     "hitBy": {}
+    },
+    "": {
+     "hits": 0,
+     "min": 2.412,
+     "hitBy": {}
+    },
+    "Left wing trim": {
+     "hits": 0,
+     "min": 0.199,
+     "hitBy": {}
+    },
+    "Extended desktop": {
+     "hits": 21,
+     "min": 0,
+     "hitBy": {
+      "": 21
+     }
+    },
+    "Artwork desktop logo": {
+     "hits": 0,
+     "min": 0.706,
+     "hitBy": {}
+    },
+    "Extended desktop trim": {
+     "hits": 0,
+     "min": 0.247,
+     "hitBy": {}
+    },
+    "Linear_Actuators": {
+     "hits": 0,
+     "min": 2.468,
+     "hitBy": {}
+    }
+   },
+   "parts": {
+    "": [
+     -142.096,
+     43.463,
+     -347.21,
+     -141.406,
+     43.619,
+     -346.974
+    ],
+    "#": [
+     -144.67,
+     42.727,
+     -347.185,
+     -140.417,
+     42.842,
+     -340.095
+    ]
+   }
+  },
+  {
+   "p": 0.5,
+   "screenBox": [
+    -155.496,
+    42.645,
+    -347.673,
+    -138.883,
+    44.047,
+    -339.603
+   ],
+   "obst": {
+    "Desktop_2": {
+     "hits": 0,
+     "min": 0.155,
+     "hitBy": {}
+    },
+    "Artwork right-panel logo": {
+     "hits": 0,
+     "min": 0.754,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_4": {
+     "hits": 0,
+     "min": 2.835,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_6": {
+     "hits": 0,
+     "min": 2.386,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_7": {
+     "hits": 0,
+     "min": 2.203,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_5": {
+     "hits": 0,
+     "min": 2.718,
+     "hitBy": {}
+    },
+    "": {
+     "hits": 0,
+     "min": 2.412,
+     "hitBy": {}
+    },
+    "Left wing trim": {
+     "hits": 0,
+     "min": 0.199,
+     "hitBy": {}
+    },
+    "Extended desktop": {
+     "hits": 21,
+     "min": 0,
+     "hitBy": {
+      "": 21
+     }
+    },
+    "Artwork desktop logo": {
+     "hits": 0,
+     "min": 0.706,
+     "hitBy": {}
+    },
+    "Extended desktop trim": {
+     "hits": 0,
+     "min": 0.332,
+     "hitBy": {}
+    },
+    "Linear_Actuators": {
+     "hits": 0,
+     "min": 2.468,
+     "hitBy": {}
+    }
+   },
+   "parts": {
+    "": [
+     -142.096,
+     43.463,
+     -347.21,
+     -141.406,
+     43.619,
+     -346.974
+    ],
+    "#": [
+     -143.733,
+     42.645,
+     -347.185,
+     -139.48,
+     42.76,
+     -340.095
+    ]
+   }
+  },
+  {
+   "p": 0.6,
+   "screenBox": [
+    -155.496,
+    41.705,
+    -347.673,
+    -139.033,
+    44.871,
+    -339.603
+   ],
+   "obst": {
+    "Desktop_2": {
+     "hits": 0,
+     "min": 0.155,
+     "hitBy": {}
+    },
+    "Artwork right-panel logo": {
+     "hits": 0,
+     "min": 0.754,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_4": {
+     "hits": 0,
+     "min": 2.835,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_6": {
+     "hits": 0,
+     "min": 2.386,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_7": {
+     "hits": 0,
+     "min": 2.203,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_5": {
+     "hits": 0,
+     "min": 2.718,
+     "hitBy": {}
+    },
+    "": {
+     "hits": 0,
+     "min": 2.412,
+     "hitBy": {}
+    },
+    "Left wing trim": {
+     "hits": 0,
+     "min": 0.199,
+     "hitBy": {}
+    },
+    "Extended desktop": {
+     "hits": 392,
+     "min": 0,
+     "hitBy": {
+      "": 392
+     }
+    },
+    "Artwork desktop logo": {
+     "hits": 74,
+     "min": 0,
+     "hitBy": {
+      "": 74
+     }
+    },
+    "Extended desktop trim": {
+     "hits": 265,
+     "min": 0,
+     "hitBy": {
+      "": 265
+     }
+    },
+    "Linear_Actuators": {
+     "hits": 0,
+     "min": 2.468,
+     "hitBy": {}
+    }
+   },
+   "parts": {
+    "": [
+     -142.096,
+     43.463,
+     -347.21,
+     -141.406,
+     43.619,
+     -346.974
+    ],
+    "#": [
+     -142.974,
+     41.746,
+     -347.185,
+     -139.321,
+     43.927,
+     -340.095
+    ]
+   }
+  },
+  {
+   "p": 0.7,
+   "screenBox": [
+    -155.496,
+    41.239,
+    -347.673,
+    -139.715,
+    45.904,
+    -339.603
+   ],
+   "obst": {
+    "Desktop_2": {
+     "hits": 0,
+     "min": 0.155,
+     "hitBy": {}
+    },
+    "Artwork right-panel logo": {
+     "hits": 0,
+     "min": 0.754,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_4": {
+     "hits": 0,
+     "min": 2.835,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_6": {
+     "hits": 0,
+     "min": 2.386,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_7": {
+     "hits": 0,
+     "min": 2.203,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_5": {
+     "hits": 0,
+     "min": 2.718,
+     "hitBy": {}
+    },
+    "": {
+     "hits": 0,
+     "min": 2.412,
+     "hitBy": {}
+    },
+    "Left wing trim": {
+     "hits": 0,
+     "min": 0.199,
+     "hitBy": {}
+    },
+    "Extended desktop": {
+     "hits": 533,
+     "min": 0,
+     "hitBy": {
+      "": 533
+     }
+    },
+    "Artwork desktop logo": {
+     "hits": 284,
+     "min": 0,
+     "hitBy": {
+      "": 284
+     }
+    },
+    "Extended desktop trim": {
+     "hits": 99,
+     "min": 0,
+     "hitBy": {
+      "": 99
+     }
+    },
+    "Linear_Actuators": {
+     "hits": 0,
+     "min": 2.468,
+     "hitBy": {}
+    }
+   },
+   "parts": {
+    "": [
+     -142.096,
+     43.463,
+     -347.21,
+     -141.406,
+     43.619,
+     -346.974
+    ],
+    "#": [
+     -141.871,
+     41.333,
+     -347.185,
+     -139.753,
+     45.023,
+     -340.095
+    ]
+   }
+  },
+  {
+   "p": 0.8,
+   "screenBox": [
+    -155.496,
+    41.243,
+    -347.673,
+    -140.666,
+    46.385,
+    -339.603
+   ],
+   "obst": {
+    "Desktop_2": {
+     "hits": 0,
+     "min": 0.155,
+     "hitBy": {}
+    },
+    "Artwork right-panel logo": {
+     "hits": 0,
+     "min": 0.754,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_4": {
+     "hits": 0,
+     "min": 2.835,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_6": {
+     "hits": 0,
+     "min": 2.386,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_7": {
+     "hits": 0,
+     "min": 2.203,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_5": {
+     "hits": 0,
+     "min": 2.718,
+     "hitBy": {}
+    },
+    "": {
+     "hits": 0,
+     "min": 2.412,
+     "hitBy": {}
+    },
+    "Left wing trim": {
+     "hits": 0,
+     "min": 0.199,
+     "hitBy": {}
+    },
+    "Extended desktop": {
+     "hits": 444,
+     "min": 0,
+     "hitBy": {
+      "": 444
+     }
+    },
+    "Artwork desktop logo": {
+     "hits": 236,
+     "min": 0,
+     "hitBy": {
+      "": 236
+     }
+    },
+    "Extended desktop trim": {
+     "hits": 0,
+     "min": 0.237,
+     "hitBy": {}
+    },
+    "Linear_Actuators": {
+     "hits": 0,
+     "min": 2.468,
+     "hitBy": {}
+    }
+   },
+   "parts": {
+    "": [
+     -142.096,
+     43.463,
+     -347.21,
+     -141.406,
+     43.619,
+     -346.974
+    ],
+    "#": [
+     -140.708,
+     41.513,
+     -347.185,
+     -140.666,
+     45.767,
+     -340.095
+    ]
+   }
+  },
+  {
+   "p": 0.9,
+   "screenBox": [
+    -155.496,
+    41.589,
+    -347.673,
+    -139.745,
+    46.284,
+    -339.603
+   ],
+   "obst": {
+    "Desktop_2": {
+     "hits": 0,
+     "min": 0.155,
+     "hitBy": {}
+    },
+    "Artwork right-panel logo": {
+     "hits": 0,
+     "min": 0.754,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_4": {
+     "hits": 0,
+     "min": 2.835,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_6": {
+     "hits": 0,
+     "min": 2.386,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_7": {
+     "hits": 0,
+     "min": 2.203,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_5": {
+     "hits": 0,
+     "min": 2.718,
+     "hitBy": {}
+    },
+    "": {
+     "hits": 0,
+     "min": 2.412,
+     "hitBy": {}
+    },
+    "Left wing trim": {
+     "hits": 0,
+     "min": 0.199,
+     "hitBy": {}
+    },
+    "Extended desktop": {
+     "hits": 578,
+     "min": 0,
+     "hitBy": {
+      "": 578
+     }
+    },
+    "Artwork desktop logo": {
+     "hits": 218,
+     "min": 0,
+     "hitBy": {
+      "": 218
+     }
+    },
+    "Extended desktop trim": {
+     "hits": 0,
+     "min": 0.454,
+     "hitBy": {}
+    },
+    "Linear_Actuators": {
+     "hits": 0,
+     "min": 2.468,
+     "hitBy": {}
+    }
+   },
+   "parts": {
+    "": [
+     -142.096,
+     43.463,
+     -347.21,
+     -141.406,
+     43.619,
+     -346.974
+    ],
+    "#": [
+     -141.826,
+     42.239,
+     -347.185,
+     -139.782,
+     45.97,
+     -340.095
+    ]
+   }
+  },
+  {
+   "p": 1,
+   "screenBox": [
+    -155.496,
+    42.453,
+    -347.673,
+    -139.237,
+    45.621,
+    -339.603
+   ],
+   "obst": {
+    "Desktop_2": {
+     "hits": 0,
+     "min": 0.155,
+     "hitBy": {}
+    },
+    "Artwork right-panel logo": {
+     "hits": 0,
+     "min": 0.754,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_4": {
+     "hits": 0,
+     "min": 2.835,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_6": {
+     "hits": 0,
+     "min": 2.386,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_7": {
+     "hits": 0,
+     "min": 2.203,
+     "hitBy": {}
+    },
+    "L_A_Hardware_Top_5": {
+     "hits": 0,
+     "min": 2.718,
+     "hitBy": {}
+    },
+    "": {
+     "hits": 0,
+     "min": 2.412,
+     "hitBy": {}
+    },
+    "Left wing trim": {
+     "hits": 0,
+     "min": 0.199,
+     "hitBy": {}
+    },
+    "Extended desktop": {
+     "hits": 464,
+     "min": 0,
+     "hitBy": {
+      "": 464
+     }
+    },
+    "Artwork desktop logo": {
+     "hits": 187,
+     "min": 0,
+     "hitBy": {
+      "": 187
+     }
+    },
+    "Extended desktop trim": {
+     "hits": 0,
+     "min": 0.17,
+     "hitBy": {}
+    },
+    "Linear_Actuators": {
+     "hits": 0,
+     "min": 2.468,
+     "hitBy": {}
+    }
+   },
+   "parts": {
+    "": [
+     -142.096,
+     43.463,
+     -347.21,
+     -141.406,
+     43.619,
+     -346.974
+    ],
+    "#": [
+     -142.937,
+     43.325,
+     -347.185,
+     -139.329,
+     45.579,
+     -340.095
+    ]
+   }
+  }
+ ],
+ "parts": {
+  "Top_Shelf": {
+   "vis": true,
+   "box": [
+    -180.623,
+    44.656,
+    -346.997,
+    -179.911,
+    55.773,
+    -307.299
+   ]
+  },
+  "Desktop_1": {
+   "vis": true,
+   "box": [
+    -180.895,
+    27.662,
+    -306.467,
+    -143.302,
+    44.376,
+    -305.757
+   ]
+  },
+  "Desktop_2": {
+   "vis": true,
+   "box": [
+    -180.894,
+    27.662,
+    -348.539,
+    -143.301,
+    44.376,
+    -347.829
+   ]
+  },
+  "Desktop": {
+   "vis": true,
+   "box": [
+    -161.644,
+    41.522,
+    -349.573,
+    -160.932,
+    43.991,
+    -304.736
+   ]
+  },
+  "Desktop_3": {
+   "vis": false,
+   "box": [
+    -177.087,
+    44.041,
+    -350.37,
+    -143.296,
+    44.754,
+    -303.922
+   ]
+  },
+  "Touch_Screen_1": {
+   "vis": true,
+   "box": [
+    -155.49,
+    43.788,
+    -347.58,
+    -148.311,
+    44.051,
+    -347.089
+   ]
+  },
+  "Touch_Screen_2": {
+   "vis": true,
+   "box": [
+    -151.118,
+    43.645,
+    -340.273,
+    -143.948,
+    43.952,
+    -339.603
+   ]
+  },
+  "Touch_Screen_3": {
+   "vis": true,
+   "box": [
+    -151.118,
+    43.647,
+    -347.673,
+    -143.947,
+    43.952,
+    -347.003
+   ]
+  },
+  "Touch_Screen_4": {
+   "vis": true,
+   "box": [
+    -148.709,
+    43.524,
+    -347.54,
+    -143.565,
+    44.09,
+    -339.74
+   ]
+  },
+  "Touch_Screen_5": {
+   "vis": true,
+   "box": [
+    -148.557,
+    43.106,
+    -347.39,
+    -144.048,
+    43.843,
+    -339.89
+   ]
+  },
+  "Touch_Screen_6": {
+   "vis": true,
+   "box": [
+    -148.433,
+    43.107,
+    -347.185,
+    -144.17,
+    43.803,
+    -340.095
+   ]
+  },
+  "Touch_Screen_7": {
+   "vis": true,
+   "box": [
+    -152.258,
+    43.978,
+    -347.538,
+    -146.31,
+    44.058,
+    -339.738
+   ]
+  },
+  "Touch_Screen": {
+   "vis": true,
+   "box": [
+    -155.496,
+    43.786,
+    -340.183,
+    -148.312,
+    44.043,
+    -339.685
+   ]
+  },
+  "Left wing trim": {
+   "vis": true,
+   "box": [
+    -180.909,
+    27.648,
+    -348.557,
+    -143.284,
+    44.391,
+    -347.829
+   ]
+  },
+  "Right wing trim": {
+   "vis": true,
+   "box": [
+    -180.91,
+    27.648,
+    -306.467,
+    -143.285,
+    44.391,
+    -305.739
+   ]
+  },
+  "Standard desktop trim": {
+   "vis": false,
+   "box": [
+    -175.908,
+    44.042,
+    -350.4,
+    -143.271,
+    44.784,
+    -303.892
+   ]
+  },
+  "Extended desktop": {
+   "vis": true,
+   "box": [
+    -176.987,
+    44.042,
+    -356.936,
+    -139.45,
+    44.755,
+    -297.497
+   ]
+  },
+  "Extended desktop trim": {
+   "vis": true,
+   "box": [
+    -177.057,
+    44.042,
+    -357.01,
+    -139.37,
+    44.846,
+    -297.436
+   ]
+  }
+ },
+ "modelScale": [
+  0.03859392694789663,
+  0.03859392694789663,
+  0.03859392694789663
+ ],
+ "worldScale": [
+  0.03859392694789663,
+  0.03859392694789663,
+  0.03859392694789663
+ ]
+}

@@ -1,0 +1,162 @@
+{
+ "res": [
+  {
+   "p": 0.9,
+   "dx": 0,
+   "box": [
+    -138.962,
+    41.247,
+    -347.54,
+    -135.928,
+    45.942,
+    -339.74
+   ],
+   "per": {
+    "Desktop_2": [
+     0,
+     null
+    ],
+    "Desktop_3": [
+     0,
+     null
+    ],
+    "Standard desktop trim": [
+     0,
+     null
+    ],
+    "Extended desktop": [
+     0,
+     0.81
+    ],
+    "Artwork desktop logo": [
+     0,
+     0.81
+    ],
+    "Extended desktop trim": [
+     0,
+     0.732
+    ]
+   }
+  },
+  {
+   "p": 0.95,
+   "dx": 0,
+   "box": [
+    -139.523,
+    41.631,
+    -347.54,
+    -135.602,
+    45.635,
+    -339.74
+   ],
+   "per": {
+    "Desktop_2": [
+     0,
+     null
+    ],
+    "Desktop_3": [
+     0,
+     null
+    ],
+    "Standard desktop trim": [
+     0,
+     null
+    ],
+    "Extended desktop": [
+     0,
+     0.281
+    ],
+    "Artwork desktop logo": [
+     0,
+     0.281
+    ],
+    "Extended desktop trim": [
+     0,
+     0.203
+    ]
+   }
+  },
+  {
+   "p": 0.98,
+   "dx": 0,
+   "box": [
+    -139.831,
+    41.913,
+    -347.54,
+    -135.474,
+    45.42,
+    -339.74
+   ],
+   "per": {
+    "Desktop_2": [
+     0,
+     null
+    ],
+    "Desktop_3": [
+     0,
+     null
+    ],
+    "Standard desktop trim": [
+     0,
+     null
+    ],
+    "Extended desktop": [
+     83,
+     0
+    ],
+    "Artwork desktop logo": [
+     50,
+     0
+    ],
+    "Extended desktop trim": [
+     71,
+     0
+    ]
+   }
+  },
+  {
+   "p": 1,
+   "dx": 0,
+   "box": [
+    -140.011,
+    42.119,
+    -347.54,
+    -135.42,
+    45.287,
+    -339.74
+   ],
+   "per": {
+    "Desktop_2": [
+     0,
+     null
+    ],
+    "Desktop_3": [
+     0,
+     null
+    ],
+    "Standard desktop trim": [
+     0,
+     null
+    ],
+    "Extended desktop": [
+     250,
+     0
+    ],
+    "Artwork desktop logo": [
+     184,
+     0
+    ],
+    "Extended desktop trim": [
+     261,
+     0
+    ]
+   }
+  }
+ ],
+ "prof": {
+  "Desktop_3": -143.402,
+  "Standard desktop trim": -143.419,
+  "Extended desktop": -139.45,
+  "Extended desktop trim": -139.37
+ }
+}

@@ -1,0 +1,18 @@
+seated noah-steps walk.path[2] [-3098, -1064] ok
+seated noah-pulls at [-3098, -1064] ok
+seated noah-taps at [-3098, -1064] ok
+seated noah-watches at [-3098, -1064] ok
+seated noah-pulls act.by [0, 0, 142] ok
+seated sceneEdits added 1 (hair == patch: True ) removed 0
+seated other chapters changed in review-cut: []
+seated RESULT OK
+standing noah-steps walk.path[2] [-3098, -1064] ok
+standing noah-pulls at [-3098, -1064] ok
+standing noah-taps at [-3098, -1064] ok
+standing noah-watches at [-3098, -1064] ok
+standing noah-pulls act.by [0, 0, 142] ok
+standing sceneEdits added 1 (hair == patch: True ) removed 0
+standing other chapters changed in review-cut: []
+standing RESULT OK
+seated imported oilers vs rendered oilers-C differ in: ['directorEdited']
+standing imported oilers vs rendered oilers-C differ in: ['directorEdited']
