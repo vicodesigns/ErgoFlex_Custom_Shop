@@ -87,8 +87,19 @@ try{
   check(!await page.$(`#director-timeline [data-cam-transition="${target}"]`),'5. Delete on the band: back to a move');
   // ---- 6 a cut to the same view warns: Duplicate a key (same view, half way to the next), cut into the copy
   {await pick(target);await wait(300);await page.evaluate(()=>document.activeElement?.blur?.());await keyChord('Control','KeyD');   // (the roomy key: create's 2.35 s key would put its copy 0.025 s from the cut)
-    const now=await keysNow(),copyId=now.find(id=>!ids.includes(id));
-    if(check(!!copyId,'6. Ctrl+D made a copy of the view')){await pick(copyId);await wait(300);await setSel('key-transition','cut');
+    let now=await keysNow(),copyId=now.find(id=>!ids.includes(id));
+    if(!check(!!copyId,'6. Ctrl+D made a copy of the view')){
+      // what the page looked like (Windows, 711becec: Ctrl+D made no copy right after the Export step)
+      console.log('     after Ctrl+D: '+JSON.stringify(await page.evaluate(()=>({status:document.querySelector('#director-panel [data-status]')?.textContent||'',
+        selectedKey:document.querySelector('#director-timeline .camera-key[aria-pressed="true"]')?.dataset.key||null,keys:document.querySelectorAll('#director-timeline .camera-key').length,
+        dialogs:[...document.querySelectorAll('dialog[open]')].map(d=>d.id||d.className||d.querySelector('h2,h3')?.textContent||'dialog'),active:document.activeElement?.tagName+(document.activeElement?.id?'#'+document.activeElement.id:''),
+        exportsOpen:!!document.querySelector('.film-fresh:not([hidden]),[data-film-fresh]:not([hidden])')}))));
+      await shot('04-ctrl-d.png');
+      // go on through the Inspector's Duplicate keyframe, so the warning below is still checked
+      await page.evaluate(()=>document.querySelector('#director-panel [data-action="key-duplicate"]')?.click());await wait(500);
+      now=await keysNow();copyId=now.find(id=>!ids.includes(id));check(!!copyId,'6. the Inspector\'s Duplicate keyframe made a copy of the view');
+    }
+    if(copyId){await pick(copyId);await wait(300);await setSel('key-transition','cut');
       const warn=await page.$eval('#director-panel [data-transition-warn]',e=>e.textContent).catch(()=>'');
       const mark=await page.$(`#director-timeline [data-camera-segment-lane="${(await keysNow()).indexOf(copyId)-1}"] .seg-warn-mark`);
       check(/This cut jumps to the same view/.test(warn)&&!!mark,'6. "This cut jumps to the same view" in the Inspector and a ⚠ on the lane');
