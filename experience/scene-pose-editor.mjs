@@ -4,9 +4,9 @@
 //   blue dot      a joint: click it, then turn it with the rings (E) or the Bend / Twist / Side fields
 //   orange dot    a hand or a foot: drag it with the arrows (W) and the whole arm or leg follows (two-bone IK); the
 //                 hand or foot keeps facing the way it did. E turns the wrist or ankle itself.
-// Fingers open and close a step at a time; one side can be copied to the other; a joint, a limb or the whole pose
-// goes back to the posture as built. Every change is one undo step and lives in the chapter's cast as
-// cast[i].postures[modelId].pose = { '<bone>': [x, y, z, w] }, so the live stage and film show it.
+// Fingers open and close a step at a time, and each thumb stretches or curls on a slider of its own; one side can be
+// copied to the other; a joint, a limb or the whole pose goes back to the posture as built. Every change is one undo
+// step and lives in the chapter's cast as cast[i].postures[modelId].pose = { '<bone>': [x, y, z, w] }, so the live stage and film show it.
 // The People controller supplies an active-posture view and routes writes to that record.
 import {enhanceGizmo,mmPerUnitOf} from './gumball.mjs';
 import {heldItems,isIdentity as heldIdentity} from '../people-held-data.mjs';
@@ -294,13 +294,29 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
     for(const n of names)bone(n)?.quaternion.copy(rig.rest.get(n));
     commit(which==='joint'?`${name}: ${label(joint).toLowerCase()} back as built.`:`${name}: ${group.toLowerCase()} back as built.`);
   }
+  // ---- the thumb, per hand (Vico, 21 Nov 2026: "we don't have a thumb that either stretches it or curls it for a fist"):
+  // -100 stretched out (away from the palm and the fingers, as in a hand spread wide), 0 as built, 100 curled across the
+  // palm onto the outside of the fingers as they are in a fist. Its three bones within what a thumb does (THUMB_LIMITS):
+  //   thumb_01  the base (CMC, a saddle joint): swings toward the fist (up to 58° from as built) or out (up to 40°), and
+  //             no further than a thumb spread wide points (60° off the middle finger's line)
+  //   thumb_02  the knuckle (MCP, a hinge about the bone's own x): flexes to 55° at most, straightens to 8° back at most
+  //   thumb_03  the end joint (IP, a hinge about its x): flexes to 75° at most, straightens to 12° back at most
+  // (the hinge angles are the bone's own, measured from the thumb held straight, not from the posture: a posture that
+  // already flexes the thumb gets less, one that bends it back past those is left as it is)
+  // The value is not stored: like the grip it is read back from the bones (thumbState), so undo, saving, keys, the
+  // mirror and the film carry it as the three bones' turns.
+  const THUMB_LIMITS={cmcIn:58,cmcOut:40,spread:60,mcp:[-8,55],ip:[-12,75]},THUMB_FIT=1.5;
+  const thumbBones=side=>{const b=[1,2,3].map(j=>bone(`thumb_0${j}_${side}`));return b.every(Boolean)?b:null;};
   // This side's arm or leg adjustments, mirrored onto the other side.
   function mirror(){
     const rig=rigOf(),re=joint&&limbOf(joint),side=sideOf(joint);if(!rig||!re||!side)return;const other=side==='l'?'r':'l';let n=0;
+    const thumb=re===ARM&&thumbBones(side)&&thumbBones(other)?thumbState(side):null;
     for(const [name,b] of rig.bones){
       if(!re.test(name)||sideOf(name)!==side)continue;const twin=name.slice(0,-1)+other,tb=bone(twin);if(!tb)continue;
       const d=rig.rest.get(name).clone().invert().multiply(b.quaternion);d.set(d.x,-d.y,-d.z,d.w);tb.quaternion.copy(rig.rest.get(twin)).multiply(d);n++;
     }
+    // a thumb set with its slider goes over as that value (the two sides' postures can hold their thumbs differently)
+    if(thumb&&thumb.off<=THUMB_FIT){h.object.updateWorldMatrix(true,true);thumbPose(other,thumb.value,thumbFrame(other));}
     if(n)commit(`${personName(entry(key))}: ${info(joint)[2].toLowerCase()} adjustments copied to the ${other==='l'?'left':'right'} side.`);
   }
   // Fingers, per hand: a slider from open, through the hand as built (0), to a fist (100). Every joint bends toward the
@@ -326,35 +342,103 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
     const w=tipShare(side),rest=bend(side,true),now=bend(side),full=Math.max(8,FIST[2]+FIST[3]*w-rest),open=Math.max(8,Math.min(rest+6,OPEN[2]+OPEN[3]*w));
     return Math.round(Math.max(-100,Math.min(100,now>=rest?(now-rest)/full*100:(now-rest)/open*100))/5)*5;
   }
-  function setGrip(side,value){
-    const rig=rigOf();if(!rig||!bone('hand_'+side))return;const THREE=T(),V=()=>new THREE.Vector3(),Q=()=>new THREE.Quaternion(),pos=n=>bone(n).getWorldPosition(V());
-    const v=Math.max(-100,Math.min(100,value))/100,restCurl=Math.max(0,bend(side,true))/(SHARE[2]+SHARE[3]*tipShare(side));     // the curl the posture already has (pose_lib's amount)
-    for(const [,,n] of fingerBones(side))bone(n).quaternion.copy(rig.rest.get(n));
+  // The four fingers (not the thumb) of one hand set to the slider's amount v (-1 open … 0 as built … 1 fist), from the
+  // posture as built. Returns the palm's frame in the world: along (wrist to middle knuckle), across (index to pinky
+  // knuckle), n (out of the palm, on its inner side).
+  function curlFingers(side,v){
+    const rig=rigOf(),THREE=T(),V=()=>new THREE.Vector3(),Q=()=>new THREE.Quaternion(),pos=n=>bone(n).getWorldPosition(V());
+    const restCurl=Math.max(0,bend(side,true))/(SHARE[2]+SHARE[3]*tipShare(side));     // the curl the posture already has (pose_lib's amount)
+    for(const [f,,n] of fingerBones(side))if(f!=='thumb')bone(n).quaternion.copy(rig.rest.get(n));
     h.object.updateWorldMatrix(true,true);
     const along=pos('middle_01_'+side).sub(pos('hand_'+side)),across=pos('pinky_01_'+side).sub(pos('index_01_'+side)),n=(side==='l'?across.clone().cross(along):along.clone().cross(across)).normalize();
     // one hinge axis per finger, from the finger as built (across the finger, in the palm's plane): every joint of that
     // finger turns about it. (Taking it from each joint's own direction flips it once the finger has curled past the palm.)
     const dir=name=>{const b=bone(name),child=b.children.find(c=>c.isBone);return (child?child.getWorldPosition(V()).sub(pos(name)):pos(name).sub(b.parent.getWorldPosition(V()))).normalize();};
     const axes=Object.fromEntries(FINGERS.filter(f=>bone(`${f}_01_${side}`)).map(f=>[f,dir(`${f}_01_${side}`).cross(n)]));
-    const turnWorld=(b,axis,degrees)=>{b.quaternion.copy(b.parent.getWorldQuaternion(Q()).invert().multiply(Q().setFromAxisAngle(axis,THREE.MathUtils.degToRad(degrees)).multiply(b.getWorldQuaternion(Q())))).normalize();b.updateWorldMatrix(false,true);};
     for(const [f,j,name] of fingerBones(side)){
       if(f==='thumb')continue;
       const b=bone(name),k=KF[f],degrees=v>=0?v*Math.max(0,FIST[j]-restCurl*SHARE[j])*k:v*Math.min(OPEN[j],restCurl*SHARE[j]+6)*k,axis=axes[f];if(Math.abs(degrees)<.01||!axis||axis.lengthSq()<1e-10)continue;
       const turn=Q().setFromAxisAngle(axis.clone().normalize(),THREE.MathUtils.degToRad(degrees));
       b.quaternion.copy(b.parent.getWorldQuaternion(Q()).invert().multiply(turn.multiply(b.getWorldQuaternion(Q())))).normalize();b.updateWorldMatrix(false,true);
     }
-    // The thumb closes last, onto the fingers it wraps: its first bone swings until the thumb points at the outside of the
-    // curled middle finger, then its two joints bend the rest of the way (each within what a thumb does).
-    const thumb=[1,2,3].map(j=>bone(`thumb_0${j}_${side}`));
-    if(v>0&&thumb.every(Boolean)&&bone('middle_02_'+side)){
-      const tip=()=>{const c=thumb[2].children.find(x=>x.isBone);return c?c.getWorldPosition(V()):pos(thumb[2].name).add(pos(thumb[2].name).sub(pos(thumb[1].name)));};
-      const target=pos('middle_02_'+side).add(n.clone().multiplyScalar(along.length()*.16));
-      for(const [b,most] of [[thumb[0],58],[thumb[1],26],[thumb[2],34]]){
-        const head=pos(b.name),now=tip().sub(head),want=target.clone().sub(head),axis=now.clone().cross(want);if(axis.lengthSq()<1e-14)continue;
-        turnWorld(b,axis.normalize(),Math.min(THREE.MathUtils.radToDeg(now.angleTo(want)),most)*v);
-      }
-    }
+    return {along,across,n};
+  }
+  function setGrip(side,value){
+    const rig=rigOf();if(!rig||!bone('hand_'+side))return;
+    const v=Math.max(-100,Math.min(100,value))/100;
+    // The thumb has a slider of its own (setThumb). Left as built, or where the grip put it, it follows the grip (the fist
+    // wraps it, as before); set on its own, the grip leaves it where it is. (Where the grip put it: within two steps of
+    // the grip's reading, which on a posture in motion can be a step off; a thumb that matches no step of its slider,
+    // from before it had one, follows too.)
+    const F=thumbFrame(side),st=F&&thumbState(side,F),follows=!!st&&(st.off>THUMB_FIT||Math.abs(st.value-Math.max(0,gripValue(side)))<=10);
+    curlFingers(side,v);
+    if(follows)thumbPose(side,Math.max(0,v*100),F);
     commit(`${personName(entry(key))}: ${side==='l'?'left':'right'} hand ${v>.95?'in a fist':v>0?'closed '+Math.round(v*100)+' %':v<0?'opened':'as built'}.`,'pose-grip-'+key+side);
+  }
+  // The thumb at both ends of its slider, as the three bones' own turns (from the posture as built; the bones are put back):
+  //   curl     its tip onto the outside of the middle finger as it is in a fist (the fingers are put there for the measure
+  //            and back, so the thumb's curl is the same whatever the fingers do now): the end joint, the knuckle and the
+  //            base turn toward it in turn, a few rounds (CCD), each within its limits; the hinges only flex
+  //   stretch  the two hinges straighten to a little past straight, then the base swings out to where a thumb spread wide
+  //            points: THUMB_LIMITS.spread off the middle finger's line toward the thumb's side, in the palm's plane,
+  //            tipped 10° toward the palm's inner side
+  function thumbFrame(side){
+    const rig=rigOf(),b=thumbBones(side);if(!rig||!b||!bone('hand_'+side)||!bone('middle_02_'+side))return null;
+    const THREE=T(),V=()=>new THREE.Vector3(),Q=()=>new THREE.Quaternion(),D=THREE.MathUtils.radToDeg,R=THREE.MathUtils.degToRad,L=THUMB_LIMITS;
+    const keep=fingerBones(side).map(([,,n])=>[n,bone(n).quaternion.clone()]);
+    for(const x of b)x.quaternion.copy(rig.rest.get(x.name));
+    const {along,across,n}=curlFingers(side,1),target=bone('middle_02_'+side).getWorldPosition(V()).add(n.clone().multiplyScalar(along.length()*.16));
+    const up=along.clone().normalize(),radial=across.clone().negate().addScaledVector(up,up.dot(across)).normalize(),sp=R(L.spread),tilt=R(10);
+    const out=up.clone().multiplyScalar(Math.cos(sp)).addScaledVector(radial,Math.sin(sp)).multiplyScalar(Math.cos(tilt)).addScaledVector(n,Math.sin(tilt)).normalize();
+    const pos=x=>x.getWorldPosition(V()),len=pos(b[2]).distanceTo(pos(b[1]))*.85;
+    const tip=()=>pos(b[2]).addScaledVector(new THREE.Vector3(0,1,0).applyQuaternion(b[2].getWorldQuaternion(Q())),len);     // (no bone at the tip: the end bone runs along its y)
+    const update=()=>b[0].updateWorldMatrix(false,true);
+    const flexOf=x=>D(2*Math.atan2(x.quaternion.x,x.quaternion.w));       // a hinge's own bend: degrees about the bone's x, + flexes
+    const hinge=(x,d)=>{x.quaternion.multiply(Q().setFromAxisAngle(new THREE.Vector3(1,0,0),R(d))).normalize();update();};
+    // how far about x's hinge the tip has to turn to point at p (signed, + flexes)
+    const aim=(x,p)=>{const ax=new THREE.Vector3(1,0,0).applyQuaternion(x.getWorldQuaternion(Q())),head=pos(x),a=tip().sub(head),w=p.clone().sub(head);a.addScaledVector(ax,-a.dot(ax));w.addScaledVector(ax,-w.dot(ax));if(a.lengthSq()<1e-14||w.lengthSq()<1e-14)return 0;return D(Math.atan2(ax.dot(a.clone().cross(w)),a.dot(w)));};
+    // the base swings (in the world) to point `from` toward `to`, no further than `most` degrees from as built
+    const swing=(from,to,most)=>{const x=b[0],head=pos(x),u=from.clone().sub(head),w=to.clone().sub(head);if(u.lengthSq()<1e-14||w.lengthSq()<1e-14)return;
+      const wq=x.getWorldQuaternion(Q()).premultiply(Q().setFromUnitVectors(u.normalize(),w.normalize()));x.quaternion.copy(x.parent.getWorldQuaternion(Q()).invert().multiply(wq)).normalize();
+      const r=rig.rest.get(x.name),off=D(2*Math.acos(Math.min(1,Math.abs(x.quaternion.dot(r)))));if(off>most)x.quaternion.copy(r.clone().slerp(x.quaternion.clone(),most/off));update();};
+    const grab=()=>b.map(x=>x.quaternion.clone()),rest=()=>{for(const x of b)x.quaternion.copy(rig.rest.get(x.name));update();};
+    // curl
+    rest();const f0=b.map(flexOf);
+    for(let round=0;round<8;round++){
+      for(const [i,[,most]] of [[2,L.ip],[1,L.mcp]]){const x=b[i],f=flexOf(x),to=Math.max(f0[i],Math.min(Math.max(most,f0[i]),f+aim(x,target)));if(Math.abs(to-f)>.01)hinge(x,to-f);}
+      swing(tip(),target,L.cmcIn);
+    }
+    const curl=grab();
+    // stretch
+    rest();
+    for(const [i,[least]] of [[1,L.mcp],[2,L.ip]]){const f=flexOf(b[i]);if(f>least)hinge(b[i],least-f);}
+    {const head=pos(b[0]),aimAt=head.clone().add(out);swing(tip(),aimAt,L.cmcOut);}
+    const stretch=grab();
+    for(const [name,q] of keep)bone(name).quaternion.copy(q);h.object.updateWorldMatrix(true,true);
+    return {curl,stretch};
+  }
+  // The thumb's three bones set to the slider's value (-100 … 100): each bone turns from the posture as built toward its
+  // turn at that end of the slider, by the same share (so every step is between the two, and reads back).
+  function thumbPose(side,value,F){
+    const rig=rigOf(),b=thumbBones(side);if(!rig||!b||!F)return;const s=Math.max(-100,Math.min(100,value))/100,end=s>0?F.curl:F.stretch;
+    b.forEach((x,i)=>x.quaternion.copy(rig.rest.get(x.name)).slerp(end[i],Math.abs(s)));b[0].updateWorldMatrix(false,true);
+  }
+  // Where the thumb's slider stands (the nearest step of 5 whose thumb matches the bones) and how far off that match is
+  // (degrees, the three bones together: more than THUMB_FIT and the thumb was not set by this slider).
+  function thumbState(side,F=thumbFrame(side)){
+    const rig=rigOf(),b=thumbBones(side);if(!rig||!b||!F)return {value:0,off:0};
+    const now=b.map(x=>x.quaternion.clone()),ang=(p,q)=>2*Math.acos(Math.min(1,Math.abs(p.dot(q))))*180/Math.PI;
+    if(b.every((x,i)=>ang(now[i],rig.rest.get(x.name))<.05))return {value:0,off:0};
+    let best={value:0,off:Infinity};
+    for(let v=-100;v<=100;v+=5){thumbPose(side,v,F);const off=b.reduce((a,x,i)=>a+ang(x.quaternion,now[i]),0);if(off<best.off)best={value:v,off};}
+    b.forEach((x,i)=>x.quaternion.copy(now[i]));b[0].updateWorldMatrix(false,true);
+    return best;
+  }
+  const thumbValue=side=>thumbState(side).value;
+  function setThumb(side,value){
+    const rig=rigOf(),F=thumbFrame(side);if(!rig||!F)return;const v=Math.max(-100,Math.min(100,Math.round(value/5)*5));
+    thumbPose(side,v,F);
+    commit(`${personName(entry(key))}: ${side==='l'?'left':'right'} thumb ${v>=95?'curled into the palm':v>0?'curled '+v+' %':v<=-95?'stretched out':v<0?'stretched '+(-v)+' %':'as built'}.`,'pose-thumb-'+key+side);
   }
   // ---- mode
   function pick(name){if(!info(name))return;heldSel=null;joint=name;wake();gmode=info(name)[3]?'translate':'rotate';status(`${label(name)}: ${info(name)[3]?'drag the arrows to move the whole limb (W), or turn the joint itself (E).':moveOf(name).kind?'turn it with the rings (E) or type Bend / Twist / Side; W moves the joint itself.':'turn it with the rings, or type Bend / Twist / Side.'}`);rerender();}
@@ -392,6 +476,7 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
       <div class="director-actions"><button type="button" data-action="pe-pose-reset-joint" title="This joint back to the posture as built (Delete)">Reset joint</button><button type="button" data-action="pe-pose-reset-limb">Reset ${escape(info(joint)[2].toLowerCase())}</button>${side&&limbOf(joint)?`<button type="button" data-action="pe-pose-mirror" title="Copy this side's adjustments to the other side, mirrored">Copy to the ${side==='l'?'right':'left'} side</button>`:''}</div>`:''}
       <h4>Fingers</h4>
       <div class="pose-grip">${['l','r'].map(sd=>`<label>${sd==='l'?'Left hand':'Right hand'}<input type="range" name="pe-grip-${sd}" min="-100" max="100" step="5" value="${ready?gripValue(sd):0}" ${ready?'':'disabled'} aria-label="${sd==='l'?'Left':'Right'} hand: open to fist"></label>`).join('')}<small>open</small><small>as built</small><small>fist</small></div>
+      <div class="pose-grip pose-thumb">${['l','r'].map(sd=>`<label>${sd==='l'?'Left thumb':'Right thumb'}<input type="range" name="pe-thumb-${sd}" min="-100" max="100" step="5" value="${ready?thumbValue(sd):0}" ${ready?'':'disabled'} aria-label="${sd==='l'?'Left':'Right'} thumb: stretched out to curled across the palm" title="The thumb on its own: the hand's slider leaves it where you put it"></label>`).join('')}<small>stretched</small><small>as built</small><small>curled</small></div>
       ${heldPanel(e)}
       <h4>Save this pose</h4>
       <div class="pose-save"><input type="text" name="pe-pose-name" maxlength="44" placeholder="Name, for example: Leaning in" autocomplete="off" spellcheck="false" aria-label="Name for the saved pose"><button type="button" data-action="pe-pose-save" ${adjusted?'':'disabled'} title="Keeps this pose under that name; it never replaces another saved pose">Save pose</button></div>
@@ -495,6 +580,7 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
     if(el.name==='pe-key-ease'){const e=entry(key);if(selT===null||!EASES.includes(el.value))return true;const t=selT;keyEdit(x=>setKeyEase(x,t,el.value),`${personName(e)}: key at ${fmt(t)} s eases ${el.value==='hold'?'by holding until the next key':el.value}.`);return true;}
     if(el.name==='pe-joint'){if(el.value)pick(el.value);else{joint=null;rerender();}return true;}
     if(el.name==='pe-grip-l'||el.name==='pe-grip-r'){setGrip(el.name.slice(-1),Number(el.value)||0);return true;}
+    if(el.name==='pe-thumb-l'||el.name==='pe-thumb-r'){setThumb(el.name.slice(-1),Number(el.value)||0);return true;}
     if(el.name==='pe-pose-name')return true;      // read when Save pose is pressed
     {const m=/^pe-held-([A-Za-z][A-Za-z0-9_]*)-(x|y|z|rx|ry|rz|s)$/.exec(el.name);if(m){const v=Number(el.value);if(el.value.trim()===''||!Number.isFinite(v))throw Error('Type a number.');setHeld(m[1],m[2],v);return true;}}
     const axis=['pe-rx','pe-ry','pe-rz'].indexOf(el.name);

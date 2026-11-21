@@ -1,7 +1,7 @@
 import {enhanceGizmo,mmPerUnitOf} from './gumball.mjs';
 import {postureView,editPosture,migratePostures,editablePeople,postureRecord} from '../people-postures.mjs';
 import {cleanPeople,canonicalPeople,effectivePeople,newKey,spanText,PARTS,handoffInto} from './people-edits.mjs';
-import {createPoseEditor,JOINTS} from './scene-pose-editor.mjs';
+import {createPoseEditor,JOINTS} from './scene-pose-editor.mjs?v=thumb-control-20261121';
 import {stackRows} from './lane-rows.mjs';
 import {withSpan} from './people-spans.mjs';
 import {reachAt as reachAtTime} from '../people-reach.mjs';

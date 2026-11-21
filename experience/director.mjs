@@ -27,7 +27,7 @@ import {createLayersPanel} from './layers-panel.mjs';
 import {layersOn,studioHiddenHere,chapterRooms,chapterSetting,deskHidePlan,LAYERS_KEY} from './layers-exchange.mjs';
 import {effectivePropEdits as layersPropEdits} from './prop-edits.mjs';
 import {cleanPeople as layersCleanPeople,canonicalPeople} from './people-edits.mjs';
-import {createScenePeopleEditor} from './scene-people-editor.mjs?v=timeline-delete-20261120';
+import {createScenePeopleEditor} from './scene-people-editor.mjs?v=thumb-control-20261121';
 import {createBrandingEditor} from './branding-editor.mjs';
 import {createFloorReflectionEditor} from './floor-reflection-editor.mjs';
 import {filmPropEdits,propKey} from './prop-edits.mjs';
