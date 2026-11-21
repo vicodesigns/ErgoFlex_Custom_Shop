@@ -5,8 +5,8 @@
 //              around the cut), a + on every plain cut between two clips (add a transition), missing clips marked
 //   inspector  "Movie edit": the clips in order (source in-out, speed, transition in), the selected clip's transition
 //              (type, length, dip colour, why it is shorter), source in / out, speed; earlier / later, split, delete
-// The live stage and the Director's Render still show a hard cut at each cut point (film-fx plays the clips
-// butt-joined); the blend is composed by render-cut / render-still.cjs (compose-screen-edit.mjs).
+// The live stage shows a hard cut at each cut point (film-fx plays the clips butt-joined); Render still has the movie
+// edit composed on the desk first (studio-server POST /api/screen-edit), the film by render-cut (compose-screen-edit.mjs).
 import {TYPES,TYPE_LABEL,MAX_DUR,trackClips,transitionPlan,missingClips,setTransition,setSourceRange,sourceOut,validateTrack} from './screen-edit.mjs?v=clip-track-20261121';
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const r2=v=>Math.round(v*100)/100,pct=(t,T)=>`${Math.max(0,Math.min(100,t/(T||1)*100))}%`,name=src=>String(src||'clip').split('/').pop();
@@ -17,7 +17,7 @@ export function trackOverlay(list,key,seconds,{selected=-1,info}={}){
   clips.forEach((c,k)=>{
     if(!k)return;const prev=clips[k-1],joined=Math.abs(prev.end-c.start)<1e-6,p=plan.find(x=>x.i===c.i),t=c.sc.transitionIn,sel=selected===c.i?' selected':'';
     if(p){const short=p.got<p.want-1e-6;
-      const title=`${TYPE_LABEL[p.type]} into clip ${k+1}: ${r2(p.want)} s${short?` → ${r2(p.got)} s (${p.why})`:''} · ${r2(p.from)}–${r2(p.to)} s · the live view and Render still cut at ${r2(c.start)} s; the film render shows the blend`;
+      const title=`${TYPE_LABEL[p.type]} into clip ${k+1}: ${r2(p.want)} s${short?` → ${r2(p.got)} s (${p.why})`:''} · ${r2(p.from)}–${r2(p.to)} s · the live view cuts at ${r2(c.start)} s; Render still and the film show the blend`;
       html+=`<button type="button" class="clip-transition clip-transition-${p.type}${short?' clamped':''}${sel}" data-clip-transition="${c.i}" style="left:${pct(p.from,seconds)};width:max(10px,calc(${pct(p.to,seconds)} - ${pct(p.from,seconds)}))${p.type==='dip'?`;--dip:${esc(p.color)}`:''}" title="${esc(title)}" aria-label="${esc(title)}"><span>${GLYPH[p.type]}</span></button>`;
       return;}
     if(joined)html+=`<button type="button" class="clip-seam${sel}" data-clip-seam="${c.i}" style="left:${pct(c.start,seconds)}" title="${esc(`Cut into clip ${k+1} at ${r2(c.start)} s · click: add a dissolve or a dip here`)}" aria-label="${esc(`Cut at ${r2(c.start)} s: add a transition`)}">${t?.type==='cut'?'│':'+'}</button>`;
@@ -40,12 +40,12 @@ export function movieInspector(list,key,seconds,{selected=-1,info,known}={}){
       <div class="director-grid"><label title="${k?'How the clip before turns into this one':'The first clip: a dip fades up from its colour; a dissolve has nothing to dissolve from'}">Transition in<select name="me-type">${TYPES.map(x=>`<option value="${x}" ${x===type?'selected':''}>${TYPE_LABEL[x]}</option>`).join('')}</select></label>
       ${type==='cut'?'':`<label>Length<input type="number" name="me-dur" min="0.1" max="${MAX_DUR}" step="0.1" value="${r2(Number(t?.dur)||1)}"><small>s</small></label>`}
       ${type==='dip'?`<label>Dips through<input type="color" name="me-color" value="${esc(t?.color||'#000000')}"></label>`:''}</div>${why}
-      ${type!=='cut'?'<p class="director-hint">The live view and Render still cut at the cut point; the film render shows the blend.</p>':''}
+      ${type!=='cut'?'<p class="director-hint">The live view cuts at the cut point; Render still and the film show the blend.</p>':''}
       <div class="director-grid"><label title="The moment of the source this clip starts on">Source in<input type="number" name="me-in" min="0" step="0.1" value="${r2(Number(me.sc.offset)||0)}"><small>s</small></label><label title="The moment of the source it ends on (the clip's length follows, up to the next clip)">Source out<input type="number" name="me-out" min="0" step="0.1" value="${r2(sourceOut(me))}"><small>s</small></label><label>Speed<input type="number" name="me-rate" min="0.25" max="4" step="0.05" value="${rate}"><small>×</small></label></div>
       <div class="director-actions"><button type="button" data-graphic-action="earlier" ${k>0?'':'disabled'} title="Swap with the clip before (ripple: the clips keep their lengths)">◀ Earlier</button><button type="button" data-graphic-action="later" ${k<clips.length-1?'':'disabled'} title="Swap with the clip after">Later ▶</button><button type="button" data-graphic-action="split" data-graphic-index="${me.i}" title="Split at the playhead (Ctrl/Cmd+K)">✂ Split</button><button type="button" class="danger" data-graphic-action="delete" data-graphic-index="${me.i}">Delete clip</button></div></div>`;
   }
   return `<section class="movie-edit" data-movie-edit><h4>Movie edit</h4>
-    <p class="director-hint">The movie on the TV, clip by clip. Click a clip or a seam; Ctrl/Cmd+drag a clip on the timeline to move it between others (ripple). The live view and Render still show a cut at every cut point; the film render (render-cut) shows the dissolves and dips.</p>
+    <p class="director-hint">The movie on the TV, clip by clip. Click a clip or a seam; Ctrl/Cmd+drag a clip on the timeline to move it between others (ripple). The live view shows a cut at every cut point; Render still (composed on this machine, a moment the first time) and the film show the dissolves and dips.</p>
     ${errs.length?`<p class="director-hint movie-errors">${errs.map(esc).join(' ')}</p>`:''}
     <ol class="movie-clips">${clips.map(row).join('')}</ol>${fields||'<p class="director-hint">Select a clip to set its transition, source in / out and speed.</p>'}</section>`;
 }

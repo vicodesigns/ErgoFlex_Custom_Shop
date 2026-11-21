@@ -4,6 +4,8 @@
 //   GET  /api/studio-state            {rev, values:{key: raw localStorage string}}
 //   GET  /api/studio-state/changes?since=REV&client=ID   keys others changed since REV
 //   POST /api/studio-state            {client, by, changes:[{key, value, base} | {key, deleted:true}]}
+//   POST /api/screen-edit             {cut: '/exports/<cut dir>', shot: {id, seconds, screens}} -> {screens, tracks, report, cached}
+//                                     the movie's edit list composed for the Director's Render still (screen-edit-for-director.mjs)
 // backed by studio-state.json (committed, so agents see each other's edits).
 // Pages get /__studio/sync.js injected first in <head> (pulls the state into
 // localStorage before the app reads it, pushes ergoflex* writes back) and the
@@ -18,7 +20,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import send from 'send';
-import { execFile } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
+import os from 'node:os';
 import chokidar from 'chokidar';
 import { SPECS, SHARED_KEY, mergeWrite, changedEntries } from './studio-state/merge.mjs';
 import { load, write } from './studio-state/file.mjs';
@@ -67,6 +70,32 @@ const readBody = (req, limit = 64 << 20) => new Promise((ok, fail) => {
   req.on('end', () => ok(Buffer.concat(parts).toString('utf8'))); req.on('error', fail);
 });
 const clients = new Set(), peopleBuilds = new Map();
+// The Director's Render still with the movie's edit list composed (docs/screen-edit-list/CONTRACT.md): one compose at a
+// time (a queue), in a child at a lower priority (nice 10 on the desk; ffmpeg inherits it), answers cached by the
+// request; the composer itself reuses a composed mp4 by its compose key (exports/<cut>/screens/edl/).
+let composeQueue = Promise.resolve();
+const composeCache = new Map();
+function composeForDirector(cut, shot) {
+  const key = JSON.stringify([cut, shot.id, shot.seconds, shot.screens]);
+  if (composeCache.has(key)) return Promise.resolve({ ...composeCache.get(key), cached: true });
+  const run = () => new Promise((ok, fail) => {
+    const tmp = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'screen-edit-')), 'shot.json');
+    fs.writeFileSync(tmp, JSON.stringify(shot));
+    const child = spawn(process.execPath, [path.join(here, 'experience/screen-edit-for-director.mjs'), tmp, path.join(cut, 'screens', 'edl')], { cwd: root, stdio: ['ignore', 'pipe', 'pipe'] });
+    try { os.setPriority(child.pid, 10); } catch { /* not allowed here: normal priority */ }
+    let out = '', err = '';
+    const timer = setTimeout(() => child.kill('SIGKILL'), 10 * 60 * 1000);
+    child.stdout.on('data', d => { out += d; }); child.stderr.on('data', d => { err += d; });
+    child.on('close', code => {
+      clearTimeout(timer); fs.rmSync(path.dirname(tmp), { recursive: true, force: true });
+      let r = null; try { r = JSON.parse(out); } catch { /* below */ }
+      if (code !== 0 || !r || r.error) return fail(Error((r?.error || err.trim().split('\n').slice(-2).join(' ') || 'compose failed (' + code + ')').slice(0, 400)));
+      if (composeCache.size > 40) composeCache.delete(composeCache.keys().next().value);
+      composeCache.set(key, r); ok({ ...r, cached: false });
+    });
+  });
+  const p = composeQueue.then(run, run); composeQueue = p.catch(() => {}); return p;
+}
 const CLIENT_JS = fs.readFileSync(path.join(here, 'studio-state/sync.js'), 'utf8');
 const RELOAD_JS = `(()=>{const es=new EventSource('/__studio/events');es.onmessage=e=>{if(e.data==='css'){for(const l of document.querySelectorAll('link[rel=stylesheet]')){const u=new URL(l.href);u.searchParams.set('_r',Date.now());l.href=u.href;}}else if(e.data==='reload')location.reload();};})();`;
 
@@ -105,6 +134,18 @@ async function handle(req, res) {
       try { await peopleBuilds.get(id); } catch (e) { return json(res, 500, { error: String(e.message).slice(0, 400) }); }
     }
     return json(res, 200, { id, built: !had });
+  }
+  //   POST /api/screen-edit   {cut, shot: {id, seconds, screens}}   (above: composeForDirector). Only from this machine;
+  // a shot without an edit list (no screens entry with transitionIn) answers at once with its screens, nothing composed.
+  if (p === '/api/screen-edit' && req.method === 'POST') {
+    if (!['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress)) return json(res, 403, { error: 'The movie edit is composed on the desk machine only.' });
+    let body; try { body = JSON.parse(await readBody(req, 4 << 20)); } catch (e) { return json(res, 400, { error: String(e.message) }); }
+    const cut = String(body?.cut || '').replace(/^\//, ''), shot = body?.shot;   // ('/exports/<cut>' or 'exports/<cut>': one key)
+    if (!/^exports\/[A-Za-z0-9][A-Za-z0-9._-]{0,80}$/.test(cut) || !fs.existsSync(path.join(root, cut, 'review-cut.json'))) return json(res, 400, { error: 'Not a film cut.' });
+    if (!shot || typeof shot !== 'object' || !Array.isArray(shot.screens) || !/^[A-Za-z0-9_-]{1,40}$/.test(String(shot.id || '')) || !(Number(shot.seconds) > 0)) return json(res, 400, { error: 'Not a chapter shot.' });
+    if (!shot.screens.some(sc => sc && typeof sc === 'object' && sc.transitionIn)) return json(res, 200, { screens: shot.screens, tracks: [], report: [], composed: false });
+    try { return json(res, 200, { ...(await composeForDirector(cut, { id: shot.id, seconds: Number(shot.seconds), screens: shot.screens })), composed: true }); }
+    catch (e) { return json(res, 500, { error: String(e.message).slice(0, 400) }); }
   }
   //   POST /__film/duplicate?from=/exports/<cut dir>&name=<name>   -> { id, dir, chapters }   (tools/experience/film-cuts.py)
   // A copy of a film cut as a new cut the Director can open. Only from this machine; writes exports/ only (not watched).

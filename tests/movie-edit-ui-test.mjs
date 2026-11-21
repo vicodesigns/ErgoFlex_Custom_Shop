@@ -18,7 +18,7 @@ const L=JSON.parse(read('tests/fixtures/screen-edit-list/media-ch10.json')).scre
   assert.deepEqual(chips,[[1,5,6],[2,11.1,11.9]],'chips at the spans the composer blends');
   assert.match(html,/class="clip-transition clip-transition-dip selected"/,'the selected clip\'s chip');assert.match(html,/--dip:#000000/);
   assert.doesNotMatch(html,/data-clip-seam/,'no plain cut here');
-  assert.match(html,/the live view and Render still cut at 6 s; the film render shows the blend/);
+  assert.match(html,/the live view cuts at 6 s; Render still and the film show the blend/);
   assert.equal(trackLabel(L,key,T),'Movie <small>3 clips</small>');
 }
 // a plain cut gets a +; a clamped dissolve a dashed chip with the reason
@@ -84,5 +84,10 @@ assert.match(g,/const r=addFromBin\(graphicScreens\(\),mk,\{src:binPick,seconds:
 assert.match(g,/if\(binPick\)\{marks\[action==='mark-in'\?'in':'out'\]=t;/,'bin source: the marks');
 assert.match(g,/name:action==='mark-in'\?'me-in':'me-out',value:String\(t\)/,'clip source: its Source in \/ out');
 assert.equal(movieTrack('music',[{target:'main-landscape',src:'x.mp4'}]),null,'the game montage: no clip track');
+{const dm=read('experience/director.mjs');
+ assert.match(dm,/if\(cutDir&&Array\.isArray\(job\.screens\)&&job\.screens\.some\(sc=>sc&&sc\.transitionIn\)\)\{/,'Render still composes only an edit list');
+ assert.match(dm,/await fetch\('\/api\/screen-edit',\{method:'POST'/);assert.match(dm,/job\.screens=d\.screens;/);
+ assert.match(dm,/composed=' · movie edit NOT composed \('\+error\.message\+'\): cuts shown';/,'a failure is said on the still');
+ const sv=read('tools/studio-server.mjs');assert.match(sv,/os\.setPriority\(child\.pid, 10\)/,'a lower priority');assert.match(sv,/const p = composeQueue\.then\(run, run\); composeQueue = p\.catch/,'one at a time');}
 assert.equal(trackClips(L,key,T).length,3);
 console.log('movie-edit-ui-test: ok (chips at the composer\'s spans, + on cuts, Movie edit section and fields, wired for the movie track only)');

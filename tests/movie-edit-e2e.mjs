@@ -6,6 +6,7 @@
 //   2  split at 6 s and 11.5 s (three clips, the source continuing); clip 2's source in 70 s; the + on the 6 s cut ->
 //      Dissolve 1 s: a chip over 5-6 s; clip 3: Dip 0.8 s through black: a chip over 11.1-11.9 s
 //                                                                               (screenshot movie-edit-2-after.png)
+//      Render still at 5.5 s: composed on this machine (POST /api/screen-edit), said on the still (movie-edit-still-dissolve.jpg)
 //      Delete on the dip chip takes the dip only (the clip stays); Ctrl+Z
 //   3  ◀ Earlier on clip 3 (ripple: lengths kept), Ctrl+Z; Ctrl+drag clip 1 past clip 3 (ripple), Ctrl+Z
 //   4  Export cut: the movie screen's entries as set (transitionIn on the incoming clips, no missing flag)
@@ -84,6 +85,13 @@ try{
   assert.ok(Math.abs(chips[0].from-5)<.08&&Math.abs(chips[0].to-6)<.08,'dissolve chip over 5-6 s');
   assert.ok(Math.abs(chips[1].from-11.1)<.08&&Math.abs(chips[1].to-11.9)<.08,'dip chip over 11.1-11.9 s');
   await shoot('movie-edit-2-after.png');log('2 ok: split, source in, dissolve and dip chips');
+  // Render still inside the dissolve (5.5 s): the movie edit composed on this machine (POST /api/screen-edit), said on the still
+  {await seek(page,5.5);await page.keyboard.down('Shift');await page.keyboard.press('KeyR');await page.keyboard.up('Shift');
+   await until(async()=>/Still rendered|Render still failed/.test(await status(page)),'Render still with the movie edit',600000);
+   const note=await page.$eval('#film-still',e=>e.textContent.replace(/\s+/g,' ')).catch(()=>'');log('still note:',note.slice(0,300));
+   assert.match(note,/movie edit (composed|\(composed before\))/,'the still was rendered with the composed movie edit');
+   const url=await page.evaluate(()=>document.querySelector('#film-still img.still-main')?.src||null);if(url?.startsWith('data:'))fs.writeFileSync(path.join(shots,'movie-edit-still-dissolve.jpg'),Buffer.from(url.split(',')[1],'base64'));
+   await page.keyboard.press('Escape');await wait(500);}
   // Delete on a picked chip takes the transition, not the clip (the timeline's Delete: graphics.remove)
   {const p=await reach(`#director-timeline [data-movie-track] [data-clip-transition="${l[2].i}"]`);await page.mouse.click(p.x,p.y);await wait(600);}
   await page.$eval('#director-timeline .timeline-viewport',e=>e.focus());await page.keyboard.press('Delete');await wait(800);
