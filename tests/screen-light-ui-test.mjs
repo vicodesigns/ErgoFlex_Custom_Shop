@@ -10,7 +10,9 @@ import {cleanLighting} from '../experience/film-lighting.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=f=>fs.readFileSync(path.join(root,f),'utf8').replace(/\r/g,'');
 const cut=JSON.parse(read('exports/cinematic-intro-cut-vicos-3rd-cut/review-cut.json')),shot=id=>cut.shots.find(s=>s.id===id);
-const music=shot('music'),media=shot('media');
+// The chapters' own values (the contract's ch 9 / ch 10 picks), as data here: on the desk they live in Vico's cut folder,
+// a checkout of main may not carry them (21 Nov 2026).
+const media={sceneGlobals:{screenLight:{gain:.6,saturation:1.4,keepHue:true}}},music={sceneGlobals:{screenLight:{gain:.55,saturation:1.5}}};
 
 // ---- 1 only the media chapters (ledMode 'media')
 assert.deepEqual(cut.shots.filter(s=>isMedia(s)).map(s=>s.id).sort(),['media','music'],'ch 9 music and ch 10 media');
