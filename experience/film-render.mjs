@@ -19,6 +19,9 @@ export function filmRenderShot(film,shot,keys){
   const lit=exportLighting(shot);
   if(Array.isArray(shot.screens))next.screens=structuredClone(shot.screens);
   withScreenLook(next,shot);   // (the Graphics tab's screen look)
+  // a clip whose source is not on this machine (build-round8-director.py local_screens: missing) is kept in the cut, not played
+  // (only then; an entry's implicit target is its index, so the targets are pinned first)
+  if(Array.isArray(next.screens)&&next.screens.some(sc=>sc?.missing===true))next.screens=next.screens.map((sc,i)=>({...sc,target:sc.target??i})).filter(sc=>sc.missing!==true);
   withSonar(next,shot);        // (the Graphics tab's Sonar, a proximity chapter's)
   for(const k of ['ledStatus','ledNeutral','ledColor'])if(lit[k]!==undefined)next[k]=structuredClone(lit[k]);
   if(lit.ledStatus&&!lit.ledNeutral)delete next.ledNeutral;

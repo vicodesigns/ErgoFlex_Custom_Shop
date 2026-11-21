@@ -979,6 +979,28 @@ def local_clip(src):
     return next((a for a in alts if os.path.isfile(os.path.join(root, a))), None)
 
 
+def local_screens(screens, where=''):
+    """Screen entries with their clips pointed at copies on this machine (local_clip). A clip that is not here is KEPT,
+    its src as it was, with missing: true, and named on stderr (21 Nov 2026, the movie's edit list,
+    docs/screen-edit-list/CONTRACT.md section 7: dropping it deleted clips from the Director's film shot, and the next
+    Export cut wrote the shorter list into the film). The Director shows such a clip as missing and does not play it;
+    the import takes the flag off again (export_screens)."""
+    out = []
+    for sc in screens or []:
+        if not isinstance(sc, dict): continue
+        c = local_clip(sc.get('src', ''))
+        if c: out.append({k: v for k, v in sc.items() if k != 'missing'} | {'src': c})
+        else:
+            out.append(dict(sc, missing=True))
+            print(f'  {where}: screen clip not on this machine, kept (missing): {sc.get("src")}', file=sys.stderr)
+    return out
+
+
+def export_screens(screens):
+    """An export's screens as the film keeps them: the Director's missing flag (local_screens) off."""
+    return [{k: v for k, v in sc.items() if k != 'missing'} for sc in screens if isinstance(sc, dict)] if isinstance(screens, list) else screens
+
+
 def film_list(rows):
     """HQ28 (Vico: the Director showed the app's default props, not the film's; no way to step between chapters):
     <hq>/director-film/<id>.json is each chapter's FULL built film shot (what the renderer gets; chapter 1 is
@@ -994,11 +1016,7 @@ def film_list(rows):
     before = {c.get('id'): c for c in load(cl).get('chapters', [])} if os.path.exists(cl) else {}
     for n, cid, page, js, src, cs, mine in rows:
         shot = json.loads(json.dumps(full[cid]))
-        screens = []
-        for sc in shot.get('screens') or []:
-            c = local_clip(sc.get('src', ''))
-            if c: screens.append(dict(sc, src=c))
-        if 'screens' in shot: shot['screens'] = screens
+        if 'screens' in shot: shot['screens'] = local_screens(shot['screens'], cid)
         dump(os.path.join(H, 'director-film', f'{cid}.json'), shot)
         # Chapters the film renders as sub-shots (hero: shots/13-subshots.json, one desk build each): the Director's
         # Desk versions lane and live stage use them (experience/desk-versions.mjs), clips local like the shot's.
@@ -1007,14 +1025,14 @@ def film_list(rows):
             subs = []
             for x in load(sp)['shots']:
                 x = json.loads(json.dumps(x))
-                if 'screens' in x: x['screens'] = [dict(sc, src=c) for sc in x['screens'] for c in [local_clip(sc.get('src', ''))] if c]
+                if 'screens' in x: x['screens'] = local_screens(x['screens'], f'{cid} {x.get("subshot", "")}')
                 subs.append(x)
             # The finale renders with --storage post/finale-seed.json (render-finale.sh): its saved builds are the
             # presets' desks, so the Director's stage takes them too (in its memory-only storage).
             seed = os.path.join(H, 'post', 'finale-seed.json')
             # Bundles of film sub-shots an import dropped (apply_versions): the Director dresses that model from them.
             dp = director_file(cid); lib = (load(dp).get('versionLibrary') or []) if os.path.exists(dp) else []
-            lib = [dict(x, screens=[dict(sc, src=c) for sc in x['screens'] for c in [local_clip(sc.get('src', ''))] if c]) if 'screens' in x else x for x in lib]
+            lib = [dict(x, screens=local_screens(x['screens'], f'{cid} library')) if 'screens' in x else x for x in lib]
             dump(os.path.join(H, 'director-film', f'{cid}-subshots.json'), {'name': load(sp).get('name', ''), 'shots': subs,
                  **({'storage': f'{base}/post/finale-seed.json'} if os.path.exists(seed) else {}), **({'library': lib} if lib else {})}, indent=None)
         items.append({'n': n, 'id': cid, 'title': src.get('title', ''), 'seconds': float(src['seconds']),
@@ -1200,6 +1218,7 @@ def run_import(export):
     # The Lighting lane's edits ride in the export's shot; keep them beside the camera keys and clips (run_pass applies them).
     shot = (d.get('shots') or [{}])[0]
     lighting = {k: shot[k] for k in LIGHT_FIELDS if k in shot}
+    if 'screens' in lighting: lighting['screens'] = export_screens(lighting['screens'])   # (the Director's missing flag: not the film's)
     if isinstance(lighting.get('timeOfDay'), list) and len(lighting['timeOfDay']) >= 2:
         tod = lighting['timeOfDay']
         if tod[0].get('at') == 0 and tod[0].get('mode') == 'night' and tod[1].get('at') == 0 and tod[1].get('mode') != 'night':

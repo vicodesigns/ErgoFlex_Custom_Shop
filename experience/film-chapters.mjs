@@ -48,6 +48,9 @@ export function liveFilmShot(film,shot){
   const next={...film,id:shot.id,seconds:shot.seconds},lit=exportLighting(shot);if(shot.motion)next.motion=shot.motion;delete next.quality;
   if(Array.isArray(shot.screens))next.screens=structuredClone(shot.screens);
   withScreenLook(next,shot);   // (the Graphics tab's screen look: experience/screen-look.mjs)
+  // a clip whose source is not on this machine (build-round8-director.py local_screens: missing) is kept in the cut, not played
+  // (only then; an entry's implicit target is its index, so the targets are pinned first)
+  if(Array.isArray(next.screens)&&next.screens.some(sc=>sc?.missing===true))next.screens=next.screens.map((sc,i)=>({...sc,target:sc.target??i})).filter(sc=>sc.missing!==true);
   withSonar(next,shot);        // (the Graphics tab's Sonar, a proximity chapter's: experience/sonar.mjs)
   // Lighting edited in the Director (ledStatus present) replaces the film's.
   if(lit.ledStatus){next.ledStatus=lit.ledStatus;if(lit.ledNeutral)next.ledNeutral=lit.ledNeutral;else delete next.ledNeutral;if(lit.ledColor)next.ledColor=lit.ledColor;}
