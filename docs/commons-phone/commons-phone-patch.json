@@ -1,0 +1,357 @@
+{
+ "chapter": "commons",
+ "note": "Commons phone: Yara takes the charger phone (5.1-5.4 s); Mia reaches over and puts her phone on the charger at the release time; charging cue. Merge by key: cast entries by key, people.when by key, sceneEdits by (match, add id | material).",
+ "releaseSeconds": 12.7,
+ "people": {
+  "when": {
+   "mia-waits": [
+    [
+     0,
+     13.478,
+     0,
+     0.5
+    ]
+   ],
+   "mia-works": [
+    [
+     12.978,
+     99,
+     0.5,
+     0
+    ]
+   ]
+  },
+  "cast": {
+   "mia-waits": {
+    "postures": {
+     "people-mia-power-phone": {
+      "poseKeys": [
+       {
+        "t": 11.6,
+        "pose": {
+         "spine_02": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+         ],
+         "spine_03": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+         ],
+         "clavicle_r": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+         ],
+         "upperarm_r": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+         ],
+         "lowerarm_r": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+         ],
+         "hand_r": [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+         ]
+        }
+       },
+       {
+        "t": 12.15,
+        "pose": {
+         "spine_02": [
+          -0.1185,
+          -0.1122,
+          0.0105,
+          0.9865
+         ],
+         "spine_03": [
+          -0.0429,
+          -0.1086,
+          -0.0324,
+          0.9926
+         ],
+         "clavicle_r": [
+          -0.0984,
+          -0.1131,
+          -0.1245,
+          0.9808
+         ],
+         "upperarm_r": [
+          -0.0989,
+          -0.0802,
+          0.0466,
+          0.9908
+         ],
+         "lowerarm_r": [
+          0.1297,
+          0.0893,
+          0.0909,
+          0.9833
+         ],
+         "hand_r": [
+          -0.1218,
+          0.0938,
+          -0.0023,
+          0.9881
+         ]
+        }
+       },
+       {
+        "t": 12.7,
+        "pose": {
+         "spine_02": [
+          -0.1797,
+          -0.2025,
+          0.086,
+          0.9588
+         ],
+         "spine_03": [
+          -0.0592,
+          -0.2045,
+          -0.0125,
+          0.977
+         ],
+         "clavicle_r": [
+          -0.1729,
+          -0.1064,
+          -0.1729,
+          0.9638
+         ],
+         "upperarm_r": [
+          -0.2325,
+          -0.1022,
+          -0.0768,
+          0.9642
+         ],
+         "lowerarm_r": [
+          0.1112,
+          0.0584,
+          0.1106,
+          0.9859
+         ],
+         "hand_r": [
+          -0.2964,
+          0.2451,
+          0.223,
+          0.8957
+         ]
+        }
+       }
+      ]
+     }
+    }
+   },
+   "mia-works": {
+    "postures": {
+     "people-mia-power-type-30": {
+      "poseKeys": [
+       {
+        "t": 12.7,
+        "pose": {
+         "spine_02": [
+          -0.1797,
+          -0.2025,
+          0.086,
+          0.9588
+         ],
+         "spine_03": [
+          -0.0592,
+          -0.2045,
+          -0.0125,
+          0.977
+         ],
+         "clavicle_r": [
+          -0.1729,
+          -0.1064,
+          -0.1729,
+          0.9638
+         ],
+         "upperarm_r": [
+          -0.2325,
+          -0.1022,
+          -0.0768,
+          0.9642
+         ],
+         "lowerarm_r": [
+          0.1112,
+          0.0584,
+          0.1106,
+          0.9859
+         ],
+         "hand_r": [
+          -0.2964,
+          0.2451,
+          0.223,
+          0.8957
+         ],
+         "upperarm_l": [
+          0,
+          0,
+          0,
+          1
+         ],
+         "lowerarm_l": [
+          0,
+          0,
+          0,
+          1
+         ],
+         "hand_l": [
+          0,
+          0,
+          0,
+          1
+         ]
+        }
+       },
+       {
+        "t": 13.778,
+        "pose": {
+         "upperarm_l": [
+          -0.0885,
+          0.0041,
+          -0.0076,
+          0.996
+         ],
+         "lowerarm_l": [
+          0.1444,
+          0,
+          -0.001,
+          0.9895
+         ],
+         "hand_l": [
+          -0.1457,
+          -0.0909,
+          0.1129,
+          0.9787
+         ],
+         "upperarm_r": [
+          -0.1486,
+          0.0202,
+          -0.0302,
+          0.9882
+         ],
+         "lowerarm_r": [
+          0.1521,
+          0,
+          0.0011,
+          0.9884
+         ],
+         "hand_r": [
+          -0.0512,
+          0.1372,
+          -0.2639,
+          0.9534
+         ],
+         "spine_02": [
+          0,
+          0,
+          0,
+          1
+         ],
+         "spine_03": [
+          0,
+          0,
+          0,
+          1
+         ],
+         "clavicle_r": [
+          0,
+          0,
+          0,
+          1
+         ]
+        }
+       }
+      ]
+     }
+    },
+    "swap": 0.02,
+    "change": {
+     "seconds": 1.1,
+     "arms": [
+      0.15,
+      1.0
+     ]
+    }
+   }
+  }
+ },
+ "sceneEdits": [
+  {
+   "match": "^Prop:ergoflex-phone$",
+   "label": "iPhone \u00b7 Wireless charger (Yara takes her phone)",
+   "show": {
+    "from": 0.0,
+    "to": 5.4,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-phone"
+   },
+   "id": "mph01",
+   "match": "^Added prop:ergoflex-phone#mph01$",
+   "label": "iPhone \u00b7 Mia's phone on the charger",
+   "parent": "desk",
+   "position": [
+    -0.6238,
+    0.0149,
+    0.3056
+   ],
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "show": {
+    "from": 12.7,
+    "to": 10000
+   }
+  },
+  {
+   "match": "^Added prop:ergoflex-phone#mph01$",
+   "label": "Charging cue: Mia's phone screen brightens a little when it starts charging",
+   "materialName": "^hUlRcbieVuIiOXG$",
+   "material": {
+    "emissive": "#9fd8ff",
+    "emissiveIntensity": [
+     [
+      12.7,
+      0
+     ],
+     [
+      12.95,
+      0
+     ],
+     [
+      13.5,
+      0.6
+     ],
+     [
+      14.5,
+      0.3
+     ]
+    ]
+   }
+  }
+ ]
+}
