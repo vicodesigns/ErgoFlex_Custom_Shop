@@ -1,29 +1,179 @@
 {
-  "about": "Oilers (chapter 6) Noah's touchscreen pull and tap. Patch BY KEY on top of Vico's 2nd cut oilers (export c3273f5772d1, branch cut/vicos-2nd-baseline-20261120, people.cast entries addressed by their `key`). Needs the studio.js stowed-screen commit of this branch (see code_change); without it the screen still jumps when it opens. No other film key changes.",
+  "about": "Oilers (chapter 6) Noah's touchscreen pull and tap. Patch BY KEY on top of Vico's 2nd cut oilers (export c3273f5772d1, people.cast entries addressed by `key`). Needs the studio.js commit of this branch (a film that poses the touchscreen uses the standard screen, which comes out of the housing inside the right wing panel). REVISED after Vico's review: the first revision put Noah at [-2930,-1080] and moved the stowed screen onto the wide mount, which sits ON the wing panel plane; wrong.",
   "root_causes": [
-    "A. (code) studio.js setScreenProgress: on a 60x30 desk the open screen is the 'wide' variant, mounted at the 60x30 top's front-right corner (wideMount), but the STOWED screen is the desk model's own Touch_Screen* parts, left where the 48x30 desk has them. The instant the film's touchscreen progress passes 0.001 the stowed parts hide and the wide screen appears 91 mm to the right (room z) and 168 mm nearer the front (room x) of where it was stowed: a 190 mm jump (measured: stowed display centre room (-3327, 1067, -1677), wide display at slide 0 (-3161, 1067, -1585)).",
-    "B. (data) Vico's 2nd cut moved Noah 189 mm in room x and 49 mm in room z away from the spot the stand-screen-* postures are built for (tools/people/cast.py: Noah at [-2930, -1080] turn -146, the same placement as the 3rd cut): he stands where the STOWED screen is, so his hand takes it at x -3289 while the screen opens at x -3161 (it appears to his right).",
-    "C. (data) the walk's last stride (T 4.8-5.0) swings his right hand into his hip (hand 0.81 of the torso ellipse at T 4.96, solver harness), the posture's own pose is clear (>= 1.4)."
+    "A. (code) On a 60x30 desk setScreenProgress shows the 'wide' screen variant when the film opens the screen. The wide mount (studio.js wideMount) sits at the 60x30 top's front corner, z 4.614..4.925 in stage units, i.e. it STRADDLES the right wing panel (Desktop_2, a plate at z 4.834..4.861, x -3.90..-2.41, y 0.90..1.77). The desk model's stowed screen and rails (Touch_Screen*) are INSIDE the panel (z 4.867..5.179). So at progress 0.002 the screen jumped through the wing panel to the outside: triangle overlap with Desktop_2 of 965 triangles at progress 0.002, 831 at 0.05, 768 at 0.1, 64 at 0.2 to 0.3 (rails), and a 190 mm sideways jump of the display (stowed centre room (-3327,-1677), wide at slide 0 (-3161,-1585)).",
+    "B. (data) Noah's hand target: the stand-screen-* postures were built against the WIDE screen (button at room (-3161.4, 1078.8, -1423.7)). With the screen coming out of the housing inside the wing (standard variant: display centre (-3327, 1067, -1677) at slide 0, button 168 mm further in room -x and 92 mm further in room -z than the wide one) Noah has to stand 168 mm / 92 mm further along: [-3098, -1172].",
+    "C. (data) the walk's last stride (T 4.8-5.0) swings his right hand into his hip (worst torso r 0.81 at T 4.96); window below."
   ],
   "vicos_manual_offsets_replaced": [
-    "people.cast[key=noah-steps].walk.path[2] and the `at` of noah-pulls, noah-taps, noah-watches: [-3119, -1031] (Vico's drag: 189 mm / 49 mm off the built spot) -> [-2930, -1080]. Not needed after fix A+B.",
+    "people.cast[key=noah-steps].walk.path[2] and the `at` of noah-pulls, noah-taps, noah-watches: [-3119, -1031] (Vico's drag) -> [-3098, -1172] (21 mm / 141 mm from his drag; the hand follows the real screen edge within 5 mm at 5.4-6.5 s).",
     "people.cast[key=noah-pulls].postures.people-noah-stand-screen-pull.poseKeys: one key t 5.433 upperarm_r [-0.3238,0.0544,-0.0027,0.9446] lowerarm_r [0.2673,0.0168,-0.0754,0.9605] hand_r [-0.1905,-0.234,0.401,0.8649] (a 38 degree turn pulling the hand 190 mm back toward the screen's edge). Removed: with Noah at the built spot it would carry the hand 190 mm too far.",
     "people.cast[key=noah-steps].postures.people-noah-stand-wait.poseKeys: the same three turns as a single key at t 5.3 (held for the whole walk). Replaced by a window that is active only for the last stride, below.",
     "The 'touchscreen' block ({from 0, open [5.4 -> 0.5 (1.1 s), 6.5 -> 1 (1.1 s)], screen keys}) is IDENTICAL to the cine baseline and to the 3rd cut: nothing of Vico's there; it is what act by [0,0,120] / dur 1.1 is timed to. It stays unchanged."
   ],
   "set": [
-    { "cast": "noah-steps",   "path": "walk.path[2]", "from": [-3119, -1031], "to": [-2930, -1080] },
-    { "cast": "noah-pulls",   "path": "at",           "from": [-3119, -1031], "to": [-2930, -1080] },
-    { "cast": "noah-taps",    "path": "at",           "from": [-3119, -1031], "to": [-2930, -1080] },
-    { "cast": "noah-watches", "path": "at",           "from": [-3119, -1031], "to": [-2930, -1080] },
-    { "cast": "noah-pulls",   "path": "postures",     "to": "(delete the whole postures object: the pull posture as built)" },
-    { "cast": "noah-steps",   "path": "postures.people-noah-stand-wait.poseKeys", "to": [
-      { "t": 4.5,  "pose": { "upperarm_r": [0, 0, 0, 1], "lowerarm_r": [0, 0, 0, 1], "hand_r": [0, 0, 0, 1] } },
-      { "t": 4.8,  "pose": { "upperarm_r": [-0.2608, 0.0438, -0.0022, 0.9644], "lowerarm_r": [0.2149, 0.0135, -0.0606, 0.9747], "hand_r": [-0.155, -0.1904, 0.3263, 0.9128] } },
-      { "t": 5.0,  "pose": { "upperarm_r": [-0.2608, 0.0438, -0.0022, 0.9644], "lowerarm_r": [0.2149, 0.0135, -0.0606, 0.9747], "hand_r": [-0.155, -0.1904, 0.3263, 0.9128] } },
-      { "t": 5.38, "pose": { "upperarm_r": [0, 0, 0, 1], "lowerarm_r": [0, 0, 0, 1], "hand_r": [0, 0, 0, 1] } }
-    ] }
+    {
+      "cast": "noah-steps",
+      "path": "walk.path[2]",
+      "from": [
+        -3119,
+        -1031
+      ],
+      "to": [
+        -3098,
+        -1172
+      ]
+    },
+    {
+      "cast": "noah-pulls",
+      "path": "at",
+      "from": [
+        -3119,
+        -1031
+      ],
+      "to": [
+        -3098,
+        -1172
+      ]
+    },
+    {
+      "cast": "noah-taps",
+      "path": "at",
+      "from": [
+        -3119,
+        -1031
+      ],
+      "to": [
+        -3098,
+        -1172
+      ]
+    },
+    {
+      "cast": "noah-watches",
+      "path": "at",
+      "from": [
+        -3119,
+        -1031
+      ],
+      "to": [
+        -3098,
+        -1172
+      ]
+    },
+    {
+      "cast": "noah-pulls",
+      "path": "postures",
+      "to": "(delete the whole postures object: the pull posture as built)"
+    },
+    {
+      "cast": "noah-steps",
+      "path": "postures.people-noah-stand-wait.poseKeys",
+      "to": [
+        {
+          "t": 4.5,
+          "pose": {
+            "upperarm_r": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "lowerarm_r": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "hand_r": [
+              0,
+              0,
+              0,
+              1
+            ]
+          }
+        },
+        {
+          "t": 4.8,
+          "pose": {
+            "upperarm_r": [
+              -0.2608,
+              0.0438,
+              -0.0022,
+              0.9644
+            ],
+            "lowerarm_r": [
+              0.2149,
+              0.0135,
+              -0.0606,
+              0.9747
+            ],
+            "hand_r": [
+              -0.155,
+              -0.1904,
+              0.3263,
+              0.9128
+            ]
+          }
+        },
+        {
+          "t": 5.0,
+          "pose": {
+            "upperarm_r": [
+              -0.2608,
+              0.0438,
+              -0.0022,
+              0.9644
+            ],
+            "lowerarm_r": [
+              0.2149,
+              0.0135,
+              -0.0606,
+              0.9747
+            ],
+            "hand_r": [
+              -0.155,
+              -0.1904,
+              0.3263,
+              0.9128
+            ]
+          }
+        },
+        {
+          "t": 5.38,
+          "pose": {
+            "upperarm_r": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "lowerarm_r": [
+              0,
+              0,
+              0,
+              1
+            ],
+            "hand_r": [
+              0,
+              0,
+              0,
+              1
+            ]
+          }
+        }
+      ]
+    }
   ],
-  "unchanged": ["noah-pulls.act {at 5.4, dur 1.1, by [0,0,120]}", "noah-taps.act {at 8.2}", "turn -146 on pulls/taps/watches", "noah-talks", "noah-steps.at, walk.start 4, walk.pace 2.2, walk.path[0..1]", "when", "touchscreen", "motion (lift clip 8.5-11.5)", "sceneEdits, sceneDeskEdits, camera"],
-  "code_change": "studio.js setScreenProgress: while a film poses the screen (touchscreenBeforeFilm set) and the desk is 60x30, the stowed Touch_Screen* parts are offset by the wide mount's x/z (x also plus the wide-vs-standard pivot difference) so the stowed screen stands where the wide screen starts. Only chapters with a `touchscreen` field (oilers only) are changed; the Studio's own Extend screen button is not touched."
+  "unchanged": [
+    "noah-pulls.act {at 5.4, dur 1.1, by [0,0,120]}",
+    "noah-taps.act {at 8.2}",
+    "turn -146 on pulls/taps/watches",
+    "noah-talks",
+    "noah-steps.at, walk.start 4, walk.pace 2.2, walk.path[0..1]",
+    "when",
+    "touchscreen",
+    "motion (lift clip 8.5-11.5)",
+    "sceneEdits, sceneDeskEdits, camera"
+  ],
+  "code_change": "studio.js setScreenProgress: while a film poses the screen (touchscreenBeforeFilm set) the 'standard' variant is shown on 60x30 too. Its display and rails coincide with the stowed housing (no jump, measured within 3 mm) and stay inside the wing panel for the whole slide (screen z min 4.867 > panel z max 4.861; triangle test: zero hits on Desktop_2 / Left wing trim at progress 0, 0.002 .. 0.5). Only chapters with a `touchscreen` field (oilers only) change; Studio and every other chapter keep the wide variant."
 }
