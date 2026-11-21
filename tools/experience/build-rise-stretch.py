@@ -13,6 +13,7 @@ no final newline). Run build-cine-score.py on the cut afterwards.
 """
 import copy, json, os, subprocess, sys, tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
+SKIN = 0.25
 def load(p): return json.load(open(p, encoding='utf-8'))
 def dump(p, d): open(p, 'w', encoding='utf-8', newline='\n').write(json.dumps(d, indent=1, ensure_ascii=True))
 def bake(seconds, plan):
@@ -29,10 +30,18 @@ D = load(os.path.join(HERE, 'rise-stretch-data.json'))[mode]
 rel = 'exports/' + os.path.basename(os.path.abspath(cut))
 rc = os.path.join(cut, 'review-cut.json'); cutd = load(rc)
 shot = next(s for s in cutd['shots'] if s['id'] == 'rise')
-if shot['seconds'] != 18: sys.exit('rise is not the 18 s chapter: already built?')
 OLD, NEW = 18.0, D['seconds']
+if shot['seconds'] == NEW:   # already built: only the pose keys of the stretch are set again (arms rest before and after)
+    cast = next(c for c in shot['people']['cast'] if c['key'] == 'maya-stand'); pk = cast['postures'][D['posture']]['poseKeys']
+    first = D['poseKeys'][0]['t']; pk[:] = [k for k in pk if k['t'] < first - 1e-6] + copy.deepcopy(D['poseKeys']); pk.sort(key=lambda k: k['t'])
+    shot['people']['skinRelief'] = SKIN   # Vico: Maya looks too HD in chapter 2 (the skin relief map at close framings): a quarter of the relief
+    cutd['shots'] = [shot if s['id'] == 'rise' else s for s in cutd['shots']]; dump(rc, cutd); dump(os.path.join(cut, 'director-film', 'rise.json'), shot)
+    dc = os.path.join(cut, 'director-camera-rise.json'); d = load(dc); d['people'] = {'v': 2, **shot['people']} if 'v' in d['people'] else shot['people']; dump(dc, d)
+    print(f'rise: {mode}, pose keys set again ({len(pk)})'); sys.exit(0)
+if shot['seconds'] != 18: sys.exit('rise is not the 18 s chapter')
 shift, after = (D['shift'], D['after']) if mode == 'A' else (NEW - OLD, 12.65)   # B: only the closing 5.5 s are new, after she sits
 shot['seconds'] = NEW
+shot['people']['skinRelief'] = SKIN   # (see the rebuild branch above)
 if mode == 'A':
     for c in shot['motion']['clips']:
         if c['start'] >= after - 1e-6: c['start'] = r3(c['start'] + shift)

@@ -1105,6 +1105,8 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
             }
             assert.ok(rig.wp[rig.side.l.arm[3]].z > up.hand + .1, who + ': the arms reach forward');
         }
+        // away from the desk before and after the reps her arms hang by her sides (not on the keys), and they are level in front of her in the reps
+        for (const since of [-5, 5.2 + 3]) { solve(since); const sh = rig.wp[rig.side.l.arm[1]], hand = rig.wp[rig.side.l.arm[3]]; assert.ok(sh.y - hand.y > .4, who + ': the arms hang at rest before and after (' + (sh.y - hand.y).toFixed(2) + ' m below the shoulder)'); }
         // between the reps she is back up (the pelvis where it was), and after the last one the hips are exactly where they were
         for (const since of [5.2 / 3, 5.2 * 2 / 3]) { solve(since); assert.ok(up.pelvis - rig.wp[rig.b.pelvis].y < .01, who + ': upright between reps'); }
         solve(5.2 + 1); const after = rig.wp[rig.b.pelvis].y; solve(9); assert.equal(rig.wp[rig.b.pelvis].y, after, who + ': after the action nothing moves');

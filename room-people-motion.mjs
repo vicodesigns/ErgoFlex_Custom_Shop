@@ -671,15 +671,19 @@ const feetStay = (rig, key) => { for (const s of ['l', 'r']) { const [thigh, cal
 // where the posture has them (shoulder-width), the pelvis sinks and goes back (the legs fold by themselves under the planted feet),
 // the trunk leans forward and the arms reach forward for balance; between reps she is upright, at the end she is back as built.
 // Pure: the same second is always the same pose. SQUAT: how far the hips go (m) and the trunk's lean (rad) at the bottom.
-export const SQUAT = { down: .34, back: .17, lean: .5, reach: .52 };
+export const SQUAT = { down: .34, back: .17, lean: .5, reach: .52, hang: .56 };
 export const squatDepth = (since, dur, reps) => since <= 0 || since >= dur ? 0 : (1 - Math.cos(Math.PI * 2 * reps * since / dur)) / 2;
 function squatAct(rig, key, act, life) {
     const reps = Math.max(1, act.squat.reps | 0), d = squatDepth(act.since, act.dur, reps) * life, arms = ss(-.7, -.05, act.since) * (1 - ss(act.dur + .05, act.dur + .7, act.since)) * life;
     spot.copy(key.wp[rig.b.pelvis]); spot.y -= SQUAT.down * d; spot.z -= SQUAT.back * d; rig.placePelvis(spot); rig.fk();
     bend(rig, X, SQUAT.lean * d); feetStay(rig, key);
+    // (the arms: at rest by her sides while she is away from the desk (the life ramps over the first and the last second of
+    // her window: hands come off the keys, hang, and go back to the keys on her way in), up in front of her for the reps)
     for (const s of ['l', 'r']) {
         const [, upper, lower, hand] = rig.side[s].arm; handAt.copy(rig.wp[upper]); handAt.z += SQUAT.reach; handAt.y -= .03;
-        if (arms > 0) { spot.lerpVectors(rig.wp[hand], handAt, arms); armTo(rig, s, spot, handQ.slerpQuaternions(rig.wq[hand], rig.wq[lower], arms)); }   // (the hands in line with the forearms: level, not hanging)
+        hang.copy(rig.wp[upper]); hang.y -= SQUAT.hang; hang.z += .02;
+        spot.lerpVectors(key.wp[hand], hang, ss(0, 1, life)).lerp(handAt, arms);
+        if (life > 0) armTo(rig, s, spot, handQ.slerpQuaternions(key.wq[hand], rig.wq[lower], arms));   // (the hands in line with the forearms while they are up: level, not hanging)
     }
 }
 // Actions timed by the film (the high school chapter: Noah and the desk's touchscreen). input.act: { since: seconds
@@ -987,7 +991,7 @@ const ACTS = {
 //   gym-curl    one forearm comes up as the other goes down
 //   gym-box     two jabs and a breath: the left glove goes out to the bag (as built) and comes back to the guard
 //   sit-pottery the hands ride up and down the clay on a turning wheel: { wheel: radians }
-const centre = V(), handAt = V(), elbowAxis = V();
+const centre = V(), handAt = V(), elbowAxis = V(), hang = V();
 export function solveWorkout(rig, key, input) {
     const time = input.time ?? 0, seed = input.seed | 0, life = input.life ?? 1, b = rig.b, pose = key.pose, out = {};
     rig.load(key); rig.fk();
