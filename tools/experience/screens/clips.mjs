@@ -23,6 +23,9 @@ export const WELLNESS_BEATS = {nudge: 3.0, stretch: 8.9, stretchEnd: 12.0, breat
 export const OILERS_BEATS = {dock: 11.8, tap: 12.8, reveal: 13.1, dash: 14.2};
 // COAST_PERSON: who uses coast's featured suite (Ava: S4's decision, Nov 14)
 export const COAST_PERSON = 'Ava';
+// Overhead Triceps Stretch beats (chapter seconds; scenes/stretch.js): B seated after the desk lowers at 9.45, A standing before it lowers at 14.95
+export const RISE_STRETCH_B = {start: 13.3, rightEnd: 14.8, leftEnd: 17.8, good: 17.9, goodEnd: 19.8, seated: true};
+export const RISE_STRETCH_A = {start: 9.6, rightEnd: 11.1, leftEnd: 14.1, good: 14.1, goodEnd: 16.2, seated: false};
 const CINE_OUT = 'exports/cinematic-intro-cut-cine/screens';
 const cine = (shot, chapter, rest) => ({chapter, shot, out: CINE_OUT, ...rest});
 const CINE = [
@@ -34,6 +37,16 @@ const CINE = [
   // the phone on the desk's charger (the film's own 'phone' target; a whole-glass clip like 02-phone, 720x1516): charge ring, Maya's lock screen, then the dim always-on clock of her workday
   cine('rise', 2, {id: 'cine-rise-phone', target: 'phone', role: 'Maya: the phone on the charger, charged overnight, the workday clock', w: 720, h: 1516, scene: 'ch02ph',
     opts: {name: 'Maya', ck: [[0, 480], [4, 512], [8, 655], [12, 840], [15, 1000], [18, 1050]]}}),
+  // Nov 20 2026, Vico's 3rd cuts (chapter 2, 23.5 s): the Overhead Triceps Stretch (opts.stretch, scenes/stretch.js; B seated, A standing).
+  ...[['b', RISE_STRETCH_B, 'exports/cinematic-intro-cut-vicos-3rd-cut/screens'], ['a', RISE_STRETCH_A, 'exports/cinematic-intro-cut-vicos-3rd-cut-standing/screens']].flatMap(([v, st, out]) => {
+    const ck = [[0, 480], [4, 512], [8, 655], [12, 840], [17, 1000], [23.5, 1050]], videos = [{key: 'tricep', src: 'app-reference/demo_media/overhead_triceps_stretch_01_demo.mp4', t: 10, scale: '1280:-2'}];
+    return [
+      {chapter: 2, shot: 'rise', out, id: 'cine3' + v + '-rise-portrait', target: 'main-portrait', role: 'Maya: wellness height app + the overhead triceps stretch', w: 1080, h: 1856, scene: 'ch02p', videos,
+        opts: {name: 'Maya', initials: 'M', evening: true, ck, stretch: st}},
+      {chapter: 2, shot: 'rise', out, id: 'cine3' + v + '-rise-curved', target: 'main-landscape', role: 'Maya: the workday, the evening summary', w: 2560, h: 1072, scene: 'ch02l',
+        opts: {name: 'Maya', colleague: 'Rosa Kim', ck, toast: [20.1, 99, '3h 10m standing · 9 stand breaks']}},
+      {chapter: 2, shot: 'rise', out, id: 'cine3' + v + '-rise-phone', target: 'phone', role: 'Maya: the phone on the charger; the stretch push', w: 720, h: 1516, scene: 'ch02ph', videos, opts: {name: 'Maya', ck, stretch: st}}];
+  }),
   cine('create', 3, {id: 'cine-create-landscape', target: 'main-landscape', role: 'Lin: painting -> house model -> meadow reference', w: 1920, h: 1120, scene: 'c03l', frames: 705, opts: {...CREATE_ACTS, name: 'Lin'}}),
   cine('create', 3, {id: 'cine-create-portrait', target: 'main-portrait', role: 'Lin: references -> floor plan -> creek reference', w: 1082, h: 1856, scene: 'c03p', frames: 705, opts: {...CREATE_ACTS, name: 'Lin'}}),
   cine('create', 3, {id: 'cine-create-floor-plan', target: 'texture:Architect floor plan', role: 'the drafting paper relabelled as a home (PNG)', w: 1600, h: 1000, scene: 'cplan', still: true}),
@@ -45,6 +58,13 @@ const CINE = [
   cine('wellness', 7, {id: 'cine-wellness-main', target: 'main-landscape', role: 'Maya: report -> time to move -> the stretch + height -> standing', w: 1920, h: 1080, scene: 'c07l',
     opts: {...WELLNESS_BEATS, name: 'Maya'}, videos: [{key: 'shoulder', src: 'app-reference/demo_media/seated_scapular_squeeze_01_demo.mp4', t: 17, scale: '1280:-2'}]}),
   cine('wellness', 7, {id: 'cine-wellness-tablet', target: 'tablet', role: 'focus -> breathing with the stretch -> nice reset', w: 1620, h: 1080, scene: 'c07t', opts: {...WELLNESS_BEATS, name: 'Maya'}}),
+  // Nov 20 2026, Vico's 3rd cuts (chapter 7, 19.5 s): Desk Squats instead of the shoulder squeeze (opts.squats; the film's act: at 10.2 s, 5.2 s, 3 reps)
+  ...[['b', 'exports/cinematic-intro-cut-vicos-3rd-cut/screens'], ['a', 'exports/cinematic-intro-cut-vicos-3rd-cut-standing/screens']].flatMap(([v, out]) => {
+    const opts = {nudge: 3.0, stretch: 9.7, stretchEnd: 15.6, breatheEnd: 15.9, reset: 16.5, name: 'Maya', squats: {at: 10.2, dur: 5.2, reps: 3}}, videos = [{key: 'squat', src: 'app-reference/demo_media/desk_squats_01_demo.mp4', t: 17, scale: '1280:-2'}];
+    return [
+      {chapter: 7, shot: 'wellness', out, id: 'cine3' + v + '-wellness-main', target: 'main-landscape', role: 'Maya: report -> time to move -> Desk Squats + height -> standing', w: 1920, h: 1080, scene: 'c07l', opts, videos},
+      {chapter: 7, shot: 'wellness', out, id: 'cine3' + v + '-wellness-tablet', target: 'tablet', role: 'focus -> Desk Squats card -> great job', w: 1620, h: 1080, scene: 'c07t', opts, videos}];
+  }),
   cine('awareness', 8, {id: 'cine-awareness-main', target: 'main-landscape', role: 'radar on the roll of the cut: the pet, stopped short', w: 1920, h: 800, scene: 'c08', opts: {gap: 16, label: 'Pet'}}),
   // coast (written LAST: COAST_PERSON is S4's decision of who uses the featured suite; Maya is at the centre bay)
   cine('coast', 5, {id: 'cine-coast-main', target: 'main-landscape', role: 'the featured suite: sign-in, height, colour, export', w: 1920, h: 1120, scene: 'c05m', opts: {name: COAST_PERSON, sign: -1}}),

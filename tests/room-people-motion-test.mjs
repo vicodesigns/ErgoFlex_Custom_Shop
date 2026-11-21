@@ -1110,4 +1110,39 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
         assert.ok(faced.jump < .02, `${who}: no ankle jumps through the pivots (${(faced.jump * 1000).toFixed(1)} mm a 1/120 step)`);
     }
 }
+
+// Desk Squats (Nov 20, Vico's 3rd cuts: the gym chapter's exercise): a placement's act { kind: 'squat', at, dur, reps } on a standing
+// posture. The feet stay planted, the pelvis sinks (and goes back) and returns to where the posture has it, the knees fold, the arms
+// reach forward; the same second is the same pose; outside the action she stands as built.
+{
+    const SQ = await import('../room-people-motion.mjs');
+    for (const who of ['maya', 'ben', 'noah']) {
+        const rig = rigOf(who), key = rig.key(`people-${who}-stand-type`), act = since => ({ since, dur: 5.2, squat: { reps: 3 } });
+        const solve = since => solveStill(rig, key, { time: 1, seed: 3, life: 1, act: act(since) });
+        const knee = s => { const [thigh, calf, foot] = rig.side[s].leg; return rig.wp[thigh].clone().sub(rig.wp[calf]).normalize().angleTo(rig.wp[foot].clone().sub(rig.wp[calf]).normalize()); };
+        solve(-1);
+        const up = { pelvis: rig.wp[rig.b.pelvis].y, knee: knee('l'), hand: rig.wp[rig.side.l.arm[3]].z };
+        for (const since of [5.2 / 6, 5.2 / 2, 5.2 * 5 / 6]) {
+            solve(since);
+            const drop = up.pelvis - rig.wp[rig.b.pelvis].y;
+            assert.ok(Math.abs(drop - SQ.SQUAT.down) < .03, `${who}: the pelvis sinks ${(SQ.SQUAT.down * 100).toFixed(0)} cm at the bottom of a rep (${(drop * 100).toFixed(1)} cm)`);
+            assert.ok(knee('l') < up.knee - .6 && knee('r') < up.knee - .6, `${who}: the knees fold (${knee('l').toFixed(2)} from ${up.knee.toFixed(2)} rad)`);
+            for (const s of ['l', 'r']) {
+                const foot = rig.side[s].leg[2], moved = rig.wp[foot].distanceTo(key.wp[foot]);
+                assert.ok(moved < .004, `${who}: the ${s} foot stays planted (${(moved * 1000).toFixed(1)} mm)`);
+            }
+            assert.ok(rig.wp[rig.side.l.arm[3]].z > up.hand + .1, who + ': the arms reach forward');
+        }
+        // away from the desk before and after the reps her arms hang by her sides (not on the keys), and they are level in front of her in the reps
+        for (const since of [-5, 5.2 + 3]) { solve(since); const sh = rig.wp[rig.side.l.arm[1]], hand = rig.wp[rig.side.l.arm[3]]; assert.ok(sh.y - hand.y > .4, who + ': the arms hang at rest before and after (' + (sh.y - hand.y).toFixed(2) + ' m below the shoulder)'); }
+        // between the reps she is back up (the pelvis where it was), and after the last one the hips are exactly where they were
+        for (const since of [5.2 / 3, 5.2 * 2 / 3]) { solve(since); assert.ok(up.pelvis - rig.wp[rig.b.pelvis].y < .01, who + ': upright between reps'); }
+        solve(5.2 + 1); const after = rig.wp[rig.b.pelvis].y; solve(9); assert.equal(rig.wp[rig.b.pelvis].y, after, who + ': after the action nothing moves');
+        assert.ok(Math.abs(after - up.pelvis) < .012, who + ': back at the height she began (hips)');
+        assert.equal(SQ.squatDepth(0, 5.2, 3), 0); assert.equal(SQ.squatDepth(5.2, 5.2, 3), 0);
+        assert.ok(Math.abs(SQ.squatDepth(5.2 / 6, 5.2, 3) - 1) < 1e-9, 'the bottom of a rep is depth 1');
+        solve(1.3); const a = snapshot(rig); solveStill(rig, key, { time: 40, seed: 3, life: 1, act: act(0.2) }); solve(1.3);
+        assert.deepEqual(snapshot(rig), a, who + ': the same second is the same squat');
+    }
+}
 console.log('PASS room people motion: rig files, the desk driver (rise, lower, stop, turn back, tilt, wheelchair, short stature), exact end poses, planted feet, knees, keyboard following, determinism, life, the person in the room (film and Studio paths, chair, pose adjustments on top), posture changes in a shot and with the daypart, a walk along a path, stepping out from the desk and back.');

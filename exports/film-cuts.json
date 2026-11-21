@@ -42,8 +42,52 @@
    "dir": "/exports/cinematic-intro-cut-cine",
    "chapters": "/exports/cinematic-intro-cut-cine/director-chapters.json",
    "seconds": 262.33,
-   "updated": "2026-11-15T20:31:51Z",
+   "updated": "2026-11-17T21:05:57Z",
    "created": "2026-11-13T16:10:48Z"
+  },
+  {
+   "id": "vicos-2nd-cut",
+   "name": "Vicos 2nd cut",
+   "note": "A copy of Cinematographer's cut, made November 15, 2026.",
+   "from": "exports/cinematic-intro-cut-cine",
+   "dir": "/exports/cinematic-intro-cut-vicos-2nd-cut",
+   "chapters": "/exports/cinematic-intro-cut-vicos-2nd-cut/director-chapters.json",
+   "seconds": 261.83,
+   "updated": "2026-11-20T06:34:37Z",
+   "created": "2026-11-15T23:54:15Z"
+  },
+  {
+   "id": "vicos-3rd-cut-copy",
+   "name": "Vicos 3rd cut copy",
+   "note": "A copy of Vicos 2nd cut, made November 17, 2026.",
+   "from": "exports/cinematic-intro-cut-vicos-2nd-cut",
+   "dir": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy",
+   "chapters": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-chapters.json",
+   "seconds": 262.33,
+   "updated": "2026-11-18T05:46:24Z",
+   "created": "2026-11-18T06:22:23Z"
+  },
+  {
+   "id": "vicos-3rd-cut",
+   "name": "Vicos 3rd cut",
+   "note": "Chapter 2 with the Overhead Triceps Stretch SEATED (B), chapter 7 with Desk Squats. Copy of Vicos 2nd cut, made November 20, 2026.",
+   "from": "exports/cinematic-intro-cut-vicos-2nd-cut",
+   "dir": "/exports/cinematic-intro-cut-vicos-3rd-cut",
+   "chapters": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-chapters.json",
+   "seconds": 267.33,
+   "updated": "2026-11-20T06:34:37Z",
+   "created": "2026-11-20T17:43:58Z"
+  },
+  {
+   "id": "vicos-3rd-cut-standing",
+   "name": "Vicos 3rd cut, standing stretch",
+   "note": "Chapter 2 with the Overhead Triceps Stretch done STANDING (A): stand, type, stretch, then sit; chapter 7 with Desk Squats. Everything else as Vicos 3rd cut.",
+   "from": "exports/cinematic-intro-cut-vicos-3rd-cut",
+   "dir": "/exports/cinematic-intro-cut-vicos-3rd-cut-standing",
+   "chapters": "/exports/cinematic-intro-cut-vicos-3rd-cut-standing/director-chapters.json",
+   "seconds": 267.33,
+   "updated": "2026-11-20T19:30:00Z",
+   "created": "2026-11-20T19:01:52Z"
   }
  ]
 }

@@ -71,7 +71,11 @@ export function prepareMediaCast(room, root) {
     })]);
 }
 
-export function mediaPersonMaterial(source, cast, part) {
+// `relief`: a chapter's skin relief strength (people.skinRelief in the film's data; 1 = the cast detail as it has always been). The skin's
+// normal map (assets/rooms/media/skin-relief.webp) at normalScale .55 is what reads as pores, blotches and a scaly look at close framings.
+export const SKIN_RELIEF = .55;
+export const reliefOf = v => Number.isFinite(v) && v >= 0 && v <= 2 ? v : 1;
+export function mediaPersonMaterial(source, cast, part, relief = 1) {
     if (/^Human\.(eyebrow|eyelash)/i.test(source.name)) {
         const mat = source.clone();
         // Preserve partial strand coverage when several source hairs project
@@ -117,7 +121,7 @@ export function mediaPersonMaterial(source, cast, part) {
         }
     } else if (source.name === 'Human.body') {
         mat.normalMap ||= cast.skin;
-        mat.normalScale.set(.55, -.55);
+        mat.normalScale.set(SKIN_RELIEF * relief, -SKIN_RELIEF * relief);
         mat.roughness = .64;
         mat.clearcoat = .09;
         mat.clearcoatRoughness = .48;
