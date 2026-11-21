@@ -35,7 +35,7 @@ import {createFilmLook} from './film-look.mjs';
 import {createStillStrip} from './still-strip.mjs';
 import {filmLink,loadFilmChapters,filmChapterLabel,filmChapterIndex} from './film-chapters.mjs';
 import {createFilmFresh} from './film-fresh.mjs';
-import {timelineTicks,snapTimelineTime,adjacentEdit,TIMELINE_ZOOMS,clampZoom,maxZoom,filmTimecode,nextMarker,toggleMarker,setLoopEnd} from './timeline-ui.mjs?v=timeline-zoom-20261120';
+import {timelineTicks,snapTimelineTime,adjacentEdit,TIMELINE_ZOOMS,clampZoom,maxZoom,filmTimecode,nextMarker,toggleMarker,setLoopEnd,rulerAnchorScroll} from './timeline-ui.mjs?v=zoom-anchor-20261121';
 import {createDeskEditor} from './desk-editor.mjs?v=timeline-delete-20261120';
 import {stackRows,rowVar} from './lane-rows.mjs';
 import {createChoreoTarget,validateDeskEdits} from './desk-choreo.mjs';
@@ -1583,10 +1583,19 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   // T / F9 the camera key's interpolation, and ?debug=timeline (the real renderTimeline time in the foot).
   function laneWidth(){return Math.max(300,(timeline.clientWidth||1200)-150);}
   function zoomMax(){return maxZoom(shot().seconds,laneWidth());}
+  // Zoom keeping the time under the anchor (the pointer for Ctrl+wheel, else the middle) where it is. 21 Nov 2026 (Windows
+  // e2e: the time under the pointer drifted ~1 frame): the anchor was a fraction of the whole scroll width, which includes
+  // the fixed-width lane labels that do not zoom; now it is the fraction of the ruler (the seconds) under the anchor,
+  // put back under the same screen x after the rebuild (client px, so the UI scale cancels out).
   function setZoom(next,anchorPx=null){
-    const v=timeline.querySelector('.timeline-viewport');if(!v)return;const was=zoom,width=v.scrollWidth,px=anchorPx??v.clientWidth/2,frac=(v.scrollLeft+px)/Math.max(1,width);
+    const v=timeline.querySelector('.timeline-viewport');if(!v)return;const was=zoom,vr=v.getBoundingClientRect(),x=vr.left+(anchorPx??vr.width/2);
+    const r0=v.querySelector('.time-ruler')?.getBoundingClientRect(),frac=(v.scrollLeft+(x-vr.left)*v.clientWidth/Math.max(1,vr.width))/Math.max(1,v.scrollWidth);
     zoom=clampZoom(next,shot().seconds,laneWidth());if(zoom<1.02)zoom=1;if(Math.abs(zoom-was)<1e-6)return;renderTimeline();
-    const n=timeline.querySelector('.timeline-viewport');n.scrollLeft=Math.max(0,frac*n.scrollWidth-px);syncPan();saveScroll();
+    const n=timeline.querySelector('.timeline-viewport'),r1=n.querySelector('.time-ruler')?.getBoundingClientRect(),k=n.clientWidth/Math.max(1,n.getBoundingClientRect().width);
+    viewWant=null;
+    const to=rulerAnchorScroll({scroll:n.scrollLeft,x,before:r0,after:r1,k});
+    n.scrollLeft=to??Math.max(0,frac*n.scrollWidth-(x-vr.left)*k);
+    syncPan();saveScroll();
   }
   timeline.addEventListener('wheel',event=>{
     const v=event.target.closest('.timeline-viewport');if(!v)return;

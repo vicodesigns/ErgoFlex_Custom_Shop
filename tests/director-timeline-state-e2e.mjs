@@ -150,11 +150,14 @@ try{
   const z1=await view();check(z1.width>z0.width*3,`5. + three times: the lanes ${Math.round(z0.width)} → ${Math.round(z1.width)} px (${z1.zoom})`);
   await blurAll();await page.keyboard.press('Equal');await wait(300);const z2=await view();check(z2.width>z1.width*1.2,`5. '=' zooms in (${z2.zoom})`);
   await page.keyboard.press('Minus');await wait(300);const z3=await view();check(z3.width<z2.width/1.2,`5. '-' zooms out (${z3.zoom})`);
-  // Ctrl+wheel at a point: the time under the pointer stays
-  const at=await page.evaluate(()=>{const v=document.querySelector('#director-timeline .timeline-viewport'),r=v.getBoundingClientRect(),c=v.querySelector('.timeline-content').getBoundingClientRect(),x=r.left+150+(r.width-150)*.6;return {x,y:r.top+40,frac:(x-c.left)/c.width};});
+  // Ctrl+wheel at a point: the time under the pointer stays, within a frame (the time = the ruler's fraction × the
+  // chapter's seconds; the lanes' labels are not time, so the content's fraction was the wrong measure)
+  const rulerAt=x=>page.evaluate(x=>{const r=document.querySelector('#director-timeline .time-ruler').getBoundingClientRect(),c=document.querySelector('#director-timeline .timeline-content').getBoundingClientRect(),s=Number(document.querySelector('#director-timeline [name="timeline-seconds"]').max);return {t:(x-r.left)/r.width*s,width:c.width};},x);
+  const at=await page.evaluate(()=>{const v=document.querySelector('#director-timeline .timeline-viewport'),r=v.getBoundingClientRect();return {x:r.left+150+(r.width-150)*.6,y:r.top+40};});
+  const before=await rulerAt(at.x);
   await page.mouse.move(at.x,at.y);await page.keyboard.down('Control');await page.mouse.wheel({deltaY:-240});await page.keyboard.up('Control');await wait(400);
-  const after=await page.evaluate(x=>{const c=document.querySelector('#director-timeline .timeline-content').getBoundingClientRect();return {frac:(x-c.left)/c.width,width:c.width};},at.x);
-  check(after.width>z3.width*1.3&&Math.abs(after.frac-at.frac)<.004,`5. Ctrl+wheel zooms at the pointer (${Math.round(z3.width)} → ${Math.round(after.width)} px; time under it ${at.frac.toFixed(4)} → ${after.frac.toFixed(4)})`);
+  const after=await rulerAt(at.x);
+  check(after.width>z3.width*1.3&&Math.abs(after.t-before.t)<1/30,`5. Ctrl+wheel zooms at the pointer (${Math.round(z3.width)} → ${Math.round(after.width)} px; the time under it ${before.t.toFixed(3)} → ${after.t.toFixed(3)} s, ${(Math.abs(after.t-before.t)*1000).toFixed(1)} ms)`);
   // the most zoom
   for(let i=0;i<30;i++){const off=await page.$eval('#director-timeline [data-action="zoom-in"]',b=>b.disabled);if(off)break;await clickEl('#director-timeline [data-action="zoom-in"]');await wait(150);}
   const zmax=await view(),seconds=await page.evaluate(()=>Number(document.querySelector('#director-timeline [name="timeline-seconds"]').max));
