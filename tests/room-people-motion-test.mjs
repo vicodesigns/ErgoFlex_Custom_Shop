@@ -50,6 +50,34 @@ for (const who of characters) {
     assert.ok(travel > .1, 'scrolling moves the thumb');
 }
 
+// Sofia pauses both hands to read the laptop. Check the two motions together
+// and make sure a Director look target still takes precedence over the screen.
+{
+    const rig = rigOf('sofia'), key = rig.key('people-sofia-sit-laptop');
+    const ordinary = { ...key, id: 'laptop-reference' };
+    const fingers = [...rig.side.l.fingers, ...rig.side.r.fingers];
+    let readingFrames = 0, typingFrames = 0;
+    for (let frame = 0; frame < 270; frame++) {
+        const input = { time: frame / 30, seed: 7 };
+        solveStill(rig, ordinary, input);
+        const usualHead = rig.wq[rig.b.head].clone();
+        solveStill(rig, key, input);
+        const travel = Math.max(...fingers.map(i => rig.lq[i].angleTo(key.q[i])));
+        if (rig.wq[rig.b.head].angleTo(usualHead) > .06 && travel < .001) readingFrames++;
+        if (travel > .02) typingFrames++;
+        for (const side of ['l', 'r']) {
+            const wrist = rig.side[side].arm[3];
+            assert.ok(rig.wp[wrist].distanceTo(key.wp[wrist]) < .002, 'wrists stay over the keyboard');
+        }
+    }
+    assert.ok(readingFrames > 15 && typingFrames > 15, 'both reading and typing are visible');
+    const directed = { time: 3, look: new THREE.Vector3(.4, 1.2, .5) };
+    solveStill(rig, ordinary, directed);
+    const expected = snapshot(rig);
+    solveStill(rig, key, directed);
+    assert.deepEqual(snapshot(rig), expected, 'the authored gaze wins');
+}
+
 // Yara briefly gathers the pack strap during the first strides. Compare to
 // the same gait without the pack gesture, including a seek back to mid-reach.
 {

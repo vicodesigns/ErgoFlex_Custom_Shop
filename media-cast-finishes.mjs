@@ -32,16 +32,18 @@ function castDetailShared() {
     }
 
     // Each 512-pixel tile has a four-pixel guard band on every side.
-    function tile(atlas, i) {
+    function tile(atlas, i, count) {
+        const width = 512 * Math.min(4, count), height = 512 * Math.ceil(count / 4);
         const texture = atlas.clone();
-        texture.repeat.set(504 / 2048, 504 / 1024);
-        texture.offset.set(((i % 4) * 512 + 4) / 2048, (Math.floor(i / 4) * 512 + 4) / 1024);
+        texture.repeat.set(504 / width, 504 / height);
+        texture.offset.set(((i % 4) * 512 + 4) / width, (Math.floor(i / 4) * 512 + 4) / height);
         return texture;
     }
 
     const atlases = HAIR_ATLASES.map(suffix => ({ fibres: map('hair-fibres' + suffix), flow: map('hair-flow' + suffix), edges: map('hairline' + suffix) }));
+    const counts = HAIR_ATLASES.map((_, k) => Object.values(HAIR_TILES).filter(([atlas]) => atlas === k).length);
     const hair = new Map(Object.entries(HAIR_TILES).map(([cut, [k, i]]) => ['Human.' + cut, {
-        normal: tile(atlases[k].fibres, i), direction: tile(atlases[k].flow, i), edge: tile(atlases[k].edges, i),
+        normal: tile(atlases[k].fibres, i, counts[k]), direction: tile(atlases[k].flow, i, counts[k]), edge: tile(atlases[k].edges, i, counts[k]),
     }]));
     state.cast = { hair, skin: map('skin-relief') };
     state.ready = Promise.all(loads).then(() => { state.done = true; if (failed.length && castShared === state) castShared = null; });

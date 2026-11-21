@@ -50,6 +50,7 @@ MORE = [
     ('toigo_curled_under_bob_with_bangs', 'BlondHair.png'),
     ('toigo_inverted_bob_with_bangs', '../toigo_blunt_bob_with_bangs/AuburnHair.png'),
     ('toigo_inverted_bob', '../toigo_blunt_bob_with_bangs/AuburnHair.png'),
+    ('cropped_coil_hair', None),
 ]
 PER_ATLAS = 8
 EDGE_MAX = .12
@@ -62,6 +63,12 @@ def smooth(v, r):
     return np.asarray(Image.fromarray(np.uint8(np.clip(v * .5 + .5, 0, 1) * 255)).filter(ImageFilter.GaussianBlur(r)), dtype=np.float32) / 127.5 - 1
 def jpg(a): return Image.fromarray(np.uint8(np.clip(a, 0, 1) * 255))
 def diffuse(folder, name=None):
+    if folder.name == 'cropped_coil_hair':
+        from coil_texture import pixels
+        rgba = pixels()[::-1].copy()  # Blender pixel rows start at the bottom.
+        rgb = rgba[:, :, :3]
+        rgb[:] = np.where(rgb <= .0031308, 12.92 * rgb, 1.055 * rgb ** (1 / 2.4) - .055)
+        return Image.fromarray(np.uint8(np.clip(rgba, 0, 1) * 255)).resize((504, 504), Image.Resampling.LANCZOS)
     path = folder / name if name else next(folder.glob('*diffuse*.png'))
     return Image.open(path).convert('RGBA').resize((504, 504), Image.Resampling.LANCZOS)
 
@@ -79,6 +86,9 @@ def strand_tiles(img, gain=1.0):
     return n, d, slope
 
 def hairline_tile(folder, cut, img):
+    if cut == 'cropped_coil_hair':
+        # The groom's own colour map carries the fitted, feathered hairline.
+        return Image.new('L', img.size, 255), 0
     P = []; UV = []; E = defaultdict(list)
     for line in (folder / (next(folder.glob('*.obj')).name)).read_text().splitlines():
         a = line.split()
@@ -117,7 +127,8 @@ def pad(tile): return Image.fromarray(np.pad(np.asarray(tile), ((4, 4), (4, 4)) 
 
 def bake_atlas(items, gains=None):
     """items: [(cut, diffuse name or None)] -> (normal, direction, edge atlases, per-cut report)"""
-    normal = Image.new('RGB', (2048, 1024), (128, 128, 255)); direction = Image.new('RGB', (2048, 1024), (255, 128, 0)); edge = Image.new('L', (2048, 1024), 255)
+    dimensions = (min(4, len(items)) * 512, ((len(items) + 3) // 4) * 512)
+    normal = Image.new('RGB', dimensions, (128, 128, 255)); direction = Image.new('RGB', dimensions, (255, 128, 0)); edge = Image.new('L', dimensions, 255)
     report = {}
     for i, (cut, name) in enumerate(items):
         folder = SRC / cut; img = diffuse(folder, name)
@@ -162,7 +173,7 @@ def main():
         print('atlas', suffix, [c for c, _ in group])
     lines = ['// Which tile of which hair atlas each hairstyle (people GLB material \'Human.<cut>\') is on: [atlas, tile].',
              '// Written by tools/people/bake-hair-maps.py. Atlas 0 is hair-fibres/-flow/hairline.webp (the original eight, in the',
-             '// order media-cast-finishes.mjs always used), atlas k is hair-fibres-<k+1>.webp and so on; 2048 x 1024, eight 512 px',
+             '// order media-cast-finishes.mjs always used), atlas k is hair-fibres-<k+1>.webp and so on; up to eight 512 px',
              '// tiles with a 4 px guard band, tile i at column i % 4, row i >> 2.',
              'export const HAIR_ATLASES = [' + ', '.join(repr('' if k == 0 else '-' + str(k + 1)) for k in range(1 + (len(MORE) + PER_ATLAS - 1) // PER_ATLAS)) + '];',
              'export const HAIR_TILES = {']

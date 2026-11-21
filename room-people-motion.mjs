@@ -505,10 +505,19 @@ export function solveStill(rig, key, input) {
     // talk to, the desk that moves; a point in the model's frame, input.lookAmount of the way); someone with nothing
     // to look at lets the eyes wander further than someone at work
     let target = input.look || null, amount = input.lookAmount ?? .75;
+    let reading = 0;
     if (!target && TYPES.has(pose)) {
         const laptop = pose === 'sit-laptop';
         target = screenFrom(rig, key.wp[rig.side.l.arm[3]], key.wp[rig.side.r.arm[3]], 0, laptop, screenAt);
         if (rig.editorCast) followEditTimeline(target, time, seed, laptop ? .55 : 1);
+        if (key.id === 'people-sofia-sit-laptop') {
+            // Finish a phrase, read across the line, then lower the gaze to type.
+            const cycle = time / (7.5 + 2 * hash(121, seed)) + hash(122, seed);
+            const phase = cycle - Math.floor(cycle);
+            reading = ss(.30, .42, phase) * (1 - ss(.67, .78, phase));
+            target.x += lerp(-.070, .070, ss(.42, .67, phase)) * reading;
+            target.y += .050 * reading;
+        }
         amount = .8;
     }
     if (target) lookToward(rig, target, amount * life);
@@ -522,7 +531,7 @@ export function solveStill(rig, key, input) {
     for (const s of ['l', 'r']) {
         const [, upper, lower, hand] = rig.side[s].arm;
         if (resting.includes(s)) { rig.reach(upper, lower, hand, key.wp[hand]); rig.reach(upper, lower, hand, key.wp[hand]); rig.setWorld(hand, key.wq[hand]); }
-        if (TYPES.has(pose) && !(rig.mediaLab && key.id.includes('-sit-mix')) && input.taps !== false) tapKeys(rig, s, time, seed, life);
+        if (TYPES.has(pose) && !(rig.mediaLab && key.id.includes('-sit-mix')) && input.taps !== false) tapKeys(rig, s, time, seed, life * (1 - reading));
     }
     // (a reader turning a page, and every other activity: ACTS below)
     rig.fk();

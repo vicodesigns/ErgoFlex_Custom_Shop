@@ -1,6 +1,6 @@
 // The media lab's cast finishes and motion in every room with people (media-cast-finishes.mjs, room-people.mjs classicRig
 // and ownMaterials / shareCastDetail, room-people-motion.mjs's rig.castDetail): which rooms and looks get them, that the
-// maps (three hair atlases, three sets each, and the skin relief) load once for the page and are shared, that a person without a style or with a hijab degrades to the plain
+// maps (hair atlases, three images each, and the skin relief) load once for the page and are shared, that a person without a style or with a hijab degrades to the plain
 // material, that a room's disposal never takes the shared maps, and that the media lab's own cast is what it was.
 //   node tests/room-people-cast-detail-test.mjs
 import assert from 'node:assert/strict';
@@ -85,7 +85,7 @@ assert.equal(first.root.children.filter(o => o.name.startsWith('Person')).length
 const highschool = await pending;
 assert.ok(castDetailCast(), 'loaded');
 const { HAIR_ATLASES, HAIR_TILES } = await import('../media-cast-hair-atlas.mjs'), MAPS = HAIR_ATLASES.length * 3 + 1;
-assert.equal(MAPS, 10);
+assert.equal(MAPS, 13);
 assert.equal(requests.length, MAPS, 'one image request per map for the page (hair fibres, flow and hairline per atlas, skin relief)');
 const shared = castDetailCast();
 latency = 5;
@@ -192,16 +192,19 @@ assert.ok(seen.hijab && seen.styled && seen.unstyled && seen.bald, 'the rooms\' 
         if (kind === 'VP8 ') return [b.readUInt16LE(26) & 0x3fff, b.readUInt16LE(28) & 0x3fff];
         return [1 + b.readUIntLE(24, 3), 1 + b.readUIntLE(27, 3)];
     };
-    assert.deepEqual(HAIR_ATLASES, ['', '-2', '-3']);
-    for (const suffix of HAIR_ATLASES) for (const name of ['hair-fibres', 'hair-flow', 'hairline']) assert.deepEqual(webpSize(path.join(root, 'assets/rooms/media', name + suffix + '.webp')), [2048, 1024], name + suffix + ' is a 2048 x 1024 atlas');
+    assert.deepEqual(HAIR_ATLASES, ['', '-2', '-3', '-4']);
+    assert.deepEqual(HAIR_TILES.cropped_coil_hair, [3, 0]);
+    const dimensions = [[2048, 1024], [2048, 1024], [2048, 1024], [512, 512]];
+    for (const [k, suffix] of HAIR_ATLASES.entries()) for (const name of ['hair-fibres', 'hair-flow', 'hairline']) assert.deepEqual(webpSize(path.join(root, 'assets/rooms/media', name + suffix + '.webp')), dimensions[k], name + suffix + ' atlas dimensions');
     const taken = new Set();
     for (const [cut, [k, i]] of Object.entries(HAIR_TILES)) {
         const key = k + ':' + i; assert.ok(!taken.has(key), cut + ' has a tile of its own'); taken.add(key);
         assert.ok(k < HAIR_ATLASES.length && i >= 0 && i < 8, cut + ' tile in range');
         const style = hairKey(cut); assert.ok(style, cut + ' has a style');
+        const [width, height] = dimensions[k];
         for (const t of [style.normal, style.direction, style.edge]) {
-            assert.ok(Math.abs(t.repeat.x - 504 / 2048) < 1e-9 && Math.abs(t.repeat.y - 504 / 1024) < 1e-9, cut + ' tile size');
-            assert.ok(Math.abs(t.offset.x - ((i % 4) * 512 + 4) / 2048) < 1e-9 && Math.abs(t.offset.y - (Math.floor(i / 4) * 512 + 4) / 1024) < 1e-9, cut + ' tile offset');
+            assert.ok(Math.abs(t.repeat.x - 504 / width) < 1e-9 && Math.abs(t.repeat.y - 504 / height) < 1e-9, cut + ' tile size');
+            assert.ok(Math.abs(t.offset.x - ((i % 4) * 512 + 4) / width) < 1e-9 && Math.abs(t.offset.y - (Math.floor(i / 4) * 512 + 4) / height) < 1e-9, cut + ' tile offset');
         }
     }
     assert.equal(shared.hair.size, Object.keys(HAIR_TILES).length);

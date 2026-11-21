@@ -167,6 +167,7 @@ CHARACTERS = {
         'clothes': ['male_casualsuit01', 'shoes06'],
     },
     'sofia': {
+        'tailoring': 'breton', 'comb': 'braid',
         'name': 'Sofia', 'phenotype': {'gender': .0, 'age': .34, 'muscle': .45, 'weight': .52, 'height': .58, 'proportions': .55, 'race': race(.65, .15, .2)},
         'skin': 'young_caucasian_female2', 'eyes': 'brown', 'hair': 'braid01', 'eyebrows': 'eyebrow009', 'eyelashes': 'eyelashes03',
         'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'toigo_flats'],
@@ -1628,6 +1629,13 @@ for _who in ('maya', 'noah'):
 # body (its film placements stand her 40 mm nearer the keys, reach 850), so her elbows bend to 90 degrees over level
 # forearms (rig measure: elbow 90, forearm 0, upper arm 15 forward; without it 101 / -1 / 19).
 NUDGE['people-maya-stand-type-41'] = {'hand_l': (0, .04, 0), 'hand_r': (0, .04, 0)}
+# Sofia's laptop has its own keyboard above the tabletop. Set her wrists
+# and finger arch against that surface so the fingers clear the palm rest.
+NUDGE['people-sofia-sit-laptop'] = {
+    'hand_' + side: {'at': (0, 0, .027), 'fingers': (aim, -1, 0),
+                     'curl': .40, 'thumb': .14, 'spread': .15}
+    for side, aim in (('l', -.12), ('r', .12))
+}
 # A model in an outfit of its own ('as' on its output: these keys replace the character's): in a hospital bed Grace
 # and Ben wear a gown like the ward's patients, not their day clothes.
 VARIANTS = {

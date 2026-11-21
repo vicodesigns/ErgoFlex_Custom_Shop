@@ -11,27 +11,9 @@ import garments
 
 
 def fibre_texture(out_dir, model):
-    # Tile of overlapping short, bent fibres. Wrap each stroke at both borders.
-    size = 384
-    rng = np.random.default_rng(8154)
-    dy, dx = np.mgrid[-8:9, -8:9]
-    tone = rng.uniform(.65, 1.0, (size, size))
-    for _ in range(1250):
-        cx, cy = rng.integers(0, size, 2)
-        radius = rng.uniform(2., 6.)
-        angle = rng.uniform(0, math.tau)
-        ix = (cx + np.arange(-8, 9)) % size
-        iy = (cy + np.arange(-8, 9)) % size
-        arc = np.clip(np.cos(np.arctan2(dy, dx) - angle) + .35, 0, 1)
-        strand = np.exp(-((np.hypot(dx, dy) - radius) / .85) ** 2) * arc
-        tone[np.ix_(iy, ix)] += rng.uniform(.2, 1.0) * strand
-    width, height = 1024, 512
-    y, x = np.mgrid[:height, :width]
-    fibres = tone[(y * size * 2 // height) % size, (x * size * 5 // width) % size]
-    rgba = np.ones((height, width, 4), dtype=np.float32)
-    rgba[:, :, :3] = fibres[:, :, None] * np.array([.105, .079, .062])
-    # Thin the first few millimetres into the existing shaved hairline.
-    rgba[:, :, 3] = np.clip(y / 13 + .42 * (fibres - 1) + rng.uniform(-.27, .27, fibres.shape), 0, 1)
+    from coil_texture import pixels
+    rgba = pixels()
+    height, width = rgba.shape[:2]
     image = bpy.data.images.new('Cropped coils', width, height, alpha=True)
     image.pixels.foreach_set(rgba.ravel())
     image.filepath_raw = str(Path(out_dir, 'tex', model + '-cropped-coils.png'))
@@ -113,7 +95,7 @@ def cropped_coils(hair, base, rig, out_dir, model):
 
 def strand_colour(source, save_copy):
     """Break up the broad painted highlight with fibres that follow the UV locks."""
-    # Both cuts use long vertical strips of hair. Work at delivery resolution
+    # These cuts use long vertical strips of hair. Work at delivery resolution
     # so the variation survives WebP and mipmapping.
     image = source.copy()
     image.scale(1024, 1024)
@@ -160,6 +142,14 @@ def comb_layers(hair, rig, cut):
         if cut == 'bob':
             wave = .006 * math.sin(7 * angle + 2 * depth) - .006 * depth
             p.y += .012 * fall * max(0., math.sin(angle))
+        elif cut == 'braid':
+            # Move whole cross-sections together to preserve the interleaved
+            # plait. The nape stays fixed and the free length arcs off centre.
+            drop = max(0., (depth - .32) / .68)
+            p.x += .033 * drop * drop - .012 * math.sin(math.pi * drop)
+            p.y += .012 * drop
+            vertex.co = local @ p
+            continue
         else:
             wave = .009 * math.sin(5 * angle + 3 * depth) + .003 * math.cos(9 * angle - depth)
             p.y += .022 * fall * max(0., math.sin(angle))

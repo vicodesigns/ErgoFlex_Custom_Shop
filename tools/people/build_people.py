@@ -301,15 +301,13 @@ for o in meshes:
         import bmesh as _bm
         bm = _bm.new(); bm.from_mesh(o.data); bm.faces.ensure_lookup_table(); _bm.ops.delete(bm, geom=[bm.faces[i] for i in faces], context='FACES'); bm.to_mesh(o.data); bm.free()
 
-if who.get('comb'):
+if who.get('comb') or who.get('taper_curls'):
     import groom
     hair = next(o for o in meshes if o.name.split('.', 1)[-1] == who['hair'])
-    groom.comb_layers(hair, rig, who['comb'])
-
-if who.get('taper_curls'):
-    import groom
-    hair = next(o for o in meshes if o.name.split('.', 1)[-1] == who['hair'])
-    groom.cropped_coils(hair, base, rig, OUT_DIR, OUT_ID)
+    if who.get('comb'):
+        groom.comb_layers(hair, rig, who['comb'])
+    else:
+        groom.cropped_coils(hair, base, rig, OUT_DIR, OUT_ID)
 
 # Fit in the neutral pose so sewn details follow the existing rig and saved Director poses.
 if who.get('tailoring'):
