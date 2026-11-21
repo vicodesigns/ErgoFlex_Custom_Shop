@@ -1,0 +1,53 @@
+{
+ "label": "after",
+ "seconds": 23.5,
+ "frames": 705,
+ "bakedKeys": 349,
+ "storyKeys": 11,
+ "pathMetres": 13.38,
+ "peakSpeed_mps": [
+  0.935,
+  4.77
+ ],
+ "peakSpeed5f": [
+  0.935,
+  4.77
+ ],
+ "peakAccel_mps2": [
+  1.195,
+  19.4
+ ],
+ "peakAccel5f": [
+  0.748,
+  19.33
+ ],
+ "peakJerk_mps3": [
+  30.048,
+  19.4
+ ],
+ "peakAngular_dps": [
+  12.506,
+  15.37
+ ],
+ "peakAngular5f": [
+  12.49,
+  15.37
+ ],
+ "peakAngAccel_dps2": [
+  25.999,
+  12.67
+ ],
+ "peakAngAccel5f": [
+  19.643,
+  12.73
+ ],
+ "peakFovRate_dps": [
+  1.963,
+  4.23
+ ],
+ "travelReversals_s": [],
+ "yawFlips_s": [
+  12.6
+ ],
+ "stops_s": []
+}

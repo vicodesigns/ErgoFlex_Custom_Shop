@@ -1,0 +1,53 @@
+ok   director-camera-create.json: 11 keys equal the patch's 11 keys
+ok   director-camera-create.json seconds 23.5
+ok   director-camera-create.json .seconds unchanged
+ok   director-camera-create.json .clips unchanged
+ok   director-camera-create.json .initial unchanged
+ok   director-camera-create.json .props unchanged
+ok   director-camera-create.json .people unchanged
+ok   review-cut.json create.cameraPlan.keys equal the patch
+ok   review-cut.json create.camera (349 baked keys) equals an independent bake of the patch
+ok   create.id unchanged
+ok   create.room unchanged
+ok   create.kind unchanged
+ok   create.seconds unchanged
+ok   create.title unchanged
+ok   create.detail unchanged
+ok   create.preset unchanged
+ok   create.transition unchanged
+ok   create.size unchanged
+ok   create.layout unchanged
+ok   create.mode unchanged
+ok   create.motion unchanged
+ok   create.accessories unchanged
+ok   create.screens unchanged
+ok   create.sceneEdits unchanged
+ok   create.ledStatus unchanged
+ok   create.ledGlow unchanged
+ok   create.ledColor unchanged
+ok   create.ledSurfaces unchanged
+ok   create.ledReceivers unchanged
+ok   create.sceneGlobals unchanged
+ok   create.quality unchanged
+ok   create.screenGain unchanged
+ok   create.lightEdits unchanged
+ok   create.people unchanged
+ok   create.cameraPlan other fields (easeIn / easeOut) unchanged: {"easeIn":false,"easeOut":false}
+     create.directorEdited: {"at":"2026-11-21T01:35:33Z","fields":["camera","cameraPlan","people","sceneEdits","sceneGlobals"]} -> {"at":"2026-11-21T10:54:48Z","fields":["camera","cameraPlan","people","sceneEdits","sceneGlobals"]}
+ok   review-cut.json: the other 11 chapters unchanged
+ok   cut.json byte-identical
+ok   director-camera-coast.json byte-identical
+ok   director-camera-commons.json byte-identical
+ok   director-camera-hero.json byte-identical
+ok   director-camera-media.json byte-identical
+ok   director-camera-music.json byte-identical
+ok   director-camera-oilers.json byte-identical
+ok   director-camera-rise.json byte-identical
+ok   director-camera-storage.json byte-identical
+ok   director-camera-wellness.json byte-identical
+ok   director-camera.json byte-identical
+ok   director-chapters.json byte-identical
+ok   edl.json byte-identical
+ok   titles-src.json byte-identical
+     new files in the imported dir: none
+ALL OK

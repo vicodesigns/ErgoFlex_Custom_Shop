@@ -1,0 +1,176 @@
+{
+ "id": "create",
+ "seconds": 23.5,
+ "cameraPlan": {
+  "easeIn": false,
+  "easeOut": false,
+  "keys": [
+   {
+    "at": 0,
+    "position": [
+     5.1976918697381,
+     1.9765427015748804,
+     3.314937674815405
+    ],
+    "target": [
+     -1.7591389716239645,
+     1.3838267424331514,
+     -0.03864685704586046
+    ],
+    "fov": 35,
+    "label": "Lin at the wheel, the desk at the back of the studio"
+   },
+   {
+    "at": 2.103,
+    "position": [
+     4.75,
+     2,
+     2.62
+    ],
+    "target": [
+     -1.6,
+     1.46,
+     0.1
+    ],
+    "fov": 36.5,
+    "label": "Ease away from the wheel"
+   },
+   {
+    "at": 5.983,
+    "position": [
+     3.2,
+     1.98,
+     -0.2
+    ],
+    "target": [
+     -1.33,
+     1.68,
+     0.5
+    ],
+    "fov": 43,
+    "label": "Across the front as the desk lifts"
+   },
+   {
+    "at": 9.294,
+    "position": [
+     2.55,
+     1.9,
+     -2.95
+    ],
+    "target": [
+     -1.32,
+     1.7,
+     0.6
+    ],
+    "fov": 45.5,
+    "label": "Round to the window side: drafting begins"
+   },
+   {
+    "at": 11.208,
+    "position": [
+     1.4,
+     1.98,
+     -3.2
+    ],
+    "target": [
+     -1.32,
+     1.74,
+     0.44
+    ],
+    "fov": 47,
+    "label": "Side three-quarter: the board tilts to drafting"
+   },
+   {
+    "at": 12.7,
+    "position": [
+     0.97,
+     2.02,
+     -2.88
+    ],
+    "target": [
+     -1.34,
+     1.78,
+     0.38
+    ],
+    "fov": 48.5,
+    "label": "Lean in on the drafting board and turn back"
+   },
+   {
+    "at": 13.856,
+    "position": [
+     1.33,
+     2.04,
+     -2.55
+    ],
+    "target": [
+     -1.36,
+     1.86,
+     0.33
+    ],
+    "fov": 48.5,
+    "label": "The arc goes on as the board tilts to the easel"
+   },
+   {
+    "at": 18.244,
+    "position": [
+     3.33,
+     2.048,
+     0.02
+    ],
+    "target": [
+     -1.37,
+     1.68,
+     0.31
+    ],
+    "fov": 42.2,
+    "label": "Settle to the front"
+   },
+   {
+    "at": 19.467,
+    "position": [
+     3.4,
+     2.05,
+     0.35
+    ],
+    "target": [
+     -1.37,
+     1.64,
+     0.31
+    ],
+    "fov": 42,
+    "label": "Round to the front: the board tilts on to the painting"
+   },
+   {
+    "at": 19.5,
+    "position": [
+     1.0862,
+     2.2932,
+     -0.7845
+    ],
+    "target": [
+     -1.2069,
+     2.1121,
+     0.528
+    ],
+    "fov": 42,
+    "label": "Cut: later, Lin paints at the tilted canvas",
+    "cut": true
+   },
+   {
+    "at": 23.5,
+    "position": [
+     0.9957,
+     2.0065,
+     -1.2974
+    ],
+    "target": [
+     -1.3578,
+     1.7802,
+     0.347
+    ],
+    "fov": 43,
+    "label": "Slow arc around her brush hand"
+   }
+  ]
+ }
+}
