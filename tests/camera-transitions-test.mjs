@@ -9,7 +9,7 @@
 //   node tests/camera-transitions-test.mjs
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {TRANSITION_TYPES,DEFAULT_DUR,MIN_DUR,MAX_DUR,cleanTransition,transitionRoom,setTransition,planFields,fromPlan,transitionAt,transitionBands,dragLength} from '../experience/camera-transitions.mjs';
+import {TRANSITION_TYPES,DEFAULT_DUR,MIN_DUR,MAX_DUR,segmentInfo,segmentType,WHIP,M_PER_UNIT,cleanTransition,transitionRoom,setTransition,planFields,fromPlan,transitionAt,transitionBands,dragLength} from '../experience/camera-transitions.mjs';
 import {cleanCameraKeys,sampleCamera} from '../experience/camera-track.mjs';
 import {filmCamera} from '../experience/film-render.mjs';
 import {cameraChanged} from '../experience/film-changes.mjs';
@@ -96,11 +96,34 @@ assert.deepEqual(cleanTransition({type:'dip-white',dur:0}),{type:'dip-white',dur
   const src=readFileSync(new URL('../experience/director.mjs',import.meta.url),'utf8');
   assert.match(src,/const keys=\(\)=>withPlanTransitions\(resolveCameraKeys\(/,'keys show the plan\'s cuts by id');
   assert.match(src,/transition:i\?fromPlan\(k\):null,view:/,'filmCameraKeys: each key\'s transition from the plan');
-  assert.match(src,/\$\{transitionFields\(cameraKey\)\}<label>Camera route/,'the inspector row sits under Move to next view');
+  assert.match(src,/\$\{transitionFields\(cameraKey\)\}/,'the inspector rows');
+  assert.doesNotMatch(src,/<label>Move to next view<select name="key-easing">/,'no separate "Move to next view" beside the transition (20 Nov 2026: the two disagreed)');
+  assert.match(src,/segmentRow\(list,i-1,'Into this view','key-transition'\)/,'"Into this view": the segment before');
+  assert.match(src,/segmentRow\(list,i,'To the next view','key-transition-next'\)/,'"To the next view": the same control for the segment after (it edits the next key)');
+  assert.match(src,/Film chapter: between views the camera glides on the film\\'s spline, so Move style and Camera route do not apply here/,'film chapters: Move style and route hidden, with the reason');
+  assert.match(src,/if\(filmShot\(\)\)throw Error\('Film chapter: the camera glides on the film/,'and F9 / T say so instead of changing a dead setting');
+  assert.match(src,/\$\{segmentsHtml\(\)\}/,'every lane segment labelled');
   assert.match(src,/\$\{transitionLane\(\)\}/,'the bands on the camera lane');
   assert.match(src,/function syncPlayhead\(\)\{\n    syncTransitionPreview\(\);/,'the preview follows the playhead');
   assert.match(src,/its motion is frozen here; the film renders both moving/,'the dissolve preview says it is a still frame');
   assert.match(src,/renders this as a plain cut until the render side for dissolves and dips lands/,'and that the film renders a cut for now');
   assert.match(src,/putTransition\(band\.dataset\.camTransition,\{type:'move'\}\)/,'Delete on a band: back to a move');
 }
-console.log('camera-transitions-test: ok (cut / dissolve / dip model, room and clamps, plan fields both ways, preview mix, client-cut hold, filmCamera authoritative, change detection, Director wiring)');
+// ---- 6 segments: one type per segment, labels, warnings (Vico's Create numbers: 19.2 s -> 19.5 s, 2.36 units in 0.3 s;
+// 19.5 s -> 19.533 s, a cut to the same view)
+{
+  const v=(p,t)=>({position:p,target:t,fov:35,aspect:16/9}),T=23.5;
+  const keys=[{id:'a',time:19.2/T,easing:'linear',view:v([3.15,2.05,.35],[1,1,0])},{id:'b',time:19.5/T,easing:'linear',view:v([1.09,2.29,-.78],[0,1,-2])},
+    {id:'c',time:19.533/T,easing:'hold',transition:{type:'cut'},view:v([1.09,2.29,-.78],[0,1,-2])},{id:'d',time:22/T,easing:'linear',view:v([0,2,0],[0,1,-3])}];
+  const s0=segmentInfo(keys,0,T),s1=segmentInfo(keys,1,T);
+  assert.equal(s0.type,'move');assert.equal(s0.label,'Move 0.3 s');assert.ok(s0.whip,'2.36 units (1.4 m) in 0.3 s: a whip');
+  assert.match(s0.warn,/A 0\.3 s move over 1\.4 m.*reads as a whip/);
+  assert.equal(s1.type,'cut');assert.equal(s1.label,'Cut');assert.ok(s1.same);assert.match(s1.warn,/This cut jumps to the same view/);
+  assert.equal(segmentType(keys,2),'move','film: the key\'s "hold" easing does not count');assert.equal(segmentType(keys,2,{film:false}),'cut','a client cut: the old Hold, then cut is the same cut');
+  const calm=[{id:'a',time:0,view:v([0,2,5],[0,1,0])},{id:'b',time:.5,view:v([1,2,5],[1,1,0])}];
+  assert.equal(segmentInfo(calm,0,20).warn,null,'1 unit in 10 s: no warning');assert.equal(segmentInfo(calm,0,20).label,'Move 10 s');
+  const dz=[...calm.slice(0,1),{...calm[1],transition:{type:'dissolve',dur:.8}}];assert.equal(segmentInfo(dz,0,20).label,'Dissolve 0.8 s');
+  assert.equal(segmentInfo(calm,1,20),null);
+  assert.deepEqual(WHIP,{speed:3,turn:60});assert.ok(Math.abs(M_PER_UNIT-.5984)<1e-3);
+}
+console.log('camera-transitions-test: ok (segments: one type, labels, same-view and whip warnings; cut / dissolve / dip model, room and clamps, plan fields both ways, preview mix, client-cut hold, filmCamera authoritative, change detection, Director wiring)');

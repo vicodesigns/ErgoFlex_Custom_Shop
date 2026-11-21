@@ -505,3 +505,9 @@ body.directing:not(.inspector-hidden) #director-timeline .film-chapter-picker{di
 #director-timeline .cam-transition i[data-ct-edge="start"]{left:0}#director-timeline .cam-transition i[data-ct-edge="end"]{right:0}
 #director-timeline .cam-transition:focus-visible{outline:2px solid var(--df-select,#ffd166);outline-offset:1px}
 #director-timeline .cam-cut{position:absolute;bottom:1px;transform:translateX(-50%);z-index:2;font-size:11px;line-height:13px;color:#ffd166;pointer-events:none;text-shadow:0 1px 3px #000}
+/* segments labelled with what the camera does; a ⚠ on a cut to the same view or a whip move (20 Nov 2026) */
+body.df-shell #director-timeline .camera-segment i{opacity:.8}
+#director-timeline .camera-segment.seg-warn{border-color:#ffb34788;background:#ffb34718}
+#director-timeline .camera-segment.seg-warn i{padding-left:14px}
+#director-timeline .camera-segment .seg-warn-mark{position:absolute;left:1px;top:50%;transform:translateY(-50%);pointer-events:auto;cursor:help;color:#ffb347;font-size:12px;text-shadow:0 1px 3px #000}
+#director-panel .transition-warn{color:#ffcf7a}
