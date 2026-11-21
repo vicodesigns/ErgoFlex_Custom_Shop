@@ -50,6 +50,13 @@ export function monitorOffset({monitor,heightIn,eyeMm}){
   const centre=Math.max(lowest,above);   // never into the desktop
   return Math.round((centre-EYE_REF_ABOVE_DESKTOP)*10)/10;
 }
+// The monitor on its arm hangs from the top-shelf slot frame, which is NOT at desktop level: measured in the stage (oilers
+// film, probe of station-project-review) the frame is 258 mm above the desktop and the accessory's y offsets act 1.06 times
+// (the desk's own scale), so the panel's lower edge (the model's origin) is at SHELF_FRAME_ABOVE_DESKTOP + y*FRAME_SCALE above
+// the desktop. monitorOffset's centre clamp assumed 0 there and let a short user's panel sink into the desktop (Fern, 43.5 in:
+// y -340 put the lower edge 100 mm below the surface).
+export const SHELF_FRAME_ABOVE_DESKTOP=258,FRAME_SCALE=1.06,PANEL_EDGE_CLEARANCE=25;
+export const lowestMonitorY=(clearance=PANEL_EDGE_CLEARANCE)=>Math.ceil((clearance-SHELF_FRAME_ABOVE_DESKTOP)/FRAME_SCALE*10)/10;
 // Where things are above the floor (mm) for a desk at `heightIn`: slot frames are fixed to the desktop, so every height is
 // the desk's plus the part's own offset. (The top shelf's frame sits SHELF_ABOVE_DESKTOP over the desktop; its value is the
 // store model's and only matters for comparing two heights, which it cancels out of.)
@@ -105,6 +112,8 @@ export function copySetup(source,target,opts={}){
   if(objects[mk]&&Number.isFinite(opts.eyeMm)){
     const dy=monitorOffset({monitor:pick.monitor,heightIn:target.heightIn,eyeMm:opts.eyeMm});
     if(dy){objects[mk].transform.p.y=Math.round((objects[mk].transform.p.y+dy)*10)/10;notes.push(`monitor: ${dy>0?'+':''}${dy} mm to the user's eye height at ${target.heightIn}″`);}
+    // never with the panel's lower edge nearer the desktop than PANEL_EDGE_CLEARANCE (the arm holds it in the air)
+    const floor=lowestMonitorY();if(objects[mk].transform.p.y<floor){objects[mk].transform.p.y=floor;notes.push(`monitor: raised to y ${floor} mm, its lower edge ${PANEL_EDGE_CLEARANCE} mm above the desktop`);}
   }
   // finishes: white inputs on the tray the studio's white HBHS uses; else the source's own
   const fins={};
