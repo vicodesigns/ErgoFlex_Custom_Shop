@@ -38,7 +38,11 @@ try{
   let cutKey=null;for(const id of ids.slice(1)){await pick(id);await wait(250);if(await page.$eval('#director-panel [name="key-transition"]',s=>s.value).catch(()=>null)==='cut'){cutKey=id;break;}}
   check(!!cutKey,'1. its key\'s Inspector row says Cut ('+cutKey+')');
   // ---- 2 a dissolve on a key with room (the middle of the chapter, not the cut key)
-  const target=ids.slice(1).find(id=>id!==cutKey);await pick(target);await wait(300);
+  // the key with the most room either side (create's 2.35 s key sits 0.05 s before the 2.4 s cut: only 0.1 s fits there,
+  // so its dissolve was clamped to 0.1 s and the edge could not grow it; Windows, 20 Nov 2026)
+  const target=await page.evaluate(cut=>{const k=[...document.querySelectorAll('#director-timeline .camera-key')].map(b=>({id:b.dataset.key,x:parseFloat(b.style.left)}));
+    let best=null,room=-1;for(let i=1;i<k.length-1;i++){if(k[i].id===cut||k[i+1].id===cut)continue;const r=Math.min(k[i].x-k[i-1].x,k[i+1].x-k[i].x);if(r>room){room=r;best=k[i].id;}}return best;},cutKey);
+  check(!!target,'2. a key with room for a dissolve: '+target);await pick(target);await wait(300);
   await setSel('key-transition','dissolve');
   const band=await until(()=>page.$(`#director-timeline [data-cam-transition="${target}"]`),'the dissolve band');
   const dur0=Number(await page.$eval('#director-panel [name="key-transition-dur"]',e=>e.value));
@@ -61,8 +65,10 @@ try{
   await page.mouse.move(edge.x,edge.y);await page.mouse.down();await page.mouse.move(edge.x+25,edge.y,{steps:5});await page.keyboard.down('Alt');await page.mouse.move(edge.x+30,edge.y,{steps:2});await page.mouse.up();await page.keyboard.up('Alt');await wait(500);
   await pick(target);await wait(300);const dur1=Number(await page.$eval('#director-panel [name="key-transition-dur"]',e=>e.value));
   check(dur1>dur0,`3. dragging the end edge: ${dur0} → ${dur1} s`);
-  await page.evaluate(()=>document.activeElement?.blur?.());await keyChord('Control','KeyZ');await pick(target);await wait(300);
-  check(Math.abs(Number(await page.$eval('#director-panel [name="key-transition-dur"]',e=>e.value))-dur0)<1e-6,'3. one undo step puts the length back');
+  if(dur1>dur0){   // (only undo what the drag did: with no commit, Ctrl+Z would take the dissolve itself away)
+    await page.evaluate(()=>document.activeElement?.blur?.());await keyChord('Control','KeyZ');await pick(target);await wait(300);
+    check(Math.abs(Number(await page.$eval('#director-panel [name="key-transition-dur"]',e=>e.value).catch(()=>NaN))-dur0)<1e-6,'3. one undo step puts the length back');
+  }
   // ---- 4 preview
   const t=await page.evaluate(id=>{const sel=document.querySelector('#director-panel [name="key-time"]');return Number(sel.value);},target);
   await seek(page,t-dur0/4);const o1=await overlay();
@@ -80,7 +86,7 @@ try{
   await page.focus(`#director-timeline [data-cam-transition="${target}"]`);await page.keyboard.press('Delete');await wait(500);
   check(!await page.$(`#director-timeline [data-cam-transition="${target}"]`),'5. Delete on the band: back to a move');
   // ---- 6 a cut to the same view warns: Duplicate a key (same view, half way to the next), cut into the copy
-  {await pick(ids[1]);await wait(300);await page.evaluate(()=>document.activeElement?.blur?.());await keyChord('Control','KeyD');
+  {await pick(target);await wait(300);await page.evaluate(()=>document.activeElement?.blur?.());await keyChord('Control','KeyD');   // (the roomy key: create's 2.35 s key would put its copy 0.025 s from the cut)
     const now=await keysNow(),copyId=now.find(id=>!ids.includes(id));
     if(check(!!copyId,'6. Ctrl+D made a copy of the view')){await pick(copyId);await wait(300);await setSel('key-transition','cut');
       const warn=await page.$eval('#director-panel [data-transition-warn]',e=>e.textContent).catch(()=>'');

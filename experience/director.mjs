@@ -205,11 +205,12 @@ export function mountDirector(bridge,catalog,initial){
   // white; dissolves and dips centred on the key, their length dragged on the camera lane or typed in the inspector.
   function putTransition(id,value){
     requireReady();let list=setTransition(keys(),id,value,shot().seconds,{explicit:!!filmShot()});const n=list.findIndex(x=>x.id===id),k=list[n];
+    const asked=Number(value?.dur),fits=hasLength(k.transition)&&Number.isFinite(asked)&&k.transition.dur<asked-1e-9?` (only ${k.transition.dur} s fits: the views either side are close)`:'';
     // (client cuts: the old "Hold, then cut" easing on the key before was the same cut; the segment's transition now says it)
     if(!filmShot()&&n>0&&list[n-1].easing==='hold')list=list.map((x,j)=>j===n-1?{...x,easing:'smooth'}:x);
     commit(()=>{shot().camera={keys:copy(list)};},{render:true});
     const t=k.transition,where=`${n>0?`from "${list[n-1].label}" `:''}into "${k.label}"`;
-    status(!t?`A move ${where}.`:t.type==='cut'?`A cut ${where}: the camera jumps at ${r2(k.time*shot().seconds)} s.`:`${TRANSITION_LABELS[t.type]} ${where}, ${t.dur} s.${filmShot()?' The film renders it as a cut until the render side for dissolves and dips lands.':''} Undo brings back the one before.`);
+    status(!t?`A move ${where}.`:t.type==='cut'?`A cut ${where}: the camera jumps at ${r2(k.time*shot().seconds)} s.`:`${TRANSITION_LABELS[t.type]} ${where}, ${t.dur} s${fits}.${filmShot()?' The film renders it as a cut until the render side for dissolves and dips lands.':''} Undo brings back the one before.`);
   }
 
   // One transition per segment (key N -> key N+1), stored on key N+1: key N shows it as "To the next view", key N+1 as
