@@ -230,7 +230,12 @@
  },
  "sceneGlobals": {
   "environmentScale": 0.42,
-  "exposureScale": 1.11
+  "exposureScale": 1.11,
+  "screenLight": {
+   "gain": 0.6,
+   "saturation": 1.4,
+   "keepHue": true
+  }
  },
  "mediaBaseGain": 3.5,
  "quality": {
@@ -1497,12 +1502,13 @@
   }
  },
  "directorEdited": {
-  "at": "2026-11-20T05:05:59Z",
+  "at": "2026-11-21T21:48:03Z",
   "fields": [
    "camera",
    "cameraPlan",
    "people",
-   "sceneEdits"
+   "sceneEdits",
+   "sceneGlobals"
   ]
  }
 }

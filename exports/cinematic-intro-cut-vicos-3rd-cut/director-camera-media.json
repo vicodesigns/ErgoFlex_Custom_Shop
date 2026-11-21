@@ -1,5 +1,5 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-2nd-cut/director-exports/export-2691fee6de86-Film-chapter-media-17-s-__omar-roll_.json",
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-cd322bb4697f-Film-chapter-media-screenlight.json",
  "seconds": 17.0,
  "keys": [
   {
@@ -83,6 +83,13 @@
  "initial": {
   "height": 30,
   "tilt": 0
+ },
+ "lighting": {
+  "screenLight": {
+   "gain": 0.6,
+   "saturation": 1.4,
+   "keepHue": true
+  }
  },
  "props": [
   {

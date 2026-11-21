@@ -1,7 +1,7 @@
 {
  "fps": 30,
  "dissolve": 1.5,
- "total": 254.328,
+ "total": 253.048,
  "chapters": [
   {
    "index": 1,
@@ -13,79 +13,79 @@
   {
    "index": 2,
    "id": "rise",
-   "duration": 23.5,
+   "duration": 28.5,
    "start": 43.35,
-   "end": 66.85
+   "end": 71.85
   },
   {
    "index": 3,
    "id": "create",
    "duration": 23.5,
-   "start": 65.35,
-   "end": 88.85
+   "start": 70.35,
+   "end": 93.85
   },
   {
    "index": 4,
    "id": "commons",
    "duration": 16,
-   "start": 87.35,
-   "end": 103.35
+   "start": 92.35,
+   "end": 108.35
   },
   {
    "index": 5,
    "id": "coast",
    "duration": 14.5,
-   "start": 101.85,
-   "end": 116.35
+   "start": 106.85,
+   "end": 121.35
   },
   {
    "index": 6,
    "id": "oilers",
    "duration": 15,
-   "start": 114.85,
-   "end": 129.85
+   "start": 119.85,
+   "end": 134.85
   },
   {
    "index": 7,
    "id": "wellness",
-   "duration": 19.5,
-   "start": 128.35,
-   "end": 147.85
+   "duration": 22.5,
+   "start": 133.35,
+   "end": 155.85
   },
   {
    "index": 8,
    "id": "awareness",
    "duration": 12,
-   "start": 146.35,
-   "end": 158.35
+   "start": 154.35,
+   "end": 166.35
   },
   {
    "index": 9,
    "id": "music",
    "duration": 12.5,
-   "start": 156.85,
-   "end": 169.35
+   "start": 164.85,
+   "end": 177.35
   },
   {
    "index": 10,
    "id": "media",
    "duration": 17,
-   "start": 167.85,
-   "end": 184.85
+   "start": 175.85,
+   "end": 192.85
   },
   {
    "index": 11,
    "id": "storage",
    "duration": 24.978,
-   "start": 183.35,
-   "end": 208.328
+   "start": 191.35,
+   "end": 216.328
   },
   {
    "index": 12,
    "id": "hero",
-   "duration": 47.5,
-   "start": 206.828,
-   "end": 254.328
+   "duration": 38.22,
+   "start": 214.828,
+   "end": 253.048
   }
  ],
  "beats": [
@@ -98,11 +98,11 @@
    "what": "awaken title B: Make Room For Possibility"
   },
   {
-   "at": 248.368,
+   "at": 247.088,
    "what": "end card: ErgoFlex wordmark"
   },
   {
-   "at": 254.328,
+   "at": 253.048,
    "what": "cut to black / onboarding"
   }
  ],
