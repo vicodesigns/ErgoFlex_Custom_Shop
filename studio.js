@@ -3657,7 +3657,10 @@ function setScreenProgress(value) {
     const slide = Math.min(1, screenProgress * 2);
     const turn = Math.max(0, (screenProgress - 0.5) * 2);
     for (const [size, { moving, staticParts, pivot }] of Object.entries(variants)) {
-        const visible = opened && (size === (currentConfig.size === '60x30' ? 'wide' : 'standard'));
+        // (a film that poses the screen (the high school): the screen comes out of the housing the desk model stows it in,
+        // inside the right wing panel, whatever the size; the wide mount sits on the panel's plane and the screen would slide
+        // through it)
+        const visible = opened && (size === (currentConfig.size === '60x30' && !touchscreenBeforeFilm ? 'wide' : 'standard'));
         moving.visible = visible;
         staticParts.visible = visible;
         moving.position.x = pivot.x - SCREEN_SLIDE * (1 - slide);
