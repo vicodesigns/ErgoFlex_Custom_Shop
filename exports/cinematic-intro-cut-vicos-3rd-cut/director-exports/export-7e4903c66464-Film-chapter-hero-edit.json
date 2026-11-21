@@ -1,0 +1,3169 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "film-vicos-3rd-cut-hero",
+  "name": "Film chapter: hero (34.72 s)",
+  "client": "Vicos 3rd cut",
+  "volume": 0.32,
+  "shots": [
+    {
+      "id": "hero",
+      "room": "product",
+      "kind": "glide",
+      "seconds": 34.72,
+      "title": "One desk. Every part of your day.",
+      "detail": "",
+      "preset": "gaming",
+      "transition": 1.1,
+      "size": "60x30",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 52.5,
+          "tilt": 65,
+          "x": 0,
+          "z": 0,
+          "yaw": 0
+        },
+        "clips": [
+          {
+            "id": "b-lift",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 8,
+            "duration": 1.9,
+            "easing": "linear",
+            "label": "",
+            "target": 48,
+            "path": [
+              {
+                "time": 0,
+                "pose": {
+                  "height": 52.5
+                }
+              },
+              {
+                "time": 0.066667,
+                "pose": {
+                  "height": 52.455
+                }
+              },
+              {
+                "time": 0.133333,
+                "pose": {
+                  "height": 52.32
+                }
+              },
+              {
+                "time": 0.2,
+                "pose": {
+                  "height": 52.095
+                }
+              },
+              {
+                "time": 0.266667,
+                "pose": {
+                  "height": 51.78
+                }
+              },
+              {
+                "time": 0.333333,
+                "pose": {
+                  "height": 51.375
+                }
+              },
+              {
+                "time": 0.4,
+                "pose": {
+                  "height": 50.925
+                }
+              },
+              {
+                "time": 0.466667,
+                "pose": {
+                  "height": 50.475
+                }
+              },
+              {
+                "time": 0.533333,
+                "pose": {
+                  "height": 50.025
+                }
+              },
+              {
+                "time": 0.6,
+                "pose": {
+                  "height": 49.575
+                }
+              },
+              {
+                "time": 0.666667,
+                "pose": {
+                  "height": 49.125
+                }
+              },
+              {
+                "time": 0.733333,
+                "pose": {
+                  "height": 48.72
+                }
+              },
+              {
+                "time": 0.8,
+                "pose": {
+                  "height": 48.405
+                }
+              },
+              {
+                "time": 0.866667,
+                "pose": {
+                  "height": 48.18
+                }
+              },
+              {
+                "time": 0.933333,
+                "pose": {
+                  "height": 48.045
+                }
+              },
+              {
+                "time": 1,
+                "pose": {
+                  "height": 48
+                }
+              }
+            ]
+          },
+          {
+            "id": "b-tilt",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 8,
+            "duration": 3.55,
+            "easing": "linear",
+            "label": "",
+            "target": 30,
+            "path": [
+              {
+                "time": 0,
+                "pose": {
+                  "tilt": 65
+                }
+              },
+              {
+                "time": 0.017857,
+                "pose": {
+                  "tilt": 64.9308
+                }
+              },
+              {
+                "time": 0.035714,
+                "pose": {
+                  "tilt": 64.7233
+                }
+              },
+              {
+                "time": 0.053571,
+                "pose": {
+                  "tilt": 64.3774
+                }
+              },
+              {
+                "time": 0.071429,
+                "pose": {
+                  "tilt": 63.8931
+                }
+              },
+              {
+                "time": 0.089286,
+                "pose": {
+                  "tilt": 63.2706
+                }
+              },
+              {
+                "time": 0.107143,
+                "pose": {
+                  "tilt": 62.585
+                }
+              },
+              {
+                "time": 0.125,
+                "pose": {
+                  "tilt": 61.8993
+                }
+              },
+              {
+                "time": 0.142857,
+                "pose": {
+                  "tilt": 61.2136
+                }
+              },
+              {
+                "time": 0.160714,
+                "pose": {
+                  "tilt": 60.5279
+                }
+              },
+              {
+                "time": 0.178571,
+                "pose": {
+                  "tilt": 59.8422
+                }
+              },
+              {
+                "time": 0.196429,
+                "pose": {
+                  "tilt": 59.1566
+                }
+              },
+              {
+                "time": 0.214286,
+                "pose": {
+                  "tilt": 58.4709
+                }
+              },
+              {
+                "time": 0.232143,
+                "pose": {
+                  "tilt": 57.7852
+                }
+              },
+              {
+                "time": 0.25,
+                "pose": {
+                  "tilt": 57.0995
+                }
+              },
+              {
+                "time": 0.267857,
+                "pose": {
+                  "tilt": 56.4138
+                }
+              },
+              {
+                "time": 0.285714,
+                "pose": {
+                  "tilt": 55.7282
+                }
+              },
+              {
+                "time": 0.303571,
+                "pose": {
+                  "tilt": 55.0425
+                }
+              },
+              {
+                "time": 0.321429,
+                "pose": {
+                  "tilt": 54.3568
+                }
+              },
+              {
+                "time": 0.339286,
+                "pose": {
+                  "tilt": 53.6711
+                }
+              },
+              {
+                "time": 0.357143,
+                "pose": {
+                  "tilt": 52.9854
+                }
+              },
+              {
+                "time": 0.375,
+                "pose": {
+                  "tilt": 52.2998
+                }
+              },
+              {
+                "time": 0.392857,
+                "pose": {
+                  "tilt": 51.6141
+                }
+              },
+              {
+                "time": 0.410714,
+                "pose": {
+                  "tilt": 50.9284
+                }
+              },
+              {
+                "time": 0.428571,
+                "pose": {
+                  "tilt": 50.2427
+                }
+              },
+              {
+                "time": 0.446429,
+                "pose": {
+                  "tilt": 49.557
+                }
+              },
+              {
+                "time": 0.464286,
+                "pose": {
+                  "tilt": 48.8714
+                }
+              },
+              {
+                "time": 0.482143,
+                "pose": {
+                  "tilt": 48.1857
+                }
+              },
+              {
+                "time": 0.5,
+                "pose": {
+                  "tilt": 47.5
+                }
+              },
+              {
+                "time": 0.517857,
+                "pose": {
+                  "tilt": 46.8143
+                }
+              },
+              {
+                "time": 0.535714,
+                "pose": {
+                  "tilt": 46.1286
+                }
+              },
+              {
+                "time": 0.553571,
+                "pose": {
+                  "tilt": 45.443
+                }
+              },
+              {
+                "time": 0.571429,
+                "pose": {
+                  "tilt": 44.7573
+                }
+              },
+              {
+                "time": 0.589286,
+                "pose": {
+                  "tilt": 44.0716
+                }
+              },
+              {
+                "time": 0.607143,
+                "pose": {
+                  "tilt": 43.3859
+                }
+              },
+              {
+                "time": 0.625,
+                "pose": {
+                  "tilt": 42.7002
+                }
+              },
+              {
+                "time": 0.642857,
+                "pose": {
+                  "tilt": 42.0146
+                }
+              },
+              {
+                "time": 0.660714,
+                "pose": {
+                  "tilt": 41.3289
+                }
+              },
+              {
+                "time": 0.678571,
+                "pose": {
+                  "tilt": 40.6432
+                }
+              },
+              {
+                "time": 0.696429,
+                "pose": {
+                  "tilt": 39.9575
+                }
+              },
+              {
+                "time": 0.714286,
+                "pose": {
+                  "tilt": 39.2718
+                }
+              },
+              {
+                "time": 0.732143,
+                "pose": {
+                  "tilt": 38.5862
+                }
+              },
+              {
+                "time": 0.75,
+                "pose": {
+                  "tilt": 37.9005
+                }
+              },
+              {
+                "time": 0.767857,
+                "pose": {
+                  "tilt": 37.2148
+                }
+              },
+              {
+                "time": 0.785714,
+                "pose": {
+                  "tilt": 36.5291
+                }
+              },
+              {
+                "time": 0.803571,
+                "pose": {
+                  "tilt": 35.8434
+                }
+              },
+              {
+                "time": 0.821429,
+                "pose": {
+                  "tilt": 35.1578
+                }
+              },
+              {
+                "time": 0.839286,
+                "pose": {
+                  "tilt": 34.4721
+                }
+              },
+              {
+                "time": 0.857143,
+                "pose": {
+                  "tilt": 33.7864
+                }
+              },
+              {
+                "time": 0.875,
+                "pose": {
+                  "tilt": 33.1007
+                }
+              },
+              {
+                "time": 0.892857,
+                "pose": {
+                  "tilt": 32.415
+                }
+              },
+              {
+                "time": 0.910714,
+                "pose": {
+                  "tilt": 31.7294
+                }
+              },
+              {
+                "time": 0.928571,
+                "pose": {
+                  "tilt": 31.1069
+                }
+              },
+              {
+                "time": 0.946429,
+                "pose": {
+                  "tilt": 30.6226
+                }
+              },
+              {
+                "time": 0.964286,
+                "pose": {
+                  "tilt": 30.2767
+                }
+              },
+              {
+                "time": 0.982143,
+                "pose": {
+                  "tilt": 30.0692
+                }
+              },
+              {
+                "time": 1,
+                "pose": {
+                  "tilt": 30
+                }
+              }
+            ]
+          },
+          {
+            "id": "c-lift",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 15,
+            "duration": 3.9,
+            "easing": "linear",
+            "label": "",
+            "target": 28,
+            "path": [
+              {
+                "time": 0,
+                "pose": {
+                  "height": 48
+                }
+              },
+              {
+                "time": 0.02,
+                "pose": {
+                  "height": 47.956
+                }
+              },
+              {
+                "time": 0.04,
+                "pose": {
+                  "height": 47.8238
+                }
+              },
+              {
+                "time": 0.06,
+                "pose": {
+                  "height": 47.6036
+                }
+              },
+              {
+                "time": 0.08,
+                "pose": {
+                  "height": 47.2952
+                }
+              },
+              {
+                "time": 0.1,
+                "pose": {
+                  "height": 46.8988
+                }
+              },
+              {
+                "time": 0.12,
+                "pose": {
+                  "height": 46.4539
+                }
+              },
+              {
+                "time": 0.14,
+                "pose": {
+                  "height": 46.009
+                }
+              },
+              {
+                "time": 0.16,
+                "pose": {
+                  "height": 45.564
+                }
+              },
+              {
+                "time": 0.18,
+                "pose": {
+                  "height": 45.1191
+                }
+              },
+              {
+                "time": 0.2,
+                "pose": {
+                  "height": 44.6742
+                }
+              },
+              {
+                "time": 0.22,
+                "pose": {
+                  "height": 44.2292
+                }
+              },
+              {
+                "time": 0.24,
+                "pose": {
+                  "height": 43.7843
+                }
+              },
+              {
+                "time": 0.26,
+                "pose": {
+                  "height": 43.3393
+                }
+              },
+              {
+                "time": 0.28,
+                "pose": {
+                  "height": 42.8944
+                }
+              },
+              {
+                "time": 0.3,
+                "pose": {
+                  "height": 42.4494
+                }
+              },
+              {
+                "time": 0.32,
+                "pose": {
+                  "height": 42.0045
+                }
+              },
+              {
+                "time": 0.34,
+                "pose": {
+                  "height": 41.5596
+                }
+              },
+              {
+                "time": 0.36,
+                "pose": {
+                  "height": 41.1146
+                }
+              },
+              {
+                "time": 0.38,
+                "pose": {
+                  "height": 40.6697
+                }
+              },
+              {
+                "time": 0.4,
+                "pose": {
+                  "height": 40.2247
+                }
+              },
+              {
+                "time": 0.42,
+                "pose": {
+                  "height": 39.7798
+                }
+              },
+              {
+                "time": 0.44,
+                "pose": {
+                  "height": 39.3348
+                }
+              },
+              {
+                "time": 0.46,
+                "pose": {
+                  "height": 38.8899
+                }
+              },
+              {
+                "time": 0.48,
+                "pose": {
+                  "height": 38.4449
+                }
+              },
+              {
+                "time": 0.5,
+                "pose": {
+                  "height": 38
+                }
+              },
+              {
+                "time": 0.52,
+                "pose": {
+                  "height": 37.5551
+                }
+              },
+              {
+                "time": 0.54,
+                "pose": {
+                  "height": 37.1101
+                }
+              },
+              {
+                "time": 0.56,
+                "pose": {
+                  "height": 36.6652
+                }
+              },
+              {
+                "time": 0.58,
+                "pose": {
+                  "height": 36.2202
+                }
+              },
+              {
+                "time": 0.6,
+                "pose": {
+                  "height": 35.7753
+                }
+              },
+              {
+                "time": 0.62,
+                "pose": {
+                  "height": 35.3303
+                }
+              },
+              {
+                "time": 0.64,
+                "pose": {
+                  "height": 34.8854
+                }
+              },
+              {
+                "time": 0.66,
+                "pose": {
+                  "height": 34.4404
+                }
+              },
+              {
+                "time": 0.68,
+                "pose": {
+                  "height": 33.9955
+                }
+              },
+              {
+                "time": 0.7,
+                "pose": {
+                  "height": 33.5506
+                }
+              },
+              {
+                "time": 0.72,
+                "pose": {
+                  "height": 33.1056
+                }
+              },
+              {
+                "time": 0.74,
+                "pose": {
+                  "height": 32.6607
+                }
+              },
+              {
+                "time": 0.76,
+                "pose": {
+                  "height": 32.2157
+                }
+              },
+              {
+                "time": 0.78,
+                "pose": {
+                  "height": 31.7708
+                }
+              },
+              {
+                "time": 0.8,
+                "pose": {
+                  "height": 31.3258
+                }
+              },
+              {
+                "time": 0.82,
+                "pose": {
+                  "height": 30.8809
+                }
+              },
+              {
+                "time": 0.84,
+                "pose": {
+                  "height": 30.436
+                }
+              },
+              {
+                "time": 0.86,
+                "pose": {
+                  "height": 29.991
+                }
+              },
+              {
+                "time": 0.88,
+                "pose": {
+                  "height": 29.5461
+                }
+              },
+              {
+                "time": 0.9,
+                "pose": {
+                  "height": 29.1012
+                }
+              },
+              {
+                "time": 0.92,
+                "pose": {
+                  "height": 28.7048
+                }
+              },
+              {
+                "time": 0.94,
+                "pose": {
+                  "height": 28.3964
+                }
+              },
+              {
+                "time": 0.96,
+                "pose": {
+                  "height": 28.1762
+                }
+              },
+              {
+                "time": 0.98,
+                "pose": {
+                  "height": 28.044
+                }
+              },
+              {
+                "time": 1,
+                "pose": {
+                  "height": 28
+                }
+              }
+            ]
+          },
+          {
+            "id": "c-tilt",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 15.7,
+            "duration": 3.2,
+            "easing": "linear",
+            "label": "",
+            "target": -5,
+            "path": [
+              {
+                "time": 0,
+                "pose": {
+                  "tilt": 30
+                }
+              },
+              {
+                "time": 0.017857,
+                "pose": {
+                  "tilt": 29.9308
+                }
+              },
+              {
+                "time": 0.035714,
+                "pose": {
+                  "tilt": 29.7233
+                }
+              },
+              {
+                "time": 0.053571,
+                "pose": {
+                  "tilt": 29.3774
+                }
+              },
+              {
+                "time": 0.071429,
+                "pose": {
+                  "tilt": 28.8931
+                }
+              },
+              {
+                "time": 0.089286,
+                "pose": {
+                  "tilt": 28.2706
+                }
+              },
+              {
+                "time": 0.107143,
+                "pose": {
+                  "tilt": 27.585
+                }
+              },
+              {
+                "time": 0.125,
+                "pose": {
+                  "tilt": 26.8993
+                }
+              },
+              {
+                "time": 0.142857,
+                "pose": {
+                  "tilt": 26.2136
+                }
+              },
+              {
+                "time": 0.160714,
+                "pose": {
+                  "tilt": 25.5279
+                }
+              },
+              {
+                "time": 0.178571,
+                "pose": {
+                  "tilt": 24.8422
+                }
+              },
+              {
+                "time": 0.196429,
+                "pose": {
+                  "tilt": 24.1566
+                }
+              },
+              {
+                "time": 0.214286,
+                "pose": {
+                  "tilt": 23.4709
+                }
+              },
+              {
+                "time": 0.232143,
+                "pose": {
+                  "tilt": 22.7852
+                }
+              },
+              {
+                "time": 0.25,
+                "pose": {
+                  "tilt": 22.0995
+                }
+              },
+              {
+                "time": 0.267857,
+                "pose": {
+                  "tilt": 21.4138
+                }
+              },
+              {
+                "time": 0.285714,
+                "pose": {
+                  "tilt": 20.7282
+                }
+              },
+              {
+                "time": 0.303571,
+                "pose": {
+                  "tilt": 20.0425
+                }
+              },
+              {
+                "time": 0.321429,
+                "pose": {
+                  "tilt": 19.3568
+                }
+              },
+              {
+                "time": 0.339286,
+                "pose": {
+                  "tilt": 18.6711
+                }
+              },
+              {
+                "time": 0.357143,
+                "pose": {
+                  "tilt": 17.9854
+                }
+              },
+              {
+                "time": 0.375,
+                "pose": {
+                  "tilt": 17.2998
+                }
+              },
+              {
+                "time": 0.392857,
+                "pose": {
+                  "tilt": 16.6141
+                }
+              },
+              {
+                "time": 0.410714,
+                "pose": {
+                  "tilt": 15.9284
+                }
+              },
+              {
+                "time": 0.428571,
+                "pose": {
+                  "tilt": 15.2427
+                }
+              },
+              {
+                "time": 0.446429,
+                "pose": {
+                  "tilt": 14.557
+                }
+              },
+              {
+                "time": 0.464286,
+                "pose": {
+                  "tilt": 13.8714
+                }
+              },
+              {
+                "time": 0.482143,
+                "pose": {
+                  "tilt": 13.1857
+                }
+              },
+              {
+                "time": 0.5,
+                "pose": {
+                  "tilt": 12.5
+                }
+              },
+              {
+                "time": 0.517857,
+                "pose": {
+                  "tilt": 11.8143
+                }
+              },
+              {
+                "time": 0.535714,
+                "pose": {
+                  "tilt": 11.1286
+                }
+              },
+              {
+                "time": 0.553571,
+                "pose": {
+                  "tilt": 10.443
+                }
+              },
+              {
+                "time": 0.571429,
+                "pose": {
+                  "tilt": 9.7573
+                }
+              },
+              {
+                "time": 0.589286,
+                "pose": {
+                  "tilt": 9.0716
+                }
+              },
+              {
+                "time": 0.607143,
+                "pose": {
+                  "tilt": 8.3859
+                }
+              },
+              {
+                "time": 0.625,
+                "pose": {
+                  "tilt": 7.7002
+                }
+              },
+              {
+                "time": 0.642857,
+                "pose": {
+                  "tilt": 7.0146
+                }
+              },
+              {
+                "time": 0.660714,
+                "pose": {
+                  "tilt": 6.3289
+                }
+              },
+              {
+                "time": 0.678571,
+                "pose": {
+                  "tilt": 5.6432
+                }
+              },
+              {
+                "time": 0.696429,
+                "pose": {
+                  "tilt": 4.9575
+                }
+              },
+              {
+                "time": 0.714286,
+                "pose": {
+                  "tilt": 4.2718
+                }
+              },
+              {
+                "time": 0.732143,
+                "pose": {
+                  "tilt": 3.5862
+                }
+              },
+              {
+                "time": 0.75,
+                "pose": {
+                  "tilt": 2.9005
+                }
+              },
+              {
+                "time": 0.767857,
+                "pose": {
+                  "tilt": 2.2148
+                }
+              },
+              {
+                "time": 0.785714,
+                "pose": {
+                  "tilt": 1.5291
+                }
+              },
+              {
+                "time": 0.803571,
+                "pose": {
+                  "tilt": 0.8434
+                }
+              },
+              {
+                "time": 0.821429,
+                "pose": {
+                  "tilt": 0.1578
+                }
+              },
+              {
+                "time": 0.839286,
+                "pose": {
+                  "tilt": -0.5279
+                }
+              },
+              {
+                "time": 0.857143,
+                "pose": {
+                  "tilt": -1.2136
+                }
+              },
+              {
+                "time": 0.875,
+                "pose": {
+                  "tilt": -1.8993
+                }
+              },
+              {
+                "time": 0.892857,
+                "pose": {
+                  "tilt": -2.585
+                }
+              },
+              {
+                "time": 0.910714,
+                "pose": {
+                  "tilt": -3.2706
+                }
+              },
+              {
+                "time": 0.928571,
+                "pose": {
+                  "tilt": -3.8931
+                }
+              },
+              {
+                "time": 0.946429,
+                "pose": {
+                  "tilt": -4.3774
+                }
+              },
+              {
+                "time": 0.964286,
+                "pose": {
+                  "tilt": -4.7233
+                }
+              },
+              {
+                "time": 0.982143,
+                "pose": {
+                  "tilt": -4.9308
+                }
+              },
+              {
+                "time": 1,
+                "pose": {
+                  "tilt": -5
+                }
+              }
+            ]
+          },
+          {
+            "id": "d-lift",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 22.5,
+            "duration": 3.156667,
+            "easing": "linear",
+            "label": "",
+            "target": 39.9808,
+            "path": [
+              {
+                "time": 0,
+                "pose": {
+                  "height": 28
+                }
+              },
+              {
+                "time": 0.031679,
+                "pose": {
+                  "height": 28.0444
+                }
+              },
+              {
+                "time": 0.063358,
+                "pose": {
+                  "height": 28.1778
+                }
+              },
+              {
+                "time": 0.095037,
+                "pose": {
+                  "height": 28.4
+                }
+              },
+              {
+                "time": 0.126716,
+                "pose": {
+                  "height": 28.7111
+                }
+              },
+              {
+                "time": 0.158395,
+                "pose": {
+                  "height": 29.1111
+                }
+              },
+              {
+                "time": 0.190074,
+                "pose": {
+                  "height": 29.5556
+                }
+              },
+              {
+                "time": 0.221753,
+                "pose": {
+                  "height": 30
+                }
+              },
+              {
+                "time": 0.253432,
+                "pose": {
+                  "height": 30.4444
+                }
+              },
+              {
+                "time": 0.285111,
+                "pose": {
+                  "height": 30.8889
+                }
+              },
+              {
+                "time": 0.31679,
+                "pose": {
+                  "height": 31.3333
+                }
+              },
+              {
+                "time": 0.348469,
+                "pose": {
+                  "height": 31.7778
+                }
+              },
+              {
+                "time": 0.380148,
+                "pose": {
+                  "height": 32.2222
+                }
+              },
+              {
+                "time": 0.411827,
+                "pose": {
+                  "height": 32.6667
+                }
+              },
+              {
+                "time": 0.443506,
+                "pose": {
+                  "height": 33.1111
+                }
+              },
+              {
+                "time": 0.475185,
+                "pose": {
+                  "height": 33.5556
+                }
+              },
+              {
+                "time": 0.506864,
+                "pose": {
+                  "height": 34
+                }
+              },
+              {
+                "time": 0.538543,
+                "pose": {
+                  "height": 34.4444
+                }
+              },
+              {
+                "time": 0.570222,
+                "pose": {
+                  "height": 34.8889
+                }
+              },
+              {
+                "time": 0.601901,
+                "pose": {
+                  "height": 35.3333
+                }
+              },
+              {
+                "time": 0.63358,
+                "pose": {
+                  "height": 35.7778
+                }
+              },
+              {
+                "time": 0.665259,
+                "pose": {
+                  "height": 36.2222
+                }
+              },
+              {
+                "time": 0.696938,
+                "pose": {
+                  "height": 36.6667
+                }
+              },
+              {
+                "time": 0.728617,
+                "pose": {
+                  "height": 37.1111
+                }
+              },
+              {
+                "time": 0.760296,
+                "pose": {
+                  "height": 37.5556
+                }
+              },
+              {
+                "time": 0.791975,
+                "pose": {
+                  "height": 38
+                }
+              },
+              {
+                "time": 0.823654,
+                "pose": {
+                  "height": 38.4444
+                }
+              },
+              {
+                "time": 0.855333,
+                "pose": {
+                  "height": 38.8889
+                }
+              },
+              {
+                "time": 0.887012,
+                "pose": {
+                  "height": 39.2889
+                }
+              },
+              {
+                "time": 0.918691,
+                "pose": {
+                  "height": 39.6
+                }
+              },
+              {
+                "time": 0.95037,
+                "pose": {
+                  "height": 39.8222
+                }
+              },
+              {
+                "time": 0.982049,
+                "pose": {
+                  "height": 39.9556
+                }
+              },
+              {
+                "time": 1,
+                "pose": {
+                  "height": 39.9808
+                }
+              }
+            ]
+          },
+          {
+            "id": "d-tilt",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 23.6,
+            "duration": 2.056667,
+            "easing": "linear",
+            "label": "",
+            "target": 6.9599,
+            "path": [
+              {
+                "time": 0,
+                "pose": {
+                  "tilt": -5
+                }
+              },
+              {
+                "time": 0.049636,
+                "pose": {
+                  "tilt": -4.9305
+                }
+              },
+              {
+                "time": 0.09927,
+                "pose": {
+                  "tilt": -4.7221
+                }
+              },
+              {
+                "time": 0.148906,
+                "pose": {
+                  "tilt": -4.3747
+                }
+              },
+              {
+                "time": 0.198542,
+                "pose": {
+                  "tilt": -3.8884
+                }
+              },
+              {
+                "time": 0.248176,
+                "pose": {
+                  "tilt": -3.2639
+                }
+              },
+              {
+                "time": 0.297812,
+                "pose": {
+                  "tilt": -2.5833
+                }
+              },
+              {
+                "time": 0.347448,
+                "pose": {
+                  "tilt": -1.9028
+                }
+              },
+              {
+                "time": 0.397082,
+                "pose": {
+                  "tilt": -1.2222
+                }
+              },
+              {
+                "time": 0.446718,
+                "pose": {
+                  "tilt": -0.5417
+                }
+              },
+              {
+                "time": 0.496354,
+                "pose": {
+                  "tilt": 0.1389
+                }
+              },
+              {
+                "time": 0.545988,
+                "pose": {
+                  "tilt": 0.8194
+                }
+              },
+              {
+                "time": 0.595624,
+                "pose": {
+                  "tilt": 1.5
+                }
+              },
+              {
+                "time": 0.64526,
+                "pose": {
+                  "tilt": 2.1806
+                }
+              },
+              {
+                "time": 0.694894,
+                "pose": {
+                  "tilt": 2.8611
+                }
+              },
+              {
+                "time": 0.74453,
+                "pose": {
+                  "tilt": 3.5417
+                }
+              },
+              {
+                "time": 0.794166,
+                "pose": {
+                  "tilt": 4.2222
+                }
+              },
+              {
+                "time": 0.8438,
+                "pose": {
+                  "tilt": 4.9028
+                }
+              },
+              {
+                "time": 0.893436,
+                "pose": {
+                  "tilt": 5.5833
+                }
+              },
+              {
+                "time": 0.943072,
+                "pose": {
+                  "tilt": 6.2639
+                }
+              },
+              {
+                "time": 0.992706,
+                "pose": {
+                  "tilt": 6.8884
+                }
+              },
+              {
+                "time": 1,
+                "pose": {
+                  "tilt": 6.9599
+                }
+              }
+            ]
+          },
+          {
+            "id": "hero-cut-lift",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 25.656667,
+            "duration": 0.033333,
+            "easing": "hold",
+            "label": "Cut: gaming pose",
+            "target": 33.8421
+          },
+          {
+            "id": "hero-cut-tilt",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 25.656667,
+            "duration": 0.033333,
+            "easing": "hold",
+            "label": "Cut: gaming pose",
+            "target": 21.9291
+          },
+          {
+            "id": "f-lift",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 25.69,
+            "duration": 2.25,
+            "easing": "linear",
+            "label": "",
+            "target": 28,
+            "path": [
+              {
+                "time": 0,
+                "pose": {
+                  "height": 33.8421
+                }
+              },
+              {
+                "time": 0.022221,
+                "pose": {
+                  "height": 33.6842
+                }
+              },
+              {
+                "time": 0.066666,
+                "pose": {
+                  "height": 33.3684
+                }
+              },
+              {
+                "time": 0.111112,
+                "pose": {
+                  "height": 33.0526
+                }
+              },
+              {
+                "time": 0.155555,
+                "pose": {
+                  "height": 32.7368
+                }
+              },
+              {
+                "time": 0.2,
+                "pose": {
+                  "height": 32.4211
+                }
+              },
+              {
+                "time": 0.244446,
+                "pose": {
+                  "height": 32.1053
+                }
+              },
+              {
+                "time": 0.288888,
+                "pose": {
+                  "height": 31.7895
+                }
+              },
+              {
+                "time": 0.333334,
+                "pose": {
+                  "height": 31.4737
+                }
+              },
+              {
+                "time": 0.377777,
+                "pose": {
+                  "height": 31.1579
+                }
+              },
+              {
+                "time": 0.422222,
+                "pose": {
+                  "height": 30.8421
+                }
+              },
+              {
+                "time": 0.466668,
+                "pose": {
+                  "height": 30.5263
+                }
+              },
+              {
+                "time": 0.51111,
+                "pose": {
+                  "height": 30.2105
+                }
+              },
+              {
+                "time": 0.555556,
+                "pose": {
+                  "height": 29.8947
+                }
+              },
+              {
+                "time": 0.599999,
+                "pose": {
+                  "height": 29.5789
+                }
+              },
+              {
+                "time": 0.644444,
+                "pose": {
+                  "height": 29.2632
+                }
+              },
+              {
+                "time": 0.68889,
+                "pose": {
+                  "height": 28.9671
+                }
+              },
+              {
+                "time": 0.733332,
+                "pose": {
+                  "height": 28.7105
+                }
+              },
+              {
+                "time": 0.777778,
+                "pose": {
+                  "height": 28.4934
+                }
+              },
+              {
+                "time": 0.822224,
+                "pose": {
+                  "height": 28.3158
+                }
+              },
+              {
+                "time": 0.866666,
+                "pose": {
+                  "height": 28.1776
+                }
+              },
+              {
+                "time": 0.911112,
+                "pose": {
+                  "height": 28.0789
+                }
+              },
+              {
+                "time": 0.955554,
+                "pose": {
+                  "height": 28.0197
+                }
+              },
+              {
+                "time": 1,
+                "pose": {
+                  "height": 28
+                }
+              }
+            ]
+          },
+          {
+            "id": "g-tilt",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 25.69,
+            "duration": 3.17,
+            "easing": "linear",
+            "label": "",
+            "target": 0,
+            "path": [
+              {
+                "time": 0,
+                "pose": {
+                  "tilt": 21.9291
+                }
+              },
+              {
+                "time": 0.014421,
+                "pose": {
+                  "tilt": 21.8261
+                }
+              },
+              {
+                "time": 0.032672,
+                "pose": {
+                  "tilt": 21.6087
+                }
+              },
+              {
+                "time": 0.050924,
+                "pose": {
+                  "tilt": 21.3042
+                }
+              },
+              {
+                "time": 0.069176,
+                "pose": {
+                  "tilt": 20.9129
+                }
+              },
+              {
+                "time": 0.087427,
+                "pose": {
+                  "tilt": 20.482
+                }
+              },
+              {
+                "time": 0.105678,
+                "pose": {
+                  "tilt": 20.051
+                }
+              },
+              {
+                "time": 0.12393,
+                "pose": {
+                  "tilt": 19.62
+                }
+              },
+              {
+                "time": 0.142181,
+                "pose": {
+                  "tilt": 19.189
+                }
+              },
+              {
+                "time": 0.160432,
+                "pose": {
+                  "tilt": 18.758
+                }
+              },
+              {
+                "time": 0.178685,
+                "pose": {
+                  "tilt": 18.327
+                }
+              },
+              {
+                "time": 0.196936,
+                "pose": {
+                  "tilt": 17.896
+                }
+              },
+              {
+                "time": 0.215187,
+                "pose": {
+                  "tilt": 17.465
+                }
+              },
+              {
+                "time": 0.233438,
+                "pose": {
+                  "tilt": 17.034
+                }
+              },
+              {
+                "time": 0.25169,
+                "pose": {
+                  "tilt": 16.603
+                }
+              },
+              {
+                "time": 0.269941,
+                "pose": {
+                  "tilt": 16.172
+                }
+              },
+              {
+                "time": 0.288192,
+                "pose": {
+                  "tilt": 15.741
+                }
+              },
+              {
+                "time": 0.306445,
+                "pose": {
+                  "tilt": 15.31
+                }
+              },
+              {
+                "time": 0.324696,
+                "pose": {
+                  "tilt": 14.879
+                }
+              },
+              {
+                "time": 0.342947,
+                "pose": {
+                  "tilt": 14.448
+                }
+              },
+              {
+                "time": 0.361199,
+                "pose": {
+                  "tilt": 14.017
+                }
+              },
+              {
+                "time": 0.37945,
+                "pose": {
+                  "tilt": 13.586
+                }
+              },
+              {
+                "time": 0.397701,
+                "pose": {
+                  "tilt": 13.155
+                }
+              },
+              {
+                "time": 0.415953,
+                "pose": {
+                  "tilt": 12.724
+                }
+              },
+              {
+                "time": 0.434205,
+                "pose": {
+                  "tilt": 12.293
+                }
+              },
+              {
+                "time": 0.452456,
+                "pose": {
+                  "tilt": 11.862
+                }
+              },
+              {
+                "time": 0.470708,
+                "pose": {
+                  "tilt": 11.431
+                }
+              },
+              {
+                "time": 0.488959,
+                "pose": {
+                  "tilt": 11
+                }
+              },
+              {
+                "time": 0.50721,
+                "pose": {
+                  "tilt": 10.569
+                }
+              },
+              {
+                "time": 0.525462,
+                "pose": {
+                  "tilt": 10.138
+                }
+              },
+              {
+                "time": 0.543713,
+                "pose": {
+                  "tilt": 9.707
+                }
+              },
+              {
+                "time": 0.561965,
+                "pose": {
+                  "tilt": 9.276
+                }
+              },
+              {
+                "time": 0.580217,
+                "pose": {
+                  "tilt": 8.845
+                }
+              },
+              {
+                "time": 0.598468,
+                "pose": {
+                  "tilt": 8.414
+                }
+              },
+              {
+                "time": 0.616719,
+                "pose": {
+                  "tilt": 7.983
+                }
+              },
+              {
+                "time": 0.634971,
+                "pose": {
+                  "tilt": 7.552
+                }
+              },
+              {
+                "time": 0.653222,
+                "pose": {
+                  "tilt": 7.121
+                }
+              },
+              {
+                "time": 0.671473,
+                "pose": {
+                  "tilt": 6.69
+                }
+              },
+              {
+                "time": 0.689726,
+                "pose": {
+                  "tilt": 6.259
+                }
+              },
+              {
+                "time": 0.707977,
+                "pose": {
+                  "tilt": 5.828
+                }
+              },
+              {
+                "time": 0.726228,
+                "pose": {
+                  "tilt": 5.397
+                }
+              },
+              {
+                "time": 0.744479,
+                "pose": {
+                  "tilt": 4.966
+                }
+              },
+              {
+                "time": 0.762731,
+                "pose": {
+                  "tilt": 4.535
+                }
+              },
+              {
+                "time": 0.780982,
+                "pose": {
+                  "tilt": 4.104
+                }
+              },
+              {
+                "time": 0.799233,
+                "pose": {
+                  "tilt": 3.673
+                }
+              },
+              {
+                "time": 0.817486,
+                "pose": {
+                  "tilt": 3.242
+                }
+              },
+              {
+                "time": 0.835737,
+                "pose": {
+                  "tilt": 2.811
+                }
+              },
+              {
+                "time": 0.853988,
+                "pose": {
+                  "tilt": 2.38
+                }
+              },
+              {
+                "time": 0.87224,
+                "pose": {
+                  "tilt": 1.949
+                }
+              },
+              {
+                "time": 0.890491,
+                "pose": {
+                  "tilt": 1.518
+                }
+              },
+              {
+                "time": 0.908742,
+                "pose": {
+                  "tilt": 1.0871
+                }
+              },
+              {
+                "time": 0.926994,
+                "pose": {
+                  "tilt": 0.6958
+                }
+              },
+              {
+                "time": 0.945246,
+                "pose": {
+                  "tilt": 0.3913
+                }
+              },
+              {
+                "time": 0.963497,
+                "pose": {
+                  "tilt": 0.1739
+                }
+              },
+              {
+                "time": 0.981749,
+                "pose": {
+                  "tilt": 0.0435
+                }
+              },
+              {
+                "time": 1,
+                "pose": {
+                  "tilt": 0
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "A gaming (52.5 in / 65 deg), 3/4 front-right",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                4.5,
+                2.05,
+                8.3
+              ],
+              "target": [
+                -1.276,
+                1.2,
+                0.744
+              ],
+              "fov": 26,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-01",
+            "time": 0.028802,
+            "label": "Key 2 at 1.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.6037,
+                2.1121,
+                8.0787
+              ],
+              "target": [
+                -1.1747,
+                1.201,
+                0.7142
+              ],
+              "fov": 26.154,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-02",
+            "time": 0.057603,
+            "label": "Key 3 at 2.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.7186,
+                2.1788,
+                7.846
+              ],
+              "target": [
+                -1.0612,
+                1.2031,
+                0.6801
+              ],
+              "fov": 26.317,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.086406,
+            "label": "Key 4 at 3.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.8422,
+                2.2503,
+                7.5967
+              ],
+              "target": [
+                -0.9391,
+                1.2053,
+                0.6433
+              ],
+              "fov": 26.492,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-04",
+            "time": 0.115208,
+            "label": "Key 5 at 4.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.9654,
+                2.3241,
+                7.3336
+              ],
+              "target": [
+                -0.8186,
+                1.2065,
+                0.6079
+              ],
+              "fov": 26.675,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-05",
+            "time": 0.144009,
+            "label": "B artist lowers + tilts (aim rises for the monitor)",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.076,
+                2.3959,
+                7.0659
+              ],
+              "target": [
+                -0.7133,
+                1.2053,
+                0.5787
+              ],
+              "fov": 26.858,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-06",
+            "time": 0.172811,
+            "label": "Key 7 at 6.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.1637,
+                2.4614,
+                6.8053
+              ],
+              "target": [
+                -0.6336,
+                1.2226,
+                0.5593
+              ],
+              "fov": 27.031,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-07",
+            "time": 0.201612,
+            "label": "Key 8 at 7.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.2188,
+                2.5224,
+                6.5559
+              ],
+              "target": [
+                -0.5787,
+                1.2641,
+                0.5483
+              ],
+              "fov": 27.203,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-08",
+            "time": 0.230415,
+            "label": "Key 9 at 8.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.2529,
+                2.5797,
+                6.3172
+              ],
+              "target": [
+                -0.5394,
+                1.3121,
+                0.5426
+              ],
+              "fov": 27.372,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-09",
+            "time": 0.259217,
+            "label": "Key 10 at 9.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.2792,
+                2.6328,
+                6.0899
+              ],
+              "target": [
+                -0.5096,
+                1.3497,
+                0.5403
+              ],
+              "fov": 27.531,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-10",
+            "time": 0.288018,
+            "label": "Key 11 at 10.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.3062,
+                2.6812,
+                5.8739
+              ],
+              "target": [
+                -0.4854,
+                1.3589,
+                0.5401
+              ],
+              "fov": 27.676,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-11",
+            "time": 0.31682,
+            "label": "Key 12 at 11.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.3405,
+                2.7245,
+                5.669
+              ],
+              "target": [
+                -0.4641,
+                1.3497,
+                0.5413
+              ],
+              "fov": 27.802,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-12",
+            "time": 0.345623,
+            "label": "Key 13 at 12.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.3875,
+                2.7624,
+                5.4756
+              ],
+              "target": [
+                -0.4435,
+                1.3456,
+                0.5432
+              ],
+              "fov": 27.907,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-13",
+            "time": 0.374424,
+            "label": "C office lowers (aim follows down)",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.4523,
+                2.7943,
+                5.2942
+              ],
+              "target": [
+                -0.4217,
+                1.3465,
+                0.5455
+              ],
+              "fov": 27.987,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-14",
+            "time": 0.403226,
+            "label": "Key 15 at 14.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.5381,
+                2.8197,
+                5.1285
+              ],
+              "target": [
+                -0.3991,
+                1.3219,
+                0.5482
+              ],
+              "fov": 28.038,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-15",
+            "time": 0.432027,
+            "label": "Key 16 at 15.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.6403,
+                2.8401,
+                4.9776
+              ],
+              "target": [
+                -0.3784,
+                1.2781,
+                0.5521
+              ],
+              "fov": 28.063,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-16",
+            "time": 0.460829,
+            "label": "Key 17 at 16.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.7533,
+                2.8563,
+                4.8374
+              ],
+              "target": [
+                -0.3593,
+                1.2417,
+                0.557
+              ],
+              "fov": 28.071,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-17",
+            "time": 0.489632,
+            "label": "Key 18 at 17.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.8729,
+                2.8692,
+                4.704
+              ],
+              "target": [
+                -0.3414,
+                1.2401,
+                0.5626
+              ],
+              "fov": 28.066,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-18",
+            "time": 0.518433,
+            "label": "Key 19 at 18.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.9956,
+                2.8794,
+                4.5739
+              ],
+              "target": [
+                -0.3243,
+                1.2653,
+                0.5689
+              ],
+              "fov": 28.053,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-19",
+            "time": 0.547235,
+            "label": "Key 20 at 19.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.1179,
+                2.8872,
+                4.444
+              ],
+              "target": [
+                -0.3079,
+                1.2903,
+                0.5756
+              ],
+              "fov": 28.035,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-20",
+            "time": 0.576037,
+            "label": "Key 21 at 20.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.2364,
+                2.893,
+                4.3118
+              ],
+              "target": [
+                -0.2918,
+                1.3135,
+                0.5827
+              ],
+              "fov": 28.018,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-21",
+            "time": 0.604838,
+            "label": "Key 22 at 21.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.3471,
+                2.8972,
+                4.1744
+              ],
+              "target": [
+                -0.2759,
+                1.3332,
+                0.59
+              ],
+              "fov": 28.005,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-22",
+            "time": 0.633641,
+            "label": "D HBHS rises (aim follows up)",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.4457,
+                2.9001,
+                4.0297
+              ],
+              "target": [
+                -0.26,
+                1.348,
+                0.5974
+              ],
+              "fov": 28,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-23",
+            "time": 0.662443,
+            "label": "Key 24 at 23.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.5353,
+                2.9004,
+                3.8775
+              ],
+              "target": [
+                -0.2438,
+                1.3904,
+                0.6025
+              ],
+              "fov": 28,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-24",
+            "time": 0.691244,
+            "label": "Key 25 at 24.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.6205,
+                2.8973,
+                3.7205
+              ],
+              "target": [
+                -0.2274,
+                1.4518,
+                0.6047
+              ],
+              "fov": 28,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-25",
+            "time": 0.720046,
+            "label": "Key 26 at 25.0 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.701,
+                2.8917,
+                3.561
+              ],
+              "target": [
+                -0.2112,
+                1.4889,
+                0.6059
+              ],
+              "fov": 28,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "hero-out-1",
+            "time": 0.721966,
+            "label": "·",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.7062,
+                2.8913,
+                3.5502
+              ],
+              "target": [
+                -0.2101,
+                1.49,
+                0.606
+              ],
+              "fov": 28,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "hero-out-2",
+            "time": 0.723886,
+            "label": "·",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.7114,
+                2.8908,
+                3.5395
+              ],
+              "target": [
+                -0.2091,
+                1.4909,
+                0.6061
+              ],
+              "fov": 28,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "hero-out-3",
+            "time": 0.725806,
+            "label": "·",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.7166,
+                2.8903,
+                3.5287
+              ],
+              "target": [
+                -0.208,
+                1.4916,
+                0.6063
+              ],
+              "fov": 28,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "hero-out-4",
+            "time": 0.727727,
+            "label": "·",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.7218,
+                2.8899,
+                3.518
+              ],
+              "target": [
+                -0.207,
+                1.4921,
+                0.6064
+              ],
+              "fov": 28,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "hero-out-5",
+            "time": 0.729647,
+            "label": "·",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.7269,
+                2.8894,
+                3.5072
+              ],
+              "target": [
+                -0.2059,
+                1.4923,
+                0.6065
+              ],
+              "fov": 28,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "hero-out-6",
+            "time": 0.731567,
+            "label": "·",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.732,
+                2.8889,
+                3.4965
+              ],
+              "target": [
+                -0.2049,
+                1.4925,
+                0.6066
+              ],
+              "fov": 28,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "hero-out-7",
+            "time": 0.733487,
+            "label": "·",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.737,
+                2.8884,
+                3.4859
+              ],
+              "target": [
+                -0.2038,
+                1.4925,
+                0.6068
+              ],
+              "fov": 28,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "hero-out-8",
+            "time": 0.735407,
+            "label": "·",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.7421,
+                2.8879,
+                3.4752
+              ],
+              "target": [
+                -0.2028,
+                1.4924,
+                0.6069
+              ],
+              "fov": 28,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "hero-out-9",
+            "time": 0.737327,
+            "label": "·",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.747,
+                2.8874,
+                3.4646
+              ],
+              "target": [
+                -0.2018,
+                1.4923,
+                0.607
+              ],
+              "fov": 28,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "hero-cut-out",
+            "time": 0.738959,
+            "label": "Office: last frame before the cut",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.7513,
+                2.887,
+                3.4556
+              ],
+              "target": [
+                -0.2009,
+                1.4922,
+                0.6072
+              ],
+              "fov": 28,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "hero-cut-in",
+            "time": 0.739919,
+            "label": "Cut: gaming closing (was 38.47 s)",
+            "easing": "linear",
+            "view": {
+              "position": [
+                7.9514,
+                2.3715,
+                -0.8474
+              ],
+              "target": [
+                0.2551,
+                0.9932,
+                1.1328
+              ],
+              "fov": 28.0879,
+              "aspect": 1.7777777777777777
+            },
+            "transition": {
+              "type": "cut"
+            }
+          },
+          {
+            "id": "hero-in-1",
+            "time": 0.741839,
+            "label": "·",
+            "easing": "linear",
+            "view": {
+              "position": [
+                7.9652,
+                2.3646,
+                -0.8791
+              ],
+              "target": [
+                0.2599,
+                0.988,
+                1.1327
+              ],
+              "fov": 28.0966,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "hero-in-2",
+            "time": 0.74376,
+            "label": "·",
+            "easing": "linear",
+            "view": {
+              "position": [
+                7.9789,
+                2.3576,
+                -0.911
+              ],
+              "target": [
+                0.2646,
+                0.9826,
+                1.1324
+              ],
+              "fov": 28.1056,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "hero-in-3",
+            "time": 0.74568,
+            "label": "·",
+            "easing": "linear",
+            "view": {
+              "position": [
+                7.9925,
+                2.3508,
+                -0.9431
+              ],
+              "target": [
+                0.2691,
+                0.9773,
+                1.1317
+              ],
+              "fov": 28.115,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "hero-in-4",
+            "time": 0.7476,
+            "label": "·",
+            "easing": "linear",
+            "view": {
+              "position": [
+                8.0059,
+                2.344,
+                -0.9755
+              ],
+              "target": [
+                0.2735,
+                0.9718,
+                1.1306
+              ],
+              "fov": 28.1246,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "hero-in-5",
+            "time": 0.74952,
+            "label": "·",
+            "easing": "linear",
+            "view": {
+              "position": [
+                8.0191,
+                2.3372,
+                -1.0083
+              ],
+              "target": [
+                0.2777,
+                0.9663,
+                1.129
+              ],
+              "fov": 28.1345,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "hero-in-6",
+            "time": 0.75144,
+            "label": "·",
+            "easing": "linear",
+            "view": {
+              "position": [
+                8.032,
+                2.3306,
+                -1.0415
+              ],
+              "target": [
+                0.2817,
+                0.9608,
+                1.1269
+              ],
+              "fov": 28.1447,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "hero-in-7",
+            "time": 0.75336,
+            "label": "·",
+            "easing": "linear",
+            "view": {
+              "position": [
+                8.0445,
+                2.3241,
+                -1.0751
+              ],
+              "target": [
+                0.2854,
+                0.9551,
+                1.1243
+              ],
+              "fov": 28.155,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-39",
+            "time": 0.755185,
+            "label": "Key 40 at 26.22 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                8.0559,
+                2.318,
+                -1.1074
+              ],
+              "target": [
+                0.2888,
+                0.9497,
+                1.1211
+              ],
+              "fov": 28.165,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-40",
+            "time": 0.783986,
+            "label": "Key 41 at 27.22 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                8.2033,
+                2.2343,
+                -1.6403
+              ],
+              "target": [
+                0.3195,
+                0.8595,
+                1.0188
+              ],
+              "fov": 28.354,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-41",
+            "time": 0.812788,
+            "label": "Key 42 at 28.22 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                8.267,
+                2.1788,
+                -2.2846
+              ],
+              "target": [
+                0.2852,
+                0.7472,
+                0.734
+              ],
+              "fov": 28.423,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-42",
+            "time": 0.841591,
+            "label": "Key 43 at 29.22 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                8.285,
+                2.142,
+                -2.9363
+              ],
+              "target": [
+                0.2182,
+                0.64,
+                0.3818
+              ],
+              "fov": 28.417,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-43",
+            "time": 0.870391,
+            "label": "Key 44 at 30.22 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                8.3016,
+                2.1126,
+                -3.4434
+              ],
+              "target": [
+                0.1672,
+                0.5706,
+                0.1346
+              ],
+              "fov": 28.438,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-44",
+            "time": 0.899194,
+            "label": "End card: desk at rest, frontal 3/4",
+            "easing": "linear",
+            "view": {
+              "position": [
+                8.3267,
+                2.0924,
+                -3.6705
+              ],
+              "target": [
+                0.1559,
+                0.5514,
+                0.0726
+              ],
+              "fov": 28.487,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-45",
+            "time": 0.927995,
+            "label": "Key 46 at 32.22 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                8.3539,
+                2.075,
+                -3.8207
+              ],
+              "target": [
+                0.1551,
+                0.5443,
+                0.0666
+              ],
+              "fov": 28.485,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-46",
+            "time": 0.956797,
+            "label": "Key 47 at 33.22 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                8.3777,
+                2.0607,
+                -3.9338
+              ],
+              "target": [
+                0.1565,
+                0.5425,
+                0.074
+              ],
+              "fov": 28.496,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-47",
+            "time": 0.9856,
+            "label": "Key 48 at 34.22 s",
+            "easing": "linear",
+            "view": {
+              "position": [
+                8.3917,
+                2.0521,
+                -4.0034
+              ],
+              "target": [
+                0.157,
+                0.5407,
+                0.0762
+              ],
+              "fov": 28.5,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-48",
+            "time": 1,
+            "label": "Key 49 at 34.72 s",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                8.395,
+                2.05,
+                -4.021
+              ],
+              "target": [
+                0.157,
+                0.54,
+                0.076
+              ],
+              "fov": 28.5,
+              "aspect": 1.7777777777777777
+            }
+          }
+        ]
+      },
+      "deskVersions": [
+        {
+          "n": "A",
+          "preset": "gaming",
+          "name": "",
+          "start": 0,
+          "end": 5.3
+        },
+        {
+          "n": "B",
+          "preset": "artist",
+          "name": "",
+          "start": 4.7,
+          "end": 12.05
+        },
+        {
+          "n": "C",
+          "preset": "architect",
+          "name": "",
+          "start": 11.45,
+          "end": 19.32
+        },
+        {
+          "n": "D",
+          "preset": "office",
+          "name": "",
+          "start": 18.72,
+          "end": 26.29
+        },
+        {
+          "n": "H",
+          "preset": "gaming",
+          "name": "",
+          "start": 25.69,
+          "end": 35.22
+        }
+      ]
+    }
+  ]
+}
