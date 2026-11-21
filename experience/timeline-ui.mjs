@@ -35,6 +35,13 @@ export const clampZoom=(z,seconds,viewWidth)=>Math.max(1,Math.min(maxZoom(second
 export function zoomScroll({scroll,x,from,to,lane}){const t=(scroll+x)/(lane*from);return Math.max(0,t*lane*to-x);}
 // "film 0:50.95 · bar 4.2": the film's clock and the score's bar.beat at chapter second t (beats: [{t, beat}] from
 // score-track chapterScore, bars: chapter seconds of each bar line).
+// Ctrl+wheel / zoom buttons: the scrollLeft that keeps the time under screen x where it is (21 Nov 2026). before / after:
+// the ruler's box (client px) before the zoom and after the rebuild, the rebuild having put back `scroll`; k = CSS px per
+// client px (the UI scale). Measured on the ruler, not as a fraction of the scroll width, which includes the lane labels.
+export function rulerAnchorScroll({scroll,x,before,after,k=1}){
+  if(!before?.width||!after?.width)return null;const u=(x-before.left)/before.width;
+  return Math.max(0,scroll+(after.left+u*after.width-x)*k);
+}
 export function filmTimecode(t,{start=null,bars=[],beats=[]}={}){
   const out=[];
   if(Number.isFinite(start)){const f=start+t,m=Math.floor(f/60),s=f-m*60;out.push(`film ${m}:${s.toFixed(2).padStart(5,'0')}`);}
