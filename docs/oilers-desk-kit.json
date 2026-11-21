@@ -92,7 +92,7 @@
             "transform": {
               "p": {
                 "x": 0,
-                "y": -340,
+                "y": -219.8,
                 "z": 335.484
               },
               "q": {
@@ -177,7 +177,7 @@
   "people": "No change: Fern is cast at station 'project-review' with desk:'sit'; room-people.mjs deskFamily swaps her to people-fern-stand-type (same character and colours, built for 43.5 in) while that desk is at 43.5 in.",
   "notes": [
     [
-      "monitor: -260 mm to the user's eye height at 43.5″"
+      "monitor: -260 mm to the user's eye height at 43.5, then raised to y -219.8 so its lower edge clears the desktop (desk-kit.mjs lowestMonitorY)″"
     ],
     "Placements: desk-kit.mjs copySetup from the HBHS featured desk onto a 48x30 desk (x scaled 48/60), finish white, Fern's eye 1332 mm.",
     "The drafting chair stays as Vico had it (hidden by his own prop edit); no chair edit here."

@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import {cleanDeskBuild,withDeskBuild,buildOf,cleanBuildAccessories} from '../experience/desk-build.mjs';
 import {cleanDeskEdit,cleanDeskEdits,mergeDeskEdits,effectiveDeskEdits,describeDeskEdit} from '../experience/desk-edits.mjs';
-import {copySetup,kitEdit,hbhsObjects,monitorOffset,eyeOf,heightsAt,finishFor,KIT_PARTS,HBHS_KIT,EYE_REF_ABOVE_DESKTOP,MONITOR_CLEARANCE,MONITOR_HALF,deskTopMm} from '../experience/desk-kit.mjs';
+import {copySetup,kitEdit,hbhsObjects,monitorOffset,eyeOf,heightsAt,finishFor,KIT_PARTS,HBHS_KIT,EYE_REF_ABOVE_DESKTOP,MONITOR_CLEARANCE,MONITOR_HALF,deskTopMm,lowestMonitorY,PANEL_EDGE_CLEARANCE,SHELF_FRAME_ABOVE_DESKTOP,FRAME_SCALE} from '../experience/desk-kit.mjs';
 import {cleanShot,makeCut,cleanCut,encodeCut,decodeCut} from '../experience/cuts.mjs';
 import {accessory} from '../catalog.mjs';
 
@@ -51,7 +51,13 @@ assert.equal(monitorOffset({monitor:'flat-monitor',heightIn:43.5,eyeMm:1650}),Ma
 assert.equal(monitorOffset({monitor:'flat-monitor',heightIn:43.5,eyeMm:deskTopMm(43.5)+EYE_REF_ABOVE_DESKTOP}),0);
 const low=monitorOffset({monitor:'flat-monitor',heightIn:43.5,eyeMm:eye});
 assert.equal(low,MONITOR_HALF['flat-monitor']+MONITOR_CLEARANCE-EYE_REF_ABOVE_DESKTOP,'clamped to a clear hand above the desktop');
-assert.equal(o['accessory-flat-monitor'].transform.p.y,hb['accessory-flat-monitor'].transform.p.y+low);
+// the eye math alone says -340 mm for Fern at 43.5 in, which put the panel's lower edge 100 mm under the desktop (measured in the oilers
+// film): the arm-hung panel is now kept PANEL_EDGE_CLEARANCE above it (258 mm shelf frame, 1.06 frame scale)
+assert.equal(hb['accessory-flat-monitor'].transform.p.y+low,-340);
+assert.equal(o['accessory-flat-monitor'].transform.p.y,lowestMonitorY(),'Fern: raised to the clear-edge floor, not -340');
+assert.ok(SHELF_FRAME_ABOVE_DESKTOP+FRAME_SCALE*o['accessory-flat-monitor'].transform.p.y>=PANEL_EDGE_CLEARANCE-1e-6,'panel edge above the desktop');
+assert.ok(Math.abs(lowestMonitorY()+220)<.5,'about -220 mm (the oilers fix)');
+assert.ok(SHELF_FRAME_ABOVE_DESKTOP+FRAME_SCALE*(-340)<0,'-340 was under the desktop');
 assert.ok(r.notes.some(n=>/eye height/.test(n)));
 assert.equal(monitorOffset({monitor:'flat-monitor',heightIn:28,eyeMm:1500}),Math.round((1500-deskTopMm(28)-EYE_REF_ABOVE_DESKTOP)*10)/10);
 // no eye height known: copied as it is
