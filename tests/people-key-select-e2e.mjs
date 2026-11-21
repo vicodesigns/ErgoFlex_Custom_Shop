@@ -62,9 +62,13 @@ try{
   await ensureLivePeople(page,{id:'media',filmPeople:film.people,warnings,log});
   await page.$eval('[data-inspector-tab="people"]',e=>e.click());
   // ---- Omar, wherever this state has him: the People list's row by name
-  const person=await until(()=>page.$$eval('#director-panel .people-row[data-person-key]',(l,who)=>{const r=l.find(e=>new RegExp('\\b'+who+'\\b').test(e.textContent));return r?r.dataset.personKey:null;},WHO),`${WHO} in the People list`);
+  // (the card's name is its <strong>: the card's whole text runs the name into the next line, "OmarWatching a screen")
+  const person=await until(()=>page.$$eval('#director-panel .people-row[data-person-key]',(l,who)=>{const r=l.find(e=>(e.querySelector('.people-pick strong')?.textContent||'').trim()===who);return r?r.dataset.personKey:null;},WHO),`${WHO} in the People list`);
   log('person',person);
   await page.$eval(`#director-panel .people-row[data-person-key="${person}"] [data-action="pe-row"]`,e=>e.click());await wait(800);
+  // the timeline's PEOPLE group open (it can be folded in a saved view)
+  if(await page.$eval('#director-timeline [data-lane-group="people"] [data-action="group-toggle"]',e=>e.getAttribute('aria-expanded'))!=='true'){await page.$eval('#director-timeline [data-lane-group="people"] [data-action="group-toggle"]',e=>e.click());await wait(600);}
+  await until(()=>page.$eval('#director-timeline [data-lane-body="people"]',e=>!e.hidden),'the PEOPLE group open',10000);
   ROW=await until(()=>page.$eval(`#director-timeline [data-person-keys~="${person}"][data-ps-row]`,e=>e.dataset.psRow),`${WHO}'s timeline row`);
   assert.equal(await page.$$eval(`[data-ps-of="${ROW}"]`,l=>l.length),0,'his row is folded');
   // ---- seed: his pose keys at 3.2, 6, 11 s (pose mode, Auto-key), then out of pose mode
