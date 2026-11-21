@@ -1,107 +1,137 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-2nd-cut/director-exports/export-561d1feb59b2-Film-chapter-create-23-5-s-__11_.json",
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut-standing/director-exports/export-076af914a3a8-Film-chapter-create-camera.json",
  "seconds": 23.5,
  "keys": [
   {
-   "at": 0,
+   "at": 0.0,
    "position": [
-    6.1,
-    1.85,
-    1.95
+    5.1976918697381,
+    1.9765427015748804,
+    3.314937674815405
    ],
    "target": [
-    0.0,
-    1.25,
-    1.85
+    -1.7591389716239645,
+    1.3838267424331514,
+    -0.03864685704586046
    ],
-   "fov": 40,
+   "fov": 35,
    "label": "Lin at the wheel, the desk at the back of the studio"
   },
   {
-   "at": 2.35,
+   "at": 2.103,
    "position": [
-    5.7,
-    1.82,
-    1.9
+    4.75,
+    2,
+    2.62
    ],
    "target": [
-    0.0,
-    1.25,
-    1.75
+    -1.6,
+    1.46,
+    0.1
    ],
-   "fov": 39,
-   "label": "Lin at the wheel: slow push"
+   "fov": 36.5,
+   "label": "Ease away from the wheel"
   },
   {
-   "at": 4.2,
+   "at": 5.983,
    "position": [
-    3.5,
-    1.95,
-    -0.6
+    3.2,
+    1.98,
+    -0.2
    ],
    "target": [
-    -1.271,
-    1.45,
-    0.7351
+    -1.33,
+    1.68,
+    0.5
    ],
-   "fov": 45,
-   "label": "Front three-quarter: the lift to 52 in"
+   "fov": 43,
+   "label": "Across the front as the desk lifts"
   },
   {
-   "at": 6.8,
+   "at": 9.294,
    "position": [
-    3.1,
-    2.1,
-    -1.45
+    2.55,
+    1.9,
+    -2.95
    ],
    "target": [
-    -1.1334,
-    1.6,
-    0.821
+    -1.32,
+    1.7,
+    0.6
    ],
-   "fov": 45,
-   "label": "Up with it; the arc begins"
+   "fov": 45.5,
+   "label": "Round to the window side: drafting begins"
   },
   {
-   "at": 12.4,
+   "at": 11.208,
    "position": [
-    1.1,
-    2.0,
-    -3.1
+    1.4,
+    1.98,
+    -3.2
    ],
    "target": [
-    -1.37,
-    1.6,
-    0.31
+    -1.32,
+    1.74,
+    0.44
    ],
    "fov": 47,
    "label": "Side three-quarter: the board tilts to drafting"
   },
   {
-   "at": 16.9,
+   "at": 12.7,
    "position": [
-    2.0,
-    2.0,
+    0.97,
+    2.02,
+    -2.88
+   ],
+   "target": [
+    -1.34,
+    1.78,
+    0.38
+   ],
+   "fov": 48.5,
+   "label": "Lean in on the drafting board and turn back"
+  },
+  {
+   "at": 13.856,
+   "position": [
+    1.33,
+    2.04,
     -2.55
    ],
    "target": [
-    -1.37,
-    1.6,
-    0.31
+    -1.36,
+    1.86,
+    0.33
    ],
-   "fov": 46,
-   "label": "Drafting at 40 degrees, the arc goes on"
+   "fov": 48.5,
+   "label": "The arc goes on as the board tilts to the easel"
   },
   {
-   "at": 19.45,
+   "at": 18.244,
    "position": [
-    3.15,
+    3.33,
+    2.048,
+    0.02
+   ],
+   "target": [
+    -1.37,
+    1.68,
+    0.31
+   ],
+   "fov": 42.2,
+   "label": "Settle to the front"
+  },
+  {
+   "at": 19.467,
+   "position": [
+    3.4,
     2.05,
     0.35
    ],
    "target": [
     -1.37,
-    1.6,
+    1.64,
     0.31
    ],
    "fov": 42,

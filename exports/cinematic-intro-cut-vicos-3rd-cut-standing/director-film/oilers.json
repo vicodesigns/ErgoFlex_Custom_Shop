@@ -5640,6 +5640,28 @@
    "hide": true
   },
   {
+   "desk": "station-window-research",
+   "name": "Coastal research nook",
+   "pose": {
+    "x": -4300,
+    "z": 4489.6,
+    "yaw": 0
+   }
+  },
+  {
+   "desk": "station-research-desk",
+   "hide": true
+  },
+  {
+   "desk": "station-demonstration-desk",
+   "name": "Wave and energy demonstration desk",
+   "pose": {
+    "x": 2470.6,
+    "z": -2100,
+    "yaw": -2.0905
+   }
+  },
+  {
    "desk": "station-project-review",
    "name": "APA set and costume design review desk",
    "size": "48x30",
@@ -5649,7 +5671,7 @@
     "yaw": 0
    },
    "initial": {
-    "height": 43.5,
+    "height": 35.5,
     "tilt": 0
    },
    "build": {
@@ -5728,7 +5750,7 @@
       "transform": {
        "p": {
         "x": 0,
-        "y": -340,
+        "y": -220,
         "z": 335.484
        },
        "q": {
@@ -5787,28 +5809,6 @@
       }
      }
     }
-   }
-  },
-  {
-   "desk": "station-window-research",
-   "name": "Coastal research nook",
-   "pose": {
-    "x": -4300,
-    "z": 4489.6,
-    "yaw": 0
-   }
-  },
-  {
-   "desk": "station-research-desk",
-   "hide": true
-  },
-  {
-   "desk": "station-demonstration-desk",
-   "name": "Wave and energy demonstration desk",
-   "pose": {
-    "x": 2470.6,
-    "z": -2100,
-    "yaw": -2.0905
    }
   }
  ],
@@ -5876,6 +5876,48 @@
     "desk": "sit",
     "colors": {
      "hair": "#d9b96e"
+    },
+    "postures": {
+     "people-fern-stand-low": {
+      "pose": {
+       "upperarm_l": [
+        -0.0018,
+        0.0113,
+        -0.0095,
+        0.9999
+       ],
+       "lowerarm_l": [
+        -0.0668,
+        0,
+        -0.0029,
+        0.9978
+       ],
+       "hand_l": [
+        -0.1484,
+        0.0762,
+        0.1189,
+        0.9788
+       ],
+       "upperarm_r": [
+        -0.0018,
+        -0.0113,
+        0.0095,
+        0.9999
+       ],
+       "lowerarm_r": [
+        -0.0668,
+        0,
+        0.0029,
+        0.9978
+       ],
+       "hand_r": [
+        -0.1484,
+        -0.0762,
+        -0.1189,
+        0.9788
+       ]
+      }
+     }
     }
    },
    {
@@ -6077,21 +6119,119 @@
        -914
       ],
       [
-       -2930,
-       -1080
+       -3098,
+       -1172
       ]
      ],
      "start": 4,
      "pace": 2.2,
      "then": "people-noah-stand-screen-pull"
+    },
+    "postures": {
+     "people-noah-stand-wait": {
+      "poseKeys": [
+       {
+        "t": 4.5,
+        "pose": {
+         "upperarm_r": [
+          0,
+          0,
+          0,
+          1
+         ],
+         "lowerarm_r": [
+          0,
+          0,
+          0,
+          1
+         ],
+         "hand_r": [
+          0,
+          0,
+          0,
+          1
+         ]
+        }
+       },
+       {
+        "t": 4.8,
+        "pose": {
+         "upperarm_r": [
+          -0.2608,
+          0.0438,
+          -0.0022,
+          0.9644
+         ],
+         "lowerarm_r": [
+          0.2149,
+          0.0135,
+          -0.0606,
+          0.9747
+         ],
+         "hand_r": [
+          -0.155,
+          -0.1904,
+          0.3263,
+          0.9128
+         ]
+        }
+       },
+       {
+        "t": 5.0,
+        "pose": {
+         "upperarm_r": [
+          -0.2608,
+          0.0438,
+          -0.0022,
+          0.9644
+         ],
+         "lowerarm_r": [
+          0.2149,
+          0.0135,
+          -0.0606,
+          0.9747
+         ],
+         "hand_r": [
+          -0.155,
+          -0.1904,
+          0.3263,
+          0.9128
+         ]
+        }
+       },
+       {
+        "t": 5.38,
+        "pose": {
+         "upperarm_r": [
+          0,
+          0,
+          0,
+          1
+         ],
+         "lowerarm_r": [
+          0,
+          0,
+          0,
+          1
+         ],
+         "hand_r": [
+          0,
+          0,
+          0,
+          1
+         ]
+        }
+       }
+      ]
+     }
     }
    },
    {
     "key": "noah-pulls",
     "id": "people-noah-stand-screen-pull",
     "at": [
-     -2930,
-     -1080
+     -3098,
+     -1172
     ],
     "turn": -146,
     "act": {
@@ -6108,8 +6248,8 @@
     "key": "noah-taps",
     "id": "people-noah-stand-screen-tap",
     "at": [
-     -2930,
-     -1080
+     -3098,
+     -1172
     ],
     "turn": -146,
     "act": {
@@ -6120,8 +6260,8 @@
     "key": "noah-watches",
     "id": "people-noah-stand-wait",
     "at": [
-     -2930,
-     -1080
+     -3098,
+     -1172
     ],
     "turn": -146,
     "look": [
@@ -6424,7 +6564,7 @@
   ]
  },
  "directorEdited": {
-  "at": "2026-11-20T06:28:46Z",
+  "at": "2026-11-21T04:18:10Z",
   "fields": [
    "lightEdits",
    "people",

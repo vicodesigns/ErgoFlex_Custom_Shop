@@ -1,5 +1,5 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-2nd-cut/director-exports/export-e55ae3a99c2b-Film-chapter-wellness-16-s-__8_.json",
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut-standing/director-exports/export-3579bd9a808d-Film-chapter-wellness2-standing.json",
  "seconds": 19.5,
  "keys": [
   {
@@ -341,17 +341,17 @@
   "when": {
    "maya-break": [
     [
-     9.7,
-     15.8,
+     9.5,
+     16.1,
      0.3,
      0.35
     ]
    ]
   },
   "chair": {
-   "back": 100,
-   "side": 1000,
-   "turn": -60
+   "back": 1700,
+   "side": -500,
+   "turn": 160
   },
   "except": [
    "people-priya-stretch"
