@@ -1,87 +1,102 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-2nd-cut/director-exports/export-561d1feb59b2-Film-chapter-create-23-5-s-__11_.json",
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-1316b83131e3-Film-chapter-create-23-5-s-__23_.json",
  "seconds": 23.5,
  "keys": [
   {
-   "at": 0,
+   "at": 0.0,
    "position": [
-    6.1,
-    1.85,
-    1.95
+    5.1976918697381,
+    1.9765427015748804,
+    3.314937674815405
    ],
    "target": [
-    0.0,
-    1.25,
-    1.85
+    -1.7591389716239645,
+    1.3838267424331514,
+    -0.03864685704586046
    ],
-   "fov": 40,
+   "fov": 35,
    "label": "Lin at the wheel, the desk at the back of the studio"
   },
   {
-   "at": 2.35,
+   "at": 0.4,
    "position": [
-    5.7,
-    1.82,
-    1.9
+    5.1976918697381,
+    1.9765427015748804,
+    3.314937674815405
    ],
    "target": [
-    0.0,
-    1.25,
-    1.75
+    -1.7591389716239645,
+    1.3838267424331514,
+    -0.03864685704586046
    ],
-   "fov": 39,
-   "label": "Lin at the wheel: slow push"
+   "fov": 35,
+   "label": "Lin at the wheel, the desk at the back of the studio copy"
   },
   {
-   "at": 4.2,
+   "at": 3.0,
    "position": [
-    3.5,
-    1.95,
-    -0.6
+    3.0362764305331518,
+    2.0890030224846017,
+    3.3125672549467953
    ],
    "target": [
-    -1.271,
-    1.45,
-    0.7351
+    0.3281408105313094,
+    1.615748862016591,
+    0.5196672886883014
    ],
-   "fov": 45,
-   "label": "Front three-quarter: the lift to 52 in"
+   "fov": 41.85069119131361,
+   "label": "Camera view 10"
   },
   {
    "at": 6.8,
    "position": [
-    3.1,
-    2.1,
-    -1.45
+    2.811840957740497,
+    1.848660683548276,
+    -3.029011547590054
    ],
    "target": [
-    -1.1334,
-    1.6,
-    0.821
+    -1.307659322841075,
+    1.6794455388710632,
+    0.6557260298919676
    ],
-   "fov": 45,
+   "fov": 44.99960865246304,
    "label": "Up with it; the arc begins"
   },
   {
    "at": 12.4,
    "position": [
-    1.1,
-    2.0,
-    -3.1
+    1.3526619616813627,
+    1.969992716362882,
+    -3.3207861175758477
    ],
    "target": [
-    -1.37,
-    1.6,
-    0.31
+    -1.3176563159722845,
+    1.5375647513720663,
+    0.3657269016442523
    ],
-   "fov": 47,
-   "label": "Side three-quarter: the board tilts to drafting"
+   "fov": 46.99995760416837,
+   "label": "Side three-quarter: the board tilts to drafting copy"
   },
   {
-   "at": 16.9,
+   "at": 12.8,
    "position": [
-    2.0,
-    2.0,
+    1.3526619616813627,
+    1.969992716362882,
+    -3.3207861175758477
+   ],
+   "target": [
+    -1.3176563159722845,
+    1.5375647513720663,
+    0.3657269016442523
+   ],
+   "fov": 46.99995760416837,
+   "label": "Side three-quarter: the board tilts to drafting copy"
+  },
+  {
+   "at": 16.2,
+   "position": [
+    2,
+    2,
     -2.55
    ],
    "target": [
@@ -93,7 +108,7 @@
    "label": "Drafting at 40 degrees, the arc goes on"
   },
   {
-   "at": 19.45,
+   "at": 19.2,
    "position": [
     3.15,
     2.05,
@@ -185,6 +200,39 @@
   "height": 43.5,
   "tilt": 0
  },
+ "lighting": {
+  "ledStatus": [
+   {
+    "at": 1.5,
+    "dur": 1.9,
+    "kind": "tilt-retract",
+    "fade": 1,
+    "fadeIn": 0.6
+   },
+   {
+    "at": 4.2,
+    "dur": 2.6,
+    "kind": "lift-up",
+    "fade": 1
+   },
+   {
+    "at": 6.799998,
+    "dur": 5.6,
+    "kind": "tilt-retract",
+    "fade": 1,
+    "fadeIn": 0.6
+   },
+   {
+    "at": 16.9,
+    "dur": 2.6,
+    "kind": "tilt-retract",
+    "fade": 1,
+    "fadeIn": 0.6
+   }
+  ],
+  "ledColor": "#242424",
+  "roomLight": 0.95
+ },
  "props": [
   {
    "match": "^Artist materials worktable$",
@@ -274,16 +322,6 @@
     0.176,
     0,
     0.633
-   ]
-  },
-  {
-   "match": "^Prop:atelier-artist-palette-oak$",
-   "label": "Prop:atelier-artist-palette-oak",
-   "space": "local",
-   "position": [
-    3.798,
-    0.645,
-    -0.332
    ]
   },
   {
@@ -532,6 +570,16 @@
    "asset": "creative:premium:room:2:kenney-furniture-potted-plant",
    "label": "Prop:ficus",
    "hide": true
+  },
+  {
+   "match": "^Prop:atelier-artist-palette-oak$",
+   "label": "Prop:atelier-artist-palette-oak",
+   "space": "local",
+   "position": [
+    3.798,
+    0.645,
+    0.877
+   ]
   }
  ],
  "people": {

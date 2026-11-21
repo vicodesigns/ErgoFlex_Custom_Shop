@@ -27,8 +27,8 @@
    "seconds": 23.5,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-ch03-create.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-film/create.json",
-   "version": "9c4d62af46d9",
-   "updated": "2026-11-20T17:43:59Z"
+   "version": "81499e4b15a2",
+   "updated": "2026-11-21T01:35:24Z"
   },
   {
    "n": 4,
@@ -37,8 +37,8 @@
    "seconds": 16.0,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-ch04-commons.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-film/commons.json",
-   "version": "4989a165bfad",
-   "updated": "2026-11-20T17:43:59Z"
+   "version": "c9d67490c448",
+   "updated": "2026-11-21T01:35:28Z"
   },
   {
    "n": 5,
@@ -67,8 +67,8 @@
    "seconds": 19.5,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-ch07-wellness.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-film/wellness.json",
-   "version": "f649e9efd961",
-   "updated": "2026-11-20T21:54:09Z"
+   "version": "5fb7534fccc9",
+   "updated": "2026-11-21T00:48:35Z"
   },
   {
    "n": 8,
@@ -114,11 +114,11 @@
    "n": 12,
    "id": "hero",
    "title": "One desk. Every part of your day.",
-   "seconds": 47.5,
+   "seconds": 34.72,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-ch12-hero.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-film/hero.json",
-   "version": "c84d7c3ac633",
-   "updated": "2026-11-20T17:43:59Z"
+   "version": "1c63cb88f7b9",
+   "updated": "2026-11-21T03:50:43Z"
   }
  ]
 }
