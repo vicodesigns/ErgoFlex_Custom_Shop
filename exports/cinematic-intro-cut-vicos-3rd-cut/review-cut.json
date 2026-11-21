@@ -69453,7 +69453,11 @@
    },
    "sceneGlobals": {
     "environmentScale": 0.82,
-    "exposureScale": 1.11
+    "exposureScale": 1.11,
+    "screenLight": {
+     "gain": 0.55,
+     "saturation": 1.5
+    }
    },
    "musicBaseGain": 1.4,
    "quality": {
@@ -69892,7 +69896,12 @@
    },
    "sceneGlobals": {
     "environmentScale": 0.42,
-    "exposureScale": 1.11
+    "exposureScale": 1.11,
+    "screenLight": {
+     "gain": 0.6,
+     "saturation": 1.4,
+     "keepHue": true
+    }
    },
    "mediaBaseGain": 3.5,
    "quality": {
