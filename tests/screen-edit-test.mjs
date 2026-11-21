@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {MOVIE,movieTrack,trackClips,isEditList,cleanTransition,setTransition,transitionPlan,trimClip,moveClip,splitClip,deleteClip,reorderClip,addClip,setSourceRange,missingClips,validateTrack,describeTrack} from '../experience/screen-edit.mjs';
+import {MOVIE,movieTrack,trackClips,isEditList,cleanTransition,setTransition,transitionPlan,trimClip,moveClip,splitClip,deleteClip,reorderClip,addClip,addFromBin,setSourceRange,missingClips,validateTrack,describeTrack} from '../experience/screen-edit.mjs';
 import {planTrack} from '../tools/experience/compose-screen-edit.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const fixture=JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/screen-edit-list/media-ch10.json'),'utf8'));
@@ -85,6 +85,15 @@ same(L,fk,'fixture');
   const d=addClip(short,key,'y.mp4',{seconds:T,srcSeconds:60});assert.equal(trackClips(d,key,T)[1].end,17,'as long as the room allows');
   assert.throws(()=>addClip(short,key,'y.mp4',{at:5,seconds:T}),/playhead is on a clip/);
   const del=deleteClip(L,1);assert.equal(trackClips(del,fk,T).length,2);assert.equal(trackClips(del,fk,T)[1].start,11.5,'a gap stays');
+}
+// ---- 6b from the bin with the monitor's marks
+{
+  const short=trimClip(media.screens,0,0,10,T);
+  const r=addFromBin(short,key,{src:'divi-editor/upload-to-promo/hero.mp4',seconds:20,inS:3,outS:6},{seconds:T});
+  assert.deepEqual([r.i,r.list[r.i].start,r.list[r.i].end,r.list[r.i].offset,r.clamped],[1,10,13,3,false],'in 3, out 6: a 3 s clip after the movie');
+  const w=addFromBin(short,key,{src:'x.mp4',seconds:20},{seconds:T});assert.deepEqual([w.list[1].end,w.clamped],[17,true],'no marks: the whole source, up to the room');
+  const p=addFromBin(short,key,{src:'x.mp4',seconds:20,inS:2,outS:4},{at:null,seconds:T});assert.equal(p.list[1].offset,2);
+  assert.throws(()=>addFromBin(short,key,{src:'x.mp4',seconds:20,inS:5,outS:4},{seconds:T}),/in point before the out point/);
 }
 // ---- 7 source monitor in / out
 {

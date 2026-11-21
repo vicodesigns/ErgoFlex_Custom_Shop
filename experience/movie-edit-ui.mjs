@@ -64,3 +64,25 @@ export function movieFieldChange(list,key,seconds,i,el){
   if(el.name==='me-rate'){const r=num();if(r<.25||r>4)throw Error('Speed runs from 0.25× to 4×.');const next=structuredClone(list);next[i].rate=r;return {list:next,clamped:false};}
   return null;
 }
+// ---- the source bin (<cut>/director-film/screen-bin.json, compose-screen-edit.mjs --bin) and the source monitor
+const GROUPS=[['movie','Movie'],['promo','ErgoFlex promo'],['demo','Exercise demos'],['captures','Screen captures'],['game','Game loop']];
+export const binSources=bin=>Array.isArray(bin?.sources)?bin.sources.filter(x=>x&&typeof x.src==='string'):[];
+export const binInfoOf=bin=>{const m=new Map(binSources(bin).map(x=>[x.src,x]));return src=>m.get(String(src||'').replace(/^\/+/,''))||null;};
+export function binHTML(bin,{picked=null,open=null}={}){
+  const all=binSources(bin);if(!bin)return '<p class="director-hint">Loading the source bin…</p>';
+  if(!all.length)return '<p class="director-hint">The source bin is empty: run <code>node tools/experience/compose-screen-edit.mjs --bin &lt;cut dir&gt;</code>.</p>';
+  const groups=GROUPS.map(([g,label])=>[g,label,all.filter(x=>x.group===g)]).concat([['other','Other',all.filter(x=>!GROUPS.some(([g])=>g===x.group))]]).filter(([, ,l])=>l.length);
+  return `<details class="movie-bin" data-movie-bin-box ${open===false?'':'open'}><summary>Source bin · ${all.length} clips</summary>
+    ${groups.map(([g,label,l])=>`<details class="movie-bin-group" ${g==='movie'||l.some(x=>x.src===picked)?'open':''}><summary>${esc(label)} · ${l.length}</summary><div class="movie-bin-list">${l.map(x=>`<button type="button" class="${x.src===picked?'selected':''}" data-movie-bin="${esc(x.src)}" title="${esc(`${x.src} · ${x.w}×${x.h} · ${x.fps} fps${x.audio?' · sound':''}`)}"><span>${esc(name(x.src))}</span><small>${r2(x.seconds)} s</small></button>`).join('')}</div></details>`).join('')}
+    ${Array.isArray(bin.missing)&&bin.missing.length?`<p class="director-hint">Not on this machine: ${bin.missing.map(esc).join('; ')}.</p>`:''}</details>`;
+}
+// The monitor: the bin source picked (marks for the clip it adds) or the selected clip's source (marks = its Source in /
+// out). mode 'bin' | 'clip'.
+export function monitorHTML({mode,src,inS=null,outS=null,seconds=null,canAdd=false}){
+  if(!src)return '';
+  const marks=`<span class="monitor-marks">In <b>${inS===null?'–':r2(inS)+' s'}</b> · Out <b>${outS===null?'–':r2(outS)+' s'}</b>${seconds?` · source ${r2(seconds)} s`:''}</span>`;
+  return `<div class="source-monitor" data-source-monitor-box data-mode="${mode}"><h5>${mode==='bin'?'Source':'Clip source'} · ${esc(name(src))}</h5>
+    <video data-source-monitor src="/${esc(String(src).replace(/^\/+/,''))}" preload="metadata" muted playsinline controls data-in="${inS??''}"></video>
+    <div class="director-actions"><button type="button" data-graphic-action="mark-in" title="The source moment shown now becomes the in point ">⟦ Mark in</button><button type="button" data-graphic-action="mark-out" title="The source moment shown now becomes the out point ">Mark out ⟧</button>${marks}</div>
+    ${mode==='bin'?`<div class="director-actions"><button type="button" data-graphic-action="bin-add" data-section="playhead" ${canAdd?'':'disabled'} title="Into the free time at the playhead">+ Add at the playhead</button><button type="button" data-graphic-action="bin-add" data-section="end" ${canAdd?'':'disabled'} title="After the last clip">+ Add at the end</button></div>`:''}</div>`;
+}

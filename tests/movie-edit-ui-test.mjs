@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {trackOverlay,trackLabel,movieInspector,movieFieldChange} from '../experience/movie-edit-ui.mjs';
+import {trackOverlay,trackLabel,movieInspector,movieFieldChange,binHTML,binInfoOf,binSources,monitorHTML} from '../experience/movie-edit-ui.mjs';
 import {movieTrack,trackClips} from '../experience/screen-edit.mjs';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const read=f=>fs.readFileSync(path.join(root,f),'utf8').replace(/\r/g,'');
@@ -53,6 +53,19 @@ const L=JSON.parse(read('tests/fixtures/screen-edit-list/media-ch10.json')).scre
   assert.equal(set(1,'me-rate','2').list[1].rate,2);assert.throws(()=>set(1,'me-rate','9'),/0.25× to 4×/);
   assert.equal(movieFieldChange(L,key,T,0,{name:'pe-x',value:'1'}),null,'not ours');
 }
+// ---- 3b the bin and the monitor
+{
+  const bin={sources:[{src:'app-reference/assets/desk_viewer/media/ambient-clip.mp4',group:'movie',seconds:100,w:1280,h:720,fps:30,audio:true},{src:'divi-editor/upload-to-promo/hero.mp4',group:'promo',seconds:12.5,w:1920,h:1080,fps:30,audio:false},{src:'z/odd.mp4',group:'weird',seconds:2},{nope:1}],missing:['the full movie']};
+  assert.equal(binSources(bin).length,3);assert.equal(binInfoOf(bin)('/divi-editor/upload-to-promo/hero.mp4').seconds,12.5,'a leading / is the same source');assert.equal(binInfoOf(bin)('q.mp4'),null);
+  const h=binHTML(bin,{picked:'divi-editor/upload-to-promo/hero.mp4'});
+  assert.match(h,/Source bin · 3 clips/);assert.match(h,/<summary>Movie · 1<\/summary>/);assert.match(h,/<summary>ErgoFlex promo · 1<\/summary>/);assert.match(h,/<summary>Other · 1<\/summary>/);
+  assert.match(h,/class="selected" data-movie-bin="divi-editor\/upload-to-promo\/hero\.mp4"/);assert.match(h,/Not on this machine: the full movie/);
+  assert.match(binHTML(null),/Loading the source bin/);assert.match(binHTML({sources:[]}),/--bin/);
+  const m=monitorHTML({mode:'bin',src:'divi-editor/upload-to-promo/hero.mp4',inS:3,outS:null,seconds:12.5,canAdd:true});
+  assert.match(m,/<video data-source-monitor src="\/divi-editor\/upload-to-promo\/hero\.mp4"/);assert.match(m,/In <b>3 s<\/b> · Out <b>–<\/b> · source 12\.5 s/);
+  assert.match(m,/data-graphic-action="bin-add" data-section="playhead" (?!disabled)/);assert.match(m,/data-graphic-action="mark-in"/);
+  assert.doesNotMatch(monitorHTML({mode:'clip',src:'a.mp4',inS:1,outS:2}),/bin-add/,'a clip\'s source: marks only');assert.equal(monitorHTML({mode:'clip',src:null}),'');
+}
 // ---- 4 graphics-editor.mjs: only the movie track, the chips, the ripple, the section, the fields
 const g=read('experience/graphics-editor.mjs');
 assert.match(g,/const movieKey=\(\)=>movieTrack\(shot\(\)\.id,graphicScreens\(\)\);/);
@@ -60,11 +73,16 @@ assert.match(g,/const movie=!!mk&&graphicTrack\(entries\[0\]\[0\],entries\[0\]\[
 assert.match(g,/\$\{movie\?trackOverlay\(list,mk,seconds,movieOpts\(\)\):''\}/);
 assert.match(g,/ripple=!!mk&&\(event\.ctrlKey\|\|event\.metaKey\)&&!event\.target\.dataset\.graphicEdge&&graphicTrack\(graphicScreens\(\)\[index\],index\)===mk/,'Ctrl/Cmd+drag on a movie clip ripples');
 assert.match(g,/const list=reorderClip\(graphicScreens\(\),d\.mk,d\.from,d\.to,shot\(\)\.seconds\);commit/);
-assert.match(g,/\$\{mk\?movieInspector\(list,mk,shot\(\)\.seconds,movieOpts\(\)\):''\}/);
 assert.match(g,/r=mk&&movieFieldChange\(graphicScreens\(\),mk,shot\(\)\.seconds,i,el\)/);
 assert.match(g,/if\(action==='earlier'\|\|action==='later'\)/);
 assert.match(g,/remove\(\)\{const i=live\(\);if\(i<0\)return false;if\(onTransition&&graphicScreens\(\)\[i\]\?\.transitionIn\)\{const list=setTransition\(graphicScreens\(\),i,null\)/,'Delete on a picked chip: the transition only');
 assert.match(read('experience/director.mjs'),/from '\.\/graphics-editor\.mjs\?v=clip-track-20261121';/);
+assert.match(read('experience/director.mjs'),/graphics\.setBinUrl\(cutDir\?cutDir\+'\/director-film\/screen-bin\.json':null\);/,'the bin beside the chapter shots');
+assert.match(g,/const mk=movieKey\(\);if\(mk\)loadBin\(\);/,'loaded only for the movie chapter');
+assert.match(g,/movieInspector\(list,mk,shot\(\)\.seconds,movieOpts\(\)\)\+monitorPart\(list,mk\)\+binHTML\(bin,\{picked:binPick\}\)/);
+assert.match(g,/const r=addFromBin\(graphicScreens\(\),mk,\{src:binPick,seconds:binInfo\(binPick\)\?\.seconds\?\?null,inS:marks\.in,outS:marks\.out\},\{at:where,seconds:shot\(\)\.seconds\}\);/);
+assert.match(g,/if\(binPick\)\{marks\[action==='mark-in'\?'in':'out'\]=t;/,'bin source: the marks');
+assert.match(g,/name:action==='mark-in'\?'me-in':'me-out',value:String\(t\)/,'clip source: its Source in \/ out');
 assert.equal(movieTrack('music',[{target:'main-landscape',src:'x.mp4'}]),null,'the game montage: no clip track');
 assert.equal(trackClips(L,key,T).length,3);
 console.log('movie-edit-ui-test: ok (chips at the composer\'s spans, + on cuts, Movie edit section and fields, wired for the movie track only)');

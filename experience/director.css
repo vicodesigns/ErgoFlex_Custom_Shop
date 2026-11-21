@@ -768,3 +768,11 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 #director-panel .movie-clips li.selected button{outline:2px solid #ffd27a;outline-offset:-2px}
 #director-panel .movie-clips li.missing button{border-color:#ff7a6e}
 #director-panel .movie-clamp,#director-panel .movie-errors,#director-panel .movie-missing{color:#ffb38a}
+#director-panel .source-monitor{margin:8px 0;padding:8px;border:1px solid #ffffff22;border-radius:8px}
+#director-panel .source-monitor video{width:100%;max-height:170px;background:#000;border-radius:5px}
+#director-panel .monitor-marks{font-size:10.5px;color:#cfe3ec;align-self:center}
+#director-panel .movie-bin{margin:8px 0}
+#director-panel .movie-bin-list{display:grid;gap:3px;max-height:220px;overflow:auto}
+#director-panel .movie-bin-list button{display:flex;justify-content:space-between;gap:8px;text-align:left;padding:4px 7px;font-size:11px}
+#director-panel .movie-bin-list button small{color:#9fb3bd}
+#director-panel .movie-bin-list button.selected{outline:2px solid #ffd27a;outline-offset:-2px}

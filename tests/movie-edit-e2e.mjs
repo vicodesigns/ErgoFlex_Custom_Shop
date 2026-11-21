@@ -9,12 +9,15 @@
 //      Delete on the dip chip takes the dip only (the clip stays); Ctrl+Z
 //   3  ◀ Earlier on clip 3 (ripple: lengths kept), Ctrl+Z; Ctrl+drag clip 1 past clip 3 (ripple), Ctrl+Z
 //   4  Export cut: the movie screen's entries as set (transitionIn on the incoming clips, no missing flag)
+//   4b the source bin and monitor: clip 3 shortened to 14 s, a promo source marked 1-3 s and added at the end;
+//      Mark in on clip 1's own source                                              (screenshot movie-edit-3-bin.png)
 //   5  ch 9 music (the game montage): no Movie track, no Movie edit (Vico edits only the movie)
 //   CHROME=... [STATE_FROM=...] node tests/movie-edit-e2e.mjs [shots dir]
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import {spawnSync} from 'node:child_process';
 import {openDirectorBrowser,openChapter,seek,wait,root,status} from './director-e2e-harness.mjs';
 const CUT='exports/cinematic-intro-cut-vicos-3rd-cut',T=17;
 const shots=process.argv[2]||path.join(os.tmpdir(),'movie-edit-shots');fs.mkdirSync(shots,{recursive:true});
@@ -22,6 +25,11 @@ const chapters=JSON.parse(fs.readFileSync(path.join(root,CUT,'director-chapters.
 const film=JSON.parse(fs.readFileSync(path.join(root,CUT,'review-cut.json'),'utf8')).shots.find(s=>s.id==='media');
 const movie0=(film.screens||[]).filter(s=>s.target==='main-landscape');
 assert.equal(movie0.length,1,'today: the movie is one clip on main-landscape');
+// the source bin is generated per machine (untracked, like the cut's other files): made here when this checkout has none
+{const f=path.join(root,CUT,'director-film','screen-bin.json');if(!fs.existsSync(f)){const r=spawnSync(process.execPath,['tools/experience/compose-screen-edit.mjs','--bin',CUT],{cwd:root,encoding:'utf8'});console.log('made the source bin:',r.status,(r.stderr||'').trim().slice(-200));}
+ assert.ok(fs.existsSync(f),'the source bin '+f);}
+const binDoc=JSON.parse(fs.readFileSync(path.join(root,CUT,'director-film','screen-bin.json'),'utf8')),promo=binDoc.sources.find(x=>x.group==='promo'&&x.seconds>=4)||binDoc.sources.find(x=>x.seconds>=4&&x.group!=='movie');
+assert.ok(promo,'the bin has a source of 4 s or more besides the movie');
 const {base,page,errors,close}=await openDirectorBrowser();
 const log=(...a)=>console.log(...a);
 const until=async(fn,what,ms=60000)=>{const end=Date.now()+ms;for(;;){const v=await fn().catch(()=>null);if(v)return v;if(Date.now()>end)throw Error('timed out: '+what+' · status: '+await status(page));await wait(250);}};
@@ -98,6 +106,25 @@ try{
   assert.deepEqual(mv.map(s=>[s.start,s.end,s.offset,s.transitionIn??null]),[[0,6,40,null],[6,11.5,70,{type:'dissolve',dur:1}],[11.5,17,before[2]*1,{type:'dip',dur:.8,color:'#000000'}]],'exported: '+JSON.stringify(mv));
   assert.ok(mv.every(s=>s.missing===undefined),'no missing flag');
   log('4 ok: Export cut carries the edit list');
+  // ---- 4b the source bin and the monitor: clip 3 ends at 14 s (Source out), a promo source marked 1-3 s, + Add at the end
+  {const l3=(await listed())[2];await act(`#director-panel [data-movie-edit] [data-graphic-index="${l3.i}"]`);await change('me-out',Number(before[2])+2.5);}
+  assert.match((await listed())[2].text,/11\.5–14 s/,'clip 3 ends at 14 s');
+  await until(()=>page.$(`#director-panel [data-movie-bin="${promo.src}"]`),'the source bin in the Graphics tab');
+  await page.$eval(`#director-panel [data-movie-bin="${promo.src}"]`,e=>{e.closest('details.movie-bin-group').open=true;e.click();});await wait(700);
+  assert.equal(await page.$eval('#director-panel [data-source-monitor-box]',e=>e.dataset.mode),'bin','the monitor shows the bin source');
+  await until(()=>page.$eval('#director-panel [data-source-monitor]',v=>v.readyState>=1),'the monitor\'s video loads',30000);
+  const markAt=async(t,which)=>{await page.$eval('#director-panel [data-source-monitor]',(v,t)=>new Promise(r=>{v.addEventListener('seeked',()=>r(),{once:true});v.currentTime=t;}),t);await act(`#director-panel [data-graphic-action="mark-${which}"]`);};
+  await markAt(1,'in');await until(()=>page.$eval('#director-panel [data-source-monitor]',v=>v.readyState>=1),'the monitor after the re-render',30000);await markAt(3,'out');
+  assert.match(await page.$eval('#director-panel .monitor-marks',e=>e.textContent),/In 1 s · Out 3 s/);
+  await act('#director-panel [data-graphic-action="bin-add"][data-section="end"]');
+  {const l=await listed();assert.equal(l.length,4,'a fourth clip');assert.match(l[3].text,/14–16 s · source 1–3 s/,'at the end, its marks: '+l[3].text);assert.ok(l[3].text.includes(promo.src.split('/').pop()));}
+  await shoot('movie-edit-3-bin.png');
+  // the selected clip's own source in the monitor: Mark in sets its Source in
+  {const l=await listed();await act(`#director-panel [data-movie-edit] [data-graphic-index="${l[0].i}"]`);}
+  assert.equal(await page.$eval('#director-panel [data-source-monitor-box]',e=>e.dataset.mode),'clip');
+  await until(()=>page.$eval('#director-panel [data-source-monitor]',v=>v.readyState>=1),'the clip source loads',30000);await markAt(42,'in');
+  assert.match((await listed())[0].text,/source 42–48 s/,'Mark in: the clip\'s Source in');
+  log('4b ok: the source bin, the monitor\'s marks, + Add at the end, Mark in on a clip');
   // ---- 5 the game montage: nothing of this
   await openChapter(page,base,chapter('music'));await graphicsOpen();
   assert.equal(await page.$('#director-timeline [data-movie-track]'),null,'ch 9 music: no Movie track');assert.equal(await page.$('#director-panel [data-movie-edit]'),null,'no Movie edit');

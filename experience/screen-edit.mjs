@@ -107,6 +107,15 @@ export function setSourceRange(list,key,i,inS,outS,seconds){
   if(len<MIN_GRAPHIC-1e-6)throw Error('That is shorter than 0.1 seconds on the timeline.');
   const next=structuredClone(list);next[i].offset=r6(inS);next[i].start=r6(me.start);next[i].end=r6(me.start+len);return {list:next,clamped:len<want-1e-6};
 }
+// A source from the bin with its marks (the source monitor's in / out, source seconds; none = the whole source): addClip
+// at `at` (null = after the last clip), then the in / out. {list, i (its index), clamped}
+export function addFromBin(list,key,{src,seconds:srcSeconds=null,inS=null,outS=null},{at=null,seconds}={}){
+  const a=inS!==null&&inS!==undefined?Math.max(0,inS):0,b=outS!==null&&outS!==undefined?outS:srcSeconds;
+  if(b!==null&&b!==undefined&&!(b>a))throw Error('Mark the in point before the out point.');
+  const added=addClip(list,key,src,{at,seconds,srcSeconds:b!==null&&b!==undefined?b-a:srcSeconds}),i=added.length-1;
+  if(!a)return {list:added,i,clamped:b!==null&&b!==undefined&&added[i].end-added[i].start<b-a-1e-6};
+  const r=setSourceRange(added,key,i,a,b??a+(added[i].end-added[i].start),seconds);return {list:r.list,i,clamped:r.clamped};
+}
 // Clips whose source is not here (known(src) false): the importer keeps them (missing: true) so an Export never drops
 // them; the Director says so instead of showing an empty screen.
 export const missingClips=(list,key,seconds,known=()=>true)=>trackClips(list,key,seconds).filter(c=>c.sc.missing===true||!known(c.sc.src)).map(c=>c.i);

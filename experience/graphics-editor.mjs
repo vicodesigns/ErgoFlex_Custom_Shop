@@ -1,7 +1,7 @@
 import {graphicTrack,graphicRange as clipRange,editGraphic,splitGraphic} from './graphic-clips.mjs?v=clip-track-20261121';
 // the movie chapter's clip track (ch 10 media only; docs/screen-edit-list/CONTRACT.md)
-import {movieTrack,trackClips,reorderClip,setTransition} from './screen-edit.mjs?v=clip-track-20261121';
-import {trackOverlay,trackLabel,movieInspector,movieFieldChange} from './movie-edit-ui.mjs?v=clip-track-20261121';
+import {movieTrack,trackClips,reorderClip,setTransition,addFromBin,sourceOut} from './screen-edit.mjs?v=clip-track-20261121';
+import {trackOverlay,trackLabel,movieInspector,movieFieldChange,binHTML,binInfoOf,monitorHTML} from './movie-edit-ui.mjs?v=clip-track-20261121';
 import {FIELDS,KEYS,cleanScreenLook,lookFor} from './screen-look.mjs';
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const r2=v=>Number(v.toFixed(2));
@@ -13,19 +13,39 @@ export function createGraphicsEditor({panel,timeline,shot,filmShot,showInspector
   const graphicRange=sc=>clipRange(sc,shot().seconds);
   // The movie track (null in every other chapter: there the lane is as it always was). Source lengths: the source bin's.
   const movieKey=()=>movieTrack(shot().id,graphicScreens());
-  let binInfo=()=>null;
+  // The source bin (<cut>/director-film/screen-bin.json, loaded once when the movie chapter's Graphics tab first shows)
+  // and the source monitor: a bin source picked (its marks make the clip it adds) or the selected clip's own source.
+  let bin=null,binUrl=null,binLoading=false,binInfo=()=>null,binPick=null,marks={in:null,out:null};
+  const monitorTime=new Map();
+  function loadBin(){if(bin||binLoading||!binUrl)return;binLoading=true;fetch(binUrl,{cache:'no-store'}).then(r=>r.ok?r.json():{sources:[],missing:[]}).catch(()=>({sources:[],missing:[]})).then(doc=>{bin=doc;binInfo=binInfoOf(doc);binLoading=false;renderPanel();renderTimeline();});}
   const movieOpts=()=>({selected:selectedGraphic,info:src=>binInfo(src)});
+  function monitorPart(list,mk){
+    const seconds=shot().seconds,me=trackClips(list,mk,seconds).find(c=>c.i===selectedGraphic);
+    if(binPick)return monitorHTML({mode:'bin',src:binPick,inS:marks.in,outS:marks.out,seconds:binInfo(binPick)?.seconds,canAdd:true});
+    if(me)return monitorHTML({mode:'clip',src:me.sc.src,inS:Number(me.sc.offset)||0,outS:sourceOut(me),seconds:binInfo(me.sc.src)?.seconds});
+    return '';
+  }
   // onTransition: the clip was picked by its transition chip (Delete then takes the transition, not the clip)
   let onTransition=false;
-  function pickGraphic(index,{transition=false}={}){onPick?.();selectedGraphic=index;onTransition=transition;showInspector('graphics',true);renderPanel();renderTimeline();status('Graphic selected. Drag the clip to move it; drag either edge to trim.');}
+  function pickGraphic(index,{transition=false}={}){onPick?.();selectedGraphic=index;onTransition=transition;binPick=null;showInspector('graphics',true);renderPanel();renderTimeline();status('Graphic selected. Drag the clip to move it; drag either edge to trim.');}
   function graphicsGroup(){
     if(!filmShot())return '';const seconds=shot().seconds,list=graphicScreens(),tracks=new Map();
     list.forEach((sc,i)=>{const key=graphicTrack(sc,i);if(!tracks.has(key))tracks.set(key,[]);tracks.get(key).push([sc,i]);});
     const mk=movieKey(),clip=(sc,i)=>{const [a,b]=graphicRange(sc);return `<button class="desk-clip ${selectedGraphic===i?'selected':''}${sc.missing?' missing':''}" data-graphic-clip="${i}" aria-pressed="${selectedGraphic===i}" aria-label="Graphic ${i+1}, ${r2(a)} to ${r2(b)} seconds" style="left:${a/seconds*100}%;width:${(b-a)/seconds*100}%;background:#244d58" title="${escape(sc.src)}${sc.missing?' · NOT ON THIS MACHINE: kept in the cut, not shown here':''} · drag to move; edges trim source; Ctrl/Cmd+K splits at the playhead${mk&&graphicTrack(sc,i)===mk?'; Ctrl/Cmd+drag moves it between the other clips (ripple)':''}"><span class="clip-resize" data-graphic-edge="start"></span><strong>${escape((sc.src||'Graphic').split('/').pop())}</strong><small>${r2(a)}–${r2(b)} s</small><span class="clip-resize" data-graphic-edge="end"></span></button>`;};
     return `${groupHead('graphics')}<div class="lane-group-body desk-lanes" data-lane-body="graphics" ${groupClosed('graphics')?'hidden':''}><div class="director-actions"><button data-graphic-action="split" ${list[selectedGraphic]?'':'disabled'}>✂ Split at playhead</button></div>${list.length?[...tracks.values()].map(entries=>{const movie=!!mk&&graphicTrack(entries[0][0],entries[0][1])===mk;return `<div class="desk-lane-row${movie?' movie-track':''}" data-lane-color="graphics"${movie?' data-movie-track':''}><span class="desk-lane-label">${movie?trackLabel(list,mk,seconds):escape(entries[0][0].target??'Screen')}</span><div class="desk-lane" data-graphic-lane><div class="desk-lane-line"></div>${entries.map(([sc,i])=>clip(sc,i)).join('')}${movie?trackOverlay(list,mk,seconds,movieOpts()):''}<div class="camera-track-playhead" data-shared-playhead style="left:${time()*100}%"></div></div></div>`;}).join(''):'<p class="director-hint">No screen graphics in this chapter.</p>'}</div>`;
   }
-  function graphicAction(action,index=selectedGraphic){try{
+  function graphicAction(action,index=selectedGraphic,button=null){try{
     if(action==='pick'){pickGraphic(index);return;}
+    if(action==='mark-in'||action==='mark-out'){
+      const v=panel.querySelector('[data-source-monitor]'),t=v?Math.round(v.currentTime*100)/100:NaN;if(!Number.isFinite(t))return;
+      if(binPick){marks[action==='mark-in'?'in':'out']=t;renderPanel();status(`${action==='mark-in'?'In':'Out'} at ${t} s of the source. + Add puts it on the Movie track.`);return;}
+      const mk=movieKey(),r=mk&&movieFieldChange(graphicScreens(),mk,shot().seconds,selectedGraphic,{name:action==='mark-in'?'me-in':'me-out',value:String(t)});if(!r)return;
+      commit(()=>{shot().screens=r.list;},{render:true});renderTimeline();status(`Source ${action==='mark-in'?'in':'out'} ${t} s${r.clamped?' (shortened to the time before the next clip)':''}.`);return;}
+    if(action==='bin-add'){
+      const mk=movieKey();if(!mk||!binPick)return;const where=button?.dataset.section==='playhead'?Math.round(time()*shot().seconds*100)/100:null;
+      const r=addFromBin(graphicScreens(),mk,{src:binPick,seconds:binInfo(binPick)?.seconds??null,inS:marks.in,outS:marks.out},{at:where,seconds:shot().seconds});
+      const name=binPick.split('/').pop();binPick=null;marks={in:null,out:null};selectedGraphic=r.i;
+      commit(()=>{shot().screens=r.list;},{render:true});showInspector('graphics',true);renderPanel();renderTimeline();status(`${name} added to the Movie track${r.clamped?', shortened to the free time there':''}. Add a transition on its + to blend it in.`);return;}
     let list;if(action==='earlier'||action==='later'){const mk=movieKey(),clips=mk?trackClips(graphicScreens(),mk,shot().seconds):[],k=clips.findIndex(c=>c.i===index);if(k<0)return;
       const to=k+(action==='earlier'?-1:1);list=reorderClip(graphicScreens(),mk,k,to,shot().seconds);selectedGraphic=index;
       commit(()=>{shot().screens=list;},{render:true});showInspector('graphics',true);renderPanel();renderTimeline();status(`Clip moved ${action==='earlier'?'earlier':'later'}: the clips around it keep their lengths. Undo puts it back.`);return;}
@@ -34,7 +54,7 @@ export function createGraphicsEditor({panel,timeline,shot,filmShot,showInspector
     commit(()=>{shot().screens=list;},{render:true});showInspector('graphics',true);renderPanel();renderTimeline();status(action==='split'?'Clip split. Drag either piece to move it, or extend an edge to reveal more of the source.':'Graphic clip deleted. Undo restores it.');
   }catch(error){status(error.message,true);}}
   for(const root of [panel,timeline]){
-    root.addEventListener('click',event=>{const button=event.target.closest('[data-graphic-action]');if(!button)return;event.preventDefault();event.stopPropagation();graphicAction(button.dataset.graphicAction,button.dataset.graphicIndex===undefined?selectedGraphic:Number(button.dataset.graphicIndex));});
+    root.addEventListener('click',event=>{const button=event.target.closest('[data-graphic-action]');if(!button)return;event.preventDefault();event.stopPropagation();graphicAction(button.dataset.graphicAction,button.dataset.graphicIndex===undefined?selectedGraphic:Number(button.dataset.graphicIndex),button);});
     root.addEventListener('keydown',event=>{if(event.target.closest('input,select,textarea,[contenteditable]'))return;const el=event.target.closest('[data-graphic-clip]');if(!el&&!event.target.closest('[data-inspector-page="graphics"]'))return;if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='k'){event.preventDefault();event.stopImmediatePropagation();graphicAction('split',el?Number(el.dataset.graphicClip):selectedGraphic);}});
   }
   timeline.addEventListener('pointerdown',event=>{if(event.target.closest('[data-clip-transition],[data-clip-seam]')){event.preventDefault();event.stopPropagation();}},true);
@@ -90,8 +110,8 @@ export function createGraphicsEditor({panel,timeline,shot,filmShot,showInspector
   function screenLayers(){
     const list=shot().screens??filmShot()?.screens??[];
     if(!list.length)return '<p class="director-hint">No screen graphics in this chapter.</p>';
-    const mk=movieKey();
-    return `${lookPanel(list)}${mk?movieInspector(list,mk,shot().seconds,movieOpts()):''}<p class="director-hint">Select a clip, place the playhead where you want to cut, then Split at playhead (Ctrl/Cmd+K). Drag pieces to move them; drag edges to trim or extend the source.</p><details open><summary>Screen graphics · ${list.length}</summary>${list.map((sc,i)=>`<details ${selectedGraphic===i?'open':''}><summary>${escape(sc.target??'Screen')} · clip ${i+1}</summary><div class="director-actions"><button data-graphic-action="split" data-graphic-index="${i}">✂ Split at playhead</button><button data-graphic-action="delete" data-graphic-index="${i}">Delete clip</button></div><div class="director-grid"><label>Comes in (seconds)<input type="number" min="0" max="${shot().seconds}" step=".1" data-screen-index="${i}" data-screen-field="start" value="${graphicRange(sc)[0]}"></label><label>Goes out (seconds)<input type="number" min="0" max="${shot().seconds}" step=".1" data-screen-index="${i}" data-screen-field="end" value="${graphicRange(sc)[1]}"></label></div><label>Graphic source<input data-screen-index="${i}" data-screen-field="src" value="${escape(sc.src)}"></label><div class="director-grid"><label>Clip offset (seconds)<input type="number" step=".05" data-screen-index="${i}" data-screen-field="offset" value="${Number(sc.offset)||0}"></label><label>Playback speed<input type="number" min=".01" step=".05" data-screen-index="${i}" data-screen-field="rate" value="${sc.rate??1}"></label></div><label>Fit<select data-screen-index="${i}" data-screen-field="fit">${['cover','contain','stretch'].map(v=>`<option ${v===(sc.fit||'cover')?'selected':''}>${v}</option>`).join('')}</select></label><label>Loop<select data-screen-index="${i}" data-screen-field="loop"><option value="true" ${sc.loop!==false?'selected':''}>Loop</option><option value="false" ${sc.loop===false?'selected':''}>Hold last frame</option></select></label></details>`).join('')}<p class="director-hint">Offset selects the starting moment of the source clip. These settings apply to this chapter.</p></details>`;
+    const mk=movieKey();if(mk)loadBin();
+    return `${lookPanel(list)}${mk?movieInspector(list,mk,shot().seconds,movieOpts())+monitorPart(list,mk)+binHTML(bin,{picked:binPick}):''}<p class="director-hint">Select a clip, place the playhead where you want to cut, then Split at playhead (Ctrl/Cmd+K). Drag pieces to move them; drag edges to trim or extend the source.</p><details open><summary>Screen graphics · ${list.length}</summary>${list.map((sc,i)=>`<details ${selectedGraphic===i?'open':''}><summary>${escape(sc.target??'Screen')} · clip ${i+1}</summary><div class="director-actions"><button data-graphic-action="split" data-graphic-index="${i}">✂ Split at playhead</button><button data-graphic-action="delete" data-graphic-index="${i}">Delete clip</button></div><div class="director-grid"><label>Comes in (seconds)<input type="number" min="0" max="${shot().seconds}" step=".1" data-screen-index="${i}" data-screen-field="start" value="${graphicRange(sc)[0]}"></label><label>Goes out (seconds)<input type="number" min="0" max="${shot().seconds}" step=".1" data-screen-index="${i}" data-screen-field="end" value="${graphicRange(sc)[1]}"></label></div><label>Graphic source<input data-screen-index="${i}" data-screen-field="src" value="${escape(sc.src)}"></label><div class="director-grid"><label>Clip offset (seconds)<input type="number" step=".05" data-screen-index="${i}" data-screen-field="offset" value="${Number(sc.offset)||0}"></label><label>Playback speed<input type="number" min=".01" step=".05" data-screen-index="${i}" data-screen-field="rate" value="${sc.rate??1}"></label></div><label>Fit<select data-screen-index="${i}" data-screen-field="fit">${['cover','contain','stretch'].map(v=>`<option ${v===(sc.fit||'cover')?'selected':''}>${v}</option>`).join('')}</select></label><label>Loop<select data-screen-index="${i}" data-screen-field="loop"><option value="true" ${sc.loop!==false?'selected':''}>Loop</option><option value="false" ${sc.loop===false?'selected':''}>Hold last frame</option></select></label></details>`).join('')}<p class="director-hint">Offset selects the starting moment of the source clip. These settings apply to this chapter.</p></details>`;
   }
   panel.addEventListener('change',event=>{
     const el=event.target;if(!/^me-/.test(el.name||'')||!el.closest('[data-movie-fields]'))return;event.stopPropagation();
@@ -111,5 +131,11 @@ export function createGraphicsEditor({panel,timeline,shot,filmShot,showInspector
     }catch(error){renderPanel();status(error.message,true);}
   },true);
   const live=()=>selectedGraphic>=0&&selectedGraphic<graphicScreens().length?selectedGraphic:-1;
-  return {setBin(fn){binInfo=typeof fn==='function'?fn:()=>null;},panel:screenLayers,lane:graphicsGroup,screens:graphicScreens,selected:live,clear(){selectedGraphic=-1;},remove(){const i=live();if(i<0)return false;if(onTransition&&graphicScreens()[i]?.transitionIn){const list=setTransition(graphicScreens(),i,null);onTransition=false;commit(()=>{shot().screens=list;},{render:true});renderTimeline();status('Transition deleted: a cut again. Undo brings it back.');return true;}graphicAction('delete',i);return true;},range:i=>{const sc=graphicScreens()[i];return sc?graphicRange(sc):null;}};
+  // bin picks; the monitor keeps its moment across re-renders (media events do not bubble: capture)
+  panel.addEventListener('click',event=>{const b=event.target.closest('[data-movie-bin]');if(!b)return;event.preventDefault();event.stopPropagation();
+    binPick=b.dataset.movieBin;marks={in:null,out:null};renderPanel();status(`${binPick.split('/').pop()} in the monitor: play or scrub it, Mark in / Mark out, then + Add.`);},true);
+  panel.addEventListener('loadedmetadata',event=>{const v=event.target;if(!v.matches?.('[data-source-monitor]'))return;const src=v.getAttribute('src'),t=monitorTime.get(src)??Number(v.dataset.in);if(Number.isFinite(t)&&t>0)v.currentTime=Math.min(t,v.duration||t);},true);
+  panel.addEventListener('timeupdate',event=>{const v=event.target;if(v.matches?.('[data-source-monitor]'))monitorTime.set(v.getAttribute('src'),v.currentTime);},true);
+  panel.addEventListener('seeked',event=>{const v=event.target;if(v.matches?.('[data-source-monitor]'))monitorTime.set(v.getAttribute('src'),v.currentTime);},true);
+  return {setBinUrl(u){if(u!==binUrl){binUrl=u||null;bin=null;binInfo=()=>null;}},panel:screenLayers,lane:graphicsGroup,screens:graphicScreens,selected:live,clear(){selectedGraphic=-1;},remove(){const i=live();if(i<0)return false;if(onTransition&&graphicScreens()[i]?.transitionIn){const list=setTransition(graphicScreens(),i,null);onTransition=false;commit(()=>{shot().screens=list;},{render:true});renderTimeline();status('Transition deleted: a cut again. Undo brings it back.');return true;}graphicAction('delete',i);return true;},range:i=>{const sc=graphicScreens()[i];return sc?graphicRange(sc):null;}};
 }

@@ -903,6 +903,8 @@ export function mountDirector(bridge,catalog,initial){
   const layersStudio={on:()=>layersOn(),setting:()=>chapterSetting(shot()),featured:stageFeatured,hideDesk:layersHideDesk,
     hiddenHere:()=>{try{const s=shot();return s?studioHiddenHere(localStorage.getItem(LAYERS_KEY),s,chapterRooms(s,stageLayout()),sceneProps.items()):new Map();}catch(error){console.warn('[layers]',error);return new Map();}}};
   const graphics=createGraphicsEditor({panel,timeline,shot,filmShot,showInspector,renderPanel,renderTimeline,status,commit,onPick:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();deskSel.deselect();},groupHead:laneGroupHead,groupClosed,time:()=>playhead,snapStep:()=>numStep(),magnet:()=>magnet});
+  // the movie chapter's source bin: <cut>/director-film/screen-bin.json (compose-screen-edit.mjs --bin), beside the chapter shots
+  graphics.setBinUrl(cutDir?cutDir+'/director-film/screen-bin.json':null);
   // Sonar (sonar-editor.mjs): a proximity chapter's rings, in the Graphics tab; shot.sonar.
   const sonarEditor=createSonarEditor({panel,bridge,shot,filmShot,commit,status,showing:()=>open&&inspector==='graphics'});
   const layers=createLayersPanel({root:panel,shot,commit,status,props:sceneProps,rerender:()=>renderLayers(),studio:layersStudio});
