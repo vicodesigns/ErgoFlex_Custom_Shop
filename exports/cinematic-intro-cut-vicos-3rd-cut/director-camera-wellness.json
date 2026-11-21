@@ -1,6 +1,6 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-b180692918b0-Film-chapter-wellness2-seated.json",
- "seconds": 19.5,
+ "source": "exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-wellness3-order-Film-chapter-wellness-22-5-s-.json",
+ "seconds": 22.5,
  "keys": [
   {
    "at": 0.0,
@@ -18,7 +18,7 @@
    "label": "Wide from the mirror wall: window, bike, mat"
   },
   {
-   "at": 2.45,
+   "at": 1.6,
    "position": [
     4.95,
     1.85,
@@ -33,9 +33,9 @@
    "label": "Wide from the mirror wall: slow push"
   },
   {
-   "at": 6.0,
+   "at": 4.2,
    "position": [
-    2.0,
+    2,
     1.5,
     -1.95
    ],
@@ -48,7 +48,7 @@
    "label": "The desk begins to rise, Maya gets up"
   },
   {
-   "at": 11.0,
+   "at": 12.3,
    "position": [
     3.5472801650742953,
     2.2710553389924635,
@@ -63,7 +63,7 @@
    "label": "Desk Squats: the desk, its monitor and Maya stepping back"
   },
   {
-   "at": 14.5,
+   "at": 15.8,
    "position": [
     3.4,
     1.55,
@@ -78,7 +78,7 @@
    "label": "Desk Squats: the desk, its monitor and Maya stepping back"
   },
   {
-   "at": 19.5,
+   "at": 22.5,
    "position": [
     1.65,
     1.55,
@@ -90,7 +90,7 @@
     0.6
    ],
    "fov": 40,
-   "label": "Working standing"
+   "label": "Working seated"
   }
  ],
  "clips": [
@@ -98,16 +98,42 @@
    "id": "stand-break",
    "lane": "lift",
    "kind": "lift",
-   "start": 6,
+   "start": 3.5,
    "duration": 5,
    "easing": "smooth",
    "label": "Stand and reset",
    "target": 41
+  },
+  {
+   "id": "sit-back",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 14.55,
+   "duration": 5,
+   "easing": "smooth",
+   "label": "Back to sitting",
+   "target": 28
   }
  ],
  "initial": {
   "height": 28,
   "tilt": 0
+ },
+ "lighting": {
+  "ledStatus": [
+   {
+    "at": 3.5,
+    "dur": 5,
+    "kind": "lift-up",
+    "fade": 1
+   },
+   {
+    "at": 14.55,
+    "dur": 5,
+    "kind": "lift-down",
+    "fade": 1
+   }
+  ]
  },
  "props": [
   {
@@ -285,7 +311,128 @@
       "key": "people-maya-sit-type",
       "id": "people-maya-sit-type"
      }
-    ]
+    ],
+    "postures": {
+     "people-maya-stand-type-41": {
+      "poseKeys": [
+       {
+        "t": 9.1,
+        "pose": {
+         "spine_03": [
+          0,
+          0,
+          0,
+          1
+         ],
+         "neck_01": [
+          0,
+          0,
+          0,
+          1
+         ],
+         "head": [
+          0,
+          0,
+          0,
+          1
+         ]
+        }
+       },
+       {
+        "t": 9.35,
+        "pose": {
+         "spine_03": [
+          0.0196,
+          0.0651,
+          -0.0068,
+          0.9977
+         ],
+         "neck_01": [
+          0.0458,
+          0.1246,
+          -0.087,
+          0.9873
+         ],
+         "head": [
+          0.0664,
+          0.2052,
+          -0.0664,
+          0.9742
+         ]
+        }
+       },
+       {
+        "t": 9.55,
+        "pose": {
+         "spine_03": [
+          0.0326,
+          0.065,
+          -0.0076,
+          0.9973
+         ],
+         "neck_01": [
+          0.0763,
+          0.1216,
+          -0.0906,
+          0.9855
+         ],
+         "head": [
+          0.1106,
+          0.2009,
+          -0.0746,
+          0.9705
+         ]
+        }
+       },
+       {
+        "t": 9.75,
+        "pose": {
+         "spine_03": [
+          0.0196,
+          0.0651,
+          -0.0068,
+          0.9977
+         ],
+         "neck_01": [
+          0.0458,
+          0.1246,
+          -0.087,
+          0.9873
+         ],
+         "head": [
+          0.0664,
+          0.2052,
+          -0.0664,
+          0.9742
+         ]
+        }
+       },
+       {
+        "t": 10.1,
+        "pose": {
+         "spine_03": [
+          0,
+          0,
+          0,
+          1
+         ],
+         "neck_01": [
+          0,
+          0,
+          0,
+          1
+         ],
+         "head": [
+          0,
+          0,
+          0,
+          1
+         ]
+        }
+       }
+      ]
+     }
+    }
    },
    {
     "key": "maya-break",
@@ -303,8 +450,8 @@
     },
     "act": {
      "kind": "squat",
-     "at": 10.2,
-     "dur": 5.2,
+     "at": 11.5,
+     "dur": 4.5,
      "reps": 3
     },
     "look": [
@@ -314,7 +461,7 @@
      "people-maya-stand-type": {
       "poseKeys": [
        {
-        "t": 9.01,
+        "t": 10.31,
         "pose": {
          "index_01_l": [
           0,
@@ -487,7 +634,7 @@
         }
        },
        {
-        "t": 9.1,
+        "t": 10.4,
         "pose": {
          "index_01_r": [
           -0.0428,
@@ -564,7 +711,7 @@
         }
        },
        {
-        "t": 9.2,
+        "t": 10.5,
         "pose": {
          "index_01_r": [
           -0.0321,
@@ -641,7 +788,7 @@
         }
        },
        {
-        "t": 9.967,
+        "t": 11.267,
         "pose": {
          "index_01_l": [
           -0.1794,
@@ -847,8 +994,8 @@
   "when": {
    "maya-break": [
     [
-     9.5,
-     16.1,
+     10.8,
+     16.7,
      0.3,
      0.35
     ]
