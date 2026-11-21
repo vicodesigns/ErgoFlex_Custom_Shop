@@ -25,5 +25,5 @@
     ] }
   ],
   "unchanged": ["noah-pulls.act {at 5.4, dur 1.1, by [0,0,120]}", "noah-taps.act {at 8.2}", "turn -146 on pulls/taps/watches", "noah-talks", "noah-steps.at, walk.start 4, walk.pace 2.2, walk.path[0..1]", "when", "touchscreen", "motion (lift clip 8.5-11.5)", "sceneEdits, sceneDeskEdits, camera"],
-  "code_change": "studio.js setScreenProgress: while a film poses the screen (touchscreenBeforeFilm set) and the desk is 60x30, the stowed Touch_Screen* parts are offset by the wide mount's x/z so the stowed screen stands where the wide screen starts. Only chapters with a `touchscreen` field (oilers only) are changed; the Studio's own Extend screen button is not touched."
+  "code_change": "studio.js setScreenProgress: while a film poses the screen (touchscreenBeforeFilm set) and the desk is 60x30, the stowed Touch_Screen* parts are offset by the wide mount's x/z (x also plus the wide-vs-standard pivot difference) so the stowed screen stands where the wide screen starts. Only chapters with a `touchscreen` field (oilers only) are changed; the Studio's own Extend screen button is not touched."
 }
