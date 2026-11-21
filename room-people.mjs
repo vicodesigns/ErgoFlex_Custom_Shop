@@ -1690,9 +1690,13 @@ export class RoomPeople {
                         const fabric = knit ? cloth.stockinette : cloth.twill;
                         m.bumpMap = null;
                         m.normalMap = fabric.normal;
-                        m.normalScale.setScalar(knit ? .58 : .31);
+                        // Keep stitch relief shallow on the fitted knits in the two
+                        // film rooms. A deep furniture weave reads as ridges on a sleeve.
+                        const fittedTop = part === 'top' && /^(?:Human\.)?(?:toigo_fisherman_sweater|toigo_basic_tucked_t-shirt)$/.test(m.name)
+                            && /^people-(?:mia|yara|ava|sofia)-/.test(object.userData.person?.id || '');
+                        m.normalScale.setScalar(fittedTop ? .20 : knit ? .58 : .31);
                         m.roughnessMap ||= fabric.orm;
-                        if (!m.aoMap) { m.aoMap = fabric.orm; m.aoMapIntensity = knit ? .66 : .38; }
+                        if (!m.aoMap) { m.aoMap = fabric.orm; m.aoMapIntensity = fittedTop ? .23 : knit ? .66 : .38; }
                     } else if (m.map && !m.normalMap) {
                         m.bumpMap = m.map; m.bumpScale = .00048;
                     }

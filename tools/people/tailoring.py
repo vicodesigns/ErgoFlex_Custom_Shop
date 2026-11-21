@@ -11,6 +11,8 @@ from mathutils import Vector
 from mathutils.bvhtree import BVHTree
 from mathutils.kdtree import KDTree
 
+import garments
+
 
 GARMENTS = {'toigo_basic_tucked_t-shirt', 'joepal_crude_t-shirt_female',
             'namuhekam_male_polo_shirt', 'toigo_fisherman_sweater', 'toigo_wool_pants', 'cortu_cargo_pants'}
@@ -71,23 +73,20 @@ def panel_projector(bm):
     return patch
 
 
-def sew_panels(bm, shoulder, chest, waist, style):
+def sew_studio_panels(bm, shoulder, chest, waist):
     patch = panel_projector(bm)
-    divided = style == 'studio'
-    half = .052 if divided else .044
-    top = chest.z + (.117 if divided else .129)
+    half = .052
+    top = chest.z + .117
     rows = []
     for t, lift in [(0, .001), (.48, .005), (.86, .006), (.90, .008), (.99, .009), (1, .004)]:
         row = []
         for u in [-1, -.72, -.38, 0, .38, .72, 1]:
             x = abs(shoulder.x) * .52 + u * half * (.80 if t == 0 else 1)
-            z = top - (.112 if divided else .096) * (1 - t) + (.009 * abs(u) if t == 0 else .002 * u)
+            z = top - .112 * (1 - t) + (.009 * abs(u) if t == 0 else .002 * u)
             offset = .004 + lift * (1 - abs(u) ** 4)
-            row.append((x, z, .004 if divided and u == -.38 else offset))
+            row.append((x, z, .004 if u == -.38 else offset))
         rows.append(row)
     patch(rows)
-    if not divided:
-        return
 
     # Lin is filmed from behind while she reaches for the canvas. A shoulder
     # yoke carries a box pleat; its two raised returns release across the back.
@@ -176,7 +175,46 @@ def shape_neckline(bm, shoulder):
         v.co += v.normal * (.0028 * math.exp(-((distance - .013) / .005) ** 2))
 
 
-def fit(obj, rig, style, garment):
+def skin_surface(base):
+    hidden = garments._members(base, 'HelperGeometry') | garments._members(base, 'JointCubes')
+    faces = [tuple(face.vertices) for face in base.data.polygons if not any(i in hidden for i in face.vertices)]
+    return BVHTree.FromPolygons(garments._shape(base), faces)
+
+
+def take_in(vertex, surface, ease, amount):
+    """Remove excess cloth locally, keeping ease over the actor's shaped skin."""
+    if amount <= 0:
+        return
+    point, normal, _, distance = surface.find_nearest(vertex.co)
+    delta = vertex.co - point
+    if distance > ease and delta.dot(normal) > 0:
+        vertex.co -= delta * (amount * min(.022, distance - ease) / distance)
+
+
+def covered_skin(base, cloth):
+    """Find skin safely under the shirt in the neutral pose. An armpit can
+    cross the sleeve after an elbow bends, so posed face normals alone miss it."""
+    shell = BVHTree.FromBMesh(cloth)
+    edges = [v for v in cloth.verts if v.is_boundary]
+    openings = KDTree(len(edges))
+    for i, v in enumerate(edges):
+        openings.insert(v.co, i)
+    openings.balance()
+    groups = {g.index for g in base.vertex_groups if g.name.startswith(('spine_', 'clavicle_', 'upperarm_'))}
+    hidden = []
+    for v, point in zip(base.data.vertices, garments._shape(base)):
+        if sum(g.weight for g in v.groups if g.group in groups) < .35:
+            continue
+        hit, normal, _, distance = shell.find_nearest(point, .045)
+        if hit is None or (point - hit).dot(normal) > .003:
+            continue
+        # Keep the skin around every opening, including its adjacent triangles.
+        if openings.find(hit)[2] > .037:
+            hidden.append(v.index)
+    return hidden
+
+
+def fit(obj, rig, style, garment, base):
     trousers = garment in ('toigo_wool_pants', 'cortu_cargo_pants', 'male_casualsuit04', 'female_casualsuit01')
     polo = garment == 'namuhekam_male_polo_shirt'
     knitted = garment == 'toigo_fisherman_sweater'
@@ -207,31 +245,24 @@ def fit(obj, rig, style, garment):
             sleeves[side] = (origin, axis, reach)
     hem_z = min(v.co.z for v in bm.verts)
     knee, ankle = joint('calf_l'), joint('foot_l')
+    close_tee = not trousers and style in ('edit', 'breton')
+    if knitted or close_tee:
+        surface = skin_surface(base)
     if knitted:
-        # The ribbed cuffs lie on the forearm, farther down than a tee sleeve.
-        forearms = {}
-        for side in ('l', 'r'):
-            elbow, wrist = joint('lowerarm_' + side), joint('hand_' + side)
-            forearms[side] = (elbow, (wrist - elbow).normalized(), (wrist - elbow).length)
         body_hem = min(v.co.z for v in bm.verts if abs(v.co.x) < abs(shoulder.x) * .78)
     for v in bm.verts:
         x, y, z = v.co
         if knitted:
-            if abs(x) > abs(shoulder.x) * 1.1:
-                elbow, axis, reach = forearms['l' if x * shoulder.x > 0 else 'r']
-                along = (v.co - elbow).dot(axis)
-                # Stacked folds run obliquely out of the inside elbow, then
-                # flatten into the fitted rib at the wrist.
-                bias = .38 * (y - elbow.y)
-                drape = .007 * math.exp(-((along - bias + .015) / .021) ** 2)
-                drape += .005 * math.exp(-((along + bias - .043) / .019) ** 2)
-                drape += .007 * math.exp(-((reach - along - .055) / .014) ** 2)
-            else:
-                depth = z - body_hem - .028 * (x / shoulder.x) ** 2
-                drape = .006 * math.exp(-((depth - .038) / .012) ** 2)
-                drape += .013 * math.exp(-((depth - .087 - .26 * x) / .026) ** 2)
-                drape += .007 * math.exp(-((depth - .14 + .18 * x) / .035) ** 2)
-            v.co += v.normal * drape
+            # The fitted arm and the ribbed cuff already carry the bend.
+            # Leave the underarm room to flex, then taper over the arm itself.
+            sleeve = ramp(.78, 1.35, abs(x / shoulder.x))
+            lower_body = 1 - ramp(waist.z + .08, chest.z + .05, z)
+            take_in(v, surface, .006 + .005 * (1 - sleeve),
+                    .84 * sleeve + .58 * (1 - sleeve) * lower_body)
+            # One shallow release above the ribbing, mainly at the side seams.
+            side = ramp(.38, .84, abs(x / shoulder.x)) * (1 - sleeve)
+            depth = z - body_hem - .040 - .12 * x
+            v.co += v.normal * (.002 * side * math.exp(-(depth / .021) ** 2))
         elif trousers:
             # Breaks of woven wool above the shoe and on either side of the knee.
             side = 1 if x > 0 else -1
@@ -270,19 +301,29 @@ def fit(obj, rig, style, garment):
                 seam = .006 * math.exp(-((depth - .024) / .009) ** 2)
                 folds = .012 * math.exp(-((depth - .09 - .32 * y) / .022) ** 2)
                 ease += trunk * (seam + folds * abs(math.cos(a)) ** 4)
-            v.co += v.normal * (ease + .006 * gather * trunk * (.35 + .65 * abs(math.sin(a))) + cuff)
+            waist_fold = .006 * gather * trunk * (.35 + .65 * abs(math.sin(a)))
+            if close_tee:
+                # Follow the waistband around a seated or standing editor.
+                # Concentrate the little remaining fullness at the side seam.
+                take_in(v, surface, .005, .80 * trunk * (1 - ramp(chest.z, chest.z + .08, z)))
+                ease = .16 * ease * abs(math.cos(a)) ** 2
+                waist_fold *= .18 * abs(math.cos(a)) ** 2
+                cuff *= .55
+            v.co += v.normal * (ease + waist_fold + cuff)
     bm.normal_update()
     if style == 'breton' and garment == 'toigo_basic_tucked_t-shirt':
         shape_neckline(bm, shoulder)
-    if not trousers and style in ('studio', 'edit'):
-        sew_panels(bm, shoulder, chest, waist, style)
+    if not trousers and style == 'studio':
+        sew_studio_panels(bm, shoulder, chest, waist)
     if polo and style == 'workshop':
         workshop_pocket(bm, shoulder, chest)
     if garment == 'cortu_cargo_pants':
         cargo_pockets(bm, joint('thigh_l'), knee)
+    covered = covered_skin(base, bm) if knitted else []
     bm.transform(world.inverted())
     bm.to_mesh(fitted)
     bm.free()
     obj.modifiers.clear()
     obj.data = fitted
     obj.modifiers.new('Tailored fabric', 'ARMATURE').object = rig
+    return covered

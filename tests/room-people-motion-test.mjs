@@ -89,7 +89,13 @@ for (const who of characters) {
         solveWalk(rig, ordinary, g);
         const y = rig.wp[wrist].y, feet = ['l','r'].map(s => rig.wp[rig.side[s].leg[2]].clone());
         solveWalk(rig, plan, g);
-        if (g === 1) assert.ok(rig.wp[wrist].y > y + .12, 'the hand lifts toward the strap');
+        if (g === 1) {
+            assert.ok(rig.wp[wrist].y > y + .12, 'the hand lifts toward the strap');
+            const [, shoulder, elbow] = rig.side.r.arm;
+            const out = rig.wp[shoulder].clone().sub(rig.wp[rig.side.l.arm[1]]).normalize();
+            assert.ok(rig.wp[elbow].clone().sub(rig.wp[shoulder]).dot(out) > .035, 'bent elbow clears the side of the sweater');
+            assert.ok(rig.wp[rig.index.get('middle_03_r')].y > rig.wp[wrist].y + .06, 'fingers follow the strap toward the shoulder');
+        }
         else assert.ok(Math.abs(rig.wp[wrist].y - y) < .001, 'the hand returns to its authored swing');
         for (const [i,s] of ['l','r'].entries()) assert.ok(rig.wp[rig.side[s].leg[2]].distanceTo(feet[i]) < .001, 'the gesture preserves foot placement');
     }

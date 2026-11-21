@@ -1471,9 +1471,24 @@ export function solveWalk(rig, plan, g) {
             const across = v4.copy(rig.wp[rig.side.l.arm[1]]).sub(rig.wp[shoulder]).normalize();
             const up = v5.copy(rig.wp[b.neck_01]).sub(rig.wp[b.spine_02]).normalize();
             const front = v6.crossVectors(across, up).normalize();
-            bodyAt.copy(rig.wp[shoulder]).addScaledVector(across, .055).addScaledVector(up, -.15).addScaledVector(front, .16);
+            bodyAt.copy(rig.wp[shoulder]).addScaledVector(across, .025).addScaledVector(up, -.15).addScaledVector(front, .16);
             handAt.copy(rig.wp[hand]).lerp(bodyAt, gather);
+            // Keep the elbow on the outside of the sweater. IK from the relaxed
+            // walking arm alone can fold the elbow through the ribs on the turn.
+            const elbowPole = dir.copy(across).negate().addScaledVector(up, -2.4);
+            const alongStrap = awayAt.copy(up).addScaledVector(front, -.21).addScaledVector(across, .10).normalize();
             armTo(rig, 'r', handAt);
+            const axis = v1.copy(rig.wp[hand]).sub(rig.wp[shoulder]).normalize();
+            const elbow = rig.side.r.arm[2];
+            const bend = v2.copy(rig.wp[elbow]).sub(rig.wp[shoulder]).projectOnPlane(axis).normalize();
+            elbowPole.projectOnPlane(axis).normalize();
+            const swivel = Math.atan2(axis.dot(v3.crossVectors(bend, elbowPole)), bend.dot(elbowPole));
+            rig.turnWorld(shoulder, turn.setFromAxisAngle(axis, swivel * gather)); rig.fk();
+            // The fingers lie along the webbing as the hand arrives.
+            const knuckle = rig.index.get('middle_01_r');
+            const fingers = v1.copy(rig.wp[knuckle]).sub(rig.wp[hand]).normalize();
+            turn.setFromUnitVectors(fingers, alongStrap);
+            rig.turnWorld(hand, turn2.identity().slerp(turn, gather)); rig.fk();
         }
     }
     rig.fk();

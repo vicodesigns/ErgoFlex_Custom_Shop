@@ -310,12 +310,13 @@ if who.get('comb') or who.get('taper_curls'):
         groom.cropped_coils(hair, base, rig, OUT_DIR, OUT_ID)
 
 # Fit in the neutral pose so sewn details follow the existing rig and saved Director poses.
+covered_by_knit = []
 if who.get('tailoring'):
     for obj in meshes:
         garment = obj.name.split('.', 1)[-1]
         denim_bottom = garment in ('male_casualsuit04', 'female_casualsuit01') and who.get('parts', {}).get(garment) == 'bottom'
         if garment in who['clothes'] and (garment in tailoring.GARMENTS or denim_bottom):
-            tailoring.fit(obj, rig, who['tailoring'], garment)
+            covered_by_knit.extend(tailoring.fit(obj, rig, who['tailoring'], garment, base))
 
 # ---- garments made from the base mesh (a white coat, a gown, socks; gloves are the hands' own faces) ------
 meshes += garments.build(who, base, rig, OUT_DIR, OUT_ID)
@@ -387,6 +388,12 @@ for kind, kw in list(spec.get('held', [])) + list(who.get('carry', {}).get(spec[
 for o, bone in worn.build(rig, meshes, who, spec): extras.append(o); extra_bone[o.name] = bone
 
 # ---- bake to one static mesh -------------------------------------------------------------------
+if covered_by_knit:
+    group = base.vertex_groups.new(name='Covered by knit')
+    group.add(covered_by_knit, 1., 'REPLACE')
+    mod = base.modifiers.new('Skin inside sweater', 'MASK')
+    mod.vertex_group = group.name
+    mod.invert_vertex_group = True
 dg = bpy.context.evaluated_depsgraph_get(); baked = []
 for o in meshes:
     me = bpy.data.meshes.new_from_object(o.evaluated_get(dg), preserve_all_data_layers=True, depsgraph=dg)
