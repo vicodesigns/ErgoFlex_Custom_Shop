@@ -16,7 +16,7 @@ import {createAutosave,placeOf,changesSince,when as autosaveWhen} from './direct
 import {createGraphicsEditor} from './graphics-editor.mjs?v=timeline-delete-20261120';
 import {addCameraHolds} from './camera-holds.mjs';
 import {cinematicViews,polishMovement,openingSwoop} from './cinematography.mjs';
-import {paceChapter,lengthenChapter,chapterFloor,shortenChapter} from './chapter-timing.mjs';
+import {paceChapter,lengthenChapter,chapterFloor,shortenChapter,viewsPastEnd} from './chapter-timing.mjs?v=chapter-shorten-20261121';
 import {validateClipSchedule,sampledMotionToClips,legacyMotionToClips,cleanClipMotion,planClipInsertion,clipSummary,clipEnd} from './desk-clips.mjs';
 import {groupRange,snapGroupDelta,shiftGroup,CHAPTER_MAX} from './timeline-group.mjs';
 import {LIGHT_KINDS,WHEEL_MODES,cleanLighting,exportLighting,lightKindColor,validateStatus,neutralAt,lightAt,scaleColor,warmthOf,withWarmth,whiteName,daypartAt,DAYPART_TINTS,lightnessOf,withLightness,WHITE_PRESETS} from './film-lighting.mjs';
@@ -532,10 +532,10 @@ export function mountDirector(bridge,catalog,initial){
     // A room desk is open: its clips live in shot.deskEdits, the chapter's own motion stays the featured desk's. Chapter length is shared by all desks.
     const roomDesk=!!choreo.desk(),chapterMotion=roomDesk?deskEditor.featuredMotion():motion;
     if(!longer)validateDeskEdits(shot().deskEdits,seconds);
-    const next=(longer?lengthenChapter:shortenChapter)(shot(),chapterMotion,keys(),seconds);
+    const next=(longer?lengthenChapter:shortenChapter)(shot(),chapterMotion,keys(),seconds),trimmed=longer?0:viewsPastEnd(shot(),keys(),seconds);
     commit(()=>{project.shots[selected]=next;if(roomDesk)choreo.shot().motion=motion;apply?.(next);},{render:true});
     seekCamera(at!==null?at/seconds:Math.min(1,position/seconds));
-    status(`${message?message+' · chapter':'Chapter'} ${longer?'lengthened':'shortened'} to ${Number(seconds.toFixed(3))}s. Undo restores the previous timing.`);
+    status(`${message?message+' · chapter':'Chapter'} ${longer?'lengthened':'shortened'} to ${Number(seconds.toFixed(3))}s${trimmed?` (${trimmed} camera view${trimmed===1?'':'s'} past the new end trimmed: the camera ends on the view it had there)`:''}. Undo restores the previous timing.`);
   }
   function shiftPicks(delta,message,set=picks){
     requireReady();const base=groupBase(),next=shiftGroup(base,set,delta);if(Math.abs(next.delta)<1e-9){renderTimeline();status('The selection is already at the start of the chapter.');return;}
@@ -1179,7 +1179,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       <button data-action="magnet" class="magnet" aria-pressed="${magnet}" title="Magnet: snap to movement edges, keys, the playhead and the chapter ends (S); Alt bypasses">Magnet</button><label class="snap-control">Snap <select name="timeline-snap" aria-label="Timeline snapping">${[[0,'Off'],[.1,'0.1s'],[.5,'0.5s'],[1,'1s'],...(scoreModel()?[['beat','Beat'],['bar','Bar']]:[])].map(([v,label])=>option(v,label,snapStep)).join('')}</select></label>
       <div class="timeline-zoom"><button data-action="zoom-out" aria-label="Zoom timeline out" ${zoom===1?'disabled':''}>−</button><button data-action="zoom-fit" aria-label="Fit chapter to timeline" title="Fit the whole chapter (Shift+Z) · Z: zoom to the selection · Ctrl+wheel zooms at the pointer">${zoom===1?'Fit':'Fit · '+(Math.round(zoom*10)/10)+'×'}</button><button data-action="zoom-in" aria-label="Zoom timeline in" ${zoom>=zoomMax()-1e-6?'disabled':''}>+</button></div></div>
       <div class="timeline-viewport" tabindex="0" aria-label="Camera and desk timeline"><div class="timeline-content" style="width:${zoom*100}%;--timeline-grid:${(ticks[1]||s.seconds)/s.seconds*100}%">
-      <div class="time-ruler-row"><span class="track-heading">SECONDS</span><div class="time-ruler" role="slider" aria-label="Chapter timeline scrubber" aria-valuemin="0" aria-valuemax="${s.seconds}" aria-valuenow="${(playhead*s.seconds).toFixed(2)}" tabindex="0">${ticks.map(t=>`<span style="left:${t/s.seconds*100}%">${Number(t.toFixed(2))}</span>`).join('')}${scoreHitsHtml()}${rulerMarksHtml()}<div class="ruler-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div><button class="chapter-end-handle" data-chapter-end type="button" aria-label="Chapter length: drag to change" title="Drag to change the chapter length (snaps to 0.5 s, Alt: free). Nothing already placed moves; the camera holds its last view."><i></i></button></div>
+      <div class="time-ruler-row"><span class="track-heading">SECONDS</span><div class="time-ruler" role="slider" aria-label="Chapter timeline scrubber" aria-valuemin="0" aria-valuemax="${s.seconds}" aria-valuenow="${(playhead*s.seconds).toFixed(2)}" tabindex="0">${ticks.map(t=>`<span style="left:${t/s.seconds*100}%">${Number(t.toFixed(2))}</span>`).join('')}${scoreHitsHtml()}${rulerMarksHtml()}<div class="ruler-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div><button class="chapter-end-handle" data-chapter-end type="button" aria-label="Chapter length: drag to change" title="Drag to change the chapter length (snaps to 0.5 s, Alt: free). Nothing already placed moves; longer: the camera holds its last view; shorter: camera views past the new end are trimmed."><i></i></button></div>
       ${deskVersions.lane()}${titlesGroup()}${graphics.lane()}${laneGroupHead('motion')}<div class="lane-group-body" data-lane-body="motion" ${groupClosed('motion')?'hidden':''}><div class="camera-lane-row"><span class="track-heading"><b>◆ Camera</b><small>${s.camera?'Custom views':'Original views'}</small></span><div class="camera-track" role="group" aria-label="Camera keyframe timeline"><div class="camera-track-line"></div>${segmentsHtml()}${transitionLane()}<div class="camera-track-playhead" data-track-playhead style="left:${playhead*100}%"></div>${keys().map(k=>`<button class="camera-key ${keyId===k.id?'selected':''} ${shot().camera?'':'automatic'}" style="left:${k.time*100}%" data-key="${k.id}" aria-label="Camera keyframe: ${escape(k.label)} at ${(k.time*shot().seconds).toFixed(2)} seconds" aria-pressed="${keyId===k.id}" title="${escape(k.label)} · ${(k.time*shot().seconds).toFixed(2)}s · ${({smooth:'smooth',linear:'linear',hold:'hold'})[k.easing]||k.easing} to the next (T)" data-ease="${k.easing}"><span>${({smooth:'⧗',linear:'◆',hold:'■'})[k.easing]||'◆'}</span><small>${(k.time*shot().seconds).toFixed(1)}s</small></button>`).join('')}<span class="camera-track-zero">0s</span><span class="camera-track-end">${shot().seconds}s</span></div></div>
       ${deskEditor.timeline()}</div>${lightLane()}${peopleGroup()}${propsGroup()}${soundGroup()}</div></div>
       <label class="timeline-pan" ${zoom===1?'hidden':''}><span>Pan view</span><input name="timeline-pan" type="range" min="0" max="100" step=".1" value="0" aria-label="Timeline horizontal position"></label>
@@ -2263,7 +2263,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   timeline.addEventListener('click',event=>{if(performance.now()<suppressGroupClickUntil){event.preventDefault();event.stopImmediatePropagation();}},true);
   // End handle: drag the right end of the ruler to change the chapter length (0.5 s steps, Alt: free, 2-90 s).
   // Everything already placed keeps its seconds; the camera holds its last view over added time; shortening stops
-  // at the end of the last item. One undo step.
+  // at the end of the last clip, light or title and trims camera views past the new end (chapter-timing.mjs). One undo step.
   let endDrag=null;
   function chapterShortest(){
     const L=lighting(),T=timeOfDay(),s=shot().seconds,titles=(titleEditor.titles?.()||[]).map(t=>t.rel_out).filter(t=>t<s-.01);
@@ -2272,13 +2272,14 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   function endDragMove(event){
     const d=endDrag,raw=d.seconds+(event.clientX-d.x)/d.width*d.seconds,min=event.altKey?d.floor:Math.ceil(d.floor*2-1e-9)/2;
     let v=event.altKey?Math.round(raw*100)/100:Math.round(raw*2)/2,hint='';
-    if(v<min){v=min;hint=`Shortest ${Number(min.toFixed(2))} s: the last item ends there.`;}
+    if(v<min){v=min;hint=`Shortest ${Number(min.toFixed(2))} s: the last clip, light or title ends there.`;}
     if(v>CHAPTER_MAX){v=CHAPTER_MAX;hint='A chapter can be 90 s at most.';}
     d.value=v;const x=d.left+v/d.seconds*d.width,vr=viewport().getBoundingClientRect(),rr=d.ruler.getBoundingClientRect();
     d.ghost.style.left=Math.min(x,innerWidth-8)+'px';d.ghost.style.top=rr.top+'px';d.ghost.style.height=Math.max(0,vr.bottom-rr.top)+'px';
     d.ghost.firstChild.textContent=`${Number(v.toFixed(2))} s${Math.abs(v-d.seconds)<1e-9?'':` (${v>d.seconds?'+':'−'}${Number(Math.abs(v-d.seconds).toFixed(2))} s)`}`;
     d.ghost.dataset.hint=hint;d.ghost.classList.toggle('limit',!!hint);
-    status(hint||`Chapter length ${Number(v.toFixed(2))} s${v>d.seconds?' · the camera holds its last view over the added time':''} · Alt: free`);
+    const trim=v<d.seconds?viewsPastEnd(shot(),keys(),v):0;
+    status(hint||`Chapter length ${Number(v.toFixed(2))} s${v>d.seconds?' · the camera holds its last view over the added time':trim?` · ${trim} camera view${trim===1?'':'s'} past it trimmed`:''} · Alt: free`);
   }
   timeline.addEventListener('pointerdown',event=>{
     const h=event.target.closest?.('[data-chapter-end]');if(!h||event.button!==0||composing||bridge.bakeState().baking)return;
