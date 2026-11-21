@@ -1,0 +1,181 @@
+# Vico's rise exports (seated cut), people-maya-sit-type pose keys: count and span
+export-6a1156eb0e49-Film-chapter-rise2-seated.json: n 112 last 23.700 s
+export-84d1dc269147-Film-chapter-rise-28-5-s-.json: n 154 last 23.700 s
+export-0db929432d2f-Film-chapter-rise-28-5-s-__1_.json: n 168 last 23.700 s
+export-a8fc6cd8ebda-Film-chapter-rise-28-5-s-__3_.json: n 200 last 21.967 s
+
+# 0db929432d2f (11:59) -> a8fc6cd8ebda (12:12, the importer's latest): per key time, what changed (angles in degrees); only-A = keys the latest no longer has
+ 13.967 changed hand_r:18.1
+ 14.000 only-B        hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 14.033 changed hand_r:32.2 lowerarm_l:0.1 lowerarm_r:0.1 upperarm_l:0.1 upperarm_r:0.1
+ 14.067 changed hand_r:11.2
+ 14.100 changed hand_r:46.3 lowerarm_l:5.7 lowerarm_r:6.7 upperarm_l:6.5 upperarm_r:6.6 ease linear->None
+ 14.133 only-B        hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 14.167 changed hand_r:56.2
+ 14.200 changed hand_r+ lowerarm_l+ lowerarm_r+ upperarm_l+ upperarm_r+
+ 14.233 changed hand_l:0.2 hand_r:56.1 lowerarm_l:0.1 lowerarm_r:0.1 upperarm_l:0.1 upperarm_r:0.1
+ 14.267 only-B        hand_r
+ 14.300 changed hand_l:0.2 hand_r:43.6 lowerarm_l:0.2 upperarm_l:0.1
+ 14.333 changed hand_r+
+ 14.367 changed hand_r:51.4
+ 14.400 changed hand_r+ lowerarm_l+ upperarm_l+ upperarm_r+
+ 14.433 changed hand_l:0.1 hand_r:37.8 lowerarm_l:0.1 lowerarm_r:0.2 upperarm_l:0.1 upperarm_r:0.1
+ 14.900 changed hand_r:19.4
+ 14.933 changed hand_r:17.0
+ 14.967 changed hand_r:23.7
+ 15.000 changed hand_r+ index_01_l+ index_02_l+ index_03_l+ lowerarm_l+ lowerarm_r+ middle_01_l+ middle_02_l+ middle_03_l+ pinky_01_l+ pinky_02_l+ pinky_03_l+ ring_01_l+ ring_0
+ 15.033 changed hand_l:0.2 hand_r:23.3 index_01_l:0.1 index_02_l:0.1 index_03_l:0.1 middle_01_l:0.1 middle_02_l:0.1 middle_03_l:0.1 pinky_01_l:0.1 pinky_02_l:0.1 pinky_03_l:0.1
+ 15.067 changed hand_r+
+ 15.100 changed hand_r:31.5 ring_02_l:0.1
+ 15.133 changed hand_r+
+ 15.167 changed hand_r:26.6
+ 15.200 changed hand_r+ index_02_l+ middle_02_l+ pinky_02_l+ ring_02_l+
+ 15.233 changed hand_r:43.8
+ 15.267 changed hand_r+
+ 15.300 changed hand_r:32.9
+ 15.333 changed hand_r+
+ 15.434 only-B        hand_l,hand_r
+ 15.567 only-B        hand_r
+ 15.600 changed hand_r+
+ 15.634 only-B        hand_r
+ 15.733 changed hand_r+
+ 15.767 only-B        hand_r
+ 15.800 changed hand_r+
+ 15.833 changed hand_r+
+ 15.867 changed hand_r+
+ 15.900 changed hand_r+
+ 15.933 changed hand_r+
+ 15.967 changed hand_r+
+ 16.000 changed hand_r:51.5
+ 16.034 only-B        hand_l,hand_r
+ 16.067 changed hand_r+
+ 16.133 changed hand_r+
+ 16.167 changed hand_r+
+ 16.200 changed hand_r:44.6
+ 16.234 only-B        hand_r
+ 16.567 only-B        hand_r
+ 16.600 only-B        hand_l,hand_r
+ 16.700 changed hand_r+
+ 16.800 changed hand_r+
+ 16.867 changed hand_r+
+ 16.933 changed hand_r+
+ 17.000 changed hand_r+
+ 17.033 changed hand_r+
+ 17.067 changed hand_r+
+ 17.100 changed hand_r:28.9
+ 17.133 changed hand_r+
+ 17.167 changed hand_r:32.1
+ 17.200 changed hand_r+
+ 17.233 changed hand_r:36.4
+ 17.267 changed hand_r+
+ 17.300 changed hand_l:0.1 hand_r:28.6
+ 17.333 changed hand_r+
+ 17.367 changed hand_r:28.8
+ 17.400 changed hand_r+
+ 17.433 changed hand_r:28.1
+ 17.467 changed hand_r+
+ 17.500 changed hand_r:25.8
+ 17.533 changed hand_r:28.3
+ 17.567 changed hand_r:24.7
+ 17.600 changed hand_r:30.4 lowerarm_l+ upperarm_r+
+ 17.633 changed hand_r:32.4
+ 17.667 changed hand_r:30.3
+ 17.700 changed hand_r:36.9
+ 17.734 only-B        hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 17.767 changed hand_r:26.4
+ 17.800 changed hand_r+ lowerarm_l+ lowerarm_r+ upperarm_r+
+ 18.433 changed hand_l:0.2 hand_r:29.3 lowerarm_l:0.1 lowerarm_r:0.2 upperarm_l:0.1
+ 18.467 only-B        hand_r
+ 18.534 only-B        hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 18.567 changed hand_r:77.1
+ 18.600 only-B        hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 18.633 changed hand_l:0.2 hand_r:56.8 lowerarm_l:0.1 lowerarm_r:0.1 upperarm_l:0.1 upperarm_r:0.1
+ 18.667 only-B        hand_r
+ 18.700 changed hand_l:0.1 hand_r:99.3 lowerarm_l:0.1 lowerarm_r:0.1
+ 18.734 only-B        hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 18.767 changed hand_r:110.7
+ 18.800 only-B        hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l
+ 18.833 changed hand_l:0.1 hand_r:131.5 lowerarm_l:0.1 lowerarm_r:0.1 upperarm_l:0.1
+ 18.867 only-B        hand_r
+ 18.900 changed hand_r:132.0
+ 18.934 only-B        hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l
+ 18.967 changed hand_r:178.0
+ 19.000 only-B        hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l
+ 19.033 changed hand_l:0.1 hand_r:164.7
+ 19.067 only-B        hand_r
+ 19.100 changed hand_r:168.6
+ 19.134 only-B        hand_r
+ 19.167 changed hand_r:151.8
+ 19.200 only-B        hand_r
+ 19.233 changed hand_r:164.8
+ 19.267 only-B        hand_r
+ 19.300 changed hand_r:163.8
+ 19.334 only-B        hand_r
+ 19.367 changed hand_r:168.5
+ 19.400 only-B        hand_r
+ 19.433 changed hand_r:165.3
+ 19.467 only-B        hand_r
+ 19.500 changed hand_r:172.5
+ 19.534 only-B        hand_r
+ 19.800 only-B        hand_r
+ 19.934 only-B        hand_r
+ 20.000 only-B        hand_r
+ 20.067 only-B        hand_r
+ 20.134 only-B        hand_r
+ 20.167 only-B        hand_r
+ 20.200 changed hand_r:107.1
+ 20.234 only-B        hand_r
+ 20.300 only-B        hand_r
+ 20.334 only-B        hand_r
+ 20.367 only-B        hand_r
+ 20.400 changed hand_r:103.1
+ 20.434 only-B        hand_r
+ 20.734 only-B        hand_r
+ 20.767 only-B        hand_r
+ 20.867 only-B        hand_r
+ 21.000 only-B        hand_r
+ 21.134 only-B        hand_r
+ 21.200 only-B        hand_r
+ 21.234 only-B        hand_r
+ 21.267 only-B        hand_r
+ 21.300 changed hand_r:159.6
+ 21.334 only-B        hand_r
+ 21.367 changed hand_r:172.3
+ 21.400 only-B        hand_r,index_02_r,middle_02_r,pinky_02_r,ring_02_r
+ 21.433 changed hand_r:131.7 index_02_r:0.1 index_03_r:0.1 middle_01_r:0.1 middle_02_r:0.1 middle_03_r:0.1 pinky_01_r:0.1 pinky_02_r:0.1 pinky_03_r:0.1 ring_02_r:0.1
+ 21.467 only-B        hand_r
+ 21.500 changed hand_r:92.0
+ 21.534 only-B        hand_r,index_01_r,index_02_r,index_03_r,middle_01_r,middle_02_r,middle_03_r,pink
+ 21.567 changed hand_r:86.8
+ 21.600 only-B        hand_l,hand_r,index_01_r,index_02_r,index_03_r,lowerarm_l,lowerarm_r,middle_01_r
+ 21.633 changed hand_l:0.2 hand_r:91.0 index_01_r:0.2 index_02_r:0.3 index_03_r:0.2 lowerarm_l:0.3 lowerarm_r:0.2 middle_01_r:0.2 middle_02_r:0.2 middle_03_r:0.2 pinky_01_r:0.2
+ 21.667 only-B        hand_r
+ 21.700 changed hand_r:74.8
+ 21.734 only-B        hand_l,hand_r,index_01_r,index_02_r,index_03_r,lowerarm_l,lowerarm_r,middle_01_r
+ 21.767 changed hand_r:43.8
+ 21.800 only-B        hand_l,hand_r,index_02_r,lowerarm_l,lowerarm_r,middle_02_r,pinky_02_r,ring_02_r,
+ 21.833 changed hand_l:0.1 hand_r:28.7 lowerarm_l:0.2 lowerarm_r:0.2 upperarm_l:0.1
+ 22.033 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 22.100 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 22.167 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 22.233 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 22.300 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 22.367 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 22.433 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 22.500 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 22.567 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 22.633 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 22.700 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 22.767 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 22.833 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 22.900 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 22.967 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 23.033 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 23.100 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 23.167 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 23.233 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 23.300 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 23.367 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 23.433 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 23.500 only-A hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,
+ 23.700 only-A hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r

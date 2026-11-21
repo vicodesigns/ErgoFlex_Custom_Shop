@@ -1,0 +1,13 @@
+only in B: director-exports/export-38beb3519664-Film-chapter-rise-28-5-s-jitter-landing.json
+director-camera-rise.json: 2 difference(s)
+    /people/cast/0/postures/people-maya-sit-type/poseKeys: [{"t": 0, "pose": {"upperarm_l": [-0.1423, -0.0062, 0.0191, 0.9896], " | [{"t": 0
+    /source: "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd | "exports/cinematic-intro-cut-vicos-3rd-cut/director-ex
+director-exports/imports.json: 1 difference(s)
+    /38beb35196640aa3222d92af23442b4973e0c26ac66c20571b53aad211db963e: "<absent>" | {"file": "Film-chapter-rise-28-5-s-jitter-landing.json",
+director-film/rise.json: 2 difference(s)
+    /directorEdited/at: "2026-11-21T20:12:21Z" | "2026-11-21T20:33:56Z"
+    /people/cast/0/postures/people-maya-sit-type/poseKeys: [{"t": 0, "pose": {"upperarm_l": [-0.1423, -0.0062, 0.0191, 0.9896], " | [{"t": 0
+review-cut.json: 2 difference(s)
+    /shots/1/directorEdited/at: "2026-11-21T20:12:21Z" | "2026-11-21T20:33:56Z"
+    /shots/1/people/cast/0/postures/people-maya-sit-type/poseKeys: [{"t": 0, "pose": {"upperarm_l": [-0.1423, -0.0062, 0.0191, 0.9896], " | 
+5 file(s) differ

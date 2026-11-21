@@ -1,0 +1,201 @@
+n 200
+  0.000         6 hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 13.000         6 (same)
+ 13.100 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 13.167 linear 36 (same)
+ 13.233 linear 36 (same)
+ 13.300 linear 36 (same)
+ 13.367 linear 36 (same)
+ 13.433 linear 36 (same)
+ 13.500 linear 36 (same)
+ 13.567 linear 36 (same)
+ 13.633 linear 36 (same)
+ 13.700 linear 36 (same)
+ 13.767 linear 36 (same)
+ 13.833 linear 36 (same)
+ 13.900 linear 36 (same)
+ 13.967 linear 36 (same)
+ 14.000         6 hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 14.033 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 14.067         5 hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 14.100        36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 14.133         5 hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 14.167 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 14.200         6 hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 14.233 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 14.267         1 hand_r
+ 14.300 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 14.333         6 hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 14.367 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 14.400         5 hand_l,hand_r,lowerarm_l,upperarm_l,upperarm_r
+ 14.433 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 14.467         6 hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 14.500 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 14.533         6 hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 14.567 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 14.600         1 hand_l
+ 14.633 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 14.667         6 hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 14.700 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 14.767 linear 36 (same)
+ 14.800         1 hand_l
+ 14.833 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 14.867        18 hand_l,hand_r,index_01_l,index_02_l,index_03_l,lowerarm_l,lowerarm_r,middle_01_l,middle_02_l,middle_03_l,pinky_01_l,pinky_02_l,pinky_03_l,ring_01_l,ring_02_l,ring_03_l,upperarm_l,upperarm_r
+ 14.900 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 14.933        17 hand_l,hand_r,index_01_l,index_02_l,index_03_l,lowerarm_l,lowerarm_r,middle_01_l,middle_02_l,middle_03_l,pinky_01_l,pinky_02_l,pinky_03_l,ring_01_l,ring_02_l,ring_03_l,upperarm_r
+ 14.967 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 15.000        16 hand_l,hand_r,index_01_l,index_02_l,index_03_l,lowerarm_l,lowerarm_r,middle_01_l,middle_02_l,middle_03_l,pinky_01_l,pinky_02_l,pinky_03_l,ring_01_l,ring_02_l,ring_03_l
+ 15.033 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 15.067        15 hand_l,hand_r,index_01_l,index_02_l,index_03_l,lowerarm_l,middle_01_l,middle_02_l,middle_03_l,pinky_01_l,pinky_02_l,pinky_03_l,ring_01_l,ring_02_l,ring_03_l
+ 15.100 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 15.133        14 hand_l,hand_r,index_01_l,index_02_l,index_03_l,middle_01_l,middle_02_l,middle_03_l,pinky_01_l,pinky_02_l,pinky_03_l,ring_01_l,ring_02_l,ring_03_l
+ 15.167 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 15.200         6 hand_l,hand_r,index_02_l,middle_02_l,pinky_02_l,ring_02_l
+ 15.233 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 15.267         2 hand_l,hand_r
+ 15.300        36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 15.333         2 hand_l,hand_r
+ 15.434         2 (same)
+ 15.567         1 hand_r
+ 15.600         2 hand_l,hand_r
+ 15.634         1 hand_r
+ 15.733         2 hand_l,hand_r
+ 15.767         1 hand_r
+ 15.800         2 hand_l,hand_r
+ 15.833         2 (same)
+ 15.867         2 (same)
+ 15.900         2 (same)
+ 15.933         2 (same)
+ 15.967         2 (same)
+ 16.000        36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 16.034         2 hand_l,hand_r
+ 16.067         2 (same)
+ 16.100         1 hand_l
+ 16.133         2 hand_l,hand_r
+ 16.167         2 (same)
+ 16.200        36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 16.234         1 hand_r
+ 16.400         1 hand_l
+ 16.567         1 hand_r
+ 16.600         2 hand_l,hand_r
+ 16.700         2 (same)
+ 16.733         1 hand_l
+ 16.767         1 (same)
+ 16.800         2 hand_l,hand_r
+ 16.867         2 (same)
+ 16.900         1 hand_l
+ 16.933         2 hand_l,hand_r
+ 17.000         2 (same)
+ 17.033         2 (same)
+ 17.067         2 (same)
+ 17.100 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 17.133         2 hand_l,hand_r
+ 17.167 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 17.200         2 hand_l,hand_r
+ 17.233 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 17.267         2 hand_l,hand_r
+ 17.300 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 17.333         2 hand_l,hand_r
+ 17.367 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 17.400         2 hand_l,hand_r
+ 17.433 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 17.467         2 hand_l,hand_r
+ 17.500 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 17.533         3 hand_l,hand_r,lowerarm_r
+ 17.567        36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 17.600         5 hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_r
+ 17.633        36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 17.667         3 hand_l,hand_r,lowerarm_r
+ 17.700        36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 17.734         6 hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 17.767 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 17.800         5 hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_r
+ 17.833 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 17.867         6 hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 17.900 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 17.933         6 hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 17.967 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 18.000         1 hand_l
+ 18.033 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 18.067         6 hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 18.100 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 18.133         5 hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_r
+ 18.167 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 18.200         1 hand_l
+ 18.233 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 18.300 linear 36 (same)
+ 18.367 linear 36 (same)
+ 18.433 linear 36 (same)
+ 18.467         1 hand_r
+ 18.500 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 18.534         6 hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 18.567 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 18.600         6 hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 18.633 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 18.667         1 hand_r
+ 18.700 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 18.734         6 hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l,upperarm_r
+ 18.767 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 18.800         5 hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l
+ 18.833 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 18.867         1 hand_r
+ 18.900 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 18.934         5 hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l
+ 18.967 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 19.000         5 hand_l,hand_r,lowerarm_l,lowerarm_r,upperarm_l
+ 19.033 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 19.067         1 hand_r
+ 19.100 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 19.134         1 hand_r
+ 19.167 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 19.200         1 hand_r
+ 19.233 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 19.267         1 hand_r
+ 19.300 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 19.334         1 hand_r
+ 19.367 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 19.400         1 hand_r
+ 19.433 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 19.467         1 hand_r
+ 19.500        36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 19.534         1 hand_r
+ 19.800         1 (same)
+ 19.934         1 (same)
+ 20.000         1 (same)
+ 20.067         1 (same)
+ 20.134         1 (same)
+ 20.167         1 (same)
+ 20.200        36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 20.234         1 hand_r
+ 20.300         1 (same)
+ 20.334         1 (same)
+ 20.367         1 (same)
+ 20.400        36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 20.434         1 hand_r
+ 20.734         1 (same)
+ 20.767         1 (same)
+ 20.867         1 (same)
+ 21.000         1 (same)
+ 21.134         1 (same)
+ 21.200         1 (same)
+ 21.234         1 (same)
+ 21.267         1 (same)
+ 21.300 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 21.334         1 hand_r
+ 21.367 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 21.400         5 hand_r,index_02_r,middle_02_r,pinky_02_r,ring_02_r
+ 21.433 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 21.467         1 hand_r
+ 21.500 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 21.534        13 hand_r,index_01_r,index_02_r,index_03_r,middle_01_r,middle_02_r,middle_03_r,pinky_01_r,pinky_02_r,pinky_03_r,ring_01_r,ring_02_r,ring_03_r
+ 21.567 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 21.600        16 hand_l,hand_r,index_01_r,index_02_r,index_03_r,lowerarm_l,lowerarm_r,middle_01_r,middle_02_r,middle_03_r,pinky_01_r,pinky_02_r,pinky_03_r,ring_01_r,ring_02_r,ring_03_r
+ 21.633 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 21.667         1 hand_r
+ 21.700 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 21.734        17 hand_l,hand_r,index_01_r,index_02_r,index_03_r,lowerarm_l,lowerarm_r,middle_01_r,middle_02_r,middle_03_r,pinky_01_r,pinky_02_r,pinky_03_r,ring_01_r,ring_02_r,ring_03_r,upperarm_l
+ 21.767 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 21.800         9 hand_l,hand_r,index_02_r,lowerarm_l,lowerarm_r,middle_02_r,pinky_02_r,ring_02_r,upperarm_l
+ 21.833 linear 36 hand_l,hand_r,index_01_l,index_01_r,index_02_l,index_02_r,index_03_l,index_03_r,lowerarm_l,lowerarm_r,middle_01_l,middle_01_r,middle_02_l,middle_02_r,middle_03_l,middle_03_r,pinky_01_l,pinky_01_r,pinky_02_l,pinky_02_r,pinky_03_l,pinky_03_r,ring_01_l,ring_01_r,ring_02_l,ring_02_r,ring_03_l,ring_03_r,thumb_01_l,thumb_01_r,thumb_02_l,thumb_02_r,thumb_03_l,thumb_03_r,upperarm_l,upperarm_r
+ 21.900 linear 36 (same)
+ 21.967 linear 36 (same)

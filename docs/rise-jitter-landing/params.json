@@ -1,0 +1,7 @@
+{
+ "tol": { "upperarm": 0.5, "lowerarm": 0.5, "hand": 1.5, "finger": 2.5 },
+ "holds": [[15.25, 17.4], [19.25, 21.4]],
+ "sigmaMove": 0.05,
+ "sigmaMoveHand": 0.1,
+ "sigmaHold": 0.12
+}

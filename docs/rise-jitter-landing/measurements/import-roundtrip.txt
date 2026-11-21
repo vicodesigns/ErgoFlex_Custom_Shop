@@ -1,0 +1,75 @@
+Importer round trip on scratch copies OUTSIDE the repo (F:/eng-vrise-rt/run, cwd = the repo, python3 = Python 3.12 in UTF-8 mode).
+Both runs start from a copy of the cut as committed at caf4086e (backup F:/eng-vrise-bak/rise-jitter-landing-20261121-121959) and run docs/rise-jitter-landing/import.sh
+(copy into director-exports, build-round8-director.py --import, the pass, --pages rise, imports.json), the director-import-watch.py steps.
+  control: Vico's own latest export (export-a8fc6cd8ebda) imported again;  fix: Film-chapter-rise-28-5-s-jitter-landing.json
+
+=== control vs fix (what the doc changes, all else equal; JSON compared by value, line endings ignored):
+only in A: director-exports/export-dc5562cf180b-vico-a8fc.json
+only in B: director-exports/export-38beb3519664-Film-chapter-rise-28-5-s-jitter-landing.json
+director-camera-rise.json: 2 difference(s)
+    /people/cast/0/postures/people-maya-sit-type/poseKeys: [{"t": 0, "pose": {"upperarm_l": [-0.1423, -0.0062, 0.0191, 0.9896], " | [{"t": 0, "pose": {"upperarm_l": [-0.1423, -0.0062, 0.0191, 0.9896],
+    /source: "../eng-vrise-rt/run/cinematic-intro-cut-vicos-3rd-cut/director-export | "../eng-vrise-rt/run/cinematic-intro-cut-vicos-3rd-cut/director-export
+director-exports/imports.json: 2 difference(s)
+    /38beb35196640aa3222d92af23442b4973e0c26ac66c20571b53aad211db963e: "<absent>" | {"file": "Film-chapter-rise-28-5-s-jitter-landing.json", "chapter": "r
+    /dc5562cf180bb5cc731d824d3a9fc7d9d61b349209d0c778d2972ddf31aa31aa: {"file": "vico-a8fc.json", "chapter": "rise", "at": 1795293198.1601293 | "<absent>"
+director-film/rise.json: 2 difference(s)
+    /directorEdited/at: "2026-11-21T20:12:21Z" | "2026-11-21T20:33:21Z"
+    /people/cast/0/postures/people-maya-sit-type/poseKeys: [{"t": 0, "pose": {"upperarm_l": [-0.1423, -0.0062, 0.0191, 0.9896], " | [{"t": 0, "pose": {"upperarm_l": [-0.1423, -0.0062, 0.0191, 0.9896],
+review-cut.json: 2 difference(s)
+    /shots/1/directorEdited/at: "2026-11-21T20:12:21Z" | "2026-11-21T20:33:21Z"
+    /shots/1/people/cast/0/postures/people-maya-sit-type/poseKeys: [{"t": 0, "pose": {"upperarm_l": [-0.1423, -0.0062, 0.0191, 0.9896], " | [{"t": 0, "pose": {"upperarm_l": [-0.1423, -0.0062, 0.0191, 
+6 file(s) differ
+
+=== committed cut vs control (what the importer does on this PC whatever the doc; environment, not the fix):
+only in B: director-exports/export-dc5562cf180b-vico-a8fc.json
+director-camera-rise.json: 1 difference(s)
+    /source: "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd | "../eng-vrise-rt/run/cinematic-intro-cut-vicos-3rd-cut/director-export
+director-ch01.html: 1 differing line(s) 
+director-ch02-rise.html: 1 differing line(s) 
+director-ch03-create.html: 1 differing line(s) 
+director-ch04-commons.html: 1 differing line(s) 
+director-ch05-coast.html: 1 differing line(s) 
+director-ch06-oilers.html: 1 differing line(s) 
+director-ch07-wellness.html: 1 differing line(s) 
+director-ch08-awareness.html: 1 differing line(s) 
+director-ch09-music.html: 1 differing line(s) 
+director-ch10-media.html: 1 differing line(s) 
+director-ch11-storage.html: 1 differing line(s) 
+director-ch12-hero.html: 1 differing line(s) 
+director-chapters.json: 24 difference(s)
+    /chapters/0/page: "/exports/cinematic-intro-cut-vicos-3rd-cut/director-ch01.html" | "/../eng-vrise-rt/run/cinematic-intro-cut-vicos-3rd-cut/director-ch01.
+    /chapters/0/shot: "/exports/cinematic-intro-cut-vicos-3rd-cut/director-film/awaken.json" | "/../eng-vrise-rt/run/cinematic-intro-cut-vicos-3rd-cut/director-film/
+director-exports/imports.json: 1 difference(s)
+    /dc5562cf180bb5cc731d824d3a9fc7d9d61b349209d0c778d2972ddf31aa31aa: "<absent>" | {"file": "vico-a8fc.json", "chapter": "rise", "at": 1795293198.1601293
+director-film/awaken.json: 1 difference(s)
+    /screens: [{"target": "main-landscape", "src": "exports/cinematic-intro-cut-cine | []
+director-film/awareness.json: 1 difference(s)
+    /screens: [{"target": "main-landscape", "src": "exports/cinematic-intro-cut-cine | []
+director-film/coast.json: 1 difference(s)
+    /screens: [{"target": "main-landscape", "src": "exports/cinematic-intro-cut-cine | []
+director-film/commons.json: 1 difference(s)
+    /screens: [{"target": "main-landscape", "src": "exports/cinematic-intro-cut-cine | []
+director-film/create.json: 1 difference(s)
+    /screens: [{"target": "main-landscape", "src": "exports/cinematic-intro-cut-cine | []
+director-film/hero-subshots.json: 6 difference(s)
+    /library/1/screens: [{"target": "main-landscape", "src": "exports/cinematic-intro-cut-cine | []
+    /library/2/screens: [{"target": "main-landscape", "src": "exports/cinematic-intro-cut-cine | []
+director-film/hero.json: 1 difference(s)
+    /screens: [{"target": "main-landscape", "src": "exports/cinematic-intro-cut-cine | []
+director-film/music.json: 1 difference(s)
+    /screens: [{"target": "arcade", "src": "exports/cinematic-intro-cut-cine/screens | []
+director-film/oilers.json: 1 difference(s)
+    /screens: [{"target": "main-landscape", "src": "exports/cinematic-intro-cut-cine | []
+director-film/storage.json: 1 difference(s)
+    /screens: [{"target": "texture", "material": "^Held\\.phone screen", "person": " | []
+26 file(s) differ
+
+Notes on the environment differences above: page links / director-chapters paths = the scratch folder's location; director-film/<other chapters>.json
+screens -> [] = the monitor clips exports/cinematic-intro-cut-cine/screens/*.mp4 are not on this PC (local_clip drops clips it cannot find; Vico's importer runs
+on the Linux box, /home/ergo, where they are). In the worktree those 10 files were restored to their committed bytes after the import (see import-check-worktree.txt).
+Without UTF-8 mode the pass also garbled hero's sub-shot labels (cp1252 decoding of node's output: '·' -> 'Â·' in shots/13-subshots.json); import.sh sets PYTHONUTF8=1.
+
+=== the fix run's imported keys against the patch (docs/rise-jitter-landing/rise3-patch.json):
+  director-camera-rise.json: 125 keys, identical to the patch
+  review-cut.json (rise): 125 keys, identical to the patch
+  director-film/rise.json: 125 keys, identical to the patch

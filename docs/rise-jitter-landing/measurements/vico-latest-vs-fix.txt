@@ -1,0 +1,127 @@
+== 1. channels (local turns): per window, worst / sum over the channels of a group; before -> after
+window                       group          max resid deg      RMS accel deg/s2 (max)   RMS jerk deg/s3 (max)    vel reversals (sum)
+raise                        upper+lower arm14.1 -> 11.4       3576 -> 1104             177850 -> 28143          2 -> 1
+raise                        hand           34.7 -> 5.1        22844 -> 921             1249492 -> 32354         28 -> 2
+raise                        fingers        5.1 -> 4.5         286 -> 212               11865 -> 8836            0 -> 0
+hold1 (L palm on R elbow)    upper+lower arm1.9 -> 1.4         171 -> 206               5485 -> 8764             0 -> 0
+hold1 (L palm on R elbow)    hand           14.7 -> 2.1        8562 -> 299              470753 -> 12646          52 -> 1
+hold1 (L palm on R elbow)    fingers        3.4 -> 3.0         220 -> 195               9407 -> 8274             0 -> 0
+switch                       upper+lower arm14.4 -> 7.3        2445 -> 878              104528 -> 26228          0 -> 1
+switch                       hand           43.8 -> 11.1       24399 -> 1520            1317581 -> 55608         29 -> 2
+switch                       fingers        0.6 -> 0.6         23 -> 24                 969 -> 1052              0 -> 0
+hold2 (R palm on L elbow)    upper+lower arm1.9 -> 2.0         171 -> 253               5477 -> 9587             0 -> 0
+hold2 (R palm on L elbow)    hand           46.2 -> 10.9       23437 -> 894             1139884 -> 36776         22 -> 2
+hold2 (R palm on L elbow)    fingers        3.4 -> 3.1         218 -> 192               9222 -> 7520             0 -> 0
+release                      upper+lower arm11.0 -> 13.9       2297 -> 811              99448 -> 34208           0 -> 0
+release                      hand           39.3 -> 11.8       38399 -> 1556            1963854 -> 64158         5 -> 0
+release                      fingers        5.1 -> 4.4         506 -> 368               22328 -> 15754           0 -> 0
+
+== 2. world points: per window; before -> after
+window                       point          resid cm        RMS accel m/s2     RMS jerk m/s3       vel reversals
+raise                        elbow L        4.93 -> 2.01    14.11 -> 3.28      714 -> 84           0 -> 0
+raise                        wrist L        6.38 -> 3.59    19.15 -> 5.46      960 -> 145          0 -> 0
+raise                        palm L         6.85 -> 4.37    21.07 -> 6.43      1047 -> 168         0 -> 0
+raise                        knuckle L      7.35 -> 5.18    23.71 -> 7.47      1173 -> 194         0 -> 0
+raise                        mid tip L      7.84 -> 5.42    30.66 -> 7.95      1590 -> 198         0 -> 0
+raise                        index tip L    8.01 -> 5.64    29.67 -> 8.02      1535 -> 198         0 -> 0
+raise                        thumb tip L    7.83 -> 5.23    35.01 -> 7.32      1860 -> 177         0 -> 0
+raise                        elbow R        4.63 -> 1.79    13.90 -> 2.99      704 -> 77           0 -> 0
+raise                        wrist R        6.40 -> 2.98    19.56 -> 5.17      983 -> 132          0 -> 0
+raise                        palm R         6.94 -> 4.05    22.20 -> 6.36      1106 -> 156         0 -> 0
+raise                        knuckle R      7.54 -> 5.13    25.98 -> 7.68      1288 -> 185         1 -> 0
+raise                        mid tip R      8.02 -> 5.86    28.03 -> 8.62      1380 -> 198         2 -> 0
+raise                        index tip R    8.14 -> 5.80    30.05 -> 8.57      1500 -> 195         2 -> 0
+raise                        thumb tip R    7.81 -> 4.87    29.79 -> 7.46      1519 -> 168         2 -> 0
+hold1 (L palm on R elbow)    elbow L        0.09 -> 0.09    0.12 -> 0.16       4 -> 7              0 -> 0
+hold1 (L palm on R elbow)    wrist L        0.45 -> 0.47    0.44 -> 0.61       17 -> 25            0 -> 0
+hold1 (L palm on R elbow)    palm L         0.55 -> 0.52    1.34 -> 0.70       66 -> 28            2 -> 0
+hold1 (L palm on R elbow)    knuckle L      0.66 -> 0.58    2.59 -> 0.82       130 -> 33           7 -> 1
+hold1 (L palm on R elbow)    mid tip L      0.59 -> 0.39    2.92 -> 0.63       145 -> 25           12 -> 1
+hold1 (L palm on R elbow)    index tip L    0.73 -> 0.39    3.51 -> 0.70       175 -> 28           19 -> 1
+hold1 (L palm on R elbow)    thumb tip L    1.92 -> 0.56    8.65 -> 0.76       434 -> 31           26 -> 0
+hold1 (L palm on R elbow)    elbow R        0.19 -> 0.19    0.17 -> 0.24       6 -> 9              0 -> 0
+hold1 (L palm on R elbow)    wrist R        0.38 -> 0.34    0.35 -> 0.44       14 -> 17            0 -> 0
+hold1 (L palm on R elbow)    palm R         0.93 -> 0.30    7.18 -> 0.52       395 -> 21           20 -> 0
+hold1 (L palm on R elbow)    knuckle R      1.76 -> 0.36    14.24 -> 0.65      784 -> 27           22 -> 1
+hold1 (L palm on R elbow)    mid tip R      1.69 -> 0.40    13.64 -> 0.61      750 -> 25           23 -> 0
+hold1 (L palm on R elbow)    index tip R    1.88 -> 0.36    15.44 -> 0.62      850 -> 26           23 -> 0
+hold1 (L palm on R elbow)    thumb tip R    1.61 -> 0.38    13.81 -> 0.52      759 -> 22           23 -> 0
+switch                       elbow L        0.41 -> 0.38    0.62 -> 0.58       24 -> 22            0 -> 0
+switch                       wrist L        0.80 -> 0.75    1.68 -> 1.54       66 -> 55            0 -> 0
+switch                       palm L         1.25 -> 1.03    3.62 -> 2.12       180 -> 70           0 -> 0
+switch                       knuckle L      1.70 -> 1.36    6.27 -> 2.80       330 -> 88           0 -> 0
+switch                       mid tip L      2.90 -> 1.78    10.88 -> 3.10      588 -> 105          0 -> 0
+switch                       index tip L    2.59 -> 1.70    11.39 -> 2.99      615 -> 104          2 -> 0
+switch                       thumb tip L    4.89 -> 2.11    26.72 -> 3.36      1486 -> 122         5 -> 0
+switch                       elbow R        0.43 -> 0.38    0.64 -> 0.54       26 -> 17            0 -> 0
+switch                       wrist R        4.13 -> 1.96    7.48 -> 2.51       320 -> 74           2 -> 0
+switch                       palm R         4.60 -> 2.18    10.76 -> 2.96      488 -> 88           2 -> 0
+switch                       knuckle R      5.10 -> 2.43    15.61 -> 3.50      748 -> 105          4 -> 0
+switch                       mid tip R      5.79 -> 2.74    18.53 -> 3.94      905 -> 112          3 -> 0
+switch                       index tip R    5.04 -> 2.52    19.27 -> 3.57      970 -> 105          7 -> 0
+switch                       thumb tip R    5.30 -> 2.38    32.31 -> 3.59      1673 -> 105         13 -> 0
+hold2 (R palm on L elbow)    elbow L        0.19 -> 0.20    0.17 -> 0.25       6 -> 9              0 -> 0
+hold2 (R palm on L elbow)    wrist L        0.38 -> 0.41    0.35 -> 0.52       14 -> 18            0 -> 0
+hold2 (R palm on L elbow)    palm L         0.41 -> 0.44    0.38 -> 0.57       15 -> 19            0 -> 0
+hold2 (R palm on L elbow)    knuckle L      0.51 -> 0.56    0.46 -> 0.69       18 -> 23            0 -> 0
+hold2 (R palm on L elbow)    mid tip L      0.56 -> 0.62    0.42 -> 0.65       17 -> 22            0 -> 0
+hold2 (R palm on L elbow)    index tip L    0.48 -> 0.54    0.37 -> 0.59       15 -> 19            0 -> 0
+hold2 (R palm on L elbow)    thumb tip L    0.31 -> 0.35    0.26 -> 0.41       10 -> 13            0 -> 0
+hold2 (R palm on L elbow)    elbow R        0.09 -> 0.09    0.11 -> 0.16       3 -> 6              0 -> 0
+hold2 (R palm on L elbow)    wrist R        0.33 -> 0.35    0.36 -> 0.56       14 -> 20            0 -> 0
+hold2 (R palm on L elbow)    palm R         0.71 -> 0.51    2.98 -> 0.76       150 -> 27           7 -> 0
+hold2 (R palm on L elbow)    knuckle R      1.49 -> 0.69    5.94 -> 1.00       299 -> 36           10 -> 2
+hold2 (R palm on L elbow)    mid tip R      1.94 -> 0.96    8.69 -> 1.03       412 -> 34           23 -> 1
+hold2 (R palm on L elbow)    index tip R    2.10 -> 0.95    9.95 -> 1.10       473 -> 35           23 -> 0
+hold2 (R palm on L elbow)    thumb tip R    5.21 -> 1.52    27.71 -> 1.43      1355 -> 51          22 -> 2
+release                      elbow L        0.59 -> 0.81    1.20 -> 0.54       51 -> 21            0 -> 0
+release                      wrist L        3.57 -> 4.26    7.79 -> 5.10       327 -> 124          0 -> 0
+release                      palm L         4.49 -> 5.48    9.96 -> 6.88       417 -> 152          0 -> 0
+release                      knuckle L      5.49 -> 6.75    12.35 -> 8.80      516 -> 185          0 -> 0
+release                      mid tip L      6.14 -> 8.01    14.23 -> 10.62     594 -> 206          0 -> 0
+release                      index tip L    5.92 -> 7.94    13.76 -> 10.35     576 -> 198          0 -> 0
+release                      thumb tip L    4.83 -> 6.94    11.31 -> 8.66      477 -> 160          0 -> 0
+release                      elbow R        0.37 -> 0.61    0.76 -> 0.63       33 -> 27            0 -> 0
+release                      wrist R        3.56 -> 4.31    7.69 -> 4.14       325 -> 111          0 -> 0
+release                      palm R         4.07 -> 5.30    22.65 -> 5.04      1112 -> 136         3 -> 0
+release                      knuckle R      4.99 -> 6.30    43.02 -> 6.03      2162 -> 165         3 -> 0
+release                      mid tip R      6.09 -> 6.66    46.40 -> 6.54      2296 -> 162         4 -> 0
+release                      index tip R    6.21 -> 6.64    47.49 -> 6.42      2299 -> 147         4 -> 0
+release                      thumb tip R    5.75 -> 5.72    45.29 -> 5.48      2153 -> 110         5 -> 0
+
+== 3. positions, after vs before, at every 1/120 s in each window (cm): max | RMS | max vs the before low-passed (0.1 s gaussian on the positions)
+raise                        elbow L 3.69|0.59|1.88  wrist L 4.79|0.91|2.81  palm L 5.12|1.07|3.39  knuckle L 5.47|1.26|4.09  mid tip L 5.77|1.41|4.29  index tip L 5.88|1.43|4.26  thumb tip L 5.74|1.59|3.75
+                             elbow R 3.60|0.59|1.76  wrist R 4.90|0.89|3.18  palm R 5.30|1.10|4.39  knuckle R 5.73|1.37|5.64  mid tip R 6.12|1.51|6.50  index tip R 6.17|1.55|6.39  thumb tip R 5.91|1.44|5.36
+hold1 (L palm on R elbow)    elbow L 0.12|0.07|0.09  wrist L 0.36|0.18|0.67  palm L 0.49|0.22|0.78  knuckle L 0.68|0.29|0.90  mid tip L 0.77|0.25|0.88  index tip L 1.09|0.30|0.95  thumb tip L 2.31|0.56|0.97
+                             elbow R 0.17|0.10|0.12  wrist R 0.29|0.13|0.49  palm R 0.87|0.34|0.58  knuckle R 1.64|0.63|0.67  mid tip R 1.62|0.60|0.63  index tip R 1.77|0.68|0.62  thumb tip R 1.51|0.61|0.50
+switch                       elbow L 0.15|0.06|0.28  wrist L 0.34|0.17|0.57  palm L 0.58|0.30|0.93  knuckle L 1.01|0.47|1.32  mid tip L 2.64|0.78|1.43  index tip L 2.58|0.82|1.36  thumb tip L 5.46|1.44|2.21
+                             elbow R 0.16|0.06|0.28  wrist R 2.56|0.47|1.66  palm R 2.73|0.64|1.95  knuckle R 2.99|0.91|2.28  mid tip R 3.55|1.04|2.58  index tip R 2.87|1.05|2.49  thumb tip R 5.02|1.49|2.37
+hold2 (R palm on L elbow)    elbow L 0.17|0.09|0.11  wrist L 0.30|0.13|0.43  palm L 0.36|0.14|0.47  knuckle L 0.48|0.17|0.53  mid tip L 0.50|0.17|0.50  index tip L 0.47|0.15|0.49  thumb tip L 0.36|0.11|0.39
+                             elbow R 0.13|0.06|0.06  wrist R 0.33|0.17|0.43  palm R 0.88|0.27|0.43  knuckle R 1.48|0.43|0.56  mid tip R 2.72|0.47|1.07  index tip R 2.69|0.53|1.41  thumb tip R 6.34|1.32|2.17
+release                      elbow L 2.78|0.77|2.85  wrist L 14.91|4.28|15.22  palm L 19.26|5.54|19.63  knuckle L 23.78|6.86|24.24  mid tip L 28.21|8.11|28.71  index tip L 27.86|7.98|28.34  thumb tip L 24.16|6.84|24.56
+                             elbow R 2.09|0.57|2.12  wrist R 14.91|4.23|15.25  palm R 18.64|5.42|19.04  knuckle R 22.41|6.75|22.88  mid tip R 23.87|7.25|24.36  index tip R 23.63|7.18|24.12  thumb tip R 20.02|6.17|20.44
+hold1 (L palm on R elbow): palm to the held elbow (joint centre) before 3.4..5.8 cm, after 3.4..6.0 cm
+hold2 (R palm on L elbow): palm to the held elbow (joint centre) before 3.2..5.8 cm, after 3.3..5.8 cm
+
+== 4. landing: wrists / palms against the typing pose (the 13.0 s key), cm; and the hands' height (y, cm)
+t       before: wristL wristR palmL palmR (cm off typing)  yWristL yWristR | after: wristL wristR palmL palmR  yWristL yWristR
+21.5      49.3  59.9  48.6  62.3                101.4   120.1 |         49.6  60.1  48.9  62.9    101.6   120.4
+21.8      60.9  68.5  62.4  74.9                112.3   130.9 |         61.1  68.6  62.7  74.3    112.5   131.1
+21.967    70.8  74.3  75.8  80.8                126.2   136.8 |         71.0  74.4  76.2  81.1    126.6   136.8
+22.2      70.8  74.3  75.8  80.8                126.2   136.8 |         72.0  70.5  79.4  77.4    130.5   129.8
+22.4      70.8  74.3  75.8  80.8                126.2   136.8 |         62.1  60.3  68.6  66.3    127.5   126.4
+22.6      70.8  74.3  75.8  80.8                126.2   136.8 |         45.0  43.5  50.2  48.1    115.6   113.9
+22.8      70.8  74.3  75.8  80.8                126.2   136.8 |         27.0  25.9  30.9  29.2     99.9    98.4
+23        70.8  74.3  75.8  80.8                126.2   136.8 |         12.1  11.6  13.9  13.1     84.9    84.1
+23.2      70.8  74.3  75.8  80.8                126.2   136.8 |          3.2   3.0   3.6   3.4     76.5    76.4
+23.4      70.8  74.3  75.8  80.8                126.2   136.8 |          0.2   0.2   0.2   0.2     73.9    74.2
+23.5      70.8  74.3  75.8  80.8                126.2   136.8 |          0.0   0.0   0.0   0.0     73.8    74.1
+23.7      70.8  74.3  75.8  80.8                126.2   136.8 |          0.0   0.0   0.0   0.0     73.8    74.1
+24        70.8  74.3  75.8  80.8                126.2   136.8 |          0.0   0.0   0.0   0.0     73.8    74.1
+25        70.8  74.3  75.8  80.8                126.2   136.8 |          0.0   0.0   0.0   0.0     73.8    74.1
+26        70.8  74.3  75.8  80.8                126.2   136.8 |          0.0   0.0   0.0   0.0     73.8    74.1
+27        70.8  74.3  75.8  80.8                126.2   136.8 |          0.0   0.0   0.0   0.0     73.8    74.1
+28        70.8  74.3  75.8  80.8                126.2   136.8 |          0.0   0.0   0.0   0.0     73.8    74.1
+28.5      70.8  74.3  75.8  80.8                126.2   136.8 |          0.0   0.0   0.0   0.0     73.8    74.1
+
+keys: before 200 (0..21.967), after 125 (0..23.7)
