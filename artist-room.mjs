@@ -884,6 +884,24 @@ export function buildArtistRoom(room, root, layout, helpers) {
         box(ceiling, [95, 85, 120], [x, h - 215, layout.desk[1] + 280], chalk, 6);
         box(ceiling, [70, 4, 95], [x, h - 260, layout.desk[1] + 280], lamp, 3);
     }
+    // Ceiling deck: the film turns the cutaway plaster plane off, and the studio had no ceiling of its own, so shots that
+    // look up saw past the wall tops into the scenery (Vico, 3rd cut: "you can see through it and it makes crazy
+    // patterns"). A solid painted plaster slab (its underside 10 mm below the wall tops and the cutaway plane, so no two
+    // faces are coplanar) with a painted cornice round the three walls. Two materials, no textures. It neither casts nor
+    // RECEIVES shadows: the renderer's shadow maps are VSM, which draw every receiver into the map as an occluder too
+    // (three.js WebGLShadowMap), so a receiving deck put the whole room in the key light's shadow; this way the lighting
+    // of everything below the ceiling is exactly as before
+    // (the window light and the lamps are unchanged). It hides with the other 'Ceiling ...' groups when the eye rises
+    // above the room height, so Studio top views keep the cutaway.
+    {
+        const deck = new THREE.Group(); deck.name = 'Ceiling artist studio plaster deck'; root.add(deck);
+        const soffit = material('#efe9de', { roughness: .95 }), cornice = material('#e4dccd', { roughness: .9 });
+        box(deck, [w + 160, 50, d + 80], [0, h + 15, bz + d / 2 - 40], soffit).name = 'Studio ceiling slab';
+        box(deck, [w, 46, 46], [0, h - 33, bz + 23], cornice);
+        box(deck, [46, 46, d], [w / 2 - 23, h - 33, bz + d / 2], cornice);
+        box(deck, [46, 46, d], [-w / 2 + 23, h - 33, bz + d / 2], cornice);
+        deck.traverse(o => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; } });
+    }
     const lights = [
         { at: [layout.desk[0], h - 320, layout.desk[1] + 260], power: 1.3, range: 3400, task: true },
         { at: [cx - 120, 1450, cz], power: 1.5, range: 2400, channel: 1 },
