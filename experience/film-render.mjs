@@ -1,7 +1,7 @@
 import {withScreenLook} from './screen-look.mjs';
 import {withSonar} from './sonar.mjs';
 import {bakeCameraPlan} from './camera-spline-bake.mjs';
-import {planFields} from './camera-transitions.mjs';
+import {planFields,matchPlanKeys} from './camera-transitions.mjs';
 import {exportLighting} from './film-lighting.mjs';
 import {mergeSceneLights} from './light-edits.mjs';
 import {mergePropEdits} from './prop-edits.mjs';
@@ -34,13 +34,14 @@ export function filmRenderShot(film,shot,keys){
   return next;
 }
 // The film's camera for the Director's keys (null without keys: the film shot's own camera stays): the keys
-// become cameraPlan keys (at = time × seconds; the film plan's hold / cut kept for plan-NN ids, as
+// become cameraPlan keys (at = time × seconds; the film plan's hold / cut kept for the key that IS that plan key (matchPlanKeys), as
 // director-bridge import does) baked like camera-spline.mjs. The live stage samples these same baked keys
 // (player.mjs), so the Director's view is the film's frame.
 export function filmCamera(film,keys,seconds){
   if(!keys?.length)return null;
-  const old=[...(film?.cameraPlan?.keys||[])].sort((a,b)=>a.at-b.at),plan={...(film?.cameraPlan||{}),keys:keys.map(k=>{
-    const o=/^plan-\d+$/.test(k.id)?old[Number(k.id.slice(5))]:null,e={at:Math.round(k.time*seconds*1000)/1000,position:k.view.position,target:k.view.target,fov:k.view.fov??35};
+  // (each key's own plan key by what it is, not by its plan-NN index: camera-transitions.mjs matchPlanKeys, 20 Nov 2026)
+  const match=matchPlanKeys(keys,film?.cameraPlan?.keys,seconds),plan={...(film?.cameraPlan||{}),keys:keys.map((k,i)=>{
+    const o=match[i],e={at:Math.round(k.time*seconds*1000)/1000,position:k.view.position,target:k.view.target,fov:k.view.fov??35};
     if(k.label)e.label=k.label;if(o?.hold!==undefined)e.hold=o.hold;
     // the key's own transition when it has the field (20 Nov 2026: null = none, even over a plan cut); else the plan's cut
     if('transition' in k)Object.assign(e,planFields(k.transition));else if(o?.cut)e.cut=o.cut;return e;})};

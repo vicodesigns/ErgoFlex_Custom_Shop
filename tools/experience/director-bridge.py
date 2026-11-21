@@ -15,8 +15,8 @@
 
   director-bridge.py import <exported cut.json> <out director-camera.json> [--shot awaken] [--plan shot.json]
       Reads a cut saved with Director Mode's "Export cut" and writes its camera keys back as cameraPlan keys
-      (at = time * seconds). Keys keep their 'hold' and 'cut' from the original plan (--plan) when their id is
-      unchanged: the same keys Render still bakes (experience/film-render.mjs filmCamera), so the film renders
+      (at = time * seconds). Keys keep their 'hold' and 'cut' from the original plan (--plan) key they ARE (match_plan:
+      the same view, nearest in time; not the plan-NN index, which shifts when a key is inserted earlier): the same keys Render still bakes (experience/film-render.mjs filmCamera), so the film renders
       what the Director showed. A key that carries 'transition' (experience/camera-transitions.mjs, 20 Nov 2026)
       decides its own cut: null = none (a plan cut removed), {type:'cut'} = cut: true, a dissolve / dip = cut: true
       plus transition {type, dur} (the render composites it; until then it renders as the cut). Exports without
@@ -29,6 +29,33 @@
   connections per host, and the :3000 tabs already open on localhost leave the app stuck at "Preparing").
 """
 import base64, json, math, sys
+
+
+def _near(a, b, tol):
+    a, b = float(a), float(b); return abs(a - b) <= tol * max(1.0, abs(a), abs(b))
+def same_view(v, p, tol=1e-6):
+    return all(_near(v['position'][i], p['position'][i], tol) and _near(v['target'][i], p['target'][i], tol) for i in range(3)) \
+        and _near(v.get('fov', 35), p.get('fov', 35), tol)
+def match_plan(dkeys, plan, T, time_tol=5e-4):
+    """For each Director key (sorted by time), the film plan key it IS, or None (experience/camera-transitions.mjs
+    matchPlanKeys, 20 Nov 2026). A key's hold / cut / label belong to the key, never to its plan-NN index: ids come from
+    the plan as it was when the draft was made, and shift by one after an import inserts a key earlier (Vico's Create:
+    the cut at 19.5 s moved onto a copy of that view at 19.533 s). 1. the id's plan key when it is the same view at the
+    same time; 2. else the plan key with the same view, the nearest in time first; 3. else a plan key at the same time."""
+    out, used = [None] * len(dkeys), set()
+    at = lambda k: k['time'] * T
+    for i, k in enumerate(dkeys):
+        n = int(k['id'][5:]) if isinstance(k.get('id'), str) and k['id'].startswith('plan-') and k['id'][5:].isdigit() else -1
+        if 0 <= n < len(plan) and n not in used and same_view(k['view'], plan[n]) and abs(at(k) - plan[n]['at']) <= time_tol:
+            out[i] = plan[n]; used.add(n)
+    pairs = sorted((abs(at(k) - p['at']), n, i) for i, k in enumerate(dkeys) if out[i] is None for n, p in enumerate(plan) if n not in used and same_view(k['view'], p))
+    for _, n, i in pairs:
+        if out[i] is None and n not in used: out[i] = plan[n]; used.add(n)
+    for i, k in enumerate(dkeys):
+        if out[i] is not None: continue
+        n = next((j for j, p in enumerate(plan) if j not in used and abs(at(k) - p['at']) <= time_tol), -1)
+        if n >= 0: out[i] = plan[n]; used.add(n)
+    return out
 
 _open = open
 def open(file, mode='r', *a, **k):
@@ -83,9 +110,9 @@ elif cmd == 'import':
     cut, out = json.load(open(args[0])), args[1]
     s = next((x for x in cut['shots'] if x['id'] == shot_id), cut['shots'][0])
     T = float(s['seconds'])
-    old = {}
-    if plan_path:
-        for i, k in enumerate(sorted(load_shot(plan_path, shot_id)['cameraPlan']['keys'], key=lambda k: k['at'])): old[f'plan-{i:02d}'] = k
+    plan = sorted(load_shot(plan_path, shot_id)['cameraPlan']['keys'], key=lambda k: k['at']) if plan_path else []
+    dkeys = sorted(s['camera']['keys'], key=lambda k: k['time'])
+    match = match_plan(dkeys, plan, T)
     keys = []
     # S31: a key the Director did not change (same place, aim, lens and time as the plan's key of its id, within the
     # page's rounding) comes back as the plan's key itself, every field and its exact time kept, so an export with no
@@ -102,8 +129,8 @@ elif cmd == 'import':
         want = plan_fields(k['transition'])
         if all(e.get(f) == want.get(f) for f in ('cut', 'transition')): return e
         e = {f: v for f, v in e.items() if f not in ('cut', 'transition')}; e.update(want); return e
-    for k in sorted(s['camera']['keys'], key=lambda k: k['time']):
-        v = k['view']; o = old.get(k['id'], {})
+    for k, o in zip(dkeys, match):
+        v = k['view']; o = o or {}
         if o and abs(o['at'] - k['time'] * T) <= max(5e-4, T * 1e-6) and same(o['position'], v['position']) and same(o['target'], v['target']) \
                 and abs(float(o.get('fov', 35)) - float(v.get('fov', 35))) <= 1e-9 and (o.get('label') or '').startswith(k.get('label') or ''):      # (the Director keeps 60 characters of a label, trimmed)
             keys.append(with_transition(json.loads(json.dumps(o)), k)); continue
