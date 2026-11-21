@@ -4,6 +4,7 @@ import {loopPreviewTime,resumePreviewTime} from './preview-transport.mjs';
 import {BakeCache,bakeKey,bakeDefinition,sourceSnapshot,renderBake,BAKE_PROFILE} from './bake.mjs';
 import {score,safeReturn} from './score.mjs';
 import {ShotClock} from './timing.mjs';
+import {escapeAction,isField} from './escape-rule.mjs?v=escape-field-20261121';
 import {cleanCut,decodeCut} from './cuts.mjs';
 import {filmLink,loadFilmChapters,loadFilmShot,liveFilmShot} from './film-chapters.mjs';
 import {effectiveDeskEdits} from './desk-edits.mjs';
@@ -273,7 +274,11 @@ $('pause').onclick=()=>{if(directorOpen){director.toggleChapter();return;}if($('
 $('replay').onclick=()=>{previewOnly=false;playing=true;playShot(0);};
 $('cut').onclick=()=>{director?.close();previewOnly=false;cut=cut==='full'?'social':'full';clientCut=null;shots=score(cut);chapters();playing=true;playShot(0);};
 document.addEventListener('visibilitychange',()=>{clock.setRunning(!document.hidden&&playing&&!busy&&!finished,performance.now());stage()?.pause(activeBake||document.hidden||!playing);syncAudio();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(document.querySelector('dialog[open]'))return;if(directorOpen){e.preventDefault();director.close();return;}if(app){app.remove();app=null;stage().pause(false);}else exit();}if(e.code==='Space'&&e.target===document.body){e.preventDefault();$('pause').click();}});
+// Esc (escape-rule.mjs): in a field it only leaves the field (it used to close the whole Director from the Inspector's
+// name field); otherwise it closes the Director, the desk app or the film, as before.
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const act=escapeAction({dialog:!!document.querySelector('dialog[open]'),handled:e.defaultPrevented,inField:isField(e.target),directorOpen,app:!!app});
+  if(act==='blur'){e.preventDefault();e.target.blur();return;}if(act==='close-director'){e.preventDefault();director.close();return;}if(act==='close-app'){app.remove();app=null;stage().pause(false);return;}if(act==='exit')exit();return;}
+  if(e.code==='Space'&&e.target===document.body){e.preventDefault();$('pause').click();}});
 function openApp(){
   seen();playing=false;track.pause();stage().sound(false);stage().pause(true);
   clock.setRunning(false,performance.now());

@@ -102,7 +102,11 @@ try{
     const after=await page.$eval('#director-panel [name="key-label"]',e=>e.value).catch(()=>null),v5=await view();
     check(v5.keys===v2.keys&&after===before.slice(0,-1),`3. Backspace in the name field edits the text ("${before}" → "${after}"), the key stays (${v5.keys})`);
     await sameLogged(v2,v5,'2. after typing in the inspector (Backspace in the name field)');
-    await mark('3. Escape and blur');await page.keyboard.press('Escape');await blurAll();await wait(300);await sameLogged(v2,await view(),'2. after Escape and a blur');
+    // Escape in the field leaves the field, never the Director (before: player.mjs closed the whole Director from here)
+    await mark('3. Escape and blur');await page.keyboard.press('Escape');await wait(200);
+    const esc=await page.evaluate(()=>({directing:document.body.classList.contains('directing'),inField:document.activeElement?.name==='key-label'}));
+    check(esc.directing&&!esc.inField,`3. Escape in the name field leaves the field (${esc.inField?'still in it':'left'}) and the Director stays open (${esc.directing?'open':'CLOSED'})`);
+    await blurAll();await wait(300);await sameLogged(v2,await view(),'2. after Escape and a blur');
     // an inspector edit that commits (the name field commits on input; change as well, as a real edit ends)
     await mark('2. inspector edit');
     await page.$eval('#director-panel [name="key-label"]',e=>{e.value='Timeline e2e';e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));}).catch(()=>{});await wait(500);
