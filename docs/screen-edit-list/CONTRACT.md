@@ -106,7 +106,8 @@ Clip 2 dissolves in over 5.0-6.0 s using source 69.0-70.0 s of the movie as its 
 
 All lengths are whole frames at the output fps. A dissolve of `d` needs, and is clamped to:
 `d <= offset / rate` (head handle: source before the incoming clip's in point; handles never wrap a looping source),
-`d <= outgoing length - outgoing's own dip-in half`. A dip's halves are clamped to the clip lengths the same way.
+`d <= outgoing length - outgoing's own dip-in half`. A dip's halves are clamped each on its own side (out half <=
+outgoing length minus its own dip-in half, in half <= incoming length), so a short clip can give an uneven dip.
 A transition clamped below one frame becomes a cut. Every clamp is a line in the report, e.g.
 `main-landscape clip 2: dissolve 1.00 s -> 0.40 s (head handle: offset 0.40 s at rate 1)`.
 A source shorter than its clip with `loop: false` is reported as `holds last frame` (a frozen picture: Vico decides).
@@ -138,7 +139,7 @@ Nothing else can produce black or frozen frames: every frame of a clip is a dist
 
 | group | where | in git? | what |
 |---|---|---|---|
-| movie | `app-reference/assets/desk_viewer/media/ambient-clip.mp4` | no (app-reference, frozen via freeze-lists/untracked-app-reference.txt) | 100 s, 1280x720, 30 fps, no audio: chapter 10's movie today (offset 40) |
+| movie | `app-reference/assets/desk_viewer/media/ambient-clip.mp4` | no (app-reference, frozen via freeze-lists/untracked-app-reference.txt) | 100 s, 1280x720, 30 fps, with audio: chapter 10's movie today (offset 40; a music video, the only "movie" there is) |
 | demo | `app-reference/demo_media/*_demo.mp4` | no (frozen, all listed) | 49 wellness exercise demos |
 | captures | `exports/*/screens/*.mp4` | no (gitignored; per machine) | the screen captures (cine-*, 09-game-montage.mp4, ...) |
 | promo | `divi-editor/upload-to-promo/*.mp4` | yes | ErgoFlex promo clips (hero, LED, voice, vision) |
