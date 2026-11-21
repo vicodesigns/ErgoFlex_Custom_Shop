@@ -106,8 +106,9 @@ assert.deepEqual(cleanTransition({type:'dip-white',dur:0}),{type:'dip-white',dur
   assert.match(src,/\$\{transitionLane\(\)\}/,'the bands on the camera lane');
   assert.match(src,/function syncPlayhead\(\)\{\n    syncTransitionPreview\(\);/,'the preview follows the playhead');
   assert.match(src,/its motion is frozen here; the film renders both moving/,'the dissolve preview says it is a still frame');
-  assert.match(src,/renders this as a plain cut until the render side for dissolves and dips lands/,'and that the film renders a cut for now');
-  assert.match(src,/putTransition\(band\.dataset\.camTransition,\{type:'move'\}\)/,'Delete on a band: back to a move');
+  assert.match(src,/The film needs the dissolve render steps for this \(transition-plan\.mjs, then join-subshots\.py\); a plain chapter render shows it as a cut/,'a dissolve: what the film needs (the render side, 20 Nov 2026)');
+  assert.match(src,/The film renders this dip as it is \(render-cut\)/,'a dip: rendered as it is');
+  assert.match(src,/const id=band\.dataset\.camTransition;try\{clearPicks\(\);if\(keyId!==id\)selectKey\(id\);putTransition\(id,\{type:'move'\}\);/,'Delete on a band: back to a move, its key kept selected (camera-transition-band-delete-test)');
 }
 // ---- 6 segments: one type per segment, labels, warnings (Vico's Create numbers: 19.2 s -> 19.5 s, 2.36 units in 0.3 s;
 // 19.5 s -> 19.533 s, a cut to the same view)

@@ -218,7 +218,7 @@ export function mountDirector(bridge,catalog,initial){
     if(!filmShot()&&n>0&&list[n-1].easing==='hold')list=list.map((x,j)=>j===n-1?{...x,easing:'smooth'}:x);
     commit(()=>{shot().camera={keys:copy(list)};},{render:true});
     const t=k.transition,where=`${n>0?`from "${list[n-1].label}" `:''}into "${k.label}"`;
-    status(!t?`A move ${where}.`:t.type==='cut'?`A cut ${where}: the camera jumps at ${r2(k.time*shot().seconds)} s.`:`${TRANSITION_LABELS[t.type]} ${where}, ${t.dur} s${fits}.${filmShot()?' The film renders it as a cut until the render side for dissolves and dips lands.':''} Undo brings back the one before.`);
+    status(!t?`A move ${where}.`:t.type==='cut'?`A cut ${where}: the camera jumps at ${r2(k.time*shot().seconds)} s.`:`${TRANSITION_LABELS[t.type]} ${where}, ${t.dur} s${fits}.${filmShot()&&t.type==='dissolve'?' The film needs the dissolve render steps for it; a plain chapter render shows a cut.':''} Undo brings back the one before.`);
   }
 
   // One transition per segment (key N -> key N+1), stored on key N+1: key N shows it as "To the next view", key N+1 as
@@ -229,7 +229,9 @@ export function mountDirector(bridge,catalog,initial){
     const note=info.type==='dissolve'?'Preview: the other view is a still frame, so its motion is frozen here; the film renders both moving.':info.type==='move'?'':info.type==='cut'?'':'Preview: exact (a '+(info.type==='dip-white'?'white':'black')+' layer over the view).';
     return `<div class="director-grid camera-transition" data-camera-segment="${n}"><label>${label} <small>${escape(info.label)}</small><select name="${name}">${SEGMENT_TYPES.map(v=>option(v,TRANSITION_LABELS[v],info.type)).join('')}</select></label>${hasLength(t)?`<label>Length (seconds)<input name="${name}-dur" type="number" min="${MIN_DUR.toFixed(2)}" max="${room.toFixed(2)}" step=".05" value="${t.dur}"></label>`:''}</div>`
       +(info.warn?`<p class="director-hint transition-warn" data-transition-warn>⚠ ${escape(info.warn)}</p>`:'')+(note?`<p class="director-hint">${note}</p>`:'')
-      +(hasLength(t)&&film?'<p class="director-hint transition-film-note">The film renders this as a plain cut until the render side for dissolves and dips lands (Windows).</p>':'');
+      // (the render side, Windows, 20 Nov 2026: render-cut.cjs draws dips on every render; a dissolve needs the chapter rendered
+      // as overlapping segments, tools/experience/transition-plan.mjs then join-subshots.py, which no render request runs yet)
+      +(hasLength(t)&&film?`<p class="director-hint transition-film-note">${t.type==='dissolve'?'The film needs the dissolve render steps for this (transition-plan.mjs, then join-subshots.py); a plain chapter render shows it as a cut.':'The film renders this dip as it is (render-cut).'}</p>`:'');
   }
   function transitionFields(k){
     const list=keys(),i=list.findIndex(x=>x.id===k.id);if(i<0)return '';
@@ -2179,7 +2181,9 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       else groupDrag={id,kind,start:event.clientX,width,delta:0,moved:false,base,set:grouped?picks:{[kind]:new Set([id])}};
       viewport().setPointerCapture(event.pointerId);item.focus({preventScroll:true});return;
     }
-    if(!event.target.closest('.timeline-content')||event.target.closest('.time-ruler,button,select,input,label,.desk-track-toolbar,.track-heading,.desk-lane-label,[data-room-line],.lamps-lane,.lane-group-head,.choreo-others'))return;
+    // (not from a camera transition band: its edge drag started a marquee that swept the key under the band into the group
+    // picks, and Delete on the band then deleted that key; Windows, 20 Nov 2026)
+    if(!event.target.closest('.timeline-content')||event.target.closest('.time-ruler,button,select,input,label,.desk-track-toolbar,.track-heading,.desk-lane-label,[data-room-line],.lamps-lane,.lane-group-head,.choreo-others,[data-cam-transition]'))return;
     event.preventDefault();viewport().focus({preventScroll:true});
     if(!(event.shiftKey||event.ctrlKey||event.metaKey))sceneLights.deselect();
     marquee={x:event.clientX,y:event.clientY,add:event.shiftKey||event.ctrlKey||event.metaKey,base:Object.fromEntries(Object.entries(picks).map(([k,v])=>[k,new Set(v)])),box:null};
@@ -2289,6 +2293,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   document.addEventListener('keydown',event=>{
     if(!open||composing||!picked()||event.defaultPrevented||document.querySelector('dialog[open]'))return;
     const target=event.target;if(target!==document.body&&!timeline.contains(target))return;
+    if(target.closest?.('[data-cam-transition]'))return;   // (a focused transition band: its own Delete, the transition only)
     if(target.matches?.('input,select,textarea'))return;
     if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();clearPicks();groupStatus();return;}
     if(['Delete','Backspace'].includes(event.key)){event.preventDefault();event.stopImmediatePropagation();try{deletePicks();}catch(error){status(error.message,true);}return;}
@@ -2300,7 +2305,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   timeline.addEventListener('pointerdown',event=>{
     const band=event.target.closest?.('[data-cam-transition]');if(!band||event.button!==0)return;
     event.preventDefault();event.stopImmediatePropagation();const id=band.dataset.camTransition,edge=event.target.closest('[data-ct-edge]');
-    try{requireReady();if(keyId!==id)selectKey(id);}catch(error){status(error.message,true);return;}
+    try{requireReady();clearPicks();if(keyId!==id)selectKey(id);}catch(error){status(error.message,true);return;}
     if(!edge){timeline.querySelector(`[data-cam-transition="${CSS.escape(id)}"]`)?.focus({preventScroll:true});return;}
     const track=timeline.querySelector('.camera-track');if(!track)return;
     transitionDrag={id,pointer:event.pointerId,rect:track.getBoundingClientRect(),dur:selectedKey()?.transition?.dur};track.setPointerCapture?.(event.pointerId);
@@ -2320,7 +2325,8 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   for(const type of ['pointerup','pointercancel'])timeline.addEventListener(type,endTransitionDrag,true);
   timeline.addEventListener('keydown',event=>{
     const band=event.target.closest?.('[data-cam-transition]');if(!band||!['Delete','Backspace'].includes(event.key)||event.ctrlKey||event.metaKey||event.altKey)return;
-    event.preventDefault();event.stopImmediatePropagation();try{putTransition(band.dataset.camTransition,{type:'move'});}catch(error){status(error.message,true);}
+    // the transition only, one undo step; the key stays and stays selected (so Ctrl+D, Delete etc. go on with it)
+    event.preventDefault();event.stopImmediatePropagation();const id=band.dataset.camTransition;try{clearPicks();if(keyId!==id)selectKey(id);putTransition(id,{type:'move'});}catch(error){status(error.message,true);}
   },true);
   function syncTransitionPreview(){try{if(!open||!shot()){camTransitions.hide();return;}camTransitions.update(keys(),playhead*shot().seconds,shot().seconds);}catch{camTransitions.hide();}}
   const preview=document.getElementById('stage');let previewDocument;

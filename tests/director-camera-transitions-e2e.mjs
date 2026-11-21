@@ -48,7 +48,7 @@ try{
   const dur0=Number(await page.$eval('#director-panel [name="key-transition-dur"]',e=>e.value));
   const notes=await page.$eval('#director-panel [data-camera-transition]',e=>e.parentElement.textContent);
   check(!!band&&dur0>0,`2. Dissolve: a band on the lane, Length ${dur0} s`);
-  check(/frozen here/.test(notes)&&/plain cut until the render side/.test(notes),'2. the notes: a still frame in the preview, a plain cut in the film for now');
+  check(/frozen here/.test(notes)&&/dissolve render steps/.test(notes),'2. the notes: a still frame in the preview; what the film needs for a dissolve');
   await shot('01-dissolve-band.png');
   // 2b. (20 Nov 2026) one control per segment: the key before shows the same dissolve as "To the next view"; the lane
   // segment says so; a film chapter has no Move style / Camera route (the film's spline) and says why
@@ -65,6 +65,7 @@ try{
   await page.mouse.move(edge.x,edge.y);await page.mouse.down();await page.mouse.move(edge.x+25,edge.y,{steps:5});await page.keyboard.down('Alt');await page.mouse.move(edge.x+30,edge.y,{steps:2});await page.mouse.up();await page.keyboard.up('Alt');await wait(500);
   await pick(target);await wait(300);const dur1=Number(await page.$eval('#director-panel [name="key-transition-dur"]',e=>e.value));
   check(dur1>dur0,`3. dragging the end edge: ${dur0} → ${dur1} s`);
+  check(await page.evaluate(()=>!document.querySelector('#director-timeline .grouped')&&!document.getElementById('director-timeline').classList.contains('has-group')),'3. the edge drag picked nothing for a group (it used to sweep the key under the band into the picks)');
   if(dur1>dur0){   // (only undo what the drag did: with no commit, Ctrl+Z would take the dissolve itself away)
     await page.evaluate(()=>document.activeElement?.blur?.());await keyChord('Control','KeyZ');await pick(target);await wait(300);
     check(Math.abs(Number(await page.$eval('#director-panel [name="key-transition-dur"]',e=>e.value).catch(()=>NaN))-dur0)<1e-6,'3. one undo step puts the length back');
@@ -83,8 +84,14 @@ try{
   const sent=await until(()=>page.evaluate(()=>window.__exports.at(-1)||null),'the export',20000).catch(()=>null);
   const k=sent?JSON.parse(sent).shots[0].camera?.keys?.find(x=>x.id===target):null;
   check(k?.transition?.type==='dip-black'&&k.transition.dur>0,'5. Export cut carries the key\'s transition: '+JSON.stringify(k?.transition));
+  const before5=(await keysNow()).length;
   await page.focus(`#director-timeline [data-cam-transition="${target}"]`);await page.keyboard.press('Delete');await wait(500);
-  check(!await page.$(`#director-timeline [data-cam-transition="${target}"]`),'5. Delete on the band: back to a move');
+  const after5=await keysNow(),sel5=await page.evaluate(()=>document.querySelector('#director-timeline .camera-key[aria-pressed="true"]')?.dataset.key||null);
+  check(!await page.$(`#director-timeline [data-cam-transition="${target}"]`)&&after5.length===before5&&after5.includes(target),`5. Delete on the band: back to a move, every key kept (${before5} → ${after5.length})`);
+  check(sel5===target,'5. its key stays selected ('+sel5+')');
+  await page.evaluate(()=>document.activeElement?.blur?.());await keyChord('Control','KeyZ');
+  check(!!await page.$(`#director-timeline [data-cam-transition="${target}"]`)&&(await keysNow()).length===before5,'5. one Ctrl+Z brings the dip back');
+  await keyChord('Control','Shift','KeyZ');await pick(target);await wait(300);
   // ---- 6 a cut to the same view warns: Duplicate a key (same view, half way to the next), cut into the copy
   {await pick(target);await wait(300);await page.evaluate(()=>document.activeElement?.blur?.());await keyChord('Control','KeyD');   // (the roomy key: create's 2.35 s key would put its copy 0.025 s from the cut)
     let now=await keysNow(),copyId=now.find(id=>!ids.includes(id));
