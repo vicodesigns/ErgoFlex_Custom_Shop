@@ -1,8 +1,66 @@
 {
-  "about": "Oilers chapter ergonomics, CANDIDATE 3. Deep-merge sceneDeskEdit into the sceneDeskEdits entry whose desk is 'station-project-review' in director-film/oilers.json. Nothing else in the chapter changes. initial.height 43 (Vico's own) -> 35.5: the height Fern's built 'stand-low' posture fits (room-people.mjs HEIGHT_FIT/HEIGHT_SOLID: solid within 0.45 in, gone beyond 1.4 in); monitor y -340 -> -220 (mm, top-shelf frame): the panel's lower edge about 1 in above the desktop instead of 3.6 in below it.",
+  "about": "Oilers chapter ergonomics (Fern at the front white desk, station 'project-review'). REQUIRED part: `sceneDeskEdit`, deep-merged by key into the sceneDeskEdits entry whose desk is 'station-project-review' in director-film/oilers.json: initial.height 43 (Vico's own value) -> 35.5 (the height Fern's built 'stand-low' posture fits: solid within 0.45 in) and build.objects.accessory-flat-monitor.transform.p.y -340 -> -220 mm (panel lower edge ~1 in above the desktop instead of 3.6 in below it; desk-kit.mjs lowestMonitorY() gives -219.8). OPTIONAL part: `optionalPoseEdit`, deep-merged into the people.cast entry with key 'fern': per-posture arm turns for people-fern-stand-low (bone-local quaternions on top of the built pose, same mechanism as Vico's Mia edit) that lower the wrists 1.1 in and tilt the hands so the fingertips stay on the keys: elbow 81 -> 88 deg (side view), wrist pitch -19 -> +5 deg. Nothing else in the chapter changes.",
   "sceneDeskEdit": {
     "desk": "station-project-review",
-    "initial": { "height": 35.5, "tilt": 0 },
-    "build": { "objects": { "accessory-flat-monitor": { "transform": { "p": { "y": -220 } } } } }
+    "initial": {
+      "height": 35.5,
+      "tilt": 0
+    },
+    "build": {
+      "objects": {
+        "accessory-flat-monitor": {
+          "transform": {
+            "p": {
+              "y": -220
+            }
+          }
+        }
+      }
+    }
+  },
+  "optionalPoseEdit": {
+    "cast": "fern",
+    "postures": {
+      "people-fern-stand-low": {
+        "pose": {
+          "upperarm_l": [
+            -0.0018,
+            0.0113,
+            -0.0095,
+            0.9999
+          ],
+          "lowerarm_l": [
+            -0.0668,
+            0,
+            -0.0029,
+            0.9978
+          ],
+          "hand_l": [
+            -0.1484,
+            0.0762,
+            0.1189,
+            0.9788
+          ],
+          "upperarm_r": [
+            -0.0018,
+            -0.0113,
+            0.0095,
+            0.9999
+          ],
+          "lowerarm_r": [
+            -0.0668,
+            0,
+            0.0029,
+            0.9978
+          ],
+          "hand_r": [
+            -0.1484,
+            -0.0762,
+            -0.1189,
+            0.9788
+          ]
+        }
+      }
+    }
   }
 }
