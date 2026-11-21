@@ -184,6 +184,13 @@ async function listShot(frame,i){
   for(const c of result.clocks)console.log(`  clock ${c.kind.padEnd(7)} ${c.name} at [${c.position.join(', ')}]`);
 }
 
+// Screen edit lists: as render-cut.cjs screenEdits() (docs/screen-edit-list/CONTRACT.md); a cut without transitionIn is untouched.
+async function screenEdits(){
+  const edl=s=>(s.screens||[]).some(sc=>sc&&typeof sc==='object'&&'transitionIn' in sc);
+  if(!indices.some(i=>edl(cut.shots[i])))return;
+  const {applyScreenEdits}=await import(require('url').pathToFileURL(path.join(__dirname,'compose-screen-edit.mjs')).href);
+  for(const i of indices)if(edl(cut.shots[i]))cut.shots[i]=await applyScreenEdits(cut.shots[i],{root:path.resolve(__dirname,'..','..'),cutFile:opts.cut,log:m=>console.log(`${pad(i)} ${m}`)});
+}
 (async()=>{
   // Provenance: which commit and studio-state rev this render used (Win and Desk 02 renders must be comparable).
   {const root=path.resolve(__dirname,'..','..');let sha='?',dirty='';try{sha=execFileSync('git',['-C',root,'rev-parse','--short','HEAD']).toString().trim();
@@ -192,6 +199,7 @@ async function listShot(frame,i){
    console.log(`[provenance] git ${sha}${dirty} studio-state rev ${rev} host ${require('os').hostname()} ${process.platform} ${new Date().toISOString()}`);}
   // the checkout the server serves, if not this one (server-provenance.cjs; a warning, never a stop)
   try{await require('./server-provenance.cjs').report(opts.server,path.resolve(__dirname,'..','..'));}catch(error){console.log('[provenance] server check skipped: '+error.message);}
+  await screenEdits();
   // Windows render box: CHROME_PATH overrides the binary, ANGLE the backend (d3d11 on Windows, vulkan on Linux).
   const win=process.platform==='win32',angle=process.env.ANGLE||(win?'d3d11':'vulkan');
   const browser=await puppeteer.launch({executablePath:process.env.CHROME_PATH||(win?'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe':'/usr/bin/google-chrome'),headless:'new',defaultViewport:{width:1280,height:720},

@@ -1,0 +1,5 @@
+{"id": "media", "seconds": 17, "screens": [
+ {"target": "main-landscape", "src": "app-reference/assets/desk_viewer/media/ambient-clip.mp4", "start": 0, "end": 6, "offset": 40, "brightness": 0.9},
+ {"target": "main-landscape", "src": "app-reference/assets/desk_viewer/media/ambient-clip.mp4", "start": 6, "end": 11.5, "offset": 70, "rate": 1, "brightness": 0.9, "transitionIn": {"type": "dissolve", "dur": 1.0}},
+ {"target": "main-landscape", "src": "app-reference/assets/desk_viewer/media/ambient-clip.mp4", "start": 11.5, "end": 17, "offset": 12, "brightness": 0.9, "transitionIn": {"type": "dip", "dur": 0.8, "color": "#000000"}}
+]}

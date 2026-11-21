@@ -76,6 +76,10 @@ def read_chapter_epochs(script_dir):
         if len(w) == 3 and w[0] == 'chapter': out[w[1]] = w[2]
     return out
 
+def read_screen_edit_version(script_dir):
+    """tools/experience/screen-edit-version.txt: the screen edit composer's version (compose-screen-edit.mjs reads it too)."""
+    return open(os.path.join(script_dir, 'screen-edit-version.txt')).read().strip()
+
 def canon(o): return json.dumps(o, sort_keys=True, separators=(',', ':'), ensure_ascii=False)
 
 # ---- Studio room state the render overlays (phase 5 of the layers design, DESIGN.md 5.2/5.3) -----------------------------
@@ -178,6 +182,10 @@ def chapter_keys(hq, resolution, root, overlay=None, epoch=None, only=None):
         if seed not in assets_by_seed: assets_by_seed[seed] = studio_assets(T, seed)
         payload['studioAssets'] = room_slices(assets_by_seed[seed], shots)   # always present ({} = nothing saved for the room)
         if cid in chapter_epochs: payload['chapterEpoch'] = chapter_epochs[cid]   # only that chapter's key changes
+        # A screen edit list (docs/screen-edit-list/CONTRACT.md: a shot.screens clip with transitionIn) renders through
+        # compose-screen-edit.mjs: its version is in the key of those chapters only (absent elsewhere: keys as before).
+        if any(isinstance(sc, dict) and 'transitionIn' in sc for sh in shots for sc in (sh.get('screens') or [])):
+            payload['screenEdit'] = read_screen_edit_version(here)
         out.append((i + 1, cid, hashlib.sha256(canon(payload).encode()).hexdigest()))
     return out
 
