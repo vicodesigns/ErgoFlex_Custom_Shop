@@ -89,7 +89,7 @@ import {updateSkinnedBounds} from './skinned-bounds.mjs';
 import {poseAt} from './people-pose-keys.mjs';
 import {applyHeld} from './people-held.mjs';
 import {postureRecord,postureRecords,hasPosturePose,poseOwner,sourceOf,roomEditKey,blendPosturePoses} from './people-postures.mjs';
-import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=people-motion-carry-20261119';
+import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, squatKey, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=people-motion-carry-20261119';
 // Room looks (room-looks.mjs): the Nov 17 pass's cast finishes (own materials, hair / shirt maps) are the refreshed Create
 // room's and the Commons'; Create's Classic look keeps the cast as it was, and its people move as they did then
 // (rig.classicMotion: room-people-motion.mjs's painting, pottery and page-turn strokes from before the pass).
@@ -2120,7 +2120,8 @@ export class RoomPeople {
                 if (life === undefined) { if (on) { object.userData.personLife = null; this.later(this.enliven(object)); } if (film && on) this.rollRoot(object, time); continue; }
                 if (!life || !object.userData.personRig || (!on && !life.live)) { if (film && on && (!life || !object.userData.personRig)) this.rollRoot(object, time); continue; }
                 const step = object.userData.personStepLife ?? 1, pair = object.userData.personPairLife ?? 1;   // (stepped out: the life comes in after the step, stepOuts; round a change of posture: changing)
-                this.moveOne(object, life, on, on ? step * pair : 0, film, time, dt, hold, turning, on ? step : 0);
+                // (squats are whole from the first rep to the last: the step out and the step back in carry the arms, not a fade of the action)
+                this.moveOne(object, life, on, on ? step * pair : 0, film, time, dt, hold, turning, on ? (object.userData.person.act?.kind === 'squat' && object.userData.personStepLife !== undefined ? 1 : step) : 0);
             }
         }
         for (const crank of this.cranks) if (!turning.has(crank)) { if (crank.name === 'Bike crank') this.turnCrank(crank, 0); else { crank.rotation.y = 0; this.dirty = true; } this.cranks.delete(crank); }      // (nobody on it any more: as the room built it)
@@ -2450,16 +2451,18 @@ export class RoomPeople {
             o.userData.personStepHome ||= { position: o.position.clone(), turn: o.rotation.y };
             const step = { actor, phase: null, life: 1 }; out.set(o, step);
             const length = changeLength(actor.rig, up, actor.rig.key(s.id));
+            // (stepping out into squats: the step ends, and the step back begins, with the arms by her sides, squatKey)
+            const posed = key => { if (s.act?.kind !== 'squat') return key; const kept = (this.squatKeys ||= new Map()), id = key.id + '|' + (key.dz ?? 0); if (!kept.has(id)) kept.set(id, squatKey(actor.rig, key)); return kept.get(id); };
             for (const [t0, t1] of spans) {
                 const start = t0 - length / 2, end = t1 + length / 2; if (time < start || time > end) continue;
                 if (busy.has(actor)) { const k = this.keyOf(s); if (!(this.warnedSteps ||= new Set()).has(k)) { this.warnedSteps.add(k); console.warn('[people] ' + k + ': ' + actor.character + ' is already stepping out (overlapping fromDesk windows): left out'); } break; }   // (two at once: one of her, the first)
                 busy.add(actor);
                 if (time < t0 + length / 2) {
                     const desk = this.deskUserAt(actor, start, state);
-                    Object.assign(step, { phase: 'out', w: (time - start) / length, from: desk.key, to: actor.rig.key(s.id, desk.key.dz), dz: desk.key.dz, desk: desk.spot });
+                    Object.assign(step, { phase: 'out', w: (time - start) / length, from: desk.key, to: posed(actor.rig.key(s.id, desk.key.dz)), dz: desk.key.dz, desk: desk.spot });
                 } else if (time > t1 - length / 2) {
                     const desk = this.deskUserAt(actor, end, state);
-                    Object.assign(step, { phase: 'in', w: (time - (t1 - length / 2)) / length, from: actor.rig.key(s.id, desk.key.dz), to: desk.key, dz: desk.key.dz, desk: desk.spot });
+                    Object.assign(step, { phase: 'in', w: (time - (t1 - length / 2)) / length, from: posed(actor.rig.key(s.id, desk.key.dz)), to: desk.key, dz: desk.key.dz, desk: desk.spot });
                 } else Object.assign(step, { phase: 'hold', to: actor.rig.key(s.id), life: THREE.MathUtils.smoothstep(time, t0 + length / 2, t0 + length / 2 + 1) * (1 - THREE.MathUtils.smoothstep(time, t1 - length / 2 - 1, t1 - length / 2)) });
                 break;
             }

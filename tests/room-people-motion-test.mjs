@@ -1147,6 +1147,27 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
         assert.ok(Math.abs(after - up.pelvis) < .012, who + ': back at the height she began (hips)');
         assert.equal(SQ.squatDepth(0, 5.2, 3), 0); assert.equal(SQ.squatDepth(5.2, 5.2, 3), 0);
         assert.ok(Math.abs(SQ.squatDepth(5.2 / 6, 5.2, 3) - 1) < 1e-9, 'the bottom of a rep is depth 1');
+        // (Nov 21, the arms into and out of the squats) they swing: up from her sides over the first descent, down again over the last rise, never a jump
+        // (a hand moves under 12 cm in a 1/30 s frame against the shoulder), the arm stays straight on the way (a swing, not a reach), and the reps are whole
+        // with actLife 1 whatever the life around them (the step out and the step back in carry the arms: squatKey is the posture with the arms down)
+        {
+            assert.equal(SQ.squatArmsUp(0, 5.2, 3), 0); assert.equal(SQ.squatArmsUp(5.2, 5.2, 3), 0); assert.equal(SQ.squatArmsUp(5.2 / 2, 5.2, 3), 1);
+            let prev = null, worst = 0, bent = 0;
+            for (let f = -30; f <= Math.round(6.2 * 30); f++) {
+                solveStill(rig, key, { time: 1, seed: 3, life: .3, actLife: 1, act: act(f / 30) });
+                const [, upper, lower, hand] = rig.side.l.arm, rel = rig.wp[hand].clone().sub(rig.wp[upper]);
+                if (prev) worst = Math.max(worst, rel.distanceTo(prev)); prev = rel;
+                bent = Math.max(bent, rig.wp[upper].distanceTo(rig.wp[lower]) + rig.wp[lower].distanceTo(rig.wp[hand]) - rel.length());
+            }
+            assert.ok(worst < .12, `${who}: the hand never jumps (${(worst * 100).toFixed(1)} cm in a frame at most)`);
+            assert.ok(bent < .03, `${who}: the arm swings straight (${(bent * 100).toFixed(1)} cm of bend at most)`);
+            solveStill(rig, key, { time: 1, seed: 3, life: .3, actLife: 1, act: act(5.2 / 6) });
+            assert.ok(Math.abs(up.pelvis - rig.wp[rig.b.pelvis].y - SQ.SQUAT.down) < .03, who + ': a whole rep while the life around it is still coming in');
+            const ready = SQ.squatKey(rig, key), sh = ready.wp[rig.side.r.arm[1]], hand = ready.wp[rig.side.r.arm[3]];
+            assert.ok(sh.y - hand.y > .4 && Math.abs(hand.z - sh.z) < .08, who + ': squatKey has the arms by her sides');
+            solveStill(rig, key, { time: 1, seed: 3, life: 0, actLife: 1, act: act(0) });
+            for (const s of ['l', 'r']) for (const i of rig.side[s].arm) assert.ok(rig.lq[i].angleTo(ready.q[i]) < 1e-6, who + ': the first frame of the reps is squatKey (no jump from the step out)');
+        }
         solve(1.3); const a = snapshot(rig); solveStill(rig, key, { time: 40, seed: 3, life: 1, act: act(0.2) }); solve(1.3);
         assert.deepEqual(snapshot(rig), a, who + ': the same second is the same squat');
     }

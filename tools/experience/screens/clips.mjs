@@ -24,8 +24,10 @@ export const OILERS_BEATS = {dock: 11.8, tap: 12.8, reveal: 13.1, dash: 14.2};
 // COAST_PERSON: who uses coast's featured suite (Ava: S4's decision, Nov 14)
 export const COAST_PERSON = 'Ava';
 // Overhead Triceps Stretch beats (chapter seconds; scenes/stretch.js): B seated after the desk lowers at 9.45, A standing before it lowers at 14.95
-export const RISE_STRETCH_B = {start: 13.3, rightEnd: 14.8, leftEnd: 17.8, good: 17.9, goodEnd: 19.8, seated: true};
-export const RISE_STRETCH_A = {start: 9.6, rightEnd: 11.1, leftEnd: 14.1, good: 14.1, goodEnd: 16.2, seated: false};
+// (Nov 21 2026, the calm stretch: chapter 23.5 -> 28.5 s. B: raise 13.1-15.1, right arm held to 17.2, the switch to 19.4, left arm held to 21.5, arms down 23.4;
+// A: raise 9.6-11.6, held to 13.7, the switch to 15.9, held to 18.0, arms down 19.9. docs/rise-wellness/)
+export const RISE_STRETCH_B = {start: 13.1, rightEnd: 18.3, leftEnd: 23.2, good: 23.2, goodEnd: 25.0, seated: true};
+export const RISE_STRETCH_A = {start: 9.6, rightEnd: 14.8, leftEnd: 19.7, good: 19.7, goodEnd: 21.4, seated: false};
 const CINE_OUT = 'exports/cinematic-intro-cut-cine/screens';
 const cine = (shot, chapter, rest) => ({chapter, shot, out: CINE_OUT, ...rest});
 const CINE = [
@@ -37,14 +39,14 @@ const CINE = [
   // the phone on the desk's charger (the film's own 'phone' target; a whole-glass clip like 02-phone, 720x1516): charge ring, Maya's lock screen, then the dim always-on clock of her workday
   cine('rise', 2, {id: 'cine-rise-phone', target: 'phone', role: 'Maya: the phone on the charger, charged overnight, the workday clock', w: 720, h: 1516, scene: 'ch02ph',
     opts: {name: 'Maya', ck: [[0, 480], [4, 512], [8, 655], [12, 840], [15, 1000], [18, 1050]]}}),
-  // Nov 20 2026, Vico's 3rd cuts (chapter 2, 23.5 s): the Overhead Triceps Stretch (opts.stretch, scenes/stretch.js; B seated, A standing).
+  // Nov 20 2026, Vico's 3rd cuts (chapter 2, 23.5 s; 28.5 s since Nov 21): the Overhead Triceps Stretch (opts.stretch, scenes/stretch.js; B seated, A standing).
   ...[['b', RISE_STRETCH_B, 'exports/cinematic-intro-cut-vicos-3rd-cut/screens'], ['a', RISE_STRETCH_A, 'exports/cinematic-intro-cut-vicos-3rd-cut-standing/screens']].flatMap(([v, st, out]) => {
-    const ck = [[0, 480], [4, 512], [8, 655], [12, 840], [17, 1000], [23.5, 1050]], videos = [{key: 'tricep', src: 'app-reference/demo_media/overhead_triceps_stretch_01_demo.mp4', t: 10, scale: '1280:-2'}];
+    const ck = [[0, 480], [4, 512], [8, 655], [12, 840], [22, 1000], [28.5, 1050]], videos = [{key: 'tricep', src: 'app-reference/demo_media/overhead_triceps_stretch_01_demo.mp4', t: 10, scale: '1280:-2'}];
     return [
       {chapter: 2, shot: 'rise', out, id: 'cine3' + v + '-rise-portrait', target: 'main-portrait', role: 'Maya: wellness height app + the overhead triceps stretch', w: 1080, h: 1856, scene: 'ch02p', videos,
         opts: {name: 'Maya', initials: 'M', evening: true, ck, stretch: st}},
       {chapter: 2, shot: 'rise', out, id: 'cine3' + v + '-rise-curved', target: 'main-landscape', role: 'Maya: the workday, the evening summary', w: 2560, h: 1072, scene: 'ch02l',
-        opts: {name: 'Maya', colleague: 'Rosa Kim', ck, toast: [20.1, 99, '3h 10m standing · 9 stand breaks']}},
+        opts: {name: 'Maya', colleague: 'Rosa Kim', ck, toast: [25.1, 99, '3h 10m standing · 9 stand breaks']}},
       {chapter: 2, shot: 'rise', out, id: 'cine3' + v + '-rise-phone', target: 'phone', role: 'Maya: the phone on the charger; the stretch push', w: 720, h: 1516, scene: 'ch02ph', videos, opts: {name: 'Maya', ck, stretch: st}}];
   }),
   cine('create', 3, {id: 'cine-create-landscape', target: 'main-landscape', role: 'Lin: painting -> house model -> meadow reference', w: 1920, h: 1120, scene: 'c03l', frames: 705, opts: {...CREATE_ACTS, name: 'Lin'}}),
