@@ -57,7 +57,7 @@ export const MOVES={hand_l:{kind:'ik'},hand_r:{kind:'ik'},foot_l:{kind:'ik'},foo
   thigh_l:{kind:null,why:'The hip joint moves with the hips: turn it (E), or move the foot and the leg follows.'},thigh_r:{kind:null,why:'The hip joint moves with the hips: turn it (E), or move the foot and the leg follows.'}};
 export const moveOf=name=>MOVES[name]||{kind:null,why:'This joint turns only (E).'};
 
-export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,edit,status,rerender,personName,editing,saved=null,time=()=>0,seek=()=>{},seconds=()=>0,siblings=k=>[k],follow=()=>{},models=()=>'',cameraHeld=()=>false}){
+export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,edit,status,rerender,personName,editing,saved=null,time=()=>0,seek=()=>{},seconds=()=>0,siblings=k=>[k],follow=()=>{},models=()=>'',cameraHeld=()=>false,keyPicked=()=>{}}){
   let key=null,joint=null,gmode='rotate',h=null,rigging=false,drag=null,listening=false,orbit=true,selT=null,clip=null,hinted=false,switching=false;
   const AUTO='ergoflex.director.autoKey';
   let autoKey=(()=>{try{return globalThis.localStorage?.getItem(AUTO)==='1';}catch{return false;}})();      // (off until turned on, as in Blender: then remembered)
@@ -474,7 +474,7 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
     if(name==='pe-key-all'){keyNow('all');return true;}
     if(name==='pe-key-limb'){keyNow('limb');return true;}
     if(name==='pe-key-delete'){deleteKey();return true;}
-    if(name==='pe-key-prev'||name==='pe-key-next'){const ts=keyTimes(e),t=now(),k=name==='pe-key-prev'?[...ts].reverse().find(x=>x<t-1e-6):ts.find(x=>x>t+1e-6);if(k!==undefined){selT=k;seek(k);rerender();}return true;}
+    if(name==='pe-key-prev'||name==='pe-key-next'){const ts=keyTimes(e),t=now(),k=name==='pe-key-prev'?[...ts].reverse().find(x=>x<t-1e-6):ts.find(x=>x>t+1e-6);if(k!==undefined){selT=k;keyPicked(k);seek(k);rerender();}return true;}
     if(name==='pe-key-copy'){const t=selT??keyAt(e,now());const c=t!==undefined&&t!==null?copyKey(e,t):null;if(c){clip=c;status(`Copied the key at ${fmt(t)} s (${Object.keys(c.pose).length} bones). Paste puts it at the playhead.`);rerender();}return true;}
     if(name==='pe-key-paste'){if(!clip)return true;const t=now();selT=t;keyEdit(x=>pasteKey(x,t,clip),`${personName(e)}: key pasted at ${fmt(t)} s.`);return true;}
     if(name==='pe-pose-done'){exit();status('Pose kept. Double-click the person to adjust it again.');return true;}
@@ -515,11 +515,13 @@ export function createPoseEditor({wake=()=>{},win,three,tools,stagePeople,entry,
   },true);
   document.addEventListener('pointerup',ev=>{
     const d=kd;kd=null;if(!d)return;ev.stopPropagation();kdSuppress=performance.now()+300;
-    if(d.now===null){selT=d.t;seek(d.t);rerender();status(`Key at ${fmt(d.t)} s: drag to retime, Delete removes it, Ease out sets how it leaves.`);return;}
+    if(d.now===null){selT=d.t;keyPicked(d.t);seek(d.t);rerender();status(`Key at ${fmt(d.t)} s: drag to retime, Delete removes it, Ease out sets how it leaves.`);return;}
     retime(d.t,d.now);
   },true);
   document.addEventListener('click',ev=>{const d=ev.target.closest?.('[data-pose-key]');if(!d)return;ev.preventDefault();ev.stopPropagation();if(performance.now()<kdSuppress||!key)return;
-    const t=Number(d.dataset.poseKey);selT=t;seek(t);rerender();status(`Key at ${fmt(t)} s: drag to retime, Delete removes it, Ease out sets how it leaves.`);},true);      // (a keyboard Enter or a script's click)
+    const t=Number(d.dataset.poseKey);selT=t;keyPicked(t);seek(t);rerender();status(`Key at ${fmt(t)} s: drag to retime, Delete removes it, Ease out sets how it leaves.`);},true);      // (a keyboard Enter or a script's click)
   return {enter,exit,tick,panel,action,changed,setMode,personAt,focusKey,active:()=>key,joint:()=>joint,jointLabel:()=>joint?label(joint):'',resetJoint:()=>reset('joint'),ready:()=>!!rigOf(),
-    keyLane,sync,keyNow,deleteKey,selectedKey:()=>selT,autoKey:()=>autoKey};
+    keyLane,sync,keyNow,deleteKey,selectedKey:()=>selT,autoKey:()=>autoKey,
+    // the People sheet's selection, mirrored (no re-render: the sheet's own follows): a key there that is not one of these
+    setKey:t=>{if(key)selT=t;}};
 }

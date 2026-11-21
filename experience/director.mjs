@@ -27,7 +27,7 @@ import {createLayersPanel} from './layers-panel.mjs';
 import {layersOn,studioHiddenHere,chapterRooms,chapterSetting,deskHidePlan,LAYERS_KEY} from './layers-exchange.mjs';
 import {effectivePropEdits as layersPropEdits} from './prop-edits.mjs';
 import {cleanPeople as layersCleanPeople,canonicalPeople} from './people-edits.mjs';
-import {createScenePeopleEditor} from './scene-people-editor.mjs?v=timeline-delete-20261120';
+import {createScenePeopleEditor} from './scene-people-editor.mjs?v=pose-key-select-20261121';
 import {createBrandingEditor} from './branding-editor.mjs';
 import {createFloorReflectionEditor} from './floor-reflection-editor.mjs';
 import {filmPropEdits,propKey} from './prop-edits.mjs';
@@ -483,7 +483,8 @@ export function mountDirector(bridge,catalog,initial){
     const clipId=deskEditor.selectedId(),clip=clipId&&deskEditor.motion().clips.find(c=>c.id===clipId);if(clip)return row('▬','Desk move · '+clipSummary(clip),`${r2(clip.start)}–${r2(clipEnd(clip))} s`,['dup','zoom','delete']);
     const light=sceneLights.selected()&&sceneLights.lanes().find(x=>x.path===sceneLights.selected());if(light)return row('✺','Scene light · '+light.label,light.edited?'edited':'from the film',['frame']);
     const prop=sceneProps.header();if(prop)return row('▣','Prop · '+prop.name,prop.detail,['frame','reset','delete']);
-    const person=scenePeople.header();if(person)return row('☻','Person · '+person.name,person.detail,['dup','frame','reset','delete']);
+    // a People sheet key reads as the key, as a camera view does (21 Nov 2026, Vico: select the pose diamonds like the camera's)
+    const person=scenePeople.header();if(person)return person.key?row('◆',person.name,person.detail,['delete']):row('☻','Person · '+person.name,person.detail,['dup','frame','reset','delete']);
     const desk=deskSel.header();if(desk)return row('▭','Desk · '+desk.name,desk.detail);
     return '';
   }

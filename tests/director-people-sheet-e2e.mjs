@@ -9,6 +9,8 @@
 //   media   (Omar, pose keys written in pose mode with auto-key) M-c: copy / paste at the playhead, Delete, undo; joint
 //           rows; Inspector Bend; M-d: shapes = interpolation, right-click menu, Inspector Interpolation; time keys:
 //           menu disabled with the reason.
+//   media   M-e: the folded row's diamonds select like the camera's (click, Shift, drag), the pose panel's diamonds and
+//           the sheet share one selection, the header reads "◆ Pose key · Omar"; s33-me-1-before / -2-after.png.
 //   STATE_FROM=C:/work/studio-state-rev3478.json CHROME=... node tests/director-people-sheet-e2e.mjs [shots dir]
 // Run under the GPU lock.
 import assert from 'node:assert/strict';
@@ -155,6 +157,45 @@ try{
   assert.deepEqual(om.poseKeys.map(k=>[Math.round(k.t*10)/10,Object.keys(k.pose).sort().join(),k.ease||'smooth']),[[3.2,'lowerarm_l','smooth'],[6,'lowerarm_l','hold'],[8,'head','smooth'],[11,'lowerarm_l','smooth']]);
   assert.ok(Math.abs(turnAngles(om.poseKeys[0].pose.lowerarm_l)[0]-50)<.6,'Bend 50 written');
   for(const e of mfilm.people.cast){const {poseKeys,postures,...r}=mp.cast.find(x=>x.key===e.key);assert.deepEqual(r,e,`${e.key}: everything else as the film has it`);}
+  // ---- M-e (21 Nov 2026, Vico: "click on the diamonds and have them be selectable, with the highlighted options shown in
+  // the inspector. Just like ... the camera diamonds"): Omar's row folded, its diamonds are keys; the pose panel's
+  // diamonds and the sheet share one selection; the header reads as the key. Screenshots: before / after the click.
+  await page.keyboard.press('Escape');await wait(300);await twirl('omar');
+  assert.equal(await page.$$eval('[data-ps-of="omar"]',l=>l.length),0,'Omar folded');
+  const dot=async t=>{const sel=`[data-ps-row="omar"] [data-sk-at="${t}"]`;await page.$eval(sel,e=>e.scrollIntoView({block:'center',inline:'center'}));await wait(150);return page.$eval(sel,e=>{const r=e.getBoundingClientRect(),l=e.parentElement.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2,left:l.x,width:l.width,on:e.classList.contains('selected'),pe:getComputedStyle(e).pointerEvents};});};
+  const dotsOn=()=>page.$$eval('[data-ps-row="omar"] .ps-dot.selected',l=>l.map(e=>Number(e.dataset.skAt)).sort((a,b)=>a-b));
+  const poseOn=()=>page.$$eval('#director-panel .pose-key.selected',l=>l.map(e=>Number(e.dataset.poseKey)));
+  const header=()=>page.$eval('[data-selected-header]',e=>e.textContent.replace(/\s+/g,' ')).catch(()=>'');
+  {const d=await dot(3.2);assert.ok(!d.on&&d.pe!=='none','the folded diamond is a key, not selected yet');}
+  await seek(page,1);await shoot('s33-me-1-before.png','omar');
+  {const d=await dot(3.2);await page.mouse.click(d.x,d.y);await wait(800);}
+  assert.deepEqual(await dotsOn(),[3.2],'click selects the folded diamond');
+  assert.ok(Math.abs(await playhead()-3.2)<.02,'and takes the playhead there');
+  ins=await inspector();assert.ok(/KEY · POSE/.test(ins),'Inspector: the key '+ins);
+  assert.equal(await page.$eval('#director-panel [name="pe-sk-t"]',e=>Number(e.value)),3.2,'Inspector Time');
+  await until(()=>page.$eval('#director-panel',p=>/Pose mode/.test(p.textContent)).catch(()=>false),'pose mode on the key');
+  assert.deepEqual(await poseOn(),[3.2],'the pose panel has the same key selected');
+  assert.equal(await page.$eval('#director-panel [name="pe-key-t"]',e=>Number(e.value)),3.2,'pose panel Key at');
+  assert.ok(/Pose key · Omar/.test(await header())&&/3\.2/.test(await header()),'header: '+await header());
+  await shoot('s33-me-2-after.png','omar');
+  // the pose panel's diamond at 6 s: the sheet follows
+  await page.$eval('#director-panel .pose-key[data-pose-key="6"]',e=>e.scrollIntoView({block:'center'}));await wait(150);
+  {const r=await page.$eval('#director-panel .pose-key[data-pose-key="6"]',e=>{const q=e.getBoundingClientRect();return {x:q.x+q.width/2,y:q.y+q.height/2};});await page.mouse.click(r.x,r.y);await wait(800);}
+  assert.deepEqual(await poseOn(),[6]);assert.deepEqual(await dotsOn(),[6],'the pose panel\'s pick shows on the timeline');
+  assert.equal(await page.$eval('#director-panel [name="pe-sk-t"]',e=>Number(e.value)),6,'and in the Inspector\'s KEY section');
+  // Shift+click adds the 3.2 s diamond, Shift again takes it out
+  {const d=await dot(3.2);await page.keyboard.down('Shift');await page.mouse.click(d.x,d.y);await page.keyboard.up('Shift');await wait(600);}
+  assert.deepEqual(await dotsOn(),[3.2,6],'Shift+click adds');assert.ok(/2 keys selected/.test(await inspector()));
+  {const d=await dot(3.2);await page.keyboard.down('Shift');await page.mouse.click(d.x,d.y);await page.keyboard.up('Shift');await wait(600);}
+  assert.deepEqual(await dotsOn(),[6],'Shift+click on a selected diamond takes it out');
+  // drag the 11 s diamond to about 12 s (Alt: free): the pose key moves; one undo step
+  {const d=await dot(11);await page.keyboard.down('Alt');await page.mouse.move(d.x,d.y);await page.mouse.down();await page.mouse.move(d.x+6,d.y,{steps:2});await page.mouse.move(d.left+d.width*12/MT,d.y,{steps:8});await page.mouse.up();await page.keyboard.up('Alt');await wait(800);}
+  {const ts=await page.$$eval('[data-ps-row="omar"] .ps-dot',l=>l.map(e=>Number(e.dataset.skAt)));assert.ok(!ts.includes(11)&&ts.some(t=>Math.abs(t-12)<.1),'dragged: '+ts);}
+  await key('Control+z');assert.ok((await page.$$eval('[data-ps-row="omar"] .ps-dot',l=>l.map(e=>Number(e.dataset.skAt)))).includes(11),'undo');
+  // Esc: no key in either place
+  await page.$eval('#director-timeline .timeline-viewport',e=>e.focus());await page.keyboard.press('Escape');await wait(500);
+  assert.deepEqual(await dotsOn(),[]);assert.deepEqual(await poseOn(),[],'Esc clears the pose panel\'s key too');
+  console.log('M-e ok (folded diamonds select; pose panel and sheet share the key; header; Shift; drag; Esc)');
   assert.deepEqual(errors,[],'page errors');
   console.log('PASS people sheet: M-a rows / twirl, M-b select / marquee / Inspector / J K / ◀ ▶, M-c move / multi / snap / Time / ◆ / Delete / copy-paste / undo, M-d shapes / right-click / Interpolation; exports change only what was edited');
 }finally{await close();}
