@@ -13,7 +13,7 @@ import {createViewNav} from './view-nav.mjs';
 import {PREF as HOLD_PREF} from './editing-camera.mjs';
 import {createPreviewHides,HIDE_LABELS} from './preview-hides.mjs';
 import {createAutosave,placeOf,changesSince,when as autosaveWhen} from './director-autosave.mjs';
-import {createGraphicsEditor} from './graphics-editor.mjs';
+import {createGraphicsEditor} from './graphics-editor.mjs?v=timeline-delete-20261120';
 import {addCameraHolds} from './camera-holds.mjs';
 import {cinematicViews,polishMovement,openingSwoop} from './cinematography.mjs';
 import {paceChapter,lengthenChapter,chapterFloor,shortenChapter} from './chapter-timing.mjs';
@@ -27,7 +27,7 @@ import {createLayersPanel} from './layers-panel.mjs';
 import {layersOn,studioHiddenHere,chapterRooms,chapterSetting,deskHidePlan,LAYERS_KEY} from './layers-exchange.mjs';
 import {effectivePropEdits as layersPropEdits} from './prop-edits.mjs';
 import {cleanPeople as layersCleanPeople,canonicalPeople} from './people-edits.mjs';
-import {createScenePeopleEditor} from './scene-people-editor.mjs';
+import {createScenePeopleEditor} from './scene-people-editor.mjs?v=timeline-delete-20261120';
 import {createBrandingEditor} from './branding-editor.mjs';
 import {createFloorReflectionEditor} from './floor-reflection-editor.mjs';
 import {filmPropEdits,propKey} from './prop-edits.mjs';
@@ -35,8 +35,8 @@ import {createFilmLook} from './film-look.mjs';
 import {createStillStrip} from './still-strip.mjs';
 import {filmLink,loadFilmChapters,filmChapterLabel,filmChapterIndex} from './film-chapters.mjs';
 import {createFilmFresh} from './film-fresh.mjs';
-import {timelineTicks,snapTimelineTime,adjacentEdit,TIMELINE_ZOOMS,clampZoom,maxZoom,filmTimecode,nextMarker,toggleMarker,setLoopEnd} from './timeline-ui.mjs';
-import {createDeskEditor} from './desk-editor.mjs';
+import {timelineTicks,snapTimelineTime,adjacentEdit,TIMELINE_ZOOMS,clampZoom,maxZoom,filmTimecode,nextMarker,toggleMarker,setLoopEnd} from './timeline-ui.mjs?v=timeline-zoom-20261120';
+import {createDeskEditor} from './desk-editor.mjs?v=timeline-delete-20261120';
 import {stackRows,rowVar} from './lane-rows.mjs';
 import {createChoreoTarget,validateDeskEdits} from './desk-choreo.mjs';
 import {effectiveDeskEdits,cleanDeskEdit} from './desk-edits.mjs';
@@ -54,7 +54,8 @@ import {showcaseShots,showcaseViews} from './showcase.mjs';
 import {BAKE_PROFILE} from './bake.mjs';
 import {resolveCameraKeys,moveCameraKey,CAMERA_EASINGS} from './camera-track.mjs?v=camera-transitions-20261120';
 import {TRANSITION_LABELS,DEFAULT_DUR,MIN_DUR,hasLength,fromPlan,setTransition,transitionRoom,transitionBands,dragLength,createTransitionPreview} from './camera-transitions.mjs?v=camera-transitions-20261120';
-import {createSelection,markSelection,centreIn,GROUP_OF,deleteRoute} from './director-selection.mjs';
+import {createSelection,markSelection,centreIn,GROUP_OF,deleteTarget} from './director-selection.mjs?v=timeline-delete-20261120';
+import {viewFor,saveView,isFolded,inView} from './timeline-view.mjs?v=timeline-view-20261120';
 import {CutLibrary,makeCut,cleanCut,cleanShot,sceneShot,generateCut,encodeCut,KINDS,PRESET_IDS,defaultPreset} from './cuts.mjs';
 import {looksOf,lookOf,lookName} from '../room-looks.mjs';
 
@@ -115,8 +116,12 @@ export function mountDirector(bridge,catalog,initial){
       const g=graphics.selected?.();if(g!==null&&g!==undefined&&g!==-1)return {kind:'graphic',key:g};if(lightSel)return {kind:'lightkey',key:lightSel.id};const l=sceneLights.selected();if(l)return {kind:'light',key:l};}catch{}   // (before the editors exist: nothing)
     return null;
   }
+  // An edit, an undo / redo or a re-import can change what is selected (a deleted key leaves nothing, an undo brings one
+  // back): those never open a folded group or scroll the timeline; only a pick does (20 Nov 2026).
+  let editQuietUntil=0;
+  const editQuiet=()=>performance.now()<editQuietUntil;
   function syncSelection(){
-    const changed=b2sel.set(selectionNow());let desk='';try{desk=choreo.desk()||'';}catch{}
+    const changed=b2sel.set(selectionNow())&&!editQuiet();let desk='';try{desk=choreo.desk()||'';}catch{}
     for(const el of timeline.querySelectorAll('.desk-track-toolbar,.choreo-pick'))el.dataset.deskOf=desk;
     const sel=b2sel.get();
     // the selection's lane group opens when it is folded (Vico: "the right layer pops up")
@@ -127,6 +132,9 @@ export function mountDirector(bridge,catalog,initial){
   // Centre the selection's first visible mark under root (the timeline, or a tab page in the inspector).
   function centreSelection(root){
     const el=[...root.querySelectorAll('.b2-selected')].find(e=>e.getClientRects().length&&!e.closest('[hidden]'));
+    // (on the timeline only when it is out of sight: a click on a key must not move the lanes)
+    if(el&&root===timeline){const v=timeline.querySelector('.timeline-viewport'),r=el.getBoundingClientRect(),b=v?.getBoundingClientRect(),ruler=timeline.querySelector('.time-ruler-row')?.getBoundingClientRect().height||0,label=150;
+      if(b&&inView(r.top,r.bottom,b.top+ruler,b.bottom)&&inView(r.left,r.right,b.left+label,b.right))return;}
     if(el)centreIn(el,root===timeline?timeline:panel);
   }
   // P5: the tabs' names in the calm shell (the ids stay: tests and links use them); Classic keeps the old ones
@@ -193,7 +201,7 @@ export function mountDirector(bridge,catalog,initial){
   function snapTime(value,{pixels=1000,bypass=false,excludeClip,excludeKey,excludePlayhead=false}={}){
     const grid=typeof snapStep==='string'?snapTimes(scoreModel(),snapStep):null;
     if(grid?.length&&!bypass){const tol=8*shot().seconds/pixels,edges=[0,shot().seconds,...(excludePlayhead?[]:[playhead*shot().seconds]),...keys().filter(k=>k.id!==excludeKey).map(k=>k.time*shot().seconds),...deskEditor.boundaries(excludeClip)];const near=snapTo(value,edges,tol);return Math.max(0,Math.min(shot().seconds,near!==value?near:snapTo(value,grid,Infinity)));}
-    return snapTimelineTime(value,{seconds:shot().seconds,step:numStep(),bypass,targets:[0,shot().seconds,...(excludePlayhead?[]:[playhead*shot().seconds]),...keys().filter(k=>k.id!==excludeKey).map(k=>k.time*shot().seconds),...deskEditor.boundaries(excludeClip)],tolerance:8*shot().seconds/pixels});
+    return snapTimelineTime(value,{seconds:shot().seconds,step:numStep(),bypass,pixels,targets:[0,shot().seconds,...(excludePlayhead?[]:[playhead*shot().seconds]),...keys().filter(k=>k.id!==excludeKey).map(k=>k.time*shot().seconds),...deskEditor.boundaries(excludeClip)],tolerance:8*shot().seconds/pixels});
   }
   let orbitBase=null;   // see liveView (Film look follows an orbit)
   // A live orbit can still be coasting (OrbitControls damping): spend what is left at once, so the next seek puts the
@@ -271,7 +279,7 @@ export function mountDirector(bridge,catalog,initial){
     const tc=timeline.querySelector('[data-film-tc]');if(tc)tc.textContent=timecodeNow();
   }
   function syncPan(){const viewport=timeline.querySelector('.timeline-viewport'),range=timeline.querySelector('[name="timeline-pan"]');if(viewport&&range&&document.activeElement!==range)range.value=viewport.scrollLeft/Math.max(1,viewport.scrollWidth-viewport.clientWidth)*100;}
-  function selectKey(id){keyId=id;lightSel=null;sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();deskSel.deselect();titleEditor.clear();const k=selectedKey();if(!k)return;deskEditor.clearSelection();reveal('camera');seekCamera(k.time);renderPanel();renderTimeline();}
+  function selectKey(id){keyId=id;lightSel=null;sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();deskSel.deselect();titleEditor.clear();graphics.clear?.();const k=selectedKey();if(!k)return;deskEditor.clearSelection();reveal('camera');seekCamera(k.time);renderPanel();renderTimeline();}
   function captureKey(time,label){
     requireReady();const view=bridge.stage().captureCamera();if(!view)throw Error('The camera is not ready.');orbitBase=null;
     deskEditor.clearSelection();reveal('camera');
@@ -304,7 +312,7 @@ export function mountDirector(bridge,catalog,initial){
   // (for the browser tests: what the Props editor has selected and which desk it is inside, scene-prop-editor.mjs)
   globalThis.__directorProps=()=>({keys:sceneProps.selectedKeys(),object:sceneProps.object(),inside:sceneProps.insideDesk?.()||null,desk:deskSel.selected?.()||null,person:scenePeople.selected()||null});
   function draft(){clearTimeout(draftTimer);stampDraft();fresh.noteDraft(project,unexported());try{if(!fresh.on)library.draft(project);browserSaved={text:'Saved ✓',title:'Draft kept in this browser · Export cut sends it to the film'};}catch{browserSaved={text:'Not saved',title:'Browser storage is full, so no draft copy · Export cut sends it to the film',warn:true};}if(unexported())autosave?.poke();paintSaved();}
-  function changed(){camTransitions.forget();filmLook?.poke();bridge.update(project);clearTimeout(draftTimer);draftTimer=setTimeout(draft,250);renderTimeline();syncCameraOptions();syncFilm();for(const [name,stack]of [['undo',undo],['redo',redo]]){const b=panel.querySelector(`[data-action="${name}"]`);if(b)b.disabled=!stack.length;}renderAppBar();}
+  function changed(){editQuietUntil=performance.now()+600;camTransitions.forget();filmLook?.poke();bridge.update(project);clearTimeout(draftTimer);draftTimer=setTimeout(draft,250);renderTimeline();syncCameraOptions();syncFilm();for(const [name,stack]of [['undo',undo],['redo',redo]]){const b=panel.querySelector(`[data-action="${name}"]`);if(b)b.disabled=!stack.length;}renderAppBar();}
   // Film chapters: a dropdown that reloads this tab with another chapter's page.
   const filmIndex=()=>filmChapterIndex(filmChapters,project.shots.map(s=>s.id));
   const unexported=()=>signature()!==exported;
@@ -407,7 +415,7 @@ export function mountDirector(bridge,catalog,initial){
   function putTod(keys,{render=true}={}){requireReady();const s=shot();for(const k of keys)if(k.at<0||k.at>s.seconds+1e-6)throw Error(`Time-of-day keys must sit inside the ${s.seconds}-second chapter.`);commit(()=>{shot().timeOfDay=copy(keys).sort((a,b)=>a.at-b.at);},{render});}
   const lightItem=()=>{if(!lightSel)return null;if(lightSel.kind==='tods')return timeOfDay()?.keys.find(k=>k.id===lightSel.id)||null;const L=lighting();if(!L)return null;return lightSel.kind==='lights'?L.status.find(e=>e.id===lightSel.id):L.neutral.find(k=>k[2]===lightSel.id);};
   function selectLight(kind,id){
-    lightSel={kind,id};keyId=null;deskEditor.clearSelection();sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();deskSel.deselect();titleEditor.clear();const item=lightItem();if(!item)return;
+    lightSel={kind,id};keyId=null;deskEditor.clearSelection();sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();deskSel.deselect();titleEditor.clear();graphics.clear?.();const item=lightItem();if(!item)return;
     reveal(kind==='tods'?'tod':kind==='neutrals'?'white':'status');seekCamera((Array.isArray(item)?item[0]:item.at)/shot().seconds);render();
     const el=timeline.querySelector(`[data-light-clip="${id}"],[data-light-key="${id}"],[data-tod-key="${id}"]`);if(el)el.scrollIntoView({block:'nearest',inline:'nearest'});
   }
@@ -451,7 +459,7 @@ export function mountDirector(bridge,catalog,initial){
     return '';
   }
   function syncSelectedHeader(){const el=panel.querySelector('[data-selected-header]');if(el)el.innerHTML=selectedHeader();syncSelection();}
-  function clearSelection(){for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;titleEditor.clear();deskEditor.clearSelection();sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();deskSel.deselect();render();status('Selection cleared.');}
+  function clearSelection(){for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;titleEditor.clear();graphics.clear?.();deskEditor.clearSelection();sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();deskSel.deselect();render();status('Selection cleared.');}
   // Delete every picked item (lanes keep at least one white / time-of-day key); one undo step.
   function deletePicks(){
     const n=picked();if(!n)return;requireReady();const L=lighting(),T=timeOfDay(),motion=deskEditor.motion(),list=keys().filter(k=>!picks.keys.has(k.id));
@@ -590,8 +598,14 @@ export function mountDirector(bridge,catalog,initial){
     return `${laneGroupHead('lighting')}<div class="lane-group-body desk-lanes light-lanes" data-lane-body="lighting" ${groupClosed('lighting')?'hidden':''}>${tod}${room}${white}${status}${lamps}</div>`;
   }
   // Lane groups (MOTION, LIGHTING): collapsible, remembered in this browser; a collapsed group shows its items as ticks.
-  let laneGroups={};try{laneGroups=JSON.parse(localStorage.getItem('ergoflex.director.laneGroups')||'{}')||{};}catch{}
-  const groupClosed=g=>!!laneGroups[g];
+  // 20 Nov 2026 (Vico: "the timeline must not reset when I edit"): folded groups, zoom and scroll are kept per cut and
+  // chapter (timeline-view.mjs, this browser only); a chapter seen for the first time opens with every group folded.
+  let laneGroups={},viewKey=null,viewWant=null,renderedView=null;
+  function adoptView(){
+    let key;try{key=markKey();}catch{return;}if(key===viewKey)return;
+    const v=viewFor(key);viewKey=key;laneGroups=v.groups;zoom=clampZoom(v.zoom,shot().seconds,laneWidth());if(zoom<1.02)zoom=1;viewWant={left:v.left,top:v.top,until:performance.now()+8000};
+  }
+  const groupClosed=g=>{adoptView();return isFolded(laneGroups,g);};
   function laneGroupHead(g){
     const s=shot().seconds,L=lighting(),T=timeOfDay(),ticks=g==='graphics'?graphics.screens().map(sc=>sc.start??0):g==='motion'?[...keys().map(k=>k.time*s),...deskEditor.motion().clips.map(c=>c.start)]:g==='titles'?titleEditor.ticks():g==='sound'?(scoreModel()?.sfx||[]).map(x=>x.t):g==='props'||g==='people'?[]:[...(T?.keys||[]).map(k=>k.at),...(L?.neutral||[]).map(k=>k[0]),...(L?.status||[]).map(e=>e.at)];
     if(g==='lighting'&&!L&&!T)return '';if(g==='sound'&&!scoreModel())return '';if(g==='titles'&&!titleEditor.has())return '';if((g==='props'||g==='people')&&!filmShot())return '';
@@ -624,7 +638,7 @@ export function mountDirector(bridge,catalog,initial){
   function sizePeopleLane(){
     const lane=timeline.querySelector('[data-people-lane]'),h=scenePeople.laneHeight();if(!lane)return;lane.style.height=h?h+'px':'';const row=lane.closest('.desk-lane-row');if(row)row.style.height=h?h+4+'px':'';
     // a newly selected person: their lane scrolls into the timeline's view (it is the last lane, often below the fold)
-    const now=scenePeople.selected();if(now&&now!==peopleLaneFor&&row&&!row.closest('[hidden]'))row.scrollIntoView({block:'nearest'});peopleLaneFor=now;
+    const now=scenePeople.selected();if(now&&now!==peopleLaneFor&&row&&!row.closest('[hidden]')&&!editQuiet())row.scrollIntoView({block:'nearest'});peopleLaneFor=now;
   }
   function titlesGroup(){if(!titleEditor.has())return '';return `${laneGroupHead('titles')}<div class="lane-group-body desk-lanes title-lanes" data-lane-body="titles" ${groupClosed('titles')?'hidden':''}>${titleEditor.lane()}</div>`;}
   function revealLighting(){const v=timeline.querySelector('.timeline-viewport'),head=timeline.querySelector('[data-lane-group="lighting"]');if(!v||!head)return;if(groupClosed('lighting')){laneGroups.lighting=false;saveGroups();renderTimeline();return revealLighting();}const top=head.offsetTop-timeline.querySelector('.time-ruler-row').offsetHeight;if(top<v.scrollTop||top+head.parentElement.offsetHeight>v.scrollTop+v.clientHeight)v.scrollTop=top;}
@@ -632,7 +646,20 @@ export function mountDirector(bridge,catalog,initial){
   function setAllGroups(closed){for(const g of ALL_GROUPS)laneGroups[g]=closed;saveGroups();renderTimeline();status(closed?'Every lane group folded: } unfolds them.':'Every lane group unfolded.');}
   // Alt-click a group's twirl: fold or unfold every group (After Effects)
   timeline.addEventListener('click',event=>{const b=event.target.closest('[data-action="group-toggle"]');if(!b||!event.altKey)return;event.preventDefault();event.stopImmediatePropagation();setAllGroups(b.getAttribute('aria-expanded')==='true');},true);
-  function saveGroups(){try{localStorage.setItem('ergoflex.director.laneGroups',JSON.stringify(laneGroups));}catch{}}
+  function saveGroups(){adoptView();if(viewKey)saveView(viewKey,{groups:{...laneGroups}});}
+  // the zoom and the scroll, saved a moment after they settle (a scroll the user makes ends any pending restore)
+  let viewTimer=0;
+  function saveScroll(){if(!viewKey)return;clearTimeout(viewTimer);const key=viewKey;viewTimer=setTimeout(()=>{const v=timeline.querySelector('.timeline-viewport');if(v&&key===viewKey)saveView(key,{zoom,left:Math.round(v.scrollLeft),top:Math.round(v.scrollTop)});},250);}
+  let restoringView=false;
+  timeline.addEventListener('scroll',event=>{if(!event.target.classList?.contains('timeline-viewport')||restoringView||viewWant)return;saveScroll();},true);
+  for(const type of ['wheel','pointerdown','keydown'])timeline.addEventListener(type,event=>{if(event.target.closest?.('.timeline-viewport'))viewWant=null;},{capture:true,passive:true});
+  // Put the scroll back after a rebuild: the live one for the same chapter, else the stored one (retried while the lanes
+  // are still growing, until it fits or the user scrolls).
+  function restoreScroll(viewport,live){
+    const want=viewWant&&performance.now()<viewWant.until?viewWant:live;if(!want)return;
+    restoringView=true;viewport.scrollLeft=want.left;viewport.scrollTop=want.top;restoringView=false;
+    if(want===viewWant){const done=Math.abs(viewport.scrollLeft-want.left)<2&&Math.abs(viewport.scrollTop-want.top)<2;if(done)viewWant=null;else requestAnimationFrame(()=>{const v=timeline.querySelector('.timeline-viewport');if(v&&viewWant===want)restoreScroll(v,null);});}
+  }
   // Fit: the timeline tall enough for every lane (capped by the layout); film chapters open fitted.
   let timelineFitted=false;
   function fitTimeline(){
@@ -737,7 +764,7 @@ export function mountDirector(bridge,catalog,initial){
     syncLightTools?.();box.innerHTML=sceneLights.panel();{const row=timeline.querySelector('[data-lane-color=lamps]');if(row&&filmShot())row.outerHTML=lampsRowHtml();}if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});repulse();
   }
   const sceneLights=createSceneLightEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:renderSceneLights,
-    onSelect:()=>{const had=picked()||lightSel||keyId||deskEditor.selectedId()||titleEditor.selectedId()||sceneProps.selected();for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneProps.deselect();scenePeople.deselect();deskSel.deselect();if(had)renderTimeline();syncSelectedHeader();reveal('light');}});
+    onSelect:()=>{const had=picked()||lightSel||keyId||deskEditor.selectedId()||titleEditor.selectedId()||sceneProps.selected();for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();graphics.clear?.();sceneProps.deselect();scenePeople.deselect();deskSel.deselect();if(had)renderTimeline();syncSelectedHeader();reveal('light');}});
   // Props (scene-prop-editor.mjs): click a prop in the view, gizmo, Props tab, Props lane; per chapter only.
   function renderSceneProps(soft=false){
     const box=panel.querySelector('[data-scene-props]');if(box&&!(soft&&typing())){const active=box.contains(document.activeElement)?document.activeElement.name:null;box.innerHTML=sceneProps.panel();if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});}
@@ -761,7 +788,7 @@ export function mountDirector(bridge,catalog,initial){
   }
   const sceneProps=createScenePropEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,rerender:renderSceneProps,roomDesk:p=>openRoomDeskFromProps(p),lightsShowing:()=>sceneLights.showing(),fold:foldProps,person:o=>scenePeople.pickObject(o),blocked:()=>!!scenePeople.posing(),
     scope:()=>{const s=shot();return s&&deskVersionsNow().length?bridge.deskVersion?.(s.id)||null:null;},versions:deskVersionsNow,seconds:()=>shot()?.seconds||0,time:()=>playhead*(shot()?.seconds||0),seek:t=>seekCamera(t/(shot()?.seconds||1)),
-    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();deskSel.deselect();
+    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();graphics.clear?.();sceneLights.deselect();deskSel.deselect();
       // (18 Nov 2026: a prop picked after a person left the person selected too, and Delete removed the person, not the prop:
       // Vico's High school woman. Every other editor clears People; now a prop pick does as well.)
       if(sceneProps.selected())scenePeople.deselect();
@@ -774,7 +801,7 @@ export function mountDirector(bridge,catalog,initial){
     syncSelectedHeader();
   }
   const scenePeople=createScenePeopleEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,cameraHeld:()=>held,rerender:()=>renderPeople(),time:()=>playhead*shot().seconds,seek:t=>seekCamera(t/(shot()?.seconds||1)),lightsShowing:()=>sceneLights.showing(),snap:(t,o)=>snapTime(t,o),
-    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();sceneProps.deselect();deskSel.deselect();renderTimeline();reveal('person');}});
+    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();graphics.clear?.();sceneLights.deselect();sceneProps.deselect();deskSel.deselect();renderTimeline();reveal('person');}});
   // Layers (layers-panel.mjs): the chapter's props and desk items as an outliner, named layers (select, hide, lock); shot.propLayers.
   // The Studio's show / hide (Layers phase 3; ?layers=0 or localStorage 'ergoflex.layers.ui' = '0': the tab as before):
   // what the Studio hides at this chapter's time and size, read from this page's copy of the shared key. Never the stage's.
@@ -810,7 +837,7 @@ export function mountDirector(bridge,catalog,initial){
   }
   const layersStudio={on:()=>layersOn(),setting:()=>chapterSetting(shot()),featured:stageFeatured,hideDesk:layersHideDesk,
     hiddenHere:()=>{try{const s=shot();return s?studioHiddenHere(localStorage.getItem(LAYERS_KEY),s,chapterRooms(s,stageLayout()),sceneProps.items()):new Map();}catch(error){console.warn('[layers]',error);return new Map();}}};
-  const graphics=createGraphicsEditor({panel,timeline,shot,filmShot,showInspector,renderPanel,renderTimeline,status,commit,groupHead:laneGroupHead,groupClosed,time:()=>playhead,snapStep:()=>numStep(),magnet:()=>magnet});
+  const graphics=createGraphicsEditor({panel,timeline,shot,filmShot,showInspector,renderPanel,renderTimeline,status,commit,onPick:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();deskSel.deselect();},groupHead:laneGroupHead,groupClosed,time:()=>playhead,snapStep:()=>numStep(),magnet:()=>magnet});
   // Sonar (sonar-editor.mjs): a proximity chapter's rings, in the Graphics tab; shot.sonar.
   const sonarEditor=createSonarEditor({panel,bridge,shot,filmShot,commit,status,showing:()=>open&&inspector==='graphics'});
   const layers=createLayersPanel({root:panel,shot,commit,status,props:sceneProps,rerender:()=>renderLayers(),studio:layersStudio});
@@ -877,11 +904,11 @@ export function mountDirector(bridge,catalog,initial){
   const deskSel=createSceneDeskEditor({bridge,onPick:selectRoomDesk,shot,film:filmShot,commit,status,open:()=>open,rerender:renderSceneDesks,lightsShowing:()=>sceneLights.showing(),
     inTab:()=>inspector==='desks'&&!document.body.classList.contains('inspector-hidden'),showFeatured:()=>showInspector('groove'),
     toggleVisibility:(id,hide,name)=>layersHideDesk({name},id.slice('station-'.length),hide),
-    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();sceneProps.leaveDesk?.({quiet:true});sceneProps.deselect();scenePeople.deselect();renderTimeline();reveal('desk');}});
+    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();graphics.clear?.();sceneLights.deselect();sceneProps.leaveDesk?.({quiet:true});sceneProps.deselect();scenePeople.deselect();renderTimeline();reveal('desk');}});
   // Floor reflections (floor-reflection-editor.mjs): Lighting > Room, per LED source; outlines and drags in the view.
   const floorShowing=()=>open&&(sceneLights.showing()||inspector==='lighting'&&!document.body.classList.contains('inspector-hidden')&&!!panel.querySelector('[data-light-section="room"]')?.open&&!!panel.querySelector('[data-floor-section]')?.open);
   const floorRefl=createFloorReflectionEditor({bridge,shot,film:filmShot,commit,status,visible:floorShowing,rerender:()=>{if(inspector==='lighting'&&!typing())renderPanel();else syncSelectedHeader();},
-    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();deskSel.deselect();delete lightSectionsShut.room;const r=panel.querySelector('[data-light-section="room"]');if(r)r.open=true;renderTimeline();reveal('floor');}});
+    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();graphics.clear?.();sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();deskSel.deselect();delete lightSectionsShut.room;const r=panel.querySelector('[data-light-section="room"]');if(r)r.open=true;renderTimeline();reveal('floor');}});
   // B2: a timeline row's name selects what the row stands for (a People sheet character, an "Other desks" row).
   timeline.addEventListener('click',event=>{
     const label=event.target.closest?.('.desk-lane-label');if(!label||event.target.closest('button,select,input'))return;
@@ -1031,7 +1058,7 @@ export function mountDirector(bridge,catalog,initial){
   // Studio <-> Director (studio-sync.mjs): the "Studio changed" badge, Refresh from Studio, Adopt Studio's version.
   function renderStudioSync(){for(const el of [...appbar.querySelectorAll('[data-studio-sync]'),...panel.querySelectorAll('[data-studio-sync]')])el.innerHTML=studioSync.html();}
   const studioSync=createStudioSync({bridge,project:()=>project,index:()=>selected,shot,film:filmShot,commit,status,rerender:renderStudioSync,render:()=>render(),stageItems:()=>{try{return sceneProps.items();}catch{return [];}}});
-  function loadProject(value,keepDraft=true){if(keepDraft)draft();project=cleanCut(value,catalog);foldedDesks.clear();   // (a cut loaded now, e.g. Keep my unexported changes, gets its room-desk prop moves folded too)
+  function loadProject(value,keepDraft=true){editQuietUntil=performance.now()+600;if(keepDraft)draft();project=cleanCut(value,catalog);foldedDesks.clear();   // (a cut loaded now, e.g. Keep my unexported changes, gets its room-desk prop moves folded too)
 for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId=null;playhead=0;undo=[];redo=[];undoLabels=[];redoLabels=[];labelPending=null;group=null;changed();render();load();}
   function render(){stampDraft();renderPanel();renderTimeline();}
   function renderPanel(){
@@ -1089,7 +1116,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     repulse();
   }
   function renderTimeline(){
-    const t0=performance.now(),scroll=timeline.querySelector('.timeline-viewport')?.scrollLeft||0,s=shot();
+    adoptView();const t0=performance.now(),was=timeline.querySelector('.timeline-viewport'),live=was&&renderedView===viewKey?{left:was.scrollLeft,top:was.scrollTop}:null,s=shot();renderedView=viewKey;
     const ticks=timelineTicks(s.seconds,Math.max(300,(timeline.clientWidth-150)*zoom));
     const shell=shellOn(),transportHtml=`<div class="timeline-transport">${shell?'':`<button data-action="undo" aria-label="Undo edit" title="Undo (Ctrl/Cmd+Z)">↶</button><button data-action="redo" aria-label="Redo edit" title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)">↷</button>`}<button data-action="edit-prev" aria-label="Previous edit" title="Previous camera view or movement edge (↑)">|‹</button><button data-action="preview-loop" aria-pressed="${!!bridge.playback().loop}" title="Repeat the chapter or selected camera / Groove preview (L)">${bridge.playback().loop?'Loop on':'Loop off'}</button><button data-action="preview" aria-label="Restart chapter" title="Restart chapter">↻</button><button data-action="chapter-toggle" class="chapter-transport">▶ Play chapter</button><button data-action="edit-next" aria-label="Next edit" title="Next camera view or movement edge (↓)">›|</button>
       <label class="timeline-timecode"><input name="timeline-seconds" aria-label="Chapter playhead seconds" type="number" min="0" max="${s.seconds}" step=".033333" value="${(playhead*s.seconds).toFixed(2)}"><span>/ ${s.seconds}s</span><small data-film-tc>${escape(timecodeNow())}</small></label></div>`;
@@ -1108,7 +1135,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       ${deskEditor.timeline()}</div>${lightLane()}${peopleGroup()}${propsGroup()}${soundGroup()}</div></div>
       <label class="timeline-pan" ${zoom===1?'hidden':''}><span>Pan view</span><input name="timeline-pan" type="range" min="0" max="100" step=".1" value="0" aria-label="Timeline horizontal position"></label>
       <div class="timeline-footer"><span data-bake-summary class="timeline-bake-summary" role="status"></span><span data-timeline-status role="status">Click ruler to scrub · Drag empty lanes to select several · Shift/Ctrl-click adds · Ctrl+A all · Alt: bypass snap · Space: play</span><span class="sb-pills" data-sb-pills></span><output data-track-time>${(playhead*s.seconds).toFixed(2)}s / ${s.seconds}s</output></div>`;
-    timeline.querySelector('.timeline-viewport').scrollLeft=scroll;
+    restoreScroll(timeline.querySelector('.timeline-viewport'),live);
     renderPills();drawScore();decorateLocks();decorateGroups();decorateEyes();
     if(debugTimeline){const ms=performance.now()-t0,el=timeline.querySelector('[data-track-time]');if(el)el.title=`renderTimeline ${ms.toFixed(1)} ms · ${timeline.getElementsByTagName('*').length} elements`;const f=timeline.querySelector('.timeline-footer');if(f)f.dataset.debug=`${ms.toFixed(1)} ms · ${timeline.getElementsByTagName('*').length} el`;}
     syncTransport();syncPlayhead();syncPan();syncPicks();syncSelection();
@@ -1153,10 +1180,10 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
         const prev=[...T.keys].reverse().find(k=>k.at<=t)||T.keys[0],key={id:crypto.randomUUID(),at:t,mode:prev?.mode||roomModes()[0]?.id||'morning'};
         putTod([...T.keys,key]);selectLight('tods',key.id);status('Time-of-day key added at '+r2(t)+'s. Choose its daypart in Lighting.');return;
       }
-      if(name==='light-delete'&&lightSel?.kind==='tods'){const T=timeOfDay(),item=lightItem();if(!item||T.keys.length<=1)return;putTod(T.keys.filter(k=>k.id!==item.id));lightSel=null;render();status('Deleted. Undo restores it.');return;}
+      if(name==='light-delete'&&lightSel?.kind==='tods'){const T=timeOfDay(),item=lightItem();if(!item)return;if(T.keys.length<=1){status('The time of day needs at least one key: change this one instead.',true);return;}putTod(T.keys.filter(k=>k.id!==item.id));lightSel=null;render();status('Deleted. Undo restores it.');return;}
       if(name==='light-delete'){
         const L=lighting(),item=lightItem();if(!item)return;
-        if(lightSel.kind==='lights')putLighting({status:L.status.filter(e=>e.id!==item.id)});else{if(L.neutral.length<=1)return;putLighting({neutral:L.neutral.filter(k=>k[2]!==item[2])});}
+        if(lightSel.kind==='lights')putLighting({status:L.status.filter(e=>e.id!==item.id)});else{if(L.neutral.length<=1){status('The desk white needs at least one key: change this one instead.',true);return;}putLighting({neutral:L.neutral.filter(k=>k[2]!==item[2])});}
         lightSel=null;render();status('Deleted. Undo restores it.');return;
       }
       if(name==='film-prev'||name==='film-next'){const i=filmIndex();switchFilm(name==='film-prev'?i-1:i<0?0:i+1);return;}
@@ -1171,7 +1198,9 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       if(name==='field-reset'){resetField(index);return;}
       if(name==='sel-tool'){const t=index,ctxOf=sceneProps.selected()?'prop':scenePeople.selected()?'person':null;
         if(t==='dup'){runKey('duplicate');return;}if(t==='frame'){runKey('frame-selection');return;}if(t==='zoom'){zoomToSelection();return;}if(t==='reset'){runKey('reset-film',null,ctxOf);return;}
-        if(t==='delete'){if(keyId){await action('key-delete');return;}const what=deleteRoute(selectionNow(),{poseKey:false});if(what==='person'){scenePeople.remove();return;}if(what==='prop'){sceneProps.hide(true);return;}document.dispatchEvent(new KeyboardEvent('keydown',{key:'Delete',code:'Delete',bubbles:true,cancelable:true}));return;}
+        // (20 Nov 2026: it sent a synthetic Delete key to the document, which the desk-move, light and title handlers never
+        // saw, so 🗑 did nothing for them, and removed the whole person while People sheet keys were picked)
+        if(t==='delete'){await deleteSelection();return;}
         return;}
       if(name==='lamp-pick'){await sceneLights.changed({name:'sl-select',value:index});renderTimeline();return;}
       if(name==='white-preset'){editLight({color:index});const k=lightItem();if(k)status(`${whiteName(index)} ${index} at ${r2(k[0])} s.`);return;}
@@ -1181,7 +1210,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       if(name==='chapters'){timeline.classList.toggle('chapters-hidden');timeline.querySelector('[data-action=chapters]')?.setAttribute('aria-pressed',String(!timeline.classList.contains('chapters-hidden')));return;}
       if(name.startsWith('zoom-')){
         zoom=name==='zoom-fit'?1:clampZoom(zoom*(name==='zoom-in'?1.5:1/1.5),shot().seconds,laneWidth());if(zoom<1.02)zoom=1;renderTimeline();
-        const viewport=timeline.querySelector('.timeline-viewport');viewport.scrollLeft=zoom===1?0:Math.max(0,playhead*(viewport.scrollWidth-130)-(viewport.clientWidth-130)/2);return;
+        const viewport=timeline.querySelector('.timeline-viewport');viewport.scrollLeft=zoom===1?0:Math.max(0,playhead*(viewport.scrollWidth-130)-(viewport.clientWidth-130)/2);syncPan();saveScroll();return;
       }
       if(name==='edit-prev'||name==='edit-next'){seekCamera(adjacentEdit(editTimes(),playhead*shot().seconds,name==='edit-prev'?-1:1,shot().seconds)/shot().seconds);return;}
       if(name==='close'){setOpen(false);return;}
@@ -1505,7 +1534,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   function setZoom(next,anchorPx=null){
     const v=timeline.querySelector('.timeline-viewport');if(!v)return;const was=zoom,width=v.scrollWidth,px=anchorPx??v.clientWidth/2,frac=(v.scrollLeft+px)/Math.max(1,width);
     zoom=clampZoom(next,shot().seconds,laneWidth());if(zoom<1.02)zoom=1;if(Math.abs(zoom-was)<1e-6)return;renderTimeline();
-    const n=timeline.querySelector('.timeline-viewport');n.scrollLeft=Math.max(0,frac*n.scrollWidth-px);syncPan();
+    const n=timeline.querySelector('.timeline-viewport');n.scrollLeft=Math.max(0,frac*n.scrollWidth-px);syncPan();saveScroll();
   }
   timeline.addEventListener('wheel',event=>{
     const v=event.target.closest('.timeline-viewport');if(!v)return;
@@ -1521,7 +1550,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   function zoomToSelection(){
     const r=selectionRange();if(!r){status('Select a camera view, a move, a title or a graphic first: Z zooms to it.');return;}
     const s=shot().seconds,len=Math.max(.5,r[1]-r[0]);zoom=clampZoom(s/(len*1.4),s,laneWidth());renderTimeline();
-    const v=timeline.querySelector('.timeline-viewport');v.scrollLeft=Math.max(0,((r[0]+r[1])/2)/s*v.scrollWidth-v.clientWidth/2);syncPan();
+    const v=timeline.querySelector('.timeline-viewport');v.scrollLeft=Math.max(0,((r[0]+r[1])/2)/s*v.scrollWidth-v.clientWidth/2);syncPan();saveScroll();
   }
   function followPage(){
     if(zoom<=1||!bridge.playback().playing)return;const v=timeline.querySelector('.timeline-viewport');if(!v)return;
@@ -1823,18 +1852,33 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     if(event.repeat&&!row.repeat)return;
     try{runKey(row.id,event,row.ctx);actionLog.add(row.id,row.label,'key');keysPanel.flash(row.id);keyHint(event,state,row);}catch(error){status(error.message,true);}
   }
-  // Delete in the 3D view and on the page (not in the timeline, the panel, a field or a dialog): the selected pose key
-  // (or joint) in pose mode, the selected person (a selected path point first), the selected prop (a room prop is
-  // hidden in this chapter). Each editor's own Delete (titles, graphics, timeline picks, keys) keeps working: those act
-  // in the timeline. (These branches were the old view key handler's; keys drop 1 dropped them, 17 Nov 2026.)
+  // Delete / Backspace (20 Nov 2026, Vico: "when a key, clip or pose key is selected, Delete deletes it"): whatever the
+  // Director shows as selected (director-selection.mjs deleteTarget), from the timeline, the inspector or the 3D view, never
+  // while typing in a field or with a dialog open. The handlers that run first keep their own Delete: a focused item's
+  // button (its own handler), a title's shape points, the pose tool, the People sheet's picked keys, timeline group picks.
+  // One undo step, as every edit.
+  const deleteWhat=()=>deleteTarget(selectionNow(),{poseKey:scenePeople.posing()&&scenePeople.poseKeySelected(),picked:!!picked(),sheetKeys:!!scenePeople.keysPicked?.()});
+  async function deleteSelection(){
+    const what=deleteWhat();
+    switch(what){
+      case 'pose-key':case 'person':scenePeople.remove();return true;
+      case 'picks':deletePicks();return true;
+      case 'sheet-keys':scenePeople.deleteKeys();return true;
+      case 'camera':await action('key-delete');return true;
+      case 'clip':deskEditor.remove();return true;
+      case 'title':titleEditor.remove();return true;
+      case 'graphic':graphics.remove();return true;
+      case 'lightkey':await action('light-delete');return true;
+      case 'prop':sceneProps.hide(true);return true;
+      default:status(selectionNow()?'Delete does not remove this (a room desk or a scene light): use its own panel.':'Nothing selected to delete: select a key, a move or an item first.');return false;
+    }
+  }
   function viewDelete(event){
     if(!open||event.defaultPrevented||event.ctrlKey||event.metaKey||event.altKey||!['Delete','Backspace'].includes(event.key))return;
-    const t=event.target;if(t?.closest?.('input,select,textarea,[contenteditable]')||timeline.contains(t)||panel.contains(t)||document.querySelector('dialog[open]'))return;
-    // Delete acts on what the Director shows as selected (selectionNow, director-selection.mjs deleteRoute), never on an
-    // editor's leftover selection behind it.
-    const what=deleteRoute(selectionNow(),{poseKey:scenePeople.posing()&&scenePeople.poseKeySelected(),picked:!!picked()});
-    if(what==='person'||what==='pose-key'){event.preventDefault();scenePeople.remove();return;}
-    if(what==='prop'){event.preventDefault();sceneProps.hide(true);}
+    const t=event.target;if(t?.closest?.('input,select,textarea,[contenteditable]')||t?.isContentEditable||document.querySelector('dialog[open]')||keysPanel.element.contains(t))return;
+    if(!deleteWhat())return;   // (nothing Delete removes: the key is left to whoever else wants it)
+    event.preventDefault();if(event.repeat)return;
+    Promise.resolve(deleteSelection()).catch(error=>status(error.message,true));
   }
   document.addEventListener('keydown',viewDelete);
   // "R is now Scale…": for two weeks after the keys changed, once per key per session.
@@ -2067,7 +2111,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     });}else draft();}
   // Every room desk has its own Lift / Tilt timeline (desk-choreo.mjs): the open desk's clips are what the desk editor sees.
   const choreo=createChoreoTarget({realShot:()=>shot(),baseline:()=>filmShot()?effectiveDeskEdits(filmShot(),{}):null,roster:()=>bridge.ready()?bridge.stage().roomDesks?.()||[]:[],onChange:()=>{deskEditor.clearSelection();render();}});
-  const deskEditor=createDeskEditor({panel,timeline,bridge,shot:choreo.shot,choreo:{...choreo,pick:id=>{if(id)deskSel.select(id,{announce:false});else deskSel.deselect();}},time:()=>playhead,seek:seekCamera,commit,render,status,preview:range=>bridge.previewRange(project,selected,range),snap:snapTime,lengthen:(seconds,motion,message,at)=>resizeChapter(seconds,{motion,message,at}),focus:tab=>{keyId=null;lightSel=null;sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();titleEditor.clear();   /* (not deskSel.deselect(): the room desk being choreographed stays open; deselecting it made a Lift added to it land on the featured desk) */if(!reveal(tab==='groove'?'clip':tab))showInspector(tab,false,!typing());}});
+  const deskEditor=createDeskEditor({panel,timeline,bridge,shot:choreo.shot,choreo:{...choreo,pick:id=>{if(id)deskSel.select(id,{announce:false});else deskSel.deselect();}},time:()=>playhead,seek:seekCamera,commit,render,status,preview:range=>bridge.previewRange(project,selected,range),snap:snapTime,lengthen:(seconds,motion,message,at)=>resizeChapter(seconds,{motion,message,at}),focus:tab=>{keyId=null;lightSel=null;sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();titleEditor.clear();graphics.clear?.();   /* (not deskSel.deselect(): the room desk being choreographed stays open; deselecting it made a Lift added to it land on the featured desk) */if(!reveal(tab==='groove'?'clip':tab))showInspector(tab,false,!typing());}});
   const startPose=createStartPose({panel,shot,motion:()=>deskEditor.featuredMotion(),time:()=>playhead,seek:seekCamera,commit,status,ready:requireReady});
   // Render tab (film chapters only): Send = Export cut when this chapter has unexported edits, then a Render-request-*.json download.
   const downloadText=(name,text)=>{const url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);};
@@ -2078,7 +2122,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   // Film titles: the TITLES lane, the Title inspector and the title overlay in the frame (titles-src.json beside the film list).
   const titleEditor=createTitleEditor({panel,timeline,shot,time:()=>playhead,seek:seekCamera,commit,status,render,renderTimeline,ready:requireReady,open:()=>open,
     showInspector:tab=>{if(!reveal(tab))showInspector(tab,false,!typing());},
-    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();deskSel.deselect();},
+    onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();deskSel.deselect();graphics.clear?.();},
     snapDelta:({raw,edges,width,seconds,alt,exclude})=>{
       const tol=8/width*seconds;
       if(magnet&&!alt){let best=null;const all=snapTargets({titles:new Set([exclude])});for(const [t,name] of all)for(const e of edges){const delta=t-e,off=Math.abs(delta-raw);if(off<=tol&&(!best||off<best.off))best={delta,off,t,name};}if(best)return {delta:best.delta,snap:best};}

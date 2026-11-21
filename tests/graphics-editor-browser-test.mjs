@@ -52,9 +52,14 @@ try{
     timeline.addEventListener('click',e=>{if(e.target.closest('[data-action="keys-panel"]'))kp.toggle();});
     addEventListener('keydown',e=>{if(e.key==='Escape')kp.close();});
   });
-  const clip=await ev(()=>{const r=document.querySelector('[data-graphic-clip]').getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2];});
+  // nothing is selected until a clip is picked (20 Nov 2026: clip 0 used to count as selected from the start)
+  check(await ev(()=>!document.querySelector('[data-graphic-clip].selected')&&![...document.querySelectorAll('details details')].some(d=>d.open)),'no graphic selected before a pick');
+  let clip=await ev(()=>{const r=document.querySelector('[data-graphic-clip]').getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2];});
   await page.mouse.click(...clip);
-  check(await ev(()=>currentTab==='graphics'&&document.querySelector('details details').open),'clip click selects the Graphics inspector');
+  check(await ev(()=>currentTab==='graphics'&&document.querySelector('details details').open&&document.querySelector('[data-graphic-clip="0"]').classList.contains('selected')),'clip click selects the Graphics inspector');
+  // (this page stacks #panel above #timeline: the pick opens the clip's details there and moves the lane down, so the
+  // clip is measured again; the Director's inspector sits beside the timeline)
+  clip=await ev(()=>{const r=document.querySelector('[data-graphic-clip]').getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2];});
   const before=await ev(()=>commits);
   await drag(clip,[clip[0]+40,clip[1]]);
   check(await ev(()=>testShot.screens[0].start>2&&testShot.screens[0].end>8&&Math.abs(testShot.screens[0].end-testShot.screens[0].start-6)<.001),'drag moves the clip without changing duration');

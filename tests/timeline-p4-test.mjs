@@ -2,7 +2,7 @@
 // the loop range.
 import assert from 'node:assert/strict';
 import {maxZoom,clampZoom,zoomScroll,filmTimecode,nextMarker,toggleMarker,setLoopEnd} from '../experience/timeline-ui.mjs';
-assert.equal(maxZoom(10,1500),8,'at least 8x');assert.ok(Math.abs(maxZoom(48,1400)-48*30*20/1400)<1e-9,'about 20 px a frame');
+assert.equal(maxZoom(10,1500),8,'at least 8x');assert.ok(Math.abs(maxZoom(48,1400)-48*30*40/1400)<1e-9,'about 40 px a frame');
 assert.equal(clampZoom(.5,18,1400),1);assert.equal(clampZoom(1000,18,1400),maxZoom(18,1400));
 assert.equal(zoomScroll({scroll:0,x:500,from:1,to:2,lane:1000}),500,'the time under the pointer stays');
 assert.equal(zoomScroll({scroll:300,x:200,from:2,to:1,lane:1000}),50);

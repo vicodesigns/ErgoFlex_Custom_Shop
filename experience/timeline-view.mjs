@@ -1,0 +1,34 @@
+// The timeline's view state, per cut and chapter (Vico, 20 Nov 2026: "the timeline must not reset when I edit"):
+// which lane groups are folded, the zoom, and the scroll (left and top). Kept in this browser only, never in the cut.
+// Pure apart from the storage handed in (node tests pass a Map-backed stub).
+//   groups  {motion:false, lighting:true, ...}  false = open; a group not listed is FOLDED (first load: all folded)
+//   zoom    1 = the whole chapter in the view
+//   left, top  the viewport's scrollLeft / scrollTop in px
+export const VIEW_STORE='ergoflex.director.timelineView.v1';
+export const VIEW_LIMIT=300;   // entries kept (the least recently used go first)
+const store=storage=>storage||globalThis.localStorage;
+export function readViews(storage){try{const v=JSON.parse(store(storage)?.getItem(VIEW_STORE)||'{}');return v&&typeof v==='object'&&!Array.isArray(v)?v:{};}catch{return {};}}
+const num=(v,d)=>Number.isFinite(Number(v))?Number(v):d;
+// One chapter's view, cleaned: always {groups, zoom, left, top, saved}; saved: false when nothing was stored yet.
+export function viewFor(key,storage){
+  const v=readViews(storage)[key];
+  if(!v||typeof v!=='object')return {groups:{},zoom:1,left:0,top:0,saved:false};
+  const groups={};for(const [g,c] of Object.entries(v.groups||{}))if(typeof c==='boolean')groups[g]=c;
+  return {groups,zoom:Math.max(1,num(v.zoom,1)),left:Math.max(0,num(v.left,0)),top:Math.max(0,num(v.top,0)),saved:true};
+}
+// Merge `patch` into the chapter's view and store it (oldest entries dropped past VIEW_LIMIT).
+export function saveView(key,patch,storage,now=Date.now()){
+  const all=readViews(storage),was=all[key]&&typeof all[key]==='object'?all[key]:{};
+  all[key]={...was,...patch,at:now};
+  const keys=Object.keys(all);
+  if(keys.length>VIEW_LIMIT)for(const k of keys.sort((a,b)=>(all[a].at||0)-(all[b].at||0)).slice(0,keys.length-VIEW_LIMIT))if(k!==key)delete all[k];
+  try{store(storage)?.setItem(VIEW_STORE,JSON.stringify(all));}catch{}
+  return all[key];
+}
+// A group is folded unless the view says it is open.
+export const isFolded=(groups,g)=>groups?.[g]!==false;
+// The scroll to put back after a rebuild: the live one when it is the same chapter, else the stored one.
+export function scrollToKeep({sameChapter,live,stored}){return sameChapter&&live?{left:live.left,top:live.top}:{left:stored?.left||0,top:stored?.top||0};}
+// Whether an element's box [a, b] lies wholly inside the visible box [lo, hi] (px, any axis): then nothing needs to scroll
+// to show it (a click on a key must not move the timeline).
+export const inView=(a,b,lo,hi,slack=1)=>a>=lo-slack&&b<=hi+slack;
