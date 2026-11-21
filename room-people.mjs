@@ -1,4 +1,4 @@
-import { mediaPersonMaterial, castDetailEnsure, castDetailCast, castDetailVariant, castDetailTouches } from './media-cast-finishes.mjs';
+import { mediaPersonMaterial, castDetailEnsure, castDetailCast, castDetailVariant, castDetailTouches, reliefOf } from './media-cast-finishes.mjs';
 // People who live and work in the rooms (Studio "People" toggle, film `people`).
 //
 // The models are posed, static library props (category "people", built by
@@ -104,6 +104,7 @@ const refreshedCast = room => (room?.id === 'occmedialab' && !classicMedia(room)
 export const castDetailRoom = room => !!room && !classicCreate(room) && !classicCommons(room);
 export const classicRig = (rig, room) => { rig.castDetail = castDetailRoom(room); rig.editorCast = room?.id === 'occmedialab'; rig.mediaLab = room?.id === 'occmedialab' && !classicMedia(room); rig.classicMotion = classicCreate(room) || classicCommons(room); return rig; };
 // who looks at whom (RoomPeople.gazeOf)
+let skinCopies = null;   // (shareCastDetail: soft-skin copies of shared body materials, per chapter strength)
 const GAZE_TALK = /^(stand-talk|sit-chat|stand-drink|stand-mug|stand-coffee|sit-coffee)$/, GAZE_IDLE = /^(stand-wait|wheel-roll|wheel-watch|cane-stand|white-cane|sit-listen)$/;
 const GAZE_DESK = /^stand-phone-watch$/;      // watching the featured desk go (the workshop film): the head follows it
 const gazeDesk = new THREE.Vector3();
@@ -1287,7 +1288,7 @@ export class RoomPeople {
     // Only a change of who is in the cast (model, key, desk role) rebuilds; moving, turning, scaling or re-timing an
     // extra person re-places the model that is already there (the Director edits these live).
     setFilter(filter) {
-        const cast = JSON.stringify((filter?.cast || []).filter(c => !c.poseSource).map(c => [c.key || c.id, c.id, c.desk || '', c.station || ''])) + JSON.stringify(Object.keys(filter?.when || {})) + (filter?.motion === false ? 'still' : '');
+        const cast = JSON.stringify((filter?.cast || []).filter(c => !c.poseSource).map(c => [c.key || c.id, c.id, c.desk || '', c.station || ''])) + JSON.stringify(Object.keys(filter?.when || {})) + (filter?.motion === false ? 'still' : '') + (filter?.skinRelief !== undefined ? '|skin' + reliefOf(filter.skinRelief) : '');
         if (this.built && cast !== this.castKey) this.dispose();
         this.castKey = cast; this.filter = filter || null; this.placed = false;
         // someone already in the room who now has a pose gets their skeleton before anyone waiting on `built` goes on
@@ -1634,7 +1635,14 @@ export class RoomPeople {
     // shared finished hair, skin, eyes and brows: one copy per source material (media-cast-finishes.mjs), nothing to dispose.
     shareCastDetail(object) {
         const cast = castDetailRoom(this.room) ? castDetailCast() : null; if (!cast) return;
-        const swap = m => castDetailVariant(m, cast, partOf(m.name));
+        // (a chapter's skinRelief other than 1 gives the body its own softer copy, one per source material and strength)
+        const relief = reliefOf(this.filter?.skinRelief), swap = m => {
+            const v = castDetailVariant(m, cast, partOf(m.name));
+            if (relief === 1 || m.name !== 'Human.body') return v;
+            const k = ((skinCopies ||= new WeakMap()).get(m) || skinCopies.set(m, new Map()).get(m)); let c = k.get(relief);
+            if (!c) { c = mediaPersonMaterial(m, cast, partOf(m.name), relief); c.userData.sharedTextures = true; c.userData.castDetail = true; k.set(relief, c); }
+            return c;
+        };
         object.traverse(o => { if (o.isMesh) o.material = Array.isArray(o.material) ? o.material.map(swap) : swap(o.material); });
     }
     // The featured desk's people fade with the desk height, so they need materials of their own (textures stay shared).
@@ -1643,7 +1651,7 @@ export class RoomPeople {
         const copy = m => {
             if (!copies.has(m)) {
                 const media = this.room.root?.mediaCast, cast = media || (castDetailRoom(this.room) ? castDetailCast() : null);
-                const owned = cast && !m.userData.castDetail && (media || castDetailTouches(m, partOf(m.name))) ? mediaPersonMaterial(m,cast,partOf(m.name)) : m.clone();
+                const owned = cast && !m.userData.castDetail && (media || castDetailTouches(m, partOf(m.name))) ? mediaPersonMaterial(m,cast,partOf(m.name),reliefOf(this.filter?.skinRelief)) : m.clone();
                 owned.userData.sharedTextures = true;
                 owned.userData.solid = { transparent:owned.transparent, opacity:owned.opacity };
                 copies.set(m, owned);
@@ -2199,8 +2207,10 @@ export class RoomPeople {
     // A placement's `look` names whom they look at (a key, or keys: whichever of them is there and in front within 9 m),
     // whatever their posture: someone listening to a classmate who talks to them (the oilers film).
     gazeOf(object, life) {
-        const pose = life.key?.pose || '', talks = GAZE_TALK.test(pose), desk = GAZE_DESK.test(pose), waits = talks || desk || GAZE_IDLE.test(pose);
-        const look = (this.current(object) || object.userData.person)?.look; if (!waits && !look) return null;
+        const pose = life.key?.pose || '', look = (this.current(object) || object.userData.person)?.look;
+        // (a placement with look: ['desk'] watches the featured desk, whatever their posture: Maya doing her squats before its monitor)
+        const talks = GAZE_TALK.test(pose), desk = GAZE_DESK.test(pose) || [].concat(look || []).includes('desk'), waits = talks || desk || GAZE_IDLE.test(pose);
+        if (!waits && !look) return null;
         const root = object.userData.personRig?.bones.get('Root')?.parent; if (!root) return null;
         root.updateWorldMatrix(true, false); gazeM.copy(root.matrixWorld).invert();
         const headOf = o => { const h = o.visible && o !== object && o.userData.personRig?.bones.get('head'); if (!h) return null; h.updateWorldMatrix(true, false); return h.getWorldPosition(gazeW).applyMatrix4(gazeM); };
@@ -2518,8 +2528,12 @@ export class RoomPeople {
             if (step.phase === 'hold') { solveChange(step.actor.rig, step.to, step.to, 1); drawPose(step.actor.rig, object.userData.personRig, 0, poseNow(object.userData.person), typeof window !== 'undefined' && !!window.__directorDragging); }
             return;
         }
-        solveChange(step.actor.rig, step.from, step.to, step.w);
         const [a, z] = step.phase === 'out' ? [step.desk, home] : [home, step.desk], ease = THREE.MathUtils.smoothstep(step.w, 0, .72);
+        // (the move is walked, not slid: each foot stays on the floor and steps, first the one on the side it turns to, a step back
+        // from a desk (solveChange's `shift`, as a change with `step: true`); a person who steps out and in no longer floats)
+        const dx = (z.position.x - a.position.x) / 1000, dz = (z.position.z - a.position.z) / 1000, c = Math.cos(a.turn), sn = Math.sin(a.turn);
+        const yaw = THREE.MathUtils.euclideanModulo(z.turn - a.turn + Math.PI, Math.PI * 2) - Math.PI;
+        solveChange(step.actor.rig, step.from, step.to, step.w, null, { x: dx * c - dz * sn, z: dx * sn + dz * c, yaw, e: ease });
         object.position.lerpVectors(a.position, z.position, ease);
         object.rotation.y = a.turn + (THREE.MathUtils.euclideanModulo(z.turn - a.turn + Math.PI, Math.PI * 2) - Math.PI) * ease;   // (the short way round)
         drawPose(step.actor.rig, object.userData.personRig, step.dz, poseNow(object.userData.person), typeof window !== 'undefined' && !!window.__directorDragging);
@@ -2601,7 +2615,7 @@ export class RoomPeople {
             by = (life.actBy ||= new THREE.Vector3()).set((x * c - z * s) / 1000, y / 1000, (x * s + z * c) / 1000);
         }
         const id = object.userData.person.id, pressId = /-tap$/.test(id) ? id.replace(/-tap$/, '-press') : null;
-        return { since: time - act.at, dur: Number.isFinite(act.dur) ? act.dur : 1, by, press: pressId && life.rig?.has(pressId) ? life.rig.key(pressId) : null };
+        return { since: time - act.at, dur: Number.isFinite(act.dur) ? act.dur : 1, by, squat: act.kind === 'squat' ? { reps: act.reps > 0 ? act.reps : 3 } : null, press: pressId && life.rig?.has(pressId) ? life.rig.key(pressId) : null };
     }
     // A film's wheelchair user rolling along a path (a placement with `roll`): at its start until `start`, then rolling
     // it, then at its end. Planned once per path; the wheels of the drawn model (bones wheel_l / wheel_r, where the

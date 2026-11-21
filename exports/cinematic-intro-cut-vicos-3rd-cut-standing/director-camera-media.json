@@ -1,0 +1,254 @@
+{
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-2nd-cut/director-exports/export-2691fee6de86-Film-chapter-media-17-s-__omar-roll_.json",
+ "seconds": 17.0,
+ "keys": [
+  {
+   "at": 0.0,
+   "position": [
+    2.1251254523395637,
+    1.7274779068811077,
+    2.9961747456417256
+   ],
+   "target": [
+    -0.8483139291291955,
+    0.6018572467697416,
+    -0.4535180148496276
+   ],
+   "fov": 52,
+   "label": "Window side: the desk and Omar, the film lighting the room"
+  },
+  {
+   "at": 8.95,
+   "position": [
+    1.4,
+    1.45,
+    2.7
+   ],
+   "target": [
+    -0.7585,
+    0.6316,
+    -0.5018
+   ],
+   "fov": 51,
+   "label": "Slow push"
+  },
+  {
+   "at": 9.0,
+   "position": [
+    2.75,
+    1.41,
+    0.24
+   ],
+   "target": [
+    -0.75,
+    1.26,
+    0.34
+   ],
+   "fov": 35,
+   "label": "Cut: his front view, the LED colours on the desktop",
+   "cut": true
+  },
+  {
+   "at": 11,
+   "position": [
+    2.5,
+    1.39,
+    0.2
+   ],
+   "target": [
+    -0.75,
+    1.26,
+    0.26
+   ],
+   "fov": 35,
+   "label": "His push on the ultrawide"
+  },
+  {
+   "at": 17.0,
+   "position": [
+    1.651779782645044,
+    1.4519900877574556,
+    0.1366666856234071
+   ],
+   "target": [
+    -0.7482226442002251,
+    1.3659965154600684,
+    0.14448428310497072
+   ],
+   "fov": 35.5,
+   "label": "Pushing on into the dissolve"
+  }
+ ],
+ "clips": [],
+ "initial": {
+  "height": 30,
+  "tilt": 0
+ },
+ "props": [
+  {
+   "match": "^Prop:ergoflex-plant-2$",
+   "label": "Broad leaf planter (film: swapped)",
+   "hide": true
+  },
+  {
+   "add": {
+    "asset": "ficus"
+   },
+   "id": "fp10f",
+   "match": "^Added prop:ficus#fp10f$",
+   "label": "Ficus",
+   "parent": "room",
+   "position": [
+    -2.323,
+    0,
+    0.075
+   ],
+   "rotation": [
+    0,
+    20,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "match": "^Prop:mac-studio$",
+   "path": "^Room:music > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Prop:mac-studio$",
+   "label": "Prop:mac-studio",
+   "hide": true
+  },
+  {
+   "match": "^Prop:headphones$",
+   "path": "^Room:music > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:shelf > Prop:headphones$",
+   "label": "Prop:headphones",
+   "space": "local",
+   "position": [
+    0.292,
+    0.051,
+    0.336
+   ],
+   "rotation": [
+    0,
+    67.4,
+    0
+   ]
+  },
+  {
+   "match": "^Prop:headphones$",
+   "asset": "music:house:room:10:headphones",
+   "label": "Prop:headphones",
+   "hide": true
+  }
+ ],
+ "people": {
+  "v": 2,
+  "only": [],
+  "cast": [
+   {
+    "key": "omar-rolls-in",
+    "id": "people-omar-wheel-roll",
+    "at": [
+     0,
+     2550
+    ],
+    "turn": 155.3,
+    "roll": {
+     "path": [
+      [
+       0,
+       2550
+      ],
+      [
+       560,
+       1330
+      ],
+      [
+       380,
+       823
+      ]
+     ],
+     "start": 0,
+     "speed": 0.7,
+     "radius": 600
+    }
+   },
+   {
+    "key": "omar",
+    "id": "people-omar-wheel-watch",
+    "at": [
+     380,
+     823
+    ],
+    "turn": 200,
+    "postures": {
+     "people-omar-wheel-watch": {
+      "poseKeys": [
+       {
+        "t": 0,
+        "pose": {
+         "upperarm_l": [
+          -0.0727,
+          -0.0141,
+          0.0286,
+          0.9968
+         ],
+         "lowerarm_l": [
+          0.2233,
+          0,
+          0.0217,
+          0.9745
+         ],
+         "hand_l": [
+          0.0793,
+          0.004,
+          -0.1361,
+          0.9875
+         ],
+         "upperarm_r": [
+          -0.0672,
+          0.0108,
+          -0.025,
+          0.9974
+         ],
+         "lowerarm_r": [
+          0.2013,
+          0,
+          -0.0196,
+          0.9793
+         ],
+         "hand_r": [
+          0.0694,
+          -0.0035,
+          0.1215,
+          0.9902
+         ]
+        }
+       }
+      ]
+     }
+    }
+   }
+  ],
+  "when": {
+   "omar-rolls-in": [
+    [
+     0,
+     4.2,
+     0,
+     0
+    ]
+   ],
+   "omar": [
+    [
+     4.2,
+     99,
+     0,
+     0
+    ]
+   ]
+  }
+ }
+}

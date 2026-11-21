@@ -32,16 +32,18 @@ function castDetailShared() {
     }
 
     // Each 512-pixel tile has a four-pixel guard band on every side.
-    function tile(atlas, i) {
+    function tile(atlas, i, count) {
+        const width = 512 * Math.min(4, count), height = 512 * Math.ceil(count / 4);
         const texture = atlas.clone();
-        texture.repeat.set(504 / 2048, 504 / 1024);
-        texture.offset.set(((i % 4) * 512 + 4) / 2048, (Math.floor(i / 4) * 512 + 4) / 1024);
+        texture.repeat.set(504 / width, 504 / height);
+        texture.offset.set(((i % 4) * 512 + 4) / width, (Math.floor(i / 4) * 512 + 4) / height);
         return texture;
     }
 
     const atlases = HAIR_ATLASES.map(suffix => ({ fibres: map('hair-fibres' + suffix), flow: map('hair-flow' + suffix), edges: map('hairline' + suffix) }));
+    const counts = HAIR_ATLASES.map((_, k) => Object.values(HAIR_TILES).filter(([atlas]) => atlas === k).length);
     const hair = new Map(Object.entries(HAIR_TILES).map(([cut, [k, i]]) => ['Human.' + cut, {
-        normal: tile(atlases[k].fibres, i), direction: tile(atlases[k].flow, i), edge: tile(atlases[k].edges, i),
+        normal: tile(atlases[k].fibres, i, counts[k]), direction: tile(atlases[k].flow, i, counts[k]), edge: tile(atlases[k].edges, i, counts[k]),
     }]));
     state.cast = { hair, skin: map('skin-relief') };
     state.ready = Promise.all(loads).then(() => { state.done = true; if (failed.length && castShared === state) castShared = null; });
@@ -69,7 +71,11 @@ export function prepareMediaCast(room, root) {
     })]);
 }
 
-export function mediaPersonMaterial(source, cast, part) {
+// `relief`: a chapter's skin relief strength (people.skinRelief in the film's data; 1 = the cast detail as it has always been). The skin's
+// normal map (assets/rooms/media/skin-relief.webp) at normalScale .55 is what reads as pores, blotches and a scaly look at close framings.
+export const SKIN_RELIEF = .55;
+export const reliefOf = v => Number.isFinite(v) && v >= 0 && v <= 2 ? v : 1;
+export function mediaPersonMaterial(source, cast, part, relief = 1) {
     if (/^Human\.(eyebrow|eyelash)/i.test(source.name)) {
         const mat = source.clone();
         // Preserve partial strand coverage when several source hairs project
@@ -115,7 +121,7 @@ export function mediaPersonMaterial(source, cast, part) {
         }
     } else if (source.name === 'Human.body') {
         mat.normalMap ||= cast.skin;
-        mat.normalScale.set(.55, -.55);
+        mat.normalScale.set(SKIN_RELIEF * relief, -SKIN_RELIEF * relief);
         mat.roughness = .64;
         mat.clearcoat = .09;
         mat.clearcoatRoughness = .48;

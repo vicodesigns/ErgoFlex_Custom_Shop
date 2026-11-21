@@ -1,0 +1,360 @@
+{
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-2nd-cut/director-exports/export-e55ae3a99c2b-Film-chapter-wellness-16-s-__8_.json",
+ "seconds": 19.5,
+ "keys": [
+  {
+   "at": 0.0,
+   "position": [
+    6.8040280724166315,
+    2.2925299648741113,
+    -2.9045580244993174
+   ],
+   "target": [
+    -0.9805886392253744,
+    0.8679234887488175,
+    0.7162474808614231
+   ],
+   "fov": 47,
+   "label": "Wide from the mirror wall: window, bike, mat"
+  },
+  {
+   "at": 2.45,
+   "position": [
+    4.95,
+    1.85,
+    -1.9
+   ],
+   "target": [
+    -0.9,
+    0.79,
+    0.78
+   ],
+   "fov": 47,
+   "label": "Wide from the mirror wall: slow push"
+  },
+  {
+   "at": 6.0,
+   "position": [
+    2.0,
+    1.5,
+    -1.95
+   ],
+   "target": [
+    -0.95,
+    1.6,
+    0.7
+   ],
+   "fov": 40,
+   "label": "The desk begins to rise, Maya gets up"
+  },
+  {
+   "at": 11,
+   "position": [
+    3.4,
+    1.55,
+    -0.7
+   ],
+   "target": [
+    -0.5,
+    0.95,
+    0.55
+   ],
+   "fov": 46,
+   "label": "Desk Squats: the desk, its monitor and Maya stepping back"
+  },
+  {
+   "at": 14.5,
+   "position": [
+    3.4,
+    1.55,
+    -0.7
+   ],
+   "target": [
+    -0.5,
+    0.95,
+    0.55
+   ],
+   "fov": 46,
+   "label": "Desk Squats: the desk, its monitor and Maya stepping back"
+  },
+  {
+   "at": 19.5,
+   "position": [
+    1.65,
+    1.55,
+    -1.6
+   ],
+   "target": [
+    -0.95,
+    1.55,
+    0.6
+   ],
+   "fov": 40,
+   "label": "Working standing"
+  }
+ ],
+ "clips": [
+  {
+   "id": "stand-break",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 6,
+   "duration": 5,
+   "easing": "smooth",
+   "label": "Stand and reset",
+   "target": 41
+  }
+ ],
+ "initial": {
+  "height": 28,
+  "tilt": 0
+ },
+ "props": [
+  {
+   "match": "^Warm-up plan$",
+   "path": "^Room:gym > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Groove tabletop \u00b7 daily materials > Warm-up plan$",
+   "label": "Warm-up plan",
+   "space": "local",
+   "position": [
+    0.035,
+    0,
+    0.199
+   ]
+  },
+  {
+   "match": "^Natural foliage planter$",
+   "asset": "gym:house:room:1:decor-plant2",
+   "label": "Natural foliage planter",
+   "position": [
+    -2.118,
+    0.001,
+    -3.991
+   ]
+  },
+  {
+   "match": "^Prop:campus-pouf-slate$",
+   "label": "Prop:campus-pouf-slate",
+   "space": "local",
+   "position": [
+    0.628,
+    -0.179,
+    -0.801
+   ],
+   "scale": [
+    1,
+    1.0187,
+    1
+   ]
+  },
+  {
+   "match": "^Prop:party-speaker$",
+   "asset": "gym:house:room:2:party-speaker",
+   "label": "Prop:party-speaker",
+   "position": [
+    -0.264,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    -80.4,
+    0
+   ]
+  },
+  {
+   "match": "^Workspace notebook$",
+   "path": "^Room:gym > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Workspace notebook$",
+   "label": "Workspace notebook",
+   "hide": true
+  },
+  {
+   "match": "^Prop:tablet-pc$",
+   "path": "^Room:gym > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Prop:tablet-pc$",
+   "label": "Prop:tablet-pc",
+   "space": "local",
+   "position": [
+    0,
+    0,
+    0.263
+   ],
+   "rotation": [
+    0,
+    8.3,
+    0
+   ]
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-cup-holder"
+   },
+   "id": "71ntu6558",
+   "match": "^Added prop:ergoflex-side-cup-holder#71ntu6558$",
+   "label": "Side cup holder \u00b7 acrylic",
+   "parent": "desk",
+   "position": [
+    1.105,
+    -0.164,
+    0.303
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "match": "^Prop:sports-bottle$",
+   "path": "^Room:gym > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Prop:sports-bottle$",
+   "label": "Prop:sports-bottle",
+   "space": "local",
+   "position": [
+    0.267,
+    -0.157,
+    0.377
+   ],
+   "scale": [
+    0.71,
+    0.71,
+    0.71
+   ]
+  },
+  {
+   "match": "^Prop:dumbbell$",
+   "label": "Prop:dumbbell",
+   "space": "local",
+   "position": [
+    1.398,
+    0.06,
+    -0.169
+   ],
+   "rotation": [
+    0,
+    8.2,
+    0
+   ]
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large"
+   },
+   "id": "0uheqadi3",
+   "match": "^Added prop:ergoflex-side-shelf-large#0uheqadi3$",
+   "label": "Side shelf \u00b7 large",
+   "parent": "base-shelf",
+   "position": [
+    0.917,
+    0.032,
+    -0.114
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  }
+ ],
+ "people": {
+  "v": 2,
+  "only": [
+   "people-maya-sit-type",
+   "kai-bike"
+  ],
+  "cast": [
+   {
+    "key": "maya-stand",
+    "id": "people-maya-stand-type-41",
+    "desk": "stand",
+    "reach": 850,
+    "colors": {
+     "top": "#2d7d8a",
+     "bottom": "#1f2228",
+     "shoes": "#ececec"
+    },
+    "poseBindings": [
+     {
+      "key": "people-maya-sit-type",
+      "id": "people-maya-sit-type"
+     }
+    ]
+   },
+   {
+    "key": "maya-break",
+    "id": "people-maya-stand-type",
+    "fromDesk": true,
+    "at": [
+     -421,
+     435
+    ],
+    "turn": 135,
+    "colors": {
+     "top": "#2d7d8a",
+     "bottom": "#1f2228",
+     "shoes": "#ececec"
+    },
+    "act": {
+     "kind": "squat",
+     "at": 10.2,
+     "dur": 5.2,
+     "reps": 3
+    },
+    "look": [
+     "desk"
+    ]
+   },
+   {
+    "key": "room-priya-a2zim7",
+    "id": "people-priya-stretch",
+    "at": [
+     110,
+     3012
+    ],
+    "turn": 180
+   },
+   {
+    "key": "room-kai-liimwk",
+    "id": "people-kai-gym-cycle",
+    "at": [
+     -1530,
+     1290
+    ],
+    "turn": 180,
+    "colors": {
+     "top": "#2f2f35",
+     "bottom": "#3c4f6b"
+    },
+    "poseSource": {
+     "key": "kai-bike",
+     "id": "people-kai-gym-cycle"
+    }
+   }
+  ],
+  "when": {
+   "maya-break": [
+    [
+     9.7,
+     15.8,
+     0.3,
+     0.35
+    ]
+   ]
+  },
+  "chair": {
+   "back": 100,
+   "side": 1000,
+   "turn": -60
+  },
+  "except": [
+   "people-priya-stretch"
+  ]
+ }
+}

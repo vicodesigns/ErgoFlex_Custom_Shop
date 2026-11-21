@@ -1,8 +1,8 @@
 // Which tile of which hair atlas each hairstyle (people GLB material 'Human.<cut>') is on: [atlas, tile].
 // Written by tools/people/bake-hair-maps.py. Atlas 0 is hair-fibres/-flow/hairline.webp (the original eight, in the
-// order media-cast-finishes.mjs always used), atlas k is hair-fibres-<k+1>.webp and so on; 2048 x 1024, eight 512 px
+// order media-cast-finishes.mjs always used), atlas k is hair-fibres-<k+1>.webp and so on; up to eight 512 px
 // tiles with a 4 px guard band, tile i at column i % 4, row i >> 2.
-export const HAIR_ATLASES = ['', '-2', '-3'];
+export const HAIR_ATLASES = ['', '-2', '-3', '-4'];
 export const HAIR_TILES = {
     ponytail01: [0, 0],
     afro01: [0, 1],
@@ -28,4 +28,5 @@ export const HAIR_TILES = {
     toigo_curled_under_bob_with_bangs: [2, 5],
     toigo_inverted_bob_with_bangs: [2, 6],
     toigo_inverted_bob: [2, 7],
+    cropped_coil_hair: [3, 0],
 };

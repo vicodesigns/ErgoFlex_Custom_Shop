@@ -9,6 +9,7 @@ import bmesh
 import bpy
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
+from mathutils.kdtree import KDTree
 
 
 GARMENTS = {'toigo_basic_tucked_t-shirt', 'joepal_crude_t-shirt_female',
@@ -156,9 +157,29 @@ def cargo_pockets(bm, hip, knee):
             patch(rows, side=side)
 
 
+def shape_neckline(bm, shoulder):
+    """Ease the existing rib band in toward the neck and roll its outside lip."""
+    rim = [v for v in bm.verts if v.is_boundary and abs(v.co.x) < abs(shoulder.x)
+           and v.co.z > shoulder.z - .09]
+    center = sum((v.co for v in rim), Vector((0, 0, 0))) / len(rim)
+    tree = KDTree(len(rim))
+    for i, v in enumerate(rim):
+        tree.insert(v.co, i)
+    tree.balance()
+    for v in bm.verts:
+        _, _, distance = tree.find(v.co)
+        if distance > .04:
+            continue
+        taper = 1 - ramp(.003, .038, distance)
+        v.co.x -= (v.co.x - center.x) * .055 * taper
+        v.co.y -= (v.co.y - center.y) * .055 * taper
+        v.co += v.normal * (.0028 * math.exp(-((distance - .013) / .005) ** 2))
+
+
 def fit(obj, rig, style, garment):
     trousers = garment in ('toigo_wool_pants', 'cortu_cargo_pants', 'male_casualsuit04', 'female_casualsuit01')
     polo = garment == 'namuhekam_male_polo_shirt'
+    knitted = garment == 'toigo_fisherman_sweater'
     deps = bpy.context.evaluated_depsgraph_get()
     # Evaluate the MPFB fitting modifiers in the neutral pose. Reuse the
     # original vertex-group indices when the armature is put back on the mesh.
@@ -177,7 +198,7 @@ def fit(obj, rig, style, garment):
     # A rolled cuff is part of the existing sleeve. Measure along each upper
     # arm, including on a character whose shoulder line is asymmetric.
     sleeves = {}
-    if not trousers:
+    if not trousers and not knitted:
         for side in ('l', 'r'):
             origin = joint('upperarm_' + side)
             axis = (joint('lowerarm_' + side) - origin).normalized()
@@ -186,7 +207,6 @@ def fit(obj, rig, style, garment):
             sleeves[side] = (origin, axis, reach)
     hem_z = min(v.co.z for v in bm.verts)
     knee, ankle = joint('calf_l'), joint('foot_l')
-    knitted = garment == 'toigo_fisherman_sweater'
     if knitted:
         # The ribbed cuffs lie on the forearm, farther down than a tee sleeve.
         forearms = {}
@@ -237,7 +257,7 @@ def fit(obj, rig, style, garment):
             along = (v.co - origin).dot(axis)
             cuff = 0.
             if along > .045 and abs(x) > abs(origin.x):
-                width = .026 if polo else {'studio': .031, 'edit': .019, 'home': .024}[style]
+                width = .026 if polo else {'studio': .031, 'edit': .019, 'home': .024, 'breton': .018}[style]
                 distance = reach - along
                 cuff = .006 * math.exp(-((distance - width) / .005) ** 2)
                 cuff += .004 * ramp(0, .006, distance) * (1 - ramp(width - .004, width + .004, distance))
@@ -252,6 +272,8 @@ def fit(obj, rig, style, garment):
                 ease += trunk * (seam + folds * abs(math.cos(a)) ** 4)
             v.co += v.normal * (ease + .006 * gather * trunk * (.35 + .65 * abs(math.sin(a))) + cuff)
     bm.normal_update()
+    if style == 'breton' and garment == 'toigo_basic_tucked_t-shirt':
+        shape_neckline(bm, shoulder)
     if not trousers and style in ('studio', 'edit'):
         sew_panels(bm, shoulder, chest, waist, style)
     if polo and style == 'workshop':
