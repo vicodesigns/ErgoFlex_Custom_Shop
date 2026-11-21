@@ -186,11 +186,25 @@ export function sheetKeys(rows){
   for(const r of rows){for(const l of Object.values(r.props))for(const k of l)out.set(k.id,k);for(const j of r.joints)for(const k of j.keys)out.set(k.id,k);}
   return out;
 }
+// The keys a collapsed row's diamond at second t stands for (After Effects' summary keyframe; 21 Nov 2026, Vico: "click
+// on the diamonds and have them be selectable ... just like the camera diamonds"): every property key of the row at that
+// second, a pose key whole (its joint keys are part of it), a set-off that is a placement edge once (as that edge).
+// Pose keys first (the one the Inspector and pose mode take).
+export function keysAt(row,t){
+  if(!row)return [];
+  return Object.values(row.props).flat().filter(k=>!k.linked&&Math.abs(k.t-t)<1e-6).sort((a,b)=>(a.prop==='pose'?0:1)-(b.prop==='pose'?0:1)).map(k=>k.id);
+}
 // Selection: a click replaces it; Shift+click (toggle) adds the key or takes it out; a marquee replaces it or (add) joins it.
 export function pick(selection,ids,{add=false,toggle=false}={}){
   const out=new Set(add||toggle?selection:[]);
   for(const id of ids){if(toggle&&selection.has(id)&&ids.length===1)out.delete(id);else out.add(id);}
   return out;
+}
+// A click on a key or a collapsed diamond (ids: its keys): replaces the selection; Shift adds them or, when they are all
+// selected already, takes them out (the camera diamonds' Shift+click).
+export function clickPick(selection,ids,shift=false){
+  if(!shift)return pick(selection,ids);
+  return ids.length&&ids.every(id=>selection.has(id))?new Set([...selection].filter(id=>!ids.includes(id))):pick(selection,ids,{add:true});
 }
 // The key time before / after t among `times` (dir -1 / +1), or undefined.
 export function neighborTime(times,t,dir){
