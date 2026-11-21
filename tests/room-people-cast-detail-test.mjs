@@ -180,7 +180,8 @@ assert.ok(seen.hijab && seen.styled && seen.unstyled && seen.bald, 'the rooms\' 
 {   // the lab's material maker is the function that shipped in 4abe6181, byte for byte
     const { execFileSync } = await import('node:child_process');
     let was = null; try { was = execFileSync('git', ['show', '4abe6181:media-cast-finishes.mjs'], { cwd: root, encoding: 'utf8', maxBuffer: 1 << 24 }); } catch { console.log('(no git object 4abe6181 here: the mediaPersonMaterial byte check skipped)'); }
-    if (was) { const body = text => text.slice(text.indexOf('export function mediaPersonMaterial'), text.indexOf('\n}\n', text.indexOf('export function mediaPersonMaterial')) + 3); const now = fs.readFileSync(path.join(root, 'media-cast-finishes.mjs'), 'utf8'); assert.ok(body(was).length > 800); assert.equal(body(now), body(was), 'mediaPersonMaterial is unchanged'); }
+    if (was) { const body = text => text.slice(text.indexOf('export function mediaPersonMaterial'), text.indexOf('\n}\n', text.indexOf('export function mediaPersonMaterial')) + 3); const now = fs.readFileSync(path.join(root, 'media-cast-finishes.mjs'), 'utf8'); assert.ok(body(was).length > 800); const settled = text => text.replace(', relief = 1) {', ') {').replace('SKIN_RELIEF * relief', '.55').replace('-SKIN_RELIEF * relief', '-.55');   // the chapter skin-relief knob (people.skinRelief, default 1) is the only change allowed: at 1 it is byte-for-byte the shipped material
+        assert.equal(settled(body(now)), body(was), 'mediaPersonMaterial is unchanged (at the default skin relief)'); }
 }
 
 // ---- 4b. the hair atlases: every hairstyle in the manifest has its own tile, the files are the format the tiles assume, and
