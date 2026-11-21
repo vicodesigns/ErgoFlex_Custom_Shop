@@ -680,20 +680,34 @@ const feetStay = (rig, key) => { for (const s of ['l', 'r']) { const [thigh, cal
 // where the posture has them (shoulder-width), the pelvis sinks and goes back (the legs fold by themselves under the planted feet),
 // the trunk leans forward and the arms reach forward for balance; between reps she is upright, at the end she is back as built.
 // Pure: the same second is always the same pose. SQUAT: how far the hips go (m) and the trunk's lean (rad) at the bottom.
-export const SQUAT = { down: .34, back: .17, lean: .5, reach: .52, hang: .56 };
+export const SQUAT = { down: .34, back: .17, lean: .5, reach: .52, hang: .56, swing: .8 };
 export const squatDepth = (since, dur, reps) => since <= 0 || since >= dur ? 0 : (1 - Math.cos(Math.PI * 2 * reps * since / dur)) / 2;
+// How far the arms are up (0 by her sides, 1 level in front of her): they swing up as she goes down into the first rep, stay up for
+// the reps and swing down as she comes up from the last one (SQUAT.swing seconds each, eased; never longer than half a rep).
+export const squatArmsUp = (since, dur, reps) => { const w = Math.min(SQUAT.swing, dur / (2 * reps)); return ss(0, w, since) * (1 - ss(dur - w, dur, since)); };
+// The arms of the squat: each hand on an arc about its shoulder, from hanging by her side (up 0) to level in front of her (up 1),
+// the arm straight all the way (a swing, not a reach) and the hand in line with the forearm.
+function squatArms(rig, up) {
+    const a0 = Math.atan2(.02, SQUAT.hang), a1 = Math.atan2(SQUAT.reach, .03), a = lerp(a0, a1, up), r = lerp(Math.hypot(.02, SQUAT.hang), Math.hypot(SQUAT.reach, .03), up);
+    for (const s of ['l', 'r']) {
+        const [, upper, lower, hand] = rig.side[s].arm; handAt.copy(rig.wp[upper]); handAt.y -= r * Math.cos(a); handAt.z += r * Math.sin(a);
+        armTo(rig, s, handAt); rig.setWorld(hand, rig.wq[lower]); rig.fk();
+    }
+}
 function squatAct(rig, key, act, life) {
-    const reps = Math.max(1, act.squat.reps | 0), d = squatDepth(act.since, act.dur, reps) * life, arms = ss(-.7, -.05, act.since) * (1 - ss(act.dur + .05, act.dur + .7, act.since)) * life;
+    const reps = Math.max(1, act.squat.reps | 0), d = squatDepth(act.since, act.dur, reps) * life;
     spot.copy(key.wp[rig.b.pelvis]); spot.y -= SQUAT.down * d; spot.z -= SQUAT.back * d; rig.placePelvis(spot); rig.fk();
     bend(rig, X, SQUAT.lean * d); feetStay(rig, key);
-    // (the arms: at rest by her sides while she is away from the desk (the life ramps over the first and the last second of
-    // her window: hands come off the keys, hang, and go back to the keys on her way in), up in front of her for the reps)
-    for (const s of ['l', 'r']) {
-        const [, upper, lower, hand] = rig.side[s].arm; handAt.copy(rig.wp[upper]); handAt.z += SQUAT.reach; handAt.y -= .03;
-        hang.copy(rig.wp[upper]); hang.y -= SQUAT.hang; hang.z += .02;
-        spot.lerpVectors(key.wp[hand], hang, ss(0, 1, life)).lerp(handAt, arms);
-        if (life > 0) armTo(rig, s, spot, handQ.slerpQuaternions(key.wq[hand], rig.wq[lower], arms));   // (the hands in line with the forearms while they are up: level, not hanging)
-    }
+    // (the arms: by her sides while she is away from the desk, squatKey: the step out brings them there from the keys and the step
+    // back in takes them to the keys again; up in front of her for the reps, squatArmsUp)
+    if (life > 0) squatArms(rig, squatArmsUp(act.since, act.dur, reps) * life);
+}
+// The posture a squat starts from and ends in, as a key: the posture as built with the arms hanging by her sides. A step out from
+// the desk into the squats ends in it and the step back in starts from it (room-people.mjs stepOuts), so the hands leave the keys
+// and come down while she steps back, and go up to the keys again while she steps in: no jump at either end of the reps.
+export function squatKey(rig, key) {
+    rig.load(key); rig.fk(); squatArms(rig, 0); rig.fk();
+    return { ...key, id: key.id + '|squat', q: rig.lq.map(q => q.clone()), root: rig.lp[rig.b.Root].clone(), pelvis: rig.lp[rig.b.pelvis].clone(), wp: rig.wp.map(v => v.clone()), wq: rig.wq.map(q => q.clone()) };
 }
 // Actions timed by the film (the high school chapter: Noah and the desk's touchscreen). input.act: { since: seconds
 // since the action's moment (negative before it), dur: seconds, by: a Vector3 in the model's frame (metres),

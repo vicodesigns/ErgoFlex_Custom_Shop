@@ -1,19 +1,21 @@
 rise: Director titles -> titles-src.json unchanged
 rise: Director props -> 15 prop edit(s) kept in director-camera-rise.json
+wellness: Director props -> 10 prop edit(s) kept in director-camera-wellness.json
+wellness: Director props -> 10 prop edit(s) kept in director-camera-wellness.json
 ch02 rise: Director props (15) -> no change
 ch02 rise: Director people (2) -> review-cut.json
 ch07 wellness: Director props (10) -> no change
-ch07 wellness: Director people (4) -> no change
+ch07 wellness: Director people (4) -> review-cut.json
 ch02 rise: 9 camera keys, 4 clips, 28.5 s from director-camera-rise.json -> review-cut.json
 ch07 wellness: 6 camera keys, 1 clips, 19.5 s from director-camera-wellness.json -> no change
-directorEdited: rise (camera, cameraPlan, people, seconds)
+directorEdited: rise (camera, cameraPlan, people, seconds); wellness (people)
 ch02 rise: Director props (15) -> no change
 ch02 rise: Director people (2) -> review-cut.json
 ch07 wellness: Director props (10) -> no change
-ch07 wellness: Director people (4) -> no change
+ch07 wellness: Director people (4) -> review-cut.json
 ch02 rise: 10 camera keys, 4 clips, 28.5 s from director-camera-rise.json -> review-cut.json
 ch07 wellness: 6 camera keys, 1 clips, 19.5 s from director-camera-wellness.json -> no change
-directorEdited: rise (camera, cameraPlan, ledStatus, motion, people, seconds)
+directorEdited: rise (camera, cameraPlan, ledStatus, motion, people, seconds); wellness (people)
 --- seated, after the importer + pass:
 rise review-cut.json shot: 5 difference(s)
   /screens/2/brightness/5/0: 19.8 | 25
@@ -35,6 +37,14 @@ rise director-film/rise.json: 3334 difference(s)
   /camera/keys/2/view/position/0: 0.14111081258274533 | 0.14111174371387647
   /camera/keys/2/view/position/1: 1.5816497076740965 | 1.5816477308247365
 rise director-camera-rise.json: equal
+wellness review-cut.json shot: equal
+wellness director-film/wellness.json: 5 difference(s)
+  /people/when/maya-break/0/0: 9.7 | 9.5
+  /people/when/maya-break/0/1: 15.8 | 16.1
+  /people/chair/back: 100 | 1700
+  /people/chair/side: 1000 | -500
+  /people/chair/turn: -60 | 160
+wellness director-camera-wellness.json: equal
 --- standing, after the importer + pass:
 rise review-cut.json shot: 5 difference(s)
   /screens/2/brightness/5/0: 16.2 | 21.4
@@ -56,13 +66,39 @@ rise director-film/rise.json: 3400 difference(s)
   /camera/keys/1/view/fov: 30.001412289667876 | 30.001408773458294
   /camera/keys/2/time: 0.005714285714285714 | 0.004705882352941176
 rise director-camera-rise.json: equal
+wellness review-cut.json shot: equal
+wellness director-film/wellness.json: 5 difference(s)
+  /people/when/maya-break/0/0: 9.7 | 9.5
+  /people/when/maya-break/0/1: 15.8 | 16.1
+  /people/chair/back: 100 | 1700
+  /people/chair/side: 1000 | -500
+  /people/chair/turn: -60 | 160
+wellness director-camera-wellness.json: equal
 rise: B, 28.5 s, camera keys at [0.0, 2.0, 4.3, 7.6, 9.45, 12.65, 13.1, 22.9, 28.5], 112 pose keys (extras only)
 rise: A, 28.5 s, camera keys at [0.0, 2.0, 4.3, 7.6, 9.45, 10, 19.45, 19.95, 23.15, 28.5], 116 pose keys (extras only)
 --- seated, after apply-rise.py --only-extras:
 rise review-cut.json shot: equal
 rise director-film/rise.json: equal
 rise director-camera-rise.json: equal
+wellness review-cut.json shot: equal
+wellness director-film/wellness.json: 5 difference(s)
+  /people/when/maya-break/0/0: 9.7 | 9.5
+  /people/when/maya-break/0/1: 15.8 | 16.1
+  /people/chair/back: 100 | 1700
+  /people/chair/side: 1000 | -500
+  /people/chair/turn: -60 | 160
+wellness director-camera-wellness.json: equal
 --- standing, after apply-rise.py --only-extras:
 rise review-cut.json shot: equal
 rise director-film/rise.json: equal
 rise director-camera-rise.json: equal
+wellness review-cut.json shot: equal
+wellness director-film/wellness.json: 5 difference(s)
+  /people/when/maya-break/0/0: 9.7 | 9.5
+  /people/when/maya-break/0/1: 15.8 | 16.1
+  /people/chair/back: 100 | 1700
+  /people/chair/side: 1000 | -500
+  /people/chair/turn: -60 | 160
+wellness director-camera-wellness.json: equal
+
+Note: director-film/<id>.json is not written by the importer's pass (build-round8-director.py --pages writes it, and --pages only runs on a cut inside the repo), so in the scratch copy it stays as it was until apply-rise.py --only-extras rewrites rise's; wellness's differs there only by people.when and people.chair, the two values this fix changes.

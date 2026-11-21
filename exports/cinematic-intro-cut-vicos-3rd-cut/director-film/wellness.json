@@ -7245,17 +7245,17 @@
   "when": {
    "maya-break": [
     [
-     9.7,
-     15.8,
+     9.5,
+     16.1,
      0.3,
      0.35
     ]
    ]
   },
   "chair": {
-   "back": 100,
-   "side": 1000,
-   "turn": -60
+   "back": 1700,
+   "side": -500,
+   "turn": 160
   },
   "except": [
    "people-priya-stretch"
