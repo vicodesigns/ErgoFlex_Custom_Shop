@@ -1,0 +1,129 @@
+0.000 ease smooth smooth upperarm_l:1.0 hand_l:0.6
+13.000 ease smooth smooth upperarm_l:1.0 hand_l:0.6
+13.100 ease linear linear upperarm_l:1.0 hand_l:0.6
+13.167 ease linear linear upperarm_l:1.0 hand_l:0.6 upperarm_r:1.0 lowerarm_r:1.3 hand_r:1.4
+13.233 ease linear linear upperarm_l:1.0 hand_l:0.6 upperarm_r:1.0 lowerarm_r:1.3 hand_r:1.3
+13.300 ease linear linear upperarm_l:1.0 hand_l:0.6 upperarm_r:1.6 lowerarm_r:1.1 hand_r:1.3
+13.367 ease linear linear upperarm_l:1.0 hand_l:0.6
+13.433 ease linear linear lowerarm_l:1.2 hand_l:1.4
+13.533 ease linear linear lowerarm_r:1.3 upperarm_l:1.3 upperarm_r:1.5
+13.633 ease linear linear hand_r:1.3 lowerarm_r:1.3
+13.733 ease linear linear hand_l:1.4 lowerarm_l:0.7 upperarm_l:1.0
+13.800 ease linear linear upperarm_r:0.5
+13.833 ease linear linear hand_r:1.5 lowerarm_r:1.6
+13.900 ease linear linear hand_r:1.5 lowerarm_l:1.2 lowerarm_r:1.1 upperarm_r:1.0
+13.967 ease linear linear hand_r:1.2 lowerarm_r:0.9 upperarm_l:1.5 upperarm_r:0.3
+14.033 ease linear linear upperarm_r:1.2
+14.100 ease linear linear hand_r:1.6 lowerarm_r:0.9 upperarm_l:0.1
+14.133 ease linear linear lowerarm_l:1.3 lowerarm_r:1.7 upperarm_r:1.3
+14.233 ease linear linear hand_l:0.1 hand_r:1.1 lowerarm_l:1.2 upperarm_l:0.5 upperarm_r:1.5
+14.267 ease linear linear lowerarm_l:1.6 lowerarm_r:0.7 upperarm_r:0.7
+14.300 ease linear linear hand_l:1.1 lowerarm_r:1.5 upperarm_l:1.5
+14.333 ease linear linear upperarm_l:1.2
+14.367 ease linear linear lowerarm_r:1.5 upperarm_l:1.5 upperarm_r:1.5
+14.400 ease linear linear lowerarm_r:1.1 upperarm_l:0.8
+14.433 ease linear linear lowerarm_r:1.1 upperarm_l:0.9
+14.467 ease linear linear hand_r:0.4 lowerarm_r:0.3 upperarm_l:1.4
+14.500 ease linear linear hand_r:1.0 lowerarm_l:0.8
+14.533 ease linear linear hand_r:1.0 lowerarm_l:1.0 upperarm_l:1.6 upperarm_r:0.3
+14.567 ease linear linear lowerarm_l:1.4 upperarm_l:1.5
+14.600 ease linear linear hand_r:0.7 lowerarm_l:0.9 lowerarm_r:1.0 upperarm_l:1.7 upperarm_r:0.6
+14.633 ease linear linear hand_r:0.9 lowerarm_r:1.3 upperarm_r:0.7
+14.700 ease linear linear hand_l:1.8 hand_r:0.6 lowerarm_r:1.3 upperarm_l:0.8
+14.767 ease linear linear hand_r:1.2 index_01_l:0.8 index_01_r:1.6 index_02_l:0.5 index_03_l:0.8 index_03_r:1.6 lowerarm_l:1.4 lowerarm_r:0.2 middle_01_l:0.7 middle_01_r:1.6 middle_02_l:0.6 middle_03_l:0.7 middle_03_r:1.6 pinky_01_l:0.7 pinky_01_r:1.6 pinky_02_l:0.6 pinky_03_l:0.8 pinky_03_r:1.5 ring_01_l:0.7 ring_01_r:1.6 ring_02_l:0.2 ring_03_l:0.8 ring_03_r:1.6 thumb_01_l:1.2 thumb_03_l:1.2 upperarm_l:1.2 upperarm_r:0.8
+14.833 ease linear linear hand_l:1.3 hand_r:0.4 index_01_r:0.6 index_02_l:0.9 index_03_r:0.5 lowerarm_r:0.5 middle_01_r:0.6 middle_02_l:0.7 middle_03_r:0.5 pinky_01_r:0.5 pinky_02_l:0.6 pinky_03_r:0.6 ring_01_r:0.6 ring_02_l:0.6 ring_03_r:0.6 thumb_01_l:1.4 thumb_02_r:1.6 thumb_03_l:1.3
+14.900 ease linear linear hand_l:1.0 hand_r:1.5 index_02_r:1.4 lowerarm_r:1.2 middle_02_r:1.4 pinky_02_r:1.4 ring_02_r:1.3 thumb_01_r:1.4 thumb_03_r:1.4
+14.967 ease linear linear index_01_r:0.8 index_03_l:1.5 index_03_r:0.8 middle_01_r:0.9 middle_03_l:1.5 middle_03_r:0.9 pinky_01_r:0.8 pinky_03_l:1.6 pinky_03_r:0.8 ring_01_l:1.6 ring_01_r:0.8 ring_03_r:0.9 thumb_01_l:1.0 thumb_02_l:0.1 thumb_03_l:1.0
+15.033 ease linear linear hand_r:1.0 index_02_l:1.6 index_02_r:1.0 index_03_r:0.2 lowerarm_l:0.7 middle_02_l:1.6 middle_02_r:1.2 middle_03_r:0.3 pinky_02_l:1.0 pinky_02_r:1.0 ring_02_l:1.2 ring_02_r:1.0 ring_03_r:0.2 thumb_01_l:0.7 thumb_02_l:0.5 thumb_03_l:0.7 upperarm_r:1.0
+15.100 ease linear linear hand_l:0.5 index_01_l:1.4 index_01_r:1.1 index_02_l:1.3 index_02_r:1.4 index_03_l:1.6 index_03_r:1.2 middle_01_r:1.3 middle_02_l:0.8 middle_02_r:1.5 middle_03_r:1.2 pinky_01_r:1.3 pinky_02_l:0.9 pinky_02_r:1.5 pinky_03_l:1.6 pinky_03_r:1.2 ring_01_r:1.1 ring_02_l:0.9 ring_02_r:1.3 ring_03_r:1.2 thumb_01_r:1.6 thumb_02_l:0.7 thumb_02_r:0.7 thumb_03_r:1.6 upperarm_l:0.3 upperarm_r:0.9
+15.167 ease linear linear hand_r:0.9 index_02_l:1.4 lowerarm_r:0.9 middle_01_l:0.6 pinky_01_l:0.6 pinky_02_l:1.6 ring_01_l:1.0 ring_02_l:1.3 ring_03_l:1.1 thumb_01_r:1.3 thumb_02_l:1.4 thumb_02_r:1.5 thumb_03_r:1.3 upperarm_l:0.9 upperarm_r:1.3
+15.267 ease linear linear hand_r:1.5 index_01_l:0.9 index_02_r:0.6 index_03_r:0.3 middle_01_l:1.4 middle_01_r:0.5 middle_02_r:0.8 middle_03_l:1.1 middle_03_r:0.3 pinky_01_l:1.1 pinky_02_l:0.7 pinky_02_r:0.7 pinky_03_l:1.0 pinky_03_r:0.4 ring_01_l:1.6 ring_02_l:0.8 ring_02_r:0.3 ring_03_l:1.5 thumb_01_r:0.8 thumb_03_r:0.7
+15.433 ease linear linear hand_r:0.7 index_02_r:1.1 lowerarm_l:0.7 lowerarm_r:1.6 middle_02_l:1.3 middle_02_r:1.4 pinky_02_r:1.2 ring_01_l:0.5 ring_02_r:1.1 ring_03_l:0.5 thumb_01_l:1.3 thumb_01_r:1.4 thumb_02_r:0.7 thumb_03_l:1.3 thumb_03_r:1.4
+15.633 ease linear linear hand_l:1.0 hand_r:1.6 index_01_r:1.1 index_02_l:0.7 index_03_r:1.1 lowerarm_l:1.4 lowerarm_r:1.3 middle_01_l:0.2 middle_01_r:1.1 middle_03_l:0.4 middle_03_r:1.0 pinky_01_r:1.1 pinky_02_l:0.6 pinky_03_r:1.1 ring_01_l:0.4 ring_01_r:0.9 ring_02_l:0.7 ring_03_l:0.8 ring_03_r:1.0 thumb_01_l:1.5 thumb_01_r:1.2 thumb_02_l:1.0 thumb_03_l:1.5 thumb_03_r:1.2 upperarm_r:1.6
+15.833 ease linear linear hand_r:1.1 index_01_r:1.1 index_02_l:0.7 index_03_r:1.1 lowerarm_l:1.3 lowerarm_r:0.8 middle_01_l:0.2 middle_01_r:1.1 middle_03_l:0.4 middle_03_r:1.0 pinky_01_r:1.1 pinky_02_l:0.6 pinky_03_r:1.1 ring_01_l:0.4 ring_01_r:0.9 ring_02_l:0.7 ring_03_l:0.8 ring_03_r:1.0 thumb_01_l:1.5 thumb_01_r:1.2 thumb_02_l:1.0 thumb_03_l:1.5 thumb_03_r:1.2 upperarm_l:1.3
+15.967 ease linear linear hand_l:1.6 hand_r:1.1 index_01_r:1.1 index_02_l:0.7 index_03_r:1.1 lowerarm_l:0.8 lowerarm_r:1.5 middle_01_l:0.2 middle_01_r:1.1 middle_03_l:0.4 middle_03_r:1.0 pinky_01_r:1.1 pinky_02_l:0.6 pinky_03_r:1.1 ring_01_l:0.4 ring_01_r:0.9 ring_02_l:0.7 ring_03_l:0.8 ring_03_r:1.0 thumb_01_l:1.5 thumb_01_r:1.2 thumb_02_l:1.0 thumb_03_l:1.5 thumb_03_r:1.2
+16.167 ease linear linear hand_r:0.7 index_01_r:1.1 index_02_l:0.7 index_03_r:1.1 middle_01_l:0.2 middle_01_r:1.1 middle_03_l:0.4 middle_03_r:1.0 pinky_01_r:1.1 pinky_02_l:0.6 pinky_03_r:1.1 ring_01_l:0.4 ring_01_r:0.9 ring_02_l:0.7 ring_03_l:0.8 ring_03_r:1.0 thumb_01_l:1.5 thumb_01_r:1.2 thumb_02_l:1.0 thumb_03_l:1.5 thumb_03_r:1.2 upperarm_l:1.7 upperarm_r:0.5
+16.333 ease linear linear index_01_r:1.1 index_02_l:0.7 index_03_r:1.1 lowerarm_l:1.4 middle_01_l:0.2 middle_01_r:1.1 middle_03_l:0.4 middle_03_r:1.0 pinky_01_r:1.1 pinky_02_l:0.6 pinky_03_r:1.1 ring_01_l:0.4 ring_01_r:0.9 ring_02_l:0.7 ring_03_l:0.8 ring_03_r:1.0 thumb_01_l:1.5 thumb_01_r:1.2 thumb_02_l:1.0 thumb_03_l:1.5 thumb_03_r:1.2 upperarm_r:1.3
+16.533 ease linear linear hand_l:0.6 index_01_r:1.1 index_02_l:0.7 index_03_r:1.1 lowerarm_r:1.2 middle_01_l:0.2 middle_01_r:1.1 middle_03_l:0.4 middle_03_r:1.0 pinky_01_r:1.1 pinky_02_l:0.6 pinky_03_r:1.1 ring_01_l:0.4 ring_01_r:0.9 ring_02_l:0.7 ring_03_l:0.8 ring_03_r:1.0 thumb_01_l:1.5 thumb_01_r:1.2 thumb_02_l:1.0 thumb_03_l:1.5 thumb_03_r:1.2
+16.733 ease linear linear index_01_r:1.1 index_02_l:0.7 index_03_r:1.1 lowerarm_r:0.3 middle_01_l:0.2 middle_01_r:1.1 middle_03_l:0.4 middle_03_r:1.0 pinky_01_r:1.1 pinky_02_l:0.6 pinky_03_r:1.1 ring_01_l:0.4 ring_01_r:0.9 ring_02_l:0.7 ring_03_l:0.8 ring_03_r:1.0 thumb_01_l:1.5 thumb_01_r:1.2 thumb_02_l:1.0 thumb_03_l:1.5 thumb_03_r:1.2 upperarm_l:1.2
+16.933 ease linear linear hand_l:0.9 index_01_r:0.8 index_02_l:1.7 index_03_l:0.5 index_03_r:0.8 middle_01_l:0.2 middle_01_r:0.8 middle_02_l:1.4 middle_03_l:0.4 middle_03_r:0.7 pinky_01_r:1.1 pinky_02_l:1.6 pinky_03_l:0.7 pinky_03_r:0.8 ring_01_l:0.4 ring_01_r:0.6 ring_02_l:1.7 ring_03_l:0.8 ring_03_r:0.7 thumb_01_l:1.5 thumb_01_r:1.2 thumb_02_l:1.0 thumb_03_l:1.5 thumb_03_r:1.2
+17.167 ease linear linear index_01_r:0.9 index_03_l:1.4 index_03_r:0.9 lowerarm_l:1.4 middle_01_r:1.0 middle_03_r:1.0 pinky_01_r:1.1 pinky_03_r:0.8 ring_01_r:0.8 ring_03_r:0.9 thumb_01_l:1.1 thumb_01_r:0.2 thumb_02_r:1.5 thumb_03_l:1.3 thumb_03_r:0.3 upperarm_l:0.7
+17.367 ease linear linear hand_l:1.1 index_02_l:0.6 index_02_r:1.2 index_03_l:1.6 middle_02_r:1.3 pinky_02_l:0.8 pinky_02_r:1.0 pinky_03_l:1.6 ring_02_l:1.0 ring_02_r:0.8 thumb_01_l:1.6 thumb_02_r:1.3
+17.467 ease linear linear hand_l:1.3 hand_r:1.0 index_01_r:0.5 index_02_l:0.9 index_03_r:0.3 lowerarm_l:0.5 lowerarm_r:0.7 middle_01_l:0.9 middle_01_r:0.3 middle_03_l:0.4 middle_03_r:0.5 pinky_01_l:0.4 pinky_01_r:0.8 pinky_02_l:0.9 pinky_02_r:1.5 pinky_03_r:0.3 ring_01_r:0.3 ring_02_l:0.7 ring_02_r:1.3 ring_03_l:0.8 ring_03_r:0.5 thumb_01_l:0.9 thumb_01_r:0.4 thumb_02_r:1.6 thumb_03_l:1.0 thumb_03_r:0.2 upperarm_l:0.5
+17.567 ease linear linear hand_l:0.2 index_01_r:1.2 index_03_r:1.2 lowerarm_l:0.4 lowerarm_r:0.4 middle_01_r:1.2 middle_02_l:1.5 middle_03_r:1.3 pinky_01_r:1.4 pinky_03_r:1.4 ring_01_r:1.1 ring_03_r:1.2 upperarm_r:1.6
+17.633 ease linear linear hand_l:1.1 hand_r:0.5 index_01_r:1.5 index_02_l:0.6 index_03_l:1.5 index_03_r:1.6 lowerarm_l:0.5 lowerarm_r:0.4 middle_02_l:0.3 pinky_03_l:1.6 ring_01_r:1.6 ring_03_r:1.6 thumb_01_l:1.2 thumb_03_l:1.3 upperarm_l:1.6
+17.667 ease linear linear hand_r:1.6 index_02_l:0.9 index_03_l:1.5 lowerarm_l:1.5 lowerarm_r:1.0 ring_02_r:1.5 thumb_01_r:0.3 thumb_02_l:0.8 thumb_03_r:0.2
+17.700 ease linear linear hand_r:0.7 index_01_l:0.7 index_01_r:1.4 index_02_l:1.5 index_03_r:1.3 lowerarm_r:1.1 middle_01_l:0.7 middle_01_r:1.4 middle_02_l:1.3 middle_03_l:0.7 middle_03_r:1.4 pinky_01_l:0.4 pinky_01_r:1.6 pinky_02_l:1.2 pinky_03_l:0.5 pinky_03_r:1.4 ring_01_l:0.5 ring_01_r:1.3 ring_02_l:0.9 ring_02_r:1.6 ring_03_l:1.3 ring_03_r:1.5 thumb_01_l:0.8 thumb_01_r:1.4 thumb_02_r:1.5 thumb_03_l:0.7 thumb_03_r:1.4
+17.733 ease linear linear index_02_l:1.5 lowerarm_l:1.4 middle_02_l:1.1 pinky_02_l:1.6 ring_02_l:1.3 thumb_02_l:1.1 thumb_02_r:0.8 upperarm_l:1.4
+17.800 ease linear linear hand_l:1.7 index_02_l:0.1 lowerarm_l:0.7 lowerarm_r:0.4 middle_01_l:0.5 ring_02_l:0.5 ring_03_l:0.8 thumb_01_r:1.0 thumb_02_r:1.2 thumb_03_r:1.0 upperarm_l:1.2 upperarm_r:0.3
+17.867 ease linear linear index_01_r:0.6 index_02_r:0.3 index_03_l:1.5 lowerarm_l:1.1 lowerarm_r:1.7 middle_02_r:0.8 middle_03_r:0.5 pinky_01_r:0.4 pinky_02_r:1.0 pinky_03_r:0.6 ring_02_r:0.4 ring_03_r:0.6 thumb_02_l:1.4 thumb_02_r:0.8 upperarm_l:1.0
+17.967 ease linear linear hand_l:1.2 hand_r:1.2 index_03_l:1.4 lowerarm_r:1.5 pinky_03_l:1.3 ring_02_r:1.4 thumb_01_l:1.3 thumb_03_l:1.3
+18.033 ease linear linear index_01_l:0.8 index_02_r:1.2 lowerarm_l:1.5 middle_01_l:0.7 middle_02_l:0.9 middle_02_r:1.4 middle_03_l:0.7 pinky_01_l:0.5 pinky_02_r:1.3 pinky_03_l:0.3 ring_01_l:1.1 ring_02_l:0.5 ring_02_r:1.0 ring_03_l:1.1 thumb_01_l:1.6 thumb_03_l:1.6 upperarm_r:1.0
+18.100 ease linear linear hand_r:0.4 index_01_l:1.3 index_01_r:0.6 index_02_l:1.2 index_02_r:1.5 index_03_l:1.3 index_03_r:0.7 lowerarm_l:1.4 lowerarm_r:1.0 middle_01_l:1.4 middle_01_r:0.5 middle_02_l:0.4 middle_03_l:1.3 middle_03_r:0.6 pinky_01_l:1.5 pinky_01_r:0.9 pinky_02_l:0.7 pinky_03_l:1.5 pinky_03_r:0.7 ring_01_l:1.5 ring_01_r:0.6 ring_02_l:0.8 ring_02_r:1.5 ring_03_l:1.3 ring_03_r:0.6 thumb_01_r:1.2 thumb_02_r:1.5 thumb_03_r:1.1 upperarm_r:1.2
+18.133 ease linear linear hand_l:0.8 index_01_r:1.4 index_02_l:0.6 index_02_r:1.4 index_03_r:1.3 middle_01_r:1.3 middle_02_l:0.6 middle_02_r:1.1 middle_03_r:0.9 pinky_01_r:1.4 pinky_03_r:0.9 ring_01_r:1.0 ring_02_r:1.2 ring_03_r:1.3 thumb_01_l:0.9 thumb_01_r:0.5 thumb_02_l:1.3 thumb_02_r:1.1 thumb_03_l:0.7 thumb_03_r:0.5 upperarm_l:1.5 upperarm_r:1.8
+18.167 ease linear linear hand_r:1.6 index_01_l:0.8 index_01_r:1.0 index_03_l:0.5 index_03_r:0.2 lowerarm_l:1.0 middle_01_l:1.1 middle_01_r:0.8 middle_03_l:0.7 middle_03_r:1.0 pinky_01_l:1.1 pinky_01_r:1.1 pinky_03_l:0.8 pinky_03_r:0.9 ring_01_l:1.4 ring_01_r:0.5 ring_02_l:1.4 ring_02_r:1.3 ring_03_l:1.2 ring_03_r:1.2 thumb_02_l:0.8 upperarm_l:0.8
+18.233 ease linear linear index_01_l:1.4 index_01_r:0.7 index_02_l:0.4 index_02_r:0.8 index_03_l:1.2 middle_02_l:0.3 middle_02_r:0.9 middle_03_l:1.3 pinky_01_l:1.2 pinky_02_r:1.5 pinky_03_l:1.1 ring_01_l:1.2 ring_02_r:0.8 ring_03_l:1.5 ring_03_r:0.5 thumb_01_r:1.1 thumb_03_r:1.0
+18.267 ease linear linear hand_r:1.4 index_01_l:0.9 index_03_l:1.0 lowerarm_l:0.7 middle_01_l:1.2 middle_01_r:0.1 middle_03_l:0.6 pinky_01_l:0.8 pinky_01_r:0.8 pinky_03_l:0.6 ring_01_l:1.1 ring_01_r:0.5 ring_03_l:1.1 ring_03_r:0.5 thumb_01_l:0.7 thumb_02_l:1.4 thumb_03_l:0.6
+18.300 ease linear linear lowerarm_l:1.6 thumb_01_l:1.6 thumb_01_r:1.6 thumb_03_l:1.5 thumb_03_r:1.5 upperarm_l:1.6
+18.367 ease linear linear hand_r:0.3 index_01_l:0.7 index_01_r:1.4 index_02_l:0.8 index_02_r:0.4 index_03_r:1.2 lowerarm_l:0.2 lowerarm_r:0.7 middle_02_l:0.9 middle_02_r:0.3 middle_03_r:1.3 pinky_01_r:1.2 pinky_02_l:1.5 pinky_03_r:1.1 ring_01_r:1.2 ring_02_l:0.8 ring_03_l:0.5 ring_03_r:1.5 thumb_01_l:1.1 thumb_03_l:1.0 upperarm_l:1.2
+18.433 ease linear linear hand_r:1.2 index_01_l:1.0 index_01_r:0.8 index_03_l:1.0 index_03_r:0.5 lowerarm_l:1.3 middle_01_l:1.3 middle_01_r:1.1 middle_03_l:1.0 middle_03_r:0.7 pinky_01_l:1.1 pinky_01_r:1.1 pinky_03_l:0.9 pinky_03_r:0.8 ring_01_l:1.2 ring_01_r:1.4 ring_02_l:1.3 ring_02_r:1.4 ring_03_l:1.2 ring_03_r:1.2 thumb_02_r:0.8 upperarm_r:0.8
+18.500 ease linear linear hand_l:1.5 index_01_l:0.6 index_01_r:1.3 index_02_l:1.5 index_02_r:1.2 index_03_l:0.7 index_03_r:1.3 lowerarm_l:1.7 lowerarm_r:0.5 middle_01_l:1.1 middle_01_r:1.4 middle_02_r:0.4 middle_03_l:0.6 middle_03_r:1.3 pinky_01_l:0.9 pinky_01_r:1.5 pinky_02_r:0.7 pinky_03_l:0.7 pinky_03_r:1.5 ring_01_l:0.6 ring_01_r:1.5 ring_02_l:1.5 ring_02_r:0.8 ring_03_l:0.6 ring_03_r:1.3 thumb_01_l:1.2 thumb_02_l:1.5 thumb_03_l:1.1 upperarm_l:1.6 upperarm_r:0.5
+18.567 ease linear linear index_01_r:0.8 index_02_l:1.2 index_03_r:0.9 middle_01_r:0.7 middle_02_l:1.4 middle_02_r:0.9 middle_03_r:0.7 pinky_01_r:0.5 pinky_02_l:1.3 pinky_03_r:0.3 ring_01_r:1.1 ring_02_l:1.0 ring_02_r:0.5 ring_03_r:1.1 thumb_01_r:1.6 thumb_03_r:1.6 upperarm_l:1.4 upperarm_r:1.3
+18.633 ease linear linear hand_l:1.0 hand_r:0.5 lowerarm_r:0.4 ring_02_l:1.4 thumb_01_r:1.3 thumb_03_r:1.3 upperarm_l:0.7
+18.767 ease linear linear hand_l:0.7 hand_r:1.2 index_01_l:0.6 index_01_r:0.5 index_02_l:1.4 index_02_r:0.6 index_03_r:0.3 lowerarm_l:1.1 middle_01_l:0.4 middle_01_r:1.2 middle_02_l:1.4 middle_03_l:0.6 middle_03_r:1.1 pinky_01_l:0.4 pinky_01_r:1.2 pinky_02_l:1.2 pinky_03_l:0.6 pinky_03_r:0.6 ring_01_l:0.3 ring_01_r:0.7 ring_02_l:1.0 ring_02_r:0.6 ring_03_r:1.5 thumb_01_l:1.5 thumb_01_r:0.6 thumb_03_l:1.4 thumb_03_r:0.6 upperarm_r:1.5
+18.833 ease linear linear hand_l:0.6 index_03_r:1.5 lowerarm_l:1.4 lowerarm_r:0.5 middle_02_r:1.3 pinky_03_r:1.4 thumb_03_r:0.4 upperarm_l:0.9
+18.900 ease linear linear hand_l:0.3 index_01_l:1.4 index_01_r:0.7 index_02_r:1.5 index_03_l:1.3 lowerarm_l:1.6 middle_01_l:1.4 middle_01_r:0.7 middle_03_l:1.4 middle_03_r:0.7 pinky_01_l:1.6 pinky_01_r:0.4 pinky_02_r:1.2 pinky_03_l:1.4 pinky_03_r:0.5 ring_01_l:1.3 ring_01_r:0.5 ring_02_r:0.9 ring_03_l:1.5 ring_03_r:0.1 thumb_01_l:1.4 thumb_01_r:0.8 thumb_02_l:1.5 thumb_03_l:1.4 thumb_03_r:0.7 upperarm_l:1.5 upperarm_r:1.5
+18.967 ease linear linear hand_l:1.5 hand_r:0.2 index_01_l:1.5 index_02_r:0.6 index_03_l:1.6 lowerarm_l:1.7 lowerarm_r:0.8 middle_02_r:0.3 pinky_03_l:1.6 pinky_03_r:1.6 ring_01_l:1.6 ring_02_r:1.3 ring_03_l:1.6 thumb_01_r:1.2 thumb_03_r:1.3 upperarm_r:1.6
+19.033 ease linear linear hand_r:1.7 index_01_l:1.2 index_03_l:1.2 lowerarm_r:0.4 middle_01_l:1.2 middle_02_r:1.5 middle_03_l:1.3 pinky_01_l:1.2 pinky_03_l:1.1 ring_01_l:1.1 ring_03_l:1.2
+19.133 ease linear linear index_01_l:0.5 index_02_l:1.4 index_02_r:0.9 index_03_l:0.3 index_03_r:0.3 lowerarm_l:0.9 middle_01_l:0.3 middle_01_r:0.9 middle_03_l:0.5 middle_03_r:0.4 pinky_01_l:0.8 pinky_01_r:0.4 pinky_02_l:1.5 pinky_02_r:0.9 pinky_03_l:0.3 ring_01_l:0.3 ring_02_l:1.3 ring_02_r:0.7 ring_03_l:0.5 ring_03_r:0.8 thumb_01_l:0.4 thumb_01_r:0.9 thumb_02_l:1.6 thumb_03_l:0.2 thumb_03_r:1.0 upperarm_l:0.2 upperarm_r:0.5
+19.233 ease linear linear hand_l:0.7 lowerarm_l:0.4 middle_01_r:0.5 pinky_01_r:0.3 pinky_02_r:0.4 thumb_01_l:0.2 thumb_01_r:1.4 thumb_02_l:1.5 thumb_02_r:1.6 thumb_03_r:1.6
+19.400 ease linear linear hand_r:0.3 index_01_l:1.4 index_01_r:1.1 index_02_l:1.0 index_03_l:1.4 index_03_r:0.8 lowerarm_l:1.7 lowerarm_r:0.8 middle_01_l:1.3 middle_01_r:1.5 middle_02_l:1.3 middle_02_r:1.5 middle_03_l:1.3 middle_03_r:1.5 pinky_01_l:1.3 pinky_01_r:1.0 pinky_02_l:0.9 pinky_03_l:1.3 pinky_03_r:1.3 ring_01_l:1.3 ring_01_r:1.2 ring_02_l:0.9 ring_03_l:1.2 ring_03_r:1.1 thumb_02_l:1.1 thumb_02_r:1.1 upperarm_l:0.4 upperarm_r:1.2
+19.567 ease linear linear index_01_r:0.6 index_02_l:0.9 index_02_r:1.1 lowerarm_l:1.4 middle_01_r:0.7 middle_02_l:1.3 middle_03_r:0.8 pinky_01_r:0.8 pinky_02_l:1.0 pinky_02_r:1.1 ring_01_r:0.9 ring_02_l:0.9 ring_02_r:1.1 ring_03_r:1.0 thumb_01_l:1.1 thumb_02_r:1.5 thumb_03_l:1.1 upperarm_l:1.6 upperarm_r:0.8
+19.733 ease linear linear hand_r:0.8 index_01_l:1.1 index_02_r:0.7 index_03_l:1.1 lowerarm_r:1.2 middle_01_l:1.1 middle_01_r:0.2 middle_03_l:1.0 middle_03_r:0.4 pinky_01_l:1.1 pinky_02_r:0.6 pinky_03_l:1.1 ring_01_l:0.9 ring_01_r:0.4 ring_02_r:0.7 ring_03_l:1.0 ring_03_r:0.8 thumb_01_l:1.2 thumb_01_r:1.5 thumb_02_r:1.0 thumb_03_l:1.2 thumb_03_r:1.5 upperarm_r:0.5
+19.900 ease linear linear index_01_l:1.1 index_02_r:0.7 index_03_l:1.1 lowerarm_l:0.7 middle_01_l:1.1 middle_01_r:0.2 middle_03_l:1.0 middle_03_r:0.4 pinky_01_l:1.1 pinky_02_r:0.6 pinky_03_l:1.1 ring_01_l:0.9 ring_01_r:0.4 ring_02_r:0.7 ring_03_l:1.0 ring_03_r:0.8 thumb_01_l:1.2 thumb_01_r:1.5 thumb_02_r:1.0 thumb_03_l:1.2 thumb_03_r:1.5
+20.067 ease linear linear index_01_l:1.1 index_02_r:0.7 index_03_l:1.1 lowerarm_l:0.8 lowerarm_r:0.9 middle_01_l:1.1 middle_01_r:0.2 middle_03_l:1.0 middle_03_r:0.4 pinky_01_l:1.1 pinky_02_r:0.6 pinky_03_l:1.1 ring_01_l:0.9 ring_01_r:0.4 ring_02_r:0.7 ring_03_l:1.0 ring_03_r:0.8 thumb_01_l:1.2 thumb_01_r:1.5 thumb_02_r:1.0 thumb_03_l:1.2 thumb_03_r:1.5 upperarm_l:1.3
+20.233 ease linear linear hand_l:0.8 hand_r:1.8 index_01_l:1.1 index_02_r:0.7 index_03_l:1.1 lowerarm_l:0.4 middle_01_l:1.1 middle_01_r:0.2 middle_03_l:1.0 middle_03_r:0.4 pinky_01_l:1.1 pinky_02_r:0.6 pinky_03_l:1.1 ring_01_l:0.9 ring_01_r:0.4 ring_02_r:0.7 ring_03_l:1.0 ring_03_r:0.8 thumb_01_l:1.2 thumb_01_r:1.5 thumb_02_r:1.0 thumb_03_l:1.2 thumb_03_r:1.5 upperarm_l:1.4 upperarm_r:0.9
+20.433 ease linear linear hand_r:0.2 index_01_l:1.1 index_02_r:0.7 index_03_l:1.1 lowerarm_r:0.7 middle_01_l:1.1 middle_01_r:0.2 middle_03_l:1.0 middle_03_r:0.4 pinky_01_l:1.1 pinky_02_r:0.6 pinky_03_l:1.1 ring_01_l:0.9 ring_01_r:0.4 ring_02_r:0.7 ring_03_l:1.0 ring_03_r:0.8 thumb_01_l:1.2 thumb_01_r:1.5 thumb_02_r:1.0 thumb_03_l:1.2 thumb_03_r:1.5 upperarm_r:0.2
+20.600 ease linear linear index_01_l:1.1 index_02_r:0.7 index_03_l:1.1 lowerarm_r:1.4 middle_01_l:1.1 middle_01_r:0.2 middle_03_l:1.0 middle_03_r:0.4 pinky_01_l:1.1 pinky_02_r:0.6 pinky_03_l:1.1 ring_01_l:0.9 ring_01_r:0.4 ring_02_r:0.7 ring_03_l:1.0 ring_03_r:0.8 thumb_01_l:1.2 thumb_01_r:1.5 thumb_02_r:1.0 thumb_03_l:1.2 thumb_03_r:1.5 upperarm_l:1.3 upperarm_r:0.5
+20.767 ease linear linear hand_r:1.1 index_01_l:1.1 index_02_r:0.7 index_03_l:1.1 lowerarm_l:1.8 lowerarm_r:0.3 middle_01_l:1.1 middle_01_r:0.2 middle_03_l:1.0 middle_03_r:0.4 pinky_01_l:1.1 pinky_02_r:0.6 pinky_03_l:1.1 ring_01_l:0.9 ring_01_r:0.4 ring_02_r:0.7 ring_03_l:1.0 ring_03_r:0.8 thumb_01_l:1.2 thumb_01_r:1.5 thumb_02_r:1.0 thumb_03_l:1.2 thumb_03_r:1.5 upperarm_l:0.8 upperarm_r:0.9
+21.033 ease linear linear index_01_l:1.1 index_01_r:1.2 index_03_l:1.1 index_03_r:0.5 lowerarm_l:1.5 middle_01_l:1.1 middle_01_r:1.3 middle_02_r:1.4 middle_03_l:1.0 middle_03_r:1.4 pinky_01_l:1.1 pinky_01_r:1.1 pinky_03_l:1.1 pinky_03_r:0.7 ring_01_l:0.9 ring_01_r:1.4 ring_03_l:1.0 ring_03_r:1.5 thumb_01_l:1.2 thumb_01_r:1.5 thumb_02_r:1.0 thumb_03_l:1.2 thumb_03_r:1.5 upperarm_r:1.5
+21.133 ease linear linear hand_l:1.5 index_01_r:1.4 index_03_r:1.2 lowerarm_r:1.4 middle_02_r:1.7 pinky_03_r:1.3 ring_01_l:1.6 thumb_01_l:1.3 thumb_03_l:1.3
+21.300 ease linear linear index_01_l:1.0 index_02_l:0.5 index_02_r:1.2 index_03_l:1.0 lowerarm_r:1.4 middle_01_l:0.9 middle_01_r:0.8 middle_02_l:0.6 middle_02_r:1.1 middle_03_l:0.8 middle_03_r:0.4 pinky_01_l:1.0 pinky_02_l:0.4 pinky_02_r:1.6 pinky_03_l:1.0 ring_01_l:0.7 ring_01_r:0.1 ring_03_l:0.9 thumb_01_r:0.9 thumb_02_l:1.2 thumb_03_r:1.1 upperarm_l:1.1
+21.400 ease linear linear hand_l:1.4 index_01_l:1.1 index_02_l:0.6 index_02_r:1.3 index_03_l:1.2 middle_01_l:1.2 middle_02_l:0.9 middle_02_r:1.1 middle_03_l:1.0 pinky_01_l:1.2 pinky_02_l:0.8 pinky_02_r:1.0 pinky_03_l:1.0 ring_01_l:1.1 ring_02_l:0.6 ring_02_r:1.5 ring_03_l:1.0 thumb_01_r:1.0 thumb_03_r:0.9 upperarm_l:0.7 upperarm_r:1.1
+21.467 ease linear linear hand_l:0.7 index_01_l:1.5 index_01_r:1.3 index_02_r:1.4 index_03_l:1.5 index_03_r:0.2 lowerarm_r:0.8 middle_01_l:1.4 middle_01_r:1.2 middle_02_l:1.6 middle_02_r:1.2 middle_03_l:1.4 middle_03_r:1.4 pinky_01_l:1.5 pinky_01_r:1.2 pinky_02_l:1.4 pinky_02_r:1.6 pinky_03_l:1.5 pinky_03_r:0.9 ring_01_l:1.4 ring_01_r:0.7 ring_02_l:1.3 ring_02_r:1.3 ring_03_l:1.4 ring_03_r:1.3 thumb_01_r:1.2 thumb_03_r:1.3
+21.533 ease linear linear hand_l:0.6 hand_r:0.8 index_01_l:1.2 index_01_r:0.9 index_02_r:0.6 index_03_l:1.1 index_03_r:0.5 lowerarm_l:1.5 lowerarm_r:1.4 middle_01_l:1.1 middle_03_l:1.1 middle_03_r:0.3 pinky_01_l:1.2 pinky_01_r:0.6 pinky_02_r:0.7 pinky_03_l:1.1 pinky_03_r:0.8 ring_01_l:1.0 ring_01_r:0.3 ring_03_l:1.2 ring_03_r:1.1 thumb_01_l:0.7 thumb_02_l:1.5 thumb_03_l:0.6 upperarm_l:0.9
+21.600 ease linear linear hand_r:1.4 index_01_l:1.4 index_02_l:0.5 index_03_l:1.3 lowerarm_l:1.5 middle_01_l:1.3 middle_02_l:0.3 middle_02_r:1.3 middle_03_l:1.3 middle_03_r:0.3 pinky_01_l:1.3 pinky_02_l:0.5 pinky_02_r:1.6 pinky_03_l:1.3 pinky_03_r:0.1 ring_01_l:1.3 ring_01_r:0.1 ring_03_l:1.3 ring_03_r:0.5 thumb_01_l:1.0 thumb_01_r:0.5 thumb_02_r:1.1 thumb_03_l:1.0 thumb_03_r:0.5 upperarm_r:0.8
+21.667 ease linear linear hand_r:1.1 index_01_l:1.3 index_01_r:1.3 index_03_l:1.3 index_03_r:1.5 lowerarm_l:0.7 middle_01_l:1.2 middle_01_r:1.4 middle_03_l:1.3 middle_03_r:1.5 pinky_01_l:1.2 pinky_01_r:1.4 pinky_03_l:1.2 pinky_03_r:1.4 ring_01_l:1.2 ring_01_r:1.5 ring_03_l:1.3 ring_03_r:1.3 thumb_01_l:0.6 thumb_02_r:1.0 thumb_03_l:0.6 upperarm_l:1.2 upperarm_r:1.0
+21.733 ease linear linear index_01_r:0.8 index_03_r:1.0 lowerarm_l:1.1 lowerarm_r:1.5 middle_01_r:0.8 middle_03_r:0.8 pinky_01_r:0.5 pinky_03_r:0.3 ring_01_r:1.0 ring_03_r:0.7 thumb_02_l:0.7
+21.767 only B 10 bones smooth
+21.800 ease linear linear hand_r:1.6 index_01_r:1.3 index_02_r:1.2 index_03_r:1.4 lowerarm_l:1.5 lowerarm_r:17.9 middle_01_r:1.3 middle_02_r:1.3 middle_03_r:1.3 pinky_01_r:1.3 pinky_02_r:1.3 pinky_03_r:1.2 ring_01_r:1.3 ring_02_r:1.2 ring_03_r:1.3 thumb_02_r:1.2 upperarm_l:1.4 upperarm_r:17.0
+21.833 only B 6 bones smooth
+21.867 ease linear linear hand_l:0.8 hand_r:1.1 index_01_r:1.2 index_02_l:1.5 index_03_r:1.2 lowerarm_r:58.2 middle_01_r:1.2 middle_02_l:1.5 middle_03_r:1.3 pinky_01_r:1.2 pinky_02_l:1.5 pinky_02_r:0.1 pinky_03_r:1.2 ring_01_r:1.2 ring_02_l:1.5 ring_03_r:1.2 thumb_02_r:1.4 upperarm_l:1.0 upperarm_r:43.7
+21.900 only B 2 bones smooth
+21.933 ease linear linear index_02_r:1.2 lowerarm_r:38.5 middle_02_r:1.2 pinky_02_r:1.2 ring_02_r:1.2 upperarm_r:119.0
+21.967 only B 5 bones smooth
+22.000 ease linear linear hand_r:0.7 lowerarm_r:1.3 upperarm_l:0.3 upperarm_r:127.0
+22.067 ease linear linear hand_r:1.3 upperarm_l:1.3
+22.100 ease linear linear hand_l:1.6 hand_r:0.9
+22.167 ease linear linear upperarm_l:1.0 hand_l:0.6
+22.233 ease linear linear lowerarm_l:0.2 hand_l:0.8 upperarm_r:1.0 hand_r:1.3
+22.300 ease linear linear lowerarm_l:1.2 hand_l:0.6 upperarm_r:0.5 hand_r:1.1
+22.367 ease linear linear upperarm_r:1.3 lowerarm_r:1.2 hand_r:1.2
+22.433 ease linear linear upperarm_l:1.3 upperarm_r:1.3
+22.500 ease linear linear upperarm_l:1.4 hand_r:0.6
+22.567 ease linear linear upperarm_l:1.0 lowerarm_l:1.4
+22.633 ease linear linear hand_l:0.4 lowerarm_r:1.4 hand_r:0.8
+22.700 ease linear linear upperarm_l:1.1 lowerarm_l:0.9 hand_l:0.9 lowerarm_r:1.5
+22.767 ease linear linear hand_r:1.2
+22.833 ease linear linear hand_l:1.6 lowerarm_r:0.8 hand_r:1.1
+22.900 ease linear linear lowerarm_l:1.2 upperarm_r:0.8 lowerarm_r:0.6
+22.967 ease linear linear lowerarm_l:0.6
+23.033 ease linear linear lowerarm_l:0.6 hand_l:1.2 upperarm_r:0.8 lowerarm_r:0.9 hand_r:1.5
+23.100 ease linear linear lowerarm_l:0.4 hand_l:1.1 upperarm_r:1.2
+23.167 ease linear linear lowerarm_l:1.2 hand_l:0.5
+23.233 ease linear linear upperarm_l:1.2 lowerarm_l:1.2 hand_l:1.0 upperarm_r:1.2 lowerarm_r:1.1
+23.300 ease linear linear upperarm_l:1.4 hand_l:0.4 lowerarm_r:1.5
+23.367 ease linear linear upperarm_l:0.6 lowerarm_l:0.8 hand_l:0.5 upperarm_r:0.4 lowerarm_r:1.3 hand_r:0.3
+23.433 ease linear linear upperarm_r:1.0 lowerarm_r:1.3 hand_r:1.4
+23.500 ease smooth smooth upperarm_l:1.0 hand_l:0.6
+23.700 ease smooth smooth upperarm_l:1.0 hand_l:0.6

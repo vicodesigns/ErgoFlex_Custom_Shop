@@ -1,0 +1,28 @@
+measure                      entry (mirrored side)   exit BEFORE   exit AFTER
+min headL                               2.7 ( headR)           2.4          2.4
+min headR                               0.7 ( headL)           0.2          0.7
+min neckL                               1.4 ( neckR)           1.4          1.1
+min neckR                               3.3 ( neckL)           1.5          3.2
+min torsoL                              0.0 (torsoR)           0.0          0.1
+min torsoR                              5.1 (torsoL)           4.3          5.3
+min ponyL                               0.0 ( ponyR)           0.0          0.0
+min ponyR                               0.0 ( ponyL)           0.0          0.1
+min armarm                              0.1 (armarm)           0.0          0.1
+min deskHand                            0.0 (deskHand)          -5.0          0.0
+min deskFore                            0.0 (deskFore)           0.0          0.0
+min zminL                             -21.4 ( zminR)         -21.3        -21.3
+min zminR                             -16.7 ( zminL)         -19.5        -16.7
+max stretch shoulder l                11.99 (     r)         15.52        15.46
+min area shoulder l                    0.00 (     r)          0.00         0.00
+max stretch shoulder r                15.62 (     l)         12.01        12.00
+min area shoulder r                    0.00 (     l)          0.00         0.00
+max stretch elbow l                    3.99 (     r)          4.14         3.99
+min area elbow l                       0.01 (     r)          0.02         0.03
+max stretch elbow r                    3.98 (     l)          4.18         3.98
+min area elbow r                       0.02 (     l)          0.01         0.02
+max stretch wrist l                   13.05 (     r)         12.26        12.26
+min area wrist l                       0.07 (     r)          0.02         0.01
+max stretch wrist r                   12.29 (     l)         13.08        13.08
+min area wrist r                       0.03 (     l)          0.01         0.02
+max step/frame deskHand                        5.1          47.9          5.0
+max step/frame deskFore                        3.6          30.5          3.6

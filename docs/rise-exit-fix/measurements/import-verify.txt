@@ -1,0 +1,5 @@
+review-cut.json: A keys 129 == Vico's export: true; B keys 126 == fix doc: true; first 90 keys (t <= 21.133) identical: true; rest of the rise shot identical (directorEdited aside): true
+   B: keys after 21.133: 36 (21.2 .. 23.3); A: keys after 21.133: 39
+director-film/rise.json: A keys 129 == Vico's export: true; B keys 126 == fix doc: true; first 90 keys (t <= 21.133) identical: true; rest of the rise shot identical (directorEdited aside): true
+   B: keys after 21.133: 36 (21.2 .. 23.3); A: keys after 21.133: 39
+OK

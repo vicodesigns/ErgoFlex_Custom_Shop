@@ -1,0 +1,317 @@
+== 1. keys per bone in 13..15.4
+upperarm_l
+   0.000->13.000    0.0deg dot  1.000     0deg/s smooth
+   13.000->13.100    0.0deg dot  1.000     0deg/s smooth
+   13.100->13.167    0.0deg dot  1.000     0deg/s linear
+   13.167->13.233    0.0deg dot  1.000     0deg/s linear
+   13.233->13.300    0.0deg dot  1.000     0deg/s linear
+   13.300->13.367    0.0deg dot  1.000     0deg/s linear
+   13.367->13.433    0.1deg dot  1.000     2deg/s linear
+   13.433->13.533    1.4deg dot  1.000    14deg/s linear
+   13.533->13.633    3.1deg dot  1.000    31deg/s linear
+   13.633->13.733    5.4deg dot  0.999    54deg/s linear
+   13.733->13.800    5.1deg dot  0.999    76deg/s linear
+   13.800->13.833    3.0deg dot  1.000    92deg/s linear
+   13.833->13.900    7.1deg dot  0.998   107deg/s linear
+   13.900->13.967    8.7deg dot  0.997   130deg/s linear
+   13.967->14.033    9.6deg dot  0.996   145deg/s linear
+   14.033->14.100    9.2deg dot  0.997   138deg/s linear
+   14.100->14.133    6.4deg dot  0.998   193deg/s linear
+   14.133->14.233   25.3deg dot  0.976   253deg/s linear
+   14.233->14.267    7.6deg dot  0.998   224deg/s linear
+   14.267->14.300    7.3deg dot  0.998   222deg/s linear
+   14.300->14.333    7.3deg dot  0.998   221deg/s linear
+   14.333->14.367    7.3deg dot  0.998   216deg/s linear
+   14.367->14.400    7.4deg dot  0.998   224deg/s linear
+   14.400->14.433    7.3deg dot  0.998   222deg/s linear
+   14.433->14.467    7.1deg dot  0.998   210deg/s linear
+   14.467->14.500    6.8deg dot  0.998   206deg/s linear
+   14.500->14.533    6.2deg dot  0.999   188deg/s linear
+   14.533->14.567    5.4deg dot  0.999   160deg/s linear
+   14.567->14.600    4.7deg dot  0.999   143deg/s linear
+   14.600->14.633    4.1deg dot  0.999   126deg/s linear
+   14.633->14.700    7.2deg dot  0.998   108deg/s linear
+   14.700->14.767    6.3deg dot  0.999    94deg/s linear
+   14.767->14.833    5.5deg dot  0.999    83deg/s linear
+   14.833->14.900    4.7deg dot  0.999    71deg/s linear
+   14.900->14.967    3.9deg dot  0.999    59deg/s linear
+   14.967->15.033    3.1deg dot  1.000    47deg/s linear
+   15.033->15.100    2.1deg dot  1.000    32deg/s linear
+   15.100->15.167    1.3deg dot  1.000    19deg/s linear
+   15.167->15.267    0.7deg dot  1.000     7deg/s linear
+lowerarm_l
+   0.000->13.000    0.0deg dot  1.000     0deg/s smooth
+   13.000->13.100    0.0deg dot  1.000     0deg/s smooth
+   13.100->13.167    0.0deg dot  1.000     0deg/s linear
+   13.167->13.233    0.0deg dot  1.000     0deg/s linear
+   13.233->13.300    0.0deg dot  1.000     0deg/s linear
+   13.300->13.367    0.0deg dot  1.000     0deg/s linear
+   13.367->13.433    0.1deg dot  1.000     2deg/s linear
+   13.433->13.533    1.2deg dot  1.000    12deg/s linear
+   13.533->13.633    2.8deg dot  1.000    28deg/s linear
+   13.633->13.733    5.1deg dot  0.999    51deg/s linear
+   13.733->13.800    4.8deg dot  0.999    72deg/s linear
+   13.800->13.833    2.9deg dot  1.000    88deg/s linear
+   13.833->13.900    6.5deg dot  0.998    97deg/s linear
+   13.900->13.967    7.1deg dot  0.998   105deg/s linear
+   13.967->14.033    7.2deg dot  0.998   110deg/s linear
+   14.033->14.100    7.8deg dot  0.998   116deg/s linear
+   14.100->14.133    5.9deg dot  0.999   180deg/s linear
+   14.133->14.233   24.5deg dot  0.977   245deg/s linear
+   14.233->14.267    7.5deg dot  0.998   220deg/s linear
+   14.267->14.300    7.1deg dot  0.998   216deg/s linear
+   14.300->14.333    6.9deg dot  0.998   210deg/s linear
+   14.333->14.367    6.8deg dot  0.998   199deg/s linear
+   14.367->14.400    6.5deg dot  0.998   196deg/s linear
+   14.400->14.433    5.9deg dot  0.999   178deg/s linear
+   14.433->14.467    4.8deg dot  0.999   141deg/s linear
+   14.467->14.500    3.4deg dot  1.000   102deg/s linear
+   14.500->14.533    3.0deg dot  1.000    91deg/s linear
+   14.533->14.567    5.0deg dot  0.999   147deg/s linear
+   14.567->14.600    7.5deg dot  0.998   229deg/s linear
+   14.600->14.633    9.4deg dot  0.997   285deg/s linear
+   14.633->14.700   20.8deg dot  0.984   310deg/s linear
+   14.700->14.767   19.7deg dot  0.985   294deg/s linear
+   14.767->14.833   17.2deg dot  0.989   260deg/s linear
+   14.833->14.900   14.1deg dot  0.992   211deg/s linear
+   14.900->14.967   11.0deg dot  0.995   164deg/s linear
+   14.967->15.033    8.0deg dot  0.998   121deg/s linear
+   15.033->15.100    5.2deg dot  0.999    78deg/s linear
+   15.100->15.167    3.0deg dot  1.000    45deg/s linear
+   15.167->15.267    1.1deg dot  1.000    11deg/s linear
+hand_l
+   0.000->13.000    0.0deg dot  1.000     0deg/s smooth
+   13.000->13.100    0.0deg dot  1.000     0deg/s smooth
+   13.100->13.167    0.0deg dot  1.000     0deg/s linear
+   13.167->13.233    0.0deg dot  1.000     0deg/s linear
+   13.233->13.300    0.0deg dot  1.000     0deg/s linear
+   13.300->13.367    0.0deg dot  1.000     0deg/s linear
+   13.367->13.433    0.1deg dot  1.000     1deg/s linear
+   13.433->13.533    1.5deg dot  1.000    15deg/s linear
+   13.533->13.633    3.0deg dot  1.000    30deg/s linear
+   13.633->13.733    4.8deg dot  0.999    48deg/s linear
+   13.733->13.800    4.4deg dot  0.999    66deg/s linear
+   13.800->13.833    2.5deg dot  1.000    77deg/s linear
+   13.833->13.900    5.4deg dot  0.999    80deg/s linear
+   13.900->13.967    5.0deg dot  0.999    75deg/s linear
+   13.967->14.033    3.6deg dot  1.000    54deg/s linear
+   14.033->14.100    0.9deg dot  1.000    14deg/s linear
+   14.100->14.133    0.8deg dot  1.000    25deg/s linear
+   14.133->14.233    8.7deg dot  0.997    87deg/s linear
+   14.233->14.267    5.2deg dot  0.999   154deg/s linear
+   14.267->14.300    6.4deg dot  0.998   194deg/s linear
+   14.300->14.333    7.4deg dot  0.998   225deg/s linear
+   14.333->14.367    8.1deg dot  0.997   239deg/s linear
+   14.367->14.400    8.2deg dot  0.997   249deg/s linear
+   14.400->14.433    7.7deg dot  0.998   234deg/s linear
+   14.433->14.467    6.7deg dot  0.998   197deg/s linear
+   14.467->14.500    5.3deg dot  0.999   162deg/s linear
+   14.500->14.533    4.1deg dot  0.999   126deg/s linear
+   14.533->14.567    3.4deg dot  1.000   101deg/s linear
+   14.567->14.600    3.3deg dot  1.000    99deg/s linear
+   14.600->14.633    3.3deg dot  1.000   101deg/s linear
+   14.633->14.700    7.2deg dot  0.998   108deg/s linear
+   14.700->14.767    8.8deg dot  0.997   132deg/s linear
+   14.767->14.833   11.6deg dot  0.995   175deg/s linear
+   14.833->14.900   14.1deg dot  0.992   210deg/s linear
+   14.900->14.967   13.4deg dot  0.993   200deg/s linear
+   14.967->15.033    8.5deg dot  0.997   129deg/s linear
+   15.033->15.100    3.2deg dot  1.000    47deg/s linear
+   15.100->15.167    1.1deg dot  1.000    17deg/s linear
+   15.167->15.267    0.8deg dot  1.000     8deg/s linear
+upperarm_r
+   0.000->13.000    0.0deg dot  1.000     0deg/s smooth
+   13.000->13.100    0.0deg dot  1.000     0deg/s smooth
+   13.100->13.167    0.1deg dot  1.000     1deg/s linear
+   13.167->13.233    0.3deg dot  1.000     5deg/s linear
+   13.233->13.300    0.9deg dot  1.000    13deg/s linear
+   13.300->13.367    1.6deg dot  1.000    23deg/s linear
+   13.367->13.433    2.4deg dot  1.000    36deg/s linear
+   13.433->13.533    5.7deg dot  0.999    57deg/s linear
+   13.533->13.633    7.8deg dot  0.998    78deg/s linear
+   13.633->13.733   10.4deg dot  0.996   104deg/s linear
+   13.733->13.800    8.7deg dot  0.997   129deg/s linear
+   13.800->13.833    4.9deg dot  0.999   149deg/s linear
+   13.833->13.900   11.0deg dot  0.995   165deg/s linear
+   13.900->13.967   12.1deg dot  0.994   181deg/s linear
+   13.967->14.033   11.7deg dot  0.995   177deg/s linear
+   14.033->14.100    9.9deg dot  0.996   148deg/s linear
+   14.100->14.133    6.3deg dot  0.998   192deg/s linear
+   14.133->14.233   24.5deg dot  0.977   245deg/s linear
+   14.233->14.267    7.2deg dot  0.998   212deg/s linear
+   14.267->14.300    6.8deg dot  0.998   207deg/s linear
+   14.300->14.333    6.7deg dot  0.998   202deg/s linear
+   14.333->14.367    6.6deg dot  0.998   193deg/s linear
+   14.367->14.400    6.5deg dot  0.998   195deg/s linear
+   14.400->14.433    6.4deg dot  0.998   194deg/s linear
+   14.433->14.467    6.4deg dot  0.998   188deg/s linear
+   14.467->14.500    6.3deg dot  0.998   191deg/s linear
+   14.500->14.533    6.1deg dot  0.999   184deg/s linear
+   14.533->14.567    5.7deg dot  0.999   167deg/s linear
+   14.567->14.600    5.3deg dot  0.999   159deg/s linear
+   14.600->14.633    4.9deg dot  0.999   147deg/s linear
+   14.633->14.700    8.8deg dot  0.997   131deg/s linear
+   14.700->14.767    7.8deg dot  0.998   116deg/s linear
+   14.767->14.833    6.9deg dot  0.998   105deg/s linear
+   14.833->14.900    6.0deg dot  0.999    90deg/s linear
+   14.900->14.967    5.0deg dot  0.999    75deg/s linear
+   14.967->15.033    3.9deg dot  0.999    58deg/s linear
+   15.033->15.100    2.7deg dot  1.000    40deg/s linear
+   15.100->15.167    1.6deg dot  1.000    23deg/s linear
+   15.167->15.267    0.9deg dot  1.000     9deg/s linear
+lowerarm_r
+   0.000->13.000    0.0deg dot  1.000     0deg/s smooth
+   13.000->13.100    0.0deg dot  1.000     0deg/s smooth
+   13.100->13.167    0.0deg dot  1.000     1deg/s linear
+   13.167->13.233    0.3deg dot  1.000     4deg/s linear
+   13.233->13.300    0.7deg dot  1.000    10deg/s linear
+   13.300->13.367    1.3deg dot  1.000    19deg/s linear
+   13.367->13.433    2.0deg dot  1.000    30deg/s linear
+   13.433->13.533    4.8deg dot  0.999    48deg/s linear
+   13.533->13.633    6.7deg dot  0.998    67deg/s linear
+   13.633->13.733    8.6deg dot  0.997    86deg/s linear
+   13.733->13.800    6.5deg dot  0.998    97deg/s linear
+   13.800->13.833    3.6deg dot  0.999   110deg/s linear
+   13.833->13.900    8.9deg dot  0.997   133deg/s linear
+   13.900->13.967   11.2deg dot  0.995   167deg/s linear
+   13.967->14.033   11.5deg dot  0.995   174deg/s linear
+   14.033->14.100    9.9deg dot  0.996   148deg/s linear
+   14.100->14.133    6.3deg dot  0.998   191deg/s linear
+   14.133->14.233   23.6deg dot  0.979   236deg/s linear
+   14.233->14.267    6.3deg dot  0.998   186deg/s linear
+   14.267->14.300    5.3deg dot  0.999   161deg/s linear
+   14.300->14.333    4.1deg dot  0.999   123deg/s linear
+   14.333->14.367    2.1deg dot  1.000    63deg/s linear
+   14.367->14.400    1.3deg dot  1.000    40deg/s linear
+   14.400->14.433    4.4deg dot  0.999   133deg/s linear
+   14.433->14.467    7.6deg dot  0.998   223deg/s linear
+   14.467->14.500   10.1deg dot  0.996   305deg/s linear
+   14.500->14.533   11.4deg dot  0.995   347deg/s linear
+   14.533->14.567   11.9deg dot  0.995   350deg/s linear
+   14.567->14.600   11.8deg dot  0.995   356deg/s linear
+   14.600->14.633   11.2deg dot  0.995   340deg/s linear
+   14.633->14.700   20.4deg dot  0.984   304deg/s linear
+   14.700->14.767   17.4deg dot  0.989   259deg/s linear
+   14.767->14.833   14.5deg dot  0.992   219deg/s linear
+   14.833->14.900   11.6deg dot  0.995   173deg/s linear
+   14.900->14.967    8.9deg dot  0.997   132deg/s linear
+   14.967->15.033    6.4deg dot  0.998    97deg/s linear
+   15.033->15.100    4.2deg dot  0.999    63deg/s linear
+   15.100->15.167    2.4deg dot  1.000    36deg/s linear
+   15.167->15.267    1.2deg dot  1.000    12deg/s linear
+hand_r
+   0.000->13.000    0.0deg dot  1.000     0deg/s smooth
+   13.000->13.100    0.0deg dot  1.000     0deg/s smooth
+   13.100->13.167    0.0deg dot  1.000     0deg/s linear
+   13.167->13.233    0.2deg dot  1.000     3deg/s linear
+   13.233->13.300    0.6deg dot  1.000     8deg/s linear
+   13.300->13.367    1.0deg dot  1.000    15deg/s linear
+   13.367->13.433    1.6deg dot  1.000    24deg/s linear
+   13.433->13.533    4.4deg dot  0.999    44deg/s linear
+   13.533->13.633    5.5deg dot  0.999    55deg/s linear
+   13.633->13.733    6.0deg dot  0.999    60deg/s linear
+   13.733->13.800    3.0deg dot  1.000    44deg/s linear
+   13.800->13.833    1.1deg dot  1.000    32deg/s linear
+   13.833->13.900    3.7deg dot  0.999    56deg/s linear
+   13.900->13.967    7.5deg dot  0.998   112deg/s linear
+   13.967->14.033    9.7deg dot  0.996   147deg/s linear
+   14.033->14.100    9.1deg dot  0.997   136deg/s linear
+   14.100->14.133    3.6deg dot  1.000   109deg/s linear
+   14.133->14.233    5.3deg dot  0.999    53deg/s linear
+   14.233->14.267    0.8deg dot  1.000    23deg/s linear
+   14.267->14.300    1.5deg dot  1.000    44deg/s linear
+   14.300->14.333    2.3deg dot  1.000    70deg/s linear
+   14.333->14.367    3.2deg dot  1.000    94deg/s linear
+   14.367->14.400    4.0deg dot  0.999   120deg/s linear
+   14.400->14.433    4.5deg dot  0.999   138deg/s linear
+   14.433->14.467    5.0deg dot  0.999   146deg/s linear
+   14.467->14.500    5.2deg dot  0.999   159deg/s linear
+   14.500->14.533    5.5deg dot  0.999   168deg/s linear
+   14.533->14.567    5.9deg dot  0.999   173deg/s linear
+   14.567->14.600    6.2deg dot  0.999   187deg/s linear
+   14.600->14.633    6.3deg dot  0.998   190deg/s linear
+   14.633->14.700   12.0deg dot  0.994   180deg/s linear
+   14.700->14.767   10.4deg dot  0.996   155deg/s linear
+   14.767->14.833    8.6deg dot  0.997   131deg/s linear
+   14.833->14.900    7.8deg dot  0.998   116deg/s linear
+   14.900->14.967    7.2deg dot  0.998   107deg/s linear
+   14.967->15.033    5.9deg dot  0.999    89deg/s linear
+   15.033->15.100    4.6deg dot  0.999    68deg/s linear
+   15.100->15.167    3.8deg dot  0.999    57deg/s linear
+   15.167->15.267    4.7deg dot  0.999    47deg/s linear
+
+== 2. per frame (30 fps): angular speed deg/s per bone; elbow flexion / wrist bend (deg); wrist height (cm)
+t        upperarm_l lowerarm_l     hand_l upperarm_r lowerarm_r     hand_r  elbL  elbR   wrL   wrR  twL   twR  wyL  wyR
+13.000            0          0          0          0          0          0    83    87     6    19    86   -98    74    74
+13.033            0          0          0          0          0          0    83    87     6    19    86   -98    74    74
+13.067            0          0          0          0          0          0    83    87     6    19    86   -98    74    74
+13.100            0          0          0          0          0          0    83    87     6    19    86   -98    74    74
+13.133            0          0          0          1          1          0    83    87     6    19    86   -98    74    74
+13.167            0          0          0          1          1          0    83    87     6    19    86   -98    74    74
+13.200            0          0          0          5          4          3    83    87     6    19    86   -98    74    74
+13.233            0          0          0          5          4          3    83    87     6    19    86   -98    74    74
+13.267            0          0          0         13         10          8    83    87     6    19    86   -98    74    75
+13.300            0          0          0         13         10          8    83    87     6    19    86   -98    74    75
+13.333            0          0          0         23         19         15    83    87     6    19    86   -99    74    75
+13.367            0          0          0         23         19         15    83    87     6    18    86   -99    74    76
+13.400            2          2          1         36         30         24    83    87     6    18    86  -100    74    77
+13.433            2          2          2         37         30         25    83    88     6    17    87  -101    74    77
+13.467           14         12         15         57         48         44    83    88     6    16    87  -102    74    79
+13.500           14         12         15         57         48         44    83    89     6    15    88  -103    75    80
+13.533           14         12         16         57         48         44    83    89     6    14    88  -104    75    81
+13.567           31         28         30         78         67         55    83    90     5    13    89  -106    76    83
+13.600           31         28         30         78         67         55    84    91     5    11    90  -107    76    85
+13.633           31         28         30         78         67         55    84    92     5    10    91  -108    77    87
+13.667           54         51         48        104         86         60    85    93     5     9    93  -110    78    89
+13.700           54         51         48        104         86         60    86    94     5     7    94  -111    80    92
+13.733           54         51         48        104         86         60    86    95     4     6    96  -113    81    94
+13.767           76         72         66        129         97         44    87    95     4     5    98  -114    83    97
+13.800           76         72         66        129         97         44    89    95     4     3   100  -114    85    99
+13.833           92         88         77        150        110         32    90    94     3     2   103  -114    88   102
+13.867          107         97         80        165        133         56    91    92     3     2   105  -112    90   105
+13.900          107         97         80        165        133         56    93    90     2     2   108  -110    93   107
+13.933          130        105         75        181        167        112    94    87     2     2   110  -107    96   110
+13.967          130        105         75        181        167        112    94    83     1     2   113  -103    99   113
+14.000          145        109         54        177        174        147    94    80     1     3   115   -98   101   115
+14.033          145        110         54        177        173        147    93    76     1     4   116   -93   104   117
+14.067          138        116         14        148        148        136    91    73     1     4   117   -89   106   119
+14.100          138        116         14        148        148        136    89    71     0     5   117   -84   108   121
+14.133          194        181         26        192        191        109    86    68     0     6   116   -81   111   123
+14.167          253        245         87        245        236         53    81    64     1     6   114   -79   114   125
+14.200          253        245         87        245        236         53    76    61     1     7   111   -77   118   127
+14.233          253        245         88        245        235         52    72    59     1     8   108   -76   121   128
+14.267          224        220        154        212        186         23    69    58     1     8   103   -76   123   129
+14.300          222        216        193        207        162         44    66    57     2     7    96   -77   125   130
+14.333          221        210        225        202        122         70    63    57     2     7    89   -79   127   130
+14.367          216        199        239        193         63         94    62    56     3     6    81   -80   128   131
+14.400          224        196        249        195         40        120    60    56     4     7    73   -82   129   131
+14.433          222        178        234        194        134        138    59    54     6    10    65   -84   130   132
+14.467          210        141        197        188        223        146    58    53     7    14    58   -84   130   133
+14.500          206        103        162        191        304        158    56    54     8    19    53   -83   131   133
+14.533          188         92        125        184        347        168    54    57     9    24    50   -81   132   133
+14.567          160        147        101        167        350        173    50    62    10    29    47   -77   133   131
+14.600          143        228         99        159        356        186    46    68    12    34    46   -72   134   129
+14.633          125        286        102        147        340        190    43    75    15    39    45   -67   136   127
+14.667          108        310        108        131        304        180    42    82    18    43    44   -61   137   124
+14.700          108        310        108        131        304        180    43    90    21    47    43   -56   137   121
+14.733           94        294        132        116        259        155    46    96    24    49    40   -51   136   118
+14.767           94        294        132        116        259        155    50   103    27    51    37   -46   135   115
+14.800           83        260        175        105        219        131    55   109    30    52    33   -42   134   113
+14.833           83        259        175        105        219        130    61   115    34    53    28   -38   132   110
+14.867           71        211        210         90        173        116    66   120    36    52    22   -35   131   108
+14.900           71        211        210         90        173        116    71   125    39    50    14   -31   129   107
+14.933           59        164        200         75        132        107    75   128    42    49     7   -29   127   105
+14.967           59        164        200         75        132        107    79   132    44    47    -1   -26   125   104
+15.000           47        122        129         59         98         89    82   134    46    45    -7   -24   124   103
+15.033           46        121        128         58         97         89    85   137    48    43   -13   -22   123   103
+15.067           32         78         47         40         63         68    87   139    50    42   -15   -21   122   102
+15.100           32         78         47         40         63         68    89   140    51    40   -16   -19   121   102
+15.133           19         45         17         23         36         57    90   141    51    38   -17   -19   120   101
+15.167           19         45         17         23         36         57    92   142    52    37   -17   -18   120   101
+15.200            7         12          8         10         12         47    92   143    52    35   -17   -17   120   101
+15.233            7         11          8          9         12         47    92   143    51    34   -16   -17   119   101
+15.267            7         11          8          9         12         47    92   143    51    32   -16   -16   119   101
+15.300           13          5         30         21         22         40    92   143    51    31   -14   -16   119   101
+15.333           14          5         31         21         23         40    92   143    51    30   -13   -16   119   101
+15.367           14          5         31         21         23         40    92   143    50    29   -11   -16   119   101
+15.400           14          5         31         21         23         40    92   144    50    28   -10   -16   119   101

@@ -1,0 +1,7 @@
+{
+ "TE0": 13.1, "TE1": 15.267,
+ "S": 21.133,
+ "fadeOut": 0.3, "fadeIn": 0.6,
+ "tol": { "upperarm": 0.3, "lowerarm": 0.3, "hand": 0.5, "finger": 1.0 },
+ "maxSpan": 0.25, "HZ": 120, "keyCap": 170
+}

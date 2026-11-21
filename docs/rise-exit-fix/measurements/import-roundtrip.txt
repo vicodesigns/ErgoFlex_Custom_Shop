@@ -1,0 +1,15 @@
+only in B: director-exports/export-7c3eae7c008d-Film-chapter-rise-28-5-s-exit-fix.json
+director-camera-rise.json: 2 difference(s)
+    /people/cast/0/postures/people-maya-sit-type/poseKeys: [{"t": 0, "pose": {"upperarm_l": [-0.1423, -0.0062, 0.0191, 0.9896], " | [{"t": 0, "pose": {"upperarm_l": [-0.1423, -0.0062, 0.0191, 0.9896], "
+    /source: "F:/eng-rexit-scratch/cut/director-exports/export-15035291e783-Film-ch | "F:/eng-rexit-scratch/cut/director-exports/export-7c3eae7c008d-Film-ch
+director-exports/imports.json: 3 difference(s)
+    /15035291e783ca2532b2f9dfc2ab0fa6386cb5b7e4444a4c39ea324b826b459b/at: 1795301508.4573102 | 1795300363.7648501
+    /15035291e783ca2532b2f9dfc2ab0fa6386cb5b7e4444a4c39ea324b826b459b/file: "Film-chapter-rise-28-5-s-__4_.json" | "Film-chapter-rise-28-5-s- (4).json"
+    /7c3eae7c008d554b01015a6165659d470eb44698ab5984e6007acc35cf2d8a53: "<absent>" | {"file": "Film-chapter-rise-28-5-s-exit-fix.json", "chapter": "rise", 
+director-film/rise.json: 2 difference(s)
+    /directorEdited/at: "2026-11-21T22:32:42Z" | "2026-11-21T22:56:12Z"
+    /people/cast/0/postures/people-maya-sit-type/poseKeys: [{"t": 0, "pose": {"upperarm_l": [-0.1423, -0.0062, 0.0191, 0.9896], " | [{"t": 0, "pose": {"upperarm_l": [-0.1423, -0.0062, 0.0191, 0.9896], "
+review-cut.json: 2 difference(s)
+    /shots/1/directorEdited/at: "2026-11-21T22:32:42Z" | "2026-11-21T22:56:12Z"
+    /shots/1/people/cast/0/postures/people-maya-sit-type/poseKeys: [{"t": 0, "pose": {"upperarm_l": [-0.1423, -0.0062, 0.0191, 0.9896], " | [{"t": 0, "pose": {"upperarm_l": [-0.1423, -0.0062, 0.0191, 0.9896], "
+5 file(s) differ
