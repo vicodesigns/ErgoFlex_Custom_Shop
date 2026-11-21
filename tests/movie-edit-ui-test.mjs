@@ -75,6 +75,7 @@ assert.match(g,/ripple=!!mk&&\(event\.ctrlKey\|\|event\.metaKey\)&&!event\.targe
 assert.match(g,/const list=reorderClip\(graphicScreens\(\),d\.mk,d\.from,d\.to,shot\(\)\.seconds\);commit/);
 assert.match(g,/r=mk&&movieFieldChange\(graphicScreens\(\),mk,shot\(\)\.seconds,i,el\)/);
 assert.match(g,/if\(action==='earlier'\|\|action==='later'\)/);
+assert.ok(!/\[name="me-type"\]'\)\?\.focus\(/.test(g),'a chip / + click shows the fields without focusing them (a focused select swallows Shift+R)');
 assert.match(g,/remove\(\)\{const i=live\(\);if\(i<0\)return false;if\(onTransition&&graphicScreens\(\)\[i\]\?\.transitionIn\)\{const list=setTransition\(graphicScreens\(\),i,null\)/,'Delete on a picked chip: the transition only');
 assert.match(read('experience/director.mjs'),/from '\.\/graphics-editor\.mjs\?v=clip-track-20261121';/);
 assert.match(read('experience/director.mjs'),/graphics\.setBinUrl\(cutDir\?cutDir\+'\/director-film\/screen-bin\.json':null\);/,'the bin beside the chapter shots');

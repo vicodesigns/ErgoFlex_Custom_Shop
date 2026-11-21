@@ -85,9 +85,17 @@ try{
   assert.ok(Math.abs(chips[0].from-5)<.08&&Math.abs(chips[0].to-6)<.08,'dissolve chip over 5-6 s');
   assert.ok(Math.abs(chips[1].from-11.1)<.08&&Math.abs(chips[1].to-11.9)<.08,'dip chip over 11.1-11.9 s');
   await shoot('movie-edit-2-after.png');log('2 ok: split, source in, dissolve and dip chips');
-  // Render still inside the dissolve (5.5 s): the movie edit composed on this machine (POST /api/screen-edit), said on the still
-  {await seek(page,5.5);await page.keyboard.down('Shift');await page.keyboard.press('KeyR');await page.keyboard.up('Shift');
-   await until(async()=>/Still rendered|Render still failed/.test(await status(page)),'Render still with the movie edit',600000);
+  // Render still inside the dissolve (5.5 s): the movie edit composed on this machine (POST /api/screen-edit), said on the still.
+  // (the visible Render still button, nothing focused; the status logged every 5 s and every /api/screen-edit answer printed:
+  // 21 Nov 2026, Windows: Shift+R after the + click did nothing, the + had focused the Transition select)
+  {const answers=[];const onResponse=async r=>{if(!r.url().includes('/api/screen-edit'))return;let body='';try{body=(await r.text()).slice(0,400);}catch{}answers.push(r.status());log('POST /api/screen-edit ->',r.status(),body);};page.on('response',onResponse);
+   await seek(page,5.5);await page.evaluate(()=>document.activeElement?.blur?.());
+   assert.equal(await page.evaluate(()=>!!document.activeElement?.closest?.('input,select,textarea')),false,'no field has focus after the seam click (the Director\'s keys work)');
+   await act('.render-still[data-action="render-still"]');
+   let seen='',last=0;
+   await until(async()=>{const s=await status(page);if(s!==seen||Date.now()-last>5000){log('status:',s.slice(0,160));seen=s;last=Date.now();}return /Still rendered|Render still failed/.test(s);},'Render still with the movie edit',600000);
+   page.off('response',onResponse);
+   assert.match(await status(page),/Still rendered/,'the still rendered');assert.ok(answers.length,'the still asked for the movie edit (POST /api/screen-edit)');
    const note=await page.$eval('#film-still',e=>e.textContent.replace(/\s+/g,' ')).catch(()=>'');log('still note:',note.slice(0,300));
    assert.match(note,/movie edit (composed|\(composed before\))/,'the still was rendered with the composed movie edit');
    const url=await page.evaluate(()=>document.querySelector('#film-still img.still-main')?.src||null);if(url?.startsWith('data:'))fs.writeFileSync(path.join(shots,'movie-edit-still-dissolve.jpg'),Buffer.from(url.split(',')[1],'base64'));
