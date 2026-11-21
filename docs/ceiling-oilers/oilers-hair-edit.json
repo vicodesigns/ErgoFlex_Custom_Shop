@@ -1,0 +1,15 @@
+{
+ "match": "",
+ "path": "Person:people-noah",
+ "materialName": "^Human\\.afro01$",
+ "label": "Noah's hair: a full, even afro",
+ "material": {
+  "color": "#7a6052",
+  "roughness": 0.8,
+  "sheen": 0.08,
+  "sheenColor": "#3b2e28",
+  "anisotropy": 0,
+  "specularIntensity": 0.35
+ },
+ "note": "Nov 21 (Vico: Noah's hair looks bad). The afro01 cards' light texels and the cast finish's anisotropic sheen drew grey scratches and a cornrow pattern over a see-through scalp. Darker warm base colour on the colour map, no anisotropy, little sheen and specular: the hair reads as one full, soft, dark-brown afro. This chapter's Noah only (all his oilers models)."
+}
