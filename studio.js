@@ -3651,9 +3651,20 @@ function makeTouchscreenFace(gltf, xShift, pivot, turn, material, name) {
 function setScreenProgress(value) {
     screenProgress = THREE.MathUtils.clamp(value, 0, 1);
     if (!screenAssembly) return;
-    const { variants, baseParts } = screenAssembly;
+    const { variants, baseParts, wideMount } = screenAssembly;
     const opened = screenProgress > 0.001;
-    baseParts.forEach(mesh => { mesh.visible = !opened; });
+    // (a film that poses the screen (the high school): on the 60x30 desk the screen is drawn out of the wide mount, which
+    // sits 91 mm further right and 168 mm nearer the front than where the desk model stows the standard one, so the stowed
+    // parts stand at the wide mount too and the screen does not jump when it opens)
+    const shift = touchscreenBeforeFilm && currentConfig.size === '60x30' ? wideMount.position : null;
+    baseParts.forEach(mesh => {
+        mesh.visible = !opened;
+        const was = mesh.userData.stowShift || null;
+        if (was || shift) {
+            mesh.position.x += (shift ? shift.x : 0) - (was ? was.x : 0); mesh.position.z += (shift ? shift.z : 0) - (was ? was.z : 0);
+            mesh.userData.stowShift = shift ? { x: shift.x, z: shift.z } : null;
+        }
+    });
     const slide = Math.min(1, screenProgress * 2);
     const turn = Math.max(0, (screenProgress - 0.5) * 2);
     for (const [size, { moving, staticParts, pivot }] of Object.entries(variants)) {
@@ -3766,7 +3777,7 @@ async function loadTouchscreenAssembly() {
         loadedModel.add(root);
         const baseParts = [...partRegistry.values()].map(entry => entry.obj)
             .filter(obj => /^Touch_Screen(?:_|$)/.test(obj.name));
-        screenAssembly = { root, baseParts, variants: {
+        screenAssembly = { root, baseParts, wideMount, variants: {
             standard: { moving, staticParts, pivot: SCREEN_PIVOT },
             wide: { moving: wideMoving, staticParts: wideStatic, pivot: WIDE_SCREEN_PIVOT }
         } };
