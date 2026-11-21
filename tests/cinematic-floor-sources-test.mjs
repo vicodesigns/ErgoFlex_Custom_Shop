@@ -16,7 +16,7 @@ assert.deepEqual(cleanLighting({ sceneGlobals: { ledFloorSources: { right: { bri
 assert.equal(describeFloorSource({ on: false, x: 4 }), 'off');
 assert.equal(describeFloorSource({ z: -12, length: 1.5 }), 'moved -12 cm front/back · length ×1.5');
 // Export cut -> --import -> the film: the field rides with the other Room globals.
-assert.match(fs.readFileSync(new URL('../tools/experience/build-round8-director.py', import.meta.url), 'utf8'), /GLOBAL_FIELDS = \([^)]*'ledFloorSources'\)/);
+assert.match(fs.readFileSync(new URL('../tools/experience/build-round8-director.py', import.meta.url), 'utf8'), /GLOBAL_FIELDS = \([^)]*'ledFloorSources'[^)]*\)/);
 // The bounce shader: 'plain' (no ledFloorSources) keeps the approved text; 'param' adds the per-source controls.
 const viewer = fs.readFileSync(new URL('../tools/experience/film-viewer-leds.mjs', import.meta.url), 'utf8');
 assert.ok(viewer.includes("const fragment = (param) => samplingGLSL"), 'one shader text, two variants');
