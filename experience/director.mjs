@@ -13,7 +13,7 @@ import {createViewNav} from './view-nav.mjs';
 import {PREF as HOLD_PREF} from './editing-camera.mjs';
 import {createPreviewHides,HIDE_LABELS} from './preview-hides.mjs';
 import {createAutosave,placeOf,changesSince,when as autosaveWhen} from './director-autosave.mjs';
-import {createGraphicsEditor} from './graphics-editor.mjs?v=timeline-delete-20261120';
+import {createGraphicsEditor} from './graphics-editor.mjs?v=clip-track-20261121';
 import {addCameraHolds} from './camera-holds.mjs';
 import {cinematicViews,polishMovement,openingSwoop} from './cinematography.mjs';
 import {paceChapter,lengthenChapter,chapterFloor,shortenChapter,viewsPastEnd} from './chapter-timing.mjs?v=chapter-shorten-20261121';
