@@ -1,0 +1,26 @@
+{
+ "export_sceneGlobals_screenLight": {
+  "gain": 0.6,
+  "saturation": 1.4,
+  "contrast": 1,
+  "tint": "#FFF0E0",
+  "keepHue": true
+ },
+ "director_camera_lighting_screenLight": {
+  "gain": 0.6,
+  "saturation": 1.4,
+  "tint": "#fff0e0",
+  "keepHue": true
+ },
+ "film_shot_sceneGlobals_screenLight": {
+  "gain": 0.6,
+  "saturation": 1.4,
+  "tint": "#fff0e0",
+  "keepHue": true
+ },
+ "other_fields_unchanged": true,
+ "film_sceneGlobals_after_reset": {
+  "environmentScale": 0.42,
+  "exposureScale": 1.11
+ }
+}
