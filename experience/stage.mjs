@@ -59,7 +59,7 @@ export async function mountStage(ctx) {
   const unitsPerInch=()=>{const m=api.arSize?.metersPerUnit;return m>0?.0254/m:(reach?.userData.w||1)/(Number(String(shot?.size||'60x30').split('x')[0])||60);};
   const turnOf=()=>{ctx.loadedModel.updateWorldMatrix(true,false);return qRel.copy(ctx.loadedModel.getWorldQuaternion(new THREE.Quaternion())).multiply(ringHome.q.clone().invert());};
   const sonarShift=()=>{const u=unitsPerInch();return shiftAt.set((sonarCfg.x||0)*u,0,(sonarCfg.z||0)*u).applyQuaternion(turnOf()).setY(0);};
-  let shot=null, start=null, media=null, video=null, hidden=[], grid=null, pylons=[], sweep=null, light=null, pulse=null, floorCenter=null, trace=null, ringHome=null, reach=null, sonar=null, sonarTries=0, pings=[], obstacles=[], pingStop=0, echo=null, pingBase=null;
+  let shot=null, start=null, media=null, video=null, hidden=[], grid=null, pylons=[], sweep=null, light=null, pulse=null, floorCenter=null, trace=null, ringHome=null, reach=null, sonar=null, sonarTries=0, sonarNext=0, pings=[], obstacles=[], pingStop=0, echo=null, pingBase=null;
   let reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   let paused=false, sounds=false, mirror=null, sequence=-1, session=null, preparing=false,lastProgress=0;
   let readProgress=()=>0,deskSpan=1,lastMediaColour=0;
@@ -81,7 +81,7 @@ export async function mountStage(ctx) {
     if(video){video.pause();video.removeAttribute('src');video.load();video=null;}
     for(const [o,visible,mask] of hidden){o.visible=visible;o.layers.mask=mask;} hidden=[];
     extras.traverse(o=>{o.geometry?.dispose(); if(o.material)for(const m of Array.isArray(o.material)?o.material:[o.material]){m.map?.dispose();m.dispose();}});
-    extras.clear(); media=null;grid=null;pylons=[];sweep=null;light=null;pulse=null;trace=null;reach=null;sonar=null;sonarTries=0;pings=[];obstacles=[];pingStop=0;echo=null;pingBase=null;previewFull=false;sonarCfg=null;
+    extras.clear(); media=null;grid=null;pylons=[];sweep=null;light=null;pulse=null;trace=null;reach=null;sonar=null;sonarTries=0;sonarNext=0;pings=[];obstacles=[];pingStop=0;echo=null;pingBase=null;previewFull=false;sonarCfg=null;
   }
   function frame(targetBox, wide=false) {
     const center=targetBox.getCenter(new THREE.Vector3()), size=targetBox.getSize(new THREE.Vector3());
@@ -151,6 +151,15 @@ export async function mountStage(ctx) {
   // to rest (measured with the desk put at the shot's last pose; the caller places it for the frame afterwards). So the
   // outer ring touches the obstacle exactly when the desk stops, wherever the obstacle or the desk's path was moved to,
   // and the pulses run from the desk's footprint out to it. No film obstacle (the showcase's own pylons): the fixed rings.
+  // 21 Nov 2026 (Vico, awareness: "I don't see the sonar ... I even clicked the preview at full and I don't see the rings"):
+  // in the Director the stage is prepared BEFORE film-fx installs the obstacle (player.mjs prepareStage: the dog comes from
+  // the library, seconds later), and a paused Director never ticks, so 240 tries could pass, or never run, before it was
+  // there: no reach, no rings, for good. The reach is now looked for on every tick for the first 240 (the film render, as
+  // before), then every 400 ms for as long as it is missing, and while the Director is paused too (onFrame below).
+  const sonarDue=()=>{if(sonarTries++<240)return true;const now=performance.now();if(now<sonarNext)return false;sonarNext=now+400;return true;};
+  // The rings' reach: the film's (to the obstacle), else the Director's Size (shot.sonar.radius), so a set size shows the
+  // rings even where no obstacle has been found.
+  const sonarR=()=>sonar||(ringHome&&sonarCfg?.radius?sonarCfg.radius*unitsPerInch():0);
   function sonarReach() {
     let scene=ctx.loadedModel;while(scene.parent)scene=scene.parent;const found=[];scene.traverse(o=>{if(o.name==='Film obstacle')found.push(o);});
     if(!found.length||!ringHome)return null;
@@ -333,8 +342,9 @@ export async function mountStage(ctx) {
     lastProgress=t;
     if(reduced)t=1;
     const u=reduced?1:ease(t),kind=shot.kind;
-    if(kind==='proximity'&&reach&&!sonar&&sonarTries++<240)sonar=sonarReach();
-    if(pulse&&sonar&&pings.length){pulse.material.opacity=0;                 // the film's sonar: the pings below, once the desk is placed
+    if(kind==='proximity'&&reach&&!sonar&&sonarDue())sonar=sonarReach();
+    const R=kind==='proximity'?sonarR():0;
+    if(pulse&&R&&pings.length){pulse.material.opacity=0;                 // the film's sonar: the pings below, once the desk is placed
     } else if(pulse&&sonar){
       // a pulse every 1.6 s from the desk's footprint out to the reach, fading in over its first .13 s (no ring popping
       // up at the footprint) and out as it goes
@@ -352,18 +362,18 @@ export async function mountStage(ctx) {
     if(kind==='proximity'){
       for(const p of pylons){p.scale.y=Math.max(.001,ease(t/.2));p.position.y=p.userData.y-(1-p.scale.y)*p.geometry.parameters.height/2;}
       sweep.rotation.z=t*Math.PI*8;
-      if(sonar&&pings.length){sweep.visible=false;reach.visible=false;}
+      if(R&&pings.length){sweep.visible=false;reach.visible=false;}
       else if(sonar){const w=reach.userData.w,k=sonar/(w*.806);sweep.scale.setScalar(k);reach.scale.setScalar(k);reach.visible=true;}
       if(t>.55&&!shot.motion)ctx.demoMove(ease((t-.55)/.2)*deskSpan*.16,0,0);
     }
     if(kind==='wellness'&&!shot.motion)ctx.pose(28+15.5*ease((t-.25)/.45),0);
     if(shot.motion){const p=shot.motion.clips?sampleClipMotion(shot.motion,t*shot.seconds):sampleDeskTracks(shot.motion.tracks,t);ctx.pose(p.height,p.tilt);ctx.placeDirector(p);}
     if(ringHome&&(pulse||sweep)){const d=ringCentre();for(const ring of [pulse,sweep,reach,echo,...pings])if(ring){ring.position.x=d.x;ring.position.z=d.z;}
-      if(sonar&&pings.length){
+      if(R&&pings.length){
         // the reach in this frame: from the desk's centre where it is now to the nearest obstacle's near edge
         const cx=d.x,cz=d.z;let far=Infinity;
         for(const o of obstacles)far=Math.min(far,Math.hypot(Math.max(o.min.x-cx,0,cx-o.max.x),Math.max(o.min.z-cz,0,cz-o.max.z)));
-        if(!Number.isFinite(far)||far<=0)far=sonar;
+        if(!Number.isFinite(far)||far<=0)far=R;
         // A slow sonar: a ping leaves the centre every 2.4 s and runs outward at one steady speed (the speed that takes
         // 7.2 s to the obstacle where the desk comes to rest), and is gone the moment it reaches the obstacle's near edge
         // as it is in this frame. A ring's radius depends only on its age, so NO RING EVER SHRINKS while the desk rolls
@@ -373,7 +383,7 @@ export async function mountStage(ctx) {
         // (sonar.mjs pingRows: the same loop as numbers, a ping's radius and opacity from its age. The Director's sonar, when
         // the chapter has one: its size is the reach and the rings run to it whatever the obstacle's place; rings per pulse
         // sets the gap, 7.2 s / rings; off hides them; Preview at full holds the moment all the rings are out.)
-        const S=sonarCfg?.radius?sonarCfg.radius*unitsPerInch():sonar,hold=previewFull;
+        const S=sonarCfg?.radius?sonarCfg.radius*unitsPerInch():R,hold=previewFull;
         if(sonarCfg?.radius||hold)far=S;
         const w=reach.userData.w,sec=hold?fullSec(pingStop,sonarCfg):t*shot.seconds,band=w*.007,off=sonarCfg?.enabled===false;
         const {rows,echoAge:arrived}=pingRows({sec,pingStop,S,far,count:pings.length,cfg:sonarCfg});let echoAge=hold?0:arrived;
@@ -450,6 +460,10 @@ ctx.editCamera(editorMode||cameraHeld);if(editorMode){Object.assign(ctx.controls
     }
     if(message.type==='viewer.resetView')cam(.5);
   }
+  // Paused in the Director: the sonar's obstacle can arrive after the last seek (film-fx loads it) and the render loop
+  // sleeps when idle, so a timer looks for it (a scene walk every 500 ms, only while a proximity chapter's reach is
+  // missing) and draws the frame again once it is found (sonarReach puts the desk at its last pose; seek puts it back).
+  setInterval(()=>{if(!paused||!editorMode||preparing||shot?.kind!=='proximity'||!reach||sonar||document.hidden)return;const r=sonarReach();if(r){sonar=r;wake();seek(lastProgress);}},500);
   ctx.onFrame(now=>{
     if(paused||preparing||!shot)return;
     if(lastRendered&&now-lastRendered<250){intervals.push(now-lastRendered);if(intervals.length>180)intervals.shift();}
@@ -544,7 +558,7 @@ ctx.editCamera(editorMode||cameraHeld);if(editorMode){Object.assign(ctx.controls
     // offset (inches, the desk's turn since the start) to the stage and back; sonarInfo is what the panel shows.
     sonarTrack:(value,id)=>{if(shot?.id!==id)return;const c=value?cleanSonar(value):null;if(c)shot.sonar=c;else delete shot.sonar;sonarCfg=c;
       if(pingBase)while(pings.length<meshesFor(c))pings.push(makePing(pings.length));
-      sonar=null;sonarTries=0;keepView(()=>seek(lastProgress));},
+      sonar=null;sonarTries=0;sonarNext=0;keepView(()=>seek(lastProgress));},
     sonarPreview:(on,id)=>{if(shot?.id!==id)return false;previewFull=!!on;keepView(()=>seek(lastProgress));return previewFull;},
     sonarSpace:()=>{if(!ringHome||!pingBase)return null;
       const u=unitsPerInch(),q=turnOf().clone(),raw=ringHome.local.clone().applyMatrix4(ctx.loadedModel.matrixWorld);
@@ -552,7 +566,8 @@ ctx.editCamera(editorMode||cameraHeld);if(editorMode){Object.assign(ctx.controls
         toWorld:(dx,dz)=>{const v=new THREE.Vector3(dx*u,0,dz*u).applyQuaternion(q);return {x:raw.x+v.x,z:raw.z+v.z};},
         fromWorld:(x,z)=>{const v=new THREE.Vector3(x-raw.x,0,z-raw.z).applyQuaternion(q.clone().invert());return {x:v.x/u,z:v.z/u};}};},
     sonarInfo:()=>{if(shot?.kind!=='proximity'||!ringHome)return null;const u=unitsPerInch();
-      return {found:!!sonar,filmRadius:sonar?sonar/u:null,radius:sonar?(sonarCfg?.radius||sonar/u):null,rings:sonarCfg?.rings||3,enabled:sonarCfg?.enabled!==false,preview:previewFull,pings:pings.length,cfg:sonarCfg?structuredClone(sonarCfg):null};},
+      // found: the rings can be drawn (the film's reach, or the Director's size with no obstacle found: obstacle false)
+      return {found:!!sonarR(),obstacle:!!sonar,filmRadius:sonar?sonar/u:null,radius:sonarR()?(sonarCfg?.radius||sonar/u):null,rings:sonarCfg?.rings||3,enabled:sonarCfg?.enabled!==false,preview:previewFull,pings:pings.length,cfg:sonarCfg?structuredClone(sonarCfg):null};},
     motionTrack:(motion,id)=>{if(shot?.id===id)shot.motion=motion?(motion.clips?motion:{tracks:motion.tracks||tracksFromPoses(motion.from,motion.to)}):undefined;},
     previewPose:value=>{const p=cleanPose(value);ctx.pose(p.height,p.tilt);ctx.placeDirector(p);return ctx.readDirector();},capturePose:()=>ctx.readDirector(),
     clock:callback=>{readProgress=callback;},capture:canvas=>ctx.capture(canvas),

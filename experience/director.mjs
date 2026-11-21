@@ -42,7 +42,7 @@ import {stackRows,rowVar} from './lane-rows.mjs';
 import {createChoreoTarget,validateDeskEdits} from './desk-choreo.mjs';
 import {effectiveDeskEdits,cleanDeskEdit} from './desk-edits.mjs';
 import {createStartPose} from './start-pose.mjs';
-import {createSonarEditor} from './sonar-editor.mjs';
+import {createSonarEditor} from './sonar-editor.mjs?v=sonar-preview-20261121';
 import {createRenderRequest} from './render-request.mjs';
 import {createSceneDeskEditor} from './scene-desk-editor.mjs';
 import {createStudioSync} from './studio-sync.mjs';

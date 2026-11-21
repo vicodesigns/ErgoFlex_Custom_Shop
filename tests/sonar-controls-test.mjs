@@ -109,7 +109,20 @@ assert.match(player,/staged=\{\.\.\.staged,sonar:shot\.sonar\}/,'player: the liv
 assert.match(player,/stage\(\)\.sonarTrack\?\.\(so,s\.id\)/,'player: a change reaches the stage at once');
 assert.match(stageSrc,/sonarTrack:\(value,id\)=>/);assert.match(stageSrc,/sonarSpace:\(\)=>/);assert.match(stageSrc,/sonarPreview:\(on,id\)=>/);
 assert.match(stageSrc,/return sonarCfg&&\(sonarCfg\.x\|\|sonarCfg\.z\)\?ringAt\.add\(sonarShift\(\)\):ringAt;/,'no offset: the centre is the desk\'s exactly as before');
-assert.match(stageSrc,/const S=sonarCfg\?\.radius\?sonarCfg\.radius\*unitsPerInch\(\):sonar,hold=previewFull;/,'no sonar: S is the film\'s reach');
+assert.match(stageSrc,/const S=sonarCfg\?\.radius\?sonarCfg\.radius\*unitsPerInch\(\):R,hold=previewFull;/,'no sonar: S is the film\'s reach (R)');
+// 7. (21 Nov 2026, Vico on awareness: no rings in the Director, nor at Preview at full) the reach is looked for until it is
+// found: every tick for the first 240 (the film render as before), then every 400 ms, and while the Director is paused;
+// found late while paused, the frame is drawn again. With no obstacle on the stage, the Director's Size draws the rings.
+assert.match(stageSrc,/const sonarDue=\(\)=>\{if\(sonarTries\+\+<240\)return true;const now=performance\.now\(\);if\(now<sonarNext\)return false;sonarNext=now\+400;return true;\};/);
+assert.match(stageSrc,/if\(kind==='proximity'&&reach&&!sonar&&sonarDue\(\)\)sonar=sonarReach\(\);/);
+assert.ok(!/sonarTries\+\+<240\)sonar=sonarReach/.test(stageSrc),'no longer given up after 240 tries');
+assert.match(stageSrc,/const sonarR=\(\)=>sonar\|\|\(ringHome&&sonarCfg\?\.radius\?sonarCfg\.radius\*unitsPerInch\(\):0\);/,'the reach: the film\'s, else the Director\'s size');
+assert.match(stageSrc,/const R=kind==='proximity'\?sonarR\(\):0;/);assert.match(stageSrc,/if\(R&&pings\.length\)\{\n {8}\/\/ the reach in this frame/,'the rings draw on R');
+assert.match(stageSrc,/if\(!Number\.isFinite\(far\)\|\|far<=0\)far=R;/,'no obstacle: far is R');
+assert.match(stageSrc,/setInterval\(\(\)=>\{if\(!paused\|\|!editorMode\|\|preparing\|\|shot\?\.kind!=='proximity'\|\|!reach\|\|sonar\|\|document\.hidden\)return;const r=sonarReach\(\);if\(r\)\{sonar=r;wake\(\);seek\(lastProgress\);\}\},500\);/,'paused in the Director (the loop may sleep): a timer looks, and draws again when found');
+assert.match(stageSrc,/return \{found:!!sonarR\(\),obstacle:!!sonar,/,'the panel: found (rings drawable) and obstacle');
+assert.match(ed,/i\.obstacle\?` \(the film's: \$\{toUnit\(film,u\)\} \$\{U\}\)`:' \(your size: the obstacle has not been found on this stage yet\)'/,'the readout says when it is the size alone');
+assert.match(ed,/Set a Size to see the rings right away\./);
 assert.match(stageSrc,/pingRows\(\{sec,pingStop,S,far,count:pings\.length,cfg:sonarCfg\}\)/);
 assert.match(stageSrc,/Array\.from\(\{length:meshesFor\(sonarCfg\)\}/,'seven ping meshes when absent');
 assert.match(stageSrc,/ringHome=\{c:c\.clone\(\),p:[^}]*q:ctx\.loadedModel\.getWorldQuaternion/);
