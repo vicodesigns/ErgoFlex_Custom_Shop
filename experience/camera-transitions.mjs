@@ -48,6 +48,49 @@ export function fromPlan(k){
   if(!k?.cut)return null;
   return cleanTransition(k.transition)||{type:'cut'};
 }
+// ---- which film plan key a Director key IS (20 Nov 2026) -------------------------------------------------------------
+// A key's cut / hold belong to the key, not to an index. Director keys carry plan-NN ids from the film plan as it was when
+// the draft was made; after an import inserted or removed a key earlier in the chapter, those ids point one key off (Vico's
+// Create: the cut at 19.5 s moved onto a copy of that view at 19.533 s, and the 19.5 s key lost it). Matched one to one:
+//   1. the id's plan key when it is the same view at the same time (nothing moved);
+//   2. else the plan key with the same view (place, aim, lens), the nearest in time first (a retimed key; of two keys with
+//      one view, the one nearer the plan key's time);
+//   3. else a plan key at the same time (a key re-aimed in place).
+// -> an array: for each Director key, its plan key or null. keys: [{id, time (0..1), view}]; plan: cameraPlan keys.
+// (tools/experience/director-bridge.py match_plan is the same, for the import.)
+const near=(a,b,tol)=>Math.abs(Number(a)-Number(b))<=tol*Math.max(1,Math.abs(Number(a)),Math.abs(Number(b)));
+export const sameView=(v,p,tol=1e-6)=>!!v&&!!p&&[0,1,2].every(i=>near(v.position[i],p.position[i],tol)&&near(v.target[i],p.target[i],tol))&&near(v.fov??35,p.fov??35,tol);
+const TIME_TOL=5e-4;
+export function matchPlanKeys(keys,plan,seconds){
+  const P=[...(plan||[])].sort((a,b)=>a.at-b.at),out=keys.map(()=>null),used=new Set(),at=k=>k.time*seconds;
+  keys.forEach((k,i)=>{const n=/^plan-\d+$/.test(k.id||'')?Number(k.id.slice(5)):-1,p=P[n];if(p&&!used.has(n)&&sameView(k.view,p)&&Math.abs(at(k)-p.at)<=TIME_TOL){out[i]=p;used.add(n);}});
+  const pairs=[];keys.forEach((k,i)=>{if(out[i])return;P.forEach((p,n)=>{if(!used.has(n)&&sameView(k.view,p))pairs.push([Math.abs(at(k)-p.at),i,n]);});});
+  pairs.sort((a,b)=>a[0]-b[0]||a[2]-b[2]||a[1]-b[1]);
+  for(const [,i,n] of pairs)if(!out[i]&&!used.has(n)){out[i]=P[n];used.add(n);}
+  keys.forEach((k,i)=>{if(out[i])return;const n=P.findIndex((p,j)=>!used.has(j)&&Math.abs(at(k)-p.at)<=TIME_TOL);if(n>=0){out[i]=P[n];used.add(n);}});
+  return out;
+}
+// ---- what each segment does, and what is odd about it ---------------------------------------------------------------
+// Segment i runs from key i to key i+1; its type is key i+1's transition (or a move). World units are 0.598 m (the room's
+// millimetre scale, k = 0.001671 per mm).
+export const M_PER_UNIT=1/1.671;
+export const WHIP={speed:3,turn:60};   // world units / s, degrees / s: a move faster than either reads as a whip
+const aim=v=>v.target.map((x,j)=>x-v.position[j]);
+const angle=(a,b)=>{const u=aim(a),w=aim(b),d=Math.hypot(...u)*Math.hypot(...w);return d?Math.acos(Math.max(-1,Math.min(1,u.reduce((s,x,j)=>s+x*w[j],0)/d)))*180/Math.PI:0;};
+// film: a film chapter (the camera on the film's spline; a key's easing does not count). Elsewhere the old "Hold, then cut"
+// easing on key i is the same cut.
+export function segmentType(keys,i,{film=true}={}){const b=keys[i+1];return b?.transition?.type||(!film&&keys[i]?.easing==='hold'?'cut':'move');}
+export function segmentInfo(keys,i,seconds,{film=true}={}){
+  const a=keys[i],b=keys[i+1];if(!a||!b)return null;
+  const t=b.transition,type=segmentType(keys,i,{film}),dur=(b.time-a.time)*seconds,dist=Math.hypot(...b.view.position.map((x,j)=>x-a.view.position[j])),turn=angle(a.view,b.view);
+  const same=sameView(a.view,b.view,1e-4);
+  const whip=type==='move'&&dur>0&&!same&&(dist/dur>WHIP.speed||turn/dur>WHIP.turn);
+  const r1=v=>Math.round(v*10)/10,r2=v=>Math.round(v*100)/100;
+  const label=type==='move'?`Move ${r2(dur)} s`:type==='cut'?'Cut':`${TRANSITION_LABELS[type]} ${t.dur} s`;
+  const warn=type!=='move'&&same?`This ${type==='cut'?'cut jumps':TRANSITION_LABELS[type].toLowerCase()+' goes'} to the same view: the camera is already there (delete one of the two keys, or aim this one elsewhere).`
+    :whip?`A ${r2(dur)} s move over ${r1(dist*M_PER_UNIT)} m${turn>=5?` and ${Math.round(turn)}°`:''} reads as a whip: give it more time, or make it a Cut.`:null;
+  return {type,dur,dist,turn,same,whip,label,warn};
+}
 // ---- what the preview shows at chapter second t ----------------------------------------------------------------------
 // keys: Director keys (time 0..1). -> null, or {key, from, type, p (0..1 across the band), dip (layer opacity),
 // mix (the other view's opacity), other: 'in'|'out' (which freeze frame lies over the live view)}

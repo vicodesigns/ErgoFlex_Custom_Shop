@@ -7,6 +7,8 @@
 //   4. preview: inside the dissolve the stage shows the other view's still frame (opacity between 0 and 1); a dip to black
 //      is a black layer, full at the key
 //   5. Export cut carries the key's transition; Delete on the band takes it back to a move
+//   2b/6 (20 Nov 2026): the key before shows the same segment as "To the next view", the lane segment is labelled, no Move
+//      style in a film chapter; a cut into a copy of the view warns "This cut jumps to the same view" (Inspector and lane)
 //   node tests/director-camera-transitions-e2e.mjs        (CUT=<cut dir>, CHAPTER=<id>, SHOTS=<dir>)
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';
 import {root,wait,openDirectorBrowser,openChapter,seek,status as statusOf} from './director-e2e-harness.mjs';
@@ -44,6 +46,13 @@ try{
   check(!!band&&dur0>0,`2. Dissolve: a band on the lane, Length ${dur0} s`);
   check(/frozen here/.test(notes)&&/plain cut until the render side/.test(notes),'2. the notes: a still frame in the preview, a plain cut in the film for now');
   await shot('01-dissolve-band.png');
+  // 2b. (20 Nov 2026) one control per segment: the key before shows the same dissolve as "To the next view"; the lane
+  // segment says so; a film chapter has no Move style / Camera route (the film's spline) and says why
+  {const prev=ids[ids.indexOf(target)-1];await pick(prev);await wait(300);
+    check(await page.$eval('#director-panel [name="key-transition-next"]',s=>s.value).catch(()=>null)==='dissolve','2b. the key before shows it as "To the next view: Dissolve"');
+    check(!await page.$('#director-panel [name="key-easing"]')&&!await page.$('#director-panel [name="key-path"]')&&!!await page.$('#director-panel [data-film-spline]'),'2b. film chapter: no Move style or Camera route, and the reason');
+    const seg=await page.$eval(`#director-timeline [data-camera-segment-lane="${ids.indexOf(target)-1}"] i`,e=>e.textContent).catch(()=>'');check(/^Dissolve /.test(seg),'2b. the lane segment reads "'+seg+'"');
+    await pick(target);await wait(300);}
   await page.evaluate(()=>document.activeElement?.blur?.());await keyChord('Control','KeyZ');
   check(!await page.$(`#director-timeline [data-cam-transition="${target}"]`),'2. Ctrl+Z takes the dissolve away');
   await keyChord('Control','Shift','KeyZ');check(!!await page.$(`#director-timeline [data-cam-transition="${target}"]`),'2. Ctrl+Shift+Z brings it back');
@@ -70,6 +79,14 @@ try{
   check(k?.transition?.type==='dip-black'&&k.transition.dur>0,'5. Export cut carries the key\'s transition: '+JSON.stringify(k?.transition));
   await page.focus(`#director-timeline [data-cam-transition="${target}"]`);await page.keyboard.press('Delete');await wait(500);
   check(!await page.$(`#director-timeline [data-cam-transition="${target}"]`),'5. Delete on the band: back to a move');
+  // ---- 6 a cut to the same view warns: Duplicate a key (same view, half way to the next), cut into the copy
+  {await pick(ids[1]);await wait(300);await page.evaluate(()=>document.activeElement?.blur?.());await keyChord('Control','KeyD');
+    const now=await keysNow(),copyId=now.find(id=>!ids.includes(id));
+    if(check(!!copyId,'6. Ctrl+D made a copy of the view')){await pick(copyId);await wait(300);await setSel('key-transition','cut');
+      const warn=await page.$eval('#director-panel [data-transition-warn]',e=>e.textContent).catch(()=>'');
+      const mark=await page.$(`#director-timeline [data-camera-segment-lane="${(await keysNow()).indexOf(copyId)-1}"] .seg-warn-mark`);
+      check(/This cut jumps to the same view/.test(warn)&&!!mark,'6. "This cut jumps to the same view" in the Inspector and a ⚠ on the lane');
+      await page.evaluate(()=>document.activeElement?.blur?.());await keyChord('Control','KeyZ');await keyChord('Control','KeyZ');}}
   check(!errors.length,'no page errors'+(errors.length?': '+errors.join(' | '):''));
 }catch(error){await shot('99-failed.png').catch(()=>{});check(false,error.message);}
 finally{await close();}
