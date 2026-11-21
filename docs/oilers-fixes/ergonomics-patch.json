@@ -1,0 +1,8 @@
+{
+  "about": "Oilers chapter ergonomics, CANDIDATE 3. Deep-merge sceneDeskEdit into the sceneDeskEdits entry whose desk is 'station-project-review' in director-film/oilers.json. Nothing else in the chapter changes. initial.height 43 (Vico's own) -> 35.5: the height Fern's built 'stand-low' posture fits (room-people.mjs HEIGHT_FIT/HEIGHT_SOLID: solid within 0.45 in, gone beyond 1.4 in); monitor y -340 -> -220 (mm, top-shelf frame): the panel's lower edge about 1 in above the desktop instead of 3.6 in below it.",
+  "sceneDeskEdit": {
+    "desk": "station-project-review",
+    "initial": { "height": 35.5, "tilt": 0 },
+    "build": { "objects": { "accessory-flat-monitor": { "transform": { "p": { "y": -220 } } } } }
+  }
+}
