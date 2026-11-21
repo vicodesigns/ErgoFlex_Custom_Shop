@@ -7,7 +7,10 @@
 //   sceneGlobals.exposureScale / environmentScale  room brightness / ambient (image) light, and ledWallGlow /
 //              ledFloorGlow  the desk's LED light on the walls / on the floor (x the film's approved level): a number or
 //              keys [[seconds, value], …]; only the fields the Director touched
+//   sceneGlobals.screenLight  {gain, saturation, contrast, tint, keepHue}: the screen-coloured light of a ledMode 'media'
+//              chapter on the desk, floor and walls (experience/screen-light.mjs, docs/screen-reflection/CONTRACT.md)
 // The Director keeps an id on each event / key (third tuple slot) for selection; exportLighting drops them.
+import {cleanScreenLight} from './screen-light.mjs';
 export const LIGHT_KINDS=[['lift-up','Lift up · blue','#2f6bff'],['lift-down','Lift down · red','#ff3b30'],['tilt-retract','Tilt retract · purple','#9600ff'],['tilt-extend','Tilt extend · yellow-green','#d8f000'],['wheels','Wheels · red / amber','#ff5a1f'],['off','Off · dark','#30363c'],['collision','Collision · red breathe','#c4002a'],['proximity','Proximity · amber breathe','#ff9a00']];
 export const WHEEL_MODES=['Strafe left','Strafe right','Forward','Back','Rotate CW','Rotate CCW','Diagonal left-forward','Diagonal left-back','Diagonal right-forward','Diagonal right-back'];
 export const WARM='#52483c';
@@ -34,6 +37,8 @@ export function cleanLighting(v={}){
   const g=v.sceneGlobals||{},globals={},room=num(g.roomLight,0,4,null);if(room!==null)globals.roomLight=room;
   for(const k of ['exposureScale','environmentScale','ledWallGlow','ledFloorGlow']){const x=g[k];if(Array.isArray(x)){const keys=x.slice(0,64).filter(p=>Array.isArray(p)&&Number.isFinite(p[0])&&Number.isFinite(p[1])).map(p=>[num(p[0],0,90,0),num(p[1],0,20,1)]);if(keys.length)globals[k]=keys;}else{const n=num(x,0,20,null);if(n!==null)globals[k]=n;}}
   {const f=cleanFloorSources(g.ledFloorSources);if(f)globals.ledFloorSources=f;}
+  // screenLight: the light a media chapter's screens throw onto the room (experience/screen-light.mjs); {} is kept (= back to the film's default)
+  {const s=cleanScreenLight(g.screenLight);if(s)globals.screenLight=s;}
   if(Object.keys(globals).length)out.sceneGlobals=globals;
   return out;
 }

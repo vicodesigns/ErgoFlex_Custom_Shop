@@ -28,6 +28,11 @@ export const COAST_PERSON = 'Ava';
 // A: raise 9.6-11.6, held to 13.7, the switch to 15.9, held to 18.0, arms down 19.9. docs/rise-wellness/)
 export const RISE_STRETCH_B = {start: 13.1, rightEnd: 18.3, leftEnd: 23.2, good: 23.2, goodEnd: 25.0, seated: true};
 export const RISE_STRETCH_A = {start: 9.6, rightEnd: 14.8, leftEnd: 19.7, good: 19.7, goodEnd: 21.4, seated: false};
+// Wellness in the new order (Vico's 3rd cut, seated; Nov 21 2026, docs/wellness-order/): chapter 22.5 s, the desk rises 3.5-8.5 s,
+// she types standing from ~8.3 s, the reminder at 9.05 s (she glances at the tablet 9.1-10.1 s), the squats (the film's act)
+// 11.5 s for 4.5 s, 3 reps (the demo clip over stretch .. stretchEnd), the desk lowers 14.55-19.55 s, she sits 17.4-20.2 s,
+// the routine highlighted from 20.25 s (her hands back on the keys).
+export const WELLNESS_ORDER_B = {name: 'Maya', notice: {nudge: 9.05, routine: 20.25}, stretch: 11.0, stretchEnd: 16.2, squats: {at: 11.5, dur: 4.5, reps: 3}};
 const CINE_OUT = 'exports/cinematic-intro-cut-cine/screens';
 const cine = (shot, chapter, rest) => ({chapter, shot, out: CINE_OUT, ...rest});
 const CINE = [
@@ -61,8 +66,11 @@ const CINE = [
     opts: {...WELLNESS_BEATS, name: 'Maya'}, videos: [{key: 'shoulder', src: 'app-reference/demo_media/seated_scapular_squeeze_01_demo.mp4', t: 17, scale: '1280:-2'}]}),
   cine('wellness', 7, {id: 'cine-wellness-tablet', target: 'tablet', role: 'focus -> breathing with the stretch -> nice reset', w: 1620, h: 1080, scene: 'c07t', opts: {...WELLNESS_BEATS, name: 'Maya'}}),
   // Nov 20 2026, Vico's 3rd cuts (chapter 7, 19.5 s): Desk Squats instead of the shoulder squeeze (opts.squats; the film's act: at 10.2 s, 5.2 s, 3 reps)
-  ...[['b', 'exports/cinematic-intro-cut-vicos-3rd-cut/screens'], ['a', 'exports/cinematic-intro-cut-vicos-3rd-cut-standing/screens']].flatMap(([v, out]) => {
-    const opts = {nudge: 3.0, stretch: 9.7, stretchEnd: 15.6, breatheEnd: 15.9, reset: 16.5, name: 'Maya', squats: {at: 10.2, dur: 5.2, reps: 3}}, videos = [{key: 'squat', src: 'app-reference/demo_media/desk_squats_01_demo.mp4', t: 17, scale: '1280:-2'}];
+  // Nov 21 2026, the seated cut ('b') in the new order (docs/wellness-order/): the desk rises with her at the keys, she types
+  // standing, the reminder at notice.nudge (she glances at it), the squats (the film's act), the desk lowers, she sits and
+  // types with the routine highlighted from notice.routine (scenes/cine-wellness.js noticeMain / noticeTablet). 'a' as it was.
+  ...[['b', 'exports/cinematic-intro-cut-vicos-3rd-cut/screens', WELLNESS_ORDER_B], ['a', 'exports/cinematic-intro-cut-vicos-3rd-cut-standing/screens', null]].flatMap(([v, out, order]) => {
+    const opts = order || {nudge: 3.0, stretch: 9.7, stretchEnd: 15.6, breatheEnd: 15.9, reset: 16.5, name: 'Maya', squats: {at: 10.2, dur: 5.2, reps: 3}}, videos = [{key: 'squat', src: 'app-reference/demo_media/desk_squats_01_demo.mp4', t: 17, scale: '1280:-2'}];
     return [
       {chapter: 7, shot: 'wellness', out, id: 'cine3' + v + '-wellness-main', target: 'main-landscape', role: 'Maya: report -> time to move -> Desk Squats + height -> standing', w: 1920, h: 1080, scene: 'c07l', opts, videos},
       {chapter: 7, shot: 'wellness', out, id: 'cine3' + v + '-wellness-tablet', target: 'tablet', role: 'focus -> Desk Squats card -> great job', w: 1620, h: 1080, scene: 'c07t', opts, videos}];

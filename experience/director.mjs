@@ -19,7 +19,7 @@ import {cinematicViews,polishMovement,openingSwoop} from './cinematography.mjs';
 import {paceChapter,lengthenChapter,chapterFloor,shortenChapter,viewsPastEnd} from './chapter-timing.mjs?v=chapter-shorten-20261121';
 import {validateClipSchedule,sampledMotionToClips,legacyMotionToClips,cleanClipMotion,planClipInsertion,clipSummary,clipEnd} from './desk-clips.mjs';
 import {groupRange,snapGroupDelta,shiftGroup,CHAPTER_MAX} from './timeline-group.mjs';
-import {LIGHT_KINDS,WHEEL_MODES,cleanLighting,exportLighting,lightKindColor,validateStatus,neutralAt,lightAt,scaleColor,warmthOf,withWarmth,whiteName,daypartAt,DAYPART_TINTS,lightnessOf,withLightness,WHITE_PRESETS} from './film-lighting.mjs';
+import {LIGHT_KINDS,WHEEL_MODES,cleanLighting,exportLighting,lightKindColor,validateStatus,neutralAt,lightAt,scaleColor,warmthOf,withWarmth,whiteName,daypartAt,DAYPART_TINTS,lightnessOf,withLightness,WHITE_PRESETS} from './film-lighting.mjs?v=screen-light-20261121';
 import {filmRenderShot,createStillRenderer} from './film-render.mjs?v=transitions-fix-20261120';
 import {createSceneLightEditor} from './scene-light-editor.mjs';
 import {createScenePropEditor} from './scene-prop-editor.mjs';
@@ -30,6 +30,7 @@ import {cleanPeople as layersCleanPeople,canonicalPeople} from './people-edits.m
 import {createScenePeopleEditor} from './scene-people-editor.mjs?v=pose-key-select-20261121';
 import {createBrandingEditor} from './branding-editor.mjs';
 import {createFloorReflectionEditor} from './floor-reflection-editor.mjs';
+import {isMedia,screenLightNow,screenLightChange,screenLightField,screenLightSummary,screenLightHTML} from './screen-light-ui.mjs?v=screen-light-20261121';
 import {filmPropEdits,propKey} from './prop-edits.mjs';
 import {createFilmLook} from './film-look.mjs';
 import {createStillStrip} from './still-strip.mjs';
@@ -726,11 +727,26 @@ export function mountDirector(bridge,catalog,initial){
     const L=lighting(),T=timeOfDay(),item=lightItem(),s=shot().seconds,kind=lightSel?.kind;
     const tod=T?section('tod','Time of day','the sun and sky through the window',`<p class="director-hint">The room blends from each daypart to the next across the gaps.${T.edited?'':' From the film shot until you edit it.'}</p><div class="director-actions"><button data-action="tod-add">+ Time-of-day key</button></div>${kind==='tods'&&item?todInspector(T,item):''}`):'';
     // roomLight scales the room's own lamps, sky fill and bounce (film-fx), not the desk's LEDs: those are the two LED glow fields.
-    const room=section('room','Room','brightness, fill light, LED glow on walls and floor',`${globalFields(['exposureScale','environmentScale'])}${L?.roomLight!==undefined?`<label title="The room's lamps, sky fill and bounce light (not the desk's LEDs)">Room's own light (lamps, sky, bounce)<input name="room-light" type="number" min="0" max="2" step=".05" value="${L.roomLight}"></label>`:''}${globalFields(['ledWallGlow','ledFloorGlow'])}${floorRefl.panel()}`);
+    const media=isMedia(filmShot(),shot()),room=section('room','Room',`brightness, fill light, LED glow on walls and floor${media?', screen light':''}`,`${globalFields(['exposureScale','environmentScale'])}${L?.roomLight!==undefined?`<label title="The room's lamps, sky fill and bounce light (not the desk's LEDs)">Room's own light (lamps, sky, bounce)<input name="room-light" type="number" min="0" max="2" step=".05" value="${L.roomLight}"></label>`:''}${globalFields(['ledWallGlow','ledFloorGlow'])}${media?screenLightPanel():''}${floorRefl.panel()}`);
     if(!L)return nowCard()+tod+room+lampsSection();
     const white=section('white','Desk white','the LED colour when no status is showing',`<div class="director-actions"><button data-action="light-key-add">+ White key</button></div>${kind==='neutrals'&&item?whiteInspector(L,item,s):''}`);
     const status=section('status','Desk status','status lights while the desk moves',`<p class="director-hint">${L.edited?'Edited here; Export cut sends them to the film.':'From the film shot; your first edit keeps a copy in this cut.'}</p><div class="director-actions"><button data-action="light-add">+ Status light</button></div>${kind==='lights'&&item?statusInspector(item,s):''}`);
     return nowCard()+tod+room+white+status+lampsSection();
+  }
+  // Screen light (media chapters: the desk's LEDs follow the screen's picture; experience/screen-light.mjs and
+  // docs/screen-reflection/CONTRACT.md): sceneGlobals.screenLight, the film's values until edited, {} = 100 % as before.
+  const screenLightState=()=>screenLightNow(shot().sceneGlobals?.screenLight,filmShot()?.sceneGlobals?.screenLight);
+  const screenLightPanel=()=>screenLightHTML(screenLightState(),{filmValues:filmShot()?.sceneGlobals?.screenLight||null});
+  function putScreenLight(field,{key=null,render=true}={}){
+    requireReady();
+    commit(()=>{const s=shot(),g={...s.sceneGlobals};if(field===undefined)delete g.screenLight;else g.screenLight=field;s.sceneGlobals=g;},{render,key});
+  }
+  function setScreenLight(el,{live=false}={}){
+    const now=screenLightState(),next=screenLightChange(now.values,el);if(!next)return;
+    if(!live&&now.from==='director'&&JSON.stringify(screenLightField(next))===JSON.stringify(screenLightField(now.values))){renderPanel();return;}   // (a slider's release after its drag)
+    putScreenLight(screenLightField(next),{key:live?el.name:null,render:!live});
+    if(live){const k=el.name.replace(/^scln?-/,''),twin=panel.querySelector(`[name="${el.name.startsWith('scln-')?'scl-':'scln-'}${k}"]`),out=panel.querySelector(`[data-screen-light-out="${k}"]`);if(twin)twin.value=el.value;if(out)out.textContent=el.type==='color'?(el.value==='#ffffff'?'none':el.value):el.value+' %';syncNow();}
+    status(`Screen light: ${screenLightSummary(next)}. Render still shows it as the film will.`);
   }
   const lampsSection=()=>section('lamps','Lamps & sun','room lamps, sun and sky, film rig',`<div data-scene-lights>${sceneLights.panel()}</div>`);
   function statusInspector(e,s){return `<div class="movement-inspector light-inspector"><h4 style="--lane:${lightKindColor(e.kind)}">Status light</h4>
@@ -758,6 +774,7 @@ export function mountDirector(bridge,catalog,initial){
     rows.push(['room','Room brightness','×'+globalAt('exposureScale',t).toFixed(2)],['room','Fill light','×'+globalAt('environmentScale',t).toFixed(2)]);
     if(L){const e=L.status.find(e=>t>=e.at&&t<e.at+e.dur),c=e?lightKindColor(e.kind):neutralAt(L.neutral,t);rows.push([e?'status':'white','Desk strip',e?kindLabel(e.kind):whiteName(c)+' '+c,c]);if(L.roomLight!==undefined)rows.push(['room',"Room's own light",String(L.roomLight)]);}
     rows.push(['room','LED glow on the walls','×'+globalAt('ledWallGlow',t).toFixed(2)],['room','LED glow on the floor','×'+globalAt('ledFloorGlow',t).toFixed(2)]);
+    if(isMedia(filmShot(),shot())){const v=screenLightState().values;rows.push(['room','Screen light',screenLightSummary(v),v.tint!=='#ffffff'?v.tint:null]);}
     const sum=sceneLights.summary();if(sum)rows.push(['lamps','Lamps & sun',sum]);
     return rows;
   }
@@ -1253,6 +1270,8 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
         // saw, so 🗑 did nothing for them, and removed the whole person while People sheet keys were picked)
         if(t==='delete'){await deleteSelection();return;}
         return;}
+      if(name==='screen-light-reset'){putScreenLight({});status('Screen light back to 100 % (as the film had it before), no tint. Export cut removes the chapter\'s values.');return;}
+      if(name==='screen-light-film'){putScreenLight(undefined);status('Screen light: the chapter\'s own values again ('+screenLightSummary(screenLightState().values)+').');return;}
       if(name==='lamp-pick'){await sceneLights.changed({name:'sl-select',value:index});renderTimeline();return;}
       if(name==='white-preset'){editLight({color:index});const k=lightItem();if(k)status(`${whiteName(index)} ${index} at ${r2(k[0])} s.`);return;}
       if(name==='now-go'){const id=index;const el=panel.querySelector(`[data-light-section="${id}"]`);if(el){el.open=true;delete lightSectionsShut[id];el.scrollIntoView({block:'start',behavior:'smooth'});}return;}
@@ -1443,6 +1462,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     if(name.startsWith('fr-')&&el.type==='range'){try{floorRefl.changed(el,{live:true});}catch(error){status(error.message,true);}return;}
     if(name.startsWith('pe-path-')&&el.type==='range'){try{scenePeople.input(el);}catch(error){status(error.message,true);}return;}   // (a walk's facing slider, live)
     if(name.startsWith('mx-')&&name!=='mx-on'){sceneLights.mixerChange(el,true).catch(error=>status(error.message,true));return;}
+    if(/^scl-/.test(name)&&(el.type==='range'||el.type==='color')){try{setScreenLight(el,{live:true});}catch(error){status(error.message,true);}return;}
     if(/^gn?-/.test(name)){const k=name.replace(/^gn?-/,''),v=Number(el.value),twin=field((name.startsWith('gn-')?'g-':'gn-')+k),out=panel.querySelector(`[data-global-steps="${k}"]`);if(Number.isFinite(v)){if(twin)twin.value=String(v);if(out)out.textContent=k==='exposureScale'?stepsText(v):'×'+v;if(name.startsWith('g-'))try{setGlobal(k,v,{key:name,render:false});}catch(error){status(error.message,true);}}return;}
     // Neutral white sliders and picker edit live; one undo step per drag.
     if(['neutral-bright','neutral-bright-n','neutral-warm','neutral-color'].includes(name)&&lightItem()){
@@ -1474,6 +1494,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     const name=event.target.name,value=event.target.value;group=null;
     if(name==='film-chapter'){switchFilm(Number(value));return;}
     if(name==='film-cut'){switchCut(value);return;}
+    if(/^scln?-/.test(name||'')){try{setScreenLight(event.target);}catch(error){renderPanel();status(error.message,true);}return;}
     if(/^gn?-/.test(name||'')){try{const k=name.replace(/^gn?-/,''),v=Number(value);if(Math.abs(globalFactor(k).value-v)<1e-6){renderPanel();return;}setGlobal(k,v);}catch(error){renderPanel();status(error.message,true);}return;}
     if(name?.startsWith('mx-')){try{await sceneLights.mixerChange(event.target,false);if(name!=='mx-gain'&&name!=='mx-color')renderSceneLights();}catch(error){renderSceneLights();status(error.message,true);}return;}
     if(name?.startsWith('sl-')){try{await sceneLights.changed(event.target);}catch(error){renderSceneLights();status(error.message,true);}return;}

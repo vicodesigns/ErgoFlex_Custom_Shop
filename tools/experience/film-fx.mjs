@@ -44,6 +44,9 @@ import {screenTiming} from './screen-timing.mjs';
 //     height / tilt, applied after sceneDeskPoses and restored after.
 //   ledColor:'#f19c00'  the LED colour for the shot (the app's colour picker), restored after
 //   ledGain:1  multiplier on the sampled media-mode pixels (beyond the app's 'full' preset)
+//   sceneGlobals.screenLight:{gain, saturation, contrast, tint, keepHue}  the media-mode light (the screen's colours on the
+//     desk, floor and walls) shaped after sampling: experience/screen-light.mjs, docs/screen-reflection/CONTRACT.md.
+//     Absent / {} / all defaults: today's arithmetic, the same pixels. Only a ledMode 'media' chapter has this light.
 //   sceneGlobals:{environmentScale, exposure, exposureScale}  image-based ambient multiplier (or [[s, scale], …]), renderer
 //     exposure, and a multiplier on whatever exposure is set (the room's daypart, timeOfDay's blend; number or [[s, k], …]),
 //     roomLight: k (or [[s, k], …])  the room's own light (its lights, image-based ambient and architectural bounce) x k,
@@ -90,6 +93,7 @@ import { accessory } from '../../catalog.mjs';
 import { isTextureTarget, installTextureScreens, matches as textureMatches } from './film-texture-screens.mjs';
 import { lookFor, uniformsOf, GLSL as LOOK_GLSL, CALL as LOOK_CALL, SHADED as LOOK_SHADED, isToday } from '../../experience/screen-look.mjs';
 import { statusLightOff } from './film-status-light.mjs';
+import { screenLightTransform, applyPixel, applyHex } from '../../experience/screen-light.mjs';
 
 const api = window.ErgoFlex;
 const sceneRoot = () => { let s = api.loadedModel; while (s?.parent) s = s.parent; return s; };
@@ -417,7 +421,9 @@ async function ledSource(shot, screens, list) {
 async function makeLed(shot, screens, list) {
   const game = api.ledGameMode, counts = game.counts, small = document.createElement('canvas'); small.width = 160; small.height = 90;
   return { game, source: await ledSource(shot, screens, list), small, c: small.getContext('2d', { willReadFrequently: true }),
-    gain: Math.max(0, Number(shot.ledGain ?? 1)), target: counts.map(n => new Uint8Array(n * 4)), live: counts.map(n => new Uint8Array(n * 4)), at: null, mode: shot.ledPreset || 'normal', avg: '#000000' };
+    gain: Math.max(0, Number(shot.ledGain ?? 1)), target: counts.map(n => new Uint8Array(n * 4)), live: counts.map(n => new Uint8Array(n * 4)), at: null, mode: shot.ledPreset || 'normal', avg: '#000000',
+    // sceneGlobals.screenLight (experience/screen-light.mjs, docs/screen-reflection/CONTRACT.md): null = today's light, untouched
+    light: screenLightTransform(shot.sceneGlobals?.screenLight), shaped: counts.map(n => new Float32Array(n * 4)) };
 }
 async function sampleLed(led, seconds, video) {
   const src = led.source;
@@ -428,10 +434,13 @@ async function sampleLed(led, seconds, video) {
   // Continuous playback eases like the app; a jump (stills, first frame) snaps.
   const dt = led.at === null ? Infinity : seconds - led.at, blend = video && dt > 0 && dt <= .25 ? 1 - Math.exp(-dt * 1000 / 150) : 1;
   const gain = led.gain;
-  led.live.forEach((row, j) => row.forEach((v, i) => { const t = Math.min(255, led.target[j][i] * gain); row[i] = Math.round(v + (t - v) * blend); }));
+  if (!led.light) led.live.forEach((row, j) => row.forEach((v, i) => { const t = Math.min(255, led.target[j][i] * gain); row[i] = Math.round(v + (t - v) * blend); }));
+  // The chapter's screen light: contrast, saturation, tint, x ledGain x gain, clipped per channel (or whole, keepHue).
+  else led.live.forEach((row, j) => { const s = led.shaped[j], src = led.target[j]; for (let i = 0; i < row.length; i += 4) applyPixel(led.light, src, s, i, gain); row.forEach((v, i) => { row[i] = Math.round(v + (s[i] - v) * blend); }); });
   led.at = seconds;
   let r = 0, g = 0, b = 0; const d = image.data; for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; b += d[i + 2]; } const n = d.length / 4;
   led.avg = '#' + [r, g, b].map(x => Math.max(25, Math.round(x / n)).toString(16).padStart(2, '0')).join('');
+  if (led.light) led.avg = applyHex(led.light, led.avg);
 }
 
 // ---------- clocks ----------
@@ -1082,6 +1091,8 @@ export async function update(shot, { onSlow } = {}) {
   if (changed('ledColor') || changed('ledStatus') || changed('ledNeutral') || changed('obstacles')) status = true;
   // Floor reflections per source: data only, in place.
   if (gChanged('ledFloorSources')) active.viewerLeds?.setSources?.(g1.ledFloorSources ?? null);
+  // The screen light (Lighting tab, a media chapter's): data only, in place; the next frame samples through it.
+  if (gChanged('screenLight') && active.led) active.led.light = screenLightTransform(g1.screenLight);
   if (changed('timeOfDay')) {
     const seq = x => [...(x || [])].sort((a, b) => a.at - b.at).map(k => k.mode).join();
     if (!(active.tod?.retime && prev.timeOfDay?.length && shot.timeOfDay?.length && seq(prev.timeOfDay) === seq(shot.timeOfDay) && active.tod.retime(shot.timeOfDay))) tail = 0;

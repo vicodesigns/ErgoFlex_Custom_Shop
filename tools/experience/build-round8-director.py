@@ -330,7 +330,28 @@ LIGHT_FIELDS = ('screens', 'ledStatus', 'ledNeutral', 'ledColor', 'lights', 'lig
 # ledStatus; tools/experience/film-status-light.mjs); true = back to the default, which is the field's absence.
 # The Lighting tab's Room section: Room's own light / Room brightness / Fill light / LED glow on the walls / LED glow on the floor
 # (ledWallGlow / ledFloorGlow: x the film's approved LED room spill and floor light; film-fx.mjs sceneGlobals).
-GLOBAL_FIELDS = ('roomLight', 'exposureScale', 'environmentScale', 'ledWallGlow', 'ledFloorGlow', 'ledFloorSources')
+GLOBAL_FIELDS = ('roomLight', 'exposureScale', 'environmentScale', 'ledWallGlow', 'ledFloorGlow', 'ledFloorSources', 'screenLight')
+# screenLight (21 Nov 2026, docs/screen-reflection/CONTRACT.md): the Lighting tab's "Screen light" section, the light a
+# media chapter's screens throw onto the desk, floor and walls (film-fx.mjs, experience/screen-light.mjs): {gain,
+# saturation, contrast, tint, keepHue}, only what differs from today's. {} = back to the film's default: the pass removes
+# the chapter's sceneGlobals.screenLight. (min, max, today's) as experience/screen-light.mjs FIELDS.
+SCREEN_LIGHT = {'gain': (0, 3, 1), 'saturation': (0, 3, 1), 'contrast': (.5, 2, 1)}
+
+
+def clean_screen_light(v):
+    """experience/screen-light.mjs cleanScreenLight: the values that differ from today's, clamped, rounded to .001; {} when
+    nothing does; None for something that is not an object (then nothing is carried)."""
+    if not isinstance(v, dict): return None
+    out = {}
+    for k, (lo, hi, d) in SCREEN_LIGHT.items():
+        n = v.get(k)
+        if isinstance(n, bool) or not isinstance(n, (int, float)) or n != n or n in (float('inf'), float('-inf')): continue
+        c = round(min(hi, max(lo, float(n))) * 1000) / 1000
+        if c != d: out[k] = int(c) if c == int(c) else c
+    t = v.get('tint')
+    if isinstance(t, str) and re.fullmatch(r'#[0-9a-fA-F]{6}', t) and t.lower() != '#ffffff': out['tint'] = t.lower()
+    if v.get('keepHue') is True: out['keepHue'] = True
+    return out
 
 
 def apply_lighting(cid, f, lighting):
@@ -353,7 +374,14 @@ def apply_lighting(cid, f, lighting):
                     else: s.pop(k, None)
                 else: s[k] = copy.deepcopy(lighting[k])
             for k in GLOBAL_FIELDS:
-                if k in lighting: s.setdefault('sceneGlobals', {})[k] = copy.deepcopy(lighting[k])
+                if k not in lighting: continue
+                if k == 'screenLight':   # {} = the film's default again: the field is removed
+                    mine = clean_screen_light(lighting[k])
+                    if mine is None: continue
+                    if mine: s.setdefault('sceneGlobals', {})[k] = mine
+                    elif 'screenLight' in (s.get('sceneGlobals') or {}): s['sceneGlobals'].pop(k)
+                    continue
+                s.setdefault('sceneGlobals', {})[k] = copy.deepcopy(lighting[k])
         if dump(p, d): wrote.append(os.path.relpath(p, H))
     return wrote
 
@@ -1178,6 +1206,9 @@ def run_import(export):
             lighting['timeOfDay'] = tod[1:]
     for k in GLOBAL_FIELDS:
         if k in (shot.get('sceneGlobals') or {}): lighting[k] = shot['sceneGlobals'][k]
+    if 'screenLight' in lighting:
+        if clean_screen_light(lighting['screenLight']) is None: lighting.pop('screenLight')
+        else: lighting['screenLight'] = clean_screen_light(lighting['screenLight'])
     dc = load(director_file(cid))
     # Starting position (Chapter tab): the export's motion.initial height / tilt, and its wheels start (x, z, yaw: the Rotate
     # row) where it differs from the film's (a copy of the film's own is not kept, so a builder's later placement wins);

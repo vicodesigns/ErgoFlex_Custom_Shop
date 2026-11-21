@@ -1,0 +1,25 @@
+files that differ: director-camera-wellness.json, review-cut.json, screens\cine3b-wellness-main.capture.json, screens\cine3b-wellness-main.mp4, screens\cine3b-wellness-tablet.capture.json, screens\cine3b-wellness-tablet.mp4
+review-cut.json top level other than shots equal: true
+shots that differ: wellness (of 12)
+wellness review-cut shot: 20 changed path(s) besides the re-baked camera (291 -> 336 baked keys) and the importer stamp:
+  /seconds: 19.5  ->  22.5
+  /motion/clips/0/start: 6  ->  3.5
+  /motion/clips/1: undefined  ->  {"id":"sit-back","lane":"lift","kind":"lift","start":14.55,"duration":5,"easing":"smooth","label":"Back to sit
+  /cameraPlan/keys/1/at: 2.45  ->  1.6
+  /cameraPlan/keys/2/at: 6  ->  4.2
+  /cameraPlan/keys/3/at: 11  ->  12.3
+  /cameraPlan/keys/4/at: 14.5  ->  15.8
+  /cameraPlan/keys/5/at: 19.5  ->  22.5
+  /cameraPlan/keys/5/label: "Working standing"  ->  "Working seated"
+  /ledStatus/0/at: 6  ->  3.5
+  /ledStatus/1: undefined  ->  {"at":14.55,"dur":5,"kind":"lift-down","fade":1}
+  /people/cast/0/postures: undefined  ->  {"people-maya-stand-type-41":{"poseKeys":[{"t":9.1,"pose":{"spine_03":[0,0,0,1],"neck_01":[0,0,0,1],"head":[0,
+  /people/cast/1/act/at: 10.2  ->  11.5
+  /people/cast/1/act/dur: 5.2  ->  4.5
+  /people/cast/1/postures/people-maya-stand-type/poseKeys/0/t: 9.01  ->  10.31
+  /people/cast/1/postures/people-maya-stand-type/poseKeys/1/t: 9.1  ->  10.4
+  /people/cast/1/postures/people-maya-stand-type/poseKeys/2/t: 9.2  ->  10.5
+  /people/cast/1/postures/people-maya-stand-type/poseKeys/3/t: 9.967  ->  11.267
+  /people/when/maya-break/0/0: 9.5  ->  10.8
+  /people/when/maya-break/0/1: 16.1  ->  16.7
+(note: the screens/*.mp4 and *.capture.json differences above are not the importer's: the base scratch copy was taken before the two clips were re-captured, the v4 copy after.)
