@@ -37,7 +37,7 @@ import {createStillStrip} from './still-strip.mjs';
 import {filmLink,loadFilmChapters,filmChapterLabel,filmChapterIndex} from './film-chapters.mjs';
 import {createFilmFresh} from './film-fresh.mjs';
 import {timelineTicks,snapTimelineTime,adjacentEdit,TIMELINE_ZOOMS,clampZoom,maxZoom,filmTimecode,nextMarker,toggleMarker,setLoopEnd,rulerAnchorScroll} from './timeline-ui.mjs?v=zoom-anchor-20261121';
-import {createDeskEditor} from './desk-editor.mjs?v=timeline-delete-20261120';
+import {createDeskEditor} from './desk-editor.mjs?v=diagonal-20261122';
 import {stackRows,rowVar} from './lane-rows.mjs';
 import {createChoreoTarget,validateDeskEdits} from './desk-choreo.mjs';
 import {effectiveDeskEdits,cleanDeskEdit} from './desk-edits.mjs';

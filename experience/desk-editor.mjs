@@ -1,11 +1,14 @@
 import {DESK_LANES,POSE_FIELDS,cleanPose,simplifyDeskLane} from './desk-track.mjs';
 import {CHOREO_LANES,sizeLabel,deskLimitNote,limitDeskPose} from './desk-choreo.mjs';
 import {stackRows,rowVar} from './lane-rows.mjs';
-import {motionForShot,sampledMotionToClips,legacyMotionToClips,cleanClip,putClip,duplicateClip,planClipInsertion,clipEnd,clipTarget,clipDistance,clipSpeedUnit,clipSpeedPresets,clipSpeedSetting,retimeClipBySpeed,clipSummary,sampleClipMotion,validateClipSchedule} from './desk-clips.mjs';
+import {motionForShot,sampledMotionToClips,legacyMotionToClips,cleanClip,putClip,duplicateClip,planClipInsertion,clipEnd,clipTarget,clipDistance,clipSpeedUnit,clipSpeedPresets,clipSpeedSetting,retimeClipBySpeed,clipSummary,sampleClipMotion,validateClipSchedule,DIAGONALS,isDiagonal,cleanClipMotion} from './desk-clips.mjs';
+import {planApproach,approachClips,describePlan} from './desk-approach.mjs?v=diagonal-20261122';
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const names={lift:'Lift',tilt:'Tilt',wheels:'Wheels'};
 const fields=[['height','Height',28,52.5,.1],['tilt','Tilt',-5,65,.1],['x','Sideways',-120,120,.5],['z','Forward / back',-120,120,.5],['yaw','Turn',-3600,3600,1]];
 const round=n=>Number(n.toFixed(3));
+// travel directions as the inspector names them (the four diagonals: the real desk's 45-degree drives)
+const TRAVEL_LABEL={forward:'Forward',backward:'Back',left:'Left (strafe)',right:'Right (strafe)','forward-left':'↖ Diagonal forward-left','forward-right':'↗ Diagonal forward-right','backward-left':'↙ Diagonal back-left','backward-right':'↘ Diagonal back-right'};
 const option=(v,label,current)=>`<option value="${v}" ${v===current?'selected':''}>${escape(label)}</option>`;
 export function createDeskEditor({panel,timeline,bridge,shot,time,seek,commit,render,status,preview=()=>Promise.resolve(),focus=()=>{},snap=(value)=>Math.round(value*20)/20,lengthen=null,choreo=null}){
   let selected=null,drag=null,suppress=0,recording=null,jog=null,lastTiming=null,paletteDrag=null,paletteSuppress=0,dirty=false,pointerAction=false;
@@ -27,6 +30,41 @@ export function createDeskEditor({panel,timeline,bridge,shot,time,seek,commit,re
   const now=()=>time()*shot().seconds;
   const ready=()=>{if(!bridge.ready())throw Error('Wait for this chapter to finish loading.');};
   const guarded=fn=>{try{fn();}catch(e){dirty=false;lastTiming=null;render();status(e.message,true);}};
+  // ---- Approach a landing spot (desk-approach.mjs): from the desk's pose at the start time to a landing pose, a straight
+  // leg if needed, one 45-degree diagonal and a turn into the heading, written as Wheels clips (editable after). The form's
+  // values live here (per chapter); the landing spot starts as where the chapter ends.
+  let approach=null;
+  function approachState(){
+    const m=motion(),T=shot().seconds;
+    if(!approach||approach.shot!==shot().id){const end=sampleClipMotion(m,T);approach={shot:shot().id,start:round(Math.min(now(),T)),x:round(end.x),z:round(end.z),yaw:round(end.yaw),order:'straight-first',speed:12,turn:45,replace:true};}
+    return approach;
+  }
+  // the wheel clips kept (replace: those starting at / after the start go), the pose there, the plan; throws a sentence
+  function approachPlan(a=approachState()){
+    const m=motion(),T=shot().seconds,wheels=m.clips.filter(c=>c.lane==='wheels');
+    if(!(a.start>=0&&a.start<T))throw Error(`Start the approach inside the ${T}-second chapter.`);
+    const through=wheels.find(c=>c.start<a.start-1e-6&&clipEnd(c)>a.start+1e-6);
+    if(through)throw Error(`A wheel move runs through ${round(a.start)} s (${clipSummary(through)}, to ${round(clipEnd(through))} s): start the approach after it ends.`);
+    const kept=m.clips.filter(c=>!(c.lane==='wheels'&&a.replace&&c.start>=a.start-1e-6));
+    const from=sampleClipMotion({...m,clips:kept},a.start),plan=planApproach(from,{x:a.x,z:a.z,yaw:a.yaw},{speed:a.speed,turnSpeed:a.turn,order:a.order});
+    const clips=approachClips(plan,a.start);
+    if(a.start+plan.seconds>T+1e-6)throw Error(`The approach needs ${plan.seconds} s from ${round(a.start)} s, past the chapter's end at ${T} s: start earlier or go faster.`);
+    const later=kept.filter(c=>c.lane==='wheels'&&c.start>=a.start-1e-6);
+    if(later.some(c=>clips.some(n=>n.start<clipEnd(c)-1e-6&&c.start<n.start+n.duration-1e-6)))throw Error('Wheel moves already sit where the approach goes: tick Replace, or start it after them.');
+    return {from,plan,clips,kept};
+  }
+  function approachText(){try{const {from,plan}=approachPlan();return `From ${round(from.x)}, ${round(from.z)}″ at ${round(from.yaw)}°: ${describePlan(plan)}`;}catch(e){return e.message;}}
+  function approachHtml(){
+    const a=approachState(),T=shot().seconds,num=(n,label,v,step,extra='')=>`<label>${label}<input name="desk-ap-${n}" type="number" step="${step}" value="${v}" ${extra}></label>`;
+    return `<details class="desk-approach" data-desk-approach ${a.open?'open':''}><summary>Approach a landing spot</summary>
+      <p class="director-hint">From where the desk is at the start time: a straight leg if the spot is not on a 45° line, one diagonal, then a turn into the heading (the real desk's moves; it keeps its heading while it drives). The landing spot starts as where the chapter ends.</p>
+      <div class="director-grid">${num('start','Start (seconds)',a.start,.05,`min="0" max="${T}"`)}<label>Order<select name="desk-ap-order">${option('straight-first','Straight, then diagonal',a.order)}${option('diagonal-first','Diagonal, then straight',a.order)}</select></label></div>
+      <div class="director-grid">${num('x','Landing sideways X (inches)',a.x,.1)}${num('z','Landing forward Z (inches)',a.z,.1)}${num('yaw','Landing heading (degrees)',a.yaw,.5)}</div>
+      <div class="director-grid">${num('speed','Speed (inches / s)',a.speed,.5,'min=".5"')}${num('turn','Turn speed (degrees / s)',a.turn,1,'min="1"')}</div>
+      <label class="director-check"><input type="checkbox" name="desk-ap-replace" ${a.replace?'checked':''}>Replace the wheel moves from the start time on</label>
+      <p class="director-status" data-desk-ap-plan>${escape(approachText())}</p>
+      <div class="director-actions"><button data-desk-action="approach" class="primary">Write the moves</button><button data-desk-action="approach-here" title="The landing spot is where the desk is at the playhead">Landing spot = desk at the playhead</button><button data-desk-action="approach-start" title="The approach starts at the playhead">Start at the playhead</button></div></details>`;
+  }
   function sync(){
     for(const line of timeline.querySelectorAll('[data-desk-playhead]'))line.style.left=time()*100+'%';
     const output=panel.querySelector('[data-desk-readout]');if(output){const p=recording?.pose||(!deskInfo()&&bridge.ready()?bridge.stage().capturePose():null)||sampleClipMotion(motion(),now());output.textContent=`${p.height.toFixed(1)}″ height · ${p.tilt.toFixed(1)}° tilt · ${p.yaw.toFixed(1)}° heading`+(clip()?.lane==='wheels'?` · X ${p.x.toFixed(1)}″ · Z ${p.z.toFixed(1)}″`:'');}
@@ -39,13 +77,14 @@ export function createDeskEditor({panel,timeline,bridge,shot,time,seek,commit,re
   }
   function select(id){ready();lastTiming=null;selected=id;focus('groove');const c=clip();if(c)seek(c.start/shot().seconds);render();status('Movement selected. Edit its settings in Groove, or drag its block or trim handles.');}
   function add(lane,preferred=now(),kind=lane==='wheels'?'rotate':lane){
+    const diagonal=kind==='diagonal';if(diagonal)kind='travel';
     ready();focus('groove');const m=motion(),space=planClipInsertion(m.clips,lane,preferred,shot().seconds,3,90,kind);
     if(!space)throw Error(`The ${names[lane]} lane is full. Shorten a movement or lengthen this chapter.`);
     const {start,duration}=space,longer=space.seconds>shot().seconds+1e-9;
-    const from=sampleClipMotion(m,start),c=cleanClip({lane,start,duration,kind,target:lane==='lift'?(from.height<45?52.5:28):(from.tilt<30?35:0),value:kind==='travel'?12:360,direction:kind==='travel'?'forward':'right'});
+    const from=sampleClipMotion(m,start),c=cleanClip({lane,start,duration,kind,target:lane==='lift'?(from.height<45?52.5:28):(from.tilt<30?35:0),value:kind==='travel'?12:360,direction:diagonal?'forward-right':kind==='travel'?'forward':'right'});
     selected=c.id;
     if(longer&&lengthen){const next=putClip(m,c,space.seconds);lastTiming=null;dirty=false;lengthen(space.seconds,next,`${names[lane]} added at ${start.toFixed(1)}s`,start);return;}
-    save(putClip(m,c,shot().seconds),{at:start,message:`${names[lane]} movement added at ${round(start)}s. Set its duration, speed and direction below.`});
+    save(putClip(m,c,shot().seconds),{at:start,message:diagonal?`Diagonal added at ${round(start)}s: forward-right at 45°. Set its direction, distance and speed below.`:`${names[lane]} movement added at ${round(start)}s. Set its duration, speed and direction below.`});
   }
   function applyForm(){
     const c=clip();if(!c)return;const read=(n,fallback)=>panel.querySelector(`[name="desk-clip-${n}"]`)?.value??fallback;
@@ -95,6 +134,10 @@ export function createDeskEditor({panel,timeline,bridge,shot,time,seek,commit,re
     if(name==='record'){if(recording)stopRecord();else startRecord();return;}
     ready();
     if(name.startsWith('add-')){add(name.slice(4),now(),kind);return;}
+    if(name==='approach'){const a=approachState(),{plan,clips,kept}=approachPlan(a),next=cleanClipMotion({...motion(),clips:[...kept,...clips]},shot().seconds);
+      selected=clips[0]?.id||null;save(next,{at:a.start,message:plan.legs.length?`Approach written: ${describePlan(plan)}. Each move is its own block: edit or drag them like any other.`:'The desk is already on the landing spot: nothing to write.'});return;}
+    if(name==='approach-here'){const a=approachState(),p=sampleClipMotion(motion(),now());Object.assign(a,{x:round(p.x),z:round(p.z),yaw:round(p.yaw),open:true});render();status(`Landing spot: ${a.x}, ${a.z}″ at ${a.yaw}° (the desk at ${round(now())} s).`);return;}
+    if(name==='approach-start'){const a=approachState();a.start=round(now());a.open=true;render();status(`The approach starts at ${a.start} s.`);return;}
     if(name==='preview'){const c=clip();if(c)preview({start:c.start,end:clipEnd(c),id:'desk-'+c.id,label:clipSummary(c)}).catch(e=>status(e.message,true));return;}
     if(name==='in'||name==='out'){const c=clip();if(c)seek((name==='in'?c.start:clipEnd(c))/shot().seconds);return;}
     if(name==='clear'){selected=null;save({...motion(),clips:[]},{at:0,message:'Movement timeline cleared. Undo restores the clips.'});return;}
@@ -125,6 +168,11 @@ export function createDeskEditor({panel,timeline,bridge,shot,time,seek,commit,re
   document.addEventListener('pointercancel',()=>{pointerAction=false;flush();},true);
   panel.addEventListener('input',e=>{if(e.target.name?.startsWith('desk-clip-'))dirty=true;if(e.target.name==='desk-clip-speed')lastTiming='speed';else if(e.target.name==='desk-clip-duration')lastTiming='duration';if(e.target.name?.startsWith('desk-live-')&&recording)guarded(()=>{recording.pose=cleanPose({...recording.pose,[e.target.name.slice(10)]:Number(e.target.value)});bridge.pose(recording.pose);});});
   panel.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.name?.startsWith('desk-clip-')){e.preventDefault();flush();}});
+  const approachInput=e=>{const el=e.target;if(!el.name?.startsWith('desk-ap-'))return;const a=approachState(),k=el.name.slice(8);a.open=true;
+    if(k==='replace')a.replace=el.checked;else if(k==='order')a.order=el.value;else{const v=Number(el.value);if(el.value!==''&&Number.isFinite(v))a[k]=v;}
+    const out=panel.querySelector('[data-desk-ap-plan]');if(out)out.textContent=approachText();};
+  panel.addEventListener('input',approachInput);panel.addEventListener('change',approachInput);
+  panel.addEventListener('toggle',e=>{if(e.target.matches?.('[data-desk-approach]'))approachState().open=e.target.open;},true);
   panel.addEventListener('change',e=>guarded(()=>{
     const n=e.target.name,v=e.target.value;
     if(n==='desk-selected'){select(v);return;}
@@ -173,7 +221,7 @@ export function createDeskEditor({panel,timeline,bridge,shot,time,seek,commit,re
   timeline.addEventListener('change',e=>{if(e.target.name!=='choreo-desk')return;guarded(()=>{if(!flush())return;ready();choreo.pick(e.target.value||null);const d=deskInfo();status(d?`${d.name||'Room desk'}: its own Lift and Tilt timeline. Add moves, then drag and resize them like the main desk's.`:'Back to the featured desk.');});});
   timeline.addEventListener('click',e=>{const b=e.target.closest('[data-choreo-clip]');if(!b)return;guarded(()=>{if(!flush())return;choreo.pick(b.dataset.choreoDesk||null);select(b.dataset.choreoClip);});});
 
-  function palette(){return [['lift','lift','Lift'],['tilt','tilt','Tilt'],['wheels','rotate','Turn'],['wheels','travel','Travel'],['wheels','hold','Hold']].filter(([lane])=>laneNames().includes(lane)).map(([lane,kind,label])=>`<button data-desk-action="add-${lane}" data-desk-add="${lane}" data-desk-kind="${kind}" draggable="false" title="Add ${label.toLowerCase()} movement">+ ${label}</button>`).join('');}
+  function palette(){return [['lift','lift','Lift'],['tilt','tilt','Tilt'],['wheels','rotate','Turn'],['wheels','travel','Travel'],['wheels','diagonal','Diagonal'],['wheels','hold','Hold']].filter(([lane])=>laneNames().includes(lane)).map(([lane,kind,label])=>`<button data-desk-action="add-${lane}" data-desk-add="${lane}" data-desk-kind="${kind}" draggable="false" title="Add ${label.toLowerCase()} movement">+ ${label}</button>`).join('');}
   return {
     // the Director's keys (director-actions.mjs): Alt+←/→ nudges the selected move; Shift+Space plays just it.
     nudge(delta){if(!clip())return false;guarded(()=>{const c=clip(),start=Math.round((c.start+delta)*1000)/1000;if(start<0||start+c.duration>shot().seconds+.00001)throw Error('Keep the whole movement inside the chapter.');update({start});});return true;},
@@ -188,16 +236,17 @@ export function createDeskEditor({panel,timeline,bridge,shot,time,seek,commit,re
       ${!shot().motion?`<p class="director-status">${m.clips.length?'Original chapter movements are shown below. Select a block to edit its timing, speed or path. Your first change keeps these movements in a custom timeline.':'This chapter has no built-in desk movement. Add a block to animate it.'}</p>`:''}
       <p data-desk-readout class="director-status"></p>
       <label>Selected movement<select name="desk-selected"><option value="">Choose a movement…</option>${m.clips.map(v=>option(v.id,`${names[v.lane]} · ${clipSummary(v)} · ${round(v.start)}–${round(clipEnd(v))}s`,selected)).join('')}</select></label>
-      ${c?`<div class="movement-inspector"><h4>${({rotate:'Turn',travel:'Travel / strafe',hold:'Hold wheels',pose:'Saved path'})[c.kind]||names[c.lane]} movement</h4><div class="selection-preview"><button data-desk-action="preview" class="primary">▶ Play move</button><button data-desk-action="in">In</button><button data-desk-action="out">Out</button><output data-movement-progress></output></div><div class="movement-error" data-movement-error role="alert" hidden><span></span><button data-desk-action="revert">Revert changes</button></div><label>Movement name<input name="desk-clip-label" maxlength="60" placeholder="${escape(clipSummary({...c,label:''}))}" value="${escape(c.label)}"></label>
+      ${c?`<div class="movement-inspector"><h4>${c.kind==='travel'&&isDiagonal(c.direction)?'Diagonal (45°)':({rotate:'Turn',travel:'Travel / strafe',hold:'Hold wheels',pose:'Saved path'})[c.kind]||names[c.lane]} movement</h4><div class="selection-preview"><button data-desk-action="preview" class="primary">▶ Play move</button><button data-desk-action="in">In</button><button data-desk-action="out">Out</button><output data-movement-progress></output></div><div class="movement-error" data-movement-error role="alert" hidden><span></span><button data-desk-action="revert">Revert changes</button></div><label>Movement name<input name="desk-clip-label" maxlength="60" placeholder="${escape(clipSummary({...c,label:''}))}" value="${escape(c.label)}"></label>
         <div class="director-grid movement-timing"><label>Start time (seconds)<input name="desk-clip-start" type="number" min="0" max="${round(shot().seconds-c.duration)}" step=".05" value="${round(c.start)}"></label><label>Duration (seconds)<input name="desk-clip-duration" type="number" min=".001" max="${round(shot().seconds-c.start)}" step=".05" value="${round(c.duration)}"></label></div><p class="movement-range">${round(c.start)}s → ${round(clipEnd(c))}s <span>of ${shot().seconds}s chapter</span></p>
         ${c.lane==='wheels'?`<label>Wheel action<select name="desk-clip-operation">${option('rotate','Rotate',c.kind)}${option('travel','Travel / strafe',c.kind)}${option('hold','Hold wheels',c.kind)}${c.kind==='pose'?option('pose','Saved path','pose'):''}</select></label>`:''}
         ${c.kind==='lift'||c.kind==='tilt'?`<label>${c.kind==='lift'?'Target height (inches)':'Target tilt (degrees)'}<input name="desk-clip-target" type="number" min="${c.kind==='lift'?28:-5}" max="${c.kind==='lift'?52.5:65}" step=".1" value="${c.target}"></label><label>Direction<select name="desk-clip-direction">${option('up',c.kind==='lift'?'Up':'Tilt up',direction)}${option('down',c.kind==='lift'?'Down':'Tilt down',direction)}</select></label>`:''}
-        ${c.kind==='rotate'||c.kind==='travel'?`<div class="director-grid"><label>${c.kind==='rotate'?'Rotation (degrees)':'Distance (inches)'}<input name="desk-clip-value" type="number" min="0" max="${c.kind==='rotate'?3600:240}" step="${c.kind==='rotate'?1:.1}" value="${c.value}"></label><label>Direction<select name="desk-clip-direction">${(c.kind==='rotate'?['right','left']:['forward','backward','left','right']).map(d=>option(d,d[0].toUpperCase()+d.slice(1),c.direction)).join('')}</select></label></div>`:''}
+        ${c.kind==='rotate'||c.kind==='travel'?`<div class="director-grid"><label>${c.kind==='rotate'?'Rotation (degrees)':isDiagonal(c.direction)?'Distance along the diagonal (inches)':'Distance (inches)'}<input name="desk-clip-value" type="number" min="0" max="${c.kind==='rotate'?3600:240}" step="${c.kind==='rotate'?1:.1}" value="${c.value}"></label><label>Direction<select name="desk-clip-direction">${(c.kind==='rotate'?['right','left'].map(d=>option(d,d[0].toUpperCase()+d.slice(1),c.direction)):Object.entries(TRAVEL_LABEL).map(([d,l])=>option(d,l,c.direction))).join('')}</select></label></div>`:''}
         ${c.kind==='pose'?`<div class="director-grid">${POSE_FIELDS[c.lane].map(f=>`<label>End ${({x:'sideways (inches)',z:'forward / back (inches)',yaw:'turn (degrees)'})[f]||f}<input name="desk-clip-path-${f}" type="number" step=".1" value="${round(c.target[f])}"></label>`).join('')}</div>`:''}
         ${c.path?'<p class="director-hint">This block keeps the original curved movement. Moving or resizing it preserves the path; changing its end values adjusts where it finishes.</p>':''}
         ${c.kind==='rotate'?`<p class="director-status">${c.value}° = ${round(c.value/360)} full turn${c.value===360?'':'s'} ${c.direction}. This is the total rotation for this block.</p>`:''}
         ${c.kind!=='hold'?`<label>Speed<select name="desk-clip-speed-preset">${Object.entries(clipSpeedPresets(c)).map(([key,rate])=>option(key,`${key[0].toUpperCase()+key.slice(1)} · ${rate} ${clipSpeedUnit(c)}/s`,clipSpeedSetting(m,c))).join('')}${option('custom','Custom',clipSpeedSetting(m,c))}</select></label><details data-precise-speed ${clipSpeedSetting(m,c)==='custom'?'open':''}><summary>Precise speed</summary><label>Custom speed (${clipSpeedUnit(c)} / second)<input name="desk-clip-speed" type="number" min=".001" step=".1" value="${round(speed)}"></label></details><p class="director-hint">${round(speed)} ${clipSpeedUnit(c)}/s · ${round(c.duration)}s. Speed changes duration; the movement amount stays exact. Editing duration sets a custom speed.</p>`:''}
-        <label>Acceleration<select name="desk-clip-easing">${option('linear','Constant speed',c.easing)}${option('smooth','Ease in / out',c.easing)}${option('hold','Hold, then change',c.easing)}</select></label><div class="director-actions"><button data-desk-action="apply" class="primary">Apply movement</button><button data-desk-action="duplicate" title="Duplicate selected movement (Ctrl/Cmd+D)">Duplicate movement</button><button data-desk-action="delete">Delete movement</button></div></div>`:'<p class="movement-empty-help">Add <b>Lift</b>, <b>Tilt</b>, <b>Turn</b>, <b>Travel</b> or <b>Hold</b>, then select its block to set the timing and movement.</p>'}
+        <label>Acceleration<select name="desk-clip-easing">${option('linear','Constant speed',c.easing)}${option('smooth','Ease in / out',c.easing)}${option('hold','Hold, then change',c.easing)}</select></label><div class="director-actions"><button data-desk-action="apply" class="primary">Apply movement</button><button data-desk-action="duplicate" title="Duplicate selected movement (Ctrl/Cmd+D)">Duplicate movement</button><button data-desk-action="delete">Delete movement</button></div></div>`:'<p class="movement-empty-help">Add <b>Lift</b>, <b>Tilt</b>, <b>Turn</b>, <b>Travel</b>, <b>Diagonal</b> or <b>Hold</b>, then select its block to set the timing and movement.</p>'}
+      ${di?'':approachHtml()}
       ${di?'':`<details class="desk-start-pose"><summary>Starting wheel position</summary><p class="director-hint">Starting height and tilt: Chapter tab → Starting position.</p><div class="director-grid">${fields.filter(([f])=>!['height','tilt'].includes(f)).map(([f,label,min,max,step])=>`<label>${label} (${['height','x','z'].includes(f)?'inches':'degrees'})<input name="desk-initial-${f}" type="number" min="${min}" max="${max}" step="${step}" value="${round(m.initial[f])}"></label>`).join('')}</div></details>`}
       <div class="director-actions"><button data-desk-action="clear" ${m.clips.length||!shot().motion?'':'disabled'}>${di?'Clear this desk’s movements':'Clear movements'}</button>${di?'':`<button data-desk-action="automatic" ${shot().motion?'':'disabled'}>Use built-in animation</button>`}</div>
       ${di?'':`<details class="desk-recorder" ${recording?'open':''}><summary>Record a performance</summary><p class="director-hint">Record into an empty gap across all three lanes. Recording stops before the next movement and keeps existing clips.</p><button data-desk-action="record" class="${recording?'recording':''}">${recording?'■ Stop & keep recording':'● Record movement'}</button>

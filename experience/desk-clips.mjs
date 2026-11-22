@@ -1,6 +1,11 @@
 import {cleanPose,cleanDeskTracks,tracksFromPoses,sampleDeskTracks,POSE_FIELDS,DESK_LANES} from './desk-track.mjs';
 export const CLIP_KINDS=['lift','tilt','rotate','travel','hold','pose'];
-export const CLIP_DIRECTIONS={lift:['up','down'],tilt:['up','down'],rotate:['right','left'],travel:['forward','backward','left','right']};
+// Travel: straight (forward / backward), strafe (left / right) and, as the real desk drives them (its four 45-degree
+// mecanum diagonals: wire left_forward, right_forward, left_backward, right_backward), the diagonals (22 Nov 2026, Vico:
+// "add the diagonal wheel movements"). A diagonal's value is the distance along the diagonal; the desk keeps its heading.
+export const DIAGONALS=['forward-left','forward-right','backward-left','backward-right'];
+export const isDiagonal=d=>DIAGONALS.includes(d);
+export const CLIP_DIRECTIONS={lift:['up','down'],tilt:['up','down'],rotate:['right','left'],travel:['forward','backward','left','right',...DIAGONALS]};
 const finite=(v,min,max,fallback)=>Number.isFinite(Number(v))?Math.max(min,Math.min(max,Number(v))):fallback;
 const copy=v=>structuredClone(v);
 export const clipEnd=c=>c.start+c.duration;
@@ -45,7 +50,11 @@ export function clipTarget(c,from){
   if(c.kind==='lift')p.height=c.target;
   if(c.kind==='tilt')p.tilt=c.target;
   if(c.kind==='rotate')p.yaw+=(c.direction==='left'?-1:1)*c.value;
-  if(c.kind==='travel'){
+  if(c.kind==='travel'&&isDiagonal(c.direction)){
+    // forward unit (sin, cos), right unit (cos, -sin) in the desk's frame; half the distance on each (x 1/sqrt 2)
+    const angle=p.yaw*Math.PI/180,f=c.direction.startsWith('forward')?1:-1,r=c.direction.endsWith('right')?1:-1,k=c.value/Math.SQRT2;
+    p.x+=k*(f*Math.sin(angle)+r*Math.cos(angle));p.z+=k*(f*Math.cos(angle)-r*Math.sin(angle));
+  }else if(c.kind==='travel'){
     const angle=p.yaw*Math.PI/180,side=['left','right'].includes(c.direction),sign=['left','backward'].includes(c.direction)?-1:1;
     p.x+=sign*c.value*(side?Math.cos(angle):Math.sin(angle));p.z+=sign*c.value*(side?-Math.sin(angle):Math.cos(angle));
   }
@@ -225,7 +234,7 @@ export function clipSummary(c){
   if(c.kind==='lift')return `Lift to ${c.target}″`;
   if(c.kind==='tilt')return `Tilt to ${c.target}°`;
   if(c.kind==='rotate')return `Turn ${c.direction} ${c.value}°`;
-  if(c.kind==='travel')return `Move ${c.direction} ${c.value}″`;
+  if(c.kind==='travel')return isDiagonal(c.direction)?`Diagonal ${c.direction} ${c.value}″`:`Move ${c.direction} ${c.value}″`;
   if(c.kind==='hold')return 'Hold';
   return c.lane==='lift'?`Lift to ${Number(c.target.height.toFixed(2))}″`:c.lane==='tilt'?`Tilt to ${Number(c.target.tilt.toFixed(2))}°`:'Saved wheel movement';
 }
