@@ -280,101 +280,75 @@ function fern(b, r, x, ground, z, size = 700, hex = '#4f6e40') {
     }
 }
 
-// ---- the north coast campus under a marine layer (the Humboldt commons): redwoods, ferns and rhododendrons, a damp
-// lawn and concrete paths with path lights, a campus building of concrete and timber across the lawn, forested ridges
-// fading into the fog. The commons has glass on three sides; each looks out on its own part of the campus.
-//   facing 0 (the back wall's tall glass): the grove behind the commons, trunks near and far in the fog.
-//   facing 1 (the long glass along the right: the slot, the junction and the hall): the lawn, the path, the building.
-//   facing 2 (the hall end's vestibule): the entry plaza.
+// ---- the north coast campus under a marine layer (the Humboldt commons): pure coast redwoods on soft forest duff,
+// no other scenery (no campus buildings, paths, street lamps, benches or clutter).
+//   facing 0 (the back wall's tall glass): pure redwood grove on forest floor (subtle ground bollards only after dark).
+//   facing 1 (the right glass seen in ch4 commons — slotPane & frontPane): one large redwood framing the slot window,
+//     a mid-sized and a small redwood naturally spaced in the front window. No other scenery.
+//   facing 2 (the hall end's vestibule): quiet pair of redwoods on forest floor.
 function humboldt(k, ctx) {
     if (ctx.classic) return humboldtClassic(k, ctx);   // (the Commons' Classic look)
     const { land: b, r } = k, ground = ctx.ground - 120, L = ctx.left - 12000, R = ctx.right + 12000, cx = (ctx.left + ctx.right) / 2;
-    const lawnC = colour('#5f7650'), moss = colour('#6c7a52'), duff = colour('#5b4a3a'), conc = colour('#a9a69e'), out = new THREE.Color();
-    const near = Math.min(0, ctx.near) - 200;
+    const moss = colour('#586846'), duff = colour('#544436'), out = new THREE.Color();
+    const forestFloor = (zNear, zMid, zFar) => land(b, ground, L, R, zNear, zMid, zFar, (x, z) => {
+        const p = Math.sin(x / 1900) * Math.sin(z / 1500) * .5 + .5;
+        return out.copy(duff).lerp(moss, p * .55).multiplyScalar(.88 + r() * .12);
+    });
     if (ctx.facing === 0) {
-        // the grove: forest floor of needles and duff, ferns, a path between the trunks
-        const path = x => -9000 + Math.sin(x / 5200) * 2600;
-        land(b, ground, L, R, ctx.near - 60, -18000, -70000, (x, z) => { const d = Math.abs(z - path(x));
-            if (d < 900) return out.copy(colour('#8c7f6c')).multiplyScalar(.9 + r() * .15); const p = Math.sin(x / 1700) * Math.sin(z / 1300) * .5 + .5; return out.copy(duff).lerp(moss, p * .6).multiplyScalar(.85 + r() * .15); });
-        for (let x = ctx.left - 3000; x < ctx.right + 3000; x += 500 + r() * 400) fern(b, r, x, ground, near - 1300 - r() * 1400, 650 + r() * 350);
-        for (let n = 0; n < 40; n++) { const x = L + r() * (R - L), z = -3000 - r() * 30000; if (Math.abs(z - path(x)) < 1300) continue; fern(b, r, x, ground, z, 700 + r() * 400); }
-        for (let x = L; x < R; x += 9000 + r() * 4000) pathLight(k, x, ground, path(x) + 1200);
-        bench(b, cx + 3800, ground, path(cx + 3800) + 1300);
-        // A nurse log on the near side of the trail, with a broken branch and young sword ferns.
-        const logA = V(cx - 3420, ground + 285, -4660), logB = V(cx + 450, ground + 215, -5540);
-        limb(b, logA, logB, 305, '#645044', { geometry: new THREE.CylinderGeometry(.8, 1, 1, 13).translate(0, .5, 0) });
-        limb(b, V(cx - 1260, ground + 275, -5150), V(cx - 1070, ground + 730, -5310), 95, '#755d4b');
-        b.shadow(cx - 1485, ground, -5100, 2350, 570, .55, 550, -.22);
-        // trunks: a near pair, a middle rank, the far ones going pale in the fog; young redwoods with branches lower down
-        const trunks = [[cx - 5200, -6200, 1.5], [cx + 4300, -7600, 1.25], [cx - 1200, -15500, 1.1], [cx + 9800, -13000, 1.35], [cx - 11500, -12500, 1.2],
-            [cx + 2800, -23000, 1.0], [cx - 7400, -24500, 1.15], [cx + 15500, -21500, 1.0], [cx - 17500, -19500, 1.1], [cx + 7600, -32000, .95], [cx - 2500, -36000, 1.0], [cx - 14000, -34000, .9], [cx + 20000, -33000, .9]];
-        for (const [x, z, g] of trunks) redwood(b, r, x, ground, z, { height: 42000 + r() * 22000, girth: g });
-        for (const [x, z] of [[cx + 1200, -9500], [cx - 8500, -17500], [cx + 12500, -26500], [cx - 3800, -28500]]) redwood(b, r, x, ground, z, { height: 14000 + r() * 5000, girth: .4, start: .1 });
-        for (let x = L - 20000; x < R + 20000; x += 4500 + r() * 2500) redwood(b, r, x, ground, -48000 - r() * 12000, { height: 45000, girth: 1.1, start: .18, size: 2300 });
-        for (const [x, z, girth] of trunks.slice(0, 5)) redwoodRoots(b, x, ground, z, 650 * girth);
-        for (const t of [.24, .43, .8]) fern(b, r, logA.x + (logB.x - logA.x) * t, ground + 435, logA.z + (logB.z - logA.z) * t, 280 + t * 180);
+        // Pure redwood grove outside the back glass (natural forest duff floor; no bench, nurse log or clutter).
+        forestFloor(ctx.near - 60, -18000, -70000);
+        // Subtle low ground bollards stay completely invisible by day (lamp = 0 in morning/afternoon) and give warm night depth.
+        for (const x of [cx - 4200, cx + 4200]) pathLight(k, x, ground, -6500);
+        // Near & mid redwoods plus a distant misty redwood stand so near/far parallax reads naturally.
+        const nearTrunks = [
+            [cx - 3200, -6800, 46000, 1.40, .055],
+            [cx + 3600, -9800, 26000, .72, .075],
+            [cx + 1200, -14500, 14500, .38, .065],
+            [cx - 9500, -15500, 44000, 1.20, .08],
+            [cx + 10200, -16500, 38000, 1.05, .09],
+            [cx - 4800, -24000, 48000, 1.15, .14],
+            [cx + 5800, -26000, 44000, 1.05, .15],
+            [cx - 8200, -21000, 42000, 1.05, .12],
+            [cx + 8800, -22000, 40000, 1.00, .12],
+            [cx - 14000, -28000, 46000, 1.10, .14],
+            [cx + 15000, -30000, 45000, 1.05, .15]
+        ];
+        for (const [x, z, h, g, start] of nearTrunks) redwood(b, r, x, ground, z, { height: h, girth: g, start });
+        for (let x = L - 20000; x < R + 20000; x += 3800 + r() * 1800) redwood(b, r, x, ground, -42000 - r() * 14000, { height: 46000, girth: 1.1, start: .14, size: 2200 });
+        for (const [x, z, , g] of nearTrunks.slice(0, 6)) redwoodRoots(b, x, ground, z, 650 * g);
         return;
     }
     if (ctx.facing === 2) {
-        // the entry plaza: concrete paving, bike racks, bollard lights, a pair of redwoods, the campus path beyond
-        land(b, ground, L, R, ctx.near - 60, -14000, -60000, (x, z) => z > -9000 ? out.copy(conc).multiplyScalar((Math.floor(x / 1500) + Math.floor(z / 1500)) % 2 ? .92 : 1) : out.copy(lawnC).multiplyScalar(.9 + r() * .1));
-        for (let x = cx - 3000; x <= cx + 3000; x += 750) { limb(b, V(x, ground, -4200), V(x, ground + 800, -4200), 25, '#8d9296'); limb(b, V(x, ground + 800, -4200), V(x + 500, ground + 800, -4200), 25, '#8d9296'); limb(b, V(x + 500, ground + 800, -4200), V(x + 500, ground, -4200), 25, '#8d9296'); }
-        bicycle(b, cx - 1580, ground, -4100, 1.42, '#396259');
-        bicycle(b, cx + 1450, ground, -4330, 1.7, '#986445');
-        for (const x of [cx - 6000, cx + 6000]) pathLight(k, x, ground, -6000);
-        for (const x of [cx - 9000, cx + 8000]) redwood(b, r, x, ground, -11000, { height: 48000, girth: 1.2 });
-        for (let x = L; x < R; x += 1600 + r() * 900) shrub(b, r, x, ground, -9600 - r() * 600, 800 + r() * 300, pick(r, ['#4e6a44', '#5a7449', '#46613f']));
-        for (const x of [cx - 4500, cx + 4500]) streetLamp(k, x, ground, -10500, { height: 4500, reach: 300 });
-        for (let x = L - 20000; x < R + 20000; x += 5000 + r() * 3000) redwood(b, r, x, ground, -30000 - r() * 15000, { height: 45000, girth: 1, start: .2, size: 2000 });
+        // Pure redwoods outside the entry vestibule (no concrete plaza, bike racks, shrubs or street lamps).
+        forestFloor(ctx.near - 60, -14000, -60000);
+        for (const [x, z, h, g] of [[cx - 5200, -10500, 44000, 1.25], [cx + 4600, -13500, 24000, .68]]) {
+            redwood(b, r, x, ground, z, { height: h, girth: g, start: .08 });
+            redwoodRoots(b, x, ground, z, 650 * g);
+        }
         return;
     }
-    // facing 1: along the long glass. Planting right outside, a concrete path, the lawn, the building across, the trees.
-    land(b, ground, L, R, Math.max(...ctx.openings.map(o => o.z)) - 60, -16000, -80000, (x, z) => {
-        if (z > near - 1800) return out.copy(duff).lerp(moss, .4).multiplyScalar(.9 + r() * .12);
-        if (z > near - 4200) return out.copy(conc).multiplyScalar(Math.abs((x % 1800 + 1800) % 1800) < 40 ? .7 : .95 + r() * .06);
-        const p = Math.sin(x / 2300) * Math.sin(z / 1900) * .5 + .5; return out.copy(lawnC).lerp(moss, p * .4).multiplyScalar(.9 + r() * .1); });
-    for (let x = ctx.left - 1500; x < ctx.right + 1500; x += 700 + r() * 700) {
-        const z = near - 1500 - r() * 700;
-        if (r() < .3) {
-            const radius = 700 + r() * 300;
-            shrub(b, r, x, ground, z, radius, pick(r, ['#3f5a3c', '#47603f']), { size: 110 });
-            if (r() < .4) flowers(b, r, x, ground + radius * .85, z, radius * .62, 35, ['#b86a7e', '#c98a9a', '#a85a6e'], 24);
-        } else fern(b, r, x, ground, z, 600 + r() * 300);
+    // facing 1: the right-wall windows seen throughout Chapter 4 (commons) — slotPane and frontPane.
+    // Pure redwoods on soft forest floor; no buildings, paths, shrubs, maples, lamps or other scenery.
+    forestFloor(Math.max(...ctx.openings.map(o => o.z)) - 60, -16000, -70000);
+    // Window 1 (slotPane): one large redwood framed cleanly in Yara's desk close-up (Shot 2) and room wide (Shot 3).
+    // The two sight corridors are 8 m apart and non-overlapping, so each shot shows one majestic large redwood.
+    for (const [x, z, h, g] of [
+        [-7600, -7200, 48000, 1.40],
+        [  250, -8500, 48000, 1.35]
+    ]) {
+        redwood(b, r, x, ground, z, { height: h, girth: g, start: .048 });
+        redwoodRoots(b, x, ground, z, 650 * g);
     }
-    // A raised weathering-steel edge separates the planting from scored concrete.
-    b.box([R-L,85,10], [(L+R)/2,ground+39,near-2280], '#6c5747');
-    for (let x = L; x < R; x += 1820)
-        b.box([1810,24,1900], [x+905,ground+12,near-3240], '#aba99e');
-    for (let x = ctx.left; x < ctx.right; x += 12000) pathLight(k, x + 3000, ground, near - 4600);
-    // the lawn's trees: young redwoods and a big-leaf maple or two
-    for (let x = ctx.left - 4000; x < ctx.right + 4000; x += 11000 + r() * 5000) {
-        if (r() < .6) redwood(b, r, x, ground, -14000 - r() * 6000, { height: 26000 + r() * 12000, girth: .7, start: .12 });
-        else tree(b, r, x, ground, -12000 - r() * 5000, { height: 11000, hex: '#5f7a48', shape: 'round' });
+    // Window 2 (frontPane): one mid-sized and one small redwood, naturally spaced, visible behind Mia (Shot 5) and during the dolly (Shot 4b).
+    for (const [x, z, h, g, start] of [
+        [10750, -12500, 24000, .68, .075],
+        [13750, -19500, 13000, .36, .065],
+        [18800, -13500, 24000, .68, .075],
+        [22200, -18000, 13000, .36, .065]
+    ]) {
+        redwood(b, r, x, ground, z, { height: h, girth: g, start });
+        if (g >= .6) redwoodRoots(b, x, ground, z, 650 * g);
     }
-    // the building across the lawn: concrete frame, timber infill, lit after dark
-    const by = -36000;
-    for (let x = ctx.left - 6000; x < ctx.right + 6000; x += 30000) {
-        const height = building(k, r, x + 12000, ground, by, { width: 26000, depth: 16000, floors: 3, storey: 3800, wall: '#a9a59c', glass: '#36424a', frame: '#9b9890', shops: false, litRate: .3, warm: .6, cornice: false, bays: 8, style: 'band', fins: '#7a5e48', roof: '#5f5b55' });
-        if (!height) continue;
-        const face = by + 8000;
-        for (let f = 0; f < 3; f++) {
-            const sill = ground + 3800 * f + 800;
-            b.box([25900,105,360], [x+12000,sill-52,face+155], '#8e8b80');
-            for (let i = 1; i < 16; i++)
-                b.box([68,2370,110], [x-1000+1625*i,sill+1185,face+78], '#5e635d');
-        }
-        // A timber entrance canopy meets the path below the ribbon windows.
-        b.box([9500,200,3200], [x+3900,ground+3300,face+1580], '#78664e');
-        b.box([9200,85,3040], [x+3900,ground+3159,face+1580], '#a78b68');
-        for (const dx of [-370,3950,8180]) {
-            b.box([170,3118,170], [x+dx,ground+1559,face+2950], '#8b7359');
-            b.box([210,160,210], [x+dx,ground+80,face+2950], '#746f66');
-        }
-        b.box([26000, 400, 1600], [x + 12000, ground + 11500, by + 8600], '#8d8a83');
-    }
-    for (let x = ctx.left - 8000; x < ctx.right + 8000; x += 9000) streetLamp(k, x, ground, -26000, { height: 4500, reach: 300, power: .8 });
-    for (let x = L - 30000; x < R + 30000; x += 6000 + r() * 4000) redwood(b, r, x, ground, -48000 - r() * 14000, { height: 50000, girth: 1.1, start: .15, size: 2300 });
-    ridge(b, r, -76000, ground, L - 40000, R + 40000, 14000, '#4a5d52', { step: 2500 });
 }
 
 // ---- a city street (the gym, the music room; the neon version for the gaming room). Our building's front: a planter
