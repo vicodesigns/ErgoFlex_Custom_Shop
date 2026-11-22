@@ -48,7 +48,8 @@ Latent bug fixed by the doc: re-running the pass on the committed cut (no import
   `verify/patched-vs-unpatched-importer.txt`: with today's importer the same doc gives the same data except the sub-shots'
   `lights` (they stay Vico's: the rig would only land in review-cut, which the film does not render for chapter 12).
 - Renders through the real path (render-cut.cjs --quality hq13 --storage finale-seed, the 5 sub-shots, join-subshots.py):
-  480p before / v1 / v2 / v3 (= final), 1080p before and final. Sheets every 0.5 s, luma / framing / camera / desk measurements.
+  480p before / v1 / v2 / v3 (= final), 1080p before and final (joined: before 23.533 s, after 25.533 s; on the desk:
+  hero4-after-1080p.mp4, hero4-before-after-1080p.mp4 side by side, the before held on its last frame after 23.5 s). Sheets every 0.5 s, luma / framing / camera / desk measurements.
 
 Files: `frames/hero4-sheet-0N.jpg` (before | after every 0.5 s, 480p; the before column holds its last frame after 23.5 s),
 `frames/hero4-endcard-*.png` (end card composite), `frames/hero4-storage-last-frames.jpg` (storage's last frames, for the
