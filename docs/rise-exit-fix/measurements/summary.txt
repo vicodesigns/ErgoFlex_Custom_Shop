@@ -1,0 +1,46 @@
+Rise (ch 2, seated 3rd cut): the exit from the overhead triceps stretch, Nov 21 2026
+Export doc: docs/rise-exit-fix/Film-chapter-rise-28-5-s-exit-fix.json (sha256 7c3eae7c008d...), built from Vico's raw export
+15035291e783 by build-exit.mjs (params.json) + make-doc.mjs. Only people.cast[maya-stand].postures['people-maya-sit-type'].poseKeys
+differ: 129 -> 126 keys (cap 200). Keys 0 .. 21.133 s are his, byte for byte (90 keys); his 39 keys after 21.133 are replaced
+by 36 new ones (21.2 .. 23.3 s, linear, all 36 arm/hand/finger bones each). Chapter length, camera, clips, titles: untouched.
+
+WHAT BROKE HER ARMS (his 14:32 edit, diagnose-before.txt, vico-vs-jitter-landing-keys.txt)
+- 4 partial 'smooth' keys (21.767 10 bones, 21.833 6, 21.900 2, 21.967 5) interleaved with the full 'linear' keys, and the right
+  arm re-keyed far off its neighbours: vs the previous (jitter-landing) export upperarm_r differs 17 / 44 / 119 / 127 deg at
+  21.800 / 21.867 / 21.933 / 22.000, lowerarm_r 18 / 58 / 38 deg.
+- Result: the right wrist drops 133 -> 71 cm (62 cm) in 0.17 s (21.833 -> 22.000), 5 cm BELOW the typing hand height (into the
+  keyboard/desk), then snaps back up 64 cm in 2 frames (22.000 -> 22.067).
+  upperarm_r 124.7 deg in 0.067 s = 1862 deg/s (22.000 -> 22.067); 44.8 deg in 0.033 s = 1358 deg/s (21.900 -> 21.933)
+  lowerarm_r 68.2 deg in 0.033 s = 2041-2066 deg/s (21.967 -> 22.000), 5 velocity reversals in the exit (entry: 0)
+  skinned mesh: lowest hand vertex 5.0 cm below its typing height; 47.9 cm jump of it in one frame (entry max 5.1).
+- NOT a quaternion sign flip: every pair of consecutive keys has dot > 0.46 (all same hemisphere), and poseAt's slerp takes
+  the short way anyway (negates on dot < 0). No hyperextension at the keys themselves; it is the keyed path that dives and snaps.
+  Rendered: rise4-before-C-snap-frames.png (21.9 s: right arm down at the desk while the left is overhead; 22.0 s: back up).
+
+THE FIX: the stretch ends in hold 2 = the mirror image of hold 1 where the entry ends (left arm folded overhead vs right). The exit
+= the entry (13.1 .. 15.267 s) played backwards AND mirrored left <-> right (rig is mirror-symmetric with identity bind frames,
+rig-sym.mjs: offsets mirror in x, posture locals equal under (x,-y,-z,w)), same duration 2.167 s: 21.133 -> 23.3 s.
+End corrections (start onto his hold-2 pose, fades over the first 30 %; end onto his typing pose, fades in over the last 60 %):
+arms 1-4 deg, hand_l 41 deg (his hold-2 wrist vs the mirrored hold-1 wrist), typing wrists 18 deg (typing pose is asymmetric).
+
+ENTRY vs EXIT (angles-after.txt / .csv, angles-before.txt / .csv; FK, per progress u, exit side vs entry's other side)
+- after: elbow flexion, wrist bend, forearm twist, upper-arm elevation equal to the mirrored entry within 0-1 deg for u 0.4-0.8
+  (pure mirrored entry), within 4 deg elsewhere except the blended wrists; wrist positions within 0.0-2.7 cm of the mirrored entry.
+- before: right upper-arm elevation 51 deg vs 156 deg in the entry at u=0.65, right wrist 60 cm off the entry's path.
+- peak angular speed deg/s (exit after | entry, mirrored side): upperarm 243|245, 255|253; lowerarm 360|356, 309|310;
+  hand 193|190, 252|249. Before: upperarm_r 1862, lowerarm_r 2041.
+
+SKINNED MESH (measure-mesh.mjs, mesh-summary.txt; moving part only: entry 13.1-15.267, exit before 21.133-23.5, after 21.133-23.3)
+- clearances (cm, min) entry | before | after: head 0.7 | 0.2 | 0.7; neck 1.4 | 1.4 | 1.1 (other side 3.3 | 1.5 | 3.2);
+  torso 0.0 | 0.0 | 0.1 (forearm on the chest in the holds, his pose); ponytail 0.0 | 0.0 | 0.0 (hand at the ponytail in the
+  holds, his pose); arm-arm 0.1 | 0.0 | 0.1 (palm on elbow in the holds).
+- desk: lowest hand vertex vs typing height: entry 0.0, before -5.0, after 0.0 cm; forearm 0.0 / 0.0 / 0.0.
+- tearing / LBS: max triangle stretch and min area per region match the entry's (the large numbers are the armpit triangles in
+  the overhead holds, present in his untouched holds too): elbow 3.99 | 4.18 | 3.99, wrist 12.29-13.05 | 13.08 | 13.08,
+  shoulder 15.62 | 15.52 | 15.46.
+
+IMPORT ROUND TRIP (scratch copies outside the repo, F:/eng-rexit-scratch/RA and RB, same path): import-roundtrip.txt,
+import-verify.txt: only the sit-type poseKeys differ (+ bookkeeping: source file name, directorEdited.at, imports.json entry).
+
+RENDERS (render-cut.cjs 854x480, through the GPU lock): 20.4-28.5 s BEFORE and AFTER, film / close side (C) / back three-quarter
+(A2); entry 12.9-15.6 s same cameras. Sheets in render/sheets (also pushed to the desk as rise4-*).
