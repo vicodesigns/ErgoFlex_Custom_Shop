@@ -637,7 +637,9 @@ export function mountDirector(bridge,catalog,initial){
     let key;try{key=markKey();}catch{return;}if(key===viewKey)return;
     const v=viewFor(key);viewKey=key;laneGroups=v.groups;zoom=clampZoom(v.zoom,shot().seconds,laneWidth());if(zoom<1.02)zoom=1;viewWant={left:v.left,top:v.top,until:performance.now()+8000};
   }
-  const groupClosed=g=>{adoptView();return isFolded(laneGroups,g);};
+  // On a phone (director-phone.mjs: body.ef-phone) the Titles lane opens unfolded until the user folds it (Vico edits titles
+  // by touch, and a folded lane has no blocks to tap: Windows, 22 Nov 2026); their own choice is kept as for every group.
+  const groupClosed=g=>{adoptView();if(g==='titles'&&laneGroups.titles===undefined&&document.body.classList.contains('ef-phone'))return false;return isFolded(laneGroups,g);};
   function laneGroupHead(g){
     const s=shot().seconds,L=lighting(),T=timeOfDay(),ticks=g==='graphics'?graphics.screens().map(sc=>sc.start??0):g==='motion'?[...keys().map(k=>k.time*s),...deskEditor.motion().clips.map(c=>c.start)]:g==='titles'?titleEditor.ticks():g==='sound'?(scoreModel()?.sfx||[]).map(x=>x.t):g==='props'||g==='people'?[]:[...(T?.keys||[]).map(k=>k.at),...(L?.neutral||[]).map(k=>k[0]),...(L?.status||[]).map(e=>e.at)];
     if(g==='lighting'&&!L&&!T)return '';if(g==='sound'&&!scoreModel())return '';if(g==='titles'&&!titleEditor.has())return '';if((g==='props'||g==='people')&&!filmShot())return '';

@@ -112,6 +112,11 @@ async function layoutChecks(tag, landscape) {
   const lt = await ev(() => { const b = [...document.querySelectorAll('.light-tools button')].filter(e => e.offsetParent); if (!b.length) return null; const r = b.map(e => e.getBoundingClientRect()); return { x: Math.min(...r.map(q => q.x)), y: Math.min(...r.map(q => q.y)), r: Math.max(...r.map(q => q.right)), b: Math.max(...r.map(q => q.bottom)), shown: true }; });
   const ft = await rectOf('.film-tools-row');
   check(apart(lt, ft), `${tag}: Lights / Move / Aim / Rotate / Scale and Render still / Guides / Live do not overlap`, JSON.stringify({ lt, ft }));
+  // (Windows on main 4b828a6f: about 180 px of empty dark area under the lanes at 884 x 1100; label column too wide)
+  if (!landscape) { const gap = await ev(() => { const tl = document.getElementById('director-timeline').getBoundingClientRect(), h = document.getElementById('ef-sheet-handle')?.getBoundingClientRect(); return h ? Math.round(h.top - tl.bottom) : null; });
+    check(gap === null || gap <= 24, `${tag}: portrait: no empty area between the timeline and the sheet (${gap} px)`); }
+  const labelW = await ev(() => Math.round(document.querySelector('#director-timeline .timeline-content .desk-lane-label')?.getBoundingClientRect().width || 0));
+  check(labelW > 0 && labelW <= 140, `${tag}: the lane label column is narrow on a phone (${labelW} px)`);
   if (!landscape) check(stage.w >= (await ev(() => innerWidth)) * .8, `${tag}: portrait: the stage takes the width (${Math.round(stage.w)} px)`);
   const bar2 = await ev(() => { const t = document.querySelector('#director-timeline .workbench-toolbar'); if (!t) return null; const kids = [...t.children].filter(e => e.offsetParent); const vw = innerWidth; return { scrolls: t.scrollWidth > t.clientWidth + 2 && getComputedStyle(t).overflowX !== 'visible', off: kids.filter(e => e.getBoundingClientRect().right > vw + 1).length, wraps: getComputedStyle(t).flexWrap }; });
   check(bar2 && (bar2.off === 0 || bar2.scrolls), `${tag}: the timeline tool row is all on screen, or scrolls sideways`, JSON.stringify(bar2));
@@ -192,6 +197,11 @@ async function openInspector(landscape) {
 let sent = false;
 async function titleChecks(tag, landscape) {
   await closeInspector(landscape);
+  // On a phone the Titles lane opens unfolded (director.mjs groupClosed); if this browser had folded it, unfold it by touch
+  // (Windows, 22 Nov 2026: "nothing to tap: [data-title-clip]" with the lane folded)
+  check(await ev(() => !document.querySelector('[data-lane-body="titles"]')?.hidden), `${tag}: the Titles lane is unfolded on a phone`);
+  if (await ev(() => !!document.querySelector('[data-lane-body="titles"]')?.hidden)) { await tapSel('#director-timeline [data-lane-group="titles"] [data-action="group-toggle"]'); await wait(400); }
+  await ev(() => document.querySelector('[data-title-clip]')?.scrollIntoView({ block: 'center', inline: 'center' })); await wait(250);
   const first = (await blocks())[0];
   check(!!first, `${tag}: the chapter has a title block in the Titles lane`);
   if (!first) return;

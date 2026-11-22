@@ -110,4 +110,9 @@ assert.match(pm, /PHONE_KEY = 'ergoflex\.director\.phone\.v1'/); assert.match(pm
  assert.match(dm, /const CODE_KEY='directorInboxCode';/); assert.ok(!/^ergoflex/.test('directorInboxCode'), 'not a shared studio key');
  assert.match(dm, /'x-director-token':code/, 'sent in a header'); assert.match(dm, /if\(response\.status===401\)\{try\{localStorage\.removeItem\(CODE_KEY\);\}catch\{\}/, 'a wrong code is forgotten');
  assert.match(read('tools/director-inbox.mjs'), /if \(!sameToken\(String\(req\.headers\['x-director-token'\] \|\| ''\), want\)\) return refuse\(401/, 'the server checks it (constant time)');}
+// ---- Windows on 4b828a6f: Titles unfolded on a phone until the user folds it; the portrait timeline fits its lanes
+assert.match(read('experience/director.mjs'), /if\(g==='titles'&&laneGroups\.titles===undefined&&document\.body\.classList\.contains\('ef-phone'\)\)return false;return isFolded\(laneGroups,g\);/);
+{const pm2 = read('experience/director-phone.mjs');
+ assert.match(pm2, /content\.scrollHeight/, 'measured on the lanes\' content, not the scrolling viewport (no feedback)');
+ assert.match(pm2, /body\.style\.setProperty\('--ef-tl-h', h \+ 'px'\)/);}
 console.log('fold-titles-test: ok');

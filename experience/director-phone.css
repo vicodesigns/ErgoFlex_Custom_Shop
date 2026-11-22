@@ -141,4 +141,14 @@ body.directing.ef-phone #director-timeline .workbench-toolbar{-webkit-mask-image
 body.directing.ef-phone.ef-portrait #director-timeline .workbench-toolbar{flex-wrap:wrap!important;overflow:visible;-webkit-mask-image:none;mask-image:none;padding-right:0;row-gap:6px}
 body.directing.ef-phone.ef-portrait #director-timeline .workbench-toolbar .track-palette{flex-wrap:wrap}
 }
+
+/* ---------- D. Windows run on main 4b828a6f (884 x 1100) ---------- */
+/* portrait: the timeline as tall as its lanes (director-phone.mjs fitPortrait: --ef-tl-h), the rest to the sheet (--ef-peek):
+   at peek it shows the inspector when there is room (ef-peek-roomy), else only its handle as before */
+body.directing.ef-phone.ef-portrait #director-timeline{height:var(--ef-tl-h,auto)!important;bottom:auto!important;max-height:calc(100dvh - var(--ef-top) - var(--ef-stage-h) - var(--ef-handle) - 18px)!important}
+body.directing.ef-phone.ef-portrait.ef-sheet-peek{--ef-sheet-total:var(--ef-peek,var(--ef-handle))}
+body.directing.ef-phone.ef-portrait.ef-sheet-peek.ef-peek-roomy #director-panel{display:block}
+/* the lane labels: a narrower column on a phone (it was 120 px plus padding) */
+body.directing.ef-phone #director-timeline .timeline-content{--track-label:104px}
+body.directing.ef-phone #director-timeline .timeline-content .desk-lane-label,body.directing.ef-phone #director-timeline .track-heading{padding:4px 6px;font-size:11px}
 }

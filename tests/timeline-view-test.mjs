@@ -101,7 +101,7 @@ const memory=()=>{const m=new Map();return {getItem:k=>m.has(k)?m.get(k):null,se
 {
   const src=readFileSync(new URL('../experience/director.mjs',import.meta.url),'utf8').replace(/\r/g,'');
   assert.doesNotMatch(src,/ergoflex\.director\.laneGroups/,'the old global fold key is gone (per cut and chapter now)');
-  assert.match(src,/const groupClosed=g=>\{adoptView\(\);return isFolded\(laneGroups,g\);\};/,'folded unless opened, from the view store');
+  assert.match(src,/const groupClosed=g=>\{adoptView\(\);(if\(g==='titles'&&laneGroups\.titles===undefined&&document\.body\.classList\.contains\('ef-phone'\)\)return false;)?return isFolded\(laneGroups,g\);\};/,'folded unless opened, from the view store (on a phone the Titles lane starts open: fold-titles-test)');
   const render=/function renderTimeline\(\)\{([^]*?)\n  \}/.exec(src)?.[1]||'';assert.ok(render,'renderTimeline is there');
   assert.match(render,/live=was&&renderedView===viewKey\?\{left:was\.scrollLeft,top:was\.scrollTop\}/,'the rebuild reads both scroll axes');
   assert.match(render,/restoreScroll\(timeline\.querySelector\('\.timeline-viewport'\),live\)/,'and puts both back');

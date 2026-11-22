@@ -55,9 +55,21 @@ export function createPhoneMode({ appbar, panel, shellOn = () => true, changed =
     cls.toggle('inspector-hidden', !open); if (!keep) { store.drawer = open; save(store); }
     tab.setAttribute('aria-expanded', String(open)); tab.firstChild.textContent = open ? '›' : '‹'; changed();
   };
+  // Portrait: the timeline as tall as its lanes need (no dark empty area under a short lane list: Windows at 884 x 1100);
+  // the height left over goes to the sheet, which then shows the inspector even at peek when there is room for it.
+  // (measured on the lanes' content, not the scrolling viewport, so the size never feeds back into itself)
+  const HANDLE = 52, ROOMY = 140;
+  function fitPortrait() {
+    const tl = document.getElementById('director-timeline'), vp = tl?.querySelector('.timeline-viewport'), content = vp?.querySelector('.timeline-content');
+    if (mode !== 'portrait' || !tl || !vp || !content) { body.style.removeProperty('--ef-tl-h'); body.style.removeProperty('--ef-peek'); cls.remove('ef-peek-roomy'); return; }
+    const top = tl.getBoundingClientRect().top, avail = Math.max(120, innerHeight - top - HANDLE - 8);
+    const need = Math.ceil(tl.offsetHeight - vp.clientHeight + content.scrollHeight + 2), h = Math.min(need, avail), left = Math.max(0, avail - h);
+    body.style.setProperty('--ef-tl-h', h + 'px'); body.style.setProperty('--ef-peek', Math.round(HANDLE + left) + 'px'); cls.toggle('ef-peek-roomy', left >= ROOMY);
+  }
   function measure() {
     if (!cls.contains('directing') || appbar.hidden) return;
     const r = appbar.getBoundingClientRect(); if (r.height) body.style.setProperty('--ef-top', Math.round(r.bottom + 8) + 'px');
+    fitPortrait();
   }
   function apply() {
     const m = shellOn() ? phoneLayout({ coarse: coarse.matches, ...size() }) : null, was = mode; mode = m;
