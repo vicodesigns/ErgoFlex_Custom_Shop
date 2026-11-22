@@ -754,8 +754,8 @@ export async function installWorkshopToyStory(api) {
       { parent: lowerShelf, role: 'lower-shelf', id: 'caliper', name: 'Workshop digital caliper', key: 'workshop:toy-story:caliper', pos: [-425, 0, 28], scale: 1.15, rotY: 14, bucket: null },
       { parent: lowerShelf, role: 'lower-shelf', id: 'multi-tool-open', name: 'Workshop multi-tool', key: 'workshop:toy-story:multi-tool', pos: [275, 0, 28], scale: 1.15, rotY: -20, bucket: null },
       { parent: lowerShelf, role: 'lower-shelf', id: 'painters-tape', name: "Workshop painter's tape", key: 'workshop:toy-story:painters-tape', pos: [425, 0, 24], scale: 1.0, rotY: 15, bucket: null },
-      // Stowed onto Bottom Shelf / Footrest (between the gimbal cradle and spare parts case)
-      { parent: baseShelf, role: 'base-shelf', id: 'atelier-gaming-controller-cyber', name: 'Robot RC test controller', key: 'workshop:toy-story:rc-controller', pos: [5, 0, 22], scale: 1.15, rotY: -14, bucket: stowedNodes },
+      // RC remote sits flush on the second shelf of the top shelf unit (lower-shelf) so it lifts and rolls with the desk
+      { parent: lowerShelf, role: 'lower-shelf', id: 'atelier-gaming-controller-cyber', name: 'Robot RC test controller', key: 'workshop:toy-story:rc-controller', pos: [245, 0, 18], scale: 0.98, rotY: -14, bucket: null },
     ];
     for (const s of shelfSpecs) {
       if (!s.parent || !lib.entry(s.id)) continue;
