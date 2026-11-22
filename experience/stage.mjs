@@ -10,6 +10,7 @@ import { OPENING_VIEWS } from './opening.mjs';
 import {cleanPose,cleanCamera,defaultPreset} from './cuts.mjs';
 import {cameraFollows,poseOf,putPose} from './editing-camera.mjs';
 import {createDeskChoreo,roomDesks} from './desk-choreo.mjs';
+import {activeTrayEdit} from './tray-pose.mjs';
 import {touchscreenAt} from './touchscreen-track.mjs';
 import {cleanSonar,pingRows,fullSec,meshesFor} from './sonar.mjs';
 
@@ -31,6 +32,8 @@ export async function mountStage(ctx) {
   const api = window.ErgoFlex;
   // Every room desk's own lift / tilt clips (shot.deskEdits, desk-choreo.mjs), sampled with the chapter clock.
   const deskChoreo = createDeskChoreo(api);
+  // The keyboard tray's own keys (shot.trayEdits, tray-pose.mjs): tray-rig.mjs is imported, and the rig glb loaded, only for a chapter that has them.
+  let trayRig = null;
   const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
   const wait = async predicate => {
     const deadline = performance.now() + 120000;
@@ -232,6 +235,7 @@ export async function mountStage(ctx) {
     // Scene construction and shader compilation happen behind the outgoing
     // frame. No render loop competes with them while the room is rebuilt.
     ctx.pause(true);
+    trayRig?.restore();
     editorMode=false;ctx.editCamera(false);authoredCamera=null;activeCameraKeys=[];defaultCameraKeys=[];ctx.camera.fov=35;ctx.camera.updateProjectionMatrix();
     clear();shot={...next,camera:null};mirror=null;sequence=-1;session=null;ctx.scene.background=null;
     if(!ctx.catalog().some(r=>r.id===next.room))throw Error('This environment is unavailable. Choose another scene.');
@@ -327,6 +331,8 @@ export async function mountStage(ctx) {
     defaultCameraKeys=(next.kind==='glide'?[0,.3,.6,1]:[0,1]).map((time,i)=>{cam(time);return{id:'auto-camera-'+i,time,label:time===0?'Start view':time===1?'End view':'Movement view '+i,easing:'smooth',view:captureCamera()};});
     cam(0);authoredCamera=captureCamera();shot={...next,motion:next.motion?(next.motion.clips?next.motion:{tracks:next.motion.tracks||tracksFromPoses(next.motion.from,next.motion.to)}):undefined};resolveActive();cam(0);
     deskChoreo.restore();deskChoreo.set(next.deskEdits);
+    const trayEdit=activeTrayEdit(next.trayEdits,preset);
+    if(trayEdit){trayRig??=(await import('./tray-rig.mjs')).createTrayRig(api);await trayRig.set(trayEdit);trayRig.apply(0);}
     // The onboard touchscreen posed from the chapter's clock (shot.touchscreen); a chapter without it hands the screen back.
     api.setFilmTouchscreen?.(touchscreenAt(next.touchscreen,0));
     await ctx.warm();await nextFrame();
@@ -415,6 +421,7 @@ export async function mountStage(ctx) {
       }
     }
     if(deskChoreo.count())deskChoreo.apply(t*shot.seconds);
+    if(trayRig?.count())trayRig.apply(t*shot.seconds);
     if(shot.touchscreen)api.setFilmTouchscreen?.(touchscreenAt(shot.touchscreen,t*shot.seconds));
     if(shot.people)api.setRoomPeopleTime?.(t*shot.seconds,deskTrack());
     if(kind==='media'&&media){const now=performance.now(),updated=media.update(now);if(updated&&now-lastMediaColour>=100){lastMediaColour=now;try{const p=media.ctx2d.getImageData(Math.floor(media.canvas.width/2),Math.floor(media.canvas.height/2),1,1).data;api.setLedColor('#'+[p[0],p[1],p[2]].map(v=>Math.max(25,v).toString(16).padStart(2,'0')).join(''),false);}catch{}}}

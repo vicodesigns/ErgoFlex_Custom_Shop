@@ -148,6 +148,18 @@ export const trayActive = edit => !!edit && (!!edit.keys?.length || !!edit.initi
 export const trayKeyTimes = edit => (Array.isArray(edit?.keys) ? edit.keys : []).map(k => k.t).sort((a, b) => a - b);
 export const trayKeyedJoints = edit => { const out = new Set(); for (const k of edit?.keys || []) for (const j of Object.keys(k.pose || {})) out.add(j); return JOINTS.filter(j => out.has(j)); };
 
+// ---- the film's side of the shot field (the rule of experience/desk-edits.mjs) -----------------------------------------
+// The film shot's own tray keys (an earlier Export cut, imported by build-round8-director.py as director-camera 'tray') are the
+// Director's edits until the chapter has trayEdits of its own; present (even []), those replace them. A chapter with neither has
+// no tray motion at all: nothing below returns anything for it, and no rig is ever loaded.
+export const filmTrayEdits = film => (Array.isArray(film?.sceneTray) ? film.sceneTray : []).map(cleanTrayEdit).filter(Boolean);
+export const effectiveTrayEdits = (film, shot) => Array.isArray(shot?.trayEdits) ? structuredClone(shot.trayEdits) : filmTrayEdits(film);
+// The chapter's film fields for Render still and the renderer ({} = the film's as they are).
+export const mergeTrayEdits = (film, shot) => Array.isArray(shot?.trayEdits) ? { sceneTray: structuredClone(shot.trayEdits) } : {};
+// The one edit that moves the tray of this shot (preset = the desk model of the shot or sub-shot), or null: the only question the
+// stage and film-fx ask before they load anything.
+export const activeTrayEdit = (edits, preset) => { const e = pickTrayEdit(edits, preset); return trayActive(e) ? e : null; };
+
 // ---- travel between two poses -------------------------------------------------------------------------------------
 const FULL = JOINTS.reduce((o, j) => { o[j] = [0, 1]; return o; }, {});
 // Staging windows (fractions of the segment, spec 6.5), chosen per joint by the direction it moves: moves that RELAX the

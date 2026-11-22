@@ -67,6 +67,11 @@
       room's other ErgoFlex desks, experience/desk-edits.mjs; later per-desk moves and builds) keeps them in
       director-camera-<id>.json as 'desks' (an export without the field keeps the earlier import's). The pass writes them
       onto the chapter's film shot as 'sceneDeskEdits' (tools/experience/film-desk-edits.mjs installs them).
+      Keyboard tray: an export whose shot has 'trayEdits' (Director Mode's Tray lane: the articulated tray's keys, experience/tray-pose.mjs;
+      slide / swing / tilt / drop poses by chapter second) keeps them in director-camera-<id>.json as 'tray' ([] = he took them all
+      off; an export without the field keeps the earlier import's). The pass writes them onto the chapter's film shot (review-cut.json,
+      the chapter's shot file, hero's sub-shots) as 'sceneTray', which film-fx.mjs plays with the same sampler as the live stage;
+      none removes the field. Only a chapter with tray keys gets the field, so every other chapter's key (chapter-keys.py) is unchanged.
       Room look: an export whose shot has 'look' (Director Mode's Room look: a version of the chapter's room, room-looks.mjs)
       keeps it in director-camera-<id>.json as 'look' (an export without the field keeps the earlier import's). The pass
       writes it onto the chapter's film shot (review-cut.json, the chapter's shot file, hero's sub-shots) as 'look', which
@@ -846,6 +851,96 @@ def apply_desks(cid, f, desks):
     return wrote
 
 
+TRAY_JOINTS = {'slide': (0.0, 1.0, 4), 'swing': (-180.0, 180.0, 2), 'tilt': (-15.0, 15.0, 2), 'drop': (0.0, 165.0, 1)}   # experience/tray-limits.mjs JOINT_LIMITS, tray-pose.mjs DECIMALS
+TRAY_KEY_ID = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_-]{0,39}$')
+TRAY_SNAP = 1 / 60
+
+
+def _jsround(v, n):
+    """Math.round(v * 10**n) / 10**n as JavaScript does it (halves up), with no minus zero; whole numbers as ints."""
+    k = 10 ** n; r = math.floor(v * k + 0.5) / k + 0.0
+    return int(r) if r == int(r) else r
+
+
+def _tray_pose(v):
+    out = {}
+    src = v if isinstance(v, dict) else {}
+    for j, (lo, hi, n) in TRAY_JOINTS.items():
+        if _fin(src.get(j)): out[j] = _jsround(min(hi, max(lo, src[j])), n)
+    return out or None
+
+
+def clean_tray(edits):
+    """Director Mode's tray keys (experience/tray-pose.mjs cleanTrayEdits) as the film shot's sceneTray: one edit per desk (the
+    later wins, at most 16), each {desk?, initial?, keys?}: joints held to their hard limits and rounded as the Director does,
+    keys sorted and merged within a sixtieth of a second, at most 64, ease / route only when not the default, unique ids.
+    An edit that says nothing is dropped; [] stays [] (it takes the film's own tray keys off)."""
+    by = {}
+    for e in (edits if isinstance(edits, list) else [])[:64]:
+        if not isinstance(e, dict): continue
+        out = {}
+        if isinstance(e.get('desk'), str) and DESK_ID.match(e['desk']): out['desk'] = e['desk']
+        init = _tray_pose(e.get('initial'))
+        if init:
+            init = {j: x for j, x in init.items() if x != 0}
+            if init: out['initial'] = init
+        keys = []
+        for k in e.get('keys') if isinstance(e.get('keys'), list) else []:
+            if not isinstance(k, dict) or not _fin(k.get('t')) or k['t'] < 0 or k['t'] > 3600: continue
+            pose = _tray_pose(k.get('pose'))
+            if not pose: continue
+            key = {}
+            if isinstance(k.get('id'), str) and TRAY_KEY_ID.match(k['id']): key['id'] = k['id']
+            key['t'] = _jsround(k['t'], 3); key['pose'] = pose
+            if k.get('ease') in ('linear', 'hold'): key['ease'] = k['ease']
+            if k.get('route') == 'direct': key['route'] = 'direct'
+            if isinstance(k.get('label'), str) and k['label'].strip(): key['label'] = k['label'].strip()[:40]
+            keys.append(key)
+        keys.sort(key=lambda x: x['t'])
+        merged = []
+        for key in keys:
+            last = merged[-1] if merged else None
+            if last and key['t'] - last['t'] < TRAY_SNAP - 1e-9:
+                last['pose'].update(key['pose'])
+                for f in ('ease', 'route', 'label'):
+                    if f in key: last[f] = key[f]
+                    elif f != 'label': last.pop(f, None)
+            else: merged.append(key)
+        merged = merged[:64]; used = set()
+        for key in merged:
+            if 'id' in key and key['id'] not in used: used.add(key['id'])
+            else: key.pop('id', None)
+        n = 1; final = []
+        for key in merged:
+            if 'id' not in key:
+                while 'k%d' % n in used: n += 1
+                used.add('k%d' % n); kid = 'k%d' % n
+            else: kid = key['id']
+            final.append({'id': kid, **{f: v for f, v in key.items() if f != 'id'}})
+        if final: out['keys'] = final
+        if 'keys' in out or 'initial' in out: by[out.get('desk', '')] = out
+    return list(by.values())[:16]
+
+
+def apply_tray(cid, f, tray):
+    """The chapter's film shot gets sceneTray (the Director's keyboard tray keys; film-fx.mjs plays them with tray-pose.mjs's
+    sampler); none removes the field. Like apply_props, a chapter rendered as sub-shots (hero) gets it in every sub-shot, and
+    each desk's own keys (desk: '<preset>') are picked per sub-shot by the sampler's pickTrayEdit."""
+    mine = clean_tray(tray)
+    paths = [CUT] + ([f] if f else []) + ([os.path.join(H, 'previews', 'awaken-v5-cut.json')] if cid == 'awaken' else [])
+    if cid == 'hero': paths.append(os.path.join(H, 'shots', '13-subshots.json'))
+    wrote = []
+    for p in paths:
+        if not os.path.exists(p): continue
+        d = load(p)
+        for s in (d['shots'] if 'shots' in d else [d]):
+            if s.get('id') != cid: continue
+            if mine: s['sceneTray'] = copy.deepcopy(mine)
+            else: s.pop('sceneTray', None)
+        if dump(p, d, **({'indent': None} if p.endswith('13-subshots.json') else {})): wrote.append(os.path.relpath(p, H))
+    return wrote
+
+
 def apply_featured_build(cid, f, build):
     """The chapter's film shot gets featuredBuild (the Director's Build tab on the featured desk); none removes the field."""
     paths = [CUT] + ([f] if f else []) + ([os.path.join(H, 'previews', 'awaken-v5-cut.json')] if cid == 'awaken' else [])
@@ -956,6 +1051,9 @@ def run_pass_chapters():
         if os.path.exists(p) and 'desks' in load(p):
             w = apply_desks(cid, f, load(p)['desks'])
             print(f'ch{n:02d} {cid}: Director desks ({len(clean_desks(load(p)["desks"]))}) -> {", ".join(w) or "no change"}')
+        if os.path.exists(p) and 'tray' in load(p):
+            w = apply_tray(cid, f, load(p)['tray'])
+            print(f'ch{n:02d} {cid}: Director keyboard tray ({len(clean_tray(load(p)["tray"]))} edit(s)) -> {", ".join(w) or "no change"}')
     for n, cid, f in chapters():
         p = director_file(cid)
         if os.path.exists(p) and 'build' in load(p):
@@ -1281,6 +1379,9 @@ def run_import(export):
     # Desks (the room's other ErgoFlex desks): the export's list ([] = he reset them all); an export without the field keeps the earlier import's.
     if isinstance(shot.get('deskEdits'), list): dc['desks'] = clean_desks(shot['deskEdits'])
     elif 'desks' in before: dc['desks'] = before['desks']
+    # Keyboard tray keys (the Tray lane): the export's list ([] = he took them all off, kept so the pass removes the film's); an export without the field keeps the earlier import's.
+    if isinstance(shot.get('trayEdits'), list): dc['tray'] = clean_tray(shot['trayEdits'])
+    elif 'tray' in before: dc['tray'] = before['tray']
     # Featured desk build (Build tab): the export's deskBuild ({} = he reset it); an export without the field keeps the earlier import's.
     if isinstance(shot.get('deskBuild'), dict):
         if clean_build(shot['deskBuild']): dc['build'] = clean_build(shot['deskBuild'])
@@ -1301,6 +1402,7 @@ def run_import(export):
     if 'build' in dc: print(f'{cid}: Director featured desk build kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
     if 'branding' in dc: print(f'{cid}: Director branding -> {sum(len(v) for v in dc["branding"]["artwork"]["surfaces"].values())} graphic edit(s) kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
     if 'desks' in dc: print(f'{cid}: Director desks -> {len(dc["desks"])} desk edit(s) kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
+    if 'tray' in dc: print(f'{cid}: Director keyboard tray -> {len(dc["tray"])} tray edit(s) kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
     if 'props' in dc: print(f'{cid}: Director props -> {len(dc["props"])} prop edit(s) kept in {os.path.basename(director_file(cid))}', file=sys.stderr)
     if isinstance(shot.get('filmTitles'), list):
         lines = []; wrote = import_titles(cid, shot['filmTitles'], float(shot.get('seconds') or dc['seconds']), lines.append)

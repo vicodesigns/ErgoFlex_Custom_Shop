@@ -97,6 +97,7 @@ import { isTextureTarget, installTextureScreens, matches as textureMatches } fro
 import { lookFor, uniformsOf, GLSL as LOOK_GLSL, CALL as LOOK_CALL, SHADED as LOOK_SHADED, isToday } from '../../experience/screen-look.mjs';
 import { statusLightOff } from './film-status-light.mjs';
 import { screenLightTransform, applyPixel, applyHex } from '../../experience/screen-light.mjs';
+import { activeTrayEdit } from '../../experience/tray-pose.mjs';
 
 const api = window.ErgoFlex;
 const sceneRoot = () => { let s = api.loadedModel; while (s?.parent) s = s.parent; return s; };
@@ -1002,7 +1003,7 @@ function installGlobals(shot) {
 export async function install(shot) {
   clear();
   unhookPreset();
-  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length || shot.sceneDeskPoses?.length || shot.sceneBranding || shot.sceneDeskEdits?.length || shot.featuredBuild || shot.statusLight === false;
+  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length || shot.sceneDeskPoses?.length || shot.sceneBranding || shot.sceneDeskEdits?.length || shot.sceneTray?.length || shot.featuredBuild || shot.statusLight === false;
   if (!wants) return null;
   active = { shot, list: [], screens: [], led: null, clocks: [], tod: null, desk: null, edits: null, lights: null };
   active.desk = await installDeskObjects(shot);
@@ -1058,6 +1059,9 @@ export async function install(shot) {
   if (roomSpillFields(shot.sceneGlobals)) { active.roomSpill = installLedRoomSpill(shot.sceneGlobals); active.roomSpill.frame(); }
   // lightEdits: Director changes to existing lights (experience/light-edits.mjs), after the shot's own lights and edits.
   if (shot.lightEdits?.length) { active.lightEdits = (await import('../../experience/light-edits.mjs')).installLightEdits(shot.lightEdits, sceneRoot()); if (active.lightEdits.missing.length) console.warn('[film-fx] lightEdits: no light at ' + active.lightEdits.missing.join(' | ')); }
+  // sceneTray (the keyboard tray's own keys, experience/tray-pose.mjs): the rig glb is loaded only for a chapter that has them. After the prop
+  // edits, so the riders' rest offsets are taken where those left the keyboard and mouse; frame() poses it after them too.
+  { const edit = activeTrayEdit(shot.sceneTray, shot.preset); if (edit) { active.tray = (await import('../../experience/tray-rig.mjs')).createTrayRig(api); await active.tray.set(edit); } }
   return { accessories: active.desk.added.length + active.desk.toggled.length, deskObjects: active.desk.placed, screens: active.screens.map(s => ({ target: s.target.id, alias: s.target.alias, canvas: [s.canvas.width, s.canvas.height], aspect: +s.target.frame.aspect.toFixed(3) })), clocks: active.clocks.map(c => c.kind + ':' + c.obj.name), led: !!active.led, timeOfDay: !!active.tod, sceneEdits: active.edits?.count, lights: active.lights?.count, floorLight: !!active.floor, roomLight: active.roomLight ? [active.roomLight.lights, active.roomLight.pools] : undefined, ledRoomSpill: active.roomSpill ? { floors: active.roomSpill.floors } : undefined, ledReceivers: active.viewerLeds?.info, deskEdits: active.deskEdits ? { desks: active.deskEdits.desks, missing: active.deskEdits.missing, ...(active.deskEdits.hides?.length ? { hides: active.deskEdits.hides } : {}) } : undefined };
 }
 // Director live edits: apply changed lighting fields in place, without clear() / prepare, so props, screens,
@@ -1172,6 +1176,7 @@ export async function frame(t, chapterSeconds, { video = false, screens = true, 
   }
   active.quality?.frame();
   active.edits?.apply(chapterSeconds); active.lights?.apply(chapterSeconds); active.lightEdits?.apply(); lap('lights');
+  active.tray?.apply(chapterSeconds);   // the keyboard tray's joints and what stands on it, last (the riders ride the final plate matrix)
   if (active.screens.length && screens) { await updateScreens(active.screens, chapterSeconds); lap('screens'); }
   if (active.texScreens && screens) { await active.texScreens.frame(chapterSeconds, seek); lap('screens'); }
   if (active.clocks.length) setClocks(active.clocks, active.shot.clock, active.shot, chapterSeconds);
@@ -1205,6 +1210,7 @@ export function clear() {
   active.floor?.restore();
   active.wheels?.restore();   // after quality.restore, which hands the render back to this wrapper
   active.viewerLeds?.restore();   // after wheels.restore (installed first, so wrapped by it)
+  active.tray?.restore();   // before the prop edits go back: the riders return to where those had put them
   active.lightEdits?.restore();   // first: its intensity accessor chains over the edits' and roomLight's
   active.roomSpill?.restore(); active.roomLight?.restore();   // before edits / timeOfDay: it chains to their accessors
   active.lights?.restore(); active.edits?.restore();
