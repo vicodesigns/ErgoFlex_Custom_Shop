@@ -7,6 +7,12 @@
 // Checks, in this order, nothing is written when one fails: the caller's address (this machine or the tailnet), the
 // headers, the size (5 MB), the JSON, the schema and the one-chapter shape the importer needs, the cut id inside names a
 // real cut (exports/<dir>/cut.json id, or the master $HQ), a rate limit.
+//
+// THE TOKEN (Vico, 22 Nov 2026: yes to a shared code): every send carries x-director-token, compared in constant time with
+// the desk's token: $DIRECTOR_INBOX_TOKEN, else the file $DIRECTOR_INBOX_TOKEN_FILE, else ~/.config/ergoflex/director-inbox-token
+// (outside git; read on every send, so a new token needs no restart). No token on the desk: every send is refused
+// (503, fail closed). Make one on the desk:  node tools/director-inbox.mjs --new-token   (prints it, writes the file, mode 600)
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -54,6 +60,30 @@ export function target(d, root, hq = process.env.HQ || 'exports/cinematic-intro-
   return { folder, chapter, cutId };
 }
 
+// ---- the token
+export const tokenFile = (env = process.env, home = os.homedir()) => env.DIRECTOR_INBOX_TOKEN_FILE || path.join(home, '.config', 'ergoflex', 'director-inbox-token');
+export function deskToken(env = process.env, home = os.homedir()) {
+  if (env.DIRECTOR_INBOX_TOKEN) return String(env.DIRECTOR_INBOX_TOKEN).trim() || null;
+  try { return fs.readFileSync(tokenFile(env, home), 'utf8').trim() || null; } catch { return null; }
+}
+// A code a person types once on a phone: case, spaces and dashes do not matter. Constant time whatever the lengths: both
+// sides hashed to 32 bytes first.
+export const normToken = v => String(v ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
+export function sameToken(given, want) {
+  const a = normToken(given), b = normToken(want);
+  if (!a || !b) return false;
+  const h = v => crypto.createHash('sha256').update(v, 'utf8').digest();
+  return crypto.timingSafeEqual(h(a), h(b));
+}
+// 16 characters from 31 that cannot be mistaken for each other (no 0 o 1 l i), about 79 bits, in groups of four
+const ALPHABET = '23456789abcdefghjkmnpqrstuvwxyz';
+export const newToken = () => { const out = []; while (out.length < 16) { const b = crypto.randomBytes(1)[0]; if (b < 248) out.push(ALPHABET[b % 31]); } return out.join('').match(/.{4}/g).join('-'); };
+export function writeToken(env = process.env, home = os.homedir()) {
+  const file = tokenFile(env, home), token = newToken();
+  fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 }); fs.writeFileSync(file, token + '\n', { mode: 0o600 }); fs.chmodSync(file, 0o600);
+  return { file, token };
+}
+
 const sent = [];   // times of accepted sends (the rate limit)
 export function createInbox({ root, env = process.env }) {
   return async function handle(req, res, json) {
@@ -63,6 +93,9 @@ export function createInbox({ root, env = process.env }) {
     if (req.headers['x-director-inbox'] !== '1' || !/^application\/json\b/i.test(req.headers['content-type'] || '')) return refuse(400, 'Not from the Director (header).');
     const origin = req.headers.origin;
     if (origin) { let h = ''; try { h = new URL(origin).host; } catch { /* below */ } if (h !== req.headers.host) return refuse(403, 'Another origin.'); }
+    const want = deskToken(env);
+    if (!want) return refuse(503, 'Send to desk is not set up on the desk yet (no token there): run node tools/director-inbox.mjs --new-token on the desk.');
+    if (!sameToken(String(req.headers['x-director-token'] || ''), want)) return refuse(401, 'Wrong or missing desk code.');
     const declared = Number(req.headers['content-length']);
     if (declared > MAX_BYTES) { res.setHeader('connection', 'close'); return refuse(413, 'Too large (5 MB at most).'); }
     let text;
@@ -93,4 +126,10 @@ export function createInbox({ root, env = process.env }) {
     json(res, 200, { file: name, cut: t.folder, chapter: t.chapter, bytes: Buffer.byteLength(text) });
     return true;
   };
+}
+
+// node tools/director-inbox.mjs --new-token   (on the desk: a new code for Send to desk; the old one stops working)
+if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname) && process.argv[2] === '--new-token') {
+  const { file, token } = writeToken();
+  console.log(`Send to desk code: ${token}\n(written to ${file}; type it on the phone the first time you press Send to desk)`);
 }

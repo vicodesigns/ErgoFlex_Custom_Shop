@@ -1235,9 +1235,15 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   async function sendToDesk(){
     if(!film)throw Error('Send to desk is for a film chapter.');
     const text=exportText(),folder=String(film.film||'').match(/^\/?(exports\/[^/]+)\//)?.[1]||'';
+    // The desk code (tools/director-inbox.mjs token): asked once per device and kept in this browser only. The key does not
+    // start with 'ergoflex', so the studio sync never copies it into the shared (committed) studio state.
+    const CODE_KEY='directorInboxCode';let code='';try{code=localStorage.getItem(CODE_KEY)||'';}catch{}
+    if(!code){code=(globalThis.prompt?.('Send to desk: type the desk code (Vico makes it on the desk). It is asked once on this device.')||'').trim();if(!code)throw Error('Not sent: no desk code.');try{localStorage.setItem(CODE_KEY,code);}catch{}}
     status('Sending to the desk…');
-    let response;try{response=await fetch('/__director/inbox',{method:'POST',headers:{'content-type':'application/json','x-director-inbox':'1',...(folder?{'x-director-cut':folder}:{})},body:text});}catch{throw Error('Could not reach the desk. Is this page open from the studio server?');}
-    const body=await response.json().catch(()=>({}));if(!response.ok)throw Error(body.error||`The desk refused it (${response.status}).`);
+    let response;try{response=await fetch('/__director/inbox',{method:'POST',headers:{'content-type':'application/json','x-director-inbox':'1','x-director-token':code,...(folder?{'x-director-cut':folder}:{})},body:text});}catch{throw Error('Could not reach the desk. Is this page open from the studio server?');}
+    const body=await response.json().catch(()=>({}));
+    if(response.status===401){try{localStorage.removeItem(CODE_KEY);}catch{}throw Error('The desk code was not right: press Send to desk again and type it.');}
+    if(!response.ok)throw Error(body.error||`The desk refused it (${response.status}).`);
     exported=signature();syncFilm();fresh.exported(project,text);status(`Sent to the desk: ${body.file}. The film takes it in from there; your changes stay in this browser until it has.`);return body;
   }
   function exportCut(){const text=exportText(),url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=(project.name.replace(/[^a-z0-9]+/gi,'-')||'client-cut')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);exported=signature();syncFilm();status(fresh.on?'Cut exported: the film takes it in from Downloads. Your changes stay in this browser until it has.':'Cut exported. Import it in Director Mode on another browser.');fresh.exported(project,text);return text;}

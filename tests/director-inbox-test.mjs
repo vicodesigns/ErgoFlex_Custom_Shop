@@ -7,7 +7,21 @@ import path from 'node:path';
 import net from 'node:net';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { allowedAddress, inboxDir, target } from '../tools/director-inbox.mjs';
+import { allowedAddress, inboxDir, target, sameToken, normToken, newToken, deskToken, tokenFile, writeToken } from '../tools/director-inbox.mjs';
+// ---- the desk code (token): constant-time compare, case / spaces / dashes do not matter, typable, fail closed
+{
+  const t = newToken(); assert.match(t, /^[2-9a-hjkmnp-z]{4}(-[2-9a-hjkmnp-z]{4}){3}$/, 'four groups of four, no 0 o 1 l i: ' + t);
+  assert.notEqual(newToken(), newToken());
+  assert.ok(sameToken(t, t) && sameToken(t.toUpperCase().replace(/-/g, ' '), t), 'typed in capitals or with spaces');
+  assert.ok(!sameToken(t + 'x', t) && !sameToken('', t) && !sameToken(t, '') && !sameToken(undefined, t) && !sameToken('--', '--'), 'anything else: no');
+  assert.equal(normToken(' Ab-12 c '), 'ab12c');
+  assert.equal(deskToken({ DIRECTOR_INBOX_TOKEN: ' abc ' }), 'abc', 'the env first');
+  assert.equal(deskToken({ DIRECTOR_INBOX_TOKEN_FILE: '/nonexistent/x' }), null, 'no token: null (the server then refuses every send)');
+  assert.equal(tokenFile({}, '/h'), path.join('/h', '.config', 'ergoflex', 'director-inbox-token'), 'outside the repo');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'inbox-token-')), env = { DIRECTOR_INBOX_TOKEN_FILE: path.join(dir, 'sub', 'code') };
+  const w = writeToken(env); assert.equal(deskToken(env), w.token); assert.equal(fs.statSync(w.file).mode & 0o777, 0o600, 'readable by the desk user only');
+  fs.rmSync(dir, { recursive: true, force: true });
+}
 
 const repo = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // ---- units
@@ -29,7 +43,8 @@ fs.writeFileSync(path.join(root, 'exports/cut-nobuild/cut.json'), JSON.stringify
 fs.mkdirSync(path.join(root, 'exports/master'), { recursive: true });
 fs.writeFileSync(path.join(root, 'exports/master/review-cut.json'), '{}');
 fs.mkdirSync(downloads, { recursive: true });
-const state = path.join(tmp, 'studio-state.json');
+const state = path.join(tmp, 'studio-state.json'), codeFile = path.join(tmp, 'code'), CODE = 'k7mz-4q2t-wxyz-9abc';
+fs.writeFileSync(codeFile, CODE + '\n');
 
 const exp = (over = {}) => ({ schema: 'ergoflex.client-cut', version: 1, id: 'film-my-cut-awareness', name: 'Film chapter: awareness', shots: [{ id: 'awareness', seconds: 12 }], ...over });
 assert.deepEqual(target(exp(), root), { folder: 'exports/cut-a', chapter: 'awareness', cutId: 'my-cut' });
@@ -39,15 +54,19 @@ assert.throws(() => target(exp({ id: 'film-no-build-awareness' }), root), /revie
 
 const port = await new Promise(r => { const s = net.createServer().listen(0, '127.0.0.1', () => { const p = s.address().port; s.close(() => r(p)); }); });
 const server = spawn(process.execPath, [path.join(repo, 'tools/studio-server.mjs'), '--port', String(port), '--host', '127.0.0.1', '--root', root, '--state', state, '--no-watch'],
-  { cwd: repo, env: { ...process.env, HOME: path.join(tmp, 'home'), DIRECTOR_INBOX_DIR: downloads, DIRECTOR_IMPORT_DIRS: '' }, stdio: ['ignore', 'pipe', 'pipe'] });
+  { cwd: repo, env: { ...process.env, HOME: path.join(tmp, 'home'), DIRECTOR_INBOX_DIR: downloads, DIRECTOR_IMPORT_DIRS: '', DIRECTOR_INBOX_TOKEN: '', DIRECTOR_INBOX_TOKEN_FILE: codeFile }, stdio: ['ignore', 'pipe', 'pipe'] });
 let log = ''; server.stdout.on('data', d => { log += d; }); server.stderr.on('data', d => { log += d; });
 try {
   await new Promise((ok, fail) => { const t = setTimeout(() => fail(Error('server did not start: ' + log)), 15000); server.stdout.on('data', d => { if (/studio server/.test(d)) { clearTimeout(t); ok(); } }); server.once('exit', c => fail(Error('server exited ' + c + log))); });
-  const base = `http://127.0.0.1:${port}`, H = { 'content-type': 'application/json', 'x-director-inbox': '1' };
+  const base = `http://127.0.0.1:${port}`, H = { 'content-type': 'application/json', 'x-director-inbox': '1', 'x-director-token': CODE };
   const post = (body, headers = H) => fetch(base + '/__director/inbox', { method: 'POST', headers, body: typeof body === 'string' ? body : JSON.stringify(body) });
   const files = () => fs.readdirSync(downloads).sort();
 
   // refusals first: nothing may be written
+  // the desk code: missing / wrong -> 401; typed with capitals and spaces -> fine (below); no code on the desk -> 503
+  let r0 = await post(exp(), { 'content-type': 'application/json', 'x-director-inbox': '1' }); assert.equal(r0.status, 401, 'no code'); assert.match((await r0.json()).error, /desk code/);
+  r0 = await post(exp(), { ...H, 'x-director-token': 'k7mz-4q2t-wxyz-9abd' }); assert.equal(r0.status, 401, 'a wrong code');
+  fs.renameSync(codeFile, codeFile + '.off'); r0 = await post(exp()); assert.equal(r0.status, 503, 'no code on the desk: refused (fail closed)'); assert.match((await r0.json()).error, /--new-token/); fs.renameSync(codeFile + '.off', codeFile);
   let r = await post(exp({ schema: 'ergoflex.something' })); assert.equal(r.status, 400, 'wrong schema'); assert.match((await r.json()).error, /schema/);
   r = await post(exp({ id: 'film-ghost-awareness' })); assert.equal(r.status, 400, 'unknown cut'); assert.match((await r.json()).error, /No film cut/);
   r = await post(exp({ id: 'film-no-build-awareness' })); assert.equal(r.status, 400, 'a cut folder without review-cut.json');
@@ -72,7 +91,7 @@ try {
   assert.equal(fs.readFileSync(path.join(downloads, ok.file), 'utf8'), text, 'the content as sent');
   assert.deepEqual(JSON.parse(fs.readFileSync(path.join(downloads, ok.file), 'utf8')), good);
   // the same second again: a new name, the first kept
-  r = await post(text); const again = await r.json(); assert.equal(r.status, 200); assert.notEqual(again.file, ok.file); assert.match(again.file, /^Film-chapter-awareness-\d{8}-\d{6}(-\d+)?\.json$/); assert.equal(files().length, 2);
+  r = await post(text, { ...H, 'x-director-token': ' K7MZ 4Q2T WXYZ 9ABC ' }); const again = await r.json(); assert.equal(r.status, 200); assert.notEqual(again.file, ok.file); assert.match(again.file, /^Film-chapter-awareness-\d{8}-\d{6}(-\d+)?\.json$/); assert.equal(files().length, 2);
   // the importer would take both: its glob
   assert.ok(files().every(f => /^Film-chapter-.*\.json$/.test(f)));
   // a hostile chapter id never reaches the file name

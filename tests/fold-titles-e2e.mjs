@@ -22,6 +22,7 @@ const VIEWS = String(opt('views', process.env.VIEWS || '884x1100,1100x884')).spl
 process.env.HQ ||= 'exports/cinematic-intro-cut-vicos-3rd-cut';
 const inbox = fs.mkdtempSync(path.join(os.tmpdir(), 'fold-inbox-'));
 process.env.DIRECTOR_INBOX_DIR = inbox;            // the scratch server writes Send to desk here, never into ~/Downloads
+process.env.DIRECTOR_INBOX_TOKEN = 'fold-test-code';  // the desk code for the scratch server; the page has it already (below), so no prompt
 process.env.DIRECTOR_IMPORT_DIRS = '';
 const { openDirectorBrowser, openChapter, chapterList, wait } = await import('./director-e2e-harness.mjs');
 
@@ -33,6 +34,7 @@ const check = (ok, label, extra = '') => { log(ok ? 'PASS' : 'FAIL', label, ok ?
 const chapters = chapterList(), chapter = chapters?.find(c => c.id === CHAPTER);
 if (!chapter) { console.error(`no chapter "${CHAPTER}" in ${process.env.HQ}/director-chapters.json`); process.exit(2); }
 const { base, page, errors, close } = await openDirectorBrowser({ width: VIEWS[0].width, height: VIEWS[0].height });
+await page.evaluateOnNewDocument(() => { try { localStorage.setItem('directorInboxCode', 'fold-test-code'); } catch {} });   // (the desk code, as if typed once)
 const cdp = await page.createCDPSession();
 const fold = v => page.setViewport({ ...v, deviceScaleFactor: 2.6, isMobile: true, hasTouch: true });   // (coarse pointer, no hover, a mobile layout viewport)
 
