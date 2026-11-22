@@ -2,6 +2,8 @@
 
 Snapshot updated 2026-11-21 (late evening; credits low) so work can be resumed if credits run out. A fresh session: read this, then `git log -15`, then the memory index (MEMORY.md).
 
+Fold link: (Director, tailnet only): https://ergoflexdesk02.tailf693b8.ts.net/exports/cinematic-intro-cut-vicos-3rd-cut/director-index.html
+
 ## Rules from Vico
 - Agents are Sonnet 5.5; Opus 5.5 only after asking him.
 - Merge finished, tested branches as they arrive (push video/cinematic-intro-hq and staging/director-merge; confirm HEAD = origin = staging and localhost:3000 = 200).
