@@ -659,10 +659,19 @@ def _build_plan_tempo(edl, chs, total, centres, tempo):
         bs.append(bs[-1] + n)
     devs = np.array([abs((a1 - a0) / (n * beat) - 1) for a0, a1, n in zip(anchors[:-1], anchors[1:], seg_beats)])
     pts = sorted(list(zip(anchors, bs)) + [(float(t), float(b)) for t, b in tempo.get('knots', [])])
+    if tempo.get('lead_in_follows_first'):
+        # the wake before title B keeps the first segment's tempo (one tempo through the join, no 1.5 % step at title B):
+        # the map is carried back to the wake's first bar line at the tempo of its first piece (before that, as ever,
+        # the nominal beat: the opener and title A's echoes stay as they were)
+        (t0_, b0_), (t1_, b1_) = pts[0], pts[1]
+        nb_ = 4.0 * max(1, int(tempo.get('wake_k') or 1))
+        pts.insert(0, (t0_ - nb_ * (t1_ - t0_) / (b1_ - b0_), b0_ - nb_))
     grid = Grid([p[0] for p in pts], [p[1] for p in pts], beat)
     title_a = float(tempo.get('title_a', find_beat(edl, r'title A|level up', 1.5)))
-    return _sections(chs, total, title_a, anchors[0], anchors[-1], centres, anchors, owners, bpm, seg_beats, devs, grid,
+    plan = _sections(chs, total, title_a, anchors[0], anchors[-1], centres, anchors, owners, bpm, seg_beats, devs, grid,
                      edl, wake_k=tempo.get('wake_k'))
+    plan['lift_top'] = tempo.get('lift_top')     # film second where the desk's first lift tops out (None: no lift swell)
+    return plan
 
 
 def _sections(chs, total, title_a, title_b, end_card, centres, anchors, owners, bpm, seg_beats, devs, grid, edl, wake_k=None):
@@ -1052,6 +1061,22 @@ def compose(plan, seed):
     mix.add('boom', tb, syn.boom(2.5, 62, 40, 0.75), gain=0.36)
     events['hits'].append((tb, 'title B lift'))
 
+    # lift top: the desk reaches the top of its first lift, so a short reverse swell lands the first bar line after
+    # it (on the one grid, the chord change Bm9 with the kick). Its own random stream, so no other sound moves.
+    lt = plan.get('lift_top'); lift_hit = None
+    if lt:
+        syn2 = Synth(np.random.default_rng(seed + 7001))
+        bl = [4.0 * m for m in range(1, int(grid.bs[-1] // 4) + 1) if grid.t(4.0 * m) >= lt - 0.05]
+        if bl:
+            tl = grid.t(bl[0])
+            pre = min(1.5, 3 * beat_nom)
+            L, R = syn2.whoosh(pre, 1.1, f_lo=500, f_hi=3600, pan_from=-0.25, pan_to=0.25, curve=2.0)
+            mix.add('fx', tl - pre, L, R, gain=0.055)
+            lch = next((c for s_ in secs for (b_, nb_), c in zip(s_['bars'], s_['chords']) if abs(grid.t(b_) - tl) < 1e-6), 'Bm9')
+            rb = syn2.reverse_bell(bell_tones(lch, 74, 88)[:3], 1.4)
+            mix.add('fxt', tl - 1.4, rb, rb, gain=0.03)
+            lift_hit = (tl, 'lift top: reverse swell onto the next bar line')
+
     # dissolve swells, centred on each transition (bar line)
     big = {'music', 'storage', 'hero'}
     for s in secs[2:]:
@@ -1067,6 +1092,8 @@ def compose(plan, seed):
         rb = syn.reverse_bell(top, 1.6)
         mix.add('fxt', tc_ - 1.6, rb, rb, gain=0.03 * size)
         events['hits'].append((tc_, 'dissolve swell -> ' + s['name']))
+    if lift_hit:     # after the loop: the swells' pan alternates with the number of hits so far
+        events['hits'].append(lift_hit)
 
     # logo hit at the end card: riser, soft impact, felt mallet and shimmer, ring-out
     pre = 2 * beat_nom * 1.0 + 1.2

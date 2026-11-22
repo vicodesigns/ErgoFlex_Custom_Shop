@@ -31,6 +31,9 @@ picture instead of to the EDL alone:
   * v2.1: the echo follows the tempo map (score-synth.local_delay): repeat k sounds 0.75 k beats after its source,
     read continuously through every tempo step (no click); for up to 0.75 k beats after a step a repeat plays up to
     about 1.4 % (24 cents) off pitch;
+  * v2.2: one tempo through title B: the wake (pulse, sub, pad bar lines) before title B runs at the first segment's
+    tempo instead of the nominal one, so there is no 1.5 % tempo step at the join (the fit still costs it as before, so
+    no later time moves); and a short reverse swell lands the first bar line after the desk's first lift tops out;
   * the title A bloom lands on title A, the logo hit within LOGO_SLACK of the wordmark's first frame;
   * the desk's movement sounds (assets/led/audio) follow this cut's ledStatus (SFX_RULES), only while the motion clip
     of that lane runs, clipped to what the chapter shows, re-keyed into the score's key (SCORE_KEY), mixed before the
@@ -493,6 +496,9 @@ def main():
         beat = 60 / tempo['bpm']
         ks = [k for k in range(1, 8) if pic['title_b'] - 4 * k * beat >= pic['title_a'] + 1.0]
         if ks: tempo['wake_k'] = min(ks, key=lambda k: abs(pic['title_b'] - 4 * k * beat - pic['led_on']))
+    tempo['lead_in_follows_first'] = True    # one tempo through title B: the wake runs at the twin's tempo (no step)
+    top = [t + d for t, d, k in pic['sfx'] if k == 'lift-up' and t < edl['chapters'][0]['end']]
+    if top: tempo['lift_top'] = round(top[0], 3)     # the desk tops out: a swell lands the next bar line
     plan = synth.build_plan(edl, tempo)
     chords = hero_chords(plan, pic)
     plan['echo_local'] = True     # the echo follows the local tempo (score-synth premaster)
