@@ -11,11 +11,11 @@ Snapshot written 2026-11-21 so work can be resumed if credits run out. A fresh s
 ## Needs Vico
 - Send to desk: type the code once on the Fold: The code is in chat. Open the Director on the Fold, change something, tap Send to desk, and enter it. After that it remembers. [Fold, 5 min]
 - Foot light: look at the new stills when they land: Applied: a little brighter (peak up about 30%). New before and after stills are being rendered. The older sheet is below. Tell me if the blue should hold until the lift chase at 10.4 s, since the floor is grey for about 0.9 s in between. [Awaken]
-- Next film: say go when the stills look right: Epoch 13 (all metal) moves nine room chapters, so the next 4K is close to a full render. The new score needs only a re-finish. I queue it when you say go. [Render, Your call]
+- Next film: say go when the stills look right: Epoch 13 (all metal) moves nine room chapters, so the next 4K is close to a full render. Codex's new faces ride on the same bump. The new score needs only a re-finish. I queue it when you say go. [Render, Your call]
+- Score: listen to the new 0-30 s clips and tell me which second: Found it: the build-up before 12 s ran at a slightly slower tempo than everything after, then jumped. It now stays on one tempo, and a soft swell lands when the lift tops out. Before and after clips are on your phone. If the clash is at about 18.6 s (tilt start and chord change), nothing was added there yet. [Windows PC, Audio only, Merged]
 
 ## Working now
 - All-metal aluminium look, every room: The gym metal matches Rise value for value, so the look itself is changing: brighter, more metallic aluminium everywhere, dumbbell included. Epoch 13 approved. [Windows PC, Epoch 13, eng/desk-aluminium-look]
-- Score: fix the 12-18 s transition: The build-up is good, then the next part lands off the beat. The agent measures where the layers disagree and fixes the join. You get before and after clips on your phone. [Windows PC, Audio only, Running]
 - Foot light stills, a little brighter: Re-rendering 6 to 10 s to check it is brighter and not blown out. [Windows PC, Awaken]
 - Fold touch re-test, all four screen sizes: Titles lane and layout fixes are merged. The Windows PC re-runs the touch test in portrait and landscape; this should be the first run that reaches the title steps. [Windows PC, Fold]
 - Keyboard tray build, phases 1 to 3: Slide, swivel and tilt like the reference tray, keyboard staying on it. Joint model, Blender split into real parts, data and importer. Each phase merges as it lands. [ui, Keyboard tray]
@@ -28,6 +28,7 @@ Snapshot written 2026-11-21 so work can be resumed if credits run out. A fresh s
 - 5. Media: better speakers on the side pedestals: Properly modelled speakers that sit flush on the left and right pedestals, in the room’s materials. [Windows PC, Media]
 
 ## Done
+- Codex: faces for the whole cast: Smiles, blinks and brows for all twelve characters, performed in the rooms and in film time. Committed and pushed; moves every room's people, so it rides on epoch 13 and is in the next film. [Codex, Merged]
 - Final 4K film delivered: 240.3 s, 4K, on the desk and on your phone. Includes the hero pass with end card, Commons phone, awareness sonar, Rise exit, Coast hands, Wellness order, Media and Oilers edits, and the new score. [Film]
 - Fold layout fixes, rounds 1 and 2: Readable pickers, 44 px tap targets, bigger stage, Titles lane open on a phone, timeline fits its lanes, narrower label column. Merged. [Director, Merged]
 - Fold phone mode, titles by touch, Send to desk: Inspector as drawer or bottom sheet, closable demo card, top-bar overflow, move, trim and add titles by touch. Sends are protected by a desk code. Merged; the Director server was restarted. [Director, Merged]
