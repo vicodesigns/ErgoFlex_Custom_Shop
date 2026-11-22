@@ -1,3 +1,4 @@
+import { faceData, prepareFace } from './people-face.mjs';
 import {measureHeadphoneSockets,isDeskHeadphone,markDeskHeadphones,finishHeadphonePlug} from './desk-headphone-hook.mjs';
 import {shelfStorageSpace} from './desk-shelf-space.mjs';
 import { finishTriangleTable } from './triangle-table-finishes.mjs?v=table-clearance-20261021';
@@ -118,12 +119,15 @@ export const PROP_LIBRARY = {
             const entry = this.entry(id);
             const path = file || entry?.file || `assets/props/${id}.glb`;
             const url = './' + path + '?v=' + encodeURIComponent(entry?.revision || 'prop-unit-scale-20261013');
-            this.cache.set(cacheKey, new Promise((resolve, reject) => this.loader.load(url, gltf => {
+            const model = new Promise((resolve, reject) => this.loader.load(url, resolve, undefined, reject));
+            this.cache.set(cacheKey, Promise.all([model, faceData(id)]).then(([gltf, face]) => {
                 // A model with a skeleton (the people: baked in their pose, which is the skeleton's rest pose) is used as
                 // plain meshes; the skinned original is kept for rigInstance() (the Director's pose fine-tuning).
                 let skinned = false; gltf.scene.traverse(obj => { if (obj.isSkinnedMesh) skinned = true; });
                 if (skinned) {
-                    const rig = gltf.scene, still = new THREE.Group(); still.name = rig.name; rig.updateMatrixWorld(true);
+                    const rig = gltf.scene, still = new THREE.Group();
+                    prepareFace(rig, face);
+                    still.name = rig.name; rig.updateMatrixWorld(true);
                     rig.traverse(obj => {
                         if (!obj.isMesh) return;
                         obj.castShadow = true; obj.receiveShadow = true;
@@ -149,16 +153,14 @@ export const PROP_LIBRARY = {
                 });
                 const size = new THREE.Box3().setFromObject(gltf.scene).getSize(new THREE.Vector3()).toArray();
                 const factor = propUnitCorrection(size, entry?.size);
-                if (factor === 1) resolve(gltf.scene);
-                else {
-                    // Keep this conversion below the editable instance root.
-                    // Restoring its saved scale cannot undo the unit repair.
-                    const normalized = new THREE.Group();
-                    gltf.scene.scale.multiplyScalar(factor); normalized.add(gltf.scene);
-                    normalized.userData.propUnitCorrection = factor;
-                    resolve(normalized);
-                }
-            }, undefined, err => { this.cache.delete(cacheKey); this.failures.set(cacheKey, err); reject(err); })));
+                if (factor === 1) return gltf.scene;
+                // Keep this conversion below the editable instance root.
+                // Restoring its saved scale cannot undo the unit repair.
+                const normalized = new THREE.Group();
+                gltf.scene.scale.multiplyScalar(factor); normalized.add(gltf.scene);
+                normalized.userData.propUnitCorrection = factor;
+                return normalized;
+            }).catch(err => { this.cache.delete(cacheKey); this.failures.set(cacheKey, err); throw err; }));
         }
         return this.cache.get(cacheKey);
     },

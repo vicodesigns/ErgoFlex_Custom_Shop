@@ -1,3 +1,4 @@
+import { performFace } from './people-face.mjs';
 import { mediaPersonMaterial, castDetailEnsure, castDetailCast, castDetailVariant, castDetailTouches, reliefOf } from './media-cast-finishes.mjs';
 // People who live and work in the rooms (Studio "People" toggle, film `people`).
 //
@@ -2091,7 +2092,10 @@ export class RoomPeople {
             object.updateMatrixWorld(true);
         }
         // Pose-aware bounds let the GPU skip off-screen bodies without clipping animated limbs.
-        for (const person of this.people) if (person.visible && person.userData.personRig) updateSkinnedBounds(person);
+        for (const person of this.people) if (person.visible) {
+            performFace(person, this.room.id, this.lifeClock, time !== null, this.filter?.life !== false);
+            if (person.userData.personRig) updateSkinnedBounds(person);
+        }
     }
     // Life in the people who stay where they are (room-people-motion.mjs solveStill): breathing, a drifting head, a
     // shift of weight, typing fingers, a page turned. They are drawn skinned for it. In a film everyone in the shot.

@@ -11,5 +11,17 @@ for(const turn of [0,.7,1.5,-1.2])for(const height of [0,.8,-.4]){
  assert.ok(mesh.frustumCulled,'animated mesh supports frustum culling');
  for(let i=0;i<n;i++){const p=mesh.getVertexPosition(i,new THREE.Vector3());assert.ok(mesh.boundingSphere.containsPoint(p),'animated vertex stays inside sphere');}
 }
+// The eyes can look in either direction while the lids and cheeks move together.
+const delta=Array.from({length:n*3},(_,i)=>i%3===1?.6:0);
+mesh.geometry=g.clone();
+mesh.geometry.morphTargetsRelative=true;
+mesh.geometry.userData.morphWeightLimit=1;
+mesh.geometry.morphAttributes.position=[new THREE.Float32BufferAttribute(delta,3),new THREE.Float32BufferAttribute(delta,3)];
+mesh.updateMorphTargets();
+for(const sign of [-1,1]){
+ mesh.morphTargetInfluences.fill(sign);updateSkinnedBounds(root);
+ assert.ok(mesh.frustumCulled);
+ for(let i=0;i<n;i++)assert.ok(mesh.boundingSphere.containsPoint(mesh.getVertexPosition(i,new THREE.Vector3())));
+}
 const invalid=mesh.clone();invalid.geometry=g.clone();invalid.geometry.attributes.skinWeight.setX(0,5);const other=new THREE.Group();other.add(invalid);updateSkinnedBounds(other);assert.equal(invalid.frustumCulled,false,'unusual skinning falls back safely');
 console.log('PASS animated bounds contain all vertices through joint rotation, translation and root scaling; unsupported weights fall back safely.');

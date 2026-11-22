@@ -7,7 +7,10 @@ const caches=new WeakMap();
 const point=new THREE.Vector3(),matrix=new THREE.Matrix4(),transformed=new THREE.Box3();
 function build(mesh){
     const g=mesh.geometry,p=g.attributes.position,indices=g.attributes.skinIndex,weights=g.attributes.skinWeight;
-    if(!p||!indices||!weights||g.morphAttributes.position?.length)return null;
+    if(!p||!indices||!weights)return null;
+    const targets = g.morphAttributes.position || [];
+    const limit = g.userData.morphWeightLimit;
+    if (targets.length && !(g.morphTargetsRelative && Number.isFinite(limit) && limit > 0)) return null;
     const boxes=mesh.skeleton.bones.map(()=>new THREE.Box3());
     for(let i=0;i<p.count;i++){
         point.fromBufferAttribute(p,i).applyMatrix4(mesh.bindMatrix);
@@ -19,6 +22,20 @@ function build(mesh){
             if(weight){if(!boxes[bone])return null;boxes[bone].expandByPoint(point);}
         }
         if(Math.abs(total-1)>1e-4)return null;
+    }
+    // The cast's facial weights are bounded. Sum the largest per-target
+    // displacement in bind space so even a smile and a blink together fit.
+    if (targets.length) {
+        let margin = 0;
+        const linear = new THREE.Matrix3().setFromMatrix4(mesh.bindMatrix);
+        for (const target of targets) {
+            let largest = 0;
+            for (let i = 0; i < target.count; i++) {
+                largest = Math.max(largest, point.fromBufferAttribute(target, i).applyMatrix3(linear).lengthSq());
+            }
+            margin += limit * Math.sqrt(largest);
+        }
+        for (const box of boxes) if (!box.isEmpty()) box.expandByScalar(margin);
     }
     return {geometry:g,boxes:boxes.map((box,i)=>({box,i})).filter(e=>!e.box.isEmpty()),merged:new THREE.Box3()};
 }
