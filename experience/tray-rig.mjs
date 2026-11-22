@@ -15,11 +15,12 @@
 // transforms are runtime overrides, put back by restore().
 import * as THREE from 'three';
 import { accessory } from '../catalog.mjs';
-import { sampleTray, isRestPose, riderThicknessMm } from './tray-pose.mjs';
-import { SLIDE_TRAVEL_MM } from './tray-limits.mjs';
+import { sampleTray, isRestPose, riderThicknessMm, trayBracket } from './tray-pose.mjs';
+import { SLIDE_TRAVEL_MM, TRAY_SKEW_DEG, BRACKET } from './tray-limits.mjs';
 
 export const RIGID_ID = 'ergoflex-keyboard-tray', RIG_ID = 'ergoflex-keyboard-tray-rig', TRAY_ITEM = 'accessory-keyboard-tray';
-const PIVOTS = ['Tray_Drop', 'Tray_Slide', 'Tray_Swing', 'Tray_Tilt', 'Tray_Bracket'];
+const PIVOTS = ['Tray_Drop', 'Tray_Slide', 'Tray_Swing', 'Tray_Tilt'];
+export const BRACKET_NAME = 'Tray_MountBracket';
 const X = new THREE.Vector3(1, 0, 0), Y = new THREE.Vector3(0, 1, 0), Z = new THREE.Vector3(0, 0, 1);
 const RAD = Math.PI / 180;
 const riderOf = obj => { const a = obj?.userData?.accessoryId && accessory(obj.userData.accessoryId); return a && ['keyboard', 'mouse'].includes(a.exclusiveGroup) ? a : null; };
@@ -38,14 +39,26 @@ export function createTrayRig(api) {
     // The pose of the rig's joints. pose = tray-pose.mjs { slide, swing, tilt, drop }: mm / degrees as the model has them.
     // Node units are the glb's (metres under a x1000 root).
     function pose(p, pivots) {
-        const { Tray_Drop: drop, Tray_Slide: slide, Tray_Swing: swing, Tray_Tilt: tilt, Tray_Bracket: bracket } = pivots;
+        const { Tray_Drop: drop, Tray_Slide: slide, Tray_Swing: swing, Tray_Tilt: tilt } = pivots;
         if (drop) drop.node.position.copy(drop.position).addScaledVector(Y, -p.drop / 1000);
         if (slide) slide.node.position.copy(slide.position).addScaledVector(Z.clone().applyQuaternion(slide.quaternion), -p.slide * SLIDE_TRAVEL_MM / 1000);
         if (swing) swing.node.quaternion.copy(swing.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(Y, p.swing * RAD));            // + = the plate's front to the user's right
         if (tilt) tilt.node.quaternion.copy(tilt.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(X, -p.tilt * RAD));              // + = front edge up
-        // the mount bracket: a unit-height block that stretches from the desktop underside to the dropped track (1 mm at rest, hidden in the track)
-        if (bracket) bracket.node.scale.set(bracket.scale.x, Math.max(p.drop, 1) / 1000, bracket.scale.z);
     }
+    // The optional mount bracket (an edit's `bracket: true`; Vico's Inspector switch): a plain block that hangs from the desktop underside to the
+    // track once the tray is dropped. Built here at runtime, never in the glb: off, the scene has exactly the original model's meshes.
+    function addBracket(i, source) {
+        if (i.bracket || !source) return;
+        const geo = new THREE.BoxGeometry(BRACKET.width / 1000, 1, BRACKET.length / 1000); geo.translate(0, -0.5, 0);      // 1 m tall, top at y 0 (units of the glb: metres)
+        const mat = source.clone(); mat.userData.sharedTextures = true;
+        const mesh = new THREE.Mesh(geo, mat); mesh.name = BRACKET_NAME; mesh.castShadow = mesh.receiveShadow = true; mesh.visible = false;
+        mesh.position.set(BRACKET.at[0] / 1000, BRACKET.at[1] / 1000, BRACKET.at[2] / 1000); mesh.quaternion.setFromAxisAngle(Y, -TRAY_SKEW_DEG * RAD);   // on the track's centre line, skewed like it
+        mesh.scale.y = 1 / 1000; (i.model.getObjectByName('Tray') || i.model).add(mesh); i.bracket = mesh;
+    }
+    function removeBracket(i) {
+        const m = i?.bracket; if (!m) return; i.bracket = null; m.removeFromParent(); m.geometry.dispose(); m.material.dispose();
+    }
+    const sourceMaterial = i => { let m = null; i.rigid.traverse(o => { if (!m && o.isMesh) m = [].concat(o.material)[0]; }); return m; };
     // Rest-pose offsets of the things standing on the plate, in the plate's frame (nothing of them is saved).
     function findRiders(rigRoot, plate) {
         rigRoot.updateWorldMatrix(true, true);
@@ -80,12 +93,14 @@ export function createTrayRig(api) {
         });
         tray.remove(rigid); tray.add(model); tray.updateWorldMatrix(true, true);
         const plate = model.getObjectByName('Tray_Plate'), pivots = pivotsOf(model);
-        installed = { item, tray, rigid, model, pivots, plate, riders: plate ? findRiders(model, plate) : [] };
+        installed = { item, tray, rigid, model, pivots, plate, bracket: null, riders: plate ? findRiders(model, plate) : [] };
+        if (trayBracket(edit)) addBracket(installed, source);
         return true;
     }
     function uninstall() {
         const i = installed; installed = null; last = null;
         if (!i) return;
+        removeBracket(i);
         for (const r of i.riders) { r.obj.position.copy(r.own.position); r.obj.quaternion.copy(r.own.quaternion); r.obj.scale.copy(r.own.scale); r.obj.updateMatrix(); }
         i.tray.remove(i.model); i.tray.add(i.rigid);
         api.disposeObject?.(i.model);
@@ -106,7 +121,7 @@ export function createTrayRig(api) {
                 if (mine !== token) return !!installed;
                 if (!edit) { uninstall(); return false; }
                 if (installed && !sameTray()) uninstall();     // the room was rebuilt under us: the old model is gone with it
-                if (installed) return true;
+                if (installed) { if (trayBracket(edit)) addBracket(installed, sourceMaterial(installed)); else removeBracket(installed); return true; }
                 try { return await install(mine); } catch (error) { console.warn('[tray-rig]', error?.message || error); uninstall(); return false; }
             });
             return chain;
@@ -116,6 +131,7 @@ export function createTrayRig(api) {
             if (!sameTray()) { uninstall(); return null; }
             const p = sampleTray(edit, seconds, { riderMm: riderMm() }); last = p;
             pose(p, installed.pivots);
+            if (installed.bracket) { installed.bracket.scale.y = Math.max(p.drop, 1) / 1000; installed.bracket.visible = p.drop > 0.5; }   // sized to the drop: 1 mm and hidden at drop 0
             installed.model.updateWorldMatrix(true, true);
             const { riders, plate } = installed;
             if (isRestPose(p)) { for (const r of riders) { r.obj.position.copy(r.own.position); r.obj.quaternion.copy(r.own.quaternion); r.obj.scale.copy(r.own.scale); r.obj.updateMatrix(); } return p; }

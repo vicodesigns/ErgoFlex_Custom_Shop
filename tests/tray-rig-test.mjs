@@ -93,7 +93,10 @@ const worldOf = (o, n) => named(o, n).getWorldPosition(new THREE.Vector3());
     assert.ok(activeTrayEdit(effectiveTrayEdits(film, base), 'gaming'), 'and that is an active edit'); assert.equal(activeTrayEdit(effectiveTrayEdits(film, { ...base, trayEdits: [] }), 'gaming'), null);
 }
 
-const edit = cleanTrayEdit({ keys: [{ t: 2, pose: { swing: 40, slide: 0.2 }, ease: 'linear' }, { t: 4, pose: { tilt: 10, swing: 0, slide: 0 }, ease: 'linear' }, { t: 6, pose: { slide: 1, tilt: 0 } }] });
+// the route with the optional mount bracket on and a drop that clears the thickest rider (the MX Master, 47.2 mm: 30.5 mm): nothing is clamped
+const edit = cleanTrayEdit({ bracket: true, keys: [{ t: 2, pose: { swing: 40, slide: 0.2, drop: 31 }, ease: 'linear' }, { t: 4, pose: { tilt: 10, swing: 0, slide: 0, drop: 31 }, ease: 'linear' }, { t: 6, pose: { slide: 1, tilt: 0, drop: 31 } }] });
+// the same motion without the bracket (drop off): held to the clearance
+const plain = cleanTrayEdit({ keys: [{ t: 2, pose: { swing: 40, slide: 0.2, drop: 31 }, ease: 'linear' }, { t: 4, pose: { tilt: 10, swing: 0, slide: 0 }, ease: 'linear' }, { t: 6, pose: { slide: 1, tilt: 0 } }] });
 {   // THE RIG: swapped in for the rigid model, rest pose = the rigid tray, joints move the right parts the right way
     const r = room(), rig = createTrayRig(r.api);
     const rigidBox = worldBox(r.tray), rigidPlate = named(r.tray, 'Mesh_3');
@@ -103,7 +106,7 @@ const edit = cleanTrayEdit({ keys: [{ t: 2, pose: { swing: 40, slide: 0.2 }, eas
     assert.deepEqual(rig.riders().map(o => o.name).sort(), ['keyboard', 'mouse'], 'the keyboard and the mouse on the plate are riders, the lamp is not');
     const model = r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig'), rest = snapshot(r.scene);
     // rest pose: the rigid tray's bounding box (bracket aside), riders exactly where they were
-    const partsBox = new THREE.Box3(); model.traverse(o => { if (o.isMesh && o.name !== 'Tray_BracketMesh') partsBox.union(new THREE.Box3().setFromObject(o, true)); });
+    const partsBox = new THREE.Box3(); model.traverse(o => { if (o.isMesh && o.name !== 'Tray_MountBracket') partsBox.union(new THREE.Box3().setFromObject(o, true)); });
     for (const k of ['min', 'max']) for (const a of 'xyz') near(partsBox[k][a], rigidBox[k][a], 0.5, 'rest bounding box ' + k + a);
     rig.apply(0); r.scene.updateMatrixWorld(true);
     assert.ok(r.mouse.position.equals(mouseOwn) && r.keyboard.position.equals(kbOwn) && r.keyboard.quaternion.equals(kbQ), 'riders exactly as they were at rest');
@@ -117,7 +120,7 @@ const edit = cleanTrayEdit({ keys: [{ t: 2, pose: { swing: 40, slide: 0.2 }, eas
     // the slide has moved the pivots along the track too (0.2 of the travel): take it out
     const axis = new THREE.Vector3(0, 0, 1).applyQuaternion(named(model, 'Tray_Slide').getWorldQuaternion(new THREE.Quaternion())).multiplyScalar(-0.2 * SLIDE_TRAVEL_MM);
     // slide is applied along the skewed track axis in the Drop frame: the swing pivot is now at rest + axis, the plate turned about it
-    const slid = worldOf(model, 'Tray_Swing').sub(pivotSwing); near(slid.y, -moved.drop, 1e-6, 'the drop (the keyboard and mouse need it with the plate swung under the desk) lowers the tray: ' + moved.drop.toFixed(1) + ' mm');
+    const slid = worldOf(model, 'Tray_Swing').sub(pivotSwing); near(moved.drop, 31, 1e-9, 'the keyed drop'); near(slid.y, -31, 1e-6, 'the whole tray is lowered by the drop');
     const flat = slid.clone().setY(0); near(flat.length(), 0.2 * SLIDE_TRAVEL_MM, 0.01, 'the swing pivot slid 0.2 of the travel'); near(flat.dot(axis) / axis.length(), 0.2 * SLIDE_TRAVEL_MM, 0.01, 'along the track axis, toward the back');
     const exp2 = restCentre.clone().sub(pivotSwing).applyAxisAngle(new THREE.Vector3(0, 1, 0), 40 * Math.PI / 180).add(pivotSwing).add(slid);   // (slid includes the drop)
     for (const a of 'xyz') near(posed[a], exp2[a], 0.02, 'plate centre after swing 40 + slide 0.2 (' + a + ')');
@@ -147,20 +150,39 @@ const edit = cleanTrayEdit({ keys: [{ t: 2, pose: { swing: 40, slide: 0.2 }, eas
         const m = r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig'), k = plate_of(m).worldToLocal(r.keyboard.getWorldPosition(new THREE.Vector3()));
         rig.apply(0); const k0 = plate_of(m).worldToLocal(r.keyboard.getWorldPosition(new THREE.Vector3())); rig.apply(t);
         for (const a of 'xyz') near(k[a], k0[a], 1e-2, `keyboard on the plate at ${t} s (${a})`);
-        assert.ok(p.drop >= 0 && p.drop <= 165);
+        if (t >= 2) near(p.drop, 31, 1e-9, 'drop at ' + t); else assert.ok(p.drop <= 31 + 1e-9);
     }
-    const end = rig.apply(7), need = 45 - 19.7 + 3; near(end.slide, 1, 1e-9, 'slide'); assert.ok(end.drop >= need - 1e-6, 'pushed in with an MX Master (47.2 mm) on the plate: lowered ' + end.drop.toFixed(1) + ' mm');
-    near(end.drop, 47.2 - 19.7 + 3, 1e-6, 'drop = what the thickest rider needs (the mouse, 47.2 mm): thickness - 19.7 + 3');
-    // the track really went down by the drop, and the bracket spans it
-    r.scene.updateMatrixWorld(true);
-    const trackTop = new THREE.Box3().setFromObject(named(m2, 'Tray_Track'), true).max.y, bracket = new THREE.Box3().setFromObject(named(m2, 'Tray_BracketMesh'), true);
-    near(bracket.max.y - bracket.min.y, end.drop, 0.05, 'the bracket is as tall as the drop'); near(bracket.min.y, trackTop, 0.2, 'and reaches the dropped track');
+    const end = rig.apply(7); near(end.slide, 1, 1e-9, 'slide'); near(end.drop, 31, 1e-9, 'drop'); r.scene.updateMatrixWorld(true);
+    // the bracket (runtime, optional): as tall as the drop, from the desktop underside to the dropped track
+    const cur = r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig'), blockMesh = named(cur, 'Tray_MountBracket'); assert.ok(blockMesh && blockMesh.visible, 'bracket on: a block');
+    const trackTop = new THREE.Box3().setFromObject(named(cur, 'Tray_Track'), true).max.y, block = new THREE.Box3().setFromObject(blockMesh, true), topTrack0 = rigidBox.max.y;
+    near(block.max.y - block.min.y, 31, 0.01, 'the bracket is as tall as the drop'); near(block.min.y, trackTop, 0.01, 'and reaches the dropped track'); near(block.max.y, trackTop + 31, 0.01, 'from the desktop underside (where the track top was)');
+    assert.ok(blockMesh.geometry.parameters.width === 0.044 && blockMesh.geometry.parameters.depth === 0.07, '44 x 70 mm');
+    rig.apply(0); r.scene.updateMatrixWorld(true); assert.equal(blockMesh.visible, false, 'hidden at drop 0'); near(blockMesh.scale.y, 0.001, 1e-12, '1 mm at rest');
     // restore again: bit for bit the rigid scene
     rig.restore(); const after = worldBox(r.tray); for (const k of ['min', 'max']) for (const a of 'xyz') near(after[k][a], rigidBox[k][a], 1e-6, 'restored ' + k + a);
     assert.ok(r.keyboard.position.equals(kbOwn) && r.mouse.position.equals(mouseOwn) && r.keyboard.quaternion.equals(kbQ));
     // a stowed rider is left where the desk's stow has it; a rig for a rebuilt room is dropped, not drawn
     const s = room({ stowed: true }), rs = createTrayRig(s.api); await rs.set(edit); assert.deepEqual(rs.riders().map(o => o.name), ['keyboard'], 'the stowed mouse is not carried');
     s.tray.parent.remove(s.tray); const gone = room(); s.api.sceneDesks.active.objects.get('accessory-keyboard-tray').obj = gone.tray; assert.equal(rs.apply(3), null, 'the tray was replaced under the rig: it is dropped');
+}
+{   // BRACKET OFF (the default) = the original model, nothing added; ON = one extra runtime block; toggling needs no reload
+    const r = room(), rig = createTrayRig(r.api), n = loads; await rig.set(plain);
+    const model = r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig'), meshes = []; model.traverse(o => { if (o.isMesh) meshes.push(o); });
+    assert.deepEqual(meshes.map(m => m.name).sort(), ['Tray_Carriage', 'Tray_Crossbar', 'Tray_Forks', 'Tray_Links', 'Tray_Plate', 'Tray_Screw', 'Tray_Track'], 'seven CAD parts, no bracket');
+    assert.equal(meshes.reduce((s, m) => s + m.geometry.attributes.position.count, 0), 14214, 'the original vertex count'); assert.equal(meshes.reduce((s, m) => s + m.geometry.index.count / 3, 0), 11121, 'the original triangle count');
+    const sourceGeometries = new Set(); sources['ergoflex-keyboard-tray-rig'].traverse(o => { if (o.isMesh) sourceGeometries.add(o.geometry); });
+    assert.ok(meshes.every(m => sourceGeometries.has(m.geometry)), 'every mesh draws the glb\'s own geometry: nothing generated');
+    let found = null; r.scene.traverse(o => { if (o.name === 'Tray_MountBracket') found = o; }); assert.equal(found, null, 'no bracket anywhere in the scene');
+    // drop off: a keyed drop does nothing, and the keyboard and mouse keep the plate out from under the desk (slide <= 0.45, swing <= 20 degrees)
+    for (const [t, want] of [[2, { swing: 20, slide: 0.2, drop: 0 }], [4, { swing: 0, slide: 0, drop: 0 }], [7, { slide: 0.45, drop: 0 }]]) { const p = rig.apply(t); for (const [k, v] of Object.entries(want)) near(p[k], v, 1e-9, `plain edit at ${t} s: ${k}`); }
+    assert.equal(rig.apply(2).drop, 0); r.scene.updateMatrixWorld(true);
+    // switch the bracket on for the same install: a block appears, no second load; off again: gone
+    assert.equal(await rig.set(edit), true); assert.equal(loads, n + 1, 'the rig glb was loaded once'); rig.apply(2); let block = null; model.traverse(o => { if (o.name === 'Tray_MountBracket') block = o; }); assert.ok(block && block.visible, 'bracket on');
+    assert.equal(await rig.set(plain), true); block = null; model.traverse(o => { if (o.name === 'Tray_MountBracket') block = o; }); assert.equal(block, null, 'bracket off again'); assert.equal(rig.apply(2).drop, 0);
+    await rig.set(edit); rig.restore(); r.scene.traverse(o => { assert.notEqual(o.name, 'Tray_MountBracket', 'restore removes the bracket'); });
+    // a bracket-only edit (ticked before any key) is no reason to load anything
+    const m0 = loads; assert.equal(await createTrayRig(r.api).set(activeTrayEdit([{ bracket: true }], 'gaming')), false); assert.equal(loads, m0);
 }
 {   // a second set() while a load is in flight and restore() cancel it cleanly; set twice with the same edit loads once
     const r = room(), rig = createTrayRig(r.api), n = loads;

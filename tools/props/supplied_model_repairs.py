@@ -168,8 +168,6 @@ TRAY_PIVOTS = [
     ('Tray_Swing', 'Tray_Slide',  (-14.2, -26.1, 29.7), True),  # vertical pivot at the carriage front (the track's end when out); local Y
     ('Tray_Tilt',  'Tray_Swing',  (-9.0, -80.7, 98.6), True),   # the rod under the plate's rear; local X (front edge up = turn about -X)
 ]
-TRAY_BRACKET_AT = (9.0, 0.0, -147.9)     # the track's top centre, on the skewed centre line
-TRAY_BRACKET_HALF = (22.0, 35.0)         # half width across the track, half length along it (mm)
 TRAY_PARENT = {'Tray_Track': 'Tray_Drop', 'Tray_Carriage': 'Tray_Slide', 'Tray_Links': 'Tray_Swing', 'Tray_Forks': 'Tray_Tilt',
                'Tray_Plate': 'Tray_Tilt', 'Tray_Crossbar': 'Tray_Tilt', 'Tray_Screw': 'Tray_Tilt'}
 
@@ -193,11 +191,8 @@ def rig_keyboard_tray():
                 found[name] = o
     missing = [n for n, _, _ in TRAY_PARTS if n not in found]
     if missing: raise ValueError('keyboard tray rig: the source changed, no mesh matches ' + ', '.join(missing) + ' (see RIGDUMP lines)')
-    # One material for every part, as the rigid glb ends up with: finishes are applied by material role (workspace-3d.mjs).
-    shared = found['Tray_Carriage'].data.materials[0]
-    for name, o in found.items():
-        o.name = name; o.data.name = name
-        o.data.materials.clear(); o.data.materials.append(shared)
+    # Names only: the meshes, vertices, triangles and materials are the CAD's exactly as the rigid glb has them (a split at the joints).
+    for name, o in found.items(): o.name = name; o.data.name = name
     phi = -math.radians(TRAY_SKEW_DEG)          # Blender Z turn that points local X at glTF (cos, 0, +sin) and local Z along the track
     pivots = {}
     for name, parent, pos, skewed in TRAY_PIVOTS:
@@ -213,21 +208,5 @@ def rig_keyboard_tray():
         o = found[name]; world = o.matrix_world.copy()
         o.parent = pivots[parent]; o.matrix_parent_inverse = pivots[parent].matrix_world.inverted()
         o.matrix_world = world
-    # The mount bracket (the one part that is not CAD): a plain block that hangs from the desktop underside to the track, so a dropped
-    # tray is not floating. Its pivot node Tray_Bracket sits on the Tray root (it does not move with Tray_Drop) with a vertical scale
-    # of 0.001 (1 mm of its 1 m block, hidden inside the track at rest); the stage sets scale Y = drop / 1000 (tray-rig.mjs). The
-    # mesh is a child so the quantisation scale of the mesh node is never touched.
-    at = TRAY_BRACKET_AT
-    holder = bpy.data.objects.new('Tray_Bracket', None); holder.empty_display_type = 'ARROWS'; holder.empty_display_size = 0.02
-    bpy.context.scene.collection.objects.link(holder)
-    holder.location = Vector((at[0] / 1000, -at[2] / 1000, at[1] / 1000)); holder.rotation_euler = (0, 0, phi); holder.scale = (1, 1, 0.001)
-    bpy.context.view_layer.update(); holder.parent = pivots['Tray']; holder.matrix_parent_inverse = pivots['Tray'].matrix_world.inverted()
-    hx, hz = TRAY_BRACKET_HALF[0] / 1000, TRAY_BRACKET_HALF[1] / 1000
-    mesh = bpy.data.meshes.new('Tray_BracketMesh')
-    mesh.from_pydata([(x * hx, y * hz, z) for z in (0.0, -1.0) for x, y in ((-1, -1), (1, -1), (1, 1), (-1, 1))], [],
-                     [(0, 3, 2, 1), (4, 5, 6, 7), (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)])
-    mesh.update(); mesh.materials.append(shared)
-    block = bpy.data.objects.new('Tray_BracketMesh', mesh); bpy.context.scene.collection.objects.link(block)
-    bpy.context.view_layer.update(); block.parent = holder; block.matrix_parent_inverse = Matrix.Identity(4)
     bpy.context.view_layer.update()
     print('RIGDONE', {n: [round(c, 2) for c in ((e.matrix_world.translation.x * 1000), (e.matrix_world.translation.z * 1000), (-e.matrix_world.translation.y * 1000))] for n, e in pivots.items()}, flush=True)

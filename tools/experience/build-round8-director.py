@@ -872,7 +872,7 @@ def _tray_pose(v):
 
 def clean_tray(edits):
     """Director Mode's tray keys (experience/tray-pose.mjs cleanTrayEdits) as the film shot's sceneTray: one edit per desk (the
-    later wins, at most 16), each {desk?, initial?, keys?}: joints held to their hard limits and rounded as the Director does,
+    later wins, at most 16), each {desk?, bracket?, initial?, keys?}: bracket only when true; joints held to their hard limits and rounded as the Director does,
     keys sorted and merged within a sixtieth of a second, at most 64, ease / route only when not the default, unique ids.
     An edit that says nothing is dropped; [] stays [] (it takes the film's own tray keys off)."""
     by = {}
@@ -880,6 +880,7 @@ def clean_tray(edits):
         if not isinstance(e, dict): continue
         out = {}
         if isinstance(e.get('desk'), str) and DESK_ID.match(e['desk']): out['desk'] = e['desk']
+        if e.get('bracket') is True: out['bracket'] = True      # setup: the optional mount bracket (and the drop joint) for this edit; absent = off
         init = _tray_pose(e.get('initial'))
         if init:
             init = {j: x for j, x in init.items() if x != 0}
@@ -918,7 +919,7 @@ def clean_tray(edits):
             else: kid = key['id']
             final.append({'id': kid, **{f: v for f, v in key.items() if f != 'id'}})
         if final: out['keys'] = final
-        if 'keys' in out or 'initial' in out: by[out.get('desk', '')] = out
+        if 'keys' in out or 'initial' in out or 'bracket' in out: by[out.get('desk', '')] = out
     return list(by.values())[:16]
 
 

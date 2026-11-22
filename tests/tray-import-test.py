@@ -21,6 +21,8 @@ CASES = [None, 0, 'x', [], {}, [None, 3, 'x', {}], [{'keys': []}], [{'initial': 
     [{'desk': 'gaming', 'initial': {'tilt': 0, 'swing': 30.456}, 'keys': [{'t': 3, 'pose': {'tilt': 5}, 'ease': 'linear', 'label': ' Out '}, {'t': 1, 'pose': {'slide': 0.123456, 'junk': 1}, 'id': 'a'}, {'t': -1, 'pose': {'tilt': 1}}, {'t': 2, 'pose': {}}, {'t': 3.005, 'pose': {'swing': 20}, 'ease': 'smooth', 'route': 'direct'}, 'x', {'t': 'no', 'pose': {'tilt': 1}}, {'t': 2000, 'pose': {'tilt': 1}, 'id': 'a'}]}],
     [{'desk': 'BAD ID', 'keys': [{'t': 1, 'pose': {'tilt': 1}}]}, {'keys': [{'t': 2, 'pose': {'slide': 1}}]}, {'desk': 'gaming', 'keys': [{'t': 9, 'pose': {'tilt': -5}}]}, {'desk': 'gaming', 'keys': [{'t': 8, 'pose': {'tilt': -6}}]}],
     [{'keys': [{'t': i * 0.5, 'pose': {'tilt': (i % 7) - 3, 'drop': i}} for i in range(100)]}],
+    [{'bracket': True}, {'desk': 'office', 'bracket': True, 'keys': [{'t': 1, 'pose': {'drop': 30}}]}, {'desk': 'gaming', 'bracket': False, 'keys': [{'t': 1, 'pose': {'tilt': 2}}]}],
+    [{'bracket': 1, 'keys': [{'t': 1, 'pose': {'tilt': 2}}]}, {'desk': 'a', 'bracket': 'true', 'keys': [{'t': 1, 'pose': {'tilt': 2}}]}, {'desk': 'b', 'bracket': None, 'initial': {'swing': 5}}],
     [{'keys': [{'t': 1.0005, 'pose': {'tilt': 0.005}}, {'t': 2.0015, 'pose': {'swing': -0.004}}, {'t': 0.0004, 'pose': {'drop': 0.05}}, {'t': 3, 'pose': {'slide': 0.00005}}]}],
     [{'desk': 'd%d' % i, 'keys': [{'t': 1, 'pose': {'tilt': 1}}]} for i in range(30)]]
 node = subprocess.run(['node', '--input-type=module', '-e', "import {cleanTrayEdits} from './experience/tray-pose.mjs';const c=JSON.parse(process.argv[1]);console.log(JSON.stringify(c.map(v=>cleanTrayEdits({trayEdits:v}).trayEdits??null)));", '--', json.dumps(CASES)], cwd=REPO, capture_output=True, text=True, timeout=60)
@@ -45,8 +47,8 @@ def digest():
 run()                                                                       # the cut as the pass leaves it (a no-op on this cut)
 base = shots(); base_sub = sub()
 assert not any('sceneTray' in s for s in base.values()) and not any('sceneTray' in s for s in base_sub), 'no chapter has tray keys to begin with'
-keys = [{'desk': 'gaming', 'keys': [{'t': 2, 'pose': {'swing': 90, 'slide': 0.3}, 'label': 'Side'}, {'t': 6, 'pose': {'swing': 0, 'slide': 0}, 'ease': 'linear'}]}]
-want = b.clean_tray(keys); assert want[0]['keys'][0]['id'] == 'k1' and want[0]['keys'][1]['ease'] == 'linear'
+keys = [{'desk': 'gaming', 'bracket': True, 'keys': [{'t': 2, 'pose': {'swing': 90, 'slide': 0.3}, 'label': 'Side'}, {'t': 6, 'pose': {'swing': 0, 'slide': 0}, 'ease': 'linear'}]}]
+want = b.clean_tray(keys); assert want[0]['keys'][0]['id'] == 'k1' and want[0]['keys'][1]['ease'] == 'linear' and want[0]['bracket'] is True
 
 # an export without the field: nothing appears
 run('--import', str(page('a.json', '08-awareness', None))); run()
