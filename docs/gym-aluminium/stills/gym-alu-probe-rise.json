@@ -1,0 +1,4034 @@
+{
+ "room": "home",
+ "deskPath": "Scene > Group",
+ "sceneEnv": "c79367b9",
+ "environmentIntensity": 0.3862,
+ "desk": [
+  {
+   "uuid": "8594f63b",
+   "name": "",
+   "type": "MeshPhysicalMaterial",
+   "color": "#1c1c1e",
+   "metalness": 0.1,
+   "roughness": 0.55,
+   "envMapIntensity": 1.1,
+   "envMap": null,
+   "clearcoat": 0.05,
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": false,
+   "ior": 1.5,
+   "userData": {
+    "sceneDeskMaterial": "base"
+   },
+   "meshes": 33,
+   "sample": [
+    "Lift_Column_Top",
+    "Lift_Column_Top_1",
+    "Lift_Column_Top_2",
+    "Lift_Column_Top_3"
+   ]
+  },
+  {
+   "uuid": "411ba503",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Center base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "c14d1dd0",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Center rightWing LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "0a9dc9db",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Center base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "cf57212a",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Center rightWing LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "74207072",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Center_1 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "551896c4",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Center_1 leftWing LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "3bded745",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Center_1 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "b935dfef",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Center_1 leftWing LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "7f654080",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Top_16 desktop LED upright reflection"
+   ]
+  },
+  {
+   "uuid": "3e8e9a7e",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Top_16 shelf LED upright reflection"
+   ]
+  },
+  {
+   "uuid": "f10442eb",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Top_16 top LED upright reflection"
+   ]
+  },
+  {
+   "uuid": "8d1f3823",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Top_16 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "21c46ed8",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Top_16 rightWing LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "35054619",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Top_16 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "b0338aa5",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Top_16 rightWing LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "c31e9667",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Top_17 desktop LED upright reflection"
+   ]
+  },
+  {
+   "uuid": "ccce0f38",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Top_17 shelf LED upright reflection"
+   ]
+  },
+  {
+   "uuid": "9fc1a7a1",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Top_17 top LED upright reflection"
+   ]
+  },
+  {
+   "uuid": "2d44a8eb",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Top_17 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "5411e494",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Top_17 leftWing LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "5f537f5d",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Top_17 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "1963a859",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Top_17 leftWing LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "64f4fa9a",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Bottom_2 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "7fbe9d25",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Bottom_2 rightWing LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "94599bd5",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Bottom_2 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "34e43127",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Bottom_2 rightWing LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "bcbc57a4",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Bottom_3 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "aff3de89",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Bottom_3 leftWing LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "56f01122",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Bottom_3 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "e6f2f1e9",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Lift_Column_Bottom_3 leftWing LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "1ea35c8f",
+   "name": "",
+   "type": "MeshPhysicalMaterial",
+   "color": "#2a2a2a",
+   "metalness": 0.85,
+   "roughness": 0.3,
+   "envMapIntensity": 0.2317,
+   "envMap": "34452313",
+   "clearcoat": 0,
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": false,
+   "ior": 1.8,
+   "userData": {
+    "deskHardware": true,
+    "roomGlossOwn": 1.2,
+    "roomGlossBase": 0.6
+   },
+   "meshes": 177,
+   "sample": [
+    "Nema_17_Motors",
+    "Nema_17_Motors_1",
+    "Nema_17_Motors_2",
+    "Nema_17_Motors_3"
+   ]
+  },
+  {
+   "uuid": "21f720bd",
+   "name": "",
+   "type": "MeshPhysicalMaterial",
+   "color": "#ffffff",
+   "metalness": 1,
+   "roughness": 0.3,
+   "envMapIntensity": 0.2607,
+   "envMap": "34452313",
+   "clearcoat": 0,
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": false,
+   "ior": 2.5,
+   "userData": {
+    "deskHardware": true,
+    "roomGlossOwn": 1.35,
+    "roomGlossBase": 0.675
+   },
+   "meshes": 482,
+   "sample": [
+    "Revolve2",
+    "Plates_Hardware",
+    "Plates_Hardware_1",
+    "Plates_Hardware_2"
+   ]
+  },
+  {
+   "uuid": "6a21a66e",
+   "name": "",
+   "type": "MeshPhysicalMaterial",
+   "color": "#72777c",
+   "metalness": 0,
+   "roughness": 0.4,
+   "envMapIntensity": 1,
+   "envMap": null,
+   "clearcoat": 0.25,
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": true,
+   "ior": 1.5,
+   "userData": {
+    "sceneDeskMaterial": "wood:desktop"
+   },
+   "meshes": 32,
+   "sample": [
+    "Plates_Hardware_177",
+    "Plates_Hardware_185",
+    "Plates_Hardware_186",
+    "Plates_Hardware_188"
+   ]
+  },
+  {
+   "uuid": "f94f1b5b",
+   "name": "",
+   "type": "MeshPhysicalMaterial",
+   "color": "#1a1a1a",
+   "metalness": 0.1,
+   "roughness": 0.45,
+   "envMapIntensity": 1,
+   "envMap": null,
+   "clearcoat": 0,
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": false,
+   "ior": 1.45,
+   "userData": {},
+   "meshes": 10,
+   "sample": [
+    "Plates_Hardware_180",
+    "Plates_Hardware_181",
+    "Plates_Hardware_182",
+    "Plates_Hardware_183"
+   ]
+  },
+  {
+   "uuid": "1d0ae29c",
+   "name": "",
+   "type": "MeshStandardMaterial",
+   "color": "#76acda",
+   "metalness": 1,
+   "roughness": 1,
+   "envMapIntensity": 0.3862,
+   "envMap": "34452313",
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": false,
+   "userData": {
+    "roomGlossOwn": 1,
+    "roomGlossBase": 1
+   },
+   "meshes": 1,
+   "sample": [
+    "mesh_472"
+   ]
+  },
+  {
+   "uuid": "85c96ce4",
+   "name": "",
+   "type": "MeshStandardMaterial",
+   "color": "#76acda",
+   "metalness": 1,
+   "roughness": 1,
+   "envMapIntensity": 0.3862,
+   "envMap": "34452313",
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": false,
+   "userData": {
+    "roomGlossOwn": 1,
+    "roomGlossBase": 1
+   },
+   "meshes": 1,
+   "sample": [
+    "mesh_473"
+   ]
+  },
+  {
+   "uuid": "9a3c4630",
+   "name": "",
+   "type": "MeshStandardMaterial",
+   "color": "#76acda",
+   "metalness": 1,
+   "roughness": 1,
+   "envMapIntensity": 0.3862,
+   "envMap": "34452313",
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": false,
+   "userData": {
+    "roomGlossOwn": 1,
+    "roomGlossBase": 1
+   },
+   "meshes": 1,
+   "sample": [
+    "mesh_474"
+   ]
+  },
+  {
+   "uuid": "a50d7f6f",
+   "name": "",
+   "type": "MeshStandardMaterial",
+   "color": "#76acda",
+   "metalness": 1,
+   "roughness": 1,
+   "envMapIntensity": 0.3862,
+   "envMap": "34452313",
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": false,
+   "userData": {
+    "roomGlossOwn": 1,
+    "roomGlossBase": 1
+   },
+   "meshes": 1,
+   "sample": [
+    "mesh_476"
+   ]
+  },
+  {
+   "uuid": "877817d2",
+   "name": "",
+   "type": "MeshStandardMaterial",
+   "color": "#76acda",
+   "metalness": 1,
+   "roughness": 1,
+   "envMapIntensity": 0.3862,
+   "envMap": "34452313",
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": false,
+   "userData": {
+    "roomGlossOwn": 1,
+    "roomGlossBase": 1
+   },
+   "meshes": 1,
+   "sample": [
+    "mesh_477"
+   ]
+  },
+  {
+   "uuid": "9b7ee6db",
+   "name": "",
+   "type": "MeshStandardMaterial",
+   "color": "#76acda",
+   "metalness": 1,
+   "roughness": 1,
+   "envMapIntensity": 0.3862,
+   "envMap": "34452313",
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": false,
+   "userData": {
+    "roomGlossOwn": 1,
+    "roomGlossBase": 1
+   },
+   "meshes": 1,
+   "sample": [
+    "mesh_481"
+   ]
+  },
+  {
+   "uuid": "9a63b76d",
+   "name": "",
+   "type": "MeshStandardMaterial",
+   "color": "#76acda",
+   "metalness": 1,
+   "roughness": 1,
+   "envMapIntensity": 0.3862,
+   "envMap": "34452313",
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": false,
+   "userData": {
+    "roomGlossOwn": 1,
+    "roomGlossBase": 1
+   },
+   "meshes": 1,
+   "sample": [
+    "mesh_482"
+   ]
+  },
+  {
+   "uuid": "23768fd2",
+   "name": "",
+   "type": "MeshStandardMaterial",
+   "color": "#76acda",
+   "metalness": 1,
+   "roughness": 1,
+   "envMapIntensity": 0.3862,
+   "envMap": "34452313",
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": false,
+   "userData": {
+    "roomGlossOwn": 1,
+    "roomGlossBase": 1
+   },
+   "meshes": 1,
+   "sample": [
+    "mesh_483"
+   ]
+  },
+  {
+   "uuid": "185a57b0",
+   "name": "",
+   "type": "MeshStandardMaterial",
+   "color": "#76acda",
+   "metalness": 1,
+   "roughness": 1,
+   "envMapIntensity": 0.3862,
+   "envMap": "34452313",
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": false,
+   "userData": {
+    "roomGlossOwn": 1,
+    "roomGlossBase": 1
+   },
+   "meshes": 1,
+   "sample": [
+    "mesh_487"
+   ]
+  },
+  {
+   "uuid": "6ae7bf86",
+   "name": "",
+   "type": "MeshStandardMaterial",
+   "color": "#76acda",
+   "metalness": 1,
+   "roughness": 1,
+   "envMapIntensity": 0.3862,
+   "envMap": "34452313",
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": false,
+   "userData": {
+    "roomGlossOwn": 1,
+    "roomGlossBase": 1
+   },
+   "meshes": 1,
+   "sample": [
+    "mesh_488"
+   ]
+  },
+  {
+   "uuid": "3286be49",
+   "name": "",
+   "type": "MeshStandardMaterial",
+   "color": "#76acda",
+   "metalness": 1,
+   "roughness": 1,
+   "envMapIntensity": 0.3862,
+   "envMap": "34452313",
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": false,
+   "userData": {
+    "roomGlossOwn": 1,
+    "roomGlossBase": 1
+   },
+   "meshes": 1,
+   "sample": [
+    "mesh_489"
+   ]
+  },
+  {
+   "uuid": "fabbd810",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "3093103f",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "7f7f5f1b",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "22c5af8a",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_1 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "ee512509",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_1 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "f362392d",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_1 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "eddc09fa",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_2 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "67809108",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_2 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "3553876a",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_2 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "f5f9de1c",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_3 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "af5f4c88",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_3 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "acbc53d8",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_3 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "102c7287",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_4 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "6fdd0e7a",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_4 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "6e2694e8",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_4 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "361285bd",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_5 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "f1ab65a8",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_5 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "d2a35ce7",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_5 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "595013fa",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_6 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "475ee3a6",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_6 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "98bb0847",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_6 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "dc8955eb",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_7 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "c0841572",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_7 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "bb5eb246",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Brackets_7 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "02337889",
+   "name": "",
+   "type": "MeshStandardMaterial",
+   "color": "#00ffcd",
+   "metalness": 1,
+   "roughness": 1,
+   "envMapIntensity": 0.3862,
+   "envMap": "34452313",
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": false,
+   "userData": {
+    "roomGlossOwn": 1,
+    "roomGlossBase": 1
+   },
+   "meshes": 1,
+   "sample": [
+    "Joinery_12"
+   ]
+  },
+  {
+   "uuid": "cf7a88ad",
+   "name": "",
+   "type": "MeshPhysicalMaterial",
+   "color": "#72777c",
+   "metalness": 0,
+   "roughness": 0.4,
+   "envMapIntensity": 1,
+   "envMap": null,
+   "clearcoat": 0.25,
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": true,
+   "ior": 1.5,
+   "userData": {
+    "sceneDeskMaterial": "wood:shelf"
+   },
+   "meshes": 5,
+   "sample": [
+    "Top_Shelf",
+    "Top_Shelf_1",
+    "Top_Shelf_2",
+    "Top_Shelf_3"
+   ]
+  },
+  {
+   "uuid": "5cb47384",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Top_Shelf desktop LED upright reflection"
+   ]
+  },
+  {
+   "uuid": "6740d8f6",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Top_Shelf shelf LED upright reflection"
+   ]
+  },
+  {
+   "uuid": "6dc32edf",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Top_Shelf top LED upright reflection"
+   ]
+  },
+  {
+   "uuid": "d0d0899f",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Top_Shelf_1 desktop LED upright reflection"
+   ]
+  },
+  {
+   "uuid": "b4870994",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Top_Shelf_1 shelf LED upright reflection"
+   ]
+  },
+  {
+   "uuid": "d5958392",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Top_Shelf_1 top LED upright reflection"
+   ]
+  },
+  {
+   "uuid": "4a48679b",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Top_Shelf_2 desktop LED upright reflection"
+   ]
+  },
+  {
+   "uuid": "db783b16",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Top_Shelf_2 shelf LED upright reflection"
+   ]
+  },
+  {
+   "uuid": "9aa9dfc4",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Top_Shelf_2 top LED upright reflection"
+   ]
+  },
+  {
+   "uuid": "8463d8d7",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Base_Panels LED leg (wing glow)"
+   ]
+  },
+  {
+   "uuid": "211ca040",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Base_Panels_1 LED leg (wing glow)"
+   ]
+  },
+  {
+   "uuid": "42a51f7d",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Top_Shelf_3 LED reflection"
+   ]
+  },
+  {
+   "uuid": "485296ae",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Top_Shelf_4 LED reflection"
+   ]
+  },
+  {
+   "uuid": "82fa253e",
+   "name": "",
+   "type": "MeshPhysicalMaterial",
+   "color": "#85888c",
+   "metalness": 0.35,
+   "roughness": 0.45,
+   "envMapIntensity": 1,
+   "envMap": null,
+   "clearcoat": 0,
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": false,
+   "ior": 1.5,
+   "userData": {
+    "sceneDeskMaterial": "trim"
+   },
+   "meshes": 12,
+   "sample": [
+    "Left leg profile trim",
+    "Right leg profile trim",
+    "Shelf back trim",
+    "Shelf left trim"
+   ]
+  },
+  {
+   "uuid": "9690e22a",
+   "name": "",
+   "type": "MeshStandardMaterial",
+   "color": "#929292",
+   "metalness": 0.05,
+   "roughness": 0.4,
+   "envMapIntensity": 1,
+   "envMap": null,
+   "emissive": "#929292",
+   "emissiveIntensity": 4.437,
+   "map": false,
+   "userData": {
+    "ledPhysicalId": 7,
+    "sceneDeskMaterial": "led"
+   },
+   "meshes": 1,
+   "sample": [
+    ""
+   ]
+  },
+  {
+   "uuid": "c4a82709",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Foot LED floor glow"
+   ]
+  },
+  {
+   "uuid": "1b895ffe",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Foot LED floor glow tint"
+   ]
+  },
+  {
+   "uuid": "dbd6a87a",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "LED floor bounce"
+   ]
+  },
+  {
+   "uuid": "eea6aefb",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "LED floor bounce tint"
+   ]
+  },
+  {
+   "uuid": "81f733ba",
+   "name": "",
+   "type": "MeshStandardMaterial",
+   "color": "#929292",
+   "metalness": 0.05,
+   "roughness": 0.4,
+   "envMapIntensity": 1,
+   "envMap": null,
+   "emissive": "#929292",
+   "emissiveIntensity": 4.437,
+   "map": false,
+   "userData": {
+    "ledPhysicalId": 3,
+    "sceneDeskMaterial": "led"
+   },
+   "meshes": 1,
+   "sample": [
+    ""
+   ]
+  },
+  {
+   "uuid": "5280c8be",
+   "name": "",
+   "type": "MeshStandardMaterial",
+   "color": "#929292",
+   "metalness": 0.05,
+   "roughness": 0.4,
+   "envMapIntensity": 1,
+   "envMap": null,
+   "emissive": "#929292",
+   "emissiveIntensity": 4.437,
+   "map": false,
+   "userData": {
+    "ledPhysicalId": 0,
+    "sceneDeskMaterial": "led"
+   },
+   "meshes": 1,
+   "sample": [
+    ""
+   ]
+  },
+  {
+   "uuid": "f11f7dd4",
+   "name": "",
+   "type": "MeshStandardMaterial",
+   "color": "#929292",
+   "metalness": 0.05,
+   "roughness": 0.4,
+   "envMapIntensity": 1,
+   "envMap": null,
+   "emissive": "#929292",
+   "emissiveIntensity": 4.437,
+   "map": false,
+   "userData": {
+    "ledPhysicalId": 1,
+    "sceneDeskMaterial": "led"
+   },
+   "meshes": 1,
+   "sample": [
+    ""
+   ]
+  },
+  {
+   "uuid": "c21802d0",
+   "name": "",
+   "type": "MeshStandardMaterial",
+   "color": "#929292",
+   "metalness": 0.05,
+   "roughness": 0.4,
+   "envMapIntensity": 1,
+   "envMap": null,
+   "emissive": "#929292",
+   "emissiveIntensity": 4.437,
+   "map": false,
+   "userData": {
+    "ledPhysicalId": 2,
+    "sceneDeskMaterial": "led"
+   },
+   "meshes": 1,
+   "sample": [
+    ""
+   ]
+  },
+  {
+   "uuid": "b4122497",
+   "name": "",
+   "type": "MeshPhysicalMaterial",
+   "color": "#72777c",
+   "metalness": 0,
+   "roughness": 0.4,
+   "envMapIntensity": 1,
+   "envMap": null,
+   "clearcoat": 0.25,
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": true,
+   "ior": 1.5,
+   "userData": {
+    "sceneDeskMaterial": "wood:wing"
+   },
+   "meshes": 2,
+   "sample": [
+    "Desktop_1",
+    "Desktop_2"
+   ]
+  },
+  {
+   "uuid": "c7e0629f",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Desktop_1 LED wing outer reflection"
+   ]
+  },
+  {
+   "uuid": "b8b4d379",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Desktop_1 LED wing inner bounce"
+   ]
+  },
+  {
+   "uuid": "df032f34",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Desktop_2 LED wing outer reflection"
+   ]
+  },
+  {
+   "uuid": "f9266614",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Desktop_2 LED wing inner bounce"
+   ]
+  },
+  {
+   "uuid": "41daaad7",
+   "name": "",
+   "type": "MeshPhysicalMaterial",
+   "color": "#72777c",
+   "metalness": 0,
+   "roughness": 0.4,
+   "envMapIntensity": 1,
+   "envMap": null,
+   "clearcoat": 0.25,
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": true,
+   "ior": 1.5,
+   "userData": {
+    "sceneDeskMaterial": "wood:edge"
+   },
+   "meshes": 1,
+   "sample": [
+    "Desktop"
+   ]
+  },
+  {
+   "uuid": "c4a036b7",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Desktop base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "518503a6",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Desktop base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "71ad3e43",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "mesh_692 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "2f01603f",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "mesh_692 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "6db424bc",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Power_1 LED reflection"
+   ]
+  },
+  {
+   "uuid": "7ca09778",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Power_2 LED reflection"
+   ]
+  },
+  {
+   "uuid": "158ee570",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Power_4 LED reflection"
+   ]
+  },
+  {
+   "uuid": "3489b847",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Power_7 LED reflection"
+   ]
+  },
+  {
+   "uuid": "8b4b018c",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Power_3 LED reflection"
+   ]
+  },
+  {
+   "uuid": "17bc2ed0",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Power_5 LED reflection"
+   ]
+  },
+  {
+   "uuid": "2407b8cc",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Power LED reflection"
+   ]
+  },
+  {
+   "uuid": "8fcd990d",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Power_6 LED reflection"
+   ]
+  },
+  {
+   "uuid": "3596474e",
+   "name": "",
+   "type": "MeshStandardMaterial",
+   "color": "#929292",
+   "metalness": 0.05,
+   "roughness": 0.4,
+   "envMapIntensity": 1,
+   "envMap": null,
+   "emissive": "#929292",
+   "emissiveIntensity": 4.437,
+   "map": false,
+   "userData": {
+    "ledPhysicalId": 6,
+    "sceneDeskMaterial": "led"
+   },
+   "meshes": 1,
+   "sample": [
+    ""
+   ]
+  },
+  {
+   "uuid": "2edc86bc",
+   "name": "",
+   "type": "MeshStandardMaterial",
+   "color": "#929292",
+   "metalness": 0.05,
+   "roughness": 0.4,
+   "envMapIntensity": 1,
+   "envMap": null,
+   "emissive": "#929292",
+   "emissiveIntensity": 4.437,
+   "map": false,
+   "userData": {
+    "ledPhysicalId": 5,
+    "sceneDeskMaterial": "led"
+   },
+   "meshes": 1,
+   "sample": [
+    ""
+   ]
+  },
+  {
+   "uuid": "15620d76",
+   "name": "",
+   "type": "MeshStandardMaterial",
+   "color": "#929292",
+   "metalness": 0.05,
+   "roughness": 0.4,
+   "envMapIntensity": 1,
+   "envMap": null,
+   "emissive": "#929292",
+   "emissiveIntensity": 4.437,
+   "map": false,
+   "userData": {
+    "ledPhysicalId": 4,
+    "sceneDeskMaterial": "led"
+   },
+   "meshes": 1,
+   "sample": [
+    ""
+   ]
+  },
+  {
+   "uuid": "3cc26890",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Extended desktop LED reflection"
+   ]
+  },
+  {
+   "uuid": "81b13732",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Linear_Actuators_2 base LED actuator reflection"
+   ]
+  },
+  {
+   "uuid": "6126a047",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Linear_Actuators_2 base LED actuator reflection"
+   ]
+  },
+  {
+   "uuid": "91f09ee4",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Linear_Actuators_5 base LED actuator reflection"
+   ]
+  },
+  {
+   "uuid": "8aa5886f",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Linear_Actuators_5 base LED actuator reflection"
+   ]
+  },
+  {
+   "uuid": "62abe814",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Linear_Actuators_6 base LED actuator reflection"
+   ]
+  },
+  {
+   "uuid": "b9561a87",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Linear_Actuators_6 base LED actuator reflection"
+   ]
+  },
+  {
+   "uuid": "d1318b1b",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Linear_Actuators_8 base LED actuator reflection"
+   ]
+  },
+  {
+   "uuid": "09863ead",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Linear_Actuators_8 base LED actuator reflection"
+   ]
+  },
+  {
+   "uuid": "f02e9fcc",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Linear_Actuators base LED actuator reflection"
+   ]
+  },
+  {
+   "uuid": "d2d66b5c",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Linear_Actuators base LED actuator reflection"
+   ]
+  },
+  {
+   "uuid": "88a11518",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Linear_Actuators_3 base LED actuator reflection"
+   ]
+  },
+  {
+   "uuid": "5e653701",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Linear_Actuators_3 base LED actuator reflection"
+   ]
+  },
+  {
+   "uuid": "1cc38051",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Linear_Actuators_4 base LED actuator reflection"
+   ]
+  },
+  {
+   "uuid": "f682e526",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Linear_Actuators_4 base LED actuator reflection"
+   ]
+  },
+  {
+   "uuid": "5f2f8f88",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Linear_Actuators_7 base LED actuator reflection"
+   ]
+  },
+  {
+   "uuid": "2c52df05",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Linear_Actuators_7 base LED actuator reflection"
+   ]
+  },
+  {
+   "uuid": "8f2b64bc",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Linear_Actuators_9 base LED actuator reflection"
+   ]
+  },
+  {
+   "uuid": "d719d879",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Linear_Actuators_9 base LED actuator reflection"
+   ]
+  },
+  {
+   "uuid": "ac17dd0d",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Linear_Actuators_1 base LED actuator reflection"
+   ]
+  },
+  {
+   "uuid": "7df6f993",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Linear_Actuators_1 base LED actuator reflection"
+   ]
+  },
+  {
+   "uuid": "f7d18506",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "4a9786dd",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "93540bff",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "5c64eb12",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_1 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "543336b0",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_1 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "39edf2bd",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_1 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "9e34f001",
+   "name": "Wheel roller rubber",
+   "type": "MeshPhysicalMaterial",
+   "color": "#47484c",
+   "metalness": 0,
+   "roughness": 0.45,
+   "envMapIntensity": 1,
+   "envMap": null,
+   "clearcoat": 0.3,
+   "emissive": "#000000",
+   "emissiveIntensity": 1,
+   "map": false,
+   "ior": 1.5,
+   "userData": {},
+   "meshes": 32,
+   "sample": [
+    "Wheel_F_L_6",
+    "Wheel_F_L_16",
+    "Wheel_F_L_17",
+    "Wheel_F_L_18"
+   ]
+  },
+  {
+   "uuid": "2f641dec",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_6 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "b72af1e9",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_6 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "70b02df5",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_6 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "f7288cdb",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_8 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "d07f88f3",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_8 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "8dbc9e5a",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_8 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "04f21558",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_16 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "41bb983c",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_16 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "2fdac5be",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_16 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "9bc072dd",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_17 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "704a2bdc",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_17 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "f894aba2",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_17 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "dcd92d79",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_18 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "715ca40f",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_18 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "bc97cca2",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_18 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "8379d2f5",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_19 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "d1b07dbe",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_19 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "9a666bf4",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_19 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "b7d748c2",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_20 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "aa8ef160",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_20 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "7b52ab65",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_20 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "f483bce9",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_21 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "e9d06a5f",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_21 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "1096d8ba",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_21 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "8633e174",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_22 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "e8971cb5",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_22 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "ccf106c1",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_L_22 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "d68b8caf",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_29 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "1d86f73d",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_29 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "fea68ac7",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_29 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "e7f15311",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_30 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "56ee20b3",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_30 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "74fd991f",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_30 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "acbd6f79",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_31 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "05922bf6",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_31 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "7ad5e822",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_31 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "b66b134e",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_32 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "05d110e7",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_32 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "1e798f79",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_32 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "b5b9f5f6",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_33 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "e139e78e",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_33 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "0206efc7",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_33 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "de22a422",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_34 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "d6faf518",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_34 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "f844ea14",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_34 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "fd9b6ded",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_35 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "8019c03e",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_35 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "8e6558bb",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_35 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "d7769cbc",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_43 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "824e9ead",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_43 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "19fcd3af",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_43 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "2af51701",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_45 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "c518bfaf",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_45 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "ade1b596",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_45 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "393d3d2a",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_50 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "7f543f9c",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_50 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "93b0a201",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_50 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "1f3b95e5",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_51 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "ef1f2170",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_51 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "77a73e90",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_F_R_51 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "a90587ca",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_27 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "4ad20d60",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_27 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "69e59b44",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_27 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "28eadeeb",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_28 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "3eb46e89",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_28 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "edc39e51",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_28 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "ab71917e",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_29 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "1c2b2ff2",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_29 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "d7f48f01",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_29 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "c7eda6ba",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_30 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "96e53241",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_30 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "5a455e3a",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_30 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "828d7613",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_38 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "b99438f0",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_38 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "90a6f1c9",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_38 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "683a13c8",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_39 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "3fe25e35",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_39 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "6b7f5e15",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_39 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "86933603",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_44 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "a9690789",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_44 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "f1f3dbbd",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_44 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "47c6ef31",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_45 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "72e9d34c",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_45 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "cafdeeb1",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_45 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "621558c4",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_46 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "9107a773",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_46 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "fb83ba07",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_46 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "966a4bfb",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_47 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "3c03f9b2",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_47 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "2bd5a020",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_47 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "d942fc31",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_48 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "1e3fcab1",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_48 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "005e897b",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_L_48 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "165d52a1",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "b84c815c",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "3cf19342",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "b810e56c",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_1 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "a8954c53",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_1 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "838b18ef",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_1 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "ef313352",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_6 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "e3d1cf5f",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_6 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "914675bb",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_6 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "1c9482db",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_8 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "6675ee9f",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_8 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "92e39ba3",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_8 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "4bb12970",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_16 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "19bf3534",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_16 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "94d253d4",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_16 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "7fc417c7",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_17 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "d6583542",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_17 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "dc5bacaf",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_17 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "2004a00f",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_18 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "bb8cceb7",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_18 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "b55b665b",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_18 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "4aebbf75",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_19 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "c4adf6b1",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_19 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "f8df0b41",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_19 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "6ef0fbfa",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_20 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "22b6c153",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_20 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "e3feb14d",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_20 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "22ad747a",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_21 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "f6f6c5a7",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_21 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "462c3964",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_21 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "246ad0ca",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_22 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "37078300",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_22 base LED underside reflection"
+   ]
+  },
+  {
+   "uuid": "064bd681",
+   "name": "",
+   "type": "ShaderMaterial",
+   "color": null,
+   "envMap": null,
+   "emissive": null,
+   "map": false,
+   "userData": {},
+   "meshes": 1,
+   "sample": [
+    "Wheel_R_R_22 base LED underside reflection"
+   ]
+  }
+ ],
+ "props": []
+}
