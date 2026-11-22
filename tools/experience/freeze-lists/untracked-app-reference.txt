@@ -56,6 +56,7 @@ app-reference/assets/desk_viewer/led/led-pixel-renderer.mjs
 app-reference/assets/desk_viewer/led/led-receivers.mjs
 app-reference/assets/desk_viewer/led/led-strip-map.mjs
 app-reference/assets/desk_viewer/led/music-input.mjs
+app-reference/assets/desk_viewer/media/ambient-clip-full-vico-2026-10-27.mp4
 app-reference/assets/desk_viewer/media/ambient-clip.mp4
 app-reference/assets/desk_viewer/media/song-excerpt.mp3
 app-reference/assets/desk_viewer/model/LEDS.glb
