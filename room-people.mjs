@@ -2403,7 +2403,9 @@ export class RoomPeople {
         Object.assign(change, { rig, keyFrom: rig.key(change.from.id), keyTo: change.to.walk ? walkStance(rig, rig.key(change.to.id)) : rig.key(change.to.id), homeFrom: end ? { position: end.position.clone(), turn: end.turn } : home(ra), homeTo: home(rb) });
         // someone who walks off after the change turns toward their path during it, not in one frame as the walk starts
         // (the walker is not placed on its path yet when the skeletons load: it still faces the way it was cast)
-        const path = change.to.walk?.path; if (path?.length > 1) change.homeTo.turn = Math.atan2(path[1][0] - path[0][0], path[1][1] - path[0][1]);
+        const path = change.to.walk?.path;
+        if (Number.isFinite(change.to.walk?.startTurn)) change.homeTo.turn = THREE.MathUtils.degToRad(change.to.walk.startTurn);
+        else if (path?.length > 1) change.homeTo.turn = Math.atan2(path[1][0] - path[0][0], path[1][1] - path[0][1]);
         // (a posture whose action has moved it, the hand that drew the screen out, changes from where the action left it)
         // (as the action has it when the change begins: a film's change is centred on change.at, the length as below)
         if (change.from.act && Number.isFinite(change.at)) {
@@ -2556,11 +2558,13 @@ export class RoomPeople {
         const sign = JSON.stringify(walk) + '|' + JSON.stringify(object.userData.person.at || null);
         if (life.walkSign !== sign) {
             const path = (walk.path || [walk.from || [object.position.x, object.position.z], walk.to]).map(([x, z]) => [x / 1000, z / 1000]);
-            life.walkSign = sign; life.plan = path.length > 1 && path.every(p => p.every(Number.isFinite)) ? walkPlan(life.rig, life.key, (walk.then && life.rig.key(walk.then)) || life.key, path, { pace: walk.pace, step: walk.step ? walk.step / 1000 : undefined, toes: walk.toes, swing: walk.swing }) : null;
+            const startYaw = Number.isFinite(walk.startTurn) ? THREE.MathUtils.degToRad(walk.startTurn) : undefined;
+            const gradualTurn = !!walk.gradualTurn;
+            life.walkSign = sign; life.plan = path.length > 1 && path.every(p => p.every(Number.isFinite)) ? walkPlan(life.rig, life.key, (walk.then && life.rig.key(walk.then)) || life.key, path, { pace: walk.pace, step: walk.step ? walk.step / 1000 : undefined, toes: walk.toes, swing: walk.swing, startYaw, gradualTurn }) : null;
             // (the model drawn is the walking posture's, skinned to standing: its soles, a few millimetres off the floor
             // that way, are measured once and the footprints lowered by as much)
             if (life.plan) {
-                const endYaw = this.walkEnd(walk, path), plan = options => walkPlan(life.rig, life.key, (walk.then && life.rig.key(walk.then)) || life.key, path, { pace: walk.pace, step: walk.step ? walk.step / 1000 : undefined, toes: walk.toes, swing: walk.swing, endYaw, ...options });
+                const endYaw = this.walkEnd(walk, path), plan = options => walkPlan(life.rig, life.key, (walk.then && life.rig.key(walk.then)) || life.key, path, { pace: walk.pace, step: walk.step ? walk.step / 1000 : undefined, toes: walk.toes, swing: walk.swing, startYaw, endYaw, gradualTurn, ...options });
                 const shoes = this.soleOf(object, life, life.plan); life.plan = plan(shoes);
                 life.plan = plan({ ...shoes, land: this.landOf(object, life, life.plan) });
             }

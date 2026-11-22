@@ -1288,7 +1288,9 @@ export function walkPlan(rig, from, to, path, options = {}) {
     // path, is faced in full when the walk ends, not snapped to at the next change)
     const wrap = a => Math.atan2(Math.sin(a), Math.cos(a)), yawOf = l => l ? Math.atan2(l.b.x - l.a.x, l.b.y - l.a.y) : 0;
     const startYaw = Number.isFinite(options.startYaw) ? options.startYaw : yawOf(legs.find(l => l.d > 1e-6)), endYaw = Number.isFinite(options.endYaw) ? options.endYaw : yawOf([...legs].reverse().find(l => l.d > 1e-6)), span = Math.max(1e-3, Math.min(.6, length / 2));
-    const heading = s => { let h = curve(s); h += wrap(endYaw - h) * ss(length - span, length, s); h += wrap(startYaw - h) * (1 - ss(0, span, s)); return h; };
+    const heading = options.gradualTurn
+        ? s => startYaw + wrap(endYaw - startYaw) * ss(0, Math.max(1e-3, length), s)
+        : s => { let h = curve(s); h += wrap(endYaw - h) * ss(length - span, length, s); h += wrap(startYaw - h) * (1 - ss(0, span, s)); return h; };
     const leg = rig.offset[L.leg[1]].length() + rig.offset[L.leg[2]].length(), want = options.step || leg * .64, strides = Math.max(1, Math.round(length / want)), step = length / strides;
     // footprints: where each ankle is while that foot is on the floor. Both feet start in `from` and end in `to`.
     // (options.sole: [left, right] metres the drawn model's soles are above the floor with the feet flat where the
