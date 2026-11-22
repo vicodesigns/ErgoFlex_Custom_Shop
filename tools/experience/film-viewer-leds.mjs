@@ -133,6 +133,7 @@ const HUE_AT_ONE = `#if defined( TONE_MAPPING )
         #endif
         #include <tonemapping_fragment>`;
 const FOOT_SAT = `if (efFootSat != 1.0) { float efFootL = dot(gl_FragColor.rgb, vec3(0.2126, 0.7152, 0.0722)); gl_FragColor.rgb = max(mix(vec3(efFootL), gl_FragColor.rgb, efFootSat), 0.0); }
+        if (efFootTintAmt > 0.0) { float efTintL = dot(gl_FragColor.rgb, vec3(0.2126, 0.7152, 0.0722)); gl_FragColor.rgb = mix(gl_FragColor.rgb, efFootTint * (efTintL / max(dot(efFootTint, vec3(0.2126, 0.7152, 0.0722)), 1e-3)), efFootTintAmt); }
         `;
 const TINT_OUT = `#include <colorspace_fragment>
         {
@@ -407,6 +408,10 @@ const meshNamed = (root, name) => { let m = null; root.traverse((o) => { if (!m 
 const named = (root, name) => { let m = null; root.traverse((o) => { if (!m && o.name === name) m = o; }); return m; };
 const shownIn = (o) => { for (let p = o; p; p = p.parent) if (!p.visible) return false; return true; };
 
+// ledFloorSources fields keyed in time ([[seconds, value], ...], opt-in) resolved at chapter second s; plain values pass through as they are.
+const keyAtSeconds = (k, s) => { const i = k.findIndex((p) => p[0] > s); return i < 0 ? k.at(-1)[1] : i === 0 ? k[0][1] : k[i - 1][1] + (k[i][1] - k[i - 1][1]) * (s - k[i - 1][0]) / (k[i][0] - k[i - 1][0]); };
+export const resolveFloorFields = (src, s) => { const o = {}; for (const [f, x] of Object.entries(src || {})) o[f] = Array.isArray(x) && x.length ? keyAtSeconds(x, s) : x; return o; };
+
 export function installViewerLeds(shot) {
   const raw = shot.ledReceivers;
   const spec = { floorBounce: true, legWings: true, wingFallBelow: true, bands: true, wingRows: 'beside', indicatorLift: true,
@@ -510,16 +515,18 @@ export function installViewerLeds(shot) {
   // Each floor overlay has a plain shader (the approved look, exactly) and a 'param' one with the per-source controls;
   // the param one is only in use while the shot sets ledFloorSources.
   const footSat = appGlow.material.uniforms.efFootSat || { value: 1 };
+  // Foot glow tint (ledFloorSources.foot.tint / tintAmount, opt-in): the pool's colour moves toward the tint at its own brightness.
+  const footTint = appGlow.material.uniforms.efFootTint || { value: new THREE.Color(1, 1, 1) }, footTintAmt = appGlow.material.uniforms.efFootTintAmt || { value: 0 };
   const variants = [];
   // Materials held once (film-quality's glow pass swaps some meshes' materials inside render).
   if (bounce) variants.push({ o: bounce, m: bounce.material, plain: bounce.userData.fragments.plain, param: bounce.userData.fragments.param });
   {
     const before = appGlow.material.fragmentShader;
-    appGlow.material.uniforms.efFootSat ||= footSat;
+    appGlow.material.uniforms.efFootSat ||= footSat; appGlow.material.uniforms.efFootTint ||= footTint; appGlow.material.uniforms.efFootTintAmt ||= footTintAmt;
     // efFootSat stays on the app's uniforms after restore (at 1, unused by its shader): film-tod snapshots this
     // material's uniforms after this install and writes them back on clear.
-    undo.push(() => { appGlow.material.fragmentShader = before; appGlow.material.needsUpdate = true; footSat.value = 1; });
-    variants.push({ o: appGlow, m: appGlow.material, plain: before, param: 'uniform float efFootSat;\n' + before.replace('#include <tonemapping_fragment>', FOOT_SAT + '#include <tonemapping_fragment>') });
+    undo.push(() => { appGlow.material.fragmentShader = before; appGlow.material.needsUpdate = true; footSat.value = 1; footTintAmt.value = 0; });
+    variants.push({ o: appGlow, m: appGlow.material, plain: before, param: 'uniform float efFootSat;\nuniform vec3 efFootTint;\nuniform float efFootTintAmt;\n' + before.replace('#include <tonemapping_fragment>', FOOT_SAT + '#include <tonemapping_fragment>') });
   }
   let paramOn = false;
   const useShaders = (param) => {
@@ -580,9 +587,9 @@ export function installViewerLeds(shot) {
     const f = footCfg;
     if (!f) return lifted.call(this, sc, cam);
     const fu = U, saved = [fu.strength.value, fu.fadeReach.value, fu.stripHalfSpan.value, fu.falloffPower.value], pos = appGlow.position.clone();
-    fu.strength.value *= f.on ? f.brightness : 0; fu.fadeReach.value *= f.spread; fu.stripHalfSpan.value *= f.length; fu.falloffPower.value /= f.edge; footSat.value = f.saturation;
+    fu.strength.value *= f.on ? f.brightness : 0; fu.fadeReach.value *= f.spread; fu.stripHalfSpan.value *= f.length; fu.falloffPower.value /= f.edge; footSat.value = f.saturation; if (f.tint) footTint.value.copy(f.tint); footTintAmt.value = f.tintAmount;
     if (f.offset) { appGlow.parent.updateWorldMatrix(true, false); appGlow.position.add(footShift(f.offset)); appGlow.updateMatrixWorld(); }
-    try { return lifted.call(this, sc, cam); } finally { [fu.strength.value, fu.fadeReach.value, fu.stripHalfSpan.value, fu.falloffPower.value] = saved; footSat.value = 1; if (f.offset) { appGlow.position.copy(pos); appGlow.updateMatrixWorld(); } }
+    try { return lifted.call(this, sc, cam); } finally { [fu.strength.value, fu.fadeReach.value, fu.stripHalfSpan.value, fu.falloffPower.value] = saved; footSat.value = 1; footTintAmt.value = 0; if (f.offset) { appGlow.position.copy(pos); appGlow.updateMatrixWorld(); } }
   }
   function lifted(sc, cam) {
     const k = pixels.uniforms.efPixelActive.value > 0.5 ? lift : 1;
@@ -604,19 +611,26 @@ export function installViewerLeds(shot) {
   // Edge softness s keeps the pool's half-brightness radius: fall-off exponent 1/s, distances x alpha (see addFloorBounce).
   const prep = (c) => {
     const k = 1 / c.edge, alpha = Math.sqrt((Math.pow(1.5874, c.edge) - 1) / 0.5874);
-    return { on: c.on !== false, offset: c.x || c.z ? modelShift(c.x, c.z) : null, length: c.length, spread: c.spread, edge: c.edge, k, scale: alpha / c.spread, brightness: c.brightness, saturation: c.saturation };
+    return { on: c.on !== false, offset: c.x || c.z ? modelShift(c.x, c.z) : null, length: c.length, spread: c.spread, edge: c.edge, k, scale: alpha / c.spread, brightness: c.brightness, saturation: c.saturation,
+      tint: c.tint && c.tintAmount > 0 ? new THREE.Color(c.tint) : null, tintAmount: c.tint ? c.tintAmount : 0 };
   };
-  const FULL = { on: true, x: 0, z: 0, spread: 1, length: 1, edge: 1, brightness: 1, saturation: 1 };
+  const FULL = { on: true, x: 0, z: 0, spread: 1, length: 1, edge: 1, brightness: 1, saturation: 1, tint: null, tintAmount: 0 };
+  // A field may be keyed in time, [[seconds, value], ...] (opt-in; plain numbers behave exactly as before): resolved at `at`.
+  const resolve = resolveFloorFields;
+  let keyed = false, at = 0;
   function setSources(v) {
     const has = !!v && typeof v === 'object' && Object.keys(v).length > 0;
     current = has ? v : null;
-    const cfg = (key) => key && has ? prep({ ...FULL, ...(v[key] || {}) }) : null;
+    keyed = has && Object.values(v).some((src) => src && Object.values(src).some(Array.isArray));
+    const cfg = (key) => key && has ? prep({ ...FULL, ...resolve(v[key], at) }) : null;
     if (bounce) bounce.userData.cfg = has ? bounce.userData.keys.map(cfg) : null;
     extent = 1;
     for (const c of bounce?.userData.cfg || []) if (c) extent = Math.max(extent, (1 + (c.offset ? c.offset.length() : 0) / 40) * Math.sqrt(Math.max(1, c.length, c.spread)));
     footCfg = cfg('foot');
     if (has !== paramOn) useShaders(has);
   }
+  // Keyed fields: the chapter time of the next render (film-fx frame); a no-op unless a field is keyed.
+  function setTime(s) { if (!keyed || s === at) return; at = s; setSources(current); }
   // World-space outlines (closed loops on the floor) of each source's pool at its half-brightness edge.
   function pools() {
     const out = [], toW = (p) => p.clone().applyMatrix4(model.matrixWorld);
@@ -671,5 +685,5 @@ export function installViewerLeds(shot) {
   const info = { wings: wingInfo.map((w) => `${w.wing.name}:${w.id}${w.outer?.material.userData.ledSpillSources?.[0] !== w.id ? ' (app ' + w.outer?.material.userData.ledSpillSources?.[0] + ')' : ''}`),
     legs: list.filter((e) => e.panel).length, bounceSources: bounce ? bounce.material.uniforms.srcA.value.length : 0, stripMap: spec.stripMap,
     floorTint: tint.amount.value, floorHue: !!spec.floorHue };
-  return { info, setFloorGain(f) { floorGain = typeof f === 'function' ? f : () => 1; }, setSources, pools, restore() { for (const f of undo.reverse()) { try { f(); } catch (e) { console.warn('[viewer-leds] restore', e); } } } };
+  return { info, setFloorGain(f) { floorGain = typeof f === 'function' ? f : () => 1; }, setSources, setTime, pools, restore() { for (const f of undo.reverse()) { try { f(); } catch (e) { console.warn('[viewer-leds] restore', e); } } } };
 }
