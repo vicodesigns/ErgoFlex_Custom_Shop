@@ -10,6 +10,7 @@ import {chapterScore,staleness,snapTimes,snapTo,waveColumns,createScorePlayer} f
 import {createActionLog,captureErrors,reportBody,createReportDialog,sendReport} from './director-report.mjs';
 import {createKeysPanel,loadUi,saveUi} from './keys-panel.mjs';
 import {createViewNav} from './view-nav.mjs';
+import {createPhoneMode} from './director-phone.mjs';
 import {PREF as HOLD_PREF} from './editing-camera.mjs';
 import {createPreviewHides,HIDE_LABELS} from './preview-hides.mjs';
 import {createAutosave,placeOf,changesSince,when as autosaveWhen} from './director-autosave.mjs';
@@ -75,7 +76,7 @@ export function mountDirector(bridge,catalog,initial){
   let selected=0,undo=[],redo=[],undoLabels=[],redoLabels=[],labelPending=null,stillMark=null,group=null,draftTimer,open=false,loadToken=0,composing=false,leaving=false;
   const choices=new Map(),automaticCameras=new Map();
   let keyId=null,playhead=0,keyDrag=null,suppressKeyClickUntil=0;
-  let magnet=true,inspector='chapter',zoom=1,snapStep=.1,scrub=null,timelineResize=null;
+  let phoneMode=null,magnet=true,inspector='chapter',zoom=1,snapStep=.1,scrub=null,timelineResize=null;
   // Timeline group selection (camera keys + desk clips) and the film chapter list.
   const picks={keys:new Set(),clips:new Set(),lights:new Set(),neutrals:new Set(),tods:new Set()};let lightSel=null,stills=null,stillBusy=false,marquee=null,groupDrag=null,suppressGroupClickUntil=0;
   const film=filmLink(location.hash),signature=()=>JSON.stringify([project.name,project.client,project.volume,project.shots]);
@@ -155,7 +156,7 @@ export function mountDirector(bridge,catalog,initial){
   // (the tab grid fits about 9 characters with the icon in a 352 px column: short names, the full one on hover)
   const TAB_TITLE={project:'The whole cut: name, versions, import and export',groove:'Desk moves: the featured desk\'s lift, tilt and wheels',version:'Desk swaps: which desk version shows when',render:'Final render on the render PC',desks:'The room\'s other desks',lighting:'Lighting: time of day, room light, lamps'};
   function showInspector(tab,selection=false,unhide=true){
-    const newTab=inspector!==tab;inspector=tab;if(unhide)document.body.classList.remove('inspector-hidden');if(tab==='lighting')queueMicrotask(()=>syncNow());if(tab==='render')queueMicrotask(()=>renderRequest?.refresh());if(tab==='layers')queueMicrotask(()=>renderLayers());
+    const newTab=inspector!==tab;inspector=tab;if(unhide)document.body.classList.remove('inspector-hidden');if(unhide&&selection)phoneMode?.reveal();if(tab==='lighting')queueMicrotask(()=>syncNow());if(tab==='render')queueMicrotask(()=>renderRequest?.refresh());if(tab==='layers')queueMicrotask(()=>renderLayers());
     for(const page of panel.querySelectorAll('[data-inspector-page]'))page.hidden=page.dataset.inspectorPage!==tab;
     for(const button of panel.querySelectorAll('[data-inspector-tab]'))button.setAttribute('aria-pressed',String(button.dataset.inspectorTab===tab));
     panel.scrollTop=0;
@@ -1227,7 +1228,19 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     try{await bridge.editShot(project,selected);if(token===loadToken){automaticCameras.set(shot().id,bridge.stage().cameraKeys());deskEditor.ready();playhead=position;if(!keys().some(k=>k.id===keyId))keyId=null;renderPanel();renderTimeline();if(film&&!timelineFitted&&!document.body.style.getPropertyValue('--director-timeline-height')){fitTimeline();renderTimeline();}hookOrbit();if(film&&filmShot())sceneProps.ensure().catch(error=>console.warn('[props]',error.message));orbitBase=null;bridge.seek(playhead);status('Camera is live. Existing desk movements appear below; select a block to edit it, or add Lift, Tilt or Wheels.');}}catch(error){if(token===loadToken)status(error.message,true);}
   }
   function move(from,to){if(to<0||to>=project.shots.length)return;commit(()=>{const [s]=project.shots.splice(from,1);project.shots.splice(to,0,s);selected=to;},{render:true});load();}
-  function exportCut(){const text=JSON.stringify(((c)=>({...c,shots:c.shots.map(s=>exportLighting(s.peopleEdits?{...s,peopleEdits:canonicalPeople(s.peopleEdits)}:s))}))(cleanCut(project,catalog)),null,2),url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=(project.name.replace(/[^a-z0-9]+/gi,'-')||'client-cut')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);exported=signature();syncFilm();status(fresh.on?'Cut exported: the film takes it in from Downloads. Your changes stay in this browser until it has.':'Cut exported. Import it in Director Mode on another browser.');fresh.exported(project,text);return text;}
+  // The Export cut JSON (one serialisation: Export cut downloads it, Send to desk posts it).
+  const exportText=()=>JSON.stringify(((c)=>({...c,shots:c.shots.map(s=>exportLighting(s.peopleEdits?{...s,peopleEdits:canonicalPeople(s.peopleEdits)}:s))}))(cleanCut(project,catalog)),null,2);
+  // Send to desk (tools/director-inbox.mjs): the same JSON to the studio server, which drops it where the desk's importer
+  // watches (a phone's Export cut downloads to the phone). Only the cut this page names: the film list's folder goes along.
+  async function sendToDesk(){
+    if(!film)throw Error('Send to desk is for a film chapter.');
+    const text=exportText(),folder=String(film.film||'').match(/^\/?(exports\/[^/]+)\//)?.[1]||'';
+    status('Sending to the desk…');
+    let response;try{response=await fetch('/__director/inbox',{method:'POST',headers:{'content-type':'application/json','x-director-inbox':'1',...(folder?{'x-director-cut':folder}:{})},body:text});}catch{throw Error('Could not reach the desk. Is this page open from the studio server?');}
+    const body=await response.json().catch(()=>({}));if(!response.ok)throw Error(body.error||`The desk refused it (${response.status}).`);
+    exported=signature();syncFilm();fresh.exported(project,text);status(`Sent to the desk: ${body.file}. The film takes it in from there; your changes stay in this browser until it has.`);return body;
+  }
+  function exportCut(){const text=exportText(),url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=(project.name.replace(/[^a-z0-9]+/gi,'-')||'client-cut')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);exported=signature();syncFilm();status(fresh.on?'Cut exported: the film takes it in from Downloads. Your changes stay in this browser until it has.':'Cut exported. Import it in Director Mode on another browser.');fresh.exported(project,text);return text;}
   async function action(name,index){
     if(name==='hold-camera'){setHold(!held);return;}   // (the app bar's and the pose bar's button)
     if(name==='keys-panel'){keysPanel.toggle();return;}
@@ -1236,7 +1249,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     try{
       if(composing)return;
       group=null;
-      if((name==='save-export'||name==='export')&&index!=='stale-ok'&&await fresh.guardExport(project,unexported(),()=>action(name,'stale-ok')))return;
+      if((name==='save-export'||name==='export'||name==='send-desk')&&index!=='stale-ok'&&await fresh.guardExport(project,unexported(),()=>action(name,'stale-ok')))return;
       if(name==='film-keep-draft'||name==='film-use-film'){fresh.choose(name==='film-keep-draft'?'draft':'film');return;}
       if(name==='film-draft-ask'){fresh.prompt();return;}
       if(name==='magnet'){magnet=!magnet;timeline.querySelector('[data-action=magnet]')?.setAttribute('aria-pressed',String(magnet));status(magnet?'Magnet on: drags snap to edges, keys and the playhead.':'Magnet off: drags snap to the grid only.');return;}
@@ -1269,7 +1282,8 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
         lightSel=null;render();status('Deleted. Undo restores it.');return;
       }
       if(name==='film-prev'||name==='film-next'){const i=filmIndex();switchFilm(name==='film-prev'?i-1:i<0?0:i+1);return;}
-      if(name==='inspector'){document.body.classList.toggle('inspector-hidden');renderAppBar();return;}
+      if(name==='inspector'){if(!phoneMode?.togglePanel())document.body.classList.toggle('inspector-hidden');renderAppBar();return;}
+      if(name==='demo-card'){phoneMode?.demo(!phoneMode.demoOpen());renderAppBar();return;}
       if(name==='ab-timeline'){document.body.classList.toggle('timeline-hidden');renderAppBar();status(document.body.classList.contains('timeline-hidden')?'Timeline hidden: Shift+Tab or ⋯ brings it back.':'Timeline shown.');return;}
       if(name==='ab-review'){review(true);return;}
       if(name==='ov-guides'){runKey('guides');return;}if(name==='ov-crop'){runKey('crop-cycle');return;}if(name==='ov-look'){runKey('film-look');return;}if(name==='ov-lights'){runKey('light-markers');return;}
@@ -1356,6 +1370,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       if(name==='new'){loadProject(makeCut('New client cut',[sceneShot(catalog.find(r=>r.id==='product'))]));return;}
       if(name==='clone'){loadProject({...copy(project),id:crypto.randomUUID(),name:project.name+' · copy',updated:''});return;}
       if(name==='save-export'){if(unexported())autosave.save('export');clearTimeout(draftTimer);try{project=library.save(project);}catch{}exportCut();renderPanel();return;}
+      if(name==='send-desk'){if(unexported())autosave.save('export');clearTimeout(draftTimer);try{project=library.save(project);}catch{}await sendToDesk();renderPanel();return;}
       if(name==='save'){clearTimeout(draftTimer);project=library.save(project);renderPanel();status('Saved in this browser. Export a copy for a portable backup.');return;}
       if(name==='load'){await load();return;}
       if(name==='frame-desk'||name==='frame-room'){requireReady();bridge.stage().frameSubject(name==='frame-room'?'room':'desk');status('Preview framed. Capture a new camera view or update the selected view to save it.');return;}
@@ -1853,15 +1868,17 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   addEventListener('resize',()=>{if(open)drawScore();});
   // ---- the app bar and the mode pills (P1b, director-appbar.mjs)
   const closeMenus=wireMenus(appbar);
+  // Phone mode (director-phone.mjs): a coarse pointer on a screen up to 1200 px: the inspector a bottom sheet (portrait) or a side drawer (landscape).
+  phoneMode=createPhoneMode({appbar,panel,shellOn,changed:()=>{try{renderAppBar();}catch{/* not ready yet */}}});
   function pressed(id){return document.getElementById(id)?.getAttribute('aria-pressed')==='true';}
   function renderAppBar(){
     if(!shellOn()||!open){appbar.hidden=true;return;}appbar.hidden=false;
     if(appbar.querySelector('.ab-pop:not([hidden])')||appbar.contains(document.activeElement)&&document.activeElement.matches('select'))return;   // (not while a menu or a select is open)
     const st=bridge.playback(),q=document.getElementById('preview-quality');
     appbar.innerHTML=appBarHtml({saved:savedNow(),picker:filmPicker(),name:project.name,undo:{n:undo.length,label:undoLabels.at(-1)?editLabel(undoLabels.at(-1)):''},redo:{n:redo.length,label:redoLabels.at(-1)?editLabel(redoLabels.at(-1)):''},
-      studio:studioSync.html(),playing:st.playing&&st.index===selected,busy:st.busy,sound:pressed('sound'),lowres:q&&!q.hidden?pressed('preview-quality'):null,film:!!film,
+      studio:studioSync.html(),playing:st.playing&&st.index===selected,busy:st.busy,sound:pressed('sound'),lowres:q&&!q.hidden?pressed('preview-quality'):null,film:!!film,phone:phoneMode?.layout()!=null,demoCard:phoneMode?.demoOpen(),
       history:[...undoLabels].reverse().map(editLabel),titles:film&&titleEditor.has()?titleEditor.shown():document.body.classList.contains('preview-titles'),chapters:!timeline.classList.contains('chapters-hidden'),
-      inspector:!document.body.classList.contains('inspector-hidden'),timeline:!document.body.classList.contains('timeline-hidden'),
+      inspector:phoneMode?.layout()==='portrait'?phoneMode.sheet()!=='peek':!document.body.classList.contains('inspector-hidden'),timeline:!document.body.classList.contains('timeline-hidden'),
       held,overlays:{guides:!!document.querySelector('.film-look.guides'),crop:CROPS?.[cropAt]?.[0]||null,look:filmLook?.mode?.()||null,lights:!!sceneLights.showing?.()}});
     syncFilm();
   }

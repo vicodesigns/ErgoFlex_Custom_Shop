@@ -1,0 +1,122 @@
+/* Director Mode on a touch screen (23 Nov 2026, Vico's Galaxy Z Fold 5: about 700 x 800 CSS px folded-out in portrait,
+   840 x 600 in landscape, a bigger zoom 884 x 1100 / 1100 x 884).
+   Loaded last. Everything that changes an existing element is inside @media (pointer: coarse), so a mouse keeps the desktop
+   layout exactly; the only rules outside it are the default-hidden handle and tab (new elements of director-phone.mjs).
+   Part A: touch basics (tap targets 44 px, 16 px fields, drags that are not stolen by scrolling).
+   Part B: the phone layout, keyed on body.ef-phone (set by director-phone.mjs for a coarse pointer up to 1200 px wide):
+     portrait   app bar / stage / timeline, the inspector a bottom sheet (peek, half, full)
+     landscape  app bar / stage over timeline on the left, the inspector a side drawer on the right (collapsible) */
+#ef-sheet-handle,#ef-drawer-tab{display:none}
+
+@media (pointer: coarse){
+/* ---------- A. touch basics ---------- */
+#director-appbar .ab-btn,.ab-pop button,#director-panel button,#director-timeline button,.keys-panel button{min-height:44px}
+#director-appbar .ab-btn{height:44px;min-width:44px}
+#director-appbar .ab-btn.ab-icon{width:44px}
+#director-appbar select,#director-panel select,#director-timeline select{min-height:44px;font-size:16px}
+#director-panel input:not([type=checkbox]):not([type=range]):not([type=color]),#director-panel textarea,#director-timeline input:not([type=range]):not([type=checkbox]),.keys-panel input{font-size:16px;min-height:44px}
+#director-panel input[type=range]{min-height:44px}
+#director-panel input[type=checkbox],#director-timeline input[type=checkbox]{width:24px;height:24px}
+#director-panel .director-check{min-height:44px}
+#director-panel .inspector-tabs button{min-height:44px}
+/* a drag on a block, a handle, a key or the ruler is the editor's; the lanes and the rest of the timeline pan and pinch */
+#director-timeline .timeline-content .desk-clip,#director-timeline .timeline-content .clip-resize,#director-timeline .camera-key,#director-timeline .lane-key,#director-timeline .time-ruler,#director-timeline .cam-transition,#director-timeline .desk-version,#director-timeline .desk-version-seam,#director-timeline .chapter-end-handle{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#director-timeline .desk-lane,#director-timeline .camera-track,#director-timeline .lamps-lane{touch-action:pan-x pan-y pinch-zoom}
+#director-timeline .timeline-viewport{touch-action:pan-x pan-y pinch-zoom;-webkit-overflow-scrolling:touch}
+#director-timeline .timeline-content .time-ruler-row,#director-timeline .timeline-content .time-ruler{height:44px}
+#director-timeline .timeline-content .time-ruler>span{top:14px}
+#director-timeline .ruler-playhead{width:3px}
+#director-timeline .timeline-content .desk-lane-row,#director-timeline .timeline-content .desk-lane{height:56px}
+#director-timeline .timeline-content .desk-lane-row.layered{--row-h:48px}
+#director-timeline .timeline-content .desk-clip{top:6px;height:44px;min-height:44px}
+#director-timeline .timeline-content .desk-lane-row.layered .desk-clip{height:calc(var(--row-h) - 3px);min-height:44px}
+/* Titles: wide trim handles (the block's own width stays true; a short block is drawn at least 96 px so it can still be grabbed) */
+#director-timeline .timeline-content .title-clip{min-width:96px;padding:3px 24px}
+#director-timeline .timeline-content .title-clip .clip-resize{width:20px;background:#ffffff26}
+#director-timeline .timeline-content .title-clip.selected{min-width:128px;padding:3px 46px}
+#director-timeline .timeline-content .title-clip.selected .clip-resize{width:44px;background:#ffd27a55}
+#director-timeline .timeline-content .title-clip .clip-resize::after{content:'';position:absolute;top:50%;left:50%;width:3px;height:20px;margin:-10px 0 0 -1px;border-radius:2px;background:#fff9}
+#director-timeline .timeline-content .camera-key{width:44px!important;min-height:44px!important;top:6px!important}
+#director-timeline .timeline-content .camera-lane-row,#director-timeline .timeline-content .camera-track{height:56px}
+#director-timeline .title-add{min-height:44px;min-width:88px}
+#director-timeline .timeline-content .desk-lane-label{font-size:12px}
+.title-nudge{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.title-nudge button{min-height:48px;font-size:14px}
+.title-nudge p{grid-column:1/-1;margin:0;font-size:12px;color:#94afbf}
+
+/* ---------- B. the phone layout ---------- */
+body.directing.ef-phone{--ef-handle:52px;--ef-top:112px}
+body.directing.ef-phone.ef-landscape{--ef-dw:min(380px,42vw);--ef-tr:calc(var(--ef-dw) + 16px);--ef-reserve:calc(var(--ef-dw) + 56px);--ef-tl:clamp(200px,40dvh,340px);--ef-stage-h:calc(100dvh - var(--ef-top) - var(--ef-tl) - 18px)}
+body.directing.ef-phone.ef-landscape.inspector-hidden{--ef-dw:0px;--ef-tr:8px;--ef-reserve:0px}
+body.directing.ef-phone.ef-portrait{--ef-dw:0px;--ef-reserve:0px;--ef-stage-h:calc((100dvh - var(--ef-top)) * .38);--ef-sheet-total:var(--ef-handle)}
+body.directing.ef-phone.ef-portrait.ef-sheet-half{--ef-sheet-total:calc(100dvh - var(--ef-top) - var(--ef-stage-h) - 10px)}
+body.directing.ef-phone.ef-portrait.ef-sheet-full{--ef-sheet-total:calc(100dvh - var(--ef-top))}
+
+/* the app bar: two rows when it must; Export cut, Send to desk, Render, Panel and ⋯ always on screen; the pop-ups are fixed so no row clips them */
+body.directing.df-shell.ef-phone #director-appbar{left:8px;right:8px;top:8px;height:auto;min-height:56px;flex-wrap:wrap;row-gap:6px;column-gap:6px;padding:6px 8px;z-index:40;font-size:14px}
+body.directing.ef-phone #director-appbar>*{flex:none}
+body.directing.ef-phone #director-appbar .ab-film{flex:1 1 120px;min-width:0}
+body.directing.ef-phone #director-appbar .ab-film .film-chapter-picker{flex-wrap:nowrap;width:100%}
+body.directing.ef-phone #director-appbar .ab-film .film-chapter-picker label{flex:1 1 0;min-width:0}
+body.directing.ef-phone #director-appbar .ab-film select{max-width:none;width:100%;height:44px}
+body.directing.ef-phone #director-appbar .ab-name{max-width:40vw}
+body.directing.ef-phone #director-appbar .ab-spacer{flex:1 1 0;min-width:0}
+body.directing.ef-phone #director-appbar .saved-indicator{display:none}
+body.directing.ef-phone #director-appbar .studio-sync{display:flex;position:static;flex:none}
+body.directing.ef-phone #director-appbar .studio-sync:empty{display:none}
+body.directing.ef-phone #director-appbar [data-studio-refresh]{position:static;width:auto;height:44px;min-height:44px;border-radius:8px;padding:0 12px;white-space:nowrap;font-size:13px;line-height:1.1}
+body.directing.ef-phone #director-appbar .ab-menu{position:static}
+body.directing.ef-phone #director-appbar .ab-pop{position:fixed;top:var(--ef-top);right:8px;left:auto;min-width:min(300px,calc(100vw - 16px));max-height:calc(100dvh - var(--ef-top) - 12px);z-index:50}
+body.directing.ef-phone #director-appbar .ab-pop button{min-height:48px;font-size:15px;white-space:normal}
+body.directing.ef-phone #director-appbar .ab-pop small{display:none}
+body.directing.ef-phone .nav-pill-box{z-index:16}
+/* the player's own text and footer never sit over the stage in the Director on a phone; the Guided demo card is closed by default (director-shell.css .ef-demo-closed, director-phone.mjs) */
+body.directing.ef-phone main,body.directing.ef-phone footer{display:none!important}
+
+/* the stage: the film frame in the space the bar, the timeline and the sheet / drawer leave */
+body.directing.df-shell.film-frame.ef-phone{--frame-left:0px;--frame-top:var(--ef-top);--frame-aw:calc(100vw - 28px - var(--ef-reserve));--frame-ah:var(--ef-stage-h);--frame-w:min(var(--frame-aw),calc(var(--frame-ah) * 16 / 9));--frame-h:calc(var(--frame-w) * 9 / 16)}
+body.directing.df-shell.film-frame.ef-phone #stage,body.directing.df-shell.film-frame.ef-phone #transition-frame,body.directing.df-shell.film-frame.ef-phone #baked-stage,body.directing.df-shell.film-frame.ef-phone .shade,body.directing.df-shell.film-frame.ef-phone #curtain,body.directing.df-shell.film-frame.ef-phone .film-box{position:fixed;left:calc(var(--frame-left) + 14px + (var(--frame-aw) - var(--frame-w)) / 2)!important;top:calc(var(--frame-top) + (var(--frame-ah) - var(--frame-h)) / 2)!important;width:var(--frame-w)!important;height:var(--frame-h)!important;right:auto!important;bottom:auto!important}
+body.directing.df-shell.film-frame.ef-phone #stage{outline:1px solid #ffc97799;outline-offset:0;background:#000}
+body.directing.df-shell.ef-phone:not(.film-frame) #stage,body.directing.df-shell.ef-phone:not(.film-frame) #transition-frame,body.directing.df-shell.ef-phone:not(.film-frame) #baked-stage,body.directing.df-shell.ef-phone:not(.film-frame) .shade,body.directing.df-shell.ef-phone:not(.film-frame) #curtain{left:8px!important;top:var(--ef-top)!important;width:calc(100vw - 16px - var(--ef-reserve))!important;height:var(--ef-stage-h)!important}
+/* the view buttons (Film Persp Top Front Right) stay on the frame, a finger wide */
+body.directing.ef-phone .nav-views{right:6px;bottom:6px;gap:3px;padding:3px}
+body.directing.ef-phone .nav-views button{height:44px;min-width:44px;padding:0 8px;font-size:13px}
+body.directing.ef-phone .nav-pill{top:6px;height:36px}
+
+/* the timeline: under the stage (portrait) or the bottom row left of the drawer (landscape); one scrolling tool row */
+body.directing.ef-phone #director-timeline{box-sizing:border-box;overflow:hidden!important;max-height:none!important;padding:6px 8px 4px;gap:4px;border-radius:14px;z-index:14;box-shadow:0 -4px 24px #0006}
+body.directing.ef-phone.ef-landscape #director-timeline{left:8px!important;right:var(--ef-tr)!important;bottom:8px!important;top:auto!important;height:var(--ef-tl)!important}
+body.directing.ef-phone.ef-portrait #director-timeline{left:8px!important;right:8px!important;top:calc(var(--ef-top) + var(--ef-stage-h) + 10px)!important;bottom:calc(var(--ef-handle) + 8px)!important;height:auto!important}
+body.directing.ef-phone #director-timeline .timeline-resize{display:none}
+body.directing.ef-phone #director-timeline .timeline-viewport{min-height:96px}
+body.directing.ef-phone #director-timeline .workbench-toolbar{flex-wrap:nowrap!important;overflow-x:auto;overflow-y:hidden;gap:6px;min-height:52px;padding:3px 0;scrollbar-width:none;touch-action:pan-x}
+body.directing.ef-phone #director-timeline .workbench-toolbar>*{flex:none}
+body.directing.ef-phone #director-timeline .workbench-toolbar>strong,body.directing.ef-phone #director-timeline .workbench-count{display:none}
+body.directing.ef-phone #director-timeline .workbench-toolbar .timeline-transport{order:1}
+body.directing.ef-phone #director-timeline .workbench-toolbar .magnet,body.directing.ef-phone #director-timeline .workbench-toolbar .snap-control,body.directing.ef-phone #director-timeline .workbench-toolbar .timeline-zoom{order:2}
+body.directing.ef-phone #director-timeline .workbench-toolbar .track-palette{order:3;margin-left:0;flex-wrap:nowrap}
+body.directing.ef-phone #director-timeline .timeline-timecode input{width:84px}
+body.directing.ef-phone #director-timeline .timeline-pan{height:28px;margin:0 8px 0 70px}
+body.directing.ef-phone #director-timeline .timeline-pan input{height:28px}
+body.directing.ef-phone #director-timeline .timeline-footer{min-height:22px;font-size:11px}
+body.directing.ef-phone #director-timeline .timeline-footer .sb-pills,body.directing.ef-phone #director-timeline .timeline-footer output{display:none}
+body.directing.ef-phone #director-timeline .timeline-footer>span{white-space:normal;max-height:32px;overflow:hidden}
+
+/* the inspector: a side drawer (landscape) or a bottom sheet (portrait). Existing rules that dim the page or pin it to the top are undone */
+body.directing.ef-phone #director-panel{box-shadow:0 10px 36px #000a;padding:12px;z-index:26;background:var(--df-surface-1,#0c1822);-webkit-mask-image:none;mask-image:none;touch-action:pan-y pinch-zoom;overscroll-behavior:contain}
+body.directing.ef-phone.ef-landscape #director-panel{position:fixed;left:auto!important;right:8px!important;top:var(--ef-top)!important;bottom:8px!important;width:var(--ef-dw)!important;height:auto!important;border-radius:14px}
+body.directing.ef-phone.ef-portrait #director-panel{position:fixed;left:0!important;right:0!important;top:auto!important;bottom:0!important;width:auto!important;height:calc(var(--ef-sheet-total) - var(--ef-handle))!important;border-radius:0}
+body.directing.ef-phone.ef-portrait.ef-sheet-peek #director-panel{display:none}
+body.directing.ef-phone #director-panel .inspector-tabs{top:-12px}
+body.directing.ef-phone #director-panel .director-grid{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+body.directing.ef-phone.ef-landscape #director-panel .director-hint{-webkit-line-clamp:unset;display:block}
+
+body.directing.ef-phone.ef-portrait #ef-sheet-handle{display:flex;position:fixed;left:0;right:0;bottom:calc(var(--ef-sheet-total) - var(--ef-handle));height:var(--ef-handle);z-index:28;box-sizing:border-box;align-items:center;gap:10px;padding:8px 16px 0;background:var(--df-surface-1,#0c1822);border:1px solid var(--df-border-2,#ffffff1c);border-bottom:0;border-radius:16px 16px 0 0;box-shadow:0 -6px 24px #0007;color:#edf6fc;font:600 14px/1.2 system-ui,sans-serif;cursor:pointer;touch-action:none;-webkit-user-select:none;user-select:none}
+body.directing.ef-phone.ef-portrait #ef-sheet-handle .ef-grip{position:absolute;top:7px;left:50%;width:48px;height:5px;margin-left:-24px;border-radius:3px;background:#7f9fb0}
+body.directing.ef-phone #ef-sheet-handle .ef-sheet-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.directing.ef-phone #ef-sheet-handle .ef-sheet-state::before{content:'▲';color:#9be6fb}
+body.directing.ef-phone #ef-sheet-handle[data-sheet=half] .ef-sheet-state::before,body.directing.ef-phone #ef-sheet-handle[data-sheet=full] .ef-sheet-state::before{content:'▼'}
+body.directing.ef-phone #ef-sheet-handle:focus-visible,body.directing.ef-phone #ef-drawer-tab:focus-visible{outline:2px solid #ffd27a;outline-offset:-2px}
+body.directing.ef-phone.ef-landscape #ef-drawer-tab{display:flex;position:fixed;z-index:27;top:calc(var(--ef-top) + 8px);right:calc(var(--ef-dw) + 8px);width:44px;height:72px;padding:0;align-items:center;justify-content:center;border:1px solid var(--df-border-2,#ffffff1c);border-radius:12px 0 0 12px;background:#0c1822ee;color:#cfe9f5;font-size:28px;line-height:1;touch-action:manipulation}
+body.directing.ef-phone.ef-landscape.inspector-hidden #ef-drawer-tab{right:0}
+}

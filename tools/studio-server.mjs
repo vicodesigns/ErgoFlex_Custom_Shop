@@ -26,6 +26,7 @@ import chokidar from 'chokidar';
 import { SPECS, SHARED_KEY, mergeWrite, changedEntries } from './studio-state/merge.mjs';
 import { load, write } from './studio-state/file.mjs';
 import { writeAutosave, listAutosaves, readAutosave } from './studio-state/autosave-store.mjs';
+import { createInbox } from './director-inbox.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const arg = (name, fallback) => { const i = process.argv.indexOf('--' + name); return i > 0 ? process.argv[i + 1] : fallback; };
@@ -70,6 +71,7 @@ const readBody = (req, limit = 64 << 20) => new Promise((ok, fail) => {
   req.on('end', () => ok(Buffer.concat(parts).toString('utf8'))); req.on('error', fail);
 });
 const clients = new Set(), peopleBuilds = new Map();
+const inbox = createInbox({ root });
 // The Director's Render still with the movie's edit list composed (docs/screen-edit-list/CONTRACT.md): one compose at a
 // time (a queue), in a child at a lower priority (nice 10 on the desk; ffmpeg inherits it), answers cached by the
 // request; the composer itself reuses a composed mp4 by its compose key (exports/<cut>/screens/edl/).
@@ -179,6 +181,10 @@ async function handle(req, res) {
     console.log('[studio server] Director report:', rel);
     return json(res, 200, { dir: rel });
   }
+  //   POST /__director/inbox   the Export cut JSON of a film chapter -> {file, cut, chapter, bytes} (tools/director-inbox.mjs)
+  // Send to desk, for a phone: the file lands where the desk's importer watches (Film-chapter-<id>-<time>.json). Unlike the
+  // desk-only routes it is open to the tailnet (the checks, and what a stranger could do with it, are in that file).
+  if (p === '/__director/inbox') return inbox(req, res, json);
   // The Director's autosaves (experience/director-autosave.mjs; store: tools/studio-state/autosave-store.mjs). Only from
   // this machine; writes exports/director-autosaves/ only (not watched, never a cut's own folder).
   //   POST /__director/autosave   {v:1, cut, chapter, reason, groups, project}   -> {file, at, skipped?, kept, pruned}
