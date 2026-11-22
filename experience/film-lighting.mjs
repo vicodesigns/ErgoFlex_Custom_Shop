@@ -100,12 +100,21 @@ export function validateStatus(events,seconds){
 export const FLOOR_SOURCES=[['foot','Footrest strip'],['center','Centre strip (under the desktop)'],['left','Left side strip (front to back)'],['right','Right side strip (front to back)']];
 export const FLOOR_SOURCE_FIELDS={on:['On',null,null,true],x:['Across (cm)',-100,100,0],z:['Front / back (cm)',-100,100,0],spread:['Spread ×',.25,4,1],length:['Length ×',.25,3,1],
   edge:['Edge softness ×',.25,4,1],brightness:['Brightness ×',0,4,1],saturation:['Saturation ×',0,3,1]};
+export const KEYED_FLOOR_FIELDS=['spread','edge','brightness','saturation'];
 export function cleanFloorSources(v){
   if(!v||typeof v!=='object'||Array.isArray(v))return null;const out={};
   for(const [id] of FLOOR_SOURCES){const src=v[id];if(!src||typeof src!=='object')continue;const o={};
     for(const [k,[,min,max,def]] of Object.entries(FLOOR_SOURCE_FIELDS)){const x=src[k];if(x===undefined||x===null)continue;
       if(k==='on'){if(typeof x==='boolean'&&x!==def)o.on=x;continue;}
+      // brightness / spread / edge / saturation may be keyed in time, [[seconds, value], …] (opt-in: a plain number is the same as before).
+      if(Array.isArray(x)&&KEYED_FLOOR_FIELDS.includes(k)){const keys=x.slice(0,32).filter(p=>Array.isArray(p)&&Number.isFinite(p[0])&&Number.isFinite(p[1])).map(p=>[Math.round(num(p[0],0,90,0)*1000)/1000,Math.round(num(p[1],min,max,def)*1000)/1000]).sort((a,b)=>a[0]-b[0]);
+        if(keys.some(p=>Math.abs(p[1]-def)>1e-9))o[k]=keys;continue;}
       const n=num(x,min,max,null);if(n!==null&&Math.abs(n-def)>1e-9)o[k]=Math.round(n*1000)/1000;}
+    // foot tint (opt-in): the pool's colour moves toward tint (#rrggbb) by tintAmount 0..1 (keyable), at its own brightness.
+    if(hexOk(src.tint)){const ta=src.tintAmount;
+      if(Array.isArray(ta)){const keys=ta.slice(0,32).filter(p=>Array.isArray(p)&&Number.isFinite(p[0])&&Number.isFinite(p[1])).map(p=>[Math.round(num(p[0],0,90,0)*1000)/1000,Math.round(num(p[1],0,1,0)*1000)/1000]).sort((a,b)=>a[0]-b[0]);
+        if(keys.some(p=>p[1]>1e-9)){o.tint=src.tint.toLowerCase();o.tintAmount=keys;}}
+      else{const n=num(ta,0,1,null);if(n!==null&&n>1e-9){o.tint=src.tint.toLowerCase();o.tintAmount=Math.round(n*1000)/1000;}}}
     if(Object.keys(o).length)out[id]=o;}
   return Object.keys(out).length?out:null;
 }
@@ -116,6 +125,7 @@ export function describeFloorSource(v){
   const d=floorSourceAt(null,'x'),parts=[],r1=v=>Math.round(v*10)/10,r2=v=>Math.round(v*100)/100;if(!v)return 'as the film';
   if(v.on===false)return 'off';
   if(v.x||v.z)parts.push(`moved ${v.x?`${v.x>0?'+':''}${r1(v.x)} cm across`:''}${v.x&&v.z?', ':''}${v.z?`${v.z>0?'+':''}${r1(v.z)} cm front/back`:''}`);
-  for(const k of ['spread','length','edge','brightness','saturation'])if(v[k]!==undefined&&v[k]!==d[k])parts.push(`${FLOOR_SOURCE_FIELDS[k][0].replace(' ×','').toLowerCase()} ×${r2(v[k])}`);
+  if(v.tint&&(Array.isArray(v.tintAmount)||v.tintAmount>0))parts.push(`tint ${v.tint}${Array.isArray(v.tintAmount)?' keyed':' ×'+r2(v.tintAmount)}`);
+  for(const k of ['spread','length','edge','brightness','saturation'])if(Array.isArray(v[k]))parts.push(`${FLOOR_SOURCE_FIELDS[k][0].replace(' ×','').toLowerCase()} keyed (${v[k].length})`);else if(v[k]!==undefined&&v[k]!==d[k])parts.push(`${FLOOR_SOURCE_FIELDS[k][0].replace(' ×','').toLowerCase()} ×${r2(v[k])}`);
   return parts.join(' · ')||'as the film';
 }

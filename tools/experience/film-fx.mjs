@@ -65,6 +65,9 @@ import {screenTiming} from './screen-timing.mjs';
 //     ledFloorSources: {foot, center, left, right: {on, x, z (cm; x toward the right wing, z toward the front), spread,
 //     length, edge (softness), brightness, saturation (x)}}  the floor reflection of each LED source (film-viewer-leds:
 //     the foot glow and the floor bounce's strips); fields left out are the film's (experience/film-lighting.mjs).
+//     spread, edge, brightness, saturation and tintAmount may also be keyed, [[seconds, value], ...] (opt-in; plain numbers are unchanged).
+//     foot only (opt-in): tint '#rrggbb' + tintAmount 0..1, the footrest pool's colour moves toward the tint at its own brightness
+//     (saturation alone cannot colour a grey LED, as the awaken chapter's #767676 is).
 //   clock:{from:'08:00', to:'17:30', start=0, end=shot.seconds, ease='linear', second='real'|'clock'|'hide'}
 //   timeOfDay:[{at:seconds, mode:'morning'}, …]  (lighting-only interpolation)
 //   ledStatus:[{at,dur,kind,mode}], obstacles:[{x,ahead,radius,height,rise}]  see film-status.mjs
@@ -1160,6 +1163,7 @@ export async function frame(t, chapterSeconds, { video = false, screens = true, 
   active.deskEdits?.frame(chapterSeconds);   // the other desks' own moves by chapter time (film-desk-edits.mjs)
   active.roomLight?.frame(chapterSeconds);
   active.roomSpill?.frame(chapterSeconds);
+  active.viewerLeds?.setTime?.(chapterSeconds);   // keyed ledFloorSources fields (opt-in)
   if (active.globals?.exposureCell) active.globals.exposureCell.cell.value = keyAt(active.globals.exposureCell.keys, chapterSeconds);
   if (active.globals?.envKeys) {
     const k = active.globals.envKeys, i = k.findIndex(p => p[0] > chapterSeconds);
