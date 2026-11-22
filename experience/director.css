@@ -751,3 +751,28 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 /* film banner: how many more edits the draft has (film-fresh.mjs); the autosave list's notes (director-autosave.mjs) */
 .film-fresh .film-fresh-more{color:#ffe2a8;font-weight:600}
 .autosave-note{color:#ffc977;font-weight:600}
+/* the movie chapter's clip track (ch 10 media; movie-edit-ui.mjs): transition chips over their span, + on plain cuts */
+#director-timeline .movie-track .desk-lane-label small{display:block;font-size:9px;color:#9fb3bd}
+#director-timeline .clip-transition{position:absolute;top:9px;height:26px;min-height:0;min-width:10px;padding:0;margin:0;border:1px solid #ffd27a;border-radius:4px;background:linear-gradient(90deg,#ffd27a22,#ffd27a66,#ffd27a22);color:#fff;font-size:12px;line-height:24px;z-index:3;cursor:pointer;box-shadow:none;transform:none}
+#director-timeline .clip-transition-dip{background:linear-gradient(90deg,transparent,var(--dip,#000) 50%,transparent);border-color:#c9a8ff}
+#director-timeline .clip-transition.clamped{border-style:dashed}
+#director-timeline .clip-transition.selected{outline:2px solid #ffd27a;outline-offset:1px}
+#director-timeline .clip-seam{position:absolute;top:12px;width:16px;height:20px;min-height:0;min-width:0;margin-left:-8px;padding:0;border:1px solid #ffffff55;border-radius:4px;background:#0d1d2acc;color:#e6f4ff;font-size:11px;line-height:18px;z-index:3;cursor:pointer;box-shadow:none}
+#director-timeline .clip-seam:hover,#director-timeline .clip-seam.selected{border-color:#ffd27a;color:#ffd27a}
+#director-timeline .desk-clip.missing{background:repeating-linear-gradient(135deg,#4a1d1d,#4a1d1d 6px,#2a1111 6px,#2a1111 12px)!important;border-color:#ff7a6e}
+#director-timeline .ripple-marker{position:absolute;top:0;bottom:0;width:3px;margin-left:-1px;background:#ffd27a;z-index:5;pointer-events:none}
+#director-panel .movie-edit{margin:0 0 12px;padding:8px 10px;border:1px solid #ffd27a55;border-radius:9px}
+#director-panel .movie-clips{list-style:none;margin:6px 0;padding:0;display:grid;gap:4px}
+#director-panel .movie-clips button{width:100%;display:grid;grid-template-columns:18px 1fr;gap:0 6px;text-align:left;padding:5px 7px}
+#director-panel .movie-clips button small{grid-column:2;font-size:10px;color:#9fb3bd}
+#director-panel .movie-clips li.selected button{outline:2px solid #ffd27a;outline-offset:-2px}
+#director-panel .movie-clips li.missing button{border-color:#ff7a6e}
+#director-panel .movie-clamp,#director-panel .movie-errors,#director-panel .movie-missing{color:#ffb38a}
+#director-panel .source-monitor{margin:8px 0;padding:8px;border:1px solid #ffffff22;border-radius:8px}
+#director-panel .source-monitor video{width:100%;max-height:170px;background:#000;border-radius:5px}
+#director-panel .monitor-marks{font-size:10.5px;color:#cfe3ec;align-self:center}
+#director-panel .movie-bin{margin:8px 0}
+#director-panel .movie-bin-list{display:grid;gap:3px;max-height:220px;overflow:auto}
+#director-panel .movie-bin-list button{display:flex;justify-content:space-between;gap:8px;text-align:left;padding:4px 7px;font-size:11px}
+#director-panel .movie-bin-list button small{color:#9fb3bd}
+#director-panel .movie-bin-list button.selected{outline:2px solid #ffd27a;outline-offset:-2px}

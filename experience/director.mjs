@@ -13,7 +13,7 @@ import {createViewNav} from './view-nav.mjs';
 import {PREF as HOLD_PREF} from './editing-camera.mjs';
 import {createPreviewHides,HIDE_LABELS} from './preview-hides.mjs';
 import {createAutosave,placeOf,changesSince,when as autosaveWhen} from './director-autosave.mjs';
-import {createGraphicsEditor} from './graphics-editor.mjs?v=timeline-delete-20261120';
+import {createGraphicsEditor} from './graphics-editor.mjs?v=clip-track-20261121';
 import {addCameraHolds} from './camera-holds.mjs';
 import {cinematicViews,polishMovement,openingSwoop} from './cinematography.mjs';
 import {paceChapter,lengthenChapter,chapterFloor,shortenChapter,viewsPastEnd} from './chapter-timing.mjs?v=chapter-shorten-20261121';
@@ -903,6 +903,8 @@ export function mountDirector(bridge,catalog,initial){
   const layersStudio={on:()=>layersOn(),setting:()=>chapterSetting(shot()),featured:stageFeatured,hideDesk:layersHideDesk,
     hiddenHere:()=>{try{const s=shot();return s?studioHiddenHere(localStorage.getItem(LAYERS_KEY),s,chapterRooms(s,stageLayout()),sceneProps.items()):new Map();}catch(error){console.warn('[layers]',error);return new Map();}}};
   const graphics=createGraphicsEditor({panel,timeline,shot,filmShot,showInspector,renderPanel,renderTimeline,status,commit,onPick:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();deskSel.deselect();},groupHead:laneGroupHead,groupClosed,time:()=>playhead,snapStep:()=>numStep(),magnet:()=>magnet});
+  // the movie chapter's source bin: <cut>/director-film/screen-bin.json (compose-screen-edit.mjs --bin), beside the chapter shots
+  graphics.setBinUrl(cutDir?cutDir+'/director-film/screen-bin.json':null);
   // Sonar (sonar-editor.mjs): a proximity chapter's rings, in the Graphics tab; shot.sonar.
   const sonarEditor=createSonarEditor({panel,bridge,shot,filmShot,commit,status,showing:()=>open&&inspector==='graphics'});
   const layers=createLayersPanel({root:panel,shot,commit,status,props:sceneProps,rerender:()=>renderLayers(),studio:layersStudio});
@@ -1031,15 +1033,27 @@ export function mountDirector(bridge,catalog,initial){
     if(stillBusy)return;requireReady();if(!deskEditor.flush())return;
     const s=shot(),t=playhead,seconds=Number((t*s.seconds).toFixed(2)),name=`Film-${s.id}-${seconds.toFixed(2)}s.jpg`,film=filmShot();
     const job=deskVersions.renderShot(film,s,keys(),seconds),started=performance.now(),first=!stills?.warm?.(),caption=stillCaption();stillBusy=true;
-    const title=()=>first?`Preparing film stage (first still only) · ${Math.round((performance.now()-started)/1000)} / ${Math.round(bootMs/1000)} s`:`Rendering ${s.id} at ${seconds.toFixed(2)} s… ${Math.round((performance.now()-started)/1000)} s`;
+    let composing=false;
+    const title=()=>composing?`Composing the movie edit (dissolves and dips) for Render still… ${Math.round((performance.now()-started)/1000)} s`:first?`Preparing film stage (first still only) · ${Math.round((performance.now()-started)/1000)} / ${Math.round(bootMs/1000)} s`:`Rendering ${s.id} at ${seconds.toFixed(2)} s… ${Math.round((performance.now()-started)/1000)} s`;
     still.busy(title(),film?'Film shot with your Director edits, film quality on.':'No film shot for this chapter: rendering the Director cut alone.',{expected:first?bootMs:0});
     const timer=setInterval(()=>{const text=title();status(text);still.progress(text);},500);
     try{
+      // The movie's edit list (ch 10 media): its dissolves and dips composed on the desk (studio-server POST
+      // /api/screen-edit, compose-screen-edit.mjs, cached by its compose key) so the still shows the blend; a chapter
+      // without a transitionIn sends nothing. If it cannot be composed, the still shows the cut, and says so.
+      let composed='';
+      if(cutDir&&Array.isArray(job.screens)&&job.screens.some(sc=>sc&&sc.transitionIn)){
+        composing=true;status(title());still.progress(title());
+        try{const r=await fetch('/api/screen-edit',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({cut:cutDir,shot:{id:job.id,seconds:job.seconds,screens:job.screens}})}),d=await r.json().catch(()=>({}));
+          if(!r.ok)throw Error(d.error||r.statusText);job.screens=d.screens;composed=d.cached?' · movie edit (composed before)':' · movie edit composed';}
+        catch(error){console.warn('[render still] movie edit',error.message);composed=' · movie edit NOT composed ('+error.message+'): cuts shown';}
+        finally{composing=false;}
+      }
       stills||=createStillRenderer();const shot3d=await stills.render(job,t),took=performance.now()-started;
       // The chapter's film titles on top (as finish-intro burns them in), unless Titles is off in the toolbar.
       let url=shot3d,titled=0;try{titled=titleEditor.stillTitles(seconds);if(titled)url=await titleEditor.compositeStill(shot3d,seconds);}catch(error){console.warn('[render still] titles',error.message);titled=0;}
       if(first)try{localStorage.setItem('ergoflex.director.stillBootMs',String(Math.round(took)));bootMs=took;}catch{}
-      still.add({url,name,seconds:seconds,note:`${Math.round(took/100)/10} s to render${titled?` · ${titled===1?'title':titled+' titles'} on`:''}`,detail:caption.text});stillMark=caption.mark;group=null;
+      still.add({url,name,seconds:seconds,note:`${Math.round(took/100)/10} s to render${titled?` · ${titled===1?'title':titled+' titles'} on`:''}${composed}`,detail:caption.text});stillMark=caption.mark;group=null;
       status('Still rendered: '+name+' · R renders another, \\ compares with the live view, Shift-click a thumbnail for A/B.');
     }catch(error){console.error('[render still]',error);still.error(error.message);status('Render still failed: '+error.message,true);stills?.dispose();stills=null;}
     finally{clearInterval(timer);stillBusy=false;}

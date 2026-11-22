@@ -17,5 +17,8 @@ export function splitGraphic(list,index,at,seconds){
   // Preserve implicit screen targets when the array gains a new entry.
   const next=structuredClone(list).map((s,i)=>({...s,target:s.target??i}));
   const left={...next[index],start,end:at},right={...next[index],start:at,end,offset:Number(sc.offset||0)+(at-start)*Number(sc.rate??1)};
+  // (screen edit list, docs/screen-edit-list/CONTRACT.md: the right piece starts where the left one ends, so it has no
+  // transition in of its own (it would dissolve into its own left half) and no compose (the first clip's only))
+  delete right.transitionIn;delete right.compose;
   next.splice(index,1,left,right);return next;
 }
