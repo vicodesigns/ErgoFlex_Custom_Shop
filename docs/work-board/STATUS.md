@@ -65,6 +65,7 @@ VICO'S STANDING RULES
 3. Render-epoch bumps and queueing a film need his say, EXCEPT epoch 13 (all-metal aluminium look) which he approved; Codex faces ride on it. Epoch 13 is NOT yet written in tools/experience/render-epoch.txt: it arrives with eng/desk-aluminium-look (the epoch line should mention BOTH the all-metal look and Codex's cast faces).
 4. Do not delete his data. "Enough space, do not delete anything else for now."
 5. Keep this board + STATUS.md updated; show him stills for anything he must look at (SendUserFile to his phone; desk receiver rejects .mp3/.m4a names, use .mp4).
+5b. Media for review (Vico, 2026-11-21): attach any audio or video he must hear/see to the board itself. The artifact page has a MEDIA map and card field 'media' (audio/video players, files under media/ in the artifact; publish with publish_files, index.html plus media/*; keep each file well under 20 MiB, total under 64 MiB, so use 480p clips and audio-only AAC .mp4). Score before/after 0-30 s clips are attached to the Score card. Also still send to his phone with SendUserFile.
 6. Engineering/rendering goes to Windows (3dmodeling); the desk has little RAM/disk: no browser e2e, no long Director loads, people builds --jobs 1.
 
 STATE OF THE FILM
