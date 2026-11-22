@@ -3,7 +3,7 @@ Runs after Y-up orientation, fitting and transform baking (Blender Z is up).
 """
 import bpy
 import math
-from mathutils import Matrix
+from mathutils import Matrix, Vector
 
 def mat(name, color, roughness=.5, metallic=0):
     m=bpy.data.materials.new(name);m.use_nodes=True
@@ -65,7 +65,7 @@ def improve(id):
         # Reinforce the existing central support without changing seat height.
         bpy.ops.mesh.primitive_cylinder_add(vertices=24,radius=.019,depth=.285,location=(0,0,.23))
         o=bpy.context.object;o.name='Reinforced stool gas lift';o.data.materials.append(mat('Gas lift graphite',(.025,.03,.032),.35,.55))
-    elif id=='ergoflex-keyboard-tray':
+    elif id in ('ergoflex-keyboard-tray','ergoflex-keyboard-tray-rig'):
         # Turn right after fitting, preserving the CAD dimensions and
         # the ceiling anchor. Blender Z becomes glTF Y on export.
         turn=Matrix.Rotation(math.radians(80),4,'Z')
@@ -134,3 +134,82 @@ def improve_artist(id):
 
 def mesh_objects_artist():
     return [o for o in bpy.context.scene.objects if o.type=='MESH']
+
+
+# ---- Keyboard tray rig (docs/keyboard-tray/SPEC.md sections 2 and 3) -----------------------------------------------
+# The CAD arrives as 7 meshes. They are not welded together here: each is a whole part of the mechanism, and the hinged
+# groups are built by PARENTING them under named pivot empties, so the rest pose is the glb exactly as the rigid asset has it.
+# Everything below is in the glTF frame (Y up, +z toward the user), millimetres, after the fit, the ceiling anchor and the
+# 80 degree turn of improve(): the frame of assets/props/ergoflex-keyboard-tray.glb.
+#
+# Skew: the whole CAD is turned about the vertical by 7.43 degrees against glTF x/z (measured on the pin, rod and link axes,
+# 7.31 .. 7.44; the track's long axis is 7.4 off z). The hinge axes follow it, so the pivot nodes carry it: Tray_Slide is
+# turned 7.43 about the vertical, everything below it keeps an identity rotation of its own. Do not "straighten" the model:
+# the saved placements in preset-defaults.mjs undo the same skew with their own yaw.
+TRAY_SKEW_DEG = 7.43
+# Source meshes found by their bounds (min, max), tolerance 1 mm: a changed source stops the build instead of mis-assigning.
+TRAY_PARTS = [
+    ('Tray_Track',    (-67.4, -8.6, -343.2), (85.4, 0.0, 47.4)),       # fixed track under the desk
+    ('Tray_Carriage', (-68.3, -52.2, -110.4), (56.4, 0.0, 42.7)),     # carriage, guide rails, the pins on it
+    ('Tray_Links',    (-67.9, -84.3, -7.6), (27.9, -15.8, 145.2)),     # the two sloped links and their bracket
+    ('Tray_Forks',    (-97.5, -80.7, 99.1), (35.0, -27.0, 222.7)),     # both forks, the pin and the spacer between
+    ('Tray_Plate',    (-284.3, -28.1, 68.9), (209.6, -19.7, 354.8)),   # the 494 x 286 plate (the riders' frame)
+    ('Tray_Crossbar', (-68.7, -96.7, 84.0), (105.2, -65.8, 126.4)),   # cross-bar, rod and the lock knob
+    ('Tray_Screw',    (49.9, -88.4, 98.8), (53.4, -73.0, 114.4)),      # the small pin at the rod's end (its own material in the CAD)
+]
+# Pivot nodes: (name, parent, position in the glb frame, mm). Positions follow the track's centre line, which is the line
+# through the track centre (9.0, 0, -147.9) along the skewed track axis: the carriage centre sits on it at z -33.8, its front
+# at z 29.7 (the AABB's 36.1 is the front corner of a skewed box). tilt is on the rod axis, mid-rod. Rest pose: every node's
+# own translation / rotation about its joint is zero, so the world pose of every mesh is what the rigid glb has.
+TRAY_PIVOTS = [
+    ('Tray',       None,          (0.0, 0.0, 0.0), False),      # = today's prop root, identity
+    ('Tray_Drop',  'Tray',        (9.0, 0.0, -147.9), False),   # the mount: the track's top centre; the whole tray moves down this node's -Y
+    ('Tray_Slide', 'Tray_Drop',   (-5.9, -26.1, -33.8), True),  # carriage centre; moves along its own +Z (the track axis); carries the skew
+    ('Tray_Swing', 'Tray_Slide',  (-14.2, -26.1, 29.7), True),  # vertical pivot at the carriage front (the track's end when out); local Y
+    ('Tray_Tilt',  'Tray_Swing',  (-9.0, -80.7, 98.6), True),   # the rod under the plate's rear; local X (front edge up = turn about -X)
+]
+TRAY_PARENT = {'Tray_Track': 'Tray_Drop', 'Tray_Carriage': 'Tray_Slide', 'Tray_Links': 'Tray_Swing', 'Tray_Forks': 'Tray_Tilt',
+               'Tray_Plate': 'Tray_Tilt', 'Tray_Crossbar': 'Tray_Tilt', 'Tray_Screw': 'Tray_Tilt'}
+
+def rig_keyboard_tray():
+    """Names the seven CAD meshes, creates the pivot empties and parents everything, keeping every world transform."""
+    meshes = [o for o in bpy.context.scene.objects if o.type == 'MESH']
+    if len(meshes) != len(TRAY_PARTS): raise ValueError('keyboard tray rig: expected %d meshes, found %d' % (len(TRAY_PARTS), len(meshes)))
+    def box(o):
+        pts = [o.matrix_world @ v.co for v in o.data.vertices]
+        lo = [min(p[i] for p in pts) for i in range(3)]; hi = [max(p[i] for p in pts) for i in range(3)]
+        g = lambda v: (v[0] * 1000, v[2] * 1000, -v[1] * 1000)   # Blender (Z up, -y toward the user) -> glTF, mm
+        a, b = g(lo), g(hi)
+        return tuple(min(a[i], b[i]) for i in range(3)), tuple(max(a[i], b[i]) for i in range(3))
+    found = {}
+    for o in meshes:
+        lo, hi = box(o)
+        print('RIGDUMP', o.name, [round(c, 1) for c in lo], [round(c, 1) for c in hi], len(o.data.vertices), flush=True)
+        for name, elo, ehi in TRAY_PARTS:
+            if all(abs(lo[i] - elo[i]) < 1.0 and abs(hi[i] - ehi[i]) < 1.0 for i in range(3)):
+                if name in found: raise ValueError('keyboard tray rig: two meshes match ' + name)
+                found[name] = o
+    missing = [n for n, _, _ in TRAY_PARTS if n not in found]
+    if missing: raise ValueError('keyboard tray rig: the source changed, no mesh matches ' + ', '.join(missing) + ' (see RIGDUMP lines)')
+    # One material for every part, as the rigid glb ends up with: finishes are applied by material role (workspace-3d.mjs).
+    shared = found['Tray_Carriage'].data.materials[0]
+    for name, o in found.items():
+        o.name = name; o.data.name = name
+        o.data.materials.clear(); o.data.materials.append(shared)
+    phi = -math.radians(TRAY_SKEW_DEG)          # Blender Z turn that points local X at glTF (cos, 0, +sin) and local Z along the track
+    pivots = {}
+    for name, parent, pos, skewed in TRAY_PIVOTS:
+        e = bpy.data.objects.new(name, None); e.empty_display_type = 'ARROWS'; e.empty_display_size = 0.02
+        bpy.context.scene.collection.objects.link(e)
+        e.location = Vector((pos[0] / 1000, -pos[2] / 1000, pos[1] / 1000))
+        e.rotation_euler = (0, 0, phi if skewed else 0)
+        bpy.context.view_layer.update()
+        if parent:
+            e.parent = pivots[parent]; e.matrix_parent_inverse = pivots[parent].matrix_world.inverted()
+        pivots[name] = e
+    for name, parent in TRAY_PARENT.items():
+        o = found[name]; world = o.matrix_world.copy()
+        o.parent = pivots[parent]; o.matrix_parent_inverse = pivots[parent].matrix_world.inverted()
+        o.matrix_world = world
+    bpy.context.view_layer.update()
+    print('RIGDONE', {n: [round(c, 2) for c in ((e.matrix_world.translation.x * 1000), (e.matrix_world.translation.z * 1000), (-e.matrix_world.translation.y * 1000))] for n, e in pivots.items()}, flush=True)

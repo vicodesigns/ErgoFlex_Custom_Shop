@@ -19,7 +19,7 @@ const ERGO = 45, MOUSE = 56.9;
 {   // the joint table: four joints, Vico's ranges, rest = 0 = the glb as authored
     assert.deepEqual(T.TRAY_JOINTS.map(j => j.id), ['slide', 'swing', 'tilt', 'drop']);
     assert.deepEqual(L.JOINT_LIMITS, { slide: [0, 1], swing: [-180, 180], tilt: [-15, 15], drop: [0, 165] });
-    assert.equal(L.SLIDE_TRAVEL_MM, 254);
+    assert.equal(L.SLIDE_TRAVEL_MM, 234.5, 'the CAD travel along the track (the rig test measures it)');
     assert.ok(T.TRAY_JOINTS.every(j => j.rest === 0 && j.min <= 0 && j.max > 0 && j.min === L.JOINT_LIMITS[j.id][0]));
     assert.deepEqual(T.restPose(), REST); assert.ok(T.isRestPose(REST) && !T.isRestPose({ ...REST, tilt: 0.01 }));
 }

@@ -149,7 +149,7 @@ for (const prop of selected) {
     }
     jobs.push({ id: prop.id, source, fit: prop.fit, anchor: prop.anchor || 'floor', rotateY: prop.rotateY || 0,
                 rotateX: prop.rotateX || 0, exclude: prop.exclude || [], include: prop.include || [], material: prop.material || null,
-                budget: prop.budget || 0, repair: prop.repair || null, out: join(rawDir, `${prop.id}.glb`) });
+                budget: prop.budget || 0, repair: prop.repair || null, rig: prop.rig || null, out: join(rawDir, `${prop.id}.glb`) });
 }
 
 // 2. Blender: import, scale to real-world size, anchor, export raw GLB.
@@ -176,7 +176,9 @@ for (const prop of selected) {
     else {
         const size = String(prop.textureSize || manifest.textureSize || 1024);
         const res = run(gltfTransform, ['optimize', raw, out, '--compress', 'meshopt', '--texture-compress', 'webp',
-                                        '--texture-size', size, '--simplify', 'false', ...(prop.preserveMaterials ? ['--palette', 'false'] : [])], prop.id);
+                                        '--texture-size', size, '--simplify', 'false', ...(prop.preserveMaterials ? ['--palette', 'false'] : []),
+                                        // keepHierarchy: an articulated asset keeps its named nodes (the default flattens and joins them)
+                                        ...(prop.keepHierarchy ? ['--flatten', 'false', '--join', 'false'] : [])], prop.id);
         if (res.status !== 0) { failures++; console.error(`✗ ${prop.id}: optimize failed\n${res.stderr}`); continue; }
     }
     if (!flag('--keep-raw')) rmSync(raw);
@@ -188,6 +190,7 @@ for (const prop of selected) {
                     ...(prop.budget && r.sourceTris && r.sourceTris > r.tris ? { sourceTris: r.sourceTris } : {}),
                     source: `models/${prop.source}`, license: prop.license || 'unconfirmed', attribution: prop.attribution || null,
                     ...(prop.sizeNote ? { sizeNote: prop.sizeNote } : {}),
+                    ...(prop.hidden ? { hidden: true } : {}),
                     ...(prop.collection ? { collection: prop.collection } : {}),
                     ...(prop.revision ? { revision: prop.revision } : {}),
                     ...(prop.displayMountMm ? { displayMountMm: prop.displayMountMm } : {}) };

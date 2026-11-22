@@ -21,10 +21,11 @@ const NOT_DESK=new Set(['furniture','architecture','environment','industrial','p
 export const deskItem=e=>!!e&&['floor','surface'].includes(e.anchor||'floor')&&!NOT_DESK.has(e.category)&&Array.isArray(e.size)&&Math.max(...e.size)<=600;
 export function recentIds(){try{const v=JSON.parse(localStorage.getItem(RECENT_KEY)||'[]');return Array.isArray(v)?v.filter(x=>typeof x==='string').slice(0,RECENT_MAX):[];}catch{return [];}}
 export function pushRecent(id){try{localStorage.setItem(RECENT_KEY,JSON.stringify([id,...recentIds().filter(x=>x!==id)].slice(0,RECENT_MAX)));}catch{}}
-// Filtering (pure, tested): every word of the query in the name / id / category / collection.
+// Filtering (pure, tested): every word of the query in the name / id / category / collection. An entry with hidden:true is never
+// listed (assets the stage loads by id, e.g. the keyboard tray rig).
 export function filterEntries(entries,{query='',category='all',room=null,fits=false}={}){
   const words=query.toLowerCase().split(/\s+/).filter(Boolean);
-  return entries.filter(e=>(category==='all'||e.category===category)&&(!fits||!room||(e.scenes||[]).includes(room))&&(!words.length||(()=>{const hay=`${e.name} ${e.id} ${e.category} ${e.collection||''}`.toLowerCase();return words.every(w=>hay.includes(w));})()));
+  return entries.filter(e=>e.hidden!==true&&(category==='all'||e.category===category)&&(!fits||!room||(e.scenes||[]).includes(room))&&(!words.length||(()=>{const hay=`${e.name} ${e.id} ${e.category} ${e.collection||''}`.toLowerCase();return words.every(w=>hay.includes(w));})()));
 }
 let linked=false;
 function linkStyles(){if(linked)return;linked=true;const l=document.createElement('link');l.rel='stylesheet';l.href=new URL('./prop-library.css',import.meta.url).href;document.head.append(l);}
