@@ -71,16 +71,22 @@ export function createPhoneMode({ appbar, panel, shellOn = () => true, changed =
     const r = appbar.getBoundingClientRect(); if (r.height) body.style.setProperty('--ef-top', Math.round(r.bottom + 8) + 'px');
     fitPortrait();
   }
+  // Only touch classList when state actually changes: DOMTokenList.remove/toggle otherwise re-triggers MutationObserver.
+  const setCls = (name, on) => { if (cls.contains(name) !== !!on) cls.toggle(name, !!on); };
   function apply() {
     const m = shellOn() ? phoneLayout({ coarse: coarse.matches, ...size() }) : null, was = mode; mode = m;
-    cls.toggle('ef-phone', !!m); cls.toggle('ef-portrait', m === 'portrait'); cls.toggle('ef-landscape', m === 'landscape');
-    if (!m) { for (const s of SHEETS) cls.remove('ef-sheet-' + s); body.style.removeProperty('--ef-top'); syncDemo(); return; }
+    const isOpen = cls.contains('directing'), openChanged = isOpen !== wasOpen;
+    // Always record wasOpen before the desktop (!m) early return; leaving it false caused an infinite MutationObserver
+    // microtask loop whenever 'directing' was added on desktop browsers.
+    wasOpen = isOpen;
+    setCls('ef-phone', !!m); setCls('ef-portrait', m === 'portrait'); setCls('ef-landscape', m === 'landscape');
+    if (!m) { for (const s of SHEETS) setCls('ef-sheet-' + s, false); body.style.removeProperty('--ef-top'); syncDemo(); return; }
     if (m !== was) changed();
-    if (m !== was || cls.contains('directing') !== wasOpen) {
-      if (m === 'portrait') { cls.remove('inspector-hidden'); setSheet(store.sheet, true); }
-      else { for (const s of SHEETS) cls.remove('ef-sheet-' + s); setDrawer(store.drawer !== false, true); }
+    if (m !== was || openChanged) {
+      if (m === 'portrait') { setCls('inspector-hidden', false); setSheet(store.sheet, true); }
+      else { for (const s of SHEETS) setCls('ef-sheet-' + s, false); setDrawer(store.drawer !== false, true); }
     }
-    wasOpen = cls.contains('directing'); measure(); syncDemo();
+    measure(); syncDemo();
   }
   // Portrait has no "hidden inspector": the existing ⋯ and Tab toggle (and ≤ 700 px's start) mean the handle only.
   new MutationObserver(() => {
@@ -99,7 +105,7 @@ export function createPhoneMode({ appbar, panel, shellOn = () => true, changed =
 
   // The Guided demo card (#demo): hidden by default on a phone, closable everywhere, remembered.
   const demoStored = () => { try { return localStorage.getItem(DEMO_KEY); } catch { return null; } };
-  function syncDemo() { const v = demoStored(); cls.toggle('ef-demo-closed', v === 'closed' || (v !== 'open' && !!mode)); }
+  function syncDemo() { const v = demoStored(); setCls('ef-demo-closed', v === 'closed' || (v !== 'open' && !!mode)); }
   function demo(open) { try { localStorage.setItem(DEMO_KEY, open ? 'open' : 'closed'); } catch { /* this visit only */ } cls.toggle('ef-demo-closed', !open); changed(); }
   document.addEventListener('click', e => { if (e.target.closest?.('#demo-close')) demo(false); });
 

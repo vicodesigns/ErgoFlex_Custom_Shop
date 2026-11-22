@@ -53,7 +53,7 @@ export function filmCamera(film,keys,seconds){
 }
 // Renders single frames with the film look in a hidden stage of its own (the same calls as
 // tools/experience/render-cut.cjs: film-fx around prepare, beginBake, fx.frame, bakeFrame).
-export function createStillRenderer({width=1280,height=720,src='/?view=product&presentation=1&tour=1'}={}){
+export function createStillRenderer({width=1280,height=720,src='/?room=product&view=product&presentation=1&tour=1'}={}){
   let frame=null,ready=null,prepared=null,setupKey=null,seeded=null;
   const win=()=>frame.contentWindow;
   async function boot(){

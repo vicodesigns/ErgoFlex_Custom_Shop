@@ -99,7 +99,9 @@ function composeForDirector(cut, shot) {
   const p = composeQueue.then(run, run); composeQueue = p.catch(() => {}); return p;
 }
 const CLIENT_JS = fs.readFileSync(path.join(here, 'studio-state/sync.js'), 'utf8');
-const RELOAD_JS = `(()=>{const es=new EventSource('/__studio/events');es.onmessage=e=>{if(e.data==='css'){for(const l of document.querySelectorAll('link[rel=stylesheet]')){const u=new URL(l.href);u.searchParams.set('_r',Date.now());l.href=u.href;}}else if(e.data==='reload')location.reload();};})();`;
+// Never open SSE inside iframes (e.g. Director's #stage) and share one EventSource across all tabs via Web Locks +
+// BroadcastChannel so plain HTTP/1.1 (http://127.0.0.1:3000) cannot exhaust Chrome's 6-connection-per-origin limit.
+const RELOAD_JS = `(()=>{if(window!==parent)return;const apply=d=>{if(d==='css'){for(const l of document.querySelectorAll('link[rel=stylesheet]')){const u=new URL(l.href);u.searchParams.set('_r',Date.now());l.href=u.href;}}else if(d==='reload')location.reload();};let es=null;const close=()=>{if(es){es.close();es=null;}};addEventListener('pagehide',close);if(typeof BroadcastChannel!=='undefined'&&navigator.locks){const bc=new BroadcastChannel('__studio_reload');bc.onmessage=e=>apply(e.data);navigator.locks.request('__studio_reload_es',()=>new Promise(done=>{es=new EventSource('/__studio/events');es.onmessage=e=>{bc.postMessage(e.data);apply(e.data);};addEventListener('pagehide',()=>{close();done();},{once:true});}));}else{es=new EventSource('/__studio/events');es.onmessage=e=>apply(e.data);}})();`;
 
 async function handle(req, res) {
   const url = new URL(req.url, 'http://x'), p = decodeURIComponent(url.pathname);

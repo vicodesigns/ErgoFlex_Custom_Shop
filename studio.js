@@ -773,7 +773,7 @@ try {
 let workspaceAccessories = null, workspaceRoom = null, selectedRoomScene = 'product';
 let ceilingPreviewEnabled = new URLSearchParams(location.search).get('ceiling') === 'on' || readStore('ergoflex.ceilingPreview', 1, null)?.enabled === true;
 // People living and working in the room (room-people.mjs). Off by default: the models load on first use.
-let roomPeopleEnabled = new URLSearchParams(location.search).get('people') === 'on' || readStore('ergoflex.roomPeople', 1, null)?.enabled === true;
+let roomPeopleEnabled = new URLSearchParams(location.search).get('people') === 'on' || (!window.__ERGO_PRESENTATION__ && readStore('ergoflex.roomPeople', 1, null)?.enabled === true);
 let roomPeopleMode = null, roomPeopleFilter = null, roomPeopleTime = null, roomPeopleTrack = null;   // time: seconds into a film chapter (the stage sets it), else null
 let roomBounceEnabled = readStore('ergoflex.roomBounce', 1, null)?.enabled !== false;
 let sceneDesks=null,sceneDeskUI=null,sceneDeskInternal=false;
@@ -12562,7 +12562,7 @@ function initStudio() {
     new ResizeObserver(syncViewerSize).observe(viewerControls);
     try {
         const requestedRoom = new URLSearchParams(location.search).get('room');
-        selectedRoomScene = EVENT_DEMO ? 'product' : (Object.hasOwn(INSTITUTIONAL_GROUPS, requestedRoom) || ROOM_SCENES.some(s => s.id === requestedRoom)) ? requestedRoom : localStorage.getItem('ergoflex.roomScene') || 'product';
+        selectedRoomScene = EVENT_DEMO ? 'product' : (Object.hasOwn(INSTITUTIONAL_GROUPS, requestedRoom) || ROOM_SCENES.some(s => s.id === requestedRoom)) ? requestedRoom : window.__ERGO_PRESENTATION__ ? 'product' : localStorage.getItem('ergoflex.roomScene') || 'product';
     } catch {}
     setRoomScene(selectedRoomScene, false, { defaultDesktop: !restoredBuildSize });
     const applyEnvironment = (value) => {
