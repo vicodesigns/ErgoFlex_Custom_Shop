@@ -1,0 +1,946 @@
+{
+ "version": "1",
+ "at": "2026-11-21T22:43:01.000Z",
+ "sources": [
+  {
+   "src": "app-reference/assets/desk_viewer/media/ambient-clip-full-vico-2026-10-27.mp4",
+   "group": "movie",
+   "seconds": 608.8,
+   "w": 1920,
+   "h": 1080,
+   "fps": 30,
+   "audio": true
+  },
+  {
+   "src": "app-reference/assets/desk_viewer/media/ambient-clip.mp4",
+   "group": "movie",
+   "seconds": 100,
+   "w": 1280,
+   "h": 720,
+   "fps": 30,
+   "audio": true
+  },
+  {
+   "src": "app-reference/demo_media/ankle_rotations_01_demo.mp4",
+   "group": "demo",
+   "seconds": 15,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/blinking_exercises_01_demo.mp4",
+   "group": "demo",
+   "seconds": 11.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/box_breathing_01_demo.mp4",
+   "group": "demo",
+   "seconds": 17.25,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/chair_desk_dips_01_demo.mp4",
+   "group": "demo",
+   "seconds": 14.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/chin_tuck_01_demo.mp4",
+   "group": "demo",
+   "seconds": 16.25,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/desk_squats_01_demo.mp4",
+   "group": "demo",
+   "seconds": 15.667,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/diaphragmatic_breathing_01_demo.mp4",
+   "group": "demo",
+   "seconds": 15.25,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/eagle_arms_01_demo.mp4",
+   "group": "demo",
+   "seconds": 11.25,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/eye_rolls_01_demo.mp4",
+   "group": "demo",
+   "seconds": 15.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/focus_shifting_01_demo.mp4",
+   "group": "demo",
+   "seconds": 11.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/hand_open_close_01_demo.mp4",
+   "group": "demo",
+   "seconds": 13.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/isometric_bicep_curls_01_demo.mp4",
+   "group": "demo",
+   "seconds": 11.25,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/isometric_triceps_press_01_demo.mp4",
+   "group": "demo",
+   "seconds": 12.25,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/overhead_triceps_stretch_01_demo.mp4",
+   "group": "demo",
+   "seconds": 9.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/palming_01_demo.mp4",
+   "group": "demo",
+   "seconds": 12.25,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/pectoral_stretch_01_demo.mp4",
+   "group": "demo",
+   "seconds": 12.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/physiological_sigh_01_demo.mp4",
+   "group": "demo",
+   "seconds": 17.25,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/posterior_shoulder_stretch_01_demo.mp4",
+   "group": "demo",
+   "seconds": 10.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/quick_body_scan_01_demo.mp4",
+   "group": "demo",
+   "seconds": 17.25,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_ankle_pumps_01_demo.mp4",
+   "group": "demo",
+   "seconds": 13.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_anti_rotation_press_01_demo.mp4",
+   "group": "demo",
+   "seconds": 10.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_calf_stretch_01_demo.mp4",
+   "group": "demo",
+   "seconds": 9,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_cat_cow_01_demo.mp4",
+   "group": "demo",
+   "seconds": 13.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_chest_opener_01_demo.mp4",
+   "group": "demo",
+   "seconds": 14.25,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_core_flex_01_demo.mp4",
+   "group": "demo",
+   "seconds": 12.25,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_core_march_hold_01_demo.mp4",
+   "group": "demo",
+   "seconds": 14.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_crescent_moon_01_demo.mp4",
+   "group": "demo",
+   "seconds": 12.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_gluteal_sets_01_demo.mp4",
+   "group": "demo",
+   "seconds": 12.25,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_hamstring_stretch_01_demo.mp4",
+   "group": "demo",
+   "seconds": 14.25,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_hip_hinge_rehearsal_01_demo.mp4",
+   "group": "demo",
+   "seconds": 14.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_hip_isometrics_01_demo.mp4",
+   "group": "demo",
+   "seconds": 9.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_isometric_spinal_extension_01_demo.mp4",
+   "group": "demo",
+   "seconds": 11.25,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_knee_to_chest_01_demo.mp4",
+   "group": "demo",
+   "seconds": 10.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_leg_extensions_01_demo.mp4",
+   "group": "demo",
+   "seconds": 13.5,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_leg_self_massage_01_demo.mp4",
+   "group": "demo",
+   "seconds": 13.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_marches_01_demo.mp4",
+   "group": "demo",
+   "seconds": 14.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_pelvic_tilt_01_demo.mp4",
+   "group": "demo",
+   "seconds": 13.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_pigeon_pose_01_demo.mp4",
+   "group": "demo",
+   "seconds": 14,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_quad_set_01_demo.mp4",
+   "group": "demo",
+   "seconds": 11.25,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_scapular_squeeze_01_demo.mp4",
+   "group": "demo",
+   "seconds": 10.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_scapular_squeeze_progression_01_demo.mp4",
+   "group": "demo",
+   "seconds": 10.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_spinal_rotation_01_demo.mp4",
+   "group": "demo",
+   "seconds": 10.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_sternum_lift_01_demo.mp4",
+   "group": "demo",
+   "seconds": 16,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/seated_wrist_active_rom_01_demo.mp4",
+   "group": "demo",
+   "seconds": 22.25,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/soft_gaze_peripheral_reset_01_demo.mp4",
+   "group": "demo",
+   "seconds": 11.25,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/standing_back_extension_01_demo.mp4",
+   "group": "demo",
+   "seconds": 10.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/standing_hamstring_curl_01_demo.mp4",
+   "group": "demo",
+   "seconds": 8.25,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/wrist_extensor_stretch_01_demo.mp4",
+   "group": "demo",
+   "seconds": 9.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "app-reference/demo_media/wrist_flexor_stretch_01_demo.mp4",
+   "group": "demo",
+   "seconds": 9.75,
+   "w": 1280,
+   "h": 504,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-20261104-hq14/screens/02-curved.mp4",
+   "group": "captures",
+   "seconds": 17,
+   "w": 2560,
+   "h": 1072,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-20261104-hq14/screens/02-phone.mp4",
+   "group": "captures",
+   "seconds": 17,
+   "w": 720,
+   "h": 1516,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-20261104-hq14/screens/02-portrait.mp4",
+   "group": "captures",
+   "seconds": 17,
+   "w": 1080,
+   "h": 1856,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-20261104-hq14/screens/11-main.mp4",
+   "group": "captures",
+   "seconds": 18,
+   "w": 1920,
+   "h": 800,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-20261104-hq14/screens/13-fin-portrait.mp4",
+   "group": "captures",
+   "seconds": 8,
+   "w": 1080,
+   "h": 1856,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-20261104-hq14/screens/13-fin-wide.mp4",
+   "group": "captures",
+   "seconds": 8,
+   "w": 2560,
+   "h": 1072,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-20261104-hq14/screens/13-main.mp4",
+   "group": "captures",
+   "seconds": 49,
+   "w": 1920,
+   "h": 800,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-awaken-main.mp4",
+   "group": "captures",
+   "seconds": 45.867,
+   "w": 2560,
+   "h": 1072,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-awareness-main.mp4",
+   "group": "captures",
+   "seconds": 13,
+   "w": 1920,
+   "h": 800,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-coast-curved.mp4",
+   "group": "captures",
+   "seconds": 15.5,
+   "w": 1920,
+   "h": 800,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-coast-main.mp4",
+   "group": "captures",
+   "seconds": 15.5,
+   "w": 1920,
+   "h": 1120,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-coast-portrait.mp4",
+   "group": "captures",
+   "seconds": 15.5,
+   "w": 1080,
+   "h": 1856,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-coast-wall.mp4",
+   "group": "captures",
+   "seconds": 15.5,
+   "w": 3840,
+   "h": 1520,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-commons-reservation.mp4",
+   "group": "captures",
+   "seconds": 17,
+   "w": 1920,
+   "h": 800,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-create-landscape.mp4",
+   "group": "captures",
+   "seconds": 23.5,
+   "w": 1920,
+   "h": 1120,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-create-portrait.mp4",
+   "group": "captures",
+   "seconds": 23.5,
+   "w": 1082,
+   "h": 1856,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-hero-artist.mp4",
+   "group": "captures",
+   "seconds": 49,
+   "w": 1920,
+   "h": 800,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-hero-gaming.mp4",
+   "group": "captures",
+   "seconds": 49,
+   "w": 1920,
+   "h": 800,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-hero-hbhs.mp4",
+   "group": "captures",
+   "seconds": 49,
+   "w": 1920,
+   "h": 800,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-hero-home.mp4",
+   "group": "captures",
+   "seconds": 49,
+   "w": 1920,
+   "h": 800,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-hero-occ.mp4",
+   "group": "captures",
+   "seconds": 49,
+   "w": 1920,
+   "h": 800,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-hero-office-portrait.mp4",
+   "group": "captures",
+   "seconds": 10,
+   "w": 1080,
+   "h": 1856,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-hero-office-wide.mp4",
+   "group": "captures",
+   "seconds": 10,
+   "w": 2560,
+   "h": 1072,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-music-arcade.mp4",
+   "group": "captures",
+   "seconds": 13.5,
+   "w": 1360,
+   "h": 1080,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-music-marquee.mp4",
+   "group": "captures",
+   "seconds": 13.5,
+   "w": 1920,
+   "h": 504,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-music-streamdeck.mp4",
+   "group": "captures",
+   "seconds": 13.5,
+   "w": 960,
+   "h": 616,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-music-tv.mp4",
+   "group": "captures",
+   "seconds": 13.5,
+   "w": 1920,
+   "h": 1080,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-oilers-curved.mp4",
+   "group": "captures",
+   "seconds": 16,
+   "w": 1920,
+   "h": 800,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-oilers-laptop.mp4",
+   "group": "captures",
+   "seconds": 16,
+   "w": 1280,
+   "h": 776,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-oilers-portrait.mp4",
+   "group": "captures",
+   "seconds": 16,
+   "w": 1080,
+   "h": 1856,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-rise-curved.mp4",
+   "group": "captures",
+   "seconds": 19,
+   "w": 2560,
+   "h": 1072,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-rise-phone.mp4",
+   "group": "captures",
+   "seconds": 19,
+   "w": 720,
+   "h": 1516,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-rise-portrait.mp4",
+   "group": "captures",
+   "seconds": 19,
+   "w": 1080,
+   "h": 1856,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-storage-phone.mp4",
+   "group": "captures",
+   "seconds": 25.967,
+   "w": 540,
+   "h": 1160,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-wellness-main.mp4",
+   "group": "captures",
+   "seconds": 17,
+   "w": 1920,
+   "h": 1080,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-cine/screens/cine-wellness-tablet.mp4",
+   "group": "captures",
+   "seconds": 17,
+   "w": 1620,
+   "h": 1080,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-vicos-3rd-cut/screens/cine3b-rise-curved.mp4",
+   "group": "captures",
+   "seconds": 24.5,
+   "w": 2560,
+   "h": 1072,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-vicos-3rd-cut/screens/cine3b-rise-phone.mp4",
+   "group": "captures",
+   "seconds": 24.5,
+   "w": 720,
+   "h": 1516,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-vicos-3rd-cut/screens/cine3b-rise-portrait.mp4",
+   "group": "captures",
+   "seconds": 24.5,
+   "w": 1080,
+   "h": 1856,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-vicos-3rd-cut/screens/cine3b-wellness-main.mp4",
+   "group": "captures",
+   "seconds": 23.5,
+   "w": 1920,
+   "h": 1080,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-vicos-3rd-cut/screens/cine3b-wellness-tablet.mp4",
+   "group": "captures",
+   "seconds": 23.5,
+   "w": 1620,
+   "h": 1080,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-vicos-3rd-cut-standing/screens/cine3a-rise-curved.mp4",
+   "group": "captures",
+   "seconds": 24.5,
+   "w": 2560,
+   "h": 1072,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-vicos-3rd-cut-standing/screens/cine3a-rise-phone.mp4",
+   "group": "captures",
+   "seconds": 24.5,
+   "w": 720,
+   "h": 1516,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-vicos-3rd-cut-standing/screens/cine3a-rise-portrait.mp4",
+   "group": "captures",
+   "seconds": 24.5,
+   "w": 1080,
+   "h": 1856,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-vicos-3rd-cut-standing/screens/cine3a-wellness-main.mp4",
+   "group": "captures",
+   "seconds": 20.5,
+   "w": 1920,
+   "h": 1080,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "exports/cinematic-intro-cut-vicos-3rd-cut-standing/screens/cine3a-wellness-tablet.mp4",
+   "group": "captures",
+   "seconds": 20.5,
+   "w": 1620,
+   "h": 1080,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "divi-editor/upload-to-promo/ErgoFlex_Hero.mp4",
+   "group": "promo",
+   "seconds": 8.75,
+   "w": 960,
+   "h": 540,
+   "fps": 24,
+   "audio": false
+  },
+  {
+   "src": "divi-editor/upload-to-promo/LED_Sound_Indicators-web.mp4",
+   "group": "promo",
+   "seconds": 135.9,
+   "w": 900,
+   "h": 1080,
+   "fps": 30,
+   "audio": true
+  },
+  {
+   "src": "divi-editor/upload-to-promo/Recorded_Playback-web.mp4",
+   "group": "promo",
+   "seconds": 72.333,
+   "w": 1296,
+   "h": 1080,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "divi-editor/upload-to-promo/SoundLEds-web.mp4",
+   "group": "promo",
+   "seconds": 80.5,
+   "w": 720,
+   "h": 1280,
+   "fps": 30,
+   "audio": true
+  },
+  {
+   "src": "divi-editor/upload-to-promo/Vision_Control-web.mp4",
+   "group": "promo",
+   "seconds": 33.733,
+   "w": 1296,
+   "h": 1080,
+   "fps": 30,
+   "audio": false
+  },
+  {
+   "src": "divi-editor/upload-to-promo/Voice_Control_PreCollision-web.mp4",
+   "group": "promo",
+   "seconds": 129.133,
+   "w": 1296,
+   "h": 1080,
+   "fps": 30,
+   "audio": true
+  },
+  {
+   "src": "assets/led/game/neon-flight.mp4",
+   "group": "game",
+   "seconds": 12,
+   "w": 640,
+   "h": 360,
+   "fps": 30,
+   "audio": true
+  }
+ ],
+ "missing": [
+  "the full movie (only app-reference/assets/desk_viewer/media/ambient-clip.mp4, 100 s, exists)",
+  "game-montage.py source reels (smb-nes, mario, smk-snes, kart, sf2-snes, sf6, doom-1993, fps .mp4)"
+ ]
+}

@@ -14,11 +14,11 @@
    "n": 2,
    "id": "rise",
    "title": "Your height. Your rhythm.",
-   "seconds": 23.5,
+   "seconds": 28.5,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut-standing/director-ch02-rise.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut-standing/director-film/rise.json",
-   "version": "b466bbd6b112",
-   "updated": "2026-11-20T19:21:09Z"
+   "version": "47ba9680b728",
+   "updated": "2026-11-21T11:59:08Z"
   },
   {
    "n": 3,
@@ -27,8 +27,8 @@
    "seconds": 23.5,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut-standing/director-ch03-create.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut-standing/director-film/create.json",
-   "version": "d5c4ffdaf6af",
-   "updated": "2026-11-20T19:02:04Z"
+   "version": "7a9e46605626",
+   "updated": "2026-11-21T11:05:30Z"
   },
   {
    "n": 4,
@@ -37,8 +37,8 @@
    "seconds": 16.0,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut-standing/director-ch04-commons.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut-standing/director-film/commons.json",
-   "version": "a25f6ef53e48",
-   "updated": "2026-11-20T19:02:04Z"
+   "version": "169fd1619b30",
+   "updated": "2026-11-21T01:35:38Z"
   },
   {
    "n": 5,

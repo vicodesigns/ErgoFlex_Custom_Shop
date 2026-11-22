@@ -3778,5 +3778,16 @@
    0,
    "#b0b0b0"
   ]
- ]
+ ],
+ "sonar": {
+  "radius": 42,
+  "rings": 2,
+  "x": -1.5
+ },
+ "directorEdited": {
+  "at": "2026-11-22T01:00:05Z",
+  "fields": [
+   "sonar"
+  ]
+ }
 }

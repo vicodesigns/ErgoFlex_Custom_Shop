@@ -53,7 +53,7 @@
    "dir": "/exports/cinematic-intro-cut-vicos-2nd-cut",
    "chapters": "/exports/cinematic-intro-cut-vicos-2nd-cut/director-chapters.json",
    "seconds": 261.83,
-   "updated": "2026-11-20T06:34:37Z",
+   "updated": "2026-11-21T00:39:36Z",
    "created": "2026-11-15T23:54:15Z"
   },
   {
@@ -70,23 +70,23 @@
   {
    "id": "vicos-3rd-cut",
    "name": "Vicos 3rd cut",
-   "note": "Chapter 2 with the Overhead Triceps Stretch SEATED (B), chapter 7 with Desk Squats. Copy of Vicos 2nd cut, made November 20, 2026.",
+   "note": "A copy of Vicos 2nd cut (November 20, 2026) with the wellness stretch added to chapter 2 (Rise): stand, type, overhead triceps stretch, sit.",
    "from": "exports/cinematic-intro-cut-vicos-2nd-cut",
    "dir": "/exports/cinematic-intro-cut-vicos-3rd-cut",
    "chapters": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-chapters.json",
-   "seconds": 267.33,
-   "updated": "2026-11-20T06:34:37Z",
+   "seconds": 258.05,
+   "updated": "2026-11-21T03:50:44Z",
    "created": "2026-11-20T17:43:58Z"
   },
   {
    "id": "vicos-3rd-cut-standing",
    "name": "Vicos 3rd cut, standing stretch",
-   "note": "Chapter 2 with the Overhead Triceps Stretch done STANDING (A): stand, type, stretch, then sit; chapter 7 with Desk Squats. Everything else as Vicos 3rd cut.",
+   "note": "Chapter 2 with the Overhead Triceps Stretch done STANDING (A): stand, type, stretch, then sit. Chapter 7 with Desk Squats. Duplicate of Vicos 3rd cut before the stretch.",
    "from": "exports/cinematic-intro-cut-vicos-3rd-cut",
    "dir": "/exports/cinematic-intro-cut-vicos-3rd-cut-standing",
    "chapters": "/exports/cinematic-intro-cut-vicos-3rd-cut-standing/director-chapters.json",
-   "seconds": 267.33,
-   "updated": "2026-11-20T19:30:00Z",
+   "seconds": 270.83,
+   "updated": "2026-11-21T01:35:37Z",
    "created": "2026-11-20T19:01:52Z"
   }
  ]

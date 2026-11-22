@@ -1,5 +1,5 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-2nd-cut/director-exports/export-2691fee6de86-Film-chapter-media-17-s-__omar-roll_.json",
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-8804c0853513-Film-chapter-media-17-s-__6_.json",
  "seconds": 17.0,
  "keys": [
   {
@@ -84,6 +84,14 @@
   "height": 30,
   "tilt": 0
  },
+ "lighting": {
+  "screenLight": {
+   "gain": 0.77,
+   "saturation": 1.38,
+   "contrast": 0.76,
+   "keepHue": true
+  }
+ },
  "props": [
   {
    "match": "^Prop:ergoflex-plant-2$",
@@ -140,6 +148,12 @@
    "match": "^Prop:headphones$",
    "asset": "music:house:room:10:headphones",
    "label": "Prop:headphones",
+   "hide": true
+  },
+  {
+   "match": "^Mixing notes$",
+   "path": "^Room:music > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Groove tabletop \u00b7 daily materials > Mixing notes$",
+   "label": "Mixing notes",
    "hide": true
   }
  ],
