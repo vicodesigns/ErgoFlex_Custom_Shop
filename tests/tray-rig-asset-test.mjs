@@ -35,19 +35,19 @@ const triCount = doc => doc.getRoot().listMeshes().reduce((n, m) => n + m.listPr
     for (const p of L.TRAY_PIVOTS) { const parent = byName.get(p.name).getParentNode(); assert.equal(parent?.getName() ?? null, p.parent, p.name + ' parent'); assert.ok(!byName.get(p.name).getMesh(), p.name + ' is a pure pivot'); }
     for (const [part, pivot] of Object.entries(L.TRAY_PARTS)) { const n = byName.get(part); assert.equal(n.getParentNode().getName(), pivot, part + ' parent'); assert.ok(n.getMesh() && n.listChildren().length === 0, part + ' is a mesh leaf'); }
     // the pivots carry no scale (the quantisation scale sits on the mesh nodes only), so a joint can be set from plain numbers
-    for (const p of L.TRAY_PIVOTS) near(Math.hypot(...byName.get(p.name).getScale()), Math.sqrt(3), 1e-9, p.name + ' scale');
+    for (const p of L.TRAY_PIVOTS) { const sc = byName.get(p.name).getScale(); if (p.name === 'Tray_Bracket') { assert.ok(sc[0] === 1 && sc[2] === 1, 'bracket X, Z scale'); near(sc[1], 0.001, 1e-7, 'the bracket is 1 mm tall at rest'); } else assert.deepEqual(sc, [1, 1, 1], p.name + ' scale'); }
     assert.deepEqual(byName.get('Tray').getTranslation(), [0, 0, 0]); assert.deepEqual(byName.get('Tray').getRotation(), [0, 0, 0, 1]);
 }
 {   // pivot positions (world, rest pose, mm) against the joint table in tray-limits.mjs; axes: the skew lives in Tray_Slide only
     for (const p of L.TRAY_PIVOTS) { const w = mm(byName.get(p.name).getWorldTranslation()); for (let i = 0; i < 3; i++) near(w[i], p.at[i], 0.5, `${p.name} world ${'xyz'[i]}`); }
     const s = Math.sin(L.TRAY_SKEW_DEG * Math.PI / 180), c = Math.cos(L.TRAY_SKEW_DEG * Math.PI / 180);
     for (const p of L.TRAY_PIVOTS) {
-        const n = byName.get(p.name), W = n.getWorldMatrix(), skewed = ['Tray_Slide', 'Tray_Swing', 'Tray_Tilt'].includes(p.name);
+        const n = byName.get(p.name), W = n.getWorldMatrix(), skewed = ['Tray_Slide', 'Tray_Swing', 'Tray_Tilt', 'Tray_Bracket'].includes(p.name), bracket = p.name === 'Tray_Bracket';
         const xAxis = [W[0], W[1], W[2]], yAxis = [W[4], W[5], W[6]], zAxis = [W[8], W[9], W[10]];
-        near(yAxis[1], 1, 1e-6, p.name + ' Y is vertical'); near(Math.hypot(...xAxis), 1, 1e-6, p.name + ' no scale');
+        near(yAxis[1], bracket ? 0.001 : 1, 1e-7, p.name + ' Y is vertical'); near(Math.hypot(...xAxis), 1, 1e-6, p.name + ' no scale');
         const [ex, ez] = skewed ? [c, s] : [1, 0];      // local X (the tilt / pin axis) is the skewed glTF x; local Z (the track axis) is x turned a quarter
         near(xAxis[0], ex, 1e-4, p.name + ' X.x'); near(xAxis[2], ez, 1e-4, p.name + ' X.z'); near(zAxis[0], skewed ? -s : 0, 1e-4, p.name + ' Z.x'); near(zAxis[2], skewed ? c : 1, 1e-4, p.name + ' Z.z');
-        if (!['Tray', 'Tray_Drop', 'Tray_Slide'].includes(p.name)) assert.deepEqual(n.getRotation(), [0, 0, 0, 1], p.name + ' has no rotation of its own (the skew is Tray_Slide\'s)');
+        if (!['Tray', 'Tray_Drop', 'Tray_Slide', 'Tray_Bracket'].includes(p.name)) assert.deepEqual(n.getRotation(), [0, 0, 0, 1], p.name + ' has no rotation of its own (the skew is Tray_Slide\'s)');
     }
     // the skew really is the geometry's: the track plate's long axis and the rod's axis, measured on the vertices (PCA in the xz plane)
     const yaw = vs => { const n = vs.length, mx = vs.reduce((a, v) => a + v[0], 0) / n, mz = vs.reduce((a, v) => a + v[2], 0) / n; let sxx = 0, szz = 0, sxz = 0; for (const v of vs) { const x = v[0] - mx, z = v[2] - mz; sxx += x * x; szz += z * z; sxz += x * z; } return 0.5 * Math.atan2(2 * sxz, sxx - szz) * 180 / Math.PI; };   // angle of the major axis from +x toward +z
@@ -77,7 +77,7 @@ const triCount = doc => doc.getRoot().listMeshes().reduce((n, m) => n + m.listPr
     const rigidVs = rigid.getRoot().listNodes().filter(n => n.getMesh()).flatMap(n => worldVertices(n));
     const a = bounds(rigVs), b = bounds(rigidVs);
     for (let i = 0; i < 3; i++) for (let k = 0; k < 2; k++) near(a[i][k], b[i][k], 0.5, `rest-pose bounding box ${'xyz'[i]} ${k ? 'max' : 'min'} (rig ${a[i][k].toFixed(2)}, rigid ${b[i][k].toFixed(2)})`);
-    assert.equal(triCount(rig), triCount(rigid), 'same triangles'); assert.equal(triCount(rig), 11121);
+    assert.equal(triCount(rig), triCount(rigid) + 12, "the rigid glb's triangles plus the bracket block (12)"); assert.equal(triCount(rig), 11133);
     assert.equal(rig.getRoot().listMaterials().length, 1, 'one material (finishes are applied by role, workspace-3d.mjs)'); assert.equal(rig.getRoot().listMaterials()[0].getName(), rigid.getRoot().listMaterials()[0].getName());
     // the plate, which stays the riders' frame, is where the rigid one has it
     const plate = bounds(worldVertices(byName.get('Tray_Plate'))), rigidPlate = bounds(worldVertices(rigid.getRoot().listNodes().find(n => n.getName() === 'Mesh_3')));
@@ -85,12 +85,24 @@ const triCount = doc => doc.getRoot().listMeshes().reduce((n, m) => n + m.listPr
     near(plate[1][1], -19.7, 0.2, 'plate top is 19.7 mm under the track top (surface.top)');
     // the index entry says the same, and is hidden from the Add prop grid
     const index = JSON.parse(fs.readFileSync(path.join(root, 'assets/props/index.json'), 'utf8')).props, entry = index.find(p => p.id === 'ergoflex-keyboard-tray-rig'), old = index.find(p => p.id === 'ergoflex-keyboard-tray');
-    assert.ok(entry && old); assert.deepEqual(entry.size, old.size); assert.deepEqual(entry.min, old.min); assert.deepEqual(entry.max, old.max); assert.equal(entry.tris, old.tris); assert.equal(entry.anchor, old.anchor); assert.equal(entry.hidden, true); assert.ok(!old.hidden);
+    assert.ok(entry && old); assert.deepEqual(entry.size, old.size); assert.deepEqual(entry.min, old.min); assert.deepEqual(entry.max, old.max); assert.equal(entry.tris, old.tris + 12); assert.equal(entry.anchor, old.anchor); assert.equal(entry.hidden, true); assert.ok(!old.hidden);
     assert.deepEqual(filterEntries([entry, old], {}).map(e => e.id), ['ergoflex-keyboard-tray'], 'the rig is not offered in + Add prop');
+}
+{   // the mount bracket: a plain block, 1 mm tall and inside the track at rest; scaled to the drop it reaches from the desktop underside down to the track
+    const block = worldVertices(byName.get('Tray_BracketMesh')), b = bounds(block), trk = bounds(worldVertices(byName.get('Tray_Track')));
+    near(b[1][1] - b[1][0], 1.0, 0.05, 'bracket height at rest (mm)'); near(b[1][1], 0, 0.01, 'bracket top = the desktop underside');
+    const s = Math.sin(L.TRAY_SKEW_DEG * Math.PI / 180), c = Math.cos(L.TRAY_SKEW_DEG * Math.PI / 180);
+    const across = block.map(v => v[0] * c + v[2] * s), along = block.map(v => -v[0] * s + v[2] * c), tv = worldVertices(byName.get('Tray_Track'));
+    const tAcross = tv.map(v => v[0] * c + v[2] * s), tAlong = tv.map(v => -v[0] * s + v[2] * c);
+    assert.ok(Math.min(...across) > Math.min(...tAcross) && Math.max(...across) < Math.max(...tAcross) && Math.min(...along) > Math.min(...tAlong) && Math.max(...along) < Math.max(...tAlong), 'the block stands inside the track\'s footprint');
+    near(Math.max(...across) - Math.min(...across), 44, 0.5, 'bracket width'); near(Math.max(...along) - Math.min(...along), 70, 0.5, 'bracket length');
+    assert.ok(b[1][0] > trk[1][0] && b[1][1] <= trk[1][1] + 0.01, 'inside the track\'s thickness at rest, so the rest pose is the rigid glb');
+    // its mesh is a unit block (1 m at scale 1, so 1 mm tall at the authored scale 0.001), and the Tray_Drop translation moves the track down by exactly the drop that the stretched bracket spans
+    near((b[1][1] - b[1][0]) / byName.get('Tray_Bracket').getScale()[1], 1000, 50, 'unit block: 1000 mm tall at scale 1');
 }
 {   // the build: the manifest keeps the hierarchy for the rig only; the rigid asset's entry is as it was
     const man = JSON.parse(fs.readFileSync(path.join(root, 'tools/props/manifest.json'), 'utf8')).props, r = man.find(p => p.id === 'ergoflex-keyboard-tray-rig'), o = man.find(p => p.id === 'ergoflex-keyboard-tray');
     assert.equal(r.rig, 'keyboard-tray'); assert.equal(r.keepHierarchy, true); assert.ok(!o.rig && !o.keepHierarchy, 'the rigid asset is built exactly as before');
     for (const k of ['source', 'rotateY', 'anchor', 'fit', 'budget', 'material', 'repair']) assert.deepEqual(r[k], o[k], k + ' is the rigid entry\'s, so the geometry is the same');
 }
-console.log('tray-rig-asset-test: ok (named nodes, pivots at the joint table, skew in Tray_Slide, slide travel ' + L.SLIDE_TRAVEL_MM + ' mm, rest pose = rigid glb within 0.5 mm, 11121 tris)');
+console.log('tray-rig-asset-test: ok (named nodes, pivots at the joint table, skew in Tray_Slide, slide travel ' + L.SLIDE_TRAVEL_MM + ' mm, rest pose = rigid glb within 0.5 mm, 11133 tris incl. the bracket block)');

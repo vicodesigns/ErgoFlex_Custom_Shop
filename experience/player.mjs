@@ -8,6 +8,7 @@ import {escapeAction,isField} from './escape-rule.mjs?v=escape-field-20261121';
 import {cleanCut,decodeCut} from './cuts.mjs';
 import {filmLink,loadFilmChapters,loadFilmShot,liveFilmShot} from './film-chapters.mjs';
 import {effectiveDeskEdits} from './desk-edits.mjs';
+import {effectiveTrayEdits} from './tray-pose.mjs';
 import {latestFilmCut,withCut,filmFresh} from './film-fresh.mjs';
 import {exportLighting} from './film-lighting.mjs';
 import {filmCamera} from './film-render.mjs';
@@ -116,6 +117,7 @@ async function prepareStage(next){
   stage().filmCamera?.(setup?filmCameraBake(setup):null);
   next=versionShot(next,version);
   if(setup&&next.deskEdits===undefined&&setup.sceneDeskEdits?.length)next={...next,deskEdits:effectiveDeskEdits(setup,next)};   // an import's room-desk clips (desk-choreo.mjs)
+  if(setup&&next.trayEdits===undefined&&setup.sceneTray?.length)next={...next,trayEdits:effectiveTrayEdits(setup,next)};   // an import's keyboard tray keys (tray-pose.mjs): the live stage plays them, as it does the desk clips
   const seed=version?await storageSeed(next.id):null;if(seed)seeds.get(seed.url).done=seed;seedStage(seed);
   if(!setup||!fx)return stage().prepare(next);
   const shot=liveFilmShot(setup,next);fx.beforePrepare(shot);

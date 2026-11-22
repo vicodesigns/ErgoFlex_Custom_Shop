@@ -7,6 +7,7 @@ import {mergeSceneLights} from './light-edits.mjs';
 import {mergePropEdits} from './prop-edits.mjs';
 import {mergeBranding} from './branding-edits.mjs';
 import {mergeDeskEdits} from './desk-edits.mjs';
+import {mergeTrayEdits} from './tray-pose.mjs';
 import {mergeFeaturedBuild} from './desk-build.mjs';
 import {mergePeople} from './people-edits.mjs';
 import {withStatusLight} from '../tools/experience/film-status-light.mjs';
@@ -32,7 +33,7 @@ export function filmRenderShot(film,shot,keys){
   if(filmed){next.cameraPlan=filmed.cameraPlan;next.camera=filmed.camera;}
   // (people: the Director's cast over the film's, as the live stage shows it: film-chapters.mjs liveFilmShot; 18 Nov 2026:
   // Render still and Film look showed the film's own cast until an Export cut brought his People edits in)
-  delete next.lights;Object.assign(next,mergeSceneLights(film,shot),mergePropEdits(film,shot),mergePeople(film,shot),mergeBranding(film,shot),mergeDeskEdits(film,shot),mergeFeaturedBuild(film,shot));
+  delete next.lights;Object.assign(next,mergeSceneLights(film,shot),mergePropEdits(film,shot),mergePeople(film,shot),mergeBranding(film,shot),mergeDeskEdits(film,shot),mergeTrayEdits(film,shot),mergeFeaturedBuild(film,shot));
   if(next.quality===undefined)next.quality='hq13';
   return next;
 }
