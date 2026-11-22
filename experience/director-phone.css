@@ -22,6 +22,14 @@
 /* a drag on a block, a handle, a key or the ruler is the editor's; the lanes and the rest of the timeline pan and pinch */
 #director-timeline .timeline-content .desk-clip,#director-timeline .timeline-content .clip-resize,#director-timeline .camera-key,#director-timeline .lane-key,#director-timeline .time-ruler,#director-timeline .cam-transition,#director-timeline .desk-version,#director-timeline .desk-version-seam,#director-timeline .chapter-end-handle{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #director-timeline .desk-lane,#director-timeline .camera-track,#director-timeline .lamps-lane{touch-action:pan-x pan-y pinch-zoom}
+/* Tray mode: a key is a 44 px target around its diamond; the sliders and the number fields are 44 px (the panel rules above) */
+#director-timeline .tray-key{width:44px;height:44px;margin:-22px 0 0 -22px;min-height:0}
+#director-panel .tray-key{min-height:0}
+#director-panel .tray-joint-controls input[type=range]{min-height:44px}
+#director-panel .tray-joint-controls input[type=number]{width:88px;min-height:44px}
+#director-panel .tray-bracket input[type=checkbox]{width:24px;height:24px}
+#director-panel .tray-bracket{min-height:44px}
+#director-panel .tray-saved button{min-height:44px;min-width:44px}
 #director-timeline .timeline-viewport{touch-action:pan-x pan-y pinch-zoom;-webkit-overflow-scrolling:touch}
 #director-timeline .timeline-content .time-ruler-row,#director-timeline .timeline-content .time-ruler{height:44px}
 #director-timeline .timeline-content .time-ruler>span{top:14px}

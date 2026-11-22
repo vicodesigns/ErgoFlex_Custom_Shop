@@ -32,10 +32,11 @@ export function deleteRoute(sel,{poseKey=false,picked=false}={}){
 // deleted only by a handler on the item's own button (focus is lost when the timeline re-renders after the click), and
 // the 🗑 sent a synthetic key to the document that those handlers never saw.
 //   poseKey: a pose key selected in pose mode; picked: timeline group picks; sheetKeys: People sheet keys picked.
-//   -> 'pose-key' | 'picks' | 'sheet-keys' | 'camera' | 'clip' | 'title' | 'graphic' | 'lightkey' | 'person' | 'prop' | null
+//   -> 'pose-key' | 'tray-key' | 'picks' | 'sheet-keys' | 'camera' | 'clip' | 'title' | 'graphic' | 'lightkey' | 'person' | 'prop' | null
 export const DELETABLE=['camera','clip','title','graphic','lightkey','person','prop'];
-export function deleteTarget(sel,{poseKey=false,picked=false,sheetKeys=false}={}){
+export function deleteTarget(sel,{poseKey=false,picked=false,sheetKeys=false,trayKey=false}={}){
   if(poseKey)return 'pose-key';
+  if(trayKey)return 'tray-key';       // a selected key of the keyboard tray's lane (scene-tray-editor.mjs)
   if(picked)return 'picks';
   if(sheetKeys)return 'sheet-keys';
   return sel&&DELETABLE.includes(sel.kind)?sel.kind:null;

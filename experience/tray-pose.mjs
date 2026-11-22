@@ -250,12 +250,12 @@ function between(a, b, u, opts) {
 // no keys, or a time that is not a number: the edit's `initial`, else the rest pose = the rigid tray.
 export function sampleTray(edit, seconds, options = {}) {
     if (!edit) return restPose();
-    const opts = withSetup(edit, options), f = frames(edit);
-    if (f.length === 1 || !finite(seconds) || seconds <= 0) return clampTrayPose(f[0].pose, opts);
+    const opts = withSetup(edit, options), f = frames(edit), fin = p => options.raw ? holdPose(p) : clampTrayPose(p, opts);     // raw: held to the hard limits only (the panel shows what was keyed next to what is allowed)
+    if (f.length === 1 || !finite(seconds) || seconds <= 0) return fin(f[0].pose);
     let i = 0; while (i + 1 < f.length && f[i + 1].t <= seconds + EPS) i++;
-    if (i === f.length - 1) return clampTrayPose(f[i].pose, opts);
+    if (i === f.length - 1) return fin(f[i].pose);
     const a = f[i], b = f[i + 1], u = clamp((seconds - a.t) / (b.t - a.t), 0, 1);
-    return clampTrayPose(between(a, b, u, opts), opts);
+    return fin(between(a, b, u, opts));
 }
 // What the lane should flag (spec 6.4): [{ kind: 'key', t, id?, joints }] for a key whose pose the coupling has to change,
 // [{ kind: 'segment', t (second), from, to, joint, mode }] for a stretch whose travel does. Empty = all as authored.
@@ -300,6 +300,15 @@ export function moveKey(edit, tFrom, tTo) {
     const rest = keys.filter(k => k !== at), there = near(rest, tTo);
     if (there) { Object.assign(there.pose, at.pose); for (const f of ['ease', 'route']) { if (at[f]) there[f] = at[f]; else delete there[f]; } if (at.label) there.label = at.label; return withKeys(edit, rest); }
     at.t = tTo; return withKeys(edit, keys);
+}
+// Moves several keys at once, [[from, to], ...] in seconds (the timeline's drag of a selection). Keys that land within a sixtieth of
+// another merge as in cleanTrayKeys (the later joints win). Times below 0 are held at 0.
+export function retimeKeys(edit, moves) {
+    const map = new Map((moves || []).filter(m => Array.isArray(m) && finite(m[0]) && finite(m[1])).map(([a, b]) => [r3(a), Math.max(0, r3(b))]));
+    const keys = copyKeys(edit).map(k => { const to = [...map].find(([a]) => Math.abs(a - k.t) < KEY_SNAP - 1e-9); return to ? { ...k, t: to[1], moved: true } : k; });
+    // a moved key wins over one it lands on: it goes last at that time
+    keys.sort((a, b) => a.t - b.t || (a.moved ? 1 : 0) - (b.moved ? 1 : 0));
+    return withKeys(edit, keys.map(({ moved, ...k }) => k));
 }
 // The ease / route of the stretch that leaves the key at t.
 export function setKeyEase(edit, t, ease) { const keys = copyKeys(edit), at = near(keys, t); if (!at || !EASES.includes(ease)) return edit; setField(at, 'ease', ease, 'smooth'); return withKeys(edit, keys); }

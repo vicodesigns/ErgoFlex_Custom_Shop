@@ -33,7 +33,7 @@ export async function mountStage(ctx) {
   // Every room desk's own lift / tilt clips (shot.deskEdits, desk-choreo.mjs), sampled with the chapter clock.
   const deskChoreo = createDeskChoreo(api);
   // The keyboard tray's own keys (shot.trayEdits, tray-pose.mjs): tray-rig.mjs is imported, and the rig glb loaded, only for a chapter that has them.
-  let trayRig = null;
+  let trayRig = null, trayPreset = null, traySig = null;
   const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
   const wait = async predicate => {
     const deadline = performance.now() + 120000;
@@ -331,6 +331,7 @@ export async function mountStage(ctx) {
     defaultCameraKeys=(next.kind==='glide'?[0,.3,.6,1]:[0,1]).map((time,i)=>{cam(time);return{id:'auto-camera-'+i,time,label:time===0?'Start view':time===1?'End view':'Movement view '+i,easing:'smooth',view:captureCamera()};});
     cam(0);authoredCamera=captureCamera();shot={...next,motion:next.motion?(next.motion.clips?next.motion:{tracks:next.motion.tracks||tracksFromPoses(next.motion.from,next.motion.to)}):undefined};resolveActive();cam(0);
     deskChoreo.restore();deskChoreo.set(next.deskEdits);
+    trayPreset=preset;traySig=null;
     const trayEdit=activeTrayEdit(next.trayEdits,preset);
     if(trayEdit){trayRig??=(await import('./tray-rig.mjs')).createTrayRig(api);await trayRig.set(trayEdit);trayRig.apply(0);}
     // The onboard touchscreen posed from the chapter's clock (shot.touchscreen); a chapter without it hands the screen back.
@@ -615,6 +616,30 @@ ctx.editCamera(editorMode||cameraHeld);if(editorMode){Object.assign(ctx.controls
     // Director is open the view is the user's (they orbited somewhere handy to move things), so it is put back as it was.
     deskEditsTrack:(edits,id)=>{if(shot?.id!==id)return;shot.deskEdits=edits;deskChoreo.set(edits);keepView(()=>seek(lastProgress));},
     roomDesks:()=>roomDesks(api,deskChoreo),deskBase:id=>deskChoreo.baseOf(id),
+    // The Director's Tray mode (scene-tray-editor.mjs). trayEditsTrack: the chapter's tray keys changed (player.mjs pushes them with every edit):
+    // the rig is loaded when the edit has a key (or a starting pose), put away when it has not, and the tray re-posed at the current time.
+    trayEditsTrack:async(edits,id)=>{
+      if(shot?.id!==id)return;const sig=JSON.stringify(edits??null);if(sig===traySig)return;traySig=sig;shot.trayEdits=edits;
+      const edit=activeTrayEdit(edits,trayPreset);
+      if(edit){trayRig??=(await import('./tray-rig.mjs')).createTrayRig(api);await trayRig.set(edit);}else if(trayRig)trayRig.restore();
+      if(shot?.id===id&&traySig===sig)keepView(()=>seek(lastProgress));
+    },
+    // Does the featured desk have a tray, what stands on it (the clearance limits depend on it), and which desk model the shot is on.
+    trayInfo:()=>{
+      const objs=api.sceneDesks?.active?.objects,has=!!objs?.get('accessory-keyboard-tray'),riders=[];
+      if(has)for(const item of objs.values()){const a=item.obj?.userData?.accessoryId&&accessory(item.obj.userData.accessoryId);
+        if(a&&['keyboard','mouse'].includes(a.exclusiveGroup)&&item.obj.visible&&!item.saved?.removed&&(!trayRig?.count()||trayRig.riders().includes(item.obj)))riders.push({id:a.id,name:a.name,propId:a.propId,kind:a.exclusiveGroup});}
+      return {has,preset:trayPreset,riders};
+    },
+    // Is the first thing under this point of the view (client pixels) the keyboard tray? (the double-click that enters Tray mode)
+    trayAt:(cx,cy)=>{
+      const dom=ctx.renderer.domElement,r=dom.getBoundingClientRect(),ray=new THREE.Raycaster();
+      ray.setFromCamera(new THREE.Vector2((cx-r.left)/r.width*2-1,-(cy-r.top)/r.height*2+1),ctx.camera);
+      const ours=o=>{for(let p=o;p;p=p.parent)if(p.userData?.directorTools||p.isTransformControls)return true;return false;};
+      const hit=ray.intersectObject(ctx.scene,true).find(h=>h.object.isMesh&&h.object.visible&&!ours(h.object));
+      for(let p=hit?.object;p;p=p.parent)if(p.userData?.accessoryId==='keyboard-tray')return true;
+      return false;
+    },
     // The Director's People tab: the chapter's cast changed (room-people.mjs filter; true = the room's own people).
     peopleTrack:(people,id)=>{if(shot?.id!==id)return null;if(people)shot.people=people;else delete shot.people;return api.setRoomPeople?.(!!people,people&&typeof people==='object'?people:null);},
     // The Director's Sonar section (sonar.mjs): the chapter's sonar changed (null: the film's own); the reach is measured again
