@@ -127,6 +127,16 @@ export async function mountStage(ctx) {
     return best?new THREE.Vector3((best.min.x+best.max.x)/2,fallback.y,(best.min.z+best.max.z)/2):fallback;
   }
   // One thin ring at radius r (the band keeps its width at any radius: a scaled ring would thicken as it grows).
+  // The live view's ring band (21 Nov 2026, Vico in the Director: "I don't see the rings", org reproduced it on the desk:
+  // the ring meshes there, visible, opacity .83, and not one pixel on screen): the film's band is w*.007, a few pixels at
+  // 4K with the film's bloom, under one pixel in the Director's viewport on a floor seen at a slant, so it vanished. Live
+  // (never in a bake: render-cut, render-still and the Director's Render still all draw inside one, so the film stays
+  // pixel-identical) the band is at least 2.5 screen pixels where the ring lies, wider as the floor is seen more edge-on.
+  const liveBand=(band,at)=>{
+    if(bakeSession)return band;const cam=ctx.camera,h=ctx.renderer?.domElement?.height||cam.userData?.h||720,d=cam.position.distanceTo(at);
+    const perPx=2*d*Math.tan(THREE.MathUtils.degToRad(cam.fov)/2)/Math.max(1,h),slant=Math.max(.2,Math.abs(cam.position.y-at.y)/Math.max(1e-6,d));
+    return Math.max(band,2.5*perPx/slant);
+  };
   const setRing=(m,r,band)=>{const p=m.geometry.attributes.position,n=p.count/2,a=Math.max(0,r-band/2),b=r+band/2;for(let i=0;i<n;i++){const t=i/(n-1)*Math.PI*2,cs=Math.cos(t),sn=Math.sin(t);p.setXY(i,a*cs,a*sn);p.setXY(i+n,b*cs,b*sn);}p.needsUpdate=true;};
   function stageFloor() {
     const b=box(),sz=b.getSize(new THREE.Vector3()),w=Math.max(sz.x,sz.z),c=deskCentre(b.getCenter(new THREE.Vector3()));
@@ -385,7 +395,7 @@ export async function mountStage(ctx) {
         // sets the gap, 7.2 s / rings; off hides them; Preview at full holds the moment all the rings are out.)
         const S=sonarCfg?.radius?sonarCfg.radius*unitsPerInch():R,hold=previewFull;
         if(sonarCfg?.radius||hold)far=S;
-        const w=reach.userData.w,sec=hold?fullSec(pingStop,sonarCfg):t*shot.seconds,band=w*.007,off=sonarCfg?.enabled===false;
+        const w=reach.userData.w,sec=hold?fullSec(pingStop,sonarCfg):t*shot.seconds,band=liveBand(w*.007,d),off=sonarCfg?.enabled===false;
         const {rows,echoAge:arrived}=pingRows({sec,pingStop,S,far,count:pings.length,cfg:sonarCfg});let echoAge=hold?0:arrived;
         if(off)echoAge=Infinity;
         for(const row of rows){
@@ -463,6 +473,11 @@ ctx.editCamera(editorMode||cameraHeld);if(editorMode){Object.assign(ctx.controls
   // Paused in the Director: the sonar's obstacle can arrive after the last seek (film-fx loads it) and the render loop
   // sleeps when idle, so a timer looks for it (a scene walk every 500 ms, only while a proximity chapter's reach is
   // missing) and draws the frame again once it is found (sonarReach puts the desk at its last pose; seek puts it back).
+  // window.__sonarDebug(): what the sonar draws now (the live check in a real browser; never used by the page itself)
+  window.__sonarDebug=()=>({kind:shot?.kind,sonar,R:shot?.kind==='proximity'?sonarR():0,obstacles:obstacles.length,cfg:sonarCfg,previewFull,baking:!!bakeSession,
+    band:reach?.userData?.w?{film:reach.userData.w*.007,live:ringHome?liveBand(reach.userData.w*.007,ringCentre()):null}:null,
+    pings:pings.map(p=>({visible:p.visible,opacity:+p.material.opacity.toFixed(3),r:+(p.geometry.attributes.position.getX(p.geometry.attributes.position.count-1)).toFixed(4)})),
+    echo:echo?{visible:echo.visible,opacity:+echo.material.opacity.toFixed(3)}:null,camera:{position:ctx.camera.position.toArray().map(v=>+v.toFixed(3)),fov:ctx.camera.fov},canvas:[ctx.renderer?.domElement?.width,ctx.renderer?.domElement?.height]});
   setInterval(()=>{if(!paused||!editorMode||preparing||shot?.kind!=='proximity'||!reach||sonar||document.hidden)return;const r=sonarReach();if(r){sonar=r;wake();seek(lastProgress);}},500);
   ctx.onFrame(now=>{
     if(paused||preparing||!shot)return;

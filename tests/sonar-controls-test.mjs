@@ -123,6 +123,13 @@ assert.match(stageSrc,/setInterval\(\(\)=>\{if\(!paused\|\|!editorMode\|\|prepar
 assert.match(stageSrc,/return \{found:!!sonarR\(\),obstacle:!!sonar,/,'the panel: found (rings drawable) and obstacle');
 assert.match(ed,/i\.obstacle\?` \(the film's: \$\{toUnit\(film,u\)\} \$\{U\}\)`:' \(your size: the obstacle has not been found on this stage yet\)'/,'the readout says when it is the size alone');
 assert.match(ed,/Set a Size to see the rings right away\./);
+// 8. the live band (21 Nov 2026: the meshes drawn at opacity .83, not a pixel on screen in the Director): at least 2.5 screen
+// pixels where the ring lies, wider on a slanted floor, and in a bake (render-cut, render-still, Render still) the film's
+// own w*.007, so the film stays pixel-identical
+assert.match(stageSrc,/const liveBand=\(band,at\)=>\{\n {4}if\(bakeSession\)return band;/,'in a bake: the film\'s band');
+assert.match(stageSrc,/return Math\.max\(band,2\.5\*perPx\/slant\);/,'live: at least 2.5 px');
+assert.match(stageSrc,/band=liveBand\(w\*\.007,d\),off=sonarCfg\?\.enabled===false;/,'the pings and the echo take it');
+assert.match(stageSrc,/window\.__sonarDebug=\(\)=>\(\{/,'a debug hook for a real browser');
 assert.match(stageSrc,/pingRows\(\{sec,pingStop,S,far,count:pings\.length,cfg:sonarCfg\}\)/);
 assert.match(stageSrc,/Array\.from\(\{length:meshesFor\(sonarCfg\)\}/,'seven ping meshes when absent');
 assert.match(stageSrc,/ringHome=\{c:c\.clone\(\),p:[^}]*q:ctx\.loadedModel\.getWorldQuaternion/);
