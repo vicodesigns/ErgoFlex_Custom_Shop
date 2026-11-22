@@ -186,4 +186,26 @@ body.directing.ef-phone.ef-landscape #director-appbar .ab-film select{min-width:
 body.directing.ef-phone.ef-landscape #director-appbar .film-dirty{font-size:0}
 body.directing.ef-phone.ef-landscape #director-appbar .film-dirty::before{content:'●';font-size:16px;color:#ffb347}
 }
+
+/* ---------- F. Cut & Chapter switch button + modal sheet (ui/fold-pickers) ---------- */
+body.directing.ef-phone #director-appbar .ab-switch{display:flex;align-items:center;gap:8px;width:100%;min-width:120px;max-width:100%;height:44px;padding:0 12px;font-size:15px;font-weight:600;text-align:left;justify-content:space-between;overflow:hidden}
+body.directing.ef-phone #director-appbar .ab-switch .ab-switch-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.directing.ef-phone #director-appbar .ab-switch .ab-switch-caret{flex:none;opacity:.85}
+body.directing.ef-phone #director-appbar .ab-switch .film-dirty{flex:none;font-size:14px;color:#ffb347}
+body.directing.ef-phone #director-appbar .ab-switch.needs-choice{border-color:#ffb347;box-shadow:0 0 0 1px #ffb34766}
+body.directing.ef-phone #ef-cc-sheet{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;padding:12px}
+body.directing.ef-phone #ef-cc-sheet[hidden]{display:none}
+body.directing.ef-phone #ef-cc-sheet .cc-scrim{position:absolute;inset:0;background:#02060ab8}
+body.directing.ef-phone #ef-cc-sheet .cc-card{position:relative;z-index:1;width:min(520px,calc(100vw - 24px));max-height:min(86dvh,calc(100dvh - 24px));overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--df-surface-1,#0c1822);color:#edf6fc;border:1px solid var(--df-border-2,#ffffff26);border-radius:16px;padding:14px;box-shadow:0 18px 48px #000b;display:flex;flex-direction:column;gap:10px}
+body.directing.ef-phone #ef-cc-sheet .cc-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+body.directing.ef-phone #ef-cc-sheet .cc-head b{font-size:16px}
+body.directing.ef-phone #ef-cc-sheet .cc-head button{min-width:44px;min-height:44px;border-radius:10px;border:1px solid #ffffff24;background:#ffffff10;color:#edf6fc;font-size:18px}
+body.directing.ef-phone #ef-cc-sheet h3{margin:4px 0 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#93b6c9}
+body.directing.ef-phone #ef-cc-sheet .cc-step{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+body.directing.ef-phone #ef-cc-sheet .cc-list{display:flex;flex-direction:column;gap:6px}
+body.directing.ef-phone #ef-cc-sheet .cc-step button,body.directing.ef-phone #ef-cc-sheet .cc-list button{min-height:48px;padding:10px 12px;border-radius:10px;border:1px solid #ffffff1c;background:#ffffff0a;color:#edf6fc;font-size:15px;text-align:left}
+body.directing.ef-phone #ef-cc-sheet .cc-step button{text-align:center}
+body.directing.ef-phone #ef-cc-sheet .cc-list button[aria-current="true"]{border-color:#63d8f5;background:#63d8f522;font-weight:700}
+body.directing.ef-phone #ef-cc-sheet .cc-step button:disabled{opacity:.4}
+body.directing.ef-phone #ef-cc-sheet .cc-note{margin:0;font-size:14px;color:#9bb6c5}
 }

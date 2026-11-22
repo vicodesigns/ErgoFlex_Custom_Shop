@@ -67,7 +67,7 @@ const apart = (a, b, gap = 0) => !a || !b || !a.shown || !b.shown || a.r <= b.x 
 const appbarOverlaps = () => ev(() => {
   const items = [];
   for (const c of document.querySelectorAll('#director-appbar>*')) {
-    const parts = c.classList.contains('ab-film') ? [...c.querySelectorAll('select,strong')] : c.classList.contains('ab-menu') ? [c.querySelector('[data-ab-open]')] : c.classList.contains('studio-sync') ? [...c.querySelectorAll('button')] : c.classList.contains('ab-group') ? [...c.querySelectorAll('button')] : [c];
+    const parts = c.classList.contains('ab-film') ? [...c.querySelectorAll('button,select,strong')] : c.classList.contains('ab-menu') ? [c.querySelector('[data-ab-open]')] : c.classList.contains('studio-sync') ? [...c.querySelectorAll('button')] : c.classList.contains('ab-group') ? [...c.querySelectorAll('button')] : [c];
     for (const p of parts) { if (!p) continue; const r = p.getBoundingClientRect(); if (r.width > 0 && r.height > 0 && getComputedStyle(p).display !== 'none') items.push({ name: (p.dataset.action || p.name || p.className || p.tagName).toString().slice(0, 30), x: r.x, y: r.y, r: r.right, b: r.bottom }); }
   }
   const out = [];
@@ -110,9 +110,22 @@ async function layoutChecks(tag, landscape) {
   // tap targets and fields
   const tiny = [...await small('#director-appbar .ab-btn, #director-appbar select'), ...await small('#director-timeline .timeline-transport button, #director-timeline .title-add, #director-timeline .timeline-zoom button, #director-timeline .magnet, #director-timeline .track-palette button'), ...(panel?.shown ? await small('#director-panel [data-title-action], #director-panel .inspector-tabs button') : [])];
   check(tiny.length === 0, `${tag}: tap targets are at least 44 px`, tiny.join(' | '));
-  // (Windows on 35e387d7: pickers a chevron only, the stage's two tool rows on top of each other, a big empty area, the toolbar off the edge)
-  const pickers = await ev(() => [...document.querySelectorAll('#director-appbar .ab-film select')].map(e => Math.round(e.getBoundingClientRect().width)));
-  check(pickers.length >= 1 && pickers.every(w => w >= 100), `${tag}: the cut / chapter pickers are wide enough to read (${pickers.join(', ')} px)`);
+  // Cut & Chapter switch button + sheet (ui/fold-pickers): always visible & reachable at every size (portrait and short landscape)
+  const ccBtn = await onScreen('#director-appbar [data-action="cc-open"]');
+  check(ccBtn.found && ccBtn.shown && ccBtn.inside && ccBtn.w >= 119.5 && ccBtn.h >= 43.5, `${tag}: the Cut & Chapter switch button is visible, on screen and 44 px tall`, JSON.stringify(ccBtn));
+  if (ccBtn.found && ccBtn.shown && ccBtn.inside) {
+    await tapSel('#director-appbar [data-action="cc-open"]'); await wait(300);
+    const cc = await ev(() => {
+      const s = document.getElementById('ef-cc-sheet'), card = s?.querySelector('.cc-card');
+      const r = card?.getBoundingClientRect();
+      const cuts = [...(s?.querySelectorAll('[data-cc-cut]') || [])].map(b => Math.round(b.getBoundingClientRect().height));
+      const chs = [...(s?.querySelectorAll('[data-cc-chapter]') || [])].map(b => Math.round(b.getBoundingClientRect().height));
+      return { open: !!s && !s.hidden, inside: !!r && r.left >= 0 && r.right <= innerWidth + 1 && r.top >= 0 && r.bottom <= innerHeight + 1, cuts: cuts.length, chs: chs.length, minH: Math.min(...cuts, ...chs, 999) };
+    });
+    check(cc.open && cc.inside && cc.chs >= 1 && cc.minH >= 44, `${tag}: Cut & Chapter sheet opens on screen with 44 px+ chapter/cut buttons`, JSON.stringify(cc));
+    await tapSel('#ef-cc-sheet .cc-head [data-cc-close]'); await wait(250);
+    check(await ev(() => !!document.getElementById('ef-cc-sheet')?.hidden), `${tag}: Cut & Chapter sheet closes`);
+  }
   const lt = await ev(() => { const b = [...document.querySelectorAll('.light-tools button')].filter(e => e.offsetParent); if (!b.length) return null; const r = b.map(e => e.getBoundingClientRect()); return { x: Math.min(...r.map(q => q.x)), y: Math.min(...r.map(q => q.y)), r: Math.max(...r.map(q => q.right)), b: Math.max(...r.map(q => q.bottom)), shown: true }; });
   const ft = await rectOf('.film-tools-row');
   check(apart(lt, ft), `${tag}: Lights / Move / Aim / Rotate / Scale and Render still / Guides / Live do not overlap`, JSON.stringify({ lt, ft }));

@@ -5,8 +5,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { phoneLayout, nextSheet, dragSheet, PHONE_MAX_WIDTH } from '../experience/director-phone.mjs';
-import { appBarHtml } from '../experience/director-appbar.mjs';
+import { phoneLayout, nextSheet, dragSheet, fitSheet, PHONE_MAX_WIDTH } from '../experience/director-phone.mjs';
+import { appBarHtml, switchButton, cutChapterSheetHtml } from '../experience/director-appbar.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = f => fs.readFileSync(path.join(root, f), 'utf8');
@@ -114,7 +114,30 @@ assert.match(pm, /PHONE_KEY = 'ergoflex\.director\.phone\.v1'/); assert.match(pm
 assert.match(read('experience/director.mjs'), /if\(g==='titles'&&laneGroups\.titles===undefined&&document\.body\.classList\.contains\('ef-phone'\)\)return false;return isFolded\(laneGroups,g\);/);
 {const pm2 = read('experience/director-phone.mjs');
  assert.match(pm2, /content\.scrollHeight/, 'measured on the lanes\' content, not the scrolling viewport (no feedback)');
- assert.match(pm2, /body\.style\.setProperty\('--ef-tl-h', h \+ 'px'\)/);}
+ assert.match(pm2, /setVar\('--ef-tl-h', fit\.h \+ 'px'\)/);
+ assert.ok(pm2.indexOf('wasOpen = isOpen;') < pm2.indexOf('if (!m)'), 'desktop (!m) updates wasOpen before returning so MutationObserver never loops');}
+
+// ---- ui/fold-pickers: phone Cut & Chapter switch button + modal sheet + fitSheet hysteresis
+{
+  const bar = appBarHtml({ picker: '<div data-film-picker><select></select></div>', name: 'Cut', undo: { n: 0 }, redo: { n: 0 }, film: true, phone: true, cutChapter: { label: 'Vicos 3rd cut · 2 · rise (18 s)', dirty: true, choice: false }, lowres: false, sound: false, demoCard: false, inspector: true, titles: true, chapters: false, timeline: true, history: [], overlays: { guides: false } });
+  assert.match(bar, /data-action="cc-open"/, 'phone bar renders the Cut & Chapter switch button');
+  assert.match(bar, /Vicos 3rd cut · 2 · rise \(18 s\)/);
+  assert.doesNotMatch(bar, /<select/, 'no native select inside the phone bar when cutChapter is active');
+  const sheet = cutChapterSheetHtml({ cuts: [{ id: 'c2', name: 'Vicos 2nd cut' }, { id: 'c3', name: 'Vicos 3rd cut' }], mine: 'c3', chapters: [{ n: 0, label: '1 · awaken' }, { n: 1, label: '2 · rise' }], index: 1, error: '', notice: '', canDuplicate: true });
+  assert.match(sheet, /data-cc-cut="c3" aria-current="true"/, 'active cut marked');
+  assert.match(sheet, /data-cc-chapter="1" aria-current="true"/, 'active chapter marked');
+  assert.match(sheet, /data-cc-cut="__new"/, 'duplicate cut action offered');
+  assert.match(sheet, /data-cc-step="-1"/); assert.match(sheet, /data-cc-step="1" disabled/, 'next disabled on last chapter');
+  assert.match(switchButton({ label: 'Cut', dirty: false, choice: true }), /needs-choice/);
+  const f1 = fitSheet({ need: 210, avail: 420 }), f2 = fitSheet({ need: 210, avail: 420, prev: f1 });
+  assert.deepEqual(f2, f1, 'fitSheet is idempotent');
+  const fJitter = fitSheet({ need: 215, avail: 420, prev: f1 });
+  assert.equal(fJitter.h, f1.h, 'fitSheet ignores small content jitter within slack');
+  const rIn = fitSheet({ need: 200, avail: 400 }), rStay = fitSheet({ need: 260, avail: 400, prev: rIn }), rOut = fitSheet({ need: 310, avail: 400, prev: rStay });
+  assert.equal(rIn.roomy, true); assert.equal(rStay.roomy, true, 'hysteresis keeps roomy until below roomyOut'); assert.equal(rOut.roomy, false);
+  assert.match(phoneCss, /body\.directing\.ef-phone #director-appbar \.ab-switch\{/, 'switch button styled on phone');
+  assert.match(phoneCss, /body\.directing\.ef-phone #ef-cc-sheet\{/, 'Cut & Chapter modal sheet styled on phone');
+}
 
 // ---- Windows run on e15d69ec (fold-fixes-3)
 assert.doesNotMatch(phone.replace(/<div class="ab-pop"[\s\S]*?<\/div>/g, ''), /data-action="keys-panel"|>Close</, 'no ⌨ and no Close button in the phone bar (Close is in ⋯)');

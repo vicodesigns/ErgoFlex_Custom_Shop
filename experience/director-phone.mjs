@@ -25,6 +25,17 @@ export function nextSheet(sheet, how) {
   if (how === 'down') return SHEETS[Math.max(0, i - 1)];
   return sheet === 'peek' ? 'half' : sheet === 'half' ? 'peek' : 'half';
 }
+// The portrait fit: the timeline as tall as its lanes need, the height left over to the sheet at peek. Pure and idempotent:
+// fitSheet(same inputs, its own result as prev) gives the same result, so a re-measure after its own change never moves anything.
+// need is quantised to `step` px and a change smaller than `slack` px is ignored (the lanes' content jitters by a pixel or two);
+// the peek sheet shows the inspector ("roomy") from `roomyIn` px of spare height and stops showing it below `roomyOut` (hysteresis).
+export function fitSheet({ need, avail, handle = 52, prev = null, roomyIn = 160, roomyOut = 110, step = 8, slack = 12 }) {
+  avail = Math.max(120, Math.round(avail));
+  let h = Math.min(Math.ceil(need / step) * step, avail);
+  if (prev && prev.h <= avail && Math.abs(h - prev.h) < slack && !(prev.h === avail && h < avail)) h = prev.h;
+  const left = Math.max(0, avail - h), roomy = prev?.roomy ? left >= roomyOut : left >= roomyIn;
+  return { h, peek: handle + left, roomy, avail };
+}
 export const dragSheet = (sheet, dy, slop = 24) => Math.abs(dy) < slop ? nextSheet(sheet, 'tap') : nextSheet(sheet, dy < 0 ? 'up' : 'down');
 
 const load = () => { try { return JSON.parse(localStorage.getItem(PHONE_KEY) || '{}') || {}; } catch { return {}; } };
@@ -49,7 +60,7 @@ export function createPhoneMode({ appbar, panel, shellOn = () => true, changed =
     store.sheet = sheet; if (!keep) save(store);
     for (const s of SHEETS) cls.toggle('ef-sheet-' + s, mode === 'portrait' && s === sheet);
     handle.setAttribute('aria-expanded', String(sheet !== 'peek')); handle.dataset.sheet = sheet;
-    changed();
+    changed(); scheduleFit();
   };
   const setDrawer = (open, keep = false) => {
     cls.toggle('inspector-hidden', !open); if (!keep) { store.drawer = open; save(store); }
@@ -58,29 +69,40 @@ export function createPhoneMode({ appbar, panel, shellOn = () => true, changed =
   // Portrait: the timeline as tall as its lanes need (no dark empty area under a short lane list: Windows at 884 x 1100);
   // the height left over goes to the sheet, which then shows the inspector even at peek when there is room for it.
   // (measured on the lanes' content, not the scrolling viewport, so the size never feeds back into itself)
-  const HANDLE = 52, ROOMY = 140;
+  const HANDLE = 52;
+  let lastFit = null, fitTimer = 0, fitFrame = 0;
+  const setVar = (name, value) => { if (body.style.getPropertyValue(name) !== value) body.style.setProperty(name, value); };
   function fitPortrait() {
     const tl = document.getElementById('director-timeline'), vp = tl?.querySelector('.timeline-viewport'), content = vp?.querySelector('.timeline-content');
-    if (mode !== 'portrait' || !tl || !vp || !content) { body.style.removeProperty('--ef-tl-h'); body.style.removeProperty('--ef-peek'); cls.remove('ef-peek-roomy'); return; }
-    const top = tl.getBoundingClientRect().top, avail = Math.max(120, innerHeight - top - HANDLE - 8);
-    const need = Math.ceil(tl.offsetHeight - vp.clientHeight + content.scrollHeight + 2), h = Math.min(need, avail), left = Math.max(0, avail - h);
-    body.style.setProperty('--ef-tl-h', h + 'px'); body.style.setProperty('--ef-peek', Math.round(HANDLE + left) + 'px'); cls.toggle('ef-peek-roomy', left >= ROOMY);
+    if (mode !== 'portrait' || !tl || !vp || !content) { lastFit = null; body.style.removeProperty('--ef-tl-h'); body.style.removeProperty('--ef-peek'); cls.remove('ef-peek-roomy'); return; }
+    const top = tl.getBoundingClientRect().top, need = Math.ceil(tl.offsetHeight - vp.clientHeight + content.scrollHeight + 2);
+    const fit = fitSheet({ need, avail: innerHeight - top - HANDLE - 8, handle: HANDLE, prev: lastFit });
+    lastFit = fit; setVar('--ef-tl-h', fit.h + 'px'); setVar('--ef-peek', fit.peek + 'px'); if (cls.contains('ef-peek-roomy') !== fit.roomy) cls.toggle('ef-peek-roomy', fit.roomy);
   }
+  // No timer: the fit runs when something real changed (the window, the app bar, the lanes' size or a re-render of the timeline, the sheet)
+  // and is coalesced to one run a frame after the changes stop.
+  const scheduleFit = () => { clearTimeout(fitTimer); fitTimer = setTimeout(() => { cancelAnimationFrame(fitFrame); fitFrame = requestAnimationFrame(fitPortrait); }, 60); };
   function measure() {
     if (!cls.contains('directing') || appbar.hidden) return;
-    const r = appbar.getBoundingClientRect(); if (r.height) body.style.setProperty('--ef-top', Math.round(r.bottom + 8) + 'px');
-    fitPortrait();
+    const r = appbar.getBoundingClientRect(); if (r.height) setVar('--ef-top', Math.round(r.bottom + 8) + 'px');
+    scheduleFit();
   }
+  // Only touch classList when state actually changes: DOMTokenList.remove/toggle otherwise re-triggers MutationObserver.
+  const setCls = (name, on) => { if (cls.contains(name) !== !!on) cls.toggle(name, !!on); };
   function apply() {
     const m = shellOn() ? phoneLayout({ coarse: coarse.matches, ...size() }) : null, was = mode; mode = m;
-    cls.toggle('ef-phone', !!m); cls.toggle('ef-portrait', m === 'portrait'); cls.toggle('ef-landscape', m === 'landscape');
-    if (!m) { for (const s of SHEETS) cls.remove('ef-sheet-' + s); body.style.removeProperty('--ef-top'); syncDemo(); return; }
+    const isOpen = cls.contains('directing'), openChanged = isOpen !== wasOpen;
+    // Always record wasOpen before the desktop (!m) early return; leaving it false caused an infinite MutationObserver
+    // microtask loop whenever 'directing' was added on desktop browsers.
+    wasOpen = isOpen;
+    setCls('ef-phone', !!m); setCls('ef-portrait', m === 'portrait'); setCls('ef-landscape', m === 'landscape');
+    if (!m) { for (const s of SHEETS) setCls('ef-sheet-' + s, false); body.style.removeProperty('--ef-top'); syncDemo(); return; }
     if (m !== was) changed();
-    if (m !== was || cls.contains('directing') !== wasOpen) {
-      if (m === 'portrait') { cls.remove('inspector-hidden'); setSheet(store.sheet, true); }
-      else { for (const s of SHEETS) cls.remove('ef-sheet-' + s); setDrawer(store.drawer !== false, true); }
+    if (m !== was || openChanged) {
+      if (m === 'portrait') { setCls('inspector-hidden', false); setSheet(store.sheet, true); }
+      else { for (const s of SHEETS) setCls('ef-sheet-' + s, false); setDrawer(store.drawer !== false, true); }
     }
-    wasOpen = cls.contains('directing'); measure(); syncDemo();
+    measure(); syncDemo();
   }
   // Portrait has no "hidden inspector": the existing ⋯ and Tab toggle (and ≤ 700 px's start) mean the handle only.
   new MutationObserver(() => {
@@ -89,6 +111,7 @@ export function createPhoneMode({ appbar, panel, shellOn = () => true, changed =
     tab.firstChild.textContent = cls.contains('inspector-hidden') ? '‹' : '›';
   }).observe(body, { attributes: true, attributeFilter: ['class'] });
 
+  let lastTouch = -1e9; document.addEventListener('pointerdown', () => { lastTouch = performance.now(); }, true);
   // the handle: tap, or a drag up / down
   let down = null;
   handle.addEventListener('pointerdown', e => { if (e.button) return; down = { y: e.clientY, id: e.pointerId }; handle.setPointerCapture(e.pointerId); e.preventDefault(); });
@@ -99,7 +122,7 @@ export function createPhoneMode({ appbar, panel, shellOn = () => true, changed =
 
   // The Guided demo card (#demo): hidden by default on a phone, closable everywhere, remembered.
   const demoStored = () => { try { return localStorage.getItem(DEMO_KEY); } catch { return null; } };
-  function syncDemo() { const v = demoStored(); cls.toggle('ef-demo-closed', v === 'closed' || (v !== 'open' && !!mode)); }
+  function syncDemo() { const v = demoStored(); setCls('ef-demo-closed', v === 'closed' || (v !== 'open' && !!mode)); }
   function demo(open) { try { localStorage.setItem(DEMO_KEY, open ? 'open' : 'closed'); } catch { /* this visit only */ } cls.toggle('ef-demo-closed', !open); changed(); }
   document.addEventListener('click', e => { if (e.target.closest?.('#demo-close')) demo(false); });
 
@@ -108,16 +131,23 @@ export function createPhoneMode({ appbar, panel, shellOn = () => true, changed =
     const t = panel.querySelector('[data-inspector-tab][aria-pressed="true"]')?.textContent.trim() || 'Inspector', sel = panel.querySelector('.sel-name b')?.textContent.trim() || '';
     const text = !sel ? t : sel.startsWith(t) ? sel : `${t} · ${sel}`; if (text !== labelText) { labelText = text; handle.querySelector('[data-ef-sheet-label]').textContent = text; }
   }
-  setInterval(() => { if (mode) { label(); measure(); } }, 500);
+  setInterval(() => { if (mode) label(); }, 500);
   coarse.addEventListener?.('change', apply); addEventListener('resize', apply); addEventListener('orientationchange', () => setTimeout(apply, 120));
-  if ('ResizeObserver' in window) new ResizeObserver(measure).observe(appbar);
+  if ('ResizeObserver' in window) {
+    new ResizeObserver(measure).observe(appbar);
+    const lanes = new ResizeObserver(scheduleFit);   // the lanes' content (the timeline is rebuilt on every edit: re-attach when it is)
+    const watch = () => { lanes.disconnect(); const tl = document.getElementById('director-timeline'); for (const e of [tl?.querySelector('.timeline-viewport'), tl?.querySelector('.timeline-content')]) if (e) lanes.observe(e); };
+    const tl = document.getElementById('director-timeline'); if (tl) { new MutationObserver(() => { watch(); scheduleFit(); }).observe(tl, { childList: true }); watch(); }
+  }
+  visualViewport?.addEventListener('resize', scheduleFit);
   apply();
   return {
     apply, layout: () => mode, sheet: () => store.sheet,
     // The app bar's Panel button and the ⋯ Side column: portrait toggles the sheet, landscape the drawer.
     togglePanel() { if (mode === 'portrait') { setSheet(store.sheet === 'peek' ? 'half' : 'peek'); return true; } if (mode === 'landscape') { setDrawer(cls.contains('inspector-hidden')); return true; } return false; },
     // A selection on the timeline or in the frame asks to show its inspector: a sheet at peek comes up to half, a closed drawer opens (not remembered).
-    reveal() { if (mode === 'portrait' && store.sheet === 'peek') setSheet('half', true); else if (mode === 'landscape' && cls.contains('inspector-hidden')) setDrawer(true, true); },
+    reveal() { if (performance.now() - lastTouch > 1200) return;   // only a user's own selection, never a re-render
+      if (mode === 'portrait' && store.sheet === 'peek') setSheet('half', true); else if (mode === 'landscape' && cls.contains('inspector-hidden')) setDrawer(true, true); },
     demo, demoOpen: () => !cls.contains('ef-demo-closed'),
   };
 }
