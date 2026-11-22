@@ -1,0 +1,89 @@
+ErgoFlex film, chapter 12 HERO: cinematography / desk / lighting pass on Vico's snappier cut (hero4, 21 Nov 2026)
+Base: f1a64445 (Vico 16:01 hero edit). Delivered as a Director importer doc (docs/hero-pro/hero-pro-seated-export.json)
+plus a 12-line importer fix so the hero's light rig reaches its rendered sub-shots.
+
+LENGTH
+  before 23.5 s  -> after 25.5 s (+2.0 s, inside the +/-5 s leeway).
+  Sub-shots (chapter seconds): A gaming 0-3.53 | B artist 2.93-8.97 | C architect 8.37-13.79 | D office 13.19-18.71 |
+  H gaming 16.71-23.5 -> 16.71-25.5. Only H (the end card) grows; every seam and dissolve is Vico's.
+  End card for org (titles-src.json): logo.rel_in 19.87, cta.rel_in 21.29 (today 32.26 / 33.68: past the chapter's end).
+
+WHAT WAS WRONG (review of Vico's cut as a whole)
+  1. 1.0-1.8 s: a whip. Vico cut 16 s out of the old camera, so the camera jumps 3.7 m in 0.8 s right after the storage
+     dissolve: 6.7 m/s, 36 deg/s pan, 37 m/s2 (frame to frame), inside the A shot.
+  2. The big camera swing (the "glide", 1.75 m/s, 15 deg/s) now runs 10.5-14 s, over the ARCHITECT lowering and the C->D
+     dissolve; the office -> gaming change it was built for is at 16.3-19.5 s and gets a slow drift. 1.8-10.4 s crawls at
+     0.18 m/s (the drag he felt).
+  3. End card: the camera reaches its end view at 19.5 s but the wordmark is still timed for the 38 s hero (32.26 s), so
+     there is no end card time left; it is also the darkest moment of the hero (mean luma 0.046, highlights p95 0.09).
+  4. Lighting keys are from older timings: the key light drops 30 -> 4 at 4.0-4.55 s IN THE MIDDLE OF the artist shot (the
+     picture dims 20 % as the desk starts to move, then recovers); the architect desk is blown (2.8 % of the frame > 0.98
+     luma at 11 s: the whole white desktop and shelves without detail); the kicker/grid fades sit at 25.7-30.9 s, past the end.
+  5. Desk: the g-tilt clip carries a stale path from the old glide (target -5, path 21.9 -> 0): the desktop wobbles
+     +/-0.9 deg during the glide and SNAPS back at 20.2 s (185 deg/s2), after the desk has come to rest, under the logo.
+  6. Framing: the artist monitor touches the top of the frame (headroom 5-7 % at 3.5-4.5 s); the office desk is small and
+     pushed right during its whole shot.
+
+PER SUB-SHOT (after)
+  A gaming 0-3.53 (dissolve in from storage 0-1.5)
+    Angle: Vico's opening view kept exactly (it matches storage's last frame: the folded desk on the right two thirds, cx
+    0.68 vs 0.66). Move: the whip is replaced by one continuous rising arc around the desk (az -61 -> -39 deg, r 9.4 -> 7.5 m,
+    camera 2.05 -> 2.87 m) from his opening view to his orbit view, already moving through the dissolve (0.38 m/s at 0 s,
+    easeIn off as in the film), peak 1.38 m/s at 2.0 s, settling to 0.26 m/s by 4.2 s when the artist desk starts to move;
+    the aim re-centres the desk during the arc (lead 1.3). The A->B dissolve happens on the move. Light: as before (key 30,
+    kicker 30) until the dissolve.
+  B artist 2.93-8.97
+    Angle: Vico's orbit (az -39 -> -32), aim raised 0.17 m while the folded board and monitor are tallest (3.2-4.8 s, eased)
+    -> headroom 9.6 % (was 6.7 %). Move: a slow even orbit, 0.26-0.28 m/s, so the lift + tilt (4.4-7.6 s) reads against a
+    calm camera. Light: key steps 30 -> 12 INSIDE the A->B dissolve and holds (12 = the level the approved film settled B
+    at); rims 170 -> 150, kicker 30 -> 18 (Vico's B kicker). The mid-shot dim is gone: luma 0.123-0.135 (was 0.114-0.142).
+  C architect 8.37-13.79
+    Angle: the orbit carries on around (az -32 -> -16), aim lowered 0.12 m with the desk as it drops 48 -> 28 in (9.4-12.4)
+    so the masts stay inside the frame (min headroom 15.8 %). Move: speed rises gently 0.30 -> 0.55 m/s. Light: key 12 -> 4.5
+    and rims 150 -> 75 inside the B->C dissolve: the white desktop keeps its tones; blown area peak 0.76 % (was 2.76 %).
+  D office 13.19-18.71
+    Angle: the camera is now closer and frontal-right (az -15 -> 0) when the office desk appears, so the office is larger
+    and better centred than before (min headroom 13.6 %). Move: 0.55 -> 0.75 m/s, building into the glide.
+    Light: key 4.5 -> 24 and rims 75 -> 160 inside the C->D dissolve (the office desk is lit for its own white, no clipping).
+  D -> H glide 16.71-18.71 (d-lift 16.33-19.52, Vico's)
+    Move: Vico's glide geometry (crane down 2.6 -> 2.1 m, pull out 7.8 -> 9.0 m, arc az 0 -> +22) now happens ON the office
+    -> gaming change: speed peaks 1.38 m/s at 17.8 s (the dissolve centre is 17.71), pan peaks 8.2 deg/s at 17.1 s.
+    Light: key 24 -> 30, kicker 18 -> 30 during the glide.
+  H gaming end card 18.71-25.5
+    Angle: Vico's end-card view exactly (frontal 3/4, desk in the upper 60 %, room for the wordmark + CTA below; checked with
+    the real shade + logo + CTA overlay). Move: settles smoothly (0.5 m/s at the logo, 0.1 m/s by 21.5, at rest 23.0, held
+    to 25.5). Light: a swell into the logo 19.0-20.6 s: key 30 -> 40, rims 170 -> 260, kicker 30 -> 50, floor pool 0.30 ->
+    0.50 -> the black-and-red desk gets edges and a pool of light under it: end card highlights p95 0.090 -> 0.112 (+24 %),
+    p99 0.29 -> 0.33, nothing clips. Desk: g-tilt flattened (the desktop no longer wobbles/snaps; the desk is at rest from
+    19.53 s, before 20.2 s).
+
+NUMBERS (camera as the render samples it, 30 fps; docs/hero-pro/measurements)
+                                    before (23.5 s)        after (25.5 s)
+  peak camera speed                 6.69 m/s at 1.43 s     1.38 m/s at 17.8 s (the glide)
+  peak acceleration (frame/5-frame) 37.4 / 24.8 m/s2       1.9 / 1.16 m/s2
+  peak pan speed                    36.0 deg/s at 1.5 s    8.2 deg/s at 17.1 s
+  peak angular acceleration         242 / 149 deg/s2       10.7 / 7.0 deg/s2
+  camera path                       13.22 m                13.23 m (same geometry from his orbit view on)
+  travel reversals / pan flips      none / none            none / none
+  camera at rest                    22.93-23.47            23.0-25.47 (end card hold)
+  desk: last movement               20.2 s (g-tilt snap)   19.53 s; peak tilt accel 185 -> 94 deg/s2
+  architect blown pixels (max)      2.76 %                 0.76 %
+  artist luma over the shot         0.114-0.142 (dip)      0.123-0.135 (steady)
+  end card mean / p95 / p99 luma    0.046 / 0.090 / 0.290  0.049 / 0.112 / 0.334
+  min headroom A / B / C / D / H    5.4 / 6.7 / 14.2 / 9.6 / 7.1 %   8.3 / 9.6 / 15.8 / 13.6 / 7.1 %
+
+NOT VERIFIED / OPEN
+  - No 4K render, no render with the film's blur 8 (renders at --blur 1), no finish-intro composite: the end card was only
+    checked as a still (shade + wordmark + CTA drawn over the frame like finish-intro does), the dissolve from storage only
+    against storage's last frame as a still, not as the real 1.5 s xfade.
+  - The score was not rebuilt (org): the bar-9 logo time assumes the cue sheet's ~113 BPM grid; the builder refits the tempo.
+  - titles-src logo / cta times are a recommendation, not in the doc (the importer only carries titles, not the end card).
+  - The importer fix is needed for the lights to render: with today's importer the doc still imports camera, length, desk
+    and versions correctly, the lights land only in review-cut (not rendered for ch12). Org decides; no render-epoch bump
+    (no renderer code changed).
+  - The stage grid / pulse fades of the 38 s hero (sceneEdits @grid/@pulse at 25.7-30.3 s) are still past the end: the grid
+    stays visible under the end card as in Vico's cut. Not importable (no Director field for stage opacity); left as is.
+  - The motion was judged from numbers, 0.5 s frame sequences and the clips, by eye on stills; not reviewed by Vico.
+  - The Director page was not opened with the new doc; the Linux importer was not run (Windows scratch import only, labels
+    with '·' decode differently there, values identical).
+  - Standing cut (cinematic-intro-cut-vicos-3rd-cut-standing) not touched.
