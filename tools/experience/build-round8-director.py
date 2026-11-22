@@ -383,6 +383,17 @@ def apply_lighting(cid, f, lighting):
                     continue
                 s.setdefault('sceneGlobals', {})[k] = copy.deepcopy(lighting[k])
         if dump(p, d): wrote.append(os.path.relpath(p, H))
+    # Hero (21 Nov 2026, hero-pro pass): the film renders chapter 12 from its sub-shots (shots/13-subshots.json), so the
+    # Director's light rig ('lights' only: each desk keeps its own screens, exposure and LED settings) goes into every
+    # sub-shot too, with the same rule (director-* lights and same-named lights replaced). Keyed intensities are chapter
+    # seconds, so one keyed rig lights each desk at its own level inside its own window.
+    sp = os.path.join(H, 'shots', '13-subshots.json')
+    if cid == 'hero' and 'lights' in lighting and os.path.exists(sp):
+        d = load(sp); mine = copy.deepcopy(lighting['lights']); names = {l.get('name') for l in mine}
+        for s in d['shots']:
+            if s.get('id') != cid: continue
+            s['lights'] = [l for l in s.get('lights') or [] if not str(l.get('name', '')).startswith('director-') and l.get('name') not in names] + copy.deepcopy(mine)
+        if dump(sp, d, indent=None): wrote.append('shots/13-subshots.json')
     return wrote
 
 
