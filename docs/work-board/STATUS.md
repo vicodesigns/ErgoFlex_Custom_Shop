@@ -21,6 +21,7 @@ Snapshot written 2026-11-21 so work can be resumed if credits run out. A fresh s
 - Keyboard tray build, phases 1 to 3: Slide, swivel and tilt like the reference tray, keyboard staying on it. Joint model, Blender split into real parts, data and importer. Each phase merges as it lands. [ui, Keyboard tray]
 
 ## Queued (in this order)
+- 0. Chapter 2 (Rise): phone flush, charge-pad ring clipping: Maya's phone floats about an inch above the desk and the black ring around the charge pad shares the desktop's plane (clipping triangles in the opening close-up). Nudge the ring up, then lower the phone onto it; before/after stills. Rise data is director-film/rise.json accessories ergoflex-phone y 12.4. [Windows PC, Rise, Next]
 - 1. Commons: redwoods in both window views: One large redwood in one window, a mid-sized and a small one in the other, naturally spaced, in the shots during the chapter. No other scenery. [Windows PC, Commons]
 - 2. Storage: RC remote on the second shelf: The remote floats and does not lift with the desk. It goes on the second shelf of the top shelf unit and moves with it. [Windows PC, Storage]
 - 3. Create: fill and mirror the trade shelves: Painter and drafting shelves get real tools. Each trade also gets a mirrored shelf on the other wing in the same connector slot, with a different arrangement and highlights. Fade in and out stays as is. [Windows PC, Create]
