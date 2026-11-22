@@ -109,6 +109,109 @@ export function createMusicKeyboard(wide = false) {
     return group;
 }
 
+// Properly modelled 2-way studio reference monitor speaker in the music room's own materials
+// (walnut side cheeks, matte charcoal baffle, dark brushed metal chassis/waveguide, felt isolation pad,
+// brass driver trim rings & hardware). Millimetres, floor origin y = 0 (sits flush on the y = 750 pedestal top).
+export function createStudioMonitorSpeaker(mats) {
+    const { walnut, metal, felt, brass } = mats;
+    const baffleMat = new THREE.MeshStandardMaterial({ color: '#171c22', roughness: .76, metalness: .08 });
+    const coneMat = new THREE.MeshStandardMaterial({ color: '#21272f', roughness: .62, metalness: .16 });
+    const surroundMat = new THREE.MeshStandardMaterial({ color: '#111418', roughness: .88, metalness: .04 });
+    const domeMat = new THREE.MeshStandardMaterial({ color: '#283039', roughness: .34, metalness: .22 });
+    const portMat = new THREE.MeshStandardMaterial({ color: '#090b0e', roughness: .95, metalness: 0 });
+    const ledMat = new THREE.MeshStandardMaterial({ color: '#ffd08a', emissive: '#ffae52', emissiveIntensity: 1.4, roughness: .25 });
+    const owned = [baffleMat, coneMat, surroundMat, domeMat, portMat, ledMat];
+
+    const g = new THREE.Group();
+    g.name = 'Studio reference monitor speaker';
+    const add = (geom, mat, pos = [0, 0, 0], rot = [0, 0, 0]) => {
+        const m = new THREE.Mesh(geom, mat);
+        m.position.set(...pos);
+        if (rot[0] || rot[1] || rot[2]) m.rotation.set(...rot);
+        m.castShadow = m.receiveShadow = true;
+        g.add(m);
+        return m;
+    };
+
+    // 1. Acoustic isolation pad (sits dead flush at y = 0..10 mm on the 326 x 295 mm pedestal wood plinth)
+    add(new THREE.BoxGeometry(246, 10, 256), felt, [0, 5, 0]);
+    for (const sx of [-102, 102]) for (const sz of [-106, 106]) {
+        add(new THREE.CylinderGeometry(8, 9, 4, 16), brass, [sx, 12, sz]);
+    }
+
+    // 2. Main cabinet body (y = 14..414 mm; 256 W x 400 H x 268 D mm)
+    // Inner dark acoustic enclosure
+    add(new THREE.BoxGeometry(224, 396, 260), metal, [0, 212, 0]);
+    // Warm walnut side cheeks (matching the room's acoustic slats & credenza)
+    for (const sx of [-119, 119]) {
+        add(new THREE.BoxGeometry(18, 400, 268), walnut, [sx, 214, 0]);
+        // Subtle top/front chamfer highlight strips on walnut cheeks
+        add(new THREE.BoxGeometry(14, 4, 262), walnut, [sx, 415, 0]);
+    }
+    // Recessed matte charcoal front baffle (+Z = +130..134 mm)
+    add(new THREE.BoxGeometry(220, 388, 8), baffleMat, [0, 212, 130]);
+    // Top & bottom brushed metal lip frames
+    add(new THREE.BoxGeometry(222, 6, 12), metal, [0, 411, 128]);
+    add(new THREE.BoxGeometry(222, 6, 12), metal, [0, 17, 128]);
+
+    // 3. Flared front bass-reflex slot port (y = 48 mm)
+    add(new THREE.BoxGeometry(176, 28, 8), metal, [0, 48, 132]);
+    add(new THREE.BoxGeometry(166, 20, 10), portMat, [0, 48, 133]);
+
+    // 4. 8-inch Low-Frequency Woofer (centered y = 178 mm, z = +134 mm)
+    const wy = 178, fz = 134;
+    // Outer anodized basket flange
+    add(new THREE.CylinderGeometry(92, 94, 5, 36), metal, [0, wy, fz], [Math.PI / 2, 0, 0]);
+    // Machined brass trim bezel ring
+    add(new THREE.TorusGeometry(87, 3.6, 14, 40), brass, [0, wy, fz + 2]);
+    // 6 brass hex-socket mounting bolts around the woofer flange
+    for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2 + Math.PI / 6;
+        add(new THREE.CylinderGeometry(2.6, 2.6, 3, 8), brass, [Math.cos(a) * 89.5, wy + Math.sin(a) * 89.5, fz + 3], [Math.PI / 2, 0, 0]);
+    }
+    // Rolled rubber surround
+    add(new THREE.TorusGeometry(76, 8.5, 14, 36), surroundMat, [0, wy, fz + 1]);
+    // Concave woofer cone (LatheGeometry rotated to face +Z)
+    const conePts = [
+        new THREE.Vector2(18, -18),
+        new THREE.Vector2(34, -13),
+        new THREE.Vector2(54, -6),
+        new THREE.Vector2(70, 1),
+    ];
+    add(new THREE.LatheGeometry(conePts, 36), coneMat, [0, wy, fz + 2], [Math.PI / 2, 0, 0]);
+    // Domed center dust cap
+    add(new THREE.SphereGeometry(20, 24, 14, 0, Math.PI * 2, 0, Math.PI * .55), domeMat, [0, wy, fz - 16], [Math.PI / 2, 0, 0]);
+
+    // 5. 1.2-inch Silk-Dome Tweeter in sculpted waveguide (centered y = 334 mm, z = +134 mm)
+    const ty = 334;
+    add(new THREE.CylinderGeometry(42, 44, 5, 32), metal, [0, ty, fz], [Math.PI / 2, 0, 0]);
+    const wgPts = [
+        new THREE.Vector2(16, -9),
+        new THREE.Vector2(25, -5),
+        new THREE.Vector2(35, 1),
+        new THREE.Vector2(40, 2.5),
+    ];
+    add(new THREE.LatheGeometry(wgPts, 32), baffleMat, [0, ty, fz + 1.5], [Math.PI / 2, 0, 0]);
+    add(new THREE.TorusGeometry(37, 2.2, 12, 32), brass, [0, ty, fz + 3]);
+    add(new THREE.SphereGeometry(16, 24, 14, 0, Math.PI * 2, 0, Math.PI * .55), domeMat, [0, ty, fz - 6], [Math.PI / 2, 0, 0]);
+
+    // 6. Subtle warm power indicator LED & brass nameplate on lower baffle
+    add(new THREE.SphereGeometry(2.8, 12, 10), ledMat, [92, 48, fz + 2]);
+    add(new THREE.BoxGeometry(36, 5, 2), brass, [0, 25, fz + 1.5]);
+
+    // 7. Rear anodized heat-sink amp plate & brass binding posts (-Z = -130 mm)
+    add(new THREE.BoxGeometry(178, 290, 6), metal, [0, 200, -131]);
+    for (let i = -5; i <= 5; i++) {
+        add(new THREE.BoxGeometry(3, 210, 10), metal, [i * 14, 224, -136]);
+    }
+    for (const sx of [-28, 28]) {
+        add(new THREE.CylinderGeometry(7, 7, 14, 14), brass, [sx, 86, -137], [Math.PI / 2, 0, 0]);
+    }
+
+    g.userData.dimensionsMm = { width: 256, depth: 268, height: 418 };
+    return { group: g, materials: owned };
+}
+
 export function buildMusicRoom(room, root, layout, helpers) {
     const { material, mesh, box, rod, sphere, markSceneAsset } = helpers;
     const { width: w, depth: d, height: h, back: bz, rack: [rx, rz] } = layout, front = bz + d;
@@ -116,6 +219,14 @@ export function buildMusicRoom(room, root, layout, helpers) {
     // Library lamp shades glow with the session; copies follow the current mode.
     const shades = [], session = { mode: 'afternoon', accent: 1 };
     const shadeGlow = mat => { const mode = MUSIC_MODES[session.mode]; mat.emissiveIntensity = (.03 + Math.max(0, mode.practical - .3) * 1.4) * session.accent; };
+    const trim = material('#303d3c'), metal = material('#293136', { metalness: .5, roughness: .45 });
+    const fabricMap = texture((c, tw, th) => {
+        c.fillStyle = '#ffffff'; c.fillRect(0, 0, tw, th); c.strokeStyle = '#68746d2b'; c.lineWidth = 1;
+        for (let n = 0; n < tw; n += 4) { c.beginPath(); c.moveTo(n, 0); c.lineTo(n, th); c.moveTo(0, n); c.lineTo(tw, n); c.stroke(); }
+    }); fabricMap.repeat.set(2, 4);
+    const moss = material('#596e62', { map: fabricMap, roughness: 1 }), clay = material('#b27a55', { map: fabricMap, roughness: 1 });
+    const walnut = material('#5a3b27', { roughness: .58 }), felt = material('#17191b', { map: fabricMap, roughness: 1 });
+    const brass = material('#c0904f', { metalness: .78, roughness: .32 }), cable = material('#111315', { roughness: .5 });
     room.decorateProp = (object, placement) => {
         if (placement.id === 'kenney-furniture-lamp-round-floor') {
             object.traverse(mesh => {
@@ -125,7 +236,19 @@ export function buildMusicRoom(room, root, layout, helpers) {
             });
             return;
         }
-        // Each speaker instance owns these copies; the prop library stays reusable.
+        // Replace the slim stick speaker with a properly modelled 2-way studio reference monitor
+        // sitting flush (y = 0) on the left/right pedestal wood plinth in the room's own materials.
+        if (placement.id === 'ergoflex-slim-speaker') {
+            for (const child of [...object.children]) object.remove(child);
+            const { group: monitor, materials: ownedMats } = createStudioMonitorSpeaker({ walnut, metal, felt, brass });
+            // Parent prop wrapper carries 1000x metre-to-mm scale; scale monitor (mm) by 0.001 so it renders 1:1 in mm.
+            monitor.scale.setScalar(.001);
+            object.add(monitor);
+            object.userData.sharedProp = false;
+            for (const m of ownedMats) room.ownedMaterials.add(m);
+            return;
+        }
+        // Each other speaker instance owns these copies; the prop library stays reusable.
         if (!/speaker/.test(placement.id)) return;
         const copies = new Map();
         object.traverse(mesh => {
@@ -145,14 +268,6 @@ export function buildMusicRoom(room, root, layout, helpers) {
         group.userData.propId = id; group.userData.sceneAssetName = name;
         markSceneAsset(group, { key: `music:${layout.id}:instrument:${id}` });
     };
-    const trim = material('#303d3c'), metal = material('#293136', { metalness: .5, roughness: .45 });
-    const fabricMap = texture((c, tw, th) => {
-        c.fillStyle = '#ffffff'; c.fillRect(0, 0, tw, th); c.strokeStyle = '#68746d2b'; c.lineWidth = 1;
-        for (let n = 0; n < tw; n += 4) { c.beginPath(); c.moveTo(n, 0); c.lineTo(n, th); c.moveTo(0, n); c.lineTo(tw, n); c.stroke(); }
-    }); fabricMap.repeat.set(2, 4);
-    const moss = material('#596e62', { map: fabricMap, roughness: 1 }), clay = material('#b27a55', { map: fabricMap, roughness: 1 });
-    const walnut = material('#5a3b27', { roughness: .58 }), felt = material('#17191b', { map: fabricMap, roughness: 1 });
-    const brass = material('#c0904f', { metalness: .78, roughness: .32 }), cable = material('#111315', { roughness: .5 });
     // Long rift-sawn oak boards with staggered joints, grain, knots and fine gaps.
     const floorMap = texture((c, tw, th) => {
         const rnd = seeded(23), pw = tw / 6;
