@@ -91,7 +91,9 @@ def records(points, tex, polygons, deltas, skin=False):
     return [[k, *rows[k]] for k in sorted(rows)]
 
 
-tables = {'body': records(xyz, uvs, faces, shapes, True)}
+# A small lip seal reads as concentration before a reach or a screen cue.
+# It lives on the skin only. Brow and eyelash cards keep their three poses.
+tables = {'body': records(xyz, uvs, faces, [*shapes, unit('mouth-compression')], True)}
 keys = [next(uvs[t] for f in faces for i, t in f if i == idx) for idx in landmarks]
 for path in sorted(list(proxies.glob('eyebrows/*/*.mhclo')) + list(proxies.glob('eyelashes/*/*.mhclo'))):
     if path.stem not in {'eyebrow001', 'eyebrow004', 'eyebrow005', 'eyebrow006', 'eyebrow009',

@@ -126,7 +126,7 @@ export const PROP_LIBRARY = {
                 let skinned = false; gltf.scene.traverse(obj => { if (obj.isSkinnedMesh) skinned = true; });
                 if (skinned) {
                     const rig = gltf.scene, still = new THREE.Group();
-                    prepareFace(rig, face);
+                    prepareFace(rig, face, id);
                     still.name = rig.name; rig.updateMatrixWorld(true);
                     rig.traverse(obj => {
                         if (!obj.isMesh) return;

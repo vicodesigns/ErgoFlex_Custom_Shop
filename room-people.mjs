@@ -2093,7 +2093,7 @@ export class RoomPeople {
         }
         // Pose-aware bounds let the GPU skip off-screen bodies without clipping animated limbs.
         for (const person of this.people) if (person.visible) {
-            performFace(person, this.room.id, this.lifeClock, time !== null, this.filter?.life !== false);
+            performFace(person, this.room.id, this.lifeClock, time !== null, this.filter?.life !== false, state?.track?.shot);
             if (person.userData.personRig) updateSkinnedBounds(person);
         }
     }

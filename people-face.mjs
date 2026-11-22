@@ -42,7 +42,7 @@ function headFrame(geometry, landmarks) {
 // The compressed GLB stores all primitives of a person in the same quantized
 // coordinate system. Build these once on the cached model, before any clones
 // are drawn. Three gives every static and rigged instance its own weights.
-export function prepareFace(root, data) {
+export function prepareFace(root, data, id) {
     if (!data) return;
     const meshes = [];
     let eyes;
@@ -55,20 +55,22 @@ export function prepareFace(root, data) {
     const frame = skin && headFrame(skin.mesh.geometry, data.landmarks);
     if (!frame) return;
     if (eyes && !eyes.geometry.morphAttributes.position?.length) prepareEyes(eyes, frame);
+    const detailedMouth = ['andre', 'maya', 'omar'].includes(character(id));
     const { mid, x, y, z, scale } = frame;
     const coord = new Vector3(), delta = new Vector3();
     for (const { mesh, part } of meshes) {
         const g = mesh.geometry, { uv, position } = g.attributes;
         if (!uv || g.morphAttributes.position?.length) continue;
         const stride = part === 'body' ? 6 : 3, rows = data.parts.get(part);
-        const positions = names.map(() => new Float32Array(3 * uv.count));
-        const normals = part === 'body' ? names.map(() => new Float32Array(3 * uv.count)) : null;
+        const channels = detailedMouth && part === 'body' ? [...names, 'LipPress'] : names;
+        const positions = channels.map(() => new Float32Array(3 * uv.count));
+        const normals = part === 'body' ? channels.map(() => new Float32Array(3 * uv.count)) : null;
         for (let i = 0; i < uv.count; i++) {
             const key = 2 * uvKey(uv, i);
             const side = Number(coord.fromBufferAttribute(position, i).sub(mid).dot(x) > 0);
             const row = rows.get(key + side) || rows.get(key + 1 - side);
             if (!row) continue;
-            for (let k = 0; k < names.length; k++) {
+            for (let k = 0; k < channels.length; k++) {
                 const a = 1 + stride * k;
                 delta.copy(x).multiplyScalar(scale[0] * row[a]).addScaledVector(y, scale[1] * row[a+1])
                     .addScaledVector(z, scale[2] * row[a+2]).multiplyScalar(.0001).toArray(positions[k], i * 3);
@@ -77,7 +79,7 @@ export function prepareFace(root, data) {
             }
         }
         const attributes = arrays => arrays.map((a, i) => {
-            const attr = new Float32BufferAttribute(a, 3); attr.name = names[i]; return attr;
+            const attr = new Float32BufferAttribute(a, 3); attr.name = channels[i]; return attr;
         });
         g.morphTargetsRelative = true;
         g.userData.morphWeightLimit = 1;
@@ -150,8 +152,76 @@ function blinkPulse(t) {
     return ease(0, .085, t) * (1 - ease(.105, .24, t));
 }
 
+// The eyes lead these gestures. A hold has four edges so a fixation can
+// arrive in a fraction of a second while the mouth and cheeks take their time.
+function hold(t, start, arrived, release, end) {
+    return ease(start, arrived, t) * (1 - ease(release, end, t));
+}
+
+function drawExpression({ meshes, eyes }, smile, lids, brow, across, up, lips = 0) {
+    for (const mesh of meshes) {
+        const w = mesh.morphTargetInfluences;
+        w[0] = smile; w[1] = lids; w[2] = brow;
+        if (mesh.morphTargetDictionary.LipPress !== undefined) w[3] = lips;
+    }
+    if (eyes) {
+        eyes.morphTargetInfluences[0] = across;
+        eyes.morphTargetInfluences[1] = up;
+    }
+}
+
+const chapterActors = {
+    storage: { who: 'andre', room: 'workshop', blinks: [3.03, 7.42, 11.58, 16.85, 21.4] },
+    rise: { who: 'maya', room: 'home', blinks: [2.37, 5.7, 9.32, 12.41, 16.25, 20.76, 25.1] },
+    media: { who: 'omar', room: 'music', blinks: [1.73, 4.49, 8.28, 12.92, 16.17] },
+};
+
+function drawChapterFace(bound, shot, t, blinks) {
+    let blink = 0;
+    for (const at of blinks) blink = Math.max(blink, blinkPulse(t - at));
+    if (shot.id === 'storage') {
+        const shelf = hold(t, .79, 1.68, 2.85, 3.65);
+        const seatRobot = hold(t, .42, 1.25, 2.23, 2.97);
+        const phone = hold(t, 7.74, 8.37, 11.43, 11.99);
+        const tap = hold(t, 9.15, 10.46, 11.36, 11.95);
+        const followDesk = hold(t, 11.55, 12.14, 18.4, 22.45);
+        const satisfied = hold(t, 11.93, 13.65, 14.69, 17.45);
+        drawExpression(bound, .11 + .32 * shelf + .60 * satisfied,
+            blink, .08 + .25 * shelf + .23 * followDesk,
+            .13 * shelf - .24 * phone + .46 * followDesk,
+            -.21 + .72 * shelf - .61 * phone + .42 * followDesk, .44 * seatRobot + .51 * tap);
+    } else if (shot.id === 'rise') {
+        const wake = hold(t, 1.68, 2.1, 2.91, 3.67);
+        const readout = hold(t, 3.6, 4.15, 6.8, 7.56);
+        const atHeight = hold(t, 7.18, 8.16, 8.94, 10.04);
+        const sit = hold(t, 9.6, 10.32, 11.98, 12.89);
+        // The short edit goes straight back to typing. In the long edit the
+        // seated stretch occupies the space before the same closing summary.
+        const finish = shot.seconds;
+        const release = finish > 23 ? hold(t, 14.12, 15.82, 19.45, 22.63) : 0;
+        const summary = hold(t, finish - 4.6, finish - 3.14, finish - 1.15, finish + .3);
+        drawExpression(bound, .13 + .50 * atHeight + .21 * release + .43 * summary,
+            blink + (1 - blink) * .17 * release, .09 + .35 * wake + .26 * atHeight + .14 * summary,
+            -.36 * readout + .27 * atHeight - .22 * sit + .17 * summary,
+            -.24 + .60 * wake - .38 * readout + .51 * atHeight - .30 * sit + .33 * release + .30 * summary,
+            .11 + .27 * readout + .18 * sit - .10 * release);
+    } else {
+        const approach = hold(t, .36, 1.16, 3.22, 4.47);
+        const settle = hold(t, 3.98, 4.68, 5.82, 7.28);
+        const scan = hold(t, 7.64, 8.18, 9.12, 9.67);
+        const catchDetail = hold(t, 9.25, 9.82, 10.64, 12.03);
+        const enjoy = hold(t, 10.10, 12.15, 13.31, 15.73);
+        const afterglow = hold(t, 13.92, 14.97, 16.37, 18.08);
+        drawExpression(bound, .14 + .16 * settle + .58 * enjoy + .20 * afterglow,
+            blink, .10 + .18 * settle + .46 * catchDetail,
+            -.29 * approach + .36 * scan - .37 * catchDetail + .14 * afterglow,
+            -.13 - .31 * approach + .34 * settle + .44 * catchDetail + .19 * enjoy,
+            .28 * approach + .24 * scan);
+    }
+}
+
 const bindings = new WeakMap();
-export function performFace(person, room, seconds, film, live) {
+export function performFace(person, room, seconds, film, live, shot = null) {
     let bound = bindings.get(person);
     if (bound === undefined) {
         const who = character(person.userData.person?.id), meshes = [];
@@ -176,23 +246,27 @@ export function performFace(person, room, seconds, film, live) {
     const quietSmile = ease(1, 2.4, cycle) * (1 - ease(3.3, 5.8, cycle));
     const role = person.userData.person.key || person.userData.person.variant || '';
     const featured = role === who || role.startsWith(who + '-');
+    const lead = film && shot && chapterActors[shot.id];
+    const seatedMaya = who === 'maya' && person.userData.person.id === 'people-maya-sit-type' && !person.userData.person.station;
+    if (lead && lead.who === who && lead.room === room && (featured || seatedMaya)) {
+        drawChapterFace(bound, shot, time, lead.blinks);
+        return;
+    }
     const beat = film && featured && reactions[room]?.[who];
     const reaction = beat ? ease(beat[0], beat[1], time) * (1 - ease(beat[2], beat[3], time)) : 0;
     const smile = .11 + .065 * seed + (beat ? .045 : .25) * quietSmile + (beat ? .64 * beat[4] * reaction : 0);
     const blinkAt = (time + seed * 5) % (8.3 + seed * 1.6);
     const blink = Math.max(blinkPulse(blinkAt - 1.45), blinkPulse(blinkAt - 4.9 - seed));
+    let across = 0, up = 0;
     if (eyes) {
-        const gaze = eyes.morphTargetInfluences;
         // A brief refocus precedes the smile. Between reactions the gaze
         // rests, with a small change of fixation during an occasional blink.
         const refocus = beat ? ease(beat[0] - .28, beat[0] + .10, time) * (1 - ease(beat[2], beat[3], time)) : 0;
         const glance = ease(1.46, 1.63, blinkAt) * (1 - ease(3.0, 3.27, blinkAt));
-        gaze[0] = (seed < .5 ? -1 : 1) * (.45 * refocus + .23 * glance);
-        gaze[1] = -.16 + .65 * refocus + .13 * glance;
+        across = (seed < .5 ? -1 : 1) * (.45 * refocus + .23 * glance);
+        up = -.16 + .65 * refocus + .13 * glance;
     }
     const brow = .09 + .25 * quietSmile + .53 * reaction * (1 - .6 * reaction);
-    for (const m of meshes) {
-        const w = m.morphTargetInfluences;
-        w[0] = Math.min(1, smile); w[1] = blink * (1 - .08 * w[0]); w[2] = brow;
-    }
+    const strength = Math.min(1, smile);
+    drawExpression(bound, strength, blink * (1 - .08 * strength), brow, across, up);
 }
