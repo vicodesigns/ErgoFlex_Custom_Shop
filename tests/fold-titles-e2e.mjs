@@ -106,6 +106,15 @@ async function layoutChecks(tag, landscape) {
   // tap targets and fields
   const tiny = [...await small('#director-appbar .ab-btn, #director-appbar select'), ...await small('#director-timeline .timeline-transport button, #director-timeline .title-add, #director-timeline .timeline-zoom button, #director-timeline .magnet'), ...(panel?.shown ? await small('#director-panel [data-title-action], #director-panel .inspector-tabs button') : [])];
   check(tiny.length === 0, `${tag}: tap targets are at least 44 px`, tiny.join(' | '));
+  // (Windows on 35e387d7: pickers a chevron only, the stage's two tool rows on top of each other, a big empty area, the toolbar off the edge)
+  const pickers = await ev(() => [...document.querySelectorAll('#director-appbar .ab-film select')].map(e => Math.round(e.getBoundingClientRect().width)));
+  check(pickers.length >= 1 && pickers.every(w => w >= 100), `${tag}: the cut / chapter pickers are wide enough to read (${pickers.join(', ')} px)`);
+  const lt = await ev(() => { const b = [...document.querySelectorAll('.light-tools button')].filter(e => e.offsetParent); if (!b.length) return null; const r = b.map(e => e.getBoundingClientRect()); return { x: Math.min(...r.map(q => q.x)), y: Math.min(...r.map(q => q.y)), r: Math.max(...r.map(q => q.right)), b: Math.max(...r.map(q => q.bottom)), shown: true }; });
+  const ft = await rectOf('.film-tools-row');
+  check(apart(lt, ft), `${tag}: Lights / Move / Aim / Rotate / Scale and Render still / Guides / Live do not overlap`, JSON.stringify({ lt, ft }));
+  if (!landscape) check(stage.w >= (await ev(() => innerWidth)) * .8, `${tag}: portrait: the stage takes the width (${Math.round(stage.w)} px)`);
+  const bar2 = await ev(() => { const t = document.querySelector('#director-timeline .workbench-toolbar'); if (!t) return null; const kids = [...t.children].filter(e => e.offsetParent); const vw = innerWidth; return { scrolls: t.scrollWidth > t.clientWidth + 2 && getComputedStyle(t).overflowX !== 'visible', off: kids.filter(e => e.getBoundingClientRect().right > vw + 1).length, wraps: getComputedStyle(t).flexWrap }; });
+  check(bar2 && (bar2.off === 0 || bar2.scrolls), `${tag}: the timeline tool row is all on screen, or scrolls sideways`, JSON.stringify(bar2));
   const fonts = await ev(() => [...document.querySelectorAll('#director-panel input:not([type=checkbox]):not([type=range]):not([type=color]), #director-panel select, #director-panel textarea, #director-appbar select, #director-timeline input:not([type=range]), #director-timeline select')].filter(e => e.getBoundingClientRect().width > 0 && getComputedStyle(e).display !== 'none').map(e => [e.name || e.dataset.type || e.tagName, parseFloat(getComputedStyle(e).fontSize)]).filter(([, f]) => f < 16));
   check(fonts.length === 0, `${tag}: fields are 16 px or more (the page does not zoom on focus)`, JSON.stringify(fonts));
   // the overflow menu
@@ -121,7 +130,8 @@ async function layoutChecks(tag, landscape) {
     await tapSel('#demo-close'); await wait(300);
     check(await ev(() => document.body.classList.contains('ef-demo-closed')), `${tag}: the card's × closes it`);
   } else { await tapSel('#director-appbar [data-ab-open="more"]'); await tapSel('#director-appbar [data-ab-menu="more"] [data-action="demo-card"]'); await wait(300); log('NOTE the card has no visible × here (the player has not shown it): closed through the menu'); }
-  check(await ev(() => JSON.parse(localStorage.getItem('ergoflex.director.demoCard.v1') ?? 'null') === 'closed' || localStorage.getItem('ergoflex.director.demoCard.v1') === 'closed'), `${tag}: the choice is remembered (localStorage)`);
+  check(await ev(() => { const v = localStorage.getItem('ergoflex.director.demoCard.v1'); if (v === 'closed') return true; try { return JSON.parse(v) === 'closed'; } catch { return false; } }),   // (stored as the bare word: JSON.parse threw on Windows and the run stopped here)
+    `${tag}: the choice is remembered (localStorage)`);
 }
 
 async function inspectorChecks(tag, landscape) {
