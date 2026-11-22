@@ -1,6 +1,6 @@
 # Keyboard tray as an articulated part in the Director: specification
 
-Status: design only, no product code. Base: `438b648b` (branch `ui/keyboard-tray-spec`). Author: Claude, 21/22 Nov 2026.
+Status: design, updated 22 Nov 2026 with Vico's answers (section 0.1, which overrides anything below that disagrees with it). Original base: `438b648b` (branch `ui/keyboard-tray-spec`). Build branch: `ui/keyboard-tray-build`. Author: Claude, 21/22 Nov 2026.
 Request (Vico): the keyboard tray becomes an articulated skeleton like the real ergonomic tray (the surface TILTS; other hinges let it SWING and TUCK AWAY). Double-click the tray in the Director to get its own controls (tilt / swing / tuck, inside real limits). Its own animation lane with its own keys, apart from the desk's lift / tilt / wheels lanes, so he can pose it in several positions first and an engineer then works out how it travels between them. It has to look right: real hinge points, nothing through the desk, a believable tucked pose. "As long as they look at our existing framework": every section below starts from what the code does today.
 
 Honesty marks used throughout: **measured** (read from the glb / code), **inferred** (read off the geometry, needs a check), **proposed** (my design choice, number to be confirmed), **unknown** (needs Vico, a photo or the real hardware).
@@ -10,12 +10,37 @@ Honesty marks used throughout: **measured** (read from the glb / code), **inferr
 ## 0. Summary of the design
 
 1. Keep the tray a catalog accessory riding the desktop frame. Add a second asset, `ergoflex-keyboard-tray-rig.glb` (same geometry cut into hinged parts); the stage loads it **only when a chapter carries tray keys**. No keys = the rigid glb, byte for byte what renders today.
-2. Joint chain (proposed, section 2): fixed track -> **tuck** (slide along the track) -> **swing** (vertical hinge) -> **tilt** (horizontal hinge at the forks) -> plate. Riders (keyboard, mouse) follow the plate.
-3. Pose = `{tilt, swing, tuck}` (reserve a 4th field `drop`). Defaults 0/0/0 = the glb as authored.
+2. Joint chain (section 0.1 and 2.3): fixed track -> **slide** (carriage along the track, 254 mm) -> **swing** (vertical pivot at the track's end, +-180 degrees) -> **tilt** (horizontal hinge at the forks) -> plate. The keyboard and mouse stay on the plate and follow it. A **drop** joint (0..165 mm, the mount height) lowers the whole tray so a keyboard fits under the desktop.
+3. Pose = `{slide, swing, tilt, drop}`. Defaults 0/0/0/0 = the glb as authored (extended, level, undropped).
 4. Keys live in a new shot field `trayEdits` (not in `motion.clips`), in chapter seconds, with a per-key ease and a per-segment route; sampled by one pure module used by the live stage and the film render.
 5. Director: double-click the tray = **Tray mode** (like people Pose mode): panel with three sliders, hinge handles on the stage, a "Tray" lane of key diamonds, jog / copy / paste.
-6. Plausibility = per-joint limits + coupling table (swing and tilt shrink as the tray tucks), precomputed from a clearance probe against the real desk geometry, plus a runtime clamp from that table. The tuck with a keyboard on it is a real problem in this CAD (section 6.3).
+6. Plausibility = per-joint limits + coupling table (swing and tilt shrink as the tray slides in; the drop it needs with a keyboard on it grows as the plate goes under the desk), precomputed from a clearance probe against the real desk geometry, plus a runtime clamp from that table. The tuck with a keyboard on it is a real problem in this CAD (section 6.3).
 7. Phases: about 12 working days for one engineer; the Windows machine is needed for the browser, clearance probe and render checks (section 9).
+
+---------------------------------------------------------------------------------------------------
+
+## 0.1 Vico's answers (22 Nov 2026): the decisions this spec now follows
+
+Source: the product Vico has in mind, Amazon "Keyboard Tray Under Desk with Storage Drawer, Height Adjustable, Slide Out 360 Swivel Tilt" (ASIN B0GC643XT7, AX WABER). Screenshots: `/home/ergo/.claude/uploads/1c39807e-d572-43fd-b4a6-3a93f7e8be89/1233fdd6-image.jpg` and `8c5db007-image.jpg`. What they show: "6.5 in ADJUSTABLE HEIGHT" (the mount height, 6.5 in = 165 mm), "10 in Stretching range" (the slide), "Easy Stored When not Use" (the tray pushed in) and "Side Storage" with a 19 in span and a curved arrow (the tray swung round to the side under the desk, keyboard and mouse still on it). Vico: "It can tilt the surface and swivel to be tucked away. Totally."
+
+| Question (old section 11) | Answer | Consequence in the spec |
+|---|---|---|
+| 1 Which tray | The product above, a similar one, not an identical unit | The CAD is the geometry, the product the behaviour. The CAD has no vertical hinge; the swing pivot is **invented at the track's end** (the carriage front pin line, 2.3) and rides with the slide. |
+| 2 Ranges | **Slide** about 254 mm (10 in); **tilt** keep +-15 degrees unless the CAD shows more (it does not: the CAD gives no angle stop); **swing** about a **vertical** pivot at the track's end, the whole tray swings out to the SIDE and is stored along the desk's side ("Side Storage"); limit **+-180 degrees** (the product's "360" is a claim); **height at the mount 0..165 mm** reserved / optional | Joint table 2.3. The old `tuck` joint is called **`slide`**; the old "folds up flat" reading of tuck is dropped. |
+| 3 Mounting | Default: the tray stays fixed to the tilting top, as now | No `level` option in v1 (it stays a v1.1 idea in 6.3). |
+| 4 Keyboard on the tray | The keyboard and mouse **stay on the tray** when it is tucked: no put-away, options A and C of 6.3 are out | The clearance must be checked **with a keyboard on the tray**. At the CAD's 19.7 mm plate drop a keyboard (30 to 45 mm) cannot go under the desktop, so the reserved **`drop`** joint is **real** (the product mounts the track lower): the sampler raises `drop` to the minimum that clears the desktop whenever the plate is under it (6.3, section 6). |
+| 5 Chapters | Tray keys only where Vico adds them | No chapter gets keys by default; epoch untouched. |
+| 6 People | Hands leave the keys while the tray moves (v1) | As 6.3 "People". |
+| 7 Render policy | The rig glb is used only in chapters with tray keys: **no render-epoch bump** | As 3 and 7.3. |
+
+Decisions taken while building phase 1 (mine, to be confirmed by the probe or Vico):
+* **Names and units.** Pose = `{slide, swing, tilt, drop}`: `slide` 0..1 of the travel (0 = as authored = the tray out in front, 1 = pushed all the way in; layout independent), `swing` degrees (+ = plate front to the user's right), `tilt` degrees (+ = front edge up), `drop` **millimetres** 0..165 (a real quantity: a keyboard needs about 28 mm, so it is not normalised). Where the text below still says `tuck`, read `slide`; "tucked" as a pose name still means pushed in and/or swung away.
+* **Slide travel** is 254 mm (Vico, the product). The CAD track gives only 239.5 mm between the carriage and the rear stop; the rig either lengthens the track by 15 mm or the travel constant is lowered to 239.5 (`SLIDE_TRAVEL_MM`, phase 2).
+* **Drop** is the whole tray moving straight down at the mount. The CAD's sloped links give only about 58 mm; the rig shows the full range by translating the tray body (phase 2 decides the look).
+* **Coupling** (starting values, replaced by the probe's table): `swing` is free to +-180 while `slide` <= 0.4 and falls to 0 at `slide` 0.85; `tilt` is +-15 while `slide` <= 0.4 and narrows to -2..0 at 0.85, and also narrows as the swing carries the plate under the desk (|swing| 20 to 60 degrees). Clamp order: slide, then swing, then tilt, then drop.
+* **Under the desk** is a pose-only fraction 0..1 (`underDesk`): the larger of the slide ramp (0.45 to 0.75) and the swing ramp (|swing| 20 to 60 degrees). Needed drop = `rider thickness - 19.7 + 3 mm` times that fraction. The authored pose is 0 by construction, so a tray with no keys, or keys at rest, is never lowered.
+* **Before the first key** the tray eases from `initial` (an implicit key at 0 s) to the first key, so a first key at 3 s does not make the tray jump; add a key at the rest pose just before to hold it still until then.
+* **Storing keys.** Defaults are omitted (`ease` smooth, `route` auto), as people pose keys do; a key's `pose` may name only the joints it changes; keys are held to the joints' hard limits when cleaned and to the coupling table only when sampled.
 
 ---------------------------------------------------------------------------------------------------
 
@@ -102,19 +127,19 @@ Overall: **494 mm wide, 96.7 mm tall, 698 mm deep** (track 391 mm, plate 286 mm,
 1. **The glb is skewed about 7 degrees about the vertical.** The two pin pairs differ by 11.4 mm in z over 91.7 mm in x (atan = 7.1 degrees); the presets compensate with a saved yaw of 7.0 to 8.5 degrees (q.y .0610 / .0698 / .0741). So the hinge axes are **not** along glb x/z. Pivot nodes must carry that rotation, and the existing saved placements must stay valid, so **do not bake the skew out**.
 2. **The manifest numbers do not describe the shipped file** (`fit.mm 679` along x vs the glb's 494 x 698; the Blender 80 degree turn and `rotateY 90` stack). The shipped glb is the truth. Treat `manifest.json`'s fit as history.
 
-### 2.3 Proposed chain and limits
-Each joint node's **local axes carry the hinge**: revolute joints turn about the node's local X (tilt) or Y (swing), the slide moves along local Z. No sidecar file is needed (the converter drops glTF extras: `blender-convert.py` exports with `export_extras=False`).
+### 2.3 Chain and limits (updated with Vico's answers, 0.1)
+Each joint node's **local axes carry the hinge**: revolute joints turn about the node's local X (tilt) or Y (swing), the slide moves along local Z, the drop along local Y. No sidecar file is needed (the converter drops glTF extras: `blender-convert.py` exports with `export_extras=False`).
 
-| Joint (control) | Type | Pivot (mm, glb frame, **inferred**) | Axis | Range (**proposed**) | Rest | Sign |
+| Joint (control) | Type | Pivot (mm, glb frame, **inferred**) | Axis | Range | Rest | Sign |
 |---|---|---|---|---|---|---|
-| **tuck** | slide along the track | carriage; track axis = glb z turned by the 7.1 degree skew | track axis | 0 .. 239 mm; stored as **0..1** | 0 (deployed) | + = toward the back (under the desk). 239 = carriage rear (z -103.7) meets track rear end (z -343.2). |
-| **swing** | revolute, vertical | at the carriage front pin line: x -5.7, z 36 (**invented**: the CAD has no vertical hinge, see 2.4) | node Y | -45 .. +45 degrees | 0 | + = plate front moves to the user's right (+x) |
-| **tilt** | revolute, horizontal | the front rod: y ~-75..-81, z ~104..108, x mid -9 (rod from x -70 to 52), axis = rod axis (x turned by the skew) | node X | -15 .. +15 degrees, relative to the desktop | 0 = plate level (as authored) | + = front edge UP (negative tilt, front down, is the ergonomic one) |
-| (reserve) **drop** | revolute, horizontal, parallelogram links | the 4 pins at y -24 / -44.6 | node X (links), plate keeps level | 0 .. ~30 degrees = 0 .. ~58 mm lower | 0 | not in v1 UI, field reserved (6.3) |
+| **slide** | translation along the track | carriage; track axis = glb z turned by the 7.1 degree skew | track axis | **254 mm** (Vico) stored as **0..1** (CAD allows 239.5, see 0.1) | 0 (out, as authored) | 1 = pushed in, toward the back (under the desk) |
+| **swing** | revolute, **vertical**, rides with the slide | at the **track's end**: the carriage front pin line, x -5.7, z 36 (**invented**: the CAD has no vertical hinge, see 2.4) | node Y | **-180 .. +180 degrees** (Vico; "360" is a claim); the tray swings out to the SIDE for Side Storage | 0 | + = plate front moves to the user's right (+x) |
+| **tilt** | revolute, horizontal | the front rod: y ~-75..-81, z ~104..108, x mid -9 (rod from x -70 to 52), axis = rod axis (x turned by the skew) | node X | **-15 .. +15 degrees**, relative to the desktop (Vico: keep unless the CAD shows more; it shows no stop) | 0 = plate level (as authored) | + = front edge UP (negative, front down, is the ergonomic one) |
+| **drop** (height at the mount) | translation, vertical | the whole tray below the desktop | node Y (down) | **0 .. 165 mm** (the product's 6.5 in); a CAD-only rig would give about 58 mm via the sloped links | 0 | + = lower. **Real, not reserved**: the keyboard stays on the tray (0.1, 6.3). Not in the v1 panel as a slider: the sampler raises it as needed; the panel shows it read-only until the slider is wanted. |
 
-Coupling (proposed; numbers come from the clearance probe, section 6): `swingMax` and `tiltMax` fall to 0 as `tuck` goes toward 1; swing is free while the plate is outside the desk edge. In words: pull out, swing, tilt; tilt level, swing back, slide in.
+Coupling (starting values; numbers come from the clearance probe, section 6): `swing` max falls from 180 to 0 as `slide` goes 0.4 -> 0.85; `tilt` narrows from -15..15 to -2..0 over the same range and as the swing takes the plate under the desk; the **minimum drop** with a keyboard on the tray is the rider's thickness minus 19.7 mm plus 3 mm, scaled by how far the plate is under the desk. In words: pull out, swing, tilt; tilt level, swing back, slide in; the tray lowers before the keyboard goes under the desktop.
 
-Derived tuck numbers (**measured arithmetic**, office / gaming preset, tray origin z = +202 mm from the desktop centre, desk depth 30 in = 762 mm so front edge z = +381): plate front edge at 202+355 = 557 mm = **176 mm in front of the desk edge**; plate rear edge at 202+69 = 271, 110 mm inside the edge. To tuck the plate fully under the desk with 20 mm margin: slide >= **196 mm** of the 239 mm available. hbhs (z = 212.5) needs 206 mm. So "tucked" = tuck >= 0.85 on every preset layout.
+Derived slide numbers (**measured arithmetic**, office / gaming preset, tray origin z = +202 mm from the desktop centre, desk depth 30 in = 762 mm so front edge z = +381): plate front edge at 202+355 = 557 mm = **176 mm in front of the desk edge**; plate rear edge at 202+69 = 271, 110 mm inside the edge. To slide the plate fully under the desk with 20 mm margin: slide >= **196 mm** (0.77 of the 254 mm travel). hbhs (z = 212.5) needs 206 mm (0.81). So "pushed in" = slide >= 0.85 on every preset layout. The pivot sits 143 mm **inside** the desk edge (z 238 against 381) even with the tray out: swinging the plate about it carries the plate under the desk, which is why a swung tray with a keyboard needs the drop too.
 
 ### 2.4 What the CAD does not tell us (unknown)
 * There is **no vertical hinge** in the supplied CAD. "Swing" is therefore either a feature of the real tray that was not modelled, or a feature we would be inventing. The pivot above is a placeholder that gives a believable arc; it needs a photo or the real hardware.
@@ -171,15 +196,15 @@ So: a new shot field `trayEdits`, absent by default, modelled on `deskEdits` / `
 ```jsonc
 shot.trayEdits = [
   { "desk": "gaming",                       // optional, like propEdits.desk: only in the sub-shot whose preset is this (hero finale). Absent = every desk of the chapter that has a tray
-    "initial": {"tilt": 0, "swing": 0, "tuck": 0},   // at 0 s; absent = rigid pose
+    "initial": {"tilt": 0, "swing": 0, "slide": 0},   // at 0 s; absent = rigid pose
     "keys": [                                // chapter SECONDS (the clock of people poseKeys and clips); <= 64
-      {"id": "k1", "t": 2.0,  "pose": {"tilt": 0,   "swing": 0,  "tuck": 0},   "ease": "smooth", "route": "auto", "label": "Out"},
-      {"id": "k2", "t": 6.5,  "pose": {"tilt": -12, "swing": 25, "tuck": 0},   "ease": "smooth", "route": "auto"},
-      {"id": "k3", "t": 11.0, "pose": {"tilt": 0,   "swing": 0,  "tuck": 1},   "ease": "linear", "route": "direct", "label": "Tucked"}
+      {"id": "k1", "t": 2.0,  "pose": {"tilt": 0,   "swing": 0,  "slide": 0},   "ease": "smooth", "route": "auto", "label": "Out"},
+      {"id": "k2", "t": 6.5,  "pose": {"tilt": -12, "swing": 25, "slide": 0},   "ease": "smooth", "route": "auto"},
+      {"id": "k3", "t": 11.0, "pose": {"tilt": 0,   "swing": 90, "slide": 0.3, "drop": 30},   "ease": "linear", "route": "direct", "label": "Side storage"}
     ] }
 ]
 ```
-* `pose` units: tilt and swing in degrees, tuck 0..1 (so "fully in" is the same on 48 and 60 in desks and any layout z), optional `drop` 0..1 reserved. Missing field in a key = the previous key's value (a key may name only what it changes, as people pose keys do per bone).
+* `pose` units: tilt and swing in degrees, slide 0..1 (so "fully in" is the same on 48 and 60 in desks and any layout z), `drop` in millimetres 0..165 (optional: absent, the sampler lowers the tray as much as a keyboard on it needs). Missing field in a key = the previous key's value (a key may name only what it changes, as people pose keys do per bone).
 * `ease` (smooth / linear / hold): how a key **leaves** toward the next, same meaning as `people-pose-keys.mjs:14-15`.
 * `route` (per key, for the segment it leaves): `direct` = every joint eases from key to key independently (joint-space lerp). `auto` = the engineer's planner staggers the joints in a safe order (section 6.5). The planner may later write `route:{...}` windows; until then `auto` resolves to a fixed staging table. This field is the hook for "an engineer works out how it travels between them".
 * Before the first key: `initial` (else rigid). After the last key: hold.
@@ -209,8 +234,8 @@ Factory `createTrayEditor({win, three, tools, stage, shot, commit, status, reren
 **Panel (Inspector tab while active, header like `people-pose-bar`):**
 * Header "Tray mode · Keyboard tray" + `Done` (Esc also leaves; stop the event as pose mode does, `escape-rule.mjs`).
 * Three rows, each: label, slider within the **current** limits (limits shrink with the other joints, shown as a lighter track), number field (typed degrees / percent), a key diamond (not keyed / keyed here / keyed elsewhere, like `scene-pose-editor.mjs:543`):
-  * `Tilt` -15..+15 degrees; `Swing` -45..+45 degrees; `Tuck` 0..100 percent (with the mm and "plate fully under the desk at 85 percent" note).
-* Presets row: `Deployed` (0/0/0), `Tilt back`, `Swing aside`, `Tucked` (0/0/1); and "Save pose / saved poses" using `saved-poses.mjs` machinery under a new key `ergoflex.trayPoses.v1`.
+  * `Tilt` -15..+15 degrees; `Swing` -180..+180 degrees; `Slide` 0..100 percent (with the mm and "plate fully under the desk at 85 percent" note); `Drop` 0..165 mm (read-only follower at first).
+* Presets row: `Deployed` (0/0/0/0), `Tilt back`, `Side storage` (swing about 90, tray out), `Pushed in` (slide 1); and "Save pose / saved poses" using `saved-poses.mjs` machinery under a new key `ergoflex.trayPoses.v1`.
 * Auto-key toggle (default off, remembered, same as pose editor): on = every change writes a key at the playhead. Off = the change edits the static `initial`.
 * Reset joint / Reset all (tray back to rigid pose), Undo steps one change.
 * Hint line with the keys, and entries in the visible context shortcut panel (`experience/keys-panel.mjs`, doc generator `tools/experience/director-shortcuts-doc.mjs`, `docs/director-shortcuts.md`): `K` key all, `[` / `]` previous / next key (jog), `Delete` remove key, `Ctrl+C / Ctrl+V` key at playhead (as `copyKey / pasteKey`), `R` reset.
@@ -244,23 +269,21 @@ Factory `createTrayEditor({win, three, tools, stage, shot, commit, status, reren
 ### 6.2 Limits: probe once, bake a table, clamp at runtime
 * A **clearance probe** (Windows, headless puppeteer, no render): load the desk preset with the rig, for each (desk size 48/60) x (lift 28, 36, 43.5, 52.5) x (desk tilt -5, 9, 25, 45, 65, within `maximumTiltForHeight`) x (tuck, swing, tilt grid, step 5 degrees / 0.1), compute the world AABBs of the tray's parts against every non-tray mesh of the desk (AABB first, then triangle test only on a hit; the same item enumeration as `clip-audit.cjs`, which today skips the desk against accessories and would be extended with `--tray`). Output: `experience/tray-limits.mjs` containing per-joint hard limits and the coupling curves (`swingMax(tuck)`, `tiltMax(tuck)`, `tiltMin(tuck)`), plus a human-readable report. The probe is deterministic, a script in `tools/experience/tray-clearance.cjs`.
 * Rules the table must encode (proposed starting values, replaced by the probe):
-  * `swing`: +-45 while `tuck` <= 0.4, then linear to 0 at `tuck` = 0.85. Swinging into the leg side must stop before any intersection.
-  * `tilt`: -15..+15 while `tuck` <= 0.4, then narrows to -2..0 at `tuck` >= 0.85 (the plate must be level to fit under the top).
-  * `tuck` limited to the carriage stop (239 mm).
+  * `swing`: +-180 while `slide` <= 0.4, then linear to 0 at `slide` = 0.85. Swinging into the leg side must stop before any intersection.
+  * `tilt`: -15..+15 while `slide` <= 0.4, then narrows to -2..0 at `slide` >= 0.85 (the plate must be level to fit under the top), and narrows the same way as |swing| goes 20 -> 60 degrees (the plate is then under the desk).
+  * `slide` limited to the carriage stop (254 mm).
+  * `drop` minimum with a keyboard on the tray: rider thickness - 19.7 + 3 mm, scaled by the under-the-desk fraction (0.1). The probe replaces this with the real minimum per desk and rider.
 * Because the desk tilts, the probe runs per desk tilt too: the table is indexed by desk height and tilt, interpolated linearly (the same way `maximumTiltForHeight` interpolates, `motion-limits.mjs:24-30`). Initial version may ignore desk tilt above 9 degrees and rely on "tuck required above 9 degrees" (6.3).
 
-### 6.3 Making the tucked pose plausible (the keyboard problem)
-The CAD does not let a keyboard ride under the desktop. Options, in order of preference; Vico picks (question 4):
-* **A. Riders put away when the plate passes under the desk edge.** Reuse the stow idea already in the app: keyboards and mice pack flat to the middle shelf above 9 degrees (`docs/desk-auto-stow.md`). The riders keep following the plate until `tuck` reaches a threshold (the plate's front edge 20 mm from the desk edge), then leave through the existing stow (`desk-auto-stow.mjs` controller applied to those two objects) or the Props-lane show window (fade), as the chapter's author chooses. Cheapest, and consistent with what the desk already does when it tilts.
-* **B. Drop joint.** Use the parallelogram links (2.1) so the plate lowers about 50 mm before it slides under; keyboard fits (45 + 8 mm plate vs 19.7 + 58 mm). Most physical, needs the real hardware to confirm the links are a drop mechanism, and the 4-bar needs its own sampled limits.
-* **C. Tuck only without riders** (tuck clamped to ~0.1 when a keyboard is on the tray). Honest but not what the request wants.
-Default in the spec: **A**, with `drop` reserved for B.
+### 6.3 Making the tucked pose plausible (the keyboard problem): decided, 0.1
+Vico: the keyboard and mouse **stay on the tray** when it is tucked (the product's "Side Storage" picture shows exactly that). So the old options A (put the riders away) and C (refuse to tuck) are out, and the **drop joint (old option B) is real**: the product mounts the track lower (0..165 mm). Check, with a keyboard on the tray: plate top is 19.7 mm below the desktop underside; keyboards are 30 to 45 mm thick and mice up to 57 mm (`assets/props/index.json`), so at drop 0 they do not fit under the desktop, and the plate needs `thickness - 19.7 + 3 mm` of drop (about 28 mm for the 45 mm ergo keyboard, 40 mm for the 57 mm gaming mouse) before it goes under. That is inside the product's 165 mm and the CAD links' 58 mm. The sampler (`limitsFor` with a rider) raises `drop` to that minimum as the plate goes under; the route planner lowers it first (6.5). The probe (6.2) confirms the minimum per rider against the real desk.
+Not built: the `level` flag (the tray counter-rotating the desk's tilt), a v1.1 idea; the default stays "fixed to the tilting top".
 
-Rider mechanics (all options): riders are ordinary desk objects (`accessory-ergo-keyboard`, ...). Record each rider's baseline plate-relative offset when the rig is installed (the keyboard whose centre is inside the plate footprint within 60 mm above `traySurface.top`); each frame set `rider.matrix = plateWorld(pose) * baselineOffset` as a runtime override, keeping the authored transform in `item.saved` and restoring on clear (the same discipline as the desk's storage poses: "Storage poses live only on runtime records ... restore/read the authored transforms", `docs/desk-auto-stow.md`). A stowed rider (`userData.stowHidden`, stowed by the desk) is skipped. Nothing is written to `saved`, so a project save or a preset capture is unaffected.
+Rider mechanics: riders are ordinary desk objects (`accessory-ergo-keyboard`, ...). Record each rider's baseline plate-relative offset when the rig is installed (the keyboard whose centre is inside the plate footprint within 60 mm above `traySurface.top`); each frame set `rider.matrix = plateWorld(pose) * baselineOffset` as a runtime override, keeping the authored transform in `item.saved` and restoring on clear (the same discipline as the desk's storage poses: "Storage poses live only on runtime records ... restore/read the authored transforms", `docs/desk-auto-stow.md`). A rider the desk itself has stowed (`userData.stowHidden`, above 9 degrees of tilt) is skipped; the tray never stows a rider. Nothing is written to `saved`, so a project save or a preset capture is unaffected.
 
 Desk tilt: add an optional pose flag `level` (proposed, v1.1): the tray counter-rotates the desk's tilt up to the tilt limit so it hangs level while the top tilts. Default off (the app's behaviour today); ask Vico (question 3).
 
-People: v1 leaves the poses as built, and chapters that move the tray should have the person's hands off the keys at those times (their act already releases the keys above 9 degrees: `room-people-motion.mjs:33`). Follow-up: feed `featuredKeyboard()` from the rider's live position and let the existing wrist-follows-keyboard code (`room-people-motion.mjs:364`) track it.
+People (Vico: hands leave the keys while the tray moves, v1): v1 leaves the poses as built, and chapters that move the tray should have the person's hands off the keys at those times (their act already releases the keys above 9 degrees: `room-people-motion.mjs:33`). Follow-up: feed `featuredKeyboard()` from the rider's live position and let the existing wrist-follows-keyboard code (`room-people-motion.mjs:364`) track it.
 
 ### 6.4 Checks
 * Runtime clamp from the table (cheap, every frame, pure).
@@ -268,10 +291,10 @@ People: v1 leaves the poses as built, and chapters that move the tray should hav
 * Render-side: `clip-audit.cjs --tray` (extension of the existing tool) steps each tray chapter through 13+ samples and reports tray-vs-desk overlaps; zero overlaps is a release gate for any chapter with `trayEdits`.
 
 ### 6.5 Travel between poses (the engineer's part)
-`routeSegment(a, b, tuckBlocked)`:
-* `direct`: joints ease together.
-* `auto` staging (proposed): leaving a tucked or partly tucked pose: slide out first (0 .. 55 percent of the segment), swing 35 .. 80 percent, tilt 60 .. 100 percent; entering a tuck: tilt to level 0 .. 35, swing to 0 20 .. 65, slide 45 .. 100. A segment between two deployed poses is `direct`.
-* Validation: sample the segment at 25 points, test against the coupling table; if `direct` fails, use the staging; if staging fails, report the segment and fall back to a single clamp.
+`routeSegment(a, b, {route, riderMm})` (a, b = full poses):
+* `direct`: joints ease together (a straight line in joint space).
+* `auto` staging (proposed), chosen by the under-the-desk fraction at each end. Leaving a pushed-in or swung-away pose: slide out first (0 .. 55 percent of the segment), swing 35 .. 80, tilt and drop 60 .. 100; going under (pushing in or swinging away): drop and tilt first (0 .. 35), swing 20 .. 65, slide 45 .. 100. The windows of the joints that actually change are stretched to fill the segment. A segment between two deployed poses is `direct`.
+* Validation: sample the segment at 25 points, test against the coupling table (and the rider's drop minimum); `auto` takes `direct` if it passes, else the staging if that passes, else it reports the segment and falls back to a single clamp (`clamped`: direct motion, every sample clamped). A forced `direct` is never replaced, only reported.
 The planner is pure and unit-tested; the window shapes are its only tunables, and the data field `route` records the choice so a render never depends on the planner's later changes unless the author re-plans.
 
 ---------------------------------------------------------------------------------------------------
@@ -336,13 +359,13 @@ Order: 0 -> 1 -> (2 in parallel with 1) -> 3 -> 4 and 5 in parallel -> 6 -> 7. P
 
 ## 10. Risks
 
-1. **Real hardware unknown** (11): the CAD has no vertical hinge; swing may have to be invented. Mitigation: ask first; the joint table is data, not structure.
-2. **Keyboard thickness vs 19.7 mm clearance**: tuck with riders is not physical in this CAD (6.3). Mitigation: A (rider stow) by default, B (drop) reserved.
+1. **Real hardware unknown**: the CAD has no vertical hinge; the swing pivot is invented at the track's end (0.1, 2.4). Mitigation: the joint table is data, not structure; the product's pictures are the behaviour reference.
+2. **Keyboard thickness vs 19.7 mm clearance**: a keyboard on the plate cannot go under the desktop at the CAD's drop (6.3). Decided: the riders stay on, the `drop` joint is real and the sampler enforces its minimum; the probe must confirm the minimum per rider.
 3. **7 degree skew**: easy to lose on re-export or when someone "straightens" the model; every saved placement depends on it. Mitigation: pivot nodes carry the rotation; a test asserts the hinge axes in the glb against the measured angle (+-0.5 degrees).
 4. **Optimizer flattens the hierarchy** (`gltf-transform optimize`, `convert-props.mjs:178`). Mitigation: `keepHierarchy` flag; test that the shipped rig has the named nodes.
 5. **Rest-pose pixel drift** between rigid and rig (quantisation, normals at cut edges, draw order). Mitigation: dual assets and the parity gate; epoch only if Vico accepts a clean-up.
 6. **Desk geometry for the probe is only available in the stage** (not a standalone glb): the probe is browser-bound and desk-version dependent; re-run when the desk model changes (record the desk version in the generated table).
-7. **Tray leans with the tilting desktop**: a tilted-with-top tray looks wrong in drafting chapters; `level` option and tuck cover it, but Vico must choose.
+7. **Tray leans with the tilting desktop**: a tilted-with-top tray looks wrong in drafting chapters; `level` option and the slide cover it; Vico's answer is that the tray stays fixed to the top (0.1).
 8. **People hands and body** do not follow the tray (6.3). Acceptable v1, listed.
 9. **Meshopt / quantisation of a split asset**: more nodes, more draw calls (23 parts); 11 k tris, negligible, but check shader-warm-up time in the 4K render (`ctx.warm`).
 10. **Hero finale**: each sub-shot is a desk model; `desk` field on `trayEdits` mirrors `propEdits.desk`; some models (compact, creative, artist) have no tray: the lane must be hidden and the data ignored for them.
@@ -353,12 +376,13 @@ Order: 0 -> 1 -> (2 in parallel with 1) -> 3 -> 4 and 5 in parallel -> 6 -> 7. P
 
 ---------------------------------------------------------------------------------------------------
 
-## 11. Questions for Vico
+## 11. Questions for Vico: answered 22 Nov 2026
 
-1. **Which tray is it?** Brand / model of the real ergonomic tray (or a photo of the mechanism). The supplied CAD (`KeyboardTray.glb`, 494 x 698 mm) shows a track, a carriage, sloped links, forks and a front rod with a knob, but **no vertical swing hinge**. Does the real tray swing, and about which point?
-2. **Ranges.** Tilt: is -15..+15 degrees right (and is "front down" the negative, ergonomic way)? Swing: +-45? Tuck: does "tuck" mean sliding the tray in under the desk (CAD-supported), or folding it up flat against the underside?
-3. **Mounting.** Is the real tray fixed to the tilting desktop (as the app does now, so it leans with the top) or to the fixed frame? Should the tray be allowed to stay level while the top tilts (my `level` option)?
-4. **The keyboard on the tray.** In this CAD the plate is 20 mm below the track and a keyboard is 30 to 45 mm thick: it cannot go under the desktop on the tray. When the tray tucks, should the keyboard and mouse (A) leave by the desk's existing put-away, (B) ride along on a tray that first drops (needs the lowering links confirmed), or (C) should the tray refuse to tuck with a keyboard on it?
-5. **Which chapters** get tray motion first (my guess: the opening Awaken and the Rise / Wellness office desks), and should the finale's desk versions each have their own tray keys?
-6. **People.** When the tray swings or tucks, should the person's hands leave the keys (v1) or follow the keyboard (follow-up work on the people poses)?
-7. **Render policy.** OK to ship with the rig only on chapters that have tray keys (no render-epoch bump), and decide the epoch only if we later make the rig the only asset?
+All seven are answered in section 0.1 (table at the top). Kept here as an index:
+1. Which tray: Amazon B0GC643XT7 (similar to his), screenshots in 0.1.
+2. Ranges: slide 254 mm, tilt +-15 degrees, swing +-180 degrees about a vertical pivot at the track's end (Side Storage), height 0..165 mm optional (becomes the `drop` joint).
+3. Mounting: stays fixed to the tilting top.
+4. Keyboard: stays on the tray; the clearance is checked with a keyboard on it; the `drop` joint is real.
+5. Chapters: tray keys only where Vico adds them.
+6. People: hands leave the keys while the tray moves (v1).
+7. Render policy: rig only in chapters with tray keys, no epoch bump.
