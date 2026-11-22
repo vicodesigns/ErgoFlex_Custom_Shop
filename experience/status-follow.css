@@ -1,0 +1,22 @@
+/* Status lights follow the desk's moves (experience/status-follow.mjs, status-follow-ui.mjs). Its own sheet: the Director's desktop sheets stay as they were. */
+#director-panel .follow-light{margin:10px 0;padding:6px 10px 8px;border:1px solid var(--df-border-2);border-left:4px solid var(--lane,#5b6674);border-radius:var(--df-r-3);background:var(--df-surface-2)}
+#director-panel .follow-light.on{border-color:var(--lane,#5cd3f6)}
+#director-panel .follow-toggle{display:flex;flex-direction:row;align-items:center;gap:10px;min-height:36px;cursor:pointer;margin:0}
+#director-panel .follow-toggle>span{display:grid;gap:2px;min-width:0}
+#director-panel .follow-toggle b{font-size:var(--df-fs-md);color:var(--df-text-1)}
+#director-panel .follow-toggle small{color:var(--df-text-3);font-size:var(--df-fs-sm);overflow-wrap:anywhere}
+#director-panel .follow-toggle input[type=checkbox]{width:22px;height:22px;flex:none}
+#director-panel .follow-mode{display:flex;margin:8px 0 4px;border:1px solid var(--df-border-3);border-radius:var(--df-r-3);overflow:hidden}
+#director-panel .follow-mode button{flex:1;margin:0;border:0;border-radius:0;min-height:32px;background:var(--df-surface-3);color:var(--df-text-2)}
+#director-panel .follow-mode button+button{border-left:1px solid var(--df-border-3)}
+#director-panel .follow-mode button[aria-pressed=true]{background:var(--df-accent-soft);color:var(--df-accent-text);box-shadow:inset 0 -2px 0 var(--df-accent)}
+#director-panel .follow-timing{margin:4px 0 8px;font-size:var(--df-fs-md);color:var(--df-text-2);line-height:1.5}
+#director-panel .follow-timing small{color:var(--df-text-3)}
+.follow-chain{font-style:normal;font-size:11px;margin-right:3px}
+#director-timeline .light-clip.linked .clip-resize{display:none}
+#director-timeline .light-clip.linked{cursor:default}
+/* touch: 44 px targets (the switch row, the three-way control, its buttons) */
+@media (pointer: coarse){
+#director-panel .follow-toggle,#director-panel .follow-mode button,#director-panel .follow-light .director-actions button{min-height:44px}
+#director-panel .follow-toggle input[type=checkbox]{width:28px;height:28px}
+}

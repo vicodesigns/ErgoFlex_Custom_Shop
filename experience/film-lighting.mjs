@@ -9,7 +9,8 @@
 //              keys [[seconds, value], …]; only the fields the Director touched
 //   sceneGlobals.screenLight  {gain, saturation, contrast, tint, keepHue}: the screen-coloured light of a ledMode 'media'
 //              chapter on the desk, floor and walls (experience/screen-light.mjs, docs/screen-reflection/CONTRACT.md)
-// The Director keeps an id on each event / key (third tuple slot) for selection; exportLighting drops them.
+// The Director keeps an id on each event / key (third tuple slot) for selection; exportLighting drops them (and a status
+// event's link / manual: the move it follows, experience/status-follow.mjs).
 import {cleanScreenLight} from './screen-light.mjs';
 export const LIGHT_KINDS=[['lift-up','Lift up · blue','#2f6bff'],['lift-down','Lift down · red','#ff3b30'],['tilt-retract','Tilt retract · purple','#9600ff'],['tilt-extend','Tilt extend · yellow-green','#d8f000'],['wheels','Wheels · red / amber','#ff5a1f'],['off','Off · dark','#30363c'],['collision','Collision · red breathe','#c4002a'],['proximity','Proximity · amber breathe','#ff9a00']];
 export const WHEEL_MODES=['Strafe left','Strafe right','Forward','Back','Rotate CW','Rotate CCW','Diagonal left-forward','Diagonal left-back','Diagonal right-forward','Diagonal right-back'];
@@ -26,6 +27,8 @@ export function cleanLighting(v={}){
     const c={id:unique(e.id),at,dur,kind:e.kind};
     if(e.fade!==undefined)c.fade=num(e.fade,0,10,1);if(e.fadeIn!==undefined)c.fadeIn=num(e.fadeIn,0,10,0);
     if(e.mode!==undefined)c.mode=Math.round(num(e.mode,1,10,3));if(typeof e.reverse==='boolean')c.reverse=e.reverse;
+    // the Director's own: the move this light follows (link: clip id) or is set by hand (manual) - experience/status-follow.mjs; exportLighting drops both
+    if(safeId(e.link))c.link=e.link;else if(e.manual===true)c.manual=true;
     return [c];
   }).sort((a,b)=>a.at-b.at);
   if(Array.isArray(v.ledNeutral))out.ledNeutral=v.ledNeutral.slice(0,64).flatMap(k=>Array.isArray(k)&&num(k[0],0,90,null)!==null&&hexOk(k[1])?[[num(k[0],0,90,0),k[1].toLowerCase(),unique(k[2])]]:[]).sort((a,b)=>a[0]-b[0]);
@@ -42,10 +45,11 @@ export function cleanLighting(v={}){
   if(Object.keys(globals).length)out.sceneGlobals=globals;
   return out;
 }
-// The film's own field shapes: no Director ids.
+// The film's own field shapes: no Director ids, and none of the Director's status-light link fields (link / manual:
+// experience/status-follow.mjs), so the film shot, Export cut and the render keys never see them.
 export function exportLighting(shot){
   const s={...shot};
-  if(Array.isArray(s.ledStatus))s.ledStatus=s.ledStatus.map(({id,...e})=>e);
+  if(Array.isArray(s.ledStatus))s.ledStatus=s.ledStatus.map(({id,link,manual,...e})=>e);
   if(Array.isArray(s.ledNeutral))s.ledNeutral=s.ledNeutral.map(k=>[k[0],k[1]]);
   if(Array.isArray(s.timeOfDay))s.timeOfDay=s.timeOfDay.map(({id,...k})=>k);
   return s;

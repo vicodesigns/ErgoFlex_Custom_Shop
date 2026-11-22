@@ -21,6 +21,8 @@ import {paceChapter,lengthenChapter,chapterFloor,shortenChapter,viewsPastEnd} fr
 import {validateClipSchedule,sampledMotionToClips,legacyMotionToClips,cleanClipMotion,planClipInsertion,clipSummary,clipEnd} from './desk-clips.mjs';
 import {groupRange,snapGroupDelta,shiftGroup,CHAPTER_MAX} from './timeline-group.mjs';
 import {LIGHT_KINDS,WHEEL_MODES,cleanLighting,exportLighting,lightKindColor,validateStatus,neutralAt,lightAt,scaleColor,warmthOf,withWarmth,whiteName,daypartAt,DAYPART_TINTS,lightnessOf,withLightness,WHITE_PRESETS} from './film-lighting.mjs?v=screen-light-20261121';
+import {syncStatus,motionSig,resolveLinks,lightOfClip,enableClipLight,disableClipLight,unlinkEntry,linkEntryToClip,linkAllMatching,unlinkAll,followCounts,followMode,canFollow,followLane,deriveLight,lightName} from './status-follow.mjs';
+import {clipFollowHtml,followModeHtml,statusInspectorHtml,moveLane,span as followSpan} from './status-follow-ui.mjs';
 import {filmRenderShot,createStillRenderer} from './film-render.mjs?v=transitions-fix-20261120';
 import {createSceneLightEditor} from './scene-light-editor.mjs';
 import {createScenePropEditor} from './scene-prop-editor.mjs';
@@ -437,6 +439,91 @@ export function mountDirector(bridge,catalog,initial){
     if(roomLight!==undefined&&roomLight!==null)s.sceneGlobals={...s.sceneGlobals,roomLight};
   }
   function putLighting(change,{key=null,render=true}={}){const L=lighting();if(!L)return;requireReady();commit(()=>writeLighting(L,change),{render,key});}
+  // ---- Status lights follow the desk's moves (experience/status-follow.mjs; Vico, 22 Nov 2026). Editor-time only: the film, the
+  // renderers and Export cut see plain ledStatus (exportLighting drops the link / manual fields). Every commit that changes the
+  // featured desk's clips (drag, resize, speed, distance, direction, delete, chapter pace, clear, approach ...) re-derives the
+  // lights that follow them inside the SAME undo step; undo / redo restore clips and lights together.
+  const featuredMotion=()=>{try{return deskEditor.featuredMotion();}catch{return null;}};
+  function followSnapshot(){
+    try{
+      const s=shot();if(!s||!(s.ledStatus?.length||filmShot()?.ledStatus?.length))return null;
+      const motion=featuredMotion();return motion?{index:selected,id:s.id,hadMotion:!!s.motion,motion,sig:motionSig(motion)}:null;
+    }catch{return null;}
+  }
+  function followAfter(pre){
+    if(!pre||selected!==pre.index)return;
+    try{
+      const s=shot();if(!s||s.id!==pre.id||s.statusLight===false||(pre.hadMotion&&!s.motion))return;   // ("Use built-in animation" goes back to the film's moves and lights as they were)
+      const L=lighting(),next=featuredMotion();if(!L||!next)return;
+      const r=syncStatus(pre.motion,next,L.status,s.seconds);if(!r.changed)return;
+      writeLighting(L,{status:r.status});
+      const was=new Map(L.status.map(e=>[e.id,JSON.stringify(e)])),n=r.status.filter(e=>was.get(e.id)!==JSON.stringify(e)).length;
+      const text=r.notes.length?r.notes.join(' '):n===1?'Its status light follows.':`${n} status lights follow.`;
+      queueMicrotask(()=>{const now=panel.querySelector('[data-status]')?.textContent||'';status((now&&!/status light/i.test(now)?now+' ':'')+text);});
+    }catch(error){status(error.message,true);}
+  }
+  function followContext(){
+    const L=lighting(),m=featuredMotion();if(!L||!m)throw Error('Wait for this chapter to finish loading.');requireReady();return {L,m,seconds:shot().seconds};
+  }
+  const clipWords=c=>`${clipSummary(c)}, ${followSpan(c.start,c.duration)}`;
+  function setFollowLight(clipId,on){
+    const {L,m,seconds}=followContext(),c=m.clips.find(v=>v.id===clipId);if(!c)throw Error('Select the movement first.');
+    if(shot().statusLight===false)throw Error('Status lights are off for this chapter: choose Follow moves in Lighting → Desk status.');
+    if(on){
+      const r=enableClipLight(L.status,m,clipId,seconds);if(!r.added){renderPanel();return;}
+      commit(()=>writeLighting(L,{status:r.status}),{render:true});
+      status(`Status light on for ${clipWords(c)}: ${lightName(r.added)}. It follows this move; Undo removes it.${r.notes.length?' '+r.notes.join(' '):''}`);
+    }else{
+      const r=disableClipLight(L.status,m,clipId);if(!r.removed){renderPanel();return;}
+      commit(()=>writeLighting(L,{status:r.status}),{render:true});status('Status light removed from this move. Undo brings it back.');
+    }
+  }
+  function setFollowFade(clipId,field,value){
+    const {L,m}=followContext(),n=Number(value);if(value===''||!Number.isFinite(n)||n<0||n>10)throw Error('Fades run from 0 to 10 seconds.');
+    const found=clipId&&lightOfClip(L.status,m,clipId),id=found?found.entry.id:lightSel?.kind==='lights'?lightSel.id:null;if(!id)return;
+    commit(()=>writeLighting(L,{status:L.status.map(e=>e.id===id?{...e,[field]:Math.round(n*1000)/1000}:e)}),{render:true,key:'follow-'+field});
+    status(`${field==='fade'?'Fade out':'Fade in'} ${n} s.`);
+  }
+  function setFollowMode(mode){
+    const L=lighting();if(!L)return;requireReady();const m=featuredMotion()||{clips:[]};
+    if(mode==='off'){if(shot().statusLight===false)return;commit(()=>{shot().statusLight=false;},{render:true});status('Status lights are off for this chapter. Your lights stay; Follow moves or Manual brings them back.');return;}
+    let n=0;
+    commit(()=>{
+      const s=shot();if(s.statusLight===false)delete s.statusLight;
+      let list=L.status;
+      if(mode==='follow'){list=list.map(e=>{if(!e.manual)return e;const c={...e};delete c.manual;return c;});const r=linkAllMatching(list,m);n=r.count;list=r.status;}
+      else{const r=unlinkAll(list,m);n=r.count;list=r.status;}
+      if(JSON.stringify(list)!==JSON.stringify(L.status)||!s.ledStatus)writeLighting(L,{status:list});
+    },{render:true});
+    status(mode==='follow'?`Status lights follow the moves${n?`: ${n} light${n===1?'':'s'} that already matched a move now follow it`:''}. Switch a move's Status light on in Groove to add one.`:`Status lights are set by hand${n?`: ${n} light${n===1?'':'s'} no longer follow${n===1?'s':''} a move`:''}.`);
+  }
+  function linkAllFound(){
+    const {L,m}=followContext(),r=linkAllMatching(L.status,m);if(!r.count){status('No light matches a move that it is not linked to already.');return;}
+    commit(()=>writeLighting(L,{status:r.status}),{render:true});status(`${r.count} light${r.count===1?'':'s'} now follow${r.count===1?'s':''} their move. Nothing moved.`);
+  }
+  function unlinkSelected(){
+    const {L}=followContext();if(lightSel?.kind!=='lights')return;
+    commit(()=>writeLighting(L,{status:unlinkEntry(L.status,lightSel.id)}),{render:true});status('Unlinked: this light keeps its times and no longer follows the move. Undo links it again.');
+  }
+  function linkSelectedTo(clipId){
+    const {L,m,seconds}=followContext();if(lightSel?.kind!=='lights')return;
+    if(!clipId){commit(()=>writeLighting(L,{status:unlinkEntry(L.status,lightSel.id)}),{render:true});status('This light is set by hand.');return;}
+    const r=linkEntryToClip(L.status,m,lightSel.id,clipId,seconds);commit(()=>writeLighting(L,{status:r.status}),{render:true});
+    status(`Linked: this light now runs with ${clipWords(m.clips.find(c=>c.id===clipId))}.${r.notes.length?' '+r.notes.join(' '):''}`);
+    const e=r.status.find(v=>v.id===lightSel.id);if(e)seekCamera(e.at/seconds);
+  }
+  function gotoFollowed(){
+    const {L,m}=followContext(),l=lightSel?.kind==='lights'?resolveLinks(L.status,m).get(lightSel.id):null;if(!l)return;
+    lightSel=null;deskEditor.select(l.clip.id);
+  }
+  // The move inspector's Status light switch (desk-editor.mjs panel).
+  function clipFollowPanel(c){
+    try{
+      const L=lighting(),m=featuredMotion();if(!L||!m||!c)return '';
+      const found=lightOfClip(L.status,m,c.id);
+      return clipFollowHtml({clip:c,on:!!found,entry:found?.entry,derived:deriveLight(m,c,shot().seconds),statusOff:shot().statusLight===false});
+    }catch{return '';}
+  }
   // Time of day: the room's daypart keys (film shot until edited).
   const filmTods=new Map();
   function timeOfDay(){
@@ -615,8 +702,8 @@ export function mountDirector(bridge,catalog,initial){
     // Labelled keys alternate above / below the band so neighbours stay readable; spans mark the blends.
     const chip=(kind,attr,id,t,swatch,name,detail,i)=>`<button class="lane-key ${i%2?'low':''} ${t/s<.06?'start':t/s>.94?'end':''} ${on(kind,id)?'selected':''}" ${attr}="${id}" style="left:${t/s*100}%" aria-pressed="${on(kind,id)}" aria-label="${escape(name)} ${escape(detail)} at ${r2(t)} seconds" title="${escape(name)} · ${escape(detail)} · ${r2(t)}s (drag to retime)"><i style="background:${swatch}"></i><b>${escape(name)}</b><small>${escape(detail)} · ${r2(t)}s</small></button>`;
     const spans=(list,at,same)=>list.slice(1).map((k,i)=>same(list[i],k)?'':`<span class="lane-blend" style="left:${at(list[i])/s*100}%;width:${(at(k)-at(list[i]))/s*100}%" title="Blends ${r2(at(list[i]))} → ${r2(at(k))}s"></span>`).join('');
-    const layers=L?stackRows(L.status.map(e=>({id:e.id,start:e.at,end:e.at+e.dur}))):null,status=L?`<div class="desk-lane-row ${layers.count>1?'layered':''}" data-lane-color="light" style="--rows:${layers.count}"><span class="desk-lane-label" title="The film's desk status lights">Desk status</span><div class="desk-lane light-lane" data-light-lane role="group" aria-label="Desk status lights timeline"><div class="desk-lane-line"></div>
-      ${L.status.map(e=>`<button class="desk-clip light-clip ${on('lights',e.id)?'selected':''}" data-light-clip="${e.id}" style="${rowVar(layers,e.id)}left:${e.at/s*100}%;width:${e.dur/s*100}%;--lane:${lightKindColor(e.kind)}" aria-pressed="${on('lights',e.id)}" aria-label="Light state ${escape(kindLabel(e.kind))}, ${r2(e.at)} to ${r2(e.at+e.dur)} seconds" title="${escape(kindLabel(e.kind))} · ${r2(e.at)}–${r2(e.at+e.dur)}s · fade ${e.fade??1}s${e.fadeIn?` · fade in ${e.fadeIn}s`:''}"><span class="clip-resize" data-resize="start" title="Trim start"></span><strong>${escape(e.kind)}${e.kind==='wheels'&&e.mode?' '+e.mode:''}</strong><small>${r2(e.at)}–${r2(e.at+e.dur)}s</small><span class="clip-resize" data-resize="end" title="Trim end"></span></button>`).join('')}
+    const followed=L?resolveLinks(L.status,featuredMotion()||{clips:[]}):new Map(),layers=L?stackRows(L.status.map(e=>({id:e.id,start:e.at,end:e.at+e.dur}))):null,status=L?`<div class="desk-lane-row ${layers.count>1?'layered':''}" data-lane-color="light" style="--rows:${layers.count}"><span class="desk-lane-label" title="The film's desk status lights">Desk status</span><div class="desk-lane light-lane" data-light-lane role="group" aria-label="Desk status lights timeline"><div class="desk-lane-line"></div>
+      ${L.status.map(e=>`<button class="desk-clip light-clip ${on('lights',e.id)?'selected':''} ${followed.has(e.id)?'linked':''}" data-light-clip="${e.id}" style="${rowVar(layers,e.id)}left:${e.at/s*100}%;width:${e.dur/s*100}%;--lane:${lightKindColor(e.kind)}" aria-pressed="${on('lights',e.id)}" aria-label="Light state ${escape(kindLabel(e.kind))}, ${r2(e.at)} to ${r2(e.at+e.dur)} seconds${followed.has(e.id)?', follows its move':''}" title="${escape(kindLabel(e.kind))} · ${r2(e.at)}–${r2(e.at+e.dur)}s${followed.has(e.id)?' · follows '+escape(clipSummary(followed.get(e.id).clip)):''} · fade ${e.fade??1}s${e.fadeIn?` · fade in ${e.fadeIn}s`:''}"><span class="clip-resize" data-resize="start" title="Trim start"></span>${followed.has(e.id)?'<i class="follow-chain" aria-hidden="true" title="Follows its move">🔗</i>':''}<strong>${escape(e.kind)}${e.kind==='wheels'&&e.mode?' '+e.mode:''}</strong><small>${r2(e.at)}–${r2(e.at+e.dur)}s</small><span class="clip-resize" data-resize="end" title="Trim end"></span></button>`).join('')}
       ${L.status.length?'':'<span class="desk-lane-empty">No light states · + Light adds one at the playhead</span>'}<div class="light-now" data-light-now></div><div class="camera-track-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div></div>
       `:'',white=L?`<div class="desk-lane-row" data-lane-color="white"><span class="desk-lane-label" title="The neutral white between status lights, over the chapter">Desk white<button data-action="light-key-add" class="lane-add" title="Add a white key at the playhead with the colour there" aria-label="Add a white key">+</button></span><div class="desk-lane key-lane white-lane" data-light-lane role="group" aria-label="Desk white over time"><div class="lane-band" style="background:linear-gradient(90deg,${band(t=>withWarmth('#d9d9d9',warmthOf(neutralAt(L.neutral,t))))})"></div>
       ${spans(L.neutral,k=>k[0],(a,b)=>a[1]===b[1])}${whiteLine(L,s)}${L.neutral.map((k,i)=>chip('neutrals','data-light-key',k[2],k[0],k[1],whiteName(k[1]),Math.round(lightnessOf(k[1]))+'% bright · '+k[1],i)).join('')}<div class="camera-track-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div></div>`:'';
@@ -734,7 +821,7 @@ export function mountDirector(bridge,catalog,initial){
     const media=isMedia(filmShot(),shot()),room=section('room','Room',`brightness, fill light, LED glow on walls and floor${media?', screen light':''}`,`${globalFields(['exposureScale','environmentScale'])}${L?.roomLight!==undefined?`<label title="The room's lamps, sky fill and bounce light (not the desk's LEDs)">Room's own light (lamps, sky, bounce)<input name="room-light" type="number" min="0" max="2" step=".05" value="${L.roomLight}"></label>`:''}${globalFields(['ledWallGlow','ledFloorGlow'])}${media?screenLightPanel():''}${floorRefl.panel()}`);
     if(!L)return nowCard()+tod+room+lampsSection();
     const white=section('white','Desk white','the LED colour when no status is showing',`<div class="director-actions"><button data-action="light-key-add">+ White key</button></div>${kind==='neutrals'&&item?whiteInspector(L,item,s):''}`);
-    const status=section('status','Desk status','status lights while the desk moves',`<p class="director-hint">${L.edited?'Edited here; Export cut sends them to the film.':'From the film shot; your first edit keeps a copy in this cut.'}</p><div class="director-actions"><button data-action="light-add">+ Status light</button></div>${kind==='lights'&&item?statusInspector(item,s):''}`);
+    const status=section('status','Desk status','status lights that follow the desk\'s moves',`${followModeHtml({mode:followMode(shot(),L.status,featuredMotion()||{clips:[]}),counts:followCounts(L.status,featuredMotion()||{clips:[]}),statusEdited:L.edited})}<div class="director-actions"><button data-action="light-add">+ Status light by hand</button></div>${kind==='lights'&&item?statusInspector(item,s):''}`);
     return nowCard()+tod+room+white+status+lampsSection();
   }
   // Screen light (media chapters: the desk's LEDs follow the screen's picture; experience/screen-light.mjs and
@@ -753,12 +840,11 @@ export function mountDirector(bridge,catalog,initial){
     status(`Screen light: ${screenLightSummary(next)}. Render still shows it as the film will.`);
   }
   const lampsSection=()=>section('lamps','Lamps & sun','room lamps, sun and sky, film rig',`<div data-scene-lights>${sceneLights.panel()}</div>`);
-  function statusInspector(e,s){return `<div class="movement-inspector light-inspector"><h4 style="--lane:${lightKindColor(e.kind)}">Status light</h4>
-      <label>State<select name="light-kind">${LIGHT_KINDS.map(([id,label])=>option(id,label,e.kind)).join('')}</select></label>
-      ${e.kind==='wheels'?`<label>Drive mode<select name="light-mode">${WHEEL_MODES.map((label,i)=>option(String(i+1),`${i+1} · ${label}`,String(e.mode??3))).join('')}</select></label>`:''}
-      <div class="director-grid"><label>Start (seconds)<input name="light-at" type="number" min="0" max="${s}" step=".05" value="${r2(e.at)}"></label><label>Duration (seconds)<input name="light-dur" type="number" min=".05" max="${s}" step=".05" value="${r2(e.dur)}"></label></div>
-      <div class="director-grid"><label title="How long the white takes to give way to the state">Fade in (seconds)<input name="light-fadein" type="number" min="0" max="10" step=".05" value="${e.fadeIn??0}"></label><label title="How long the strip takes to go back to the white">Fade out (seconds)<input name="light-fade" type="number" min="0" max="10" step=".05" value="${e.fade??1}"></label></div>
-      <div class="director-actions"><button data-action="light-delete">Delete status light</button></div></div>`;}
+  function statusInspector(e,s){
+    const L=lighting(),m=featuredMotion()||{clips:[]},links=resolveLinks(L.status,m),lane=moveLane(e.kind);
+    const clips=lane?m.clips.filter(c=>canFollow(c)&&deriveLight(m,c)&&followLane(c)===lane).map(c=>{const o=lightOfClip(L.status,m,c.id);return {id:c.id,label:clipSummary(c),start:c.start,duration:c.duration,busy:!!o&&o.entry.id!==e.id};}):[];
+    return statusInspectorHtml({e,link:links.get(e.id)||null,seconds:s,clips,statusOff:shot().statusLight===false});
+  }
   function whiteInspector(L,k,s){return `<div class="movement-inspector light-inspector"><h4>White key · ${escape(whiteName(k[1]))}</h4>
       <label>Time (seconds)<input name="neutral-time" type="number" min="0" max="${s}" step=".05" value="${r2(k[0])}"></label>
       <div class="white-presets">${WHITE_PRESETS.map(([name,hex])=>`<button data-action="white-preset" data-section="${hex}" aria-pressed="${k[1]===hex}" title="${name} ${hex}"><i style="background:${hex}"></i>${name}</button>`).join('')}</div>
@@ -811,6 +897,7 @@ export function mountDirector(bridge,catalog,initial){
   // One light item changed: states stay one at a time, colour keys stay sorted.
   function editLight(change,{key=null,render=true}={}){
     const L=lighting(),item=lightItem();if(!item)return;
+    if(lightSel.kind==='lights'&&('at' in change||'dur' in change||'kind' in change||'mode' in change)&&resolveLinks(L.status,featuredMotion()||{clips:[]}).has(item.id))throw Error('This light follows its move: change the move, or press Unlink to edit it by hand.');
     if(lightSel.kind==='lights')putLighting({status:L.status.map(e=>e.id===item.id?{...e,...change}:e)},{key,render});
     else{const next=[change.time??item[0],change.color??item[1],item[2]];if(L.neutral.some(k=>k[2]!==item[2]&&Math.abs(k[0]-next[0])<.001))throw Error('There is already a colour key at that time.');putLighting({neutral:L.neutral.map(k=>k[2]===item[2]?next:k)},{key,render});}
   }
@@ -1135,8 +1222,9 @@ export function mountDirector(bridge,catalog,initial){
     status(f==='busy'?'Lanes: only those with something in them (Shift+U again: only the selection\'s).':f==='sel'?(b2sel.get()?'Lanes: only the selection\'s (Shift+U again: only what changed from the film).':'Lanes: only the selection\'s, and nothing is selected (Shift+U: only what changed).'):f==='changed'?'Lanes: only the groups changed from the film (●) (Shift+U again: every lane).':'Every lane shown.');}
   // The still stage is created on demand to avoid loading a second full scene while editing.
   function commit(fn,{render=false,key=null}={}){
+    const pre=followSnapshot();
     if(!key||group!==key){const before=copy(project);undo.push(before);undo=undo.slice(-40);undoLabels.push({before,after:null,text:null});undoLabels=undoLabels.slice(-40);redo=[];redoLabels=[];}
-    group=key;fn();const top=undoLabels.at(-1);if(top){top.after=copy(project);top.text=null;labelPending=top;setTimeout(()=>{if(labelPending===top)labelPending=null;});}changed();if(render)renderPanel();
+    group=key;fn();followAfter(pre);const top=undoLabels.at(-1);if(top){top.after=copy(project);top.text=null;labelPending=top;setTimeout(()=>{if(labelPending===top)labelPending=null;});}changed();if(render)renderPanel();
   }
   // Studio <-> Director (studio-sync.mjs): the "Studio changed" badge, Refresh from Studio, Adopt Studio's version.
   function renderStudioSync(){for(const el of [...appbar.querySelectorAll('[data-studio-sync]'),...panel.querySelectorAll('[data-studio-sync]')])el.innerHTML=studioSync.html();}
@@ -1278,6 +1366,10 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       if(name.startsWith('dk-')){await deskSel.action(name,index);return;}
       if(name.startsWith('ss-')){await studioSync.action(name);return;}
       if(name.startsWith('fr-')){await floorRefl.action(name,index);return;}
+      if(name==='follow-mode'){setFollowMode(index);return;}
+      if(name==='follow-link-all'){linkAllFound();return;}
+      if(name==='follow-unlink'){unlinkSelected();return;}
+      if(name==='follow-goto'){gotoFollowed();return;}
       if(name==='light-add'||name==='light-key-add'){addLight(name==='light-key-add');return;}
       if(name==='tod-add'){
         const T=timeOfDay();if(!T)return;requireReady();const t=Math.round(playhead*shot().seconds*1000)/1000,near=T.keys.find(k=>Math.abs(k.at-t)<.001);if(near){selectLight('tods',near.id);return;}
@@ -1551,6 +1643,14 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
         if(name==='tod-mode')next.mode=value;if(name==='tod-ease'){if(value==='smooth')next.ease='smooth';else delete next.ease;}
         putTod(T.keys.map(k=>k.id===item.id?next:k));seekCamera(next.at/shot().seconds);
         status(name==='tod-time'?`Time-of-day key moved to ${r2(next.at)} s.`:name==='tod-mode'?`Time-of-day key set to ${roomModes().find(m=>m.id===next.mode)?.label||next.mode}.`:'Time-of-day blend changed.');
+      }catch(error){renderPanel();status(error.message,true);}
+      return;
+    }
+    if(name==='follow-toggle'||name==='follow-fadein'||name==='follow-fade'||name==='follow-link-clip'){
+      try{
+        if(name==='follow-toggle')setFollowLight(event.target.dataset.clip,event.target.checked);
+        else if(name==='follow-link-clip')linkSelectedTo(value);
+        else setFollowFade(deskEditor.selectedId()||event.target.closest('[data-follow-linked]')?.dataset.followLinked,name==='follow-fade'?'fade':'fadeIn',value);
       }catch(error){renderPanel();status(error.message,true);}
       return;
     }
@@ -2235,7 +2335,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     });}else draft();}
   // Every room desk has its own Lift / Tilt timeline (desk-choreo.mjs): the open desk's clips are what the desk editor sees.
   const choreo=createChoreoTarget({realShot:()=>shot(),baseline:()=>filmShot()?effectiveDeskEdits(filmShot(),{}):null,roster:()=>bridge.ready()?bridge.stage().roomDesks?.()||[]:[],onChange:()=>{deskEditor.clearSelection();render();}});
-  const deskEditor=createDeskEditor({panel,timeline,bridge,shot:choreo.shot,choreo:{...choreo,pick:id=>{if(id)deskSel.select(id,{announce:false});else deskSel.deselect();}},time:()=>playhead,seek:seekCamera,commit,render,status,preview:range=>bridge.previewRange(project,selected,range),snap:snapTime,lengthen:(seconds,motion,message,at)=>resizeChapter(seconds,{motion,message,at}),focus:tab=>{keyId=null;lightSel=null;sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();titleEditor.clear();graphics.clear?.();   /* (not deskSel.deselect(): the room desk being choreographed stays open; deselecting it made a Lift added to it land on the featured desk) */if(!reveal(tab==='groove'?'clip':tab))showInspector(tab,false,!typing());}});
+  const deskEditor=createDeskEditor({panel,timeline,bridge,shot:choreo.shot,followHtml:clipFollowPanel,choreo:{...choreo,pick:id=>{if(id)deskSel.select(id,{announce:false});else deskSel.deselect();}},time:()=>playhead,seek:seekCamera,commit,render,status,preview:range=>bridge.previewRange(project,selected,range),snap:snapTime,lengthen:(seconds,motion,message,at)=>resizeChapter(seconds,{motion,message,at}),focus:tab=>{keyId=null;lightSel=null;sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();titleEditor.clear();graphics.clear?.();   /* (not deskSel.deselect(): the room desk being choreographed stays open; deselecting it made a Lift added to it land on the featured desk) */if(!reveal(tab==='groove'?'clip':tab))showInspector(tab,false,!typing());}});
   const startPose=createStartPose({panel,shot,motion:()=>deskEditor.featuredMotion(),time:()=>playhead,seek:seekCamera,commit,status,ready:requireReady});
   // Render tab (film chapters only): Send = Export cut when this chapter has unexported edits, then a Render-request-*.json download.
   const downloadText=(name,text)=>{const url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);};
