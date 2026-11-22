@@ -23042,6 +23042,37 @@
    "collection": "ErgoFlex Collection"
   },
   {
+   "id": "ergoflex-keyboard-tray-rig",
+   "name": "Keyboard tray (articulated rig)",
+   "category": "desk",
+   "scenes": [],
+   "file": "assets/props/ergoflex-keyboard-tray-rig.glb",
+   "anchor": "ceiling",
+   "size": [
+    494,
+    96.7,
+    698
+   ],
+   "min": [
+    -284.3,
+    -96.7,
+    -343.2
+   ],
+   "max": [
+    209.6,
+    0,
+    354.8
+   ],
+   "tris": 11121,
+   "bytes": 104980,
+   "source": "models/ergoflex-supplied/KeyboardTray.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "The same CAD as ergoflex-keyboard-tray cut into hinged parts (slide, swing, tilt, drop) for the Director's tray mode. Loaded only by chapters that have tray keys; not a catalog item. See docs/keyboard-tray/SPEC.md.",
+   "hidden": true,
+   "collection": "ErgoFlex Collection"
+  },
+  {
    "id": "ergoflex-guitar-amp",
    "name": "Guitar & amplifier",
    "category": "music",

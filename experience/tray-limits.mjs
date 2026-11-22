@@ -11,7 +11,9 @@
 
 // Hard limits of each joint (Vico, 22 Nov 2026: slide 254 mm, tilt +-15 degrees, swing +-180 degrees, height 0..165 mm).
 export const JOINT_LIMITS = Object.freeze({ slide: [0, 1], swing: [-180, 180], tilt: [-15, 15], drop: [0, 165] });
-export const SLIDE_TRAVEL_MM = 254;            // 10 in, the product. The CAD track gives 239.5 mm: phase 2 reconciles
+export const SLIDE_TRAVEL_MM = 234.5;          // the CAD's travel along the track axis, measured on the rig (tests/tray-rig-asset-test.mjs): carriage rear
+                                               // to track rear end. The product says 254 mm (10 in); 239.5 mm is the same arithmetic on the z extents of
+                                               // the skewed boxes, which is not along the track, and would push the carriage 5 mm through the rear stop.
 export const DROP_CAD_LINKS_MM = 58;           // what the CAD's sloped links alone would give (not a limit)
 export const PLATE_BELOW_TRACK_MM = 19.7;      // the plate top is this far under the track top (= the desktop underside), measured in the glb
 export const RIDER_CLEARANCE_MM = 3;           // air kept between a rider and the desktop
@@ -43,3 +45,26 @@ export const RIDER_MM = Object.freeze({
     'kenney-furniture-computer-mouse': 31.85,
 });
 export const RIDER_UNKNOWN_MM = 45;            // a rider this table does not know is taken as the thickest keyboard
+
+// ---- The rig asset (assets/props/ergoflex-keyboard-tray-rig.glb, built by tools/props/supplied_model_repairs.py rig_keyboard_tray) ----
+// glTF frame (Y up, +z toward the user), millimetres at rest pose, the same frame as the rigid ergoflex-keyboard-tray.glb. The file holds
+// metres; the stage scales it by 1000 like every prop. tests/tray-rig-asset-test.mjs checks the glb against this table, so the Blender
+// script's copy cannot drift.
+export const TRAY_SKEW_DEG = 7.43;             // the CAD's turn about the vertical (measured on rod, link and track axes); carried by Tray_Slide only
+// Pivot nodes, parent first. `at` = world position at rest. Joint use (node-local axes; every pivot below Tray_Slide has an identity local rotation):
+//   Tray_Drop  translate along -Y            (drop, mm)
+//   Tray_Slide translate along +Z, the track axis, = world (-sin skew, 0, cos skew)   (slide * SLIDE_TRAVEL_MM, toward the back = negative Z)
+//   Tray_Swing rotate about Y                (swing; + = the plate's front moves to the user's right = rotation about +Y by +swing in glTF)
+//   Tray_Tilt  rotate about X, the rod axis  (tilt; + = front edge up = rotation about -X)
+export const TRAY_PIVOTS = Object.freeze([
+    { name: 'Tray',       parent: null,         at: [0, 0, 0] },
+    { name: 'Tray_Drop',  parent: 'Tray',       at: [9.0, 0, -147.9] },       // the mount: the track's top centre
+    { name: 'Tray_Slide', parent: 'Tray_Drop',  at: [-5.9, -26.1, -33.8] },   // carriage centre
+    { name: 'Tray_Swing', parent: 'Tray_Slide', at: [-14.2, -26.1, 29.7] },   // carriage front on the track's centre line: the track's end when out
+    { name: 'Tray_Tilt',  parent: 'Tray_Swing', at: [-9.0, -80.7, 98.6] },    // mid-rod, under the plate's rear
+]);
+// The seven CAD parts and the pivot each hangs from (mesh nodes; no joint of their own).
+export const TRAY_PARTS = Object.freeze({
+    Tray_Track: 'Tray_Drop', Tray_Carriage: 'Tray_Slide', Tray_Links: 'Tray_Swing',
+    Tray_Forks: 'Tray_Tilt', Tray_Plate: 'Tray_Tilt', Tray_Crossbar: 'Tray_Tilt', Tray_Screw: 'Tray_Tilt',
+});

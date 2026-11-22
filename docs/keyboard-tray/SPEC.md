@@ -35,7 +35,7 @@ Source: the product Vico has in mind, Amazon "Keyboard Tray Under Desk with Stor
 
 Decisions taken while building phase 1 (mine, to be confirmed by the probe or Vico):
 * **Names and units.** Pose = `{slide, swing, tilt, drop}`: `slide` 0..1 of the travel (0 = as authored = the tray out in front, 1 = pushed all the way in; layout independent), `swing` degrees (+ = plate front to the user's right), `tilt` degrees (+ = front edge up), `drop` **millimetres** 0..165 (a real quantity: a keyboard needs about 28 mm, so it is not normalised). Where the text below still says `tuck`, read `slide`; "tucked" as a pose name still means pushed in and/or swung away.
-* **Slide travel** is 254 mm (Vico, the product). The CAD track gives only 239.5 mm between the carriage and the rear stop; the rig either lengthens the track by 15 mm or the travel constant is lowered to 239.5 (`SLIDE_TRAVEL_MM`, phase 2).
+* **Slide travel** is the CAD's, **234.5 mm** along the track axis (`SLIDE_TRAVEL_MM`), not Vico's 254 mm for the product: the carriage rear meets the track's rear end after 234.6 mm measured on the rig's vertices (`tests/tray-rig-asset-test.mjs`). The 239.5 mm quoted in 2.1 is the same arithmetic on the z extents of the *skewed* boxes, which is not along the track and would push the carriage 5 mm through the rear stop. To get 254 mm the track would have to be lengthened by about 20 mm (a modelling change, not done).
 * **Drop** is the whole tray moving straight down at the mount. The CAD's sloped links give only about 58 mm; the rig shows the full range by translating the tray body (phase 2 decides the look).
 * **Coupling** (starting values, replaced by the probe's table): `swing` is free to +-180 while `slide` <= 0.4 and falls to 0 at `slide` 0.85; `tilt` is +-15 while `slide` <= 0.4 and narrows to -2..0 at 0.85, and also narrows as the swing carries the plate under the desk (|swing| 20 to 60 degrees). Clamp order: slide, then swing, then tilt, then drop.
 * **Under the desk** is a pose-only fraction 0..1 (`underDesk`): the larger of the slide ramp (0.45 to 0.75) and the swing ramp (|swing| 20 to 60 degrees). Needed drop = `rider thickness - 19.7 + 3 mm` times that fraction. The authored pose is 0 by construction, so a tray with no keys, or keys at rest, is never lowered.
@@ -124,7 +124,7 @@ One material in the file (`Anodized_Aluminum_Brushed_90_Black_#1`, base ~0.03,0.
 Overall: **494 mm wide, 96.7 mm tall, 698 mm deep** (track 391 mm, plate 286 mm, plate z 69..355, track z -343..47).
 
 ### 2.2 Two facts the engineer must not miss
-1. **The glb is skewed about 7 degrees about the vertical.** The two pin pairs differ by 11.4 mm in z over 91.7 mm in x (atan = 7.1 degrees); the presets compensate with a saved yaw of 7.0 to 8.5 degrees (q.y .0610 / .0698 / .0741). So the hinge axes are **not** along glb x/z. Pivot nodes must carry that rotation, and the existing saved placements must stay valid, so **do not bake the skew out**.
+1. **The glb is skewed about 7.4 degrees about the vertical.** The two pin pairs differ by 11.4 mm in z over 91.7 mm in x (atan = 7.1 degrees from the pin *centres*; fitting the pin, rod and link axes gives 7.31 .. 7.44, the rod and links 7.43, used as `TRAY_SKEW_DEG`); the presets compensate with a saved yaw of 7.0 to 8.5 degrees (q.y .0610 / .0698 / .0741). So the hinge axes are **not** along glb x/z. Pivot nodes must carry that rotation, and the existing saved placements must stay valid, so **do not bake the skew out**.
 2. **The manifest numbers do not describe the shipped file** (`fit.mm 679` along x vs the glb's 494 x 698; the Blender 80 degree turn and `rotateY 90` stack). The shipped glb is the truth. Treat `manifest.json`'s fit as history.
 
 ### 2.3 Chain and limits (updated with Vico's answers, 0.1)
@@ -132,14 +132,14 @@ Each joint node's **local axes carry the hinge**: revolute joints turn about the
 
 | Joint (control) | Type | Pivot (mm, glb frame, **inferred**) | Axis | Range | Rest | Sign |
 |---|---|---|---|---|---|---|
-| **slide** | translation along the track | carriage; track axis = glb z turned by the 7.1 degree skew | track axis | **254 mm** (Vico) stored as **0..1** (CAD allows 239.5, see 0.1) | 0 (out, as authored) | 1 = pushed in, toward the back (under the desk) |
-| **swing** | revolute, **vertical**, rides with the slide | at the **track's end**: the carriage front pin line, x -5.7, z 36 (**invented**: the CAD has no vertical hinge, see 2.4) | node Y | **-180 .. +180 degrees** (Vico; "360" is a claim); the tray swings out to the SIDE for Side Storage | 0 | + = plate front moves to the user's right (+x) |
-| **tilt** | revolute, horizontal | the front rod: y ~-75..-81, z ~104..108, x mid -9 (rod from x -70 to 52), axis = rod axis (x turned by the skew) | node X | **-15 .. +15 degrees**, relative to the desktop (Vico: keep unless the CAD shows more; it shows no stop) | 0 = plate level (as authored) | + = front edge UP (negative, front down, is the ergonomic one) |
+| **slide** | translation along the track | carriage centre (-5.9, -26.1, -33.8), measured; track axis = glb z turned by the 7.43 degree skew | track axis (node `Tray_Slide`, local +Z) | **234.5 mm** (the CAD; Vico's product says 254, see 0.1) stored as **0..1** | 0 (out, as authored) | 1 = pushed in, toward the back (under the desk) |
+| **swing** | revolute, **vertical**, rides with the slide | at the **track's end**: the carriage front on the track's centre line, (-14.2, -26.1, 29.7) (**invented**: the CAD has no vertical hinge, see 2.4) | node Y | **-180 .. +180 degrees** (Vico; "360" is a claim); the tray swings out to the SIDE for Side Storage | 0 | + = plate front moves to the user's right (+x) |
+| **tilt** | revolute, horizontal | the rod, mid-length: (-9.0, -80.7, 98.6) (rod from x -70 to 52; centre line fitted to the rod vertices within 0.1 mm), axis = rod axis (x turned by the skew) | node X | **-15 .. +15 degrees**, relative to the desktop (Vico: keep unless the CAD shows more; it shows no stop) | 0 = plate level (as authored) | + = front edge UP (negative, front down, is the ergonomic one) |
 | **drop** (height at the mount) | translation, vertical | the whole tray below the desktop | node Y (down) | **0 .. 165 mm** (the product's 6.5 in); a CAD-only rig would give about 58 mm via the sloped links | 0 | + = lower. **Real, not reserved**: the keyboard stays on the tray (0.1, 6.3). Not in the v1 panel as a slider: the sampler raises it as needed; the panel shows it read-only until the slider is wanted. |
 
 Coupling (starting values; numbers come from the clearance probe, section 6): `swing` max falls from 180 to 0 as `slide` goes 0.4 -> 0.85; `tilt` narrows from -15..15 to -2..0 over the same range and as the swing takes the plate under the desk; the **minimum drop** with a keyboard on the tray is the rider's thickness minus 19.7 mm plus 3 mm, scaled by how far the plate is under the desk. In words: pull out, swing, tilt; tilt level, swing back, slide in; the tray lowers before the keyboard goes under the desktop.
 
-Derived slide numbers (**measured arithmetic**, office / gaming preset, tray origin z = +202 mm from the desktop centre, desk depth 30 in = 762 mm so front edge z = +381): plate front edge at 202+355 = 557 mm = **176 mm in front of the desk edge**; plate rear edge at 202+69 = 271, 110 mm inside the edge. To slide the plate fully under the desk with 20 mm margin: slide >= **196 mm** (0.77 of the 254 mm travel). hbhs (z = 212.5) needs 206 mm (0.81). So "pushed in" = slide >= 0.85 on every preset layout. The pivot sits 143 mm **inside** the desk edge (z 238 against 381) even with the tray out: swinging the plate about it carries the plate under the desk, which is why a swung tray with a keyboard needs the drop too.
+Derived slide numbers (**measured arithmetic**, office / gaming preset, tray origin z = +202 mm from the desktop centre, desk depth 30 in = 762 mm so front edge z = +381): plate front edge at 202+355 = 557 mm = **176 mm in front of the desk edge**; plate rear edge at 202+69 = 271, 110 mm inside the edge. To slide the plate fully under the desk with 20 mm margin: slide >= **196 mm** (0.84 of the 234.5 mm travel); at slide 1 the front edge is 58 mm behind the edge. hbhs (z = 212.5) needs 206 mm (0.88). So "pushed in" = slide >= 0.9 on every preset layout. The pivot sits 143 mm **inside** the desk edge (z 238 against 381) even with the tray out: swinging the plate about it carries the plate under the desk, which is why a swung tray with a keyboard needs the drop too.
 
 ### 2.4 What the CAD does not tell us (unknown)
 * There is **no vertical hinge** in the supplied CAD. "Swing" is therefore either a feature of the real tray that was not modelled, or a feature we would be inventing. The pivot above is a placeholder that gives a believable arc; it needs a photo or the real hardware.
@@ -159,17 +159,28 @@ Steps in the repair function (after the 80 degree turn, before the second `bake_
 3. Create pivot empties at the positions of 2.3; orient each empty so its local axes are the hinge axes (measured in Blender from the pin and rod cylinders, 7.1 degree skew included); parent parts under them.
 4. Export hierarchy intact: `convert-props.mjs:178` runs `gltf-transform optimize` which **flattens and joins** (that is why the shipped glb has 2 meshes). Add a manifest flag `keepHierarchy:true` that appends `--flatten false --join false` for this prop, as `preserveMaterials` already appends `--palette false`. Keep the meshopt compression.
 
-**Node names (proposed, stable API for code):**
+**As built (phase 2, `assets/props/ergoflex-keyboard-tray-rig.glb`, 103 KB, 11 121 tris = the rigid glb's).** The CAD comes as 7 meshes that are already whole parts, so the rig does **not** split them further (the 23-piece weld analysis stays in 2.1 as documentation): each source mesh is found by its bounds (+-1 mm, so a changed source stops the build instead of mis-assigning), named, and parented under a pivot node. Node names and rest-pose pivots (world, glTF frame, mm; `TRAY_PIVOTS` / `TRAY_PARTS` in `experience/tray-limits.mjs`, checked against the glb by `tests/tray-rig-asset-test.mjs`):
 ```
-Tray                      identity, = today's prop root
- +- Tray_Track            fixed (track plate)
- +- Tray_Slide            pivot at carriage centre, slides on local Z
-     +- Tray_Carriage     carriage body, guide rails, pins P1 / P2, links L / R (v1: rigid, "drop" later)
-     +- Tray_Swing        pivot S, local Y vertical
-         +- Tray_Tilt     pivot T at the front rod, local X
-             +- Tray_Fork_L, Tray_Fork_R, Tray_Crossbar, Tray_Knob
-             +- Tray_Plate     (the 494 x 286 plate; also the riders' frame)
+Tray                      (0, 0, 0)            identity = today's prop root
+ +- Tray_Drop             (9.0, 0, -147.9)     the mount, track top centre; drop = translate along -Y
+     +- Tray_Track        (Mesh_6)             fixed track plate
+     +- Tray_Slide        (-5.9, -26.1, -33.8) carriage centre; slide = translate along local +Z (track axis); CARRIES THE 7.43 DEG SKEW
+         +- Tray_Carriage (Mesh_0)             carriage body, guide rails, the four pins on it
+         +- Tray_Swing    (-14.2, -26.1, 29.7) vertical pivot at the carriage front (track's end); swing = rotate about +Y by +swing
+             +- Tray_Links (Mesh_1)            the two sloped links and their bracket
+             +- Tray_Tilt (-9.0, -80.7, 98.6)  the rod axis, local X; tilt = rotate about X by -tilt (front edge up)
+                 +- Tray_Forks     (Mesh_2)    both forks, their pin and spacer
+                 +- Tray_Crossbar  (Mesh_4)    cross-bar, rod, lock knob
+                 +- Tray_Screw     (Mesh_5)    the small pin at the rod's end
+                 +- Tray_Plate     (Mesh_3)    the 494 x 286 plate (the riders' frame)
 ```
+* Only `Tray_Slide` has a rotation of its own (-7.43 degrees about +Y); every pivot below it has an identity local rotation, so its local X is the skewed hinge axis, local Y is vertical and local Z the track axis, and a joint is set from one number. The mesh nodes carry the meshopt quantisation scale and the inverse skew, so **never scale or rotate a mesh node**; set joints on the pivots only (all pivots have scale 1).
+* Rest pose = every joint at 0: the world pose of every vertex is the rigid glb's (bounding box equal within 0.03 mm, test).
+* Deviations from the plan above: (1) the empties are created **after** the last `bake_transforms()` (`blender-convert.py`, `job.rig`), because `transform_apply` on a parent and its children together double-applies the parent (the comment at `flatten_hierarchy()`); (2) one material for every part (the CAD's small pin had its own); (3) `Tray_Fork_L / R / Knob` are not separate nodes (they are inside `Tray_Forks` / `Tray_Crossbar`); (4) the rig's id is also handled by the `ergoflex-keyboard-tray` branch of `improve()` (the 80 degree turn), or the rig comes out 90 degrees off; (5) the swing pivot x is -14.2, not -5.7: it is on the track's centre line (the carriage's AABB x is that of a skewed box).
+* The rig's index entry is `hidden: true` (and `scenes: []`): `prop-library.mjs` `filterEntries` never lists it in + Add prop.
+* **Not modelled:** the mount bracket that a dropped track would hang from. At drop 28 to 40 mm (a keyboard on the plate) the track floats that far below the desktop; phase 3 decides whether to add a plate bracket (`Tray_Drop` scaled bracket mesh) or accept it.
+* **Build trap:** `node tools/convert-props.mjs --only <id>` rewrites `assets/props/index.json` keeping only the entries the manifest knows (1 062 of the 2 544 now in the file: it drops everything other generators added, and re-escapes non-ASCII text). Revert the file and splice the one new entry in by hand, as done here.
+
 Material names are kept (`Anodized_Aluminum_Brushed_90_Black_#1`) because `applyAccessoryFinishes` (`workspace-3d.mjs:850-880`) clones by role under `Prop:<propId>`; the steel map is applied per mesh, so splitting does not break finishes.
 
 **Who / where.** Blender headless is not a render and runs fine on the desk (`BLENDER=` as in the portable-Blender note); it is one engineer for about 1.5 days including the dump, the pivot measurements and a reviewer's check of every pivot against the glb inventory. All verification that needs a browser (rest-pose parity, hinge look) happens on the Windows machine (section 9).
@@ -271,7 +282,7 @@ Factory `createTrayEditor({win, three, tools, stage, shot, commit, status, reren
 * Rules the table must encode (proposed starting values, replaced by the probe):
   * `swing`: +-180 while `slide` <= 0.4, then linear to 0 at `slide` = 0.85. Swinging into the leg side must stop before any intersection.
   * `tilt`: -15..+15 while `slide` <= 0.4, then narrows to -2..0 at `slide` >= 0.85 (the plate must be level to fit under the top), and narrows the same way as |swing| goes 20 -> 60 degrees (the plate is then under the desk).
-  * `slide` limited to the carriage stop (254 mm).
+  * `slide` limited to the carriage stop (234.5 mm).
   * `drop` minimum with a keyboard on the tray: rider thickness - 19.7 + 3 mm, scaled by the under-the-desk fraction (0.1). The probe replaces this with the real minimum per desk and rider.
 * Because the desk tilts, the probe runs per desk tilt too: the table is indexed by desk height and tilt, interpolated linearly (the same way `maximumTiltForHeight` interpolates, `motion-limits.mjs:24-30`). Initial version may ignore desk tilt above 9 degrees and rely on "tuck required above 9 degrees" (6.3).
 

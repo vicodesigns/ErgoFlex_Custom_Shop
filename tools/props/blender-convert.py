@@ -246,6 +246,13 @@ def run(job):
         # describe vertices, rather than rotated corners of the old bounds.
         bake_transforms()
         objs = mesh_objects()
+    if job.get('rig'):
+        # Articulated asset (keyboard tray): name the parts and parent them under pivot empties AFTER the last bake, so no
+        # transform_apply sees a parent and its children together. World transforms, and so the bounds, are unchanged.
+        sys.path.insert(0, os.path.dirname(__file__))
+        if job['rig'] != 'keyboard-tray': raise ValueError('unknown rig ' + job['rig'])
+        from supplied_model_repairs import rig_keyboard_tray
+        rig_keyboard_tray()
     reconnect_diffuse()
     fix_materials()
     lo, hi = world_bounds(objs)
