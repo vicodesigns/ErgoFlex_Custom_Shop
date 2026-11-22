@@ -278,7 +278,7 @@ export function addParent(kind, on = null) {
 // material (the room desk's, else the product desk's Desktop_3), the printed cubby its trim colour. Inline, not imported:
 // this file is frozen for the render PC and an extra import path would have to be frozen with it.
 function matchDeskFinish(o, asset) {
-  if (!/^ergoflex-side-/.test(asset || '')) return;
+  if (!/^ergoflex-(side-|painter-shelf)/.test(asset || '')) return;
   let wood = null, trim = null;
   try { const r = api.sceneDesks?.active, fin = r && api.sceneDesks.ctx?.deskFinish?.(r); wood = fin?.wood || null; trim = fin?.trim || null; } catch (error) { console.warn('[film-fx] side shelving finish', error); }
   if (!wood) api.loadedModel?.traverse?.(m => { if (!wood && m.isMesh && m.name === 'Desktop_3' && m.material) wood = [].concat(m.material).find(x => x?.isMeshPhysicalMaterial) || null; });
