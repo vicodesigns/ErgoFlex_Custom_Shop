@@ -11,6 +11,14 @@
 
 // Hard limits of each joint (Vico, 22 Nov 2026: slide 254 mm, tilt +-15 degrees, swing +-180 degrees, height 0..165 mm).
 export const JOINT_LIMITS = Object.freeze({ slide: [0, 1], swing: [-180, 180], tilt: [-15, 15], drop: [0, 165] });
+// The drop joint (the whole tray lowered at the mount) moves the original geometry unchanged, but the track then hangs below the desktop
+// with a visible gap at the mount, and the CAD models nothing to fill it. So it is OFF: its range is 0..0 and nothing lowers the tray
+// automatically for a keyboard. It is switched on for one chapter's tray edit by that edit's `bracket: true` (the optional added mount
+// bracket, tray-rig.mjs BRACKET), which is what makes a lowered tray look mounted. Vico decides later (docs/keyboard-tray/SPEC.md 0.2).
+export const DROP_ENABLED = false;
+// The optional mount bracket, a runtime block (never part of the rig glb): its top centre in the rig frame (mm; the track's top centre,
+// where the original mount is) and its footprint (mm, across the track x along it). Height = the drop.
+export const BRACKET = Object.freeze({ at: [9.0, 0, -147.9], width: 44, length: 70 });
 export const SLIDE_TRAVEL_MM = 234.5;          // the CAD's travel along the track axis, measured on the rig (tests/tray-rig-asset-test.mjs): carriage rear
                                                // to track rear end. The product says 254 mm (10 in); 239.5 mm is the same arithmetic on the z extents of
                                                // the skewed boxes, which is not along the track, and would push the carriage 5 mm through the rear stop.
@@ -56,18 +64,16 @@ export const TRAY_SKEW_DEG = 7.43;             // the CAD's turn about the verti
 //   Tray_Slide translate along +Z, the track axis, = world (-sin skew, 0, cos skew)   (slide * SLIDE_TRAVEL_MM, toward the back = negative Z)
 //   Tray_Swing rotate about Y                (swing; + = the plate's front moves to the user's right = rotation about +Y by +swing in glTF)
 //   Tray_Tilt  rotate about X, the rod axis  (tilt; + = front edge up = rotation about -X)
-//   Tray_Bracket  scale Y = max(drop, 1) / 1000 (a unit block, so its height in mm is the drop)
 export const TRAY_PIVOTS = Object.freeze([
     { name: 'Tray',       parent: null,         at: [0, 0, 0] },
     { name: 'Tray_Drop',  parent: 'Tray',       at: [9.0, 0, -147.9] },       // the mount: the track's top centre
     { name: 'Tray_Slide', parent: 'Tray_Drop',  at: [-5.9, -26.1, -33.8] },   // carriage centre
     { name: 'Tray_Swing', parent: 'Tray_Slide', at: [-14.2, -26.1, 29.7] },   // carriage front on the track's centre line: the track's end when out
     { name: 'Tray_Tilt',  parent: 'Tray_Swing', at: [-9.0, -80.7, 98.6] },    // mid-rod, under the plate's rear
-    { name: 'Tray_Bracket', parent: 'Tray',     at: [9.0, 0, -147.9] },       // the mount bracket's top, fixed to the desktop: skewed like the track, scale Y = drop / 1000 (1 mm at rest, hidden in the track)
 ]);
-// The seven CAD parts (and the bracket block) with the pivot each hangs from (mesh nodes; no joint of their own).
+// The seven CAD parts, the original model split at the joints and nothing else (same vertices, triangles and material as the rigid glb),
+// with the pivot each hangs from (mesh nodes; no joint of their own).
 export const TRAY_PARTS = Object.freeze({
     Tray_Track: 'Tray_Drop', Tray_Carriage: 'Tray_Slide', Tray_Links: 'Tray_Swing',
     Tray_Forks: 'Tray_Tilt', Tray_Plate: 'Tray_Tilt', Tray_Crossbar: 'Tray_Tilt', Tray_Screw: 'Tray_Tilt',
-    Tray_BracketMesh: 'Tray_Bracket',      // not CAD: a plain 44 x 70 mm block, 1 m tall at scale 1, hanging from the desktop underside to the dropped track
 });

@@ -48,7 +48,8 @@ const ERGO = 45, MOUSE = 56.9;
 }
 {   // the coupling: limits per joint given the others, held in the order slide, swing, tilt, drop
     posesNear(T.clampTrayPose(REST), REST); posesNear(T.clampTrayPose(REST, { riderMm: ERGO }), REST);
-    assert.deepEqual(T.limitsFor(REST), { slide: [0, 1], swing: [-180, 180], tilt: [-15, 15], drop: [0, 165] }, 'fully out: nothing is narrowed');
+    assert.deepEqual(T.limitsFor(REST), { slide: [0, 1], swing: [-180, 180], tilt: [-15, 15], drop: [0, 0] }, 'fully out: nothing is narrowed, and the drop joint is off by default');
+    assert.deepEqual(T.limitsFor(REST, { dropEnabled: true }).drop, [0, 165]); assert.equal(L.DROP_ENABLED, false, 'the drop joint is off by default (Vico decides later)');
     const pushed = T.limitsFor({ slide: 1 });
     assert.deepEqual(pushed.swing, [0, 0]); assert.deepEqual(pushed.tilt, [-2, 0], 'pushed in: level, no swing');
     posesNear(T.clampTrayPose({ slide: 1, swing: 90, tilt: 10 }), { slide: 1, swing: 0, tilt: 0, drop: 0 });
@@ -67,21 +68,29 @@ const ERGO = 45, MOUSE = 56.9;
     assert.deepEqual(T.limitsFor({ swing: 20 }).tilt, [-15, 15]); assert.deepEqual(T.limitsFor({ swing: 60 }).tilt, [-2, 0]);
     assert.deepEqual(T.clampedJoints({ slide: 1, swing: 90, tilt: 10, drop: 0 }), ['swing', 'tilt']); assert.deepEqual(T.clampedJoints(REST), []);
     // hard limits still apply when an edit is sampled raw: a pose past them is clamped, never thrown
-    posesNear(T.clampTrayPose({ slide: 9, swing: 999, tilt: 99, drop: 999 }), { slide: 1, swing: 0, tilt: 0, drop: 165 });
+    posesNear(T.clampTrayPose({ slide: 9, swing: 999, tilt: 99, drop: 999 }), { slide: 1, swing: 0, tilt: 0, drop: 0 }); posesNear(T.clampTrayPose({ slide: 9, swing: 999, tilt: 99, drop: 999 }, { dropEnabled: true }), { slide: 1, swing: 0, tilt: 0, drop: 165 });
+    assert.deepEqual(T.clampedJoints({ drop: 20 }), ['drop'], 'a keyed drop while the joint is off is named'); assert.deepEqual(T.clampedJoints({ drop: 20 }, { dropEnabled: true }), []);
 }
-{   // the keyboard stays on the tray: the drop it needs once the plate is under the desk (spec 0.1, 6.3)
+{   // the keyboard stays on the tray and the drop joint is off: the plate may not go under the desk with a rider that does not fit (spec 0.2)
     near(T.dropNeededMm(ERGO), 45 - 19.7 + 3); near(T.dropNeededMm(MOUSE), 56.9 - 19.7 + 3); assert.equal(T.dropNeededMm(0), 0); assert.equal(T.dropNeededMm(10), 0, 'a thin rider fits at the CAD drop');
     assert.equal(T.riderThicknessMm([]), 0); near(T.riderThicknessMm(['apple-keyboard', 'magic-mouse']), 30.3); near(T.riderThicknessMm(['ergoflex-ergo-keyboard', 'gaming-mouse']), 56.9); assert.equal(T.riderThicknessMm(['mystery']), L.RIDER_UNKNOWN_MM);
     assert.equal(T.underDesk(REST), 0); assert.equal(T.underDesk({ slide: 1 }), 1); assert.equal(T.underDesk({ swing: -90 }), 1); near(T.underDesk({ slide: 0.6 }), 0.5);
-    assert.equal(T.clampTrayPose({ slide: 1 }).drop, 0, 'no rider: never lowered');
-    near(T.clampTrayPose({ slide: 1 }, { riderMm: ERGO }).drop, 28.3);
-    near(T.clampTrayPose({ slide: 0.6 }, { riderMm: ERGO }).drop, 28.3 * 0.5);
-    near(T.clampTrayPose({ swing: 90 }, { riderMm: ERGO }).drop, 28.3);
-    near(T.clampTrayPose({ slide: 1, drop: 60 }, { riderMm: ERGO }).drop, 60);
-    near(T.limitsFor({ slide: 1 }, { riderMm: ERGO }).drop[0], 28.3); assert.equal(T.limitsFor({ slide: 1 }, { riderMm: ERGO }).drop[1], 165);
-    assert.equal(T.clampTrayPose({ slide: 1 }, { riderMm: 10 }).drop, 0);
-    // never needed more than the joint allows, even for a silly rider
-    assert.equal(T.clampTrayPose({ slide: 1 }, { riderMm: 1000 }).drop, 165);
+    assert.ok(T.riderFitsUnder(0) && T.riderFitsUnder(10) && !T.riderFitsUnder(ERGO) && !T.riderFitsUnder(22.2) && !T.riderFitsUnder(MOUSE));
+    // no rider (or a thin one): the whole range, as before
+    for (const riderMm of [0, 10]) { assert.deepEqual(T.limitsFor(REST, { riderMm }).slide, [0, 1]); assert.deepEqual(T.limitsFor(REST, { riderMm }).swing, [-180, 180]); }
+    // a keyboard or mouse on the plate, drop off (the default): slide <= 0.45 (106 mm of 234.5), |swing| <= 20 degrees; tilt as the coupling says there (full range)
+    const kb = T.limitsFor(REST, { riderMm: ERGO }); assert.deepEqual(kb.slide, [0, 0.45]); assert.deepEqual(kb.swing, [-20, 20]); assert.deepEqual(kb.tilt, [-15, 15]); assert.deepEqual(kb.drop, [0, 0]);
+    posesNear(T.clampTrayPose({ slide: 1, swing: 90, tilt: 10 }, { riderMm: ERGO }), { slide: 0.45, swing: 20, tilt: 10, drop: 0 });
+    posesNear(T.clampTrayPose({ slide: 0.3, swing: -15 }, { riderMm: MOUSE }), { slide: 0.3, swing: -15, tilt: 0, drop: 0 }, 1e-9);
+    assert.deepEqual(T.clampedJoints({ slide: 1, swing: 90 }, { riderMm: ERGO }), ['slide', 'swing']);
+    // nothing lowers the tray by itself, ever
+    for (const pose of [{ slide: 1 }, { swing: 90 }, { slide: 0.6 }]) for (const riderMm of [0, ERGO, 1000]) for (const dropEnabled of [false, true]) assert.equal(T.clampTrayPose(pose, { riderMm, dropEnabled }).drop, 0, JSON.stringify([pose, riderMm, dropEnabled]));
+    // the drop joint on (an edit with bracket: true): a keyed drop that clears the rider lifts the limit, one that does not leaves it
+    const on = { dropEnabled: true, riderMm: ERGO };
+    posesNear(T.clampTrayPose({ slide: 1, drop: 30 }, on), { slide: 1, swing: 0, tilt: 0, drop: 30 }); posesNear(T.clampTrayPose({ slide: 1, drop: 28.3 }, on), { slide: 1, swing: 0, tilt: 0, drop: 28.3 });
+    posesNear(T.clampTrayPose({ slide: 1, drop: 20 }, on), { slide: 0.45, swing: 0, tilt: 0, drop: 20 }); posesNear(T.clampTrayPose({ swing: 90, drop: 40 }, on), { slide: 0, swing: 90, tilt: 0, drop: 40 });
+    assert.deepEqual(T.limitsFor({ drop: 30 }, on).slide, [0, 1]); assert.deepEqual(T.limitsFor({ drop: 10 }, on).slide, [0, 0.45]);
+    assert.equal(T.clampTrayPose({ slide: 1, drop: 165 }, { dropEnabled: true, riderMm: 1000 }).slide, 0.45, 'a rider nothing can clear stays out');
 }
 {   // keys: sorted, close ones merged, ids unique, defaults omitted, idempotent, capped
     const keys = T.cleanTrayKeys([{ t: 3, pose: { tilt: 5 }, ease: 'linear', label: ' Out ' }, { t: 1, pose: { slide: 0.5, junk: 1 }, id: 'a' }, { t: -1, pose: { tilt: 1 } }, { t: 2, pose: {} }, { t: 3.005, pose: { swing: 20 }, ease: 'smooth', route: 'direct' }, 'x', { t: 'no', pose: { tilt: 1 } }, { t: 2000, pose: { tilt: 1 }, id: 'a' }]);
@@ -149,9 +158,9 @@ const ERGO = 45, MOUSE = 56.9;
     // the coupling is applied at sampling, not to the stored keys
     const wild = T.cleanTrayEdit({ keys: [{ t: 1, pose: { slide: 1, swing: 120, tilt: 12 } }] });
     assert.deepEqual(wild.keys[0].pose, { slide: 1, swing: 120, tilt: 12 }, 'stored as keyed'); posesNear(T.sampleTray(wild, 1), { slide: 1, swing: 0, tilt: 0, drop: 0 });
-    // with a rider the tray is lowered as it goes under the desk
-    near(T.sampleTray(wild, 1, { riderMm: ERGO }).drop, 28.3); assert.equal(T.sampleTray(wild, 1).drop, 0);
-    // every sample stays inside the limits (incl. the rider's drop minimum)
+    // with a rider on the plate (drop off) the slide stops at 0.45 and the swing at 20 degrees, and the tilt follows the coupling there
+    posesNear(T.sampleTray(wild, 1, { riderMm: ERGO }), { slide: 0.45, swing: 20, tilt: 12, drop: 0 }, 1e-9); assert.deepEqual(T.trayIssues(wild, { riderMm: ERGO }).find(i => i.kind === 'key').joints, ['slide', 'swing']);
+    // every sample stays inside the limits
     for (const riderMm of [0, ERGO]) for (let t = 0; t <= 12; t += 0.1) {
         const p = T.sampleTray(T.cleanTrayEdit({ keys: [{ t: 1, pose: { swing: 90, tilt: 12 } }, { t: 4, pose: { slide: 1, swing: 0, tilt: 0 } }, { t: 8, pose: { slide: 0, swing: -170, tilt: -15 } }, { t: 10, pose: { swing: 0 } }] }), t, { riderMm });
         assert.deepEqual(T.clampedJoints(p, { riderMm }), [], `t=${t}`); posesNear(T.clampTrayPose(p, { riderMm }), p, 1e-9);
@@ -179,9 +188,14 @@ const ERGO = 45, MOUSE = 56.9;
     // a sampled staged move never leaves the allowed set, and is smooth in time (no joint jumps)
     const edit = T.cleanTrayEdit({ keys: [{ t: 0, pose: { slide: 0, swing: 90, tilt: 0 } }, { t: 4, pose: { slide: 1, swing: 0, tilt: 0 } }] });
     let last = null; for (let t = 0; t <= 4.0001; t += 0.02) { const p = T.sampleTray(edit, t, { riderMm: ERGO }); assert.deepEqual(T.clampedJoints(p, { riderMm: ERGO }), [], 't=' + t); if (last) for (const j of T.JOINTS) assert.ok(Math.abs(p[j] - last[j]) < (j === 'swing' ? 8 : j === 'drop' ? 3 : 0.1), `${j} jumps at ${t}`); last = p; }
-    posesNear(T.sampleTray(edit, 4, { riderMm: ERGO }), { slide: 1, swing: 0, tilt: 0, drop: 28.3 }, 1e-9); posesNear(T.sampleTray(edit, 0), { slide: 0, swing: 90, tilt: 0, drop: 0 }, 1e-9);
-    near(T.sampleTray(edit, 0, { riderMm: ERGO }).drop, 28.3);
-    // the route field of a key is honoured
+    posesNear(T.sampleTray(edit, 4), { slide: 1, swing: 0, tilt: 0, drop: 0 }, 1e-9); posesNear(T.sampleTray(edit, 0), { slide: 0, swing: 90, tilt: 0, drop: 0 }, 1e-9);
+    // the same move with a keyboard on the plate, drop off: held at the clearance (swing 20, slide 0.45), never lowered
+    posesNear(T.sampleTray(edit, 0, { riderMm: ERGO }), { slide: 0, swing: 20, tilt: 0, drop: 0 }, 1e-9); posesNear(T.sampleTray(edit, 4, { riderMm: ERGO }), { slide: 0.45, swing: 0, tilt: 0, drop: 0 }, 1e-9);
+    // an edit with bracket: true and a keyed drop that clears the keyboard is allowed all the way
+    const dropped = T.cleanTrayEdit({ bracket: true, keys: [{ t: 0, pose: { slide: 0, swing: 90, tilt: 0, drop: 30 } }, { t: 4, pose: { slide: 1, swing: 0, tilt: 0, drop: 30 } }] });
+    for (let t = 0; t <= 4.001; t += 0.1) { const p = T.sampleTray(dropped, t, { riderMm: ERGO }); assert.deepEqual(T.clampedJoints(p, { riderMm: ERGO, dropEnabled: true }), [], 't=' + t); near(p.drop, 30, 1e-9, 'drop'); }
+    posesNear(T.sampleTray(dropped, 4, { riderMm: ERGO }), { slide: 1, swing: 0, tilt: 0, drop: 30 }, 1e-9); assert.deepEqual(T.trayIssues(dropped, { riderMm: ERGO }), []);
+    assert.equal(T.sampleTray(T.setBracket(dropped, false), 4, { riderMm: ERGO }).drop, 0, 'bracket off: the drop joint is off again');    // the route field of a key is honoured
     const forced = T.cleanTrayEdit({ keys: [{ t: 0, pose: { slide: 0, tilt: 10 }, route: 'direct' }, { t: 4, pose: { slide: 1, tilt: 0 } }] });
     assert.ok(T.trayIssues(forced).some(i => i.kind === 'segment' && i.joint === 'tilt' && i.mode === 'direct'), 'a direct segment that is not allowed is reported');
     assert.deepEqual(T.trayIssues(T.cleanTrayEdit({ keys: [{ t: 0, pose: { slide: 0, tilt: 10 } }, { t: 4, pose: { slide: 1, tilt: 0 } }] })), [], 'auto stages it: nothing to report');
@@ -216,5 +230,19 @@ const ERGO = 45, MOUSE = 56.9;
     const i1 = T.setInitial({}, { tilt: 5, swing: 10 }); assert.deepEqual(i1.initial, { tilt: 5, swing: 10 }); assert.deepEqual(T.setInitial(i1, { tilt: 0 }).initial, { swing: 10 }); assert.ok(!('initial' in T.setInitial(i1, null))); assert.ok(!('initial' in T.setInitial(T.setInitial(i1, { tilt: 0 }), { swing: 0 })));
     assert.equal(T.cleanTrayEdit(e0), null, 'an empty shell is nothing in the cut'); assert.ok(T.cleanTrayEdit(e3));
     for (const e of [e1, e2, e3, e9]) assert.deepEqual(T.cleanTrayEdit(e), e, 'every edit is already clean');
+}
+{   // the setup flag bracket: absent = off; only a real true is kept; it rides in the edit like the keys
+    assert.deepEqual(T.cleanTrayEdit({ bracket: true, keys: [{ t: 1, pose: { tilt: 3 } }] }).bracket, true);
+    for (const v of [false, 0, 1, 'true', null, undefined, {}]) assert.ok(!('bracket' in (T.cleanTrayEdit({ bracket: v, keys: [{ t: 1, pose: { tilt: 3 } }] }))), 'bracket ' + JSON.stringify(v) + ' is off');
+    assert.deepEqual(T.cleanTrayEdit({ bracket: true }), { bracket: true }, 'the setup alone is kept (ticked before the first key)'); assert.equal(T.trayActive({ bracket: true }), false, 'but it needs no rig by itself');
+    assert.equal(T.activeTrayEdit([{ bracket: true }], 'gaming'), null);
+    const e = T.cleanTrayEdits({ trayEdits: [{ desk: 'gaming', bracket: true, keys: [{ t: 1, pose: { drop: 30 } }] }, { keys: [{ t: 1, pose: { tilt: 3 } }] }] }).trayEdits; assert.equal(e[0].bracket, true); assert.ok(!('bracket' in e[1]));
+    assert.deepEqual(T.cleanTrayEdits({ trayEdits: e }), { trayEdits: e }, 'clean twice changes nothing');
+    assert.equal(T.trayBracket(e[0]), true); assert.equal(T.trayBracket(e[1]), false); assert.equal(T.trayBracket(null), false);
+    assert.deepEqual(T.setBracket(e[1], true), { ...e[1], bracket: true }); assert.ok(!('bracket' in T.setBracket(e[0], false))); assert.deepEqual(T.setBracket(null, true), { bracket: true });
+    // it is what switches the drop joint on: a keyed drop is held to 0 without it, kept with it
+    assert.equal(T.sampleTray(e[0], 1).drop, 30); assert.equal(T.sampleTray(T.setBracket(e[0], false), 1).drop, 0); assert.equal(T.sampleTray(e[0], 1, { dropEnabled: false }).drop, 0, 'an explicit option wins');
+    // an edit without bracket and without a keyed drop: samples exactly as before
+    posesNear(T.sampleTray(e[1], 1), { ...REST, tilt: 3 });
 }
 console.log('tray-pose-test: ok (joints and hard limits, coupling and the rider drop, keys, shot field and byte-identical fixtures, sampler, routes, determinism, editing)');
