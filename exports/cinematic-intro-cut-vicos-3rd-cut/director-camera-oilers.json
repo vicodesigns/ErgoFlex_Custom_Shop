@@ -1,5 +1,5 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-2nd-cut/director-exports/export-f66192b9c973-Film-chapter-oilers-15-s-__fern-fix2_.json",
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-59e936bfc7f6-Film-chapter-oilers-15-s-__13_.json",
  "seconds": 15.0,
  "keys": [
   {
@@ -96,33 +96,34 @@
   {
    "at": 7.0,
    "position": [
-    -1.735,
-    2.263,
-    5.054
+    -1.7848030650624112,
+    2.2069315214556466,
+    5.24971055039114
    ],
    "target": [
-    -2.163,
-    1.5974,
-    4.7544
+    -2.212803056698653,
+    1.5413315298471926,
+    4.950110552475134
    ],
-   "fov": 31,
+   "fov": 30.99999972213429,
    "label": "Cut: the screen's user's view, face-on: it turns up and asks 'Lower to Kai's height'",
    "cut": true
   },
   {
    "at": 8.95,
    "position": [
-    -1.7651,
-    2.2328,
-    5.0465
+    -1.7848030650624112,
+    2.2069315214556466,
+    5.24971055039114
    ],
    "target": [
-    -2.163,
-    1.5974,
-    4.7544
+    -2.212803056698653,
+    1.5413315298471926,
+    4.950110552475134
    ],
-   "fov": 30,
-   "label": "His finger on the button, it lights; the height starts down"
+   "fov": 30.99999972213429,
+   "label": "Cut: the screen's user's view, face-on: it turns up and asks",
+   "cut": true
   },
   {
    "at": 9.0,
@@ -186,49 +187,6 @@
  "initial": {
   "height": 43.5,
   "tilt": 0
- },
- "lighting": {
-  "lightEdits": [
-   {
-    "target": "Room:highschool > PointLight",
-    "position": [
-     -3.168,
-     3.345,
-     5.657
-    ],
-    "visible": true
-   },
-   {
-    "target": "Room:highschool > Daily planning table > PointLight",
-    "visible": true
-   },
-   {
-    "target": "Room:highschool > PointLight#1",
-    "visible": true
-   },
-   {
-    "target": "HemisphereLight",
-    "visible": true
-   },
-   {
-    "target": "Room:highschool > PointLight#2",
-    "visible": true
-   },
-   {
-    "target": "DirectionalLight#2",
-    "visible": true
-   },
-   {
-    "target": "DirectionalLight#1",
-    "visible": true
-   },
-   {
-    "target": "DirectionalLight",
-    "visible": true
-   }
-  ],
-  "ledWallGlow": 0.14,
-  "ledFloorGlow": 0.53
  },
  "props": [
   {
@@ -630,6 +588,48 @@
     "desk": "sit",
     "colors": {
      "hair": "#d9b96e"
+    },
+    "postures": {
+     "people-fern-stand-low": {
+      "pose": {
+       "upperarm_l": [
+        -0.0018,
+        0.0113,
+        -0.0095,
+        0.9999
+       ],
+       "lowerarm_l": [
+        -0.0668,
+        0,
+        -0.0029,
+        0.9978
+       ],
+       "hand_l": [
+        -0.1484,
+        0.0762,
+        0.1189,
+        0.9788
+       ],
+       "upperarm_r": [
+        -0.0018,
+        -0.0113,
+        0.0095,
+        0.9999
+       ],
+       "lowerarm_r": [
+        -0.0668,
+        0,
+        0.0029,
+        0.9978
+       ],
+       "hand_r": [
+        -0.1484,
+        -0.0762,
+        -0.1189,
+        0.9788
+       ]
+      }
+     }
     }
    },
    {
@@ -810,7 +810,8 @@
     "look": [
      "kai-rolls",
      "kai-docks"
-    ]
+    ],
+    "y": -4
    },
    {
     "key": "noah-steps",
@@ -831,21 +832,119 @@
        -914
       ],
       [
-       -2930,
-       -1080
+       -3098,
+       -1064
       ]
      ],
      "start": 4,
      "pace": 2.2,
      "then": "people-noah-stand-screen-pull"
+    },
+    "postures": {
+     "people-noah-stand-wait": {
+      "poseKeys": [
+       {
+        "t": 4.5,
+        "pose": {
+         "upperarm_r": [
+          0,
+          0,
+          0,
+          1
+         ],
+         "lowerarm_r": [
+          0,
+          0,
+          0,
+          1
+         ],
+         "hand_r": [
+          0,
+          0,
+          0,
+          1
+         ]
+        }
+       },
+       {
+        "t": 4.8,
+        "pose": {
+         "upperarm_r": [
+          -0.2608,
+          0.0438,
+          -0.0022,
+          0.9644
+         ],
+         "lowerarm_r": [
+          0.2149,
+          0.0135,
+          -0.0606,
+          0.9747
+         ],
+         "hand_r": [
+          -0.155,
+          -0.1904,
+          0.3263,
+          0.9128
+         ]
+        }
+       },
+       {
+        "t": 5,
+        "pose": {
+         "upperarm_r": [
+          -0.2608,
+          0.0438,
+          -0.0022,
+          0.9644
+         ],
+         "lowerarm_r": [
+          0.2149,
+          0.0135,
+          -0.0606,
+          0.9747
+         ],
+         "hand_r": [
+          -0.155,
+          -0.1904,
+          0.3263,
+          0.9128
+         ]
+        }
+       },
+       {
+        "t": 5.38,
+        "pose": {
+         "upperarm_r": [
+          0,
+          0,
+          0,
+          1
+         ],
+         "lowerarm_r": [
+          0,
+          0,
+          0,
+          1
+         ],
+         "hand_r": [
+          0,
+          0,
+          0,
+          1
+         ]
+        }
+       }
+      ]
+     }
     }
    },
    {
     "key": "noah-pulls",
     "id": "people-noah-stand-screen-pull",
     "at": [
-     -2930,
-     -1080
+     -3098,
+     -1064
     ],
     "turn": -146,
     "act": {
@@ -854,7 +953,7 @@
      "by": [
       0,
       0,
-      120
+      142
      ]
     }
    },
@@ -862,8 +961,8 @@
     "key": "noah-taps",
     "id": "people-noah-stand-screen-tap",
     "at": [
-     -2930,
-     -1080
+     -3098,
+     -1064
     ],
     "turn": -146,
     "act": {
@@ -874,8 +973,8 @@
     "key": "noah-watches",
     "id": "people-noah-stand-wait",
     "at": [
-     -2930,
-     -1080
+     -3098,
+     -1064
     ],
     "turn": -146,
     "look": [
@@ -1130,6 +1229,28 @@
    "hide": true
   },
   {
+   "desk": "station-window-research",
+   "name": "Coastal research nook",
+   "pose": {
+    "x": -4300,
+    "z": 4489.6,
+    "yaw": 0
+   }
+  },
+  {
+   "desk": "station-research-desk",
+   "hide": true
+  },
+  {
+   "desk": "station-demonstration-desk",
+   "name": "Wave and energy demonstration desk",
+   "pose": {
+    "x": 2470.6,
+    "z": -2100,
+    "yaw": -2.0905
+   }
+  },
+  {
    "desk": "station-project-review",
    "name": "APA set and costume design review desk",
    "size": "48x30",
@@ -1139,7 +1260,7 @@
     "yaw": 0
    },
    "initial": {
-    "height": 43.5,
+    "height": 35.5,
     "tilt": 0
    },
    "build": {
@@ -1218,7 +1339,7 @@
       "transform": {
        "p": {
         "x": 0,
-        "y": -340,
+        "y": -220,
         "z": 335.484
        },
        "q": {
@@ -1277,28 +1398,6 @@
       }
      }
     }
-   }
-  },
-  {
-   "desk": "station-window-research",
-   "name": "Coastal research nook",
-   "pose": {
-    "x": -4300,
-    "z": 4489.6,
-    "yaw": 0
-   }
-  },
-  {
-   "desk": "station-research-desk",
-   "hide": true
-  },
-  {
-   "desk": "station-demonstration-desk",
-   "name": "Wave and energy demonstration desk",
-   "pose": {
-    "x": 2470.6,
-    "z": -2100,
-    "yaw": -2.0905
    }
   }
  ]
