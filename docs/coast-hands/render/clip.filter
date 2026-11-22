@@ -1,0 +1,1 @@
+[0]scale=960:540,drawtext=fontfile='C\:/Windows/Fonts/arial.ttf':fontsize=26:fontcolor=white:box=1:boxcolor=black@0.6:x=8:y=8:text='BEFORE (ch 4.10-6.80 s, film ~110.95-113.65 s, half speed)'[a];[1]scale=960:540,drawtext=fontfile='C\:/Windows/Fonts/arial.ttf':fontsize=26:fontcolor=white:box=1:boxcolor=black@0.6:x=8:y=8:text='AFTER'[b];[a][b]hstack,setpts=2*PTS[v]

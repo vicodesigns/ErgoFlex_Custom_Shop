@@ -1,0 +1,67 @@
+only in A: director-exports/export-9423f9b72580-Film-chapter-coast-14-5-s-control.json
+only in B: director-exports/export-6b942f7f3bfb-Film-chapter-coast-14-5-s-hands.json
+director-camera-coast.json: 3 difference(s)
+    /people/cast/1/postures/people-ava-sit-type-30: "<absent>" | {"poseKeys": [{"t": 0, "pose": {"upperarm_r": [-0.2227, -0.0085, 0.024
+    /people/cast/1/postures/people-ava-stand-low/poseKeys: [{"t": 7.6, "pose": {"upperarm_l": [0.054, -0.0703, 0.0845, 0.9925], " | [{"t": 5.35, "pose": {"upperarm_l": [0.054, -0.0703, 0.0845, 0.9925], 
+    /source: "F:/eng-coast-scratch/A/director-exports/export-9423f9b72580-Film-chap | "F:/eng-coast-scratch/B/director-exports/export-6b942f7f3bfb-Film-chap
+director-ch01.html: 1 differing line(s) 
+    line 1: b'<!doctype html><meta charset="utf-8"><title>Film chapter: awaken (44.85 s) in Director Mod' | b'<!doctype html><meta charset="utf-8"><title>Film chapter: awaken (44.85 s) in Director Mod'
+director-ch02-rise.html: 1 differing line(s) 
+    line 1: b'<!doctype html><meta charset="utf-8"><title>Film chapter: rise (28.5 s) in Director Mode</' | b'<!doctype html><meta charset="utf-8"><title>Film chapter: rise (28.5 s) in Director Mode</'
+director-ch03-create.html: 1 differing line(s) 
+    line 1: b'<!doctype html><meta charset="utf-8"><title>Film chapter: create (23.5 s) in Director Mode' | b'<!doctype html><meta charset="utf-8"><title>Film chapter: create (23.5 s) in Director Mode'
+director-ch04-commons.html: 1 differing line(s) 
+    line 1: b'<!doctype html><meta charset="utf-8"><title>Film chapter: commons (16 s) in Director Mode<' | b'<!doctype html><meta charset="utf-8"><title>Film chapter: commons (16 s) in Director Mode<'
+director-ch05-coast.html: 1 differing line(s) 
+    line 1: b'<!doctype html><meta charset="utf-8"><title>Film chapter: coast (14.5 s) in Director Mode<' | b'<!doctype html><meta charset="utf-8"><title>Film chapter: coast (14.5 s) in Director Mode<'
+director-ch06-oilers.html: 1 differing line(s) 
+    line 1: b'<!doctype html><meta charset="utf-8"><title>Film chapter: oilers (15 s) in Director Mode</' | b'<!doctype html><meta charset="utf-8"><title>Film chapter: oilers (15 s) in Director Mode</'
+director-ch07-wellness.html: 1 differing line(s) 
+    line 1: b'<!doctype html><meta charset="utf-8"><title>Film chapter: wellness (22.5 s) in Director Mo' | b'<!doctype html><meta charset="utf-8"><title>Film chapter: wellness (22.5 s) in Director Mo'
+director-ch08-awareness.html: 1 differing line(s) 
+    line 1: b'<!doctype html><meta charset="utf-8"><title>Film chapter: awareness (12 s) in Director Mod' | b'<!doctype html><meta charset="utf-8"><title>Film chapter: awareness (12 s) in Director Mod'
+director-ch09-music.html: 1 differing line(s) 
+    line 1: b'<!doctype html><meta charset="utf-8"><title>Film chapter: music (12.5 s) in Director Mode<' | b'<!doctype html><meta charset="utf-8"><title>Film chapter: music (12.5 s) in Director Mode<'
+director-ch10-media.html: 1 differing line(s) 
+    line 1: b'<!doctype html><meta charset="utf-8"><title>Film chapter: media (17 s) in Director Mode</t' | b'<!doctype html><meta charset="utf-8"><title>Film chapter: media (17 s) in Director Mode</t'
+director-ch11-storage.html: 1 differing line(s) 
+    line 1: b'<!doctype html><meta charset="utf-8"><title>Film chapter: storage (24.978 s) in Director M' | b'<!doctype html><meta charset="utf-8"><title>Film chapter: storage (24.978 s) in Director M'
+director-ch12-hero.html: 1 differing line(s) 
+    line 1: b'<!doctype html><meta charset="utf-8"><title>Film chapter: hero (38.22 s) in Director Mode<' | b'<!doctype html><meta charset="utf-8"><title>Film chapter: hero (38.22 s) in Director Mode<'
+director-chapters.json: 24 difference(s)
+    /chapters/0/page: "/../eng-coast-scratch/A/director-ch01.html" | "/../eng-coast-scratch/B/director-ch01.html"
+    /chapters/0/shot: "/../eng-coast-scratch/A/director-film/awaken.json" | "/../eng-coast-scratch/B/director-film/awaken.json"
+    /chapters/1/page: "/../eng-coast-scratch/A/director-ch02-rise.html" | "/../eng-coast-scratch/B/director-ch02-rise.html"
+    /chapters/1/shot: "/../eng-coast-scratch/A/director-film/rise.json" | "/../eng-coast-scratch/B/director-film/rise.json"
+    /chapters/2/page: "/../eng-coast-scratch/A/director-ch03-create.html" | "/../eng-coast-scratch/B/director-ch03-create.html"
+    /chapters/2/shot: "/../eng-coast-scratch/A/director-film/create.json" | "/../eng-coast-scratch/B/director-film/create.json"
+    /chapters/3/page: "/../eng-coast-scratch/A/director-ch04-commons.html" | "/../eng-coast-scratch/B/director-ch04-commons.html"
+    /chapters/3/shot: "/../eng-coast-scratch/A/director-film/commons.json" | "/../eng-coast-scratch/B/director-film/commons.json"
+    /chapters/4/page: "/../eng-coast-scratch/A/director-ch05-coast.html" | "/../eng-coast-scratch/B/director-ch05-coast.html"
+    /chapters/4/shot: "/../eng-coast-scratch/A/director-film/coast.json" | "/../eng-coast-scratch/B/director-film/coast.json"
+    /chapters/5/page: "/../eng-coast-scratch/A/director-ch06-oilers.html" | "/../eng-coast-scratch/B/director-ch06-oilers.html"
+    /chapters/5/shot: "/../eng-coast-scratch/A/director-film/oilers.json" | "/../eng-coast-scratch/B/director-film/oilers.json"
+    /chapters/6/page: "/../eng-coast-scratch/A/director-ch07-wellness.html" | "/../eng-coast-scratch/B/director-ch07-wellness.html"
+    /chapters/6/shot: "/../eng-coast-scratch/A/director-film/wellness.json" | "/../eng-coast-scratch/B/director-film/wellness.json"
+    /chapters/7/page: "/../eng-coast-scratch/A/director-ch08-awareness.html" | "/../eng-coast-scratch/B/director-ch08-awareness.html"
+    /chapters/7/shot: "/../eng-coast-scratch/A/director-film/awareness.json" | "/../eng-coast-scratch/B/director-film/awareness.json"
+    /chapters/8/page: "/../eng-coast-scratch/A/director-ch09-music.html" | "/../eng-coast-scratch/B/director-ch09-music.html"
+    /chapters/8/shot: "/../eng-coast-scratch/A/director-film/music.json" | "/../eng-coast-scratch/B/director-film/music.json"
+    /chapters/9/page: "/../eng-coast-scratch/A/director-ch10-media.html" | "/../eng-coast-scratch/B/director-ch10-media.html"
+    /chapters/9/shot: "/../eng-coast-scratch/A/director-film/media.json" | "/../eng-coast-scratch/B/director-film/media.json"
+    /chapters/10/page: "/../eng-coast-scratch/A/director-ch11-storage.html" | "/../eng-coast-scratch/B/director-ch11-storage.html"
+    /chapters/10/shot: "/../eng-coast-scratch/A/director-film/storage.json" | "/../eng-coast-scratch/B/director-film/storage.json"
+    /chapters/11/page: "/../eng-coast-scratch/A/director-ch12-hero.html" | "/../eng-coast-scratch/B/director-ch12-hero.html"
+    /chapters/11/shot: "/../eng-coast-scratch/A/director-film/hero.json" | "/../eng-coast-scratch/B/director-film/hero.json"
+director-exports/imports.json: 2 difference(s)
+    /6b942f7f3bfb519d4235bea02780686748e730c289f3ef66980b8cd09caf5b2d: "<absent>" | {"file": "Film-chapter-coast-14-5-s-hands.json", "chapter": "coast", "
+    /9423f9b7258085b3302430987dc5d48b6db13dff603beba0c6d5db8e226fb898: {"file": "Film-chapter-coast-14-5-s-control.json", "chapter": "coast", | "<absent>"
+director-film/coast.json: 3 difference(s)
+    /directorEdited/at: "2026-11-20T02:14:50Z" | "2026-11-22T00:16:11Z"
+    /people/cast/1/postures/people-ava-sit-type-30: "<absent>" | {"poseKeys": [{"t": 0, "pose": {"upperarm_r": [-0.2227, -0.0085, 0.024
+    /people/cast/1/postures/people-ava-stand-low/poseKeys: [{"t": 7.6, "pose": {"upperarm_l": [0.054, -0.0703, 0.0845, 0.9925], " | [{"t": 5.35, "pose": {"upperarm_l": [0.054, -0.0703, 0.0845, 0.9925], 
+review-cut.json: 3 difference(s)
+    /shots/4/directorEdited/at: "2026-11-20T02:14:50Z" | "2026-11-22T00:16:11Z"
+    /shots/4/people/cast/1/postures/people-ava-sit-type-30: "<absent>" | {"poseKeys": [{"t": 0, "pose": {"upperarm_r": [-0.2227, -0.0085, 0.024
+    /shots/4/people/cast/1/postures/people-ava-stand-low/poseKeys: [{"t": 7.6, "pose": {"upperarm_l": [0.054, -0.0703, 0.0845, 0.9925], " | [{"t": 5.35, "pose": {"upperarm_l": [0.054, -0.0703, 0.0845, 0.9925], 
+19 file(s) differ

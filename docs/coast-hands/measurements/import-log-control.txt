@@ -1,0 +1,46 @@
+6 camera keys and 1 movement clips from Director Mode -> F:/eng-coast-scratch/A\director-camera-coast.json
+coast: Director room look refresh kept in director-camera-coast.json
+coast: Director props -> 6 prop edit(s) kept in director-camera-coast.json
+coast
+ch01 awaken: Director props (1) -> no change
+ch02 rise: Director props (15) -> no change
+ch02 rise: Director people (2) -> no change
+ch03 create: Director lighting (ledColor, ledStatus, roomLight) -> no change
+ch03 create: Director props (26) -> no change
+ch03 create: Director people (2) -> no change
+ch04 commons: Director props (42) -> no change
+ch04 commons: Director people (12) -> no change
+ch04 commons: Director branding -> no change
+ch04 commons: Director room look refresh -> no change
+ch05 coast: Director props (6) -> no change
+ch05 coast: Director people (8) -> no change
+ch05 coast: Director room look refresh -> no change
+ch06 oilers: Director props (43) -> no change
+ch06 oilers: Director people (17) -> no change
+ch06 oilers: Director desks (5) -> no change
+ch07 wellness: Director lighting (ledStatus) -> no change
+ch07 wellness: Director props (10) -> no change
+ch07 wellness: Director people (4) -> no change
+ch09 music: Director lighting (screenLight) -> no change
+ch09 music: Director props (14) -> no change
+ch09 music: Director people (2) -> no change
+ch10 media: Director lighting (screenLight) -> no change
+ch10 media: Director props (6) -> no change
+ch10 media: Director people (2) -> no change
+ch11 storage: Director people (10) -> no change
+ch12 hero: Director props (2) -> no change
+ch12 hero: Director desk versions -> no change
+ch01 awaken: 19 camera keys, 9 clips, 44.85 s from director-camera.json -> no change
+ch02 rise: 9 camera keys, 4 clips, 28.5 s from director-camera-rise.json -> no change
+ch03 create: 11 camera keys, 4 clips, 23.5 s from director-camera-create.json -> no change
+ch04 commons: 10 camera keys, 4 clips, 16 s from director-camera-commons.json -> no change
+ch05 coast: 6 camera keys, 1 clips, 14.5 s from director-camera-coast.json -> no change
+ch06 oilers: 11 camera keys, 1 clips, 15 s from director-camera-oilers.json -> no change
+ch07 wellness: 6 camera keys, 2 clips, 22.5 s from director-camera-wellness.json -> no change
+ch09 music: 5 camera keys, 3 clips, 12.5 s from director-camera-music.json -> no change
+ch10 media: 5 camera keys, 0 clips, 17 s from director-camera-media.json -> no change
+ch11 storage: 16 camera keys, 5 clips, 24.978 s from director-camera-storage.json -> no change
+ch12 hero: 47 camera keys, 10 clips, 38.22 s from director-camera-hero.json -> no change
+    sub-shot H renderRange [26.44, 38.72] lies past the 38.22 s chapter
+    hero: the preset seams (sub-shot renderRanges, the main shot's subshots map) are NOT moved with the clips
+imported Film-chapter-coast-14-5-s-control.json (F:/eng-coast-scratch/A/director-exports/export-9423f9b72580-Film-chapter-coast-14-5-s-control.json)
