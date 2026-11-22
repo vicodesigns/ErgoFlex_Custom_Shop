@@ -1,5 +1,5 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-2nd-cut/director-exports/export-6976cdf65b2a-Film-chapter-music-12-5-s-__status-light_.json",
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-f6d0eb706476-Film-chapter-music-screenlight.json",
  "seconds": 12.5,
  "keys": [
   {
@@ -85,7 +85,7 @@
    "lane": "lift",
    "kind": "lift",
    "start": 6.3,
-   "duration": 3,
+   "duration": 3.0,
    "easing": "linear",
    "label": "",
    "target": 47
@@ -95,7 +95,7 @@
    "lane": "tilt",
    "kind": "tilt",
    "start": 6.3,
-   "duration": 3,
+   "duration": 3.0,
    "easing": "linear",
    "label": "",
    "target": 5
@@ -117,7 +117,10 @@
   "tilt": 0
  },
  "lighting": {
-  "statusLight": false
+  "screenLight": {
+   "gain": 0.55,
+   "saturation": 1.5
+  }
  },
  "props": [
   {
