@@ -26,6 +26,7 @@ import {clipFollowHtml,followModeHtml,statusInspectorHtml,moveLane,span as follo
 import {filmRenderShot,createStillRenderer} from './film-render.mjs?v=transitions-fix-20261120';
 import {createSceneLightEditor} from './scene-light-editor.mjs';
 import {createScenePropEditor} from './scene-prop-editor.mjs';
+import {createTrayEditor} from './scene-tray-editor.mjs?v=tray-mode-20261122';
 import {createLayersPanel} from './layers-panel.mjs';
 import {layersOn,studioHiddenHere,chapterRooms,chapterSetting,deskHidePlan,LAYERS_KEY} from './layers-exchange.mjs';
 import {effectivePropEdits as layersPropEdits} from './prop-edits.mjs';
@@ -307,7 +308,7 @@ export function mountDirector(bridge,catalog,initial){
     const line=timeline.querySelector('[data-track-playhead]');if(line)line.style.left=(playhead*100)+'%';
     const label=timeline.querySelector('[data-track-time]');if(label)label.textContent=(playhead*shot().seconds).toFixed(2)+'s / '+shot().seconds+'s';
     for(const line of timeline.querySelectorAll('[data-shared-playhead]'))line.style.left=playhead*100+'%';
-    syncLightNow();syncNow();titleEditor.sync();scenePeople.poseSync();deskVersions.sync(playhead);if(playhead!==pokedAt){pokedAt=playhead;filmLook?.poke();}
+    syncLightNow();syncNow();titleEditor.sync();scenePeople.poseSync();trayEd.sync();deskVersions.sync(playhead);if(playhead!==pokedAt){pokedAt=playhead;filmLook?.poke();}
     const ruler=timeline.querySelector('.time-ruler');if(ruler)ruler.setAttribute('aria-valuenow',(playhead*shot().seconds).toFixed(2));
     const exact=timeline.querySelector('[name="timeline-seconds"]');if(exact&&document.activeElement!==exact)exact.value=(playhead*shot().seconds).toFixed(2);
     const tc=timeline.querySelector('[data-film-tc]');if(tc)tc.textContent=timecodeNow();
@@ -609,6 +610,7 @@ export function mountDirector(bridge,catalog,initial){
   document.addEventListener('keydown',event=>{
     if(event.key!=='Escape'||!open||picked()||document.querySelector('dialog[open]')||event.target.closest?.('input,select,textarea'))return;
     if(titleEditor.editing())return;
+    if(trayEd.active()){event.preventDefault();event.stopImmediatePropagation();trayEd.exit();return;}   // (Tray mode: Esc leaves it; in a field Esc only leaves the field, above)
     if(sceneProps.insideDesk?.()){event.preventDefault();event.stopImmediatePropagation();sceneProps.leaveDesk();return;}   // (inside a desk: Esc leaves it, the desk selected)
     if(!(lightSel||keyId||deskEditor.selectedId()||sceneLights.selected()||sceneProps.selected()||scenePeople.selected()||deskSel.selected()||titleEditor.selectedId()))return;
     event.preventDefault();event.stopImmediatePropagation();clearSelection();
@@ -973,6 +975,13 @@ export function mountDirector(bridge,catalog,initial){
   }
   const scenePeople=createScenePeopleEditor({bridge,shot,film:filmShot,commit,status,open:()=>open,cameraHeld:()=>held,rerender:()=>renderPeople(),time:()=>playhead*shot().seconds,seek:t=>seekCamera(t/(shot()?.seconds||1)),lightsShowing:()=>sceneLights.showing(),snap:(t,o)=>snapTime(t,o),
     onSelect:()=>{for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();graphics.clear?.();sceneLights.deselect();sceneProps.deselect();deskSel.deselect();renderTimeline();reveal('person');}});
+  // Tray mode (scene-tray-editor.mjs): the keyboard tray's joints and keys. Double-click the tray in the view; the Tray tab; the Tray lane of the Motion group.
+  function renderTray(soft=false){
+    const box=panel.querySelector('[data-scene-tray]');if(box&&!(soft&&typing())){const active=box.contains(document.activeElement)?document.activeElement.name:null;box.innerHTML=filmShot()?trayEd.panel():'';if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});}
+    const lane=timeline.querySelector('[data-tray-lane]');if(lane){lane.innerHTML='<div class="desk-lane-line"></div>'+trayEd.lane();const n=timeline.querySelector('[data-tray-count]');if(n){const m=trayEd.laneModel();n.textContent=m.keys.length?m.keys.length+' key'+(m.keys.length===1?'':'s')+(m.warnings?' · held':''):'';}}
+  }
+  const trayEd=createTrayEditor({win:()=>document.getElementById('stage')?.contentWindow,three:()=>bridge.stage()?.three?.(),stage:()=>bridge.stage(),shot,film:filmShot,commit,status,rerender:soft=>{renderTray(soft===true);},
+    time:()=>playhead*(shot()?.seconds||0),seek:t=>seekCamera(t/(shot()?.seconds||1)),seconds:()=>shot()?.seconds||0,editing:()=>open&&!scenePeople.posing(),lightsShowing:()=>sceneLights.showing(),reveal:()=>{if(!panel.querySelector('[data-inspector-tab="tray"]'))renderPanel();showInspector('tray');}});
   // Layers (layers-panel.mjs): the chapter's props and desk items as an outliner, named layers (select, hide, lock); shot.propLayers.
   // The Studio's show / hide (Layers phase 3; ?layers=0 or localStorage 'ergoflex.layers.ui' = '0': the tab as before):
   // what the Studio hides at this chapter's time and size, read from this page's copy of the shared key. Never the stage's.
@@ -1256,7 +1265,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     panel.innerHTML=(shellOn()?'':`
       <div class="director-heading"><div><span class="director-kicker">DIRECTOR MODE</span><h2>Director studio.</h2></div><button data-action="ab-classic" class="calm-back" title="The new layout: one app bar, one timeline row (the classic one stays one click away)">New layout</button><button data-action="inspector" aria-label="Hide inspector" title="Hide inspector; keep the timeline open">‹</button></div>
       <div class="inspector-global"><button data-action="save-export" class="primary" title="Download this cut (the film picks it up from Downloads); also keeps a copy in this browser when there is room">Export cut</button><button data-action="undo" title="Undo (Ctrl/Cmd+Z)" ${undo.length?'':'disabled'}>Undo</button><button data-action="redo" title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)" ${redo.length?'':'disabled'}>Redo</button><span class="studio-sync" data-studio-sync>${studioSync.html()}</span><span class="saved-indicator" data-saved title="Draft kept in this browser"></span></div>${filmPicker()}`)+`
-      ${shellOn()&&filmShot()?sceneListHtml():''}<nav class="inspector-tabs" aria-label="Inspector sections">${['project','chapter',...(titleEditor.has()?['title']:[]),'camera','groove',...(lighting()||timeOfDay()||filmShot()?['lighting']:[]),...(filmShot()?['graphics','props','people','layers','desks']:[]),...(filmShot()&&branding.available()?['branding']:[]),...(filmShot()&&deskBuild.shows()?['build']:[]),...(filmShot()&&deskVersions.has()?['version']:[]),...(film?['render']:[])].map(tab=>`<button data-inspector-tab="${tab}" aria-pressed="${inspector===tab}" ${shellOn()&&TAB_TITLE[tab]?`title="${TAB_TITLE[tab]}"`:''}>${tabLabel(tab)}</button>`).join('')}<button data-action="inspector" aria-label="Hide inspector" title="Hide inspector">×</button></nav><div class="selected-header" data-selected-header>${selectedHeader()}</div>
+      ${shellOn()&&filmShot()?sceneListHtml():''}<nav class="inspector-tabs" aria-label="Inspector sections">${['project','chapter',...(titleEditor.has()?['title']:[]),'camera','groove',...(lighting()||timeOfDay()||filmShot()?['lighting']:[]),...(filmShot()?['graphics','props','people','layers','desks']:[]),...(filmShot()&&trayEd.has()?['tray']:[]),...(filmShot()&&branding.available()?['branding']:[]),...(filmShot()&&deskBuild.shows()?['build']:[]),...(filmShot()&&deskVersions.has()?['version']:[]),...(film?['render']:[])].map(tab=>`<button data-inspector-tab="${tab}" aria-pressed="${inspector===tab}" ${shellOn()&&TAB_TITLE[tab]?`title="${TAB_TITLE[tab]}"`:''}>${tabLabel(tab)}</button>`).join('')}<button data-action="inspector" aria-label="Hide inspector" title="Hide inspector">×</button></nav><div class="selected-header" data-selected-header>${selectedHeader()}</div>
       <p data-status role="status" class="director-status">${escape(titleEditor.editHint?.()||`${project.shots.length} chapters · ${Math.round(duration(project.shots))} seconds`)}</p>
       <div data-inspector-page="project">
       <div class="director-actions"><button data-action="new">New cut</button><button data-action="clone">Duplicate cut</button></div>
@@ -1291,7 +1300,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       <label>Selected camera keyframe<select name="camera-key"><option value="">Select a keyframe…</option>${keys().map(k=>option(k.id,`${k.label} · ${(k.time*s.seconds).toFixed(2)}s`,keyId)).join('')}</select></label>
       ${cameraKey?`<div data-reveal="camera-key"><div class="selection-preview"><button data-action="key-preview" ${keys().at(-1)?.id===cameraKey.id?'disabled title="Last camera view: select an earlier view to preview its move"':''}>▶ Preview camera move</button><button data-action="key-go">Go to view</button></div><label>Keyframe name<input name="key-label" maxlength="60" value="${escape(cameraKey.label)}"></label><div class="director-grid"><label>Keyframe time (seconds)<input name="key-time" type="number" min="0" max="${s.seconds}" step=".05" value="${Number((cameraKey.time*s.seconds).toFixed(3))}"></label></div>${transitionFields(cameraKey)}<label>Field of view (degrees) <small class="lens-mm" title="The same view on a full-frame camera (24 mm high)">≈ ${Math.round(12/Math.tan(cameraKey.view.fov*Math.PI/360))} mm lens</small><input name="key-fov" type="number" min="15" max="80" step="1" value="${cameraKey.view.fov}"></label><div class="director-actions lens-presets">${[[24,'Detail · 24°'],[35,'Balanced · 35°'],[50,'Wide · 50°']].map(([fov,label])=>`<button data-action="lens-${fov}" aria-pressed="${cameraKey.view.fov===fov}">${label}</button>`).join('')}</div><p class="director-hint">Lens buttons update this keyframe. After orbiting or framing the preview, use Update selected view to keep that composition.</p></div>`:''}
 
-      </div><div data-inspector-page="title">${titleEditor.panel()}</div><div data-inspector-page="graphics">${sonarEditor.panel()}${graphics.panel()}</div><div data-inspector-page="groove">${deskEditor.panel()}</div><div data-inspector-page="lighting">${lightPanel()}</div><div data-inspector-page="props"><div data-scene-props>${filmShot()?sceneProps.panel():''}</div></div><div data-inspector-page="people"><div data-scene-people>${filmShot()?scenePeople.panel():''}</div></div><div data-inspector-page="layers"><div data-scene-layers>${filmShot()&&inspector==='layers'?layers.panel():''}</div></div><div data-inspector-page="desks"><div data-scene-desks>${filmShot()?deskSel.panel():''}</div></div><div data-inspector-page="branding"><div data-scene-branding>${filmShot()?branding.panel():''}</div></div><div data-inspector-page="build">${filmShot()?deskBuild.panel():''}</div><div data-inspector-page="version">${filmShot()&&deskVersions.has()?deskVersions.panel():''}</div>${film?renderRequest.panel():''}`;
+      </div><div data-inspector-page="title">${titleEditor.panel()}</div><div data-inspector-page="graphics">${sonarEditor.panel()}${graphics.panel()}</div><div data-inspector-page="groove">${deskEditor.panel()}</div><div data-inspector-page="lighting">${lightPanel()}</div><div data-inspector-page="props"><div data-scene-props>${filmShot()?sceneProps.panel():''}</div></div><div data-inspector-page="people"><div data-scene-people>${filmShot()?scenePeople.panel():''}</div></div><div data-inspector-page="tray"><div data-scene-tray>${filmShot()?trayEd.panel():''}</div></div><div data-inspector-page="layers"><div data-scene-layers>${filmShot()&&inspector==='layers'?layers.panel():''}</div></div><div data-inspector-page="desks"><div data-scene-desks>${filmShot()?deskSel.panel():''}</div></div><div data-inspector-page="branding"><div data-scene-branding>${filmShot()?branding.panel():''}</div></div><div data-inspector-page="build">${filmShot()?deskBuild.panel():''}</div><div data-inspector-page="version">${filmShot()&&deskVersions.has()?deskVersions.panel():''}</div>${film?renderRequest.panel():''}`;
     branding.mount(panel.querySelector('[data-scene-branding]'));
     decorateChanged();
     renderAppBar();
@@ -1320,7 +1329,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       <div class="timeline-viewport" tabindex="0" aria-label="Camera and desk timeline"><div class="timeline-content" style="width:${zoom*100}%;--timeline-grid:${(ticks[1]||s.seconds)/s.seconds*100}%">
       <div class="time-ruler-row"><span class="track-heading">SECONDS</span><div class="time-ruler" role="slider" aria-label="Chapter timeline scrubber" aria-valuemin="0" aria-valuemax="${s.seconds}" aria-valuenow="${(playhead*s.seconds).toFixed(2)}" tabindex="0">${ticks.map(t=>`<span style="left:${t/s.seconds*100}%">${Number(t.toFixed(2))}</span>`).join('')}${scoreHitsHtml()}${rulerMarksHtml()}<div class="ruler-playhead" data-shared-playhead style="left:${playhead*100}%"></div></div><button class="chapter-end-handle" data-chapter-end type="button" aria-label="Chapter length: drag to change" title="Drag to change the chapter length (snaps to 0.5 s, Alt: free). Nothing already placed moves; longer: the camera holds its last view; shorter: camera views past the new end are trimmed."><i></i></button></div>
       ${deskVersions.lane()}${titlesGroup()}${graphics.lane()}${laneGroupHead('motion')}<div class="lane-group-body" data-lane-body="motion" ${groupClosed('motion')?'hidden':''}><div class="camera-lane-row"><span class="track-heading"><b>◆ Camera</b><small>${s.camera?'Custom views':'Original views'}</small></span><div class="camera-track" role="group" aria-label="Camera keyframe timeline"><div class="camera-track-line"></div>${segmentsHtml()}${transitionLane()}<div class="camera-track-playhead" data-track-playhead style="left:${playhead*100}%"></div>${keys().map(k=>`<button class="camera-key ${keyId===k.id?'selected':''} ${shot().camera?'':'automatic'}" style="left:${k.time*100}%" data-key="${k.id}" aria-label="Camera keyframe: ${escape(k.label)} at ${(k.time*shot().seconds).toFixed(2)} seconds" aria-pressed="${keyId===k.id}" title="${escape(k.label)} · ${(k.time*shot().seconds).toFixed(2)}s · ${({smooth:'smooth',linear:'linear',hold:'hold'})[k.easing]||k.easing} to the next (T)" data-ease="${k.easing}"><span>${({smooth:'⧗',linear:'◆',hold:'■'})[k.easing]||'◆'}</span><small>${(k.time*shot().seconds).toFixed(1)}s</small></button>`).join('')}<span class="camera-track-zero">0s</span><span class="camera-track-end">${shot().seconds}s</span></div></div>
-      ${deskEditor.timeline()}</div>${lightLane()}${peopleGroup()}${propsGroup()}${soundGroup()}</div></div>
+      ${deskEditor.timeline()}${filmShot()?trayEd.laneRow():''}</div>${lightLane()}${peopleGroup()}${propsGroup()}${soundGroup()}</div></div>
       <label class="timeline-pan" ${zoom===1?'hidden':''}><span>Pan view</span><input name="timeline-pan" type="range" min="0" max="100" step=".1" value="0" aria-label="Timeline horizontal position"></label>
       <div class="timeline-footer"><span data-bake-summary class="timeline-bake-summary" role="status"></span><span data-timeline-status role="status">Click ruler to scrub · Drag empty lanes to select several · Shift/Ctrl-click adds · Ctrl+A all · Alt: bypass snap · Space: play</span><span class="sb-pills" data-sb-pills></span><output data-track-time>${(playhead*s.seconds).toFixed(2)}s / ${s.seconds}s</output></div>`;
     restoreScroll(timeline.querySelector('.timeline-viewport'),live);
@@ -1377,6 +1386,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       if(name.startsWith('sl-')){await sceneLights.action(name,index);return;}
       if(name.startsWith('pp-')){await sceneProps.action(name,index);return;}
       if(name.startsWith('pe-')){await scenePeople.action(name,index);return;}
+      if(name.startsWith('tr-')){trayEd.action(name,index);return;}
       if(name.startsWith('ly-')){const r=await layers.action(name,index);if(r==='show'){showInspector('layers');renderLayers();panel.querySelector('[name="ly-name"]')?.focus();}else renderLayers();return;}
       if(name.startsWith('br-')){await branding.action(name,index);return;}
       if(name.startsWith('dk-')){await deskSel.action(name,index);return;}
@@ -1606,6 +1616,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     if(name.startsWith('sl-')){try{sceneLights.input(el);}catch(error){status(error.message,true);}return;}
     if(name.startsWith('dk-')&&el.type==='range'){try{deskSel.changed(el,{live:true});}catch(error){status(error.message,true);}return;}
     if(name.startsWith('fr-')&&el.type==='range'){try{floorRefl.changed(el,{live:true});}catch(error){status(error.message,true);}return;}
+    if(name.startsWith('tr-')&&el.type==='range'){try{trayEd.input(el);}catch(error){status(error.message,true);}return;}   // (a tray slider, live: the tray follows at once)
     if(name.startsWith('pe-path-')&&el.type==='range'){try{scenePeople.input(el);}catch(error){status(error.message,true);}return;}   // (a walk's facing slider, live)
     if(name.startsWith('mx-')&&name!=='mx-on'){sceneLights.mixerChange(el,true).catch(error=>status(error.message,true));return;}
     if(/^scl-/.test(name)&&(el.type==='range'||el.type==='color')){try{setScreenLight(el,{live:true});}catch(error){status(error.message,true);}return;}
@@ -1647,6 +1658,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     if(name?.startsWith('ly-')){try{layers.changed(event.target);}catch(error){renderLayers();status(error.message,true);}return;}
     if(name?.startsWith('pp-')){try{await sceneProps.changed(event.target);}catch(error){renderSceneProps();status(error.message,true);}return;}
     if(name?.startsWith('pe-')){try{await scenePeople.changed(event.target);}catch(error){renderPeople();status(error.message,true);}return;}
+    if(name?.startsWith('tr-')){try{trayEd.changed(event.target);}catch(error){renderTray();status(error.message,true);}return;}
     if(name?.startsWith('br-')){try{branding.changed(event.target);}catch(error){renderBranding();status(error.message,true);}return;}
     if(name?.startsWith('dk-')){if(event.target.type==='range'){renderSceneDesks();return;}try{deskSel.changed(event.target);}catch(error){renderSceneDesks();status(error.message,true);}return;}
     if(name?.startsWith('fr-')){if(event.target.type==='range'){renderPanel();return;}try{floorRefl.changed(event.target);}catch(error){renderPanel();status(error.message,true);}return;}
@@ -2097,11 +2109,12 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   // while typing in a field or with a dialog open. The handlers that run first keep their own Delete: a focused item's
   // button (its own handler), a title's shape points, the pose tool, the People sheet's picked keys, timeline group picks.
   // One undo step, as every edit.
-  const deleteWhat=()=>deleteTarget(selectionNow(),{poseKey:scenePeople.posing()&&scenePeople.poseKeySelected(),picked:!!picked(),sheetKeys:!!scenePeople.keysPicked?.()});
+  const deleteWhat=()=>deleteTarget(selectionNow(),{poseKey:scenePeople.posing()&&scenePeople.poseKeySelected(),picked:!!picked(),sheetKeys:!!scenePeople.keysPicked?.(),trayKey:trayEd.keySelected()});
   async function deleteSelection(){
     const what=deleteWhat();
     switch(what){
       case 'pose-key':case 'person':scenePeople.remove();return true;
+      case 'tray-key':trayEd.deleteKeys();return true;
       case 'picks':deletePicks();return true;
       case 'sheet-keys':scenePeople.deleteKeys();return true;
       case 'camera':await action('key-delete');return true;
@@ -2555,6 +2568,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     if(event.key!=='Escape'||!open)return;event.preventDefault();event.stopImmediatePropagation();
     if(still.open){still.close();return;}
     if(picked()){clearPicks();groupStatus();return;}
+    if(trayEd.active()){trayEd.exit();return;}
     if(sceneProps.insideDesk?.()){sceneProps.leaveDesk();return;}
     if(lightSel||keyId||deskEditor.selectedId()||sceneLights.selected()||sceneProps.selected()||scenePeople.selected()||deskSel.selected()||titleEditor.selectedId())clearSelection();
   }
