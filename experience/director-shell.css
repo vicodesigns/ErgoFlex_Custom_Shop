@@ -296,3 +296,9 @@ body.df-filter-changed #director-timeline :is(.lane-group-head,.lane-group-body)
 .ab-btn.ab-hold.on{background:#5a3d06;border-color:#ffc977;color:#ffe2a8;font-weight:600}
 .nav-pill.held{background:#5a3d06f2;border-color:#ffc977;color:#ffe2a8}
 .people-pose-bar .pose-held{color:#ffc977;font-size:11px;font-weight:600}
+
+/* The Guided demo card (#demo) can be closed in the Director (director-phone.mjs remembers it; ⋯ → Guided demo card brings it back) */
+#demo-close{display:none}
+body.directing #demo-close{display:block;position:absolute;top:6px;right:6px;width:32px;height:32px;min-height:0;padding:0;border:0;border-radius:50%;background:#ffffff14;color:#eef6fb;font-size:20px;line-height:1;cursor:pointer}
+body.directing #demo-close:hover{background:#ffffff30}
+body.directing.ef-demo-closed #demo{display:none!important}

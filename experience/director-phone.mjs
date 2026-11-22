@@ -1,0 +1,111 @@
+// Phone mode for the Director (23 Nov 2026, Vico's Galaxy Z Fold 5 over the tailnet): a coarse pointer on a screen up to
+// 1200 CSS px wide. The page asks for it with matchMedia('(pointer: coarse)') and the layout viewport's size
+// (the visual viewport changes while pinching or when the keyboard shows; the layout viewport follows the keyboard only
+// with interactive-widget=resizes-content, which index.html asks for).
+//   body.ef-phone + body.ef-portrait | body.ef-landscape    set only for a coarse pointer; director-phone.css keys on these
+//   portrait   the stage on top, the timeline under it, the inspector a bottom sheet: peek (a handle) / half / full
+//              (body.ef-sheet-peek | ef-sheet-half | ef-sheet-full; the handle: tap, or drag up / down)
+//   landscape  the stage on the left over the timeline, the inspector a side drawer: body.inspector-hidden is the drawer
+//              closed (the existing class, so the ⋯ menu and the Tab key stay in step); the tab on the edge opens it
+//   --ef-top   the bottom of the app bar in px (the app bar wraps to two rows on a narrow screen)
+// The choices (sheet, drawer, the Guided demo card) are remembered per device in localStorage.
+// Pure parts (phoneLayout, nextSheet, dragSheet) are node-tested (tests/fold-titles-test.mjs).
+export const PHONE_KEY = 'ergoflex.director.phone.v1', DEMO_KEY = 'ergoflex.director.demoCard.v1';
+export const PHONE_MAX_WIDTH = 1200;
+const SHEETS = ['peek', 'half', 'full'];
+
+export function phoneLayout({ coarse, width, height }) {
+  if (!coarse || !(width > 0) || !(height > 0) || width > PHONE_MAX_WIDTH) return null;
+  return height > width ? 'portrait' : 'landscape';
+}
+// A tap on the handle: peek -> half, half -> peek, full -> half. A drag: up opens one step more, down one step less.
+export function nextSheet(sheet, how) {
+  const i = Math.max(0, SHEETS.indexOf(sheet));
+  if (how === 'up') return SHEETS[Math.min(2, i + 1)];
+  if (how === 'down') return SHEETS[Math.max(0, i - 1)];
+  return sheet === 'peek' ? 'half' : sheet === 'half' ? 'peek' : 'half';
+}
+export const dragSheet = (sheet, dy, slop = 24) => Math.abs(dy) < slop ? nextSheet(sheet, 'tap') : nextSheet(sheet, dy < 0 ? 'up' : 'down');
+
+const load = () => { try { return JSON.parse(localStorage.getItem(PHONE_KEY) || '{}') || {}; } catch { return {}; } };
+const save = v => { try { localStorage.setItem(PHONE_KEY, JSON.stringify(v)); } catch { /* storage full: the choice lasts this visit */ } };
+
+// appbar, panel: the Director's elements; shellOn(): the calm layout is on (the phone layout needs its app bar).
+export function createPhoneMode({ appbar, panel, shellOn = () => true, changed = () => {} }) {
+  const body = document.body, cls = body.classList, coarse = matchMedia('(pointer: coarse)');
+  let mode = null, store = load(), wasOpen = false, labelText = '';
+  if (!SHEETS.includes(store.sheet)) store.sheet = 'peek';
+
+  const handle = document.createElement('div');
+  handle.id = 'ef-sheet-handle'; handle.setAttribute('role', 'button'); handle.tabIndex = 0;
+  handle.setAttribute('aria-label', 'Inspector sheet: tap or drag to open and close');
+  handle.innerHTML = '<span class="ef-grip" aria-hidden="true"></span><span class="ef-sheet-label" data-ef-sheet-label>Inspector</span><span class="ef-sheet-state" aria-hidden="true"></span>';
+  const tab = document.createElement('button');
+  tab.id = 'ef-drawer-tab'; tab.type = 'button'; tab.setAttribute('aria-label', 'Show or hide the inspector'); tab.innerHTML = '<span aria-hidden="true">‹</span>';
+  body.append(handle, tab);
+
+  const size = () => ({ width: innerWidth, height: innerHeight });
+  const setSheet = (sheet, keep = false) => {
+    store.sheet = sheet; if (!keep) save(store);
+    for (const s of SHEETS) cls.toggle('ef-sheet-' + s, mode === 'portrait' && s === sheet);
+    handle.setAttribute('aria-expanded', String(sheet !== 'peek')); handle.dataset.sheet = sheet;
+    changed();
+  };
+  const setDrawer = (open, keep = false) => {
+    cls.toggle('inspector-hidden', !open); if (!keep) { store.drawer = open; save(store); }
+    tab.setAttribute('aria-expanded', String(open)); tab.firstChild.textContent = open ? '›' : '‹'; changed();
+  };
+  function measure() {
+    if (!cls.contains('directing') || appbar.hidden) return;
+    const r = appbar.getBoundingClientRect(); if (r.height) body.style.setProperty('--ef-top', Math.round(r.bottom + 8) + 'px');
+  }
+  function apply() {
+    const m = shellOn() ? phoneLayout({ coarse: coarse.matches, ...size() }) : null, was = mode; mode = m;
+    cls.toggle('ef-phone', !!m); cls.toggle('ef-portrait', m === 'portrait'); cls.toggle('ef-landscape', m === 'landscape');
+    if (!m) { for (const s of SHEETS) cls.remove('ef-sheet-' + s); body.style.removeProperty('--ef-top'); syncDemo(); return; }
+    if (m !== was) changed();
+    if (m !== was || cls.contains('directing') !== wasOpen) {
+      if (m === 'portrait') { cls.remove('inspector-hidden'); setSheet(store.sheet, true); }
+      else { for (const s of SHEETS) cls.remove('ef-sheet-' + s); setDrawer(store.drawer !== false, true); }
+    }
+    wasOpen = cls.contains('directing'); measure(); syncDemo();
+  }
+  // Portrait has no "hidden inspector": the existing ⋯ and Tab toggle (and ≤ 700 px's start) mean the handle only.
+  new MutationObserver(() => {
+    if (mode === 'portrait' && cls.contains('inspector-hidden')) { cls.remove('inspector-hidden'); setSheet('peek', true); }
+    if (cls.contains('directing') !== wasOpen) apply();
+    tab.firstChild.textContent = cls.contains('inspector-hidden') ? '‹' : '›';
+  }).observe(body, { attributes: true, attributeFilter: ['class'] });
+
+  // the handle: tap, or a drag up / down
+  let down = null;
+  handle.addEventListener('pointerdown', e => { if (e.button) return; down = { y: e.clientY, id: e.pointerId }; handle.setPointerCapture(e.pointerId); e.preventDefault(); });
+  handle.addEventListener('pointerup', e => { if (!down) return; const dy = e.clientY - down.y; down = null; setSheet(dragSheet(store.sheet, dy)); });
+  handle.addEventListener('pointercancel', () => { down = null; });
+  handle.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setSheet(nextSheet(store.sheet, 'tap')); } });
+  tab.addEventListener('click', () => setDrawer(cls.contains('inspector-hidden')));
+
+  // The Guided demo card (#demo): hidden by default on a phone, closable everywhere, remembered.
+  const demoStored = () => { try { return localStorage.getItem(DEMO_KEY); } catch { return null; } };
+  function syncDemo() { const v = demoStored(); cls.toggle('ef-demo-closed', v === 'closed' || (v !== 'open' && !!mode)); }
+  function demo(open) { try { localStorage.setItem(DEMO_KEY, open ? 'open' : 'closed'); } catch { /* this visit only */ } cls.toggle('ef-demo-closed', !open); changed(); }
+  document.addEventListener('click', e => { if (e.target.closest?.('#demo-close')) demo(false); });
+
+  // The handle says what the sheet holds: the tab and the selection.
+  function label() {
+    const t = panel.querySelector('[data-inspector-tab][aria-pressed="true"]')?.textContent.trim() || 'Inspector', sel = panel.querySelector('.sel-name b')?.textContent.trim() || '';
+    const text = sel ? `${t} · ${sel}` : t; if (text !== labelText) { labelText = text; handle.querySelector('[data-ef-sheet-label]').textContent = text; }
+  }
+  setInterval(() => { if (mode) { label(); measure(); } }, 500);
+  coarse.addEventListener?.('change', apply); addEventListener('resize', apply); addEventListener('orientationchange', () => setTimeout(apply, 120));
+  if ('ResizeObserver' in window) new ResizeObserver(measure).observe(appbar);
+  apply();
+  return {
+    apply, layout: () => mode, sheet: () => store.sheet,
+    // The app bar's Panel button and the ⋯ Side column: portrait toggles the sheet, landscape the drawer.
+    togglePanel() { if (mode === 'portrait') { setSheet(store.sheet === 'peek' ? 'half' : 'peek'); return true; } if (mode === 'landscape') { setDrawer(cls.contains('inspector-hidden')); return true; } return false; },
+    // A selection on the timeline or in the frame asks to show its inspector: a sheet at peek comes up to half, a closed drawer opens (not remembered).
+    reveal() { if (mode === 'portrait' && store.sheet === 'peek') setSheet('half', true); else if (mode === 'landscape' && cls.contains('inspector-hidden')) setDrawer(true, true); },
+    demo, demoOpen: () => !cls.contains('ef-demo-closed'),
+  };
+}

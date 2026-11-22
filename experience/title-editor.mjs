@@ -164,7 +164,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   function pickMany(ids){if(!ids.length)return;onSelect();multi.clear();for(const id of ids)multi.add(id);selected=ids[0];lineSel=null;showInspector('title',true);render();renderTimeline();lastKey='';sync();
     status(`${ids.length} title${ids.length===1?'':'s'} selected.`);}
   timeline.addEventListener('pointermove',event=>{
-    if(!drag)return;const d=drag,s=d.base.seconds,o=d.original;if(Math.abs(event.clientX-d.start)>3)d.moved=true;if(!d.moved)return;
+    if(!drag)return;const d=drag,s=d.base.seconds,o=d.original;if(Math.abs(event.clientX-d.start)>(event.pointerType==='touch'?8:3))d.moved=true;if(!d.moved)return;
     const raw=(event.clientX-d.start)/d.width*s,edges=d.edge==='start'?[o.rel_in]:d.edge==='end'?[o.rel_out]:[o.rel_in,o.rel_out];
     const {delta,snap}=snapDelta({raw,edges,width:d.width,seconds:s,alt:event.altKey,exclude:o.id});d.snap=snap;
     if(d.group){const {delta:dd,list}=shiftTitles(d.base.titles,d.group,delta,s);d.candidate=list;d.delta=dd;
@@ -233,6 +233,16 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     return `<details open class="title-spacing"><summary>Line spacing</summary><div class="director-grid"><label>Eyebrow to headline (px)<input type="number" step="1" min="-400" max="600" data-gap="top" value="${g.top}" title="Baseline to baseline; the film's is ${GAPS.top}"></label><label>Headline to supporting (px)<input type="number" step="1" min="-400" max="600" data-gap="bottom" value="${g.bottom}" title="Baseline to baseline; the film's is ${GAPS.bottom}"></label></div><div class="director-actions"><button data-title-action="reset-lines" ${moved?'':'disabled'} title="Every line back to the film's place (${GAPS.top} / ${GAPS.bottom} px)">Reset line positions</button></div></details>`;}
   panel.addEventListener('input',event=>{const el=event.target;if(!el.dataset.gap)return;event.stopPropagation();const v=Number(el.value);if(el.value===''||!Number.isFinite(v))return;
     try{put(t=>{const typ=withGap(t,el.dataset.gap,Math.max(-400,Math.min(600,v)));if(typ)t.typography=typ;else delete t.typography;return t;},{key:'gap-'+selected+el.dataset.gap,renderAll:false});syncLineFields();status(`${el.dataset.gap==='top'?'Eyebrow to headline':'Headline to supporting text'}: ${v} px (the film's is ${GAPS[el.dataset.gap]}).`);}catch(error){status(error.message,true);}},true);
+  // On a touch screen: buttons that move or trim the selected title in steps (a short block is hard to hit with a finger).
+  const touch=()=>{try{return matchMedia('(pointer: coarse)').matches;}catch{return false;}};
+  const NUDGES=[['move','-0.5','Move −0.5 s'],['move','0.5','Move +0.5 s'],['in','-0.1','In −0.1 s'],['in','0.1','In +0.1 s'],['out','-0.1','Out −0.1 s'],['out','0.1','Out +0.1 s']];
+  const nudgeHtml=()=>touch()?`<div class="title-nudge" data-title-nudge>${NUDGES.map(([w,d,l])=>`<button type="button" data-title-action="nudge" data-nudge="${w}:${d}">${l}</button>`).join('')}</div>`:'';
+  function nudge(spec){
+    const t=item();if(!t)throw Error('Select a title first.');const [what,d]=spec.split(':'),step=Number(d),s=shot().seconds;let a=t.rel_in,b=t.rel_out;
+    if(what==='in')a=Math.max(0,Math.min(b-.5,a+step));else if(what==='out')b=Math.max(a+.5,Math.min(s,b+step));
+    else{const dd=Math.max(-a,Math.min(s-b,step));a+=dd;b+=dd;}
+    a=Math.round(a*1000)/1000;b=Math.round(b*1000)/1000;putTiming(t.id,a,b,`Title ${what==='move'?'moved':what==='in'?'in point trimmed':'out point trimmed'}: ${r2(a)}–${r2(b)} s.`);
+  }
   function panelHtml(){
     if(!has())return '<p class="director-hint">This chapter has no film titles.</p>';
     const t=item(),full=titles().length>=MAX_TITLES,addBtn=`<button data-title-action="add" ${full?'disabled':''} title="A new title at the playhead with placeholder copy">+ Add title</button>`;
@@ -245,7 +255,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
       <label>Title scale (%)<input name="ft-scale" type="number" min="10" max="500" step="1" value="${Math.round((t.scale??1)*100)}"></label><div class="director-grid"><label>X (film pixels)<input name="ft-x" type="number" step="1" value="${placeOf(t).x}"></label><label>Y (headline baseline)<input name="ft-y" type="number" step="1" value="${placeOf(t).anchor[1]}"></label></div><div class="director-actions"><button data-title-action="copy-layout">Copy layout</button><button data-title-action="paste-layout" ${copiedLayout?'':'disabled'}>Paste layout</button></div>${spacingControls(t)}<details open><summary>Text layers</summary><details open><summary>Eyebrow</summary><label>Eyebrow<input name="ft-eyebrow" maxlength="60" value="${escape(t.eyebrow)}"></label>${typeControls(t,'eyebrow')}</details>
       <details open><summary>Headline</summary><label>Headline<input name="ft-title" maxlength="140" value="${escape(t.title)}"></label>${typeControls(t,'title')}</details>
       <details open><summary>Supporting text</summary><label>Supporting text<textarea name="ft-detail" rows="2" maxlength="260">${escape(t.detail)}</textarea></label>${typeControls(t,'detail')}</details>
-      </details><div class="director-grid"><label>Comes in (seconds)<input name="ft-in" type="number" min="0" max="${shot().seconds}" step=".05" value="${r2(t.rel_in)}"></label><label>Goes out (seconds)<input name="ft-out" type="number" min="0" max="${shot().seconds}" step=".05" value="${r2(t.rel_out)}"></label></div>
+      </details><div class="director-grid"><label>Comes in (seconds)<input name="ft-in" type="number" min="0" max="${shot().seconds}" step=".05" value="${r2(t.rel_in)}"></label><label>Goes out (seconds)<input name="ft-out" type="number" min="0" max="${shot().seconds}" step=".05" value="${r2(t.rel_out)}"></label></div>${nudgeHtml()}
       <p class="director-hint title-rule-note">${R?.earliest!==undefined?`Film rule: titles come in at least 1.5 s after the cut, here from <b>${r2(R.earliest)} s</b>.`:'This chapter opens the film: no cut before it.'}${t.timed?' Your timing is kept as you set it.':''}</p>
       ${notes.map(x=>`<p class="title-warning" role="note">${escape(x)} The film keeps your timing.</p>`).join('')}
       <div class="director-actions">${R?.earliest!==undefined?`<button data-title-action="to-rule" title="Move the title so it comes in exactly at the 1.5 s-after-cut mark">Start at the 1.5 s mark</button>`:''}<button data-title-action="go" title="Move the playhead to where the whole title is in">Show title</button></div>
@@ -282,11 +292,12 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   },true);
   panel.addEventListener('click',event=>{
     const b=event.target.closest('[data-title-action]');if(!b)return;event.stopPropagation();
-    try{titleAction(b.dataset.titleAction,b.dataset.titleId);}catch(error){status(error.message,true);}
+    try{titleAction(b.dataset.titleAction,b.dataset.titleId,b.dataset.nudge);}catch(error){status(error.message,true);}
   });
-  function titleAction(name,id){
+  function titleAction(name,id,extra){
     if(name==='pick'){select(id);return;}
     if(name==='add'){addTitle();return;}
+    if(name==='nudge'){nudge(extra||'');return;}
     if(name==='paste'){pasteAtPlayhead();return;}
     const t=item();if(!t)return;
     if(name==='duplicate'){duplicateSelected();return;}

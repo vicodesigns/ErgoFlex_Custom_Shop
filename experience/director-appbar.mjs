@@ -17,30 +17,49 @@ export function appBarHtml(s) {
   const item = (action, label, hint = '', more = '') => `<button type="button" role="menuitem" data-action="${action}" ${more}><span>${esc(label)}</span>${hint ? `<small>${esc(hint)}</small>` : ''}</button>`;
   const check = (action, label, on, hint = '') => item(action, (on ? '✓ ' : '  ') + label, hint, `aria-checked="${!!on}" role="menuitemcheckbox"`);
   const history = (s.history || []).slice(0, 12);
-  return `<span class="ab-brand">ErgoFlex <b>Director</b></span>
+  // On a phone the bar keeps Undo / Redo, Export cut, Send to desk, Render and Panel; the rest lives in the ⋯ menu.
+  const proxy = (id, label, on) => `<button type="button" role="menuitem" data-ab-proxy="${id}" aria-pressed="${!!on}"><span>${esc(label)}</span></button>`;
+  const phoneItems = [
+    item('chapter-toggle', s.playing ? 'Pause chapter' : 'Play chapter'),
+    proxy('sound', s.sound ? 'Sound on' : 'Sound off (muted)', s.sound),
+    ...(s.lowres === null ? [] : [proxy('preview-quality', s.lowres ? 'Low-res on' : 'Low-res', s.lowres)]),
+    item('hold-camera', s.held ? '● Editing camera (on)' : 'Editing camera', 'keep the view where you put it'),
+    ...(s.overlays ? [
+      check('ov-guides', 'Thirds and title-safe guides', s.overlays.guides),
+      item('ov-crop', 'Crop guide: ' + (s.overlays.crop || 'off')),
+      item('ov-look', 'Film look: ' + (s.overlays.look || 'live')),
+      check('ov-lights', 'Light markers', s.overlays.lights),
+    ] : []),
+    check('demo-card', 'Guided demo card', s.demoCard),
+    proxy('director', 'Close the Director'),
+  ];
+  return `${s.phone ? '' : '<span class="ab-brand">ErgoFlex <b>Director</b></span>'}
     <div class="ab-film">${s.picker || `<strong class="ab-name" title="${esc(s.name)}">${esc(s.name)}</strong>`}</div>
     <div class="ab-group ab-history"><button type="button" class="ab-btn ab-icon" data-action="undo" aria-label="${esc(step('Undo', s.undo?.label))}" title="${esc(step('Undo', s.undo?.label))} (Ctrl+Z)" ${s.undo?.n ? '' : 'disabled'}>↶</button><button type="button" class="ab-btn ab-icon" data-action="redo" aria-label="${esc(step('Redo', s.redo?.label))}" title="${esc(step('Redo', s.redo?.label))} (Ctrl+Y)" ${s.redo?.n ? '' : 'disabled'}>↷</button></div>
     <span class="studio-sync" data-studio-sync>${s.studio || ''}</span><span class="saved-indicator${s.saved?.warn ? ' warn' : ''}" data-saved title="${esc(s.saved?.title || 'Draft kept in this browser')}">${esc(s.saved?.text || '')}</span>
     <span class="ab-spacer"></span>
-    <button type="button" class="ab-btn ab-play" data-action="chapter-toggle" aria-pressed="${!!s.playing}" ${s.busy ? 'disabled' : ''} title="Play / pause the chapter (Space)">${s.playing ? '❚❚ Pause chapter' : '▶ Play chapter'}</button>
-    <button type="button" class="ab-btn" data-ab-proxy="sound" aria-pressed="${!!s.sound}" title="Sound (Shift+M)">${s.sound ? '🔊 Sound' : '🔈 Muted'}</button>
-    ${s.lowres === null ? '' : `<button type="button" class="ab-btn" data-ab-proxy="preview-quality" aria-pressed="${!!s.lowres}" title="Reduce the preview resolution for smoother editing (the film is not affected)">${s.lowres ? 'Low-res on' : 'Low-res'}</button>`}
-    <button type="button" class="ab-btn ab-hold${s.held ? ' on' : ''}" data-action="hold-camera" aria-pressed="${!!s.held}" title="Editing camera (Shift+C): ${s.held ? 'ON: the view stays where you put it while the chapter plays or scrubs. Click: back to the film camera' : 'keep the view where you put it while the chapter plays or scrubs'}">${s.held ? '● Editing camera' : 'Editing camera'}</button>
+    ${s.phone ? '' : `<button type="button" class="ab-btn ab-play" data-action="chapter-toggle" aria-pressed="${!!s.playing}" ${s.busy ? 'disabled' : ''} title="Play / pause the chapter (Space)">${s.playing ? '❚❚ Pause chapter' : '▶ Play chapter'}</button>`}
+    ${s.phone ? '' : `<button type="button" class="ab-btn" data-ab-proxy="sound" aria-pressed="${!!s.sound}" title="Sound (Shift+M)">${s.sound ? '🔊 Sound' : '🔈 Muted'}</button>`}
+    ${s.phone ? '' : `${s.lowres === null ? '' : `<button type="button" class="ab-btn" data-ab-proxy="preview-quality" aria-pressed="${!!s.lowres}" title="Reduce the preview resolution for smoother editing (the film is not affected)">${s.lowres ? 'Low-res on' : 'Low-res'}</button>`}`}
+    ${s.phone ? '' : `<button type="button" class="ab-btn ab-hold${s.held ? ' on' : ''}" data-action="hold-camera" aria-pressed="${!!s.held}" title="Editing camera (Shift+C): ${s.held ? 'ON: the view stays where you put it while the chapter plays or scrubs. Click: back to the film camera' : 'keep the view where you put it while the chapter plays or scrubs'}">${s.held ? '● Editing camera' : 'Editing camera'}</button>`}
     <button type="button" class="ab-btn primary" data-action="save-export" title="Download this cut for the film (Ctrl+M); also keeps a copy in this browser">Export cut</button>
+    ${s.film ? '<button type="button" class="ab-btn ab-send" data-action="send-desk" title="Send this chapter to the desk, where the film takes it in (for a phone or tablet: Export cut downloads to the device)">Send to desk</button>' : ''}
     ${menu('render', 'Render ▾', 'Still image, preview video, final render', [
       item('render-still', 'Still image', 'Shift+R · this frame, full quality'),
       item('bake', 'Preview video', 'bake this chapter for smooth playback'),
       item('bake-all', 'Preview video, every chapter', '1080p'),
       ...(s.film ? [item('final-render', 'Final render…', 'on the render PC')] : []),
     ])}
-    ${s.overlays ? menu('overlays', 'Overlays ▾', 'What is drawn over the frame (Shift+O)', [
+    ${s.overlays && !s.phone ? menu('overlays', 'Overlays ▾', 'What is drawn over the frame (Shift+O)', [
       check('ov-guides', 'Thirds and title-safe guides', s.overlays.guides, 'G'),
       item('ov-crop', 'Crop guide: ' + (s.overlays.crop || 'off'), 'Shift+G · 9:16 · 1:1 · 4:5'),
       item('ov-look', 'Film look: ' + (s.overlays.look || 'live'), 'V · Live / Film look / Split'),
       check('ov-lights', 'Light markers', s.overlays.lights, 'Shift+L'),
       check('titles', 'Titles in the frame', s.titles),
     ]) : ''}
+    ${s.phone ? `<button type="button" class="ab-btn ab-panel" data-action="inspector" aria-pressed="${!!s.inspector}" title="Show or hide the inspector">Panel</button>` : ''}
     ${menu('more', '⋯', 'Cut settings, history, layout, report a problem', [
+      ...(s.phone ? phoneItems : []),
       item('autosaves', 'Autosaves…', 'Ctrl+Alt+S · earlier versions, kept on this computer'),
       item('cut-settings', 'Cut settings…', 'name, versions, import / export'),
       `<div class="ab-sub" role="group" aria-label="History"><p>History${history.length ? '' : ': nothing yet'}</p>${history.map((h, i) => `<button type="button" role="menuitem" data-ab-undo="${i + 1}" title="Undo back to before this step">${esc(h || 'Edit')}</button>`).join('')}</div>`,

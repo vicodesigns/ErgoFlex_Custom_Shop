@@ -44,7 +44,7 @@ assert.ok(!('sonar' in exported.shots[0]),'Export cut: a chapter without it has 
 assert.deepEqual(exported.shots[1].sonar,{radius:84,rings:5,x:6,z:-2},'Export cut carries it');
 assert.deepEqual(cleanCut(exported).shots[1].sonar,exported.shots[1].sonar,'and Import cut / a reload keeps it');
 const dir=src('experience/director.mjs');
-assert.match(dir,/function exportCut\(\)\{const text=JSON\.stringify\(\(\(c\)=>\(\{\.\.\.c,shots:c\.shots\.map\(s=>exportLighting\(/,'exportCut goes through cleanCut');
+assert.match(dir,/const exportText=\(\)=>JSON\.stringify\(\(\(c\)=>\(\{\.\.\.c,shots:c\.shots\.map\(s=>exportLighting\(/,'exportCut goes through cleanCut (exportText: the one serialisation Export cut and Send to desk share)');
 assert.match(dir,/cleanCut\(project,catalog\)\),null,2\)/);
 assert.match(dir,/sonar:'sonar'/,'the "what changed" list names it');assert.match(dir,/createSonarEditor\(/);assert.match(dir,/\$\{sonarEditor\.panel\(\)\}\$\{graphics\.panel\(\)\}/,'in the Graphics tab');
 // 3. the film shot
