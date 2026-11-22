@@ -46133,8 +46133,8 @@
     1288.6,
     573.8
    ],
-   "tris": 63169,
-   "bytes": 1494024,
+   "tris": 63113,
+   "bytes": 1492908,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -46167,8 +46167,8 @@
     1288.6,
     573.8
    ],
-   "tris": 63170,
-   "bytes": 1494132,
+   "tris": 63106,
+   "bytes": 1492692,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -46286,22 +46286,22 @@
    "file": "assets/props/people-mia-stand-work.glb",
    "anchor": "floor",
    "size": [
-    547.3,
+    529.5,
     1474.5,
     631.3
    ],
    "min": [
-    -262.6,
+    -254.1,
     0,
     -126.6
    ],
    "max": [
-    284.7,
+    275.4,
     1474.5,
     504.7
    ],
-   "tris": 57487,
-   "bytes": 1458532,
+   "tris": 57354,
+   "bytes": 1456328,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -46352,7 +46352,7 @@
    "file": "assets/props/people-mia-stretch.glb",
    "anchor": "floor",
    "size": [
-    426.8,
+    419.3,
     1798.8,
     305.7
    ],
@@ -46362,12 +46362,12 @@
     -140.7
    ],
    "max": [
-    235.8,
+    228.3,
     1798.8,
     165
    ],
-   "tris": 54633,
-   "bytes": 1439508,
+   "tris": 54865,
+   "bytes": 1439104,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -46385,22 +46385,22 @@
    "file": "assets/props/people-mia-stretch-open.glb",
    "anchor": "floor",
    "size": [
-    613,
+    606.6,
     1545.2,
-    347.1
+    344.2
    ],
    "min": [
-    -306.5,
+    -303.3,
     0,
-    -182.3
+    -179.4
    ],
    "max": [
-    306.5,
+    303.3,
     1545.2,
     164.8
    ],
-   "tris": 57504,
-   "bytes": 1455044,
+   "tris": 57299,
+   "bytes": 1451184,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -46451,22 +46451,22 @@
    "file": "assets/props/people-mia-white-cane.glb",
    "anchor": "floor",
    "size": [
-    468.2,
+    451.9,
     1508.4,
     1012.6
    ],
    "min": [
-    -223,
+    -211.5,
     0,
     -238.9
    ],
    "max": [
-    245.2,
+    240.4,
     1508.4,
     773.7
    ],
-   "tris": 57464,
-   "bytes": 1458424,
+   "tris": 57350,
+   "bytes": 1456408,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -46484,22 +46484,22 @@
    "file": "assets/props/people-mia-walk.glb",
    "anchor": "floor",
    "size": [
-    489,
+    478.1,
     1499.2,
     781.8
    ],
    "min": [
-    -252,
+    -245.5,
     0,
     -329.3
    ],
    "max": [
-    237,
+    232.6,
     1499.2,
     452.5
    ],
-   "tris": 57182,
-   "bytes": 1453492,
+   "tris": 57058,
+   "bytes": 1451184,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -46682,22 +46682,22 @@
    "file": "assets/props/people-mia-wheel-roll.glb",
    "anchor": "floor",
    "size": [
-    656.4,
+    650.8,
     1272.3,
     938.7
    ],
    "min": [
-    -328.2,
+    -325.4,
     0,
     -370
    ],
    "max": [
-    328.2,
+    325.4,
     1272.3,
     568.7
    ],
-   "tris": 63135,
-   "bytes": 1495044,
+   "tris": 63065,
+   "bytes": 1493592,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -46729,8 +46729,8 @@
     1302.8,
     579.3
    ],
-   "tris": 63206,
-   "bytes": 1494548,
+   "tris": 63146,
+   "bytes": 1492932,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
