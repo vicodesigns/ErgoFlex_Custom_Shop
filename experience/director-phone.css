@@ -48,11 +48,18 @@
 body.directing #director-timeline .workbench-toolbar button,body.directing #director-timeline .timeline-transport button,body.directing #director-timeline .timeline-zoom button,body.directing #director-timeline .magnet,body.directing #director-timeline .chapter-transport{min-height:44px!important;min-width:44px!important}
 body.directing #director-timeline .snap-control select{min-height:44px}
 
+/* (Windows e15d69ec) the inspector's tab buttons: director-theme.css pins them at 28 px with a :has() rule of higher weight */
+#director-panel .inspector-tabs:has([data-inspector-tab]) button{min-height:44px}
+/* Titles: blocks 48 px (46 px trim handles inside the border), a bigger row for layered titles */
+#director-timeline .timeline-content .title-clip{top:4px;height:48px;min-height:48px}
+#director-timeline .timeline-content .desk-lane-row.layered{--row-h:52px}
+#director-timeline .timeline-content .title-clip.selected .clip-resize{width:46px}
+
 /* ---------- B. the phone layout ---------- */
 body.directing.ef-phone{--ef-handle:52px;--ef-top:112px}
 body.directing.ef-phone.ef-landscape{--ef-dw:min(380px,42vw);--ef-tr:calc(var(--ef-dw) + 16px);--ef-reserve:calc(var(--ef-dw) + 56px);--ef-tl:clamp(200px,40dvh,340px);--ef-stage-h:calc(100dvh - var(--ef-top) - var(--ef-tl) - 18px)}
 body.directing.ef-phone.ef-landscape.inspector-hidden{--ef-dw:0px;--ef-tr:8px;--ef-reserve:0px}
-body.directing.ef-phone.ef-portrait{--ef-dw:0px;--ef-reserve:0px;--ef-stage-h:min(calc((100vw - 28px) * 9 / 16),calc((100dvh - var(--ef-top)) * .55));--ef-sheet-total:var(--ef-handle)}
+body.directing.ef-phone.ef-portrait{--ef-dw:0px;--ef-reserve:0px;--ef-stage-h:min(calc((100vw - 28px) * 9 / 16),calc((100dvh - var(--ef-top)) * .5));--ef-sheet-total:var(--ef-handle)}
 body.directing.ef-phone.ef-portrait.ef-sheet-half{--ef-sheet-total:calc(100dvh - var(--ef-top) - var(--ef-stage-h) - 10px)}
 body.directing.ef-phone.ef-portrait.ef-sheet-full{--ef-sheet-total:calc(100dvh - var(--ef-top))}
 
@@ -151,4 +158,32 @@ body.directing.ef-phone.ef-portrait.ef-sheet-peek.ef-peek-roomy #director-panel{
 /* the lane labels: a narrower column on a phone (it was 120 px plus padding) */
 body.directing.ef-phone #director-timeline .timeline-content{--track-label:104px}
 body.directing.ef-phone #director-timeline .timeline-content .desk-lane-label,body.directing.ef-phone #director-timeline .track-heading{padding:4px 6px;font-size:11px}
+
+/* ---------- E. Windows run on e15d69ec (884 x 1100, 1100 x 884, 697 x 800, 837 x 600) ---------- */
+/* the app bar: no long export note (it wrapped to three lines; the status line says it); a set-aside draft's buttons keep their own row */
+body.directing.ef-phone #director-appbar .film-fresh:not(:has(.film-fresh-choice)){display:none}
+body.directing.ef-phone #director-appbar .film-chapter-picker:has(.film-fresh-choice){flex-wrap:wrap}
+body.directing.ef-phone #director-appbar .film-fresh{flex:1 0 100%;font-size:12px}
+/* the "Free view (not saved)" pill: small, above the view buttons instead of over the tool rows */
+body.directing.ef-phone .nav-pill{left:auto;right:6px;top:auto;bottom:62px;transform:none;height:32px;padding:0 10px;font-size:12px;gap:6px}
+body.directing.ef-phone .nav-pill kbd{display:none}
+/* the Guided demo card, when it is opened on purpose: inside the stage's area, clear of the drawer's tab and its own close button */
+body.directing.ef-phone #demo{top:calc(var(--ef-top) + 10px);right:calc(var(--ef-reserve) + 64px);width:min(230px,36vw);padding:16px 14px;z-index:20}
+body.directing.ef-phone.ef-portrait #demo{right:12px}
+body.directing.ef-phone #demo #demo-title{font-size:20px}
+body.directing.ef-phone #demo #demo-detail{font-size:13px}
+body.directing.ef-phone #demo-close{top:4px;right:4px;width:44px;height:44px}
+/* the drawer's tab in the middle of the screen's edge, not up in the corner */
+body.directing.ef-phone.ef-landscape #ef-drawer-tab{top:calc(var(--ef-top) + (100dvh - var(--ef-top)) / 2 - 36px)}
+body.directing.ef-phone.ef-landscape{--ef-tl:clamp(200px,38dvh,340px)}
+/* a short landscape screen (the Fold folded out, about 840 x 600): the pickers share the bar's one row, the chevrons go (the
+   chapter picker still switches), "not exported" is a dot; the stage gets the height the second bar row took */
+@media (max-height:700px){
+body.directing.ef-phone.ef-landscape #director-appbar .ab-film{flex:1 1 220px;order:0}
+body.directing.ef-phone.ef-landscape #director-appbar .ab-film [data-action="film-prev"],body.directing.ef-phone.ef-landscape #director-appbar .ab-film [data-action="film-next"]{display:none}
+body.directing.ef-phone.ef-landscape #director-appbar .ab-film .film-chapter-picker label{min-width:96px}
+body.directing.ef-phone.ef-landscape #director-appbar .ab-film select{min-width:96px}
+body.directing.ef-phone.ef-landscape #director-appbar .film-dirty{font-size:0}
+body.directing.ef-phone.ef-landscape #director-appbar .film-dirty::before{content:'●';font-size:16px;color:#ffb347}
+}
 }

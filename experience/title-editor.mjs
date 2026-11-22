@@ -171,20 +171,24 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
       for(const x of list)if(d.group.includes(x.id)){const b=timeline.querySelector(`[data-title-clip="${x.id}"]`);if(b){b.style.left=x.rel_in/s*100+'%';const sm=b.querySelector('small');if(sm)sm.textContent=`${r2(x.rel_in)}–${r2(x.rel_out)}s`;}}
       dragFeedback(d,event);status(`${d.group.length} titles ${dd>=0?'+':''}${r2(dd)} s${snap?' · snapped to '+snap.name:''} · Alt: bypass snap`);return;}
     let a=o.rel_in,b=o.rel_out;
-    if(d.edge==='start')a=Math.max(0,Math.min(b-.5,o.rel_in+delta));else if(d.edge==='end')b=Math.max(a+.5,Math.min(s,o.rel_out+delta));
-    else{const dd=Math.max(-o.rel_in,Math.min(s-o.rel_out,delta));a=o.rel_in+dd;b=o.rel_out+dd;}
+    // (a drag follows the finger exactly; only the chapter's ends and the 0.5 s minimum stop it, and the status says so)
+    let stop='';
+    if(d.edge==='start'){const w=o.rel_in+delta;a=Math.max(0,Math.min(b-.5,w));stop=w<0?'the chapter start':w>b-.5?'the 0.5 s minimum':'';}
+    else if(d.edge==='end'){const w=o.rel_out+delta;b=Math.max(a+.5,Math.min(s,w));stop=w>s?'the chapter end':w<a+.5?'the 0.5 s minimum':'';}
+    else{const dd=Math.max(-o.rel_in,Math.min(s-o.rel_out,delta));a=o.rel_in+dd;b=o.rel_out+dd;stop=delta<-o.rel_in-1e-6?'the chapter start':delta>s-o.rel_out+1e-6?'the chapter end':'';}
+    d.stop=stop;
     a=Math.round(a*1000)/1000;b=Math.round(b*1000)/1000;d.candidate=[a,b];d.delta=d.edge==='end'?b-o.rel_out:a-o.rel_in;
     d.el.style.left=a/s*100+'%';d.el.style.width=(b-a)/s*100+'%';const small=d.el.querySelector('small');if(small)small.textContent=`${r2(a)}–${r2(b)}s`;
     const early=rule()?.earliest!==undefined&&a<rule().earliest-1e-6;d.el.classList.toggle('early',early);
     dragFeedback(d,event);
-    status(`${d.edge==='start'?'In':d.edge==='end'?'Out':'Title'} ${r2(a)}–${r2(b)} s · ${r2(b-a)} s on screen${early?' · before the 1.5 s-after-cut mark':''}${snap?' · snapped to '+snap.name:''} · Alt: bypass snap`);
+    status(`${d.edge==='start'?'In':d.edge==='end'?'Out':'Title'} ${r2(a)}–${r2(b)} s · ${r2(b-a)} s on screen${early?' · before the 1.5 s-after-cut mark':''}${stop?' · stopped at '+stop:''}${snap?' · snapped to '+snap.name:''} · Alt: bypass snap`);
   });
   function endDrag(event){
     if(!drag)return;const d=drag;drag=null;endDragFeedback(d);suppress=performance.now()+300;
     if(event.type==='pointercancel'){renderTimeline();return;}
     if(d.group&&d.moved&&d.candidate){const keep=[...multi];putList(d.candidate,{select:d.id});for(const id of keep)multi.add(id);renderTimeline();status(`${d.group.length} titles moved ${d.delta>=0?'+':''}${r2(d.delta)} s.`);return;}
     if(!d.moved||!d.candidate){select(d.id);return;}
-    onSelect();selected=d.id;showInspector('title',true);putTiming(d.id,d.candidate[0],d.candidate[1],d.edge?`Title ${d.edge==='start'?'in point':'out point'} trimmed: ${r2(d.candidate[0])}–${r2(d.candidate[1])} s.`:`Title moved to ${r2(d.candidate[0])}–${r2(d.candidate[1])} s.`);
+    onSelect();selected=d.id;showInspector('title',true);putTiming(d.id,d.candidate[0],d.candidate[1],d.edge?`Title ${d.edge==='start'?'in point':'out point'} trimmed: ${r2(d.candidate[0])}–${r2(d.candidate[1])} s${d.stop?' (stopped at '+d.stop+')':''}.`:`Title moved to ${r2(d.candidate[0])}–${r2(d.candidate[1])} s${d.stop?' (stopped at '+d.stop+')':''}.`);
   }
   timeline.addEventListener('pointerup',endDrag);timeline.addEventListener('pointercancel',endDrag);
   // Marquee (drag on empty lanes, director.mjs's own gesture): title blocks it crosses are picked as well, after the

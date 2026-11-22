@@ -75,13 +75,17 @@ const appbarOverlaps = () => ev(() => {
   return { n: items.length, out };
 });
 
+let demoSeen = false;
 async function layoutChecks(tag, landscape) {
   const bodyClasses = await body();
   check(/ef-phone/.test(bodyClasses) && bodyClasses.includes(landscape ? 'ef-landscape' : 'ef-portrait'), `${tag}: phone mode is on (${bodyClasses})`);
   check(await ev(() => matchMedia('(pointer: coarse)').matches), `${tag}: the page sees a coarse pointer (touch emulation)`);
   // the Guided demo card
-  const demo = await ev(() => { const d = document.getElementById('demo'); return { shown: !!d && getComputedStyle(d).display !== 'none' && d.getBoundingClientRect().width > 0 }; });
-  check(!demo.shown, `${tag}: the Guided demo card is hidden by default`);
+  // (the choice is remembered per device, so only the first visit shows the default; later visits start from what the last one left, normalised to closed)
+  const demoShown = () => ev(() => { const d = document.getElementById('demo'); return !!d && getComputedStyle(d).display !== 'none' && d.getBoundingClientRect().width > 0; });
+  if (!demoSeen) { check(!(await demoShown()), `${tag}: the Guided demo card is hidden by default`); demoSeen = true; }
+  else if (await demoShown()) { await tapSel('#director-appbar [data-ab-open="more"]'); await tapSel('#director-appbar [data-ab-menu="more"] [data-action="demo-card"]'); await wait(300); log('NOTE the card was open from the last size: closed it through the menu first'); }
+  check(!(await demoShown()), `${tag}: the Guided demo card is closed at the start of the checks`);
   // the view buttons
   const views = await ev(() => [...document.querySelectorAll('[data-nav-view]')].map(b => { const r = b.getBoundingClientRect(); return { id: b.dataset.navView, ok: r.width >= 43.5 && r.height >= 43.5 && r.left >= 0 && r.right <= innerWidth && r.top >= 0 && r.bottom <= innerHeight, w: Math.round(r.width), h: Math.round(r.height) }; }));
   check(views.length === 5 && views.every(v => v.ok), `${tag}: Film / Persp / Top / Front / Right are on screen and 44 px`, JSON.stringify(views));
@@ -104,7 +108,7 @@ async function layoutChecks(tag, landscape) {
   if (landscape && panel?.shown) check(apart(panel, tl, 1) && apart(panel, stage, 1), `${tag}: the drawer overlaps neither the stage nor the timeline`, JSON.stringify({ panel, stage, tl }));
   check(stage.w > 200 && stage.h > 110, `${tag}: the stage is a real size (${Math.round(stage.w)}x${Math.round(stage.h)})`);
   // tap targets and fields
-  const tiny = [...await small('#director-appbar .ab-btn, #director-appbar select'), ...await small('#director-timeline .timeline-transport button, #director-timeline .title-add, #director-timeline .timeline-zoom button, #director-timeline .magnet'), ...(panel?.shown ? await small('#director-panel [data-title-action], #director-panel .inspector-tabs button') : [])];
+  const tiny = [...await small('#director-appbar .ab-btn, #director-appbar select'), ...await small('#director-timeline .timeline-transport button, #director-timeline .title-add, #director-timeline .timeline-zoom button, #director-timeline .magnet, #director-timeline .track-palette button'), ...(panel?.shown ? await small('#director-panel [data-title-action], #director-panel .inspector-tabs button') : [])];
   check(tiny.length === 0, `${tag}: tap targets are at least 44 px`, tiny.join(' | '));
   // (Windows on 35e387d7: pickers a chevron only, the stage's two tool rows on top of each other, a big empty area, the toolbar off the edge)
   const pickers = await ev(() => [...document.querySelectorAll('#director-appbar .ab-film select')].map(e => Math.round(e.getBoundingClientRect().width)));
@@ -130,6 +134,10 @@ async function layoutChecks(tag, landscape) {
   await tapSel('#director-appbar [data-ab-menu="more"] [data-action="demo-card"]'); await wait(400);
   const shown = await ev(() => { const d = document.getElementById('demo'); return !!d && !d.hidden && getComputedStyle(d).display !== 'none'; });
   check(await ev(() => !document.body.classList.contains('ef-demo-closed')), `${tag}: ⋯ → Guided demo card opens the card again`, String(shown));
+  if (shown) {   // the card's own close button must be the topmost thing at its centre (the drawer's tab once covered it) and 44 px
+    const x = await ev(() => { const b = document.getElementById('demo-close'), r = b.getBoundingClientRect(), t = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return { top: t === b || b.contains(t), w: r.width, h: r.height }; });
+    check(x.top && x.w >= 43.5 && x.h >= 43.5, `${tag}: the card's × is not covered by anything and is 44 px`, JSON.stringify(x));
+  }
   await shot(`${tag}-demo-open`);
   if (await ev(() => document.getElementById('demo-close') && getComputedStyle(document.getElementById('demo-close')).display !== 'none' && getComputedStyle(document.getElementById('demo')).display !== 'none')) {
     await tapSel('#demo-close'); await wait(300);
@@ -159,7 +167,9 @@ async function inspectorChecks(tag, landscape) {
   } else {
     const peek = await rectOf('#director-panel'), handle = await onScreen('#ef-sheet-handle');
     check(/ef-sheet-peek/.test(await body()) && !peek.shown, `${tag}: the sheet starts at peek (only the handle)`, await body());
-    check(handle.found && handle.shown && handle.inside && handle.h >= 43.5 && handle.b >= (await ev(() => innerHeight)) - 1, `${tag}: the handle is on screen at the bottom and 44 px tall`, JSON.stringify(handle));
+    check(handle.found && handle.shown && handle.inside && handle.h >= 43.5, `${tag}: the handle is on screen and at least 44 px tall (it is 52 px)`, JSON.stringify(handle));
+    // (at peek the sheet may show the inspector under the handle when there is room: then the panel ends at the bottom, else the handle does)
+    { const H = await ev(() => innerHeight), pb = peek.shown ? peek.b : handle.b; check(pb >= H - 1, `${tag}: the peek sheet reaches the bottom of the screen`, JSON.stringify({ peek, handle, H })); }
     const tlPeek = await rectOf('#director-timeline'), stage = await rectOf('#stage');
     check(tlPeek.b <= handle.y + 1 && tlPeek.y >= stage.b - 1, `${tag}: at peek the stage, the timeline and the handle stack without overlap`, JSON.stringify({ stage, tlPeek, handle }));
     await shot(`${tag}-sheet-peek`);
@@ -202,48 +212,58 @@ async function titleChecks(tag, landscape) {
   check(await ev(() => !document.querySelector('[data-lane-body="titles"]')?.hidden), `${tag}: the Titles lane is unfolded on a phone`);
   if (await ev(() => !!document.querySelector('[data-lane-body="titles"]')?.hidden)) { await tapSel('#director-timeline [data-lane-group="titles"] [data-action="group-toggle"]'); await wait(400); }
   await ev(() => document.querySelector('[data-title-clip]')?.scrollIntoView({ block: 'center', inline: 'center' })); await wait(250);
-  const first = (await blocks())[0];
+  const first = (await blocks())[0], titlesAtStart = (await blocks()).length;
   check(!!first, `${tag}: the chapter has a title block in the Titles lane`);
   if (!first) return;
+  // (every size starts from the chapter as loaded: the edits of the last size are undone at its end; the title is followed by its id)
+  const T = () => blocks().then(l => l.find(b => b.id === first.id));
+  const sel0 = `[data-title-clip="${first.id}"]`;
   // tap = select
-  await tapSel('[data-title-clip]');
-  let bl = (await blocks())[0];
+  await tapSel(sel0);
+  const bl = await T();
   check(bl.sel && /Title selected/.test(await statusText()), `${tag}: tapping a block selects it`, await statusText());
   const opened = /ef-sheet-half/.test(await body()) || (landscape && !/inspector-hidden/.test(await body()));
   check(opened, `${tag}: selecting a title brings its inspector up`, await body());
   await shot(`${tag}-title-selected`);
   await closeInspector(landscape);
   const handles = await ev(() => { const h = document.querySelectorAll('[data-title-clip].selected .clip-resize'); return [...h].map(e => { const r = e.getBoundingClientRect(); return [e.dataset.resize, Math.round(r.width), Math.round(r.height)]; }); });
-  check(handles.length === 2 && handles.every(([, w, h]) => w >= 44 && h >= 44), `${tag}: the selected title's trim handles are 44 px`, JSON.stringify(handles));
+  check(handles.length === 2 && handles.every(([, w, h]) => w >= 44 && h >= 44), `${tag}: the selected title's trim handles are at least 44 px`, JSON.stringify(handles));
   // drag = move
-  const t0 = times((await blocks())[0].text), c = await centre('[data-title-clip]');
-  const laneW = await ev(() => document.querySelector('[data-title-lane]').getBoundingClientRect().width);
+  const t0 = times((await T()).text), c = await centre(sel0);
+  const laneW = await ev(() => document.querySelector('[data-title-lane]').getBoundingClientRect().width), secs = await ev(() => Number(document.querySelector('[name="timeline-seconds"]').max));
+  const want = 0.12 * secs;   // the finger moves 12 % of the lane: the block follows it exactly (snap to the 0.1 s grid / the playhead / other edges: 0.25 s)
   await drag(c, [c[0] + laneW * 0.12, c[1]]);
-  const t1 = times((await blocks())[0].text);
-  check(t1[0] > t0[0] + 0.3 && Math.abs((t1[1] - t1[0]) - (t0[1] - t0[0])) < 0.06, `${tag}: a finger drag moves the block (${t0.join('–')} -> ${t1.join('–')})`, await statusText());
+  const t1 = times((await T()).text);
+  check(Math.abs(t1[0] - (t0[0] + want)) < 0.25 && Math.abs((t1[1] - t1[0]) - (t0[1] - t0[0])) < 0.06, `${tag}: a finger drag moves the block by what the finger moved (${t0.join('–')} + ${want.toFixed(2)} s -> ${t1.join('–')})`, await statusText());
   // trim the end
-  const he = await centre('[data-title-clip] .clip-resize[data-resize="end"]');
+  const he = await centre(sel0 + ' .clip-resize[data-resize="end"]');
   await drag(he, [he[0] - laneW * 0.08, he[1]]);
-  const t2 = times((await blocks())[0].text);
-  check(t2[1] < t1[1] - 0.2 && Math.abs(t2[0] - t1[0]) < 0.01, `${tag}: dragging the end handle trims the out point (${t1.join('–')} -> ${t2.join('–')})`, await statusText());
-  const hs = await centre('[data-title-clip] .clip-resize[data-resize="start"]');
+  const t2 = times((await T()).text);
+  check(Math.abs(t2[1] - (t1[1] - 0.08 * secs)) < 0.25 && Math.abs(t2[0] - t1[0]) < 0.01, `${tag}: dragging the end handle trims the out point (${t1.join('–')} -> ${t2.join('–')})`, await statusText());
+  const hs = await centre(sel0 + ' .clip-resize[data-resize="start"]');
   await drag(hs, [hs[0] + laneW * 0.05, hs[1]]);
-  const t3 = times((await blocks())[0].text);
-  check(t3[0] > t2[0] + 0.15 && Math.abs(t3[1] - t2[1]) < 0.01, `${tag}: dragging the start handle trims the in point (${t2.join('–')} -> ${t3.join('–')})`, await statusText());
+  const t3 = times((await T()).text);
+  check(Math.abs(t3[0] - (t2[0] + 0.05 * secs)) < 0.25 && Math.abs(t3[1] - t2[1]) < 0.01, `${tag}: dragging the start handle trims the in point (${t2.join('–')} -> ${t3.join('–')})`, await statusText());
   await shot(`${tag}-title-trimmed`);
   // undo / redo buttons
   await tapSel('#director-appbar [data-action="undo"]');
-  const t4 = times((await blocks())[0].text);
+  const t4 = times((await T()).text);
   check(Math.abs(t4[0] - t2[0]) < 0.01 && Math.abs(t4[1] - t2[1]) < 0.01, `${tag}: Undo (a visible button) takes the last trim back`, t4.join('–'));
   await tapSel('#director-appbar [data-action="redo"]');
-  const t5 = times((await blocks())[0].text);
+  const t5 = times((await T()).text);
   check(Math.abs(t5[0] - t3[0]) < 0.01, `${tag}: Redo puts it back`, t5.join('–'));
+  // a drag past the chapter's end stops there and says so
+  { const hb = await centre(sel0), before = times((await T()).text); await drag(hb, [hb[0] + laneW * 0.6, hb[1]], { steps: 10 });
+    const st = await statusText(), after = times((await T()).text);
+    check(Math.abs(after[1] - secs) < 0.02 && /stopped at the chapter end/.test(st), `${tag}: dragging past the end stops at the chapter end and says so (${before.join('–')} -> ${after.join('–')})`, st);
+    await tapSel('#director-appbar [data-action="undo"]'); }
   // scrub with a finger
   const ruler = await ev(() => { document.querySelector('.time-ruler').scrollIntoView({ block: 'nearest' }); const r = document.querySelector('.time-ruler').getBoundingClientRect(); return [r.x, r.y + r.height / 2, r.width]; });
   const before = await ev(() => Number(document.querySelector('[name="timeline-seconds"]').value));
-  await drag([ruler[0] + ruler[2] * 0.2, ruler[1]], [ruler[0] + ruler[2] * 0.7, ruler[1]]);
+  const at = f => f * secs, from = before > at(.5) ? 0.2 : 0.8, to = before > at(.5) ? 0.35 : 0.65;   // (an end point well away from where the playhead is)
+  await drag([ruler[0] + ruler[2] * from, ruler[1]], [ruler[0] + ruler[2] * to, ruler[1]]);
   const after = await ev(() => Number(document.querySelector('[name="timeline-seconds"]').value));
-  check(Math.abs(after - before) > 2, `${tag}: a finger on the ruler scrubs the playhead (${before} -> ${after} s)`);
+  check(Math.abs(after - at(to)) < 0.5, `${tag}: a finger on the ruler scrubs the playhead to where it ended (${before} -> ${after} s, aimed at ${at(to).toFixed(1)})`);
   // play / pause
   const label = () => ev(() => document.querySelector('#director-timeline [data-action="chapter-toggle"]')?.textContent.trim() || '');
   await tapSel('#director-timeline [data-action="chapter-toggle"]'); await wait(800);
@@ -283,7 +303,7 @@ async function titleChecks(tag, landscape) {
     await tapSel('#director-appbar [data-action="send-desk"]');
     await page.waitForFunction(() => /Sent to the desk|Could not|refused/.test(document.querySelector('#director-panel [data-status]')?.textContent || ''), { timeout: 20000 }).catch(() => {});
     const st = await statusText(); await shot(`${tag}-sent`);
-    check(/Sent to the desk/.test(st), `${tag}: Send to desk says "Sent to the desk"`, st);
+    check(/^Sent to the desk: 1 chapter, \d+ s/.test(st), `${tag}: Send to desk says "Sent to the desk: 1 chapter, N s" (singular)`, st);
     const files = fs.readdirSync(inbox).filter(f => /^Film-chapter-.*\.json$/.test(f));
     check(files.length === before + 1 && files.length >= 1, `${tag}: one Film-chapter file appeared in the scratch Downloads`, JSON.stringify(fs.readdirSync(inbox)));
     if (files.length) {
@@ -302,15 +322,23 @@ async function titleChecks(tag, landscape) {
   await tapSel('#director-appbar [data-action="undo"]');
   check((await blocks()).length === nb, `${tag}: Undo brings the deleted title back`);
   await closeInspector(landscape);
+  // back to the chapter as loaded for the next size: every step of this size undone by the Undo button
+  for (let i = 0; i < 80 && await ev(() => !document.querySelector('#director-appbar [data-action="undo"]')?.disabled); i++) await tapSel('#director-appbar [data-action="undo"]');
+  check((await blocks()).length === titlesAtStart, `${tag}: the edits are undone again (${(await blocks()).length} title(s), ${titlesAtStart} at the start)`);
 }
 
+// A two-finger pinch on the stage is the 3D view's own zoom (the orbit controls take it: that is the editor, not the page).
+// The page itself is pinched over the app bar. The Director has no touchstart / touchmove / gesture handler, the viewport
+// meta has no user-scalable=no / maximum-scale and nothing but blocks, handles, keys and the ruler has touch-action:none
+// (tests/fold-titles-test.mjs checks those); if the emulation still cannot zoom the page, this check says so by failing.
 async function pinchCheck(tag) {
+  const bar = await rectOf('#director-appbar'), px = Math.round(bar.x + bar.w / 2), py = Math.round(bar.y + bar.h / 2);
   const scale0 = await ev(() => visualViewport.scale);
-  await cdp.send('Input.synthesizePinchGesture', { x: 200, y: 400, scaleFactor: 1.6, relativeSpeed: 300, gestureSourceType: 'touch' }).catch(e => log('NOTE pinch gesture:', e.message));
+  await cdp.send('Input.synthesizePinchGesture', { x: px, y: py, scaleFactor: 1.6, relativeSpeed: 300, gestureSourceType: 'touch' }).catch(e => log('NOTE pinch gesture:', e.message));
   await wait(500);
   const scale1 = await ev(() => visualViewport.scale);
   check(scale1 > scale0 + 0.1, `${tag}: the page can be pinch-zoomed (visualViewport.scale ${scale0} -> ${scale1})`);
-  await cdp.send('Input.synthesizePinchGesture', { x: 200, y: 400, scaleFactor: 1 / 1.6, relativeSpeed: 300, gestureSourceType: 'touch' }).catch(() => {});
+  await cdp.send('Input.synthesizePinchGesture', { x: px, y: py, scaleFactor: 1 / 1.6, relativeSpeed: 300, gestureSourceType: 'touch' }).catch(() => {});
   await wait(500);
 }
 
