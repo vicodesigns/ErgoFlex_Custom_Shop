@@ -1,7 +1,7 @@
 import {createTimelineHints,timelineShortcuts} from './timeline-hints.mjs';
 import {resolve as resolveKey,targetKind,changedHint,effectiveActions} from './director-actions.mjs';
 import {createPalette} from './command-palette.mjs';
-import {appBarHtml,statusBarHtml,wireMenus} from './director-appbar.mjs';
+import {appBarHtml,statusBarHtml,wireMenus,cutChapterSheetHtml} from './director-appbar.mjs';
 import {setSpaceAll,spaceNow} from './gumball.mjs';
 import {enhanceNumberFields} from './number-fields.mjs';
 import {createContextMenu} from './context-menu.mjs';
@@ -396,7 +396,22 @@ export function mountDirector(bridge,catalog,initial){
       status(`“${name}” is ready · opening it…`);goFilm({...target,cut:name});
     }catch(error){status('No new cut: '+error.message,true);}
   });
-  function renderFilm(){for(const el of document.querySelectorAll('[data-film-picker]'))el.outerHTML=filmPicker();syncTransport();}
+  function renderFilm(){for(const el of document.querySelectorAll('[data-film-picker]'))el.outerHTML=filmPicker();syncTransport();if(phoneMode?.layout())renderAppBar();}
+  // The phone's one place for the cut and the chapter (director-appbar.mjs switchButton / cutChapterSheetHtml): a sheet over the stage, built when it opens.
+  const ccSheet=document.createElement('div');ccSheet.id='ef-cc-sheet';ccSheet.hidden=true;document.body.append(ccSheet);
+  const ccData=()=>{const i=filmIndex(),mine=myCut();return {cuts:filmCuts?.map(c=>({id:c.id,name:c.name}))||[],mine:mine?.id??null,chapters:filmChapters?filmChapters.map((c,n)=>({n,label:filmChapterLabel(c)})):null,index:i,error:filmError,notice:fresh.noticeHTML(),canDuplicate:!!filmCuts?.length};};
+  const ccLabel=()=>{const i=filmIndex(),c=filmChapters?.[i];return `${myCut()?.name||filmCuts?.find(x=>x.dir===cutDir)?.name||project.name}${c?' · '+filmChapterLabel(c):''}`;};
+  function ccClose(){if(ccSheet.hidden)return;ccSheet.hidden=true;ccSheet.innerHTML='';document.querySelector('#director-appbar [data-action="cc-open"]')?.focus?.({preventScroll:true});}
+  function ccOpen(){ccSheet.innerHTML=cutChapterSheetHtml(ccData());ccSheet.hidden=false;ccSheet.querySelector('[aria-current="true"]')?.scrollIntoView({block:'center'});}
+  addEventListener('keydown',event=>{if(event.key==='Escape'&&!ccSheet.hidden){event.preventDefault();ccClose();}},true);
+  ccSheet.addEventListener('click',event=>{
+    const t=event.target.closest('button,[data-cc-close]');if(!t)return;
+    if(t.hasAttribute('data-cc-close')){ccClose();return;}
+    if(t.dataset.ccCut!==undefined){const id=t.dataset.ccCut;ccSheet.hidden=true;ccSheet.innerHTML='';if(id===(myCut()?.id??null)&&id!=='__new')return;switchCut(id);return;}
+    if(t.dataset.ccChapter!==undefined){ccSheet.hidden=true;ccSheet.innerHTML='';switchFilm(Number(t.dataset.ccChapter));return;}
+    if(t.dataset.ccStep!==undefined){ccSheet.hidden=true;ccSheet.innerHTML='';action(Number(t.dataset.ccStep)<0?'film-prev':'film-next');return;}
+    if(t.dataset.action){ccSheet.hidden=true;ccSheet.innerHTML='';action(t.dataset.action);}
+  });
   if(film)fetch('/exports/film-cuts.json',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(v=>{filmCuts=Array.isArray(v?.cuts)?v.cuts.filter(c=>c&&typeof c.id==='string'&&typeof c.name==='string'&&typeof c.dir==='string'&&typeof c.chapters==='string'):null;},()=>{}).finally(()=>renderFilm());
   if(film)loadFilmChapters(film.film).then(list=>{filmChapters=list;filmError='';studioSync.remember(list[filmIndex()]);},error=>{filmError='Film chapters unavailable: '+error.message;}).finally(renderFilm);
   const switcher=document.createElement('dialog');switcher.id='film-switch';switcher.setAttribute('aria-labelledby','film-switch-title');document.body.append(switcher);
@@ -1339,7 +1354,8 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   }
   function exportCut(){const text=exportText(),url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=(project.name.replace(/[^a-z0-9]+/gi,'-')||'client-cut')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);exported=signature();syncFilm();status(fresh.on?'Cut exported: the film takes it in from Downloads. Your changes stay in this browser until it has.':'Cut exported. Import it in Director Mode on another browser.');fresh.exported(project,text);return text;}
   async function action(name,index){
-    if(name==='hold-camera'){setHold(!held);return;}   // (the app bar's and the pose bar's button)
+    if(name==='hold-camera'){setHold(!held);return;}
+    if(name==='cc-open'){ccOpen();return;}   // (the app bar's and the pose bar's button)
     if(name==='keys-panel'){keysPanel.toggle();return;}
     if(name==='report-problem'){reportDialog.open();return;}
     if(name==='autosaves'){autosave.open();return;}
@@ -1985,7 +2001,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     if(appbar.querySelector('.ab-pop:not([hidden])')||appbar.contains(document.activeElement)&&document.activeElement.matches('select'))return;   // (not while a menu or a select is open)
     const st=bridge.playback(),q=document.getElementById('preview-quality');
     appbar.innerHTML=appBarHtml({saved:savedNow(),picker:filmPicker(),name:project.name,undo:{n:undo.length,label:undoLabels.at(-1)?editLabel(undoLabels.at(-1)):''},redo:{n:redo.length,label:redoLabels.at(-1)?editLabel(redoLabels.at(-1)):''},
-      studio:studioSync.html(),playing:st.playing&&st.index===selected,busy:st.busy,sound:pressed('sound'),lowres:q&&!q.hidden?pressed('preview-quality'):null,film:!!film,phone:phoneMode?.layout()!=null,demoCard:phoneMode?.demoOpen(),
+      studio:studioSync.html(),playing:st.playing&&st.index===selected,busy:st.busy,sound:pressed('sound'),lowres:q&&!q.hidden?pressed('preview-quality'):null,film:!!film,phone:phoneMode?.layout()!=null,cutChapter:film?{label:ccLabel(),dirty:unexported(),choice:/film-fresh-choice/.test(fresh.noticeHTML())}:null,demoCard:phoneMode?.demoOpen(),
       history:[...undoLabels].reverse().map(editLabel),titles:film&&titleEditor.has()?titleEditor.shown():document.body.classList.contains('preview-titles'),chapters:!timeline.classList.contains('chapters-hidden'),
       inspector:phoneMode?.layout()==='portrait'?phoneMode.sheet()!=='peek':!document.body.classList.contains('inspector-hidden'),timeline:!document.body.classList.contains('timeline-hidden'),
       held,overlays:{guides:!!document.querySelector('.film-look.guides'),crop:CROPS?.[cropAt]?.[0]||null,look:filmLook?.mode?.()||null,lights:!!sceneLights.showing?.()}});
@@ -2325,7 +2341,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       }catch(error){picker.querySelector('[data-picker-status]').textContent=error.message;}
     }
   });
-  function setOpen(value){deskEditor.stop();if(bridge.bakeState().baking&&!value){status('Cancel the bake before closing the editor.');return;}open=value;nav.setActive(open);syncHold();if(!open){camTransitions.hide();keysPanel.close();review(false);}document.body.classList.toggle('directing',open);document.body.classList.toggle('df-shell',open&&shellOn());appbar.hidden=!open||!shellOn();document.body.classList.toggle('film-frame',open&&!!film);filmLook?.visible(open);panel.hidden=timeline.hidden=!open;bridge.editMode(open);titleEditor.sync();if(open){if(matchMedia('(max-width:700px)').matches)document.body.classList.add('inspector-hidden');render();load().then(()=>{
+  function setOpen(value){deskEditor.stop();if(bridge.bakeState().baking&&!value){status('Cancel the bake before closing the editor.');return;}open=value;nav.setActive(open);syncHold();if(!open){ccClose();camTransitions.hide();keysPanel.close();review(false);}document.body.classList.toggle('directing',open);document.body.classList.toggle('df-shell',open&&shellOn());appbar.hidden=!open||!shellOn();document.body.classList.toggle('film-frame',open&&!!film);filmLook?.visible(open);panel.hidden=timeline.hidden=!open;bridge.editMode(open);titleEditor.sync();if(open){if(matchMedia('(max-width:700px)').matches)document.body.classList.add('inspector-hidden');render();load().then(()=>{
       const url=new URL(location.href);
       if(open&&url.searchParams.get('cinematic')==='1'&&bridge.ready()){
         url.searchParams.delete('cinematic');history.replaceState(null,'',url);action('cinematic-pass');

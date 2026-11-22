@@ -12,6 +12,21 @@ const step = (verb, l) => l ? `${verb} ${l}` : verb;
 
 // s: { picker (html), name, undo: {n, label}, redo: {n, label}, studio (html), playing, busy, sound, lowres (null: not
 // offered), film (a film cut: Final render), history: [label…] newest first, titles, chapters, inspector, timeline }
+// A phone has ONE place for the cut and the chapter: this button, first in the bar. It opens the sheet below (cutChapterSheetHtml),
+// which has both lists, the previous / next chapter and the stale-draft choice. No <select> in the bar: a native select popup is
+// lost when the bar is rebuilt, and the pickers were found in two places.
+export function switchButton(c) {
+  return `<button type="button" class="ab-btn ab-switch${c.choice ? ' needs-choice' : ''}" data-action="cc-open" aria-haspopup="dialog" aria-label="Cut and chapter: ${esc(c.label)}. Tap to change."><span class="ab-switch-label">${esc(c.label)}</span><span class="film-dirty" data-film-dirty title="Edited since the last Export cut" ${c.dirty ? '' : 'hidden'}>●</span><span class="ab-switch-caret" aria-hidden="true">▾</span></button>`;
+}
+// c: { cuts: [{id, name}], mine: id | null, chapters: [{n, label}] | null, index, error, notice (html), canDuplicate }
+export function cutChapterSheetHtml(c) {
+  const list = (items, attr, cur) => items.map(i => `<button type="button" ${attr}="${esc(i.id ?? i.n)}" ${(i.id ?? i.n) === cur ? 'aria-current="true"' : ''}>${esc(i.name ?? i.label)}</button>`).join('');
+  const cuts = c.cuts?.length ? `<h3>Cut</h3><div class="cc-list" data-cc-cuts>${list(c.cuts, 'data-cc-cut', c.mine)}${c.canDuplicate ? '<button type="button" data-cc-cut="__new">＋ Duplicate this cut…</button>' : ''}</div>` : '';
+  const chapters = c.chapters
+    ? `<h3>Chapter</h3><div class="cc-step"><button type="button" data-cc-step="-1" ${c.index <= 0 ? 'disabled' : ''}>‹ Previous chapter</button><button type="button" data-cc-step="1" ${c.index >= c.chapters.length - 1 ? 'disabled' : ''}>Next chapter ›</button></div><div class="cc-list" data-cc-chapters>${list(c.chapters, 'data-cc-chapter', c.index)}</div>`
+    : `<h3>Chapter</h3><p class="cc-note">${esc(c.error || 'Loading film chapters…')}</p>`;
+  return `<div class="cc-scrim" data-cc-close></div><div class="cc-card" role="dialog" aria-modal="true" aria-label="Cut and chapter"><div class="cc-head"><b>Cut · Chapter</b><button type="button" data-cc-close aria-label="Close">✕</button></div>${c.notice || ''}${cuts}${chapters}</div>`;
+}
 export function appBarHtml(s) {
   const menu = (id, label, title, items) => `<div class="ab-menu" data-ab-menu="${id}"><button type="button" class="ab-btn" data-ab-open="${id}" aria-haspopup="menu" aria-expanded="false" title="${esc(title)}">${label}</button><div class="ab-pop" role="menu" hidden>${items.join('')}</div></div>`;
   const item = (action, label, hint = '', more = '') => `<button type="button" role="menuitem" data-action="${action}" ${more}><span>${esc(label)}</span>${hint ? `<small>${esc(hint)}</small>` : ''}</button>`;
@@ -34,7 +49,7 @@ export function appBarHtml(s) {
     proxy('director', 'Close the Director'),
   ];
   return `${s.phone ? '' : '<span class="ab-brand">ErgoFlex <b>Director</b></span>'}
-    <div class="ab-film">${s.picker || `<strong class="ab-name" title="${esc(s.name)}">${esc(s.name)}</strong>`}</div>
+    <div class="ab-film">${s.phone && s.cutChapter ? switchButton(s.cutChapter) : s.picker || `<strong class="ab-name" title="${esc(s.name)}">${esc(s.name)}</strong>`}</div>
     <div class="ab-group ab-history"><button type="button" class="ab-btn ab-icon" data-action="undo" aria-label="${esc(step('Undo', s.undo?.label))}" title="${esc(step('Undo', s.undo?.label))} (Ctrl+Z)" ${s.undo?.n ? '' : 'disabled'}>↶</button><button type="button" class="ab-btn ab-icon" data-action="redo" aria-label="${esc(step('Redo', s.redo?.label))}" title="${esc(step('Redo', s.redo?.label))} (Ctrl+Y)" ${s.redo?.n ? '' : 'disabled'}>↷</button></div>
     <span class="studio-sync" data-studio-sync>${s.studio || ''}</span><span class="saved-indicator${s.saved?.warn ? ' warn' : ''}" data-saved title="${esc(s.saved?.title || 'Draft kept in this browser')}">${esc(s.saved?.text || '')}</span>
     <span class="ab-spacer"></span>
