@@ -1,6 +1,6 @@
 # Film work board
 
-Snapshot written 2026-11-21 so work can be resumed if credits run out. A fresh session: read this, then `git log -15`, then the memory index (MEMORY.md).
+Snapshot updated 2026-11-21 (late evening; credits low) so work can be resumed if credits run out. A fresh session: read this, then `git log -15`, then the memory index (MEMORY.md).
 
 ## Rules from Vico
 - Agents are Sonnet 5.5; Opus 5.5 only after asking him.
@@ -46,3 +46,47 @@ Snapshot written 2026-11-21 so work can be resumed if credits run out. A fresh s
 - Thumb control and pose-key selection: Curl or stretch the thumb in pose mode. Click a pose-key diamond in the People tab to select it. [Director, Merged]
 - Housekeeping: Older full films and finished worktrees deleted. Disk is fine for now. All work committed and pushed with notes. [Repo]
 
+## Resume guide
+
+RESUME GUIDE (written 2026-11-21 ~21:30 PST, main = a352dd00 + later snapshot commits; HEAD = origin/video/cinematic-intro-hq = origin/staging/director-merge)
+
+WHO IS WHO
+- org = the Claude Code session on Vico's desk (main checkout /home/ergo/ErgoFlex_Custom_Shop, branch video/cinematic-intro-hq, staging branch staging/director-merge). Coordinates, verifies, merges, keeps this board and docs/work-board/STATUS.md current.
+- ui = Director UX session on the desk (makes its own worktrees ~/ErgoFlex_Custom_Shop_<Name>WT). Does Director screens, Fold touch mode, keyboard tray UI/data.
+- 3dmodeling = Claude session on the Windows render PC (reached via Remote Control / cross-session message). Runs engineer agents (max 2 at once, GPU only through its lock), all renders, stills, clips and browser e2e. The render watcher renders queued jobs.
+- Codex = separate agent on the desk making people/model work (faces etc.). Its files appear uncommitted in the main checkout; commit them with a note that it is Codex's work once quiet 40+ min.
+
+VICO'S STANDING RULES
+1. Merge finished, tested branches as they arrive, even when he does not answer (push video/cinematic-intro-hq, then HEAD:staging/director-merge; confirm HEAD = origin = staging and curl localhost:3000 = 200). Run the branch's tests AFTER merging into main, not before.
+2. Agents are Sonnet 5.5. Opus 5.5 only after asking Vico first.
+3. Render-epoch bumps and queueing a film need his say, EXCEPT epoch 13 (all-metal aluminium look) which he approved; Codex faces ride on it. Epoch 13 is NOT yet written in tools/experience/render-epoch.txt: it arrives with eng/desk-aluminium-look (the epoch line should mention BOTH the all-metal look and Codex's cast faces).
+4. Do not delete his data. "Enough space, do not delete anything else for now."
+5. Keep this board + STATUS.md updated; show him stills for anything he must look at (SendUserFile to his phone; desk receiver rejects .mp3/.m4a names, use .mp4).
+6. Engineering/rendering goes to Windows (3dmodeling); the desk has little RAM/disk: no browser e2e, no long Director loads, people builds --jobs 1.
+
+STATE OF THE FILM
+- Final 4K of the seated 3rd cut (exports/cinematic-intro-cut-vicos-3rd-cut, 240.328 s) is delivered and reviewed ("awesome"). A NEXT film is wanted but waits for Vico's go (see below).
+- Next film will carry: epoch 13 (all-metal look; moves the nine room chapters, so nearly a full render), Codex faces (all rooms' people), chapter 1 foot light (data), new score (re-finish only), Rise phone/ring fix, Commons redwoods, storage RC remote, Create shelves, music walk, media speakers as they land.
+- To queue a film when Vico says go: make a fresh cut handoff branch (temp worktree ~/ErgoFlex_Custom_Shop_CutHandoffWT, rsync excluding score/, *.wav, screens/*.mp4, screens/edl; git add -f; push cut/... branch; remove worktree), then RENDER_REQ_IMPORT_WAIT=0 bash tools/experience/render-request.sh <request.json> (request: {v:1, scope:"film", chapter:"rise", resolution:"4K", cut:"exports/cinematic-intro-cut-vicos-3rd-cut", note, created, signature:"3b554e65fa72a909", exportSha:null, estimateMinutes}). The watcher reuses cached chapters whose keys did not change. Chapter keys: python3 tools/experience/chapter-keys.py <cut> --resolution 4K (the --json flag crashes). Say the wait before queuing; rebuild edl/score (tools/experience/build-cine-score.py <cut> [--edl-only|--check]) if lengths change.
+- Score: new score.wav (sha256 55c080fd0d55aae9b78932aa2921f007e42668887cc4e904274929a15d3397be) is installed in the cut's score/ folder on the desk (untracked); the old one is backed up in ~/ErgoFlex-Renders/score-before-join/. Code merged (586e52ad).
+
+IN FLIGHT (who, what, how to verify and merge)
+1. 3dmodeling: eng/desk-aluminium-look (all-metal aluminium, every room; epoch 13). On handback: check before/after stills per room, tests, which chapters move; add the epoch 13 line; then ask Vico for the film go.
+2. 3dmodeling: foot light = ONLY the blue foot light (Vico's choice). The three white floor strips (ledFloorSources center/left/right) go OFF before 7.5 s and stay off through the start of the lift. Data only in previews/awaken-v5-cut.json (+ review-cut.json awaken entry + docs/awaken-foot-light/awaken-foot-light-export.json, CRLF file). Merge when pushed; tests/cinematic-floor-keyed-test.mjs; only awaken's chapter key should change. Open question for Vico: hold the blue until the lift chase at 10.4 s (about 0.9 s grey floor between)? Send him the 9.5 s and 10 s frames. Hot-core control (coreBoost/coreSat) is shelved.
+3. 3dmodeling: Commons redwoods (eng/commons-redwoods; one large + mid + small, natural spacing, only Commons).
+4. 3dmodeling queue after those (Sonnet 5.5 each): 0) Rise phone flush + charge-pad ring clipping (director-film/rise.json accessories ergoflex-phone y 12.4; find the ring mesh in the GLB; nudge up; phone down; stills; list chapters that use the same GLB; do not commit the convert-props index.json rewrite); 1) storage RC remote on the second shelf of the top shelf unit and lifting with the desk; 2) Create trade shelves filled with tools and mirrored on the other wing; 3) Music gamer's natural curved walk; 4) Media speakers on the pedestals.
+5. 3dmodeling (its own runs): foot dimmed-strips P1 sheet (superseded by item 2, may be dropped); Fold e2e re-run at four sizes: node tests/fold-titles-e2e.mjs --shots shots\fold --views 884x1100,1100x884,697x800,837x600; report pass/fail. If failures need fixing, ask ui via org.
+6. ui: keyboard tray build. Phases 0-2 are merged (spec, pure joint model experience/tray-pose.mjs + tray-limits.mjs, rig glb assets/props/ergoflex-keyboard-tray-rig.glb, hidden prop index entry). Phase 3 (trayEdits shot field, importer, film field sceneTray, shared sampler in stage + film-fx, early-return gate) is running on ui/keyboard-tray-build. Later: Director Tray mode (double-click the prop), the mount bracket that stretches with the drop (default yes), Windows rest-pose pixel parity and clearance probe. Slide is 234.5 mm as measured (Vico's product 254 mm would need a 20 mm longer track; ask him). Swing pivot sits 143 mm inside the desk edge, so a swung tray passes under the desk and needs the drop.
+7. ui: Fold polish after the Windows e2e report. Open: Titles second row at 697 px wide may need scroll; auto-reveal reopens a collapsed landscape drawer on every selection (could be limited to title selections); the 837x600 stage is small by arithmetic.
+8. Codex: faces committed (a2be39cf). More Codex files may appear uncommitted in the main checkout: commit and push them quiet 40+ min with a note.
+
+WAITING ON VICO
+- Next film go (epoch 13 + all the above). Which second he hears the score's two tempos colliding (18.65 s tilt/chord change vs the lift top 16.15 s; nothing was added at 18.65 yet). Hold the blue foot light until 10.4 s? Tray slide 234.5 vs 254 mm. Type the Send-to-desk code once on the Fold (code was given in chat; new code: node tools/director-inbox.mjs --new-token).
+- Fold Director link (tailnet only): https://ergoflexdesk02.tailf693b8.ts.net/exports/cinematic-intro-cut-vicos-3rd-cut/director-index.html ; the :3000 studio-server (node tools/studio-server.mjs --port 3000 --host ::) must be restarted to pick up new server code.
+
+TRAPS
+- chapter-keys.py compare only against the same-method run, not queue entries with other methods. Keys hash chapter data + epoch (+ per-chapter epoch lines), not code.
+- CRLF files: preserve line endings (whole-file diffs otherwise). Importer: DIRECTOR_IMPORT_DIRS=<dir> DIRECTOR_IMPORT_STATE=<state.json> PYTHONUTF8=1 python3 tools/experience/director-import-watch.py --once.
+- Windows-only test failures (path separators, Pillow/python3 Store stub) are not product failures; tests pass on the desk. pose-thumb-test and editing-camera-test fail on the base (unrelated).
+- Check exports/render-queue/queue.json before merges that touch render code (a merge once broke two unfetched 4K jobs).
+- Memory notes live in /home/ergo/.claude/projects/-home-ergo-ErgoFlex-Custom-Shop/memory/ (MEMORY.md index); the full previous conversation is in /home/ergo/.claude/projects/-home-ergo-ErgoFlex-Custom-Shop/1c39807e-d572-43fd-b4a6-3a93f7e8be89.jsonl.
