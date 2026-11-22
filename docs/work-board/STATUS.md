@@ -49,6 +49,9 @@ Fold link: (Director, tailnet only): https://ergoflexdesk02.tailf693b8.ts.net/ex
 - Thumb control and pose-key selection: Curl or stretch the thumb in pose mode. Click a pose-key diamond in the People tab to select it. [Director, Merged]
 - Housekeeping: Older full films and finished worktrees deleted. Disk is fine for now. All work committed and pushed with notes. [Repo]
 
+## Vico's notes (ideas, not queued)
+- Create chapter: three studios for three kinds of maker: The Create chapter already looks great. Idea for making it better: keep the same room size, but change the whole environment to suit different makers. Today the room is perfect for the painter. A second version would be for the digital artist or graphic designer (the whole room set up for that work), and a third for the architect or drafter (the whole room set up for someone who designs buildings). This is an idea for later, not queued work. Nothing is being built for it yet.
+
 ## Resume guide
 
 RESUME GUIDE (written 2026-11-21 ~21:30 PST, main = a352dd00 + later snapshot commits; HEAD = origin/video/cinematic-intro-hq = origin/staging/director-merge)
