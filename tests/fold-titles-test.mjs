@@ -115,4 +115,21 @@ assert.match(read('experience/director.mjs'), /if\(g==='titles'&&laneGroups\.tit
 {const pm2 = read('experience/director-phone.mjs');
  assert.match(pm2, /content\.scrollHeight/, 'measured on the lanes\' content, not the scrolling viewport (no feedback)');
  assert.match(pm2, /body\.style\.setProperty\('--ef-tl-h', h \+ 'px'\)/);}
+
+// ---- Windows run on e15d69ec (fold-fixes-3)
+assert.doesNotMatch(phone.replace(/<div class="ab-pop"[\s\S]*?<\/div>/g, ''), /data-action="keys-panel"|>Close</, 'no ⌨ and no Close button in the phone bar (Close is in ⋯)');
+assert.match(desk, /data-action="keys-panel"/, 'the desktop bar keeps them');
+assert.match(dir, /function reveal\(type\)\{\s*const home=homeOf\(type\);if\(!home\|\|typing\(\)\)return false;\s*phoneMode\?\.reveal\(\)/, 'every selection\'s reveal() raises the sheet / opens the drawer');
+assert.match(dir, /status\(`Sent to the desk: \$\{n\} chapter\$\{n===1\?'':'s'\}, \$\{Math\.round\(duration\(project\.shots\)\)\} s/, 'Send to desk: singular, set after the panel redraw');
+assert.match(dir, /const sent=await sendToDesk\(\);renderPanel\(\);const n=/, 'the status is set after renderPanel (renderPanel resets it)');
+assert.match(te, /stopped at '\+stop/, 'a drag stopped by the chapter\'s ends or the minimum says so');
+assert.match(phoneCss, /\.inspector-tabs:has\(\[data-inspector-tab\]\) button\{min-height:44px\}/, 'the inspector tabs are 44 px (the theme\'s :has() rule pinned 28)');
+assert.match(phoneCss, /\.title-clip\.selected \.clip-resize\{width:46px\}/); assert.match(phoneCss, /\.title-clip\{top:4px;height:48px;min-height:48px\}/, 'trim handles at least 46 px');
+assert.match(phoneCss, /\.film-fresh:not\(:has\(\.film-fresh-choice\)\)\{display:none\}/, 'the export note does not wrap in the bar');
+assert.match(phoneCss, /#demo\{top:calc\(var\(--ef-top\) \+ 10px\);right:calc\(var\(--ef-reserve\) \+ 64px\)/, 'the demo card clears the drawer\'s tab');
+assert.match(phoneCss, /#ef-drawer-tab\{top:calc\(var\(--ef-top\) \+ \(100dvh/, 'the tab sits mid-edge');
+assert.match(phoneCss, /@media \(max-height:700px\)\{[\s\S]*film-prev/, 'short landscape: pickers share the bar row');
+// no Director handler takes two-finger touches or locks the page's zoom
+for (const f of fs.readdirSync(path.join(root, 'experience')).filter(f => f.endsWith('.mjs'))) assert.doesNotMatch(read('experience/' + f), /addEventListener\(\s*['"](touchstart|touchmove|gesturestart|gesturechange)['"]/, f + ': no touch / gesture listener');
+assert.doesNotMatch(read('experience/experience.css') + read('experience/director-shell.css'), /(html|body)\s*\{[^}]*touch-action/, 'no touch-action on html / body');
 console.log('fold-titles-test: ok');

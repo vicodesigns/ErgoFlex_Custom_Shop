@@ -106,7 +106,7 @@ export function createPhoneMode({ appbar, panel, shellOn = () => true, changed =
   // The handle says what the sheet holds: the tab and the selection.
   function label() {
     const t = panel.querySelector('[data-inspector-tab][aria-pressed="true"]')?.textContent.trim() || 'Inspector', sel = panel.querySelector('.sel-name b')?.textContent.trim() || '';
-    const text = sel ? `${t} · ${sel}` : t; if (text !== labelText) { labelText = text; handle.querySelector('[data-ef-sheet-label]').textContent = text; }
+    const text = !sel ? t : sel.startsWith(t) ? sel : `${t} · ${sel}`; if (text !== labelText) { labelText = text; handle.querySelector('[data-ef-sheet-label]').textContent = text; }
   }
   setInterval(() => { if (mode) { label(); measure(); } }, 500);
   coarse.addEventListener?.('change', apply); addEventListener('resize', apply); addEventListener('orientationchange', () => setTimeout(apply, 120));

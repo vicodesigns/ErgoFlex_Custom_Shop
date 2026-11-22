@@ -69,8 +69,8 @@ export function appBarHtml(s) {
       item('ab-classic', 'Classic layout', 'the old arrangement; ⋯ brings this one back'),
       item('report-problem', 'Report a problem…', 'for Claude'),
     ])}
-    <button type="button" class="ab-btn ab-icon" data-action="keys-panel" title="Keys & mouse (?)" aria-label="Keys and mouse">⌨</button>
-    <button type="button" class="ab-btn" data-ab-proxy="director" title="Close the Director">Close</button>`;
+    ${s.phone ? '' : '<button type="button" class="ab-btn ab-icon" data-action="keys-panel" title="Keys & mouse (?)" aria-label="Keys and mouse">⌨</button>'}
+    ${s.phone ? '' : '<button type="button" class="ab-btn" data-ab-proxy="director" title="Close the Director">Close</button>'}`;
 }
 // pills: [{ id, label, on, title }] (only the ones that are on are shown, plus Snap, which is shown either way)
 export function statusBarHtml(text, pills) {

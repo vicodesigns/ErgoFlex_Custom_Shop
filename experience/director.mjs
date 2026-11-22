@@ -173,6 +173,7 @@ export function mountDirector(bridge,catalog,initial){
   const homeOf=type=>type==='title'&&titleEditor?.has()?['title','[data-reveal="title"]']:HOMES[type];
   function reveal(type){
     const home=homeOf(type);if(!home||typing())return false;
+    phoneMode?.reveal();   // (a phone: the sheet comes up to half, a closed drawer opens)
     if(inspector!==home[0]||document.body.classList.contains('inspector-hidden'))showInspector(home[0]);
     revealWant=type;requestAnimationFrame(()=>requestAnimationFrame(applyReveal));return true;
   }
@@ -1246,7 +1247,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     const body=await response.json().catch(()=>({}));
     if(response.status===401){try{localStorage.removeItem(CODE_KEY);}catch{}throw Error('The desk code was not right: press Send to desk again and type it.');}
     if(!response.ok)throw Error(body.error||`The desk refused it (${response.status}).`);
-    exported=signature();syncFilm();fresh.exported(project,text);status(`Sent to the desk: ${body.file}. The film takes it in from there; your changes stay in this browser until it has.`);return body;
+    exported=signature();syncFilm();fresh.exported(project,text);return body;
   }
   function exportCut(){const text=exportText(),url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=(project.name.replace(/[^a-z0-9]+/gi,'-')||'client-cut')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);exported=signature();syncFilm();status(fresh.on?'Cut exported: the film takes it in from Downloads. Your changes stay in this browser until it has.':'Cut exported. Import it in Director Mode on another browser.');fresh.exported(project,text);return text;}
   async function action(name,index){
@@ -1378,7 +1379,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       if(name==='new'){loadProject(makeCut('New client cut',[sceneShot(catalog.find(r=>r.id==='product'))]));return;}
       if(name==='clone'){loadProject({...copy(project),id:crypto.randomUUID(),name:project.name+' · copy',updated:''});return;}
       if(name==='save-export'){if(unexported())autosave.save('export');clearTimeout(draftTimer);try{project=library.save(project);}catch{}exportCut();renderPanel();return;}
-      if(name==='send-desk'){if(unexported())autosave.save('export');clearTimeout(draftTimer);try{project=library.save(project);}catch{}await sendToDesk();renderPanel();return;}
+      if(name==='send-desk'){if(unexported())autosave.save('export');clearTimeout(draftTimer);try{project=library.save(project);}catch{}const sent=await sendToDesk();renderPanel();const n=project.shots.length;status(`Sent to the desk: ${n} chapter${n===1?'':'s'}, ${Math.round(duration(project.shots))} s (${sent.file}). The film takes it in from there; your changes stay in this browser until it has.`);return;}
       if(name==='save'){clearTimeout(draftTimer);project=library.save(project);renderPanel();status('Saved in this browser. Export a copy for a portable backup.');return;}
       if(name==='load'){await load();return;}
       if(name==='frame-desk'||name==='frame-room'){requireReady();bridge.stage().frameSubject(name==='frame-room'?'room':'desk');status('Preview framed. Capture a new camera view or update the selected view to save it.');return;}
