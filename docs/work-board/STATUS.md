@@ -10,13 +10,12 @@ Snapshot written 2026-11-21 so work can be resumed if credits run out. A fresh s
 
 ## Needs Vico
 - Send to desk: type the code once on the Fold: The code is in chat. Open the Director on the Fold, change something, tap Send to desk, and enter it. After that it remembers. [Fold, 5 min]
-- Foot light: the foot vs the three floor strips, and two choices: The three floor strips (centre, left, right) make a big pale pool and at the peak put out about 8x more floor light than the foot, so they swamp it. Choice A (data only): dim the three to under half at 8.0-9.0 s (check render running). Choice B (new opt-in coreBoost/coreSat control for the foot, hot core with fast falloff, ~40 min). Also open: hold the blue until 10.4 s (0.9 s grey gap). Vico says A, B, both or neither. Sheets: foot3-sheet-*-A-B-C.jpg in ~/ErgoFlex-Renders. [Awaken, Your call]
+- Foot light: white strips off, only the blue: Vico chose only the blue foot light, the three white floor strips (center/left/right) OFF from before 7.5 s through the start of the lift. Windows PC is applying it as data in the cut's awaken source (chapter 1 key only), then stills 8.0-10.5 s. Still open: hold the blue until the 10.4 s lift chase? [Windows PC, Awaken, Running]
 - Next film: say go when the stills look right: Epoch 13 (all metal) moves nine room chapters, so the next 4K is close to a full render. Codex's new faces ride on the same bump. The new score needs only a re-finish. I queue it when you say go. [Render, Your call]
 - Score: listen to the new 0-30 s clips and tell me which second: Found it: the build-up before 12 s ran at a slightly slower tempo than everything after, then jumped. It now stays on one tempo, and a soft swell lands when the lift tops out. Before and after clips are on your phone. If the clash is at about 18.6 s (tilt start and chord change), nothing was added there yet. [Windows PC, Audio only, Merged]
 
 ## Working now
 - All-metal aluminium look, every room: The gym metal matches Rise value for value, so the look itself is changing: brighter, more metallic aluminium everywhere, dumbbell included. Epoch 13 approved. [Windows PC, Epoch 13, eng/desk-aluminium-look]
-- Foot light: dimmed-strips check render: Rendering 6-10 s with the three strips dimmed while the foot peaks. [Windows PC, Awaken]
 - Fold touch re-test, all four screen sizes: Titles lane and layout fixes are merged. The Windows PC re-runs the touch test in portrait and landscape; this should be the first run that reaches the title steps. [Windows PC, Fold]
 - Keyboard tray build, phases 1 to 3: Slide, swivel and tilt like the reference tray, keyboard staying on it. Joint model, Blender split into real parts, data and importer. Each phase merges as it lands. [ui, Keyboard tray]
 
