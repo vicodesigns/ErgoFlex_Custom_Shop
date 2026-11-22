@@ -1,0 +1,85 @@
+top-level (non-shot) fields equal: True
+chapter awaken: IDENTICAL
+chapter rise: CHANGED: 2120 differences
+chapter create: IDENTICAL
+chapter coast: IDENTICAL
+chapter oilers: CHANGED: 1733 differences
+chapter wellness: IDENTICAL
+chapter awareness: IDENTICAL
+chapter music: IDENTICAL
+chapter media: CHANGED: 6 differences
+chapter storage: IDENTICAL
+chapter hero: IDENTICAL
+=== chapter commons
+  CHANGED /directorEdited/at 2026-11-21T01:35:27Z -> 2026-11-21T23:08:48Z
+  sceneEdits: 46 -> 47
+    - {"asset": "library:humboldt:room:76:kenney-furniture-chair-modern-cushion", "director": true, "label": "Oak study chair · forest", "match": "^Oak study chair · forest$", "position": [0.146, 0, 0]}
+    - {"asset": "library:humboldt:fixture:humboldt-study-kit-6", "director": true, "label": "Commons study materials", "match": "^Commons study materials$", "position": [0, 0, 0.149]}
+    + [44] {"director": true, "hide": true, "label": "Person chair:people-sofia-sit-laptop", "match": "^Person chair:people-sofia-sit-laptop$"}
+    + [45] {"asset": "library:humboldt:room:76:kenney-furniture-chair-modern-cushion", "director": true, "label": "Oak study chair · forest", "match": "^Oak study chair · forest$", "position": [0.146, 0, 0.08]}
+    + [46] {"asset": "library:humboldt:fixture:humboldt-study-kit-6", "director": true, "label": "Commons study materials", "match": "^Commons study materials$", "position": [0, 0, 0.049]}
+  cast order equal: True
+  cast yara-works: identical
+  cast yara-leaves: identical
+  cast mia-waits: identical
+  cast mia-works: identical
+  cast mate-right: 26 differences
+    CHANGED /at[0] 6100 -> 6007
+    LEN /postures/people-sofia-sit-laptop/poseKeys 1 -> 2
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/hand_l[0] 0.0556 -> -0.0067
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/hand_l[1] -0.0073 -> 0.0005
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/hand_l[2] -0.0212 -> 0.0488
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/hand_l[3] 0.9982 -> 0.9988
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/hand_r[0] 0.0496 -> -0.0062
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/hand_r[1] 0.0064 -> -0.0001
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/hand_r[2] 0.0236 -> -0.0392
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/hand_r[3] 0.9985 -> 0.9992
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/lowerarm_l[0] -0.0641 -> -0.1038
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/lowerarm_l[2] 0.0006 -> 0.001
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/lowerarm_l[3] 0.9979 -> 0.9946
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/lowerarm_r[0] -0.0636 -> -0.0989
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/lowerarm_r[2] -0.0005 -> -0.0008
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/lowerarm_r[3] 0.998 -> 0.9951
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/upperarm_l[0] 0.1053 -> 0.0568
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/upperarm_l[1] -0.0286 -> -0.0079
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/upperarm_l[2] 0.0329 -> 0.0092
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/upperarm_l[3] 0.9935 -> 0.9983
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/upperarm_r[0] 0.1045 -> 0.0607
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/upperarm_r[1] 0.0243 -> 0.0055
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/upperarm_r[2] -0.0279 -> -0.007
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/pose/upperarm_r[3] 0.9938 -> 0.9981
+    CHANGED /postures/people-sofia-sit-laptop/poseKeys[0]/t 11.8 -> 0
+    ADDED /postures/people-sofia-sit-laptop/poseKeys[1] {"t": 11.8, "pose": {"upperarm_r": [0.1045, 0.0243, -0.0279, 0.9938], "lowerarm_r": [-0.0636, 0, -0.0005, 0.998], "hand_r": [0.0496, 0.0064,
+  cast mate-left: 26 differences
+    LEN /postures/people-kai-sit-write/poseKeys 1 -> 2
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/hand_l[0] 0.0183 -> 0.0301
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/hand_l[1] -0.0392 -> -0.0632
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/hand_l[2] 0.1941 -> 0.1858
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/hand_l[3] 0.98 -> 0.9801
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/hand_r[0] -0.0069 -> 0.0089
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/hand_r[1] -0.0634 -> -0.0653
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/hand_r[2] -0.1356 -> -0.1028
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/hand_r[3] 0.9887 -> 0.9925
+    REMOVED /postures/people-kai-sit-write/poseKeys[0]/pose/head [-0.1784, 0, 0, 0.984]
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/lowerarm_l[0] -0.0248 -> -0.0114
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/lowerarm_l[2] -0.0023 -> -0.001
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/lowerarm_l[3] 0.9997 -> 0.9999
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/lowerarm_r[0] -0.482 -> -0.465
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/lowerarm_r[2] 0.0453 -> 0.0437
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/lowerarm_r[3] 0.875 -> 0.8842
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/upperarm_l[0] -0.1389 -> -0.1349
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/upperarm_l[1] -0.1005 -> -0.1169
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/upperarm_l[2] 0.0535 -> 0.0674
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/upperarm_l[3] 0.9837 -> 0.9816
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/upperarm_r[0] 0.3526 -> 0.3659
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/upperarm_r[1] 0.019 -> 0.0284
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/upperarm_r[2] 0.0207 -> 0.0114
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/pose/upperarm_r[3] 0.9354 -> 0.9302
+    CHANGED /postures/people-kai-sit-write/poseKeys[0]/t 11.8 -> 0
+    ADDED /postures/people-kai-sit-write/poseKeys[1] {"t": 11.8, "pose": {"upperarm_l": [-0.1389, -0.1005, 0.0535, 0.9837], "lowerarm_l": [-0.0248, 0, -0.0023, 0.9997], "hand_l": [0.0183, -0.03
+  cast zoe-walks: identical
+  cast room-leo-6mogpj: identical
+  cast room-zoe-mfms79: identical
+  cast room-eli-1hdjsgj: identical
+  cast room-ben-1wyru4v: identical
+  cast room-grace-8f2rj7: identical

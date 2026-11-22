@@ -1,0 +1,100 @@
+{
+ "chapter": "commons",
+ "cut": "vicos-3rd-cut (seated)",
+ "note": "Commons phone (verified on the current seated 3rd cut): the HAND sceneEdits that apply_hand.py merges by key after the importer. The people part rides in the export doc (peopleEdits).",
+ "releaseSeconds": 12.7,
+ "people": {
+  "when": {
+   "mia-waits": [
+    [
+     0,
+     13.478,
+     0,
+     0.5
+    ]
+   ],
+   "mia-works": [
+    [
+     12.978,
+     99,
+     0.5,
+     0
+    ]
+   ]
+  }
+ },
+ "sceneEdits": [
+  {
+   "match": "^Prop:ergoflex-phone$",
+   "label": "iPhone · Wireless charger (Yara takes her phone)",
+   "show": {
+    "from": 0.0,
+    "to": 5.25
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-phone"
+   },
+   "id": "mph01",
+   "match": "^Added prop:ergoflex-phone#mph01$",
+   "label": "iPhone · Mia's phone on the charger",
+   "parent": "desk",
+   "position": [
+    -0.6238,
+    0.0149,
+    0.3056
+   ],
+   "rotation": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "scale": [
+    1.0,
+    1.0,
+    1.0
+   ],
+   "show": {
+    "from": 12.7,
+    "to": 10000
+   }
+  },
+  {
+   "match": "^Supplied_phone_part_\\d+$",
+   "label": "Charging cue: Mia's phone screen (lit as in her hand), dims, wakes with the charging flash, then a faint charging glow",
+   "materialName": "^hUlRcbieVuIiOXG$",
+   "material": {
+    "emissive": "#cadef6",
+    "emissiveIntensity": [
+     [
+      12.7,
+      0.7
+     ],
+     [
+      12.95,
+      0.7
+     ],
+     [
+      13.1,
+      0.25
+     ],
+     [
+      13.35,
+      1.0
+     ],
+     [
+      14.2,
+      1.0
+     ],
+     [
+      15.0,
+      0.35
+     ]
+    ]
+   },
+   "path": "Added prop:ergoflex-phone#mph01",
+   "clone": true
+  }
+ ]
+}
