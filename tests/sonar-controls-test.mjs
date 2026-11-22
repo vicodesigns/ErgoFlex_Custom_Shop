@@ -127,9 +127,15 @@ assert.match(ed,/Set a Size to see the rings right away\./);
 // pixels where the ring lies, wider on a slanted floor, and in a bake (render-cut, render-still, Render still) the film's
 // own w*.007, so the film stays pixel-identical
 assert.match(stageSrc,/const liveBand=\(band,at\)=>\{\n {4}if\(bakeSession\)return band;/,'in a bake: the film\'s band');
-assert.match(stageSrc,/return Math\.max\(band,2\.5\*perPx\/slant\);/,'live: at least 2.5 px');
+assert.match(stageSrc,/return Math\.max\(band,2\*perPx\/slant\);/,'live: at least 2 px');
+// ...and depth (org, the desk's Chrome: lifted 5 cm alone, the rings showed; the live floor buried them): live the pings and
+// the echo ride LIVE_LIFT above their film height, still depth-tested; in a bake their film height
+assert.match(stageSrc,/const LIVE_LIFT=\.04,ringY=m=>\{m\.position\.y=m\.userData\.y0\+\(bakeSession\?0:LIVE_LIFT\);\};/);
+assert.match(stageSrc,/m\.position\.y=y;m\.userData\.y0=y;m\.renderOrder=RING_ORDER;/,'each ring keeps its film height');
+assert.match(stageSrc,/setRing\(ring,row\.r,band\);ringY\(ring\);/);assert.match(stageSrc,/ringY\(echo\);echo\.visible=/);
+assert.ok(!/depthTest:false/.test(stageSrc.slice(stageSrc.indexOf('const ringMesh'),stageSrc.indexOf('const ringMesh')+400)),'still depth-tested');
 assert.match(stageSrc,/band=liveBand\(w\*\.007,d\),off=sonarCfg\?\.enabled===false;/,'the pings and the echo take it');
-assert.match(stageSrc,/window\.__sonarDebug=\(\)=>\(\{/,'a debug hook for a real browser');
+assert.match(stageSrc,/window\.__sonarDebug=\(deep=false\)=>\{/,'a debug hook for a real browser');
 assert.match(stageSrc,/pingRows\(\{sec,pingStop,S,far,count:pings\.length,cfg:sonarCfg\}\)/);
 assert.match(stageSrc,/Array\.from\(\{length:meshesFor\(sonarCfg\)\}/,'seven ping meshes when absent');
 assert.match(stageSrc,/ringHome=\{c:c\.clone\(\),p:[^}]*q:ctx\.loadedModel\.getWorldQuaternion/);

@@ -1,8 +1,9 @@
 // The sonar's rings in the Director's live view, checked in PIXELS (21 Nov 2026, Vico on chapter 8 awareness: "I don't
 // see the sonar ... I even clicked the preview at full and I don't see the rings"; org reproduced it in the desk's Chrome:
 // the ring meshes visible with opacity .83 and not one ring pixel on screen: the film's band, w*.007, is under a pixel in
-// the Director's viewport on a slanted floor. experience/stage.mjs now draws the live band at least 2.5 screen pixels
-// wide (never in a bake: the film and Render still are unchanged)). Self-contained (any studio state), Vico's 3rd cut:
+// the Director's viewport on a slanted floor, and (found in the desk's Chrome) the live floor buried them in depth.
+// experience/stage.mjs now draws them live at least 2 screen pixels wide and 4 cm higher, still depth-tested (never in a
+// bake: the film and Render still are unchanged)). Self-contained (any studio state), Vico's 3rd cut:
 //   1  awareness, paused at 3 s, nothing edited: ring pixels on screen (sonar on vs off, same frame)   (sonar-1-film.png)
 //   2  Size 60 in, 3 rings: ring pixels                                                                (sonar-2-size60.png)
 //   3  Preview at full: ring pixels                                                                    (sonar-3-full.png)

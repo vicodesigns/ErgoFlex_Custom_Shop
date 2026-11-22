@@ -111,7 +111,7 @@ export async function mountStage(ctx) {
   // Drawn before them (renderOrder 0, as until 2026-11-14) a ring was darkened under the desk and took the LED's hue
   // (yellow, red, near black) wherever the floor pool lay: an uneven ring under a flat fill. The LED light is unchanged.
   const RING_ORDER=4;
-  const ringMesh=(geometry,color,opacity,y)=>{const m=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide,transparent:true,opacity,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.y=y;m.renderOrder=RING_ORDER;extras.add(m);return m;};
+  const ringMesh=(geometry,color,opacity,y)=>{const m=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color,side:THREE.DoubleSide,transparent:true,opacity,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.y=y;m.userData.y0=y;m.renderOrder=RING_ORDER;extras.add(m);return m;};
   // The centre the rings start from is the centre of the desk's bottom shelf: the base shelf that carries the floor
   // light, the whole shelf (Vico, 2026-11-14). It was the centre of the model's whole box, which also holds the film's
   // LED helper planes and the desktop's overhang, so the rings sat about 24 cm in front of the shelf's centre. The shelf
@@ -135,8 +135,13 @@ export async function mountStage(ctx) {
   const liveBand=(band,at)=>{
     if(bakeSession)return band;const cam=ctx.camera,h=ctx.renderer?.domElement?.height||cam.userData?.h||720,d=cam.position.distanceTo(at);
     const perPx=2*d*Math.tan(THREE.MathUtils.degToRad(cam.fov)/2)/Math.max(1,h),slant=Math.max(.2,Math.abs(cam.position.y-at.y)/Math.max(1e-6,d));
-    return Math.max(band,2.5*perPx/slant);
+    return Math.max(band,2*perPx/slant);
   };
+  // ...and DEPTH (org found it in the desk's Chrome, 21 Nov 2026: lifted 5 cm alone, the rings showed): live, the floor
+  // surface lies at or above the rings' height (the floor + 6 mm) and buries them; the film's bake draws them right. So
+  // live (never in a bake) the pings and the echo ride 4 cm above it, still depth-tested (the desk and the dog hide them
+  // as they pass behind); in a bake they are at the film's own height, so the film stays pixel-identical.
+  const LIVE_LIFT=.04,ringY=m=>{m.position.y=m.userData.y0+(bakeSession?0:LIVE_LIFT);};
   const setRing=(m,r,band)=>{const p=m.geometry.attributes.position,n=p.count/2,a=Math.max(0,r-band/2),b=r+band/2;for(let i=0;i<n;i++){const t=i/(n-1)*Math.PI*2,cs=Math.cos(t),sn=Math.sin(t);p.setXY(i,a*cs,a*sn);p.setXY(i+n,b*cs,b*sn);}p.needsUpdate=true;};
   function stageFloor() {
     const b=box(),sz=b.getSize(new THREE.Vector3()),w=Math.max(sz.x,sz.z),c=deskCentre(b.getCenter(new THREE.Vector3()));
@@ -401,12 +406,12 @@ export async function mountStage(ctx) {
         for(const row of rows){
           const ring=pings[row.i];
           if(off||!row.alive){ring.visible=false;ring.material.opacity=0;continue;}
-          setRing(ring,row.r,band);ring.visible=!reduced;
+          setRing(ring,row.r,band);ringY(ring);ring.visible=!reduced;
           ring.material.opacity=reduced?0:row.a;                                            // in at the centre, still bright as it arrives
         }
         // The echo: a ping that reaches the obstacle lights a ring at the obstacle's edge for .7 s, then it is gone until
         // the next arrival, so the obstacle stands on the widest circle each time a ping lands and nothing lingers to shrink.
-        if(echo){const k=echoAge<.7?Math.pow(1-echoAge/.7,1.6):0;setRing(echo,far,band*1.25);echo.visible=!reduced&&k>0;echo.material.opacity=reduced?0:.85*k;}
+        if(echo){const k=echoAge<.7?Math.pow(1-echoAge/.7,1.6):0;setRing(echo,far,band*1.25);ringY(echo);echo.visible=!reduced&&k>0;echo.material.opacity=reduced?0:.85*k;}
       }
     }
     if(deskChoreo.count())deskChoreo.apply(t*shot.seconds);
@@ -474,10 +479,47 @@ ctx.editCamera(editorMode||cameraHeld);if(editorMode){Object.assign(ctx.controls
   // sleeps when idle, so a timer looks for it (a scene walk every 500 ms, only while a proximity chapter's reach is
   // missing) and draws the frame again once it is found (sonarReach puts the desk at its last pose; seek puts it back).
   // window.__sonarDebug(): what the sonar draws now (the live check in a real browser; never used by the page itself)
-  window.__sonarDebug=()=>({kind:shot?.kind,sonar,R:shot?.kind==='proximity'?sonarR():0,obstacles:obstacles.length,cfg:sonarCfg,previewFull,baking:!!bakeSession,
-    band:reach?.userData?.w?{film:reach.userData.w*.007,live:ringHome?liveBand(reach.userData.w*.007,ringCentre()):null}:null,
-    pings:pings.map(p=>({visible:p.visible,opacity:+p.material.opacity.toFixed(3),r:+(p.geometry.attributes.position.getX(p.geometry.attributes.position.count-1)).toFixed(4)})),
-    echo:echo?{visible:echo.visible,opacity:+echo.material.opacity.toFixed(3)}:null,camera:{position:ctx.camera.position.toArray().map(v=>+v.toFixed(3)),fov:ctx.camera.fov},canvas:[ctx.renderer?.domElement?.width,ctx.renderer?.domElement?.height]});
+  // window.__sonarDebug(): what the sonar draws now (the live check in a real browser; never used by the page itself).
+  // __sonarDebug(true): also every ring's world place, parents, material, layers and what lies near the floor under it.
+  // window.__sonarRedraw(): draw the frame again and return __sonarDebug() (checks in a real browser)
+  window.__sonarRedraw=()=>{wake();seek(lastProgress);return window.__sonarDebug();};
+  // what is drawn over the floor where the rings run (a plane that writes depth above them hides them): every visible
+  // mesh within 6 cm above the rings, with its depth / blend state
+  window.__sonarCovers=()=>{const y=pingBase?.y??0,b=new THREE.Box3(),out=[];ctx.scene.updateMatrixWorld(true);
+    ctx.scene.traverse(o=>{if(!o.isMesh||!o.visible||pings.includes(o)||o===echo)return;b.setFromObject(o);if(b.isEmpty())return;const sz=b.getSize(new THREE.Vector3());
+      if(b.min.y>y+.06||b.max.y<y||Math.max(sz.x,sz.z)<.3||sz.y>.1)return;const m=Array.isArray(o.material)?o.material[0]:o.material;
+      out.push({name:o.name||o.type,parent:o.parent?.name||'',y:[+b.min.y.toFixed(4),+b.max.y.toFixed(4)],size:+Math.max(sz.x,sz.z).toFixed(2),renderOrder:o.renderOrder,type:m?.type,depthTest:m?.depthTest,depthWrite:m?.depthWrite,transparent:m?.transparent,blending:m?.blending,colorWrite:m?.colorWrite,filmFx:!!o.userData?.filmFx});});
+    return out;};
+  window.__sonarDebug=(deep=false)=>{
+    const r4=v=>+(+v).toFixed(4),vec=v=>v.toArray().map(r4),cam=ctx.camera;
+    const meshInfo=m=>{
+      if(!m)return null;m.updateWorldMatrix(true,false);const wp=new THREE.Vector3(),wq=new THREE.Quaternion(),ws=new THREE.Vector3();m.matrixWorld.decompose(wp,wq,ws);
+      const chain=[];for(let p=m.parent;p;p=p.parent)chain.push(`${p.name||p.type}${p.visible?'':' (HIDDEN)'}${p.layers.mask!==1?` layers ${p.layers.mask}`:''}`);
+      const mat=m.material,pos=m.geometry.attributes.position;
+      return {name:m.name,visible:m.visible,opacity:r4(mat.opacity),inScene:!!ctx.scene.getObjectById(m.id),worldPosition:vec(wp),worldScale:vec(ws),rotation:vec(new THREE.Vector3().setFromEuler(m.rotation)),
+        r:{inner:r4(Math.hypot(pos.getX(0),pos.getY(0))),outer:r4(Math.hypot(pos.getX(pos.count-1),pos.getY(pos.count-1)))},verts:pos.count,drawRange:[m.geometry.drawRange.start,m.geometry.drawRange.count],
+        material:{type:mat.type,color:'#'+mat.color.getHexString(),side:mat.side,depthTest:mat.depthTest,depthWrite:mat.depthWrite,blending:mat.blending,transparent:mat.transparent,toneMapped:mat.toneMapped,fog:mat.fog,colorWrite:mat.colorWrite,visible:mat.visible},
+        renderOrder:m.renderOrder,layers:m.layers.mask,cameraLayers:cam.layers.mask,frustumCulled:m.frustumCulled,onBeforeRender:m.onBeforeRender?.toString().slice(0,80)||null,chain};
+    };
+    const out={kind:shot?.kind,sonar,R:shot?.kind==='proximity'?sonarR():0,obstacles:obstacles.length,cfg:sonarCfg,previewFull,baking:!!bakeSession,paused,editorMode,reduced,
+      band:reach?.userData?.w?{film:reach.userData.w*.007,live:ringHome?liveBand(reach.userData.w*.007,ringCentre()):null}:null,
+      pings:pings.map(p=>({visible:p.visible,opacity:+p.material.opacity.toFixed(3),r:+(p.geometry.attributes.position.getX(p.geometry.attributes.position.count-1)).toFixed(4)})),
+      echo:echo?{visible:echo.visible,opacity:+echo.material.opacity.toFixed(3)}:null,camera:{position:ctx.camera.position.toArray().map(v=>+v.toFixed(3)),fov:ctx.camera.fov,near:cam.near,far:cam.far,layers:cam.layers.mask},
+      canvas:[ctx.renderer?.domElement?.width,ctx.renderer?.domElement?.height]};
+    if(!deep)return out;
+    out.ping0=meshInfo(pings.find(p=>p.visible)||pings[0]);out.echoMesh=meshInfo(echo);out.reachMesh=meshInfo(reach);out.sweepMesh=meshInfo(sweep);out.pulseMesh=meshInfo(pulse);
+    out.grid=grid?{y:r4(grid.getWorldPosition(new THREE.Vector3()).y),visible:grid.visible,renderOrder:grid.renderOrder,depthWrite:grid.material?.depthWrite,inScene:!!ctx.scene.getObjectById(grid.id)}:null;
+    out.floorY=pingBase?r4(pingBase.y):null;out.extras={visible:extras.visible,inScene:!!ctx.scene.getObjectById(extras.id),children:extras.children.length,layers:extras.layers.mask};
+    // what else lies flat near the floor (a film floor, a receiver plane, a reflector) and could cover the rings
+    const near=[],b=new THREE.Box3(),y0=pingBase?.y??0;ctx.scene.updateMatrixWorld(true);
+    ctx.scene.traverse(o=>{if(!o.isMesh||!o.visible||pings.includes(o)||o===echo||o===reach||o===sweep||o===pulse)return;b.setFromObject(o);if(b.isEmpty())return;const sz=b.getSize(new THREE.Vector3());
+      if(b.max.y>=y0-.05&&b.min.y<=y0+.05&&sz.y<.06&&Math.max(sz.x,sz.z)>.5)near.push({name:o.name||o.type,parent:o.parent?.name||o.parent?.type,minY:r4(b.min.y),maxY:r4(b.max.y),size:[r4(sz.x),r4(sz.z)],renderOrder:o.renderOrder,transparent:!!o.material?.transparent,depthWrite:o.material?.depthWrite,blending:o.material?.blending,filmFx:!!o.userData?.filmFx});});
+    out.flatNearFloor=near.slice(0,20);
+    let rendered=0;ctx.scene.traverseVisible(o=>{if(o.isMesh||o.isLine||o.isPoints)rendered++;});out.visibleDrawables=rendered;
+    out.renderer={info:ctx.renderer?.info?.render?{calls:ctx.renderer.info.render.calls,triangles:ctx.renderer.info.render.triangles}:null,autoClear:ctx.renderer?.autoClear,toneMapping:ctx.renderer?.toneMapping};
+    out.composer=Object.keys(ctx).filter(k=>/compos|pass|bloom|post|effect/i.test(k));
+    return out;
+  };
   setInterval(()=>{if(!paused||!editorMode||preparing||shot?.kind!=='proximity'||!reach||sonar||document.hidden)return;const r=sonarReach();if(r){sonar=r;wake();seek(lastProgress);}},500);
   ctx.onFrame(now=>{
     if(paused||preparing||!shot)return;
