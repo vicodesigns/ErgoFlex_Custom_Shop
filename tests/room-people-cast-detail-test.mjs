@@ -195,7 +195,8 @@ assert.ok(seen.hijab && seen.styled && seen.unstyled && seen.bald, 'the rooms\' 
     };
     assert.deepEqual(HAIR_ATLASES, ['', '-2', '-3', '-4']);
     assert.deepEqual(HAIR_TILES.cropped_coil_hair, [3, 0]);
-    const dimensions = [[2048, 1024], [2048, 1024], [2048, 1024], [512, 512]];
+    assert.deepEqual(HAIR_TILES.layered_long_hair, [3, 1]);
+    const dimensions = [[2048, 1024], [2048, 1024], [2048, 1024], [1024, 512]];
     for (const [k, suffix] of HAIR_ATLASES.entries()) for (const name of ['hair-fibres', 'hair-flow', 'hairline']) assert.deepEqual(webpSize(path.join(root, 'assets/rooms/media', name + suffix + '.webp')), dimensions[k], name + suffix + ' atlas dimensions');
     const taken = new Set();
     for (const [cut, [k, i]] of Object.entries(HAIR_TILES)) {

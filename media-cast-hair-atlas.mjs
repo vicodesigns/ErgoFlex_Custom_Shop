@@ -29,4 +29,5 @@ export const HAIR_TILES = {
     toigo_inverted_bob_with_bangs: [2, 6],
     toigo_inverted_bob: [2, 7],
     cropped_coil_hair: [3, 0],
+    layered_long_hair: [3, 1],
 };

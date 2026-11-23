@@ -481,7 +481,7 @@ CHARACTERS = {
         'dye': {'male_casualsuit02': (.22, .4, .3)}, 'tint': {'cortu_cargo_pants': (.42, .38, .3)}, 'look': 3, 'postures': CROWD + ['sit-raise'],
     },
     'yara': {
-        'tailoring': 'commons', 'comb': 'long',
+        'tailoring': 'commons', 'layered_waves': True,
         'name': 'Yara', 'phenotype': {'gender': .0, 'age': .375, 'muscle': .45, 'weight': .5, 'height': .58, 'proportions': .6, 'race': race(.66, .17, .17)},
         'skin': 'young_caucasian_female', 'skin_tone': (.88, .76, .66), 'eyes': 'brown', 'hair': 'long01', 'hair_tint': (.09, .055, .035), 'eyebrows': 'eyebrow011', 'eyelashes': 'eyelashes03',
         'face': {'head-diamond': .4, 'nose-hump-incr': .25, 'nose-scale-vert-incr': .3, 'lr-cheek-bones-incr': .5, 'eyebrows-angle-up': .3, 'mouth-lowerlip-volume-incr': .4, 'chin-triangle': .3},

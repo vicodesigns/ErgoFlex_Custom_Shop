@@ -51,6 +51,7 @@ MORE = [
     ('toigo_inverted_bob_with_bangs', '../toigo_blunt_bob_with_bangs/AuburnHair.png'),
     ('toigo_inverted_bob', '../toigo_blunt_bob_with_bangs/AuburnHair.png'),
     ('cropped_coil_hair', None),
+    ('layered_long_hair', None),
 ]
 PER_ATLAS = 8
 EDGE_MAX = .12
@@ -63,8 +64,11 @@ def smooth(v, r):
     return np.asarray(Image.fromarray(np.uint8(np.clip(v * .5 + .5, 0, 1) * 255)).filter(ImageFilter.GaussianBlur(r)), dtype=np.float32) / 127.5 - 1
 def jpg(a): return Image.fromarray(np.uint8(np.clip(a, 0, 1) * 255))
 def diffuse(folder, name=None):
-    if folder.name == 'cropped_coil_hair':
-        from coil_texture import pixels
+    if folder.name in ('cropped_coil_hair', 'layered_long_hair'):
+        if folder.name == 'cropped_coil_hair':
+            from coil_texture import pixels
+        else:
+            from long_wave_texture import pixels
         rgba = pixels()[::-1].copy()  # Blender pixel rows start at the bottom.
         rgb = rgba[:, :, :3]
         rgb[:] = np.where(rgb <= .0031308, 12.92 * rgb, 1.055 * rgb ** (1 / 2.4) - .055)
@@ -86,7 +90,7 @@ def strand_tiles(img, gain=1.0):
     return n, d, slope
 
 def hairline_tile(folder, cut, img):
-    if cut == 'cropped_coil_hair':
+    if cut in ('cropped_coil_hair', 'layered_long_hair'):
         # The groom's own colour map carries the fitted, feathered hairline.
         return Image.new('L', img.size, 255), 0
     P = []; UV = []; E = defaultdict(list)

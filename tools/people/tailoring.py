@@ -311,7 +311,7 @@ def fit(obj, rig, style, garment, base):
                 cuff *= .55
             v.co += v.normal * (ease + waist_fold + cuff)
     bm.normal_update()
-    if style == 'breton' and garment == 'toigo_basic_tucked_t-shirt':
+    if (style == 'breton' and garment == 'toigo_basic_tucked_t-shirt') or (style == 'commons' and knitted):
         shape_neckline(bm, shoulder)
     if not trousers and style == 'studio':
         sew_studio_panels(bm, shoulder, chest, waist)
