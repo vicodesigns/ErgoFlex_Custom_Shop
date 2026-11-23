@@ -118,16 +118,20 @@ for (const who of characters) {
     assert.deepEqual(sample(2.5), edit, 'seeking back reproduces the edit gesture');
 }
 
-// The cast detail motion (finger travel, resting beat, neighbouring digit, audience reaction) is every room's but the frozen
-// Classic casts; the editor's timeline scan (editorCast) and fader hand (mediaLab) stay the media lab's. The media lab moves
-// exactly as it did when one flag (rig.coastCast) held all of it: both modules solved side by side, bone for bone.
+// The cast detail motion (finger travel, neighbouring digit, audience reaction) is every room's but the frozen Classic
+// casts; the editor's timeline scan (editorCast) and fader hand (mediaLab) stay the media lab's. Non-typing poses still
+// match commit 4abe6181 bone for bone; typing poses run the upgraded continuous active keyboard typing (tapKeys).
 {
     const { execFileSync } = await import('node:child_process');
     let old = null; try { old = execFileSync('git', ['show', '4abe6181:room-people-motion.mjs'], { cwd: root, encoding: 'utf8', maxBuffer: 1 << 26 }); } catch { old = null; }
-    const fresh = (who, flags) => Object.assign(rigOf(who), flags), poses = ['sit-type', 'stand-type', 'wheel-type', 'sit-laptop', 'sit-listen', 'wheel-watch', 'stand-wait', 'sit-mix-30'];
-    const sweep = (make, solve) => {
+    const fresh = (who, flags) => Object.assign(rigOf(who), flags);
+    const nonTypingPoses = ['sit-listen', 'wheel-watch', 'stand-wait'];
+    const mediaLabNonTypingPoses = [...nonTypingPoses, 'sit-mix-30'];
+    const typingPoses = ['sit-type', 'stand-type', 'wheel-type', 'sit-laptop'];
+    const allPoses = [...typingPoses, ...mediaLabNonTypingPoses];
+    const sweep = (make, solve, poseList = allPoses) => {
         const out = [];
-        for (const who of ['andre', 'ava', 'lin', 'kai', 'maya']) for (const pose of poses) {
+        for (const who of ['andre', 'ava', 'lin', 'kai', 'maya']) for (const pose of poseList) {
             const probe = rigOf(who), id = `people-${who}-${pose}`; if (!probe.has(id)) continue;
             for (const time of [0, 1.3, 2.5, 7.1, 13.2]) for (const seed of [41, 5]) {
                 const rig = make(who), key = rig.key(id);
@@ -147,19 +151,43 @@ for (const who of characters) {
         try {
             const O = await import(file + '?old');
             const oldRig = (who, flags) => Object.assign(new O.PersonRig(JSON.parse(fs.readFileSync(path.join(root, 'assets/props/people-rigs', who + '.json'), 'utf8'))), flags);
-            const before = (flags) => sweep(who => oldRig(who, flags), O.solveStill);
-            assert.deepEqual(cases, before({ coastCast: true }), 'media lab Classic: bone for bone what it was');
-            assert.deepEqual(lab, before({ coastCast: true, mediaLab: true }), 'media lab refresh: bone for bone what it was');
-            assert.deepEqual(flat, before({}), 'the frozen Classic casts (no detail flags) move as before');
-            assert.deepEqual(labFlat, before({ mediaLab: true }));
-            // the desk user (solveDesk) too
-            const desk = (M, make) => { const out = []; for (const who of ['maya', 'andre', 'grace']) for (const [tau, k, height, time] of [[0, 1, 28, 3.3], [0, 1, 30, 9.9], [2.6, .4, 36, 14.1], [8, 0, 43.5, 6.2]]) { const rig = make(who), actor = new M.DeskActor(rig); actor.configure(crew(who)); M.solveDesk(rig, actor.keys, { tau, k, height, time, seed: actor.seed }); out.push(snapshot(rig)); } return out; };
-            assert.deepEqual(desk({ DeskActor, solveDesk }, who => fresh(who, { castDetail: true, editorCast: true })), desk(O, who => oldRig(who, { coastCast: true })), 'the media lab\'s desk user: the same');
-            assert.deepEqual(desk({ DeskActor, solveDesk }, who => fresh(who, {})), desk(O, who => oldRig(who, {})), 'a frozen Classic desk user: the same');
+            const before = (flags, poseList) => sweep(who => oldRig(who, flags), O.solveStill, poseList);
+            assert.deepEqual(sweep(who => fresh(who, { castDetail: true, editorCast: true }), solveStill, nonTypingPoses), before({ coastCast: true }, nonTypingPoses), 'media lab Classic non-typing poses: bone for bone what they were');
+            assert.deepEqual(sweep(who => fresh(who, { castDetail: true, editorCast: true, mediaLab: true }), solveStill, mediaLabNonTypingPoses), before({ coastCast: true, mediaLab: true }, mediaLabNonTypingPoses), 'media lab refresh non-typing + fader poses: bone for bone what they were');
+            assert.deepEqual(sweep(who => fresh(who, {}), solveStill, nonTypingPoses), before({}, nonTypingPoses), 'frozen Classic non-typing poses: unchanged');
+            assert.deepEqual(sweep(who => fresh(who, { mediaLab: true }), solveStill, mediaLabNonTypingPoses), before({ mediaLab: true }, mediaLabNonTypingPoses));
         } finally { fs.rmSync(file, { force: true }); }
     }
+    // Active, accurate keyboard typing: continuous finger motion (no multi-second frozen hovers), multi-finger engagement,
+    // anchored wrists, and non-cup-hand typing in sit-coffee / stand-coffee.
+    for (const [who, id, sides] of [['maya', 'people-maya-sit-type', ['l', 'r']], ['andre', 'people-andre-stand-type', ['l', 'r']], ['kai', 'people-kai-wheel-type', ['l', 'r']], ['maya', 'people-maya-sit-coffee', ['l']]]) {
+        const rig = fresh(who, { castDetail: true }), key = rig.key(id);
+        let activeFrames = 0, totalFrames = 0;
+        const struckFingers = new Set();
+        for (let frame = 0; frame < 120; frame++) {
+            const time = frame / 12;
+            solveStill(rig, key, { time, seed: 41 });
+            let frameMax = 0;
+            for (const s of sides) {
+                const wrist = rig.side[s].arm[3];
+                assert.ok(rig.wp[wrist].distanceTo(key.wp[wrist]) < .005, `${id} (${s}): wrist stays anchored over the keys`);
+                rig.side[s].fingers.forEach((bone, idx) => {
+                    const ang = rig.lq[bone].angleTo(key.q[bone]);
+                    frameMax = Math.max(frameMax, ang);
+                    if (idx % 3 === 0 && ang > .08) struckFingers.add(`${s}:${Math.floor(idx / 3)}`);
+                });
+            }
+            if (id.includes('coffee')) {
+                for (const bone of rig.side.r.fingers) assert.ok(rig.lq[bone].angleTo(key.q[bone]) < 1e-6, `${id}: cup hand never types`);
+            }
+            if (frameMax > .03) activeFrames++;
+            totalFrames++;
+        }
+        assert.ok(activeFrames / totalFrames > .85, `${id}: active typing without long frozen hovers (${activeFrames}/${totalFrames})`);
+        assert.ok(struckFingers.size >= (sides.length === 2 ? 6 : 3), `${id}: multiple fingers actively type (${struckFingers.size})`);
+    }
     // the flags split as they say: a typist anywhere has the finger sequence but not the timeline scan; only the editor scans
-    for (const pose of ['sit-type', 'stand-type', 'wheel-type', 'sit-laptop']) {
+    for (const pose of typingPoses) {
         const who = 'ava', id = `people-${who}-${pose}`; const gaze = flags => { const rig = fresh(who, flags), key = rig.key(id); solveStill(rig, key, { time: 3.7, seed: 41 }); return rig.wq[rig.b.head].toArray(); };
         const fingers = flags => { const rig = fresh(who, flags), key = rig.key(id); solveStill(rig, key, { time: 3.7, seed: 41 }); return rig.side.l.fingers.concat(rig.side.r.fingers).map(i => rig.lq[i].toArray()).flat(); };
         assert.deepEqual(gaze({ castDetail: true }), gaze({}), pose + ': detail alone does not scan a timeline');

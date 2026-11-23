@@ -234,30 +234,74 @@ const blendQ = (out, pair, i) => pair.w > 0 ? out.slerpQuaternions(pair.a.q[i], 
 const blendV = (out, pair, i) => pair.w > 0 ? out.lerpVectors(pair.a.wp[i], pair.b.wp[i], pair.w) : out.copy(pair.a.wp[i]);
 const blendW = (out, pair, i) => pair.w > 0 ? out.slerpQuaternions(pair.a.wq[i], pair.b.wq[i], pair.w) : out.copy(pair.a.wq[i]);
 
-// Typing: in bursts with pauses, one finger of each hand at a time dips onto a key (the two hands half a beat apart).
+// Active, accurate touch-typing: continuous natural bursts with brief micro-breaths (no long frozen hovers),
+// overlapping multi-finger strikes + anticipatory pre-lift, and row/column wrist pitch, yaw & pronation roll
+// synced to keystrokes while keeping the wrist pivot anchored over the keyboard.
 function tapKeys(rig, s, time, seed, life) {
-    // Everyone rests their fingers on the keys for a beat now and then (the media lab's editor, during playback).
-    if (rig.castDetail) life *= 1 - moment(time,seed,102,8,2.4);
-    const { fingers, arm } = rig.side[s], busy = ss(-.15, .1, noise(time * .31 + (s === 'l' ? 0 : .4), seed + 21)) * life, beat = time * (6.1 + hash(3, seed) * 1.6) + (s === 'l' ? 0 : .5), n = Math.floor(beat), x = beat - n;
-    const which = Math.floor(hash(n, seed + (s === 'l' ? 40 : 41)) * 5.99) % 5, tap = Math.sin(Math.PI * x) ** 2 * busy * (hash(n, seed + 50) < .82 ? 1 : 0);
-    if (tap <= 0) return;
+    if (!(life > 0)) return;
+    const { fingers, arm } = rig.side[s];
+    if (!fingers.length) return;
+    const handOffset = s === 'l' ? 0 : 13;
+    // Continuous natural cadence with brief split-second word breaths (never freezes into a multi-second hover)
+    const microPause = 1 - .45 * moment(time, seed + handOffset, 102, 5.2, .35);
+    const busy = (.72 + .28 * ss(-.6, .4, noise(time * .48 + (s === 'l' ? 0 : .7), seed + 21))) * microPause * life;
+    const rate = 7.4 + hash(3, seed) * 1.8;
+    const beat = time * rate + (s === 'l' ? 0 : .47), n = Math.floor(beat), x = beat - n;
+    const sideSign = s === 'l' ? 1 : -1;
+    // Finger group count (usually 5: thumb, index, middle, ring, pinky; 3 joints each)
+    const nFingers = Math.max(1, Math.floor(fingers.length / 3));
+    const pickFinger = k => {
+        const h = hash(k, seed + (s === 'l' ? 40 : 41));
+        // Spacebar / thumb ~12% of strokes, remaining 88% across the 4 main typing digits
+        if (nFingers >= 5) return h < .12 ? 0 : 1 + Math.floor(((h - .12) / .88) * 3.999);
+        return Math.floor(h * (nFingers - .001));
+    };
+    const which = pickFinger(n), prevWhich = pickFinger(n - 1), nextWhich = pickFinger(n + 1);
+    const activeBeat = hash(n, seed + 50 + handOffset) < .93 ? 1 : .25;
+    // Crisp downward keystroke strike + quick rebound
+    const strike = Math.sin(Math.PI * clamp01((x - .06) / .80)) ** 1.55;
+    const tap = strike * busy * activeBeat;
+    const prevRelease = x < .32 ? (1 - x / .32) ** 2 * .38 * busy : 0;
+    const nextPrep = x > .52 ? ((x - .52) / .48) * busy : 0;
+    // Key row (-1 bottom, 0 home, +1 top) & column reach smoothly tracking from previous key to current key
+    const rowOf = k => (hash(k, seed + 61 + handOffset) - .5) * 2;
+    const colOf = f => (f / Math.max(1, nFingers - 1) - .5) * 2;
+    const blend = ss(0, .34, x);
+    const row = lerp(rowOf(n - 1), rowOf(n), blend);
+    const col = lerp(colOf(prevWhich), colOf(which), blend);
     fingers.forEach((i, at) => {
         const finger = Math.floor(at / 3), joint = at % 3;
-        if (rig.castDetail && finger === (which+1)%5 && joint===0) {
-            // A neighbouring digit lifts slightly as the typing finger loads the key.
-            rig.lq[i].multiply(turn.setFromAxisAngle(X,-.045*tap));
-        }
-        if (finger !== which) return;
-        if (rig.castDetail) {
-            // The proximal joint leads, then the fingertip closes and releases.
-            const travel=Math.sin(Math.PI*clamp01((x-joint*.075)/(1-joint*.075)))**2;
-            const thumb=rig.names[i].startsWith('thumb');
-            rig.lq[i].multiply(turn.setFromAxisAngle(X,travel*busy*(thumb?.55:1)*[.19,.14,.075][joint]));
+        const thumb = rig.names[i].startsWith('thumb');
+        const scale = thumb ? .56 : 1;
+        if (finger === which) {
+            // Proximal joint leads slightly, fingertip presses down crisply onto the keycap then rebounds
+            const travel = Math.sin(Math.PI * clamp01((x - .05 - joint * .055) / Math.max(.2, .80 - joint * .055))) ** 1.5;
+            const preLift = x < .16 && joint === 0 ? -Math.sin(Math.PI * (x / .16)) * .065 * busy : 0;
+            const amp = (rig.castDetail ? [.38, .25, .14] : [.36, .22, .12])[joint];
+            rig.lq[i].multiply(turn.setFromAxisAngle(X, (travel * busy * activeBeat * amp + preLift) * scale));
             return;
         }
-        rig.lq[i].multiply(turn.setFromAxisAngle(X, tap * (joint === 0 ? .2 : joint === 1 ? .1 : .05) * (rig.names[i].startsWith('thumb') ? .5 : 1)));
+        if (finger === prevWhich && prevRelease > 0) {
+            rig.lq[i].multiply(turn.setFromAxisAngle(X, prevRelease * [.26, .16, .09][joint] * scale));
+            return;
+        }
+        if (finger === nextWhich && joint === 0 && nextPrep > 0) {
+            // Next finger pre-lifts slightly in anticipation of its upcoming keystroke
+            rig.lq[i].multiply(turn.setFromAxisAngle(X, -.085 * nextPrep * scale));
+            return;
+        }
+        if (finger === (which + 1) % nFingers && joint === 0) {
+            // Neighboring digit counter-lifts subtly as the typing finger loads the key
+            rig.lq[i].multiply(turn.setFromAxisAngle(X, -.055 * tap));
+        }
     });
-    rig.lq[arm[3]].multiply(turn.setFromAxisAngle(X, tap * .012));
+    // Natural wrist pitch dip onto keycaps + subtle row/column sweep & pronation roll (wrist stays anchored!)
+    const wristPitch = tap * .068 + row * .030 * busy;
+    const wristRoll = sideSign * col * .042 * busy;
+    const wristYaw = sideSign * col * .052 * busy;
+    rig.lq[arm[3]].multiply(turn.setFromAxisAngle(X, wristPitch));
+    rig.lq[arm[3]].multiply(turn.setFromAxisAngle(Y, wristRoll));
+    rig.lq[arm[3]].multiply(turn.setFromAxisAngle(Z, wristYaw));
 }
 
 const CUP_HAND = { 'sit-coffee': 'r', 'stand-coffee': 'r' };      // desk postures with a drink in one hand (tools/people/cast.py)
@@ -382,10 +426,10 @@ export function solveDesk(rig, keys, input) {
             spot.set(lerp(awayAt.x, keysAt.x, ke), lerp(awayAt.y, keysAt.y, upFirst) + .03 * Math.sin(Math.PI * ke), lerp(awayAt.z, keysAt.z, thenIn));
             handQ.copy(rig.wq[hand]); rig.reach(upper, lower, hand, spot); rig.reach(upper, lower, hand, spot); rig.setWorld(hand, handQ);
         }
-        // fingers: curled for the keys, looser away from them; typing taps them in bursts
-        const loose = wait || keyed.a;
+        // fingers: curled for the keys, looser away from them; active typing eases in as hands reach the keyboard
+        const loose = wait || keyed.a, tapW = ss(.82, .98, ke);
         for (const i of fingers) { rig.lq[i].copy(loose.q[i]); if (ke > 0 && keyed) rig.lq[i].slerp(blendQ(tq, keyed, i), ke); }
-        if (life > 0 && ke > .98 && keyed && !mixing && input.taps !== false && s !== cup) tapKeys(rig, s, time, seed, life);
+        if (life > 0 && tapW > 0 && keyed && !mixing && input.taps !== false && s !== cup) tapKeys(rig, s, time, seed, life * tapW);
     }
     rig.fk();
     if (mixing && life > 0 && ke > .9) rideFader(rig,time,seed,life*ss(.9,1,ke));
@@ -475,13 +519,13 @@ export function drawPose(rig, drawn, dz = 0, pose = null, hold = false) {
 // The posture as built with life in it: breathing, a head that drifts, a shift of weight for those on their feet
 // (feet pinned), typing fingers, a page turned by a reader. Hands that rest on something (keys, a table, a bench, a
 // stick) stay exactly where they are. key: rig.key(id). input: { time, seed, life: 0..1 }. Pure.
-const RESTING = { 'sit-type': 'lr', 'stand-type': 'lr', 'stand-mid': 'lr', 'stand-type-low': 'lr', 'stand-counter': 'lr', 'sit-microscope': 'lr', 'lie-bed': 'lr', 'wheel-type': 'lr', 'power-type': 'lr', 'sit-laptop': 'lr', 'sit-write': 'lr', 'sit-listen': 'lr', 'sit-raise': 'l', 'stand-work': 'lr', 'cane-stand': 'r', 'wheel-roll': 'lr', 'wheel-watch': 'lr',
+const RESTING = { 'sit-type': 'lr', 'stand-type': 'lr', 'stand-mid': 'lr', 'stand-type-low': 'lr', 'stand-counter': 'lr', 'sit-microscope': 'lr', 'lie-bed': 'lr', 'wheel-type': 'lr', 'power-type': 'lr', 'sit-laptop': 'lr', 'sit-coffee': 'l', 'stand-coffee': 'l', 'sit-write': 'lr', 'sit-listen': 'lr', 'sit-raise': 'l', 'stand-work': 'lr', 'cane-stand': 'r', 'wheel-roll': 'lr', 'wheel-watch': 'lr',
     'kid-stand-desk': 'lr', 'kid-sit-desk': 'lr', 'kid-sit-k': 'lr', 'kid-sit-e': 'lr', 'kid-kneel-craft': 'lr', 'kid-play-floor': 'lr',
     // (the workshop film: a hand that holds the robot where it sits, both hands at the phone so the finger stays on its button)
     'stand-robot-work': 'r', 'stand-robot-shelf': 'lr', 'stand-phone-up': 'lr', 'stand-phone-press': 'lr',
     // (the high school film: the hand on the desk's touchscreen, its edge or its glass)
     'stand-screen-pull': 'r', 'stand-screen-tap': 'r', 'stand-screen-press': 'r' };
-const TYPES = new Set(['sit-type', 'stand-type', 'stand-mid', 'stand-type-low', 'wheel-type', 'power-type', 'sit-laptop']);
+const TYPES = new Set(['sit-type', 'stand-type', 'stand-mid', 'stand-type-low', 'wheel-type', 'power-type', 'sit-laptop', 'sit-coffee', 'stand-coffee']);
 const ON_FEET = new Set(['stand-type', 'stand-mid', 'stand-type-low', 'stand-brief', 'stand-radio', 'stand-chart', 'stand-counter', 'stand-wait', 'stand-phone', 'stand-present', 'stand-present-left', 'stand-work', 'stand-paint', 'cane-stand', 'kid-stand', 'kid-stand-wait', 'kid-stand-desk', 'stand-robot-work', 'stand-robot-lift', 'stand-robot-shelf', 'stand-phone-pull', 'stand-phone-up', 'stand-phone-press', 'stand-phone-watch', 'stand-screen-pull', 'stand-screen-tap', 'stand-screen-press']);
 const INTENT = new Set(['stand-chart', 'sit-microscope', 'stand-radio', 'sit-read', 'sit-phone', 'power-phone', 'stand-phone', 'sit-write', 'stand-work', 'stand-paint', 'sit-controller', 'kid-read-floor', 'kid-sit-desk', 'kid-stand-desk', 'kid-sit-k', 'kid-sit-e', 'kid-kneel-craft', 'kid-play-floor', 'stand-robot-work', 'stand-robot-lift', 'stand-robot-shelf', 'stand-phone-up', 'stand-phone-press', 'stand-screen-pull', 'stand-screen-tap', 'stand-screen-press']);      // eyes on what the hands hold
 export const livelyPose = pose => pose !== 'walk' && pose !== 'white-cane' && pose !== 'push-cart';
@@ -531,7 +575,7 @@ export function solveStill(rig, key, input) {
     for (const s of ['l', 'r']) {
         const [, upper, lower, hand] = rig.side[s].arm;
         if (resting.includes(s)) { rig.reach(upper, lower, hand, key.wp[hand]); rig.reach(upper, lower, hand, key.wp[hand]); rig.setWorld(hand, key.wq[hand]); }
-        if (TYPES.has(pose) && !(rig.mediaLab && key.id.includes('-sit-mix')) && input.taps !== false) tapKeys(rig, s, time, seed, life * (1 - reading));
+        if (TYPES.has(pose) && s !== CUP_HAND[pose] && !(rig.mediaLab && key.id.includes('-sit-mix')) && input.taps !== false) tapKeys(rig, s, time, seed, life * (1 - reading));
     }
     // (a reader turning a page, and every other activity: ACTS below)
     rig.fk();
