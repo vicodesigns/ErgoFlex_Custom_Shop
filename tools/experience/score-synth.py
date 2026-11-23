@@ -835,17 +835,46 @@ def compose(plan, seed):
     beat_nom = grid.beat
     ta, tb, te = plan['title_a'], plan['title_b'], plan['end_card']
 
+    # Precompute smooth transition hand-offs between consecutive chapters:
+    #   'drop' = energy eases down (e.g. oilers -> wellness, music -> media): thin drums/arp on final 2 beats
+    #   'lift' = energy steps up (e.g. awareness -> music, media -> storage): clean 1-beat pocket + soft pickup
+    sec_trans = {}
+    for si, s in enumerate(secs):
+        if si + 1 >= len(secs):
+            continue
+        cur_e = STYLES[s['style']].get('energy', 0.7)
+        nxt_e = STYLES[secs[si + 1]['style']].get('energy', 0.7)
+        if nxt_e < cur_e - 0.12:
+            sec_trans[s['name']] = 'drop'
+        elif nxt_e > cur_e + 0.12:
+            sec_trans[s['name']] = 'lift'
+
     # ---------------- pad (chords) ----------------
     pad_events = [(0.0, 'Asus4', 1.35), (ta, 'Dmaj9', 0.10)]
-    for s in secs:
-        for (b, nb), ch in zip(s['bars'], s['chords']):
+    for si, s in enumerate(secs):
+        nxt = secs[si + 1] if si + 1 < len(secs) else None
+        nxt_ch0 = nxt['chords'][0] if (nxt and nxt.get('chords')) else None
+        st = STYLES[s['style']]
+        for bi, ((b, nb), ch) in enumerate(zip(s['bars'], s['chords'])):
             t0 = grid.t(b)
             if pad_events[-1][1] != ch:
                 att = 0.35 if s['style'] not in ('wellness', 'awareness', 'media') else 0.7
                 pad_events.append((t0, ch, att))
+            # Smooth 2-beat harmonic turnaround on the last bar if repeating the next chapter's opening chord
+            # or entering a contrasting key (e.g. coast Gmaj9 -> oilers Gmaj9, wellness Dmaj9 -> awareness Bm9)
+            if bi == len(s['bars']) - 1 and nb == 4 and nxt_ch0 and s['style'] != 'wake':
+                turn_ch = st.get('turn')
+                if ch == nxt_ch0:
+                    turn_ch = turn_ch or ('Asus4' if nxt_ch0 != 'Asus4' else 'A')
+                elif turn_ch and turn_ch != ch and turn_ch != nxt_ch0 and s['style'] in ('wellness', 'commons', 'rise'):
+                    pass
+                else:
+                    turn_ch = None
+                if turn_ch and turn_ch in CHORDS and turn_ch != ch:
+                    pad_events.append((grid.t(b + 2.0), turn_ch, 0.45))
     pad_events.append((te, 'Dmaj9', 0.06))
     # voice-led: common tones are held across chord changes (no re-attack, no phasing),
-    # departing tones release over ~0.9 s while arriving tones fade in.
+    # departing tones release over ~1.0 s while arriving tones fade in.
     open_notes = {}  # midi -> (t_start, attack)
     spans = []
     for i, (t0, ch, att) in enumerate(pad_events):
@@ -854,7 +883,7 @@ def compose(plan, seed):
         for m in list(open_notes):
             if m not in notes:
                 ts, a = open_notes.pop(m)
-                spans.append((m, ts, t0 + 0.12, a, 0.9))
+                spans.append((m, ts, t0 + 0.15, a, 1.0))
         for m in notes:
             if m not in open_notes:
                 open_notes[m] = (t0, att)
@@ -868,12 +897,13 @@ def compose(plan, seed):
         mix.add('pad', ts, L, R, gain=0.16)
 
     # ---------------- arpeggio / pulse ----------------
-    arp_lvl_c = curve(plan, {s['name']: STYLES[s['style']].get('arp_lvl', 0) for s in secs}, smooth_s=0.6)
+    arp_lvl_c = curve(plan, {s['name']: STYLES[s['style']].get('arp_lvl', 0) for s in secs}, smooth_s=0.85)
     for s in secs:
         st = STYLES[s['style']]
         kind = st.get('arp')
         if not kind:
             continue
+        tr_out = sec_trans.get(s['name'])
         step_i = 0
         for bi, ((b, nb), ch) in enumerate(zip(s['bars'], s['chords'])):
             tones = arp_tones(ch)
@@ -892,12 +922,18 @@ def compose(plan, seed):
                     continue
                 if st.get('breath_end') and bi == len(s['bars']) - 1:
                     continue
+                # Smoothly taper arp over the final 2 beats before an energy-drop dissolve
+                fade_end = 1.0
+                if tr_out == 'drop' and bb >= s['b1'] - 2.0:
+                    if bb >= s['b1'] - 1.0:
+                        continue
+                    fade_end = max(0.0, (s['b1'] - 1.0 - bb) / 1.0) * 0.65
                 seq = [0, 2, 1, 3, 2, 4, 3, 5] if kind != '8up' else [0, 1, 2, 3, 4, 5, 4, 2]
                 idx = seq[step_i % len(seq)] + (2 if (bi % 4) == 3 and kind != '8' else 0)
                 step_i += 1
                 midi = tones[idx % len(tones)]
                 acc = [1.0, 0.55, 0.72, 0.55][k % 4] if rate == 0.25 else [1.0, 0.7][k % 2]
-                vel = acc * (0.85 + 0.15 * rng.random())
+                vel = acc * fade_end * (0.85 + 0.15 * rng.random())
                 t0 = grid.t(bb)
                 if st.get('swing') and k % 2 == 1:
                     t0 += st['swing'] * beat_nom * 0.5
@@ -958,6 +994,7 @@ def compose(plan, seed):
     # ---------------- drums ----------------
     for s in secs:
         st = STYLES[s['style']]
+        tr_out = sec_trans.get(s['name'])
         for (b, nb) in s['bars']:
             last_bar = (b + nb) >= s['b1'] - 1e-6
             for inst in ('kick', 'clap', 'hat', 'shaker', 'tickp'):
@@ -971,6 +1008,12 @@ def compose(plan, seed):
                         continue
                     bb = b + k * 0.25
                     if st.get('breath_end') and bb >= s['b1'] - 2:
+                        continue
+                    # Smooth drum breath before an energy-drop dissolve (let reverb tail bloom into the quieter chapter)
+                    if tr_out == 'drop' and bb >= s['b1'] - 2.0:
+                        continue
+                    # Brief 1-beat kick pocket before an energy-lift drop so beat 1 of the next chapter hits cleanly
+                    if tr_out == 'lift' and inst == 'kick' and bb >= s['b1'] - 1.0:
                         continue
                     t0 = grid.t(bb)
                     if st.get('swing') and k % 2 == 1:
@@ -991,6 +1034,10 @@ def compose(plan, seed):
                     else:
                         mix.add('tick', t0, syn.tick(93 if s['style'] == 'awareness' else 86),
                                 gain=0.045 * vel, pan=rng.uniform(-0.4, 0.4))
+            # Clean 2-hit soft clap pickup leading into high-energy drops (awareness -> music, media -> storage)
+            if tr_out == 'lift' and not st.get('roll') and last_bar and nb >= 4 and s['style'] in ('awareness', 'media'):
+                for off_p, v_p, p_p in ((3.5, 0.45, -0.10), (3.75, 0.62, 0.10)):
+                    mix.add('clap', grid.t(b + off_p), syn.clap(int(rng.integers(6))), gain=0.13 * v_p, pan=p_p)
             # storage: soft 16th clap roll building through the final bar
             if st.get('roll') and last_bar:
                 for k in range(4 * nb):
@@ -1052,55 +1099,65 @@ def compose(plan, seed):
         mix.add('lead', ta + 0.01, syn.bell(m, 'celesta', 3.0), gain=g, pan=0.2 * (m - 85) / 5)
     events['hits'].append((ta, 'title A bloom'))
 
-    # title B lift: reverse swell + soft impact
-    pre = 4 * beat_nom * 0.9
+    # title B lift: exact 4-beat beat-locked reverse swell + soft impact
+    pre = tb - grid.t(-4.0)
     L, R = syn.whoosh(pre, 1.8, f_lo=300, f_hi=4500, pan_from=0.4, pan_to=-0.2)
     mix.add('fx', tb - pre, L, R, gain=0.10)
-    rb = syn.reverse_bell([69, 74, 81], 2 * beat_nom * 1.0)
-    mix.add('fxt', tb - 2 * beat_nom, rb, rb, gain=0.07)
+    rb_dur = tb - grid.t(-2.0)
+    rb = syn.reverse_bell([69, 74, 81], rb_dur)
+    mix.add('fxt', tb - rb_dur, rb, rb, gain=0.07)
     mix.add('boom', tb, syn.boom(2.5, 62, 40, 0.75), gain=0.36)
     events['hits'].append((tb, 'title B lift'))
 
-    # lift top: the desk reaches the top of its first lift, so a short reverse swell lands the first bar line after
-    # it (on the one grid, the chord change Bm9 with the kick). Its own random stream, so no other sound moves.
+    # lift top: the desk reaches the top of its first lift, so a beat-locked reverse swell lands on the next bar line
     lt = plan.get('lift_top'); lift_hit = None
     if lt:
         syn2 = Synth(np.random.default_rng(seed + 7001))
         bl = [4.0 * m for m in range(1, int(grid.bs[-1] // 4) + 1) if grid.t(4.0 * m) >= lt - 0.05]
         if bl:
-            tl = grid.t(bl[0])
-            pre = min(1.5, 3 * beat_nom)
+            b_hit = bl[0]
+            tl = grid.t(b_hit)
+            pre = tl - grid.t(b_hit - 3.0)
             L, R = syn2.whoosh(pre, 1.1, f_lo=500, f_hi=3600, pan_from=-0.25, pan_to=0.25, curve=2.0)
             mix.add('fx', tl - pre, L, R, gain=0.055)
             lch = next((c for s_ in secs for (b_, nb_), c in zip(s_['bars'], s_['chords']) if abs(grid.t(b_) - tl) < 1e-6), 'Bm9')
-            rb = syn2.reverse_bell(bell_tones(lch, 74, 88)[:3], 1.4)
-            mix.add('fxt', tl - 1.4, rb, rb, gain=0.03)
+            rb_dur = tl - grid.t(b_hit - 2.5)
+            rb = syn2.reverse_bell(bell_tones(lch, 74, 88)[:3], rb_dur)
+            mix.add('fxt', tl - rb_dur, rb, rb, gain=0.03)
             lift_hit = (tl, 'lift top: reverse swell onto the next bar line')
 
-    # dissolve swells, centred on each transition (bar line)
-    big = {'music', 'storage', 'hero'}
+    # dissolve swells, beat-locked to exact bars/beats and peaking dead-on each transition bar line
+    big = {'music', 'storage', 'hero', 'finale'}
     for s in secs[2:]:
         tc_ = s['t0']
-        size = 1.3 if s['style'] in big else 1.0
-        pre = 1.9 * size
-        L, R = syn.whoosh(pre, 1.3, f_lo=260, f_hi=2600 + 600 * size,
+        b0 = s['b0']
+        is_big = s['style'] in big
+        size = 1.25 if is_big else 1.0
+        pre = tc_ - grid.t(b0 - (6.0 if is_big else 4.0))
+        L, R = syn.whoosh(pre, 1.35, f_lo=260, f_hi=2600 + 600 * size,
                           pan_from=-0.45 if len(events['hits']) % 2 else 0.45,
                           pan_to=0.45 if len(events['hits']) % 2 else -0.45)
-        mix.add('fx', tc_ - pre, L, R, gain=0.075 * size)
+        mix.add('fx', tc_ - pre, L, R, gain=0.072 * size)
         ch0 = s['chords'][0] if s['chords'] else 'Dmaj9'
         top = bell_tones(ch0, 76, 88)[:3]
-        rb = syn.reverse_bell(top, 1.6)
-        mix.add('fxt', tc_ - 1.6, rb, rb, gain=0.03 * size)
+        rb_dur = tc_ - grid.t(b0 - (4.0 if is_big else 3.0))
+        rb = syn.reverse_bell(top, rb_dur)
+        mix.add('fxt', tc_ - rb_dur, rb, rb, gain=0.030 * size)
+        # Soft sub-boom anchor on big downbeat drops (music, hero/finale)
+        if s['style'] in ('music', 'hero', 'finale'):
+            mix.add('boom', tc_, syn.boom(2.2, 60, 38, 0.70), gain=0.24)
         events['hits'].append((tc_, 'dissolve swell -> ' + s['name']))
     if lift_hit:     # after the loop: the swells' pan alternates with the number of hits so far
         events['hits'].append(lift_hit)
 
-    # logo hit at the end card: riser, soft impact, felt mallet and shimmer, ring-out
-    pre = 2 * beat_nom * 1.0 + 1.2
-    L, R = syn.whoosh(pre, 3.0, f_lo=300, f_hi=5200, pan_from=-0.3, pan_to=0.3, curve=2.8)
+    # logo hit at the end card: beat-locked 1-bar riser + 4-beat reverse bell, soft impact, felt mallet and shimmer, ring-out
+    b_end = secs[-1]['b1']
+    pre = te - grid.t(b_end - 4.0)
+    L, R = syn.whoosh(pre, 3.0, f_lo=300, f_hi=5200, pan_from=-0.3, pan_to=0.3, curve=2.6)
     mix.add('fx', te - pre, L, R, gain=0.10)
-    rb = syn.reverse_bell([74, 78, 81, 86], 2.4)
-    mix.add('fxt', te - 2.4, rb, rb, gain=0.07)
+    rb_dur = te - grid.t(b_end - 4.0)
+    rb = syn.reverse_bell([74, 78, 81, 86], rb_dur)
+    mix.add('fxt', te - rb_dur, rb, rb, gain=0.07)
     mix.add('boom', te, syn.boom(4.5, 60, 37, 1.5), gain=0.33)
     mix.add('kick', te, syn.kick(0, 1.6), gain=0.30)
     for m, g, p in ((50, 0.10, 0), (57, 0.07, -0.1), (62, 0.06, 0.1)):  # felt mallet body
@@ -1116,7 +1173,7 @@ def compose(plan, seed):
 
     # ---------------- bus processing ----------------
     tc_cut, cut = curve(plan, dict({s['name']: tuple(np.multiply(STYLES[s['style']]['cut'], 1.2)) if isinstance(STYLES[s['style']]['cut'], tuple) else 1.2 * STYLES[s['style']]['cut'] for s in secs},
-                                   intro=(500, 1500), tail=(4200, 900)), smooth_s=1.2, default=1500)
+                                   intro=(500, 1500), tail=(4200, 900)), smooth_s=1.4, default=1500)
     tc_pad, padlvl = curve(plan, dict({s['name']: STYLES[s['style']]['pad'] for s in secs},
                                       intro=(0.7, 0.8), tail=1.0), smooth_s=1.0, default=0.8)
     # slow filter motion: 8-bar LFO (+/- 0.3 octave) and breathing in wellness
