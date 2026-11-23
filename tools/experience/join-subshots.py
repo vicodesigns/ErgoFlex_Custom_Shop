@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Join a chapter's sub-shot renders into one chapter render with cross-dissolves.
 
-    python3 tools/experience/join-subshots.py <subshots-cut.json> <render-dir> <out.mkv> [--transition fadeblack] [--plan]
+    python3 tools/experience/join-subshots.py <subshots-cut.json> <render-dir> <out.mkv> [--transition fadeblack] [--fps 30] [--plan]
 
 <subshots-cut.json> lists the sub-shots in order, each with renderRange [t0, t1] in chapter
 seconds (build-safety-chapter.py writes one); render-cut.cjs rendered them as <render-dir>/01.mkv,
@@ -15,6 +15,8 @@ dissolve's [duration, offset], the chapter's seconds) as JSON and renders nothin
 import json, os, subprocess, sys
 cut, rdir, out = sys.argv[1:4]
 trans = sys.argv[sys.argv.index('--transition') + 1] if '--transition' in sys.argv else 'fade'
+fps = int(sys.argv[sys.argv.index('--fps') + 1]) if '--fps' in sys.argv else 30
+assert fps > 0, 'fps must be positive'
 subs = json.load(open(cut))['shots']
 inputs, f, fades, prev = [], [], [], '[0:v]'
 for k, s in enumerate(subs):
@@ -30,7 +32,7 @@ if '--plan' in sys.argv:
                       'seconds': round(subs[-1]['renderRange'][1] - subs[0]['renderRange'][0], 4)}))
     sys.exit(0)
 graph = ['-filter_complex', ';'.join(f), '-map', prev] if f else []      # one sub-shot: nothing to dissolve
-subprocess.run(['ffmpeg', '-v', 'error', '-y', *inputs, *graph, '-r', '30',
+subprocess.run(['ffmpeg', '-v', 'error', '-y', *inputs, *graph, '-r', str(fps),
                 '-c:v', 'libx264', '-preset', 'medium', '-crf', '8', '-pix_fmt', 'yuv444p',
                 '-color_primaries', 'bt709', '-color_trc', 'bt709', '-colorspace', 'bt709', out], check=True)
 d = float(subprocess.check_output(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', out]))

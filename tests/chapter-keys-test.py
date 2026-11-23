@@ -57,6 +57,9 @@ try:
     check(changed(k4, keys()) == ['coast'], 'a missing clip is keyed as missing (no crash)')
     k5 = keys(); a4 = keys('1080p')
     check(all(a4[c] != k5[c] for c in IDS), 'resolution changes every key')
+    f60 = keys('4K', fps=60); f120 = keys('4K', fps=120)
+    check(all(f60[c] != k5[c] and f120[c] != f60[c] and f120[c] != k5[c] for c in IDS), 'fps (30 vs 60 vs 120) changes every key')
+    check(keys('4K', fps=30) == k5, 'fps=30 matches default keys bit-for-bit')
     e = {c: k for _, c, k in ck.chapter_keys(HQ, '4K', tmp, epoch='2')}
     check(all(e[c] != k5[c] for c in IDS), 'epoch changes every key')
     v5 = json.load(open(f'{tmp}/{HQ}/previews/awaken-v5-cut.json')); v5['shots'][0]['seconds'] = 44; w(f'{HQ}/previews/awaken-v5-cut.json', v5)

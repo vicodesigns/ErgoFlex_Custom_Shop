@@ -23,8 +23,12 @@ const LEDISH = /\bLEDs?\b|LED strip|led-strip/i, NOT_BLOOM = /floor glow|floor l
 const RECEIVER = /LED reflection|LED floor bounce/i;
 const SCREENISH = /screen|display|monitor|\btv\b|marquee|stage media/i;
 export const PRESETS = {
-  hq13: { shadowMap: 4096, shadowRadius: 2, shadowSamples: 25, anisotropy: 16, reflections: 512,
-          ao: { intensity: .45, radius: .12 }, bloom: { strength: .16, radius: .28, threshold: .0 } }
+  // Epoch 13 fidelity preset: 8192 shadows (overridable via preset 'hq13_4k_shadow' or shot.quality.shadowMap),
+  // 1024 room reflections, 32-sample GTAO. Clamped automatically to renderer.capabilities.maxTextureSize.
+  hq13: { shadowMap: 8192, shadowRadius: 2, shadowSamples: 25, anisotropy: 16, reflections: 1024,
+          ao: { intensity: .45, radius: .12, samples: 32 }, bloom: { strength: .16, radius: .28, threshold: .0 } },
+  hq13_4k_shadow: { shadowMap: 4096, shadowRadius: 2, shadowSamples: 25, anisotropy: 16, reflections: 1024,
+                    ao: { intensity: .45, radius: .12, samples: 32 }, bloom: { strength: .16, radius: .28, threshold: .0 } }
 };
 
 const sceneRoot = () => { let s = api.loadedModel; while (s?.parent) s = s.parent; return s; };
@@ -116,7 +120,8 @@ async function installPost(renderer, scene, q, deskWidth, screens, info) {
   const size = renderer.getDrawingBufferSize(new THREE.Vector2()), cam0 = new THREE.PerspectiveCamera();
   let gtao = null;
   if (q.ao) {
-    gtao = new GTAOPass(scene, cam0, size.x, size.y, undefined, { radius: deskWidth * q.ao.radius, distanceExponent: 1, thickness: deskWidth * .02, scale: 1, samples: 16 }, { lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 16 });
+    const aoSamples = q.ao.samples ?? 16;
+    gtao = new GTAOPass(scene, cam0, size.x, size.y, undefined, { radius: deskWidth * q.ao.radius, distanceExponent: 1, thickness: deskWidth * .02, scale: 1, samples: aoSamples }, { lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 16 });
     gtao.output = GTAOPass.OUTPUT.Off;
   }
   // The glow set (screens, LEDs, emissive fixtures) over black: the bloom source, and the AO mask (no AO on light sources).
