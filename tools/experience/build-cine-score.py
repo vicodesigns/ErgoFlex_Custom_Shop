@@ -64,12 +64,12 @@ SEED = 20261030
 # ---- knobs (see SCORE-GUIDE.md next to this cut's score) ----
 DISSOLVE_SLACK = 0.30      # s: how far a chapter's first bar line may sit from its dissolve centre (and <= 0.45 x dissolve)
 MAX_BEND = 0.03            # a chapter's tempo stays within 3 % of the film's
-STEP_CAP = 0.015           # no tempo step anywhere (chapter joins, knots, title B) larger than 1.5 % (v2)
+STEP_CAP = 0.010           # no tempo step anywhere (chapter joins, knots, title B) larger than 1.0 % with zero 2/4 half-bars
 CUT_WEIGHT = 4.0           # cost of a hard cut inside a chapter half a beat off the grid (1.0 = a 1 % tempo bend); v2:
                            # a steady groove comes first, an inside cut gets a knot only when it stays under STEP_CAP
 LOOK_WEIGHT = 16.0         # cost of a finale desk-version change half a bar off a bar line
-JUMP_WEIGHT = 2.0          # cost of a 1 % tempo step between neighbouring chapters (squared), under the hard STEP_CAP
-HALF_BAR_COST = 200.0     # a chapter that ends on a 2/4 bar (only when whole bars cannot fit)
+JUMP_WEIGHT = 8.0          # cost of a 1 % tempo step between neighbouring chapters (squared), under the hard STEP_CAP
+HALF_BAR_COST = 1000.0     # strongly prefer whole 4/4 bars (never drop to a 2/4 bar when whole bars fit within STEP_CAP)
 HERO_UNIT = 4              # beats: every desk-version change of the finale aims at a bar line (its chords then move in 2-bar steps)
 HERO_CYCLE = ['D/F#', 'Gmaj9', 'Em9', 'Bm9']   # 2 bars each, restarting the 2-bar step at every desk-version change ...
 HERO_CADENCE = ['Gmaj9', 'Gmaj9', 'Asus4', 'A']  # ... and its last 4 bars: IV, Vsus V into the logo (D)
