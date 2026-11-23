@@ -39,7 +39,7 @@
 //     face; x is sideways from the desk's centre. rise eases its scale in.
 import * as THREE from 'three';
 import { sampleMovementInto } from '../../led-movement.mjs';
-import { statusEvents } from './film-status-light.mjs';
+import { statusEvents, statusLightOff } from './film-status-light.mjs';
 
 const api = window.ErgoFlex;
 const ZERO = [0, 0, 0, 0], RED = [255, 0, 0, 0], BLUE = [0, 0, 255, 0], AMBER = [255, 70, 0, 0], YELLOW = [255, 255, 0, 0], PURPLE = [150, 0, 255, 0];
@@ -109,6 +109,9 @@ vec3 dogMove(vec3 pos) {
 export function installStatus(shot) {
   const game = api.ledGameMode, counts = game.counts;
   const frame = counts.map(n => new Uint8Array(n * 4)), events = statusEvents(shot);   // (none with statusLight:false: film-status-light.mjs)
+  // When a shot authors its own ledStatus timeline, suppress studio.js's live auto-LedMotion so unlisted moves never
+  // hijack the strips or override the Lighting timeline during Director playback (Vico, 22 Nov 2026).
+  const motionCue = events.length ? statusLightOff(api) : null;
   const group = new THREE.Group(); group.name = 'Film status'; group.userData.filmFx = true;
   const pylons = [], dogs = [], regular0 = api.ledColor || '#ffffff';
   const rgbOf = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
@@ -268,6 +271,6 @@ export function installStatus(shot) {
       game.active = true;
     },
     after() { game.active = false; delete game.sample; },
-    clear() { group.removeFromParent(); fill?.dispose(); for (const p of pylons) { p.mesh.geometry.dispose(); p.mesh.material.dispose(); } game.active = false; delete game.sample; }
+    clear() { motionCue?.restore(); group.removeFromParent(); fill?.dispose(); for (const p of pylons) { p.mesh.geometry.dispose(); p.mesh.material.dispose(); } game.active = false; delete game.sample; }
   };
 }

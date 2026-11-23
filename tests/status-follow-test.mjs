@@ -69,6 +69,18 @@ const strip=list=>list.map(({link,manual,...e})=>e);
   assert.equal(resolveLinks([entry('x',3.4,4.2,'lift-down')],m).size,0,'colour of the other direction is a hand-set choice');
   assert.equal(resolveLinks([entry('x',14,3,'wheels',{mode:2})],m).size,0,'the other drive mode');
   assert.equal(resolveLinks([entry('x',3.4,4.2,'lift-up',{manual:true})],m).size,0,'manual stays manual');
+  // hand-over trimmed lights: an earlier light trimmed where the next light begins still auto-links to its clip
+  {
+    const hm=motion([tilt('t',9.25,3,-5),lift('l',10.4,5.75,45.5)]);
+    const hs=[entry('et',9.25,1.15,'tilt-extend'),entry('el',10.4,5.75,'lift-up')];
+    const hl=resolveLinks(hs,hm);
+    assert.deepEqual([...hl].map(([id,l])=>[id,l.clip.id,l.via]),[['et','t','timing'],['el','l','timing']],'hand-over-trimmed tilt light auto-links to its tilt clip');
+    // moving the lift later lets the trimmed tilt light automatically expand to the new hand-over point
+    const moved=putClip(hm,{...hm.clips[1],start:11.5,duration:4.65},T);
+    const res=syncStatus(hm,moved,hs,T);
+    assert.ok(res.changed,'moving the following lift updates the hand-over');
+    assert.equal(res.status.find(e=>e.id==='el').at,11.5);
+  }
   // explicit link wins, and a clip has one light
   const s2=[entry('p',20,1,'lift-up',{link:'a'}),entry('q',3.4,4.2,'lift-up')];
   const l2=resolveLinks(s2,m);assert.equal(l2.get('p').clip.id,'a');assert.equal(l2.has('q'),false,'the clip is taken');

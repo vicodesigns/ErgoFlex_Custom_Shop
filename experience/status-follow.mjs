@@ -60,8 +60,10 @@ export function resolveLinks(status,motion){
   }
   for(const e of status){
     if(out.has(e.id)||e.manual||e.link||!LANE_OF_KIND[e.kind])continue;
-    const found=clips.filter(c=>!taken.has(c.id)&&followLane(c)===LANE_OF_KIND[e.kind]&&same(e.at,c.start)&&same(e.dur,c.duration)&&sameState(e,deriveLight(motion,c)||{}))
-      .sort((a,b)=>Math.abs(a.start-e.at)-Math.abs(b.start-e.at))[0];
+    const end=e.at+e.dur,handedOver=status.some(o=>o.id!==e.id&&same(o.at,end));
+    const durMatches=c=>same(e.dur,c.duration)||(handedOver&&e.dur<=c.duration+FOLLOW_TOL+1e-9);
+    const found=clips.filter(c=>!taken.has(c.id)&&followLane(c)===LANE_OF_KIND[e.kind]&&same(e.at,c.start)&&durMatches(c)&&sameState(e,deriveLight(motion,c)||{}))
+      .sort((a,b)=>Math.abs(a.start-e.at)-Math.abs(b.start-e.at)||Math.abs(a.duration-e.dur)-Math.abs(b.duration-e.dur))[0];
     if(found){out.set(e.id,{clip:found,via:'timing'});taken.add(found.id);}
   }
   return out;
