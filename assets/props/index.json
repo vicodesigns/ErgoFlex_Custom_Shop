@@ -85590,22 +85590,22 @@
    "file": "assets/props/people-andre-stand-phone-pull.glb",
    "anchor": "floor",
    "size": [
-    574.6,
+    610,
     1798.2,
-    411.4
+    412
    ],
    "min": [
-    -277.5,
+    -312.9,
     0,
     -142.8
    ],
    "max": [
     297.1,
     1798.2,
-    268.6
+    269.2
    ],
-   "tris": 62351,
-   "bytes": 1057196,
+   "tris": 62490,
+   "bytes": 1057812,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,

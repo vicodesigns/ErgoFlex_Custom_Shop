@@ -731,10 +731,10 @@ def stand_robot_shelf(k):
 
 
 def stand_phone_pull(k):
-    """The right hand at the front pocket, drawing the phone out, top first (held as it will be used: its back in the
-    palm, the fingers round its far edge; here the palm faces the thigh)."""
-    return {'spine': (2, 3, 3), 'spine_twist': -4, 'neck': 9, 'head': 11, 'head_yaw': -12,
-            'hand_r': {'at': _s(k, -.178, -.022, .79), 'fingers': (0, -1, -.15), 'palm': (1, .1, 0), 'elbow': (-.15, .3, .1), 'curl': .22, 'thumb': -.8},
+    """The right hand at the right front pocket drawing the phone out: elbow bent naturally, wrist straight (no twist),
+    fingers dipping into the pocket opening, palm toward the hip so the back of the hand covers the pocket."""
+    return {'spine': (2, 3, 3), 'spine_twist': -4, 'neck': 9, 'head': 11, 'head_yaw': -10,
+            'hand_r': {'at': _s(k, -.185, .005, .855), 'fingers': (.12, -.20, -.97), 'palm': (.97, .16, .08), 'elbow': (-.22, .38, -.05), 'curl': .38, 'thumb': .15},
             'hand_l': _hang(k, 'l', -.02),
             'foot_l': {'at': _s(k, .10, .0, .07 / k), 'toes': (.25, -1, 0)}, 'foot_r': {'at': _s(k, -.12, .04, .07 / k), 'toes': (-.3, -1, 0)}}
 
