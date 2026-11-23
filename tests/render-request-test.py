@@ -71,14 +71,18 @@ try:
     q = json.load(open(f'{R}/exports/render-queue/queue.json')); j2 = q['jobs'][1]
     check(len(q['jobs']) == 2 and j2['id'] > j['id'] and j2['scope'] == 'film' and j2['height'] == 2160 and j2['shots'] == 'all', 'second job appended after the first, 4K film')
     check(json.load(open(f"{R}/{j2['cut']}")) == review, 'film cut = the whole review-cut.json')
-    film_blur = json.load(open(f'{WT}/tools/experience/film-render.json'))['FILM_BLUR']
+    fr = json.load(open(f'{WT}/tools/experience/film-render.json'))
+    film_blur = fr['FILM_BLUR']; film_fps = int(fr.get('FILM_FPS', 30))
     check(j.get('blur') == film_blur and j2.get('blur') == film_blur, f'chapter and film jobs carry blur = FILM_BLUR ({film_blur})')
-    # chapter cache keys: computed from the frozen copy, at the job's resolution, 12 for a film / 1 for a chapter; force defaults to false
+    check(j.get('fps') == film_fps and j2.get('fps') == film_fps, f'chapter and film jobs carry fps = FILM_FPS ({film_fps})')
+    # chapter cache keys: computed from the frozen copy, at the job's resolution and fps, 12 for a film / 1 for a chapter; force defaults to false
     import importlib.util
     sp = importlib.util.spec_from_file_location('ck', f'{WT}/tools/experience/chapter-keys.py'); ck = importlib.util.module_from_spec(sp); sp.loader.exec_module(ck)
-    want = {c: k for _, c, k in ck.chapter_keys(HQ, '4K', R, os.path.join(R, j2['manifest'].rsplit('/', 1)[0]))}
+    want = {c: k for _, c, k in ck.chapter_keys(HQ, '4K', R, os.path.join(R, j2['manifest'].rsplit('/', 1)[0]), fps=film_fps)}
     check(list(j2.get('chapterKeys', {})) == ids and j2['chapterKeys'] == want and j2.get('epoch') == ck.read_epoch(f'{WT}/tools/experience') and j2.get('force') is False, 'film job: chapterKeys for all 12 chapters + epoch + force:false')
-    check(j['chapterKeys'] == {'create': {**{c: k for _, c, k in ck.chapter_keys(HQ, '720p', R, os.path.join(R, F))}}['create']}, 'chapter job: only its own key, at 720p')
+    check(j['chapterKeys'] == {'create': {**{c: k for _, c, k in ck.chapter_keys(HQ, '720p', R, os.path.join(R, F), fps=film_fps)}}['create']}, 'chapter job: only its own key, at 720p')
+    frozen_edl = json.load(open(f'{R}/{F}/{HQ}/edl.json'))
+    check(frozen_edl.get('fps') == film_fps, f'frozen edl.json fps synced to job.fps ({film_fps})')
     check(j['chapterKeys']['create'] != j2['chapterKeys']['create'], 'the same chapter has another key at 4K')
     check(not [f for f in os.listdir(f'{R}/exports/render-queue') if f.endswith('.tmp')], 'no temp files left by the atomic write')
     # ---- waits for the cut lock

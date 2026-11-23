@@ -118,8 +118,8 @@ async function loadFx(frame){await frame.evaluate(async()=>{if(!window.__filmFx)
 // it always was (same pixels, same JPEG); a chapter without a dip never takes this path.
 function dipsOf(shot){return (shot.cameraPlan?.keys||[]).filter(k=>k&&k.cut&&k.transition&&(k.transition.type==='dip-black'||k.transition.type==='dip-white')&&Number.isFinite(k.at)&&Number(k.transition.dur)>0).map(k=>({at:Number(k.at),half:Number(k.transition.dur)/2,color:k.transition.type==='dip-white'?'#ffffff':'#000000'}));}
 function dipAt(dips,seconds){let best=null;for(const d of dips||[]){const a=1-Math.abs(seconds-d.at)/d.half;if(a>0&&(!best||a>best.a))best={a:Math.min(1,a),c:d.color};}return best;}
-async function grab(frame,t,seconds,quality=.96,chapter=seconds,video=false,dip=null){
-  const url=await frame.evaluate(async(t,s,q,c,v,mre,mof,dp)=>{const fx=window.__filmFx;if(fx)await fx.frame(t,c,{video:v});try{await window.ErgoPresentation.bakeFrame(t,window.__rc,s);if(mre)window.__rcMaterials=(0,eval)('('+mof+')')(mre);}finally{fx?.after();}if(dp){const g=window.__rc.getContext('2d');g.save();g.globalAlpha=dp.a;g.fillStyle=dp.c;g.fillRect(0,0,window.__rc.width,window.__rc.height);g.restore();}return window.__rc.toDataURL('image/jpeg',q);},t,seconds,quality,chapter,video,opts['list-materials']||null,String(materialsOf),dip);
+async function grab(frame,t,seconds,quality=.96,chapter=seconds,video=false,dip=null,mime='image/jpeg'){
+  const url=await frame.evaluate(async(t,s,q,c,v,mre,mof,dp,mm)=>{const fx=window.__filmFx;if(fx)await fx.frame(t,c,{video:v});try{await window.ErgoPresentation.bakeFrame(t,window.__rc,s);if(mre)window.__rcMaterials=(0,eval)('('+mof+')')(mre);}finally{fx?.after();}if(dp){const g=window.__rc.getContext('2d');g.save();g.globalAlpha=dp.a;g.fillStyle=dp.c;g.fillRect(0,0,window.__rc.width,window.__rc.height);g.restore();}return mm==='image/png'?window.__rc.toDataURL('image/png'):window.__rc.toDataURL('image/jpeg',q);},t,seconds,quality,chapter,video,opts['list-materials']||null,String(materialsOf),dip,mime);
   if(opts['list-materials'])printMaterials(await frame.evaluate(()=>window.__rcMaterials));
   return Buffer.from(url.slice(url.indexOf(',')+1),'base64');
 }
@@ -161,14 +161,17 @@ async function renderShot(frame,i){
     if(ss>1)vf.push(`scale=${W}:${H}:flags=lanczos`);
     vf.push('setpts=N/('+fps+'*TB)');
     const file=path.join(opts.out,tag+'.mkv');
-    const ff=spawn('ffmpeg',['-v','error','-y','-f','image2pipe','-framerate',String(fps*open),'-c:v','mjpeg','-i','-','-vf',vf.join(','),'-r',String(fps),'-c:v','libx264','-preset','medium','-crf','8','-pix_fmt','yuv444p','-color_primaries','bt709','-color_trc','bt709','-colorspace','bt709',file],{stdio:['pipe','inherit','inherit']});
+    // Lossless PNG pipe by default for full 4:4:4 chroma before shutter blur + Lanczos downscale (--pipe-fmt jpeg to opt out).
+    const useJpeg=String(opts['pipe-fmt']||'png').toLowerCase()==='jpeg';
+    const pipeCodec=useJpeg?'mjpeg':'png',pipeMime=useJpeg?'image/jpeg':'image/png';
+    const ff=spawn('ffmpeg',['-v','error','-y','-f','image2pipe','-framerate',String(fps*open),'-c:v',pipeCodec,'-i','-','-vf',vf.join(','),'-r',String(fps),'-c:v','libx264','-preset','medium','-crf','8','-pix_fmt','yuv444p','-color_primaries','bt709','-color_trc','bt709','-colorspace','bt709',file],{stdio:['pipe','inherit','inherit']});
     const done=new Promise((res,rej)=>ff.on('close',c=>c===0?res():rej(Error('ffmpeg exited '+c))));
-    let lastN=-1,jpg=null;const dips=dipsOf(shot);if(dips.length)console.log(`${tag} ${shot.id}: ${dips.length} camera dip(s)`,JSON.stringify(dips));
+    let lastN=-1,buf=null;const dips=dipsOf(shot);if(dips.length)console.log(`${tag} ${shot.id}: ${dips.length} camera dip(s)`,JSON.stringify(dips));
     for(let i=0;i<order.length;i++){
       const n=order[i];
       // Same sampling as the in-browser bake: t spans 0…1 across the chapter. A repeated sub-frame (frame 0's group) is not baked again.
-      if(n!==lastN){const seconds=(n0+n)/(fps*sub),t=Math.min(1,seconds/((chapterFrames-1)/fps));jpg=await grab(frame,t,seconds+off,.97,seconds,true,dipAt(dips,seconds));lastN=n;}
-      if(!ff.stdin.write(jpg))await new Promise(r=>ff.stdin.once('drain',r));
+      if(n!==lastN){const seconds=(n0+n)/(fps*sub),t=Math.min(1,seconds/((chapterFrames-1)/fps));buf=await grab(frame,t,seconds+off,.97,seconds,true,dipAt(dips,seconds),pipeMime);lastN=n;}
+      if(!ff.stdin.write(buf))await new Promise(r=>ff.stdin.once('drain',r));
       if(i%(fps*open*2)===0)process.stdout.write(`\r${tag} ${shot.id}: ${Math.round(i/order.length*100)}%   `);
     }
     ff.stdin.end();await done;

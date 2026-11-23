@@ -200,13 +200,15 @@ def main():
     args = [a for a in sys.argv[1:] if not a.startswith('--')]
     draft = '--draft' in sys.argv
     wip = '--wip' in sys.argv  # full-res, fast encode, one titled MP4 for review
-    hq_only = '--hq-only' in sys.argv  # full master and the 1080p (CRF 18, 9.5 Mbps cap) + poster; skips textless/720p
+    hq_only = '--hq-only' in sys.argv  # full master and the HQ deliverables (+ 10-bit HEVC OLED master) + poster; skips textless/720p
+    no_hevc = '--no-hevc' in sys.argv
     only = sys.argv[sys.argv.index('--only') + 1] if '--only' in sys.argv else None
+    fps_override = int(sys.argv[sys.argv.index('--fps') + 1]) if '--fps' in sys.argv else None
     d = os.path.abspath(args[0]); out = os.path.join(d, 'final'); os.makedirs(out, exist_ok=True)
     edl = json.load(open(os.path.join(d, 'edl.json'), encoding='utf-8'))
     src = json.load(open(os.path.join(d, 'titles-src.json'), encoding='utf-8'))
     grade = json.load(open(os.path.join(d, 'grade.json'), encoding='utf-8')) if os.path.exists(os.path.join(d, 'grade.json')) else {}
-    ch = edl['chapters']; X = edl['dissolve']; total = edl['total']; fps = edl['fps']
+    ch = edl['chapters']; X = edl['dissolve']; total = edl['total']; fps = fps_override or edl['fps']
     start = {c['id']: c['start'] for c in ch}
 
     # ---- titles.json (absolute) + ASS -------------------------------------
@@ -301,12 +303,14 @@ def main():
             f'[{li + 1}:v]scale={W}:{H},format=rgba,trim=0:{total},fade=t=in:st={logo_at - 1.0:.3f}:d=2.2:alpha=1[shade];'
             f'[graded][shade]overlay=shortest=1[shaded];'
             f'[{li}:v]scale={lw}:-1:flags=lanczos,format=rgba,trim=0:{total},fade=t=in:st={logo_at:.3f}:d=1.4:alpha=1,fade=t=out:st={total - 1.4:.3f}:d=1.4:alpha=1[logo];'
+            # Keep master clean 10-bit (no 8-bit dark-void dithering grain baked in) so the 10-bit HEVC OLED master
+            # gets pure banding-free gradients; 8-bit H.264 deliverables add light dithering grain on their own pass.
             f'[shaded][logo]overlay=x=(W-w)/2:y=H*0.73-h/2:shortest=1,'
-            # Light luma grain dithers gradients in the dark voids.
-            f'noise=c0s={3 if not draft else 0}:c0f=t,format=yuv420p,trim=0:{total}[v]')
+            f'format={"yuv420p" if (draft or wip) else "yuv420p10le"},trim=0:{total}[v]')
         filters.append(look)
         script = os.path.join(out, 'filter.txt'); open(script, 'w', encoding='utf-8').write(';\n'.join(filters))
-        enc = ['-c:v', 'libx264', '-preset', 'ultrafast' if draft else 'veryfast' if wip else 'slow', '-crf', '23' if draft else '14' if wip else '9', '-pix_fmt', 'yuv420p'] + COLOR
+        master_pix = 'yuv420p' if (draft or wip) else 'yuv420p10le'
+        enc = ['-c:v', 'libx264', '-preset', 'ultrafast' if draft else 'veryfast' if wip else 'slow', '-crf', '23' if draft else '14' if wip else '9', '-pix_fmt', master_pix] + COLOR
         run(['ffmpeg', '-v', 'error', '-stats', '-y', *inputs, *FILTER_SCRIPT(script), '-map', '[v]', '-r', str(fps), *enc, master])
 
     if only == 'master': return
@@ -322,9 +326,19 @@ def main():
     if draft:
         run(['ffmpeg', '-v', 'error', '-stats', '-y', '-i', master, *audio_in, '-vf', subs, '-map', '0:v', '-map', '1:a', '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '24', '-c:a', 'aac', '-b:a', '128k', '-shortest', '-movflags', '+faststart', os.path.join(out, 'draft.mp4')])
         return
+    # Scale H.264 bitrate cap with both pixel count and framerate (4K @ 60 fps -> 75M maxrate / 150M bufsize; 4K @ 30 fps -> 37.5M / 75M)
+    fps_scale = max(1.0, fps / 30.0)
+    max_k = int(round(9375 * px * fps_scale))
+    buf_k = max_k * 2
     hq = os.path.join(out, f'ErgoFlex-Intro-{H}p.mp4')
-    run(['ffmpeg', '-v', 'error', '-stats', '-y', '-i', master, *audio_in, '-map', '0:v', '-map', '1:a', '-vf', subs, '-c:v', 'libx264', '-preset', 'slow', '-profile:v', 'high', '-crf', '18', '-maxrate', f'{int(9500 * px)}k', '-bufsize', f'{int(19000 * px)}k',
-         '-pix_fmt', 'yuv420p', '-g', str(fps * 2), '-x264-params', 'aq-mode=3', *COLOR, '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-shortest', '-movflags', '+faststart', hq])
+    vf_8bit = f'{subs},noise=c0s=3:c0f=t,format=yuv420p'
+    run(['ffmpeg', '-v', 'error', '-stats', '-y', '-i', master, *audio_in, '-map', '0:v', '-map', '1:a', '-vf', vf_8bit, '-c:v', 'libx264', '-preset', 'slow', '-profile:v', 'high', '-crf', '15', '-maxrate', f'{max_k}k', '-bufsize', f'{buf_k}k',
+         '-pix_fmt', 'yuv420p', '-g', str(fps * 2), '-x264-params', 'aq-mode=3', *COLOR, '-c:a', 'aac', '-b:a', '320k', '-ar', '48000', '-shortest', '-movflags', '+faststart', hq])
+    # 10-bit H.265/HEVC OLED showcase master (pure 10-bit gradients, zero 8-bit dithering grain, hvc1 Apple/Windows/Android tag)
+    if not no_hevc:
+        hevc = os.path.join(out, f'ErgoFlex-Intro-{H}p-10bit-hevc.mp4')
+        run(['ffmpeg', '-v', 'error', '-stats', '-y', '-i', master, *audio_in, '-map', '0:v', '-map', '1:a', '-vf', f'{subs},format=yuv420p10le', '-c:v', 'libx265', '-preset', 'slow', '-crf', '15', '-tag:v', 'hvc1',
+             '-pix_fmt', 'yuv420p10le', '-g', str(fps * 2), '-x265-params', 'aq-mode=3', *COLOR, '-c:a', 'aac', '-b:a', '320k', '-ar', '48000', '-shortest', '-movflags', '+faststart', hevc])
     for name, vf, rate, ab in [] if hq_only else [
                                ('ErgoFlex-Intro-1080p-textless.mp4', 'null', '6M', '192k'),
                                ('ErgoFlex-Intro-720p.mp4', subs + ',scale=1280:720:flags=lanczos', '2500k', '128k'),

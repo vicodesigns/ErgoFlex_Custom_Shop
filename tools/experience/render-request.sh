@@ -241,14 +241,32 @@ job = {'id': jid, 'created': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
        'resolution': res, 'height': H[res], 'note': req.get('note') or '', 'manifest': mp, 'cut': cutp, 'shots': '0' if scope == 'chapter' else 'all',
        'requestCreated': req.get('created'), 'clientSignature': req.get('signature'), 'requestSha': request_sha, 'force': req.get('force') is True, 'status': 'queued'}
 if cutdir != hq: job['cutDir'] = cutdir; job['cutName'] = json.load(open(f'{cutdir}/cut.json')).get('name', '')
-# the film's shutter: render-cut.cjs --blur for every chapter of this job (tools/experience/film-render.json FILM_BLUR)
-blur = json.load(open(os.path.join(os.environ['RENDER_REQ_HERE'], 'film-render.json')))['FILM_BLUR']
+# the film's frame rate & shutter: render-cut.cjs --fps / --blur for every chapter of this job (tools/experience/film-render.json)
+fr = json.load(open(os.path.join(os.environ['RENDER_REQ_HERE'], 'film-render.json')))
+fps = int(req.get('fps') or fr.get('FILM_FPS', 30))
+if fps not in (24, 30, 60, 120): sys.exit(f'film-render.json FILM_FPS must be 24, 30, 60 or 120, not {fps!r}')
+blur = int(req.get('blur') or fr['FILM_BLUR'])
 if blur not in (1, 2, 4, 8, 16): sys.exit(f'film-render.json FILM_BLUR must be 1, 2, 4, 8 or 16, not {blur!r}')
+job['fps'] = fps
 job['blur'] = blur
+# Keep the frozen edl.json's fps in step with job.fps so finish-intro.py masters at the exact job frame rate.
+edl_rel = f'{hq}/edl.json'; edl_frozen = f'{F}/{edl_rel}'
+if os.path.isfile(edl_frozen):
+    edl_obj = json.load(open(edl_frozen, encoding='utf-8'))
+    if edl_obj.get('fps') != fps:
+        edl_obj['fps'] = fps
+        edl_bytes = (json.dumps(edl_obj, indent=1) + '\n').encode('utf-8')
+        open(edl_frozen, 'wb').write(edl_bytes)
+        ml = open(mp).read().rstrip('\n').split('\n')
+        new_line = f'{hashlib.sha256(edl_bytes).hexdigest()} {len(edl_bytes)} {edl_rel} {edl_frozen}'
+        at = [i for i, l in enumerate(ml) if i and len(l.split(' ')) >= 3 and l.split(' ')[2] == edl_rel]
+        if at: ml[at[0]] = new_line
+        else: ml.append(new_line)
+        open(mp, 'w').write('\n'.join(ml) + '\n')
 # chapter cache keys from the frozen copy of the film data (the freeze overlays the repo: freeze file first, live file otherwise)
 import subprocess
 kp = subprocess.run([sys.executable, os.path.join(os.environ['RENDER_REQ_HERE'], 'chapter-keys.py'), hq, '--root', root, '--overlay', F,
-                     '--resolution', res, '--json'] + ([] if scope == 'film' else ['--chapter', chapter]), capture_output=True, text=True)
+                     '--resolution', res, '--fps', str(fps), '--json'] + ([] if scope == 'film' else ['--chapter', chapter]), capture_output=True, text=True)
 if kp.returncode == 0:
     ck = json.loads(kp.stdout); job['chapterKeys'] = ck['keys']; job['epoch'] = ck['epoch']
 else: print('WARNING: chapter keys not computed (the render PC renders every chapter): ' + kp.stderr.strip()[-300:], file=sys.stderr)

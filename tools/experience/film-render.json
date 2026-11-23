@@ -1,4 +1,5 @@
 {
- "_doc": "Film render options every render request carries into its job (render-request.sh -> job.blur; tools/experience/RENDER-QUEUE.md). FILM_BLUR: render-cut.cjs --blur, sub-frames per film frame at 30 fps; the last half are blended (180-degree shutter) and only those are baked (render-shutter.cjs): 4 = 2 taps over 8.3 ms, 8 = 4 taps over 12.5 ms at the same cost. The value is not in the chapter keys: changing it needs a render-epoch bump, or the render PC's cache serves chapters rendered at the old value.",
- "FILM_BLUR": 8
+ "_doc": "Film render options every render request carries into its job (render-request.sh -> job.fps, job.blur; tools/experience/RENDER-QUEUE.md). FILM_FPS: output frame rate (30, 60, or 120; included in chapter cache keys when != 30). FILM_BLUR: render-cut.cjs --blur, sub-frames per film frame; the last half are blended (180-degree shutter) and only those are baked (render-shutter.cjs): e.g. 8 at 30 fps (4 taps), 4 at 60 fps (2 taps), 1 at 120 fps. Changing FILM_BLUR alone still needs a render-epoch bump.",
+ "FILM_FPS": 60,
+ "FILM_BLUR": 4
 }

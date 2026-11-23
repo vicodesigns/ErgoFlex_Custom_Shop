@@ -160,10 +160,11 @@ def room_slices(assets, shots):
         if sl is not None: out[sid] = sl
     return out
 
-def chapter_keys(hq, resolution, root, overlay=None, epoch=None, only=None):
+def chapter_keys(hq, resolution, root, overlay=None, epoch=None, only=None, fps=30):
     """-> [(index 1-based, id, key)] in film order"""
     here = os.path.dirname(os.path.abspath(__file__))
     T = Tree(root, overlay); epoch = epoch or read_epoch(here); chapter_epochs = read_chapter_epochs(here)
+    fps = int(fps or 30)
     review = T.load(f'{hq}/review-cut.json'); out = []; assets_by_seed = {}
     def cutinfo(cut): return {k: v for k, v in cut.items() if k not in ('shots', 'name')}
     for i, s in enumerate(review['shots']):
@@ -179,6 +180,7 @@ def chapter_keys(hq, resolution, root, overlay=None, epoch=None, only=None):
         media = sorted({v for sh in shots for v in strings(sh) if MEDIA.search(v) and not v.startswith(('http', 'data:', '/'))})
         payload = {'epoch': epoch, 'resolution': resolution, 'chapter': cid, 'source': src, 'cut': cutinfo(cut), 'shots': shots,
                    'seed': {'name': seed_for(cid), 'sha256': T.sha(seed)}, 'media': {m: T.sha(m) for m in media}}
+        if fps != 30: payload['fps'] = fps   # 30 fps keeps existing keys bit-for-bit identical; 60/120 fps get distinct cache keys
         if seed not in assets_by_seed: assets_by_seed[seed] = studio_assets(T, seed)
         payload['studioAssets'] = room_slices(assets_by_seed[seed], shots)   # always present ({} = nothing saved for the room)
         if cid in chapter_epochs: payload['chapterEpoch'] = chapter_epochs[cid]   # only that chapter's key changes
@@ -192,11 +194,11 @@ def chapter_keys(hq, resolution, root, overlay=None, epoch=None, only=None):
 def main():
     here = os.path.dirname(os.path.abspath(__file__))
     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0]); ap.add_argument('hq'); ap.add_argument('--resolution', default='4K', choices=RES)
-    ap.add_argument('--json', action='store_true'); ap.add_argument('--root', default=os.path.dirname(os.path.dirname(here)))
+    ap.add_argument('--fps', type=int, default=30); ap.add_argument('--json', action='store_true'); ap.add_argument('--root', default=os.path.dirname(os.path.dirname(here)))
     ap.add_argument('--overlay'); ap.add_argument('--chapter'); a = ap.parse_args()
     root = os.path.abspath(a.root); hq = os.path.relpath(os.path.abspath(a.hq if os.path.isabs(a.hq) else os.path.join(root, a.hq)), root)
-    rows = chapter_keys(hq, a.resolution, root, os.path.abspath(a.overlay) if a.overlay else None, only=a.chapter)
-    if a.json: print(json.dumps({'epoch': read_epoch(here), 'resolution': a.resolution, 'keys': {c: k for _, c, k in rows}}, indent=1))
+    rows = chapter_keys(hq, a.resolution, root, os.path.abspath(a.overlay) if a.overlay else None, only=a.chapter, fps=a.fps)
+    if a.json: print(json.dumps({'epoch': read_epoch(here), 'resolution': a.resolution, 'fps': a.fps, 'keys': {c: k for _, c, k in rows}}, indent=1))
     else:
         for i, c, k in rows: print(f'{i:02d} {c:<10} {k}')
 
