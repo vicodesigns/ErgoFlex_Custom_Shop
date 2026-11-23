@@ -23,11 +23,14 @@ const LEDISH = /\bLEDs?\b|LED strip|led-strip/i, NOT_BLOOM = /floor glow|floor l
 const RECEIVER = /LED reflection|LED floor bounce/i;
 const SCREENISH = /screen|display|monitor|\btv\b|marquee|stage media/i;
 export const PRESETS = {
-  // Epoch 13 fidelity preset: 8192 shadows (overridable via preset 'hq13_4k_shadow' or shot.quality.shadowMap),
-  // 1024 room reflections, 32-sample GTAO. Clamped automatically to renderer.capabilities.maxTextureSize.
-  hq13: { shadowMap: 8192, shadowRadius: 2, shadowSamples: 25, anisotropy: 16, reflections: 1024,
+  // Epoch 13 fidelity preset: 4096 shadows (default for 3x parallel 4K VRAM headroom on RX 6900 XT 16 GB;
+  // 8192 hit 15.29/16 GB on awaken alone), 1024 room reflections, 32-sample GTAO.
+  // Use 'hq13_8k_shadow' or shot.quality.shadowMap: 8192 to opt into 8K shadows; clamped to maxTextureSize.
+  hq13: { shadowMap: 4096, shadowRadius: 2, shadowSamples: 25, anisotropy: 16, reflections: 1024,
           ao: { intensity: .45, radius: .12, samples: 32 }, bloom: { strength: .16, radius: .28, threshold: .0 } },
   hq13_4k_shadow: { shadowMap: 4096, shadowRadius: 2, shadowSamples: 25, anisotropy: 16, reflections: 1024,
+                    ao: { intensity: .45, radius: .12, samples: 32 }, bloom: { strength: .16, radius: .28, threshold: .0 } },
+  hq13_8k_shadow: { shadowMap: 8192, shadowRadius: 2, shadowSamples: 25, anisotropy: 16, reflections: 1024,
                     ao: { intensity: .45, radius: .12, samples: 32 }, bloom: { strength: .16, radius: .28, threshold: .0 } }
 };
 
