@@ -17,7 +17,7 @@ from mathutils.bvhtree import BVHTree
 import held, pose_lib
 
 ARM = ('upperarm', 'lowerarm', 'hand', 'index', 'middle', 'ring', 'pinky', 'thumb'); LEG = ('thigh', 'calf', 'foot', 'ball')
-SKIP = ('low-poly', 'teeth', 'tongue', 'eyebrow', 'eyelash', 'glasses')
+SKIP = ('low-poly', 'high-poly', 'teeth', 'tongue', 'eyebrow', 'eyelash', 'glasses')
 X, Y, Z = Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1))
 FRONT, BACK = Vector((0, -1, 0)), Vector((0, 1, 0))
 

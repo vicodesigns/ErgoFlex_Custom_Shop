@@ -96,8 +96,7 @@ def records(points, tex, polygons, deltas, skin=False):
 tables = {'body': records(xyz, uvs, faces, [*shapes, unit('mouth-compression')], True)}
 keys = [next(uvs[t] for f in faces for i, t in f if i == idx) for idx in landmarks]
 for path in sorted(list(proxies.glob('eyebrows/*/*.mhclo')) + list(proxies.glob('eyelashes/*/*.mhclo'))):
-    if path.stem not in {'eyebrow001', 'eyebrow004', 'eyebrow005', 'eyebrow006', 'eyebrow009',
-                         'eyebrow011', 'eyebrow012', 'eyelashes01', 'eyelashes02', 'eyelashes03'}:
+    if path.stem not in {f'eyebrow{i:03d}' for i in range(1, 13)} | {'eyelashes01', 'eyelashes02', 'eyelashes03'}:
         continue
     points, tex, polygons = obj(path.with_suffix('.obj'))
     fits = []

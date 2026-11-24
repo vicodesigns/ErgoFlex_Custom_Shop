@@ -2,7 +2,10 @@
 // baking a different rest pose for every desk height, wheelchair and action.
 import { Float32BufferAttribute, Vector3 } from 'three';
 
-const cast = new Set(['mia', 'yara', 'ava', 'sofia', 'lin', 'maya', 'kai', 'noah', 'priya', 'omar', 'andre', 'jo']);
+const cast = new Set([
+    'mia', 'yara', 'ava', 'sofia', 'lin', 'maya', 'kai', 'noah', 'priya', 'omar', 'andre', 'jo',
+    'zoe', 'eli', 'ben', 'grace', 'leo', 'hale', 'fern', 'nia', 'finn',
+]);
 const names = ['Smile', 'Blink', 'Brow'];
 const character = id => id?.startsWith('people-') ? id.split('-')[1] : null;
 let atlas;
@@ -44,17 +47,18 @@ function headFrame(geometry, landmarks) {
 // are drawn. Three gives every static and rigged instance its own weights.
 export function prepareFace(root, data, id) {
     if (!data) return;
-    const meshes = [];
-    let eyes;
+    const meshes = [], eyes = [];
     root.traverse(mesh => {
         const part = mesh.material?.name?.replace(/^Human\./, '');
-        if (mesh.isMesh && part === 'low-poly') eyes = mesh;
+        if (mesh.isMesh && (part === 'low-poly' || part === 'eyes_cornea')) eyes.push(mesh);
         if (mesh.isMesh && data.parts.has(part)) meshes.push({ mesh, part });
     });
     const skin = meshes.find(p => p.part === 'body');
     const frame = skin && headFrame(skin.mesh.geometry, data.landmarks);
     if (!frame) return;
-    if (eyes && !eyes.geometry.morphAttributes.position?.length) prepareEyes(eyes, frame);
+    for (const eyeMesh of eyes) {
+        if (!eyeMesh.geometry.morphAttributes.position?.length) prepareEyes(eyeMesh, frame);
+    }
     const detailedMouth = ['andre', 'maya', 'omar'].includes(character(id));
     const { mid, x, y, z, scale } = frame;
     const coord = new Vector3(), delta = new Vector3();
@@ -159,14 +163,17 @@ function hold(t, start, arrived, release, end) {
 }
 
 function drawExpression({ meshes, eyes }, smile, lids, brow, across, up, lips = 0) {
+    // Natural eyelid follow: looking down lowers the upper lid slightly so the eye avoids a staring gap above the iris.
+    const lidFollow = up < 0 ? Math.min(.22, -up * .22) : 0;
+    const effLids = Math.min(1, lids + (1 - lids) * lidFollow);
     for (const mesh of meshes) {
         const w = mesh.morphTargetInfluences;
-        w[0] = smile; w[1] = lids; w[2] = brow;
+        w[0] = smile; w[1] = effLids; w[2] = brow;
         if (mesh.morphTargetDictionary.LipPress !== undefined) w[3] = lips;
     }
-    if (eyes) {
-        eyes.morphTargetInfluences[0] = across;
-        eyes.morphTargetInfluences[1] = up;
+    for (const eyeMesh of eyes) {
+        eyeMesh.morphTargetInfluences[0] = across;
+        eyeMesh.morphTargetInfluences[1] = up;
     }
 }
 
@@ -224,10 +231,9 @@ const bindings = new WeakMap();
 export function performFace(person, room, seconds, film, live, shot = null) {
     let bound = bindings.get(person);
     if (bound === undefined) {
-        const who = character(person.userData.person?.id), meshes = [];
-        let eyes;
+        const who = character(person.userData.person?.id), meshes = [], eyes = [];
         if (cast.has(who)) person.traverse(mesh => {
-            if (mesh.morphTargetDictionary?.LookAcross === 0) eyes = mesh;
+            if (mesh.morphTargetDictionary?.LookAcross === 0) eyes.push(mesh);
             if (mesh.morphTargetDictionary?.Smile === 0 && mesh.morphTargetDictionary?.Brow === 2) meshes.push(mesh);
         });
         const seed = [...(who || '')].reduce((sum, c) => (sum * 31 + c.charCodeAt(0)) % 997, 0) / 997;
@@ -238,7 +244,7 @@ export function performFace(person, room, seconds, film, live, shot = null) {
     const { who, meshes, eyes, seed } = bound;
     if (!live) {
         for (const mesh of meshes) mesh.morphTargetInfluences.fill(0);
-        eyes?.morphTargetInfluences.fill(0);
+        for (const eyeMesh of eyes) eyeMesh.morphTargetInfluences.fill(0);
         return;
     }
     const time = seconds;

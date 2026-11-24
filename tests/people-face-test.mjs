@@ -13,8 +13,9 @@ const postures = [
     'yara-walk', 'yara-stand-mid', 'mia-power-type-30', 'ava-stand-mid', 'ava-sit-type',
     'sofia-sit-laptop', 'lin-stand-paint', 'kai-wheel-roll', 'noah-stand-wait', 'maya-stand-type-41', 'maya-sit-type',
     'omar-wheel-watch', 'andre-stand-phone-watch', 'priya-stretch', 'jo-stand-work',
+    'zoe-sit-laptop', 'eli-sit-listen', 'nia-sit-write', 'hale-stand-present-left',
 ];
-assert.equal(faceData('people-eli-sit-listen'), null);
+assert.equal(faceData('people-sam-sit-type'), null);
 for (const posture of postures) {
     const id = 'people-' + posture;
     const doc = await io.read(fileURLToPath(new URL('../assets/props/' + id + '.glb', import.meta.url)));
@@ -23,10 +24,11 @@ for (const posture of postures) {
     for (const p of doc.getRoot().listMeshes()[0].listPrimitives()) {
         const material = new MeshStandardMaterial();
         material.name = p.getMaterial().getName();
-        if (!/^Human\.(?:body|eyebrow\d+|eyelashes\d+|low-poly)$/.test(material.name)) continue;
+        if (!/^Human\.(?:body|eyebrow\d+|eyelashes\d+|low-poly|eyes_cornea)$/.test(material.name)) continue;
         const g = new BufferGeometry();
         for (const [semantic, name] of [['POSITION', 'position'], ['NORMAL', 'normal'], ['TEXCOORD_0', 'uv']]) {
             const a = p.getAttribute(semantic);
+            if (!a) continue;
             const values = Array.from({ length: a.getCount() }, (_, i) => a.getElement(i, [])).flat();
             g.setAttribute(name, new Float32BufferAttribute(values, a.getElementSize()));
         }
