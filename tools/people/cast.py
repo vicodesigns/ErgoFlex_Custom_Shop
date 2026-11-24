@@ -143,6 +143,7 @@ CHARACTERS = {
         'tint': {'toigo_fisherman_sweater': (.3, .45, .4), 'toigo_wool_pants': (.2, .22, .3)},
     },
     'leo': {
+        'comb': 'lob',
         'name': 'Leo', 'phenotype': {'gender': 1., 'age': .32, 'muscle': .5, 'weight': .55, 'height': .4, 'proportions': .5, 'race': race(.6, .15, .25)},
         'skin': 'young_caucasian_male', 'eyes': 'brown', 'hair': 'culturalibre_hair_01', 'hair_tint': (.07, .05, .04), 'eyebrows': 'eyebrow003', 'eyelashes': 'eyelashes01',
         'clothes': ['male_casualsuit06', 'shoes04'],
@@ -157,7 +158,7 @@ CHARACTERS = {
         'tint': {'namuhekam_male_polo_shirt': (.85, .82, .76), 'cortu_cargo_pants': (.16, .18, .22)},
     },
     'ava': {
-        'tailoring': 'edit',
+        'tailoring': 'edit', 'roots': 'tied',
         'name': 'Ava', 'phenotype': {'gender': .0, 'age': .33, 'muscle': .4, 'weight': .42, 'height': .64, 'proportions': .6, 'race': race(.1, 0, .9)},
         'skin': 'young_asian_female', 'eyes': 'brown', 'hair': 'ponytail01', 'hair_tint': (.06, .05, .05), 'eyebrows': 'eyebrow006', 'eyelashes': 'eyelashes02',
         'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'shoes04'],
@@ -169,7 +170,7 @@ CHARACTERS = {
         'clothes': ['male_casualsuit01', 'shoes06'],
     },
     'sofia': {
-        'tailoring': 'breton', 'comb': 'braid',
+        'tailoring': 'breton', 'comb': 'braid', 'roots': 'tied',
         'name': 'Sofia', 'phenotype': {'gender': .0, 'age': .34, 'muscle': .45, 'weight': .52, 'height': .58, 'proportions': .55, 'race': race(.65, .15, .2)},
         'skin': 'young_caucasian_female2', 'eyes': 'brown', 'hair': 'braid01', 'eyebrows': 'eyebrow009', 'eyelashes': 'eyelashes03',
         'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'toigo_flats'],
@@ -470,6 +471,7 @@ CHARACTERS = {
     },
     # Students of 16 to 19 (MakeHuman age .31 to .375).
     'nia': {
+        'sculpted_coils': 'curly_bob',
         'name': 'Nia', 'phenotype': {'gender': .0, 'age': .33, 'muscle': .45, 'weight': .47, 'height': .6, 'proportions': .55, 'race': race(.05, .95, 0)},
         'skin': 'young_african_female', 'eyes': 'brown', 'hair': 'cortu_strawberry_cloud_hair', 'hair_tint': (.05, .035, .03), 'eyebrows': 'eyebrow007', 'eyelashes': 'eyelashes02',
         'face': {'head-oval': .4, 'forehead-nubian-incr': .3, 'lr-cheek-volume-incr': .3, 'nose-point-up': .2, 'mouth-scale-horiz-decr': .2, 'chin-height-decr': .3, 'lr-eye-scale-incr': .3},
@@ -484,7 +486,7 @@ CHARACTERS = {
         'dye': {'male_casualsuit02': (.22, .4, .3)}, 'tint': {'cortu_cargo_pants': (.42, .38, .3)}, 'look': 3, 'postures': CROWD + ['sit-raise'],
     },
     'yara': {
-        'tailoring': 'commons', 'layered_waves': True,
+        'tailoring': 'commons', 'layered_waves': True, 'roots': 'parted',
         'name': 'Yara', 'phenotype': {'gender': .0, 'age': .375, 'muscle': .45, 'weight': .5, 'height': .58, 'proportions': .6, 'race': race(.66, .17, .17)},
         'skin': 'young_caucasian_female', 'skin_tone': (.88, .76, .66), 'eyes': 'brown', 'hair': 'long01', 'hair_tint': (.09, .055, .035), 'eyebrows': 'eyebrow011', 'eyelashes': 'eyelashes03',
         'face': {'head-diamond': .4, 'nose-hump-incr': .25, 'nose-scale-vert-incr': .3, 'lr-cheek-bones-incr': .5, 'eyebrows-angle-up': .3, 'mouth-lowerlip-volume-incr': .4, 'chin-triangle': .3},

@@ -369,6 +369,12 @@ if who.get('layered_waves'):
     top_cloth = [o for o in meshes if o.name.split('.', 1)[-1] in who['clothes']]
     groom.layered_long_hair(hair, base, top_cloth, rig, OUT_DIR, OUT_ID)
 
+if who.get('roots'):
+    import groom
+    roots = groom.brushed_roots(base, rig, OUT_DIR, OUT_ID, who['roots'])
+    roots.name = 'Human.' + who['hair'] + '.roots'
+    meshes.append(roots)
+
 # ---- garments made from the base mesh (a white coat, a gown, socks; gloves are the hands' own faces) ------
 meshes += garments.build(who, base, rig, OUT_DIR, OUT_ID)
 
@@ -476,7 +482,7 @@ if who.get('layered_waves'):
     import groom
     hair_baked = next((b for b in baked if who.get('hair') and who['hair'] in b.name), None)
     if hair_baked is not None:
-        obs = [b for b in baked if b is not hair_baked and not any(k in b.name.lower() for k in ('low-poly', 'high-poly', 'teeth', 'tongue', 'eyebrow', 'eyelash', 'glasses'))]
+        obs = [b for b in baked if b is not hair_baked and not b.name.endswith('.roots.baked') and not any(k in b.name.lower() for k in ('low-poly', 'high-poly', 'teeth', 'tongue', 'eyebrow', 'eyelash', 'glasses'))]
         groom.drape_hair_over_posed(hair_baked, obs, rig)
 
 # Skin under clothing pokes through once the body is posed. Any body face with cloth just outside it goes.

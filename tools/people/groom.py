@@ -120,10 +120,131 @@ def strand_colour(source, save_copy):
     return result
 
 
+def brushed_roots(base, rig, out_dir, model, style):
+    """A fitted, head-weighted foundation with fibres swept across the crown or back to the tie."""
+    shape = garments._shape(base)
+    helpers = garments._members(base, 'HelperGeometry') | garments._members(base, 'JointCubes')
+    faces = [tuple(f.vertices) for f in base.data.polygons if not any(i in helpers for i in f.vertices)]
+    scalp = BVHTree.FromPolygons(shape, faces)
+    weights = garments._weights(base)
+    head = [shape[i] for i in {v for f in faces for v in f} if weights[i].get('head', 0) > .8]
+    center_y = (min(p.y for p in head) + max(p.y for p in head)) * .5
+    center = Vector((0, center_y, max(p.z for p in head) - .105))
+    parted = style == 'parted'
+    cols, rings = 88, 28
+    points, coords, faces = [], [], []
+    angles = [0, .48, .84, 1.12, 1.44, 1.72, 2.13, 2.58, math.pi]
+    hairline = [.54, .51, .37, .13, -.025, .015, -.34, -.70, -.82]
+
+    def add_point(azimuth, elevation, t):
+        ray = Vector((math.sin(azimuth) * math.cos(elevation),
+                      -math.cos(azimuth) * math.cos(elevation), math.sin(elevation)))
+        hit = scalp.ray_cast(center + ray * .23, -ray, .21)[0]
+        if hit is None:
+            raise ValueError('No scalp for ' + model)
+        x, y, z = ray
+        if parted:
+            u, v = .5 + .35*y + .09*abs(x) + .04*x, .5 + .44*x
+        else:
+            u, v = .5 + .34*x - .16*x*y + .055*math.sin(azimuth)*(1-z), .5 + .44*y
+        # The boundary starts under the skin so the temple and nape edges taper into it.
+        volume = .004 if parted else .005
+        lift = -.0007 + (volume + .0007) * _smoothstep(0, .12, t)
+        points.append(hit + ray * lift)
+        coords.append((u, v))
+
+    for i in range(rings):
+        t = i / rings
+        for j in range(cols):
+            angle = math.tau * j / cols
+            edge = float(np.interp(min(angle, math.tau-angle), angles, hairline))
+            edge += .016*math.sin(3*angle+.4) + .008*math.sin(11*angle)
+            add_point(angle, edge + (math.pi*.5-edge)*t, t)
+    add_point(0, math.pi*.5, 1)
+    pole = len(points) - 1
+    for i in range(rings):
+        for j in range(cols):
+            a, b = i*cols + j, i*cols + (j+1) % cols
+            faces.append((a, b, pole) if i == rings-1 else (a, b, b+cols, a+cols))
+
+    mesh = bpy.data.meshes.new('Brushed roots')
+    mesh.from_pydata(points, [], faces)
+    uv = mesh.uv_layers.new(name='UVMap')
+    uv.data.foreach_set('uv', np.asarray([coords[loop.vertex_index] for loop in mesh.loops], np.float32).ravel())
+    for face in mesh.polygons:
+        face.use_smooth = True
+
+    height, width = 256, 768
+    y, x = np.mgrid[:height, :width]
+    drift = 8*np.sin(y*.022 + x*.007) + 3*np.sin(y*.043 - x*.014)
+    fibres = np.random.default_rng(431).uniform(-1, 1, width)
+    strand = np.interp((x+drift) % width, np.arange(width), fibres, period=width)
+    value = .91 + .25*strand + .22*np.cos((x+drift)*.16) + .05*np.sin((x+drift)*.46)
+    color = (.11, .067, .042) if parted else (.096, .072, .059)
+    pixels = np.ones((height, width, 4), np.float32)
+    pixels[:, :, :3] = value[:, :, None] * np.array(color)
+    image = bpy.data.images.new('Brushed root fibres', width, height, alpha=False)
+    image.pixels.foreach_set(pixels.ravel())
+    path = Path(out_dir, 'tex', model + '--root-fibres.png')
+    path.parent.mkdir(exist_ok=True, parents=True)
+    image.filepath_raw = str(path)
+    image.file_format = 'PNG'
+    image.save()
+
+    mat = bpy.data.materials.new('Human.brushed_roots_hair')
+    mat.use_nodes = True
+    bsdf = mat.node_tree.nodes.get('Principled BSDF')
+    bsdf.inputs['Roughness'].default_value = .82
+    strand_map = mat.node_tree.nodes.new('ShaderNodeTexImage')
+    strand_map.image = image
+    mat.node_tree.links.new(strand_map.outputs['Color'], bsdf.inputs['Base Color'])
+    mesh.materials.append(mat)
+    obj = bpy.data.objects.new('Brushed root hair', mesh)
+    bpy.context.scene.collection.objects.link(obj)
+    obj.vertex_groups.new(name='head').add(range(len(points)), 1., 'REPLACE')
+    obj.modifiers.new('Head', 'ARMATURE').object = rig
+    return obj
+
+
 def comb_layers(hair, rig, cut):
     """Soften the existing locks, retaining their painted UVs and bone weights."""
     # Subdivide the fitted cards before posing. The open ends retain their
     # corners so wisps keep the outline drawn by the original alpha texture.
+    if cut == 'braid':
+        # The braid and the sheets wrapped over the brow are disconnected islands.
+        # Keep the continuous crown and the lower plait. Remove the narrow sheets crossing the brow.
+        import bmesh
+        bm = bmesh.new()
+        bm.from_mesh(hair.data)
+        remaining = set(bm.verts)
+        top = max((hair.matrix_world @ v.co).z for v in remaining)
+        islands = []
+        while remaining:
+            island = [remaining.pop()]
+            for v in island:
+                for e in v.link_edges:
+                    other = e.other_vert(v)
+                    if other in remaining:
+                        remaining.remove(other)
+                        island.append(other)
+            if max((hair.matrix_world @ v.co).z for v in island) > top-.065:
+                islands.append(island)
+        shell = max(islands, key=len)
+        # The main shell has a painted fringe too. Tuck its lowest rows inside
+        # the fitted foundation, keeping the swept texture above the temples.
+        world = hair.matrix_world
+        local = world.inverted()
+        center = Vector((0, (min((world @ v.co).y for v in shell) + max((world @ v.co).y for v in shell))*.5, top-.105))
+        for vertex in shell:
+            point = world @ vertex.co
+            ray = (point-center).normalized()
+            angle = abs(math.atan2(ray.x, -ray.y))
+            border = np.interp(angle, [0, .52, .90, 1.3, 1.8, 2.5, math.pi], [.54, .50, .34, .04, -.07, -.62, -.82])
+            fade = 1 - _smoothstep(.12, .51, math.asin(ray.z)-border)
+            vertex.co = local @ (point - ray*(.032*fade))
+        bmesh.ops.delete(bm, geom=[v for island in islands if island is not shell for v in island], context='VERTS')
+        bm.to_mesh(hair.data)
+        bm.free()
     smooth = hair.modifiers.new('Smooth hair layers', 'SUBSURF')
     smooth.levels = 1
     smooth.render_levels = 1
@@ -139,6 +260,18 @@ def comb_layers(hair, rig, cut):
         fall = depth * depth * (3 - 2 * depth)
         angle = math.atan2(p.x, mid_y - p.y)
         # Group the ends into soft, unequal locks; the part stays anchored.
+        if cut == 'lob':
+            # Keep the side part and jaw framing; the lowest locks finish above the collar
+            # even when the shoulder comes up to answer a question.
+            jaw = high - .085
+            if p.z < jaw:
+                drop = jaw - p.z
+                p.z = jaw - drop * .46
+                taper = _smoothstep(0,.105,drop)
+                p.x *= 1 - .16*taper
+                p.y = mid_y + (p.y - mid_y)*(1 - .12*taper)
+            vertex.co = local @ p
+            continue
         if cut == 'bob':
             wave = .006 * math.sin(7 * angle + 2 * depth) - .006 * depth
             p.y += .012 * fall * max(0., math.sin(angle))
@@ -159,6 +292,9 @@ def comb_layers(hair, rig, cut):
         vertex.co = local @ p
     hair.modifiers.clear()
     hair.data = mesh
+    if cut == 'lob':
+        hair.vertex_groups.clear()
+        hair.vertex_groups.new(name='head').add(range(len(mesh.vertices)), 1., 'REPLACE')
     hair.modifiers.new('Combed hair', 'ARMATURE').object = rig
 
 
@@ -177,7 +313,7 @@ def _long_wave_texture(out_dir, model):
 
 
 def _smoothstep(edge0, edge1, x):
-    t = max(0.0, min(1.0, (x - edge0) / max(1e-6, edge1 - edge0)))
+    t = max(0.0, min(1.0, (x - edge0) / (edge1 - edge0)))
     return t * t * (3.0 - 2.0 * t)
 
 
@@ -256,15 +392,11 @@ def layered_long_hair(hair, base, cloth_objs, rig, out_dir, model):
         hit, _, _, _ = scalp_bvh.ray_cast(head_center, ray, 0.35)
         return (hit if hit is not None else head_center + ray * 0.090), ray
 
-    def _short_angle_lerp(a0, a1, t):
-        d = (a1 - a0 + math.pi) % math.tau - math.pi
-        return a0 + d * t
-
     def push_outside(p, min_clear, side_sign=0.0):
         """Keep point p cleanly outside head/neck/torso sweater and away from forehead/eyes."""
         # Open-face protection: sweep cleanly past temples and cheeks, never over eyes/brows.
-        if p.y < -0.052 and 1.335 < p.z < 1.495:
-            top_t = _smoothstep(1.455, 1.498, p.z)
+        if p.y < head_center.y and z_head - .064 < p.z < crown_z - .065:
+            top_t = _smoothstep(crown_z - .100, crown_z - .065, p.z)
             min_x = (0.075 if p.z > 1.385 else 0.068) * (1.0 - 0.85 * top_t)
             if abs(p.x) < min_x:
                 sgn = side_sign if side_sign != 0.0 else (1.0 if p.x >= 0.0 else -1.0)
@@ -303,48 +435,6 @@ def layered_long_hair(hair, base, cloth_objs, rig, out_dir, model):
     v_weights = []
     guide_normals = []
 
-    # ---- 1. Tightly recessed scalp under-cap (UV Col 3: u in [0.755, 0.995]) --------------------
-    # Hugs 0.4mm off the skull strictly underneath the crown cards so it NEVER peeks above the crown
-    # silhouette or across her forehead, while preventing bright skin showing through the parting line.
-    rings, cols = 20, 64
-    angles_ref = [0.0, 0.35, 0.72, 1.08, 1.38, 1.65, 1.98, 2.40, math.pi]
-    edges_ref = [0.68, 0.62, 0.44, 0.16, 0.04, 0.06, -0.08, -0.32, -0.46]
-    cap_start = len(points)
-    for i in range(rings):
-        t = i / rings
-        for j in range(cols):
-            a = math.tau * j / cols
-            edge = float(np.interp(min(a, math.tau - a), angles_ref, edges_ref))
-            elev = edge + (math.pi * 0.5 - edge) * t
-            hit, ray = _ray_scalp(a, elev)
-            lift = 0.0003 + 0.0005 * _smoothstep(0.0, 0.30, t)
-            points.append(hit + ray * lift)
-            v_weights.append({'head': 1.0})
-            guide_normals.append(ray.copy())
-    top_hit, _ = _ray_scalp(0.0, math.pi * 0.5)
-    cap_pole = len(points)
-    points.append(Vector((head_center.x, head_center.y, top_hit.z + 0.0008)))
-    v_weights.append({'head': 1.0})
-    guide_normals.append(Vector((0.0, 0.0, 1.0)))
-
-    u_c0, u_c1 = 0.755, 0.995
-    for i in range(rings):
-        v0, v1 = i / rings, (i + 1) / rings
-        for j in range(cols):
-            jn = (j + 1) % cols
-            u0 = u_c0 + (u_c1 - u_c0) * (j / cols)
-            u1 = u_c0 + (u_c1 - u_c0) * ((j + 1) / cols)
-            a0 = cap_start + i * cols + j
-            a1 = cap_start + i * cols + jn
-            if i + 1 == rings:
-                quads.append([a0, a1, cap_pole])
-                uvs.extend([(u0, v0), (u1, v0), (0.5 * (u0 + u1), 1.0)])
-            else:
-                b1 = cap_start + (i + 1) * cols + jn
-                b0 = cap_start + (i + 1) * cols + j
-                quads.append([a0, a1, b1, b0])
-                uvs.extend([(u0, v0), (u1, v0), (u1, v1), (u0, v1)])
-
     # ---- 2. Sculpted guide-shell concentric hair-card builder -----------------------------------
     # Every card follows ONE smooth sleek guide surface S(fall_az, s), offset cleanly by tier
     # (0mm at root -> tier_offset along mid/ends) so cards NEVER randomly stab through each other.
@@ -370,17 +460,12 @@ def layered_long_hair(hair, base, cloth_objs, rig, out_dir, model):
 
         if start_elev is not None:
             p_root, r_nrm = _ray_scalp(fall_az, start_elev)
-            root_az = fall_az
-            root_elev = start_elev
         else:
             # Root right on the clean parting arc (reaching all the way forward to the forehead hairline!)
             px = part_x + side_sign * 0.0025
-            ray_p = (Vector((px, part_py, crown_z + 0.055)) - head_center).normalized()
-            hit_p, _, _, _ = scalp_bvh.ray_cast(head_center, ray_p, 0.35)
+            hit_p = scalp_bvh.ray_cast(Vector((px, part_py, crown_z + .05)), Vector((0, 0, -1)), .20)[0]
             p_root = hit_p if hit_p is not None else Vector((px, part_py, crown_z - 0.008))
             r_nrm = (p_root - head_center).normalized()
-            root_az = math.atan2(r_nrm.x, -r_nrm.y) % math.tau
-            root_elev = math.asin(max(-0.99, min(0.99, r_nrm.z)))
 
         wrap_end_s = 0.36 if start_elev is None else 0.26
         exit_elev = -0.22
@@ -408,9 +493,10 @@ def layered_long_hair(hair, base, cloth_objs, rig, out_dir, model):
                 u_w = s / max(1e-4, wrap_end_s)
                 u_sm = u_w * u_w * (3.0 - 2.0 * u_w)
                 # Sweep smoothly from the part out over the temples/crown toward fall_az
-                az_k = _short_angle_lerp(root_az, fall_az, u_sm ** 0.58)
-                el_k = root_elev + (exit_elev - root_elev) * (u_w ** 1.18)
-                surf_p, ray_k = _ray_scalp(az_k, el_k)
+                ray_k = r_nrm.slerp(exit_ray, u_sm)
+                surf_p = scalp_bvh.ray_cast(head_center + ray_k*.23, -ray_k, .21)[0]
+                if surf_p is None:
+                    surf_p = p_root.lerp(p_exit_surf, u_sm)
                 # Smoothly rise from 0.5mm at the part to sleek crown_off (zero floating root bumps!)
                 off = 0.0005 + (crown_off - 0.0005) * _smoothstep(0.0, 0.35, u_w) + 0.0018 * math.sin(math.pi * u_w)
                 p = surf_p + ray_k * off
@@ -500,6 +586,15 @@ def layered_long_hair(hair, base, cloth_objs, rig, out_dir, model):
                 p_l = push_outside(p_l, edge_c, side_sign=side_sign)
                 p_r = push_outside(p_r, edge_c, side_sign=side_sign)
 
+            # Subdivision and smoothing can cut across the convex skull between guide
+            # samples. Refit both ribbon edges as well as the spine above the temples.
+            if s <= wrap_end_s:
+                fitted = []
+                for point in (p_l, p_m, p_r):
+                    ray = (point - head_center).normalized()
+                    hit = scalp_bvh.ray_cast(head_center + ray*.23, -ray, .21)[0]
+                    fitted.append(hit + ray*(.0055 + tier_offset) if hit is not None else point)
+                p_l, p_m, p_r = fitted
             row_starts.append(len(points))
             bw = _hair_bone_weights(p, z_head, z_neck, z_shoulder)
             # Safe blended AAA guide normals: 55% smooth shell normal + 45% ribbon geometric normal
@@ -836,7 +931,16 @@ def sculpted_afro_coils(hair, base, rig, out_dir, model, style='taper_afro'):
                 if hit is None:
                     hit = center + ray * (0.095 * head_scale)
                 length = _coil_height(hit, t, a, seed_shift=seed_shift) + extra_offset * head_scale * shell_grow
-                points.append(hit + ray * (length - 0.0005 * head_scale * (1.0 - min(1.0, t / 0.14))))
+                if style == 'curly_bob':
+                    length -= extra_offset * head_scale * shell_grow * .75
+                    length += .0028 * noise.noise(hit*120) * shell_grow
+                p = hit + ray * (length - 0.0005 * head_scale * (1.0 - min(1.0, t / 0.14)))
+                if style == 'curly_bob':
+                    back = _smoothstep(.45, 1.85, min(a, math.tau-a))
+                    ends = back * (1-_smoothstep(.05,.78,t))
+                    p.z -= ends * (.050+.004*math.cos(15*a))*head_scale
+                    p += Vector((math.sin(a),-math.cos(a),0)) * ends * (.019+.003*math.cos(13*a))*head_scale
+                points.append(p)
 
         top_hit, _, _, _ = scalp.ray_cast(center, Vector((0, 0, 1)), 0.35)
         top_p = top_hit if top_hit is not None else Vector((center.x, center.y, crown))
