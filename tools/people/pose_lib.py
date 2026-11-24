@@ -79,8 +79,8 @@ def aim_hand(rig, side, fingers, palm):
 
 
 def curl_fingers(rig, side, curl=.35, thumb=.25, spread=0., fingers=None):
-    """Relaxed flexion: every joint bends toward the palm. fingers: {name: amount} for one finger on its own (a
-    pointing index: {'index': .05})."""
+    """Relaxed flexion: fingers bend toward the palm while the thumb opposes anatomically across the palm.
+    fingers: {name: amount} for one finger on its own (a pointing index: {'index': .05})."""
     for f in FINGERS:
         amount = (fingers or {}).get(f, thumb if f == 'thumb' else curl)
         for j, share in ((1, 38), (2, 46), (3, 30)):
@@ -88,10 +88,25 @@ def curl_fingers(rig, side, curl=.35, thumb=.25, spread=0., fingers=None):
             if name not in rig.pose.bones:
                 continue
             n = palm_normal(rig, side); d = bone_dir(rig, name)
+            if f == 'thumb':
+                # Carpometacarpal opposition: thumb_01 sweeps inward across the palm (around palm_normal) while flexing
+                # toward the palm interior; distal phalanges bend along the thumb's own opposed flexion plane.
+                across = (bone_world(rig, 'pinky_01_' + side).translation - bone_world(rig, 'index_01_' + side).translation).normalized()
+                inward = (n * 0.65 + across * 0.75).normalized()
+                axis = d.cross(inward)
+                if axis.length < 1e-5:
+                    continue
+                if j == 1:
+                    # Subtle palm-normal sweep brings the thumb pad across toward index/middle tips on positive curl
+                    sign = 1.0 if side == 'l' else -1.0
+                    rotate_world(rig, name, n, amount * 16.0 * sign)
+                k = {1: .52, 2: .62, 3: .58}[j]
+                rotate_world(rig, name, axis, amount * share * k)
+                continue
             axis = d.cross(n)
             if axis.length < 1e-5:
                 continue
-            k = {'thumb': .6, 'index': .9, 'middle': 1., 'ring': 1.05, 'pinky': 1.1}[f]
+            k = {'index': .9, 'middle': 1., 'ring': 1.05, 'pinky': 1.1}[f]
             rotate_world(rig, name, axis, amount * share * k)
         if spread and f != 'thumb' and f != 'middle':
             n = palm_normal(rig, side); sign = {'index': -1, 'ring': 1, 'pinky': 2}[f] * (1 if side == 'l' else -1)

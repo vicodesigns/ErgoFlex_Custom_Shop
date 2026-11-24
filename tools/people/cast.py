@@ -122,6 +122,7 @@ CHARACTERS = {
         'tint': {'toigo_basic_tucked_t-shirt': (.6, .14, .32), 'toigo_wool_pants': (.12, .12, .14), 'toigo_flats': (.5, .12, .25)},
     },
     'priya': {
+        'tailoring': 'home',
         'name': 'Priya', 'phenotype': {'gender': .0, 'age': .45, 'muscle': .55, 'weight': .45, 'height': .6, 'proportions': .65, 'race': race(.35, .15, .5)},
         'skin': 'young_asian_female', 'eyes': 'brown', 'hair': 'braid01', 'eyebrows': 'eyebrow012', 'eyelashes': 'eyelashes02',
         # (a tee over loose trousers: the sportsuit's crop top left her midriff and back bare, worst with her arms up in the gym)
@@ -130,7 +131,7 @@ CHARACTERS = {
     'jo': {
         'name': 'Jo', 'phenotype': {'gender': .0, 'age': .62, 'muscle': .55, 'weight': .55, 'height': .55, 'proportions': .5, 'race': race(1, 0, 0)},
         'skin': 'middleage_caucasian_female', 'eyes': 'bluegreen', 'hair': 'bob01', 'hair_tint': (.42, .2, .1), 'eyebrows': 'eyebrow004', 'eyelashes': 'eyelashes01',
-        'clothes': ['male_worksuit01', 'shoes02'],
+        'clothes': ['male_worksuit01', 'shoes04'],
     },
     'mia': {
         'tailoring': 'commons', 'comb': 'bob',
@@ -1620,11 +1621,9 @@ ALSO = ['people-sam-sit-type', 'people-sam-sit-type-30', 'people-grace-lie-bed',
 # holds it, and on Yusuf's broader chest it tips into the writing hand.
 NUDGE = {('yusuf', 'stand-chart'): {'hand_r': (.02, .0, .035)},
          ('zoe', 'gym-cycle'): {'hip_z': .03}}      # (her hips are fuller under the hip joints than Kai's: on the saddle, not sunk into it)
-# The film's two typists seen close (Maya, Noah): the knuckles up and the fingers arched down to the home row, close
-# together, not a hand laid flat with the fingers spread. The fingertips meet the keys where the flat hand's did
-# (within 2 mm, Blender measure).
+# All film desk typists: knuckles up and fingers arched down to the home row, close together, not flat spread hands.
 TYPE_ARCH = {'fingers': (0, -1, -.12), 'curl': 1.0, 'thumb': .35, 'spread': .06, 'lift': -.004}
-for _who in ('maya', 'noah'):
+for _who in ('maya', 'noah', 'ava', 'mia', 'lin', 'kai', 'omar', 'andre', 'sofia', 'zoe', 'fern'):
     for _pose in ('sit-type', 'stand-type', 'stand-type-low', 'wheel-type', 'sit-laptop'):
         for _side, _sign in (('hand_l', 1), ('hand_r', -1)):
             NUDGE.setdefault((_who, _pose), {})[_side] = {'fingers': (-_sign * .12, *TYPE_ARCH['fingers'][1:]), 'curl': TYPE_ARCH['curl'], 'thumb': TYPE_ARCH['thumb'], 'spread': TYPE_ARCH['spread'], 'at': (0, 0, TYPE_ARCH['lift'])}

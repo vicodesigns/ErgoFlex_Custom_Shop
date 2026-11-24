@@ -58,12 +58,13 @@ def blender(o):
 
 
 def set_alpha(path, alpha, cutoff={}):
-    """Rewrite the GLB's JSON chunk: hair, brows and lashes are cut-outs, everything else is opaque."""
+    """Rewrite the GLB's JSON chunk: hair, brows and lashes are cut-outs, cornea shells blend, everything else is opaque."""
     data = open(path, 'rb').read(); magic, version, _ = struct.unpack_from('<4sII', data, 0)
     length, kind = struct.unpack_from('<I4s', data, 12); doc = json.loads(data[20:20 + length]); rest = data[20 + length:]
     for m in doc.get('materials', []):
         mode = alpha.get(m.get('name'), 'OPAQUE'); m['alphaMode'] = mode; m.pop('alphaCutoff', None)
         if mode == 'MASK': m['alphaCutoff'] = cutoff.get(m.get('name'), .4); m['doubleSided'] = True
+        elif mode == 'BLEND': m['doubleSided'] = False
     body = json.dumps(doc, separators=(',', ':')).encode(); body += b' ' * (-len(body) % 4)
     out = struct.pack('<4sII', magic, version, 12 + 8 + len(body) + len(rest)) + struct.pack('<I4s', len(body), kind) + body + rest
     open(path, 'wb').write(out)

@@ -313,13 +313,24 @@ def fit(obj, rig, style, garment, base):
     bm.normal_update()
     if (style == 'breton' and garment == 'toigo_basic_tucked_t-shirt') or (style == 'commons' and knitted):
         shape_neckline(bm, shoulder)
+    if garment == 'joepal_crude_t-shirt_female':
+        # Ease & smooth the underarm gusset so raised-arm poses (e.g. Priya's stretch) never pinch or fold black spikes.
+        underarm = [v for v in bm.verts if not v.is_boundary
+                    and abs(shoulder.x) * .62 < abs(v.co.x) < abs(shoulder.x) * 1.18
+                    and shoulder.z - .14 < v.co.z < shoulder.z + .03]
+        if underarm:
+            bmesh.ops.smooth_vert(bm, verts=underarm, factor=.48, use_axis_x=True, use_axis_y=True, use_axis_z=True)
+            bm.normal_update()
+            for v in underarm:
+                v.co += v.normal * .0035
+            bm.normal_update()
     if not trousers and style == 'studio':
         sew_studio_panels(bm, shoulder, chest, waist)
     if polo and style == 'workshop':
         workshop_pocket(bm, shoulder, chest)
     if garment == 'cortu_cargo_pants':
         cargo_pockets(bm, joint('thigh_l'), knee)
-    covered = covered_skin(base, bm) if knitted else []
+    covered = covered_skin(base, bm) if (knitted or garment == 'joepal_crude_t-shirt_female') else []
     bm.transform(world.inverted())
     bm.to_mesh(fitted)
     bm.free()

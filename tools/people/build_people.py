@@ -37,7 +37,7 @@ def asset(name, ext='mhclo'):
 info = HumanService._create_default_human_info_dict()
 phen = dict(who['phenotype']); info['phenotype'].update({k: v for k, v in phen.items() if k != 'race'}); info['phenotype']['race'] = phen['race']
 info['rig'] = 'game_engine'
-info['eyes'] = 'low-poly/low-poly.mhclo'
+info['eyes'] = 'high-poly/high-poly.mhclo'
 info['eyebrows'] = asset(who.get('eyebrows', 'eyebrow001')); info['eyelashes'] = asset(who.get('eyelashes', 'eyelashes01'))
 info['teeth'] = 'teeth_base/teeth_base.mhclo'
 if who.get('hair'): info['hair'] = asset(who['hair'])
@@ -65,8 +65,8 @@ def save_copy(image, px, tag):
 
 
 def eye_image(image, colour):
-    """Eyes that sit in the head instead of looking painted on: the white is shaded toward the lids and a little
-    warm (a pure white eyeball glows in a room), the iris gets its dark rim, the reddish brown iris becomes brown."""
+    """Eyes that sit in the head instead of looking painted on: warm shaded sclera toward the corners, soft
+    upper-eyelid ambient occlusion across the top hemisphere, a crisp dark limbal ring, and natural iris tones."""
     w, h = image.size; px = np.empty(w * h * 4, dtype=np.float32); image.pixels.foreach_get(px); px = px.reshape(h, w, 4)
     v, u = np.mgrid[0:h, 0:w]; u = (u + .5) / w; v = (v + .5) / h; lum = px[..., :3].mean(axis=2)
     for cu, cv in ((.29, .29), (.71, .705)):                      # the two eyeballs of the texture (rows from the bottom)
@@ -76,20 +76,53 @@ def eye_image(image, colour):
         iris = np.clip((R - r) / .012, 0, 1)[..., None]; white = (1 - iris) * ball[..., None]
         shade = 1 - .5 * np.clip((r - R * .9) / (R * 1.5), 0, 1) ** .8           # darker away from the iris: under the lids, in the corners
         px[..., :3] = px[..., :3] * (1 - white) + px[..., :3] * shade[..., None] * np.array([.93, .9, .87], dtype=np.float32) * white
+        # Soft upper-eyelid ambient cast shadow across upper sclera and top edge of the iris
+        lid = (1 - .34 * np.clip((v - (cv + .015)) / (R * 1.15), 0, 1) ** 1.15)[..., None] * ball[..., None]
+        px[..., :3] = px[..., :3] * (1 - ball[..., None]) + px[..., :3] * lid
         rim = np.exp(-((r - R * .96) / (R * .09)) ** 2)[..., None] * ball[..., None]; px[..., :3] *= 1 - .45 * rim
-        if colour.startswith('brown'): px[..., :3] = px[..., :3] * (1 - iris) + px[..., :3] * np.array([.62, .6, .56] if colour == 'brown' else [.8, .74, .62], dtype=np.float32) * iris
+        if colour.startswith('brown'):
+            px[..., :3] = px[..., :3] * (1 - iris) + px[..., :3] * np.array([.62, .6, .56] if colour == 'brown' else [.8, .74, .62], dtype=np.float32) * iris
+        elif colour in ('blue', 'lightblue', 'ice'):
+            # Calm overly bright/cyan MPFB blue irides so they read naturally in close-up lighting.
+            iris_rgb = px[..., :3]
+            iris_lum = iris_rgb.mean(axis=2, keepdims=True)
+            calmed = (iris_lum * .22 + iris_rgb * .78) * np.array([.86, .84, .82], dtype=np.float32)
+            px[..., :3] = px[..., :3] * (1 - iris) + calmed * iris
     return save_copy(image, px.reshape(-1, 4), '_eye')
 
 
-# Eye colour: the eye material's texture is swapped for the named iris.
+# Eye colour & high-poly dual-shell split: keep inner sclera+iris as 'Human.low-poly' (compatible with runtime shaders
+# & face rig) and split the outer corneal bulge (UV box u > 0.85, v < 0.15) onto a clear wet 'Human.eyes_cornea' shell.
 for o in meshes:
-    if 'low-poly' in o.name and who.get('eyes'):
+    if ('low-poly' in o.name or 'high-poly' in o.name) and who.get('eyes'):
         for m in o.data.materials:
+            m.name = 'Human.low-poly'
             for n in m.node_tree.nodes:
                 if n.type == 'TEX_IMAGE' and n.image:
                     folder = os.path.dirname(n.image.filepath_from_user()); want = os.path.join(folder, who['eyes'] + '_eye.png')
                     if os.path.exists(want): n.image = bpy.data.images.load(want)
-                    if LOOK >= 3: n.image = eye_image(n.image, who.get('eyes', ''))
+                    n.image = eye_image(n.image, who.get('eyes', ''))
+        uv_layer = o.data.uv_layers.active
+        if 'high-poly' in o.name and uv_layer:
+            cornea = bpy.data.materials.new('Human.eyes_cornea')
+            cornea.use_nodes = True
+            cornea['alpha'] = 'BLEND'
+            cbsdf = cornea.node_tree.nodes.get('Principled BSDF')
+            # Pure-black diffuse base prevents milky white haze while keeping crystal-clear wet specular catchlights.
+            cbsdf.inputs['Base Color'].default_value = (0.0, 0.0, 0.0, 1.0)
+            cbsdf.inputs['Roughness'].default_value = 0.02
+            cbsdf.inputs['IOR'].default_value = 1.376
+            cbsdf.inputs['Alpha'].default_value = 0.02
+            if 'Coat Weight' in cbsdf.inputs:
+                cbsdf.inputs['Coat Weight'].default_value = 1.0
+                cbsdf.inputs['Coat Roughness'].default_value = 0.01
+            o.data.materials.append(cornea)
+            cornea_idx = len(o.data.materials) - 1
+            for poly in o.data.polygons:
+                us = [uv_layer.data[i].uv.x for i in poly.loop_indices]
+                vs = [uv_layer.data[i].uv.y for i in poly.loop_indices]
+                if (sum(us) / len(us)) > 0.84 and (sum(vs) / len(vs)) < 0.16:
+                    poly.material_index = cornea_idx
 
 
 # ---- an outfit in parts (cast 'parts': {outfit: 'top' | 'bottom' | 'both'}) -------------------------------------
@@ -238,6 +271,7 @@ tints = who.get('tint', {})
 for o in meshes:
     kind = o.name.split('.', 1)[-1]
     for m in o.data.materials:
+        if m.name == 'Human.eyes_cornea': continue
         tree = m.node_tree; bsdf = next(n for n in tree.nodes if n.type == 'BSDF_PRINCIPLED')
         cut = any(k in o.name.lower() for k in ALPHA_CUT) or bool(who.get('hair')) and who['hair'] in o.name
         m['alpha'] = 'MASK' if cut else 'OPAQUE'
@@ -249,7 +283,7 @@ for o in meshes:
             bsdf.inputs['Alpha'].default_value = 1
         rough = .5
         if o is base: rough = .7 if LOOK >= 3 else .58
-        elif 'low-poly' in o.name: rough = .3 if LOOK >= 3 else .12
+        elif 'low-poly' in o.name or 'high-poly' in o.name: rough = .14
         elif 'shoes' in o.name or 'boots' in o.name or 'flats' in o.name: rough = .55
         elif kind == who.get('hair') and who.get('comb'): rough = .73
         elif cut: rough = .5
@@ -387,7 +421,7 @@ if cleared: pose = cleared; pose_lib.apply_pose(rig, pose)
 HELD_BONE = {'gamepad': 'hand_r', 'carton': 'hand_r', 'backpack': 'spine_03', 'headphones': 'head', 'wheelchair': None, 'laptop': None, 'prosthesis': 'calf_{side}'}
 extras, extra_bone = [], {}
 # What is worn on the body is fitted outside the posed body and clothes (not the hair, the eyes, brows or teeth).
-held.BODY = [o for o in meshes if o.type == 'MESH' and not any(k in o.name.lower() for k in ('low-poly', 'teeth', 'tongue', 'eyebrow', 'eyelash', 'glasses'))
+held.BODY = [o for o in meshes if o.type == 'MESH' and not any(k in o.name.lower() for k in ('low-poly', 'high-poly', 'teeth', 'tongue', 'eyebrow', 'eyelash', 'glasses'))
              and not (who.get('hair') and who['hair'] in o.name)]
 for kind, kw in list(spec.get('held', [])) + list(who.get('carry', {}).get(spec['pose'], [])):
     made = held.BUILDERS[kind](rig, **dict(kw)); extras += made
@@ -435,14 +469,14 @@ if who.get('layered_waves'):
     import groom
     hair_baked = next((b for b in baked if who.get('hair') and who['hair'] in b.name), None)
     if hair_baked is not None:
-        obs = [b for b in baked if b is not hair_baked and not any(k in b.name.lower() for k in ('low-poly', 'teeth', 'tongue', 'eyebrow', 'eyelash', 'glasses'))]
+        obs = [b for b in baked if b is not hair_baked and not any(k in b.name.lower() for k in ('low-poly', 'high-poly', 'teeth', 'tongue', 'eyebrow', 'eyelash', 'glasses'))]
         groom.drape_hair_over_posed(hair_baked, obs, rig)
 
 # Skin under clothing pokes through once the body is posed. Any body face with cloth just outside it goes.
 from mathutils.bvhtree import BVHTree  # noqa: E402
 import bmesh  # noqa: E402
 body = next(b for b in baked if b.name == base_name + '.baked')
-SMALL = ('low-poly', 'teeth', 'tongue', 'eyebrow', 'eyelash', 'glasses')
+SMALL = ('low-poly', 'high-poly', 'teeth', 'tongue', 'eyebrow', 'eyelash', 'glasses')
 cloth = [b for b in baked if b is not body and b not in extras and not any(k in b.name.lower() for k in SMALL) and not (who.get('hair') and who['hair'] in b.name)]
 # Outer garments first, in the order the character lists them: each layer loses the faces a layer above it covers.
 order = {name: i for i, name in enumerate(garments.names(who) + who['clothes'])}
@@ -508,11 +542,11 @@ def cull_under(o, trees, reach, through=.018, corners=False, whole=False, tuck=F
     bm.transform(o.matrix_world.inverted()); bm.to_mesh(o.data); bm.free()
 
 
-# Heavy garments (knitwear, long skirts) come down to a budget; the silhouette survives it.
+# Heavy garments (knitwear, long skirts) come down to a budget; 18k keeps tailored collars, cuffs & folds crisp.
 for c in cloth:
     c.data.calc_loop_triangles(); n = len(c.data.loop_triangles)
-    if n > 14000:
-        mod = c.modifiers.new('Budget', 'DECIMATE'); mod.ratio = 14000 / n
+    if n > 18000:
+        mod = c.modifiers.new('Budget', 'DECIMATE'); mod.ratio = 18000 / n
         dg2 = bpy.context.evaluated_depsgraph_get(); me = bpy.data.meshes.new_from_object(c.evaluated_get(dg2), preserve_all_data_layers=True, depsgraph=dg2); c.modifiers.clear(); old = c.data; c.data = me; bpy.data.meshes.remove(old)
 trees = [tree_of(c) for c in cloth]
 made = len(garments.names(who))      # (garments made from the base mesh: smooth shells with cut necklines)

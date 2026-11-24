@@ -84,9 +84,9 @@ await new Promise(r => setTimeout(r, 4));
 assert.equal(first.root.children.filter(o => o.name.startsWith('Person')).length, 0, 'nobody is shown with half-loaded hair: people wait for the maps');
 const highschool = await pending;
 assert.ok(castDetailCast(), 'loaded');
-const { HAIR_ATLASES, HAIR_TILES } = await import('../media-cast-hair-atlas.mjs'), MAPS = HAIR_ATLASES.length * 3 + 1;
-assert.equal(MAPS, 13);
-assert.equal(requests.length, MAPS, 'one image request per map for the page (hair fibres, flow and hairline per atlas, skin relief)');
+const { HAIR_ATLASES, HAIR_TILES } = await import('../media-cast-hair-atlas.mjs'), MAPS = HAIR_ATLASES.length * 3 + 5;
+assert.equal(MAPS, 17);
+assert.equal(requests.length, MAPS, 'one image request per map for the page (hair fibres, flow and hairline per atlas, skin relief, shared textiles)');
 const shared = castDetailCast();
 latency = 5;
 const gym = await cast(roomOf('gym', layouts.gym)), home = await cast(roomOf('home', layouts.home));
@@ -104,7 +104,11 @@ const sharedSkin = shared.skin, hairKey = n => shared.hair.get('Human.' + n);
             SKINS.add(mats.body.normalMap);
             assert.ok(mats['low-poly'].isMeshPhysicalMaterial && mats['low-poly'].emissiveMap === set.get('low-poly').map, name + ': eyes');
             assert.ok(mats.eyebrow001.transparent && mats.eyelashes01.transparent, name + ': brows and lashes are cards');
-            for (const key of ['toigo_wool_pants', 'namuhekam_male_polo_shirt', 'shoes05', 'teeth_base']) assert.equal(mats[key], set.get(key), name + ': ' + key + ' is the library\'s');
+            assert.equal(mats.teeth_base, set.get('teeth_base'), name + ': teeth_base stays the library\'s');
+            for (const key of ['toigo_wool_pants', 'namuhekam_male_polo_shirt']) {
+                assert.ok(mats[key].isMeshPhysicalMaterial && mats[key].sheen > 0 && mats[key].normalMap, name + ': ' + key + ' gets shared cloth sheen & weave');
+            }
+            assert.ok(mats.shoes05.isMeshPhysicalMaterial && mats.shoes05.clearcoat > 0, name + ': shoes05 gets physical shoe finish');
             const hair = Object.keys(mats).find(k => partOf('Human.' + k) === 'hair');
             seen[!hair ? 'bald' : hair === 'headscarf_hair' ? 'hijab' : hairKey(hair) ? 'styled' : 'unstyled']++;
             if (hair === 'headscarf_hair') assert.equal(mats[hair], set.get(hair), name + ': a hijab (opaque) keeps its own material');
@@ -177,11 +181,35 @@ assert.ok(seen.hijab && seen.styled && seen.unstyled && seen.bald, 'the rooms\' 
     }
 }
 
-{   // the lab's material maker is the function that shipped in 4abe6181, byte for byte
-    const { execFileSync } = await import('node:child_process');
-    let was = null; try { was = execFileSync('git', ['show', '4abe6181:media-cast-finishes.mjs'], { cwd: root, encoding: 'utf8', maxBuffer: 1 << 24 }); } catch { console.log('(no git object 4abe6181 here: the mediaPersonMaterial byte check skipped)'); }
-    if (was) { const body = text => text.slice(text.indexOf('export function mediaPersonMaterial'), text.indexOf('\n}\n', text.indexOf('export function mediaPersonMaterial')) + 3); const now = fs.readFileSync(path.join(root, 'media-cast-finishes.mjs'), 'utf8'); assert.ok(body(was).length > 800); const settled = text => text.replace(', relief = 1) {', ') {').replace('SKIN_RELIEF * relief', '.55').replace('-SKIN_RELIEF * relief', '-.55');   // the chapter skin-relief knob (people.skinRelief, default 1) is the only change allowed: at 1 it is byte-for-byte the shipped material
-        assert.equal(settled(body(now)), body(was), 'mediaPersonMaterial is unchanged (at the default skin relief)'); }
+{   // Character realism v2 shading invariants (approved 2026-11-23):
+    // 1. Eyes (low-poly inner + eyes_cornea outer) have crisp wet clearcoat and restrained emissive.
+    // 2. GLB-embedded OpenGL hair normal maps keep positive +Y normalScale, while baked atlas maps keep -Y.
+    // 3. Coiled 4C hair uses velvety dark sheen & low anisotropy; skin has subtle warm sheen & refined relief.
+    // 4. Clothing receives shared fabric weave + sheen across all non-Classic rooms.
+    const ownNrm = new THREE.Texture();
+    const coilsSrc = new THREE.MeshStandardMaterial({ name: 'Human.sculpted_coils_hair', alphaTest: .28 });
+    coilsSrc.map = new THREE.Texture(); coilsSrc.normalMap = ownNrm;
+    const coilsMat = mediaPersonMaterial(coilsSrc, shared, 'hair');
+    assert.equal(coilsMat.normalMap, ownNrm, 'GLB-embedded hair normal map is preserved');
+    assert.ok(coilsMat.normalScale.y > 0, 'GLB-embedded OpenGL hair normal map uses +Y normalScale');
+    assert.ok(coilsMat.anisotropy < .2 && coilsMat.sheen < .15, 'coiled 4C hair stays velvety with low linear anisotropy');
+
+    const atlasHairSrc = new THREE.MeshStandardMaterial({ name: 'Human.ponytail01', alphaTest: .4 });
+    atlasHairSrc.map = new THREE.Texture();
+    const atlasHairMat = mediaPersonMaterial(atlasHairSrc, shared, 'hair');
+    assert.ok(atlasHairMat.normalScale.y < 0, 'baked flipY=false atlas hair normal map uses -Y normalScale');
+
+    const corneaSrc = new THREE.MeshStandardMaterial({ name: 'Human.eyes_cornea' });
+    const corneaMat = mediaPersonMaterial(corneaSrc, shared, null);
+    assert.ok(corneaMat.isMeshPhysicalMaterial && corneaMat.transparent && corneaMat.clearcoat === 1 && corneaMat.roughness <= .05, 'cornea shell is crystal-clear wet glass');
+
+    const eyeSrc = new THREE.MeshStandardMaterial({ name: 'Human.low-poly' }); eyeSrc.map = new THREE.Texture();
+    const eyeMat = mediaPersonMaterial(eyeSrc, shared, null);
+    assert.ok(eyeMat.clearcoat === 1 && eyeMat.clearcoatRoughness <= .05 && eyeMat.emissiveIntensity <= .12, 'inner eyeball has crisp catchlights and restrained socket fill');
+
+    const skinSrc = new THREE.MeshStandardMaterial({ name: 'Human.body' }); skinSrc.map = new THREE.Texture();
+    const skinMat = mediaPersonMaterial(skinSrc, shared, null);
+    assert.ok(skinMat.sheen > 0 && skinMat.normalScale.x <= .35, 'skin carries warm grazing sheen and refined pore relief');
 }
 
 // ---- 4b. the hair atlases: every hairstyle in the manifest has its own tile, the files are the format the tiles assume, and
@@ -231,7 +259,7 @@ assert.ok(seen.hijab && seen.styled && seen.unstyled && seen.bald, 'the rooms\' 
 
 // ---- 5. disposal: a room going away never takes the shared maps
 {
-    const before = [sharedSkin, ...[...shared.hair.values()].flatMap(s => [s.normal, s.direction, s.edge])];
+    const before = [sharedSkin, shared.textiles.stockinette.normal, shared.textiles.stockinette.orm, shared.textiles.twill.normal, shared.textiles.twill.orm, ...[...shared.hair.values()].flatMap(s => [s.normal, s.direction, s.edge])];
     let disposed = 0; for (const t of before) t.addEventListener('dispose', () => disposed++);
     const room = roomOf('home', layouts.home), people = await cast(room);
     room.people = people; disposeWorkspaceObject([room.root]); people.dispose();

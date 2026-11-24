@@ -34837,7 +34837,7 @@
    "file": "assets/props/people-priya-stretch.glb",
    "anchor": "floor",
    "size": [
-    471.4,
+    472.8,
     1960.3,
     330.9
    ],
@@ -34847,12 +34847,12 @@
     -150.7
    ],
    "max": [
-    247.6,
+    249,
     1960.3,
     180.2
    ],
-   "tris": 43906,
-   "bytes": 804240,
+   "tris": 51922,
+   "bytes": 862060,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -85769,8 +85769,8 @@
     1253.6,
     563.6
    ],
-   "tris": 57020,
-   "bytes": 1455332,
+   "tris": 61532,
+   "bytes": 1480292,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
