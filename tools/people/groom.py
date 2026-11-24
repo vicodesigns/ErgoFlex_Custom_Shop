@@ -757,3 +757,154 @@ def drape_hair_over_posed(hair_obj, obstacle_objs, rig):
     for v, p in zip(me.vertices, pts):
         v.co = inv @ p
     me.update()
+
+
+def _afro_coil_textures(out_dir, model):
+    from afro_coil_texture import _build_all
+    rgba, nrm_rgba = _build_all()
+    height, width = rgba.shape[:2]
+
+    img_col = bpy.data.images.new('Sculpted coils', width, height, alpha=True)
+    img_col.pixels.foreach_set(rgba.ravel())
+    p_col = Path(out_dir, 'tex', model + '--sculpted-coils.png')
+    p_col.parent.mkdir(parents=True, exist_ok=True)
+    img_col.filepath_raw = str(p_col)
+    img_col.file_format = 'PNG'
+    img_col.save()
+
+    img_nrm = bpy.data.images.new('Sculpted coils normal', width, height, alpha=True)
+    img_nrm.colorspace_settings.name = 'Non-Color'
+    img_nrm.pixels.foreach_set(nrm_rgba.ravel())
+    p_nrm = Path(out_dir, 'tex', model + '--sculpted-coils-nrm.png')
+    img_nrm.filepath_raw = str(p_nrm)
+    img_nrm.file_format = 'PNG'
+    img_nrm.save()
+    return img_col, img_nrm
+
+
+def sculpted_afro_coils(hair, base, rig, out_dir, model, style='taper_afro'):
+    """Replace the cracked afro01 shell with a sculpted 3D sponge-coil volume + 2 concentric airy micro-coil lace shells."""
+    shape = garments._shape(base)
+    helpers = garments._members(base, 'HelperGeometry') | garments._members(base, 'JointCubes')
+    faces = [tuple(p.vertices) for p in base.data.polygons if not any(i in helpers for i in p.vertices)]
+    scalp = BVHTree.FromPolygons(shape, faces)
+    weights = garments._weights(base)
+    head = [shape[i] for i in {v for f in faces for v in f} if weights[i].get('head', 0) > 0.8]
+    crown = max(p.z for p in head)
+    head_h = crown - min(p.z for p in head)
+    head_scale = max(0.72, min(1.15, head_h / 0.225))
+    center = Vector((0.0, (max(p.y for p in head) + min(p.y for p in head)) * 0.5 + 0.005 * head_scale, crown - 0.105 * head_scale))
+
+    points, quads, uvs = [], [], []
+
+    # Clean, natural hairline reaching smoothly around the ears and down to the nape (-0.70).
+    angles = [0.0, 0.40, 0.78, 1.04, 1.24, 1.54, 1.84, 2.22, math.pi]
+    if style == 'full_afro':
+        # Softer, rounded natural hairline for Zoe / Tess (slightly fuller temples & nape wrap).
+        edges = [0.34, 0.33, 0.23, -0.09, -0.19, -0.04, -0.17, -0.50, -0.72]
+    else:
+        edges = [0.36, 0.35, 0.25, -0.07, -0.17, -0.02, -0.15, -0.48, -0.70]
+
+    def _coil_height(hit, t, a, seed_shift=0.0):
+        # Smooth, natural tapered hairline (no chunky forehead shelf!) rising smoothly into a lush Afro crown.
+        taper_edge = _smoothstep(0.0, 0.28 if style == 'full_afro' else 0.30, t) ** 1.25
+        side_factor = abs(math.sin(a))
+        crown_t = _smoothstep(0.16 if style == 'full_afro' else 0.18, 0.72, t)
+        if style == 'full_afro':
+            # Lush, rounded natural Afro volume with fuller sides (keeps a sleek, natural silhouette).
+            base_len = (0.0018 + 0.0145 * taper_edge + (0.0215 - 0.0020 * side_factor) * crown_t) * head_scale
+        else:
+            base_len = (0.0014 + 0.0115 * taper_edge + (0.0175 - 0.0045 * side_factor) * crown_t) * head_scale
+        p_n = (hit / head_scale) + Vector((seed_shift, seed_shift * 0.7, -seed_shift * 0.5))
+        n1 = noise.noise(p_n * 72.0, noise_basis='PERLIN_ORIGINAL')
+        n2 = noise.noise(p_n * 145.0, noise_basis='PERLIN_ORIGINAL')
+        # Organic rounded sponge-coil pillows sculpted directly into geometry
+        pillow = ((1.0 - abs(n1)) * 0.0048 + n2 * 0.0022) * head_scale
+        return base_len + pillow * taper_edge
+
+    def _add_shell(rings, columns, u_lo, u_hi, extra_offset=0.0, u_shift=0.0, seed_shift=0.0):
+        base_v = len(points)
+        for i in range(rings):
+            t = i / rings
+            shell_grow = _smoothstep(0.06, 0.34, t)
+            for j in range(columns):
+                a = math.tau * j / columns
+                edge = float(np.interp(min(a, math.tau - a), angles, edges)) + 0.007 * math.sin(9.0 * a)
+                elev = edge + (math.pi * 0.5 - edge) * t
+                ray = Vector((math.sin(a) * math.cos(elev), -math.cos(a) * math.cos(elev), math.sin(elev)))
+                hit, _, _, _ = scalp.ray_cast(center, ray, 0.35)
+                if hit is None:
+                    hit = center + ray * (0.095 * head_scale)
+                length = _coil_height(hit, t, a, seed_shift=seed_shift) + extra_offset * head_scale * shell_grow
+                points.append(hit + ray * (length - 0.0005 * head_scale * (1.0 - min(1.0, t / 0.14))))
+
+        top_hit, _, _, _ = scalp.ray_cast(center, Vector((0, 0, 1)), 0.35)
+        top_p = top_hit if top_hit is not None else Vector((center.x, center.y, crown))
+        pole = len(points)
+        points.append(top_p + Vector((0, 0, _coil_height(top_p, 1.0, 0.0, seed_shift=seed_shift) + extra_offset * head_scale)))
+
+        u_span = u_hi - u_lo
+        for i in range(rings):
+            v0, v1 = i / rings, (i + 1) / rings
+            for j in range(columns):
+                jn = (j + 1) % columns
+                f0 = ((j / columns) + u_shift) % 1.0
+                f1 = f0 + (1.0 / columns)
+                if f1 > 1.0:
+                    f1 = 1.0
+                u0 = u_lo + u_span * f0
+                u1 = u_lo + u_span * f1
+                a0 = base_v + i * columns + j
+                a1 = base_v + i * columns + jn
+                if i + 1 == rings:
+                    quads.append([a0, a1, pole])
+                    uvs.extend([(u0, v0), (u1, v0), (0.5 * (u0 + u1), 1.0)])
+                else:
+                    b1 = base_v + (i + 1) * columns + jn
+                    b0 = base_v + (i + 1) * columns + j
+                    quads.append([a0, a1, b1, b0])
+                    uvs.extend([(u0, v0), (u1, v0), (u1, v1), (u0, v1)])
+
+    # Shell 0: Sculpted solid dense 4C coil base volume (left UV half)
+    _add_shell(44, 132, 0.004, 0.494, extra_offset=0.0, u_shift=0.0, seed_shift=0.0)
+    # Shell 1: Inner airy micro-coil lace parallax shell (+3.2mm, right UV half)
+    _add_shell(32, 96, 0.506, 0.996, extra_offset=0.0032, u_shift=0.17, seed_shift=0.013)
+    # Shell 2: Outer fuzzy micro-coil silhouette halo shell (+6.6mm, right UV half, phase-shifted)
+    _add_shell(28, 84, 0.506, 0.996, extra_offset=0.0066, u_shift=0.61, seed_shift=0.029)
+
+    mesh = bpy.data.meshes.new('Sculpted coils')
+    local = hair.matrix_world.inverted()
+    mesh.from_pydata([local @ p for p in points], [], quads)
+    uv = mesh.uv_layers.new(name='UVMap')
+    uv.data.foreach_set('uv', np.asarray(uvs, dtype=np.float32).ravel())
+    for face in mesh.polygons:
+        face.use_smooth = True
+
+    mat = bpy.data.materials.new('Human.sculpted_coils_hair')
+    mat.use_nodes = True
+    mat['alpha'] = 'MASK'
+    mat['cutoff'] = 0.28
+    bsdf = mat.node_tree.nodes.get('Principled BSDF')
+    # Natural velvety 4C coil finish (soft sheen, zero plastic glare!)
+    bsdf.inputs['Roughness'].default_value = 0.80
+    bsdf.inputs['Specular IOR Level'].default_value = 0.22
+    img_col, img_nrm = _afro_coil_textures(out_dir, model)
+    strand = mat.node_tree.nodes.new('ShaderNodeTexImage')
+    strand.image = img_col
+    mat.node_tree.links.new(strand.outputs['Color'], bsdf.inputs['Base Color'])
+    mat.node_tree.links.new(strand.outputs['Alpha'], bsdf.inputs['Alpha'])
+
+    # Wire real tangent-space coil normal map so both Blender Cycles & Three.js shade every micro-coil!
+    nrm_tex = mat.node_tree.nodes.new('ShaderNodeTexImage')
+    nrm_tex.image = img_nrm
+    nrm_node = mat.node_tree.nodes.new('ShaderNodeNormalMap')
+    nrm_node.inputs['Strength'].default_value = 0.90
+    mat.node_tree.links.new(nrm_tex.outputs['Color'], nrm_node.inputs['Color'])
+    mat.node_tree.links.new(nrm_node.outputs['Normal'], bsdf.inputs['Normal'])
+    mesh.materials.append(mat)
+
+    hair.modifiers.clear()
+    hair.data = mesh
+    hair.vertex_groups.clear()
+    hair.vertex_groups.new(name='head').add(range(len(points)), 1.0, 'REPLACE')
+    hair.modifiers.new('Sculpted coils', 'ARMATURE').object = rig
