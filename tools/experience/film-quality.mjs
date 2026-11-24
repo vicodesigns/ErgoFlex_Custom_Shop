@@ -78,29 +78,44 @@ export async function installQuality(shot, { screens = [] } = {}) {
     const cam = new THREE.CubeCamera(deskWidth * .01, deskWidth * 60, rt);
     const c = desk.getCenter(new THREE.Vector3()); cam.position.set(c.x, desk.min.y + deskSize.y * .75, c.z); scene.add(cam);
     const was = api.loadedModel.visible; api.loadedModel.visible = false;
-    try { cam.update(renderer, scene); } finally { api.loadedModel.visible = was; cam.removeFromParent(); }
+    const ceiling = api.workspaceRoom?.ceilingSurface, ceilWas = ceiling?.visible;
+    if (ceiling) ceiling.visible = true;   // close the room shell for the reflection probe so +Y isn't a black void
+    try { cam.update(renderer, scene); } finally {
+      if (ceiling) ceiling.visible = ceilWas;
+      api.loadedModel.visible = was; cam.removeFromParent();
+    }
     // how bright the capture is (mean radiance of each face's middle): a black capture turns every metal in the film black
+    let meanLevel = 1;
     try {
       const n = 16, buf = new Uint16Array(n * n * 4), at = Math.floor((q.reflections - n) / 2), level = [];
       for (let face = 0; face < 6; face++) { renderer.readRenderTargetPixels(rt, at, at, n, n, buf, face); let sum = 0; for (let i = 0; i < n * n; i++) sum += (THREE.DataUtils.fromHalfFloat(buf[i * 4]) + THREE.DataUtils.fromHalfFloat(buf[i * 4 + 1]) + THREE.DataUtils.fromHalfFloat(buf[i * 4 + 2])) / 3; level.push(+(sum / (n * n)).toFixed(3)); }
       info.reflectionLevel = level;      // +x, -x, +y (ceiling), -y (floor), +z, -z
+      meanLevel = level.reduce((a, b) => a + b, 0) / level.length;
     } catch (error) { info.reflectionLevel = String(error).slice(0, 80); }
     const pmrem = new THREE.PMREMGenerator(renderer), env = pmrem.fromCubemap(rt.texture).texture; pmrem.dispose(); rt.dispose();
-    // Metals and clear plastics in a room already reflect a room (studio.js roomGlossPass: the same in the Studio
-    // and here, at the room's own level). They keep it: this capture is taken inside a room whose ceiling and near
-    // walls are cut away for the camera and often comes out black (reflectionLevel above), which turned the film's
-    // aluminium black. What is left for the capture: glass and whatever else has no environment of its own yet.
     api.applyRoomGloss?.();
     const swapped = [];
-    scene.traverse(o => { if (!o.isMesh || within(o, api.loadedModel) && named(o, LEDISH)) return;
-      for (const m of [].concat(o.material || [])) {
-        if (!m.isMeshStandardMaterial || m.envMap || swapped.some(s => s.m === m)) continue;
-        // envMap feeds the diffuse IBL too, so only metals and glass (little or no diffuse) get the room capture;
-        // glossy dielectrics (desk tops, paint) keep the studio environment or their colour shifts.
-        const reflective = m.metalness >= .6 || m.transmission > 0; if (!reflective) continue;
-        swapped.push({ m, intensity: m.envMapIntensity }); m.envMap = env; m.envMapIntensity = m.envMapIntensity * (scene.environmentIntensity ?? 1); m.needsUpdate = true;
-      } });
-    undo.push(() => { for (const s of swapped) { s.m.envMap = null; s.m.envMapIntensity = s.intensity; s.m.needsUpdate = true; } env.dispose(); });
+    // Apply the real room CubeCamera capture when it has genuine room luminance (meanLevel >= 0.04), upgrading both
+    // bare reflective glass/metals AND metals carrying the generic roomGloss placeholder while preserving deskHardware
+    // calibration (roomGlossBase). Dark product-stage captures fall back cleanly to roomGloss / studio env.
+    if (meanLevel >= 0.04) {
+      scene.traverse(o => { if (!o.isMesh || within(o, api.loadedModel) && named(o, LEDISH)) return;
+        for (const m of [].concat(o.material || [])) {
+          if (!m.isMeshStandardMaterial || swapped.some(s => s.m === m)) continue;
+          const isPlaceholder = m.userData?.roomGlossBase != null;
+          if (m.envMap && !isPlaceholder) continue;
+          // envMap feeds the diffuse IBL too, so only metals and glass (little or no diffuse) get the room capture;
+          // glossy dielectrics (desk tops, paint) keep the studio environment or their colour shifts.
+          const reflective = m.metalness >= .6 || m.transmission > 0; if (!reflective) continue;
+          swapped.push({ m, prevEnv: m.envMap, intensity: m.envMapIntensity });
+          m.userData.filmQualityEnv = true;
+          m.envMap = env;
+          const base = isPlaceholder ? m.userData.roomGlossBase : (m.envMapIntensity ?? 1);
+          m.envMapIntensity = base * (scene.environmentIntensity ?? 1);
+          m.needsUpdate = true;
+        } });
+    }
+    undo.push(() => { for (const s of swapped) { delete s.m.userData.filmQualityEnv; s.m.envMap = s.prevEnv; s.m.envMapIntensity = s.intensity; s.m.needsUpdate = true; } env.dispose(); });
     info.reflections = swapped.length;
   }
 

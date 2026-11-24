@@ -84,42 +84,93 @@ export function resetRoomLightRig(lights) {
 }
 
 const SURFACES = {
-    wood: { period: 240, relief: .16 },
-    plaster: { period: 120, relief: .25 },
-    fabric: { period: 20, relief: .28 },
-    powder: { period: 65, relief: .07 },
-    metal: { period: 100, relief: .025 },
-    stone: { period: 160, relief: .08 },
-    rubber: { period: 55, relief: .3 }
+    wood:    { period: 240, relief: .16, normalScale: .32, slope: 3.4, roughRange: 76 },
+    plaster: { period: 120, relief: .25, normalScale: .28, slope: 2.8, roughRange: 56 },
+    fabric:  { period: 20,  relief: .28, normalScale: .42, slope: 4.0, roughRange: 44 },
+    powder:  { period: 65,  relief: .07, normalScale: .16, slope: 1.9, roughRange: 42 },
+    metal:   { period: 100, relief: .025, normalScale: .18, slope: 2.2, roughRange: 68 },
+    stone:   { period: 160, relief: .08, normalScale: .26, slope: 2.6, roughRange: 88 },
+    rubber:  { period: 55,  relief: .30, normalScale: .40, slope: 3.6, roughRange: 52 }
 };
 
 function surfaceMaps(kind) {
-    const size = 256, height = new Uint8Array(size * size * 4), sheen = new Uint8Array(size * size * 4), color = new Uint8Array(size * size * 4);
-    // Integer noise is stable across rebuilds. Sine waves tile at the edges.
-    const noise = (x, y) => { let n = Math.imul(x + 13, 374761393) ^ Math.imul(y + 37, 668265263); n = Math.imul(n ^ n >>> 13, 1274126177); return (n >>> 0) / 4294967295; };
+    const spec = SURFACES[kind] || SURFACES.plaster;
+    const size = 256, field = new Float32Array(size * size);
+    const height = new Uint8Array(size * size * 4), normal = new Uint8Array(size * size * 4), sheen = new Uint8Array(size * size * 4), color = new Uint8Array(size * size * 4);
+    // Integer hash noise is deterministic across rebuilds; value-interpolated octave + sine waves tile seamlessly.
+    const hash = (x, y) => {
+        const xm = ((x % size) + size) % size, ym = ((y % size) + size) % size;
+        let n = Math.imul(xm + 13, 374761393) ^ Math.imul(ym + 37, 668265263);
+        n = Math.imul(n ^ n >>> 13, 1274126177); return (n >>> 0) / 4294967295;
+    };
+    const smoothNoise = (x, y, step) => {
+        const gx = Math.floor(x / step), gy = Math.floor(y / step);
+        const fx = (x - gx * step) / step, fy = (y - gy * step) / step;
+        const ux = fx * fx * (3 - 2 * fx), uy = fy * fy * (3 - 2 * fy);
+        const cells = size / step;
+        const h = (cx, cy) => hash(((cx % cells) + cells) % cells * step, ((cy % cells) + cells) % cells * step);
+        const a = h(gx, gy) + (h(gx + 1, gy) - h(gx, gy)) * ux;
+        const b = h(gx, gy + 1) + (h(gx + 1, gy + 1) - h(gx, gy + 1)) * ux;
+        return a + (b - a) * uy;
+    };
+    const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
     for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
-        const a = x / size * Math.PI * 2, b = y / size * Math.PI * 2, n = noise(x, y);
+        const a = x / size * Math.PI * 2, b = y / size * Math.PI * 2;
+        const n1 = hash(x, y), n4 = smoothNoise(x, y, 4), n16 = smoothNoise(x, y, 16);
         let value;
-        if (kind === 'wood') value = .5 + .15 * Math.sin(a * 13 + .7 * Math.sin(b * 2)) + .09 * Math.sin(a * 43 + 1.2 * Math.sin(b)) + .035 * Math.cos(a * 79) + (n - .5) * .07;
-        else if (kind === 'fabric') value = .5 + .11 * Math.cos(a * 24) + .11 * Math.cos(b * 24) + .045 * Math.sin((a + b) * 12) + .035 * Math.sin(a * 3 + Math.sin(b * 2)) + (n - .5) * .12;
-        else if (kind === 'metal') value = .5 + .11 * Math.sin(a * 61) + .045 * Math.sin(a * 97) + (n - .5) * .04;
-        else if (kind === 'stone') value = .52 + .1 * Math.sin(a * 2 + 1.5 * Math.sin(b * 3)) + .035 * Math.sin(a * 11 + Math.sin(b * 2)) + (n - .5) * .09;
-        else if (kind === 'rubber') value = .5 + (n - .5) * .55 + .06 * Math.cos(a * 24) * Math.cos(b * 24);
-        else if (kind === 'powder') value = .5 + (n - .5) * .2;
-        else value = .5 + (n - .5) * .32 + .035 * Math.sin(a * 3) * Math.cos(b * 4);
+        if (kind === 'wood') {
+            const warp = .65 * Math.sin(b * 2 + n16 * 1.4) + .25 * Math.sin(b * 5);
+            value = .5 + .16 * Math.sin(a * 11 + warp) + .09 * Math.sin(a * 37 + warp * 1.6) + .045 * Math.cos(a * 79 + b) + (n4 - .5) * .08 + (n1 - .5) * .045;
+        } else if (kind === 'fabric') {
+            const twill = Math.cos(a * 24) * .12 + Math.cos(b * 24) * .12 + Math.sin((a + b) * 16) * .065;
+            value = .5 + twill + .035 * Math.sin(a * 3 + Math.sin(b * 2)) + (n4 - .5) * .10 + (n1 - .5) * .09;
+        } else if (kind === 'metal') {
+            value = .5 + .11 * Math.sin(a * 61) + .055 * Math.sin(a * 113 + n4 * .5) + .03 * Math.cos(a * 19) + (n1 - .5) * .04;
+        } else if (kind === 'stone') {
+            const vein = Math.sin(a * 2 + 1.5 * Math.sin(b * 3) + (n16 - .5) * 2.4);
+            value = .52 + .11 * vein + .045 * Math.sin(a * 9 + Math.cos(b * 7)) + (n16 - .5) * .14 + (n4 - .5) * .08 + (n1 - .5) * .05;
+        } else if (kind === 'rubber') {
+            value = .5 + (n4 - .5) * .34 + (n1 - .5) * .36 + .055 * Math.cos(a * 24) * Math.cos(b * 24);
+        } else if (kind === 'powder') {
+            value = .5 + (n4 - .5) * .18 + (n1 - .5) * .14;
+        } else {
+            value = .5 + (n16 - .5) * .16 + (n4 - .5) * .18 + (n1 - .5) * .16 + .035 * Math.sin(a * 3) * Math.cos(b * 4);
+        }
+        const v = clamp01(value);
+        field[y * size + x] = v;
         const i = (y * size + x) * 4;
-        height[i] = height[i + 1] = height[i + 2] = Math.round(value * 255); height[i + 3] = 255;
-        const range = kind === 'stone' ? 42 : kind === 'metal' ? 36 : kind === 'wood' ? 38 : 18;
-        sheen[i] = sheen[i + 1] = sheen[i + 2] = Math.round(255 - range + value * range); sheen[i + 3] = 255;
-        color[i] = color[i + 1] = color[i + 2] = Math.round(240 + value * 15); color[i + 3] = 255;
+        height[i] = height[i + 1] = height[i + 2] = Math.round(v * 255); height[i + 3] = 255;
+        const range = spec.roughRange;
+        // Stone veins / high spots read slightly glossier than matte pores; other surfaces brighten roughness on peaks.
+        const roughVal = kind === 'stone' ? (1 - v) : v;
+        sheen[i] = sheen[i + 1] = sheen[i + 2] = Math.round(255 - range + roughVal * range); sheen[i + 3] = 255;
+        color[i] = color[i + 1] = color[i + 2] = Math.round(236 + v * 19); color[i + 3] = 255;
+    }
+    // 3x3 Sobel tangent-space normal map (seamless wrap across edges).
+    const sample = (x, y) => field[(((y % size) + size) % size) * size + (((x % size) + size) % size)];
+    const slope = spec.slope;
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+        const tl = sample(x - 1, y - 1), t = sample(x, y - 1), tr = sample(x + 1, y - 1);
+        const l  = sample(x - 1, y),                           r  = sample(x + 1, y);
+        const bl = sample(x - 1, y + 1), b = sample(x, y + 1), br = sample(x + 1, y + 1);
+        const dx = (tr + 2 * r + br) - (tl + 2 * l + bl);
+        const dy = (bl + 2 * b + br) - (tl + 2 * t + tr);
+        let nx = -dx * slope, ny = -dy * slope, nz = 1;
+        const inv = 1 / Math.hypot(nx, ny, nz);
+        nx *= inv; ny *= inv; nz *= inv;
+        const i = (y * size + x) * 4;
+        normal[i]     = Math.round((nx * .5 + .5) * 255);
+        normal[i + 1] = Math.round((ny * .5 + .5) * 255);
+        normal[i + 2] = Math.round((nz * .5 + .5) * 255);
+        normal[i + 3] = 255;
     }
     const texture = (data, srgb = false) => {
         const map = new THREE.DataTexture(data, size, size); map.wrapS = map.wrapT = THREE.RepeatWrapping;
         map.magFilter = THREE.LinearFilter; map.minFilter = THREE.LinearMipmapLinearFilter; map.generateMipmaps = true;
-        map.channel = 1; if (srgb) map.colorSpace = THREE.SRGBColorSpace;
+        map.channel = 1; map.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace;
         map.needsUpdate = true; return map;
     };
-    return { bump: texture(height), roughness: texture(sheen), color: ['wood', 'stone', 'fabric', 'rubber'].includes(kind) ? texture(color, true) : null };
+    return { bump: texture(height), normal: texture(normal), roughness: texture(sheen), color: ['wood', 'stone', 'fabric', 'rubber'].includes(kind) ? texture(color, true) : null };
 }
 
 // A second UV set gives surface relief a physical repeat distance. Authored
@@ -159,7 +210,7 @@ export function refineRoomSurfaces(room) {
         const mat = obj.material, kind = mat?.userData?.roomSurface, spec = SURFACES[kind];
         if (!obj.isMesh || obj.isInstancedMesh || !spec || obj.userData.sharedProp || !mat.isMeshStandardMaterial || mat.transparent || mat.emissive.getHex() !== 0) return;
         const geometry = obj.geometry, positions = geometry.attributes.position, normals = geometry.attributes.normal;
-        if (!positions || !normals || mat.userData.roomDetailAuthored || (mat.bumpMap && !materials.has(mat))) return;
+        if (!positions || !normals || mat.userData.roomDetailAuthored || ((mat.bumpMap || mat.normalMap) && !materials.has(mat))) return;
         const transform = inverse.clone().multiply(obj.matrixWorld), normalTransform = new THREE.Matrix3().getNormalMatrix(transform);
         const uv = new Float32Array(positions.count * 2), p = new THREE.Vector3(), n = new THREE.Vector3();
         for (let i = 0; i < positions.count; i++) {
@@ -179,7 +230,9 @@ export function refineRoomSurfaces(room) {
             root.ownedTextures ||= []; root.ownedTextures.push(...Object.values(generated).filter(Boolean));
         }
         const detail = maps.get(kind);
-        mat.bumpMap = detail.bump; mat.bumpScale = spec.relief * root.scale.x;
+        mat.bumpMap = detail.bump; mat.bumpScale = 0;
+        mat.normalMap = detail.normal;
+        mat.normalScale.set(spec.normalScale, spec.normalScale);
         if (!mat.roughnessMap) mat.roughnessMap = detail.roughness;
         if (!mat.map && detail.color) mat.map = detail.color;
         mat.needsUpdate = true;
