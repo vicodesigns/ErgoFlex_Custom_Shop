@@ -346,14 +346,21 @@ if who.get('comb') or who.get('taper_curls') or who.get('sculpted_coils'):
     else:
         groom.cropped_coils(hair, base, rig, OUT_DIR, OUT_ID)
 
-# Fit in the neutral pose so sewn details follow the existing rig and saved Director poses.
+# Fit in the neutral pose so sewn details, trouser shaping, ankle cuffs and underarm smoothing follow the rig.
 covered_by_knit = []
-if who.get('tailoring'):
-    for obj in meshes:
-        garment = obj.name.split('.', 1)[-1]
-        denim_bottom = garment in ('male_casualsuit04', 'female_casualsuit01') and who.get('parts', {}).get(garment) == 'bottom'
-        if garment in who['clothes'] and (garment in tailoring.GARMENTS or denim_bottom):
-            covered_by_knit.extend(tailoring.fit(obj, rig, who['tailoring'], garment, base))
+_tucked = set(who.get('tuck', []))
+_has_untucked_top = any(
+    g in tailoring.TOPS and g not in _tucked and g != 'toigo_basic_tucked_t-shirt'
+    for g in who['clothes']
+)
+for obj in meshes:
+    garment = obj.name.split('.', 1)[-1]
+    if garment in who['clothes'] and garment in tailoring.GARMENTS:
+        part = who.get('parts', {}).get(garment)
+        covered_by_knit.extend(tailoring.fit(
+            obj, rig, who.get('tailoring'), garment, base,
+            part=part, has_untucked_top=_has_untucked_top,
+        ))
 
 # Sculpted multi-layered hair-card groom runs after tailoring so locks drape cleanly onto the fitted collar & shoulders.
 if who.get('layered_waves'):
@@ -535,10 +542,18 @@ def cull_under(o, trees, reach, through=.018, corners=False, whole=False, tuck=F
     bmesh.ops.delete(bm, geom=covered, context='FACES')
     if tuck:
         bm.normal_update()
+        tucked_verts = []
         for v in bm.verts:
             if of_hand(v) or not v.link_faces: continue
             hits = [h for h in (t.ray_cast(v.co - v.normal * .0005, -v.normal, min(through, .02)) for t in trees) if h[0] is not None]
-            if hits: v.co = min(hits, key=lambda h: h[3])[0] - v.normal * .003
+            if hits:
+                best = min(hits, key=lambda h: h[3])
+                # Pull along the outer garment's surface normal (never flipping faces inside-out).
+                out_n = best[1] if best[1].dot(v.normal) > 0 else v.normal
+                v.co = best[0] - out_n * .0035
+                tucked_verts.append(v)
+        if tucked_verts:
+            bmesh.ops.smooth_vert(bm, verts=tucked_verts, factor=.25, use_axis_x=True, use_axis_y=True, use_axis_z=True)
     bm.transform(o.matrix_world.inverted()); bm.to_mesh(o.data); bm.free()
 
 
@@ -556,7 +571,7 @@ cull_under(body, trees, .035, whole=made > 0 or LOOK >= 3, tuck=LOOK >= 3, bare_
 # (what is under a shell shows at every corner that pokes through it)
 # (a headscarf is laid over the clothes as they are: nothing under it needs to go)
 # (round three: a corner of what is under a garment that pokes through it is tucked back under: the flecks of trouser along a sweater's hem)
-for i, c in enumerate(cloth[1:], 1): cull_under(c, [t for t, b in zip(trees[:i], cloth) if b.name.split('.', 1)[-1].replace('.baked', '') not in garments.OVER], .025, .045, corners=i >= 1 and made > 0 and c.name.split('.', 1)[-1].replace('.baked', '') in who['clothes'], tuck=LOOK >= 3)
+for i, c in enumerate(cloth[1:], 1): cull_under(c, [t for t, b in zip(trees[:i], cloth) if b.name.split('.', 1)[-1].replace('.baked', '') not in garments.OVER], .025, .045, corners=i >= 1 and made > 0 and c.name.split('.', 1)[-1].replace('.baked', '') in who['clothes'], whole=LOOK >= 3 and made == 0, tuck=LOOK >= 3)
 bpy.ops.object.select_all(action='DESELECT')
 for b in baked: b.select_set(True)
 bpy.context.view_layer.objects.active = baked[0]; bpy.ops.object.join(); person = bpy.context.object; person.name = OUT_ID
