@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {fileURLToPath} from 'node:url';import {execFileSync} from 'node:child_process';
 import * as THREE from 'three';
-import {cleanPropEdit,cleanAddEdit,cleanPropEdits,cleanShow,showFactor,propKey,propTarget,describePropEdit,isNoop,mergePropEdits,filmPropEdits} from '../experience/prop-edits.mjs';
+import {cleanPropEdit,cleanAddEdit,cleanPropEdits,cleanShow,showFactor,propKey,propTarget,describePropEdit,isNoop,mergePropEdits,filmPropEdits,copyPropEffect,cleanPropEffect,applyPropEffect,describePropEffect} from '../experience/prop-edits.mjs';
 import {cleanPropLayer} from '../experience/prop-layers.mjs';
 import {cleanCut} from '../experience/cuts.mjs';
 
@@ -112,3 +112,28 @@ fs.rmSync(tmp,{recursive:true,force:true});
 console.log('Props with a desk of their own and a time on screen: cleaning, keys and layers, the stage (another desk\'s edit skipped, drawn only in its window, fade copies, restore), and the importer writing them into every sub-shot.');
 // an end left open (100000) reads "from … s", not "1–100000 s" (17 Nov: the Make permanent panel said "on screen 3–100000 s")
 assert.match(describePropEdit(add),/on screen from 1 s after its desk comes in, fades in 0\.3 s/);assert.match(describePropEdit(cleanPropEdit({match:'^a$',show:{from:0,to:100000,fadeOut:1}})),/on screen the whole time, fades out 1 s/);
+
+// ---- Copy & paste prop timing / fade effects (single, multi-select, cross-desk, fades-only)
+{
+  const srcFx=copyPropEffect({from:7.0,to:18.7,fadeIn:0.4,fadeOut:1.8,ease:'smooth'},{lo:0,hi:23.5,desk:null},'Drafting kit');
+  assert.deepEqual(srcFx,{from:7,to:18.7,relFrom:7,relTo:18.7,fullStart:false,fullEnd:false,fadeIn:0.4,fadeOut:1.8,ease:'smooth',desk:null,label:'Drafting kit'});
+  assert.deepEqual(cleanPropEffect(JSON.parse(JSON.stringify(srcFx))),srcFx,'clipboard JSON round-trip');
+  assert.equal(describePropEffect(srcFx),'7–18.7 s · fade in 0.4 s, out 1.8 s · smooth');
+  // Paste timing & fades onto a brand-new added prop spanning the whole chapter
+  const pastedAll=applyPropEffect(srcFx,{from:0,to:23.5,fadeIn:0,fadeOut:0,ease:null},{lo:0,hi:23.5,desk:null},{mode:'all'});
+  assert.deepEqual(pastedAll,{from:7,to:18.7,fadeIn:0.4,fadeOut:1.8,ease:'smooth'});
+  // Paste fades only: preserves target prop's own appear/leave window, clamps fades if window is shorter
+  const pastedFades=applyPropEffect(srcFx,{from:2,to:3.2,fadeIn:0,fadeOut:0,ease:null},{lo:0,hi:23.5,desk:null},{mode:'fades'});
+  assert.deepEqual(pastedFades,{from:2,to:3.2,fadeIn:0.4,fadeOut:1.2,ease:'smooth'},'fades clamped to 1.2 s target window');
+  // Paste across sub-shot desks maps relative to the target desk's span start
+  const deskFx=copyPropEffect({from:13.5,to:18.5,fadeIn:0.5,fadeOut:0.5,ease:null},{lo:12.5,hi:21.9,desk:'office'},'Monitor');
+  const otherDesk=applyPropEffect(deskFx,{from:0,to:10,fadeIn:0,fadeOut:0,ease:null},{lo:0,hi:10,desk:'gaming'},{mode:'all'});
+  assert.deepEqual(otherDesk,{from:1,to:6,fadeIn:0.5,fadeOut:0.5,ease:null},'relative timing preserved across sub-shot desks');
+  // Respects a target prop's own film fade bounds
+  const filmBounded=applyPropEffect(srcFx,{from:8,to:15,fadeIn:0,fadeOut:0,ease:null,film:{from:8,to:15}},{lo:0,hi:23.5,desk:null},{mode:'all'});
+  assert.deepEqual(filmBounded,{from:8,to:15,fadeIn:0.4,fadeOut:1.8,ease:'smooth'});
+  // Whole-time cut copy/paste
+  const cutFx=copyPropEffect({from:0,to:20,fadeIn:0,fadeOut:0,ease:null},{lo:0,hi:20,desk:null},'Lamp');
+  assert.equal(describePropEffect(cutFx),'whole time · cut');
+  assert.deepEqual(applyPropEffect(cutFx,{from:4,to:10,fadeIn:1,fadeOut:1,ease:'smooth'},{lo:0,hi:20,desk:null},{mode:'all'}),{from:0,to:20,fadeIn:0,fadeOut:0,ease:null});
+}

@@ -202,7 +202,8 @@ Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl als
 |---|---|---|
 | Alt+R | Reset to the film | Director |
 | End / Shift+End / Alt+End | Drop onto the surface below (Shift: flat, Alt: align) | Director |
-| Ctrl+C | Copy this prop's turn and size | Premiere |
+| Ctrl+C | Copy this prop's timing, fades, turn and size | Premiere |
+| Ctrl+V | Paste copied timing and fades onto selected prop(s) | Premiere |
 | Ctrl+Alt+V | Paste the copied turn and size (paste attributes) | Premiere |
 | Alt + drag the gizmo | Copy a prop you added: the copy stays where it was, you move the original | Rhino |
 | Ctrl (held) | Snap the gizmo (5 cm, 15°); Shift holds the main axis |  |

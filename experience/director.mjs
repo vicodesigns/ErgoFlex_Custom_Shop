@@ -1384,7 +1384,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     exported=signature();syncFilm();fresh.exported(project,text);return body;
   }
   function exportCut(){const text=exportText(),url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=(project.name.replace(/[^a-z0-9]+/gi,'-')||'client-cut')+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);exported=signature();syncFilm();status(fresh.on?'Cut exported: the film takes it in from Downloads. Your changes stay in this browser until it has.':'Cut exported. Import it in Director Mode on another browser.');fresh.exported(project,text);return text;}
-  async function action(name,index){
+  async function action(name,index,ev=null){
     if(name==='hold-camera'){setHold(!held);return;}
     if(name==='cc-open'){ccOpen();return;}   // (the app bar's and the pose bar's button)
     if(name==='keys-panel'){keysPanel.toggle();return;}
@@ -1406,7 +1406,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
         shiftPicks(delta,name==='sel-align'?'Aligned to the playhead':'Selection moved');return;
       }
       if(name.startsWith('sl-')){await sceneLights.action(name,index);return;}
-      if(name.startsWith('pp-')){await sceneProps.action(name,index);return;}
+      if(name.startsWith('pp-')){await sceneProps.action(name,index,ev);return;}
       if(name.startsWith('pe-')){await scenePeople.action(name,index);return;}
       if(name.startsWith('tr-')){trayEd.action(name,index);return;}
       if(name.startsWith('ly-')){const r=await layers.action(name,index);if(r==='show'){showInspector('layers');renderLayers();panel.querySelector('[name="ly-name"]')?.focus();}else renderLayers();return;}
@@ -1619,7 +1619,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
 
     }catch(error){status(error.message,true);}
   }
-  for(const el of [panel,timeline])el.addEventListener('click',event=>{const b=event.target.closest('button[data-action]');if(b)action(b.dataset.action,b.dataset.section??Number(b.dataset.index));});
+  for(const el of [panel,timeline])el.addEventListener('click',event=>{const b=event.target.closest('button[data-action]');if(b)action(b.dataset.action,b.dataset.section??Number(b.dataset.index),event);});
   panel.addEventListener('toggle',event=>{const d=event.target.closest?.('[data-light-section]');if(!d)return;if(d.open)delete lightSectionsShut[d.dataset.lightSection];else lightSectionsShut[d.dataset.lightSection]=true;try{localStorage.setItem('ergoflex.director.lightSections',JSON.stringify(lightSectionsShut));}catch{}},true);
   panel.addEventListener('click',event=>{const tab=event.target.closest('[data-inspector-tab]');if(tab)showInspector(tab.dataset.inspectorTab);
     const hint=event.target.closest('.director-hint');if(hint&&!event.target.closest('a,button,input,select,textarea,label'))hint.classList.toggle('expanded');});   // long hints show three lines; click for all
@@ -1924,8 +1924,25 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   const safe=fn=>()=>{try{const r=fn();if(r?.catch)r.catch(error=>status(error.message,true));}catch(error){status(error.message,true);}};
   timeline.addEventListener('contextmenu',event=>{
     if(event.target.closest('[data-sk],input,select,textarea'))return;
-    const k=event.target.closest('.camera-key[data-key]'),c=event.target.closest('[data-desk-clip]'),r=event.target.closest('.time-ruler'),g=event.target.closest('.lane-group-head');
-    if(!k&&!c&&!r&&!g)return;event.preventDefault();const x=event.clientX,y=event.clientY;
+    const k=event.target.closest('.camera-key[data-key]'),c=event.target.closest('[data-desk-clip]'),pb=event.target.closest('.prop-bar:not(.ghost)'),r=event.target.closest('.time-ruler'),g=event.target.closest('.lane-group-head');
+    if(!k&&!c&&!pb&&!r&&!g)return;event.preventDefault();const x=event.clientX,y=event.clientY;
+    if(pb){
+      const picked=sceneProps.selectLaneForContext(pb.dataset.index);if(!picked)return;
+      const fx=sceneProps.copiedEffect();
+      ctx.open(x,y,[
+        {label:`Copy timing & fades${picked.count>1?' (from '+picked.it.name+')':''}`,hint:'Ctrl+C',run:safe(()=>sceneProps.copyEffect(picked.it))},
+        {label:fx?`Paste timing & fades (${fx.summary})`:'Paste timing & fades',hint:'Ctrl+V',disabled:!fx,run:safe(()=>sceneProps.pasteEffect('all'))},
+        {label:'Paste fades only (keep window)',disabled:!fx,run:safe(()=>sceneProps.pasteEffect('fades'))},'-',
+        {label:'Copy turn & size',hint:'Ctrl+C',run:safe(()=>sceneProps.copyAttrs())},
+        {label:'Paste turn & size',hint:'Ctrl+Alt+V',disabled:!sceneProps.hasAttrsClip(),run:safe(()=>sceneProps.pasteAttrs())},'-',
+        {label:'Appear at playhead',run:safe(()=>sceneProps.action('pp-t-from-now'))},
+        {label:'Leave at playhead',run:safe(()=>sceneProps.action('pp-t-to-now'))},
+        {label:'Whole time (clear fades)',run:safe(()=>sceneProps.action('pp-t-all'))},'-',
+        {label:'Hide in this chapter',hint:'Delete',run:safe(()=>sceneProps.hide(true))},
+        {label:'Reset to the film',hint:'Alt+R',run:safe(()=>sceneProps.action('pp-reset'))},
+      ],picked.title);
+      return;
+    }
     if(k){
       if(keyId!==k.dataset.key)selectKey(k.dataset.key);const key=selectedKey();if(!key)return;
       ctx.open(x,y,[{label:'Go to this view',run:safe(()=>action('key-go'))},{label:'Update from the 3D view',hint:'U',run:safe(()=>action('key-update'))},{label:'Preview the move to the next',run:safe(()=>action('key-preview'))},'-',
@@ -2189,6 +2206,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       case 'palette':palette.toggle();return;
       case 'crop-cycle':cycleCrop();return;
       case 'copy-attrs':(ctx==='person'?scenePeople:sceneProps).copyAttrs();return;
+      case 'paste-fx':sceneProps.pasteEffect('all');return;
       case 'paste-attrs':(ctx==='person'?scenePeople:sceneProps).pasteAttrs();return;
       case 'lane-filter':{const F=['','busy','sel','changed'],next=F[(F.indexOf(laneFilter)+1)%F.length];setLaneFilter(next);return;}
       case 'lock-camera':lockCamera=!lockCamera;renderPills();status(lockCamera?(keyId?'Lock camera to view: orbit, pan or zoom and the selected camera view follows (one undo step each).':'Lock camera to view is on: select a camera view, then move the view.'):'Camera no longer locked to the view.');return;

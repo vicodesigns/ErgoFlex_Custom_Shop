@@ -222,3 +222,61 @@ export function writeSceneAssets(raw,sceneId,changes){
   all[sceneId]={...room,removed:[...removed],added,transforms};
   return JSON.stringify(all);
 }
+// ---- Copy & paste prop timing / fade effects (works across film props, room props, and added props, single or multi-select)
+export function copyPropEffect(screen,span={lo:0,hi:100000},label='prop'){
+  if(!screen||!finite(screen.from)||!finite(screen.to))return null;
+  const lo=finite(span?.lo)?span.lo:0,hi=finite(span?.hi)?span.hi:100000;
+  const from=r2(Math.max(0,screen.from)),to=r2(Math.max(from+.1,screen.to));
+  const fadeIn=finite(screen.fadeIn)&&screen.fadeIn>0?r2(Math.min(screen.fadeIn,to-from)):0;
+  const fadeOut=finite(screen.fadeOut)&&screen.fadeOut>0?r2(Math.min(screen.fadeOut,to-from)):0;
+  return {
+    from,to,
+    relFrom:r2(Math.max(0,from-lo)),relTo:r2(Math.max(.1,to-lo)),
+    fullStart:from<=lo+.05,fullEnd:to>=hi-.05,
+    fadeIn,fadeOut,
+    ease:screen.ease==='smooth'&&(fadeIn||fadeOut)?'smooth':null,
+    desk:typeof span?.desk==='string'?span.desk:null,
+    label:String(label||'prop').slice(0,80),
+  };
+}
+export function cleanPropEffect(v){
+  if(!v||typeof v!=='object'||!finite(v.from)||!finite(v.to))return null;
+  const from=r2(Math.max(0,v.from)),to=r2(Math.max(from+.1,Math.min(100000,v.to)));
+  const fadeIn=finite(v.fadeIn)&&v.fadeIn>0?r2(Math.min(v.fadeIn,to-from)):0;
+  const fadeOut=finite(v.fadeOut)&&v.fadeOut>0?r2(Math.min(v.fadeOut,to-from)):0;
+  return {
+    from,to,
+    relFrom:finite(v.relFrom)?r2(Math.max(0,v.relFrom)):from,
+    relTo:finite(v.relTo)?r2(Math.max(.1,v.relTo)):to,
+    fullStart:!!v.fullStart,fullEnd:!!v.fullEnd,
+    fadeIn,fadeOut,
+    ease:v.ease==='smooth'&&(fadeIn||fadeOut)?'smooth':null,
+    desk:typeof v.desk==='string'&&DESK.test(v.desk)?v.desk:null,
+    label:typeof v.label==='string'?v.label.slice(0,80):'prop',
+  };
+}
+export function applyPropEffect(effect,cur,span,{mode='all'}={}){
+  const fx=cleanPropEffect(effect);if(!fx)return null;
+  const lo=cur?.film?Math.max(span.lo,cur.film.from):span.lo,hi=cur?.film?Math.min(span.hi,cur.film.to):span.hi;
+  if(!(hi-lo>=.1-1e-9))return null;
+  let from=cur?.from??lo,to=cur?.to??hi;
+  if(mode!=='fades'){
+    const otherDesk=!!(fx.desk&&span?.desk&&fx.desk!==span.desk);
+    const rawFrom=fx.fullStart?lo:(otherDesk?span.lo+fx.relFrom:fx.from);
+    const rawTo=fx.fullEnd?hi:(otherDesk?span.lo+fx.relTo:fx.to);
+    from=r2(Math.max(lo,Math.min(hi-.1,rawFrom)));
+    to=r2(Math.min(hi,Math.max(from+.1,rawTo)));
+  }else{
+    from=r2(Math.max(lo,Math.min(hi-.1,from)));
+    to=r2(Math.min(hi,Math.max(from+.1,to)));
+  }
+  const len=r2(to-from),fadeIn=r2(Math.min(fx.fadeIn,len)),fadeOut=r2(Math.min(fx.fadeOut,len));
+  return {from,to,fadeIn,fadeOut,ease:fx.ease==='smooth'&&(fadeIn||fadeOut)?'smooth':null};
+}
+export function describePropEffect(v){
+  const fx=cleanPropEffect(v);if(!fx)return '';
+  const when=fx.fullStart&&fx.fullEnd?'whole time':fx.fullEnd?`from ${m(fx.from)} s`:`${m(fx.from)}–${m(fx.to)} s`;
+  const fades=[fx.fadeIn?`in ${m(fx.fadeIn)} s`:'',fx.fadeOut?`out ${m(fx.fadeOut)} s`:''].filter(Boolean).join(', ');
+  const curve=fades?(fx.ease==='smooth'?' · smooth':''):' · cut';
+  return `${when}${fades?' · fade '+fades:''}${curve}`;
+}

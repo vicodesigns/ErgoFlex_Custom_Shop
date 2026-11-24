@@ -2,7 +2,7 @@ import {enhanceGizmo,mmPerUnitOf} from './gumball.mjs';
 let altHeld=false;   // Alt held as a prop drag starts: Alt+drag copies (P3)
 import {noteStudioValue} from './studio-sync.mjs';
 import {layersOn,splitPermanent,writePermanentLayers,permanentCells,foldDeskHides,LAYERS_KEY} from './layers-exchange.mjs';
-import {FOLLOW_LABELS,cleanPlace,cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,propTarget,DESK_SURFACES,MOUNTS,mountLabel,onDesk,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets,keyedFadeWindow,filmFadeKeys,combineFilmFade,showOverFilm} from './prop-edits.mjs';
+import {FOLLOW_LABELS,cleanPlace,cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,propTarget,DESK_SURFACES,MOUNTS,mountLabel,onDesk,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets,keyedFadeWindow,filmFadeKeys,combineFilmFade,showOverFilm,copyPropEffect,cleanPropEffect,applyPropEffect,describePropEffect} from './prop-edits.mjs';
 import {stackRows} from './lane-rows.mjs';
 import {stowWindow,EASEL_ANGLE,filmVisibleKeys,keyedWindow} from './prop-stow-window.mjs';
 import {legacyMotionToClips,sampleClipMotion} from './desk-clips.mjs';
@@ -949,16 +949,29 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const e=editOfKey(sel.key),span=selSpan(),s=screenOf(e,sel.target,span),curve=!(s.fadeIn||s.fadeOut)?'cut':s.ease==='smooth'?'smooth':'linear';
     const num=(name,text,value,extra='')=>`<label>${text}<input name="${name}" type="number" step=".1" min="0" value="${value}" ${extra}></label>`;
     const where=span.missing?`Its desk (${escape(span.desk)}) is not in this chapter now, so it does not show.`:span.desk?`Belongs to Desk ${escape(span.n)} · ${escape(span.label)}, on screen ${r1(span.lo)}–${r1(span.hi)} s. It follows that desk if you reorder the desks.`:`The chapter runs 0–${r1(span.hi)} s.`;
+    const fx=effectClip?describePropEffect(effectClip):'';
     return `<div class="prop-timing" data-prop-timing><h5>On screen <small>${escape(timeText(s,span))}</small></h5>
       <div class="director-grid">${num('pp-t-from','Appears at (s)',r2(s.from))}${num('pp-t-to','Leaves at (s)',r2(s.to))}${num('pp-t-fin','Fade in (s)',s.fadeIn,'max="30"')}${num('pp-t-fout','Fade out (s)',s.fadeOut,'max="30"')}</div>
       <div class="director-grid prop-curve"><label>Curve<select name="pp-t-curve" title="How the fades run: Cut (no fade), Linear (a straight ramp) or Smooth (eased in and out)"><option value="cut" ${curve==='cut'?'selected':''}>Cut (0 s)</option><option value="linear" ${curve==='linear'?'selected':''}>Linear</option><option value="smooth" ${curve==='smooth'?'selected':''}>Smooth (ease in-out)</option></select></label>
       <span class="prop-fade-presets" role="group" aria-label="Fade length">${[['fast','Fast',.2],['medium','Medium',.5],['slow','Slow',1]].map(([k,l,v])=>`<button data-action="pp-t-${k}" title="Fade in and out ${v} s" aria-pressed="${s.fadeIn===v&&s.fadeOut===v}">${l} ${v} s</button>`).join('')}</span></div>
       ${s.film?`<p class="director-hint">The film ${s.film.keyed&&!s.film.fadeIn&&!s.film.fadeOut?'shows it':'fades it'} itself (${r1(s.film.from)}–${r1(s.film.to)} s${s.film.fadeIn?`, in ${r1(s.film.fadeIn)} s`:''}${s.film.fadeOut?`, out ${r1(s.film.fadeOut)} s`:''}): retimed, it keeps those fades; it can appear later and leave sooner than that, not outside it.</p>`:''}
       <div class="director-actions"><button data-action="pp-t-from-now" title="It appears at the playhead">Appear at playhead</button><button data-action="pp-t-to-now" title="It leaves at the playhead">Leave at playhead</button><button data-action="pp-t-all" ${s.timed?'':'disabled'} title="On screen the whole time again, no fades">Whole time</button></div>
-      <p class="director-hint">${where} You can also drag the ends of its bar in the timeline's Props lane.</p></div>`;
+      <div class="director-actions prop-fx-clip"><button data-action="pp-copy-fx" title="Copy this prop's on-screen window, fades and curve (Ctrl+C)">Copy timing &amp; fades</button><button data-action="pp-paste-fx" ${effectClip?'':'disabled'} title="${escape(effectClip?`Paste from ${effectClip.label}: ${fx} (Ctrl+V)`:'Copy timing & fades from a prop first (Ctrl+C)')}">Paste timing &amp; fades</button><button data-action="pp-paste-fades" ${effectClip?'':'disabled'} title="${escape(effectClip?`Keep appear/leave times; paste only fades from ${effectClip.label}`:'Copy timing & fades from a prop first (Ctrl+C)')}">Paste fades only</button></div>
+      ${effectClip?`<p class="director-hint">Copied: <b>${escape(effectClip.label)}</b> · ${escape(fx)}</p>`:''}
+      <p class="director-hint">${where} Drag bar ends in the Props lane, Shift/Ctrl+click bars to pick several, or right-click a bar to copy/paste.</p></div>`;
+  }
+  function groupTimingHtml(){
+    const fx=effectClip?describePropEffect(effectClip):'';
+    return `<div class="prop-timing" data-prop-timing><h5>On screen &amp; fades <small>${members().length} props</small></h5>
+      <div class="director-actions prop-fx-clip"><button data-action="pp-paste-fx" ${effectClip?'':'disabled'} title="${escape(effectClip?`Apply ${effectClip.label}'s window & fades (${fx}) to all selected props (Ctrl+V)`:'Copy timing & fades from a prop first (Ctrl+C)')}">Paste timing &amp; fades</button><button data-action="pp-paste-fades" ${effectClip?'':'disabled'} title="${escape(effectClip?`Keep each prop's window; apply fades from ${effectClip.label}`:'Copy timing & fades from a prop first (Ctrl+C)')}">Paste fades only</button></div>
+      ${effectClip?`<p class="director-hint">Copied: <b>${escape(effectClip.label)}</b> · ${escape(fx)}</p>`:'<p class="director-hint">Select one prop and press Copy timing &amp; fades (or Ctrl+C), then select target props and Paste (Ctrl+V).</p>'}
+      <div class="director-actions"><button data-action="pp-t-from-now" title="All selected props appear at the playhead">Appear at playhead</button><button data-action="pp-t-to-now" title="All selected props leave at the playhead">Leave at playhead</button><button data-action="pp-t-all" title="All selected props on screen the whole time, no fades">Whole time</button></div>
+      <div class="director-actions"><span class="prop-fade-presets" role="group" aria-label="Fade length">${[['fast','Fast',.2],['medium','Medium',.5],['slow','Slow',1]].map(([k,l,v])=>`<button data-action="pp-t-${k}" title="Fade in and out ${v} s on all selected props">${l} ${v} s</button>`).join('')}</span></div></div>`;
   }
   function setTiming(change){
-    if(!sel)return;if(sel.blocked){status(`${CANT_SAVE}: ${sel.blocked}`,true);return;}
+    if(!sel)return;
+    if(group()){setTimingGroup(change);return;}
+    if(sel.blocked){status(`${CANT_SAVE}: ${sel.blocked}`,true);return;}
     const span=selSpan();if(span.missing){status('Its desk is not in this chapter now: nothing to time.',true);return;}
     const s=screenOf(editOfKey(sel.key),sel.target,span),lo=s.film?Math.max(span.lo,s.film.from):span.lo,hi=s.film?Math.min(span.hi,s.film.to):span.hi,next={from:s.from,to:s.to,fadeIn:s.fadeIn,fadeOut:s.fadeOut,ease:s.ease,...change};
     if('from' in change)next.from=Math.max(lo,Math.min(change.from,next.to-.1));
@@ -966,6 +979,24 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     if(next.to-next.from<.1){status('It needs at least a tenth of a second on screen.',true);rerender();return;}
     const len=next.to-next.from;next.fadeIn=Math.min(next.fadeIn,len);next.fadeOut=Math.min(next.fadeOut,len);
     writeShow(sel,next,span,selName());
+  }
+  function setTimingGroup(change){
+    const changes=[];let skipped=0;
+    for(const m of members()){
+      if(m.blocked){skipped++;continue;}
+      const e=editOfKey(m.key),span=spanOf((e||m.target).desk);if(span.missing){skipped++;continue;}
+      const s=screenOf(e,m.target,span),lo=s.film?Math.max(span.lo,s.film.from):span.lo,hi=s.film?Math.min(span.hi,s.film.to):span.hi;
+      const next={from:s.from,to:s.to,fadeIn:s.fadeIn,fadeOut:s.fadeOut,ease:s.ease,...change};
+      if('from' in change)next.from=Math.max(lo,Math.min(change.from,next.to-.1));
+      if('to' in change)next.to=Math.min(hi,Math.max(change.to,next.from+.1));
+      if(next.to-next.from<.1){skipped++;continue;}
+      const len=next.to-next.from;next.fadeIn=Math.min(next.fadeIn,len);next.fadeOut=Math.min(next.fadeOut,len);
+      const show=showFor(span,s.film?showOverFilm(s.film,span.lo,span.hi,next):next),edit={...m.target,...(e||{}),show};
+      if(show===undefined)delete edit.show;
+      changes.push({key:m.key,next:edit});
+    }
+    if(!changes.length){status(skipped?'None of the selected props could be timed here.':'Nothing to change.',!!skipped);rerender();return;}
+    writeMany(changes,`Updated timing on ${changes.length} prop${changes.length===1?'':'s'}${skipped?` (${skipped} skipped)`:''}. One Undo puts them all back.`);
   }
   function changedTiming(name,v){
     if(!Number.isFinite(v)||v<0)throw Error('Enter seconds, 0 or more.');
@@ -985,7 +1016,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const head=`<h3>Props</h3><p class="director-hint">Click a prop in the view to select it (not while Lights are shown). W move · E rotate · R scale · click any gumball handle to type exact inches / ° / −1 to flip · Ctrl snaps · Delete hides it. Edits stay in this chapter: Studio does not change.</p>
       <div class="director-actions"><button data-action="pp-add" class="prop-add-button" title="Add a model from the prop library: it goes on the desk or the floor in front of the camera, ready to move">+ Add prop</button><button data-action="pp-reset-all" ${n?'':'disabled'} title="Every prop back to the film in this chapter: one step, Undo brings them back">Reset all props to the film${n?' ('+n+')':''}</button><button data-action="pp-permanent" ${st.ok?'':'disabled'} title="${escape(st.ok?'Write these prop edits into Studio\'s room layout (you confirm each one)':st.why)}">Make permanent in Studio…</button></div>${st.ok?'':`<p class="director-hint" data-permanent-why>${escape(st.why)}</p>`}`;
     if(!sel)return head+'<p class="director-hint">No prop selected. Shift+click adds to the selection, Ctrl+click adds or removes.</p>';
-    if(group())return head+groupPanelHtml({members:members().map(m=>({key:m.key,name:nice(m.target.label||''),desk:!!(objOf(m)&&(onDeskItself(objOf(m))||ridesDesk(objOf(m)))),hidden:editOfKey(m.key)?.hide===true||(!!objOf(m)&&!shown(objOf(m))),blocked:m.blocked,missing:!objOf(m)})),mode,escape,edited:members().some(m=>editOfKey(m.key)),extra:dropButtons()});
+    if(group())return head+groupPanelHtml({members:members().map(m=>({key:m.key,name:nice(m.target.label||''),desk:!!(objOf(m)&&(onDeskItself(objOf(m))||ridesDesk(objOf(m)))),hidden:editOfKey(m.key)?.hide===true||(!!objOf(m)&&!shown(objOf(m))),blocked:m.blocked,missing:!objOf(m)})),mode,escape,edited:members().some(m=>editOfKey(m.key)),extra:dropButtons(),timing:groupTimingHtml()});
     if(!o)return head+`<div class="movement-inspector prop-inspector" data-reveal="prop"><h4 title="${escape(sel.target.label||'')}">${escape(nice(sel.target.label))}</h4><p class="director-hint">${(e||sel.target).desk&&(e||sel.target).desk!==deskNow()?.preset?'It belongs to another desk of this chapter: click its bar in the Props lane to go to that desk.':'Not in the room right now (the film setup did not find it).'}</p>${timingHtml()}<div class="director-actions"><button data-action="pp-reset" ${e?'':'disabled'}>Reset to the film</button></div></div>`;
     if(!tools)return head;if(isAddEdit(e))return head+addPanel(o,e);if(isFollow(e))return head+followPanel(o,e);const b=base(o),{THREE}=tools,pos=o.getWorldPosition(new THREE.Vector3()).toArray(),turn=e?.rotation||[0,0,0],fac=e?.scale||[1,1,1],uniform=Math.abs(fac[0]-fac[1])<1e-4&&Math.abs(fac[1]-fac[2])<1e-4;
     const num=(name,text,value,step,extra='')=>`<label>${text}<input name="${name}" type="number" step="${step}" value="${value}" ${extra}></label>`;
@@ -1049,15 +1080,18 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     write(sel.key,cleanAddEdit({...e,parent:kind,position:local.toArray().map(v=>r3(v*k)),rotation:[0,r1(wrapDeg(r.y*180/Math.PI)),0]}),`Put ${label(o)} on ${DESK_SURFACES[kind]}: it rides the desk's lift and tilt. Move it with the gizmo.`);
   }
   const dropButtons=()=>`<div class="director-actions prop-drop"><button data-action="pp-drop" title="Move it straight down until it rests on the surface below (End)">Drop to surface</button><button data-action="pp-drop-flat" title="Level it (no tilt or roll), then drop it onto the surface below (Shift+End)">Drop flat</button><button data-action="pp-drop-align" title="Tilt it to the surface under it (a ramp, the tilted desktop), then drop it (Alt+End)">Align to surface</button></div>`;
-  async function action(name,arg){
+  async function action(name,arg,ev=null){
     if(name==='pp-add'){library.open();return;}
+    if(name==='pp-copy-fx'){copyEffect();return;}
+    if(name==='pp-paste-fx'){pasteEffect('all');return;}
+    if(name==='pp-paste-fades'){pasteEffect('fades');return;}
     await ensure();
     if(name==='pp-remove'){remove();return;}
     if(name==='pp-drop'||name==='pp-drop-flat'||name==='pp-drop-align'){await dropSelected(name==='pp-drop-flat'?'flat':name==='pp-drop-align'?'align':'drop');return;}
     if(name==='pp-place'){const o=current();if(!o||!isAddEdit(editOfKey(sel.key)))return;placing=!placing;rerender();status(placing?`Click a surface in the view to put ${label(o)} there (the desktop, a table, the floor). Click Place again to cancel.`:'Placing cancelled.');return;}
     if(name==='pp-pick'){select(arg);return;}
     if(name.startsWith('pp-put-')){putOn(name.slice(7));return;}
-    if(name==='pp-lane'){if(performance.now()<barSuppress)return;laneClick(laneList[Number(arg)]);return;}
+    if(name==='pp-lane'){if(performance.now()<barSuppress)return;laneClick(laneList[Number(arg)],ev);return;}
     if(name==='pp-t-from-now'){setTiming({from:r2(time())});return;}
     if(name==='pp-t-to-now'){setTiming({to:r2(time())});return;}
     if(name==='pp-t-all'){setTiming({from:-1,to:END,fadeIn:0,fadeOut:0});return;}
@@ -1090,7 +1124,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     return true;
   }
   const laneName=e=>isAddEdit(e)?(e.label||propName(e.add.asset)):propName(e.label||e.match.replace(/^\^|\$$/g,'').replace(/\\/g,''));
-  let laneList=[],laneRows=1,barDrag=null,barSuppress=0,wanted=null;const ROW=17,MAX_ROWS=9;
+  let laneList=[],laneRows=1,barDrag=null,barSuppress=0,wanted=null,lastLaneKey=null;const ROW=17,MAX_ROWS=9;
   function laneItems(){
     const T=seconds()||1,vs=versions(),out=[],chapter={t0:0,lo:0,hi:T},all=edits();
     let tiltAt=null;
@@ -1120,7 +1154,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       const e=it.e,x=it.start/T*100,w=Math.max(.5,(it.end-it.start)/T*100),top=1+layers.row.get(it.id)*ROW;
       if(it.ghost)return `<button type="button" class="prop-bar ghost" data-action="pp-lane" data-index="${i}" style="left:${x}%;width:${w}%;top:${top}px;height:${ROW-2}px" title="Go to this desk: its items are listed here once it has been on stage">${escape(it.name)}</button>`;
       const hiddenBar=e?.hide===true,added=isAddEdit(e),fi=it.fadeIn>0?Math.min(100,it.fadeIn/(it.end-it.start)*100):0,fo=it.fadeOut>0?Math.min(100,it.fadeOut/(it.end-it.start)*100):0;
-      const tip=`${it.name}${it.span.desk?` · Desk ${it.span.n} · ${it.span.label}`:''} · on screen ${timeText({from:it.start,to:it.end},it.span)}${e?' · '+describePropEdit(e,{mpu:metresPerUnit(),unit:'in'}):' · as the film has it'}${hiddenBar?' · hidden: click, then untick Hide to bring it back':''}${it.stowed?` · the desk puts it away once its tilt crosses ${EASEL_ANGLE}°`:it.film?.keyed?' · the film shows and hides it itself':''} · click to select, drag an end to set when it appears or leaves${it.timed?', drag the middle to move it':''}`;
+      const tip=`${it.name}${it.span.desk?` · Desk ${it.span.n} · ${it.span.label}`:''} · on screen ${timeText({from:it.start,to:it.end},it.span)}${e?' · '+describePropEdit(e,{mpu:metresPerUnit(),unit:'in'}):' · as the film has it'}${hiddenBar?' · hidden: click, then untick Hide to bring it back':''}${it.stowed?` · the desk puts it away once its tilt crosses ${EASEL_ANGLE}°`:it.film?.keyed?' · the film shows and hides it itself':''} · click to select (Shift/Ctrl+click for several, right-click to copy/paste fades), drag an end to set when it appears or leaves${it.timed?', drag the middle to move it':''}`;
       // (the fade ramps: drawn on the bar, a small handle at the inner end of each drags its length; with no fade the
       // handle sits 12 px inside, off the bar's 8 px end grip: on the end it took the press, so dragging a bar's end without
       // a fade moved a fade of 0 instead and wrote nothing, director-stow-window-e2e's easel drag)
@@ -1128,20 +1162,46 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       return `<button type="button" class="prop-bar ${e?'prop-chip':'film'} ${hiddenBar?'prop-hidden':''} ${added?'prop-added':''} ${it.timed?'timed':''} ${isSel(it.key)?'selected':''}" data-action="pp-lane" data-index="${i}" data-prop-key="${escape(it.key)}" style="left:${x}%;width:${w}%;top:${top}px;height:${ROW-2}px;--fade-in:${fi}%;--fade-out:${fo}%" title="${escape(tip)}">${ramps}${added?'<b aria-label="added">+</b>':''}${escape(it.name)}</button>`;}).join('');
   }
   const laneHeight=()=>Math.min(MAX_ROWS,Math.max(2,laneRows))*ROW+4;
-  // A click on a bar: the playhead goes into its seconds when it is outside them (so its desk comes on stage), then
-  // the prop is selected (as soon as the stage has it).
-  function laneClick(it){
-    if(!it)return;const t=time(),inside=t>=it.start-1e-3&&t<=it.end+1e-3;
-    if(!inside||it.ghost){const to=Math.min(it.end-.05,it.start+(it.ghost?.2:.1));seek(Math.max(0,to));}
-    if(it.ghost){status(`${it.name.split(':')[0]} is coming on stage: its items appear in the Props lane.`);return;}
-    setMembers([{key:it.key,target:it.target,obj:tools?find(it.key,it.target):null}]);
-    const o=current();wanted=o?null:{key:it.key,target:it.target,until:performance.now()+8000};status(o?`${label(o)} selected · W move · E rotate · R scale · drag its bar's ends to set when it shows.`:`${it.name} selected${it.span.desk&&it.span.desk!==deskNow()?.preset?`: going to Desk ${it.span.n} · ${it.span.label}`:''}.`);
+  // A click on a bar: plain click selects one (seeking into its window if outside); Ctrl/Cmd+click toggles it in/out
+  // of a multi-selection; Shift+click adds it (or the range of bars from the last clicked bar).
+  function laneEntry(it){return {key:it.key,target:it.target,obj:tools?find(it.key,it.target):null};}
+  function laneClick(it,ev=null){
+    if(!it)return;
+    if(it.ghost){const to=Math.min(it.end-.05,it.start+.2);seek(Math.max(0,to));status(`${it.name.split(':')[0]} is coming on stage: its items appear in the Props lane.`);return;}
+    const how=ev?pickMode(ev):'replace';
+    if(how==='toggle'){
+      const next=isSel(it.key)?members().filter(m=>m.key!==it.key):[...members(),laneEntry(it)];
+      lastLaneKey=it.key;setMembers(next);
+      status(next.length>1?`${next.length} props selected in timeline · Ctrl+V pastes timing & fades onto all of them.`:next.length===1?`${it.name} selected.`:'Selection cleared.');
+      if(!tools)ensure().catch(error=>status(error.message,true));
+      return;
+    }
+    if(how==='add'){
+      const bars=laneList.filter(x=>!x.ghost),a=lastLaneKey?bars.findIndex(x=>x.key===lastLaneKey):-1,b=bars.findIndex(x=>x.key===it.key);
+      const add=a>=0&&b>=0?bars.slice(Math.min(a,b),Math.max(a,b)+1):[it];
+      const keep=members(),seenK=new Set(keep.map(m=>m.key)),merged=[...keep];
+      for(const x of add)if(!seenK.has(x.key)){seenK.add(x.key);merged.push(laneEntry(x));}
+      lastLaneKey=it.key;setMembers(merged);
+      status(merged.length>1?`${merged.length} props selected in timeline · Ctrl+V pastes timing & fades onto all of them.`:`${it.name} selected.`);
+      if(!tools)ensure().catch(error=>status(error.message,true));
+      return;
+    }
+    const t=time(),inside=t>=it.start-1e-3&&t<=it.end+1e-3;
+    if(!inside){const to=Math.min(it.end-.05,it.start+.1);seek(Math.max(0,to));}
+    lastLaneKey=it.key;setMembers([laneEntry(it)]);
+    const o=current();wanted=o?null:{key:it.key,target:it.target,until:performance.now()+8000};status(o?`${label(o)} selected · Ctrl+C copies timing & fades · Shift/Ctrl+click bars for several.`:`${it.name} selected${it.span.desk&&it.span.desk!==deskNow()?.preset?`: going to Desk ${it.span.n} · ${it.span.label}`:''}.`);
     if(!tools)ensure().catch(error=>status(error.message,true));
+  }
+  // Right-click on a bar in the Props lane: keep multi-selection if already selected, else select that bar without seeking.
+  function selectLaneForContext(index){
+    const it=laneList[Number(index)];if(!it||it.ghost)return null;
+    if(!isSel(it.key)){lastLaneKey=it.key;setMembers([laneEntry(it)]);}
+    return {it,count:members().length,title:group()?`${members().length} props selected`:it.name};
   }
   // A bar's ends drag to set when the prop appears and leaves (within its desk's seconds, snapped to a tenth);
   // the middle of a timed bar moves it. Back over the whole stretch, the timing is cleared.
   document.addEventListener('pointerdown',ev=>{
-    const bar=ev.target.closest?.('.prop-bar');if(!bar||bar.classList.contains('ghost')||ev.button!==0||!editing())return;
+    const bar=ev.target.closest?.('.prop-bar');if(!bar||bar.classList.contains('ghost')||ev.button!==0||ev.shiftKey||ev.ctrlKey||ev.metaKey||!editing())return;
     const it=laneList[Number(bar.dataset.index)],T=seconds(),r=bar.getBoundingClientRect(),box=bar.parentElement.getBoundingClientRect();if(!it||!T||!box.width)return;
     const handle=ev.target.closest?.('.prop-fade-h'),grip=Math.min(8,r.width/3),edge=handle?'f'+handle.dataset.fade:ev.clientX-r.left<grip?'in':r.right-ev.clientX<grip?'out':'move';
     if(handle){ev.preventDefault();ev.stopPropagation();}
@@ -1183,11 +1243,51 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       pending=null;bridge.stage()?.wake?.(300);
     }
   }
-  // P5 paste attributes (Ctrl+C / Ctrl+Alt+V on a prop): its turn and size onto another prop of the same kind (a room
-  // prop's are changes from the film, an added prop's are its own)
-  let attrClip=null;
-  function copyAttrs(){if(!sel){status('Select a prop first: Ctrl+C copies its turn and size.');return false;}const e=editOfKey(sel.key),add=isAddEdit(e),o=current();
-    attrClip={add,rotation:[...(e?.rotation||[0,0,0])],scale:[...(e?.scale||[1,1,1])],label:o?label(o):'the prop'};status(`Copied the turn and size of ${attrClip.label}: Ctrl+Alt+V pastes them onto another prop.`);return true;}
+  // P5 paste attributes + prop timing/fade effect clipboard (Ctrl+C copies both; Ctrl+V pastes timing & fades onto
+  // one or many props of any kind; Ctrl+Alt+V pastes turn & size onto a matching prop). Persisted across chapters.
+  const PROP_FX_KEY='ergoflex.director.propEffectClipboard.v1';
+  let attrClip=null,effectClip=null;
+  try{effectClip=cleanPropEffect(JSON.parse(localStorage.getItem(PROP_FX_KEY)||'null'));}catch{}
+  function saveEffectClip(fx){effectClip=fx;try{if(fx)localStorage.setItem(PROP_FX_KEY,JSON.stringify(fx));else localStorage.removeItem(PROP_FX_KEY);}catch{}}
+  function copyEffect(source=null){
+    const target=source?source.target:sel?.target,key=source?source.key:sel?.key;
+    if(!key){status('Select a prop first to copy its timing and fades.');return false;}
+    const e=editOfKey(key),span=source?.span||spanOf((e||target).desk);
+    const s=screenOf(e,target,span),name=source?.name||selName()||'the prop';
+    const fx=copyPropEffect(s,span,name);
+    if(!fx){status('Could not copy timing from that prop.',true);return false;}
+    saveEffectClip(fx);rerender();
+    status(`Copied timing & fades from ${name} (${describePropEffect(fx)}). Select prop(s) and press Ctrl+V (or Paste) to apply.`);
+    return true;
+  }
+  function pasteEffect(mode='all'){
+    if(!effectClip){status('Copy timing & fades from a prop first (Ctrl+C or right-click a prop bar).',true);return false;}
+    const list=members();if(!list.length){status('Select one or more props to paste timing & fades onto.',true);return false;}
+    const changes=[];let skipped=0;
+    for(const m of list){
+      if(m.blocked){skipped++;continue;}
+      const e=editOfKey(m.key),span=spanOf((e||m.target).desk);if(span.missing){skipped++;continue;}
+      const cur=screenOf(e,m.target,span),next=applyPropEffect(effectClip,cur,span,{mode});
+      if(!next){skipped++;continue;}
+      const show=showFor(span,cur.film?showOverFilm(cur.film,span.lo,span.hi,next):next),edit={...m.target,...(e||{}),show};
+      if(show===undefined)delete edit.show;
+      changes.push({key:m.key,next:edit});
+    }
+    if(!changes.length){status(skipped?'None of the selected props could take the copied timing/fades.':'Nothing to paste.',true);rerender();return false;}
+    const what=mode==='fades'?'fades':'timing & fades',summary=describePropEffect(effectClip);
+    writeMany(changes,`Pasted ${what} from ${effectClip.label} (${summary}) onto ${changes.length} prop${changes.length===1?'':'s'}${skipped?` (${skipped} skipped)`:''}. One Undo puts them back.`);
+    return true;
+  }
+  function copyAttrs(){
+    if(!sel){status('Select a prop first: Ctrl+C copies its timing, fades, turn and size.');return false;}
+    const e=editOfKey(sel.key),add=isAddEdit(e),o=current(),name=o?label(o):selName()||'the prop';
+    attrClip={add,rotation:[...(e?.rotation||[0,0,0])],scale:[...(e?.scale||[1,1,1])],label:name};
+    const span=selSpan(),fx=copyPropEffect(screenOf(e,sel.target,span),span,name);
+    if(fx)saveEffectClip(fx);
+    rerender();
+    status(`Copied ${name} (${fx?describePropEffect(fx):'turn & size'}): Ctrl+V pastes timing & fades onto selected prop(s); Ctrl+Alt+V pastes turn & size.`);
+    return true;
+  }
   function pasteAttrs(){
     if(!attrClip){status('Copy a prop\'s turn and size first (Ctrl+C on it).');return false;}if(!sel){status('Select the prop to paste onto.');return false;}
     const e=editOfKey(sel.key),add=isAddEdit(e),o=current(),name=o?label(o):'the prop';
@@ -1196,7 +1296,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const next=add?cleanAddEdit({...e,rotation:[...attrClip.rotation],scale:[...attrClip.scale]}):{...sel.target,...(e||{}),rotation:[...attrClip.rotation],scale:[...attrClip.scale]};
     write(sel.key,next,`${name}: the turn and size of ${attrClip.label}. Undo puts it back.`);return true;
   }
-  return {copyAttrs,pasteAttrs,panel,lane,laneHeight,action,changed,select,deselect,hide,reset,setMode,applied,editedCount,ensure,learn,boxPick,
+  return {copyAttrs,pasteAttrs,copyEffect,pasteEffect,copiedEffect:()=>effectClip?{...effectClip,summary:describePropEffect(effectClip)}:null,hasAttrsClip:()=>!!attrClip,selectLaneForContext,panel,lane,laneHeight,action,changed,select,deselect,hide,reset,setMode,applied,editedCount,ensure,learn,boxPick,
     insideDesk:()=>inside?{...inside}:null,leaveDesk,addToDesks,chapterDesks,enterDesk:id=>{const sd=win()?.ErgoFlex?.sceneDesks,r=sd?.records?.get(id);if(!r||id===sd.selected)return false;enterDesk({id,name:r.state?.name||'Room desk'});return true;},object:()=>{try{return current();}catch{return null;}},
     selected:()=>sel?.key||null,selectedKeys:()=>members().map(m=>m.key),selectKeys,items,hideItems:(keys,on,also)=>hideItems(keys.map(k=>{const i=items().find(x=>x.key===k);return i?{key:k,target:i.target,obj:i.obj}:{key:k};}),on,also),
     flashKey,setLocked:fn=>{lockedKeys=fn;},isHidden:key=>{const e=editOfKey(key);if(e)return e.hide===true;const i=items().find(x=>x.key===key);return !!i&&i.hidden;},selectedName:()=>sel?(current()?.name||sel.target.label):null,mode:()=>mode,
