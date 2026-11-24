@@ -2,7 +2,7 @@ import {enhanceGizmo,mmPerUnitOf} from './gumball.mjs';
 let altHeld=false;   // Alt held as a prop drag starts: Alt+drag copies (P3)
 import {noteStudioValue} from './studio-sync.mjs';
 import {layersOn,splitPermanent,writePermanentLayers,permanentCells,foldDeskHides,LAYERS_KEY} from './layers-exchange.mjs';
-import {FOLLOW_LABELS,cleanPlace,cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,propTarget,DESK_SURFACES,MOUNTS,mountLabel,onDesk,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets,keyedFadeWindow,filmFadeKeys,combineFilmFade,showOverFilm,copyPropEffect,cleanPropEffect,applyPropEffect,describePropEffect,copyPropPosition,cleanPropPosition,applyPropPositionToAdd,describePropPosition} from './prop-edits.mjs';
+import {FOLLOW_LABELS,cleanPlace,cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,propTarget,DESK_SURFACES,MOUNTS,mountLabel,onDesk,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets,keyedFadeWindow,filmFadeKeys,combineFilmFade,showOverFilm,copyPropEffect,cleanPropEffect,applyPropEffect,describePropEffect,copyPropPosition,cleanPropPosition,applyPropPositionToAdd,describePropPosition,cleanPasteMask,describePasteMask} from './prop-edits.mjs';
 import {stackRows} from './lane-rows.mjs';
 import {stowWindow,EASEL_ANGLE,filmVisibleKeys,keyedWindow} from './prop-stow-window.mjs';
 import {legacyMotionToClips,sampleClipMotion} from './desk-clips.mjs';
@@ -716,6 +716,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function reset(){if(!sel)return;if(group()){const list=members().filter(m=>editOfKey(m.key));if(!list.length){status('They are already where the film puts them.');return;}writeMany(list.map(m=>({key:m.key,next:null})),`${list.length} items back to the film. One Undo brings them back.`);return;}if(isAddEdit(editOfKey(sel.key))){remove();return;}const name=sel.target.label?nice(sel.target.label):'The prop';if(!editOfKey(sel.key)){status(name+' is already where the film puts it.');return;}write(sel.key,null,`${name} back to the film.`);}
   function resetAll(){const n=editedCount();if(!n){status('No prop edits in this chapter: the props are the film\'s.');return;}const a=edits().filter(isAddEdit).length;commit(()=>{shot().propEdits=[];},{render:false});if(sel&&a)sel=null;status(`All props back to the film (${n} edit${n===1?'':'s'} cleared${a?`, ${a} added prop${a===1?'':'s'} removed`:''}). Undo brings them back.`);rerender();}
   async function changed(el){
+    if(/^pp-mask-/.test(el.name)){setPasteMask(el.name.slice(8),el.checked);return;}
     await ensure();if(group()){groupChanged(el);return;}
     if(sel&&el.name==='pp-t-curve'){setCurve(el.value);return;}
     if(sel&&/^pp-t-/.test(el.name)){changedTiming(el.name,el.value===''?NaN:Number(el.value));return;}
@@ -1083,15 +1084,25 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     write(sel.key,cleanAddEdit({...e,parent:kind,position:local.toArray().map(v=>r3(v*k)),rotation:[0,r1(wrapDeg(r.y*180/Math.PI)),0]}),`Put ${label(o)} on ${DESK_SURFACES[kind]}: it rides the desk's lift and tilt. Move it with the gizmo.`);
   }
   const dropButtons=()=>`<div class="director-actions prop-drop"><button data-action="pp-drop" title="Move it straight down until it rests on the surface below (End)">Drop to surface</button><button data-action="pp-drop-flat" title="Level it (no tilt or roll), then drop it onto the surface below (Shift+End)">Drop flat</button><button data-action="pp-drop-align" title="Tilt it to the surface under it (a ramp, the tilted desktop), then drop it (Alt+End)">Align to surface</button></div>`;
-  const posButtons=(isGroup=false)=>{const p=posClip?describePropPosition(posClip):'';return `<div class="director-actions prop-pos-clip">${isGroup?'':'<button data-action="pp-copy-pos" title="Copy this prop\'s position and shelf/surface attachment (works across desks & chapters)">Copy position</button>'}<button data-action="pp-paste-pos" ${posClip?'':'disabled'} title="${escape(posClip?`Move selected prop(s) to ${p}`:'Copy a prop\'s position first')}">Paste position</button><button data-action="pp-paste-xform" ${posClip?'':'disabled'} title="${escape(posClip?`Copy surface, position, turn & size from ${p}`:'Copy a prop\'s position first')}">Paste full transform</button></div>${posClip?`<p class="director-hint">Position copied: <b>${escape(p)}</b></p>`:''}`;};
+  const posButtons=(isGroup=false)=>{
+    const p=posClip?describePropPosition(posClip):'',hasAny=!!(posClip||(pasteMask.timing&&effectClip)),summary=describePasteMask(pasteMask);
+    const anyChecked=pasteMask.position||pasteMask.rotation||pasteMask.scale||pasteMask.timing;
+    const chk=(k,lbl)=>`<label><input type="checkbox" name="pp-mask-${k}" ${pasteMask[k]?'checked':''}>${lbl}</label>`;
+    return `<div class="prop-paste-box"><div class="director-actions prop-pos-clip">${isGroup?'':'<button data-action="pp-copy-pos" title="Copy this prop\'s position, shelf/surface, turn, scale and timing (Ctrl+C)">Copy transform</button>'}<button data-action="pp-paste-selected" ${hasAny&&anyChecked?'':'disabled'} title="${escape(hasAny&&anyChecked?`Paste ${summary} from ${p||effectClip?.label||'copied prop'}`:'Copy a prop first, then choose what to paste below')}">Paste ${escape(summary)}</button></div>
+      <div class="prop-paste-opts" role="group" aria-label="Attributes to paste">${chk('position','Position')}${chk('rotation','Turn')}${chk('scale','Scale')}${chk('timing','Timing &amp; fades')}</div>
+      ${p?`<p class="director-hint">Copied: <b>${escape(p)}</b></p>`:''}</div>`;
+  };
   async function action(name,arg,ev=null){
     if(name==='pp-add'){library.open();return;}
     if(name==='pp-copy-fx'){copyEffect();return;}
     if(name==='pp-paste-fx'){pasteEffect('all');return;}
     if(name==='pp-paste-fades'){pasteEffect('fades');return;}
     if(name==='pp-copy-pos'){copyPosition();return;}
-    if(name==='pp-paste-pos'){await ensure();pastePosition({includeRotationScale:false});return;}
-    if(name==='pp-paste-xform'){await ensure();pastePosition({includeRotationScale:true});return;}
+    if(name==='pp-paste-selected'){await ensure();pasteSelected();return;}
+    if(name==='pp-paste-pos'){await ensure();pasteSelected({position:true,rotation:false,scale:false,timing:false});return;}
+    if(name==='pp-paste-rot'){await ensure();pasteSelected({position:false,rotation:true,scale:false,timing:false});return;}
+    if(name==='pp-paste-scale'){await ensure();pasteSelected({position:false,rotation:false,scale:true,timing:false});return;}
+    if(name==='pp-paste-xform'){await ensure();pasteSelected({position:true,rotation:true,scale:true,timing:false});return;}
     await ensure();
     if(name==='pp-remove'){remove();return;}
     if(name==='pp-drop'||name==='pp-drop-flat'||name==='pp-drop-align'){await dropSelected(name==='pp-drop-flat'?'flat':name==='pp-drop-align'?'align':'drop');return;}
@@ -1254,26 +1265,49 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   // Paste position aligns added props to the exact same shelf/surface & coordinates across desks; Ctrl+Alt+V pastes turn & size).
   const PROP_FX_KEY='ergoflex.director.propEffectClipboard.v1';
   const PROP_POS_KEY='ergoflex.director.propPositionClipboard.v1';
-  let attrClip=null,effectClip=null,posClip=null;
+  const PROP_MASK_KEY='ergoflex.director.propPasteMask.v1';
+  let attrClip=null,effectClip=null,posClip=null,pasteMask=cleanPasteMask(null);
   try{effectClip=cleanPropEffect(JSON.parse(localStorage.getItem(PROP_FX_KEY)||'null'));}catch{}
   try{posClip=cleanPropPosition(JSON.parse(localStorage.getItem(PROP_POS_KEY)||'null'));}catch{}
+  try{pasteMask=cleanPasteMask(JSON.parse(localStorage.getItem(PROP_MASK_KEY)||'null'));}catch{}
   function saveEffectClip(fx){effectClip=fx;try{if(fx)localStorage.setItem(PROP_FX_KEY,JSON.stringify(fx));else localStorage.removeItem(PROP_FX_KEY);}catch{}}
   function savePosClip(p){posClip=p;try{if(p)localStorage.setItem(PROP_POS_KEY,JSON.stringify(p));else localStorage.removeItem(PROP_POS_KEY);}catch{}}
-  function copyPosition(source=null){
+  function setPasteMask(field,on){
+    pasteMask=cleanPasteMask({...pasteMask,[field]:!!on});
+    try{localStorage.setItem(PROP_MASK_KEY,JSON.stringify(pasteMask));}catch{}
+    rerender();status(`Paste options: ${describePasteMask(pasteMask)}.`);
+  }
+  function capturePropData(source=null){
     const key=source?source.key:sel?.key,target=source?source.target:sel?.target;
-    if(!key){status('Select a prop first to copy its position.');return false;}
+    if(!key)return null;
     const e=editOfKey(key),o=source?(tools?find(key,target):null):current();
     const world=o&&tools?o.getWorldPosition(new tools.THREE.Vector3()).toArray():null;
+    const worldQuat=o&&tools?o.getWorldQuaternion(new tools.THREE.Quaternion()).toArray():null;
     const surface=o?surfaceNow(o):null,name=source?.name||(o?label(o):selName())||'the prop';
-    const clip=copyPropPosition(e,{world,surface,label:name});
-    if(!clip){status(`${name} is not on stage right now: click its bar once so its desk is on stage, then Copy position.`,true);return false;}
-    savePosClip(clip);rerender();
-    status(`Copied position from ${describePropPosition(clip)}. Select target prop(s) and click Paste position (or right-click a prop bar).`);
+    const pos=copyPropPosition(e,{world,worldQuat,surface,label:name});
+    const span=source?.span||spanOf((e||target).desk);
+    const fx=copyPropEffect(screenOf(e,target,span),span,name);
+    const add=isAddEdit(e);
+    attrClip={add,rotation:[...(e?.rotation||[0,0,0])],scale:[...(e?.scale||[1,1,1])],label:name};
+    if(pos)savePosClip(pos);
+    if(fx)saveEffectClip(fx);
+    return {name,pos,fx};
+  }
+  function copyPosition(source=null){
+    const got=capturePropData(source);
+    if(!got){status('Select a prop first to copy its position, turn and scale.');return false;}
+    if(!got.pos){status(`${got.name} is not on stage right now: click its bar once so its desk is on stage, then Copy.`,true);return false;}
+    rerender();
+    status(`Copied ${describePropPosition(got.pos)} (position, turn, scale & fades). Select prop(s) and Paste ${describePasteMask(pasteMask)}.`);
     return true;
   }
-  function pastePosition({includeRotationScale=false}={}){
-    if(!posClip){status('Copy a prop\'s position first (Copy position or right-click a prop bar).',true);return false;}
-    const list=members();if(!list.length){status('Select one or more props to paste position onto.',true);return false;}
+  function pasteSelected(overrideMask=null){
+    const mask=cleanPasteMask(overrideMask||pasteMask);
+    const wantXform=mask.position||mask.rotation||mask.scale,wantTiming=mask.timing;
+    if(!wantXform&&!wantTiming){status('Tick at least one option (Position, Turn, Scale, or Timing & fades) to paste.',true);return false;}
+    if(wantXform&&!posClip){status('Copy a prop first (Copy transform, Ctrl+C, or right-click a prop bar).',true);return false;}
+    if(wantTiming&&!effectClip){status('Copy a prop\'s timing & fades first (Ctrl+C or right-click a prop bar).',true);return false;}
+    const list=members();if(!list.length){status('Select one or more props to paste onto.',true);return false;}
     const E=win()?.__filmEdits,THREE=tools?.THREE;
     const worldToLocal=(parentKind,worldArr,on=null)=>{
       if(!E||!THREE||!worldArr)return null;
@@ -1281,33 +1315,69 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       p.updateWorldMatrix(true,false);const k=p.getWorldScale(new THREE.Vector3()).x||1;
       return p.worldToLocal(new THREE.Vector3(...worldArr)).toArray().map(v=>r3(v*k));
     };
+    const worldQuatToLocal=(parentKind,qArr,on=null)=>{
+      if(!E||!THREE||!qArr)return null;
+      const p=E.addParent(parentKind,on);if(!p)return null;
+      p.updateWorldMatrix(true,false);
+      const q=p.getWorldQuaternion(new THREE.Quaternion()).invert().multiply(new THREE.Quaternion(...qArr));
+      const r=new THREE.Euler().setFromQuaternion(q);
+      return [r.x,r.y,r.z].map(v=>r1(wrapDeg(THREE.MathUtils.radToDeg(v))));
+    };
     const changes=[];let skipped=0;
     for(const m of list){
       if(m.blocked){skipped++;continue;}
       const e=editOfKey(m.key);
-      if(isAddEdit(e)){
-        const next=applyPropPositionToAdd(posClip,e,{includeRotationScale,hasMount:(k,on)=>E?hasMount(E,k,on):true,worldToLocal:(k,w)=>worldToLocal(k,w,e.on||null)});
-        if(!next){skipped++;continue;}
-        changes.push({key:m.key,next});
-        continue;
+      let next=e?structuredClone(e):{...m.target};
+      let changedAny=false;
+      if(wantXform){
+        if(isAddEdit(next)){
+          const applied=applyPropPositionToAdd(posClip,next,{
+            position:mask.position,rotation:mask.rotation,scale:mask.scale,
+            hasMount:(k,on)=>E?hasMount(E,k,on):true,
+            worldToLocal:(k,w)=>worldToLocal(k,w,next.on||null),
+            worldQuatToLocal:(k,q)=>worldQuatToLocal(k,q,next.on||null),
+          });
+          if(applied){next=applied;changedAny=true;}
+        }else{
+          const o=objOf(m);
+          if(o&&THREE){
+            if(isFollow(next)){
+              let ok=false;
+              if(mask.position&&posClip.world){const wVec=new THREE.Vector3(...posClip.world);o.position.copy(o.parent?o.parent.worldToLocal(wVec):wVec);ok=true;}
+              if(mask.rotation&&posClip.worldQuat){const pq=o.parent?o.parent.getWorldQuaternion(new THREE.Quaternion()):new THREE.Quaternion();o.quaternion.copy(pq.invert().multiply(new THREE.Quaternion(...posClip.worldQuat)));ok=true;}
+              if(mask.scale&&posClip.scale){o.scale.set(...posClip.scale);ok=true;}
+              if(ok){o.updateMatrixWorld(true);next={...next,place:placeFrom(o)};changedAny=true;}
+            }else{
+              const b=base(o);
+              if(mask.position&&posClip.world){const ed=editFrom(o,b,{world:new THREE.Vector3(...posClip.world)});next={...m.target,...next,position:ed.position,...(ed.space?{space:ed.space}:{})};changedAny=true;}
+              if(mask.rotation){
+                if(posClip.kind==='scene'){next={...m.target,...next,rotation:[...posClip.rotation]};changedAny=true;}
+                else if(posClip.worldQuat){const pq=o.parent?o.parent.getWorldQuaternion(new THREE.Quaternion()):new THREE.Quaternion();const lq=pq.invert().multiply(new THREE.Quaternion(...posClip.worldQuat));const ed=editFrom(o,b,{rot:new THREE.Euler().setFromQuaternion(lq,o.rotation.order)});next={...m.target,...next,rotation:ed.rotation};changedAny=true;}
+              }
+              if(mask.scale){next={...m.target,...next,scale:[...posClip.scale]};changedAny=true;}
+            }
+          }
+        }
       }
-      const o=objOf(m);if(!o||!THREE||!posClip.world){skipped++;continue;}
-      const wVec=new THREE.Vector3(...posClip.world);
-      if(isFollow(e)){
-        o.position.copy(o.parent?o.parent.worldToLocal(wVec):wVec);o.updateMatrixWorld(true);
-        changes.push({key:m.key,next:{...e,place:placeFrom(o)}});
-        continue;
+      if(wantTiming){
+        const span=spanOf((next||m.target).desk);
+        if(!span.missing){
+          const cur=screenOf(next,m.target,span),tw=applyPropEffect(effectClip,cur,span,{mode:'all'});
+          if(tw){
+            const show=showFor(span,cur.film?showOverFilm(cur.film,span.lo,span.hi,tw):tw);
+            next={...m.target,...next,show};if(show===undefined)delete next.show;changedAny=true;
+          }
+        }
       }
-      const b=base(o),ed=editFrom(o,b,{world:wVec});
-      const next={...m.target,...(e||{}),position:ed.position,...(ed.space?{space:ed.space}:{})};
-      if(includeRotationScale&&posClip.kind==='scene'){next.rotation=[...posClip.rotation];next.scale=[...posClip.scale];}
+      if(!changedAny){skipped++;continue;}
       changes.push({key:m.key,next});
     }
-    if(!changes.length){status(skipped?'Selected prop(s) could not take that position (make sure they are on stage or added props).':'Nothing to paste.',true);rerender();return false;}
-    const what=includeRotationScale?'position, turn & size':'position';
-    writeMany(changes,`Pasted ${what} from ${describePropPosition(posClip)} onto ${changes.length} prop${changes.length===1?'':'s'}${skipped?` (${skipped} skipped)`:''}. One Undo puts them back.`);
+    if(!changes.length){status(skipped?'Selected prop(s) could not take those attributes (make sure they are on stage or added props).':'Nothing to paste.',true);rerender();return false;}
+    const from=posClip?describePropPosition(posClip):effectClip?.label||'copied prop';
+    writeMany(changes,`Pasted ${describePasteMask(mask)} from ${from} onto ${changes.length} prop${changes.length===1?'':'s'}${skipped?` (${skipped} skipped)`:''}. One Undo puts them back.`);
     return true;
   }
+  const pastePosition=({includeRotationScale=false}={})=>pasteSelected({position:true,rotation:!!includeRotationScale,scale:!!includeRotationScale,timing:false});
   function copyEffect(source=null){
     const target=source?source.target:sel?.target,key=source?source.key:sel?.key;
     if(!key){status('Select a prop first to copy its timing and fades.');return false;}
@@ -1338,16 +1408,10 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     return true;
   }
   function copyAttrs(){
-    if(!sel){status('Select a prop first: Ctrl+C copies its timing, fades, position, turn and size.');return false;}
-    const e=editOfKey(sel.key),add=isAddEdit(e),o=current(),name=o?label(o):selName()||'the prop';
-    attrClip={add,rotation:[...(e?.rotation||[0,0,0])],scale:[...(e?.scale||[1,1,1])],label:name};
-    const span=selSpan(),fx=copyPropEffect(screenOf(e,sel.target,span),span,name);
-    if(fx)saveEffectClip(fx);
-    const world=o&&tools?o.getWorldPosition(new tools.THREE.Vector3()).toArray():null;
-    const pos=copyPropPosition(e,{world,surface:o?surfaceNow(o):null,label:name});
-    if(pos)savePosClip(pos);
+    const got=capturePropData(null);
+    if(!got){status('Select a prop first: Ctrl+C copies its position, turn, scale, timing and fades.');return false;}
     rerender();
-    status(`Copied ${name} (${fx?describePropEffect(fx):'attributes'}${pos?' · '+describePropPosition(pos):''}): Ctrl+V pastes timing & fades; right-click or Props tab pastes position.`);
+    status(`Copied ${got.name} (${got.fx?describePropEffect(got.fx):'attributes'}${got.pos?' · '+describePropPosition(got.pos):''}): Ctrl+V pastes timing & fades; Props tab or right-click pastes ${describePasteMask(pasteMask)}.`);
     return true;
   }
   function pasteAttrs(){
@@ -1358,7 +1422,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const next=add?cleanAddEdit({...e,rotation:[...attrClip.rotation],scale:[...attrClip.scale]}):{...sel.target,...(e||{}),rotation:[...attrClip.rotation],scale:[...attrClip.scale]};
     write(sel.key,next,`${name}: the turn and size of ${attrClip.label}. Undo puts it back.`);return true;
   }
-  return {copyAttrs,pasteAttrs,copyEffect,pasteEffect,copiedEffect:()=>effectClip?{...effectClip,summary:describePropEffect(effectClip)}:null,copyPosition,pastePosition,copiedPosition:()=>posClip?{...posClip,summary:describePropPosition(posClip)}:null,hasAttrsClip:()=>!!attrClip,selectLaneForContext,panel,lane,laneHeight,action,changed,select,deselect,hide,reset,setMode,applied,editedCount,ensure,learn,boxPick,
+  return {copyAttrs,pasteAttrs,copyEffect,pasteEffect,copiedEffect:()=>effectClip?{...effectClip,summary:describePropEffect(effectClip)}:null,copyPosition,pastePosition,pasteSelected,pasteMaskSummary:()=>describePasteMask(pasteMask),copiedPosition:()=>posClip?{...posClip,summary:describePropPosition(posClip)}:null,hasAttrsClip:()=>!!attrClip,selectLaneForContext,panel,lane,laneHeight,action,changed,select,deselect,hide,reset,setMode,applied,editedCount,ensure,learn,boxPick,
     insideDesk:()=>inside?{...inside}:null,leaveDesk,addToDesks,chapterDesks,enterDesk:id=>{const sd=win()?.ErgoFlex?.sceneDesks,r=sd?.records?.get(id);if(!r||id===sd.selected)return false;enterDesk({id,name:r.state?.name||'Room desk'});return true;},object:()=>{try{return current();}catch{return null;}},
     selected:()=>sel?.key||null,selectedKeys:()=>members().map(m=>m.key),selectKeys,items,hideItems:(keys,on,also)=>hideItems(keys.map(k=>{const i=items().find(x=>x.key===k);return i?{key:k,target:i.target,obj:i.obj}:{key:k};}),on,also),
     flashKey,setLocked:fn=>{lockedKeys=fn;},isHidden:key=>{const e=editOfKey(key);if(e)return e.hide===true;const i=items().find(x=>x.key===key);return !!i&&i.hidden;},selectedName:()=>sel?(current()?.name||sel.target.label):null,mode:()=>mode,

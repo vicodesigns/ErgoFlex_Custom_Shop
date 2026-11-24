@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {fileURLToPath} from 'node:url';import {execFileSync} from 'node:child_process';
 import * as THREE from 'three';
-import {cleanPropEdit,cleanAddEdit,cleanPropEdits,cleanShow,showFactor,propKey,propTarget,describePropEdit,isNoop,mergePropEdits,filmPropEdits,copyPropEffect,cleanPropEffect,applyPropEffect,describePropEffect,copyPropPosition,cleanPropPosition,applyPropPositionToAdd,describePropPosition} from '../experience/prop-edits.mjs';
+import {cleanPropEdit,cleanAddEdit,cleanPropEdits,cleanShow,showFactor,propKey,propTarget,describePropEdit,isNoop,mergePropEdits,filmPropEdits,copyPropEffect,cleanPropEffect,applyPropEffect,describePropEffect,copyPropPosition,cleanPropPosition,applyPropPositionToAdd,describePropPosition,cleanPasteMask,describePasteMask} from '../experience/prop-edits.mjs';
 import {cleanPropLayer} from '../experience/prop-layers.mjs';
 import {cleanCut} from '../experience/cuts.mjs';
 
@@ -153,8 +153,18 @@ assert.match(describePropEdit(add),/on screen from 1 s after its desk comes in, 
   const xform=applyPropPositionToAdd(clip,target,{includeRotationScale:true,hasMount:()=>true});
   assert.equal(xform.parent,'shelf');assert.deepEqual(xform.position,[0.12,0,0.05]);assert.deepEqual(xform.rotation,[0,30,0]);assert.deepEqual(xform.scale,[1.2,1.2,1.2]);
   // Scene/film prop world position pasted onto added prop via worldToLocal
-  const sceneClip=copyPropPosition(null,{world:[2,1.1,-0.5],surface:'lower-shelf',label:'Lamp'});
+  const sceneClip=copyPropPosition(null,{world:[2,1.1,-0.5],worldQuat:[0,0.7071,0,0.7071],surface:'lower-shelf',label:'Lamp'});
   assert.equal(sceneClip.kind,'scene');assert.equal(describePropPosition(sceneClip),'Lamp · Desktop shelf (lower)');
-  const fromScene=applyPropPositionToAdd(sceneClip,target,{hasMount:()=>true,worldToLocal:(k,w)=>[0.25,0,-0.1]});
-  assert.equal(fromScene.parent,'lower-shelf');assert.deepEqual(fromScene.position,[0.25,0,-0.1]);
+  const fromScene=applyPropPositionToAdd(sceneClip,target,{position:true,rotation:true,scale:false,hasMount:()=>true,worldToLocal:(k,w)=>[0.25,0,-0.1],worldQuatToLocal:(k,q)=>[0,90,0]});
+  assert.equal(fromScene.parent,'lower-shelf');assert.deepEqual(fromScene.position,[0.25,0,-0.1]);assert.deepEqual(fromScene.rotation,[0,90,0]);
+  // Selectable paste mask: defaults to Position + Turn + Scale; supports Turn-only, Scale-only, and Position + Turn
+  assert.deepEqual(cleanPasteMask(null),{position:true,rotation:true,scale:true,timing:false});
+  assert.equal(describePasteMask(cleanPasteMask(null)),'Position + Turn + Scale');
+  assert.equal(describePasteMask({position:true,rotation:true,scale:false,timing:true}),'Position + Turn + Fades');
+  const turnOnly=applyPropPositionToAdd(clip,target,{position:false,rotation:true,scale:false});
+  assert.equal(turnOnly.parent,'desk','turn-only keeps surface');assert.deepEqual(turnOnly.position,[0,0,0],'turn-only keeps position');assert.deepEqual(turnOnly.rotation,[0,30,0]);assert.deepEqual(turnOnly.scale,[1,1,1]);
+  const scaleOnly=applyPropPositionToAdd(clip,target,{position:false,rotation:false,scale:true});
+  assert.deepEqual(scaleOnly.position,[0,0,0]);assert.deepEqual(scaleOnly.rotation,[0,90,0]);assert.deepEqual(scaleOnly.scale,[1.2,1.2,1.2]);
+  const posTurn=applyPropPositionToAdd(clip,target,{position:true,rotation:true,scale:false});
+  assert.equal(posTurn.parent,'shelf');assert.deepEqual(posTurn.position,[0.12,0,0.05]);assert.deepEqual(posTurn.rotation,[0,30,0]);assert.deepEqual(posTurn.scale,[1,1,1],'pos+turn keeps scale');
 }

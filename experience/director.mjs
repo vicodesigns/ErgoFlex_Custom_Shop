@@ -1928,16 +1928,16 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     if(!k&&!c&&!pb&&!r&&!g)return;event.preventDefault();const x=event.clientX,y=event.clientY;
     if(pb){
       const picked=sceneProps.selectLaneForContext(pb.dataset.index);if(!picked)return;
-      const fx=sceneProps.copiedEffect(),pos=sceneProps.copiedPosition();
+      const fx=sceneProps.copiedEffect(),pos=sceneProps.copiedPosition(),maskSummary=sceneProps.pasteMaskSummary();
       ctx.open(x,y,[
-        {label:`Copy timing & fades${picked.count>1?' (from '+picked.it.name+')':''}`,hint:'Ctrl+C',run:safe(()=>sceneProps.copyEffect(picked.it))},
+        {label:`Copy prop (position, turn, scale & fades)${picked.count>1?' · '+picked.it.name:''}`,hint:'Ctrl+C',run:safe(()=>sceneProps.copyPosition(picked.it))},'-',
+        {label:pos?`Paste position, turn & scale (${pos.summary})`:'Paste position, turn & scale',disabled:!pos,run:safe(()=>sceneProps.action('pp-paste-xform'))},
+        {label:`Paste checked (${maskSummary})`,disabled:!(pos||fx),run:safe(()=>sceneProps.action('pp-paste-selected'))},
+        {label:'Paste position only',disabled:!pos,run:safe(()=>sceneProps.action('pp-paste-pos'))},
+        {label:'Paste turn only',disabled:!pos,run:safe(()=>sceneProps.action('pp-paste-rot'))},
+        {label:'Paste scale only',disabled:!pos,run:safe(()=>sceneProps.action('pp-paste-scale'))},'-',
         {label:fx?`Paste timing & fades (${fx.summary})`:'Paste timing & fades',hint:'Ctrl+V',disabled:!fx,run:safe(()=>sceneProps.pasteEffect('all'))},
         {label:'Paste fades only (keep window)',disabled:!fx,run:safe(()=>sceneProps.pasteEffect('fades'))},'-',
-        {label:`Copy position${picked.count>1?' (from '+picked.it.name+')':''}`,run:safe(()=>sceneProps.copyPosition(picked.it))},
-        {label:pos?`Paste position (${pos.summary})`:'Paste position',disabled:!pos,run:safe(()=>sceneProps.action('pp-paste-pos'))},
-        {label:'Paste position, turn & size',disabled:!pos,run:safe(()=>sceneProps.action('pp-paste-xform'))},'-',
-        {label:'Copy turn & size',hint:'Ctrl+C',run:safe(()=>sceneProps.copyAttrs())},
-        {label:'Paste turn & size',hint:'Ctrl+Alt+V',disabled:!sceneProps.hasAttrsClip(),run:safe(()=>sceneProps.pasteAttrs())},'-',
         {label:'Appear at playhead',run:safe(()=>sceneProps.action('pp-t-from-now'))},
         {label:'Leave at playhead',run:safe(()=>sceneProps.action('pp-t-to-now'))},
         {label:'Whole time (clear fades)',run:safe(()=>sceneProps.action('pp-t-all'))},'-',

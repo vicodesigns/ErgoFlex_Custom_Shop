@@ -280,50 +280,79 @@ export function describePropEffect(v){
   const curve=fades?(fx.ease==='smooth'?' · smooth':''):' · cut';
   return `${when}${fades?' · fade '+fades:''}${curve}`;
 }
-// ---- Copy & paste prop position / full transform (surface + coordinates, works across desks & chapters)
-export function copyPropPosition(edit,{world=null,surface=null,label='prop'}={}){
-  const w=vec(world)||null;
+// ---- Copy & paste prop position / turn / scale / timing mask (works across desks & chapters)
+const quat4=v=>Array.isArray(v)&&v.length===4&&v.every(n=>finite(n)&&Math.abs(n)<=2)?v.map(r4):null;
+export const DEFAULT_PASTE_MASK={position:true,rotation:true,scale:true,timing:false};
+export function cleanPasteMask(v){
+  if(!v||typeof v!=='object')return {...DEFAULT_PASTE_MASK};
+  return {
+    position:typeof v.position==='boolean'?v.position:DEFAULT_PASTE_MASK.position,
+    rotation:typeof v.rotation==='boolean'?v.rotation:DEFAULT_PASTE_MASK.rotation,
+    scale:typeof v.scale==='boolean'?v.scale:DEFAULT_PASTE_MASK.scale,
+    timing:typeof v.timing==='boolean'?v.timing:DEFAULT_PASTE_MASK.timing,
+  };
+}
+export function describePasteMask(v){
+  const m=cleanPasteMask(v),parts=[];
+  if(m.position)parts.push('Position');
+  if(m.rotation)parts.push('Turn');
+  if(m.scale)parts.push('Scale');
+  if(m.timing)parts.push('Fades');
+  return parts.join(' + ')||'nothing';
+}
+export function copyPropPosition(edit,{world=null,worldQuat=null,surface=null,label='prop'}={}){
+  const w=vec(world)||null,wq=quat4(worldQuat);
   if(isAddEdit(edit)){
     const parent=DESK_SURFACES[edit.parent]?edit.parent:'room';
     const position=vec(edit.position)||[0,0,0];
     const rotation=vec(edit.rotation,n=>Math.abs(n)<=720)||[0,0,0];
     const scale=vec(edit.scale,n=>Math.abs(n)>=.01&&Math.abs(n)<=100)||[1,1,1];
-    return {kind:'add',parent,position,rotation,scale,world:w,label:String(label||edit.label||'prop').slice(0,80)};
+    return {kind:'add',parent,position,rotation,scale,world:w,worldQuat:wq,label:String(label||edit.label||'prop').slice(0,80)};
   }
-  if(!w)return null;
+  if(!w&&!wq)return null;
   const parent=surface&&DESK_SURFACES[surface]?surface:'room';
   const rotation=vec(edit?.rotation,n=>Math.abs(n)<=720)||[0,0,0];
   const scale=vec(edit?.scale,n=>Math.abs(n)>=.01&&Math.abs(n)<=100)||[1,1,1];
-  return {kind:'scene',parent,position:null,rotation,scale,world:w,label:String(label||edit?.label||'prop').slice(0,80)};
+  return {kind:'scene',parent,position:null,rotation,scale,world:w,worldQuat:wq,label:String(label||edit?.label||'prop').slice(0,80)};
 }
 export function cleanPropPosition(v){
   if(!v||typeof v!=='object')return null;
   const kind=v.kind==='add'?'add':'scene';
   const parent=DESK_SURFACES[v.parent]?v.parent:'room';
   const position=kind==='add'?vec(v.position):null;
-  const world=vec(v.world)||null;
+  const world=vec(v.world)||null,worldQuat=quat4(v.worldQuat);
   if(kind==='add'&&!position)return null;
-  if(kind!=='add'&&!world)return null;
+  if(kind!=='add'&&!world&&!worldQuat)return null;
   const rotation=vec(v.rotation,n=>Math.abs(n)<=720)||[0,0,0];
   const scale=vec(v.scale,n=>Math.abs(n)>=.01&&Math.abs(n)<=100)||[1,1,1];
-  return {kind,parent,position,rotation,scale,world,label:typeof v.label==='string'?v.label.slice(0,80):'prop'};
+  return {kind,parent,position,rotation,scale,world,worldQuat,label:typeof v.label==='string'?v.label.slice(0,80):'prop'};
 }
-export function applyPropPositionToAdd(clip,targetEdit,{includeRotationScale=false,hasMount=()=>true,worldToLocal=null}={}){
+export function applyPropPositionToAdd(clip,targetEdit,{includeRotationScale=false,position=true,rotation=includeRotationScale,scale=includeRotationScale,hasMount=()=>true,worldToLocal=null,worldQuatToLocal=null}={}){
   const c=cleanPropPosition(clip);if(!c||!isAddEdit(targetEdit))return null;
+  if(!position&&!rotation&&!scale)return null;
   const on=targetEdit.on||null;
   const canUse=kind=>kind==='room'||(!!DESK_SURFACES[kind]&&!!hasMount(kind,on));
-  let parent=targetEdit.parent||'room',position=null;
-  if(c.kind==='add'&&c.position){
-    if(canUse(c.parent)){parent=c.parent;position=[...c.position];}
-    else if(c.world&&worldToLocal){parent=canUse(targetEdit.parent)?targetEdit.parent:'room';position=worldToLocal(parent,c.world);}
-    else{parent=canUse(targetEdit.parent)?targetEdit.parent:'room';position=[...c.position];}
-  }else if(c.world&&worldToLocal){
-    parent=c.parent&&c.parent!=='room'&&canUse(c.parent)?c.parent:(canUse(targetEdit.parent)?targetEdit.parent:'room');
-    position=worldToLocal(parent,c.world);
+  let parent=targetEdit.parent||'room',nextPos=targetEdit.position;
+  if(position){
+    let pos=null;
+    if(c.kind==='add'&&c.position){
+      if(canUse(c.parent)){parent=c.parent;pos=[...c.position];}
+      else if(c.world&&worldToLocal){parent=canUse(targetEdit.parent)?targetEdit.parent:'room';pos=worldToLocal(parent,c.world);}
+      else{parent=canUse(targetEdit.parent)?targetEdit.parent:'room';pos=[...c.position];}
+    }else if(c.world&&worldToLocal){
+      parent=c.parent&&c.parent!=='room'&&canUse(c.parent)?c.parent:(canUse(targetEdit.parent)?targetEdit.parent:'room');
+      pos=worldToLocal(parent,c.world);
+    }
+    if(!pos)return null;
+    nextPos=pos;
   }
-  if(!position)return null;
-  const next={...targetEdit,parent,position};
-  if(includeRotationScale&&c.kind==='add'){next.rotation=[...c.rotation];next.scale=[...c.scale];}
+  const next={...targetEdit,parent,position:nextPos};
+  if(rotation){
+    if(c.kind==='add')next.rotation=[...c.rotation];
+    else if(c.worldQuat&&worldQuatToLocal){const r=worldQuatToLocal(parent,c.worldQuat);if(r)next.rotation=r;}
+    else next.rotation=[...c.rotation];
+  }
+  if(scale){next.scale=[...c.scale];}
   return cleanAddEdit(next);
 }
 export function describePropPosition(v){
