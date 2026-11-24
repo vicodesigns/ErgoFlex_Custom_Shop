@@ -79789,8 +79789,8 @@
     1544.1,
     440.4
    ],
-   "tris": 69688,
-   "bytes": 1313720,
+   "tris": 71304,
+   "bytes": 1511560,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -80087,8 +80087,8 @@
     1548.5,
     426.7
    ],
-   "tris": 68680,
-   "bytes": 1303484,
+   "tris": 68952,
+   "bytes": 1476976,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,

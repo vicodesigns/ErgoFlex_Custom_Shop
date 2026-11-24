@@ -366,8 +366,7 @@ for obj in meshes:
 if who.get('layered_waves'):
     import groom
     hair = next(o for o in meshes if o.name.split('.', 1)[-1] == who['hair'])
-    top_cloth = [o for o in meshes if o.name.split('.', 1)[-1] in who['clothes']]
-    groom.layered_long_hair(hair, base, top_cloth, rig, OUT_DIR, OUT_ID)
+    groom.layered_long_hair(hair, base, rig, OUT_DIR, OUT_ID)
 
 if who.get('roots'):
     import groom
@@ -473,6 +472,8 @@ for o in extras:
 bpy.ops.object.mode_set(mode='OBJECT'); rig.select_set(False)
 for o in extras:
     if o.type != 'MESH': continue
+    if o.name.startswith('padded shoulder strap') and o.vertex_groups:
+        continue
     for g in list(o.vertex_groups): o.vertex_groups.remove(g)
     o.vertex_groups.new(name=extra_bone.get(o.name) or 'still').add(range(len(o.data.vertices)), 1., 'REPLACE')
 baked += extras
@@ -483,7 +484,9 @@ if who.get('layered_waves'):
     hair_baked = next((b for b in baked if who.get('hair') and who['hair'] in b.name), None)
     if hair_baked is not None:
         obs = [b for b in baked if b is not hair_baked and not b.name.endswith('.roots.baked') and not any(k in b.name.lower() for k in ('low-poly', 'high-poly', 'teeth', 'tongue', 'eyebrow', 'eyelash', 'glasses'))]
-        groom.drape_hair_over_posed(hair_baked, obs, rig)
+        sweater = next(b for b in baked if 'toigo_fisherman_sweater' in b.name)
+        groom.drape_hair_over_posed(hair_baked, obs, rig, sweater,
+                                   packed=any(o.name.startswith('backpack') for o in extras))
 
 # Skin under clothing pokes through once the body is posed. Any body face with cloth just outside it goes.
 from mathutils.bvhtree import BVHTree  # noqa: E402

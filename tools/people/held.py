@@ -325,10 +325,93 @@ def _fit_backpack(rig, m, p, trunk, webbing=False):
     return (0, cy, cz), paths
 
 
-def padded_strap(path, mat, world):
+def _webbing_surface(rig, frame):
+    """Posed knit in backpack coordinates, with the weights that move it."""
+    from mathutils.bvhtree import BVHTree
+    from mathutils.kdtree import KDTree
+    points, faces, weights = [], [], []
+    for o in BODY:
+        if 'sweater' not in o.name.lower():
+            continue
+        obj = o.evaluated_get(bpy.context.evaluated_depsgraph_get())
+        mesh = obj.to_mesh()
+        transform = frame.inverted() @ obj.matrix_world
+        off = len(points)
+        for v in mesh.vertices:
+            points.append(transform @ v.co)
+            weights.append({o.vertex_groups[g.group].name: g.weight for g in v.groups
+                            if o.vertex_groups[g.group].name in rig.data.bones})
+        for poly in mesh.polygons:
+            ids = [off+i for i in poly.vertices]
+            # A sleeve can be closer to a side ray than the ribs underneath.
+            if all(sum(w for name,w in weights[i].items() if 'arm_' in name) < .60 for i in ids):
+                faces.append(ids)
+        obj.to_mesh_clear()
+    if not faces:
+        return None
+    tree = KDTree(len(points))
+    for i in {i for f in faces for i in f}:
+        tree.insert(points[i], i)
+    tree.balance()
+    return BVHTree.FromPolygons(points, faces), tree, weights
+
+
+def _pack_panel_fit(center, surface):
+    """Orient the pack's flat inner panel against the posed shoulder blades."""
+    import numpy as np
+    tree = surface[0]
+    _, cy, cz = center
+    profile = []
+    for dy in np.linspace(-.185, .185, 19):
+        row = [tree.ray_cast(Vector((x, cy+dy, .5)), Vector((0, 0, -1)), .70)[0]
+               for x in np.linspace(-.13, .13, 9)]
+        depths = [hit.z for hit in row if hit is not None]
+        if depths:
+            profile.append((dy, max(depths)))
+    if len(profile) < 2:
+        return Matrix.Identity(4)
+    heights, depths = np.array(profile).T
+    slope = np.polyfit(heights, depths, 1)[0]
+    # A rigid panel is tangent to the fullest part of the back. Allow
+    # clearance for the layer of hair under it as the shoulders move.
+    contact = max(depths-slope*heights) + .006
+    pivot = Vector((0, cy, cz-.075))
+    target = Vector((0, cy, contact))
+    return Matrix.Translation(target) @ Matrix.Rotation(math.atan(slope), 4, 'X') @ Matrix.Translation(-pivot)
+
+
+def _fit_webbing(path, surface):
+    # Densify the sparsely sampled chest and flank. Keeping both edges of
+    # the padded band clear matters where it crosses the bust diagonally.
+    tree = surface[0]
+    points = [Vector(p) for p in path]
+    out = [points[0]]
+    peak = max(range(len(points)), key=lambda i: points[i].y)
+    for i, (a,b) in enumerate(zip(points, points[1:])):
+        count = max(1, math.ceil((b-a).length/.013))
+        for j in range(1,count+1):
+            p = a.lerp(b,j/count)
+            if i >= peak and i < len(points)-2:
+                radial = Vector((p.x, 0., p.z))
+                radial.normalize()
+                along = Vector((radial.z, 0., -radial.x))
+                clearance = 0.
+                for u in (-.021, 0., .021):
+                    edge = p + along*u
+                    hit = tree.ray_cast(edge+radial*.20, -radial, .24)[0]
+                    if hit is not None:
+                        clearance = max(clearance, (hit-edge).dot(radial)+.009)
+                p += radial*clearance
+            out.append(p)
+    for _ in range(3):
+        out = [out[0]] + [(a+2*b+c)*.25 for a,b,c in zip(out,out[1:],out[2:])] + [out[-1]]
+    return out
+
+
+def padded_strap(path, mat, world, surface=None):
     # Sweep one flattened, rounded section along the fitted shoulder. Carry its
     # width around the bend under the arm so the webbing never twists edge-on.
-    points = [Vector(p) for p in path]
+    points = _fit_webbing(path, surface) if surface else [Vector(p) for p in path]
     bm = bmesh.new()
     width_axis = Vector((1., 0., 0.))
     last_axis = None
@@ -339,7 +422,7 @@ def padded_strap(path, mat, world):
             width_axis = last_axis.rotation_difference(axis) @ width_axis
         width_axis = (width_axis - axis * width_axis.dot(axis)).normalized()
         normal = axis.cross(width_axis)
-        width = .012 if i in (0, len(points) - 1) else .022
+        width = .012 if i in (0, len(points) - 1) else .0185
         profile = [(-1, 0), (-.86, .8), (0, 1), (.86, .8), (1, 0), (.86, -.8), (0, -1), (-.86, -.8)]
         row = [bm.verts.new(p + width_axis * (u * width) + normal * (v * .0045)) for u, v in profile]
         if rows:
@@ -351,7 +434,23 @@ def padded_strap(path, mat, world):
     bm.faces.new(rows[0])
     bm.faces.new(rows[-1])
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces[:])
-    return _obj('padded shoulder strap', bm, mat, world)
+    obj = _obj('padded shoulder strap', bm, mat, world)
+    if surface:
+        _, tree, weights = surface
+        groups = {}
+        for vertex in obj.data.vertices:
+            _, i, dist = tree.find(vertex.co)
+            seam_distance = min((vertex.co-end).length for end in (points[0], points[-1]))
+            attachment = max(0., min(1., (seam_distance-.022)/.055))
+            mix = attachment * max(0., min(1., (.065-dist)/.040))
+            w = {name: mix*v for name,v in weights[i].items()}
+            w['spine_03'] = w.get('spine_03', 0.) + 1.-mix
+            for name, value in w.items():
+                if value > .0001:
+                    if name not in groups:
+                        groups[name] = obj.vertex_groups.new(name=name)
+                    groups[name].add([vertex.index], value, 'REPLACE')
+    return obj
 
 
 def backpack(rig, color=(.16, .22, .3), webbing=False):
@@ -372,13 +471,21 @@ def backpack(rig, color=(.16, .22, .3), webbing=False):
         paths = [[(a + c[0], b + c[1], d + c[2]) for a, b, d in ((s * .09, .19, -.05), (s * .1, .25, -.15), (s * .115, .2, -.27), (s * .13, .03, -.31), (s * .16, -.12, -.2), (s * .13, -.17, -.07))]
                  for s in (-1, 1)]
     else: c, paths = fit
-    out = [box('backpack', (.29, .4, .15), mat, m, at=c, bevel=.03), box('backpack pocket', (.2, .17, .05), mat, m, at=(c[0], c[1] - .09, c[2] + .085), bevel=.02),
-           tube('backpack handle', .008, (-.04, c[1] + .21, c[2] - .03), (.04, c[1] + .21, c[2] - .03), strap, m, 8)]
+    surface = _webbing_surface(rig, m) if webbing else None
+    panel = m
+    if surface:
+        fit_panel = _pack_panel_fit(c, surface)
+        panel = m @ fit_panel
+        for path in paths:
+            for end in (0, -1):
+                path[end] = fit_panel @ Vector(path[end])
+    out = [box('backpack', (.29, .4, .15), mat, panel, at=c, bevel=.03), box('backpack pocket', (.2, .17, .05), mat, panel, at=(c[0], c[1] - .09, c[2] + .085), bevel=.02),
+           tube('backpack handle', .008, (-.04, c[1] + .21, c[2] - .03), (.04, c[1] + .21, c[2] - .03), strap, panel, 8)]
     if webbing:
-        out.extend(padded_strap(path, strap, m) for path in paths)
+        out.extend(padded_strap(path, strap, m, surface) for path in paths)
         # Zipped front compartment; the pull hangs from its closed end.
-        out.append(box('pocket zipper', (.177, .005, .006), strap, m, at=(c[0], c[1] - .042, c[2] + .110), bevel=.002))
-        out.append(box('zipper pull', (.008, .024, .005), strap, m, at=(c[0] + .081, c[1] - .053, c[2] + .114), bevel=.002))
+        out.append(box('pocket zipper', (.177, .005, .006), strap, panel, at=(c[0], c[1] - .042, c[2] + .110), bevel=.002))
+        out.append(box('zipper pull', (.008, .024, .005), strap, panel, at=(c[0] + .081, c[1] - .053, c[2] + .114), bevel=.002))
     else:
         for path in paths:
             for a, b in zip(path, path[1:]): out.append(tube('backpack strap', .014, a, b, strap, m, 8))
