@@ -67,7 +67,7 @@ try {
   for (const f of ['experience/director.css', 'experience/director-theme.css', 'experience/director-shell.css', 'experience/experience.css']) {
     const [added, removed] = execFileSync('git', ['diff', '--numstat', BASE, '--', f], { cwd: root, encoding: 'utf8' }).trim().split('\t').map(Number);
     assert.ok(!(removed > 0), `${f}: no existing line changed (${removed} removed)`);
-    if (added) { const now = read(f), was = execFileSync('git', ['show', BASE + ':' + f], { cwd: root, encoding: 'utf8', maxBuffer: 1 << 26 }); assert.ok(now.startsWith(was.replace(/\n$/, '')), f + ': only appended'); assert.match(now.slice(was.length), /demo/i, f + ': what was appended is the demo card'); }
+    if (added) { const now = read(f).replace(/\r\n/g, '\n'), was = execFileSync('git', ['show', BASE + ':' + f], { cwd: root, encoding: 'utf8', maxBuffer: 1 << 26 }).replace(/\r\n/g, '\n'); assert.ok(now.startsWith(was.replace(/\n$/, '')), f + ': only appended'); assert.match(now.slice(was.length), /demo/i, f + ': what was appended is the demo card'); }
   }
 } catch (e) { if (e.name === 'AssertionError') throw e; console.log('(no base commit ' + BASE + ' here: desktop CSS diff not checked)'); }
 

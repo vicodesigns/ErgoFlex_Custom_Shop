@@ -145,4 +145,4 @@ const far=await body(CHAIR);
   console.log(passed.map(p=>'ok  '+p).join('\n'));console.log(`\n${passed.length} checks passed. Screenshots: ${shots}`);
 }catch(error){
   console.log(passed.map(p=>'ok  '+p).join('\n'));console.error('\nFAILED:',error.message);await page.screenshot({path:path.join(shots,'failure.png')}).catch(()=>{});process.exitCode=1;
-}finally{await browser.close().catch(()=>{});server.kill();fs.rmSync(profile,{recursive:true,force:true});}
+}finally{await browser.close().catch(()=>{});server.kill();try{fs.rmSync(profile,{recursive:true,force:true});}catch{}}

@@ -535,11 +535,14 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   },true);
   // Arrow nudges: the picked line (typography dx / dy) or, with no line picked, the whole title (position).
   function nudge([dx,dy]){
+    if(!Number.isFinite(dx)||!Number.isFinite(dy))return;
     const t=item();if(!t)return;
     if(lineSel){const L=titleLines(t).find(l=>l.key===lineSel),base=LINES.find(l=>l.key===lineSel);
+      if(!L||!base)return;
       put(x=>withLine(x,lineSel,{dx:L.dx+dx,dy:L.y-base.y+dy}),{key:'nudge-line-'+t.id+lineSel,renderAll:false});syncLineFields();lastKey='';sync();status(`${LINE_LABEL[lineSel]} nudged ${dx?`${dx>0?'right':'left'} ${Math.abs(dx)}`:`${dy>0?'down':'up'} ${Math.abs(dy)}`} px (Shift ×10).`);return;}
-    const P=placeOf(t);put(x=>({...x,position:{x:r2(P.x+dx),y:r2(P.anchor[1]+dy)}}),{key:'nudge-title-'+t.id,renderAll:false});
-    for(const [n,v] of [['ft-x',P.x+dx],['ft-y',P.anchor[1]+dy]]){const el=panel.querySelector(`[name=${n}]`);if(el)el.value=String(r2(v));}status(`Title nudged to ${r2(P.x+dx)}, ${r2(P.anchor[1]+dy)} (Shift ×10).`);
+    const P=placeOf(t),px=Number.isFinite(P?.x)?P.x:0,py=Number.isFinite(P?.anchor?.[1])?P.anchor[1]:0;
+    put(x=>({...x,position:{x:r2(px+dx),y:r2(py+dy)}}),{key:'nudge-title-'+t.id,renderAll:false});
+    for(const [n,v] of [['ft-x',px+dx],['ft-y',py+dy]]){const el=panel.querySelector(`[name=${n}]`);if(el)el.value=String(r2(v));}status(`Title nudged to ${r2(px+dx)}, ${r2(py+dy)} (Shift ×10).`);
   }
   function saveShapeKeyed(paths){put(t=>{t.shadow={...t.shadow,paths:structuredClone(paths)};return t;},{key:'ft-nudge'+selected,renderAll:false,message:'Nudged (Shift ×10).'});}
   addEventListener('resize',()=>{lastKey='';sync();});

@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import * as THREE from 'three';
 import { RoomPeople } from '../room-people.mjs';
 import { PersonRig, DeskActor, simulateDesk, settleDesk, stepDesk, deskDescription, deskWants, solveDesk, solveStill, solveChange, walkPlan, solveWalk, STAND_UP, solveTread, shoeFit } from '../room-people-motion.mjs';
@@ -149,7 +149,7 @@ for (const who of characters) {
     if (old) {
         const file = path.join(root, `.old-motion-${process.pid}.mjs`); fs.writeFileSync(file, old);
         try {
-            const O = await import(file + '?old');
+            const O = await import(pathToFileURL(file).href + '?old');
             const oldRig = (who, flags) => Object.assign(new O.PersonRig(JSON.parse(fs.readFileSync(path.join(root, 'assets/props/people-rigs', who + '.json'), 'utf8'))), flags);
             const before = (flags, poseList) => sweep(who => oldRig(who, flags), O.solveStill, poseList);
             assert.deepEqual(sweep(who => fresh(who, { castDetail: true, editorCast: true }), solveStill, nonTypingPoses), before({ coastCast: true }, nonTypingPoses), 'media lab Classic non-typing poses: bone for bone what they were');

@@ -22,6 +22,10 @@
 #director-appbar .ab-pop button.ab-pill[aria-pressed="true"]{background:var(--df-accent,#5cd3f6);border-color:var(--df-accent,#5cd3f6);color:#04121a}
 #director-panel .render-quality-note{margin-top:2px;font-size:11px;opacity:.85}
 
+/* Missing inspector tab icons for Tray and Graphics (prevents solid grey square fallback) */
+[data-inspector-tab=tray]{--icon:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='2.5' y='6.5' width='19' height='11' rx='2'/><path d='M6 10.5h.01M9.5 10.5h.01M13 10.5h.01M16.5 10.5h.01M7.5 14h9'/></svg>")}
+[data-inspector-tab=graphics]{--icon:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='3' y='4.5' width='18' height='15' rx='2'/><circle cx='8.5' cy='9.5' r='1.5'/><path d='M21 15.5l-5-4.5-6 6-3-2.5L3 18'/></svg>")}
+
 /* Grouped inspector tabs (film chapters in Calm Shell): 4 aligned domain rows, every tab stays 1-click clickable */
 #director-panel .inspector-tabs.inspector-tabs-grouped{display:flex;flex-direction:column;gap:3px;padding:5px 6px}
 #director-panel .inspector-tabs.inspector-tabs-grouped .inspector-tab-row{display:grid;grid-template-columns:42px minmax(0,1fr);align-items:center;gap:4px;padding:2px 0 2px 6px;border-left:2px solid color-mix(in srgb,var(--tg-accent,#5cd3f6) 40%,transparent);border-radius:3px;transition:border-color .15s ease,background .15s ease}

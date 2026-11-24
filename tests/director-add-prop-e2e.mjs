@@ -223,4 +223,4 @@ try{
   console.log(`Director add prop e2e: ${passed.length} checks passed. Screens in ${shots}`);
 }catch(error){
   console.log(passed.map(p=>'ok  '+p).join('\n'));await page.screenshot({path:path.join(shots,'add-prop-failure.png')}).catch(()=>{});console.error('FAILED:',error.message,'\nstatus:',await status(),'\nerrors:',errors.join(' | '));process.exitCode=1;
-}finally{await browser.close().catch(()=>{});server.kill();fs.rmSync(profile,{recursive:true,force:true});if(!process.env.SHOTS)fs.rmSync(tmp,{recursive:true,force:true});else fs.rmSync(downloads,{recursive:true,force:true});}
+}finally{await browser.close().catch(()=>{});server.kill();try{fs.rmSync(profile,{recursive:true,force:true});}catch{}if(!process.env.SHOTS)try{fs.rmSync(tmp,{recursive:true,force:true});}catch{}else try{fs.rmSync(downloads,{recursive:true,force:true});}catch{}}

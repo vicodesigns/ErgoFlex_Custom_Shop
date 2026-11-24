@@ -237,5 +237,42 @@ export function refineRoomSurfaces(room) {
         if (!mat.map && detail.color) mat.map = detail.color;
         mat.needsUpdate = true;
     });
+    // Guard against shared/instanced/array-material meshes that share a refined material without uv1.
+    const detachCache = new Map();
+    const detachMat = m => {
+        if (!detachCache.has(m)) {
+            const c = m.clone();
+            c.bumpMap = null; c.bumpScale = 0; c.normalMap = null;
+            if (c.roughnessMap && c.roughnessMap.channel === 1) c.roughnessMap = null;
+            if (c.map && c.map.channel === 1) c.map = null;
+            if (c.userData) { c.userData = { ...c.userData }; delete c.userData.roomSurface; }
+            c.needsUpdate = true;
+            detachCache.set(m, c);
+        }
+        return detachCache.get(m);
+    };
+    root.traverse(obj => {
+        if (!obj.isMesh || obj.geometry?.attributes?.uv1) return;
+        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+        const hit = mats.find(m => materials.has(m));
+        if (!hit) return;
+        const geometry = obj.geometry, positions = geometry?.attributes?.position, normals = geometry?.attributes?.normal;
+        if (!obj.isInstancedMesh && !obj.userData.sharedProp && positions && normals) {
+            const spec = SURFACES[hit.userData?.roomSurface] || SURFACES.plaster;
+            const transform = inverse.clone().multiply(obj.matrixWorld), normalTransform = new THREE.Matrix3().getNormalMatrix(transform);
+            const uv = new Float32Array(positions.count * 2), p = new THREE.Vector3(), n = new THREE.Vector3();
+            for (let i = 0; i < positions.count; i++) {
+                p.fromBufferAttribute(positions, i).applyMatrix4(transform); n.fromBufferAttribute(normals, i).applyMatrix3(normalTransform);
+                const ax = Math.abs(n.x), ay = Math.abs(n.y), az = Math.abs(n.z);
+                const pair = ay >= ax && ay >= az ? [p.x, p.z] : ax >= az ? [p.z, p.y] : [p.x, p.y];
+                uv[i * 2] = pair[0] / spec.period; uv[i * 2 + 1] = pair[1] / spec.period;
+            }
+            geometry.setAttribute('uv1', new THREE.BufferAttribute(uv, 2)); meshes++;
+        } else if (Array.isArray(obj.material)) {
+            obj.material = obj.material.map(m => materials.has(m) ? detachMat(m) : m);
+        } else {
+            obj.material = detachMat(obj.material);
+        }
+    });
     root.userData.surfaceDetail = { meshes, materials: materials.size, types: [...maps.keys()], textureSize: 256, easedFurnitureEdges: softened.size };
 }

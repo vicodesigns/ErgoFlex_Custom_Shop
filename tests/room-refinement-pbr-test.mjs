@@ -20,7 +20,27 @@ const authoredMat = new THREE.MeshStandardMaterial({ color: 0xffffff, normalMap:
 authoredMat.userData.roomSurface = 'wood';
 root.add(new THREE.Mesh(new THREE.BoxGeometry(100, 100, 100), authoredMat));
 
+// Shared material on an InstancedMesh and on a sharedProp mesh must never end up with bumpMap/normalMap without uv1
+const sharedPropMesh = new THREE.Mesh(new THREE.BoxGeometry(80, 80, 80), mats[0]);
+sharedPropMesh.userData.sharedProp = true;
+root.add(sharedPropMesh);
+const instMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(40, 40, 40), mats[1], 3);
+instMesh.userData.sharedProp = true;
+root.add(instMesh);
+const arrayMatMesh = new THREE.Mesh(new THREE.BoxGeometry(90, 90, 90), [mats[2], mats[3]]);
+root.add(arrayMatMesh);
+
 refineRoomSurfaces({ id: 'home', root, roomLayout: { id: 'house' } });
+
+// Verify NO mesh in the room has a roomSurface material with uv1 bumpMap/normalMap while lacking uv1
+root.traverse(o => {
+  if (!o.isMesh) return;
+  for (const m of [].concat(o.material)) {
+    if (m?.userData?.roomSurface && ((m.bumpMap && m.bumpMap.channel === 1) || (m.normalMap && m.normalMap.channel === 1))) {
+      assert.ok(o.geometry.attributes.uv1, `mesh ${o.name || o.type} sharing refined material must have uv1`);
+    }
+  }
+});
 
 assert.equal(root.userData.surfaceDetail.textureSize, 256);
 assert.equal(root.userData.surfaceDetail.materials, 7);
