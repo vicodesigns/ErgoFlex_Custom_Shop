@@ -46,3 +46,8 @@
   #director-panel .inspector-tabs.inspector-tabs-grouped button[data-inspector-tab]{min-height:25px;padding:1px 3px;font-size:11px;gap:3px}
   #director-panel .inspector-tabs.inspector-tabs-grouped button[data-inspector-tab]::before{width:12px;height:12px}
 }
+
+/* Multi-line title textareas (Enter inserts a new line in Eyebrow, Headline, and Supporting text) */
+#director-panel textarea[name="ft-eyebrow"],
+#director-panel textarea[name="ft-title"],
+#director-panel textarea[name="ft-detail"]{resize:vertical;line-height:1.35;white-space:pre-wrap;min-height:30px}

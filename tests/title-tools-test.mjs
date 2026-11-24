@@ -7,7 +7,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {newTitle,duplicateTitle,newTitleId,spanAt,cleanFilmTitles,chapterTitles,srcEntry,DEFAULT_COPY,NEW_TITLE_SECONDS,MAX_TITLES,titleLines,lineGaps,withGap,GAPS,cleanTypography,fittedBox,fittedPaths,LINES,splitTitle,pasteTitles,shiftTitles,withLine} from '../experience/film-titles.mjs';
+import {newTitle,duplicateTitle,newTitleId,spanAt,cleanFilmTitles,chapterTitles,srcEntry,DEFAULT_COPY,NEW_TITLE_SECONDS,MAX_TITLES,titleLines,expandedLines,LINE_LEAD,sublinesOf,lineGaps,withGap,GAPS,cleanTypography,fittedBox,fittedPaths,textBounds,LINES,splitTitle,pasteTitles,shiftTitles,withLine} from '../experience/film-titles.mjs';
 import {cleanShot,cleanCut} from '../experience/cuts.mjs';
 import {filmRenderShot} from '../experience/film-render.mjs';
 import {liveFilmShot} from '../experience/film-chapters.mjs';
@@ -144,4 +144,50 @@ try{
   assert.deepEqual(withLine(t,'detail',{dx:12.345,dy:-7}).typography,{detail:{dx:12.35,dy:-7}});
   assert.equal(withLine({...t,typography:{detail:{dx:5}}},'detail',{dx:0,dy:0}).typography,undefined,'back at its place: nothing stored');
 }
-console.log('Title tools: + Title / Duplicate / Delete (ids, span inside the chapter, copy keeps layout + shadow), draft and Export cut keep the list ([] included), filmTitles never in the render shot, import adds / removes titles-src entries (other chapters untouched), titles.ass + --chapter-titles burn show the new title, delete-all import verified; M2 per-line offsets / line spacing in the model, fitted boxes and the burn (defaults unchanged); M3 split / paste / group move / line move.');
+
+// ---- Multi-line titles (Enter -> '\n' in Eyebrow, Headline, Supporting text) ----
+{
+  const ml=cleanFilmTitles([{id:'wellness-0',rel_in:2,rel_out:8,eyebrow:'WELLNESS EVERYDAY',title:'Build movement\r\ninto your routine.',detail:'Pause. Stretch.\nBreathe. Reset.'}],20)[0];
+  assert.equal(ml.title,'Build movement\ninto your routine.','CRLF normalized to LF');
+  assert.deepEqual(sublinesOf(ml.title),['Build movement','into your routine.']);
+  const exp=expandedLines(ml);
+  assert.deepEqual(exp.map(L=>[L.key,L.text]),[
+    ['eyebrow','WELLNESS EVERYDAY'],
+    ['title','Build movement'],
+    ['title','into your routine.'],
+    ['detail','Pause. Stretch.'],
+    ['detail','Breathe. Reset.'],
+  ]);
+  const titleStep=Math.round(86*LINE_LEAD*100)/100,detailStep=Math.round(40*LINE_LEAD*100)/100;
+  assert.equal(exp[0].y,Math.round((812-titleStep)*100)/100,'eyebrow shifts up by extra headline height');
+  assert.equal(exp[1].y,Math.round((912-titleStep)*100)/100,'top headline line sits above baseline');
+  assert.equal(exp[2].y,912,'bottom headline line stays anchored at 912');
+  assert.equal(exp[3].y,970,'first supporting line stays at 970');
+  assert.equal(exp[4].y,Math.round((970+detailStep)*100)/100,'second supporting line stacks downward');
+  const m=(L,s)=>s.length*L.size*.5;
+  assert.equal(fittedPaths(ml,m).length,5,'each non-empty sub-line gets its own fitted shadow box');
+  const tb=textBounds(ml,m);
+  assert.ok(Math.abs(tb.y0-(exp[0].y-28-912))<1e-6,'textBounds top includes shifted eyebrow');
+  assert.ok(Math.abs(tb.y1-(exp[4].y-912))<1e-6,'textBounds bottom includes second supporting line');
+  // Inspector markup uses <textarea> for all three fields so Enter inserts a line break
+  const editorSrc=fs.readFileSync(path.join(root,'experience/title-editor.mjs'),'utf8');
+  assert.equal((editorSrc.match(/<textarea name="ft-eyebrow"/g)||[]).length,2,'ft-eyebrow textarea in Chapter & Title tabs');
+  assert.equal((editorSrc.match(/<textarea name="ft-title"/g)||[]).length,2,'ft-title textarea in Chapter & Title tabs');
+  assert.equal((editorSrc.match(/<textarea name="ft-detail"/g)||[]).length,2,'ft-detail textarea in Chapter & Title tabs');
+  // finish-intro.py emits matching per-subline Dialogues with zero raw newlines inside ASS lines
+  const H3=fs.mkdtempSync(path.join(os.tmpdir(),'ergoflex-title-multiline-'));
+  try{
+    const edl={fps:30,dissolve:1.5,total:20,chapters:[{index:1,id:'wellness',duration:20,start:0,end:20}],transitions:[]};
+    fs.writeFileSync(path.join(H3,'edl.json'),JSON.stringify(edl));
+    fs.writeFileSync(path.join(H3,'titles-src.json'),JSON.stringify({titles:[{chapter:'wellness',rel_in:2,rel_out:8,eyebrow:'WELLNESS EVERYDAY',title:'Build movement\ninto your routine.',detail:'Pause. Stretch.\nBreathe. Reset.'}],cta:{chapter:'wellness',rel_in:18,rel_out:null,text:''},logo:{chapter:'wellness',rel_in:18}}));
+    py(path.join(X,'finish-intro.py'),H3,'--titles-only');
+    const lines=fs.readFileSync(path.join(H3,'final','titles.ass'),'utf8').split('\n').filter(l=>/,(Box)?(Eyebrow|Title|Detail),/.test(l));
+    assert.equal(lines.length,10,'5 text dialogues + 5 fitted box dialogues');
+    assert.ok(lines.find(l=>/,Eyebrow,/.test(l)&&l.includes(`\\move(128,${Math.round((812-titleStep+10)*100)/100},128,${Math.round((812-titleStep)*100)/100},0,900)`)&&l.endsWith('WELLNESS EVERYDAY')),'ASS eyebrow shifts up identically');
+    assert.ok(lines.find(l=>/,Title,/.test(l)&&l.includes(`\\move(128,${Math.round((912-titleStep+14)*100)/100},128,${Math.round((912-titleStep)*100)/100},0,900)`)&&l.endsWith('Build movement')),'ASS top headline line');
+    assert.ok(lines.find(l=>/,Title,/.test(l)&&l.includes('\\move(128,926,128,912,0,900)')&&l.endsWith('into your routine.')),'ASS bottom headline line');
+    assert.ok(lines.find(l=>/,Detail,/.test(l)&&l.includes('\\move(128,980,128,970,0,900)')&&l.endsWith('Pause. Stretch.')),'ASS first supporting line');
+    assert.ok(lines.find(l=>/,Detail,/.test(l)&&l.includes(`\\move(128,${Math.round((970+detailStep+10)*100)/100},128,${Math.round((970+detailStep)*100)/100},0,900)`)&&l.endsWith('Breathe. Reset.')),'ASS second supporting line');
+  }finally{fs.rmSync(H3,{recursive:true,force:true});}
+}
+console.log('Title tools: + Title / Duplicate / Delete (ids, span inside the chapter, copy keeps layout + shadow), draft and Export cut keep the list ([] included), filmTitles never in the render shot, import adds / removes titles-src entries (other chapters untouched), titles.ass + --chapter-titles burn show the new title, delete-all import verified; M2 per-line offsets / line spacing in the model, fitted boxes and the burn (defaults unchanged); M3 split / paste / group move / line move; multi-line Enter line breaks verified.');

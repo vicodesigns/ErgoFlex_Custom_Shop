@@ -1,4 +1,4 @@
-import {titleLines,LINES,ANCHOR,FILM_W,FONT_REAL,DESC,BOX_BLUR,BOX_OPACITY,BLUR_SIGMA,chapterTitles,cutRule,timingNotes,cleanFilmTitles,shadowOf,fittedPaths,textBounds,lineState,pathTiming,restTime,svgPath,bounds,nearestOnPath,insertPoint,deletePoint,toggleSmooth,moveHandle,movePoint,transformPaths,pointCount,placeOf,newTitle,duplicateTitle,MAX_TITLES,NEW_TITLE_SECONDS,lineGaps,withGap,GAPS,SKEW_ITALIC,cleanTypography,FALLBACK,ASC,splitTitle,pasteTitles,shiftTitles,withLine,newTitleId} from './film-titles.mjs';
+import {titleLines,expandedLines,LINES,ANCHOR,FILM_W,FONT_REAL,DESC,BOX_BLUR,BOX_OPACITY,BLUR_SIGMA,chapterTitles,cutRule,timingNotes,cleanFilmTitles,shadowOf,fittedPaths,textBounds,lineState,pathTiming,restTime,svgPath,bounds,nearestOnPath,insertPoint,deletePoint,toggleSmooth,moveHandle,movePoint,transformPaths,pointCount,placeOf,newTitle,duplicateTitle,MAX_TITLES,NEW_TITLE_SECONDS,lineGaps,withGap,GAPS,SKEW_ITALIC,cleanTypography,FALLBACK,ASC,splitTitle,pasteTitles,shiftTitles,withLine,newTitleId} from './film-titles.mjs';
 import {stackRows,rowVar} from './lane-rows.mjs';
 // Film titles in Director Mode: the TITLES lane (one block per title card: drag to move, edges to trim), the Title
 // inspector (copy, timing, shadow) and the title overlay in the 16:9 frame, drawn as finish-intro.py burns it in.
@@ -7,6 +7,8 @@ import {stackRows,rowVar} from './lane-rows.mjs';
 // point for smooth / sharp, click an edge to add a point, Delete removes it, drag inside a shape to move it,
 // the frame's corner and edge squares scale the selection (Shift keeps proportions, Alt scales from the centre).
 const escape=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const oneLine=v=>String(v??'').replace(/\s*\n\s*/g,' ').trim();
+const lineRows=(v,min=1)=>Math.max(min,Math.min(5,String(v??'').split('\n').length));
 const r2=v=>Number((+v).toFixed(2));
 const FONT_URL=new URL('../app-reference/assets/google_fonts/',import.meta.url).href;
 const FAMILY={700:'EF Film Poppins Bold',600:'EF Film Poppins SemiBold',500:'EF Film Poppins Medium',400:'EF Film Poppins'};
@@ -88,7 +90,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   function deleteSelected(){
     if(picked().length>1){const gone=new Set(picked().map(t=>t.id)),rest=titles().filter(x=>!gone.has(x.id));multi.clear();putList(rest,{});render();status(`${gone.size} titles deleted. Undo brings them back.`);return;}
     const t=item();if(!t)throw Error('Select a title to delete.');const rest=titles().filter(x=>x.id!==t.id);
-    putList(rest,{});render();status(`Title “${t.title||t.eyebrow||'untitled'}” deleted.${rest.length?'':' This chapter now has no titles.'} Undo brings it back.`);
+    putList(rest,{});render();status(`Title “${oneLine(t.title||t.eyebrow)||'untitled'}” deleted.${rest.length?'':' This chapter now has no titles.'} Undo brings it back.`);
   }
   function splitSelected(){
     const s=shot(),t=item();if(!t)throw Error('Select a title to split.');const at=time()*s.seconds,list=titles();
@@ -136,11 +138,11 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     const zone=R?.cutDone!==undefined?`<span class="title-cut-zone" style="width:${Math.min(100,R.cutDone/s*100)}%" title="The transition from the previous chapter (done at ${r2(R.cutDone)} s)"></span>`:'';
     const mark=R?.earliest!==undefined?`<span class="title-rule" data-title-rule style="left:${R.earliest/s*100}%" title="1.5 s after the cut (${r2(R.earliest)} s): the film's titles come in from here"><i>1.5 s after cut</i></span>`:'';
     const layers=stackRows(list.map(t=>({id:t.id,start:t.rel_in,end:t.rel_out}))),blocks=list.map(t=>{const notes=timingNotes(t,R),early=R?.earliest!==undefined&&t.rel_in<R.earliest-1e-6,custom=!!t.shadow?.paths;
-      return `<button class="desk-clip title-clip ${selected===t.id||multi.has(t.id)?'selected':''} ${early?'early':''}" data-title-clip="${t.id}" style="${rowVar(layers,t.id)}left:${t.rel_in/s*100}%;width:${(t.rel_out-t.rel_in)/s*100}%" aria-pressed="${selected===t.id||multi.has(t.id)}" aria-label="Title ${escape(t.title)}, ${r2(t.rel_in)} to ${r2(t.rel_out)} seconds" title="${escape([t.eyebrow,t.title].filter(Boolean).join(' · '))} · ${r2(t.rel_in)}–${r2(t.rel_out)}s${custom?' · custom shadow':''}${notes.length?' · '+escape(notes.join(' ')):''} (drag to move, edges to trim)"><span class="clip-resize" data-resize="start" title="Trim the title's in point"></span><strong>${t.eyebrow?`<em>${escape(t.eyebrow)}</em> `:''}${escape(t.title||'(no headline)')}</strong><small>${r2(t.rel_in)}–${r2(t.rel_out)}s${custom?' · custom shadow':''}${early?' · before the 1.5 s mark':''}</small><span class="clip-resize" data-resize="end" title="Trim the title's out point"></span></button>`;}).join('');
+      return `<button class="desk-clip title-clip ${selected===t.id||multi.has(t.id)?'selected':''} ${early?'early':''}" data-title-clip="${t.id}" style="${rowVar(layers,t.id)}left:${t.rel_in/s*100}%;width:${(t.rel_out-t.rel_in)/s*100}%" aria-pressed="${selected===t.id||multi.has(t.id)}" aria-label="Title ${escape(oneLine(t.title))}, ${r2(t.rel_in)} to ${r2(t.rel_out)} seconds" title="${escape([oneLine(t.eyebrow),oneLine(t.title)].filter(Boolean).join(' · '))} · ${r2(t.rel_in)}–${r2(t.rel_out)}s${custom?' · custom shadow':''}${notes.length?' · '+escape(notes.join(' ')):''} (drag to move, edges to trim)"><span class="clip-resize" data-resize="start" title="Trim the title's in point"></span><strong>${t.eyebrow?`<em>${escape(oneLine(t.eyebrow))}</em> `:''}${escape(oneLine(t.title)||'(no headline)')}</strong><small>${r2(t.rel_in)}–${r2(t.rel_out)}s${custom?' · custom shadow':''}${early?' · before the 1.5 s mark':''}</small><span class="clip-resize" data-resize="end" title="Trim the title's out point"></span></button>`;}).join('');
     return `<div class="desk-lane-row ${layers.count>1?'layered':''}" data-lane-color="titles" style="--rows:${layers.count}"><span class="desk-lane-label" title="The film's title cards (titles-src.json): drag a block to move it, its edges to trim, click it to edit the copy and the shadow">Titles${edited()?' <small>edited</small>':''} <button class="title-add" data-title-add type="button" title="Add a title at the playhead (placeholder copy, ${NEW_TITLE_SECONDS} s)" aria-label="Add a title at the playhead" ${list.length>=MAX_TITLES?'disabled':''}>+ Title</button></span><div class="desk-lane title-lane" data-title-lane role="group" aria-label="Film titles timeline"><div class="desk-lane-line"></div>${zone}${mark}${blocks}<div class="camera-track-playhead" data-shared-playhead style="left:${time()*100}%"></div></div></div>`;
   }
   function snapTargets(exclude){
-    const out=[];for(const t of titles())if(t.id!==exclude)out.push([t.rel_in,`${t.title||'title'} in`],[t.rel_out,`${t.title||'title'} out`]);
+    const out=[];for(const t of titles())if(t.id!==exclude)out.push([t.rel_in,`${oneLine(t.title)||'title'} in`],[t.rel_out,`${oneLine(t.title)||'title'} out`]);
     const R=rule();if(R?.earliest!==undefined)out.push([R.earliest,'the 1.5 s-after-cut mark']);if(R?.cutDone!==undefined)out.push([R.cutDone,'the end of the transition']);return out;
   }
   // Drag a block (move) or an edge (trim); Magnet / snap / Alt like the other lanes; one undo step per drag.
@@ -213,17 +215,17 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
       putTiming(t.id,Math.round((t.rel_in+dd)*1000)/1000,Math.round((t.rel_out+dd)*1000)/1000,`Title nudged to ${r2(t.rel_in+dd)}–${r2(t.rel_out+dd)} s.`);timeline.querySelector(`[data-title-clip="${t.id}"]`)?.focus();}catch(error){status(error.message,true);}
   });
   // ---- inspector --------------------------------------------------------------------------------------------
-  function header(){const t=item();if(!t)return '';return `<div class="sel-row"><span class="sel-icon">T</span><span class="sel-name"><b>${escape('Title · '+(t.title||t.eyebrow||'untitled'))}</b><small>${r2(t.rel_in)}–${r2(t.rel_out)} s${t.shadow?.paths?' · custom shadow':''}</small></span><button data-action="sel-clear" title="Deselect (Esc)" aria-label="Deselect">×</button></div>`;}
+  function header(){const t=item();if(!t)return '';return `<div class="sel-row"><span class="sel-icon">T</span><span class="sel-name"><b>${escape('Title · '+(oneLine(t.title||t.eyebrow)||'untitled'))}</b><small>${r2(t.rel_in)}–${r2(t.rel_out)} s${t.shadow?.paths?' · custom shadow':''}</small></span><button data-action="sel-clear" title="Deselect (Esc)" aria-label="Deselect">×</button></div>`;}
   function list(){
-    return titles().map((t,i)=>`<button class="title-pick ${selected===t.id?'selected':''}" data-title-action="pick" data-title-id="${t.id}" title="Edit this title"><b>${i+1}</b><span>${t.eyebrow?`<em>${escape(t.eyebrow)}</em> · `:''}${escape(t.title||'(no headline)')}</span><small>${r2(t.rel_in)}–${r2(t.rel_out)} s</small></button>`).join('');
+    return titles().map((t,i)=>`<button class="title-pick ${selected===t.id?'selected':''}" data-title-action="pick" data-title-id="${t.id}" title="Edit this title"><b>${i+1}</b><span>${t.eyebrow?`<em>${escape(oneLine(t.eyebrow))}</em> · `:''}${escape(oneLine(t.title)||'(no headline)')}</span><small>${r2(t.rel_in)}–${r2(t.rel_out)} s</small></button>`).join('');
   }
   // The Chapter tab's Headline / Supporting text: the chapter's first film title (the card the film shows).
   function chapterFields(){
     if(!has()||!titles().length)return null;const all=titles(),t=all[0];
-    return `<div class="film-title-fields"><p class="director-hint">${all.length>1?`The film shows ${all.length} titles in this chapter; these fields are title 1. Pick a title below (or on the Titles lane) for the others, its timing and its shadow.`:'The film title of this chapter (titles-src.json). Its timing and shadow: select it on the Titles lane.'}</p>
-      <label>Eyebrow<input name="ft-eyebrow" data-title-id="${t.id}" maxlength="60" value="${escape(t.eyebrow)}"></label>
-      <label>Headline<input name="ft-title" data-title-id="${t.id}" maxlength="140" value="${escape(t.title)}"></label>
-      <label>Supporting text<textarea name="ft-detail" data-title-id="${t.id}" rows="2" maxlength="260">${escape(t.detail)}</textarea></label>
+    return `<div class="film-title-fields"><p class="director-hint">${all.length>1?`The film shows ${all.length} titles in this chapter; these fields are title 1. Pick a title below (or on the Titles lane) for the others, its timing and its shadow.`:'The film title of this chapter (titles-src.json). Press Enter inside any field for a second line.'}</p>
+      <label>Eyebrow<textarea name="ft-eyebrow" data-title-id="${t.id}" rows="${lineRows(t.eyebrow)}" maxlength="60" placeholder="Press Enter for a new line">${escape(t.eyebrow)}</textarea></label>
+      <label>Headline<textarea name="ft-title" data-title-id="${t.id}" rows="${lineRows(t.title)}" maxlength="140" placeholder="Press Enter for a new line">${escape(t.title)}</textarea></label>
+      <label>Supporting text<textarea name="ft-detail" data-title-id="${t.id}" rows="${lineRows(t.detail,2)}" maxlength="260" placeholder="Press Enter for a new line">${escape(t.detail)}</textarea></label>
       <div class="title-list">${list()}</div></div>`;
   }
   function typeControls(t,key){const L=titleLines(t).find(l=>l.key===key);return `<div class="director-grid"><label>Font<select data-type="weight" data-line="${key}">${[[400,'Regular'],[500,'Medium'],[600,'Semibold'],[700,'Bold']].map(([w,n])=>`<option value="${w}" ${w===L.weight?'selected':''}>Poppins ${n}</option>`).join('')}</select></label><label>Font size<input type="number" min="8" max="300" data-type="size" data-line="${key}" value="${L.size}"></label><label>Letter spacing<input type="number" min="-10" max="40" step=".1" data-type="spacing" data-line="${key}" value="${L.spacing}"></label><label>Text color<input type="color" data-type="color" data-line="${key}" value="${L.color}"></label><label>Style<select data-type="italic" data-line="${key}"><option value="false" ${!L.italic?'selected':''}>Normal</option><option value="true" ${L.italic?'selected':''}>Italic</option></select></label><label>Move right (px)<input type="number" step="1" data-type="dx" data-line="${key}" value="${L.dx}" title="Moves this line alone, in film pixels (0 = the film's place)"></label><label>Move down (px)<input type="number" step="1" data-type="dy" data-line="${key}" value="${r2(L.y-LINES.find(l=>l.key===key).y)}" title="Moves this line alone, in film pixels (0 = the film's place)"></label></div>`;}
@@ -256,9 +258,9 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     const short=S.custom&&tb&&bb&&(tb.x1>bb.x1+2||tb.x0<bb.x0-2);
     return `<div data-reveal="title"><h3>Film title ${n} <span class="inspector-subtitle">of ${titles().length} in this chapter</span></h3><div class="title-list">${titles().length>1?list():''}</div>
       <div class="director-actions title-list-actions">${addBtn}<button data-title-action="duplicate" ${full?'disabled':''} title="A copy of this title (copy, layout, shadow) right after it (Ctrl+D)">Duplicate</button><button data-title-action="delete" title="Delete this title (Delete); Undo brings it back">Delete</button><button data-title-action="split" title="Split this title at the playhead into two (Ctrl/Cmd+K)">Split at playhead</button><button data-title-action="copy" title="Copy this title (Ctrl/Cmd+C)">Copy</button><button data-title-action="paste" ${clipboard?.length?'':'disabled'} title="Paste the copied title(s) at the playhead (Ctrl/Cmd+V)">Paste</button></div>${lineSel?`<p class="director-hint" data-line-hint>${LINE_LABEL[lineSel]} selected in the frame: drag it to move this line alone (it snaps to the other lines, the film's place and the safe margins; Alt: no snapping); arrows nudge 1 px (Shift 10). Esc goes back to the whole title.</p>`:''}
-      <label>Title scale (%)<input name="ft-scale" type="number" min="10" max="500" step="1" value="${Math.round((t.scale??1)*100)}"></label><div class="director-grid"><label>X (film pixels)<input name="ft-x" type="number" step="1" value="${placeOf(t).x}"></label><label>Y (headline baseline)<input name="ft-y" type="number" step="1" value="${placeOf(t).anchor[1]}"></label></div><div class="director-actions"><button data-title-action="copy-layout">Copy layout</button><button data-title-action="paste-layout" ${copiedLayout?'':'disabled'}>Paste layout</button></div>${spacingControls(t)}<details open><summary>Text layers</summary><details open><summary>Eyebrow</summary><label>Eyebrow<input name="ft-eyebrow" maxlength="60" value="${escape(t.eyebrow)}"></label>${typeControls(t,'eyebrow')}</details>
-      <details open><summary>Headline</summary><label>Headline<input name="ft-title" maxlength="140" value="${escape(t.title)}"></label>${typeControls(t,'title')}</details>
-      <details open><summary>Supporting text</summary><label>Supporting text<textarea name="ft-detail" rows="2" maxlength="260">${escape(t.detail)}</textarea></label>${typeControls(t,'detail')}</details>
+      <label>Title scale (%)<input name="ft-scale" type="number" min="10" max="500" step="1" value="${Math.round((t.scale??1)*100)}"></label><div class="director-grid"><label>X (film pixels)<input name="ft-x" type="number" step="1" value="${placeOf(t).x}"></label><label>Y (headline baseline)<input name="ft-y" type="number" step="1" value="${placeOf(t).anchor[1]}"></label></div><div class="director-actions"><button data-title-action="copy-layout">Copy layout</button><button data-title-action="paste-layout" ${copiedLayout?'':'disabled'}>Paste layout</button></div>${spacingControls(t)}<details open><summary>Text layers</summary><p class="director-hint">Press Enter inside Eyebrow, Headline, or Supporting text to break onto another line.</p><details open><summary>Eyebrow</summary><label>Eyebrow<textarea name="ft-eyebrow" rows="${lineRows(t.eyebrow)}" maxlength="60" placeholder="Press Enter for a new line">${escape(t.eyebrow)}</textarea></label>${typeControls(t,'eyebrow')}</details>
+      <details open><summary>Headline</summary><label>Headline<textarea name="ft-title" rows="${lineRows(t.title)}" maxlength="140" placeholder="Press Enter for a new line">${escape(t.title)}</textarea></label>${typeControls(t,'title')}</details>
+      <details open><summary>Supporting text</summary><label>Supporting text<textarea name="ft-detail" rows="${lineRows(t.detail,2)}" maxlength="260" placeholder="Press Enter for a new line">${escape(t.detail)}</textarea></label>${typeControls(t,'detail')}</details>
       </details><div class="director-grid"><label>Comes in (seconds)<input name="ft-in" type="number" min="0" max="${shot().seconds}" step=".05" value="${r2(t.rel_in)}"></label><label>Goes out (seconds)<input name="ft-out" type="number" min="0" max="${shot().seconds}" step=".05" value="${r2(t.rel_out)}"></label></div>${nudgeHtml()}
       <p class="director-hint title-rule-note">${R?.earliest!==undefined?`Film rule: titles come in at least 1.5 s after the cut, here from <b>${r2(R.earliest)} s</b>.`:'This chapter opens the film: no cut before it.'}${t.timed?' Your timing is kept as you set it.':''}</p>
       ${notes.map(x=>`<p class="title-warning" role="note">${escape(x)} The film keeps your timing.</p>`).join('')}
@@ -278,7 +280,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     const el=event.target,name=el.name;if(!name?.startsWith('ft-'))return;event.stopPropagation();
     try{
       const id=el.dataset.titleId||selected;if(!id)return;const prev=selected;selected=id;
-      if(['ft-eyebrow','ft-title','ft-detail'].includes(name)){const k=name.slice(3);put(t=>{t[k]=el.value;return t;},{key:name+id,renderAll:false});selected=prev;renderTimeline();return;}
+      if(['ft-eyebrow','ft-title','ft-detail'].includes(name)){const k=name.slice(3);if(el.tagName==='TEXTAREA')el.rows=lineRows(el.value,name==='ft-detail'?2:1);put(t=>{t[k]=el.value;return t;},{key:name+id,renderAll:false});selected=prev;renderTimeline();return;}
       if(name==='ft-scale'){const v=Number(el.value);if(el.value===''||!Number.isFinite(v))return;put(t=>({...t,scale:v/100}),{key:name+id,renderAll:false});return;}
       if(name==='ft-x'||name==='ft-y'){const v=Number(el.value);if(el.value===''||!Number.isFinite(v))return;put(t=>{const P=placeOf(t);t.position={x:P.x,y:P.anchor[1],[name==='ft-x'?'x':'y']:v};return t;},{key:name+id,renderAll:false});return;}
       if(name==='ft-blur'||name==='ft-blur-n'){const v=Number(el.value);if(el.value===''||!Number.isFinite(v))return;put(t=>{t.shadow={...t.shadow,blur:Math.max(0,Math.min(80,v))};return t;},{key:'ft-blur'+id,renderAll:false});const o=panel.querySelector('[data-title-blur]');if(o)o.textContent=String(v);const twin=panel.querySelector(`[name="${name==='ft-blur'?'ft-blur-n':'ft-blur'}"]`);if(twin)twin.value=String(v);status(`Shadow softness ${v} (the film's is ${BOX_BLUR}).`);return;}
@@ -352,8 +354,8 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     if(S.blur>0)defs.push(blurFilter('tb-'+t.id,S.blur));
     S.paths.forEach(p=>{const [delay,rise]=pathTiming(p),st=rest?{on:true,alpha:1,dy:0}:lineState(t,delay,rise,at);if(!st.on||st.alpha<=0)return;
       parts.push(`<path d="${svgPath(p,P.anchor)}" fill="#000" fill-opacity="${(S.opacity*st.alpha).toFixed(4)}" transform="translate(0 ${st.dy.toFixed(2)})" ${S.blur>0?`filter="url(#tb-${t.id})"`:''}/>`);});
-    // text (layer 1), with its drop shadow
-    for(const L of titleLines(t)){const s=t[L.key];if(!s)continue;const st=rest?{on:true,alpha:1,dy:0,blur:0}:lineState(t,L.delay,L.rise,at);if(!st.on||st.alpha<=0)continue;
+    // text (layer 1), with its drop shadow (supports multi-line copy via Enter -> '\n')
+    for(const L of expandedLines(t)){const s=L.text;if(!s)continue;const st=rest?{on:true,alpha:1,dy:0,blur:0}:lineState(t,L.delay,L.rise,at);if(!st.on||st.alpha<=0)continue;
       const fid=st.blur>.05?`tt-${t.id}-${n++}`:null;if(fid)defs.push(blurFilter(fid,st.blur));
       // italic: libass shears the upright glyphs (faux italic, 12 deg) about each line's baseline; the overlay does the same
       // (the shadow copy is the same sheared glyphs, offset), so the advance and every edge land where the burn puts them.
@@ -367,11 +369,17 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     return {defs:defs.join(''),body:`<g transform="translate(${P.x} ${P.anchor[1]}) scale(${scale}) translate(${-P.x} ${-P.anchor[1]})">${parts.join('')}</g>`};
   }
   // Each line's box in the frame (film px, the title's scale and place applied): x across its text, y from the line's
-  // top (baseline - full size above the box bottom) to its box bottom (the line's y).
+  // top (baseline - full size above the box bottom) to its box bottom (the line's y). Multi-line fields merge all sub-lines.
   function lineBoxes(t){
     const P=placeOf(t),s=t.scale??1,AX=P.x,AY=P.anchor[1],sx=x=>AX+(x-AX)*s,sy=y=>AY+(y-AY)*s;
-    return titleLines(t).filter(L=>t[L.key]).map(L=>{const w=measure(L,t[L.key]),x0=P.x+L.dx-(P.align==='right'?w:0),y1=L.y+P.dy;
-      return {key:L.key,x0:sx(x0),x1:sx(x0+w),y0:sy(y1-L.size),y1:sy(y1)};});
+    const byKey=new Map();
+    for(const L of expandedLines(t)){
+      const w=measure(L,L.text),x0=sx(P.x+L.dx-(P.align==='right'?w:0)),x1=sx(P.x+L.dx-(P.align==='right'?w:0)+w),y1=L.y+P.dy,b0=sy(y1-L.size),b1=sy(y1);
+      const cur=byKey.get(L.key);
+      if(!cur)byKey.set(L.key,{key:L.key,x0,x1,y0:b0,y1:b1});
+      else{cur.x0=Math.min(cur.x0,x0);cur.x1=Math.max(cur.x1,x1);cur.y0=Math.min(cur.y0,b0);cur.y1=Math.max(cur.y1,b1);}
+    }
+    return [...byKey.values()];
   }
   const svgPoint=event=>{const m=svg.getScreenCTM();if(!m)return [0,0];const p=new DOMPoint(event.clientX,event.clientY).matrixTransform(m.inverse());return [p.x,p.y];};
   const lineAt=(t,[x,y])=>lineBoxes(t).find(b=>x>=b.x0-4&&x<=b.x1+4&&y>=b.y0-4&&y<=b.y1+4)?.key||null;

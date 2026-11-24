@@ -145,9 +145,30 @@ def title_dialogues(titles):
             rise *= scale
             ass.append(f'Dialogue: 0,{ts(a + delay / 1000)},{ts(b)},Scrim,,0,0,0,,{{\\an7\\move(0,{rise},0,0,0,900)\\fad(650,420)\\p1\\bord0\\shad0'
                        f'\\1c&H000000&\\1a&H{alpha}&\\blur{blur}}}{ass_drawing(p, (X0, ANCHOR[1] + DY))}{{\\p0}}')
+        # Multi-line titles (Enter -> '\n'): match experience/film-titles.mjs LINE_LEAD = 0.74.
+        # Single-line titles emit the exact same single Dialogue as before (byte-identical golden ASS).
+        LINE_LEAD = 0.74
+        BASE_SIZES = {'eyebrow': 28, 'title': 86, 'detail': 40}
+        raw_title = (t.get('title') or '').replace('\r\n', '\n').replace('\r', '\n')
+        title_parts = raw_title.split('\n') if raw_title else []
+        title_size = float((typography.get('title') or {}).get('size', 86))
+        title_extra = max(0, len(title_parts) - 1) * title_size * LINE_LEAD
         for style, y, key, delay, rise in (('Eyebrow', 812, 'eyebrow', 0, 10), ('Title', 912, 'title', 140, 14), ('Detail', 970, 'detail', 380, 10)):
-            if not SCRIM_BLOCK and not sh.get('paths'): ass.append(box(style, y, t[key], delay, rise))
-            ass.append(line(1, style, y, t[key], delay, rise))
+            raw = (t.get(key) or '').replace('\r\n', '\n').replace('\r', '\n')
+            if '\n' not in raw and (key != 'eyebrow' or title_extra == 0):
+                if not SCRIM_BLOCK and not sh.get('paths'): ass.append(box(style, y, raw, delay, rise))
+                ass.append(line(1, style, y, raw, delay, rise))
+                continue
+            parts = raw.split('\n') if raw else []
+            step = float((typography.get(key) or {}).get('size', BASE_SIZES[key])) * LINE_LEAD
+            base_y = (y - title_extra) if key == 'eyebrow' else y
+            direction = 1 if key == 'detail' else -1
+            n = len(parts)
+            for i, part in enumerate(parts):
+                if not part: continue
+                sub_y = round(base_y - (n - 1 - i) * step, 2) if direction < 0 else round(base_y + i * step, 2)
+                if not SCRIM_BLOCK and not sh.get('paths'): ass.append(box(style, sub_y, part, delay, rise))
+                ass.append(line(1, style, sub_y, part, delay, rise))
     return ass
 
 def chapter_titles(argv):

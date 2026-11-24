@@ -62,7 +62,30 @@ export const BLUR_SIGMA=2/Math.sqrt(Math.log(256));        // libass: Gaussian s
 export const LEAD=1.5,TAIL=.8,MIN_ON=3.5;                   // titles-after-cut.py
 const r2=v=>Math.round(v*100)/100,r3=v=>Math.round(v*1000)/1000;
 const num=(v,lo,hi,fallback)=>{const n=Number(v);return Number.isFinite(n)?Math.max(lo,Math.min(hi,n)):fallback;};
-const text=(v,max)=>typeof v==='string'?v.slice(0,max):'';
+const text=(v,max)=>typeof v==='string'?v.replace(/\r\n?/g,'\n').slice(0,max):'';
+export const LINE_LEAD=0.74;                                // multi-line step as a fraction of L.size (~1.30x em in Poppins)
+export const sublinesOf=s=>s?String(s).replace(/\r\n?/g,'\n').split('\n'):[];
+// Expand eyebrow / title / detail into positioned sub-lines when copy contains '\n' (Enter).
+// Single-line titles stay at their exact titleLines() baselines. A multi-line headline stacks upward from T.y and
+// shifts the eyebrow up by the same extra height so they never overlap; supporting text stacks downward from D.y.
+export function expandedLines(t){
+  const [E,T,D]=titleLines(t);
+  const ep=sublinesOf(t?.eyebrow),tp=sublinesOf(t?.title),dp=sublinesOf(t?.detail);
+  const titleExtra=Math.max(0,tp.length-1)*T.size*LINE_LEAD;
+  const out=[];
+  const push=(L,parts,baseY,dir)=>{
+    const n=parts.length,step=L.size*LINE_LEAD;
+    for(let i=0;i<n;i++){
+      const s=parts[i];if(!s)continue;
+      const y=dir<0?baseY-(n-1-i)*step:baseY+i*step;
+      out.push({...L,y:r2(y),text:s,subIndex:i,subCount:n});
+    }
+  };
+  push(E,ep,E.y-titleExtra,-1);
+  push(T,tp,T.y,-1);
+  push(D,dp,D.y,1);
+  return out;
+}
 const lineOf=key=>LINES.find(l=>l.key===key);
 
 // ---- film source ---------------------------------------------------------------------------------------------
@@ -186,7 +209,7 @@ export function fittedBox(line,width,align='left',up=0){
 }
 const rect=({x0,y0,x1,y1})=>[{x:x0,y:y0},{x:x1,y:y0},{x:x1,y:y1},{x:x0,y:y1}].map(p=>({x:r2(p.x),y:r2(p.y)}));
 export function fittedPaths(title,measure){
-  const {align}=placeOf(title);return titleLines(title).filter(L=>title[L.key]).map(L=>({line:L.key,points:rect(fittedBox(L,measure(L,title[L.key]),align,measure.rise?.(L,title[L.key])||0))}));
+  const {align}=placeOf(title);return expandedLines(title).map(L=>({line:L.key,points:rect(fittedBox(L,measure(L,L.text),align,measure.rise?.(L,L.text)||0))}));
 }
 export function shadowOf(title,measure){
   const s=title.shadow||{};
@@ -194,9 +217,9 @@ export function shadowOf(title,measure){
 }
 // The text block's own extents (left/right/top/bottom) relative to the anchor.
 export function textBounds(title,measure){
-  const lines=titleLines(title).filter(L=>title[L.key]);if(!lines.length)return null;const [ax,ay]=ANCHOR;
+  const lines=expandedLines(title);if(!lines.length)return null;const [ax,ay]=ANCHOR;
   const y0=Math.min(...lines.map(L=>L.y-L.size))-ay,y1=Math.max(...lines.map(L=>L.y))-ay,right=placeOf(title).align==='right';
-  const xs=lines.map(L=>{const w=measure(L,title[L.key]);return right?[L.dx-w,L.dx]:[X0-ax+L.dx,X0-ax+L.dx+w];});
+  const xs=lines.map(L=>{const w=measure(L,L.text);return right?[L.dx-w,L.dx]:[X0-ax+L.dx,X0-ax+L.dx+w];});
   return {x0:Math.min(...xs.map(x=>x[0])),x1:Math.max(...xs.map(x=>x[1])),y0,y1};
 }
 
