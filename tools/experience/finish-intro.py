@@ -243,6 +243,11 @@ def main():
     logo_at = start[src['logo']['chapter']] + src['logo']['rel_in']
     cta = dict(id='cta', chapter=src['cta']['chapter'], start=round(start[src['cta']['chapter']] + src['cta']['rel_in'], 3),
                end=round(total, 3), text=src['cta']['text'])
+    # optional (polish1124): the CTA's fade-in (s, default 0.9) and size (px on a 1080 frame, default 46); its fade-out is
+    # always the film's last 1.4 s fade
+    cta_in = float(src['cta'].get('fade_in', 0.9)); cta_px = int(src['cta'].get('size', 46))
+    if cta['start'] >= total - 1.4:
+        print(f"WARNING: the CTA starts at {cta['start']} s, inside or after the film's last fade (from {total - 1.4:.3f} s): it will not be seen", file=sys.stderr)
     json.dump(dict(schema='ergoflex.intro-titles', version=1, duration=total, fps=fps,
                    placement=dict(anchor='bottom-left', safeArea=0.9, eyebrowColor='#1388EC',
                                   note='Coordinates for a 1920×1080 frame: text left edge x=128; eyebrow/title/detail bottoms at y=812/912/970. Wordmark centered at y=788 (22% of width); CTA centered at y=904.'),
@@ -255,7 +260,7 @@ def main():
     ass = list(ASS_HEAD)
     CTA_Y = 904
     ass += title_dialogues(titles)
-    ass.append(f'Dialogue: 1,{ts(cta["start"])},{ts(total)},CTA,,0,0,0,,{{\\an5\\move(960,{CTA_Y + 10},960,{CTA_Y},0,1100)\\fad(900,1400)\\blur4\\t(0,800,\\blur0)}}{cta["text"]}')
+    ass.append(f'Dialogue: 1,{ts(cta["start"])},{ts(total)},CTA,,0,0,0,,{{\\an5\\move(960,{CTA_Y + 10},960,{CTA_Y},0,1100)\\fad({int(round(cta_in * 1000))},1400)\\fs{cta_px}\\blur4\\t(0,800,\\blur0)}}{cta["text"]}')
     open(os.path.join(out, 'titles.ass'), 'w', encoding='utf-8').write('\n'.join(ass) + '\n')
 
     if '--title-still' in sys.argv:

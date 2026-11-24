@@ -34,6 +34,8 @@ picture instead of to the EDL alone:
   * v2.2: one tempo through title B: the wake (pulse, sub, pad bar lines) before title B runs at the first segment's
     tempo instead of the nominal one, so there is no 1.5 % tempo step at the join (the fit still costs it as before, so
     no later time moves); and a short reverse swell lands the first bar line after the desk's first lift tops out;
+  * v2.4: <cut>/score-pins.json may pin dissolve bar lines (pins()): the fit keeps them, so a late picture edit does not
+    retime an earlier chapter's music;
   * the title A bloom lands on title A, the logo hit within LOGO_SLACK of the wordmark's first frame; v2.3: then exactly on
     it (snap_logo: only the finale's tempo changes, when it stays within the caps), and a short end card no longer
     fades the cadence and the hit out (score-synth.tail_layout: the ding sounds at full level, then a short fade to the cut);
@@ -160,6 +162,15 @@ def edl_problems(cut_dir, edl):
 # picture events (film seconds)
 # ---------------------------------------------------------------------------------------------------------------------
 
+def pins(cut_dir):
+    """v2.4: <cut>/score-pins.json {"bar_lines": [{"at": film s, "why": ...}]}: dissolve bar lines the fit keeps where they
+    are (each must lie inside its dissolve's window). For a picture edit late in the film (Nov 24: the finale's desk-version
+    fades moved onto its bar lines) that would otherwise let the fit re-choose an earlier chapter's last bar line and so
+    retime that chapter's music. No file: no pins (as before)."""
+    p = os.path.join(cut_dir, 'score-pins.json')
+    return [float(b['at']) for b in J(p).get('bar_lines', [])] if os.path.exists(p) else []
+
+
 def picture(cut_dir, edl):
     cut = J(os.path.join(cut_dir, 'review-cut.json')); src = J(os.path.join(cut_dir, 'titles-src.json'))
     ch = edl['chapters']; X = float(edl['dissolve'])
@@ -202,7 +213,7 @@ def picture(cut_dir, edl):
             merged[-1][1] = round(max(merged[-1][0] + merged[-1][1], at + dur) - merged[-1][0], 3)
         else: merged.append([at, dur, kind])
     merged.sort()
-    return dict(cuts=cuts, dissolves=dissolves, looks=looks, title_a=start[ch[0]['id']] + aw[0]['rel_in'],
+    return dict(cuts=cuts, dissolves=dissolves, looks=looks, pins=pins(cut_dir), title_a=start[ch[0]['id']] + aw[0]['rel_in'],
                 title_b=start[ch[0]['id']] + aw[1]['rel_in'], logo=logo_at, led_on=led_on, sfx=merged, win=win)
 
 
@@ -240,6 +251,9 @@ def fit_tempo(synth, edl, pic, cap=STEP_CAP, logo_hi=LOGO_SLACK):
     lo = [-0.05] + [-min(DISSOLVE_SLACK, 0.45 * pic['dissolves'][i][1]) for i in cidx] + [0.0]
     hi = [0.05] + [min(DISSOLVE_SLACK, 0.45 * pic['dissolves'][i][1]) for i in cidx] + [logo_hi]
     D = [np.round(np.arange(l, h + 1e-9, 0.025), 3) for l, h in zip(lo, hi)]
+    for p in pic.get('pins', []):      # v2.4: a pinned dissolve bar line (score-pins.json) is not refitted
+        for k in range(1, len(A) - 1):
+            if A[k] + lo[k] - 1e-9 <= p <= A[k] + hi[k] + 1e-9: D[k] = np.array([round(p - A[k], 3)])
     K = len(A) - 1
     tg = [[] for _ in range(K)]                  # (time, beats per unit, weight) targets inside each segment
     for t, _ in pic['cuts']:
@@ -435,7 +449,7 @@ def inputs_digest(cut_dir, edl_bytes):
                            os.devnull, os.devnull, '--plan'], capture_output=True, text=True, check=True).stdout
     plan = json.loads(plan); looks = [plan['fades'], plan['seconds']]
     part = dict(edl=[edl['chapters'], edl['dissolve'], edl.get('transitions'), edl.get('beats'), edl['total']],
-                titles=[aw, src['logo']['chapter'], src['logo']['rel_in']], shots=shots, looks=looks,
+                titles=[aw, src['logo']['chapter'], src['logo']['rel_in']], shots=shots, looks=looks, **({'pins': pins(cut_dir)} if pins(cut_dir) else {}),
                 code=[code_digest(os.path.abspath(__file__)), code_digest(os.path.join(HERE, 'score-synth.py'))])
     return hashlib.sha256(json.dumps(part, sort_keys=True).encode()).hexdigest()
 
