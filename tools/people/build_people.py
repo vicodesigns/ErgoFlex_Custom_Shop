@@ -374,6 +374,15 @@ if who.get('roots'):
     roots.name = 'Human.' + who['hair'] + '.roots'
     meshes.append(roots)
 
+# Real locks over the crown of the layered cut (a part, bangs, flyaways) on top of the roots: their own object, so
+# the lengths and their drape below are left as they were (cast: 'crown': True, with 'layered_waves').
+if who.get('crown') and who.get('layered_waves'):
+    import groom
+    hair = next(o for o in meshes if o.name.split('.', 1)[-1] == who['hair'])
+    crown = groom.crown_locks(hair, base, rig)
+    crown.name = 'Human.' + who['hair'] + '.crown'
+    meshes.append(crown)
+
 # ---- garments made from the base mesh (a white coat, a gown, socks; gloves are the hands' own faces) ------
 meshes += garments.build(who, base, rig, OUT_DIR, OUT_ID)
 
@@ -483,7 +492,7 @@ if who.get('layered_waves'):
     import groom
     hair_baked = next((b for b in baked if who.get('hair') and who['hair'] in b.name), None)
     if hair_baked is not None:
-        obs = [b for b in baked if b is not hair_baked and not b.name.endswith('.roots.baked') and not any(k in b.name.lower() for k in ('low-poly', 'high-poly', 'teeth', 'tongue', 'eyebrow', 'eyelash', 'glasses'))]
+        obs = [b for b in baked if b is not hair_baked and not b.name.endswith(('.roots.baked', '.crown.baked')) and not any(k in b.name.lower() for k in ('low-poly', 'high-poly', 'teeth', 'tongue', 'eyebrow', 'eyelash', 'glasses'))]
         sweater = next(b for b in baked if 'toigo_fisherman_sweater' in b.name)
         groom.drape_hair_over_posed(hair_baked, obs, rig, sweater,
                                    packed=any(o.name.startswith('backpack') for o in extras))
