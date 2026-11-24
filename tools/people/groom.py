@@ -605,15 +605,23 @@ def drape_hair_over_posed(hair_obj, obstacle_objs, rig, sweater, packed):
     me.update()
 
 
+NORMAL_LIFT = .5      # (crown_locks: how far the shading normals turn from level toward the scalp's)
+
+
 def crown_locks(hair, base, rig):
     """Hair-card locks over the crown of the layered long cut (Yara).
 
     The brushed roots are a painted shell 4 mm over the scalp and the layered
     locks emerge from under it only above the ears, so from a camera above eye
     height the top of the head read as a flat painted dome. These locks lie
-    over that shell: a centre parting with soft curtain bangs, strands swept
-    from the part and the crown down into the existing lengths, a second
-    staggered tier for thickness and a few lifted flyaways. They are a separate
+    over that shell: a slightly wandering centre parting whose clumps cross and
+    interleave over the line, soft curtain bangs of loose clumps (varied
+    lengths, a few crossing strands, tips to points), clumps swept from the
+    part and the crown down into the existing lengths with staggered ends, a
+    second tier for thickness and a few lifted flyaways. Strands are as thick
+    as on the lengths, and the shading normals follow the lengths' (level, a
+    little up) rather than the scalp's, which put one broad grey sheen over the
+    top of the head in the film's light. They are a separate
     object weighted to the head, so the layered lengths, their drape over the
     sweater and the roots stay exactly as they were. Same atlas and material
     as the layered lengths.
@@ -629,39 +637,60 @@ def crown_locks(hair, base, rig):
     head_center = Vector((0.0, head_y_mid + 0.008, crown_z - 0.104))
 
     rng = np.random.default_rng(1124)
-    rows = 12
+    rows = 14
     points, quads, uvs, normals = [], [], [], []
 
     def direction(azimuth, elevation):
         return Vector((math.sin(azimuth)*math.cos(elevation),
                        -math.cos(azimuth)*math.cos(elevation), math.sin(elevation)))
 
-    def part_dir(s):
-        # The centre parting runs from the front hairline over the top to the crown.
+    def part_dir(s, off=0.):
+        # The parting runs from the front hairline over the top to the crown, wandering a little.
         phi = .64 + (1.98-.64)*s
-        return Vector((0., -math.cos(phi), math.sin(phi))).normalized()
+        x = .006*math.sin(5.3*s + .4) + .004*math.sin(11.*s) + off
+        return Vector((x, -math.cos(phi), math.sin(phi))).normalized()
 
     def surface(d):
         hit = scalp_bvh.ray_cast(head_center + d*.24, -d, .23)[0]
         return hit if hit is not None else head_center + d*.09
 
-    def add_card(d0, d1, d2, width0, width1, clearance, column, span=(0., 1.), lift=0.):
-        """A three-wide ribbon along the scalp from d0 (root) through d1 to d2."""
+    def add_card(d0, d1, d2, widths, clearance, column, span=None, lift=0.):
+        """A three-wide ribbon along the scalp from d0 (root) through d1 to d2.
+
+        widths: (root, widest, tip) in radians over the scalp; the clump fans out
+        from the root and narrows to a point. The texture's u span is fixed along
+        the card, so its strands gather to the tip as the card narrows. span: the
+        part of the atlas column across the card, by default sized so the strands
+        are as thick as on the layered lengths (a full column over ~4.3 cm).
+        """
+        w_root, w_max, w_tip = widths
+        if span is None:
+            size = min(.96, w_max*.09/.043)
+            lo = rng.uniform(0, 1-size)
+            span = (lo, lo+size)
+        # Shading normals like the layered lengths' (outward and level, .12 up),
+        # not the scalp's: normals facing the ceiling made one broad grey sheen
+        # over the top of the head (the film's hair sheen and the room's
+        # reflections on near-black hair). Each clump turns a little on its own.
+        out = Vector((d2.x, d2.y, 0)).normalized()
+        tilt = rng.uniform(-.10, .10)
         start = len(points)
         c0, c_peak, c_end = clearance
         for row in range(rows):
             t = row / (rows-1)
             d = ((1-t)**2*d0 + 2*(1-t)*t*d1 + t*t*d2).normalized()
-            tangent = 2*(1-t)*(d1-d0) + 2*t*(d2-d1)
+            tangent = (2*(1-t)*(d1-d0) + 2*t*(d2-d1)).normalized()
             side = d.cross(tangent).normalized()
-            width = width0 + (width1-width0)*_smoothstep(0, .6, t)
+            width = (w_root + (w_max-w_root)*_smoothstep(0, .35, t)) - (w_max-w_tip)*_smoothstep(.45, 1, t)
             # Rise off the part (volume), settle over the lengths at the tip.
             gap = c0 + (c_peak-c0)*_smoothstep(0, .35, t) - (c_peak-c_end)*_smoothstep(.35, 1, t)
             gap += lift*math.sin(math.pi*min(1., t*1.15))
             for across in (-.5, 0., .5):
                 a = (d + side*across*width).normalized()
                 points.append(surface(a) + a*(gap + .0007*abs(across)*(1-t)))
-                normals.append(a)
+                level = Vector((a.x, a.y, 0))
+                level = (level.normalized() if level.length > .2 else out).lerp(out, .5*(1-t)).normalized()
+                normals.append((level + a*(NORMAL_LIFT + .7*t) + Vector((0, 0, .12)) + side*(tilt + .06*math.sin(5.*t + 30.*tilt) + .15*across)).normalized())
             if row:
                 k = start + 3*(row-1)
                 v0, v1 = 1-(row-1)/(rows-1), 1-row/(rows-1)
@@ -672,57 +701,63 @@ def crown_locks(hair, base, rig):
                     right = column*.25 + .004 + .242*(lo + (hi-lo)*(j+1)*.5)
                     uvs.extend([(left, v0), (left, v1), (right, v1), (right, v0)])
 
-    # ---- the part: locks swept from each side of the parting into the side lengths ----------
-    for tier, (count, gap, column) in enumerate(((10, (.0047, .0098, .0090), 1), (9, (.0060, .0112, .0102), 0))):
+    # ---- the part: clumps swept from each side of the parting into the side lengths --------
+    # Their roots start across the line by up to a millimetre or two and interleave with the
+    # other side's, so the parting is a soft natural line with only a hint of the scalp.
+    for tier, (count, gap, column) in enumerate(((16, (.0046, .0098, .0090), 1), (14, (.0058, .0110, .0101), 0))):
         for side in (-1, 1):
             for i in range(count):
-                s = min(1., max(0., (i + .5*tier + rng.uniform(-.12, .12)) / (count - .5)))
-                root = (part_dir(s) + Vector((side*.035, 0, 0))).normalized()
-                if s < .22:
-                    # Soft curtain bangs: from the part across the forehead to the temple.
-                    f = s/.22
-                    # They dip just over the hairline at the front, softening the edge of the roots.
-                    f = s/.22
-                    end = direction(side*(.86 + .26*f), .36 + .06*f)
-                    mid = direction(side*(.24 + .22*f), .47 + .10*f)
-                else:
-                    # Into the lengths: above the ear, then lower behind it.
-                    f = (s-.22)/.78
-                    az = min(math.pi-.12, 1.08 + 1.75*f + rng.uniform(-.06, .06))
-                    end = direction(side*az, .44 - .14*_smoothstep(1.7, 2.1, az) + rng.uniform(-.03, .03))
-                    mid = ((root + end).normalized() + Vector((0, 0, .18))).normalized()
-                # (the bangs from the airy wisp column: their edge over the forehead stays feathered)
-                add_card(root, mid, end, .15 + .03*tier, .30, gap, 2 if s < .22 else column)
+                s = .10 + .90*min(1., max(0., (i + .5*tier + rng.uniform(-.25, .25)) / (count - .5)))
+                root = part_dir(s, side*rng.uniform(-.014, .014))
+                f = (s-.10)/.90
+                az = min(math.pi-.12, .98 + 1.95*f + rng.uniform(-.07, .07))
+                # Into the lengths: above the ear, then lower behind it.
+                # (ends staggered, so the crown has no edge where it meets the lengths; clear of the ear)
+                low = .33 if 1.15 < az < 1.95 else .16
+                end = direction(side*az, max(low, .42 - .16*_smoothstep(1.7, 2.1, az) + rng.uniform(-.12, .05)))
+                mid = ((root + end).normalized() + Vector((0, 0, .18))).normalized()
+                add_card(root, mid, end, (.07, rng.uniform(.20, .27), rng.uniform(.10, .14)), gap, column)
 
-    # ---- fine wisps feathering the lower edge of the bangs -----------------------------------
+    # ---- soft curtain bangs: loose clumps of varied length, tips to points ----------------------
     for side in (-1, 1):
-        for i in range(4):
-            f = (i + rng.uniform(.2, .8)) / 4
-            root = (part_dir(.03 + .17*f) + Vector((side*.03, 0, 0))).normalized()
-            end = direction(side*(.70 + .40*f), .31 + .07*f)
-            mid = direction(side*(.20 + .25*f), .44 + .08*f)
-            lo = rng.uniform(.0, .55)
-            add_card(root, mid, end, .06, .10, (.0058, .0108, .0100), 2, span=(lo, lo + .4))
+        for i in range(9):
+            f = (i + rng.uniform(.1, .9)) / 9
+            root = part_dir(.30*f, side*rng.uniform(-.015, .03))
+            end = direction(side*(.52 + .62*f + rng.uniform(-.08, .08)), .29 + .15*f + rng.uniform(-.045, .045))
+            mid = direction(side*(.14 + .30*f + rng.uniform(-.05, .05)), .50 + .09*f + rng.uniform(-.03, .03))
+            lift = rng.uniform(.0, .004)
+            add_card(root, mid, end, (.05, rng.uniform(.09, .15), .012), (.0060, .0118 + lift, .0100),
+                     2 if i % 3 else 1, lift=lift)
+        # a few finer strands, some crossing the part to the other side
+        for i in range(5):
+            f = rng.uniform(.1, 1.)
+            cross = i < 1
+            root = part_dir(.25*f, side*rng.uniform(.0, .03))
+            end = direction((-side*rng.uniform(.25, .4)) if cross else side*(.45 + .7*f + rng.uniform(-.1, .1)),
+                            .34 + .12*f + rng.uniform(-.05, .05))
+            mid = direction(side*(.06 if cross else .12 + .3*f), .52 + .06*f)
+            add_card(root, mid, end, (.02, .045, .006), (.0072, .0128, .0108), 2,
+                     lift=rng.uniform(.001, .004))
 
-    # ---- the crown: locks radiating from just behind the top down the back ----------------
+    # ---- the crown: clumps radiating from just behind the top down the back -------------------
     crown = part_dir(1.)
-    for tier, (count, gap, column) in enumerate(((9, (.0050, .0102, .0092), 1), (8, (.0064, .0116, .0104), 0))):
+    for tier, (count, gap, column) in enumerate(((12, (.0050, .0102, .0092), 1), (11, (.0062, .0114, .0103), 0))):
         for i in range(count):
-            f = (i + .5 + .5*tier) / count
-            end = direction(math.pi + (f-.5)*2.3 + rng.uniform(-.05, .05), .30 + rng.uniform(-.05, .05))
+            f = (i + .5 + .5*tier + rng.uniform(-.2, .2)) / count
+            end = direction(math.pi + (f-.5)*2.3 + rng.uniform(-.05, .05), .28 + rng.uniform(-.10, .06))
             root = (crown + .05*(end-crown)).normalized()
             mid = ((root + end).normalized() + Vector((0, 0, .14))).normalized()
-            add_card(root, mid, end, .20, .34, gap, column)
+            add_card(root, mid, end, (.08, rng.uniform(.24, .32), rng.uniform(.12, .16)), gap, column)
 
-    # ---- flyaways: a few fine strands lifted off the part and the crown --------------------
+    # ---- flyaways: a few fine strands lifted off the part and the crown -----------------------
     for i in range(9):
         s = rng.uniform(.15, 1.)
         side = 1 if i % 2 else -1
-        root = (part_dir(s) + Vector((side*.05, 0, 0))).normalized()
+        root = part_dir(s, side*.05)
         end = direction(side*(1.0 + 1.5*s) + rng.uniform(-.15, .15), .85 + rng.uniform(-.06, .08))
         mid = ((root + end).normalized() + Vector((0, 0, .08))).normalized()
         lo = rng.uniform(.05, .7)
-        add_card(root, mid, end, .022, .03, (.0112, .0120, .0110), 2,
+        add_card(root, mid, end, (.012, .028, .004), (.0112, .0120, .0110), 2,
                  span=(lo, lo + .16), lift=rng.uniform(.0015, .004))
 
     mesh = bpy.data.meshes.new('Crown locks')
