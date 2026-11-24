@@ -10,7 +10,7 @@
 // laid over HOURS. hazeFar: the distance at which the air has its full say.
 import * as THREE from 'three';
 import { basket, bicycle, neonMarquee, parasol, pitchedGlasshouse, redwoodRoots, roofDetail, shadeSail, steppingStone, sunflower } from './window-scenery-details.mjs';
-import { BOX as BOX_UNIT, QUAD, colour, M, seen, ground as groundPlane, ridge, crown, tree, conifer, redwood, fanPalm, featherPalm, shrub, hedge, flowers, grass, rock, house, building, streetLamp, car, bench, pathLight, utilityPole, wire, fence, masonry, pole, limb, spray } from './window-scenery-kit.mjs?v=polish-20261113b';
+import { BOX as BOX_UNIT, QUAD, colour, M, seen, rand, ground as groundPlane, ridge, crown, tree, conifer, redwood, fanPalm, featherPalm, shrub, hedge, flowers, grass, rock, house, building, streetLamp, car, bench, pathLight, utilityPole, wire, fence, masonry, pole, limb, spray } from './window-scenery-kit.mjs?v=polish-20261113b';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const pick = (r, list) => list[Math.floor(r() * list.length)];
@@ -135,6 +135,20 @@ function backGarden(k, ctx) {
         b.add(handle,M(bucket.x,bucket.y+107,bucket.z),()=>colour('#a3a6a0'));handle.dispose();
         for (let y = 300; y < 2700; y += 300) b.box([600, 40, 40], [hx - 300, ground + y, hz + 1550-270*y/2730], '#8a6a4c');
     }
+    // A trained flowering climber on its own timber screen along the back fence.
+    const trellisX = cx - f*2700, trellisZ = -12400;
+    for (const dx of [-1200, 1200]) b.box([95, 2310, 95], [trellisX+dx, ground+1155, trellisZ], '#79654f');
+    for (let j = 0; j < 5; j++) {
+        const x = trellisX - 1160 + j*580;
+        b.box([41, 1970, 50], [x, ground+1210, trellisZ+50], '#a79272');
+        b.box([2420, 55, 50], [trellisX, ground+480+j*405, trellisZ+85], '#92795c');
+    }
+    const vine = rand(ctx.seed + 531);
+    for (let j = 0; j < 13; j++) {
+        const x = trellisX-1090 + (j%5)*480 + (vine()-.5)*185, y = ground+270+j*137;
+        crown(b, vine, x, y, trellisZ+140, 365, 315, 120, '#527652', {size:90});
+        if (j>4 && j%3) flowers(b, vine, x, y+50, trellisZ+230, 200, 11, ['#b68cba','#caadcb','#d9c9d8'], 35);
+    }
     // trees, a shed, a flower bed, the fence and hedge at the end, lights after dark
     for (const [x, z, h, shape] of [[w * .5 + 3200 + jit(1500), -6500 + jit(1500), 5800, 'round'], [-w * .5 - 4600 + jit(1500), -9500 + jit(2000), 4800, 'ornamental'], [jit(9000), -13200 + jit(1200), 6200, 'round']])
         tree(b, r, cx + f * x, ground, z, { height: h + jit(1200), hex: pick(r, ['#688856', '#5f7d53', '#7f9566', '#5a7a50']), shape });
@@ -170,6 +184,15 @@ function studioGarden(k, ctx) {
         const d = Math.abs(x - path(z)); if (d < 520) return out.copy(brick).multiplyScalar(.82 + r() * .22).lerp(moss, d > 400 ? .4 : 0);
         const patch = Math.sin(x / 1900 + 2) * Math.sin(z / 1500) * .5 + .5; return out.copy(lawn).lerp(moss, patch * .45).multiplyScalar(.92 + r() * .08);
     });
+    const pathBrick = ['#a67861', '#916653', '#b08469', '#9e725a'];
+    for (let row = 0; row < 57; row++) {
+        const z = -1430 - row * 178, center = path(z);
+        for (let col = 0; col < 3 + row % 2; col++) {
+            const left = Math.max(0, col - (row % 2) * .5), right = Math.min(3, col + 1 - (row % 2) * .5);
+            b.box([(right-left)*320-8, 32, 169], [center+(left+right-3)*160, ground+14, z],
+                pathBrick[(row*7+col*5+Math.floor(row/4))%4]);
+        }
+    }
     groundPlane(b, ground - 30, -70000, 70000, -80000, wallZ - 150, 2500, () => out.copy(colour('#6c7f58')).multiplyScalar(.95 + r() * .05));
     // pots on the gravel strip under the sill: herbs, geraniums, a clipped box ball
     for (let x = cx - w / 2 - 500; x <= cx + w / 2 + 500; x += 420 + r() * 260) {
@@ -289,10 +312,30 @@ function fern(b, r, x, ground, z, size = 700, hex = '#4f6e40') {
 function humboldt(k, ctx) {
     if (ctx.classic) return humboldtClassic(k, ctx);   // (the Commons' Classic look)
     const { land: b, r } = k, ground = ctx.ground - 120, L = ctx.left - 12000, R = ctx.right + 12000, cx = (ctx.left + ctx.right) / 2;
-    const moss = colour('#586846'), duff = colour('#544436'), out = new THREE.Color();
+    // Two wooded slopes close the horizon beyond the individual trees. Keep their
+    // random stream separate so the foreground trunks retain their film marks.
+    const hills = rand(ctx.seed + 739);
+    for (const [z, elevation, pigment] of [[-164000, 17500, '#657d74'], [-96000, 8900, '#485f53']]) {
+        ridge(b, hills, z, ground - 3600, cx - 330000, cx + 330000, elevation, pigment, { step: 2200, rough: .18, bumps: .45 });
+    }
+    // The broken upper edge is made of separate redwood crowns on the nearer slope.
+    for (let x = cx - 122000; x <= cx + 122000; x += 2100 + hills() * 2700) {
+        const z = -86500 - hills() * 4100, height = 5700 + 3200 * Math.sin(x / 16900) + hills() * 4700;
+        const width = 1100 + hills() * 1300, tint = colour(hills() < .5 ? '#405d50' : '#526d5b');
+        for (let tier = 0; tier < 3; tier++) {
+            const radius = width * (1. - tier * .25), y = ground + height * (.21 + tier * .24);
+            const tip = V(x + width * .12, y + height * .43, z);
+            for (let side = 0; side < 5; side++) {
+                const angle = side * Math.PI * .4, next = angle + Math.PI * .4;
+                b.tri(tip, V(x + radius*Math.cos(angle), y, z + radius*Math.sin(angle)),
+                    V(x + radius*Math.cos(next), y, z + radius*Math.sin(next)), tint);
+            }
+        }
+    }
+    const moss = colour('#667448'), duff = colour('#664833'), out = new THREE.Color();
     const forestFloor = (zNear, zMid, zFar) => land(b, ground, L, R, zNear, zMid, zFar, (x, z) => {
         const p = Math.sin(x / 1900) * Math.sin(z / 1500) * .5 + .5;
-        return out.copy(duff).lerp(moss, p * .55).multiplyScalar(.88 + r() * .12);
+        return out.copy(duff).lerp(moss, p * (.52+.35*Math.sin(z/6900))).multiplyScalar(.82 + r() * .18);
     });
     if (ctx.facing === 0) {
         // Pure redwood grove outside the back glass (natural forest duff floor; no bench, nurse log or clutter).
@@ -367,18 +410,19 @@ const QUAD_FLAG = new THREE.PlaneGeometry(1, 1);
 const NEON = ['#ff4fa8', '#46d6ff', '#a066ff', '#ff9a4a', '#5cf0a8'];
 const TOWER_WALLS = ['#8f979d', '#a3a6a8', '#5f6a74', '#a69f94', '#4f5a66', '#9a9488', '#3f4852', '#b8ad9c', '#6c7a86'];
 // A block drawn plainly, its windows a grid in the shader (far rows, towers): a box, a parapet, things on its roof.
-function plainBlock(k, r, x, ground, z, { width, depth, height, wall, roof = true, crown = false }) {
+function plainBlock(k, r, x, ground, z, { width, depth, height, wall, roof = true, crown = false, terrace = false }) {
     const b = k.land; if (!seen(b, x, z, width / 2 + 3000)) return;
     const c = colour(wall).offsetHSL(0, 0, (r() - .5) * .06);
     b.box([width, height, depth], [x, ground + height / 2, z], c, 0, null, { facade: true });
     b.box([width + 200, 600, depth + 200], [x, ground + height + 300, z], c.clone().multiplyScalar(.9));
     if (crown) b.box([width * .6, height * .08, depth * .6], [x, ground + height * 1.04, z], c.clone().multiplyScalar(.85), 0, null, { facade: true });
-    if (roof && Math.abs(z) < 120000) {
+    if (roof && !terrace && Math.abs(z) < 120000) {
         if (r() < .7) b.box([width * (.2 + r() * .2), 2200, depth * .25], [x + (r() - .5) * width * .4, ground + height + 1100, z + (r() - .5) * depth * .3], '#8f8b84');
         if (r() < .45) { const tx = x + (r() - .5) * width * .6, tz = z + (r() - .5) * depth * .4; b.add(TANK, M(tx, ground + height + 3000, tz, 1200, 2400, 1200), () => colour('#6f5f50')); b.box([1600, 1800, 1600], [tx, ground + height + 900, tz], '#4a4b4c'); }
         for (let i = 0, m = Math.floor(r() * 4); i < m; i++) b.box([1200, 900, 1000], [x + (r() - .5) * width * .7, ground + height + 450, z + (r() - .5) * depth * .6], '#a09f9b');
     }
-    if (roof && Math.abs(z)<68000) roofDetail(b,x,ground+height+600,z,width,depth);
+    if (terrace) plantedRoof(k, r, x, ground + height + 600, z, width, depth);
+    else if (roof && Math.abs(z)<68000) roofDetail(b,x,ground+height+600,z,width,depth);
     if (!roof && crown) {
         const top=ground+height;
         b.box([width*.39,height*.045,depth*.43],[x,top+height*.102,z],c.clone().multiplyScalar(.82));
@@ -400,9 +444,54 @@ function skyline(k, r, cx, ground, { near = -300000, far = -1100000, min = 60000
         }
     }
 }
+// Occupied roofs across from the gym. The low planting and timber shade frame sit
+// below the distant skyline, with an ornamental tree offset to one side.
+function plantedRoof(k, r, x, top, z, width, depth) {
+    const b = k.land, front = z + depth / 2, deck = '#aa8261', rail = '#496863';
+    b.box([width - 200, 90, depth - 200], [x, top + 45, z], deck);
+    for (let i = -4; i <= 4; i++)
+        b.box([width - 300, 12, 28], [x, top + 94, z + depth * i / 10], '#705849');
+    for (const side of [-1, 1]) {
+        b.box([130, 930, depth], [x + side * (width / 2 - 65), top + 465, z], rail);
+        b.box([width, 240, 170], [x, top + 120, z + side * (depth / 2 - 85)], '#aa6348');
+        b.box([width, 65, 80], [x, top + 1050, z + side * (depth / 2 - 85)], rail);
+        for (let j = -4; j <= 4; j++)
+            b.box([45, 850, 45], [x + width * j / 8.2, top + 620, z + side * (depth / 2 - 85)], rail);
+    }
+    const px = x - width * .21, pz = z - depth * .15;
+    for (const dx of [-2450, 2450]) for (const dz of [-1450, 1450])
+        b.box([130, 2550, 130], [px + dx, top + 1365, pz + dz], rail);
+    for (const dz of [-1450, 1450])
+        b.box([5300, 200, 150], [px, top + 2620, pz + dz], '#986444');
+    for (let j = -4; j <= 4; j++)
+        b.box([240, 150, 3500], [px + j * 600, top + 2790, pz], '#c39765');
+    bench(b, px, top + 90, pz);
+    k.lights.box([3900, 50, 65], [px, top + 2520, pz + 1450], '#edc998');
+    b.light(px, top + 1500, pz, '#e9bc87', 3300, .42);
+    for (const side of [-1, 1]) {
+        const bx = x + side * width * .26, bz = front - 1350;
+        b.box([4300, 580, 1400], [bx, top + 380, bz], '#ae674b');
+        b.box([4180, 40, 1280], [bx, top + 675, bz], '#534239');
+        for (let i = -1; i <= 1; i++)
+            shrub(b, r, bx + i * 1280, top + 700, bz, 650, i ? '#52774b' : '#879454');
+    }
+    const tx = x + width * .24, tz = z - depth * .17;
+    b.box([2500, 720, 2500], [tx, top + 450, tz], '#687b75');
+    tree(b, r, tx, top + 810, tz, { height: 3600, hex: '#708e52', shape: 'ornamental' });
+    // A continuous band of recessed steel sash and a projecting sill under the parapet.
+    b.box([width, 420, 200], [x, top - 1000, front], rail);
+    const bay = (width - 1200) / 5;
+    for (let i = -2; i <= 2; i++) {
+        const sashX = x + i * bay;
+        b.box([bay - 380, 1950, 100], [sashX, top - 2230, front + 65], '#45636b');
+        b.box([75, 1950, 145], [sashX, top - 2230, front + 65], '#404c4f');
+        b.box([bay - 250, 110, 260], [sashX, top - 3240, front + 60], '#b09d87');
+    }
+}
+
 function highCity(k, ctx, opts, neon) {
     const { land: b, r } = k, ground = ctx.ground, cx = (ctx.left + ctx.right) / 2, eye = ctx.storey + 1600, out = new THREE.Color();
-    const roofs = colour('#8b8780'), street = colour('#4a4b4e');
+    const street = colour('#4a4b4e');
     k.hazeFar = 170000;
     groundPlane(b, ground, cx - 160000, cx + 160000, -130000, -9000, 6000, () => out.copy(street).multiplyScalar(.9 + r() * .15));
     groundPlane(b, ground - 30, cx - 900000, cx + 900000, -1400000, -130000, 45000, () => out.copy(street).multiplyScalar(1 + r() * .1));
@@ -412,13 +501,13 @@ function highCity(k, ctx, opts, neon) {
         const d = Math.abs(z), bw = 15000 + d * .1, gap = 7000 + d * .03, span = 30000 + d * 2.6;
         for (let x = cx - span + r() * bw; x < cx + span; x += bw * (.7 + r() * .6) + gap) {
             const tall = r() < .14 && Math.abs(x - cx) > ctx.width / 2 + bw, height = eye * (tall ? 1.05 + r() * .5 : .32 + r() * .5) + 3000;
-            plainBlock(k, r, x, ground, z - r() * gap, { width: bw * (.7 + r() * .4), depth: 14000 + d * .08, height, wall: pick(r, ['#a49a8c', '#b5ab9c', '#8f8478', '#9c9a94', '#a8806c', '#7c7a78', '#94604e', '#c4b8a4', '#6e6a66']) });
+            const terrace = opts.includes('square') && Math.abs(x - cx) < 36000 && ((z === rows[0] && x <= cx) || (z === rows[1] && x > cx));
+            plainBlock(k, r, x, ground, z - r() * gap, { terrace, width: bw * (.7 + r() * .4), depth: 14000 + d * .08, height, wall: pick(r, ['#a49a8c', '#b5ab9c', '#8f8478', '#9c9a94', '#a8806c', '#7c7a78', '#94604e', '#c4b8a4', '#6e6a66']) });
             if (neon && r() < .25 && d < 100000) { const c = pick(r, NEON); k.lights.box([bw * .4, 1200, 200], [x, ground + height - 2500, z + 9000], c); k.halos.add(x, ground + height - 2500, z + 9500, bw * .3, c, .2); }
         }
         // the street in front of each row: its lamps after dark
         for (let x = cx - span; x < cx + span; x += 24000 + r() * 8000) if (seen(b, x, z, 2000)) { k.lights.box([500, 200, 500], [x, ground + 6500, z + 12000], '#ffd29a'); k.halos.add(x, ground + 6500, z + 12000, 2400, '#ffcf90', .3); }
     }
-    void roofs;
     skyline(k, r, cx, ground, { near: -340000, far: -1300000, min: eye * .8 + 30000, max: eye + 160000, neon });
 }
 function city(k, ctx, { neon = false } = {}) {
@@ -549,7 +638,19 @@ function city(k, ctx, { neon = false } = {}) {
         b.box([18000, 900, 300], [cx, ground + 450, far - 2400], '#8f8a82');
         for (let x = cx - 7800; x < cx + 7800; x += 2600) if (r() < .55) car(k, r, x + 1300, ground, across - 5000, { turn: Math.PI / 2 + (r() - .5) * .1 });
         const bx = cx + side * 10500; for (const s of [-1, 1]) pole(b, bx + s * 2500, ground, across - 11000, 7500, 160, '#5a5c5e');
-        b.box([7000, 3200, 300], [bx, ground + 9000, across - 11000], '#4f5560'); b.quad(6600, 2800, [bx, ground + 9000, across - 10840], colour('#7d8a8c'));
+        b.box([7000, 3200, 300], [bx, ground + 9000, across - 11000], '#4f5560'); b.quad(6600, 2800, [bx, ground + 9000, across - 10840], colour('#25606a'));
+        // Screen-printed record sleeve on the billboard above the rehearsal-room street.
+        const printZ = across - 10824, recordX = bx - 1490, recordY = ground + 9000;
+        const disc = new THREE.CircleGeometry(1110, 40);
+        b.add(disc, M(recordX, recordY, printZ), () => colour('#24363e')); disc.dispose();
+        for (const radius of [355, 780, 905]) {
+            const ring = new THREE.RingGeometry(radius-31, radius, 40);
+            b.add(ring, M(recordX, recordY, printZ+4), () => colour('#d19b73')); ring.dispose();
+        }
+        for (let j = 0; j < 11; j++) {
+            const h = 380 + 1430 * Math.sin((j+1)*Math.PI/12)**2;
+            b.quad(146, h, [bx+180+j*242, recordY, printZ], j<7?'#d18b61':'#d9c393');
+        }
         k.lights.box([7000, 120, 200], [bx, ground + 10700, across - 10800], '#f0e6d0'); b.light(bx, ground + 9000, across - 9000, '#f4ecd8', 3500, .2);
         for (let x = L - 20000; x < R + 20000;) { const width = 14000 + r() * 14000;
             plainBlock(k, r, x + width / 2, ground, -56000 - r() * 12000, { width, depth: 16000, height: (2 + Math.floor(r() * 3)) * 3300, wall: pick(r, walls) }); x += width + 3000 + r() * 9000; }
@@ -569,7 +670,7 @@ function city(k, ctx, { neon = false } = {}) {
     // far off: the towers
     skyline(k, r, cx, ground, { near: -260000, far: -1000000, min: 40000, max: 140000, neon });
 }
-const CITY_NIGHT = { morning: {haze:.22, air:'#a8bbc5', horizon:'#c9d9dc'}, afternoon:{haze:.24,air:'#afbfca'}, night: { horizon: '#3a3a4e', air: '#2a2c3a', stars: .25, tint: [.13, .14, .2] }, party: { horizon: '#36334a', air: '#26263a', stars: .15 } };
+const CITY_NIGHT = { morning: {haze:.17, air:'#99adbc', horizon:'#d6c8ae'}, afternoon:{haze:.13,air:'#8caac3'}, night: { horizon: '#3a3a4e', air: '#2a2c3a', stars: .25, tint: [.13, .14, .2] }, party: { horizon: '#36334a', air: '#26263a', stars: .15 } };
 const NEON_NIGHT = { ...CITY_NIGHT, evening: { horizon: '#d98a70', zenith: '#4a4f82' }, night: { zenith: '#0e0f22', horizon: '#33304a', air: '#24223a', stars: .1, tint: [.12, .12, .19] }, party: { zenith: '#10112a', horizon: '#3a3150', air: '#282640', stars: .05 } };
 
 // ---- a yard behind a garage workshop: a concrete apron and gravel, a lumber rack under a lean-to, a shed, a work
@@ -585,6 +686,12 @@ function yard(k, ctx) {
         return out.copy(grassC).lerp(dirt, d * .3).multiplyScalar(.9 + r() * .1); }, 450);
     // near the wall: a workbench outside, sawhorses, a stack of pavers, weeds along the wall's foot
     grass(b, r, ctx.left - 2000, ctx.right + 2000, -900, -300, ground, 260, '#748a58', 300);
+    for (const x of [-3900, -900, 2100, 5100])
+        paint(b, cx+x, ground, -2300, 21, 4310, '#888578');
+    const drainX = cx + flip*1930;
+    b.box([390, 24, 880], [drainX, ground+10, -1770], '#646860');
+    for (let i = -5; i <= 5; i++)
+        b.box([346, 9, 34], [drainX, ground+25, -1770+i*72], '#3f4845');
     const benchZ=-2590;
     for(const support of [-1,1]){
         const x=cx+support*990;
@@ -604,7 +711,16 @@ function yard(k, ctx) {
     const lx = cx + flip * (w / 2 + 6000), lz = -7800;
     for (const dx of [-2400, 2400]) for (const dz of [-1200, 1200]) b.box([120, 2700, 120], [lx + dx, ground + 1350, lz + dz], '#7f6a55');
     b.box([5600, 80, 3000], [lx, ground + 2750, lz], '#8d9298');
-    for (let i = 0; i < 4; i++) b.box([4600, 90 + r() * 60, 2000], [lx, ground + 350 + i * 260, lz], pick(r, ['#c9a77a', '#bf9b6c', '#d1b083', '#b48e62']), .05, r);
+    for (let i = -7; i <= 7; i++) b.box([55, 48, 2980], [lx+i*364, ground+2810, lz], '#a8adab');
+    for (let level = 0; level < 4; level++) {
+        const y = ground + 430 + level*340;
+        for (const dx of [-1840, 1840]) b.box([100, 135, 2210], [lx+dx, y-112, lz], '#706450');
+        const timber = pick(r, ['#bb956d', '#d1b18a', '#b48c67']);
+        for (let j = 0; j < 5; j++) {
+            const length = 4380 + 280*Math.sin(level*8 + j*3);
+            b.box([length, 145, 335], [lx+80*Math.cos(j), y, lz+(j-2)*369], timber);
+        }
+    }
     const sx = cx - flip * 6500, sz = -12500;
     house(k, r, sx, ground, sz, { width: 4200, depth: 3200, eaves: 2400, ridge: 1100, wall: '#8c9a88', roof: '#5d5a56', lit: [], porch: false, storeys: 1 });
     // a work trailer and a pickup
@@ -702,7 +818,16 @@ function coast(k, ctx, edge, drop, shore, townFrom, townTo, mediaLab = false) {
     // the town: blocks and houses under tile roofs, palms among them
     for (let z = townFrom; z > townTo; z -= 9000 + r() * 4000) for (let x = cx - 80000 - r() * 10000; x < cx + 80000; x += 13000 + r() * 9000) {
         if (r() < .2) { fanPalm(b, r, x, low, z, { height: 16000 + r() * 8000 }); continue; }
-        house(k, r, x, low, z, { width: 9000 + r() * 6000, depth: 8000 + r() * 3000, eaves: r() < .5 ? 6000 : 3200, ridge: 2200, storeys: 2, wall: pick(r, ['#e6dcc0', '#dccfae', '#efe4c8', '#d8c6a2', '#e8d6b4']), roof: pick(r, ['#b0613f', '#a85a3c', '#b86c48', '#9c5638']), lit: r() < .5 ? [0, 3] : [2], porch: false });
+        const width = 9000 + r()*6000, depth = 8000 + r()*3000, eaves = r() < .5 ? 6000 : 3200;
+        const wall = pick(r, ['#e4d3b7', '#c5cfc4', '#e5dbcb', '#c39579', '#ded0ae']);
+        const roof = pick(r, ['#ae664d', '#91715d', '#ae7756', '#79665a']);
+        house(k, r, x, low, z, { width, depth, eaves, ridge: 2200, storeys: eaves > 4000 ? 2 : 1, wall, roof, lit: r() < .5 ? [0, 3] : [2], porch: false });
+        const face = z + depth/2;
+        b.box([width+470, 175, 190], [x, low+eaves, face+310], '#a7947b');
+        b.box([width+490, 190, 290], [x, low+eaves+2190, z], '#97715d');
+        const porchX = x - width*.13;
+        b.box([width*.51, 125, 1180], [porchX, low+2420, face+580], '#748a85');
+        for (const side of [-1, 1]) pole(b, porchX+side*width*.23, low, face+1070, 2370, 74, '#eee0c6');
     }
     for (let x = cx - 90000; x < cx + 90000; x += 18000 + r() * 12000) streetLamp(k, x, low, roadZ + 2600, { height: 7000, reach: 1400, face: -1, power: .7 });
     for (let x = cx - 90000; x < cx + 90000; x += 9000 + r() * 16000) if (r() < .5) car(k, r, x, low, roadZ + (r() < .5 ? 1100 : -1100), { turn: (r() < .5 ? 0 : Math.PI) });
@@ -919,6 +1044,13 @@ function campus(k, ctx) {
     const spots = v === 'quad' ? [[-9000, -11000], [8000, -13000], [-15000, -21000], [14000, -22000], [-3000, -24000]] : [[-7000, -9000], [11000, -12500], [-15000, -17000], [3000, -20000], [19000, -21000], [-23000, -24000]];
     for (const [x, z] of spots) { const turn = r() < .2; tree(b, r, cx + f * x + jit(2000), ground, z + jit(2000), { height: 8000 + r() * 4000, hex: turn ? pick(r, ['#a8743e', '#b5603c', '#9a8a44']) : pick(r, ['#5e7a4a', '#66804c', '#58744a']), shape: r() < .5 ? 'spreading' : 'round', bark: '#5a4d42' }); }
     for (let z = -6000; z > -30000; z -= 8000) { const x = paths[0](z); pathLight(k, x + 1300, ground, z, '#ffdcae', .6); if (r() < .6) bench(b, x - 1600, ground, z - 1500, f * Math.PI / 2, '#5d4f42'); }
+    const border = rand(ctx.seed + 211);
+    for (let i = 0; i < 13; i++) {
+        const z = -10200-i*840, x = paths[0](z)+f*(2050+260*Math.cos(i*.62));
+        if (Math.abs(x-paths[1](z))<2150) continue;
+        shrub(b, border, x, ground, z, 375+i%3*44, i%3?'#6c835b':'#849269', {size:105});
+        if (i%4 !== 0) flowers(b, border, x, ground+390, z, 310, 16, ['#aa805b','#bbbb83','#b88c9e'], 57);
+    }
     // the buildings
     if (v === 'quad') { collegeWing(k, r, cx, ground, -40000, { width: 52000, floors: 3, tower: r() < .6 }); for (const s of [-1, 1]) collegeWing(k, r, cx + s * 30000, ground, -25000, { width: 26000, floors: 3 }); }
     else collegeWing(k, r, cx + f * 6000 + jit(6000), ground, -38000 + jit(4000), { width: 46000 + jit(10000), floors: 2 + Math.floor(r() * 2), tower: v === 'green' && r() < .5 });
@@ -953,6 +1085,13 @@ function schoolyard(k, ctx) {
             for(const sign of [-1,1])paint(b,bx+side*9720,ground+4,cz+sign*1980,5590,70,ink);
             paint(b,bx+side*6960,ground+4,cz,70,3960,ink);
         }
+        for (const side of [-1, 1]) {
+            // Free-throw semicircles at the key, marked on the actual playing surface.
+            const arc = new THREE.RingGeometry(1905, 1980, 32, 1, -Math.PI/2, Math.PI);
+            arc.rotateX(-Math.PI/2);
+            b.add(arc, M(bx+side*6960, ground+12, cz, 1,1,1, side>0?Math.PI:0), () => colour(ink));
+            arc.dispose();
+        }
         paint(b,bx,ground+4,cz,80,13100,ink);
         const ring=new THREE.RingGeometry(1560,1635,44).rotateX(-Math.PI/2);
         b.add(ring,M(bx,ground+11,cz),()=>colour(ink));ring.dispose();
@@ -966,6 +1105,10 @@ function schoolyard(k, ctx) {
     // the play structure: a deck on posts, a roof, a slide, a climbing wall; swings; a hoop; a shade sail
     if (v !== 'middle') {
         const px = cx + f * (w / 2 + 3500), pz = -13000, small = v === 'kinder' ? .7 : 1;
+        const pad = new THREE.CircleGeometry(1, 40).rotateX(-Math.PI/2);
+        b.add(pad, M(px-f*1250,ground+5,pz,4300,1,2770), () => colour('#946f57'));
+        b.add(pad, M(px-f*1250,ground+9,pz,4020,1,2510), () => colour('#b48f67'));
+        pad.dispose();
         for (const [dx, dz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) b.box([150, 3200 * small, 150], [px + dx * 1100, ground + 1600 * small, pz + dz * 1100], '#2f6a9a');
         b.box([2400, 120, 2400], [px, ground + 1500 * small, pz], '#d8a83a'); b.add(new THREE.ConeGeometry(1900, 1300 * small, 4, 1).rotateY(Math.PI / 4), M(px, ground + 3800 * small, pz), () => colour('#c8503a'), { facet: true });
         b.add(BOX_UNIT, new THREE.Matrix4().compose(V(px - f * 2600, ground + 800 * small, pz + 300), new THREE.Quaternion().setFromAxisAngle(V(0, 0, 1), f * .5), V(3000, 60, 700)), () => colour('#e0b030'));
@@ -1081,7 +1224,7 @@ export const SCENES = {
     // that the grove still reads as trees through the film's cameras, which see it from across the room)
     humboldt: { build: humboldt, storey: 0, hazeFar: 60000, lampLevel: .7, haloLevel: 1.2, hours: {
         morning: { tint: [.86, .88, .86], zenith: '#a3b0b8', horizon: '#d5d8d4', sun: [-50, 16, '#f2eee2', .22], clouds: .95, haze: .46, air: '#c9cfcd' },
-        afternoon: { tint: [.94, .95, .92], zenith: '#8aa5bb', horizon: '#d6dcdc', sun: [45, 42, '#fff6e6', .35], clouds: .7, haze: .38, air: '#cdd4d4' },
+        afternoon: { tint: [.94, .95, .92], zenith: '#588bae', horizon: '#c8d6d7', sun: [45, 42, '#fff6e6', .35], clouds: .57, haze: .33, air: '#bccbcf' },
         evening: { tint: [.62, .56, .55], zenith: '#56607c', horizon: '#b99a8a', sun: [36, 6, '#ffb07a', .6], clouds: .8, haze: .52, air: '#9a8c86' },
         night: { tint: [.09, .11, .15], zenith: '#0d1420', horizon: '#26303a', clouds: .9, haze: .6, air: '#1e2730', stars: .15 },
         party: { tint: [.12, .12, .2], zenith: '#151a32', horizon: '#33304e', clouds: .85, haze: .6, air: '#262640', stars: .1 } } },

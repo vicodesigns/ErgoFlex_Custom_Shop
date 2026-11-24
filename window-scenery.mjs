@@ -50,9 +50,9 @@ export const DEFAULT_VIEW = { '*': 'scenery' };
 // A scene may adjust any of these for its place (SCENES[name].hours), e.g. a marine layer or a city's glow.
 // Party is an ordinary late evening outside (the room's own party lights carry the mood; M7 of the November 13 review).
 export const HOURS = {
-    morning:   { tint: [1.0, .95, .86], zenith: '#7aabd2', horizon: '#dfd9cc', sun: [-52, 13, '#ffe2b0', .8], light: [.62, .62], clouds: .42, lamp: 0, haze: .34, air: '#cdd2cd', stars: 0 },
-    afternoon: { tint: [.98, .99, .97], zenith: '#7aa9cf', horizon: '#dbe3e6', sun: [48, 50, '#fff4e2', .45], light: [.58, .7], clouds: .5, lamp: 0, haze: .34, air: '#d3dbe0', stars: 0 },
-    evening:   { tint: [.78, .62, .55], zenith: '#55628c', horizon: '#e49c6c', sun: [38, 5, '#ff9f5c', 1.0], light: [.6, .75], clouds: .55, lamp: .5, haze: .55, air: '#b88a74', stars: 0 },
+    morning:   { tint: [1.0, .95, .86], zenith: '#467fb4', horizon: '#e2c99e', sun: [-52, 13, '#ffe2b0', .8], light: [.56, .79], clouds: .45, lamp: 0, haze: .22, air: '#b6c3c6', stars: 0 },
+    afternoon: { tint: [.98, .99, .97], zenith: '#246dac', horizon: '#92c0dc', sun: [48, 50, '#fff4e2', .45], light: [.52, .83], clouds: .34, lamp: 0, haze: .12, air: '#9fb9cd', stars: 0 },
+    evening:   { tint: [.78, .62, .55], zenith: '#4d5886', horizon: '#e5a076', sun: [38, 5, '#ff9f5c', 1.0], light: [.6, .75], clouds: .55, lamp: .5, haze: .31, air: '#ae8c86', stars: 0 },
     night:     { tint: [.11, .135, .21], zenith: '#09101f', horizon: '#1d2a40', sun: [30, 36, '#c9d6f0', .22], light: [.8, .3], clouds: .2, lamp: 1, haze: .45, air: '#151d30', stars: 1 },
     party:     { tint: [.13, .14, .22], zenith: '#0c1226', horizon: '#2a2a40', sun: [-40, 30, '#d0d4ec', .2], light: [.8, .3], clouds: .25, lamp: 1, haze: .45, air: '#1b1e30', stars: .6 }
 };
@@ -81,7 +81,7 @@ attribute vec3 canopy; uniform vec3 shadeHour; varying float vCanopy;
 #endif
 attribute vec3 tone; attribute vec3 glow; varying vec3 vTone; varying vec3 vGlow; varying vec3 vWorld; varying vec3 vFrame; varying vec3 vNormal;
 #ifdef LEAVES
-varying vec2 vUv;
+uniform float weatherSeconds; varying vec2 vUv;
 #endif
 void main() { vTone = tone; vGlow = glow; vFrame = position; vNormal = normal;
     #ifdef CANOPY
@@ -89,8 +89,15 @@ void main() { vTone = tone; vGlow = glow; vFrame = position; vNormal = normal;
     #endif
     #ifdef LEAVES
     vUv = uv;
+    // A breeze passes through attached sprays. Keep woody geometry still
+    // and use a continuous field so adjoining vertices move together.
+    if (uv.x >= 0.) {
+        float gust = sin(weatherSeconds * .79 + dot(position.xz, vec2(.00043, .00032)));
+        float flutter = sin(weatherSeconds * 1.9 + position.y * .0041 + position.x * .0013);
+        vFrame.xz += vec2(1., .32) * (13. * gust + 4. * flutter);
+    }
     #endif
-    vec4 w = modelMatrix * vec4(position, 1.0); vWorld = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`;
+    vec4 w = modelMatrix * vec4(vFrame, 1.0); vWorld = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`;
 // The land: its colour lit by the sky (a hemisphere, the ground's bounce below) and the sun (the hour's direction, so
 // shade falls on the side away from the sun in the sky), a grain from the noise on walls and ground, into the air by
 // distance, a little greyer after dark; the lamps' light on top.
@@ -114,7 +121,9 @@ void main() {
         if (t.a * (1. + clamp(lod, 0., 5.) * .3) < .45) discard; tone *= t.r * 1.4; }   // (alpha holds up in the small mip levels, so far crowns keep their mass)
     else tone *= .78 + .44 * texture2D(noiseMap, vFrame.xy / 2600.).b;
     #endif
-    float d = length(vFrame.xz), h = haze * (1. - exp(-1.7 * d / hazeFar)) + (1. - haze) * (1. - exp(-d / (hazeFar * 8.)));   // the air: near things keep their colour, far ones go into it
+    // Keep colour in the first few metres. The distant ridge still merges into the sky.
+    float d = max(0., length(vFrame.xz) / hazeFar - .045);
+    float h = mix(1. - exp(-.075 * d), 1. - exp(-1.45 * d), haze);
     #ifdef LAMP
     if (lamp < .02) discard;
     vec2 gv = abs(vNormal.x) > abs(vNormal.z) ? vFrame.zy : vFrame.xy; float v = texture2D(noiseMap, gv / 3600.).r;
@@ -145,7 +154,11 @@ void main() {
             float blur = clamp(max(fw.x, fw.y) * 2.5 - .4, 0., 1.), win = step(.26, f.x) * step(f.x, .74) * step(.28, f.y) * step(f.y, .8);
             float on = step(cellHash(floor(fc)), facadeLit) * (.5 + .5 * cellHash(floor(fc) + 7.));
             win = mix(win, .22, blur); on = mix(on * win, facadeLit * .15, blur);
-            tone = mix(tone, tone * .3 + vec3(.035, .04, .05), win); lit = vec3(1., .78, .52) * on * .45;
+            float reflection = .5 + .5*sin(fc.x*.39 + fc.y*.17 + 1.6*sin(fc.y*.29));
+            vec3 glazing = mix(tone*.26, air*vec3(.44,.59,.68), .31+.37*reflection);
+            float sill = (1.-smoothstep(.025,.10,abs(f.y-.24))) * (1.-blur);
+            tone = mix(tone, glazing, win) * (1.-.15*sill);
+            lit = vec3(1., .78, .52) * on * .45;
         }
         vec2 g = abs(n.y) > .6 ? vFrame.xz : vec2(vFrame.x + vFrame.z, vFrame.y);
         tone *= .8 + .4 * dot(texture2D(noiseMap, g / 6400.), vec4(.36, .3, .22, .12));
@@ -200,25 +213,25 @@ vec3 seaAt(vec3 view, vec3 sunDir, vec2 spot) {
     // remain visible after the small capillary ripples have averaged away.
     vec4 offshore=texture2D(noiseMap,vec2(m.x/280.,m.y/95.));
     float banks=clamp((offshore.g-.5)*1.8+(offshore.b-.5)*.45,-.55,.55);
-    c=mix(c,seaColor*day, .26) * (1.+.52*banks);
-    float sets=sin(m.y*.145+1.6*sin(m.x*.039+m.y*.008)+4.2*offshore.g);
+    c=mix(c,seaColor*day, .30) * (1.+.34*banks);
+    float sets = sin(m.y*.145 - weatherSeconds*.32 + 2.3*sin(m.x*.039 + m.y*.008) + 6.2*offshore.g);
     float resolve=1.-smoothstep(.55,3.,fwidth(m.y*.145));
     float wind=.55+.45*sin(m.x*.025+m.y*.013+offshore.b*4.);
     c+=vec3(.028,.078,.084)*day*(sets*.5+.5)*resolve*(.25+.75*wind)*(.4+.7*offshore.r);
-    float swell = m.y*.88 + sin(m.x*.13) + .58*sin(m.x*.39+m.y*.07);
+    float swell = m.y*.88 - weatherSeconds*1.15 + 1.7*sin(m.x*.13) + .68*sin(m.x*.39+m.y*.07);
     float crest = .5+.5*sin(swell), detail=1.-smoothstep(.4,2.8,fwidth(swell));
-    float ripple = sin(m.y*3.2+m.x*.29+sin(m.x*.52));
+    float ripple = sin(m.y*3.2 + m.x*.29 - weatherSeconds*2.2 + sin(m.x*.52));
     float streak = (crest*crest-.38)*detail + ripple*.15*(1.-smoothstep(.35,2.5,fwidth(m.y*3.2)));
     c *= 1.+.29*streak;
     c += vec3(.045,.115,.12)*day*detail*pow(crest,6.)*(.5+.5*sin(m.x*.18+m.y*.04));
     #endif
     vec3 r = reflect(view, vec3(0., 1., 0.)); float s = max(dot(r, sunDir), 0.), s2 = s * s, s6 = s2 * s2 * s2;
-    vec2 g = spot / 1800., cell = floor(g), f = fract(g) - .5; float sparkle = step(.55, seaHash(cell)) * (.5 + .5 * seaHash(cell + 3.1)) * smoothstep(.5, .1, length(f));
+    vec2 g = spot / 1800. + weatherSeconds * vec2(.018, -.13), cell = floor(g), f = fract(g) - .5; float sparkle = step(.55, seaHash(cell)) * (.5 + .5 * seaHash(cell + 3.1)) * (1. - smoothstep(.1, .5, length(f)));
     float s48 = s6 * s6; s48 *= s48; s48 *= s48;
     c += sunColor * sunPower * (s48 * 1.4 * sparkle + s6 * .12);
     return mix(c, horizon * .92, exp(-down * 220.) * .45);           // into the haze at the horizon
 }`;
-const SEA = `uniform sampler2D noiseMap; uniform vec3 zenith, horizon, sunLocal, sunColor, wOut, wRight, seaColor; uniform float sunPower, level;
+const SEA = `uniform sampler2D noiseMap; uniform vec3 zenith, horizon, sunLocal, sunColor, wOut, wRight, seaColor; uniform float sunPower, level, weatherSeconds;
 varying vec3 vWorld;
 ${PORTAL}
 ${SEA_AT}
@@ -232,10 +245,9 @@ void main() {
 }`;
 const SKY_VERTEX = `varying vec3 vWorld;
 void main() { vec4 w = modelMatrix * vec4(position, 1.0); vWorld = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }`;
-// The sky on the pane, by view direction: a gradient, the sun or moon, soft clouds (two fetches of the noise texture,
-// coloured from the sky itself, so they go dark with it at night), stars as soft points sized to the pixel. drift moves
-// the clouds (left at 0: they stand still unless a film animates it).
-const SKY = `uniform vec3 zenith, horizon, sunLocal, sunColor, wOut, wRight, seaColor; uniform float sunPower, clouds, stars, level, drift, nearZ, sea; uniform mat4 portalInv;
+// The sky on the pane follows the view direction. Clouds use the hour’s light and
+// drift with elapsed Studio time or the Director playhead. Stars are sized to the pixel.
+const SKY = `uniform vec3 zenith, horizon, sunLocal, sunColor, wOut, wRight, seaColor; uniform float sunPower, clouds, stars, level, weatherSeconds, nearZ, sea; uniform mat4 portalInv;
 uniform sampler2D noiseMap;
 varying vec3 vWorld;
 ${SEA_AT}
@@ -247,8 +259,8 @@ void main() {
     vec3 dir = isOrthographic ? view : normalize(vWorld - cameraPosition);
     vec3 sunDir = normalize(wRight * sunLocal.x + vec3(0., sunLocal.y, 0.) + wOut * sunLocal.z);
     float up = dir.y;
-    vec3 c = mix(horizon, zenith, pow(smoothstep(-.02, .62, up), .75));
-    if (up < 0.) { c = mix(c, horizon * .92, smoothstep(.0, -.12, up));            // below the horizon: the far air (behind the scenery)
+    vec3 c = mix(horizon, zenith, 1. - exp(-max(up + .009, 0.) * 6.2));
+    if (up < 0.) { c = mix(c, horizon * .92, smoothstep(0., .12, -up));            // below the horizon: the far air (behind the scenery)
         if (sea > .5) c = up > -.035 ? seaAt(dir, sunDir, dir.xz / max(-up, 1e-4) * 9e5) : mix(horizon, seaColor, .5); }   // beyond the modelled sea: more of it, to the horizon (lower down the sea mesh covers it: a plain colour there)
     float s = max(dot(dir, sunDir), 0.), s2 = s * s, s5 = s2 * s2 * s, s40 = s5 * s5; s40 *= s40; s40 *= s40;
     c += sunColor * sunPower * (pow(s, 900.) * 1.6 + s40 * .32 + s5 * .1);
@@ -258,14 +270,23 @@ void main() {
             c += vec3(.75, .8, 1.) * (.35 + .65 * hash(g + 7.)) * stars * smoothstep(.04, .3, up) * .5 * smoothstep(r, r * .25, length(f)) * min(1., .2 / px); } }
     // clouds on a level sheet above: soft-edged, lit from the sun's side, coloured from the sky, thinning toward the horizon
     if (clouds > .01 && up > -.01) {
-        vec2 q = vec2(dot(dir, wRight), dot(dir, wOut)) / max(up + .16, .1) * .085 + vec2(drift, 0.);
-        float n = fbmT(q) * .62 + fbmT(q * 2.71 + .37) * .38;
-        float cover = smoothstep(1. - clouds * .62, 1.36 - clouds * .5, n + .3) * smoothstep(-.01, .2, up);
-        vec3 grey = vec3(dot(horizon, vec3(.33))), lit = mix(horizon, grey, .35) * 1.04, shade = mix(zenith, horizon, .55) * .86;
-        vec3 cloud = mix(shade, lit, smoothstep(.35, .8, n)) + sunColor * sunPower * .2 * s2 * s;
-        float wisps = fbmT(q * vec2(1.8, 8.) + vec2(.41, .76));
-        c = mix(c, lit, smoothstep(.57, .81, wisps) * clouds * .23 * smoothstep(.015, .23, up));
-        c = mix(c, cloud, cover * .85);
+        // Two wind layers in world coordinates. A displaced sample gives each bank a
+        // sun-facing edge and a shaded belly, even in the narrow strip above a roof.
+        vec2 sheet = dir.xz * (.125 / max(up + .13, .11));
+        vec2 wind = weatherSeconds * .0028 * vec2(1., .24);
+        vec2 q = sheet + wind;
+        float mass = .70 * fbmT(q) + .30 * fbmT(q * 2.7 + .37);
+        float edge = .64 - .32 * clouds;
+        float cover = smoothstep(edge, edge + .12, mass) * smoothstep(.002, .105, up);
+        float towardSun = fbmT(q + sunDir.xz * .045);
+        float rim = clamp(.5 + (mass - towardSun) * 4.5, 0., 1.);
+        float day = clamp(dot(horizon, vec3(.24, .65, .11)) * 2.6, 0., 1.);
+        vec3 shade = mix(zenith, horizon, .52) * .81;
+        vec3 lit = mix(horizon, sunColor, .61 * day) * (1. + .23 * sunPower);
+        vec3 cloud = mix(shade, lit, .26 + .74 * rim);
+        float wisps = fbmT(sheet * vec2(2., 7.) + wind * .46 + vec2(.41, .76));
+        c = mix(c, lit, smoothstep(.56, .77, wisps) * clouds * .32 * smoothstep(.01, .17, up));
+        c = mix(c, cloud, cover * .94);
     }
     gl_FragColor = vec4(c * level, 1.);
     #include <tonemapping_fragment>
@@ -361,7 +382,7 @@ function world(panes, name, scene, options) {
         e.hazeFar = k.hazeFar; e.triangles = k.land.triangles + k.lights.triangles + k.leaves.triangles + k.halos.position.length / 9;
         return e;
     });
-    const shared = { ...portal, shadeHour: { value: new THREE.Vector3() }, tint: { value: new THREE.Vector3(1, 1, 1) }, air: { value: new THREE.Color() }, haze: { value: 0 }, hazeFar: { value: entry.hazeFar ?? scene.hazeFar ?? 52000 }, level: { value: LEVEL }, lamp: { value: 0 },
+    const shared = { ...portal, weatherSeconds: { value: 0 }, shadeHour: { value: new THREE.Vector3() }, tint: { value: new THREE.Vector3(1, 1, 1) }, air: { value: new THREE.Color() }, haze: { value: 0 }, hazeFar: { value: entry.hazeFar ?? scene.hazeFar ?? 52000 }, level: { value: LEVEL }, lamp: { value: 0 },
         lampLevel: { value: scene.lampLevel ?? 1 }, haloLevel: { value: scene.haloLevel ?? 1 }, ambient: { value: .6 }, sunShare: { value: .7 }, facadeLit: { value: scene.facadeLit ?? .14 },
         sunDirF: { value: new THREE.Vector3(0, 1, 0) }, sunLight: { value: new THREE.Color(1, 1, 1) }, skyLight: { value: new THREE.Color(1, 1, 1) }, groundLight: { value: new THREE.Color(.5, .5, .5) },
         noiseMap: { value: tex.noise }, leafMap: { value: tex.leaves } };
@@ -378,12 +399,12 @@ function world(panes, name, scene, options) {
     const sky = new THREE.ShaderMaterial({ defines, vertexShader: SKY_VERTEX, fragmentShader: SKY, depthWrite: false, side: frame.material?.side ?? THREE.FrontSide, uniforms: {
         portalInv: portal.portalInv, nearZ: { value: Math.min(...openings.map(o => o.at.z)) - 5 },
         zenith: { value: new THREE.Color() }, horizon: { value: new THREE.Color() }, sunLocal: { value: new THREE.Vector3(0, 1, 0) }, sunColor: { value: new THREE.Color() }, sunPower: { value: 0 },
-        clouds: { value: .4 }, stars: { value: 0 }, level: { value: LEVEL }, drift: { value: 0 }, wOut: { value: new THREE.Vector3(0, 0, -1) }, wRight: { value: new THREE.Vector3(1, 0, 0) },
+        clouds: { value: .4 }, stars: { value: 0 }, level: { value: LEVEL }, weatherSeconds: shared.weatherSeconds, wOut: { value: new THREE.Vector3(0, 0, -1) }, wRight: { value: new THREE.Vector3(1, 0, 0) },
         seaColor: { value: new THREE.Color(entry.seaSpec?.color || '#3a5f75') }, sea: { value: entry.seaSpec ? 1 : 0 }, noiseMap: { value: tex.noise } } });
     sky.name = 'Window sky · ' + name;
     let sea = null;
     if (entry.sea) {
-        const u = sky.uniforms, seaMaterial = new THREE.ShaderMaterial({ vertexShader: SKY_VERTEX, fragmentShader: SEA, defines, side: THREE.DoubleSide, uniforms: { ...portal, noiseMap: u.noiseMap,
+        const u = sky.uniforms, seaMaterial = new THREE.ShaderMaterial({ vertexShader: SKY_VERTEX, fragmentShader: SEA, defines, side: THREE.DoubleSide, uniforms: { ...portal, weatherSeconds: shared.weatherSeconds, noiseMap: u.noiseMap,
             zenith: u.zenith, horizon: u.horizon, sunLocal: u.sunLocal, sunColor: u.sunColor, sunPower: u.sunPower, wOut: u.wOut, wRight: u.wRight, level: u.level, seaColor: u.seaColor } });
         seaMaterial.name = 'Window sea · ' + name;
         sea = new THREE.Mesh(entry.sea, seaMaterial); sea.name = 'Window scenery sea'; sea.renderOrder = ORDER.sea; keep(sea);
@@ -402,7 +423,15 @@ function world(panes, name, scene, options) {
         frame.getWorldQuaternion(quaternion); out.set(0, 0, -1).applyQuaternion(quaternion); out.y = 0; if (out.lengthSq() < 1e-6) return; out.normalize(); right.crossVectors(out, UP).normalize();
         sky.uniforms.wOut.value.copy(out); sky.uniforms.wRight.value.copy(right);
     };
-    for (const { pane } of openings) { const before = befores.get(pane); pane.onBeforeRender = function (...args) { sync(); before?.apply(this, args); }; }
+    for (const { pane } of openings) {
+        const before = befores.get(pane);
+        pane.onBeforeRender = function (renderer, scene, ...args) {
+            sync();
+            const seconds = scene?.userData?.windowSkySeconds ?? performance.now() / 1000;
+            shared.weatherSeconds.value = seconds;
+            before?.call(this, renderer, scene, ...args);
+        };
+    }
     land.onBeforeRender = sync;
     sync();
     const lum = c => .3 * c.r + .59 * c.g + .11 * c.b, toneOf = (c, white) => c.multiplyScalar(1 / Math.max(lum(c), 1e-4)).lerp(new THREE.Color(1, 1, 1), white);

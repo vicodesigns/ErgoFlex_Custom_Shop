@@ -237,6 +237,7 @@ export async function mountStage(ctx) {
     ctx.pause(true);
     trayRig?.restore();
     editorMode=false;ctx.editCamera(false);authoredCamera=null;activeCameraKeys=[];defaultCameraKeys=[];ctx.camera.fov=35;ctx.camera.updateProjectionMatrix();
+    ctx.scene.userData.windowSkySeconds = 0;
     clear();shot={...next,camera:null};mirror=null;sequence=-1;session=null;ctx.scene.background=null;
     if(!ctx.catalog().some(r=>r.id===next.room))throw Error('This environment is unavailable. Choose another scene.');
     const preset=next.preset||({create:'artist',commons:'library',storage:'library',coast:'occ',oilers:'hbhs',music:'gaming',rise:'office',awaken:'gaming',hero:'gaming',media:'office',awareness:'gaming',wellness:'office'}[next.id])||defaultPreset(next.room,next.kind);
@@ -362,6 +363,7 @@ export async function mountStage(ctx) {
   function tick(t) {
     if(paused||!shot)return;
     lastProgress=t;
+    ctx.scene.userData.windowSkySeconds = t * shot.seconds;
     if(reduced)t=1;
     const u=reduced?1:ease(t),kind=shot.kind;
     if(kind==='proximity'&&reach&&!sonar&&sonarDue())sonar=sonarReach();

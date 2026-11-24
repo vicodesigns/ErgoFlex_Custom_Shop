@@ -90,6 +90,16 @@ for (const name of Object.keys(SCENES)) {
     for (const m of view.materials) assert.ok(uniformKinds(m), name + ': every uniform is a number, a colour, a vector, the window\'s matrix, the openings or a shared generated texture');
     // the frame follows the window: straight out of this one is -Z
     pane.onBeforeRender(); assert.ok(s.wOut.value.distanceTo(new THREE.Vector3(0, 0, -1)) < 1e-6, name + ': straight out of the window');
+    if (name === 'garden') {
+        const renderAt = seconds => {
+            pane.onBeforeRender(null, { userData: { windowSkySeconds: seconds } });
+            return s.weatherSeconds.value;
+        };
+        const first = renderAt(0), later = renderAt(9);
+        assert.ok(later > first, 'the cloud bank moves while the film plays');
+        assert.equal(renderAt(0), first, 'scrubbing back restores the sky');
+        assert.equal(renderAt(9), later, 'exporting the same frame restores the same clouds');
+    }
     // built once: the same room built again takes the same geometry
     const again = attachScenery(paneIn(new THREE.Group(), 1700, 1400, [-670, 1550, -1865]), name, { floor: -1550 });
     assert.equal(again.group.children[0].geometry, land.geometry, name + ': built once, reused when the room is rebuilt'); again.dispose();

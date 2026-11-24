@@ -578,6 +578,20 @@ export function building(k, r, x, ground, z, { width = 16000, depth = 14000, flo
                 b.add(BOX, new THREE.Matrix4().compose(at.set(wx, ground + sh * .7, face + 650), q.setFromAxisAngle(X, .35), scale.set(bay * .82, 60, 1250)), () => aw, { ambient: .6 });
                 b.box([bay * .82, 260, 40], [wx, ground + sh * .7 - 270, face + 1230], aw.clone().multiplyScalar(.85)); }
             else if (make && r() < .35) { b.box([60, 700, 600], [wx + bay * .4, ground + sh + 300, face + 420], sign); b.box([40, 900, 40], [wx + bay * .4, ground + sh + 750, face + 120], '#3c3e40'); }
+            if (Math.abs(z) < 65000) {
+                // Divide the recessed shopfront into a display bay, glazed door and
+                // transom. Frames project past the night glazing as well.
+                const stile = '#716e61', doorX = wx + bay*.19;
+                b.box([62, 2300, 64], [doorX-bay*.13, ground+1170, face+84], stile);
+                b.box([bay*.78, 70, 68], [wx, ground+2160, face+84], stile);
+                b.box([42, 400, 95], [doorX-bay*.08, ground+1070, face+109], '#a29783');
+                b.box([bay*.36, 85, 105], [wx-bay*.15, ground+670, face+96], '#965e48');
+                for (let j = 0; j < 3; j++) {
+                    const h = 330+130*((i+j)%3);
+                    b.quad(bay*.079, h, [wx-bay*(.25-.103*j), ground+715+h/2, face+65],
+                        ['#bc936d','#849d92','#cbbf9e'][(i+j)%3]);
+                }
+            }
             if (r() < .6) { lights.quad(bay * .74, sh * .55, [wx, ground + sh * .4, face + 42], colour('#f0c898').multiplyScalar(.32 + r() * .12)); b.light(wx, ground + 1600, face + 2200, '#ffd9a8', 3000, .2); }
             if (neon && r() < .7) { const nc = neon[Math.floor(r() * neon.length)]; lights.box([bay * .55, 260, 40], [wx, ground + sh + 500, face + 70], nc); halos.add(wx, ground + sh + 500, face + 300, bay * .55, nc, .35); b.light(wx, ground + sh, face + 2500, nc, 3500, .25); }
         } }
