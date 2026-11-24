@@ -280,3 +280,54 @@ export function describePropEffect(v){
   const curve=fades?(fx.ease==='smooth'?' · smooth':''):' · cut';
   return `${when}${fades?' · fade '+fades:''}${curve}`;
 }
+// ---- Copy & paste prop position / full transform (surface + coordinates, works across desks & chapters)
+export function copyPropPosition(edit,{world=null,surface=null,label='prop'}={}){
+  const w=vec(world)||null;
+  if(isAddEdit(edit)){
+    const parent=DESK_SURFACES[edit.parent]?edit.parent:'room';
+    const position=vec(edit.position)||[0,0,0];
+    const rotation=vec(edit.rotation,n=>Math.abs(n)<=720)||[0,0,0];
+    const scale=vec(edit.scale,n=>Math.abs(n)>=.01&&Math.abs(n)<=100)||[1,1,1];
+    return {kind:'add',parent,position,rotation,scale,world:w,label:String(label||edit.label||'prop').slice(0,80)};
+  }
+  if(!w)return null;
+  const parent=surface&&DESK_SURFACES[surface]?surface:'room';
+  const rotation=vec(edit?.rotation,n=>Math.abs(n)<=720)||[0,0,0];
+  const scale=vec(edit?.scale,n=>Math.abs(n)>=.01&&Math.abs(n)<=100)||[1,1,1];
+  return {kind:'scene',parent,position:null,rotation,scale,world:w,label:String(label||edit?.label||'prop').slice(0,80)};
+}
+export function cleanPropPosition(v){
+  if(!v||typeof v!=='object')return null;
+  const kind=v.kind==='add'?'add':'scene';
+  const parent=DESK_SURFACES[v.parent]?v.parent:'room';
+  const position=kind==='add'?vec(v.position):null;
+  const world=vec(v.world)||null;
+  if(kind==='add'&&!position)return null;
+  if(kind!=='add'&&!world)return null;
+  const rotation=vec(v.rotation,n=>Math.abs(n)<=720)||[0,0,0];
+  const scale=vec(v.scale,n=>Math.abs(n)>=.01&&Math.abs(n)<=100)||[1,1,1];
+  return {kind,parent,position,rotation,scale,world,label:typeof v.label==='string'?v.label.slice(0,80):'prop'};
+}
+export function applyPropPositionToAdd(clip,targetEdit,{includeRotationScale=false,hasMount=()=>true,worldToLocal=null}={}){
+  const c=cleanPropPosition(clip);if(!c||!isAddEdit(targetEdit))return null;
+  const on=targetEdit.on||null;
+  const canUse=kind=>kind==='room'||(!!DESK_SURFACES[kind]&&!!hasMount(kind,on));
+  let parent=targetEdit.parent||'room',position=null;
+  if(c.kind==='add'&&c.position){
+    if(canUse(c.parent)){parent=c.parent;position=[...c.position];}
+    else if(c.world&&worldToLocal){parent=canUse(targetEdit.parent)?targetEdit.parent:'room';position=worldToLocal(parent,c.world);}
+    else{parent=canUse(targetEdit.parent)?targetEdit.parent:'room';position=[...c.position];}
+  }else if(c.world&&worldToLocal){
+    parent=c.parent&&c.parent!=='room'&&canUse(c.parent)?c.parent:(canUse(targetEdit.parent)?targetEdit.parent:'room');
+    position=worldToLocal(parent,c.world);
+  }
+  if(!position)return null;
+  const next={...targetEdit,parent,position};
+  if(includeRotationScale&&c.kind==='add'){next.rotation=[...c.rotation];next.scale=[...c.scale];}
+  return cleanAddEdit(next);
+}
+export function describePropPosition(v){
+  const c=cleanPropPosition(v);if(!c)return '';
+  const where=c.parent==='room'?'room':(mountLabel(c.parent)||DESK_SURFACES[c.parent]||c.parent);
+  return `${c.label} · ${where}`;
+}

@@ -5,7 +5,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {fileURLToPath} from 'node:url';import {execFileSync} from 'node:child_process';
 import * as THREE from 'three';
-import {cleanPropEdit,cleanAddEdit,cleanPropEdits,cleanShow,showFactor,propKey,propTarget,describePropEdit,isNoop,mergePropEdits,filmPropEdits,copyPropEffect,cleanPropEffect,applyPropEffect,describePropEffect} from '../experience/prop-edits.mjs';
+import {cleanPropEdit,cleanAddEdit,cleanPropEdits,cleanShow,showFactor,propKey,propTarget,describePropEdit,isNoop,mergePropEdits,filmPropEdits,copyPropEffect,cleanPropEffect,applyPropEffect,describePropEffect,copyPropPosition,cleanPropPosition,applyPropPositionToAdd,describePropPosition} from '../experience/prop-edits.mjs';
 import {cleanPropLayer} from '../experience/prop-layers.mjs';
 import {cleanCut} from '../experience/cuts.mjs';
 
@@ -136,4 +136,25 @@ assert.match(describePropEdit(add),/on screen from 1 s after its desk comes in, 
   const cutFx=copyPropEffect({from:0,to:20,fadeIn:0,fadeOut:0,ease:null},{lo:0,hi:20,desk:null},'Lamp');
   assert.equal(describePropEffect(cutFx),'whole time · cut');
   assert.deepEqual(applyPropEffect(cutFx,{from:4,to:10,fadeIn:1,fadeOut:1,ease:'smooth'},{lo:0,hi:20,desk:null},{mode:'all'}),{from:0,to:20,fadeIn:0,fadeOut:0,ease:null});
+}
+
+// ---- Copy & paste prop position & full transform (shelf-aligned across desks & chapters)
+{
+  const shelfSrc=cleanAddEdit({add:{asset:'book-stack'},id:'bk01',label:'Books',parent:'shelf',desk:'gaming',position:[0.12,0,0.05],rotation:[0,30,0],scale:[1.2,1.2,1.2]});
+  const clip=copyPropPosition(shelfSrc,{world:[1.5,1.4,-0.3],label:'Books'});
+  assert.deepEqual(cleanPropPosition(JSON.parse(JSON.stringify(clip))),clip,'position clipboard JSON round-trip');
+  assert.equal(describePropPosition(clip),'Books · Desktop shelf');
+  // Target added prop on Desk 2 (starts on 'desk' at origin): Paste position moves it to 'shelf' at [0.12, 0, 0.05], keeping its own desk/id/rotation/scale
+  const target=cleanAddEdit({add:{asset:'ergoflex-mug'},id:'mg02',label:'Mug',desk:'office',parent:'desk',position:[0,0,0],rotation:[0,90,0],scale:[1,1,1]});
+  const moved=applyPropPositionToAdd(clip,target,{includeRotationScale:false,hasMount:()=>true});
+  assert.equal(moved.parent,'shelf');assert.deepEqual(moved.position,[0.12,0,0.05]);
+  assert.equal(moved.desk,'office','keeps target desk sub-shot');assert.deepEqual(moved.rotation,[0,90,0],'position-only keeps target rotation');assert.deepEqual(moved.scale,[1,1,1],'position-only keeps target scale');
+  // Full transform also copies rotation and scale
+  const xform=applyPropPositionToAdd(clip,target,{includeRotationScale:true,hasMount:()=>true});
+  assert.equal(xform.parent,'shelf');assert.deepEqual(xform.position,[0.12,0,0.05]);assert.deepEqual(xform.rotation,[0,30,0]);assert.deepEqual(xform.scale,[1.2,1.2,1.2]);
+  // Scene/film prop world position pasted onto added prop via worldToLocal
+  const sceneClip=copyPropPosition(null,{world:[2,1.1,-0.5],surface:'lower-shelf',label:'Lamp'});
+  assert.equal(sceneClip.kind,'scene');assert.equal(describePropPosition(sceneClip),'Lamp · Desktop shelf (lower)');
+  const fromScene=applyPropPositionToAdd(sceneClip,target,{hasMount:()=>true,worldToLocal:(k,w)=>[0.25,0,-0.1]});
+  assert.equal(fromScene.parent,'lower-shelf');assert.deepEqual(fromScene.position,[0.25,0,-0.1]);
 }
