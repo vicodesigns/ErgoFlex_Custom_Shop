@@ -604,7 +604,7 @@ export function solveStill(rig, key, input) {
         const [, upper, lower, hand] = rig.side[s].arm;
         if (resting.includes(s)) { rig.reach(upper, lower, hand, key.wp[hand]); rig.reach(upper, lower, hand, key.wp[hand]); rig.setWorld(hand, key.wq[hand]); }
         const poseW = poseTapWeight(input.pose, s);
-        if (TYPES.has(pose) && s !== CUP_HAND[pose] && !(rig.mediaLab && key.id.includes('-sit-mix')) && input.taps !== false && poseW > 0) tapKeys(rig, s, time, seed, life * (1 - reading) * poseW, input.typing);
+        if (TYPES.has(pose) && !input.act && s !== CUP_HAND[pose] && !(rig.mediaLab && key.id.includes('-sit-mix')) && input.taps !== false && poseW > 0) tapKeys(rig, s, time, seed, life * (1 - reading) * poseW, input.typing);
     }
     // (a reader turning a page, and every other activity: ACTS below)
     rig.fk();

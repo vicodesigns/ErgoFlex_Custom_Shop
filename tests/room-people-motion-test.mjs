@@ -1225,6 +1225,14 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
         }
         solve(1.3); const a = snapshot(rig); solveStill(rig, key, { time: 40, seed: 3, life: 1, act: act(0.2) }); solve(1.3);
         assert.deepEqual(snapshot(rig), a, who + ': the same second is the same squat');
+        // Wellness chapter: a typing posture (people-maya-stand-type) doing squat exercises keeps fingers firm (no typing twitch)
+        const typeKey = rig.key('people-' + who + '-stand-type');
+        let fingerMove = 0;
+        for (let t = 10.5; t < 17; t += .08) {
+            solveStill(rig, typeKey, { time: t, seed: 3, life: 1, actLife: 1, taps: true, act: act(t - 11.5) });
+            for (const s of ['l', 'r']) for (const i of rig.side[s].fingers) fingerMove = Math.max(fingerMove, rig.lq[i].angleTo(typeKey.q[i]));
+        }
+        assert.ok(fingerMove < 1e-6, `${who}: no finger twitching during squat exercises (${fingerMove.toFixed(4)})`);
     }
 }
 console.log('PASS room people motion: rig files, the desk driver (rise, lower, stop, turn back, tilt, wheelchair, short stature), exact end poses, planted feet, knees, keyboard following, determinism, life, the person in the room (film and Studio paths, chair, pose adjustments on top), posture changes in a shot and with the daypart, a walk along a path, stepping out from the desk and back.');

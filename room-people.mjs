@@ -2146,7 +2146,7 @@ export class RoomPeople {
         }
         // out of the list: back to the posture as built (at amount 0)
         const gaze = amount > 0 ? this.gazeOf(object, life) : null, act = film ? this.actOf(object, life, time) : null;
-        const moved = solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: amount, actLife, taps: film || dt < .05, typing: this.filter?.typing, pose: poseNow(object.userData.person), look: gaze?.at, lookAmount: gaze?.amount, ...(act ? { act } : {}) });
+        const moved = solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: amount, actLife, taps: (film || dt < .05) && !object.userData.person.act && !object.userData.person.fromDesk, typing: this.filter?.typing, pose: poseNow(object.userData.person), look: gaze?.at, lookAmount: gaze?.amount, ...(act ? { act } : {}) });
         drawPose(life.rig, object.userData.personRig, 0, poseNow(object.userData.person), hold); life.live = amount > 0;
         // a rider's bike: its crank turns with the feet, the pedals stay level
         if (moved?.crank !== undefined) { const crank = object.userData.personAnchor?.getObjectByName('Bike crank'); if (crank) { this.turnCrank(crank, moved.crank); turning.add(crank); this.cranks.add(crank); } }
