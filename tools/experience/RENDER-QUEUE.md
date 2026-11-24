@@ -28,6 +28,8 @@ Every **60 s** `GET <base>/exports/render-queue/queue.json` (`Cache-Control: no-
   "chapterKeys": {"awaken": "48155a97…", …},   // chapter id -> cache key (all 12 for scope film, only the chapter for scope chapter); see 3b
   "epoch": "1",                                // render-epoch.txt when the keys were computed (already inside every key)
   "force": false,                              // true = "Re-render every chapter": ignore the cache for this job (still store the renders)
+  "fps": 60,                                   // 30 | 60 (render-cut.cjs --fps & finish-intro.py --fps; default FILM_FPS in film-render.json)
+  "format": "both",                            // "both" | "hevc" | "h264" (finish-intro.py --format; default "both" = 10-bit HEVC + 8-bit H.264)
   "blur": 4,                                   // render-cut.cjs --blur for every chapter (tools/experience/film-render.json FILM_BLUR); jobs before 2026-11-15 have none: 4
   "warning": "…",                              // only if set: the freeze may lack the export he sent (see 5)
   "status": "queued"
@@ -66,7 +68,7 @@ With your existing pipeline, from the clone with the overlay, at the job's resol
 | 1080p | 1920x1080 | |
 | 4K | 3840x2160 | `--ss 1.5`, as the HQ14t 4K film |
 
-Every resolution renders with `--blur <job.blur>` (4 when the job has no `blur`). render-cut.cjs bakes only the sub-frames
+Every resolution renders with `--fps <job.fps>` (default `30` if absent on legacy jobs) and `--blur <job.blur>` (4 when the job has no `blur`). `job.format` chooses the output deliverable codec(s): `"both"` (default: 10-bit HEVC + 8-bit H.264), `"hevc"` (10-bit HEVC `hvc1` only), or `"h264"` (8-bit H.264 only). For `scope: "film"`, pass `--fps <job.fps> --format <job.format>` to `finish-intro.py`; for `scope: "chapter"`, encode the requested codec(s) (`*-<res>.mp4` for H.264, `*-<res>-10bit-hevc.mp4` for HEVC, or both). render-cut.cjs bakes only the sub-frames
 its 180-degree shutter blends (round(blur/2) a frame: tools/experience/render-shutter.cjs), so `blur` 8 (4 taps over
 12.5 ms) costs what `--blur 4` cost before 2026-11-15. `blur` is not in the chapter keys: render-epoch.txt is bumped
 whenever FILM_BLUR changes, so chapters cached at the old value are not reused.

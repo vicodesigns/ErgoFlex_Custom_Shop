@@ -13,6 +13,15 @@
 #director-panel .people-typing input[type=range]{width:100%;margin:0}
 #director-panel .people-typing button{flex:none;white-space:nowrap}
 
+/* Quick Render PC quality pills in the app bar's Render menu & note in the Render tab */
+#director-appbar .ab-render-sub{padding:6px 6px 8px}
+#director-appbar .ab-render-sub p{margin:0 4px 6px;font-weight:600;color:var(--df-text-2,#b7c3cf);white-space:nowrap}
+#director-appbar .ab-render-pills{display:flex;gap:4px;margin-top:4px}
+#director-appbar .ab-pop button.ab-pill{flex:1 1 0;justify-content:center;padding:5px 6px;border:1px solid var(--df-border-2,#ffffff1f);border-radius:6px;background:var(--df-surface-2,#12212d);color:var(--df-text-2,#b7c3cf);font-size:11px;font-weight:600;white-space:nowrap}
+#director-appbar .ab-pop button.ab-pill:hover{background:var(--df-surface-3,#1c2b38);color:var(--df-text-1,#e6f2f8)}
+#director-appbar .ab-pop button.ab-pill[aria-pressed="true"]{background:var(--df-accent,#5cd3f6);border-color:var(--df-accent,#5cd3f6);color:#04121a}
+#director-panel .render-quality-note{margin-top:2px;font-size:11px;opacity:.85}
+
 /* Grouped inspector tabs (film chapters in Calm Shell): 4 aligned domain rows, every tab stays 1-click clickable */
 #director-panel .inspector-tabs.inspector-tabs-grouped{display:flex;flex-direction:column;gap:3px;padding:5px 6px}
 #director-panel .inspector-tabs.inspector-tabs-grouped .inspector-tab-row{display:grid;grid-template-columns:42px minmax(0,1fr);align-items:center;gap:4px;padding:2px 0 2px 6px;border-left:2px solid color-mix(in srgb,var(--tg-accent,#5cd3f6) 40%,transparent);border-radius:3px;transition:border-color .15s ease,background .15s ease}

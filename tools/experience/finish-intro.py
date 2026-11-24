@@ -202,6 +202,9 @@ def main():
     wip = '--wip' in sys.argv  # full-res, fast encode, one titled MP4 for review
     hq_only = '--hq-only' in sys.argv  # full master and the HQ deliverables (+ 10-bit HEVC OLED master) + poster; skips textless/720p
     no_hevc = '--no-hevc' in sys.argv
+    fmt = sys.argv[sys.argv.index('--format') + 1] if '--format' in sys.argv else ('h264' if no_hevc else 'both')
+    if fmt not in ('both', 'hevc', 'h264'): raise SystemExit(f'--format must be both, hevc or h264, not {fmt!r}')
+    if no_hevc and fmt == 'both': fmt = 'h264'
     only = sys.argv[sys.argv.index('--only') + 1] if '--only' in sys.argv else None
     fps_override = int(sys.argv[sys.argv.index('--fps') + 1]) if '--fps' in sys.argv else None
     d = os.path.abspath(args[0]); out = os.path.join(d, 'final'); os.makedirs(out, exist_ok=True)
@@ -330,12 +333,13 @@ def main():
     fps_scale = max(1.0, fps / 30.0)
     max_k = int(round(9375 * px * fps_scale))
     buf_k = max_k * 2
-    hq = os.path.join(out, f'ErgoFlex-Intro-{H}p.mp4')
-    vf_8bit = f'{subs},noise=c0s=3:c0f=t,format=yuv420p'
-    run(['ffmpeg', '-v', 'error', '-stats', '-y', '-i', master, *audio_in, '-map', '0:v', '-map', '1:a', '-vf', vf_8bit, '-c:v', 'libx264', '-preset', 'slow', '-profile:v', 'high', '-crf', '15', '-maxrate', f'{max_k}k', '-bufsize', f'{buf_k}k',
-         '-pix_fmt', 'yuv420p', '-g', str(fps * 2), '-x264-params', 'aq-mode=3', *COLOR, '-c:a', 'aac', '-b:a', '320k', '-ar', '48000', '-shortest', '-movflags', '+faststart', hq])
+    if fmt in ('both', 'h264'):
+        hq = os.path.join(out, f'ErgoFlex-Intro-{H}p.mp4')
+        vf_8bit = f'{subs},noise=c0s=3:c0f=t,format=yuv420p'
+        run(['ffmpeg', '-v', 'error', '-stats', '-y', '-i', master, *audio_in, '-map', '0:v', '-map', '1:a', '-vf', vf_8bit, '-c:v', 'libx264', '-preset', 'slow', '-profile:v', 'high', '-crf', '15', '-maxrate', f'{max_k}k', '-bufsize', f'{buf_k}k',
+             '-pix_fmt', 'yuv420p', '-g', str(fps * 2), '-x264-params', 'aq-mode=3', *COLOR, '-c:a', 'aac', '-b:a', '320k', '-ar', '48000', '-shortest', '-movflags', '+faststart', hq])
     # 10-bit H.265/HEVC OLED showcase master (pure 10-bit gradients, zero 8-bit dithering grain, hvc1 Apple/Windows/Android tag)
-    if not no_hevc:
+    if fmt in ('both', 'hevc'):
         hevc = os.path.join(out, f'ErgoFlex-Intro-{H}p-10bit-hevc.mp4')
         run(['ffmpeg', '-v', 'error', '-stats', '-y', '-i', master, *audio_in, '-map', '0:v', '-map', '1:a', '-vf', f'{subs},format=yuv420p10le', '-c:v', 'libx265', '-preset', 'slow', '-crf', '15', '-tag:v', 'hvc1',
              '-pix_fmt', 'yuv420p10le', '-g', str(fps * 2), '-x265-params', 'aq-mode=3', *COLOR, '-c:a', 'aac', '-b:a', '320k', '-ar', '48000', '-shortest', '-movflags', '+faststart', hevc])

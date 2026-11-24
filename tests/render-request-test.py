@@ -75,6 +75,15 @@ try:
     film_blur = fr['FILM_BLUR']; film_fps = int(fr.get('FILM_FPS', 30))
     check(j.get('blur') == film_blur and j2.get('blur') == film_blur, f'chapter and film jobs carry blur = FILM_BLUR ({film_blur})')
     check(j.get('fps') == film_fps and j2.get('fps') == film_fps, f'chapter and film jobs carry fps = FILM_FPS ({film_fps})')
+    check(j.get('format') == 'both' and j2.get('format') == 'both', 'legacy requests default format to both')
+    # explicit fps=30 + format=hevc overrides defaults cleanly and gets a distinct 30-fps cache key
+    time.sleep(1.1); p_opts = sh(SH, req(chapter='create', resolution='720p', fps=30, format='hevc'), R, env=env)
+    check(p_opts.returncode == 0, 'fps=30 format=hevc request runs: ' + (p_opts.stderr.strip()[-300:] or 'ok'))
+    j_opts = json.load(open(f'{R}/exports/render-queue/queue.json'))['jobs'][2]
+    check(j_opts.get('fps') == 30 and j_opts.get('format') == 'hevc', f'explicit fps/format preserved ({j_opts.get("fps")}, {j_opts.get("format")})')
+    if film_fps != 30:
+        check(j_opts['chapterKeys']['create'] != j['chapterKeys']['create'], '30 fps gets a distinct chapter cache key from 60 fps')
+    check(json.load(open(f"{R}/{j_opts['manifest'].rsplit('/', 1)[0]}/{HQ}/edl.json")).get('fps') == 30, 'frozen edl.json synced to explicit 30 fps')
     # chapter cache keys: computed from the frozen copy, at the job's resolution and fps, 12 for a film / 1 for a chapter; force defaults to false
     import importlib.util
     sp = importlib.util.spec_from_file_location('ck', f'{WT}/tools/experience/chapter-keys.py'); ck = importlib.util.module_from_spec(sp); sp.loader.exec_module(ck)
@@ -93,15 +102,15 @@ try:
     exp = b'{"export":"cut"}'; esha = hashlib.sha256(exp).hexdigest(); os.makedirs(f'{R}/{HQ}/director-exports', exist_ok=True)
     threading.Timer(3, lambda: open(f'{R}/{HQ}/director-exports/export-120000-Film-chapter-media.json', 'wb').write(exp)).start()
     t0 = time.time(); p4 = sh(SH, req(chapter='media', exportSha=esha), R, env={**env, 'RENDER_REQ_IMPORT_WAIT': '30'}); dt = time.time() - t0
-    j4 = json.load(open(f'{R}/exports/render-queue/queue.json'))['jobs'][3]
+    j4 = json.load(open(f'{R}/exports/render-queue/queue.json'))['jobs'][-1]
     check(p4.returncode == 0 and dt >= 2.5 and 'warning' not in j4, f'waits for the export to be imported ({dt:.1f}s), no warning')
     t0 = time.time(); p5 = sh(SH, req(chapter='music', exportSha='0' * 64), R, env={**env, 'RENDER_REQ_IMPORT_WAIT': '3'})
-    j5 = json.load(open(f'{R}/exports/render-queue/queue.json'))['jobs'][4]
+    j5 = json.load(open(f'{R}/exports/render-queue/queue.json'))['jobs'][-1]
     check(p5.returncode == 0 and 'warning' in j5 and 'importer' in j5['warning'], 'an export that never shows up: job still queued, with a warning')
     # ---- bad requests
-    for what, r in [('bad resolution', req(resolution='999p')), ('bad scope', req(scope='both')), ('unknown chapter', req(chapter='nope'))]:
+    for what, r in [('bad resolution', req(resolution='999p')), ('bad scope', req(scope='both')), ('bad fps', req(fps=45)), ('bad format', req(format='avi')), ('unknown chapter', req(chapter='nope'))]:
         b = sh(SH, r, R, env=env); check(b.returncode != 0, f'{what} is refused: ' + b.stderr.strip().split('\n')[-1][:90])
-    check(len(json.load(open(f'{R}/exports/render-queue/queue.json'))['jobs']) == 5, 'refused requests queued nothing')
+    check(len(json.load(open(f'{R}/exports/render-queue/queue.json'))['jobs']) == 6, 'refused requests queued nothing')
     check(os.path.exists(os.path.join(LIVE, 'exports/render-queue')) == live_before, 'the live checkout got no render-queue')
 finally:
     shutil.rmtree(tmp, ignore_errors=True)

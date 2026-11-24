@@ -48,6 +48,18 @@ export function appBarHtml(s) {
     check('demo-card', 'Guided demo card', s.demoCard),
     proxy('director', 'Close the Director'),
   ];
+  const rq = s.render || { resolution: '720p', fps: 60, format: 'both', summary: '720p · 60 fps · HEVC + H.264', chapter: '' };
+  const rPill = (action, val, label, on) => `<button type="button" class="ab-pill" data-action="${action}" data-val="${esc(val)}" data-ab-keep aria-pressed="${!!on}">${esc(label)}</button>`;
+  const renderPcItems = s.film ? [
+    `<div class="ab-sub ab-render-sub" role="group" aria-label="Render PC quality">`
+      + `<p data-ab-render-summary>Render PC · ${esc(rq.summary)}</p>`
+      + `<div class="ab-render-pills" aria-label="Resolution">${['480p', '720p', '1080p', '4K'].map(v => rPill('render-set-res', v, v, rq.resolution === v)).join('')}</div>`
+      + `<div class="ab-render-pills" aria-label="Frame rate">${[[30, '30 fps'], [60, '60 fps']].map(([v, l]) => rPill('render-set-fps', String(v), l, Number(rq.fps) === v)).join('')}</div>`
+      + `<div class="ab-render-pills" aria-label="Video format">${[['both', 'HEVC + H.264'], ['hevc', 'HEVC 10-bit'], ['h264', 'H.264']].map(([v, l]) => rPill('render-set-format', v, l, rq.format === v)).join('')}</div>`
+      + `</div>`,
+    item('render-quick-chapter', 'Send this chapter now', `${rq.chapter ? rq.chapter + ' · ' : ''}${rq.resolution} · ${rq.fps} fps`, 'data-ab-render-quick'),
+    item('final-render', 'Final render…', 'whole film, note & recent'),
+  ] : [];
   return `${s.phone ? '' : '<span class="ab-brand">ErgoFlex <b>Director</b></span>'}
     <div class="ab-film">${s.phone && s.cutChapter ? switchButton(s.cutChapter) : s.picker || `<strong class="ab-name" title="${esc(s.name)}">${esc(s.name)}</strong>`}</div>
     <div class="ab-group ab-history"><button type="button" class="ab-btn ab-icon" data-action="undo" aria-label="${esc(step('Undo', s.undo?.label))}" title="${esc(step('Undo', s.undo?.label))} (Ctrl+Z)" ${s.undo?.n ? '' : 'disabled'}>↶</button><button type="button" class="ab-btn ab-icon" data-action="redo" aria-label="${esc(step('Redo', s.redo?.label))}" title="${esc(step('Redo', s.redo?.label))} (Ctrl+Y)" ${s.redo?.n ? '' : 'disabled'}>↷</button></div>
@@ -63,7 +75,7 @@ export function appBarHtml(s) {
       item('render-still', 'Still image', 'Shift+R · this frame, full quality'),
       item('bake', 'Preview video', 'bake this chapter for smooth playback'),
       item('bake-all', 'Preview video, every chapter', '1080p'),
-      ...(s.film ? [item('final-render', 'Final render…', 'on the render PC')] : []),
+      ...renderPcItems,
     ])}
     ${s.overlays && !s.phone ? menu('overlays', 'Overlays ▾', 'What is drawn over the frame (Shift+O)', [
       check('ov-guides', 'Thirds and title-safe guides', s.overlays.guides, 'G'),
@@ -97,7 +109,7 @@ export function wireMenus(root) {
   root.addEventListener('click', ev => {
     const opener = ev.target.closest('[data-ab-open]');
     if (opener) { const m = opener.closest('[data-ab-menu]'), pop = m.querySelector('.ab-pop'), show = pop.hidden; closeAll(m); pop.hidden = !show; opener.setAttribute('aria-expanded', String(show)); if (show) pop.querySelector('button:not([disabled])')?.focus(); return; }
-    if (ev.target.closest('.ab-pop button')) closeAll();
+    if (ev.target.closest('.ab-pop button') && !ev.target.closest('[data-ab-keep]')) closeAll();
   });
   document.addEventListener('pointerdown', ev => { if (!root.contains(ev.target)) closeAll(); }, true);
   root.addEventListener('keydown', ev => { if (ev.key === 'Escape' && root.querySelector('.ab-pop:not([hidden])')) { ev.stopPropagation(); closeAll(); root.querySelector('[aria-expanded="true"]')?.focus(); } });

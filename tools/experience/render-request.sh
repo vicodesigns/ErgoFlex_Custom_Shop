@@ -77,6 +77,10 @@ sha=r.get('exportSha')
 if sha is not None and (not isinstance(sha,str) or not re.fullmatch(r'[0-9a-f]{64}',sha)): sys.exit('exportSha must be null or 64 lowercase hex characters')
 cut=r.get('cut')
 if cut is not None and (not isinstance(cut,str) or not re.fullmatch(r'exports/[A-Za-z0-9][A-Za-z0-9._-]{0,80}',cut)): sys.exit('cut must be exports/<folder>')
+fps=r.get('fps')
+if fps is not None and (isinstance(fps,bool) or not isinstance(fps,int) or fps not in (24,30,60,120)): sys.exit('fps must be 24, 30, 60 or 120')
+fmt=r.get('format')
+if fmt is not None and fmt not in ('both','hevc','h264'): sys.exit('format must be both, hevc or h264')
 print(r['scope'],r['chapter'],r['resolution'],sha or '-',cut or '-')
 PY
 ); then
@@ -249,6 +253,9 @@ blur = int(req.get('blur') or fr['FILM_BLUR'])
 if blur not in (1, 2, 4, 8, 16): sys.exit(f'film-render.json FILM_BLUR must be 1, 2, 4, 8 or 16, not {blur!r}')
 job['fps'] = fps
 job['blur'] = blur
+fmt = req.get('format') or 'both'
+if fmt not in ('both', 'hevc', 'h264'): sys.exit(f'request format must be both, hevc or h264, not {fmt!r}')
+job['format'] = fmt
 # Keep the frozen edl.json's fps in step with job.fps so finish-intro.py masters at the exact job frame rate.
 edl_rel = f'{hq}/edl.json'; edl_frozen = f'{F}/{edl_rel}'
 if os.path.isfile(edl_frozen):

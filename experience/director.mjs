@@ -79,7 +79,7 @@ export function mountDirector(bridge,catalog,initial){
   let selected=0,undo=[],redo=[],undoLabels=[],redoLabels=[],labelPending=null,stillMark=null,group=null,draftTimer,open=false,loadToken=0,composing=false,leaving=false;
   const choices=new Map(),automaticCameras=new Map();
   let keyId=null,playhead=0,keyDrag=null,suppressKeyClickUntil=0;
-  let phoneMode=null,magnet=true,inspector='chapter',zoom=1,snapStep=.1,scrub=null,timelineResize=null;
+  let phoneMode=null,renderRequest=null,magnet=true,inspector='chapter',zoom=1,snapStep=.1,scrub=null,timelineResize=null;
   // Timeline group selection (camera keys + desk clips) and the film chapter list.
   const picks={keys:new Set(),clips:new Set(),lights:new Set(),neutrals:new Set(),tods:new Set()};let lightSel=null,stills=null,stillBusy=false,marquee=null,groupDrag=null,suppressGroupClickUntil=0;
   const film=filmLink(location.hash),signature=()=>JSON.stringify([project.name,project.client,project.volume,project.shots]);
@@ -1439,6 +1439,10 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       if(name==='ab-classic'){const now=!classic();saveUi({shell:now?'classic':'calm'});document.body.classList.toggle('df-shell',open&&!now);render();status(now?'Classic layout. ⋯ → Calm layout brings the new one back.':'Calm layout.');return;}
       if(name==='cut-settings'){if(document.body.classList.contains('inspector-hidden'))document.body.classList.remove('inspector-hidden');showInspector('project');return;}
       if(name==='final-render'){if(document.body.classList.contains('inspector-hidden'))document.body.classList.remove('inspector-hidden');showInspector('render');return;}
+      if(name==='render-set-res'){renderRequest?.setQuality({resolution:String(index||'')},{announce:true});return;}
+      if(name==='render-set-fps'){renderRequest?.setQuality({fps:Number(index)},{announce:true});return;}
+      if(name==='render-set-format'){renderRequest?.setQuality({format:String(index||'')},{announce:true});return;}
+      if(name==='render-quick-chapter'){await renderRequest?.send({scope:'chapter'});return;}
       if(name==='scene-desk-pick'){deskSel.select(index);return;}
       if(name==='field-reset'){resetField(index);return;}
       if(name==='sel-tool'){const t=index,ctxOf=sceneProps.selected()?'prop':scenePeople.selected()?'person':null;
@@ -2030,12 +2034,22 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   // Phone mode (director-phone.mjs): a coarse pointer on a screen up to 1200 px: the inspector a bottom sheet (portrait) or a side drawer (landscape).
   phoneMode=createPhoneMode({appbar,panel,shellOn,changed:()=>{try{renderAppBar();}catch{/* not ready yet */}}});
   function pressed(id){return document.getElementById(id)?.getAttribute('aria-pressed')==='true';}
+  function syncRenderMenu(){
+    if(!renderRequest)return;
+    const rq=renderRequest.settings(),ch=shot()?.id||'';
+    const sum=appbar.querySelector('[data-ab-render-summary]');if(sum)sum.textContent=`Render PC · ${rq.summary}`;
+    const qh=appbar.querySelector('[data-ab-render-quick] small');if(qh)qh.textContent=`${ch?ch+' · ':''}${rq.resolution} · ${rq.fps} fps`;
+    for(const b of appbar.querySelectorAll('[data-action="render-set-res"]'))b.setAttribute('aria-pressed',String(b.dataset.val===rq.resolution));
+    for(const b of appbar.querySelectorAll('[data-action="render-set-fps"]'))b.setAttribute('aria-pressed',String(Number(b.dataset.val)===Number(rq.fps)));
+    for(const b of appbar.querySelectorAll('[data-action="render-set-format"]'))b.setAttribute('aria-pressed',String(b.dataset.val===rq.format));
+    renderAppBar();
+  }
   function renderAppBar(){
     if(!shellOn()||!open){appbar.hidden=true;return;}appbar.hidden=false;
     if(appbar.querySelector('.ab-pop:not([hidden])')||appbar.contains(document.activeElement)&&document.activeElement.matches('select'))return;   // (not while a menu or a select is open)
     const st=bridge.playback(),q=document.getElementById('preview-quality');
     appbar.innerHTML=appBarHtml({saved:savedNow(),picker:filmPicker(),name:project.name,undo:{n:undo.length,label:undoLabels.at(-1)?editLabel(undoLabels.at(-1)):''},redo:{n:redo.length,label:redoLabels.at(-1)?editLabel(redoLabels.at(-1)):''},
-      studio:studioSync.html(),playing:st.playing&&st.index===selected,busy:st.busy,sound:pressed('sound'),lowres:q&&!q.hidden?pressed('preview-quality'):null,film:!!film,phone:phoneMode?.layout()!=null,cutChapter:film?{label:ccLabel(),dirty:unexported(),choice:/film-fresh-choice/.test(fresh.noticeHTML())}:null,demoCard:phoneMode?.demoOpen(),
+      studio:studioSync.html(),playing:st.playing&&st.index===selected,busy:st.busy,sound:pressed('sound'),lowres:q&&!q.hidden?pressed('preview-quality'):null,film:!!film,render:renderRequest?{...renderRequest.settings(),chapter:shot()?.id||''}:null,phone:phoneMode?.layout()!=null,cutChapter:film?{label:ccLabel(),dirty:unexported(),choice:/film-fresh-choice/.test(fresh.noticeHTML())}:null,demoCard:phoneMode?.demoOpen(),
       history:[...undoLabels].reverse().map(editLabel),titles:film&&titleEditor.has()?titleEditor.shown():document.body.classList.contains('preview-titles'),chapters:!timeline.classList.contains('chapters-hidden'),
       inspector:phoneMode?.layout()==='portrait'?phoneMode.sheet()!=='peek':!document.body.classList.contains('inspector-hidden'),timeline:!document.body.classList.contains('timeline-hidden'),
       held,overlays:{guides:!!document.querySelector('.film-look.guides'),crop:CROPS?.[cropAt]?.[0]||null,look:filmLook?.mode?.()||null,lights:!!sceneLights.showing?.()}});
@@ -2045,7 +2059,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     const proxy=event.target.closest('[data-ab-proxy]');if(proxy){document.getElementById(proxy.dataset.abProxy)?.click();setTimeout(renderAppBar,0);proxy.blur();return;}
     const back=event.target.closest('[data-ab-undo]');if(back){const n=Number(back.dataset.abUndo);(async()=>{for(let i=0;i<n&&undo.length;i++)await action('undo');})().catch(error=>status(error.message,true));return;}
     const b=event.target.closest('button[data-action]');if(!b)return;b.blur();
-    Promise.resolve(action(b.dataset.action,b.dataset.section??Number(b.dataset.index))).then(()=>setTimeout(renderAppBar,0)).catch(error=>status(error.message,true));
+    Promise.resolve(action(b.dataset.action,b.dataset.section??b.dataset.val??Number(b.dataset.index))).then(()=>setTimeout(renderAppBar,0)).catch(error=>status(error.message,true));
   });
   appbar.addEventListener('change',event=>{
     if(event.target.name==='film-chapter'){switchFilm(Number(event.target.value));return;}
@@ -2390,7 +2404,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   const startPose=createStartPose({panel,shot,motion:()=>deskEditor.featuredMotion(),time:()=>playhead,seek:seekCamera,commit,status,ready:requireReady});
   // Render tab (film chapters only): Send = Export cut when this chapter has unexported edits, then a Render-request-*.json download.
   const downloadText=(name,text)=>{const url=URL.createObjectURL(new Blob([text],{type:'application/json'})),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),10000);};
-  const renderRequest=createRenderRequest({panel,cut:()=>myCut()&&!myCut().master?cutDir.replace(/^\//,''):null,chapters:()=>filmChapters,shot,signature,unexported,status,escape,storage,download:downloadText,
+  renderRequest=createRenderRequest({panel,cut:()=>myCut()&&!myCut().master?cutDir.replace(/^\//,''):null,chapters:()=>filmChapters,shot,signature,unexported,status,escape,storage,download:downloadText,changed:syncRenderMenu,
     exportNow:async()=>{if(await fresh.guardExport(project,true,()=>{}))return null;clearTimeout(draftTimer);try{project=library.save(project);}catch{}const text=exportCut();renderPanel();return text;}});
   // Build tab: the selected desk's (default: the featured desk's) materials, trim and accessories (desk-build-panel.mjs).
   const deskBuild=createDeskBuildPanel({panel,shot,film:filmShot,commit,status,rerender:()=>renderPanel(),ready:()=>open&&bridge.ready(),selection:()=>deskSel.selected()||'featured',versions:()=>deskVersions.has()});   // no Desks-tab selection = the featured desk; the panel's own picker stays hidden
