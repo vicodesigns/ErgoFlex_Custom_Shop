@@ -79,11 +79,14 @@ const VERTEX = `
 #ifdef CANOPY
 attribute vec3 canopy; uniform vec3 shadeHour; varying float vCanopy;
 #endif
-attribute vec3 tone; attribute vec3 glow; varying vec3 vTone; varying vec3 vGlow; varying vec3 vWorld; varying vec3 vFrame; varying vec3 vNormal;
+attribute vec3 tone; attribute vec3 glow; varying vec3 vTone; varying vec3 vGlow; varying vec3 vWorld; varying vec3 vFrame; varying vec3 vNormal; varying float surfaceTag;
 #ifdef LEAVES
 uniform float weatherSeconds; varying vec2 vUv;
 #endif
 void main() { vTone = tone; vGlow = glow; vFrame = position; vNormal = normal;
+    // The packed length identifies the material at each vertex. Taking
+    // length after interpolating curved normals can turn masonry into glass.
+    surfaceTag = length(normal);
     #ifdef CANOPY
     vCanopy = dot(canopy,shadeHour);
     #endif
@@ -110,7 +113,7 @@ uniform sampler2D noiseMap;
 #ifdef LEAVES
 uniform sampler2D leafMap; varying vec2 vUv;
 #endif
-varying vec3 vTone; varying vec3 vGlow; varying vec3 vWorld; varying vec3 vFrame; varying vec3 vNormal;
+varying vec3 vTone; varying vec3 vGlow; varying vec3 vWorld; varying vec3 vFrame; varying vec3 vNormal; varying float surfaceTag;
 ${PORTAL}
 float cellHash(vec2 p) { return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }
 void main() {
@@ -130,9 +133,9 @@ void main() {
     vec3 c = mix(tone * (.35 + 1.1 * v * v), air * level, h * .5) * lamp * lampLevel;   // a room's light is uneven: a lamp, a curtain
     #else
     float nl = length(vNormal); vec3 light;
-    if (nl < .3) light = tint * (ambient + sunShare * .3);
+    if (surfaceTag < .3 || nl < .001) light = tint * (ambient + sunShare * .3);
     #ifndef LEAVES
-    else if (nl > .38 && nl < .42) {
+    else if (surfaceTag > .38 && surfaceTag < .42) {
         vec3 eye = isOrthographic ? mat3(portalInv) * vec3(viewMatrix[0][2], viewMatrix[1][2], viewMatrix[2][2])
                                   : (portalInv * vec4(cameraPosition, 1.)).xyz - vFrame;
         vec3 n = vNormal / nl, ray = reflect(-normalize(eye), n);
@@ -148,10 +151,13 @@ void main() {
         #ifdef LEAVES
         ndl = max(ndl * .55 + .45, 0.);
         #else
-        ndl = nl < .72 ? abs(ndl) * .75 : max(ndl, 0.);
-        if (nl > .72 && nl < .93) {   // a facade drawn as a grid of windows (far blocks and towers): glass darker, a few lit after dark
+        ndl = surfaceTag < .72 ? abs(ndl) * .75 : max(ndl, 0.);
+        if (surfaceTag > .72 && surfaceTag < .93) {   // a facade drawn as a grid of windows (far blocks and towers): glass darker, a few lit after dark
             vec2 fc = vec2(abs(n.x) > .7 ? vFrame.z : vFrame.x, vFrame.y) / vec2(3300., 3400.), fw = fwidth(fc), f = fract(fc);
-            float blur = clamp(max(fw.x, fw.y) * 2.5 - .4, 0., 1.), win = step(.26, f.x) * step(f.x, .74) * step(.28, f.y) * step(f.y, .8);
+            vec2 aa = clamp(.5 * fw, vec2(.001), vec2(.18));
+            vec2 inside = smoothstep(vec2(.26,.28)-aa, vec2(.26,.28)+aa, f)
+                        * (1.-smoothstep(vec2(.74,.8)-aa, vec2(.74,.8)+aa, f));
+            float blur = clamp(max(fw.x, fw.y) * 2.5 - .4, 0., 1.), win = inside.x * inside.y;
             float on = step(cellHash(floor(fc)), facadeLit) * (.5 + .5 * cellHash(floor(fc) + 7.));
             win = mix(win, .22, blur); on = mix(on * win, facadeLit * .15, blur);
             float reflection = .5 + .5*sin(fc.x*.39 + fc.y*.17 + 1.6*sin(fc.y*.29));
@@ -200,6 +206,9 @@ void main() {
 // The sea (a scene that has one): a level plane far out, its colour the sky it reflects (more of it toward the
 // horizon) over the water's own, the sun's (or moon's) glitter broken into soft sparkles, fading into the horizon's haze.
 const SEA_AT = `
+#ifdef PACIFIC_COAST
+uniform float shoreZ;
+#endif
 float seaHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 vec3 seaAt(vec3 view, vec3 sunDir, vec2 spot) {
     float down = clamp(-view.y, 0., 1.), fres = exp(-down * 12.);
@@ -214,6 +223,10 @@ vec3 seaAt(vec3 view, vec3 sunDir, vec2 spot) {
     vec4 offshore=texture2D(noiseMap,vec2(m.x/280.,m.y/95.));
     float banks=clamp((offshore.g-.5)*1.8+(offshore.b-.5)*.45,-.55,.55);
     c=mix(c,seaColor*day, .30) * (1.+.34*banks);
+    // Sunlight through the shallows traces the sandbars along the coast.
+    float fromBeach = max(0., shoreZ*.001 - m.y - 7.*sin(m.x*.021));
+    float shoal = exp(-fromBeach*.013) * (.55 + .45*offshore.g);
+    c = mix(c, vec3(.045,.31,.29)*day, .72*shoal);
     float sets = sin(m.y*.145 - weatherSeconds*.32 + 2.3*sin(m.x*.039 + m.y*.008) + 6.2*offshore.g);
     float resolve=1.-smoothstep(.55,3.,fwidth(m.y*.145));
     float wind=.55+.45*sin(m.x*.025+m.y*.013+offshore.b*4.);
@@ -400,11 +413,11 @@ function world(panes, name, scene, options) {
         portalInv: portal.portalInv, nearZ: { value: Math.min(...openings.map(o => o.at.z)) - 5 },
         zenith: { value: new THREE.Color() }, horizon: { value: new THREE.Color() }, sunLocal: { value: new THREE.Vector3(0, 1, 0) }, sunColor: { value: new THREE.Color() }, sunPower: { value: 0 },
         clouds: { value: .4 }, stars: { value: 0 }, level: { value: LEVEL }, weatherSeconds: shared.weatherSeconds, wOut: { value: new THREE.Vector3(0, 0, -1) }, wRight: { value: new THREE.Vector3(1, 0, 0) },
-        seaColor: { value: new THREE.Color(entry.seaSpec?.color || '#3a5f75') }, sea: { value: entry.seaSpec ? 1 : 0 }, noiseMap: { value: tex.noise } } });
+        shoreZ: { value: entry.seaSpec?.z1 ?? 0 }, seaColor: { value: new THREE.Color(entry.seaSpec?.color || '#3a5f75') }, sea: { value: entry.seaSpec ? 1 : 0 }, noiseMap: { value: tex.noise } } });
     sky.name = 'Window sky · ' + name;
     let sea = null;
     if (entry.sea) {
-        const u = sky.uniforms, seaMaterial = new THREE.ShaderMaterial({ vertexShader: SKY_VERTEX, fragmentShader: SEA, defines, side: THREE.DoubleSide, uniforms: { ...portal, weatherSeconds: shared.weatherSeconds, noiseMap: u.noiseMap,
+        const u = sky.uniforms, seaMaterial = new THREE.ShaderMaterial({ vertexShader: SKY_VERTEX, fragmentShader: SEA, defines, side: THREE.DoubleSide, uniforms: { ...portal, weatherSeconds: shared.weatherSeconds, shoreZ: u.shoreZ, noiseMap: u.noiseMap,
             zenith: u.zenith, horizon: u.horizon, sunLocal: u.sunLocal, sunColor: u.sunColor, sunPower: u.sunPower, wOut: u.wOut, wRight: u.wRight, level: u.level, seaColor: u.seaColor } });
         seaMaterial.name = 'Window sea · ' + name;
         sea = new THREE.Mesh(entry.sea, seaMaterial); sea.name = 'Window scenery sea'; sea.renderOrder = ORDER.sea; keep(sea);

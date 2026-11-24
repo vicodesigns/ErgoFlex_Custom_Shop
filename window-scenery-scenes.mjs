@@ -263,6 +263,16 @@ function studioGarden(k, ctx) {
     masonry(b, r, -26000, gateX - 800, ground, wallZ, 2400, '#9e6e58'); masonry(b, r, gateX + 800, 26000, ground, wallZ, 2400, '#9e6e58');
     b.box([1700, 600, 380], [gateX, ground + 2700, wallZ], '#8e6a58'); b.box([1300, 2300, 60], [gateX, ground + 1150, wallZ + 20], '#4f5b4f');
     for (const s of [-1, 1]) b.box([300, 2900, 420], [gateX + s * 800, ground + 1450, wallZ], '#8e6a58');
+    const arch = new THREE.RingGeometry(660, 824, 18, 1, 0, Math.PI);
+    b.add(arch, M(gateX,ground+2260,wallZ+219), () => colour('#bc8c70'));
+    arch.dispose();
+    for (let j = 0; j < 9; j++) {
+        const a = Math.PI*j/8;
+        limb(b,V(gateX+666*Math.cos(a),ground+2260+666*Math.sin(a),wallZ+225),
+            V(gateX+818*Math.cos(a),ground+2260+818*Math.sin(a),wallZ+225), 13, '#897165');
+    }
+    for (const h of [410,1750]) b.box([1280,96,58],[gateX,ground+h,wallZ+115],'#697362');
+    for (let j = -3; j <= 3; j++) b.box([16,2210,32],[gateX+j*175,ground+1120,wallZ+70],'#394e42');
     k.lights.box([120, 180, 120], [gateX + 1050, ground + 2200, wallZ + 300], '#ffcf8e'); k.halos.add(gateX + 1050, ground + 2200, wallZ + 400, 600, '#ffc985', .45); b.light(gateX + 1050, ground + 2000, wallZ + 1200, '#ffc985', 2800, .38);
     // climbers on the wall, shrubs along it
     for (let x = -24000; x < 24000; x += 1500 + r() * 1300) { if (Math.abs(x - gateX) < 1300) continue; shrub(b, r, x, ground, wallZ + 700, 700 + r() * 400, pick(r, ['#5d7b4e', '#6a8656', '#55724a']));
@@ -319,17 +329,22 @@ function humboldt(k, ctx) {
         ridge(b, hills, z, ground - 3600, cx - 330000, cx + 330000, elevation, pigment, { step: 2200, rough: .18, bumps: .45 });
     }
     // The broken upper edge is made of separate redwood crowns on the nearer slope.
-    for (let x = cx - 122000; x <= cx + 122000; x += 2100 + hills() * 2700) {
-        const z = -86500 - hills() * 4100, height = 5700 + 3200 * Math.sin(x / 16900) + hills() * 4700;
-        const width = 1100 + hills() * 1300, tint = colour(hills() < .5 ? '#405d50' : '#526d5b');
-        for (let tier = 0; tier < 3; tier++) {
-            const radius = width * (1. - tier * .25), y = ground + height * (.21 + tier * .24);
-            const tip = V(x + width * .12, y + height * .43, z);
-            for (let side = 0; side < 5; side++) {
-                const angle = side * Math.PI * .4, next = angle + Math.PI * .4;
-                b.tri(tip, V(x + radius*Math.cos(angle), y, z + radius*Math.sin(angle)),
-                    V(x + radius*Math.cos(next), y, z + radius*Math.sin(next)), tint);
+    for (let x = cx - 122000; x <= cx + 122000; x += 1300 + hills() * 2300) {
+        const z = -86500 - hills() * 5800, height = 5900 + 2500 * Math.sin(x / 16900) + hills() * 4400;
+        const width = 1000 + hills() * 1100, tint = colour(hills() < .5 ? '#405d50' : '#526d5b');
+        const lean = (hills() - .5) * width * .8, levels = 16;
+        let prev;
+        for (let row = 0; row <= levels; row++) {
+            const t = row / levels, y = ground + height*t, center = x + lean*t*t;
+            const radius = width * Math.pow(1-t,.63) * (row % 2 ? .65 : 1);
+            const branch = () => radius * (.75 + hills()*.45);
+            const edge = [V(center - branch(), y - radius*hills()*.38, z),
+                V(center, y, z + radius*.56), V(center + branch(), y - radius*hills()*.38, z)];
+            if (prev) for (let side = 0; side < 2; side++) {
+                b.tri(prev[side], prev[side+1], edge[side], tint);
+                if (row < levels) b.tri(prev[side+1], edge[side+1], edge[side], tint);
             }
+            prev = edge;
         }
     }
     const moss = colour('#667448'), duff = colour('#664833'), out = new THREE.Color();
@@ -406,7 +421,6 @@ function humboldt(k, ctx) {
 // From high up (storey 12 m and more) the room looks over a roofscape to towers far off and the sky (highCity).
 // The storey (the room's floor above the street) decides how much of the street is seen. After dark: lamps and their
 // pools, a few lit windows and shopfronts, the odd car's lights; neon: signs over the shops and on the towers.
-const QUAD_FLAG = new THREE.PlaneGeometry(1, 1);
 const NEON = ['#ff4fa8', '#46d6ff', '#a066ff', '#ff9a4a', '#5cf0a8'];
 const TOWER_WALLS = ['#8f979d', '#a3a6a8', '#5f6a74', '#a69f94', '#4f5a66', '#9a9488', '#3f4852', '#b8ad9c', '#6c7a86'];
 // A block drawn plainly, its windows a grid in the shader (far rows, towers): a box, a parapet, things on its roof.
@@ -610,13 +624,30 @@ function city(k, ctx, { neon = false } = {}) {
             const ped = new THREE.Shape(); ped.moveTo(-12800, 0); ped.lineTo(0, 3200); ped.lineTo(12800, 0); ped.closePath(); const pg = new THREE.ExtrudeGeometry(ped, { depth: 2800, bevelEnabled: false });
             b.add(pg, M(cx, ground + 12900, face + 100), () => colour('#d2c9b6'), { facet: true }); pg.dispose();
             for (let i = 0; i < 3; i++) { const x = flagX - 4000 + i * 4000; pole(b, x, ground, -21000, 11000, 70, '#c9c9c4');
-                b.add(QUAD_FLAG, M(x + 900, ground + 10200, -21000, 1800, 1100, 1), () => colour(['#5a6e8c', '#8c4b45', '#d8d2c2'][i]), { two: true }); }
+                const cloth = colour(['#5a718e', '#9b564a', '#d8d2c2'][i]);
+                const hem = (t, dy) => V(x + t*1780, ground + 10650 + dy - 260*t*t,
+                    -21000 + t*280*Math.sin(t*9+i));
+                for (let j = 0; j < 9; j++) {
+                    const u=j/9, v=(j+1)/9;
+                    b.tri(hem(u,0), hem(u,-1050), hem(v,0), cloth);
+                    b.tri(hem(v,0), hem(u,-1050), hem(v,-1050), cloth);
+                } }
         } else {
             building(k, r, cx, ground, bz - 9000, { width: bw, depth: 18000, floors: 4, storey: 3800, shops: false, style: 'band', wall: '#d4d2cc', glass: '#4a5a66', litRate: .5, warm: .4, cornice: false, roof: '#cfcac0', bays: 14 });
             b.box([22000, 400, 7000], [cx, ground + 4200, bz + 3500], '#e3e1dc'); for (let x = cx - 10000; x <= cx + 10000; x += 5000) pole(b, x, ground, bz + 6700, 4000, 120, '#b9bcbe');
             for (let x = cx - 9000; x <= cx + 9000; x += 3000) { k.lights.box([600, 40, 600], [x, ground + 3980, bz + 3500], '#f2f4f0'); }
             b.light(cx, ground + 3500, bz + 4000, '#eef2f0', 7000, .4);
-            b.box([5200, 2400, 2100], [cx + 6000, ground + 1300, bz + 9000], '#e8e6e0'); b.box([1600, 1900, 2000], [cx + 8600, ground + 950, bz + 9000], '#e8e6e0'); b.quad(2000, 260, [cx + 6000, ground + 1500, bz + 10060], colour('#a8433a'));
+            b.box([5200, 2400, 2100], [cx + 6000, ground + 1690, bz + 9000], '#e8e6e0'); b.box([1600, 1900, 2000], [cx + 8600, ground + 1430, bz + 9000], '#e8e6e0'); b.quad(2000, 260, [cx + 6000, ground + 1500, bz + 10060], colour('#a8433a'));
+            const vanX = cx + 6000, vanZ = bz + 9000;
+            b.quad(1180, 720, [vanX+2580, ground+2050, vanZ+1015], '#405963');
+            b.quad(1900, 560, [vanX-250, ground+2000, vanZ+1065], '#536770');
+            const tyre = new THREE.CylinderGeometry(440, 440, 220, 18).rotateX(Math.PI/2);
+            const hub = new THREE.CylinderGeometry(215, 215, 230, 14).rotateX(Math.PI/2);
+            for (const dx of [-1700, 2530]) for (const sign of [-1, 1]) {
+                b.add(tyre, M(vanX+dx,ground+445,vanZ+sign*1000), () => colour('#343b3c'));
+                b.add(hub, M(vanX+dx,ground+445,vanZ+sign*1004), () => colour('#8f9895'));
+            }
+            tyre.dispose(); hub.dispose();
             for (let x = cx - 30000; x <= cx + 30000; x += 9000) if (Math.abs(x - cx) > 8000) tree(b, r, x, ground, bz + 14000, { height: 8000, hex: '#62804e', shape: 'round' });
         }
         for (let x = cx - 22000; x <= cx + 22000; x += 7300) { if (Math.abs(x - flagX) < 6000 && civic) continue; b.box([2200, 500, 2200], [x, ground + 250, -26000], '#a49d90'); tree(b, r, x, ground + 500, -26000, { height: 7000, hex: '#62804e', shape: 'round' }); }
@@ -809,6 +840,17 @@ function campusBlock(k, r, x, ground, z, { width = 36000, floors = 3, wall = '#d
 function coast(k, ctx, edge, drop, shore, townFrom, townTo, mediaLab = false) {
     const { land: b, r } = k, ground = ctx.ground, low = ground - drop, cx = (ctx.left + ctx.right) / 2, out = new THREE.Color();
     const scrub = colour('#7c8460'), dry = colour('#a39a78'), sand = colour('#d8ccae'), wet = colour('#a8a08a'), road = colour('#55575a');
+    // Low drifts of coastal sage on the lip of the bluff, leaving sightlines
+    // to the beach and pier between them.
+    const planting = rand(ctx.seed + 61);
+    for (let group = -2; group <= 2; group++) {
+        const x = cx + group*7300 + 1400, z = edge + 1100 + planting()*760;
+        for (let j = 0; j < 4; j++) {
+            const px = x+j*620, pz = z+410*Math.sin(j+group);
+            shrub(b, planting, px, ground, pz, 410+planting()*230, j%2?'#74845e':'#87967c', {size:145});
+            if (j === 1) flowers(b, planting, px, ground+400, pz+190, 350, 15, ['#cb963e','#d7af68'], 53);
+        }
+    }
     const roadZ = townTo - 2500, sandZ = roadZ - 3500;
     groundPlane(b, low, cx - 260000, cx + 260000, sandZ, edge - 2000, 3000, (x, z) => z > roadZ + 2200 ? out.copy(dry).lerp(scrub, .5 + .5 * Math.sin(x / 7000 + z / 5000)).multiplyScalar(.85 + r() * .15) : z > roadZ - 2200 ? out.copy(road).multiplyScalar(.95 + r() * .08) : out.copy(sand).multiplyScalar(.9));
     groundPlane(b, low - 200, cx - 700000, cx + 700000, shore - 2000, sandZ, 8000, (x, z) => out.copy(z < shore + 9000 ? wet : sand).multiplyScalar(.93 + r() * .07 + .04 * Math.sin(x / 13000)));
@@ -816,7 +858,7 @@ function coast(k, ctx, edge, drop, shore, townFrom, townTo, mediaLab = false) {
     { const geo = new THREE.PlaneGeometry(560000, Math.hypot(drop, 9000), 140, 4); geo.rotateX(-Math.PI / 2 - Math.atan2(drop, 9000)); b.add(geo, M(cx, ground - drop / 2, edge - 4500), (p) => out.copy(scrub).lerp(dry, .5 + .5 * Math.sin(p.x / 3000)).multiplyScalar(.75 + r() * .2)); geo.dispose(); }
     for (let x = cx - 70000; x < cx + 70000; x += 2500 + r() * 3000) shrub(b, r, x, ground - 1500 - r() * drop * .6, edge - 2000 - r() * 6000, 900 + r() * 700, pick(r, ['#62704c', '#6e7a52', '#58664a']), { size: 300 });
     // the town: blocks and houses under tile roofs, palms among them
-    for (let z = townFrom; z > townTo; z -= 9000 + r() * 4000) for (let x = cx - 80000 - r() * 10000; x < cx + 80000; x += 13000 + r() * 9000) {
+    for (let z = townFrom; z > townTo; z -= 14300 + r() * 3000) for (let x = cx - 80000 - r() * 10000; x < cx + 80000; x += 17700 + r() * 5300) {
         if (r() < .2) { fanPalm(b, r, x, low, z, { height: 16000 + r() * 8000 }); continue; }
         const width = 9000 + r()*6000, depth = 8000 + r()*3000, eaves = r() < .5 ? 6000 : 3200;
         const wall = pick(r, ['#e4d3b7', '#c5cfc4', '#e5dbcb', '#c39579', '#ded0ae']);
@@ -1139,8 +1181,15 @@ function schoolyard(k, ctx) {
     // the low fence, trees, the school's wing across, houses beyond
     fence(b, r, cx - 30000, cx + 30000, ground, fenceZ, { kind: 'chain', height: 1200 });
     for (let x = cx - 26000; x <= cx + 26000; x += 7000 + r() * 4000) if (Math.abs(x - cx) > w / 2 + 3000 || r() < .3) tree(b, r, x, ground, fenceZ - 2500 - r() * 2000, { height: 7000 + r() * 3000, hex: pick(r, ['#62804e', '#6c8754', '#5c7849']), shape: 'round' });
-    const wing = building(k, r, cx - f * 4000 + jit(6000), ground, -45000, { width: 50000, depth: 16000, floors: v === 'middle' ? 2 : 1, storey: 4200, shops: false, material: 'render', bays: 12, litRate: .3, cornice: false });
-    if (wing) for (let i = 0; i < 8; i++) b.box([3000, 1200, 100], [cx - f * 4000 - 21000 + i * 6000, ground + 3300, -36950], pick(r, ['#c8604a', '#4a8ac8', '#e0b030', '#4a9a6a']));
+    const wingX = cx-f*4000+jit(6000), wingFront = -37000;
+    const wing = building(k, r, wingX, ground, -45000, { width: 50000, depth: 16000, floors: v === 'middle' ? 2 : 1, storey: 4200, shops: false, material: 'render', bays: 12, litRate: .3, cornice: false });
+    if (wing) for (let i = 0; i < 8; i++) {
+        const x = wingX - 21000 + i*6000, enamel = pick(r, ['#af6654','#548198','#be984e','#638d77']);
+        b.box([3200, 170, 920], [x, ground+3510, wingFront+440], enamel);
+        b.box([3200, 390, 90], [x, ground+3360, wingFront+870], enamel);
+        for (const side of [-1, 1]) limb(b, V(x+side*1410,ground+2900,wingFront+50),
+            V(x+side*1410,ground+3430,wingFront+795), 46, '#677673');
+    }
     for (let x = cx - 60000; x <= cx + 60000; x += 13000 + r() * 6000) house(k, r, x, ground, -70000 - r() * 8000, { width: 9000, wall: pick(r, ['#d6cab5', '#cbbfae', '#c8c2b6']), roof: pick(r, ['#96705e', '#7c6a64']), lit: [0, 2] });
     for (let x = cx - 70000; x <= cx + 70000; x += 3000 + r() * 1000) crown(b, r, x, ground + 2400 + r() * 1200, -85000 - r() * 6000, 3500, 3200, 2400, '#5b735f', { size: 1500, lobes: .2 });
 }

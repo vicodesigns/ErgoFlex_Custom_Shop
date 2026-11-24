@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
 import { attachScenery, windowView, HOURS, LEVEL, SCENES, DEFAULT_VIEW, hourOf, ORDER } from '../window-scenery.mjs';
-import { Builder, Leaves, LEAF, sharedTextures } from '../window-scenery-kit.mjs?v=polish-20261113b';   // (the stamp the scenery module imports it with: one instance)
+import { Builder, Leaves, LEAF, house, sharedTextures } from '../window-scenery-kit.mjs?v=polish-20261113b';   // (the stamp the scenery module imports it with: one instance)
 
 // Texture rows follow DataTexture storage. A needle card grows away from the stem
 // at row 238 of the upper-right tile.
@@ -12,6 +12,21 @@ for (const cell of Object.values(LEAF)) {
     leaves.card(new THREE.Vector3(), 100, new THREE.Vector3(0, 0, 1), 0, cell, new THREE.Color());
     const u = (cell % 2) / 2, v = Math.floor(cell / 2) / 2;
     assert.deepEqual(leaves.uv.slice(0, 6), [u, v + .5, u + .5, v + .5, u + .5, v]);
+}
+
+// From either side of a window edge there should be one surface at the
+// facade. A second frame or wall behind the glass competes in distant views.
+{
+    const land = new Builder();
+    house({ land, lights: new Builder() }, () => .5, 0, 0, 0, { porch: false, lit: [] });
+    const geo = land.geometry(), mesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }));
+    const ray = new THREE.Raycaster(new THREE.Vector3(), new THREE.Vector3(0, 0, -1), 0, 6600);
+    for (const x of [-2880, -2240, -2140, 0]) { // glass, trim, plaster, door
+        ray.ray.origin.set(x, 1545, 10000);
+        const hits = ray.intersectObject(mesh);
+        assert.deepEqual(hits.map(h => h.distance), [6500], 'single front surface at ' + x);
+    }
+    geo.dispose(); mesh.material.dispose();
 }
 
 // ---- which view a window shows: the 3D scenery unless asked otherwise, the default in one place
@@ -187,6 +202,8 @@ for (const name of Object.keys(SCENES)) {
 // the coast: the sea a band six to twelve degrees deep below the horizon from the rooms' storeys
 for (const [name, storey] of [['beach-school', 4000], ['socal-campus', 8400]]) { const pane = paneIn(new THREE.Group(), 1600, 1450, [0, 1575, -1800]), view = attachScenery(pane, name, { floor: -1575, storey });
     const sea = view.group.children.find(o => o.name === 'Window scenery sea'); sea.geometry.computeBoundingBox(); const b = sea.geometry.boundingBox, deg = Math.atan2(25 - b.max.y, -b.max.z) * 180 / Math.PI;
+    assert.equal(sea.material.uniforms.weatherSeconds, view.sky.uniforms.weatherSeconds, name + ': clouds and swells use the same playback clock');
+    assert.ok(Math.abs(sea.material.uniforms.shoreZ.value - b.max.z) < 1, name + ': shallows follow the near edge of the sea');
     assert.ok(deg > 6 && deg < 12, name + ': the sea from the horizon down to ' + deg.toFixed(1) + ' degrees'); view.dispose(); }
 
 assert.throws(() => attachScenery(new THREE.Mesh(), 'moon-base', { width: 1, height: 1 }), /No window scenery/);

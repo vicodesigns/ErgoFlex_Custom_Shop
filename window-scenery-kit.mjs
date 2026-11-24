@@ -494,25 +494,58 @@ export function ridge(b, r, z, y0, x0, x1, height, hex, { step = 1500, rough = .
 }
 
 // ---- built things
+// Back and gable-end walls only. The front is tiled around its openings,
+// and the roof closes the top. A solid box here leaves competing surfaces
+// behind glass and under the eaves on distant houses.
+const HOUSE_SHELL = new THREE.BoxGeometry(1, 1, 1);
+HOUSE_SHELL.setIndex(HOUSE_SHELL.groups.filter(({ materialIndex }) => [0, 1, 5].includes(materialIndex))
+    .flatMap(({ start, count }) => Array.from(BOX.index.array.slice(start, start + count))));
+HOUSE_SHELL.clearGroups();
+
+function windowTrim(b, x, y, z, width, height, rim, color) {
+    for (const side of [-1, 1]) {
+        b.quad(rim, height, [x + side*(width-rim)/2, y, z], color, { light: true });
+        b.quad(width-2*rim, rim, [x, y + side*(height-rim)/2, z], color, { light: true });
+    }
+}
+
 // A house: walls, a pitched roof along x, windows on the face toward the room (dark glass by day; `lit` ones glow
 // after dark), a door with a porch light.
 export function house(k, r, x, ground, z, { width = 9000, depth = 7000, eaves = 5600, ridge: rise = 2600, wall = '#d6cab5', roof = '#96705e', lit = [1, 4], porch = true, storeys = 2 } = {}) {
     if (!seen(k.land, x, z, width / 2 + 3000)) return;
     const { land: b, lights } = k;
-    b.box([width, eaves, depth], [x, ground + eaves / 2, z], wall); b.footing(x - width / 2, x + width / 2, z - depth / 2, z + depth / 2, ground, 1600, .4, 1400);
+    const stucco = colour(wall);
+    b.add(HOUSE_SHELL, M(x, ground+eaves/2, z, width, eaves, depth), () => stucco);
+    b.footing(x - width / 2, x + width / 2, z - depth / 2, z + depth / 2, ground, 1600, .4, 1400);
     const shape = new THREE.Shape(); shape.moveTo(-depth / 2 - 350, 0); shape.lineTo(0, rise); shape.lineTo(depth / 2 + 350, 0); shape.closePath();
     const prism = new THREE.ExtrudeGeometry(shape, { depth: width + 500, bevelEnabled: false }), c = colour(roof), gable = colour(wall).multiplyScalar(.93);
     b.add(prism, new THREE.Matrix4().makeRotationY(Math.PI / 2).setPosition(x - width / 2 - 250, ground + eaves, z), (p, n) => Math.abs(n.x) > .9 ? gable : c.clone().multiplyScalar(.92 + .08 * Math.sin(p.y * .02)), { facet: true }); prism.dispose();
     b.box([520, 1500, 520], [x + width * .28, ground + eaves + rise * .8, z - depth * .12], '#8e7767');
-    const face = z + depth / 2, frame = '#efe8dc'; let n = 0;
-    for (const level of storeys > 1 ? [1500, 4150] : [1500]) for (const u of [-.32, 0, .32]) {
-        const wx = x + u * width, wy = ground + level, door = level < 2000 && u === 0;
-        if (door) { b.box([1050, 2150, 40], [wx, ground + 1075, face + 20], '#6d5a4c');
-            if (porch) { lights.box([140, 200, 40], [wx + 800, ground + 2250, face + 60], '#ffd9a0'); k.halos.add(wx + 800, ground + 2250, face + 120, 650, '#ffcf8f', .55); b.light(wx + 800, ground + 2200, face + 700, '#ffc98a', 3200, .5); }
-            n++; continue; }
-        b.box([1350, 1450, 30], [wx, wy, face + 15], frame); b.quad(1190, 1290, [wx, wy, face + 32], colour('#4d5c68').multiplyScalar(.8 + .25 * (level > 2000)), { glazing: true });
-        if (lit.includes(n)) { const half = n % 2; lights.quad(1190, 1290 * (half ? .55 : 1), [wx, wy - (half ? 290 : 0), face + 46], colour(half ? '#e8b878' : '#f0cc98').multiplyScalar(.55)); b.light(wx, wy - 400, face + 1500, '#ffd8a0', 2600, .35); }
-        n++;
+    const face = z + depth/2, levels = storeys > 1 ? [1500, 4150] : [1500];
+    const plaster = (x0, y0, x1, y1) => {
+        if (x1 > x0 && y1 > y0) b.quad(x1-x0, y1-y0, [x+(x0+x1)/2, ground+(y0+y1)/2, face], stucco, { light: true });
+    };
+    for (const [row, level] of levels.entries()) for (let bay = 0; bay < 3; bay++) {
+        const n = row*3+bay, door = n === 1, dx = (bay-1)*width*.32;
+        const x0 = bay === 0 ? -width/2 : (bay-1.5)*width*.32, x1 = bay === 2 ? width/2 : (bay-.5)*width*.32;
+        const y0 = row === 0 ? 0 : (levels[0]+level)/2, y1 = row === levels.length-1 ? eaves : (level+levels[1])/2;
+        const w = Math.min(door ? 1050 : 1350, .78*(x1-x0));
+        const bottom = door ? 0 : level-725, top = Math.min(y1, door ? 2150 : level+725);
+        const wx = x+dx, wy = ground+(bottom+top)/2, h = top-bottom;
+        plaster(x0, y0, dx-w/2, y1); plaster(dx+w/2, y0, x1, y1);
+        plaster(dx-w/2, y0, dx+w/2, bottom); plaster(dx-w/2, top, dx+w/2, y1);
+        if (door) {
+            b.quad(w, h, [wx, wy, face], '#705f50', { light: true });
+            if (porch) { lights.box([140, 200, 40], [wx+800,ground+2250,face+60], '#ffd9a0'); k.halos.add(wx+800,ground+2250,face+120,650,'#ffcf8f',.55); b.light(wx+800,ground+2200,face+700,'#ffc98a',3200,.5); }
+        } else {
+            windowTrim(b, wx, wy, face, w, h, 80, '#e3ded1');
+            b.quad(w-160, h-160, [wx, wy, face], colour('#4d5c68').multiplyScalar(row ? 1.05 : .8), { glazing: true });
+            if (lit.includes(n)) {
+                const partial = n % 2, glowH = (h-160)*(partial ? .55 : 1);
+                lights.quad(w-160, glowH, [wx, wy-(h-160-glowH)/2, face+45], colour(partial ? '#e8b878' : '#f0cc98').multiplyScalar(.55));
+                b.light(wx, wy-400, face+1500, '#ffd8a0', 2600, .35);
+            }
+        }
     }
 }
 
@@ -555,9 +588,14 @@ export function building(k, r, x, ground, z, { width = 16000, depth = 14000, flo
         for (let i = 0; i < n; i++) {
             if (skip && r() < skip) continue;
             const wx = x - width / 2 + bay * (i + .5), ww = bay * (make ? wFrac : .52), wh = storey * (make ? hFrac : .56), g = glassC.clone().multiplyScalar(.75 + r() * .4 + .25 * (f / floors));
-            if (make) { b.box([ww + 140, wh + 140, 30], [wx, y, face + 15], reveal); b.quad(ww, wh, [wx, y, face + 34], g, { glazing: true });
+            if (make) { windowTrim(b, wx, y, face+34, ww+140, wh+140, 70, reveal); b.quad(ww, wh, [wx, y, face + 34], g, { glazing: true });
                 b.box([ww + 260, 90, 170], [wx, y - wh / 2 - 60, face + 85], trim); if (make.heads) b.box([ww + 240, 170, 60], [wx, y + wh / 2 + 120, face + 30], trim); }
-            else { b.box([ww + 160, wh + 160, 40], [wx, y, face + 20], frame); b.quad(ww, wh, [wx, y, face + 44], g, { glazing: true }); }
+            else { windowTrim(b, wx, y, face+44, ww+160, wh+160, 80, frame); b.quad(ww, wh, [wx, y, face + 44], g, { glazing: true }); }
+            if (Math.abs(z) < 65000 && (i + 3*f + Math.floor(Math.abs(x)/900)) % 5 === 1) {
+                const drop = wh * (.22 + .08*((i+f)%3));
+                b.quad(ww*.98, drop, [wx, y + (wh-drop)*.5, face + (make?49:58)],
+                    '#a49a87', {light:true});
+            }
             if (r() < litRate) { const curtain = r() < .45, lc = colour(litColours[Math.floor(r() * (r() < warm ? 4 : 5))]).multiplyScalar((.32 + r() * .3) * (curtain ? .6 : 1)); lights.quad(ww, wh * (curtain ? .5 : 1), [wx, y - (curtain ? wh * .25 : 0), face + (make ? 46 : 56)], lc); }
         }
     }

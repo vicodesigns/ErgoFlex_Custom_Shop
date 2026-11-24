@@ -49,6 +49,45 @@ function texture(draw, width=512, height=512) {
 }
 // Seeded jitter keeps every procedural texture identical between rebuilds.
 const jitter=i=>{const x=Math.sin(i*127.1+311.7)*43758.5453;return x-Math.floor(x);};
+// Surface pigments seen from orbit. Project the noise fields onto the visible
+// hemisphere so coastlines and weather fronts compress toward the limb.
+let cachedGlobe;
+function globeSurface() {
+    if (cachedGlobe) return cachedGlobe;
+    const size = 480, canvas = document.createElement('canvas');
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext('2d'), image = ctx.createImageData(size, size);
+    const land = new Uint8Array(size * size);
+    const grid = Float32Array.from({length: 4096}, (_, i) => jitter(i+371));
+    function noise(x, y) {
+        const ix = Math.floor(x), iy = Math.floor(y);
+        const fx = x-ix, fy = y-iy, u = fx*fx*(3-2*fx), v = fy*fy*(3-2*fy);
+        const a = (iy & 63)*64, b = ((iy+1) & 63)*64, left = ix & 63, right = (ix+1) & 63;
+        return (grid[a+left]*(1-u)+grid[a+right]*u)*(1-v) + (grid[b+left]*(1-u)+grid[b+right]*u)*v;
+    }
+    for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+        const nx = (2*x+1)/size-1, ny = (2*y+1)/size-1, zz = 1-nx*nx-ny*ny;
+        if (zz <= 0) continue;
+        const lon = Math.atan2(nx,Math.sqrt(zz)), lat = Math.asin(ny);
+        const u = lon*3.4+13, v = lat*4+19, i = y*size+x;
+        const relief = .59*noise(u,v) + .25*noise(u*2.3,v*2.3) + .16*noise(7*u,7*v);
+        const terrain = THREE.MathUtils.smoothstep(relief,.49,.54);
+        land[i] = Math.round(terrain*255);
+        const curl = 1.6*noise(u*1.4+24,v*1.4);
+        const front = .61*noise(u*1.65+curl, v*4.2+2.1*Math.sin(lon*4+curl))
+            + .26*noise(u*5,v*9+curl) + .13*noise(u*15,v*19);
+        const cloud = THREE.MathUtils.smoothstep(front,.51,.73);
+        const dry = THREE.MathUtils.smoothstep(relief,.56,.72);
+        const pixels = image.data, offset = i*4;
+        pixels[offset]   = (28 + terrain*(49+67*dry))*(1-cloud) + 228*cloud;
+        pixels[offset+1] = (82 + terrain*(24+23*dry))*(1-cloud) + 237*cloud;
+        pixels[offset+2] = (123 - terrain*(43-15*dry))*(1-cloud) + 240*cloud;
+        pixels[offset+3] = 92+terrain*67+cloud*80;
+    }
+    ctx.putImageData(image,0,0);
+    cachedGlobe = {canvas, land, size};
+    return cachedGlobe;
+}
 const rgba=(hex,a)=>{const n=parseInt(hex.slice(1,7),16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;};
 // Atlas regions in canvas pixels -> UV rectangles (canvas textures are flipped).
 const region=(x0,y0,x1,y1,W=1024,H=512)=>[x0/W,1-y1/H,x1/W,1-y0/H];
@@ -358,11 +397,23 @@ export function buildScifiRoom(room, root, layout, helpers) {
         c.fillStyle='#1a2230';c.fillRect(392,232*k-3,60,6);c.fillRect(419,232*k-14,6,28);c.fillStyle='#41536d';c.fillRect(372,232*k-9,18,18);c.fillRect(454,232*k-9,18,18);c.fillStyle='#ff6a5c';c.fillRect(420,232*k-18,3,3);
         c.save();c.beginPath();c.arc(cx,cy,R,0,7);c.clip();
         const base=c.createLinearGradient(cx,cy-R,cx,cy+R);base.addColorStop(0,mode.planet[0]);base.addColorStop(1,mode.planet[1]);c.fillStyle=base;c.fillRect(cx-R,cy-R,R*2,R*2);
-        c.filter='blur(14px)';for(let i=0;i<22;i++){c.fillStyle=rgba(i%3?'#2f7a6a':'#556b3f',.28);c.beginPath();c.ellipse(cx-R+jitter(i+70)*R*2,cy-R+jitter(i+80)*R*1.2,60+jitter(i+90)*150,14+jitter(i+95)*40,-.15+jitter(i+99)*.3,0,7);c.fill();}c.filter='none';
-        c.filter='blur(5px)';c.fillStyle='rgba(240,248,255,.22)';for(let i=0;i<30;i++){const y=cy-R+jitter(i+120)*R*1.4,x=cx-R+jitter(i+130)*R*2;c.beginPath();c.ellipse(x,y,70+jitter(i+140)*180,6+jitter(i+150)*12,-.12+jitter(i+160)*.1,0,7);c.fill();}c.filter='none';
+        const globe = globeSurface();
+        c.drawImage(globe.canvas,cx-R,cy-R,2*R,2*R);
         // Terminator: the night side falls away from the sun across the disk.
         const night=c.createLinearGradient(cx+sx*R,cy+sy*R,cx-sx*R,cy-sy*R);night.addColorStop(0,'rgba(2,5,14,0)');night.addColorStop(Math.min(.95,lit*.9),'rgba(2,5,14,0)');night.addColorStop(Math.min(1,lit*.9+.3),'rgba(2,5,14,.93)');night.addColorStop(1,'rgba(2,5,14,.97)');c.fillStyle=night;c.fillRect(cx-R,cy-R,R*2,R*2);
-        for(let i=0;i<320;i++){const ang=jitter(i+200)*Math.PI*2,rr=Math.sqrt(jitter(i+210))*R*.96,x=cx+Math.cos(ang)*rr,y=cy+Math.sin(ang)*rr,t=(1-((x-cx)*sx+(y-cy)*sy)/R)/2;if(t<lit*.9+.25)continue;c.fillStyle=`rgba(255,${190+Math.round(jitter(i)*50)},120,${.35+jitter(i+220)*.5})`;c.fillRect(x,y,1.6+jitter(i+230),1.6+jitter(i+230));}
+        // Settlements cluster on the unlit land; water stays dark.
+        for (let i = 0; i < 260; i++) {
+            const angle = jitter(i+200)*Math.PI*2, radius = Math.sqrt(jitter(i+210))*.97;
+            const nx = Math.cos(angle)*radius, ny = Math.sin(angle)*radius;
+            const t = (1-nx*sx-ny*sy)/2;
+            const px = Math.floor((nx+1)*.5*globe.size), py = Math.floor((ny+1)*.5*globe.size);
+            if (t < lit*.9+.25 || globe.land[py*globe.size+px]<165) continue;
+            c.fillStyle = rgba('#ffd59b', .33+.49*jitter(i+220));
+            for (let j = 0; j < 5; j++) {
+                const spread = 6*jitter(i*5+j+333);
+                c.fillRect(cx+R*nx+spread,cy+R*ny+spread*.4+3*jitter(i+j+420),1.3,1.2);
+            }
+        }
         const limb=c.createRadialGradient(cx,cy,R*.82,cx,cy,R);limb.addColorStop(0,'rgba(0,0,0,0)');limb.addColorStop(1,rgba(mode.colors[0],.35));c.fillStyle=limb;c.fillRect(cx-R,cy-R,R*2,R*2);
         c.restore();
         c.shadowColor=mode.colors[0];c.shadowBlur=28;c.strokeStyle=rgba(mode.colors[0],.9);c.lineWidth=6;c.beginPath();c.arc(cx,cy,R+3,sunAngle-.9-lit,sunAngle+.9+lit);c.stroke();
