@@ -33,9 +33,9 @@ const server=http.createServer((req,res)=>{if(req.url==='/audit'){res.setHeader(
     b.configure(lights,{enabled:false});if(b.uniforms.efBounceGain.value!==0)fail.push(id+': disabled bounce remains active');
     if(count()!==before)fail.push(id+': added real lights');
    }
-   room.set('product');return{checked,fail};
+   room.set('product');return{checked,expected:ROOM_SCENES.filter(s=>s.id!=='product').length,fail};
   });
-  console.log(JSON.stringify(result,null,2));assert.equal(result.checked,27);assert.deepEqual(result.fail,[]);
-  console.log('PASS 27 rooms × 5 dayparts: finite stable bounce, translated rooms, RGB atlas response, LED off, no extra lights.');
+  console.log(JSON.stringify(result,null,2));assert.equal(result.checked,result.expected);assert.ok(result.checked>=27);assert.deepEqual(result.fail,[]);
+  console.log(`PASS ${result.checked} rooms × 5 dayparts: finite stable bounce, translated rooms, RGB atlas response, LED off, no extra lights.`);
  }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;server.close();});

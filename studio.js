@@ -30,7 +30,7 @@ import { RenderPacing, pruneTinyCasters } from './render-pacing.mjs?v=render-pac
 import { SceneTour, tourEnabled } from './scene-tour.mjs?v=highschool-setting-20261104';
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
 import { TouchscreenDisplay } from './touchscreen-display.mjs?v=film-touchscreen-20261114';
-import { roomPolishLighting } from './room-polish.mjs?v=polish-20261111f';
+import { roomPolishLighting, ROOM_FINISHES } from './room-polish.mjs?v=polish-20261111f';
 import { roomViewBounds } from './room-view-bounds.mjs?v=table-clearance-20261021';
 import { ROOM_DESK_STYLES, cleanDeskStyle, cleanRoomDeskStyles, stationDeskStyle, roomDeskStyle } from './room-desk-styles.mjs?v=polish-20261111f';
 import { RoomLedSpill } from './room-led-spill.mjs?v=polish-20261111f';
@@ -1434,15 +1434,57 @@ function createStudioEnvironment() {
 // a dark room, the hour, or a film's environmentScale dims them with everything else. The product stage keeps the
 // studio. Everything else in a room is untouched: its light and its reflections come from scene.environment as before.
 const ROOM_GLOSS = 1;      // the room reflection's level against scene.environmentIntensity
-const roomGloss = { env: null, touched: new Map(), frame: 0 };
-function createRoomGlossEnvironment() {
-    const env = new THREE.Scene(); env.background = new THREE.Color(0x8d8c88);      // the walls
-    const panel = (w, h, intensity, x, y, z) => { const mat = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }); mat.color.setScalar(intensity); const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat); mesh.position.set(x, y, z); mesh.lookAt(0, 0, 0); env.add(mesh); };
-    panel(18, 18, 1.5, 0, 9, .01);      // the ceiling and its lights
-    panel(18, 18, .3, 0, -8, .01);      // the floor
-    panel(6, 5, 2.8, -9, 3, 2);         // a window
-    panel(5, 4, 1.3, 8, 2.5, -4);       // a lit wall
+const ROOM_GLOSS_CACHE_MAX = 8;
+const roomGloss = { env: null, key: null, cache: new Map(), touched: new Map(), frame: 0 };
+const ROOM_GLOSS_DAYPART = {
+    morning:   { wall: '#c7c0b4', ceil: '#fff3e2', ceilI: 1.45, win: '#ffe7c4', winI: 2.65, fill: '#f3dec4', fillI: 1.25 },
+    afternoon: { wall: '#b8bab8', ceil: '#f7f8fa', ceilI: 1.50, win: '#f2f7ff', winI: 2.80, fill: '#e8ecf2', fillI: 1.30 },
+    evening:   { wall: '#9a8676', ceil: '#f2d3b0', ceilI: 1.20, win: '#ffbe82', winI: 2.25, fill: '#dca982', fillI: 1.05 },
+    night:     { wall: '#3e485a', ceil: '#8aa0be', ceilI: 0.72, win: '#5a7eb5', winI: 0.90, fill: '#6c7c96', fillI: 0.65 },
+    party:     { wall: '#4d4160', ceil: '#a68ac8', ceilI: 0.85, win: '#b07ce8', winI: 1.15, fill: '#68b4d8', fillI: 0.90 }
+};
+function createRoomGlossEnvironment(roomId = 'home', mode = 'afternoon') {
+    const fin = ROOM_FINISHES[roomId] || ROOM_FINISHES.home;
+    const dp = ROOM_GLOSS_DAYPART[mode] || ROOM_GLOSS_DAYPART.afternoon;
+    const scifi = roomId === 'scifi';
+    const env = new THREE.Scene();
+    const groundCol = new THREE.Color(fin?.ground || '#85745e');
+    const wallCol = new THREE.Color(scifi ? '#2c4157' : dp.wall).lerp(groundCol, scifi ? 0.25 : 0.22);
+    env.background = wallCol;
+    const panel = (w, h, color, intensity, x, y, z) => {
+        const mat = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
+        mat.color.set(color).multiplyScalar(intensity);
+        const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
+        mesh.position.set(x, y, z); mesh.lookAt(0, 0, 0); env.add(mesh);
+    };
+    panel(18, 18, scifi ? '#8cc8e6' : dp.ceil, scifi ? 1.15 : dp.ceilI, 0, 9, .01);         // ceiling & overhead wash
+    panel(18, 18, groundCol, mode === 'night' ? 0.22 : 0.36, 0, -8, .01);                   // room-tinted floor bounce
+    panel(6, 5, scifi ? '#74d0f0' : dp.win, scifi ? 2.0 : dp.winI, -9, 3, 2);               // daypart window highlight
+    panel(5, 4, scifi ? '#5298c4' : dp.fill, scifi ? 1.0 : dp.fillI, 8, 2.5, -4);           // warm/cool opposite wall
     return env;
+}
+function roomGlossEnvFor(roomId, mode) {
+    const g = roomGloss;
+    if (!renderer) return g.env;
+    const key = `${roomId || 'home'}:${mode || 'afternoon'}`;
+    if (g.cache.has(key)) {
+        const tex = g.cache.get(key);
+        g.cache.delete(key); g.cache.set(key, tex);   // touch LRU
+        return tex;
+    }
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    pmrem.compileEquirectangularShader();
+    const envScene = createRoomGlossEnvironment(roomId, mode);
+    const tex = pmrem.fromScene(envScene, 0.08).texture;
+    envScene.traverse(o => { if (o.isMesh) { o.geometry?.dispose?.(); o.material?.dispose?.(); } });
+    pmrem.dispose();
+    g.cache.set(key, tex);
+    while (g.cache.size > ROOM_GLOSS_CACHE_MAX) {
+        const [oldKey, oldTex] = g.cache.entries().next().value;
+        g.cache.delete(oldKey);
+        if (oldTex !== g.env) oldTex.dispose();
+    }
+    return tex;
 }
 const glossy = m => m?.isMeshStandardMaterial && !m.envMap && (m.metalness >= .45 || /acrylic|plexi/i.test(m.name || ''));
 // The desk's own hardware (its aluminium: tilt actuators, side connector discs, motor brackets; and the wheels' dark
@@ -1456,8 +1498,18 @@ const deskHardware = m => m?.userData?.deskHardware === true && m.isMeshStandard
 function roomGlossPass(now = false) {
     const g = roomGloss; if (!g.env) return;
     if (selectedRoomScene === 'product') {      // back to the studio's reflections
-        if (g.touched.size) { for (const [m, base] of g.touched) { m.envMap = null; m.envMapIntensity = m.userData.roomGlossOwn ?? base; delete m.userData.roomGlossBase; delete m.userData.roomGlossOwn; m.needsUpdate = true; } g.touched.clear(); }
+        if (g.touched.size) { for (const [m, base] of g.touched) { if (!m.userData?.filmQualityEnv) { m.envMap = null; m.envMapIntensity = m.userData.roomGlossOwn ?? base; m.needsUpdate = true; } delete m.userData.roomGlossBase; delete m.userData.roomGlossOwn; } g.touched.clear(); }
         return;
+    }
+    const wantKey = `${selectedRoomScene}:${roomPeopleMode || 'afternoon'}`;
+    if (g.key !== wantKey) {
+        const nextEnv = roomGlossEnvFor(selectedRoomScene, roomPeopleMode || 'afternoon');
+        if (nextEnv) {
+            g.env = nextEnv; g.key = wantKey;
+            for (const m of g.touched.keys()) {
+                if (!m.userData?.filmQualityEnv && m.envMap !== g.env) { m.envMap = g.env; m.needsUpdate = true; }
+            }
+        }
     }
     // (what loads later is found within a third of a second; a film's bake looks every frame, so a still and the
     // film's frame agree; what is gone is let go)
@@ -1468,19 +1520,21 @@ function roomGlossPass(now = false) {
                 if (!m) continue;
                 if (g.touched.has(m)) seen.add(m);
                 // a copy of one of ours (a film's fade clones the material with whatever level it had that frame)
-                else if (m.envMap === g.env) { g.touched.set(m, m.userData.roomGlossBase ?? 1); seen.add(m); }
+                else if (m.envMap === g.env || m.userData?.roomGlossBase != null) { g.touched.set(m, m.userData.roomGlossBase ?? 1); seen.add(m); }
                 else if (glossy(m)) {
                     // roomGlossOwn: the material's own level, put back on the product stage (the hardware's room level is lower)
                     m.userData.roomGlossOwn = m.envMapIntensity ?? 1;
                     m.userData.roomGlossBase = m.userData.roomGlossOwn * (deskHardware(m) ? DESK_HARDWARE_GLOSS : 1);
-                    g.touched.set(m, m.userData.roomGlossBase); m.envMap = g.env; m.needsUpdate = true; seen.add(m);
+                    g.touched.set(m, m.userData.roomGlossBase);
+                    if (!m.userData?.filmQualityEnv) { m.envMap = g.env; m.needsUpdate = true; }
+                    seen.add(m);
                 }
             }
         });
         for (const m of g.touched.keys()) if (!seen.has(m)) g.touched.delete(m);
     }
     const level = (scene.environmentIntensity ?? 1) * ROOM_GLOSS;
-    for (const [m, base] of g.touched) m.envMapIntensity = base * level;
+    for (const [m, base] of g.touched) if (!m.userData?.filmQualityEnv) m.envMapIntensity = base * level;
 }
 
 // Three.js renders translate, rotate and scale as separate gizmos. This wrapper
@@ -1721,7 +1775,11 @@ function initThreeJS() {
     pmremGenerator.compileEquirectangularShader();
     scene.environment = pmremGenerator.fromScene(createStudioEnvironment(), 0.06).texture;
     scene.environmentIntensity = 1.15;
-    roomGloss.env = pmremGenerator.fromScene(createRoomGlossEnvironment(), 0.08).texture;
+    const initGlossScene = createRoomGlossEnvironment('home', 'afternoon');
+    roomGloss.env = pmremGenerator.fromScene(initGlossScene, 0.08).texture;
+    initGlossScene.traverse(o => { if (o.isMesh) { o.geometry?.dispose?.(); o.material?.dispose?.(); } });
+    roomGloss.key = 'home:afternoon';
+    roomGloss.cache.set('home:afternoon', roomGloss.env);
     scene.onBeforeRender = () => roomGlossPass();
     pmremGenerator.dispose();
 
@@ -11284,7 +11342,7 @@ function applyRoomLighting() {
             workspaceRoom.applyAtelierLighting(measured.mode, accent);
             workspaceRoom.life?.apply(measured.mode);
             workspaceRoom.life?.lightActivity();
-            const bounced = ceilingPreviewEnabled && roomBounceEnabled;
+            const bounced = roomBounceEnabled;
             // Replace a little flat ambient fill with directional surface
             // bounce. Starting from the authored profile avoids accumulation.
             if (bounced) {
@@ -11776,7 +11834,7 @@ function setRoomScene(id, persist = true, { preserveDesk = false, defaultDesktop
     const ceilingControl = document.getElementById('room-ceiling-control');
     if (ceilingControl) { ceilingControl.hidden = !workspaceRoom?.roomLayout; ceilingControl.querySelector('input').checked = ceilingPreviewEnabled; }
     const bounceControl = document.getElementById('room-bounce-control');
-    if (bounceControl) { bounceControl.hidden = !workspaceRoom?.roomLayout; const input=bounceControl.querySelector('input'); input.checked=roomBounceEnabled; input.disabled=!ceilingPreviewEnabled; }
+    if (bounceControl) { bounceControl.hidden = !workspaceRoom?.roomLayout; const input=bounceControl.querySelector('input'); input.checked=roomBounceEnabled; input.disabled=false; }
     if (measured) {
         if (!preserveDesk) positionHomeDesk();
         if (!preserveDesk && persist && loadedModel) {
@@ -12487,14 +12545,12 @@ function initStudio() {
         ceilingPreviewEnabled = e.target.checked;
         writeStore('ergoflex.ceilingPreview', { v: 1, enabled: ceilingPreviewEnabled });
         workspaceRoom?.setCeilingEnabled(ceilingPreviewEnabled);
-        const bounceInput = document.getElementById('room-bounce-toggle');
-        if (bounceInput) bounceInput.disabled = !ceilingPreviewEnabled;
         applyRoomLighting();
         if (camera) workspaceRoom?.update(camera);
     };
     toolbar.append(ceilingControl);
     const bounceControl = document.createElement('label'); bounceControl.id = 'room-bounce-control'; bounceControl.hidden = true;
-    bounceControl.className = 'check-label'; bounceControl.title = 'Approximate light reflected once by the ceiling, walls and floor, including desk LED colours. Enable Ceiling preview to compare.';
+    bounceControl.className = 'check-label'; bounceControl.title = 'Approximate light reflected once by the ceiling, walls and floor, including desk LED colours.';
     bounceControl.innerHTML = '<input type="checkbox" id="room-bounce-toggle"><span>Bounced lighting</span>';
     bounceControl.querySelector('input').onchange = e => {
         roomBounceEnabled = e.target.checked; writeStore('ergoflex.roomBounce', { v: 1, enabled: roomBounceEnabled }); applyRoomLighting();
