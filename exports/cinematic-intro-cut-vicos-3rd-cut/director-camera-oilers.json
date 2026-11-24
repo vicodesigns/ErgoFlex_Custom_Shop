@@ -1,5 +1,5 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-59e936bfc7f6-Film-chapter-oilers-15-s-__13_.json",
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-c47b5f458c3a-Film-chapter-oilers-15-s-__15_.json",
  "seconds": 15.0,
  "keys": [
   {
@@ -567,6 +567,12 @@
   {
    "match": "^Pendulum (bob|string)$",
    "label": "Ceiling pendulum (orange bob and string)",
+   "hide": true
+  },
+  {
+   "match": "^Person chair:people-sofia-sit-laptop$",
+   "asset": "highschool:house:placement:107:0:Person chair:people-sofia-sit-laptop",
+   "label": "Person chair:people-sofia-sit-laptop",
    "hide": true
   }
  ],
