@@ -5,6 +5,14 @@
 /* Active state for Rhino-style mirror / flip axis buttons in the Prop inspector */
 #director-panel .prop-flip button[aria-pressed=true]{background:#9ff0ff;color:#04121a}
 
+/* Chapter-wide Typing intensity control in the People inspector */
+#director-panel .people-typing{display:flex;align-items:center;gap:8px;margin:8px 0;padding:8px 10px;border:1px solid var(--df-border-1,#ffffff1c);border-radius:var(--df-r-3,10px);background:var(--df-surface-2,#12212d)}
+#director-panel .people-typing label{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;margin:0;font-size:12px}
+#director-panel .people-typing label>span{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:600;color:var(--df-text-1,#e6f2f8)}
+#director-panel .people-typing output{font-weight:500;font-size:11px;color:var(--df-accent,#5cd3f6);font-variant-numeric:tabular-nums}
+#director-panel .people-typing input[type=range]{width:100%;margin:0}
+#director-panel .people-typing button{flex:none;white-space:nowrap}
+
 /* Grouped inspector tabs (film chapters in Calm Shell): 4 aligned domain rows, every tab stays 1-click clickable */
 #director-panel .inspector-tabs.inspector-tabs-grouped{display:flex;flex-direction:column;gap:3px;padding:5px 6px}
 #director-panel .inspector-tabs.inspector-tabs-grouped .inspector-tab-row{display:grid;grid-template-columns:42px minmax(0,1fr);align-items:center;gap:4px;padding:2px 0 2px 6px;border-left:2px solid color-mix(in srgb,var(--tg-accent,#5cd3f6) 40%,transparent);border-radius:3px;transition:border-color .15s ease,background .15s ease}

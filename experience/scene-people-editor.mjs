@@ -62,7 +62,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     // (a chapter whose film has no cast of its own: the room's people as plain entries, so the first edit copies them in and
     // each one can be moved, hidden, recoloured or posed; they are the chapter's from then on)
     const live=stagePeople()?.resolved?.()||[];
-    return {cast:live,when:f&&typeof f==='object'?structuredClone(f.when||{}):{},...(f?.chair?{chair:f.chair}:{}),...(f?.fade!==undefined?{fade:f.fade}:{})};
+    return {cast:live,when:f&&typeof f==='object'?structuredClone(f.when||{}):{},...(f?.chair?{chair:f.chair}:{}),...(f?.fade!==undefined?{fade:f.fade}:{}),...(f?.typing!==undefined?{typing:f.typing}:{})};
   }
   // The cast the tabs work on. Only a cast that keeps the film's own people (v2: the room's crew in `only` is still the
   // room's) gets the room's people as pose-only entries (poseSource); a copied-in cast has them as real entries already.
@@ -71,10 +71,10 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   const entry=key=>cast().find(e=>e.key===key)||null;
   const spans=key=>(own()?own().when:film()?.people?.when)?.[key]||null;
   const count=()=>cast().filter(e=>!e.hide).length;
-  function write(change,text,{undoKey=null}={}){
+  function write(change,text,{undoKey=null,render=true}={}){
     const next=currentPeople();change(next);const clean=cleanPeople(canonicalPeople(next));
     if(!clean){status('That would not be a cast the film can keep.',true);rerender();return;}
-    commit(()=>{shot().peopleEdits=clean;},{key:undoKey,render:false});status(text);rerender();
+    commit(()=>{shot().peopleEdits=clean;},{key:undoKey,render:false});status(text);if(render)rerender();
   }
   const edit=(key,change,text,options)=>write(p=>{const e=p.cast.find(e=>e.key===key);if(e)change(e,p);},text,options);
   // ---- the view: selection box and gizmo on the selected person's model
@@ -439,12 +439,21 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
   const reachAt=(e,t)=>reachAtTime(reachOfStance(e,'sit'),e.reachKeys,t);
   function reachKeysOf(e){return Array.isArray(e?.reachKeys)?e.reachKeys:[];}
   function setReachKeys(key,change,text,undoKey=null){edit(key,x=>{const list=reachKeysOf(x).map(k=>({...k}));change(list,x);list.sort((a,b)=>a.at-b.at);if(list.length)x.reachKeys=list.slice(0,16);else delete x.reachKeys;},text,undoKey?{undoKey}:undefined);}
+  const typingNow=()=>{const m=own();const v=m?m.typing:film()?.people?.typing;return typeof v==='number'&&Number.isFinite(v)?Math.max(0,Math.min(2,v)):1;};
+  const typingLabel=v=>{const pct=Math.round(v*100);return `${pct}% · ${pct===0?'Off':pct<=65?'Light':pct<=115?'Natural':'Brisk'}`;};
+  function setTyping(pct,{live=false}={}){
+    const val=Math.max(0,Math.min(2,Math.round(pct)/100));
+    const out=document.querySelector('#director-panel [data-pe-typing-out]');if(out)out.textContent=typingLabel(val);
+    write(p=>{if(Math.abs(val-1)<.01)delete p.typing;else p.typing=Math.round(val*1000)/1000;},
+      val===0?'Chapter typing off (hands stay still on the keys).':`Chapter typing set to ${typingLabel(val)}.`,{undoKey:'people-typing',render:!live});
+  }
   async function changed(el){
     if(keyChanged(el))return;   // S33: the selected key's Inspector
     if(pose.changed(el))return;
     if(paths.changed(el))return;   // S31 M3 hook
     const name=el.name,e=sel&&entry(sel),v=Number(el.value);
     if(name==='pe-sex'||name==='pe-age'||name==='pe-heritage'){filters[name.slice(3)]=el.value;rerender();return;}
+    if(name==='pe-typing'){if(Number.isFinite(v))setTyping(v);return;}
     if(!e)return;
     const who=personName(e),num=(lo,hi)=>{if(el.value.trim()===''||!Number.isFinite(v))throw Error('Type a number.');return Math.min(hi,Math.max(lo,v));};
     if(name==='pe-pose'){await swap(sel,null,el.value);return;}
@@ -541,6 +550,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
       if(!live.length){status('This room has no people of its own yet. Use + Add person.',true);return;}
       write(p=>{p.cast=live;},`Brought in the room's ${live.length} people. Each one is now an entry you can move, change or remove.`);return;
     }
+    if(name==='pe-typing-reset'){setTyping(100);return;}
     if(name==='pe-reset'){
       if(shot().peopleEdits===undefined){status('The cast is already the film\'s.');return;}
       commit(()=>{delete shot().peopleEdits;},{render:false});sel=null;status('People reset: the chapter shows the film\'s cast again. Undo brings your cast back.');rerender();return;
@@ -712,6 +722,10 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     }
     return out.join('');
   }
+  function typingPanel(){
+    const v=typingNow(),pct=Math.round(v*100);
+    return `<div class="people-typing" data-people-typing><label title="How active keyboard typing is in this chapter (0 %: hands still, 100 %: natural rhythmic bursts with pauses, 150 %: brisk)"><span>Typing <output data-pe-typing-out>${typingLabel(v)}</output></span><input type="range" name="pe-typing" min="0" max="150" step="5" value="${pct}"></label>${Math.abs(v-1)>.01?'<button type="button" data-action="pe-typing-reset" title="Back to natural rhythmic typing (100 %)">↺ Default</button>':''}</div>`;
+  }
   function panel(){
     if(!catalog)loadCatalog();
     const list=cast(),mine=!!own(),T=seconds();rowKeys=list.map(e=>e.key);const e=sel&&entry(sel);
@@ -719,6 +733,7 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     return `<div class="director-heading"><div><span class="director-kicker">PEOPLE</span><h3>${list.length?`${count()} in this chapter`:'Nobody in this chapter'}</h3></div></div>
       <div class="director-actions"><button type="button" data-action="pe-add">+ Add person</button>${list.length?'':'<button type="button" data-action="pe-room">Bring in the room\'s people</button>'}${mine?'<button type="button" data-action="pe-reset" title="Back to the cast the film has for this chapter">Reset to the film</button>':''}</div>
       <p class="director-hint">${mine?'This chapter has its own cast.':list.length?'This is the film\'s cast. Your first change copies it into the chapter.':'Add people from the library, or bring in the people who live in this room.'} Click a person in the view or in the list.</p>
+      ${list.length||hasFilmDesk()?typingPanel():''}
       ${hasFilmDesk()?`<details class="people-chair-park" data-chair-park open><summary>Where the chair ends up · while they stand</summary>${parkPanel()}</details>`:''}
       ${keyInspector()}<div class="people-list">${list.map(row).join('')}</div>${e?selectedPanel(e):''}`;
   }
@@ -1052,5 +1067,5 @@ export function createScenePeopleEditor({bridge,shot,film,commit,status,open,rer
     const e=sel&&entry(sel);return e?{name:personName(e),detail:pose.active()===sel?'Pose mode'+(pose.joint()?' · '+pose.jointLabel():''):doing(e)}:null;};
   // After the film setup is (re)applied or the cut changes: the selection may be gone.
   function applied(){if(sel&&!entry(sel)){pose.exit();sel=null;}ensure().catch(()=>null);}
-  return {copyAttrs,pasteAttrs,panel,lane,laneHeight,action,changed,input:el=>paths.input(el),select,deselect,selected:()=>sel,object:()=>sel?objectOf(sel):null,header,pickObject,setMode,mode:()=>mode,count,remove:k=>{if(k===undefined&&picked.size){deletePicked();return;}if(k===undefined&&pose.active()){if(pose.selectedKey()!==null){pose.deleteKey();return;}pose.resetJoint();return;}if(k===undefined&&paths.removeSelected())return;/* S31 M3 hook */remove(k);},posing:()=>pose.active(),keysPicked:()=>picked.size>0,deleteKeys:()=>deletePicked(),trackRows,poseKeyLane:()=>pose.keyLane(),poseKeySelected:()=>pose.selectedKey()!==null&&!picked.size,poseSync:()=>pose.sync(),keyNow:w=>pose.keyNow(w),applied,openLibrary,effective:()=>effectivePeople(film(),shot())};
+  return {copyAttrs,pasteAttrs,panel,lane,laneHeight,action,changed,input:el=>{if(el.name==='pe-typing'){const v=Number(el.value);if(Number.isFinite(v))setTyping(v,{live:true});return;}paths.input(el);},select,deselect,selected:()=>sel,object:()=>sel?objectOf(sel):null,header,pickObject,setMode,mode:()=>mode,count,remove:k=>{if(k===undefined&&picked.size){deletePicked();return;}if(k===undefined&&pose.active()){if(pose.selectedKey()!==null){pose.deleteKey();return;}pose.resetJoint();return;}if(k===undefined&&paths.removeSelected())return;/* S31 M3 hook */remove(k);},posing:()=>pose.active(),keysPicked:()=>picked.size>0,deleteKeys:()=>deletePicked(),trackRows,poseKeyLane:()=>pose.keyLane(),poseKeySelected:()=>pose.selectedKey()!==null&&!picked.size,poseSync:()=>pose.sync(),keyNow:w=>pose.keyNow(w),applied,openLibrary,effective:()=>effectivePeople(film(),shot())};
 }

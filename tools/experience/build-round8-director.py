@@ -584,6 +584,11 @@ def clean_people(v):
     if not isinstance(v, dict) or not isinstance(v.get('cast'), list): return None
     if v.get('v') == 2:
         out = copy.deepcopy(v); out['cast'] = [e for e in out['cast'] if isinstance(e, dict) and isinstance(e.get('id'), str)]
+        if 'typing' in out:
+            if isinstance(out['typing'], (int, float)) and not isinstance(out['typing'], bool) and math.isfinite(out['typing']) and 0 <= out['typing'] <= 2 and abs(out['typing'] - 1) > 1e-3:
+                out['typing'] = round(float(out['typing']), 3)
+            else:
+                out.pop('typing', None)
         return out
     num = lambda x: isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x)
     cast, seen = [], set()
@@ -635,6 +640,7 @@ def clean_people(v):
     c = v.get('chair')
     if isinstance(c, dict) and any(num(c.get(k)) for k in ('back', 'side', 'turn')): res['chair'] = {k: (c[k] if num(c.get(k)) else d) for k, d in (('back', 620), ('side', 0), ('turn', 0))}
     if num(v.get('fade')) and 0 <= v['fade'] <= 5: res['fade'] = v['fade']
+    if num(v.get('typing')) and 0 <= v['typing'] <= 2 and abs(v['typing'] - 1) > 1e-3: res['typing'] = round(float(v['typing']), 3)
     return res
 
 
@@ -653,7 +659,7 @@ def apply_people(cid, f, people):
         film = {'only': [], 'cast': cast}
         when = {k: v for k, v in (mine.get('when') or {}).items() if k in keys}
         if when: film['when'] = when
-        for k in ('chair', 'fade'):
+        for k in ('chair', 'fade', 'typing'):
             if k in mine: film[k] = mine[k]
     wrote = []
     for p in [CUT] + ([f] if f else []):

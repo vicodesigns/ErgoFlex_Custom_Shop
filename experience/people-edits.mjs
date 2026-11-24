@@ -107,6 +107,7 @@ export function cleanSpans(v,seconds=Infinity){
 function cleanPeopleV2(v){
   let out;try{out=JSON.parse(JSON.stringify(v));}catch{return null;}
   out.cast=out.cast.filter(e=>e&&typeof e==='object'&&typeof e.id==='string'&&MODEL.test(e.id)).map(validateArchivedKeys);
+  if(out.typing!==undefined){if(finite(out.typing)&&out.typing>=0&&out.typing<=2&&Math.abs(out.typing-1)>1e-3)out.typing=r3(out.typing);else delete out.typing;}
   return out;
 }
 // Called at a deliberate write/export boundary, never as a side effect of read.
@@ -121,6 +122,7 @@ export function cleanPeople(v){
   if(Object.keys(when).length)out.when=when;
   const c=v.chair;if(c&&typeof c==='object'&&[c.back,c.side,c.turn].some(finite))out.chair={back:finite(c.back)?Math.round(c.back):620,side:finite(c.side)?Math.round(c.side):0,turn:finite(c.turn)?r1(c.turn):0};
   if(finite(v.fade)&&v.fade>=0&&v.fade<=5)out.fade=r3(v.fade);
+  if(finite(v.typing)&&v.typing>=0&&v.typing<=2&&Math.abs(v.typing-1)>1e-3)out.typing=r3(v.typing);
   return out;
 }
 // The cut field (cuts.mjs): kept only when it is a cast.
@@ -136,7 +138,7 @@ export function peopleFilter(edits){
   }
   const cast=p.cast.filter(e=>!e.hide).map(({hide,...e})=>e),keys=new Set(cast.map(e=>e.key)),out={only:[],cast};
   const when=Object.fromEntries(Object.entries(p.when||{}).filter(([k])=>keys.has(k)));if(Object.keys(when).length)out.when=when;
-  if(p.chair)out.chair=p.chair;if(p.fade!==undefined)out.fade=p.fade;
+  if(p.chair)out.chair=p.chair;if(p.fade!==undefined)out.fade=p.fade;if(p.typing!==undefined)out.typing=p.typing;
   return out;
 }
 // For liveFilmShot: the Director's cast over the film's.

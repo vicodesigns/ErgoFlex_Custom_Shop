@@ -234,18 +234,44 @@ const blendQ = (out, pair, i) => pair.w > 0 ? out.slerpQuaternions(pair.a.q[i], 
 const blendV = (out, pair, i) => pair.w > 0 ? out.lerpVectors(pair.a.wp[i], pair.b.wp[i], pair.w) : out.copy(pair.a.wp[i]);
 const blendW = (out, pair, i) => pair.w > 0 ? out.slerpQuaternions(pair.a.wq[i], pair.b.wq[i], pair.w) : out.copy(pair.a.wq[i]);
 
-// Active, accurate touch-typing: continuous natural bursts with brief micro-breaths (no long frozen hovers),
-// overlapping multi-finger strikes + anticipatory pre-lift, and row/column wrist pitch, yaw & pronation roll
-// synced to keystrokes while keeping the wrist pivot anchored over the keyboard.
-function tapKeys(rig, s, time, seed, life) {
-    if (!(life > 0)) return;
+const POSE_FINGER_PREFIX = ['thumb', 'index', 'middle', 'ring', 'pinky'];
+const quatAngle = q => Array.isArray(q) && q.length === 4 ? 2 * Math.acos(Math.min(1, Math.abs(q[3]))) : 0;
+// Suppress automatic keyboard typing on a hand whenever Director pose/poseKeys lift that arm away from the keys
+// (>26 deg upperarm turn) or explicitly key any finger bone on that hand (e.g. overhead tricep stretches, gestures).
+export function poseTapWeight(pose, s) {
+    if (!pose || typeof pose !== 'object') return 1;
+    const armW = 1 - ss(.45, .80, quatAngle(pose['upperarm_' + s]));
+    let maxF = 0;
+    for (const f of POSE_FINGER_PREFIX) for (let j = 1; j <= 3; j++) {
+        const a = quatAngle(pose[`${f}_0${j}_${s}`]);
+        if (a > maxF) maxF = a;
+    }
+    return armW * (1 - ss(.015, .08, maxF));
+}
+
+// Natural rhythmic touch-typing: realistic ~65-80 WPM bursts interspersed with genuine reading/thinking pauses
+// where hands rest calmly on the home row, plus subtle grounded wrist poise. `typing` (0..2, default 1) lets
+// each Director chapter dial typing from Off (0) to Light (0.5), Natural (1), or Brisk (1.5).
+function tapKeys(rig, s, time, seed, life, typing = 1) {
+    const amount = Math.max(0, Math.min(2, Number.isFinite(typing) ? typing : 1));
+    if (!(life > 0) || !(amount > 0)) return;
     const { fingers, arm } = rig.side[s];
     if (!fingers.length) return;
     const handOffset = s === 'l' ? 0 : 13;
-    // Continuous natural cadence with brief split-second word breaths (never freezes into a multi-second hover)
-    const microPause = 1 - .45 * moment(time, seed + handOffset, 102, 5.2, .35);
-    const busy = (.72 + .28 * ss(-.6, .4, noise(time * .48 + (s === 'l' ? 0 : .7), seed + 21))) * microPause * life;
-    const rate = 7.4 + hash(3, seed) * 1.8;
+    // Shared phrase burst-and-pause cadence per character (tiny 0.07s L/R lead/lag so both hands pause & resume together)
+    const tHand = time + (s === 'l' ? 0 : .07);
+    const phrasePeriod = 5.4 + hash(101, seed) * 1.8;
+    const phrasePhase = tHand / phrasePeriod + hash(102, seed);
+    const phraseIdx = Math.floor(phrasePhase), u = phrasePhase - phraseIdx;
+    const duty = Math.min(.94, (.44 + hash(phraseIdx, seed + 103) * .18) * (.45 + .55 * amount));
+    const burstStart = .06, burstEnd = Math.min(.96, burstStart + duty);
+    const inPhrase = ss(burstStart, burstStart + .07, u) * (1 - ss(burstEnd - .08, burstEnd, u));
+    // Gentle mid-phrase word-space breath
+    const wordBreath = 1 - .55 * moment(tHand, seed, 104, 2.6, .28);
+    const intensity = Math.min(1.35, .58 + .42 * amount);
+    const busy = inPhrase * wordBreath * life * intensity;
+    if (busy < 1e-4) return;
+    const rate = (3.1 + hash(3, seed) * .85) * (.76 + .24 * amount);
     const beat = time * rate + (s === 'l' ? 0 : .47), n = Math.floor(beat), x = beat - n;
     const sideSign = s === 'l' ? 1 : -1;
     // Finger group count (usually 5: thumb, index, middle, ring, pinky; 3 joints each)
@@ -257,48 +283,49 @@ function tapKeys(rig, s, time, seed, life) {
         return Math.floor(h * (nFingers - .001));
     };
     const which = pickFinger(n), prevWhich = pickFinger(n - 1), nextWhich = pickFinger(n + 1);
-    const activeBeat = hash(n, seed + 50 + handOffset) < .93 ? 1 : .25;
-    // Crisp downward keystroke strike + quick rebound
-    const strike = Math.sin(Math.PI * clamp01((x - .06) / .80)) ** 1.55;
+    const beatProb = Math.min(.94, .62 + .15 * amount);
+    const activeBeat = hash(n, seed + 50 + handOffset) < beatProb ? 1 : .16;
+    // Smooth, rhythmic downward keystroke strike + relaxed rebound
+    const strike = Math.sin(Math.PI * clamp01((x - .08) / .78)) ** 1.35;
     const tap = strike * busy * activeBeat;
-    const prevRelease = x < .32 ? (1 - x / .32) ** 2 * .38 * busy : 0;
-    const nextPrep = x > .52 ? ((x - .52) / .48) * busy : 0;
+    const prevRelease = x < .30 ? (1 - x / .30) ** 2 * .26 * busy : 0;
+    const nextPrep = x > .56 ? ((x - .56) / .44) * busy : 0;
     // Key row (-1 bottom, 0 home, +1 top) & column reach smoothly tracking from previous key to current key
     const rowOf = k => (hash(k, seed + 61 + handOffset) - .5) * 2;
     const colOf = f => (f / Math.max(1, nFingers - 1) - .5) * 2;
-    const blend = ss(0, .34, x);
+    const blend = ss(0, .38, x);
     const row = lerp(rowOf(n - 1), rowOf(n), blend);
     const col = lerp(colOf(prevWhich), colOf(which), blend);
     fingers.forEach((i, at) => {
         const finger = Math.floor(at / 3), joint = at % 3;
         const thumb = rig.names[i].startsWith('thumb');
-        const scale = thumb ? .56 : 1;
+        const scale = thumb ? .54 : 1;
         if (finger === which) {
-            // Proximal joint leads slightly, fingertip presses down crisply onto the keycap then rebounds
-            const travel = Math.sin(Math.PI * clamp01((x - .05 - joint * .055) / Math.max(.2, .80 - joint * .055))) ** 1.5;
-            const preLift = x < .16 && joint === 0 ? -Math.sin(Math.PI * (x / .16)) * .065 * busy : 0;
-            const amp = (rig.castDetail ? [.38, .25, .14] : [.36, .22, .12])[joint];
+            // Proximal joint leads softly, fingertip presses keycap then eases back up
+            const travel = Math.sin(Math.PI * clamp01((x - .07 - joint * .05) / Math.max(.22, .78 - joint * .05))) ** 1.35;
+            const preLift = x < .16 && joint === 0 ? -Math.sin(Math.PI * (x / .16)) * .038 * busy : 0;
+            const amp = (rig.castDetail ? [.23, .15, .08] : [.21, .13, .07])[joint];
             rig.lq[i].multiply(turn.setFromAxisAngle(X, (travel * busy * activeBeat * amp + preLift) * scale));
             return;
         }
         if (finger === prevWhich && prevRelease > 0) {
-            rig.lq[i].multiply(turn.setFromAxisAngle(X, prevRelease * [.26, .16, .09][joint] * scale));
+            rig.lq[i].multiply(turn.setFromAxisAngle(X, prevRelease * [.16, .10, .055][joint] * scale));
             return;
         }
         if (finger === nextWhich && joint === 0 && nextPrep > 0) {
-            // Next finger pre-lifts slightly in anticipation of its upcoming keystroke
-            rig.lq[i].multiply(turn.setFromAxisAngle(X, -.085 * nextPrep * scale));
+            // Next finger pre-lifts subtly in anticipation of its upcoming keystroke
+            rig.lq[i].multiply(turn.setFromAxisAngle(X, -.042 * nextPrep * scale));
             return;
         }
         if (finger === (which + 1) % nFingers && joint === 0) {
             // Neighboring digit counter-lifts subtly as the typing finger loads the key
-            rig.lq[i].multiply(turn.setFromAxisAngle(X, -.055 * tap));
+            rig.lq[i].multiply(turn.setFromAxisAngle(X, -.028 * tap));
         }
     });
-    // Natural wrist pitch dip onto keycaps + subtle row/column sweep & pronation roll (wrist stays anchored!)
-    const wristPitch = tap * .068 + row * .030 * busy;
-    const wristRoll = sideSign * col * .042 * busy;
-    const wristYaw = sideSign * col * .052 * busy;
+    // Calm, grounded wrist poise synced softly to row/column travel (wrist pivot stays anchored)
+    const wristPitch = tap * .024 + row * .014 * busy;
+    const wristRoll = sideSign * col * .015 * busy;
+    const wristYaw = sideSign * col * .018 * busy;
     rig.lq[arm[3]].multiply(turn.setFromAxisAngle(X, wristPitch));
     rig.lq[arm[3]].multiply(turn.setFromAxisAngle(Y, wristRoll));
     rig.lq[arm[3]].multiply(turn.setFromAxisAngle(Z, wristYaw));
@@ -427,9 +454,9 @@ export function solveDesk(rig, keys, input) {
             handQ.copy(rig.wq[hand]); rig.reach(upper, lower, hand, spot); rig.reach(upper, lower, hand, spot); rig.setWorld(hand, handQ);
         }
         // fingers: curled for the keys, looser away from them; active typing eases in as hands reach the keyboard
-        const loose = wait || keyed.a, tapW = ss(.82, .98, ke);
+        const loose = wait || keyed.a, tapW = ss(.82, .98, ke) * poseTapWeight(input.pose, s);
         for (const i of fingers) { rig.lq[i].copy(loose.q[i]); if (ke > 0 && keyed) rig.lq[i].slerp(blendQ(tq, keyed, i), ke); }
-        if (life > 0 && tapW > 0 && keyed && !mixing && input.taps !== false && s !== cup) tapKeys(rig, s, time, seed, life * tapW);
+        if (life > 0 && tapW > 0 && keyed && !mixing && input.taps !== false && s !== cup) tapKeys(rig, s, time, seed, life * tapW, input.typing);
     }
     rig.fk();
     if (mixing && life > 0 && ke > .9) rideFader(rig,time,seed,life*ss(.9,1,ke));
@@ -491,7 +518,8 @@ export class DeskActor {
             this.life += dt; this.clock = this.life; state = this.state;
         }
         this.height = height;
-        this.out = solveDesk(this.rig, this.keys, { tau: state.tau, k: state.k, height, time: input.life === false ? null : this.clock, seed: this.seed, taps: input.taps, chairRoll: this.chairRoll, chairScoot: this.chairScoot });
+        const pose = typeof input.pose === 'function' ? input.pose(state.tau) : input.pose;
+        this.out = solveDesk(this.rig, this.keys, { tau: state.tau, k: state.k, height, time: input.life === false ? null : this.clock, seed: this.seed, taps: input.taps, typing: input.typing, pose, chairRoll: this.chairRoll, chairScoot: this.chairScoot });
         // the model that is drawn: the one built for this stance, nearest this desk height
         const stance = !this.mobile ? this.out.stance : state.tau >= this.swapAt ? 'stand' : 'sit', of = this.members.filter(m => (m.role === 'stand') === (stance === 'stand'));
         this.shown = of.sort((a, b) => Math.abs((a.key.deskHeight ?? height) - height) - Math.abs((b.key.deskHeight ?? height) - height))[0] || null;
@@ -575,7 +603,8 @@ export function solveStill(rig, key, input) {
     for (const s of ['l', 'r']) {
         const [, upper, lower, hand] = rig.side[s].arm;
         if (resting.includes(s)) { rig.reach(upper, lower, hand, key.wp[hand]); rig.reach(upper, lower, hand, key.wp[hand]); rig.setWorld(hand, key.wq[hand]); }
-        if (TYPES.has(pose) && s !== CUP_HAND[pose] && !(rig.mediaLab && key.id.includes('-sit-mix')) && input.taps !== false) tapKeys(rig, s, time, seed, life * (1 - reading));
+        const poseW = poseTapWeight(input.pose, s);
+        if (TYPES.has(pose) && s !== CUP_HAND[pose] && !(rig.mediaLab && key.id.includes('-sit-mix')) && input.taps !== false && poseW > 0) tapKeys(rig, s, time, seed, life * (1 - reading) * poseW, input.typing);
     }
     // (a reader turning a page, and every other activity: ACTS below)
     rig.fk();

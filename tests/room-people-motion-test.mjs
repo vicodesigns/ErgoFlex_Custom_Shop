@@ -158,13 +158,14 @@ for (const who of characters) {
             assert.deepEqual(sweep(who => fresh(who, { mediaLab: true }), solveStill, mediaLabNonTypingPoses), before({ mediaLab: true }, mediaLabNonTypingPoses));
         } finally { fs.rmSync(file, { force: true }); }
     }
-    // Active, accurate keyboard typing: continuous finger motion (no multi-second frozen hovers), multi-finger engagement,
-    // anchored wrists, and non-cup-hand typing in sit-coffee / stand-coffee.
+    // Natural rhythmic keyboard typing: realistic bursts interspersed with genuine reading/thinking pauses
+    // (not frozen and not nonstop frantic), multi-finger engagement, anchored wrists, per-chapter typing scaling,
+    // pose-aware auto-suppression during overhead stretches, and non-cup-hand typing in sit-coffee.
     for (const [who, id, sides] of [['maya', 'people-maya-sit-type', ['l', 'r']], ['andre', 'people-andre-stand-type', ['l', 'r']], ['kai', 'people-kai-wheel-type', ['l', 'r']], ['maya', 'people-maya-sit-coffee', ['l']]]) {
         const rig = fresh(who, { castDetail: true }), key = rig.key(id);
         let activeFrames = 0, totalFrames = 0;
         const struckFingers = new Set();
-        for (let frame = 0; frame < 120; frame++) {
+        for (let frame = 0; frame < 180; frame++) {
             const time = frame / 12;
             solveStill(rig, key, { time, seed: 41 });
             let frameMax = 0;
@@ -174,17 +175,43 @@ for (const who of characters) {
                 rig.side[s].fingers.forEach((bone, idx) => {
                     const ang = rig.lq[bone].angleTo(key.q[bone]);
                     frameMax = Math.max(frameMax, ang);
-                    if (idx % 3 === 0 && ang > .08) struckFingers.add(`${s}:${Math.floor(idx / 3)}`);
+                    if (idx % 3 === 0 && ang > .05) struckFingers.add(`${s}:${Math.floor(idx / 3)}`);
                 });
             }
             if (id.includes('coffee')) {
                 for (const bone of rig.side.r.fingers) assert.ok(rig.lq[bone].angleTo(key.q[bone]) < 1e-6, `${id}: cup hand never types`);
             }
-            if (frameMax > .03) activeFrames++;
+            if (frameMax > .02) activeFrames++;
             totalFrames++;
         }
-        assert.ok(activeFrames / totalFrames > .85, `${id}: active typing without long frozen hovers (${activeFrames}/${totalFrames})`);
+        const ratio = activeFrames / totalFrames;
+        assert.ok(ratio >= .32 && ratio <= .75, `${id}: natural rhythmic bursts with genuine pauses (${activeFrames}/${totalFrames} = ${(ratio * 100).toFixed(1)}%)`);
         assert.ok(struckFingers.size >= (sides.length === 2 ? 6 : 3), `${id}: multiple fingers actively type (${struckFingers.size})`);
+    }
+    // Typing intensity scaling (0 = still, 0.5 = lighter/sparser, 1.5 = brisker) and pose-aware auto-suppression
+    {
+        const rig = fresh('maya', { castDetail: true }), key = rig.key('people-maya-sit-type');
+        const countActive = (opts) => {
+            let n = 0;
+            for (let frame = 0; frame < 180; frame++) {
+                solveStill(rig, key, { time: frame / 12, seed: 41, ...opts });
+                let m = 0;
+                for (const s of ['l', 'r']) for (const bone of rig.side[s].fingers) m = Math.max(m, rig.lq[bone].angleTo(key.q[bone]));
+                if (m > .02) n++;
+            }
+            return n;
+        };
+        assert.equal(countActive({ typing: 0 }), 0, 'typing=0 keeps hands completely still');
+        const light = countActive({ typing: .5 }), brisk = countActive({ typing: 1.5 });
+        assert.ok(brisk > light, `typing=1.5 (${brisk}) is more active than typing=0.5 (${light})`);
+        const rise = JSON.parse(fs.readFileSync(path.join(root, 'exports/cinematic-intro-cut-vicos-3rd-cut/director-film/rise.json'), 'utf8'));
+        const riseKeys = rise.people.cast[0].postures['people-maya-sit-type'].poseKeys;
+        const atKeys = riseKeys[0].pose;
+        const holdL = riseKeys.find(k => Math.abs(k.t - 15.967) < .02).pose;
+        const holdR = riseKeys.find(k => Math.abs(k.t - 20.067) < .02).pose;
+        assert.equal(countActive({ pose: holdL }), 0, 'Maya overhead tricep stretch (Side 1) suppresses typing completely');
+        assert.equal(countActive({ pose: holdR }), 0, 'Maya overhead tricep stretch (Side 2) suppresses typing completely');
+        assert.ok(countActive({ pose: atKeys }) > 40, 'Maya small seated keyboard pose adjustment keeps natural typing');
     }
     // the flags split as they say: a typist anywhere has the finger sequence but not the timeline scan; only the editor scans
     for (const pose of typingPoses) {

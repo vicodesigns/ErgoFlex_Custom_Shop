@@ -1416,16 +1416,18 @@ export class RoomPeople {
             if (!held && object.userData.personRig && !object.userData.personLife?.live && !object.userData.personDriven) this.pose(object, spec);
         }
     }
-    actorPose(actor, time) {
-        const spec = actor.shown?.object.userData.person;
+    actorPose(actor, time) { return this.actorPoseAt(actor, time); }
+    actorPoseAt(actor, time, tauOverride = null) {
+        const spec = actor.shown?.object.userData.person || actor.members[0]?.object.userData.person;
         if (!spec) return null;
         const owner = this.poseOwner(spec) || spec;
-        if (postureRecords(owner).length < 2 || !actor.mobile) return poseNow(spec);
+        const tau = tauOverride ?? actor.state?.tau;
+        if (postureRecords(owner).length < 2 || !actor.mobile || tau == null) return poseNow(spec);
         const nearest = role => actor.members.filter(m => (m.role === 'stand') === (role === 'stand')).sort((a,b) => Math.abs((a.key.deskHeight ?? actor.height)-actor.height)-Math.abs((b.key.deskHeight ?? actor.height)-actor.height))[0];
         const sit = nearest('sit'), stand = nearest('stand');
         if (!sit || !stand) return poseNow(spec);
         // solveDesk blends core with smoothstep(1.05, 2.4, tau).
-        const u = Math.max(0, Math.min(1, (actor.state.tau - 1.05) / 1.35)), w = u*u*(3-2*u);
+        const u = Math.max(0, Math.min(1, (tau - 1.05) / 1.35)), w = u*u*(3-2*u);
         return blendPosturePoses(poseAt(postureRecord(owner, sit.id), time), poseAt(postureRecord(owner, stand.id), time), w);
     }
     // The size a placement asks for, on top of the size the model was loaded at.
@@ -1989,7 +1991,7 @@ export class RoomPeople {
         const steps = this.stepOuts(time, state, driven);   // (before the actors are driven for this second: it drives them at the steps' ends)
         for (const [o, step] of this.docks(time, state)) steps.set(o, step);   // (a roll that docks into the film desk's user: its change of posture)
         for (const actor of driven) {
-            actor.drive({ height, target: state?.target, tilt: state?.tilt, time, track: state?.track || null, dt, life: this.filter?.life === false ? false : undefined, taps: time !== null || dt < .05 });
+            actor.drive({ height, target: state?.target, tilt: state?.tilt, time, track: state?.track || null, dt, life: this.filter?.life === false ? false : undefined, taps: time !== null || dt < .05, typing: this.filter?.typing, pose: tau => this.actorPoseAt(actor, time, tau) });
             const sign = actor.state.tau.toFixed(3) + '|' + actor.state.k.toFixed(3) + '|' + actor.shown?.id; if (sign !== actor.drawnAs) { actor.drawnAs = sign; this.dirty = true; }
             actor.off = Math.min(...actor.members.map(m => m.key.deskHeight === null ? 0 : Math.abs(height - m.key.deskHeight)));
             if (actor.mobile) { const fits = actor.members.map(m => m.key.deskHeight); if (height >= Math.min(...fits) && height <= Math.max(...fits)) actor.off = 0; }
@@ -2144,7 +2146,7 @@ export class RoomPeople {
         }
         // out of the list: back to the posture as built (at amount 0)
         const gaze = amount > 0 ? this.gazeOf(object, life) : null, act = film ? this.actOf(object, life, time) : null;
-        const moved = solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: amount, actLife, taps: film || dt < .05, look: gaze?.at, lookAmount: gaze?.amount, ...(act ? { act } : {}) });
+        const moved = solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: amount, actLife, taps: film || dt < .05, typing: this.filter?.typing, pose: poseNow(object.userData.person), look: gaze?.at, lookAmount: gaze?.amount, ...(act ? { act } : {}) });
         drawPose(life.rig, object.userData.personRig, 0, poseNow(object.userData.person), hold); life.live = amount > 0;
         // a rider's bike: its crank turns with the feet, the pedals stay level
         if (moved?.crank !== undefined) { const crank = object.userData.personAnchor?.getObjectByName('Bike crank'); if (crank) { this.turnCrank(crank, moved.crank); turning.add(crank); this.cranks.add(crank); } }
@@ -2479,7 +2481,7 @@ export class RoomPeople {
     // where that model stands. (Drives the actor at that second: update() drives it again for the second it is at.)
     deskUserAt(actor, at, state) {
         const track = state.track || null, height = track ? track.heightAt(at) : state.height ?? 28;
-        actor.drive({ height, target: height, tilt: track?.tiltAt ? track.tiltAt(at) : state.tilt, time: at, track, dt: 0, life: this.filter?.life === false ? false : undefined, taps: true });
+        actor.drive({ height, target: height, tilt: track?.tiltAt ? track.tiltAt(at) : state.tilt, time: at, track, dt: 0, life: this.filter?.life === false ? false : undefined, taps: true, typing: this.filter?.typing, pose: tau => this.actorPoseAt(actor, at, tau) });
         const r = actor.rig, spec = actor.shown?.object.userData.person, yaw = state.pose.yaw || 0, front = frontOf(yaw), keys = state.keyboard;
         const key = { id: 'desk@' + at, pose: null, q: r.lq.map(q => q.clone()), root: r.lp[r.b.Root].clone(), pelvis: r.lp[r.b.pelvis].clone(), wp: r.wp.map(v => v.clone()), wq: r.wq.map(q => q.clone()), dz: actor.shown?.dz ?? 0 };
         const short = spec ? (spec.reach ?? REACH[spec.desk]) - REACH[spec.desk] : 0, role = spec?.desk || 'stand';
