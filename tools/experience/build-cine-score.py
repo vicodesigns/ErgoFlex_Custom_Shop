@@ -34,7 +34,9 @@ picture instead of to the EDL alone:
   * v2.2: one tempo through title B: the wake (pulse, sub, pad bar lines) before title B runs at the first segment's
     tempo instead of the nominal one, so there is no 1.5 % tempo step at the join (the fit still costs it as before, so
     no later time moves); and a short reverse swell lands the first bar line after the desk's first lift tops out;
-  * the title A bloom lands on title A, the logo hit within LOGO_SLACK of the wordmark's first frame;
+  * the title A bloom lands on title A, the logo hit within LOGO_SLACK of the wordmark's first frame; v2.3: then exactly on
+    it (snap_logo: only the finale's tempo changes, when it stays within the caps), and a short end card no longer
+    fades the cadence and the hit out (score-synth.tail_layout: the ding sounds at full level, then a short fade to the cut);
   * the desk's movement sounds (assets/led/audio) follow this cut's ledStatus (SFX_RULES), only while the motion clip
     of that lane runs, clipped to what the chapter shows, re-keyed into the score's key (SCORE_KEY), mixed before the
     master at SFX_DB: a gain on the raw asset relative to the master's gain, 8 dB lower than v1, which measures about
@@ -219,6 +221,19 @@ def max_step(pts, bpm_wake):
     return max(abs(b / a - 1) for a, b in zip(T[:-1], T[1:]))
 
 
+def snap_logo(anchors, bs, bpm, logo, cap):
+    """v2.3 (Nov 24): the finale's last bar line (its cadence resolving into the Dmaj9 logo hit) moves from where the fit
+    put it (up to LOGO_SLACK after the wordmark) exactly onto the wordmark's first frame, when the finale's tempo then
+    stays within MAX_BEND and every tempo step under the cap. Only the finale's own tempo changes: every earlier anchor,
+    and so every earlier chapter's music, stays as fitted."""
+    if abs(anchors[-1] - logo) < 1e-9: return anchors
+    trial = list(anchors[:-1]) + [round(float(logo), 3)]
+    pts = list(zip(trial, bs))
+    if max_step(pts, bpm) <= cap + 1e-9 and all(abs(v / bpm - 1) <= MAX_BEND for v in piece_tempos(pts)):
+        return trial
+    return anchors
+
+
 def fit_tempo(synth, edl, pic, cap=STEP_CAP, logo_hi=LOGO_SLACK):
     base, owners, cidx = synth.plan_anchors(edl)
     A = [pic['title_b']] + [pic['dissolves'][i][0] for i in cidx] + [pic['logo']]
@@ -292,6 +307,7 @@ def fit_tempo(synth, edl, pic, cap=STEP_CAP, logo_hi=LOGO_SLACK):
         sys.exit('no tempo map within MAX_BEND fits this cut; raise MAX_BEND or DISSOLVE_SLACK')
     _, bpm, anchors, seg = best
     bs = np.concatenate([[0], np.cumsum(seg)]).astype(float)
+    anchors = snap_logo(anchors, bs, bpm, pic['logo'], cap)
     pts = list(zip(anchors, bs))
     # knots: the finale's version changes first, then the inside cuts; each only if every tempo step stays under the cap
     cands = sorted([(t, unit, k) for k in range(K) for t, unit, _ in tg[k]], key=lambda c: (c[1] == 1, c[0]))

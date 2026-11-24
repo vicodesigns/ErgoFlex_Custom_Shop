@@ -62,6 +62,25 @@ def fade_out(n):
     return fade_in(n)[::-1]
 
 
+END_FADE = 2.5     # s: the master's fade to silence at the end of the file
+TAIL_RING = 0.4    # s: the logo hit (the "ding") always sounds at full level at least this long before that fade starts
+
+
+def tail_layout(total, te, beat):
+    """The end of the score: the master fade's length and the celesta D-A-D's offsets from the logo hit at te.
+    A tail of END_FADE + TAIL_RING or more is exactly as before (2.5 s fade; celesta 0.12 + 0.18 k s after the hit).
+    A shorter tail (Nov 24: the 3rd cut's end card holds 0.63 s) used to fade out over the cadence and the hit itself;
+    now the fade starts no earlier than TAIL_RING after the hit (and is at least 0.12 s: no click at the cut to
+    black), and the celesta's first D sounds on the hit itself, the A and the top D a 16th apart (compressed if the
+    tail is too short to hold them), so the whole "ding" sounds before the fade."""
+    tail = max(0.0, total - te)
+    if tail >= END_FADE + TAIL_RING:
+        return dict(fade=END_FADE, celesta=[0.12 + 0.18 * i for i in range(3)])
+    fade = min(END_FADE, max(0.12, tail - TAIL_RING))
+    step = max(0.0, min(beat / 4, (tail - fade) / 2.5))
+    return dict(fade=fade, celesta=[step * i for i in range(3)])
+
+
 def env_note(n_hold, n_rel, att, dec=None, sus=1.0, rel_shape='cos'):
     """Hold segment (attack + optional exponential decay to sus) then a release to 0.
     All segments are smooth and end exactly at zero, so notes never click."""
@@ -1165,8 +1184,8 @@ def compose(plan, seed):
     for i, m in enumerate((86, 90, 93, 98, 100)):  # shimmer cluster D6 F#6 A6 D7 E7
         y = syn.bell(m, 'shimmer', 5.5) * (1 + 0.25 * np.sin(TAU * (5.1 + 0.7 * i) * np.arange(int(5.5 * SR)) / SR))
         mix.add('lead', te + 0.03 * i, y, gain=0.022, pan=-0.5 + 0.25 * i)
-    for i, m in enumerate((74, 81, 86)):
-        mix.add('lead', te + 0.12 + 0.18 * i, syn.bell(m, 'celesta', 4.0), gain=0.05, pan=0.15 * (i - 1))
+    for i, (m, dt) in enumerate(zip((74, 81, 86), tail_layout(total, te, beat_nom)['celesta'])):   # celesta D-A-D
+        mix.add('lead', te + dt, syn.bell(m, 'celesta', 4.0), gain=0.05, pan=0.15 * (i - 1))
     by = syn.bass(38, (total - te) * 0.45, att_s=0.02, rel_s=(total - te) * 0.5)
     mix.add('bass', te, by, gain=0.28)
     events['hits'].append((te, 'LOGO HIT'))
@@ -1567,6 +1586,10 @@ def write_cue_sheet(path, plan, events, meas, rep, edl_path, out_wav):
     lines.append('|---:|---|')
     for t, what in sorted(events['hits'] + [(plan['pulse_t'], 'pulse/arp enters on a bar line (desk wakes up)')]):
         lines.append(f'| {fmt_t(t)} ({t:.3f} s) | {what} |')
+    tl = tail_layout(plan['total'], plan['end_card'], plan['grid'].beat)
+    if tl['fade'] < END_FADE:
+        lines.append(f'| {fmt_t(plan["total"] - tl["fade"])} ({plan["total"] - tl["fade"]:.3f} s) | the ding has rung {plan["total"] - tl["fade"] - plan["end_card"]:.2f} s at full level; '
+                     f'{tl["fade"]:.2f} s fade to the cut (celesta D-A-D at +{", +".join(f"{d:.3f}" for d in tl["celesta"])} s) |')
     lines.append(f'| {fmt_t(plan["total"])} | end of file (tail has rung out; master fade completes) |')
     lines.append('')
     lines.append('Dissolve swells peak exactly on each dissolve centre (= chapter i end - dissolve/2), which is also the bar line '
@@ -1578,8 +1601,8 @@ def write_cue_sheet(path, plan, events, meas, rep, edl_path, out_wav):
                  'arp (+ dotted-8th ping-pong delay), sine bass, felt kick / clap / hat / shaker / ticks (FFT-shaped noise), '
                  'celesta/glass/Rhodes bells, whooshes + reversed bells, sub booms. Kick sidechain ducks pad/bass/arp per section.')
     lines.append('- Shared synthetic stereo hall (frequency-dependent RT60 0.8-3.1 s, partially correlated L/R for mono safety).')
-    lines.append('- Master: 30 Hz HP, -2.5 dB low shelf under 55 Hz, gentle -1.5 dB shelf above 9 kHz, gain to -16 LUFS (BS.1770 meter in numpy), 4x-oversampled look-ahead '
-                 'limiter at -1.9 dBTP, 2.5 s fade to silence, TPDF dither to 24-bit.')
+    lines.append(f'- Master: 30 Hz HP, -2.5 dB low shelf under 55 Hz, gentle -1.5 dB shelf above 9 kHz, gain to -16 LUFS (BS.1770 meter in numpy), 4x-oversampled look-ahead '
+                 f'limiter at -1.9 dBTP, {tl["fade"]:.2f} s fade to silence, TPDF dither to 24-bit.')
     if rep:
         lines.append(f'- Analysis: stereo correlation {rep["corr_total"]}, DC {rep["dc"][0]:.1e}/{rep["dc"][1]:.1e}, sample peak '
                      f'{rep["sample_peak_dbfs"]} dBFS, {rep["n_full_scale"]} samples at full scale, last 0.5 s RMS '
@@ -1684,10 +1707,10 @@ def premaster(plan, seed, stems_dir=None, hook=None):
     if hook:  # extra layers (build-cine-score.py: the desk's movement sounds) join before the fades and the master
         x = hook(x)
 
-    # fades: start from true silence, ring out to silence at total
+    # fades: start from true silence, ring out to silence at total (never over the logo hit: tail_layout)
     fi = int(0.01 * SR)
     x[:, :fi] *= fade_in(fi)
-    fo = int(2.5 * SR)
+    fo = int(tail_layout(plan['total'], plan['end_card'], plan['grid'].beat)['fade'] * SR)
     x[:, -fo:] *= ((0.5 + 0.5 * np.cos(np.pi * (np.arange(fo) + 0.5) / fo)) ** 1.5)
     x[:, -1] = 0
 
