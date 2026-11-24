@@ -1,0 +1,27 @@
+/* Director desktop & inspector polish (loaded after director-shell.css and before director-phone.css).
+   Keeps the additive-only desktop CSS guardrail in tests/fold-titles-test.mjs intact while organizing
+   the film inspector's 16 tabs into 4 scannable color-coded workflow rows (Story, Motion, Stage, Look). */
+
+/* Active state for Rhino-style mirror / flip axis buttons in the Prop inspector */
+#director-panel .prop-flip button[aria-pressed=true]{background:#9ff0ff;color:#04121a}
+
+/* Grouped inspector tabs (film chapters in Calm Shell): 4 aligned domain rows, every tab stays 1-click clickable */
+#director-panel .inspector-tabs.inspector-tabs-grouped{display:flex;flex-direction:column;gap:3px;padding:5px 6px}
+#director-panel .inspector-tabs.inspector-tabs-grouped .inspector-tab-row{display:grid;grid-template-columns:42px minmax(0,1fr);align-items:center;gap:4px;padding:2px 0 2px 6px;border-left:2px solid color-mix(in srgb,var(--tg-accent,#5cd3f6) 40%,transparent);border-radius:3px;transition:border-color .15s ease,background .15s ease}
+#director-panel .inspector-tabs.inspector-tabs-grouped .inspector-tab-row[data-tab-group=story]{--tg-accent:var(--df-accent,#5cd3f6)}
+#director-panel .inspector-tabs.inspector-tabs-grouped .inspector-tab-row[data-tab-group=motion]{--tg-accent:var(--df-lane-tilt,#f2b765)}
+#director-panel .inspector-tabs.inspector-tabs-grouped .inspector-tab-row[data-tab-group=stage]{--tg-accent:var(--df-lane-wheels,#62d69d)}
+#director-panel .inspector-tabs.inspector-tabs-grouped .inspector-tab-row[data-tab-group=look]{--tg-accent:var(--df-lane-titles,#a99bff)}
+#director-panel .inspector-tabs.inspector-tabs-grouped .inspector-tab-row:has(button[aria-pressed=true]){border-left-color:var(--tg-accent);background:color-mix(in srgb,var(--tg-accent) 9%,transparent)}
+#director-panel .inspector-tabs.inspector-tabs-grouped .inspector-tab-group-label{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--df-text-3,#7f9aa9);user-select:none;white-space:nowrap}
+#director-panel .inspector-tabs.inspector-tabs-grouped .inspector-tab-row:has(button[aria-pressed=true]) .inspector-tab-group-label{color:var(--tg-accent)}
+#director-panel .inspector-tabs.inspector-tabs-grouped .inspector-tab-group-btns{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:2px;min-width:0}
+#director-panel .inspector-tabs.inspector-tabs-grouped button[data-inspector-tab=version]{grid-column:auto}
+#director-panel .inspector-tabs.inspector-tabs-grouped .inspector-tab-row button[aria-pressed=true]{box-shadow:inset 0 -2px 0 var(--tg-accent),0 1px 2px #0006}
+#director-panel .inspector-tabs.inspector-tabs-grouped .inspector-tab-row button[aria-pressed=true]::before{background:var(--tg-accent)}
+
+/* Desktop fine pointer only: compact 25 px tab height saves ~36 px vertically without touching coarse 44 px targets */
+@media (pointer: fine){
+  #director-panel .inspector-tabs.inspector-tabs-grouped button[data-inspector-tab]{min-height:25px;padding:1px 3px;font-size:11px;gap:3px}
+  #director-panel .inspector-tabs.inspector-tabs-grouped button[data-inspector-tab]::before{width:12px;height:12px}
+}

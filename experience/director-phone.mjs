@@ -145,9 +145,12 @@ export function createPhoneMode({ appbar, panel, shellOn = () => true, changed =
     apply, layout: () => mode, sheet: () => store.sheet,
     // The app bar's Panel button and the ⋯ Side column: portrait toggles the sheet, landscape the drawer.
     togglePanel() { if (mode === 'portrait') { setSheet(store.sheet === 'peek' ? 'half' : 'peek'); return true; } if (mode === 'landscape') { setDrawer(cls.contains('inspector-hidden')); return true; } return false; },
-    // A selection on the timeline or in the frame asks to show its inspector: a sheet at peek comes up to half, a closed drawer opens (not remembered).
-    reveal() { if (performance.now() - lastTouch > 1200) return;   // only a user's own selection, never a re-render
-      if (mode === 'portrait' && store.sheet === 'peek') setSheet('half', true); else if (mode === 'landscape' && cls.contains('inspector-hidden')) setDrawer(true, true); },
+    // A selection on the timeline or in the frame asks to show its inspector: a sheet at peek comes up to half;
+    // in landscape, respect an explicitly collapsed drawer (store.drawer === false) except for Title selections.
+    reveal(tab = '') { if (performance.now() - lastTouch > 1200) return;   // only a user's own selection, never a re-render
+      if (mode === 'portrait' && store.sheet === 'peek') setSheet('half', true);
+      else if (mode === 'landscape' && cls.contains('inspector-hidden') && (store.drawer !== false || tab === 'title')) setDrawer(true, true); },
+    keepDrawerClosed: (tab = '') => mode === 'landscape' && store.drawer === false && tab !== 'title',
     demo, demoOpen: () => !cls.contains('ef-demo-closed'),
   };
 }

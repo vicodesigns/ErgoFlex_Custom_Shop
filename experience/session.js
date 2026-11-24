@@ -29,10 +29,8 @@
     return;
   }
   if (parent !== window) return;
-  let seen = true;
-  try { seen = localStorage.getItem('ergoflex.cinematicSeen.v1') === '1'; } catch {}
-  // Existing editing links always go straight to their workspace.
-  if (query.get('intro') === '1' || (!seen && !location.search && !matchMedia('(prefers-reduced-motion: reduce)').matches)) {
+  // Cinematic intro is opt-in (?intro=1 or the Watch intro header link); bare / opens the Custom Shop directly.
+  if (query.get('intro') === '1') {
     const target = new URL('./experience/', location.href);
     target.searchParams.set('return', location.pathname + location.search.replace(/([?&])intro=1&?/, '$1'));
     location.replace(target);

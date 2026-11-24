@@ -72,7 +72,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     const s=shot(),list=titles();if(list.length>=MAX_TITLES)throw Error(`A chapter holds ${MAX_TITLES} titles; delete one first.`);
     const t=newTitle(s.id,time()*s.seconds,s.seconds,list.map(x=>x.id));onSelect();
     putList([...list,t],{select:t.id});const message=`Title added at ${r2(t.rel_in)}–${r2(t.rel_out)} s. Type its copy in Title; Undo removes it.`;
-    showInspector('title',true);try{seek(restTime(t)/s.seconds);}catch{}render();status(message);return t.id;
+    showInspector('title',true);try{seek(restTime(t)/s.seconds);}catch{}render();if(document.body.classList.contains('ef-phone'))requestAnimationFrame(()=>timeline.querySelector(`[data-title-clip="${t.id}"]`)?.scrollIntoView({block:'nearest',inline:'nearest'}));status(message);return t.id;
   }
   function duplicateSelected(){
     if(picked().length>1)return duplicateMany();
@@ -116,7 +116,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   function select(id,{reveal=true,keepMulti=false}={}){
     onSelect();if(id!==selected)lineSel=null;selected=id;if(!keepMulti)multi.clear();const t=item();if(!t)return;showInspector('title',true);
     if(reveal){try{seek(restTime(t)/shot().seconds);}catch{}}
-    render();status('Title selected. Drag its block to move it, its edges to trim, or edit its copy and shadow in Title.');
+    render();if(document.body.classList.contains('ef-phone'))requestAnimationFrame(()=>timeline.querySelector(`[data-title-clip="${t.id}"]`)?.scrollIntoView({block:'nearest',inline:'nearest'}));status('Title selected. Drag its block to move it, its edges to trim, or edit its copy and shadow in Title.');
   }
   function clear(){if(!selected&&!editing&&!multi.size)return false;selected=null;multi.clear();lineSel=null;setEditing(false,false);return true;}
   // The picked titles: the lane's multi-selection plus the inspector's title, in film order.

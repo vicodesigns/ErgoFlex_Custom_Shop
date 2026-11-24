@@ -84,6 +84,11 @@ html.ui-shell #scene-controls .vb-pop input[type=range] { width: 100%; }
 html.ui-shell #scene-controls .vb-pop .camera-shortcuts { display: flex; flex-wrap: wrap; gap: var(--vb-gap); }
 html.ui-shell body:not(.setup-layout) #scene-controls .vb-pop .camera-shortcuts { display: none; }
 
+/* Storefront separation: keep every element in the DOM for scripts/tests, hide Studio/Director-only authoring chrome in Store mode. */
+html.ui-shell body:not(.setup-layout) #scene-controls :is(#send-to-director, #layers-open, #vb-light-menu, .vb-room-more),
+html.ui-shell body:not(.setup-layout) #setup-sidebar :is(#led-surfaces-advanced, #save-preset, #preset-save-status) { display: none; }
+html.ui-shell body.store-layout #viewer-shell #scene-controls.vb { border-color: color-mix(in srgb, var(--ui-border) 82%, transparent); }
+
 /* All scenes: the chips as a browsable grid. */
 html.ui-shell #viewer-shell #scene-controls #vb-scenes-menu > .vb-pop { width: min(560px, 100%); }
 html.ui-shell #viewer-shell #scene-controls .vb-pop .scene-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--vb-gap); overflow: visible; padding: 0; }

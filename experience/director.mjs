@@ -158,8 +158,29 @@ export function mountDirector(bridge,catalog,initial){
   function tabLabel(tab){if(!shellOn())return tab==='version'?'Desk version':tab[0].toUpperCase()+tab.slice(1);return {project:'Cut',groove:'Moves',version:'Swaps',render:'Render',desks:'Desks'}[tab]||tab[0].toUpperCase()+tab.slice(1);}
   // (the tab grid fits about 9 characters with the icon in a 352 px column: short names, the full one on hover)
   const TAB_TITLE={project:'The whole cut: name, versions, import and export',groove:'Desk moves: the featured desk\'s lift, tilt and wheels',version:'Desk swaps: which desk version shows when',render:'Final render on the render PC',desks:'The room\'s other desks',lighting:'Lighting: time of day, room light, lamps'};
+  const TAB_GROUPS=[
+    {id:'story',label:'Story',tabs:['project','chapter','title','render']},
+    {id:'motion',label:'Motion',tabs:['camera','groove','tray','version']},
+    {id:'stage',label:'Stage',tabs:['props','people','desks','layers']},
+    {id:'look',label:'Look',tabs:['lighting','graphics','branding','build']},
+  ];
+  function inspectorTabsHtml(tabs){
+    const btn=tab=>`<button data-inspector-tab="${tab}" aria-pressed="${inspector===tab}" ${shellOn()&&TAB_TITLE[tab]?`title="${TAB_TITLE[tab]}"`:''}>${tabLabel(tab)}</button>`;
+    const close='<button data-action="inspector" aria-label="Hide inspector" title="Hide inspector">×</button>';
+    if(!shellOn()||tabs.length<=6)return `<nav class="inspector-tabs" aria-label="Inspector sections">${tabs.map(btn).join('')}${close}</nav>`;
+    const avail=new Set(tabs),used=new Set(),rows=[];
+    for(const g of TAB_GROUPS){
+      const list=g.tabs.filter(t=>avail.has(t));
+      if(!list.length)continue;
+      list.forEach(t=>used.add(t));
+      rows.push(`<div class="inspector-tab-row" data-tab-group="${g.id}"><span class="inspector-tab-group-label">${g.label}</span><div class="inspector-tab-group-btns">${list.map(btn).join('')}</div></div>`);
+    }
+    const extra=tabs.filter(t=>!used.has(t));
+    if(extra.length)rows.push(`<div class="inspector-tab-row" data-tab-group="more"><span class="inspector-tab-group-label">More</span><div class="inspector-tab-group-btns">${extra.map(btn).join('')}</div></div>`);
+    return `<nav class="inspector-tabs inspector-tabs-grouped" aria-label="Inspector sections">${rows.join('')}${close}</nav>`;
+  }
   function showInspector(tab,selection=false,unhide=true){
-    const newTab=inspector!==tab;inspector=tab;if(unhide)document.body.classList.remove('inspector-hidden');if(unhide&&selection)phoneMode?.reveal();if(tab==='lighting')queueMicrotask(()=>syncNow());if(tab==='render')queueMicrotask(()=>renderRequest?.refresh());if(tab==='layers')queueMicrotask(()=>renderLayers());
+    const newTab=inspector!==tab;inspector=tab;if(unhide)document.body.classList.remove('inspector-hidden');if(unhide&&selection)phoneMode?.reveal(tab);if(tab==='lighting')queueMicrotask(()=>syncNow());if(tab==='render')queueMicrotask(()=>renderRequest?.refresh());if(tab==='layers')queueMicrotask(()=>renderLayers());
     for(const page of panel.querySelectorAll('[data-inspector-page]'))page.hidden=page.dataset.inspectorPage!==tab;
     for(const button of panel.querySelectorAll('[data-inspector-tab]'))button.setAttribute('aria-pressed',String(button.dataset.inspectorTab===tab));
     panel.scrollTop=0;
@@ -177,7 +198,8 @@ export function mountDirector(bridge,catalog,initial){
   function reveal(type){
     const home=homeOf(type);if(!home||typing())return false;
     phoneMode?.reveal();   // (a phone: the sheet comes up to half, a closed drawer opens)
-    if(inspector!==home[0]||document.body.classList.contains('inspector-hidden'))showInspector(home[0]);
+    const keepClosed=phoneMode?.keepDrawerClosed?.(home[0]);
+    if(inspector!==home[0]||(!keepClosed&&document.body.classList.contains('inspector-hidden')))showInspector(home[0],false,!keepClosed);
     revealWant=type;requestAnimationFrame(()=>requestAnimationFrame(applyReveal));return true;
   }
   function revealTarget(type){
@@ -1265,7 +1287,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     panel.innerHTML=(shellOn()?'':`
       <div class="director-heading"><div><span class="director-kicker">DIRECTOR MODE</span><h2>Director studio.</h2></div><button data-action="ab-classic" class="calm-back" title="The new layout: one app bar, one timeline row (the classic one stays one click away)">New layout</button><button data-action="inspector" aria-label="Hide inspector" title="Hide inspector; keep the timeline open">‹</button></div>
       <div class="inspector-global"><button data-action="save-export" class="primary" title="Download this cut (the film picks it up from Downloads); also keeps a copy in this browser when there is room">Export cut</button><button data-action="undo" title="Undo (Ctrl/Cmd+Z)" ${undo.length?'':'disabled'}>Undo</button><button data-action="redo" title="Redo (Ctrl+Y or Ctrl/Cmd+Shift+Z)" ${redo.length?'':'disabled'}>Redo</button><span class="studio-sync" data-studio-sync>${studioSync.html()}</span><span class="saved-indicator" data-saved title="Draft kept in this browser"></span></div>${filmPicker()}`)+`
-      ${shellOn()&&filmShot()?sceneListHtml():''}<nav class="inspector-tabs" aria-label="Inspector sections">${['project','chapter',...(titleEditor.has()?['title']:[]),'camera','groove',...(lighting()||timeOfDay()||filmShot()?['lighting']:[]),...(filmShot()?['graphics','props','people','layers','desks']:[]),...(filmShot()&&trayEd.has()?['tray']:[]),...(filmShot()&&branding.available()?['branding']:[]),...(filmShot()&&deskBuild.shows()?['build']:[]),...(filmShot()&&deskVersions.has()?['version']:[]),...(film?['render']:[])].map(tab=>`<button data-inspector-tab="${tab}" aria-pressed="${inspector===tab}" ${shellOn()&&TAB_TITLE[tab]?`title="${TAB_TITLE[tab]}"`:''}>${tabLabel(tab)}</button>`).join('')}<button data-action="inspector" aria-label="Hide inspector" title="Hide inspector">×</button></nav><div class="selected-header" data-selected-header>${selectedHeader()}</div>
+      ${shellOn()&&filmShot()?sceneListHtml():''}${inspectorTabsHtml(['project','chapter',...(titleEditor.has()?['title']:[]),'camera','groove',...(lighting()||timeOfDay()||filmShot()?['lighting']:[]),...(filmShot()?['graphics','props','people','layers','desks']:[]),...(filmShot()&&trayEd.has()?['tray']:[]),...(filmShot()&&branding.available()?['branding']:[]),...(filmShot()&&deskBuild.shows()?['build']:[]),...(filmShot()&&deskVersions.has()?['version']:[]),...(film?['render']:[])])}<div class="selected-header" data-selected-header>${selectedHeader()}</div>
       <p data-status role="status" class="director-status">${escape(titleEditor.editHint?.()||`${project.shots.length} chapters · ${Math.round(duration(project.shots))} seconds`)}</p>
       <div data-inspector-page="project">
       <div class="director-actions"><button data-action="new">New cut</button><button data-action="clone">Duplicate cut</button></div>

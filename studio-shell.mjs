@@ -327,11 +327,12 @@ function controlLabel(el) {
     if (el.title && label.length < 22 && clean(el.title) !== label && !/^(Ctrl|Cmd|Shift|Alt|Delete|Down)/.test(el.title)) label += ` · ${clean(el.title)}`;
     return label.slice(0, 90);
 }
+const STORE_HIDDEN_IDS = new Set(['anim-debugger', 'portal-project-actions', 'send-to-director', 'layers-open', 'vb-light-menu', 'led-surfaces-advanced', 'save-preset', 'preset-save-status']);
 function available(el) {
     const studio = document.body.classList.contains('setup-layout');
     for (let node = el; node && node !== document.body; node = node.parentElement) {
         if (node.hidden && !node.classList.contains('ui-group-body')) return false;
-        if (!studio && (node.id === 'anim-debugger' || node.classList.contains('camera-shortcuts') || node.id === 'portal-project-actions')) return false;
+        if (!studio && (STORE_HIDDEN_IDS.has(node.id) || node.classList.contains('camera-shortcuts') || node.classList.contains('vb-room-more'))) return false;
     }
     return true;
 }
