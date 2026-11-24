@@ -301,11 +301,14 @@ for o in meshes:
         import bmesh as _bm
         bm = _bm.new(); bm.from_mesh(o.data); bm.faces.ensure_lookup_table(); _bm.ops.delete(bm, geom=[bm.faces[i] for i in faces], context='FACES'); bm.to_mesh(o.data); bm.free()
 
-if who.get('comb') or who.get('taper_curls'):
+if who.get('comb') or who.get('taper_curls') or who.get('sculpted_coils'):
     import groom
     hair = next(o for o in meshes if o.name.split('.', 1)[-1] == who['hair'])
     if who.get('comb'):
         groom.comb_layers(hair, rig, who['comb'])
+    elif who.get('sculpted_coils'):
+        style = who['sculpted_coils'] if isinstance(who['sculpted_coils'], str) else 'taper_afro'
+        groom.sculpted_afro_coils(hair, base, rig, OUT_DIR, OUT_ID, style=style)
     else:
         groom.cropped_coils(hair, base, rig, OUT_DIR, OUT_ID)
 

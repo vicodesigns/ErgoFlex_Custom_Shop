@@ -80,6 +80,7 @@ CHARACTERS = {
         'tint': {'namuhekam_male_polo_shirt': (.72, .3, .12), 'toigo_wool_pants': (.13, .14, .17)},
     },
     'zoe': {
+        'sculpted_coils': 'full_afro',
         'name': 'Zoe', 'phenotype': {'gender': .0, 'age': .33, 'muscle': .45, 'weight': .48, 'height': .59, 'proportions': .6, 'race': race(.05, .9, .05)},
         'skin': 'young_african_female', 'eyes': 'brown', 'hair': 'afro01', 'eyebrows': 'eyebrow007', 'eyelashes': 'eyelashes02',
         'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'shoes05'],
@@ -146,7 +147,7 @@ CHARACTERS = {
         'clothes': ['male_casualsuit06', 'shoes04'],
     },
     'noah': {
-        'tailoring': 'polo',
+        'tailoring': 'polo', 'sculpted_coils': 'taper_afro',
         'name': 'Noah', 'phenotype': {'gender': 1., 'age': .34, 'muscle': .55, 'weight': .45, 'height': .63, 'proportions': .6, 'race': race(.1, .85, .05)},
         'skin': 'young_african_male', 'eyes': 'brown', 'hair': 'afro01', 'eyebrows': 'eyebrow012', 'eyelashes': 'eyelashes01',
         # (a relaxed face: brows up and level where they sat in a scowl; a full brow that reads on dark skin at film distance; 'brow_cutoff' build_people.py)
@@ -176,6 +177,7 @@ CHARACTERS = {
     # Children (MakeHuman age: 0 = 1 year, .1875 = 10 years). Their poses scale with them (k) and sit on child furniture.
     # `height` is set so each stands about as tall as a child of that age (101 cm at four to 137 cm at ten).
     'tess': {
+        'sculpted_coils': 'full_afro',
         'name': 'Tess', 'phenotype': {'gender': .0, 'age': .0625, 'muscle': .5, 'weight': .55, 'height': 0.71, 'proportions': .5, 'race': race(.4, .6, 0)},
         'skin': 'young_african_female', 'eyes': 'brown', 'hair': 'afro01', 'hair_tint': (.06, .045, .04), 'eyebrows': 'eyebrow007', 'eyelashes': 'eyelashes02',
         'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'shoes05'],
@@ -518,6 +520,7 @@ CHARACTERS = {
         'tint': {'toigo_ballet_flats': (.4, .1, .12)}, 'look': 3, 'postures': CROWD + ['sit-raise'],
     },
     'jack': {
+        'sculpted_coils': 'taper_afro',
         'name': 'Jack', 'phenotype': {'gender': 1., 'age': .375, 'muscle': .5, 'weight': .42, 'height': .6, 'proportions': .6, 'race': race(.4, .55, .05)},
         'skin': 'young_african_male', 'skin_tone': (1.4, 1.34, 1.28), 'eyes': 'brown', 'hair': 'afro01', 'hair_tint': (.06, .045, .04), 'eyebrows': 'eyebrow003', 'eyelashes': 'eyelashes01',
         'face': {'head-rectangular': .3, 'head-scale-vert-incr': .3, 'chin-height-incr': .4, 'nose-scale-vert-incr': .4, 'lr-cheek-inner-decr': .4, 'lr-cheek-bones-incr': .3, 'neck-scale-vert-incr': .4, 'mouth-scale-horiz-incr': .2},

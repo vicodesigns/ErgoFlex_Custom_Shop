@@ -52,6 +52,7 @@ MORE = [
     ('toigo_inverted_bob', '../toigo_blunt_bob_with_bangs/AuburnHair.png'),
     ('cropped_coil_hair', None),
     ('layered_long_hair', None),
+    ('sculpted_coils_hair', None),
 ]
 PER_ATLAS = 8
 EDGE_MAX = .12
@@ -64,11 +65,13 @@ def smooth(v, r):
     return np.asarray(Image.fromarray(np.uint8(np.clip(v * .5 + .5, 0, 1) * 255)).filter(ImageFilter.GaussianBlur(r)), dtype=np.float32) / 127.5 - 1
 def jpg(a): return Image.fromarray(np.uint8(np.clip(a, 0, 1) * 255))
 def diffuse(folder, name=None):
-    if folder.name in ('cropped_coil_hair', 'layered_long_hair'):
+    if folder.name in ('cropped_coil_hair', 'layered_long_hair', 'sculpted_coils_hair'):
         if folder.name == 'cropped_coil_hair':
             from coil_texture import pixels
-        else:
+        elif folder.name == 'layered_long_hair':
             from long_wave_texture import pixels
+        else:
+            from afro_coil_texture import pixels
         rgba = pixels()[::-1].copy()  # Blender pixel rows start at the bottom.
         rgb = rgba[:, :, :3]
         rgb[:] = np.where(rgb <= .0031308, 12.92 * rgb, 1.055 * rgb ** (1 / 2.4) - .055)
@@ -76,7 +79,7 @@ def diffuse(folder, name=None):
     path = folder / name if name else next(folder.glob('*diffuse*.png'))
     return Image.open(path).convert('RGBA').resize((504, 504), Image.Resampling.LANCZOS)
 
-def strand_tiles(img, gain=1.0):
+def strand_tiles(img, gain=1.0, isotropic=False):
     """normal tile, direction tile and the alpha-weighted slope the normal carries, from one diffuse image."""
     l = lum(img); alpha = np.asarray(img.getchannel('A'), dtype=np.float32) / 255
     h = (np.log(.045 + l) - np.log(.045 + lum(img.convert('L').filter(ImageFilter.GaussianBlur(3))))) * alpha
@@ -85,12 +88,13 @@ def strand_tiles(img, gain=1.0):
     tx = dx * dx - dy * dy; ty = 2 * dx * dy; scale = max(.01, np.percentile(np.abs(tx), 99))
     a = smooth(tx / scale, 2); b = smooth(ty / scale, 2)
     angle = .5 * np.arctan2(b, a) + np.pi / 2
-    d = jpg(np.stack([.5 + .5 * np.cos(angle), .5 + .5 * np.sin(angle), np.clip(np.hypot(a, b) * 3, .12, .92) * alpha], axis=2))
+    coherence = np.full_like(alpha, .04) if isotropic else np.clip(np.hypot(a, b) * 3, .12, .92)
+    d = jpg(np.stack([.5 + .5 * np.cos(angle), .5 + .5 * np.sin(angle), coherence * alpha], axis=2))
     slope = float(np.sqrt((alpha * (dx * dx + dy * dy)).sum() / max(alpha.sum(), 1)) * 1.85)
     return n, d, slope
 
 def hairline_tile(folder, cut, img):
-    if cut in ('cropped_coil_hair', 'layered_long_hair'):
+    if cut in ('cropped_coil_hair', 'layered_long_hair', 'sculpted_coils_hair'):
         # The groom's own colour map carries the fitted, feathered hairline.
         return Image.new('L', img.size, 255), 0
     P = []; UV = []; E = defaultdict(list)
@@ -137,7 +141,7 @@ def bake_atlas(items, gains=None):
     for i, (cut, name) in enumerate(items):
         folder = SRC / cut; img = diffuse(folder, name)
         gain = (gains or {}).get(cut, 1.0)
-        n, d, slope = strand_tiles(img, gain)
+        n, d, slope = strand_tiles(img, gain, isotropic=(cut == 'sculpted_coils_hair'))
         e, segs = hairline_tile(folder, cut, img)
         for dest, tile in [(normal, n), (direction, d), (edge, e)]: dest.paste(pad(tile), (i % 4 * 512, i // 4 * 512))
         report[cut] = {'slope': slope, 'gain': gain, 'segments': segs}
