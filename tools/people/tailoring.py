@@ -655,6 +655,15 @@ def fit(obj, rig, style, garment, base, part=None, has_untucked_top=False):
         if style == 'studio':
             sew_studio_panels(bm, shoulder, chest, waist)
         if polo and style == 'workshop':
+            # Smooth upper-sleeve / deltoid cap so reaching poses (stand-robot-work) crease evenly without a sharp outer pinch.
+            sleeve_cap = [v for v in bm.verts if not v.is_boundary
+                          and abs(v.co.x) > abs(shoulder.x) * .92
+                          and shoulder.z - .18 < v.co.z < shoulder.z + .06]
+            if sleeve_cap:
+                for _ in range(2):
+                    bmesh.ops.smooth_vert(bm, verts=sleeve_cap, factor=.35,
+                                          use_axis_x=True, use_axis_y=True, use_axis_z=True)
+                bm.normal_update()
             workshop_pocket(bm, shoulder, chest)
         # Hide neutral-pose covered torso/armpit skin under every fitted top so arms & chests never clip.
         covered = covered_skin(base, bm)

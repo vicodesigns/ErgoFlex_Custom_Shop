@@ -732,9 +732,12 @@ for (const who of ['zoe', 'andre', 'grace', 'ben', 'rosa']) {
             assert.ok(fit.heels.every(h => h && h[1] < 0), `${who}: the measured heels are behind the ankles (${JSON.stringify(fit.heels)})`);
             plan = walkPlan(rig, rig.key(fromId), rig.key(toId), route, { ...options, ...fit });
             for (const st of plan.steps.slice(1, -2)) {
-                solveWalk(rig, plan, st.g1 + .02); const a = rig.wp[rig.side[st.which ? 'r' : 'l'].leg[2]]; let low = null;
+                solveWalk(rig, plan, st.g1 + .02); const leg = rig.side[st.which ? 'r' : 'l'].leg, a = rig.wp[leg[2]], ball = rig.wp[leg[3]];
+                const fwd = ball.clone().sub(a); fwd.y = 0; if (fwd.lengthSq() > 1e-8) fwd.normalize(); else fwd.set(0, 0, 1);
+                let low = null;
                 for (const [x, y, z, k] of points()) if (k === st.which && (!low || y < low[1])) low = [x, y, z];
-                assert.ok(low[2] < a.z + .02, `${who}: lands heel first at ${st.g1.toFixed(2)} (lowest point ${((low[2] - a.z) * 1000).toFixed(0)} mm from the ankle)`);
+                const along = (low[0] - a.x) * fwd.x + (low[2] - a.z) * fwd.z;
+                assert.ok(along < .02, `${who}: lands heel first at ${st.g1.toFixed(2)} (lowest point ${(along * 1000).toFixed(0)} mm along the foot from the ankle)`);
             }
         }
     }

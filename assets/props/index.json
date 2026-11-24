@@ -34370,22 +34370,22 @@
    "file": "assets/props/people-andre-sit-type.glb",
    "anchor": "floor",
    "size": [
-    567.9,
+    563.7,
     1348,
     725
    ],
    "min": [
-    -284.2,
+    -281.9,
     0,
     -119.5
    ],
    "max": [
-    283.7,
+    281.8,
     1348,
     605.5
    ],
-   "tris": 65724,
-   "bytes": 1053304,
+   "tris": 65998,
+   "bytes": 957240,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -34404,22 +34404,22 @@
    "file": "assets/props/people-andre-stand-type.glb",
    "anchor": "floor",
    "size": [
-    583.6,
+    580.4,
     1804.5,
     602.5
    ],
    "min": [
-    -291.9,
+    -290.3,
     0,
     -135.9
    ],
    "max": [
-    291.7,
+    290.1,
     1804.5,
     466.6
    ],
-   "tris": 65716,
-   "bytes": 1048112,
+   "tris": 66306,
+   "bytes": 954476,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -34438,22 +34438,22 @@
    "file": "assets/props/people-andre-stand-phone.glb",
    "anchor": "floor",
    "size": [
-    586.6,
+    581.8,
     1794.2,
     542.7
    ],
    "min": [
-    -285.1,
+    -282.6,
     0,
     -125.3
    ],
    "max": [
-    301.5,
+    299.2,
     1794.2,
     417.4
    ],
-   "tris": 65792,
-   "bytes": 1053240,
+   "tris": 66396,
+   "bytes": 959712,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -35571,22 +35571,22 @@
    "file": "assets/props/people-andre-sit-type-30.glb",
    "anchor": "floor",
    "size": [
-    572.8,
+    568.4,
     1348,
     725
    ],
    "min": [
-    -286.7,
+    -284.4,
     0,
     -119.5
    ],
    "max": [
-    286.1,
+    284,
     1348,
     605.5
    ],
-   "tris": 65746,
-   "bytes": 1053348,
+   "tris": 66018,
+   "bytes": 957156,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -36772,22 +36772,22 @@
    "file": "assets/props/people-andre-stand-type-low.glb",
    "anchor": "floor",
    "size": [
-    517.5,
+    517.3,
     1817.2,
     481.3
    ],
    "min": [
-    -258.8,
+    -258.7,
     0,
     -135.9
    ],
    "max": [
-    258.7,
+    258.6,
     1817.2,
     345.4
    ],
-   "tris": 65544,
-   "bytes": 1046860,
+   "tris": 66136,
+   "bytes": 952864,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -36806,22 +36806,22 @@
    "file": "assets/props/people-andre-stand-type-low-30.glb",
    "anchor": "floor",
    "size": [
-    517.3,
+    516.9,
     1817.2,
     493
    ],
    "min": [
-    -258.7,
+    -258.5,
     0,
     -135.9
    ],
    "max": [
-    258.6,
+    258.4,
     1817.2,
     357.1
    ],
-   "tris": 65580,
-   "bytes": 1046948,
+   "tris": 66174,
+   "bytes": 953200,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -36854,8 +36854,8 @@
     1410.5,
     615.9
    ],
-   "tris": 71466,
-   "bytes": 1092000,
+   "tris": 71654,
+   "bytes": 993988,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -36888,8 +36888,8 @@
     1410.5,
     615.9
    ],
-   "tris": 71644,
-   "bytes": 1092372,
+   "tris": 71866,
+   "bytes": 995020,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -36908,22 +36908,22 @@
    "file": "assets/props/people-andre-stand-wait.glb",
    "anchor": "floor",
    "size": [
-    602.1,
+    597.4,
     1808.5,
     369.4
    ],
    "min": [
-    -301.7,
+    -299.3,
     0,
     -135.9
    ],
    "max": [
-    300.4,
+    298.1,
     1808.5,
     233.5
    ],
-   "tris": 65824,
-   "bytes": 1048456,
+   "tris": 66414,
+   "bytes": 954692,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -36955,8 +36955,8 @@
     1822.3,
     514
    ],
-   "tris": 65872,
-   "bytes": 1052664,
+   "tris": 66482,
+   "bytes": 958512,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -36974,22 +36974,22 @@
    "file": "assets/props/people-andre-stand-work.glb",
    "anchor": "floor",
    "size": [
-    597.3,
+    592.2,
     1746.3,
     695.6
    ],
    "min": [
-    -300.4,
+    -297.9,
     0,
     -145.4
    ],
    "max": [
-    296.9,
+    294.3,
     1746.3,
     550.2
    ],
-   "tris": 65856,
-   "bytes": 1052768,
+   "tris": 66468,
+   "bytes": 959528,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -37021,8 +37021,8 @@
     1814.9,
     753.6
    ],
-   "tris": 66206,
-   "bytes": 1062772,
+   "tris": 66800,
+   "bytes": 968976,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -37040,22 +37040,22 @@
    "file": "assets/props/people-andre-stretch.glb",
    "anchor": "floor",
    "size": [
-    560.7,
+    540,
     2233.9,
     353.6
    ],
    "min": [
-    -241.8,
+    -224.2,
     0,
     -145.9
    ],
    "max": [
-    318.9,
+    315.8,
     2233.9,
     207.7
    ],
-   "tris": 65720,
-   "bytes": 1045096,
+   "tris": 66320,
+   "bytes": 951592,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -37087,8 +37087,8 @@
     1874.1,
     207.5
    ],
-   "tris": 65794,
-   "bytes": 1047600,
+   "tris": 66380,
+   "bytes": 953984,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -37106,7 +37106,7 @@
    "file": "assets/props/people-andre-cane-stand.glb",
    "anchor": "floor",
    "size": [
-    666.1,
+    663.8,
     1783.8,
     441
    ],
@@ -37116,12 +37116,12 @@
     -136.8
    ],
    "max": [
-    299.8,
+    297.5,
     1783.8,
     304.2
    ],
-   "tris": 65946,
-   "bytes": 1052592,
+   "tris": 66554,
+   "bytes": 959028,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -37139,22 +37139,22 @@
    "file": "assets/props/people-andre-white-cane.glb",
    "anchor": "floor",
    "size": [
-    591.8,
+    587.8,
     1801.2,
     1144
    ],
    "min": [
-    -290.9,
+    -289.2,
     0,
     -298.9
    ],
    "max": [
-    300.9,
+    298.6,
     1801.2,
     845.1
    ],
-   "tris": 65942,
-   "bytes": 1054176,
+   "tris": 66528,
+   "bytes": 960604,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -37172,22 +37172,22 @@
    "file": "assets/props/people-andre-walk.glb",
    "anchor": "floor",
    "size": [
-    595,
+    592.6,
     1767.7,
-    954.6
+    958.3
    ],
    "min": [
-    -312.4,
+    -310,
     0,
-    -406.1
+    -409.8
    ],
    "max": [
     282.6,
     1767.7,
     548.5
    ],
-   "tris": 65780,
-   "bytes": 1049716,
+   "tris": 66208,
+   "bytes": 954996,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -37219,8 +37219,8 @@
     1257.2,
     509.8
    ],
-   "tris": 65834,
-   "bytes": 1058380,
+   "tris": 66110,
+   "bytes": 961484,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -37238,22 +37238,22 @@
    "file": "assets/props/people-andre-sit-laptop.glb",
    "anchor": "floor",
    "size": [
-    591,
+    587.4,
     1342.9,
     723.4
    ],
    "min": [
-    -295.5,
+    -293.9,
     0,
     -100.6
    ],
    "max": [
-    295.5,
+    293.5,
     1342.9,
     622.8
    ],
-   "tris": 65912,
-   "bytes": 1060796,
+   "tris": 66212,
+   "bytes": 964536,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -37271,22 +37271,22 @@
    "file": "assets/props/people-andre-sit-read.glb",
    "anchor": "floor",
    "size": [
-    610.2,
+    605,
     1351.2,
     887.4
    ],
    "min": [
-    -305,
+    -302.4,
     0,
     -172.4
    ],
    "max": [
-    305.2,
+    302.6,
     1351.2,
     715
    ],
-   "tris": 65996,
-   "bytes": 1058260,
+   "tris": 66294,
+   "bytes": 961796,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -37304,12 +37304,12 @@
    "file": "assets/props/people-andre-sit-listen.glb",
    "anchor": "floor",
    "size": [
-    666.7,
+    664.1,
     1374.4,
     644.2
    ],
    "min": [
-    -305.8,
+    -303.2,
     0,
     -100.9
    ],
@@ -37318,8 +37318,8 @@
     1374.4,
     543.3
    ],
-   "tris": 65812,
-   "bytes": 1053456,
+   "tris": 66108,
+   "bytes": 957360,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -37337,12 +37337,12 @@
    "file": "assets/props/people-andre-sit-raise.glb",
    "anchor": "floor",
    "size": [
-    662.5,
+    662.4,
     1738.3,
     607.7
    ],
    "min": [
-    -325.7,
+    -325.6,
     0,
     -100
    ],
@@ -37351,8 +37351,8 @@
     1738.3,
     507.7
    ],
-   "tris": 65828,
-   "bytes": 1051648,
+   "tris": 66130,
+   "bytes": 955036,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -37370,12 +37370,12 @@
    "file": "assets/props/people-andre-sit-phone.glb",
    "anchor": "floor",
    "size": [
-    645.3,
+    643.3,
     1289.2,
     726.9
    ],
    "min": [
-    -312.2,
+    -310.2,
     0,
     -119.2
    ],
@@ -37384,8 +37384,8 @@
     1289.2,
     607.7
    ],
-   "tris": 65874,
-   "bytes": 1059096,
+   "tris": 66112,
+   "bytes": 962164,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -37417,8 +37417,8 @@
     1264,
     618.2
    ],
-   "tris": 65894,
-   "bytes": 1057240,
+   "tris": 66242,
+   "bytes": 961740,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -37450,8 +37450,8 @@
     1391.9,
     611.3
    ],
-   "tris": 71856,
-   "bytes": 1094296,
+   "tris": 72190,
+   "bytes": 997364,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -37483,8 +37483,8 @@
     1439.2,
     620.9
    ],
-   "tris": 71668,
-   "bytes": 1092312,
+   "tris": 71900,
+   "bytes": 994116,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -50805,22 +50805,22 @@
    "file": "assets/props/people-andre-stand-mug.glb",
    "anchor": "floor",
    "size": [
-    586.5,
+    582,
     1812.3,
     426.8
    ],
    "min": [
-    -287.7,
+    -285.5,
     0,
     -125.6
    ],
    "max": [
-    298.8,
+    296.5,
     1812.3,
     301.2
    ],
-   "tris": 65806,
-   "bytes": 1052604,
+   "tris": 66406,
+   "bytes": 958912,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -51499,22 +51499,22 @@
    "file": "assets/props/people-andre-stand-drink.glb",
    "anchor": "floor",
    "size": [
-    589.7,
+    585,
     1819,
     452.5
    ],
    "min": [
-    -285.5,
+    -283.1,
     0,
     -162.5
    ],
    "max": [
-    304.2,
+    301.9,
     1819,
     290
    ],
-   "tris": 65808,
-   "bytes": 1050520,
+   "tris": 66422,
+   "bytes": 957516,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -51631,22 +51631,22 @@
    "file": "assets/props/people-andre-stand-talk.glb",
    "anchor": "floor",
    "size": [
-    603.3,
+    599.3,
     1818.9,
     646.9
    ],
    "min": [
-    -309.8,
+    -308.1,
     0,
     -132.3
    ],
    "max": [
-    293.5,
+    291.2,
     1818.9,
     514.6
    ],
-   "tris": 65816,
-   "bytes": 1048352,
+   "tris": 66390,
+   "bytes": 954532,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -52192,22 +52192,22 @@
    "file": "assets/props/people-andre-sit-mug.glb",
    "anchor": "floor",
    "size": [
-    582.6,
+    578.4,
     1353.7,
     835.4
    ],
    "min": [
-    -290.2,
+    -288.6,
     0,
     -161.5
    ],
    "max": [
-    292.4,
+    289.8,
     1353.7,
     673.9
    ],
-   "tris": 65882,
-   "bytes": 1059536,
+   "tris": 66158,
+   "bytes": 962468,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -52765,22 +52765,22 @@
    "file": "assets/props/people-andre-sit-mix.glb",
    "anchor": "floor",
    "size": [
-    567.9,
+    563.7,
     1371.6,
     725
    ],
    "min": [
-    -284.2,
+    -281.9,
     0,
     -119.5
    ],
    "max": [
-    283.7,
+    281.8,
     1371.6,
     605.5
    ],
-   "tris": 66276,
-   "bytes": 1059600,
+   "tris": 66550,
+   "bytes": 963552,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -52799,22 +52799,22 @@
    "file": "assets/props/people-andre-sit-mix-30.glb",
    "anchor": "floor",
    "size": [
-    572.8,
+    568.4,
     1371.6,
     725
    ],
    "min": [
-    -286.7,
+    -284.4,
     0,
     -119.5
    ],
    "max": [
-    286.1,
+    284,
     1371.6,
     605.5
    ],
-   "tris": 66298,
-   "bytes": 1059644,
+   "tris": 66570,
+   "bytes": 963412,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -53035,22 +53035,22 @@
    "file": "assets/props/people-andre-stand-low.glb",
    "anchor": "floor",
    "size": [
-    559.5,
+    554.6,
     1758.2,
-    591.4
+    590.6
    ],
    "min": [
-    -279.6,
+    -277.2,
     0,
-    -138.7
+    -137.9
    ],
    "max": [
-    279.9,
+    277.4,
     1758.2,
     452.7
    ],
-   "tris": 65744,
-   "bytes": 1048576,
+   "tris": 66308,
+   "bytes": 955200,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -56333,22 +56333,22 @@
    "file": "assets/props/people-andre-sit-chat.glb",
    "anchor": "floor",
    "size": [
-    610.6,
+    606.2,
     1352.1,
     800.4
    ],
    "min": [
-    -294.3,
+    -292.6,
     0,
     -149.5
    ],
    "max": [
-    316.3,
+    313.6,
     1352.1,
     650.9
    ],
-   "tris": 65856,
-   "bytes": 1058128,
+   "tris": 66158,
+   "bytes": 961592,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -69305,22 +69305,22 @@
    "file": "assets/props/people-andre-stand-mid.glb",
    "anchor": "floor",
    "size": [
-    573.3,
+    569.9,
     1790,
-    601.3
+    600.5
    ],
    "min": [
-    -286.6,
+    -285,
     0,
-    -138.6
+    -137.8
    ],
    "max": [
-    286.7,
+    284.9,
     1790,
     462.7
    ],
-   "tris": 65698,
-   "bytes": 1047564,
+   "tris": 66292,
+   "bytes": 954368,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -85306,8 +85306,8 @@
     1434.8,
     656.1
    ],
-   "tris": 66026,
-   "bytes": 1056008,
+   "tris": 66530,
+   "bytes": 961964,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -85524,12 +85524,12 @@
    "file": "assets/props/people-andre-stand-robot-work.glb",
    "anchor": "floor",
    "size": [
-    696.3,
+    695.8,
     1688.1,
     676.8
    ],
    "min": [
-    -318.7,
+    -318.2,
     0.1,
     -128.3
    ],
@@ -85538,8 +85538,8 @@
     1688.2,
     548.5
    ],
-   "tris": 70926,
-   "bytes": 1086996,
+   "tris": 71536,
+   "bytes": 993580,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -85557,12 +85557,12 @@
    "file": "assets/props/people-andre-stand-robot-shelf.glb",
    "anchor": "floor",
    "size": [
-    617.6,
+    617,
     1746.4,
     892.7
    ],
    "min": [
-    -256.6,
+    -256,
     0,
     -148.4
    ],
@@ -85571,8 +85571,8 @@
     1746.4,
     744.3
    ],
-   "tris": 70928,
-   "bytes": 1085768,
+   "tris": 71500,
+   "bytes": 992240,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -85590,22 +85590,22 @@
    "file": "assets/props/people-andre-stand-phone-pull.glb",
    "anchor": "floor",
    "size": [
-    606.3,
+    602.3,
     1798.2,
     393.4
    ],
    "min": [
-    -310.8,
+    -309.1,
     0,
     -124.2
    ],
    "max": [
-    295.5,
+    293.2,
     1798.2,
     269.2
    ],
-   "tris": 66380,
-   "bytes": 1063000,
+   "tris": 66476,
+   "bytes": 964808,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -85637,8 +85637,8 @@
     1760.4,
     378.6
    ],
-   "tris": 65826,
-   "bytes": 1059020,
+   "tris": 66436,
+   "bytes": 965156,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -85670,8 +85670,8 @@
     1760.4,
     378.6
    ],
-   "tris": 65842,
-   "bytes": 1057668,
+   "tris": 66450,
+   "bytes": 963920,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -85689,22 +85689,22 @@
    "file": "assets/props/people-andre-stand-phone-watch.glb",
    "anchor": "floor",
    "size": [
-    605,
+    600.3,
     1820.3,
     358.3
    ],
    "min": [
-    -300.8,
+    -298.4,
     0,
     -152
    ],
    "max": [
-    304.2,
+    301.9,
     1820.3,
     206.3
    ],
-   "tris": 65846,
-   "bytes": 1056444,
+   "tris": 66454,
+   "bytes": 963464,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -85922,12 +85922,12 @@
    "file": "assets/props/people-andre-stand-robot-lift.glb",
    "anchor": "floor",
    "size": [
-    655.3,
+    654.4,
     1739.3,
     677
    ],
    "min": [
-    -257.5,
+    -256.6,
     -0.4,
     -138.3
    ],
@@ -85936,8 +85936,8 @@
     1738.9,
     538.7
    ],
-   "tris": 70930,
-   "bytes": 1086188,
+   "tris": 71496,
+   "bytes": 992900,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,

@@ -60,9 +60,12 @@ CHARACTERS = {
         'skin': 'young_african_male', 'eyes': 'brown', 'hair': 'short01', 'eyebrows': 'eyebrow012', 'eyelashes': 'eyelashes01',
         # (a relaxed face: brows up and level where they sat in a scowl; a full brow that reads on dark skin at film distance; 'brow_cutoff' build_people.py)
         'face': {'eyebrows-angle-up': .45, 'eyebrows-trans-up': .2, 'mouth-angles-up': .15}, 'brow_cutoff': .12,
-        'clothes': ['namuhekam_male_polo_shirt', 'cortu_cargo_pants', 'shoes04'],
+        # Option C (Vico 2026-11-24): Charcoal polo + deep indigo denim jeans + dark casual shoes.
+        'clothes': ['namuhekam_male_polo_shirt', 'male_casualsuit04', 'shoes04'],
+        'parts': {'male_casualsuit04': 'bottom'},
         'hair_tint': (.05, .045, .04),
-        'tint': {'namuhekam_male_polo_shirt': (.16, .36, .34), 'cortu_cargo_pants': (.5, .45, .37)},
+        'tint': {'namuhekam_male_polo_shirt': (.20, .23, .28)},
+        'dye': {'male_casualsuit04': (.13, .18, .28)},
     },
     'grace': {
         'name': 'Grace', 'phenotype': {'gender': .0, 'age': .86, 'muscle': .35, 'weight': .56, 'height': .42, 'proportions': .5, 'race': race(1, 0, 0)},
