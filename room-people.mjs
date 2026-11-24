@@ -66,6 +66,11 @@ import { mediaPersonMaterial, castDetailEnsure, castDetailCast, castDetailVarian
 //                                                     `step`: that move is a step (feet planted, left then right; a turn
 //                                                     over 60 deg in two steps each, round the turn), and
 //                                                     `hands: 'line'`: the hands go straight, not along the arms' arc
+//   act: { kind: 'place', at, prop: '<name regex>', contact, hold, back, lift, grip: { at: [x, y, z], q: [x, y, z, w] } }
+//                                                     (power-phone: Mia) the left hand carries the scene prop `prop` (a phone, held
+//                                                     in the hand's frame by `grip`) from where it is held to where the prop rests
+//                                                     in the scene (the desk's wireless charger), `contact` seconds after `at`: one
+//                                                     object, hand to desk, the model's own held phone hidden (placeOf, placeCarry)
 //   look: '<key>' | ['<key>', ...]                    whom they look at, whatever their posture (whichever of them is there,
 //                                                     in front within 9 m): a listener who turns to the talker
 //   act: { at: seconds, dur: seconds, by: [x, y, z] mm }  film only: an action at that moment of the chapter, for the
@@ -89,8 +94,9 @@ import * as THREE from 'three';
 import {updateSkinnedBounds} from './skinned-bounds.mjs';
 import {poseAt} from './people-pose-keys.mjs';
 import {applyHeld} from './people-held.mjs';
+import {partsOf} from './people-held-data.mjs';
 import {postureRecord,postureRecords,hasPosturePose,poseOwner,sourceOf,roomEditKey,blendPosturePoses} from './people-postures.mjs';
-import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, squatKey, WORKOUTS, drawPose, livelyPose, seedOf } from './room-people-motion.mjs?v=people-motion-carry-20261119';
+import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, squatKey, WORKOUTS, drawPose, livelyPose, seedOf, placeGrip } from './room-people-motion.mjs?v=people-place-20261124';
 // Room looks (room-looks.mjs): the Nov 17 pass's cast finishes (own materials, hair / shirt maps) are the refreshed Create
 // room's and the Commons'; Create's Classic look keeps the cast as it was, and its people move as they did then
 // (rig.classicMotion: room-people-motion.mjs's painting, pottery and page-turn strokes from before the pass).
@@ -2148,6 +2154,7 @@ export class RoomPeople {
         const gaze = amount > 0 ? this.gazeOf(object, life) : null, act = film ? this.actOf(object, life, time) : null;
         const moved = solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: amount, actLife, taps: (film || dt < .05) && !object.userData.person.act && !object.userData.person.fromDesk, typing: this.filter?.typing, pose: poseNow(object.userData.person), look: gaze?.at, lookAmount: gaze?.amount, ...(act ? { act } : {}) });
         drawPose(life.rig, object.userData.personRig, 0, poseNow(object.userData.person), hold); life.live = amount > 0;
+        if (object.userData.person.act?.kind === 'place') this.placeCarry(object, film ? time : null);
         // a rider's bike: its crank turns with the feet, the pedals stay level
         if (moved?.crank !== undefined) { const crank = object.userData.personAnchor?.getObjectByName('Bike crank'); if (crank) { this.turnCrank(crank, moved.crank); turning.add(crank); this.cranks.add(crank); } }
         // a potter's wheel: its head (and the pot on it) turns while they throw
@@ -2632,7 +2639,54 @@ export class RoomPeople {
             by = (life.actBy ||= new THREE.Vector3()).set((x * c - z * s) / 1000, y / 1000, (x * s + z * c) / 1000);
         }
         const id = object.userData.person.id, pressId = /-tap$/.test(id) ? id.replace(/-tap$/, '-press') : null;
-        return { since: time - act.at, dur: Number.isFinite(act.dur) ? act.dur : 1, by, squat: act.kind === 'squat' ? { reps: act.reps > 0 ? act.reps : 3 } : null, press: pressId && life.rig?.has(pressId) ? life.rig.key(pressId) : null };
+        return { since: time - act.at, place: act.kind === 'place' ? this.placeOf(object, act) : null, dur: Number.isFinite(act.dur) ? act.dur : 1, by, squat: act.kind === 'squat' ? { reps: act.reps > 0 ? act.reps : 3 } : null, press: pressId && life.rig?.has(pressId) ? life.rig.key(pressId) : null };
+    }
+    // The scene prop a placement's `act: { kind: 'place' }` carries (a name regex over the room's objects): found once, and its
+    // own place in the scene (where the film's edits put it: the rest it comes to) kept from the first time it is seen.
+    placePropOf(act) {
+        const root = this.room?.root; if (!root || typeof act.prop !== 'string') return null;
+        const cache = this.placeProps ||= new Map(); let o = cache.get(act.prop);
+        if (o) { let p = o; while (p && p !== root) p = p.parent; if (!p) o = null; }
+        if (!o) { let re = null; try { re = new RegExp(act.prop); } catch { return null; } root.traverse(n => { if (!o && re.test(n.name)) o = n; }); if (o) cache.set(act.prop, o); else cache.delete(act.prop); }
+        if (o && !o.userData.placeRest) o.userData.placeRest = { p: o.position.clone(), q: o.quaternion.clone(), s: o.scale.clone() };
+        return o || null;
+    }
+    // The prop's rest in the world now (it rides its parent: the desk).
+    placeRestWorld(prop, into = {}) {
+        const rest = prop.userData.placeRest; prop.parent.updateWorldMatrix(true, false);
+        const m = (into.m ||= new THREE.Matrix4()).compose(rest.p, rest.q, rest.s).premultiply(prop.parent.matrixWorld);
+        m.decompose(into.p ||= new THREE.Vector3(), into.q ||= new THREE.Quaternion(), into.s ||= new THREE.Vector3()); return into;
+    }
+    // act.place for the solver (room-people-motion.mjs placePhone): where the prop rests, in the model's frame, and the grip.
+    placeOf(object, act) {
+        if (!object.matrixWorld || !object.updateWorldMatrix || !Array.isArray(act.grip?.at) || !Array.isArray(act.grip?.q)) return null;
+        const prop = this.placePropOf(act); if (!prop?.parent) return null;
+        const rest = this.placeRestWorld(prop); object.updateWorldMatrix(true, false);
+        const inv = new THREE.Matrix4().copy(object.matrixWorld).invert(), oq = new THREE.Quaternion(); object.matrixWorld.decompose(new THREE.Vector3(), oq, new THREE.Vector3());
+        const grip = g => ({ at: new THREE.Vector3().fromArray(g.at), q: new THREE.Quaternion().fromArray(g.q).normalize() }), ok = g => Array.isArray(g?.at) && Array.isArray(g?.q);
+        return { p: rest.p.clone().applyMatrix4(inv), q: oq.invert().multiply(rest.q), grip: grip(act.grip), grip2: ok(act.grip2) ? grip(act.grip2) : null, regrip: Array.isArray(act.regrip) ? act.regrip : null,
+            contact: Number.isFinite(act.contact) ? act.contact : 1, hold: act.hold, back: act.back, lift: Number.isFinite(act.lift) ? act.lift : .06 };
+    }
+    // The carried prop, after the person is drawn (a film): in the left hand's grip until it touches down, then at rest where the
+    // scene has it; the model's own held thing (its baked phone) hidden, so there is one phone, not two. The last .12 s before
+    // touching down the phone is eased onto its rest exactly (the hand is there; this only takes out what the arm cannot reach).
+    // Not a film (the Studio): the prop stays at rest.
+    placeCarry(object, time) {
+        const act = object.userData.person.act, prop = this.placePropOf(act); if (!prop?.parent) return;
+        for (const m of partsOf(object)) m.visible = false;
+        const rest = this.placeRestWorld(prop, this.placeW ||= {}), release = act.at + (Number.isFinite(act.contact) ? act.contact : 1);
+        let held = time !== null && time < release && Array.isArray(act.grip?.at) && Array.isArray(act.grip?.q);
+        const bone = held && object.userData.personRig?.bones.get('hand_' + (act.hand || 'l')); if (held && !bone) held = false;
+        prop.userData.heldByPerson = held;
+        const keep = prop.userData.placeNow ||= { p: new THREE.Vector3(), q: new THREE.Quaternion(), s: new THREE.Vector3(), m: new THREE.Matrix4() };
+        if (!held) { if (prop.userData.placeHeld) { prop.position.copy(prop.userData.placeRest.p); prop.quaternion.copy(prop.userData.placeRest.q); prop.scale.copy(prop.userData.placeRest.s); prop.userData.placeHeld = false; this.dirty = true; } return; }
+        bone.updateWorldMatrix(true, false); bone.matrixWorld.decompose(keep.p, keep.q, keep.s);
+        const g = placeGrip(this.placeOf(object, act) || { grip: { at: new THREE.Vector3().fromArray(act.grip.at), q: new THREE.Quaternion().fromArray(act.grip.q).normalize() } }, THREE.MathUtils.smoothstep(time - act.at, 0, Number.isFinite(act.contact) ? act.contact : 1));
+        const at = g.at.clone().applyMatrix4(bone.matrixWorld), q = keep.q.clone().multiply(g.q);
+        prop.userData.placeMiss = at.distanceTo(rest.p);      // (how far the hand is from where the prop rests, before the last .12 s eases it there: tests, probes)
+        const ease = THREE.MathUtils.smoothstep(time, release - .12, release); at.lerp(rest.p, ease); q.slerp(rest.q, ease);
+        keep.m.compose(at, q, rest.s).premultiply(new THREE.Matrix4().copy(prop.parent.matrixWorld).invert()).decompose(prop.position, prop.quaternion, prop.scale);
+        prop.userData.placeHeld = true; this.dirty = true;
     }
     // A film's wheelchair user rolling along a path (a placement with `roll`): at its start until `start`, then rolling
     // it, then at its end. Planned once per path; the wheels of the drawn model (bones wheel_l / wheel_r, where the

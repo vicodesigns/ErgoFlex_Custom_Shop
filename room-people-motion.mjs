@@ -612,7 +612,7 @@ export function solveStill(rig, key, input) {
     if (pose === 'wheel-roll' && input.roll) { pushRims(rig, key, input.roll, actLife); rig.fk(); }
     // (an action at a moment of the film: input.act, SCREEN_ACTS)
     else if (input.act?.squat && ON_FEET.has(pose)) { squatAct(rig, key, input.act, actLife); rig.fk(); }
-    else if (input.act && SCREEN_ACTS[pose]) { SCREEN_ACTS[pose](rig, key, input.act, actLife); rig.fk(); }
+    else if (input.act && SCREEN_ACTS[pose]) { SCREEN_ACTS[pose](rig, key, input.act.time === undefined ? { ...input.act, time, seed } : input.act, actLife); rig.fk(); }
     else if (rig.mediaLab && key.id.includes('-sit-mix')) rideFader(rig,time,seed,life);
     else if (ACTS[pose]) { ACTS[pose](rig, key, time, seed, life); rig.fk(); }
     if (rig.castDetail && !input.look && !input.act && (pose === 'wheel-watch' || pose === 'sit-listen')) {
@@ -792,6 +792,7 @@ export function squatKey(rig, key) {
 //                       over 0.15 s, held 0.3 s, up over 0.15 s. Without a pressed posture it goes `by` (default 25 mm
 //                       ahead) instead.
 const SCREEN_ACTS = {
+    'power-phone': placePhone,
     'stand-screen-pull'(rig, key, act, life) {
         const hand = rig.side.r.arm[3], w = act.dur > 0 ? ss(0, act.dur, act.since) : act.since >= 0 ? 1 : 0;
         if (!act.by) return;
@@ -807,6 +808,58 @@ const SCREEN_ACTS = {
         } else { handAt.copy(key.wp[hand]); if (act.by) handAt.addScaledVector(act.by, down); else handAt.z += .025 * down; armTo(rig, 'r', handAt, key.wq[hand]); }
     }
 };
+// ---- setting a phone down (the commons film, 24 Nov 2026: Mia's phone from her hands to the desk's wireless charger)
+// act.place (room-people.mjs placeOf): { p, q: where the phone ends up (position and turn, the model's frame), grip: { at, q:
+// the phone in the left hand's own frame, metres and a turn }, contact: seconds after the action's `at` that it touches down,
+// hold: seconds it stays there, back: seconds the hand takes to return, lift: metres of arch }. The left hand carries the
+// phone from where the posture holds it to the charger (the right hand lets go and stays), the body leans in as far as the
+// reach needs, and the head follows the phone. Before `at` and after the hand has returned she is the posture as built
+// with its life (the phone between both hands, the thumb scrolling).
+const placeQ = Q(), placeEye = V(), placeRight = V(), placeRightQ = Q(), placeSnap = [], placeG = { at: V(), q: Q() };
+// The phone in the hand at e (0..1 through the reach): the grip it is lifted in (pl.grip), changing over pl.regrip (fractions
+// of the reach, [.35, .85]) to the grip it is set down in (pl.grip2: between thumb and fingers, the hand above it), if given.
+export function placeGrip(pl, e) {
+    if (!pl.grip2) return pl.grip;
+    const [a, b] = pl.regrip || [.35, .85], k = ss(a, b, e);
+    placeG.at.lerpVectors(pl.grip.at, pl.grip2.at, k); placeG.q.slerpQuaternions(pl.grip.q, pl.grip2.q, k); return placeG;
+}
+export function placePhone(rig, key, act, life) {
+    const base = ACTS['power-phone']; if (base) { base(rig, key, act.time ?? 0, act.seed ?? 0, life); rig.fk(); }
+    const pl = act.place; if (!pl) return;
+    const since = act.since, contact = Math.max(.2, pl.contact ?? 1), hold = pl.hold ?? .15, back = Math.max(.1, pl.back ?? .45);
+    const e = ss(0, contact, since), v = ss(contact + hold, contact + hold + back, since), w = e * (1 - v);
+    if (!(w > 1e-4)) return;
+    const b = rig.b, [, upper, lower, hand] = rig.side.l.arm, grip = placeGrip(pl, e);
+    // where the left hand has to be for the phone to be at p, q: hand = phone x grip^-1
+    placeQ.copy(grip.q).invert(); const handQ1 = Q().multiplyQuaternions(pl.q, placeQ);
+    const handP1 = V().copy(grip.at).applyQuaternion(handQ1).multiplyScalar(-1).add(pl.p);
+    const handNow = V().lerpVectors(key.wp[hand], handP1, w); handNow.y += (pl.lift ?? .06) * Math.sin(Math.PI * w);
+    const handQn = Q().slerpQuaternions(key.wq[hand], handQ1, w);
+    // the body: turns toward the reach and leans in just far enough (bisection over the lean, from the posture with life)
+    placeSnap.length = rig.n; for (let i = 0; i < rig.n; i++) (placeSnap[i] ||= Q()).copy(rig.lq[i]);
+    const rightHand = rig.side.r.arm[3], rightAt = placeRight.copy(rig.wp[rightHand]), rightQ = placeRightQ.copy(rig.wq[rightHand]);      // (the right hand lets go and stays in her lap while the body leans)
+    const shoulder = rig.wp[upper], dx = handNow.x - shoulder.x, dz = handNow.z - shoulder.z;
+    const yaw = THREE.MathUtils.clamp(Math.atan2(dx, dz) * .55, -.4, .4) * w;
+    const lean = amount => {
+        for (let i = 0; i < rig.n; i++) rig.lq[i].copy(placeSnap[i]); rig.fk();
+        rig.turnWorld(b.spine_02, turn.setFromAxisAngle(Y, yaw * .5)); rig.fk(); rig.turnWorld(b.spine_03, turn.setFromAxisAngle(Y, yaw * .5)); rig.fk();
+        for (const [bone, share] of [[b.spine_01, .25], [b.spine_02, .4], [b.spine_03, .35]]) { rig.turnWorld(bone, turn.setFromAxisAngle(X, amount * share)); rig.fk(); }
+        rig.turnWorld(rig.side.l.arm[0], turn.setFromAxisAngle(Y, -Math.min(.45, amount * .6))); rig.fk();      // (the shoulder comes forward with the lean)
+        armTo(rig, 'r', rightAt, rightQ);
+        armTo(rig, 'l', handNow, handQn);
+        return rig.wp[hand].distanceTo(handNow);
+    };
+    let amount = .07 * w;
+    if (lean(amount) > .002) {
+        let lo = amount, hi = .85;
+        if (lean(hi) > .002) amount = hi;      // (out of reach even at full lean: as near as the arm gets)
+        else { for (let i = 0; i < 9; i++) { const mid = (lo + hi) / 2; if (lean(mid) > .002) lo = mid; else hi = mid; } amount = hi; }
+    }
+    lean(amount);
+    // the head follows the phone: from the hand's turn, the phone's place; she looks at it all the way down
+    placeEye.copy(grip.at).applyQuaternion(rig.wq[hand]).add(rig.wp[hand]);
+    lookToward(rig, placeEye, .8);
+}
 // A posture as its action leaves it (the pull: the hand where the screen was drawn to), as a key: a change of
 // posture that follows the action starts from there, not from the posture as built (room-people.mjs readyChange).
 export function actedKey(rig, key, act) {

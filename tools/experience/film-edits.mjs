@@ -181,7 +181,7 @@ function installShow(edit, objects, shot, undo, live) {
     const keep = edit.hide !== true && !o.userData.__filmFxRawVisible;
     // (a hide written while the window holds it hidden is the getter's own false echoed back, e.g. three's GTAOPass caching
     // and restoring every object's visible around its normal pass: taken as the prop's own state, it never came back)
-    Object.defineProperty(o, 'visible', { configurable: true, enumerable: true, get: () => cell.f > 0 && (get() || (keep && o.userData.stowHidden === true)), set: v => { if (cell.f <= 0 && v === false) return; set(v); } });
+    Object.defineProperty(o, 'visible', { configurable: true, enumerable: true, get: () => (cell.f > 0 || o.userData.heldByPerson === true) && (get() || (keep && o.userData.stowHidden === true)), set: v => { if (cell.f <= 0 && v === false && o.userData.heldByPerson !== true) return; set(v); } });
     undo.push(() => { delete o.visible; if (own && !('value' in own)) Object.defineProperty(o, 'visible', own); else o.visible = raw; });
     // (the film's own meshes are left out, except a screen picture on the prop: film-fx.mjs installScreens, filmScreen)
     o.traverse(mesh => { if (mesh.material && (!mesh.userData.filmFx || mesh.userData.filmScreen)) fades.push({ mesh, orig: null, copy: null }); });
