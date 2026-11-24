@@ -161,11 +161,17 @@ py(script,H);assert.deepEqual(edits().map(e=>[e.match,e.position?.[2]??null,!!e.
 // An export without propEdits keeps them; propEdits [] removes them.
 py(script,H,'--import',exportOf(null));py(script,H);assert.equal(edits().filter(e=>e.director).length,3,'an export that never touched props keeps the earlier ones');
 py(script,H,'--import',exportOf([]));py(script,H);assert.deepEqual(edits().map(e=>e.match),['^Prop:steelcase-leap-v2$','^Piano bench$'],'reset all in the Director clears them from the film');
-// Added props through Export cut -> import -> pass: kept as add entries, after the hand-made edits.
-{const add=cleanAddEdit({add:{asset:'ergoflex-phone'},id:'ph0ne',label:'Smartphone',parent:'desk',position:[.1,0,-.05],rotation:[0,15,0],scale:[1,1,1]});
-  py(script,H,'--import',exportOf([mine[0],add]));py(script,H);
-  assert.deepEqual(edits().filter(e=>e.director),[{...mine[0],director:true},{...add,director:true}],'the added phone survives the round trip as it was exported');
-  assert.deepEqual(filmPropEdits(read('review-cut.json').shots[0]),[mine[0],add],'and reopens as the same Director edits');
+// Added props & mirrored props (negative scale) through Export cut -> import -> pass: kept as add / prop entries.
+{const add=cleanAddEdit({add:{asset:'ergoflex-phone'},id:'ph0ne',label:'Smartphone',parent:'desk',position:[.1,0,-.05],rotation:[0,15,0],scale:[-1,1,1]});
+  const mirrored=cleanPropEdit({match:'^Piano bench$',label:'Piano bench',scale:[-1,1,1]});
+  assert.deepEqual(add.scale,[-1,1,1],'negative scale kept on added prop');
+  assert.deepEqual(mirrored.scale,[-1,1,1],'negative scale kept on stock prop');
+  assert.equal(cleanPropEdit({match:'^Piano bench$',scale:[0,1,1]}),null,'zero scale rejected');
+  assert.equal(describePropEdit(mirrored),'mirrored X');
+  assert.equal(describePropEdit({position:[.254,0,0]},{mpu:1,unit:'in'}),'moved 10 in (x +10)');
+  py(script,H,'--import',exportOf([mirrored,add]));py(script,H);
+  assert.deepEqual(edits().filter(e=>e.director),[{...mirrored,director:true},{...add,director:true}],'mirrored stock and added props survive the Python importer round trip');
+  assert.deepEqual(filmPropEdits(read('review-cut.json').shots[0]),[mirrored,add],'and reopen as the same Director edits');
   py(script,H,'--import',exportOf([]));py(script,H);}
 fs.rmSync(tmp,{recursive:true,force:true});
 // a renamed scene asset key reads as the new one (the workshop robot and dock edits in the storage chapter)

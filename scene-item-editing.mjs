@@ -67,10 +67,22 @@ export class ItemGizmo {
     center() { const box = new THREE.Box3(); this.objects.forEach(o => box.expandByObject(o)); box.getCenter(this.proxy.position); this.proxy.quaternion.identity(); this.proxy.scale.setScalar(1); this.proxy.updateMatrixWorld(true); }
     move() {
         if (!this.drag || this.control.object !== this.proxy) return;
-        this.proxy.scale.max(new THREE.Vector3(.01,.01,.01));
+        for (const a of ['x', 'y', 'z']) {
+            const v = this.proxy.scale[a];
+            if (Math.abs(v) < 0.01) this.proxy.scale[a] = v < 0 ? -0.01 : 0.01;
+        }
         this.proxy.updateMatrixWorld(true); const delta = this.proxy.matrixWorld.clone().multiply(this.drag.inverse);
         for (const { obj, matrix } of this.drag.items) { if (!obj.parent) continue; obj.parent.updateWorldMatrix(true, false); obj.parent.matrixWorld.clone().invert().multiply(delta).multiply(matrix).decompose(obj.position, obj.quaternion, obj.scale); obj.updateMatrixWorld(true); }
         this.changed?.(this.active);
+    }
+    flip(axis) {
+        if (!this.active || !['x', 'y', 'z'].includes(axis)) return false;
+        this.control.dispatchEvent({ type: 'dragging-changed', value: true, mode: 'scale', gumball: true });
+        this.proxy.scale[axis] *= -1;
+        this.proxy.updateMatrixWorld(true);
+        this.control.dispatchEvent({ type: 'objectChange', mode: 'scale' });
+        this.control.dispatchEvent({ type: 'dragging-changed', value: false, mode: 'scale', gumball: true });
+        return true;
     }
     finish() { const d = this.drag; if (!d) return; this.drag = null; this.commit(this.active, d.edit); if (this.active) this.center(); }
     close() { if(this.control.dragging)this.control.controls.forEach(c=>{if(c.dragging)c.pointerUp({button:0});}); this.finish(); if (this.control.object === this.proxy) this.control.detach(); this.active = null; this.objects = []; }

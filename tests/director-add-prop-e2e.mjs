@@ -49,7 +49,7 @@ const draft=()=>page.evaluate(()=>__draft());
 const addsOf=async asset=>((await draft())||[]).filter(e=>e.add?.asset===asset);
 const PHONE='^Added prop:ergoflex-phone#',FICUS='^Added prop:ficus#';
 const added=(re,where='live')=>page.evaluate((r,w)=>__added(r,w),re,where);
-const toM=async u=>{const k=await page.evaluate(()=>{const e=document.getElementById('stage').contentWindow.ErgoFlex,sc=e?.workspaceRoom?.scale||e?.workspaceAccessories?.scale;return sc>0?1/(sc*1000):1;});return Number((u*k).toFixed(5));};   // (the Props fields are real metres; the stage is in scene units)
+const toM=async u=>{const k=await page.evaluate(()=>{const e=document.getElementById('stage').contentWindow.ErgoFlex,sc=e?.workspaceRoom?.scale||e?.workspaceAccessories?.scale;return sc>0?1/(sc*25.4):1/0.0254;});return Number((u*k).toFixed(5));};   // (the Props fields are inches; the stage is in scene units)
 const near=(a,b,eps=2e-3)=>a.length===b.length&&a.every((v,i)=>Math.abs(v-b[i])<=eps);
 const dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
 const key=async(k,mod)=>{if(mod)await page.keyboard.down(mod);await page.keyboard.press(k);if(mod)await page.keyboard.up(mod);await wait(900);};

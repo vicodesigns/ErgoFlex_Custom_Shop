@@ -123,12 +123,13 @@ export const onDesk=parent=>!!DESK_SURFACES[parent];
 export const addName=(asset,id)=>`Added prop:${asset}#${id}`;
 export const addMatch=(asset,id)=>'^'+escapeRegex(addName(asset,id))+'$';
 export const newAddId=()=>Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-3);
+const okScale=n=>Math.abs(n)>=.001&&Math.abs(n)<=1000;
 export function cleanAddEdit(e){
   const asset=typeof e?.add==='string'?e.add:e?.add?.asset;if(typeof asset!=='string'||!ASSET.test(asset)||typeof e.id!=='string'||!ADD_ID.test(e.id))return null;
   const out={add:{asset},id:e.id,match:addMatch(asset,e.id)},label=text(e.label,120);if(label)out.label=label;
   out.parent=DESK_SURFACES[e.parent]?e.parent:'room';
   out.position=vec(e.position)||[0,0,0];out.rotation=vec(e.rotation)||[0,0,0];
-  out.scale=Array.isArray(e.scale)?vec(e.scale,n=>n>=.001&&n<=1000)||[1,1,1]:finite(e.scale)&&e.scale>=.001&&e.scale<=1000?[e.scale,e.scale,e.scale].map(r4):[1,1,1];
+  out.scale=Array.isArray(e.scale)?vec(e.scale,okScale)||[1,1,1]:finite(e.scale)&&okScale(e.scale)?[e.scale,e.scale,e.scale].map(r4):[1,1,1];
   const desk=cleanDesk(e.desk),show=cleanShow(e.show);if(desk)out.desk=desk;if(show)out.show=show;
   // on: one of the room's other desks (its scene desk record id, desk-edits.mjs DESK_ID); absent: the featured desk
   if(out.parent!=='room'&&typeof e.on==='string'&&ON.test(e.on))out.on=e.on;
@@ -145,7 +146,7 @@ export function cleanPropEdit(e){
   if(asset)out.asset=RENAMED_ASSETS[asset]||asset;if(path&&validRegex(path))out.path=path;
   const near=vec(e.near);if(near&&near[2]>0)out.near=near;
   if(label)out.label=label;
-  const position=vec(e.position),rotation=vec(e.rotation),scale=Array.isArray(e.scale)?vec(e.scale,n=>n>=.001&&n<=1000):finite(e.scale)&&e.scale>=.001&&e.scale<=1000?[e.scale,e.scale,e.scale].map(r4):undefined;
+  const position=vec(e.position),rotation=vec(e.rotation),scale=Array.isArray(e.scale)?vec(e.scale,okScale):finite(e.scale)&&okScale(e.scale)?[e.scale,e.scale,e.scale].map(r4):undefined;
   const place=FOLLOW_LABELS[e.follow]?cleanPlace(e.place):null;
   if(place){out.follow=e.follow;out.place=place;}   // (its own transform on that surface: the offsets do not apply)
   else{if(!zero(position)){if(e.space==='local')out.space='local';out.position=position;}if(!zero(rotation))out.rotation=rotation;if(!one(scale))out.scale=scale;}
@@ -185,13 +186,19 @@ export function describeShow(e){
   const open=!(s.to<1e4),when=open?(s.from>0?`from ${m(s.from)} s`:'the whole time'):`${m(s.from)}–${m(s.to)} s`;
   return `on screen ${when}${e.desk?' after its desk comes in':''}${s.fadeIn?`, fades in ${m(s.fadeIn)} s`:''}${s.fadeOut?`, fades out ${m(s.fadeOut)} s`:''}`;
 }
-// "moved 0.32 m (x +0.20, z −0.25), turned 15° about y, scaled ×1.2, hidden".
-export function describePropEdit(e,{mpu=1}={}){   // mpu: metres per scene unit (the Director passes the stage's), so 'moved … m' is real metres
-  if(isAddEdit(e)){const s=e.scale||[1,1,1],k=Math.abs(s[0]-s[1])<1e-4&&Math.abs(s[1]-s[2])<1e-4?s[0]:null;return `added ${e.parent==='desk'?'on the desk':onDesk(e.parent)?'on '+DESK_SURFACES[e.parent]:'to the room'}${k!==null&&Math.abs(k-1)>1e-4?`, scaled ×${Number(k.toFixed(3))}`:k===null?`, scaled ×${s.map(n=>Number(n.toFixed(3))).join(' / ')} (x / y / z)`:''}${e.show?', '+describeShow(e):''}`;}
-  const parts=[],axes=v=>v.map((n,i)=>Math.abs(n)<5e-4?'':`${'xyz'[i]} ${n>0?'+':'−'}${m(Math.abs(n))}`).filter(Boolean).join(', ');
-  if(e.position)parts.push(`moved ${m(len(e.position)*mpu)} m${e.space==='local'?' on the desk':''} (${axes(e.position.map(n=>n*mpu))})`);
+const describeScale=s=>{
+  const [x,y,z]=s,flipped=['X','Y','Z'].filter((_,i)=>s[i]<0);
+  if(flipped.length&&s.every(n=>Math.abs(Math.abs(n)-1)<1e-4))return `mirrored ${flipped.join(' / ')}`;
+  return Math.abs(x-y)<1e-4&&Math.abs(y-z)<1e-4?`scaled ×${Number(x.toFixed(3))}`:`scaled ×${s.map(n=>Number(n.toFixed(3))).join(' / ')} (x / y / z)`;
+};
+// "moved 0.32 m (x +0.20, z −0.25), turned 15° about y, scaled ×1.2, hidden" (or in inches with unit:'in').
+export function describePropEdit(e,{mpu=1,unit='m'}={}){   // mpu: metres per scene unit; unit:'m'|'in'
+  const k=unit==='in'?mpu/0.0254:mpu,uLabel=unit==='in'?'in':'m',fmtD=v=>unit==='in'?Number(v.toFixed(1)):m(v);
+  if(isAddEdit(e)){const s=e.scale||[1,1,1],sameOne=s.every(n=>Math.abs(n-1)<1e-4);return `added ${e.parent==='desk'?'on the desk':onDesk(e.parent)?'on '+DESK_SURFACES[e.parent]:'to the room'}${sameOne?'':`, ${describeScale(s)}`}${e.show?', '+describeShow(e):''}`;}
+  const parts=[],axes=v=>v.map((n,i)=>Math.abs(n)<(unit==='in'?.05:5e-4)?'':`${'xyz'[i]} ${n>0?'+':'−'}${fmtD(Math.abs(n))}`).filter(Boolean).join(', ');
+  if(e.position)parts.push(`moved ${fmtD(len(e.position)*k)} ${uLabel}${e.space==='local'?' on the desk':''} (${axes(e.position.map(n=>n*k))})`);
   if(e.rotation){const r=e.rotation.map((n,i)=>Math.abs(n)<.05?'':`${deg(n)}° about ${'xyz'[i]}`).filter(Boolean);parts.push('turned '+r.join(', '));}
-  if(e.scale){const [x,y,z]=e.scale;parts.push(Math.abs(x-y)<1e-4&&Math.abs(y-z)<1e-4?`scaled ×${Number(x.toFixed(3))}`:`scaled ×${e.scale.map(n=>Number(n.toFixed(3))).join(' / ')} (x / y / z)`);}
+  if(e.scale)parts.push(describeScale(e.scale));
   if(e.follow&&FOLLOW_LABELS[e.follow])parts.push('travels with '+FOLLOW_LABELS[e.follow].replace(/ \(.*\)$/,'').toLowerCase());
   if(e.hide===true)parts.push('hidden');if(e.hide===false)parts.push('shown (the film hides it)');
   if(e.show)parts.push(describeShow(e));

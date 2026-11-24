@@ -15,9 +15,9 @@ const server=http.createServer((req,res)=>{const file=path.join(root,new URL(req
   assert.ok(bounds.size.every(n=>n>0&&n<80),'webcam is desk sized');assert.equal(bounds.lights,0,'status strip does not spend the room light budget');
   await page.click('.scene-desk-panel > summary');await page.select('[data-object-select]','accessory-obsbot-tiny-2');
   const field=async(selector,value)=>{await page.$eval(selector,(e,v)=>{e.value=v;e.dispatchEvent(new Event('change',{bubbles:true}))},String(value))};
-  await field('[data-object-x]',-350);await field('[data-object-y]',12.5);await field('[data-object-rotation]',15);
+  await field('[data-object-x]',-350/25.4);await field('[data-object-y]',12.5/25.4);await field('[data-object-rotation]',15);
   await page.evaluate(()=>ErgoFlex.saveBuildPreset());await page.reload();await ready();
-  const saved=await webcam();assert.equal(saved.loaded,true);assert.equal(saved.pose[0],-350);assert.equal(saved.pose[1],12.5);assert.ok(Math.abs(saved.rotation[1]-Math.PI/12)<1e-7,'rotation survives reload');
+  const saved=await webcam();assert.equal(saved.loaded,true);assert.ok(Math.abs(saved.pose[0]-(-350))<1e-6);assert.ok(Math.abs(saved.pose[1]-12.5)<1e-6);assert.ok(Math.abs(saved.rotation[1]-Math.PI/12)<1e-7,'rotation survives reload');
   await page.click('.scene-desk-panel > summary');await page.click('.desk-object-library > summary');await field('[data-object-search]','obsbot');
   // Search listens to input rather than change.
   await page.$eval('[data-object-search]',e=>e.dispatchEvent(new Event('input',{bubbles:true})));

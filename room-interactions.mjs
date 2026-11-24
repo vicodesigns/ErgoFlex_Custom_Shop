@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { DoubleItemTap } from './scene-item-editing.mjs?v=item-gumball-clipboard-20261016';
+import { DoubleItemTap } from './scene-item-editing.mjs?v=rhino-gumball-mirror-20261123';
 import { surfaceDrop, usable, mmOf } from './item-surface-drop.mjs';
 import { dropToSurface } from './experience/drop-to-surface.mjs';
 import { RoomGrounding } from './room-polish.mjs?v=polish-20261111f';

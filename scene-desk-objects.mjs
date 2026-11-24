@@ -1,6 +1,6 @@
 import {headphoneSocketTransform,headphoneHookState,finishDeskHeadphones} from './desk-headphone-hook.mjs';
 import * as THREE from 'three';
-import { DoubleItemTap, cloneItem, nodeSnapshot } from './scene-item-editing.mjs?v=item-gumball-clipboard-20261016';
+import { DoubleItemTap, cloneItem, nodeSnapshot } from './scene-item-editing.mjs?v=rhino-gumball-mirror-20261123';
 import { surfaceDrop, usable, mmOf } from './item-surface-drop.mjs';
 import { dropToSurface as dropShared } from './experience/drop-to-surface.mjs';
 import { notebookTransform } from './notebook-transform.mjs';
@@ -160,7 +160,16 @@ export class SceneDeskObjects {
         if(Number.isFinite(values.rotation))o.rotation.y=THREE.MathUtils.degToRad(values.rotation);
         if(Number.isFinite(values.tilt))o.rotation.x=THREE.MathUtils.degToRad(values.tilt);
         if(Number.isFinite(values.roll))o.rotation.z=THREE.MathUtils.degToRad(values.roll);
-        if(Number.isFinite(values.scale))o.scale.copy(item.baseScale).multiplyScalar(Math.max(1,Math.min(500,values.scale))/100);
+        if(Number.isFinite(values.scale)&&Math.abs(values.scale)>=1){
+            const mag=Math.min(500,Math.max(1,Math.abs(values.scale)))/100;
+            const sign=values.scale<0?-1:1;
+            o.scale.set(
+                (o.scale.x<0?-1:1)*sign*item.baseScale.x*mag,
+                (o.scale.y<0?-1:1)*item.baseScale.y*mag,
+                (o.scale.z<0?-1:1)*item.baseScale.z*mag
+            );
+        }
+        if(values.flip&&['x','y','z'].includes(values.flip)){o.scale[values.flip]*=-1;}
         o.updateMatrixWorld(true);m.persist();m.ctx.edit?.(before,m.serialize());m.sync();return true;
     }
     // mode 'drop': straight down. 'flat': level it first, then drop. 'align': tilt it to the surface under it, then drop

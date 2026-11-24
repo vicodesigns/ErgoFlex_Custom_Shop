@@ -65,7 +65,7 @@ await page.evaluateOnNewDocument(()=>{
 const draft=()=>page.evaluate(()=>__draft());
 const CHAIR='Prop:steelcase-leap-v2',MONITOR='Prop:ergoflex-wide-monitor';
 const pose=name=>page.evaluate(n=>__pose(__find(x=>x.name===n)),name);
-const toM=async u=>{const k=await page.evaluate(()=>{const e=document.getElementById('stage').contentWindow.ErgoFlex,sc=e?.workspaceRoom?.scale||e?.workspaceAccessories?.scale;return sc>0?1/(sc*1000):1;});return Number((u*k).toFixed(5));};   // (the Props fields are real metres; the stage is in scene units)
+const toM=async u=>{const k=await page.evaluate(()=>{const e=document.getElementById('stage').contentWindow.ErgoFlex,sc=e?.workspaceRoom?.scale||e?.workspaceAccessories?.scale;return sc>0?1/(sc*25.4):1/0.0254;});return Number((u*k).toFixed(5));};   // (the Props fields are inches; the stage is in scene units)
 const near=(a,b,eps=2e-3)=>a.length===b.length&&a.every((v,i)=>Math.abs(v-b[i])<=eps);
 // A real drag on the gizmo: find the handle (axis) by hovering, then drag it.
 async function dragHandle(axes,dir){

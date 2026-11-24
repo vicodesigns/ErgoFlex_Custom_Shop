@@ -118,7 +118,7 @@ export const ACTIONS = [
   R('still', 'Still image of this frame', ['Shift+R'], 'view', { origin: 'Director' }),
   R('peek', 'Peek at the live view under a still (hold)', ['\\'], 'view', { hold: true, origin: 'Director' }),
   R('light-markers', 'Show / hide the light markers', ['Shift+L'], 'view', { origin: 'Director' }),
-  G('gumball-type', 'Exact value: while dragging a gizmo (or just after), type 12, 12in, 30cm, 45°, 150% and press Enter', 'Type during a drag', 'view', { phase: '3', origin: 'Rhino' }),
+  G('gumball-type', 'Exact value: click any gumball arrow, ring or cube (or drag then type) — 2.5, -1 1/2, 50mm, 45°, -1 to flip, 150% — and press Enter', 'Click handle / type', 'view', { phase: '3', origin: 'Rhino' }),
   G('gumball-shift', 'Constrain a free or plane move to its main axis', 'Shift while dragging', 'view', { phase: '3', origin: 'Rhino' }),
   G('gumball-ctrl', 'Snap (5 cm, 15°, 10 %); inverts while held', 'Ctrl while dragging', 'view', { phase: '3', origin: 'Rhino' }),
   R('gizmo-space', 'Gizmo frame: World / Object (the room desk keeps its own)', [], 'view', { phase: '3', origin: 'Rhino', aliases: ['world', 'object', 'local', 'space'] }),

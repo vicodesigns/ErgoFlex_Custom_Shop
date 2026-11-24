@@ -109,7 +109,7 @@ Generated from `experience/director-actions.mjs` (do not edit by hand). Ctrl als
 | Shift+R | Still image of this frame | Director |
 | \ | Peek at the live view under a still (hold) | Director |
 | Shift+L | Show / hide the light markers | Director |
-| Type during a drag | Exact value: while dragging a gizmo (or just after), type 12, 12in, 30cm, 45°, 150% and press Enter | Rhino |
+| Click handle / type | Exact value: click any gumball arrow, ring or cube (or drag then type) — 2.5, -1 1/2, 50mm, 45°, -1 to flip, 150% — and press Enter | Rhino |
 | Shift while dragging | Constrain a free or plane move to its main axis | Rhino |
 | Ctrl while dragging | Snap (5 cm, 15°, 10 %); inverts while held | Rhino |
 | Ctrl+P: world, object, local, space | Gizmo frame: World / Object (the room desk keeps its own) | Rhino |

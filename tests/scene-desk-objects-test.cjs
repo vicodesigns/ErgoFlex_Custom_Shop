@@ -41,8 +41,8 @@ await page.setViewport({width:1600,height:1400});
 await page.click('.scene-desk-panel > summary');await page.click('.scene-desk-object-panel > summary');
 await page.select('[data-object-select]',result.object);
 assert.equal(await page.$eval('[data-object-edit]',e=>e.checked),true);
-await page.$eval('[data-object-x]',e=>{e.value='90';e.dispatchEvent(new Event('change',{bubbles:true}));});
-assert.equal(await page.evaluate(()=>ErgoFlex.sceneDesks.objects.current.obj.position.x),90,'UI input did not edit object');
+await page.$eval('[data-object-x]',e=>{e.value=String(90/25.4);e.dispatchEvent(new Event('change',{bubbles:true}));});
+assert.ok(Math.abs(await page.evaluate(()=>ErgoFlex.sceneDesks.objects.current.obj.position.x)-90)<1e-6,'UI input did not edit object');
 await page.$eval('.scene-desk-panel',e=>e.open=false);await new Promise(r=>setTimeout(r,600));
 const point=await page.evaluate(async()=>{
  const m=ErgoFlex.sceneDesks,T=await import('three'),obj=m.objects.current.obj;

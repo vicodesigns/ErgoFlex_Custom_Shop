@@ -459,7 +459,7 @@ body.title-shape-editing .title-overlay{pointer-events:auto}
 #director-timeline .prop-chip{border-color:#9fe3c466}
 #director-timeline .prop-chip.prop-hidden{text-decoration:line-through;text-decoration-thickness:1.5px;color:#9fb3bd;border-style:dotted;opacity:.85}
 #director-panel .prop-inspector .prop-name{margin-top:-4px;word-break:break-all}
-#director-panel .prop-modes button[aria-pressed=true]{background:#9ff0ff;color:#04121a}
+#director-panel .prop-modes button[aria-pressed=true],#director-panel .prop-flip button[aria-pressed=true]{background:#9ff0ff;color:#04121a}
 #prop-permanent{position:fixed;width:min(620px,94vw);border-radius:18px;padding:22px;color:#edf6fc;background:#0d1924f8;border:1px solid #8bc5df40;box-shadow:0 20px 80px #000a;font-size:13px;line-height:1.5}
 #prop-permanent::backdrop{background:#020a11a8;backdrop-filter:blur(6px)}
 #prop-permanent h2{margin:4px 0 8px;font-size:20px}

@@ -245,14 +245,14 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   }
   // An edit from the prop's state now (after a drag or typed numbers) relative to base().
   // Turns: of the two Euler triples for the same rotation, the one nearest the film's (a turn about y stays a turn
-  // about y, not ±180° on x and z). Scale: kept between ×0.01 and ×100, never mirrored.
+  // about y, not ±180° on x and z). Scale: kept between ±0.01 and ±100; negative mirrors/inverts along that axis.
+  const clampScale=v=>{const s=v<0?-1:1;return Math.round(s*Math.min(100,Math.max(.01,Math.abs(v)))*1e4)/1e4;};
   function editFrom(o,b,{world,rot,scale}={}){
     const {THREE}=tools,w=world||o.getWorldPosition(new THREE.Vector3()),r=rot||o.rotation,s=scale||o.scale,deg=THREE.MathUtils.radToDeg;
     const [a0,a1,a2]=(r.order||'XYZ').toLowerCase().split(''),alt={[a0]:r[a0]+Math.PI,[a1]:Math.PI-r[a1],[a2]:r[a2]+Math.PI};
     const turn=e=>['x','y','z'].map(k=>wrapDeg(deg(e[k]-b.rot[k]))),plain=turn(r),other=turn(alt),size=t=>t.reduce((n,v)=>n+Math.abs(v),0);
-    const clamp=v=>Math.round(Math.min(100,Math.max(.01,Math.abs(v)))*1e4)/1e4;
     const position=b.local?(o.parent?o.parent.worldToLocal(w.clone()):w.clone()).sub(b.local).multiply(parentScale(o)):w.clone().sub(b.world);
-    return {space:b.local?'local':undefined,position:position.toArray().map(r3),rotation:(size(other)<size(plain)-1e-6?other:plain).map(r1),scale:[s.x/b.scale.x,s.y/b.scale.y,s.z/b.scale.z].map(clamp)};
+    return {space:b.local?'local':undefined,position:position.toArray().map(r3),rotation:(size(other)<size(plain)-1e-6?other:plain).map(r1),scale:[s.x/b.scale.x,s.y/b.scale.y,s.z/b.scale.z].map(clampScale)};
   }
   // ---- added props: their own transform in the parent's frame (prop-edits.mjs cleanAddEdit)
   const parentK=o=>{const {THREE}=tools;if(!o.parent)return 1;o.parent.updateWorldMatrix(true,false);return o.parent.getWorldScale(new THREE.Vector3()).x||1;};
@@ -260,13 +260,14 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function addFrom(o,e,{position,rotation,scale}={}){
     const k=parentK(o),b=libScale(o),deg=tools.THREE.MathUtils.radToDeg;
     return cleanAddEdit({...e,position:position||o.position.toArray().map(v=>r3(v*k)),rotation:rotation||[o.rotation.x,o.rotation.y,o.rotation.z].map(v=>r1(wrapDeg(deg(v)))),
-      scale:scale||[o.scale.x/b,o.scale.y/b,o.scale.z/b].map(v=>Math.round(Math.min(100,Math.max(.01,Math.abs(v)))*1e4)/1e4)});
+      scale:scale||[o.scale.x/b,o.scale.y/b,o.scale.z/b].map(clampScale)});
   }
   // ---- "Travels with" (film-edits.mjs follow / place): the surface a prop follows, chosen here; it stays where it is on
   // screen at the moment of choosing and follows that surface from then on. Its edit holds its own transform there.
   const isFollow=e=>!!(e&&!isAddEdit(e)&&e.follow&&e.place);
-  // metres per scene unit (the desk is scaled to the scene, about 0.62 m a unit): the inspector shows real metres
+  // metres / inches per scene unit (the desk is scaled to the scene, about 0.62 m a unit): the inspector shows inches
   const metresPerUnit=()=>{const w=win()?.ErgoFlex,sc=w?.workspaceRoom?.scale||w?.workspaceAccessories?.scale;return sc>0?1/(sc*1000):1;};
+  const inchesPerUnit=()=>metresPerUnit()/0.0254;
   function placeFrom(o){const deg=tools.THREE.MathUtils.radToDeg;return cleanPlace({position:o.position.toArray(),rotation:[o.rotation.x,o.rotation.y,o.rotation.z].map(v=>wrapDeg(deg(v))),scale:o.scale.toArray()});}
   // the surface a prop is on now: the nearest frame among its parents (for the select's "as the film places it")
   function surfaceNow(o){const E=win()?.__filmEdits;if(!E?.followFrame)return null;for(let p=o.parent;p;p=p.parent){if(p.userData?.filmFxLift)return 'lift';for(const k of ['desk','shelf','lower-shelf','base-shelf'])if(E.followFrame(k)===p)return k;}return 'room';}
@@ -327,17 +328,17 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       ${unit?`<label class="prop-follow">Shelf<select name="pp-follow-shelf"><option value="shelf" ${now==='shelf'?'selected':''}>Top shelf</option><option value="lower-shelf" ${now==='lower-shelf'?'selected':''}>Lower shelf</option></select></label>`:''}`;
   }
   function changedFollow(o,e,name,v){
-    if(!/^pp-p[xyz]$/.test(name)){status('Turn and size it with the Gumball (E rotate, R scale): it travels with a surface.',true);rerender();return;}
-    if(Math.abs(v)>1000)throw Error('Positions run from -1000 to 1000 m.');const {THREE}=tools,w=o.getWorldPosition(new THREE.Vector3());w.setComponent('xyz'.indexOf(name[4]),v/metresPerUnit());
+    if(!/^pp-p[xyz]$/.test(name)){status('Turn and size it with the Gumball (E rotate, R scale) or use Mirror / Flip: it travels with a surface.',true);rerender();return;}
+    if(Math.abs(v)>40000)throw Error('Positions run from -40000 to 40000 in.');const {THREE}=tools,w=o.getWorldPosition(new THREE.Vector3());w.setComponent('xyz'.indexOf(name[4]),v/inchesPerUnit());
     o.position.copy(o.parent?o.parent.worldToLocal(w):w);o.updateMatrixWorld(true);write(sel.key,{...e,place:placeFrom(o)},`Moved ${label(o)}.`);
   }
   function changedAdd(o,e,name,v){
     let next=null,verb='Moved';
-    if(/^pp-p[xyz]$/.test(name)){if(Math.abs(v)>1000)throw Error('Positions run from -1000 to 1000 m.');const {THREE}=tools,w=o.getWorldPosition(new THREE.Vector3());w.setComponent('xyz'.indexOf(name[4]),v/metresPerUnit());
+    if(/^pp-p[xyz]$/.test(name)){if(Math.abs(v)>40000)throw Error('Positions run from -40000 to 40000 in.');const {THREE}=tools,w=o.getWorldPosition(new THREE.Vector3());w.setComponent('xyz'.indexOf(name[4]),v/inchesPerUnit());
       const local=o.parent?o.parent.worldToLocal(w):w,k=parentK(o);next={position:local.toArray().map(x=>r3(x*k))};}
     else if(/^pp-r[xyz]$/.test(name)){const r=e.rotation.slice();r['xyz'.indexOf(name[4])]=r1(wrapDeg(v));next={rotation:r};verb='Rotated';}
-    else if(name==='pp-s'){if(v<.01||v>100)throw Error('Scale runs from 0.01 to 100.');next={scale:[v,v,v]};verb='Scaled';}
-    else if(/^pp-s[xyz]$/.test(name)){if(v<.01||v>100)throw Error('Scale runs from 0.01 to 100.');const f=e.scale.slice();f['xyz'.indexOf(name[4])]=v;next={scale:f};verb='Scaled';}
+    else if(name==='pp-s'){if(Math.abs(v)<.01||Math.abs(v)>100)throw Error('Scale runs from ±0.01 to ±100 (use negative to flip/mirror).');next={scale:[v,v,v]};verb='Scaled';}
+    else if(/^pp-s[xyz]$/.test(name)){if(Math.abs(v)<.01||Math.abs(v)>100)throw Error('Scale runs from ±0.01 to ±100 (use negative to flip/mirror).');const f=e.scale.slice();f['xyz'.indexOf(name[4])]=v;next={scale:f};verb='Scaled';}
     else return;
     write(sel.key,cleanAddEdit({...e,...next}),`${verb} ${label(o)}.`);
   }
@@ -457,7 +458,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const {THREE,TransformControls}=w.__directorThree,group=new THREE.Group();group.name='Director prop tools';group.userData.directorTools=true;t.scene.add(group);
     const box=new THREE.BoxHelper(undefined,0x63d8f5);box.material.depthTest=false;box.material.transparent=true;box.renderOrder=998;box.visible=false;group.add(box);
     const gizmo=new TransformControls(t.camera,t.renderer.domElement);gizmo.userData.directorTools=true;gizmo.setSize(1.35);gizmo.setSpace('world');gizmo.visible=false;gizmo.enabled=false;t.scene.add(gizmo);
-    enhanceGizmo(gizmo,{win:w,THREE,mmPerUnit:()=>mmPerUnitOf(w,THREE),status:t=>status(t),setSnap:on=>{snapping=on;syncSnap();}});   // P3: Rhino's Gumball (gumball.mjs)
+    const gumball=enhanceGizmo(gizmo,{win:w,THREE,mmPerUnit:()=>mmPerUnitOf(w,THREE),status:t=>status(t),setSnap:on=>{snapping=on;syncSnap();}});   // P3: Rhino's Gumball (gumball.mjs)
     // (a gizmo drag's start pose: posedAway says it really moved)
     const poseOf=o=>o?{p:o.position.clone(),q:o.quaternion.clone(),s:o.scale.clone()}:null;
     const posedAway=(o,f)=>!!o&&(o.position.distanceToSquared(f.p)>1e-12||o.quaternion.angleTo(f.q)>1e-6||o.scale.distanceToSquared(f.s)>1e-12);
@@ -484,14 +485,14 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     dom.addEventListener('pointerup',ev=>{
       const d=down;down=null;if(d)trace({e:'up',onGizmo:d.gizmo,dragging:gizmo.dragging,dd:!!w.__directorDragging,moved:gizmoMoved,far:Math.hypot(ev.clientX-d.x,ev.clientY-d.y)>5});
       if(!d||ev.button!==0||Math.hypot(ev.clientX-d.x,ev.clientY-d.y)>5||lightsShowing()||!editing()||blocked())return;
-      // A press on the gizmo that never moved is a click on what is under it (19 Nov 2026: the gumball of a selected desk
-      // item covers its small neighbours, and clicking one only grabbed the gizmo). After TransformControls lets go.
-      if(d.gizmo){setTimeout(()=>{const go=!gizmo.dragging&&!w.__directorDragging&&!gizmoMoved;trace({e:'through',go,dragging:gizmo.dragging,dd:!!w.__directorDragging,moved:gizmoMoved});if(go)viewClick(ev,d,true);},0);return;}
+      // A press on the gizmo that never moved is a click on what is under it (unless it opened the Rhino handle input box).
+      if(d.gizmo){setTimeout(()=>{const go=!gizmo.dragging&&!w.__directorDragging&&!gizmoMoved;trace({e:'through',go,dragging:gizmo.dragging,dd:!!w.__directorDragging,moved:gizmoMoved,popup:gumball.popupOpen()});if(go)viewClick(ev,d,true);},0);return;}
       if(gizmo.dragging||w.__directorDragging)return;
       viewClick(ev,d,false);
     },true);
     // A click in the view. underGizmo: it came through the gizmo: it only picks another prop (never deselects, never a desk).
     function viewClick(ev,d,underGizmo){
+      if(underGizmo&&gumball.popupOpen())return;
       const r=dom.getBoundingClientRect();raycaster.setFromCamera(new THREE.Vector2((ev.clientX-r.left)/r.width*2-1,-(ev.clientY-r.top)/r.height*2+1),t.camera);
       if(placing){const now=current(),e=sel&&editOfKey(sel.key);placing=false;
         if(now&&isAddEdit(e)){const h=raycaster.intersectObject(t.scene,true).find(h=>h.object.isMesh&&shown(h.object)&&!isOurs(h.object)&&!isAncestor(now,h.object));if(h)placeAt(now,e,h.point,roomDeskGroupOf(h.object)?.id||null);else{status('Nothing there to put it on.',true);rerender();}return;}}
@@ -728,14 +729,34 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const b=base(o),{THREE}=tools,st=installed(o),world=st.position.clone();if(o.parent){o.parent.updateMatrixWorld(true);o.parent.localToWorld(world);}
     const e=editOfKey(sel.key)||{},rotNow=new THREE.Euler(b.rot.x,b.rot.y,b.rot.z,b.rot.order),turn=(e.rotation||[0,0,0]).slice(),fac=(e.scale||[1,1,1]).slice();
     let verb='Moved';
-    if(/^pp-p[xyz]$/.test(name)){if(Math.abs(v)>1000)throw Error('Positions run from -1000 to 1000 m.');world.setComponent('xyz'.indexOf(name[4]),v/metresPerUnit());}
+    if(/^pp-p[xyz]$/.test(name)){if(Math.abs(v)>40000)throw Error('Positions run from -40000 to 40000 in.');world.setComponent('xyz'.indexOf(name[4]),v/inchesPerUnit());}
     else if(/^pp-r[xyz]$/.test(name)){turn['xyz'.indexOf(name[4])]=wrapDeg(v);verb='Rotated';}
-    else if(name==='pp-s'){if(v<.01||v>100)throw Error('Scale runs from 0.01 to 100.');fac[0]=fac[1]=fac[2]=v;verb='Scaled';}
-    else if(/^pp-s[xyz]$/.test(name)){if(v<.01||v>100)throw Error('Scale runs from 0.01 to 100.');fac['xyz'.indexOf(name[4])]=v;verb='Scaled';}
+    else if(name==='pp-s'){if(Math.abs(v)<.01||Math.abs(v)>100)throw Error('Scale runs from ±0.01 to ±100 (use negative to flip/mirror).');fac[0]=fac[1]=fac[2]=v;verb='Scaled';}
+    else if(/^pp-s[xyz]$/.test(name)){if(Math.abs(v)<.01||Math.abs(v)>100)throw Error('Scale runs from ±0.01 to ±100 (use negative to flip/mirror).');fac['xyz'.indexOf(name[4])]=v;verb='Scaled';}
     else return;
     rotNow.x+=THREE.MathUtils.degToRad(turn[0]);rotNow.y+=THREE.MathUtils.degToRad(turn[1]);rotNow.z+=THREE.MathUtils.degToRad(turn[2]);
     const next={...sel.target,...e,...editFrom(o,b,{world,rot:rotNow,scale:b.scale.clone().multiply(new THREE.Vector3(...fac))})};
     write(sel.key,next,`${verb} ${label(o)}.`);
+  }
+  function flipAxis(axis){
+    const idx='xyz'.indexOf(axis);if(idx<0||!sel)return;
+    const o=current();if(!o){status('That prop is not in the room right now.',true);return;}
+    if(sel.blocked){status(`${CANT_SAVE}: ${sel.blocked}`,true);return;}
+    const e=editOfKey(sel.key);
+    if(isAddEdit(e)){
+      const f=(e.scale||[1,1,1]).slice();f[idx]=clampScale(-f[idx]);
+      write(sel.key,cleanAddEdit({...e,scale:f}),`Flipped ${label(o)} on ${axis.toUpperCase()}.`);return;
+    }
+    if(isFollow(e)){
+      o.scale[axis]=-o.scale[axis];o.updateMatrixWorld(true);
+      write(sel.key,{...e,place:placeFrom(o)},`Flipped ${label(o)} on ${axis.toUpperCase()}.`);return;
+    }
+    const b=base(o),{THREE}=tools,st=installed(o),world=st.position.clone();if(o.parent){o.parent.updateMatrixWorld(true);o.parent.localToWorld(world);}
+    const cur=e||{},rotNow=new THREE.Euler(b.rot.x,b.rot.y,b.rot.z,b.rot.order),turn=(cur.rotation||[0,0,0]).slice(),fac=(cur.scale||[1,1,1]).slice();
+    fac[idx]=clampScale(-fac[idx]);
+    rotNow.x+=THREE.MathUtils.degToRad(turn[0]);rotNow.y+=THREE.MathUtils.degToRad(turn[1]);rotNow.z+=THREE.MathUtils.degToRad(turn[2]);
+    const next={...sel.target,...cur,...editFrom(o,b,{world,rot:rotNow,scale:b.scale.clone().multiply(new THREE.Vector3(...fac))})};
+    write(sel.key,next,`Flipped ${label(o)} on ${axis.toUpperCase()}.`);
   }
   // ---- the chapter's editable things, for the Layers tab: [{key, target, obj, name, desk, hidden}]
   function items(){
@@ -838,7 +859,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function plan(){
     const room=studioRoom(),{THREE}=tools||{};
     return edits().map((e,i)=>{
-      const key=propKey(e),o=tools&&find(key),raw=e.label||o?.name||'',name=isAddEdit(e)?(e.label||nice(e.add.asset)):nice(raw),row={edit:e,key,name,raw,change:describePropEdit(e,{mpu:metresPerUnit()}),obj:o};
+      const key=propKey(e),o=tools&&find(key),raw=e.label||o?.name||'',name=isAddEdit(e)?(e.label||nice(e.add.asset)):nice(raw),row={edit:e,key,name,raw,change:describePropEdit(e,{mpu:metresPerUnit(),unit:'in'}),obj:o};
       if(isAddEdit(e))return addPlan(row,e,o,room,i);
       if(isFollow(e))return {...row,ok:false,why:'it travels with a surface of the desk in this chapter (Travels with is a Director setting)'};
       if(o&&onDeskItself(o))return {...row,ok:false,why:ON_DESK};
@@ -957,10 +978,11 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     if(curve==='cut')setTiming({fadeIn:0,fadeOut:0,ease:null});
     else setTiming({ease:curve==='smooth'?'smooth':null,...(none?{fadeIn:.5,fadeOut:.5}:{})});
   }
+  const flipButtons=(fac=null)=>`<div class="director-actions prop-flip"><span class="director-hint">Mirror / Flip</span>${['x','y','z'].map((k,i)=>`<button data-action="pp-flip-${k}" aria-pressed="${fac?fac[i]<0:false}" title="Mirror / invert along ${k.toUpperCase()} (×−1)">Flip ${k.toUpperCase()}</button>`).join('')}</div>`;
   function panel(){
     if(!three()?.scene)return '<h3>Props</h3><p class="director-hint">Loading the chapter…</p>';
     const o=current(),e=sel&&editOfKey(sel.key),st=permanentState(),n=editedCount();
-    const head=`<h3>Props</h3><p class="director-hint">Click a prop in the view to select it (not while Lights are shown). W move · E rotate · R scale · Shift snaps · Delete hides it. Edits stay in this chapter: Studio does not change.</p>
+    const head=`<h3>Props</h3><p class="director-hint">Click a prop in the view to select it (not while Lights are shown). W move · E rotate · R scale · click any gumball handle to type exact inches / ° / −1 to flip · Ctrl snaps · Delete hides it. Edits stay in this chapter: Studio does not change.</p>
       <div class="director-actions"><button data-action="pp-add" class="prop-add-button" title="Add a model from the prop library: it goes on the desk or the floor in front of the camera, ready to move">+ Add prop</button><button data-action="pp-reset-all" ${n?'':'disabled'} title="Every prop back to the film in this chapter: one step, Undo brings them back">Reset all props to the film${n?' ('+n+')':''}</button><button data-action="pp-permanent" ${st.ok?'':'disabled'} title="${escape(st.ok?'Write these prop edits into Studio\'s room layout (you confirm each one)':st.why)}">Make permanent in Studio…</button></div>${st.ok?'':`<p class="director-hint" data-permanent-why>${escape(st.why)}</p>`}`;
     if(!sel)return head+'<p class="director-hint">No prop selected. Shift+click adds to the selection, Ctrl+click adds or removes.</p>';
     if(group())return head+groupPanelHtml({members:members().map(m=>({key:m.key,name:nice(m.target.label||''),desk:!!(objOf(m)&&(onDeskItself(objOf(m))||ridesDesk(objOf(m)))),hidden:editOfKey(m.key)?.hide===true||(!!objOf(m)&&!shown(objOf(m))),blocked:m.blocked,missing:!objOf(m)})),mode,escape,edited:members().some(m=>editOfKey(m.key)),extra:dropButtons()});
@@ -969,12 +991,13 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const num=(name,text,value,step,extra='')=>`<label>${text}<input name="${name}" type="number" step="${step}" value="${value}" ${extra}></label>`;
     const studio=plan().find(r=>r.key===sel.key),hidden=e?.hide===true||!shown(o),moved=b?o.getWorldPosition(new THREE.Vector3()).distanceTo(b.world):0;
     return head+`<div class="movement-inspector prop-inspector" data-reveal="prop"><h4>${escape(propName(o.name))}</h4><p class="director-hint prop-name">${escape(o.name||'Unnamed')}${o.userData.sceneAssetKey?' · Studio item':''}</p>
-      <div class="director-actions prop-modes">${Object.entries(MODES).map(([m,t])=>`<button data-action="pp-mode-${m}" aria-pressed="${mode===m}" title="${t} (${m==='translate'?'W':m==='rotate'?'E':'T'})">${t}</button>`).join('')}${meaningful(o.parent||o)?'<button data-action="pp-parent" title="Select what it sits on (Alt-click in the view)">Select what it sits on</button>':''}</div>
+      <div class="director-actions prop-modes">${Object.entries(MODES).map(([m,t])=>`<button data-action="pp-mode-${m}" aria-pressed="${mode===m}" title="${t} (${m==='translate'?'W':m==='rotate'?'E':'R'})">${t}</button>`).join('')}${meaningful(o.parent||o)?'<button data-action="pp-parent" title="Select what it sits on (Alt-click in the view)">Select what it sits on</button>':''}</div>
       ${followSelect(o,e)}
-      <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-p'+k,'Position '+k+' (m)',r3(pos[i]*metresPerUnit()),.01)).join('')}</div>${e?.position?`<p class="director-hint">Moved ${r3(moved*metresPerUnit())} m from the film's place.</p>`:''}
+      <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-p'+k,'Position '+k+' (in)',r2(pos[i]*inchesPerUnit()),.1)).join('')}</div>${e?.position?`<p class="director-hint">Moved ${r2(moved*inchesPerUnit())} in from the film's place.</p>`:''}
       <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-r'+k,'Turn '+k+' (°)',r1(turn[i]),1)).join('')}</div>
-      <label>Scale ×<input name="pp-s" type="number" min=".01" max="100" step=".05" value="${uniform?Number(fac[0].toFixed(3)):''}" placeholder="mixed"></label>
-      <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-s'+k,'Scale '+k+' ×',Number(fac[i].toFixed(3)),.05,'min=".01" max="100"')).join('')}</div>
+      <label>Scale ×<input name="pp-s" type="number" min="-100" max="100" step=".05" value="${uniform?Number(fac[0].toFixed(3)):''}" placeholder="mixed"></label>
+      <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-s'+k,'Scale '+k+' ×',Number(fac[i].toFixed(3)),.05,'min="-100" max="100"')).join('')}</div>
+      ${flipButtons(fac)}
       ${dropButtons()}
       ${timingHtml()}
       <label class="director-check"><input type="checkbox" name="pp-hide" ${e?.hide===true||(!shown(o)&&!e?.show&&!filmFade(sel.target||e,selSpan())?.keyed)?'checked':''}>Hide in this chapter</label>
@@ -984,10 +1007,11 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   function followPanel(o,e){
     const {THREE}=tools,pos=o.getWorldPosition(new THREE.Vector3()).toArray(),num=(name,text,value,step)=>`<label>${text}<input name="${name}" type="number" step="${step}" value="${value}"></label>`;
     return `<div class="movement-inspector prop-inspector prop-follows" data-reveal="prop"><h4>${escape(propName(o.name))}</h4><p class="director-hint prop-name">${escape(o.name||'Unnamed')} · travels with ${escape(FOLLOW_LABELS[e.follow].replace(/ \(.*\)$/,'').toLowerCase())}</p>
-      <div class="director-actions prop-modes">${Object.entries(MODES).map(([m,t])=>`<button data-action="pp-mode-${m}" aria-pressed="${mode===m}" title="${t} (${m==='translate'?'W':m==='rotate'?'E':'T'})">${t}</button>`).join('')}</div>
+      <div class="director-actions prop-modes">${Object.entries(MODES).map(([m,t])=>`<button data-action="pp-mode-${m}" aria-pressed="${mode===m}" title="${t} (${m==='translate'?'W':m==='rotate'?'E':'R'})">${t}</button>`).join('')}</div>
       ${followSelect(o,e)}
-      <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-p'+k,'Position '+k+' (m)',r3(pos[i]*metresPerUnit()),.01)).join('')}</div>
-      <p class="director-hint">It keeps its place on that surface as the desk lifts and tilts. Move, turn and size it with the Gumball (W / E / R); the numbers move it in the room.</p>
+      <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-p'+k,'Position '+k+' (in)',r2(pos[i]*inchesPerUnit()),.1)).join('')}</div>
+      <p class="director-hint">It keeps its place on that surface as the desk lifts and tilts. Click any Gumball handle to type exact inches / ° / −1 to flip.</p>
+      ${flipButtons(e.place?.scale||null)}
       ${dropButtons()}
       ${timingHtml()}
       <label class="director-check"><input type="checkbox" name="pp-hide" ${e?.hide===true?'checked':''}>Hide in this chapter</label>
@@ -997,11 +1021,12 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const {THREE}=tools,pos=o.getWorldPosition(new THREE.Vector3()).toArray(),fac=e.scale,uniform=Math.abs(fac[0]-fac[1])<1e-4&&Math.abs(fac[1]-fac[2])<1e-4,studio=plan().find(r=>r.key===sel.key);
     const num=(name,text,value,step,extra='')=>`<label>${text}<input name="${name}" type="number" step="${step}" value="${value}" ${extra}></label>`;
     return `<div class="movement-inspector prop-inspector prop-added" data-reveal="prop"><h4>${escape(label(o))}</h4><p class="director-hint prop-name">+ Added in this chapter · ${escape(e.add.asset)} · ${onDesk(e.parent)?`on ${e.on?escape(deskName(e.on))+' · ':''}${escape(mountLabel(e.parent)||DESK_SURFACES[e.parent])} (${e.parent==='desk'?'rides lift and tilt':escape((MOUNTS.find(m=>m.kind===e.parent)?.tip||'rides lift and tilt').replace(/^[^:]*: /,'').replace(/\.$/,''))})`:'in the room'}</p>
-      <div class="director-actions prop-modes">${Object.entries(MODES).map(([m,t])=>`<button data-action="pp-mode-${m}" aria-pressed="${mode===m}" title="${t} (${m==='translate'?'W':m==='rotate'?'E':'T'})">${t}</button>`).join('')}</div>
-      <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-p'+k,'Position '+k+' (m)',r3(pos[i]*metresPerUnit()),.01)).join('')}</div>
+      <div class="director-actions prop-modes">${Object.entries(MODES).map(([m,t])=>`<button data-action="pp-mode-${m}" aria-pressed="${mode===m}" title="${t} (${m==='translate'?'W':m==='rotate'?'E':'R'})">${t}</button>`).join('')}</div>
+      <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-p'+k,'Position '+k+' (in)',r2(pos[i]*inchesPerUnit()),.1)).join('')}</div>
       <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-r'+k,'Turn '+k+' (°)',r1(e.rotation[i]),1)).join('')}</div>
-      <label>Scale ×<input name="pp-s" type="number" min=".01" max="100" step=".05" value="${uniform?Number(fac[0].toFixed(3)):''}" placeholder="mixed"></label>
-      <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-s'+k,'Scale '+k+' ×',Number(fac[i].toFixed(3)),.05,'min=".01" max="100"')).join('')}</div>
+      <label>Scale ×<input name="pp-s" type="number" min="-100" max="100" step=".05" value="${uniform?Number(fac[0].toFixed(3)):''}" placeholder="mixed"></label>
+      <div class="director-grid three-up">${['x','y','z'].map((k,i)=>num('pp-s'+k,'Scale '+k+' ×',Number(fac[i].toFixed(3)),.05,'min="-100" max="100"')).join('')}</div>
+      ${flipButtons(fac)}
       ${dropButtons()}
       ${timingHtml()}
       ${putButtons(e)}
@@ -1044,6 +1069,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     if(name==='pp-reset'){reset();return;}
     if(name==='pp-parent'){const o=current(),p=o&&meaningful(o.parent);if(p)pick(p);return;}
     if(name.startsWith('pp-mode-')){setMode(name.slice(8));return;}
+    if(name.startsWith('pp-flip-')){flipAxis(name.slice(8));return;}
   }
   function setMode(m){if(!MODES[m])return;if(group()&&m==='scale'){status('Scale works on one item at a time: select one item, or move and turn the group.',true);return;}mode=m;rerender();status(`Gizmo: ${MODES[m].toLowerCase()}${sel?'':' (select a prop first)'}.`);}
   // ---- the timeline's Props lane: bars over the seconds each prop is on screen
@@ -1094,7 +1120,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       const e=it.e,x=it.start/T*100,w=Math.max(.5,(it.end-it.start)/T*100),top=1+layers.row.get(it.id)*ROW;
       if(it.ghost)return `<button type="button" class="prop-bar ghost" data-action="pp-lane" data-index="${i}" style="left:${x}%;width:${w}%;top:${top}px;height:${ROW-2}px" title="Go to this desk: its items are listed here once it has been on stage">${escape(it.name)}</button>`;
       const hiddenBar=e?.hide===true,added=isAddEdit(e),fi=it.fadeIn>0?Math.min(100,it.fadeIn/(it.end-it.start)*100):0,fo=it.fadeOut>0?Math.min(100,it.fadeOut/(it.end-it.start)*100):0;
-      const tip=`${it.name}${it.span.desk?` · Desk ${it.span.n} · ${it.span.label}`:''} · on screen ${timeText({from:it.start,to:it.end},it.span)}${e?' · '+describePropEdit(e,{mpu:metresPerUnit()}):' · as the film has it'}${hiddenBar?' · hidden: click, then untick Hide to bring it back':''}${it.stowed?` · the desk puts it away once its tilt crosses ${EASEL_ANGLE}°`:it.film?.keyed?' · the film shows and hides it itself':''} · click to select, drag an end to set when it appears or leaves${it.timed?', drag the middle to move it':''}`;
+      const tip=`${it.name}${it.span.desk?` · Desk ${it.span.n} · ${it.span.label}`:''} · on screen ${timeText({from:it.start,to:it.end},it.span)}${e?' · '+describePropEdit(e,{mpu:metresPerUnit(),unit:'in'}):' · as the film has it'}${hiddenBar?' · hidden: click, then untick Hide to bring it back':''}${it.stowed?` · the desk puts it away once its tilt crosses ${EASEL_ANGLE}°`:it.film?.keyed?' · the film shows and hides it itself':''} · click to select, drag an end to set when it appears or leaves${it.timed?', drag the middle to move it':''}`;
       // (the fade ramps: drawn on the bar, a small handle at the inner end of each drags its length; with no fade the
       // handle sits 12 px inside, off the bar's 8 px end grip: on the end it took the press, so dragging a bar's end without
       // a fade moved a fade of 0 instead and wrote nothing, director-stow-window-e2e's easel drag)
@@ -1175,5 +1201,5 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     selected:()=>sel?.key||null,selectedKeys:()=>members().map(m=>m.key),selectKeys,items,hideItems:(keys,on,also)=>hideItems(keys.map(k=>{const i=items().find(x=>x.key===k);return i?{key:k,target:i.target,obj:i.obj}:{key:k};}),on,also),
     flashKey,setLocked:fn=>{lockedKeys=fn;},isHidden:key=>{const e=editOfKey(key);if(e)return e.hide===true;const i=items().find(x=>x.key===key);return !!i&&i.hidden;},selectedName:()=>sel?(current()?.name||sel.target.label):null,mode:()=>mode,
     addProp,dropSelected,dropObject,writeLive,openLibrary:()=>library.open(),library:()=>library,
-    header:()=>group()?{name:`${members().length} selected`,detail:'moving, turning and hiding together'}:sel?{name:current()?label(current()):nice(sel.target.label),detail:(editOfKey(sel.key)?describePropEdit(editOfKey(sel.key),{mpu:metresPerUnit()}):'from the film')}:null};
+    header:()=>group()?{name:`${members().length} selected`,detail:'moving, turning and hiding together'}:sel?{name:current()?label(current()):nice(sel.target.label),detail:(editOfKey(sel.key)?describePropEdit(editOfKey(sel.key),{mpu:metresPerUnit(),unit:'in'}):'from the film')}:null};
 }

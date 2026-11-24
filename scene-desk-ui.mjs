@@ -1,4 +1,4 @@
-import { mountDeskObjectUI } from './scene-desk-object-ui.mjs?v=humboldt-decals-stow-20261016';
+import { mountDeskObjectUI } from './scene-desk-object-ui.mjs?v=rhino-gumball-mirror-20261123';
 export function mountSceneDeskUI(parent,manager){
     const panel=document.createElement('details');panel.className='scene-desk-panel';panel.open=false;
     panel.innerHTML=`<summary><span data-desk-title>Desks</span> <span data-desk-summary></span></summary>

@@ -449,7 +449,7 @@ def clean_add(e):
     if d['parent'] != 'room' and isinstance(e.get('on'), str) and ADD_ON.match(e['on']): d['on'] = e['on']
     d['position'] = vec(e.get('position'), [0, 0, 0]); d['rotation'] = vec(e.get('rotation'), [0, 0, 0])
     sc = vec(e.get('scale'), None)
-    d['scale'] = sc if sc and all(.001 <= x <= 1000 for x in sc) else [1, 1, 1]
+    d['scale'] = sc if sc and all(.001 <= abs(x) <= 1000 for x in sc) else [1, 1, 1]
     desk_and_show(e, d)
     d['director'] = True
     return d
@@ -468,6 +468,7 @@ def clean_props(props):
         d = {k: copy.deepcopy(e[k]) for k in PROP_FIELDS if k in e}
         for k in ('near', 'position', 'rotation', 'scale'):
             if k in d and not vec(d[k]): d.pop(k)
+        if 'scale' in d and not all(.001 <= abs(x) <= 1000 for x in d['scale']): d.pop('scale')
         if 'hide' in d and not isinstance(d['hide'], bool): d.pop('hide')
         for k in ('asset', 'path', 'label'):
             if k in d and not isinstance(d[k], str): d.pop(k)

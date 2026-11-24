@@ -1,13 +1,14 @@
 import { SceneScreens, SCENE_SCREENS_KEY } from './scene-screens.mjs?v=polish-20261111f';
 import { measureRoute, routePose } from './experience/timing.mjs';
-import { ItemGizmo, cloneItem, nodeSnapshot, topLevelItems } from './scene-item-editing.mjs?v=item-gumball-clipboard-20261016';
+import { ItemGizmo, cloneItem, nodeSnapshot, topLevelItems } from './scene-item-editing.mjs?v=rhino-gumball-mirror-20261123';
+import { enhanceGizmo, mmPerUnitOf } from './experience/gumball.mjs?v=rhino-gumball-mirror-20261123';
 import { LedCommandCenter } from './led-command-center.mjs?v=portal-polish-20261008';
 import { normalizeCustomLook, normalizeCustomPalette, importCustomLooks, CUSTOM_LOOKS_KEY, customLookUsesMusic, CustomLookSampler, tintCustomMusic } from './led-custom-presets.mjs?v=desktop-bands-back-20261005';
 import { SAVED_LED_LOOKS } from './led-saved-library.mjs';
 import { configureRoomLightRig, resetRoomLightRig } from './room-refinement.mjs?v=polish-20261111f';
 import { roomLifeBaseTransform, roomLifeDisplayTransform, ROOM_STORIES, DAY_PHASES } from './room-life.mjs?v=polish-20261111f';
 import { poseIsClear, grooveDestination } from './room-groove.mjs?v=humboldt-commons-20261015';
-import { SceneDesks } from './scene-desks.mjs?v=drop-flat-align-20261110';
+import { SceneDesks } from './scene-desks.mjs?v=rhino-gumball-mirror-20261123';
 import { applyLibraryProductBuild, seedLibraryChargerPhone } from './library-product-build.mjs?v=item-gumball-clipboard-20261016';
 import { loadLibraryArtworkRecovery, libraryArtworkRecovery, repairLibraryArtwork } from './library-artwork-link.mjs?v=humboldt-decals-stow-20261016';
 import { applyCollegeProductArtwork } from './college-product-artwork.mjs';
@@ -19,12 +20,12 @@ import { chooseShelfStations, seedShelfStation, createShelfStationSupplies } fro
 import { encodeStoredJSON, decodeStoredJSON, compactStoredDesigns } from './browser-design-storage.mjs?v=scene-sized-setups-20261012';
 import { SCENE_DESKS_KEY } from './scene-desk-data.mjs?v=item-gumball-clipboard-20261016';
 import { buildSceneDeskRig } from './scene-desk-rig.mjs?v=library-build-free-items-20261013';
-import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=humboldt-decals-stow-20261016';
+import { mountSceneDeskUI } from './scene-desk-ui.mjs?v=rhino-gumball-mirror-20261123';
 import { freeDeskPosition,planDeskPath,sampleDeskPath,deskPoseClear,deskObstacles,deskRoomBounds,deskFootprint } from './scene-desk-routing.mjs';
 import { RoomGroove } from './room-groove-runtime.mjs?v=commons-group-work-20261016';
 import { GROOVE_PRESETS_KEY, groovePresetKey, normalizeGroovePresets } from './room-groove-presets.mjs';
 import { normalizeDJSettings } from './led-auto-dj.mjs?v=room-led-interaction-20261006';
-import { RoomInteractions } from './room-interactions.mjs?v=polish-20261111f';
+import { RoomInteractions } from './room-interactions.mjs?v=rhino-gumball-mirror-20261123';
 import { RenderPacing, pruneTinyCasters } from './render-pacing.mjs?v=render-pacing-vsm-20261015';
 import { SceneTour, tourEnabled } from './scene-tour.mjs?v=highschool-setting-20261104';
 import { RoomSafety } from './room-safety.mjs?v=room-regressions-20261007';
@@ -1593,9 +1594,18 @@ class UnifiedTransformGumball extends THREE.Group {
     setRotationSnap(value) { this.controls.forEach(control => control.setRotationSnap(value)); return this; }
     setScaleSnap(value) { this.controls.forEach(control => control.setScaleSnap(value)); return this; }
 
+    pointerHover(pointer) {
+        if (this.mode === 'unified') return;
+        const active = this.controlFor(this.mode);
+        if (active?.enabled) active.pointerHover(pointer);
+    }
+
     controlFor(mode) { return this.controls.find(control => control.mode === mode); }
     get object() { return this._object; }
     get dragging() { return Boolean(this._active?.dragging); }
+    get enabled() { return this.controls.some(control => control.enabled); }
+    get camera() { return this.controls[0]?.camera; }
+    get activeMode() { return this._active?.mode || this.controls.find(control => control.enabled && control.axis !== null)?.mode || (this.mode === 'unified' ? 'translate' : this.mode); }
     get axis() { return this._active?.axis || this.controls.find(control => control.axis !== null)?.axis || null; }
     get space() { return this.controlFor('translate').space; }
     get translationSnap() { return this.controlFor('translate').translationSnap; }
@@ -1684,6 +1694,7 @@ function initThreeJS() {
         } else if (pendingTransformSnapshot) {
             commitTransform(pendingTransformSnapshot);
             pendingTransformSnapshot = null;
+            refreshTransformInspector();
         }
     });
     scene.add(transformControl);
@@ -1697,6 +1708,14 @@ function initThreeJS() {
         },
         changed:()=>{if(roomInteractions?.selected)roomInteractions.highlight.box.setFromObject(roomInteractions.selected.obj);}
     });
+    if (!window.__ERGO_PRESENTATION__) {
+        enhanceGizmo(transformControl, {
+            win: window,
+            THREE,
+            mmPerUnit: () => mmPerUnitOf(window, THREE),
+            status: notifyUser
+        });
+    }
 
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
     pmremGenerator.compileEquirectangularShader();
@@ -6089,9 +6108,12 @@ function refreshTransformInspector() {
     if (!panel || inspectorSuspended) return;
     const obj = inspectorTarget();
     const fields = panel.querySelectorAll('input[data-axis]');
+    const flipBtns = panel.querySelectorAll('[data-flip-axis]');
     const lockButton = document.getElementById('lock-selected');
+    const canFlip = Boolean((obj && !isLocked(obj)) || itemGizmo?.active);
+    flipBtns.forEach(btn => { btn.disabled = !canFlip; });
     if (!obj) {
-        panel.dataset.empty = 'true';
+        panel.dataset.empty = itemGizmo?.active ? 'false' : 'true';
         fields.forEach(input => { input.value = ''; input.disabled = true; });
         if (lockButton) lockButton.disabled = true;
         return;
@@ -6275,7 +6297,8 @@ function openItemGizmo(kind, target) {
         ? { kind, target: target.obj, objects: target.objects, label: target.name }
         : { kind, target: target.obj, objects: [target.obj], label: target.saved.label, id: target.id };
     const opened = itemGizmo.open(selection);
-    if (opened) notifyUser('Arrows move · rings rotate · squares scale. Escape hides the gumball.');
+    refreshTransformInspector();
+    if (opened) notifyUser('Arrows move · rings rotate · squares scale · click any handle to type exact inches / ° / −1 to flip. Esc hides.');
     return opened;
 }
 
@@ -6518,6 +6541,9 @@ function buildPrecisionTools(anchorElement) {
         ${row('position', 'Pos', '0.001')}
         ${row('rotation', 'Rot', '0.5')}
         ${row('scale', 'Scale', '0.01')}
+        <div class="inspector-row"><span>Flip</span>
+            ${['x', 'y', 'z'].map(axis => `<button type="button" data-flip-axis="${axis}" disabled title="Mirror / invert along ${axis.toUpperCase()} (×−1)">Flip ${axis.toUpperCase()}</button>`).join('')}
+        </div>
         <div class="inspector-actions">
             <button id="lock-selected" aria-pressed="false" disabled title="Lock the selected parts so they cannot be selected or moved">Lock</button>
             <button id="align-menu-toggle" aria-expanded="false" aria-controls="align-tools">Align…</button>
@@ -6558,6 +6584,26 @@ function buildPrecisionTools(anchorElement) {
     });
     panel.querySelectorAll('[data-distribute-axis]').forEach(button => {
         button.onclick = () => distributeSelection(button.dataset.distributeAxis);
+    });
+    panel.querySelectorAll('[data-flip-axis]').forEach(button => {
+        button.onclick = () => {
+            const axis = button.dataset.flipAxis;
+            if (itemGizmo?.active) {
+                if (itemGizmo.flip(axis)) notifyUser(`Flipped ${itemGizmo.active.label || 'item'} on ${axis.toUpperCase()}.`);
+                return;
+            }
+            const ok = editSelection(objects => {
+                const box = new THREE.Box3();
+                objects.forEach(o => box.expandByObject(o));
+                const c = box.getCenter(new THREE.Vector3());
+                const s = new THREE.Vector3(axis === 'x' ? -1 : 1, axis === 'y' ? -1 : 1, axis === 'z' ? -1 : 1);
+                const refl = new THREE.Matrix4().makeTranslation(c.x, c.y, c.z)
+                    .multiply(new THREE.Matrix4().makeScale(s.x, s.y, s.z))
+                    .multiply(new THREE.Matrix4().makeTranslation(-c.x, -c.y, -c.z));
+                objects.forEach(o => { o.updateWorldMatrix(true, false); setWorldMatrix(o, refl.clone().multiply(o.matrixWorld)); });
+            });
+            if (ok) notifyUser(`Flipped selection on ${axis.toUpperCase()}.`);
+        };
     });
 }
 
@@ -6981,7 +7027,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.preventDefault();
             cancelMarquee();
         } else if(e.key==='Escape'&&itemGizmo?.active){
-            e.preventDefault();itemGizmo.close();
+            e.preventDefault();itemGizmo.close();refreshTransformInspector();
         } else if((e.ctrlKey||e.metaKey)&&!e.altKey&&e.key.toLowerCase()==='c'){
             if(!window.getSelection()?.toString()&&copySelectedWorkspaceItems())e.preventDefault();
         } else if((e.ctrlKey||e.metaKey)&&!e.altKey&&e.key.toLowerCase()==='v'&&itemClipboard){

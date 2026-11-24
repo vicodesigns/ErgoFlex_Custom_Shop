@@ -47,7 +47,7 @@ await page.evaluateOnNewDocument(()=>{
 });
 const draft=()=>page.evaluate(()=>__draft());
 const body=name=>page.evaluate(n=>__body(n),name);
-const toM=async u=>{const k=await page.evaluate(()=>{const e=document.getElementById('stage').contentWindow.ErgoFlex,sc=e?.workspaceRoom?.scale||e?.workspaceAccessories?.scale;return sc>0?1/(sc*1000):1;});return Number((u*k).toFixed(5));};   // (the Props fields are real metres; the stage is in scene units)
+const toM=async u=>{const k=await page.evaluate(()=>{const e=document.getElementById('stage').contentWindow.ErgoFlex,sc=e?.workspaceRoom?.scale||e?.workspaceAccessories?.scale;return sc>0?1/(sc*25.4):1/0.0254;});return Number((u*k).toFixed(5));};   // (the Props fields are inches; the stage is in scene units)
 async function setField(name,value){const n0=(await draft())?.length;await page.evaluate((n,v)=>{const el=document.querySelector(`#director-panel [name="${n}"]`);el.value=String(v);el.dispatchEvent(new Event('change',{bubbles:true}));},name,value);await wait(1800);if(process.env.LOG)console.log('field',name,value,JSON.stringify((await draft()).filter(e=>/steelcase|monitor/.test(e.match||''))));}
 const click=async sel=>{await page.click(sel);await wait(1000);};
 const undo=async()=>{await page.keyboard.down('Control');await page.keyboard.press('z');await page.keyboard.up('Control');await wait(900);};
@@ -102,7 +102,7 @@ try{
   await setField('pp-py',await toM(c0.p[1]+4*INCH));await click('#director-panel [data-action=pp-drop-align]');
   const al=await body(CHAIR);check(al.tilt<.3&&rests(al.minY,c0.minY),'Align to surface on the floor: upright, resting');
   // nothing below: far out of the room
-  const before=await body(CHAIR);await setField('pp-px',900);   // (900 m: far out of the room)
+  const before=await body(CHAIR);await setField('pp-px',35000);   // (35000 in: far out of the room)
 const far=await body(CHAIR);
   await click('#director-panel [data-action=pp-drop]');
   const after=await body(CHAIR);
