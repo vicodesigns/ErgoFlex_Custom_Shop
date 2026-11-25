@@ -616,7 +616,7 @@ def clean_people(v):
         else: continue
         # the film's own motion fields, kept as they are (experience/people-edits.mjs KEPT): a walker, a roll, an action, a
         # change of posture, something carried (a walk's end facing, walk.turn, with it) stays one after the import
-        for k in ('seat', 'along', 'depth', 'rise', 'toward', 'face', 'clear', 'walk', 'roll', 'act', 'change', 'toes', 'tread', 'carry'):
+        for k in ('seat', 'along', 'depth', 'rise', 'toward', 'face', 'clear', 'walk', 'roll', 'act', 'change', 'toes', 'tread', 'carry', 'typeStyle'):
             if k in e:
                 try: json.dumps(e[k]); out[k] = copy.deepcopy(e[k])
                 except (TypeError, ValueError): pass
