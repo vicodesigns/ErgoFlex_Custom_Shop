@@ -99,6 +99,13 @@ const CINE = [
     ['occ', COAST_PERSON, 'Edit suite', [['Export', '100%', '', 'green', 1, 'COAST_final_4K'], ['Suite', '39.0', 'in', 'blue2', .4, 'Standing edit'], ['Review', '5', 'films', 'coral', .8, 'Portfolio'], ['Grade', 'Teal', '', 'amber', .6, '& Amber']]],
     ['home', '', 'Your desk is ready', null],
   ].map(([v, name, sub, tiles]) => cine('hero', 12, {id: 'cine-hero-' + v, target: 'main-landscape', role: `finale ${v} version home`, w: 1920, h: 800, scene: 'ch12', opts: {homeUntil: 1e3, name, sub, ...(tiles ? {tiles} : {})}})),
+  // hero desk screens (polish1124 Stream D, Nov 24 2026): the artist's two added monitors and the architect's wide monitor (the film's
+  // own screen ids from render-cut --list-screens). 6 s each: the artist sub-shot plays them at offset 0 (shown 0-5.4 s), the
+  // architect's at offset -4.8 (shown 4.8-9.95 s). Artist: Lin's reference board + palette, and the Lakeside dusk canvas being painted
+  // (scenes c03p / c03l held in act 1); architect: House B (scenes/cine-herodesks.js).
+  cine('hero', 12, {id: 'cine-hero-desk-artist-portrait', target: 'added-prop-ergoflex-portrait-monitor-bvm1mxp20/monitor-screen', role: 'hero artist desk: reference board + palette', w: 1080, h: 1856, scene: 'c03p', frames: 180, opts: {A: 1e3, B: 1e3, name: 'Lin'}}),
+  cine('hero', 12, {id: 'cine-hero-desk-artist-wide', target: 'added-prop-ergoflex-wide-monitor-j7rkts842/monitor-screen', role: 'hero artist desk: the canvas, brush and layers windows', w: 2560, h: 1066, scene: 'c03l', frames: 180, opts: {A: 6.5, B: 1e3, name: 'Lin'}}),
+  cine('hero', 12, {id: 'cine-hero-desk-architect-wide', target: 'added-prop-ergoflex-wide-monitor-gvmdrt6n4/monitor-screen', role: 'hero architect desk: House B model, floor plan, properties', w: 2560, h: 1066, scene: 'hdarch', frames: 180, opts: {name: 'Studio Arc'}}),
 ];
 export const CLIPS = [
   {id: '01-main', chapter: 1, target: 'main-landscape', role: 'curved main: digital-twin control', w: 2560, h: 1072, scene: 'ch01'},

@@ -139,11 +139,11 @@ function propGlass(prop, ps) {
 }
 
 // ---------- discovery ----------
-function discover(shot) {
+function discover(shot, all = false) {   // all: hidden meshes too (a timed added prop is hidden until its show window opens)
   const scene = sceneRoot(); scene.updateMatrixWorld(true);
   const desk = api.loadedModel, room = api.workspaceRoom?.root, list = [], seen = new Set();
   const push = (obj, info) => {
-    if (!obj?.isMesh || seen.has(obj) || !shown(obj) || obj.userData.filmFx || !obj.geometry?.attributes?.position) return;
+    if (!obj?.isMesh || seen.has(obj) || (!all && !shown(obj)) || obj.userData.filmFx || !obj.geometry?.attributes?.position) return;
     seen.add(obj); list.push({ obj, path: pathOf(obj, scene), ...info });
   };
   // The stage's own curved media screen (kind:'media' only).
@@ -356,10 +356,14 @@ function draw(sc) {
   ctx2d.drawImage(media, sx, sy, sW, sH, -dw / 2, -dh / 2, dw, dh); ctx2d.restore(); ctx2d.setTransform(1, 0, 0, 1, 0, 0);
   sc.texture.needsUpdate = true;
 }
-async function installScreens(shot, list) {
+// afterEdits:true (Nov 24 2026, the chapter 12 hero desks): the screen of a prop the Director added (a sceneEdits add, e.g.
+// 'added-prop-ergoflex-wide-monitor-<id>/monitor-screen') exists only once the edits are installed, so such an entry is
+// installed after them (installLateScreens); every other entry as before.
+async function installScreens(shot, list, late = false) {
   const out = [];
   for (const [i, spec] of (shot.screens || []).entries()) {
     if (isTextureTarget(spec)) continue;   // painted into a material's own picture (film-texture-screens.mjs)
+    if (!!spec.afterEdits !== late) continue;
     const target = resolve(list, spec.target ?? i);
     if (!target) throw Error(`screens[${i}]: no screen matches target "${spec.target}". Run render-cut --list-screens.`);
     const media = await loadMedia(spec.src), f = target.frame;
@@ -382,6 +386,12 @@ async function installScreens(shot, list) {
     out.push(sc);
   }
   return out;
+}
+async function installLateScreens(shot) {
+  if (!active || !(shot.screens || []).some(sc => sc && sc.afterEdits && !isTextureTarget(sc))) return;
+  for (const sc of active.screens.filter(sc => sc.spec.afterEdits)) { sc.mesh.removeFromParent(); sc.mesh.geometry.dispose(); sc.mesh.material.dispose(); sc.texture.dispose(); if (sc.media instanceof HTMLVideoElement) { sc.media.removeAttribute('src'); sc.media.load(); } }
+  active.screens = active.screens.filter(sc => !sc.spec.afterEdits);
+  active.screens.push(...await installScreens(shot, discover(shot, true), true));
 }
 async function updateScreens(screens, chapterSeconds) {
   await Promise.all(screens.map(async sc => {
@@ -1053,7 +1063,7 @@ export async function install(shot) {
   if (shot.quality) { active.quality = await (await import('./film-quality.mjs')).installQuality(shot, { screens: active.screens }); if (active.quality) console.log('[film-quality]', JSON.stringify(active.quality.info)); }
   if (shot.clock) { active.clocks = findClocks(); if (!active.clocks.length) console.warn('[film-fx] clock: no wall clock in this room'); }
   if (shot.timeOfDay) active.tod = await (await import('./film-tod.mjs')).installTimeOfDay(shot);
-  if (shot.sceneEdits || shot.lights) { const E = await import('./film-edits.mjs'); if (shot.sceneEdits) { await E.prepareAdds(shot); active.edits = E.installEdits(shot); } if (shot.lights) active.lights = E.installLights(shot); }
+  if (shot.sceneEdits || shot.lights) { const E = await import('./film-edits.mjs'); if (shot.sceneEdits) { await E.prepareAdds(shot); active.edits = E.installEdits(shot); await installLateScreens(shot); } if (shot.lights) active.lights = E.installLights(shot); }
   // After timeOfDay (which snapshots the raw light levels) and sceneEdits (whose light multipliers it chains to).
   if (shot.sceneGlobals?.roomLight !== undefined) active.roomLight = installRoomLight(shot.sceneGlobals.roomLight);
   if (roomSpillFields(shot.sceneGlobals)) { active.roomSpill = installLedRoomSpill(shot.sceneGlobals); active.roomSpill.frame(); }
@@ -1150,7 +1160,7 @@ export async function update(shot, { onSlow } = {}) {
   for (let i = tail; i < TAIL.length; i++) {
     const k = TAIL[i];
     if (k === 'tod' && shot.timeOfDay) active.tod = await (await import('./film-tod.mjs')).installTimeOfDay(shot);
-    if (k === 'edits' && shot.sceneEdits) { const E = await import('./film-edits.mjs'); await E.prepareAdds(shot); active.edits = E.installEdits(shot); }
+    if (k === 'edits' && shot.sceneEdits) { const E = await import('./film-edits.mjs'); await E.prepareAdds(shot); active.edits = E.installEdits(shot); await installLateScreens(shot); }
     if (k === 'lights' && shot.lights) active.lights = (await import('./film-edits.mjs')).installLights(shot);
     if (k === 'roomLight' && shot.sceneGlobals?.roomLight !== undefined) active.roomLight = installRoomLight(shot.sceneGlobals.roomLight);
     if (k === 'roomSpill' && roomSpillFields(shot.sceneGlobals)) { active.roomSpill = installLedRoomSpill(shot.sceneGlobals); active.roomSpill.frame(); }

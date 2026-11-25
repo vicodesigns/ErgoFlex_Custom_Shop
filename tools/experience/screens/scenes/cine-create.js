@@ -25,6 +25,9 @@
     {n: 'ENTRY', r: [950, 480, 300, 250], col: '#dcd2e6'},
   ];
   const DOOR = [640, 480, 80];
+  // The house's name, sheet and roof colour: House A here; the chapter 12 architect desk (scenes/cine-herodesks.js) draws a
+  // variant of it (House B) through SCENES._create.withHouse, and puts these defaults back afterwards.
+  const HOUSE = {name: 'HOUSE A', sheet: 'A-101', stage: 'CONCEPT DESIGN', roof: '#8a5a44'};
   // metres: 100 px = 1 m (1:100), x right, z down the sheet, the house centred on the origin
   const M = 100, CX = OUT[0] + OUT[2] / 2, CZ = OUT[1] + OUT[3] / 2;
   const mx = px => (px - CX) / M, mz = pz => (pz - CZ) / M;
@@ -48,7 +51,7 @@
     g.lineWidth = 2; g.beginPath(); g.arc(DOOR[0], DOOR[1], DOOR[2], -Math.PI / 2, 0); g.stroke();
     g.beginPath(); g.arc(1180, 740, 60, Math.PI, Math.PI * 1.5); g.stroke();   // the front door, into the entry
     g.font = '500 22px monospace'; g.fillText('N ↑', 1390, 160);
-    g.fillText('HOUSE A  /  FLOOR PLAN', 110, 875); g.fillText('A-101   ·   1:100   ·   CONCEPT DESIGN', 110, 925);
+    g.fillText(HOUSE.name + '  /  FLOOR PLAN', 110, 875); g.fillText(HOUSE.sheet + '   ·   1:100   ·   ' + HOUSE.stage, 110, 925);
     g.restore();
   }
   SCENES.cplan = {draw() { drawPlanSheet(0, 0, W, H); }};
@@ -87,7 +90,7 @@
       }
     }
     if (roofA > .01) {   // a gable roof along x, hovering roofLift above the walls (an architect's exploded model)
-      const y0 = WH + roofLift, yr = y0 + 1.7, zc = (oz0 + oz1) / 2, col = '#8a5a44', o = {a: roofA, two: true, edge: 'rgba(255,230,210,.35)', lw: 1.5};
+      const y0 = WH + roofLift, yr = y0 + 1.7, zc = (oz0 + oz1) / 2, col = HOUSE.roof, o = {a: roofA, two: true, edge: 'rgba(255,230,210,.35)', lw: 1.5};
       F.push({p: [[ox0, y0, oz0], [ox1, y0, oz0], [ox1, yr, zc], [ox0, yr, zc]].reverse(), col, ...o});   // north slope
       F.push({p: [[ox0, y0, oz1], [ox0, yr, zc], [ox1, yr, zc], [ox1, y0, oz1]].reverse(), col, ...o});   // south slope
       F.push({p: [[ox0, y0, oz0], [ox0, yr, zc], [ox0, y0, oz1]], col: '#efe9df', ...o});   // gables
@@ -229,6 +232,9 @@
       });
     },
   };
+
+  SCENES._create = {houseView, drawPlanSheet, ROOMS, OUT, M, area, yawAt, facing,
+    withHouse(v, fn) { const keep = {...HOUSE}; Object.assign(HOUSE, v); try { fn(); } finally { Object.assign(HOUSE, keep); } }};
 
   // ---------------- left monitor (portrait 1080x1856) ----------------
   SCENES.c03p = {

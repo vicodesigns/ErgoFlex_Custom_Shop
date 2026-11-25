@@ -19398,6 +19398,387 @@
    "scenes": [],
    "converter": "people-generator",
    "collection": "people"
+  },
+  {
+   "id": "herodesk-office-briefcase",
+   "name": "Hero desk · Leather attaché briefcase (chestnut, brass)",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "office",
+    "home"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "herodesk-office-files",
+   "name": "Hero desk · Tidy files (2 lever-arch binders, slim file)",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "office",
+    "home"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "herodesk-office-photo-frame",
+   "name": "Hero desk · Framed photo (5x7 in, walnut, beach at golden hour)",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "office",
+    "home"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "herodesk-office-plant",
+   "name": "Hero desk · Snake plant in a white ceramic pot (fits the cubby cup)",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "office",
+    "home"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "herodesk-office-pen-cup",
+   "name": "Hero desk · Pens, pencil, highlighter and scissors (for the cubby cup)",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "office",
+    "home"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "herodesk-office-sticky-notes",
+   "name": "Hero desk · Sticky-note pads (yellow, pink) and a loose note",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "office",
+    "home"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "herodesk-office-phone",
+   "name": "Hero desk · Smartphone (stands in the cubby slot)",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "office",
+    "home"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "herodesk-arch-tube",
+   "name": "Hero desk · Telescoping drawing tube (black)",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "office",
+    "creative",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "herodesk-arch-rolls",
+   "name": "Hero desk · Rolled drawings (white, blueprint, kraft)",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "office",
+    "creative",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "herodesk-arch-scale-ruler",
+   "name": "Hero desk · Triangular architect scale ruler (1:100 / 1:200 / 1:500)",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "office",
+    "creative",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "herodesk-arch-trace-roll",
+   "name": "Hero desk · Yellow tracing-paper roll (12 in) with a pulled-out sheet",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "office",
+    "creative",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "herodesk-arch-model-house",
+   "name": "Hero desk · Study model house (white card, basswood; a variant of House A)",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "office",
+    "creative",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "herodesk-arch-coffee",
+   "name": "Hero desk · Coffee mug (charcoal ceramic)",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "office",
+    "creative",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "herodesk-arch-cup-fill",
+   "name": "Hero desk · Drafting pencils, fineliners and a compass (for the cubby cup)",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "office",
+    "creative",
+    "study"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "herodesk-art-brushes",
+   "name": "Hero desk · Paint brushes (8, for the cubby cup)",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "creative",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "herodesk-art-tools",
+   "name": "Hero desk · Markers, palette knives and pencils (for the cubby)",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "creative",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "herodesk-art-paint-jars",
+   "name": "Hero desk · Paint jars (ultramarine, cadmium red, ochre, sap green)",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "creative",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "herodesk-art-swatches",
+   "name": "Hero desk · Colour swatch fan deck",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "creative",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "herodesk-art-sketchbooks",
+   "name": "Hero desk · Sketchbook stack (A4 hardcover, A5 kraft, pocket book)",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "creative",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "herodesk-art-canvas",
+   "name": "Hero desk · Small canvas on a table easel (lakeside dusk oil study)",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "creative",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "herodesk-art-case",
+   "name": "Hero desk · Wooden art case (beech, brass corners, leather handle)",
+   "category": "desk",
+   "collection": "Hero Desk Decor",
+   "scenes": [
+    "product",
+    "creative",
+    "gallery"
+   ],
+   "anchor": "floor",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
+  },
+  {
+   "id": "ergoflex-mic-boom-arm",
+   "name": "ErgoFlex mic boom arm on the accessory port (posed for the office desk, right port)",
+   "category": "desk",
+   "collection": "ErgoFlex Hardware",
+   "scenes": [
+    "product",
+    "office",
+    "home"
+   ],
+   "anchor": "socket",
+   "source": "tools/props/hero-desks/build_props.py",
+   "converter": "hero-desk-props",
+   "license": "project-original",
+   "attribution": "Built for the ErgoFlex film, chapter 12 hero desks (polish1124 Stream D)",
+   "revision": "hero-desks-20261124"
   }
  ],
  "screens": [
