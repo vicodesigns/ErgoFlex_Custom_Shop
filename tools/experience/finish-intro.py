@@ -108,6 +108,9 @@ TIGHT_PAD = {'eyebrow': (14, 9), 'title': (22, 14), 'detail': (16, 10)}   # (hor
 POPPINS_FILES = {400: 'Poppins-Regular', 500: 'Poppins-Medium', 600: 'Poppins-SemiBold', 700: 'Poppins-Bold'}
 _FONT_CACHE = {}
 
+def alpha_hex(opacity):
+    return f"{max(0, min(255, round(255 * (1 - opacity)))):02X}"
+
 def r2(v):
     return math.floor(v * 100 + .5) / 100              # JS Math.round, not Python's banker's rounding
 
@@ -154,11 +157,12 @@ def has_fallback(size, weight, text):
     pop = _poppins(weight)
     return bool(pop) and any(ord(ch) not in pop[0] for ch in text)
 
-def fitted_box(key, size, y, dx, width, align_right, up=0):
+def fitted_box(key, size, y, dx, width, align='left', up=0):
     """One tight box (relative to the title anchor, unscaled): film-titles.mjs fittedBox()."""
     ph, pv = TIGHT_PAD[key]; em = size / FONT_REAL; base = y - DESC * size
     y0 = base - GLYPH_ASC * em - pv - up - ANCHOR[1]; y1 = base + GLYPH_DESC * em + pv - ANCHOR[1]
-    if align_right: return dict(x0=dx - width - ph, x1=dx + ph, y0=y0, y1=y1)
+    if align == 'right': return dict(x0=dx - width - ph, x1=dx + ph, y0=y0, y1=y1)
+    if align == 'center': return dict(x0=dx - width / 2 - ph, x1=dx + width / 2 + ph, y0=y0, y1=y1)
     return dict(x0=X0_LEFT + dx - ph - ANCHOR[0], x1=X0_LEFT + dx + width + ph - ANCHOR[0], y0=y0, y1=y1)
 
 def separate_boxes(boxes):
@@ -182,6 +186,10 @@ def title_dialogues(titles):
         if t.get('position'):
             X0 = float(t['position']['x'])
             DY = float(t['position']['y']) - 912
+        # optional 'align' (film-titles.mjs ALIGNS): the anchor x is each line's left edge / centre / right edge
+        if t.get('align') in ('left', 'center', 'right') and {'left': 1, 'center': 2, 'right': 3}[t['align']] != AN:
+            AN = {'left': 1, 'center': 2, 'right': 3}[t['align']]
+            if not t.get('position'): X0 = {1: 128, 2: 960, 3: 1920 - 128}[AN]
         scale = max(.1, min(5, float(t.get('scale', 1))))
         if scale == 1: scale = 1
         typography = t.get('typography') or {}
@@ -189,15 +197,28 @@ def title_dialogues(titles):
         if SCRIM_BLOCK: ass.append(f'Dialogue: 0,{ts(a - .2)},{ts(b + .2)},Scrim,,0,0,0,,{{\\an7\\pos(0,0)\\p1\\1c&H000000&\\1a&HFF&\\blur90\\t(0,900,\\1a&H{t.get('scrim') or '90'}&)\\t({int((b - a) * 1000 - 300)},{int((b - a) * 1000 + 400)},\\1a&HFF&)}}m 0 730 l 1300 730 1300 1080 0 1080{{\\p0}}')
         def type_tags(style):
             key = {'Eyebrow': 'eyebrow', 'Title': 'title', 'Detail': 'detail'}[style]
-            cfg = {k: v for k, v in (typography.get(key) or {}).items() if k not in ('dx', 'dy')}   # dx / dy: position only (\move)
+            cfg = {k: v for k, v in (typography.get(key) or {}).items() if k not in ('dx', 'dy', 'lineHeight', 'caps')}   # dx / dy / lineHeight / caps: position and copy only, no style tags
             if not cfg and scale == 1: return ''
             size, weight, spacing, border, shadow = {'Eyebrow': (28,600,6,16,1.2), 'Title': (86,600,-.6,26,2), 'Detail': (40,400,.2,20,1.5)}[style]
             # spacing default: the Style's as libass applies it (it ignores a negative Style Spacing; a \fsp override is honoured)
-            tags = f"\\fs{ass_num(float(cfg.get('size', size))*scale)}\\fsp{ass_num(float(cfg.get('spacing', max(0, spacing)))*scale)}\\b{int(cfg.get('weight', weight))}\\i{1 if cfg.get('italic') else 0}\\bord0\\shad{ass_num(shadow*scale)}"
+            tags = f"\\fs{ass_num(float(cfg.get('size', size))*scale)}\\fsp{ass_num(float(cfg.get('spacing', max(0, spacing)))*scale)}\\b{int(cfg.get('weight', weight))}\\i{1 if cfg.get('italic') else 0}\\bord{ass_num(float(cfg.get('strokeW', 0))*scale)}\\shad{ass_num(float(cfg.get('shadowDist', shadow))*scale)}"
             family = {400: 'Poppins', 500: 'Poppins Medium', 600: 'Poppins SemiBold', 700: 'Poppins'}[int(cfg.get('weight', weight))]
             tags += '\\fn' + family
             color = cfg.get('color')
             if color: tags += '\\1c&H' + color[5:7] + color[3:5] + color[1:3] + '&'
+            # text options (all optional; none set = the tags above, byte for byte): outline colour, shadow colour, opacity.
+            # \\alpha would also reset the shadow's own transparency, so the alphas are set one by one: the text and the
+            # outline get 1 - opacity, the shadow its own opacity (default the film's) x the text's.
+            bgr = lambda c: c[5:7] + c[3:5] + c[1:3]
+            if float(cfg.get('strokeW', 0)) > 0 and cfg.get('strokeColor'): tags += '\\3c&H' + bgr(cfg['strokeColor']) + '&'
+            if cfg.get('shadowColor'): tags += '\\4c&H' + bgr(cfg['shadowColor']) + '&'
+            op = float(cfg['opacity']) if 'opacity' in cfg else None
+            if op is not None:
+                tags += f"\\1a&H{alpha_hex(op)}&"
+                if float(cfg.get('strokeW', 0)) > 0: tags += f"\\3a&H{alpha_hex(op)}&"
+            if op is not None or 'shadowOpacity' in cfg:
+                base = {'Eyebrow': 1 - 0xB4 / 255, 'Title': 1 - 0xA0 / 255, 'Detail': 1 - 0xA0 / 255}[style]
+                tags += f"\\4a&H{alpha_hex(float(cfg.get('shadowOpacity', base)) * (1 if op is None else op))}&"
             return tags
         # Director Mode's per-line offsets (typography.<line>.dx / dy, film px before the title's scale): that line alone moves.
         def offset(style):
@@ -229,16 +250,22 @@ def title_dialogues(titles):
         raw_title = (t.get('title') or '').replace('\r\n', '\n').replace('\r', '\n')
         title_parts = raw_title.split('\n') if raw_title else []
         title_size = float((typography.get('title') or {}).get('size', 86))
-        title_extra = max(0, len(title_parts) - 1) * title_size * LINE_LEAD
+        def step_of(key):
+            c = typography.get(key) or {}; size = float(c.get('size', BASE_SIZES[key]))
+            return float(c['lineHeight']) * size / FONT_REAL if c.get('lineHeight') is not None else size * LINE_LEAD
+        title_extra = (max(0, len(title_parts) - 1) * step_of('title')) if (typography.get('title') or {}).get('lineHeight') is not None else max(0, len(title_parts) - 1) * title_size * LINE_LEAD
+        def cased(key, s):
+            caps = (typography.get(key) or {}).get('caps')
+            return s.upper() if caps == 'upper' else s.lower() if caps == 'lower' else s
         texts, fits = [], []    # the text dialogues, and every non-empty line for the auto shadow boxes
         for style, y, key, delay, rise in (('Eyebrow', 812, 'eyebrow', 0, 10), ('Title', 912, 'title', 140, 14), ('Detail', 970, 'detail', 380, 10)):
-            raw = (t.get(key) or '').replace('\r\n', '\n').replace('\r', '\n')
+            raw = cased(key, (t.get(key) or '').replace('\r\n', '\n').replace('\r', '\n'))
             if '\n' not in raw and (key != 'eyebrow' or title_extra == 0):
                 texts.append(line(1, style, y, raw, delay, rise))
                 if raw: fits.append((style, key, y, raw, delay, rise))
                 continue
             parts = raw.split('\n') if raw else []
-            step = float((typography.get(key) or {}).get('size', BASE_SIZES[key])) * LINE_LEAD
+            step = step_of(key)
             base_y = (y - title_extra) if key == 'eyebrow' else y
             direction = 1 if key == 'detail' else -1
             n = len(parts)
@@ -255,7 +282,7 @@ def title_dialogues(titles):
                 size = float(cfg.get('size', BASE_SIZES[key])); weight = int(cfg.get('weight', {'eyebrow': 600, 'title': 600, 'detail': 400}[key]))
                 spacing = float(cfg.get('spacing', max(0, {'eyebrow': 6, 'title': -.6, 'detail': .2}[key])))
                 up = size * max(0, FALLBACK_ASC - ASC) if has_fallback(size, weight, text) else 0
-                boxes.append(fitted_box(key, size, y + dy, dx, text_width(size, spacing, weight, text), AN == 3, up))
+                boxes.append(fitted_box(key, size, y + dy, dx, text_width(size, spacing, weight, text), {1: 'left', 2: 'center', 3: 'right'}[AN], up))
             for (style, key, y, text, delay, rise), box in zip(fits, separate_boxes(boxes)):
                 ass.append(shadow_dialogue(box_path(box), delay, rise))
         ass += texts
@@ -309,7 +336,7 @@ def chapter_titles(argv):
     if not mine:
         print(f'chapter-titles: {cid} has no titles: plain copy'); shutil.copyfile(vin, part); os.replace(part, vout); return
     titles = [dict(chapter=cid, start=float(t['rel_in']), end=float(t['rel_out']), eyebrow=t['eyebrow'], title=t['title'], detail=t['detail'],
-                   scrim=t.get('scrim'), shadow=t.get('shadow') or {}, **({k: t[k] for k in ('position', 'scale', 'typography') if k in t}), **({'place': t['place']} if t.get('place') in PLACES else {})) for t in mine]
+                   scrim=t.get('scrim'), shadow=t.get('shadow') or {}, **({k: t[k] for k in ('position', 'scale', 'typography', 'align') if k in t}), **({'place': t['place']} if t.get('place') in PLACES else {})) for t in mine]
     tmp = tempfile.mkdtemp(prefix='chtitles-')
     try:
         assf = os.path.join(tmp, 'titles.ass'); open(assf, 'w', encoding='utf-8').write('\n'.join(ASS_HEAD + title_dialogues(titles)) + '\n')
@@ -354,7 +381,7 @@ def main():
     # ---- titles.json (absolute) + ASS -------------------------------------
     titles = [dict(id=f"{t['chapter']}-{i}", chapter=t['chapter'], start=round(start[t['chapter']] + t['rel_in'], 3),
                    end=round(start[t['chapter']] + t['rel_out'], 3), eyebrow=t['eyebrow'], title=t['title'], detail=t['detail'], scrim=t.get('scrim'),
-                   shadow=t.get('shadow') or {}, **({k: t[k] for k in ('position', 'scale', 'typography') if k in t}), **({'place': t['place']} if t.get('place') in PLACES and t['place'] != 'lower-left' else {}))
+                   shadow=t.get('shadow') or {}, **({k: t[k] for k in ('position', 'scale', 'typography', 'align') if k in t}), **({'place': t['place']} if t.get('place') in PLACES and t['place'] != 'lower-left' else {}))
               for i, t in enumerate(src['titles'])]
     logo_at = start[src['logo']['chapter']] + src['logo']['rel_in']
     L = end_logo(src['logo'])

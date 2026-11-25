@@ -1250,6 +1250,15 @@ def clean_typography(v):
         if a.get('weight') in (400, 500, 600, 700): b['weight'] = a['weight']
         if isinstance(a.get('color'), str) and re.fullmatch(r'#[0-9a-fA-F]{6}', a['color']): b['color'] = a['color']
         if isinstance(a.get('italic'), bool): b['italic'] = a['italic']
+        if num(a.get('lineHeight')): b['lineHeight'] = round(max(.5, min(3, a['lineHeight'])), 3)
+        if a.get('caps') in ('upper', 'lower'): b['caps'] = a['caps']
+        if num(a.get('opacity')) and a['opacity'] < .999: b['opacity'] = round(max(0, min(1, a['opacity'])), 3)
+        if num(a.get('strokeW')) and a['strokeW'] >= .05:
+            b['strokeW'] = round(min(20, a['strokeW']), 2)
+            if isinstance(a.get('strokeColor'), str) and re.fullmatch(r'#[0-9a-fA-F]{6}', a['strokeColor']): b['strokeColor'] = a['strokeColor']
+        if num(a.get('shadowDist')): b['shadowDist'] = round(max(0, min(30, a['shadowDist'])), 2)
+        if num(a.get('shadowOpacity')): b['shadowOpacity'] = round(max(0, min(1, a['shadowOpacity'])), 3)
+        if isinstance(a.get('shadowColor'), str) and re.fullmatch(r'#[0-9a-fA-F]{6}', a['shadowColor']) and a['shadowColor'].lower() != '#000000': b['shadowColor'] = a['shadowColor']
         if b: out[key] = b
     return out or None
 
@@ -1301,6 +1310,9 @@ def import_titles(cid, titles, seconds, log):
         else: e.pop('director_timing', None)
         if d.get('place') in TITLE_PLACES: e['place'] = d['place']
         else: e.pop('place', None)
+        # text alignment (film-titles.mjs ALIGNS): kept only when it differs from the place's own (left; top-right: right)
+        if d.get('align') in ('left', 'center', 'right') and d['align'] != ('right' if e.get('place') == 'top-right' else 'left'): e['align'] = d['align']
+        else: e.pop('align', None)
         new.append(e); was.append(mine.get(d.get('id'), {}))
     if [src['titles'][i] for i in old_idx] == new: return []
     at = old_idx[0] if old_idx else len(src['titles'])
