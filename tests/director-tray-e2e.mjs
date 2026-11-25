@@ -37,5 +37,20 @@ try{
   await set('tr-tilt-n',9);await click('[data-action="tr-apply"]');
   const tilt=await page.evaluate(()=>document.querySelector('[name="tr-tilt-n"]').value);assert.equal(Number(tilt),0,'applying the saved pose sets its tilt back (the pose was keyed at tilt 0 ... K keyed the tray as it was at 2 s)');
   await click('[data-action="tr-forget"]');assert.equal(await page.evaluate(()=>document.querySelectorAll('.tray-saved li').length),0,'forgotten');
-  console.log('PASS Director Tray: slide, tilt and swing move the jointed tray on the live stage; a limit is named under the slider.');
+  // K3 (25 Nov 2026): with the desk tilted past 9 deg (chapter 1 from about 20.4 s) the keyboard is UP on the desk's shelf: the tray takes a full
+  // slide with no limit and no warning, and the keyboard STAYS on the shelf while the tray moves (it used to reappear on the plate).
+  const kb=()=>page.evaluate(()=>{const d=document.getElementById('stage').contentWindow.ErgoFlex.sceneDesks.active,it=[...d.objects].find(([id])=>/keyboard/.test(id)&&!/tray/.test(id))?.[1];if(!it)return null;it.obj.updateWorldMatrix(true,false);const e=it.obj.matrixWorld.elements;return {parent:it.obj.parent?.name,stow:it.autoStow?.role||null,p:[e[12],e[13],e[14]]};});
+  const plateY=()=>page.evaluate(()=>{const o=document.getElementById('stage').contentWindow.ErgoFlex.sceneDesks.active.objects.get('accessory-keyboard-tray').obj.getObjectByName('Tray_Plate');o.updateWorldMatrix(true,false);return o.matrixWorld.elements[13];});
+  if(await page.evaluate(()=>document.querySelector('[data-action="tr-auto"]')?.getAttribute('aria-pressed'))!=='true')await click('[data-action="tr-auto"]');
+  await seek(23);await set('tr-slide-n',100);
+  const up=await page.evaluate(()=>document.querySelector('[data-tray-joint="slide"]')?.innerText||'');
+  assert.ok(!/held|does not fit/.test(up),'riders on the shelf: the tray takes 100 % with no limit: '+up);assert.ok(!/held at/.test(await status(page)),'no "held" in the status: '+await status(page));
+  assert.match(await page.evaluate(()=>document.querySelector('[data-tray-riders]')?.innerText||''),/on the desk.s shelf here/,'the panel says why');
+  for(const t of [23,24,25,26]){await seek(t);const k=await kb();assert.equal(k.stow,'lower-shelf',`the keyboard is stowed at ${t}`);assert.ok(k.p[1]>await plateY()+0.25,`and it stays UP on the shelf at ${t} s, not on the tray: keyboard y ${k.p[1].toFixed(3)}, plate y ${(await plateY()).toFixed(3)}`);}
+  // K4: the hand-off is a carry, not a pop: between 20.4 and 20.8 s the keyboard is part way, and above the desk
+  const t0=await page.evaluate(()=>document.getElementById('stage').contentWindow.ErgoFlex.riderHandoff.timeline()?.events?.[0]?.t);assert.ok(t0>20&&t0<21,'the desk sends them up at about 20.4 s: '+t0);
+  await seek(t0-0.05);const k0=(await kb()).p;await seek(t0+0.6);const k1=(await kb()).p;await seek(t0+0.2);const mid=(await kb()).p;
+  const dist=(p,q)=>Math.hypot(p[0]-q[0],p[1]-q[1],p[2]-q[2]),whole=dist(k0,k1);
+  assert.ok(whole>0.3,'it goes somewhere: '+whole.toFixed(3));assert.ok(dist(k0,mid)>0.15*whole&&dist(mid,k1)>0.15*whole,`half way through the carry it is between the tray and the shelf (${dist(k0,mid).toFixed(3)} / ${dist(mid,k1).toFixed(3)} of ${whole.toFixed(3)})`);
+  console.log('PASS Director Tray: slide, tilt and swing move the jointed tray on the live stage; a limit is named under the slider; with the desk tilted the keyboard stays on the shelf and the tray is free; the hand-off is a carry.');
 }catch(e){console.error('FAIL',e.message);process.exitCode=1;}finally{await close();}

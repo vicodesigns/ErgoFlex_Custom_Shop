@@ -48,7 +48,9 @@ run()                                                                       # th
 base = shots(); base_sub = sub()
 assert not any('sceneTray' in s for s in base.values()) and not any('sceneTray' in s for s in base_sub), 'no chapter has tray keys to begin with'
 keys = [{'desk': 'gaming', 'bracket': True, 'keys': [{'t': 2, 'pose': {'swing': 90, 'slide': 0.3}, 'label': 'Side'}, {'t': 6, 'pose': {'swing': 0, 'slide': 0}, 'ease': 'linear'}]}]
-want = b.clean_tray(keys); assert want[0]['keys'][0]['id'] == 'k1' and want[0]['keys'][1]['ease'] == 'linear' and want[0]['bracket'] is True
+want = b.clean_tray(keys); assert want[0]['keys'][0]['id'] == 'k1' and want[0]['keys'][1]['ease'] == 'linear' and 'bracket' not in want[0], 'an old export with the bracket imports, the bracket is ignored'
+old = b.clean_tray([{'bracket': True, 'initial': {'drop': 40}, 'keys': [{'t': 1, 'pose': {'drop': 30}}, {'t': 2, 'pose': {'tilt': 3, 'drop': 9}}]}])
+assert old == [{'keys': [{'id': 'k1', 't': 2, 'pose': {'tilt': 3}}]}], old   # (old data: bracket and drop gone, no error)
 
 # an export without the field: nothing appears
 run('--import', str(page('a.json', '08-awareness', None))); run()

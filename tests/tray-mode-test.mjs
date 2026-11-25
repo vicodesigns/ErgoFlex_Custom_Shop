@@ -1,5 +1,5 @@
 // The Director's Tray mode (experience/scene-tray-editor.mjs, tray-ui.mjs; docs/keyboard-tray/SPEC.md 5): what the panel and the lane say, every
-// edit as one undo step, the keys (select, Shift, retime, Delete, ease, route, copy / paste), the bracket switch, the live tray track and the wiring
+// edit as one undo step, the keys (select, Shift, retime, Delete, ease, route, copy / paste), the riders on / off the tray, the live tray track and the wiring
 // into director.mjs / stage.mjs / player.mjs. Pure node: the editor runs on fake deps (the Director's commit with its undo grouping, a fake stage).
 //   node tests/tray-mode-test.mjs
 import assert from 'node:assert/strict';
@@ -21,7 +21,7 @@ const ERGO = 45, KEYBOARD = [{ kind: 'keyboard', propId: 'ergoflex-ergo-keyboard
     const e = T.cleanTrayEdit({ keys: [{ t: 2, pose: { slide: 1, swing: 90 } }] });
     const raw = T.sampleTray(e, 3, { raw: true, riderMm: ERGO }), held = T.sampleTray(e, 3, { riderMm: ERGO });
     assert.deepEqual([raw.slide, raw.swing], [1, 90], 'raw: only the hard limits'); assert.deepEqual([held.slide, held.swing], [0.45, 20]);
-    assert.deepEqual(T.sampleTray(null, 3, { raw: true }), { slide: 0, swing: 0, tilt: 0, drop: 0 });
+    assert.deepEqual(T.sampleTray(null, 3, { raw: true }), { slide: 0, swing: 0, tilt: 0 });
     let k = T.cleanTrayEdit({ keys: [{ t: 1, pose: { tilt: 1 } }, { t: 2, pose: { tilt: 2 } }, { t: 3, pose: { tilt: 3 } }, { t: 4, pose: { tilt: 4 } }] });
     assert.deepEqual(T.trayKeyTimes(T.retimeKeys(k, [[2, 2.5], [3, 3.5]])), [1, 2.5, 3.5, 4], 'two keys together');
     const merged = T.retimeKeys(k, [[1, 4]]); assert.deepEqual(T.trayKeyTimes(merged), [2, 3, 4]); assert.equal(merged.keys[2].pose.tilt, 1, 'a moved key wins where it lands');
@@ -29,24 +29,25 @@ const ERGO = 45, KEYBOARD = [{ kind: 'keyboard', propId: 'ergoflex-ergo-keyboard
     assert.equal(T.retimeKeys(k, [['x', 1], null, [9, 9]]).keys.length, 4); assert.deepEqual(k, T.cleanTrayEdit(k), 'the edit given is not changed');
 }
 {   // tray-ui: what the panel shows
-    assert.deepEqual(['slide', 'swing', 'tilt', 'drop'].map(j => U.toDisplay(j, 0.5)), [50, 0.5, 0.5, 0.5]); assert.equal(U.fromDisplay('slide', 50), 0.5); assert.equal(U.fromDisplay('swing', 30), 30);
-    const none = U.panelModel(null, 0); assert.deepEqual(none.rows.map(r => r.joint), ['slide', 'swing', 'tilt'], 'no drop slider without the bracket');
+    assert.deepEqual(['slide', 'swing', 'tilt'].map(j => U.toDisplay(j, 0.5)), [50, 0.5, 0.5]); assert.equal(U.fromDisplay('slide', 50), 0.5); assert.equal(U.fromDisplay('swing', 30), 30);
+    const none = U.panelModel(null, 0); assert.deepEqual(none.rows.map(r => r.joint), ['slide', 'swing', 'tilt'], 'no drop slider (the drop is gone)'); assert.deepEqual(none.rows.map(r => r.label), ['Slide', 'Swing', 'Surface tilt']);
+    for (const gone of ['BRACKET_LABEL', 'BRACKET_HINT', 'dropOn']) assert.ok(!(gone in U), gone + ' is gone');
     assert.ok(none.rows.every(r => r.value === 0 && r.shown === 0 && !r.reason && !r.clamped)); assert.equal(none.rows[0].limitText, '0–100 %'); assert.equal(none.rows[1].limitText, '-180–180°'); assert.equal(none.rows[2].limitText, '-15–15°');
-    const on = U.panelModel(T.cleanTrayEdit({ bracket: true, keys: [{ t: 1, pose: { drop: 30 } }] }), 2); assert.deepEqual(on.rows.map(r => r.joint), ['slide', 'swing', 'tilt', 'drop']); assert.equal(on.rows[3].shown, 30); assert.equal(on.rows[3].limitText, '0–165 mm');
-    // a keyboard on the tray, the drop off: the keyed value and the value the tray takes, with the reason in words
+    // old data with the bracket and a keyed drop: the panel shows the three joints, no error
+    const old = U.panelModel({ bracket: true, keys: [{ t: 1, pose: { drop: 30, tilt: 2 } }] }, 2); assert.deepEqual(old.rows.map(r => r.joint), ['slide', 'swing', 'tilt']); assert.equal(old.rows[2].shown, 2);
+    // a keyboard on the tray: the keyed value and the value the tray takes, with the reason in words (no bracket in it any more)
     const e = T.cleanTrayEdit({ keys: [{ t: 2, pose: { slide: 1, swing: 90, tilt: 5 } }] }), m = U.panelModel(e, 3, { riderMm: ERGO, riders: ['keyboard'] });
     const by = Object.fromEntries(m.rows.map(r => [r.joint, r]));
-    assert.equal(by.slide.value, 100); assert.equal(by.slide.shown, 45); assert.ok(by.slide.clamped); assert.match(by.slide.reason, /keyboard \(45 mm\) does not fit under the desk/); assert.match(by.slide.reason, /45 % of its slide \(106 of 234\.5 mm\)/); assert.match(by.slide.reason, /Mount bracket \(added\)/); assert.match(by.slide.reason, /28\.3 mm/);
+    assert.equal(by.slide.value, 100); assert.equal(by.slide.shown, 45); assert.ok(by.slide.clamped); assert.match(by.slide.reason, /keyboard \(45 mm\) does not fit under the desk/); assert.match(by.slide.reason, /45 % of its slide \(106 of 234\.5 mm\)/); assert.match(by.slide.reason, /while it is on the tray/); assert.match(by.slide.reason, /desk tilts past 9°, the keyboard and mouse go up to the desk's shelf and the tray is free/); assert.ok(!/bracket|drop/i.test(by.slide.reason), 'no bracket, no drop: ' + by.slide.reason);
     assert.equal(by.swing.shown, 20); assert.match(by.swing.reason, /swings no further than 20°/); assert.equal(by.tilt.reason, '', 'tilt 5 is fine there');
     assert.equal(by.slide.limitText, '0–45 %'); assert.equal(by.swing.limitText, '-20–20°');
-    // with the bracket on and the drop short of what the keyboard needs: the same limit, and the fix in words
-    const short = U.panelModel(T.cleanTrayEdit({ bracket: true, keys: [{ t: 2, pose: { slide: 1, drop: 10 } }] }), 3, { riderMm: ERGO, riders: ['keyboard'] }); assert.match(short.rows[0].reason, /Key a drop of 28\.3 mm or more \(it is 10 mm here\)/);
-    const ok = U.panelModel(T.cleanTrayEdit({ bracket: true, keys: [{ t: 2, pose: { slide: 1, drop: 30 } }] }), 3, { riderMm: ERGO }); assert.equal(ok.rows[0].shown, 100); assert.equal(ok.rows[0].reason, '');
+    // the same key with the keyboard and mouse on the desk's shelf (the desk tilted: riderAwayAt 1): the full range, no reason, a note that says why
+    const up = U.panelModel(e, 3, { riderMm: ERGO, riders: ['keyboard', 'mouse'], riderAwayAt: () => 1 }), ub = Object.fromEntries(up.rows.map(r => [r.joint, r]));
+    assert.equal(ub.slide.shown, 100); assert.equal(ub.slide.reason, ''); assert.equal(ub.slide.limitText, '0–100 %'); assert.ok(!ub.slide.clamped && !/keyboard|mouse/.test(ub.swing.reason + ub.tilt.reason), 'what is left is the coupling, not the riders'); assert.match(up.ridersNote, /keyboard and mouse are on the desk's shelf here .*the tray is free/);
+    const half = U.panelModel(e, 3, { riderMm: ERGO, riders: ['keyboard'], riderAwayAt: () => 0.5 }); assert.match(half.rows[0].reason, /being carried up to the desk's shelf/); assert.match(half.ridersNote, /being carried/);
+    assert.equal(m.ridersNote, '', 'on the tray: no note');
     // a limit that is not the rider's: the coupling
     const c = U.panelModel(T.cleanTrayEdit({ keys: [{ t: 2, pose: { slide: 0.9, swing: 100, tilt: 10 } }] }), 3); const cb = Object.fromEntries(c.rows.map(r => [r.joint, r])); assert.match(cb.swing.reason, /Swing stops at ±\d+(\.\d)?° at this slide/); assert.match(cb.tilt.reason, /Tilt is held to/); assert.equal(cb.slide.reason, '');
-    // a keyed drop with the joint off
-    assert.match(U.limitReason('drop', { slide: 0, swing: 0, tilt: 0, drop: 20 }, T.cleanTrayEdit({ keys: [{ t: 1, pose: { tilt: 1 } }] })), /The drop is off\. Switch on "Mount bracket \(added\)"/);
-    assert.equal(U.BRACKET_LABEL, 'Mount bracket (added)'); assert.ok(U.BRACKET_HINT.length > 40 && !U.BRACKET_HINT.includes('\n'));
     // presets and saved poses
     assert.deepEqual(U.PRESETS.map(p => p.id), ['out', 'tilt', 'side', 'in']); assert.equal(Object.isFrozen(U.PRESETS), true);
     const s1 = U.addSaved([], ' Typing ', { slide: 0, tilt: -5, junk: 1, swing: NaN }); assert.deepEqual(s1, [{ name: 'Typing', pose: { slide: 0, tilt: -5 } }]); assert.equal(U.addSaved(s1, 'Typing', { tilt: 3 }).length, 1, 'the same name replaces'); assert.deepEqual(U.addSaved(s1, 'B', { tilt: 3 }).map(p => p.name), ['B', 'Typing']);
@@ -56,15 +57,18 @@ const ERGO = 45, KEYBOARD = [{ kind: 'keyboard', propId: 'ergoflex-ergo-keyboard
     assert.deepEqual(lane.keys.map(k => [k.t, k.left, k.selected, k.warn]), [[2, 20, false, false], [4, 40, true, true], [8, 80, false, false]]); assert.equal(lane.segments.length, 2); assert.deepEqual(lane.segments.map(s => [s.from, s.to, s.route]), [[2, 4, 'auto'], [4, 8, 'direct']]); assert.ok(lane.warnings >= 1);
     assert.match(lane.keys[1].why, /Slide, Swing held to the limits here/); assert.match(U.keyTitle(lane.keys[1]), /Tray key at 4\.00 s.*held to the limits.*Shift: add.*Delete: remove/);
     assert.deepEqual(U.laneModel(null, 10).keys, []); assert.equal(U.laneModel(T.cleanTrayEdit({ keys: [{ t: 1, pose: { tilt: 3 } }] }), 10).warnings, 0, 'an allowed key has no warning');
+    // the same lane with the riders on the desk's shelf from 3 s: the 4 s key is not warned any more
+    const free = U.laneModel(T.cleanTrayEdit({ keys: [{ t: 2, pose: { slide: 0 } }, { t: 4, pose: { slide: 1, swing: 90 }, route: 'direct' }, { t: 8, pose: { slide: 0, swing: 0 } }] }), 10, { riderMm: ERGO, riderAwayAt: s => s >= 3 ? 1 : 0 });
+    assert.equal(free.keys[1].why, 'Swing held to the limits here', 'riders on the shelf: only the coupling (swing at a full slide) is left, no rider clash on the slide');
 }
 
 // the Director's commit, as far as the editor sees it: one undo step per call, calls with the same key merged
-function director({ film = null, has = true, riders = KEYBOARD, preset = 'gaming', store = null, doc = null, shotInit = {} } = {}) {
+function director({ film = null, has = true, riders = KEYBOARD, preset = 'gaming', store = null, doc = null, shotInit = {}, awayAt = undefined } = {}) {
     const shot = { id: 'awareness', seconds: 12, ...shotInit }, undo = [], calls = { seek: [], status: [], rerender: 0, picked: [] }; let group = null, t = 0, soft = 0;
     const commit = (fn, { key = null } = {}) => { if (!key || group !== key) undo.push(structuredClone(shot)); group = key; fn(); };
     const memory = new Map(), local = store || { getItem: k => memory.get(k) ?? null, setItem: (k, v) => memory.set(k, v) };
     const ed = createTrayEditor({ shot: () => shot, film: () => film, commit, status: (m, bad) => calls.status.push([m, !!bad]), rerender: s => { if (s === true) soft++; else calls.rerender++; }, time: () => t, seek: x => { calls.seek.push(x); t = x; }, seconds: () => shot.seconds,
-        stage: () => ({ trayInfo: () => ({ has, preset, riders }), trayAt: () => true }), keyPicked: x => calls.picked.push(x), store: local, doc });
+        stage: () => ({ trayInfo: () => ({ has, preset, riders, awayAt }), trayAt: () => true }), keyPicked: x => calls.picked.push(x), store: local, doc });
     return { ed, shot, undo, calls, at: x => { t = x; }, soft: () => soft, local, group: () => { group = null; } };
 }
 const edit0 = d => d.shot.trayEdits?.[0];
@@ -74,8 +78,8 @@ const edit0 = d => d.shot.trayEdits?.[0];
     const d = director(); assert.match(d.ed.panel(), /Double-click the tray/); assert.match(d.ed.panel(), /data-action="tr-enter"/); assert.ok(!/name="tr-slide"/.test(d.ed.panel()), 'Tray mode is not entered yet');
     assert.match(d.ed.laneRow(), /data-tray-lane/); assert.match(d.ed.laneRow(), /Double-click the tray to key it/); assert.match(d.ed.laneRow(), /empty/);
     assert.equal(d.ed.enter(), true); assert.equal(d.ed.active(), true); const p = d.ed.panel();
-    for (const n of ['tr-slide', 'tr-swing', 'tr-tilt', 'tr-slide-n', 'tr-swing-n', 'tr-tilt-n', 'tr-bracket']) assert.ok(p.includes(`name="${n}"`), n); assert.ok(!p.includes('name="tr-drop"'), 'no drop slider with the bracket off');
-    assert.ok(!/name="tr-bracket" checked/.test(p)); assert.match(p, /Mount bracket \(added\)/); assert.ok(p.includes(U.BRACKET_HINT.slice(0, 40)), 'the one-line hint');
+    for (const n of ['tr-slide', 'tr-swing', 'tr-tilt', 'tr-slide-n', 'tr-swing-n', 'tr-tilt-n']) assert.ok(p.includes(`name="${n}"`), n); assert.ok(!p.includes('name="tr-drop"'), 'no drop slider');
+    assert.ok(!/tr-bracket|Mount bracket|bracket/i.test(p), 'no bracket checkbox, no bracket words'); assert.match(p, /<span>Surface tilt<\/span>/); assert.match(p, /<span>Slide<\/span>/);
     assert.match(p, /data-action="tr-done"/); assert.match(p, /data-action="tr-auto" aria-pressed="false"/); assert.ok(!/autofocus/.test(p), 'no field is focused for the user (the Director\'s keys stay free)');
     assert.equal(d.undo.length, 0, 'entering changes nothing in the cut');
 }
@@ -103,9 +107,13 @@ const edit0 = d => d.shot.trayEdits?.[0];
     const d = director({ shotInit: { trayEdits: [{ keys: [{ id: 'k1', t: 2, pose: { slide: 1, swing: 90 } }] }] } }); d.ed.enter(); d.at(3);
     const p = d.ed.panel(); assert.match(p, /tray-joint clamped/); assert.match(p, /keyed 100 % · the tray takes 45 %/); assert.match(p, /keyboard and mouse \(47\.2 mm\) does not fit under the desk/); assert.match(p, /name="tr-slide" min="0" max="100" step="1" value="45"/);
     const lane = d.ed.laneRow(); assert.match(lane, /tray-key  warn|tray-key\s+warn/); assert.match(lane, /1 key · held/); assert.match(lane, /<button type="button" class="tray-key/, 'keys are buttons: the timeline marquee ignores buttons');
-    d.at(2); d.ed.changed({ name: 'tr-bracket', checked: true }); assert.equal(edit0(d).bracket, true); assert.match(d.ed.panel(), /name="tr-drop"/); assert.match(d.ed.panel(), /name="tr-bracket" checked/);
-    d.ed.changed({ name: 'tr-drop-n', value: '31' }); assert.equal(edit0(d).keys[0].pose.drop, 31, 'a key at the playhead takes the drop'); d.at(3); assert.ok(!/does not fit under the desk/.test(d.ed.panel()) && /name="tr-slide" min="0" max="100" step="1" value="100"/.test(d.ed.panel()), 'a drop that clears the keyboard lifts the rider limit so slide reaches 100 %'); assert.equal(d.undo.length, 2);
-    d.ed.changed({ name: 'tr-bracket', checked: false }); assert.ok(!('bracket' in edit0(d))); assert.ok(!/name="tr-drop"/.test(d.ed.panel())); assert.equal(d.undo.length, 3);
+    assert.match(p, /desk tilts past 9°, the keyboard and mouse go up to the desk(?:'|&#39;)s shelf and the tray is free/); assert.ok(!/bracket/i.test(p));
+    // old fields are ignored: the bracket checkbox and the drop number are no fields of the editor any more
+    assert.equal(d.ed.changed({ name: 'tr-bracket', checked: true }), false); assert.equal(d.ed.changed({ name: 'tr-drop-n', value: '31' }), false); assert.equal(d.undo.length, 0);
+    // the same key while the keyboard and mouse are up on the desk's shelf (the desk tilted): the tray takes it all, no warning, the note says why
+    const u = director({ awayAt: () => 1, shotInit: { trayEdits: [{ keys: [{ id: 'k1', t: 2, pose: { slide: 1, swing: 90 } }] }] } }); u.ed.enter(); u.at(3);
+    const up = u.ed.panel(); assert.ok(!/does not fit under the desk/.test(up) && !/tray-joint clamped" data-tray-joint="slide"/.test(up)); assert.match(up, /name="tr-slide" min="0" max="100" step="1" value="100"/); assert.match(up, /data-tray-riders/); assert.match(up, /on the desk(?:'|&#39;)s shelf here/);
+    assert.ok(!/Slide, Swing held to the limits/.test(u.ed.laneRow()), 'no rider warning in the lane');
 }
 {   // keys: select, Shift, retime, delete, ease, route, label, copy / paste, prev / next
     const d = director({ shotInit: { trayEdits: [{ keys: [{ t: 1, pose: { tilt: 3 } }, { t: 3, pose: { tilt: -3 } }, { t: 6, pose: { swing: 20 } }, { t: 9, pose: { tilt: 0 } }] }] } }); d.ed.enter();
@@ -167,4 +175,4 @@ const edit0 = d => d.shot.trayEdits?.[0];
     assert.ok(html.includes('href="./tray-mode.css"') && html.indexOf('tray-mode.css') < html.indexOf('director-phone.css'), 'tray-mode.css linked before director-phone.css');
     assert.ok(phone.indexOf('.tray-key{width:44px') > phone.indexOf('@media (pointer: coarse){'), 'inside the coarse block');
 }
-console.log('tray-mode-test: ok (panel and limits text, one undo step per edit, Auto-key / starting pose, keys, bracket switch, saved poses, the double-click, the wiring into the Director, stage and player)');
+console.log('tray-mode-test: ok (panel and limits text, one undo step per edit, Auto-key / starting pose, keys, riders on the shelf free the tray, no bracket / drop, saved poses, the double-click, the wiring into the Director, stage and player)');

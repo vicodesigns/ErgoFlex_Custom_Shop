@@ -1,7 +1,7 @@
 // Keyboard tray pose model: joints, limits, keys and the one sampler (docs/keyboard-tray/SPEC.md sections 0.1, 2.3, 4, 6.5).
 //
 // A chapter may carry shot.trayEdits = [ { desk?, initial?, keys: [ { id, t, pose, ease?, route?, label? }, ... ] } ].
-//   pose   {slide, swing, tilt, drop}, any subset: a key names only the joints it changes, the rest keep the value they
+//   pose   {slide, swing, tilt}, any subset: a key names only the joints it changes, the rest keep the value they
 //          had at the key before (or `initial`, or the rest pose). Units and ranges: tray-limits.mjs.
 //   t      chapter seconds (the clock of clips and people pose keys).
 //   ease   how the key LEAVES toward the next: 'smooth' (default, smoothstep), 'linear' or 'hold' (stays, then jumps).
@@ -12,13 +12,18 @@
 // Stored keys are held to the joints' HARD limits only. The coupling between joints (tray-limits.mjs) is applied when
 // sampling, never destructively, so a key outside the allowed set still shows a clamped tray, and trayIssues says where.
 //
+// Riders (the keyboard and mouse on the plate) limit the tray only while they are ON it: opts.riderMm is their thickness, opts.riderAway
+// (0..1) how far they have gone to the desk's shelf (tray-riders.mjs: decided by the desk's tilt only, never by the tray), or
+// opts.riderAwayAt(seconds) the same along the chapter. Away = the tray's full range, no clearance warning.
+// An old edit's `drop` joint and `bracket: true` (taken out 25 Nov 2026, SPEC.md 0.3) are ignored when cleaned and sampled.
+//
 // Pure: no three.js, no DOM. The Director's panels, the stage, the film (film-fx) and the node tests share it.
-import { JOINT_LIMITS, SLIDE_COUPLING, SWING_TILT, UNDER_RAMPS, RIDER_MM, RIDER_UNKNOWN_MM, PLATE_BELOW_TRACK_MM, RIDER_CLEARANCE_MM, DROP_ENABLED } from './tray-limits.mjs';
+import { JOINT_LIMITS, SLIDE_COUPLING, SWING_TILT, UNDER_RAMPS, RIDER_MM, RIDER_UNKNOWN_MM, PLATE_BELOW_TRACK_MM, RIDER_CLEARANCE_MM } from './tray-limits.mjs';
 
-export const JOINTS = ['slide', 'swing', 'tilt', 'drop'];
-const DECIMALS = { slide: 4, swing: 2, tilt: 2, drop: 1 };
-const UNITS = { slide: '', swing: 'deg', tilt: 'deg', drop: 'mm' };
-const LABELS = { slide: 'Slide', swing: 'Swing', tilt: 'Tilt', drop: 'Drop' };
+export const JOINTS = ['slide', 'swing', 'tilt'];
+const DECIMALS = { slide: 4, swing: 2, tilt: 2 };
+const UNITS = { slide: '', swing: 'deg', tilt: 'deg' };
+const LABELS = { slide: 'Slide', swing: 'Swing', tilt: 'Surface tilt' };
 export const TRAY_JOINTS = Object.freeze(JOINTS.map(id => Object.freeze({ id, label: LABELS[id], unit: UNITS[id], min: JOINT_LIMITS[id][0], max: JOINT_LIMITS[id][1], rest: 0, decimals: DECIMALS[id] })));
 export const EASES = ['smooth', 'linear', 'hold'];
 export const ROUTES = ['auto', 'direct'];
@@ -26,7 +31,7 @@ export const KEY_SNAP = 1 / 60;                 // two keys nearer than this are
 export const MAX_KEYS = 64;
 export const MAX_EDITS = 16;
 const MAX_T = 3600, EPS = 1e-9, ROUTE_SAMPLES = 25;
-export const REST = Object.freeze({ slide: 0, swing: 0, tilt: 0, drop: 0 });
+export const REST = Object.freeze({ slide: 0, swing: 0, tilt: 0 });
 export const restPose = () => ({ ...REST });
 
 const finite = v => typeof v === 'number' && Number.isFinite(v);
@@ -69,38 +74,34 @@ const swingTilt = swing => table(SWING_TILT, 'swing', Math.abs(swing), r => r.ti
 export const underDesk = pose => Math.max(ramp(pose?.slide ?? 0, UNDER_RAMPS.slide), ramp(Math.abs(pose?.swing ?? 0), UNDER_RAMPS.swing));
 // The thickest thing that rides on the plate, mm (0 when nothing does): from prop ids, the unknown ones count as a thick keyboard.
 export const riderThicknessMm = ids => (ids || []).reduce((m, id) => Math.max(m, RIDER_MM[id] ?? RIDER_UNKNOWN_MM), 0);
-// The drop a rider needs before the plate may go under the desktop: its thickness, less the 19.7 mm the plate already
-// hangs, plus a little air; 0 for no rider. (28.3 mm for the 45 mm ergo keyboard, 40.2 mm for the gaming mouse.)
-export const dropNeededMm = riderMm => riderMm > 0 ? Math.max(0, riderMm - PLATE_BELOW_TRACK_MM + RIDER_CLEARANCE_MM) : 0;
-
 // Does a rider of this thickness fit under the desktop at the CAD's plate drop (19.7 mm under the track, less a little air)? A thin one
 // (under about 17 mm) does; every keyboard and mouse of the library is thicker.
 export const riderFitsUnder = riderMm => !(riderMm > PLATE_BELOW_TRACK_MM - RIDER_CLEARANCE_MM);
-// The pose after the coupling. Order: drop (hard limit; 0..0 unless the drop joint is on), slide, swing (given the slide), tilt (given slide
-// and swing). Returns the pose and the limits each joint was held to.
-// opts.riderMm: thickness of what stands on the plate (0 = nothing). opts.dropEnabled (default DROP_ENABLED = false, tray-limits.mjs;
-// sampleTray / trayIssues turn it on for an edit with bracket: true).
-//   The rider clears the desktop when it fits at the CAD's drop, or when the drop joint (on, and keyed) is at least dropNeededMm. Until
-//   then the plate may not go under the desk: slide <= the first value of UNDER_RAMPS.slide, |swing| <= that of UNDER_RAMPS.swing. Nothing
-//   lowers the tray by itself: a drop only happens where a key asks for it.
+// The pose after the coupling. Order: slide, swing (given the slide), tilt (given slide and swing). Returns the pose and the limits each
+// joint was held to.
+// opts.riderMm: thickness of what stands on the plate (0 = nothing); opts.riderAway 0..1: how far it has gone to the shelf (1 = off the
+//   tray: no rider limit at all). A rider that does not fit under the desktop keeps the plate out from under the desk while it is on:
+//   slide <= the first value of UNDER_RAMPS.slide, |swing| <= that of UNDER_RAMPS.swing; while it is being carried off (0 < away < 1)
+//   those limits open in step, so a tray keyed further than they allow follows the hand-off smoothly instead of jumping.
 function chain(pose, opts) {
-    const riderMm = opts?.riderMm || 0, dropOn = opts?.dropEnabled ?? DROP_ENABLED, p = holdPose(pose), limits = {};
-    limits.drop = dropOn ? [...JOINT_LIMITS.drop] : [0, 0]; p.drop = clamp(p.drop, ...limits.drop);
-    const blocked = !(riderFitsUnder(riderMm) || p.drop >= dropNeededMm(riderMm) - 1e-9);
-    limits.slide = [JOINT_LIMITS.slide[0], blocked ? UNDER_RAMPS.slide[0] : JOINT_LIMITS.slide[1]]; p.slide = clamp(p.slide, ...limits.slide);
-    const s = slideLimits(p.slide), swingMax = blocked ? Math.min(s.swing, UNDER_RAMPS.swing[0]) : s.swing;
+    const riderMm = opts?.riderMm || 0, away = clamp(finite(opts?.riderAway) ? opts.riderAway : 0, 0, 1), p = holdPose(pose), limits = {};
+    const blocked = !riderFitsUnder(riderMm) && away < 1;
+    limits.slide = [JOINT_LIMITS.slide[0], blocked ? lerp(UNDER_RAMPS.slide[0], JOINT_LIMITS.slide[1], away) : JOINT_LIMITS.slide[1]]; p.slide = clamp(p.slide, ...limits.slide);
+    const s = slideLimits(p.slide), swingMax = blocked ? Math.min(s.swing, lerp(UNDER_RAMPS.swing[0], s.swing, away)) : s.swing;
     limits.swing = [0 - swingMax, swingMax]; p.swing = clamp(p.swing, ...limits.swing);
     const w = swingTilt(p.swing);
     limits.tilt = [Math.max(s.tilt[0], w[0]), Math.min(s.tilt[1], w[1])]; p.tilt = clamp(p.tilt, ...limits.tilt);
     return { pose: p, limits };
 }
-// What each joint may do given the others: { slide:[lo,hi], swing, tilt, drop }. opts.riderMm: thickness of the keyboard /
+// The options at chapter second s: opts.riderAwayAt(s) (the riders' hand-off along the chapter) becomes opts.riderAway.
+export const ridersAt = (opts, s) => typeof opts?.riderAwayAt === 'function' ? { ...opts, riderAway: opts.riderAwayAt(s) } : (opts || {});
+// What each joint may do given the others: { slide:[lo,hi], swing, tilt }. opts.riderMm: thickness of the keyboard /
 // mouse on the plate (0 = none). The limits of a joint depend only on the joints before it in the order above.
 export const limitsFor = (pose, opts = {}) => chain(pose, opts).limits;
 // A pose held to the hard limits and the coupling (a fresh object). Rest stays rest; a tray with no rider is never lowered.
 export const clampTrayPose = (pose, opts = {}) => chain(pose, opts).pose;
-// The joints the coupling had to change (for the lane's warning). A drop held to 0 because the joint is off is named too (a keyed drop
-// that does nothing is worth saying); with a rider the slide and swing that would take it under the desk are named.
+// The joints the coupling had to change (for the lane's warning); with a rider on the plate the slide and swing that would take it
+// under the desk are named.
 export function clampedJoints(pose, opts = {}) { const raw = holdPose(pose), c = clampTrayPose(raw, opts); return JOINTS.filter(j => Math.abs(raw[j] - c[j]) > 1e-6); }
 
 // ---- keys ---------------------------------------------------------------------------------------------------------
@@ -137,11 +138,11 @@ export function cleanTrayKeys(v) {
 export function cleanTrayEdit(e) {
     if (!e || typeof e !== 'object' || Array.isArray(e)) return null;
     const out = {}; if (typeof e.desk === 'string' && DESK_ID.test(e.desk)) out.desk = e.desk;
-    if (e.bracket === true) out.bracket = true;       // setup, not motion: the optional mount bracket (and with it the drop joint) for this edit; absent = off
+    // (an old edit's `bracket: true` and keyed `drop` are not carried over: the bracket and the drop joint were taken out, SPEC.md 0.3)
     const init = cleanTrayPose(e.initial, { partial: true });
     if (init) { for (const j of JOINTS) if (j in init && Math.abs(init[j] - REST[j]) < EPS) delete init[j]; if (Object.keys(init).length) out.initial = init; }
     const keys = cleanTrayKeys(e.keys); if (keys.length) out.keys = keys;
-    return out.keys || out.initial || out.bracket ? out : null;
+    return out.keys || out.initial ? out : null;
 }
 // The shot field, as cleanDeskEdits does it: nothing when the shot has none (so an untouched chapter's cut is byte-identical);
 // otherwise the cleaned edits, one per desk (the later one wins), at most MAX_EDITS. A present empty list stays (it replaces
@@ -174,16 +175,15 @@ export const activeTrayEdit = (edits, preset) => { const e = pickTrayEdit(edits,
 // ---- travel between two poses -------------------------------------------------------------------------------------
 const FULL = JOINTS.reduce((o, j) => { o[j] = [0, 1]; return o; }, {});
 // Staging windows (fractions of the segment, spec 6.5), chosen per joint by the direction it moves: moves that RELAX the
-// coupling go first, moves that TIGHTEN it go last. Relaxing: slide out, swing toward the front, tilt toward level, drop down
-// being added; tightening: slide in, swing away, tilt away from level, drop taken back. So pushing the tray in goes
+// coupling go first, moves that TIGHTEN it go last. Relaxing: slide out, swing toward the front, tilt toward level; tightening:
+// slide in, swing away, tilt away from level. So pushing the tray in goes
 // level -> swing back -> slide in; bringing it out goes slide out -> swing -> tilt, as the spec words it.
 const WINDOWS = {
     slide: { relax: [0, 0.55], tighten: [0.45, 1] },
     swing: { relax: [0.2, 0.65], tighten: [0.35, 0.8] },
     tilt: { relax: [0, 0.35], tighten: [0.6, 1] },
-    drop: { relax: [0, 0.35], tighten: [0.6, 1] },
 };
-const relaxes = (j, a, b) => j === 'slide' ? b.slide < a.slide : j === 'drop' ? b.drop > a.drop : Math.abs(b[j]) < Math.abs(a[j]);
+const relaxes = (j, a, b) => j === 'slide' ? b.slide < a.slide : Math.abs(b[j]) < Math.abs(a[j]);
 function stagedWindows(a, b, changing) {
     const out = { ...FULL }, base = {};
     for (const j of changing) base[j] = WINDOWS[j][relaxes(j, a, b) ? 'relax' : 'tighten'];
@@ -215,14 +215,14 @@ export function routeSegment(a, b, opts = {}) {
     return staged.length ? { mode: 'clamped', windows: { ...FULL }, issues: direct } : { mode: 'staged', windows, issues: [] };
 }
 
-// The edit's setup as sampler options: `bracket: true` is what switches the drop joint on for this edit (the lowered tray needs the added
-// mount bracket to look mounted); an explicit opts.dropEnabled wins.
-const withSetup = (edit, opts) => opts.dropEnabled === undefined && edit?.bracket === true ? { ...opts, dropEnabled: true } : opts;
-export const trayBracket = edit => edit?.bracket === true;
-// Sets or clears the edit's setup flag (the Inspector's "Mount bracket (added)"); false removes the field.
-export function setBracket(edit, on) { const out = { ...(edit || {}) }; if (on === true) out.bracket = true; else delete out.bracket; return out; }
-
 // ---- the timeline and the sampler ---------------------------------------------------------------------------------
+// The riders for planning the way between two keys: on the tray (the strictest) if they are on it at any point of the stretch, else
+// away. A stretch's route is chosen once, so the tray does not change its way half-way through a hand-off.
+function segmentRiders(opts, t0, t1) {
+    if (typeof opts?.riderAwayAt !== 'function') return opts || {};
+    let away = 1; for (let n = 0; n <= 8; n++) away = Math.min(away, opts.riderAwayAt(lerp(t0, t1, n / 8)));
+    return { ...opts, riderAway: away };
+}
 // The edit's keys with every joint filled in: [{ t, pose (full), ease, route, id?, label? }], the first one at 0 s = `initial`.
 function frames(edit) {
     let cur = holdPose(edit?.initial);
@@ -238,35 +238,35 @@ function frames(edit) {
 }
 function between(a, b, u, opts) {
     if (samePose(a.pose, b.pose)) return a.pose;
-    const { windows } = routeSegment(a.pose, b.pose, { ...opts, route: a.route }), out = {};
+    const { windows } = routeSegment(a.pose, b.pose, { ...segmentRiders(opts, a.t, b.t), route: a.route }), out = {};
     for (const j of JOINTS) {
         const [w0, w1] = windows[j], local = w1 - w0 > EPS ? clamp((u - w0) / (w1 - w0), 0, 1) : (u >= w1 ? 1 : 0);
         out[j] = lerp(a.pose[j], b.pose[j], a.ease === 'hold' ? (u >= 1 ? 1 : 0) : a.ease === 'linear' ? local : smooth(local));
     }
     return out;
 }
-// The tray's pose at chapter second `seconds`: a fresh { slide, swing, tilt, drop } held to the hard limits and the coupling
-// (opts.riderMm: thickness of what rides on the plate, 0 = none). Pure and stateless, so out-of-order seeks agree. No edit,
-// no keys, or a time that is not a number: the edit's `initial`, else the rest pose = the rigid tray.
+// The tray's pose at chapter second `seconds`: a fresh { slide, swing, tilt } held to the hard limits and the coupling
+// (opts.riderMm: thickness of what rides on the plate, 0 = none; opts.riderAway / riderAwayAt: the riders on the shelf, see chain).
+// Pure and stateless, so out-of-order seeks agree. No edit, no keys, or a time that is not a number: the edit's `initial`, else the
+// rest pose = the rigid tray.
 export function sampleTray(edit, seconds, options = {}) {
     if (!edit) return restPose();
-    const opts = withSetup(edit, options), f = frames(edit), fin = p => options.raw ? holdPose(p) : clampTrayPose(p, opts);     // raw: held to the hard limits only (the panel shows what was keyed next to what is allowed)
+    const opts = ridersAt(options, seconds), f = frames(edit), fin = p => options.raw ? holdPose(p) : clampTrayPose(p, opts);     // raw: held to the hard limits only (the panel shows what was keyed next to what is allowed)
     if (f.length === 1 || !finite(seconds) || seconds <= 0) return fin(f[0].pose);
     let i = 0; while (i + 1 < f.length && f[i + 1].t <= seconds + EPS) i++;
     if (i === f.length - 1) return fin(f[i].pose);
     const a = f[i], b = f[i + 1], u = clamp((seconds - a.t) / (b.t - a.t), 0, 1);
-    return fin(between(a, b, u, opts));
+    return fin(between(a, b, u, options));
 }
 // What the lane should flag (spec 6.4): [{ kind: 'key', t, id?, joints }] for a key whose pose the coupling has to change,
 // [{ kind: 'segment', t (second), from, to, joint, mode }] for a stretch whose travel does. Empty = all as authored.
 export function trayIssues(edit, options = {}) {
     if (!edit) return [];
-    const opts = withSetup(edit, options);
     const f = frames(edit), out = [];
-    for (const k of f) { const joints = clampedJoints(k.pose, opts); if (joints.length) out.push({ kind: 'key', t: k.t, ...(k.id ? { id: k.id } : {}), joints }); }
+    for (const k of f) { const joints = clampedJoints(k.pose, ridersAt(options, k.t)); if (joints.length) out.push({ kind: 'key', t: k.t, ...(k.id ? { id: k.id } : {}), joints }); }
     for (let i = 0; i + 1 < f.length; i++) {
         const a = f[i], b = f[i + 1]; if (samePose(a.pose, b.pose)) continue;
-        const r = routeSegment(a.pose, b.pose, { ...opts, route: a.route });
+        const r = routeSegment(a.pose, b.pose, { ...segmentRiders(options, a.t, b.t), route: a.route });
         if (r.issues.length) out.push({ kind: 'segment', t: r3(a.t + r.issues[0].u * (b.t - a.t)), from: a.t, to: b.t, joint: r.issues[0].joint, mode: r.mode });
     }
     return out;
