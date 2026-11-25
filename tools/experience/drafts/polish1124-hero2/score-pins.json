@@ -1,6 +1,0 @@
-{
- "note": "Bar lines the score fit keeps (tools/experience/build-cine-score.py pins()). polish1124 hero2: the storage -> hero dissolve bar line as in the 3rd cut's score of Nov 24 (checkpoint 6063c6b5), so moving the hero's desk-version fades onto its bar lines does not retime the storage chapter's music.",
- "bar_lines": [
-  {"at": 215.478, "why": "storage -> hero dissolve bar line (Vicos 3rd cut score, 2026-11-24)"}
- ]
-}

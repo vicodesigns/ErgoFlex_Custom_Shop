@@ -11,13 +11,13 @@ Vico's 3rd cut ends 0.63 s after the wordmark; the old 2.5 s master fade then fa
      the fit without the snap puts it (no earlier chapter's music changes), and keeps every tempo step under the cap.
   4. if the cut's score/score.wav is built and in step: the hit is not faded (its first 0.4 s are as loud as the bar
      before it, within 6 dB), and the music before the hit is not faded either.
-  5. polish1124 hero2 (25.5 s hero, end-card hold): on a temp copy of the 3rd cut, the DRAFT Director import
-     (tools/experience/drafts/polish1124-hero2) through build-round8-director.py (--import, then the pass) and apply.py:
-     the hero is 25.5 s, the camera rests on the final pose from its landing key to 25.5 s, the score fit keeps every
-     anchor before the hero exactly as the 20.5 s cut's, puts each desk look within 0.05 beat of a bar line and the hit
-     on the wordmark, the tail takes the long (unchanged) path; finish-intro.py's titles: the CTA starts 1.0-1.5 s after
-     the wordmark, after its 0.6 s fade-in is fully visible >= 2.5 s before the film's last 1.4 s fade, and the
-     wordmark is fully visible >= 2.8 s. Needs python3 and node on PATH (skipped otherwise).
+  5. polish1124 hero3 (25.95 s hero, end-card hold): on a temp copy of the 3rd cut, tools/experience/drafts/polish1124-hero3/
+     run-all.py: refuses before the import, --import --dry-run writes nothing, --import runs the DRAFT import, the pass,
+     the page, apply.py and the score with its --check; then: the hero is 25.95 s, the camera rests on the final pose from
+     its landing key to 25.95 s, the fit keeps every anchor before the hero as in the 20.5 s cut, each desk look within
+     0.05 beat of a bar line, the hit on the wordmark, the long tail; finish-intro.py: the CTA 1.0-1.5 s after the
+     wordmark, fully visible >= 3 s before the last fade, 72 px SemiBold 30 px under the wordmark on its axis, inside
+     the safe area; the wordmark fully visible >= 3 s. Needs python3 and node on PATH (skipped otherwise); builds a score.
 
     python3 tests/cine-score-end-test.py      (CPU only, a few seconds; part 4 needs the built score)
 """
@@ -94,55 +94,70 @@ if os.path.isdir(CUT):
 else:
     print('skip 3rd-cut checks (no cut folder)')
 
-# 5. polish1124 hero2
-import shutil, tempfile
-DR = os.path.join(WT, 'tools', 'experience', 'drafts', 'polish1124-hero2')
+# 5. polish1124 hero3
+import hashlib, re, shutil, tempfile
+DR = os.path.join(WT, 'tools', 'experience', 'drafts', 'polish1124-hero3')
 py3 = shutil.which('python3'); have = bool(py3) and subprocess.run([py3, '-c', 'print(1)'], capture_output=True).returncode == 0 and bool(shutil.which('node'))
+HS, TOTAL = 25.95, 240.778
+def tree_sha(root):
+    h = hashlib.sha256()
+    for dp, dn, fn in sorted(os.walk(root)):
+        dn.sort()
+        for f in sorted(fn): h.update(os.path.relpath(os.path.join(dp, f), root).encode()); h.update(open(os.path.join(dp, f), 'rb').read())
+    return h.hexdigest()
 if os.path.isdir(CUT) and have:
     tmp = tempfile.mkdtemp(prefix='cine-score-end-test-'); C = os.path.join(tmp, 'cut')
     try:
         shutil.copytree(CUT, C, ignore=shutil.ignore_patterns('score', '*.wav', '*.mp4', '*.mkv'))
-        env = dict(os.environ, PYTHONUTF8='1')
-        B8 = os.path.join(WT, 'tools', 'experience', 'build-round8-director.py')
-        r1 = subprocess.run([py3, B8, C, '--import', os.path.join(DR, 'ErgoFlex-film-ch12-hero-director-DRAFT-25s.json')], capture_output=True, text=True, env=env, cwd=tmp)
-        r2 = subprocess.run([py3, B8, C], capture_output=True, text=True, env=env, cwd=tmp)
-        r3 = subprocess.run([py3, os.path.join(DR, 'apply.py'), C], capture_output=True, text=True, env=env, cwd=tmp)
-        check(r1.returncode == 0 and r2.returncode == 0 and r3.returncode == 0, f'hero2: import, pass and apply.py run ({r1.returncode} {r2.returncode} {r3.returncode} {(r1.stderr + r2.stderr + r3.stderr)[-300:]})')
+        env = dict(os.environ, PYTHONUTF8='1'); RA = os.path.join(DR, 'run-all.py')
+        r0 = subprocess.run([py3, RA, C], capture_output=True, text=True, env=env, cwd=tmp)
+        check(r0.returncode != 0 and 'import the DRAFT' in (r0.stdout + r0.stderr), 'hero3: run-all.py refuses while the hero is not 25.95 s (no --import)')
+        before = tree_sha(C)
+        rd = subprocess.run([py3, RA, C, '--import', '--dry-run'], capture_output=True, text=True, env=env, cwd=tmp)
+        check(rd.returncode == 0 and tree_sha(C) == before and 'dry run' in rd.stdout, 'hero3: run-all.py --import --dry-run lists the steps and writes nothing')
+        ra = subprocess.run([py3, RA, C, '--import'], capture_output=True, text=True, env=env, cwd=tmp)
+        check(ra.returncode == 0 and 'check OK' in ra.stdout + ra.stderr and 'OK: edl.json and score/score.wav are in step' in ra.stdout,
+              f'hero3: run-all.py --import (import, pass, page, apply.py, score, --check) ({ra.returncode} {(ra.stdout + ra.stderr)[-300:]})')
+        rd2 = subprocess.run([py3, RA, C, '--dry-run'], capture_output=True, text=True, env=env, cwd=tmp)
+        check(rd2.returncode == 0 and 'nothing to do' in rd2.stdout, 'hero3: a second run-all.py --dry-run finds apply.py already applied')
         rc = bcs.J(os.path.join(C, 'review-cut.json')); hero = rc['shots'][-1]
-        check(abs(float(hero['seconds']) - 25.5) < 1e-9, f"hero2: the hero is {hero['seconds']} s")
+        check(abs(float(hero['seconds']) - HS) < 1e-9, f"hero3: the hero is {hero['seconds']} s")
         ks = sorted(hero['cameraPlan']['keys'], key=lambda k: k['at']); land, end = ks[-2], ks[-1]
-        check(end['at'] == 25.5 and land['position'] == end['position'] and land['target'] == end['target'] and land.get('fov') == end.get('fov'),
-              f"hero2: final pose keyed at {land['at']} s and again at 25.5 s (a pure hold)")
-        cam = hero['camera']['keys']; rest = [k for k in cam if k['time'] * 25.5 >= land['at'] - 1e-6]
+        check(end['at'] == HS and land['position'] == end['position'] and land['target'] == end['target'] and land.get('fov') == end.get('fov'),
+              f"hero3: final pose keyed at {land['at']} s and again at {HS} s (a pure hold)")
+        rest = [k for k in hero['camera']['keys'] if k['time'] * HS >= land['at'] - 1e-6]
         drift = max(abs(a - b) for k in rest for a, b in zip(k['view']['position'] + k['view']['target'], land['position'] + land['target']))
-        check(drift < 1e-4, f'hero2: the baked camera rests from {land["at"]} s to 25.5 s ({len(rest)} baked keys; largest deviation '
+        check(drift < 1e-4, f'hero3: the baked camera rests from {land["at"]} s to {HS} s ({len(rest)} baked keys; largest deviation '
                             f'{drift:.1e} wu = {drift / 1.671 * 1000:.3f} mm, the bake\'s own rounding)')
-        g = subprocess.run([sys.executable, os.path.join(WT, 'tools', 'experience', 'build-cine-score.py'), C, '--edl-only'], capture_output=True, text=True)
-        check(g.returncode == 0, 'hero2: edl.json regenerated')
         edl2 = bcs.J(os.path.join(C, 'edl.json')); pic2 = bcs.picture(C, edl2); t2, rep2 = bcs.fit_tempo(synth, edl2, pic2)
-        check(abs(float(edl2['total']) - 240.328) < 1e-6, f"hero2: film total {edl2['total']} s")
-        if os.path.isdir(CUT):
-            check(t2['anchors'][:-1] == tempo['anchors'][:-1] and t2['seg_beats'] == tempo['seg_beats'] and t2['bpm'] == tempo['bpm'],
-                  'hero2: every anchor before the hero, the bar counts and the tempo are those of the 20.5 s cut (earlier chapters unchanged)')
-        check(abs(t2['anchors'][-1] - pic2['logo']) < 1e-9, f"hero2: logo hit {t2['anchors'][-1]} on the wordmark")
+        check(abs(float(edl2['total']) - TOTAL) < 1e-6, f"hero3: film total {edl2['total']} s")
+        check(t2['anchors'][:-1] == tempo['anchors'][:-1] and t2['seg_beats'] == tempo['seg_beats'] and t2['bpm'] == tempo['bpm'],
+              'hero3: every anchor before the hero, the bar counts and the tempo are those of the 20.5 s cut (earlier chapters unchanged)')
+        check(abs(t2['anchors'][-1] - pic2['logo']) < 1e-9, f"hero3: logo hit {t2['anchors'][-1]} on the wordmark")
         looks = [r for r in rep2 if r['kind'] == 'look']
-        check(len(looks) == 3 and all(abs(r['off_beats']) <= 0.05 for r in looks), f"hero2: desk looks on bar lines {[(r['t'], r['off_beats']) for r in looks]}")
-        check(t2['max_step'] <= t2['step_cap'] + 1e-9 <= 0.015 + 1e-9, f"hero2: largest step {100 * t2['max_step']:.2f} %")
+        check(len(looks) == 3 and all(abs(r['off_beats']) <= 0.05 for r in looks), f"hero3: desk looks on bar lines {[(r['t'], float(r['off_beats'])) for r in looks]}")
+        check(t2['max_step'] <= t2['step_cap'] + 1e-9 <= 0.015 + 1e-9, f"hero3: largest step {100 * t2['max_step']:.2f} %")
         tl = synth.tail_layout(float(edl2['total']), pic2['logo'], 60 / 112.38)
-        check(tl == synth.tail_layout(240.328, 234.698, 1.0) and tl['fade'] == 2.5, f'hero2: long tail path {tl}')
+        check(tl == synth.tail_layout(240.328, 234.698, 1.0) and tl['fade'] == 2.5, f'hero3: long tail path {tl}')
         f = subprocess.run([sys.executable, os.path.join(WT, 'tools', 'experience', 'finish-intro.py'), C, '--titles-only'], capture_output=True, text=True, cwd=tmp)
-        check(f.returncode == 0, 'hero2: finish-intro.py --titles-only ' + f.stderr[-200:])
+        check(f.returncode == 0 and 'WARNING' not in f.stderr, 'hero3: finish-intro.py --titles-only ' + f.stderr[-200:])
         tj = bcs.J(os.path.join(C, 'final', 'titles.json')); total = float(edl2['total']); logo = tj['logo']['start']; cta = tj['cta']['start']
-        ass = open(os.path.join(C, 'final', 'titles.ass'), encoding='utf-8').read()
-        full = cta + 0.6; fade = total - 1.4
-        check(1.0 <= cta - logo <= 1.5, f'hero2: CTA at {cta} s, {cta - logo:.3f} s after the wordmark ({logo} s)')
-        check(r'\fad(600,1400)\fs54' in ass and 'build yours' in ass, 'hero2: CTA line: 0.6 s fade-in, 1.4 s fade-out with the film, 54 px')
-        check(fade - full >= 2.5, f'hero2: CTA fully visible {full:.3f}-{fade:.3f} s = {fade - full:.2f} s before the last fade')
-        check(fade - (logo + 1.4) >= 2.8, f'hero2: wordmark fully visible {logo + 1.4:.3f}-{fade:.3f} s = {fade - logo - 1.4:.2f} s')
+        line = [l for l in open(os.path.join(C, 'final', 'titles.ass'), encoding='utf-8').read().split('\n') if ',CTA,' in l][0]
+        full = cta + 0.5; fade = total - 1.4
+        check(1.0 <= cta - logo <= 1.5, f'hero3: CTA at {cta} s, {cta - logo:.3f} s after the wordmark ({logo} s)')
+        check(fade - full >= 3.0, f'hero3: CTA fully visible {full:.3f}-{fade:.3f} s = {fade - full:.2f} s (>= 3 s) before the last fade')
+        check(fade - (logo + 1.4) >= 3.0, f'hero3: wordmark fully visible {logo + 1.4:.3f}-{fade:.3f} s = {fade - logo - 1.4:.2f} s')
+        BS = chr(92)
+        check(all(BS + t in line for t in ('fad(500,1400)', 'fs72', 'fnPoppins SemiBold', 'fsp2.5', 'an8')) and 'build yours' in line,
+              'hero3: CTA line: 0.5 s fade-in, 1.4 s fade-out with the film, 72 px Poppins SemiBold, letter-spacing 2.5, top-centred')
+        m = re.search(re.escape(BS) + r'move\(960,[0-9.]+,960,([0-9.]+)', line); top = float(m.group(1)) if m else -1
+        logo_bottom = 1080 * .73 + 1920 * .22 * 304 / 1400 / 2
+        check(abs(top - (logo_bottom + 30)) < 0.6, f'hero3: CTA line top {top} = the wordmark\'s bottom {logo_bottom:.1f} + 30 px (1080 frame), on the wordmark\'s axis x 960')
+        check(top + 72 * 1.25 <= 1080 * 0.95, f'hero3: CTA line bottom about {top + 72 * 1.25:.0f} px, inside the 90 % safe area ({1080 * .95:.0f})')
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
 else:
-    print('skip hero2 checks (needs the cut folder, python3 and node on PATH)')
+    print('skip hero3 checks (needs the cut folder, python3 and node on PATH)')
 
 print(f'{len(fails)} failure(s)' if fails else 'all ok')
 sys.exit(1 if fails else 0)

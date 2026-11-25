@@ -2,7 +2,7 @@
  "schema": "ergoflex.client-cut",
  "version": 1,
  "id": "film-vicos-3rd-cut-hero",
- "name": "Film chapter: hero (25.5 s) DRAFT end-card hold + camera smoothing 2026-11-24",
+ "name": "Film chapter: hero (25.95 s) DRAFT end-card hold + camera smoothing 2026-11-24",
  "client": "Vicos 3rd cut",
  "volume": 0.32,
  "shots": [
@@ -10,7 +10,7 @@
    "id": "hero",
    "room": "product",
    "kind": "glide",
-   "seconds": 25.5,
+   "seconds": 25.95,
    "title": "One desk. Every part of your day.",
    "detail": "",
    "preset": "gaming",
@@ -1420,7 +1420,7 @@
      },
      {
       "id": "plan-01",
-      "time": 0.027451,
+      "time": 0.026975,
       "label": "Arc from the opening view (0.70 s)",
       "easing": "linear",
       "view": {
@@ -1440,7 +1440,7 @@
      },
      {
       "id": "plan-02",
-      "time": 0.054902,
+      "time": 0.05395,
       "label": "Arc from the opening view (1.40 s)",
       "easing": "linear",
       "view": {
@@ -1460,7 +1460,7 @@
      },
      {
       "id": "plan-03",
-      "time": 0.082353,
+      "time": 0.080925,
       "label": "Arc from the opening view (2.10 s)",
       "easing": "linear",
       "view": {
@@ -1480,7 +1480,7 @@
      },
      {
       "id": "plan-04",
-      "time": 0.109804,
+      "time": 0.1079,
       "label": "Arc from the opening view (2.80 s)",
       "easing": "linear",
       "view": {
@@ -1500,7 +1500,7 @@
      },
      {
       "id": "plan-05",
-      "time": 0.137255,
+      "time": 0.134875,
       "label": "Arc from the opening view (3.50 s)",
       "easing": "linear",
       "view": {
@@ -1520,7 +1520,7 @@
      },
      {
       "id": "plan-06",
-      "time": 0.164706,
+      "time": 0.16185,
       "label": "Arc from the opening view (4.20 s)",
       "easing": "linear",
       "view": {
@@ -1540,7 +1540,7 @@
      },
      {
       "id": "plan-07",
-      "time": 0.192157,
+      "time": 0.188825,
       "label": "Vico path at his 2.79 s",
       "easing": "linear",
       "view": {
@@ -1560,7 +1560,7 @@
      },
      {
       "id": "plan-08",
-      "time": 0.219608,
+      "time": 0.2158,
       "label": "Vico path at his 3.83 s",
       "easing": "linear",
       "view": {
@@ -1580,7 +1580,7 @@
      },
      {
       "id": "plan-09",
-      "time": 0.247059,
+      "time": 0.242775,
       "label": "Vico path at his 4.89 s",
       "easing": "linear",
       "view": {
@@ -1600,7 +1600,7 @@
      },
      {
       "id": "plan-10",
-      "time": 0.27451,
+      "time": 0.26975,
       "label": "Vico path at his 5.98 s",
       "easing": "linear",
       "view": {
@@ -1620,7 +1620,7 @@
      },
      {
       "id": "plan-11",
-      "time": 0.301961,
+      "time": 0.296724,
       "label": "Vico path at his 7.08 s",
       "easing": "linear",
       "view": {
@@ -1640,7 +1640,7 @@
      },
      {
       "id": "plan-12",
-      "time": 0.329412,
+      "time": 0.323699,
       "label": "Vico path at his 8.18 s",
       "easing": "linear",
       "view": {
@@ -1660,7 +1660,7 @@
      },
      {
       "id": "plan-13",
-      "time": 0.356863,
+      "time": 0.350674,
       "label": "Vico path at his 9.31 s",
       "easing": "linear",
       "view": {
@@ -1680,7 +1680,7 @@
      },
      {
       "id": "plan-14",
-      "time": 0.384314,
+      "time": 0.377649,
       "label": "Vico path at his 10.53 s",
       "easing": "linear",
       "view": {
@@ -1700,7 +1700,7 @@
      },
      {
       "id": "plan-15",
-      "time": 0.411765,
+      "time": 0.404624,
       "label": "Vico path at his 10.97 s",
       "easing": "linear",
       "view": {
@@ -1720,7 +1720,7 @@
      },
      {
       "id": "plan-16",
-      "time": 0.439216,
+      "time": 0.431599,
       "label": "Vico path at his 11.23 s",
       "easing": "linear",
       "view": {
@@ -1740,7 +1740,7 @@
      },
      {
       "id": "plan-17",
-      "time": 0.466667,
+      "time": 0.458574,
       "label": "Vico path at his 11.46 s",
       "easing": "linear",
       "view": {
@@ -1760,7 +1760,7 @@
      },
      {
       "id": "plan-18",
-      "time": 0.494118,
+      "time": 0.485549,
       "label": "Vico path at his 11.68 s",
       "easing": "linear",
       "view": {
@@ -1780,7 +1780,7 @@
      },
      {
       "id": "plan-19",
-      "time": 0.54902,
+      "time": 0.539499,
       "label": "Vico path at his 12.13 s",
       "easing": "linear",
       "view": {
@@ -1800,7 +1800,7 @@
      },
      {
       "id": "plan-20",
-      "time": 0.576471,
+      "time": 0.566474,
       "label": "Vico path at his 12.37 s",
       "easing": "linear",
       "view": {
@@ -1820,7 +1820,7 @@
      },
      {
       "id": "plan-21",
-      "time": 0.603922,
+      "time": 0.593449,
       "label": "Vico path at his 12.62 s",
       "easing": "linear",
       "view": {
@@ -1840,7 +1840,7 @@
      },
      {
       "id": "plan-22",
-      "time": 0.631373,
+      "time": 0.620424,
       "label": "Vico path at his 12.92 s",
       "easing": "linear",
       "view": {
@@ -1860,7 +1860,7 @@
      },
      {
       "id": "plan-23",
-      "time": 0.658824,
+      "time": 0.647399,
       "label": "Vico path at his 13.36 s",
       "easing": "linear",
       "view": {
@@ -1880,7 +1880,7 @@
      },
      {
       "id": "plan-24",
-      "time": 0.686275,
+      "time": 0.674374,
       "label": "Vico path at his 14.46 s",
       "easing": "linear",
       "view": {
@@ -1900,7 +1900,7 @@
      },
      {
       "id": "plan-25",
-      "time": 0.713725,
+      "time": 0.701349,
       "label": "Vico path at his 16.07 s",
       "easing": "linear",
       "view": {
@@ -1920,7 +1920,7 @@
      },
      {
       "id": "plan-26",
-      "time": 0.741176,
+      "time": 0.728324,
       "label": "Vico path at his 17.32 s",
       "easing": "linear",
       "view": {
@@ -1940,7 +1940,7 @@
      },
      {
       "id": "plan-27",
-      "time": 0.768627,
+      "time": 0.755299,
       "label": "Vico path at his 18.37 s",
       "easing": "linear",
       "view": {
@@ -1960,7 +1960,7 @@
      },
      {
       "id": "plan-28",
-      "time": 0.847059,
+      "time": 0.83237,
       "label": "Arrive on the end-card pose (21.60 s)",
       "easing": "linear",
       "view": {
@@ -1981,7 +1981,7 @@
      {
       "id": "plan-29",
       "time": 1.0,
-      "label": "Hold on the end card (25.50 s)",
+      "label": "Hold on the end card (25.95 s)",
       "easing": "smooth",
       "view": {
        "position": [
@@ -2027,7 +2027,7 @@
      "preset": "gaming",
      "name": "",
      "start": 14.6,
-     "end": 25.5
+     "end": 25.95
     }
    ]
   }

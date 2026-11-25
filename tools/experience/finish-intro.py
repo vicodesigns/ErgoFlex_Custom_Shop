@@ -171,6 +171,17 @@ def title_dialogues(titles):
                 ass.append(line(1, style, sub_y, part, delay, rise))
     return ass
 
+def logo_aspect(path, default=304 / 1400):
+    """Height / width of the end-card wordmark PNG (its IHDR), or the film's wordmark's when the file cannot be read."""
+    try:
+        with open(path, 'rb') as f: b = f.read(24)
+        if b[:8] == b'\x89PNG\r\n\x1a\n':
+            w, h = int.from_bytes(b[16:20], 'big'), int.from_bytes(b[20:24], 'big')
+            if w > 0 and h > 0: return h / w
+    except OSError: pass
+    return default
+
+
 def chapter_titles(argv):
     """--chapter-titles <chapter id> <in video> <out video>: burn ONE chapter's titles (titles-src.json, chapter seconds, no film
     offset) onto a chapter file with the film's own ASS look. No dissolves, end card, wordmark or CTA (those belong to the film).
@@ -260,7 +271,18 @@ def main():
     ass = list(ASS_HEAD)
     CTA_Y = 904
     ass += title_dialogues(titles)
-    ass.append(f'Dialogue: 1,{ts(cta["start"])},{ts(total)},CTA,,0,0,0,,{{\\an5\\move(960,{CTA_Y + 10},960,{CTA_Y},0,1100)\\fad({int(round(cta_in * 1000))},1400)\\fs{cta_px}\\blur4\\t(0,800,\\blur0)}}{cta["text"]}')
+    if 'gap' in src['cta']:
+        # polish1124 hero3: the CTA set under the wordmark, in the 1920x1080 ASS frame (libass scales it with the output, so
+        # 720p, 1080p and 4K keep the same proportions as the wordmark, which is always 22 % of the width at y = 0.73 H):
+        # its line top 'gap' px under the wordmark's box, centred on the wordmark's axis; 'font' (default Poppins Medium)
+        # and 'spacing' (letter-spacing, px) optional.
+        lb = 1080 * .73 + 1920 * .22 * logo_aspect(os.path.join(d, 'post', 'logo-color.png')) / 2
+        cy = lb + float(src['cta']['gap'])
+        tags = (f'\\an8\\move(960,{cy + 10:.1f},960,{cy:.1f},0,1100)\\fad({int(round(cta_in * 1000))},1400)\\fs{cta_px}'
+                f'\\fn{src["cta"].get("font", "Poppins Medium")}\\fsp{float(src["cta"].get("spacing", 1.5)):g}\\blur4\\t(0,800,\\blur0)')
+        ass.append(f'Dialogue: 1,{ts(cta["start"])},{ts(total)},CTA,,0,0,0,,{{{tags}}}{cta["text"]}')
+    else:
+        ass.append(f'Dialogue: 1,{ts(cta["start"])},{ts(total)},CTA,,0,0,0,,{{\\an5\\move(960,{CTA_Y + 10},960,{CTA_Y},0,1100)\\fad({int(round(cta_in * 1000))},1400)\\fs{cta_px}\\blur4\\t(0,800,\\blur0)}}{cta["text"]}')
     open(os.path.join(out, 'titles.ass'), 'w', encoding='utf-8').write('\n'.join(ass) + '\n')
 
     if '--title-still' in sys.argv:
