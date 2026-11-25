@@ -1,0 +1,5 @@
+# Vico's second set (about 13:43), profile views of the three real parts
+
+Vico: "perfect images of the 3 parts, and right now how it's fully up and how it tilts down. The engineer can keep the size of the other one, match the size. It's the exact same size, just a slightly different tilt." So: do NOT rescale the CAD parts; the CAD keyboard surface, arm and brackets are the same size as the real ones.
+What Orch sees (verify): 01 close side view of the front plate with the arc slot and lock knob (platform tilt); 02 (profile) tray tucked, with keyboard on the platform, the rear L-bracket hanging from the desk-underside plate, arm to the front arc plate; 03 same with the platform out and level; 04 front arc plate close-up; 05 arm tilted down with the front plate seen from the side; 06 the rear L-bracket under the desk with its mount plate/swivel disc and two bolts; 07 arm tilted down, other angle.
+Note the L-shaped rear bracket hangs from a plate with a round swivel disc under the desktop (the swing), and the arm is bolted to the bracket's two bolts: the drop below the desktop comes from this hanging bracket + swivel plate.
