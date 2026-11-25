@@ -37,6 +37,8 @@ import { mediaPersonMaterial, castDetailEnsure, castDetailCast, castDetailVarian
 //                                                     gaps, wrists, forearms, shoulders and trunk moving a hair with the
 //                                                     keys (room-people-motion.mjs, natural typing). Without it: the finger
 //                                                     taps every typist has. The chapter's typing slider still scales it.
+//   typeStyle: 'busy'                                 the same, the phrases back to back (1.45-1.9 s of keys, 0.3-0.95 s of
+//                                                     rest): typing within a beat of any moment (a short shot, Commons5)
 //   carry: { from: '<model id>' }                    what that model holds (its 'Held.' parts, Kai's controller) is held
 //                                                    in this one too, same hand, same grip, the arms as that model's
 //                                                    posture has them: through a change of posture, a walk and the
@@ -97,12 +99,12 @@ import { mediaPersonMaterial, castDetailEnsure, castDetailCast, castDetailVarian
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
 import {updateSkinnedBounds} from './skinned-bounds.mjs';
-import {poseAt, blendPoses, KEY_SNAP} from './people-pose-keys.mjs?v=people-lap-20261124c';
-import {armBones,lapPlan,lapModel,lapRest,handsAt,turnHands,handTurnAt,layAngles} from './people-lap.mjs?v=people-lap-20261124c';
+import {poseAt, blendPoses, KEY_SNAP} from './people-pose-keys.mjs?v=commons5b-20261125';
+import {armBones,lapPlan,lapModel,lapRest,handsAt,turnHands,handTurnAt,layAngles} from './people-lap.mjs?v=commons5b-20261125';
 import {applyHeld} from './people-held.mjs';
 import {partsOf} from './people-held-data.mjs';
 import {postureRecord,postureRecords,hasPosturePose,poseOwner,sourceOf,roomEditKey,blendPosturePoses} from './people-postures.mjs';
-import { PersonRig, DeskActor, solveStill, solveChange, changeArms, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, squatKey, WORKOUTS, drawPose, livelyPose, seedOf, placeGrip, handsKey } from './room-people-motion.mjs?v=people-lap-20261124c';
+import { PersonRig, DeskActor, solveStill, solveChange, changeArms, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, squatKey, WORKOUTS, drawPose, livelyPose, seedOf, placeGrip, handsKey } from './room-people-motion.mjs?v=commons5b-20261125';
 // Room looks (room-looks.mjs): the Nov 17 pass's cast finishes (own materials, hair / shirt maps) are the refreshed Create
 // room's and the Commons'; Create's Classic look keeps the cast as it was, and its people move as they did then
 // (rig.classicMotion: room-people-motion.mjs's painting, pottery and page-turn strokes from before the pass).
@@ -2540,7 +2542,7 @@ export class RoomPeople {
         // a turn the short way round
         change.homeTo.turn = change.homeFrom.turn + THREE.MathUtils.euclideanModulo(change.homeTo.turn - change.homeFrom.turn + Math.PI, Math.PI * 2) - Math.PI;
         change.length = changeLength(rig, change.keyFrom, change.keyTo);
-        if (Number.isFinite(change.to.change?.seconds)) change.length = THREE.MathUtils.clamp(change.to.change.seconds, .6, 3);      // (`change.seconds`: its own length)
+        if (Number.isFinite(change.to.change?.seconds)) change.length = THREE.MathUtils.clamp(change.to.change.seconds, .1, 3);      // (`change.seconds`: its own length; Commons5b: down to 0.1 s, for a change that moves nothing, the action before it ending in the new posture)
         change.ready = true;
     }
     // After a change both models are as built again, each where it belongs.
@@ -2789,7 +2791,7 @@ export class RoomPeople {
     // of the same person, its hands `handsBy` mm where the keys are, as the next placement has them: handsKey). Also the left
     // hand's fingers for the grip (act.fingers: { from: '<model id>', thumb: [deg, deg, deg] }: that posture's fingers, the
     // thumb's three bones curled that much more about their own z, down along the phone's edge) and the timing and shape of
-    // the beat (grab, handover [x, y, z] m, handoverTurn rad, approach, clear, lift2, rightBack, look, turn, side, reachOut, rightNudge [x, y, z] m in the
+    // the beat (grab, handover [x, y, z] m, handoverTurn rad, approach, clear, lift2, rightBack, look, turn, side, reachOut, elbowRoll rad (the forearm rolled up off the desktop: Commons5b), rightNudge [x, y, z] m in the
     // phone's frame: the right hand's hold eased off its edge). {} without act.to.
     // Kept per person.
     placeOnward(object, act) {
@@ -2807,7 +2809,7 @@ export class RoomPeople {
             life.placeOn = { to, fingers }; life.placeOnSign = sign;
         }
         const n = v => Number.isFinite(v) ? v : undefined;
-        return { to: life.placeOn.to, fingers: life.placeOn.fingers, grab: n(act.grab), handover: Array.isArray(act.handover) && act.handover.length === 3 ? act.handover : null, handoverTurn: n(act.handoverTurn), approach: n(act.approach), clear: n(act.clear), lift2: n(act.lift2), rightBack: n(act.rightBack), look: n(act.look), turn: n(act.turn), side: n(act.side), reachOut: n(act.reachOut), rightNudge: Array.isArray(act.rightNudge) && act.rightNudge.length === 3 ? act.rightNudge : null };
+        return { to: life.placeOn.to, fingers: life.placeOn.fingers, grab: n(act.grab), handover: Array.isArray(act.handover) && act.handover.length === 3 ? act.handover : null, handoverTurn: n(act.handoverTurn), approach: n(act.approach), clear: n(act.clear), lift2: n(act.lift2), rightBack: n(act.rightBack), look: n(act.look), turn: n(act.turn), side: n(act.side), reachOut: n(act.reachOut), elbowRoll: n(act.elbowRoll), rightNudge: Array.isArray(act.rightNudge) && act.rightNudge.length === 3 ? act.rightNudge : null };
     }
     // The fingers (both hands) as a relaxed open hand of another posture of the same person (act.openFrom): { bone index: quaternion }.
     placeOpen(object, act) {

@@ -2191,6 +2191,7 @@
         0,
         0
        ],
+       "elbowRoll": 0.73,
        "openFrom": "people-mia-stretch",
        "grip": {
         "at": [
@@ -2308,7 +2309,7 @@
       },
       "swap": 0.02,
       "change": {
-       "seconds": 0.6,
+       "seconds": 0.2,
        "arms": [
         0.15,
         1
@@ -2318,7 +2319,8 @@
        0,
        -32,
        -71
-      ]
+      ],
+      "typeStyle": "busy"
      },
      {
       "key": "mate-right",
@@ -2821,16 +2823,16 @@
      "mia-waits": [
       [
        0,
-       16.07,
+       15.97,
        0,
-       0.5
+       0
       ]
      ],
      "mia-works": [
       [
-       16.07,
+       15.77,
        99,
-       0.5,
+       0,
        0
       ]
      ],

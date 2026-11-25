@@ -18,7 +18,7 @@
 //   the state at any second depends on nothing else and scrubbing gives the same frames as playing.
 // Everything else (breathing, the head, weight shifts, typing fingers) is layered on from time and a seed.
 import * as THREE from 'three';
-import { lapRests } from './people-lap.mjs?v=people-lap-20261124c';
+import { lapRests } from './people-lap.mjs?v=commons5b-20261125';
 
 const V = () => new THREE.Vector3(), Q = () => new THREE.Quaternion();
 const clamp01 = x => x < 0 ? 0 : x > 1 ? 1 : x;
@@ -342,11 +342,15 @@ function tapKeys(rig, s, time, seed, life, typing = 1) {
 //     millimetres with it and drifts toward the key's column and row, the forearm following through the arm's own
 //     solve, with a little shoulder and trunk behind it
 // Everything here is small (millimetres at the wrist, about a degree at the trunk): wrists stay put, nothing swings.
-const TYPE_CELL = 7.4, TYPE_STROKE = .17, typeCells = new Map();
-function typeCell(i, seed) {
-    const id = seed + ':' + i; let cell = typeCells.get(id); if (cell) return cell;
-    const H = k => hash(k + i * 61, seed + 900), keys = [], base = i * TYPE_CELL;
-    const start = .3 + H(2) * 1.7, len = H(1) < .3 ? 2.9 + H(3) * 1.5 : 1.1 + H(3) * 1.6;      // (a long phrase now and then, short ones between)
+// typeStyle 'busy' (Commons5, Nov 25 2026: Mia at the commons desk, a few seconds on screen): the same keys, strokes and wrists,
+// but the phrases come back to back (1.45-1.9 s of keys, then 0.3-0.95 s of rest), so whenever the hands are on the keys they
+// are typing within a beat: no pause long enough to read as a still typist in a short shot.
+const TYPE_CELL = 7.4, BUSY_CELL = 2.2, TYPE_STROKE = .17, typeCells = new Map();
+function typeCell(i, seed, busy = false) {
+    const id = seed + ':' + i + (busy ? 'b' : ''); let cell = typeCells.get(id); if (cell) return cell;
+    const size = busy ? BUSY_CELL : TYPE_CELL, H = k => hash(k + i * 61, seed + 900), keys = [], base = i * size;
+    const start = busy ? .05 + H(2) * .3 : .3 + H(2) * 1.7;
+    const len = busy ? Math.min(1.45 + H(3) * .45, size - .25 - start) : H(1) < .3 ? 2.9 + H(3) * 1.5 : 1.1 + H(3) * 1.6;      // (a long phrase now and then, short ones between)
     let t = start, n = 0, word = 0, wordLen = 3 + Math.floor(H(4) * 5), hand = H(5) < .5 ? 0 : 1;
     while (t < start + len && n < 70) {
         const h = k => hash(n * 11 + k + i * 997, seed + 910), space = word >= wordLen;
@@ -363,11 +367,11 @@ function typeCell(i, seed) {
 }
 // One hand's keys around now: the key it is on (cur), the one before (prev) and the next, and the burst's envelope.
 const NAT = { env: 0, l: { cur: null, prev: null, next: null }, r: { cur: null, prev: null, next: null }, strike: { l: 0, r: 0 } };
-function typeNow(time, seed) {
-    const c = Math.floor(time / TYPE_CELL); let env = 0;
+function typeNow(time, seed, busy = false) {
+    const c = Math.floor(time / (busy ? BUSY_CELL : TYPE_CELL)); let env = 0;
     for (const s of ['l', 'r']) NAT[s].cur = NAT[s].prev = NAT[s].next = null;
     for (let ci = c - 1; ci <= c + 1; ci++) {
-        const cell = typeCell(ci, seed);
+        const cell = typeCell(ci, seed, busy);
         env = Math.max(env, ss(cell.from - .35, cell.from + .1, time) * (1 - ss(cell.to + .3, cell.to + 1.2, time)));
         for (const k of cell.keys) {
             const o = NAT[k.hand ? 'r' : 'l'];
@@ -699,9 +703,9 @@ export function solveStill(rig, key, input) {
     const yaw = (noise(time * .19, seed + 5) * .07 + noise(time * .053 + 3, seed + 6) * .09) * life * fixed * idle, nod = (noise(time * .23 + 11, seed + 7) * .03 * fixed + glance * .14) * life;
     rig.turnWorld(b.neck_01, turn.setFromAxisAngle(Y, yaw * .4).multiply(turn2.setFromAxisAngle(X, nod * .4 + .004 * breath))); rig.fk();
     rig.turnWorld(b.head, turn.setFromAxisAngle(Y, yaw * .6).multiply(turn2.setFromAxisAngle(X, nod * .6))); rig.fk();
-    // (the natural typist: input.style 'natural', time and seed give the keys; the body moves before the arms are solved)
-    const natural = input.style === 'natural' && TYPES.has(pose) && !input.act && input.taps !== false && life > 0 && !(rig.mediaLab && key.id.includes('-sit-mix')) ? Math.min(1.6, Math.max(0, input.typing ?? 1)) * life : 0;
-    if (natural > 0) { typeNow(time, seed); typeBody(rig, natural); }
+    // (the natural typist: input.style 'natural' (or 'busy': the phrases back to back), time and seed give the keys; the body moves before the arms are solved)
+    const natural = (input.style === 'natural' || input.style === 'busy') && TYPES.has(pose) && !input.act && input.taps !== false && life > 0 && !(rig.mediaLab && key.id.includes('-sit-mix')) ? Math.min(1.6, Math.max(0, input.typing ?? 1)) * life : 0;
+    if (natural > 0) { typeNow(time, seed, input.style === 'busy'); typeBody(rig, natural); }
     if (standing) for (const s of ['l', 'r']) { const [thigh, calf, foot] = rig.side[s].leg; rig.reach(thigh, calf, foot, key.wp[foot]); rig.reach(thigh, calf, foot, key.wp[foot]); rig.setWorld(foot, key.wq[foot]); }
     const resting = RESTING[pose] || '';
     for (const s of ['l', 'r']) {
@@ -728,6 +732,16 @@ export function solveStill(rig, key, input) {
     }
 }
 
+// Rolls an arm about the line from its shoulder to its wrist by `angle` x `w` radians, the way that raises the elbow (the hand does
+// not move; its turn is kept as `q`). (placeToKeys: the forearm kept off the desktop it reaches across. A fixed roll eased by the
+// reach, not 'as much as the elbow needs': that changes frame by frame and shows as a flicking wrist.)
+const leA = V(), leE = V(), leB = V(), leQ = Q();
+export function liftElbow(rig, s, angle, w, q) {
+    const [, upper, lower, hand] = rig.side[s].arm, S = rig.wp[upper];
+    leA.copy(rig.wp[hand]).sub(S); if (leA.lengthSq() < 1e-10 || !(angle * w > 1e-6)) return; leA.normalize();
+    leE.copy(rig.wp[lower]).sub(S); leB.copy(leA).cross(leE);      // (the way the elbow goes for a small roll: up if its y is)
+    rig.turnWorld(upper, leQ.setFromAxisAngle(leA, (leB.y >= 0 ? 1 : -1) * angle * w)); rig.fk(); if (q) { rig.setWorld(hand, q); rig.fk(); }
+}
 // ---- what people do where they are --------------------------------------------------------------------------------
 // On top of the life above, a posture that is an activity shows it: the pen writes, the brush paints, a drink is
 // sipped, a hand that is up stretches and waves, a talker's hand talks. Each is worked out from the posture as built
@@ -1073,6 +1087,12 @@ function placeToKeys(rig, key, pl, since) {
         else { for (let i = 0; i < 10; i++) { const mid = (lo + hi) / 2; if (lean(mid) > 0) lo = mid; else hi = mid; } amount = hi; }
     }
     lean(amount); armTo(rig, 'l', k.Lp, k.Lq);
+    // (Commons5b: the elbow over the desktop. Reaching out low over the desk to the charger, the elbow hung at the desktop's own height
+    // and the forearm and its sleeve went through its inner edge: the arm rolls about the shoulder-to-wrist line by pl.elbowRoll (radians)
+    // the way that lifts the elbow, the hand exactly where it is and turned as it is, eased in over the reach and out over the whole way
+    // back to the keys, so the forearm's turn unwinds a degree or two a frame)
+    const we = ss(grab * .4, contact, since) * (1 - ss(release, end, since));
+    if (pl.elbowRoll > 0 && we > 1e-4) liftElbow(rig, 'l', pl.elbowRoll, we, k.Lq);
     // the left fingers: into the grip as the hand comes onto the phone, lifted off it when it is let go, then the typing hand
     if (pl.fingers) {
         const gw = ss(grab * .05, grab * .6, since) * (1 - ss(release, release + hold + .1, since)), ow = .55 * ss(release, release + hold, since) * (1 - ss(release + hold, end, since));
