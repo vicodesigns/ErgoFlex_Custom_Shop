@@ -1,5 +1,5 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-59e936bfc7f6-Film-chapter-oilers-15-s-__13_.json",
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-52aee31cc6ac-Film-chapter-oilers-15-s-__21_.json",
  "seconds": 15.0,
  "keys": [
   {
@@ -568,6 +568,23 @@
    "match": "^Pendulum (bob|string)$",
    "label": "Ceiling pendulum (orange bob and string)",
    "hide": true
+  },
+  {
+   "match": "^Person chair:people-sofia-sit-laptop$",
+   "asset": "highschool:house:placement:107:0:Person chair:people-sofia-sit-laptop",
+   "label": "Person chair:people-sofia-sit-laptop",
+   "hide": true
+  },
+  {
+   "match": "^Accessory:logitech-mx-master$",
+   "path": "^Room:highschool > APA set and costume design review desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Accessory:logitech-mx-master$",
+   "label": "Accessory:logitech-mx-master",
+   "space": "local",
+   "position": [
+    0,
+    0,
+    -0.093
+   ]
   }
  ],
  "people": {
@@ -628,9 +645,29 @@
         -0.1189,
         0.9788
        ]
-      }
+      },
+      "poseKeys": [
+       {
+        "t": 0,
+        "pose": {
+         "hand_l": [
+          -0.1174,
+          -0.1489,
+          0.1496,
+          0.9704
+         ],
+         "hand_r": [
+          -0.1139,
+          0.1712,
+          -0.1523,
+          0.9667
+         ]
+        }
+       }
+      ]
      }
-    }
+    },
+    "typeStyle": "natural"
    },
    {
     "key": "kai-rolls",

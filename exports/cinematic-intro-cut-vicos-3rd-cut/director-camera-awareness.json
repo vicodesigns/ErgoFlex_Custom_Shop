@@ -1,5 +1,5 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-6a8e0904c2b8-Film-chapter-awareness-sonar-3rd.json",
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-62804144f43c-Film-chapter-awareness-12-s-__7_.json",
  "seconds": 12.0,
  "keys": [
   {
@@ -127,6 +127,36 @@
   "height": 30,
   "tilt": 0
  },
+ "props": [
+  {
+   "add": {
+    "asset": "obsbot-tiny-2"
+   },
+   "id": "9m5btf89g",
+   "match": "^Added prop:obsbot-tiny-2#9m5btf89g$",
+   "label": "OBSBOT Tiny 2 webcam / mic",
+   "parent": "shelf",
+   "position": [
+    -0.037,
+    0.557,
+    0.503
+   ],
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "show": {
+    "from": 5.03,
+    "to": 100000
+   }
+  }
+ ],
  "sonar": {
   "radius": 42,
   "rings": 2,
