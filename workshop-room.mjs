@@ -593,7 +593,8 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
         // Slab: the room's own material, with UVs that continue its map (saw-cut joints line up).
         const fg=new THREE.BoxGeometry(w,30,ext);fg.translate(0,-15,mid);
         {const p=fg.attributes.position,uv=fg.attributes.uv;for(let i=0;i<p.count;i++)uv.setXY(i,(p.getX(i)+w/2)/w,(front-p.getZ(i))/d);}
-        mesh(root,fg,slab);
+        // Shell, not furnishings: names that room-interactions.mjs treats as architecture keep the bay out of the drag/collide set.
+        const apron=new THREE.Group();apron.name='Workshop loading bay floor by the roll-up door';root.add(apron);mesh(apron,fg,slab);
         // Side walls carry on with the same block, wainscot paint, steel base and safety stripe.
         wallBox(left,[80,h,ext],[-w/2-40,h/2,mid],plaster);wallBox(left,[2,940,ext],[-w/2+1,630,mid],paintLow);
         wallBox(right,[80,h,ext],[w/2+40,h/2,mid],plaster);box(right,[20,160,ext],[w/2-10,80,mid],steel);
@@ -632,8 +633,11 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
 
         // LEFT WALL (window side), the wall the 14 s shot looks along: steel shelving, then the exit door and fire point.
         // Group local axes: +z points into the room, +x runs along the wall.
-        const onLeft=(id,name,z)=>group(id,name,[-w/2,0,z],Math.PI/2,left);
-        const onRight=(id,name,z)=>group(id,name,[w/2,0,z],-Math.PI/2,right);
+        // Plain groups, not scene assets: the bay is room shell (outside the layout's floor, so it is not draggable or saved).
+        const fixture=(name,at,turn,parent)=>{const g=new THREE.Group();g.name=name;g.position.set(...at);g.rotation.y=turn;parent.add(g);return g;};
+        const fitL=fixture('Workshop loading bay wall fittings (exit door side)',[0,0,0],0,left),fitR=fixture('Workshop loading bay wall fittings (roll-up door side)',[0,0,0],0,right);
+        const onLeft=(id,name,z)=>fixture(name,[-w/2,0,z],Math.PI/2,fitL);
+        const onRight=(id,name,z)=>fixture(name,[w/2,0,z],-Math.PI/2,fitR);
         const binTones=[orange,teal,yellow,red];
         const binLabel=texture((c,tw,th)=>{c.fillStyle='#f3efe2';c.fillRect(0,0,tw,th);c.fillStyle='#1f2a2c';c.font='bold 30px monospace';c.textAlign='center';
             ['M4','M5','M6','M8','NUTS','WASH','HINGE','SPRNG'].forEach((t,i)=>c.fillText(t,(i%4+.5)*tw/4,(Math.floor(i/4)+.5)*th/2+10));},512,128);
@@ -732,10 +736,9 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
         {at:[0,1880,bz+520],power:4.4,level:'practical'},
         {at:[layout.desk[0],h-450,layout.desk[1]],power:5,level:'practical'},
         {at:[tier>=2?500:0,h-450,bz+d*.7],power:4,level:'tubes',tube:true},
-        {at:[w/2-700,1850,bz+d*.4],power:3.1,level:'wash',channel:1},
-        // The bay's own shop light: its short reach stops before the original room, so the tuned shots keep their light.
-        {at:[0,h-450,bay.mid],power:3.2,level:'wash',channel:1,reach:2800}
-    ].map(spec=>{const light=new THREE.PointLight('#e4f3f5',0,(spec.reach||4800)*root.scale.x,2);light.position.set(...spec.at);root.add(light);return {...spec,light,power:spec.power*(root.scale.x*1000)**2};});
+        {at:[w/2-700,1850,bz+d*.4],power:3.1,level:'wash',channel:1}
+        // (The bay adds no fifth light: the room keeps its four practicals; the bay reads by its tubes and floor pool.)
+    ].map(spec=>{const light=new THREE.PointLight('#e4f3f5',0,4800*root.scale.x,2);light.position.set(...spec.at);root.add(light);return {...spec,light,power:spec.power*(root.scale.x*1000)**2};});
     const paintSky=(mode,id)=>{
         const c=skyCanvas.getContext('2d'),grad=c.createLinearGradient(0,0,0,512),night=id==='night';grad.addColorStop(0,mode.sky[0]);grad.addColorStop(1,mode.sky[1]);c.fillStyle=grad;c.fillRect(0,0,512,512);
         if(night){c.fillStyle='#f3f0dc';for(let i=0;i<70;i++){c.globalAlpha=.25+hash(i)*.6;c.fillRect(hash(i+3)*512,hash(i+9)*300,2,2);}c.globalAlpha=1;c.beginPath();c.arc(370,105,24,0,Math.PI*2);c.fill();}
