@@ -3672,6 +3672,35 @@
   {
    "match": "^Base_Panels_3 LED reflection$",
    "hide": true
+  },
+  {
+   "add": {
+    "asset": "obsbot-tiny-2"
+   },
+   "id": "9m5btf89g",
+   "match": "^Added prop:obsbot-tiny-2#9m5btf89g$",
+   "label": "OBSBOT Tiny 2 webcam / mic",
+   "parent": "shelf",
+   "position": [
+    -0.037,
+    0.557,
+    0.503
+   ],
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "show": {
+    "from": 5.03,
+    "to": 100000
+   },
+   "director": true
   }
  ],
  "lights": [
@@ -3785,8 +3814,9 @@
   "x": -1.5
  },
  "directorEdited": {
-  "at": "2026-11-22T01:00:05Z",
+  "at": "2026-11-24T23:02:56Z",
   "fields": [
+   "sceneEdits",
    "sonar"
   ]
  }

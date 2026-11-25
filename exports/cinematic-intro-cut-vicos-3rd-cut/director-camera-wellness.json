@@ -1,5 +1,5 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-a6e416f35f1f-Film-chapter-wellness-22-5-s-order.json",
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-6fe9782100e6-Film-chapter-wellness-22-5-s-__5_.json",
  "seconds": 22.5,
  "keys": [
   {
@@ -118,22 +118,6 @@
  "initial": {
   "height": 28,
   "tilt": 0
- },
- "lighting": {
-  "ledStatus": [
-   {
-    "at": 3.5,
-    "dur": 5,
-    "kind": "lift-up",
-    "fade": 1
-   },
-   {
-    "at": 14.55,
-    "dur": 5,
-    "kind": "lift-down",
-    "fade": 1
-   }
-  ]
  },
  "props": [
   {
