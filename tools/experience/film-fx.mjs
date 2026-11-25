@@ -376,7 +376,7 @@ async function installScreens(shot, list, late = false) {
     const texture = new THREE.CanvasTexture(canvas); texture.colorSpace = THREE.SRGBColorSpace;
     texture.anisotropy = api.renderer?.capabilities.getMaxAnisotropy?.() || 1; texture.minFilter = THREE.LinearMipmapLinearFilter;
     const clearEdge = inset.some(x => x > 0), add = spec.blend === 'add';
-    const material = new THREE.MeshBasicMaterial({ map: texture, toneMapped: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -4, transparent: clearEdge || add, alphaTest: clearEdge ? .5 : 0,
+    const material = new THREE.MeshBasicMaterial({ map: texture, toneMapped: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: late ? -8 : -1, polygonOffsetUnits: late ? -64 : -4, transparent: clearEdge || add, alphaTest: clearEdge ? .5 : 0,
       ...(add ? { blending: THREE.AdditiveBlending, depthWrite: false } : {}) });
     const mesh = new THREE.Mesh(pictureGeometry(target.obj, f), material); mesh.name = 'Film screen · ' + target.id; mesh.userData.filmFx = true; mesh.userData.filmScreen = true;   // (filmScreen: a timed prop's fade takes its picture too, film-edits.mjs installShow) mesh.castShadow = mesh.receiveShadow = false; mesh.renderOrder = 2;
     target.obj.add(mesh);
