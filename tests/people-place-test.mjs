@@ -57,8 +57,23 @@ assert.deepEqual(shot.motion, live.motion, 'the desk\'s motion is the cut\'s own
 assert.deepEqual(exported.shots[0].motion, JSON.parse(fs.readFileSync(path.join(cutDir, 'director-import/ErgoFlex-film-ch04-commons-director.json'), 'utf8')).shots[0].motion, 'the export carries the Director\'s own desk motion unchanged');
 const wheels = shot.motion.clips.find(c => c.lane === 'wheels'), arrives = wheels.start + wheels.duration;
 assert.ok(act.at >= arrives + 0.15 && act.at <= arrives + 0.6, `she notices the desk has docked ${(act.at - arrives).toFixed(2)} s before she moves (0.15 to 0.6)`);
-assert.ok(Math.abs(contactAt - 14.45) < 0.2, `the phone touches down at ${contactAt.toFixed(2)} s (about 1:46.8 of the film)`);
-assert.ok(endAt > 14.8 && endAt < 15.35, `the hands are on the keys at ${endAt.toFixed(2)} s (about 15 s)`);
+// Commons5: the beat ~0.6 s slower (touch down 14.8 s, on the keys 15.77 s, were 14.45 and 15.14) and the chapter 20.3 s long (two bars of the score more), so
+// she types ~4 s (3 s or more before the 1.1 s dissolve)
+assert.ok(Math.abs(contactAt - 14.8) < 0.2, `the phone touches down at ${contactAt.toFixed(2)} s`);
+assert.ok(endAt > 15.6 && endAt < 15.95, `the hands are on the keys at ${endAt.toFixed(2)} s (about 15.8 s)`);
+assert.ok(T.end - T.grab >= 1.0, `from taking the phone to the keys ${(T.end - T.grab).toFixed(2)} s: not rushed (was 0.64 s)`);
+assert.equal(shot.seconds, 20.3, 'the chapter is 20.3 s');
+assert.ok(shot.seconds - shot.transition - endAt >= 3, `${(shot.seconds - shot.transition - endAt).toFixed(2)} s of typing before the dissolve`);
+assert.equal(exported.shots[0].seconds, 20.3, 'the export carries the new length');
+{   // the camera: every key on the same second as before, and one more at the new end carrying the closing push on (no stop)
+    const was = JSON.parse(fs.readFileSync(path.join(cutDir, 'director-import/ErgoFlex-film-ch04-commons-director.json'), 'utf8')).shots[0];
+    const ks = exported.shots[0].camera.keys, T0 = was.seconds;
+    assert.equal(ks.length, was.camera.keys.length + 1);
+    was.camera.keys.forEach((k, i) => { assert.ok(Math.abs(ks[i].time * 20.3 - k.time * T0) < 1e-3, `camera key ${k.id} stays at ${(k.time * T0).toFixed(3)} s`); assert.deepEqual(ks[i].view, k.view); });
+    const [a, b, c] = ks.slice(-3).map(k => ({t: k.time * 20.3, p: k.view.position}));
+    for (let j = 0; j < 3; j++) assert.ok(Math.abs((c.p[j] - b.p[j]) / (c.t - b.t) - (b.p[j] - a.p[j]) / (b.t - a.t)) < 1e-3, 'the push goes on at the same speed');
+    assert.equal(shot.cameraPlan.keys.at(-1).at, 20.3);
+}
 assert.ok(Math.abs(cue.emissiveIntensity[0][0] - +releaseAt.toFixed(2)) < 1e-9, `the phone's glow cue starts where it is let go (${cue.emissiveIntensity[0][0]} s)`);
 // the change of model comes right after the action and is centred 0.3 s after it ends (the change is 0.6 s)
 assert.deepEqual(people.when['mia-waits'][0].slice(0, 2), [0, +(endAt + 0.3).toFixed(3)]);

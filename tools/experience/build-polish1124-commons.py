@@ -2,7 +2,11 @@
 """Polish pass for chapter 4 (commons), 24 Nov 2026, branch director/polish-1124-commons. Takes the cut's own chapter file
 (director-film/commons.json: Vico's 3rd cut) and writes a DRAFT elsewhere; nothing of the cut is changed.
 
-  build-polish1124-commons.py <cut dir> <out dir> [--grip params.json] [--dock-cm 0]
+  build-polish1124-commons.py <cut dir> <out dir> [--grip params.json] [--dock-cm 0] [--seconds 20.3]
+
+  Commons5 (25 Nov 2026): the chapter is SECONDS (20.3 s, was 16) long: the export carries the new length, its camera keys put
+  back on the same seconds and one key at the new end that carries the closing push on; the EDL and the score must then be
+  rebuilt (tools/experience/drafts/polish1124-commons5/run-all.py does the whole chain).
 
   <out>/commons-shot.json      the chapter shot with the polish
   <out>/commons-cut.json       the same wrapped as a one-shot client cut, for render-still.cjs / render-cut.cjs (--cut)
@@ -45,8 +49,12 @@ def turn_for(fx, fz):
 # change to the typing model after it moves nothing. Grip: the phone under the left palm, the ring and middle finger pads on
 # its glass at the far end, the thumb 1-2 mm off its inner long edge, 8 mm down it; found by search against the phone's box
 # (scratch work of the pass, checked frame by frame in tests/people-place-test.mjs).
-PLACE = {'at': 13.6, 'grab': 0.5, 'contact': 0.85, 'settle': 0.06, 'hold': 0.08, 'back': 0.55, 'lift': 0.045, 'lift2': 0.035, 'bend': 0.9,
-         'approach': 0.07, 'clear': 0.07, 'rightBack': 0.5, 'look': 0.5, 'turn': 0.7, 'side': 0.16, 'reachOut': 0.3, 'handover': [0.07, -0.08, 0.04], 'handoverTurn': -1.6, 'rightNudge': [0.007, 0, 0]}
+# Commons5 (Vico, 25 Nov: the phone goes down too fast and the chapter ends as her hands reach the keys): the same beat about
+# 0.6 s slower (grab 0.5 -> 0.65 s, carry 0.35 -> 0.55 s, let go 0.06 -> 0.08 s, fingers off it 0.08 -> 0.14 s, back to the keys
+# 0.55 -> 0.75 s, the right hand to its keys 0.5 -> 0.6 s): touch down 14.8 s, let go 14.88 s, hands on the keys 15.77 s
+# (were 14.45, 14.51, 15.14), and the chapter 4.3 s longer (SECONDS) so she types for ~4 s, ~3 s of it before the dissolve.
+PLACE = {'at': 13.6, 'grab': 0.65, 'contact': 1.2, 'settle': 0.08, 'hold': 0.14, 'back': 0.75, 'lift': 0.045, 'lift2': 0.035, 'bend': 0.9,
+         'approach': 0.07, 'clear': 0.07, 'rightBack': 0.6, 'look': 0.5, 'turn': 0.7, 'side': 0.16, 'reachOut': 0.3, 'handover': [0.07, -0.08, 0.04], 'handoverTurn': -1.6, 'rightNudge': [0.007, 0, 0]}
 TYPING = 'people-mia-power-type-30'
 # Commons4 (Vico's three yeses on the Commons3 'not fixed' list): her seat 5 mm lower so the keyboard tray clears her thighs (the tray
 # sat 3.1 to 3.8 mm into them at the desk's 29 in), and the wheelchair 20 mm further back from the desk (from the chair's own
@@ -180,15 +188,59 @@ def dock(shot, cm):
 def cue(shot, release):
     """Mia's phone screen (the film's hand-made edit: lit in her hand, dims, wakes with the charging flash, then a glow) follows the new
     set-down. The Director import cannot carry this edit: see the patch file written beside the export."""
-    keys = [[round(release + d, 2), v] for d, v in ((0, 0.7), (0.25, 0.7), (0.4, 0.25), (0.65, 1.0), (1.2, 1.0))] + [[16.0, 0.6]]
+    # (Commons5: the glow settles to 0.6 half a second after the flash, 1.7 s after the let-go; it used to end on the old last frame, 16.0 s)
+    keys = [[round(release + d, 2), v] for d, v in ((0, 0.7), (0.25, 0.7), (0.4, 0.25), (0.65, 1.0), (1.2, 1.0), (1.7, 0.6))]
     for e in shot.get('sceneEdits', []):
         if e.get('materialName') == '^hUlRcbieVuIiOXG$' and e.get('path') == 'Added prop:ergoflex-phone#mph01':
             e['material']['emissiveIntensity'] = keys; return keys
     return None
 
 
+SECONDS = 20.3     # Commons5: the chapter's length (was 16: 4.3 s more, all of it after the hands reach the keys; 4.3 s is two bars of
+                   # the score's ~111.3 BPM there, so every chapter after it keeps its music exactly, 4.3 s later)
+END_LABEL = 'Still pushing in: Mia types into the dissolve'
+
+
+def _extend(keys, t0, t1):
+    """keys: [(at s, position, target, fov)] in time order, the last at t0 (the old end). -> the key at t1 that carries the last
+    move on at its own speed (the slow push of the closing shot goes on: no stop, no change of pace, the spline stays smooth)."""
+    (a0, p0, g0, f0), (a1, p1, g1, f1) = keys[-2], keys[-1]
+    k = (t1 - a1) / (a1 - a0)
+    go = lambda u, v: [round(y + (y - x) * k, 4) for x, y in zip(u, v)]
+    return go(p0, p1), go(g0, g1), round(f1 + (f1 - f0) * k, 2)
+
+
+def lengthen(shot, seconds):
+    """The film shot (director-film/commons.json form): `seconds`, and a camera plan key at the new end (cameraPlan.keys are in
+    seconds). The baked `camera` is left to build-round8-director.py's pass (it re-bakes it from the plan)."""
+    t0 = float(shot['seconds'])
+    if seconds <= t0 + 1e-9: return False
+    keys = shot['cameraPlan']['keys']
+    if abs(keys[-1]['at'] - t0) > 1e-6 or keys[-1].get('cut'): sys.exit(f'commons: the camera plan does not end in a move at {t0} s: not lengthened by hand here')
+    p, g, f = _extend([(k['at'], k['position'], k['target'], k['fov']) for k in keys[-2:]], t0, seconds)
+    keys.append({'at': seconds, 'position': p, 'target': g, 'fov': f, 'label': END_LABEL}); shot['seconds'] = seconds
+    return True
+
+
+def lengthen_export(shot0, seconds):
+    """The Director export's shot: `seconds`, its camera keys (fractions of the chapter) put back on the same seconds of the
+    new length, and the key at the new end (as lengthen())."""
+    t0 = float(shot0['seconds'])
+    if seconds <= t0 + 1e-9: return False
+    keys = shot0['camera']['keys']
+    for k in keys: k['time'] = round(k['time'] * t0 / seconds, 6)
+    at = lambda k: k['time'] * seconds
+    if abs(at(keys[-1]) - t0) > 1e-3: sys.exit(f'commons: the Director camera does not end at {t0} s: not lengthened by hand here')
+    p, g, f = _extend([(at(k), k['view']['position'], k['view']['target'], k['view']['fov']) for k in keys[-2:]], t0, seconds)
+    keys[-1]['easing'] = 'linear'
+    keys.append({'id': f'plan-{len(keys):02d}', 'time': 1.0, 'label': END_LABEL[:60], 'easing': 'smooth', 'view': dict(keys[-1]['view'], position=p, target=g, fov=f)})
+    shot0['seconds'] = seconds
+    return True
+
+
 def build(shot, params):
     shot = copy.deepcopy(shot); ppl = shot['people']
+    lengthen(shot, params.get('seconds', SECONDS))
     if not params.get('skip_mia'):
         mia(ppl, params); dock(shot, params.get('dock_cm', DOCK_CM))
         if params.get('chair_back_mm', CHAIR_BACK_MM):
@@ -205,6 +257,7 @@ def main(argv):
     cut, out = argv[0], argv[1]; params = {}
     if '--grip' in argv: params = json.load(open(argv[argv.index('--grip') + 1]))
     if '--dock-cm' in argv: params['dock_cm'] = float(argv[argv.index('--dock-cm') + 1])
+    if '--seconds' in argv: params['seconds'] = float(argv[argv.index('--seconds') + 1])
     shot = json.load(open(os.path.join(cut, 'director-film/commons.json'), encoding='utf8'))
     new = build(shot, params); os.makedirs(out, exist_ok=True)
     json.dump(new, open(os.path.join(out, 'commons-shot.json'), 'w', encoding='utf8'), indent=1)
@@ -216,6 +269,7 @@ def main(argv):
     # whole cast, and the whole prop list (the import replaces the list: Vico's own director props stay, the chair hides join)
     base = json.load(open(os.path.join(cut, 'director-import/ErgoFlex-film-ch04-commons-director.json'), encoding='utf8'))
     shot0 = copy.deepcopy(base['shots'][0])
+    lengthen_export(shot0, params.get('seconds', SECONDS))
     if not params.get('skip_mia'): dock(shot0, params.get('dock_cm', DOCK_CM))      # (the Director's own copy of the wheels clip: the import writes it back)
     props = json.load(open(os.path.join(cut, 'director-camera-commons.json'), encoding='utf8')).get('props', [])
     have = {e.get('match') for e in props}
@@ -223,7 +277,7 @@ def main(argv):
     props = [e for e in copy.deepcopy(props) if e.get('label') != CHAIR_LABEL]
     if not params.get('skip_mia') and params.get('chair_back_mm', CHAIR_BACK_MM): props.append(chair_edit(params))
     shot0.update({'peopleEdits': people, 'propEdits': props + hides})
-    exp = dict(base, id=f'film-{cutid}-commons', name='Film chapter: commons (polish 1124 draft)', shots=[shot0])
+    exp = dict(base, id=f'film-{cutid}-commons', name=f"Film chapter: commons ({shot0['seconds']:g} s, polish 1124 draft)", shots=[shot0])
     json.dump(exp, open(os.path.join(out, 'Film-chapter-commons-polish1124.json'), 'w', encoding='utf8'), indent=1)
     if params.get('cue'):
         json.dump({'_doc': 'By hand, in the cut files: the sceneEdits entry of the chapter whose path is "Added prop:ergoflex-phone#mph01" and materialName "^hUlRcbieVuIiOXG$" (director-film/commons.json, review-cut.json and shots/*.json): replace material.emissiveIntensity with this. The Director import cannot carry it (prop edits have no material).',
