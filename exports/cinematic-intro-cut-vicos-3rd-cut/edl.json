@@ -1,7 +1,7 @@
 {
  "fps": 30,
  "dissolve": 1.5,
- "total": 240.328,
+ "total": 235.328,
  "chapters": [
   {
    "index": 1,
@@ -83,9 +83,9 @@
   {
    "index": 12,
    "id": "hero",
-   "duration": 25.5,
+   "duration": 20.5,
    "start": 214.828,
-   "end": 240.328
+   "end": 235.328
   }
  ],
  "beats": [
@@ -102,7 +102,7 @@
    "what": "end card: ErgoFlex wordmark"
   },
   {
-   "at": 240.328,
+   "at": 235.328,
    "what": "cut to black / onboarding"
   }
  ],

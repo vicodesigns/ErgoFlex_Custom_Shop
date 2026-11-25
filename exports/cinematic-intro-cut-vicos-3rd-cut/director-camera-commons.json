@@ -1,5 +1,5 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-3b4050822f44-Film-chapter-commons-phone-verified.json",
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-0e76e7f7ca62-Film-chapter-commons-16-s-__19_.json",
  "seconds": 16.0,
  "keys": [
   {
@@ -97,14 +97,14 @@
   {
    "at": 8.3,
    "position": [
-    -0.6,
-    4.6,
-    -2.4
+    0.17446733208408816,
+    5.043747576883185,
+    -1.202412335826308
    ],
    "target": [
-    -1.0,
-    0.8,
-    -11.6
+    -0.2797936654019355,
+    0.7282681007659434,
+    -11.650415278004886
    ],
    "fov": 38,
    "label": "High over the tables: the desk drives along the cork wall",
@@ -2175,34 +2175,6 @@
    "hide": true
   },
   {
-   "add": {
-    "asset": "ergoflex-side-shelf-large-cubby"
-   },
-   "id": "d6jjdq2yx",
-   "match": "^Added prop:ergoflex-side-shelf-large-cubby#d6jjdq2yx$",
-   "label": "Side shelf \u00b7 large, cubby and cups",
-   "parent": "desk",
-   "position": [
-    1.113,
-    -0.183,
-    0.493
-   ],
-   "rotation": [
-    -180,
-    -90,
-    -180
-   ],
-   "scale": [
-    1,
-    1,
-    1
-   ],
-   "show": {
-    "from": 7.1,
-    "to": 100000
-   }
-  },
-  {
    "match": "^Oak study chair \u00b7 forest$",
    "asset": "library:humboldt:room:74:kenney-furniture-chair-modern-cushion",
    "label": "Oak study chair \u00b7 forest",
@@ -2256,13 +2228,27 @@
     0,
     0.049
    ]
+  },
+  {
+   "match": "^Person chair:people-eli-sit-listen$",
+   "label": "Person chair:people-eli-sit-listen",
+   "hide": true
+  },
+  {
+   "match": "^Oak study chair \u00b7 forest$",
+   "asset": "library:humboldt:room:75:kenney-furniture-chair-modern-cushion",
+   "label": "Oak study chair \u00b7 forest",
+   "position": [
+    -0.137,
+    0,
+    0
+   ]
   }
  ],
  "people": {
   "v": 2,
   "only": [
    "people-zoe-sit-laptop",
-   "people-eli-sit-listen",
    "people-ben-white-cane",
    "people-grace-cane-stand"
   ],
@@ -2343,40 +2329,40 @@
         "t": 11.6,
         "pose": {
          "spine_02": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
+          0,
+          0,
+          0,
+          1
          ],
          "spine_03": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
+          0,
+          0,
+          0,
+          1
          ],
          "clavicle_r": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
+          0,
+          0,
+          0,
+          1
          ],
          "upperarm_r": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
+          0,
+          0,
+          0,
+          1
          ],
          "lowerarm_r": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
+          0,
+          0,
+          0,
+          1
          ],
          "hand_r": [
-          0.0,
-          0.0,
-          0.0,
-          1.0
+          0,
+          0,
+          0,
+          1
          ]
         }
        },
@@ -2602,7 +2588,7 @@
      "seconds": 1.1,
      "arms": [
       0.15,
-      1.0
+      1
      ]
     }
    },
@@ -2663,40 +2649,40 @@
         "t": 11.8,
         "pose": {
          "upperarm_r": [
-          0.1045,
-          0.0243,
-          -0.0279,
-          0.9938
+          0.0607,
+          0.0055,
+          -0.007,
+          0.9981
          ],
          "lowerarm_r": [
-          -0.0636,
+          -0.0989,
           0,
-          -0.0005,
-          0.998
+          -0.0008,
+          0.9951
          ],
          "hand_r": [
-          0.0496,
-          0.0064,
-          0.0236,
-          0.9985
+          -0.0062,
+          -0.0001,
+          -0.0392,
+          0.9992
          ],
          "upperarm_l": [
-          0.1053,
-          -0.0286,
-          0.0329,
-          0.9935
+          0.0568,
+          -0.0079,
+          0.0092,
+          0.9983
          ],
          "lowerarm_l": [
-          -0.0641,
+          -0.1038,
           0,
-          0.0006,
-          0.9979
+          0.001,
+          0.9946
          ],
          "hand_l": [
-          0.0556,
-          -0.0073,
-          -0.0212,
-          0.9982
+          -0.0067,
+          0.0005,
+          0.0488,
+          0.9988
          ]
         }
        }
@@ -2865,15 +2851,11 @@
     "key": "room-eli-1hdjsgj",
     "id": "people-eli-sit-listen",
     "at": [
-     517,
-     2887
+     4888,
+     2694
     ],
-    "turn": 2.3,
-    "y": 20,
-    "poseSource": {
-     "key": "people-eli-sit-listen",
-     "id": "people-eli-sit-listen"
-    }
+    "turn": 180,
+    "y": 20
    },
    {
     "key": "room-ben-1wyru4v",
@@ -2937,7 +2919,8 @@
    ]
   },
   "except": [
-   "people-leo-sit-write"
+   "people-leo-sit-write",
+   "people-eli-sit-listen"
   ]
  },
  "branding": {
