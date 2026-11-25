@@ -2,7 +2,7 @@
 """Polish pass for chapter 4 (commons), 24 Nov 2026, branch director/polish-1124-commons. Takes the cut's own chapter file
 (director-film/commons.json: Vico's 3rd cut) and writes a DRAFT elsewhere; nothing of the cut is changed.
 
-  build-polish1124-commons.py <cut dir> <out dir> [--grip params.json] [--dock-cm 8]
+  build-polish1124-commons.py <cut dir> <out dir> [--grip params.json] [--dock-cm 0]
 
   <out>/commons-shot.json      the chapter shot with the polish
   <out>/commons-cut.json       the same wrapped as a one-shot client cut, for render-still.cjs / render-cut.cjs (--cut)
@@ -12,10 +12,11 @@
 
 Stream B, Mia's phone: the same prop (mph01, the phone the film puts on the desk's wireless charger) travels from her hands
 to the charger. She looks at it while the desk drives in (it is in her hands from the first frame; the model's own baked
-phone is hidden: room-people.mjs placeCarry), and when the desk docks she reaches with her LEFT hand, sets it down flat on
-the charger (it comes to the prop's own rest, the film's edit: the charger's real place on that desk, not an estimate), the
-hand withdraws, and the change into typing (people-mia-power-type-30) follows. Timings and grips are the numbers the
-stills were checked with.
+phone is hidden: room-people.mjs placeCarry). Pass 3: when the desk has docked she tips it flat with her right hand, the
+left hand takes it from above, sets it down on the charger (the prop's own rest, the film's edit) and goes straight on to
+the keys; the action ends in the typing posture (room-people-motion.mjs placeToKeys), so the change to the typing model
+after it moves nothing. Vico's desk (lift, dock) is the cut's own and is not touched. Re-run on a cut that already has the
+pass-2 import: Mia's two entries are replaced, the extras are kept as they are (not added twice).
 
 Stream C, the commons' other tables: seated people (laptop, reading, talking, coffee) at the empty tables and three
 walkers, from the library's cast, none of a face already in the chapter.
@@ -36,32 +37,55 @@ def turn_for(fx, fz):
 
 
 # ---- Stream B ---------------------------------------------------------------------------------------------------------
-# pass 2 (Vico: she waits until the desk has docked): the desk's path ends at 13.4 s (wheels clip 7.2 + 6.2), so she notices and
-# reaches 0.3 s later (13.7 s), the phone touches down at 14.25 s and is let go 0.06 s later, the hand withdraws, and the change into
-# typing follows (hands on the keys at 15.4 s)
-PLACE = {'at': 13.7, 'contact': 0.55, 'settle': 0.06, 'hold': 0.17, 'back': 0.35, 'lift': 0.05, 'bend': 0.93}
-DOCK_CM = 8.0          # the desk docks this much nearer her wheelchair (cm): the wheels clip's last stretch, see dock()
+# pass 3 (Vico's notes on 1:46.55-1:48.05, after his own desk edit: lift 29 in, the wheels clip ending at z 150.5; his desk is
+# kept as it is, nothing here moves it). The desk comes to rest at 13.4 s; at 13.65 s she tips the phone flat with her right
+# hand while the left comes over it from above and takes it (13.95 s), carries it to the charger (touches down 14.25 s), lets
+# go 0.06 s later, and the left hand goes straight on to the keys (on them at 14.94 s), the right hand already there; the eyes
+# go from the phone to the screen. The action ends exactly in the typing posture (room-people-motion.mjs placeToKeys), so the
+# change to the typing model after it moves nothing. Grip: the phone under the left palm, the ring and middle finger pads on
+# its glass at the far end, the thumb 1-2 mm off its inner long edge, 8 mm down it; found by search against the phone's box
+# (scratch work of the pass, checked frame by frame in tests/people-place-test.mjs).
+PLACE = {'at': 13.6, 'grab': 0.5, 'contact': 0.85, 'settle': 0.06, 'hold': 0.08, 'back': 0.55, 'lift': 0.045, 'lift2': 0.035, 'bend': 0.9,
+         'approach': 0.07, 'clear': 0.07, 'rightBack': 0.5, 'look': 0.5, 'turn': 0.7, 'side': 0.16, 'reachOut': 0.3, 'handover': [0.07, -0.08, 0.04], 'handoverTurn': -1.6, 'rightNudge': [0.007, 0, 0]}
+TYPING = 'people-mia-power-type-30'
+HANDS_BY = [0, -41, -91]   # mm, her frame: the keys from where the typing posture was built for (the desk 3.6 in nearer than the 3rd cut's 146.9 and 1 in lower), checked with the fingertips on the keys
+DOCK_CM = 0.0          # pass 2 docked the desk 8 cm nearer here; Vico has set the dock himself since (z 150.5): 0, nothing moved
 INCH = 2.54
 GRIP = {'at': [0.0673, 0.1531, 0.0321], 'q': [0.6977, 0.4778, -0.1066, 0.523]}      # the phone where her hands hold it (the baked phone's place, measured)
-GRIP2 = {'at': [0.0, 0.08, 0.05], 'q': [0.0, 0.7071, -0.7071, 0.0]}                  # between thumb and fingers, the hand over it, to set it down
-CHANGE_FROM, CHANGE_LEN = 14.8, 0.6
+GRIP2 = {'at': [0.03858, 0.11135, 0.07742], 'q': [-0.56274, 0.73644, -0.36599, -0.08389]}    # set down: under the left palm, pads on the glass, thumb at the inner edge
+FINGERS = {'from': TYPING, 'thumb': [20, 10, 0]}
+# the right index and thumb as the posture holds the phone sink 6 mm into the film's phone (a thicker prop than the posture's own):
+# the index curled 20 degrees and the thumb lifted 28 degrees off its glass while she holds it (a correction, not a motion: the
+# same all through the hold), back to the posture's own as the hand goes to the keys
+INDEX_R = {'index_01_r': [0, 0, 0.17365, 0.98481], 'thumb_01_r': [-0.24192, 0, 0, 0.9703]}
+
+
+def times(p):
+    grab = p['grab']; contact = max(grab + 0.15, p['contact']); release = contact + p['settle']
+    return {'grab': p['at'] + grab, 'contact': p['at'] + contact, 'release': p['at'] + release, 'end': p['at'] + release + p['hold'] + p['back']}
 
 
 def mia(ppl, params):
     cast = {e['key']: e for e in ppl['cast']}
     waits, works = cast['mia-waits'], cast['mia-works']
-    p = dict(PLACE, **params.get('place', {}))
-    waits['act'] = {'kind': 'place', 'at': p['at'], 'prop': '^Added prop:ergoflex-phone#mph01$', 'hand': 'l', 'contact': p['contact'], 'hold': p['hold'],
-                    'back': p['back'], 'lift': p['lift'], 'settle': p['settle'], 'bend': p['bend'], 'openFrom': 'people-mia-stretch', 'grip': params.get('grip', GRIP), 'grip2': params.get('grip2', GRIP2), 'regrip': [0.35, 0.85]}
-    waits['postures']['people-mia-power-phone'].pop('poseKeys', None)      # (the old arm keys leaned her to the keyboard with the phone in her right hand)
-    keys = works['postures']['people-mia-power-type-30']['poseKeys']
-    final, first = keys[-1]['pose'], keys[0]['pose']
-    bones = sorted(set(first) | set(final)); span = keys[-1]['t'] - keys[0]['t']
-    works['postures']['people-mia-power-type-30']['poseKeys'] = [{'t': CHANGE_FROM, 'pose': {b: [0, 0, 0, 1] for b in bones}}, {'t': round(CHANGE_FROM + span, 3), 'pose': final}]
-    works['change'] = {'seconds': CHANGE_LEN, 'arms': [0.15, 1]}
-    works['handsBy'] = [0, 0, -round(params.get('dock_cm', DOCK_CM) * 10)]      # (her hands go to the keys where they now are: the desk docked nearer by this many mm)
-    ppl['when']['mia-waits'] = [[0, round(CHANGE_FROM + CHANGE_LEN - 0.3, 3), 0, 0.5]]
-    ppl['when']['mia-works'] = [[round(CHANGE_FROM + 0.3, 3), 99, 0.5, 0]]
+    p = dict(PLACE, **params.get('place', {})); by = params.get('hands_by', HANDS_BY); t = times(p)
+    waits['act'] = {'kind': 'place', 'prop': '^Added prop:ergoflex-phone#mph01$', 'hand': 'l', **{k: p[k] for k in ('at', 'grab', 'contact', 'settle', 'hold', 'back', 'lift', 'lift2', 'bend', 'approach', 'clear', 'rightBack', 'look', 'turn', 'side', 'reachOut', 'handover', 'handoverTurn', 'rightNudge')},
+                    'openFrom': 'people-mia-stretch', 'grip': params.get('grip', GRIP), 'grip2': params.get('grip2', GRIP2), 'fingers': params.get('fingers', FINGERS), 'to': TYPING, 'handsBy': by}
+    # the typing posture's arm keys (Vico's, the last of them: the arms as he set them for typing) hold from the start of the typing
+    # model, and come into the waiting model while the hand travels from the charger to the keys (both models then end in the same pose)
+    keys = works['postures'][TYPING]['poseKeys']; final = keys[-1]['pose']
+    end = round(t['end'], 3)
+    works['postures'][TYPING]['poseKeys'] = [{'t': end, 'pose': final}]
+    post = waits['postures']['people-mia-power-phone']; post.pop('poseKeys', None)
+    let = t['grab'] + 0.03
+    post['poseKeys'] = [{'t': 0, 'pose': dict(INDEX_R)}, {'t': round(let, 3), 'pose': dict(INDEX_R)}, {'t': round(let + 0.25, 3), 'pose': {b: [0, 0, 0, 1] for b in INDEX_R}},
+                        {'t': round(t['release'] + p['hold'], 3), 'pose': {b: [0, 0, 0, 1] for b in final}}, {'t': end, 'pose': final}]
+    works['change'] = {'seconds': 0.6, 'arms': [0.15, 1]}
+    works['handsBy'] = by
+    # the change of model right after the action ends (centred 0.3 s after it: the change is 0.6 s): nothing moves in it
+    ppl['when']['mia-waits'] = [[0, round(end + 0.3, 3), 0, 0.5]]
+    ppl['when']['mia-works'] = [[round(end + 0.3, 3), 99, 0.5, 0]]
+    params['times'] = t
 
 
 # ---- Stream C ---------------------------------------------------------------------------------------------------------
@@ -105,9 +129,11 @@ def walker(row):
 
 
 def others(ppl):
+    have = {e.get('key') for e in ppl['cast']}      # (a cut that has them already, the pass-2 import Vico made: kept as they are, not added twice)
     for row in SEATED:
-        ppl['cast'].append(seated(row))
+        if row[0] not in have: ppl['cast'].append(seated(row))
     for row in WALKERS:
+        if row[0] in have: continue
         ppl['cast'].append(walker(row))
         if row[4] is not None:
             ppl.setdefault('when', {})[row[0]] = [[0, row[4], 0, 0.8]]
@@ -123,6 +149,7 @@ def dock(shot, cm):
     """The desk docks `cm` nearer her wheelchair: the last stretch of the wheels clip's path (and its target) gains the distance in
     proportion to how far along it is (so it still sets off and drives as before and only arrives further), in the clip's own
     inches. Nothing else of the desk's motion changes: it still comes to rest at 13.4 s."""
+    if not cm: return
     inches = cm / INCH
     for c in shot.get('motion', {}).get('clips', []):
         if c.get('lane') != 'wheels' or not c.get('path'): continue
@@ -145,7 +172,7 @@ def build(shot, params):
     shot = copy.deepcopy(shot); ppl = shot['people']
     if not params.get('skip_mia'):
         mia(ppl, params); dock(shot, params.get('dock_cm', DOCK_CM))
-        p = dict(PLACE, **params.get('place', {})); params['cue'] = cue(shot, p['at'] + p['contact'] + p['settle'])
+        params['cue'] = cue(shot, params['times']['release'])
     if not params.get('skip_others'):
         others(ppl)
         have = {e.get('match') for e in shot.get('sceneEdits', [])}

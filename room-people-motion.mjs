@@ -919,7 +919,9 @@ export function placeGrip(pl, e) {
 }
 export function placePhone(rig, key, act, life) {
     const base = ACTS['power-phone']; if (base) { base(rig, key, act.time ?? 0, act.seed ?? 0, life); rig.fk(); }
+    rig.placeOut = null;
     const pl = act.place; if (!pl) return;
+    if (pl.to) return placeToKeys(rig, key, pl, act.since);
     const since = act.since, contact = Math.max(.2, pl.contact ?? 1), hold = pl.hold ?? .15, back = Math.max(.1, pl.back ?? .45), settle = pl.settle ?? 0;
     const e = ss(0, contact, since), v = ss(contact + hold, contact + hold + back, since), w = e * (1 - v);
     if (!(w > 1e-4)) return;
@@ -958,6 +960,122 @@ export function placePhone(rig, key, act, life) {
     // the head follows the phone: from the hand's turn, the phone's place; she looks at it all the way down
     placeEye.copy(grip.at).applyQuaternion(rig.wq[hand]).add(rig.wp[hand]);
     lookToward(rig, placeEye, .8);
+}
+// ---- setting the phone down and going straight to the keys (pass 3, Vico's notes of 24 Nov 2026 on 1:46.55-1:48.05)
+// With pl.to (a typing key: room-people.mjs placeOf, the next placement's posture with its hands where the keys are) the
+// action is the whole beat from the phone in both hands to typing, and ends exactly in pl.to:
+//   0 .. grab        the right hand tips the phone flat and a little forward (pl.handover, metres, the model's frame) while
+//                    the left hand comes over it from above and takes it (pl.grip2: the phone in the left hand, the palm
+//                    over the glass, the finger pads on it, the thumb at its inner edge; pl.fingers: that hand's fingers)
+//   grab .. contact  the left hand carries it, flat, on an arch (pl.lift) to the charger (pl.p, pl.q); the right hand lets
+//                    go and goes to its keys; the body turns and leans in only as far as keeps the elbow bent (pl.bend)
+//   + settle         it is let go; the fingers lift off it (pl.hold), the hand rises a little
+//   .. end (+ back)  the left hand goes from the charger to its keys on an arch (lift, move, lower), the wrist turning the
+//                    short way (palm down on the phone, palm down on the keys: never through palm up); the head comes up
+//                    from the phone to the screen, the body back to the typing posture
+// No pose of holding a phone is ever gone back to. The phone's own place each frame is left in rig.placeOut (the model's
+// frame; null when it is not carried): the room draws the prop there.
+const ptk = { wp4: V(), wq1: Q(), L0p: V(), L0q: Q(), P0p: V(), P0q: Q(), P1p: V(), P1q: Q(), Pp: V(), Pq: Q(), Lp: V(), Lq: Q(), Rp: V(), Rq: Q(), Rh: V(), RhQ: Q(), grQ: Q(), grAt: V(), g2i: Q(), restP: V(), restQ: Q(), snap: [], lp0: V(), lp1: V(), eye: V(), tmp: V(), tq: Q() };
+export function placeTimes(pl) {
+    const grab = Math.max(.12, pl.grab ?? .24), contact = Math.max(grab + .15, pl.contact ?? .55), settle = pl.settle ?? .06, release = contact + settle;
+    const hold = pl.hold ?? .08, back = Math.max(.25, pl.back ?? .55); return { grab, contact, release, hold, back, end: release + hold + back };
+}
+function placeToKeys(rig, key, pl, since) {
+    if (!(since > 0)) return;
+    const b = rig.b, to = pl.to, [clL, upper, lower, hl] = rig.side.l.arm, hr = rig.side.r.arm[3], T = placeTimes(pl), { grab, contact, release, hold, end } = T, lift = pl.lift ?? .05;
+    if (since >= end) { for (let i = 0; i < rig.n; i++) rig.lq[i].copy(to.q[i]); rig.lp[b.Root].copy(to.root); rig.lp[b.pelvis].copy(to.pelvis); rig.fk(); return; }
+    const g1 = pl.grip, g2 = pl.grip2, k = ptk;
+    // the life pose (the phone in both hands, the thumb scrolling): the phone where it is now, the right hand's hold of it
+    k.L0p.copy(rig.wp[hl]); k.L0q.copy(rig.wq[hl]);
+    k.P0q.multiplyQuaternions(k.L0q, g1.q); k.P0p.copy(g1.at).applyQuaternion(k.L0q).add(k.L0p);
+    k.grQ.copy(key.wq[hr]).invert(); k.tq.multiplyQuaternions(key.wq[hl], g1.q);      // (the phone in the right hand, as the posture holds it)
+    k.grAt.copy(g1.at).applyQuaternion(key.wq[hl]).add(key.wp[hl]).sub(key.wp[hr]).applyQuaternion(k.grQ); k.grQ.multiply(k.tq);
+    k.restP.copy(pl.p); k.restQ.copy(pl.q);
+    k.P1p.copy(k.P0p); if (pl.handover) k.P1p.add(k.tmp.fromArray(pl.handover));
+    k.P1q.setFromAxisAngle(Y, pl.handoverTurn ?? 0).multiply(k.restQ);      // (flat, turned about the vertical so the left hand takes it with its wrist straight; turned to the charger's way as it is carried)
+    // the phone's path: tipped flat (it keeps the charger's turn from here on), then carried on an arch
+    if (since < grab) { const e = ss(0, grab, since); k.Pp.lerpVectors(k.P0p, k.P1p, e); k.Pq.slerpQuaternions(k.P0q, k.P1q, e); }
+    else if (since < contact) { const u = ss(grab, contact, since); k.Pp.lerpVectors(k.P1p, k.restP, u); k.Pp.y += lift * Math.sin(Math.PI * u); k.Pq.slerpQuaternions(k.P1q, k.restQ, ss(0, .85, u)); }
+    else { k.Pp.copy(k.restP); k.Pq.copy(k.restQ); }
+    k.g2i.copy(g2.q).invert();
+    const handFor = (pp, pq, outP, outQ) => { outQ.multiplyQuaternions(pq, k.g2i); outP.copy(g2.at).applyQuaternion(outQ).negate().add(pp); };
+    // the body: from the posture (its life fading) to the typing posture, the spine and shoulders through the beat, the
+    // head only once the phone is let go (until then she looks at it)
+    const m = ss(grab * .5, end, since), mHead = ss(release - .05, release + .5, since), mFingersL = ss(release, end, since), mFingersR = ss(grab, grab + .55, since);
+    const fingersL = new Set(rig.side.l.fingers), fingersR = new Set(rig.side.r.fingers);
+    for (let i = 0; i < rig.n; i++) rig.lq[i].slerp(to.q[i], i === b.neck_01 || i === b.head ? mHead : fingersL.has(i) ? mFingersL : fingersR.has(i) ? mFingersR : m);
+    rig.lp[b.Root].lerp(to.root, m); rig.lp[b.pelvis].lerp(to.pelvis, m); rig.fk();
+    // the left hand
+    if (since < grab) {
+        // over to the phone and onto it from above: out to her left past its edge (pl.clear) and up (pl.approach) while it
+        // turns from under the phone to over it, then down onto the glass where the phone is by then
+        const s = ss(0, grab, since), tl = clamp01(since / grab);
+        handFor(k.Pp, k.Pq, k.wp4, k.wq1);
+        // (across and turned first, over the glass by 0.7 of the way; then straight down onto it: the thumb, which ends beside the
+        // phone's inner edge below its top, never crosses over the glass that low)
+        const across = ss(0, .7, s);
+        k.Lp.set(lerp(k.L0p.x, k.wp4.x, across), k.wp4.y + (k.L0p.y - k.wp4.y) * (1 - ss(0, .45, s)), lerp(k.L0p.z, k.wp4.z, across));
+        k.Lp.x += (pl.clear ?? .05) * Math.sin(Math.PI * Math.min(1, s / .7)); k.Lp.y += (pl.approach ?? .06) * ss(0, .4, s) * (1 - ss(.78, 1, s));
+        k.Lq.slerpQuaternions(k.L0q, k.wq1, ss(0, .7, tl));      // (on the clock, not the eased path: the turn spread over the grab, done before it comes down)
+    } else if (since < release) handFor(k.Pp, k.Pq, k.Lp, k.Lq);
+    else {
+        handFor(k.restP, k.restQ, k.lp0, k.tq); k.lp0.y += .014 * ss(release, release + hold, since);      // (let go: the fingers lift off and the hand rises a little)
+        const u = ss(release + hold * .5, end, since);
+        k.Lp.lerpVectors(k.lp0, to.wp[hl], u); k.Lp.y += (pl.lift2 ?? .035) * Math.sin(Math.PI * u);
+        k.Lq.slerpQuaternions(k.tq, to.wq[hl], ss(release + hold * .5, end - .04, since));      // (the shortest turn between two palm-down hands)
+    }
+    // the right hand: holds the phone while it is tipped flat, lets go once the left hand has it, then to its keys
+    const rLet = grab + .03;
+    if (since < rLet) {
+        k.Rq.multiplyQuaternions(k.Pq, k.tq.copy(k.grQ).invert()); k.Rp.copy(k.grAt).applyQuaternion(k.Rq).negate().add(k.Pp);
+        if (pl.rightNudge) k.Rp.add(k.tmp.fromArray(pl.rightNudge).multiplyScalar(ss(0, .12, since)).applyQuaternion(k.Pq));      // (the hold eased off the phone's edge a little: the prop is thicker than the posture's own phone)
+    }
+    else {
+        k.RhQ.multiplyQuaternions(k.P1q, k.tq.copy(k.grQ).invert()); k.Rh.copy(k.grAt).applyQuaternion(k.RhQ).negate().add(k.P1p);
+        if (pl.rightNudge) k.Rh.add(k.tmp.fromArray(pl.rightNudge).applyQuaternion(k.P1q));
+        const u = ss(rLet, rLet + (pl.rightBack ?? .5), since);
+        k.Rp.lerpVectors(k.Rh, to.wp[hr], u); k.Rp.y += .02 * Math.sin(Math.PI * u); k.Rq.slerpQuaternions(k.RhQ, to.wq[hr], u);
+    }
+    // the reach: turn toward it and lean in only as far as keeps the elbow bent (the wrist no further than `bend` of the arm's
+    // length from the shoulder), the head held up
+    const wr = ss(grab * .4, contact, since) * (1 - ss(release + hold, release + hold + (end - release - hold) * .7, since));
+    const snap = k.snap; snap.length = rig.n; for (let i = 0; i < rig.n; i++) (snap[i] ||= Q()).copy(rig.lq[i]);
+    const armLength = to.wp[upper].distanceTo(to.wp[lower]) + to.wp[lower].distanceTo(to.wp[hl]), limit = (pl.bend ?? .9) * armLength;
+    const shoulder = rig.wp[upper], yaw = THREE.MathUtils.clamp(Math.atan2(k.Lp.x - shoulder.x, k.Lp.z - shoulder.z) * (pl.turn ?? .7), -.4, .4) * wr;
+    const lean = amount => {
+        for (let i = 0; i < rig.n; i++) rig.lq[i].copy(snap[i]); rig.fk();
+        if (wr > 1e-4) {
+            rig.turnWorld(b.spine_02, turn.setFromAxisAngle(Y, yaw * .5)); rig.fk(); rig.turnWorld(b.spine_03, turn.setFromAxisAngle(Y, yaw * .5)); rig.fk();
+            // (to the left, the reaching side, before forward: the charger is far out to her left; the shoulder comes forward on its own)
+            for (const [bone, share] of [[b.spine_01, .3], [b.spine_02, .4], [b.spine_03, .3]]) { rig.turnWorld(bone, turn.setFromAxisAngle(Z, -(pl.side ?? .16) * share * wr)); rig.fk(); }
+            rig.turnWorld(clL, turn.setFromAxisAngle(Y, -(pl.reachOut ?? .3) * wr)); rig.fk();
+            for (const [bone, share] of [[b.spine_01, .25], [b.spine_02, .4], [b.spine_03, .35]]) { rig.turnWorld(bone, turn.setFromAxisAngle(X, amount * share)); rig.fk(); }
+            for (const [bone, share] of [[b.neck_01, .45], [b.head, .45]]) { rig.turnWorld(bone, turn.setFromAxisAngle(X, -amount * share)); rig.fk(); }      // (the head stays up: not folded down with the back)
+        }
+        armTo(rig, 'r', k.Rp, k.Rq);
+        return rig.wp[upper].distanceTo(k.Lp) - limit;
+    };
+    let amount = 0;
+    if (wr > 1e-4 && lean(0) > 0) {
+        let lo = 0, hi = .7;
+        if (lean(hi) > 0) amount = hi;
+        else { for (let i = 0; i < 10; i++) { const mid = (lo + hi) / 2; if (lean(mid) > 0) lo = mid; else hi = mid; } amount = hi; }
+    }
+    lean(amount); armTo(rig, 'l', k.Lp, k.Lq);
+    // the left fingers: into the grip as the hand comes onto the phone, lifted off it when it is let go, then the typing hand
+    if (pl.fingers) {
+        const gw = ss(grab * .05, grab * .6, since) * (1 - ss(release, release + hold + .1, since)), ow = .55 * ss(release, release + hold, since) * (1 - ss(release + hold, end, since));
+        for (const i of rig.side.l.fingers) { if (gw > 0 && pl.fingers[i]) rig.lq[i].slerp(pl.fingers[i], gw); if (ow > 0 && pl.open?.[i]) rig.lq[i].slerp(pl.open[i], ow); }
+        rig.fk();
+    }
+    // the right fingers let go of it
+    if (pl.open) { const ow = .5 * ss(rLet - .02, rLet + .15, since) * (1 - ss(rLet + .15, rLet + .5, since)); if (ow > 0) { for (const i of rig.side.r.fingers) if (pl.open[i]) rig.lq[i].slerp(pl.open[i], ow); rig.fk(); } }
+    // the eyes: on the phone until it is down, then up to the screen (the typing posture's own head)
+    const look = (pl.look ?? .5) * ss(0, grab, since) * (1 - ss(release - .05, release + .3, since));
+    if (look > 0) lookToward(rig, k.eye.copy(k.Pp), look);
+    // the phone: in the right hand's hold while tipped, then in the left hand's grip as the arm has actually put it
+    if (since < grab) rig.placeOut = { p: k.Pp.clone(), q: k.Pq.clone() };
+    else if (since < release) { const q = Q().multiplyQuaternions(rig.wq[hl], g2.q); rig.placeOut = { p: V().copy(g2.at).applyQuaternion(rig.wq[hl]).add(rig.wp[hl]), q }; }
 }
 // A posture as its action leaves it (the pull: the hand where the screen was drawn to), as a key: a change of
 // posture that follows the action starts from there, not from the posture as built (room-people.mjs readyChange).
