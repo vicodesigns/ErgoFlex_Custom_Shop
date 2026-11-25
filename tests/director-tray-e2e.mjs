@@ -18,5 +18,6 @@ try{
   await set('tr-slide-n',90);
   const msg=await page.evaluate(()=>document.querySelector('[data-tray-joint="slide"]')?.innerText||'');
   assert.match(msg,/keyed 90 %/);assert.match(msg,/does not fit under the desk|held to/,'a limit is said in words: '+msg);
+  assert.match(await status(page),/held at 45 %/,'the status line names the limit too: '+await status(page));
   console.log('PASS Director Tray: slide, tilt and swing move the jointed tray on the live stage; a limit is named under the slider.');
 }catch(e){console.error('FAIL',e.message);process.exitCode=1;}finally{await close();}

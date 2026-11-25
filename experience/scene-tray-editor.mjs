@@ -57,6 +57,8 @@ export function createTrayEditor({ win = () => null, three = () => null, stage =
         write(x => onKey ? setKey(x, t, { [joint]: fromDisplay(joint, value) }) : setInitial(x, { [joint]: fromDisplay(joint, value) }),
             `Tray: ${name} ${shown}${onKey ? ` · key at ${fmtT(t)} s` : trayKeyTimes(e).length ? ' · starting pose' : ' · the whole chapter'}.${note}`, { undoKey: 'tray-' + joint + (onKey ? ':' + t : ''), render: !live });
         if (onKey) sel = [t];
+        // a value outside what the tray may do right now is SAID, not silently ignored (the tray takes the limit, the reason is under the slider too)
+        { const row = model().rows.find(r => r.joint === joint); if (row?.reason && row.shown !== row.value) status(`Tray: ${name} held at ${row.shown} ${row.unit} (you asked for ${row.value}). ${row.reason}`, true); }
         if (live) liveReadout(joint, value);
     }
     // while a slider is dragged the panel is not redrawn (that would drop the slider): its number follows, the rest on release
