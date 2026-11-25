@@ -1,0 +1,4 @@
+newmtl tray_black
+Kd 0.03 0.03 0.04
+Ks 0.3 0.3 0.3
+Ns 40
