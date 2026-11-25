@@ -125,7 +125,10 @@ CHARACTERS = {
         'tint': {'toigo_basic_tucked_t-shirt': (.6, .14, .32), 'toigo_wool_pants': (.12, .12, .14), 'toigo_flats': (.5, .12, .25)},
     },
     'priya': {
-        'tailoring': 'home',
+        # ('hairline': False: in the rooms and the film her hair keeps the edges braid01 is drawn with. The braid's thin sheets
+        # over the brow and temple carry the open edges the hairline coverage map is baked from, and media-cast-finishes.mjs
+        # cut that map into them as salmon hatching, the forehead showing through; build_people.py, build.py set_alpha.)
+        'tailoring': 'home', 'hairline': False,
         'name': 'Priya', 'phenotype': {'gender': .0, 'age': .45, 'muscle': .55, 'weight': .45, 'height': .6, 'proportions': .65, 'race': race(.35, .15, .5)},
         'skin': 'young_asian_female', 'eyes': 'brown', 'hair': 'braid01', 'eyebrows': 'eyebrow012', 'eyelashes': 'eyelashes02',
         # (a tee over loose trousers: the sportsuit's crop top left her midriff and back bare, worst with her arms up in the gym)
@@ -879,10 +882,13 @@ def stand_paint(k):
 
 
 def stretch(k):
-    """A standing break: both arms overhead, hands together, a gentle side bend."""
-    return {'spine': (-2, -2, -3), 'spine_side': 12, 'neck': -4, 'head': -6,
-            'hand_l': {'at': _s(k, .0, -.03, 1.97), 'fingers': (-.05, 0, 1), 'palm': (-1, 0, 0), 'elbow': (.3, .1, .2), 'curl': .1, 'thumb': .1},
-            'hand_r': {'at': _s(k, -.07, -.03, 1.97), 'fingers': (.05, 0, 1), 'palm': (1, 0, 0), 'elbow': (-.3, .1, .2), 'curl': .1, 'thumb': .1},
+    """A standing break: both arms reaching up, hands a little wider than the shoulders, palms in, a slight lean.
+    (Hands together over the head with a 12 degree side bend put the left arm through the side of the head and hair. The
+    side to side bend is the motion's, room-people-motion.mjs 'stretch', which carries the arms with the trunk, so the
+    posture stays nearly upright and the arms stay clear of the head at both ends of the bend.)"""
+    return {'spine': (-2, -2, -3), 'spine_side': 4, 'neck': -3, 'head': -5, 'raised_top': True,
+            'hand_l': {'at': _s(k, .23, -.02, 1.95), 'fingers': (.12, -.02, 1), 'palm': (-1, 0, .05), 'elbow': (.35, .12, -.05), 'curl': .12, 'thumb': .12},
+            'hand_r': {'at': _s(k, -.17, -.02, 1.95), 'fingers': (-.12, -.02, 1), 'palm': (1, 0, .05), 'elbow': (-.35, .12, -.05), 'curl': .12, 'thumb': .12},
             'foot_l': {'at': _s(k, .13, .0, .07 / k), 'toes': (.2, -1, 0)}, 'foot_r': {'at': _s(k, -.13, .0, .07 / k), 'toes': (-.2, -1, 0)}}
 
 

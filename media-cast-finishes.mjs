@@ -148,8 +148,11 @@ export function mediaPersonMaterial(source, cast, part, relief = 1) {
             mat.anisotropy = coiled ? .08 : .53;
             mat.anisotropyMap = style.direction;
             // Coverage at the open scalp edges combines with each strand's
-            // painted alpha in the person's original colour map.
-            mat.alphaMap ||= style.edge;
+            // painted alpha in the person's original colour map. A model built with
+            // its hair's own edges (glTF extras hairline: false, tools/people/cast.py
+            // 'hairline') goes without: on braid01's thin sheets over the brow the
+            // map cut salmon hatching, the forehead showing through (Priya, gym).
+            if (source.userData?.hairline !== false) mat.alphaMap ||= style.edge;
         } else if (hasOwnNormal) {
             mat.normalScale.set(.65, .65);
         }

@@ -497,6 +497,12 @@ if who.get('layered_waves'):
         groom.drape_hair_over_posed(hair_baked, obs, rig, sweater,
                                    packed=any(o.name.startswith('backpack') for o in extras))
 
+# A top fitted hanging crumples at the armpits and saws at the neckline under arms raised over the head: relaxed in the
+# posed shape where the posture asks for it (cast.stretch 'raised_top': True; tailoring.relax_raised_top).
+if pose.get('raised_top'):
+    for b in baked:
+        if b.name.replace('.baked', '').split('.', 1)[-1] in tailoring.TOPS: tailoring.relax_raised_top(b, rig)
+
 # Skin under clothing pokes through once the body is posed. Any body face with cloth just outside it goes.
 from mathutils.bvhtree import BVHTree  # noqa: E402
 from mathutils.kdtree import KDTree  # noqa: E402
@@ -667,6 +673,10 @@ result = {'id': OUT_ID, 'ok': True, 'tris': len(person.data.loop_triangles),
           'max': [round(float(co[:, 0].max()) * 1000, 1), round(float(co[:, 2].max()) * 1000, 1), round(float(-co[:, 1].min()) * 1000, 1)],
           'alpha': {m.name: m.get('alpha', 'OPAQUE') for m in person.data.materials}, 'cutoff': {m.name: m['cutoff'] for m in person.data.materials if m.get('cutoff')}, 'bones': len(rig.data.bones), 'loose': len(loose)}
 result['size'] = [round(result['max'][i] - result['min'][i], 1) for i in range(3)]
+# (cast 'hairline': False: the hair material says so in its glTF extras, three.js userData; media-cast-finishes.mjs then
+# leaves out the baked hairline coverage map. build.py set_alpha writes it.)
+if who.get('hairline') is False and who.get('hair'):
+    result['extras'] = {m.name: {'hairline': False} for m in person.data.materials if m.name == 'Human.' + who['hair']}
 
 os.makedirs(OUT_DIR, exist_ok=True)
 rig.select_set(True); person.select_set(True)
