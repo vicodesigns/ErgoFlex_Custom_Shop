@@ -135,7 +135,7 @@ const ERGO = 45, MOUSE = 56.9;
     const norm = s => JSON.stringify(s, (k, v) => typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-/.test(v) ? 'U' : v);   // (cleaning mints random ids)
     for (const f of files) {
         let j; try { j = JSON.parse(fs.readFileSync(path.join(root, f), 'utf8')); } catch { continue; }
-        for (const shot of j.shots || []) { const out = cleanShot(shot); assert.ok(!('trayEdits' in out), f); assert.deepEqual(T.cleanTrayEdits(shot), {}, f); assert.equal(norm(cleanShot(out)), norm(out), f + ' cleans to itself'); shots++; }
+        for (const shot of j.shots || []) { const out = cleanShot(shot); if (!('trayEdits' in shot)) { assert.ok(!('trayEdits' in out), f); assert.deepEqual(T.cleanTrayEdits(shot), {}, f); } assert.equal(norm(cleanShot(out)), norm(out), f + ' cleans to itself'); shots++; }   // (a live cut Vico has keyed the tray in keeps them: only shots without trayEdits must gain none)
     }
     assert.ok(shots > 50, 'fixture shots were checked: ' + shots);
     const withKeys = cleanShot({ room: 'product', seconds: 12, trayEdits: [{ keys: [{ t: 2, pose: { tilt: -10 } }] }] });

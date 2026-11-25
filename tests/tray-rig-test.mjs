@@ -80,9 +80,10 @@ const worldOf = (o, n) => named(o, n).getWorldPosition(new THREE.Vector3());
     for (const f of ['tools/experience/render-cut.cjs', 'tools/experience/render-still.cjs']) assert.ok(/FX_FIELDS=\[[^\]]*'sceneTray'/.test(fs.readFileSync(path.join(root, f), 'utf8')), f + ' passes sceneTray to film-fx');
 }
 {   // the film shot: no tray keys, no new field, anywhere (every tracked film shot, live and render versions)
-    const cuts = ['exports/cinematic-intro-cut-vicos-3rd-cut/review-cut.json', 'exports/cinematic-intro-cut-cine/review-cut.json'].filter(f => fs.existsSync(path.join(root, f)));
+    // (frozen film shots, tests/fixtures/tray-film-shots-20261125.json: the live cuts change, Vico keys the tray in them)
+    const frozen = JSON.parse(fs.readFileSync(path.join(root, 'tests/fixtures/tray-film-shots-20261125.json'), 'utf8')).cuts;
     let n = 0;
-    for (const f of cuts) for (const film of JSON.parse(fs.readFileSync(path.join(root, f), 'utf8')).shots) {
+    for (const f of Object.keys(frozen)) for (const film of frozen[f]) {
         const base = { id: film.id, room: film.room, seconds: film.seconds, kind: film.kind }, a = filmRenderShot(film, base, null), b = liveFilmShot(film, base);
         for (const o of [a, b]) { assert.ok(!('sceneTray' in o) && !('trayEdits' in o), film.id + ' gains no tray field'); }
         assert.deepEqual(mergeTrayEdits(film, base), {}); assert.deepEqual(effectiveTrayEdits(film, base), []); n++;
