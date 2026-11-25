@@ -583,12 +583,159 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
         const spans=Math.max(2,Math.round((w-400)/1800)),span=(w-400)/spans;
         for(let r=0;r<spans;r++)pennants(shelf,[-w/2+200+r*span,0,bz+312],[-w/2+200+(r+1)*span,0,bz+312],25,0);
     }
+    // Loading bay (Vico, Nov 24 2026): the room used to stop at its open front, so the storage chapter's
+    // cameras (and the free Director view) looked past the slab into the void. The walls, slab and
+    // ceiling now run on by `ext` to a roll-up door wall. Nothing inside the original room moves:
+    // layout width/depth, props, desk and people keep their coordinates; only new geometry is added
+    // beyond `front`. The first 500 mm of each side wall stays plain so the tuned shots' edges keep their look.
+    const buildWorkshopBay=()=>{
+        const ext=3600,E=front+ext,mid=front+ext/2;
+        // Slab: the room's own material, with UVs that continue its map (saw-cut joints line up).
+        const fg=new THREE.BoxGeometry(w,30,ext);fg.translate(0,-15,mid);
+        {const p=fg.attributes.position,uv=fg.attributes.uv;for(let i=0;i<p.count;i++)uv.setXY(i,(p.getX(i)+w/2)/w,(front-p.getZ(i))/d);}
+        mesh(root,fg,slab);
+        // Side walls carry on with the same block, wainscot paint, steel base and safety stripe.
+        wallBox(left,[80,h,ext],[-w/2-40,h/2,mid],plaster);wallBox(left,[2,940,ext],[-w/2+1,630,mid],paintLow);
+        wallBox(right,[80,h,ext],[w/2+40,h/2,mid],plaster);box(right,[20,160,ext],[w/2-10,80,mid],steel);
+        wallBox(right,[2,940,ext],[w/2-1,630,mid],paintLow);box(right,[4,30,ext],[w/2-2,1115,mid],yellow);
+        // Roll-up door wall at the far end; hides like the other walls when the eye is beyond it.
+        const end=new THREE.Group();end.name='Workshop loading bay door wall';root.add(end);
+        wallBox(end,[w+160,h,80],[0,h/2,E+40],plaster);wallBox(end,[w,940,2],[0,630,E-1],paintLow);box(end,[w,160,24],[0,80,E-12],steel);
+        room.walls.push({obj:end,axis:'x',limit:E*root.scale.x,sign:-1});
+        const doorW=Math.min(3000,w-1400),doorH=Math.min(2400,h-300),dx=w/2-300-doorW/2;
+        const doorPaint=material('#d9dcd6',{roughness:.55,metalness:.2});
+        kbox(end,[doorW+60,doorH+40,30],[dx,(doorH+40)/2,E-14],steel);
+        for(let i=0;i<5;i++){const y=doorH/5*(i+.5);kbox(end,[doorW,doorH/5-14,22],[dx,y,E-36],doorPaint);kbox(end,[doorW,10,26],[dx,y+doorH/10-4,E-38],steel);}
+        for(let i=0;i<5;i++)kbox(end,[doorW/5-60,150,4],[dx-doorW*.4+i*doorW/5,doorH*.7,E-49],glass);
+        kbox(end,[doorW+200,320,320],[dx,doorH+200,E-170],steel);for(const s of [-1,1])kbox(end,[50,doorH+120,60],[dx+s*(doorW/2+50),(doorH+120)/2,E-60],steel);
+        kbox(end,[240,30,40],[dx,260,E-60],silver);kbox(end,[80,160,60],[dx+doorW/2+180,1300,E-30],steel);kbox(end,[50,40,10],[dx+doorW/2+180,1330,E-64],orange);
+        // Hazard edge at the door threshold and a drain grate.
+        kbox(end,[doorW,2,120],[dx,1,E-80],hazard,undefined,200);kbox(end,[900,3,140],[dx,1.5,E-500],rubber);
+        // Ceiling deck, joists and a twin-tube fixture pair, placed behind every storage camera (z > front + 1800).
+        const deck=root.children.find(g=>g.name==='Ceiling workshop deck and joists');
+        if(deck){
+            const deckPaint=material('#e6dcc6',{roughness:.93}),joistPaint=material('#d3c4a6',{roughness:.88});
+            part(deck,deckPaint,new THREE.PlaneGeometry(w,ext),[0,h,mid],[Math.PI/2,0,0]);
+            for(let z=front+400;z<E;z+=1200)if(Math.abs(z-(front+2400))>700)kbox(deck,[w-40,150,90],[0,h-75,z],joistPaint);
+        }
+        const lz=front+2400;
+        for(const x of [-w*.25,w*.25]){
+            for(const o of [-450,450])krod(ceiling,[x,h,lz+o],[x,h-185,lz+o],3,steel,5);
+            kbox(ceiling,[250,26,1260],[x,h-198,lz],enamel);for(const s of [-1,1])kbox(ceiling,[8,64,1260],[x+s*136,h-232,lz],enamel,[0,0,s*.45]);
+            for(const s of [-1,1])kcyl(ceiling,[14,14,1210,10],[x+s*55,h-238,lz],tubeGlow,[Math.PI/2,0,0]);
+        }
+        // Conduit along both bay walls with outlet boxes at bench height.
+        for(const [s,wall,cy,drops] of [[-1,left,2450,[front+300,E-250]],[1,right,2700,[front+300]]]){
+            krod(wall,[s*(w/2-30),cy,front],[s*(w/2-30),cy,E-40],12,silver,8);
+            for(const z of drops){krod(wall,[s*(w/2-30),cy,z],[s*(w/2-30),1060,z],10,silver,8);kbox(wall,[40,110,80],[s*(w/2-22),1000,z],steel);kbox(wall,[4,56,40],[s*(w/2-43),1000,z],paper);}
+        }
+
+        // LEFT WALL (window side), the wall the 14 s shot looks along: steel shelving, then the exit door and fire point.
+        // Group local axes: +z points into the room, +x runs along the wall.
+        const onLeft=(id,name,z)=>group(id,name,[-w/2,0,z],Math.PI/2,left);
+        const onRight=(id,name,z)=>group(id,name,[w/2,0,z],-Math.PI/2,right);
+        const binTones=[orange,teal,yellow,red];
+        const binLabel=texture((c,tw,th)=>{c.fillStyle='#f3efe2';c.fillRect(0,0,tw,th);c.fillStyle='#1f2a2c';c.font='bold 30px monospace';c.textAlign='center';
+            ['M4','M5','M6','M8','NUTS','WASH','HINGE','SPRNG'].forEach((t,i)=>c.fillText(t,(i%4+.5)*tw/4,(Math.floor(i/4)+.5)*th/2+10));},512,128);
+        const labels=material('#ffffff',{map:binLabel,roughness:.85});
+        const tag=(parent,i,at)=>{const g=new THREE.PlaneGeometry(90,30),uv=g.attributes.uv,cx=i%4,cy=Math.floor(i/4)%2;for(let k=0;k<uv.count;k++)uv.setXY(k,(cx+uv.getX(k))/4,1-(cy+1)/2+uv.getY(k)/2);part(parent,labels,g,at);};
+        {
+            const shelf=onLeft('bay-shelving','Steel shelving with labelled parts bins',front+1250);
+            const sw=1400,sd=460;
+            for(const x of [-sw/2,sw/2])for(const z of [30,sd-10])kbox(shelf,[40,2050,30],[x,1025,z],steel);
+            [80,520,960,1400,1840].forEach((y,lvl)=>{
+                kbox(shelf,[sw,28,sd],[0,y,sd/2+10],ply);kbox(shelf,[sw+40,50,14],[0,y-4,sd+17],steel);
+                if(lvl===0){for(let i=0;i<2;i++)kbox(shelf,[560,300,400],[-380+i*720,y+164,sd/2],cardboard),kbox(shelf,[180,90,2],[-380+i*720,y+200,sd/2+201],paper);}
+                else if(lvl<3){for(let i=0;i<6;i++){const x=-sw/2+125+i*230,m=binTones[(i+lvl)%4];kbox(shelf,[180,170,380],[x,y+100,sd/2-10],m);kbox(shelf,[180,60,30],[x,y+45,sd/2+190],m);tag(shelf,i+lvl*3,[x,y+130,sd/2+182]);}}
+                else if(lvl===3){for(let i=0;i<3;i++)kbox(shelf,[400,250,380],[-500+i*500,y+139,sd/2],i===1?red:cardboard),kbox(shelf,[150,70,2],[-500+i*500,y+170,sd/2+191],paper);}
+                else{for(let i=0;i<5;i++)kcyl(shelf,[90,90,170,16],[-560+i*280,y+99,sd/2],[silver,orange,teal,silver,red][i]);}
+            });
+            // An extension-cord reel and a coiled air line hang from the upright.
+            kcyl(shelf,[150,150,70,20],[sw/2+130,1500,90],orange,[0,0,Math.PI/2]);kcyl(shelf,[60,60,90,12],[sw/2+130,1500,90],steel,[0,0,Math.PI/2]);
+            ktorus(shelf,[150,14],[sw/2+130,1500,90],orange,[0,Math.PI/2,0]);ktorus(shelf,[120,12],[sw/2+150,1100,60],yellow,[0,Math.PI/2,0]);
+            kbox(shelf,[24,24,120],[sw/2+130,1690,60],steel);kbox(shelf,[24,24,120],[sw/2+150,1260,40],steel);
+            // A wall bulkhead light above the shelving.
+            kbox(shelf,[220,90,60],[0,2350,30],steel);mesh(shelf,new THREE.BoxGeometry(190,60,8),taskGlow,[0,2350,62]).castShadow=false;
+            signPlate(shelf,6,[300,300],[sw/2+140,2050,3]);
+        }
+        {
+            const exit=onLeft('bay-exit-door','Exit door, fire point and first-aid cabinet',E-850);
+            kbox(exit,[1000,2200,40],[0,1100,10],steel);kbox(exit,[860,2100,50],[0,1050,30],material('#4a6d6a',{roughness:.5,metalness:.25}));
+            kbox(exit,[140,40,60],[320,1050,70],silver);kbox(exit,[780,40,40],[0,1000,70],silver);kbox(exit,[300,200,4],[0,1650,57],glass);
+            const exitMap=texture((c,tw,th)=>{c.fillStyle='#1f8a4c';c.fillRect(0,0,tw,th);c.fillStyle='#ffffff';c.font='bold 80px sans-serif';c.textAlign='center';c.fillText('EXIT',tw*.58,th*.7);
+                c.beginPath();c.moveTo(40,th/2);c.lineTo(90,th/2-30);c.lineTo(90,th/2+30);c.fill();c.fillRect(85,th/2-10,40,20);},512,128);
+            const exitFace=material('#ffffff',{map:exitMap,emissive:'#ffffff',emissiveMap:exitMap,emissiveIntensity:.6,roughness:.4});
+            kbox(exit,[440,150,70],[0,2330,35],steel);mesh(exit,new THREE.BoxGeometry(400,110,6),exitFace,[0,2330,73]).castShadow=false;
+            // Fire point: extinguisher on its bracket, sign above; first-aid cabinet beside the door.
+            const fx=650;kbox(exit,[40,120,60],[fx,1300,30],steel);kcyl(exit,[72,72,430,18],[fx,1000,110],red);kball(exit,[72,36,72],[fx,1215,110],red);kcyl(exit,[28,28,40],[fx,1250,110],rubber);
+            kbox(exit,[150,10,28],[fx+6,1272,110],silver);krod(exit,[fx+36,1255,110],[fx+36,900,150],9,rubber);kcyl(exit,[73,73,120,18],[fx,1030,110],paper);
+            signPlate(exit,3,[200,200],[fx,1480,3]);
+            const aid=material('#1f8a4c',{roughness:.6});kbox(exit,[300,380,130],[fx,1850,65],paper);kbox(exit,[180,50,6],[fx,1860,132],aid);kbox(exit,[50,180,6],[fx,1860,132],aid);
+            // A push broom and dustpan lean in the corner by the door.
+            krod(exit,[-600,0,140],[-560,1400,40],13,handle);kbox(exit,[420,60,70],[-602,30,140],rubber);kbox(exit,[300,8,240],[-280,4,240],rubber,[0,.3,0]);
+        }
+
+        // RIGHT WALL: a second workbench under a pegboard with painted tool outlines, a tall cabinet and a ladder.
+        {
+            const outlineMap=texture((c,tw,th)=>{
+                c.fillStyle='#a98c63';c.fillRect(0,0,tw,th);
+                for(let x=8;x<tw;x+=16)for(let y=8;y<th;y+=16){c.fillStyle='#3d3f38';c.beginPath();c.arc(x,y,2.7,0,Math.PI*2);c.fill();}
+                c.strokeStyle='#1f2a2c';c.lineWidth=5;c.fillStyle='#1f2a2c33';
+                const shape=(x,y,w0,h0,r=0)=>{c.save();c.translate(x,y);c.rotate(r);c.fillRect(-w0/2,-h0/2,w0,h0);c.strokeRect(-w0/2,-h0/2,w0,h0);c.restore();};
+                [[90,170,22,180],[140,170,22,200],[190,170,22,220],[300,150,120,26],[300,220,26,120],[430,170,40,200],[520,170,30,230],[610,160,90,90],[740,170,22,200],[790,170,22,180],[880,160,140,40]].forEach(a=>shape(...a));
+                c.font='bold 22px sans-serif';c.fillStyle='#1f2a2c';c.fillText('RETURN TOOLS TO THEIR OUTLINE',40,th-24);
+            },1024,320);
+            const bench2=onRight('bay-workbench','Second workbench, outlined tool board and vise',front+1500);
+            const bl=2000;
+            kbox(bench2,[bl,60,700],[0,880,360],block);kbox(bench2,[bl,40,8],[0,890,712],walnut);
+            for(const x of [-bl/2+60,bl/2-60])for(const z of [80,640])kbox(bench2,[70,850,70],[x,425,z],steel);
+            kbox(bench2,[bl-80,30,620],[0,180,360],ply);
+            box(bench2,[600,700,600],[bl/2-380,470,350],teal,3);for(const y of [260,480,700])kbox(bench2,[560,190,10],[bl/2-380,y,652],teal),kbox(bench2,[160,12,14],[bl/2-380,y+60,662],silver);
+            kbox(bench2,[400,260,320],[-500,327,330],red);kbox(bench2,[300,200,260],[-60,280,330],cardboard);
+            mesh(bench2,new THREE.BoxGeometry(bl-100,640,22),material('#ffffff',{map:outlineMap,roughness:.9}),[0,1500,14]);
+            for(const y of [1170,1830])kbox(bench2,[bl-60,36,30],[0,y,16],pine);for(const s of [-1,1])kbox(bench2,[36,700,30],[s*(bl/2-30),1500,16],pine);
+            // Tools on some outlines (others are out on the bench): sized to the outline map's 1024 × 320 px over (bl−100) × 640 mm.
+            const px=(u,v)=>[(u/1024-.5)*(bl-100),1500+(.5-v/320)*640];
+            for(const [u,v,len,m] of [[90,170,170,orange],[140,170,190,red],[740,170,190,teal]]){const [x,y]=px(u,v);kbox(bench2,[16,len*2,14],[x,y,36],m);kcyl(bench2,[4,4,26,6],[x,y+len+14,30],silver,[Math.PI/2,0,0]);}
+            {const [x,y]=px(300,185);kbox(bench2,[230,40,20],[x,y+60,36],silver);kbox(bench2,[44,230,20],[x,y,36],handle);}
+            {const [x,y]=px(610,160);ktorus(bench2,[70,14],[x,y,36],yellow);kbox(bench2,[40,40,30],[x,y,36],rubber);}
+            {const [x,y]=px(880,160);kbox(bench2,[270,60,30],[x,y,40],yellow);}
+            // Bench vise, a work light and a project mid-repair.
+            box(bench2,[150,40,170],[-bl/2+260,930,640],steel,4);box(bench2,[120,90,130],[-bl/2+260,995,610],steel,5);for(const z of [560,680])box(bench2,[180,40,30],[-bl/2+260,1060,z],silver,2);
+            rod(bench2,[-bl/2+150,1005,740],[-bl/2+370,1005,740],9,silver);
+            kbox(bench2,[300,18,180],[200,919,380],oak);for(let i=0;i<10;i++)kball(bench2,[12+hash(i+70)*10,3,8+hash(i+71)*6],[-200+hash(i+72)*500,912,300+hash(i+73)*250],pine);
+            kcyl(bench2,[42,38,96],[560,958,420],paper);
+            // Maintenance chart and posters above the board.
+            const chartMap=texture((c,tw,th)=>{c.fillStyle='#f4f1e8';c.fillRect(0,0,tw,th);c.fillStyle='#1f2a2c';c.font='bold 30px sans-serif';c.fillText('MACHINE MAINTENANCE',24,48);c.fillStyle='#d58b45';c.fillRect(24,60,tw-48,5);
+                c.font='18px sans-serif';['COMPRESSOR · DRAIN TANK','DRILL PRESS · BELT','MILL · WAY OIL','SHOP VAC · FILTER','BANDSAW · BLADE'].forEach((t,i)=>{c.fillStyle='#1f2a2c';c.fillText(t,24,104+i*44);for(let k=0;k<6;k++){c.strokeStyle='#2a3436';c.strokeRect(300+k*34,84+i*44,26,26);if(k<3+i%3){c.fillStyle='#1f8a4c';c.fillRect(305+k*34,89+i*44,16,16);}}});},512,340);
+            kbox(bench2,[540,360,10],[-bl/2+330,2075,5],steel);mesh(bench2,new THREE.BoxGeometry(510,330,4),material('#ffffff',{map:chartMap,roughness:.85}),[-bl/2+330,2075,12]);
+            signPlate(bench2,0,[200,200],[120,2060,3]);signPlate(bench2,2,[200,200],[360,2060,3]);
+            kbox(bench2,[240,90,60],[bl/2-300,2060,30],steel);mesh(bench2,new THREE.BoxGeometry(210,60,8),taskGlow,[bl/2-300,2060,62]).castShadow=false;
+            // Anti-fatigue mat and two oil drips on the slab in front of the bench.
+            kbox(bench2,[1600,10,560],[-100,5,1050],rubber);
+            const drip=material('#2c2f2c',{roughness:.35,transparent:true,opacity:.55,depthWrite:false});
+            for(const [x,z,r] of [[620,1500,70],[480,1640,40]]){const g=new THREE.CircleGeometry(r,20);g.scale(1,1.3,1);part(bench2,drip,g,[x,1.2,z],[-Math.PI/2,0,0]);}
+        }
+        {
+            const tall=onRight('bay-cabinet','Tall steel cabinet and wall ladder',E-600);
+            box(tall,[900,1950,500],[0,975,250],teal,4);kbox(tall,[6,1850,8],[0,975,503],steel);for(const s of [-1,1])kbox(tall,[20,180,16],[s*40,1050,512],silver);
+            kbox(tall,[880,60,480],[0,30,250],rubber);kbox(tall,[260,80,2],[-220,1700,501],paper);
+            for(let i=0;i<3;i++)kbox(tall,[200+i*40,180,180],[-280+i*260,2040,250],[cardboard,red,cardboard][i]);
+            // An aluminium step ladder hung flat on the wall above the bench line.
+            for(const s of [-1,1])kbox(tall,[1700,50,22],[-1650,2440+s*160,40],silver);for(let i=0;i<8;i++)kbox(tall,[24,320,26],[-2400+i*215,2440,40],silver);
+            for(const x of [-2300,-1000])kbox(tall,[30,60,90],[x,2250,45],steel);
+        }
+        return {ext,E,mid};
+    };
+    const bay=buildWorkshopBay();
     const lights=[
         {at:[0,1880,bz+520],power:4.4,level:'practical'},
         {at:[layout.desk[0],h-450,layout.desk[1]],power:5,level:'practical'},
         {at:[tier>=2?500:0,h-450,bz+d*.7],power:4,level:'tubes',tube:true},
-        {at:[w/2-700,1850,bz+d*.4],power:3.1,level:'wash',channel:1}
-    ].map(spec=>{const light=new THREE.PointLight('#e4f3f5',0,4800*root.scale.x,2);light.position.set(...spec.at);root.add(light);return {...spec,light,power:spec.power*(root.scale.x*1000)**2};});
+        {at:[w/2-700,1850,bz+d*.4],power:3.1,level:'wash',channel:1},
+        // The bay's own shop light: its short reach stops before the original room, so the tuned shots keep their light.
+        {at:[0,h-450,bay.mid],power:3.2,level:'wash',channel:1,reach:2800}
+    ].map(spec=>{const light=new THREE.PointLight('#e4f3f5',0,(spec.reach||4800)*root.scale.x,2);light.position.set(...spec.at);root.add(light);return {...spec,light,power:spec.power*(root.scale.x*1000)**2};});
     const paintSky=(mode,id)=>{
         const c=skyCanvas.getContext('2d'),grad=c.createLinearGradient(0,0,0,512),night=id==='night';grad.addColorStop(0,mode.sky[0]);grad.addColorStop(1,mode.sky[1]);c.fillStyle=grad;c.fillRect(0,0,512,512);
         if(night){c.fillStyle='#f3f0dc';for(let i=0;i<70;i++){c.globalAlpha=.25+hash(i)*.6;c.fillRect(hash(i+3)*512,hash(i+9)*300,2,2);}c.globalAlpha=1;c.beginPath();c.arc(370,105,24,0,Math.PI*2);c.fill();}
@@ -611,6 +758,7 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
     pools.add(root, [0, 4, bz + 900], [Math.min(3600, w - 600), 1500], '#f3f1e6', level(.8, [0, 0, .45, .7, .4]));
     pools.add(root, [0, 1500, bz + 6], [Math.min(3400, w - 600), 1300], '#f3f1e6', level(.55, [0, 0, .4, .6, .35]), 'back');
     pools.add(root, [layout.desk[0], 4, layout.desk[1]], [2000, 1700], '#ffe6c2', level(.6, [0, 0, .4, .55, .45]));
+    pools.add(root, [0, 4, bay.mid + 300], [Math.min(3600, w - 900), 2400], '#f3f1e6', level(.7, [0, 0, .45, .7, .4]));
     room.roomAtmosphere=(id,accent=1)=>{
         const mode=WORKSHOP_MODES[id]||WORKSHOP_MODES.morning;paintSky(mode,id);poolGain.v=accent;pools.apply(id);sun.update(id);
         glow.forEach(({mat,kind})=>{
