@@ -637,6 +637,11 @@ export function mountDirector(bridge,catalog,initial){
     if(!(lightSel||keyId||deskEditor.selectedId()||sceneLights.selected()||sceneProps.selected()||scenePeople.selected()||deskSel.selected()||titleEditor.selectedId()))return;
     event.preventDefault();event.stopImmediatePropagation();clearSelection();
   },true);
+  // Tray mode: K keys every joint at the playhead (the Key all button says so; scene-tray-editor.mjs keyAll)
+  document.addEventListener('keydown',event=>{
+    if(event.key?.toLowerCase()!=='k'||event.ctrlKey||event.metaKey||event.altKey||event.shiftKey||!open||!trayEd.active()||document.querySelector('dialog[open]')||event.target.closest?.('input,select,textarea,[contenteditable]'))return;
+    event.preventDefault();event.stopImmediatePropagation();trayEd.keyAll();
+  },true);
   // Ctrl+Shift+A: every item in the lane under the pointer.
   let hoverRow=null;
   function pickLane(){
