@@ -1,7 +1,7 @@
 // Keyboard tray pose model: joints, limits, keys and the one sampler (docs/keyboard-tray/SPEC.md sections 0.1, 2.3, 4, 6.5).
 //
 // A chapter may carry shot.trayEdits = [ { desk?, initial?, keys: [ { id, t, pose, ease?, route?, label? }, ... ] } ].
-//   pose   {slide, swing, tilt}, any subset: a key names only the joints it changes, the rest keep the value they
+//   pose   {slide, swing, baseTilt, tilt}, any subset: a key names only the joints it changes, the rest keep the value they
 //          had at the key before (or `initial`, or the rest pose). Units and ranges: tray-limits.mjs.
 //   t      chapter seconds (the clock of clips and people pose keys).
 //   ease   how the key LEAVES toward the next: 'smooth' (default, smoothstep), 'linear' or 'hold' (stays, then jumps).
@@ -18,12 +18,12 @@
 // An old edit's `drop` joint and `bracket: true` (taken out 25 Nov 2026, SPEC.md 0.3) are ignored when cleaned and sampled.
 //
 // Pure: no three.js, no DOM. The Director's panels, the stage, the film (film-fx) and the node tests share it.
-import { JOINT_LIMITS, SLIDE_COUPLING, SWING_TILT, UNDER_RAMPS, RIDER_MM, RIDER_UNKNOWN_MM, PLATE_BELOW_TRACK_MM, RIDER_CLEARANCE_MM } from './tray-limits.mjs';
+import { JOINT_LIMITS, SLIDE_COUPLING, SWING_TILT, UNDER_RAMPS, RIDER_MM, RIDER_UNKNOWN_MM, PLATE_BELOW_TRACK_MM, RIDER_CLEARANCE_MM, BASE_TILT_UNDER_MAX } from './tray-limits.mjs';
 
-export const JOINTS = ['slide', 'swing', 'tilt'];
-const DECIMALS = { slide: 4, swing: 2, tilt: 2 };
-const UNITS = { slide: '', swing: 'deg', tilt: 'deg' };
-const LABELS = { slide: 'Slide', swing: 'Swing', tilt: 'Surface tilt' };
+export const JOINTS = ['slide', 'swing', 'baseTilt', 'tilt'];
+const DECIMALS = { slide: 4, swing: 2, baseTilt: 2, tilt: 2 };
+const UNITS = { slide: '', swing: 'deg', baseTilt: 'deg', tilt: 'deg' };
+const LABELS = { slide: 'Slide', swing: 'Swing', baseTilt: 'Base tilt', tilt: 'Surface tilt' };
 export const TRAY_JOINTS = Object.freeze(JOINTS.map(id => Object.freeze({ id, label: LABELS[id], unit: UNITS[id], min: JOINT_LIMITS[id][0], max: JOINT_LIMITS[id][1], rest: 0, decimals: DECIMALS[id] })));
 export const EASES = ['smooth', 'linear', 'hold'];
 export const ROUTES = ['auto', 'direct'];
@@ -31,7 +31,7 @@ export const KEY_SNAP = 1 / 60;                 // two keys nearer than this are
 export const MAX_KEYS = 64;
 export const MAX_EDITS = 16;
 const MAX_T = 3600, EPS = 1e-9, ROUTE_SAMPLES = 25;
-export const REST = Object.freeze({ slide: 0, swing: 0, tilt: 0 });
+export const REST = Object.freeze({ slide: 0, swing: 0, baseTilt: 0, tilt: 0 });
 export const restPose = () => ({ ...REST });
 
 const finite = v => typeof v === 'number' && Number.isFinite(v);
@@ -77,8 +77,9 @@ export const riderThicknessMm = ids => (ids || []).reduce((m, id) => Math.max(m,
 // Does a rider of this thickness fit under the desktop at the CAD's plate drop (19.7 mm under the track, less a little air)? A thin one
 // (under about 17 mm) does; every keyboard and mouse of the library is thicker.
 export const riderFitsUnder = riderMm => !(riderMm > PLATE_BELOW_TRACK_MM - RIDER_CLEARANCE_MM);
-// The pose after the coupling. Order: slide, swing (given the slide), tilt (given slide and swing). Returns the pose and the limits each
-// joint was held to.
+// The pose after the coupling. Order: slide, swing (given the slide), base tilt (given slide and swing), surface tilt (given all three).
+// Returns the pose and the limits each joint was held to. The coupling tables limit the PLATFORM's own angle (baseTilt + tilt): the
+// surface tilt's limits are those less the base tilt, inside its own hard limits (the arc slot).
 // opts.riderMm: thickness of what stands on the plate (0 = nothing); opts.riderAway 0..1: how far it has gone to the shelf (1 = off the
 //   tray: no rider limit at all). A rider that does not fit under the desktop keeps the plate out from under the desk while it is on:
 //   slide <= the first value of UNDER_RAMPS.slide, |swing| <= that of UNDER_RAMPS.swing; while it is being carried off (0 < away < 1)
@@ -89,13 +90,16 @@ function chain(pose, opts) {
     limits.slide = [JOINT_LIMITS.slide[0], blocked ? lerp(UNDER_RAMPS.slide[0], JOINT_LIMITS.slide[1], away) : JOINT_LIMITS.slide[1]]; p.slide = clamp(p.slide, ...limits.slide);
     const s = slideLimits(p.slide), swingMax = blocked ? Math.min(s.swing, lerp(UNDER_RAMPS.swing[0], s.swing, away)) : s.swing;
     limits.swing = [0 - swingMax, swingMax]; p.swing = clamp(p.swing, ...limits.swing);
-    const w = swingTilt(p.swing);
-    limits.tilt = [Math.max(s.tilt[0], w[0]), Math.min(s.tilt[1], w[1])]; p.tilt = clamp(p.tilt, ...limits.tilt);
+    const under = underDesk(p);
+    limits.baseTilt = [JOINT_LIMITS.baseTilt[0], lerp(JOINT_LIMITS.baseTilt[1], Math.min(JOINT_LIMITS.baseTilt[1], BASE_TILT_UNDER_MAX), under)]; p.baseTilt = clamp(p.baseTilt, ...limits.baseTilt);
+    const w = swingTilt(p.swing), net = [Math.max(s.tilt[0], w[0]), Math.min(s.tilt[1], w[1])];
+    const lo = Math.max(JOINT_LIMITS.tilt[0], net[0] - p.baseTilt), hi = Math.min(JOINT_LIMITS.tilt[1], net[1] - p.baseTilt);
+    limits.tilt = lo <= hi ? [lo, hi] : [hi, hi]; p.tilt = clamp(p.tilt, ...limits.tilt);
     return { pose: p, limits };
 }
 // The options at chapter second s: opts.riderAwayAt(s) (the riders' hand-off along the chapter) becomes opts.riderAway.
 export const ridersAt = (opts, s) => typeof opts?.riderAwayAt === 'function' ? { ...opts, riderAway: opts.riderAwayAt(s) } : (opts || {});
-// What each joint may do given the others: { slide:[lo,hi], swing, tilt }. opts.riderMm: thickness of the keyboard /
+// What each joint may do given the others: { slide:[lo,hi], swing, baseTilt, tilt }. opts.riderMm: thickness of the keyboard /
 // mouse on the plate (0 = none). The limits of a joint depend only on the joints before it in the order above.
 export const limitsFor = (pose, opts = {}) => chain(pose, opts).limits;
 // A pose held to the hard limits and the coupling (a fresh object). Rest stays rest; a tray with no rider is never lowered.
@@ -181,6 +185,7 @@ const FULL = JOINTS.reduce((o, j) => { o[j] = [0, 1]; return o; }, {});
 const WINDOWS = {
     slide: { relax: [0, 0.55], tighten: [0.45, 1] },
     swing: { relax: [0.2, 0.65], tighten: [0.35, 0.8] },
+    baseTilt: { relax: [0, 0.35], tighten: [0.6, 1] },
     tilt: { relax: [0, 0.35], tighten: [0.6, 1] },
 };
 const relaxes = (j, a, b) => j === 'slide' ? b.slide < a.slide : Math.abs(b[j]) < Math.abs(a[j]);
@@ -245,7 +250,7 @@ function between(a, b, u, opts) {
     }
     return out;
 }
-// The tray's pose at chapter second `seconds`: a fresh { slide, swing, tilt } held to the hard limits and the coupling
+// The tray's pose at chapter second `seconds`: a fresh { slide, swing, baseTilt, tilt } held to the hard limits and the coupling
 // (opts.riderMm: thickness of what rides on the plate, 0 = none; opts.riderAway / riderAwayAt: the riders on the shelf, see chain).
 // Pure and stateless, so out-of-order seeks agree. No edit, no keys, or a time that is not a number: the edit's `initial`, else the
 // rest pose = the rigid tray.
@@ -271,6 +276,9 @@ export function trayIssues(edit, options = {}) {
     }
     return out;
 }
+
+// The surface tilt that makes the platform level for this base tilt (the panel's "Level the platform").
+export const levelTilt = baseTilt => clamp(-(finite(baseTilt) ? baseTilt : 0), JOINT_LIMITS.tilt[0], JOINT_LIMITS.tilt[1]) + 0;
 
 // ---- editing (each returns a new edit; the one given is not changed; an edit with no keys left may be an empty shell,
 // cleanTrayEdit / cleanTrayEdits drop those) -------------------------------------------------------------------------

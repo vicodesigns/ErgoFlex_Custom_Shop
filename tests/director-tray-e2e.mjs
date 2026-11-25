@@ -6,14 +6,14 @@ import assert from 'node:assert/strict';
 import {openDirectorBrowser,openChapter,chapterList,wait,status} from './director-e2e-harness.mjs';
 const {base,page,errors,close}=await openDirectorBrowser();
 const set=async(name,v)=>{await page.evaluate((n,v)=>{const el=document.querySelector(`[name="${n}"]`);el.value=String(v);el.dispatchEvent(new Event('change',{bubbles:true}));},name,v);await wait(1500);};
-const pivots=()=>page.evaluate(()=>{const it=document.getElementById('stage').contentWindow.ErgoFlex.sceneDesks.active.objects.get('accessory-keyboard-tray'),o={};it.obj.traverse(n=>{if(/^Tray_(Slide|Swing|Tilt)$/.test(n.name))o[n.name]=[...n.position.toArray(),...n.quaternion.toArray()];});return o;});
+const pivots=()=>page.evaluate(()=>{const it=document.getElementById('stage').contentWindow.ErgoFlex.sceneDesks.active.objects.get('accessory-keyboard-tray'),o={};it.obj.traverse(n=>{if(/^Tray_(Slide|Swing|Tilt|BaseTilt|SurfaceTilt)$/.test(n.name))o[n.name]=[...n.position.toArray(),...n.quaternion.toArray()];});return o;});
 try{
   await openChapter(page,base,chapterList().find(c=>c.id==='awaken'));
   await page.evaluate(()=>document.querySelector('[data-inspector-tab="tray"]')?.click());await wait(400);
   await page.evaluate(()=>document.querySelector('[data-action="tr-enter"]')?.click());await wait(600);
   await set('tr-slide-n',1);const a=await pivots();assert.ok(a.Tray_Slide,'the jointed tray is loaded (Tray_Slide exists): '+await status(page)+' '+errors.join('|'));
   await set('tr-slide-n',40);const b=await pivots();assert.notDeepEqual(b.Tray_Slide,a.Tray_Slide,'slide moves the carriage');
-  await set('tr-tilt-n',10);const c=await pivots();assert.notDeepEqual(c.Tray_Tilt,b.Tray_Tilt,'tilt turns the plate');
+  await set('tr-tilt-n',10);const c=await pivots();assert.notDeepEqual(c.Tray_SurfaceTilt,b.Tray_SurfaceTilt,'surface tilt turns the plate (on the arm front bolt)');
   await set('tr-swing-n',15);const d=await pivots();assert.notDeepEqual(d.Tray_Swing,c.Tray_Swing,'swing turns the plate');
   await set('tr-slide-n',90);
   const msg=await page.evaluate(()=>document.querySelector('[data-tray-joint="slide"]')?.innerText||'');
@@ -52,5 +52,14 @@ try{
   await seek(t0-0.05);const k0=(await kb()).p;await seek(t0+0.6);const k1=(await kb()).p;await seek(t0+0.2);const mid=(await kb()).p;
   const dist=(p,q)=>Math.hypot(p[0]-q[0],p[1]-q[1],p[2]-q[2]),whole=dist(k0,k1);
   assert.ok(whole>0.3,'it goes somewhere: '+whole.toFixed(3));assert.ok(dist(k0,mid)>0.15*whole&&dist(mid,k1)>0.15*whole,`half way through the carry it is between the tray and the shelf (${dist(k0,mid).toFixed(3)} / ${dist(mid,k1).toFixed(3)} of ${whole.toFixed(3)})`);
-  console.log('PASS Director Tray: slide, tilt and swing move the jointed tray on the live stage; a limit is named under the slider; with the desk tilted the keyboard stays on the shelf and the tray is free; the hand-off is a carry.');
+  // K1: Base tilt and Level the platform on the real rig: the arm turns on the rear bolt, the button levels the platform again
+  // the platform's angle against the swing frame (the track's axes after the swing): at rest that is the plate node's own local rotation = level
+  const plateQ=()=>page.evaluate(()=>{const it=document.getElementById('stage').contentWindow.ErgoFlex.sceneDesks.active.objects.get('accessory-keyboard-tray').obj,pl=it.getObjectByName('Tray_Plate'),sw=it.getObjectByName('Tray_Swing'),q=pl.getWorldQuaternion(pl.quaternion.clone()),t=sw.getWorldQuaternion(pl.quaternion.clone());return t.invert().multiply(q).toArray();});
+  const levelQ=await page.evaluate(()=>document.getElementById('stage').contentWindow.ErgoFlex.sceneDesks.active.objects.get('accessory-keyboard-tray').obj.getObjectByName('Tray_Plate').quaternion.toArray());
+  const angle=(a,b)=>2*Math.acos(Math.min(1,Math.abs(a[0]*b[0]+a[1]*b[1]+a[2]*b[2]+a[3]*b[3])))*180/Math.PI;
+  await seek(8);const q0=await plateQ();const base0=(await pivots()).Tray_BaseTilt;assert.ok(base0,'the runtime base-tilt pivot exists');
+  await set('tr-baseTilt-n',-20);const q1=await plateQ();assert.ok(angle(q0,q1)>5&&angle(q0,q1)<15.5,'base tilt -20 tilts the platform with the arm (the platform is held within 15 deg of level): '+angle(q0,q1).toFixed(1));
+  await click('[data-action="tr-level"]');const q2=await plateQ();assert.ok(angle(levelQ,q2)<0.5,'Level the platform: level ('+angle(levelQ,q2).toFixed(2)+' deg off)');
+  assert.match(await status(page),/platform levelled/);assert.match(await page.evaluate(()=>document.querySelector('[data-tray-joint="tilt"] [name="tr-tilt-n"]')?.value||''),/^20$/);
+  console.log('PASS Director Tray: slide, tilt and swing move the jointed tray on the live stage; a limit is named under the slider; with the desk tilted the keyboard stays on the shelf and the tray is free; the hand-off is a carry; Base tilt turns the arm and Level the platform levels it.');
 }catch(e){console.error('FAIL',e.message);process.exitCode=1;}finally{await close();}

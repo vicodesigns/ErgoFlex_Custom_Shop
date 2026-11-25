@@ -11,7 +11,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { createTrayRig } from '../experience/tray-rig.mjs';
 import { activeTrayEdit, cleanTrayEdit, sampleTray, effectiveTrayEdits, mergeTrayEdits, filmTrayEdits, riderThicknessMm } from '../experience/tray-pose.mjs';
-import { SLIDE_TRAVEL_MM, TRAY_SKEW_DEG } from '../experience/tray-limits.mjs';
+import { SLIDE_TRAVEL_MM, TRAY_SKEW_DEG, BASE_TILT_AT, SURFACE_TILT_AT } from '../experience/tray-limits.mjs';
 import { filmRenderShot } from '../experience/film-render.mjs';
 import { liveFilmShot } from '../experience/film-chapters.mjs';
 
@@ -121,10 +121,10 @@ const old = { bracket: true, keys: [{ t: 2, pose: { swing: 40, slide: 0.2, drop:
     for (const k of ['min', 'max']) for (const a of 'xyz') near(partsBox[k][a], rigidBox[k][a], 0.5, 'rest bounding box ' + k + a);
     rig.apply(0); r.scene.updateMatrixWorld(true);
     assert.ok(r.mouse.position.equals(mouseOwn) && r.keyboard.position.equals(kbOwn) && r.keyboard.quaternion.equals(kbQ), 'riders exactly as they were at rest');
-    const p0 = rig.pose(); assert.deepEqual(p0, { slide: 0, swing: 0, tilt: 0 });
+    const p0 = rig.pose(); assert.deepEqual(p0, { slide: 0, swing: 0, baseTilt: 0, tilt: 0 });
     // helpers: where a point of the rig is
     const plate = () => named(model, 'Tray_Plate'), plateCentre = () => new THREE.Box3().setFromObject(plate(), true).getCenter(new THREE.Vector3());
-    const restCentre = plateCentre(), pivotSwing = worldOf(model, 'Tray_Swing'), pivotTilt = worldOf(model, 'Tray_Tilt');
+    const restCentre = plateCentre(), pivotSwing = worldOf(model, 'Tray_Swing'), pivotTilt = worldOf(model, 'Tray_SurfaceTilt');
     // swing +20: rotation about the vertical through the swing pivot, the plate's front moves to +x (the user's right) in the tray's frame
     rig.apply(2); r.scene.updateMatrixWorld(true);
     const posed = plateCentre(), moved = rig.pose(); near(moved.swing, 20, 1e-9, 'swing'); near(moved.slide, 0.2, 1e-9, 'slide');
@@ -147,7 +147,12 @@ const old = { bracket: true, keys: [{ t: 2, pose: { swing: 40, slide: 0.2, drop:
     const tilted = new THREE.Box3().setFromObject(named(m2, 'Tray_Plate'), true);
     assert.ok(tilted.max.y > restTop + 20, 'tilt +10: the front edge rises (' + (tilted.max.y - restTop).toFixed(1) + ' mm)');
     // pure tilt: the plate turns about the rod axis (through the tilt pivot); the pivot itself does not move
-    near(worldOf(m2, 'Tray_Tilt').distanceTo(pivotTilt), 0, 1e-6, 'the tilt pivot stays');
+    near(worldOf(m2, 'Tray_SurfaceTilt').distanceTo(pivotTilt), 0, 1e-6, 'the surface tilt pivot (the arm front bolt) stays');
+    // the runtime pivots sit on the real bolts (tray-limits.mjs BASE_TILT_AT, SURFACE_TILT_AT, the track's frame) and hold the right parts
+    { const sk = TRAY_SKEW_DEG * Math.PI / 180, bolt = ([u, y, w]) => m2.getObjectByName('Tray').localToWorld(new THREE.Vector3((u * Math.cos(sk) - w * Math.sin(sk)) / 1000, y / 1000, (u * Math.sin(sk) + w * Math.cos(sk)) / 1000));
+      rig.apply(0); r.scene.updateMatrixWorld(true);
+      near(worldOf(m2, 'Tray_BaseTilt').distanceTo(bolt(BASE_TILT_AT)), 0, 1e-6, 'base tilt on the rear upper bolt'); near(worldOf(m2, 'Tray_SurfaceTilt').distanceTo(bolt(SURFACE_TILT_AT)), 0, 1e-6, 'surface tilt on the front bolt');
+      assert.equal(named(m2, 'Tray_Links').parent.name, 'Tray_BaseTilt'); assert.equal(named(m2, 'Tray_Tilt').parent.name, 'Tray_SurfaceTilt'); assert.equal(named(m2, 'Tray_SurfaceTilt').parent.name, 'Tray_BaseTilt'); assert.equal(named(m2, 'Tray_BaseTilt').parent.name, 'Tray_Swing'); }
     // the rider rides the plate: the keyboard keeps its place in the plate's frame
     const inPlate = o => plate_of(m2).worldToLocal(o.getWorldPosition(new THREE.Vector3()));
     function plate_of(m) { return named(m, 'Tray_Plate'); }
@@ -210,6 +215,19 @@ const old = { bracket: true, keys: [{ t: 2, pose: { swing: 40, slide: 0.2, drop:
     hr.apply(5); assert.ok(tray(h.keyboard) instanceof THREE.Matrix4, 'the keyboard on the plate as posed'); assert.equal(tray(h.tray), null, 'the tray itself is no rider');
     hr.restore(); assert.equal(tray, null, 'restore unregisters');
 }
+{   // BASE TILT (K1): the arm and the platform turn on the rear upper bolt; with the surface levelled the plate stays level and moves down/up
+    const r = room(), rig = createTrayRig(r.api); await rig.set(cleanTrayEdit({ keys: [{ t: 1, pose: { baseTilt: -25, tilt: 25 } }, { t: 2, pose: { baseTilt: 10, tilt: -10 } }, { t: 3, pose: { baseTilt: -20 } }] }));
+    const m = r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig'), box = () => { r.scene.updateMatrixWorld(true); return new THREE.Box3().setFromObject(named(m, 'Tray_Plate'), true); }, q = () => named(m, 'Tray_Plate').getWorldQuaternion(new THREE.Quaternion());
+    rig.apply(0); const b0 = box(), q0 = q(), bolt0 = worldOf(m, 'Tray_BaseTilt'), restLinks = worldBox(named(m, 'Tray_Links'));
+    rig.apply(1); const bDown = box(); assert.ok(q().angleTo(q0) < 1e-6, 'arm down, surface levelled: the platform is level'); assert.ok(bDown.max.y < b0.max.y - 20, 'and lower: ' + (b0.max.y - bDown.max.y).toFixed(1) + ' mm');
+    near(worldOf(m, 'Tray_BaseTilt').distanceTo(bolt0), 0, 1e-6, 'the bolt does not move');
+    rig.apply(2); const bUp = box(); assert.ok(q().angleTo(q0) < 1e-6); assert.ok(bUp.max.y > b0.max.y + 10, 'arm up: the platform rises ' + (bUp.max.y - b0.max.y).toFixed(1) + ' mm');
+    rig.apply(3); assert.ok(q().angleTo(q0) > 0.2, 'base tilt alone tilts the platform with the arm');
+    // the riders ride along (the keyboard keeps its place on the plate)
+    const inPlate = () => named(m, 'Tray_Plate').worldToLocal(r.keyboard.getWorldPosition(new THREE.Vector3()));
+    rig.apply(0); const k0 = inPlate(); rig.apply(1); const k1 = inPlate(); for (const a of 'xyz') near(k1[a], k0[a], 1e-3, 'keyboard on the plate ' + a);
+    rig.apply(0); r.scene.updateMatrixWorld(true); const back = worldBox(named(m, 'Tray_Links')); for (const k of ['min', 'max']) for (const a of 'xyz') near(back[k][a], restLinks[k][a], 1e-6, 'rest again');
+}
 {   // a second set() while a load is in flight and restore() cancel it cleanly; set twice with the same edit loads once
     const r = room(), rig = createTrayRig(r.api), n = loads;
     const first = rig.set(edit), second = rig.set(edit); await Promise.all([first, second]); assert.equal(loads - n, 1, 'one load'); assert.equal(rig.count(), 1);
@@ -228,4 +246,4 @@ const old = { bracket: true, keys: [{ t: 2, pose: { swing: 40, slide: 0.2, drop:
     const rig = createTrayRig(real); assert.equal(await rig.set(edit), true, 'the rig installs with the real api shape'); assert.equal(rig.count(), 1);
     assert.notDeepEqual(rig.apply(3), null); rig.restore(); assert.equal(rig.count(), 0);
 }
-console.log('tray-rig-test: ok (no keys: nothing loaded or touched, no new film field; rig swap, rest pose = rigid, joint signs and axes, riders on the plate, riders on the shelf left alone and the tray free, no bracket / drop (old data ignored), restore, cancel, the film plumbing)');
+console.log('tray-rig-test: ok (no keys: nothing loaded or touched, no new film field; rig swap, rest pose = rigid, joint signs and axes, riders on the plate, riders on the shelf left alone and the tray free, base tilt on the rear bolt and surface tilt on the front bolt (level platform up and down), no bracket / drop (old data ignored), restore, cancel, the film plumbing)');

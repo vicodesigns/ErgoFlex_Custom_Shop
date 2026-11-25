@@ -21,7 +21,7 @@ const ERGO = 45, KEYBOARD = [{ kind: 'keyboard', propId: 'ergoflex-ergo-keyboard
     const e = T.cleanTrayEdit({ keys: [{ t: 2, pose: { slide: 1, swing: 90 } }] });
     const raw = T.sampleTray(e, 3, { raw: true, riderMm: ERGO }), held = T.sampleTray(e, 3, { riderMm: ERGO });
     assert.deepEqual([raw.slide, raw.swing], [1, 90], 'raw: only the hard limits'); assert.deepEqual([held.slide, held.swing], [0.45, 20]);
-    assert.deepEqual(T.sampleTray(null, 3, { raw: true }), { slide: 0, swing: 0, tilt: 0 });
+    assert.deepEqual(T.sampleTray(null, 3, { raw: true }), { slide: 0, swing: 0, baseTilt: 0, tilt: 0 });
     let k = T.cleanTrayEdit({ keys: [{ t: 1, pose: { tilt: 1 } }, { t: 2, pose: { tilt: 2 } }, { t: 3, pose: { tilt: 3 } }, { t: 4, pose: { tilt: 4 } }] });
     assert.deepEqual(T.trayKeyTimes(T.retimeKeys(k, [[2, 2.5], [3, 3.5]])), [1, 2.5, 3.5, 4], 'two keys together');
     const merged = T.retimeKeys(k, [[1, 4]]); assert.deepEqual(T.trayKeyTimes(merged), [2, 3, 4]); assert.equal(merged.keys[2].pose.tilt, 1, 'a moved key wins where it lands');
@@ -29,12 +29,12 @@ const ERGO = 45, KEYBOARD = [{ kind: 'keyboard', propId: 'ergoflex-ergo-keyboard
     assert.equal(T.retimeKeys(k, [['x', 1], null, [9, 9]]).keys.length, 4); assert.deepEqual(k, T.cleanTrayEdit(k), 'the edit given is not changed');
 }
 {   // tray-ui: what the panel shows
-    assert.deepEqual(['slide', 'swing', 'tilt'].map(j => U.toDisplay(j, 0.5)), [50, 0.5, 0.5]); assert.equal(U.fromDisplay('slide', 50), 0.5); assert.equal(U.fromDisplay('swing', 30), 30);
-    const none = U.panelModel(null, 0); assert.deepEqual(none.rows.map(r => r.joint), ['slide', 'swing', 'tilt'], 'no drop slider (the drop is gone)'); assert.deepEqual(none.rows.map(r => r.label), ['Slide', 'Swing', 'Surface tilt']);
+    assert.deepEqual(['slide', 'swing', 'baseTilt', 'tilt'].map(j => U.toDisplay(j, 0.5)), [50, 0.5, 0.5, 0.5]); assert.equal(U.fromDisplay('slide', 50), 0.5); assert.equal(U.fromDisplay('swing', 30), 30);
+    const none = U.panelModel(null, 0); assert.deepEqual(none.rows.map(r => r.joint), ['slide', 'swing', 'baseTilt', 'tilt'], 'no drop slider (the drop is gone)'); assert.deepEqual(none.rows.map(r => r.label), ['Slide', 'Swing', 'Base tilt', 'Surface tilt']);
     for (const gone of ['BRACKET_LABEL', 'BRACKET_HINT', 'dropOn']) assert.ok(!(gone in U), gone + ' is gone');
-    assert.ok(none.rows.every(r => r.value === 0 && r.shown === 0 && !r.reason && !r.clamped)); assert.equal(none.rows[0].limitText, '0–100 %'); assert.equal(none.rows[1].limitText, '-180–180°'); assert.equal(none.rows[2].limitText, '-15–15°');
+    assert.ok(none.rows.every(r => r.value === 0 && r.shown === 0 && !r.reason && !r.clamped)); assert.equal(none.rows[0].limitText, '0–100 %'); assert.equal(none.rows[1].limitText, '-180–180°'); assert.equal(none.rows[2].limitText, '-25–10°'); assert.equal(none.rows[3].limitText, '-15–15°');
     // old data with the bracket and a keyed drop: the panel shows the three joints, no error
-    const old = U.panelModel({ bracket: true, keys: [{ t: 1, pose: { drop: 30, tilt: 2 } }] }, 2); assert.deepEqual(old.rows.map(r => r.joint), ['slide', 'swing', 'tilt']); assert.equal(old.rows[2].shown, 2);
+    const old = U.panelModel({ bracket: true, keys: [{ t: 1, pose: { drop: 30, tilt: 2 } }] }, 2); assert.deepEqual(old.rows.map(r => r.joint), ['slide', 'swing', 'baseTilt', 'tilt']); assert.equal(old.rows[3].shown, 2);
     // a keyboard on the tray: the keyed value and the value the tray takes, with the reason in words (no bracket in it any more)
     const e = T.cleanTrayEdit({ keys: [{ t: 2, pose: { slide: 1, swing: 90, tilt: 5 } }] }), m = U.panelModel(e, 3, { riderMm: ERGO, riders: ['keyboard'] });
     const by = Object.fromEntries(m.rows.map(r => [r.joint, r]));
@@ -47,9 +47,9 @@ const ERGO = 45, KEYBOARD = [{ kind: 'keyboard', propId: 'ergoflex-ergo-keyboard
     const half = U.panelModel(e, 3, { riderMm: ERGO, riders: ['keyboard'], riderAwayAt: () => 0.5 }); assert.match(half.rows[0].reason, /being carried up to the desk's shelf/); assert.match(half.ridersNote, /being carried/);
     assert.equal(m.ridersNote, '', 'on the tray: no note');
     // a limit that is not the rider's: the coupling
-    const c = U.panelModel(T.cleanTrayEdit({ keys: [{ t: 2, pose: { slide: 0.9, swing: 100, tilt: 10 } }] }), 3); const cb = Object.fromEntries(c.rows.map(r => [r.joint, r])); assert.match(cb.swing.reason, /Swing stops at ±\d+(\.\d)?° at this slide/); assert.match(cb.tilt.reason, /Tilt is held to/); assert.equal(cb.slide.reason, '');
+    const c = U.panelModel(T.cleanTrayEdit({ keys: [{ t: 2, pose: { slide: 0.9, swing: 100, tilt: 10 } }] }), 3); const cb = Object.fromEntries(c.rows.map(r => [r.joint, r])); assert.match(cb.swing.reason, /Swing stops at ±\d+(\.\d)?° at this slide/); assert.match(cb.tilt.reason, /Surface tilt is held to/); assert.equal(cb.slide.reason, '');
     // presets and saved poses
-    assert.deepEqual(U.PRESETS.map(p => p.id), ['out', 'tilt', 'side', 'in']); assert.equal(Object.isFrozen(U.PRESETS), true);
+    assert.deepEqual(U.PRESETS.map(p => p.id), ['out', 'tilt', 'side', 'in', 'down', 'up']); assert.equal(Object.isFrozen(U.PRESETS), true);
     const s1 = U.addSaved([], ' Typing ', { slide: 0, tilt: -5, junk: 1, swing: NaN }); assert.deepEqual(s1, [{ name: 'Typing', pose: { slide: 0, tilt: -5 } }]); assert.equal(U.addSaved(s1, 'Typing', { tilt: 3 }).length, 1, 'the same name replaces'); assert.deepEqual(U.addSaved(s1, 'B', { tilt: 3 }).map(p => p.name), ['B', 'Typing']);
     assert.deepEqual(U.cleanSaved([null, { name: '', pose: { tilt: 1 } }, { name: 'x', pose: {} }, { name: 'ok', pose: { tilt: 1 } }, 'z']), [{ name: 'ok', pose: { tilt: 1 } }]); assert.equal(U.cleanSaved(Array.from({ length: 40 }, (_, i) => ({ name: 'n' + i, pose: { tilt: 1 } }))).length, 24);
     // the lane: keys, segments, warnings
@@ -128,10 +128,10 @@ const edit0 = d => d.shot.trayEdits?.[0];
     // previous / next move the playhead to a key
     d.at(5); d.ed.action('tr-key-prev'); assert.equal(d.calls.seek.at(-1), 2); d.ed.action('tr-key-next'); assert.equal(d.calls.seek.at(-1), 6.5); assert.deepEqual(d.calls.picked.slice(-2), [2, 6.5]);
     // Key all: every joint as the tray is now
-    d.at(7); d.ed.action('tr-key-all'); assert.deepEqual(Object.keys(edit0(d).keys.find(k => k.t === 7).pose).sort(), ['slide', 'swing', 'tilt']);
+    d.at(7); d.ed.action('tr-key-all'); assert.deepEqual(Object.keys(edit0(d).keys.find(k => k.t === 7).pose).sort(), ['baseTilt', 'slide', 'swing', 'tilt']);
     // saved poses (this browser)
     const doc = { querySelector: () => ({ value: 'Typing' }), querySelectorAll: () => [], addEventListener() {} }, s = director({ doc, shotInit: { trayEdits: [{ initial: { tilt: -6 } }] } }); s.ed.enter();
-    s.ed.action('tr-save'); assert.deepEqual(JSON.parse(s.local.getItem(U.SAVED_KEY)), [{ name: 'Typing', pose: { slide: 0, swing: 0, tilt: -6 } }]); assert.match(s.ed.panel(), /data-action="tr-apply" data-index="0"/);
+    s.ed.action('tr-save'); assert.deepEqual(JSON.parse(s.local.getItem(U.SAVED_KEY)), [{ name: 'Typing', pose: { slide: 0, swing: 0, baseTilt: 0, tilt: -6 } }]); assert.match(s.ed.panel(), /data-action="tr-apply" data-index="0"/);
     s.ed.action('tr-preset', 0); assert.equal(s.shot.trayEdits, undefined); s.ed.action('tr-apply', 0); assert.deepEqual(edit0(s).initial, { tilt: -6 }); s.ed.action('tr-forget', 0); assert.equal(JSON.parse(s.local.getItem(U.SAVED_KEY)).length, 0);
     // the reset, with and without keys of the film's
     const r = director({ shotInit: { trayEdits: [{ keys: [{ t: 1, pose: { tilt: 3 } }] }] } }); r.ed.enter(); r.ed.action('tr-reset'); assert.equal(r.shot.trayEdits, undefined, 'no film keys to take off: no field');
@@ -175,4 +175,16 @@ const edit0 = d => d.shot.trayEdits?.[0];
     assert.ok(html.includes('href="./tray-mode.css"') && html.indexOf('tray-mode.css') < html.indexOf('director-phone.css'), 'tray-mode.css linked before director-phone.css');
     assert.ok(phone.indexOf('.tray-key{width:44px') > phone.indexOf('@media (pointer: coarse){'), 'inside the coarse block');
 }
-console.log('tray-mode-test: ok (panel and limits text, one undo step per edit, Auto-key / starting pose, keys, riders on the shelf free the tray, no bracket / drop, saved poses, the double-click, the wiring into the Director, stage and player)');
+{   // BASE TILT and "Level the platform" (K1): two sliders, Base tilt and Surface tilt; the button keys surface = -base at the playhead (one undo step)
+    const d = director({ riders: [] }); d.ed.enter(); const p = d.ed.panel();
+    for (const n of ['tr-baseTilt', 'tr-baseTilt-n']) assert.ok(p.includes(`name="${n}"`), n); assert.match(p, /<span>Base tilt<\/span>/); assert.match(p, /<span>Surface tilt<\/span>/);
+    assert.match(p, /data-action="tr-level"[^>]*>Level the platform</); assert.ok(p.indexOf('name="tr-baseTilt"') < p.indexOf('name="tr-tilt"'), 'Base tilt above Surface tilt');
+    d.ed.action('tr-auto'); d.at(3); d.ed.changed({ name: 'tr-baseTilt-n', value: '-20' }); assert.deepEqual(edit0(d).keys[0].pose, { baseTilt: -20 }); const n = d.undo.length;
+    d.ed.action('tr-level'); assert.deepEqual(edit0(d).keys[0].pose, { baseTilt: -20, tilt: 20 }); assert.equal(d.undo.length, n + 1, 'one undo step'); assert.match(d.calls.status.at(-1)[0], /platform levelled \(surface tilt 20° against base tilt -20°\)/);
+    // a base tilt past its limit is said, with the reason
+    d.at(5); d.ed.changed({ name: 'tr-baseTilt-n', value: '10' }); d.ed.changed({ name: 'tr-slide-n', value: '100' }); d.at(6);
+    const m = d.ed.model(), base = m.rows.find(r => r.joint === 'baseTilt'); assert.equal(base.shown, 0, 'pushed in: the arm may not lift the plate'); assert.match(base.reason, /Base tilt is held to .* under the desk/);
+    // presets: arm down, level / arm up, level
+    const q = director(); q.ed.enter(); q.ed.action('tr-preset', U.PRESETS.findIndex(x => x.id === 'down')); assert.deepEqual(edit0(q).initial, { baseTilt: -25, tilt: 25 });
+}
+console.log('tray-mode-test: ok (panel and limits text, Base tilt / Surface tilt / Level the platform, one undo step per edit, Auto-key / starting pose, keys, riders on the shelf free the tray, no bracket / drop, saved poses, the double-click, the wiring into the Director, stage and player)');

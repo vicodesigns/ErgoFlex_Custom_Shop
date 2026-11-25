@@ -2,17 +2,28 @@
 // Pure: no three.js, no DOM. tray-pose.mjs reads these; the clearance probe (tools/experience/tray-clearance.cjs, phase 6)
 // will regenerate the tables below from the real desk geometry, so keep them tables and keep the shape.
 //
-// Pose = { slide, swing, tilt }
-//   slide  0..1       0 = as authored (the tray out in front), 1 = pushed all the way in under the desk
-//   swing  degrees    about the vertical pivot at the track's end; + = the plate's front moves to the user's right
-//   tilt   degrees    "Surface tilt": about the horizontal hinge at the front rod; + = front edge up
+// Pose = { slide, swing, baseTilt, tilt }
+//   slide     0..1       0 = as authored (the tray out in front), 1 = pushed all the way in under the desk
+//   swing     degrees    about the vertical pivot at the track's end; + = the plate's front moves to the user's right
+//   baseTilt  degrees    "Base tilt": the arm about the rear bracket's upper bolt (BASE_TILT_AT); + = the arm's front up
+//   tilt      degrees    "Surface tilt": the platform about the arm's front bolt (SURFACE_TILT_AT); + = front edge up. The platform's
+//                        own angle is baseTilt + tilt; "Level the platform" sets tilt = -baseTilt.
 // All at 0 is the glb exactly as authored (today's rigid tray).
 // (Until 25 Nov 2026 there was a fourth joint, `drop`, and an optional added "mount bracket". Vico: "That drop option, the mount
 // bracket, is not even a real thing on the product." Both are gone; an old trayEdits with a `drop` or `bracket: true` still loads, and
 // they are ignored: SPEC.md 0.3.)
 
-// Hard limits of each joint (Vico, 22 Nov 2026: slide 254 mm, tilt +-15 degrees, swing +-180 degrees).
-export const JOINT_LIMITS = Object.freeze({ slide: [0, 1], swing: [-180, 180], tilt: [-15, 15] });
+// Hard limits of each joint (Vico, 22 Nov 2026: slide 254 mm, swing +-180 degrees; 25 Nov 2026, his real unit: the arm from about 25 deg
+// further down than as built to the highest the CAD allows under the desktop (+10: the plate 3 mm under it), and the arc slot +-30).
+export const JOINT_LIMITS = Object.freeze({ slide: [0, 1], swing: [-180, 180], baseTilt: [-25, 10], tilt: [-30, 30] });
+// The two tilt pivots on the CAD's parts (the track's frame: u across, y up from the track top = the desktop underside, w along the track
+// toward the user; mm): the rear bracket's upper bolt (the arm turns on it) and the arm's front bolt (the forks' pin: the platform turns on
+// it, the knob below it runs in the arc slot). tray-rig.mjs makes runtime pivots there; the glb is not changed.
+export const BASE_TILT_AT = Object.freeze([-10, -23.85, 8.75]);
+export const SURFACE_TILT_AT = Object.freeze([-10, -69.7, 119.45]);
+// The base tilt may not raise the plate while it is under the desk: its top is 19.7 mm under the desktop at rest, +10 deg is the most
+// out front; the limit closes to 0 as the plate goes under (the same ramps as the rider limit, UNDER_RAMPS).
+export const BASE_TILT_UNDER_MAX = 0;
 export const SLIDE_TRAVEL_MM = 234.5;          // the CAD's travel along the track axis, measured on the rig (tests/tray-rig-asset-test.mjs): carriage rear
                                                // to track rear end. The product says 254 mm (10 in); 239.5 mm is the same arithmetic on the z extents of
                                                // the skewed boxes, which is not along the track, and would push the carriage 5 mm through the rear stop.
@@ -20,7 +31,7 @@ export const PLATE_BELOW_TRACK_MM = 19.7;      // the plate top is this far unde
 export const RIDER_CLEARANCE_MM = 3;           // air kept between a rider and the desktop
 
 // Coupling 1: what the slide allows (starting values, spec 6.2; the probe replaces them).
-// Linear between rows. swing = largest |swing|; tilt = [lowest, highest].
+// Linear between rows. swing = largest |swing|; tilt = [lowest, highest] of the PLATFORM's own angle (baseTilt + tilt).
 export const SLIDE_COUPLING = Object.freeze([
     { slide: 0,    swing: 180, tilt: [-15, 15] },
     { slide: 0.4,  swing: 180, tilt: [-15, 15] },

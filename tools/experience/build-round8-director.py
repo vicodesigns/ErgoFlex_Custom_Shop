@@ -72,7 +72,7 @@
       director-camera-<id>.json as 'desks' (an export without the field keeps the earlier import's). The pass writes them
       onto the chapter's film shot as 'sceneDeskEdits' (tools/experience/film-desk-edits.mjs installs them).
       Keyboard tray: an export whose shot has 'trayEdits' (Director Mode's Tray lane: the articulated tray's keys, experience/tray-pose.mjs;
-      slide / swing / tilt poses by chapter second; an old export's bracket / drop are ignored) keeps them in director-camera-<id>.json as 'tray' ([] = he took them all
+      slide / swing / baseTilt / tilt poses by chapter second; an old export's bracket / drop are ignored) keeps them in director-camera-<id>.json as 'tray' ([] = he took them all
       off; an export without the field keeps the earlier import's). The pass writes them onto the chapter's film shot (review-cut.json,
       the chapter's shot file, hero's sub-shots) as 'sceneTray', which film-fx.mjs plays with the same sampler as the live stage;
       none removes the field. Only a chapter with tray keys gets the field, so every other chapter's key (chapter-keys.py) is unchanged.
@@ -862,7 +862,7 @@ def apply_desks(cid, f, desks):
     return wrote
 
 
-TRAY_JOINTS = {'slide': (0.0, 1.0, 4), 'swing': (-180.0, 180.0, 2), 'tilt': (-15.0, 15.0, 2)}   # experience/tray-limits.mjs JOINT_LIMITS, tray-pose.mjs DECIMALS (no drop since 25 Nov 2026)
+TRAY_JOINTS = {'slide': (0.0, 1.0, 4), 'swing': (-180.0, 180.0, 2), 'baseTilt': (-25.0, 10.0, 2), 'tilt': (-30.0, 30.0, 2)}   # experience/tray-limits.mjs JOINT_LIMITS, tray-pose.mjs DECIMALS (no drop since 25 Nov 2026; base tilt and the arc slot's +-30 since then)
 TRAY_KEY_ID = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_-]{0,39}$')
 TRAY_SNAP = 1 / 60
 

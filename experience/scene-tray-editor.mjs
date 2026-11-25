@@ -1,14 +1,14 @@
 // Director Tray mode: the keyboard tray as an articulated part (docs/keyboard-tray/SPEC.md section 5; modelled on pose mode,
 // scene-pose-editor.mjs). Double-click the tray in the view (or "Tray mode" in the Tray tab): the Tray tab shows the joints as sliders
 // inside their live limits, the keys; the timeline's Motion group gets a Tray lane of key diamonds.
-//   Slide / Swing / Surface tilt: a slider and a number each. A change is written at the playhead: into the
+//   Slide / Swing / Base tilt / Surface tilt: a slider and a number each. "Level the platform" sets Surface tilt = -Base tilt at the playhead. A change is written at the playhead: into the
 //     key that is there, else (Auto-key on) as a new key, else into the tray's starting pose (a chapter with no keys: the tray stays so).
 //   The tray never leaves its limits: what was keyed shows next to what the tray takes, with the reason (tray-ui.mjs limitReason). The
 //     keyboard and mouse limit it only while they are on it: past 9 deg of desk tilt they are on the desk's shelf (tray-riders.mjs).
 //   Keys: click a diamond = select + go there, Shift-click adds, drag = retime (all selected keys), Delete removes, an ease and a route per
 //     key, copy / paste at the playhead, previous / next. Every change is ONE undo step (slider drags merge into one).
 // The data is shot.trayEdits (tray-pose.mjs); the live stage plays it at once (player.mjs -> stage.trayEditsTrack), the film as sceneTray.
-import { JOINTS, cleanTrayEdits, pickTrayEdit, filmTrayEdits, setKey, removeKey, retimeKeys, setKeyEase, setKeyRoute, setInitial, copyKey, pasteKey, EASES, ROUTES, KEY_SNAP, trayKeyTimes, sampleTray } from './tray-pose.mjs';
+import { JOINTS, levelTilt, cleanTrayEdits, pickTrayEdit, filmTrayEdits, setKey, removeKey, retimeKeys, setKeyEase, setKeyRoute, setInitial, copyKey, pasteKey, EASES, ROUTES, KEY_SNAP, trayKeyTimes, sampleTray } from './tray-pose.mjs';
 import { riderThicknessMm } from './tray-pose.mjs';
 import { panelModel, laneModel, keyTitle, fmtT, PRESETS, toDisplay, fromDisplay, unitOf, labelOf, optionsFor, SAVED_KEY, cleanSaved, addSaved } from './tray-ui.mjs';
 
@@ -94,7 +94,7 @@ export function createTrayEditor({ win = () => null, three = () => null, stage =
     function enter() {
         if (!has()) { status('This chapter\'s desk has no keyboard tray.', true); return false; }
         if (active) return true;
-        active = true; sel = []; status('Tray mode: set Slide, Swing and Surface tilt in the Tray tab; Auto-key writes keys at the playhead. Esc or Done leaves.'); onEnter(); reveal(); rerender(); return true;
+        active = true; sel = []; status('Tray mode: set Slide, Swing, Base tilt and Surface tilt in the Tray tab; Auto-key writes keys at the playhead. Esc or Done leaves.'); onEnter(); reveal(); rerender(); return true;
     }
     function exit() { if (!active) return; active = false; sel = []; rerender(); }
 
@@ -125,6 +125,7 @@ export function createTrayEditor({ win = () => null, three = () => null, stage =
         return `<section class="tray-panel" data-reveal="tray"><div class="tray-bar"><strong>Tray mode · Keyboard tray</strong><span>${n ? `${n} key${n === 1 ? '' : 's'}` : e?.initial ? 'starting pose set' : 'as built'}</span><button type="button" class="primary" data-action="tr-done">Done</button></div>
           <p class="director-hint">Move a slider or type a number: it goes where Auto-key says (see Keys). The tray cannot leave its limits; the reason shows under the slider.</p>
           <div class="tray-joints">${m.rows.map(r => jointRow(m, r)).join('')}</div>
+          <div class="director-actions tray-level"><button type="button" data-action="tr-level" title="Set Surface tilt to the opposite of Base tilt at the playhead, so the platform is level">Level the platform</button></div>
           ${m.ridersNote ? `<p class="director-hint tray-riders" data-tray-riders role="status">${escape(m.ridersNote)}</p>` : ''}
           <h4>Poses</h4><div class="director-actions tray-presets">${PRESETS.map((p, i) => `<button type="button" data-action="tr-preset" data-index="${i}" title="Set ${escape(p.label.toLowerCase())} at the playhead">${escape(p.label)}</button>`).join('')}</div>
           ${keysPanel(e)}
@@ -161,6 +162,7 @@ export function createTrayEditor({ win = () => null, three = () => null, stage =
         if (name === 'tr-key-prev' || name === 'tr-key-next') { const ts = trayKeyTimes(e), t = now(), k = name === 'tr-key-prev' ? [...ts].reverse().find(x => x < t - 1e-6) : ts.find(x => x > t + 1e-6); if (k !== undefined) { sel = [k]; keyPicked(k); seek(k); rerender(); } return true; }
         if (name === 'tr-key-copy') { const t = selectedHere()[0] ?? keyAt(e, now()), c = t !== undefined ? copyKey(e, t) : null; if (c) { clip = c; status(`Copied the tray key at ${fmtT(t)} s. Paste puts it at the playhead.`); rerender(); } return true; }
         if (name === 'tr-key-paste') { if (!clip) return true; const t = now(); sel = [t]; write(x => pasteKey(x, t, clip), `Tray: key pasted at ${fmtT(t)} s.`); return true; }
+        if (name === 'tr-level') { const m = model(), base = m.shown.baseTilt, want = levelTilt(base); setPose({ tilt: want }, `platform levelled (surface tilt ${Math.round(want * 10) / 10}° against base tilt ${Math.round(base * 10) / 10}°)`); return true; }
         if (name === 'tr-preset') { const p = PRESETS[Number(index)]; if (p) setPose(p.pose, p.label.toLowerCase()); return true; }
         if (name === 'tr-save') { const field = doc?.querySelector?.('[name="tr-pose-name"]'), label = (field?.value || '').trim(); if (!label) { status('Name the pose first.', true); return true; } const m = model(); setSaved(addSaved(savedList(), label, Object.fromEntries(m.rows.map(r => [r.joint, m.shown[r.joint]])))); status(`Pose "${label}" saved in this browser.`); rerender(); return true; }
         if (name === 'tr-apply') { const p = savedList()[Number(index)]; if (p) setPose(p.pose, `"${p.name}"`); return true; }
@@ -171,7 +173,7 @@ export function createTrayEditor({ win = () => null, three = () => null, stage =
     // a field changed (the Director's change handler): numbers and selects on release
     function changed(el) {
         const name = el.name;
-        const j = /^tr-(slide|swing|tilt)(-n)?$/.exec(name);
+        const j = /^tr-(slide|swing|baseTilt|tilt)(-n)?$/.exec(name);
         if (j) { const v = Number(el.value); if (String(el.value).trim() === '' || !Number.isFinite(v)) throw Error('Type a number.'); setJoint(j[1], v); return true; }
         if (name === 'tr-key-t') { const ts = selectedHere(), v = Number(el.value); if (ts.length === 1 && Number.isFinite(v)) retime([[ts[0], v]]); return true; }
         if (name === 'tr-key-ease') { if (EASES.includes(el.value)) keyEdit((x, t) => setKeyEase(x, t, el.value), `Tray: the key eases ${el.value === 'hold' ? 'by holding until the next key' : el.value}.`); return true; }
@@ -181,7 +183,7 @@ export function createTrayEditor({ win = () => null, three = () => null, stage =
     }
     // a slider moving (live): the tray follows at once; one undo step for the whole drag
     function input(el) {
-        const j = /^tr-(slide|swing|tilt)$/.exec(el.name); if (!j) return false;
+        const j = /^tr-(slide|swing|baseTilt|tilt)$/.exec(el.name); if (!j) return false;
         const v = Number(el.value); if (Number.isFinite(v)) setJoint(j[1], v, { live: true }); return true;
     }
 

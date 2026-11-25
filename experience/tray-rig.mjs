@@ -22,10 +22,11 @@
 import * as THREE from 'three';
 import { accessory } from '../catalog.mjs';
 import { sampleTray, isRestPose, riderThicknessMm } from './tray-pose.mjs';
-import { SLIDE_TRAVEL_MM } from './tray-limits.mjs';
+import { SLIDE_TRAVEL_MM, TRAY_SKEW_DEG, BASE_TILT_AT, SURFACE_TILT_AT } from './tray-limits.mjs';
 
 export const RIGID_ID = 'ergoflex-keyboard-tray', RIG_ID = 'ergoflex-keyboard-tray-rig', TRAY_ITEM = 'accessory-keyboard-tray';
-const PIVOTS = ['Tray_Slide', 'Tray_Swing', 'Tray_Tilt'];      // (Tray_Drop, the mount, has no joint: the drop was taken out)
+const PIVOTS = ['Tray_Slide', 'Tray_Swing', 'Tray_BaseTilt', 'Tray_SurfaceTilt'];      // (Tray_Drop, the mount, has no joint: the drop was taken out)
+export const BASE_PIVOT = 'Tray_BaseTilt', SURFACE_PIVOT = 'Tray_SurfaceTilt';
 const X = new THREE.Vector3(1, 0, 0), Y = new THREE.Vector3(0, 1, 0), Z = new THREE.Vector3(0, 0, 1);
 const RAD = Math.PI / 180;
 const riderOf = obj => { const a = obj?.userData?.accessoryId && accessory(obj.userData.accessoryId); return a && ['keyboard', 'mouse'].includes(a.exclusiveGroup) ? a : null; };
@@ -39,16 +40,30 @@ export function createTrayRig(api) {
     const desk = () => api.sceneDesks?.active || null;
     const trayItem = () => desk()?.objects?.get(TRAY_ITEM) || null;
 
+    // The two tilt pivots on the real bolts (25 Nov 2026, Vico's unit; SPEC.md 0.4), made at runtime so the glb stays the supplied model split:
+    // Tray_BaseTilt at the rear bracket's upper bolt (under Tray_Swing; the arm Tray_Links and the platform group Tray_Tilt hang from it) and
+    // Tray_SurfaceTilt at the arm's front bolt (under it; Tray_Tilt hangs from that). Both carry no rotation of their own beyond the track's
+    // (as every pivot under Tray_Slide), so local X is the bolts' axis. Pure re-parenting: at rest every part is exactly where it was.
+    function addTiltPivots(model) {
+        const swing = model.getObjectByName('Tray_Swing'), links = model.getObjectByName('Tray_Links'), tilt = model.getObjectByName('Tray_Tilt'), root = model.getObjectByName('Tray') || model;
+        if (!swing || !links || !tilt || model.getObjectByName(BASE_PIVOT)) return;
+        model.updateWorldMatrix(true, true);
+        const sk = TRAY_SKEW_DEG * RAD, at = ([u, y, w]) => root.localToWorld(new THREE.Vector3((u * Math.cos(sk) - w * Math.sin(sk)) / 1000, y / 1000, (u * Math.sin(sk) + w * Math.cos(sk)) / 1000));
+        const make = (name, parent, world) => { const n = new THREE.Object3D(); n.name = name; parent.add(n); parent.updateWorldMatrix(true, false); n.position.copy(parent.worldToLocal(world.clone())); n.updateWorldMatrix(true, false); return n; };
+        const base = make(BASE_PIVOT, swing, at(BASE_TILT_AT)); base.attach(links); base.attach(tilt);
+        const surface = make(SURFACE_PIVOT, base, at(SURFACE_TILT_AT)); surface.attach(tilt);
+    }
     // The pivots of one rig model, with the transforms the glb gave them (the joints are offsets from these).
     function pivotsOf(model) {
         const out = {};
         for (const name of PIVOTS) { const n = model.getObjectByName(name); if (n) out[name] = { node: n, position: n.position.clone(), quaternion: n.quaternion.clone(), scale: n.scale.clone() }; }
         return out;
     }
-    // The pose of the rig's joints. pose = tray-pose.mjs { slide, swing, tilt }: fraction / degrees.
+    // The pose of the rig's joints. pose = tray-pose.mjs { slide, swing, baseTilt, tilt }: fraction / degrees.
     // Node units are the glb's (metres under a x1000 root).
     function pose(p, pivots) {
-        const { Tray_Slide: slide, Tray_Swing: swing, Tray_Tilt: tilt } = pivots;
+        const { Tray_Slide: slide, Tray_Swing: swing, Tray_BaseTilt: base, Tray_SurfaceTilt: tilt } = pivots;
+        if (base) base.node.quaternion.copy(base.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(X, -(p.baseTilt || 0) * RAD));  // + = the arm's front up
         if (slide) slide.node.position.copy(slide.position).addScaledVector(Z.clone().applyQuaternion(slide.quaternion), -p.slide * SLIDE_TRAVEL_MM / 1000);
         if (swing) swing.node.quaternion.copy(swing.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(Y, p.swing * RAD));            // + = the plate's front to the user's right
         if (tilt) tilt.node.quaternion.copy(tilt.quaternion).multiply(new THREE.Quaternion().setFromAxisAngle(X, -p.tilt * RAD));              // + = front edge up
@@ -92,6 +107,7 @@ export function createTrayRig(api) {
             const mat = source.clone(); mat.userData.sharedTextures = true; o.material = mat; o.ownedMaterials = [mat];
         });
         tray.remove(rigid); tray.add(model); tray.updateWorldMatrix(true, true);
+        addTiltPivots(model);
         const plate = model.getObjectByName('Tray_Plate'), pivots = pivotsOf(model);
         installed = { item, tray, rigid, model, pivots, plate, riders: plate ? findRiders(model, plate) : [] };
         api.riderHandoff?.setTray(riderWorld);
