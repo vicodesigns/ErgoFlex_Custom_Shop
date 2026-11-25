@@ -139,6 +139,11 @@ Tray carry (0f9cc1dc) and other chapters:
 - **The checkpoint's previews/awaken-v5-cut.json is older than the live one.** e9f0b637 did not capture previews/. The live
   file is reconstructed here from director-film/awaken.json, which the watcher's pages step makes from it. run-all works
   on whatever the live file holds.
+  - Check in the dry run: on the live cut, director-film/awaken.json and previews/awaken-v5-cut.json should show only
+    seconds, cameraPlan, camera and motion (plus ledStatus for previews if the live file lacks it).
+  - If director-film/awaken.json also shows sceneGlobals (the foot light 7.5 -> 10.4), the live render source does not have
+    Vico's 13:00 lighting. Ask him which foot light he wants before the real run.
+  - Run against the checkpoint copy, the dry run shows exactly that, because that copy is older than the live one.
 - **The render source had other drift.** Before 13:00 (hq 0f9cc1dc), the render source's awaken camera already differed
   from review-cut's (23 vs 19 keys at the same 44.85 s). The importer fix ends that: the next pass gives the render source
   review-cut's camera.
