@@ -16,7 +16,8 @@
 //      has the wrists in the thighs as built (Andre, Ben, Hale, Jo, Priya, Maya), by the change as the film makes it
 //      (tests/lib/people-lap-run.mjs), resting on the legs, not held up in the air
 //   4. Kai (oilers, his roll and his change to wheel-type-31) and Mia (commons, the phone set down and the change to power-type-30)
-//      are drawn exactly as before the pass (tests/fixtures/people-lap-kai-mia.json, from video/cinematic-intro-hq 129f2b3f): 0.000 mm
+//      are drawn exactly as before the pass: Kai against tests/fixtures/people-lap-kai-mia.json (from video/cinematic-intro-hq 129f2b3f),
+//      Mia (whose acts, seat and chair the commons polish passes edit) against the same film drawn with the lap code switched off: 0.000 mm
 //   5. the coast chapter: Omar types at the accessible bay all chapter (wheel-type-28, Vico's pose keys), no change: drawn as before
 //      (a typist's hands are not lifted at rest); a change from the roll to that posture, were one cast, is one move too
 //   6. the pieces: the lap data has the fingers, the knee cap only (not the shin), the typing postures; softLift is C1; the plan
@@ -117,6 +118,17 @@ for (const who of ['andre', 'ben', 'hale', 'jo', 'priya', 'maya']) {
         if (!shot) { console.log(`people-omar-lap-test: no ${chapter} chapter here, ${key} skipped`); continue; }
         const rows = await filmFrames({ shot, key: new RegExp(key), times: want.frames.map(f => f.t), bones: FX.bones });
         let most = 0;
+        if (chapter === 'commons') {
+            // Mia's own motion is edited in the commons polish passes (her acts, her seat, her chair), so her frames are not frozen here: the lap code
+            // leaves her exactly as the film draws her WITHOUT the lap code (a copy of the modules whose lapModel / lapRest are false), whatever she does
+            const off = fs.mkdtempSync(path.join(ROOT, 'scratch-lapoff-')); process.on('exit', () => fs.rmSync(off, { recursive: true, force: true }));
+            for (const f of fs.readdirSync(ROOT)) if (f.endsWith('.mjs')) fs.copyFileSync(path.join(ROOT, f), path.join(off, f));
+            const lapSrc = fs.readFileSync(path.join(off, 'people-lap.mjs'), 'utf8').replace(/export const lapRest = [^\n]*/, 'export const lapRest = () => false;').replace(/export const lapModel = [^\n]*/, 'export const lapModel = () => false;');
+            assert.ok(/lapRest = \(\) => false/.test(lapSrc) && /lapModel = \(\) => false/.test(lapSrc), 'the lap-off copy is made');
+            fs.writeFileSync(path.join(off, 'people-lap.mjs'), lapSrc);
+            const bare = await filmFrames({ shot, key: new RegExp(key), times: want.frames.map(f => f.t), bones: FX.bones, code: off });
+            rows.forEach((r, i) => { assert.deepEqual(r.shown, bare[i].shown, `${id} ${r.t}: the same model without the lap code`); FX.bones.forEach(n => { const p = r.bones[n], q = bare[i].bones[n]; most = Math.max(most, Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]) * 1000); }); });
+        } else
         rows.forEach((r, i) => { assert.deepEqual(r.shown, want.frames[i].shown, `${id} ${r.t}: the same model`); FX.bones.forEach((n, j) => { const p = r.bones[n].slice(0, 3).map(x => Math.round(x * 1e6) / 1000), q = want.frames[i].p[j]; most = Math.max(most, Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2])); }); });
         assert.ok(most < .0005, `${id}: drawn as before the pass (${most.toFixed(4)} mm)`);
         assert.ok(rows.every(r => r.shown.every(s => !lapModel(s.split(':')[1], ''))), `${id}: no model of theirs is planned out of the lap`);
