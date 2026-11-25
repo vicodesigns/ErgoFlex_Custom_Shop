@@ -1,0 +1,9 @@
+{
+ "note": "Live-cut pin (Orch, 2026-11-24): the storage -> hero dissolve bar line of Vico's 3rd cut with storage at 26.67 s (hero 20.5 s fit, scratch build) so lengthening the hero and moving its desk-version fades do not retime the storage chapter's music. Replaces the draft's 215.478, which belonged to the 24.978 s storage.",
+ "bar_lines": [
+  {
+   "at": 217.395,
+   "why": "storage -> hero dissolve bar line, storage 26.67 s (live cut, 2026-11-24)"
+  }
+ ]
+}
