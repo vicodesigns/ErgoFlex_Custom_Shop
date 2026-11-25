@@ -596,7 +596,7 @@ for i, c in enumerate(cloth[1:], 1): cull_under(c, [t for t, b in zip(trees[:i],
 # label, the lighter denim) come through the tee's hem and its lower back as small tan and pale-blue patches. Every vertex
 # of the trousers' shells that has come out through the tee is put back under it, as a corner of what is under a garment
 # is under the garments above (cull_under, tuck). The tee's hem stays outside the waistband.
-def tuck_suit(o, through=.12):
+def tuck_suit(o, through=.04, REACH=.015):      # (REACH: no vertex is moved further than 15 mm: a poke, not a pull across the body)
     bm = bmesh.new(); bm.from_mesh(o.data); bm.transform(o.matrix_world); bm.normal_update(); bm.verts.ensure_lookup_table()
     waist = (rig.matrix_world @ rig.pose.bones['spine_01'].head).z
     seen, top = set(), set()
@@ -616,19 +616,24 @@ def tuck_suit(o, through=.12):
     tee_verts = [bm.verts[i] for i in top]; low = min(v.co.z for v in tee_verts); mid = sum(v.co.x for v in tee_verts) / len(tee_verts), sum(v.co.y for v in tee_verts) / len(tee_verts)
     hem = [v for v in tee_verts if v.is_boundary and v.co.z < low + .12]
     ring = KDTree(len(hem)); [ring.insert((v.co.x, v.co.y, 0), i) for i, v in enumerate(hem)]; ring.balance()
-    tucked = []
+    tucked, was = [], {}
     for v in bm.verts:
         if v.index in top or not v.link_faces: continue
+        was[v.index] = v.co.copy()
         hit = tee.ray_cast(v.co - v.normal * .0005, -v.normal, through)
         if hit[0] is not None:
             out_n = hit[1] if hit[1].dot(v.normal) > 0 else v.normal
-            v.co = hit[0] - out_n * .0035; tucked.append(v); continue
+            to = hit[0] - out_n * .0035
+            if (to - v.co).length <= REACH: v.co = to; tucked.append(v)
+            continue
         if not hem or v.co.z < hem[ring.find((v.co.x, v.co.y, 0))[1]].co.z + .004: continue
         near = tee.find_nearest(v.co)
         if near[0] is None or near[3] > .04: continue
         out_n = near[1] if near[1].dot((v.co.x - mid[0], v.co.y - mid[1], 0)) > 0 else -near[1]
-        if (v.co - near[0]).dot(out_n) > -.002: v.co = near[0] - out_n * .0035; tucked.append(v)
+        to = near[0] - out_n * .0035
+        if (v.co - near[0]).dot(out_n) > -.002 and (to - v.co).length <= REACH: v.co = to; tucked.append(v)
     if not tucked: bm.free(); return 0      # (nothing through: the mesh is left exactly as it was)
+    print('SUIT_TUCK_MAX_MM', round(max((v.co - was[v.index]).length for v in tucked) * 1000, 1))
     bmesh.ops.smooth_vert(bm, verts=tucked, factor=.25, use_axis_x=True, use_axis_y=True, use_axis_z=True)
     bm.transform(o.matrix_world.inverted()); bm.to_mesh(o.data); bm.free()
     return len(tucked)
