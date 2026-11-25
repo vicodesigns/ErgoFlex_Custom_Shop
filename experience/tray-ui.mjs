@@ -20,10 +20,12 @@ const range = (joint, [lo, hi]) => joint === 'slide' ? `${toDisplay(joint, lo)}�
 
 // The presets of the panel (poses to key at the playhead).
 export const PRESETS = Object.freeze([
-    { id: 'out', label: 'Out (as built)', pose: { slide: 0, swing: 0, tilt: 0 } },
+    { id: 'out', label: 'Out (as built)', pose: { slide: 0, swing: 0, baseTilt: 0, tilt: 0 } },
     { id: 'tilt', label: 'Tilted down', pose: { tilt: -12 } },
     { id: 'side', label: 'Side storage', pose: { slide: 0, swing: 90, tilt: 0 } },
-    { id: 'in', label: 'Pushed in', pose: { slide: 1, swing: 0, tilt: 0 } },
+    { id: 'in', label: 'Pushed in', pose: { slide: 1, swing: 0, baseTilt: 0, tilt: 0 } },
+    { id: 'down', label: 'Arm down, level', pose: { baseTilt: -25, tilt: 25 } },
+    { id: 'up', label: 'Arm up, level', pose: { baseTilt: 10, tilt: -10 } },
 ]);
 
 // Why a joint is not where it was keyed, in words for the panel ('' when it is).
@@ -33,7 +35,7 @@ export function limitReason(joint, raw, edit, riderMm = 0, riders = [], opts = {
     if (Math.abs(got[joint] - raw[joint]) < 1e-6) return '';
     // the joints before this one in the clamp order (slide, swing, tilt) are already as the tray has them: would this one have been
     // allowed without the rider? Then the rider is the reason.
-    const order = ['slide', 'swing', 'tilt'], pre = { ...raw }; for (const j of order.slice(0, order.indexOf(joint))) pre[j] = got[j];
+    const order = ['slide', 'swing', 'baseTilt', 'tilt'], pre = { ...raw }; for (const j of order.slice(0, order.indexOf(joint))) pre[j] = got[j];
     const bare = clampTrayPose(pre, { ...opts, riderMm: 0 }), byRider = Math.abs(bare[joint] - raw[joint]) < 1e-6 && riderMm > 0 && !riderFitsUnder(riderMm);
     if (byRider) {
         const what = riders.length ? riders.join(' and ') : 'keyboard or mouse', many = riders.length > 1;
@@ -42,7 +44,9 @@ export function limitReason(joint, raw, edit, riderMm = 0, riders = [], opts = {
         return `A ${what} (${r1(riderMm)} mm) does not fit under the desk, so while ${many ? 'they are' : 'it is'} on the tray ${where}. Once the desk tilts past ${LEAVE_DEG}°, the keyboard and mouse go up to the desk's shelf and the tray is free.`;
     }
     const L = limitsFor(got, opts)[joint];
-    return joint === 'swing' ? `Swing stops at ±${r1(L[1])}° at this slide: it narrows as the tray slides in.` : joint === 'tilt' ? `Tilt is held to ${range('tilt', L)} here: the plate is under the desk or going there.` : `${labelOf(joint)} is held to ${range(joint, L)}.`;
+    return joint === 'swing' ? `Swing stops at ±${r1(L[1])}° at this slide: it narrows as the tray slides in.`
+        : joint === 'baseTilt' ? `Base tilt is held to ${range('baseTilt', L)} here: the arm cannot lift the plate into the desktop while it is under the desk.`
+        : joint === 'tilt' ? `Surface tilt is held to ${range('tilt', L)} here: the platform's own angle (base + surface tilt) stays within its range, and level under the desk.` : `${labelOf(joint)} is held to ${range(joint, L)}.`;
 }
 
 // What the panel shows at second `t`: the keyed values (raw), the values the tray takes (shown), each joint's live limits and reasons.
