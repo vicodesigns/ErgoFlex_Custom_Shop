@@ -34,6 +34,10 @@ picture instead of to the EDL alone:
   * v2.2: one tempo through title B: the wake (pulse, sub, pad bar lines) before title B runs at the first segment's
     tempo instead of the nominal one, so there is no 1.5 % tempo step at the join (the fit still costs it as before, so
     no later time moves); and a short reverse swell lands the first bar line after the desk's first lift tops out;
+  * v2.5: the finale's desk looks no longer steer the fit (they used to cost in it, so a picture edit to the finale's
+    version fades could move the storage -> hero bar line and retime storage); they only get knots, chords and the
+    report, and are put on bar lines in the picture (the version fades). The logo snap may use a tempo step up to
+    SNAP_CAP (1.5 %) so the hit lands on the wordmark without moving any earlier bar line;
   * v2.4: <cut>/score-pins.json may pin dissolve bar lines (pins()): the fit keeps them, so a late picture edit does not
     retime an earlier chapter's music;
   * the title A bloom lands on title A, the logo hit within LOGO_SLACK of the wordmark's first frame; v2.3: then exactly on
@@ -86,6 +90,7 @@ SFX_DB = {'wheels': -25.0}; SFX_DB_DEFAULT = -22.0   # gain on the raw asset in 
 SFX_FADE_IN, SFX_FADE_OUT = 0.3, 0.25
 SCORE_KEY = {2, 4, 6, 7, 9, 11, 1}   # D major (= B minor, G Lydian): every section of the score uses these pitch classes
 KEY_TIE = 0.01             # re-keying: shifts this close to the best in-key share are a tie; the smallest shift wins
+SNAP_CAP = 0.015           # v2.5: the finale's tempo step allowed for the logo hit to land exactly on the wordmark (snap_logo)
 LOGO_SLACK = 0.10          # s: the logo hit lands at most this long after the wordmark's first frame (0.35 if it cannot)
 
 
@@ -259,9 +264,10 @@ def fit_tempo(synth, edl, pic, cap=STEP_CAP, logo_hi=LOGO_SLACK):
     for t, _ in pic['cuts']:
         k = int(np.searchsorted(A, t)) - 1
         if 0 <= k < K: tg[k].append((t, 1, CUT_WEIGHT))
+    lk = [[] for _ in range(K)]                  # v2.5: the finale's desk looks: knots and the report only, not the fit
     for t in pic['looks']:
         k = int(np.searchsorted(A, t)) - 1
-        if 0 <= k < K: tg[k].append((t, HERO_UNIT, LOOK_WEIGHT))
+        if 0 <= k < K: lk[k].append((t, HERO_UNIT, LOOK_WEIGHT))
     pen = [(d / 0.3) ** 2 * 0.5 for d in D]
     best = None
     for bpm in np.arange(104, 124.001, 0.25):
@@ -321,10 +327,10 @@ def fit_tempo(synth, edl, pic, cap=STEP_CAP, logo_hi=LOGO_SLACK):
         sys.exit('no tempo map within MAX_BEND fits this cut; raise MAX_BEND or DISSOLVE_SLACK')
     _, bpm, anchors, seg = best
     bs = np.concatenate([[0], np.cumsum(seg)]).astype(float)
-    anchors = snap_logo(anchors, bs, bpm, pic['logo'], cap)
+    anchors = snap_logo(anchors, bs, bpm, pic['logo'], max(cap, SNAP_CAP))
     pts = list(zip(anchors, bs))
     # knots: the finale's version changes first, then the inside cuts; each only if every tempo step stays under the cap
-    cands = sorted([(t, unit, k) for k in range(K) for t, unit, _ in tg[k]], key=lambda c: (c[1] == 1, c[0]))
+    cands = sorted([(t, unit, k) for k in range(K) for t, unit, _ in tg[k] + lk[k]], key=lambda c: (c[1] == 1, c[0]))
     knots, report = [], []
     for t, unit, k in cands:
         P = sorted(pts); i = max(j for j in range(len(P)) if P[j][0] <= t)

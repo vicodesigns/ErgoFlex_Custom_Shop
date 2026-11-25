@@ -2,7 +2,7 @@
  "schema": "ergoflex.client-cut",
  "version": 1,
  "id": "film-vicos-3rd-cut-hero",
- "name": "Film chapter: hero (25.95 s) DRAFT end-card hold + camera smoothing 2026-11-24",
+ "name": "Film chapter: hero (25.95 s) DRAFT end-card hold + camera smoothing 2026-11-24 (desk-version fades: run-all.py puts them on the bar lines)",
  "client": "Vicos 3rd cut",
  "volume": 0.32,
  "shots": [
@@ -1999,37 +1999,7 @@
       }
      }
     ]
-   },
-   "deskVersions": [
-    {
-     "n": "B",
-     "preset": "artist",
-     "name": "",
-     "start": 0.0,
-     "end": 5.22
-    },
-    {
-     "n": "C",
-     "preset": "architect",
-     "name": "",
-     "start": 4.62,
-     "end": 9.49
-    },
-    {
-     "n": "D",
-     "preset": "office",
-     "name": "",
-     "start": 8.89,
-     "end": 16.6
-    },
-    {
-     "n": "H",
-     "preset": "gaming",
-     "name": "",
-     "start": 14.6,
-     "end": 25.95
-    }
-   ]
+   }
   }
  ]
 }
