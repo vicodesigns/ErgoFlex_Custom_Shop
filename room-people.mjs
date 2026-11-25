@@ -101,7 +101,7 @@ import {poseAt} from './people-pose-keys.mjs';
 import {applyHeld} from './people-held.mjs';
 import {partsOf} from './people-held-data.mjs';
 import {postureRecord,postureRecords,hasPosturePose,poseOwner,sourceOf,roomEditKey,blendPosturePoses} from './people-postures.mjs';
-import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, squatKey, WORKOUTS, drawPose, livelyPose, seedOf, placeGrip, handsKey } from './room-people-motion.mjs?v=people-place-20261124b';
+import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, squatKey, WORKOUTS, drawPose, livelyPose, seedOf, placeGrip, handsKey } from './room-people-motion.mjs?v=people-place-20261124c';
 // Room looks (room-looks.mjs): the Nov 17 pass's cast finishes (own materials, hair / shirt maps) are the refreshed Create
 // room's and the Commons'; Create's Classic look keeps the cast as it was, and its people move as they did then
 // (rig.classicMotion: room-people-motion.mjs's painting, pottery and page-turn strokes from before the pass).
@@ -2426,6 +2426,9 @@ export class RoomPeople {
             const length = changeLength(rig, change.keyFrom, change.keyTo);
             const act = this.actOf({ userData: { person: change.from }, rotation: { y: change.homeFrom.turn } }, {}, change.at - length / 2);
             if (act) change.keyFrom = actedKey(rig, change.keyFrom, act);
+            // (an action that ends in the next placement's own posture, the phone set down and the hands on the keys: the change
+            // starts where it ends, so nothing moves in it)
+            if (change.from.act.kind === 'place' && change.from.act.to === change.to.id && JSON.stringify(change.from.act.handsBy ?? null) === JSON.stringify(change.to.handsBy ?? null)) change.keyFrom = change.keyTo;
         }
         const rolls = change.to.roll && this.rollPath(rb, change.to.roll); if (rolls) change.homeTo.turn = rollPlan(rolls, this.rollOptions(change.to.roll)).at(0).yaw;
         // a turn the short way round
@@ -2673,12 +2676,37 @@ export class RoomPeople {
         const inv = new THREE.Matrix4().copy(object.matrixWorld).invert(), oq = new THREE.Quaternion(); object.matrixWorld.decompose(new THREE.Vector3(), oq, new THREE.Vector3());
         const grip = g => ({ at: new THREE.Vector3().fromArray(g.at), q: new THREE.Quaternion().fromArray(g.q).normalize() }), ok = g => Array.isArray(g?.at) && Array.isArray(g?.q);
         return { p: rest.p.clone().applyMatrix4(inv), q: oq.invert().multiply(rest.q), grip: grip(act.grip), grip2: ok(act.grip2) ? grip(act.grip2) : null, regrip: Array.isArray(act.regrip) ? act.regrip : null,
-            contact: Number.isFinite(act.contact) ? act.contact : 1, hold: act.hold, back: act.back, settle: act.settle, bend: act.bend, open: this.placeOpen(object, act), lift: Number.isFinite(act.lift) ? act.lift : .06 };
+            contact: Number.isFinite(act.contact) ? act.contact : 1, hold: act.hold, back: act.back, settle: act.settle, bend: act.bend, open: this.placeOpen(object, act), lift: Number.isFinite(act.lift) ? act.lift : .06,
+            ...this.placeOnward(object, act) };
     }
-    // The left hand's fingers as a relaxed open hand of another posture of the same person (act.openFrom): { bone index: quaternion }.
+    // Pass 3 (act.to): the phone set down and the hands straight on to the keys, ending in the typing posture `to` (a model id
+    // of the same person, its hands `handsBy` mm where the keys are, as the next placement has them: handsKey). Also the left
+    // hand's fingers for the grip (act.fingers: { from: '<model id>', thumb: [deg, deg, deg] }: that posture's fingers, the
+    // thumb's three bones curled that much more about their own z, down along the phone's edge) and the timing and shape of
+    // the beat (grab, handover [x, y, z] m, handoverTurn rad, approach, clear, lift2, rightBack, look, turn, side, reachOut, rightNudge [x, y, z] m in the
+    // phone's frame: the right hand's hold eased off its edge). {} without act.to.
+    // Kept per person.
+    placeOnward(object, act) {
+        const life = object.userData.personLife, rig = life?.rig; if (!rig || typeof act.to !== 'string' || !rig.has(act.to)) return {};
+        const sign = JSON.stringify([act.to, act.handsBy, act.fingers]);
+        if (life.placeOnSign !== sign) {
+            const by = this.handsBy(act), key = rig.key(act.to);
+            const to = by ? handsKey(rig, key, by) : key;
+            let fingers = null;
+            if (act.fingers && typeof act.fingers.from === 'string' && rig.has(act.fingers.from)) {
+                const k = rig.key(act.fingers.from), curl = Array.isArray(act.fingers.thumb) ? act.fingers.thumb : [0, 0, 0], z = new THREE.Vector3(0, 0, 1);
+                fingers = Object.fromEntries(rig.side.l.fingers.map(i => [i, k.q[i].clone()]));
+                ['thumb_01_l', 'thumb_02_l', 'thumb_03_l'].forEach((n, j) => { const i = rig.index.get(n); if (i !== undefined && fingers[i] && Number.isFinite(curl[j])) fingers[i].multiply(new THREE.Quaternion().setFromAxisAngle(z, THREE.MathUtils.degToRad(curl[j]))); });
+            }
+            life.placeOn = { to, fingers }; life.placeOnSign = sign;
+        }
+        const n = v => Number.isFinite(v) ? v : undefined;
+        return { to: life.placeOn.to, fingers: life.placeOn.fingers, grab: n(act.grab), handover: Array.isArray(act.handover) && act.handover.length === 3 ? act.handover : null, handoverTurn: n(act.handoverTurn), approach: n(act.approach), clear: n(act.clear), lift2: n(act.lift2), rightBack: n(act.rightBack), look: n(act.look), turn: n(act.turn), side: n(act.side), reachOut: n(act.reachOut), rightNudge: Array.isArray(act.rightNudge) && act.rightNudge.length === 3 ? act.rightNudge : null };
+    }
+    // The fingers (both hands) as a relaxed open hand of another posture of the same person (act.openFrom): { bone index: quaternion }.
     placeOpen(object, act) {
         const life = object.userData.personLife, rig = life?.rig; if (!rig || typeof act.openFrom !== 'string' || !rig.has(act.openFrom)) return null;
-        if (!life.placeOpen || life.placeOpenId !== act.openFrom) { const k = rig.key(act.openFrom); life.placeOpen = Object.fromEntries(rig.side.l.fingers.map(i => [i, k.q[i].clone()])); life.placeOpenId = act.openFrom; }
+        if (!life.placeOpen || life.placeOpenId !== act.openFrom) { const k = rig.key(act.openFrom); life.placeOpen = Object.fromEntries([...rig.side.l.fingers, ...rig.side.r.fingers].map(i => [i, k.q[i].clone()])); life.placeOpenId = act.openFrom; }
         return life.placeOpen;
     }
     // The carried prop, after the person is drawn (a film): in the left hand's grip until it touches down, then at rest where the
@@ -2694,6 +2722,16 @@ export class RoomPeople {
         prop.userData.heldByPerson = held;
         const keep = prop.userData.placeNow ||= { p: new THREE.Vector3(), q: new THREE.Quaternion(), s: new THREE.Vector3(), m: new THREE.Matrix4() };
         if (!held) { if (prop.userData.placeHeld) { prop.position.copy(prop.userData.placeRest.p); prop.quaternion.copy(prop.userData.placeRest.q); prop.scale.copy(prop.userData.placeRest.s); prop.userData.placeHeld = false; this.dirty = true; } return; }
+        // (pass 3, act.to: the solver has left where the phone is, in the model's frame: rig.placeOut)
+        const out = typeof act.to === 'string' ? object.userData.personLife?.rig?.placeOut : null;
+        if (typeof act.to === 'string' && out && time >= act.at) {
+            object.updateWorldMatrix(true, false); object.matrixWorld.decompose(keep.p, keep.q, keep.s);
+            const at = out.p.clone().applyMatrix4(object.matrixWorld), q = keep.q.clone().multiply(out.q);
+            prop.userData.placeMiss = at.distanceTo(rest.p);
+            const ease = THREE.MathUtils.smoothstep(time, release - .12, release); at.lerp(rest.p, ease); q.slerp(rest.q, ease);
+            keep.m.compose(at, q, rest.s).premultiply(new THREE.Matrix4().copy(prop.parent.matrixWorld).invert()).decompose(prop.position, prop.quaternion, prop.scale);
+            prop.userData.placeHeld = true; this.dirty = true; return;
+        }
         bone.updateWorldMatrix(true, false); bone.matrixWorld.decompose(keep.p, keep.q, keep.s);
         const g = placeGrip(this.placeOf(object, act) || { grip: { at: new THREE.Vector3().fromArray(act.grip.at), q: new THREE.Quaternion().fromArray(act.grip.q).normalize() } }, THREE.MathUtils.smoothstep(time - act.at, 0, Number.isFinite(act.contact) ? act.contact : 1));
         const at = g.at.clone().applyMatrix4(bone.matrixWorld), q = keep.q.clone().multiply(g.q);
