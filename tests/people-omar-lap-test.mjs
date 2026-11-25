@@ -20,6 +20,7 @@
 //      Mia (whose acts, seat and chair the commons polish passes edit) against the same film drawn with the lap code switched off: 0.000 mm
 //   5. the coast chapter: Omar types at the accessible bay all chapter (wheel-type-28, Vico's pose keys), no change: drawn as before
 //      (a typist's hands are not lifted at rest); a change from the roll to that posture, were one cast, is one move too
+//   7. Vico's own pose keys win at rest: a key at 5.2 s and the hands dragged 20 mm down stay there (section 7, before 6)
 //   6. the pieces: the lap data has the fingers, the knee cap only (not the shin), the typing postures; softLift is C1; the plan
 //      starts and ends exactly on the postures at rest; the modules the browser loads carry a changed ?v=
 //   node tests/people-omar-lap-test.mjs
@@ -154,6 +155,25 @@ for (const who of ['andre', 'ben', 'hale', 'jo', 'priya', 'maya']) {
     for (let f = 0; f <= 84; f++) { raw.change(f / 84); before = Math.max(before, raw.depth().hand); type.change(f / 84); const d = type.depth(); after = Math.max(after, d.hand, d.fore); const p = type.arm(); if (prev) p.forEach((v, i) => { step = Math.max(step, v.distanceTo(prev[i])); }); prev = p; }
     assert.ok(before > .03 && after <= .008, `a roll to the coast's typing posture: ${mm(before)} deep without the fix, ${mm(after)} with it`);
     assert.ok(step * 1000 <= 17, `and one move (${(step * 1000).toFixed(1)} mm a frame at the most, 60 fps)`);
+}
+
+// ---- 7. Vico's own keys win at rest (24 Nov 2026): a key at 5.2 s on the left shoulder (bend -9, twist 5.2, side 7.8 in the pose
+// panel), then both hands dragged 20 mm down in the Director (auto-key: the arms' turns at 5.2 s as the drag left them, from a
+// headless repro of the editor's hand drag). Before, both popped back up 20 mm (the lift took them out of the thighs again); now they
+// stay where they were dragged, at 5.2 s and after, with no kick through the change or at the key
+if (media) {
+    const deg = Math.PI / 180, shoulder = new THREE.Quaternion().setFromEuler(new THREE.Euler(-9 * deg, 5.2 * deg, 7.8 * deg, 'XYZ')).toArray();
+    const DRAG = { upperarm_l: [-0.0662, 0.0587, 0.0529, 0.9947], lowerarm_l: [0.1802, 0, 0.0175, 0.9835], hand_l: [-0.057, -0.0071, 0.107, -0.9926], upperarm_r: [-0.0592, 0.0039, -0.0157, 0.9981], lowerarm_r: [0.1582, 0, -0.0154, 0.9873], hand_r: [0.0484, -0.0062, 0.0901, 0.9947] };
+    const withKeys = (...keys) => filter => { const w = filter.cast.find(e => e.key === 'omar').postures['people-omar-wheel-watch']; w.poseKeys = [...w.poseKeys, ...keys]; return filter; };
+    const times = frames(4.4, 6.5, 30), at = (rows, t) => rows.find(r => Math.abs(r.t - t) < 1e-6);
+    const shoulderOnly = await filmFrames({ shot: media, key: /^omar/, times, edit: withKeys({ t: 5.2, pose: { upperarm_l: shoulder } }) });
+    const dragged = await filmFrames({ shot: media, key: /^omar/, times, edit: withKeys({ t: 5.2, pose: { upperarm_l: shoulder, ...DRAG } }) });
+    for (const s of ['l', 'r']) for (const t of [5.2, 6, 6.5]) {
+        const down = at(shoulderOnly, t).room['hand_' + s][1] - at(dragged, t).room['hand_' + s][1];
+        assert.ok(down > 15, `the ${s} hand dragged 20 mm down at 5.2 s stays down at ${t} s (${down.toFixed(1)} mm lower than without the drag)`);
+    }
+    for (const rows of [shoulderOnly, dragged]) { const m = motionOf(rows); for (const field of ['step', 'dstep']) { const w = worstOf(m, field); assert.ok(w.value <= CAPS[30][field], `a key at 5.2 s: ${w.point} ${field} ${w.value.toFixed(2)} at ${w.at?.toFixed(3)} s (at most ${CAPS[30][field]})`); } }
+    console.log('people-omar-lap-test: Vico\'s key at 5.2 s and his hands dragged 20 mm down stay there, no kick');
 }
 
 // ---- 6. the pieces
