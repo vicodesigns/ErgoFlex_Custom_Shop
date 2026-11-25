@@ -19,5 +19,23 @@ try{
   const msg=await page.evaluate(()=>document.querySelector('[data-tray-joint="slide"]')?.innerText||'');
   assert.match(msg,/keyed 90 %/);assert.match(msg,/does not fit under the desk|held to/,'a limit is said in words: '+msg);
   assert.match(await status(page),/held at 45 %/,'the status line names the limit too: '+await status(page));
+  // jog (the Key buttons and K) and the saved poses
+  const seek=async t=>{await page.evaluate(t=>{const el=document.querySelector('#director-timeline [name="timeline-seconds"]');el.value=String(t);el.dispatchEvent(new Event('change',{bubbles:true}));},t);await wait(700);};
+  const click=async sel=>{await page.evaluate(q=>document.querySelector(q)?.click(),sel);await wait(700);};
+  const at=()=>page.evaluate(()=>Number(document.querySelector('[data-tray-at]')?.textContent));
+  const keys=()=>page.evaluate(()=>document.querySelectorAll('[data-tray-key-row] [data-tray-key]').length);
+  await click('[data-action="tr-reset"]');await click('[data-action="tr-auto"]');
+  await seek(1);await set('tr-tilt-n',5);await seek(3);await set('tr-tilt-n',-5);await seek(0);
+  assert.equal(await keys(),2);
+  await click('[data-action="tr-key-next"]');assert.equal(await at(),1,'Key > jumps to the first key');
+  await click('[data-action="tr-key-next"]');assert.equal(await at(),3,'Key > jumps to the next key');
+  await click('[data-action="tr-key-prev"]');assert.equal(await at(),1,'< Key jumps back');
+  await seek(2);await page.evaluate(()=>document.activeElement?.blur?.());await page.keyboard.press('k');await wait(700);
+  assert.equal(await keys(),3,'K keys every joint at the playhead');
+  await page.evaluate(()=>{const e=document.querySelector('[name="tr-pose-name"]');e.value='Typing';e.dispatchEvent(new Event('change',{bubbles:true}));});await click('[data-action="tr-save"]');
+  assert.match(await page.evaluate(()=>document.querySelector('.tray-saved')?.innerText||''),/Typing/);
+  await set('tr-tilt-n',9);await click('[data-action="tr-apply"]');
+  const tilt=await page.evaluate(()=>document.querySelector('[name="tr-tilt-n"]').value);assert.equal(Number(tilt),0,'applying the saved pose sets its tilt back (the pose was keyed at tilt 0 ... K keyed the tray as it was at 2 s)');
+  await click('[data-action="tr-forget"]');assert.equal(await page.evaluate(()=>document.querySelectorAll('.tray-saved li').length),0,'forgotten');
   console.log('PASS Director Tray: slide, tilt and swing move the jointed tray on the live stage; a limit is named under the slider.');
 }catch(e){console.error('FAIL',e.message);process.exitCode=1;}finally{await close();}
