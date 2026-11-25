@@ -16,6 +16,11 @@ to <dir>/standin/NN.* for pipeline tests), <dir>/score/score.wav (optional),
 Title shadows: a title's optional 'shadow' {blur, opacity, paths} (Director Mode's shadow editor) replaces the fitted
   line boxes with ASS vector drawings (m / l / b) at the same darkness and softness; blur / opacity alone
   restyle the fitted boxes. Path points are 1920x1080 pixels relative to the title anchor (128, 912).
+--with-logo (with --title-still): the still also gets the end card's shade and wordmark as the master lays them (their
+  fade at that time, the same scale / overlay expressions), so a still shows the whole end card.
+End card (titles-src 'logo' / 'cta', Director Mode's end-card blocks, experience/end-card.mjs): optional logo x / y (its
+  centre, 1920x1080 px; default 960, 0.73 H) and scale (x the film's 22 % of the width); optional cta x (its centre;
+  default the wordmark's) and rel_out (null = to the film's end). Absent: everything exactly as before.
 --size 2560x1440 masters at that size (chapter renders must match); the HQ file is ErgoFlex-Intro-<H>p.mp4 with the
   bitrate cap scaled by pixel count. Titles stay authored on the 1920×1080 grid (libass scales PlayRes to the frame).
 """
@@ -182,6 +187,21 @@ def logo_aspect(path, default=304 / 1400):
     return default
 
 
+def end_logo(logo):
+    """The wordmark's centre (1920x1080 px) and scale, defaults filled in, plus whether any was set (Director end card)."""
+    return dict(x=float(logo.get('x', 960)), y=float(logo.get('y', 1080 * .73)), scale=max(.1, min(5, float(logo.get('scale', 1)))),
+                placed=any(k in logo for k in ('x', 'y')), scaled='scale' in logo)
+
+def logo_w(W, L):
+    """The wordmark's width in output pixels: 22 % of the frame (x its scale when set)."""
+    return int(W * .22 * L['scale']) if L['scaled'] else int(W * .22)
+
+def logo_xy(L):
+    """The wordmark's overlay position: centred at 0.73 H (the film's), or at its own centre when set."""
+    if not L['placed']: return 'x=(W-w)/2:y=H*0.73-h/2'
+    return f"x=W*{L['x'] / 1920:.6f}-w/2:y=H*{L['y'] / 1080:.6f}-h/2"
+
+
 def chapter_titles(argv):
     """--chapter-titles <chapter id> <in video> <out video>: burn ONE chapter's titles (titles-src.json, chapter seconds, no film
     offset) onto a chapter file with the film's own ASS look. No dissolves, end card, wordmark or CTA (those belong to the film).
@@ -252,8 +272,11 @@ def main():
                    shadow=t.get('shadow') or {}, **({k: t[k] for k in ('position', 'scale', 'typography') if k in t}), **({'place': t['place']} if t.get('place') in PLACES and t['place'] != 'lower-left' else {}))
               for i, t in enumerate(src['titles'])]
     logo_at = start[src['logo']['chapter']] + src['logo']['rel_in']
+    L = end_logo(src['logo'])
+    cta_out = src['cta'].get('rel_out')
+    cta_end = min(total, start[src['cta']['chapter']] + float(cta_out)) if cta_out is not None else total
     cta = dict(id='cta', chapter=src['cta']['chapter'], start=round(start[src['cta']['chapter']] + src['cta']['rel_in'], 3),
-               end=round(total, 3), text=src['cta']['text'])
+               end=round(cta_end, 3), text=src['cta']['text'])
     # optional (polish1124): the CTA's fade-in (s, default 0.9) and size (px on a 1080 frame, default 46); its fade-out is
     # always the film's last 1.4 s fade
     cta_in = float(src['cta'].get('fade_in', 0.9)); cta_px = int(src['cta'].get('size', 46))
@@ -262,7 +285,8 @@ def main():
     json.dump(dict(schema='ergoflex.intro-titles', version=1, duration=total, fps=fps,
                    placement=dict(anchor='bottom-left', safeArea=0.9, eyebrowColor='#1388EC',
                                   note='Coordinates for a 1920×1080 frame: text left edge x=128; eyebrow/title/detail bottoms at y=812/912/970. Wordmark centered at y=788 (22% of width); CTA centered at y=904.'),
-                   titles=[{k: v for k, v in t.items() if k not in ('scrim', 'shadow')} for t in titles], cta=cta, logo=dict(start=round(logo_at, 3))),
+                   titles=[{k: v for k, v in t.items() if k not in ('scrim', 'shadow')} for t in titles], cta=cta,
+                   logo=dict(start=round(logo_at, 3), **{k: src['logo'][k] for k in ('x', 'y', 'scale') if k in src['logo']})),
               open(os.path.join(out, 'titles.json'), 'w', encoding='utf-8'), indent=1, ensure_ascii=False)
 
     size = sys.argv[sys.argv.index('--size') + 1] if '--size' in sys.argv else '1920x1080'
@@ -276,11 +300,14 @@ def main():
         # 720p, 1080p and 4K keep the same proportions as the wordmark, which is always 22 % of the width at y = 0.73 H):
         # its line top 'gap' px under the wordmark's box, centred on the wordmark's axis; 'font' (default Poppins Medium)
         # and 'spacing' (letter-spacing, px) optional.
-        lb = 1080 * .73 + 1920 * .22 * logo_aspect(os.path.join(d, 'post', 'logo-color.png')) / 2
+        # Director end card: the wordmark's centre / scale (logo x, y, scale) and the CTA's own centre (cta x) and end (rel_out).
+        lb = L['y'] + 1920 * .22 * L['scale'] * logo_aspect(os.path.join(d, 'post', 'logo-color.png')) / 2
         cy = lb + float(src['cta']['gap'])
-        tags = (f'\\an8\\move(960,{cy + 10:.1f},960,{cy:.1f},0,1100)\\fad({int(round(cta_in * 1000))},1400)\\fs{cta_px}'
+        cx = ass_num(src['cta'].get('x', L['x']))
+        fade_out = 1400 if cta_end >= total - 1e-6 else max(0, min(1400, int((cta_end - cta['start']) * 500)))
+        tags = (f'\\an8\\move({cx},{cy + 10:.1f},{cx},{cy:.1f},0,1100)\\fad({int(round(cta_in * 1000))},{fade_out})\\fs{cta_px}'
                 f'\\fn{src["cta"].get("font", "Poppins Medium")}\\fsp{float(src["cta"].get("spacing", 1.5)):g}\\blur4\\t(0,800,\\blur0)')
-        ass.append(f'Dialogue: 1,{ts(cta["start"])},{ts(total)},CTA,,0,0,0,,{{{tags}}}{cta["text"]}')
+        ass.append(f'Dialogue: 1,{ts(cta["start"])},{ts(cta_end)},CTA,,0,0,0,,{{{tags}}}{cta["text"]}')
     else:
         ass.append(f'Dialogue: 1,{ts(cta["start"])},{ts(total)},CTA,,0,0,0,,{{\\an5\\move(960,{CTA_Y + 10},960,{CTA_Y},0,1100)\\fad({int(round(cta_in * 1000))},1400)\\fs{cta_px}\\blur4\\t(0,800,\\blur0)}}{cta["text"]}')
     open(os.path.join(out, 'titles.ass'), 'w', encoding='utf-8').write('\n'.join(ass) + '\n')
@@ -290,9 +317,21 @@ def main():
         at = start[v.split(':')[0]] + float(v.split(':')[1]) if ':' in v else float(v)
         bg, png = sys.argv[sys.argv.index('--bg') + 1], sys.argv[sys.argv.index('--out') + 1]
         fp = (lambda p: os.path.relpath(p).replace(os.sep, '/')) if os.name == 'nt' else (lambda p: p)
+        subs_f = f"subtitles=filename={fp(os.path.join(out, 'titles.ass'))}:fontsdir={fp(FONTS)}"
+        if '--with-logo' in sys.argv:
+            # the end card as the master lays it: the shade (fade in from logo_at - 1 over 2.2 s), the wordmark (in over
+            # 1.4 s from logo_at, out with the film's last 1.4 s), both at their alpha at that time, the master's expressions
+            ramp = lambda t0, dur: max(0.0, min(1.0, (at - t0) / dur))
+            sa = ramp(logo_at - 1.0, 2.2); la = ramp(logo_at, 1.4) * (1 - ramp(total - 1.4, 1.4))
+            graph = (f'[0:v]scale={W}:{H}:flags=lanczos,format=gbrp[bg];[1:v]scale={W}:{H},format=rgba,colorchannelmixer=aa={sa:.6f}[shade];'
+                     f'[bg][shade]overlay[shaded];[2:v]scale={logo_w(W, L)}:-1:flags=lanczos,format=rgba,colorchannelmixer=aa={la:.6f}[logo];'
+                     f'[shaded][logo]overlay={logo_xy(L)},format=yuv444p,setpts=PTS+{at:.4f}/TB,{subs_f}[v]')
+            run(['ffmpeg', '-v', 'error', '-y', '-loop', '1', '-framerate', str(fps), '-i', bg, '-i', os.path.join(d, 'post', 'shade.png'),
+                 '-i', os.path.join(d, 'post', 'logo-color.png'), '-filter_complex', graph, '-map', '[v]', '-frames:v', '1', png])
+            return
         # format=yuv444p: libass burns onto the film's YUV frames; on an RGB frame ffmpeg's blend writes white as 235.
         run(['ffmpeg', '-v', 'error', '-y', '-loop', '1', '-framerate', str(fps), '-i', bg, '-vf',
-             f"scale={W}:{H}:flags=lanczos,format=yuv444p,setpts=PTS+{at:.4f}/TB,subtitles=filename={fp(os.path.join(out, 'titles.ass'))}:fontsdir={fp(FONTS)}",
+             f"scale={W}:{H}:flags=lanczos,format=yuv444p,setpts=PTS+{at:.4f}/TB,{subs_f}",
              '-frames:v', '1', png])
         return
     if '--titles-only' in sys.argv: return
@@ -338,7 +377,7 @@ def main():
         li = len(ch)
         inputs += ['-loop', '1', '-framerate', str(fps), '-i', os.path.join(d, 'post', 'logo-color.png'),
                    '-loop', '1', '-framerate', str(fps), '-i', os.path.join(d, 'post', 'shade.png')]
-        lw = int(W * .22)
+        lw = logo_w(W, L)
         bloom_sigma = 14 if not draft else 7
         look = (
             # Shared look: soft highlight bloom, gentle filmic S-curve with lifted
@@ -356,7 +395,7 @@ def main():
             f'[{li}:v]scale={lw}:-1:flags=lanczos,format=rgba,trim=0:{total},fade=t=in:st={logo_at:.3f}:d=1.4:alpha=1,fade=t=out:st={total - 1.4:.3f}:d=1.4:alpha=1[logo];'
             # Keep master clean 10-bit (no 8-bit dark-void dithering grain baked in) so the 10-bit HEVC OLED master
             # gets pure banding-free gradients; 8-bit H.264 deliverables add light dithering grain on their own pass.
-            f'[shaded][logo]overlay=x=(W-w)/2:y=H*0.73-h/2:shortest=1,'
+            f'[shaded][logo]overlay={logo_xy(L)}:shortest=1,'
             f'format={"yuv420p" if (draft or wip) else "yuv420p10le"},trim=0:{total}[v]')
         filters.append(look)
         script = os.path.join(out, 'filter.txt'); open(script, 'w', encoding='utf-8').write(';\n'.join(filters))

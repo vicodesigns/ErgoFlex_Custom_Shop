@@ -8,6 +8,7 @@
      hero's Director page (--pages hero --downloads <cut>/director-import): the steps the director-import watcher runs for
      an export. Without --import the hero must already be 25.95 s.
   2. apply.py: titles-src.json CTA (timing from this cut's score), and the storage -> hero pin file removed if present.
+     An end card edited in the Director (titles-src 'edited': true on the CTA or the wordmark) is left as he set it.
   3. looks.py: the desk-version fades on this cut's score bar lines (each moved at most 0.8 s from Vico's own); when they
      change, the hero's own Director export (director-import/ErgoFlex-film-ch12-hero-director.json) plus those
      deskVersions goes through build-round8-director.py --import, the pass and the pages step (camera unchanged).

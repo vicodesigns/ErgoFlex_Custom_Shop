@@ -57,3 +57,10 @@
 #director-panel .prop-paste-opts{display:flex;flex-wrap:wrap;gap:6px 10px;margin:6px 0 2px}
 #director-panel .prop-paste-opts label{display:inline-flex;align-items:center;gap:4px;margin:0;font-size:11px;font-weight:500;color:var(--df-text-2,#b7c3cf);cursor:pointer;white-space:nowrap}
 #director-panel .prop-paste-opts input[type=checkbox]{margin:0;width:auto}
+/* The end card (end-card.mjs): the hero's wordmark and CTA blocks on the Titles lane, and the film's last fade */
+#director-timeline .title-lane .desk-clip.end-clip,.title-lane .desk-clip.end-clip{background:color-mix(in srgb,#ffd27a 20%,#0d1820);border-color:#ffd27a99}
+.title-lane .end-clip strong em{color:#ffd27a}
+.end-clip.end-logo .clip-resize[data-resize=end]{display:none}
+.title-film-fade{position:absolute;top:0;bottom:0;background:linear-gradient(90deg,transparent,#000d);border-left:1px dashed #ffffffaa;pointer-events:none;z-index:4}
+.title-film-fade i{position:absolute;bottom:1px;left:3px;font:600 8px system-ui;color:#ffffffaa;white-space:nowrap;font-style:normal;letter-spacing:.02em}
+.end-note{border-left:3px solid #ffd27a;padding-left:8px}

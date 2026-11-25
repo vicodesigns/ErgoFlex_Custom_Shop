@@ -13,6 +13,8 @@ review-cut.json says the hero is 25.95 s. run-all.py next to it does this, the d
   2. score-pins.json: a pin file whose bar lines all sit in the storage -> hero dissolve (the 215.478 of hero3 or the
      desk's 217.395) is removed (backup score-pins.pre-polish1124-hero4-<time>.json): build-cine-score.py v2.5 keeps the
      earlier chapters where they are by itself (the finale's looks no longer steer the fit), so no pin is needed.
+  A CTA or wordmark Vico edited in the Director (titles-src 'edited': true, set by build-round8-director.py --import)
+  is left alone: no CTA retiming or restyling, and a moved wordmark is not an error (run-all.py goes on with the rest).
 --dry-run prints what would change and writes nothing.
 """
 import datetime, importlib.util, json, os, shutil, sys
@@ -45,12 +47,17 @@ def plan(cut):
     if abs(float(hero['seconds']) - HERO_SECONDS) > 1e-6:
         sys.exit(f"the hero is {hero['seconds']} s in {cut}/review-cut.json: import the DRAFT ({HERO_SECONDS} s) first")
     src = json.load(open(os.path.join(cut, 'titles-src.json'), encoding='utf-8'))
-    if abs(float(src['logo']['rel_in']) - LOGO_REL) > 1e-6 or src['cta']['chapter'] != 'hero':
+    edited = [k for k in ('logo', 'cta') if src.get(k, {}).get('edited')]
+    if src['cta']['chapter'] != 'hero' or (not edited and abs(float(src['logo']['rel_in']) - LOGO_REL) > 1e-6):
         sys.exit(f"titles-src.json's wordmark / CTA are not where this patch expects them ({src['logo']}, {src['cta']}): not applied")
     bpm, (lo, hi) = finale(cut)
-    want = dict(src['cta'], rel_in=round(LOGO_REL + 2 * 60 / bpm, 2), **CTA); changes = []; new_src = None
-    if want != src['cta']:
-        changes.append(f"titles-src.json cta: {src['cta']} -> {want} (wordmark + 2 beats at the finale's {bpm:.2f} BPM)"); new_src = dict(src, cta=want)
+    changes = []; new_src = None
+    if edited:
+        print(f"titles-src.json cta left alone: the {' and the '.join('wordmark' if k == 'logo' else 'CTA' for k in edited)} edited in the Director")
+    else:
+        want = dict(src['cta'], rel_in=round(LOGO_REL + 2 * 60 / bpm, 2), **CTA)
+        if want != src['cta']:
+            changes.append(f"titles-src.json cta: {src['cta']} -> {want} (wordmark + 2 beats at the finale's {bpm:.2f} BPM)"); new_src = dict(src, cta=want)
     pp = os.path.join(cut, 'score-pins.json'); drop = False
     if os.path.exists(pp):
         pins = [float(x['at']) for x in json.load(open(pp, encoding='utf-8')).get('bar_lines', [])]

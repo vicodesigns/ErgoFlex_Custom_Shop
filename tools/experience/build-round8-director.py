@@ -35,6 +35,10 @@
       shadow) rewrites that chapter's entries in <hq>/titles-src.json (backup first: titles-src.pre-director-<id>-<time>.json;
       unchanged titles leave the file alone). Titles he retimed get director_timing: true, which titles-after-cut.py
       keeps as set (it only flags a break of the 1.5 s-after-cut rule).
+      End card (hero): an export whose shot has 'endCard' ({logo?: {rel_in, x, y, scale}, cta?: {rel_in, rel_out, text, fade_in,
+      size, font, spacing, gap, x}}: the Titles lane's wordmark / CTA blocks, only the parts he changed) rewrites titles-src.json's
+      'logo' / 'cta' (same backup), each changed part marked edited: true so polish1124-hero3/apply.py leaves it alone. Moving
+      the wordmark's rel_in moves the score's logo hit: build-cine-score.py <cut> re-fits it (its --check says when it is due).
       Desk versions (hero): an export whose shot has 'deskVersions' ([{n, preset, name, start, end}] in time order: the
       chapter's desks, one sub-shot each: its id, desk model, label and renderRange) keeps them in director-camera-hero.json
       as 'versions' (an export without the field keeps the earlier import's). The list is the whole chapter: 1 to 12
@@ -1314,6 +1318,45 @@ def import_titles(cid, titles, seconds, log):
     return [f'titles-src.json (backup titles-src.pre-{tag}.json)']
 
 
+END_FIELDS = {'logo': (('rel_in', 0, None), ('x', -4000, 4000), ('y', -4000, 4000), ('scale', .1, 5)),
+              'cta': (('rel_in', 0, None), ('fade_in', 0, 5), ('size', 8, 300), ('spacing', -10, 40), ('gap', -1000, 1000), ('x', -4000, 4000))}
+END_FONTS = ('Poppins', 'Poppins Medium', 'Poppins SemiBold', 'Poppins Bold')   # experience/end-card.mjs CTA_FONTS
+
+
+def import_end_card(cid, card, seconds, log):
+    """The export's endCard (end-card.mjs: the parts he changed) -> titles-src.json 'logo' / 'cta', changed parts edited: true."""
+    p = os.path.join(H, 'titles-src.json'); src = load(p)
+    isnum = lambda v: isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+    tidy = lambda v: int(v) if float(v).is_integer() else v
+    new = dict(src)
+    for part, fields in END_FIELDS.items():
+        d = card.get(part)
+        if not isinstance(d, dict): continue
+        cur = src.get(part)
+        if not isinstance(cur, dict) or cur.get('chapter') != cid:
+            sys.exit(f'{cid}: the export edits the end card\'s {part}, but titles-src.json has it in {(cur or {}).get("chapter")!r}; import stopped')
+        e = copy.deepcopy(cur)
+        for k, lo, hi in fields:
+            if isnum(d.get(k)): e[k] = tidy(round(max(lo, min(seconds if hi is None else hi, float(d[k]))), 3))
+        if part == 'cta':
+            if 'rel_out' in d:
+                v = d['rel_out']
+                e['rel_out'] = None if v is None or not isnum(v) or float(v) >= seconds - .02 else tidy(round(max(e['rel_in'] + .5, min(seconds, float(v))), 3))
+            if isinstance(d.get('text'), str): e['text'] = ' '.join(d['text'].split())[:120]
+            if d.get('font') in END_FONTS: e['font'] = d['font']
+        what = [k for k in e if k != 'edited' and e.get(k) != cur.get(k)]
+        if not what: continue
+        e['edited'] = True; new[part] = e
+        log(f'    end card {part}: ' + ', '.join(f'{k} {cur.get(k)!r} -> {e[k]!r}' for k in what) + ' (edited in the Director)')
+        if part == 'logo' and 'rel_in' in what:
+            log(f'    the wordmark moved ({cur.get("rel_in")} -> {e["rel_in"]} s): the score\'s logo hit follows it once build-cine-score.py re-fits the score (its --check says so until then)')
+    if new == src: return []
+    tag = f'director-{cid}-endcard-{time.strftime("%Y%m%d-%H%M%S")}'
+    open(os.path.join(H, f'titles-src.pre-{tag}.json'), 'w', encoding='utf-8').write(open(p, encoding='utf-8').read())
+    json.dump(new, open(p, 'w', encoding='utf-8'), indent=1, ensure_ascii=False)
+    return [f'titles-src.json (backup titles-src.pre-{tag}.json)']
+
+
 def run_import(export):
     d = load(export); cid = (d.get('shots') or [{}])[0].get('id')
     known = {c: (n, f) for n, c, f in chapters()}
@@ -1415,6 +1458,10 @@ def run_import(export):
     if isinstance(shot.get('filmTitles'), list):
         lines = []; wrote = import_titles(cid, shot['filmTitles'], float(shot.get('seconds') or dc['seconds']), lines.append)
         print(f'{cid}: Director titles -> {", ".join(wrote) or "titles-src.json unchanged"}', file=sys.stderr)
+        for l in lines: print(l, file=sys.stderr)
+    if isinstance(shot.get('endCard'), dict):
+        lines = []; wrote = import_end_card(cid, shot['endCard'], float(shot.get('seconds') or dc['seconds']), lines.append)
+        print(f'{cid}: Director end card -> {", ".join(wrote) or "titles-src.json unchanged"}', file=sys.stderr)
         for l in lines: print(l, file=sys.stderr)
     print(cid)
 

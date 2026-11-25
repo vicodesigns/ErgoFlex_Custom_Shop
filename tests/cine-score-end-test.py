@@ -18,6 +18,9 @@ Vico's 3rd cut ends 0.63 s after the wordmark; the old 2.5 s master fade then fa
      chapters unchanged); the hit on the wordmark; looks within 0.05 beat of bar lines; fades moved <= 0.8 s from Vico's
      with their lengths; the long tail; the CTA 2 beats (1.0-1.5 s) after the wordmark, fully visible >= 3 s, 72 px
      SemiBold 30 px under the wordmark inside the safe area. Needs python3 and node on PATH; builds a score per cut.
+  6. the end card edited in the Director (titles-src 'edited': true, build-round8-director.py --import), on the same copy:
+     apply.py and run-all.py leave an edited CTA exactly as he set it, a moved (edited) wordmark is not an error; moving it
+     makes build-cine-score.py --check report the score stale, and the rebuilt score puts the logo hit on the new wordmark.
 
     python3 tests/cine-score-end-test.py [cut dir ...]     (default: exports/cinematic-intro-cut-vicos-3rd-cut)
 """
@@ -169,8 +172,36 @@ def part5(SRC, tag):
         m = re.search(re.escape(BS) + r'move\(960,[0-9.]+,960,([0-9.]+)', line); top = float(m.group(1)) if m else -1
         logo_bottom = 1080 * .73 + 1920 * .22 * 304 / 1400 / 2
         check(abs(top - (logo_bottom + 30)) < 0.6 and top + 72 * 1.25 <= 1080 * 0.95, f"{tag}: CTA line top {top} = the wordmark's bottom {logo_bottom:.1f} + 30 px, bottom inside the safe area")
+        part6(C, tag, tmp, env)
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
+
+
+def part6(C, tag, tmp, env):
+    """6. Vico's own end card (the Director's import marks it edited): apply.py / run-all.py leave it; the score follows the wordmark."""
+    import json
+    TP = os.path.join(C, 'titles-src.json'); AP = os.path.join(DR, 'apply.py'); RA = os.path.join(DR, 'run-all.py'); SC = os.path.join(WT, 'tools', 'experience', 'build-cine-score.py')
+    src = bcs.J(TP); mine = dict(src['cta'], text='Build yours with us.', rel_in=round(src['cta']['rel_in'] + 0.3, 3), size=60, gap=44, x=1000, edited=True)
+    json.dump(dict(src, cta=mine), open(TP, 'w', encoding='utf-8'), indent=1, ensure_ascii=False)
+    r = subprocess.run([py3, AP, C], capture_output=True, text=True, env=env, cwd=tmp)
+    check(r.returncode == 0 and bcs.J(TP)['cta'] == mine and 'left alone' in r.stdout, f'{tag}: apply.py leaves the CTA he edited as it is ({r.returncode} {(r.stdout + r.stderr)[-200:]})')
+    logo = dict(src['logo'], rel_in=round(src['logo']['rel_in'] + 0.5, 3), edited=True)
+    json.dump(dict(bcs.J(TP), logo=logo), open(TP, 'w', encoding='utf-8'), indent=1, ensure_ascii=False)
+    r = subprocess.run([py3, AP, C, '--dry-run'], capture_output=True, text=True, env=env, cwd=tmp)
+    check(r.returncode == 0 and 'nothing to do' in r.stdout, f'{tag}: a wordmark moved in the Director is not an error for apply.py ({r.returncode} {(r.stdout + r.stderr)[-200:]})')
+    r = subprocess.run([py3, SC, C, '--check'], capture_output=True, text=True, env=env, cwd=tmp)
+    check(r.returncode != 0, f'{tag}: after the wordmark moved, build-cine-score.py --check says the score is stale ({(r.stdout + r.stderr).strip()[-160:]})')
+    r = subprocess.run([py3, RA, C], capture_output=True, text=True, env=env, cwd=tmp)
+    check(r.returncode == 0 and 'OK: edl.json and score/score.wav are in step' in r.stdout, f'{tag}: run-all.py after the move: score rebuilt and in step ({r.returncode} {(r.stdout + r.stderr)[-300:]})')
+    after = bcs.J(TP)
+    check(after['cta'] == mine and after['logo'] == logo, f"{tag}: run-all.py left his CTA and wordmark as he set them (cta {after['cta'].get('text')!r} at {after['cta']['rel_in']}, wordmark {after['logo']['rel_in']})")
+    edl, pic, t, _ = fit(C)
+    hs = next(c['start'] for c in edl['chapters'] if c['id'] == 'hero')
+    check(abs(pic['logo'] - (hs + logo['rel_in'])) < 1e-6 and abs(t['anchors'][-1] - pic['logo']) < 1e-9, f"{tag}: the rebuilt score's logo hit {t['anchors'][-1]} on the moved wordmark ({hs + logo['rel_in']:.3f} s)")
+    f = subprocess.run([sys.executable, os.path.join(WT, 'tools', 'experience', 'finish-intro.py'), C, '--titles-only'], capture_output=True, text=True, cwd=tmp)
+    line = [l for l in open(os.path.join(C, 'final', 'titles.ass'), encoding='utf-8').read().split('\n') if ',CTA,' in l][0]
+    check(f.returncode == 0 and 'Build yours with us.' in line and chr(92) + 'move(1000,' in line and chr(92) + 'fs60' in line, f'{tag}: finish-intro burns his CTA ({line[:120]})')
+
 
 
 for i, C in enumerate(CUTS):

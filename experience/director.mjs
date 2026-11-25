@@ -52,7 +52,7 @@ import {createSceneDeskEditor} from './scene-desk-editor.mjs';
 import {createStudioSync} from './studio-sync.mjs';
 import {createDeskVersions,deskVersions as deskVersionList} from './desk-versions.mjs';
 import {createDeskBuildPanel} from './desk-build-panel.mjs';
-import {createTitleEditor,loadTitleSource} from './title-editor.mjs';
+import {createTitleEditor,loadTitleSource} from './title-editor.mjs?v=endcard-20261124';
 import {score} from './score.mjs';
 import {makeOpeningShot} from './opening.mjs';
 import {showcaseShots,showcaseViews} from './showcase.mjs';
