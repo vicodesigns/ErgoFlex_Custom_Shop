@@ -37,8 +37,8 @@
    "seconds": 16.0,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-ch04-commons.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-film/commons.json",
-   "version": "c9d67490c448",
-   "updated": "2026-11-21T01:35:28Z"
+   "version": "92b3b8334dcb",
+   "updated": "2026-11-25T00:44:05Z"
   },
   {
    "n": 5,
@@ -104,21 +104,21 @@
    "n": 11,
    "id": "storage",
    "title": "Make room for what\u2019s next.",
-   "seconds": 24.978,
+   "seconds": 26.67,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-ch11-storage.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-film/storage.json",
-   "version": "e6719fe5b51e",
-   "updated": "2026-11-20T17:43:59Z"
+   "version": "d797c980788d",
+   "updated": "2026-11-25T00:19:59Z"
   },
   {
    "n": 12,
    "id": "hero",
    "title": "One desk. Every part of your day.",
-   "seconds": 25.5,
+   "seconds": 25.95,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-ch12-hero.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-film/hero.json",
-   "version": "c4992882a3f1",
-   "updated": "2026-11-22T01:06:38Z"
+   "version": "2ba5d382e2e9",
+   "updated": "2026-11-25T00:55:13Z"
   }
  ]
 }

@@ -5524,6 +5524,25 @@
    "label": "Ceiling pendulum (orange bob and string)",
    "hide": true,
    "director": true
+  },
+  {
+   "match": "^Person chair:people-sofia-sit-laptop$",
+   "asset": "highschool:house:placement:107:0:Person chair:people-sofia-sit-laptop",
+   "label": "Person chair:people-sofia-sit-laptop",
+   "hide": true,
+   "director": true
+  },
+  {
+   "match": "^Accessory:logitech-mx-master$",
+   "path": "^Room:highschool > APA set and costume design review desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Accessory:logitech-mx-master$",
+   "label": "Accessory:logitech-mx-master",
+   "space": "local",
+   "position": [
+    0,
+    0,
+    -0.093
+   ],
+   "director": true
   }
  ],
  "clock": {
@@ -6501,7 +6520,7 @@
   ]
  },
  "directorEdited": {
-  "at": "2026-11-21T23:21:20Z",
+  "at": "2026-11-24T22:49:50Z",
   "fields": [
    "camera",
    "cameraPlan",
