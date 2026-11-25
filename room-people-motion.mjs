@@ -18,6 +18,7 @@
 //   the state at any second depends on nothing else and scrubbing gives the same frames as playing.
 // Everything else (breathing, the head, weight shifts, typing fingers) is layered on from time and a seed.
 import * as THREE from 'three';
+import { lapPose } from './people-lap.mjs';
 
 const V = () => new THREE.Vector3(), Q = () => new THREE.Quaternion();
 const clamp01 = x => x < 0 ? 0 : x > 1 ? 1 : x;
@@ -611,11 +612,14 @@ export class DeskActor {
     // each bone from where the motion has it; `rest` is kept at the motion's pose so the editor measures from it.
     apply(member, pose = null, hold = false) { drawPose(this.rig, member.object.userData.personRig, member.dz, pose, hold); }
 }
-// A solved pose (rig.lq, rig.lp) on a drawn model's bones (drawn: { bones, rest }, room-people.mjs rig()); dz: metres
+// A solved pose (rig.lq, rig.lp) on a drawn model's bones (drawn: { bones, rest, lap }, room-people.mjs rig()); dz: metres
 // the model's own frame is ahead of the solver's. `pose`: the person's own fine tuning, a turn per bone from where
 // the motion has it. `hold`: leave the bones alone (someone is dragging one in the Director).
-export function drawPose(rig, drawn, dz = 0, pose = null, hold = false) {
+export function drawPose(rig, drawn, dz = 0, pose = null, hold = false, lap = !!drawn?.lap) {
     if (!drawn) return;
+    // (someone in a wheelchair: the hands and forearms are kept out of the thighs whatever the pose, the pose keys and the blend left them
+    // at, people-lap.mjs; `lap`: the model is a watcher's, or the change is to or from one's)
+    if (!hold && lap) pose = lapPose(rig, pose);
     for (let i = 0; i < rig.n; i++) {
         const name = rig.names[i], bone = drawn.bones.get(name); if (!bone || name === 'still') continue;
         if (hold) continue;   // (the pose editor measures its turns from `rest`: it stays with the bones while one is dragged)
@@ -1499,8 +1503,10 @@ export function solveTread(rig, plan, time, begin = 0) {
 // (a turn of more than STEP_TURN is stepped in more steps, the feet taking turns, each about STEP_TURN at most)
 export const STEP_TURN = THREE.MathUtils.degToRad(60);
 const stepsFor = yaw => Math.max(1, Math.ceil(Math.abs(yaw) / STEP_TURN - 1e-9));
+// How far (0..1) the arms are through a change at w (the part of it they move in: `arms`, [.22, 1] when not given).
+export const changeArms = (w, arms0 = null) => arms0 ? ss(arms0[0], arms0[1], clamp01(w)) : ss(.22, 1, clamp01(w));
 export function solveChange(rig, from, to, w, arms0 = null, shift = null, line = false) {
-    const b = rig.b, t = clamp01(w), hips = ss(0, .72, t), spine = ss(.08, .82, t), head = ss(.15, .92, t), arms = arms0 ? ss(arms0[0], arms0[1], t) : ss(.22, 1, t);
+    const b = rig.b, t = clamp01(w), hips = ss(0, .72, t), spine = ss(.08, .82, t), head = ss(.15, .92, t), arms = changeArms(t, arms0);
     if (t <= 0 || t >= 1) { rig.load(t <= 0 ? from : to); rig.fk(); return { model: t <= 0 ? 'from' : 'to' }; }
     const part = new Float32Array(rig.n).fill(hips);
     for (const i of [b.spine_01, b.spine_02, b.spine_03]) part[i] = spine;

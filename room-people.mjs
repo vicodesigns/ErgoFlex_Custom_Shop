@@ -97,11 +97,12 @@ import { mediaPersonMaterial, castDetailEnsure, castDetailCast, castDetailVarian
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
 import {updateSkinnedBounds} from './skinned-bounds.mjs';
-import {poseAt} from './people-pose-keys.mjs';
+import {poseAt, blendPoses} from './people-pose-keys.mjs';
+import {armBones} from './people-lap.mjs';
 import {applyHeld} from './people-held.mjs';
 import {partsOf} from './people-held-data.mjs';
 import {postureRecord,postureRecords,hasPosturePose,poseOwner,sourceOf,roomEditKey,blendPosturePoses} from './people-postures.mjs';
-import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, squatKey, WORKOUTS, drawPose, livelyPose, seedOf, placeGrip, handsKey } from './room-people-motion.mjs?v=people-place-20261124c';
+import { PersonRig, DeskActor, solveStill, solveChange, changeArms, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, squatKey, WORKOUTS, drawPose, livelyPose, seedOf, placeGrip, handsKey } from './room-people-motion.mjs?v=people-place-20261124c';
 // Room looks (room-looks.mjs): the Nov 17 pass's cast finishes (own materials, hair / shirt maps) are the refreshed Create
 // room's and the Commons'; Create's Classic look keeps the cast as it was, and its people move as they did then
 // (rig.classicMotion: room-people-motion.mjs's painting, pottery and page-turn strokes from before the pass).
@@ -1359,7 +1360,7 @@ export class RoomPeople {
             const bones = new Map(), rest = new Map(); rigged.traverse(o => { if (o.isBone) { bones.set(o.name, o); rest.set(o.name, o.quaternion.clone()); } });
             rigged.name = object.name; rigged.position.copy(object.position); rigged.rotation.copy(object.rotation); rigged.visible = object.visible;
             for (const k of ['person', 'personFit', 'personChair', 'personChairBase', 'personMissing', 'personAmount', 'sceneAsset', 'sceneAssetKey', 'sceneAssetRole', 'editorId', 'personPlacement']) if (object.userData[k] !== undefined) rigged.userData[k] = object.userData[k];
-            rigged.userData.personRig = { bones, rest };
+            rigged.userData.personRig = { bones, rest, lap: this.library.entry?.(spec.id)?.person?.pose === 'wheel-watch' };   // (lap: the hands rest on the thighs and are kept out of them, people-lap.mjs)
             if (object.userData.personMaterials) { for (const m of object.userData.personMaterials) m.dispose(); this.ownMaterials(rigged); }
             else this.shareCastDetail(rigged);
             object.parent?.add(rigged); object.removeFromParent(); this.people[at] = rigged;
@@ -2395,7 +2396,10 @@ export class RoomPeople {
             const shown = (cut === null ? model === 'from' : w < cut) ? a : b;
             if (pair.to?.carry) this.carryArms(pair.rig, pair.to);   // (carrying: the hands stay on it all through the change)
             shown.position.lerpVectors(pair.homeFrom.position, pair.homeTo.position, ease); shown.rotation.y = pair.homeFrom.turn + (pair.homeTo.turn - pair.homeFrom.turn) * ease;
-            drawPose(pair.rig, shown.userData.personRig, 0, poseNow(shown.userData.person), typeof window !== 'undefined' && !!window.__directorDragging);   // (hold: the Director's pose mode drags a bone of someone in the middle of a change)
+            // (the arms' fine tuning (pose keys) of the two placements goes from the first's to the second's with the arms, not in one frame where the model is swapped: a
+            // turn made for the arms at rest on the knees, put on arms still half way from the rims, took the hands through the thighs. Wheelchair: and whatever of them is in the thigh is brought out over it, people-lap.mjs)
+            const lap = !!(a.userData.personRig?.lap || b.userData.personRig?.lap), armsNow = changeArms(w, part('arms')), pose = lap ? blendPoses(poseNow(a.userData.person), poseNow(b.userData.person), armsNow, armBones(pair.rig)) : null;
+            drawPose(pair.rig, shown.userData.personRig, 0, pose ? { ...poseNow(shown.userData.person), ...pose } : poseNow(shown.userData.person), typeof window !== 'undefined' && !!window.__directorDragging, lap);   // (hold: the Director's pose mode drags a bone of someone in the middle of a change)
             if (shown === a && pair.wheels) turnWheels(shown.userData.personRig, pair.wheels);
             a.userData.personChanging = b.userData.personChanging = true; pair.live = true; this.dirty = true; out.set(a, { shown }); out.set(b, { shown });
         }

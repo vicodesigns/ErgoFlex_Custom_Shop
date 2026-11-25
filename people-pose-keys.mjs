@@ -66,6 +66,13 @@ function slerp(a, b, k) {
     const out = [a[0] * s0 + bx * s1, a[1] * s0 + by * s1, a[2] * s0 + bz * s1, a[3] * s0 + bw * s1], n = Math.hypot(...out) || 1;
     return out.map(c => c / n);
 }
+// The turns of two poses blended (k 0 = a, 1 = b) for the bones `names` only: a bone one of them leaves out is the identity there. A change of
+// posture (room-people.mjs) eases the arms' fine tuning in with the arms, not in one frame where the model is swapped.
+export function blendPoses(a, b, k, names) {
+    const out = {}, same = [0, 0, 0, 1];
+    for (const name of names) { const x = a?.[name], y = b?.[name]; if (!x && !y) continue; out[name] = k <= 0 && x ? x : k >= 1 && y ? y : slerp(x || same, y || same, k); }
+    return out;
+}
 const eased = (k, ease) => ease === 'hold' ? 0 : ease === 'linear' ? k : k * k * (3 - 2 * k);
 
 // The pose a person has at `time`: { '<bone>': [x, y, z, w] } or null. Without a time (the Studio, a still with no
