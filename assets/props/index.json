@@ -36343,22 +36343,22 @@
    "file": "assets/props/people-maya-stretch-2.glb",
    "anchor": "floor",
    "size": [
-    459.5,
-    1973.5,
-    361.7
+    447.2,
+    1961.8,
+    361.4
    ],
    "min": [
     -209.1,
     0,
-    -179.8
+    -179.5
    ],
    "max": [
-    250.4,
-    1973.5,
+    238.1,
+    1961.8,
     181.9
    ],
-   "tris": 51632,
-   "bytes": 1070832,
+   "tris": 51668,
+   "bytes": 1070648,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -37040,22 +37040,22 @@
    "file": "assets/props/people-andre-stretch.glb",
    "anchor": "floor",
    "size": [
-    540,
-    2233.9,
-    353.6
+    563.5,
+    2219.3,
+    350.1
    ],
    "min": [
-    -224.2,
+    -257.7,
     0,
-    -145.9
+    -142.4
    ],
    "max": [
-    315.8,
-    2233.9,
+    305.8,
+    2219.3,
     207.7
    ],
-   "tris": 66320,
-   "bytes": 951592,
+   "tris": 66366,
+   "bytes": 951256,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -37905,22 +37905,22 @@
    "file": "assets/props/people-grace-stretch.glb",
    "anchor": "floor",
    "size": [
-    442,
-    1857.5,
-    349.1
+    428.2,
+    1845.9,
+    344.5
    ],
    "min": [
     -193.5,
     0,
-    -168.5
+    -163.9
    ],
    "max": [
-    248.5,
-    1857.5,
+    234.7,
+    1845.9,
     180.6
    ],
-   "tris": 71730,
-   "bytes": 1318044,
+   "tris": 74128,
+   "bytes": 1327780,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -38670,22 +38670,22 @@
    "file": "assets/props/people-kai-stretch.glb",
    "anchor": "floor",
    "size": [
-    436.8,
-    1725.5,
-    297.7
+    452.6,
+    1714,
+    295.2
    ],
    "min": [
-    -184.2,
+    -207.3,
     0,
-    -131.1
+    -128.6
    ],
    "max": [
-    252.6,
-    1725.5,
+    245.3,
+    1714,
     166.6
    ],
-   "tris": 51808,
-   "bytes": 1016200,
+   "tris": 51862,
+   "bytes": 1015964,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -39403,22 +39403,22 @@
    "file": "assets/props/people-zoe-stretch.glb",
    "anchor": "floor",
    "size": [
-    434,
-    1860.8,
-    344.7
+    429.1,
+    1849.8,
+    340.7
    ],
    "min": [
     -196.9,
     0,
-    -173.9
+    -169.9
    ],
    "max": [
-    237.1,
-    1860.8,
+    232.2,
+    1849.8,
     170.8
    ],
-   "tris": 71818,
-   "bytes": 1329108,
+   "tris": 71866,
+   "bytes": 1328940,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -40169,22 +40169,22 @@
    "file": "assets/props/people-hale-stretch.glb",
    "anchor": "floor",
    "size": [
-    506.1,
-    2104.4,
-    347.8
+    510.1,
+    2091,
+    344.4
    ],
    "min": [
-    -215.4,
+    -231.5,
     0,
-    -144.2
+    -140.8
    ],
    "max": [
-    290.7,
-    2104.4,
+    278.6,
+    2091,
     203.6
    ],
-   "tris": 34734,
-   "bytes": 1371108,
+   "tris": 36714,
+   "bytes": 1379372,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -40899,22 +40899,22 @@
    "file": "assets/props/people-lin-stretch.glb",
    "anchor": "floor",
    "size": [
-    423.5,
-    1814.7,
-    305
+    463.6,
+    1799.4,
+    300.9
    ],
    "min": [
-    -187.4,
+    -207.7,
     0,
-    -131.8
+    -127.7
    ],
    "max": [
-    236.1,
-    1814.7,
+    255.9,
+    1799.4,
     173.2
    ],
-   "tris": 71310,
-   "bytes": 1134504,
+   "tris": 71364,
+   "bytes": 1135036,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -41663,22 +41663,22 @@
    "file": "assets/props/people-omar-stretch.glb",
    "anchor": "floor",
    "size": [
-    523.7,
-    2091.9,
-    353.5
+    580.9,
+    2077.5,
+    353.6
    ],
    "min": [
-    -213.1,
+    -268.7,
     0,
-    -156.5
+    -156.6
    ],
    "max": [
-    310.6,
-    2091.9,
+    312.2,
+    2077.5,
     197
    ],
-   "tris": 32278,
-   "bytes": 961496,
+   "tris": 34468,
+   "bytes": 971004,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -42360,22 +42360,22 @@
    "file": "assets/props/people-sam-stretch.glb",
    "anchor": "floor",
    "size": [
-    525.5,
-    2115.4,
-    349.3
+    555.6,
+    2099.7,
+    350.6
    ],
    "min": [
-    -224.3,
+    -254.9,
     0,
-    -146.9
+    -148.2
    ],
    "max": [
-    301.2,
-    2115.4,
+    300.7,
+    2099.7,
     202.4
    ],
-   "tris": 50550,
-   "bytes": 998484,
+   "tris": 50610,
+   "bytes": 998424,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -43225,22 +43225,22 @@
    "file": "assets/props/people-ben-stretch.glb",
    "anchor": "floor",
    "size": [
-    525,
-    2157.1,
-    352
+    519,
+    2143.1,
+    348.5
    ],
    "min": [
-    -222.6,
+    -237.2,
     0,
-    -141.1
+    -137.6
    ],
    "max": [
-    302.4,
-    2157.1,
+    281.8,
+    2143.1,
     210.9
    ],
-   "tris": 58940,
-   "bytes": 1225332,
+   "tris": 60880,
+   "bytes": 1232252,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -43989,22 +43989,22 @@
    "file": "assets/props/people-rosa-stretch.glb",
    "anchor": "floor",
    "size": [
-    420.4,
-    1348.1,
-    304.4
+    423.3,
+    1337.1,
+    301.4
    ],
    "min": [
-    -180.5,
+    -192.3,
     0,
-    -128.5
+    -125.5
    ],
    "max": [
-    239.9,
-    1348.1,
+    231,
+    1337.1,
     175.9
    ],
    "tris": 70132,
-   "bytes": 1098516,
+   "bytes": 1098524,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -45620,22 +45620,22 @@
    "file": "assets/props/people-jo-stretch.glb",
    "anchor": "floor",
    "size": [
-    463.2,
-    1967.7,
-    341.5
+    458.2,
+    1955.6,
+    338.6
    ],
    "min": [
     -205.4,
     0,
-    -160.7
+    -157.8
    ],
    "max": [
-    257.8,
-    1967.7,
+    252.8,
+    1955.6,
     180.8
    ],
-   "tris": 44320,
-   "bytes": 1013276,
+   "tris": 44330,
+   "bytes": 1013520,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -46383,22 +46383,22 @@
    "file": "assets/props/people-mia-stretch.glb",
    "anchor": "floor",
    "size": [
-    421,
-    1798.8,
-    305.7
+    432.4,
+    1786.1,
+    301.7
    ],
    "min": [
-    -191,
+    -192.4,
     0,
-    -140.7
+    -136.7
    ],
    "max": [
-    230,
-    1798.8,
+    240,
+    1786.1,
     165
    ],
-   "tris": 59710,
-   "bytes": 1466512,
+   "tris": 62152,
+   "bytes": 1477072,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -47182,22 +47182,22 @@
    "file": "assets/props/people-leo-stretch.glb",
    "anchor": "floor",
    "size": [
-    432,
-    1727.2,
-    306.5
+    468.5,
+    1712.4,
+    303.7
    ],
    "min": [
-    -180.4,
+    -211.7,
     0,
-    -140
+    -137.2
    ],
    "max": [
-    251.6,
-    1727.2,
+    256.8,
+    1712.4,
     166.5
    ],
    "tris": 53004,
-   "bytes": 1241380,
+   "bytes": 1240964,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -47846,22 +47846,22 @@
    "file": "assets/props/people-noah-stretch.glb",
    "anchor": "floor",
    "size": [
-    525.8,
-    2143.5,
-    373.2
+    518.5,
+    2129.7,
+    369.6
    ],
    "min": [
-    -230.4,
+    -236,
     0,
-    -167.2
+    -163.6
    ],
    "max": [
-    295.4,
-    2143.5,
+    282.5,
+    2129.7,
     206
    ],
-   "tris": 72268,
-   "bytes": 1463904,
+   "tris": 72328,
+   "bytes": 1463932,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -48678,22 +48678,22 @@
    "file": "assets/props/people-ava-stretch.glb",
    "anchor": "floor",
    "size": [
-    414.3,
-    1804.8,
-    331.3
+    408.2,
+    1794,
+    331.2
    ],
    "min": [
     -186.1,
     0,
-    -167.3
+    -167.2
    ],
    "max": [
-    228.2,
-    1804.8,
+    222.1,
+    1794,
     164
    ],
-   "tris": 60172,
-   "bytes": 1092092,
+   "tris": 60234,
+   "bytes": 1092268,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -49510,22 +49510,22 @@
    "file": "assets/props/people-eli-stretch.glb",
    "anchor": "floor",
    "size": [
-    468.8,
-    1850.5,
-    308.2
+    508.5,
+    1836.2,
+    307.8
    ],
    "min": [
-    -196.3,
+    -234.9,
     0,
-    -129.7
+    -129.3
    ],
    "max": [
-    272.5,
-    1850.5,
+    273.6,
+    1836.2,
     178.5
    ],
-   "tris": 46728,
-   "bytes": 848328,
+   "tris": 48798,
+   "bytes": 857368,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -50342,22 +50342,22 @@
    "file": "assets/props/people-sofia-stretch.glb",
    "anchor": "floor",
    "size": [
-    413.9,
-    1790.5,
-    315.3
+    407.8,
+    1779.9,
+    312.5
    ],
    "min": [
     -185,
     0,
-    -144.9
+    -142.1
    ],
    "max": [
-    228.9,
-    1790.5,
+    222.8,
+    1779.9,
     170.4
    ],
-   "tris": 91062,
-   "bytes": 1306544,
+   "tris": 91110,
+   "bytes": 1306652,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -55952,7 +55952,7 @@
     376.6
    ],
    "tris": 54338,
-   "bytes": 927728,
+   "bytes": 927756,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -68324,7 +68324,7 @@
     554.6
    ],
    "tris": 43204,
-   "bytes": 911024,
+   "bytes": 911052,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
@@ -68723,7 +68723,7 @@
     410
    ],
    "tris": 43212,
-   "bytes": 909240,
+   "bytes": 909268,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,

@@ -501,7 +501,7 @@ if who.get('layered_waves'):
 # posed shape where the posture asks for it (cast.stretch 'raised_top': True; tailoring.relax_raised_top).
 if pose.get('raised_top'):
     for b in baked:
-        if b.name.replace('.baked', '').split('.', 1)[-1] in tailoring.TOPS: tailoring.relax_raised_top(b, rig)
+        if b.name.replace('.baked', '').split('.', 1)[-1] in tailoring.RAISED_TOPS: tailoring.relax_raised_top(b, rig)
 
 # Skin under clothing pokes through once the body is posed. Any body face with cloth just outside it goes.
 from mathutils.bvhtree import BVHTree  # noqa: E402

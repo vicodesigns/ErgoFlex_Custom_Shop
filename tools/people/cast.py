@@ -228,6 +228,7 @@ CHARACTERS = {
         'tint': {'namuhekam_male_polo_shirt': (.92, .48, .16), 'cortu_cargo_pants': (.2, .3, .45)},
     },
     'ines': {
+        'hairline': False,
         'name': 'Ines', 'phenotype': {'gender': .0, 'age': .167, 'muscle': .45, 'weight': .47, 'height': 0.635, 'proportions': .5, 'race': race(.6, .15, .25)},
         'skin': 'young_caucasian_female', 'eyes': 'brown', 'hair': 'braid01', 'hair_tint': (.16, .1, .06), 'eyebrows': 'eyebrow007', 'eyelashes': 'eyelashes02',
         'clothes': ['toigo_basic_tucked_t-shirt', 'toigo_wool_pants', 'shoes05'],
@@ -263,6 +264,7 @@ CHARACTERS = {
         'gear': [('hip_badge', {}), ('lanyard', {'color': (.04, .04, .05), 'stripe': (.1, .2, .5)})], 'postures': POLICE_POSTURES,
     },
     'okoye': {
+        'hairline': False,
         'name': 'Okoye', 'role': 'security officer', 'phenotype': {'gender': .0, 'age': .57, 'muscle': .6, 'weight': .55, 'height': 0.56, 'proportions': .6, 'race': race(.05, .9, .05)},
         'skin': 'young_african_female', 'eyes': 'brown', 'hair': 'braid01', 'hair_tint': (.04, .035, .03), 'eyebrows': 'eyebrow007', 'eyelashes': 'eyelashes02',
         'clothes': ['namuhekam_male_polo_shirt', 'toigo_wool_pants', 'shoes04'], 'tuck': ['namuhekam_male_polo_shirt'],
@@ -395,6 +397,7 @@ CHARACTERS = {
         'carry': {'walk': [('backpack', {'color': (.1, .1, .12)})]}, 'postures': STUDENT_POSTURES,
     },
     'fern': {
+        'hairline': False,
         'name': 'Fern', 'role': 'student', 'phenotype': {'gender': .0, 'age': .24, 'muscle': .45, 'weight': .47, 'height': 0.6, 'proportions': .5, 'race': race(1, 0, 0)},
         'skin': 'young_caucasian_female', 'eyes': 'green', 'hair': 'braid01', 'hair_tint': (.5, .22, .1), 'eyebrows': 'eyebrow006', 'eyelashes': 'eyelashes02',
         'clothes': ['female_casualsuit01', 'shoes06'], 'carry': {'walk': [('backpack', {'color': (.2, .5, .3)})]}, 'postures': STUDENT_POSTURES,
@@ -1642,6 +1645,11 @@ for _who in ('maya', 'noah', 'ava', 'mia', 'lin', 'kai', 'omar', 'andre', 'sofia
 # body (its film placements stand her 40 mm nearer the keys, reach 850), so her elbows bend to 90 degrees over level
 # forearms (rig measure: elbow 90, forearm 0, upper arm 15 forward; without it 101 / -1 / 19).
 NUDGE['people-maya-stand-type-41'] = {'hand_l': (0, .04, 0), 'hand_r': (0, .04, 0)}
+# The stretch (arms up, hands a little wider than the shoulders) for those whose hair or head is fuller than Priya's: the hands
+# go further out (metres, each hand away from the head) so the arms clear it at both ends of the motion's side bend
+# (the smallest arm to head/hair gap over a stretch cycle was under 10 mm with the shared pose; tools/people notes of Nov 24).
+for _who, _out in {'leo': .065, 'lin': .06, 'rosa': .045, 'eli': .05, 'sam': .05, 'mia': .035, 'omar': .03}.items():
+    NUDGE[(_who, 'stretch')] = {'hand_l': (_out, 0, 0), 'hand_r': (-_out, 0, 0)}
 # Sofia's laptop has its own keyboard above the tabletop. Set her wrists
 # and finger arch against that surface so the fingers clear the palm rest.
 NUDGE['people-sofia-sit-laptop'] = {
