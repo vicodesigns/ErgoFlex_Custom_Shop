@@ -18,7 +18,7 @@
 //   the state at any second depends on nothing else and scrubbing gives the same frames as playing.
 // Everything else (breathing, the head, weight shifts, typing fingers) is layered on from time and a seed.
 import * as THREE from 'three';
-import { lapPose } from './people-lap.mjs';
+import { lapPose } from './people-lap.mjs?v=people-lap-20261124b';
 
 const V = () => new THREE.Vector3(), Q = () => new THREE.Quaternion();
 const clamp01 = x => x < 0 ? 0 : x > 1 ? 1 : x;
@@ -618,8 +618,9 @@ export class DeskActor {
 export function drawPose(rig, drawn, dz = 0, pose = null, hold = false, lap = !!drawn?.lap) {
     if (!drawn) return;
     // (someone in a wheelchair: the hands and forearms are kept out of the thighs whatever the pose, the pose keys and the blend left them
-    // at, people-lap.mjs; `lap`: the model is a watcher's, or the change is to or from one's)
-    if (!hold && lap) pose = lapPose(rig, pose);
+    // at, people-lap.mjs; `lap`: true for a model at rest (the lift from how deep the hand would be), or the lifts { l, r } a change's plan
+    // has for this moment of it (room-people.mjs: one smooth move from the rims to the lap, lapPlan))
+    if (!hold && lap) pose = lapPose(rig, pose, typeof lap === 'object' ? lap : null);
     for (let i = 0; i < rig.n; i++) {
         const name = rig.names[i], bone = drawn.bones.get(name); if (!bone || name === 'still') continue;
         if (hold) continue;   // (the pose editor measures its turns from `rest`: it stays with the bones while one is dragged)

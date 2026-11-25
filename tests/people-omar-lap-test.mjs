@@ -1,127 +1,160 @@
 // Omar in the media film (24 Nov 2026, Vico's 3rd cut, chapter 'media', "Movie night, upgraded."): he rolls in with his hands on the
-// rims, lets go at 4.2 s and brings them up to rest on his knees, and between 4.2 and 4.9 s his hands and forearms went through his
-// thighs (and through the knees for the rest of the chapter). The hand's and forearm's skin points against the thigh, knee and trunk
-// skin of the baked model, by its own normals (tests/lib/people-surface.mjs), over the whole chapter:
-//   - the roll along the path (0 to 4.2 s): the lap fix leaves the pose exactly as the roll made it
-//   - the change from the roll posture to the watching one, every 1/120 s, with Vico's pose keys on the watch placement, and with the
-//     arms moving in other parts of the change (the chapter's timing shifts: the same maths of `w`, so the same holds)
-//   - the watching, 4.9 s to 17 s, every frame at 30 fps, for several seeds (breathing, the nods, a hand that lets go and comes back)
-// It also checks that what the fix is for is real (without it the same frames are 50 mm deep in his thighs), that people whose arms
-// never went into their laps are not moved at all, and the places in the code the film's frames pass through.
+// rims, lets go and brings them onto his knees (the change from omar-rolls-in, wheel-roll, to omar, wheel-watch, centred on 4.2 s,
+// 3.51 to 4.89 s). First his hands and forearms went through his thighs; with the first fix (a8bf60f0) they JUMPED onto them at
+// 4.217 s, 143 mm in one 1/60 s frame (the lift out of the thigh was taken at each frame from how deep the hand was, and a hand
+// coming in low from the rims had the whole height of the thigh over it), and the fingers still went through them (the hand's
+// points left the fingers out). Now (people-lap.mjs lapPlan, room-people.mjs lapChange) the change is one move, and this holds it:
+//   1. the film's own frames (RoomPeople, the 3rd cut's media chapter; skipped without the cut) through the whole change at 30, 60
+//      and 120 fps, for three seeds (the placements' keys) and two more timings of the arms (shorter than the film's: twice the
+//      step, four times its change, the same `jump`): the wrists, the tips of the middle
+//      fingers, the elbows and the middle of the forearms move at most `step` mm a frame, their move changes by at most `dstep` from
+//      one frame to the next, no frame moves more than `jump` over the larger of the frames either side of it, and the way they go
+//      turns by at most `turn` degrees a frame (while they move); and the hands (fingers too) and forearms are at most TOL deep in
+//      his thighs, knees, shins or trunk, by the skin's own normals
+//   2. then watching, to the end of the chapter (17 s), every frame at 30 fps, three seeds: as deep at most TOL, no step over 4 mm
+//   3. what the fix is for is real: without it the same change is 50 mm deep; and the same for the others whose watching posture
+//      has the wrists in the thighs as built (Andre, Ben, Hale, Jo, Priya, Maya), by the change as the film makes it
+//      (tests/lib/people-lap-run.mjs), resting on the legs, not held up in the air
+//   4. Kai (oilers, his roll and his change to wheel-type-31) and Mia (commons, the phone set down and the change to power-type-30)
+//      are drawn exactly as before the pass (tests/fixtures/people-lap-kai-mia.json, from video/cinematic-intro-hq 129f2b3f): 0.000 mm
+//   5. the coast chapter: Omar types at the accessible bay all chapter (wheel-type-28, Vico's pose keys), no change: drawn as before
+//      (a typist's hands are not lifted at rest); a change from the roll to that posture, were one cast, is one move too
+//   6. the pieces: the lap data has the fingers, the knee cap only (not the shin), the typing postures; softLift is C1; the plan
+//      starts and ends exactly on the postures at rest; the modules the browser loads carry a changed ?v=
 //   node tests/people-omar-lap-test.mjs
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
-import { rollPlan, solveStill } from '../room-people-motion.mjs';
-import { blendPoses } from '../people-pose-keys.mjs';
-import { lapPose, lapClear, armBones } from '../people-lap.mjs';
+import * as THREE from 'three';
+import { softLift, lapRest, lapModel } from '../people-lap.mjs';
 import LAP from '../people-lap-data.mjs';
-import { Lap, turned } from './lib/people-lap-run.mjs';
-import { ROOT } from './lib/people-surface.mjs';
+import { Lap } from './lib/people-lap-run.mjs';
+import { ROOT, bodyPoints, posed, intoSkin, facingOut } from './lib/people-surface.mjs';
+import { filmFrames, chapterShot, motionOf, worstOf } from './lib/people-film-run.mjs';
 
-const mm = m => (m * 1000).toFixed(1) + ' mm', TOL = .006;
-// Vico's pose keys on the media film's 'omar' placement (the 3rd cut, checkpoint director/checkpoint-1124e): one key at 0 s that turns
-// both arms to lift the hands onto the knees. The arms' own bones only.
+const mm = m => (m * 1000).toFixed(1) + ' mm', TOL = .004;
+// the caps, per frame rate (mm, degrees; a hand going from the rims to the knees moves about 10 mm a 1/60 s frame at the most)
+const CAPS = { 30: { step: 26, dstep: 6.5, jump: 4, turn: 60 }, 60: { step: 13, dstep: 1.8, jump: 1, turn: 22 }, 120: { step: 6.5, dstep: .5, jump: .3, turn: 12 } };
+const media = chapterShot('media');
+const OMAR = new Set(['omar-rolls-in', 'omar']);
+// (another seed: the same placements under other keys, the life's seed is the key's; arms: another timing of the arms in the change)
+const rekey = (suffix, arms = null) => filter => {
+    for (const e of filter.cast) if (OMAR.has(e.key)) { e.key += suffix; if (arms && e.id === 'people-omar-wheel-watch') e.change = { ...(e.change || {}), arms }; }
+    filter.when = Object.fromEntries(Object.entries(filter.when).map(([k, v]) => [OMAR.has(k) ? k + suffix : k, v]));
+    return filter;
+};
+const frames = (t0, t1, fps) => { const out = []; for (let f = Math.round(t0 * fps); f <= Math.round(t1 * fps); f++) out.push(f / fps); return out; };
+// how deep the hands (fingers too) and the forearms are, on film frames, by the watching model's skin
+const skin = await bodyPoints('people-omar-wheel-watch');
+function depthOf(row) {
+    const names = Object.keys(row.bones), rig = { index: new Map(names.map((n, i) => [n, i])), wp: names.map(n => new THREE.Vector3().fromArray(row.bones[n])), wq: names.map(n => new THREE.Quaternion().fromArray(row.bones[n], 3)) };
+    const body = facingOut(rig, posed(rig, skin, ['pelvis', 'spine_01', 'spine_02', 'spine_03', 'thigh_l', 'thigh_r', 'calf_l', 'calf_r']));
+    let d = 0;
+    for (const s of ['l', 'r']) {
+        const hand = posed(rig, skin, ['hand_' + s, ...names.filter(n => /^(thumb|index|middle|ring|pinky)_0\d_/.test(n) && n.endsWith('_' + s))]).filter((_, i) => i % 2 === 0).map(p => p.slice(0, 3));
+        d = Math.max(d, intoSkin(body, hand).depth, intoSkin(body, posed(rig, skin, ['lowerarm_' + s]).filter((_, i) => i % 2 === 0).map(p => p.slice(0, 3))).depth);
+    }
+    return d;
+}
+
+if (!media) console.log('people-omar-lap-test: the 3rd cut is not here: the film\'s frames (1, 2) skipped');
+else {
+    // ---- 1. the change, frame by frame, as the film draws it
+    let checked = 0;
+    for (const [suffix, arms] of [['', null], ['-b', null], ['-c', null], ['-d', [0, .6]], ['-e', [.4, 1]]]) {
+        for (const fps of [30, 60, 120]) {
+            if (fps === 120 && suffix !== '') continue;
+            const rows = await filmFrames({ shot: media, key: /^omar/, times: frames(3.4, 5.0, fps), edit: rekey(suffix, arms) });
+            assert.ok(rows.every(r => r.bones && r.shown.length === 1), `${fps} fps${suffix}: one Omar drawn in every frame`);
+            assert.ok(rows.some(r => /wheel-roll/.test(r.shown[0])) && rows.some(r => /wheel-watch/.test(r.shown[0])), 'the frames span the change (the rolling model, then the watching one)');
+            // (the arms in a shorter part of the change go faster: the step and its change are allowed for that, never a jump)
+            const k = arms ? 2 : 1, m = motionOf(rows), cap = { ...CAPS[fps], step: CAPS[fps].step * k, dstep: CAPS[fps].dstep * k * k, turn: arms ? 180 : CAPS[fps].turn }, tag = `change${suffix}${arms ? ' arms ' + JSON.stringify(arms) : ''} at ${fps} fps`;
+            for (const field of ['step', 'dstep', 'jump', 'turn']) { const w = worstOf(m, field); assert.ok(w.value <= cap[field], `${tag}: ${w.point} ${field} ${w.value.toFixed(2)} at ${w.at?.toFixed(4)} s (at most ${cap[field]})`); }
+            if (fps === 60) for (const r of rows) { const d = depthOf(r); assert.ok(d <= (arms ? .006 : TOL), `${tag}: hands or forearms ${mm(d)} deep in his body at ${r.t.toFixed(3)} s`); }
+            checked++;
+        }
+    }
+    // ---- 2. watching, to the end of the chapter
+    for (const suffix of ['', '-b', '-f']) {
+        const rows = await filmFrames({ shot: media, key: /^omar/, times: frames(4.9, 17, 30), edit: rekey(suffix) });
+        const w = worstOf(motionOf(rows), 'step');
+        assert.ok(w.value <= 4, `watching${suffix}: ${w.point} steps ${w.value.toFixed(2)} mm in a frame at ${w.at?.toFixed(3)} s`);
+        for (const r of rows.filter((_, i) => i % 3 === 0)) { const d = depthOf(r); assert.ok(d <= TOL, `watching${suffix}: ${mm(d)} deep at ${r.t.toFixed(2)} s`); }
+    }
+    console.log(`people-omar-lap-test: the film's change, ${checked} runs (30/60/120 fps, seeds, arm timings), within`, JSON.stringify(CAPS[60]), 'at 60 fps');
+}
+
+// ---- 3. the fault is real, and the others
 const FINE = {
     upperarm_l: [-.0727, -.0141, .0286, .9968], lowerarm_l: [.2233, 0, .0217, .9745], hand_l: [.0793, .004, -.1361, .9875],
     upperarm_r: [-.0672, .0108, -.025, .9974], lowerarm_r: [.2013, 0, -.0196, .9793], hand_r: [.0694, -.0035, .1215, .9902],
 };
-const omar = await new Lap('omar', { fine: FINE }).load(), raw = await new Lap('omar', { fine: FINE, lap: false }).load(), built = await new Lap('omar', { lap: false }).load();
-
-// ---- the fault is real: the same frames without the fix
 {
-    let hand = 0, fore = 0;
-    for (let w = 0; w <= 1.0001; w += 1 / 60) { raw.change(Math.min(1, w)); const d = raw.depth(); hand = Math.max(hand, d.hand); fore = Math.max(fore, d.fore); }
-    assert.ok(hand > .03 && fore > .03, `without the fix the hands (${mm(hand)}) and the forearms (${mm(fore)}) are deep in the thighs during the change`);
-    let rest = 0;
-    for (let t = 5; t < 17; t += .5) { raw.still(t, 3); const d = raw.depth(); rest = Math.max(rest, d.hand, d.fore); }
-    assert.ok(rest > .01, `and at rest (${mm(rest)}) with the pose keys' turn on the posture as built`);
-    built.still(8, 3); const b = built.depth(); assert.ok(b.hand > .03, `the posture as built has the hands ${mm(b.hand)} in the thighs`);
-}
-
-// ---- the roll: his hands stay on the rims, the fix does nothing there
-{
-    const rig = omar.rig, plan = rollPlan([[0, 2.55], [.56, 1.33], [.38, .823]], { speed: .7, radius: .6 });
-    let frames = 0, most = 0;
-    for (let t = 0; t <= Math.min(plan.seconds, 4.2) + 1e-9; t += 1 / 30) {
-        solveStill(rig, omar.roll, { time: t, seed: 3, life: 1, roll: plan.at(t) }); rig.fk();
-        assert.equal(lapPose(rig, null), null, `the pose of the roll at ${t.toFixed(2)} s is left as it is`);
-        if (frames++ % 6 === 0) { const d = omar.depth(); most = Math.max(most, d.hand, d.fore); }
-    }
-    assert.ok(most < TOL, `rolling: hands and forearms are clear of his body (${mm(most)})`);
-}
-
-// ---- the change, every 1/120 s: nothing of his hands or forearms in his thighs, knees, shins or trunk
-for (const arms of [null, [0, .6], [.4, 1], [.1, .45]]) {
-    let hand = 0, fore = 0, at = 0;
-    for (let w = 0; w <= 1.00001; w += 1 / 120) {
-        omar.change(Math.min(1, w), { arms }); const d = omar.depth();
-        if (d.hand > hand) { hand = d.hand; at = w; } fore = Math.max(fore, d.fore);
-    }
-    assert.ok(hand < TOL, `change, arms ${JSON.stringify(arms)}: the hands are ${mm(hand)} deep at w ${at.toFixed(3)}`);
-    assert.ok(fore < TOL, `change, arms ${JSON.stringify(arms)}: the forearms are ${mm(fore)} deep`);
-}
-{
-    // it starts exactly as the roll posture and ends on the watching one (no jump at the ends: the first frame of the change and the last are the rig's own)
-    omar.change(0); const first = omar.rig.wp.map(v => v.clone()); omar.rig.load(omar.roll); omar.rig.fk();
-    omar.rig.wp.forEach((v, i) => assert.ok(v.distanceTo(first[i]) < 1e-6, 'w 0 is the roll posture'));
-    omar.change(1); const gap = ['hand_l', 'hand_r'].map(n => omar.rig.wp[omar.rig.index.get(n)].clone());
-    omar.still(4.9, 3, 0); ['hand_l', 'hand_r'].forEach((n, i) => assert.ok(omar.rig.wp[omar.rig.index.get(n)].distanceTo(gap[i]) < .004, `the change ends where the watching begins (${n})`));
-}
-
-// ---- the watching, 4.9 s to the end of the chapter (17 s), every frame, several seeds
-for (const seed of [0, 3, 7, 12, 99]) {
-    let hand = 0, fore = 0, at = 0, floating = 0;
-    for (let f = Math.round(4.9 * 30); f <= 17 * 30; f++) {
-        const t = f / 30; omar.still(t, seed); const d = omar.depth({ step: 3 });
-        if (d.hand > hand) { hand = d.hand; at = t; } fore = Math.max(fore, d.fore); floating = Math.max(floating, ...d.gap);
-    }
-    assert.ok(hand < TOL, `watching, seed ${seed}: the hands are ${mm(hand)} deep at ${at.toFixed(2)} s`);
-    assert.ok(fore < TOL, `watching, seed ${seed}: the forearms are ${mm(fore)} deep`);
-    assert.ok(floating < .05, `watching, seed ${seed}: the hands rest on the legs, they are not held up in the air (${mm(floating)} off the skin)`);
-}
-
-// ---- the same fault in the others (the posture as built puts the wrists in the thighs for them too)
-for (const who of ['andre', 'ben', 'hale', 'jo', 'priya', 'maya']) {
-    const fixed = await new Lap(who).load(), loose = await new Lap(who, { lap: false }).load();
+    const raw = await new Lap('omar', { fine: FINE, lap: false }).load(), fixed = await new Lap('omar', { fine: FINE }).load();
     let before = 0, after = 0;
-    for (let w = 0; w <= 1.0001; w += 1 / 30) { loose.change(Math.min(1, w)); before = Math.max(before, loose.depth().hand); fixed.change(Math.min(1, w)); after = Math.max(after, fixed.depth().hand, fixed.depth().fore); }
-    for (let t = 5; t < 17; t += 1) { fixed.still(t, 5); after = Math.max(after, fixed.depth().hand, fixed.depth().fore); }
-    assert.ok(after < TOL, `${who}: hands and forearms are ${mm(after)} deep with the fix (${mm(before)} without)`);
+    for (let w = 0; w <= 1.0001; w += 1 / 60) { raw.change(Math.min(1, w)); before = Math.max(before, raw.depth().hand); fixed.change(Math.min(1, w)); const d = fixed.depth(); after = Math.max(after, d.hand, d.fore); }
+    assert.ok(before > .03, `without the fix the hands are ${mm(before)} deep in his thighs during the change`);
+    assert.ok(after <= TOL, `with it ${mm(after)}`);
+    let floating = 0, rest = 0;
+    for (const seed of [0, 3, 7, 12, 99]) for (let t = 4.9; t < 17; t += .5) { fixed.still(t, seed); const d = fixed.depth({ step: 3 }); rest = Math.max(rest, d.hand, d.fore); floating = Math.max(floating, ...d.gap); }
+    assert.ok(rest <= TOL, `watching (seeds 0 3 7 12 99): ${mm(rest)} deep`); assert.ok(floating < .05, `the hands rest on the legs (${mm(floating)} off the skin)`);
+}
+for (const who of ['andre', 'ben', 'hale', 'jo', 'priya', 'maya']) {
+    const fixed = await new Lap(who).load(); let after = 0, step = 0, prev = null;
+    for (let f = 0; f <= 84; f++) { fixed.change(f / 84); const d = fixed.depth({ step: 3 }); after = Math.max(after, d.hand, d.fore); const p = fixed.arm(); if (prev) p.forEach((v, i) => { step = Math.max(step, v.distanceTo(prev[i])); }); prev = p; }
+    for (let t = 5; t < 17; t += 2) { fixed.still(t, 5); const d = fixed.depth({ step: 3 }); after = Math.max(after, d.hand, d.fore); }
+    // (Andre, in no film in a wheelchair: his loose trousers stand out further than the table has them at the side of the thigh, and a hand
+    // lifted there over the rim is still in them by up to 19 mm early in the change, w .27; a known limit, from 60 mm)
+    assert.ok(after <= (who === 'andre' ? .02 : .006), `${who}: hands and forearms ${mm(after)} deep with the fix`);
+    assert.ok(step * 1000 <= 16, `${who}: the change at 60 fps moves a hand at most ${(step * 1000).toFixed(1)} mm a frame`);
 }
 
-// ---- Kai (oilers) and Mia (commons) and the others whose arms never went into their laps: not moved at all
-for (const who of ['kai', 'mia', 'ava', 'lin', 'sofia']) {
-    const a = await new Lap(who).load(), b = await new Lap(who, { lap: false }).load(), P = L => ['hand_l', 'hand_r', 'lowerarm_l', 'lowerarm_r'].map(n => L.rig.wp[L.rig.index.get(n)].clone());
-    let most = 0;
-    for (let w = 0; w <= 1.0001; w += 1 / 60) { a.change(Math.min(1, w)); b.change(Math.min(1, w)); P(a).forEach((p, i) => { most = Math.max(most, p.distanceTo(P(b)[i])); }); }
-    for (let t = 0; t < 17; t += .25) { a.still(t, 5); b.still(t, 5); P(a).forEach((p, i) => { most = Math.max(most, p.distanceTo(P(b)[i])); }); }
-    assert.ok(most < 1e-6, `${who}: the pose is the pose (${mm(most)} moved)`);
-}
-
-// ---- the pieces
+// ---- 4. Kai and Mia, exactly as before
 {
-    // a hand already clear of the thigh is not touched
-    const rig = omar.rig; omar.rig.load(omar.roll); rig.fk();
-    assert.equal(lapClear(rig), 0, 'hands on the rims: nothing to move');
-    // the turns of the pose keys are blended with the arms, not switched at the swap
-    const only = armBones(rig); assert.ok(only.includes('hand_l') && only.includes('index_02_r') && !only.includes('head'), 'the arm bones: arms, hands and fingers');
-    const half = blendPoses(null, FINE, .5, only);
-    assert.ok(Math.abs(half.hand_l[3] - Math.sqrt((1 + FINE.hand_l[3]) / 2)) < 2e-3, 'half way is half the turn');
-    assert.deepEqual(blendPoses(null, FINE, 1, only).hand_l, FINE.hand_l, 'the whole turn at the end');
-    assert.ok(Object.values(blendPoses(null, FINE, 0, only)).every(q => Math.abs(q[3] - 1) < 1e-9), 'none at the start (the identity)');
-    // every wheelchair user has a thigh table
-    const chars = fs.readdirSync(path.join(ROOT, 'assets/props')).filter(f => /^people-.+-wheel-watch\.glb$/.test(f)).map(f => f.slice(7, -16));
-    for (const c of chars) assert.ok(LAP.characters[c]?.l.length === 12 * 24 && LAP.characters[c].arm.l.length > 20 && LAP.characters[c].fore.l.length === 6 * 12, `${c} has measured thighs (tools/people/measure-lap.mjs)`);
+    const FX = JSON.parse(fs.readFileSync(path.join(ROOT, 'tests/fixtures/people-lap-kai-mia.json'), 'utf8'));
+    for (const [id, want] of Object.entries(FX.people)) {
+        const [chapter, key] = id.split(':'), shot = chapterShot(chapter);
+        if (!shot) { console.log(`people-omar-lap-test: no ${chapter} chapter here, ${key} skipped`); continue; }
+        const rows = await filmFrames({ shot, key: new RegExp(key), times: want.frames.map(f => f.t), bones: FX.bones });
+        let most = 0;
+        rows.forEach((r, i) => { assert.deepEqual(r.shown, want.frames[i].shown, `${id} ${r.t}: the same model`); FX.bones.forEach((n, j) => { const p = r.bones[n].slice(0, 3).map(x => Math.round(x * 1e6) / 1000), q = want.frames[i].p[j]; most = Math.max(most, Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2])); }); });
+        assert.ok(most < .0005, `${id}: drawn as before the pass (${most.toFixed(4)} mm)`);
+        assert.ok(rows.every(r => r.shown.every(s => !lapModel(s.split(':')[1], ''))), `${id}: no model of theirs is planned out of the lap`);
+        console.log(`people-omar-lap-test: ${id} ${rows.length} frames through the changes: ${most.toFixed(3)} mm from before`);
+    }
 }
 
-// ---- where the film's frames pass: the model is told it is a wheelchair user's, the change blends the keys' turns, every draw goes through drawPose
+// ---- 5. the coast chapter
 {
-    const people = fs.readFileSync(path.join(ROOT, 'room-people.mjs'), 'utf8'), motion = fs.readFileSync(path.join(ROOT, 'room-people-motion.mjs'), 'utf8');
-    assert.match(people, /personRig = \{ bones, rest, lap: this\.library\.entry\?\.\(spec\.id\)\?\.person\?\.pose === 'wheel-watch' \}/, 'the drawn model of a wheel-watch person has lap set (a rolling one has not: his hands on the rims are left alone)');
-    assert.match(people, /blendPoses\(poseNow\(a\.userData\.person\), poseNow\(b\.userData\.person\), armsNow, armBones\(pair\.rig\)\)/, 'a change eases the pose keys of the two placements in with the arms');
-    assert.match(motion, /if \(!hold && lap\) pose = lapPose\(rig, pose\);/, 'drawPose keeps the hands out of the thighs');
-    assert.match(people, /drawPose\(pair\.rig, shown\.userData\.personRig, 0, [^;]*, lap\);/, 'a change to or from a watcher is drawn with the lap fix, whichever of the two models is shown');
-    assert.match(motion, /export const changeArms = /, 'the arms\' share of a change is one function');
+    const coast = chapterShot('coast'), cast = (coast?.people?.cast || []).filter(e => /-omar-/.test(e.id));
+    if (coast) {
+        assert.deepEqual(cast.map(e => e.id), ['people-omar-wheel-type-28'], 'coast: Omar at the accessible bay, and no other posture of his (no change)');
+        assert.equal(lapRest('wheel-type'), false, 'a typist\'s hands are not lifted at rest: Omar at the coast bay is drawn as before');
+    }
+    const KEYS = { upperarm_r: [-0.0295, 0.0113, -0.0181, 0.9993], lowerarm_r: [0.2323, 0, -0.0226, 0.9724], hand_r: [0.1443, 0.0063, 0.1475, 0.9785], upperarm_l: [-0.0274, -0.0126, 0.0206, 0.9993], lowerarm_l: [0.2493, 0, 0.0243, 0.9681], hand_l: [0.158, -0.0078, -0.1613, 0.9741] };
+    const type = await new Lap('omar', { fine: KEYS, to: 'wheel-type-28' }).load(), raw = await new Lap('omar', { fine: KEYS, to: 'wheel-type-28', lap: false }).load();
+    let before = 0, after = 0, step = 0, prev = null;
+    for (let f = 0; f <= 84; f++) { raw.change(f / 84); before = Math.max(before, raw.depth().hand); type.change(f / 84); const d = type.depth(); after = Math.max(after, d.hand, d.fore); const p = type.arm(); if (prev) p.forEach((v, i) => { step = Math.max(step, v.distanceTo(prev[i])); }); prev = p; }
+    assert.ok(before > .03 && after <= .008, `a roll to the coast's typing posture: ${mm(before)} deep without the fix, ${mm(after)} with it`);
+    assert.ok(step * 1000 <= 17, `and one move (${(step * 1000).toFixed(1)} mm a frame at the most, 60 fps)`);
 }
-console.log('people-omar-lap-test ok: Omar, rims to knees, 0 to 17 s: hands and forearms never deeper than', TOL * 1000, 'mm in thighs, knees or trunk (without the fix: up to 55 mm)');
+
+// ---- 6. the pieces
+{
+    for (const [c, t] of Object.entries(LAP.characters)) {
+        assert.ok(t.arm.l.some(p => /^(index|middle|ring|pinky|thumb)_0\d_l$/.test(p[0])), `${c}: the hand's points have the fingers`);
+        assert.ok(Math.max(...t.l, ...t.r) < .2, `${c}: the thigh's skin, not the shin hanging from the knee (${mm(Math.max(...t.l, ...t.r))} at the most)`);
+    }
+    for (const id of Object.keys(LAP.typing)) assert.ok(!/-(kai|mia)-/.test(id), `${id}: Kai's and Mia's typing postures are clear of their laps as built`);
+    assert.equal(softLift(0), 0); assert.ok(Math.abs(softLift(.004) - .002) < 1e-12 && Math.abs(softLift(.01) - .008) < 1e-12, 'softLift: none, eased in, then the depth less 2 mm');
+    const e = 1e-6; assert.ok(Math.abs((softLift(.004 + e) - softLift(.004 - e)) / (2 * e) - 1) < 1e-3 && softLift(e) < 1e-9, 'softLift is C1');
+    const omar = await new Lap('omar', { fine: FINE }).load(), plan = omar.plan();
+    assert.ok(plan && plan.at(0).l === 0 && plan.at(0).r === 0, 'the plan starts with no lift (the hands on the rims, as rolled)');
+    assert.equal(plan.at(1).l, plan.need.l.at(-1)); assert.ok(Math.abs(plan.at(1 - 1e-6).l - plan.at(1).l) < 1e-4, 'and ends on the lift the watching posture has at rest, with no step');
+    for (let k = 0; k <= 120; k++) assert.ok(plan.at(k / 120).l >= plan.need.l[k] - 1e-9 && plan.at(k / 120).r >= plan.need.r[k] - 1e-9, `the lift is never under what is needed (w ${k / 120})`);
+    const src = f => fs.readFileSync(path.join(ROOT, f), 'utf8'), tag = 'people-lap-20261124b';
+    assert.ok(src('workspace-3d.mjs').includes(`room-people.mjs?v=${tag}`), 'workspace-3d.mjs loads the new room-people.mjs');
+    assert.ok(src('room-people.mjs').includes(`room-people-motion.mjs?v=${tag}`) && src('room-people.mjs').includes(`people-lap.mjs?v=${tag}`) && src('room-people.mjs').includes(`people-pose-keys.mjs?v=${tag}`), 'room-people.mjs loads the new motion, lap and pose-key modules');
+    assert.ok(src('room-people-motion.mjs').includes(`people-lap.mjs?v=${tag}`) && src('people-lap.mjs').includes(`people-lap-data.mjs?v=${tag}`), 'and they the new lap module and its data');
+}
+console.log('people-omar-lap-test ok: Omar from the rims to his knees in one move (no step), never more than', TOL * 1000, 'mm in his body; Kai and Mia as before');

@@ -97,12 +97,12 @@ import { mediaPersonMaterial, castDetailEnsure, castDetailCast, castDetailVarian
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
 import {updateSkinnedBounds} from './skinned-bounds.mjs';
-import {poseAt, blendPoses} from './people-pose-keys.mjs';
-import {armBones} from './people-lap.mjs';
+import {poseAt, blendPoses} from './people-pose-keys.mjs?v=people-lap-20261124b';
+import {armBones,lapPlan,lapModel,lapRest,handsAt,turnHands,handTurnAt} from './people-lap.mjs?v=people-lap-20261124b';
 import {applyHeld} from './people-held.mjs';
 import {partsOf} from './people-held-data.mjs';
 import {postureRecord,postureRecords,hasPosturePose,poseOwner,sourceOf,roomEditKey,blendPosturePoses} from './people-postures.mjs';
-import { PersonRig, DeskActor, solveStill, solveChange, changeArms, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, squatKey, WORKOUTS, drawPose, livelyPose, seedOf, placeGrip, handsKey } from './room-people-motion.mjs?v=people-place-20261124c';
+import { PersonRig, DeskActor, solveStill, solveChange, changeArms, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, squatKey, WORKOUTS, drawPose, livelyPose, seedOf, placeGrip, handsKey } from './room-people-motion.mjs?v=people-lap-20261124b';
 // Room looks (room-looks.mjs): the Nov 17 pass's cast finishes (own materials, hair / shirt maps) are the refreshed Create
 // room's and the Commons'; Create's Classic look keeps the cast as it was, and its people move as they did then
 // (rig.classicMotion: room-people-motion.mjs's painting, pottery and page-turn strokes from before the pass).
@@ -142,6 +142,8 @@ const BEHIND_KEYS = { sit: 470, wheel: 460, stand: 415 };
 // Seconds a change of posture on the spot takes (solveChange): 1.4, up to 2.4 where the hips rise or sink (getting up, sitting down).
 // Seconds the life (breathing, a look) takes to go out of a model before a film's change of posture and come into the next after it.
 const PAIR_EASE = .6;
+// (a wheelchair user's change that begins while the roll before it is still under way takes over from the roll over this much of it: lapChange)
+const ROLL_INTO = .3, NO_LIFT = Object.freeze({ l: 0, r: 0 }), lapQ = new THREE.Quaternion();
 const changeLength = (rig, from, to) => 1.4 + THREE.MathUtils.clamp(Math.abs(to.wp[rig.b.pelvis].y - from.wp[rig.b.pelvis].y) / .3, 0, 1);
 const HEIGHT_FIT = 1.4;                       // inches either side of the height a desk pose was built for
 const LIVELY = 4;                             // Studio, the old way (lively=0): the 4 nearest to the camera move, every frame
@@ -1360,7 +1362,9 @@ export class RoomPeople {
             const bones = new Map(), rest = new Map(); rigged.traverse(o => { if (o.isBone) { bones.set(o.name, o); rest.set(o.name, o.quaternion.clone()); } });
             rigged.name = object.name; rigged.position.copy(object.position); rigged.rotation.copy(object.rotation); rigged.visible = object.visible;
             for (const k of ['person', 'personFit', 'personChair', 'personChairBase', 'personMissing', 'personAmount', 'sceneAsset', 'sceneAssetKey', 'sceneAssetRole', 'editorId', 'personPlacement']) if (object.userData[k] !== undefined) rigged.userData[k] = object.userData[k];
-            rigged.userData.personRig = { bones, rest, lap: this.library.entry?.(spec.id)?.person?.pose === 'wheel-watch' };   // (lap: the hands rest on the thighs and are kept out of them, people-lap.mjs)
+            const pose = this.library.entry?.(spec.id)?.person?.pose;
+            // (lap: the hands rest on the thighs and are kept out of them, people-lap.mjs; lapChange: a change to or from it is one planned move, lapChange)
+            rigged.userData.personRig = { bones, rest, lap: lapRest(pose), lapChange: lapModel(spec.id, pose) };
             if (object.userData.personMaterials) { for (const m of object.userData.personMaterials) m.dispose(); this.ownMaterials(rigged); }
             else this.shareCastDetail(rigged);
             object.parent?.add(rigged); object.removeFromParent(); this.people[at] = rigged;
@@ -2345,7 +2349,7 @@ export class RoomPeople {
             if (!was) { this.later(this.readyChange(pair)); return pair; }
             const changed = !same(was.from, pair.from) || !same(was.to, pair.to) || was.at !== pair.at;
             was.from = pair.from; was.to = pair.to; if (pair.at !== null) was.at = pair.at;   // (retimed: at its new moment from now on)
-            if (changed) this.later(this.readyChange(pair).then(() => { if (pair.ready && this.pairs.includes(was)) { for (const k of ['rig', 'keyFrom', 'keyTo', 'homeFrom', 'homeTo', 'length', 'wheels']) was[k] = pair[k]; this.dirty = true; } }));
+            if (changed) this.later(this.readyChange(pair).then(() => { if (pair.ready && this.pairs.includes(was)) { for (const k of ['rig', 'keyFrom', 'keyTo', 'homeFrom', 'homeTo', 'length', 'wheels', 'rollFrom', 'rollRig']) was[k] = pair[k]; was.lapSign = null; this.dirty = true; } }));
             return was;
         });
     }
@@ -2396,14 +2400,74 @@ export class RoomPeople {
             const shown = (cut === null ? model === 'from' : w < cut) ? a : b;
             if (pair.to?.carry) this.carryArms(pair.rig, pair.to);   // (carrying: the hands stay on it all through the change)
             shown.position.lerpVectors(pair.homeFrom.position, pair.homeTo.position, ease); shown.rotation.y = pair.homeFrom.turn + (pair.homeTo.turn - pair.homeFrom.turn) * ease;
-            // (the arms' fine tuning (pose keys) of the two placements goes from the first's to the second's with the arms, not in one frame where the model is swapped: a
-            // turn made for the arms at rest on the knees, put on arms still half way from the rims, took the hands through the thighs. Wheelchair: and whatever of them is in the thigh is brought out over it, people-lap.mjs)
-            const lap = !!(a.userData.personRig?.lap || b.userData.personRig?.lap), armsNow = changeArms(w, part('arms')), pose = lap ? blendPoses(poseNow(a.userData.person), poseNow(b.userData.person), armsNow, armBones(pair.rig)) : null;
-            drawPose(pair.rig, shown.userData.personRig, 0, pose ? { ...poseNow(shown.userData.person), ...pose } : poseNow(shown.userData.person), typeof window !== 'undefined' && !!window.__directorDragging, lap);   // (hold: the Director's pose mode drags a bone of someone in the middle of a change)
-            if (shown === a && pair.wheels) turnWheels(shown.userData.personRig, pair.wheels);
+            // (a wheelchair user whose hands rest on the thighs, people-lap.mjs lapModel: lapChange, one move from the rims to the lap)
+            const lap = !!(a.userData.personRig?.lapChange || b.userData.personRig?.lapChange), hold = typeof window !== 'undefined' && !!window.__directorDragging;   // (hold: the Director's pose mode drags a bone of someone in the middle of a change)
+            if (lap) this.lapChange(pair, a, b, w, { arms: part('arms'), turnPart, step: plan?.step === true, line: plan?.hands === 'line', cut, film, time, hold });
+            else {
+                drawPose(pair.rig, shown.userData.personRig, 0, poseNow(shown.userData.person), hold, false);
+                if (shown === a && pair.wheels) turnWheels(shown.userData.personRig, pair.wheels);
+            }
             a.userData.personChanging = b.userData.personChanging = true; pair.live = true; this.dirty = true; out.set(a, { shown }); out.set(b, { shown });
         }
         return out;
+    }
+    // A change to or from a wheelchair user's model whose hands rest on the thighs (people-lap.mjs lapModel: Omar rolling in and letting
+    // go of the wheels to watch the film, 24 Nov 2026). Everything else of a change is drawn as for anyone (solveChange, the spot, the
+    // model swapped at `swap`), and:
+    //  - the arms' fine tuning (pose keys) of the two placements goes from the first's to the second's with the arms, not in one frame
+    //    where the model is swapped (a turn made for the arms at rest on the knees, put on arms still half way from the rims, took
+    //    the hands through the thighs and jumped them 77 mm in a 1/60 s frame)
+    //  - a film's change that begins while the roll before it is still under way (the chair still rolling, the trunk still leaning
+    //    into the last push, the life still in it) begins from the roll as drawn and takes over from it over ROLL_INTO of the change
+    //    (it began from the posture as built: an 18 mm jump of the hands in one frame)
+    //  - the hands are lifted clear of the thighs by a plan made once for the change (lapPlan, from the change's own poses every
+    //    1/120 of it): they lift clear while still at the rims, go over the thighs and come down onto them, one smooth move (the lift
+    //    at each frame from how deep the hand was then took it straight up the whole height of the thigh in one frame: 143 mm)
+    // The plan is made again when what it is made from changes (the pose keys of either placement, the timing).
+    lapChange(pair, a, b, w, { arms, turnPart, step, line, cut, film, time, hold }) {
+        const rig = pair.rig, names = armBones(rig), pa = poseNow(a.userData.person), pb = poseNow(b.userData.person), length = pair.length, lerp = THREE.MathUtils.lerp;
+        const start = film && Number.isFinite(pair.at) ? pair.at - length / 2 : null, roll = start !== null && pair.from?.roll && pair.rollFrom && pair.rollRig ? pair.from.roll : null;
+        const at = u => {
+            const ease = THREE.MathUtils.smoothstep(u, turnPart[0], turnPart[1]);
+            let shift = null;
+            if (step) {
+                const dx = (pair.homeTo.position.x - pair.homeFrom.position.x) / 1000, dz = (pair.homeTo.position.z - pair.homeFrom.position.z) / 1000, yaw = pair.homeFrom.turn, c = Math.cos(yaw), sn = Math.sin(yaw);
+                shift = { x: dx * c - dz * sn, z: dx * sn + dz * c, yaw: pair.homeTo.turn - pair.homeFrom.turn, e: ease };
+            }
+            const { model } = solveChange(rig, pair.keyFrom, pair.keyTo, u, arms, shift, line), shown = (cut === null ? model === 'from' : u < cut) ? a : b;
+            if (pair.to?.carry) this.carryArms(rig, pair.to);
+            const position = new THREE.Vector3().lerpVectors(pair.homeFrom.position, pair.homeTo.position, ease);
+            let turn = pair.homeFrom.turn + (pair.homeTo.turn - pair.homeFrom.turn) * ease, wheels = pair.wheels;
+            const k = roll ? THREE.MathUtils.smoothstep(u, 0, ROLL_INTO) : 1;
+            if (k < 1) {
+                // (the roll as rollAlong draws it at that second: where the chair is, the push, the lean, the life)
+                const t = start + u * length, r = pair.rollFrom.at(Math.max(0, t - (roll.start || 0))), from = pair.rollRig, life = a.userData.personLife;
+                const p0 = a.position.clone(), y0 = a.rotation.y; a.position.x = r.x * 1000; a.position.z = r.z * 1000; a.rotation.y = r.yaw;
+                const gaze = life ? this.gazeOf(a, life) : null; a.position.copy(p0); a.rotation.y = y0;
+                solveStill(from, life?.key || pair.keyFrom, { time: this.lifeClock + (t - time), seed: life?.seed ?? seedOf(this.keyOf(a.userData.person)), life: 1, roll: r, look: gaze?.at, lookAmount: gaze?.amount });
+                for (let i = 0; i < rig.n; i++) { lapQ.copy(rig.lq[i]); rig.lq[i].copy(from.lq[i]).slerp(lapQ, k); }
+                for (const i of [rig.b.Root, rig.b.pelvis]) rig.lp[i].lerpVectors(from.lp[i], rig.lp[i], k);
+                rig.fk();
+                position.x = lerp(r.x * 1000, position.x, k); position.z = lerp(r.z * 1000, position.z, k);
+                turn = r.yaw + (THREE.MathUtils.euclideanModulo(turn - r.yaw + Math.PI, Math.PI * 2) - Math.PI) * k;
+                if (wheels) wheels = { l: lerp(r.wheel.l, wheels.l, k), r: lerp(r.wheel.r, wheels.r, k) };
+            }
+            // (the hands turn to how they rest on the knees early, while they lift off the rims: people-lap.mjs turnHands)
+            const pose = turnHands(rig, { ...(poseNow(shown.userData.person) || {}), ...blendPoses(pa, pb, changeArms(u, arms), names) }, names, handTo, u < 1 ? handTurnAt(u, arms) : 0);
+            return { shown, position, turn, wheels, pose };
+        };
+        const sign = JSON.stringify([pa, pb, arms, cut, length, start, roll?.start ?? null, turnPart, step, line, pair.to?.carry || null, !!a.userData.personRig?.lap, !!b.userData.personRig?.lap]);
+        let handTo = null;
+        if (pair.lapSign !== sign) {
+            // (the hands' turn at the end of the change, in the model's frame: as they rest on the knees)
+            pair.lapHands = handsAt(rig, at(1).pose);
+            handTo = pair.lapHands; pair.lapSign = sign; pair.lapPlan = lapPlan(rig, u => at(u).pose, { ends: { from: !!a.userData.personRig?.lap, to: !!b.userData.personRig?.lap } });
+        }
+        handTo = pair.lapHands;
+        const now = at(w);
+        now.shown.position.copy(now.position); now.shown.rotation.y = now.turn;
+        drawPose(rig, now.shown.userData.personRig, 0, now.pose, hold, pair.lapPlan ? pair.lapPlan.at(w) : NO_LIFT);
+        if (now.shown === a && now.wheels) turnWheels(now.shown.userData.personRig, now.wheels);
     }
     // Both models with their skeletons, and the bone data: until then the two simply dissolve as before.
     async readyChange(change) {
@@ -2415,7 +2479,7 @@ export class RoomPeople {
         const home = o => ({ position: o.position.clone(), turn: o.rotation.y });
         // (someone who rolled there changes posture at the end of the path, not where they set off)
         const end = this.rollEnd(ra), rolled = change.from.roll && this.rollPath(ra, change.from.roll);
-        if (rolled) { const plan = rollPlan(rolled, this.rollOptions(change.from.roll)); change.wheels = plan.at(plan.seconds).wheel; }      // (its wheels as they came to rest)
+        if (rolled) { const plan = rollPlan(rolled, this.rollOptions(change.from.roll)); change.wheels = plan.at(plan.seconds).wheel; change.rollFrom = plan; change.rollRig = classicRig(new PersonRig(data), this.room); }      // (its wheels as they came to rest; the roll and a rig of its own for a change that starts while it is still under way: lapChange)
         // (someone who walks off from a change starts the walk standing, walkStance: the change ends there, not in the
         // walking posture as built, mid-stride)
         Object.assign(change, { rig, keyFrom: rig.key(change.from.id), keyTo: change.to.walk ? walkStance(rig, rig.key(change.to.id)) : this.handsBy(change.to) ? handsKey(rig, rig.key(change.to.id), this.handsBy(change.to)) : rig.key(change.to.id), homeFrom: end ? { position: end.position.clone(), turn: end.turn } : home(ra), homeTo: home(rb) });
