@@ -1,5 +1,6 @@
 import {titleLines,expandedLines,LINES,ANCHOR,FILM_W,FONT_REAL,DESC,BOX_BLUR,BOX_OPACITY,BLUR_SIGMA,chapterTitles,cutRule,timingNotes,cleanFilmTitles,shadowOf,fittedPaths,textBounds,lineState,pathTiming,restTime,svgPath,bounds,nearestOnPath,insertPoint,deletePoint,toggleSmooth,moveHandle,movePoint,transformPaths,pointCount,placeOf,newTitle,duplicateTitle,MAX_TITLES,NEW_TITLE_SECONDS,lineGaps,withGap,GAPS,SKEW_ITALIC,cleanTypography,FALLBACK,ASC,splitTitle,pasteTitles,shiftTitles,withLine,newTitleId} from './film-titles.mjs';
 import {stackRows,rowVar} from './lane-rows.mjs';
+import {endCardOf,mergedEndCard,cleanEndCard,logoBox,ctaLayout,spans as endSpans,filmFadeAt,logoAlpha,ctaState,CTA_FONTS,LOGO_DEFAULT,CTA_DEFAULT,LOGO_FADE} from './end-card.mjs';
 // Film titles in Director Mode: the TITLES lane (one block per title card: drag to move, edges to trim), the Title
 // inspector (copy, timing, shadow) and the title overlay in the 16:9 frame, drawn as finish-intro.py burns it in.
 // "Edit shadow shape" turns the overlay into a point editor for the soft shape behind the copy (Figma-style):
@@ -14,6 +15,8 @@ const FONT_URL=new URL('../app-reference/assets/google_fonts/',import.meta.url).
 const FAMILY={700:'EF Film Poppins Bold',600:'EF Film Poppins SemiBold',500:'EF Film Poppins Medium',400:'EF Film Poppins'};
 const FONT_FILES=[['Poppins-Bold.ttf',700],['Poppins-SemiBold.ttf',600],['Poppins-Medium.ttf',500],['Poppins-Regular.ttf',400]];
 const NS='http://www.w3.org/2000/svg';
+// The end card's wordmark: the film's own post/logo-color.png (the cut folders link to this copy).
+const LOGO_URL=new URL('../exports/cinematic-intro-20261030/post/logo-color.png',import.meta.url).href;
 export async function loadTitleSource(filmList,base=location.href,fetcher=globalThis.fetch){
   const url=new URL(filmList,base),get=async name=>{const r=await fetcher(new URL(name,url).href,{cache:'no-store'});if(!r.ok)throw Error(`${name} unavailable (${r.status})`);return r.json();};
   const [src,edl]=await Promise.all([get('titles-src.json'),get('edl.json').catch(()=>null)]);
@@ -59,7 +62,32 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   }
   const rule=()=>source?.edl?cutRule(source.edl,shot().id):null;
   const item=()=>titles().find(t=>t.id===selected)||null;
-  const edited=()=>!!shot().filmTitles;
+  const edited=()=>!!shot().filmTitles||!!shot().endCard;
+  // ---- the end card (end-card.mjs): the wordmark and the CTA of the chapter that has them (the hero) -------------
+  // endSel: 'logo' | 'cta' (the inspector shows the end card instead of a title); shot.endCard: only the parts he changed.
+  let endSel=null,laneEndDrag=null,endFrameDrag=null;
+  const END_LABEL={logo:'Wordmark',cta:'CTA line'};
+  const endFilm=()=>source?endCardOf(source.src,shot().id):null;
+  const endCard=()=>{const f=endFilm();return f?mergedEndCard(f,shot().endCard):null;};
+  const endFade=()=>source?.edl?filmFadeAt(source.edl,shot().id):null;
+  // The card as drawn while a lane or frame drag is under way.
+  function endView(){const c=endCard();if(!c)return null;if(laneEndDrag?.card)return laneEndDrag.card;if(endFrameDrag?.card)return endFrameDrag.card;return c;}
+  function putEnd(change,{parts,key=null,message='',renderAll=true}={}){
+    ready();const next=structuredClone(endCard());change(next);
+    commit(()=>{const s=shot(),edit={...(s.endCard||{})};for(const p of parts)edit[p]=next[p];const c=cleanEndCard(edit,s.seconds);if(c)s.endCard=c;else delete s.endCard;},{render:renderAll,key});
+    lastKey='';sync();if(message)status(message);
+  }
+  // Moving the wordmark carries the CTA by the same amount (it keeps its distance after the wordmark).
+  function moveLogo(c,a,seconds){const d=a-c.logo.rel_in;c.logo.rel_in=a;const sp=c.cta.rel_out===null||c.cta.rel_out===undefined?null:c.cta.rel_out;
+    const lim=sp===null?seconds-.5:seconds;const dd=Math.max(-c.cta.rel_in,Math.min(lim-(sp??c.cta.rel_in),d));c.cta.rel_in=r3(c.cta.rel_in+dd);if(sp!==null)c.cta.rel_out=r3(sp+dd);return c;}
+  const r3=v=>Math.round(v*1000)/1000;
+  // Where both end-card parts are fully in (for Select / Show): after the CTA's fade-in, before the film's fade.
+  function endRest(c){const s=shot().seconds,f=endFade()??s,L=ctaLayout(c);return Math.max(0,Math.min(f-.05,s-.05,Math.max(c.logo.rel_in+LOGO_FADE,c.cta.rel_in+L.fade_in+.2)));}
+  function selectEnd(part,{reveal=true}={}){
+    const c=endCard();if(!c)return;onSelect();selected=null;multi.clear();lineSel=null;if(editing)setEditing(false,false);endSel=part;showInspector('title',true);
+    if(reveal){try{seek(endRest(c)/shot().seconds);}catch{}}
+    render();renderTimeline();lastKey='';sync();status(part==='logo'?'Wordmark selected. Drag its block to change when it comes in (the CTA follows), or drag it in the frame; edit it in Title.':'CTA line selected. Drag its block to move it, its edges to trim; drag it in the frame, or edit its copy and type in Title.');
+  }
   function put(change,{key=null,message='',renderAll=true}={}){
     ready();const list=titles().map(t=>t.id===selected?change(structuredClone(t)):t);
     commit(()=>{const s=shot();s.filmTitles=cleanFilmTitles(list,s.seconds);const first=s.filmTitles[0];if(first){s.title=first.title||s.title;s.detail=first.detail;}},{render:renderAll,key});
@@ -116,11 +144,12 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   }
   // ---- selection --------------------------------------------------------------------------------------------
   function select(id,{reveal=true,keepMulti=false}={}){
-    onSelect();if(id!==selected)lineSel=null;selected=id;if(!keepMulti)multi.clear();const t=item();if(!t)return;showInspector('title',true);
+    if(id==='end-logo'||id==='end-cta'){selectEnd(id.slice(4),{reveal});return;}
+    endSel=null;onSelect();if(id!==selected)lineSel=null;selected=id;if(!keepMulti)multi.clear();const t=item();if(!t)return;showInspector('title',true);
     if(reveal){try{seek(restTime(t)/shot().seconds);}catch{}}
     render();if(document.body.classList.contains('ef-phone'))requestAnimationFrame(()=>timeline.querySelector(`[data-title-clip="${t.id}"]`)?.scrollIntoView({block:'nearest',inline:'nearest'}));status('Title selected. Drag its block to move it, its edges to trim, or edit its copy and shadow in Title.');
   }
-  function clear(){if(!selected&&!editing&&!multi.size)return false;selected=null;multi.clear();lineSel=null;setEditing(false,false);return true;}
+  function clear(){if(!selected&&!editing&&!multi.size&&!endSel)return false;selected=null;endSel=null;multi.clear();lineSel=null;setEditing(false,false);return true;}
   // The picked titles: the lane's multi-selection plus the inspector's title, in film order.
   function picked(){const ids=new Set(multi);if(selected)ids.add(selected);return titles().filter(t=>ids.has(t.id));}
   // While the shape is edited, the inspector's message line keeps this hint (director.mjs renders it there).
@@ -137,13 +166,19 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     const s=shot().seconds,R=rule(),list=titles();
     const zone=R?.cutDone!==undefined?`<span class="title-cut-zone" style="width:${Math.min(100,R.cutDone/s*100)}%" title="The transition from the previous chapter (done at ${r2(R.cutDone)} s)"></span>`:'';
     const mark=R?.earliest!==undefined?`<span class="title-rule" data-title-rule style="left:${R.earliest/s*100}%" title="1.5 s after the cut (${r2(R.earliest)} s): the film's titles come in from here"><i>1.5 s after cut</i></span>`:'';
-    const layers=stackRows(list.map(t=>({id:t.id,start:t.rel_in,end:t.rel_out}))),blocks=list.map(t=>{const notes=timingNotes(t,R),early=R?.earliest!==undefined&&t.rel_in<R.earliest-1e-6,custom=!!t.shadow?.paths;
+    const EC=endView(),ES=EC?endSpans(EC,s):null,FA=EC?endFade():null;
+    const layers=stackRows([...list.map(t=>({id:t.id,start:t.rel_in,end:t.rel_out})),...(ES?[{id:'end-logo',start:ES.logo[0],end:ES.logo[1]},{id:'end-cta',start:ES.cta[0],end:ES.cta[1]}]:[])]),blocks=list.map(t=>{const notes=timingNotes(t,R),early=R?.earliest!==undefined&&t.rel_in<R.earliest-1e-6,custom=!!t.shadow?.paths;
       return `<button class="desk-clip title-clip ${selected===t.id||multi.has(t.id)?'selected':''} ${early?'early':''}" data-title-clip="${t.id}" style="${rowVar(layers,t.id)}left:${t.rel_in/s*100}%;width:${(t.rel_out-t.rel_in)/s*100}%" aria-pressed="${selected===t.id||multi.has(t.id)}" aria-label="Title ${escape(oneLine(t.title))}, ${r2(t.rel_in)} to ${r2(t.rel_out)} seconds" title="${escape([oneLine(t.eyebrow),oneLine(t.title)].filter(Boolean).join(' · '))} · ${r2(t.rel_in)}–${r2(t.rel_out)}s${custom?' · custom shadow':''}${notes.length?' · '+escape(notes.join(' ')):''} (drag to move, edges to trim)"><span class="clip-resize" data-resize="start" title="Trim the title's in point"></span><strong>${t.eyebrow?`<em>${escape(oneLine(t.eyebrow))}</em> `:''}${escape(oneLine(t.title)||'(no headline)')}</strong><small>${r2(t.rel_in)}–${r2(t.rel_out)}s${custom?' · custom shadow':''}${early?' · before the 1.5 s mark':''}</small><span class="clip-resize" data-resize="end" title="Trim the title's out point"></span></button>`;}).join('');
-    return `<div class="desk-lane-row ${layers.count>1?'layered':''}" data-lane-color="titles" style="--rows:${layers.count}"><span class="desk-lane-label" title="The film's title cards (titles-src.json): drag a block to move it, its edges to trim, click it to edit the copy and the shadow">Titles${edited()?' <small>edited</small>':''} <button class="title-add" data-title-add type="button" title="Add a title at the playhead (placeholder copy, ${NEW_TITLE_SECONDS} s)" aria-label="Add a title at the playhead" ${list.length>=MAX_TITLES?'disabled':''}>+ Title</button></span><div class="desk-lane title-lane" data-title-lane role="group" aria-label="Film titles timeline"><div class="desk-lane-line"></div>${zone}${mark}${blocks}<div class="camera-track-playhead" data-shared-playhead style="left:${time()*100}%"></div></div></div>`;
+    const endBlocks=ES?['logo','cta'].map(k=>{const [a,b]=ES[k],on=endSel===k,label=k==='logo'?'ErgoFlex wordmark':`“${oneLine(EC.cta.text)}”`,tail=k==='logo'||EC.cta.rel_out==null?'end':`${r2(b)}s`;
+      return `<button class="desk-clip title-clip end-clip end-${k} ${on?'selected':''}" data-end-clip="${k}" style="${rowVar(layers,'end-'+k)}left:${a/s*100}%;width:${(b-a)/s*100}%" aria-pressed="${on}" aria-label="End card ${END_LABEL[k]}, from ${r2(a)} seconds" title="End card · ${escape(END_LABEL[k])}${k==='cta'?' · '+escape(oneLine(EC.cta.text)):''} · ${r2(a)} s to the ${tail==='end'?'film\'s end':tail} (drag to move${k==='cta'?', edges to trim':'; the CTA follows'})"><span class="clip-resize" data-resize="start" title="${k==='logo'?'When the wordmark comes in':'Trim the CTA\'s in point'}"></span><strong><em>END CARD</em> ${escape(label)}</strong><small>${r2(a)}–${tail}${shot().endCard?.[k]?' · edited':''}</small><span class="clip-resize" data-resize="end" title="Trim the CTA's out point (to the end: it fades with the film)"></span></button>`;}).join(''):'';
+    const fade=FA!==null&&FA!==undefined&&FA<s?`<span class="title-film-fade" data-film-fade style="left:${Math.max(0,FA)/s*100}%;width:${(s-Math.max(0,FA))/s*100}%" title="The film fades to black from ${r2(FA)} s (the last 1.4 s): the wordmark and the CTA fade out with it"><i>film fade</i></span>`:'';
+    return `<div class="desk-lane-row ${layers.count>1?'layered':''}" data-lane-color="titles" style="--rows:${layers.count}"><span class="desk-lane-label" title="The film's title cards (titles-src.json): drag a block to move it, its edges to trim, click it to edit the copy and the shadow">Titles${edited()?' <small>edited</small>':''} <button class="title-add" data-title-add type="button" title="Add a title at the playhead (placeholder copy, ${NEW_TITLE_SECONDS} s)" aria-label="Add a title at the playhead" ${list.length>=MAX_TITLES?'disabled':''}>+ Title</button></span><div class="desk-lane title-lane" data-title-lane role="group" aria-label="Film titles timeline"><div class="desk-lane-line"></div>${zone}${mark}${blocks}${endBlocks}${fade}<div class="camera-track-playhead" data-shared-playhead style="left:${time()*100}%"></div></div></div>`;
   }
   function snapTargets(exclude){
     const out=[];for(const t of titles())if(t.id!==exclude)out.push([t.rel_in,`${oneLine(t.title)||'title'} in`],[t.rel_out,`${oneLine(t.title)||'title'} out`]);
-    const R=rule();if(R?.earliest!==undefined)out.push([R.earliest,'the 1.5 s-after-cut mark']);if(R?.cutDone!==undefined)out.push([R.cutDone,'the end of the transition']);return out;
+    const R=rule();if(R?.earliest!==undefined)out.push([R.earliest,'the 1.5 s-after-cut mark']);if(R?.cutDone!==undefined)out.push([R.cutDone,'the end of the transition']);
+    const EC=endCard();if(EC){if(exclude!=='end-logo')out.push([EC.logo.rel_in,'the wordmark']);if(exclude!=='end-cta'){out.push([EC.cta.rel_in,'the CTA in']);if(EC.cta.rel_out!=null)out.push([EC.cta.rel_out,'the CTA out']);}const F=endFade();if(F!==null)out.push([F,'the film fade']);}
+    return out;
   }
   // Drag a block (move) or an edge (trim); Magnet / snap / Alt like the other lanes; one undo step per drag.
   timeline.addEventListener('pointerdown',event=>{
@@ -157,6 +192,48 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     if(!edge&&multi.size>1&&multi.has(t.id))drag.group=picked().map(x=>x.id);
     el.setPointerCapture(event.pointerId);el.focus({preventScroll:true});
   });
+  timeline.addEventListener('pointerdown',event=>{
+    const el=event.target.closest('[data-end-clip]');if(!el||event.button!==0)return;event.preventDefault();event.stopPropagation();
+    try{ready();}catch(error){status(error.message,true);return;}const c=endCard();if(!c)return;const part=el.dataset.endClip,lane=el.closest('[data-title-lane]');
+    let edge=event.target.closest('[data-resize]')?.dataset.resize||null;if(part==='logo')edge='start';
+    const [a,b]=endSpans(c,shot().seconds)[part];
+    laneEndDrag={part,edge,el,start:event.clientX,width:lane.getBoundingClientRect().width,seconds:shot().seconds,base:c,card:null,moved:false,
+      id:'end-'+part,kind:'titles',original:{id:'end-'+part,rel_in:a,rel_out:b}};laneEndDrag.base.titles=[laneEndDrag.original];
+    el.setPointerCapture(event.pointerId);el.focus({preventScroll:true});
+  });
+  timeline.addEventListener('pointermove',event=>{
+    const d=laneEndDrag;if(!d)return;if(Math.abs(event.clientX-d.start)>(event.pointerType==='touch'?8:3))d.moved=true;if(!d.moved)return;
+    const s=d.seconds,o=d.original,raw=(event.clientX-d.start)/d.width*s,edges=d.edge==='start'?[o.rel_in]:d.edge==='end'?[o.rel_out]:[o.rel_in,o.rel_out];
+    const r=snapDelta({raw,edges,width:d.width,seconds:s,alt:event.altKey,exclude:o.id})||{},delta=Number.isFinite(r.delta)?r.delta:raw,c=structuredClone(d.base);delete c.titles;
+    if(d.part==='logo')moveLogo(c,r3(Math.max(0,Math.min(s-.5,o.rel_in+delta))),s);
+    else if(d.edge==='start')c.cta.rel_in=r3(Math.max(0,Math.min(o.rel_out-.5,o.rel_in+delta)));
+    else if(d.edge==='end'){const v=Math.max(o.rel_in+.5,Math.min(s,o.rel_out+delta));c.cta.rel_out=v>=s-.02?null:r3(v);}
+    else{const dd=Math.max(-o.rel_in,Math.min(s-o.rel_out,delta));c.cta.rel_in=r3(o.rel_in+dd);if(c.cta.rel_out!=null)c.cta.rel_out=r3(o.rel_out+dd);}
+    d.card=c;d.snap=r.snap;const sp=endSpans(c,s);
+    for(const k of ['logo','cta']){const b=timeline.querySelector(`[data-end-clip="${k}"]`);if(!b)continue;const [a,e]=sp[k];b.style.left=a/s*100+'%';b.style.width=(e-a)/s*100+'%';const sm=b.querySelector('small');if(sm)sm.textContent=`${r2(a)}–${k==='logo'||c.cta.rel_out==null?'end':r2(e)+'s'}`;}
+    d.candidate=sp[d.part];dragFeedback(d,event);lastKey='';sync();
+    status(d.part==='logo'?`Wordmark in at ${r2(c.logo.rel_in)} s (the CTA follows: ${r2(c.cta.rel_in)} s) · the score's logo hit is re-fitted to it after the import${r.snap?' · snapped to '+r.snap.name:''} · Alt: bypass snap`
+      :`CTA ${r2(c.cta.rel_in)}–${c.cta.rel_out==null?'the film\'s end':r2(c.cta.rel_out)+' s'}${r.snap?' · snapped to '+r.snap.name:''} · Alt: bypass snap`);
+  });
+  function endLaneDrag(event){
+    const d=laneEndDrag;if(!d)return;laneEndDrag=null;endDragFeedback(d);suppress=performance.now()+300;
+    if(event.type==='pointercancel'||!d.moved||!d.card){if(event.type!=='pointercancel'&&!d.moved)selectEnd(d.part);else{renderTimeline();lastKey='';sync();}return;}
+    const c=d.card;endSel=d.part;
+    putEnd(x=>{x.logo=c.logo;x.cta=c.cta;},{parts:d.part==='logo'?['logo','cta']:['cta'],message:d.part==='logo'?`Wordmark now comes in at ${r2(c.logo.rel_in)} s; the CTA moved with it (${r2(c.cta.rel_in)} s). The score's logo hit will be re-fitted to the wordmark after the import.`:`CTA now ${r2(c.cta.rel_in)}–${c.cta.rel_out==null?'the film\'s end':r2(c.cta.rel_out)+' s'}.`});
+    renderTimeline();
+  }
+  timeline.addEventListener('pointerup',endLaneDrag);timeline.addEventListener('pointercancel',endLaneDrag);
+  timeline.addEventListener('keydown',event=>{
+    const el=event.target.closest('[data-end-clip]');if(!el||!['ArrowLeft','ArrowRight','Enter'].includes(event.key))return;event.preventDefault();event.stopPropagation();
+    if(event.key==='Enter'){selectEnd(el.dataset.endClip);return;}endSel=el.dataset.endClip;try{nudgeEnd((event.shiftKey?1:.1)*(event.key==='ArrowLeft'?-1:1));timeline.querySelector(`[data-end-clip="${endSel}"]`)?.focus();}catch(error){status(error.message,true);}
+  });
+  // Timing nudge of the selected end-card part (arrows on its block, Alt+arrows): the wordmark carries the CTA.
+  function nudgeEnd(delta){
+    const c=endCard();if(!c||!endSel)return false;const s=shot().seconds;
+    if(endSel==='logo'){const a=r3(Math.max(0,Math.min(s-.5,c.logo.rel_in+delta)));putEnd(x=>moveLogo(x,a,s),{parts:['logo','cta'],message:`Wordmark nudged to ${r2(a)} s (the CTA follows). The score's logo hit is re-fitted after the import.`});}
+    else{const [a,b]=endSpans(c,s).cta,dd=Math.max(-a,Math.min(s-b,delta));putEnd(x=>{x.cta.rel_in=r3(a+dd);if(x.cta.rel_out!=null)x.cta.rel_out=r3(b+dd);},{parts:['cta'],message:`CTA nudged to ${r2(a+dd)} s.`});}
+    renderTimeline();return true;
+  }
   function togglePick(id){
     if(!multi.size&&selected)multi.add(selected);if(multi.has(id))multi.delete(id);else multi.add(id);
     const keep=selected&&multi.has(selected)?selected:[...multi][0]||null;onSelect();selected=keep;lineSel=null;
@@ -190,13 +267,13 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     if(event.type==='pointercancel'){renderTimeline();return;}
     if(d.group&&d.moved&&d.candidate){const keep=[...multi];putList(d.candidate,{select:d.id});for(const id of keep)multi.add(id);renderTimeline();status(`${d.group.length} titles moved ${d.delta>=0?'+':''}${r2(d.delta)} s.`);return;}
     if(!d.moved||!d.candidate){select(d.id);return;}
-    onSelect();selected=d.id;showInspector('title',true);putTiming(d.id,d.candidate[0],d.candidate[1],d.edge?`Title ${d.edge==='start'?'in point':'out point'} trimmed: ${r2(d.candidate[0])}–${r2(d.candidate[1])} s${d.stop?' (stopped at '+d.stop+')':''}.`:`Title moved to ${r2(d.candidate[0])}–${r2(d.candidate[1])} s${d.stop?' (stopped at '+d.stop+')':''}.`);
+    onSelect();endSel=null;selected=d.id;showInspector('title',true);putTiming(d.id,d.candidate[0],d.candidate[1],d.edge?`Title ${d.edge==='start'?'in point':'out point'} trimmed: ${r2(d.candidate[0])}–${r2(d.candidate[1])} s${d.stop?' (stopped at '+d.stop+')':''}.`:`Title moved to ${r2(d.candidate[0])}–${r2(d.candidate[1])} s${d.stop?' (stopped at '+d.stop+')':''}.`);
   }
   timeline.addEventListener('pointerup',endDrag);timeline.addEventListener('pointercancel',endDrag);
   // Marquee (drag on empty lanes, director.mjs's own gesture): title blocks it crosses are picked as well, after the
   // director's own selection settles. Shift / Ctrl add to the picked titles.
   let band=null;
-  timeline.addEventListener('pointerdown',event=>{band=null;if(event.button!==0||event.target.closest('[data-title-clip],button,select,input,label,.time-ruler,.lane-group-head,.desk-lane-label')||!event.target.closest('.timeline-content'))return;
+  timeline.addEventListener('pointerdown',event=>{band=null;if(event.button!==0||event.target.closest('[data-title-clip],[data-end-clip],button,select,input,label,.time-ruler,.lane-group-head,.desk-lane-label')||!event.target.closest('.timeline-content'))return;
     band={x:event.clientX,y:event.clientY,add:event.shiftKey||event.ctrlKey||event.metaKey};},true);
   addEventListener('pointerup',event=>{const b=band;band=null;if(!b||Math.hypot(event.clientX-b.x,event.clientY-b.y)<5)return;
     const r={x0:Math.min(b.x,event.clientX),x1:Math.max(b.x,event.clientX),y0:Math.min(b.y,event.clientY),y1:Math.max(b.y,event.clientY)};
@@ -204,7 +281,7 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     if(!hit.length)return;const prior=b.add?picked().map(t=>t.id):[];setTimeout(()=>pickMany([...new Set([...prior,...hit])]),0);},true);
   timeline.addEventListener('click',event=>{
     if(event.target.closest('[data-title-add]')){event.preventDefault();event.stopPropagation();try{addTitle();}catch(error){status(error.message,true);}return;}
-    if(event.target.closest('[data-title-clip]')){if(performance.now()<suppress){event.preventDefault();event.stopPropagation();}return;}
+    if(event.target.closest('[data-title-clip],[data-end-clip]')){if(performance.now()<suppress){event.preventDefault();event.stopPropagation();}return;}
     const rail=event.target.closest('[data-title-lane]');if(!rail)return;try{const r=rail.getBoundingClientRect();seek(Math.max(0,Math.min(1,(event.clientX-r.left)/r.width)));}catch(error){status(error.message,true);}
   });
   timeline.addEventListener('keydown',event=>{
@@ -215,7 +292,8 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
       putTiming(t.id,Math.round((t.rel_in+dd)*1000)/1000,Math.round((t.rel_out+dd)*1000)/1000,`Title nudged to ${r2(t.rel_in+dd)}–${r2(t.rel_out+dd)} s.`);timeline.querySelector(`[data-title-clip="${t.id}"]`)?.focus();}catch(error){status(error.message,true);}
   });
   // ---- inspector --------------------------------------------------------------------------------------------
-  function header(){const t=item();if(!t)return '';return `<div class="sel-row"><span class="sel-icon">T</span><span class="sel-name"><b>${escape('Title · '+(oneLine(t.title||t.eyebrow)||'untitled'))}</b><small>${r2(t.rel_in)}–${r2(t.rel_out)} s${t.shadow?.paths?' · custom shadow':''}</small></span><button data-action="sel-clear" title="Deselect (Esc)" aria-label="Deselect">×</button></div>`;}
+  function header(){if(endSel&&endCard()){const c=endCard(),[a]=endSpans(c,shot().seconds)[endSel];return `<div class="sel-row"><span class="sel-icon">E</span><span class="sel-name"><b>${escape('End card · '+(endSel==='logo'?'Wordmark':oneLine(c.cta.text)||'CTA'))}</b><small>from ${r2(a)} s${shot().endCard?.[endSel]?' · edited':''}</small></span><button data-action="sel-clear" title="Deselect (Esc)" aria-label="Deselect">×</button></div>`;}
+    const t=item();if(!t)return '';return `<div class="sel-row"><span class="sel-icon">T</span><span class="sel-name"><b>${escape('Title · '+(oneLine(t.title||t.eyebrow)||'untitled'))}</b><small>${r2(t.rel_in)}–${r2(t.rel_out)} s${t.shadow?.paths?' · custom shadow':''}</small></span><button data-action="sel-clear" title="Deselect (Esc)" aria-label="Deselect">×</button></div>`;}
   function list(){
     return titles().map((t,i)=>`<button class="title-pick ${selected===t.id?'selected':''}" data-title-action="pick" data-title-id="${t.id}" title="Edit this title"><b>${i+1}</b><span>${t.eyebrow?`<em>${escape(oneLine(t.eyebrow))}</em> · `:''}${escape(oneLine(t.title)||'(no headline)')}</span><small>${r2(t.rel_in)}–${r2(t.rel_out)} s</small></button>`).join('');
   }
@@ -249,11 +327,31 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     else{const dd=Math.max(-a,Math.min(s-b,step));a+=dd;b+=dd;}
     a=Math.round(a*1000)/1000;b=Math.round(b*1000)/1000;putTiming(t.id,a,b,`Title ${what==='move'?'moved':what==='in'?'in point trimmed':'out point trimmed'}: ${r2(a)}–${r2(b)} s.`);
   }
+  // The end card's picks (Title tab), and its inspector when one part is selected.
+  function endPicks(){const c=endCard();if(!c)return '';const sp=endSpans(c,shot().seconds);
+    return `<div class="title-list end-list"><p class="director-hint">End card (the film's last frames; not a title card)</p>${['logo','cta'].map(k=>`<button class="title-pick ${endSel===k?'selected':''}" data-title-action="end-pick" data-title-id="${k}" title="Edit the end card's ${END_LABEL[k]}"><b>E</b><span><em>END CARD</em> · ${escape(k==='logo'?'ErgoFlex wordmark':oneLine(c.cta.text))}</span><small>${r2(sp[k][0])} s</small></button>`).join('')}</div>`;}
+  function endPanelHtml(){
+    const c=endCard(),k=endSel,s=shot().seconds,F=endFade(),L=ctaLayout(c),B=logoBox(c.logo),ed=shot().endCard||{},film=endFilm();
+    const moved=ed.logo&&Math.abs((ed.logo.rel_in??film.logo.rel_in)-film.logo.rel_in)>1e-6;
+    const head=`<h3>End card <span class="inspector-subtitle">${k==='logo'?'the ErgoFlex wordmark':'the line under the wordmark'}</span></h3>${endPicks()}`;
+    const reset=`<div class="director-actions"><button data-title-action="end-go" title="Move the playhead to where the wordmark and the CTA are both in">Show end card</button><button data-title-action="end-reset" data-title-id="${k}" ${ed[k]?'':'disabled'} title="Back to the film's ${END_LABEL[k]} (titles-src.json)">Reset ${k==='logo'?'wordmark':'CTA'}</button></div>`;
+    const fadeNote=F!==null?`<p class="director-hint">The film fades to black from <b>${r2(F)} s</b> (its last 1.4 s); the end card fades out with it.</p>`:'';
+    const scoreNote=`<p class="director-hint end-note" role="note" data-end-score-note>${moved?'<b>You moved the wordmark.</b> ':''}The score's logo hit lands on the wordmark's first frame, so moving the wordmark means the score gets re-fitted: Orch does that after the import (the film keeps your time). The CTA moves with the wordmark.</p>`;
+    if(k==='logo')return `<div data-reveal="title">${head}<label>Comes in (seconds)<input name="ec-logo-in" type="number" min="0" max="${s}" step=".05" value="${r2(c.logo.rel_in)}"></label>${scoreNote}
+      <label>Scale (%)<input name="ec-logo-scale" type="number" min="10" max="500" step="1" value="${Math.round((c.logo.scale??1)*100)}" title="100 % = the film's 22 % of the frame width"></label><div class="director-grid"><label>X centre (film pixels)<input name="ec-logo-x" type="number" step="1" value="${r2(B.x)}" title="The film's is ${LOGO_DEFAULT.x}"></label><label>Y centre (film pixels)<input name="ec-logo-y" type="number" step="1" value="${r2(B.y)}" title="The film's is ${r2(LOGO_DEFAULT.y)} (73 % of the height)"></label></div>
+      <p class="director-hint">Drag the wordmark in the frame to move it; the CTA stays under it. It stays to the film's end.</p>${fadeNote}${reset}</div>`;
+    return `<div data-reveal="title">${head}<label>Text<input name="ec-cta-text" maxlength="120" value="${escape(c.cta.text)}"></label>
+      <div class="director-grid"><label>Font<select name="ec-cta-font">${CTA_FONTS.map(([f,n])=>`<option value="${f}" ${f===L.font?'selected':''}>${n}</option>`).join('')}</select></label><label>Font size<input name="ec-cta-size" type="number" min="8" max="300" step="1" value="${L.size}"></label><label>Letter spacing<input name="ec-cta-spacing" type="number" min="-10" max="40" step=".1" value="${L.spacing}"></label><label>Fade-in (seconds)<input name="ec-cta-fade" type="number" min="0" max="5" step=".05" value="${L.fade_in}"></label></div>
+      <div class="director-grid"><label>X centre (film pixels)<input name="ec-cta-x" type="number" step="1" value="${r2(L.x)}" title="Empty or the wordmark's centre (${r2(B.x)}) keeps it on the wordmark's axis"></label><label>Gap under the wordmark (px)<input name="ec-cta-gap" type="number" step="1" value="${r2(c.cta.gap??0)}" title="From the wordmark's bottom to the line's top"></label></div>
+      <div class="director-grid"><label>Comes in (seconds)<input name="ec-cta-in" type="number" min="0" max="${s}" step=".05" value="${r2(c.cta.rel_in)}"></label><label>Goes out (seconds)<input name="ec-cta-out" type="number" min="0" max="${s}" step=".05" value="${c.cta.rel_out==null?'':r2(c.cta.rel_out)}" placeholder="film end" title="Empty: to the film's end (it fades out with the film)"></label></div>
+      <p class="director-hint">Drag the line in the frame to move it (sideways: X; up / down: the gap under the wordmark).</p>${fadeNote}${reset}</div>`;
+  }
   function panelHtml(){
     if(!has())return '<p class="director-hint">This chapter has no film titles.</p>';
+    if(endSel&&endCard())return endPanelHtml();
     const t=item(),full=titles().length>=MAX_TITLES,addBtn=`<button data-title-action="add" ${full?'disabled':''} title="A new title at the playhead with placeholder copy">+ Add title</button>`;
-    if(!titles().length)return `<div data-reveal="title"><h3>Film titles</h3><p class="director-hint">This chapter has no titles. Add one at the playhead, then type its copy.</p><div class="director-actions title-list-actions">${addBtn}</div></div>`;
-    if(!t)return `<div data-reveal="title"><h3>Film titles</h3><p class="director-hint">Select a title on the Titles lane, or here, to edit its copy, timing and the shadow behind it.</p><div class="director-actions title-list-actions">${addBtn}</div><div class="title-list">${list()}</div></div>`;
+    if(!titles().length)return `<div data-reveal="title"><h3>Film titles</h3><p class="director-hint">This chapter has no titles${endCard()?' (the end card below is the wordmark and the CTA)':''}. Add one at the playhead, then type its copy.</p><div class="director-actions title-list-actions">${addBtn}</div>${endPicks()}</div>`;
+    if(!t)return `<div data-reveal="title"><h3>Film titles</h3><p class="director-hint">Select a title on the Titles lane, or here, to edit its copy, timing and the shadow behind it.</p><div class="director-actions title-list-actions">${addBtn}</div><div class="title-list">${list()}</div>${endPicks()}</div>`;
     const R=rule(),notes=timingNotes(t,R),S=shadowOf(t,measure),n=titles().indexOf(t)+1,tb=textBounds(t,measure),bb=bounds(S.paths);
     const short=S.custom&&tb&&bb&&(tb.x1>bb.x1+2||tb.x0<bb.x0-2);
     return `<div data-reveal="title"><h3>Film title ${n} <span class="inspector-subtitle">of ${titles().length} in this chapter</span></h3><div class="title-list">${titles().length>1?list():''}</div>
@@ -287,6 +385,27 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
       if(name==='ft-opacity'||name==='ft-opacity-n'){const v=Number(el.value);if(el.value===''||!Number.isFinite(v))return;put(t=>{t.shadow={...t.shadow,opacity:Math.max(0,Math.min(100,v))/100};return t;},{key:'ft-opacity'+id,renderAll:false});const o=panel.querySelector('[data-title-opacity]');if(o)o.textContent=Math.round(v)+'%';const twin=panel.querySelector(`[name="${name==='ft-opacity'?'ft-opacity-n':'ft-opacity'}"]`);if(twin)twin.value=String(v);status(`Shadow darkness ${Math.round(v)}% (the film's is ${Math.round(BOX_OPACITY*100)}%).`);return;}
     }catch(error){status(error.message,true);}
   },true);
+  // End-card fields: copy / type / place live (one undo step per field), timing on change.
+  const EC_NUM={'ec-logo-scale':['logo','scale',v=>Math.max(.1,Math.min(5,v/100))],'ec-logo-x':['logo','x'],'ec-logo-y':['logo','y'],'ec-cta-size':['cta','size',v=>Math.max(8,Math.min(300,v))],'ec-cta-spacing':['cta','spacing',v=>Math.max(-10,Math.min(40,v))],'ec-cta-fade':['cta','fade_in',v=>Math.max(0,Math.min(5,v))],'ec-cta-x':['cta','x'],'ec-cta-gap':['cta','gap']};
+  panel.addEventListener('input',event=>{
+    const el=event.target,name=el.name;if(!name?.startsWith('ec-'))return;event.stopPropagation();
+    try{
+      if(name==='ec-cta-text'){putEnd(c=>{c.cta.text=el.value;},{parts:['cta'],key:name,renderAll:false});renderTimeline();return;}
+      if(name==='ec-cta-font'){putEnd(c=>{c.cta.font=el.value;},{parts:['cta'],key:name,renderAll:false,message:`CTA font ${el.value} (the film's was ${endFilm().cta.font??CTA_DEFAULT.font}).`});return;}
+      const spec=EC_NUM[name];if(!spec)return;const v=Number(el.value);if(el.value===''||!Number.isFinite(v))return;const [part,key,f=x=>x]=spec;
+      putEnd(c=>{c[part][key]=f(v);},{parts:[part],key:name,renderAll:false});
+    }catch(error){status(error.message,true);}
+  },true);
+  panel.addEventListener('change',event=>{
+    const el=event.target,name=el.name;if(!name?.startsWith('ec-'))return;event.stopPropagation();
+    try{
+      const s=shot().seconds,c=endCard();if(!c)return;
+      if(name==='ec-logo-in'){const v=Number(el.value);if(el.value===''||!Number.isFinite(v))throw Error('Enter a time in seconds.');const a=r3(Math.max(0,Math.min(s-.5,v)));putEnd(x=>moveLogo(x,a,s),{parts:['logo','cta'],message:`Wordmark now comes in at ${r2(a)} s; the CTA moved with it. The score's logo hit will be re-fitted to it after the import.`});renderTimeline();return;}
+      if(name==='ec-cta-in'){const v=Number(el.value);if(el.value===''||!Number.isFinite(v))throw Error('Enter a time in seconds.');const b=c.cta.rel_out??s,a=r3(Math.max(0,Math.min(b-.5,v)));putEnd(x=>{x.cta.rel_in=a;},{parts:['cta'],message:`CTA comes in at ${r2(a)} s.`});renderTimeline();return;}
+      if(name==='ec-cta-out'){const v=Number(el.value);if(el.value!==''&&!Number.isFinite(v))throw Error('Enter a time in seconds, or leave it empty for the film\'s end.');const b=el.value===''||v>=s-.02?null:r3(Math.max(c.cta.rel_in+.5,Math.min(s,v)));putEnd(x=>{x.cta.rel_out=b;},{parts:['cta'],message:b===null?'CTA stays to the film\'s end (it fades out with the film).':`CTA goes out at ${r2(b)} s.`});renderTimeline();return;}
+      render();renderTimeline();status('End card updated. Export cut sends it to the film.');
+    }catch(error){render();status(error.message,true);}
+  },true);
   panel.addEventListener('change',event=>{
     const el=event.target,name=el.name;if(!name?.startsWith('ft-'))return;event.stopPropagation();
     try{
@@ -302,6 +421,14 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   });
   function titleAction(name,id,extra){
     if(name==='pick'){select(id);return;}
+    if(name==='end-pick'){selectEnd(id);return;}
+    if(name==='end-go'){const c=endCard();if(c)seek(endRest(c)/shot().seconds);return;}
+    if(name==='end-reset'){
+      // the wordmark back to the film's takes the CTA back by the time it was carried (and drops its edit when that is all it had)
+      ready();const film=endFilm(),cur=endCard();commit(()=>{const s=shot(),e={...(s.endCard||{})};delete e[id];
+        if(id==='logo'&&e.cta&&film&&cur){const d=film.logo.rel_in-cur.logo.rel_in;if(Math.abs(d)>1e-9){const c={...e.cta,rel_in:r3(cur.cta.rel_in+d)};if(cur.cta.rel_out!=null)c.rel_out=r3(cur.cta.rel_out+d);e.cta=c;}
+          if(JSON.stringify(mergedEndCard(film,{cta:e.cta}).cta)===JSON.stringify(film.cta))delete e.cta;}
+        const c=cleanEndCard(e,s.seconds);if(c)s.endCard=c;else delete s.endCard;},{render:true});lastKey='';sync();renderTimeline();status(`${END_LABEL[id]} back to the film's${id==='logo'?' (the CTA moved back with it)':''}.`);return;}
     if(name==='add'){addTitle();return;}
     if(name==='nudge'){nudge(extra||'');return;}
     if(name==='paste'){pasteAtPlayhead();return;}
@@ -401,14 +528,40 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
     return {dx,dy,guides};
   }
   const lineView=x=>lineDrag&&lineDrag.id===x.id?withLine(x,lineDrag.key,lineDrag.next):x;
+  function endSvg(at){
+    const c=endView();if(!c||!shown)return '';const s=shot().seconds,F=endFade(),parts=[];
+    const B=logoBox(c.logo),la=endSel==='logo'?Math.max(.35,logoAlpha(c,at,s,F)):logoAlpha(c,at,s,F);
+    if(la>0)parts.push(`<g data-end-card="logo"><image href="${LOGO_URL}" x="${B.x0.toFixed(2)}" y="${B.y0.toFixed(2)}" width="${B.w.toFixed(2)}" height="${B.h.toFixed(2)}" preserveAspectRatio="none" opacity="${la.toFixed(4)}"/><rect data-end-move="logo" x="${B.x0}" y="${B.y0}" width="${B.w}" height="${B.h}" fill="transparent" style="pointer-events:all;cursor:move"><title>Drag to move the wordmark (the CTA stays under it)</title></rect>${endSel==='logo'?`<rect x="${B.x0}" y="${B.y0}" width="${B.w}" height="${B.h}" fill="none" stroke="#ffd27a" stroke-width="${px()}" style="pointer-events:none"/>`:''}</g>`);
+    let st=ctaState(c,at,s,F);if(endSel==='cta'&&(!st.on||st.alpha<.35))st={on:true,alpha:.35,dy:0};
+    if(st.on&&st.alpha>0&&c.cta.text){const L=ctaLayout(c),T={weight:L.weight,size:L.size,spacing:L.spacing},text=oneLine(c.cta.text),w=measure(T,text),x0=L.x-w/2,top=L.top+st.dy,y=top+L.size-L.size*DESC;
+      const attrs=`font-family="${FAMILY[L.weight]}" font-weight="${L.weight}" font-size="${(L.size/FONT_REAL).toFixed(3)}" letter-spacing="${L.spacing}" textLength="${w.toFixed(2)}" lengthAdjust="spacing" style="font-kerning:none;white-space:pre"`;
+      parts.push(`<g data-end-card="cta" opacity="${st.alpha.toFixed(4)}"><text x="${(x0+1.5).toFixed(2)}" y="${(y+1.5).toFixed(2)}" ${attrs} fill="#000" fill-opacity="${(1-0xA0/255).toFixed(3)}">${escape(text)}</text><text x="${x0.toFixed(2)}" y="${y.toFixed(2)}" ${attrs} fill="#ffffff">${escape(text)}</text><rect data-end-move="cta" x="${x0}" y="${top}" width="${w}" height="${L.size}" fill="transparent" style="pointer-events:all;cursor:move"><title>Drag to move the CTA (sideways: X; up / down: the gap under the wordmark)</title></rect>${endSel==='cta'?`<rect x="${x0}" y="${top}" width="${w}" height="${L.size}" fill="none" stroke="#ffd27a" stroke-width="${px()}" style="pointer-events:none"/>`:''}</g>`);}
+    return `<g class="end-card-overlay">${parts.join('')}</g>`;
+  }
+  svg.addEventListener('pointerdown',event=>{
+    const part=event.target.closest?.('[data-end-move]')?.dataset.endMove;if(!part||editing||event.button!==0)return;event.preventDefault();event.stopPropagation();
+    try{ready();}catch(error){status(error.message,true);return;}if(endSel!==part)selectEnd(part,{reveal:false});const c=endCard();if(!c)return;
+    endFrameDrag={part,start:svgPoint(event),base:c,card:null};svg.setPointerCapture(event.pointerId);
+  });
+  svg.addEventListener('pointermove',event=>{
+    const d=endFrameDrag;if(!d)return;const [fx,fy]=svgPoint(event),dx=fx-d.start[0],dy=fy-d.start[1];if(!d.card&&Math.hypot(dx,dy)<2*px())return;
+    const c=structuredClone(d.base),B=logoBox(d.base.logo),L=ctaLayout(d.base);
+    if(d.part==='logo'){c.logo.x=r2(B.x+dx);c.logo.y=r2(B.y+dy);if(c.cta.x!=null)c.cta.x=r2(c.cta.x+dx);}else{c.cta.x=r2(L.x+dx);c.cta.gap=r2(Number(d.base.cta.gap??0)+dy);}
+    d.card=c;lastKey='';sync();status(d.part==='logo'?`Wordmark centre ${r2(c.logo.x)}, ${r2(c.logo.y)} (the film's: ${LOGO_DEFAULT.x}, ${r2(LOGO_DEFAULT.y)})`:`CTA centre x ${r2(c.cta.x)}, ${r2(c.cta.gap)} px under the wordmark`);
+  });
+  function endFrameUp(event){
+    const d=endFrameDrag;if(!d)return;endFrameDrag=null;if(event.type==='pointercancel'||!d.card){lastKey='';sync();return;}const c=d.card;
+    putEnd(x=>{x.logo=c.logo;x.cta=c.cta;},{parts:d.part==='logo'?(c.cta.x!=null?['logo','cta']:['logo']):['cta'],message:d.part==='logo'?'Wordmark moved. Undo puts it back.':'CTA moved. Undo puts it back.'});
+  }
+  svg.addEventListener('pointerup',endFrameUp);svg.addEventListener('pointercancel',endFrameUp);
   function shapeFor(t){const S=shadowOf(t,measure);if(editing&&t.id===selected&&shape.draft)S.paths=shape.draft;return S;}
   function sync(){
     const visible=open()&&shown&&has()&&document.body.classList.contains('film-frame');box.hidden=!visible;if(!visible){lastKey='';return;}
     const at=time()*shot().seconds,t0=item(),t=t0&&lineView(t0),list=(editing&&t0?[t0]:titles().filter(x=>at>=x.rel_in&&at<x.rel_out)).map(lineView);
-    const key=JSON.stringify([at.toFixed(3),list,editing,shape.pt,[...shape.sel],shape.draft,cardDrag?.next,cardDrag?.scale,lineSel,lineDrag?.next,lineDrag?.guides,fontsReady,svg.clientWidth]);if(key===lastKey)return;lastKey=key;
+    const key=JSON.stringify([at.toFixed(3),list,endView(),endSel,editing,shape.pt,[...shape.sel],shape.draft,cardDrag?.next,cardDrag?.scale,lineSel,lineDrag?.next,lineDrag?.guides,fontsReady,svg.clientWidth]);if(key===lastKey)return;lastKey=key;
     let defs='',body='';for(const x of list){const c=cardSvg(x,at,editing&&x.id===selected);defs+=c.defs;const bb=bounds(shadowOf(x,measure).paths),P=placeOf(x),scale=cardDrag?.id===x.id?(cardDrag.scale??x.scale??1):(x.scale??1),pos=cardDrag?.id===x.id?cardDrag.next:{x:P.x,y:P.anchor[1]};body+=`<g class="title-card" data-title-card="${x.id}">${c.body}${!editing&&bb?`<rect data-card-move x="${bb.x0*scale+pos.x}" y="${bb.y0*scale+pos.y}" width="${(bb.x1-bb.x0)*scale}" height="${(bb.y1-bb.y0)*scale}" fill="transparent" style="pointer-events:all;cursor:move"/>`:''}</g>`;}
     const guides=(lineDrag?.guides||[]).map(g=>g.x!==undefined?`<line class="title-guide" x1="${g.x}" y1="0" x2="${g.x}" y2="1080" stroke="#ff4fd8" stroke-width="${px()}" stroke-dasharray="${6*px()} ${4*px()}" style="pointer-events:none"/>`:`<line class="title-guide" x1="0" y1="${g.y}" x2="${FILM_W}" y2="${g.y}" stroke="#ff4fd8" stroke-width="${px()}" stroke-dasharray="${6*px()} ${4*px()}" style="pointer-events:none"/>`).join('');
-    svg.innerHTML=`<defs>${defs}</defs>${body}${editing&&t?editLayer(t):t&&list.some(x=>x.id===t.id)?titleFrame(t):''}${guides}`;
+    svg.innerHTML=`<defs>${defs}</defs>${editing?'':endSvg(at)}${body}${editing&&t?editLayer(t):t&&list.some(x=>x.id===t.id)?titleFrame(t):''}${guides}`;
   }
   // A selected title shows its shadow's outline (dashed); clicking the shape starts editing it.
   function titleFrame(t){
@@ -555,12 +708,17 @@ export function createTitleEditor({panel,timeline,shot,time,seek,commit,status,r
   function saveShapeKeyed(paths){put(t=>{t.shadow={...t.shadow,paths:structuredClone(paths)};return t;},{key:'ft-nudge'+selected,renderAll:false,message:'Nudged (Shift ×10).'});}
   addEventListener('resize',()=>{lastKey='';sync();});
   return {
-    setSource(v){source=v;fromFilm.clear();lastKey='';},has,titles,ticks,lane,snapTargets,panel:panelHtml,chapterFields,header,
+    setSource(v){source=v;fromFilm.clear();lastKey='';if(endSel&&!endCard())endSel=null;},has,titles,ticks,lane,snapTargets,panel:panelHtml,chapterFields,header,
     // the Director's keys: Alt+arrows nudge the selected title (or its picked line) in the frame, or one step in time.
-    nudgeFrame:d=>{if(!item())return false;nudge(d);return true;},
-    nudgeTime(delta){const t=item();if(!t)return false;const s=shot().seconds,dd=Math.max(-t.rel_in,Math.min(s-t.rel_out,delta));putTiming(t.id,Math.round((t.rel_in+dd)*1000)/1000,Math.round((t.rel_out+dd)*1000)/1000,`Title nudged to ${r2(t.rel_in+dd)}–${r2(t.rel_out+dd)} s.`);return true;},
-    range:()=>{const t=item();return t?[t.rel_in,t.rel_out]:null;},
-    selectedId:()=>selected,select,clear,add:addTitle,duplicate:duplicateSelected,remove:deleteSelected,split:splitSelected,copy:copySelected,paste:pasteAtPlayhead,picked:()=>picked().map(t=>t.id),lineSelected:()=>lineSel,editing:()=>editing,editHint:()=>editing?SHAPE_HINT:null,sync,fontsLoaded,measure,
+    nudgeFrame:d=>{if(endSel&&endCard()){const [dx,dy]=d;if(!Number.isFinite(dx)||!Number.isFinite(dy))return false;const c=endCard();
+      if(endSel==='logo'){const B=logoBox(c.logo);putEnd(x=>{x.logo.x=r2(B.x+dx);x.logo.y=r2(B.y+dy);},{parts:['logo'],key:'end-nudge-logo',renderAll:false,message:`Wordmark nudged to ${r2(B.x+dx)}, ${r2(B.y+dy)}.`});}
+      else{const L=ctaLayout(c);putEnd(x=>{x.cta.x=r2(L.x+dx);x.cta.gap=r2(Number(c.cta.gap??0)+dy);},{parts:['cta'],key:'end-nudge-cta',renderAll:false,message:'CTA nudged.'});}return true;}
+      if(!item())return false;nudge(d);return true;},
+    nudgeTime(delta){if(endSel&&endCard())return nudgeEnd(delta);const t=item();if(!t)return false;const s=shot().seconds,dd=Math.max(-t.rel_in,Math.min(s-t.rel_out,delta));putTiming(t.id,Math.round((t.rel_in+dd)*1000)/1000,Math.round((t.rel_out+dd)*1000)/1000,`Title nudged to ${r2(t.rel_in+dd)}–${r2(t.rel_out+dd)} s.`);return true;},
+    range:()=>{if(endSel&&endCard())return endSpans(endCard(),shot().seconds)[endSel];const t=item();return t?[t.rel_in,t.rel_out]:null;},
+    selectedId:()=>selected||(endSel&&endCard()?'end-'+endSel:null),select,clear,add:addTitle,duplicate:duplicateSelected,
+    remove:()=>{if(endSel&&endCard()){status('The end card stays in the film: Reset in Title puts it back to the film\'s.');return;}deleteSelected();},
+    endCard:()=>endCard(),endSelected:()=>endSel,split:splitSelected,copy:copySelected,paste:pasteAtPlayhead,picked:()=>picked().map(t=>t.id),lineSelected:()=>lineSel,editing:()=>editing,editHint:()=>editing?SHAPE_HINT:null,sync,fontsLoaded,measure,
     toggleShown(){shown=!shown;lastKey='';sync();return shown;},shown:()=>shown,compositeStill,stillTitles:seconds=>stillTitles(seconds).length,
     fitted:t=>fittedPaths(t,measure),
   };

@@ -18,6 +18,7 @@ import {cleanTrayEdits} from './tray-pose.mjs';
 import {cleanDeskBuildField} from './desk-build.mjs';
 import {cleanDeskVersionsField} from './desk-versions-edit.mjs';
 import {cleanFilmTitles} from './film-titles.mjs';
+import {cleanEndCard} from './end-card.mjs';
 import {cleanTouchscreenField} from './touchscreen-track.mjs';
 import {cleanLook} from '../room-looks.mjs';
 export const CUTS_KEY='ergoflex.clientCuts.v1';
@@ -63,6 +64,8 @@ export function cleanShot(v={},catalog){
   // Film titles edited in the Director (absent until then): copy, timing, shadow shape.
   if(Array.isArray(v.screens))shot.screens=structuredClone(v.screens);
   const titles=cleanFilmTitles(v.filmTitles,shot.seconds);if(titles)shot.filmTitles=titles;
+  // The end card (the hero's wordmark and CTA, end-card.mjs) edited in the Director: only the parts he changed.
+  const endCard=cleanEndCard(v.endCard,shot.seconds);if(endCard)shot.endCard=endCard;
   // The desk's onboard touchscreen posed from chapter time (touchscreen-track.mjs), absent unless the film gives it.
   const touchscreen=cleanTouchscreenField(v.touchscreen);if(touchscreen)shot.touchscreen=touchscreen;
   return shot;
