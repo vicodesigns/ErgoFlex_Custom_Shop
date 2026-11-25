@@ -30,6 +30,22 @@ export async function bodyPoints(modelId) {
     }
     return out;
 }
+// The skin's triangles (not only its corners: a low-poly thigh has its vertices 40 mm apart along it, and the cloth between them
+// is the triangle, well inside the corners' farthest): [[[bone, x, y, z], x3], ...], each corner in the frame of the bone that
+// moves it most, as bodyPoints has it. (tools/people/measure-lap.mjs samples them for the thighs' table)
+export async function bodyTriangles(modelId) {
+    const doc = await io.read(path.join(ROOT, 'assets/props', modelId + '.glb')), root = doc.getRoot(), skin = root.listSkins()[0];
+    const joints = skin.listJoints(), names = joints.map(j => decodeURIComponent(j.getName())), ibm = skin.getInverseBindMatrices().getArray();
+    const mats = names.map((_, i) => new THREE.Matrix4().fromArray(ibm, i * 16)), out = [], v = new THREE.Vector3();
+    for (const mesh of root.listMeshes()) for (const prim of mesh.listPrimitives()) {
+        const mat = prim.getMaterial()?.getName() || ''; if (HELD.test(mat)) continue;
+        const P = prim.getAttribute('POSITION'), J = prim.getAttribute('JOINTS_0'), W = prim.getAttribute('WEIGHTS_0'), I = prim.getIndices(); if (!J || !W) continue;
+        const corner = i => { const j = J.getElement(i, []), w = W.getElement(i, []); let b = 0; for (let k = 1; k < 4; k++) if (w[k] > w[b]) b = k; v.fromArray(P.getElement(i, [])).applyMatrix4(mats[j[b]]); return [names[j[b]], v.x, v.y, v.z]; };
+        const n = I ? I.getCount() : P.getCount();
+        for (let k = 0; k + 2 < n; k += 3) out.push([0, 1, 2].map(m => corner(I ? I.getScalar(k + m) : k + m)));
+    }
+    return out;
+}
 // The points of the given bones posed on the rig now (rig.fk() current): [[x, y, z, bone, material, nx, ny, nz], ...] in the rig's frame
 // (the skin's normal with each).
 export function posed(rig, points, bones) {

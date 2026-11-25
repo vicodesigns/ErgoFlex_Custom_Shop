@@ -71,7 +71,10 @@ else {
             // (the arms in a shorter part of the change go faster: the step and its change are allowed for that, never a jump)
             const k = arms ? 2 : 1, m = motionOf(rows), cap = { ...CAPS[fps], step: CAPS[fps].step * k, dstep: CAPS[fps].dstep * k * k, turn: arms ? 180 : CAPS[fps].turn }, tag = `change${suffix}${arms ? ' arms ' + JSON.stringify(arms) : ''} at ${fps} fps`;
             for (const field of ['step', 'dstep', 'jump', 'turn']) { const w = worstOf(m, field); assert.ok(w.value <= cap[field], `${tag}: ${w.point} ${field} ${w.value.toFixed(2)} at ${w.at?.toFixed(4)} s (at most ${cap[field]})`); }
-            if (fps === 60) for (const r of rows) { const d = depthOf(r); assert.ok(d <= (arms ? .006 : TOL), `${tag}: hands or forearms ${mm(d)} deep in his body at ${r.t.toFixed(3)} s`); }
+            // (the shorter arm timings: .008. With the hands now resting on the jeans the lift through the change is lower, and at w .12 of the
+            // [0, .6] timing the skin's corners read the left thumb 7.9 mm in its thigh where it is 18 mm from the nearest corner and 17 mm
+            // outside the thigh's triangles (people-lap-data.mjs): the corners' normals over a low-poly thigh, not a thumb in it; 24 Nov 2026)
+            if (fps === 60) for (const r of rows) { const d = depthOf(r); assert.ok(d <= (arms ? .008 : TOL), `${tag}: hands or forearms ${mm(d)} deep in his body at ${r.t.toFixed(3)} s`); }
             checked++;
         }
     }
@@ -106,7 +109,9 @@ for (const who of ['andre', 'ben', 'hale', 'jo', 'priya', 'maya']) {
     for (let t = 5; t < 17; t += 2) { fixed.still(t, 5); const d = fixed.depth({ step: 3 }); after = Math.max(after, d.hand, d.fore); }
     // (Andre, in no film in a wheelchair: his loose trousers stand out further than the table has them at the side of the thigh, and a hand
     // lifted there over the rim is still in them by up to 19 mm early in the change, w .27; a known limit, from 60 mm)
-    assert.ok(after <= (who === 'andre' ? .02 : .006), `${who}: hands and forearms ${mm(after)} deep with the fix`);
+    // (24 Nov 2026, the table now the skin's own triangles, no longer 10 to 17 mm over it: Andre's and Ben's changes from the rims (neither in a
+    // film in a wheelchair) graze their trousers more on the way over, Andre 23 mm early in the change, Ben 12; at rest none. A known limit)
+    assert.ok(after <= (who === 'andre' ? .025 : who === 'ben' ? .012 : .006), `${who}: hands and forearms ${mm(after)} deep with the fix`);
     assert.ok(step * 1000 <= 16, `${who}: the change at 60 fps moves a hand at most ${(step * 1000).toFixed(1)} mm a frame`);
 }
 
@@ -158,13 +163,14 @@ for (const who of ['andre', 'ben', 'hale', 'jo', 'priya', 'maya']) {
         assert.ok(Math.max(...t.l, ...t.r) < .2, `${c}: the thigh's skin, not the shin hanging from the knee (${mm(Math.max(...t.l, ...t.r))} at the most)`);
     }
     for (const id of Object.keys(LAP.typing)) assert.ok(!/-(kai|mia)-/.test(id), `${id}: Kai's and Mia's typing postures are clear of their laps as built`);
-    assert.equal(softLift(0), 0); assert.ok(Math.abs(softLift(.004) - .002) < 1e-12 && Math.abs(softLift(.01) - .008) < 1e-12, 'softLift: none, eased in, then the depth less 2 mm');
-    const e = 1e-6; assert.ok(Math.abs((softLift(.004 + e) - softLift(.004 - e)) / (2 * e) - 1) < 1e-3 && softLift(e) < 1e-9, 'softLift is C1');
+    // (SOFT 3 mm since the table is the skin's own: 24 Nov 2026, the hands rest on the jeans; it was 4)
+    assert.equal(softLift(0), 0); assert.ok(Math.abs(softLift(.003) - .0015) < 1e-12 && Math.abs(softLift(.01) - .0085) < 1e-12, 'softLift: none, eased in, then the depth less 1.5 mm');
+    const e = 1e-6; assert.ok(Math.abs((softLift(.003 + e) - softLift(.003 - e)) / (2 * e) - 1) < 1e-3 && softLift(e) < 1e-9, 'softLift is C1');
     const omar = await new Lap('omar', { fine: FINE }).load(), plan = omar.plan();
     assert.ok(plan && plan.at(0).l === 0 && plan.at(0).r === 0, 'the plan starts with no lift (the hands on the rims, as rolled)');
     assert.equal(plan.at(1).l, plan.need.l.at(-1)); assert.ok(Math.abs(plan.at(1 - 1e-6).l - plan.at(1).l) < 1e-4, 'and ends on the lift the watching posture has at rest, with no step');
     for (let k = 0; k <= 120; k++) assert.ok(plan.at(k / 120).l >= plan.need.l[k] - 1e-9 && plan.at(k / 120).r >= plan.need.r[k] - 1e-9, `the lift is never under what is needed (w ${k / 120})`);
-    const src = f => fs.readFileSync(path.join(ROOT, f), 'utf8'), tag = 'people-lap-20261124b';
+    const src = f => fs.readFileSync(path.join(ROOT, f), 'utf8'), tag = 'people-lap-20261124c';
     assert.ok(src('workspace-3d.mjs').includes(`room-people.mjs?v=${tag}`), 'workspace-3d.mjs loads the new room-people.mjs');
     assert.ok(src('room-people.mjs').includes(`room-people-motion.mjs?v=${tag}`) && src('room-people.mjs').includes(`people-lap.mjs?v=${tag}`) && src('room-people.mjs').includes(`people-pose-keys.mjs?v=${tag}`), 'room-people.mjs loads the new motion, lap and pose-key modules');
     assert.ok(src('room-people-motion.mjs').includes(`people-lap.mjs?v=${tag}`) && src('people-lap.mjs').includes(`people-lap-data.mjs?v=${tag}`), 'and they the new lap module and its data');

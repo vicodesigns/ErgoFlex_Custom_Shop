@@ -18,7 +18,7 @@
 //   the state at any second depends on nothing else and scrubbing gives the same frames as playing.
 // Everything else (breathing, the head, weight shifts, typing fingers) is layered on from time and a seed.
 import * as THREE from 'three';
-import { lapPose } from './people-lap.mjs?v=people-lap-20261124b';
+import { lapRests } from './people-lap.mjs?v=people-lap-20261124c';
 
 const V = () => new THREE.Vector3(), Q = () => new THREE.Quaternion();
 const clamp01 = x => x < 0 ? 0 : x > 1 ? 1 : x;
@@ -617,14 +617,20 @@ export class DeskActor {
 // the motion has it. `hold`: leave the bones alone (someone is dragging one in the Director).
 export function drawPose(rig, drawn, dz = 0, pose = null, hold = false, lap = !!drawn?.lap) {
     if (!drawn) return;
-    // (someone in a wheelchair: the hands and forearms are kept out of the thighs whatever the pose, the pose keys and the blend left them
-    // at, people-lap.mjs; `lap`: true for a model at rest (the lift from how deep the hand would be), or the lifts { l, r } a change's plan
-    // has for this moment of it (room-people.mjs: one smooth move from the rims to the lap, lapPlan))
-    if (!hold && lap) pose = lapPose(rig, pose, typeof lap === 'object' ? lap : null);
+    // (someone in a wheelchair: the hands and forearms are kept out of the thighs and laid on the knees, people-lap.mjs lapRests; `lap`:
+    // true for a model at rest (the lift from how deep the hand would be), or { l, r, ref, drape } for a moment of a change (the lifts its
+    // plan has then, room-people.mjs: one smooth move from the rims to the lap, lapPlan). The lift and the laying down are worked out
+    // from `ref` (the placement's own tuning: drawn.lapRef at rest, room-people.mjs keyPoses) and are part of the bones' rest; the pose
+    // keys made in the act turn on top, so a hand Vico drags lower stays there)
+    let rests = null;
+    if (!hold && lap) {
+        const at = typeof lap === 'object' ? lap : null, ref = at && 'ref' in at ? at.ref : drawn.lapRef !== undefined ? drawn.lapRef : pose;
+        rests = lapRests(rig, pose, ref ?? null, { lifts: at && Number.isFinite(at.l) ? at : null, drape: at?.drape ?? 1, lay: at?.lay ?? null });
+    }
     for (let i = 0; i < rig.n; i++) {
         const name = rig.names[i], bone = drawn.bones.get(name); if (!bone || name === 'still') continue;
         if (hold) continue;   // (the pose editor measures its turns from `rest`: it stays with the bones while one is dragged)
-        const rest = drawn.rest.get(name); rest.copy(rig.lq[i]);
+        const rest = drawn.rest.get(name); rest.copy(rig.lq[i]); if (rests?.[i]) rest.multiply(rests[i]);
         bone.quaternion.copy(rest); const d = pose?.[name]; if (Array.isArray(d) && d.length === 4) bone.quaternion.multiply(tq.fromArray(d)).normalize();
         if (name === 'Root') { bone.position.copy(rig.lp[i]); bone.position.z -= dz; } else if (name === 'pelvis') bone.position.copy(rig.lp[i]);
     }

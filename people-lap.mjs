@@ -32,16 +32,21 @@
 // skin is from the thigh bone, by place along it and the angle round it, in the thigh bone's own frame; the hand's points,
 // fingers included, and the forearm's rings).
 import * as THREE from 'three';
-import LAP from './people-lap-data.mjs?v=people-lap-20261124b';
-import { LAP_STATIONS, LAP_BINS, LAP_FROM, LAP_TO, thighFrame } from './people-lap-frame.mjs';
+import LAP from './people-lap-data.mjs?v=people-lap-20261124c';
+import { LAP_STATIONS, LAP_BINS, LAP_FROM, LAP_TO, thighFrame } from './people-lap-frame.mjs?v=people-lap-20261124c';
 
 export { LAP_STATIONS, LAP_BINS, thighFrame };
 // The skin's distance from the axis at s (0 the hip joint .. 1 the knee) and angle th, from a table (LAP_STATIONS x LAP_BINS, metres).
+const EDGE = .3;      // (skinAt: the part of a station, round its edge, over which skin that ends there closes)
 export function skinAt(table, s, th) {
     const f = Math.min(LAP_STATIONS - 1, Math.max(0, (s - LAP_FROM) / (LAP_TO - LAP_FROM) * LAP_STATIONS - .5)), k0 = Math.floor(f), k1 = Math.min(LAP_STATIONS - 1, k0 + 1), kf = f - k0;
     const g = (th + Math.PI) / (2 * Math.PI) * LAP_BINS - .5, j0 = Math.floor(g), jf = g - j0, a = ((j0 % LAP_BINS) + LAP_BINS) % LAP_BINS, b = (a + 1) % LAP_BINS;
-    const row = k => table[k * LAP_BINS + a] * (1 - jf) + table[k * LAP_BINS + b] * jf;
-    return row(k0) * (1 - kf) + row(k1) * kf;
+    const row = k => table[k * LAP_BINS + a] * (1 - jf) + table[k * LAP_BINS + b] * jf, r0 = row(k0), r1 = row(k1);
+    // (where the skin ends along the leg, the front of the knee cap: a station with skin and the next with none. Read straight between
+    // them, a fingertip on the knee cap's face was half way into what the table took for air; there the station's skin holds nearly to
+    // its edge and closes over the last of it, continuously: by how unlike the two stations are)
+    const c = Math.abs(r0 - r1) / Math.max(r0, r1, 1e-6), sharp = Math.min(1, Math.max(0, (kf - .5) / EDGE + .5)), k = kf + (sharp - kf) * c;
+    return r0 * (1 - k) + r1 * k;
 }
 
 // The names of the bones of the arms and hands of a rig (the pose keys' turns that a change of posture blends).
@@ -55,11 +60,16 @@ const FORE_BINS = 12;      // points round the forearm at each station (tools/pe
 const v0 = new THREE.Vector3(), v1 = new THREE.Vector3(), v2 = new THREE.Vector3(), v3 = new THREE.Vector3(), wrist = new THREE.Vector3(), base = new THREE.Vector3();
 const q0 = new THREE.Quaternion(), q1 = new THREE.Quaternion(), qh = new THREE.Quaternion(), frames = new Map(), points = new Map();
 const smoothstep = (a, b, x) => { if (b <= a) return x >= b ? 1 : 0; const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); }, smooth = smoothstep;
-const SKIN = .004;       // metres of cloth a hand lies on without going into it
-const SOFT = .004;       // metres over which a lift at rest eases in (it leaves at most SOFT / 2 of the cloth's SKIN pressed)
+// (the table is the skin's own triangles now, to a millimetre or two: tools/people/measure-lap.mjs. It was read off the corners and
+// widened, 10 to 17 mm over the jeans, and with 4 mm of SKIN on that the hands hovered an inch over the knees: 24 Nov 2026)
+const SKIN = .003;       // metres of cloth a hand lies on without going into it
+const SOFT = .003;       // metres over which a lift at rest eases in (it leaves at most SOFT / 2 of the cloth's SKIN pressed)
 const PLAN_STEPS = 120;  // a change measured at this many steps (every ~12 ms of a 1.4 s change)
 const RISE = .45;        // the part of a change (0..1) over which the hands lift clear before they first meet a thigh
 const MARGIN = .0015;    // metres a change's lift is kept over what was measured (for what a hand needs between two of the steps)
+const TRAVEL_SKIN = .008; // the SKIN a change's hands are kept over while they travel (the cloth's SKIN at its ends, where they rest: TRAVEL_END)
+const TRAVEL_END = .3;
+let skinNow = SKIN;
 const END_EASE = .25;    // (lapPlan)
 const SETTLE = .1;       // the end of a change, where the hand settles onto the thigh, over which that margin goes
 
@@ -100,10 +110,10 @@ const UP = new THREE.Vector3(0, 1, 0), probe = new THREE.Vector3();
 // How far straight up a sample has to go to leave the thigh (and the air over it), to a quarter of a millimetre: the hand comes
 // over the thigh from above, never out through its side or its underside. 0 for a sample that is clear.
 function exitUp(rig, side, table, p) {
-    if (inside(rig, side, table, p, SKIN) <= 0) return 0;
-    for (let h = .004; h < MOST; h += .004) if (inside(rig, side, table, probe.copy(p).addScaledVector(UP, h), SKIN) <= 0) {
+    if (inside(rig, side, table, p, skinNow) <= 0) return 0;
+    for (let h = .004; h < MOST; h += .004) if (inside(rig, side, table, probe.copy(p).addScaledVector(UP, h), skinNow) <= 0) {
         let lo = h - .004, hi = h;
-        for (let k = 0; k < 4; k++) { const m = (lo + hi) / 2; if (inside(rig, side, table, probe.copy(p).addScaledVector(UP, m), SKIN) <= 0) hi = m; else lo = m; }
+        for (let k = 0; k < 4; k++) { const m = (lo + hi) / 2; if (inside(rig, side, table, probe.copy(p).addScaledVector(UP, m), skinNow) <= 0) hi = m; else lo = m; }
         return hi;
     }
     return 0;       // (never out of it: not a hand in a thigh but a pose the table does not know, left as it is)
@@ -131,23 +141,24 @@ function need(rig, side, character) {
 // The lift at rest for a depth h: none for a hand that is clear, eased in over SOFT (h^2 / 2 SOFT), then the depth less SOFT / 2.
 export const softLift = h => h <= 0 ? 0 : h < SOFT ? h * h / (2 * SOFT) : h - SOFT / 2;
 // { l, r }: how far each wrist is lifted at rest (metres), for the rig's pose (fk() current).
-export function lapLifts(rig, { character = rig.character } = {}) {
-    rig.fk();
-    return { l: softLift(need(rig, 'l', character)), r: softLift(need(rig, 'r', character)) };
+export function lapLifts(rig, { character = rig.character, skin = SKIN } = {}) {
+    rig.fk(); skinNow = skin;
+    try { return { l: softLift(need(rig, 'l', character)), r: softLift(need(rig, 'r', character)) }; } finally { skinNow = SKIN; }
 }
 
 // The turns on top of the rig's pose (`pose`: a turn per bone, drawPose's) that lift the wrists by `lifts` ({ l, r } metres; by
 // lapLifts when not given) and so keep the arms out of the thighs. `pose` itself when nothing moves.
 const arm = rig => ['l', 'r'].flatMap(s => rig.side[s].arm.slice(1));
-export function lapPose(rig, pose, lifts = null) {
+export function lapPose(rig, pose, lifts = null, { drape = 0, lay = null } = {}) {
     const saved = rig.lq.map(q => q.clone());
     rig.fk();
     if (pose) for (const [name, d] of Object.entries(pose)) { const i = rig.index.get(name); if (i !== undefined && Array.isArray(d) && d.length === 4) rig.lq[i].multiply(q0.fromArray(d)).normalize(); }
     rig.fk();
     const up = lifts || lapLifts(rig);
-    let result = pose;
-    if (up.l > 1e-7 || up.r > 1e-7) {
-        for (const side of ['l', 'r']) if (up[side] > 1e-7) { const hand = rig.side[side].arm[3]; lift(rig, side, v0.copy(rig.wp[hand]), q1.copy(rig.wq[hand]), up[side]); }
+    let result = pose, moved = false;
+    for (const side of ['l', 'r']) if (up[side] > 1e-7) { const hand = rig.side[side].arm[3]; lift(rig, side, v0.copy(rig.wp[hand]), q1.copy(rig.wq[hand]), up[side]); moved = true; }
+    if (drape > 0) for (const side of ['l', 'r']) moved = layHand(rig, side, rig.character, drape, lay ? lay[side] : null) || moved;
+    if (moved) {
         result = { ...(pose || {}) };
         // (the turn each arm bone has to be given on top of the pose as solved, so that the pose keys' turn and the lift come to the same: drawPose multiplies the turn on)
         arm(rig).forEach(i => { q1.copy(saved[i]).invert().multiply(rig.lq[i]).normalize(); result[rig.names[i]] = q1.toArray(); });
@@ -155,6 +166,84 @@ export function lapPose(rig, pose, lifts = null) {
     for (let i = 0; i < rig.n; i++) rig.lq[i].copy(saved[i]);
     rig.fk();
     return result;
+}
+
+// ---- the hands laid on the knees ----------------------------------------------------------------------------------
+// The forearms rest on the thighs, and the hands go on over the knees, where the leg falls away: a hand held as the posture holds
+// it stands off the knee cap by up to 20 mm (Vico, 24 Nov 2026: "the hands covering like an inch or so"). Resting, the hand lies
+// on the knee: it is let down about its wrist (the way its fingers point, turned toward the floor) until the hand or a finger is on
+// the cloth (LAY_GAP over the skin by the table), at most LAY_MOST; `k` of that (a change lays it down as the hands settle). A hand
+// already on the cloth, or in it, is left as it is. The fingers keep their curl. -> whether the hand moved (fk() current after).
+const LAY_GAP = .004, LAY_SOFT = .001, LAY_MOST = .7, LAY_STEPS = 12, axisL = new THREE.Vector3(), down = new THREE.Vector3(0, -1, 0), qL = new THREE.Quaternion(), pL = new THREE.Vector3();
+function layHand(rig, side, character, k, angle = null) {
+    const a = (angle === null ? layAngle(rig, side, character) : (handAxis(rig, side, character), angle)) * k; if (!(a > 1e-5) || !axisL.lengthSq()) return false;
+    rig.setWorld(rig.side[side].arm[3], qL.setFromAxisAngle(axisL, a).multiply(q1.copy(rig.wq[rig.side[side].arm[3]]))); rig.fk();
+    return true;
+}
+// The turn (radians) that lays one hand on the knee, the rig as it is; leaves axisL the axis it is about (0 for a hand on the cloth already).
+// (the axis a hand is laid down about, into axisL: across the way it points, from the wrist to the middle of its points, level; its points)
+function handAxis(rig, side, character) {
+    const at = rig.wp[rig.side[side].arm[3]], pts = samples(rig, side, character).filter(c => c.t === 1);
+    axisL.set(0, 0, 0); if (!pts.length) return pts;
+    v3.set(0, 0, 0); for (const c of pts) v3.add(c.p); v3.divideScalar(pts.length).sub(at);
+    axisL.crossVectors(v3, down); if (axisL.lengthSq() < 1e-8) axisL.set(0, 0, 0); else axisL.normalize();
+    return pts;
+}
+function layAngle(rig, side, character) {
+    const table = tableOf(character, side), at = rig.wp[rig.side[side].arm[3]], pts = handAxis(rig, side, character);
+    if (!axisL.lengthSq()) return 0;
+    // (how near the hand is to the cloth at a turn a: the nearest of its points, softly (LAY_SOFT): which point touches first changes as the
+    // hand moves, and the turn found by the nearest alone had a kink each time, a kick of the fingertips at the end of the change)
+    const near = new Array(pts.length);
+    const clear = a => { qL.setFromAxisAngle(axisL, a); let most = -1; for (let i = 0; i < pts.length; i++) { pL.copy(pts[i].p).sub(at).applyQuaternion(qL).add(at); near[i] = inside(rig, side, table, pL, 0); if (near[i] > most) most = near[i]; } let sum = 0; for (const d of near) sum += Math.exp((d - most) / LAY_SOFT); return most + LAY_SOFT * Math.log(sum) + LAY_GAP; };
+    if (clear(0) >= 0) return 0;
+    let lo = 0, hi = LAY_MOST;
+    if (clear(hi) < 0) lo = hi;
+    else for (let n = 0; n < LAY_STEPS; n++) { const m = (lo + hi) / 2; if (clear(m) < 0) lo = m; else hi = m; }
+    // (a hand far over the knee, still on its way to it, is not let down to it: none at LAY_MOST, so no step where it comes within reach)
+    return lo * (1 - smoothstep(LAY_MOST / 2, LAY_MOST, lo));
+}
+// { l, r }: the turns that lay the hands on the knees in the rig's pose with `pose` on it, lifted by `lifts` (a change's end: lapChange lays
+// the hands down by these, the same all through, not by what each of its frames measures: that went down and up again, a kick).
+export function layAngles(rig, pose, lifts = null) {
+    const solved = rig.lq.map(q => q.clone()); turned(rig, pose);
+    const up = lifts || lapLifts(rig);
+    for (const side of ['l', 'r']) if (up[side] > 1e-7) { const hand = rig.side[side].arm[3]; lift(rig, side, v0.copy(rig.wp[hand]), q1.copy(rig.wq[hand]), up[side]); }
+    const out = { l: layAngle(rig, 'l', rig.character), r: layAngle(rig, 'r', rig.character) };
+    for (let i = 0; i < rig.n; i++) rig.lq[i].copy(solved[i]); rig.fk();
+    return out;
+}
+
+// ---- Vico's own hands: the pose keys he makes win -----------------------------------------------------------------
+// Where the hands are kept out of the lap (lifted, laid on the knees) is worked out from `ref`: the posture's own tuning (the pose
+// keys the placement starts with; room-people.mjs lapRef), not from the keys made inside the act. Those are turned on top of the
+// hands as they rest, so a hand dragged lower in the Director stays where it was dragged (24 Nov 2026: a key at 5.2 s on Omar's
+// left shoulder, the hands dragged down 2 cm, and both popped back up every time: the lift took them out of the thighs again).
+// Only a hand keyed deep into the thigh is taken back out, softly, by what is past DEEP (deepLift): never to the cloth.
+//   lapRests(rig, pose, ref, { lifts, drape }) -> [per bone: a turn or null]: the bone's rest is rig.lq[i] times it, the drawn bone
+//   that rest times pose[name] (the Director measures its turns from that rest). rig: the solved pose (fk() current, left so).
+const DEEP = .02, DEEP_SOFT = .01;
+export const deepLift = h => h <= DEEP ? 0 : h < DEEP + DEEP_SOFT ? (h - DEEP) ** 2 / (2 * DEEP_SOFT) : h - DEEP - DEEP_SOFT / 2;
+const qa = new THREE.Quaternion(), qb = new THREE.Quaternion();
+const turnOf = (pose, name) => { const d = pose?.[name]; return Array.isArray(d) && d.length === 4 ? qb.fromArray(d) : qb.identity(); };
+export function lapRests(rig, pose, ref = pose, { lifts = null, drape = 1, lay = null, character = rig.character } = {}) {
+    const solved = rig.lq.map(q => q.clone()), bones = arm(rig), out = new Array(rig.n).fill(null);
+    const settled = lapPose(rig, ref, lifts, { drape, lay });
+    // (the rest that puts the hands where they rest with ref's turns on: solved x settled x ref^-1)
+    for (const i of bones) { const name = rig.names[i]; out[i] = qa.copy(turnOf(settled, name)).multiply(turnOf(ref, name).invert()).normalize().clone(); }
+    if (pose !== ref) {
+        // (the keys made in the act on top: only what is past DEEP into a thigh comes back out)
+        for (let i = 0; i < rig.n; i++) { rig.lq[i].copy(solved[i]); if (out[i]) rig.lq[i].multiply(out[i]); rig.lq[i].multiply(turnOf(pose, rig.names[i])).normalize(); }
+        rig.fk();
+        const deep = { l: deepLift(need(rig, 'l', character)), r: deepLift(need(rig, 'r', character)) };
+        if (deep.l > 1e-7 || deep.r > 1e-7) {
+            for (const side of ['l', 'r']) if (deep[side] > 1e-7) { const hand = rig.side[side].arm[3]; lift(rig, side, v0.copy(rig.wp[hand]), q1.copy(rig.wq[hand]), deep[side]); }
+            for (const i of bones) out[i] = qa.copy(solved[i]).invert().multiply(rig.lq[i]).multiply(turnOf(pose, rig.names[i]).invert()).normalize().clone();
+        }
+        for (let i = 0; i < rig.n; i++) rig.lq[i].copy(solved[i]); rig.fk();
+    }
+    for (const i of bones) if (Math.abs(out[i].w) > 1 - 1e-12) out[i] = null;
+    return out;
 }
 
 // ---- a change of posture as one move ------------------------------------------------------------------------------
@@ -214,7 +303,9 @@ export function lapPlan(rig, poseAt, { steps = PLAN_STEPS, character = rig.chara
         // (a posture at rest whose hands are not lifted (a typist's) is come to, or left, over END_EASE of the change: what the table
         // reads as needed there goes, so that the lift comes down to none with no step; the hands are where its keys put them)
         const ease = (ends.from ? 1 : smoothstep(0, END_EASE, k / steps)) * (ends.to ? 1 : 1 - smoothstep(1 - END_EASE, 1, k / steps));
-        const up = fixed(k) ? { l: 0, r: 0 } : lapLifts(rig, { character }); needs.l.push(up.l * ease); needs.r.push(up.r * ease);
+        // (a millimetre more cloth while the hands travel over the thighs, the cloth's own where they come to rest or leave it)
+        const w = k / steps, rest = Math.min(1, (ends.to ? smoothstep(1 - TRAVEL_END, 1, w) : 0) + (ends.from ? 1 - smoothstep(0, TRAVEL_END, w) : 0));
+        const up = fixed(k) ? { l: 0, r: 0 } : lapLifts(rig, { character, skin: TRAVEL_SKIN + (SKIN - TRAVEL_SKIN) * rest }); needs.l.push(up.l * ease); needs.r.push(up.r * ease);
         for (let i = 0; i < rig.n; i++) rig.lq[i].copy(saved[i]); rig.fk();
     }
     const shape = { l: envelope(needs.l), r: envelope(needs.r) };

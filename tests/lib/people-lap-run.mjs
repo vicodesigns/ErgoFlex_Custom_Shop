@@ -7,17 +7,24 @@ import path from 'node:path';
 import * as THREE from 'three';
 import { PersonRig, solveStill, solveChange, changeArms } from '../../room-people-motion.mjs';
 import { blendPoses } from '../../people-pose-keys.mjs';
-import { lapPose, lapPlan, armBones, handsAt, turnHands, handTurnAt } from '../../people-lap.mjs';
+import { lapRests, lapPlan, armBones, handsAt, turnHands, handTurnAt } from '../../people-lap.mjs';
 import { bodyPoints, posed, intoSkin, nearest, facingOut, ROOT } from './people-surface.mjs';
 
 export const rigOf = who => new PersonRig(JSON.parse(fs.readFileSync(path.join(ROOT, 'assets/props/people-rigs', who + '.json'), 'utf8')));
 export const FINGERS = /^(thumb|index|middle|ring|pinky)_0\d_/;
-const q = new THREE.Quaternion();
+const q = new THREE.Quaternion(), smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 // The turns of a pose (drawPose's last argument) on the rig's bones, as the stage does.
 export function turned(rig, pose) {
     if (pose) for (const [name, d] of Object.entries(pose)) { const i = rig.index.get(name); if (i !== undefined) rig.lq[i].multiply(q.fromArray(d)).normalize(); }
     rig.fk();
 }
+// The lap pass as drawPose puts it on (room-people-motion.mjs): the rests it gives the arms, then the turns on top.
+export function drawLap(rig, pose, lifts = null, { ref = pose, drape = 1 } = {}) {
+    const rests = lapRests(rig, pose, ref, { lifts, drape });
+    for (let i = 0; i < rig.n; i++) if (rests[i]) rig.lq[i].multiply(rests[i]);
+    turned(rig, pose);
+}
+export const LAY_IN = .2;      // (room-people.mjs: the hands laid onto the knees over the end of a change)
 export class Lap {
     // to: the posture after the roll ('wheel-watch', or a typing one: 'wheel-type-28'); rest: whether it is lifted out of the lap at rest
     // (a watcher's hands are, a typist's stay on the keys: people-lap.mjs lapRest). fine: the second placement's pose keys' turns (one
@@ -39,12 +46,14 @@ export class Lap {
     // The pose a change gives at w: the rig is left in it.
     change(w, { arms = null } = {}) {
         const rig = this.rig, plan = this.lap ? this.plan(arms) : null, pose = this.posed(w, arms);
-        const final = this.lap ? lapPose(rig, pose, plan ? plan.at(w) : { l: 0, r: 0 }) : pose; turned(rig, final); return final;
+        if (this.lap) drawLap(rig, pose, plan ? plan.at(w) : { l: 0, r: 0 }, { drape: this.rest ? smooth(1 - LAY_IN, 1, w) : 0 }); else turned(rig, pose);
+        return pose;
     }
     // The posture after the change with life in it at a time of the chapter.
     still(time, seed, life = 1) {
         const rig = this.rig; solveStill(rig, this.watch, { time, seed, life }); rig.fk();
-        const final = this.lap && this.rest ? lapPose(rig, this.fine) : this.fine; turned(rig, final); return final;
+        if (this.lap && this.rest) drawLap(rig, this.fine, null, { ref: this.ref === undefined ? this.fine : this.ref }); else turned(rig, this.fine);
+        return this.fine;
     }
     // How deep the hands (fingers too) and forearms are in the body now, metres, by the skin's normals: { hand, fore } in the thighs, knees
     // and shins, the pelvis and the trunk (the arm's own bones, the head and the wheelchair are not skin to be in; nor the inner faces of

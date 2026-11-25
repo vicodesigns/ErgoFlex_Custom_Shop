@@ -97,12 +97,12 @@ import { mediaPersonMaterial, castDetailEnsure, castDetailCast, castDetailVarian
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
 import {updateSkinnedBounds} from './skinned-bounds.mjs';
-import {poseAt, blendPoses} from './people-pose-keys.mjs?v=people-lap-20261124b';
-import {armBones,lapPlan,lapModel,lapRest,handsAt,turnHands,handTurnAt} from './people-lap.mjs?v=people-lap-20261124b';
+import {poseAt, blendPoses, KEY_SNAP} from './people-pose-keys.mjs?v=people-lap-20261124c';
+import {armBones,lapPlan,lapModel,lapRest,handsAt,turnHands,handTurnAt,layAngles} from './people-lap.mjs?v=people-lap-20261124c';
 import {applyHeld} from './people-held.mjs';
 import {partsOf} from './people-held-data.mjs';
 import {postureRecord,postureRecords,hasPosturePose,poseOwner,sourceOf,roomEditKey,blendPosturePoses} from './people-postures.mjs';
-import { PersonRig, DeskActor, solveStill, solveChange, changeArms, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, squatKey, WORKOUTS, drawPose, livelyPose, seedOf, placeGrip, handsKey } from './room-people-motion.mjs?v=people-lap-20261124b';
+import { PersonRig, DeskActor, solveStill, solveChange, changeArms, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, squatKey, WORKOUTS, drawPose, livelyPose, seedOf, placeGrip, handsKey } from './room-people-motion.mjs?v=people-lap-20261124c';
 // Room looks (room-looks.mjs): the Nov 17 pass's cast finishes (own materials, hair / shirt maps) are the refreshed Create
 // room's and the Commons'; Create's Classic look keeps the cast as it was, and its people move as they did then
 // (rig.classicMotion: room-people-motion.mjs's painting, pottery and page-turn strokes from before the pass).
@@ -144,6 +144,8 @@ const BEHIND_KEYS = { sit: 470, wheel: 460, stand: 415 };
 const PAIR_EASE = .6;
 // (a wheelchair user's change that begins while the roll before it is still under way takes over from the roll over this much of it: lapChange)
 const ROLL_INTO = .3, NO_LIFT = Object.freeze({ l: 0, r: 0 }), lapQ = new THREE.Quaternion();
+// (the part of a change at its end over which the hands are laid down onto the knees, people-lap.mjs layHand; at its start when they leave them)
+const LAY_IN = .35;
 const changeLength = (rig, from, to) => 1.4 + THREE.MathUtils.clamp(Math.abs(to.wp[rig.b.pelvis].y - from.wp[rig.b.pelvis].y) / .3, 0, 1);
 const HEIGHT_FIT = 1.4;                       // inches either side of the height a desk pose was built for
 const LIVELY = 4;                             // Studio, the old way (lively=0): the 4 nearest to the camera move, every frame
@@ -1398,6 +1400,19 @@ export class RoomPeople {
         const turns = poseNow(spec);
         for (const [name, bone] of rig.bones) { const d = turns?.[name]; bone.quaternion.copy(rig.rest.get(name)); if (Array.isArray(d) && d.length === 4) bone.quaternion.multiply(poseTurn.fromArray(d)).normalize(); }
     }
+    // The pose keys a wheelchair user's lap pass works from (people-lap.mjs lapRests): those up to the start of the placement (its first
+    // `when`, 0 without one), the placement's own tuning; the keys made inside the act (Vico in the Director, the hands dragged where he
+    // wants them) are turned on top of the hands as they rest and win. null when no key is in the act (the pass works from the pose
+    // itself, as it always did). A record ({ pose, poseKeys }) like the one given, kept while the keys and the start are the same.
+    lapBase(spec, record) {
+        const keys = record?.poseKeys; if (!Array.isArray(keys) || !keys.length) return null;
+        const spans = this.filter?.when?.[this.keyOf(spec)], start = Array.isArray(spans) && spans.length ? Math.min(...spans.map(w => Number.isFinite(w?.[0]) ? w[0] : 0)) : 0;
+        const memo = this.lapBases ||= new WeakMap(), was = memo.get(record);
+        if (was && was.keys === keys && was.pose === record.pose && was.start === start) return was.base;
+        const own = keys.filter(k => k.t <= start + KEY_SNAP), base = own.length === keys.length ? null : { ...(record.pose ? { pose: record.pose } : {}), ...(own.length ? { poseKeys: own } : {}) };
+        memo.set(record, { keys, pose: record.pose, start, base });
+        return base;
+    }
     // Pose keys (spec.poseKeys): the turns each keyed person has at this second of the chapter, for everything that
     // draws them this frame (poseNow). Someone nothing moves this frame (no life, not at a moving desk) is posed here.
     // The Director's Gumball on a held thing: shown where it is dragged until the drag ends (people-held.mjs).
@@ -1418,11 +1433,16 @@ export class RoomPeople {
                     delete object.userData.personPostureApplied;
                 }
                 if(spec && spec.poseNow !== undefined)delete spec.poseNow;
+                if(object.userData.personRig)delete object.userData.personRig.lapRef;
                 if(object.userData.heldSig)applyHeld(object,null);
                 continue;
             }
             if(stored)object.userData.personPostureApplied=true;
             spec.poseNow = poseAt(record, time, object.userData.personKeyed ||= {});
+            // (a wheelchair user resting the hands on the knees: what the lap pass works from, the placement's own tuning without the keys
+            // made in the act, which win: lapBase, drawPose)
+            const drawnRig = object.userData.personRig;
+            if (drawnRig?.lap || drawnRig?.lapChange) { const base = this.lapBase(spec, record); if (base) drawnRig.lapRef = poseAt(base, time); else delete drawnRig.lapRef; }
             // (a held thing moved on its own: people-held.mjs, on the skeleton)
             if (object.userData.personRig && !held) applyHeld(object, record.held || null);   // (not during a Director drag: it previews the held thing itself)
             if ((record.pose || record.poseKeys?.length || record.held) && !object.userData.personRig && !object.userData.personPoseLoading) {
@@ -2425,8 +2445,16 @@ export class RoomPeople {
     //    at each frame from how deep the hand was then took it straight up the whole height of the thigh in one frame: 143 mm)
     // The plan is made again when what it is made from changes (the pose keys of either placement, the timing).
     lapChange(pair, a, b, w, { arms, turnPart, step, line, cut, film, time, hold }) {
-        const rig = pair.rig, names = armBones(rig), pa = poseNow(a.userData.person), pb = poseNow(b.userData.person), length = pair.length, lerp = THREE.MathUtils.lerp;
+        const rig = pair.rig, names = armBones(rig), length = pair.length, lerp = THREE.MathUtils.lerp;
         const start = film && Number.isFinite(pair.at) ? pair.at - length / 2 : null, roll = start !== null && pair.from?.roll && pair.rollFrom && pair.rollRig ? pair.from.roll : null;
+        // (the pose keys at each moment of the change, not at this frame's for all of it: a key in the act, at 5.2 s, moves the keys' turns
+        // every frame of the change, and a plan made again every frame from them kicked the hands 60 mm in a 1/30 s frame. And what the lap
+        // pass works from, the placements' own tuning, apart from the keys made in the act: lapBase)
+        const recOf = o => { const spec = o.userData.person, owner = this.poseOwner(spec); return owner?.postures ? postureRecord(owner, spec.id) : spec; };
+        const ra = recOf(a), rb = recOf(b), baseA = this.lapBase(a.userData.person, ra), baseB = this.lapBase(b.userData.person, rb), keyed = start !== null;
+        const poseOf = (o, rec, u) => keyed ? poseAt(rec, start + u * length) : poseNow(o.userData.person);
+        const refOf = (o, rec, base, u) => !base ? poseOf(o, rec, u) : keyed ? poseAt(base, start + u * length) : o.userData.personRig?.lapRef ?? poseNow(o.userData.person);
+        const turns = (u, pick) => { const pa = pick(a, ra, baseA, u), pb = pick(b, rb, baseB, u); return { pa, pb }; };
         const at = u => {
             const ease = THREE.MathUtils.smoothstep(u, turnPart[0], turnPart[1]);
             let shift = null;
@@ -2453,20 +2481,30 @@ export class RoomPeople {
                 if (wheels) wheels = { l: lerp(r.wheel.l, wheels.l, k), r: lerp(r.wheel.r, wheels.r, k) };
             }
             // (the hands turn to how they rest on the knees early, while they lift off the rims: people-lap.mjs turnHands)
-            const pose = turnHands(rig, { ...(poseNow(shown.userData.person) || {}), ...blendPoses(pa, pb, changeArms(u, arms), names) }, names, handTo, u < 1 ? handTurnAt(u, arms) : 0);
-            return { shown, position, turn, wheels, pose };
+            const kh = u < 1 ? handTurnAt(u, arms) : 0, own = shown === a ? [a, ra, baseA] : [b, rb, baseB];
+            const { pa, pb } = turns(u, (o, rec, base, v) => poseOf(o, rec, v)), pose = turnHands(rig, { ...(poseOf(own[0], own[1], u) || {}), ...blendPoses(pa, pb, changeArms(u, arms), names) }, names, handTo, kh);
+            let ref = pose;
+            if (baseA || baseB) { const r = turns(u, refOf); ref = turnHands(rig, { ...(refOf(...own, u) || {}), ...blendPoses(r.pa, r.pb, changeArms(u, arms), names) }, names, refTo, kh); }
+            return { shown, position, turn, wheels, pose, ref };
         };
-        const sign = JSON.stringify([pa, pb, arms, cut, length, start, roll?.start ?? null, turnPart, step, line, pair.to?.carry || null, !!a.userData.personRig?.lap, !!b.userData.personRig?.lap]);
-        let handTo = null;
+        const keysOf = rec => [rec?.pose || null, rec?.poseKeys || null];
+        const sign = JSON.stringify([keyed ? [keysOf(ra), keysOf(rb)] : [poseNow(a.userData.person), poseNow(b.userData.person), a.userData.personRig?.lapRef ?? null, b.userData.personRig?.lapRef ?? null], arms, cut, length, start, roll?.start ?? null, turnPart, step, line, pair.to?.carry || null, !!a.userData.personRig?.lap, !!b.userData.personRig?.lap]);
+        let handTo = null, refTo = null;
         if (pair.lapSign !== sign) {
             // (the hands' turn at the end of the change, in the model's frame: as they rest on the knees)
-            pair.lapHands = handsAt(rig, at(1).pose);
-            handTo = pair.lapHands; pair.lapSign = sign; pair.lapPlan = lapPlan(rig, u => at(u).pose, { ends: { from: !!a.userData.personRig?.lap, to: !!b.userData.personRig?.lap } });
+            const end = at(1);
+            pair.lapHands = handsAt(rig, end.pose); pair.lapHandsRef = end.ref === end.pose ? pair.lapHands : handsAt(rig, end.ref);
+            handTo = pair.lapHands; refTo = pair.lapHandsRef; pair.lapSign = sign; pair.lapPlan = lapPlan(rig, u => at(u).ref, { ends: { from: !!a.userData.personRig?.lap, to: !!b.userData.personRig?.lap } });
+            // (how far the hands are laid down onto the knees where the change ends in the lap (or begins there), the same all through it)
+            const lifts = u => pair.lapPlan ? pair.lapPlan.at(u) : NO_LIFT;
+            pair.lapLay = { to: b.userData.personRig?.lap ? layAngles(rig, at(1).ref, lifts(1)) : null, from: a.userData.personRig?.lap ? layAngles(rig, at(0).ref, lifts(0)) : null };
         }
-        handTo = pair.lapHands;
+        handTo = pair.lapHands; refTo = pair.lapHandsRef;
         const now = at(w);
         now.shown.position.copy(now.position); now.shown.rotation.y = now.turn;
-        drawPose(rig, now.shown.userData.personRig, 0, now.pose, hold, pair.lapPlan ? pair.lapPlan.at(w) : NO_LIFT);
+        // (the hands laid onto the knees as they settle at the end of a change to the lap, and lifted off them as one from it begins)
+        const lay = pair.lapLay?.to && (w >= .5 || !pair.lapLay.from) ? pair.lapLay.to : pair.lapLay?.from || null, drape = lay === pair.lapLay?.to ? THREE.MathUtils.smoothstep(w, 1 - LAY_IN, 1) : 1 - THREE.MathUtils.smoothstep(w, 0, LAY_IN);
+        drawPose(rig, now.shown.userData.personRig, 0, now.pose, hold, { ...(pair.lapPlan ? pair.lapPlan.at(w) : NO_LIFT), ref: now.ref, drape: lay ? drape : 0, lay });
         if (now.shown === a && now.wheels) turnWheels(now.shown.userData.personRig, now.wheels);
     }
     // Both models with their skeletons, and the bone data: until then the two simply dissolve as before.
