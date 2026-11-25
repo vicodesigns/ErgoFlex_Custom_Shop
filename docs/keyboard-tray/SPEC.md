@@ -74,6 +74,13 @@ Vico, after using it for real: "That drop option, the mount bracket, is not even
 
 ---------------------------------------------------------------------------------------------------
 
+## 0.5 25 Nov 2026: rig v2, Vico's real arm (option B+)
+
+Vico, after the throwaway previews (polish1124-tray2-k1d-*): "go with B+ and pick the rest position from my photo".
+* **Model** (`tools/props/tray-rig-v2.mjs` -> `assets/props/ergoflex-keyboard-tray-rig-v2.glb`; v1 untouched as the fallback; `tests/tray-rig-v2-asset-test.mjs`): `Tray_Links` 75 mm bolt to bolt (was 120; cut in its straight middle, both eyes unchanged); `Tray_Forks`' pin and its rod 27 mm higher on the forks plate (the platform 23 mm above its bolt, as on the real front plate, not 50); `Tray_Carriage`'s two bolts and rods 38.1 mm forward with the front of its hanging side plates. Nothing else: track, rod and knob, screw, plate, triangles, material.
+* **Rest position**: Vico's profile photos show where the arm is (flat when out or tucked: profile-02, -04, -07) but nothing that ties the rear bracket to the desk or the track, so they cannot tell the two candidates apart fore and aft (the platform 38.1 mm further back with the bracket as supplied, or today's place with the bolts forward). Today's rest is kept exactly: the platform, forks, rod, knob and riders are where the supplied model has them (0 mm), the arm rests 14.6 deg down (was 22.5). His everyday pose, arm flat with the platform just under the desktop, is base +14.6 / surface -14.6 (0.8 mm under); the joint stops at +12.9 (3 mm under), the preset "Arm up, level".
+* **Pivots**: `BASE_TILT_AT` the moved rear bolt (-10, -23.85, 46.86), `SURFACE_TILT_AT` the raised front bolt (-10, -42.7, 119.45). **Ranges**: base -30..+12.9 deg (-30 = the arm about 45 deg down, platform levelled 33.8 mm lower, profile-05), surface -30..+30. Presets "Arm down, level" -30 / +30, "Arm up, level" +12.9 / -12.9. The 3 mm rule and the coupling (platform within +-15 deg, level under the desk) are as in 0.4.
+
 ## 0.4 25 Nov 2026: Base tilt, Surface tilt on the real bolts, Level the platform (K1)
 
 Vico's photos of his real unit (docs/reference/keyboard-tray-real-20261125 on director/tray-photos-1125, profiles-134318): three parts, the rear L-bracket hanging under the swivel plate with two bolts, the arm (a box channel) bolted to it, and the front plate with the arc slot and a lock knob that carries the platform rail. They are the CAD's carriage bracket (its two pins), `Tray_Links`, and the forks with the rod and knob (`Tray_Crossbar`): the same parts, the same sizes (Vico: do not resize).

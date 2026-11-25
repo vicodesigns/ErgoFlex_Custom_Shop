@@ -19,7 +19,7 @@ const ERGO = 45, MOUSE = 56.9;
 {   // the joint table: Vico's ranges, rest = 0 = the glb as authored (no drop joint since 25 Nov 2026: "not even a real thing on the product")
     assert.deepEqual(T.TRAY_JOINTS.map(j => j.id), ['slide', 'swing', 'baseTilt', 'tilt']);
     assert.deepEqual(T.TRAY_JOINTS.map(j => j.label), ['Slide', 'Swing', 'Base tilt', 'Surface tilt']);
-    assert.deepEqual(L.JOINT_LIMITS, { slide: [0, 1], swing: [-180, 180], baseTilt: [-25, 8], tilt: [-30, 30] });
+    assert.deepEqual(L.JOINT_LIMITS, { slide: [0, 1], swing: [-180, 180], baseTilt: [-30, 12.9], tilt: [-30, 30] });
     for (const gone of ['DROP_ENABLED', 'BRACKET', 'DROP_CAD_LINKS_MM']) assert.ok(!(gone in L), gone + ' is gone');
     for (const gone of ['dropNeededMm', 'setBracket', 'trayBracket']) assert.ok(!(gone in T), gone + ' is gone');
     assert.equal(L.SLIDE_TRAVEL_MM, 234.5, 'the CAD travel along the track (the rig test measures it)');
@@ -42,7 +42,7 @@ const ERGO = 45, MOUSE = 56.9;
 {   // cleanTrayPose: hard limits, units, junk
     assert.deepEqual(T.cleanTrayPose(null), REST); assert.deepEqual(T.cleanTrayPose('x'), REST); assert.deepEqual(T.cleanTrayPose([1, 2]), REST);
     assert.deepEqual(T.cleanTrayPose({ slide: 2, swing: 400, tilt: -90, drop: 999 }), { slide: 1, swing: 180, baseTilt: 0, tilt: -30 }, 'an old drop is ignored');
-    assert.deepEqual(T.cleanTrayPose({ slide: -1, swing: -400, tilt: 90, drop: -5, baseTilt: -99 }), { slide: 0, swing: -180, baseTilt: -25, tilt: 30 });
+    assert.deepEqual(T.cleanTrayPose({ slide: -1, swing: -400, tilt: 90, drop: -5, baseTilt: -99 }), { slide: 0, swing: -180, baseTilt: -30, tilt: 30 });
     assert.deepEqual(T.cleanTrayPose({ tilt: 7.123456, slide: 0.123456, drop: 12.345 }), { slide: 0.1235, swing: 0, baseTilt: 0, tilt: 7.12 });
     assert.equal(T.cleanTrayPose({ drop: 30 }, { partial: true }), null, 'a pose that names only the old drop says nothing');
     assert.deepEqual(T.cleanTrayPose({ tilt: NaN, swing: Infinity, slide: '1' }), REST, 'junk values are the rest value');
@@ -52,7 +52,7 @@ const ERGO = 45, MOUSE = 56.9;
 }
 {   // the coupling: limits per joint given the others, held in the order slide, swing, tilt
     posesNear(T.clampTrayPose(REST), REST); posesNear(T.clampTrayPose(REST, { riderMm: ERGO }), REST);
-    assert.deepEqual(T.limitsFor(REST), { slide: [0, 1], swing: [-180, 180], baseTilt: [-25, 8], tilt: [-15, 15] }, 'fully out: nothing is narrowed (the platform within +-15 deg of level)');
+    assert.deepEqual(T.limitsFor(REST), { slide: [0, 1], swing: [-180, 180], baseTilt: [-30, 12.9], tilt: [-15, 15] }, 'fully out: nothing is narrowed (the platform within +-15 deg of level)');
     const pushed = T.limitsFor({ slide: 1 });
     assert.deepEqual(pushed.swing, [0, 0]); assert.deepEqual(pushed.tilt, [-2, 0], 'pushed in: level, no swing');
     posesNear(T.clampTrayPose({ slide: 1, swing: 90, tilt: 10 }), { slide: 1, swing: 0, tilt: 0 });
@@ -251,13 +251,13 @@ const ERGO = 45, MOUSE = 56.9;
 }
 {   // BASE TILT (K1, 25 Nov 2026): the arm on the rear bracket's upper bolt; its limits, and the surface tilt that keeps the platform's own angle
     // (base + surface) within +-15 deg of level (level under the desk); "Level the platform" = surface -base
-    assert.deepEqual(T.cleanTrayPose({ baseTilt: -40 }), { ...REST, baseTilt: -25 }); assert.deepEqual(T.cleanTrayPose({ baseTilt: 30 }), { ...REST, baseTilt: 8 });
+    assert.deepEqual(T.cleanTrayPose({ baseTilt: -40 }), { ...REST, baseTilt: -30 }); assert.deepEqual(T.cleanTrayPose({ baseTilt: 30 }), { ...REST, baseTilt: 12.9 });
     assert.deepEqual(T.limitsFor({ baseTilt: -25 }).tilt, [10, 30], 'arm 25 deg down: the surface must tilt up at least 10 deg, level at +25');
     assert.deepEqual(T.limitsFor({ baseTilt: 8 }).tilt, [-23, 7]);
     posesNear(T.clampTrayPose({ baseTilt: -25, tilt: 25 }), { baseTilt: -25, tilt: 25 }); posesNear(T.clampTrayPose({ baseTilt: 8, tilt: -8 }), { baseTilt: 8, tilt: -8 });
     posesNear(T.clampTrayPose({ baseTilt: -25, tilt: 0 }), { baseTilt: -25, tilt: 10 }, 1e-9);     // the platform may not hang 25 deg down: held at -15
     // under the desk the arm may not lift the plate, and the platform stays level
-    assert.deepEqual(T.limitsFor({ slide: 1 }).baseTilt, [-25, 0]); near(T.limitsFor({ slide: 0.6 }).baseTilt[1], 4);
+    assert.deepEqual(T.limitsFor({ slide: 1 }).baseTilt, [-30, 0]); near(T.limitsFor({ slide: 0.6 }).baseTilt[1], 6.45);
     posesNear(T.clampTrayPose({ slide: 1, baseTilt: 8, tilt: -8 }), { slide: 1, baseTilt: 0, tilt: -2 }, 1e-9);
     posesNear(T.clampTrayPose({ slide: 1, baseTilt: -20, tilt: 20 }), { slide: 1, baseTilt: -20, tilt: 20 }, 1e-9, 'arm down under the desk, platform level: allowed');
     // Level the platform
