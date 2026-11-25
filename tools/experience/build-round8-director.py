@@ -317,6 +317,20 @@ def apply(n, cid, f, dc, log):
         if dump(f, put(sh, new_T)): wrote.append(os.path.relpath(f, H))
     cut['shots'][ci] = put(cut['shots'][ci], new_cut_T)
     if dump(CUT, cut): wrote.append('review-cut.json')
+    pv = os.path.join(H, 'previews', 'awaken-v5-cut.json')
+    if cid == 'awaken' and os.path.exists(pv):
+        # Nov 25 2026 (Vico's 48.3 s chapter 1): the film renders awaken from previews/awaken-v5-cut.json (chapter-keys.py,
+        # render-request.sh) and the Director's film shot is made from it (film_list), but only review-cut.json took the
+        # import: the render and the Director kept the 44.85 s chapter. Length, camera, desk moves and status lights now go
+        # into that copy too (its own look fields - sceneEdits, sceneGlobals, screens - are left as they are; the
+        # lighting / props / tray steps already write it). The camera is the cut's own bake whenever its keys differ.
+        d = load(pv); s = next((x for x in d['shots'] if x.get('id') == cid), None)
+        if s is not None:
+            done = cut['shots'][ci]
+            same = abs(float(s.get('seconds', -1)) - float(done['seconds'])) < 1e-9 and srt((s.get('cameraPlan') or {}).get('keys') or []) == srt(done['cameraPlan']['keys'])
+            put(s, new_cut_T)
+            if not same: s['cameraPlan'] = copy.deepcopy(done['cameraPlan']); s['camera'] = copy.deepcopy(done['camera'])
+            if dump(pv, d): wrote.append('previews/awaken-v5-cut.json')
     if cid == 'hero':
         sp = os.path.join(H, 'shots', '13-subshots.json')
         if os.path.exists(sp):
