@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """polish1124 Stream D: the three hero desk screens into the hero SUB-SHOTS (the film renders chapter 12 from them).
 
-    python3 tools/experience/drafts/polish1124-hero-desks/add-desk-screens.py <cut dir> [--check]
+    python3 tools/experience/drafts/polish1124-hero-desks/add-desk-screens.py <cut dir> [--dry-run]
 
 The Director import keeps hero screens out of the sub-shots (build-round8-director.py apply_lighting: each desk keeps its own
 screens), so these go in here, idempotently, into <cut dir>/shots/13-subshots.json and <cut dir>/director-film/hero-subshots.json:
   artist sub-shot     + the portrait monitor (reference board + palette) and the wide monitor (the canvas)  offset 0
   architect sub-shot  + the wide monitor (House B model, floor plan, properties)                             offset -4.8
-Each entry has afterEdits: true (film-fx.mjs installs it once the Director's added monitors exist). Nothing else changes:
+Each entry has afterEdits: true (film-fx.mjs installs it once the Director's added monitors exist). --dry-run (or --check) only reports. Nothing else changes:
 an entry with the same target is replaced, every other entry and field is kept as it is. --check only reports.
 The clips: exports/cinematic-intro-cut-cine/screens/cine-hero-desk-*.mp4 (tools/experience/screens/capture.mjs).
 """
@@ -39,7 +39,7 @@ def patch(path, check):
 
 def main():
     if len(sys.argv) < 2: sys.exit(__doc__)
-    cut, check = sys.argv[1], '--check' in sys.argv
+    cut, check = sys.argv[1], '--check' in sys.argv or '--dry-run' in sys.argv
     for rel in ('shots/13-subshots.json', 'director-film/hero-subshots.json'):
         p = os.path.join(cut, rel)
         if os.path.exists(p): patch(p, check)

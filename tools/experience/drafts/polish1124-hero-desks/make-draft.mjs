@@ -65,7 +65,7 @@ export function draftEdits(shot, names) {
   });
 }
 function main() {
-  const args = process.argv.slice(2), fi = args.indexOf('--film'), film = fi < 0 ? null : args.splice(fi, 2)[1], [src, outArg] = args;
+  const args = process.argv.slice(2), fi = args.indexOf('--film'), film = fi < 0 ? null : args.splice(fi, 2)[1], ki = args.indexOf('--keep-titles'), keepTitles = ki >= 0 && !!args.splice(ki, 1), [src, outArg] = args;
   if (!src) { console.error('usage: make-draft.mjs <live hero export.json> [--film <director-film/hero.json>] [out.json]'); process.exit(2); }
   const raw = fs.readFileSync(src, 'utf8').replace(/\r\n/g, '\n'), cut = JSON.parse(raw), shot = cut.shots[0];
   if (shot.id !== 'hero' || Math.abs(shot.seconds - 25.95) > 1e-9) throw Error('not the 25.95 s hero export');
@@ -80,8 +80,10 @@ function main() {
   if (his.some(e => /^Added prop:(herodesk-|ergoflex-mic-boom-arm)/.test(e.match || ''))) throw Error('this list already has the hero desk props');
   const adds = draftEdits({sceneEdits: his}, names).map(({director, ...e}) => e), out = JSON.parse(raw);
   out.shots[0].propEdits = [...his, ...adds];
+  // --keep-titles: no filmTitles in the draft, so the import keeps the titles imported before (titles-src.json untouched)
+  if (keepTitles) delete out.shots[0].filmTitles;
   const text = JSON.stringify(out, null, 2) + (raw.endsWith('\n') ? '\n' : '');
-  const back = JSON.parse(text); if (Array.isArray(shot.propEdits)) back.shots[0].propEdits = shot.propEdits; else delete back.shots[0].propEdits;
+  const back = JSON.parse(text); if (keepTitles && shot.filmTitles) back.shots[0].filmTitles = shot.filmTitles; if (Array.isArray(shot.propEdits)) back.shots[0].propEdits = shot.propEdits; else delete back.shots[0].propEdits;
   if (JSON.stringify(back) !== JSON.stringify(cut)) throw Error('draft differs from the export outside propEdits');
   const dest = outArg || path.join(HERE, 'ErgoFlex-film-ch12-hero-director-DRAFT-hero-desks.json');
   fs.writeFileSync(dest, text);
