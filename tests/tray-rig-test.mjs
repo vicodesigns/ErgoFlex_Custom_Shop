@@ -21,7 +21,7 @@ const load = async id => {
     const buf = fs.readFileSync(path.join(root, 'assets/props', id + '.glb')), loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
     return (await new Promise((res, rej) => loader.parse(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength), '', res, rej))).scene;
 };
-const sources = { 'ergoflex-keyboard-tray': await load('ergoflex-keyboard-tray'), 'ergoflex-keyboard-tray-rig': await load('ergoflex-keyboard-tray-rig') };
+const sources = { 'ergoflex-keyboard-tray': await load('ergoflex-keyboard-tray'), 'ergoflex-keyboard-tray-rig-v2': await load('ergoflex-keyboard-tray-rig-v2') };
 let loads = 0;
 const instance = id => { loads++; const c = sources[id].clone(true); c.name = 'Prop:' + id; c.userData.propId = id; c.scale.setScalar(1000); return c; };
 
@@ -113,9 +113,9 @@ const old = { bracket: true, keys: [{ t: 2, pose: { swing: 40, slide: 0.2, drop:
     const rigidBox = worldBox(r.tray), rigidPlate = named(r.tray, 'Mesh_3');
     const mouseOwn = r.mouse.position.clone(), kbOwn = r.keyboard.position.clone(), kbQ = r.keyboard.quaternion.clone();
     assert.equal(await rig.set(edit), true); assert.equal(rig.count(), 1); assert.equal(loads > 0, true);
-    assert.ok(!r.tray.getObjectByName('Prop:ergoflex-keyboard-tray') && r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig'), 'the rigid model is out, the rig in');
+    assert.ok(!r.tray.getObjectByName('Prop:ergoflex-keyboard-tray') && r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig-v2'), 'the rigid model is out, the rig in');
     assert.deepEqual(rig.riders().map(o => o.name).sort(), ['keyboard', 'mouse'], 'the keyboard and the mouse on the plate are riders, the lamp is not');
-    const model = r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig'), rest = snapshot(r.scene);
+    const model = r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig-v2'), rest = snapshot(r.scene);
     // rest pose: the rigid tray's bounding box, riders exactly where they were
     const partsBox = new THREE.Box3(); model.traverse(o => { if (o.isMesh) partsBox.union(new THREE.Box3().setFromObject(o, true)); });
     for (const k of ['min', 'max']) for (const a of 'xyz') near(partsBox[k][a], rigidBox[k][a], 0.5, 'rest bounding box ' + k + a);
@@ -136,13 +136,13 @@ const old = { bracket: true, keys: [{ t: 2, pose: { swing: 40, slide: 0.2, drop:
     const exp2 = restCentre.clone().sub(pivotSwing).applyAxisAngle(new THREE.Vector3(0, 1, 0), 20 * Math.PI / 180).add(pivotSwing).add(slid);
     for (const a of 'xyz') near(posed[a], exp2[a], 0.1, 'plate centre after swing 20 + slide 0.2 (' + a + ')');
     // the plate's front goes to the user's right: in the tray's frame the plate centre (in front of the pivot) gains +x
-    { const swingOnly = createTrayRig(room().api); const rr = room(), sw = createTrayRig(rr.api); await sw.set(cleanTrayEdit({ keys: [{ t: 1, pose: { swing: 40 } }] })); const m = rr.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig'), c0 = new THREE.Box3().setFromObject(named(m, 'Tray_Plate'), true).getCenter(new THREE.Vector3()); sw.apply(1); rr.scene.updateMatrixWorld(true); const c1 = new THREE.Box3().setFromObject(named(m, 'Tray_Plate'), true).getCenter(new THREE.Vector3()); const d = rr.tray.worldToLocal(c1.clone()).sub(rr.tray.worldToLocal(c0.clone())); assert.ok(d.x > 50, 'swing +40: the plate centre moves to +x in the tray frame, ' + d.x.toFixed(1)); assert.ok(swingOnly); }
+    { const swingOnly = createTrayRig(room().api); const rr = room(), sw = createTrayRig(rr.api); await sw.set(cleanTrayEdit({ keys: [{ t: 1, pose: { swing: 40 } }] })); const m = rr.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig-v2'), c0 = new THREE.Box3().setFromObject(named(m, 'Tray_Plate'), true).getCenter(new THREE.Vector3()); sw.apply(1); rr.scene.updateMatrixWorld(true); const c1 = new THREE.Box3().setFromObject(named(m, 'Tray_Plate'), true).getCenter(new THREE.Vector3()); const d = rr.tray.worldToLocal(c1.clone()).sub(rr.tray.worldToLocal(c0.clone())); assert.ok(d.x > 50, 'swing +40: the plate centre moves to +x in the tray frame, ' + d.x.toFixed(1)); assert.ok(swingOnly); }
     // tilt +10 (front edge up): about the rod axis. Check the sign on a pure tilt: apply at 3 s of a one-key edit
     const tiltOnly = cleanTrayEdit({ keys: [{ t: 1, pose: { tilt: 10 } }] }); rig.restore(); assert.equal(rig.count(), 0);
-    assert.ok(r.tray.getObjectByName('Prop:ergoflex-keyboard-tray') && !r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig'), 'restore: the rigid model is back');
+    assert.ok(r.tray.getObjectByName('Prop:ergoflex-keyboard-tray') && !r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig-v2'), 'restore: the rigid model is back');
     assert.ok(r.mouse.position.equals(mouseOwn) && r.keyboard.position.equals(kbOwn), 'restore: the riders\' own transforms');
     const bBox = worldBox(r.tray); for (const k of ['min', 'max']) for (const a of 'xyz') near(bBox[k][a], rigidBox[k][a], 1e-6, 'restore: the tray is the rigid tray ' + k + a);
-    await rig.set(tiltOnly); const m2 = r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig'); rig.apply(0);
+    await rig.set(tiltOnly); const m2 = r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig-v2'); rig.apply(0);
     const front0 = new THREE.Box3().setFromObject(named(m2, 'Tray_Plate'), true), restTop = front0.max.y; rig.apply(1); r.scene.updateMatrixWorld(true);
     const tilted = new THREE.Box3().setFromObject(named(m2, 'Tray_Plate'), true);
     assert.ok(tilted.max.y > restTop + 20, 'tilt +10: the front edge rises (' + (tilted.max.y - restTop).toFixed(1) + ' mm)');
@@ -163,7 +163,7 @@ const old = { bracket: true, keys: [{ t: 2, pose: { swing: 40, slide: 0.2, drop:
     await rig.set(edit);
     for (let t = 0; t <= 7; t += 0.25) {
         const p = rig.apply(t); r.scene.updateMatrixWorld(true);
-        const m = r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig'), k = plate_of(m).worldToLocal(r.keyboard.getWorldPosition(new THREE.Vector3()));
+        const m = r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig-v2'), k = plate_of(m).worldToLocal(r.keyboard.getWorldPosition(new THREE.Vector3()));
         rig.apply(0); const k0 = plate_of(m).worldToLocal(r.keyboard.getWorldPosition(new THREE.Vector3())); rig.apply(t);
         for (const a of 'xyz') near(k[a], k0[a], 1e-2, `keyboard on the plate at ${t} s (${a})`);
         assert.ok(!('drop' in p));
@@ -178,10 +178,10 @@ const old = { bracket: true, keys: [{ t: 2, pose: { swing: 40, slide: 0.2, drop:
 }
 {   // NO BRACKET, NO DROP (25 Nov 2026): the original model only, an old edit with the bracket and drop keys loads and they are ignored
     const r = room(), rig = createTrayRig(r.api), n = loads; await rig.set(cleanTrayEdit(old));
-    const model = r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig'), meshes = []; model.traverse(o => { if (o.isMesh) meshes.push(o); });
+    const model = r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig-v2'), meshes = []; model.traverse(o => { if (o.isMesh) meshes.push(o); });
     assert.deepEqual(meshes.map(m => m.name).sort(), ['Tray_Carriage', 'Tray_Crossbar', 'Tray_Forks', 'Tray_Links', 'Tray_Plate', 'Tray_Screw', 'Tray_Track'], 'seven CAD parts, nothing added');
     assert.equal(meshes.reduce((s, m) => s + m.geometry.attributes.position.count, 0), 14214, 'the original vertex count'); assert.equal(meshes.reduce((s, m) => s + m.geometry.index.count / 3, 0), 11121, 'the original triangle count');
-    const sourceGeometries = new Set(); sources['ergoflex-keyboard-tray-rig'].traverse(o => { if (o.isMesh) sourceGeometries.add(o.geometry); });
+    const sourceGeometries = new Set(); sources['ergoflex-keyboard-tray-rig-v2'].traverse(o => { if (o.isMesh) sourceGeometries.add(o.geometry); });
     assert.ok(meshes.every(m => sourceGeometries.has(m.geometry)), 'every mesh draws the glb\'s own geometry: nothing generated');
     const mount0 = worldOf(model, 'Tray_Drop').clone();
     for (const t of [0, 2, 4, 7]) { const p = rig.apply(t); assert.ok(!('drop' in p)); r.scene.updateMatrixWorld(true); near(worldOf(model, 'Tray_Drop').distanceTo(mount0), 0, 1e-9, 'the mount never moves at ' + t); }
@@ -217,7 +217,7 @@ const old = { bracket: true, keys: [{ t: 2, pose: { swing: 40, slide: 0.2, drop:
 }
 {   // BASE TILT (K1): the arm and the platform turn on the rear upper bolt; with the surface levelled the plate stays level and moves down/up
     const r = room(), rig = createTrayRig(r.api); await rig.set(cleanTrayEdit({ keys: [{ t: 1, pose: { baseTilt: -25, tilt: 25 } }, { t: 2, pose: { baseTilt: 8, tilt: -8 } }, { t: 3, pose: { baseTilt: -20 } }] }));
-    const m = r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig'), box = () => { r.scene.updateMatrixWorld(true); return new THREE.Box3().setFromObject(named(m, 'Tray_Plate'), true); }, q = () => named(m, 'Tray_Plate').getWorldQuaternion(new THREE.Quaternion());
+    const m = r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig-v2'), box = () => { r.scene.updateMatrixWorld(true); return new THREE.Box3().setFromObject(named(m, 'Tray_Plate'), true); }, q = () => named(m, 'Tray_Plate').getWorldQuaternion(new THREE.Quaternion());
     rig.apply(0); const b0 = box(), q0 = q(), bolt0 = worldOf(m, 'Tray_BaseTilt'), restLinks = worldBox(named(m, 'Tray_Links'));
     rig.apply(1); const bDown = box(); assert.ok(q().angleTo(q0) < 1e-6, 'arm down, surface levelled: the platform is level'); assert.ok(bDown.max.y < b0.max.y - 20, 'and lower: ' + (b0.max.y - bDown.max.y).toFixed(1) + ' mm');
     near(worldOf(m, 'Tray_BaseTilt').distanceTo(bolt0), 0, 1e-6, 'the bolt does not move');
@@ -232,7 +232,7 @@ const old = { bracket: true, keys: [{ t: 2, pose: { swing: 40, slide: 0.2, drop:
     const r = room(), rig = createTrayRig(r.api), n = loads;
     const first = rig.set(edit), second = rig.set(edit); await Promise.all([first, second]); assert.equal(loads - n, 1, 'one load'); assert.equal(rig.count(), 1);
     const pending = rig.set(edit); rig.restore(); await pending.catch(() => {}); assert.equal(rig.count(), 0); assert.ok(r.tray.getObjectByName('Prop:ergoflex-keyboard-tray'), 'restore after a set: rigid back');
-    const again = createTrayRig(r.api); const cancelled = again.set(edit); again.restore(); await cancelled; assert.equal(again.count(), 0); assert.ok(!r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig'), 'a cancelled load leaves no rig behind');
+    const again = createTrayRig(r.api); const cancelled = again.set(edit); again.restore(); await cancelled; assert.equal(again.count(), 0); assert.ok(!r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig-v2'), 'a cancelled load leaves no rig behind');
 }
 {   // film-fx and the stage sample the same function: the pose of the rig at a second is tray-pose's, with the riders' thickness
     const r = room(), rig = createTrayRig(r.api); await rig.set(edit);

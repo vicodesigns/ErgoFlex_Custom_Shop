@@ -24,7 +24,8 @@ import { accessory } from '../catalog.mjs';
 import { sampleTray, isRestPose, riderThicknessMm } from './tray-pose.mjs';
 import { SLIDE_TRAVEL_MM, TRAY_SKEW_DEG, BASE_TILT_AT, SURFACE_TILT_AT } from './tray-limits.mjs';
 
-export const RIGID_ID = 'ergoflex-keyboard-tray', RIG_ID = 'ergoflex-keyboard-tray-rig', TRAY_ITEM = 'accessory-keyboard-tray';
+export const RIGID_ID = 'ergoflex-keyboard-tray', RIG_ID = 'ergoflex-keyboard-tray-rig-v2',   // v2: Vico's real arm (tools/props/tray-rig-v2.mjs); v1 kept as the fallback
+    TRAY_ITEM = 'accessory-keyboard-tray';
 const PIVOTS = ['Tray_Slide', 'Tray_Swing', 'Tray_BaseTilt', 'Tray_SurfaceTilt'];      // (Tray_Drop, the mount, has no joint: the drop was taken out)
 export const BASE_PIVOT = 'Tray_BaseTilt', SURFACE_PIVOT = 'Tray_SurfaceTilt';
 const X = new THREE.Vector3(1, 0, 0), Y = new THREE.Vector3(0, 1, 0), Z = new THREE.Vector3(0, 0, 1);
