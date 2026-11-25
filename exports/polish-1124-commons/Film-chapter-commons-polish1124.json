@@ -1949,7 +1949,7 @@
       "id": "people-mia-power-phone",
       "turn": 90,
       "on": "electric-wheelchair",
-      "seat": 470,
+      "seat": 475,
       "depth": -40,
       "postures": {
        "people-mia-power-phone": {
@@ -2209,8 +2209,8 @@
        "to": "people-mia-power-type-30",
        "handsBy": [
         0,
-        -41,
-        -91
+        -32,
+        -71
        ]
       }
      },
@@ -2219,7 +2219,7 @@
       "id": "people-mia-power-type-30",
       "turn": 90,
       "on": "electric-wheelchair",
-      "seat": 470,
+      "seat": 475,
       "depth": -40,
       "postures": {
        "people-mia-power-type-30": {
@@ -2296,8 +2296,8 @@
       },
       "handsBy": [
        0,
-       -41,
-       -91
+       -32,
+       -71
       ]
      },
      {
@@ -2598,7 +2598,7 @@
        3951,
        -5912
       ],
-      "turn": 0.0,
+      "turn": 0,
       "y": 20
      },
      {
@@ -2608,7 +2608,7 @@
        2717,
        -2399
       ],
-      "turn": -90.0,
+      "turn": -90,
       "y": 20
      },
      {
@@ -2618,7 +2618,7 @@
        1233,
        -2413
       ],
-      "turn": 90.0,
+      "turn": 90,
       "y": 20
      },
      {
@@ -2628,7 +2628,7 @@
        1306,
        -795
       ],
-      "turn": 90.0,
+      "turn": 90,
       "y": 20
      },
      {
@@ -2638,7 +2638,7 @@
        1438,
        2957
       ],
-      "turn": 0.0,
+      "turn": 0,
       "y": 20
      },
      {
@@ -2648,7 +2648,7 @@
        1452,
        4487
       ],
-      "turn": 180.0,
+      "turn": 180,
       "y": 20
      },
      {
@@ -2658,7 +2658,7 @@
        -385,
        1637
       ],
-      "turn": -90.0,
+      "turn": -90,
       "y": 20
      },
      {
@@ -2668,7 +2668,7 @@
        6708,
        5495
       ],
-      "turn": 90.0,
+      "turn": 90,
       "y": 20
      },
      {
@@ -2678,7 +2678,7 @@
        7841,
        7179
       ],
-      "turn": 0.0,
+      "turn": 0,
       "y": 20
      },
      {
@@ -2688,7 +2688,7 @@
        7841,
        8411
       ],
-      "turn": 180.0,
+      "turn": 180,
       "y": 20
      },
      {
@@ -2698,7 +2698,7 @@
        3759,
        10499
       ],
-      "turn": 90.0,
+      "turn": 90,
       "y": 20
      },
      {
@@ -2706,14 +2706,14 @@
       "id": "people-max-walk",
       "at": [
        3712,
-       -4110
+       -3748
       ],
       "turn": 1.8,
       "walk": {
        "path": [
         [
          3712,
-         -4110
+         -3748
         ],
         [
          3778,
@@ -2724,7 +2724,7 @@
          133
         ]
        ],
-       "start": 0.0
+       "start": 0
       }
      },
      {
@@ -2761,7 +2761,7 @@
        -928,
        -5236
       ],
-      "turn": 90.0,
+      "turn": 90,
       "walk": {
        "path": [
         [
@@ -2777,7 +2777,7 @@
          -4110
         ]
        ],
-       "start": 0.0
+       "start": 0
       }
      }
     ],
@@ -2825,7 +2825,7 @@
      "c4-luca-walks": [
       [
        0,
-       6.0,
+       6,
        0,
        0.8
       ]
@@ -3318,6 +3318,20 @@
      "match": "^Person chair:people-bruno-sit-read$",
      "label": "Person chair:people-bruno-sit-read",
      "hide": true
+    },
+    {
+     "match": "^Person chair:people-leo-sit-write$",
+     "label": "Person chair:people-leo-sit-write",
+     "hide": true
+    },
+    {
+     "match": "^Prop:electric-wheelchair$",
+     "label": "Wheelchair: 20 mm back from the desk (Commons4: its armrest clear of the keyboard)",
+     "position": [
+      0.0302,
+      0,
+      0
+     ]
     }
    ]
   }

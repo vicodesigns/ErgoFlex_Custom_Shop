@@ -48,7 +48,16 @@ def turn_for(fx, fz):
 PLACE = {'at': 13.6, 'grab': 0.5, 'contact': 0.85, 'settle': 0.06, 'hold': 0.08, 'back': 0.55, 'lift': 0.045, 'lift2': 0.035, 'bend': 0.9,
          'approach': 0.07, 'clear': 0.07, 'rightBack': 0.5, 'look': 0.5, 'turn': 0.7, 'side': 0.16, 'reachOut': 0.3, 'handover': [0.07, -0.08, 0.04], 'handoverTurn': -1.6, 'rightNudge': [0.007, 0, 0]}
 TYPING = 'people-mia-power-type-30'
-HANDS_BY = [0, -41, -91]   # mm, her frame: the keys from where the typing posture was built for (the desk 3.6 in nearer than the 3rd cut's 146.9 and 1 in lower), checked with the fingertips on the keys
+# Commons4 (Vico's three yeses on the Commons3 'not fixed' list): her seat 5 mm lower so the keyboard tray clears her thighs (the tray
+# sat 3.1 to 3.8 mm into them at the desk's 29 in), and the wheelchair 20 mm further back from the desk (from the chair's own
+# placement, a Director prop edit on the chair: the desk is not moved) so its right armrest / joystick no longer reaches into the
+# keyboard's right end. She sits in that chair, so she goes back with it; the keys are then 20 mm further ahead of her and 5 mm
+# higher in her own frame, which handsBy carries (the hands were [0, -41, -91] mm: [0, -32, -71], found so the fingertips sit as high
+# above the key tops as before: the arm solve gives only about 4 mm of a 5 mm raise, so the y is 9, not 5).
+SEAT = 475             # the cast's `seat` (mm, the pose's seat height the real seat is met at: a person stands this much lower the larger it is; was 470: 5 mm lower)
+CHAIR_BACK_MM = 20     # mm the wheelchair rolls back from the desk (her frame -z, the world +x), at the film's 1.5087 scale: 30.17 mm world
+CHAIR_SCALE = 1.5087
+HANDS_BY = [0, -32, -71]   # mm, her frame: the keys from where the typing posture was built for (the desk 3.6 in nearer than the 3rd cut's 146.9 and 1 in lower), checked with the fingertips on the keys; Commons4: her seat 5 mm lower, 20 mm further back
 DOCK_CM = 0.0          # pass 2 docked the desk 8 cm nearer here; Vico has set the dock himself since (z 150.5): 0, nothing moved
 INCH = 2.54
 GRIP = {'at': [0.0673, 0.1531, 0.0321], 'q': [0.6977, 0.4778, -0.1066, 0.523]}      # the phone where her hands hold it (the baked phone's place, measured)
@@ -69,6 +78,7 @@ def mia(ppl, params):
     cast = {e['key']: e for e in ppl['cast']}
     waits, works = cast['mia-waits'], cast['mia-works']
     p = dict(PLACE, **params.get('place', {})); by = params.get('hands_by', HANDS_BY); t = times(p)
+    waits['seat'] = works['seat'] = params.get('seat', SEAT)
     waits['act'] = {'kind': 'place', 'prop': '^Added prop:ergoflex-phone#mph01$', 'hand': 'l', **{k: p[k] for k in ('at', 'grab', 'contact', 'settle', 'hold', 'back', 'lift', 'lift2', 'bend', 'approach', 'clear', 'rightBack', 'look', 'turn', 'side', 'reachOut', 'handover', 'handoverTurn', 'rightNudge')},
                     'openFrom': 'people-mia-stretch', 'grip': params.get('grip', GRIP), 'grip2': params.get('grip2', GRIP2), 'fingers': params.get('fingers', FINGERS), 'to': TYPING, 'handsBy': by}
     # the typing posture's arm keys (Vico's, the last of them: the arms as he set them for typing) hold from the start of the typing
@@ -139,6 +149,15 @@ def others(ppl):
             ppl.setdefault('when', {})[row[0]] = [[0, row[4], 0, 0.8]]
 
 
+CHAIR_LABEL = 'Wheelchair: 20 mm back from the desk (Commons4: its armrest clear of the keyboard)'
+
+
+def chair_edit(params):
+    """The Director's own prop edit on Mia's wheelchair (world metres from where the film puts it; she sits on it and goes with it)."""
+    back = params.get('chair_back_mm', CHAIR_BACK_MM)
+    return {'match': '^Prop:electric-wheelchair$', 'label': CHAIR_LABEL, 'position': [round(back * CHAIR_SCALE / 1000, 4), 0, 0]}
+
+
 def chair_hides():
     """The model's own black swivel chair under each seated person is hidden (the film hides it for Sofia and Eli the same
     way): they sit on the table's oak chairs."""
@@ -172,6 +191,8 @@ def build(shot, params):
     shot = copy.deepcopy(shot); ppl = shot['people']
     if not params.get('skip_mia'):
         mia(ppl, params); dock(shot, params.get('dock_cm', DOCK_CM))
+        if params.get('chair_back_mm', CHAIR_BACK_MM):
+            shot['sceneEdits'] = [e for e in shot.get('sceneEdits', []) if e.get('label') != CHAIR_LABEL] + [dict(chair_edit(params), director=True)]
         params['cue'] = cue(shot, params['times']['release'])
     if not params.get('skip_others'):
         others(ppl)
@@ -199,7 +220,9 @@ def main(argv):
     props = json.load(open(os.path.join(cut, 'director-camera-commons.json'), encoding='utf8')).get('props', [])
     have = {e.get('match') for e in props}
     hides = [] if params.get('skip_others') else [h for h in chair_hides() if h['match'] not in have]
-    shot0.update({'peopleEdits': people, 'propEdits': copy.deepcopy(props) + hides})
+    props = [e for e in copy.deepcopy(props) if e.get('label') != CHAIR_LABEL]
+    if not params.get('skip_mia') and params.get('chair_back_mm', CHAIR_BACK_MM): props.append(chair_edit(params))
+    shot0.update({'peopleEdits': people, 'propEdits': props + hides})
     exp = dict(base, id=f'film-{cutid}-commons', name='Film chapter: commons (polish 1124 draft)', shots=[shot0])
     json.dump(exp, open(os.path.join(out, 'Film-chapter-commons-polish1124.json'), 'w', encoding='utf8'), indent=1)
     if params.get('cue'):
