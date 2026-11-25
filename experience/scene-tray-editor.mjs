@@ -1,16 +1,16 @@
 // Director Tray mode: the keyboard tray as an articulated part (docs/keyboard-tray/SPEC.md section 5; modelled on pose mode,
 // scene-pose-editor.mjs). Double-click the tray in the view (or "Tray mode" in the Tray tab): the Tray tab shows the joints as sliders
-// inside their live limits, the keys, the bracket switch; the timeline's Motion group gets a Tray lane of key diamonds.
-//   Slide / Swing / Tilt (and Drop, only with the bracket on): a slider and a number each. A change is written at the playhead: into the
+// inside their live limits, the keys; the timeline's Motion group gets a Tray lane of key diamonds.
+//   Slide / Swing / Surface tilt: a slider and a number each. A change is written at the playhead: into the
 //     key that is there, else (Auto-key on) as a new key, else into the tray's starting pose (a chapter with no keys: the tray stays so).
-//   The tray never leaves its limits: what was keyed shows next to what the tray takes, with the reason (tray-ui.mjs limitReason).
-//   Mount bracket (added): the optional plain block, and with it the Drop joint (tray-pose.mjs setBracket / trayBracket).
+//   The tray never leaves its limits: what was keyed shows next to what the tray takes, with the reason (tray-ui.mjs limitReason). The
+//     keyboard and mouse limit it only while they are on it: past 9 deg of desk tilt they are on the desk's shelf (tray-riders.mjs).
 //   Keys: click a diamond = select + go there, Shift-click adds, drag = retime (all selected keys), Delete removes, an ease and a route per
 //     key, copy / paste at the playhead, previous / next. Every change is ONE undo step (slider drags merge into one).
 // The data is shot.trayEdits (tray-pose.mjs); the live stage plays it at once (player.mjs -> stage.trayEditsTrack), the film as sceneTray.
-import { JOINTS, cleanTrayEdits, pickTrayEdit, filmTrayEdits, setKey, removeKey, retimeKeys, setKeyEase, setKeyRoute, setInitial, setBracket, trayBracket, copyKey, pasteKey, EASES, ROUTES, KEY_SNAP, trayKeyTimes, sampleTray } from './tray-pose.mjs';
+import { JOINTS, cleanTrayEdits, pickTrayEdit, filmTrayEdits, setKey, removeKey, retimeKeys, setKeyEase, setKeyRoute, setInitial, copyKey, pasteKey, EASES, ROUTES, KEY_SNAP, trayKeyTimes, sampleTray } from './tray-pose.mjs';
 import { riderThicknessMm } from './tray-pose.mjs';
-import { panelModel, laneModel, keyTitle, fmtT, PRESETS, BRACKET_LABEL, BRACKET_HINT, toDisplay, fromDisplay, unitOf, labelOf, optionsFor, SAVED_KEY, cleanSaved, addSaved } from './tray-ui.mjs';
+import { panelModel, laneModel, keyTitle, fmtT, PRESETS, toDisplay, fromDisplay, unitOf, labelOf, optionsFor, SAVED_KEY, cleanSaved, addSaved } from './tray-ui.mjs';
 
 const escape = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const AUTO = 'ergoflex.director.autoKey';
@@ -44,8 +44,10 @@ export function createTrayEditor({ win = () => null, three = () => null, stage =
     }
 
     // ---- what the panel and the lane show
-    const model = () => panelModel(current(), now(), { riderMm: riderMm(), riders: riderNames() });
-    const laneOf = () => laneModel(current(), T(), { riderMm: riderMm(), selected: selectedHere() });
+    // where the keyboard and mouse are along the chapter (the desk's tilt decides, the stage's tray-riders.mjs timeline)
+    const awayAt = () => { const f = info().awayAt; return typeof f === 'function' ? f : null; };
+    const model = () => panelModel(current(), now(), { riderMm: riderMm(), riders: riderNames(), riderAwayAt: awayAt() });
+    const laneOf = () => laneModel(current(), T(), { riderMm: riderMm(), selected: selectedHere(), riderAwayAt: awayAt() });
     const has = () => !!info().has;
 
     // ---- changes
@@ -66,7 +68,7 @@ export function createTrayEditor({ win = () => null, three = () => null, stage =
         const n = doc?.querySelector?.(`[name="tr-${joint}-n"]`); if (n) n.value = value;
     }
     function setPose(pose, label) {
-        const t = now(), bracket = trayBracket(current()), named = Object.fromEntries(Object.entries(pose).filter(([j]) => j !== 'drop' || bracket)), onKey = autoKey || (current() && keyAt(current(), t) !== undefined);
+        const t = now(), named = Object.fromEntries(Object.entries(pose).filter(([j]) => JOINTS.includes(j))), onKey = autoKey || (current() && keyAt(current(), t) !== undefined);
         write(x => onKey ? setKey(x, t, named) : setInitial(x, named), `Tray: ${label}${onKey ? ` · key at ${fmtT(t)} s` : ' · starting pose'}.`);
         if (onKey) sel = [t];
     }
@@ -92,7 +94,7 @@ export function createTrayEditor({ win = () => null, three = () => null, stage =
     function enter() {
         if (!has()) { status('This chapter\'s desk has no keyboard tray.', true); return false; }
         if (active) return true;
-        active = true; sel = []; status('Tray mode: set Slide, Swing and Tilt in the Tray tab; Auto-key writes keys at the playhead. Esc or Done leaves.'); onEnter(); reveal(); rerender(); return true;
+        active = true; sel = []; status('Tray mode: set Slide, Swing and Surface tilt in the Tray tab; Auto-key writes keys at the playhead. Esc or Done leaves.'); onEnter(); reveal(); rerender(); return true;
     }
     function exit() { if (!active) return; active = false; sel = []; rerender(); }
 
@@ -119,11 +121,11 @@ export function createTrayEditor({ win = () => null, three = () => null, stage =
         if (!has()) return `<section class="tray-panel" data-reveal="tray"><h4>Keyboard tray</h4><p class="director-hint">This chapter's desk has no keyboard tray. Add one in the desk's build (Build tab) to pose it here.</p></section>`;
         const e = current(), n = trayKeyTimes(e).length;
         if (!active) return `<section class="tray-panel" data-reveal="tray"><h4>Keyboard tray</h4><p class="director-hint">Double-click the tray in the view, or press the button, to pose it: it slides out on its track, swings to the side and tilts, inside the limits of the real part.${n ? ` ${n} key${n === 1 ? '' : 's'} so far.` : ''}</p><div class="director-actions"><button type="button" class="primary" data-action="tr-enter">Tray mode</button></div></section>`;
-        const m = model(), cur = trayBracket(e), list = savedList(), ready = !!e && (n > 0 || e.initial);
+        const m = model(), list = savedList(), ready = !!e && (n > 0 || e.initial);
         return `<section class="tray-panel" data-reveal="tray"><div class="tray-bar"><strong>Tray mode · Keyboard tray</strong><span>${n ? `${n} key${n === 1 ? '' : 's'}` : e?.initial ? 'starting pose set' : 'as built'}</span><button type="button" class="primary" data-action="tr-done">Done</button></div>
           <p class="director-hint">Move a slider or type a number: it goes where Auto-key says (see Keys). The tray cannot leave its limits; the reason shows under the slider.</p>
           <div class="tray-joints">${m.rows.map(r => jointRow(m, r)).join('')}</div>
-          <label class="tray-bracket"><input type="checkbox" name="tr-bracket" ${cur ? 'checked' : ''}> ${BRACKET_LABEL}</label><p class="director-hint tray-bracket-hint">${BRACKET_HINT}</p>
+          ${m.ridersNote ? `<p class="director-hint tray-riders" data-tray-riders role="status">${escape(m.ridersNote)}</p>` : ''}
           <h4>Poses</h4><div class="director-actions tray-presets">${PRESETS.map((p, i) => `<button type="button" data-action="tr-preset" data-index="${i}" title="Set ${escape(p.label.toLowerCase())} at the playhead">${escape(p.label)}</button>`).join('')}</div>
           ${keysPanel(e)}
           <h4>Save this pose</h4><div class="tray-save"><input type="text" name="tr-pose-name" maxlength="40" placeholder="Name, for example: Typing" autocomplete="off" spellcheck="false" aria-label="Name for the saved pose"><button type="button" data-action="tr-save" title="Keep the tray's pose at the playhead in this browser">Save</button></div>
@@ -166,11 +168,10 @@ export function createTrayEditor({ win = () => null, three = () => null, stage =
         if (name === 'tr-reset') { sel = []; write(() => ({}), 'Tray: back as built. Undo brings the keys back.'); return true; }
         return false;
     }
-    // a field changed (the Director's change handler): numbers and selects on release, the bracket checkbox
+    // a field changed (the Director's change handler): numbers and selects on release
     function changed(el) {
         const name = el.name;
-        if (name === 'tr-bracket') { const on = !!el.checked; write(x => setBracket(x, on), on ? `Tray: ${BRACKET_LABEL} on. The Drop slider is there now; the rig loads once the tray has a key.` : `Tray: ${BRACKET_LABEL} off. The tray is the original model again and the drop is off.`); return true; }
-        const j = /^tr-(slide|swing|tilt|drop)(-n)?$/.exec(name);
+        const j = /^tr-(slide|swing|tilt)(-n)?$/.exec(name);
         if (j) { const v = Number(el.value); if (String(el.value).trim() === '' || !Number.isFinite(v)) throw Error('Type a number.'); setJoint(j[1], v); return true; }
         if (name === 'tr-key-t') { const ts = selectedHere(), v = Number(el.value); if (ts.length === 1 && Number.isFinite(v)) retime([[ts[0], v]]); return true; }
         if (name === 'tr-key-ease') { if (EASES.includes(el.value)) keyEdit((x, t) => setKeyEase(x, t, el.value), `Tray: the key eases ${el.value === 'hold' ? 'by holding until the next key' : el.value}.`); return true; }
@@ -180,7 +181,7 @@ export function createTrayEditor({ win = () => null, three = () => null, stage =
     }
     // a slider moving (live): the tray follows at once; one undo step for the whole drag
     function input(el) {
-        const j = /^tr-(slide|swing|tilt|drop)$/.exec(el.name); if (!j) return false;
+        const j = /^tr-(slide|swing|tilt)$/.exec(el.name); if (!j) return false;
         const v = Number(el.value); if (Number.isFinite(v)) setJoint(j[1], v, { live: true }); return true;
     }
 

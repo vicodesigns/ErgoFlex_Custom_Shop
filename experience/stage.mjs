@@ -11,6 +11,7 @@ import {cleanPose,cleanCamera,defaultPreset} from './cuts.mjs';
 import {cameraFollows,poseOf,putPose} from './editing-camera.mjs';
 import {createDeskChoreo,roomDesks} from './desk-choreo.mjs';
 import {activeTrayEdit} from './tray-pose.mjs';
+import {createRiderHandoff} from './rider-handoff.mjs';
 import {touchscreenAt} from './touchscreen-track.mjs';
 import {cleanSonar,pingRows,fullSec,meshesFor} from './sonar.mjs';
 
@@ -34,6 +35,9 @@ export async function mountStage(ctx) {
   const deskChoreo = createDeskChoreo(api);
   // The keyboard tray's own keys (shot.trayEdits, tray-pose.mjs): tray-rig.mjs is imported, and the rig glb loaded, only for a chapter that has them.
   let trayRig = null, trayPreset = null, traySig = null;
+  // The keyboard and mouse between the desk / tray and the desk's shelf (rider-handoff.mjs): decided by the chapter's desk tilt, carried
+  // in 0.4 s instead of popping. One per page (api.riderHandoff): film-fx's tray rig uses it too.
+  const riderHandoff = api.riderHandoff ??= createRiderHandoff(api);
   const nextFrame = () => new Promise(resolve => requestAnimationFrame(resolve));
   const wait = async predicate => {
     const deadline = performance.now() + 120000;
@@ -235,7 +239,7 @@ export async function mountStage(ctx) {
     // Scene construction and shader compilation happen behind the outgoing
     // frame. No render loop competes with them while the room is rebuilt.
     ctx.pause(true);
-    trayRig?.restore();
+    trayRig?.restore();riderHandoff.restore();
     editorMode=false;ctx.editCamera(false);authoredCamera=null;activeCameraKeys=[];defaultCameraKeys=[];ctx.camera.fov=35;ctx.camera.updateProjectionMatrix();
     ctx.scene.userData.windowSkySeconds = 0;
     clear();shot={...next,camera:null};mirror=null;sequence=-1;session=null;ctx.scene.background=null;
@@ -335,6 +339,7 @@ export async function mountStage(ctx) {
     trayPreset=preset;traySig=null;
     const trayEdit=activeTrayEdit(next.trayEdits,preset);
     if(trayEdit){trayRig??=(await import('./tray-rig.mjs')).createTrayRig(api);await trayRig.set(trayEdit);trayRig.apply(0);}
+    riderHandoff.apply(0,deskTrack());
     // The onboard touchscreen posed from the chapter's clock (shot.touchscreen); a chapter without it hands the screen back.
     api.setFilmTouchscreen?.(touchscreenAt(next.touchscreen,0));
     await ctx.warm();await nextFrame();
@@ -425,6 +430,7 @@ export async function mountStage(ctx) {
     }
     if(deskChoreo.count())deskChoreo.apply(t*shot.seconds);
     if(trayRig?.count())trayRig.apply(t*shot.seconds);
+    riderHandoff.apply(t*shot.seconds,deskTrack());   // the keyboard and mouse last: on the desk / tray, on the shelf, or carried between
     if(shot.touchscreen)api.setFilmTouchscreen?.(touchscreenAt(shot.touchscreen,t*shot.seconds));
     if(shot.people)api.setRoomPeopleTime?.(t*shot.seconds,deskTrack());
     if(kind==='media'&&media){const now=performance.now(),updated=media.update(now);if(updated&&now-lastMediaColour>=100){lastMediaColour=now;try{const p=media.ctx2d.getImageData(Math.floor(media.canvas.width/2),Math.floor(media.canvas.height/2),1,1).data;api.setLedColor('#'+[p[0],p[1],p[2]].map(v=>Math.max(25,v).toString(16).padStart(2,'0')).join(''),false);}catch{}}}
@@ -631,7 +637,7 @@ ctx.editCamera(editorMode||cameraHeld);if(editorMode){Object.assign(ctx.controls
       const objs=api.sceneDesks?.active?.objects,has=!!objs?.get('accessory-keyboard-tray'),riders=[];
       if(has)for(const item of objs.values()){const a=item.obj?.userData?.accessoryId&&accessory(item.obj.userData.accessoryId);
         if(a&&['keyboard','mouse'].includes(a.exclusiveGroup)&&item.obj.visible&&!item.saved?.removed&&(!trayRig?.count()||trayRig.riders().includes(item.obj)))riders.push({id:a.id,name:a.name,propId:a.propId,kind:a.exclusiveGroup});}
-      return {has,preset:trayPreset,riders};
+      return {has,preset:trayPreset,riders,awayAt:s=>riderHandoff.awayAt(s)};
     },
     // Is the first thing under this point of the view (client pixels) the keyboard tray? (the double-click that enters Tray mode)
     trayAt:(cx,cy)=>{
