@@ -15,6 +15,9 @@
 //   4. the reach at the new desk: the elbow bent at the charger, the back leaning little, the head up
 //   5. kept: one phone (in the hand, then at the prop's own rest, 0 mm off, released at the glow cue's time), the 14 extras,
 //      Vico's desk exactly as he set it (nothing here moves it)
+// Commons4 (Vico's three yeses on Commons3's 'not fixed' list), section 6: her seat 5 mm lower so the keyboard tray clears her thighs (it was
+// 3.1 to 3.8 mm into them at 29 in), the wheelchair 20 mm further back (a Director prop edit; the desk is not moved) so the keyboard's end is clear of
+// the armrest and joystick (checked to 0.7 mm, not on the 5 mm grid), the typing pose still fits (handsBy; the fingertips as high above the keys as before)
 //   node tests/people-place-test.mjs
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -200,4 +203,78 @@ assert.ok(hold.bones.head.p.y - atRest.bones.head.p.y < 0.09, `the head drops ${
 setDesk(14.2); rp.update(state(14.2)); await rp.settled(); assert.ok(prop.userData.heldByPerson === true, 'scrubbed back into the reach: in her hand again');
 const edits = fs.readFileSync(path.join(root, 'tools/experience/film-edits.mjs'), 'utf8');
 assert.ok(/heldByPerson === true\) && \(get\(\)/.test(edits), 'film-edits: a carried prop is drawn whatever its show window says');
-console.log(`people-place-test: ok (pass 3: ${F.length} frames ${F[0].t}-${F.at(-1).t} s; deepest hand vertex ${(-stats.penL * 1000).toFixed(1)} mm (left) / ${(-stats.penR * 1000).toFixed(1)} mm (right) outside the phone; wrist at most ${stats.twistStep.toFixed(0)} deg a frame, bent back at most ${stats.ext.toFixed(0)} deg; back to the keys ${travel.toFixed(1)} deg of twist for ${net.toFixed(1)} net (${against.toFixed(1)} against); elbow ${elbow(atRest).toFixed(0)} deg at the charger, lean ${lean(atRest).toFixed(0)} deg; grab ${grabAt.toFixed(2)} s, touch down ${contactAt.toFixed(2)}, let go ${releaseAt.toFixed(2)}, on the keys ${endAt.toFixed(2)}; one phone; ${extra.length} extras)`);
+
+// ---- 6. Commons4 (Vico's three yeses): the keyboard tray clears her thighs, the keyboard clears the armrest, her seat -----------------
+// The geometry is the render's, before the fixes (tests/fixtures/mia-desk-clearance.json: her thighs, the tray, the keyboard end, the wheelchair's armrest,
+// in her frame, metres); here it is moved by what the DATA now says (the cast's seat, the wheelchair's prop edit) and measured. Her seat: the pose's
+// seat height the real seat is met at (room-people.mjs seatLift), a person stands that much lower the larger it is; the wheelchair: a Director prop edit
+// (world metres, the film's 1.5087 scale), she sits on it and goes with it.
+const CL = JSON.parse(fs.readFileSync(path.join(root, 'tests/fixtures/mia-desk-clearance.json'), 'utf8')), c4 = {};
+const WORLD = 1.5087, seatNow = waits.seat, dSeat = (seatNow - CL.ref.seat) / 1000;
+assert.equal(works.seat, seatNow, 'both of Mia\'s models sit at the same seat height');
+assert.ok(dSeat >= 0.0045 && dSeat <= 0.012, `her seat is ${seatNow - CL.ref.seat} mm lower than before (Vico: 5 mm; not more than 12)`);
+const chairEdits = list => list.filter(e => e.match === '^Prop:electric-wheelchair$' && e.position && /Wheelchair: .* back from the desk/.test(e.label || ''));
+const chairShot = chairEdits(shot.sceneEdits || []), chairExport = chairEdits(exported.shots[0].propEdits || []);
+assert.equal(chairShot.length, 1, 'one Director edit of the wheelchair in the chapter shot'); assert.equal(chairExport.length, 1, 'and one in the Director export (propEdits)');
+assert.deepEqual(chairShot[0].position, chairExport[0].position, 'the same edit in both');
+const chBack = chairShot[0].position[0] / WORLD;       // (metres of her frame, back from the desk: the world +x is her -z)
+assert.ok(chairShot[0].position[1] === 0 && chairShot[0].position[2] === 0 && chBack > 0.015 && chBack < 0.03, `the wheelchair rolls straight back ${(chBack * 1000).toFixed(1)} mm from the desk (nothing sideways, nothing up)`);
+assert.deepEqual(shot.motion, live.motion, 'the desk is the cut own (lift, dock end z): nothing here moves it, the chair goes back instead');
+const tri = (a, i) => [a.slice(i * 9, i * 9 + 3), a.slice(i * 9 + 3, i * 9 + 6), a.slice(i * 9 + 6, i * 9 + 9)];
+const triN = a => a.length / 9;
+// 6a. tray against her thighs: each thigh skin point (moved down by the seat, back with the chair) against the tray's triangles above it: the number of
+// surfaces above it (odd: inside the tray's plate) and the gap up to the underside
+const trayClear = (dy, dz) => {
+    const T = Array.from({ length: triN(CL.tray) }, (_, i) => tri(CL.tray, i)); let worst = Infinity, inside = 0, n = 0;
+    for (let i = 0; i < CL.thigh.length; i += 3) {
+        const x = CL.thigh[i], y = CL.thigh[i + 1] - dy, z = CL.thigh[i + 2] - dz; let up = Infinity, down = Infinity, above = 0;
+        for (const [a, b, c] of T) {
+            const d = (b[2] - c[2]) * (a[0] - c[0]) + (c[0] - b[0]) * (a[2] - c[2]); if (Math.abs(d) < 1e-12) continue;
+            const l1 = ((b[2] - c[2]) * (x - c[0]) + (c[0] - b[0]) * (z - c[2])) / d, l2 = ((c[2] - a[2]) * (x - c[0]) + (a[0] - c[0]) * (z - c[2])) / d, l3 = 1 - l1 - l2;
+            if (l1 < 0 || l2 < 0 || l3 < 0) continue;
+            const h = l1 * a[1] + l2 * b[1] + l3 * c[1];
+            if (h >= y) { above++; up = Math.min(up, h - y); } else down = Math.min(down, y - h);
+        }
+        if (!isFinite(up)) continue; n++;
+        const clear = above % 2 === 1 ? -down : up; if (clear < 0) inside++; worst = Math.min(worst, clear);
+    }
+    return { worst, inside, n };
+};
+{
+    const now = trayClear(dSeat, chBack), only = trayClear(dSeat, 0), was = trayClear(0, 0);
+    assert.ok(now.n > 100, `the tray is over her thighs (${now.n} skin points under it)`);
+    assert.equal(now.inside, 0, `the keyboard tray is not in her thighs: ${now.inside} skin points inside the tray's plate, the nearest ${(now.worst * 1000).toFixed(1)} mm`);
+    assert.ok(only.worst * 1000 >= 1, `the seat alone (without the chair's move) clears them by ${(only.worst * 1000).toFixed(2)} mm`);
+    assert.ok(now.worst * 1000 >= 1.5, `the tray's underside clears her thighs by ${(now.worst * 1000).toFixed(2)} mm (aim: a few mm; it was 3.8 mm INTO them at the desk's 29 in)`);
+    // (the check sees what Vico saw, on the Commons3 seat)
+    assert.ok(was.worst < -0.0030 && was.worst > -0.0045, `the same check on the Commons3 seat: ${(was.worst * 1000).toFixed(1)} mm (the 3.1 to 3.8 mm into the thighs that was seen)`);
+    c4.tray = now.worst * 1000;
+}
+// 6b. the keyboard's right end against the wheelchair's right armrest and joystick, to 0.7 mm (the first check was on a 5 mm grid): both surfaces sampled
+// every 0.7 mm, the chair's moved back with her; the two surfaces must be at least 1 mm apart (crossing surfaces have points within the sampling)
+{
+    const H = 0.0007, sample = (a, dz) => { const pts = []; for (let i = 0; i < triN(a); i++) { const [p, q, r] = tri(a, i), n = Math.max(1, Math.ceil(Math.max(Math.hypot(q[0] - p[0], q[1] - p[1], q[2] - p[2]), Math.hypot(r[0] - q[0], r[1] - q[1], r[2] - q[2]), Math.hypot(p[0] - r[0], p[1] - r[1], p[2] - r[2])) / H));
+        for (let u = 0; u <= n; u++) for (let v = 0; v <= n - u; v++) { const s = u / n, t = v / n; pts.push([p[0] + (q[0] - p[0]) * s + (r[0] - p[0]) * t, p[1] + (q[1] - p[1]) * s + (r[1] - p[1]) * t, p[2] + (q[2] - p[2]) * s + (r[2] - p[2]) * t + dz]); } } return pts; };
+    const K = sample(CL.kb, 0), A = sample(CL.arm, -chBack), A0 = sample(CL.arm, 0);
+    const key = (x, y, z, c) => Math.floor(x / c) + ',' + Math.floor(y / c) + ',' + Math.floor(z / c), C = 0.002, grid = new Map();
+    for (const p of K) { const k = key(p[0], p[1], p[2], C); (grid.get(k) || grid.set(k, []).get(k)).push(p); }
+    let nearest = Infinity;
+    for (const p of A) { const cx = Math.floor(p[0] / C), cy = Math.floor(p[1] / C), cz = Math.floor(p[2] / C);
+        for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) for (let k = -2; k <= 2; k++) for (const q of grid.get(`${cx + i},${cy + j},${cz + k}`) || []) nearest = Math.min(nearest, Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2])); }
+    // (a wheelchair surface that is in the keyboard crosses the keyboard's surface, so it has points within the sampling of it: the two apart by 1 mm or more is no overlap)
+    let before = Infinity;
+    for (const p of A0) { const cx = Math.floor(p[0] / C), cy = Math.floor(p[1] / C), cz = Math.floor(p[2] / C);
+        for (let i = -2; i <= 2; i++) for (let j = -2; j <= 2; j++) for (let k = -2; k <= 2; k++) for (const q of grid.get(`${cx + i},${cy + j},${cz + k}`) || []) before = Math.min(before, Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2])); }
+    assert.ok(before * 1000 < 0.7, `the check finds the armrest in the keyboard's end with the chair where it was (the surfaces ${(before * 1000).toFixed(2)} mm apart: crossing)`);
+    assert.ok(nearest * 1000 >= 1, `the armrest and joystick are ${(nearest * 1000).toFixed(2)} mm from the keyboard's end (at least 1 mm: no overlap)`);
+    c4.arm = nearest * 1000;
+}
+// 6c. the typing pose still fits: her hands follow the keys (the keys are 5 mm higher and 20 mm further ahead in her frame; handsBy is the arm solve's
+// answer, found by rendering: the fingertips as high above the key tops as before, within 1.5 mm), and the model change moves nothing (section 5)
+{
+    assert.deepEqual(CL.fingers.handsBy_after, works.handsBy, 'handsBy is what the render check (tests/fixtures/mia-desk-clearance.json fingers) measured');
+    for (const k of Object.keys(CL.fingers.before_mm).filter(k => CL.fingers.before_mm[k] !== null && CL.fingers.after_mm[k] !== null)) assert.ok(Math.abs(CL.fingers.after_mm[k] - CL.fingers.before_mm[k]) <= 1.5, `finger ${k}: ${CL.fingers.before_mm[k]} mm above the keys before, ${CL.fingers.after_mm[k]} mm after`);
+    assert.ok(Math.min(...Object.values(CL.fingers.after_mm).filter(v => v !== null)) >= 3, 'no finger is pressed into the keys: the lowest is 3 mm or more above the key tops');
+    assert.ok(CL.rendered_after.calf_vs_desk_mm >= CL.rendered_after.calf_vs_desk_before_mm && CL.rendered_after.chair_vs_desk_min_mm >= 2, 'knees and shins are no nearer the desk; the chair is clear of the desk and the keyboard (rendered)');
+}
+console.log(`people-place-test: ok (Commons4: the tray clears her thighs by ${c4.tray.toFixed(1)} mm with her seat ${waits.seat - CL.ref.seat} mm lower and the chair ${(chBack * 1000).toFixed(0)} mm back, the keyboard is ${c4.arm.toFixed(1)} mm from the armrest; pass 3: ${F.length} frames ${F[0].t}-${F.at(-1).t} s; deepest hand vertex ${(-stats.penL * 1000).toFixed(1)} mm (left) / ${(-stats.penR * 1000).toFixed(1)} mm (right) outside the phone; wrist at most ${stats.twistStep.toFixed(0)} deg a frame, bent back at most ${stats.ext.toFixed(0)} deg; back to the keys ${travel.toFixed(1)} deg of twist for ${net.toFixed(1)} net (${against.toFixed(1)} against); elbow ${elbow(atRest).toFixed(0)} deg at the charger, lean ${lean(atRest).toFixed(0)} deg; grab ${grabAt.toFixed(2)} s, touch down ${contactAt.toFixed(2)}, let go ${releaseAt.toFixed(2)}, on the keys ${endAt.toFixed(2)}; one phone; ${extra.length} extras)`);
