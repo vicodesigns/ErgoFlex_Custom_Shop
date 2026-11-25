@@ -199,17 +199,34 @@ export function duplicateTitle(t,chapter,seconds,taken=[]){
 
 // ---- layout (film pixels) ------------------------------------------------------------------------------------
 // measure(line, text) -> the line's advance width in film pixels as libass sets it (the Director measures with
-// the same Poppins files). Fitted box: from the text's left edge - padding to its advance + padding; from the
-// baseline - ascender - padding to the baseline + descender + padding (bottom = the line's y + padding).
-// up: extra height above the line when a fallback font with a taller ascender is in it (libass's line box grows).
+// the same Poppins files). Auto shadow ("fitted"): one tight box per line, sized to the glyphs, not to libass' full line
+// cell (that was 138 px tall for the headline, so boxes of neighbouring lines and of a multi-line headline overlapped and
+// their 31 % black stacked to twice as dark). Horizontally: from the text's left edge - padding to its advance + padding;
+// vertically: from the ascender line (GLYPH_ASC em above the baseline) to the descender line (GLYPH_DESC em below it),
+// each plus a small padding. The baseline sits DESC x size above the line's y (libass' line cell bottom).
+// Boxes that would still touch vertically (a multi-line headline steps 1.3 em, its boxes are taller) are trimmed to meet
+// halfway, so no pixel is ever covered by two boxes (finish-intro.py auto_boxes does exactly the same arithmetic).
+// up: extra height above the line when a fallback font with a taller ascender is in it.
+export const GLYPH_ASC=.74,GLYPH_DESC=.275;     // em fractions: Poppins 'l' / 'h' reach 740 / 1000, 'g' / 'p' fall 273 / 1000
+export const TIGHT_PAD={eyebrow:[14,9],title:[22,14],detail:[16,10]};   // [horizontal, vertical] film px around the glyphs
 export function fittedBox(line,width,align='left',up=0){
-  const L=typeof line==='string'?lineOf(line):line,[ax,ay]=ANCHOR,dx=L.dx||0;
-  if(align==='right')return {x0:dx-width-L.border,x1:dx+L.border,y0:L.y-L.size-up-L.border-ay,y1:L.y+L.border-ay};
-  return {x0:X0+dx-L.border-ax,x1:X0+dx+width+L.border-ax,y0:L.y-L.size-up-L.border-ay,y1:L.y+L.border-ay};
+  const L=typeof line==='string'?lineOf(line):line,[ax,ay]=ANCHOR,dx=L.dx||0,[ph,pv]=TIGHT_PAD[L.key]||TIGHT_PAD.title;
+  const em=L.size/FONT_REAL,base=L.y-DESC*L.size,y0=base-GLYPH_ASC*em-pv-up-ay,y1=base+GLYPH_DESC*em+pv-ay;
+  if(align==='right')return {x0:dx-width-ph,x1:dx+ph,y0,y1};
+  return {x0:X0+dx-ph-ax,x1:X0+dx+width+ph-ax,y0,y1};
 }
 const rect=({x0,y0,x1,y1})=>[{x:x0,y:y0},{x:x1,y:y0},{x:x1,y:y1},{x:x0,y:y1}].map(p=>({x:r2(p.x),y:r2(p.y)}));
+// Trim boxes that overlap vertically (and share some width) to meet at the middle of the overlap; top to bottom.
+export function separateBoxes(boxes){
+  const order=boxes.map((b,i)=>i).sort((a,b)=>boxes[a].y0-boxes[b].y0||a-b);
+  for(let k=0;k+1<order.length;k++){const a=boxes[order[k]],b=boxes[order[k+1]];
+    if(a.y1>b.y0&&a.x0<b.x1&&b.x0<a.x1){const mid=(a.y1+b.y0)/2;a.y1=mid;b.y0=mid;}}
+  return boxes;
+}
 export function fittedPaths(title,measure){
-  const {align}=placeOf(title);return expandedLines(title).map(L=>({line:L.key,points:rect(fittedBox(L,measure(L,L.text),align,measure.rise?.(L,L.text)||0))}));
+  const {align}=placeOf(title),lines=expandedLines(title);
+  const boxes=separateBoxes(lines.map(L=>fittedBox(L,measure(L,L.text),align,measure.rise?.(L,L.text)||0)));
+  return lines.map((L,i)=>({line:L.key,points:rect(boxes[i])}));
 }
 export function shadowOf(title,measure){
   const s=title.shadow||{};

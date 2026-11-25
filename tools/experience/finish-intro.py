@@ -24,7 +24,7 @@ End card (titles-src 'logo' / 'cta', Director Mode's end-card blocks, experience
 --size 2560x1440 masters at that size (chapter renders must match); the HQ file is ErgoFlex-Intro-<H>p.mp4 with the
   bitrate cap scaled by pixel count. Titles stay authored on the 1920×1080 grid (libass scales PlayRes to the frame).
 """
-import json, os, subprocess, sys, glob, shutil, tempfile
+import json, math, os, subprocess, sys, glob, shutil, tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 def _fonts_dir():
@@ -38,6 +38,7 @@ FONTS = _fonts_dir()
 BLUE = '&H00EC8813&'
 BOX_A, BOX_BLUR, SCRIM_BLOCK = 'B0', 18, False   # title line boxes: alpha B0 = 31% black, soft edge (HQ20 F); SCRIM_BLOCK True = the old block scrim  # #1388ec as ASS BGR
 
+X0_LEFT = 128
 ANCHOR = (128, 912)   # title anchor: the headline's left edge / bottom line (Director Mode's film-titles.mjs ANCHOR)
 # A title's optional 'place' (film-titles.mjs PLACES; absent = lower-left, everything as before): (x, line y offset,
 # ASS alignment, box alpha). top-*: the eyebrow's top 110 px from the top edge, as the supporting line's bottom is from
@@ -96,6 +97,82 @@ ASS_HEAD = [
     'Style: CTA,Poppins Medium,46,&H00FFFFFF,&H00FFFFFF,&H00000000,&HA0000000,0,0,0,0,100,100,1.5,0,1,0,1.5,5,0,0,0,1', '',
     '[Events]', 'Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text']
 
+# ---- auto shadow: tight, never-overlapping boxes (film-titles.mjs fittedBox / separateBoxes / fittedPaths) -------------
+# One box per line, sized to the glyphs (ascender line to descender line + a little padding) instead of libass' full
+# line cell, drawn as an ASS vector shape. Boxes that would still touch are trimmed to meet halfway, so no pixel is
+# covered twice and the 31 % black never stacks. Same arithmetic as film-titles.mjs (the Director preview).
+FONT_REAL, DESC, ASC = 1762 / 1000, 627 / 1762, 1135 / 1762   # libass sizes Poppins by winAscent + winDescent
+FALLBACK_REAL, FALLBACK_ASC = 2288 / 2048, 1854 / 2288        # Arial, for the glyphs Poppins lacks (the film's ″)
+GLYPH_ASC, GLYPH_DESC = .74, .275
+TIGHT_PAD = {'eyebrow': (14, 9), 'title': (22, 14), 'detail': (16, 10)}   # (horizontal, vertical) px around the glyphs
+POPPINS_FILES = {400: 'Poppins-Regular', 500: 'Poppins-Medium', 600: 'Poppins-SemiBold', 700: 'Poppins-Bold'}
+_FONT_CACHE = {}
+
+def r2(v):
+    return math.floor(v * 100 + .5) / 100              # JS Math.round, not Python's banker's rounding
+
+def _font(name, path):
+    """(advance widths by code point, units per em) of a TTF, cached; None when the file cannot be read."""
+    if name in _FONT_CACHE: return _FONT_CACHE[name]
+    out = None
+    try:
+        from fontTools.ttLib import TTFont
+        f = TTFont(path, lazy=True); cmap, hmtx = f.getBestCmap(), f['hmtx']
+        out = ({c: hmtx[g][0] for c, g in cmap.items()}, f['head'].unitsPerEm)
+    except Exception as e:
+        print(f'WARNING: cannot read {path} to measure title text ({e}); the shadow boxes use an estimate', file=sys.stderr)
+    _FONT_CACHE[name] = out; return out
+
+def _poppins(weight):
+    for w in sorted(POPPINS_FILES, key=lambda k: abs(k - weight)):
+        path = os.path.join(FONTS, POPPINS_FILES[w] + '.ttf')
+        if os.path.exists(path): return _font(POPPINS_FILES[w], path)
+    return None
+
+def _fallback_font():
+    for path in (r'C:\Windows\Fonts\arial.ttf', '/usr/share/fonts/truetype/msttcorefonts/Arial.ttf', '/Library/Fonts/Arial.ttf',
+                 '/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf'):
+        if os.path.exists(path): return _font('fallback:' + path, path)
+    return None
+
+def text_width(size, spacing, weight, text):
+    """The line's advance width (film px) as libass sets it: each glyph's advance at size / FONT_REAL px (no kerning, no
+    hinting), Arial at size / FALLBACK_REAL for glyphs Poppins lacks, plus the spacing after every glyph. Same as the
+    Director's measure()."""
+    pop, fb = _poppins(weight), None
+    w = 0.0
+    for ch in text:
+        c = ord(ch)
+        if pop and c in pop[0]: w += pop[0][c] / pop[1] * size / FONT_REAL
+        else:
+            fb = fb or _fallback_font()
+            w += (fb[0].get(c, fb[1] // 2) / fb[1] * size / FALLBACK_REAL) if fb else .55 * size / FONT_REAL
+        w += spacing
+    return w
+
+def has_fallback(size, weight, text):
+    pop = _poppins(weight)
+    return bool(pop) and any(ord(ch) not in pop[0] for ch in text)
+
+def fitted_box(key, size, y, dx, width, align_right, up=0):
+    """One tight box (relative to the title anchor, unscaled): film-titles.mjs fittedBox()."""
+    ph, pv = TIGHT_PAD[key]; em = size / FONT_REAL; base = y - DESC * size
+    y0 = base - GLYPH_ASC * em - pv - up - ANCHOR[1]; y1 = base + GLYPH_DESC * em + pv - ANCHOR[1]
+    if align_right: return dict(x0=dx - width - ph, x1=dx + ph, y0=y0, y1=y1)
+    return dict(x0=X0_LEFT + dx - ph - ANCHOR[0], x1=X0_LEFT + dx + width + ph - ANCHOR[0], y0=y0, y1=y1)
+
+def separate_boxes(boxes):
+    """Trim boxes that overlap vertically (and share some width) to meet at the middle of the overlap: separateBoxes()."""
+    order = sorted(range(len(boxes)), key=lambda i: (boxes[i]['y0'], i))
+    for k in range(len(order) - 1):
+        a, b = boxes[order[k]], boxes[order[k + 1]]
+        if a['y1'] > b['y0'] and a['x0'] < b['x1'] and b['x0'] < a['x1']:
+            mid = (a['y1'] + b['y0']) / 2; a['y1'] = b['y0'] = mid
+    return boxes
+
+def box_path(b):
+    return {'points': [{'x': r2(x), 'y': r2(y)} for x, y in ((b['x0'], b['y0']), (b['x1'], b['y0']), (b['x1'], b['y1']), (b['x0'], b['y1']))]}
+
 def title_dialogues(titles):
     """ASS Dialogue lines for titles carrying absolute 'start' / 'end' seconds (the film's burn-in look, shared with --chapter-titles)."""
     ass = []
@@ -110,17 +187,17 @@ def title_dialogues(titles):
         typography = t.get('typography') or {}
         # (Until HQ20: one soft, blurred 1300 x 350 scrim behind the text block, per-title 'scrim' alpha; now fitted line boxes.)
         if SCRIM_BLOCK: ass.append(f'Dialogue: 0,{ts(a - .2)},{ts(b + .2)},Scrim,,0,0,0,,{{\\an7\\pos(0,0)\\p1\\1c&H000000&\\1a&HFF&\\blur90\\t(0,900,\\1a&H{t.get('scrim') or '90'}&)\\t({int((b - a) * 1000 - 300)},{int((b - a) * 1000 + 400)},\\1a&HFF&)}}m 0 730 l 1300 730 1300 1080 0 1080{{\\p0}}')
-        def type_tags(style, box=False):
+        def type_tags(style):
             key = {'Eyebrow': 'eyebrow', 'Title': 'title', 'Detail': 'detail'}[style]
             cfg = {k: v for k, v in (typography.get(key) or {}).items() if k not in ('dx', 'dy')}   # dx / dy: position only (\move)
             if not cfg and scale == 1: return ''
             size, weight, spacing, border, shadow = {'Eyebrow': (28,600,6,16,1.2), 'Title': (86,600,-.6,26,2), 'Detail': (40,400,.2,20,1.5)}[style]
             # spacing default: the Style's as libass applies it (it ignores a negative Style Spacing; a \fsp override is honoured)
-            tags = f"\\fs{ass_num(float(cfg.get('size', size))*scale)}\\fsp{ass_num(float(cfg.get('spacing', max(0, spacing)))*scale)}\\b{int(cfg.get('weight', weight))}\\i{1 if cfg.get('italic') else 0}\\bord{ass_num(border*scale if box else 0)}\\shad{ass_num(0 if box else shadow*scale)}"
+            tags = f"\\fs{ass_num(float(cfg.get('size', size))*scale)}\\fsp{ass_num(float(cfg.get('spacing', max(0, spacing)))*scale)}\\b{int(cfg.get('weight', weight))}\\i{1 if cfg.get('italic') else 0}\\bord0\\shad{ass_num(shadow*scale)}"
             family = {400: 'Poppins', 500: 'Poppins Medium', 600: 'Poppins SemiBold', 700: 'Poppins'}[int(cfg.get('weight', weight))]
             tags += '\\fn' + family
             color = cfg.get('color')
-            if color and not box: tags += '\\1c&H' + color[5:7] + color[3:5] + color[1:3] + '&'
+            if color: tags += '\\1c&H' + color[5:7] + color[3:5] + color[1:3] + '&'
             return tags
         # Director Mode's per-line offsets (typography.<line>.dx / dy, film px before the title's scale): that line alone moves.
         def offset(style):
@@ -133,23 +210,18 @@ def title_dialogues(titles):
             dur = int((b - a) * 1000)
             return (f'Dialogue: {layer},{ts(a + delay / 1000)},{ts(b)},{style},,0,0,0,,'
                     f'{{{type_tags(style)}\\an{AN}\\move({ass_num(x)},{ass_num(y + DY + rise)},{ass_num(x)},{ass_num(y + DY)},0,900)\\fad(650,420)\\blur5\\t(0,700,\\blur0)}}{text}')
-        # Director Mode's shadow: blur / opacity restyle the boxes; paths replace them (one drawing each, timed like its line).
+        # Director Mode's shadow: blur / opacity restyle the auto boxes; paths replace them (one drawing each, timed like its line).
         sh = t['shadow']; blur = ass_num(float(sh.get('blur', BOX_BLUR))*scale)
         alpha = f"{max(0, min(255, round(255 * (1 - float(sh['opacity']))))):02X}" if 'opacity' in sh else (BOX_PLACE or BOX_A)
-        tint = f'\\3a&H{alpha}&' if alpha != BOX_A else ''
-        def box(style, y, text, delay, rise=14):
-            dx, dy = offset(style)
-            y = 912 + (y + dy - 912)*scale; x = X0 + dx*scale if dx else X0
-            rise *= scale
-            return (f'Dialogue: 0,{ts(a + delay / 1000)},{ts(b)},Box{style},,0,0,0,,'
-                    f'{{{type_tags(style, True)}\\an{AN}\\move({ass_num(x)},{ass_num(y + DY + rise)},{ass_num(x)},{ass_num(y + DY)},0,900)\\fad(650,420){tint}\\blur{blur}}}{text}')
-        for p in sh.get('paths') or []:
+        def shadow_dialogue(p, delay, rise):
             if scale != 1:
                 p = {**p, 'points': [{**q, 'x': q['x']*scale, 'y': q['y']*scale, **{k: [v*scale for v in q[k]] for k in ('in','out') if k in q}} for q in p['points']]}
-            delay, rise = LINE_TIMING.get(p.get('line'), (0, 10))
             rise *= scale
-            ass.append(f'Dialogue: 0,{ts(a + delay / 1000)},{ts(b)},Scrim,,0,0,0,,{{\\an7\\move(0,{rise},0,0,0,900)\\fad(650,420)\\p1\\bord0\\shad0'
-                       f'\\1c&H000000&\\1a&H{alpha}&\\blur{blur}}}{ass_drawing(p, (X0, ANCHOR[1] + DY))}{{\\p0}}')
+            return (f'Dialogue: 0,{ts(a + delay / 1000)},{ts(b)},Scrim,,0,0,0,,{{\\an7\\move(0,{rise},0,0,0,900)\\fad(650,420)\\p1\\bord0\\shad0'
+                    f'\\1c&H000000&\\1a&H{alpha}&\\blur{blur}}}{ass_drawing(p, (X0, ANCHOR[1] + DY))}{{\\p0}}')
+        for p in sh.get('paths') or []:
+            delay, rise = LINE_TIMING.get(p.get('line'), (0, 10))
+            ass.append(shadow_dialogue(p, delay, rise))
         # Multi-line titles (Enter -> '\n'): match experience/film-titles.mjs LINE_LEAD = 0.74.
         # Single-line titles emit the exact same single Dialogue as before (byte-identical golden ASS).
         LINE_LEAD = 0.74
@@ -158,11 +230,12 @@ def title_dialogues(titles):
         title_parts = raw_title.split('\n') if raw_title else []
         title_size = float((typography.get('title') or {}).get('size', 86))
         title_extra = max(0, len(title_parts) - 1) * title_size * LINE_LEAD
+        texts, fits = [], []    # the text dialogues, and every non-empty line for the auto shadow boxes
         for style, y, key, delay, rise in (('Eyebrow', 812, 'eyebrow', 0, 10), ('Title', 912, 'title', 140, 14), ('Detail', 970, 'detail', 380, 10)):
             raw = (t.get(key) or '').replace('\r\n', '\n').replace('\r', '\n')
             if '\n' not in raw and (key != 'eyebrow' or title_extra == 0):
-                if not SCRIM_BLOCK and not sh.get('paths'): ass.append(box(style, y, raw, delay, rise))
-                ass.append(line(1, style, y, raw, delay, rise))
+                texts.append(line(1, style, y, raw, delay, rise))
+                if raw: fits.append((style, key, y, raw, delay, rise))
                 continue
             parts = raw.split('\n') if raw else []
             step = float((typography.get(key) or {}).get('size', BASE_SIZES[key])) * LINE_LEAD
@@ -172,8 +245,20 @@ def title_dialogues(titles):
             for i, part in enumerate(parts):
                 if not part: continue
                 sub_y = round(base_y - (n - 1 - i) * step, 2) if direction < 0 else round(base_y + i * step, 2)
-                if not SCRIM_BLOCK and not sh.get('paths'): ass.append(box(style, sub_y, part, delay, rise))
-                ass.append(line(1, style, sub_y, part, delay, rise))
+                texts.append(line(1, style, sub_y, part, delay, rise))
+                fits.append((style, key, sub_y, part, delay, rise))
+        if not SCRIM_BLOCK and not sh.get('paths'):
+            boxes = []
+            for style, key, y, text, delay, rise in fits:
+                dx, dy = offset(style)
+                cfg = typography.get(key) or {}
+                size = float(cfg.get('size', BASE_SIZES[key])); weight = int(cfg.get('weight', {'eyebrow': 600, 'title': 600, 'detail': 400}[key]))
+                spacing = float(cfg.get('spacing', max(0, {'eyebrow': 6, 'title': -.6, 'detail': .2}[key])))
+                up = size * max(0, FALLBACK_ASC - ASC) if has_fallback(size, weight, text) else 0
+                boxes.append(fitted_box(key, size, y + dy, dx, text_width(size, spacing, weight, text), AN == 3, up))
+            for (style, key, y, text, delay, rise), box in zip(fits, separate_boxes(boxes)):
+                ass.append(shadow_dialogue(box_path(box), delay, rise))
+        ass += texts
     return ass
 
 def logo_aspect(path, default=304 / 1400):
