@@ -96,4 +96,4 @@ Dialogue: 0,0:03:48.96,0:03:54.13,BoxTitle,,0,0,0,,{\an1\move(128,926,128,912,0,
 Dialogue: 1,0:03:48.96,0:03:54.13,Title,,0,0,0,,{\an1\move(128,926,128,912,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}One desk. Every part of your day.
 Dialogue: 0,0:03:49.20,0:03:54.13,BoxDetail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur18}
 Dialogue: 1,0:03:49.20,0:03:54.13,Detail,,0,0,0,,{\an1\move(128,980,128,970,0,900)\fad(650,420)\blur5\t(0,700,\blur0)}
-Dialogue: 1,0:03:57.31,0:04:02.35,CTA,,0,0,0,,{\an5\move(960,914,960,904,0,1100)\fad(900,1400)\blur4\t(0,800,\blur0)}Let’s build yours.
+Dialogue: 1,0:03:57.31,0:04:02.35,CTA,,0,0,0,,{\an5\move(960,914,960,904,0,1100)\fad(900,1400)\fs46\blur4\t(0,800,\blur0)}Let’s build yours.

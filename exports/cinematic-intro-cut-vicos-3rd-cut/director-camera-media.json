@@ -1,5 +1,5 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-8804c0853513-Film-chapter-media-17-s-__6_.json",
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-e17c6145a389-Film-chapter-media-17-s-__10_.json",
  "seconds": 17.0,
  "keys": [
   {
@@ -84,14 +84,6 @@
   "height": 30,
   "tilt": 0
  },
- "lighting": {
-  "screenLight": {
-   "gain": 0.77,
-   "saturation": 1.38,
-   "contrast": 0.76,
-   "keepHue": true
-  }
- },
  "props": [
   {
    "match": "^Prop:ergoflex-plant-2$",
@@ -155,6 +147,17 @@
    "path": "^Room:music > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Groove tabletop \u00b7 daily materials > Mixing notes$",
    "label": "Mixing notes",
    "hide": true
+  },
+  {
+   "match": "^Accessory:magic-mouse$",
+   "path": "^Room:music > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Accessory:magic-mouse$",
+   "label": "Accessory:magic-mouse",
+   "space": "local",
+   "position": [
+    0,
+    0.003,
+    0
+   ]
   }
  ],
  "people": {

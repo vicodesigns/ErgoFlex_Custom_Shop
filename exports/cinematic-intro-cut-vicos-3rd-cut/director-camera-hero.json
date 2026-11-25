@@ -1,18 +1,18 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-635bc7853c39-Film-chapter-hero-pro.json",
- "seconds": 25.5,
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-681ca9360d57-Film-chapter-hero-25-95-s-__2_.json",
+ "seconds": 25.95,
  "keys": [
   {
    "at": 0.0,
    "position": [
-    4.5,
-    2.05,
-    8.3
+    5.476144125217537,
+    2.2304701588316247,
+    9.62698043708028
    ],
    "target": [
-    -1.276,
-    1.2,
-    0.744
+    -1.3022924387743022,
+    1.2329509276347648,
+    0.7596212477585418
    ],
    "fov": 26,
    "label": "Arc from the opening view (0.00 s)"
@@ -20,91 +20,91 @@
   {
    "at": 0.7,
    "position": [
-    4.7009,
-    2.1381,
-    7.9404
+    6.0185595105228735,
+    2.2613489245372325,
+    9.439105464549492
    ],
    "target": [
-    -1.2345,
-    1.2018,
-    0.7359
+    -1.1819825593993531,
+    1.1253000779635671,
+    0.6995677351063705
    ],
-   "fov": 26.0919,
+   "fov": 26.092694179161573,
    "label": "Arc from the opening view (0.70 s)"
   },
   {
    "at": 1.4,
    "position": [
-    5.0015,
-    2.2915,
-    7.3081
+    6.051256553292804,
+    2.5114484372054626,
+    7.986932236927871
    ],
    "target": [
-    -1.0145,
-    1.2111,
-    0.6932
+    -0.7839446861576304,
+    1.2838808634066987,
+    0.47098398388820295
    ],
-   "fov": 26.5782,
+   "fov": 26.578553889610117,
    "label": "Arc from the opening view (1.40 s)"
   },
   {
    "at": 2.1,
    "position": [
-    5.3049,
-    2.4948,
-    6.4645
+    6.273013185570399,
+    2.883044227033625,
+    6.929509395824873
    ],
    "target": [
-    -0.615,
-    1.2281,
-    0.6156
+    -0.3961190138402867,
+    1.4566155621663317,
+    0.3405998953519507
    ],
-   "fov": 27.4615,
+   "fov": 27.461291692850224,
    "label": "Arc from the opening view (2.10 s)"
   },
   {
    "at": 2.8,
    "position": [
-    5.6266,
-    2.6689,
-    5.6473
+    6.085408372462635,
+    2.9231405750022477,
+    5.776078922905242
    ],
    "target": [
-    -0.3497,
-    1.3244,
-    0.5641
+    -0.24544232048805348,
+    1.498971136791555,
+    0.39040347666652736
    ],
-   "fov": 28.0482,
+   "fov": 28.04650134435382,
    "label": "Arc from the opening view (2.80 s)"
   },
   {
    "at": 3.5,
    "position": [
-    5.8005,
-    2.7986,
-    5.0358
+    6.233597668035409,
+    3.0093656860161344,
+    5.159586671601431
    ],
    "target": [
-    -0.3425,
-    1.4097,
-    0.5627
+    -0.27327543623412914,
+    1.5380539564692375,
+    0.4210902548420475
    ],
-   "fov": 28.0643,
+   "fov": 28.064340527794524,
    "label": "Arc from the opening view (3.50 s)"
   },
   {
    "at": 4.2,
    "position": [
-    5.8699,
-    2.8683,
-    4.7092
+    6.347507658599263,
+    3.122401303886417,
+    4.777473736990774
    ],
    "target": [
-    -0.3425,
-    1.4097,
-    0.5627
+    -0.2608098477001457,
+    1.5712799157529511,
+    0.3663377622742852
    ],
-   "fov": 28.0643,
+   "fov": 28.06428778136962,
    "label": "Arc from the opening view (4.20 s)"
   },
   {
@@ -125,31 +125,31 @@
   {
    "at": 5.6,
    "position": [
-    6.1214,
-    2.8874,
-    4.4401
+    6.252174528336136,
+    2.9870982153026646,
+    4.1811607703719345
    ],
    "target": [
-    -0.3074,
-    1.291,
-    0.5758
+    -0.17665416117510474,
+    1.3911214756758294,
+    0.3171284328164418
    ],
-   "fov": 28.0345,
+   "fov": 28.03447765145272,
    "label": "Vico path at his 3.83 s"
   },
   {
    "at": 6.3,
    "position": [
-    6.2469,
-    2.8934,
-    4.2995
+    6.356638007884552,
+    2.939743928275671,
+    4.086817182030673
    ],
    "target": [
-    -0.2903,
-    1.3155,
-    0.5834
+    -0.18064208205888707,
+    1.3618256103092181,
+    0.3708524949031844
    ],
-   "fov": 28.0166,
+   "fov": 28.016591691680397,
    "label": "Vico path at his 4.89 s"
   },
   {
@@ -185,61 +185,61 @@
   {
    "at": 8.4,
    "position": [
-    6.5683,
-    2.8996,
-    3.8182
+    6.7503246510541235,
+    2.894805224894576,
+    3.4350241515839004
    ],
    "target": [
-    -0.2376,
-    1.4135,
-    0.6036
+    -0.05557793650571376,
+    1.4085238329261456,
+    0.22043866930056918
    ],
-   "fov": 28,
+   "fov": 27.999998061028954,
    "label": "Vico path at his 8.18 s"
   },
   {
    "at": 9.1,
    "position": [
-    6.6618,
-    2.8947,
-    3.6399
+    6.7986459733487346,
+    2.99255815527928,
+    3.281183945805752
    ],
    "target": [
-    -0.2191,
-    1.3851,
-    0.6053
+    -0.0823110784075045,
+    1.4831800455304451,
+    0.2466993185120256
    ],
-   "fov": 28,
+   "fov": 28.000002777310378,
    "label": "Vico path at his 9.31 s"
   },
   {
    "at": 9.8,
    "position": [
-    6.7579,
-    2.8859,
-    3.4393
+    6.992060081911722,
+    2.9547367441844665,
+    2.8271674937998235
    ],
    "target": [
-    -0.1993,
-    1.3717,
-    0.608
+    0.03507786499603436,
+    1.4405506652564817,
+    -0.004608773424488461
    ],
-   "fov": 27.9999,
+   "fov": 27.999897680494854,
    "label": "Vico path at his 10.53 s"
   },
   {
    "at": 10.5,
    "position": [
-    6.8287,
-    2.864,
-    3.205
+    6.910427147437705,
+    2.897780087751983,
+    2.963126816470272
    ],
    "target": [
-    -0.1762,
-    1.3508,
-    0.6344
+    -0.09443240641754921,
+    1.3845628950295321,
+    0.39223215550977664
    ],
-   "fov": 27.9973,
+   "fov": 27.997305205479655,
    "label": "Vico path at his 10.97 s"
   },
   {
@@ -286,21 +286,6 @@
    ],
    "fov": 27.9895,
    "label": "Vico path at his 11.68 s"
-  },
-  {
-   "at": 13.3,
-   "position": [
-    7.147,
-    2.7349,
-    2.0019
-   ],
-   "target": [
-    -0.055,
-    1.3251,
-    0.7956
-   ],
-   "fov": 27.9881,
-   "label": "Vico path at his 11.90 s"
   },
   {
    "at": 14.0,
@@ -365,14 +350,14 @@
   {
    "at": 16.8,
    "position": [
-    7.7664,
-    2.4598,
-    -0.2877
+    7.7978,
+    2.3983,
+    -0.292
    ],
    "target": [
-    0.1866,
-    1.0699,
-    1.0875
+    0.2058,
+    1.038,
+    1.0491
    ],
    "fov": 28.0261,
    "label": "Vico path at his 13.36 s"
@@ -380,167 +365,92 @@
   {
    "at": 17.5,
    "position": [
-    8.0444,
-    2.3241,
-    -1.0749
+    8.0563,
+    2.3061,
+    -1.0763
    ],
    "target": [
-    0.2855,
-    0.9552,
-    1.1246
+    0.2706,
+    0.9351,
+    0.9483
    ],
-   "fov": 28.1544,
+   "fov": 28.1451,
    "label": "Vico path at his 14.46 s"
   },
   {
    "at": 18.2,
    "position": [
-    8.2472,
-    2.2004,
-    -1.9891
+    8.219,
+    2.3068,
+    -2.083
    ],
    "target": [
-    0.307,
-    0.7985,
-    0.8778
+    0.219,
+    0.8545,
+    0.6977
    ],
-   "fov": 28.4052,
+   "fov": 28.418,
    "label": "Vico path at his 16.07 s"
   },
   {
    "at": 18.9,
    "position": [
-    8.2822,
-    2.1486,
-    -2.815
+    7.9575,
+    2.8498,
+    -3.0657
    ],
    "target": [
-    0.2311,
-    0.6588,
-    0.4463
+    0.1034,
+    0.873,
+    0.3602
    ],
-   "fov": 28.4173,
+   "fov": 28.419,
    "label": "Vico path at his 17.32 s"
   },
   {
    "at": 19.6,
    "position": [
-    8.2981,
-    2.1165,
-    -3.3879
+    7.3327,
+    2.8815,
+    -3.6959
    ],
    "target": [
-    0.1717,
-    0.577,
-    0.157
+    0.0084,
+    0.8995,
+    0.1924
    ],
-   "fov": 28.4319,
+   "fov": 28.4276,
    "label": "Vico path at his 18.37 s"
   },
   {
-   "at": 20.3,
+   "at": 21.6,
    "position": [
-    8.334,
-    2.0875,
-    -3.7156
+    6.025489250250201,
+    3.1851927899769152,
+    -4.588263986815632
    ],
    "target": [
-    0.1551,
-    0.5487,
-    0.0678
+    -0.030463268861634092,
+    1.2031427967945454,
+    -0.013171750280005843
    ],
-   "fov": 28.4885,
-   "label": "Vico path at his 19.79 s"
+   "fov": 28.488784203684432,
+   "label": "Arrive on the end-card pose (21.60 s)"
   },
   {
-   "at": 21.0,
+   "at": 25.95,
    "position": [
-    8.3649,
-    2.0684,
-    -3.8737
+    5.482268002415035,
+    3.0207927917373976,
+    -4.277585972045252
    ],
    "target": [
-    0.1556,
-    0.5433,
-    0.0694
+    -0.07365264965981755,
+    1.2023893141113149,
+    -0.08021956679763062
    ],
-   "fov": 28.4895,
-   "label": "Vico path at his 20.94 s"
-  },
-  {
-   "at": 21.7,
-   "position": [
-    8.3815,
-    2.0584,
-    -3.9524
-   ],
-   "target": [
-    0.1567,
-    0.5421,
-    0.0748
-   ],
-   "fov": 28.4973,
-   "label": "Vico path at his 21.74 s"
-  },
-  {
-   "at": 22.4,
-   "position": [
-    8.3901,
-    2.0531,
-    -3.9953
-   ],
-   "target": [
-    0.157,
-    0.541,
-    0.0761
-   ],
-   "fov": 28.4997,
-   "label": "Vico path at his 22.36 s"
-  },
-  {
-   "at": 23.1,
-   "position": [
-    8.3944,
-    2.0504,
-    -4.0176
-   ],
-   "target": [
-    0.157,
-    0.5401,
-    0.0761
-   ],
-   "fov": 28.5,
-   "label": "Vico path at his 22.84 s"
-  },
-  {
-   "at": 23.5,
-   "position": [
-    8.395,
-    2.05,
-    -4.021
-   ],
-   "target": [
-    0.157,
-    0.54,
-    0.076
-   ],
-   "fov": 28.5,
-   "label": "Vico path at his 23.02 s"
-  },
-  {
-   "at": 25.5,
-   "position": [
-    8.395,
-    2.05,
-    -4.021
-   ],
-   "target": [
-    0.157,
-    0.54,
-    0.076
-   ],
-   "fov": 28.5,
-   "label": "End card held"
+   "fov": 28.488785729795904,
+   "label": "Hold on the end card (25.95 s)"
   }
  ],
  "clips": [
@@ -1010,8 +920,8 @@
    "id": "c-lift",
    "lane": "lift",
    "kind": "lift",
-   "start": 9.400007,
-   "duration": 3.0000028399999987,
+   "start": 9.4,
+   "duration": 3,
    "easing": "linear",
    "label": "",
    "target": 28,
@@ -1328,8 +1238,8 @@
    "id": "c-tilt",
    "lane": "tilt",
    "kind": "tilt",
-   "start": 10.100007,
-   "duration": 2.3000028399999994,
+   "start": 10.1,
+   "duration": 2.3,
    "easing": "linear",
    "label": "",
    "target": -5,
@@ -1682,11 +1592,11 @@
    "id": "d-lift",
    "lane": "lift",
    "kind": "lift",
-   "start": 16.330003,
+   "start": 16.33,
    "duration": 3.19,
    "easing": "linear",
    "label": "",
-   "target": 39.9956,
+   "target": 45,
    "path": [
     {
      "time": 0,
@@ -1892,7 +1802,7 @@
    "id": "g-tilt",
    "lane": "tilt",
    "kind": "tilt",
-   "start": 17.030003,
+   "start": 17.03,
    "duration": 3.17,
    "easing": "linear",
    "label": "",
@@ -1917,248 +1827,6 @@
   "height": 52.5,
   "tilt": 65
  },
- "lighting": {
-  "lights": [
-   {
-    "preset": "productRig",
-    "key": {
-     "at": {
-      "az": 35,
-      "el": 22,
-      "dist": 3.4
-     },
-     "width": 2.6,
-     "height": 1.3,
-     "intensity": [
-      [
-       0,
-       30
-      ],
-      [
-       2.93,
-       30
-      ],
-      [
-       3.53,
-       12
-      ],
-      [
-       8.37,
-       12
-      ],
-      [
-       8.97,
-       4.5
-      ],
-      [
-       13.19,
-       4.5
-      ],
-      [
-       13.79,
-       24
-      ],
-      [
-       16.71,
-       24
-      ],
-      [
-       18.71,
-       30
-      ],
-      [
-       19,
-       30
-      ],
-      [
-       20.6,
-       40
-      ]
-     ]
-    },
-    "rimLeft": {
-     "at": {
-      "az": 135,
-      "el": 45,
-      "dist": 3.6
-     },
-     "intensity": [
-      [
-       0,
-       170
-      ],
-      [
-       2.93,
-       170
-      ],
-      [
-       3.53,
-       150
-      ],
-      [
-       8.37,
-       150
-      ],
-      [
-       8.97,
-       75
-      ],
-      [
-       13.19,
-       75
-      ],
-      [
-       13.79,
-       160
-      ],
-      [
-       16.71,
-       160
-      ],
-      [
-       18.71,
-       170
-      ],
-      [
-       19,
-       170
-      ],
-      [
-       20.6,
-       260
-      ]
-     ]
-    },
-    "rimRight": {
-     "at": {
-      "az": -135,
-      "el": 45,
-      "dist": 3.6
-     },
-     "intensity": [
-      [
-       0,
-       170
-      ],
-      [
-       2.93,
-       170
-      ],
-      [
-       3.53,
-       150
-      ],
-      [
-       8.37,
-       150
-      ],
-      [
-       8.97,
-       75
-      ],
-      [
-       13.19,
-       75
-      ],
-      [
-       13.79,
-       160
-      ],
-      [
-       16.71,
-       160
-      ],
-      [
-       18.71,
-       170
-      ],
-      [
-       19,
-       170
-      ],
-      [
-       20.6,
-       260
-      ]
-     ]
-    },
-    "pool": {
-     "strength": [
-      [
-       0,
-       0.3
-      ],
-      [
-       19,
-       0.3
-      ],
-      [
-       20.6,
-       0.5
-      ]
-     ]
-    },
-    "contact": {
-     "opacity": 0.8
-    }
-   },
-   {
-    "type": "rect",
-    "name": "kicker",
-    "at": {
-     "az": 180,
-     "el": 25,
-     "dist": 3.2
-    },
-    "width": 0.5,
-    "height": 2,
-    "color": "#eef1ff",
-    "intensity": [
-     [
-      0,
-      30
-     ],
-     [
-      2.93,
-      30
-     ],
-     [
-      3.53,
-      18
-     ],
-     [
-      16.71,
-      18
-     ],
-     [
-      18.71,
-      30
-     ],
-     [
-      19,
-      30
-     ],
-     [
-      20.6,
-      50
-     ]
-    ]
-   },
-   {
-    "type": "rect",
-    "name": "frontLow",
-    "at": {
-     "az": -45,
-     "el": 8,
-     "dist": 4
-    },
-    "width": 1.2,
-    "height": 0.6,
-    "color": "#fff0e0",
-    "intensity": 6
-   }
-  ]
- },
  "props": [
   {
    "match": "^Accessory:artist-easel$",
@@ -2166,7 +1834,8 @@
    "desk": "artist",
    "show": {
     "from": 0,
-    "to": 7.2
+    "to": 5.13,
+    "fadeOut": 0.3
    }
   },
   {
@@ -2175,45 +1844,949 @@
    "desk": "artist",
    "show": {
     "from": 0,
-    "to": 7.8
+    "to": 5.13,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large"
+   },
+   "id": "mys3r28ti",
+   "match": "^Added prop:ergoflex-side-shelf-large#mys3r28ti$",
+   "label": "Side shelf \u00b7 large",
+   "parent": "base-shelf",
+   "position": [
+    0.938,
+    0.025,
+    -0.119
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 5.13,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large"
+   },
+   "id": "od9s27p2e",
+   "match": "^Added prop:ergoflex-side-shelf-large#od9s27p2e$",
+   "label": "Side shelf \u00b7 large",
+   "parent": "base-shelf",
+   "position": [
+    -0.923,
+    0.024,
+    -0.113
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 5.13,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-small"
+   },
+   "id": "wjdm9pvoq",
+   "match": "^Added prop:ergoflex-side-shelf-small#wjdm9pvoq$",
+   "label": "Side shelf \u00b7 small",
+   "parent": "shelf",
+   "position": [
+    0.945,
+    -0.168,
+    0.098
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 5.13,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-small"
+   },
+   "id": "ty7t6ksvx",
+   "match": "^Added prop:ergoflex-side-shelf-small#ty7t6ksvx$",
+   "label": "Side shelf \u00b7 small",
+   "parent": "shelf",
+   "position": [
+    -0.944,
+    -0.175,
+    0.116
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 5.13,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large-cubby"
+   },
+   "id": "ubuyk82ct",
+   "match": "^Added prop:ergoflex-side-shelf-large-cubby#ubuyk82ct$",
+   "label": "Side shelf \u00b7 large, cubby and cups",
+   "parent": "desk",
+   "position": [
+    -1.123,
+    -0.034,
+    0.288
+   ],
+   "rotation": [
+    -58.7,
+    90,
+    0
+   ],
+   "scale": [
+    -1,
+    1,
+    1
+   ],
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 5.13,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:easel-rail$",
+   "label": "Accessory:easel-rail",
+   "desk": "architect",
+   "show": {
+    "from": 0.3,
+    "to": 5.15,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:drafting-kit$",
+   "label": "Accessory:drafting-kit",
+   "desk": "architect",
+   "show": {
+    "from": 0.3,
+    "to": 5.15,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:task-light$",
+   "label": "Accessory:task-light",
+   "desk": "architect",
+   "show": {
+    "from": 0.3,
+    "to": 5.15,
+    "fadeIn": 0.2,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:monitor-arm$",
+   "label": "Accessory:monitor-arm",
+   "hide": true,
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 5.13,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:flat-monitor$",
+   "label": "Accessory:flat-monitor",
+   "hide": true,
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 5.13,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:task-light$",
+   "label": "Accessory:task-light",
+   "space": "local",
+   "position": [
+    -0.007,
+    0,
+    0.082
+   ],
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 5.13,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-dual-monitor-arm-compact"
+   },
+   "id": "qcobypzmi",
+   "match": "^Added prop:ergoflex-dual-monitor-arm-compact#qcobypzmi$",
+   "label": "Dual monitor arms \u00b7 extended",
+   "parent": "shelf",
+   "position": [
+    0,
+    -0.046,
+    0.124
+   ],
+   "rotation": [
+    -180,
+    3.5,
+    -180
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "artist"
+  },
+  {
+   "add": {
+    "asset": "ergoflex-portrait-monitor"
+   },
+   "id": "bvm1mxp20",
+   "match": "^Added prop:ergoflex-portrait-monitor#bvm1mxp20$",
+   "label": "ProVision Ultra 32\u2033 \u00b7 portrait panel",
+   "parent": "shelf",
+   "position": [
+    -0.534,
+    -0.187,
+    0.464
+   ],
+   "rotation": [
+    0,
+    7.8,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "artist"
+  },
+  {
+   "add": {
+    "asset": "ergoflex-wide-monitor"
+   },
+   "id": "j7rkts842",
+   "match": "^Added prop:ergoflex-wide-monitor#j7rkts842$",
+   "label": "AETHER 34UW \u00b7 curved ultrawide",
+   "parent": "shelf",
+   "position": [
+    0.474,
+    0.127,
+    0.55
+   ],
+   "rotation": [
+    0,
+    -13.2,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "artist"
+  },
+  {
+   "add": {
+    "asset": "ergoflex-wide-monitor"
+   },
+   "id": "gvmdrt6n4",
+   "match": "^Added prop:ergoflex-wide-monitor#gvmdrt6n4$",
+   "label": "AETHER 34UW \u00b7 curved ultrawide",
+   "parent": "shelf",
+   "position": [
+    0,
+    0,
+    0.504
+   ],
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    1.1,
+    1.1,
+    1.1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.3,
+    "to": 5.15,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-single-monitor-arm"
+   },
+   "id": "10y4a92rf",
+   "match": "^Added prop:ergoflex-single-monitor-arm#10y4a92rf$",
+   "label": "Single monitor arm",
+   "parent": "shelf",
+   "position": [
+    0,
+    0,
+    0.082
+   ],
+   "rotation": [
+    -180,
+    -87.2,
+    -180
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.3,
+    "to": 5.15,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large"
+   },
+   "id": "6fdq03ibv",
+   "match": "^Added prop:ergoflex-side-shelf-large#6fdq03ibv$",
+   "label": "Side shelf \u00b7 large",
+   "parent": "base-shelf",
+   "position": [
+    0.938,
+    0.025,
+    -0.119
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.3,
+    "to": 5.15,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large"
+   },
+   "id": "6f52lf1nf",
+   "match": "^Added prop:ergoflex-side-shelf-large#6f52lf1nf$",
+   "label": "Side shelf \u00b7 large",
+   "parent": "base-shelf",
+   "position": [
+    -0.923,
+    0.024,
+    -0.113
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.3,
+    "to": 5.15,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-small"
+   },
+   "id": "wd4hxbong",
+   "match": "^Added prop:ergoflex-side-shelf-small#wd4hxbong$",
+   "label": "Side shelf \u00b7 small",
+   "parent": "shelf",
+   "position": [
+    -0.944,
+    -0.175,
+    0.116
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.3,
+    "to": 5.15,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-small"
+   },
+   "id": "fi8308l2v",
+   "match": "^Added prop:ergoflex-side-shelf-small#fi8308l2v$",
+   "label": "Side shelf \u00b7 small",
+   "parent": "shelf",
+   "position": [
+    0.945,
+    -0.168,
+    0.098
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.3,
+    "to": 5.15,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large-cubby"
+   },
+   "id": "kwdk8pqfc",
+   "match": "^Added prop:ergoflex-side-shelf-large-cubby#kwdk8pqfc$",
+   "label": "Side shelf \u00b7 large, cubby and cups",
+   "parent": "desk",
+   "position": [
+    -1.137,
+    -0.183,
+    0.306
+   ],
+   "rotation": [
+    -17.4,
+    90,
+    0
+   ],
+   "scale": [
+    -1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.3,
+    "to": 5.15,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-cup-holder"
+   },
+   "id": "evb37kaue",
+   "match": "^Added prop:ergoflex-side-cup-holder#evb37kaue$",
+   "label": "Side cup holder \u00b7 acrylic",
+   "parent": "desk",
+   "position": [
+    1.079,
+    -0.237,
+    0.096
+   ],
+   "rotation": [
+    -31.7,
+    -84.6,
+    -15.5
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.3,
+    "to": 5.15,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:cable-tray$",
+   "label": "Accessory:cable-tray",
+   "desk": "office",
+   "show": {
+    "from": 0.3,
+    "to": 6.33,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large"
+   },
+   "id": "1zr1k8lwb",
+   "match": "^Added prop:ergoflex-side-shelf-large#1zr1k8lwb$",
+   "label": "Side shelf \u00b7 large",
+   "parent": "base-shelf",
+   "position": [
+    -0.923,
+    0.024,
+    -0.113
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 0.3,
+    "to": 6.33,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large-cubby"
+   },
+   "id": "4lq1al8mj",
+   "match": "^Added prop:ergoflex-side-shelf-large-cubby#4lq1al8mj$",
+   "label": "Side shelf \u00b7 large, cubby and cups",
+   "parent": "desk",
+   "position": [
+    -1.117,
+    -0.191,
+    0.493
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    -1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 0.3,
+    "to": 6.33,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large-cubby"
+   },
+   "id": "zq7lk6r1w",
+   "match": "^Added prop:ergoflex-side-shelf-large-cubby#zq7lk6r1w$",
+   "label": "Side shelf \u00b7 large, cubby and cups",
+   "parent": "desk",
+   "position": [
+    1.112,
+    -0.191,
+    0.493
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 0.3,
+    "to": 6.33,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large"
+   },
+   "id": "mq9mg01h7",
+   "match": "^Added prop:ergoflex-side-shelf-large#mq9mg01h7$",
+   "label": "Side shelf \u00b7 large",
+   "parent": "base-shelf",
+   "position": [
+    0.926,
+    0.025,
+    -0.119
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 0.3,
+    "to": 6.33,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:portrait-monitor$",
+   "label": "Accessory:portrait-monitor",
+   "desk": "office",
+   "show": {
+    "from": 0.3,
+    "to": 6.33,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:logitech-mx-master$",
+   "label": "Accessory:logitech-mx-master",
+   "desk": "office",
+   "show": {
+    "from": 0.3,
+    "to": 6.33,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:keyboard-tray$",
+   "label": "Accessory:keyboard-tray",
+   "desk": "office",
+   "show": {
+    "from": 0.3,
+    "to": 6.33,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:ergo-keyboard$",
+   "label": "Accessory:ergo-keyboard",
+   "desk": "office",
+   "show": {
+    "from": 0.3,
+    "to": 6.33,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Prop:tablet-folder$",
+   "label": "Prop:tablet-folder",
+   "rotation": [
+    1,
+    -36.3,
+    4.6
+   ],
+   "desk": "office",
+   "show": {
+    "from": 0.3,
+    "to": 6.33,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Prop:pen$",
+   "label": "Prop:pen",
+   "space": "local",
+   "position": [
+    -0.557,
+    -0.111,
+    0.164
+   ],
+   "rotation": [
+    58.3,
+    -34.1,
+    -77.3
+   ],
+   "desk": "office",
+   "show": {
+    "from": 0.3,
+    "to": 6.33,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Prop:glasses-3$",
+   "label": "Prop:glasses-3",
+   "space": "local",
+   "position": [
+    -0.769,
+    -0.06,
+    0.06
+   ],
+   "desk": "office",
+   "show": {
+    "from": 0.3,
+    "to": 6.33,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Prop:calculator$",
+   "label": "Prop:calculator",
+   "space": "local",
+   "position": [
+    0.017,
+    -0.006,
+    -0.052
+   ],
+   "desk": "office",
+   "show": {
+    "from": 0.3,
+    "to": 6.33,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Prop:insulated-mug$",
+   "label": "Prop:insulated-mug",
+   "space": "local",
+   "position": [
+    0.329,
+    -0.166,
+    0.37
+   ],
+   "scale": [
+    0.7,
+    0.7,
+    0.7
+   ],
+   "desk": "office",
+   "show": {
+    "from": 0.3,
+    "to": 6.33,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:obsbot-tiny-2$",
+   "label": "Accessory:obsbot-tiny-2",
+   "desk": "office",
+   "show": {
+    "from": 0.3,
+    "to": 6.33,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:monitor-arm-2$",
+   "label": "Accessory:monitor-arm-2",
+   "desk": "office",
+   "show": {
+    "from": 0.3,
+    "to": 6.33,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:wide-monitor$",
+   "label": "Accessory:wide-monitor",
+   "desk": "office",
+   "show": {
+    "from": 0.3,
+    "to": 6.33,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:cable-tray$",
+   "label": "Accessory:cable-tray",
+   "desk": "gaming",
+   "show": {
+    "from": 0,
+    "to": 5.49,
+    "fadeOut": 0.55
+   }
+  },
+  {
+   "match": "^Accessory:logitech-mx-master$",
+   "label": "Accessory:logitech-mx-master",
+   "desk": "gaming",
+   "show": {
+    "from": 0,
+    "to": 5.49,
+    "fadeOut": 0.55
+   }
+  },
+  {
+   "match": "^Accessory:keyboard-tray$",
+   "label": "Accessory:keyboard-tray",
+   "desk": "gaming",
+   "show": {
+    "from": 0,
+    "to": 5.49,
+    "fadeOut": 0.55
+   }
+  },
+  {
+   "match": "^Accessory:ergo-keyboard$",
+   "label": "Accessory:ergo-keyboard",
+   "desk": "gaming",
+   "show": {
+    "from": 0,
+    "to": 5.49,
+    "fadeOut": 0.55
+   }
+  },
+  {
+   "match": "^Accessory:monitor-arm$",
+   "label": "Accessory:monitor-arm",
+   "desk": "gaming",
+   "show": {
+    "from": 0,
+    "to": 5.49,
+    "fadeOut": 0.55
+   }
+  },
+  {
+   "match": "^Accessory:wide-monitor$",
+   "label": "Accessory:wide-monitor",
+   "desk": "gaming",
+   "show": {
+    "from": 0,
+    "to": 5.49,
+    "fadeOut": 0.55
    }
   }
  ],
  "versions": [
   {
-   "n": "A",
-   "preset": "gaming",
-   "name": "",
-   "start": 0.0,
-   "end": 3.53
-  },
-  {
    "n": "B",
    "preset": "artist",
    "name": "",
-   "start": 2.93,
-   "end": 8.97
+   "start": 0.0,
+   "end": 5.4
   },
   {
    "n": "C",
    "preset": "architect",
    "name": "",
-   "start": 8.37,
-   "end": 13.79
+   "start": 4.8,
+   "end": 9.62
   },
   {
    "n": "D",
    "preset": "office",
    "name": "",
-   "start": 13.19,
-   "end": 18.71
+   "start": 9.02,
+   "end": 16.65
   },
   {
    "n": "H",
    "preset": "gaming",
    "name": "",
-   "start": 16.71,
-   "end": 25.5
+   "start": 14.65,
+   "end": 25.95
   }
  ],
  "versionLibrary": [
