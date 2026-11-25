@@ -42,8 +42,8 @@ const near = (a, b, eps, what) => assert.ok(Math.abs(a - b) <= eps, `${what}: ${
     // determinism: out of order = in order
     const times = Array.from({ length: 500 }, (_, i) => (i * 7919) % 1000 / 100); assert.deepEqual(times.map(t => R.riderAway(tl, t)), [...times].reverse().map(t => R.riderAway(tl, t)).reverse());
 }
-{   // chapter 1 (the 3rd cut's awaken): the desk tilts up over 18.65..24.6 s (they go at about 20.4 s) and level over 31.55..35.7 s (back at about 34.9 s)
-    const d = JSON.parse(fs.readFileSync(path.join(root, 'exports/cinematic-intro-cut-vicos-3rd-cut/director-camera.json'), 'utf8')), motion = { clips: d.clips, initial: d.initial };
+{   // chapter 1 (the 3rd cut's awaken, frozen in tests/fixtures/tray-awaken-motion-20261125.json: Vico re-times the live cut): the desk tilts up over 18.65..24.6 s (they go at about 20.4 s) and level over 31.55..35.7 s (back at about 34.9 s)
+    const d = JSON.parse(fs.readFileSync(path.join(root, 'tests/fixtures/tray-awaken-motion-20261125.json'), 'utf8')), motion = { clips: d.clips, initial: d.initial };
     const tl = R.riderTimeline(s => sampleClipMotion(motion, s).tilt, d.seconds);
     assert.deepEqual(tl.events.map(e => e.to), ['shelf', 'tray']); assert.ok(tl.events[0].t > 20 && tl.events[0].t < 21, 'up at ' + tl.events[0].t); assert.ok(tl.events[1].t > 34 && tl.events[1].t < 36, 'back at ' + tl.events[1].t);
     // Vico's tray keys there (tilt -10 at 20.8 s, then slide it in): the tray is free while they are up, no warning, and held again once they are back

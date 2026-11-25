@@ -46,7 +46,7 @@ def digest():
 
 run()                                                                       # the cut as the pass leaves it (a no-op on this cut)
 base = shots(); base_sub = sub()
-assert not any('sceneTray' in s for s in base.values()) and not any('sceneTray' in s for s in base_sub), 'no chapter has tray keys to begin with'
+assert 'sceneTray' not in base['awareness'] and 'sceneTray' not in base['hero'] and not any('sceneTray' in s for s in base_sub), 'the chapters this test keys have no tray keys to begin with (others, like a live awaken Vico has keyed, may)'
 keys = [{'desk': 'gaming', 'bracket': True, 'keys': [{'t': 2, 'pose': {'swing': 90, 'slide': 0.3}, 'label': 'Side'}, {'t': 6, 'pose': {'swing': 0, 'slide': 0}, 'ease': 'linear'}]}]
 want = b.clean_tray(keys); assert want[0]['keys'][0]['id'] == 'k1' and want[0]['keys'][1]['ease'] == 'linear' and 'bracket' not in want[0], 'an old export with the bracket imports, the bracket is ignored'
 old = b.clean_tray([{'bracket': True, 'initial': {'drop': 40}, 'keys': [{'t': 1, 'pose': {'drop': 30}}, {'t': 2, 'pose': {'tilt': 3, 'drop': 9}}]}])

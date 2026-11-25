@@ -1,0 +1,103 @@
+{
+ "note": "Frozen 25 Nov 2026: chapter 1 (awaken) desk movement of exports/cinematic-intro-cut-vicos-3rd-cut/director-camera.json at 2c1b1dd8 (tests/tray-riders-test.mjs). Vico re-times the live chapter; this copy does not change.",
+ "seconds": 44.85,
+ "clips": [
+  {
+   "id": "op-roll",
+   "lane": "wheels",
+   "kind": "travel",
+   "start": 2.0,
+   "duration": 2.3,
+   "easing": "smooth",
+   "label": "Move forward",
+   "value": 12,
+   "direction": "forward"
+  },
+  {
+   "id": "03582967-0974-43a8-9379-a000caa92dfb",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 9.25,
+   "duration": 3.0,
+   "easing": "linear",
+   "label": "",
+   "target": -5
+  },
+  {
+   "id": "op-lift",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 10.4,
+   "duration": 5.75,
+   "easing": "smooth",
+   "label": "Lift up",
+   "target": 45.5
+  },
+  {
+   "id": "op-tilt-down",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 18.65,
+   "duration": 5.950000000000003,
+   "easing": "smooth",
+   "label": "Tilt up",
+   "target": 65
+  },
+  {
+   "id": "8fd6bb67-5297-4296-a82b-e38b974d9b58",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 21.1,
+   "duration": 3.5,
+   "easing": "linear",
+   "label": "",
+   "target": 52.5
+  },
+  {
+   "id": "op-turn",
+   "lane": "wheels",
+   "kind": "rotate",
+   "start": 25.55,
+   "duration": 6.7,
+   "easing": "smooth",
+   "label": "Rotating left",
+   "value": 100,
+   "direction": "left"
+  },
+  {
+   "id": "op-tilt-back",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 31.55,
+   "duration": 4.150000000000002,
+   "easing": "smooth",
+   "label": "Tilt level",
+   "target": 0
+  },
+  {
+   "id": "op-lower",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 33.800000000000004,
+   "duration": 4.55,
+   "easing": "smooth",
+   "label": "Lift down",
+   "target": 28
+  },
+  {
+   "id": "op-roll-lit",
+   "lane": "wheels",
+   "kind": "travel",
+   "start": 37.9,
+   "duration": 5.000000000000007,
+   "easing": "smooth",
+   "label": "Move forward",
+   "value": 24,
+   "direction": "forward"
+  }
+ ],
+ "initial": {
+  "height": 28,
+  "tilt": 0
+ }
+}
