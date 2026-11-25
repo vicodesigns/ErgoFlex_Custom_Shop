@@ -22,7 +22,11 @@ export const LINES=[
 // the film's standing layout (eyebrow 812, headline 912, supporting 970).
 // spacing: libass ignores a negative Spacing in a Style line (the headline's -0.6 burns as 0) but honours \fsp, so the
 // line's effective spacing is its own typography value when set, else the style's clamped at 0.
-export function titleLines(t){return LINES.map(L=>{const a=t?.typography?.[L.key]||{};return {...L,...a,spacing:Number.isFinite(a.spacing)?a.spacing:Math.max(0,L.spacing),dx:Number(a.dx)||0,y:L.y+(Number(a.dy)||0)};});}
+// Text options added 2026-11-25 (all optional; absent = exactly the film's look): lineHeight (x em, the step between a
+// block's own lines), caps ('upper' | 'lower'), opacity (0..1), strokeW (px) + strokeColor, shadowDist (px) + shadowColor +
+// shadowOpacity (the line's drop shadow; film: 1.2 / 2 / 1.5 px, black, 71 % / 63 % / 63 %).
+export function titleLines(t){return LINES.map(L=>{const a=t?.typography?.[L.key]||{},n=Number.isFinite;return {...L,...a,spacing:n(a.spacing)?a.spacing:Math.max(0,L.spacing),dx:Number(a.dx)||0,y:L.y+(Number(a.dy)||0),
+  shadow:n(a.shadowDist)?a.shadowDist:L.shadow,shadowAlpha:n(a.shadowOpacity)?a.shadowOpacity:L.shadowAlpha,shadowColor:a.shadowColor||'#000000',opacity:n(a.opacity)?a.opacity:1,strokeW:n(a.strokeW)?a.strokeW:0,strokeColor:a.strokeColor||'#000000'};});}
 // Line spacing (baseline to baseline): eyebrow -> headline and headline -> supporting text. Film: 100 and 58.
 export const GAPS={top:912-812,bottom:970-912};
 export function lineGaps(t){const [E,T,D]=titleLines(t);return {top:r2(T.y-E.y),bottom:r2(D.y-T.y)};}
@@ -43,6 +47,14 @@ export function cleanTypography(v){
     if([400,500,600,700].includes(a.weight))b.weight=a.weight;
     if(/^#[0-9a-f]{6}$/i.test(a.color))b.color=a.color;
     if(typeof a.italic==='boolean')b.italic=a.italic;
+    if(Number.isFinite(a.lineHeight))b.lineHeight=r3(Math.max(.5,Math.min(3,a.lineHeight)));
+    if(a.caps==='upper'||a.caps==='lower')b.caps=a.caps;
+    if(Number.isFinite(a.opacity)&&a.opacity<.999)b.opacity=r3(Math.max(0,Math.min(1,a.opacity)));
+    if(Number.isFinite(a.strokeW)&&a.strokeW>=.05)b.strokeW=r2(Math.min(20,a.strokeW));
+    if(b.strokeW&&/^#[0-9a-f]{6}$/i.test(a.strokeColor))b.strokeColor=a.strokeColor;
+    if(Number.isFinite(a.shadowDist))b.shadowDist=r2(Math.max(0,Math.min(30,a.shadowDist)));
+    if(Number.isFinite(a.shadowOpacity))b.shadowOpacity=r3(Math.max(0,Math.min(1,a.shadowOpacity)));
+    if(/^#[0-9a-f]{6}$/i.test(a.shadowColor)&&a.shadowColor.toLowerCase()!=='#000000')b.shadowColor=a.shadowColor;
     if(Object.keys(b).length)out[L.key]=b;
   }return Object.keys(out).length?out:undefined;
 }
@@ -54,9 +66,14 @@ export const BOX_BLUR=18,BOX_OPACITY=1-0xB0/255;          // finish-intro BOX_A 
 // A custom shadow path is relative to its title's placed anchor (the headline's left edge, or right edge when right).
 export const PLACE_DY=110-(812-28),BOX_OPACITY_TOP=1-0x70/255;
 export const PLACES={'lower-left':{x:128,dy:0,align:'left'},'top-left':{x:128,dy:PLACE_DY,align:'left'},'top-right':{x:1920-128,dy:PLACE_DY,align:'right'}};
+// Text alignment (titles-src 'align': 'left' | 'center' | 'right'; absent = the place's own: flush left, top-right flush right).
+// The anchor x is the left edge, the centre or the right edge of every line; with no explicit position it sits at the film's
+// left margin (128), the frame centre (960) or the right margin (1792).
+export const ALIGNS=['left','center','right'],ALIGN_X={left:128,center:960,right:1920-128};
+export const alignShift=(align,w)=>align==='right'?-w:align==='center'?-w/2:0;   // a line's left edge relative to the anchor x
 export function placeOf(t){const key=Object.hasOwn(PLACES,t?.place)?t.place:'lower-left',P=PLACES[key];
-  const x=Number.isFinite(t?.position?.x)?t.position.x:P.x,dy=Number.isFinite(t?.position?.y)?t.position.y-912:P.dy;
-  return {key,x,dy,align:P.align,anchor:[x,912+dy],boxOpacity:key==='lower-left'?BOX_OPACITY:BOX_OPACITY_TOP};}
+  const align=ALIGNS.includes(t?.align)?t.align:P.align,x=Number.isFinite(t?.position?.x)?t.position.x:align===P.align?P.x:ALIGN_X[align],dy=Number.isFinite(t?.position?.y)?t.position.y-912:P.dy;
+  return {key,x,dy,align,anchor:[x,912+dy],boxOpacity:key==='lower-left'?BOX_OPACITY:BOX_OPACITY_TOP};}
 export const FADE_IN=.65,FADE_OUT=.42,RISE_TIME=.9,TEXT_BLUR=5,TEXT_BLUR_TIME=.7;
 export const BLUR_SIGMA=2/Math.sqrt(Math.log(256));        // libass: Gaussian sigma = \blur x 0.849 (measured on its output)
 export const LEAD=1.5,TAIL=.8,MIN_ON=3.5;                   // titles-after-cut.py
@@ -64,6 +81,9 @@ const r2=v=>Math.round(v*100)/100,r3=v=>Math.round(v*1000)/1000;
 const num=(v,lo,hi,fallback)=>{const n=Number(v);return Number.isFinite(n)?Math.max(lo,Math.min(hi,n)):fallback;};
 const text=(v,max)=>typeof v==='string'?v.replace(/\r\n?/g,'\n').slice(0,max):'';
 export const LINE_LEAD=0.74;                                // multi-line step as a fraction of L.size (~1.30x em in Poppins)
+// A block's own line step: lineHeight (x the em, i.e. Fontsize / FONT_REAL) when set, else the film's 0.74 x Fontsize (= 1.30 em).
+export const stepOf=L=>Number.isFinite(L.lineHeight)?L.lineHeight*L.size/FONT_REAL:L.size*LINE_LEAD;
+export const caseOf=(L,s)=>L.caps==='upper'?s.toUpperCase():L.caps==='lower'?s.toLowerCase():s;
 export const sublinesOf=s=>s?String(s).replace(/\r\n?/g,'\n').split('\n'):[];
 // Expand eyebrow / title / detail into positioned sub-lines when copy contains '\n' (Enter).
 // Single-line titles stay at their exact titleLines() baselines. A multi-line headline stacks upward from T.y and
@@ -71,14 +91,14 @@ export const sublinesOf=s=>s?String(s).replace(/\r\n?/g,'\n').split('\n'):[];
 export function expandedLines(t){
   const [E,T,D]=titleLines(t);
   const ep=sublinesOf(t?.eyebrow),tp=sublinesOf(t?.title),dp=sublinesOf(t?.detail);
-  const titleExtra=Math.max(0,tp.length-1)*T.size*LINE_LEAD;
+  const titleExtra=Number.isFinite(T.lineHeight)?Math.max(0,tp.length-1)*stepOf(T):Math.max(0,tp.length-1)*T.size*LINE_LEAD;
   const out=[];
   const push=(L,parts,baseY,dir)=>{
-    const n=parts.length,step=L.size*LINE_LEAD;
+    const n=parts.length,step=stepOf(L);
     for(let i=0;i<n;i++){
       const s=parts[i];if(!s)continue;
       const y=dir<0?baseY-(n-1-i)*step:baseY+i*step;
-      out.push({...L,y:r2(y),text:s,subIndex:i,subCount:n});
+      out.push({...L,y:r2(y),text:caseOf(L,s),subIndex:i,subCount:n});
     }
   };
   push(E,ep,E.y-titleExtra,-1);
@@ -137,6 +157,7 @@ export function cleanTitle(t,seconds=90){
   const typography=cleanTypography(t?.typography);if(typography)out.typography=typography;
   if(Number.isFinite(t?.position?.x)&&Number.isFinite(t?.position?.y))out.position={x:r2(num(t.position.x,-4000,4000,128)),y:r2(num(t.position.y,-4000,4000,912))};
   if(t?.place&&t.place!=='lower-left'&&Object.hasOwn(PLACES,t.place))out.place=t.place;
+  if(ALIGNS.includes(t?.align)&&t.align!==PLACES[out.place||'lower-left'].align)out.align=t.align;
   const s=cleanShadow(t?.shadow);if(s)out.shadow=s;
   return out;
 }
@@ -213,6 +234,7 @@ export function fittedBox(line,width,align='left',up=0){
   const L=typeof line==='string'?lineOf(line):line,[ax,ay]=ANCHOR,dx=L.dx||0,[ph,pv]=TIGHT_PAD[L.key]||TIGHT_PAD.title;
   const em=L.size/FONT_REAL,base=L.y-DESC*L.size,y0=base-GLYPH_ASC*em-pv-up-ay,y1=base+GLYPH_DESC*em+pv-ay;
   if(align==='right')return {x0:dx-width-ph,x1:dx+ph,y0,y1};
+  if(align==='center')return {x0:dx-width/2-ph,x1:dx+width/2+ph,y0,y1};
   return {x0:X0+dx-ph-ax,x1:X0+dx+width+ph-ax,y0,y1};
 }
 const rect=({x0,y0,x1,y1})=>[{x:x0,y:y0},{x:x1,y:y0},{x:x1,y:y1},{x:x0,y:y1}].map(p=>({x:r2(p.x),y:r2(p.y)}));
@@ -235,8 +257,8 @@ export function shadowOf(title,measure){
 // The text block's own extents (left/right/top/bottom) relative to the anchor.
 export function textBounds(title,measure){
   const lines=expandedLines(title);if(!lines.length)return null;const [ax,ay]=ANCHOR;
-  const y0=Math.min(...lines.map(L=>L.y-L.size))-ay,y1=Math.max(...lines.map(L=>L.y))-ay,right=placeOf(title).align==='right';
-  const xs=lines.map(L=>{const w=measure(L,L.text);return right?[L.dx-w,L.dx]:[X0-ax+L.dx,X0-ax+L.dx+w];});
+  const y0=Math.min(...lines.map(L=>L.y-L.size))-ay,y1=Math.max(...lines.map(L=>L.y))-ay,align=placeOf(title).align;
+  const xs=lines.map(L=>{const w=measure(L,L.text),s=alignShift(align,w);return align==='left'?[X0-ax+L.dx,X0-ax+L.dx+w]:[L.dx+s,L.dx+s+w];});
   return {x0:Math.min(...xs.map(x=>x[0])),x1:Math.max(...xs.map(x=>x[1])),y0,y1};
 }
 
@@ -325,5 +347,5 @@ export function srcEntry(chapter,t){
   const e={chapter,rel_in:t.rel_in,rel_out:t.rel_out,eyebrow:t.eyebrow,title:t.title,detail:t.detail};
   if(t.scale!==undefined)e.scale=t.scale;if(t.typography)e.typography=structuredClone(t.typography);
   if(t.position)e.position=structuredClone(t.position);
-  if(t.shadow)e.shadow=structuredClone(t.shadow);if(t.timed)e.director_timing=true;if(t.place)e.place=t.place;return e;
+  if(t.shadow)e.shadow=structuredClone(t.shadow);if(t.timed)e.director_timing=true;if(t.place)e.place=t.place;if(t.align)e.align=t.align;return e;
 }
