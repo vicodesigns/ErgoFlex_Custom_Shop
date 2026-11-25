@@ -25,6 +25,10 @@ const X = new THREE.Vector3(1, 0, 0), Y = new THREE.Vector3(0, 1, 0), Z = new TH
 const RAD = Math.PI / 180;
 const riderOf = obj => { const a = obj?.userData?.accessoryId && accessory(obj.userData.accessoryId); return a && ['keyboard', 'mouse'].includes(a.exclusiveGroup) ? a : null; };
 
+// window.ErgoFlex (the api the stage and film-fx hand in) has no loadProp / disposeObject of its own: they live on the desk manager's
+// context (studio.js, SceneDesks ctx). Using api.loadProp alone made the rig install throw "loadProp is not a function" on the real page.
+const loaderOf = api => (api.loadProp ? api.loadProp.bind(api) : api.sceneDesks?.ctx?.loadProp?.bind(api.sceneDesks.ctx)) || (() => { throw Error('no prop loader on the stage api'); });
+const disposerOf = api => (api.disposeObject ? api.disposeObject.bind(api) : api.sceneDesks?.ctx?.disposeObject?.bind(api.sceneDesks.ctx));
 export function createTrayRig(api) {
     let edit = null, installed = null, token = 0, chain = Promise.resolve(), last = null;
     const desk = () => api.sceneDesks?.active || null;
@@ -82,8 +86,8 @@ export function createTrayRig(api) {
         await api.workspaceAccessories?.ready;
         const tray = item.obj, rigid = tray.getObjectByName('Prop:' + RIGID_ID);
         if (!rigid) return false;
-        const model = await api.loadProp(RIG_ID);
-        if (mine !== token || !model) { if (model) api.disposeObject?.(model); return false; }
+        const model = await loaderOf(api)(RIG_ID);
+        if (mine !== token || !model) { if (model) disposerOf(api)?.(model); return false; }
         model.position.copy(rigid.position); model.quaternion.copy(rigid.quaternion); model.scale.copy(rigid.scale);
         // the finish the rigid model has now (black, white, steel), as plain copies: this model's own materials, textures shared
         let source = null; rigid.traverse(o => { if (!source && o.isMesh) source = [].concat(o.material)[0]; });
@@ -103,7 +107,7 @@ export function createTrayRig(api) {
         removeBracket(i);
         for (const r of i.riders) { r.obj.position.copy(r.own.position); r.obj.quaternion.copy(r.own.quaternion); r.obj.scale.copy(r.own.scale); r.obj.updateMatrix(); }
         i.tray.remove(i.model); i.tray.add(i.rigid);
-        api.disposeObject?.(i.model);
+        disposerOf(api)?.(i.model);
     }
     const sameTray = () => installed && trayItem()?.obj === installed.tray && installed.model.parent === installed.tray;
     // The riders' thickness for the drop the tray needs under the desk (tray-limits.mjs RIDER_MM).
