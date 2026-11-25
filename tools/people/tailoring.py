@@ -21,6 +21,9 @@ TOPS = {
     'toigo_fisherman_sweater',
     'elvs_crude_t-shirt_male',
 }
+# Garments that cover the torso and the arms but are not fitted as a top above (a casual suit's jacket or shirt, overalls with a tee):
+# relaxed too where a posture raises the arms over the head (cast.stretch, build_people.py 'raised_top'; relax_raised_top).
+RAISED_TOPS = TOPS | {'male_casualsuit01', 'male_casualsuit03', 'male_casualsuit05', 'male_casualsuit06', 'male_worksuit01'}
 TROUSERS = {
     'toigo_wool_pants',
     'cortu_cargo_pants',
