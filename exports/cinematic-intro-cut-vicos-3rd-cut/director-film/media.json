@@ -223,6 +223,18 @@
    "label": "Mixing notes",
    "hide": true,
    "director": true
+  },
+  {
+   "match": "^Accessory:magic-mouse$",
+   "path": "^Room:music > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Accessory:magic-mouse$",
+   "label": "Accessory:magic-mouse",
+   "space": "local",
+   "position": [
+    0,
+    0.003,
+    0
+   ],
+   "director": true
   }
  ],
  "clock": {
@@ -1510,7 +1522,7 @@
   }
  },
  "directorEdited": {
-  "at": "2026-11-21T22:54:35Z",
+  "at": "2026-11-24T23:40:12Z",
   "fields": [
    "camera",
    "cameraPlan",

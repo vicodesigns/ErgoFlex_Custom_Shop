@@ -1,6 +1,6 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-2nd-cut/director-exports/export-e8f4d78a360c-Film-chapter-storage-24-978-s-__6_.json",
- "seconds": 24.978,
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-e8c3ce338a82-Film-chapter-storage-24-978-s-__10_.json",
+ "seconds": 26.67,
  "keys": [
   {
    "at": 0,
@@ -232,7 +232,7 @@
    "label": "Ending hold copy"
   },
   {
-   "at": 24.978,
+   "at": 26.67,
    "position": [
     6.703923166396544,
     1.0229182605407892,
@@ -871,11 +871,22 @@
    "lane": "wheels",
    "kind": "travel",
    "start": 12.25,
-   "duration": 4.8,
+   "duration": 1.75,
    "easing": "linear",
    "label": "",
-   "value": 57,
+   "value": 12,
    "direction": "forward"
+  },
+  {
+   "id": "storage-roll",
+   "lane": "wheels",
+   "kind": "travel",
+   "start": 14,
+   "duration": 6.200000000000003,
+   "easing": "linear",
+   "label": "",
+   "value": 68,
+   "direction": "forward-right"
   },
   {
    "id": "d2e4c43f-6210-43af-8d20-fe2c9a7caa9a",
@@ -888,31 +899,89 @@
    "target": 52.5
   },
   {
-   "id": "storage-roll",
-   "lane": "wheels",
-   "kind": "travel",
-   "start": 17.05,
-   "duration": 5.1,
-   "easing": "linear",
-   "label": "",
-   "value": 60,
-   "direction": "right"
-  },
-  {
    "id": "fd16bf28-f7a4-4fe5-bde7-e3afcc94628e",
    "lane": "wheels",
    "kind": "rotate",
-   "start": 18.95,
+   "start": 20.200000000000003,
    "duration": 3.6,
    "easing": "linear",
    "label": "",
    "value": 90,
    "direction": "left"
+  },
+  {
+   "id": "64574913-03fe-4701-aabf-6b9ac9edda3c",
+   "lane": "wheels",
+   "kind": "travel",
+   "start": 23.67,
+   "duration": 3,
+   "easing": "linear",
+   "label": "",
+   "value": 12,
+   "direction": "backward"
   }
  ],
  "initial": {
   "height": 43.5,
   "tilt": 0
+ },
+ "lighting": {
+  "ledStatus": [
+   {
+    "at": 11.25,
+    "dur": 1,
+    "kind": "tilt-retract"
+   },
+   {
+    "at": 12.25,
+    "dur": 1.75,
+    "kind": "wheels",
+    "mode": 3,
+    "reverse": true
+   },
+   {
+    "at": 14,
+    "dur": 0.75,
+    "kind": "wheels",
+    "fade": 1,
+    "fadeIn": 0.6,
+    "mode": 9
+   },
+   {
+    "at": 14.75,
+    "dur": 0.8,
+    "kind": "lift-up",
+    "fade": 1,
+    "fadeIn": 0.6
+   },
+   {
+    "at": 15.55,
+    "dur": 1.5,
+    "kind": "wheels",
+    "fade": 1,
+    "fadeIn": 0.6,
+    "mode": 3,
+    "reverse": true
+   },
+   {
+    "at": 18.95,
+    "dur": 3.678,
+    "kind": "wheels",
+    "fade": 1,
+    "fadeIn": 0.6,
+    "mode": 5
+   },
+   {
+    "at": 23.67,
+    "dur": 3,
+    "kind": "wheels",
+    "fade": 1,
+    "fadeIn": 0.6,
+    "mode": 4
+   }
+  ],
+  "ledColor": "#242424",
+  "roomLight": 0.8
  },
  "people": {
   "v": 2,

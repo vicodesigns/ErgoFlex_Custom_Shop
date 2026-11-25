@@ -1,0 +1,839 @@
+{
+ "schema": "ergoflex.intro-titles",
+ "version": 1,
+ "note": "in/out are seconds from the start of the film. Chapter-relative times live in titles-src. Placement: lower-left, inside the 90% safe area. The end card shows the ErgoFlex wordmark (graphic, present in the textless master) plus the \"cta\" line.",
+ "titles": [
+  {
+   "chapter": "awaken",
+   "rel_in": 3.1,
+   "rel_out": 8.8,
+   "eyebrow": "ERGOFLEX",
+   "title": "Unlock Your Potential",
+   "detail": "More comfort. Clearer focus. More joy in your work.",
+   "director_timing": true,
+   "position": {
+    "x": 101.84,
+    "y": 767.97
+   },
+   "scale": 1.1234163075449475,
+   "typography": {
+    "eyebrow": {
+     "size": 43,
+     "spacing": 4.2,
+     "dy": 18
+    },
+    "title": {
+     "size": 88,
+     "spacing": 1.1,
+     "dy": 3
+    },
+    "detail": {
+     "spacing": 0.9,
+     "dy": -17
+    }
+   }
+  },
+  {
+   "chapter": "awaken",
+   "rel_in": 12.4,
+   "rel_out": 17.0,
+   "eyebrow": "YOUR SPACE REIMAGINED",
+   "title": "Make Room For Possibility",
+   "detail": "A workstation that moves and adapts to you. ",
+   "scrim": "60",
+   "director_timing": true,
+   "position": {
+    "x": 98.02,
+    "y": 794.02
+   },
+   "scale": 1.1188671335108993,
+   "typography": {
+    "eyebrow": {
+     "size": 34,
+     "spacing": 4.2,
+     "dy": 13
+    },
+    "title": {
+     "size": 85,
+     "spacing": 0.1
+    },
+    "detail": {
+     "size": 42,
+     "spacing": 0.4,
+     "dy": -15
+    }
+   }
+  },
+  {
+   "chapter": "awaken",
+   "rel_in": 22.6,
+   "rel_out": 27.6,
+   "eyebrow": "YOUR WELLNESS PARTNER",
+   "title": "Groove through your day.",
+   "detail": "Effortless control. Thoughtful coaching. Healthier habits.",
+   "position": {
+    "x": 1042.03,
+    "y": 494.35
+   },
+   "typography": {
+    "eyebrow": {
+     "size": 45,
+     "spacing": 4.5,
+     "dy": 10
+    },
+    "title": {
+     "size": 87
+    },
+    "detail": {
+     "size": 46,
+     "spacing": 1.1,
+     "dy": -9
+    }
+   },
+   "director_timing": true
+  },
+  {
+   "chapter": "rise",
+   "rel_in": 3.6,
+   "rel_out": 9.4,
+   "eyebrow": "BALANCED HEALTH",
+   "title": "Your Day. Your rhythm.",
+   "detail": "Guided Sit-Stand-Stretch routines ",
+   "scrim": "38",
+   "shadow": {
+    "paths": [
+     {
+      "line": "eyebrow",
+      "points": [
+       {
+        "x": -7.71,
+        "y": -129.13
+       },
+       {
+        "x": 358.48,
+        "y": -127.27
+       },
+       {
+        "x": 354.39,
+        "y": -88.95
+       },
+       {
+        "x": -9.31,
+        "y": -92.14
+       }
+      ]
+     },
+     {
+      "line": "title",
+      "points": [
+       {
+        "x": -6.97,
+        "y": -79.8
+       },
+       {
+        "x": 569.98,
+        "y": -70.48
+       },
+       {
+        "x": 570.13,
+        "y": -15.68
+       },
+       {
+        "x": -9.34,
+        "y": -16.35
+       }
+      ]
+     },
+     {
+      "line": "detail",
+      "points": [
+       {
+        "x": -9.04,
+        "y": -4.33
+       },
+       {
+        "x": 532.77,
+        "y": 1.52
+       },
+       {
+        "x": 529.52,
+        "y": 38.06
+       },
+       {
+        "x": -10.85,
+        "y": 39.07
+       }
+      ]
+     }
+    ]
+   },
+   "position": {
+    "x": 132.95,
+    "y": 745.75
+   },
+   "typography": {
+    "eyebrow": {
+     "size": 56,
+     "spacing": 4.2,
+     "dy": 21
+    },
+    "detail": {
+     "size": 50,
+     "spacing": 1.3,
+     "dy": -15
+    }
+   },
+   "scale": 0.9021955031502769
+  },
+  {
+   "chapter": "create",
+   "rel_in": 3.6,
+   "rel_out": 9.2,
+   "eyebrow": "PATENTED PRECISION",
+   "title": "One Surface. Zero Friction.",
+   "detail": "From digital to drafting to painting. True value in every form.",
+   "scrim": "38",
+   "shadow": {
+    "paths": [
+     {
+      "line": "eyebrow",
+      "points": [
+       {
+        "x": -4.37,
+        "y": -110.7
+       },
+       {
+        "x": 280.92,
+        "y": -111.38
+       },
+       {
+        "x": 282.34,
+        "y": -88.6
+       },
+       {
+        "x": -1.15,
+        "y": -87.64
+       }
+      ]
+     },
+     {
+      "line": "title",
+      "points": [
+       {
+        "x": -6.2,
+        "y": -71.7
+       },
+       {
+        "x": 647.11,
+        "y": -77.2
+       },
+       {
+        "x": 650.93,
+        "y": -23.42
+       },
+       {
+        "x": -5.38,
+        "y": -18.16
+       }
+      ]
+     },
+     {
+      "line": "detail",
+      "points": [
+       {
+        "x": -5.67,
+        "y": -5.26
+       },
+       {
+        "x": 688.93,
+        "y": -8.25
+       },
+       {
+        "x": 695.96,
+        "y": 31.65
+       },
+       {
+        "x": -6.27,
+        "y": 28.09
+       }
+      ]
+     }
+    ]
+   },
+   "director_timing": true,
+   "position": {
+    "x": 140.73,
+    "y": 854.98
+   },
+   "typography": {
+    "eyebrow": {
+     "size": 35,
+     "spacing": 3.9,
+     "dy": 21
+    },
+    "title": {
+     "dy": -5
+    },
+    "detail": {
+     "dy": -27
+    }
+   }
+  },
+  {
+   "chapter": "commons",
+   "rel_in": 2.65,
+   "rel_out": 8.45,
+   "eyebrow": "ACCESSIBILITY EVOLVED",
+   "title": "Unlocking opportunity",
+   "detail": "The only workstation that comes to you.",
+   "scrim": "60",
+   "shadow": {
+    "paths": [
+     {
+      "line": "eyebrow",
+      "points": [
+       {
+        "x": -12.68,
+        "y": -119.04
+       },
+       {
+        "x": 441.16,
+        "y": -120.08
+       },
+       {
+        "x": 441.93,
+        "y": -87.14
+       },
+       {
+        "x": -11.82,
+        "y": -81.2
+       }
+      ]
+     },
+     {
+      "line": "title",
+      "points": [
+       {
+        "x": -10.34,
+        "y": -75.31
+       },
+       {
+        "x": 581.37,
+        "y": -80.19
+       },
+       {
+        "x": 578.4,
+        "y": -10.3
+       },
+       {
+        "x": -12.04,
+        "y": -11.72
+       }
+      ]
+     },
+     {
+      "line": "detail",
+      "points": [
+       {
+        "x": -7.55,
+        "y": -9.53
+       },
+       {
+        "x": 580.49,
+        "y": -10.89
+       },
+       {
+        "x": 581.32,
+        "y": 31.0
+       },
+       {
+        "x": -14.85,
+        "y": 30.73
+       }
+      ]
+     }
+    ]
+   },
+   "position": {
+    "x": 127.02,
+    "y": 912
+   },
+   "typography": {
+    "eyebrow": {
+     "size": 57,
+     "spacing": 2.5,
+     "dy": 26
+    },
+    "title": {
+     "size": 88
+    },
+    "detail": {
+     "size": 46,
+     "spacing": 1.8,
+     "dy": -22
+    }
+   }
+  },
+  {
+   "chapter": "coast",
+   "rel_in": 2.65,
+   "rel_out": 7.95,
+   "eyebrow": "OCC MEDIA LAB",
+   "title": "Ideas become stories.",
+   "detail": "Adaptable workstation for dynamic spaces.",
+   "shadow": {
+    "paths": [
+     {
+      "line": "eyebrow",
+      "points": [
+       {
+        "x": 0.41,
+        "y": -125.76
+       },
+       {
+        "x": 278.96,
+        "y": -123.25
+       },
+       {
+        "x": 280.38,
+        "y": -90.73
+       },
+       {
+        "x": -2.73,
+        "y": -90.17
+       }
+      ]
+     },
+     {
+      "line": "title",
+      "points": [
+       {
+        "x": -7.05,
+        "y": -81.55
+       },
+       {
+        "x": 542.2,
+        "y": -84.23
+       },
+       {
+        "x": 543.95,
+        "y": -17.39
+       },
+       {
+        "x": -8.49,
+        "y": -16.9
+       }
+      ]
+     },
+     {
+      "line": "detail",
+      "points": [
+       {
+        "x": -5.56,
+        "y": -7.21
+       },
+       {
+        "x": 509.62,
+        "y": -11.67
+       },
+       {
+        "x": 513.53,
+        "y": 22.08
+       },
+       {
+        "x": -5.45,
+        "y": 27.86
+       }
+      ]
+     }
+    ]
+   },
+   "typography": {
+    "eyebrow": {
+     "size": 53,
+     "spacing": 3.1,
+     "dy": 23
+    },
+    "detail": {
+     "dy": -29
+    }
+   }
+  },
+  {
+   "chapter": "oilers",
+   "rel_in": 9.4,
+   "rel_out": 13.0,
+   "eyebrow": "ACCESSIBLE CLASSROOMS",
+   "title": "Space to discover.",
+   "detail": "Built to serve all students.",
+   "scrim": "70",
+   "director_timing": true,
+   "position": {
+    "x": 84.64,
+    "y": 513.36
+   },
+   "typography": {
+    "eyebrow": {
+     "size": 50,
+     "spacing": 2.7,
+     "dy": 22
+    },
+    "detail": {
+     "size": 53,
+     "spacing": 1.3,
+     "dy": -12
+    }
+   },
+   "shadow": {
+    "paths": [
+     {
+      "line": "eyebrow",
+      "points": [
+       {
+        "x": -14.28,
+        "y": -128.12
+       },
+       {
+        "x": 229.09,
+        "y": -127.89
+       },
+       {
+        "x": 226.35,
+        "y": -86.87
+       },
+       {
+        "x": -11.76,
+        "y": -87.46
+       }
+      ]
+     },
+     {
+      "line": "title",
+      "points": [
+       {
+        "x": -18.67,
+        "y": -75.97
+       },
+       {
+        "x": 477.64,
+        "y": -71.07
+       },
+       {
+        "x": 479.55,
+        "y": -17.46
+       },
+       {
+        "x": -15.08,
+        "y": -15.49
+       }
+      ]
+     },
+     {
+      "line": "detail",
+      "points": [
+       {
+        "x": -17.39,
+        "y": -5.44
+       },
+       {
+        "x": 481.12,
+        "y": -1.99
+       },
+       {
+        "x": 485.04,
+        "y": 45.72
+       },
+       {
+        "x": -16.1,
+        "y": 39.92
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "chapter": "wellness",
+   "rel_in": 2.65,
+   "rel_out": 8.45,
+   "eyebrow": "WELLNESS EVERYDAY",
+   "title": "Build movement into your routine.",
+   "detail": "Pause. Stretch. Breathe. Reset.",
+   "scrim": "70",
+   "typography": {
+    "eyebrow": {
+     "size": 52,
+     "spacing": 3.2,
+     "dy": 16
+    },
+    "detail": {
+     "size": 53,
+     "dy": -12
+    }
+   },
+   "shadow": {
+    "paths": [
+     {
+      "line": "eyebrow",
+      "points": [
+       {
+        "x": -12.06,
+        "y": -138.53
+       },
+       {
+        "x": 210.43,
+        "y": -142.8
+       },
+       {
+        "x": 213.31,
+        "y": -95.35
+       },
+       {
+        "x": -13.04,
+        "y": -90.23
+       }
+      ]
+     },
+     {
+      "line": "title",
+      "points": [
+       {
+        "x": -11.53,
+        "y": -75.99
+       },
+       {
+        "x": 783.9,
+        "y": -82.58
+       },
+       {
+        "x": 785.26,
+        "y": -7.76
+       },
+       {
+        "x": -17.98,
+        "y": -12.55
+       }
+      ]
+     },
+     {
+      "line": "detail",
+      "points": [
+       {
+        "x": -12.37,
+        "y": -5.61
+       },
+       {
+        "x": 472.07,
+        "y": -7.29
+       },
+       {
+        "x": 472.15,
+        "y": 41.66
+       },
+       {
+        "x": -12.6,
+        "y": 45.53
+       }
+      ]
+     }
+    ]
+   },
+   "position": {
+    "x": 144.34,
+    "y": 740.06
+   }
+  },
+  {
+   "chapter": "awareness",
+   "rel_in": 3.6,
+   "rel_out": 9.8,
+   "eyebrow": "SURROUNDING AWARENESS",
+   "title": "Keeping your investment safe",
+   "detail": "Proximity sensors stop the workstation before contact.",
+   "position": {
+    "x": 75.1,
+    "y": 934.2
+   },
+   "typography": {
+    "eyebrow": {
+     "size": 57,
+     "spacing": 3.8,
+     "dy": 23
+    },
+    "detail": {
+     "size": 44,
+     "spacing": 0.8,
+     "dy": -17
+    }
+   }
+  },
+  {
+   "chapter": "music",
+   "rel_in": 2.65,
+   "rel_out": 8.25,
+   "eyebrow": "GAMING",
+   "title": "Feel the room come alive.",
+   "detail": "Light that plays along with the game.",
+   "shadow": {
+    "paths": [
+     {
+      "line": "eyebrow",
+      "points": [
+       {
+        "x": -10.54,
+        "y": -132.41
+       },
+       {
+        "x": 105.7,
+        "y": -133.15
+       },
+       {
+        "x": 108.69,
+        "y": -96.82
+       },
+       {
+        "x": -16.43,
+        "y": -96.32
+       }
+      ]
+     },
+     {
+      "line": "title",
+      "points": [
+       {
+        "x": -16.67,
+        "y": -78.59
+       },
+       {
+        "x": 622.75,
+        "y": -75.36
+       },
+       {
+        "x": 625.0,
+        "y": -10.78
+       },
+       {
+        "x": -16.15,
+        "y": -16.83
+       }
+      ]
+     },
+     {
+      "line": "detail",
+      "points": [
+       {
+        "x": -11.75,
+        "y": 10.25
+       },
+       {
+        "x": 442.24,
+        "y": 12.37
+       },
+       {
+        "x": 441.03,
+        "y": 65.28
+       },
+       {
+        "x": -12.04,
+        "y": 59.83
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "chapter": "media",
+   "rel_in": 2.75,
+   "rel_out": 8.35,
+   "eyebrow": "CINEMA",
+   "title": "Movie night, upgraded.",
+   "detail": "Ambient color drawn from every scene."
+  },
+  {
+   "chapter": "storage",
+   "rel_in": 11.75,
+   "rel_out": 14.75,
+   "eyebrow": "STORAGE",
+   "title": "Make room for what’s next.",
+   "detail": "One tap: fold to 65°, roll to the wall.",
+   "shadow": {
+    "paths": [
+     {
+      "line": "eyebrow",
+      "points": [
+       {
+        "x": -10.95,
+        "y": -132.91
+       },
+       {
+        "x": 120.42,
+        "y": -134.53
+       },
+       {
+        "x": 131.47,
+        "y": -93.5
+       },
+       {
+        "x": -15.7,
+        "y": -90.72
+       }
+      ]
+     },
+     {
+      "line": "title",
+      "points": [
+       {
+        "x": -10.28,
+        "y": -77.81
+       },
+       {
+        "x": 655.03,
+        "y": -82.87
+       },
+       {
+        "x": 655.83,
+        "y": -6.96
+       },
+       {
+        "x": -8.35,
+        "y": -1.44
+       }
+      ]
+     },
+     {
+      "line": "detail",
+      "points": [
+       {
+        "x": -15.12,
+        "y": 15.69
+       },
+       {
+        "x": 418.21,
+        "y": 10.28
+       },
+       {
+        "x": 416.83,
+        "y": 62.04
+       },
+       {
+        "x": -12.24,
+        "y": 59.58
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ],
+ "cta": {
+  "chapter": "hero",
+  "rel_in": 21.29,
+  "rel_out": null,
+  "text": "Let’s build yours."
+ },
+ "logo": {
+  "chapter": "hero",
+  "rel_in": 19.87
+ }
+}
