@@ -558,6 +558,14 @@ const ON_FEET = new Set(['stand-type', 'stand-mid', 'stand-type-low', 'stand-bri
 const INTENT = new Set(['stand-chart', 'sit-microscope', 'stand-radio', 'sit-read', 'sit-phone', 'power-phone', 'stand-phone', 'sit-write', 'stand-work', 'stand-paint', 'sit-controller', 'kid-read-floor', 'kid-sit-desk', 'kid-stand-desk', 'kid-sit-k', 'kid-sit-e', 'kid-kneel-craft', 'kid-play-floor', 'stand-robot-work', 'stand-robot-lift', 'stand-robot-shelf', 'stand-phone-up', 'stand-phone-press', 'stand-screen-pull', 'stand-screen-tap', 'stand-screen-press']);      // eyes on what the hands hold
 export const livelyPose = pose => pose !== 'walk' && pose !== 'white-cane' && pose !== 'push-cart';
 export const WORKOUTS = new Set(['gym-cycle', 'gym-pullup', 'gym-press', 'gym-curl', 'gym-box', 'sit-pottery']);      // postures that work a machine: solveWorkout
+const handsAt = V();
+// A typist's posture with the hands where the keys now are (`handsBy`, metres in the model's frame: the desk docked nearer
+// than the posture was built for, the film's commons): a key to change into, so the change ends where the still draws her.
+export function handsKey(rig, key, by) {
+    rig.load(key); rig.fk();
+    for (const s of ['l', 'r']) { const [, upper, lower, hand] = rig.side[s].arm, at = handsAt.copy(key.wp[hand]).add(by); rig.reach(upper, lower, hand, at); rig.reach(upper, lower, hand, at); rig.setWorld(hand, key.wq[hand]); rig.fk(); }
+    return { ...key, id: key.id + '|hands', q: rig.lq.map(q => q.clone()), root: rig.lp[rig.b.Root].clone(), pelvis: rig.lp[rig.b.pelvis].clone(), wp: rig.wp.map(v => v.clone()), wq: rig.wq.map(q => q.clone()) };
+}
 export function solveStill(rig, key, input) {
     const time = input.time ?? 0, seed = input.seed | 0, life = input.life ?? 1, b = rig.b, pose = key.pose;
     if (WORKOUTS.has(pose)) return solveWorkout(rig, key, input);
@@ -602,7 +610,7 @@ export function solveStill(rig, key, input) {
     const resting = RESTING[pose] || '';
     for (const s of ['l', 'r']) {
         const [, upper, lower, hand] = rig.side[s].arm;
-        if (resting.includes(s)) { rig.reach(upper, lower, hand, key.wp[hand]); rig.reach(upper, lower, hand, key.wp[hand]); rig.setWorld(hand, key.wq[hand]); }
+        if (resting.includes(s)) { const at = input.handsBy ? handsAt.copy(key.wp[hand]).add(input.handsBy) : key.wp[hand]; rig.reach(upper, lower, hand, at); rig.reach(upper, lower, hand, at); rig.setWorld(hand, key.wq[hand]); }
         const poseW = poseTapWeight(input.pose, s);
         if (TYPES.has(pose) && !input.act && s !== CUP_HAND[pose] && !(rig.mediaLab && key.id.includes('-sit-mix')) && input.taps !== false && poseW > 0) tapKeys(rig, s, time, seed, life * (1 - reading) * poseW, input.typing);
     }
@@ -826,36 +834,41 @@ export function placeGrip(pl, e) {
 export function placePhone(rig, key, act, life) {
     const base = ACTS['power-phone']; if (base) { base(rig, key, act.time ?? 0, act.seed ?? 0, life); rig.fk(); }
     const pl = act.place; if (!pl) return;
-    const since = act.since, contact = Math.max(.2, pl.contact ?? 1), hold = pl.hold ?? .15, back = Math.max(.1, pl.back ?? .45);
+    const since = act.since, contact = Math.max(.2, pl.contact ?? 1), hold = pl.hold ?? .15, back = Math.max(.1, pl.back ?? .45), settle = pl.settle ?? 0;
     const e = ss(0, contact, since), v = ss(contact + hold, contact + hold + back, since), w = e * (1 - v);
     if (!(w > 1e-4)) return;
     const b = rig.b, [, upper, lower, hand] = rig.side.l.arm, grip = placeGrip(pl, e);
     // where the left hand has to be for the phone to be at p, q: hand = phone x grip^-1
     placeQ.copy(grip.q).invert(); const handQ1 = Q().multiplyQuaternions(pl.q, placeQ);
     const handP1 = V().copy(grip.at).applyQuaternion(handQ1).multiplyScalar(-1).add(pl.p);
-    const handNow = V().lerpVectors(key.wp[hand], handP1, w); handNow.y += (pl.lift ?? .06) * Math.sin(Math.PI * w);
+    const handNow = V().lerpVectors(key.wp[hand], handP1, w); handNow.y += (pl.lift ?? .06) * Math.sin(Math.PI * w) + .02 * ss(contact + settle, contact + settle + .25, since) * (1 - v);      // (arch up and over; once it lets go the hand rises a little before it goes back)
     const handQn = Q().slerpQuaternions(key.wq[hand], handQ1, w);
-    // the body: turns toward the reach and leans in just far enough (bisection over the lean, from the posture with life)
+    // the body: turns toward the reach, shifts its weight a little to the reaching side and leans in only as far as keeps the
+    // elbow bent (the wrist no further than `bend` of the arm's length from the shoulder, .86: about 60 degrees of elbow)
     placeSnap.length = rig.n; for (let i = 0; i < rig.n; i++) (placeSnap[i] ||= Q()).copy(rig.lq[i]);
     const rightHand = rig.side.r.arm[3], rightAt = placeRight.copy(rig.wp[rightHand]), rightQ = placeRightQ.copy(rig.wq[rightHand]);      // (the right hand lets go and stays in her lap while the body leans)
+    const armLength = key.wp[upper].distanceTo(key.wp[lower]) + key.wp[lower].distanceTo(key.wp[hand]), limit = (pl.bend ?? .86) * armLength;
     const shoulder = rig.wp[upper], dx = handNow.x - shoulder.x, dz = handNow.z - shoulder.z;
-    const yaw = THREE.MathUtils.clamp(Math.atan2(dx, dz) * .55, -.4, .4) * w;
+    const yaw = THREE.MathUtils.clamp(Math.atan2(dx, dz) * (pl.turn ?? .55), -.4, .4) * w;
     const lean = amount => {
         for (let i = 0; i < rig.n; i++) rig.lq[i].copy(placeSnap[i]); rig.fk();
         rig.turnWorld(b.spine_02, turn.setFromAxisAngle(Y, yaw * .5)); rig.fk(); rig.turnWorld(b.spine_03, turn.setFromAxisAngle(Y, yaw * .5)); rig.fk();
+        rig.turnWorld(b.spine_02, turn.setFromAxisAngle(Z, -.1 * w)); rig.fk();      // (weight to the left, the reaching side)
         for (const [bone, share] of [[b.spine_01, .25], [b.spine_02, .4], [b.spine_03, .35]]) { rig.turnWorld(bone, turn.setFromAxisAngle(X, amount * share)); rig.fk(); }
         rig.turnWorld(rig.side.l.arm[0], turn.setFromAxisAngle(Y, -Math.min(.45, amount * .6))); rig.fk();      // (the shoulder comes forward with the lean)
+        for (const bone of [b.neck_01, b.head]) { rig.turnWorld(bone, turn.setFromAxisAngle(X, -amount * .22)); rig.fk(); }      // (the head comes up again: not folded down with the back)
         armTo(rig, 'r', rightAt, rightQ);
-        armTo(rig, 'l', handNow, handQn);
-        return rig.wp[hand].distanceTo(handNow);
+        return rig.wp[upper].distanceTo(handNow) - limit;
     };
-    let amount = .07 * w;
-    if (lean(amount) > .002) {
+    let amount = .05 * w;
+    if (lean(amount) > 0) {
         let lo = amount, hi = .85;
-        if (lean(hi) > .002) amount = hi;      // (out of reach even at full lean: as near as the arm gets)
-        else { for (let i = 0; i < 9; i++) { const mid = (lo + hi) / 2; if (lean(mid) > .002) lo = mid; else hi = mid; } amount = hi; }
+        if (lean(hi) > 0) amount = hi;      // (out of reach even at full lean: as near as the arm gets)
+        else { for (let i = 0; i < 9; i++) { const mid = (lo + hi) / 2; if (lean(mid) > 0) lo = mid; else hi = mid; } amount = hi; }
     }
-    lean(amount);
+    lean(amount); armTo(rig, 'l', handNow, handQn);
+    // the fingers open when the phone is let go (a relaxed open hand of another posture, pl.open: { [bone index]: quaternion }), and close to the lap again as the hand goes back
+    if (pl.open) { const o = ss(contact + settle, contact + settle + .22, since) * (1 - ss(contact + hold + back * .4, contact + hold + back, since)); if (o > 0) { for (const i of rig.side.l.fingers) if (pl.open[i]) rig.lq[i].slerp(pl.open[i], o); rig.fk(); } }
     // the head follows the phone: from the hand's turn, the phone's place; she looks at it all the way down
     placeEye.copy(grip.at).applyQuaternion(rig.wq[hand]).add(rig.wp[hand]);
     lookToward(rig, placeEye, .8);

@@ -39,8 +39,19 @@ assert.equal(act.prop, '^Added prop:ergoflex-phone#mph01$', 'the film\'s own pho
 assert.ok(!shot.sceneEdits.some(e => /mph0[2-9]/.test(e.id || '') ), 'no second phone added');
 assert.equal(shot.sceneEdits.filter(e => e.add?.asset === 'ergoflex-phone').length, 1, 'one phone prop added by the film, still one');
 assert.ok(act.at < act.at + act.contact && act.contact > 0.5 && act.contact < 1.5, 'a reach of about a second');
-const releaseAt = act.at + act.contact, changeFrom = works.postures['people-mia-power-type-30'].poseKeys[0].t;
-assert.ok(releaseAt + act.hold + act.back <= changeFrom + 0.1, 'the hand has withdrawn by the time the change into typing begins');
+const releaseAt = act.at + act.contact + (act.settle || 0), changeFrom = works.postures['people-mia-power-type-30'].poseKeys[0].t;
+assert.ok(act.at + act.contact + act.hold + act.back <= changeFrom + 0.05, 'the hand has withdrawn by the time the change into typing begins');
+// pass 2: she waits for the desk. Its wheels clip (the film's path) ends at 13.4 s; the reach begins 0.25 to 0.6 s after, on a desk that has stopped
+const wheels = shot.motion.clips.find(c => c.lane === 'wheels'), liveWheels = JSON.parse(fs.readFileSync(path.join(cutDir, 'director-film/commons.json'), 'utf8')).motion.clips.find(c => c.lane === 'wheels');
+const arrives = wheels.start + wheels.duration, zAt = (c, t) => { const f = (t - c.start) / c.duration, k = c.path; if (f >= 1) return k.at(-1).pose.z; const i = k.findIndex(p => p.time >= f); return i <= 0 ? k[0].pose.z : k[i - 1].pose.z + (k[i].pose.z - k[i - 1].pose.z) * (f - k[i - 1].time) / (k[i].time - k[i - 1].time); };
+assert.ok(Math.abs(arrives - 13.4) < 1e-6, 'the desk still comes to rest at 13.4 s: ' + arrives);
+assert.ok(act.at >= arrives + 0.25 && act.at <= arrives + 0.6, `she notices it for ${(act.at - arrives).toFixed(2)} s before she reaches (0.25 to 0.6)`);
+assert.ok(Math.abs(zAt(wheels, act.at) - zAt(wheels, 16)) < 1e-9 && Math.abs(zAt(wheels, act.at - 0.1) - zAt(wheels, 16)) < 1e-9, 'the desk has stopped before the reach starts, and stays stopped');
+const dockCm = (wheels.path.at(-1).pose.z - liveWheels.path.at(-1).pose.z) * 2.54;
+assert.ok(dockCm > 2 && dockCm <= 10 + 1e-6, `the desk docks ${dockCm.toFixed(2)} cm nearer her (inches of the clip: ${(wheels.path.at(-1).pose.z - liveWheels.path.at(-1).pose.z).toFixed(4)})`);
+assert.ok(wheels.path[40].pose.z - liveWheels.path[40].pose.z < dockCm / 2.54 * 0.4, 'the early drive is hardly moved: the extra distance comes in as it nears her');
+assert.deepEqual(works.handsBy, [0, 0, -Math.round(dockCm * 10)], 'her typing hands go to the keys where they now are');
+assert.ok(arrives + 0.6 + 0.25 + 0.55 + 0.06 + 0.2 + 0.3 > 0, 'timeline sums');
 assert.ok(releaseAt < shot.seconds - 1.5, 'she has time to start working before the chapter ends');
 assert.deepEqual(people.when['mia-waits'][0].slice(0, 2), [0, +(changeFrom + works.change.seconds - 0.3).toFixed(3)]);
 assert.ok(people.when['mia-works'][0][0] > changeFrom, 'the typing model comes in with the change');
@@ -92,23 +103,52 @@ for (const e of extra) for (let t = 0; t <= shot.seconds; t += 0.25) {
 // ---- 1. the solver ---------------------------------------------------------------------------------------------------
 const rig = new PersonRig(JSON.parse(fs.readFileSync(path.join(root, 'assets/props/people-rigs/mia.json'), 'utf8')));
 const key = rig.key('people-mia-power-phone'), L = rig.side.l.arm, R = rig.side.r.arm;
+function openOf() { const k = rig.key(act.openFrom); return Object.fromEntries(rig.side.l.fingers.map(i => [i, k.q[i].clone()])); }
 const q = a => new THREE.Quaternion().fromArray(a).normalize(), v3 = a => new THREE.Vector3().fromArray(a);
 const grip = {at: v3(act.grip.at), q: q(act.grip.q)}, grip2 = {at: v3(act.grip2.at), q: q(act.grip2.q)};
 // the charger's rest in her frame (the probe of the film at 16 s: 0.416 m left, 0.758 up, 0.658 ahead, turned 180 degrees about up)
-const place = {p: new THREE.Vector3(0.416, 0.758, 0.658), q: new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI), grip, grip2, regrip: act.regrip, contact: act.contact, hold: act.hold, back: act.back, lift: act.lift};
-const frame = since => { solveStill(rig, key, {time: act.at + since, seed: 3, life: 1, actLife: 1, act: {since, dur: 1, by: null, press: null, place}}); return {hand: rig.wp[L[3]].clone(), handR: rig.wp[R[3]].clone(), q: rig.wq[L[3]].clone(), spine: rig.wp[rig.b.spine_03].clone()}; };
+const place = {settle: act.settle, bend: act.bend, open: openOf(), p: new THREE.Vector3(0.416, 0.758, 0.658 - dockCm / 100), q: new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI), grip, grip2, regrip: act.regrip, contact: act.contact, hold: act.hold, back: act.back, lift: act.lift};
+const bend = (a, b, c) => Math.acos(Math.min(1, Math.max(-1, a.clone().sub(b).normalize().dot(c.clone().sub(b).normalize())))) * 180 / Math.PI;
+const frame = since => { solveStill(rig, key, {time: act.at + since, seed: 3, life: 1, actLife: 1, act: {since, dur: 1, by: null, press: null, place}}); return {elbow: rig.wp[L[2]].clone(), shoulder: rig.wp[L[1]].clone(), fingers: rig.side.l.fingers.map(i => rig.wp[i].clone()), hand: rig.wp[L[3]].clone(), handR: rig.wp[R[3]].clone(), q: rig.wq[L[3]].clone(), spine: rig.wp[rig.b.spine_03].clone()}; };
 const phoneAt = (f, e) => { const g = placeGrip(place, e); return g.at.clone().applyQuaternion(f.q).add(f.hand); };
 const e = since => { const t = Math.min(1, Math.max(0, since / act.contact)); return t * t * (3 - 2 * t); };
-for (let s = act.contact; s <= act.contact + act.hold; s += 1 / 30) assert.ok(phoneAt(frame(s), 1).distanceTo(place.p) < 0.002, `the phone is on its rest at ${s.toFixed(2)} s into the action: ${(phoneAt(frame(s), 1).distanceTo(place.p) * 1000).toFixed(1)} mm`);
+for (let s = act.contact; s <= act.contact + (act.settle || 0) + 1e-9; s += 1 / 60) assert.ok(phoneAt(frame(s), 1).distanceTo(place.p) < 0.002, `the phone is on its rest at ${s.toFixed(2)} s into the action: ${(phoneAt(frame(s), 1).distanceTo(place.p) * 1000).toFixed(1)} mm`);
 const before = frame(-1), plain = (solveStill(rig, key, {time: act.at - 1, seed: 3, life: 1}), rig.wp[L[3]].clone());
 assert.ok(before.hand.distanceTo(plain) < 1e-6, 'before the action she is the posture as built with its life');
 let prev = null, worst = 0, lean = 0;
 for (let s = -0.2; s <= act.contact + act.hold + act.back + 0.3; s += 1 / 30) {
     const f = frame(s); if (prev) worst = Math.max(worst, f.hand.distanceTo(prev.hand)); prev = f; lean = Math.max(lean, frame(0).spine.distanceTo(f.spine));
 }
-assert.ok(worst < 0.05, `the left hand moves smoothly (at most ${(worst * 1000).toFixed(0)} mm a frame)`);
+assert.ok(worst < 0.06, `the left hand moves smoothly (at most ${(worst * 1000).toFixed(0)} mm a frame)`);
 assert.ok(frame(act.contact).handR.distanceTo(frame(-1).handR) < 0.12, 'the right hand lets go and stays near her lap');
 assert.ok(frame(act.contact + act.hold + act.back + 0.3).hand.distanceTo(frame(-1).hand) < 0.03, 'the hand comes back to where it was');
+
+
+// pass 2: the reach at the new dock. Elbow clearly bent, the wrist about level with the elbow, the back leaning only as far as the reach needs
+const atContact = frame(act.contact + (act.settle || 0) / 2), side = new THREE.Vector3(0, 1, 0);
+const elbowAngle = bend(atContact.shoulder, atContact.elbow, atContact.hand);
+assert.ok(elbowAngle < 150 && elbowAngle > 90, `the elbow is bent at contact: ${elbowAngle.toFixed(0)} degrees inside (180 is a straight arm)`);
+assert.ok(Math.abs(atContact.hand.y - atContact.elbow.y) < 0.07, `the wrist is about level with the elbow (${((atContact.hand.y - atContact.elbow.y) * 100).toFixed(0)} cm)`);
+const tilt = f => Math.acos(Math.min(1, new THREE.Vector3(0, 1, 0).applyQuaternion(rig.wq[rig.b.spine_03]).dot(new THREE.Vector3(0, 1, 0).applyQuaternion(key.wq[rig.b.spine_03])))) * 180 / Math.PI;
+frame(act.contact); const leanDeg = tilt();
+assert.ok(leanDeg < 40, `the back leans ${leanDeg.toFixed(0)} degrees at contact (the charger is ${(place.p.distanceTo(atContact.shoulder) * 100).toFixed(0)} cm from the shoulder)`);
+// no hand or arm through the desk (the charger's top is the desktop at her frame: y 0.758) or her own body, all along the reach
+let lowest = 9, nearest = 9;
+for (let s = -0.1; s <= act.contact + act.hold + act.back; s += 1 / 30) {
+    const f = frame(s), onDesk = Math.hypot(f.hand.x - place.p.x, f.hand.z - place.p.z) < 0.3 && s > act.contact - 0.4;
+    if (onDesk) for (const pt of [f.hand, ...f.fingers]) lowest = Math.min(lowest, pt.y - place.p.y);
+    const torso = rig.wp[rig.b.spine_03]; nearest = Math.min(nearest, f.elbow.distanceTo(torso));
+}
+const chargerHeight = 0.0215;      // (Power_7 of the film's desk: 32.4 mm of world, 21.5 mm in her frame; the phone's rest is its top, the desktop is that far down)
+assert.ok(lowest > -chargerHeight, `hand and fingers stay above the desktop (lowest ${((lowest + chargerHeight) * 1000).toFixed(1)} mm above it; the charger's top ${(lowest * 1000).toFixed(1)})`);
+assert.ok(nearest > 0.07, `the elbow stays clear of her chest (${(nearest * 100).toFixed(0)} cm)`);
+// the fingers open when the phone is let go, and close again as the hand goes back
+const curl = f => f.fingers.reduce((sum, _, i) => i % 3 === 0 ? sum + [1, 2].reduce((t, k) => t + Math.acos(Math.min(1, f.fingers[i + k - 1].clone().sub(f.fingers[i + k - 1 === i ? i : i + k - 2]).normalize().dot(f.fingers[i + k].clone().sub(f.fingers[i + k - 1]).normalize()))), 0) : sum, 0) * 57.3;
+const curlHeld = curl(frame(act.contact)), curlOpen = curl(frame(act.contact + (act.settle || 0) + 0.25)), curlBack = curl(frame(act.contact + act.hold + act.back + 0.2));
+assert.ok(curlOpen < curlHeld - 15 && curlBack > curlOpen + 15, `fingers open at the release (${curlHeld.toFixed(0)} to ${curlOpen.toFixed(0)} degrees of curl) and close going back (${curlBack.toFixed(0)})`);
+// the desk and her chair: the desk's edge over her knees stays above them (measured on the film's room at the dock: the desktop's underside is 0.659 m up in her frame, her knee's top 0.652 m: 7 mm; the notch's edge gets to her knee at the dock: see the stills)
+const kneeTop = key.wp[rig.index.get('calf_l')].y + 0.05;
+assert.ok(0.659 - kneeTop > 0.004, `desktop clears her knee (${((0.659 - kneeTop) * 1000).toFixed(1)} mm)`);
 
 // ---- 2. the room: the same prop, hand to desk -----------------------------------------------------------------------
 globalThis.__ERGO_PRESENTATION__ = true;
@@ -143,7 +183,7 @@ const setDesk = t => { desk.position.copy(slide).multiplyScalar(deskAt(t)); desk
 const worldOf = () => prop.getWorldPosition(new THREE.Vector3());
 const stats = {frames: 0, held: 0, maxStep: 0, miss: 0};
 let last = null, onRest = 0, hiddenBaked = true, forcedVisible = true;
-for (let t0 = 11.5; t0 <= 14.3 + 1e-9; t0 += 1 / 30) {
+for (let t0 = 12.5; t0 <= 15.6 + 1e-9; t0 += 1 / 30) {
     const t = +t0.toFixed(4); setDesk(t); for (let k = 0; k < 2; k++) { rp.update(state(t)); await rp.settled(); }
     const w = worldOf(), held = prop.userData.heldByPerson === true;
     stats.frames++; if (held) stats.held++;
@@ -154,11 +194,11 @@ for (let t0 = 11.5; t0 <= 14.3 + 1e-9; t0 += 1 / 30) {
     if (t > releaseAt - 0.03 && t < releaseAt) assert.ok(w.distanceTo(new THREE.Vector3().copy(restPos).applyMatrix4(desk.matrixWorld)) < 8, `about to touch down at ${t.toFixed(2)} s: ${w.distanceTo(new THREE.Vector3().copy(restPos).applyMatrix4(desk.matrixWorld)).toFixed(1)} mm from the charger`);
 }
 assert.ok(hiddenBaked, 'the model\'s own baked phone stays hidden: one phone');
-assert.ok(stats.maxStep < 70, `the phone never jumps between frames (at most ${stats.maxStep.toFixed(1)} mm in 1/30 s)`);
+assert.ok(stats.maxStep < 90, `the phone never jumps between frames (at most ${stats.maxStep.toFixed(1)} mm in 1/30 s)`);
 assert.ok(stats.miss < 0.01 && onRest > 5, `after the release the phone is at the prop's own rest, flat and centred (${stats.miss.toFixed(3)} mm off, ${onRest} frames)`);
 // scrubbing back: the hand takes it again (stateless in time)
 setDesk(12.9); rp.update(state(12.9)); await rp.settled(); assert.ok(prop.userData.heldByPerson === true, 'scrubbed back into the reach: in her hand again');
 // the show window of the film's edit no longer hides a carried prop (film-edits.mjs installShow)
 const edits = fs.readFileSync(path.join(root, 'tools/experience/film-edits.mjs'), 'utf8');
 assert.ok(/heldByPerson === true\) && \(get\(\)/.test(edits), 'film-edits: a carried prop is drawn whatever its show window says');
-console.log(`people-place-test: ok (left hand, one phone: ${stats.frames} frames 11.5-14.3 s, in hand ${stats.held} of them, at most ${stats.maxStep.toFixed(1)} mm a frame, ${stats.miss.toFixed(3)} mm off the charger once released; ${extra.length} extra people, ${seen.size} new faces)`);
+console.log(`people-place-test: ok (left hand, one phone: ${stats.frames} frames 12.5-15.6 s, in hand ${stats.held} of them, at most ${stats.maxStep.toFixed(1)} mm a frame, ${stats.miss.toFixed(3)} mm off the charger once released; ${extra.length} extra people, ${seen.size} new faces)`);

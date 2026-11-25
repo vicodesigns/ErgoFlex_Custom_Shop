@@ -96,7 +96,7 @@ import {poseAt} from './people-pose-keys.mjs';
 import {applyHeld} from './people-held.mjs';
 import {partsOf} from './people-held-data.mjs';
 import {postureRecord,postureRecords,hasPosturePose,poseOwner,sourceOf,roomEditKey,blendPosturePoses} from './people-postures.mjs';
-import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, squatKey, WORKOUTS, drawPose, livelyPose, seedOf, placeGrip } from './room-people-motion.mjs?v=people-place-20261124';
+import { PersonRig, DeskActor, solveStill, solveChange, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, squatKey, WORKOUTS, drawPose, livelyPose, seedOf, placeGrip, handsKey } from './room-people-motion.mjs?v=people-place-20261124b';
 // Room looks (room-looks.mjs): the Nov 17 pass's cast finishes (own materials, hair / shirt maps) are the refreshed Create
 // room's and the Commons'; Create's Classic look keeps the cast as it was, and its people move as they did then
 // (rig.classicMotion: room-people-motion.mjs's painting, pottery and page-turn strokes from before the pass).
@@ -2152,7 +2152,7 @@ export class RoomPeople {
         }
         // out of the list: back to the posture as built (at amount 0)
         const gaze = amount > 0 ? this.gazeOf(object, life) : null, act = film ? this.actOf(object, life, time) : null;
-        const moved = solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: amount, actLife, taps: (film || dt < .05) && !object.userData.person.act && !object.userData.person.fromDesk, typing: this.filter?.typing, pose: poseNow(object.userData.person), look: gaze?.at, lookAmount: gaze?.amount, ...(act ? { act } : {}) });
+        const moved = solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: amount, actLife, taps: (film || dt < .05) && !object.userData.person.act && !object.userData.person.fromDesk, typing: this.filter?.typing, handsBy: life.handsBy, pose: poseNow(object.userData.person), look: gaze?.at, lookAmount: gaze?.amount, ...(act ? { act } : {}) });
         drawPose(life.rig, object.userData.personRig, 0, poseNow(object.userData.person), hold); life.live = amount > 0;
         if (object.userData.person.act?.kind === 'place') this.placeCarry(object, film ? time : null);
         // a rider's bike: its crank turns with the feet, the pedals stay level
@@ -2409,7 +2409,7 @@ export class RoomPeople {
         if (rolled) { const plan = rollPlan(rolled, this.rollOptions(change.from.roll)); change.wheels = plan.at(plan.seconds).wheel; }      // (its wheels as they came to rest)
         // (someone who walks off from a change starts the walk standing, walkStance: the change ends there, not in the
         // walking posture as built, mid-stride)
-        Object.assign(change, { rig, keyFrom: rig.key(change.from.id), keyTo: change.to.walk ? walkStance(rig, rig.key(change.to.id)) : rig.key(change.to.id), homeFrom: end ? { position: end.position.clone(), turn: end.turn } : home(ra), homeTo: home(rb) });
+        Object.assign(change, { rig, keyFrom: rig.key(change.from.id), keyTo: change.to.walk ? walkStance(rig, rig.key(change.to.id)) : this.handsBy(change.to) ? handsKey(rig, rig.key(change.to.id), this.handsBy(change.to)) : rig.key(change.to.id), homeFrom: end ? { position: end.position.clone(), turn: end.turn } : home(ra), homeTo: home(rb) });
         // someone who walks off after the change turns toward their path during it, not in one frame as the walk starts
         // (the walker is not placed on its path yet when the skeletons load: it still faces the way it was cast)
         const path = change.to.walk?.path;
@@ -2641,6 +2641,9 @@ export class RoomPeople {
         const id = object.userData.person.id, pressId = /-tap$/.test(id) ? id.replace(/-tap$/, '-press') : null;
         return { since: time - act.at, place: act.kind === 'place' ? this.placeOf(object, act) : null, dur: Number.isFinite(act.dur) ? act.dur : 1, by, squat: act.kind === 'squat' ? { reps: act.reps > 0 ? act.reps : 3 } : null, press: pressId && life.rig?.has(pressId) ? life.rig.key(pressId) : null };
     }
+    // `handsBy: [x, y, z]` (mm, the model's frame): a typist's hands where the keys are when the desk docked nearer than the posture
+    // was built for (the commons film); null without it.
+    handsBy(spec) { const h = spec?.handsBy; return Array.isArray(h) && h.length === 3 && h.every(Number.isFinite) ? new THREE.Vector3(h[0] / 1000, h[1] / 1000, h[2] / 1000) : null; }
     // The scene prop a placement's `act: { kind: 'place' }` carries (a name regex over the room's objects): found once, and its
     // own place in the scene (where the film's edits put it: the rest it comes to) kept from the first time it is seen.
     placePropOf(act) {
@@ -2665,7 +2668,13 @@ export class RoomPeople {
         const inv = new THREE.Matrix4().copy(object.matrixWorld).invert(), oq = new THREE.Quaternion(); object.matrixWorld.decompose(new THREE.Vector3(), oq, new THREE.Vector3());
         const grip = g => ({ at: new THREE.Vector3().fromArray(g.at), q: new THREE.Quaternion().fromArray(g.q).normalize() }), ok = g => Array.isArray(g?.at) && Array.isArray(g?.q);
         return { p: rest.p.clone().applyMatrix4(inv), q: oq.invert().multiply(rest.q), grip: grip(act.grip), grip2: ok(act.grip2) ? grip(act.grip2) : null, regrip: Array.isArray(act.regrip) ? act.regrip : null,
-            contact: Number.isFinite(act.contact) ? act.contact : 1, hold: act.hold, back: act.back, lift: Number.isFinite(act.lift) ? act.lift : .06 };
+            contact: Number.isFinite(act.contact) ? act.contact : 1, hold: act.hold, back: act.back, settle: act.settle, bend: act.bend, open: this.placeOpen(object, act), lift: Number.isFinite(act.lift) ? act.lift : .06 };
+    }
+    // The left hand's fingers as a relaxed open hand of another posture of the same person (act.openFrom): { bone index: quaternion }.
+    placeOpen(object, act) {
+        const life = object.userData.personLife, rig = life?.rig; if (!rig || typeof act.openFrom !== 'string' || !rig.has(act.openFrom)) return null;
+        if (!life.placeOpen || life.placeOpenId !== act.openFrom) { const k = rig.key(act.openFrom); life.placeOpen = Object.fromEntries(rig.side.l.fingers.map(i => [i, k.q[i].clone()])); life.placeOpenId = act.openFrom; }
+        return life.placeOpen;
     }
     // The carried prop, after the person is drawn (a film): in the left hand's grip until it touches down, then at rest where the
     // scene has it; the model's own held thing (its baked phone) hidden, so there is one phone, not two. The last .12 s before
@@ -2674,7 +2683,7 @@ export class RoomPeople {
     placeCarry(object, time) {
         const act = object.userData.person.act, prop = this.placePropOf(act); if (!prop?.parent) return;
         for (const m of partsOf(object)) m.visible = false;
-        const rest = this.placeRestWorld(prop, this.placeW ||= {}), release = act.at + (Number.isFinite(act.contact) ? act.contact : 1);
+        const rest = this.placeRestWorld(prop, this.placeW ||= {}), release = act.at + (Number.isFinite(act.contact) ? act.contact : 1) + (Number.isFinite(act.settle) ? act.settle : 0);
         let held = time !== null && time < release && Array.isArray(act.grip?.at) && Array.isArray(act.grip?.q);
         const bone = held && object.userData.personRig?.bones.get('hand_' + (act.hand || 'l')); if (held && !bone) held = false;
         prop.userData.heldByPerson = held;
@@ -2770,7 +2779,7 @@ export class RoomPeople {
         if (!this.rigsOf.has(person.character)) this.rigsOf.set(person.character, classicRig(new PersonRig(data), this.room));
         const rig = this.rigsOf.get(person.character); if (!rig.has(spec.id)) return still(object);
         const drawn = await this.rig(object); if (!drawn.userData.personRig) return still(drawn);
-        drawn.userData.personLife = { rig, key: rig.key(spec.id), seed: seedOf(this.keyOf(spec)), live: false };
+        drawn.userData.personLife = { rig, key: rig.key(spec.id), seed: seedOf(this.keyOf(spec)), live: false, handsBy: this.handsBy(spec) };
     }
     // A moving person's task chair: under them while they sit, rolled back with them before they stand, and left a
     // little further back (or where filter.chair parks it) while they are on their feet.
