@@ -499,6 +499,7 @@ if who.get('layered_waves'):
 
 # Skin under clothing pokes through once the body is posed. Any body face with cloth just outside it goes.
 from mathutils.bvhtree import BVHTree  # noqa: E402
+from mathutils.kdtree import KDTree  # noqa: E402
 import bmesh  # noqa: E402
 body = next(b for b in baked if b.name == base_name + '.baked')
 SMALL = ('low-poly', 'high-poly', 'teeth', 'tongue', 'eyebrow', 'eyelash', 'glasses')
@@ -590,6 +591,52 @@ cull_under(body, trees, .035, whole=made > 0 or LOOK >= 3, tuck=LOOK >= 3, bare_
 # (a headscarf is laid over the clothes as they are: nothing under it needs to go)
 # (round three: a corner of what is under a garment that pokes through it is tucked back under: the flecks of trouser along a sweater's hem)
 for i, c in enumerate(cloth[1:], 1): cull_under(c, [t for t, b in zip(trees[:i], cloth) if b.name.split('.', 1)[-1].replace('.baked', '') not in garments.OVER], .025, .045, corners=i >= 1 and made > 0 and c.name.split('.', 1)[-1].replace('.baked', '') in who['clothes'], whole=LOOK >= 3 and made == 0, tuck=LOOK >= 3)
+# A one-piece suit (a jeans-and-tee in one mesh: female_casualsuit01, as Fern, Nia and Lena wear it) has no layer above its
+# trousers to cull them under: once the pose bends the trunk, the jeans' waistband, yoke and back-pocket bags (the leather
+# label, the lighter denim) come through the tee's hem and its lower back as small tan and pale-blue patches. Every vertex
+# of the trousers' shells that has come out through the tee is put back under it, as a corner of what is under a garment
+# is under the garments above (cull_under, tuck). The tee's hem stays outside the waistband.
+def tuck_suit(o, through=.12):
+    bm = bmesh.new(); bm.from_mesh(o.data); bm.transform(o.matrix_world); bm.normal_update(); bm.verts.ensure_lookup_table()
+    waist = (rig.matrix_world @ rig.pose.bones['spine_01'].head).z
+    seen, top = set(), set()
+    for start in bm.verts:
+        if start.index in seen: continue
+        comp, stack = [], [start]; seen.add(start.index)
+        while stack:
+            cur = stack.pop(); comp.append(cur)
+            for e in cur.link_edges:
+                nxt = e.other_vert(cur)
+                if nxt.index not in seen: seen.add(nxt.index); stack.append(nxt)
+        if sum(v.co.z for v in comp) / len(comp) > waist: top.update(v.index for v in comp)
+    faces = [[v.index for v in f.verts] for f in bm.faces if f.verts[0].index in top]
+    if not faces or len(top) == len(bm.verts): bm.free(); return 0
+    tee = BVHTree.FromPolygons([v.co.copy() for v in bm.verts], faces)
+    # the tee's hem: its lowest boundary, where the trousers show below it; above it every trouser vertex belongs under the tee
+    tee_verts = [bm.verts[i] for i in top]; low = min(v.co.z for v in tee_verts); mid = sum(v.co.x for v in tee_verts) / len(tee_verts), sum(v.co.y for v in tee_verts) / len(tee_verts)
+    hem = [v for v in tee_verts if v.is_boundary and v.co.z < low + .12]
+    ring = KDTree(len(hem)); [ring.insert((v.co.x, v.co.y, 0), i) for i, v in enumerate(hem)]; ring.balance()
+    tucked = []
+    for v in bm.verts:
+        if v.index in top or not v.link_faces: continue
+        hit = tee.ray_cast(v.co - v.normal * .0005, -v.normal, through)
+        if hit[0] is not None:
+            out_n = hit[1] if hit[1].dot(v.normal) > 0 else v.normal
+            v.co = hit[0] - out_n * .0035; tucked.append(v); continue
+        if not hem or v.co.z < hem[ring.find((v.co.x, v.co.y, 0))[1]].co.z + .004: continue
+        near = tee.find_nearest(v.co)
+        if near[0] is None or near[3] > .04: continue
+        out_n = near[1] if near[1].dot((v.co.x - mid[0], v.co.y - mid[1], 0)) > 0 else -near[1]
+        if (v.co - near[0]).dot(out_n) > -.002: v.co = near[0] - out_n * .0035; tucked.append(v)
+    if not tucked: bm.free(); return 0      # (nothing through: the mesh is left exactly as it was)
+    bmesh.ops.smooth_vert(bm, verts=tucked, factor=.25, use_axis_x=True, use_axis_y=True, use_axis_z=True)
+    bm.transform(o.matrix_world.inverted()); bm.to_mesh(o.data); bm.free()
+    return len(tucked)
+
+
+for c in cloth:
+    _name = c.name.split('.', 1)[-1].replace('.baked', '')
+    if _name in tailoring.SUITS and who.get('parts', {}).get(_name) in (None, 'both'): print('SUIT_TUCK', _name, tuck_suit(c))
 bpy.ops.object.select_all(action='DESELECT')
 for b in baked: b.select_set(True)
 bpy.context.view_layer.objects.active = baked[0]; bpy.ops.object.join(); person = bpy.context.object; person.name = OUT_ID

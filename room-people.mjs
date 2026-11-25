@@ -32,6 +32,11 @@ import { mediaPersonMaterial, castDetailEnsure, castDetailCast, castDetailVarian
 //   scale: n                                          a factor on the model's size (any placement; 1 = as built)
 //   colors: { top, bottom, shoes, hair: '#rrggbb' }   recolours those parts of the model (the fabric's shading is kept)
 //   postures: { '<model id>': {pose, poseKeys} }      corrections per model, independent of model selection
+//   typeStyle: 'natural'                              a typist at a station desk (a standing or seated typing posture, drawn
+//                                                     by solveStill) types as a person does: phrases and pauses at uneven
+//                                                     gaps, wrists, forearms, shoulders and trunk moving a hair with the
+//                                                     keys (room-people-motion.mjs, natural typing). Without it: the finger
+//                                                     taps every typist has. The chapter's typing slider still scales it.
 //   carry: { from: '<model id>' }                    what that model holds (its 'Held.' parts, Kai's controller) is held
 //                                                    in this one too, same hand, same grip, the arms as that model's
 //                                                    posture has them: through a change of posture, a walk and the
@@ -2152,7 +2157,7 @@ export class RoomPeople {
         }
         // out of the list: back to the posture as built (at amount 0)
         const gaze = amount > 0 ? this.gazeOf(object, life) : null, act = film ? this.actOf(object, life, time) : null;
-        const moved = solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: amount, actLife, taps: (film || dt < .05) && !object.userData.person.act && !object.userData.person.fromDesk, typing: this.filter?.typing, handsBy: life.handsBy, pose: poseNow(object.userData.person), look: gaze?.at, lookAmount: gaze?.amount, ...(act ? { act } : {}) });
+        const moved = solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: amount, actLife, taps: (film || dt < .05) && !object.userData.person.act && !object.userData.person.fromDesk, typing: this.filter?.typing, handsBy: life.handsBy, style: object.userData.person.typeStyle, pose: poseNow(object.userData.person), look: gaze?.at, lookAmount: gaze?.amount, ...(act ? { act } : {}) });
         drawPose(life.rig, object.userData.personRig, 0, poseNow(object.userData.person), hold); life.live = amount > 0;
         if (object.userData.person.act?.kind === 'place') this.placeCarry(object, film ? time : null);
         // a rider's bike: its crank turns with the feet, the pedals stay level
