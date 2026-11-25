@@ -675,3 +675,46 @@ def fit(obj, rig, style, garment, base, part=None, has_untucked_top=False):
     obj.data = fitted
     obj.modifiers.new('Tailored fabric', 'ARMATURE').object = rig
     return covered
+
+
+def relax_raised_top(obj, rig, rounds=8, radius=.13):
+    """A top baked with the arms raised over the head (a posture's 'raised_top': True, cast.stretch): the sleeve's underarm
+    and the front and back of the armpit, fitted hanging, crumple into torn-looking folds and spikes once the upper arm
+    turns up past the shoulder, and the neckline, pulled by the shoulders, goes from a line to a saw edge. Relax the
+    armpits in the posed shape (the openings stay put, so hems and neckline keep their place) and lift them a little off
+    the skin, then even the neckline along itself. Runs on the baked garment, before the skin under cloth is culled."""
+    bm = bmesh.new(); bm.from_mesh(obj.data); bm.transform(obj.matrix_world)
+    layer = bm.verts.layers.deform.active
+    groups = {g.name: g.index for g in obj.vertex_groups}
+    weight = {}
+    for side in ('l', 'r'):
+        shoulder = rig.matrix_world @ rig.data.bones['upperarm_' + side].head_local
+        elbow = rig.matrix_world @ rig.data.bones['lowerarm_' + side].head_local
+        if elbow.z < shoulder.z + .05: continue        # (only an arm that is up)
+        arm = {groups[n] for n in ('upperarm_' + side, 'clavicle_' + side) if n in groups}
+        for v in bm.verts:
+            if v.is_boundary or not layer: continue
+            w = sum(x for g, x in v[layer].items() if g in arm)
+            d = (v.co - shoulder).length
+            if w < .1 or d > radius: continue
+            weight[v] = max(weight.get(v, 0.), min(1., w * 1.5) * (1 - ramp(radius * .55, radius, d)))
+    if weight:
+        for _ in range(rounds):
+            moved = {}
+            for v, w in weight.items():
+                near = [e.other_vert(v).co for e in v.link_edges]
+                if near: moved[v] = v.co.lerp(sum(near, Vector()) / len(near), .5 * w)
+            for v, co in moved.items(): v.co = co
+        bm.normal_update()
+        for v, w in weight.items(): v.co += v.normal * (.0025 * w)
+    # The neckline: its edge loop evened along itself (each point toward the middle of its two neighbours on the edge).
+    neck = rig.matrix_world @ rig.data.bones['neck_01'].head_local
+    collar = [v for v in bm.verts if v.is_boundary and v.co.z > neck.z - .12 and Vector((v.co.x - neck.x, v.co.y - neck.y)).length < .16]
+    for _ in range(rounds // 2):
+        moved = {}
+        for v in collar:
+            near = [e.other_vert(v).co for e in v.link_edges if e.is_boundary]
+            if len(near) == 2: moved[v] = v.co.lerp((near[0] + near[1]) / 2, .5)
+        for v, co in moved.items(): v.co = co
+    bm.transform(obj.matrix_world.inverted()); bm.to_mesh(obj.data); bm.free(); obj.data.update()
+    return len(weight), len(collar)

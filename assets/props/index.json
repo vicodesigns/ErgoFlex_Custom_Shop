@@ -34837,22 +34837,22 @@
    "file": "assets/props/people-priya-stretch.glb",
    "anchor": "floor",
    "size": [
-    473.3,
-    1960.3,
-    330.9
+    460.6,
+    1948.4,
+    328
    ],
    "min": [
     -223.8,
     0,
-    -150.7
+    -147.8
    ],
    "max": [
-    249.5,
-    1960.3,
+    236.8,
+    1948.4,
     180.2
    ],
-   "tris": 52062,
-   "bytes": 862656,
+   "tris": 52112,
+   "bytes": 863572,
    "source": "tools/people/cast.py",
    "license": "CC0 (MakeHuman / MPFB assets)",
    "attribution": null,
