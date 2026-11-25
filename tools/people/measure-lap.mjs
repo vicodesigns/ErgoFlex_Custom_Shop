@@ -13,14 +13,17 @@ import { fileURLToPath } from 'node:url';
 import * as THREE from 'three';
 import { PersonRig } from '../../room-people-motion.mjs';
 import { thighFrame, LAP_STATIONS, LAP_BINS, LAP_FROM, LAP_TO } from '../../people-lap-frame.mjs';
-import { bodyPoints } from '../../tests/lib/people-surface.mjs';
+import { bodyPoints, posed, intoSkin } from '../../tests/lib/people-surface.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..'), RIGS = path.join(ROOT, 'assets/props/people-rigs');
 const STATIONS = LAP_STATIONS, BINS = LAP_BINS;
 const who = fs.readdirSync(RIGS).filter(f => f.endsWith('.json')).map(f => f.slice(0, -5)).filter(c => fs.existsSync(path.join(ROOT, 'assets/props', `people-${c}-wheel-watch.glb`)));
-// The hand's and the forearm's skin, as a few points that stand for it: every ARM_POINTS-th pick of a farthest-point walk over the vertices of
-// the hand, the fingers and the forearm, in the frame of the bone that moves each ([bone, x, y, z], millimetres).
-const HAND_POINTS = 44, FORE_STATIONS = 6, FORE_BINS = 12;
+// (the shin's skin counts only as far as KNEE_CAP metres down from the knee: the knee cap. Below it the shin hangs away from the thigh, and
+// in the thigh's frame it would stand for skin half a metre from the bone, a whole sector of nothing taken for leg: 24 Nov 2026)
+const KNEE_CAP = .09;
+// The hand's and the forearm's skin, as a few points that stand for it: HAND_POINTS picks of a farthest-point walk over the vertices of
+// the hand and the fingers (all three bones of each), in the frame of the bone that moves each ([bone, x, y, z], millimetres).
+const HAND_POINTS = 64, FORE_STATIONS = 6, FORE_BINS = 12;
 function walk(list, count) {
     if (list.length <= count) return list;
     const far = (a, b) => (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2 + (a[3] - b[3]) ** 2, mid = list.reduce((m, p) => [0, m[1] + p[1] / list.length, m[2] + p[2] / list.length, m[3] + p[3] / list.length], [0, 0, 0, 0]);
@@ -32,7 +35,7 @@ function armPoints(points, rig, side) {
     // (in the hand's own frame, so that the walk goes over the whole hand and not along the bones: the hand and finger bones' points go to the hand bone's frame by the pose as built)
     const key = rig.key(rig.postures && Object.keys(rig.postures).find(id => /wheel-watch$/.test(id))), v = new THREE.Vector3(), handI = rig.index.get('hand_' + side), q = new THREE.Quaternion();
     const hand = [];
-    for (const name of ['hand_' + side, ...rig.names.filter(n => /^(thumb|index|middle|ring|pinky)_0d_/.test(n) && n.endsWith('_' + side))]) {
+    for (const name of ['hand_' + side, ...rig.names.filter(n => /^(thumb|index|middle|ring|pinky)_0\d_/.test(n) && n.endsWith('_' + side))]) {
         const i = rig.index.get(name);
         for (const [x, y, z] of points[name] || []) { v.set(x, y, z).applyQuaternion(key.wq[i]).add(key.wp[i]).sub(key.wp[handI]).applyQuaternion(q.copy(key.wq[handI]).invert()); hand.push([name, v.x, v.y, v.z, x, y, z]); }
     }
@@ -72,7 +75,7 @@ for (const c of who) {
         const [thigh, calf] = rig.side[side].leg, f = thighFrame(rig.offset[calf]), len = rig.offset[calf].length();
         const grid = Array.from({ length: STATIONS * BINS }, () => 0), v = new THREE.Vector3();
         // (the thigh's skin, and the top of the shin's: the knee cap, in the thigh's frame as the posture was built)
-        const own = (points['thigh_' + side] || []).map(p => p.slice(0, 3)), knee = (points['calf_' + side] || []).map(([x, y, z]) => { v.set(x, y, z).applyQuaternion(rig.wq[calf]).add(rig.wp[calf]).sub(rig.wp[thigh]).applyQuaternion(rig.wq[thigh].clone().invert()); return [v.x, v.y, v.z]; });
+        const shin = rig.offset[rig.side[side].leg[2]].clone().normalize(), own = (points['thigh_' + side] || []).map(p => p.slice(0, 3)), knee = (points['calf_' + side] || []).filter(([x, y, z]) => v.set(x, y, z).dot(shin) < KNEE_CAP).map(([x, y, z]) => { v.set(x, y, z).applyQuaternion(rig.wq[calf]).add(rig.wp[calf]).sub(rig.wp[thigh]).applyQuaternion(rig.wq[thigh].clone().invert()); return [v.x, v.y, v.z]; });
         for (const [x, y, z] of [...own, ...knee]) {
             v.set(x, y, z); const s = v.dot(f.axis) / len;
             if (s < LAP_FROM || s >= LAP_TO) continue;
@@ -80,7 +83,10 @@ for (const c of who) {
             if (r > grid[k * BINS + j]) grid[k * BINS + j] = r;
         }
         fill(grid, STATIONS, BINS);
-        out[side] = grid.map(m => Math.round(m * 1000));
+        // (each bin at least as far out as the bins round it and along: people-lap.mjs reads the table between bins, and a point of skin
+        // near the edge of a bin would otherwise stand further out than what is read there; a hand grazed the thigh by 14 mm)
+        const near = grid.map((_, i) => { const k = Math.floor(i / BINS), j = i % BINS; let m = 0; for (let dk = -1; dk <= 1; dk++) for (let dj = -1; dj <= 1; dj++) { const kk = k + dk; if (kk < 0 || kk >= STATIONS) continue; m = Math.max(m, grid[kk * BINS + (j + dj + BINS) % BINS]); } return m; });
+        out[side] = near.map(m => Math.round(m * 1000));
     }
     out.arm = {}; out.fore = {};
     for (const side of ['l', 'r']) { out.arm[side] = armPoints(points, rig, side); out.fore[side] = foreRadii(points, rig, side); }
@@ -105,6 +111,25 @@ ${rows(t.r)}]),
       fore: { l: ${JSON.stringify(t.fore.l)}, r: ${JSON.stringify(t.fore.r)} },
     },
 `;
-text += '  },\n};\n';
+// The typing postures in a wheelchair whose model as built has the hands or forearms in the thighs (millimetres, by the skin's own normals:
+// tests/lib/people-surface.mjs): a change to or from one of them is kept out of the lap as a wheel-watch one is (people-lap.mjs lapModel).
+// Those under LAP_POSTURE_MM are not listed: their people are drawn exactly as before.
+const LAP_POSTURE_MM = 8, typing = {};
+for (const c of fs.readdirSync(RIGS).filter(f => f.endsWith('.json')).map(f => f.slice(0, -5))) {
+    const rig = new PersonRig(JSON.parse(fs.readFileSync(path.join(RIGS, c + '.json'), 'utf8')));
+    for (const id of Object.keys(rig.postures || {}).filter(id => /-wheel-type(-\d+)?$/.test(id) && fs.existsSync(path.join(ROOT, 'assets/props', id + '.glb')))) {
+        const points = await bodyPoints(id); rig.load(rig.key(id)); rig.fk();
+        const body = posed(rig, points, ['pelvis', 'spine_01', 'spine_02', 'spine_03', 'thigh_l', 'thigh_r', 'calf_l', 'calf_r']);
+        let deep = 0;
+        for (const s of ['l', 'r']) {
+            const hand = posed(rig, points, ['hand_' + s, ...rig.names.filter(n => /^(thumb|index|middle|ring|pinky)_0\d_/.test(n) && n.endsWith('_' + s))]).map(p => p.slice(0, 3));
+            deep = Math.max(deep, intoSkin(body, hand).depth, intoSkin(body, posed(rig, points, ['lowerarm_' + s]).map(p => p.slice(0, 3))).depth);
+        }
+        if (deep * 1000 >= LAP_POSTURE_MM) typing[id] = Math.round(deep * 1000);
+    }
+}
+text += '  },\n';
+text += `  // typing postures (wheel-type) whose model as built has the hands or forearms this many mm in the thighs (>= ${LAP_POSTURE_MM} mm)\n  typing: ${JSON.stringify(typing)},\n`;
+text += '};\n';
 fs.writeFileSync(path.join(ROOT, 'people-lap-data.mjs'), text);
 console.log('people-lap-data.mjs:', who.length, 'characters');

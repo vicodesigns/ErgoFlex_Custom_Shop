@@ -102,3 +102,18 @@ export function resting(skin, probe, { reach = .08, cell = .04 } = {}) {
     }
     return { clear, at };
 }
+
+// The skin of the legs (posed() points of thigh_* / calf_*) without the bits that face in toward the leg's own bone: the inner layer of
+// a cargo pocket's flap on Noah's and Sam's trousers is a face whose normal points into the leg, a few mm under the outer one, and a
+// hand beside the pocket, clear of the leg, was read 58 mm deep by it (24 Nov 2026). A point stays when its normal is not turned in
+// toward the bone (the line from the bone's joint to the next one) by more than `slack` of the way.
+export function facingOut(rig, points, { slack = .3 } = {}) {
+    const next = { thigh_l: 'calf_l', thigh_r: 'calf_r', calf_l: 'foot_l', calf_r: 'foot_r' }, a = new THREE.Vector3(), b = new THREE.Vector3(), p = new THREE.Vector3(), r = new THREE.Vector3();
+    return points.filter(q => {
+        const child = next[q[3]]; if (!child) return true;
+        a.copy(rig.wp[rig.index.get(q[3])]); b.copy(rig.wp[rig.index.get(child)]); p.set(q[0], q[1], q[2]);
+        const ab = b.clone().sub(a), t = Math.min(1, Math.max(0, p.clone().sub(a).dot(ab) / ab.lengthSq()));
+        r.copy(p).sub(a.addScaledVector(ab, t)); const len = r.length(); if (len < 1e-4) return true;
+        return (r.x * q[5] + r.y * q[6] + r.z * q[7]) / len > -slack;
+    });
+}
