@@ -49,13 +49,22 @@ def turn_for(fx, fz):
 # change to the typing model after it moves nothing. Grip: the phone under the left palm, the ring and middle finger pads on
 # its glass at the far end, the thumb 1-2 mm off its inner long edge, 8 mm down it; found by search against the phone's box
 # (scratch work of the pass, checked frame by frame in tests/people-place-test.mjs).
+# Commons5b (Vico, 25 Nov: the forearm clips the desktop on the reach): through the reach the arm rolls ELBOW_ROLL (radians) about the
+# shoulder-to-wrist line the way that lifts the elbow, the hand where it was (room-people-motion.mjs liftElbow). Measured (tests/people-
+# place-test.mjs 7a): the elbow joint was 12 mm over the desktop at the charger (its sleeve through the desktop's inner edge); 42 degrees
+# lifts it to ~60 mm, what the 'as needed' version of this found.
+ELBOW_ROLL = 0.73
 # Commons5 (Vico, 25 Nov: the phone goes down too fast and the chapter ends as her hands reach the keys): the same beat about
 # 0.6 s slower (grab 0.5 -> 0.65 s, carry 0.35 -> 0.55 s, let go 0.06 -> 0.08 s, fingers off it 0.08 -> 0.14 s, back to the keys
 # 0.55 -> 0.75 s, the right hand to its keys 0.5 -> 0.6 s): touch down 14.8 s, let go 14.88 s, hands on the keys 15.77 s
 # (were 14.45, 14.51, 15.14), and the chapter 4.3 s longer (SECONDS) so she types for ~4 s, ~3 s of it before the dissolve.
 PLACE = {'at': 13.6, 'grab': 0.65, 'contact': 1.2, 'settle': 0.08, 'hold': 0.14, 'back': 0.75, 'lift': 0.045, 'lift2': 0.035, 'bend': 0.9,
-         'approach': 0.07, 'clear': 0.07, 'rightBack': 0.6, 'look': 0.5, 'turn': 0.7, 'side': 0.16, 'reachOut': 0.3, 'handover': [0.07, -0.08, 0.04], 'handoverTurn': -1.6, 'rightNudge': [0.007, 0, 0]}
+         'approach': 0.07, 'clear': 0.07, 'rightBack': 0.6, 'look': 0.5, 'turn': 0.7, 'side': 0.16, 'reachOut': 0.3, 'handover': [0.07, -0.08, 0.04], 'handoverTurn': -1.6, 'rightNudge': [0.007, 0, 0],
+         'elbowRoll': ELBOW_ROLL}
 TYPING = 'people-mia-power-type-30'
+# Commons5b: the change to the typing model is 0.2 s (was 0.6 s, centred 0.3 s after the action): it starts as the hands land. The
+# action ends exactly in the typing posture, so nothing moves in it; the typing's life then comes in over PAIR_EASE (0.6 s).
+CHANGE = 0.2
 # Commons4 (Vico's three yeses on the Commons3 'not fixed' list): her seat 5 mm lower so the keyboard tray clears her thighs (the tray
 # sat 3.1 to 3.8 mm into them at the desk's 29 in), and the wheelchair 20 mm further back from the desk (from the chair's own
 # placement, a Director prop edit on the chair: the desk is not moved) so its right armrest / joystick no longer reaches into the
@@ -87,7 +96,7 @@ def mia(ppl, params):
     waits, works = cast['mia-waits'], cast['mia-works']
     p = dict(PLACE, **params.get('place', {})); by = params.get('hands_by', HANDS_BY); t = times(p)
     waits['seat'] = works['seat'] = params.get('seat', SEAT)
-    waits['act'] = {'kind': 'place', 'prop': '^Added prop:ergoflex-phone#mph01$', 'hand': 'l', **{k: p[k] for k in ('at', 'grab', 'contact', 'settle', 'hold', 'back', 'lift', 'lift2', 'bend', 'approach', 'clear', 'rightBack', 'look', 'turn', 'side', 'reachOut', 'handover', 'handoverTurn', 'rightNudge')},
+    waits['act'] = {'kind': 'place', 'prop': '^Added prop:ergoflex-phone#mph01$', 'hand': 'l', **{k: p[k] for k in ('at', 'grab', 'contact', 'settle', 'hold', 'back', 'lift', 'lift2', 'bend', 'approach', 'clear', 'rightBack', 'look', 'turn', 'side', 'reachOut', 'handover', 'handoverTurn', 'rightNudge', 'elbowRoll')},
                     'openFrom': 'people-mia-stretch', 'grip': params.get('grip', GRIP), 'grip2': params.get('grip2', GRIP2), 'fingers': params.get('fingers', FINGERS), 'to': TYPING, 'handsBy': by}
     # the typing posture's arm keys (Vico's, the last of them: the arms as he set them for typing) hold from the start of the typing
     # model, and come into the waiting model while the hand travels from the charger to the keys (both models then end in the same pose)
@@ -98,11 +107,15 @@ def mia(ppl, params):
     let = t['grab'] + 0.03
     post['poseKeys'] = [{'t': 0, 'pose': dict(INDEX_R)}, {'t': round(let, 3), 'pose': dict(INDEX_R)}, {'t': round(let + 0.25, 3), 'pose': {b: [0, 0, 0, 1] for b in INDEX_R}},
                         {'t': round(t['release'] + p['hold'], 3), 'pose': {b: [0, 0, 0, 1] for b in final}}, {'t': end, 'pose': final}]
-    works['change'] = {'seconds': 0.6, 'arms': [0.15, 1]}
+    works['change'] = {'seconds': CHANGE, 'arms': [0.15, 1]}
     works['handsBy'] = by
+    works['typeStyle'] = 'busy'      # Commons5b: types from the moment the hands land, short rests between phrases (room-people-motion.mjs)
     # the change of model right after the action ends (centred 0.3 s after it: the change is 0.6 s): nothing moves in it
-    ppl['when']['mia-waits'] = [[0, round(end + 0.3, 3), 0, 0.5]]
-    ppl['when']['mia-works'] = [[round(end + 0.3, 3), 99, 0.5, 0]]
+    # (Commons5b: no fades on these two windows. With the 0.5 s fade-out / fade-in of pass 2-4 she went to ~7 % opacity round the
+    # change (a ghost: one model is drawn at a time, each fading). The windows overlap by the change instead, hard-edged: the change
+    # (centred on the overlap's middle, room-people.mjs pairs) swaps the models; she is whole all through.)
+    ppl['when']['mia-waits'] = [[0, round(end + CHANGE, 3), 0, 0]]
+    ppl['when']['mia-works'] = [[round(end, 3), 99, 0, 0]]
     params['times'] = t
 
 

@@ -32,8 +32,8 @@
 // skin is from the thigh bone, by place along it and the angle round it, in the thigh bone's own frame; the hand's points,
 // fingers included, and the forearm's rings).
 import * as THREE from 'three';
-import LAP from './people-lap-data.mjs?v=people-lap-20261124c';
-import { LAP_STATIONS, LAP_BINS, LAP_FROM, LAP_TO, thighFrame } from './people-lap-frame.mjs?v=people-lap-20261124c';
+import LAP from './people-lap-data.mjs?v=commons5b-20261125';
+import { LAP_STATIONS, LAP_BINS, LAP_FROM, LAP_TO, thighFrame } from './people-lap-frame.mjs?v=commons5b-20261125';
 
 export { LAP_STATIONS, LAP_BINS, thighFrame };
 // The skin's distance from the axis at s (0 the hip joint .. 1 the knee) and angle th, from a table (LAP_STATIONS x LAP_BINS, metres).

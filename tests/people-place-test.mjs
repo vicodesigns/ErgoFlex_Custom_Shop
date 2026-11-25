@@ -75,9 +75,10 @@ assert.equal(exported.shots[0].seconds, 20.3, 'the export carries the new length
     assert.equal(shot.cameraPlan.keys.at(-1).at, 20.3);
 }
 assert.ok(Math.abs(cue.emissiveIntensity[0][0] - +releaseAt.toFixed(2)) < 1e-9, `the phone's glow cue starts where it is let go (${cue.emissiveIntensity[0][0]} s)`);
-// the change of model comes right after the action and is centred 0.3 s after it ends (the change is 0.6 s)
-assert.deepEqual(people.when['mia-waits'][0].slice(0, 2), [0, +(endAt + 0.3).toFixed(3)]);
-assert.equal(people.when['mia-works'][0][0], +(endAt + 0.3).toFixed(3));
+// the change of model starts as the action ends and is centred 0.1 s after it (Commons5b: the change is 0.2 s, so the typing starts as the hands land)
+assert.equal(works.change.seconds, 0.2); assert.equal(works.typeStyle, 'busy', 'Mia types in back-to-back phrases (short rests)');
+assert.deepEqual(people.when['mia-waits'][0], [0, +(endAt + 0.2).toFixed(3), 0, 0], 'no fade out (the change swaps the models: a fade was a ghost round it)');
+assert.deepEqual(people.when['mia-works'][0], [+endAt.toFixed(3), 99, 0, 0], 'no fade in; the windows overlap by the change, centred 0.1 s after the action');
 assert.ok(works.postures[works.id].poseKeys.length === 1, 'the typing model holds Vico\'s typing arms from its first frame (no drift of the arms after the hands land)');
 assert.deepEqual(exported.shots[0].peopleEdits.cast, people.cast, 'the Director export carries the same cast');
 assert.ok(exported.shots[0].camera && exported.shots[0].motion, 'the export keeps the chapter\'s camera and motion (the importer needs them)');
@@ -207,8 +208,9 @@ assert.ok(toKeys.slice(1).every((d, i) => d < toKeys[i] + 0.0005), 'the left han
 assert.ok(toKeys.slice(1, -3).every((d, i) => toKeys[i] - d > 0.0015), 'and keeps moving until it is there');
 const headUp = f => new THREE.Vector3(0, 0, 1).applyQuaternion(f.bones.head.q).y;
 for (const f of F.filter(f => f.t >= releaseAt + 0.45)) assert.ok(headUp(f) >= headUp(typing) - 0.05, `${f.t.toFixed(2)} s: the head is up (eyes to the screen), not down at her hands`);
-for (const f of F.filter(f => f.t >= endAt + 0.02 && f.t <= endAt + 0.58)) for (const n of ['hand_l', 'hand_r', 'head', 'spine_03']) assert.ok(f.bones[n].p.distanceTo(typing.bones[n].p) < 0.002, `${f.t.toFixed(2)} s: nothing moves through the change of model (${n})`);
-assert.ok(F.some(f => f.who === 'mia-works' && f.t > endAt + 0.35), 'the typing model takes over after the action');
+for (const f of F.filter(f => f.t >= endAt + 0.02 && f.t <= endAt + works.change.seconds)) for (const n of ['hand_l', 'hand_r', 'head', 'spine_03']) assert.ok(f.bones[n].p.distanceTo(typing.bones[n].p) < 0.002, `${f.t.toFixed(2)} s: nothing moves through the change of model (${n})`);
+// (Commons5b: the change is 0.2 s, then the typing's life comes in: the window is the change itself)
+assert.ok(F.some(f => f.who === 'mia-works' && f.t > endAt + 0.1) && !F.some(f => f.who === 'mia-works' && f.t < endAt - 1e-6), 'the typing model takes over after the action, not before it ends');
 // 4. the reach at the new desk: the elbow bent at the charger, the back leaning little, the head up
 const atRest = F.find(f => f.t >= contactAt + 0.03), lean = f => new THREE.Vector3(0, 1, 0).applyQuaternion(f.bones.spine_03.q).angleTo(new THREE.Vector3(0, 1, 0).applyQuaternion(hold.bones.spine_03.q)) * 180 / Math.PI;
 assert.ok(elbow(atRest) > 110 && elbow(atRest) < 150, `the elbow is bent at the charger: ${elbow(atRest).toFixed(0)} degrees inside (180 is straight)`);
@@ -219,6 +221,33 @@ setDesk(14.2); rp.update(state(14.2)); await rp.settled(); assert.ok(prop.userDa
 const edits = fs.readFileSync(path.join(root, 'tools/experience/film-edits.mjs'), 'utf8');
 assert.ok(/heldByPerson === true\) && \(get\(\)/.test(edits), 'film-edits: a carried prop is drawn whatever its show window says');
 
+// ---- 7. Commons5b: the forearm off the desktop on the reach, and typing from the hands landing to the end -----------------------------------
+// 7a. (Vico, 25 Nov: the forearm clipped the desktop as she reached to the charger.) Every frame from the grab until the hand is past the
+// desktop's edge on the way back, the elbow joint is at least 4.2 cm over the phone's rest (the desktop's height: the sleeve is about 3.5 cm
+// thick there); without act.elbowRoll it was 1.2 cm (the sleeve through the desktop's inner edge, seen in the film at 14.8 s).
+const c5 = {}; let elbowMin = Infinity, elbowAt = 0;
+for (const f of F) if (f.t >= grabAt + 0.15 && f.t <= releaseAt + T.hold + 0.3) { const d = f.bones.lowerarm_l.p.y - FX.phone.p[1]; if (d < elbowMin) { elbowMin = d; elbowAt = f.t; } }
+assert.ok(elbowMin >= 0.042, `the elbow rides ${(elbowMin * 1000).toFixed(0)} mm over the desktop at ${elbowAt.toFixed(2)} s (at least 42 mm: the sleeve, about 35 mm thick there, off it)`);
+// 7b. (Vico: the hands land, then sit still for ~3 s.) From half a second after the hands land to the chapter's end, the fingers are never
+// still for more than 0.9 s (typeStyle 'busy': phrases back to back, short rests), and they type at least 70 % of that time.
+{
+    const fingers = n => /^(index|middle|ring|pinky|thumb)_0[123]_[lr]$/.test(n); let prevF = null, still = 0, longest = 0, moving = 0, n = 0;
+    for (let t = endAt + 0.5; t <= shot.seconds + 1e-9; t += 1 / 30) {
+        const f = await frameAt(+t.toFixed(4)); let a = 0;
+        if (prevF) { for (const b in f.bones) if (fingers(b)) a += f.bones[b].q.angleTo(prevF.bones[b].q) * 180 / Math.PI; n++; if (a > 1.0) { moving++; still = 0; } else { still += 1 / 30; longest = Math.max(longest, still); } }
+        prevF = f;
+    }
+    assert.ok(longest <= 0.9, `the fingers are never still for more than 0.9 s while she types (longest ${longest.toFixed(2)} s)`);
+    assert.ok(moving / n >= 0.7, `she types ${(100 * moving / n).toFixed(0)} % of the time from 0.5 s after the hands land`);
+    c5.typing = { longest, share: moving / n }; c5.elbow = elbowMin * 1000;
+}
+// 7c. (seen in the Commons5b renders, in every pass since pass 2: she faded to ~7 % round the change of model.) Whole all through the change:
+// exactly one Mia drawn at every frame from 15 s to 16.6 s, fully there.
+for (let t = 15.0; t <= 16.6 + 1e-9; t += 1 / 30) {
+    setDesk(t); rp.update(state(t)); await rp.settled();
+    const shown = mias().filter(o => o.visible), amount = shown.map(o => rp.present(o.userData.person, t));
+    assert.ok(shown.length === 1 && amount[0] > 0.999, `${t.toFixed(3)} s: one Mia, whole (${shown.map((o, i) => rp.keyOf(o.userData.person) + ' ' + amount[i].toFixed(2)).join(', ')})`);
+}
 // ---- 6. Commons4 (Vico's three yeses): the keyboard tray clears her thighs, the keyboard clears the armrest, her seat -----------------
 // The geometry is the render's, before the fixes (tests/fixtures/mia-desk-clearance.json: her thighs, the tray, the keyboard end, the wheelchair's armrest,
 // in her frame, metres); here it is moved by what the DATA now says (the cast's seat, the wheelchair's prop edit) and measured. Her seat: the pose's
@@ -292,4 +321,4 @@ const trayClear = (dy, dz) => {
     assert.ok(Math.min(...Object.values(CL.fingers.after_mm).filter(v => v !== null)) >= 3, 'no finger is pressed into the keys: the lowest is 3 mm or more above the key tops');
     assert.ok(CL.rendered_after.calf_vs_desk_mm >= CL.rendered_after.calf_vs_desk_before_mm && CL.rendered_after.chair_vs_desk_min_mm >= 2, 'knees and shins are no nearer the desk; the chair is clear of the desk and the keyboard (rendered)');
 }
-console.log(`people-place-test: ok (Commons4: the tray clears her thighs by ${c4.tray.toFixed(1)} mm with her seat ${waits.seat - CL.ref.seat} mm lower and the chair ${(chBack * 1000).toFixed(0)} mm back, the keyboard is ${c4.arm.toFixed(1)} mm from the armrest; pass 3: ${F.length} frames ${F[0].t}-${F.at(-1).t} s; deepest hand vertex ${(-stats.penL * 1000).toFixed(1)} mm (left) / ${(-stats.penR * 1000).toFixed(1)} mm (right) outside the phone; wrist at most ${stats.twistStep.toFixed(0)} deg a frame, bent back at most ${stats.ext.toFixed(0)} deg; back to the keys ${travel.toFixed(1)} deg of twist for ${net.toFixed(1)} net (${against.toFixed(1)} against); elbow ${elbow(atRest).toFixed(0)} deg at the charger, lean ${lean(atRest).toFixed(0)} deg; grab ${grabAt.toFixed(2)} s, touch down ${contactAt.toFixed(2)}, let go ${releaseAt.toFixed(2)}, on the keys ${endAt.toFixed(2)}; one phone; ${extra.length} extras)`);
+console.log(`people-place-test: ok (Commons4: the tray clears her thighs by ${c4.tray.toFixed(1)} mm with her seat ${waits.seat - CL.ref.seat} mm lower and the chair ${(chBack * 1000).toFixed(0)} mm back, the keyboard is ${c4.arm.toFixed(1)} mm from the armrest; pass 3: ${F.length} frames ${F[0].t}-${F.at(-1).t} s; deepest hand vertex ${(-stats.penL * 1000).toFixed(1)} mm (left) / ${(-stats.penR * 1000).toFixed(1)} mm (right) outside the phone; wrist at most ${stats.twistStep.toFixed(0)} deg a frame, bent back at most ${stats.ext.toFixed(0)} deg; back to the keys ${travel.toFixed(1)} deg of twist for ${net.toFixed(1)} net (${against.toFixed(1)} against); elbow ${elbow(atRest).toFixed(0)} deg at the charger, lean ${lean(atRest).toFixed(0)} deg; grab ${grabAt.toFixed(2)} s, touch down ${contactAt.toFixed(2)}, let go ${releaseAt.toFixed(2)}, on the keys ${endAt.toFixed(2)}; one phone; ${extra.length} extras; Commons5b: elbow ${c5.elbow.toFixed(0)} mm over the desktop, typing ${(100 * c5.typing.share).toFixed(0)} % with rests of at most ${c5.typing.longest.toFixed(2)} s)`);

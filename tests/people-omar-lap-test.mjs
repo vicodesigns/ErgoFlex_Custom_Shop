@@ -190,7 +190,7 @@ if (media) {
     assert.ok(plan && plan.at(0).l === 0 && plan.at(0).r === 0, 'the plan starts with no lift (the hands on the rims, as rolled)');
     assert.equal(plan.at(1).l, plan.need.l.at(-1)); assert.ok(Math.abs(plan.at(1 - 1e-6).l - plan.at(1).l) < 1e-4, 'and ends on the lift the watching posture has at rest, with no step');
     for (let k = 0; k <= 120; k++) assert.ok(plan.at(k / 120).l >= plan.need.l[k] - 1e-9 && plan.at(k / 120).r >= plan.need.r[k] - 1e-9, `the lift is never under what is needed (w ${k / 120})`);
-    const src = f => fs.readFileSync(path.join(ROOT, f), 'utf8'), tag = 'people-lap-20261124c';
+    const src = f => fs.readFileSync(path.join(ROOT, f), 'utf8'), tag = 'commons5b-20261125';
     assert.ok(src('workspace-3d.mjs').includes(`room-people.mjs?v=${tag}`), 'workspace-3d.mjs loads the new room-people.mjs');
     assert.ok(src('room-people.mjs').includes(`room-people-motion.mjs?v=${tag}`) && src('room-people.mjs').includes(`people-lap.mjs?v=${tag}`) && src('room-people.mjs').includes(`people-pose-keys.mjs?v=${tag}`), 'room-people.mjs loads the new motion, lap and pose-key modules');
     assert.ok(src('room-people-motion.mjs').includes(`people-lap.mjs?v=${tag}`) && src('people-lap.mjs').includes(`people-lap-data.mjs?v=${tag}`), 'and they the new lap module and its data');
