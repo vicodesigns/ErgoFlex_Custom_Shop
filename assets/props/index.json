@@ -23073,6 +23073,37 @@
    "collection": "ErgoFlex Collection"
   },
   {
+   "id": "ergoflex-keyboard-tray-rig-v2",
+   "name": "Keyboard tray (articulated rig, real arm)",
+   "category": "desk",
+   "scenes": [],
+   "file": "assets/props/ergoflex-keyboard-tray-rig-v2.glb",
+   "anchor": "ceiling",
+   "size": [
+    494,
+    96.7,
+    698
+   ],
+   "min": [
+    -284.3,
+    -96.7,
+    -343.2
+   ],
+   "max": [
+    209.6,
+    0,
+    354.8
+   ],
+   "tris": 11121,
+   "bytes": 218504,
+   "source": "models/ergoflex-supplied/KeyboardTray.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "v2 of ergoflex-keyboard-tray-rig as on Vico's real unit (his photos, 25 Nov 2026): the arm 75 mm bolt to bolt, the forks' pin 27 mm higher, the rear bracket's bolts 38.1 mm forward; the platform where the supplied model has it. Built by tools/props/tray-rig-v2.mjs. See docs/keyboard-tray/SPEC.md 0.5.",
+   "hidden": true,
+   "collection": "ErgoFlex Collection"
+  },
+  {
    "id": "ergoflex-guitar-amp",
    "name": "Guitar & amplifier",
    "category": "music",
