@@ -383,6 +383,14 @@ if who.get('crown') and who.get('layered_waves'):
     crown.name = 'Human.' + who['hair'] + '.crown'
     meshes.append(crown)
 
+# A short textured crop over a short cut's shell (cast 'textured_crop': True; experimental, nobody has it): cards of its own, the shell left as it was.
+if who.get('textured_crop') and who.get('hair'):
+    import groom
+    hair = next(o for o in meshes if o.name.split('.', 1)[-1] == who['hair'])
+    crop = groom.crop_locks(hair, base, rig)
+    crop.name = 'Human.' + who['hair'] + '.crop'
+    meshes.append(crop)
+
 # ---- garments made from the base mesh (a white coat, a gown, socks; gloves are the hands' own faces) ------
 meshes += garments.build(who, base, rig, OUT_DIR, OUT_ID)
 

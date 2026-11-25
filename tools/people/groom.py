@@ -775,6 +775,173 @@ def crown_locks(hair, base, rig):
     return obj
 
 
+def crop_locks(hair, base, rig):
+    """A short textured crop over a fitted short cut's shell (cast 'textured_crop': True).
+
+    EXPERIMENTAL, off for everyone (no character sets 'textured_crop'): tried on Kai for the
+    film (polish 1124) and left off. In the film's light the card tips pick up white
+    speckle glints on the top of the head and add little volume, even with the shell's own
+    normals (probably the atlas normal/flow maps media-cast-finishes.mjs puts on short04 by UV).
+
+    short04 alone is one painted shell combed back: in the film's close-up it
+    read as a flat cap with a hard edge at the brow. These cards lie over the
+    shell (a separate object weighted to the head; the shell stays as it was):
+    fine clumps over the top, a little longer and lifted off the head, falling
+    forward and to the sides from a whorl at the crown, their tips kept inside
+    the shell's own painted hairline (which stays the edge), and a few lifted
+    flyaways. Same material and atlas as the shell: the cards
+    take the dense middle of short04's painted strands, with its fine tufted
+    top edge toward their pointed tips. Their shading normals follow the
+    shell's own (turned a little toward level, as on the crown locks),
+    so the film's sheen sits on them as it does on the shell.
+    """
+    shape = garments._shape(base)
+    helpers = garments._members(base, 'HelperGeometry') | garments._members(base, 'JointCubes')
+    base_faces = [tuple(p.vertices) for p in base.data.polygons if not any(i in helpers for i in p.vertices)]
+    scalp_bvh = BVHTree.FromPolygons(shape, base_faces)
+    weights_base = garments._weights(base)
+    head_pts = [shape[i] for i in {v for f in base_faces for v in f} if weights_base[i].get('head', 0) > 0.8]
+    crown_z = max(p.z for p in head_pts)
+    head_y_mid = (max(p.y for p in head_pts) + min(p.y for p in head_pts)) * 0.5
+    head_center = Vector((0.0, head_y_mid + 0.008, crown_z - 0.104))
+    mw = hair.matrix_world
+    shell_bvh = BVHTree.FromPolygons([mw @ v.co for v in hair.data.vertices], [tuple(p.vertices) for p in hair.data.polygons])
+
+    rng = np.random.default_rng(1128)
+    rows = 10
+    points, quads, uvs, normals = [], [], [], []
+    angles = [0, .48, .84, 1.12, 1.44, 1.72, 2.13, 2.58, math.pi]
+    hairline = [.54, .51, .37, .13, -.025, .015, -.34, -.70, -.82]
+
+    def edge(az):
+        a = abs((az + math.pi) % math.tau - math.pi)
+        return float(np.interp(a, angles, hairline))
+
+    def direction(azimuth, elevation):
+        return Vector((math.sin(azimuth)*math.cos(elevation),
+                       -math.cos(azimuth)*math.cos(elevation), math.sin(elevation)))
+
+    def surface(d):
+        """The outside of the shell along d (or the scalp, 4 mm out, past its edge), and the shell's normal there."""
+        hit, nrm, _, _ = shell_bvh.ray_cast(head_center + d*.26, -d, .25)
+        if hit is not None:
+            return hit, (nrm if nrm.dot(d) > 0 else -nrm)
+        hit = scalp_bvh.ray_cast(head_center + d*.24, -d, .23)[0]
+        return (hit if hit is not None else head_center + d*.09) + d*.004, d
+
+    # short04's painted strands: the dense middle of the shell (roots) up to the fine tufted top edge (tips).
+    U0, U1, V_ROOT, V_TIP = .40, .60, .67, .86
+
+    def add_card(d0, d1, d2, widths, clearance, lift=0., span=None):
+        w_root, w_max, w_tip = widths
+        if span is None:
+            size = min(.9, w_max*1.2)
+            lo = rng.uniform(0, 1-size)
+            span = (lo, lo+size)
+        out = Vector((d2.x, d2.y, 0))
+        out = out.normalized() if out.length > 1e-4 else Vector((0, -1, 0))
+        tilt = rng.uniform(-.10, .10)
+        start = len(points)
+        c0, c_peak, c_end = clearance
+        for row in range(rows):
+            t = row / (rows-1)
+            d = ((1-t)**2*d0 + 2*(1-t)*t*d1 + t*t*d2).normalized()
+            tangent = (2*(1-t)*(d1-d0) + 2*t*(d2-d1)).normalized()
+            side = d.cross(tangent).normalized()
+            width = (w_root + (w_max-w_root)*_smoothstep(0, .3, t)) - (w_max-w_tip)*_smoothstep(.5, 1, t)
+            gap = c0 + (c_peak-c0)*_smoothstep(0, .4, t) - (c_peak-c_end)*_smoothstep(.4, 1, t)
+            gap += lift*math.sin(math.pi*min(1., t*1.1))
+            for across in (-.5, 0., .5):
+                a = (d + side*across*width).normalized()
+                p, n_shell = surface(a)
+                points.append(p + a*(gap + .0006*abs(across)*(1-t)))
+                level = Vector((a.x, a.y, 0))
+                level = (level.normalized() if level.length > .2 else out).lerp(out, .5*(1-t)).normalized()
+                level = (level + a*(NORMAL_LIFT + .5*t) + Vector((0, 0, .12))).normalized()
+                normals.append(n_shell.normalized())
+            if row:
+                k = start + 3*(row-1)
+                v0 = V_ROOT + (V_TIP-V_ROOT)*(row-1)/(rows-1)
+                v1 = V_ROOT + (V_TIP-V_ROOT)*row/(rows-1)
+                lo, hi = span
+                for j in range(2):
+                    quads.append([k+j, k+j+3, k+j+4, k+j+1])
+                    left = U0 + (U1-U0)*(lo + (hi-lo)*j*.5)
+                    right = U0 + (U1-U0)*(lo + (hi-lo)*(j+1)*.5)
+                    uvs.extend([(left, v0), (left, v1), (right, v1), (right, v0)])
+
+    whorl = direction(math.pi, 1.18)
+
+    def on_shell(d):
+        return shell_bvh.ray_cast(head_center + d*.26, -d, .25)[0] is not None
+
+    def flow(d, forward=0.):
+        """Along the scalp away from the whorl (and a little toward the face on top)."""
+        f = d - whorl
+        f = f - d*f.dot(d)
+        fwd = Vector((0, -forward, 0))
+        f = f + fwd - d*fwd.dot(d)
+        return f.normalized() if f.length > 1e-5 else Vector((0, -1, 0))
+
+    def rotate(d, f, angle):
+        return (d*math.cos(angle) + f*math.sin(angle)).normalized()
+
+    # ---- the top: longer clumps lifting off the head and falling forward and to the sides -------
+    # (two tiers: the lower one denser and closer, the upper one longer, lifted, its ends staggered)
+    for tier, (count, gap, lift, length) in enumerate(((260, (.0010, .0030, .0012), .0014, .26),
+                                                       (200, (.0020, .0050, .0022), .0026, .30))):
+        made = 0
+        while made < count:
+            az = rng.uniform(-math.pi, math.pi)
+            lo = edge(az) + .24
+            el = rng.uniform(lo, math.pi*.5)
+            top = _smoothstep(.35, 1.25, el) * (1 - .55*_smoothstep(2.2, 2.9, abs(az)))
+            if tier and top < .25:
+                continue
+            d0 = direction(az, el)
+            fl = flow(d0, forward=.35*top)
+            ang = (length * (.45 + .55*top)) * rng.uniform(.75, 1.15)
+            d2 = rotate(d0, fl, ang)
+            # (never past the shell: the tips stop a little inside its own painted hairline, which stays the edge)
+            while not on_shell(rotate(d0, fl, ang + .10)) and ang > .04:
+                ang *= .8
+                d2 = rotate(d0, fl, ang)
+            if not on_shell(d0) or ang <= .04:
+                continue
+            made += 1
+            d1 = rotate(d0, fl, ang*.45)
+            w = rng.uniform(.028, .05) * (.75 + .25*top)
+            add_card(d0, d1, d2, (.014, w, .0015),
+                     (gap[0], gap[1]*(.5 + .7*top), gap[2]), lift=lift*top*rng.uniform(.5, 1.3))
+
+    # ---- flyaways: a few fine strands lifted off the top ----------------------------------------
+    for i in range(8):
+        az = rng.uniform(-1.6, 1.6) + (math.pi if i % 3 == 0 else 0)
+        el = rng.uniform(.95, 1.4)
+        d0 = direction(az, el)
+        fl = flow(d0, forward=.3)
+        ang = rng.uniform(.22, .34)
+        if not (on_shell(d0) and on_shell(rotate(d0, fl, ang + .1))):
+            continue
+        lo = rng.uniform(.05, .8)
+        add_card(d0, rotate(d0, fl, ang*.45), rotate(d0, fl, ang), (.008, .02, .003),
+                 (.0050, .0085, .0060), span=(lo, lo + .1), lift=rng.uniform(.002, .004))
+
+    mesh = bpy.data.meshes.new('Crop locks')
+    mesh.from_pydata(points, [], quads)
+    uv = mesh.uv_layers.new(name='UVMap')
+    uv.data.foreach_set('uv', np.asarray(uvs, dtype=np.float32).ravel())
+    for face in mesh.polygons:
+        face.use_smooth = True
+    mesh.normals_split_custom_set_from_vertices([n.normalized() for n in normals])
+    mesh.materials.append(hair.data.materials[0])
+    obj = bpy.data.objects.new('Crop locks', mesh)
+    bpy.context.scene.collection.objects.link(obj)
+    obj.vertex_groups.new(name='head').add(range(len(points)), 1., 'REPLACE')
+    obj.modifiers.new('Head', 'ARMATURE').object = rig
+    return obj
+
+
 def _afro_coil_textures(out_dir, model):
     from afro_coil_texture import _build_all
     rgba, nrm_rgba = _build_all()
