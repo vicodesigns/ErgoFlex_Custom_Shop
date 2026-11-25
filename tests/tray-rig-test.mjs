@@ -195,4 +195,11 @@ const plain = cleanTrayEdit({ keys: [{ t: 2, pose: { swing: 40, slide: 0.2, drop
     const ids = rig.riders().map(o => o.userData.accessoryId), mm = riderThicknessMm(['ergoflex-ergo-keyboard', 'ergoflex-mx-master-mouse']); near(mm, 47.2, 1e-9, 'thickest rider'); assert.deepEqual(ids.sort(), ['ergo-keyboard', 'logitech-mx-master']);
     for (const t of [0, 1.3, 2, 3.7, 5, 6, 9]) assert.deepEqual(rig.apply(t), sampleTray(edit, t, { riderMm: mm }), 'second ' + t);
 }
+{   // REGRESSION (24 Nov 2026, "the tray never moves"): the real window.ErgoFlex has no loadProp / disposeObject of its own, they are on sceneDesks.ctx.
+    // The rig used api.loadProp, threw on the real page and never loaded. Hand it an api shaped like the real one.
+    const r = room(), real = { sceneDesks: { active: r.api.sceneDesks.active, ctx: { loadProp: r.api.loadProp, disposeObject: r.api.disposeObject } }, workspaceAccessories: r.api.workspaceAccessories };
+    assert.equal(real.loadProp, undefined);
+    const rig = createTrayRig(real); assert.equal(await rig.set(edit), true, 'the rig installs with the real api shape'); assert.equal(rig.count(), 1);
+    assert.notDeepEqual(rig.apply(3), null); rig.restore(); assert.equal(rig.count(), 0);
+}
 console.log('tray-rig-test: ok (no keys: nothing loaded or touched, no new film field; rig swap, rest pose = rigid, joint signs and axes, riders on the plate, drop and bracket, restore, cancel, the film plumbing)');
