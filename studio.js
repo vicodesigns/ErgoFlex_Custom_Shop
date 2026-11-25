@@ -43,7 +43,7 @@ import { GALLERY_MODES, GALLERY_LAYOUTS, galleryLayoutForSize, galleryLayoutById
 import { CHILD_AGE_STAGES, childAgeStage, childModesForStage, upgradeChildDesk } from './child-growth-profiles.mjs';
 import { CHILD_MODES, CHILD_LAYOUTS, CHILD_ALL_LAYOUTS, childLayoutsForStage, childLayoutForSize, childLayoutById } from './child-room.mjs?v=polish-20261113b';
 import { BEDROOM_MODES, BEDROOM_LAYOUTS, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=polish-20261113b';
-import { WORKSHOP_MODES, WORKSHOP_LAYOUTS, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=polish-20261113b';
+import { WORKSHOP_MODES, WORKSHOP_LAYOUTS, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=polish-20261124-workshop';
 import * as THREE from 'three';
 import { LED_EFFECTS, normalizeLedEffect, sampleLedEffect } from './led-effects.mjs?v=led-effects-20261003';
 import { LED_STRIPS, LED_STRIP_MAP_VERSION, createLedFrame, sampleLedDiagnostic } from './led-strip-map.mjs?v=led-game-20261003';
@@ -66,7 +66,7 @@ import { layersSwitch, UI_SWITCH_KEY as LAYERS_UI_SWITCH_KEY, frameView, project
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule, institutionalModes } from './institutional-scenes.mjs?v=polish-20261111f';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY, setEaselLook } from './workspace-3d.mjs?v=people-place-20261124c';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY, setEaselLook } from './workspace-3d.mjs?v=polish-20261124-workshop';
 import { cleanLook, lookOf } from './room-looks.mjs';
 // The look each room builds (room-looks.mjs), by room id; none = the room's default. Not saved: the Studio always opens a
 // room in its default look unless a Director chapter asks for another (setRoomLook).

@@ -25,7 +25,7 @@ import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-roo
 import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=polish-20261113b';
 import { buildChildRoom, CHILD_MODES, childLayoutForSize, childLayoutById } from './child-room.mjs?v=polish-20261113b';
 import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=polish-20261113b';
-import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById, polishWorkshopEquipment } from './workshop-room.mjs?v=polish-20261113b';
+import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById, polishWorkshopEquipment } from './workshop-room.mjs?v=polish-20261124-workshop';
 import * as THREE from 'three';
 import { RoomBounceLight } from './room-bounce-light.mjs?v=polish-20261111f';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -386,27 +386,43 @@ export function createAccessory(item) {
         mesh(clamp, new THREE.CylinderGeometry(17, 17, 3, 24), rubber, [0, -20, 23]);
         box(clamp, [36, 8, 14], [0, -47, 23], dark, 3);
         mesh(clamp, new THREE.CylinderGeometry(16, 19, 12, 24), steel, [0, 11, 14]);
-        rod(root, [0, 15, 14], [0, 240, -45], 9, dark);
-        rod(root, [0, 240, -45], [0, 395, 100], 8, dark);
-        sphere(root, [15, 15, 15], [0, 240, -45], silver);
-        box(root, [170, 13, 48], [0, 391, 100], dark, 6);
-        const diffuser = box(root, [153, 2, 32], [0, 383, 100],
-            material('#fff5df', { emissive: '#fff0ce', emissiveIntensity: 3, toneMapped: false }));
-        diffuser.name = 'Clamp light luminous diffuser';
-        // A local halo follows the lamp through tilt and object edits. It adds
-        // no scene lights, keeping multi-desk rooms within the lighting budget.
+        // Two-segment arm on hinge hubs with a return spring and a cable, ending in a lamp head with real
+        // thickness: a bevelled satin-black housing, cooling ribs on top and a recessed diffuser underneath
+        // (Vico, Nov 24 2026: the old head was a flat 13 mm slab over a peach glow sheet and read as a cut-out).
+        const housing = material('#1e2226', { metalness: .55, roughness: .38 });
+        const hub = (at, r = 15) => { const g = mesh(root, new THREE.CylinderGeometry(r, r, 30, 24), steel, at); g.rotation.z = Math.PI / 2;
+            const cap = mesh(root, new THREE.CylinderGeometry(r * .62, r * .62, 34, 18), housing, at); cap.rotation.z = Math.PI / 2; };
+        rod(root, [0, 15, 14], [0, 240, -45], 7, housing);
+        rod(root, [0, 240, -45], [0, 380, 92], 6, housing);
+        rod(root, [11, 40, 8], [11, 220, -40], 1.8, silver);
+        rod(root, [11, 255, -32], [11, 362, 78], 1.8, silver);
+        hub([0, 15, 14], 13); hub([0, 240, -45]); hub([0, 380, 92], 12);
+        mesh(root, new THREE.SphereGeometry(9, 16, 10), silver, [19, 240, -45]);
+        const head = box(root, [190, 30, 64], [0, 394, 104], housing, 9);
+        head.name = 'Clamp light head housing';
+        box(root, [198, 9, 70], [0, 379, 104], housing, 4);
+        for (let i = 0; i < 6; i++) box(root, [4, 7, 48], [-70 + i * 28, 412, 104], steel);
+        // Recessed diffuser: a lit face inside the shade lip, so the head shows an edge, a shade and a glowing underside.
+        const diffuser = box(root, [176, 3, 50], [0, 376, 104],
+            material('#fff6e6', { emissive: '#fff3dc', emissiveIntensity: 2.2, toneMapped: false }));
+        diffuser.name = 'Clamp light luminous diffuser'; diffuser.castShadow = false;
+        // Cable: from the head's back, along the arm, down to the clamp.
+        const cable = new THREE.CatmullRomCurve3([[0, 400, 72], [-12, 392, 70], [-12, 300, 22], [-12, 230, -60], [-12, 120, -20], [-14, 20, -8], [-14, -30, -12]].map(p => new THREE.Vector3(...p)));
+        mesh(root, new THREE.TubeGeometry(cable, 40, 2.4, 6), material('#141618', { roughness: .8 })).castShadow = false;
+        // A small, neutral bloom just under the diffuser (no scene light: multi-desk rooms stay within the
+        // lighting budget). It sits inside the shade footprint, so it never lands on a panel as a decal.
         const haloSheet = document.createElement('canvas'); haloSheet.width = haloSheet.height = 128;
-        const c = haloSheet.getContext('2d'), gradient = c.createRadialGradient(64,64,8,64,64,64);
-        gradient.addColorStop(0,'rgba(255,245,218,.65)');
-        gradient.addColorStop(.45,'rgba(255,237,194,.25)');
-        gradient.addColorStop(1,'rgba(255,237,194,0)');
+        const c = haloSheet.getContext('2d'), gradient = c.createRadialGradient(64,64,4,64,64,64);
+        gradient.addColorStop(0,'rgba(255,250,240,.55)');
+        gradient.addColorStop(.5,'rgba(255,246,230,.18)');
+        gradient.addColorStop(1,'rgba(255,246,230,0)');
         c.fillStyle=gradient;c.fillRect(0,0,128,128);
         const haloMap=new THREE.CanvasTexture(haloSheet);haloMap.colorSpace=THREE.SRGBColorSpace;
-        const halo=mesh(root,new THREE.PlaneGeometry(235,86),new THREE.MeshBasicMaterial({
-            map:haloMap,transparent:true,opacity:.5,blending:THREE.AdditiveBlending,
-            depthWrite:false,toneMapped:false,side:THREE.DoubleSide
-        }),[0,381.8,100]);
-        halo.name='Clamp light soft glow';halo.rotation.x=-Math.PI/2;
+        const halo=mesh(root,new THREE.PlaneGeometry(200,72),new THREE.MeshBasicMaterial({
+            map:haloMap,transparent:true,opacity:.35,blending:THREE.AdditiveBlending,
+            depthWrite:false,toneMapped:false
+        }),[0,374,104]);
+        halo.name='Clamp light soft glow';halo.rotation.x=Math.PI/2;
         halo.castShadow=false;halo.receiveShadow=false;halo.ownedTextures=[haloMap];
     } else if (type === 'arm' || type === 'dual-arm') {
         box(root, [80, 8, 60], [0, 4, 0], dark, 3);
