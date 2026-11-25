@@ -14,14 +14,14 @@
 // they are ignored: SPEC.md 0.3.)
 
 // Hard limits of each joint (Vico, 22 Nov 2026: slide 254 mm, swing +-180 degrees; 25 Nov 2026, his real unit: the arm from about 25 deg
-// further down than as built to the highest the CAD allows under the desktop (+10: the plate 3 mm under it), and the arc slot +-30).
-export const JOINT_LIMITS = Object.freeze({ slide: [0, 1], swing: [-180, 180], baseTilt: [-25, 10], tilt: [-30, 30] });
+// further down than as built to the highest the CAD allows under the desktop (+8: the plate levelled 3 mm under it), and the arc slot +-30).
+export const JOINT_LIMITS = Object.freeze({ slide: [0, 1], swing: [-180, 180], baseTilt: [-25, 8], tilt: [-30, 30] });
 // The two tilt pivots on the CAD's parts (the track's frame: u across, y up from the track top = the desktop underside, w along the track
 // toward the user; mm): the rear bracket's upper bolt (the arm turns on it) and the arm's front bolt (the forks' pin: the platform turns on
 // it, the knob below it runs in the arc slot). tray-rig.mjs makes runtime pivots there; the glb is not changed.
 export const BASE_TILT_AT = Object.freeze([-10, -23.85, 8.75]);
 export const SURFACE_TILT_AT = Object.freeze([-10, -69.7, 119.45]);
-// The base tilt may not raise the plate while it is under the desk: its top is 19.7 mm under the desktop at rest, +10 deg is the most
+// The base tilt may not raise the plate while it is under the desk: its top is 19.7 mm under the desktop at rest, +8 deg is the most (the plate 3 mm under it, the arm turning on its rear bolt and the platform levelled on its front bolt)
 // out front; the limit closes to 0 as the plate goes under (the same ramps as the rider limit, UNDER_RAMPS).
 export const BASE_TILT_UNDER_MAX = 0;
 export const SLIDE_TRAVEL_MM = 234.5;          // the CAD's travel along the track axis, measured on the rig (tests/tray-rig-asset-test.mjs): carriage rear

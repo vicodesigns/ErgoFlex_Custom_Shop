@@ -25,7 +25,7 @@ export const PRESETS = Object.freeze([
     { id: 'side', label: 'Side storage', pose: { slide: 0, swing: 90, tilt: 0 } },
     { id: 'in', label: 'Pushed in', pose: { slide: 1, swing: 0, baseTilt: 0, tilt: 0 } },
     { id: 'down', label: 'Arm down, level', pose: { baseTilt: -25, tilt: 25 } },
-    { id: 'up', label: 'Arm up, level', pose: { baseTilt: 10, tilt: -10 } },
+    { id: 'up', label: 'Arm up, level', pose: { baseTilt: 8, tilt: -8 } },
 ]);
 
 // Why a joint is not where it was keyed, in words for the panel ('' when it is).
