@@ -1,0 +1,267 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "film-vicos-3rd-cut-wellness",
+  "name": "Film chapter: wellness (22.5 s)",
+  "client": "Vicos 3rd cut",
+  "volume": 0.32,
+  "updated": "2026-11-24T06:13:56.309Z",
+  "shots": [
+    {
+      "id": "wellness",
+      "room": "gym",
+      "kind": "wellness",
+      "seconds": 22.5,
+      "title": "Build movement into your day.",
+      "detail": "Pause. Stretch. Breathe. Reset.",
+      "preset": "office",
+      "transition": 1.1,
+      "size": "60x30",
+      "layout": "house",
+      "mode": "morning",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 28,
+          "tilt": 0,
+          "x": 0,
+          "z": 0,
+          "yaw": 0
+        },
+        "clips": [
+          {
+            "id": "stand-break",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 3.5,
+            "duration": 5,
+            "easing": "smooth",
+            "label": "Stand and reset",
+            "target": 41
+          },
+          {
+            "id": "sit-back",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 14.55,
+            "duration": 5,
+            "easing": "smooth",
+            "label": "Back to sitting",
+            "target": 28
+          }
+        ]
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "Wide from the mirror wall: window, bike, mat",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                6.8040280724166315,
+                2.2925299648741113,
+                -2.9045580244993174
+              ],
+              "target": [
+                -0.9805886392253744,
+                0.8679234887488175,
+                0.7162474808614231
+              ],
+              "fov": 47,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-01",
+            "time": 0.071111,
+            "label": "Wide from the mirror wall: slow push",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.95,
+                1.85,
+                -1.9
+              ],
+              "target": [
+                -0.9,
+                0.79,
+                0.78
+              ],
+              "fov": 47,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-02",
+            "time": 0.186667,
+            "label": "The desk begins to rise, Maya gets up",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2,
+                1.5,
+                -1.95
+              ],
+              "target": [
+                -0.95,
+                1.6,
+                0.7
+              ],
+              "fov": 40,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.546667,
+            "label": "Desk Squats: the desk, its monitor and Maya stepping back",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.5472801650742953,
+                2.2710553389924635,
+                -1.833853381021204
+              ],
+              "target": [
+                -0.5324733218784612,
+                1.1174194193650842,
+                0.6177059732202246
+              ],
+              "fov": 45.99977434874724,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-04",
+            "time": 0.702222,
+            "label": "Desk Squats: the desk, its monitor and Maya stepping back",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.4,
+                1.55,
+                -0.7
+              ],
+              "target": [
+                -0.5,
+                0.95,
+                0.55
+              ],
+              "fov": 46,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-05",
+            "time": 1,
+            "label": "Working seated",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                1.65,
+                1.55,
+                -1.6
+              ],
+              "target": [
+                -0.95,
+                1.55,
+                0.6
+              ],
+              "fov": 40,
+              "aspect": 1.7777777777777777
+            }
+          }
+        ]
+      },
+      "filmTitles": [
+        {
+          "id": "wellness-0",
+          "rel_in": 2.65,
+          "rel_out": 8.45,
+          "eyebrow": "WELLNESS",
+          "title": "Build movement into your day.",
+          "detail": "Pause. Stretch. Breathe. Reset.",
+          "typography": {
+            "eyebrow": {
+              "size": 52,
+              "dy": 16
+            },
+            "detail": {
+              "size": 53,
+              "dy": -12
+            }
+          },
+          "shadow": {
+            "paths": [
+              {
+                "line": "eyebrow",
+                "points": [
+                  {
+                    "x": -12.06,
+                    "y": -138.53
+                  },
+                  {
+                    "x": 210.43,
+                    "y": -142.8
+                  },
+                  {
+                    "x": 213.31,
+                    "y": -95.35
+                  },
+                  {
+                    "x": -13.04,
+                    "y": -90.23
+                  }
+                ]
+              },
+              {
+                "line": "title",
+                "points": [
+                  {
+                    "x": -11.53,
+                    "y": -75.99
+                  },
+                  {
+                    "x": 783.9,
+                    "y": -82.58
+                  },
+                  {
+                    "x": 785.26,
+                    "y": -7.76
+                  },
+                  {
+                    "x": -17.98,
+                    "y": -12.55
+                  }
+                ]
+              },
+              {
+                "line": "detail",
+                "points": [
+                  {
+                    "x": -12.37,
+                    "y": -5.61
+                  },
+                  {
+                    "x": 472.07,
+                    "y": -7.29
+                  },
+                  {
+                    "x": 472.15,
+                    "y": 41.66
+                  },
+                  {
+                    "x": -12.6,
+                    "y": 45.53
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

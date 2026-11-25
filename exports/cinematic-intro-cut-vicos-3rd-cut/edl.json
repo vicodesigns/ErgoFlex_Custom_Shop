@@ -1,7 +1,7 @@
 {
  "fps": 30,
  "dissolve": 1.5,
- "total": 240.328,
+ "total": 242.47,
  "chapters": [
   {
    "index": 1,
@@ -76,16 +76,16 @@
   {
    "index": 11,
    "id": "storage",
-   "duration": 24.978,
+   "duration": 26.67,
    "start": 191.35,
-   "end": 216.328
+   "end": 218.02
   },
   {
    "index": 12,
    "id": "hero",
-   "duration": 25.5,
-   "start": 214.828,
-   "end": 240.328
+   "duration": 25.95,
+   "start": 216.52,
+   "end": 242.47
   }
  ],
  "beats": [
@@ -98,11 +98,11 @@
    "what": "awaken title B: Make Room For Possibility"
   },
   {
-   "at": 234.698,
+   "at": 236.39,
    "what": "end card: ErgoFlex wordmark"
   },
   {
-   "at": 240.328,
+   "at": 242.47,
    "what": "cut to black / onboarding"
   }
  ],
