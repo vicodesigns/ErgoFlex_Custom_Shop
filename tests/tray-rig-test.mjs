@@ -216,7 +216,7 @@ const old = { bracket: true, keys: [{ t: 2, pose: { swing: 40, slide: 0.2, drop:
     hr.restore(); assert.equal(tray, null, 'restore unregisters');
 }
 {   // BASE TILT (K1): the arm and the platform turn on the rear upper bolt; with the surface levelled the plate stays level and moves down/up
-    const r = room(), rig = createTrayRig(r.api); await rig.set(cleanTrayEdit({ keys: [{ t: 1, pose: { baseTilt: -25, tilt: 25 } }, { t: 2, pose: { baseTilt: 10, tilt: -10 } }, { t: 3, pose: { baseTilt: -20 } }] }));
+    const r = room(), rig = createTrayRig(r.api); await rig.set(cleanTrayEdit({ keys: [{ t: 1, pose: { baseTilt: -25, tilt: 25 } }, { t: 2, pose: { baseTilt: 8, tilt: -8 } }, { t: 3, pose: { baseTilt: -20 } }] }));
     const m = r.tray.getObjectByName('Prop:ergoflex-keyboard-tray-rig'), box = () => { r.scene.updateMatrixWorld(true); return new THREE.Box3().setFromObject(named(m, 'Tray_Plate'), true); }, q = () => named(m, 'Tray_Plate').getWorldQuaternion(new THREE.Quaternion());
     rig.apply(0); const b0 = box(), q0 = q(), bolt0 = worldOf(m, 'Tray_BaseTilt'), restLinks = worldBox(named(m, 'Tray_Links'));
     rig.apply(1); const bDown = box(); assert.ok(q().angleTo(q0) < 1e-6, 'arm down, surface levelled: the platform is level'); assert.ok(bDown.max.y < b0.max.y - 20, 'and lower: ' + (b0.max.y - bDown.max.y).toFixed(1) + ' mm');

@@ -32,7 +32,7 @@ const ERGO = 45, KEYBOARD = [{ kind: 'keyboard', propId: 'ergoflex-ergo-keyboard
     assert.deepEqual(['slide', 'swing', 'baseTilt', 'tilt'].map(j => U.toDisplay(j, 0.5)), [50, 0.5, 0.5, 0.5]); assert.equal(U.fromDisplay('slide', 50), 0.5); assert.equal(U.fromDisplay('swing', 30), 30);
     const none = U.panelModel(null, 0); assert.deepEqual(none.rows.map(r => r.joint), ['slide', 'swing', 'baseTilt', 'tilt'], 'no drop slider (the drop is gone)'); assert.deepEqual(none.rows.map(r => r.label), ['Slide', 'Swing', 'Base tilt', 'Surface tilt']);
     for (const gone of ['BRACKET_LABEL', 'BRACKET_HINT', 'dropOn']) assert.ok(!(gone in U), gone + ' is gone');
-    assert.ok(none.rows.every(r => r.value === 0 && r.shown === 0 && !r.reason && !r.clamped)); assert.equal(none.rows[0].limitText, '0–100 %'); assert.equal(none.rows[1].limitText, '-180–180°'); assert.equal(none.rows[2].limitText, '-25–10°'); assert.equal(none.rows[3].limitText, '-15–15°');
+    assert.ok(none.rows.every(r => r.value === 0 && r.shown === 0 && !r.reason && !r.clamped)); assert.equal(none.rows[0].limitText, '0–100 %'); assert.equal(none.rows[1].limitText, '-180–180°'); assert.equal(none.rows[2].limitText, '-25–8°'); assert.equal(none.rows[3].limitText, '-15–15°');
     // old data with the bracket and a keyed drop: the panel shows the three joints, no error
     const old = U.panelModel({ bracket: true, keys: [{ t: 1, pose: { drop: 30, tilt: 2 } }] }, 2); assert.deepEqual(old.rows.map(r => r.joint), ['slide', 'swing', 'baseTilt', 'tilt']); assert.equal(old.rows[3].shown, 2);
     // a keyboard on the tray: the keyed value and the value the tray takes, with the reason in words (no bracket in it any more)
