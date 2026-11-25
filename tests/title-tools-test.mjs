@@ -113,13 +113,14 @@ try{
   try{
     const edl={fps:30,dissolve:1.5,total:60,chapters:[{index:1,id:'awaken',duration:44.85,start:0,end:44.85},{index:2,id:'rise',duration:16,start:43.35,end:59.35}],transitions:[.8]};
     const run=entry=>{fs.writeFileSync(path.join(H2,'edl.json'),JSON.stringify(edl));fs.writeFileSync(path.join(H2,'titles-src.json'),JSON.stringify({titles:[{chapter:'rise',rel_in:3.6,rel_out:9.4,eyebrow:'SIT',title:'Head',detail:'Sub',...entry}],cta:{chapter:'rise',rel_in:15,rel_out:null,text:''},logo:{chapter:'rise',rel_in:15}}));
-      py(path.join(X,'finish-intro.py'),H2,'--titles-only');return fs.readFileSync(path.join(H2,'final','titles.ass'),'utf8').split('\n').filter(l=>/,(Box)?(Eyebrow|Title|Detail),/.test(l));};
-    const base=run({}),moved=run({typography:{eyebrow:{dx:6,dy:-24},detail:{dy:18}}});
+      py(path.join(X,'finish-intro.py'),H2,'--titles-only');return fs.readFileSync(path.join(H2,'final','titles.ass'),'utf8').split('\n').filter(l=>/,(Eyebrow|Title|Detail),/.test(l));};
+    const shapes=()=>fs.readFileSync(path.join(H2,'final','titles.ass'),'utf8').split('\n').filter(l=>/,Scrim,.*\\p1/.test(l));
+    const base=run({}),baseShapes=shapes(),moved=run({typography:{eyebrow:{dx:6,dy:-24},detail:{dy:18}}});
     assert.ok(base.find(l=>/,Eyebrow,/.test(l)).includes('{\\an1\\move(128,822,128,812,0,900)'),'default eyebrow as before');
     assert.ok(moved.find(l=>/,Eyebrow,/.test(l)).includes('{\\an1\\move(134,798,134,788,0,900)'),'eyebrow moved 6 right, 24 up, no type tags');
-    assert.ok(moved.find(l=>/,BoxEyebrow,/.test(l)).includes('\\move(134,798,134,788,0,900)'),'its box moves with it');
+    {const ms=shapes();assert.equal(ms.length,3);assert.ok(ms[0]!==baseShapes[0]&&ms[1]===baseShapes[1],'only the eyebrow shape moved (its box moves with it); the headline shape is untouched');}
     assert.ok(moved.find(l=>/,Detail,/.test(l)).includes('\\move(128,998,128,988,0,900)'),'supporting line 18 down');
-    assert.deepEqual(moved.filter(l=>/,(Box)?Title,/.test(l)),base.filter(l=>/,(Box)?Title,/.test(l)),'the headline is untouched');
+    assert.deepEqual(moved.filter(l=>/,Title,/.test(l)),base.filter(l=>/,Title,/.test(l)),'the headline is untouched');
     const scaled=run({scale:1.5,typography:{eyebrow:{dy:-20}}});
     assert.ok(scaled.find(l=>/,Eyebrow,/.test(l)).includes('\\move(128,'+(912+(792-912)*1.5+15)+',128,'+(912+(792-912)*1.5)+',0,900)'),'offsets scale with the title (about the headline baseline)');
     const styled=run({typography:{title:{color:'#ff0000'}}});
@@ -181,8 +182,9 @@ try{
     fs.writeFileSync(path.join(H3,'edl.json'),JSON.stringify(edl));
     fs.writeFileSync(path.join(H3,'titles-src.json'),JSON.stringify({titles:[{chapter:'wellness',rel_in:2,rel_out:8,eyebrow:'WELLNESS EVERYDAY',title:'Build movement\ninto your routine.',detail:'Pause. Stretch.\nBreathe. Reset.'}],cta:{chapter:'wellness',rel_in:18,rel_out:null,text:''},logo:{chapter:'wellness',rel_in:18}}));
     py(path.join(X,'finish-intro.py'),H3,'--titles-only');
-    const lines=fs.readFileSync(path.join(H3,'final','titles.ass'),'utf8').split('\n').filter(l=>/,(Box)?(Eyebrow|Title|Detail),/.test(l));
-    assert.equal(lines.length,10,'5 text dialogues + 5 fitted box dialogues');
+    const lines=fs.readFileSync(path.join(H3,'final','titles.ass'),'utf8').split(/\r?\n/).filter(l=>/,(Eyebrow|Title|Detail),/.test(l));
+    assert.equal(lines.length,5,'5 text dialogues');
+    assert.equal(fs.readFileSync(path.join(H3,'final','titles.ass'),'utf8').split('\n').filter(l=>/,Scrim,.*\\p1/.test(l)).length,5,'plus 5 fitted shadow shapes (one tight box per line, drawn as vectors)');
     assert.ok(lines.find(l=>/,Eyebrow,/.test(l)&&l.includes(`\\move(128,${Math.round((812-titleStep+10)*100)/100},128,${Math.round((812-titleStep)*100)/100},0,900)`)&&l.endsWith('WELLNESS EVERYDAY')),'ASS eyebrow shifts up identically');
     assert.ok(lines.find(l=>/,Title,/.test(l)&&l.includes(`\\move(128,${Math.round((912-titleStep+14)*100)/100},128,${Math.round((912-titleStep)*100)/100},0,900)`)&&l.endsWith('Build movement')),'ASS top headline line');
     assert.ok(lines.find(l=>/,Title,/.test(l)&&l.includes('\\move(128,926,128,912,0,900)')&&l.endsWith('into your routine.')),'ASS bottom headline line');

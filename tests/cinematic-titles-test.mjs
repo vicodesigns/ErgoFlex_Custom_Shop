@@ -4,7 +4,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import {execFileSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
-import {LINES,ANCHOR,BOX_BLUR,BOX_OPACITY,chapterTitles,cutRule,timingNotes,cleanFilmTitles,cleanShadow,fittedBox,fittedPaths,shadowOf,lineState,restTime,svgPath,assDrawing,segments,bounds,nearestOnPath,insertPoint,deletePoint,toggleSmooth,moveHandle,movePoint,transformPaths,pointCount,srcEntry,placeOf,PLACES,PLACE_DY,BOX_OPACITY_TOP,textBounds} from '../experience/film-titles.mjs';
+import {LINES,FONT_REAL,DESC,GLYPH_ASC,GLYPH_DESC,ANCHOR,BOX_BLUR,BOX_OPACITY,chapterTitles,cutRule,timingNotes,cleanFilmTitles,cleanShadow,fittedBox,fittedPaths,shadowOf,lineState,restTime,svgPath,assDrawing,segments,bounds,nearestOnPath,insertPoint,deletePoint,toggleSmooth,moveHandle,movePoint,transformPaths,pointCount,srcEntry,placeOf,PLACES,PLACE_DY,BOX_OPACITY_TOP,textBounds} from '../experience/film-titles.mjs';
 import {cleanShot,cleanCut} from '../experience/cuts.mjs';
 const root=path.dirname(path.dirname(fileURLToPath(import.meta.url))),X=path.join(root,'tools/experience');
 
@@ -33,11 +33,12 @@ assert.equal(cleanShadow({paths:[{line:'bogus',points:[{x:0,y:0},{x:1,y:0,in:[0,
 assert.deepEqual(cleanShadow({paths:[{points:[{x:0,y:0},{x:1,y:0,in:[0,0]},{x:1,y:1,out:[2,'3'],smooth:1}]}]}).paths[0].points,[{x:0,y:0},{x:1,y:0},{x:1,y:1,out:[2,3],smooth:true}]);
 assert.equal(cleanFilmTitles(undefined),undefined);
 
-// ---- fitted boxes (libass BorderStyle 3: advance + padding; line box = Fontsize + 2 x padding, bottom at y + padding) ----
+// ---- fitted boxes (2026-11-25: tight to the glyphs, ascender line - GLYPH_DESC em below the baseline, + TIGHT_PAD; they used to be libass BorderStyle 3 line cells, Fontsize + 2 x padding) ----
 const measure=(L,t)=>t.length*L.size*.5;
 const [E,T,D]=LINES;
-assert.deepEqual(fittedBox(T,597),{x0:-26,x1:597+26,y0:912-86-26-912,y1:26});    // probed: x 102..751, y 800..938
-assert.deepEqual(fittedBox(E,126),{x0:-16,x1:142,y0:812-28-16-912,y1:812+16-912}); // probed: x 112..270, y 768..828
+{const em=86/FONT_REAL,base=912-DESC*86,b=fittedBox(T,597);assert.deepEqual(b,{x0:-22,x1:597+22,y0:base-GLYPH_ASC*em-14-912,y1:base+GLYPH_DESC*em+14-912});
+  assert.ok(b.y1-b.y0<90,'the headline box is ~75 px tall (the libass line cell was 138)');}
+{const em=28/FONT_REAL,base=812-DESC*28;assert.deepEqual(fittedBox(E,126),{x0:-14,x1:140,y0:base-GLYPH_ASC*em-9-912,y1:base+GLYPH_DESC*em+9-912});}
 const title={id:'rise-0',rel_in:3.6,rel_out:9.4,eyebrow:'SIT · STAND',title:'Your height.',detail:''};
 const fit=fittedPaths(title,measure);assert.deepEqual(fit.map(p=>p.line),['eyebrow','title']);assert.equal(fit[1].points.length,4);
 let S=shadowOf(title,measure);assert.equal(S.custom,false);assert.equal(S.blur,BOX_BLUR);assert.equal(S.opacity,BOX_OPACITY);
@@ -107,7 +108,7 @@ try{
   assert.ok(drawing[0].includes(`\\1a&H${Math.round(255*.6).toString(16).toUpperCase()}&\\blur22}`+assDrawing(shape.paths[0])+'{\\p0}'),'finish-intro draws the Director path');
   assert.ok(drawing[0].startsWith('Dialogue: 0,0:00:44.69,')&&drawing[0].includes('\\move(0,14,0,0,0,900)'),'the path keeps its line\'s timing (headline: +140 ms, 14 px rise)');
   const riseBoxes=ass.filter(l=>/Box(Eyebrow|Title|Detail)/.test(l)&&l.includes('0:00:44'));assert.equal(riseBoxes.length,0);
-  assert.equal(ass.filter(l=>/,BoxTitle,/.test(l)).length,2,'the other titles keep their fitted boxes');
+  assert.equal(ass.filter(l=>/,Scrim,.*\p1/.test(l)&&!l.includes('0:00:44')).length>=6,true,'the other titles keep their fitted shapes (one per line)');
   const styledSource=JSON.parse(fs.readFileSync(path.join(H,'titles-src.json'),'utf8'));
   styledSource.titles[2].scale=1.5;styledSource.titles[2].typography={title:{size:110,weight:700,color:'#ff0000',spacing:2,italic:true}};
   fs.writeFileSync(path.join(H,'titles-src.json'),JSON.stringify(styledSource));
@@ -125,7 +126,7 @@ assert.equal(PLACE_DY,110-(812-28));assert.deepEqual(placeOf({place:'top-left'})
 assert.equal(placeOf({place:'top-right'}).boxOpacity,BOX_OPACITY_TOP);
 assert.deepEqual(fittedPaths({...title,place:'lower-left'},measure),fittedPaths(title,measure));
 assert.deepEqual(shadowOf({...title,place:'top-left'},measure).paths,fittedPaths(title,measure),'top-left: same boxes, relative to the moved anchor');
-assert.deepEqual(fittedBox(T,597,'right'),{x0:-597-26,x1:26,y0:912-86-26-912,y1:26});
+assert.deepEqual(fittedBox(T,597,'right'),{x0:-597-22,x1:22,y0:fittedBox(T,597).y0,y1:fittedBox(T,597).y1});
 assert.deepEqual(textBounds({...title,place:'top-right'},measure),{x0:-measure(T,title.title),x1:0,y0:812-28-912,y1:0});
 assert.deepEqual(textBounds(title,measure),{x0:0,x1:measure(T,title.title),y0:812-28-912,y1:0});
 assert.equal(cleanFilmTitles([{...title,place:'top-right'}])[0].place,'top-right');
@@ -148,10 +149,12 @@ assert.equal(svgPath(sq,placeOf({place:'top-right'}).anchor),`M 1792 ${912+PLACE
   for(const [place,x,an] of [['top-left',128,1],['top-right',1792,3]]){
     const got=run({...gsrc,titles:gsrc.titles.map((t,k)=>k===i?{...t,place}:t)}),lines=got.ass.split('\n'),gl=golden.ass.split('\n');
     const mine=l=>l.endsWith('}'+w.eyebrow)||l.endsWith('}'+w.title)||l.endsWith('}'+w.detail);
-    assert.deepEqual(lines.filter(l=>!mine(l)),gl.filter(l=>!mine(l)),`${place}: every other line unchanged`);
+    const scrim=l=>/,Scrim,/.test(l),other=l=>!mine(l)&&!scrim(l);
+    assert.deepEqual(lines.filter(other),gl.filter(other),`${place}: every other line unchanged`);
+    const fresh=lines.filter(l=>scrim(l)&&!gl.includes(l));assert.equal(fresh.length,3,`${place}: its three fitted shapes are the only shadow lines that changed`);
     const head=lines.filter(l=>mine(l)&&l.includes(',Title,'))[0];
     assert.ok(head.includes(`{\\an${an}\\move(${x},${912+PLACE_DY+14},${x},${912+PLACE_DY},0,900)`),`${place}: headline at the placed anchor`);
-    const box=lines.filter(l=>mine(l)&&l.includes(',BoxTitle,'))[0];assert.ok(box.includes(`\\an${an}\\move(${x},`)&&box.includes('\\3a&H70&'),`${place}: fitted box placed and darker`);
+    assert.ok(fresh.every(l=>l.includes('\\1a&H70&')),`${place}: fitted shapes darker (56 %)`);assert.ok(fresh.every(l=>l.includes('\\p1')),`${place}: drawn as vectors`);
     assert.equal(JSON.parse(got.json).titles[i].place,place);assert.equal(JSON.parse(got.json).titles.filter(t=>t.place).length,1);
   }
 }
