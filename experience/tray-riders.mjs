@@ -9,9 +9,10 @@
 // The decision is walked along the chapter's desk-tilt timeline (tiltAt(seconds)), so it is the same at every second however the film is
 // scrubbed or rendered (frames out of order included).
 //
-// HOW they move: not a pop (Vico: "it disappears and appears over there ... make it a quick but smooth transition, not too slow, not too
-// fast, snappy"): a carry of HANDOFF_S seconds, eased in and out, along a small lift-and-travel arc that rises clear of the desktop first
-// and slides into the shelf level, so nothing passes through the desk (carryPath).
+// HOW they change place: never a pop. With the keyboard tray's rig in the chapter and something standing on its plate (chapter 1) they do
+// not travel at all (Vico: the carry made them jump up and go into the shelf): over HANDOFF_S seconds the one at the tray / desk place
+// fades OUT while its copy at the shelf place fades IN, each exactly where it is (riderFade; drawn by rider-fade.mjs). A desk without
+// such a tray keeps the earlier carry: HANDOFF_S seconds, eased, along a small lift-and-travel arc that clears the desktop (carryPath).
 export const LEAVE_DEG = 9;        // = desk-auto-stow.mjs STOW_ANGLE (tests/tray-riders-test.mjs keeps them equal)
 export const RETURN_DEG = 7;
 export const HANDOFF_S = 0.4;
@@ -39,19 +40,23 @@ export function riderTimeline(tiltAt, seconds, { step = 1 / 120 } = {}) {
     }
     return out;
 }
-// How far the riders are from the tray at chapter second s: 0 = on the desk / tray, 1 = on the shelf, between = being carried (eased).
+// How far the riders are from the tray at chapter second s: 0 = on the desk / tray, 1 = on the shelf, between = changing place (eased).
 // A hand-off that starts before the last one finished starts from where that one was.
-export function riderAway(timeline, s, handoff = HANDOFF_S) {
+export function riderAway(timeline, s, handoff = HANDOFF_S, ease = carryEase) {
     if (!timeline) return 0;
     let away = timeline.start === 'shelf' ? 1 : 0;
     for (const e of timeline.events) {
         if (e.t > s) break;
         const next = timeline.events[timeline.events.indexOf(e) + 1], until = next && next.t <= s ? next.t : s;
         const to = e.to === 'shelf' ? 1 : 0, u = handoff > 0 ? (until - e.t) / handoff : 1;
-        away = away + (to - away) * carryEase(u);
+        away = away + (to - away) * ease(u);
     }
     return clamp(away, 0, 1);
 }
+// The cross-fade at chapter second s: the shelf copy's opacity (the tray one has 1 minus it). Same start and end as riderAway; a gentler
+// ease (smoothstep), so the fade is seen over most of the 0.4 s.
+export const fadeEase = u => { u = clamp(u, 0, 1); return u * u * (3 - 2 * u); };
+export const riderFade = (timeline, s, handoff = HANDOFF_S) => riderAway(timeline, s, handoff, fadeEase);
 // The state in words for the panel and the tests: { where: 'tray' | 'shelf' | 'to shelf' | 'to tray', away }.
 export function riderState(timeline, s, handoff = HANDOFF_S) {
     const away = riderAway(timeline, s, handoff);

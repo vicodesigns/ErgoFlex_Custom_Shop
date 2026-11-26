@@ -167,7 +167,7 @@ const edit0 = d => d.shot.trayEdits?.[0];
     // the stage: the live track, the info and the pick; the player pushes every edit
     for (const n of ['trayEditsTrack:async(edits,id)', 'trayInfo:()=>', 'trayAt:(cx,cy)=>']) assert.ok(stage.includes(n), n);
     assert.ok(player.includes('stage().trayEditsTrack?.(effectiveTrayEdits(filmSetup(shots[index].id),shots[index]),shots[index].id)'), 'the player pushes the tray keys with every edit, as the desk clips');
-    assert.ok(/activeTrayEdit\(edits,trayPreset\)/.test(stage) && stage.includes("await import('./tray-rig.mjs')"), 'the rig only for an active edit');
+    assert.ok(/activeTrayEdit\(edits,trayPreset\)/.test(stage) && stage.includes("await import('./tray-rig.mjs?v=rider-fade-20261125')"), 'the rig only for an active edit');
     assert.equal(deleteTarget(null, { trayKey: true }), 'tray-key'); assert.equal(deleteTarget({ kind: 'camera', key: 'x' }, { trayKey: true }), 'tray-key'); assert.equal(deleteTarget({ kind: 'camera', key: 'x' }), 'camera'); assert.equal(deleteTarget(null, {}), null);
     // 44 px under (pointer: coarse); tray-mode.css has the lane and the panel and is linked before director-phone.css
     const phone = read('experience/director-phone.css'), css = read('experience/tray-mode.css'), html = read('experience/index.html');
