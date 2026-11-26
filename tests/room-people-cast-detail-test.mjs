@@ -26,7 +26,7 @@ globalThis.localStorage ??= { getItem: () => null, setItem() {}, removeItem() {}
 
 const { RoomPeople, ROOM_PEOPLE, partOf, classicRig, castDetailRoom } = await import('../room-people.mjs');
 const { PersonRig } = await import('../room-people-motion.mjs');
-const { castDetailCast, castDetailEnsure, prepareMediaCast, mediaPersonMaterial, castDetailTouches } = await import('../media-cast-finishes.mjs');
+const { castDetailCast, castDetailEnsure, prepareMediaCast, mediaPersonMaterial, castDetailTouches, castDetailVariant, softHairChunks, softHairEdge, coilTaper, rootsTaper, COIL_TAPER, FABRIC_SCALE, HAIR_FRINGE, HAIR_SHEEN, SKIN_GLOSS, ROOTS_HAIR, IRIS_TONE } = await import('../media-cast-finishes.mjs');
 const { disposeWorkspaceObject } = await import('../workspace-3d.mjs');
 const index = JSON.parse(fs.readFileSync(path.join(root, 'assets/props/index.json'), 'utf8'));
 const entries = new Map(index.props.map(p => [p.id, p]));
@@ -233,7 +233,8 @@ assert.ok(seen.hijab && seen.styled && seen.unstyled && seen.bald, 'the rooms\' 
         assert.ok(k < HAIR_ATLASES.length && i >= 0 && i < 8, cut + ' tile in range');
         const style = hairKey(cut); assert.ok(style, cut + ' has a style');
         const [width, height] = dimensions[k];
-        for (const t of [style.normal, style.direction, style.edge]) {
+        // (the two coil crops' edge map is their own tapered hairline, not a tile of the atlas: section 4c)
+        for (const t of COIL_TAPER['Human.' + cut] ? [style.normal, style.direction] : [style.normal, style.direction, style.edge]) {
             assert.ok(Math.abs(t.repeat.x - 504 / width) < 1e-9 && Math.abs(t.repeat.y - 504 / height) < 1e-9, cut + ' tile size');
             assert.ok(Math.abs(t.offset.x - ((i % 4) * 512 + 4) / width) < 1e-9 && Math.abs(t.offset.y - (Math.floor(i / 4) * 512 + 4) / height) < 1e-9, cut + ' tile offset');
         }
@@ -255,6 +256,88 @@ assert.ok(seen.hijab && seen.styled && seen.unstyled && seen.bald, 'the rooms\' 
     assert.ok(slots > 1400, 'the library has cut-out hair: ' + slots);
     assert.ok(covered / slots > .93, 'at least 93% of the library\'s cut-out hair has strand maps: ' + covered + ' of ' + slots);
     for (const [name, n] of Object.entries(counts)) if (!shared.hair.has(name) && n > 20) assert.ok(['Human.culturalibre_hair_05'].includes(name), name + ' (' + n + ' models) has no strand maps and is not a known gap');
+}
+
+// ---- 4c. the people pass of 25 Nov 2026: soft hair edges, tapered coil and roots hairlines, cloth at the size it is worn,
+// skin without the lacquer, matt lashes
+{
+    // soft hair edges: a cut-out hair material is alphaTest + alphaToCoverage + alphaHash, keeps the canvas opaque, and a clone keeps all of it
+    const src = new THREE.MeshStandardMaterial({ name: 'Human.ponytail01', alphaTest: .4 }); src.map = new THREE.Texture();
+    const hair = mediaPersonMaterial(src, shared, 'hair');
+    assert.ok(hair.alphaTest > 0 && hair.alphaTest <= .18 && hair.alphaToCoverage && hair.alphaHash && !hair.transparent, 'cut-out hair: the soft edge switch, still a solid draw');
+    assert.ok(hair.blending === THREE.CustomBlending && hair.blendSrc === THREE.OneFactor && hair.blendDst === THREE.ZeroFactor && hair.blendSrcAlpha === THREE.OneFactor && hair.blendDstAlpha === THREE.OneMinusSrcAlphaFactor, 'part-covered hair pixels leave the canvas opaque');
+    const copy = hair.clone(); assert.ok(copy.alphaHash && copy.alphaToCoverage && copy.alphaTest === hair.alphaTest && copy.blending === THREE.CustomBlending, 'a person\'s own copy keeps the soft edge');
+    assert.equal(hair.sheen, HAIR_SHEEN.strength); assert.ok(hair.sheen < .2, 'no silvery film on dark hair');
+    // the chunks: only the three-way combination takes the soft path; everything else compiles what three ships
+    const chunks = { alphatest_fragment: 'TEST', alphahash_fragment: 'HASH' };
+    softHairChunks(chunks);      // (the real chunks were patched when the first hair was finished: this call is the once-only guard)
+    assert.deepEqual(chunks, { alphatest_fragment: 'TEST', alphahash_fragment: 'HASH' }, 'the chunks are patched once');
+    const test = THREE.ShaderChunk.alphatest_fragment, hash = THREE.ShaderChunk.alphahash_fragment, combo = 'defined( USE_ALPHATEST ) && defined( ALPHA_TO_COVERAGE ) && defined( USE_ALPHAHASH )';
+    assert.ok(test.startsWith('#if !( ' + combo + ' )') && test.includes('if ( diffuseColor.a < alphaTest ) discard;') && test.includes('smoothstep( alphaTest, alphaTest + fwidth( diffuseColor.a ), diffuseColor.a )'), 'alpha test: three\'s own code but for the soft combination');
+    assert.ok(hash.startsWith('#if ' + combo) && hash.includes('#else') && hash.includes('if ( diffuseColor.a < getAlphaHashThreshold( vPosition ) ) discard;'), 'alpha hash: three\'s own code but for the soft combination');
+    assert.ok(hash.includes(HAIR_FRINGE.width.toFixed(3)) && hash.includes('getAlphaHashThreshold( vPosition )') && hash.includes('efCover * min( efSolid, 1.0 )'), 'the fringe is coverage, broken up on the hair itself, and fades with the person');
+    const plain = softHairEdge(new THREE.MeshStandardMaterial({ name: 'Human.shirt' })); assert.ok(!plain.alphaHash && !plain.alphaToCoverage, 'a material that is not a cut-out is left alone');
+
+    // the coil crops taper to their hairline: nothing on the rim, everything beyond `to`, the same every time
+    for (const [name, taper] of Object.entries(COIL_TAPER)) {
+        const style = shared.hair.get(name), t = style.edge, d = t.image.data, w = t.image.width, h = t.image.height, row = y => { let s = 0; for (let x = 0; x < w; x++) s += d[(y * w + x) * 4 + 1]; return s / w / 255; };
+        assert.ok(t.isDataTexture && t.flipY === false && t.wrapS === THREE.RepeatWrapping && t.repeat.x === 1, name + ': a taper map of its own');
+        assert.ok(row(h - 1) < .3 && row(Math.round(h * (1 - taper.to)) - 2) === 1 && row(0) === 1, name + ': thin at the hairline (v = 1), solid from `to` up to the crown');
+        const mid = row(Math.round(h * (1 - (taper.from + taper.to) / 2))); assert.ok(mid > .35 && mid < .75, name + ': half way through the taper about half is there (' + mid.toFixed(2) + ')');
+        assert.deepEqual([...coilTaper(taper).image.data.slice(0, 4096)], [...coilTaper(taper).image.data.slice(0, 4096)], name + ': the same flecks every time');
+        const coil = mediaPersonMaterial(Object.assign(new THREE.MeshStandardMaterial({ name, alphaTest: .3 }), { map: new THREE.Texture() }), shared, 'hair');
+        assert.equal(coil.alphaMap, t, name + ': the taper is the finished material\'s alpha map'); assert.ok(coil.alphaHash, name + ': with the soft edge');
+    }
+
+    // the brushed roots: the rings in from the rim become vertex alpha; the roots' finish is a soft cut-out; a hijab is still left alone
+    const cap = new THREE.SphereGeometry(1, 16, 8, 0, Math.PI * 2, 0, Math.PI / 2);      // a dome: pole on top, an open rim at the equator
+    assert.equal(rootsTaper(cap), true); const alpha = cap.getAttribute('color'), pos = cap.getAttribute('position');
+    assert.equal(alpha.itemSize, 4);
+    for (let i = 0; i < pos.count; i++) { const y = pos.getY(i), a = alpha.getW(i); assert.ok(alpha.getX(i) === 1 && alpha.getY(i) === 1 && alpha.getZ(i) === 1); if (y < 1e-6) assert.equal(a, 0, 'nothing on the rim'); else if (y > .75) assert.equal(a, 1, 'everything near the crown'); else assert.ok(a > 0 && a <= 1); }
+    assert.equal(rootsTaper(cap), false, 'counted once per geometry');
+    assert.equal(rootsTaper(new THREE.SphereGeometry(1, 8, 6)), false, 'a closed shell has no rim: left as it is');
+    const rootsSrc = new THREE.MeshStandardMaterial({ name: 'Human.brushed_roots_hair', roughness: .82 }); rootsSrc.map = new THREE.Texture();
+    assert.ok(ROOTS_HAIR.test(rootsSrc.name) && castDetailTouches(rootsSrc, 'hair'), 'the roots take a finish');
+    const roots = castDetailVariant(rootsSrc, shared, 'hair');
+    assert.ok(roots !== rootsSrc && roots.vertexColors && roots.alphaTest === .18 && roots.alphaHash && roots.alphaToCoverage && !roots.transparent, 'the roots\' rim is a soft cut-out');
+    assert.ok(!rootsSrc.vertexColors && rootsSrc.alphaTest === 0, 'the library\'s own roots material is untouched (the Classic casts keep the solid shell)');
+    const scarf = new THREE.MeshStandardMaterial({ name: 'Human.headscarf_hair' }); assert.equal(castDetailTouches(scarf, 'hair'), false, 'a hijab keeps its own material');
+
+    // cloth at the size it is worn: views of the two weave maps with their own repeat, the old ones untouched
+    assert.deepEqual([shared.textiles.stockinette.normal.repeat.x, shared.textiles.twill.normal.repeat.x], [5, 7], 'the room textiles\' repeats are as they were');
+    for (const [kind, [from, repeat]] of Object.entries(FABRIC_SCALE)) {
+        const f = shared.textiles[kind]; assert.ok(repeat >= 10, kind + ': a stitch of millimetres, not a centimetre');
+        assert.ok(f.normal !== shared.textiles[from].normal && f.normal.source === shared.textiles[from].normal.source && f.orm.source === shared.textiles[from].orm.source, kind + ': a view of the ' + from + ' maps (no second image)');
+        assert.ok(f.normal.repeat.x === repeat && f.normal.repeat.y === repeat && f.orm.repeat.x === repeat && f.normal.wrapS === THREE.RepeatWrapping, kind + ': repeat ' + repeat);
+    }
+    const cloth = (name, part) => mediaPersonMaterial(Object.assign(new THREE.MeshStandardMaterial({ name }), { map: new THREE.Texture() }), shared, part);
+    assert.equal(cloth('Human.joepal_crude_t-shirt_female', 'top').normalMap, shared.textiles.jersey.normal, 'a T-shirt is jersey');
+    assert.equal(cloth('Human.namuhekam_male_polo_shirt', 'top').normalMap, shared.textiles.jersey.normal, 'a polo is jersey');
+    assert.equal(cloth('Human.toigo_fisherman_sweater', 'top').normalMap, shared.textiles.knit.normal, 'a sweater is a heavier knit');
+    assert.equal(cloth('Human.toigo_wool_pants', 'bottom').normalMap, shared.textiles.woven.normal, 'trousers are woven');
+    assert.equal(cloth('Human.toigo_wool_pants', 'bottom').roughnessMap, shared.textiles.woven.orm);
+    const ownNormal = new THREE.Texture(), cargo = mediaPersonMaterial(Object.assign(new THREE.MeshStandardMaterial({ name: 'Human.cortu_cargo_pants' }), { map: new THREE.Texture(), normalMap: ownNormal }), shared, 'bottom');
+    assert.equal(cargo.normalMap, ownNormal, 'a garment with folds of its own keeps them');
+
+    // skin and lashes
+    const skin = mediaPersonMaterial(Object.assign(new THREE.MeshStandardMaterial({ name: 'Human.body' }), { map: new THREE.Texture() }), shared, null);
+    assert.ok(skin.roughness === SKIN_GLOSS.roughness && skin.roughness >= .6 && skin.clearcoat === SKIN_GLOSS.coat && skin.clearcoat <= .06 && skin.ior === 1.4 && skin.sheen > 0, 'skin: no lacquer, the warm grazing sheen stays');
+    const lash = mediaPersonMaterial(new THREE.MeshStandardMaterial({ name: 'Human.eyelashes02', alphaTest: .4, roughness: .5 }), shared, null), brow = mediaPersonMaterial(new THREE.MeshStandardMaterial({ name: 'Human.eyebrow001', alphaTest: .2, roughness: .5 }), shared, null);
+    assert.ok(lash.roughness === 1 && lash.envMapIntensity === 0 && lash.transparent && !lash.depthWrite, 'lashes: matt, no mirror of the room, still blended cards');
+    assert.ok(brow.roughness === .9 && brow.envMapIntensity < .5 && brow.transparent, 'brows: nearly matt');
+
+    // brown eyes: the eyeball's shader turns the maroon iris brown (and nothing else), and a clone keeps the shader
+    const eye = mediaPersonMaterial(Object.assign(new THREE.MeshStandardMaterial({ name: 'Human.low-poly' }), { map: new THREE.Texture() }), shared, null);
+    const shader = { fragmentShader: 'A\n#include <common>\nB\n#include <map_fragment>\nC\n#include <emissivemap_fragment>\nD' }; eye.onBeforeCompile(shader);
+    assert.ok(shader.fragmentShader.includes('vec3 efIrisTone( vec3 c )') && shader.fragmentShader.includes('#include <map_fragment>\n\tdiffuseColor.rgb = efIrisTone( diffuseColor.rgb );') && shader.fragmentShader.includes('#include <emissivemap_fragment>\n\ttotalEmissiveRadiance = efIrisTone( totalEmissiveRadiance );'), 'the iris tone is in the eyeball\'s shader, for what it reflects and what it gives off');
+    const eyeCopy = eye.clone(), again = eyeCopy.clone();
+    assert.ok(eyeCopy.onBeforeCompile === eye.onBeforeCompile && again.onBeforeCompile === eye.onBeforeCompile && eyeCopy.customProgramCacheKey() === eye.customProgramCacheKey() && eyeCopy.clearcoat === 1 && eyeCopy.emissiveMap === eye.map, 'a person\'s own copy of the eyeball keeps the shader');
+    assert.notEqual(eye.customProgramCacheKey(), new THREE.MeshPhysicalMaterial().customProgramCacheKey(), 'and compiles a program of its own');
+    // the same arithmetic as the shader: maroon turns brown at the same brightness x gain; the white of the eye, a blue iris and the pupil stay
+    const tone = c => { const red = (c[0] - Math.max(c[1], c[2])) / Math.max(c[0], 1e-4), lum = .2126 * c[0] + .7152 * c[1] + .0722 * c[2], t = Math.min(1, Math.max(0, (red - IRIS_TONE.from) / (IRIS_TONE.to - IRIS_TONE.from))), w = t * t * (3 - 2 * t); return c.map((v, i) => v + (lum * IRIS_TONE.hue[i] * IRIS_TONE.gain - v) * w); };
+    const maroon = tone([.102, .013, .010]); assert.ok(maroon[1] / maroon[0] > .35 && maroon[1] / maroon[0] < .5 && maroon[2] < maroon[1], 'the maroon iris is a brown one: ' + maroon.map(v => v.toFixed(3)));
+    for (const keep of [[.209, .191, .175], [.05, .12, .3], [0, 0, 0], [.6, .45, .4]]) assert.deepEqual(tone(keep).map(v => +v.toFixed(6)), keep, 'left as it is: ' + keep);
+    assert.ok(Math.abs(.2126 * IRIS_TONE.hue[0] + .7152 * IRIS_TONE.hue[1] + .0722 * IRIS_TONE.hue[2] - 1) < .01, 'the brown hue has a brightness of one: the gain is the only change of brightness');
 }
 
 // ---- 5. disposal: a room going away never takes the shared maps

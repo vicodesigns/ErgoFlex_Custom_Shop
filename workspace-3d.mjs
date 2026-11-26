@@ -1,4 +1,5 @@
 import { faceData, prepareFace } from './people-face.mjs';
+import { rootsTapers } from './media-cast-finishes.mjs';
 import {measureHeadphoneSockets,isDeskHeadphone,markDeskHeadphones,finishHeadphonePlug} from './desk-headphone-hook.mjs';
 import {shelfStorageSpace} from './desk-shelf-space.mjs';
 import { finishTriangleTable } from './triangle-table-finishes.mjs?v=table-clearance-20261021';
@@ -127,6 +128,7 @@ export const PROP_LIBRARY = {
                 if (skinned) {
                     const rig = gltf.scene, still = new THREE.Group();
                     prepareFace(rig, face, id);
+                    rootsTapers(rig);      // (brushed hair roots: the rings in from their rim, for the soft hairline of the cast finishes; the still copy below shares the geometry)
                     still.name = rig.name; rig.updateMatrixWorld(true);
                     rig.traverse(obj => {
                         if (!obj.isMesh) return;
