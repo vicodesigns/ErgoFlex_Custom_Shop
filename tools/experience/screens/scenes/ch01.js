@@ -140,7 +140,8 @@
       backdrop(t, {top: '#08101e', bot: '#04060b', blobs: [[C.blue, .16], [C.violet, .06]]});
       const p = pose(t), ui = eo(seg(t, BOOT - .2, BOOT + .8)), endLogo = sm(seg(t, B.end, B.end + 1.2));
       // ---- main UI
-      alpha(ui * (1 - endLogo * .85), () => {
+      // The dashboard leaves completely under the end logo: only the lockup stays on the screen (Vico, Nov 26 2026).
+      alpha(ui * (1 - endLogo), () => {
         at(0, (1 - ui) * 40, 1, () => {
           // header
           appIcon(78, 70, 64, {glow: true});
@@ -227,9 +228,10 @@
         const k = t < EARLY ? eo(seg(t, ON, ON + 1.2)) : eo(seg(t, B.end, B.end + 1.6));
         g.fillStyle = rad(W / 2, H / 2, 700, [[0, hexA(C.blue, .22 * la)], [1, 'rgba(0,0,0,0)']]); g.fillRect(0, 0, W, H);
         logo(W / 2, H / 2 - 30, lerp(760, 820, k), 1, {glow: hexA(C.blue2, .6), glowR: 50});
-        T(t < EARLY ? 'Connecting to your desk' : 'Your partner in health', W / 2, H / 2 + 120, 40, {w: 500, a: 'center', c: C.soft});
+        if (t < EARLY) T('Connecting to your desk', W / 2, H / 2 + 120, 40, {w: 500, a: 'center', c: C.soft});
+        else T('Your partner in health', W / 2, H / 2 + 125, 52, {w: 500, a: 'center', c: C.soft});
         if (t < EARLY) bar(W / 2 - 220, H / 2 + 170, 440, 10, eo(seg(t, ON + .2, BOOT)), C.blue);
-        else { T(`${p.height.toFixed(1)} in  ·  ${Math.round(p.tilt)}°  ·  synced`, W / 2, H / 2 + 180, 32, {w: 600, a: 'center', c: C.blue2}); }
+        else { T(`${p.height.toFixed(1)} in  ·  ${Math.round(p.tilt)}°  ·  synced`, W / 2, H / 2 + 190, 32, {w: 600, a: 'center', c: C.blue2}); }
       });
       vignette(.45);
     },
