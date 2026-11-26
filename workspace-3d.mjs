@@ -39,6 +39,7 @@ import { buildMusicRoom, musicLayoutForSize, musicLayoutById, createMusicKeyboar
 import { buildArtistRoom, artistLayoutForSize, artistLayoutById } from './artist-room.mjs?v=polish-20261113b';
 import { buildArtistRoom as buildArtistRoomClassic } from './artist-room-classic.mjs';
 import { lookOf } from './room-looks.mjs';
+import { applyInteriorPass, finishInteriorPass } from './interior-cinema.mjs?v=interior-20261125a';
 import { buildStudyRoom, studyLayoutForSize, studyLayoutById } from './study-room.mjs?v=polish-20261113b';
 
 import { buildOfficeRoom, officeLayoutForSize, officeLayoutById } from './office-room.mjs?v=polish-20261113b';
@@ -1425,7 +1426,7 @@ export class WorkspaceRoom {
         this.decorateStation = null;
         this.homeAtmosphere = null; this.roomAtmosphere = null; this.decorateProp = null; this.migrateSavedTransform = null; this.migrateSavedAssets = null; this.propReplacements = null;
         this.propSupports = [];
-        this.homeLayout = null; this.roomLayout = null; this.ceilingFixture = null; this.ceilingSurface = null; this.bounce = null; this.life = null; this.windowViewReady = Promise.resolve();
+        this.interiorPass = null; this.homeLayout = null; this.roomLayout = null; this.ceilingFixture = null; this.ceilingSurface = null; this.bounce = null; this.life = null; this.windowViewReady = Promise.resolve();
         if (id === 'product') { this.ready = Promise.resolve(); return; }
         let scene = ROOM_SCENES.find(s => s.id === id);
         if (INSTITUTIONAL_ROOMS[id]) {
@@ -1514,6 +1515,8 @@ export class WorkspaceRoom {
             this.buildCeiling();
             if(!this.roomLayout.customLife) this.life = new RoomLife(this, { material, mesh, box, rod, sphere, markSceneAsset });
             refineRoomSurfaces(this);
+            // Film and Director only: the interior pass (interior-cinema.mjs) shapes the light on the finished shell.
+            applyInteriorPass(this, { material, mesh, box, rod, sphere });
         }
         const token = this.token;
         this.ready = Promise.all([this.windowViewReady, this.addProps(root, scene, this.token),
@@ -1526,6 +1529,7 @@ export class WorkspaceRoom {
                 this.life?.bind();
                 const life=this.life;
                 if (life) { await PROP_LIBRARY.loadIndex(); if(token===this.token) await life.decorate(PROP_LIBRARY,()=>token===this.token); }
+                if (token === this.token) finishInteriorPass(this);
             }
         });
         this.people = new RoomPeople(this, PROP_LIBRARY);

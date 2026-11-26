@@ -93,7 +93,8 @@ async function stage(browser){
     console.log(`[provenance] state-keys rev ${st.rev}: ${got.map(k=>k+'@'+st.keys[k].rev).join(' ')||'none'}`);
     opts.__overlay=Object.fromEntries(got.map(k=>[k,st.keys[k].value]));if(seed0)opts.storage=null;}
   if(opts.storage||opts.__overlay){let seed=opts.storage?JSON.parse(fs.readFileSync(opts.storage,'utf8')):{};if(seed.format==='ergoflex-studio-state-v1')seed=Object.fromEntries(Object.entries(seed.keys).filter(([,r])=>!r.deleted).map(([k,r])=>[k,r.value]));if(opts.__overlay)Object.assign(seed,opts.__overlay);await page.evaluate(s=>{localStorage.clear();for(const [k,v] of Object.entries(s))localStorage.setItem(k,v);},seed);}
-  await page.evaluate(()=>{document.documentElement.innerHTML='<body style="margin:0;background:#000"><iframe id="s" style="width:1280px;height:720px;border:0" src="/?view=product&presentation=1&tour=1"></iframe></body>';});
+  // --interior 1 (or 1,-washes,…; 0 = off, the default): the interior pass switch (interior-cinema.mjs), for before/after renders
+  await page.evaluate(interior=>{document.documentElement.innerHTML='<body style="margin:0;background:#000"><iframe id="s" style="width:1280px;height:720px;border:0" src="/?view=product&presentation=1&tour=1'+interior+'"></iframe></body>';},opts.interior!==undefined?'&interior='+encodeURIComponent(opts.interior):'');
   const frame=await (await page.waitForSelector('#s')).contentFrame();
   await frame.waitForFunction(()=>window.ErgoPresentation,{timeout:180000});
   const rm=await frame.evaluate(()=>matchMedia('(prefers-reduced-motion: reduce)').matches);
