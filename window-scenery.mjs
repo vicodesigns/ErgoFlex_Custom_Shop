@@ -50,13 +50,24 @@ export const DEFAULT_VIEW = { '*': 'scenery' };
 // A scene may adjust any of these for its place (SCENES[name].hours), e.g. a marine layer or a city's glow.
 // Party is an ordinary late evening outside (the room's own party lights carry the mood; M7 of the November 13 review).
 export const HOURS = {
-    morning:   { tint: [1.0, .95, .86], zenith: '#467fb4', horizon: '#e2c99e', sun: [-52, 13, '#ffe2b0', .8], light: [.56, .79], clouds: .45, lamp: 0, haze: .22, air: '#b6c3c6', stars: 0 },
-    afternoon: { tint: [.98, .99, .97], zenith: '#246dac', horizon: '#92c0dc', sun: [48, 50, '#fff4e2', .45], light: [.52, .83], clouds: .34, lamp: 0, haze: .12, air: '#9fb9cd', stars: 0 },
-    evening:   { tint: [.78, .62, .55], zenith: '#4d5886', horizon: '#e5a076', sun: [38, 5, '#ff9f5c', 1.0], light: [.6, .75], clouds: .55, lamp: .5, haze: .31, air: '#ae8c86', stars: 0 },
+    morning:   { tint: [1.0, .95, .86], zenith: '#467fb4', horizon: '#e2c99e', sun: [-19.8, 30.3, '#ffe2b0', .8], light: [.56, .79], clouds: .45, lamp: 0, haze: .22, air: '#b6c3c6', stars: 0 },
+    afternoon: { tint: [.98, .99, .97], zenith: '#246dac', horizon: '#92c0dc', sun: [6.8, 55.2, '#fff4e2', .45], light: [.52, .83], clouds: .34, lamp: 0, haze: .12, air: '#9fb9cd', stars: 0 },
+    evening:   { tint: [.78, .62, .55], zenith: '#4d5886', horizon: '#e5a076', sun: [25.6, 16.1, '#ff9f5c', 1.0], light: [.6, .75], clouds: .55, lamp: .5, haze: .31, air: '#ae8c86', stars: 0 },
     night:     { tint: [.11, .135, .21], zenith: '#09101f', horizon: '#1d2a40', sun: [30, 36, '#c9d6f0', .22], light: [.8, .3], clouds: .2, lamp: 1, haze: .45, air: '#151d30', stars: 1 },
     party:     { tint: [.13, .14, .22], zenith: '#0c1226', horizon: '#2a2a40', sun: [-40, 30, '#d0d4ec', .2], light: [.8, .3], clouds: .25, lamp: 1, haze: .45, air: '#1b1e30', stars: .6 }
 };
-export const hourOf = (name, id) => ({ ...(HOURS[id] || HOURS.afternoon), ...(SCENES[name]?.hours?.all || {}), ...(SCENES[name]?.hours?.[id] || {}) });
+// Where the sun stands by day is not a scene's choice: it is where the room's own key light comes from, so the shade
+// outside falls the way the shadows on the room's floor do. room-refinement.mjs configureRoomLightRig aims the key
+// along the window's outward direction plus `sweep` along the wall, `elevation` up (DAY_ANGLES); as degrees to the
+// right of straight out and degrees up that is RIG_SUN. A scene whose room has its own angles says so (`rig`: the
+// yard, for the workshop's broad day light). The moon after dark stays the hour's own (the rig is a ceiling wash then).
+// In a built room setHour goes further and takes the rig's very direction (below).
+export const RIG_SUN = { morning: [-19.8, 30.3], afternoon: [6.8, 55.2], evening: [25.6, 16.1] };
+export const hourOf = (name, id) => {
+    const h = { ...(HOURS[id] || HOURS.afternoon), ...(SCENES[name]?.hours?.all || {}), ...(SCENES[name]?.hours?.[id] || {}) }, rig = SCENES[name]?.rig?.[id] || RIG_SUN[id];
+    if (rig) h.sun = [rig[0], rig[1], h.sun[2], h.sun[3]];
+    return h;
+};
 
 // The sight line from the camera to this point crosses one of the wall's openings (rectangles in the window's frame:
 // centre openAt.xy at depth openAt.z, half size openHalf; the room on +z). False from outside the wall.
@@ -79,11 +90,11 @@ const VERTEX = `
 #ifdef CANOPY
 attribute vec3 canopy; uniform vec3 shadeHour; varying float vCanopy;
 #endif
-attribute vec3 tone; attribute vec3 glow; varying vec3 vTone; varying vec3 vGlow; varying vec3 vWorld; varying vec3 vFrame; varying vec3 vNormal; varying float surfaceTag;
+attribute vec3 tone; attribute vec3 glow; attribute vec4 kind; varying vec3 vTone; varying vec3 vGlow; varying vec3 vWorld; varying vec3 vFrame; varying vec3 vNormal; varying float surfaceTag; varying vec4 vKind;
 #ifdef LEAVES
 uniform float weatherSeconds; varying vec2 vUv;
 #endif
-void main() { vTone = tone; vGlow = glow; vFrame = position; vNormal = normal;
+void main() { vTone = tone; vGlow = glow; vFrame = position; vNormal = normal; vKind = kind;
     // The packed length identifies the material at each vertex. Taking
     // length after interpolating curved normals can turn masonry into glass.
     surfaceTag = length(normal);
@@ -113,16 +124,34 @@ uniform sampler2D noiseMap;
 #ifdef LEAVES
 uniform sampler2D leafMap; varying vec2 vUv;
 #endif
-varying vec3 vTone; varying vec3 vGlow; varying vec3 vWorld; varying vec3 vFrame; varying vec3 vNormal; varying float surfaceTag;
+varying vec3 vTone; varying vec3 vGlow; varying vec3 vWorld; varying vec3 vFrame; varying vec3 vNormal; varying float surfaceTag; varying vec4 vKind;
 ${PORTAL}
 float cellHash(vec2 p) { return fract(sin(dot(p, vec2(41.3, 289.1))) * 43758.5453); }
+// Brickwork: stretcher bond, each brick its own shade, the joints a little recessed. px: the millimetres one pixel
+// covers here; the pattern goes out before it is finer than the pixels (no shimmer on far walls).
+float brickwork(vec2 at, float px) {
+    float row = floor(at.y / 86.); vec2 bc = vec2(at.x / 230. + .5 * mod(row, 2.), at.y / 86.), bf = fract(bc);
+    float joint = max(1. - smoothstep(.03, .13, min(bf.y, 1. - bf.y)), 1. - smoothstep(.012, .05, min(bf.x, 1. - bf.x)));
+    return mix(1., (.84 + .3 * cellHash(floor(bc))) * (1. - .26 * joint), 1. - smoothstep(.16, .5, px / 86.));
+}
 void main() {
     if (!throughWindow(vWorld)) discard;
     vec3 tone = vTone, lit = vec3(0.);
+    vec3 eye = isOrthographic ? mat3(portalInv) * vec3(viewMatrix[0][2], viewMatrix[1][2], viewMatrix[2][2])
+                              : (portalInv * vec4(cameraPosition, 1.)).xyz - vFrame;
     #ifdef LEAVES
     if (vUv.x >= 0.) { vec4 t = texture2D(leafMap, vUv); float lod = log2(max(length(dFdx(vUv)), length(dFdy(vUv))) * 512.);
         if (t.a * (1. + clamp(lod, 0., 5.) * .3) < .45) discard; tone *= t.r * 1.4; }   // (alpha holds up in the small mip levels, so far crowns keep their mass)
-    else tone *= .78 + .44 * texture2D(noiseMap, vFrame.xy / 2600.).b;
+    else {
+        // The mass inside a crown is leaves in shade, not a balloon: it takes the small-leaf cell of the atlas, laid
+        // on from the side it faces, so what shows between the outer sprays (and from below) is leaf and gap, and
+        // it breaks up where it turns away from the eye.
+        vec3 an = abs(normalize(vNormal)); vec2 lp = (an.y > an.x && an.y > an.z ? vFrame.xz : an.x > an.z ? vFrame.zy : vFrame.xy) / 560.;
+        vec4 t = textureGrad(leafMap, vec2(.02, .52) + fract(lp) * .46, dFdx(lp) * .46, dFdy(lp) * .46);
+        float clump = texture2D(noiseMap, vFrame.zy / 3300. + vFrame.x / 2700.).b, turn = 1. - abs(dot(normalize(vNormal), normalize(eye)));
+        if (turn > .5 + .45 * t.a) discard;
+        tone *= mix(.5, .62 + .95 * t.r, smoothstep(.25, .6, t.a)) * (.72 + .56 * clump);
+    }
     #endif
     // Keep colour in the first few metres. The distant ridge still merges into the sky.
     float d = max(0., length(vFrame.xz) / hazeFar - .045);
@@ -136,8 +165,6 @@ void main() {
     if (surfaceTag < .3 || nl < .001) light = tint * (ambient + sunShare * .3);
     #ifndef LEAVES
     else if (surfaceTag > .38 && surfaceTag < .42) {
-        vec3 eye = isOrthographic ? mat3(portalInv) * vec3(viewMatrix[0][2], viewMatrix[1][2], viewMatrix[2][2])
-                                  : (portalInv * vec4(cameraPosition, 1.)).xyz - vFrame;
         vec3 n = vNormal / nl, ray = reflect(-normalize(eye), n);
         float grazing = 1. - abs(dot(n, normalize(eye)));
         float sky = smoothstep(-.17, .42, ray.y + .09 * texture2D(noiseMap, ray.xz * .8).r);
@@ -152,22 +179,74 @@ void main() {
         ndl = max(ndl * .55 + .45, 0.);
         #else
         ndl = surfaceTag < .72 ? abs(ndl) * .75 : max(ndl, 0.);
-        if (surfaceTag > .72 && surfaceTag < .93) {   // a facade drawn as a grid of windows (far blocks and towers): glass darker, a few lit after dark
-            vec2 fc = vec2(abs(n.x) > .7 ? vFrame.z : vFrame.x, vFrame.y) / vec2(3300., 3400.), fw = fwidth(fc), f = fract(fc);
+        float px = length(fwidth(vFrame)), kid = floor(vKind.x * 255. + .5);   // (px: the millimetres a pixel covers here)
+        float alongWall = abs(n.x) > abs(n.z) ? vFrame.z : vFrame.x;
+        if (surfaceTag > .72 && surfaceTag < .93) {
+            // A facade drawn as a grid of windows (far blocks, towers, the roofscape): each building has its own bays,
+            // storey height and style (punched windows in brick or render, ribbon windows, a curtain wall), and near
+            // the glass the windows have their frames, a shaded head, blinds part way down and more sky in the top of
+            // each pane. All of that goes out with distance (sharp): a far tower is the plain grid it was.
+            float seed = kid == 1. ? vKind.w : 0.;
+            vec2 cell = seed > 0. ? vec2(2200. + vKind.y * 2400., 2900. + vKind.z * 1100.) : vec2(3300., 3400.);
+            vec2 fc = vec2(alongWall, vFrame.y) / cell, fw = fwidth(fc), f = fract(fc), id = floor(fc);
+            float style = fract(seed * 13.37), curtain = step(.72, style) * step(.001, seed), ribbon = step(.44, style) * (1. - curtain) * step(.001, seed);
+            vec2 lo = vec2(.26, .28), hi = vec2(.74, .8);
+            if (curtain > .5) { lo = vec2(.03, .13); hi = vec2(.97, .87); }
+            else if (ribbon > .5) { lo = vec2(-.2, .31); hi = vec2(1.2, .77); }
+            else if (seed > 0.) { float w = .18 + .13 * fract(seed * 5.3), t = .17 + .11 * fract(seed * 3.1); lo = vec2(w, t + .07); hi = vec2(1. - w, 1. - t + .07); }
             vec2 aa = clamp(.5 * fw, vec2(.001), vec2(.18));
-            vec2 inside = smoothstep(vec2(.26,.28)-aa, vec2(.26,.28)+aa, f)
-                        * (1.-smoothstep(vec2(.74,.8)-aa, vec2(.74,.8)+aa, f));
-            float blur = clamp(max(fw.x, fw.y) * 2.5 - .4, 0., 1.), win = inside.x * inside.y;
-            float on = step(cellHash(floor(fc)), facadeLit) * (.5 + .5 * cellHash(floor(fc) + 7.));
-            win = mix(win, .22, blur); on = mix(on * win, facadeLit * .15, blur);
-            float reflection = .5 + .5*sin(fc.x*.39 + fc.y*.17 + 1.6*sin(fc.y*.29));
-            vec3 glazing = mix(tone*.26, air*vec3(.44,.59,.68), .31+.37*reflection);
-            float sill = (1.-smoothstep(.025,.10,abs(f.y-.24))) * (1.-blur);
-            tone = mix(tone, glazing, win) * (1.-.15*sill);
+            vec2 inside = smoothstep(lo - aa, lo + aa, f) * (1. - smoothstep(hi - aa, hi + aa, f));
+            float blur = clamp(max(fw.x, fw.y) * 2.5 - .4, 0., 1.), sharp = 1. - blur, win = inside.x * inside.y;
+            float cover = seed > 0. ? (min(hi.x, 1.) - max(lo.x, 0.)) * (hi.y - lo.y) * .85 : .22;
+            float on = step(cellHash(id), facadeLit) * (.5 + .5 * cellHash(id + 7.));
+            win = mix(win, cover, blur); on = mix(on * win, facadeLit * .15, blur);
+            vec2 gp = clamp((f - lo) / (hi - lo), 0., 1.);                                   // where in the pane
+            float h1 = cellHash(id + 3. + seed * 91.), h2 = cellHash(id + 11. + seed * 13.);
+            // the wall between the windows: brick on half of the punched fronts, a string course under each row
+            if (seed > 0. && curtain < .5 && fract(seed * 29.3) < .5) tone *= brickwork(vec2(alongWall, vFrame.y), px);
+            if (curtain > .5) tone = mix(tone, tone * .5 + air * vec3(.2, .27, .32), .6);     // spandrel glass
+            float sill = (1. - smoothstep(.02, .085, abs(f.y - (lo.y - .04)))) * sharp;
+            tone *= 1. - .15 * sill;
+            float reflection = .5 + .5 * sin(fc.x * .39 + fc.y * .17 + 1.6 * sin(fc.y * .29));
+            vec3 glazing = mix(tone * .26, air * vec3(.44, .59, .68), .31 + .37 * reflection);
+            glazing = mix(glazing, air * vec3(.6, .73, .82), sharp * .34 * gp.y * gp.y);       // the sky in the top of the pane
+            glazing *= 1. - .5 * sharp * (1. - smoothstep(0., .075, 1. - gp.y));              // the head's shade on the glass
+            float blind = step(.5, h1) * step(1. - (.16 + .5 * h2), gp.y) * sharp;            // a blind part way down
+            glazing = mix(glazing, (mix(tone, vec3(dot(tone, vec3(.34))), .55) * 1.1 + .03) * (.93 + .07 * sin(gp.y * 140.)), blind * .82 * (1. - .5 * lamp));
+            float bars = ribbon > .5 || curtain > .5 ? 3. : 2., barAA = fw.x / (hi.x - lo.x) * bars;
+            float mullion = 1. - smoothstep(.035 * bars, .035 * bars + barAA, .5 - abs(fract(gp.x * bars) - .5));
+            float transom = (1. - smoothstep(.016, .016 + fw.y / (hi.y - lo.y), abs(gp.y - .7))) * step(.3, h2) * (1. - ribbon);
+            tone = mix(tone, glazing, win);
+            tone = mix(tone, mix(vTone * .4, vec3(.62, .63, .62) * dot(vTone, vec3(.6)), step(.5, fract(seed * 41.7)) * (1. - curtain)), max(mullion, transom) * win * sharp * .9);
             lit = vec3(1., .78, .52) * on * .45;
+        }
+        else if (kid == 2.) {
+            // Bark: long fibrous ridges up the trunk, from the noise stretched fourteen to one, laid round the bole
+            // from two sides so there is no seam; the ridges a little redder, the furrows dark.
+            float wx = n.x * n.x, wz = n.z * n.z, across = 90. + 260. * vKind.y;
+            vec4 fa = texture2D(noiseMap, vec2(vFrame.z / across, vFrame.y / (across * 14.))), fb = texture2D(noiseMap, vec2(vFrame.x / across, vFrame.y / (across * 14.)));
+            float fibre = dot((fa * wx + fb * wz) / max(wx + wz, 1e-4), vec4(.4, .3, .2, .1));
+            tone *= .42 + 1.25 * fibre;
+            tone = mix(tone, tone * vec3(1.14, .98, .88), smoothstep(.5, .72, fibre));
+        }
+        else if (kid == 3.) tone *= brickwork(vec2(alongWall, vFrame.y), px);
+        else if (kid == 4.) {
+            // Roof tiles: courses up the slope, each tile's lower edge in the next one's shade.
+            vec2 tc = vec2(vFrame.x / 250., vFrame.y / 150.); float course = floor(tc.y), up = fract(tc.y);
+            tone *= mix(1., (.78 + .34 * up) * (.9 + .2 * cellHash(vec2(floor(tc.x + .5 * mod(course, 2.)), course))), 1. - smoothstep(.16, .5, px / 150.));
         }
         vec2 g = abs(n.y) > .6 ? vFrame.xz : vec2(vFrame.x + vFrame.z, vFrame.y);
         tone *= .8 + .4 * dot(texture2D(noiseMap, g / 6400.), vec4(.36, .3, .22, .12));
+        // Close up a surface is never one flat colour: a fine grain on everything; rain streaks down walls; grass
+        // in blades, tufts and sun-dried patches where the ground is green; grit on paving and soil.
+        tone *= .9 + .2 * dot(texture2D(noiseMap, g / 730.), vec4(.2, .3, .3, .2));
+        if (abs(n.y) < .5) tone *= .9 + .2 * texture2D(noiseMap, vec2(g.x / 2300., g.y / 21000.)).g;
+        else if (n.y > .6) {
+            float green = smoothstep(.012, .075, tone.g - max(tone.r, tone.b * 1.12));
+            float blades = texture2D(noiseMap, g / 310.).a - .5, tufts = texture2D(noiseMap, g / 1900.).b - .5, patches = texture2D(noiseMap, g / 9000. + .37).r - .5;
+            tone *= 1. + green * (.5 * blades + .34 * tufts) + (1. - green) * (.3 * blades + .42 * tufts);
+            tone = mix(tone, tone * vec3(1.15, 1.04, .8), green * clamp(patches * 1.7 + .15, 0., 1.) * .55);
+        }
         #endif
         float direct = 1., fill = 1.;
         #ifdef CANOPY
@@ -227,12 +306,16 @@ vec3 seaAt(vec3 view, vec3 sunDir, vec2 spot) {
     float fromBeach = max(0., shoreZ*.001 - m.y - 7.*sin(m.x*.021));
     float shoal = exp(-fromBeach*.013) * (.55 + .45*offshore.g);
     c = mix(c, vec3(.045,.31,.29)*day, .72*shoal);
-    float sets = sin(m.y*.145 - weatherSeconds*.32 + 2.3*sin(m.x*.039 + m.y*.008) + 6.2*offshore.g);
+    // Real swell is not ruled lines: the crests bend, run out and come in groups. A slow noise shifts each
+    // train's phase along the coast and another gathers the waves into sets.
+    vec4 drift=texture2D(noiseMap,vec2(m.x/830.,m.y/470.)+.19);
+    float groups=smoothstep(.34,.66,texture2D(noiseMap,vec2(m.x/1900.,m.y/260.)+.57).g);
+    float sets = sin(m.y*.145 - weatherSeconds*.32 + 2.3*sin(m.x*.039 + m.y*.008) + 6.2*offshore.g + 7.*drift.r);
     float resolve=1.-smoothstep(.55,3.,fwidth(m.y*.145));
     float wind=.55+.45*sin(m.x*.025+m.y*.013+offshore.b*4.);
-    c+=vec3(.028,.078,.084)*day*(sets*.5+.5)*resolve*(.25+.75*wind)*(.4+.7*offshore.r);
-    float swell = m.y*.88 - weatherSeconds*1.15 + 1.7*sin(m.x*.13) + .68*sin(m.x*.39+m.y*.07);
-    float crest = .5+.5*sin(swell), detail=1.-smoothstep(.4,2.8,fwidth(swell));
+    c+=vec3(.028,.078,.084)*day*(sets*.5+.5)*resolve*(.25+.75*wind)*(.4+.7*offshore.r)*(.45+.55*groups);
+    float swell = m.y*.88 - weatherSeconds*1.15 + 1.7*sin(m.x*.13) + .68*sin(m.x*.39+m.y*.07) + 9.*drift.g + 3.*drift.b;
+    float crest = .5+.5*sin(swell), detail=(1.-smoothstep(.4,2.8,fwidth(swell)))*(.3+.7*groups);
     float ripple = sin(m.y*3.2 + m.x*.29 - weatherSeconds*2.2 + sin(m.x*.52));
     float streak = (crest*crest-.38)*detail + ripple*.15*(1.-smoothstep(.35,2.5,fwidth(m.y*3.2)));
     c *= 1.+.29*streak;
@@ -275,6 +358,12 @@ void main() {
     vec3 c = mix(horizon, zenith, 1. - exp(-max(up + .009, 0.) * 6.2));
     if (up < 0.) { c = mix(c, horizon * .92, smoothstep(0., .12, -up));            // below the horizon: the far air (behind the scenery)
         if (sea > .5) c = up > -.035 ? seaAt(dir, sunDir, dir.xz / max(-up, 1e-4) * 9e5) : mix(horizon, seaColor, .5); }   // beyond the modelled sea: more of it, to the horizon (lower down the sea mesh covers it: a plain colour there)
+    // The sky is not the same all the way round: low down it is warmer and brighter on the sun's side (the more so
+    // the lower the sun stands), a little deeper opposite. By day only: the moon does not warm the sky.
+    float day = clamp(dot(horizon, vec3(.24, .65, .11)) * 2.6, 0., 1.);
+    float toward = dot(normalize(dir.xz + 1e-5), normalize(sunDir.xz + 1e-5)) * .5 + .5, lowSky = exp(-max(up, 0.) * 4.5), lowSun = 1. - clamp(sunDir.y * 1.6, 0., 1.);
+    c += sunColor * sunPower * day * lowSky * toward * toward * toward * (.05 + .3 * lowSun);
+    c *= 1. - .14 * day * lowSky * (1. - toward) * lowSun;
     float s = max(dot(dir, sunDir), 0.), s2 = s * s, s5 = s2 * s2 * s, s40 = s5 * s5; s40 *= s40; s40 *= s40;
     c += sunColor * sunPower * (pow(s, 900.) * 1.6 + s40 * .32 + s5 * .1);
     // stars after dark: sparse soft points, fewer toward the horizon's glow
@@ -288,18 +377,23 @@ void main() {
         vec2 sheet = dir.xz * (.125 / max(up + .13, .11));
         vec2 wind = weatherSeconds * .0028 * vec2(1., .24);
         vec2 q = sheet + wind;
-        float mass = .70 * fbmT(q) + .30 * fbmT(q * 2.7 + .37);
+        // (a third, finer octave breaks the banks' edges into smaller heads)
+        float mass = .66 * fbmT(q) + .27 * fbmT(q * 2.7 + .37) + .07 * fbmT(q * 6.9 + wind * 1.6 + .71);
         float edge = .64 - .32 * clouds;
         float cover = smoothstep(edge, edge + .12, mass) * smoothstep(.002, .105, up);
+        float body = smoothstep(edge + .05, edge + .3, mass);                       // how deep into the bank: its belly is in its own shade
         float towardSun = fbmT(q + sunDir.xz * .045);
         float rim = clamp(.5 + (mass - towardSun) * 4.5, 0., 1.);
-        float day = clamp(dot(horizon, vec3(.24, .65, .11)) * 2.6, 0., 1.);
         vec3 shade = mix(zenith, horizon, .52) * .81;
         vec3 lit = mix(horizon, sunColor, .61 * day) * (1. + .23 * sunPower);
-        vec3 cloud = mix(shade, lit, .26 + .74 * rim);
+        vec3 cloud = mix(shade, lit, (.26 + .74 * rim) * (1. - .3 * body));
+        cloud += sunColor * sunPower * day * pow(s, 6.) * (1. - body) * .3;         // thin edges light up toward the sun
+        // Far banks stand in the same air as the land: paler and flatter toward the horizon, so the sky has depth.
+        float farAir = exp(-max(up, 0.) * 7.);
+        cloud = mix(cloud, mix(horizon, cloud, .5), farAir);
         float wisps = fbmT(sheet * vec2(2., 7.) + wind * .46 + vec2(.41, .76));
         c = mix(c, lit, smoothstep(.56, .77, wisps) * clouds * .32 * smoothstep(.01, .17, up));
-        c = mix(c, cloud, cover * .94);
+        c = mix(c, cloud, cover * .94 * (1. - .3 * farAir));
     }
     gl_FragColor = vec4(c * level, 1.);
     #include <tonemapping_fragment>
@@ -455,6 +549,14 @@ function world(panes, name, scene, options) {
         shared.tint.value.fromArray(h.tint); shared.air.value.set(h.air); shared.haze.value = h.haze; shared.lamp.value = h.lamp; shared.ambient.value = amb; shared.sunShare.value = sun;
         const s = sky.uniforms; s.zenith.value.set(h.zenith); s.horizon.value.set(h.horizon); s.sunColor.value.set(h.sun[2]); s.sunPower.value = h.sun[3]; s.clouds.value = h.clouds; s.stars.value = h.stars ?? 0;
         s.sunLocal.value.set(Math.sin(a) * Math.cos(e), Math.sin(e), Math.cos(a) * Math.cos(e));
+        // In a room whose light rig has run for this hour (root.userData.lighting, published before the room's
+        // atmosphere calls setHour), take the key light's very direction: a wall that is not the daylight wall then
+        // has the sun where it really is (off to one side, or behind the building: its land front-lit, no sun in its
+        // sky), and a room with its own angles needs no entry here.
+        for (let o = group.parent; o; o = o.parent) { const lit = o.userData?.lighting; if (!lit) continue;
+            if (lit.mode === id && lit.source === 'window-daylight' && Array.isArray(lit.direction)) { sync(); v.fromArray(lit.direction).transformDirection(o.matrixWorld);
+                if (out.lengthSq() > .5) s.sunLocal.value.set(v.dot(right), v.y, v.dot(out)).normalize(); }
+            break; }
         // the land's light in the window's frame (out is -z): the sun's direction and colour, the sky's and the ground's
         shared.sunDirF.value.set(s.sunLocal.value.x, s.sunLocal.value.y, -s.sunLocal.value.z);
         toneOf(shared.sunLight.value.set(h.sun[2]), .15); toneOf(shared.skyLight.value.copy(s.zenith.value).lerp(s.horizon.value, .35), .5);

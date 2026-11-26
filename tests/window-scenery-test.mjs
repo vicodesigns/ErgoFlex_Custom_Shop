@@ -2,8 +2,8 @@
 //   node tests/window-scenery-test.mjs
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import { attachScenery, windowView, HOURS, LEVEL, SCENES, DEFAULT_VIEW, hourOf, ORDER } from '../window-scenery.mjs';
-import { Builder, Leaves, LEAF, house, sharedTextures } from '../window-scenery-kit.mjs?v=polish-20261113b';   // (the stamp the scenery module imports it with: one instance)
+import { attachScenery, windowView, HOURS, LEVEL, SCENES, DEFAULT_VIEW, hourOf, ORDER, RIG_SUN } from '../window-scenery.mjs';
+import { Builder, Leaves, LEAF, KIND, house, redwood, rand, sharedTextures } from '../window-scenery-kit.mjs?v=polish-20261113b';   // (the stamp the scenery module imports it with: one instance)
 
 // Texture rows follow DataTexture storage. A needle card grows away from the stem
 // at row 238 of the upper-right tile.
@@ -206,5 +206,53 @@ for (const [name, storey] of [['beach-school', 4000], ['socal-campus', 8400]]) {
     assert.ok(Math.abs(sea.material.uniforms.shoreZ.value - b.max.z) < 1, name + ': shallows follow the near edge of the sea');
     assert.ok(deg > 6 && deg < 12, name + ': the sea from the horizon down to ' + deg.toFixed(1) + ' degrees'); view.dispose(); }
 
+// ---- the outdoor pass of November 25: the sun where the room's key light says, what surfaces are made of, the bole
+{ // RIG_SUN is room-refinement.mjs DAY_ANGLES (the window's outward plus `sweep` along the wall, `elevation` up) in the
+  // sky's terms; every scene's daytime sun stands there unless its room has its own angles (the workshop's yard)
+  const DAY_ANGLES = { morning: [.62, -.36], afternoon: [1.45, .12], evening: [.32, .48] }, deg = 180 / Math.PI;
+  for (const [id, [elevation, sweep]] of Object.entries(DAY_ANGLES)) {
+      assert.ok(Math.abs(RIG_SUN[id][0] - Math.atan(sweep) * deg) < .1 && Math.abs(RIG_SUN[id][1] - Math.atan(elevation / Math.hypot(1, sweep)) * deg) < .1, id + ': the sun is where the room\'s key light comes from');
+      for (const name of Object.keys(SCENES)) assert.deepEqual(hourOf(name, id).sun.slice(0, 2), SCENES[name].rig?.[id] || RIG_SUN[id], name + ' ' + id + ': no scene keeps a sun of its own by day'); }
+  assert.ok(Math.abs(SCENES.yard.rig.morning[0] - Math.atan(-.22) * deg) < .1 && Math.abs(SCENES.yard.rig.morning[1] - Math.atan(.95 / Math.hypot(1, .22)) * deg) < .1, 'the yard has the workshop\'s broad day angle');
+  for (const id of ['night', 'party']) assert.deepEqual(hourOf('garden', id).sun, HOURS[id].sun, id + ': the moon stays the hour\'s own');
+  // in a built room the rig's very direction is taken (root.userData.lighting): a turned and scaled room with windows
+  // on its back wall (the daylight wall) and its right wall
+  const root = new THREE.Group(), back = new THREE.Group(), side = new THREE.Group(); root.add(back, side); root.rotation.y = .8; root.scale.setScalar(.001); root.position.set(3, 0, -2);
+  const a = paneIn(back, 1500, 1400, [0, 1550, -2000]), b = paneIn(side, 1500, 1400, [2500, 1550, 0], -Math.PI / 2); root.updateWorldMatrix(true, true);
+  const view = attachScenery([a, b], 'garden', { floor: -1550 }), [front, right] = view.worlds.map(w => w.sky.uniforms.sunLocal.value);
+  const direction = new THREE.Vector3(-.36, .62, -1).normalize();   // morning through the back wall (outward -z, along +x)
+  view.setHour('morning'); assert.ok(Math.abs(front.x - right.x) < 1e-9 && Math.abs(front.z - right.z) < 1e-9, 'without a rig every wall has the hour\'s sun before it');
+  root.userData.lighting = { mode: 'morning', source: 'window-daylight', direction: direction.toArray() };
+  view.setHour('morning');
+  assert.ok(Math.abs(front.x - direction.x) < 1e-6 && Math.abs(front.y - direction.y) < 1e-6 && Math.abs(front.z + direction.z) < 1e-6, 'the daylight wall: the sun in its sky is the key light\'s direction');
+  const s = hourOf('garden', 'morning').sun, az = s[0] / deg, el = s[1] / deg;
+  assert.ok(Math.abs(front.x - Math.sin(az) * Math.cos(el)) < 2e-3 && Math.abs(front.y - Math.sin(el)) < 2e-3, 'which is the hour\'s sun (RIG_SUN) for a room with the common angles');
+  assert.ok(Math.abs(right.x - direction.z) < 1e-6 && Math.abs(right.z - direction.x) < 1e-6 && right.x < 0 && right.z < 0, 'the right wall: the same sun, off to its left and behind the building');
+  for (const w of view.worlds) { const f = w.materials[0].uniforms.sunDirF.value, sky = w.sky.uniforms.sunLocal.value; assert.ok(Math.abs(f.x - sky.x) < 1e-9 && Math.abs(f.z + sky.z) < 1e-9, 'the land is lit from there'); }
+  root.userData.lighting = { mode: 'afternoon', source: 'window-daylight', direction: direction.toArray() };
+  view.setHour('morning'); assert.ok(Math.abs(front.x - right.x) < 1e-9, 'a rig that ran for another hour is not this hour\'s sun');
+  root.userData.lighting = { mode: 'night', source: 'ceiling-wash', direction: [0, 1, 0] };
+  view.setHour('night'); assert.ok(front.z > 0 && Math.abs(front.y - Math.sin(HOURS.night.sun[1] / deg)) < 1e-6, 'after dark the rig is a ceiling wash: the moon is the hour\'s');
+  view.dispose(); }
+{ // what a surface is made of: four bytes a vertex; facades carry their block's own make, a redwood's bole is bark
+  const kinds = (name, options) => { const view = attachScenery(paneIn(new THREE.Group(), 1700, 1400, [0, 1550, -1800]), name, { floor: -1550, ...options }), k = view.group.children[0].geometry.attributes.kind, seen = new Map();
+      assert.ok(k && k.itemSize === 4 && k.normalized && k.count === view.group.children[0].geometry.attributes.position.count, name + ': a kind for every vertex');
+      for (let i = 0; i < k.count; i++) { const id = k.array[i * 4]; if (!seen.has(id)) seen.set(id, new Set()); seen.get(id).add(k.array[i * 4 + 1] + ':' + k.array[i * 4 + 2] + ':' + k.array[i * 4 + 3]); }
+      view.dispose(); return seen; };
+  const city = kinds('city', { variant: 'square', storey: 13000, seed: 4401 });
+  assert.ok(city.get(KIND.facade)?.size > 12, 'the roofscape and skyline: many makes of facade (' + city.get(KIND.facade)?.size + '), not one grid');
+  assert.ok([...city.get(KIND.facade)].every(v => +v.split(':')[2] > 0), 'every tagged block has its own number (0 is the plain grid of an untagged facade)');
+  assert.ok(kinds('humboldt', { seed: 7130 }).has(KIND.bark) && kinds('studio-garden', { seed: 1302 }).has(KIND.brick) && kinds('garden', {}).has(KIND.tiles), 'bark in the grove, brick in the studio garden\'s wall, tiles on the neighbours\' roofs');
+  // the bole is modelled from where the tree stands, not from the scene's random stream: a tree just inside 34 m (modelled) and
+  // one just beyond it (a plain column) draw the same numbers, so the Commons' trees keep
+  // their film marks whatever the bole's detail
+  const grow = z => { let n = 0; const r = rand(77), land = new Builder(); land.leaves = new Leaves(land); redwood(land, () => { n++; return r(); }, 0, 0, z, { height: 46000, girth: 1.4, size: 2200 }); return [n, land]; };
+  const [n, land] = grow(-33990), [far] = grow(-34010), geo = land.geometry(), p = geo.attributes.position; let foot = 0, waist = 0;
+  assert.equal(n, far, 'the bole draws nothing from the stream');
+  for (let i = 0; i < p.count; i++) { const y = p.getY(i), rr = Math.hypot(p.getX(i), p.getZ(i) + 33990); if (y < 100) foot = Math.max(foot, rr); if (y > 6000 && y < 9000) waist = Math.max(waist, rr); }
+  assert.ok(foot > waist * 1.6 && foot < waist * 4, 'a redwood near the glass flares into buttresses at its foot (' + Math.round(foot) + ' against ' + Math.round(waist) + ' mm at 6 to 9 m)');
+  assert.ok(geo.attributes.position.count / 3 > 1500, 'and is modelled finely enough to hold its bark ridges');
+  geo.dispose(); }
+
 assert.throws(() => attachScenery(new THREE.Mesh(), 'moon-base', { width: 1, height: 1 }), /No window scenery/);
-console.log('PASS window scenery: the view switch and its default, ' + Object.keys(SCENES).length + ' scenes (built, outside the wall, cost, lights after dark, depth, hours, reuse), several openings in one wall, walls facing different ways, the opening test, dispose, draw order and sharing, light from the sky\'s sun, navy party, leaves under lamps, three city compositions, sky from high floors, the sea in view');
+console.log('PASS window scenery: the view switch and its default, ' + Object.keys(SCENES).length + ' scenes (built, outside the wall, cost, lights after dark, depth, hours, reuse), several openings in one wall, walls facing different ways, the opening test, dispose, draw order and sharing, light from the sky\'s sun, navy party, leaves under lamps, three city compositions, sky from high floors, the sea in view, the sun where the room\'s key light says, material kinds, the redwood bole');

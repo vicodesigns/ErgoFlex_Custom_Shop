@@ -10,7 +10,7 @@
 // laid over HOURS. hazeFar: the distance at which the air has its full say.
 import * as THREE from 'three';
 import { basket, bicycle, neonMarquee, parasol, pitchedGlasshouse, redwoodRoots, roofDetail, shadeSail, steppingStone, sunflower } from './window-scenery-details.mjs';
-import { BOX as BOX_UNIT, QUAD, colour, M, seen, rand, ground as groundPlane, ridge, crown, tree, conifer, redwood, fanPalm, featherPalm, shrub, hedge, flowers, grass, rock, house, building, streetLamp, car, bench, pathLight, utilityPole, wire, fence, masonry, pole, limb, spray } from './window-scenery-kit.mjs?v=polish-20261113b';
+import { BOX as BOX_UNIT, QUAD, colour, M, seen, rand, ground as groundPlane, ridge, crown, tree, conifer, redwood, fanPalm, featherPalm, shrub, hedge, flowers, grass, rock, house, building, streetLamp, car, bench, pathLight, utilityPole, wire, fence, masonry, pole, limb, spray, facadeKind } from './window-scenery-kit.mjs?v=polish-20261113b';
 
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 const pick = (r, list) => list[Math.floor(r() * list.length)];
@@ -348,10 +348,12 @@ function humboldt(k, ctx) {
         }
     }
     const moss = colour('#667448'), duff = colour('#664833'), out = new THREE.Color();
-    const forestFloor = (zNear, zMid, zFar) => land(b, ground, L, R, zNear, zMid, zFar, (x, z) => {
-        const p = Math.sin(x / 1900) * Math.sin(z / 1500) * .5 + .5;
-        return out.copy(duff).lerp(moss, p * (.52+.35*Math.sin(z/6900))).multiplyScalar(.82 + r() * .18);
-    });
+    // (flanks: the near floor carried well past the glass on both sides, for cameras that look along the wall; their
+    // own random stream, so the trunks keep their film marks)
+    const flank = rand(ctx.seed + 911), floorTone = (x, z, k) => { const p = Math.sin(x / 1900) * Math.sin(z / 1500) * .5 + .5;
+        return out.copy(duff).lerp(moss, p * (.52+.35*Math.sin(z/6900))).multiplyScalar(.82 + k * .18); };
+    const forestFloor = (zNear, zMid, zFar) => { land(b, ground, L, R, zNear, zMid, zFar, (x, z) => floorTone(x, z, r()));
+        for (const [x0, x1] of [[L - 40000, L], [R, R + 40000]]) groundPlane(b, ground, x0, x1, zMid, zNear, 2500, (x, z) => floorTone(x, z, flank())); };
     if (ctx.facing === 0) {
         // Pure redwood grove outside the back glass (natural forest duff floor; no bench, nurse log or clutter).
         forestFloor(ctx.near - 60, -18000, -70000);
@@ -427,9 +429,10 @@ const TOWER_WALLS = ['#8f979d', '#a3a6a8', '#5f6a74', '#a69f94', '#4f5a66', '#9a
 function plainBlock(k, r, x, ground, z, { width, depth, height, wall, roof = true, crown = false, terrace = false }) {
     const b = k.land; if (!seen(b, x, z, width / 2 + 3000)) return;
     const c = colour(wall).offsetHSL(0, 0, (r() - .5) * .06);
-    b.box([width, height, depth], [x, ground + height / 2, z], c, 0, null, { facade: true });
+    const make = facadeKind(x, z);   // (the shader's window grid: this block's own bays, storeys and style)
+    b.box([width, height, depth], [x, ground + height / 2, z], c, 0, null, { facade: true, kind: make });
     b.box([width + 200, 600, depth + 200], [x, ground + height + 300, z], c.clone().multiplyScalar(.9));
-    if (crown) b.box([width * .6, height * .08, depth * .6], [x, ground + height * 1.04, z], c.clone().multiplyScalar(.85), 0, null, { facade: true });
+    if (crown) b.box([width * .6, height * .08, depth * .6], [x, ground + height * 1.04, z], c.clone().multiplyScalar(.85), 0, null, { facade: true, kind: make });
     if (roof && !terrace && Math.abs(z) < 120000) {
         if (r() < .7) b.box([width * (.2 + r() * .2), 2200, depth * .25], [x + (r() - .5) * width * .4, ground + height + 1100, z + (r() - .5) * depth * .3], '#8f8b84');
         if (r() < .45) { const tx = x + (r() - .5) * width * .6, tz = z + (r() - .5) * depth * .4; b.add(TANK, M(tx, ground + height + 3000, tz, 1200, 2400, 1200), () => colour('#6f5f50')); b.box([1600, 1800, 1600], [tx, ground + height + 900, tz], '#4a4b4c'); }
@@ -492,15 +495,9 @@ function plantedRoof(k, r, x, top, z, width, depth) {
     const tx = x + width * .24, tz = z - depth * .17;
     b.box([2500, 720, 2500], [tx, top + 450, tz], '#687b75');
     tree(b, r, tx, top + 810, tz, { height: 3600, hex: '#708e52', shape: 'ornamental' });
-    // A continuous band of recessed steel sash and a projecting sill under the parapet.
+    // A steel channel under the parapet. The storey below it is the block's own facade (its windows are the
+    // shader's, with frames, blinds and the sky in the glass); the flat sash panels that stood in front of it are gone.
     b.box([width, 420, 200], [x, top - 1000, front], rail);
-    const bay = (width - 1200) / 5;
-    for (let i = -2; i <= 2; i++) {
-        const sashX = x + i * bay;
-        b.box([bay - 380, 1950, 100], [sashX, top - 2230, front + 65], '#45636b');
-        b.box([75, 1950, 145], [sashX, top - 2230, front + 65], '#404c4f');
-        b.box([bay - 250, 110, 260], [sashX, top - 3240, front + 60], '#b09d87');
-    }
 }
 
 function highCity(k, ctx, opts, neon) {
@@ -1279,7 +1276,8 @@ export const SCENES = {
         party: { tint: [.12, .12, .2], zenith: '#151a32', horizon: '#33304e', clouds: .85, haze: .6, air: '#262640', stars: .1 } } },
     city: { build: (k, ctx) => city(k, ctx), storey: 3400, hazeFar: 110000, lampLevel: .78, hours: CITY_NIGHT },
     'city-neon': { build: (k, ctx) => city(k, ctx, { neon: true }), storey: 3400, hazeFar: 110000, lampLevel: .78, haloLevel: .8, hours: NEON_NIGHT },
-    yard: { build: yard, storey: 0, hazeFar: 80000 },
+    // (rig: the workshop's key light keeps one broad angle through the day: room-refinement.mjs workshopDay)
+    yard: { build: yard, storey: 0, hazeFar: 80000, rig: { morning: [-12.4, 42.9], afternoon: [-12.4, 42.9] } },
     'socal-campus': { build: (k, ctx) => socal(k, ctx, 'campus'), storey: 4200, hazeFar: 255000, hours: {
         ...SOCAL,
         morning:{zenith:'#527fa6',horizon:'#b4cbd7',air:'#9aafbc',haze:.26,clouds:.27,light:[.64,.84],sun:[-48,16,'#ffe0af',.66]},

@@ -9,6 +9,8 @@
 // the hour's sun and sky, so the light outside agrees with the sun in the sky at every hour and through the film's
 // time-of-day blend); `glow`, the light the place's own lamps throw on it after dark. A zero normal means "not lit"
 // (signs). A length of .4 marks reflective glazing, .6 a thin double-sided surface, and .85 a distant facade.
+// `kind` (optional, four bytes): what the surface is made of, for the shader's close-up detail (KIND): a facade's
+// window grid and style, bark, brick, roof tiles. Unmarked surfaces get the plain grain.
 // Foliage is its own geometry: cards cut out of a generated leaf texture (leafAtlas), lit as the volume of its crown.
 import * as THREE from 'three';
 
@@ -16,6 +18,13 @@ import * as THREE from 'three';
 export const SUN = new THREE.Vector3(.5, .78, -.38).normalize();
 export const rand = seed => () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
 export const colour = hex => new THREE.Color(hex);      // (linear working values)
+// What a surface is made of (Builder.add's `kind`: [KIND.x, a, b, c], bytes). facade: a = bay width, b = storey height,
+// c = the building's own number (style, blinds, brick or render), see facadeKind. bark: a = how coarse (0 fine .. 255).
+export const KIND = { facade: 1, bark: 2, brick: 3, tiles: 4 };
+const hash01 = (x, z, salt = 0) => { const h = Math.sin(x * .0127 + z * .0311 + salt * 7.13) * 43758.5453; return h - Math.floor(h); };
+// A facade's make from where the building stands (not from the scene's random stream: the film's compositions keep
+// their marks): bays 2.2 to 4.6 m wide, storeys 2.9 to 4 m, and a number the shader turns into its style.
+export const facadeKind = (x, z) => [KIND.facade, Math.round(hash01(x, z, 1) * 255), Math.round(hash01(x, z, 2) * 255), 1 + Math.round(hash01(x, z, 3) * 254)];
 const smooth = THREE.MathUtils.smoothstep, point = new THREE.Vector3(), normal = new THREE.Vector3(), normalMatrix = new THREE.Matrix3();
 const flatGeometry = new WeakMap(), nonIndexed = g => { if (!g.index) return g; let n = flatGeometry.get(g); if (!n) { n = g.toNonIndexed(); flatGeometry.set(g, n); } return n; };
 const A = new THREE.Vector3(), B = new THREE.Vector3(), C = new THREE.Vector3(), E1 = new THREE.Vector3(), E2 = new THREE.Vector3(), FN = new THREE.Vector3();
@@ -92,13 +101,14 @@ const CELL = [[0, 0], [.5, 0], [0, .5], [.5, .5]];
 // Geometry with a colour per vertex. `tone` is the surface's colour (occlusion baked in); `glow` is what the lights after
 // dark put on the surface (added under the hour's `lamp`), from the point lights given with light().
 export class Builder {
-    constructor() { this.position = []; this.tone = []; this.normal = []; this.lights = []; this.shadows = []; this.glowScale = 1; }
+    constructor() { this.position = []; this.tone = []; this.normal = []; this.lights = []; this.shadows = []; this.kinds = []; this.glowScale = 1; }
     get triangles() { return this.position.length / 9; }
     // geometry in place (matrix), coloured by shade(position, normal) -> Color. light: false takes the colour as it is
     // (glass, a sign: not lit by the sun); facet: each triangle faces its own way (rocks, roofs); two: lit from either
     // side (thin things).
-    add(geometry, matrix, shade, { light = true, facet = false, lumps = 0, dapple = 0, seed = 0, two = false, facade = false, glazing = false } = {}) {
+    add(geometry, matrix, shade, { light = true, facet = false, lumps = 0, dapple = 0, seed = 0, two = false, facade = false, glazing = false, kind = null } = {}) {
         const g = nonIndexed(geometry), p = g.attributes.position, n = g.attributes.normal; normalMatrix.getNormalMatrix(matrix);
+        if (kind) this.kinds.push([this.position.length / 3, this.position.length / 3 + p.count, kind]);
         for (let i = 0; i < p.count; i++) {
             point.fromBufferAttribute(p, i); normal.fromBufferAttribute(n, i);
             let patch = 0;
@@ -163,6 +173,9 @@ export class Builder {
         geo.setAttribute('position', new THREE.Float32BufferAttribute(this.position, 3)); geo.setAttribute('tone', new THREE.BufferAttribute(tone, 3));
         geo.setAttribute('normal', new THREE.BufferAttribute(nrm, 3, true)); geo.setAttribute('glow', new THREE.BufferAttribute(this.bakeGlow(), 3));
         if (this.uv) geo.setAttribute('uv', new THREE.Float32BufferAttribute(this.uv, 2));
+        const kind = new Uint8Array(this.position.length / 3 * 4);
+        for (const [from, to, [a = 0, b = 0, c = 0, d = 0]] of this.kinds) for (let i = from; i < to; i++) kind.set([a, b, c, d], i * 4);
+        geo.setAttribute('kind', new THREE.BufferAttribute(kind, 4, true));
         geo.computeBoundingSphere(); return geo;
     }
 }
@@ -209,11 +222,12 @@ const STEM = new THREE.CylinderGeometry(.72, 1, 1, 7, 1, true).translate(0, .5, 
 const Y = new THREE.Vector3(0, 1, 0), X = new THREE.Vector3(1, 0, 0), FWD = new THREE.Vector3(0, 0, 1), q = new THREE.Quaternion(), euler = new THREE.Euler(), at = new THREE.Vector3(), scale = new THREE.Vector3(), m4 = new THREE.Matrix4();
 
 // A tapered limb (or pole) from a to b, radius r at a.
-export function limb(b, a, end, radius, hex, { geometry = STEM } = {}) {
+export function limb(b, a, end, radius, hex, { geometry = STEM, kind = null } = {}) {
     const dir = new THREE.Vector3().subVectors(end, a), len = dir.length(); if (len < 1) return;
     q.setFromUnitVectors(Y, dir.divideScalar(len)); m4.compose(a, q, scale.set(radius, len, radius));
-    const c = typeof hex === 'string' ? colour(hex) : hex; (b.land || b).add(geometry, m4, () => c);
+    const c = typeof hex === 'string' ? colour(hex) : hex; (b.land || b).add(geometry, m4, () => c, { kind });
 }
+const BARK = [KIND.bark, 90], BARK_FINE = [KIND.bark, 30];
 export const pole = (b, x, y0, z, height, radius, hex) => limb(b, new THREE.Vector3(x, y0, z), new THREE.Vector3(x, y0 + height, z), radius, hex, { geometry: POLE });
 
 // How fine foliage is drawn at a distance from the window (near: small cards of single leaves; far: big clumps): the
@@ -316,14 +330,14 @@ export function tree(b, r, x, ground, z, { height = 6000, spread, hex = '#62804f
     if (!seen(b, x, z, 8000)) return;
     const wide = { round: .36, tall: .24, spreading: .48, ornamental: .4 }[shape] ?? .36, R = height * (spread ?? wide), fork = height * (shape === 'tall' ? .28 : shape === 'spreading' ? .32 : .38);
     const lean = (r() - .5) * height * .05, base = new THREE.Vector3(x, ground - 100, z), top = new THREE.Vector3(x + lean, ground + fork, z + (r() - .5) * height * .03), trunkR = height * (shape === 'ornamental' ? .016 : .022);
-    const barkC = colour(bark); limb(b, base, top, trunkR, barkC);
+    const barkC = colour(bark); limb(b, base, top, trunkR, barkC, { kind: BARK });
     (b.land || b).shadow(x + lean, ground, z, R * 1.15, R * .95, .5, fork * .7);
     const cy = ground + fork + (height - fork) * .5, masses = 3 + Math.floor(r() * 3), sz = size ?? spray(z);
     for (let i = 0; i < masses; i++) {
         const a = i / masses * 6.28 + r() * .9, off = R * (.32 + .22 * r()), rr = R * (.48 + .22 * r()), up = (r() - .35) * R * .55;
         const c = new THREE.Vector3(x + lean + Math.cos(a) * off, cy + up, z + Math.sin(a) * off * .8);
         if (z > -48000) b.canopies?.push([c.x,c.y,c.z,ground,rr,rr*.76]);
-        limb(b, top, new THREE.Vector3().lerpVectors(top, c, .75), trunkR * .5, barkC);
+        limb(b, top, new THREE.Vector3().lerpVectors(top, c, .75), trunkR * .5, barkC, { kind: BARK_FINE });
         crown(b, r, c.x, c.y, c.z, rr * 1.05, rr * (shape === 'tall' ? 1.25 : .82), rr, hex, { size: sz, density });
     }
     crown(b, r, x + lean, cy + R * .3, z, R * .62, R * (shape === 'tall' ? 1.1 : .62), R * .6, hex, { size: sz, density });
@@ -333,7 +347,7 @@ export function tree(b, r, x, ground, z, { height = 6000, spread, hex = '#62804f
 export function conifer(b, r, x, ground, z, { height = 8000, width = .34, hex = '#3d5c4a', bark = '#4f4038', size, density = 1, start = .1 } = {}) {
     if (!seen(b, x, z, 8000)) return;
     const L = leavesOf(b) || b, base = colour(hex), sz = size ?? spray(z) * 1.1, card = Math.max(sz * 4.2, 650);
-    limb(b, new THREE.Vector3(x, ground - 100, z), new THREE.Vector3(x, ground + height * .97, z), height * .012, bark);
+    limb(b, new THREE.Vector3(x, ground - 100, z), new THREE.Vector3(x, ground + height * .97, z), height * .012, bark, { kind: BARK });
     (b.land || b).shadow(x, ground, z, height * width * .55, height * width * .5, .5, 1500);
     const centre = new THREE.Vector3(x, ground + height * .45, z), whorls = Math.round(8 + height / 1800);
     for (let w = 0; w < whorls; w++) {
@@ -357,12 +371,29 @@ export function conifer(b, r, x, ground, z, { height = 8000, width = .34, hex = 
 export function redwood(b, r, x, ground, z, { height = 42000, girth = 1.0, hex = '#4a5c3c', bark = '#6a4a3c', size, start = .32 } = {}) {
     if (!seen(b, x, z, 8000)) return;
     const land = b.land || b, L = leavesOf(b) || b, R0 = 650 * girth, barkC = colour(bark), dark = barkC.clone().multiplyScalar(.6), out = new THREE.Color(), seed = r() * 50;
-    // the trunk: a fluted, tapering column; the bark's furrows in the colour
-    const trunk = new THREE.CylinderGeometry(R0 * .28, R0, height, 12, 8, true).translate(0, height / 2, 0);
-    land.add(trunk, M(x, ground - 200, z), (p, n) => { const a = Math.atan2(n.z, n.x), f = .5 + .5 * Math.sin(a * 9 + seed + p.y * .0002);
-        return out.copy(dark).lerp(barkC, .45 + .55 * f * f).multiplyScalar(.9 + .1 * Math.sin(p.y * .003 + seed)); });
-    // a buttressed foot, the duff dark round it
-    land.add(new THREE.ConeGeometry(R0 * 1.55, R0 * 2.2, 10, 1, true).translate(0, R0 * 1.1, 0), M(x, ground - 60, z, 1, 1, 1, seed), () => barkC.clone().multiplyScalar(.82));
+    // the trunk: one surface from the buttressed foot to the top. Near the glass it is modelled: a flare that
+    // spreads into a few root buttresses at the ground, bark ridges that run up the bole (real relief, so the hour's
+    // light models them), moss low on one side; the fibrous grain between the ridges is the shader's (KIND.bark).
+    // Far trunks are a plain tapering column. Nothing here draws from the scene's random stream.
+    const nearBole = z > -34000 && girth >= .3, RS = nearBole ? 48 : 12, HS = nearBole ? 22 : 6, ridges = 7 + Math.round(4 * hash01(x, z, 4));
+    const lobes = [0, 1, 2, 3, 4].map(i => [i * 1.2566 + (hash01(x, z, 10 + i) - .5) * .9, .55 + .45 * hash01(x, z, 20 + i), 3 + 5 * hash01(x, z, 30 + i)]);
+    const radiusAt = (a, y) => { const t = y / height; let rr = R0 * (.28 + .72 * (1 - t)); if (!nearBole) return rr + R0 * .5 * Math.exp(-y / (R0 * 1.6));
+        let lobe = 0; for (const [at, amp, sharp] of lobes) lobe = Math.max(lobe, amp * Math.pow(Math.max(0, Math.cos(a - at)), sharp));
+        rr += R0 * (.42 * Math.exp(-y / (R0 * 1.9)) + 1.15 * lobe * Math.exp(-y / (R0 * (.75 + .5 * lobe))));
+        return rr * (1 + .05 * Math.sin(a * ridges + seed + y * .00016) + .022 * Math.sin(a * (ridges * 2 + 3) + seed * 1.7 - y * .0003)); };
+    const trunk = new THREE.BufferGeometry(), tp = [], ti = [];
+    for (let j = 0; j <= HS; j++) { const y = height * Math.pow(j / HS, nearBole ? 2.6 : 1);
+        for (let i = 0; i <= RS; i++) { const a = i / RS * 6.2832, rr = radiusAt(a, y); tp.push(Math.cos(a) * rr, y, Math.sin(a) * rr); } }
+    for (let j = 0; j < HS; j++) for (let i = 0; i < RS; i++) { const a = j * (RS + 1) + i, c = a + RS + 1; ti.push(a, c, a + 1, a + 1, c, c + 1); }
+    trunk.setAttribute('position', new THREE.Float32BufferAttribute(tp, 3)); trunk.setIndex(ti); trunk.computeVertexNormals();
+    { const nr = trunk.attributes.normal, last = RS;   // (the seam: both columns of vertices share one normal)
+      for (let j = 0; j <= HS; j++) { const a = j * (RS + 1), c = a + last, nx = nr.getX(a) + nr.getX(c), ny = nr.getY(a) + nr.getY(c), nz = nr.getZ(a) + nr.getZ(c), l = Math.hypot(nx, ny, nz) || 1; nr.setXYZ(a, nx / l, ny / l, nz / l); nr.setXYZ(c, nx / l, ny / l, nz / l); } }
+    const mossC = colour('#5d6a45');
+    land.add(trunk, M(x, ground - 200, z), p => { const a = Math.atan2(p.z - z, p.x - x), y = p.y - ground, f = .5 + .5 * Math.sin(a * ridges + seed + y * .00016);
+        out.copy(dark).lerp(barkC, .3 + .7 * f * f).multiplyScalar(.9 + .1 * Math.sin(y * .003 + seed));
+        if (nearBole) out.lerp(mossC, .34 * Math.exp(-Math.max(0, y) / (R0 * 1.4)) * (.5 + .5 * Math.sin(a + seed * .37))).multiplyScalar(.74 + .26 * Math.min(1, Math.max(0, y) / (R0 * 2.2)));   // (the foot sits in its own shade)
+        return out; }, { kind: [KIND.bark, 200] });
+    trunk.dispose();
     land.shadow(x, ground, z, R0 * 4.5, R0 * 4.5, .5, R0 * 3);
     if (z > -38000) b.canopies?.push([x,ground+height*.46,z,ground,3800*girth,4300*girth]);
     // sprays high above the window's sight lines are never seen (from a ground floor the view tops out near 40 degrees)
@@ -395,7 +426,7 @@ export function fanPalm(b, r, x, ground, z, { height = 18000, hex = '#6f8452', s
         limb(b, prev, p, 210 - t * 70, barkC.clone().multiplyScalar(.85 + .1 * (i % 2)), { geometry: POLE }); prev = p; }
     const head = prev.clone(); (b.land || b).shadow(x, ground, z, 1800, 1800, .35, 600);
     // the skirt: dead fronds hanging close under the head, short
-    const far = Math.abs(z) > 40000, fronds = far ? 14 : 34, pleats = far ? 4 : 9;   // (far palms: a few pixels, fewer pieces)
+    const far = Math.abs(z) > 40000, fronds = far ? 14 : 34, pleats = far ? 7 : 9;   // (far palms: fewer fronds; their fans keep enough pleats that the film's long lens does not show them as paddles)
     for (let k = 0; k < (far ? 10 : 40); k++) { const a = r() * 6.28, h = r(), R = 260 + 200 * (1 - h);
         const c = colour(skirt).offsetHSL(0, 0, (r() - .5) * .08).multiplyScalar(.6 + .3 * h);
         euler.set((r() - .5) * .3, -a, (r() - .5) * .3); q.setFromEuler(euler); m4.compose(at.set(head.x + Math.cos(a) * R, head.y - 250 - h * 1400, head.z + Math.sin(a) * R), q, scale.set(200, 700, 120));
@@ -519,7 +550,7 @@ export function house(k, r, x, ground, z, { width = 9000, depth = 7000, eaves = 
     b.footing(x - width / 2, x + width / 2, z - depth / 2, z + depth / 2, ground, 1600, .4, 1400);
     const shape = new THREE.Shape(); shape.moveTo(-depth / 2 - 350, 0); shape.lineTo(0, rise); shape.lineTo(depth / 2 + 350, 0); shape.closePath();
     const prism = new THREE.ExtrudeGeometry(shape, { depth: width + 500, bevelEnabled: false }), c = colour(roof), gable = colour(wall).multiplyScalar(.93);
-    b.add(prism, new THREE.Matrix4().makeRotationY(Math.PI / 2).setPosition(x - width / 2 - 250, ground + eaves, z), (p, n) => Math.abs(n.x) > .9 ? gable : c.clone().multiplyScalar(.92 + .08 * Math.sin(p.y * .02)), { facet: true }); prism.dispose();
+    b.add(prism, new THREE.Matrix4().makeRotationY(Math.PI / 2).setPosition(x - width / 2 - 250, ground + eaves, z), (p, n) => Math.abs(n.x) > .9 ? gable : c.clone().multiplyScalar(.92 + .08 * Math.sin(p.y * .02)), { facet: true, kind: [KIND.tiles, 0] }); prism.dispose();
     b.box([520, 1500, 520], [x + width * .28, ground + eaves + rise * .8, z - depth * .12], '#8e7767');
     const face = z + depth/2, levels = storeys > 1 ? [1500, 4150] : [1500];
     const plaster = (x0, y0, x1, y1) => {
@@ -566,7 +597,7 @@ export function building(k, r, x, ground, z, { width = 16000, depth = 14000, flo
     if (!seen(k.land, x, z, width / 2 + 3000)) return 0;
     const make = material && MAKES[material], { land: b, lights, halos } = k, base = shops ? 600 : 0, height = floors * storey + base, face = z + depth / 2;
     const wallC = colour(make ? make.walls[Math.floor(r() * make.walls.length)] : wall).offsetHSL(0, 0, (r() - .5) * .05), trim = make ? colour(make.trim).offsetHSL(0, 0, (r() - .5) * .04) : colour(frame);
-    b.box([width, height, depth], [x, ground + height / 2, z], wallC); b.footing(x - width / 2, x + width / 2, z - depth / 2, z + depth / 2, ground, 2200, .38, 2600);
+    b.box([width, height, depth], [x, ground + height / 2, z], wallC, 0, null, material === 'brick' ? { kind: [KIND.brick, 0] } : undefined); b.footing(x - width / 2, x + width / 2, z - depth / 2, z + depth / 2, ground, 2200, .38, 2600);
     litRate = Math.min(.25, litRate * .55);   // after dark most windows are dark (a lit facade is the hottest thing in a frame otherwise)
     if (cornice) { b.box([width + 300, 380, 500], [x, ground + height - 190, face - 100], trim);
         if (make && material !== 'panel' && material !== 'render') b.box([width + 600, 160, 760], [x, ground + height - 20, face - 230], trim); }
@@ -710,6 +741,6 @@ export function masonry(b, r, x0, x1, ground, z, height, hex = '#a0705a', { cour
     // the face toward the room: courses and the odd darker brick in the colour
     const geo = new THREE.PlaneGeometry(x1 - x0, height, Math.max(1, Math.round((x1 - x0) / 600)), Math.max(1, Math.round(height / course)));
     b.add(geo, M((x0 + x1) / 2, ground + height / 2, z + thick / 2 + 4), p => { const row = Math.floor((p.y - ground) / course), v = Math.sin(row * 12.9898 + Math.floor(p.x / 600) * 78.233 + seed) * 43758.5453;
-        return out.copy(c).multiplyScalar(.84 + .22 * (v - Math.floor(v))); }); geo.dispose();
+        return out.copy(c).multiplyScalar(.84 + .22 * (v - Math.floor(v))); }, { kind: [KIND.brick, 0] }); geo.dispose();
     b.box([x1 - x0 + 60, 70, thick + 80], [(x0 + x1) / 2, ground + height + 35, z], coping);
 }
