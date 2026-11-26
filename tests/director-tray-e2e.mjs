@@ -18,7 +18,7 @@ try{
   await set('tr-slide-n',90);
   const msg=await page.evaluate(()=>document.querySelector('[data-tray-joint="slide"]')?.innerText||'');
   assert.match(msg,/keyed 90 %/);assert.match(msg,/does not fit under the desk|held to/,'a limit is said in words: '+msg);
-  assert.match(await status(page),/held at 45 %/,'the status line names the limit too: '+await status(page));
+  assert.match(await status(page),/held at 75 %/,'the status line names the limit too: '+await status(page));
   // jog (the Key buttons and K) and the saved poses
   const seek=async t=>{await page.evaluate(t=>{const el=document.querySelector('#director-timeline [name="timeline-seconds"]');el.value=String(t);el.dispatchEvent(new Event('change',{bubbles:true}));},t);await wait(700);};
   const click=async sel=>{await page.evaluate(q=>document.querySelector(q)?.click(),sel);await wait(700);};
@@ -58,7 +58,7 @@ try{
   const levelQ=await page.evaluate(()=>document.getElementById('stage').contentWindow.ErgoFlex.sceneDesks.active.objects.get('accessory-keyboard-tray').obj.getObjectByName('Tray_Plate').quaternion.toArray());
   const angle=(a,b)=>2*Math.acos(Math.min(1,Math.abs(a[0]*b[0]+a[1]*b[1]+a[2]*b[2]+a[3]*b[3])))*180/Math.PI;
   await seek(8);const q0=await plateQ();const base0=(await pivots()).Tray_BaseTilt;assert.ok(base0,'the runtime base-tilt pivot exists');
-  await set('tr-baseTilt-n',-20);const q1=await plateQ();assert.ok(angle(q0,q1)>5&&angle(q0,q1)<15.5,'base tilt -20 tilts the platform with the arm (the platform is held within 15 deg of level): '+angle(q0,q1).toFixed(1));
+  await set('tr-baseTilt-n',-20);const q1=await plateQ();assert.ok(angle(q0,q1)>5&&angle(q0,q1)<20.5,'base tilt -20 tilts the platform with the arm (rig v3: inside the -61.1..+7.8 Vico modelled): '+angle(q0,q1).toFixed(1));
   await click('[data-action="tr-level"]');const q2=await plateQ();assert.ok(angle(levelQ,q2)<0.5,'Level the platform: level ('+angle(levelQ,q2).toFixed(2)+' deg off)');
   assert.match(await status(page),/platform levelled/);assert.match(await page.evaluate(()=>document.querySelector('[data-tray-joint="tilt"] [name="tr-tilt-n"]')?.value||''),/^20$/);
   console.log('PASS Director Tray: slide, tilt and swing move the jointed tray on the live stage; a limit is named under the slider; with the desk tilted the keyboard stays on the shelf and the tray is free; the hand-off is a carry; Base tilt turns the arm and Level the platform levels it.');

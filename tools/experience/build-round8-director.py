@@ -876,7 +876,7 @@ def apply_desks(cid, f, desks):
     return wrote
 
 
-TRAY_JOINTS = {'slide': (0.0, 1.0, 4), 'swing': (-180.0, 180.0, 2), 'baseTilt': (-30.0, 12.9, 2), 'tilt': (-30.0, 30.0, 2)}   # experience/tray-limits.mjs JOINT_LIMITS, tray-pose.mjs DECIMALS (no drop since 25 Nov 2026; base tilt and the arc slot's +-30 since then)
+TRAY_JOINTS = {'slide': (0.0, 1.0, 4), 'swing': (-180.0, 180.0, 2), 'baseTilt': (-33.2, 0.0, 2), 'tilt': (-59.4, 33.6, 2)}   # experience/tray-limits.mjs JOINT_LIMITS, tray-pose.mjs DECIMALS (no drop since 25 Nov 2026; rig v3 26 Nov 2026: Vico's modelled ranges, base -33.2..0, surface -59.4..+33.6)
 TRAY_KEY_ID = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_-]{0,39}$')
 TRAY_SNAP = 1 / 60
 

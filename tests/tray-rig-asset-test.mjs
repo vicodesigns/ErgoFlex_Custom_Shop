@@ -68,9 +68,9 @@ const triCount = doc => doc.getRoot().listMeshes().reduce((n, m) => n + m.listPr
     const s = Math.sin(L.TRAY_SKEW_DEG * Math.PI / 180), c = Math.cos(L.TRAY_SKEW_DEG * Math.PI / 180), proj = vs => { const p = vs.map(v => -v[0] * s + v[2] * c); return [Math.min(...p), Math.max(...p)]; };
     const track = proj(worldVertices(byName.get('Tray_Track'))), carriage = proj(worldVertices(byName.get('Tray_Carriage')));
     const travel = carriage[0] - track[0];
-    near(travel, L.SLIDE_TRAVEL_MM, 0.6, 'slide travel along the track axis'); assert.ok(L.SLIDE_TRAVEL_MM <= travel + 1e-9, 'never more than the track allows: the carriage stays on the track');
+    near(travel, L.V1_SLIDE_TRAVEL_MM, 0.6, 'slide travel along the track axis'); assert.ok(L.V1_SLIDE_TRAVEL_MM <= travel + 1e-9, 'never more than the track allows: the carriage stays on the track');
     assert.ok(carriage[1] <= track[1] + 0.5 && track[1] - carriage[1] < 6, 'authored (slide 0) = out at the front stop, ' + (track[1] - carriage[1]).toFixed(1) + ' mm short of the front end');
-    assert.ok(L.SLIDE_TRAVEL_MM > 230 && L.SLIDE_TRAVEL_MM < 254, 'between the CAD z-arithmetic 239.5 and the product 254 it is neither: ' + L.SLIDE_TRAVEL_MM);
+    assert.ok(L.V1_SLIDE_TRAVEL_MM > 230 && L.V1_SLIDE_TRAVEL_MM < 254, 'between the CAD z-arithmetic 239.5 and the product 254 it is neither: ' + L.V1_SLIDE_TRAVEL_MM);
 }
 {   // REST POSE = THE RIGID GLB: same bounding box (0.5 mm), same triangles, one material, same size as indexed
     const rigVs = [...byName].filter(([n]) => L.TRAY_PARTS[n]).flatMap(([, n]) => worldVertices(n));
@@ -145,4 +145,4 @@ const triCount = doc => doc.getRoot().listMeshes().reduce((n, m) => n + m.listPr
     assert.equal(r.rig, 'keyboard-tray'); assert.equal(r.keepHierarchy, true); assert.ok(!o.rig && !o.keepHierarchy, 'the rigid asset is built exactly as before');
     for (const k of ['source', 'rotateY', 'anchor', 'fit', 'budget', 'material', 'repair']) assert.deepEqual(r[k], o[k], k + ' is the rigid entry\'s, so the geometry is the same');
 }
-console.log('tray-rig-asset-test: ok (named nodes, pivots at the joint table, skew in Tray_Slide, slide travel ' + L.SLIDE_TRAVEL_MM + ' mm, rest pose = rigid glb within 0.5 mm, 11121 tris, vertices and normals matched to the rigid glb)');
+console.log('tray-rig-asset-test: ok (named nodes, pivots at the joint table, skew in Tray_Slide, slide travel ' + L.V1_SLIDE_TRAVEL_MM + ' mm, rest pose = rigid glb within 0.5 mm, 11121 tris, vertices and normals matched to the rigid glb)');
