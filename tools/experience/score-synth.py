@@ -1701,6 +1701,11 @@ def premaster(plan, seed, stems_dir=None, hook=None):
     eq = hp_gain(f, 30) * (1 / np.sqrt(1 + (f / 15500) ** 8))
     eq *= 1 - (1 - undb(-1.5)) * (1 / (1 + (9000 / np.maximum(f, 1)) ** 2))  # gentle high shelf
     eq *= 1 - (1 - undb(-2.5)) * (1 / (1 + (np.maximum(f, 1) / 55) ** 2))  # tame the sub (low shelf)
+    for b in (plan.get('master_eq') or []):   # a cut's own extra bands (build-cine-score.py, <cut>/score-mix.json): none = as before
+        g, f0 = undb(float(b['db'])) - 1, float(b['hz'])
+        if b.get('kind', 'high') == 'high': eq *= 1 + g * (1 / (1 + (f0 / np.maximum(f, 1)) ** 2))
+        elif b['kind'] == 'low': eq *= 1 + g * (1 / (1 + (np.maximum(f, 1) / f0) ** 2))
+        else: eq *= 1 + g * np.exp(-0.5 * (np.log2(np.maximum(f, 1) / f0) / float(b.get('octaves', 1.0))) ** 2)   # 'bell'
     x = np.stack([np.fft.irfft(np.fft.rfft(x[c], nfft) * eq, nfft)[:N] for c in range(2)])
     x -= x.mean(axis=1, keepdims=True)
 

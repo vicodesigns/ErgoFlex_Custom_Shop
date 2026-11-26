@@ -207,7 +207,7 @@ if cutdir != hq:
     # another cut: its film data takes the master's place in this job's freeze (the manifest's line for the master's
     # path points at the copy), so everything downstream renders this cut
     mp0 = f'{F}/manifest.txt'; L = open(mp0).read().rstrip('\n').split('\n'); laid = 0
-    for pat in ('review-cut.json', 'titles-src.json', 'edl.json', 'shots/*.json', 'post/finale-seed.json', 'previews/awaken-v5-cut.json'):
+    for pat in ('review-cut.json', 'titles-src.json', 'edl.json', 'shots/*.json', 'post/finale-seed.json', 'previews/awaken-v5-cut.json', 'grade.json'):   # grade.json: a cut's own per-chapter grade trims (finish-intro.py), when it has one
         for src in sorted(glob.glob(f'{cutdir}/{pat}')):
             path = f'{hq}/{os.path.relpath(src, cutdir)}'; dst = f'{F}/{path}'; data = open(src, 'rb').read()
             os.makedirs(os.path.dirname(dst), exist_ok=True); open(dst, 'wb').write(data)

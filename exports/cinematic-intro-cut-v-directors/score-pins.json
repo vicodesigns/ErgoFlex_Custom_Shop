@@ -1,0 +1,9 @@
+{
+ "note": "V directors cut: the finale keeps the base cut's grid (first bar line 1.05 s in), so its desk changes stay on bar lines.",
+ "bar_lines": [
+  {
+   "at": 197.02,
+   "why": "media -> hero dissolve bar line, where the base cut has it relative to the finale"
+  }
+ ]
+}

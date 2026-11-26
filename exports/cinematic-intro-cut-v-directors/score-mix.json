@@ -1,0 +1,55 @@
+{
+ "master_eq": [
+  {
+   "kind": "high",
+   "hz": 6500,
+   "db": 2.0
+  },
+  {
+   "kind": "bell",
+   "hz": 2600,
+   "db": 1.0,
+   "octaves": 1.0
+  }
+ ],
+ "sfx_db": {
+  "default": -18.0,
+  "wheels": -21.0
+ },
+ "styles": {
+  "storage": {
+   "roll": false,
+   "mixdb": [
+    -0.5,
+    0.0
+   ]
+  },
+  "media": {
+   "roll": true,
+   "mixdb": [
+    -2.0,
+    0.0
+   ]
+  }
+ },
+ "sfx_rules": {
+  "rise": [
+   "lift-up",
+   "lift-down"
+  ],
+  "create": [
+   "lift-up",
+   "tilt-retract"
+  ],
+  "coast": [
+   "lift-up"
+  ],
+  "oilers": [
+   "lift-down"
+  ],
+  "wellness": [
+   "lift-up",
+   "lift-down"
+  ]
+ }
+}

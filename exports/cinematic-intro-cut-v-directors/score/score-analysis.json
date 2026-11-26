@@ -1,0 +1,382 @@
+{
+ "sections": [
+  {
+   "name": "intro",
+   "t0": 0.0,
+   "t1": 8.108,
+   "peak_dbfs": -5.92,
+   "rms_dbfs": -23.41,
+   "crest_db": 17.49,
+   "corr": 0.714,
+   "mono_sum_db": -0.67,
+   "max_jump": 0.1069,
+   "hf_spike_dbfs": -49.0,
+   "bands": {
+    "sub <60": -7.3,
+    "low 60-250": -9.0,
+    "lowmid 250-1k": -2.6,
+    "mid 1-4k": -9.1,
+    "high 4-10k": -21.1,
+    "air >10k": -41.5
+   }
+  },
+  {
+   "name": "wake",
+   "t0": 8.108,
+   "t1": 12.375,
+   "peak_dbfs": -8.46,
+   "rms_dbfs": -22.47,
+   "crest_db": 14.02,
+   "corr": 0.739,
+   "mono_sum_db": -0.61,
+   "max_jump": 0.088,
+   "hf_spike_dbfs": -49.2,
+   "bands": {
+    "sub <60": -16.5,
+    "low 60-250": -6.3,
+    "lowmid 250-1k": -1.7,
+    "mid 1-4k": -12.1,
+    "high 4-10k": -41.6,
+    "air >10k": -57.1
+   }
+  },
+  {
+   "name": "twin",
+   "t0": 12.375,
+   "t1": 18.775,
+   "peak_dbfs": -1.92,
+   "rms_dbfs": -16.71,
+   "crest_db": 14.79,
+   "corr": 0.827,
+   "mono_sum_db": -0.4,
+   "max_jump": 0.1094,
+   "hf_spike_dbfs": -39.0,
+   "bands": {
+    "sub <60": -9.7,
+    "low 60-250": -5.5,
+    "lowmid 250-1k": -2.6,
+    "mid 1-4k": -12.2,
+    "high 4-10k": -28.0,
+    "air >10k": -39.4
+   }
+  },
+  {
+   "name": "rise",
+   "t0": 18.775,
+   "t1": 46.55,
+   "peak_dbfs": -4.1,
+   "rms_dbfs": -17.22,
+   "crest_db": 13.12,
+   "corr": 0.852,
+   "mono_sum_db": -0.33,
+   "max_jump": 0.2041,
+   "hf_spike_dbfs": -26.4,
+   "bands": {
+    "sub <60": -6.8,
+    "low 60-250": -4.7,
+    "lowmid 250-1k": -4.0,
+    "mid 1-4k": -13.4,
+    "high 4-10k": -22.8,
+    "air >10k": -30.6
+   }
+  },
+  {
+   "name": "create",
+   "t0": 46.55,
+   "t1": 67.975,
+   "peak_dbfs": -5.41,
+   "rms_dbfs": -18.6,
+   "crest_db": 13.19,
+   "corr": 0.84,
+   "mono_sum_db": -0.36,
+   "max_jump": 0.1175,
+   "hf_spike_dbfs": -37.5,
+   "bands": {
+    "sub <60": -7.6,
+    "low 60-250": -4.2,
+    "lowmid 250-1k": -4.4,
+    "mid 1-4k": -10.9,
+    "high 4-10k": -25.8,
+    "air >10k": -36.3
+   }
+  },
+  {
+   "name": "commons",
+   "t0": 67.975,
+   "t1": 87.35,
+   "peak_dbfs": -4.08,
+   "rms_dbfs": -17.57,
+   "crest_db": 13.5,
+   "corr": 0.851,
+   "mono_sum_db": -0.34,
+   "max_jump": 0.2149,
+   "hf_spike_dbfs": -26.5,
+   "bands": {
+    "sub <60": -6.7,
+    "low 60-250": -5.0,
+    "lowmid 250-1k": -3.9,
+    "mid 1-4k": -13.1,
+    "high 4-10k": -20.2,
+    "air >10k": -29.1
+   }
+  },
+  {
+   "name": "coast",
+   "t0": 87.35,
+   "t1": 100.325,
+   "peak_dbfs": -3.45,
+   "rms_dbfs": -16.78,
+   "crest_db": 13.33,
+   "corr": 0.876,
+   "mono_sum_db": -0.28,
+   "max_jump": 0.1951,
+   "hf_spike_dbfs": -25.6,
+   "bands": {
+    "sub <60": -5.8,
+    "low 60-250": -4.7,
+    "lowmid 250-1k": -4.6,
+    "mid 1-4k": -13.7,
+    "high 4-10k": -21.3,
+    "air >10k": -29.4
+   }
+  },
+  {
+   "name": "oilers",
+   "t0": 100.325,
+   "t1": 113.25,
+   "peak_dbfs": -1.92,
+   "rms_dbfs": -16.21,
+   "crest_db": 14.29,
+   "corr": 0.853,
+   "mono_sum_db": -0.33,
+   "max_jump": 0.2218,
+   "hf_spike_dbfs": -26.0,
+   "bands": {
+    "sub <60": -6.3,
+    "low 60-250": -5.0,
+    "lowmid 250-1k": -4.5,
+    "mid 1-4k": -11.0,
+    "high 4-10k": -19.9,
+    "air >10k": -29.0
+   }
+  },
+  {
+   "name": "wellness",
+   "t0": 113.25,
+   "t1": 134.6,
+   "peak_dbfs": -6.75,
+   "rms_dbfs": -20.98,
+   "crest_db": 14.24,
+   "corr": 0.828,
+   "mono_sum_db": -0.39,
+   "max_jump": 0.0685,
+   "hf_spike_dbfs": -41.5,
+   "bands": {
+    "sub <60": -11.0,
+    "low 60-250": -3.0,
+    "lowmid 250-1k": -4.4,
+    "mid 1-4k": -12.6,
+    "high 4-10k": -29.2,
+    "air >10k": -43.2
+   }
+  },
+  {
+   "name": "storage",
+   "t0": 134.6,
+   "t1": 159.97,
+   "peak_dbfs": -3.59,
+   "rms_dbfs": -17.21,
+   "crest_db": 13.62,
+   "corr": 0.872,
+   "mono_sum_db": -0.29,
+   "max_jump": 0.1984,
+   "hf_spike_dbfs": -26.3,
+   "bands": {
+    "sub <60": -6.6,
+    "low 60-250": -4.3,
+    "lowmid 250-1k": -4.4,
+    "mid 1-4k": -13.6,
+    "high 4-10k": -20.1,
+    "air >10k": -28.8
+   }
+  },
+  {
+   "name": "awareness",
+   "t0": 159.97,
+   "t1": 170.52,
+   "peak_dbfs": -6.8,
+   "rms_dbfs": -20.39,
+   "crest_db": 13.59,
+   "corr": 0.88,
+   "mono_sum_db": -0.27,
+   "max_jump": 0.0868,
+   "hf_spike_dbfs": -39.7,
+   "bands": {
+    "sub <60": -8.2,
+    "low 60-250": -2.5,
+    "lowmid 250-1k": -6.3,
+    "mid 1-4k": -12.7,
+    "high 4-10k": -36.2,
+    "air >10k": -78.8
+   }
+  },
+  {
+   "name": "music",
+   "t0": 170.52,
+   "t1": 181.07,
+   "peak_dbfs": -1.95,
+   "rms_dbfs": -15.72,
+   "crest_db": 13.77,
+   "corr": 0.864,
+   "mono_sum_db": -0.31,
+   "max_jump": 0.2742,
+   "hf_spike_dbfs": -23.5,
+   "bands": {
+    "sub <60": -6.9,
+    "low 60-250": -4.8,
+    "lowmid 250-1k": -4.0,
+    "mid 1-4k": -12.7,
+    "high 4-10k": -18.5,
+    "air >10k": -28.5
+   }
+  },
+  {
+   "name": "media",
+   "t0": 181.07,
+   "t1": 197.02,
+   "peak_dbfs": -5.26,
+   "rms_dbfs": -18.59,
+   "crest_db": 13.33,
+   "corr": 0.889,
+   "mono_sum_db": -0.25,
+   "max_jump": 0.1302,
+   "hf_spike_dbfs": -35.7,
+   "bands": {
+    "sub <60": -6.0,
+    "low 60-250": -3.4,
+    "lowmid 250-1k": -5.8,
+    "mid 1-4k": -15.9,
+    "high 4-10k": -26.5,
+    "air >10k": -38.5
+   }
+  },
+  {
+   "name": "hero",
+   "t0": 197.02,
+   "t1": 216.34,
+   "peak_dbfs": -2.48,
+   "rms_dbfs": -16.41,
+   "crest_db": 13.93,
+   "corr": 0.844,
+   "mono_sum_db": -0.35,
+   "max_jump": 0.1106,
+   "hf_spike_dbfs": -36.6,
+   "bands": {
+    "sub <60": -10.3,
+    "low 60-250": -3.6,
+    "lowmid 250-1k": -3.8,
+    "mid 1-4k": -13.0,
+    "high 4-10k": -24.5,
+    "air >10k": -40.4
+   }
+  },
+  {
+   "name": "tail",
+   "t0": 216.34,
+   "t1": 221.92,
+   "peak_dbfs": -1.9,
+   "rms_dbfs": -18.85,
+   "crest_db": 16.95,
+   "corr": 0.824,
+   "mono_sum_db": -0.4,
+   "max_jump": 0.1087,
+   "hf_spike_dbfs": -47.5,
+   "bands": {
+    "sub <60": -13.6,
+    "low 60-250": -1.8,
+    "lowmid 250-1k": -6.9,
+    "mid 1-4k": -10.7,
+    "high 4-10k": -34.2,
+    "air >10k": -70.1
+   }
+  }
+ ],
+ "hits": [],
+ "dc": [
+  2.22452e-05,
+  1.782364e-05
+ ],
+ "sample_peak_dbfs": -1.9,
+ "true_peak_dbtp_est": -1.9,
+ "corr_total": 0.854,
+ "bands_total": {
+  "sub <60": -6.9,
+  "low 60-250": -4.4,
+  "lowmid 250-1k": -4.4,
+  "mid 1-4k": -12.6,
+  "high 4-10k": -21.0,
+  "air >10k": -30.0
+ },
+ "n_full_scale": 0,
+ "last_0.5s_rms_dbfs": -78.0,
+ "first_0.05s_peak_dbfs": -66.6,
+ "master": {
+  "raw_tp": -1.64,
+  "raw_lufs": -17.0,
+  "master_gain_db": 1.0,
+  "limiter_max_gr_db": 1.26,
+  "limited_ms": 379.6,
+  "limiter_gr_db_by_section": {
+   "intro": -0.0,
+   "wake": 0.05,
+   "twin": 0.1,
+   "rise": -0.0,
+   "create": -0.0,
+   "commons": -0.0,
+   "coast": -0.0,
+   "oilers": 0.82,
+   "wellness": -0.0,
+   "storage": -0.0,
+   "awareness": -0.0,
+   "music": 0.67,
+   "media": -0.0,
+   "hero": 0.03,
+   "tail": 1.26
+  }
+ },
+ "ffmpeg": {
+  "I": -16.0,
+  "LRA": 5.4,
+  "TP": -1.9,
+  "loudnorm_input_i": -16.05,
+  "loudnorm_input_tp": -1.88,
+  "loudnorm_input_lra": 5.3,
+  "stream": {
+   "codec_name": "pcm_s24le",
+   "sample_rate": "48000",
+   "channels": 2,
+   "bits_per_sample": 24,
+   "duration_ts": 10652160,
+   "bits_per_raw_sample": "24"
+  }
+ },
+ "tempo": {
+  "bpm": 112.5,
+  "seg_beats": [
+   12,
+   52,
+   40,
+   36,
+   24,
+   24,
+   40,
+   48,
+   20,
+   20,
+   30,
+   36
+  ],
+  "knots": [],
+  "max_bend_pct": 1.37
+ }
+}

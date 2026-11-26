@@ -94,6 +94,30 @@ SNAP_CAP = 0.015           # v2.5: the finale's tempo step allowed for the logo 
 LOGO_SLACK = 0.10          # s: the logo hit lands at most this long after the wordmark's first frame (0.35 if it cannot)
 
 
+def mix_opts(cut_dir):
+    """<cut>/score-mix.json: a cut's own mix on top of the shared score (no file: nothing changes).
+      {"styles": {"<chapter id>": {<score-synth STYLES fields>}},     arrangement per chapter (lists become tuples: ramps)
+       "sfx_rules": {"<chapter id>": ["lift-up", ...] | "all"},      which movement sounds a chapter plays (adds to SFX_RULES)
+       "sfx_db": {"default": -18, "wheels": -21},                    their level in the mastered mix
+       "master_eq": [{"kind": "high"|"low"|"bell", "hz": 6000, "db": 2.0, "octaves": 1}]}   extra master EQ bands"""
+    p = os.path.join(cut_dir, 'score-mix.json')
+    return J(p) if os.path.exists(p) else {}
+
+
+def apply_mix(mx, synth=None):
+    """The cut's mix into this run's knobs (module globals: one cut per run) and, with synth, into its styles."""
+    global SFX_DB, SFX_DB_DEFAULT, SFX_RULES
+    if not mx: return
+    db = dict(mx.get('sfx_db') or {})
+    if 'default' in db: SFX_DB_DEFAULT = float(db.pop('default'))
+    SFX_DB = {**SFX_DB, **{k: float(v) for k, v in db.items()}}
+    SFX_RULES = {**SFX_RULES, **{c: (set(SOUND) if v == 'all' else set(v)) for c, v in (mx.get('sfx_rules') or {}).items()}}
+    if synth is not None:
+        for cid, kv in (mx.get('styles') or {}).items():
+            if cid not in synth.STYLES: sys.exit(f'score-mix.json: no style {cid!r}')
+            synth.STYLES[cid].update({k: tuple(v) if isinstance(v, list) and k != 'prog' else v for k, v in kv.items()})
+
+
 def load_synth():
     spec = importlib.util.spec_from_file_location('score_synth', os.path.join(HERE, 'score-synth.py'))
     m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m); return m
@@ -455,7 +479,7 @@ def inputs_digest(cut_dir, edl_bytes):
                            os.devnull, os.devnull, '--plan'], capture_output=True, text=True, check=True).stdout
     plan = json.loads(plan); looks = [plan['fades'], plan['seconds']]
     part = dict(edl=[edl['chapters'], edl['dissolve'], edl.get('transitions'), edl.get('beats'), edl['total']],
-                titles=[aw, src['logo']['chapter'], src['logo']['rel_in']], shots=shots, looks=looks, **({'pins': pins(cut_dir)} if pins(cut_dir) else {}),
+                titles=[aw, src['logo']['chapter'], src['logo']['rel_in']], shots=shots, looks=looks, **({'pins': pins(cut_dir)} if pins(cut_dir) else {}), **({'mix': mix_opts(cut_dir)} if mix_opts(cut_dir) else {}),
                 code=[code_digest(os.path.abspath(__file__)), code_digest(os.path.join(HERE, 'score-synth.py'))])
     return hashlib.sha256(json.dumps(part, sort_keys=True).encode()).hexdigest()
 
@@ -509,6 +533,7 @@ def main():
     ap.add_argument('--no-extras', action='store_true', help='skip analysis, cue sheet and spectrogram')
     a = ap.parse_args()
     cut_dir = a.cut if os.path.isabs(a.cut) else os.path.join(ROOT, a.cut)
+    apply_mix(mix_opts(cut_dir))      # the cut's own movement-sound rules and levels (also what --check digests)
     if a.check:
         p = check(cut_dir)
         for x in p: print('FAIL', x)
@@ -525,7 +550,7 @@ def main():
     else:
         ep = os.path.join(ROOT, MASTER, 'edl.json'); edl = J(ep)
     edl_bytes = txt.encode() if a.edl == 'cut' else open(ep, 'rb').read()
-    synth = load_synth()
+    synth = load_synth(); apply_mix(mix_opts(cut_dir), synth)
     pic = picture(cut_dir, edl)
     tempo, report = fit_tempo(synth, edl, pic)
     if pic['led_on']:      # the wake section starts on the bar nearest the moment the desk lights up
@@ -538,6 +563,7 @@ def main():
     plan = synth.build_plan(edl, tempo)
     chords = hero_chords(plan, pic)
     plan['echo_local'] = True     # the echo follows the local tempo (score-synth premaster)
+    plan['master_eq'] = mix_opts(cut_dir).get('master_eq') or []
     print(f"tempo {tempo['bpm']} BPM, segments {tempo['seg_beats']}, knots {len(tempo['knots'])}")
     for s in plan['sections']:
         bpm = 60 * (s['b1'] - s['b0']) / (s['t1'] - s['t0']) if s.get('bars') else 0
