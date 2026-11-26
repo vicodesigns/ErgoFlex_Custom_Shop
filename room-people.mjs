@@ -2407,6 +2407,7 @@ export class RoomPeople {
             // (`swap` on the second placement: how far through the change (0..1) the second model takes over, .5 when not
             // given. Something put down stays with the first model until the hands have left it (early: the robot set on
             // the shelf in the workshop film); a screen that lights when it is touched, late.)
+            // (`change.wrist`: which way a hand turns in the change, room-people-motion.mjs turnWrist; not in a lap change)
             // (`change` on the second placement: { arms: [from, to], turn: [from, to] }, the parts of the change (0..1) in
             // which the arms move and the body turns and moves to the new spot; [.22, 1] and [0, .72] when not given. The
             // workshop film: the hands come off the shelf before he turns away from the desk.)
@@ -2418,7 +2419,7 @@ export class RoomPeople {
                 const dx = (pair.homeTo.position.x - pair.homeFrom.position.x) / 1000, dz = (pair.homeTo.position.z - pair.homeFrom.position.z) / 1000, yaw = pair.homeFrom.turn, c = Math.cos(yaw), sn = Math.sin(yaw);
                 shift = { x: dx * c - dz * sn, z: dx * sn + dz * c, yaw: pair.homeTo.turn - pair.homeFrom.turn, e: ease };
             }
-            const { model } = solveChange(pair.rig, pair.keyFrom, pair.keyTo, w, part('arms'), shift, plan?.hands === 'line'), cut = Number.isFinite(pair.to?.swap) ? THREE.MathUtils.clamp(pair.to.swap, .02, .98) : null;
+            const { model } = solveChange(pair.rig, pair.keyFrom, pair.keyTo, w, part('arms'), shift, plan?.hands === 'line', plan?.wrist), cut = Number.isFinite(pair.to?.swap) ? THREE.MathUtils.clamp(pair.to.swap, .02, .98) : null;
             const shown = (cut === null ? model === 'from' : w < cut) ? a : b;
             if (pair.to?.carry) this.carryArms(pair.rig, pair.to);   // (carrying: the hands stay on it all through the change)
             shown.position.lerpVectors(pair.homeFrom.position, pair.homeTo.position, ease); shown.rotation.y = pair.homeFrom.turn + (pair.homeTo.turn - pair.homeFrom.turn) * ease;
