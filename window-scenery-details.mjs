@@ -266,23 +266,7 @@ export function steppingStone(b, x, y, z, size, turn, hex) {
 }
 
 // Outer folds spread into the duff at the base of the grove's mature trees.
-export function redwoodRoots(b, x, ground, z, radius) {
-    const bark = colour('#765341'),
-        crease = colour('#554137'),
-        moss = colour('#616245');
-    for (let i = 0; i < 8; i++) {
-        const angle = (i * Math.PI) / 4 + Math.sin(x * 0.002 + i) * 0.13;
-        const length = 1.85 + 0.72 * Math.sin(z * 0.0007 + i * 2.3);
-        const point = (theta, r, h) =>
-            V(x + radius * r * Math.cos(theta), ground + radius * h, z + radius * r * Math.sin(theta));
-        const high = point(angle, 0.9, 3.5),
-            ridge = point(angle, 1.28, 0.74);
-        const toe = point(angle + 0.07, length + 0.9, 0.02);
-        const left = point(angle - 0.29, 1.06, 0.02),
-            right = point(angle + 0.28, 1.09, 0.02);
-        b.tri(left, high, ridge, bark);
-        b.tri(ridge, high, right, crease);
-        b.tri(left, ridge, toe, i % 3 === 0 ? moss : bark);
-        b.tri(toe, ridge, right, crease);
-    }
+export function redwoodRoots() {
+    // The buttresses are part of the trunk now (kit redwood: one modelled surface that spreads into the duff, its
+    // foot in its own shade), so the separate triangular fins that stood here are gone. Kept for the scenes' calls.
 }
