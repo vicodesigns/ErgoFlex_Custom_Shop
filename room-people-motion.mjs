@@ -1532,7 +1532,45 @@ export const STEP_TURN = THREE.MathUtils.degToRad(60);
 const stepsFor = yaw => Math.max(1, Math.ceil(Math.abs(yaw) / STEP_TURN - 1e-9));
 // How far (0..1) the arms are through a change at w (the part of it they move in: `arms`, [.22, 1] when not given).
 export const changeArms = (w, arms0 = null) => arms0 ? ss(arms0[0], arms0[1], clamp01(w)) : ss(.22, 1, clamp01(w));
-export function solveChange(rig, from, to, w, arms0 = null, shift = null, line = false) {
+// A bone's turn in its parent as q = swing x roll: its roll about its own length (+Y, radians, -PI..PI), then its bend.
+export function rollSplit(q) {
+    const t = Q().set(0, q.y, 0, q.w); if (t.lengthSq() < 1e-12) t.set(0, 0, 0, 1); else t.normalize(); if (t.w < 0) t.set(0, -t.y, 0, -t.w);
+    return { roll: 2 * Math.atan2(t.y, t.w), swing: q.clone().multiply(t.invert()) };
+}
+// A change's hand turned the way a real one can (`change: { wrist: { r: { turn: 'pronate' | 'supinate', over: [from, to],
+// relax: 0..1, arc: { lift, k, p } } } }` on the second placement). Blending the two hand turns as one quaternion takes the shortest way in 4D,
+// which can roll the wrist through the back of its range (Noah from the screen's edge to the tap: +187 degrees, further palm
+// up and round the back, where a hand goes 173 degrees back through thumb-up). So the roll and the bend are blended apart:
+// the roll from one posture's to the other's the way `turn` says (pronate: toward palm down, for the right hand a turn to
+// its owner's left), the bend from one to the other, eased toward a straight wrist by `relax` on the way; over the part
+// `over` of the change (the arms' own part when not given). Both ends are the two postures exactly. (The hand turns where
+// it is: only `arc`, below, moves the wrist.)
+const wristShare = (spec, t, arms) => Array.isArray(spec.over) && spec.over.length === 2 && spec.over.every(Number.isFinite) && spec.over[0] < spec.over[1] ? ss(spec.over[0], spec.over[1], t) : arms;
+function turnWrist(rig, from, to, s, t, spec, arms) {
+    const hand = rig.side[s].arm[3], a = wristShare(spec, t, arms), one = rollSplit(from.q[hand]), two = rollSplit(to.q[hand]);
+    const way = (spec.turn === 'supinate' ? 1 : -1) * (s === 'r' ? 1 : -1);      // (the sign of the roll that goes the named way: the two hands are mirrored)
+    let by = THREE.MathUtils.euclideanModulo(two.roll - one.roll + Math.PI, Math.PI * 2) - Math.PI;
+    if (by * way < 0 && Math.abs(by) > Math.PI / 2) by += way * Math.PI * 2;      // (under 90 degrees the other way is a plain small turn: left as it is)
+    const ease = clamp01(Number(spec.relax) || 0) * Math.max(0, Math.sin(Math.PI * a)) ** .6;
+    rig.lq[hand].copy(one.swing).slerp(two.swing, a).slerp(Q(), ease).multiply(Q().setFromAxisAngle(Y, one.roll + by * a)).normalize();
+}
+// `arc`: with the wrist straighter on the way, the hand reaches further along the forearm than either posture has it (Noah's
+// index finger swept 14 cm past the button and came back). So the arm moves the wrist for the index finger's tip to go one
+// clean way: from where it is in the first posture to where it is in the second, `lift` metres up on the way, by `k` (0..1,
+// how closely) times sin(pi x share)^`p`: nothing at either end. The hand's turn in the room is kept; the arm takes up the
+// difference. In the model's frame, so only for a change that does not step to a new spot. fk() current on entry and on return.
+const tipFrom = V(), tipTo = V(), tipNow = V(), tipAt = V(), arcAt = V(), arcQ = Q();
+function arcFinger(rig, from, to, s, t, spec, arms) {
+    const [, upper, lower, hand] = rig.side[s].arm, i3 = rig.index.get('index_03_' + s), i2 = rig.index.get('index_02_' + s);
+    const a = wristShare(spec, t, arms), way = Math.max(0, Math.sin(Math.PI * a)), k = clamp01(Number(spec.arc.k ?? 1)) * way ** THREE.MathUtils.clamp(Number(spec.arc.p ?? .6) || .6, .2, 4);
+    if (!(k > 1e-6) || i3 === undefined || i2 === undefined) return;
+    // (the tip: 24 mm on from the last joint, along the finger)
+    const tip = (wp, out) => out.copy(wp[i3]).sub(wp[i2]).setLength(.024).add(wp[i3]);
+    tipAt.copy(tip(from.wp, tipFrom)).lerp(tip(to.wp, tipTo), a); tipAt.y += (Number(spec.arc.lift) || 0) * way;
+    arcAt.copy(rig.wp[hand]).addScaledVector(tipAt.sub(tip(rig.wp, tipNow)), k); arcQ.copy(rig.wq[hand]);
+    rig.reach(upper, lower, hand, arcAt); rig.reach(upper, lower, hand, arcAt); rig.setWorld(hand, arcQ); rig.fk();
+}
+export function solveChange(rig, from, to, w, arms0 = null, shift = null, line = false, wrist = null) {
     const b = rig.b, t = clamp01(w), hips = ss(0, .72, t), spine = ss(.08, .82, t), head = ss(.15, .92, t), arms = changeArms(t, arms0);
     if (t <= 0 || t >= 1) { rig.load(t <= 0 ? from : to); rig.fk(); return { model: t <= 0 ? 'from' : 'to' }; }
     const part = new Float32Array(rig.n).fill(hips);
@@ -1540,6 +1578,7 @@ export function solveChange(rig, from, to, w, arms0 = null, shift = null, line =
     part[b.neck_01] = part[b.head] = head;
     for (const s of ['l', 'r']) { for (const i of rig.side[s].arm) part[i] = arms; for (const i of rig.side[s].fingers) part[i] = arms; }
     for (let i = 0; i < rig.n; i++) rig.lq[i].slerpQuaternions(from.q[i], to.q[i], part[i]);
+    for (const s of ['l', 'r']) if (wrist?.[s]?.turn) turnWrist(rig, from, to, s, t, wrist[s], arms);
     rig.lp[b.Root].lerpVectors(from.root, to.root, hips);
     const a = from.wp[b.pelvis], z = to.wp[b.pelvis], travel = z.y - a.y, rising = travel > 0;
     // getting up the hips go forward before they go up; sitting down they come down before they go back
@@ -1584,6 +1623,7 @@ export function solveChange(rig, from, to, w, arms0 = null, shift = null, line =
         rig.reach(thigh, calf, foot, awayAt); rig.reach(thigh, calf, foot, awayAt); rig.setWorld(foot, footQ);
     }
     rig.fk();
+    for (const s of ['l', 'r']) if (wrist?.[s]?.turn && wrist[s].arc && !shift) arcFinger(rig, from, to, s, t, wrist[s], arms);
     if (line) {
         const a = arms0 ? ss(arms0[0], arms0[1], t) : ss(.22, 1, t), yaw = shift?.yaw || 0, e = shift?.e || 0;
         for (const s of ['l', 'r']) {
