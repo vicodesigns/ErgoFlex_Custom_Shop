@@ -187,13 +187,13 @@ export function holdArms(rig, key) {
     for (const s of ['l', 'r']) for (const i of [...rig.side[s].arm, ...rig.side[s].fingers]) if (i >= 0 && key.q[i]) rig.lq[i].copy(key.q[i]);
     rig.fk();
 }
-export function lookToward(rig, target, amount, pitchOnly = false) {
+export function lookToward(rig, target, amount, pitchOnly = false, maxYaw = LOOK_YAW, maxPitch = LOOK_PITCH) {
     if (!target || !(amount > 0)) return;
     const b = rig.b, face = faceOf(rig), from = v7.copy(rig.wp[b.head]); from.y += .07;      // (the eyes: a little above the head bone)
     gazeV.copy(face).applyQuaternion(rig.wq[b.head]); lookV.copy(target).sub(from); if (lookV.lengthSq() < 1e-6) return; lookV.normalize();
     const wrap = a => Math.atan2(Math.sin(a), Math.cos(a)), clamp = THREE.MathUtils.clamp;
-    const yaw = pitchOnly ? 0 : clamp(wrap(Math.atan2(lookV.x, lookV.z) - Math.atan2(gazeV.x, gazeV.z)), -LOOK_YAW, LOOK_YAW) * amount;
-    const pitch = clamp(Math.asin(clamp(lookV.y, -1, 1)) - Math.asin(clamp(gazeV.y, -1, 1)), -LOOK_PITCH, LOOK_PITCH) * amount;
+    const yaw = pitchOnly ? 0 : clamp(wrap(Math.atan2(lookV.x, lookV.z) - Math.atan2(gazeV.x, gazeV.z)), -maxYaw, maxYaw) * amount;
+    const pitch = clamp(Math.asin(clamp(lookV.y, -1, 1)) - Math.asin(clamp(gazeV.y, -1, 1)), -maxPitch, maxPitch) * amount;
     for (const [bone, share] of [[b.neck_01, .4], [b.head, .6]]) {
         rig.turnWorld(bone, lookTurn.setFromAxisAngle(Y, yaw * share)); rig.fk();
         gazeV.copy(face).applyQuaternion(rig.wq[b.head]); lookAxis.crossVectors(gazeV, Y);

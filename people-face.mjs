@@ -57,6 +57,8 @@ export function prepareFace(root, data, id) {
     const frame = skin && headFrame(skin.mesh.geometry, data.landmarks);
     if (!frame) return;
     for (const eyeMesh of eyes) {
+        // (the eyes' frame as bound, for a glance's aim: eyeAim; `unit` a small step in the geometry's own units)
+        eyeMesh.geometry.userData.eyeFrame ||= { mid: frame.mid.toArray(), x: frame.x.toArray(), y: frame.y.toArray(), z: frame.z.toArray(), unit: frame.scale[2] * .5, vertex: 0 };
         if (!eyeMesh.geometry.morphAttributes.position?.length) prepareEyes(eyeMesh, frame);
     }
     const detailedMouth = ['andre', 'maya', 'omar'].includes(character(id));
@@ -227,6 +229,38 @@ function drawChapterFace(bound, shot, t, blinks) {
     }
 }
 
+// Glances (opt-in: a cast entry's `glances`, room-people.mjs): authored looks away from what the posture has them doing, in
+// chapter seconds: keys [[leave, there, leave there, back], ...]. The eyes go first (EYE_LEAD) and quicker than the head;
+// the smile gathers a little after the eyes arrive and stays a little after they have left.
+const EYE_LEAD = .1, EYE_TRAVEL = Math.PI / 30, EYE_MAX = 1.5;      // (6 degrees of iris travel at influence 1, prepareEyes)
+export function glanceAt(glances, t) {
+    const out = { head: 0, eyes: 0, smile: 0, blink: 0 };
+    for (const key of Array.isArray(glances?.keys) ? glances.keys : []) {
+        if (!Array.isArray(key) || key.length !== 4 || !key.every(Number.isFinite)) continue;
+        const [a, b, c, d] = key;
+        out.head = Math.max(out.head, hold(t, a, b, c, d));
+        out.eyes = Math.max(out.eyes, hold(t, a - EYE_LEAD, a + (b - a) * .45 - EYE_LEAD, c - EYE_LEAD * .5, c + (d - c) * .55));
+        out.smile = Math.max(out.smile, hold(t, a + .1, b + .25, c, d + .35));
+        out.blink = Math.max(out.blink, blinkPulse(t - (a - EYE_LEAD - .04)));
+    }
+    return out;
+}
+// How far the eyes must turn from straight ahead (radians, to their left and up) to be on `target` (the world) from
+// where the head has them now: the eyes' own frame as bound (prepareEyes), carried by the head bone.
+const eyeP = [new Vector3(), new Vector3(), new Vector3(), new Vector3()], eyeTo = new Vector3();
+function eyeAim(eyeMesh, target) {
+    const f = eyeMesh.geometry.userData.eyeFrame; if (!f) return null;
+    eyeMesh.updateWorldMatrix(true, false); eyeMesh.skeleton?.bones.forEach(bone => bone.name === 'head' && bone.updateWorldMatrix(true, false));
+    const [mid, px, py, pz] = eyeP.map((p, k) => {
+        p.fromArray(f.mid); if (k) p.addScaledVector(eyeTo.fromArray(f['xyz'[k - 1]]), f.unit);
+        if (eyeMesh.isSkinnedMesh) eyeMesh.applyBoneTransform(f.vertex, p);
+        return p.applyMatrix4(eyeMesh.matrixWorld);
+    });
+    px.sub(mid).normalize(); py.sub(mid).normalize(); pz.sub(mid).normalize(); eyeTo.copy(target).sub(mid).normalize();
+    const a = eyeTo.dot(px), u = eyeTo.dot(py), n = eyeTo.dot(pz);
+    return { across: Math.atan2(a, n), up: Math.atan2(u, Math.hypot(a, n)) };
+}
+
 const bindings = new WeakMap();
 export function performFace(person, room, seconds, film, live, shot = null) {
     let bound = bindings.get(person);
@@ -273,6 +307,22 @@ export function performFace(person, room, seconds, film, live, shot = null) {
         up = -.16 + .65 * refocus + .13 * glance;
     }
     const brow = .09 + .25 * quietSmile + .53 * reaction * (1 - .6 * reaction);
-    const strength = Math.min(1, smile);
-    drawExpression(bound, strength, blink * (1 - .08 * strength), brow, across, up);
+    let smiling = smile, lid = blink;
+    const glances = film ? person.userData.person.glances : null;
+    person.userData.glanceProbe = undefined;
+    if (glances) {
+        const glance = glanceAt(glances, time);
+        smiling += (Number.isFinite(glances.smile) ? glances.smile : .3) * glance.smile;
+        lid = Math.max(lid, glance.blink);
+        const target = person.userData.glanceTarget, aim = glance.eyes > 0 && target && eyes[0] ? eyeAim(eyes[0], target) : null;
+        if (aim) {
+            const to = v => Math.max(-EYE_MAX, Math.min(EYE_MAX, v / EYE_TRAVEL));
+            across += (to(aim.across) - across) * glance.eyes; up += (to(aim.up) - up) * glance.eyes;
+            // (read by probes and tests: how far off the target the head, and then the eyes, are, degrees)
+            const deg = 180 / Math.PI;
+            person.userData.glanceProbe = { weight: glance.head, headAcross: aim.across * deg, headUp: aim.up * deg, eyeAcross: (aim.across - across * EYE_TRAVEL) * deg, eyeUp: (aim.up - up * EYE_TRAVEL) * deg, smile: Math.min(1, smiling), lid };
+        }
+    }
+    const strength = Math.min(1, smiling);
+    drawExpression(bound, strength, lid * (1 - .08 * strength), brow, across, up);
 }

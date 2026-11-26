@@ -1,4 +1,4 @@
-import { faceData, prepareFace } from './people-face.mjs';
+import { faceData, prepareFace } from './people-face.mjs?v=miaphone-20261126';
 import { rootsTapers } from './media-cast-finishes.mjs';
 import {measureHeadphoneSockets,isDeskHeadphone,markDeskHeadphones,finishHeadphonePlug} from './desk-headphone-hook.mjs';
 import {shelfStorageSpace} from './desk-shelf-space.mjs';
@@ -14,7 +14,7 @@ import { buildInstitutionalRoom } from './institutional-room.mjs?v=polish-202611
 import { refineRoomSurfaces } from './room-refinement.mjs?v=polish-20261111f';
 import { polishRoomProp } from './room-polish.mjs?v=polish-20261111f';
 import { RoomLife } from './room-life.mjs?v=polish-20261111f';
-import { RoomPeople } from './room-people.mjs?v=noah-20261125';
+import { RoomPeople } from './room-people.mjs?v=miaphone-20261126';
 import { propUnitCorrection } from './prop-scale.mjs?v=prop-unit-scale-20261013';
 import { atelierSceneChair } from './atelier-scene-seating.mjs?v=conference-chairs-20261015';
 import { milanoSceneSofa } from './milano-scene-seating.mjs?v=milano-seating-20261014';
