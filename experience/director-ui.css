@@ -1,0 +1,299 @@
+/* Director UI pass (25 Nov 2026): one control family across the app bar, the menus, the inspector, the timeline,
+   the frame tools and the dialogs. Loaded after director-polish.css and before director-phone.css.
+
+   Why a new file: director.css, director-theme.css and director-shell.css are append-only (tests/fold-titles-test.mjs),
+   and most of what was inconsistent came from two leaks, not from the design system itself:
+     1. the film page's own element rules (experience.css: button{min-height:42px;border-radius:100px;padding:9px 18px},
+        header{position:fixed}, footer{position:fixed}, aside span{letter-spacing:2px}) reached every Director surface
+        that did not undo them one by one: the app bar and its menus, the right-click menu, the Keys & mouse panel
+        (its header flew to the top of the window and its footer was hidden), the view buttons, the report dialog;
+     2. newer panels were styled with class-only selectors that lose to the theme's #director-panel rules
+        (the Tray's sliders collapsed to their thumb, a hidden row showed, the status pills were 28 px tall).
+   This file undoes the leaks once, then states each control once, with the --df-* tokens of director-theme.css.
+
+   Presentation only: no element is added, removed or renamed here, and nothing the film reads is touched.
+   Everything that changes an existing element sits inside "not (pointer: coarse)", so the phone layout
+   (director-phone.css, pointer: coarse) is exactly as it was. (Headless Chrome reports pointer: none, so the tests
+   see these rules too; "pointer: fine" alone would hide them from every e2e.) */
+:root{
+  /* Control heights: xs = chips and pills, sm = dense rows, md = buttons, lg = fields and the app bar */
+  --df-h-xs:20px;--df-h-sm:24px;--df-h-md:26px;--df-h-lg:28px;
+  --df-r-5:10px;
+  /* Elevation: 1 = raised control, 2 = floating tool group over the view, 3 = menu / popover, 4 = dialog */
+  --df-elev-1:0 1px 2px #0006;--df-elev-2:0 4px 14px #0007;--df-elev-3:0 14px 40px #000b,0 2px 6px #0006;--df-elev-4:0 28px 80px #000c,0 4px 12px #0007;
+  --df-menu:#131a23;--df-scrim:#03070bb3;
+  --df-ring:0 0 0 1px var(--df-surface-0),0 0 0 3px var(--df-accent);
+  --df-ease:.12s cubic-bezier(.2,0,0,1);
+  /* One icon set: 24 px grid, 2 px round strokes, drawn as masks so they take the text colour */
+  --df-i-chevron:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+  --df-i-chevron-light:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a97a6' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+  --df-i-check:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'><path d='M5 12.5l4.5 4.5L19 7.5'/></svg>");
+  --df-i-undo:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M8 5L4 9l4 4'/><path d='M4 9h10a6 6 0 0 1 0 12h-3'/></svg>");
+  --df-i-redo:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M16 5l4 4-4 4'/><path d='M20 9H10a6 6 0 0 0 0 12h3'/></svg>");
+  --df-i-sound:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 9.5h3.5L12 6v12l-4.5-3.5H4z'/><path d='M15.5 9.5a4 4 0 0 1 0 5M18 7a7.5 7.5 0 0 1 0 10'/></svg>");
+  --df-i-muted:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 9.5h3.5L12 6v12l-4.5-3.5H4z'/><path d='M16 9.5l5 5M21 9.5l-5 5'/></svg>");
+  --df-i-keys:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='2.5' y='6' width='19' height='12' rx='2'/><path d='M6.5 10h.01M10 10h.01M13.500 10h.01M17 10h.01M8 14h8'/></svg>");
+  --df-i-more:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black'><circle cx='5' cy='12' r='1.9'/><circle cx='12' cy='12' r='1.9'/><circle cx='19' cy='12' r='1.9'/></svg>");
+  --df-i-eye:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M2.500 12S6 5.500 12 5.500 21.500 12 21.500 12 18 18.500 12 18.500 2.500 12 2.500 12z'/><circle cx='12' cy='12' r='3'/></svg>");
+  --df-i-eye-off:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M9.500 5.900A9 9 0 0 1 12 5.500c6 0 9.500 6.500 9.500 6.500a15 15 0 0 1-2.600 3.300M6.200 7.600A15 15 0 0 0 2.500 12S6 18.500 12 18.500a9 9 0 0 0 4-.900'/><path d='M4 4l16 16'/></svg>");
+  --df-i-lock:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><rect x='5' y='11' width='14' height='9' rx='2'/><path d='M8 11V8a4 4 0 0 1 8 0v3'/></svg>");
+  --df-i-unlock:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><rect x='5' y='11' width='14' height='9' rx='2'/><path d='M8 11V8a4 4 0 0 1 7.500-2'/></svg>");
+  --df-i-bug:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M12 3.500l9 16H3z'/><path d='M12 10v4.500M12 17v.01'/></svg>");
+  --df-i-close:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round'><path d='M6 6l12 12M18 6L6 18'/></svg>");
+}
+
+@media not all and (pointer:coarse){
+
+/* ============================================================ 0. The leaks, undone once ============================================================ */
+/* (:where keeps this as weak as the page rule it answers, so each surface's own rules still decide its sizes) */
+body.directing :where(#director-appbar,.ab-pop,.df-ctx,.keys-panel,.df-palette,.df-report,.df-toast,.nav-views,.nav-pill-box,.still-opener,.film-tools,.light-tools,#director-autosaves,#film-switch,#film-cut-new,#film-stale,#film-draft,#people-library,#prop-library,#scene-picker,.desk-isolate-chip,.timeline-tooltip) button{min-height:0;backdrop-filter:none;letter-spacing:0}
+/* the hidden attribute always hides (a label's display:grid showed the Render tab's "Re-render every chapter" row
+   while the request was for one chapter) */
+#director-panel [hidden],#director-timeline [hidden],#director-appbar [hidden]{display:none!important}
+
+/* ============================================================ 1. The app bar ============================================================ */
+#director-appbar{gap:6px;padding:0 8px 0 12px;border-radius:var(--df-r-4);border-color:var(--df-border-2);box-shadow:var(--df-elev-2);font:500 12px/1 var(--df-font)}
+#director-appbar .ab-brand{margin-right:6px;font-size:12.5px;letter-spacing:.01em;color:var(--df-text-3)}
+#director-appbar .ab-brand b{color:var(--df-text-1)}
+/* every button in the bar: one height, one radius */
+#director-appbar .ab-btn,#director-appbar .film-chapter-picker button{height:var(--df-h-lg);min-height:0;padding:0 10px;border:1px solid var(--df-border-2);border-radius:var(--df-r-2);background:var(--df-surface-2);color:var(--df-text-1);font:500 12px/1 var(--df-font);box-shadow:none;transition:background-color var(--df-ease),border-color var(--df-ease),color var(--df-ease)}
+#director-appbar .ab-btn:hover:not([disabled]),#director-appbar .film-chapter-picker button:hover:not([disabled]){background:var(--df-surface-4);border-color:var(--df-border-3)}
+#director-appbar .ab-btn:active:not([disabled]){background:#2d3b4a}
+#director-appbar .ab-btn[disabled],#director-appbar .film-chapter-picker button[disabled]{opacity:1;color:var(--df-text-4);cursor:default}
+#director-appbar .ab-btn[aria-pressed="true"],#director-appbar .ab-btn[aria-expanded="true"]{background:var(--df-accent-soft);border-color:var(--df-accent-line);color:var(--df-accent-text)}
+#director-appbar .ab-btn:focus-visible,#director-appbar select:focus-visible,#director-appbar .film-chapter-picker button:focus-visible{outline:none;box-shadow:var(--df-ring)}
+/* icon buttons: quiet until hovered */
+#director-appbar .ab-btn.ab-icon,#director-appbar [data-ab-open="more"]{width:var(--df-h-lg);padding:0;background:transparent;border-color:transparent;color:var(--df-text-2);font-size:0;display:inline-flex;align-items:center;justify-content:center}
+#director-appbar .ab-btn.ab-icon::before,#director-appbar [data-ab-open="more"]::before{content:'';width:16px;height:16px;background:currentColor;-webkit-mask:var(--i) center/contain no-repeat;mask:var(--i) center/contain no-repeat}
+#director-appbar [data-action="undo"]{--i:var(--df-i-undo)}#director-appbar [data-action="redo"]{--i:var(--df-i-redo)}
+#director-appbar [data-action="keys-panel"]{--i:var(--df-i-keys)}#director-appbar [data-ab-open="more"]{--i:var(--df-i-more)}
+#director-appbar .ab-btn.ab-icon:hover:not([disabled]),#director-appbar [data-ab-open="more"]:hover{background:var(--df-surface-3);border-color:transparent;color:var(--df-text-1)}
+#director-appbar .ab-group{gap:0}
+/* Sound: the speaker drawn, the word from the state (the button's own text is an emoji and a word) */
+#director-appbar [data-ab-proxy="sound"]{font-size:0;display:inline-flex;align-items:center;gap:6px}
+#director-appbar [data-ab-proxy="sound"]::before{content:'';width:15px;height:15px;background:currentColor;-webkit-mask:var(--df-i-muted) center/contain no-repeat;mask:var(--df-i-muted) center/contain no-repeat}
+#director-appbar [data-ab-proxy="sound"]::after{content:'Muted';font-size:12px}
+#director-appbar [data-ab-proxy="sound"][aria-pressed="true"]::before{-webkit-mask-image:var(--df-i-sound);mask-image:var(--df-i-sound)}
+#director-appbar [data-ab-proxy="sound"][aria-pressed="true"]::after{content:'Sound'}
+#director-appbar [data-ab-proxy="sound"]:not([aria-pressed="true"]){color:var(--df-text-2)}
+/* the transport and the one primary */
+#director-appbar .ab-play{min-width:118px;font-weight:600}
+#director-appbar .ab-play[aria-pressed="true"]{background:var(--df-select-soft);border-color:#ffc85c88;color:var(--df-select-text)}
+#director-appbar .ab-btn.primary{margin-left:6px;padding:0 13px;background:var(--df-accent);border-color:transparent;color:var(--df-accent-ink);font-weight:650}
+#director-appbar .ab-btn.primary:hover:not([disabled]){background:var(--df-accent-hover);border-color:transparent}
+#director-appbar .ab-btn.ab-hold.on{background:#4a3206;border-color:#ffc977;color:#ffe2a8}
+#director-appbar [data-ab-proxy="director"]{margin-left:2px;background:transparent;color:var(--df-text-2)}
+/* the cut and chapter pickers: fields of the same height, the steps joined to the chapter */
+#director-appbar .ab-film .film-chapter-picker{gap:0}
+#director-appbar select{-webkit-appearance:none;appearance:none;height:var(--df-h-lg);min-height:0;max-width:210px;padding:0 24px 0 9px;border:1px solid var(--df-border-2);border-radius:var(--df-r-2);background:var(--df-input) var(--df-i-chevron-light) right 6px center/13px no-repeat;color:var(--df-text-1);font:550 12px/1 var(--df-font);text-overflow:ellipsis;cursor:pointer;transition:border-color var(--df-ease)}
+#director-appbar select:hover{border-color:var(--df-border-3)}
+#director-appbar .film-cut{margin-right:8px}
+#director-appbar .film-cut select{border-color:#ffc97766;color:#ffe2b0}
+#director-appbar .film-chapter-picker button{width:24px;padding:0;font-size:14px;line-height:1;color:var(--df-text-2)}
+#director-appbar .film-chapter-picker [data-action="film-prev"]{border-radius:var(--df-r-2) 0 0 var(--df-r-2);margin-right:-1px}
+#director-appbar .film-chapter-picker [data-action="film-next"]{border-radius:0 var(--df-r-2) var(--df-r-2) 0;margin-left:-1px}
+#director-appbar .film-chapter-picker [data-action="film-prev"]+label select{border-radius:0}
+#director-appbar .film-chapter-picker button:hover:not([disabled]){position:relative;z-index:1}
+#director-appbar .saved-indicator{margin-left:4px;font-size:11px;color:var(--df-text-3)}
+
+/* ============================================================ 2. Menus: the app bar's and the right-click menu ============================================================ */
+.ab-pop{top:calc(100% + 6px);min-width:236px;padding:4px;border-radius:var(--df-r-3);background:var(--df-menu);border:1px solid var(--df-border-2);box-shadow:var(--df-elev-3);font:500 12.5px/1.3 var(--df-font);color:var(--df-text-1)}
+.ab-pop button{min-height:var(--df-h-md);height:auto;align-items:center;gap:20px;padding:4px 10px;border:0;border-radius:var(--df-r-1);background:transparent;color:var(--df-text-1);font:500 12.5px/1.3 var(--df-font);white-space:nowrap;box-shadow:none}
+.ab-pop button:hover:not(:disabled),.ab-pop button:focus-visible{background:#5cd3f624;color:#fff;outline:none}
+.ab-pop button:disabled{color:var(--df-text-4);cursor:default}
+.ab-pop button small{margin-left:auto;color:var(--df-text-3);font:500 10.5px/1.3 var(--df-font);letter-spacing:.01em}
+.ab-pop button:hover:not(:disabled) small{color:var(--df-text-2)}
+/* check items: the tick hangs in a gutter and every label of that menu starts on the same line
+   (the label text begins with "✓ " or two spaces; as plain inline text the two never lined up) */
+.ab-pop:has([aria-checked])>button,.ab-pop:has([aria-checked])>.ab-sub>button{padding-left:28px}
+.ab-pop [aria-checked]>span:first-child{white-space:normal}
+.ab-pop [aria-checked="true"]>span:first-child{white-space:pre;margin-left:-1.1em}
+.ab-sub{margin:4px -4px;padding:4px;border-top:1px solid var(--df-border-1);border-bottom:1px solid var(--df-border-1)}
+.ab-sub p{margin:3px 10px 4px;color:var(--df-text-3);font:650 var(--df-fs-2xs)/1.4 var(--df-font);letter-spacing:.1em;text-transform:uppercase}
+.ab-pop:has([aria-checked])>.ab-sub>p{margin-left:28px}
+.ab-sub button{color:var(--df-text-2);font-size:12px}
+/* the Render menu's quality pills: a segmented row per setting */
+#director-appbar .ab-render-sub{padding:4px 6px 8px}
+#director-appbar .ab-render-sub p{margin:3px 4px 6px;font:650 var(--df-fs-2xs)/1.4 var(--df-font);letter-spacing:.1em;text-transform:uppercase;color:var(--df-text-3)}
+#director-appbar .ab-render-pills{gap:0;margin-top:5px;border:1px solid var(--df-border-2);border-radius:var(--df-r-2);overflow:hidden;background:var(--df-input)}
+#director-appbar .ab-pop button.ab-pill{min-height:var(--df-h-sm);height:var(--df-h-sm);padding:0 6px;border:0;border-left:1px solid var(--df-border-1);border-radius:0;background:transparent;color:var(--df-text-2);font:600 11px/1 var(--df-font)}
+#director-appbar .ab-pop button.ab-pill:first-child{border-left:0}
+#director-appbar .ab-pop button.ab-pill:hover{background:var(--df-surface-3);color:var(--df-text-1)}
+#director-appbar .ab-pop button.ab-pill[aria-pressed="true"]{background:var(--df-accent);color:var(--df-accent-ink)}
+/* right-click menu */
+.df-ctx.ab-pop{min-width:210px;top:auto}
+.df-ctx hr{border:0;border-top:1px solid var(--df-border-1);margin:4px -4px}
+.df-ctx-title{margin:3px 10px 5px;max-width:240px;color:var(--df-text-3);font:650 var(--df-fs-2xs)/1.4 var(--df-font);letter-spacing:.1em;text-transform:uppercase}
+
+/* ============================================================ 3. The inspector ============================================================ */
+#director-panel{border-color:var(--df-border-2);box-shadow:var(--df-elev-2)}
+/* buttons: 26 px; fields: 28 px */
+#director-panel button{min-height:var(--df-h-md);padding:3px 10px;font-size:var(--df-fs-sm);line-height:1.25}
+#director-panel input:not([type=checkbox]):not([type=range]):not([type=color]),#director-panel select{min-height:var(--df-h-lg);padding-top:3px;padding-bottom:3px}
+#director-panel select{-webkit-appearance:none;appearance:none;padding-right:24px;background:var(--df-input) var(--df-i-chevron-light) right 6px center/13px no-repeat;text-overflow:ellipsis;cursor:pointer}
+#director-panel select[multiple],#director-panel select[size]:not([size="1"]){background-image:none;padding-right:8px}
+/* disabled: quiet and flat (the dashed edge read as "drop something here") */
+#director-panel button:disabled,#director-timeline button:disabled,#director-panel .primary:disabled,#director-panel button:disabled:hover,#director-timeline button:disabled:hover{border:1px solid var(--df-border-1);background:transparent;color:var(--df-text-4)}
+#director-panel input:disabled,#director-panel select:disabled{border-style:solid;border-color:var(--df-border-1);color:var(--df-text-4);opacity:1}
+/* a second "primary" in a card is an accent outline; the filled one is kept for the action a page is about */
+#director-panel button:focus-visible,#director-timeline button:focus-visible,.film-tools button:focus-visible,.light-tools button:focus-visible,.nav-views button:focus-visible{outline:none;box-shadow:var(--df-ring)}
+/* checkboxes and sliders */
+#director-panel input[type=checkbox],#director-timeline input[type=checkbox]{width:14px;height:14px;margin:0;flex:none;accent-color:var(--df-accent);cursor:pointer}
+#director-panel input[type=range]{min-height:18px;height:18px;cursor:pointer}
+/* a checkbox and its sentence on one line (a label is a grid here: the box sat alone above its text) */
+#director-panel label:has(>input[type=checkbox]:first-child):not(.director-check){display:flex;flex-direction:row;align-items:flex-start;gap:8px;line-height:1.4;cursor:pointer}
+#director-panel label:has(>input[type=checkbox]:first-child):not(.director-check)>input{margin-top:2px}
+
+/* the tab bar: four rows, the columns as wide as their longest name so no name is cut */
+#director-panel .inspector-tabs.inspector-tabs-grouped{display:grid;grid-template-columns:max-content repeat(4,auto);gap:2px;padding:3px;border-radius:var(--df-r-3);border-color:var(--df-border-1)}
+#director-panel .inspector-tabs.inspector-tabs-grouped .inspector-tab-row{display:grid;grid-column:1/-1;grid-template-columns:subgrid;gap:0 2px;padding:1px 0 1px 5px;border-left:2px solid color-mix(in srgb,var(--tg-accent,#5cd3f6) 45%,transparent);border-radius:2px var(--df-r-1) var(--df-r-1) 2px}
+#director-panel .inspector-tabs.inspector-tabs-grouped .inspector-tab-row:has(button[aria-pressed=true]){background:color-mix(in srgb,var(--tg-accent) 8%,transparent)}
+#director-panel .inspector-tabs.inspector-tabs-grouped .inspector-tab-group-label{padding-right:2px;font:700 8px/1 var(--df-font);letter-spacing:.05em}
+#director-panel .inspector-tabs.inspector-tabs-grouped .inspector-tab-group-btns{display:grid;grid-column:2/-1;grid-template-columns:subgrid;gap:0 2px}
+#director-panel .inspector-tabs.inspector-tabs-grouped button[data-inspector-tab]{min-width:0;min-height:var(--df-h-md);height:var(--df-h-md);justify-content:flex-start;gap:3px;padding:0 2px 0 3px;border-radius:var(--df-r-1);font:550 11px/1 var(--df-font);letter-spacing:0}
+#director-panel .inspector-tabs.inspector-tabs-grouped button[data-inspector-tab]::before{width:11px;height:11px;opacity:.8}
+#director-panel .inspector-tabs.inspector-tabs-grouped .inspector-tab-row button[aria-pressed=true]{background:var(--df-surface-4);color:#fff;box-shadow:inset 0 -2px 0 var(--tg-accent)}
+#director-panel .inspector-tabs.inspector-tabs-grouped .inspector-tab-row button[aria-pressed=true]::before{opacity:1}
+#director-panel .inspector-tabs.inspector-tabs-grouped>button[data-action=inspector]{display:none}
+
+/* page headings: one size for every tab's title, one for the groups inside it */
+#director-panel [data-inspector-page] h3,#director-panel [data-inspector-page]>h3{margin:12px 0 4px;font:650 var(--df-fs-lg)/1.3 var(--df-font);letter-spacing:-.005em;color:var(--df-text-1)}
+#director-panel [data-inspector-page] h4{margin:12px 0 5px;font:650 var(--df-fs-md)/1.3 var(--df-font);letter-spacing:0;text-transform:none;color:var(--df-text-1)}
+#director-panel [data-inspector-page] :is(h3,h4) small,#director-panel .inspector-subtitle{font-weight:450;font-size:var(--df-fs-xs);color:var(--df-text-3);letter-spacing:0}
+body.df-shell #director-panel [data-inspector-page]:not([hidden])::before{margin:2px 0 0;padding:0 7px;border-radius:var(--df-r-1);border-color:var(--df-border-1);background:var(--df-surface-2);font:650 var(--df-fs-2xs)/17px var(--df-font);letter-spacing:.08em;text-transform:uppercase}
+/* folding sections: one chevron everywhere (the browser's own triangle was left on half of them) */
+#director-panel details:not(.light-section):not(.floor-section)>summary{display:flex;align-items:center;gap:7px;list-style:none;cursor:pointer;border-radius:var(--df-r-1)}
+#director-panel details:not(.light-section):not(.floor-section)>summary::-webkit-details-marker{display:none}
+#director-panel details:not(.light-section):not(.floor-section)>summary::before{content:'';width:6px;height:6px;flex:none;margin:0 1px 0 3px;border-right:1.6px solid var(--df-text-3);border-bottom:1.6px solid var(--df-text-3);transform:rotate(-45deg);transition:transform var(--df-ease)}
+#director-panel details[open]:not(.light-section):not(.floor-section)>summary::before{transform:rotate(45deg) translate(-1px,-1px)}
+#director-panel details>summary:hover{color:var(--df-text-1)}
+#director-panel details>summary:hover::before{border-color:var(--df-text-1)}
+#director-panel details>summary:focus-visible{outline:none;box-shadow:var(--df-ring)}
+/* the Scene list at the top of the column */
+#director-panel .scene-list{padding:3px 5px;border:1px solid var(--df-border-1);border-radius:var(--df-r-3)}
+#director-panel .scene-list summary{min-height:var(--df-h-sm);padding:0 2px;font:650 var(--df-fs-md)/1 var(--df-font)}
+#director-panel .scene-list-rows button{min-height:var(--df-h-sm);padding:2px 6px;border:0;border-radius:var(--df-r-1);background:transparent;font-size:var(--df-fs-sm);font-weight:500}
+#director-panel .scene-list-rows button:hover{background:var(--df-surface-3)}
+#director-panel .scene-list-rows button.b2-selected{background:var(--df-select-soft);color:var(--df-select-text)}
+
+/* the People tab's Move / Turn / Scale: pressed like every other pressed button (it was pink) */
+#director-panel .people-modes button[aria-pressed=true]{background:var(--df-accent-soft);border-color:var(--df-accent-line);color:var(--df-accent-text)}
+#director-panel .prop-flip button[aria-pressed=true]{background:var(--df-accent-soft);border-color:var(--df-accent-line);color:var(--df-accent-text)}
+
+/* the Tray tab: the slider takes the row and the number keeps its 72 px (the theme's input width won, so the slider
+   was squeezed down to its thumb); the name and its range on one line */
+#director-panel .tray-joint{margin:6px 0;padding:6px 8px 4px;border:1px solid var(--df-border-1);border-radius:var(--df-r-3);background:var(--df-surface-2)}
+#director-panel .tray-joint.clamped{border-color:#ff7a6b88;background:#ff7a6b10}
+#director-panel .tray-joint-label{display:flex;flex-direction:row;justify-content:space-between;align-items:baseline;gap:8px;margin:0 0 2px;font-size:var(--df-fs-sm);color:var(--df-text-1);cursor:default}
+#director-panel .tray-limit{font:500 var(--df-fs-2xs)/1.3 var(--df-mono);color:var(--df-text-3)}
+#director-panel .tray-joint-controls input[type=range]{flex:1 1 auto;min-width:0;width:auto}
+#director-panel .tray-joint-controls input[type=number]{flex:none;width:68px}
+#director-panel .tray-joint-controls small{flex:none;width:12px;color:var(--df-text-3);font-size:var(--df-fs-xs)}
+#director-panel .tray-panel .tray-bar span{color:var(--df-text-3)}
+
+/* ============================================================ 4. The timeline ============================================================ */
+#director-timeline{border-color:var(--df-border-2);box-shadow:var(--df-elev-2)}
+#director-timeline button{min-height:var(--df-h-md)}
+#director-timeline select{-webkit-appearance:none;appearance:none;padding:0 22px 0 8px;background:var(--df-input) var(--df-i-chevron-light) right 5px center/12px no-repeat;border:1px solid var(--df-border-2);border-radius:var(--df-r-2);color:var(--df-text-1);font:550 11.5px/1 var(--df-font);cursor:pointer}
+#director-timeline .film-chapter-picker select,#director-timeline .snap-control select,#director-timeline .choreo-pick select{background:var(--df-input) var(--df-i-chevron-light) right 5px center/12px no-repeat;padding:0 22px 0 8px}
+#director-timeline select:hover{border-color:var(--df-border-3)}
+#director-timeline select:focus-visible,#director-timeline input:focus-visible{outline:none;border-color:var(--df-accent);box-shadow:0 0 0 3px var(--df-accent-soft)}
+/* the transport */
+#director-timeline .timeline-transport button{min-height:var(--df-h-lg);min-width:var(--df-h-lg)}
+#director-timeline .timeline-transport .chapter-transport{min-height:var(--df-h-lg);box-shadow:none}
+#director-timeline .timeline-timecode input{height:var(--df-h-lg)}
+/* Shortcuts and Report a problem are not "add to a lane": no lane dot, a quiet look, a rule after them */
+#director-timeline .track-palette .timeline-shortcuts{padding:0 8px;border:0;color:var(--df-text-3);font:500 var(--df-fs-sm)/1 var(--df-font);opacity:1;margin:0}
+#director-timeline .track-palette .timeline-shortcuts::before{width:13px;height:13px;border-radius:0;box-shadow:none;background:currentColor;-webkit-mask:var(--df-i-keys) center/contain no-repeat;mask:var(--df-i-keys) center/contain no-repeat}
+#director-timeline .track-palette .timeline-report::before{-webkit-mask-image:var(--df-i-bug);mask-image:var(--df-i-bug)}
+#director-timeline .track-palette .timeline-shortcuts:hover{background:var(--df-surface-3);border-color:transparent;color:var(--df-text-1)}
+#director-timeline .track-palette .timeline-shortcuts:not(.timeline-report){font-size:0;gap:6px}
+#director-timeline .track-palette .timeline-shortcuts:not(.timeline-report)::after{content:'Shortcuts';font-size:var(--df-fs-sm)}
+#director-timeline .track-palette .timeline-report{margin-right:5px;position:relative}
+#director-timeline .track-palette .timeline-report::after{content:'';position:absolute;right:-4px;top:5px;bottom:5px;width:1px;background:var(--df-border-2)}
+/* the mode pills in the foot: pills, not buttons */
+#director-timeline .sb-pill{min-height:0;height:var(--df-h-xs);padding:0 8px;border-radius:10px;border:1px solid var(--df-border-2);background:transparent;color:var(--df-text-3);font:600 var(--df-fs-xs)/1 var(--df-font)}
+#director-timeline .sb-pill:hover{border-color:var(--df-border-3);color:var(--df-text-1);background:var(--df-surface-3)}
+#director-timeline .sb-pill.on{color:var(--df-accent-text);border-color:var(--df-accent-line);background:var(--df-accent-soft)}
+#director-timeline .sb-pill.on.warn{color:#ffd79a;border-color:#ffb54788;background:#ffb5471a}
+#director-timeline .timeline-footer{min-height:var(--df-h-xs)}
+/* lane labels: a long name is cut at the label's edge instead of running over the lane's clips */
+#director-timeline .timeline-content .desk-lane-label{overflow:hidden}
+/* the eye and the lock: drawn, in the text colour (they were colour emoji) */
+#director-timeline .lane-eye,#director-timeline .lane-lock{font-size:0;color:var(--df-text-2);min-height:0}
+#director-timeline .lane-eye::before,#director-timeline .lane-lock::before{content:'';display:block;width:12px;height:12px;margin:auto;background:currentColor;-webkit-mask:var(--i) center/contain no-repeat;mask:var(--i) center/contain no-repeat}
+#director-timeline .lane-eye{--i:var(--df-i-eye);width:18px;min-width:18px;padding:0;opacity:.5}
+#director-timeline .lane-eye[aria-pressed="true"]{--i:var(--df-i-eye-off);opacity:1;color:var(--df-warning);background:none}
+#director-timeline .lane-eye:hover{opacity:1;color:var(--df-text-1)}
+#director-timeline .lane-lock{--i:var(--df-i-unlock);opacity:0}
+#director-timeline .lane-lock[aria-pressed="true"]{--i:var(--df-i-lock);opacity:1;color:var(--df-warning)}
+#director-timeline .desk-lane-label:hover .lane-lock,#director-timeline .track-heading:hover .lane-lock{opacity:.75}
+#director-timeline .lane-lock:hover{opacity:1!important;color:var(--df-text-1)}
+
+/* ============================================================ 5. The tools over the view ============================================================ */
+.nav-views{right:8px;bottom:8px;gap:2px;padding:3px;border-radius:var(--df-r-3);background:var(--df-overlay);border:1px solid var(--df-border-2);box-shadow:var(--df-elev-2)}
+.nav-views button{height:var(--df-h-sm);min-height:0;padding:0 8px;border:1px solid transparent;border-radius:var(--df-r-2);background:transparent;color:var(--df-text-2);font:600 var(--df-fs-sm)/1 var(--df-font)}
+.nav-views button:hover{background:var(--df-surface-4);color:var(--df-text-1)}
+.nav-views button[aria-pressed="true"]{background:var(--df-accent-soft);border-color:var(--df-accent-line);color:var(--df-accent-text)}
+.light-tools button,.film-tools button,.still-opener button{min-height:var(--df-h-md);height:var(--df-h-md)}
+.light-tools button{top:10px}
+.film-tools-row{box-shadow:var(--df-elev-2)}
+.light-tools::before{box-shadow:var(--df-elev-2)}
+
+/* ============================================================ 6. Floating panels and dialogs ============================================================ */
+/* Keys & mouse: its header and footer are its own again (the page's header / footer rules pinned them to the window) */
+.keys-panel{top:70px;right:16px;bottom:16px;padding:0;border-radius:var(--df-r-4);border:1px solid var(--df-border-2);background:var(--df-surface-1);box-shadow:var(--df-elev-3);font:12.5px/1.4 var(--df-font);overflow:hidden}
+.keys-panel>header{position:static;inset:auto;z-index:auto;display:grid;grid-template-columns:auto max-content minmax(0,1fr) auto auto;grid-template-areas:"title tabs . edit close" "find find find find find";align-items:center;gap:8px 6px;padding:10px 10px 10px 12px;border-bottom:1px solid var(--df-border-1);background:var(--df-surface-2);zoom:1}
+.keys-panel>header>b{grid-area:title}.keys-panel>header>.kp-tabs{grid-area:tabs}.keys-panel>header>input{grid-area:find}.keys-panel>header>[data-kp-edit]{grid-area:edit}.keys-panel>header>[data-kp-close]{grid-area:close}
+body.directing .keys-panel>footer,.keys-panel>footer{position:static;inset:auto;display:block;padding:8px 12px;border-top:1px solid var(--df-border-1);background:var(--df-surface-2);color:var(--df-text-3);font-size:var(--df-fs-xs);line-height:1.45}
+.keys-panel span{letter-spacing:0;font-size:inherit;color:inherit}
+.keys-panel header b{font:650 var(--df-fs-md)/1 var(--df-font);white-space:nowrap}
+.keys-panel header input{width:100%;box-sizing:border-box;height:var(--df-h-lg);padding:0 9px;border-radius:var(--df-r-2);font-size:var(--df-fs-md)}
+.keys-panel header input:focus{outline:none;border-color:var(--df-accent);box-shadow:0 0 0 3px var(--df-accent-soft)}
+.keys-panel header button{height:var(--df-h-sm);border-radius:var(--df-r-2);font:550 var(--df-fs-sm)/1 var(--df-font);color:var(--df-text-2)}
+.keys-panel header .kp-tabs{background:var(--df-input)}
+.keys-panel header .kp-tabs button{height:22px;padding:0 7px;border:0;background:transparent}
+.keys-panel header .kp-tabs button[aria-selected="true"]{background:var(--df-surface-4);color:var(--df-text-1)}
+.keys-panel header [data-kp-edit]{border:1px solid var(--df-border-2);background:transparent;padding:0 7px;white-space:nowrap}
+.keys-panel header [data-kp-close]{width:var(--df-h-sm);padding:0;border:0;background:transparent;font-size:0}
+.keys-panel header [data-kp-close]::before{content:'';display:block;width:14px;height:14px;margin:auto;background:currentColor;-webkit-mask:var(--df-i-close) center/contain no-repeat;mask:var(--df-i-close) center/contain no-repeat}
+.keys-panel header button:hover{background:var(--df-surface-4);color:var(--df-text-1)}
+.keys-panel .kp-body{padding:8px 10px 12px;scrollbar-color:#3a4857 transparent;scrollbar-width:thin}
+.kp-sec{margin:6px 0;padding:6px 6px 4px;border:1px solid var(--df-border-1);border-radius:var(--df-r-3)}
+.kp-sec h4{margin:2px 4px 4px;font:650 var(--df-fs-2xs)/1.4 var(--df-font);letter-spacing:.1em;text-transform:uppercase;color:var(--df-text-3)}
+.kp-sec.kp-active h4{color:var(--df-select-text)}
+.keys-panel .kp-row{grid-template-columns:118px minmax(0,1fr) auto;gap:8px;min-height:var(--df-h-sm);padding:3px 4px;border-radius:var(--df-r-1);font:500 var(--df-fs-sm)/1.35 var(--df-font);color:var(--df-text-1)}
+.keys-panel button.kp-row:hover{background:var(--df-surface-3)}
+.keys-panel .kp-label small{font-size:var(--df-fs-xs);color:var(--df-text-3)}
+.keys-panel .kp-origin{font-size:var(--df-fs-2xs);color:var(--df-text-4)}
+.keys-panel .kp-gesture{font-size:var(--df-fs-xs);color:var(--df-accent-text)}
+.keys-panel kbd,.df-palette li kbd,.nav-pill kbd{display:inline-block;min-width:18px;padding:1px 5px;border:1px solid var(--df-border-3);border-bottom-width:2px;border-radius:var(--df-r-1);background:var(--df-surface-3);font:600 10.5px/1.35 var(--df-mono);text-align:center;color:var(--df-text-1)}
+.keys-panel .kb-key{height:50px;border-radius:var(--df-r-1)}
+.keys-panel .kb-key small{font-size:9.5px;line-height:1.15;max-height:2.3em}
+.keys-panel .kb-legend .kb-key{height:auto;border-bottom-width:1px;border-radius:10px;font-size:var(--df-fs-xs)}
+/* command search */
+.df-palette{background:var(--df-scrim)}
+.df-palette-box{border-radius:var(--df-r-5);background:var(--df-menu);border-color:var(--df-border-2);box-shadow:var(--df-elev-4)}
+.df-palette input{height:40px;font:500 14px/1 var(--df-font);color:var(--df-text-1)}
+.df-palette li{min-height:var(--df-h-lg);padding:4px 10px;border-radius:var(--df-r-1);font:500 12.5px/1.3 var(--df-font)}
+.df-palette li:hover{background:var(--df-surface-3)}
+.df-palette li[aria-selected="true"]{background:#5cd3f624;color:#fff}
+/* dialogs: one card */
+#director-autosaves,#film-cut-new,#film-stale,#film-draft,#film-switch,dialog.df-report,#people-library,#prop-library{border:1px solid var(--df-border-2);border-radius:var(--df-r-4);background:var(--df-surface-1);color:var(--df-text-1);box-shadow:var(--df-elev-4)}
+#director-autosaves::backdrop,#film-cut-new::backdrop,#film-stale::backdrop,#film-draft::backdrop,#film-switch::backdrop,dialog.df-report::backdrop,#people-library::backdrop,#prop-library::backdrop{background:var(--df-scrim);backdrop-filter:blur(3px)}
+:is(#director-autosaves,#film-cut-new,#film-stale,#film-draft,#film-switch,dialog.df-report) button{min-height:var(--df-h-lg);padding:0 12px;border:1px solid var(--df-border-2);border-radius:var(--df-r-2);background:var(--df-surface-3);color:var(--df-text-1);font:550 12px/1 var(--df-font);cursor:pointer}
+:is(#director-autosaves,#film-cut-new,#film-stale,#film-draft,#film-switch,dialog.df-report) button:hover:not(:disabled){background:var(--df-surface-4);border-color:var(--df-border-3)}
+:is(#director-autosaves,#film-cut-new,#film-stale,#film-draft,#film-switch,dialog.df-report) button:focus-visible{outline:none;box-shadow:var(--df-ring)}
+:is(#director-autosaves,#film-cut-new,#film-stale,#film-draft,#film-switch,dialog.df-report) button:is(.primary,[value=send],[type=submit]:not([value=cancel])){background:var(--df-accent);border-color:transparent;color:var(--df-accent-ink);font-weight:650}
+dialog.df-report{padding:18px 20px}
+dialog.df-report h3{margin:0 0 6px;font:650 var(--df-fs-xl)/1.3 var(--df-font)}
+dialog.df-report textarea:focus{outline:none;border-color:var(--df-accent);box-shadow:0 0 0 3px var(--df-accent-soft)}
+dialog.df-report label{display:flex;align-items:center;gap:8px;font-size:var(--df-fs-md);color:var(--df-text-2)}
+/* the toast */
+.df-toast{border-radius:var(--df-r-3);background:var(--df-menu);box-shadow:var(--df-elev-3)}
+.df-toast button{height:var(--df-h-sm);border-radius:var(--df-r-2)}
+
+/* ============================================================ 7. Scrollbars ============================================================ */
+#director-panel,#director-timeline .timeline-viewport,.ab-pop,.keys-panel .kp-body,.df-palette ol,.scene-list-rows{scrollbar-width:thin;scrollbar-color:#3a4857 transparent}
+
+}
