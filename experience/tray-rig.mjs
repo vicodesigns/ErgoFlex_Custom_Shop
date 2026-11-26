@@ -24,7 +24,7 @@ import { accessory } from '../catalog.mjs';
 import { sampleTray, isRestPose, riderThicknessMm } from './tray-pose.mjs';
 import { SLIDE_TRAVEL_MM, TRAY_SKEW_DEG, BASE_TILT_AT, SURFACE_TILT_AT } from './tray-limits.mjs';
 
-export const RIGID_ID = 'ergoflex-keyboard-tray', RIG_ID = 'ergoflex-keyboard-tray-rig-v2',   // v2: Vico's real arm (tools/props/tray-rig-v2.mjs); v1 kept as the fallback
+export const RIGID_ID = 'ergoflex-keyboard-tray', RIG_ID = 'ergoflex-keyboard-tray-rig-v3',   // v3: Vico's own model of his tray (tools/props/tray-rig-v3.mjs); v1 and v2 kept
     TRAY_ITEM = 'accessory-keyboard-tray';
 const PIVOTS = ['Tray_Slide', 'Tray_Swing', 'Tray_BaseTilt', 'Tray_SurfaceTilt'];      // (Tray_Drop, the mount, has no joint: the drop was taken out)
 export const BASE_PIVOT = 'Tray_BaseTilt', SURFACE_PIVOT = 'Tray_SurfaceTilt';
@@ -41,7 +41,8 @@ export function createTrayRig(api) {
     const desk = () => api.sceneDesks?.active || null;
     const trayItem = () => desk()?.objects?.get(TRAY_ITEM) || null;
 
-    // The two tilt pivots on the real bolts (25 Nov 2026, Vico's unit; SPEC.md 0.4), made at runtime so the glb stays the supplied model split:
+    // Rig v3 has its tilt pivots (Tray_BaseTilt, Tray_SurfaceTilt) in the glb, on the bolts of Vico's model: nothing to add (the early return).
+    // For v1 / v2 (the fallbacks): the two tilt pivots on the real bolts (25 Nov 2026, Vico's unit; SPEC.md 0.4), made at runtime so the glb stays the supplied model split:
     // Tray_BaseTilt at the rear bracket's upper bolt (under Tray_Swing; the arm Tray_Links and the platform group Tray_Tilt hang from it) and
     // Tray_SurfaceTilt at the arm's front bolt (under it; Tray_Tilt hangs from that). Both carry no rotation of their own beyond the track's
     // (as every pivot under Tray_Slide), so local X is the bolts' axis. Pure re-parenting: at rest every part is exactly where it was.
@@ -127,7 +128,7 @@ export function createTrayRig(api) {
     const riderMm = () => installed ? riderThicknessMm(installed.riders.map(r => r.propId)) : 0;
     const ownBack = r => { if (r.obj.parent !== r.own.parent || r.item?.autoStow) return; r.obj.position.copy(r.own.position); r.obj.quaternion.copy(r.own.quaternion); r.obj.scale.copy(r.own.scale); r.obj.updateMatrix(); };
     // A rider's world matrix standing on the plate as it is posed now; null when obj is not a rider, or the tray is at rest (then the
-    // rider's own place on the desk is exactly right: the rest pose is the rigid tray).
+    // rider's own place on the desk is exactly right: the rest pose puts the platform where the rigid tray's plate is, v3 included).
     function riderWorld(obj) {
         const r = installed?.riders.find(x => x.obj === obj); if (!r || !last || isRestPose(last)) return null;
         installed.plate.updateWorldMatrix(true, false);

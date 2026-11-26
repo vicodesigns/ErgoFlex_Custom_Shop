@@ -18,7 +18,7 @@
 // An old edit's `drop` joint and `bracket: true` (taken out 25 Nov 2026, SPEC.md 0.3) are ignored when cleaned and sampled.
 //
 // Pure: no three.js, no DOM. The Director's panels, the stage, the film (film-fx) and the node tests share it.
-import { JOINT_LIMITS, SLIDE_COUPLING, SWING_TILT, UNDER_RAMPS, RIDER_MM, RIDER_UNKNOWN_MM, PLATE_BELOW_TRACK_MM, RIDER_CLEARANCE_MM, BASE_TILT_UNDER_MAX } from './tray-limits.mjs';
+import { JOINT_LIMITS, SLIDE_COUPLING, SWING_TILT, UNDER_RAMPS, RIDER_MM, RIDER_UNKNOWN_MM, PLATE_BELOW_TRACK_MM, RIDER_CLEARANCE_MM, ARM_BOLTS } from './tray-limits.mjs';
 
 export const JOINTS = ['slide', 'swing', 'baseTilt', 'tilt'];
 const DECIMALS = { slide: 4, swing: 2, baseTilt: 2, tilt: 2 };
@@ -74,24 +74,37 @@ const swingTilt = swing => table(SWING_TILT, 'swing', Math.abs(swing), r => r.ti
 export const underDesk = pose => Math.max(ramp(pose?.slide ?? 0, UNDER_RAMPS.slide), ramp(Math.abs(pose?.swing ?? 0), UNDER_RAMPS.swing));
 // The thickest thing that rides on the plate, mm (0 when nothing does): from prop ids, the unknown ones count as a thick keyboard.
 export const riderThicknessMm = ids => (ids || []).reduce((m, id) => Math.max(m, RIDER_MM[id] ?? RIDER_UNKNOWN_MM), 0);
-// Does a rider of this thickness fit under the desktop at the CAD's plate drop (19.7 mm under the track, less a little air)? A thin one
-// (under about 17 mm) does; every keyboard and mouse of the library is thicker.
-export const riderFitsUnder = riderMm => !(riderMm > PLATE_BELOW_TRACK_MM - RIDER_CLEARANCE_MM);
-// The pose after the coupling. Order: slide, swing (given the slide), base tilt (given slide and swing), surface tilt (given all three).
+// How deep the platform's top is under the desktop, mm, with the arm at this base tilt and the platform levelled (rig v3, Vico's model):
+// 12.5 with the arm level, 71.9 at 33.2 deg down.
+export function platformDepthMm(baseTilt = 0) {
+    const b = (finite(baseTilt) ? Math.min(0, baseTilt) : 0) * Math.PI / 180, { dw, dy } = ARM_BOLTS;
+    return PLATE_BELOW_TRACK_MM - (dw * Math.sin(b) + dy * Math.cos(b) - dy);
+}
+// Does a rider of this thickness fit under the desktop (less a little air) with the arm at this base tilt? With the arm level only a thin
+// one does (under 9.5 mm); a 45 mm keyboard needs the arm about 19 deg down (rig v3: the real tray tucks a keyboard by lowering the arm).
+export const riderFitsUnder = (riderMm, baseTilt = 0) => !(riderMm > platformDepthMm(baseTilt) - RIDER_CLEARANCE_MM);
+// The base tilt at which a rider of this thickness first fits under the desk (degrees, <= 0), or null when it never does.
+export function baseTiltToFit(riderMm) {
+    if (riderFitsUnder(riderMm, 0)) return 0;
+    if (!riderFitsUnder(riderMm, JOINT_LIMITS.baseTilt[0])) return null;
+    let lo = JOINT_LIMITS.baseTilt[0], hi = 0; for (let n = 0; n < 40; n++) { const m = (lo + hi) / 2; if (riderFitsUnder(riderMm, m)) lo = m; else hi = m; }
+    return Math.floor(lo * 10) / 10;
+}
+// The pose after the coupling. Order (rig v3): base tilt (its hard limits only: with the arm's top level the platform can never rise into
+// the desktop), slide and swing (given the base tilt: does the rider fit under the desk at it?), surface tilt (given all three).
 // Returns the pose and the limits each joint was held to. The coupling tables limit the PLATFORM's own angle (baseTilt + tilt): the
 // surface tilt's limits are those less the base tilt, inside its own hard limits (the arc slot).
 // opts.riderMm: thickness of what stands on the plate (0 = nothing); opts.riderAway 0..1: how far it has gone to the shelf (1 = off the
-//   tray: no rider limit at all). A rider that does not fit under the desktop keeps the plate out from under the desk while it is on:
+//   tray: no rider limit at all). A rider that does not fit under the desktop at this base tilt keeps the plate out from under the desk while it is on:
 //   slide <= the first value of UNDER_RAMPS.slide, |swing| <= that of UNDER_RAMPS.swing; while it is being carried off (0 < away < 1)
 //   those limits open in step, so a tray keyed further than they allow follows the hand-off smoothly instead of jumping.
 function chain(pose, opts) {
     const riderMm = opts?.riderMm || 0, away = clamp(finite(opts?.riderAway) ? opts.riderAway : 0, 0, 1), p = holdPose(pose), limits = {};
-    const blocked = !riderFitsUnder(riderMm) && away < 1;
+    limits.baseTilt = [...JOINT_LIMITS.baseTilt]; p.baseTilt = clamp(p.baseTilt, ...limits.baseTilt);
+    const blocked = !riderFitsUnder(riderMm, p.baseTilt) && away < 1;
     limits.slide = [JOINT_LIMITS.slide[0], blocked ? lerp(UNDER_RAMPS.slide[0], JOINT_LIMITS.slide[1], away) : JOINT_LIMITS.slide[1]]; p.slide = clamp(p.slide, ...limits.slide);
     const s = slideLimits(p.slide), swingMax = blocked ? Math.min(s.swing, lerp(UNDER_RAMPS.swing[0], s.swing, away)) : s.swing;
     limits.swing = [0 - swingMax, swingMax]; p.swing = clamp(p.swing, ...limits.swing);
-    const under = underDesk(p);
-    limits.baseTilt = [JOINT_LIMITS.baseTilt[0], lerp(JOINT_LIMITS.baseTilt[1], Math.min(JOINT_LIMITS.baseTilt[1], BASE_TILT_UNDER_MAX), under)]; p.baseTilt = clamp(p.baseTilt, ...limits.baseTilt);
     const w = swingTilt(p.swing), net = [Math.max(s.tilt[0], w[0]), Math.min(s.tilt[1], w[1])];
     const lo = Math.max(JOINT_LIMITS.tilt[0], net[0] - p.baseTilt), hi = Math.min(JOINT_LIMITS.tilt[1], net[1] - p.baseTilt);
     limits.tilt = lo <= hi ? [lo, hi] : [hi, hi]; p.tilt = clamp(p.tilt, ...limits.tilt);

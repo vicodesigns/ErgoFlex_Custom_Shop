@@ -50,7 +50,7 @@ const near = (a, b, eps, what) => assert.ok(Math.abs(a - b) <= eps, `${what}: ${
     const edit = cleanTrayEdit({ keys: [{ t: 20.8, pose: { tilt: -10 } }, { t: 26, pose: { slide: 1, tilt: 0 } }, { t: 30, pose: { slide: 0 } }] }), awayAt = s => R.riderAway(tl, s);
     near(sampleTray(edit, 26, { riderMm: 45, riderAwayAt: awayAt }).slide, 1, 1e-9, 'slid all the way in with the keyboard on the shelf');
     assert.deepEqual(trayIssues(edit, { riderMm: 45, riderAwayAt: awayAt }), [], 'and no clash warning');
-    near(sampleTray(edit, 26, { riderMm: 45 }).slide, 0.45, 1e-9, '(the same key with the keyboard on the tray is held)');
+    near(sampleTray(edit, 26, { riderMm: 45 }).slide, 0.75, 1e-9, '(the same key with the keyboard on the tray, the arm level, is held)');
 }
 {   // the carry path: leaves straight up, ends level into the shelf from the user's side, clears the desktop, never less than a small lift
     const from = [0, -25, 420], to = [-90, 700, -300], desk = { width: 1219, depth: 762 }, p = R.carryPath(from, to, { desk, half: 22 });

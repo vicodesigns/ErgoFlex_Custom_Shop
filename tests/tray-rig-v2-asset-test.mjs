@@ -31,8 +31,8 @@ const d = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
 
 {   // the numbers, and the tables that use them
     assert.equal(B.ARM_MM, 75); assert.equal(B.PIN_UP_MM, 27); near(B.BOLTS_FWD_MM, 38.11, 0.01, 'bolts forward'); near(B.ARM_REST_DEG, 14.56, 0.01, 'arm at rest');
-    assert.deepEqual(L.BASE_TILT_AT.map(v => +v.toFixed(2)), B.REAR_BOLT_V2.map(v => +v.toFixed(2)), 'tray-limits BASE_TILT_AT = the moved rear bolt');
-    assert.deepEqual([...L.SURFACE_TILT_AT], B.FRONT_BOLT, 'tray-limits SURFACE_TILT_AT = the raised front bolt');
+    // (tray-limits BASE_TILT_AT / SURFACE_TILT_AT are rig v3's since 26 Nov 2026; v2's bolts are its own REAR_BOLT_V2 / FRONT_BOLT)
+    assert.deepEqual(B.REAR_BOLT_V2.map(v => +v.toFixed(2)), [-10, -23.85, 46.86]); assert.deepEqual(B.FRONT_BOLT, [-10, -42.7, 119.45]);
     near(Math.hypot(B.FRONT_BOLT[1] - B.REAR_BOLT_V2[1], B.FRONT_BOLT[2] - B.REAR_BOLT_V2[2]), 75, 1e-6, 'bolt to bolt');
 }
 {   // the same nodes, pivots, triangles, material as v1
@@ -69,11 +69,10 @@ const d = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
     for (const i of rear) near(axisD(b[i], B.REAR_BOLT_V2), axisD(a[i], R), 1e-3, 'the rear eye turns about the rear bolt');
     for (const i of front) near(axisD(b[i], B.FRONT_BOLT), axisD(a[i], F), 1e-3, 'the front eye sits on the front bolt');
 }
-{   // the build is reproducible, and indexed (hidden), v1 kept, the stage loads v2
+{   // the build is reproducible, and indexed (hidden), v1 kept (the stage loads v3 since 26 Nov 2026; v2 stays as a fallback)
     const tmp = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'tray-v2-')), 'v2.glb'); await B.build({ out: tmp });
     assert.ok(fs.readFileSync(tmp).equals(fs.readFileSync(path.join(root, 'assets/props/ergoflex-keyboard-tray-rig-v2.glb'))), 'tools/props/tray-rig-v2.mjs makes exactly the committed file');
     const index = JSON.parse(fs.readFileSync(path.join(root, 'assets/props/index.json'), 'utf8')).props, e = index.find(p => p.id === 'ergoflex-keyboard-tray-rig-v2'), one = index.find(p => p.id === 'ergoflex-keyboard-tray-rig');
     assert.ok(e && one); assert.equal(e.hidden, true); assert.equal(e.tris, 11121); assert.equal(e.bytes, fs.statSync(path.join(root, e.file)).size); assert.deepEqual(filterEntries([e], {}), []); assert.ok(fs.existsSync(path.join(root, one.file)), 'v1 kept');
-    assert.match(fs.readFileSync(path.join(root, 'experience/tray-rig.mjs'), 'utf8'), /RIG_ID = 'ergoflex-keyboard-tray-rig-v2'/, 'the stage loads v2');
 }
 console.log('tray-rig-v2-asset-test: ok (arm 75 mm bolt to bolt, forks pin +27 mm, rear bolts +38.1 mm forward; track, rod, knob, screw, plate untouched; same nodes, triangles, material; reproducible build; indexed, v1 kept)');

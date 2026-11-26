@@ -1,7 +1,7 @@
 // The Director's Tray mode, the parts that are plain data (no DOM, no three.js; tests/tray-mode-test.mjs): what the sliders show at the
 // playhead (the keyed value next to the value the tray really takes, with the reason when they differ), the limits as text, the presets,
 // the lane's keys and segments with their warnings, and the saved poses. scene-tray-editor.mjs draws and wires it.
-import { JOINTS, TRAY_JOINTS, sampleTray, limitsFor, clampTrayPose, clampedJoints, trayIssues, riderFitsUnder, ridersAt, KEY_SNAP } from './tray-pose.mjs';
+import { JOINTS, TRAY_JOINTS, sampleTray, limitsFor, clampTrayPose, clampedJoints, trayIssues, riderFitsUnder, baseTiltToFit, ridersAt, KEY_SNAP } from './tray-pose.mjs';
 import { SLIDE_TRAVEL_MM, UNDER_RAMPS } from './tray-limits.mjs';
 import { LEAVE_DEG } from './tray-riders.mjs';
 
@@ -18,14 +18,14 @@ export const labelOf = joint => TRAY_JOINTS.find(j => j.id === joint)?.label || 
 export const stepOf = () => 1;
 const range = (joint, [lo, hi]) => joint === 'slide' ? `${toDisplay(joint, lo)}–${toDisplay(joint, hi)} %` : `${r1(lo)}–${r1(hi)}°`;
 
-// The presets of the panel (poses to key at the playhead).
+// The presets of the panel (poses to key at the playhead): Vico's own poses of his tray (rig v3, SPEC.md 0.6) where he modelled them.
 export const PRESETS = Object.freeze([
-    { id: 'out', label: 'Out (as built)', pose: { slide: 0, swing: 0, baseTilt: 0, tilt: 0 } },
+    { id: 'out', label: 'Pulled out (as built)', pose: { slide: 0, swing: 0, baseTilt: 0, tilt: 0 } },
     { id: 'tilt', label: 'Tilted down', pose: { tilt: -12 } },
     { id: 'side', label: 'Side storage', pose: { slide: 0, swing: 90, tilt: 0 } },
-    { id: 'in', label: 'Pushed in', pose: { slide: 1, swing: 0, baseTilt: 0, tilt: 0 } },
-    { id: 'down', label: 'Arm down, level', pose: { baseTilt: -30, tilt: 30 } },
-    { id: 'up', label: 'Arm up, level', pose: { baseTilt: 12.9, tilt: -12.9 } },
+    { id: 'in', label: 'Pulled in (arm down, level)', pose: { slide: 1, swing: 0, baseTilt: -33.2, tilt: 33.2 } },
+    { id: 'down', label: 'Arm down, level', pose: { baseTilt: -33.2, tilt: 33.2 } },
+    { id: 'up', label: 'Tilted up (slot end)', pose: { baseTilt: 0, tilt: 7.8 } },
 ]);
 
 // Why a joint is not where it was keyed, in words for the panel ('' when it is).
@@ -33,19 +33,21 @@ export const PRESETS = Object.freeze([
 export function limitReason(joint, raw, edit, riderMm = 0, riders = [], opts = { riderMm }) {
     const got = clampTrayPose(raw, opts);
     if (Math.abs(got[joint] - raw[joint]) < 1e-6) return '';
-    // the joints before this one in the clamp order (slide, swing, tilt) are already as the tray has them: would this one have been
-    // allowed without the rider? Then the rider is the reason.
-    const order = ['slide', 'swing', 'baseTilt', 'tilt'], pre = { ...raw }; for (const j of order.slice(0, order.indexOf(joint))) pre[j] = got[j];
-    const bare = clampTrayPose(pre, { ...opts, riderMm: 0 }), byRider = Math.abs(bare[joint] - raw[joint]) < 1e-6 && riderMm > 0 && !riderFitsUnder(riderMm);
+    // the joints before this one in the clamp order (base tilt, slide, swing, tilt) are already as the tray has them: would this one have
+    // been allowed without the rider? Then the rider is the reason.
+    const order = ['baseTilt', 'slide', 'swing', 'tilt'], pre = { ...raw }; for (const j of order.slice(0, order.indexOf(joint))) pre[j] = got[j];
+    // (the rider is the reason when, without it, the joint would have gone further than it does: the coupling may hold it too, less tightly)
+    const bare = clampTrayPose(pre, { ...opts, riderMm: 0 }), byRider = Math.abs(bare[joint] - got[joint]) > 1e-6 && riderMm > 0 && !riderFitsUnder(riderMm, got.baseTilt);
     if (byRider) {
         const what = riders.length ? riders.join(' and ') : 'keyboard or mouse', many = riders.length > 1;
         const where = joint === 'slide' ? `the tray stops at ${toDisplay('slide', UNDER_RAMPS.slide[0])} % of its slide (${Math.round(UNDER_RAMPS.slide[0] * SLIDE_TRAVEL_MM)} of ${SLIDE_TRAVEL_MM} mm)` : joint === 'swing' ? `it swings no further than ${UNDER_RAMPS.swing[0]}°` : 'the plate stays level';
         if ((opts.riderAway || 0) > 0) return `The ${what} ${many ? 'are' : 'is'} being carried up to the desk's shelf: the tray opens to its full range as ${many ? 'they go' : 'it goes'}.`;
-        return `A ${what} (${r1(riderMm)} mm) does not fit under the desk, so while ${many ? 'they are' : 'it is'} on the tray ${where}. Once the desk tilts past ${LEAVE_DEG}°, the keyboard and mouse go up to the desk's shelf and the tray is free.`;
+        const fit = baseTiltToFit(riderMm), lower = fit === null ? '' : ` Lower the arm (Base tilt ${r1(fit)}° or further) and it fits under.`;
+        return `A ${what} (${r1(riderMm)} mm) does not fit under the desk with the arm at ${r1(got.baseTilt)}°, so while ${many ? 'they are' : 'it is'} on the tray ${where}.${lower} Once the desk tilts past ${LEAVE_DEG}°, the keyboard and mouse go up to the desk's shelf and the tray is free.`;
     }
     const L = limitsFor(got, opts)[joint];
     return joint === 'swing' ? `Swing stops at ±${r1(L[1])}° at this slide: it narrows as the tray slides in.`
-        : joint === 'baseTilt' ? `Base tilt is held to ${range('baseTilt', L)} here: the arm cannot lift the plate into the desktop while it is under the desk.`
+        : joint === 'baseTilt' ? `Base tilt is held to ${range('baseTilt', L)}: the arm goes from level (its top: the platform 19.7 mm under the desktop) to 33.2° down, as on Vico's tray.`
         : joint === 'tilt' ? `Surface tilt is held to ${range('tilt', L)} here: the platform's own angle (base + surface tilt) stays within its range, and level under the desk.` : `${labelOf(joint)} is held to ${range(joint, L)}.`;
 }
 
