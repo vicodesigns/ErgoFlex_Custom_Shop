@@ -98,3 +98,56 @@ failed on a detached node); the others are from the live page.
    dropping either the icons or the Story / Motion / Stage / Look captions and keeping larger text.
 4. The lane lock is hidden until the pointer is over the lane's label (it was always faintly visible).
 5. App bar buttons are 28 px tall (were 42 px). Positions and order are unchanged.
+
+---
+
+# Round 2 (26 Nov 2026)
+
+Same branch, same stylesheet (`experience/director-ui.css`, section 8 plus the icon tokens at the top), CSS only again.
+No JavaScript, data, key, shortcut or Export cut output touched, so ESLint no-use-before-define had nothing to lint.
+Audited in headless Chrome on the harness's own scratch server (coast, Cinematographer's cut, 1920 x 1080, and a
+2560 x 1440 look): every inspector tab, a selected person, pose mode, tray mode, a selected camera key, the Keys & mouse
+Keyboard view, the Studio (Store / Studio / Layers).
+
+## What changed
+
+- **Timeline transport**: skip back, skip forward and restart are drawn icons (they were `|‹`, `›|`, `↻`); Loop has a
+  drawn loop glyph and, when on, the same cyan pressed look as every other pressed toggle.
+- **Sliders**: one layout. Graphics' "Screen look" rows were stacked and centred (a class-only rule lost to the theme):
+  now name left, track, mono value right. Lighting's rows put the value ("x1", "+3 steps of x1.11") on the name's line.
+  One 72 px mono right-aligned number field in Lighting and the Chapter tab's starting position (they were 68 / 84 / full).
+- **Selection bar** (Person / Prop / Camera view ... at the top of the inspector): Duplicate, Frame, Zoom to it, Reset,
+  Delete and Deselect are drawn icons (they were ⧉ ⌖ ↔ ↺ colour-emoji bin ×); Delete goes red on hover; focus ring.
+- **Fields**: every inspector input, select and textarea shows the same accent edge and halo when focused.
+- **Tray tab**: its title was an h4 (12 px); it now matches every other tab's title.
+- **Layers**: "Find" and its field are one row (the label was a centred column above the field).
+- **Keys & mouse, Keyboard view**: the panel is 1060 px wide (was 760), keys 62 px tall with three-line captions, so
+  "Maximise the panel under the pointer", "Snapping on / off", "Update this view from what the 3D ..." read in full
+  instead of being cut at two short lines. The panel is as tall as its keys, not the whole window.
+- Checked and found already consistent after round 1: Tray mode, pose mode (Done, Hold camera, Keys, Fingers, Save this
+  pose), People, Desks, Props, Camera, Moves, Cut, Title, Render, Build, Branding, 2560 x 1440 (the 1.2 zoom scales).
+
+Screenshots: `docs/fable-ui-20261125/round2-before-NN.jpg` / `round2-after-NN.jpg`: 01 transport, 02 sliders (Graphics,
+Lighting) and Layers, 03 selection bar, 04 Keyboard view.
+
+## The Studio: audited, not changed
+
+The Studio (index.html, studio.css, studio-shell.css, portal-ui.css, studio-layers.css) is the light, green customer-facing
+design studio, shared with the public Store, restyled on 23 Nov (studio-shell.css). Measured: one 8 px radius, 12 px
+SF Pro text, 30 px controls across its toolbar and panels; nothing inconsistent enough to fix without redrawing it.
+Making it match the Director would be a redesign of the public page, not a polish: see the decision below.
+
+## Still not done
+
+- The Render menu's "Bake chapter" / "Bake full intro" rows lose their hints (needs a JS change in `syncTransport`).
+- Play / Pause glyphs inside the "Play chapter" buttons are still text (the label changes with state; needs JS).
+- Selection bar's leading symbol (a person, a diamond, a dot) is still a text character set by JS.
+- The People lane's per-person rows are dense and saturated pink; a lane-colour decision, not a bug.
+- Classic layout (`?shell=classic`), the libraries and Autosaves were not re-captured after round 2.
+- Browser e2e suites (`director-*-e2e`) were not run; touch devices (the phone layout is untouched) not checked.
+
+## For Vico to decide (round 2)
+
+1. Should the Studio take the Director's dark chrome, or stay light? (Not started; large and public.)
+2. Key captions in the Keyboard view: wider panel (done) or a hover card per key instead?
+3. Keep the paragraph hints cut at two or three lines until hovered (the existing rule), or show them in full?
