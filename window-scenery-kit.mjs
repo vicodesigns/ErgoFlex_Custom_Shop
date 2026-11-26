@@ -426,7 +426,7 @@ export function fanPalm(b, r, x, ground, z, { height = 18000, hex = '#6f8452', s
         limb(b, prev, p, 210 - t * 70, barkC.clone().multiplyScalar(.85 + .1 * (i % 2)), { geometry: POLE }); prev = p; }
     const head = prev.clone(); (b.land || b).shadow(x, ground, z, 1800, 1800, .35, 600);
     // the skirt: dead fronds hanging close under the head, short
-    const far = Math.abs(z) > 40000, fronds = far ? 14 : 34, pleats = far ? 4 : 9;   // (far palms: a few pixels, fewer pieces)
+    const far = Math.abs(z) > 40000, fronds = far ? 14 : 34, pleats = far ? 7 : 9;   // (far palms: fewer fronds; their fans keep enough pleats that the film's long lens does not show them as paddles)
     for (let k = 0; k < (far ? 10 : 40); k++) { const a = r() * 6.28, h = r(), R = 260 + 200 * (1 - h);
         const c = colour(skirt).offsetHSL(0, 0, (r() - .5) * .08).multiplyScalar(.6 + .3 * h);
         euler.set((r() - .5) * .3, -a, (r() - .5) * .3); q.setFromEuler(euler); m4.compose(at.set(head.x + Math.cos(a) * R, head.y - 250 - h * 1400, head.z + Math.sin(a) * R), q, scale.set(200, 700, 120));

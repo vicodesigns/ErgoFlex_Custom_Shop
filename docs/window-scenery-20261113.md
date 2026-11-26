@@ -61,6 +61,45 @@ How it stays behind the room:
 - **Film**: `tools/experience/film-quality.mjs` hides the scenery from its GTAO pass and keeps it out of `bloomOnly`
   (the scenery sits under nodes named "Window ...").
 
+## The outdoor pass (November 25, 2026)
+
+Vico asked for the views out of the film's windows to be improved (skies, depth, light that matches the interior,
+anything flat or fake at 4K). What changed, all of it in the four scenery modules (no room file):
+
+- **What a surface is made of.** Besides `tone`, `normal` and `glow` a vertex carries `kind` (four bytes; kit `KIND`:
+  facade, bark, brick, tiles; `Builder.add(..., { kind })`). The land shader gives every surface close-up detail: a
+  fine grain, rain streaks down walls, grass in blades, tufts and sun-dried patches where the ground is green, grit on
+  paving and duff; brick is coursed with recessed joints, tiles lap, bark is fibrous. Every pattern is faded out by
+  the size of a pixel on the surface (`fwidth`) before it could shimmer, so far things are as calm as they were.
+- **Facades.** A block's `kind` is its own make (`facadeKind(x, z)`: bay width, storey height and a number, from where
+  it stands, not from the scene's random stream): punched windows in brick or render, ribbon windows, or a curtain
+  wall. Near the glass each window has its frame and bars, a shaded head, a blind part way down on some, and more sky
+  in the top of the pane. A far tower is the plain grid it was.
+- **Redwoods.** The bole is one modelled surface: a flare that spreads into root buttresses, bark ridges with real
+  relief, moss low down; the triangular root fins are gone (`redwoodRoots` is kept as an empty call). Nothing is
+  drawn from the scene's random stream, so the Commons' trees stand and branch exactly where they did (checked: every
+  leaf, light and halo of the nine film scenes is in the same place as before the pass).
+- **Crowns.** The mass inside a crown takes the leaf atlas (laid on from the side it faces) and breaks up where it
+  turns from the eye, instead of showing as a smooth dark bag between the sprays or from below.
+- **Sky.** Low down it is warmer and brighter on the sun's side (the more so the lower the sun), a little deeper
+  opposite; cloud banks have a shaded belly, thin edges that light up toward the sun, and go pale toward the horizon
+  like the land does; a third octave breaks their edges.
+- **Sea.** The swell's crests bend, run out and come in sets (two slow noises on the phase and the amplitude).
+- **The sun is the room's.** By day the sun outside stands where the room's key light comes from: `RIG_SUN` is
+  `room-refinement.mjs` `DAY_ANGLES` in degrees right of straight out and degrees up (morning -19.8 / 30.3, afternoon
+  6.8 / 55.2, evening 25.6 / 16.1); a scene whose room has its own angles carries `rig` (the yard: the workshop's
+  broad day light). In a built room `setHour` takes the rig's very direction from `root.userData.lighting` (published
+  before the room's atmosphere runs), so a wall that is not the daylight wall has the sun where it really is (the
+  Commons' back glass: off to the right; behind the building for a wall facing away). Before, the morning sun
+  outside stood 52 degrees left and 13 up while the sun patch on the floor came from 20 left and 30 up. If
+  `DAY_ANGLES` change, change `RIG_SUN` with them (`tests/window-scenery-test.mjs` holds the numbers together).
+- **Cost.** No new pass or render target. Humboldt goes from 24 000 to 44 000 triangles (the modelled boles); the
+  others are unchanged. With a window filling a 1080p frame the desk's GPU takes 4.2 -> 5.2 ms (city) and 5.1 -> 5.5 ms
+  (grove); a film window is a fraction of the frame.
+- **Film**: every room chapter's pixels change through its windows, so the film needs an epoch bump (Vico's call).
+- **Still open**: fan palms are still simple fans; cars and houses are still plain models; no people or traffic
+  outside; the towers' faces are one material each.
+
 ## The places
 
 Scenes (`window-scenery-scenes.mjs`): `garden` (the home room), `back-garden` (other gardens; variants 'bedroom',
