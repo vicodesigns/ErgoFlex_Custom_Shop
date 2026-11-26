@@ -3,7 +3,7 @@
 // the lane's keys and segments with their warnings, and the saved poses. scene-tray-editor.mjs draws and wires it.
 import { JOINTS, TRAY_JOINTS, sampleTray, limitsFor, clampTrayPose, clampedJoints, trayIssues, riderFitsUnder, baseTiltToFit, ridersAt, KEY_SNAP } from './tray-pose.mjs';
 import { SLIDE_TRAVEL_MM, UNDER_RAMPS } from './tray-limits.mjs';
-import { LEAVE_DEG } from './tray-riders.mjs?v=rider-fade-20261125';
+import { LEAVE_DEG } from './tray-riders.mjs?v=rider-fade-hero-20261126';
 
 export const fmtT = t => (Math.round(t * 100) / 100).toFixed(2);
 const r1 = v => Math.round(v * 10) / 10;

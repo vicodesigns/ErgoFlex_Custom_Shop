@@ -11,7 +11,7 @@ import {cleanPose,cleanCamera,defaultPreset} from './cuts.mjs';
 import {cameraFollows,poseOf,putPose} from './editing-camera.mjs';
 import {createDeskChoreo,roomDesks} from './desk-choreo.mjs';
 import {activeTrayEdit} from './tray-pose.mjs';
-import {createRiderHandoff} from './rider-handoff.mjs?v=rider-fade-20261125';
+import {createRiderHandoff} from './rider-handoff.mjs?v=rider-fade-hero-20261126';
 import {touchscreenAt} from './touchscreen-track.mjs';
 import {cleanSonar,pingRows,fullSec,meshesFor} from './sonar.mjs';
 
@@ -338,7 +338,8 @@ export async function mountStage(ctx) {
     deskChoreo.restore();deskChoreo.set(next.deskEdits);
     trayPreset=preset;traySig=null;
     const trayEdit=activeTrayEdit(next.trayEdits,preset);
-    if(trayEdit){trayRig??=(await import('./tray-rig.mjs?v=rider-fade-20261125')).createTrayRig(api);await trayRig.set(trayEdit);trayRig.apply(0);}
+    if(trayEdit){trayRig??=(await import('./tray-rig.mjs?v=rider-fade-hero-20261126')).createTrayRig(api);await trayRig.set(trayEdit);trayRig.apply(0);}
+    riderHandoff.setChapter(next.id);
     riderHandoff.apply(0,deskTrack());
     // The onboard touchscreen posed from the chapter's clock (shot.touchscreen); a chapter without it hands the screen back.
     api.setFilmTouchscreen?.(touchscreenAt(next.touchscreen,0));
@@ -629,7 +630,7 @@ ctx.editCamera(editorMode||cameraHeld);if(editorMode){Object.assign(ctx.controls
     trayEditsTrack:async(edits,id)=>{
       if(shot?.id!==id)return;const sig=JSON.stringify(edits??null);if(sig===traySig)return;traySig=sig;shot.trayEdits=edits;
       const edit=activeTrayEdit(edits,trayPreset);
-      if(edit){trayRig??=(await import('./tray-rig.mjs?v=rider-fade-20261125')).createTrayRig(api);await trayRig.set(edit);}else if(trayRig)trayRig.restore();
+      if(edit){trayRig??=(await import('./tray-rig.mjs?v=rider-fade-hero-20261126')).createTrayRig(api);await trayRig.set(edit);}else if(trayRig)trayRig.restore();
       if(shot?.id===id&&traySig===sig)keepView(()=>seek(lastProgress));
     },
     // Does the featured desk have a tray, what stands on it (the clearance limits depend on it), and which desk model the shot is on.

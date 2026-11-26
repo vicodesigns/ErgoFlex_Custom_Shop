@@ -10,12 +10,16 @@
 // scrubbed or rendered (frames out of order included).
 //
 // HOW they change place: never a pop. With the keyboard tray's rig in the chapter and something standing on its plate (chapter 1) they do
-// not travel at all (Vico: the carry made them jump up and go into the shelf): over HANDOFF_S seconds the one at the tray / desk place
+// not travel at all, nor in the chapters of FADE_CHAPTERS (Vico: the carry made them jump up and go into the shelf): over HANDOFF_S seconds the one at the tray / desk place
 // fades OUT while its copy at the shelf place fades IN, each exactly where it is (riderFade; drawn by rider-fade.mjs). A desk without
 // such a tray keeps the earlier carry: HANDOFF_S seconds, eased, along a small lift-and-travel arc that clears the desktop (carryPath).
 export const LEAVE_DEG = 9;        // = desk-auto-stow.mjs STOW_ANGLE (tests/tray-riders-test.mjs keeps them equal)
 export const RETURN_DEG = 7;
 export const HANDOFF_S = 0.4;
+// Chapters whose desk has no keyboard tray rig but which cross-fade too (Vico, 26 Nov 2026: in the hero they still flew). By shot id; the
+// hero's sub-shots all carry 'hero'. Every other chapter without the rig keeps the carry.
+export const FADE_CHAPTERS = Object.freeze(['hero']);
+export const fadesInChapter = id => FADE_CHAPTERS.includes(id);
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 // in-out cubic: a quick start and a soft landing in 0.4 s reads as "snappy" without a pop
 export const carryEase = u => { u = clamp(u, 0, 1); return u < 0.5 ? 4 * u * u * u : 1 - (-2 * u + 2) ** 3 / 2; };

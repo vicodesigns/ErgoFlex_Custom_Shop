@@ -72,7 +72,7 @@ const worldOf = (o, n) => named(o, n).getWorldPosition(new THREE.Vector3());
     for (const f of ['experience/stage.mjs', 'tools/experience/film-fx.mjs']) {
         const s = fs.readFileSync(path.join(root, f), 'utf8');
         assert.ok(!/^\s*import[^\n]*tray-rig\.mjs/m.test(s), f + ' must not import tray-rig.mjs statically');
-        const at = s.indexOf("import('./tray-rig.mjs?v=rider-fade-20261125')") >= 0 ? s.indexOf("import('./tray-rig.mjs?v=rider-fade-20261125')") : s.indexOf("import('../../experience/tray-rig.mjs?v=rider-fade-20261125')"); assert.ok(at > 0, f + ' imports it dynamically');
+        const at = s.indexOf("import('./tray-rig.mjs?v=rider-fade-hero-20261126')") >= 0 ? s.indexOf("import('./tray-rig.mjs?v=rider-fade-hero-20261126')") : s.indexOf("import('../../experience/tray-rig.mjs?v=rider-fade-hero-20261126')"); assert.ok(at > 0, f + ' imports it dynamically');
         assert.ok(s.slice(Math.max(0, at - 260), at).includes('activeTrayEdit(') || s.slice(Math.max(0, at - 260), at).includes('trayEdit'), f + ': only behind the active-edit check');
     }
     const fx = fs.readFileSync(path.join(root, 'tools/experience/film-fx.mjs'), 'utf8');
