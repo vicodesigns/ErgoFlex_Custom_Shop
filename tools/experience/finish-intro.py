@@ -18,7 +18,8 @@ Title shadows: a title's optional 'shadow' {blur, opacity, paths} (Director Mode
   restyle the fitted boxes. Path points are 1920x1080 pixels relative to the title anchor (128, 912).
 --with-logo (with --title-still): the still also gets the end card's shade and wordmark as the master lays them (their
   fade at that time, the same scale / overlay expressions), so a still shows the whole end card.
-End card (titles-src 'logo' / 'cta', Director Mode's end-card blocks, experience/end-card.mjs): optional logo x / y (its
+End card (titles-src 'logo' / 'cta', Director Mode's end-card blocks, experience/end-card.mjs): optional logo show_delay
+  (s the picture's wordmark and shade come in after rel_in, where the score's logo hit stays), optional logo x / y (its
   centre, 1920x1080 px; default 960, 0.73 H) and scale (x the film's 22 % of the width); optional cta x (its centre;
   default the wordmark's) and rel_out (null = to the film's end). Absent: everything exactly as before.
 --size 2560x1440 masters at that size (chapter renders must match); the HQ file is ErgoFlex-Intro-<H>p.mp4 with the
@@ -299,6 +300,13 @@ def logo_aspect(path, default=304 / 1400):
     return default
 
 
+def logo_start(start, logo):
+    """The film second the wordmark (and its shade) starts to come in: its chapter's start + rel_in, + show_delay when set.
+    rel_in is also where the score puts its logo hit (build-cine-score.py); show_delay moves the picture only, so the
+    hit can sound first (the hero's desk turns white on it, the wordmark follows)."""
+    return start[logo['chapter']] + logo['rel_in'] + float(logo.get('show_delay', 0))
+
+
 def end_logo(logo):
     """The wordmark's centre (1920x1080 px) and scale, defaults filled in, plus whether any was set (Director end card)."""
     return dict(x=float(logo.get('x', 960)), y=float(logo.get('y', 1080 * .73)), scale=max(.1, min(5, float(logo.get('scale', 1)))),
@@ -383,7 +391,7 @@ def main():
                    end=round(start[t['chapter']] + t['rel_out'], 3), eyebrow=t['eyebrow'], title=t['title'], detail=t['detail'], scrim=t.get('scrim'),
                    shadow=t.get('shadow') or {}, **({k: t[k] for k in ('position', 'scale', 'typography', 'align') if k in t}), **({'place': t['place']} if t.get('place') in PLACES and t['place'] != 'lower-left' else {}))
               for i, t in enumerate(src['titles'])]
-    logo_at = start[src['logo']['chapter']] + src['logo']['rel_in']
+    logo_at = logo_start(start, src['logo'])
     L = end_logo(src['logo'])
     cta_out = src['cta'].get('rel_out')
     cta_end = min(total, start[src['cta']['chapter']] + float(cta_out)) if cta_out is not None else total
