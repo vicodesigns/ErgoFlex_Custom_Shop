@@ -276,6 +276,14 @@ kp = subprocess.run([sys.executable, os.path.join(os.environ['RENDER_REQ_HERE'],
                      '--resolution', res, '--fps', str(fps), '--json'] + ([] if scope == 'film' else ['--chapter', chapter]), capture_output=True, text=True)
 if kp.returncode == 0:
     ck = json.loads(kp.stdout); job['chapterKeys'] = ck['keys']; job['epoch'] = ck['epoch']
+    # A cut whose chapters run in another order than the render PC's fixed chapter list (queue-watcher.ps1 takes cache
+    # name + key by slot number from that list while it renders shot N of the cut): a request with "keysBySlot": [the
+    # fixed list] gets its keys by SLOT (slot i's name -> the key of the chapter the cut has at i), so every slot reuses
+    # or stores the frames of the chapter that is really there. The true id -> key map stays in chapterKeysById.
+    slots = req.get('keysBySlot')
+    if scope == 'film' and isinstance(slots, list) and sorted(slots) == sorted(ids) and slots != ids:
+        job['chapterKeysById'] = ck['keys']; job['chapterOrder'] = ids
+        job['chapterKeys'] = {slots[i]: ck['keys'][ids[i]] for i in range(len(ids))}
 else: print('WARNING: chapter keys not computed (the render PC renders every chapter): ' + kp.stderr.strip()[-300:], file=sys.stderr)
 if req.get('estimateMinutes') is not None: job['estimateMinutes'] = req['estimateMinutes']
 if warn: job['warning'] = warn
