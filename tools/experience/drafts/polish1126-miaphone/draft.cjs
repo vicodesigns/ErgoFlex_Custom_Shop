@@ -14,7 +14,7 @@ const apply = rest.includes('--apply'), out = rest.includes('--out') ? rest[rest
 if (apply && /^f:/i.test(require('path').resolve(out))) throw Error('Refusing to write under F:');
 const cut = JSON.parse(fs.readFileSync(file, 'utf8')), shot = cut.shots.find(s => s.id === 'commons');
 const EASE = 1.2, ARRIVE0 = 13.4;      // braking time of the new last stretch (s); the wheels clip's old end
-const GLANCES = { at: 'desk', height: 1080, head: 1, smile: .34, keys: [[8.7, 9.15, 9.95, 10.4], [10.95, 11.35, 11.95, 12.3], [12.62, 13.05, 13.62, 14.1]] };
+const GLANCES = { at: 'desk', height: 1080, head: 1, smile: .34, keys: [[9.5, 10, 11.15, 11.65], [12.62, 13.05, 13.62, 14.1]] };
 let changes = 0;
 const note = (what, before, after) => { const a = JSON.stringify(before), b = JSON.stringify(after); if (a === b) return console.log(`= ${what}: already ${b}`); changes++; console.log(`~ ${what}\n    before ${a}\n    after  ${b}`); };
 
