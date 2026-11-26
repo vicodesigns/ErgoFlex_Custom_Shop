@@ -291,6 +291,24 @@ function matchDeskFinish(o, asset) {
 }
 // Scene units per millimetre (a library instance is in millimetres at scale 1000 under a millimetre parent).
 export const mmScale = () => api.workspaceAccessories?.scale || api.workspaceRoom?.scale || .001;
+// level:{drop} on an added prop (a drink in a tilting cup holder): it stays upright while its parent tilts. `position` is
+// then the point it hangs from (the cup hole's rim centre, in the parent's frame, so it rides lift and tilt), the prop's
+// base is `drop` (the position's units) straight under it, and rotation[1] turns it from the parent's heading. Set where
+// the matrices are composed, so every drawn frame and still uses the pose the desk is in at that moment.
+function keepLevel(o, level, undo) {
+  const hang = o.position.clone(), yaw = o.rotation.y, drop = Number(level.drop) || 0;
+  const qp = new THREE.Quaternion(), x = new THREE.Vector3(), at = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+  o.updateMatrixWorld = function (force) {
+    if (this.parent) {
+      this.parent.getWorldQuaternion(qp); x.set(1, 0, 0).applyQuaternion(qp);
+      this.quaternion.setFromAxisAngle(up, Math.atan2(-x.z, x.x) + yaw).premultiply(qp.invert());
+      this.parent.localToWorld(at.copy(hang)); at.y -= drop;
+      this.position.copy(this.parent.worldToLocal(at));
+    }
+    THREE.Object3D.prototype.updateMatrixWorld.call(this, force);
+  };
+  undo.push(() => { delete o.updateMatrixWorld; });
+}
 function installAdd(edit, n, undo) {
   const o = prepared.get(edit); if (!o) { console.warn(`[film-fx] sceneEdits[${n}] add: ${edit.add?.asset || edit.add} not loaded (prepareAdds first)`); return null; }
   const parent = addParent(edit.parent, edit.on || null); if (!parent) { console.warn(`[film-fx] sceneEdits[${n}] add: no desk${edit.on ? ' ' + edit.on : ''} to put ${edit.add?.asset || edit.add} on`); return null; }
@@ -299,7 +317,7 @@ function installAdd(edit, n, undo) {
   o.name = `Added prop:${asset}#${edit.id}`; o.userData.directorAdd = { asset, id: edit.id, label: edit.label || asset, parent: Object.hasOwn(DESK_SURFACES, edit.parent) || edit.parent === 'lift' ? edit.parent : 'room', ...(edit.on ? { on: edit.on } : {}) };
   const p = edit.position || [0, 0, 0], r = edit.rotation || [0, 0, 0], s = edit.scale || [1, 1, 1], d = THREE.MathUtils.degToRad;
   o.position.set(p[0] / k, p[1] / k, p[2] / k); o.rotation.set(d(r[0]), d(r[1]), d(r[2])); o.scale.set(base * s[0], base * s[1], base * s[2]);
-  parent.add(o); o.updateMatrixWorld(true); matchDeskFinish(o, asset);
+  parent.add(o); if (edit.level) keepLevel(o, edit.level, undo); o.updateMatrixWorld(true); matchDeskFinish(o, asset);
   (o.userData.__filmFxEdits ||= []).push(edit); edit.__count = 1;
   undo.push(() => { o.removeFromParent(); delete o.userData.__filmFxEdits; prepared.delete(edit); });
   return o;
