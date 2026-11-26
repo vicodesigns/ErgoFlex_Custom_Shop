@@ -495,15 +495,9 @@ function plantedRoof(k, r, x, top, z, width, depth) {
     const tx = x + width * .24, tz = z - depth * .17;
     b.box([2500, 720, 2500], [tx, top + 450, tz], '#687b75');
     tree(b, r, tx, top + 810, tz, { height: 3600, hex: '#708e52', shape: 'ornamental' });
-    // A continuous band of recessed steel sash and a projecting sill under the parapet.
+    // A steel channel under the parapet. The storey below it is the block's own facade (its windows are the
+    // shader's, with frames, blinds and the sky in the glass); the flat sash panels that stood in front of it are gone.
     b.box([width, 420, 200], [x, top - 1000, front], rail);
-    const bay = (width - 1200) / 5;
-    for (let i = -2; i <= 2; i++) {
-        const sashX = x + i * bay;
-        b.box([bay - 380, 1950, 100], [sashX, top - 2230, front + 65], '#3b4d55', 0, null, { glazing: true });
-        b.box([75, 1950, 145], [sashX, top - 2230, front + 65], '#404c4f');
-        b.box([bay - 250, 110, 260], [sashX, top - 3240, front + 60], '#b09d87');
-    }
 }
 
 function highCity(k, ctx, opts, neon) {
