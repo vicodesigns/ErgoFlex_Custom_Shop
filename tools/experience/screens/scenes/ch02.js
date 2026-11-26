@@ -143,6 +143,12 @@
       });
       confetti(t, c0 + .05, W / 2, 840, 90, 620);
       if (O.stretch) window.stretchCard(t, 40, 1065, W - 80, 770, O.stretch);   // Nov 20: the Overhead Triceps Stretch card (3rd cuts)
+      if (O.warmWhite) {
+        // The toast fades around its anchor. Start its first visible frame at the LED cue.
+        toast(t, O.warmWhite + .25, 2.4, 40, 1065, W - 80, 'Winding down', 'Desk lights switching to warm white', {
+          col: C.amber, icon: 'sun', h: 178, ts: 56, ss: 38,
+        });
+      }
       vignette(.35);
     },
   };

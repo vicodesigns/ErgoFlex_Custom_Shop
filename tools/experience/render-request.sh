@@ -192,7 +192,9 @@ if [ "$CUT" != "$HQ" ] && { [ -f "$ROOT/$CUT/score/score.wav" ] || grep -qs 'GEN
   fi
 fi
 python3 "$HERE/finish-intro.py" "$ROOT/$HQ" --titles-only
-OUT=$("$HERE/freeze-inputs.sh" "$ROOT" "$TAG" "$HQ"); echo "$OUT"
+FREEZE_DIRS=("$HQ")
+if [ "$CUT" != "$HQ" ] && [ -d "$ROOT/$CUT/screens" ]; then FREEZE_DIRS+=("$CUT/screens"); fi
+OUT=$("$HERE/freeze-inputs.sh" "$ROOT" "$TAG" "${FREEZE_DIRS[@]}"); echo "$OUT"
 MANIFEST=$(echo "$OUT" | tail -1 | cut -d: -f1); F=${MANIFEST%/manifest.txt}
 LIVE=$(git -C "$ROOT" status --porcelain -- '*.mjs' '*.js' '*.cjs' | { grep -vE "exports/|tools/experience/|experience/|workshop-room\.mjs|workspace-3d\.mjs|catalog\.mjs|scene-product-reference\.mjs|preset-defaults\.mjs|scene-peripheral-layouts\.mjs|institutional-|campus-lived-in" || true; } | cut -c4- | sed 's/.* -> //')
 python3 "$HERE/pin-inputs.py" "$ROOT" "$F" $PIN_ALWAYS $LIVE

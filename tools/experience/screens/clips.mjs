@@ -28,6 +28,8 @@ export const COAST_PERSON = 'Ava';
 // A: raise 9.6-11.6, held to 13.7, the switch to 15.9, held to 18.0, arms down 19.9. docs/rise-wellness/)
 export const RISE_STRETCH_B = {start: 13.1, rightEnd: 18.3, leftEnd: 23.2, good: 23.2, goodEnd: 25.0, seated: true};
 export const RISE_STRETCH_A = {start: 9.6, rightEnd: 14.8, leftEnd: 19.7, good: 19.7, goodEnd: 21.4, seated: false};
+// stretchOn fades for .175 s past goodEnd. The LED ramp and the next portrait toast start together after that.
+export const RISE_EVENING = {from: 25.2, to: 26.45, color: '#856d53', clip: 'cine3b-rise-portrait-evening'};
 // Wellness in the new order (Vico's 3rd cut, seated; Nov 21 2026, docs/wellness-order/): chapter 22.5 s, the desk rises 3.5-8.5 s,
 // she types standing from ~8.3 s, the reminder at 9.05 s (she glances at the tablet 9.1-10.1 s), the squats (the film's act)
 // 11.5 s for 4.5 s, 3 reps (the demo clip over stretch .. stretchEnd), the desk lowers 14.55-19.55 s, she sits 17.4-20.2 s,
@@ -50,6 +52,11 @@ const CINE = [
     return [
       {chapter: 2, shot: 'rise', out, id: 'cine3' + v + '-rise-portrait', target: 'main-portrait', role: 'Maya: wellness height app + the overhead triceps stretch', w: 1080, h: 1856, scene: 'ch02p', videos,
         opts: {name: 'Maya', initials: 'M', evening: true, ck, stretch: st}},
+      ...(v === 'b' ? [{
+        chapter: 2, shot: 'rise', out, id: RISE_EVENING.clip, target: 'main-portrait',
+        role: 'Maya: stretch and warm-white lighting notification', w: 1080, h: 1856, scene: 'ch02p', videos,
+        opts: {name: 'Maya', initials: 'M', evening: true, ck, stretch: st, warmWhite: RISE_EVENING.from},
+      }] : []),
       {chapter: 2, shot: 'rise', out, id: 'cine3' + v + '-rise-curved', target: 'main-landscape', role: 'Maya: the workday, the evening summary', w: 2560, h: 1072, scene: 'ch02l',
         opts: {name: 'Maya', colleague: 'Rosa Kim', ck, toast: [25.1, 99, '3h 10m standing · 9 stand breaks']}},
       {chapter: 2, shot: 'rise', out, id: 'cine3' + v + '-rise-phone', target: 'phone', role: 'Maya: the phone on the charger; the stretch push', w: 720, h: 1516, scene: 'ch02ph', videos, opts: {name: 'Maya', ck, stretch: st}}];
