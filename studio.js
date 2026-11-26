@@ -13211,7 +13211,7 @@ if (!EVENT_DEMO && !window.__ERGO_PRESENTATION__) window.ErgoStudioShell?.mount(
 if (window.__ERGO_PRESENTATION__) {
     let presentationRoute = null, presentationOrigin = null, directorAnchor = null, bakeViewport = null;
     const presentationProductOrigins=new Map();
-    import('./experience/stage.mjs').then(({mountStage}) => mountStage({
+    import('./experience/stage.mjs?v=rider-fade-20261125').then(({mountStage}) => mountStage({
         get scene(){return scene;}, get camera(){return camera;}, get renderer(){return renderer;},
         get controls(){return controls;}, get loadedModel(){return loadedModel;},
         catalog(){

@@ -1,6 +1,7 @@
-// The keyboard and mouse ON the desk / tray or UP on the desk's shelf, and the carry between (experience/tray-riders.mjs,
-// docs/keyboard-tray/SPEC.md 0.3): decided by the desk tilt only (9 deg out, 7 deg back), eased over 0.4 s, on a path that clears the
-// desktop, deterministic for any seek; chapter 1's real desk movement as the example. Pure node.   node tests/tray-riders-test.mjs
+// The keyboard and mouse ON the desk / tray or UP on the desk's shelf, and the hand-off between (experience/tray-riders.mjs,
+// rider-handoff.mjs, rider-fade.mjs, docs/keyboard-tray/SPEC.md 0.3): decided by the desk tilt only (9 deg out, 7 deg back), 0.4 s,
+// deterministic for any seek. With the keyboard tray: a cross-fade, nothing travels (sampled every 1/60 s with the real desk auto-stow);
+// without it: the carry on a path that clears the desktop. Chapter 1's real desk movement as the example. Pure node.   node tests/tray-riders-test.mjs
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -8,6 +9,10 @@ import { fileURLToPath } from 'node:url';
 import * as R from '../experience/tray-riders.mjs';
 import { sampleClipMotion } from '../experience/desk-clips.mjs';
 import { sampleTray, cleanTrayEdit, trayIssues } from '../experience/tray-pose.mjs';
+import * as THREE from 'three';
+import { DeskAutoStow } from '../desk-auto-stow.mjs';
+import { createRiderHandoff } from '../experience/rider-handoff.mjs';
+import { FADE_COPY_NAME } from '../experience/rider-fade.mjs?v=rider-fade-20261125';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const near = (a, b, eps, what) => assert.ok(Math.abs(a - b) <= eps, `${what}: ${a} != ${b} (+-${eps})`);
@@ -62,4 +67,86 @@ const near = (a, b, eps, what) => assert.ok(Math.abs(a - b) <= eps, `${what}: ${
     const tilted = R.carryPath(from, [-90, 120, -300], { up: [0, Math.cos(0.2), Math.sin(0.2)], desk, half: 22 }); assert.ok(tilted.lift >= R.MIN_LIFT_MM);
     for (let u = 0.05; u <= 0.95; u += 0.01) { const q = tilted.at(u); if (Math.abs(q[0]) < desk.width / 2 && q[2] < desk.depth / 2 - 10) assert.ok(q[1] - 22 >= R.CLEAR_MM - 1e-6, 'tilted: clear at ' + u.toFixed(2)); }
 }
-console.log('tray-riders-test: ok (decided by the desk tilt only, 9 deg out / 7 deg back, eased 0.4 s hand-off without a pop, deterministic, chapter 1 frees the tray, the carry clears the desktop)');
+{   // the cross-fade (the keyboard tray's riders): every 1/60 s of chapter 1, with the real desk auto-stow, each visible keyboard / mouse
+    // is EXACTLY at its tray / desk place or EXACTLY at its shelf place (never between), the two opacities add to 1, nothing else turns
+    // see-through, the riders' own materials come back, and a frame rendered on its own is the frame a run from 0 s gives
+    const d = JSON.parse(fs.readFileSync(path.join(root, 'tests/fixtures/tray-awaken-motion-20261125.json'), 'utf8')), motion = { clips: d.clips, initial: d.initial };
+    const tiltAt = s => sampleClipMotion(motion, s).tilt, track = { seconds: d.seconds, tiltAt }, tl = R.riderTimeline(tiltAt, d.seconds);
+    const PLATE = new THREE.Matrix4().makeTranslation(0, -45, 520);      // the fake tray's keyboard place, in the desktop's frame
+    function world(withTray = true) {
+        const scene = new THREE.Scene(), desktop = new THREE.Group(), mounts = { desktop };
+        desktop.position.set(0, 900, 0); scene.add(desktop);
+        for (const [role, y] of [['lower-shelf', 1300], ['shelf', 1650]]) { const m = mounts[role] = new THREE.Group(); m.position.set(0, y, -330); m.userData.surfaceSize = { width: 1100, depth: 300 }; scene.add(m); }
+        const shared = new THREE.MeshStandardMaterial({ color: 0x222222 }), objects = new Map();
+        const add = (id, accessoryId, size, at, role, material) => {
+            const obj = new THREE.Mesh(new THREE.BoxGeometry(...size), material); obj.position.set(...at); obj.castShadow = true;
+            obj.userData = accessoryId ? { accessoryId, deskObject: {} } : { deskObject: {}, fixedHardware: true };
+            desktop.add(obj); objects.set(id, { id, obj, saved: { role, label: id } }); return obj;
+        };
+        const keyboard = add('keyboard', 'ergo-keyboard', [440, 30, 200], [0, 15, 250], 'desktop', shared);
+        const mouse = add('mouse', 'logitech-mx-master', [80, 40, 120], [420, 20, 200], 'desktop', new THREE.MeshStandardMaterial({ color: 0x333333 }));
+        const bystander = add('hardware', null, [100, 20, 100], [-400, 10, 0], 'desktop', shared);     // stays on the desk, shares the keyboard's material
+        const stow = new DeskAutoStow({ editing: true /* as in the stage: editing on, nothing picked */, selected: null, manager: { selected: null, ctx: { phase: () => 'x' } }, purchaseMount: () => null });
+        const r = { id: 'desk', objects, rig: { mounts }, state: { tilt: 0, size: '48x30' }, spec: {} };
+        const h = createRiderHandoff({ sceneDesks: { active: r, objects: { stow } } });
+        if (withTray) h.setTray(obj => obj === keyboard ? new THREE.Matrix4().multiplyMatrices(desktop.matrixWorld, PLATE) : null, () => true);
+        const own = new Map([keyboard, mouse].map(o => [o, { material: o.material, local: (o.updateMatrix(), o.matrix.clone()) }]));
+        return { scene, desktop, mounts, keyboard, mouse, bystander, shared, stow, r, h, own };
+    }
+    // one frame as the stage draws it: the desk's pose, the stow, then the hand-off layer
+    const draw = (w, s) => { w.r.state.tilt = tiltAt(s); w.desktop.rotation.x = w.r.state.tilt * Math.PI / 180; w.scene.updateMatrixWorld(true); w.stow.update(w.r); w.h.apply(s, track); w.scene.updateMatrixWorld(true); };
+    const copies = w => {
+        const out = [{ id: 'keyboard', o: w.keyboard, real: true }, { id: 'mouse', o: w.mouse, real: true }];
+        w.scene.traverse(o => { if (o.name === FADE_COPY_NAME) out.push({ id: o.userData.riderFadeOf === 'ergo-keyboard' ? 'keyboard' : 'mouse', o, real: false }); });
+        return out;
+    };
+    const meshOf = c => c.real ? c.o : c.o.children[0];
+    const shown = c => { for (let o = c.o; o; o = o.parent) if (!o.visible) return false; return true; };
+    const off = (a, b) => Math.max(...a.elements.map((v, i) => Math.abs(v - b.elements[i])));
+    // the two places of a rider with the desk as it is now: tray / desk (rides the desktop) and shelf (rides the shelf mount)
+    const shelfLocal = new Map();
+    {
+        const w = world(false); w.r.state.tilt = 20; w.desktop.rotation.x = 20 * Math.PI / 180; w.scene.updateMatrixWorld(true); w.stow.update(w.r);
+        for (const [id, item] of w.r.objects) if (item.autoStow?.role) { item.obj.updateMatrix(); shelfLocal.set(id, { role: item.autoStow.role, matrix: item.obj.matrix.clone() }); }
+        assert.deepEqual([...shelfLocal.keys()].sort(), ['keyboard', 'mouse'], 'the real stow puts both on a shelf');
+    }
+    const places = (w, id) => ({ tray: new THREE.Matrix4().multiplyMatrices(w.desktop.matrixWorld, id === 'keyboard' ? PLATE : w.own.get(w.mouse).local),
+        shelf: new THREE.Matrix4().multiplyMatrices(w.mounts[shelfLocal.get(id).role].matrixWorld, shelfLocal.get(id).matrix) });
+    const snapshot = w => copies(w).filter(shown).map(c => {
+        c.o.updateWorldMatrix(true, false); const p = places(w, c.id), m = meshOf(c).material, atTray = off(c.o.matrixWorld, p.tray), atShelf = off(c.o.matrixWorld, p.shelf);
+        return { id: c.id, where: atTray < 1e-6 ? 'tray' : atShelf < 1e-6 ? 'shelf' : 'BETWEEN ' + Math.min(atTray, atShelf).toFixed(2), opacity: +(m.transparent ? m.opacity : 1).toFixed(9) };
+    }).sort((a, b) => (a.id + a.where).localeCompare(b.id + b.where));
+    const w = world(), frames = Math.round(d.seconds * 60), run = [], faded = [0, 0], last = {};
+    const inWindow = s => tl.events.findIndex(e => s > e.t && s < e.t + R.HANDOFF_S);
+    for (let n = 0; n <= frames; n++) {
+        const s = n / 60; draw(w, s); const rows = snapshot(w); run.push(rows); const win = inWindow(s), at = 'at ' + s.toFixed(3) + ' s (tilt ' + tiltAt(s).toFixed(2) + ')';
+        for (const row of rows) assert.ok(row.where === 'tray' || row.where === 'shelf', `${row.id} is ${row.where} ${at}`);
+        for (const id of ['keyboard', 'mouse']) {
+            const mine = rows.filter(x => x.id === id), onShelf = mine.filter(x => x.where === 'shelf').reduce((a, x) => a + x.opacity, 0);
+            near(mine.reduce((a, x) => a + x.opacity, 0), 1, 1e-6, `${id}: the two opacities add to 1 ${at}`);
+            near(onShelf, R.riderFade(tl, s), 1e-6, `${id}: the shelf one has the fade's opacity ${at}`);
+            if (n) assert.ok(Math.abs(onShelf - last[id]) < 0.07, `${id}: no pop ${at}: ${last[id]} -> ${onShelf}`);
+            last[id] = onShelf; assert.equal(mine.length, win >= 0 ? 2 : 1, `${id}: one outside a hand-off, two inside ${at}`);
+        }
+        if (win >= 0) faded[win]++;
+        else for (const o of [w.keyboard, w.mouse]) {
+            assert.equal(o.material, w.own.get(o).material, 'its very own material back ' + at); assert.equal(o.children.length, 0, 'no depth pass left ' + at); assert.ok(o.castShadow && o.renderOrder === 0, 'its flags back ' + at);
+        }
+        for (const o of [w.keyboard, w.mouse]) { const m = w.own.get(o).material; assert.ok(m.opacity === 1 && !m.transparent && m.depthWrite, 'its own material is never written ' + at); }
+        assert.ok(w.bystander.material === w.shared && !w.shared.transparent && w.shared.opacity === 1 && w.shared.depthWrite, 'nothing else turns see-through ' + at);
+    }
+    assert.deepEqual(tl.events.map(e => e.to), ['shelf', 'tray']); for (const f of faded) assert.ok(f >= 23 && f <= 24, 'each cross-fade is 0.4 s of frames: ' + faded);
+    // seek-safe: a fresh desk that has never seen the stow (a render chunk starting inside the way back, a scrub) draws the same frames
+    const around = tl.events.flatMap(e => [-0.3, -0.05, 0.05, 0.2, 0.35, 0.5].map(k => Math.round((e.t + k) * 60)));
+    for (const n of around) { const cold = world(); draw(cold, n / 60); assert.deepEqual(snapshot(cold), run[n], 'cold frame ' + n + ' = the run'); }
+    const jumbled = world(); for (let i = 0; i < 300; i++) { const n = i % 2 ? around[(i * 7) % around.length] : (i * 7919) % (frames + 1); draw(jumbled, n / 60); assert.deepEqual(snapshot(jumbled), run[n], 'out of order frame ' + n); }
+    // restoring in the middle of a fade leaves nothing behind
+    draw(jumbled, tl.events[0].t + 0.2); assert.equal(copies(jumbled).length, 4); jumbled.h.restore();
+    assert.equal(copies(jumbled).length, 2); assert.equal(jumbled.keyboard.material, jumbled.own.get(jumbled.keyboard).material); assert.equal(jumbled.keyboard.children.length, 0);
+    // a desk without the tray is as before: the carry, no fade copy
+    const plain = world(false); draw(plain, 0); draw(plain, tl.events[0].t + 0.2);
+    assert.equal(copies(plain).length, 2, 'no fade copy without the tray'); assert.equal(plain.h.fading(), false); assert.ok(snapshot(plain).every(x => x.where.startsWith('BETWEEN')), 'carried, as before');
+    const bare = world(); bare.h.setTray(() => null, () => false); assert.equal(bare.h.fading(), false, 'a tray with nothing on it does not fade');
+    console.log(`  cross-fade: ${frames + 1} frames at 60 fps, ${faded.join(' + ')} fading, every visible keyboard / mouse at its tray or shelf place, ${around.length} cold and 300 out-of-order frames identical`);
+}
+console.log('tray-riders-test: ok (decided by the desk tilt only, 9 deg out / 7 deg back, 0.4 s hand-off without a pop, deterministic, chapter 1 frees the tray, the tray riders cross-fade in place, the carry clears the desktop)');

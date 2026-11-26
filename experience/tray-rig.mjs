@@ -112,7 +112,7 @@ export function createTrayRig(api) {
         addTiltPivots(model);
         const plate = model.getObjectByName('Tray_Plate'), pivots = pivotsOf(model);
         installed = { item, tray, rigid, model, pivots, plate, riders: plate ? findRiders(model, plate) : [] };
-        api.riderHandoff?.setTray(riderWorld);
+        api.riderHandoff?.setTray(riderWorld, () => !!installed?.riders.length);
         return true;
     }
     function uninstall() {
