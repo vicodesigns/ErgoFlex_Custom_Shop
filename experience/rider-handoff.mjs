@@ -3,13 +3,15 @@
 // desktop tilts past 9 deg; this layer only changes WHEN and HOW they are seen to get there:
 //   * when: by the chapter's desk-tilt timeline (tray-riders.mjs riderTimeline: leave above 9 deg, back below 7 deg), never by the tray;
 //   * how, never a pop, both ways, 0.4 s: where the chapter's keyboard tray rig has riders on its plate, a cross-fade (the one at the tray /
-//     desk fades out while its copy on the shelf fades in, neither moves: rider-fade.mjs); elsewhere the lift-and-travel carry (carryPath);
+//     desk fades out while its copy on the shelf fades in, neither moves: rider-fade.mjs), and so in the hero (FADE_CHAPTERS), which has no
+//     rig; elsewhere the lift-and-travel carry (carryPath);
 //   * while they are on the shelf, the keyboard tray (tray-rig.mjs) leaves them alone and has its full range (Vico, 25 Nov 2026).
 //
 //   const h = createRiderHandoff(api)        api = window.ErgoFlex (sceneDesks)
 //   h.apply(seconds, track)                  every frame (stage tick): track = { seconds, tiltAt(s) } of the chapter (stage deskTrack())
 //   h.setTray(fn, hasRiders)                 the tray rig: fn(obj) -> the rider's world matrix on the plate now (null: not a rider);
 //                                            hasRiders() -> something stands on its plate (then the hand-off is the cross-fade)
+//   h.setChapter(id)                         the shot's id (stage prepare): a chapter in tray-riders FADE_CHAPTERS cross-fades without a rig
 //   h.fading()                               the cross-fade is the hand-off here
 //   h.awayAt(s)                              0 on the tray .. 1 on the shelf (the tray's limits, the Director's panel)
 //   h.restore()                              everything back as the app has it
@@ -19,16 +21,16 @@
 // A chapter whose desk never crosses 9 deg, with no keyboard tray rig, is never touched (no wrapper, no write).
 import * as THREE from 'three';
 import { accessory } from '../catalog.mjs';
-import { riderTimeline, riderAway, riderFade, carryPath, LEAVE_DEG } from './tray-riders.mjs?v=rider-fade-20261125';
-import { createRiderFade } from './rider-fade.mjs?v=rider-fade-20261125';
+import { riderTimeline, riderAway, riderFade, carryPath, fadesInChapter, LEAVE_DEG } from './tray-riders.mjs?v=rider-fade-hero-20261126';
+import { createRiderFade } from './rider-fade.mjs?v=rider-fade-hero-20261126';
 
 const isRider = obj => { const a = obj?.userData?.accessoryId && accessory(obj.userData.accessoryId); return !!a && ['keyboard', 'mouse'].includes(a.exclusiveGroup); };
 const SIZE = { '48x30': [48, 30], '60x30': [60, 30], '72x30': [72, 30] };
 
 export function createRiderHandoff(api) {
-    let track = null, timeline = null, now = 0, trayOf = null, onTray = null, wrapped = null, stowUpdate = null;
+    let track = null, timeline = null, now = 0, trayOf = null, onTray = null, chapterFades = false, wrapped = null, stowUpdate = null;
     const fades = createRiderFade();
-    const fading = () => !!trayOf && !!onTray?.();
+    const fading = () => chapterFades || !!trayOf && !!onTray?.();
     const over = new Map();     // obj -> { parent, position, quaternion, scale } its own transform while the layer overrides it
     const shelf = new WeakMap(); // obj -> { parent, matrix } where the stow put it last (kept for the way back, the stow lets go at 9 deg)
     const desk = () => api.sceneDesks?.active || null;
@@ -137,10 +139,11 @@ export function createRiderHandoff(api) {
             if (!trayOf) fades.dispose();
             if (!active()) { unwrap(); unapply(); }
         },
+        setChapter(id) { chapterFades = fadesInChapter(id); if (!fading()) fades.dispose(); },
         fading,
         awayAt: s => riderAway(timeline, s),
         timeline: () => timeline,
         overridden: () => [...over.keys()],
-        restore() { unapply(); fades.dispose(); unwrap(); track = null; timeline = null; trayOf = null; onTray = null; },
+        restore() { unapply(); fades.dispose(); unwrap(); track = null; timeline = null; trayOf = null; onTray = null; chapterFades = false; },
     };
 }

@@ -12,7 +12,7 @@ import { sampleTray, cleanTrayEdit, trayIssues } from '../experience/tray-pose.m
 import * as THREE from 'three';
 import { DeskAutoStow } from '../desk-auto-stow.mjs';
 import { createRiderHandoff } from '../experience/rider-handoff.mjs';
-import { FADE_COPY_NAME } from '../experience/rider-fade.mjs?v=rider-fade-20261125';
+import { FADE_COPY_NAME } from '../experience/rider-fade.mjs?v=rider-fade-hero-20261126';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const near = (a, b, eps, what) => assert.ok(Math.abs(a - b) <= eps, `${what}: ${a} != ${b} (+-${eps})`);
@@ -147,6 +147,30 @@ const near = (a, b, eps, what) => assert.ok(Math.abs(a - b) <= eps, `${what}: ${
     const plain = world(false); draw(plain, 0); draw(plain, tl.events[0].t + 0.2);
     assert.equal(copies(plain).length, 2, 'no fade copy without the tray'); assert.equal(plain.h.fading(), false); assert.ok(snapshot(plain).every(x => x.where.startsWith('BETWEEN')), 'carried, as before');
     const bare = world(); bare.h.setTray(() => null, () => false); assert.equal(bare.h.fading(), false, 'a tray with nothing on it does not fade');
+    // the hero (no tray rig, FADE_CHAPTERS): the same cross-fade both ways between the desk place and the shelf place, cold frames the same;
+    // chapter 1 (by its id alone), create and storage without a rig keep the carry
+    assert.deepEqual([...R.FADE_CHAPTERS], ['hero']);
+    const hero = () => { const x = world(false); x.h.setChapter('hero'); return x; }, heroRun = [], h = hero();
+    for (let n = 0; n <= frames; n++) {
+        const s = n / 60; draw(h, s);
+        for (const id of ['keyboard', 'mouse']) {
+            const mine = copies(h).filter(c => c.id === id && shown(c)); let sum = 0, onShelf = 0;
+            for (const c of mine) {
+                c.o.updateWorldMatrix(true, false);
+                const desk = new THREE.Matrix4().multiplyMatrices(h.desktop.matrixWorld, h.own.get(id === 'keyboard' ? h.keyboard : h.mouse).local), up = places(h, id).shelf, m = meshOf(c).material, o = m.transparent ? m.opacity : 1;
+                const atShelf = off(c.o.matrixWorld, up) < 1e-6; assert.ok(atShelf || off(c.o.matrixWorld, desk) < 1e-6, `hero: ${id} is between its two places at ${s.toFixed(3)} s`);
+                sum += o; if (atShelf) onShelf += o;
+            }
+            near(sum, 1, 1e-6, 'hero: opacities add to 1'); near(onShelf, R.riderFade(tl, s), 1e-6, 'hero: the fade at ' + s.toFixed(3));
+        }
+        heroRun.push(copies(h).filter(shown).map(c => (c.o.updateWorldMatrix(true, false), [c.id, c.real, +(meshOf(c).material.transparent ? meshOf(c).material.opacity : 1).toFixed(9), ...c.o.matrixWorld.elements.map(v => +v.toFixed(6))].join())).sort());
+    }
+    for (const n of around) { const cold = hero(); draw(cold, n / 60); assert.deepEqual(copies(cold).filter(shown).map(c => (c.o.updateWorldMatrix(true, false), [c.id, c.real, +(meshOf(c).material.transparent ? meshOf(c).material.opacity : 1).toFixed(9), ...c.o.matrixWorld.elements.map(v => +v.toFixed(6))].join())).sort(), heroRun[n], 'hero cold frame ' + n); }
+    for (const id of ['awaken', 'create', 'storage', undefined]) {
+        const other = world(false); other.h.setChapter(id); draw(other, 0); draw(other, tl.events[0].t + 0.2);
+        assert.equal(other.h.fading(), false, id + ': no fade'); assert.equal(copies(other).length, 2); assert.ok(snapshot(other).every(x => x.where.startsWith('BETWEEN')), id + ': carried, as before');
+    }
+    h.h.setChapter('hero'); h.h.restore(); assert.equal(h.h.fading(), false, 'restore forgets the chapter');
     console.log(`  cross-fade: ${frames + 1} frames at 60 fps, ${faded.join(' + ')} fading, every visible keyboard / mouse at its tray or shelf place, ${around.length} cold and 300 out-of-order frames identical`);
 }
 console.log('tray-riders-test: ok (decided by the desk tilt only, 9 deg out / 7 deg back, 0.4 s hand-off without a pop, deterministic, chapter 1 frees the tray, the tray riders cross-fade in place, the carry clears the desktop)');
