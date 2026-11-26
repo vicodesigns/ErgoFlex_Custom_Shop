@@ -39,6 +39,9 @@ import { mediaPersonMaterial, castDetailEnsure, castDetailCast, castDetailVarian
 //                                                     taps every typist has. The chapter's typing slider still scales it.
 //   typeStyle: 'busy'                                 the same, the phrases back to back (1.45-1.9 s of keys, 0.3-0.95 s of
 //                                                     rest): typing within a beat of any moment (a short shot, Commons5)
+//                                                     Both also work on a desk user who sits and stands with the desk
+//                                                     (`desk`, no station: DeskActor, solveDesk): the entry's own model
+//                                                     types that way while it is the one drawn, the rest as before.
 //   carry: { from: '<model id>' }                    what that model holds (its 'Held.' parts, Kai's controller) is held
 //                                                    in this one too, same hand, same grip, the arms as that model's
 //                                                    posture has them: through a change of posture, a walk and the
@@ -99,12 +102,12 @@ import { mediaPersonMaterial, castDetailEnsure, castDetailCast, castDetailVarian
 // own, and the seconds of the chapter each one is there for.
 import * as THREE from 'three';
 import {updateSkinnedBounds} from './skinned-bounds.mjs';
-import {poseAt, blendPoses, KEY_SNAP} from './people-pose-keys.mjs?v=commons5b-20261125';
-import {armBones,lapPlan,lapModel,lapRest,handsAt,turnHands,handTurnAt,layAngles} from './people-lap.mjs?v=commons5b-20261125';
+import {poseAt, blendPoses, KEY_SNAP} from './people-pose-keys.mjs?v=maya-busy-20261125';
+import {armBones,lapPlan,lapModel,lapRest,handsAt,turnHands,handTurnAt,layAngles} from './people-lap.mjs?v=maya-busy-20261125';
 import {applyHeld} from './people-held.mjs';
 import {partsOf} from './people-held-data.mjs';
 import {postureRecord,postureRecords,hasPosturePose,poseOwner,sourceOf,roomEditKey,blendPosturePoses} from './people-postures.mjs';
-import { PersonRig, DeskActor, solveStill, solveChange, changeArms, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, squatKey, WORKOUTS, drawPose, livelyPose, seedOf, placeGrip, handsKey } from './room-people-motion.mjs?v=commons5b-20261125';
+import { PersonRig, DeskActor, solveStill, solveChange, changeArms, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, squatKey, WORKOUTS, drawPose, livelyPose, seedOf, placeGrip, handsKey } from './room-people-motion.mjs?v=maya-busy-20261125';
 // Room looks (room-looks.mjs): the Nov 17 pass's cast finishes (own materials, hair / shirt maps) are the refreshed Create
 // room's and the Commons'; Create's Classic look keeps the cast as it was, and its people move as they did then
 // (rig.classicMotion: room-people-motion.mjs's painting, pottery and page-turn strokes from before the pass).

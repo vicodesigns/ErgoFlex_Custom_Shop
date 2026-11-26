@@ -18,7 +18,7 @@
 //   the state at any second depends on nothing else and scrubbing gives the same frames as playing.
 // Everything else (breathing, the head, weight shifts, typing fingers) is layered on from time and a seed.
 import * as THREE from 'three';
-import { lapRests } from './people-lap.mjs?v=commons5b-20261125';
+import { lapRests } from './people-lap.mjs?v=maya-busy-20261125';
 
 const V = () => new THREE.Vector3(), Q = () => new THREE.Quaternion();
 const clamp01 = x => x < 0 ? 0 : x > 1 ? 1 : x;
@@ -411,11 +411,17 @@ function typeFingers(rig, s, time, amount) {
 }
 // The shoulders and the trunk behind the hands: a shoulder rises a hair with its hand's strokes, the trunk leans in a
 // hair through a burst and turns a hair toward the hand that is working. (Before the arms are solved.)
+function typeShoulder(rig, s, amount) {
+    const e = NAT.env * amount, clav = rig.side[s].arm[0];
+    if (clav >= 0) rig.turnWorld(clav, turn.setFromAxisAngle(Z, (s === 'l' ? 1 : -1) * (.012 * e + .016 * NAT.strike[s] * e)));
+}
+function typeTrunk(rig, amount) {
+    const e = NAT.env * amount;
+    rig.turnWorld(rig.b.spine_03, turn.setFromAxisAngle(X, .006 * e).multiply(turn2.setFromAxisAngle(Y, (NAT.strike.l - NAT.strike.r) * .008 * e))); rig.fk();
+}
 function typeBody(rig, amount) {
-    const b = rig.b, e = NAT.env * amount, sl = NAT.strike.l, sr = NAT.strike.r;
-    for (const [s, v] of [['l', sl], ['r', sr]]) { const clav = rig.side[s].arm[0]; if (clav >= 0) rig.turnWorld(clav, turn.setFromAxisAngle(Z, (s === 'l' ? 1 : -1) * (.012 * e + .016 * v * e))); }
-    rig.fk();
-    rig.turnWorld(b.spine_03, turn.setFromAxisAngle(X, .006 * e).multiply(turn2.setFromAxisAngle(Y, (sl - sr) * .008 * e))); rig.fk();
+    for (const s of ['l', 'r']) typeShoulder(rig, s, amount);
+    rig.fk(); typeTrunk(rig, amount);
 }
 
 const CUP_HAND = { 'sit-coffee': 'r', 'stand-coffee': 'r' };      // desk postures with a drink in one hand (tools/people/cast.py)
@@ -491,6 +497,12 @@ export function solveDesk(rig, keys, input) {
         rig.turnWorld(b.neck_01, turn.setFromAxisAngle(Y, yaw * .4).multiply(turn2.setFromAxisAngle(X, nod * .4 + .004 * breath))); rig.fk();
         rig.turnWorld(b.head, turn.setFromAxisAngle(Y, yaw * .6).multiply(turn2.setFromAxisAngle(X, nod * .6))); rig.fk();
     }
+    // (a placement's typeStyle 'natural' or 'busy', opt-in: DeskActor hands its drawn member's here as input.style. The same
+    // typist as at a station (solveStill, typeNow below), in place of the stock taps. Without one nothing here changes.
+    // natAmount: how much of it a hand has, as much as it is on the keys (ke) and the Director has not posed it)
+    const natural = (input.style === 'natural' || input.style === 'busy') && life > 0 && input.taps !== false;
+    const natAmount = s => natural ? Math.min(1.6, Math.max(0, input.typing ?? 1)) * life * ss(.82, .98, ke) * poseTapWeight(input.pose, s) : 0;
+    if (natural) typeNow(time, seed, input.style === 'busy');
     // ---- legs: the feet step back under the knees one after the other while the chair rolls, then stay planted
     for (const s of ['l', 'r']) {
         const [thigh, calf, foot] = rig.side[s].leg, from = sit ? blendV(v1, sit, foot).clone() : null, to = feet ? standV(V(), foot) : null;
@@ -505,6 +517,7 @@ export function solveDesk(rig, keys, input) {
     // a drink at the desk (sit-coffee, stand-coffee): one hand holds it and does not type
     const mixing = rig.mediaLab && keyed?.a.id.includes('-sit-mix');
     const cup = keyed ? CUP_HAND[(keyed.w > .5 ? keyed.b : keyed.a).pose] || null : null;
+    if (natural && keyed && !mixing) { const amount = Math.max(natAmount('l'), natAmount('r')); if (amount > 0) typeTrunk(rig, amount); }
     for (const s of ['l', 'r']) {
         const arm = rig.side[s].arm, [clavicle, upper, lower, hand] = arm, [thigh, calf] = rig.side[s].leg, fingers = rig.side[s].fingers;
         // away from the keys: seated and getting up, a hand on each thigh; standing, the arms hang
@@ -520,11 +533,14 @@ export function solveDesk(rig, keys, input) {
         }
         if (armsDown > 0) arm.forEach((i, n) => armsDown < 1 ? away[s][n].slerp(wait.q[i], armsDown) : away[s][n].copy(wait.q[i]));
         // on the keys: the posture as built, the wrists following the keyboard as the desk moves a little
+        const nat = keyed && !mixing && s !== cup ? natAmount(s) : 0;
         if (ke > 0 && keyed) {
             for (const i of arm) blendQ(rig.lq[i], keyed, i);
             rig.fk();
+            if (nat > 0) { typeShoulder(rig, s, nat); rig.fk(); }
             if (Math.abs(lift) > 1e-5 || life > 0) {
                 blendV(spot, keyed, hand); spot.y += lift; blendW(handQ, keyed, hand);
+                if (nat > 0) spot.add(typeHandAt(time, s, nat));
                 rig.reach(upper, lower, hand, spot); rig.setWorld(hand, handQ);
             }
             arm.forEach((i, n) => onKeys[s][n].copy(rig.lq[i])); keysAt.copy(rig.wp[hand]);
@@ -543,7 +559,8 @@ export function solveDesk(rig, keys, input) {
         // fingers: curled for the keys, looser away from them; active typing eases in as hands reach the keyboard
         const loose = wait || keyed.a, tapW = ss(.82, .98, ke) * poseTapWeight(input.pose, s);
         for (const i of fingers) { rig.lq[i].copy(loose.q[i]); if (ke > 0 && keyed) rig.lq[i].slerp(blendQ(tq, keyed, i), ke); }
-        if (life > 0 && tapW > 0 && keyed && !mixing && input.taps !== false && s !== cup) tapKeys(rig, s, time, seed, life * tapW, input.typing);
+        if (natural) { if (nat > 0) typeFingers(rig, s, time, nat); }
+        else if (life > 0 && tapW > 0 && keyed && !mixing && input.taps !== false && s !== cup) tapKeys(rig, s, time, seed, life * tapW, input.typing);
     }
     rig.fk();
     if (mixing && life > 0 && ke > .9) rideFader(rig,time,seed,life*ss(.9,1,ke));
@@ -606,11 +623,20 @@ export class DeskActor {
         }
         this.height = height;
         const pose = typeof input.pose === 'function' ? input.pose(state.tau) : input.pose;
-        this.out = solveDesk(this.rig, this.keys, { tau: state.tau, k: state.k, height, time: input.life === false ? null : this.clock, seed: this.seed, taps: input.taps, typing: input.typing, pose, chairRoll: this.chairRoll, chairScoot: this.chairScoot });
+        // (typeStyle is the drawn member's own, a cast entry's opt-in. Which one is drawn is known before the solve: by the
+        // time into standing up, or, with one stance alone, that stance)
+        const before = !this.mobile ? (this.members[0]?.role === 'stand' ? 'stand' : 'sit') : state.tau >= this.swapAt ? 'stand' : 'sit';
+        const style = this.drawnAt(before, height)?.object?.userData?.person?.typeStyle;
+        this.out = solveDesk(this.rig, this.keys, { tau: state.tau, k: state.k, height, time: input.life === false ? null : this.clock, seed: this.seed, taps: input.taps, typing: input.typing, style, pose, chairRoll: this.chairRoll, chairScoot: this.chairScoot });
         // the model that is drawn: the one built for this stance, nearest this desk height
-        const stance = !this.mobile ? this.out.stance : state.tau >= this.swapAt ? 'stand' : 'sit', of = this.members.filter(m => (m.role === 'stand') === (stance === 'stand'));
-        this.shown = of.sort((a, b) => Math.abs((a.key.deskHeight ?? height) - height) - Math.abs((b.key.deskHeight ?? height) - height))[0] || null;
+        const stance = !this.mobile ? this.out.stance : state.tau >= this.swapAt ? 'stand' : 'sit';
+        this.shown = this.drawnAt(stance, height);
         return this.out;
+    }
+    // The member drawn for a stance at a desk height: of those built for that stance, the nearest.
+    drawnAt(stance, height) {
+        const of = this.members.filter(m => (m.role === 'stand') === (stance === 'stand'));
+        return of.sort((a, b) => Math.abs((a.key.deskHeight ?? height) - height) - Math.abs((b.key.deskHeight ?? height) - height))[0] || null;
     }
     // The solved pose on the drawn model's bones. A person's own fine tuning (`pose`, the Director's pose mode) turns
     // each bone from where the motion has it; `rest` is kept at the motion's pose so the editor measures from it.
