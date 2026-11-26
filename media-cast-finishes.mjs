@@ -101,7 +101,8 @@ export function prepareMediaCast(room, root) {
 // and still an ordinary solid draw. The shadow pass keeps its plain cutoff.
 // The switch is a material that is alphaTest + alphaToCoverage + alphaHash, a combination nothing else in the app uses;
 // it is read by the two shader chunks below, so a clone of the material (a person's own copy, a recoloured one) keeps
-// it, which an onBeforeCompile would not.
+// it, which an onBeforeCompile would not. (Should such a material ever lose its alphaToCoverage, it is a plain cut-out
+// again: the hashed discard of three's alphaHash is kept for materials without an alpha test only.)
 export const HAIR_FRINGE = { width: .56, dither: .25, floor: .04 };
 let fringeChunks = false;
 export function softHairChunks(chunks = THREE.ShaderChunk) {
@@ -118,7 +119,7 @@ export function softHairChunks(chunks = THREE.ShaderChunk) {
 		if ( efCover < 1.0 ) efCover = clamp( efCover + ( getAlphaHashThreshold( vPosition ) - 0.5 ) * ${f(HAIR_FRINGE.dither)}, ${f(HAIR_FRINGE.floor)}, 1.0 );
 		diffuseColor.a = efCover * min( efSolid, 1.0 );
 	}
-#else
+#elif !defined( USE_ALPHATEST )
 ${chunks.alphahash_fragment}
 #endif
 `;

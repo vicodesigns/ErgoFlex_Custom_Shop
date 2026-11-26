@@ -274,7 +274,7 @@ assert.ok(seen.hijab && seen.styled && seen.unstyled && seen.bald, 'the rooms\' 
     assert.deepEqual(chunks, { alphatest_fragment: 'TEST', alphahash_fragment: 'HASH' }, 'the chunks are patched once');
     const test = THREE.ShaderChunk.alphatest_fragment, hash = THREE.ShaderChunk.alphahash_fragment, combo = 'defined( USE_ALPHATEST ) && defined( ALPHA_TO_COVERAGE ) && defined( USE_ALPHAHASH )';
     assert.ok(test.startsWith('#if !( ' + combo + ' )') && test.includes('if ( diffuseColor.a < alphaTest ) discard;') && test.includes('smoothstep( alphaTest, alphaTest + fwidth( diffuseColor.a ), diffuseColor.a )'), 'alpha test: three\'s own code but for the soft combination');
-    assert.ok(hash.startsWith('#if ' + combo) && hash.includes('#else') && hash.includes('if ( diffuseColor.a < getAlphaHashThreshold( vPosition ) ) discard;'), 'alpha hash: three\'s own code but for the soft combination');
+    assert.ok(hash.startsWith('#if ' + combo) && hash.includes('#elif !defined( USE_ALPHATEST )') && hash.includes('if ( diffuseColor.a < getAlphaHashThreshold( vPosition ) ) discard;'), 'alpha hash: three\'s own code for a material without an alpha test; a cut-out that lost its coverage is a plain cut-out, never hashed');
     assert.ok(hash.includes(HAIR_FRINGE.width.toFixed(3)) && hash.includes('getAlphaHashThreshold( vPosition )') && hash.includes('efCover * min( efSolid, 1.0 )'), 'the fringe is coverage, broken up on the hair itself, and fades with the person');
     const plain = softHairEdge(new THREE.MeshStandardMaterial({ name: 'Human.shirt' })); assert.ok(!plain.alphaHash && !plain.alphaToCoverage, 'a material that is not a cut-out is left alone');
 
