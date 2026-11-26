@@ -48,7 +48,7 @@ export function cleanPose(v){
   return Object.keys(out).length?out:null;
 }
 const PLACED=['on','near','by','around'];
-const KEPT=[...PLACED,'seat','along','depth','rise','toward','face','clear','walk','roll','act','change','toes','tread','carry','typeStyle'];
+const KEPT=[...PLACED,'seat','along','depth','rise','toward','face','clear','walk','roll','act','change','toes','tread','carry','typeStyle','glances'];
 // sitReach / standReach: the person's distance from the desk in their other stance (mm; `reach` is their own model's),
 // which the room's models of the same person at the featured desk take too (room-people.mjs deskReach).
 // A desk user's own chair roll: chairRoll (mm the chair rolls back before they stand, the film's 265) and chairScoot

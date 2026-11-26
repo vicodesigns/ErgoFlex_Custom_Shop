@@ -66,7 +66,7 @@ import { layersSwitch, UI_SWITCH_KEY as LAYERS_UI_SWITCH_KEY, frameView, project
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule, institutionalModes } from './institutional-scenes.mjs?v=polish-20261111f';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY, setEaselLook } from './workspace-3d.mjs?v=people-20261125b';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY, setEaselLook } from './workspace-3d.mjs?v=miaphone-20261126';
 import { cleanLook, lookOf } from './room-looks.mjs';
 // The look each room builds (room-looks.mjs), by room id; none = the room's default. Not saved: the Studio always opens a
 // room in its default look unless a Director chapter asks for another (setRoomLook).

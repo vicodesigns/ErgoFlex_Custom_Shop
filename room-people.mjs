@@ -1,4 +1,4 @@
-import { performFace } from './people-face.mjs';
+import { performFace, glanceAt } from './people-face.mjs?v=miaphone-20261126';
 import { mediaPersonMaterial, castDetailEnsure, castDetailCast, castDetailVariant, castDetailTouches, reliefOf } from './media-cast-finishes.mjs';
 // People who live and work in the rooms (Studio "People" toggle, film `people`).
 //
@@ -78,6 +78,12 @@ import { mediaPersonMaterial, castDetailEnsure, castDetailCast, castDetailVarian
 //                                                     in the hand's frame by `grip`) from where it is held to where the prop rests
 //                                                     in the scene (the desk's wireless charger), `contact` seconds after `at`: one
 //                                                     object, hand to desk, the model's own held phone hidden (placeOf, placeCarry)
+//   glances: { at: 'desk', height: mm, head: 0..1, smile: 0..1, keys: [[a, b, c, d], ...] }
+//                                                     film only: looks up at the featured desk wherever it is (its point
+//                                                     `height` above the floor): from a the eyes then the neck and head go to
+//                                                     it, there from b to c, back to the posture by d (chapter seconds);
+//                                                     `head`: how far the head goes (the eyes take the rest, to 9 degrees),
+//                                                     `smile`: added to their smile meanwhile (people-face.mjs glanceAt)
 //   look: '<key>' | ['<key>', ...]                    whom they look at, whatever their posture (whichever of them is there,
 //                                                     in front within 9 m): a listener who turns to the talker
 //   act: { at: seconds, dur: seconds, by: [x, y, z] mm }  film only: an action at that moment of the chapter, for the
@@ -104,7 +110,7 @@ import {armBones,lapPlan,lapModel,lapRest,handsAt,turnHands,handTurnAt,layAngles
 import {applyHeld} from './people-held.mjs';
 import {partsOf} from './people-held-data.mjs';
 import {postureRecord,postureRecords,hasPosturePose,poseOwner,sourceOf,roomEditKey,blendPosturePoses} from './people-postures.mjs';
-import { PersonRig, DeskActor, solveStill, solveChange, changeArms, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, squatKey, WORKOUTS, drawPose, livelyPose, seedOf, placeGrip, handsKey } from './room-people-motion.mjs?v=noah-20261125';
+import { PersonRig, DeskActor, solveStill, solveChange, changeArms, walkPlan, walkStance, shoeFit, solveWalk, holdArms, lookToward, solveTread, rollPlan, reachAt, actedKey, squatKey, WORKOUTS, drawPose, livelyPose, seedOf, placeGrip, handsKey } from './room-people-motion.mjs?v=miaphone-20261126';
 // Room looks (room-looks.mjs): the Nov 17 pass's cast finishes (own materials, hair / shirt maps) are the refreshed Create
 // room's and the Commons'; Create's Classic look keeps the cast as it was, and its people move as they did then
 // (rig.classicMotion: room-people-motion.mjs's painting, pottery and page-turn strokes from before the pass).
@@ -2185,6 +2191,7 @@ export class RoomPeople {
         // out of the list: back to the posture as built (at amount 0)
         const gaze = amount > 0 ? this.gazeOf(object, life) : null, act = film ? this.actOf(object, life, time) : null;
         const moved = solveStill(life.rig, life.key, { time: this.lifeClock, seed: life.seed, life: amount, actLife, taps: (film || dt < .05) && !object.userData.person.act && !object.userData.person.fromDesk, typing: this.filter?.typing, handsBy: life.handsBy, style: object.userData.person.typeStyle, pose: poseNow(object.userData.person), look: gaze?.at, lookAmount: gaze?.amount, ...(act ? { act } : {}) });
+        this.glanceOne(object, life, film ? time : null, amount);
         drawPose(life.rig, object.userData.personRig, 0, poseNow(object.userData.person), hold); life.live = amount > 0;
         if (object.userData.person.act?.kind === 'place') this.placeCarry(object, film ? time : null);
         // a rider's bike: its crank turns with the feet, the pedals stay level
@@ -2280,6 +2287,20 @@ export class RoomPeople {
         }
         for (const actor of this.actors) for (const m of actor.members) { const p = headOf(m.object); if (ahead(p, 9)) return { at: p.clone(), amount: .55 }; }
         return null;
+    }
+    // A film's glances (a placement's `glances`): the neck and head lifted from whatever the posture has them doing toward the
+    // featured desk wherever it is now, by the glance's weight at this second; the eyes and the smile are performFace's.
+    glanceOne(object, life, time, amount) {
+        object.userData.glanceTarget = undefined;
+        const g = object.userData.person.glances, at = this.deskLive, room = this.room?.root;
+        if (!g || time === null || !(amount > 0) || g.at !== 'desk' || !at || !room) return;
+        const w = glanceAt(g, time); if (!(w.head > 0 || w.eyes > 0)) return;
+        const root = object.userData.personRig?.bones.get('Root')?.parent; if (!root) return;
+        room.updateWorldMatrix(true, false); root.updateWorldMatrix(true, false);
+        const world = (object.userData.glanceWorld ||= new THREE.Vector3()).set(at.x, Number.isFinite(g.height) ? g.height : 1000, at.z);
+        room.localToWorld(world); if (!Number.isFinite(world.x)) return;
+        object.userData.glanceTarget = world;
+        if (w.head > 0) lookToward(life.rig, gazeDesk.copy(world).applyMatrix4(gazeM.copy(root.matrixWorld).invert()), w.head * (Number.isFinite(g.head) ? g.head : .85), false, .8, .75);
     }
     training(object) { return !!object.userData.person.tread || this.strolls(object) || WORKOUTS.has(this.library.entry?.(object.userData.person.id)?.person?.pose); }
     // ---- a stroll: a walker in the Studio goes along the longest clear stretch from where they stand (their own
