@@ -23104,6 +23104,37 @@
    "collection": "ErgoFlex Collection"
   },
   {
+   "id": "ergoflex-keyboard-tray-rig-v3",
+   "name": "Keyboard tray (articulated rig, Vico's model)",
+   "category": "desk",
+   "scenes": [],
+   "file": "assets/props/ergoflex-keyboard-tray-rig-v3.glb",
+   "anchor": "ceiling",
+   "size": [
+    492.2,
+    86.8,
+    708.6
+   ],
+   "min": [
+    -283.5,
+    -94.1,
+    -360.1
+   ],
+   "max": [
+    208.8,
+    -7.2,
+    348.5
+   ],
+   "tris": 5978,
+   "bytes": 232180,
+   "source": "docs/reference/keyboard-tray-real-20261125/vico-model/Keyboard_Tray.glb",
+   "license": "user-provided",
+   "attribution": null,
+   "sizeNote": "Vico's own Rhino model of his real keyboard tray (25 Nov 2026, inches -> mm), his pose 'pulled out' split at his 18 parts (top plate, rear bracket, arm, front plates and platform, 4 bolts): same vertices and triangles, nothing reshaped. Placed so the platform at rest is where the supplied tray's plate is; his top plate then hangs 7.2 mm under the desktop. Pivots on his bolts; ranges as he modelled them. Built by tools/props/tray-rig-v3.mjs. See docs/keyboard-tray/SPEC.md 0.6.",
+   "hidden": true,
+   "collection": "ErgoFlex Collection"
+  },
+  {
    "id": "ergoflex-guitar-amp",
    "name": "Guitar & amplifier",
    "category": "music",
