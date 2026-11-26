@@ -85,12 +85,13 @@ export async function installQuality(shot, { screens = [] } = {}) {
       api.loadedModel.visible = was; cam.removeFromParent();
     }
     // how bright the capture is (mean radiance of each face's middle): a black capture turns every metal in the film black
-    let meanLevel = 1;
+    let meanLevel = 1, roomLit = true;
     try {
       const n = 16, buf = new Uint16Array(n * n * 4), at = Math.floor((q.reflections - n) / 2), level = [];
       for (let face = 0; face < 6; face++) { renderer.readRenderTargetPixels(rt, at, at, n, n, buf, face); let sum = 0; for (let i = 0; i < n * n; i++) sum += (THREE.DataUtils.fromHalfFloat(buf[i * 4]) + THREE.DataUtils.fromHalfFloat(buf[i * 4 + 1]) + THREE.DataUtils.fromHalfFloat(buf[i * 4 + 2])) / 3; level.push(+(sum / (n * n)).toFixed(3)); }
       info.reflectionLevel = level;      // +x, -x, +y (ceiling), -y (floor), +z, -z
       meanLevel = level.reduce((a, b) => a + b, 0) / level.length;
+      roomLit = level.some((v, face) => face !== 2 && v >= 0.04);      // a wall or the floor, not just the ceiling
     } catch (error) { info.reflectionLevel = String(error).slice(0, 80); }
     const pmrem = new THREE.PMREMGenerator(renderer), env = pmrem.fromCubemap(rt.texture).texture; pmrem.dispose(); rt.dispose();
     api.applyRoomGloss?.();
@@ -103,7 +104,9 @@ export async function installQuality(shot, { screens = [] } = {}) {
         for (const m of [].concat(o.material || [])) {
           if (!m.isMeshStandardMaterial || swapped.some(s => s.m === m)) continue;
           const isPlaceholder = m.userData?.roomGlossBase != null;
-          if (m.envMap && !isPlaceholder) continue;
+          // A capture where only the ceiling (shown for this probe) is lit passes the mean but is black all round: metals
+          // keep their roomGloss then, or the aluminium renders black (Create: [0,0,0.648,0,0,0]).  (26 Nov 2026)
+          if (m.envMap && !(isPlaceholder && roomLit)) continue;
           // envMap feeds the diffuse IBL too, so only metals and glass (little or no diffuse) get the room capture;
           // glossy dielectrics (desk tops, paint) keep the studio environment or their colour shifts.
           const reflective = m.metalness >= .6 || m.transmission > 0; if (!reflective) continue;
