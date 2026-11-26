@@ -60,6 +60,7 @@
 //   node tools/experience/render-server.cjs 3017
 const puppeteer=require('puppeteer-core'),fs=require('fs'),path=require('path'),{spawn,execFileSync}=require('child_process');
 const {shutterPlan}=require('./render-shutter.cjs');
+const {finishFadeOf,weightAt,variantShot}=require('./finish-fade.cjs');
 
 const opts={listScreens:false,cut:null,shots:'all',out:'.',stills:0,at:null,video:false,size:'1920x1080',fps:30,blur:1,ss:1,server:'http://127.0.0.1:3017'};
 for(let i=2;i<process.argv.length;i++){
@@ -119,28 +120,35 @@ async function loadFx(frame){await frame.evaluate(async()=>{if(!window.__filmFx)
 // it always was (same pixels, same JPEG); a chapter without a dip never takes this path.
 function dipsOf(shot){return (shot.cameraPlan?.keys||[]).filter(k=>k&&k.cut&&k.transition&&(k.transition.type==='dip-black'||k.transition.type==='dip-white')&&Number.isFinite(k.at)&&Number(k.transition.dur)>0).map(k=>({at:Number(k.at),half:Number(k.transition.dur)/2,color:k.transition.type==='dip-white'?'#ffffff':'#000000'}));}
 function dipAt(dips,seconds){let best=null;for(const d of dips||[]){const a=1-Math.abs(seconds-d.at)/d.half;if(a>0&&(!best||a>best.a))best={a:Math.min(1,a),c:d.color};}return best;}
-async function grab(frame,t,seconds,quality=.96,chapter=seconds,video=false,dip=null,mime='image/jpeg'){
-  const url=await frame.evaluate(async(t,s,q,c,v,mre,mof,dp,mm)=>{const fx=window.__filmFx;if(fx)await fx.frame(t,c,{video:v});try{await window.ErgoPresentation.bakeFrame(t,window.__rc,s);if(mre)window.__rcMaterials=(0,eval)('('+mof+')')(mre);}finally{fx?.after();}if(dp){const g=window.__rc.getContext('2d');g.save();g.globalAlpha=dp.a;g.fillStyle=dp.c;g.fillRect(0,0,window.__rc.width,window.__rc.height);g.restore();}return mm==='image/png'?window.__rc.toDataURL('image/png'):window.__rc.toDataURL('image/jpeg',q);},t,seconds,quality,chapter,video,opts['list-materials']||null,String(materialsOf),dip,mime);
+async function grab(frame,t,seconds,quality=.96,chapter=seconds,video=false,dip=null,mime='image/jpeg',over=null){
+  const url=await frame.evaluate(async(t,s,q,c,v,mre,mof,dp,mm,ov)=>{const fx=window.__filmFx;if(fx)await fx.frame(t,c,{video:v});try{await window.ErgoPresentation.bakeFrame(t,window.__rc,s);if(mre)window.__rcMaterials=(0,eval)('('+mof+')')(mre);}finally{fx?.after();}if(ov){const img=await createImageBitmap(await (await fetch(ov.url)).blob()),g=window.__rc.getContext('2d');g.save();g.globalAlpha=ov.alpha;g.drawImage(img,0,0,window.__rc.width,window.__rc.height);g.restore();img.close();}if(dp){const g=window.__rc.getContext('2d');g.save();g.globalAlpha=dp.a;g.fillStyle=dp.c;g.fillRect(0,0,window.__rc.width,window.__rc.height);g.restore();}return mm==='image/png'?window.__rc.toDataURL('image/png'):window.__rc.toDataURL('image/jpeg',q);},t,seconds,quality,chapter,video,opts['list-materials']||null,String(materialsOf),dip,mime,over);
   if(opts['list-materials'])printMaterials(await frame.evaluate(()=>window.__rcMaterials));
   return Buffer.from(url.slice(url.indexOf(',')+1),'base64');
 }
 
-async function renderShot(frame,i){
-  const shot=cut.shots[i],tag=pad(i),started=Date.now(),fx=usesFx(shot);
-  if(fx)await loadFx(frame);
+async function prepareShot(frame,shot,tag,fx){
   await frame.evaluate(async s=>{window.__filmFx?.clear();window.__filmFx?.beforePrepare(s);try{await window.ErgoPresentation.prepare(s);}finally{window.__filmFx?.unhookPreset();}},shot);
   // studio.js phases LED effects from performance.now() at setLedEffect, but
   // bakes pass chapter time. Re-arm the effect prepare() chose with its start
   // at 0 so the reactive lighting animates from the first frame.
   if(shot.kind==='music'&&shot.ledMode!=='media')await frame.evaluate(period=>{const now=performance.now;performance.now=()=>0;try{window.ErgoFlex.setLedEffect({mode:'spectrum',period},false);}finally{performance.now=now;}},Number(shot.ledPeriod)||6);
+  if(fx){const info=await frame.evaluate(s=>window.__filmFx.install(s),{...shot,__stageClip:opts.screen});console.log(`${tag} ${shot.id}: film fx`,JSON.stringify(info));}
+}
+async function beginShot(frame,w,h){await frame.evaluate((w,h)=>{window.__rc=document.createElement('canvas');window.__rc.width=w;window.__rc.height=h;window.ErgoPresentation.beginBake(w,h);},w,h);}
+const endShot=frame=>frame.evaluate(()=>{window.ErgoPresentation.endBake();window.__filmFx?.clear();});
+
+async function renderShot(frame,i){
+  const shot=cut.shots[i],tag=pad(i),started=Date.now(),fx=usesFx(shot);
+  if(fx)await loadFx(frame);
+  await prepareShot(frame,shot,tag,fx);
   // shot.screenOffset (s): start the in-scene media clip that far in. Bakes
   // seek the clip to chapter time, so this only shifts what the screen shows.
   const off=Number(shot.screenOffset)||0;
-  if(fx){const info=await frame.evaluate(s=>window.__filmFx.install(s),{...shot,__stageClip:opts.screen});console.log(`${tag} ${shot.id}: film fx`,JSON.stringify(info));}
   const stillMode=!opts.video,w=stillMode?960:RW,h=stillMode?540:RH;
-  await frame.evaluate((w,h)=>{window.__rc=document.createElement('canvas');window.__rc.width=w;window.__rc.height=h;window.ErgoPresentation.beginBake(w,h);},w,h);
+  await beginShot(frame,w,h);
   try{
     if(stillMode){
+      if(shot.finishFade)console.log(`${tag} ${shot.id}: stills show the first look only (the finish fade is drawn by --video)`);
       const fractions=opts.at?String(opts.at).split(',').map(Number):(n=>Array.from({length:n},(_,k)=>k/(n-1)))(Math.max(2,Number(opts.stills)||8));
       const dir=path.join(opts.out,tag+'-stills');fs.rmSync(dir,{recursive:true,force:true});fs.mkdirSync(dir,{recursive:true});
       for(const [k,t] of fractions.entries())fs.writeFileSync(path.join(dir,String(k).padStart(3,'0')+'.jpg'),await grab(frame,t,t*shot.seconds+off,.9,t*shot.seconds,false));
@@ -167,13 +175,30 @@ async function renderShot(frame,i){
     const pipeCodec=useJpeg?'mjpeg':'png',pipeMime=useJpeg?'image/jpeg':'image/png';
     const ff=spawn('ffmpeg',['-v','error','-y','-f','image2pipe','-framerate',String(fps*open),'-c:v',pipeCodec,'-i','-','-vf',vf.join(','),'-r',String(fps),'-c:v','libx264','-preset','medium','-crf','8','-pix_fmt','yuv444p','-color_primaries','bt709','-color_trc','bt709','-colorspace','bt709',file],{stdio:['pipe','inherit','inherit']});
     const done=new Promise((res,rej)=>ff.on('close',c=>c===0?res():rej(Error('ffmpeg exited '+c))));
-    let lastN=-1,buf=null;const dips=dipsOf(shot);if(dips.length)console.log(`${tag} ${shot.id}: ${dips.length} camera dip(s)`,JSON.stringify(dips));
-    for(let i=0;i<order.length;i++){
-      const n=order[i];
-      // Same sampling as the in-browser bake: t spans 0…1 across the chapter. A repeated sub-frame (frame 0's group) is not baked again.
-      if(n!==lastN){const seconds=(n0+n)/(fps*sub),t=Math.min(1,seconds/((chapterFrames-1)/fps));buf=await grab(frame,t,seconds+off,.97,seconds,true,dipAt(dips,seconds),pipeMime);lastN=n;}
-      if(!ff.stdin.write(buf))await new Promise(r=>ff.stdin.once('drain',r));
-      if(i%(fps*open*2)===0)process.stdout.write(`\r${tag} ${shot.id}: ${Math.round(i/order.length*100)}%   `);
+    const dips=dipsOf(shot);if(dips.length)console.log(`${tag} ${shot.id}: ${dips.length} camera dip(s)`,JSON.stringify(dips));
+    // Same sampling as the in-browser bake: t spans 0…1 across the chapter.
+    const secondsOf=n=>(n0+n)/(fps*sub),bake=(n,dip,over=null)=>{const seconds=secondsOf(n),t=Math.min(1,seconds/((chapterFrames-1)/fps));return grab(frame,t,seconds+off,.97,seconds,true,dip,pipeMime,over);};
+    const write=async buf=>{if(!ff.stdin.write(buf))await new Promise(r=>ff.stdin.once('drain',r));};
+    const progress=at=>{if(at%(fps*open*2)===0)process.stdout.write(`\r${tag} ${shot.id}: ${Math.round(at/order.length*100)}%   `);};
+    // Sub-frames order[a..b): a repeated sub-frame (frame 0's group) is not baked again.
+    const run=async(a,b,make)=>{let lastN=-1,buf=null;for(let i=a;i<b;i++){const n=order[i];if(n!==lastN){buf=await make(n);lastN=n;}await write(buf);progress(i);}};
+    // shot.finishFade (finish-fade.cjs): two passes. The first bakes the shot's own look up to the window's end (the
+    // window's sub-frames are held on disk), the second prepares the second look and mixes the held pictures over it.
+    const fade=finishFadeOf(shot),after=test=>{const i=order.findIndex(n=>test(secondsOf(n)));return i<0?order.length:i;};
+    if(!fade)await run(0,order.length,n=>bake(n,dipAt(dips,secondsOf(n))));
+    else{
+      const mixFrom=after(s=>weightAt(fade,s)>0),mixTo=after(s=>weightAt(fade,s)>=1),held=new Map();
+      const hold=fs.mkdtempSync(path.join(require('os').tmpdir(),'finishfade-')),dataUrl=file=>`data:${pipeMime};base64,${fs.readFileSync(file).toString('base64')}`;
+      console.log(`${tag} ${shot.id}: finish fade ${fade.from}-${fade.to} s (${mixTo-mixFrom} mixed sub-frames)`);
+      try{
+        await run(0,mixFrom,n=>bake(n,dipAt(dips,secondsOf(n))));
+        for(const n of new Set(order.slice(mixFrom,mixTo))){const file=path.join(hold,String(n));fs.writeFileSync(file,await bake(n,null));held.set(n,file);}
+        if(mixFrom<order.length){
+          const second=variantShot(shot,fade);
+          await endShot(frame);if(usesFx(second))await loadFx(frame);await prepareShot(frame,second,tag,usesFx(second));await beginShot(frame,w,h);
+          await run(mixFrom,order.length,n=>bake(n,dipAt(dips,secondsOf(n)),held.has(n)?{url:dataUrl(held.get(n)),alpha:1-weightAt(fade,secondsOf(n))}:null));
+        }
+      }finally{fs.rmSync(hold,{recursive:true,force:true});}
     }
     ff.stdin.end();await done;
     console.log(`\r${tag} ${shot.id}: ${outFrames} frames → ${file} (${((Date.now()-started)/1000).toFixed(0)}s)`);

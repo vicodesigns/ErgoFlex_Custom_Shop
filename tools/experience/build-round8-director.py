@@ -76,6 +76,13 @@
       off; an export without the field keeps the earlier import's). The pass writes them onto the chapter's film shot (review-cut.json,
       the chapter's shot file, hero's sub-shots) as 'sceneTray', which film-fx.mjs plays with the same sampler as the live stage;
       none removes the field. Only a chapter with tray keys gets the field, so every other chapter's key (chapter-keys.py) is unchanged.
+      Sub-shot motion and finish fades (chapter 12, polish1126 hero end): an export whose shot has 'subshotMotion'
+      ({'<sub-shot>': {'<clip id>': {start?, duration?}}}) and / or 'finishFades' ({'<sub-shot>': {at: [from, to],
+      set: {look fields}}}, tools/experience/finish-fade.cjs) keeps them in director-camera-<id>.json under the same
+      names ({} = none; an export without the field keeps the earlier import's). After the chapter's motion, the pass
+      retimes those clips in that sub-shot's own copy only (shots/13-subshots.json; review-cut and the other
+      sub-shots keep the chapter's) and puts each finish fade on its sub-shot as 'finishFade' (render-cut draws it).
+      The Director's live preview shows neither.
       Room look: an export whose shot has 'look' (Director Mode's Room look: a version of the chapter's room, room-looks.mjs)
       keeps it in director-camera-<id>.json as 'look' (an export without the field keeps the earlier import's). The pass
       writes it onto the chapter's film shot (review-cut.json, the chapter's shot file, hero's sub-shots) as 'look', which
@@ -260,6 +267,44 @@ def retime_status(events, old_clips, new_clips, old_T, new_T, initial, log, new_
     return [e for e in out if e['dur'] > 1e-3]
 
 
+FADE_SET = ('deskFinish', 'featuredBuild', 'ledColor', 'ledGlow', 'ledSurfaces', 'lights', 'lightEdits', 'sceneGlobals', 'sceneEdits', 'screens', 'screenGain')
+
+
+def clean_subshot_motion(v):
+    out = {}
+    for sub, clips in (v if isinstance(v, dict) else {}).items():
+        for clip, d in (clips if isinstance(clips, dict) else {}).items():
+            keep = {k: d[k] for k in ('start', 'duration') if isinstance(d, dict) and isinstance(d.get(k), (int, float))
+                    and not isinstance(d.get(k), bool) and 0 <= d[k] < 1e5}
+            if keep: out.setdefault(str(sub), {})[str(clip)] = keep
+    return out
+
+
+def clean_finish_fades(v):
+    out = {}
+    for sub, d in (v if isinstance(v, dict) else {}).items():
+        at, look = (d.get('at'), d.get('set')) if isinstance(d, dict) else (None, None)
+        if (isinstance(at, list) and len(at) == 2 and all(isinstance(x, (int, float)) for x in at) and 0 <= at[0] < at[1]
+                and isinstance(look, dict) and look):
+            out[str(sub)] = {'at': list(at), 'set': {k: copy.deepcopy(look[k]) for k in FADE_SET if k in look}}
+    return out
+
+
+def apply_subshot_extras(s, dc, log):
+    """One sub-shot's own clip times and finish fade (director-camera-hero.json subshotMotion / finishFades), on its copy
+    of the chapter's motion. Absent from the director file: the sub-shot is left as the pass made it."""
+    sub = str(s.get('subshot'))
+    mine = (dc.get('subshotMotion') or {}).get(sub)
+    if mine:
+        clips = {c['id']: c for c in (s.get('motion') or {}).get('clips') or []}
+        for clip, d in mine.items():
+            if clip in clips: clips[clip].update(d)
+            else: log(f'    WARNING sub-shot {sub}: no desk move {clip} to retime')
+    if 'finishFades' in dc:
+        if sub in dc['finishFades']: s['finishFade'] = copy.deepcopy(dc['finishFades'][sub])
+        else: s.pop('finishFade', None)
+
+
 def apply(n, cid, f, dc, log):
     cut = load(CUT); ci = next(i for i, s in enumerate(cut['shots']) if s['id'] == cid)
     src = load(f) if f else cut['shots'][ci]
@@ -338,6 +383,7 @@ def apply(n, cid, f, dc, log):
             for s in sub['shots']:
                 if s.get('id') != 'hero': continue
                 put(s, new_T)
+                apply_subshot_extras(s, dc, log)
                 if s['renderRange'][0] >= new_T or s['renderRange'][1] > new_T + 1e-6:
                     log(f'    sub-shot {s.get("subshot")} renderRange {s["renderRange"]} lies past the {new_T:g} s chapter')
             if dump(sp, sub, indent=None): wrote.append('shots/13-subshots.json')
@@ -1343,7 +1389,7 @@ def import_titles(cid, titles, seconds, log):
     return [f'titles-src.json (backup titles-src.pre-{tag}.json)']
 
 
-END_FIELDS = {'logo': (('rel_in', 0, None), ('x', -4000, 4000), ('y', -4000, 4000), ('scale', .1, 5)),
+END_FIELDS = {'logo': (('rel_in', 0, None), ('show_delay', 0, 5), ('x', -4000, 4000), ('y', -4000, 4000), ('scale', .1, 5)),
               'cta': (('rel_in', 0, None), ('fade_in', 0, 5), ('size', 8, 300), ('spacing', -10, 40), ('gap', -1000, 1000), ('x', -4000, 4000))}
 END_FONTS = ('Poppins', 'Poppins Medium', 'Poppins SemiBold', 'Poppins Bold')   # experience/end-card.mjs CTA_FONTS
 
@@ -1466,6 +1512,10 @@ def run_import(export):
     # Room look: the export's; an export without the field keeps the earlier import's.
     if isinstance(shot.get('look'), str) and LOOK.fullmatch(shot['look']): dc['look'] = shot['look']
     elif 'look' in before: dc['look'] = before['look']
+    # Sub-shot clip times and finish fades (chapter 12): the export's ({} = none); without the field, the earlier import's.
+    for key, clean in (('subshotMotion', clean_subshot_motion), ('finishFades', clean_finish_fades)):
+        if isinstance(shot.get(key), dict): dc[key] = clean(shot[key])
+        elif key in before: dc[key] = before[key]
     # Desk versions (chapter 12's Desk version panel and lane): the export's list; an export without it keeps the earlier import's.
     if 'deskVersions' in shot:
         if clean_versions(shot['deskVersions']): dc['versions'] = clean_versions(shot['deskVersions'])
