@@ -11,7 +11,7 @@ import {effectiveDeskEdits} from './desk-edits.mjs';
 import {effectiveTrayEdits} from './tray-pose.mjs';
 import {latestFilmCut,withCut,filmFresh} from './film-fresh.mjs';
 import {exportLighting} from './film-lighting.mjs';
-import {filmCamera} from './film-render.mjs';
+import {filmCamera,finishFadeAt} from './film-render.mjs';
 import {deskVersions,versionAt,versionShot,loadFilmSubshots,loadStorageSeed} from './desk-versions.mjs';
 const $=id=>document.getElementById(id), frame=$('stage'), query=new URLSearchParams(location.search), linkQuery=new URLSearchParams(location.hash.slice(1));
 let cut=query.get('cut')==='social'?'social':'full',shots=score(cut),index=-1,playing=true,busy=true,finished=false,generation=0,sound=false,app=null,preparation=Promise.resolve(),hasFrame=false,lastUI=0;
@@ -95,6 +95,7 @@ const perf=query.get('perf')==='1',perfSum={seek:0,n:0,fx:0,fxn:0};let perfAt=pe
 function perfNote(kind,ms){if(kind==='seek'){perfSum.seek+=ms;perfSum.n++;}else{perfSum.fx+=ms;perfSum.fxn++;}
   if(performance.now()-perfAt>2000){const parts=Object.entries(perfSum).filter(([k])=>k.startsWith('fx:')).map(([k,v])=>`${k.slice(3)} ${(v/Math.max(1,perfSum.fxn)).toFixed(1)}`).join(', ');console.log(`[perf] ${perfSum.n} seeks ${(perfSum.seek/Math.max(1,perfSum.n)).toFixed(1)} ms each · ${perfSum.fxn} film-fx frames ${(perfSum.fx/Math.max(1,perfSum.fxn)).toFixed(1)} ms each (${parts})`);perfAt=performance.now();for(const k of Object.keys(perfSum))perfSum[k]=0;}}
 let fxLast=0,fxScreensAt=0,fxScrubbed=false,liveFx=null,fxShot=null,fxAt=-1,fxPending=null,fxLights=null,fxTimer=null;
+let fxFinish=null;
 // Film layers the Director edits in place (film-fx update): lighting and its prop edits.
 let fxPeople='null',fxSonar='null';
 const lightsKey=s=>{const l=exportLighting(s);return JSON.stringify([l.ledStatus,l.ledNeutral,l.ledColor,l.sceneGlobals,l.lights,l.lightEdits,l.timeOfDay,s.statusLight,l.propEdits,l.brandingEdits,l.deskEdits,l.deskBuild,l.screens,s.screenLook]);};   // (screenLook: the Graphics tab, applied in place by film-fx update)
@@ -111,7 +112,7 @@ function filmCameraBake(setup){
   return (keys,seconds)=>{const key=JSON.stringify([keys,seconds]);if(key!==last){out=filmCamera(setup,keys,seconds).camera.keys;last=key;}return out;};
 }
 // The renderer's order around prepare: clear, beforePrepare, prepare, unhookPreset, install.
-async function prepareStage(next){
+async function prepareStage(next,seconds){
   await filmReady;await fxRefresh;while(fxBusy)await fxRefresh;await fxPending;const version=activeVersion(next.id),setup=filmSetup(next.id),fx=setup?await stageFx().catch(error=>{console.warn('[film fx]',error.message);return null;}):frame.contentWindow.__filmFx;
   liveFx=null;fxShot=null;frame.contentWindow.__directorLightsRestore?.();frame.contentWindow.__directorPropsRestore?.();fx?.clear();
   stage().filmCamera?.(setup?filmCameraBake(setup):null);
@@ -120,14 +121,16 @@ async function prepareStage(next){
   if(setup&&next.trayEdits===undefined&&setup.sceneTray?.length)next={...next,trayEdits:effectiveTrayEdits(setup,next)};   // an import's keyboard tray keys (tray-pose.mjs): the live stage plays them, as it does the desk clips
   const seed=version?await storageSeed(next.id):null;if(seed)seeds.get(seed.url).done=seed;seedStage(seed);
   if(!setup||!fx)return stage().prepare(next);
-  const shot=liveFilmShot(setup,next);fx.beforePrepare(shot);
+  const base=liveFilmShot(setup,next),finish=finishFadeAt(setup,seconds);
+  const look=finish?.weight>=.5?finish.look:null,shot=look?{...base,...look}:base;
+  fx.beforePrepare(shot);
   // The stage casts the room from the shot it prepares: the film's people with the Director's cast over them.
   fxPeople=JSON.stringify(shot.people??null);fxSonar=JSON.stringify(shot.sonar??null);
   // (and its onboard touchscreen: the Director's if the chapter has one, else the film's)
   let staged=shot.people?{...next,people:shot.people}:next;const touchscreen=next.touchscreen??shot.touchscreen;if(touchscreen!==undefined&&staged.touchscreen!==touchscreen)staged={...staged,touchscreen};
   if(shot.sonar!==undefined&&staged.sonar!==shot.sonar)staged={...staged,sonar:shot.sonar};   // (the Director's Sonar over the film's: sonar.mjs)
   let result;try{result=await stage().prepare(staged);}finally{fx.unhookPreset();}
-  fxError=null;try{await fx.install(shot);liveFx=fx;fxShot=next.id;fxAt=-1;fxLights=lightsKey(next);director?.filmApplied?.();}catch(error){console.error('[film fx]',error);fx.clear();fxError=error.message;director?.setStatus('The film setup could not be applied: '+error.message);}
+  fxError=null;try{await fx.install(shot);liveFx=fx;fxShot=next.id;fxAt=-1;fxFinish=look;fxLights=lightsKey(next);director?.filmApplied?.();}catch(error){console.error('[film fx]',error);fx.clear();fxError=error.message;director?.setStatus('The film setup could not be applied: '+error.message);}
   return result;
 }
 // Lighting edits re-install the film layers (no re-prepare), so the live strips follow the Director.
@@ -140,13 +143,15 @@ async function reinstallFilmLights(){
   // Not under a Director gizmo drag: the dragged light would jump back mid-gesture.
   while(frame.contentWindow.__directorDragging)await new Promise(r=>setTimeout(r,100));
   await fxPending;const s=shots[index],setup=s&&filmSetup(s.id),fx=liveFx;if(!fx||busy||!setup||s.id!==fxShot||activeBake||bakeController)return;
-  const shot=liveFilmShot(setup,s);let held=false;const hold=()=>{if(!held){held=true;stage().hold?.(true);}};
+  const base=liveFilmShot(setup,s),finish=finishFadeAt(setup,clock.progress(performance.now(),s.seconds)*s.seconds);
+  const look=finish?.weight>=.5?finish.look:null,shot=look?{...base,...look}:base;
+  let held=false;const hold=()=>{if(!held){held=true;stage().hold?.(true);}};
   liveFx=null;
   try{
     frame.contentWindow.__directorLightsRestore?.();frame.contentWindow.__directorPropsRestore?.();
     let result='full';try{result=fx.update?await fx.update(shot,{onSlow:hold}):'full';}catch(error){console.error('[film fx] update',error);}
     if(result==='full'){hold();fx.clear();await fx.install(shot);}
-    liveFx=fx;fxAt=-1;director?.filmApplied?.();
+    liveFx=fx;fxAt=-1;fxFinish=look;director?.filmApplied?.();
   }catch(error){console.error('[film fx]',error);}
   finally{if(held)stage().hold(false);}
 }
@@ -156,6 +161,8 @@ function filmFrame(){
   if(!liveFx||fxPending||busy||index<0||activeBake||bakeController||shots[index]?.id!==fxShot)return;
   const s=shots[index],at=clock.progress(performance.now(),s.seconds)*s.seconds,fx=liveFx,now=performance.now(),scrubbing=director?.scrubbing?.();
   if(scrubbing&&now-fxLast<100)return;if(!scrubbing&&fxScrubbed){fxScrubbed=false;fxAt=-1;}if(scrubbing)fxScrubbed=true;
+  const finish=finishFadeAt(filmSetup(s.id),at);
+  if((finish?.weight>=.5?finish.look:null)!==fxFinish){void refreshFilmLights();return;}
   if(Math.abs(at-fxAt)<1/30)return;fxLast=now;stage()?.wake?.();
   const drawScreens=!playing||now-fxScreensAt>=250;if(drawScreens)fxScreensAt=now;
   fxAt=at;const fxStart=performance.now(),timing=perf?{}:null;fxPending=fx.frame(at,at,{video:false,screens:drawScreens,timing}).then(()=>{fx.after();if(perf){perfNote('fx',performance.now()-fxStart);for(const [k,v] of Object.entries(timing))perfSum['fx:'+k]=(perfSum['fx:'+k]||0)+v;}}).catch(error=>console.warn('[film fx]',error.message)).finally(()=>{fxPending=null;});
@@ -210,7 +217,7 @@ async function playShot(i,{position=0,forceLive=false,range=null}={}){
     if(token!==generation)return;
     if(record){try{await showBaked(record,position);}catch{record=null;clearBaked();}}
     if(!record){
-      preparation=preparation.catch(()=>{}).then(()=>token===generation?prepareStage(next):null);
+      preparation=preparation.catch(()=>{}).then(()=>token===generation?prepareStage(next,position*next.seconds):null);
       await preparation;if(token!==generation)return;clearBaked();
       // Director playback and seeking must sample the authored motion even when the OS reduces automatic animation.
       stage().reduced(reduced.matches&&!directorOpen);stage().pause(false);stage().tick(position);stage().pause(!playing||document.hidden);

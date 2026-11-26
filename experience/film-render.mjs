@@ -11,6 +11,16 @@ import {mergeTrayEdits} from './tray-pose.mjs';
 import {mergeFeaturedBuild} from './desk-build.mjs';
 import {mergePeople} from './people-edits.mjs';
 import {withStatusLight} from '../tools/experience/film-status-light.mjs';
+// The film renderer composites two looks with this smoothstep. Live editing can
+// switch between the looks without keeping a second WebGL stage open.
+export function finishFadeAt(shot,seconds){
+  const fade=shot?.finishFade;
+  if(!Array.isArray(fade?.at)||!fade.set)return null;
+  const [from,to]=fade.at;
+  if(!Number.isFinite(from)||!Number.isFinite(to)||to<=from)return null;
+  const x=Math.max(0,Math.min(1,(seconds-from)/(to-from)));
+  return {weight:x*x*(3-2*x),look:fade.set};
+}
 // The shot a film render gets: the full built film shot with the Director's edits on top.
 // Camera: filmCamera below.
 export function filmRenderShot(film,shot,keys){
@@ -65,7 +75,22 @@ export function createStillRenderer({width=1280,height=720,src='/?room=product&v
     await new Promise((resolve,reject)=>{w.__filmFxDone=resolve;w.__filmFxFail=reject;const s=w.document.createElement('script');s.type='module';s.textContent="import('/tools/experience/film-fx.mjs?v=20261114-cine-s1-wheels').then(m=>{window.__filmFx=m;window.__filmFxDone();},e=>window.__filmFxFail(e));";w.document.head.append(s);});
   }
   let queue=Promise.resolve();
-  const render=(shot,t)=>(queue=queue.then(()=>renderNow(shot,t),()=>renderNow(shot,t)));
+  const render=(shot,t)=>(queue=queue.then(()=>renderFinish(shot,t),()=>renderFinish(shot,t)));
+  async function renderFinish(shot,t){
+    const fade=finishFadeAt(shot,t*shot.seconds);
+    let canvas;
+    if(!fade?.weight)canvas=await renderNow(shot,t);
+    else{
+      const after={...shot,...fade.look};
+      if(fade.weight===1)canvas=await renderNow(after,t);
+      else{
+        canvas=await renderNow(shot,t);
+        const end=await renderNow(after,t),ctx=canvas.getContext('2d');
+        ctx.save();ctx.globalAlpha=fade.weight;ctx.drawImage(end,0,0);ctx.restore();
+      }
+    }
+    return canvas.toDataURL('image/jpeg',.92);
+  }
   async function renderNow(shot,t){
     ready||=boot().catch(error=>{dispose();throw error;});await ready;
     const w=win(),EP=w.ErgoPresentation,fx=w.__filmFx;
@@ -90,7 +115,7 @@ export function createStillRenderer({width=1280,height=720,src='/?room=product&v
     EP.beginBake(width,height);
     try{await fx.frame(t,seconds,{video:false});await EP.bakeFrame(t,canvas,seconds+offset);}
     finally{fx.after();EP.endBake();}
-    return canvas.toDataURL('image/jpeg',.92);
+    return canvas;
   }
   function dispose(){frame?.remove();frame=null;ready=null;prepared=null;setupKey=null;seeded=null;}
   return {render,dispose,warm:()=>!!prepared};
