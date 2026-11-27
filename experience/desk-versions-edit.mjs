@@ -22,6 +22,11 @@
 // sub-shots, then in the library (film sub-shots an earlier import dropped: build-round8-director.py keeps their
 // bundles). A model with no bundle anywhere gets its preset's defaults (model-specific dressing reset).
 // The desk changes at the middle of each overlap.
+import {whiteLook,PEARL} from './finish-fades.mjs';
+// A desk's `look` (optional): 'blank-pearl' = the desk with no accessories, no props and no screens, in the Pearl White finish
+// (the opener of the hero: the same desk and camera as the one after it, bare, in the ending's white look).
+export const LOOKS=Object.freeze(['blank-pearl']);
+export const BLANK_NAME='Pearl White';
 export const NAMES={artist:'Artist',occ:'OCC',architect:'Architect',hbhs:'HBHS',office:'Office',gaming:'Gaming',library:'Library',music:'Music',compact:'Compact',creative:'Creative'};
 export const labelOf=id=>NAMES[id]||(String(id||'Desk')[0].toUpperCase()+String(id||'Desk').slice(1));
 export const MIN_SHOWN=2;                       // s a desk is shown at least
@@ -43,7 +48,7 @@ export function cleanDeskVersionList(value){
     const preset=String(e.preset||'');if(!/^[a-z0-9-]{1,40}$/.test(preset))return null;
     const start=num(e.start,0,600),end=num(e.end,0,600);if(start===null||end===null||end<=start)return null;
     const name=String(e.name??'').replace(/[\u0000-\u001f]/g,' ').trim().slice(0,40);
-    out.push({n:e.n,preset,name,start:r2(start),end:r2(end)});
+    out.push({n:e.n,preset,name,start:r2(start),end:r2(end),...(LOOKS.includes(e.look)?{look:e.look}:{})});
   }
   if(new Set(out.map(e=>e.n)).size!==out.length)return null;
   out.sort((a,b)=>a.start-b.start||a.n.localeCompare(b.n));
@@ -75,7 +80,7 @@ export function windowsFrom(seams,overlaps,total){
   return Array.from({length:n},(_,i)=>[i?r2(seams[i-1]-overlaps[i-1]/2):0,i<n-1?r2(seams[i]+overlaps[i]/2):r2(total)]);
 }
 // `desks` (id, model, name) in time order over the windows `wins`.
-const place=(desks,wins)=>desks.map((v,i)=>({n:v.n,preset:v.preset,name:v.name||'',start:wins[i][0],end:wins[i][1]}));
+const place=(desks,wins)=>desks.map((v,i)=>({n:v.n,preset:v.preset,name:v.name||'',start:wins[i][0],end:wins[i][1],...(LOOKS.includes(v.look)?{look:v.look}:{})}));
 // Drag a desk to another place in the order: the others shift along; the time slots (letters and windows) stay where they are.
 export function moveVersion(list,from,to){
   if(from===to||from<0||to<0||from>=list.length||to>=list.length)return list;
@@ -116,8 +121,39 @@ export function addVersion(list,src,at,id,total){
   lens.splice(at,0,mine);
   const next=[];let t=0;for(const l of lens.slice(0,-1)){t+=l;next.push(r2(t));}
   const near=[overlaps[at-1],overlaps[at-2]].find(o=>o>0)??DEFAULT_OVERLAP,ov=overlaps.slice();ov.splice(at-1,0,near);
-  const desks=list.slice();desks.splice(at,0,{n:id,preset:list[src].preset,name:list[src].name||''});
+  const desks=list.slice();desks.splice(at,0,{n:id,preset:list[src].preset,name:list[src].name||'',...(list[src].look?{look:list[src].look}:{})});
   return place(desks,windowsFrom(next,ov,total));
+}
+// A new desk at the very start of the chapter (a copy of desk `src`, with `look` when given). When the desks were slid right and
+// left a gap in front of the first one, the new desk fills it: it shows from 0 to the gap's end, where the change happens (the
+// crossfade centred on it); else it takes the first half of the first desk's time (the first desk must show at least twice
+// MIN_SHOWN). null when it does not fit (canAddVersion), the first desk is too short to share, or the id is taken.
+export function addVersionAtStart(list,src,id,total,{look=null}={}){
+  if(!list[0]||!list[src]||!ID.test(String(id||''))||list.some(v=>v.n===id)||!canAddVersion(list,total))return null;
+  const {seams,overlaps}=seamsOf(list),gap=list[0].start;
+  let seam,ov;
+  if(gap>=.5-1e-9){seam=r2(gap);ov=r2(Math.min(DEFAULT_OVERLAP,2*gap));}
+  else{
+    const first=seams.length?seams[0]:total;if(first<2*MIN_SHOWN-1e-9)return null;
+    seam=Math.max(MIN_SHOWN,Math.round(first/2*10)/10);ov=DEFAULT_OVERLAP;
+  }
+  const mine={n:id,preset:list[src].preset,name:look==='blank-pearl'?BLANK_NAME:list[src].name||'',...(LOOKS.includes(look)?{look}:{})};
+  return place([mine,...list],windowsFrom([seam,...seams],[ov,...overlaps],total));
+}
+// Slide the picked desks by `delta` seconds (a group move: the desks keep their lengths and crossfades). The order stays, no
+// desk may pass its neighbour, no gap may open between two desks (a gap in front of the first one is for + Desk at the start to
+// fill), and the last desk runs to the end of the chapter (`total`, the chapter's length after the move). Throws a sentence.
+export function shiftVersions(list,picked,delta,total){
+  const next=list.map(v=>picked.has(v.n)?{...v,start:r2(v.start+delta),end:r2(v.end+delta)}:{...v});
+  if(next.some(v=>v.start<-1e-9))throw Error('A desk cannot start before the chapter does.');
+  for(let i=1;i<next.length;i++){
+    if(!(next[i].start>next[i-1].start&&next[i].end>next[i-1].end))throw Error(`Desk ${next[i].n} cannot pass Desk ${next[i-1].n}: drag a desk in the Desk versions lane to reorder.`);
+    if(next[i].start>next[i-1].end+1e-9)throw Error(`That would leave a gap between Desk ${next[i-1].n} and Desk ${next[i].n}: move them together, or retime the line between them.`);
+  }
+  const {seams}=seamsOf(next);
+  for(let i=1;i<seams.length;i++)if(seams[i]-seams[i-1]<MIN_SHOWN-1e-9)throw Error(`Each desk shows at least ${MIN_SHOWN} s.`);
+  const last=next.at(-1);if(Number.isFinite(total)&&last.end<total-1e-9)last.end=r2(total);
+  return next;
 }
 // Without version i: the desk before it stays on for its time (the next one, when it was the first). null when it is
 // the only one.
@@ -127,6 +163,20 @@ export function removeVersion(list,i,total){
   return place(list.filter((_,j)=>j!==i),windowsFrom(seams,overlaps,total));
 }
 
+// The blank Pearl White desk (look 'blank-pearl') made of a desk's sub-shot: the Pearl White finish and frame through the featured
+// build with no accessories on it, the props the chapter put on this desk gone (sceneEdits that add), no screen clips, and the
+// ending's white look (warm white LED, softer rig, lower exposure: finish-fades.mjs whiteLook). Camera, performance, the room and
+// the rest of the dressing are the desk's own, so it stands where that desk stands.
+function blankPearl(out){
+  const white=whiteLook(out);
+  out.sceneEdits=(out.sceneEdits||[]).filter(e=>!e?.add);
+  out.screens=[];delete out.accessories;delete out.deskFinish;
+  out.featuredBuild={woodFinish:PEARL.wood,baseFinish:PEARL.base,trimColor:PEARL.trim,accessories:[]};
+  out.ledColor=white.ledColor;out.ledGlow=white.ledGlow;
+  if(white.sceneGlobals)out.sceneGlobals=white.sceneGlobals;
+  if(white.lights)out.lights=white.lights;
+  delete out.finishFade;out.deskLook='blank-pearl';
+}
 // The sub-shots for `versions`, from the sub-shots as the film has them now (and `library`: bundles of film sub-shots
 // an earlier import dropped). Pure; `subs` is not changed.
 export function resolveSubshots(subs,versions,library=[]){
@@ -135,7 +185,9 @@ export function resolveSubshots(subs,versions,library=[]){
   const mainScreen=cur.flatMap(s=>s.screens||[]).find(x=>x.target==='main-landscape'&&x.offset===undefined&&x.rate===undefined);
   return versions.map(v=>{
     // Its own sub-shot in the film, else (a version added in the Director) a copy of its model's.
-    const own=cur.find(s=>s.subshot===v.n),donor=own?.preset===v.preset?own:cur.find(s=>s.preset===v.preset)||lib.find(s=>s.preset===v.preset);
+    // (a blank desk is made from a desk that is not one, so the white look is never applied twice)
+    const plain=s=>!s.deskLook,own=cur.find(s=>s.subshot===v.n),pick=list=>list.find(s=>s.preset===v.preset&&plain(s))||list.find(s=>s.preset===v.preset);
+    const donor=own&&own.preset===v.preset&&plain(own)?own:pick(cur)||pick(lib);
     const slot=own||(donor&&cur.includes(donor)?donor:cur[0]);if(!slot)return null;
     const out=clone(slot);out.subshot=v.n;out.renderRange=[v.start,v.end];
     if(donor){
@@ -151,7 +203,9 @@ export function resolveSubshots(subs,versions,library=[]){
       out.screens=mainScreen?[clone(mainScreen)]:[];
       out.lights=(out.lights||[]).map(l=>l?.name==='kicker'?{...l,intensity:18}:l);
     }
-    if(v.name&&v.name!==labelOf(v.preset))out.name=v.name;else delete out.name;
+    if(slot.deskLook&&v.look!=='blank-pearl'){delete out.deskLook;delete out.featuredBuild;for(const k of ['ledColor','ledGlow']){const d=donor?.[k];if(d!==undefined)out[k]=clone(d);else delete out[k];}}
+    if(v.look==='blank-pearl')blankPearl(out);
+    if(v.name&&v.name!==labelOf(v.preset))out.name=v.name;else if(v.look==='blank-pearl')out.name=BLANK_NAME;else delete out.name;
     return out;
   }).filter(Boolean);
 }
@@ -162,7 +216,7 @@ export const libraryEntry=s=>({id:s.id,subshot:s.subshot,renderRange:clone(s.ren
 
 // The list the Director shows: the cut's own (shot.deskVersions) when it has a valid one, else the film's.
 export function effectiveVersions(base,edits){
-  return cleanDeskVersionList(edits)||base.map(v=>({n:v.n,preset:v.preset,name:v.setup?.name||'',start:v.start,end:v.end}));
+  return cleanDeskVersionList(edits)||base.map(v=>({n:v.n,preset:v.preset,name:v.setup?.name||'',start:v.start,end:v.end,...(v.look?{look:v.look}:{})}));
 }
 // "Model-specific dressing" a model change resets, for the panel's hint.
 export const RESET_NOTE='Model-specific screens and dressing reset to this model’s defaults; camera and light are kept.';

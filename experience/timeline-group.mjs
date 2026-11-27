@@ -1,14 +1,18 @@
 import {validateClipSchedule,clipEnd} from './desk-clips.mjs';
 import {validateStatus} from './film-lighting.mjs';
+import {shiftVersions} from './desk-versions-edit.mjs';
 // A timeline group: camera keys (fractions of the chapter), desk clips (seconds), light states
 // ({id, at, dur}) and neutral light keys ([seconds, hex, id]) picked together. Moving it shifts
 // their times only; holds, easings, durations and colours stay as they are. Items pushed past
-// the end lengthen the chapter.
+// the end lengthen the chapter. Desk versions ({n,start,end}: base.versions, picks.versions by letter) and finish fades
+// ({<letter>:{at:[from,to],set}}: base.fades, picks.fades) are part of the group too (Vico, 27 Nov 2026: slide the whole
+// desk line-up right to open a lead-in).
 export const CHAPTER_MAX=90;
 const tidy=v=>Math.round(v*1e6)/1e6,has=(set,id)=>!!set?.has(id);
-function pickedTimes({seconds,keys,clips,lights=[],neutrals=[],tods=[]},picks){
+function pickedTimes({seconds,keys,clips,lights=[],neutrals=[],tods=[],versions=[],fades={}},picks){
   return [...keys.filter(k=>has(picks.keys,k.id)).map(k=>[k.time*seconds,k.time*seconds]),...clips.filter(c=>has(picks.clips,c.id)).map(c=>[c.start,clipEnd(c)]),
-    ...lights.filter(e=>has(picks.lights,e.id)).map(e=>[e.at,e.at+e.dur]),...neutrals.filter(k=>has(picks.neutrals,k[2])).map(k=>[k[0],k[0]]),...tods.filter(k=>has(picks.tods,k.id)).map(k=>[k.at,k.at])];
+    ...lights.filter(e=>has(picks.lights,e.id)).map(e=>[e.at,e.at+e.dur]),...neutrals.filter(k=>has(picks.neutrals,k[2])).map(k=>[k[0],k[0]]),...tods.filter(k=>has(picks.tods,k.id)).map(k=>[k.at,k.at]),
+    ...versions.filter(v=>has(picks.versions,v.n)).map(v=>[v.start,v.end]),...Object.entries(fades||{}).filter(([n])=>has(picks.fades,n)).map(([,f])=>[f.at[0],f.at[1]])];
 }
 // The deltas (seconds) that keep the group at or after 0 and inside the chapter limit.
 export function groupRange(base,picks,max=CHAPTER_MAX){
@@ -33,6 +37,13 @@ export function shiftGroup(base,picks,delta,max=CHAPTER_MAX){
   if(base.tods){
     next.tods=base.tods.map(k=>has(picks.tods,k.id)?{...k,at:tidy(k.at+d)}:k).sort((a,b)=>a.at-b.at);
     for(let i=1;i<next.tods.length;i++)if(next.tods[i].at-next.tods[i-1].at<.001&&(has(picks.tods,next.tods[i].id)||has(picks.tods,next.tods[i-1].id)))throw Error('Two time-of-day keys would land at the same time. Move the selection a little further.');
+  }
+  if(base.versions){
+    next.versions=base.versions;
+    if(picks.versions?.size)next.versions=shiftVersions(base.versions,picks.versions,d,seconds);
+  }
+  if(base.fades){
+    next.fades=Object.fromEntries(Object.entries(base.fades).map(([n,f])=>[n,has(picks.fades,n)?{...f,at:[tidy(f.at[0]+d),tidy(f.at[1]+d)]}:f]));
   }
   return next;
 }

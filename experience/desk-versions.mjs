@@ -16,7 +16,7 @@ import {PRESETS,PRODUCT_CONFIG} from '../catalog.mjs';
 import {SHARED_BUILD_PRESETS} from '../preset-defaults.mjs';
 import {filmRenderShot} from './film-render.mjs';
 import {effectiveFades,edited as finishEdited} from './finish-fades.mjs';
-import {NAMES,resolveSubshots,resolveFilm,moveVersion,moveSeam,seamsOf,shown,MIN_SHOWN,MAX_VERSIONS,RESET_NOTE,cleanDeskVersionList,addVersion,removeVersion,canAddVersion,nextVersionId} from './desk-versions-edit.mjs';
+import {NAMES,resolveSubshots,resolveFilm,moveVersion,moveSeam,seamsOf,shown,MIN_SHOWN,MAX_VERSIONS,RESET_NOTE,cleanDeskVersionList,addVersion,addVersionAtStart,removeVersion,canAddVersion,nextVersionId,BLANK_NAME} from './desk-versions-edit.mjs';
 
 export const presetLabel=id=>NAMES[id]||PRESETS.find(p=>p.id===id)?.name||String(id||'Desk');
 // The build's own colours: desktop finish, frame, trim (preset-defaults.mjs wins over the catalog card, as applyPreset).
@@ -37,7 +37,7 @@ function deskVersionsBase(film,subshots){
   const presets=Array.isArray(film.presets)?film.presets:[],subs=Array.isArray(subshots)?subshots:Array.isArray(subshots?.shots)?subshots.shots:[];
   const list=Object.entries(map).filter(([,r])=>Array.isArray(r)&&r.length===2&&r.every(Number.isFinite)).sort((a,b)=>a[1][0]-b[1][0]||a[0].localeCompare(b[0]))
     .map(([n,[start,end]],i)=>{const setup=subs.find(s=>s?.subshot===n)||null,preset=setup?.preset||presets[i]||film.preset;
-      return {n,preset,label:setup?.name||presetLabel(preset),sig:n+'|'+preset,start,end,setup,kind:setup?.kind||null,swatch:presetSwatch(preset)};});
+      return {n,preset,label:setup?.name||presetLabel(preset),sig:n+'|'+preset+(setup?.deskLook?'|'+setup.deskLook:''),start,end,setup,kind:setup?.kind||null,look:setup?.deskLook||null,swatch:setup?.deskLook?{wood:'#f4f3ef',base:'#f8f8f8',trim:'#f5f5f2',woodName:'Pearl White',baseName:'White'}:presetSwatch(preset)};});
   for(const [i,v] of list.entries()){
     const prev=list[i-1],next=list[i+1];
     v.from=prev?(prev.end>v.start?(v.start+prev.end)/2:v.start):0;
@@ -77,7 +77,7 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     if(memo&&memo.film===film&&memo.subs===subs&&memo.id===s.id&&memo.key===JSON.stringify(edits||null))return memo.list;
     memo={film,subs,id:s.id,key:JSON.stringify(edits||null),list:deskVersions(film,subs,edits)};return memo.list;
   };
-  const asEdits=l=>l.map(v=>({n:v.n,preset:v.preset,name:v.setup?.name||'',start:v.start,end:v.end}));
+  const asEdits=l=>l.map(v=>({n:v.n,preset:v.preset,name:v.setup?.name||'',start:v.start,end:v.end,...(v.look?{look:v.look}:{})}));
   const edited=()=>!!cleanDeskVersionList(shot()?.deskVersions);
   const fmt=x=>Number(x.toFixed(2));
   // The desk an add / duplicate copies and a remove takes: the one picked in the lane or the panel, else the one showing.
@@ -144,6 +144,12 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     next[i]={...next[i],name:name.trim()===presetLabel(next[i].preset)?'':name.trim().slice(0,40)};
     write(next,`Desk ${n} is called ${next[i].name||presetLabel(next[i].preset)}.`,{key:'dv-name-'+n});endGroup();
   }
+  function setLook(n,look){
+    const l=list(),i=l.findIndex(x=>x.n===n);if(i<0||(l[i].look||'')===look)return;
+    const next=asEdits(l),old=next[i];delete old.look;
+    next[i]={...old,...(look?{look}:{}),name:look&&!old.name?BLANK_NAME:(!look&&old.name===BLANK_NAME?'':old.name)};
+    write(next,look?`Desk ${n} is now the blank Pearl White desk: the Pearl White finish with no accessories, no props and no screens, in the ending’s white look. Undo takes it back.`:`Desk ${n} is back to its model’s own look: accessories, props and screens return.`,{tab:true});
+  }
   function setShown(n,which,seconds){
     const l=list(),i=l.findIndex(x=>x.n===n);if(i<0||!Number.isFinite(seconds))return;
     const seam=which==='start'?i-1:i;if(seam<0||seam>=l.length-1)return;
@@ -167,14 +173,29 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     const before=l[at-1],text=`Desk ${id} · ${v.label} added ${after?`after Desk ${v.n}`:'at the end'}, a copy of Desk ${v.n}: it shows ${span(next,at)} and Desk ${before.n} · ${before.label} now ${span(next,at-1)}. Change its model in the Desk version tab, drag it in the lane to reorder; Undo takes it back.`;
     pickedN=id;said=null;
     write(next,text,{last:id,tab:true});
-    // Show it: the playhead goes to where the new desk starts (the stage switches to it, then this status line returns).
-    // A stage that is still switching desks refuses a seek: try again shortly, unless the playhead or the pick moved on.
-    const from=lastPlayhead,to=Math.min(1,(shown(next,at)[0]+.01)/total());let tries=20;
+    reveal(id,Math.min(1,(shown(next,at)[0]+.01)/total()),text);
+  }
+  // Show it: the playhead goes to where the new desk starts (the stage switches to it, then this status line returns).
+  // A stage that is still switching desks refuses a seek: try again shortly, unless the playhead or the pick moved on.
+  function reveal(id,to,text){
+    const from=lastPlayhead;let tries=20;
     const go=()=>{
       if(pickedN!==id||lastPlayhead!==from||!isOpen())return;
       try{if(!bridge.ready())throw 0;seek(to);said={text,until:Date.now()+15000,at:lastPlayhead};}catch{if(tries-->0)setTimeout(go,300);}
     };
     said={text,until:Date.now()+15000,at:lastPlayhead};go();
+  }
+  // A desk at the very start of the chapter (versions-edit addVersionAtStart): fills the gap left when the desks were slid right,
+  // else takes the first half of the first desk's time. look 'blank-pearl': the bare Pearl White desk (the opener), a copy of the first desk.
+  function addAtStart({look=null,n=null}={}){
+    const l=list();if(!l.length)return;
+    if(!room()){status(full(),true);return;}
+    const v=look?l[0]:picked(n),id=nextVersionId(usedIds()),next=id&&addVersionAtStart(asEdits(l),l.indexOf(v),id,total(),{look});
+    if(!next){status('There is no room at the start: slide the desks right first (select them in the Desk versions lane, drag them), or give the first desk at least 4 s.',true);return;}
+    const first=l[0],text=`Desk ${id} · ${look?BLANK_NAME+', blank':v.label} added at the start: it shows ${span(next,0)}, then Desk ${first.n} · ${first.label} takes over (${span(next,1)}). ${look?'No accessories, no props, no screens: the desk in the ending’s Pearl White look. ':''}Undo takes it back.`;
+    pickedN=id;said=null;
+    write(next,text,{last:id,tab:true});
+    reveal(id,Math.min(1,.01/total()),text);
   }
   function remove(n=null){
     const l=list(),v=picked(n);if(!v)return;
@@ -234,10 +255,11 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
       <label class="build-desk">Model<select name="dv-model" aria-label="Desk model">${models().map(m=>`<option value="${escape(m.id)}" ${m.id===v.preset?'selected':''}>${escape(m.name)}</option>`).join('')}</select></label>
       <p class="director-hint" data-dv-note>The whole model comes with it: finishes, accessories and artwork or stickers (a model without stickers shows none). ${RESET_NOTE}</p>
       <label class="build-desk">Name<input name="dv-name" type="text" maxlength="40" value="${escape(v.setup?.name||'')}" placeholder="${escape(presetLabel(v.preset))}" aria-label="Name shown on the lane and the frame badge"></label>
+      <label class="build-desk">Look<select name="dv-look" aria-label="Desk look"><option value="" ${v.look?'':'selected'}>The model’s own (accessories, props, screens)</option><option value="blank-pearl" ${v.look==='blank-pearl'?'selected':''}>Blank Pearl White (no accessories, no props, no screens)</option></select></label>
       <div class="build-desk-times"><label>Shown from <input name="dv-start" type="number" step=".1" min="0" max="${total()}" value="${fmtIn(a)}" ${first?'disabled title="The first desk starts the chapter"':''}> s</label>
       <label>until <input name="dv-end" type="number" step=".1" min="0" max="${total()}" value="${fmtIn(b)}" ${last?'disabled title="The last desk runs to the end of the chapter"':''}> s</label></div>
       <p class="director-hint">Each desk shows at least ${MIN_SHOWN} s and the chapter keeps its length; the crossfade between desks keeps its width. The film renders this desk from ${fmtIn(v.start)} to ${fmtIn(v.end)} s.</p>
-      <div class="director-actions desk-version-actions"><button type="button" data-dv-add data-dv-n="${escape(v.n)}" ${room()?'':'disabled'} title="${escape(addTip(v.n))}">+ Desk version</button><button type="button" data-dv-duplicate data-dv-n="${escape(v.n)}" ${room()?'':'disabled'} title="${escape(dupTip(v.n))}">Duplicate</button><button type="button" data-dv-remove data-dv-n="${escape(v.n)}" ${l.length>1?'':'disabled'} title="${escape(removeTip(v.n))}">Remove</button></div>
+      <div class="director-actions desk-version-actions"><button type="button" data-dv-add data-dv-n="${escape(v.n)}" ${room()?'':'disabled'} title="${escape(addTip(v.n))}">+ Desk version</button><button type="button" data-dv-duplicate data-dv-n="${escape(v.n)}" ${room()?'':'disabled'} title="${escape(dupTip(v.n))}">Duplicate</button> <button type="button" data-dv-add-start data-dv-n="${escape(v.n)}" ${room()?'':'disabled'} title="Add a copy of this desk at the very start of the chapter. If you slid the desks right, it fills the gap in front of the first one.">+ Desk at the start</button><button type="button" data-dv-opener ${room()?'':'disabled'} title="Add a blank Pearl White desk (no accessories, no props, no screens) at the very start, in front of the first desk. Slide the desks right first to make room: it fills that gap; else it takes the first half of the first desk's time.">+ Pearl White opener</button><button type="button" data-dv-remove data-dv-n="${escape(v.n)}" ${l.length>1?'':'disabled'} title="${escape(removeTip(v.n))}">Remove</button></div>
       <p class="director-hint" data-dv-count>${l.length} of ${MAX_VERSIONS} desks. A new desk is a copy of this one, with its own letter; the film renders one sub-shot per desk and crossfades them.</p>
       <div class="director-actions"><button type="button" data-dv-reset ${edited()?'':'disabled'} title="Back to the desks, order, lengths and models the film has now; desks added here go, removed ones return. One Undo takes it back.">Reset desk versions to the film</button></div>`;
   }
@@ -246,13 +268,14 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     const l=list(),n=(l.find(x=>x.n===pickedN)||l.find(x=>x.n===current(lastPlayhead*total())?.n)||l[0])?.n;
     if(t.name==='dv-pick'){pickedN=t.value;rerender();const v=byN(t.value);if(v)seek(Math.min(1,v.from/total()));}
     else if(t.name==='dv-model')setModel(n,t.value);
+    else if(t.name==='dv-look')setLook(n,t.value);
     else if(t.name==='dv-name'){setName(n,t.value);}
     else if(t.name==='dv-start'||t.name==='dv-end')setShown(n,t.name==='dv-start'?'start':'end',Number(t.value));
   }
   function onClick(event){
-    const b=event.target.closest?.('[data-dv-reset],[data-dv-add],[data-dv-duplicate],[data-dv-remove]');if(!b||!panel.contains(b)||b.disabled)return;
+    const b=event.target.closest?.('[data-dv-reset],[data-dv-add],[data-dv-duplicate],[data-dv-remove],[data-dv-add-start],[data-dv-opener]');if(!b||!panel.contains(b)||b.disabled)return;
     const n=b.dataset.dvN||null;
-    if(b.matches('[data-dv-reset]'))reset();else if(b.matches('[data-dv-add]'))add({n});else if(b.matches('[data-dv-duplicate]'))add({after:true,n});else remove(n);
+    if(b.matches('[data-dv-reset]'))reset();else if(b.matches('[data-dv-add-start]'))addAtStart({n});else if(b.matches('[data-dv-opener]'))addAtStart({look:'blank-pearl'});else if(b.matches('[data-dv-add]'))add({n});else if(b.matches('[data-dv-duplicate]'))add({after:true,n});else remove(n);
   }
   if(panel){panel.addEventListener('change',onChange);panel.addEventListener('click',onClick);}
   document.addEventListener('pointerdown',event=>{if(event.target.closest?.('#director-timeline'))down(event);});
@@ -260,5 +283,5 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     // The Director's own finish fades (finish-fades.mjs) replace the film's on the still too.
     if(v&&finishEdited(s)){const f=effectiveFades(s,list())[v.n];if(f)job.finishFade=f;else delete job.finishFade;}
     // The still renderer's stage takes the render's storage seed too (film-render.mjs; not part of the shot's JSON).
-    if(seed)Object.defineProperty(job,'__storage',{value:seed,enumerable:false});return job;},has:()=>list().length>0,panel:panelHtml,list,select,edited,add,remove};
+    if(seed)Object.defineProperty(job,'__storage',{value:seed,enumerable:false});return job;},has:()=>list().length>0,panel:panelHtml,list,edits:()=>asEdits(list()),select,edited,add,addAtStart,remove};
 }

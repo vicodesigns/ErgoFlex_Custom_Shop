@@ -82,7 +82,7 @@ export function mountDirector(bridge,catalog,initial){
   let keyId=null,playhead=0,keyDrag=null,suppressKeyClickUntil=0;
   let phoneMode=null,renderRequest=null,magnet=true,inspector='chapter',zoom=1,snapStep=.1,scrub=null,timelineResize=null;
   // Timeline group selection (camera keys + desk clips) and the film chapter list.
-  const picks={keys:new Set(),clips:new Set(),lights:new Set(),neutrals:new Set(),tods:new Set()};let lightSel=null,stills=null,stillBusy=false,marquee=null,groupDrag=null,suppressGroupClickUntil=0;
+  const picks={keys:new Set(),clips:new Set(),lights:new Set(),neutrals:new Set(),tods:new Set(),versions:new Set(),fades:new Set()};let lightSel=null,stills=null,stillBusy=false,marquee=null,groupDrag=null,suppressGroupClickUntil=0;
   const film=filmLink(location.hash),signature=()=>JSON.stringify([project.name,project.client,project.volume,project.shots]);
   let filmChapters=null,filmCuts=null,filmError='',exported=signature();
   // A film chapter reloaded after an import: the film's newer cut, an unexported draft to keep or drop, stale-export warning.
@@ -579,11 +579,11 @@ export function mountDirector(bridge,catalog,initial){
     const el=timeline.querySelector(`[data-light-clip="${id}"],[data-light-key="${id}"],[data-tod-key="${id}"]`);if(el)el.scrollIntoView({block:'nearest',inline:'nearest'});
   }
   // Group selection: marquee or Shift/Ctrl-click camera keys, desk clips and lighting, then move them together.
-  const KINDS_ON_TIMELINE=[['keys','[data-key]','key'],['clips','[data-desk-clip]','deskClip'],['lights','[data-light-clip]','lightClip'],['neutrals','[data-light-key]','lightKey'],['tods','[data-tod-key]','todKey']];
+  const KINDS_ON_TIMELINE=[['keys','[data-key]','key'],['clips','[data-desk-clip]','deskClip'],['lights','[data-light-clip]','lightClip'],['neutrals','[data-light-key]','lightKey'],['tods','[data-tod-key]','todKey'],['versions','[data-desk-version]','deskVersion'],['fades','.finish-ramp[data-ff]','ff']];
   const itemOf=el=>{for(const [kind,attr,data] of KINDS_ON_TIMELINE)if(el.matches(attr))return [kind,el.dataset[data]];return null;};
   const picked=()=>Object.values(picks).reduce((n,set)=>n+set.size,0);
   function syncPicks(){
-    const L=lighting(),ids={keys:new Set(keys().map(k=>k.id)),clips:new Set(deskEditor.motion().clips.map(c=>c.id)),lights:new Set(L?.status.map(e=>e.id)),neutrals:new Set(L?.neutral.map(k=>k[2])),tods:new Set(timeOfDay()?.keys.map(k=>k.id))};
+    const L=lighting(),ids={keys:new Set(keys().map(k=>k.id)),clips:new Set(deskEditor.motion().clips.map(c=>c.id)),lights:new Set(L?.status.map(e=>e.id)),neutrals:new Set(L?.neutral.map(k=>k[2])),tods:new Set(timeOfDay()?.keys.map(k=>k.id)),versions:new Set(deskVersions.list().map(v=>v.n)),fades:new Set(Object.keys(finishLane.fades()))};
     for(const [kind,attr,data] of KINDS_ON_TIMELINE){
       for(const id of picks[kind])if(!ids[kind].has(id))picks[kind].delete(id);
       for(const el of timeline.querySelectorAll(attr))el.classList.toggle('grouped',picks[kind].has(el.dataset[data]));
@@ -591,14 +591,14 @@ export function mountDirector(bridge,catalog,initial){
     timeline.classList.toggle('has-group',picked()>0);syncSelectedHeader();
   }
   function groupStatus(){
-    const n=(v,one,many)=>v?`${v} ${v===1?one:many}`:'',parts=[n(picks.keys.size,'camera view','camera views'),n(picks.clips.size,'move','moves'),n(picks.lights.size,'light state','light states'),n(picks.neutrals.size,'white key','white keys'),n(picks.tods.size,'time-of-day key','time-of-day keys')].filter(Boolean);
+    const n=(v,one,many)=>v?`${v} ${v===1?one:many}`:'',parts=[n(picks.keys.size,'camera view','camera views'),n(picks.clips.size,'move','moves'),n(picks.lights.size,'light state','light states'),n(picks.neutrals.size,'white key','white keys'),n(picks.tods.size,'time-of-day key','time-of-day keys'),n(picks.versions.size,'desk version','desk versions'),n(picks.fades.size,'finish fade','finish fades')].filter(Boolean);
     status(picked()?`${parts.join(' · ')} selected · drag one to move them together · ←/→ nudge (Shift ×10) · Esc clears`:'Selection cleared.');
   }
   function clearPicks(){if(!picked())return;for(const set of Object.values(picks))set.clear();syncPicks();}
   // The Selected header: what the inspector edits (or how many items a group move takes), with batch actions.
   function selectedHeader(){
     const n=picked();
-    if(n){const c=(v,one,many)=>v?`${v} ${v===1?one:many}`:'',parts=[c(picks.keys.size,'camera view','camera views'),c(picks.clips.size,'move','moves'),c(picks.lights.size,'status light','status lights'),c(picks.neutrals.size,'white key','white keys'),c(picks.tods.size,'time-of-day key','time-of-day keys')].filter(Boolean).join(', ');
+    if(n){const c=(v,one,many)=>v?`${v} ${v===1?one:many}`:'',parts=[c(picks.keys.size,'camera view','camera views'),c(picks.clips.size,'move','moves'),c(picks.lights.size,'status light','status lights'),c(picks.neutrals.size,'white key','white keys'),c(picks.tods.size,'time-of-day key','time-of-day keys'),c(picks.versions.size,'desk version','desk versions'),c(picks.fades.size,'finish fade','finish fades')].filter(Boolean).join(', ');
       return `<div class="sel-row"><span class="sel-icon">▦</span><span class="sel-name"><b>${n} items</b><small>${parts}</small></span><button data-action="sel-clear" title="Deselect (Esc)" aria-label="Deselect">×</button></div><div class="sel-batch"><label>Move by<input name="sel-move" type="number" step=".1" value="1"> s</label><button data-action="sel-move">Move</button><button data-action="sel-align" title="Move the selection so its first item starts at the playhead">Align to playhead</button><button data-action="sel-delete" title="Delete the selection (Delete)">Delete</button></div>`;}
     const th=titleEditor.header();if(th)return th;
     // P5: every selection's header ends with the same tools (Duplicate · Frame / Zoom to · Reset to the film · Delete)
@@ -622,7 +622,9 @@ export function mountDirector(bridge,catalog,initial){
   function clearSelection(){for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;titleEditor.clear();graphics.clear?.();deskEditor.clearSelection();sceneLights.deselect();sceneProps.deselect();scenePeople.deselect();deskSel.deselect();render();status('Selection cleared.');}
   // Delete every picked item (lanes keep at least one white / time-of-day key); one undo step.
   function deletePicks(){
-    const n=picked();if(!n)return;requireReady();const L=lighting(),T=timeOfDay(),motion=deskEditor.motion(),list=keys().filter(k=>!picks.keys.has(k.id));
+    const n=picked()-picks.versions.size-picks.fades.size;
+    if(!n){if(picked())status('Desk versions and finish fades are removed in the Desk version tab (Remove), not with Delete.',true);return;}
+    requireReady();const L=lighting(),T=timeOfDay(),motion=deskEditor.motion(),list=keys().filter(k=>!picks.keys.has(k.id));
     commit(()=>{const s=shot();
       if(picks.keys.size){if(list.length)s.camera={keys:copy(list)};else delete s.camera;}
       if(picks.clips.size)choreo.shot().motion=cleanClipMotion({...copy(motion),clips:motion.clips.filter(c=>!picks.clips.has(c.id))},s.seconds);
@@ -659,9 +661,10 @@ export function mountDirector(bridge,catalog,initial){
     const L=lighting();for(const k of keys())picks.keys.add(k.id);for(const c of deskEditor.motion().clips)picks.clips.add(c.id);
     if(L){for(const e of L.status)picks.lights.add(e.id);for(const k of L.neutral)picks.neutrals.add(k[2]);}
     for(const k of timeOfDay()?.keys||[])picks.tods.add(k.id);
+    for(const v of deskVersions.list())picks.versions.add(v.n);for(const n of Object.keys(finishLane.fades()))picks.fades.add(n);
     syncPicks();groupStatus();
   }
-  const groupBase=()=>{const L=lighting();return {seconds:shot().seconds,keys:copy(keys()),clips:copy(deskEditor.motion().clips),...(L?{lights:copy(L.status),neutrals:copy(L.neutral)}:{}),...(timeOfDay()?{tods:copy(timeOfDay().keys)}:{})};};
+  const groupBase=()=>{const L=lighting();return {seconds:shot().seconds,keys:copy(keys()),clips:copy(deskEditor.motion().clips),...(L?{lights:copy(L.status),neutrals:copy(L.neutral)}:{}),...(timeOfDay()?{tods:copy(timeOfDay().keys)}:{}),...(deskVersions.has()?{versions:deskVersions.edits(),fades:copy(finishLane.fades())}:{})};};
   // Change the chapter length without moving anything that is already there (see chapter-timing.mjs); one undo step.
   // `at` seconds puts the playhead there afterwards; `apply(next)` adds the new item inside the same step.
   function resizeChapter(seconds,{motion=deskEditor.motion(),message='Chapter length changed',at=null,apply=null}={}){
@@ -681,9 +684,12 @@ export function mountDirector(bridge,catalog,initial){
       const s=shot();s.seconds=next.seconds;if(next.keys.length&&(set.keys?.size||longer))s.camera={keys:next.keys};if(set.clips?.size||(longer&&!choreo.desk()))choreo.shot().motion=cleanClipMotion({...copy(motion),clips:next.clips},next.seconds);
       if(lit)writeLighting(L,{status:next.lights,neutral:next.neutrals});
       if(set.tods?.size)s.timeOfDay=next.tods;
+      if(set.versions?.size&&next.versions)s.deskVersions=copy(next.versions);
+      if(set.fades?.size&&next.fades)s.finishFades=copy(next.fades);
     },{render:true});
     seekCamera(position/next.seconds);
-    status(`${message} ${next.delta>0?'+':''}${Number(next.delta.toFixed(3))}s${longer?` · chapter lengthened to ${next.seconds}s`:''}. Undo restores the previous timing.`);
+    const gap=set.versions?.size&&next.versions?.[0]?.start>.04?` · Nothing shows before Desk ${next.versions[0].n} (${r2(next.versions[0].start)} s): the Desk version tab's + Desk at the start fills it.`:'';
+    status(`${message} ${next.delta>0?'+':''}${Number(next.delta.toFixed(3))}s${longer?` · chapter lengthened to ${next.seconds}s`:''}${gap}. Undo restores the previous timing.`);
   }
   // Magnet: every edge and key that is not moving, the playhead and the chapter ends, within 8 px.
   function snapTargets(set){
@@ -703,6 +709,8 @@ export function mountDirector(bridge,catalog,initial){
     if(d.kind==='clips'){const c=b.clips.find(c=>c.id===i);return c&&[c.start,clipEnd(c)];}
     if(d.kind==='lights'){const e=b.lights?.find(e=>e.id===i);return e&&[e.at,e.at+e.dur];}
     if(d.kind==='neutrals'){const k=b.neutrals?.find(k=>k[2]===i);return k&&[k[0],k[0]];}
+    if(d.kind==='versions'){const v=b.versions?.find(v=>v.n===i);return v&&[v.start,v.end];}
+    if(d.kind==='fades'){const f=b.fades?.[i];return f&&[f.at[0],f.at[1]];}
     if(d.kind==='titles'){const t=b.titles?.find(t=>t.id===i);return t&&(d.edge==='start'?[t.rel_in,t.rel_in]:d.edge==='end'?[t.rel_out,t.rel_out]:[t.rel_in,t.rel_out]);}
     const k=b.tods?.find(k=>k.id===i);return k&&[k.at,k.at];
   }
@@ -714,7 +722,7 @@ export function mountDirector(bridge,catalog,initial){
   // Drag feedback: a ghost at the origin, a chip at the cursor, a guide line when snapped.
   function dragFeedback(d,event){
     const content=timeline.querySelector('.timeline-content'),s=d.base.seconds;if(!content)return;
-    if(!d.ghosts){d.ghosts=[];for(const [kind,attr,data] of KINDS_ON_TIMELINE)for(const el of timeline.querySelectorAll(attr))if(d.set[kind]?.has(el.dataset[data])){const g=el.cloneNode(true);g.removeAttribute('data-key');g.removeAttribute('data-desk-clip');g.removeAttribute('data-light-clip');g.removeAttribute('data-light-key');g.removeAttribute('data-tod-key');g.classList.add('drag-ghost');g.classList.remove('grouped','selected','invalid');g.style.left=el.dataset.originLeft||el.style.left;el.parentElement.insertBefore(g,el);d.ghosts.push(g);}}
+    if(!d.ghosts){d.ghosts=[];for(const [kind,attr,data] of KINDS_ON_TIMELINE)for(const el of timeline.querySelectorAll(attr))if(d.set[kind]?.has(el.dataset[data])){const g=el.cloneNode(true);g.removeAttribute('data-key');g.removeAttribute('data-desk-clip');g.removeAttribute('data-light-clip');g.removeAttribute('data-light-key');g.removeAttribute('data-tod-key');g.removeAttribute('data-desk-version');g.removeAttribute('data-ff');g.classList.add('drag-ghost');g.classList.remove('grouped','selected','invalid');g.style.left=el.dataset.originLeft||el.style.left;el.parentElement.insertBefore(g,el);d.ghosts.push(g);}}
     d.chip||=Object.assign(document.createElement('div'),{className:'drag-chip'});if(!d.chip.isConnected)document.body.append(d.chip);
     const span=grabbedSpan(d),n=span?[span[0]+d.delta,span[1]+d.delta]:null,sign=d.delta>=0?'+':'−';
     d.chip.textContent=`${sign}${Math.abs(d.delta).toFixed(2)} s`+(n?` → ${n[0]===n[1]?r2(n[0])+' s':r2(n[0])+'–'+r2(n[1])+' s'}`:'')+(d.snap?` · snapped to ${d.snap.name}`:'');
@@ -734,7 +742,7 @@ export function mountDirector(bridge,catalog,initial){
   function endDragFeedback(d){for(const g of d.ghosts||[])g.remove();d.chip?.remove();d.guide?.remove();}
   function previewGroup(d){
     const s=d.base.seconds;let valid=true,next=null;try{next=shiftGroup(d.base,d.set,d.delta);}catch{valid=false;}
-    const at={keys:k=>k.time*s,clips:c=>c.start,lights:e=>e.at,neutrals:k=>k[0],tods:k=>k.at},find={keys:id=>d.base.keys.find(k=>k.id===id),clips:id=>d.base.clips.find(c=>c.id===id),lights:id=>d.base.lights?.find(e=>e.id===id),neutrals:id=>d.base.neutrals?.find(k=>k[2]===id),tods:id=>d.base.tods?.find(k=>k.id===id)};
+    const at={keys:k=>k.time*s,clips:c=>c.start,lights:e=>e.at,neutrals:k=>k[0],tods:k=>k.at,versions:v=>v.start,fades:f=>f.at[0]},find={keys:id=>d.base.keys.find(k=>k.id===id),clips:id=>d.base.clips.find(c=>c.id===id),lights:id=>d.base.lights?.find(e=>e.id===id),neutrals:id=>d.base.neutrals?.find(k=>k[2]===id),tods:id=>d.base.tods?.find(k=>k.id===id),versions:id=>d.base.versions?.find(v=>v.n===id),fades:id=>d.base.fades?.[id]};
     for(const [kind,attr,data] of KINDS_ON_TIMELINE)for(const el of timeline.querySelectorAll(attr)){const id=el.dataset[data];if(!d.set[kind]?.has(id))continue;const item=find[kind](id);if(item){el.dataset.originLeft||=el.style.left;el.style.left=(at[kind](item)+d.delta)/s*100+'%';const small=el.querySelector('small'),a=at[kind](item)+d.delta;if(small)small.textContent=kind==='clips'?`${r2(a)}–${r2(a+item.duration)}s · ${r2(item.duration)}s`:kind==='lights'?`${r2(a)}–${r2(a+item.dur)}s`:kind==='keys'?`${a.toFixed(1)}s`:small.textContent;el.classList.toggle('invalid',!valid);}}
     const count=Object.values(d.set).reduce((n,v)=>n+v.size,0);
     status(valid?`Moving ${count} item${count===1?'':'s'} ${d.delta>0?'+':''}${Number(d.delta.toFixed(3))}s${next.seconds>s?` · chapter becomes ${next.seconds}s`:''} · Alt: bypass snap`:'Those positions overlap another movement, light state or key.',!valid);
@@ -1413,7 +1421,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       if(name==='sel-clear'){clearSelection();return;}
       if(name==='sel-delete'){deletePicks();return;}
       if(name==='sel-move'||name==='sel-align'){
-        if(!picked())return;const base=groupBase(),t=playhead*shot().seconds,starts=[...base.keys.filter(k=>picks.keys.has(k.id)).map(k=>k.time*base.seconds),...base.clips.filter(c=>picks.clips.has(c.id)).map(c=>c.start),...(base.lights||[]).filter(e=>picks.lights.has(e.id)).map(e=>e.at),...(base.neutrals||[]).filter(k=>picks.neutrals.has(k[2])).map(k=>k[0]),...(base.tods||[]).filter(k=>picks.tods.has(k.id)).map(k=>k.at)];
+        if(!picked())return;const base=groupBase(),t=playhead*shot().seconds,starts=[...base.keys.filter(k=>picks.keys.has(k.id)).map(k=>k.time*base.seconds),...base.clips.filter(c=>picks.clips.has(c.id)).map(c=>c.start),...(base.lights||[]).filter(e=>picks.lights.has(e.id)).map(e=>e.at),...(base.neutrals||[]).filter(k=>picks.neutrals.has(k[2])).map(k=>k[0]),...(base.tods||[]).filter(k=>picks.tods.has(k.id)).map(k=>k.at),...(base.versions||[]).filter(v=>picks.versions.has(v.n)).map(v=>v.start),...Object.entries(base.fades||{}).filter(([n])=>picks.fades.has(n)).map(([,f])=>f.at[0])];
         const delta=name==='sel-align'?t-Math.min(...starts):Number(field('sel-move')?.value);if(!Number.isFinite(delta))throw Error('Enter how many seconds to move the selection.');
         shiftPicks(delta,name==='sel-align'?'Aligned to the playhead':'Selection moved');return;
       }
@@ -2457,7 +2465,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
   const viewport=()=>timeline.querySelector('.timeline-viewport');
   timeline.addEventListener('pointerdown',event=>{
     if(event.button!==0||composing||bridge.bakeState().baking)return;
-    const item=event.target.closest('[data-key],[data-desk-clip],[data-light-clip],[data-light-key],[data-tod-key]');
+    const item=event.target.closest('[data-key],[data-desk-clip],[data-light-clip],[data-light-key],[data-tod-key],[data-desk-version],.finish-ramp[data-ff]');
     if(item){
       const [kind,id]=itemOf(item),light=kind==='lights'||kind==='neutrals'||kind==='tods',edge=event.target.closest('[data-resize]')?.dataset.resize;
       if(event.shiftKey||event.ctrlKey||event.metaKey){event.preventDefault();event.stopImmediatePropagation();suppressGroupClickUntil=performance.now()+400;item.focus({preventScroll:true});togglePick(kind,id);return;}
@@ -2466,7 +2474,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       if(edge&&!light)return;
       event.preventDefault();event.stopImmediatePropagation();
       try{requireReady();if(!deskEditor.flush())return;}catch(error){status(error.message,true);return;}
-      const width=item.closest('.camera-track,[data-desk-lane],[data-light-lane]').getBoundingClientRect().width,base=groupBase();
+      const width=item.closest('.camera-track,[data-desk-lane],[data-light-lane],.desk-versions-lane,.finish-lane').getBoundingClientRect().width,base=groupBase();
       if(edge&&kind==='lights'){const e=base.lights.find(e=>e.id===id);lightTrim={id,edge,start:event.clientX,width,base,original:e,candidate:e,moved:false,item};}
       else groupDrag={id,kind,start:event.clientX,width,delta:0,moved:false,base,set:grouped?picks:{[kind]:new Set([id])}};
       viewport().setPointerCapture(event.pointerId);item.focus({preventScroll:true});return;
@@ -2515,8 +2523,8 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     if(groupDrag){
       const d=groupDrag;groupDrag=null;suppressGroupClickUntil=performance.now()+300;endDragFeedback(d);
       if(event.type==='pointercancel'){renderTimeline();return;}
-      if(!d.moved){clearPicks();try{if(d.kind==='keys')selectKey(d.id);else if(d.kind==='clips')deskEditor.select(d.id);else selectLight(d.kind,d.id);}catch(error){status(error.message,true);}return;}
-      try{shiftPicks(d.delta,d.set===picks?'Selection moved':({keys:'Camera view',clips:'Desk move',lights:'Status light',neutrals:'White key',tods:'Time-of-day key'}[d.kind]||'Item')+' moved',d.set);if(d.set!==picks)selectLight(d.kind,d.id);}catch(error){renderTimeline();status(error.message,true);}
+      if(!d.moved){clearPicks();try{if(d.kind==='keys')selectKey(d.id);else if(d.kind==='clips')deskEditor.select(d.id);else if(d.kind==='versions')deskVersions.select(d.id);else if(d.kind==='fades')finishLane.select(d.id);else selectLight(d.kind,d.id);}catch(error){status(error.message,true);}return;}
+      try{shiftPicks(d.delta,d.set===picks?'Selection moved':({keys:'Camera view',clips:'Desk move',lights:'Status light',neutrals:'White key',tods:'Time-of-day key',versions:'Desk version',fades:'Finish fade'}[d.kind]||'Item')+' moved',d.set);if(d.set!==picks&&['lights','neutrals','tods'].includes(d.kind))selectLight(d.kind,d.id);}catch(error){renderTimeline();status(error.message,true);}
       return;
     }
     if(lightTrim){

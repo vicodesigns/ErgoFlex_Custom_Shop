@@ -534,3 +534,8 @@ body.df-shell #director-timeline .camera-segment i{opacity:.8}
 
 /* Props lane: the stretches a loose desktop item is put away on the desk's shelf (the desk is tilted): hatched over the bar */
 #director-timeline .prop-bar .prop-away{position:absolute;top:0;bottom:0;pointer-events:none;background:repeating-linear-gradient(135deg,#0b111890 0 3px,#0b111860 3px 6px);border-right:1px dashed #ffffff60;box-sizing:border-box;z-index:1}
+
+/* Desk versions and finish fades in the group selection (marquee / Shift-click, then drag one to slide them all) */
+#director-timeline .desk-version.grouped,#director-timeline .finish-ramp.grouped{outline:2px solid #9ff0ff;outline-offset:-2px;box-shadow:0 0 0 2px #9ff0ff,0 0 12px #62d9f5aa;z-index:3}
+#director-timeline .desk-version.grouped.invalid,#director-timeline .finish-ramp.grouped.invalid{outline-color:#ff786e;box-shadow:0 0 0 2px #ff786e}
+#director-timeline .desk-version.drag-ghost,#director-timeline .finish-ramp.drag-ghost{opacity:.35;pointer-events:none}
