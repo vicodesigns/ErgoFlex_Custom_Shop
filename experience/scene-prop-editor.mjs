@@ -1134,7 +1134,10 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   // loose desktop items on its shelf while the tilt is up (prop-stow-window.mjs awayStretches), so the lane has to know.
   function deskRoleOf(o){
     if(!o)return {};
-    let role='';try{const r=win()?.ErgoFlex?.sceneDesks?.active,id=o.userData?.deskObject?.id,it=id&&r?.objects?.get?.(id);role=it?.saved?.role||'';}catch{}
+    let role='';try{
+      // The desk's own list of its items (scene-desk-objects.mjs: the children of its mounts, 'default-<mount>-<n>', and the product accessories, 'accessory-<id>'): the one whose object is this prop or holds it.
+      const r=win()?.ErgoFlex?.sceneDesks?.active,aid=o.userData?.accessoryId,it=(aid&&r?.objects?.get?.('accessory-'+aid))||[...(r?.objects?.values?.()||[])].find(x=>{for(let p=o;p;p=p.parent)if(p===x.obj)return true;return false;});role=it?.saved?.role||'';
+    }catch{}
     if(!role)for(let p=o;p;p=p.parent){const m=/^(?:Accessory mount|Desk dressing|Scene dressing):\s*(desktop|shelf|lower-shelf|base-shelf)\b/i.exec(p.name||'');if(m){role=m[1].toLowerCase();break;}}
     let rider=false;try{const a=o.userData?.accessoryId&&catalogAccessory(o.userData.accessoryId);rider=!!a&&['keyboard','mouse'].includes(a.exclusiveGroup);}catch{}
     return {...(role?{role}:{}),...(rider?{rider:true}:{})};
