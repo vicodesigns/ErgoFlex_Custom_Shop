@@ -633,16 +633,21 @@ let restoring = null;
 // applyPreset first SAVES the desk as it is into the preset's saved build and then reads it back, so a desk that is still half restored
 // (a blank Pearl White opener followed by the same preset's Artist desk) would be saved as the Artist's own build and come back bare.
 export async function settled() { if (restoring) { const r = restoring; restoring = null; await r; } }
-async function installFeaturedBuild(build) {
+async function installFeaturedBuild(build, bare = false) {
   const DB = await import('../../experience/desk-build.mjs'), objects = api.sceneDesks?.objects, rec = () => api.sceneDesks?.active;
   const frames = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   const finish = (build.woodFinish || build.baseFinish || build.trimColor) ? installDeskFinish({ wood: build.woodFinish, base: build.baseFinish, trim: build.trimColor }) : null;
-  const was = { accessories: [...api.currentConfig.accessories], roles: {} }, fresh = new Set(), flip = id => { try { api.toggleAccessory(id); } catch (e) { console.warn('[film-fx] featuredBuild toggle', id, e); } };
+  const was = { accessories: [...api.currentConfig.accessories], roles: {}, removed: [] }, fresh = new Set(), flip = id => { try { api.toggleAccessory(id); } catch (e) { console.warn('[film-fx] featuredBuild toggle', id, e); } };
   console.log('[film-fx] featuredBuild was', JSON.stringify({ wood: api.currentConfig.woodFinish, accessories: was.accessories }));
   if (build.accessories) {
     const want = new Set(build.accessories.map(a => a.id));
     for (const id of want) if (!api.currentConfig.accessories.includes(id)) { flip(id); if (api.currentConfig.accessories.includes(id)) fresh.add(id); else console.warn('[film-fx] featuredBuild: ' + id + ' does not fit this desk size'); }
-    for (const id of [...api.currentConfig.accessories]) if (!want.has(id)) flip(id);
+    // The blank Pearl White look (shot.deskLook 'blank-pearl') HIDES what is not wanted by the desk objects' own 'removed' flag instead of
+    // toggling the accessories out: a toggled-out accessory loses its record, and toggled back in it is placed at its natural spot, not
+    // where the preset (the Artist's easel, painting, shelf) had it saved - the easel and painting came back upside down.
+    const hideBare = r0 => { for (const [id, item] of r0?.objects || []) if (item.obj?.userData?.accessoryId && !want.has(item.obj.userData.accessoryId) && !item.saved.removed) { was.removed.push(item); item.saved.removed = true; } if (was.removed.length) objects?.phase(r0); };
+    if (bare) hideBare(rec());
+    else for (const id of [...api.currentConfig.accessories]) if (!want.has(id)) flip(id);
     await api.workspaceAccessories?.ready; await objects?.ready; objects?.syncAccessories(); await frames();
     const r = rec(), per = {};
     for (const { id, slot } of build.accessories) {
@@ -659,6 +664,7 @@ async function installFeaturedBuild(build) {
     info: { finish: finish?.info, accessories: build.accessories?.map(a => a.id + '@' + a.slot) },
     restore() {
       const r = rec(), now = api.currentConfig.accessories;
+      if (was.removed.length) { for (const item of was.removed) item.saved.removed = false; objects?.phase(r); }
       for (const [id, o] of Object.entries(was.roles)) { const item = r?.objects?.get('accessory-' + id); if (!item || !objects) continue; item.saved.role = o.role; item.saved.transform = o.transform; objects.register(r, item.id, item.obj, item.saved, item.baseScale); }
       if (build.accessories) {
         for (const id of [...now]) if (!was.accessories.includes(id)) flip(id); for (const id of was.accessories) if (!api.currentConfig.accessories.includes(id)) flip(id);
@@ -1040,7 +1046,7 @@ export async function install(shot) {
   active.desk = await installDeskObjects(shot);
   if (shot.deskFinish) active.finish = installDeskFinish(shot.deskFinish);
   if (shot.keepDeskItems) active.keepItems = installKeepDeskItems();
-  if (shot.featuredBuild) active.featured = await installFeaturedBuild(shot.featuredBuild);
+  if (shot.featuredBuild) active.featured = await installFeaturedBuild(shot.featuredBuild, shot.deskLook === 'blank-pearl');
   if (shot.room === 'workshop') active.workshopToyStory = await (await import('./workshop-toy-story.mjs?v=20261113-andre-shelf')).installWorkshopToyStory(api);
   if (shot.sceneDeskPoses?.length) active.deskPoses = installSceneDeskPoses(shot.sceneDeskPoses);
   if (shot.sceneDeskEdits?.length) { active.deskEdits = (await import('./film-desk-edits.mjs')).installDeskEdits(shot.sceneDeskEdits, api); await active.deskEdits.ready; }
@@ -1174,7 +1180,7 @@ export async function update(shot, { onSlow } = {}) {
   if (changed('featuredBuild')) {
     active.featured?.restore(); active.featured = null;
     if (restoring) { const r = restoring; restoring = null; await r; }
-    if (shot.featuredBuild) active.featured = await installFeaturedBuild(shot.featuredBuild);
+    if (shot.featuredBuild) active.featured = await installFeaturedBuild(shot.featuredBuild, shot.deskLook === 'blank-pearl');
   }
   if (globals) installGlobals(shot);
   if (status) {
