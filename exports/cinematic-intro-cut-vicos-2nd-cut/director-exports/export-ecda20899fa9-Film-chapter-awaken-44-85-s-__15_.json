@@ -1,0 +1,521 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "film-vicos-2nd-cut-awaken",
+  "name": "Film chapter: awaken (44.85 s)",
+  "client": "Vicos 2nd cut",
+  "volume": 0.32,
+  "updated": "",
+  "shots": [
+    {
+      "id": "awaken",
+      "room": "product",
+      "kind": "glide",
+      "seconds": 44.85,
+      "title": "Level up your every day.",
+      "detail": "Better health. Clearer focus. More joy in your work.",
+      "preset": "gaming",
+      "transition": 0.35,
+      "size": "60x30",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 28,
+          "tilt": 0,
+          "x": 0,
+          "z": 0,
+          "yaw": 0
+        },
+        "clips": [
+          {
+            "id": "op-roll",
+            "lane": "wheels",
+            "kind": "travel",
+            "start": 2,
+            "duration": 2.6,
+            "easing": "smooth",
+            "label": "Move forward",
+            "value": 12,
+            "direction": "forward"
+          },
+          {
+            "id": "03582967-0974-43a8-9379-a000caa92dfb",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 9.25,
+            "duration": 3,
+            "easing": "linear",
+            "label": "",
+            "target": -5
+          },
+          {
+            "id": "op-lift",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 10.4,
+            "duration": 5.75,
+            "easing": "smooth",
+            "label": "Lift up",
+            "target": 45.5
+          },
+          {
+            "id": "op-tilt-down",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 18.65,
+            "duration": 5.950000000000003,
+            "easing": "smooth",
+            "label": "Tilt up",
+            "target": 65
+          },
+          {
+            "id": "8fd6bb67-5297-4296-a82b-e38b974d9b58",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 21.1,
+            "duration": 3.5,
+            "easing": "linear",
+            "label": "",
+            "target": 52.5
+          },
+          {
+            "id": "op-turn",
+            "lane": "wheels",
+            "kind": "rotate",
+            "start": 25.55,
+            "duration": 6.7,
+            "easing": "smooth",
+            "label": "Rotating left",
+            "value": 100,
+            "direction": "left"
+          },
+          {
+            "id": "op-tilt-back",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 31.55,
+            "duration": 4.150000000000002,
+            "easing": "smooth",
+            "label": "Tilt level",
+            "target": 0
+          },
+          {
+            "id": "op-lower",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 33.800000000000004,
+            "duration": 4.55,
+            "easing": "smooth",
+            "label": "Lift down",
+            "target": 28
+          },
+          {
+            "id": "op-roll-lit",
+            "lane": "wheels",
+            "kind": "travel",
+            "start": 37.9,
+            "duration": 5.000000000000007,
+            "easing": "smooth",
+            "label": "Move forward",
+            "value": 24,
+            "direction": "forward"
+          }
+        ]
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "Wheel macro, desk dark",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                1.1244,
+                0.2203,
+                1.7861
+              ],
+              "target": [
+                0.093,
+                0.179,
+                0.972
+              ],
+              "fov": 24,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-01",
+            "time": 0.040134,
+            "label": "Wheels start",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.4073105312344516,
+                0.10547882423809757,
+                1.2756851360475794
+              ],
+              "target": [
+                0.17937996947715468,
+                0.16944163275148474,
+                0.9445145072956719
+              ],
+              "fov": 23.99999999999714,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-02",
+            "time": 0.044593,
+            "label": "Wheels start copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.4073105312344516,
+                0.10547882423809757,
+                1.2756851360475794
+              ],
+              "target": [
+                0.17937996947715468,
+                0.16944163275148474,
+                0.9445145072956719
+              ],
+              "fov": 23.99999999999714,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.091416,
+            "label": "Roll lands, pull back",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.624539509726648,
+                1.0017562057712788,
+                1.7747961695715306
+              ],
+              "target": [
+                0.47067549155267324,
+                0.6473779466404054,
+                0.9174711039906447
+              ],
+              "fov": 25.004833158313204,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-04",
+            "time": 0.107023,
+            "label": "Roll lands, pull back copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.624539509726648,
+                1.0017562057712788,
+                1.7747961695715306
+              ],
+              "target": [
+                0.47067549155267324,
+                0.6473779466404054,
+                0.9174711039906447
+              ],
+              "fov": 25.004833158313204,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-05",
+            "time": 0.19621,
+            "label": "Lift starts: in and down toward the floor",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.701060026836172,
+                2.1205197503053057,
+                2.3919173865976484
+              ],
+              "target": [
+                0.08230087454839057,
+                1.1688533923173572,
+                0.6892318675417873
+              ],
+              "fov": 32.998962224820005,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-06",
+            "time": 0.206243,
+            "label": "Lift starts: in and down toward the floor copy",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.701060026836172,
+                2.1205197503053057,
+                2.3919173865976484
+              ],
+              "target": [
+                0.08230087454839057,
+                1.1688533923173572,
+                0.6892318675417873
+              ],
+              "fov": 32.998962224820005,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-07",
+            "time": 0.249721,
+            "label": "Low three-quarter: the desktop climbs (blue)",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4,
+                0.55,
+                3.1
+              ],
+              "target": [
+                0.1281,
+                1.25,
+                0.6586
+              ],
+              "fov": 36,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-08",
+            "time": 0.358974,
+            "label": "Craning up with it: the desktop and its light, standing heig",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.981624452403774,
+                1.5846437674264102,
+                3.024285978105337
+              ],
+              "target": [
+                0.027135502308147617,
+                1.3649233514360393,
+                0.8616166030020906
+              ],
+              "fov": 38.99741103049749,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-09",
+            "time": 0.412486,
+            "label": "Side three-quarter: the board will tilt",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2.787594196814269,
+                1.2254862023917659,
+                5.446681161194391
+              ],
+              "target": [
+                -0.14661539138394497,
+                1.3254689947565625,
+                0.4617287391689797
+              ],
+              "fov": 32.001297185980164,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-10",
+            "time": 0.548495,
+            "label": "Side three-quarter: 65 degrees, raised (purple)",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2.760816314540177,
+                1.509076749639912,
+                5.8285868621661265
+              ],
+              "target": [
+                0.5008545968602062,
+                1.4502124671578474,
+                0.14962345815267494
+              ],
+              "fov": 33.50397847565427,
+              "aspect": 1.7774524158125915
+            }
+          },
+          {
+            "id": "plan-11",
+            "time": 0.593088,
+            "label": "Up and over: the turn starts",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.307669613996933,
+                1.7987760898774026,
+                2.781063185504989
+              ],
+              "target": [
+                0.5213149785276286,
+                1.5028700984583554,
+                0.2285646438860801
+              ],
+              "fov": 37.9771214860455,
+              "aspect": 1.7774524158125915
+            }
+          },
+          {
+            "id": "plan-12",
+            "time": 0.696767,
+            "label": "From above: the desk turns on its ring",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2.3858500700177783,
+                1.6771347374082768,
+                4.791200615410784
+              ],
+              "target": [
+                0.5717387500899124,
+                1.509741694969958,
+                0.3635477057351964
+              ],
+              "fov": 37.99767715389661,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-13",
+            "time": 0.7870680044593089,
+            "label": "3/4: red lowering",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.4509,
+                1.9,
+                5.3859
+              ],
+              "target": [
+                0.5406,
+                1.4224,
+                0.0126
+              ],
+              "fov": 33,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-14",
+            "time": 0.829431,
+            "label": "Lit roll toward the lens: swing starts",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.2631,
+                1.95,
+                5.0705
+              ],
+              "target": [
+                0.7438,
+                1.2136,
+                -0.0081
+              ],
+              "fov": 33,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-15",
+            "time": 0.896321,
+            "label": "Across the front: the roll comes to the lens",
+            "easing": "linear",
+            "view": {
+              "position": [
+                -0.432,
+                1.82,
+                6.029
+              ],
+              "target": [
+                0.1895,
+                1.26,
+                0.967
+              ],
+              "fov": 33.3,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-16",
+            "time": 0.947603,
+            "label": "Hero 3/4: slow push into the dissolve",
+            "easing": "linear",
+            "view": {
+              "position": [
+                -2.9278,
+                1.78,
+                5.3927
+              ],
+              "target": [
+                0.061,
+                1.31,
+                1.0749
+              ],
+              "fov": 33.5,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-17",
+            "time": 1,
+            "label": "Push into the dissolve",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                -3.088,
+                1.74,
+                5.0139
+              ],
+              "target": [
+                0.0661,
+                1.31,
+                1.0683
+              ],
+              "fov": 33,
+              "aspect": 1.7777777777777777
+            }
+          }
+        ]
+      },
+      "filmTitles": [
+        {
+          "id": "awaken-0",
+          "rel_in": 4.3,
+          "rel_out": 9.25,
+          "eyebrow": "ERGOFLEX",
+          "title": "Level up your every day.",
+          "detail": "Better health. Clearer focus. More joy in your work.",
+          "timed": true,
+          "scale": 1.1234163075449475,
+          "position": {
+            "x": 101.84,
+            "y": 767.97
+          }
+        },
+        {
+          "id": "awaken-1",
+          "rel_in": 14.9,
+          "rel_out": 19.1,
+          "eyebrow": "SAFETY",
+          "title": "Safe for everyone around it.",
+          "detail": "Light and sound tell the room when it moves.",
+          "timed": true,
+          "scale": 1.1188671335108993,
+          "position": {
+            "x": 98.02,
+            "y": 794.02
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1151 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "film-vicos-2nd-cut-oilers",
+  "name": "Film chapter: oilers (15 s)",
+  "client": "Vicos 2nd cut",
+  "volume": 0.32,
+  "updated": "2026-11-20T03:08:59.252Z",
+  "shots": [
+    {
+      "id": "oilers",
+      "room": "highschool",
+      "kind": "room",
+      "seconds": 15,
+      "title": "Space to discover.",
+      "detail": "Built for how each student learns.",
+      "preset": "hbhs",
+      "transition": 1.1,
+      "size": "60x30",
+      "layout": "house",
+      "mode": "morning",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 43.5,
+          "tilt": 0,
+          "x": 0,
+          "z": 0,
+          "yaw": 0
+        },
+        "clips": [
+          {
+            "id": "oilers-demo-lift",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 8.5,
+            "duration": 3,
+            "easing": "smooth",
+            "label": "Noah taps 'Lower to Kai's height': down to his wheelchair he",
+            "target": 31
+          }
+        ]
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "Over the class from the back: Kai rolls in, Noah at the desk",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                6.4,
+                2.6,
+                3.2
+              ],
+              "target": [
+                -2.5,
+                1,
+                5.2
+              ],
+              "fov": 46,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-01",
+            "time": 0.1,
+            "label": "The dissolve is over: the same view",
+            "easing": "linear",
+            "view": {
+              "position": [
+                6.33,
+                2.6,
+                3.19
+              ],
+              "target": [
+                -2.48,
+                1,
+                5.17
+              ],
+              "fov": 46,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-02",
+            "time": 0.226667,
+            "label": "Craned up and to the left over the class: Kai whole in the a",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.2,
+                5,
+                1.75
+              ],
+              "target": [
+                -1,
+                0.75,
+                4.45
+              ],
+              "fov": 46,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.35,
+            "label": "Kai rolls toward the desk, Noah steps to its corner",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.05,
+                4.95,
+                1.8
+              ],
+              "target": [
+                -1.15,
+                0.75,
+                4.6
+              ],
+              "fov": 46,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-04",
+            "time": 0.353333,
+            "label": "Cut: low from Kai's side, under the desk's edge band: Noah's",
+            "easing": "linear",
+            "view": {
+              "position": [
+                -1.6595,
+                1.3578,
+                5.2049
+              ],
+              "target": [
+                -2.2177,
+                1.569,
+                4.6919
+              ],
+              "fov": 42,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-05",
+            "time": 0.463333,
+            "label": "The screen slides out",
+            "easing": "linear",
+            "view": {
+              "position": [
+                -1.6746,
+                1.388,
+                5.1898
+              ],
+              "target": [
+                -2.1574,
+                1.569,
+                4.6919
+              ],
+              "fov": 42,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-06",
+            "time": 0.466667,
+            "label": "Cut: the screen's user's view, face-on: it turns up and asks",
+            "easing": "linear",
+            "view": {
+              "position": [
+                -1.735,
+                2.263,
+                5.054
+              ],
+              "target": [
+                -2.163,
+                1.5974,
+                4.7544
+              ],
+              "fov": 31,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-07",
+            "time": 0.596667,
+            "label": "His finger on the button, it lights; the height starts down",
+            "easing": "linear",
+            "view": {
+              "position": [
+                -1.7651,
+                2.2328,
+                5.0465
+              ],
+              "target": [
+                -2.163,
+                1.5974,
+                4.7544
+              ],
+              "fov": 30,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-08",
+            "time": 0.6,
+            "label": "Cut: front three-quarter from the window side: the desk comi",
+            "easing": "linear",
+            "view": {
+              "position": [
+                0.6,
+                2.25,
+                7.2
+              ],
+              "target": [
+                -2.6,
+                1.4,
+                5.5
+              ],
+              "fov": 50,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-09",
+            "time": 0.766667,
+            "label": "At his height: Kai rolls in under it",
+            "easing": "linear",
+            "view": {
+              "position": [
+                0.5,
+                2.25,
+                7.25
+              ],
+              "target": [
+                -2.65,
+                1.38,
+                5.5
+              ],
+              "fov": 50,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-10",
+            "time": 1,
+            "label": "He starts the quiz; Noah watches",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                0.35,
+                2.28,
+                7.3
+              ],
+              "target": [
+                -2.7,
+                1.38,
+                5.5
+              ],
+              "fov": 50,
+              "aspect": 1.7777777777777777
+            }
+          }
+        ]
+      },
+      "sceneGlobals": {
+        "ledWallGlow": 0.14,
+        "ledFloorGlow": 0.53
+      },
+      "lightEdits": [
+        {
+          "target": "Room:highschool > PointLight",
+          "position": [
+            -3.168,
+            3.345,
+            5.657
+          ],
+          "visible": true
+        },
+        {
+          "target": "Room:highschool > Daily planning table > PointLight",
+          "visible": true
+        },
+        {
+          "target": "Room:highschool > PointLight#1",
+          "visible": true
+        },
+        {
+          "target": "HemisphereLight",
+          "visible": true
+        },
+        {
+          "target": "Room:highschool > PointLight#2",
+          "visible": true
+        },
+        {
+          "target": "DirectionalLight#2",
+          "visible": true
+        },
+        {
+          "target": "DirectionalLight#1",
+          "visible": true
+        },
+        {
+          "target": "DirectionalLight",
+          "visible": true
+        }
+      ],
+      "propEdits": [
+        {
+          "match": "^Prop:ergoflex-small-bookshelf$",
+          "asset": "highschool:house:room:24:ergoflex-small-bookshelf",
+          "label": "Prop:ergoflex-small-bookshelf",
+          "hide": true
+        },
+        {
+          "match": "^Prop:ergoflex-designer-chair$",
+          "asset": "highschool:house:room:13:ergoflex-designer-chair",
+          "label": "Prop:ergoflex-designer-chair",
+          "position": [
+            -0.471,
+            0,
+            -0.286
+          ]
+        },
+        {
+          "match": "^Prop:water-bottle$",
+          "asset": "highschool:house:room:7:water-bottle",
+          "label": "Prop:water-bottle",
+          "position": [
+            0.289,
+            0,
+            -0.172
+          ]
+        },
+        {
+          "match": "^Added prop:campus-lockers-compact-hbhs#oilm1$",
+          "label": "Added prop:campus-lockers-compact-hbhs#oilm1",
+          "position": [
+            0,
+            0,
+            -2.688
+          ]
+        },
+        {
+          "match": "^Added prop:campus-lockers-compact-hbhs#oilm0$",
+          "label": "Added prop:campus-lockers-compact-hbhs#oilm0",
+          "position": [
+            0,
+            0,
+            -4.751
+          ]
+        },
+        {
+          "match": "^Added prop:campus-lockers-compact-hbhs#oilk0$",
+          "label": "Added prop:campus-lockers-compact-hbhs#oilk0",
+          "position": [
+            0,
+            0,
+            -10.239
+          ]
+        },
+        {
+          "match": "^Added prop:campus-lockers-compact-hbhs#oilk2$",
+          "label": "Added prop:campus-lockers-compact-hbhs#oilk2",
+          "position": [
+            0,
+            0,
+            -9.867
+          ]
+        },
+        {
+          "match": "^Added prop:campus-lockers-compact-hbhs#oilk1$",
+          "label": "Added prop:campus-lockers-compact-hbhs#oilk1",
+          "position": [
+            0,
+            0,
+            -5.617
+          ]
+        },
+        {
+          "match": "^Added prop:kenney-furniture-wall#oilfw$",
+          "label": "Added prop:kenney-furniture-wall#oilfw",
+          "position": [
+            0.066,
+            0,
+            0
+          ]
+        },
+        {
+          "match": "^Prop:ergoflex-office-chair$",
+          "asset": "highschool:house:room:1:ergoflex-office-chair",
+          "label": "Prop:ergoflex-office-chair",
+          "position": [
+            0.995,
+            0,
+            0
+          ]
+        },
+        {
+          "match": "^Task chair$",
+          "asset": "highschool:house:fixture:mobile-desk-chair",
+          "label": "Task chair",
+          "position": [
+            0,
+            0,
+            -0.745
+          ],
+          "show": {
+            "from": 0,
+            "to": 3.2,
+            "fadeOut": 3.2
+          }
+        },
+        {
+          "match": "^Prop:ergoflex-calendar$",
+          "path": "^Room:highschool > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:shelf > Prop:ergoflex-calendar$",
+          "label": "Prop:ergoflex-calendar",
+          "hide": true
+        },
+        {
+          "match": "^Prop:ergoflex-picture-frame$",
+          "path": "^Room:highschool > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Prop:ergoflex-picture-frame$",
+          "label": "Prop:ergoflex-picture-frame",
+          "hide": true
+        },
+        {
+          "match": "^Prop:ergoflex-pencil-cup$",
+          "path": "^Room:highschool > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:shelf > Prop:ergoflex-pencil-cup$",
+          "label": "Prop:ergoflex-pencil-cup",
+          "hide": true
+        },
+        {
+          "match": "^Prop:papers$",
+          "path": "^Room:highschool > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Prop:papers$",
+          "label": "Prop:papers",
+          "space": "local",
+          "position": [
+            0,
+            0,
+            0.17
+          ],
+          "hide": true
+        },
+        {
+          "match": "^Lesson plan$",
+          "path": "^Room:highschool > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Groove tabletop · daily materials > Lesson plan$",
+          "label": "Lesson plan",
+          "space": "local",
+          "position": [
+            -0.122,
+            0,
+            0.161
+          ]
+        },
+        {
+          "match": "^Prop:ergoflex-pencil-cup$",
+          "path": "^Room:highschool > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Prop:ergoflex-pencil-cup$",
+          "label": "Prop:ergoflex-pencil-cup",
+          "space": "local",
+          "position": [
+            -0.112,
+            0,
+            0.158
+          ],
+          "hide": true
+        },
+        {
+          "match": "^Prop:calculator$",
+          "path": "^Room:highschool > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Prop:calculator$",
+          "label": "Prop:calculator",
+          "hide": true
+        },
+        {
+          "match": "^Accessory:logitech-mx-master$",
+          "path": "^Room:highschool > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Accessory:logitech-mx-master$",
+          "label": "Accessory:logitech-mx-master",
+          "space": "local",
+          "position": [
+            0.006,
+            0,
+            0.044
+          ]
+        },
+        {
+          "match": "^Prop:ergoflex-laptop$",
+          "path": "^Room:highschool > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Prop:ergoflex-laptop$",
+          "label": "Prop:ergoflex-laptop",
+          "space": "local",
+          "position": [
+            0.534,
+            0,
+            0.077
+          ],
+          "rotation": [
+            0,
+            -7.5,
+            0
+          ],
+          "scale": [
+            0.838,
+            0.7455,
+            0.8045
+          ]
+        },
+        {
+          "match": "^Accessory:shelf-organizer$",
+          "path": "^Room:highschool > APA set and costume design review desk · ErgoFlex desk > Desk dressing:base-shelf > Accessory:shelf-organizer$",
+          "label": "Accessory:shelf-organizer",
+          "hide": true
+        },
+        {
+          "match": "^Prop:ergoflex-shelf-organizer$",
+          "path": "^Room:highschool > APA set and costume design review desk · ErgoFlex desk > Desk dressing:shelf > Prop:ergoflex-shelf-organizer$",
+          "label": "Prop:ergoflex-shelf-organizer",
+          "hide": true
+        },
+        {
+          "match": "^Prop:ergoflex-plant-3$",
+          "label": "Prop:ergoflex-plant-3",
+          "hide": true
+        },
+        {
+          "match": "^Prop:ergoflex-shelf-organizer$",
+          "path": "^Room:highschool > Coastal research nook · ErgoFlex desk > Desk dressing:shelf > Prop:ergoflex-shelf-organizer$",
+          "label": "Prop:ergoflex-shelf-organizer",
+          "hide": true
+        },
+        {
+          "match": "^Prop:ergoflex-tall-office-chair$",
+          "asset": "highschool:house:room:19:ergoflex-tall-office-chair",
+          "label": "Prop:ergoflex-tall-office-chair",
+          "position": [
+            -3.885,
+            0,
+            2.247
+          ],
+          "rotation": [
+            0,
+            -97.8,
+            0
+          ],
+          "hide": true
+        },
+        {
+          "match": "^Prop:kenney-furniture-books$",
+          "label": "Prop:kenney-furniture-books",
+          "hide": true
+        },
+        {
+          "match": "^APA set and costume design review desk role detail$",
+          "label": "APA set and costume design review desk role detail",
+          "space": "local",
+          "position": [
+            0,
+            0,
+            -0.333
+          ],
+          "hide": true
+        },
+        {
+          "match": "^Shelf · project reference books$",
+          "path": "^Room:highschool > APA set and costume design review desk · ErgoFlex desk > Desk dressing:shelf > Shelf · project reference books$",
+          "label": "Shelf · project reference books",
+          "hide": true
+        },
+        {
+          "match": "^Prop:ergoflex-pencil-cup$",
+          "path": "^Room:highschool > APA set and costume design review desk · ErgoFlex desk > Desk dressing:shelf > Prop:ergoflex-pencil-cup$",
+          "label": "Prop:ergoflex-pencil-cup",
+          "hide": true
+        },
+        {
+          "match": "^Prop:glasses$",
+          "label": "Prop:glasses",
+          "hide": true
+        },
+        {
+          "match": "^Prop:ergoflex-laptop$",
+          "path": "^Room:highschool > Coastal research nook · ErgoFlex desk > Desk dressing:desktop > Prop:ergoflex-laptop$",
+          "label": "Prop:ergoflex-laptop",
+          "space": "local",
+          "position": [
+            0.769,
+            0,
+            0
+          ],
+          "hide": true
+        },
+        {
+          "match": "^Accessory:logitech-mx-master$",
+          "path": "^Room:highschool > Coastal research nook · ErgoFlex desk > Desk dressing:desktop > Accessory:logitech-mx-master$",
+          "label": "Accessory:logitech-mx-master",
+          "space": "local",
+          "position": [
+            0,
+            0,
+            -0.202
+          ]
+        },
+        {
+          "match": "^Prop:ergoflex-office-chair$",
+          "asset": "highschool:house:room:2:ergoflex-office-chair",
+          "label": "Prop:ergoflex-office-chair",
+          "hide": true
+        },
+        {
+          "match": "^Prop:ergoflex-desktop-pc$",
+          "asset": "highschool:house:room:20:ergoflex-desktop-pc",
+          "label": "Prop:ergoflex-desktop-pc",
+          "hide": true
+        },
+        {
+          "match": "^Daily planning table$",
+          "asset": "highschool:house:fixture:activity-table",
+          "label": "Daily planning table",
+          "hide": true
+        },
+        {
+          "match": "^Student work table$",
+          "asset": "highschool:house:fixture:student-table-1-2",
+          "label": "Student work table",
+          "position": [
+            -2.083,
+            0,
+            3.094
+          ]
+        },
+        {
+          "match": "^Student lockers$",
+          "asset": "highschool:house:fixture:lockers",
+          "label": "Student lockers",
+          "position": [
+            0,
+            0.02,
+            0
+          ]
+        },
+        {
+          "match": "^Prop:ergoflex-trash-can$",
+          "asset": "highschool:house:room:22:ergoflex-trash-can",
+          "label": "Prop:ergoflex-trash-can",
+          "position": [
+            -3.655,
+            0,
+            -1.332
+          ]
+        },
+        {
+          "match": "^Prop:ergoflex-trash-can$",
+          "asset": "highschool:house:room:21:ergoflex-trash-can",
+          "label": "Prop:ergoflex-trash-can",
+          "position": [
+            -0.27,
+            0,
+            -1.085
+          ]
+        },
+        {
+          "match": "^First bell · Prepare the mobile desk · daily activity$",
+          "asset": "highschool:house:life:activity",
+          "label": "First bell · Prepare the mobile desk · daily activity",
+          "hide": true
+        },
+        {
+          "match": "^Task chair$",
+          "asset": "highschool:house:fixture:student-chair-1-0-1",
+          "label": "Task chair",
+          "position": [
+            0,
+            0,
+            -0.324
+          ]
+        },
+        {
+          "match": "^Student investigation & work in progress$",
+          "asset": "highschool:house:fixture:campus-life-student-table-1-0",
+          "label": "Student investigation & work in progress",
+          "position": [
+            0,
+            0,
+            -0.156
+          ]
+        }
+      ],
+      "peopleEdits": {
+        "v": 2,
+        "except": [
+          "people-ava-sit-write",
+          "people-maya-sit-type",
+          "people-maya-stand-type",
+          "people-kai-wheel-type",
+          "people-noah-sit-type",
+          "people-sofia-sit-laptop"
+        ],
+        "cast": [
+          {
+            "key": "fern",
+            "id": "people-fern-sit-type",
+            "station": "project-review",
+            "desk": "sit",
+            "colors": {
+              "hair": "#d9b96e"
+            }
+          },
+          {
+            "key": "kai-rolls",
+            "id": "people-kai-wheel-roll",
+            "at": [
+              -961,
+              1300
+            ],
+            "turn": 0,
+            "roll": {
+              "path": [
+                [
+                  -961,
+                  1300
+                ],
+                [
+                  -961,
+                  -265
+                ],
+                [
+                  -3757,
+                  -265
+                ],
+                [
+                  -3757,
+                  -610
+                ]
+              ],
+              "start": 0.3,
+              "speed": 1,
+              "radius": 350
+            },
+            "look": [
+              "noah-talks",
+              "noah-steps",
+              "noah-pulls",
+              "noah-taps",
+              "noah-watches"
+            ]
+          },
+          {
+            "key": "kai-docks",
+            "id": "people-kai-wheel-roll",
+            "at": [
+              -3757,
+              -610
+            ],
+            "turn": 180,
+            "roll": {
+              "path": [
+                [
+                  -3757,
+                  -610
+                ],
+                [
+                  -3757,
+                  -1110
+                ]
+              ],
+              "start": 9.4,
+              "speed": 0.7
+            },
+            "look": [
+              "noah-talks",
+              "noah-steps",
+              "noah-pulls",
+              "noah-taps",
+              "noah-watches"
+            ]
+          },
+          {
+            "key": "kai",
+            "id": "people-kai-wheel-type-31",
+            "desk": "wheel",
+            "reach": 808,
+            "postures": {
+              "people-kai-wheel-type-31": {
+                "poseKeys": [
+                  {
+                    "t": 12.767,
+                    "pose": {
+                      "upperarm_l": [
+                        -0.2669,
+                        -0.0107,
+                        0.016,
+                        0.9635
+                      ],
+                      "lowerarm_l": [
+                        0.393,
+                        0,
+                        0.037,
+                        0.9188
+                      ],
+                      "hand_l": [
+                        -0.0754,
+                        -0.2067,
+                        -0.0902,
+                        0.9713
+                      ],
+                      "upperarm_r": [
+                        -0.2703,
+                        -0.0091,
+                        0.0324,
+                        0.9622
+                      ],
+                      "lowerarm_r": [
+                        0.4221,
+                        0,
+                        -0.0398,
+                        0.9057
+                      ],
+                      "hand_r": [
+                        0.0074,
+                        0.119,
+                        0.0766,
+                        0.9899
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "key": "noah-talks",
+            "id": "people-noah-stand-talk",
+            "at": [
+              -2681,
+              -1248
+            ],
+            "turn": 43,
+            "look": [
+              "kai-rolls",
+              "kai-docks"
+            ]
+          },
+          {
+            "key": "noah-steps",
+            "id": "people-noah-stand-wait",
+            "at": [
+              -2681,
+              -1248
+            ],
+            "turn": 43,
+            "walk": {
+              "path": [
+                [
+                  -2681,
+                  -1248
+                ],
+                [
+                  -2818,
+                  -914
+                ],
+                [
+                  -2930,
+                  -1080
+                ]
+              ],
+              "start": 4,
+              "pace": 2.2,
+              "then": "people-noah-stand-screen-pull"
+            }
+          },
+          {
+            "key": "noah-pulls",
+            "id": "people-noah-stand-screen-pull",
+            "at": [
+              -2930,
+              -1080
+            ],
+            "turn": -146,
+            "act": {
+              "at": 5.4,
+              "dur": 1.1,
+              "by": [
+                0,
+                0,
+                120
+              ]
+            }
+          },
+          {
+            "key": "noah-taps",
+            "id": "people-noah-stand-screen-tap",
+            "at": [
+              -2930,
+              -1080
+            ],
+            "turn": -146,
+            "act": {
+              "at": 8.2
+            }
+          },
+          {
+            "key": "noah-watches",
+            "id": "people-noah-stand-wait",
+            "at": [
+              -2930,
+              -1080
+            ],
+            "turn": -146,
+            "look": [
+              "kai-docks",
+              "kai"
+            ]
+          },
+          {
+            "key": "nia-class",
+            "id": "people-nia-sit-write",
+            "on": "student-chair-0-0-0",
+            "seat": 450,
+            "turn": 180,
+            "colors": {
+              "top": "#3f6b5a",
+              "bottom": "#2c2f38"
+            }
+          },
+          {
+            "key": "finn-class",
+            "id": "people-finn-sit-listen",
+            "on": "student-chair-0-0-1",
+            "seat": 450,
+            "turn": 180,
+            "colors": {
+              "top": "#2f4d6a",
+              "bottom": "#2b2d33"
+            }
+          },
+          {
+            "key": "room-zoe-volrnp",
+            "id": "people-zoe-stand-type",
+            "desk": "stand",
+            "station": "student-standing",
+            "colors": {
+              "top": "#2f6f73",
+              "bottom": "#2a2d33"
+            },
+            "poseSource": {
+              "key": "people-zoe-stand-type",
+              "id": "people-zoe-stand-type",
+              "station": "student-standing"
+            }
+          },
+          {
+            "key": "room-mia-1yke27n",
+            "id": "people-mia-sit-type",
+            "desk": "sit",
+            "station": "window-research",
+            "colors": {
+              "top": "#8a3b4a",
+              "bottom": "#2c2f3a"
+            },
+            "poseSource": {
+              "key": "people-mia-sit-type",
+              "id": "people-mia-sit-type",
+              "station": "window-research"
+            },
+            "postures": {
+              "people-mia-sit-type": {
+                "poseKeys": [
+                  {
+                    "t": 0,
+                    "pose": {
+                      "upperarm_r": [
+                        -0.1667,
+                        -0.0084,
+                        0.0159,
+                        0.9858
+                      ],
+                      "lowerarm_r": [
+                        0.2605,
+                        0,
+                        0.0018,
+                        0.9655
+                      ],
+                      "hand_r": [
+                        -0.1678,
+                        0.2578,
+                        -0.4368,
+                        0.8453
+                      ],
+                      "upperarm_l": [
+                        -0.2074,
+                        0.0117,
+                        -0.0211,
+                        0.978
+                      ],
+                      "lowerarm_l": [
+                        0.3148,
+                        0,
+                        -0.0022,
+                        0.9492
+                      ],
+                      "hand_l": [
+                        0.0329,
+                        -0.0028,
+                        -0.1085,
+                        0.9935
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "key": "room-leo-xqc13v",
+            "id": "people-leo-sit-raise",
+            "at": [
+              -89,
+              1011
+            ],
+            "turn": 180,
+            "y": 60,
+            "colors": {
+              "top": "#a8553a",
+              "bottom": "#2b2d33"
+            },
+            "poseSource": {
+              "key": "people-leo-sit-raise",
+              "id": "people-leo-sit-raise"
+            }
+          },
+          {
+            "key": "room-eli-1hdjsgj",
+            "id": "people-eli-sit-listen",
+            "at": [
+              1915,
+              1051
+            ],
+            "turn": 180,
+            "y": 60,
+            "colors": {
+              "top": "#4a6d8c",
+              "bottom": "#3a3530"
+            },
+            "poseSource": {
+              "key": "people-eli-sit-listen",
+              "id": "people-eli-sit-listen"
+            }
+          },
+          {
+            "key": "room-sofia-16m2cd5",
+            "id": "people-sofia-sit-laptop",
+            "at": [
+              -1857,
+              3011
+            ],
+            "turn": 180,
+            "y": 60,
+            "colors": {
+              "top": "#c9a24a",
+              "bottom": "#3a4150"
+            }
+          },
+          {
+            "key": "room-hale-1m8pehr",
+            "id": "people-hale-stand-present-left",
+            "at": [
+              -1450,
+              -2950
+            ],
+            "turn": 30,
+            "poseSource": {
+              "key": "people-hale-stand-present-left",
+              "id": "people-hale-stand-present-left"
+            }
+          }
+        ],
+        "when": {
+          "kai-rolls": [
+            [
+              0,
+              9.4,
+              0,
+              0
+            ]
+          ],
+          "kai-docks": [
+            [
+              9.4,
+              12.75,
+              0,
+              0
+            ]
+          ],
+          "kai": [
+            [
+              12.75,
+              99,
+              0,
+              0
+            ]
+          ],
+          "noah-talks": [
+            [
+              0,
+              3.3,
+              0,
+              0
+            ]
+          ],
+          "noah-steps": [
+            [
+              3.3,
+              5.4,
+              0,
+              0
+            ]
+          ],
+          "noah-pulls": [
+            [
+              5.4,
+              7.2,
+              0,
+              0
+            ]
+          ],
+          "noah-taps": [
+            [
+              7.2,
+              9.4,
+              0,
+              0
+            ]
+          ],
+          "noah-watches": [
+            [
+              9.4,
+              99,
+              0,
+              0
+            ]
+          ]
+        },
+        "chair": {
+          "back": 250,
+          "side": -780,
+          "turn": 35
+        }
+      }
+    }
+  ]
+}

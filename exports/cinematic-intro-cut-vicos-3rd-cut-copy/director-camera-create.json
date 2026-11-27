@@ -1,0 +1,509 @@
+{
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-2nd-cut/director-exports/export-8202caad8a6c-Film-chapter-create-23-5-s-__1_.json",
+ "seconds": 23.5,
+ "keys": [
+  {
+   "at": 0,
+   "position": [
+    6.1,
+    1.85,
+    1.95
+   ],
+   "target": [
+    0.0,
+    1.25,
+    1.85
+   ],
+   "fov": 40,
+   "label": "Lin at the wheel, the desk at the back of the studio"
+  },
+  {
+   "at": 2.35,
+   "position": [
+    5.7,
+    1.82,
+    1.9
+   ],
+   "target": [
+    0.0,
+    1.25,
+    1.75
+   ],
+   "fov": 39,
+   "label": "Lin at the wheel: slow push"
+  },
+  {
+   "at": 2.4,
+   "position": [
+    3.75,
+    1.9,
+    -0.3
+   ],
+   "target": [
+    -1.2964,
+    1.45,
+    0.7583
+   ],
+   "fov": 45,
+   "label": "Cut: the desk, front three-quarter",
+   "cut": true
+  },
+  {
+   "at": 4.2,
+   "position": [
+    3.5,
+    1.95,
+    -0.6
+   ],
+   "target": [
+    -1.271,
+    1.45,
+    0.7351
+   ],
+   "fov": 45,
+   "label": "Front three-quarter: the lift to 52 in"
+  },
+  {
+   "at": 6.8,
+   "position": [
+    3.1,
+    2.1,
+    -1.45
+   ],
+   "target": [
+    -1.1334,
+    1.6,
+    0.821
+   ],
+   "fov": 45,
+   "label": "Up with it; the arc begins"
+  },
+  {
+   "at": 12.4,
+   "position": [
+    1.1,
+    2.0,
+    -3.1
+   ],
+   "target": [
+    -1.37,
+    1.6,
+    0.31
+   ],
+   "fov": 47,
+   "label": "Side three-quarter: the board tilts to drafting"
+  },
+  {
+   "at": 16.9,
+   "position": [
+    2.0,
+    2.0,
+    -2.55
+   ],
+   "target": [
+    -1.37,
+    1.6,
+    0.31
+   ],
+   "fov": 46,
+   "label": "Drafting at 40 degrees, the arc goes on"
+  },
+  {
+   "at": 19.45,
+   "position": [
+    3.15,
+    2.05,
+    0.35
+   ],
+   "target": [
+    -1.37,
+    1.6,
+    0.31
+   ],
+   "fov": 42,
+   "label": "Round to the front: the board tilts on to the painting"
+  },
+  {
+   "at": 19.5,
+   "position": [
+    1.0862,
+    2.2932,
+    -0.7845
+   ],
+   "target": [
+    -1.2069,
+    2.1121,
+    0.528
+   ],
+   "fov": 42,
+   "label": "Cut: later, Lin paints at the tilted canvas",
+   "cut": true
+  },
+  {
+   "at": 23.5,
+   "position": [
+    0.9957,
+    2.0065,
+    -1.2974
+   ],
+   "target": [
+    -1.3578,
+    1.7802,
+    0.347
+   ],
+   "fov": 43,
+   "label": "Slow arc around her brush hand"
+  }
+ ],
+ "clips": [
+  {
+   "id": "b5418102-1403-4470-9f42-8efd6dfbddaa",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 1.5,
+   "duration": 1.9,
+   "easing": "linear",
+   "label": "",
+   "target": 7
+  },
+  {
+   "id": "stand-to-draw",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 4.2,
+   "duration": 2.6,
+   "easing": "smooth",
+   "label": "Lift up \u00b7 52 in",
+   "target": 52
+  },
+  {
+   "id": "drafting",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 6.8,
+   "duration": 5.6,
+   "easing": "smooth",
+   "label": "Drafting \u00b7 40\u00b0",
+   "target": 40
+  },
+  {
+   "id": "painting",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 16.9,
+   "duration": 2.6,
+   "easing": "smooth",
+   "label": "Easel \u00b7 55\u00b0",
+   "target": 55
+  }
+ ],
+ "initial": {
+  "height": 43.5,
+  "tilt": 0
+ },
+ "people": {
+  "v": 2,
+  "only": [
+   "lin-at-wheel"
+  ],
+  "cast": [
+   {
+    "key": "lin-desk",
+    "id": "people-lin-stand-paint",
+    "at": [
+     -200,
+     -130
+    ],
+    "turn": 180,
+    "postures": {
+     "people-lin-stand-paint": {
+      "held": {
+       "hand_r": {
+        "at": [
+         0.0618,
+         0.0137,
+         -0.0169
+        ],
+        "turn": [
+         180,
+         68,
+         0
+        ]
+       },
+       "hand_l": {
+        "at": [
+         0,
+         0.020591581544399655,
+         0
+        ]
+       }
+      },
+      "poseKeys": [
+       {
+        "t": 22.3,
+        "pose": {
+         "index_01_l": [
+          -0.1162,
+          0,
+          -0.028,
+          0.9928
+         ],
+         "index_02_l": [
+          -0.1331,
+          -0.0049,
+          -0.0331,
+          0.9905
+         ],
+         "index_03_l": [
+          -0.0987,
+          -0.0024,
+          -0.0246,
+          0.9948
+         ],
+         "middle_01_l": [
+          -0.1244,
+          0,
+          -0.0187,
+          0.9921
+         ],
+         "middle_02_l": [
+          -0.1421,
+          0.007,
+          -0.0248,
+          0.9895
+         ],
+         "middle_03_l": [
+          -0.1054,
+          0.0011,
+          -0.0191,
+          0.9942
+         ],
+         "pinky_01_l": [
+          -0.1333,
+          0,
+          -0.0017,
+          0.9911
+         ],
+         "pinky_02_l": [
+          -0.153,
+          0.0048,
+          0.0001,
+          0.9882
+         ],
+         "pinky_03_l": [
+          -0.1135,
+          0.0007,
+          -0.0029,
+          0.9935
+         ],
+         "ring_01_l": [
+          -0.1287,
+          0,
+          -0.0145,
+          0.9916
+         ],
+         "ring_02_l": [
+          -0.1468,
+          0.0092,
+          -0.0224,
+          0.9889
+         ],
+         "ring_03_l": [
+          -0.1081,
+          -0.0009,
+          -0.0217,
+          0.9939
+         ],
+         "index_01_r": [
+          0.1787,
+          0,
+          -0.0431,
+          0.983
+         ],
+         "index_02_r": [
+          0.2078,
+          -0.0019,
+          -0.0503,
+          0.9769
+         ],
+         "index_03_r": [
+          0.1493,
+          0.003,
+          -0.0366,
+          0.9881
+         ],
+         "middle_01_r": [
+          0.1913,
+          0,
+          -0.0287,
+          0.9811
+         ],
+         "middle_02_r": [
+          0.2212,
+          0.0015,
+          -0.0406,
+          0.9744
+         ],
+         "middle_03_r": [
+          0.1583,
+          0.0203,
+          -0.0261,
+          0.9868
+         ],
+         "pinky_01_r": [
+          0.2048,
+          0,
+          -0.0025,
+          0.9788
+         ],
+         "pinky_02_r": [
+          0.2381,
+          -0.0029,
+          -0.0001,
+          0.9712
+         ],
+         "pinky_03_r": [
+          0.1706,
+          0.0164,
+          -0.0026,
+          0.9852
+         ],
+         "ring_01_r": [
+          0.1979,
+          0,
+          -0.0223,
+          0.98
+         ],
+         "ring_02_r": [
+          0.2285,
+          0.0007,
+          -0.0371,
+          0.9728
+         ],
+         "ring_03_r": [
+          0.1595,
+          0.0379,
+          -0.0295,
+          0.986
+         ],
+         "thumb_01_r": [
+          0.155,
+          -0.0042,
+          0.0791,
+          0.9847
+         ],
+         "thumb_02_r": [
+          0.0783,
+          0,
+          0.0456,
+          0.9959
+         ],
+         "thumb_03_r": [
+          0.0921,
+          0.0288,
+          0.0685,
+          0.993
+         ],
+         "upperarm_l": [
+          0.0045,
+          0.0039,
+          -0.0047,
+          1
+         ],
+         "lowerarm_l": [
+          -0.0191,
+          0,
+          0.0019,
+          0.9998
+         ],
+         "hand_l": [
+          0.0049,
+          0.0056,
+          -0.0139,
+          0.9999
+         ]
+        }
+       }
+      ]
+     }
+    }
+   },
+   {
+    "key": "room-lin-v5n086",
+    "id": "people-lin-sit-pottery",
+    "at": [
+     -1387,
+     1589
+    ],
+    "turn": 255.7,
+    "poseSource": {
+     "key": "lin-at-wheel",
+     "id": "people-lin-sit-pottery"
+    },
+    "postures": {
+     "people-lin-sit-pottery": {
+      "poseKeys": [
+       {
+        "t": 1.4,
+        "pose": {
+         "upperarm_r": [
+          0.077,
+          0.0313,
+          -0.0325,
+          0.996
+         ],
+         "lowerarm_r": [
+          -0.1751,
+          0,
+          -0.017,
+          0.9844
+         ],
+         "hand_r": [
+          0.1081,
+          0.0225,
+          0.0095,
+          0.9938
+         ],
+         "upperarm_l": [
+          0.1167,
+          -0.0043,
+          -0.0108,
+          0.9931
+         ],
+         "lowerarm_l": [
+          -0.2456,
+          0,
+          0.0239,
+          0.9691
+         ],
+         "hand_l": [
+          0.1261,
+          -0.0184,
+          0.2779,
+          0.9521
+         ]
+        }
+       }
+      ]
+     }
+    }
+   }
+  ],
+  "when": {
+   "lin-desk": [
+    [
+     19.5,
+     99,
+     0,
+     0
+    ]
+   ],
+   "lin-at-wheel": [
+    [
+     0,
+     14
+    ]
+   ]
+  }
+ }
+}

@@ -1,0 +1,543 @@
+{
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-2nd-cut/director-exports/export-c5a2d9696078-Film-chapter-rise-18-s-__22_.json",
+ "seconds": 18.0,
+ "keys": [
+  {
+   "at": 0.0,
+   "position": [
+    0.14148306748932715,
+    1.5808533152580795,
+    1.0242989554549016
+   ],
+   "target": [
+    -0.4735368643950818,
+    1.0652403301229472,
+    0.9431015884855715
+   ],
+   "fov": 30.000000000000004,
+   "label": "DAILY NOTES and the sleeping desk"
+  },
+  {
+   "at": 2.0,
+   "position": [
+    0.0757350167867415,
+    1.7226143260577607,
+    0.9856212571660291
+   ],
+   "target": [
+    -0.4864768948228069,
+    1.1060213450711327,
+    0.8906986467388635
+   ],
+   "fov": 31.00176818795182,
+   "label": "Desk wakes: lights and screens on"
+  },
+  {
+   "at": 4.3,
+   "position": [
+    1.55,
+    1.62,
+    2.5
+   ],
+   "target": [
+    -0.87,
+    1.1457,
+    0.6927
+   ],
+   "fov": 54,
+   "label": "Back off the notes to the front three-quarter: Maya up, the readout climbs"
+  },
+  {
+   "at": 7.6,
+   "position": [
+    1.8346242148603746,
+    2.066120769974215,
+    2.0568810668690736
+   ],
+   "target": [
+    -0.7262858886969733,
+    1.4321725489681034,
+    0.4466851323207073
+   ],
+   "fov": 54.00070924735684,
+   "label": "Standing height on the readout, Maya beside the column"
+  },
+  {
+   "at": 9.45,
+   "position": [
+    1.821696059952487,
+    1.7322412677672558,
+    2.1702230245548866
+   ],
+   "target": [
+    -0.7262737784682904,
+    1.4321923861265884,
+    0.4466689737860453
+   ],
+   "fov": 54.00058624404436,
+   "label": "Standing height on the readout, Maya beside the column copy"
+  },
+  {
+   "at": 12.65,
+   "position": [
+    2.463454252704788,
+    1.2964528373028545,
+    2.5839742986286045
+   ],
+   "target": [
+    -0.23520810077495727,
+    1.0964354278137036,
+    -0.013185692156666257
+   ],
+   "fov": 46.00500138844767,
+   "label": "Front three-quarter: seated again, the window behind"
+  },
+  {
+   "at": 18,
+   "position": [
+    1.45,
+    1.5,
+    1.95
+   ],
+   "target": [
+    -0.6,
+    1.35,
+    0.4
+   ],
+   "fov": 44,
+   "label": "Evening: in toward the screens and the summary of the day"
+  }
+ ],
+ "clips": [
+  {
+   "id": "comfortable-standing",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 3.4,
+   "duration": 4.2,
+   "easing": "smooth",
+   "label": "Rise to comfortable standing",
+   "target": 39
+  },
+  {
+   "id": "27f6834b-b946-4f74-bbf5-629e95a3f1bf",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 6.4,
+   "duration": 1.2,
+   "easing": "linear",
+   "label": "",
+   "target": -5
+  },
+  {
+   "id": "full-height",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 9.45,
+   "duration": 3.2,
+   "easing": "smooth",
+   "label": "Back to sitting",
+   "target": 28
+  },
+  {
+   "id": "2ddd39af-db54-4716-8878-0e89f21c3f42",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 11.364,
+   "duration": 1.286,
+   "easing": "linear",
+   "label": "",
+   "target": 0
+  }
+ ],
+ "initial": {
+  "height": 28,
+  "tilt": 0
+ },
+ "props": [
+  {
+   "match": "^Workspace notebook$",
+   "path": "^Room:home > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Workspace notebook$",
+   "label": "Workspace notebook",
+   "hide": true
+  },
+  {
+   "match": "^Prop:ficus$",
+   "asset": "home:house:room:4:ficus",
+   "label": "Prop:ficus",
+   "position": [
+    0,
+    0,
+    0.075
+   ]
+  },
+  {
+   "match": "^Prop:steelcase-leap-v2$",
+   "asset": "home:house:room:0:steelcase-leap-v2",
+   "label": "Prop:steelcase-leap-v2",
+   "position": [
+    0.08,
+    0,
+    0
+   ]
+  },
+  {
+   "match": "^Prop:ergoflex-phone$",
+   "label": "Prop:ergoflex-phone",
+   "space": "local",
+   "position": [
+    0.012,
+    -0.003,
+    -0.004
+   ]
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large"
+   },
+   "id": "chotnr5n9",
+   "match": "^Added prop:ergoflex-side-shelf-large#chotnr5n9$",
+   "label": "Side shelf \u00b7 large",
+   "parent": "base-shelf",
+   "position": [
+    -0.918,
+    0.032,
+    -0.12
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "match": "^Prop:backpack-leather$",
+   "label": "Prop:backpack-leather",
+   "space": "local",
+   "position": [
+    -1.474,
+    0.065,
+    -0.141
+   ],
+   "rotation": [
+    0,
+    -66.6,
+    0
+   ],
+   "scale": [
+    0.65,
+    0.65,
+    0.65
+   ]
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large"
+   },
+   "id": "a898km51e",
+   "match": "^Added prop:ergoflex-side-shelf-large#a898km51e$",
+   "label": "Side shelf \u00b7 large",
+   "parent": "base-shelf",
+   "position": [
+    0.922,
+    0.028,
+    -0.122
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-cup-holder"
+   },
+   "id": "df2i9ur5b",
+   "match": "^Added prop:ergoflex-side-cup-holder#df2i9ur5b$",
+   "label": "Side cup holder \u00b7 acrylic",
+   "parent": "desk",
+   "position": [
+    1.1,
+    -0.169,
+    0.303
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ]
+  },
+  {
+   "match": "^Prop:ergoflex-thermal-cup$",
+   "label": "Prop:ergoflex-thermal-cup",
+   "space": "local",
+   "position": [
+    1.716,
+    -0.161,
+    0.114
+   ],
+   "scale": [
+    1.2,
+    1.2,
+    1.2
+   ]
+  },
+  {
+   "match": "^Accessory:logitech-mx-master$",
+   "path": "^Room:home > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Accessory:logitech-mx-master$",
+   "label": "Accessory:logitech-mx-master",
+   "space": "local",
+   "position": [
+    0,
+    0.007,
+    0.001
+   ]
+  },
+  {
+   "match": "^Daily planning$",
+   "path": "^Room:home > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Groove tabletop \u00b7 daily materials > Daily planning$",
+   "label": "Daily planning",
+   "space": "local",
+   "position": [
+    -0.137,
+    0,
+    -0.021
+   ],
+   "rotation": [
+    0,
+    44.2,
+    0
+   ]
+  },
+  {
+   "match": "^$",
+   "asset": "home:house:placement:0:0:",
+   "label": "Unnamed prop",
+   "position": [
+    -0.308,
+    0,
+    -0.006
+   ],
+   "scale": [
+    1,
+    1,
+    1.2819
+   ]
+  },
+  {
+   "match": "^$",
+   "asset": "home:house:placement:1:0:",
+   "label": "Unnamed prop",
+   "position": [
+    0.118,
+    0,
+    0
+   ]
+  },
+  {
+   "match": "^Prop:armchair-poppi$",
+   "asset": "home:house:room:1:armchair-poppi",
+   "label": "Prop:armchair-poppi",
+   "position": [
+    0.614,
+    0,
+    -0.259
+   ]
+  },
+  {
+   "match": "^Prop:quaternius-guitar$",
+   "asset": "home:house:room:10:quaternius-guitar",
+   "label": "Prop:quaternius-guitar",
+   "position": [
+    -0.993,
+    0.273,
+    0
+   ]
+  }
+ ],
+ "people": {
+  "v": 2,
+  "only": [
+   "people-maya-sit-type"
+  ],
+  "chair": {
+   "back": 300,
+   "side": 760,
+   "turn": -42
+  },
+  "cast": [
+   {
+    "key": "maya-stand",
+    "id": "people-maya-stand-type-41",
+    "desk": "stand",
+    "reach": 850,
+    "poseBindings": [
+     {
+      "key": "people-maya-sit-type",
+      "id": "people-maya-sit-type"
+     }
+    ],
+    "sitReach": 843,
+    "postures": {
+     "people-maya-stand-type-41": {
+      "pose": {
+       "upperarm_l": [
+        0.14690371355150492,
+        -0.03732203427202023,
+        0.05408950946408292,
+        0.9869653943621886
+       ],
+       "lowerarm_l": [
+        -0.02210594874625814,
+        -2.09392174137929e-08,
+        0.0011855970659346796,
+        0.999754930665323
+       ],
+       "hand_l": [
+        -0.12330310313529139,
+        0.014468864627722636,
+        0.0846558445532394,
+        -0.9886457326548121
+       ],
+       "upperarm_r": [
+        0.10813197388625959,
+        0.04639718939106359,
+        -0.08322678024789257,
+        0.9895595384258798
+       ],
+       "lowerarm_r": [
+        0.01590259982262351,
+        -1.9788315401211842e-08,
+        0.0008529375669013434,
+        0.9998731818667745
+       ],
+       "hand_r": [
+        0.13886925746575282,
+        0.043211538873889815,
+        0.0766642511248137,
+        0.9863927639832587
+       ]
+      },
+      "poseKeys": [
+       {
+        "t": 7.6,
+        "pose": {
+         "upperarm_l": [
+          0.084,
+          -0.0525,
+          0.063,
+          0.9931
+         ],
+         "lowerarm_l": [
+          0.0191,
+          0,
+          -0.001,
+          0.9998
+         ],
+         "hand_l": [
+          0.0541,
+          -0.2686,
+          0.0858,
+          0.9579
+         ],
+         "hand_r": [
+          0.069,
+          0.3338,
+          -0.0078,
+          0.9401
+         ]
+        }
+       }
+      ]
+     },
+     "people-maya-sit-type": {
+      "poseKeys": [
+       {
+        "t": 0,
+        "pose": {
+         "upperarm_l": [
+          -0.1423,
+          -0.0062,
+          0.0191,
+          0.9896
+         ],
+         "lowerarm_l": [
+          0.2121,
+          0,
+          -0.0114,
+          0.9772
+         ],
+         "hand_l": [
+          -0.0022,
+          -0.2809,
+          0.0318,
+          0.9592
+         ],
+         "upperarm_r": [
+          -0.1527,
+          -0.0056,
+          0.0142,
+          0.9882
+         ],
+         "lowerarm_r": [
+          0.2461,
+          0,
+          0.0132,
+          0.9692
+         ],
+         "hand_r": [
+          -0.0974,
+          0.1822,
+          0.0472,
+          0.9773
+         ]
+        }
+       }
+      ]
+     }
+    }
+   },
+   {
+    "key": "maya-waits",
+    "id": "people-maya-stand-wait",
+    "at": [
+     -167,
+     405
+    ],
+    "turn": 180
+   }
+  ],
+  "when": {
+   "maya-waits": [
+    [
+     3.75,
+     7.4,
+     0.4,
+     0.4
+    ],
+    [
+     9.65,
+     12.5,
+     0.4,
+     0.4
+    ]
+   ]
+  }
+ }
+}

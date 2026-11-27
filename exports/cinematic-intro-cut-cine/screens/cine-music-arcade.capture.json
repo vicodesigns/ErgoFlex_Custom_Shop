@@ -1,0 +1,16 @@
+{
+ "id": "cine-music-arcade",
+ "shot": "music",
+ "frames": 405,
+ "motion": "824e5db57f71cfb2",
+ "audio": true,
+ "tempo": {
+  "beats": 23,
+  "first": 1.05,
+  "bpm": 111.369,
+  "source": "exports\\cinematic-intro-cut-cine\\score\\tempo-map.json"
+ },
+ "spectrum": 147.85,
+ "twin": null,
+ "at": "2026-11-15T16:34:36.540Z"
+}

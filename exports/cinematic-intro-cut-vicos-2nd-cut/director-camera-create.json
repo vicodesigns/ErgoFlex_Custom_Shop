@@ -1,0 +1,5002 @@
+{
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-2nd-cut/director-exports/export-a2ec985e912d-Film-chapter-create-23-5-s-__cutfix_.json",
+ "seconds": 23.5,
+ "keys": [
+  {
+   "at": 0.0,
+   "position": [
+    5.1976918697381,
+    1.9765427015748804,
+    3.314937674815405
+   ],
+   "target": [
+    -1.7591389716239645,
+    1.3838267424331514,
+    -0.03864685704586046
+   ],
+   "fov": 35,
+   "label": "Lin at the wheel, the desk at the back of the studio"
+  },
+  {
+   "at": 0.4,
+   "position": [
+    5.1976918697381,
+    1.9765427015748804,
+    3.314937674815405
+   ],
+   "target": [
+    -1.7591389716239645,
+    1.3838267424331514,
+    -0.03864685704586046
+   ],
+   "fov": 35,
+   "label": "Lin at the wheel, the desk at the back of the studio copy"
+  },
+  {
+   "at": 3.0,
+   "position": [
+    3.0362764305331518,
+    2.0890030224846017,
+    3.3125672549467953
+   ],
+   "target": [
+    0.3281408105313094,
+    1.615748862016591,
+    0.5196672886883014
+   ],
+   "fov": 41.85069119131361,
+   "label": "Camera view 10"
+  },
+  {
+   "at": 6.8,
+   "position": [
+    2.811840957740497,
+    1.848660683548276,
+    -3.029011547590054
+   ],
+   "target": [
+    -1.307659322841075,
+    1.6794455388710632,
+    0.6557260298919676
+   ],
+   "fov": 44.99960865246304,
+   "label": "Up with it; the arc begins"
+  },
+  {
+   "at": 12.4,
+   "position": [
+    1.3526619616813627,
+    1.969992716362882,
+    -3.3207861175758477
+   ],
+   "target": [
+    -1.3176563159722845,
+    1.5375647513720663,
+    0.3657269016442523
+   ],
+   "fov": 46.99995760416837,
+   "label": "Side three-quarter: the board tilts to drafting copy"
+  },
+  {
+   "at": 12.8,
+   "position": [
+    1.3526619616813627,
+    1.969992716362882,
+    -3.3207861175758477
+   ],
+   "target": [
+    -1.3176563159722845,
+    1.5375647513720663,
+    0.3657269016442523
+   ],
+   "fov": 46.99995760416837,
+   "label": "Side three-quarter: the board tilts to drafting copy"
+  },
+  {
+   "at": 16.2,
+   "position": [
+    2,
+    2,
+    -2.55
+   ],
+   "target": [
+    -1.37,
+    1.6,
+    0.31
+   ],
+   "fov": 46,
+   "label": "Drafting at 40 degrees, the arc goes on"
+  },
+  {
+   "at": 19.2,
+   "position": [
+    3.15,
+    2.05,
+    0.35
+   ],
+   "target": [
+    -1.37,
+    1.6,
+    0.31
+   ],
+   "fov": 42,
+   "label": "Round to the front: the board tilts on to the painting"
+  },
+  {
+   "at": 19.5,
+   "position": [
+    1.0862,
+    2.2932,
+    -0.7845
+   ],
+   "target": [
+    -1.2069,
+    2.1121,
+    0.528
+   ],
+   "fov": 42,
+   "label": "Cut: later, Lin paints at the tilted canvas",
+   "cut": true
+  },
+  {
+   "at": 23.5,
+   "position": [
+    0.9957,
+    2.0065,
+    -1.2974
+   ],
+   "target": [
+    -1.3578,
+    1.7802,
+    0.347
+   ],
+   "fov": 43,
+   "label": "Slow arc around her brush hand"
+  }
+ ],
+ "clips": [
+  {
+   "id": "b5418102-1403-4470-9f42-8efd6dfbddaa",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 1.5,
+   "duration": 1.9,
+   "easing": "linear",
+   "label": "",
+   "target": 7
+  },
+  {
+   "id": "stand-to-draw",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 4.2,
+   "duration": 2.6,
+   "easing": "smooth",
+   "label": "Lift up \u00b7 52 in",
+   "target": 52
+  },
+  {
+   "id": "drafting",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 6.8,
+   "duration": 5.6,
+   "easing": "smooth",
+   "label": "Drafting \u00b7 40\u00b0",
+   "target": 40
+  },
+  {
+   "id": "painting",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 16.9,
+   "duration": 2.6,
+   "easing": "smooth",
+   "label": "Easel \u00b7 55\u00b0",
+   "target": 55
+  }
+ ],
+ "initial": {
+  "height": 43.5,
+  "tilt": 0
+ },
+ "props": [
+  {
+   "match": "^Colour studies \u00b7 daily activity$",
+   "asset": "creative:premium:life:activity",
+   "label": "Colour studies \u00b7 daily activity",
+   "position": [
+    0.792,
+    0,
+    1.012
+   ]
+  },
+  {
+   "match": "^Artist painting easel$",
+   "asset": "creative:premium:fixture:artist-easel",
+   "label": "Artist painting easel",
+   "position": [
+    0,
+    0,
+    0.161
+   ]
+  },
+  {
+   "match": "^$",
+   "asset": "creative:premium:placement:0:0:",
+   "label": "Unnamed prop",
+   "position": [
+    -0.279,
+    0,
+    0
+   ]
+  },
+  {
+   "match": "^Prop:long-scissors$",
+   "asset": "creative:premium:room:12:long-scissors",
+   "label": "Prop:long-scissors",
+   "position": [
+    -0.168,
+    0,
+    0.248
+   ],
+   "rotation": [
+    0,
+    121.3,
+    0
+   ]
+  },
+  {
+   "match": "^Prop:ruler-set-square$",
+   "asset": "creative:premium:room:11:ruler-set-square",
+   "label": "Prop:ruler-set-square",
+   "position": [
+    -0.116,
+    0,
+    0.33
+   ],
+   "rotation": [
+    0,
+    -11.5,
+    0
+   ]
+  },
+  {
+   "match": "^Prop:atelier-artist-palette-oak$",
+   "label": "Prop:atelier-artist-palette-oak",
+   "space": "local",
+   "position": [
+    3.798,
+    0.645,
+    -0.332
+   ]
+  },
+  {
+   "match": "^Prop:atelier-artist-pen-display-oak$",
+   "label": "Prop:atelier-artist-pen-display-oak",
+   "space": "local",
+   "position": [
+    0.689,
+    0,
+    0
+   ],
+   "hide": true
+  },
+  {
+   "match": "^Prop:painted-mug$",
+   "path": "^Room:creative > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Prop:painted-mug$",
+   "label": "Prop:painted-mug",
+   "space": "local",
+   "position": [
+    0,
+    0,
+    0.179
+   ],
+   "hide": true
+  },
+  {
+   "match": "^Prop:sketchbook$",
+   "path": "^Room:creative > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Prop:sketchbook$",
+   "label": "Prop:sketchbook",
+   "hide": true
+  },
+  {
+   "match": "^Prop:apple-pencil$",
+   "path": "^Room:creative > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Prop:apple-pencil$",
+   "label": "Prop:apple-pencil",
+   "space": "local",
+   "position": [
+    -0.154,
+    0,
+    0
+   ]
+  },
+  {
+   "match": "^Prop:ergoflex-plant-2$",
+   "near": [
+    -2.3535,
+    3.5454,
+    0.3
+   ],
+   "label": "Prop:ergoflex-plant-2 (behind the bust)",
+   "hide": true
+  },
+  {
+   "match": "^Original color study 2$",
+   "asset": "creative:premium:fixture:artist-study-1",
+   "label": "Original color study 2",
+   "position": [
+    0,
+    -0.655,
+    2.047
+   ]
+  },
+  {
+   "match": "^Original color study 1$",
+   "asset": "creative:premium:fixture:artist-study-0",
+   "label": "Original color study 1",
+   "position": [
+    0,
+    -0.635,
+    0.109
+   ],
+   "hide": true
+  },
+  {
+   "match": "^Original atelier painting$",
+   "asset": "creative:premium:placement:35:0:Original atelier painting",
+   "label": "Original atelier painting",
+   "position": [
+    -1.069,
+    0,
+    0
+   ]
+  },
+  {
+   "match": "^Original color study 3$",
+   "asset": "creative:premium:fixture:artist-study-2",
+   "label": "Original color study 3",
+   "position": [
+    0,
+    -0.697,
+    -1.585
+   ]
+  },
+  {
+   "add": {
+    "asset": "tea-cup"
+   },
+   "id": "iktqfoa9x",
+   "match": "^Added prop:tea-cup#iktqfoa9x$",
+   "label": "Japanese tea cup",
+   "parent": "desk",
+   "position": [
+    1.296,
+    -0.159,
+    0.297
+   ],
+   "rotation": [
+    0,
+    41.7,
+    0
+   ],
+   "scale": [
+    1.2976,
+    1.2149,
+    1.3011
+   ],
+   "show": {
+    "from": 0,
+    "to": 7.4,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-cup-holder"
+   },
+   "id": "ouy3umddv",
+   "match": "^Added prop:ergoflex-side-cup-holder#ouy3umddv$",
+   "label": "Side cup holder \u00b7 acrylic",
+   "parent": "desk",
+   "position": [
+    1.093,
+    -0.168,
+    0.303
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "show": {
+    "from": 0,
+    "to": 7.4,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "match": "^Accessory:cable-tray$",
+   "label": "Accessory:cable-tray",
+   "show": {
+    "from": 0,
+    "to": 23.5,
+    "fadeIn": 1,
+    "fadeOut": 1
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large-cubby"
+   },
+   "id": "vima7dnnn",
+   "match": "^Added prop:ergoflex-side-shelf-large-cubby#vima7dnnn$",
+   "label": "Side shelf \u00b7 large, cubby and cups",
+   "parent": "desk",
+   "position": [
+    1.133,
+    -0.183,
+    0.485
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "show": {
+    "from": 7.4,
+    "to": 17.3,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "match": "^Prop:ergoflex-drawing-tablet$",
+   "path": "^Room:creative > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Prop:ergoflex-drawing-tablet$",
+   "label": "Prop:ergoflex-drawing-tablet",
+   "space": "local",
+   "position": [
+    1.111,
+    0,
+    0.275
+   ],
+   "rotation": [
+    0,
+    -26.7,
+    0
+   ],
+   "show": {
+    "from": 0,
+    "to": 7.6,
+    "fadeOut": 0.5
+   }
+  },
+  {
+   "match": "^Colour palette$",
+   "path": "^Room:creative > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Groove tabletop \u00b7 daily materials > Colour palette$",
+   "label": "Colour palette",
+   "space": "local",
+   "position": [
+    -0.579,
+    0.006,
+    -0.23
+   ]
+  },
+  {
+   "match": "^Accessory:painter-shelf$",
+   "path": "^Room:creative > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Accessory:painter-shelf$",
+   "label": "Accessory:painter-shelf",
+   "space": "local",
+   "position": [
+    -0.021,
+    -0.096,
+    -0.004
+   ],
+   "rotation": [
+    45.5,
+    0,
+    0
+   ],
+   "show": {
+    "from": 17.3,
+    "to": 100000,
+    "fadeIn": 0.45
+   }
+  },
+  {
+   "match": "^Prop:ficus$",
+   "asset": "creative:premium:room:2:kenney-furniture-potted-plant",
+   "label": "Prop:ficus",
+   "hide": true
+  },
+  {
+   "match": "^Prop:ergoflex-coffee-table$",
+   "asset": "creative:premium:room:7:ergoflex-coffee-table",
+   "label": "Prop:ergoflex-coffee-table",
+   "position": [
+    -0.104,
+    0.589,
+    0
+   ],
+   "rotation": [
+    -180,
+    51.7,
+    0
+   ]
+  },
+  {
+   "match": "^$",
+   "asset": "creative:premium:placement:10:0:",
+   "label": "Unnamed prop",
+   "position": [
+    -1.252,
+    0,
+    0
+   ]
+  },
+  {
+   "match": "^Prop:antique-vase$",
+   "asset": "creative:premium:room:9:antique-vase",
+   "label": "Prop:antique-vase",
+   "position": [
+    0,
+    0.154,
+    0
+   ],
+   "scale": [
+    0.5339,
+    0.5745,
+    0.6418
+   ]
+  },
+  {
+   "match": "^Prop:paper-bin$",
+   "asset": "creative:premium:room:1:paper-bin",
+   "label": "Prop:paper-bin",
+   "position": [
+    0.496,
+    0,
+    0
+   ]
+  },
+  {
+   "match": "^Artist canvas stack$",
+   "asset": "creative:premium:fixture:artist-canvas-stack",
+   "label": "Artist canvas stack",
+   "position": [
+    -1.285,
+    0,
+    0
+   ]
+  },
+  {
+   "match": "^Prop:ergoflex-artist-stool$",
+   "label": "Prop:ergoflex-artist-stool",
+   "space": "local",
+   "position": [
+    0.32,
+    0,
+    0.845
+   ]
+  },
+  {
+   "match": "^Artist materials worktable$",
+   "asset": "creative:premium:fixture:artist-worktable",
+   "label": "Artist materials worktable",
+   "position": [
+    0.252,
+    0,
+    0.365
+   ]
+  },
+  {
+   "match": "^Atelier artist \u00b7 Illustration tablet & stylus \u00b7 Pale ash & brushed silver$",
+   "asset": "creative:premium:room:10:papers",
+   "label": "Atelier artist \u00b7 Illustration tablet & stylus \u00b7 Pale ash & brushed silver",
+   "position": [
+    0.404,
+    0,
+    0.764
+   ]
+  },
+  {
+   "match": "^$",
+   "asset": "creative:premium:fixture:artist-brushes-worktable",
+   "label": "Unnamed prop",
+   "position": [
+    0,
+    0.03,
+    0.09
+   ]
+  },
+  {
+   "match": "^Artist paint taboret$",
+   "asset": "creative:premium:fixture:artist-taboret",
+   "label": "Artist paint taboret",
+   "position": [
+    0,
+    0,
+    0.054
+   ]
+  }
+ ],
+ "people": {
+  "v": 2,
+  "only": [
+   "lin-at-wheel"
+  ],
+  "cast": [
+   {
+    "key": "lin-desk",
+    "id": "people-lin-stand-paint",
+    "at": [
+     -200,
+     -130
+    ],
+    "turn": 180,
+    "postures": {
+     "people-lin-stand-paint": {
+      "held": {
+       "hand_r": {
+        "at": [
+         0.0618,
+         0.0137,
+         -0.0169
+        ],
+        "turn": [
+         180,
+         68,
+         0
+        ]
+       },
+       "hand_l": {
+        "at": [
+         0,
+         0.020591581544399655,
+         0
+        ]
+       }
+      },
+      "poseKeys": [
+       {
+        "t": 22.3,
+        "pose": {
+         "index_01_l": [
+          -0.1162,
+          0,
+          -0.028,
+          0.9928
+         ],
+         "index_02_l": [
+          -0.1331,
+          -0.0049,
+          -0.0331,
+          0.9905
+         ],
+         "index_03_l": [
+          -0.0987,
+          -0.0024,
+          -0.0246,
+          0.9948
+         ],
+         "middle_01_l": [
+          -0.1244,
+          0,
+          -0.0187,
+          0.9921
+         ],
+         "middle_02_l": [
+          -0.1421,
+          0.007,
+          -0.0248,
+          0.9895
+         ],
+         "middle_03_l": [
+          -0.1054,
+          0.0011,
+          -0.0191,
+          0.9942
+         ],
+         "pinky_01_l": [
+          -0.1333,
+          0,
+          -0.0017,
+          0.9911
+         ],
+         "pinky_02_l": [
+          -0.153,
+          0.0048,
+          0.0001,
+          0.9882
+         ],
+         "pinky_03_l": [
+          -0.1135,
+          0.0007,
+          -0.0029,
+          0.9935
+         ],
+         "ring_01_l": [
+          -0.1287,
+          0,
+          -0.0145,
+          0.9916
+         ],
+         "ring_02_l": [
+          -0.1468,
+          0.0092,
+          -0.0224,
+          0.9889
+         ],
+         "ring_03_l": [
+          -0.1081,
+          -0.0009,
+          -0.0217,
+          0.9939
+         ],
+         "index_01_r": [
+          0.1787,
+          0,
+          -0.0431,
+          0.983
+         ],
+         "index_02_r": [
+          0.2078,
+          -0.0019,
+          -0.0503,
+          0.9769
+         ],
+         "index_03_r": [
+          0.1493,
+          0.003,
+          -0.0366,
+          0.9881
+         ],
+         "middle_01_r": [
+          0.1913,
+          0,
+          -0.0287,
+          0.9811
+         ],
+         "middle_02_r": [
+          0.2212,
+          0.0015,
+          -0.0406,
+          0.9744
+         ],
+         "middle_03_r": [
+          0.1583,
+          0.0203,
+          -0.0261,
+          0.9868
+         ],
+         "pinky_01_r": [
+          0.2048,
+          0,
+          -0.0025,
+          0.9788
+         ],
+         "pinky_02_r": [
+          0.2381,
+          -0.0029,
+          -0.0001,
+          0.9712
+         ],
+         "pinky_03_r": [
+          0.1706,
+          0.0164,
+          -0.0026,
+          0.9852
+         ],
+         "ring_01_r": [
+          0.1979,
+          0,
+          -0.0223,
+          0.98
+         ],
+         "ring_02_r": [
+          0.2285,
+          0.0007,
+          -0.0371,
+          0.9728
+         ],
+         "ring_03_r": [
+          0.1595,
+          0.0379,
+          -0.0295,
+          0.986
+         ],
+         "thumb_01_r": [
+          0.155,
+          -0.0042,
+          0.0791,
+          0.9847
+         ],
+         "thumb_02_r": [
+          0.0783,
+          0,
+          0.0456,
+          0.9959
+         ],
+         "thumb_03_r": [
+          0.0921,
+          0.0288,
+          0.0685,
+          0.993
+         ],
+         "upperarm_l": [
+          0.0045,
+          0.0039,
+          -0.0047,
+          1
+         ],
+         "lowerarm_l": [
+          -0.0191,
+          0,
+          0.0019,
+          0.9998
+         ],
+         "hand_l": [
+          0.0049,
+          0.0056,
+          -0.0139,
+          0.9999
+         ]
+        }
+       }
+      ]
+     }
+    }
+   },
+   {
+    "key": "room-lin-v5n086",
+    "id": "people-lin-sit-pottery",
+    "at": [
+     -1387,
+     1589
+    ],
+    "turn": 255.7,
+    "poseSource": {
+     "key": "lin-at-wheel",
+     "id": "people-lin-sit-pottery"
+    },
+    "postures": {
+     "people-lin-sit-pottery": {
+      "poseKeys": [
+       {
+        "t": 0,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ],
+         "thigh_r": [
+          -0.0668,
+          0.0042,
+          -0.0102,
+          0.9977
+         ],
+         "calf_r": [
+          0.2385,
+          0,
+          -0.0243,
+          0.9708
+         ],
+         "foot_r": [
+          -0.1668,
+          -0.0435,
+          0.0335,
+          0.9845
+         ],
+         "thigh_l": [
+          -0.0178,
+          0.0427,
+          -0.0529,
+          0.9975
+         ],
+         "calf_l": [
+          0.2508,
+          0,
+          0.0256,
+          0.9677
+         ],
+         "foot_l": [
+          -0.26,
+          0.0395,
+          0.0038,
+          0.9648
+         ]
+        }
+       },
+       {
+        "t": 0.033,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       },
+       {
+        "t": 0.5,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       },
+       {
+        "t": 0.7,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       },
+       {
+        "t": 0.8,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       },
+       {
+        "t": 0.9,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       },
+       {
+        "t": 0.933,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       },
+       {
+        "t": 0.967,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       },
+       {
+        "t": 1,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       },
+       {
+        "t": 1.033,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       },
+       {
+        "t": 1.067,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       },
+       {
+        "t": 1.1,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       },
+       {
+        "t": 1.133,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       },
+       {
+        "t": 1.167,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       },
+       {
+        "t": 1.2,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       },
+       {
+        "t": 1.233,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       },
+       {
+        "t": 1.267,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       },
+       {
+        "t": 1.3,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       },
+       {
+        "t": 1.333,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       },
+       {
+        "t": 1.367,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       },
+       {
+        "t": 1.4,
+        "pose": {
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       },
+       {
+        "t": 1.433,
+        "pose": {
+         "upperarm_l": [
+          0.1416,
+          -0.0105,
+          -0.0028,
+          0.9899
+         ],
+         "lowerarm_l": [
+          -0.2838,
+          0,
+          0.0276,
+          0.9585
+         ],
+         "hand_l": [
+          0.1645,
+          -0.1109,
+          0.2608,
+          0.9448
+         ],
+         "upperarm_r": [
+          0.147,
+          0.0339,
+          -0.0397,
+          0.9878
+         ],
+         "lowerarm_r": [
+          -0.266,
+          0,
+          -0.0258,
+          0.9636
+         ],
+         "hand_r": [
+          0.1291,
+          0.1934,
+          0.0315,
+          0.9721
+         ],
+         "index_01_l": [
+          -0.077,
+          0,
+          -0.0185,
+          0.9969
+         ],
+         "index_02_l": [
+          -0.09,
+          -0.002,
+          -0.0218,
+          0.9957
+         ],
+         "index_03_l": [
+          -0.0627,
+          0.0002,
+          -0.0155,
+          0.9979
+         ],
+         "middle_01_l": [
+          -0.0824,
+          0,
+          -0.0124,
+          0.9965
+         ],
+         "middle_02_l": [
+          -0.0959,
+          0.0026,
+          -0.0176,
+          0.9952
+         ],
+         "middle_03_l": [
+          -0.0669,
+          0.0004,
+          -0.0123,
+          0.9977
+         ],
+         "pinky_01_l": [
+          -0.0883,
+          0,
+          -0.0011,
+          0.9961
+         ],
+         "pinky_02_l": [
+          -0.1033,
+          0.0009,
+          -0.0004,
+          0.9946
+         ],
+         "pinky_03_l": [
+          -0.0721,
+          0.0009,
+          -0.0021,
+          0.9974
+         ],
+         "ring_01_l": [
+          -0.0853,
+          0,
+          -0.0096,
+          0.9963
+         ],
+         "ring_02_l": [
+          -0.0991,
+          0.0031,
+          -0.0162,
+          0.9949
+         ],
+         "ring_03_l": [
+          -0.0686,
+          0.0014,
+          -0.0142,
+          0.9975
+         ],
+         "index_01_r": [
+          -0.077,
+          0,
+          0.0185,
+          0.9969
+         ],
+         "index_02_r": [
+          -0.09,
+          0.002,
+          0.0218,
+          0.9957
+         ],
+         "index_03_r": [
+          -0.0627,
+          -0.0002,
+          0.0155,
+          0.9979
+         ],
+         "middle_01_r": [
+          -0.0824,
+          0,
+          0.0124,
+          0.9965
+         ],
+         "middle_02_r": [
+          -0.0959,
+          -0.0026,
+          0.0176,
+          0.9952
+         ],
+         "middle_03_r": [
+          -0.0669,
+          -0.0004,
+          0.0123,
+          0.9977
+         ],
+         "pinky_01_r": [
+          -0.0883,
+          0,
+          0.0011,
+          0.9961
+         ],
+         "pinky_02_r": [
+          -0.1033,
+          -0.0009,
+          0.0004,
+          0.9946
+         ],
+         "pinky_03_r": [
+          -0.0721,
+          -0.0009,
+          0.0021,
+          0.9974
+         ],
+         "ring_01_r": [
+          -0.0853,
+          0,
+          0.0096,
+          0.9963
+         ],
+         "ring_02_r": [
+          -0.0991,
+          -0.0031,
+          0.0161,
+          0.9949
+         ],
+         "ring_03_r": [
+          -0.0686,
+          -0.0014,
+          0.0142,
+          0.9975
+         ]
+        }
+       }
+      ]
+     }
+    }
+   }
+  ],
+  "when": {
+   "lin-desk": [
+    [
+     19.5,
+     99,
+     0,
+     0
+    ]
+   ],
+   "lin-at-wheel": [
+    [
+     0,
+     14
+    ]
+   ]
+  }
+ }
+}

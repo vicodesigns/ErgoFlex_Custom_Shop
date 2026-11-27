@@ -1,0 +1,313 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "film-vicos-2nd-cut-create",
+  "name": "Film chapter: create (23.5 s)",
+  "client": "Vicos 2nd cut",
+  "volume": 0.32,
+  "updated": "2026-11-20T23:29:38.092Z",
+  "shots": [
+    {
+      "id": "create",
+      "room": "creative",
+      "kind": "tilt",
+      "seconds": 23.5,
+      "title": "Angle it to your art.",
+      "detail": "From drafting to digital painting. Everything within reach.",
+      "preset": "artist",
+      "transition": 1.1,
+      "size": "60x30",
+      "layout": "premium",
+      "mode": "morning",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 43.5,
+          "tilt": 0,
+          "x": 0,
+          "z": 0,
+          "yaw": 0
+        },
+        "clips": [
+          {
+            "id": "b5418102-1403-4470-9f42-8efd6dfbddaa",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 1.5,
+            "duration": 1.9,
+            "easing": "linear",
+            "label": "",
+            "target": 7
+          },
+          {
+            "id": "stand-to-draw",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 4.2,
+            "duration": 2.6,
+            "easing": "smooth",
+            "label": "Lift up · 52 in",
+            "target": 52
+          },
+          {
+            "id": "drafting",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 6.8,
+            "duration": 5.6,
+            "easing": "smooth",
+            "label": "Drafting · 40°",
+            "target": 40
+          },
+          {
+            "id": "painting",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 16.9,
+            "duration": 2.6,
+            "easing": "smooth",
+            "label": "Easel · 55°",
+            "target": 55
+          }
+        ]
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "Lin at the wheel, the desk at the back of the studio",
+            "easing": "smooth",
+            "transition": null,
+            "view": {
+              "position": [
+                5.1976918697381,
+                1.9765427015748804,
+                3.314937674815405
+              ],
+              "target": [
+                -1.7591389716239645,
+                1.3838267424331514,
+                -0.03864685704586046
+              ],
+              "fov": 35,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-01",
+            "time": 0.017021,
+            "label": "Lin at the wheel, the desk at the back of the studio copy",
+            "easing": "linear",
+            "transition": null,
+            "view": {
+              "position": [
+                5.1976918697381,
+                1.9765427015748804,
+                3.314937674815405
+              ],
+              "target": [
+                -1.7591389716239645,
+                1.3838267424331514,
+                -0.03864685704586046
+              ],
+              "fov": 35,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-02",
+            "time": 0.12766,
+            "label": "Camera view 10",
+            "easing": "linear",
+            "transition": null,
+            "view": {
+              "position": [
+                3.0362764305331518,
+                2.0890030224846017,
+                3.3125672549467953
+              ],
+              "target": [
+                0.3281408105313094,
+                1.615748862016591,
+                0.5196672886883014
+              ],
+              "fov": 41.85069119131361,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.289362,
+            "label": "Up with it; the arc begins",
+            "easing": "linear",
+            "transition": null,
+            "view": {
+              "position": [
+                2.811840957740497,
+                1.848660683548276,
+                -3.029011547590054
+              ],
+              "target": [
+                -1.307659322841075,
+                1.6794455388710632,
+                0.6557260298919676
+              ],
+              "fov": 44.99960865246304,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-04",
+            "time": 0.52766,
+            "label": "Side three-quarter: the board tilts to drafting copy",
+            "easing": "linear",
+            "transition": null,
+            "view": {
+              "position": [
+                1.3526619616813627,
+                1.969992716362882,
+                -3.3207861175758477
+              ],
+              "target": [
+                -1.3176563159722845,
+                1.5375647513720663,
+                0.3657269016442523
+              ],
+              "fov": 46.99995760416837,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-05",
+            "time": 0.544681,
+            "label": "Side three-quarter: the board tilts to drafting copy",
+            "easing": "linear",
+            "transition": null,
+            "view": {
+              "position": [
+                1.3526619616813627,
+                1.969992716362882,
+                -3.3207861175758477
+              ],
+              "target": [
+                -1.3176563159722845,
+                1.5375647513720663,
+                0.3657269016442523
+              ],
+              "fov": 46.99995760416837,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-06",
+            "time": 0.689362,
+            "label": "Drafting at 40 degrees, the arc goes on",
+            "easing": "linear",
+            "transition": null,
+            "view": {
+              "position": [
+                2,
+                2,
+                -2.55
+              ],
+              "target": [
+                -1.37,
+                1.6,
+                0.31
+              ],
+              "fov": 46,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-07",
+            "time": 0.817021,
+            "label": "Round to the front: the board tilts on to the painting",
+            "easing": "linear",
+            "transition": null,
+            "view": {
+              "position": [
+                3.15,
+                2.05,
+                0.35
+              ],
+              "target": [
+                -1.37,
+                1.6,
+                0.31
+              ],
+              "fov": 42,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-08",
+            "time": 0.829787,
+            "label": "Cut: later, Lin paints at the tilted canvas",
+            "easing": "linear",
+            "transition": null,
+            "view": {
+              "position": [
+                1.0862,
+                2.2932,
+                -0.7845
+              ],
+              "target": [
+                -1.2069,
+                2.1121,
+                0.528
+              ],
+              "fov": 42,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-09",
+            "time": 0.831191,
+            "label": "Camera view 11",
+            "easing": "linear",
+            "transition": {
+              "type": "cut"
+            },
+            "view": {
+              "position": [
+                1.0861742226943059,
+                2.2931183386348906,
+                -0.7846460903877384
+              ],
+              "target": [
+                -1.2069429811649637,
+                2.1120054642236488,
+                0.5279484453886123
+              ],
+              "fov": 42.00028483210711,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-10",
+            "time": 1,
+            "label": "Slow arc around her brush hand",
+            "easing": "smooth",
+            "transition": null,
+            "view": {
+              "position": [
+                0.9957,
+                2.0065,
+                -1.2974
+              ],
+              "target": [
+                -1.3578,
+                1.7802,
+                0.347
+              ],
+              "fov": 43,
+              "aspect": 1.7777777777777777
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

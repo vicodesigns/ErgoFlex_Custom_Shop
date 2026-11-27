@@ -1,0 +1,600 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "film-vicos-2nd-cut-create",
+  "name": "Film chapter: create (23.5 s)",
+  "client": "Vicos 2nd cut",
+  "volume": 0.32,
+  "updated": "2026-11-19T04:39:14.356Z",
+  "shots": [
+    {
+      "id": "create",
+      "room": "creative",
+      "kind": "tilt",
+      "seconds": 23.5,
+      "title": "One Surface. Zero Friction.",
+      "detail": "From digital to drafting to painting. True value in every form.",
+      "preset": "artist",
+      "transition": 1.1,
+      "size": "60x30",
+      "layout": "premium",
+      "mode": "morning",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 43.5,
+          "tilt": 0,
+          "x": 0,
+          "z": 0,
+          "yaw": 0
+        },
+        "clips": [
+          {
+            "id": "b5418102-1403-4470-9f42-8efd6dfbddaa",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 1.5,
+            "duration": 1.9,
+            "easing": "linear",
+            "label": "",
+            "target": 7
+          },
+          {
+            "id": "stand-to-draw",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 4.2,
+            "duration": 2.6,
+            "easing": "smooth",
+            "label": "Lift up · 52 in",
+            "target": 52
+          },
+          {
+            "id": "drafting",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 6.8,
+            "duration": 5.6,
+            "easing": "smooth",
+            "label": "Drafting · 40°",
+            "target": 40
+          },
+          {
+            "id": "painting",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 16.9,
+            "duration": 2.6,
+            "easing": "smooth",
+            "label": "Easel · 55°",
+            "target": 55
+          }
+        ]
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "Lin at the wheel, the desk at the back of the studio",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                6.1,
+                1.85,
+                1.95
+              ],
+              "target": [
+                0,
+                1.25,
+                1.85
+              ],
+              "fov": 40,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-01",
+            "time": 0.1,
+            "label": "Lin at the wheel: slow push",
+            "easing": "linear",
+            "view": {
+              "position": [
+                5.7,
+                1.82,
+                1.9
+              ],
+              "target": [
+                0,
+                1.25,
+                1.75
+              ],
+              "fov": 39,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.178723,
+            "label": "Front three-quarter: the lift to 52 in",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.5,
+                1.95,
+                -0.6
+              ],
+              "target": [
+                -1.271,
+                1.45,
+                0.7351
+              ],
+              "fov": 45,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-04",
+            "time": 0.289362,
+            "label": "Up with it; the arc begins",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.1,
+                2.1,
+                -1.45
+              ],
+              "target": [
+                -1.1334,
+                1.6,
+                0.821
+              ],
+              "fov": 45,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-05",
+            "time": 0.52766,
+            "label": "Side three-quarter: the board tilts to drafting",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.1,
+                2,
+                -3.1
+              ],
+              "target": [
+                -1.37,
+                1.6,
+                0.31
+              ],
+              "fov": 47,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-06",
+            "time": 0.719149,
+            "label": "Drafting at 40 degrees, the arc goes on",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2,
+                2,
+                -2.55
+              ],
+              "target": [
+                -1.37,
+                1.6,
+                0.31
+              ],
+              "fov": 46,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-07",
+            "time": 0.82766,
+            "label": "Round to the front: the board tilts on to the painting",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.15,
+                2.05,
+                0.35
+              ],
+              "target": [
+                -1.37,
+                1.6,
+                0.31
+              ],
+              "fov": 42,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-08",
+            "time": 0.829787,
+            "label": "Cut: later, Lin paints at the tilted canvas",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.0862,
+                2.2932,
+                -0.7845
+              ],
+              "target": [
+                -1.2069,
+                2.1121,
+                0.528
+              ],
+              "fov": 42,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-09",
+            "time": 1,
+            "label": "Slow arc around her brush hand",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                0.9957,
+                2.0065,
+                -1.2974
+              ],
+              "target": [
+                -1.3578,
+                1.7802,
+                0.347
+              ],
+              "fov": 43,
+              "aspect": 1.7777777777777777
+            }
+          }
+        ]
+      },
+      "sceneGlobals": {
+        "ledWallGlow": 0.65,
+        "ledFloorGlow": 0.66
+      },
+      "propEdits": [
+        {
+          "match": "^Artist materials worktable$",
+          "asset": "creative:premium:fixture:artist-worktable",
+          "label": "Artist materials worktable",
+          "position": [
+            0,
+            0,
+            0.365
+          ]
+        },
+        {
+          "match": "^Colour studies · daily activity$",
+          "asset": "creative:premium:life:activity",
+          "label": "Colour studies · daily activity",
+          "position": [
+            0.792,
+            0,
+            1.012
+          ]
+        },
+        {
+          "match": "^Artist painting easel$",
+          "asset": "creative:premium:fixture:artist-easel",
+          "label": "Artist painting easel",
+          "position": [
+            0,
+            0,
+            0.161
+          ]
+        },
+        {
+          "match": "^$",
+          "asset": "creative:premium:placement:0:0:",
+          "label": "Unnamed prop",
+          "position": [
+            -0.279,
+            0,
+            0
+          ]
+        },
+        {
+          "match": "^Prop:long-scissors$",
+          "asset": "creative:premium:room:12:long-scissors",
+          "label": "Prop:long-scissors",
+          "position": [
+            -0.168,
+            0,
+            0.248
+          ],
+          "rotation": [
+            0,
+            121.3,
+            0
+          ]
+        },
+        {
+          "match": "^Prop:ruler-set-square$",
+          "asset": "creative:premium:room:11:ruler-set-square",
+          "label": "Prop:ruler-set-square",
+          "position": [
+            -0.116,
+            0,
+            0.33
+          ],
+          "rotation": [
+            0,
+            -11.5,
+            0
+          ]
+        },
+        {
+          "match": "^Atelier artist · Illustration tablet & stylus · Pale ash & brushed silver$",
+          "asset": "creative:premium:room:10:papers",
+          "label": "Atelier artist · Illustration tablet & stylus · Pale ash & brushed silver",
+          "position": [
+            0,
+            0,
+            0.597
+          ]
+        },
+        {
+          "match": "^Prop:ergoflex-artist-stool$",
+          "label": "Prop:ergoflex-artist-stool",
+          "space": "local",
+          "position": [
+            0.176,
+            0,
+            0.633
+          ]
+        },
+        {
+          "match": "^Prop:atelier-artist-palette-oak$",
+          "label": "Prop:atelier-artist-palette-oak",
+          "space": "local",
+          "position": [
+            3.798,
+            0.645,
+            -0.332
+          ]
+        },
+        {
+          "match": "^Accessory:painter-shelf$",
+          "path": "^Room:creative > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Accessory:painter-shelf$",
+          "label": "Accessory:painter-shelf",
+          "space": "local",
+          "position": [
+            0,
+            -0.127,
+            -0.135
+          ],
+          "rotation": [
+            31.9,
+            0,
+            0
+          ]
+        },
+        {
+          "match": "^Prop:atelier-artist-pen-display-oak$",
+          "label": "Prop:atelier-artist-pen-display-oak",
+          "space": "local",
+          "position": [
+            0.689,
+            0,
+            0
+          ],
+          "hide": true
+        },
+        {
+          "match": "^Prop:painted-mug$",
+          "path": "^Room:creative > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Prop:painted-mug$",
+          "label": "Prop:painted-mug",
+          "space": "local",
+          "position": [
+            0,
+            0,
+            0.179
+          ],
+          "hide": true
+        },
+        {
+          "match": "^Prop:sketchbook$",
+          "path": "^Room:creative > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Prop:sketchbook$",
+          "label": "Prop:sketchbook",
+          "hide": true
+        },
+        {
+          "match": "^Prop:apple-pencil$",
+          "path": "^Room:creative > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Prop:apple-pencil$",
+          "label": "Prop:apple-pencil",
+          "space": "local",
+          "position": [
+            -0.154,
+            0,
+            0
+          ]
+        },
+        {
+          "match": "^Prop:ergoflex-drawing-tablet$",
+          "path": "^Room:creative > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Prop:ergoflex-drawing-tablet$",
+          "label": "Prop:ergoflex-drawing-tablet",
+          "space": "local",
+          "position": [
+            1.111,
+            0,
+            0.275
+          ],
+          "rotation": [
+            0,
+            -26.7,
+            0
+          ]
+        },
+        {
+          "match": "^Colour palette$",
+          "path": "^Room:creative > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Groove tabletop · daily materials > Colour palette$",
+          "label": "Colour palette",
+          "space": "local",
+          "position": [
+            -1.547,
+            0,
+            0
+          ],
+          "rotation": [
+            0,
+            36.2,
+            0
+          ]
+        },
+        {
+          "match": "^Prop:ergoflex-plant-2$",
+          "near": [
+            -2.3535,
+            3.5454,
+            0.3
+          ],
+          "label": "Prop:ergoflex-plant-2 (behind the bust)",
+          "hide": true
+        },
+        {
+          "match": "^Original color study 2$",
+          "asset": "creative:premium:fixture:artist-study-1",
+          "label": "Original color study 2",
+          "position": [
+            0,
+            -0.655,
+            2.047
+          ]
+        },
+        {
+          "match": "^Original color study 1$",
+          "asset": "creative:premium:fixture:artist-study-0",
+          "label": "Original color study 1",
+          "position": [
+            0,
+            -0.635,
+            0.109
+          ],
+          "hide": true
+        },
+        {
+          "match": "^Original atelier painting$",
+          "asset": "creative:premium:placement:35:0:Original atelier painting",
+          "label": "Original atelier painting",
+          "position": [
+            -1.069,
+            0,
+            0
+          ]
+        },
+        {
+          "match": "^Original color study 3$",
+          "asset": "creative:premium:fixture:artist-study-2",
+          "label": "Original color study 3",
+          "position": [
+            0,
+            -0.697,
+            -1.585
+          ]
+        }
+      ],
+      "filmTitles": [
+        {
+          "id": "create-0",
+          "rel_in": 3.6,
+          "rel_out": 9.2,
+          "eyebrow": "PATENTED PRECISION",
+          "title": "One Surface. Zero Friction.",
+          "detail": "From digital to drafting to painting. True value in every form.",
+          "timed": true,
+          "typography": {
+            "eyebrow": {
+              "size": 35,
+              "spacing": 3.9,
+              "dy": 21
+            },
+            "title": {
+              "dy": -5
+            },
+            "detail": {
+              "dy": -27
+            }
+          },
+          "position": {
+            "x": 140.73,
+            "y": 856.75
+          },
+          "shadow": {
+            "paths": [
+              {
+                "line": "eyebrow",
+                "points": [
+                  {
+                    "x": -4.37,
+                    "y": -110.7
+                  },
+                  {
+                    "x": 280.92,
+                    "y": -111.38
+                  },
+                  {
+                    "x": 282.34,
+                    "y": -88.6
+                  },
+                  {
+                    "x": -1.15,
+                    "y": -87.64
+                  }
+                ]
+              },
+              {
+                "line": "title",
+                "points": [
+                  {
+                    "x": -6.2,
+                    "y": -71.7
+                  },
+                  {
+                    "x": 647.11,
+                    "y": -77.2
+                  },
+                  {
+                    "x": 650.93,
+                    "y": -23.42
+                  },
+                  {
+                    "x": -5.38,
+                    "y": -18.16
+                  }
+                ]
+              },
+              {
+                "line": "detail",
+                "points": [
+                  {
+                    "x": -5.67,
+                    "y": -5.26
+                  },
+                  {
+                    "x": 688.93,
+                    "y": -8.25
+                  },
+                  {
+                    "x": 695.96,
+                    "y": 31.65
+                  },
+                  {
+                    "x": -6.27,
+                    "y": 28.09
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

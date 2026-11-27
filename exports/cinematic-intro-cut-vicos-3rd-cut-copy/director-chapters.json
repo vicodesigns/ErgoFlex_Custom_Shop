@@ -1,0 +1,124 @@
+{
+ "chapters": [
+  {
+   "n": 1,
+   "id": "awaken",
+   "title": "Level up your every day.",
+   "seconds": 44.85,
+   "page": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-ch01.html",
+   "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-film/awaken.json",
+   "version": "0053568e82d3",
+   "updated": "2026-11-18T06:22:25Z"
+  },
+  {
+   "n": 2,
+   "id": "rise",
+   "title": "Your height. Your rhythm.",
+   "seconds": 18.0,
+   "page": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-ch02-rise.html",
+   "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-film/rise.json",
+   "version": "d96cde71a3a8",
+   "updated": "2026-11-18T06:22:25Z"
+  },
+  {
+   "n": 3,
+   "id": "create",
+   "title": "Angle it to your art.",
+   "seconds": 23.5,
+   "page": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-ch03-create.html",
+   "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-film/create.json",
+   "version": "93060980475a",
+   "updated": "2026-11-18T06:22:25Z"
+  },
+  {
+   "n": 4,
+   "id": "commons",
+   "title": "A place for everyone.",
+   "seconds": 16.0,
+   "page": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-ch04-commons.html",
+   "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-film/commons.json",
+   "version": "c4135879bac2",
+   "updated": "2026-11-18T06:22:25Z"
+  },
+  {
+   "n": 5,
+   "id": "coast",
+   "title": "Ideas become stories.",
+   "seconds": 14.5,
+   "page": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-ch05-coast.html",
+   "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-film/coast.json",
+   "version": "fdba2f2a4ff4",
+   "updated": "2026-11-18T06:22:25Z"
+  },
+  {
+   "n": 6,
+   "id": "oilers",
+   "title": "Space to discover.",
+   "seconds": 15.0,
+   "page": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-ch06-oilers.html",
+   "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-film/oilers.json",
+   "version": "cc4d4e0f8368",
+   "updated": "2026-11-18T06:22:25Z"
+  },
+  {
+   "n": 7,
+   "id": "wellness",
+   "title": "Build movement into your day.",
+   "seconds": 16.0,
+   "page": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-ch07-wellness.html",
+   "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-film/wellness.json",
+   "version": "b2a403df2b70",
+   "updated": "2026-11-18T06:22:25Z"
+  },
+  {
+   "n": 8,
+   "id": "awareness",
+   "title": "It sees what\u2019s in its way.",
+   "seconds": 12.0,
+   "page": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-ch08-awareness.html",
+   "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-film/awareness.json",
+   "version": "9999389c859d",
+   "updated": "2026-11-18T06:22:25Z"
+  },
+  {
+   "n": 9,
+   "id": "music",
+   "title": "Feel the room come alive.",
+   "seconds": 12.5,
+   "page": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-ch09-music.html",
+   "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-film/music.json",
+   "version": "06a1a3e2e062",
+   "updated": "2026-11-18T06:22:25Z"
+  },
+  {
+   "n": 10,
+   "id": "media",
+   "title": "Movie night, upgraded.",
+   "seconds": 17.0,
+   "page": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-ch10-media.html",
+   "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-film/media.json",
+   "version": "9d484a5ba559",
+   "updated": "2026-11-18T06:22:25Z"
+  },
+  {
+   "n": 11,
+   "id": "storage",
+   "title": "Make room for what\u2019s next.",
+   "seconds": 24.978,
+   "page": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-ch11-storage.html",
+   "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-film/storage.json",
+   "version": "b221bfae714e",
+   "updated": "2026-11-18T06:22:25Z"
+  },
+  {
+   "n": 12,
+   "id": "hero",
+   "title": "One desk. Every part of your day.",
+   "seconds": 48.0,
+   "page": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-ch12-hero.html",
+   "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-film/hero.json",
+   "version": "21eb8d7f0d93",
+   "updated": "2026-11-18T06:22:25Z"
+  }
+ ]
+}

@@ -1,0 +1,322 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "film-vicos-2nd-cut-coast",
+  "name": "Film chapter: coast (14.5 s)",
+  "client": "Vicos 2nd cut",
+  "volume": 0.32,
+  "updated": "2026-11-19T19:44:19.226Z",
+  "shots": [
+    {
+      "id": "coast",
+      "room": "occmedialab",
+      "kind": "room",
+      "seconds": 14.5,
+      "title": "Ideas become stories.",
+      "detail": "Your own edit suite inside a shared media lab.",
+      "preset": "occ",
+      "transition": 1.1,
+      "size": "60x30",
+      "layout": "house",
+      "mode": "morning",
+      "look": "refresh",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 28,
+          "tilt": 0,
+          "x": 0,
+          "z": 0,
+          "yaw": 0
+        },
+        "clips": [
+          {
+            "id": "db2144e8-100f-4932-83c9-07f6e054a086",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 3.6,
+            "duration": 4,
+            "easing": "smooth",
+            "label": "Her suite rises to her standing height",
+            "target": 39
+          }
+        ]
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "Ava edits seated at the free suite, the bays beyond",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                6.174726864334941,
+                3.398411912381029,
+                -9.319535274472962
+              ],
+              "target": [
+                1.8728630810711728,
+                0.7862067260978843,
+                -2.0563076661656834
+              ],
+              "fov": 44,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-01",
+            "time": 0.248276,
+            "label": "She gets up as the suite sets off",
+            "easing": "linear",
+            "view": {
+              "position": [
+                -0.19807268700411185,
+                1.9725054741319887,
+                1.581941240828797
+              ],
+              "target": [
+                -2.173691957444401,
+                1.1204558661732436,
+                5.08956293900566
+              ],
+              "fov": 44.00031442073761,
+              "aspect": 1.7761732851985559
+            }
+          },
+          {
+            "id": "plan-02",
+            "time": 0.524138,
+            "label": "The suite arrives at her standing height",
+            "easing": "linear",
+            "view": {
+              "position": [
+                0.05,
+                2.3,
+                2.6
+              ],
+              "target": [
+                -1.9135,
+                1.6,
+                5.4995
+              ],
+              "fov": 43,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.662069,
+            "label": "Round behind her, wide of her shoulder",
+            "easing": "linear",
+            "view": {
+              "position": [
+                0.61,
+                2.35,
+                4.56
+              ],
+              "target": [
+                -2.6,
+                1.5,
+                4.9
+              ],
+              "fov": 40,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-04",
+            "time": 0.841379,
+            "label": "She works standing; the Orange Coast College mark on the des",
+            "easing": "linear",
+            "view": {
+              "position": [
+                -0.21,
+                2.15,
+                6.76
+              ],
+              "target": [
+                -2.9,
+                1.45,
+                4.72
+              ],
+              "fov": 42,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-05",
+            "time": 1,
+            "label": "A slow push into the dissolve (no cut after 7.6 s)",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                -0.5,
+                2.08,
+                6.77
+              ],
+              "target": [
+                -2.9,
+                1.45,
+                4.72
+              ],
+              "fov": 42,
+              "aspect": 1.7777777777777777
+            }
+          }
+        ]
+      },
+      "peopleEdits": {
+        "v": 2,
+        "except": [
+          "people-maya-sit-type",
+          "people-maya-sit-type-30",
+          "people-maya-stand-type",
+          "people-noah-sit-laptop",
+          "people-ava-stand-low"
+        ],
+        "cast": [
+          {
+            "key": "bay-1",
+            "id": "people-maya-sit-type",
+            "station": "film-edit-01",
+            "desk": "sit"
+          },
+          {
+            "key": "ava-sits",
+            "id": "people-ava-sit-type",
+            "desk": "sit",
+            "colors": {
+              "top": "#2f5f8f",
+              "bottom": "#d8d2c4"
+            }
+          },
+          {
+            "key": "ava-stands",
+            "id": "people-ava-stand-mid",
+            "desk": "stand",
+            "colors": {
+              "top": "#2f5f8f",
+              "bottom": "#d8d2c4"
+            }
+          },
+          {
+            "key": "room-andre-f7aaju",
+            "id": "people-andre-sit-type",
+            "desk": "sit",
+            "station": "sound-mix-02",
+            "poseSource": {
+              "key": "people-andre-sit-type",
+              "id": "people-andre-sit-type",
+              "station": "sound-mix-02"
+            }
+          },
+          {
+            "key": "room-lin-1svoymj",
+            "id": "people-lin-sit-type",
+            "desk": "sit",
+            "station": "digital-art-03",
+            "poseSource": {
+              "key": "people-lin-sit-type",
+              "id": "people-lin-sit-type",
+              "station": "digital-art-03"
+            }
+          },
+          {
+            "key": "room-omar-curg1x",
+            "id": "people-omar-wheel-type-28",
+            "desk": "wheel",
+            "station": "accessible-edit-04",
+            "poseSource": {
+              "key": "people-omar-wheel-type-28",
+              "id": "people-omar-wheel-type-28",
+              "station": "accessible-edit-04"
+            },
+            "postures": {
+              "people-omar-wheel-type-28": {
+                "poseKeys": [
+                  {
+                    "t": 0,
+                    "pose": {
+                      "upperarm_r": [
+                        -0.0295,
+                        0.0113,
+                        -0.0181,
+                        0.9993
+                      ],
+                      "lowerarm_r": [
+                        0.2323,
+                        0,
+                        -0.0226,
+                        0.9724
+                      ],
+                      "hand_r": [
+                        0.1443,
+                        0.0063,
+                        0.1475,
+                        0.9785
+                      ],
+                      "upperarm_l": [
+                        -0.0274,
+                        -0.0126,
+                        0.0206,
+                        0.9993
+                      ],
+                      "lowerarm_l": [
+                        0.2493,
+                        0,
+                        0.0243,
+                        0.9681
+                      ],
+                      "hand_l": [
+                        0.158,
+                        -0.0078,
+                        -0.1613,
+                        0.9741
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "key": "room-sofia-16m2cd5",
+            "id": "people-sofia-sit-laptop",
+            "at": [
+              400,
+              7407
+            ],
+            "turn": 180,
+            "y": -33,
+            "colors": {
+              "top": "#6b3f5e",
+              "bottom": "#2b2e36"
+            },
+            "poseSource": {
+              "key": "people-sofia-sit-laptop",
+              "id": "people-sofia-sit-laptop"
+            }
+          },
+          {
+            "key": "room-zoe-eelp3h",
+            "id": "people-zoe-walk",
+            "at": [
+              1900,
+              4300
+            ],
+            "turn": -90,
+            "colors": {
+              "top": "#5a6e3a",
+              "bottom": "#2b2d33"
+            },
+            "poseSource": {
+              "key": "people-zoe-walk",
+              "id": "people-zoe-walk"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

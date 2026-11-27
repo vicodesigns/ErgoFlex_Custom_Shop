@@ -1,0 +1,235 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "film-vicos-2nd-cut-wellness",
+  "name": "Film chapter: wellness (16 s)",
+  "client": "Vicos 2nd cut",
+  "volume": 0.32,
+  "updated": "2026-11-20T03:16:28.699Z",
+  "shots": [
+    {
+      "id": "wellness",
+      "room": "gym",
+      "kind": "wellness",
+      "seconds": 16,
+      "title": "Build movement into your day.",
+      "detail": "Pause. Stretch. Breathe. Reset.",
+      "preset": "office",
+      "transition": 1.1,
+      "size": "60x30",
+      "layout": "house",
+      "mode": "morning",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 28,
+          "tilt": 0,
+          "x": 0,
+          "z": 0,
+          "yaw": 0
+        },
+        "clips": [
+          {
+            "id": "stand-break",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 6,
+            "duration": 5,
+            "easing": "smooth",
+            "label": "Stand and reset",
+            "target": 41
+          }
+        ]
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "Wide from the mirror wall: window, bike, mat",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                6.8040280724166315,
+                2.2925299648741113,
+                -2.9045580244993174
+              ],
+              "target": [
+                -0.9805886392253744,
+                0.8679234887488175,
+                0.7162474808614231
+              ],
+              "fov": 47,
+              "aspect": 1.7761732851985559
+            }
+          },
+          {
+            "id": "plan-01",
+            "time": 0.153125,
+            "label": "Wide from the mirror wall: slow push",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.95,
+                1.85,
+                -1.9
+              ],
+              "target": [
+                -0.9,
+                0.79,
+                0.78
+              ],
+              "fov": 47,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-02",
+            "time": 0.375,
+            "label": "The desk begins to rise, Maya gets up",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2,
+                1.5,
+                -1.95
+              ],
+              "target": [
+                -0.95,
+                1.6,
+                0.7
+              ],
+              "fov": 40,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.6875,
+            "label": "The column and desktop climb beside her",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.85,
+                1.55,
+                -1.8
+              ],
+              "target": [
+                -0.95,
+                1.62,
+                0.62
+              ],
+              "fov": 41,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-04",
+            "time": 1,
+            "label": "Working standing",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                1.65,
+                1.55,
+                -1.6
+              ],
+              "target": [
+                -0.95,
+                1.55,
+                0.6
+              ],
+              "fov": 40,
+              "aspect": 1.7777777777777777
+            }
+          }
+        ]
+      },
+      "peopleEdits": {
+        "v": 2,
+        "only": [
+          "people-maya-sit-type",
+          "kai-bike"
+        ],
+        "cast": [
+          {
+            "key": "maya-stand",
+            "id": "people-maya-stand-type-41",
+            "desk": "stand",
+            "reach": 850,
+            "colors": {
+              "top": "#2d7d8a",
+              "bottom": "#1f2228",
+              "shoes": "#ececec"
+            },
+            "poseBindings": [
+              {
+                "key": "people-maya-sit-type",
+                "id": "people-maya-sit-type"
+              }
+            ]
+          },
+          {
+            "key": "maya-break",
+            "id": "people-maya-stretch",
+            "fromDesk": true,
+            "at": [
+              -421,
+              85
+            ],
+            "turn": 180,
+            "colors": {
+              "top": "#2d7d8a",
+              "bottom": "#1f2228",
+              "shoes": "#ececec"
+            }
+          },
+          {
+            "key": "room-priya-a2zim7",
+            "id": "people-priya-stretch",
+            "at": [
+              110,
+              3012
+            ],
+            "turn": 180
+          },
+          {
+            "key": "room-kai-liimwk",
+            "id": "people-kai-gym-cycle",
+            "at": [
+              -1530,
+              1290
+            ],
+            "turn": 180,
+            "colors": {
+              "top": "#2f2f35",
+              "bottom": "#3c4f6b"
+            },
+            "poseSource": {
+              "key": "kai-bike",
+              "id": "people-kai-gym-cycle"
+            }
+          }
+        ],
+        "when": {
+          "maya-break": [
+            [
+              9.7,
+              12.3,
+              0.3,
+              0.35
+            ]
+          ]
+        },
+        "chair": {
+          "back": 100,
+          "side": -700,
+          "turn": 60
+        },
+        "except": [
+          "people-priya-stretch"
+        ]
+      }
+    }
+  ]
+}
