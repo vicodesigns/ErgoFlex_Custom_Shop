@@ -626,6 +626,9 @@ function installDeskFinish(spec) {
 // The featured desk's build (Director Build tab, shot.featuredBuild = {woodFinish, baseFinish, trimColor, accessories:[{id, slot}]}):
 // finishes through the configurator's swatches (installDeskFinish), accessories toggled in / out like accessories.add / remove
 // until the desk has exactly this set, each moved onto its slot (desktop / shelf / lower-shelf / base-shelf). Restored by clear().
+// A restore() is synchronous but the accessories it puts back load on their own time: the next install waits for them
+// (a blank desk, accessories [], was followed by a desk whose screens sit on a monitor that was not there yet: 'no screen matches main-landscape').
+let restoring = null;
 async function installFeaturedBuild(build) {
   const DB = await import('../../experience/desk-build.mjs'), objects = api.sceneDesks?.objects, rec = () => api.sceneDesks?.active;
   const frames = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -652,7 +655,10 @@ async function installFeaturedBuild(build) {
     restore() {
       const r = rec(), now = api.currentConfig.accessories;
       for (const [id, o] of Object.entries(was.roles)) { const item = r?.objects?.get('accessory-' + id); if (!item || !objects) continue; item.saved.role = o.role; item.saved.transform = o.transform; objects.register(r, item.id, item.obj, item.saved, item.baseScale); }
-      if (build.accessories) { for (const id of [...now]) if (!was.accessories.includes(id)) flip(id); for (const id of was.accessories) if (!api.currentConfig.accessories.includes(id)) flip(id); }
+      if (build.accessories) {
+        for (const id of [...now]) if (!was.accessories.includes(id)) flip(id); for (const id of was.accessories) if (!api.currentConfig.accessories.includes(id)) flip(id);
+        restoring = (async () => { try { await api.workspaceAccessories?.ready; await objects?.ready; objects?.syncAccessories(); await frames(); await objects?.ready; } catch (e) { console.warn('[film-fx] featuredBuild restore', e); } })();
+      }
       finish?.restore();
     },
   };
@@ -1022,6 +1028,7 @@ function installKeepDeskItems() {
 export async function install(shot) {
   clear();
   unhookPreset();
+  if (restoring) { const r = restoring; restoring = null; await r; }
   const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.keepDeskItems || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length || shot.sceneDeskPoses?.length || shot.sceneBranding || shot.sceneDeskEdits?.length || shot.sceneTray?.length || shot.featuredBuild || shot.statusLight === false;
   if (!wants) return null;
   active = { shot, list: [], screens: [], led: null, clocks: [], tod: null, desk: null, edits: null, lights: null };
@@ -1161,6 +1168,7 @@ export async function update(shot, { onSlow } = {}) {
   // featuredBuild (the Director's Build tab on the featured desk): swatches and accessories back, then applied again.
   if (changed('featuredBuild')) {
     active.featured?.restore(); active.featured = null;
+    if (restoring) { const r = restoring; restoring = null; await r; }
     if (shot.featuredBuild) active.featured = await installFeaturedBuild(shot.featuredBuild);
   }
   if (globals) installGlobals(shot);

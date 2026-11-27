@@ -13,12 +13,13 @@ assert.match(fx,/shot\.accessories \|\| shot\.keepDeskItems \|\|/,'a shot with o
 // module versions bumped, so an open page does not keep the old stow
 assert.match(read('scene-desk-objects.mjs'),/desk-auto-stow\.mjs\?v=keep-desk-items-20261127/);
 assert.match(read('experience/stage.mjs'),/rider-handoff\.mjs\?v=keep-desk-items-20261127/);
-assert.match(read('experience/player.mjs'),/film-fx\.mjs\?v=20261127-keep-desk-items/);
-assert.match(read('experience/film-render.mjs'),/film-fx\.mjs\?v=20261127-keep-desk-items/);
+assert.match(read('experience/player.mjs'),/film-fx\.mjs\?v=20261127-featured-restore/);
+assert.match(read('experience/film-render.mjs'),/film-fx\.mjs\?v=20261127-featured-restore/);
 // the cut: the Office sub-shot only
 const subs=JSON.parse(read('exports/cinematic-intro-cut-vicos-3rd-cut/shots/13-subshots.json').replace(/^﻿/,'')).shots;
 assert.deepEqual(subs.filter(s=>s.keepDeskItems).map(s=>s.subshot),['D'],'only the Office sub-shot carries the flag');
 // the Props lane draws no put-away stretch for a desk that has it
 assert.match(read('experience/scene-prop-editor.mjs'),/keep:!!v\.setup\?\.keepDeskItems/);
 assert.match(read('experience/scene-prop-editor.mjs'),/if\(!tiltAt\|\|span\.keep\|\|/);
+assert.match(read('tools/experience/film-fx.mjs'),/restoring = \(async[\s\S]*export async function install\(shot\) \{\n  clear\(\);\n  unhookPreset\(\);\n  if \(restoring\)/);
 console.log('keep-desk-items-test ok');
