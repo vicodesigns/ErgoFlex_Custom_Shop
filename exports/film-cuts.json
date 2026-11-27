@@ -9,7 +9,7 @@
    "dir": "/exports/cinematic-intro-20261104-hq14",
    "chapters": "/exports/cinematic-intro-20261104-hq14/director-chapters.json",
    "seconds": 261.33,
-   "updated": "2026-11-13T07:16:25Z",
+   "updated": "2026-11-26T06:40:24Z",
    "created": ""
   },
   {
@@ -20,7 +20,7 @@
    "dir": "/exports/cinematic-intro-20261110-people",
    "chapters": "/exports/cinematic-intro-20261110-people/director-chapters.json",
    "seconds": 261.33,
-   "updated": "2026-11-14T07:39:11Z",
+   "updated": "2026-11-26T06:40:24Z",
    "created": "2026-11-10T23:16:03Z"
   },
   {
@@ -31,7 +31,7 @@
    "dir": "/exports/cinematic-intro-20261110-alt",
    "chapters": "/exports/cinematic-intro-20261110-alt/director-chapters.json",
    "seconds": 261.33,
-   "updated": "2026-11-13T22:48:13Z",
+   "updated": "2026-11-26T06:40:24Z",
    "created": "2026-11-10T23:16:07Z"
   },
   {
@@ -42,30 +42,8 @@
    "dir": "/exports/cinematic-intro-cut-cine",
    "chapters": "/exports/cinematic-intro-cut-cine/director-chapters.json",
    "seconds": 262.33,
-   "updated": "2026-11-17T21:05:57Z",
+   "updated": "2026-11-26T06:40:24Z",
    "created": "2026-11-13T16:10:48Z"
-  },
-  {
-   "id": "vicos-2nd-cut",
-   "name": "Vicos 2nd cut",
-   "note": "A copy of Cinematographer's cut, made November 15, 2026.",
-   "from": "exports/cinematic-intro-cut-cine",
-   "dir": "/exports/cinematic-intro-cut-vicos-2nd-cut",
-   "chapters": "/exports/cinematic-intro-cut-vicos-2nd-cut/director-chapters.json",
-   "seconds": 261.83,
-   "updated": "2026-11-21T00:39:36Z",
-   "created": "2026-11-15T23:54:15Z"
-  },
-  {
-   "id": "vicos-3rd-cut-copy",
-   "name": "Vicos 3rd cut copy",
-   "note": "A copy of Vicos 2nd cut, made November 17, 2026.",
-   "from": "exports/cinematic-intro-cut-vicos-2nd-cut",
-   "dir": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy",
-   "chapters": "/exports/cinematic-intro-cut-vicos-3rd-cut-copy/director-chapters.json",
-   "seconds": 262.33,
-   "updated": "2026-11-18T05:46:24Z",
-   "created": "2026-11-18T06:22:23Z"
   },
   {
    "id": "vicos-3rd-cut",
@@ -74,8 +52,8 @@
    "from": "exports/cinematic-intro-cut-vicos-2nd-cut",
    "dir": "/exports/cinematic-intro-cut-vicos-3rd-cut",
    "chapters": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-chapters.json",
-   "seconds": 258.05,
-   "updated": "2026-11-21T03:50:44Z",
+   "seconds": 266.72,
+   "updated": "2026-11-26T01:20:43Z",
    "created": "2026-11-20T17:43:58Z"
   },
   {
@@ -85,9 +63,31 @@
    "from": "exports/cinematic-intro-cut-vicos-3rd-cut",
    "dir": "/exports/cinematic-intro-cut-vicos-3rd-cut-standing",
    "chapters": "/exports/cinematic-intro-cut-vicos-3rd-cut-standing/director-chapters.json",
-   "seconds": 270.83,
-   "updated": "2026-11-21T01:35:37Z",
+   "seconds": 275.83,
+   "updated": "2026-11-26T06:40:24Z",
    "created": "2026-11-20T19:01:52Z"
+  },
+  {
+   "id": "v-polish",
+   "name": "V polish cut",
+   "note": "Vicos 3rd cut (live state of Nov 25, 2026, 22:45 PST) with a finishing pass only: same chapters, order, lengths and titles.",
+   "from": "exports/cinematic-intro-cut-vicos-3rd-cut",
+   "dir": "/exports/cinematic-intro-cut-v-polish",
+   "chapters": "/exports/cinematic-intro-cut-v-polish/director-chapters.json",
+   "seconds": 266.72,
+   "updated": "2026-11-26T01:20:43Z",
+   "created": "2026-11-26T06:40:42Z"
+  },
+  {
+   "id": "v-directors",
+   "name": "V directors cut",
+   "note": "A freer re-cut of Vicos 3rd cut (live state of Nov 25, 2026): structure, titles, pacing, light and sound reworked.",
+   "from": "exports/cinematic-intro-cut-vicos-3rd-cut",
+   "dir": "/exports/cinematic-intro-cut-v-directors",
+   "chapters": "/exports/cinematic-intro-cut-v-directors/director-chapters.json",
+   "seconds": 238.42,
+   "updated": "2026-11-26T06:58:42Z",
+   "created": "2026-11-26T06:40:44Z"
   }
  ]
 }

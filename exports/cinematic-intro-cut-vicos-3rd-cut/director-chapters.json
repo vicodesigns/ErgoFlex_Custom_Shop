@@ -4,11 +4,11 @@
    "n": 1,
    "id": "awaken",
    "title": "Level up your every day.",
-   "seconds": 44.85,
+   "seconds": 48.3,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-ch01.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-film/awaken.json",
-   "version": "07decf58f36e",
-   "updated": "2026-11-20T17:43:59Z"
+   "version": "90e87c3b0c1f",
+   "updated": "2026-11-25T21:00:25Z"
   },
   {
    "n": 2,
@@ -34,11 +34,11 @@
    "n": 4,
    "id": "commons",
    "title": "A place for everyone.",
-   "seconds": 16.0,
+   "seconds": 20.3,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-ch04-commons.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-film/commons.json",
-   "version": "c9d67490c448",
-   "updated": "2026-11-21T01:35:28Z"
+   "version": "68d9099cb693",
+   "updated": "2026-11-25T20:20:08Z"
   },
   {
    "n": 5,
@@ -104,21 +104,21 @@
    "n": 11,
    "id": "storage",
    "title": "Make room for what\u2019s next.",
-   "seconds": 24.978,
+   "seconds": 26.67,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-ch11-storage.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-film/storage.json",
-   "version": "e6719fe5b51e",
-   "updated": "2026-11-20T17:43:59Z"
+   "version": "d797c980788d",
+   "updated": "2026-11-25T00:19:59Z"
   },
   {
    "n": 12,
    "id": "hero",
    "title": "One desk. Every part of your day.",
-   "seconds": 25.5,
+   "seconds": 25.95,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-ch12-hero.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-film/hero.json",
-   "version": "c4992882a3f1",
-   "updated": "2026-11-22T01:06:38Z"
+   "version": "b4cad73ffc65",
+   "updated": "2026-11-25T05:41:11Z"
   }
  ]
 }

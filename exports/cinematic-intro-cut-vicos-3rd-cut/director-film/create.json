@@ -7895,28 +7895,6 @@
    "director": true
   },
   {
-   "match": "^Prop:ergoflex-drawing-tablet$",
-   "path": "^Room:creative > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Prop:ergoflex-drawing-tablet$",
-   "label": "Prop:ergoflex-drawing-tablet",
-   "space": "local",
-   "position": [
-    1.111,
-    0,
-    0.275
-   ],
-   "rotation": [
-    0,
-    -26.7,
-    0
-   ],
-   "show": {
-    "from": 0,
-    "to": 7.6,
-    "fadeOut": 0.5
-   },
-   "director": true
-  },
-  {
    "match": "^Colour palette$",
    "path": "^Room:creative > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Groove tabletop \u00b7 daily materials > Colour palette$",
    "label": "Colour palette",
@@ -8030,86 +8008,26 @@
   },
   {
    "add": {
-    "asset": "painters-tape"
+    "asset": "metal-ruler"
    },
-   "id": "crdrRtap",
-   "match": "^Added prop:painters-tape#crdrRtap$",
-   "label": "Drafting masking tape (right shelf)",
+   "id": "crdrRrul",
+   "match": "^Added prop:metal-ruler#crdrRrul$",
+   "label": "Architect steel scale ruler (right cubby)",
    "parent": "desk",
    "position": [
-    1.326,
-    -0.167,
-    0.442
+    1.399,
+    -0.065,
+    0.66
    ],
    "rotation": [
-    0,
-    18,
-    0
+    76,
+    8,
+    -5
    ],
    "scale": [
-    0.82,
-    0.82,
-    0.82
-   ],
-   "show": {
-    "from": 7.4,
-    "to": 17.3,
-    "fadeOut": 0.4
-   },
-   "director": true
-  },
-  {
-   "add": {
-    "asset": "pencil-case"
-   },
-   "id": "crdrRcas",
-   "match": "^Added prop:pencil-case#crdrRcas$",
-   "label": "Drafting pencil case (right shelf)",
-   "parent": "desk",
-   "position": [
-    1.325,
-    -0.0551,
-    0.305
-   ],
-   "rotation": [
-    0,
-    86,
-    0
-   ],
-   "scale": [
-    0.78,
-    0.78,
-    0.78
-   ],
-   "show": {
-    "from": 7.4,
-    "to": 17.3,
-    "fadeOut": 0.4
-   },
-   "director": true
-  },
-  {
-   "add": {
-    "asset": "caliper"
-   },
-   "id": "crdrRcal",
-   "match": "^Added prop:caliper#crdrRcal$",
-   "label": "Drafting caliper (right cubby)",
-   "parent": "desk",
-   "position": [
-    1.326,
-    -0.16,
-    0.655
-   ],
-   "rotation": [
-    72,
-    12,
-    0
-   ],
-   "scale": [
-    0.95,
-    0.95,
-    0.95
+    0.6625,
+    0.85,
+    0.4716
    ],
    "show": {
     "from": 7.4,
@@ -8127,9 +8045,9 @@
    "label": "Technical drafting pen (right cubby)",
    "parent": "desk",
    "position": [
-    1.31,
-    -0.155,
-    0.695
+    1.33,
+    -0.039,
+    0.676
    ],
    "rotation": [
     78,
@@ -8150,301 +8068,31 @@
   },
   {
    "add": {
-    "asset": "apple-pencil"
+    "asset": "painters-tape"
    },
-   "id": "crdrRpen2",
-   "match": "^Added prop:apple-pencil#crdrRpen2$",
-   "label": "Drafting stylus (right cubby)",
+   "id": "crdrRtap",
+   "match": "^Added prop:painters-tape#crdrRtap$",
+   "label": "Drafting masking tape (right shelf)",
    "parent": "desk",
    "position": [
-    1.35,
-    -0.155,
-    0.625
-   ],
-   "rotation": [
-    80,
-    15,
-    -6
-   ],
-   "scale": [
-    1,
-    1,
-    1
-   ],
-   "show": {
-    "from": 7.4,
-    "to": 17.3,
-    "fadeOut": 0.4
-   },
-   "director": true
-  },
-  {
-   "add": {
-    "asset": "metal-ruler"
-   },
-   "id": "crdrRrul",
-   "match": "^Added prop:metal-ruler#crdrRrul$",
-   "label": "Architect steel scale ruler (right cubby)",
-   "parent": "desk",
-   "position": [
-    1.355,
-    -0.158,
-    0.675
-   ],
-   "rotation": [
-    76,
-    8,
-    -5
-   ],
-   "scale": [
-    0.85,
-    0.85,
-    0.85
-   ],
-   "show": {
-    "from": 7.4,
-    "to": 17.3,
-    "fadeOut": 0.4
-   },
-   "director": true
-  },
-  {
-   "add": {
-    "asset": "ergoflex-side-shelf-large-cubby"
-   },
-   "id": "crdraftL",
-   "match": "^Added prop:ergoflex-side-shelf-large-cubby#crdraftL$",
-   "label": "Side shelf \u00b7 large, cubby and cups (left wing)",
-   "parent": "desk",
-   "position": [
-    -1.133,
-    -0.183,
-    0.485
+    1.326,
+    -0.135,
+    0.64
    ],
    "rotation": [
     0,
-    90,
+    18,
     0
    ],
    "scale": [
-    1,
-    1,
-    1
+    0.4689,
+    0.5106,
+    0.2819
    ],
    "show": {
     "from": 7.4,
     "to": 17.3,
     "fadeOut": 0.4
-   },
-   "director": true
-  },
-  {
-   "add": {
-    "asset": "tea-cup"
-   },
-   "id": "crdrLcup",
-   "match": "^Added prop:tea-cup#crdrLcup$",
-   "label": "Studio ceramic cup (left drafting shelf)",
-   "parent": "desk",
-   "position": [
-    -1.326,
-    -0.167,
-    0.528
-   ],
-   "rotation": [
-    0,
-    -35,
-    0
-   ],
-   "scale": [
-    1.18,
-    1.18,
-    1.18
-   ],
-   "show": {
-    "from": 7.4,
-    "to": 17.3,
-    "fadeOut": 0.4
-   },
-   "director": true
-  },
-  {
-   "add": {
-    "asset": "ruler-set-square"
-   },
-   "id": "crdrLsq",
-   "match": "^Added prop:ruler-set-square#crdrLsq$",
-   "label": "Drafting set square & ruler (left shelf)",
-   "parent": "desk",
-   "position": [
-    -1.32,
-    -0.0551,
-    0.645
-   ],
-   "rotation": [
-    0,
-    -82,
-    0
-   ],
-   "scale": [
-    0.76,
-    0.76,
-    0.76
-   ],
-   "show": {
-    "from": 7.4,
-    "to": 17.3,
-    "fadeOut": 0.4
-   },
-   "director": true
-  },
-  {
-   "add": {
-    "asset": "long-scissors"
-   },
-   "id": "crdrLsci",
-   "match": "^Added prop:long-scissors#crdrLsci$",
-   "label": "Drafting shears (left cubby)",
-   "parent": "desk",
-   "position": [
-    -1.335,
-    -0.158,
-    0.3
-   ],
-   "rotation": [
-    75,
-    -18,
-    6
-   ],
-   "scale": [
-    0.82,
-    0.82,
-    0.82
-   ],
-   "show": {
-    "from": 7.4,
-    "to": 17.3,
-    "fadeOut": 0.4
-   },
-   "director": true
-  },
-  {
-   "add": {
-    "asset": "multi-tool"
-   },
-   "id": "crdrLmto",
-   "match": "^Added prop:multi-tool#crdrLmto$",
-   "label": "Precision utility tool (left drafting shelf)",
-   "parent": "desk",
-   "position": [
-    -1.34,
-    -0.0551,
-    0.43
-   ],
-   "rotation": [
-    0,
-    24,
-    0
-   ],
-   "scale": [
-    0.85,
-    0.85,
-    0.85
-   ],
-   "show": {
-    "from": 7.4,
-    "to": 17.3,
-    "fadeOut": 0.4
-   },
-   "director": true
-  },
-  {
-   "add": {
-    "asset": "atelier-artist-stylus-chalk"
-   },
-   "id": "crdrLsty",
-   "match": "^Added prop:atelier-artist-stylus-chalk#crdrLsty$",
-   "label": "Drafting compass stylus (left shelf)",
-   "parent": "desk",
-   "position": [
-    -1.29,
-    -0.0551,
-    0.56
-   ],
-   "rotation": [
-    0,
-    74,
-    0
-   ],
-   "scale": [
-    1,
-    1,
-    1
-   ],
-   "show": {
-    "from": 7.4,
-    "to": 17.3,
-    "fadeOut": 0.4
-   },
-   "director": true
-  },
-  {
-   "add": {
-    "asset": "atelier-artist-brushes-oak"
-   },
-   "id": "crptRbru",
-   "match": "^Added prop:atelier-artist-brushes-oak#crptRbru$",
-   "label": "Ceramic brush pot & brushes (right painter shelf)",
-   "parent": "desk",
-   "position": [
-    1.515,
-    -0.0615,
-    0.22
-   ],
-   "rotation": [
-    0,
-    -18,
-    0
-   ],
-   "scale": [
-    0.88,
-    0.88,
-    0.88
-   ],
-   "show": {
-    "from": 17.3,
-    "to": 100000,
-    "fadeIn": 0.45
-   },
-   "director": true
-  },
-  {
-   "add": {
-    "asset": "atelier-artist-palette-oak"
-   },
-   "id": "crptRpal",
-   "match": "^Added prop:atelier-artist-palette-oak#crptRpal$",
-   "label": "Oak paint palette & knife (right painter shelf)",
-   "parent": "desk",
-   "position": [
-    1.335,
-    -0.061,
-    0.245
-   ],
-   "rotation": [
-    0,
-    14,
-    0
-   ],
-   "scale": [
-    0.78,
-    0.78,
-    0.78
-   ],
-   "show": {
-    "from": 17.3,
-    "to": 100000,
-    "fadeIn": 0.45
    },
    "director": true
   },
@@ -8457,9 +8105,9 @@
    "label": "Canvas masking tape (right painter shelf)",
    "parent": "desk",
    "position": [
-    1.435,
-    -0.061,
-    0.275
+    1.211,
+    -0.123,
+    0.307
    ],
    "rotation": [
     0,
@@ -8480,31 +8128,187 @@
   },
   {
    "add": {
-    "asset": "bottle-set"
+    "asset": "apple-pencil"
    },
-   "id": "crptRbot",
-   "match": "^Added prop:bottle-set#crptRbot$",
-   "label": "Pigment & medium bottles (right painter shelf)",
+   "id": "crdrRpen2",
+   "match": "^Added prop:apple-pencil#crdrRpen2$",
+   "label": "Drafting stylus (right cubby)",
    "parent": "desk",
    "position": [
-    1.41,
-    -0.061,
-    0.165
+    1.248,
+    -0.058,
+    0.618
    ],
    "rotation": [
-    0,
-    4,
+    -90,
+    85.9,
+    152
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "show": {
+    "from": 7.4,
+    "to": 17.3,
+    "fadeIn": 0.25,
+    "fadeOut": 0.4
+   },
+   "director": true
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large-cubby"
+   },
+   "id": "crdraftL",
+   "match": "^Added prop:ergoflex-side-shelf-large-cubby#crdraftL$",
+   "label": "Side shelf \u00b7 large, cubby and cups (left wing)",
+   "parent": "desk",
+   "position": [
+    -1.115,
+    -0.035,
+    0.292
+   ],
+   "rotation": [
+    -56.9,
+    90,
     0
    ],
    "scale": [
-    0.68,
-    0.68,
-    0.68
+    -1,
+    1,
+    1
    ],
    "show": {
     "from": 17.3,
-    "to": 100000,
-    "fadeIn": 0.45
+    "to": 23.5,
+    "fadeIn": 0.4,
+    "fadeOut": 0.4
+   },
+   "director": true
+  },
+  {
+   "add": {
+    "asset": "multi-tool"
+   },
+   "id": "crdrLmto",
+   "match": "^Added prop:multi-tool#crdrLmto$",
+   "label": "Precision utility tool (left drafting shelf)",
+   "parent": "desk",
+   "position": [
+    -1.403,
+    0.214,
+    0.249
+   ],
+   "rotation": [
+    23.2,
+    -10.6,
+    -97
+   ],
+   "scale": [
+    0.85,
+    0.85,
+    0.85
+   ],
+   "show": {
+    "from": 17.3,
+    "to": 23.5,
+    "fadeIn": 0.2,
+    "fadeOut": 0.4
+   },
+   "director": true
+  },
+  {
+   "add": {
+    "asset": "tea-cup"
+   },
+   "id": "crdrLcup",
+   "match": "^Added prop:tea-cup#crdrLcup$",
+   "label": "Studio ceramic cup (left drafting shelf)",
+   "parent": "desk",
+   "position": [
+    -1.326,
+    -0.062,
+    0.266
+   ],
+   "rotation": [
+    -58.8,
+    -35,
+    0
+   ],
+   "scale": [
+    1.18,
+    1.18,
+    1.18
+   ],
+   "show": {
+    "from": 17.3,
+    "to": 23.5,
+    "fadeIn": 0.3,
+    "fadeOut": 0.4
+   },
+   "director": true
+  },
+  {
+   "add": {
+    "asset": "long-scissors"
+   },
+   "id": "crdrLsci",
+   "match": "^Added prop:long-scissors#crdrLsci$",
+   "label": "Drafting shears (left cubby)",
+   "parent": "desk",
+   "position": [
+    -1.326,
+    0.226,
+    0.295
+   ],
+   "rotation": [
+    59.7,
+    -7,
+    93
+   ],
+   "scale": [
+    0.6572,
+    0.82,
+    0.6734
+   ],
+   "show": {
+    "from": 17.3,
+    "to": 23.5,
+    "fadeIn": 0.2,
+    "fadeOut": 0.4
+   },
+   "director": true
+  },
+  {
+   "add": {
+    "asset": "atelier-artist-stylus-chalk"
+   },
+   "id": "crdrLsty",
+   "match": "^Added prop:atelier-artist-stylus-chalk#crdrLsty$",
+   "label": "Drafting compass stylus (left shelf)",
+   "parent": "desk",
+   "position": [
+    -1.256,
+    0.209,
+    0.289
+   ],
+   "rotation": [
+    32.6,
+    74,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "show": {
+    "from": 17.3,
+    "to": 23.5,
+    "fadeIn": 0.35,
+    "fadeOut": 0.4
    },
    "director": true
   },
@@ -8517,13 +8321,13 @@
    "label": "Painter accessory shelf (left wing)",
    "parent": "desk",
    "position": [
-    -1.2491,
-    -0.3254,
-    0.1364
+    -1.249,
+    -0.325,
+    0.263
    ],
    "rotation": [
     19.5,
-    180,
+    -180,
     0
    ],
    "scale": [
@@ -8532,129 +8336,92 @@
     1
    ],
    "show": {
-    "from": 17.3,
-    "to": 100000,
-    "fadeIn": 0.45
+    "from": 7.4,
+    "to": 17.3,
+    "fadeIn": 0.45,
+    "fadeOut": 0.35
    },
    "director": true
   },
   {
    "add": {
-    "asset": "atelier-artist-brushes-chalk"
+    "asset": "ergoflex-keyboard-tray"
    },
-   "id": "crptLbru",
-   "match": "^Added prop:atelier-artist-brushes-chalk#crptLbru$",
-   "label": "Pale-ash brush pot & brushes (left painter shelf)",
+   "id": "wol3m7q03",
+   "match": "^Added prop:ergoflex-keyboard-tray#wol3m7q03$",
+   "label": "Keyboard tray",
    "parent": "desk",
    "position": [
-    -1.325,
-    -0.061,
-    0.215
+    0.007,
+    -0.02,
+    0.32
    ],
    "rotation": [
     0,
-    28,
+    6.5,
     0
    ],
    "scale": [
-    0.9,
-    0.9,
-    0.9
+    1,
+    1,
+    1
    ],
    "show": {
-    "from": 17.3,
-    "to": 100000,
-    "fadeIn": 0.45
+    "from": 0,
+    "to": 7.4,
+    "fadeOut": 0.35
+   },
+   "director": true
+  },
+  {
+   "match": "^Prop:ergoflex-drawing-tablet$",
+   "path": "^Room:creative > Cinematic demonstration desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Prop:ergoflex-drawing-tablet$",
+   "label": "Prop:ergoflex-drawing-tablet",
+   "space": "local",
+   "position": [
+    1.111,
+    0,
+    0.275
+   ],
+   "rotation": [
+    0,
+    -26.7,
+    0
+   ],
+   "show": {
+    "from": 0,
+    "to": 7.4,
+    "fadeOut": 0.5
    },
    "director": true
   },
   {
    "add": {
-    "asset": "ink-quill"
+    "asset": "atelier-gaming-peripherals-arctic"
    },
-   "id": "crptLink",
-   "match": "^Added prop:ink-quill#crptLink$",
-   "label": "Ink bottle & quill (left painter shelf)",
+   "id": "fd3tw826r",
+   "match": "^Added prop:atelier-gaming-peripherals-arctic#fd3tw826r$",
+   "label": "Atelier gaming \u00b7 Compact keyboard & gaming mouse \u00b7 Arctic white \u00b7 ice & violet",
    "parent": "desk",
    "position": [
-    -1.455,
-    -0.0612,
-    0.235
+    -0.026,
+    -0.063,
+    0.658
    ],
    "rotation": [
     0,
-    -25,
-    0
+    -3,
+    0.4
    ],
    "scale": [
-    0.76,
-    0.76,
-    0.76
+    1,
+    1,
+    1
    ],
    "show": {
-    "from": 17.3,
-    "to": 100000,
-    "fadeIn": 0.45
-   },
-   "director": true
-  },
-  {
-   "add": {
-    "asset": "atelier-artist-palette-chalk"
-   },
-   "id": "crptLpal",
-   "match": "^Added prop:atelier-artist-palette-chalk#crptLpal$",
-   "label": "Pale-ash palette & knife (left painter shelf)",
-   "parent": "desk",
-   "position": [
-    -1.545,
-    -0.0615,
-    0.245
-   ],
-   "rotation": [
-    0,
-    -16,
-    0
-   ],
-   "scale": [
-    0.74,
-    0.74,
-    0.74
-   ],
-   "show": {
-    "from": 17.3,
-    "to": 100000,
-    "fadeIn": 0.45
-   },
-   "director": true
-  },
-  {
-   "add": {
-    "asset": "polish-bottle"
-   },
-   "id": "crptLmed",
-   "match": "^Added prop:polish-bottle#crptLmed$",
-   "label": "Artist varnish medium bottle (left painter shelf)",
-   "parent": "desk",
-   "position": [
-    -1.565,
-    -0.0615,
-    0.17
-   ],
-   "rotation": [
-    0,
-    12,
-    0
-   ],
-   "scale": [
-    0.68,
-    0.68,
-    0.68
-   ],
-   "show": {
-    "from": 17.3,
-    "to": 100000,
-    "fadeIn": 0.45
+    "from": 0,
+    "to": 7.4,
+    "fadeOut": 0.4
    },
    "director": true
   }
@@ -13107,7 +12874,7 @@
   }
  },
  "directorEdited": {
-  "at": "2026-11-21T11:05:24Z",
+  "at": "2026-11-26T00:18:44Z",
   "fields": [
    "camera",
    "cameraPlan",
