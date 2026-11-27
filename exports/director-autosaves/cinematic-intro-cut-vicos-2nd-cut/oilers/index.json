@@ -1,0 +1,371 @@
+[
+ {
+  "file": "20261124-063052-aside.json.gz",
+  "at": "2026-11-24T06:30:52.810Z",
+  "reason": "aside",
+  "groups": [],
+  "bytes": 2870,
+  "hash": "01edd3fd9322b903",
+  "edits": 33,
+  "note": "your changes from Nov 20 15:15",
+  "protected": true
+ },
+ {
+  "file": "20261121-012530-reopen.json.gz",
+  "at": "2026-11-21T01:25:30.625Z",
+  "reason": "reopen",
+  "groups": [
+   "desk",
+   "people"
+  ],
+  "bytes": 2870,
+  "hash": "01edd3fd9322b903"
+ },
+ {
+  "file": "20261120-231141-edit.json.gz",
+  "at": "2026-11-20T23:11:41.939Z",
+  "reason": "edit",
+  "groups": [
+   "desk",
+   "people"
+  ],
+  "bytes": 2851,
+  "hash": "42216a15da81dc24"
+ },
+ {
+  "file": "20261120-231056-edit.json.gz",
+  "at": "2026-11-20T23:10:56.389Z",
+  "reason": "edit",
+  "groups": [
+   "desk",
+   "people"
+  ],
+  "bytes": 2917,
+  "hash": "af2cee2bb033a202"
+ },
+ {
+  "file": "20261120-231052-edit.json.gz",
+  "at": "2026-11-20T23:10:52.385Z",
+  "reason": "edit",
+  "groups": [
+   "desk",
+   "people"
+  ],
+  "bytes": 2918,
+  "hash": "62f20d9e47d710bf"
+ },
+ {
+  "file": "20261120-231048-edit.json.gz",
+  "at": "2026-11-20T23:10:48.533Z",
+  "reason": "edit",
+  "groups": [
+   "desk",
+   "people"
+  ],
+  "bytes": 2919,
+  "hash": "81e41e29d068004c"
+ },
+ {
+  "file": "20261120-231036-edit.json.gz",
+  "at": "2026-11-20T23:10:36.814Z",
+  "reason": "edit",
+  "groups": [
+   "desk",
+   "people"
+  ],
+  "bytes": 2918,
+  "hash": "a3c174c46fcb9cc6"
+ },
+ {
+  "file": "20261120-231026-edit.json.gz",
+  "at": "2026-11-20T23:10:26.106Z",
+  "reason": "edit",
+  "groups": [
+   "desk",
+   "people"
+  ],
+  "bytes": 2915,
+  "hash": "62e5d727748dd35f"
+ },
+ {
+  "file": "20261120-231018-edit.json.gz",
+  "at": "2026-11-20T23:10:18.275Z",
+  "reason": "edit",
+  "groups": [
+   "desk",
+   "people"
+  ],
+  "bytes": 2914,
+  "hash": "04687d908c6ecd26"
+ },
+ {
+  "file": "20261120-230930-edit.json.gz",
+  "at": "2026-11-20T23:09:30.416Z",
+  "reason": "edit",
+  "groups": [
+   "desk",
+   "people"
+  ],
+  "bytes": 2865,
+  "hash": "5b6b098c1f876e18"
+ },
+ {
+  "file": "20261120-230856-edit.json.gz",
+  "at": "2026-11-20T23:08:56.866Z",
+  "reason": "edit",
+  "groups": [
+   "desk",
+   "people"
+  ],
+  "bytes": 2851,
+  "hash": "42216a15da81dc24"
+ },
+ {
+  "file": "20261120-230819-edit.json.gz",
+  "at": "2026-11-20T23:08:19.886Z",
+  "reason": "edit",
+  "groups": [
+   "desk",
+   "people"
+  ],
+  "bytes": 2838,
+  "hash": "b60ab4d4a26e4528"
+ },
+ {
+  "file": "20261120-230807-edit.json.gz",
+  "at": "2026-11-20T23:08:07.233Z",
+  "reason": "edit",
+  "groups": [
+   "desk",
+   "people"
+  ],
+  "bytes": 2836,
+  "hash": "b1c2b69c41975c53"
+ },
+ {
+  "file": "20261120-230801-edit.json.gz",
+  "at": "2026-11-20T23:08:01.965Z",
+  "reason": "edit",
+  "groups": [
+   "desk",
+   "people"
+  ],
+  "bytes": 2835,
+  "hash": "a22e24f7e7d8a6ff"
+ },
+ {
+  "file": "20261120-230757-edit.json.gz",
+  "at": "2026-11-20T23:07:57.239Z",
+  "reason": "edit",
+  "groups": [
+   "desk",
+   "people"
+  ],
+  "bytes": 2834,
+  "hash": "62465db61c8cb397"
+ },
+ {
+  "file": "20261120-230744-edit.json.gz",
+  "at": "2026-11-20T23:07:44.306Z",
+  "reason": "edit",
+  "groups": [
+   "desk",
+   "people"
+  ],
+  "bytes": 2831,
+  "hash": "2d79b5947cf9e311"
+ },
+ {
+  "file": "20261120-230733-edit.json.gz",
+  "at": "2026-11-20T23:07:33.232Z",
+  "reason": "edit",
+  "groups": [
+   "desk",
+   "people"
+  ],
+  "bytes": 2832,
+  "hash": "4619417e2ef477e1"
+ },
+ {
+  "file": "20261120-230558-edit.json.gz",
+  "at": "2026-11-20T23:05:58.194Z",
+  "reason": "edit",
+  "groups": [
+   "desk",
+   "people"
+  ],
+  "bytes": 2780,
+  "hash": "a00315b0518084da"
+ },
+ {
+  "file": "20261120-230249-edit.json.gz",
+  "at": "2026-11-20T23:02:49.606Z",
+  "reason": "edit",
+  "groups": [
+   "desk"
+  ],
+  "bytes": 1593,
+  "hash": "df242263d4459693"
+ },
+ {
+  "file": "20261120-230227-edit.json.gz",
+  "at": "2026-11-20T23:02:27.791Z",
+  "reason": "edit",
+  "groups": [
+   "desk"
+  ],
+  "bytes": 1594,
+  "hash": "28d5d30678872154"
+ },
+ {
+  "file": "20261120-230222-edit.json.gz",
+  "at": "2026-11-20T23:02:22.962Z",
+  "reason": "edit",
+  "groups": [
+   "desk"
+  ],
+  "bytes": 1594,
+  "hash": "cb537f6e65bead10"
+ },
+ {
+  "file": "20261120-230217-edit.json.gz",
+  "at": "2026-11-20T23:02:17.233Z",
+  "reason": "edit",
+  "groups": [
+   "desk"
+  ],
+  "bytes": 1593,
+  "hash": "df242263d4459693"
+ },
+ {
+  "file": "20261120-033215-restore.json.gz",
+  "at": "2026-11-20T03:32:15.421Z",
+  "reason": "restore",
+  "groups": [
+   "Kai docks 4 in closer, free sp"
+  ],
+  "bytes": 3627,
+  "hash": "e549d9bdc4324804"
+ },
+ {
+  "file": "20261120-032941-edit.json.gz",
+  "at": "2026-11-20T03:29:41.179Z",
+  "reason": "edit",
+  "groups": [
+   "lighting",
+   "props",
+   "people"
+  ],
+  "bytes": 3633,
+  "hash": "0965f0b2de323048"
+ },
+ {
+  "file": "20261120-032929-edit.json.gz",
+  "at": "2026-11-20T03:29:29.142Z",
+  "reason": "edit",
+  "groups": [
+   "lighting",
+   "props",
+   "people"
+  ],
+  "bytes": 3625,
+  "hash": "bf9dc615f0801090"
+ },
+ {
+  "file": "20261120-032009-reopen.json.gz",
+  "at": "2026-11-20T03:20:09.492Z",
+  "reason": "reopen",
+  "groups": [
+   "lighting",
+   "props",
+   "people"
+  ],
+  "bytes": 3627,
+  "hash": "8c24368c4e0f4e44"
+ },
+ {
+  "file": "20261120-031930-restore.json.gz",
+  "at": "2026-11-20T03:19:30.943Z",
+  "reason": "restore",
+  "groups": [
+   "lighting",
+   "props",
+   "people"
+  ],
+  "bytes": 3607,
+  "hash": "22639c18e153d9c8"
+ },
+ {
+  "file": "20261120-031735-reopen.json.gz",
+  "at": "2026-11-20T03:17:35.029Z",
+  "reason": "reopen",
+  "groups": [
+   "lighting",
+   "props",
+   "people"
+  ],
+  "bytes": 3607,
+  "hash": "22639c18e153d9c8"
+ },
+ {
+  "file": "20261120-031610-restore.json.gz",
+  "at": "2026-11-20T03:16:10.009Z",
+  "reason": "restore",
+  "groups": [
+   "Kai hand-off repaired"
+  ],
+  "bytes": 3627,
+  "hash": "8c24368c4e0f4e44"
+ },
+ {
+  "file": "20261120-030831-edit.json.gz",
+  "at": "2026-11-20T03:08:31.914Z",
+  "reason": "edit",
+  "groups": [],
+  "bytes": 3607,
+  "hash": "16fb7fac03a23cab"
+ },
+ {
+  "file": "20261120-025958-edit.json.gz",
+  "at": "2026-11-20T02:59:58.450Z",
+  "reason": "edit",
+  "groups": [
+   "lighting",
+   "props",
+   "people"
+  ],
+  "bytes": 3424,
+  "hash": "e4436e206072f257"
+ },
+ {
+  "file": "20261119-233452-edit.json.gz",
+  "at": "2026-11-19T23:34:52.397Z",
+  "reason": "edit",
+  "groups": [
+   "props"
+  ],
+  "bytes": 3573,
+  "hash": "0675f327627ae52d"
+ },
+ {
+  "file": "20261119-033417-edit.json.gz",
+  "at": "2026-11-19T03:34:17.920Z",
+  "reason": "edit",
+  "groups": [
+   "props"
+  ],
+  "bytes": 1868,
+  "hash": "db0593da711d358e"
+ },
+ {
+  "file": "20261119-024336-edit.json.gz",
+  "at": "2026-11-19T02:43:36.774Z",
+  "reason": "edit",
+  "groups": [
+   "desk",
+   "props"
+  ],
+  "bytes": 2031,
+  "hash": "cf8a41514cf8f7e7"
+ }
+]
