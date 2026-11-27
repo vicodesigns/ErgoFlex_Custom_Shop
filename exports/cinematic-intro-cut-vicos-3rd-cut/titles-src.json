@@ -472,8 +472,8 @@
   },
   {
    "chapter": "hero",
-   "rel_in": 3.7,
-   "rel_out": 8.1,
+   "rel_in": 5.2,
+   "rel_out": 9.6,
    "eyebrow": "ONE PLATFORM. INFINITE FORMS.",
    "title": "Built for every part \nof your day.",
    "detail": "Configured by you. Engineered to last.",
@@ -497,7 +497,7 @@
  ],
  "cta": {
   "chapter": "hero",
-  "rel_in": 22.23,
+  "rel_in": 23.73,
   "rel_out": null,
   "text": "Let’s build yours.",
   "fade_in": 0.5,
@@ -510,7 +510,7 @@
  },
  "logo": {
   "chapter": "hero",
-  "rel_in": 20.37,
+  "rel_in": 21.87,
   "x": 338.49,
   "y": 484.99,
   "scale": 0.67,

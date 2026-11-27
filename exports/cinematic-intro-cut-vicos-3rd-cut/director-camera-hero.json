@@ -1,9 +1,24 @@
 {
  "source": "exports/drafts/polish1126-heroend/polish1126-heroend-hero.json",
- "seconds": 25.95,
+ "seconds": 27.45,
  "keys": [
   {
-   "at": 0.0,
+   "at": 0,
+   "position": [
+    5.476144125217537,
+    2.2304701588316247,
+    9.62698043708028
+   ],
+   "target": [
+    -1.3022924387743022,
+    1.2329509276347648,
+    0.7596212477585418
+   ],
+   "fov": 26,
+   "label": "Lead-in hold (Pearl White opener)"
+  },
+  {
+   "at": 1.5,
    "position": [
     5.476144125217537,
     2.2304701588316247,
@@ -18,7 +33,7 @@
    "label": "Opening arc (0.00 s), as Vico set it"
   },
   {
-   "at": 1.4,
+   "at": 2.9,
    "position": [
     6.051256553292804,
     2.5114484372054626,
@@ -33,7 +48,7 @@
    "label": "Opening arc rises over the artist desk (1.40 s)"
   },
   {
-   "at": 4.0,
+   "at": 5.5,
    "position": [
     6.744006708977229,
     3.295468587174425,
@@ -48,7 +63,7 @@
    "label": "Artist desk B: Vico framing, screens clear of the top"
   },
   {
-   "at": 7.2,
+   "at": 8.7,
    "position": [
     6.3651,
     2.9278,
@@ -63,7 +78,7 @@
    "label": "Architect desk C: Vico framing"
   },
   {
-   "at": 10.15,
+   "at": 11.65,
    "position": [
     6.951243614674714,
     2.966258415968225,
@@ -78,7 +93,7 @@
    "label": "Office desk D: Vico framing, glide right"
   },
   {
-   "at": 14.0,
+   "at": 15.5,
    "position": [
     7.2444,
     2.693,
@@ -93,7 +108,7 @@
    "label": "Office desk D: track with the lowered desk (14.00 s)"
   },
   {
-   "at": 16.1,
+   "at": 17.6,
    "position": [
     7.5949,
     2.5382,
@@ -108,7 +123,7 @@
    "label": "Into the gaming desk H (16.10 s)"
   },
   {
-   "at": 19.6,
+   "at": 21.1,
    "position": [
     7.3327,
     2.8815,
@@ -123,7 +138,7 @@
    "label": "Gaming desk H: swing to the end card (19.60 s)"
   },
   {
-   "at": 21.6,
+   "at": 23.1,
    "position": [
     6.025489250250201,
     3.1851927899769152,
@@ -138,7 +153,7 @@
    "label": "Arrive on the end-card pose (21.60 s)"
   },
   {
-   "at": 25.95,
+   "at": 27.45,
    "position": [
     5.482268002415035,
     3.0207927917373976,
@@ -158,7 +173,7 @@
    "id": "b-lift",
    "lane": "lift",
    "kind": "lift",
-   "start": 4.4,
+   "start": 5.9,
    "duration": 1.9,
    "easing": "linear",
    "label": "",
@@ -266,7 +281,7 @@
    "id": "b-tilt",
    "lane": "tilt",
    "kind": "tilt",
-   "start": 4.4,
+   "start": 5.9,
    "duration": 3.2,
    "easing": "linear",
    "label": "",
@@ -620,7 +635,7 @@
    "id": "c-lift",
    "lane": "lift",
    "kind": "lift",
-   "start": 9.4,
+   "start": 10.9,
    "duration": 3.0,
    "easing": "linear",
    "label": "",
@@ -938,7 +953,7 @@
    "id": "c-tilt",
    "lane": "tilt",
    "kind": "tilt",
-   "start": 10.1,
+   "start": 11.6,
    "duration": 2.3,
    "easing": "linear",
    "label": "",
@@ -1292,7 +1307,7 @@
    "id": "d-lift",
    "lane": "lift",
    "kind": "lift",
-   "start": 16.33,
+   "start": 17.83,
    "duration": 3.19,
    "easing": "linear",
    "label": "",
@@ -1502,7 +1517,7 @@
    "id": "g-tilt",
    "lane": "tilt",
    "kind": "tilt",
-   "start": 17.03,
+   "start": 18.53,
    "duration": 3.17,
    "easing": "linear",
    "label": "",
@@ -1534,7 +1549,7 @@
    "desk": "artist",
    "show": {
     "from": 0,
-    "to": 5.13,
+    "to": 6.63,
     "fadeOut": 0.3
    }
   },
@@ -1544,7 +1559,7 @@
    "desk": "artist",
    "show": {
     "from": 0,
-    "to": 5.13,
+    "to": 6.63,
     "fadeOut": 0.3
    }
   },
@@ -1574,7 +1589,7 @@
    "desk": "artist",
    "show": {
     "from": 0,
-    "to": 5.13,
+    "to": 6.63,
     "fadeOut": 0.3
    }
   },
@@ -1604,7 +1619,7 @@
    "desk": "artist",
    "show": {
     "from": 0,
-    "to": 5.13,
+    "to": 6.63,
     "fadeOut": 0.3
    }
   },
@@ -1634,7 +1649,7 @@
    "desk": "artist",
    "show": {
     "from": 0,
-    "to": 5.13,
+    "to": 6.63,
     "fadeOut": 0.3
    }
   },
@@ -1664,7 +1679,7 @@
    "desk": "artist",
    "show": {
     "from": 0,
-    "to": 5.13,
+    "to": 6.63,
     "fadeOut": 0.3
    }
   },
@@ -1694,7 +1709,7 @@
    "desk": "artist",
    "show": {
     "from": 0,
-    "to": 5.13,
+    "to": 6.63,
     "fadeOut": 0.3
    }
   },
@@ -1703,8 +1718,8 @@
    "label": "Accessory:easel-rail",
    "desk": "architect",
    "show": {
-    "from": 0.3,
-    "to": 5.15,
+    "from": 1.8,
+    "to": 6.65,
     "fadeIn": 0.25,
     "fadeOut": 0.3
    }
@@ -1714,8 +1729,8 @@
    "label": "Accessory:drafting-kit",
    "desk": "architect",
    "show": {
-    "from": 0.3,
-    "to": 5.15,
+    "from": 1.8,
+    "to": 6.65,
     "fadeIn": 0.25,
     "fadeOut": 0.3
    }
@@ -1725,8 +1740,8 @@
    "label": "Accessory:task-light",
    "desk": "architect",
    "show": {
-    "from": 0.3,
-    "to": 5.15,
+    "from": 1.8,
+    "to": 6.65,
     "fadeIn": 0.2,
     "fadeOut": 0.3
    }
@@ -1738,7 +1753,7 @@
    "desk": "artist",
    "show": {
     "from": 0,
-    "to": 5.13,
+    "to": 6.63,
     "fadeOut": 0.3
    }
   },
@@ -1749,7 +1764,7 @@
    "desk": "artist",
    "show": {
     "from": 0,
-    "to": 5.13,
+    "to": 6.63,
     "fadeOut": 0.3
    }
   },
@@ -1853,8 +1868,8 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.3,
-    "to": 5.15,
+    "from": 1.8,
+    "to": 6.65,
     "fadeIn": 0.25,
     "fadeOut": 0.3
    }
@@ -1884,8 +1899,8 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.3,
-    "to": 5.15,
+    "from": 1.8,
+    "to": 6.65,
     "fadeIn": 0.25,
     "fadeOut": 0.3
    }
@@ -1915,8 +1930,8 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.3,
-    "to": 5.15,
+    "from": 1.8,
+    "to": 6.65,
     "fadeIn": 0.25,
     "fadeOut": 0.3
    }
@@ -1946,8 +1961,8 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.3,
-    "to": 5.15,
+    "from": 1.8,
+    "to": 6.65,
     "fadeIn": 0.25,
     "fadeOut": 0.3
    }
@@ -1977,8 +1992,8 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.3,
-    "to": 5.15,
+    "from": 1.8,
+    "to": 6.65,
     "fadeIn": 0.25,
     "fadeOut": 0.3
    }
@@ -2008,8 +2023,8 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.3,
-    "to": 5.15,
+    "from": 1.8,
+    "to": 6.65,
     "fadeIn": 0.25,
     "fadeOut": 0.3
    }
@@ -2039,8 +2054,8 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.3,
-    "to": 5.15,
+    "from": 1.8,
+    "to": 6.65,
     "fadeIn": 0.25,
     "fadeOut": 0.3
    }
@@ -2070,8 +2085,8 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.3,
-    "to": 5.15,
+    "from": 1.8,
+    "to": 6.65,
     "fadeIn": 0.25,
     "fadeOut": 0.3
    }
@@ -2081,8 +2096,8 @@
    "label": "Accessory:cable-tray",
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -2112,8 +2127,8 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -2143,8 +2158,8 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -2174,8 +2189,8 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -2205,8 +2220,8 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -2216,8 +2231,8 @@
    "label": "Accessory:portrait-monitor",
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -2227,8 +2242,8 @@
    "label": "Accessory:logitech-mx-master",
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -2238,8 +2253,8 @@
    "label": "Accessory:keyboard-tray",
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -2249,8 +2264,8 @@
    "label": "Accessory:ergo-keyboard",
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -2265,8 +2280,8 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -2287,8 +2302,8 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -2304,8 +2319,8 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -2321,8 +2336,8 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -2343,8 +2358,8 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -2354,8 +2369,8 @@
    "label": "Accessory:obsbot-tiny-2",
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -2365,8 +2380,8 @@
    "label": "Accessory:monitor-arm-2",
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -2376,8 +2391,8 @@
    "label": "Accessory:wide-monitor",
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -2388,7 +2403,7 @@
    "desk": "gaming",
    "show": {
     "from": 0,
-    "to": 4.22,
+    "to": 5.72,
     "fadeOut": 0.55
    }
   },
@@ -2398,7 +2413,7 @@
    "desk": "gaming",
    "show": {
     "from": 0,
-    "to": 4.22,
+    "to": 5.72,
     "fadeOut": 0.55
    }
   },
@@ -2408,7 +2423,7 @@
    "desk": "gaming",
    "show": {
     "from": 0,
-    "to": 4.22,
+    "to": 5.72,
     "fadeOut": 0.55
    }
   },
@@ -2418,7 +2433,7 @@
    "desk": "gaming",
    "show": {
     "from": 0,
-    "to": 4.22,
+    "to": 5.72,
     "fadeOut": 0.55
    }
   },
@@ -2428,7 +2443,7 @@
    "desk": "gaming",
    "show": {
     "from": 0,
-    "to": 4.22,
+    "to": 5.72,
     "fadeOut": 0.55
    }
   },
@@ -2438,7 +2453,7 @@
    "desk": "gaming",
    "show": {
     "from": 0,
-    "to": 4.22,
+    "to": 5.72,
     "fadeOut": 0.55
    }
   },
@@ -2467,8 +2482,8 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -2498,8 +2513,8 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -2529,8 +2544,8 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.3,
-    "to": 5.15,
+    "from": 1.8,
+    "to": 6.65,
     "fadeIn": 0.25,
     "fadeOut": 0.3
    }
@@ -2560,8 +2575,8 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.3,
-    "to": 5.15,
+    "from": 1.8,
+    "to": 6.65,
     "fadeIn": 0.25,
     "fadeOut": 0.3
    }
@@ -2591,8 +2606,8 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.3,
-    "to": 5.15,
+    "from": 1.8,
+    "to": 6.65,
     "fadeIn": 0.25,
     "fadeOut": 0.3
    }
@@ -2622,8 +2637,8 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.3,
-    "to": 5.15,
+    "from": 1.8,
+    "to": 6.65,
     "fadeIn": 0.25,
     "fadeOut": 0.3
    }
@@ -2653,8 +2668,8 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.3,
-    "to": 5.15,
+    "from": 1.8,
+    "to": 6.65,
     "fadeIn": 0.25,
     "fadeOut": 0.3
    }
@@ -2684,8 +2699,8 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.3,
-    "to": 5.15,
+    "from": 1.8,
+    "to": 6.65,
     "fadeIn": 0.25,
     "fadeOut": 0.3
    }
@@ -2715,8 +2730,8 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.3,
-    "to": 5.15,
+    "from": 1.8,
+    "to": 6.65,
     "fadeIn": 0.25,
     "fadeOut": 0.3
    }
@@ -2747,7 +2762,7 @@
    "desk": "artist",
    "show": {
     "from": 0,
-    "to": 5.13,
+    "to": 6.63,
     "fadeOut": 0.3
    }
   },
@@ -2777,7 +2792,7 @@
    "desk": "artist",
    "show": {
     "from": 0,
-    "to": 5.13,
+    "to": 6.63,
     "fadeOut": 0.3
    }
   },
@@ -2807,7 +2822,7 @@
    "desk": "artist",
    "show": {
     "from": 0,
-    "to": 5.13,
+    "to": 6.63,
     "fadeOut": 0.3
    }
   },
@@ -2837,7 +2852,7 @@
    "desk": "artist",
    "show": {
     "from": 0,
-    "to": 5.13,
+    "to": 6.63,
     "fadeOut": 0.3
    }
   },
@@ -2853,7 +2868,7 @@
    "desk": "artist",
    "show": {
     "from": 0,
-    "to": 5.13,
+    "to": 6.63,
     "fadeOut": 0.3
    }
   },
@@ -2883,7 +2898,7 @@
    "desk": "artist",
    "show": {
     "from": 0,
-    "to": 5.13,
+    "to": 6.63,
     "fadeOut": 0.3
    }
   },
@@ -2913,7 +2928,7 @@
    "desk": "artist",
    "show": {
     "from": 0,
-    "to": 5.13,
+    "to": 6.63,
     "fadeOut": 0.3
    }
   },
@@ -2943,7 +2958,7 @@
    "desk": "artist",
    "show": {
     "from": 0,
-    "to": 5.13,
+    "to": 6.63,
     "fadeOut": 0.3
    }
   },
@@ -2972,8 +2987,8 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -3003,8 +3018,8 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -3034,8 +3049,8 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -3065,8 +3080,8 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.36,
+    "from": 1.8,
+    "to": 7.86,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -3096,8 +3111,8 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.36,
+    "from": 1.8,
+    "to": 7.86,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -3127,8 +3142,8 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -3158,8 +3173,8 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 6.33,
+    "from": 1.8,
+    "to": 7.83,
     "fadeOut": 0.3,
     "fadeIn": 0.25
    }
@@ -3189,8 +3204,8 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.3,
-    "to": 5.15,
+    "from": 1.8,
+    "to": 6.65,
     "fadeIn": 0.25,
     "fadeOut": 0.3
    }
@@ -3220,8 +3235,8 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.3,
-    "to": 5.15,
+    "from": 1.8,
+    "to": 6.65,
     "fadeIn": 0.25,
     "fadeOut": 0.3
    }
@@ -3230,8 +3245,8 @@
  "finishFades": {
   "H": {
    "at": [
-    19.2,
-    20.45
+    20.7,
+    21.95
    ],
    "set": {
     "deskFinish": {
@@ -3313,32 +3328,40 @@
  },
  "versions": [
   {
+   "n": "I",
+   "preset": "artist",
+   "name": "Pearl White",
+   "start": 0,
+   "end": 1.8,
+   "look": "blank-pearl"
+  },
+  {
    "n": "B",
    "preset": "artist",
    "name": "",
-   "start": 0.0,
-   "end": 5.64
+   "start": 1.2,
+   "end": 7.14
   },
   {
    "n": "C",
    "preset": "architect",
    "name": "",
-   "start": 5.04,
-   "end": 9.94
+   "start": 6.54,
+   "end": 11.44
   },
   {
    "n": "D",
    "preset": "office",
    "name": "",
-   "start": 9.34,
-   "end": 17.08
+   "start": 10.84,
+   "end": 18.58
   },
   {
    "n": "H",
    "preset": "gaming",
    "name": "",
-   "start": 15.08,
-   "end": 25.95
+   "start": 16.58,
+   "end": 27.45
   }
  ],
  "versionLibrary": [
