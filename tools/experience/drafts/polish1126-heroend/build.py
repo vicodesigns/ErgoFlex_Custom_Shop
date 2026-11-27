@@ -4,11 +4,10 @@
     python tools/experience/drafts/polish1126-heroend/build.py <cut dir> [<out dir>] [--dry-run]
 
 Carries the desk props patch (../polish1126-heroprops/apply-heroprops.py) and the office / ending patch
-(apply-heroend.py, which says what each change is). Writes <out>/polish1126-heroend-hero.json (default out:
+(apply-heroend.py, which says what each change is; the office desk keeps its tilt-and-lower move). Writes <out>/polish1126-heroend-hero.json (default out:
 exports/drafts/polish1126-heroend): the cut's own director-import/ErgoFlex-film-ch12-hero-director.json (camera and
 desk moves as they are) as an ergoflex.client-cut export with
     propEdits      the chapter's whole Director prop list (review-cut.json), patched
-    subshotMotion  sub-shot D alone: c-tilt 7.6 s + 1.2 s (the office desk is level before it is seen)
     finishFades    sub-shot H: the cross-fade to Pearl White / White frame / White trim
     endCard        logo.show_delay 1.0 s, cta.rel_in 22.23 s
 Import it with THIS BRANCH's build-round8-director.py (subshotMotion, finishFades and logo.show_delay are new):
@@ -51,18 +50,14 @@ def main(argv):
     log = []
     props_patch.walk(edits, 'propEdits', log)
 
-    # 2. office items on from the first frame, gaming items gone earlier: the same entries apply-heroend.py changes in D / H
+    # 2. gaming items gone earlier: the same entries apply-heroend.py changes in H (the office desk is left as it was)
     p = end_patch.Patch()
     for e in edits:
         w = e.get('show'); name = e.get('label') or e.get('match')
-        if not w: continue
-        if e.get('desk') == 'office':
-            if w.get('from') != 0: p.set(f'{name} show.from', w, 'from', 0.3, 0)
-            if 'fadeIn' in w: p.set(f'{name} show.fadeIn', w, 'fadeIn', 0.25, None)
-        elif e.get('desk') == 'gaming':
+        if w and e.get('desk') == 'gaming':
             p.set(f'{name} show.to', w, 'to', *end_patch.GAMING_TO)
 
-    # 3. D's own desk move, H's finish fade, the end card (apply-heroend.py is the one place the values live)
+    # 3. H's finish fade, the end card (apply-heroend.py is the one place the values live)
     end_patch.patch_subshots(p, subshots)
     end_patch.patch_titles(p, titles)
     h = next(s for s in subshots['shots'] if s.get('subshot') == 'H')
@@ -75,11 +70,10 @@ def main(argv):
     shot = copy.deepcopy(base['shots'][0])
     if shot.get('id') != 'hero': sys.exit('director-import hero export: not the hero')
     shot['propEdits'] = edits
-    shot['subshotMotion'] = {'D': {'c-tilt': dict(end_patch.C_TILT[1])}}
     shot['finishFades'] = {'H': copy.deepcopy(h['finishFade'])}
     shot['endCard'] = {'logo': {'show_delay': end_patch.LOGO_DELAY}, 'cta': {'rel_in': end_patch.CTA_REL_IN[1]}}
     cutid = J(cut, 'cut.json')['id']
-    exp = dict(base, id=f'film-{cutid}-hero', name='DRAFT polish1126 hero: desk props, level office desk, pearl white ending', shots=[shot])
+    exp = dict(base, id=f'film-{cutid}-hero', name='DRAFT polish1126 hero: desk props, pearl white ending', shots=[shot])
     os.makedirs(out, exist_ok=True); path = os.path.join(out, 'polish1126-heroend-hero.json')
     with open(path, 'w', encoding='utf-8', newline='\n') as f:
         json.dump(exp, f, indent=1, ensure_ascii=False)

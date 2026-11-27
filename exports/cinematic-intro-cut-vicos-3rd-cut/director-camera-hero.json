@@ -2081,9 +2081,10 @@
    "label": "Accessory:cable-tray",
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -2111,9 +2112,10 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -2141,9 +2143,10 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -2171,9 +2174,10 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -2201,9 +2205,10 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -2211,9 +2216,10 @@
    "label": "Accessory:portrait-monitor",
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -2221,9 +2227,10 @@
    "label": "Accessory:logitech-mx-master",
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -2231,9 +2238,10 @@
    "label": "Accessory:keyboard-tray",
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -2241,9 +2249,10 @@
    "label": "Accessory:ergo-keyboard",
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -2256,9 +2265,10 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -2277,9 +2287,10 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -2293,9 +2304,10 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -2309,9 +2321,10 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -2330,9 +2343,10 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -2340,9 +2354,10 @@
    "label": "Accessory:obsbot-tiny-2",
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -2350,9 +2365,10 @@
    "label": "Accessory:monitor-arm-2",
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -2360,9 +2376,10 @@
    "label": "Accessory:wide-monitor",
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -2450,9 +2467,10 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -2480,9 +2498,10 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -2953,9 +2972,10 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -2983,9 +3003,10 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -3013,9 +3034,10 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -3043,9 +3065,10 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.36,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -3073,9 +3096,10 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.36,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -3103,9 +3127,10 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -3133,9 +3158,10 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0,
+    "from": 0.3,
     "to": 6.33,
-    "fadeOut": 0.3
+    "fadeOut": 0.3,
+    "fadeIn": 0.25
    }
   },
   {
@@ -3201,14 +3227,6 @@
    }
   }
  ],
- "subshotMotion": {
-  "D": {
-   "c-tilt": {
-    "start": 7.6,
-    "duration": 1.2
-   }
-  }
- },
  "finishFades": {
   "H": {
    "at": [

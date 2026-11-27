@@ -127202,9 +127202,10 @@
      "label": "Accessory:cable-tray",
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -127233,9 +127234,10 @@
      ],
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -127264,9 +127266,10 @@
      ],
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -127295,9 +127298,10 @@
      ],
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -127326,9 +127330,10 @@
      ],
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -127337,9 +127342,10 @@
      "label": "Accessory:portrait-monitor",
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -127348,9 +127354,10 @@
      "label": "Accessory:logitech-mx-master",
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -127359,9 +127366,10 @@
      "label": "Accessory:keyboard-tray",
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -127370,9 +127378,10 @@
      "label": "Accessory:ergo-keyboard",
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -127386,9 +127395,10 @@
      ],
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -127408,9 +127418,10 @@
      ],
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -127425,9 +127436,10 @@
      ],
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -127442,9 +127454,10 @@
      ],
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -127464,9 +127477,10 @@
      ],
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -127475,9 +127489,10 @@
      "label": "Accessory:obsbot-tiny-2",
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -127486,9 +127501,10 @@
      "label": "Accessory:monitor-arm-2",
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -127497,9 +127513,10 @@
      "label": "Accessory:wide-monitor",
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -127594,9 +127611,10 @@
      ],
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -127625,9 +127643,10 @@
      ],
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -128114,9 +128133,10 @@
      ],
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -128145,9 +128165,10 @@
      ],
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -128176,9 +128197,10 @@
      ],
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -128207,9 +128229,10 @@
      ],
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.36,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -128238,9 +128261,10 @@
      ],
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.36,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -128269,9 +128293,10 @@
      ],
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },
@@ -128300,9 +128325,10 @@
      ],
      "desk": "office",
      "show": {
-      "from": 0,
+      "from": 0.3,
       "to": 6.33,
-      "fadeOut": 0.3
+      "fadeOut": 0.3,
+      "fadeIn": 0.25
      },
      "director": true
     },

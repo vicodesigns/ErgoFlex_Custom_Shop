@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Chapter 12 (hero) data patch, polish1126: the office desk comes in level, and the ending turns pearl white.
+"""Chapter 12 (hero) data patch, polish1126: the ending turns pearl white.
 
     python3 tools/experience/drafts/polish1126-heroend/apply-heroend.py <cut folder>            dry run: lists before / after
     python3 tools/experience/drafts/polish1126-heroend/apply-heroend.py --apply <cut folder>    writes
@@ -9,11 +9,9 @@ Needs this branch's render-cut.cjs + finish-fade.cjs (shot.finishFade) and finis
 It edits shots/13-subshots.json and titles-src.json. A second run reports 0 changes. A value that is neither the old nor
 the new one stops the script before anything is written (the cut is not the one this patch was made for).
 
-OFFICE (sub-shot D, 9.34-17.08 s, chapter seconds). Its desk opened tilted 30 deg, so keyboard, mouse and desktop items
-started auto-stowed on the shelf and cross-faded to the desk at 11.58 s. In D only (its own copy of the motion):
-  c-tilt 10.1 s + 2.3 s -> 7.6 s + 1.2 s, so the desk is level (-5 deg) and the hand-off is over before D's first frame.
-  The office items' own fade-in (0.3 s after the desk comes in) goes: they are on from D's first frame and come in with
-  the cross-dissolve from the architect desk. Fade-outs, lift and camera unchanged.
+OFFICE (sub-shot D): NOT changed here. Vico's call (27 Nov): the office desk keeps its own tilt-and-lower move
+(c-tilt 10.1 s + 2.3 s) while it dissolves in from the architect desk, and its items fade in (show.from 0.3, fadeIn 0.25).
+A level-from-the-first-frame office desk with instant items (option A, an earlier version of this patch) was rejected.
 
 ENDING (sub-shot H, 15.08-25.95 s).
   The gaming desk's monitor, keyboard, mouse, trays: gone at 19.30 s (were 20.57 s), the same 0.55 s fade.
@@ -26,7 +24,6 @@ ENDING (sub-shot H, 15.08-25.95 s).
 """
 import copy, json, os, sys
 
-C_TILT = (dict(start=10.1, duration=2.3), dict(start=7.6, duration=1.2))
 GAMING_TO = (5.49, 4.22)          # seconds after sub-shot H starts (15.08): fade 18.75 -> 19.30
 FADE_AT = [19.2, 20.45]
 WHITE = dict(wood='Pearl White', base='White', trim='#f5f5f2')
@@ -73,21 +70,6 @@ def patch_subshots(p, cut):
     shots = {s.get('subshot'): s for s in cut['shots']}
     d, h = shots['D'], shots['H']
     assert d['preset'] == 'office' and h['preset'] == 'gaming'
-    clip = next(c for c in d['motion']['clips'] if c['id'] == 'c-tilt')
-    for k in ('start', 'duration'):
-        p.set(f'D motion c-tilt {k}', clip, k, C_TILT[0][k], C_TILT[1][k])
-    n = 0
-    for e in d['sceneEdits']:
-        w = e.get('show')
-        if e.get('desk') != 'office' or not w:
-            continue
-        n += 1
-        name = e.get('label') or e['match']
-        if w.get('from') != 0:
-            p.set(f'D {name} show.from', w, 'from', 0.3, 0)
-        if 'fadeIn' in w:
-            p.set(f'D {name} show.fadeIn', w, 'fadeIn', 0.25, None)
-    assert n >= 20, f'only {n} timed office items in D'
     n = 0
     for e in h['sceneEdits']:
         if e.get('desk') == 'gaming' and e.get('show'):
