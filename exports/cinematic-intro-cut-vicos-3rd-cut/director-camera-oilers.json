@@ -1,5 +1,5 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-59e936bfc7f6-Film-chapter-oilers-15-s-__13_.json",
+ "source": "exports/drafts/polish1124-noah/polish1124-noah-oilers.json",
  "seconds": 15.0,
  "keys": [
   {
@@ -178,9 +178,9 @@
    "lane": "lift",
    "kind": "lift",
    "start": 8.5,
-   "duration": 3,
+   "duration": 3.0,
    "easing": "smooth",
-   "label": "Noah taps 'Lower to Kai's height': down to his wheelchair he",
+   "label": "Noah taps 'Lower to Kai's height': down to his wheelchair height",
    "target": 31
   }
  ],
@@ -568,10 +568,26 @@
    "match": "^Pendulum (bob|string)$",
    "label": "Ceiling pendulum (orange bob and string)",
    "hide": true
+  },
+  {
+   "match": "^Person chair:people-sofia-sit-laptop$",
+   "asset": "highschool:house:placement:107:0:Person chair:people-sofia-sit-laptop",
+   "label": "Person chair:people-sofia-sit-laptop",
+   "hide": true
+  },
+  {
+   "match": "^Accessory:logitech-mx-master$",
+   "path": "^Room:highschool > APA set and costume design review desk \u00b7 ErgoFlex desk > Desk dressing:desktop > Accessory:logitech-mx-master$",
+   "label": "Accessory:logitech-mx-master",
+   "space": "local",
+   "position": [
+    0,
+    0,
+    -0.093
+   ]
   }
  ],
  "people": {
-  "v": 2,
   "except": [
    "people-ava-sit-write",
    "people-maya-sit-type",
@@ -628,9 +644,29 @@
         -0.1189,
         0.9788
        ]
-      }
+      },
+      "poseKeys": [
+       {
+        "t": 0,
+        "pose": {
+         "hand_l": [
+          -0.1174,
+          -0.1489,
+          0.1496,
+          0.9704
+         ],
+         "hand_r": [
+          -0.1139,
+          0.1712,
+          -0.1523,
+          0.9667
+         ]
+        }
+       }
+      ]
      }
-    }
+    },
+    "typeStyle": "natural"
    },
    {
     "key": "kai-rolls",
@@ -967,6 +1003,23 @@
     "turn": -146,
     "act": {
      "at": 8.2
+    },
+    "change": {
+     "wrist": {
+      "r": {
+       "turn": "pronate",
+       "over": [
+        0.06,
+        0.96
+       ],
+       "relax": 0.6,
+       "arc": {
+        "lift": 0.06,
+        "k": 1,
+        "p": 0.4
+       }
+      }
+     }
     }
    },
    {
@@ -1215,7 +1268,8 @@
    "back": 250,
    "side": -780,
    "turn": 35
-  }
+  },
+  "v": 2
  },
  "desks": [
   {
