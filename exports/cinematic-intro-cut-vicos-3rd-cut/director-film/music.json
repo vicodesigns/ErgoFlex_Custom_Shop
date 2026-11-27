@@ -3835,25 +3835,29 @@
    "src": "exports/cinematic-intro-cut-cine/screens/cine-music-arcade.mp4",
    "offset": 0,
    "loop": false,
-   "brightness": 0.55
+   "brightness": 0.55,
+   "missing": true
   },
   {
    "target": "marquee",
    "src": "exports/cinematic-intro-cut-cine/screens/cine-music-marquee.mp4",
    "offset": 0,
-   "loop": false
+   "loop": false,
+   "missing": true
   },
   {
    "target": "atelier-gaming-streamdeck-cyber/gaming-macro-key-display",
    "src": "exports/cinematic-intro-cut-cine/screens/cine-music-streamdeck.mp4",
    "offset": 0,
-   "loop": false
+   "loop": false,
+   "missing": true
   },
   {
    "target": "tv",
    "src": "exports/cinematic-intro-cut-cine/screens/cine-music-tv.mp4",
    "offset": 0,
-   "loop": false
+   "loop": false,
+   "missing": true
   }
  ],
  "sceneEdits": [

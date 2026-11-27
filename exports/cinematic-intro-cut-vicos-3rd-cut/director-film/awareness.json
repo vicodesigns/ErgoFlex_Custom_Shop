@@ -3733,7 +3733,8 @@
    "target": "main-landscape",
    "src": "exports/cinematic-intro-cut-cine/screens/cine-awareness-main.mp4",
    "offset": 0,
-   "loop": false
+   "loop": false,
+   "missing": true
   }
  ],
  "obstacles": [

@@ -4457,26 +4457,30 @@
    "target": "main-landscape",
    "src": "exports/cinematic-intro-cut-cine/screens/cine-coast-main.mp4",
    "offset": 0,
-   "loop": false
+   "loop": false,
+   "missing": true
   },
   {
    "target": "ergoflex-wide-monitor/monitor-screen",
    "src": "exports/cinematic-intro-cut-cine/screens/cine-coast-curved.mp4",
    "offset": 0,
-   "loop": false
+   "loop": false,
+   "missing": true
   },
   {
    "target": "ergoflex-portrait-monitor/monitor-screen",
    "src": "exports/cinematic-intro-cut-cine/screens/cine-coast-portrait.mp4",
    "offset": 0,
-   "loop": false
+   "loop": false,
+   "missing": true
   },
   {
    "target": "occ-display",
    "src": "exports/cinematic-intro-cut-cine/screens/cine-coast-wall.mp4",
    "offset": 0,
    "loop": false,
-   "brightness": 0.6
+   "brightness": 0.6,
+   "missing": true
   }
  ],
  "deskObjects": {

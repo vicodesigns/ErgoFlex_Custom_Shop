@@ -7416,13 +7416,15 @@
    "target": "main-landscape",
    "src": "exports/cinematic-intro-cut-vicos-3rd-cut/screens/cine3b-wellness-main.mp4",
    "offset": 0,
-   "loop": false
+   "loop": false,
+   "missing": true
   },
   {
    "target": "tablet",
    "src": "exports/cinematic-intro-cut-vicos-3rd-cut/screens/cine3b-wellness-tablet.mp4",
    "offset": 0,
-   "loop": false
+   "loop": false,
+   "missing": true
   }
  ],
  "ledStatus": [

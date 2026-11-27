@@ -7334,13 +7334,15 @@
    "target": "main-landscape",
    "src": "exports/cinematic-intro-cut-cine/screens/cine-create-landscape.mp4",
    "offset": 0,
-   "loop": false
+   "loop": false,
+   "missing": true
   },
   {
    "target": "main-portrait",
    "src": "exports/cinematic-intro-cut-cine/screens/cine-create-portrait.mp4",
    "offset": 0,
-   "loop": false
+   "loop": false,
+   "missing": true
   },
   {
    "target": "texture",

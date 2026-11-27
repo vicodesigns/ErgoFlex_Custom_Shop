@@ -8411,7 +8411,8 @@
    "src": "exports/cinematic-intro-cut-cine/screens/cine-commons-reservation.mp4",
    "offset": 0,
    "loop": false,
-   "brightness": 0.75
+   "brightness": 0.75,
+   "missing": true
   }
  ],
  "ledStatus": [
