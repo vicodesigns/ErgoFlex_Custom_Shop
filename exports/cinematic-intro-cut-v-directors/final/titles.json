@@ -1,0 +1,345 @@
+{
+ "schema": "ergoflex.intro-titles",
+ "version": 1,
+ "duration": 221.92,
+ "fps": 30,
+ "placement": {
+  "anchor": "bottom-left",
+  "safeArea": 0.9,
+  "eyebrowColor": "#1388EC",
+  "note": "Coordinates for a 1920×1080 frame: text left edge x=128; eyebrow/title/detail bottoms at y=812/912/970. Wordmark centered at y=788 (22% of width); CTA centered at y=904."
+ },
+ "titles": [
+  {
+   "id": "awaken-0",
+   "chapter": "awaken",
+   "start": 3.1,
+   "end": 8.8,
+   "eyebrow": "ERGOFLEX",
+   "title": "Meet the workstation\nthat moves with you.",
+   "detail": "More comfort. Clearer focus. More joy in your work.",
+   "position": {
+    "x": 74.86,
+    "y": 699.36
+   },
+   "typography": {
+    "eyebrow": {
+     "size": 50,
+     "spacing": 3.2,
+     "dy": 22
+    },
+    "detail": {
+     "size": 43,
+     "spacing": 1.2,
+     "dy": -20
+    },
+    "title": {
+     "lineHeight": 1.2
+    }
+   }
+  },
+  {
+   "id": "awaken-1",
+   "chapter": "awaken",
+   "start": 12.4,
+   "end": 17.4,
+   "eyebrow": "DESIGNED FOR MOTION",
+   "title": "Spend a day with it.",
+   "detail": "From the first coffee to movie night.",
+   "position": {
+    "x": 92.26,
+    "y": 760.64
+   },
+   "typography": {
+    "eyebrow": {
+     "size": 50,
+     "spacing": 3.2,
+     "dy": 22
+    },
+    "detail": {
+     "size": 46,
+     "spacing": 1.2,
+     "dy": -20
+    }
+   }
+  },
+  {
+   "id": "rise-2",
+   "chapter": "rise",
+   "start": 22.1,
+   "end": 27.9,
+   "eyebrow": "HOME OFFICE",
+   "title": "Your day. Your rhythm.",
+   "detail": "50+ guided routines built right in.",
+   "position": {
+    "x": 132.95,
+    "y": 745.75
+   },
+   "scale": 0.9021955031502769,
+   "typography": {
+    "eyebrow": {
+     "size": 50,
+     "spacing": 3.2,
+     "dy": 22
+    },
+    "detail": {
+     "size": 46,
+     "spacing": 1.2,
+     "dy": -20
+    }
+   }
+  },
+  {
+   "id": "create-3",
+   "chapter": "create",
+   "start": 49.1,
+   "end": 54.7,
+   "eyebrow": "ART STUDIO",
+   "title": "Angle it to your art.",
+   "detail": "Digital, drafting and painting on one surface.",
+   "position": {
+    "x": 80.97,
+    "y": 822.09
+   },
+   "typography": {
+    "eyebrow": {
+     "size": 50,
+     "spacing": 3.2,
+     "dy": 22
+    },
+    "detail": {
+     "size": 46,
+     "spacing": 1.2,
+     "dy": -20
+    }
+   }
+  },
+  {
+   "id": "commons-4",
+   "chapter": "commons",
+   "start": 70.9,
+   "end": 76.15,
+   "eyebrow": "CAMPUS LIBRARY",
+   "title": "The desk that comes to you.",
+   "detail": "Shared space that adjusts to every body.",
+   "position": {
+    "x": 109.57,
+    "y": 867.34
+   },
+   "typography": {
+    "eyebrow": {
+     "size": 50,
+     "spacing": 3.2,
+     "dy": 22
+    },
+    "detail": {
+     "size": 46,
+     "spacing": 1.2,
+     "dy": -20
+    }
+   }
+  },
+  {
+   "id": "coast-5",
+   "chapter": "coast",
+   "start": 88.95,
+   "end": 92.8,
+   "eyebrow": "MEDIA LAB",
+   "title": "Ideas become stories.",
+   "detail": "Your own edit suite in a shared studio.",
+   "typography": {
+    "eyebrow": {
+     "size": 50,
+     "spacing": 3.2,
+     "dy": 22
+    },
+    "detail": {
+     "size": 46,
+     "spacing": 1.2,
+     "dy": -20
+    }
+   }
+  },
+  {
+   "id": "oilers-6",
+   "chapter": "oilers",
+   "start": 108.7,
+   "end": 112.5,
+   "eyebrow": "CLASSROOM",
+   "title": "Room to discover.",
+   "detail": "Every learner at their own height.",
+   "position": {
+    "x": 175.64,
+    "y": 994.77
+   },
+   "typography": {
+    "eyebrow": {
+     "size": 50,
+     "spacing": 3.2,
+     "dy": 22
+    },
+    "detail": {
+     "size": 46,
+     "spacing": 1.2,
+     "dy": -20
+    }
+   }
+  },
+  {
+   "id": "wellness-7",
+   "chapter": "wellness",
+   "start": 118.6,
+   "end": 124.4,
+   "eyebrow": "GYM",
+   "title": "Movement built\ninto your day.",
+   "detail": "Pause. Stretch. Breathe. Reset.",
+   "position": {
+    "x": 201.34,
+    "y": 731.06
+   },
+   "typography": {
+    "eyebrow": {
+     "size": 50,
+     "spacing": 3.2,
+     "dy": 22
+    },
+    "detail": {
+     "size": 46,
+     "spacing": 1.2,
+     "dy": -20
+    },
+    "title": {
+     "lineHeight": 1.2
+    }
+   }
+  },
+  {
+   "id": "awareness-8",
+   "chapter": "awareness",
+   "start": 162.57,
+   "end": 167.37,
+   "eyebrow": "ALWAYS AWARE",
+   "title": "It senses what’s in the way.",
+   "detail": "Proximity sensors stop the roll before contact.",
+   "position": {
+    "x": 74.72,
+    "y": 935.1
+   },
+   "scale": 0.9853116373842294,
+   "typography": {
+    "eyebrow": {
+     "size": 50,
+     "spacing": 3.2,
+     "dy": 22
+    },
+    "detail": {
+     "size": 46,
+     "spacing": 1.2,
+     "dy": -20
+    }
+   }
+  },
+  {
+   "id": "music-9",
+   "chapter": "music",
+   "start": 172.12,
+   "end": 177.72,
+   "eyebrow": "GAME ROOM",
+   "title": "Feel the room come alive.",
+   "detail": "Light that plays along with the game.",
+   "typography": {
+    "eyebrow": {
+     "size": 50,
+     "spacing": 3.2,
+     "dy": 22
+    },
+    "detail": {
+     "size": 46,
+     "spacing": 1.2,
+     "dy": -20
+    }
+   }
+  },
+  {
+   "id": "media-10",
+   "chapter": "media",
+   "start": 183.22,
+   "end": 188.82,
+   "eyebrow": "MOVIE NIGHT",
+   "title": "The room joins the film.",
+   "detail": "Ambient color drawn from every scene.",
+   "typography": {
+    "eyebrow": {
+     "size": 50,
+     "spacing": 3.2,
+     "dy": 22
+    },
+    "detail": {
+     "size": 46,
+     "spacing": 1.2,
+     "dy": -20
+    }
+   }
+  },
+  {
+   "id": "storage-11",
+   "chapter": "storage",
+   "start": 142.35,
+   "end": 148.55,
+   "eyebrow": "WORKSHOP",
+   "title": "Make room for what’s next.",
+   "detail": "One tap. It folds and rolls to the wall.",
+   "typography": {
+    "eyebrow": {
+     "size": 50,
+     "spacing": 3.2,
+     "dy": 22
+    },
+    "detail": {
+     "size": 46,
+     "spacing": 1.2,
+     "dy": -20
+    }
+   }
+  },
+  {
+   "id": "hero-12",
+   "chapter": "hero",
+   "start": 199.67,
+   "end": 204.07,
+   "eyebrow": "ONE DESK",
+   "title": "Every part of your day.",
+   "detail": "Configured by you. Engineered to last.",
+   "position": {
+    "x": 154,
+    "y": 679.31
+   },
+   "scale": 0.8160655149490516,
+   "typography": {
+    "eyebrow": {
+     "size": 50,
+     "spacing": 3.2,
+     "dy": 22
+    },
+    "detail": {
+     "size": 46,
+     "spacing": 1.2,
+     "dy": -20
+    }
+   }
+  }
+ ],
+ "cta": {
+  "id": "cta",
+  "chapter": "hero",
+  "start": 217.4,
+  "end": 221.92,
+  "text": "Let’s build yours."
+ },
+ "logo": {
+  "start": 216.34,
+  "x": 338.49,
+  "y": 484.99,
+  "scale": 0.67
+ }
+}

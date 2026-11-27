@@ -1,0 +1,19 @@
+{
+ "master_eq": [
+  {
+   "kind": "high",
+   "hz": 6500,
+   "db": 2.0
+  },
+  {
+   "kind": "bell",
+   "hz": 2600,
+   "db": 1.0,
+   "octaves": 1.0
+  }
+ ],
+ "sfx_db": {
+  "default": -18.0,
+  "wheels": -21.0
+ }
+}

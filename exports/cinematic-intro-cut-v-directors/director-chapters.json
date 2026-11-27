@@ -1,0 +1,124 @@
+{
+ "chapters": [
+  {
+   "n": 1,
+   "id": "awaken",
+   "title": "Level up your every day.",
+   "seconds": 20.0,
+   "page": "/exports/cinematic-intro-cut-v-directors/director-ch01.html",
+   "shot": "/exports/cinematic-intro-cut-v-directors/director-film/awaken.json",
+   "version": "da53b1ef90eb",
+   "updated": "2026-11-26T06:54:59Z"
+  },
+  {
+   "n": 2,
+   "id": "rise",
+   "title": "Your height. Your rhythm.",
+   "seconds": 28.5,
+   "page": "/exports/cinematic-intro-cut-v-directors/director-ch02-rise.html",
+   "shot": "/exports/cinematic-intro-cut-v-directors/director-film/rise.json",
+   "version": "83122c24f4cc",
+   "updated": "2026-11-26T06:40:45Z"
+  },
+  {
+   "n": 3,
+   "id": "create",
+   "title": "Angle it to your art.",
+   "seconds": 23.5,
+   "page": "/exports/cinematic-intro-cut-v-directors/director-ch03-create.html",
+   "shot": "/exports/cinematic-intro-cut-v-directors/director-film/create.json",
+   "version": "67442c1a07e3",
+   "updated": "2026-11-26T06:40:45Z"
+  },
+  {
+   "n": 4,
+   "id": "commons",
+   "title": "A place for everyone.",
+   "seconds": 20.3,
+   "page": "/exports/cinematic-intro-cut-v-directors/director-ch04-commons.html",
+   "shot": "/exports/cinematic-intro-cut-v-directors/director-film/commons.json",
+   "version": "24f782d64272",
+   "updated": "2026-11-26T06:40:45Z"
+  },
+  {
+   "n": 5,
+   "id": "coast",
+   "title": "Ideas become stories.",
+   "seconds": 14.5,
+   "page": "/exports/cinematic-intro-cut-v-directors/director-ch05-coast.html",
+   "shot": "/exports/cinematic-intro-cut-v-directors/director-film/coast.json",
+   "version": "fe613632f838",
+   "updated": "2026-11-26T06:40:45Z"
+  },
+  {
+   "n": 6,
+   "id": "oilers",
+   "title": "Space to discover.",
+   "seconds": 15.0,
+   "page": "/exports/cinematic-intro-cut-v-directors/director-ch06-oilers.html",
+   "shot": "/exports/cinematic-intro-cut-v-directors/director-film/oilers.json",
+   "version": "0c27c462b968",
+   "updated": "2026-11-26T06:40:45Z"
+  },
+  {
+   "n": 7,
+   "id": "wellness",
+   "title": "Build movement into your day.",
+   "seconds": 22.5,
+   "page": "/exports/cinematic-intro-cut-v-directors/director-ch07-wellness.html",
+   "shot": "/exports/cinematic-intro-cut-v-directors/director-film/wellness.json",
+   "version": "e582324385e1",
+   "updated": "2026-11-26T06:40:45Z"
+  },
+  {
+   "n": 8,
+   "id": "storage",
+   "title": "Make room for what\u2019s next.",
+   "seconds": 26.67,
+   "page": "/exports/cinematic-intro-cut-v-directors/director-ch08-storage.html",
+   "shot": "/exports/cinematic-intro-cut-v-directors/director-film/storage.json",
+   "version": "85d218b29d64",
+   "updated": "2026-11-26T06:40:45Z"
+  },
+  {
+   "n": 9,
+   "id": "awareness",
+   "title": "It sees what\u2019s in its way.",
+   "seconds": 12.0,
+   "page": "/exports/cinematic-intro-cut-v-directors/director-ch09-awareness.html",
+   "shot": "/exports/cinematic-intro-cut-v-directors/director-film/awareness.json",
+   "version": "0d907533605b",
+   "updated": "2026-11-26T06:40:45Z"
+  },
+  {
+   "n": 10,
+   "id": "music",
+   "title": "Feel the room come alive.",
+   "seconds": 12.5,
+   "page": "/exports/cinematic-intro-cut-v-directors/director-ch10-music.html",
+   "shot": "/exports/cinematic-intro-cut-v-directors/director-film/music.json",
+   "version": "dbef07d8bdb9",
+   "updated": "2026-11-26T06:40:45Z"
+  },
+  {
+   "n": 11,
+   "id": "media",
+   "title": "Movie night, upgraded.",
+   "seconds": 17.0,
+   "page": "/exports/cinematic-intro-cut-v-directors/director-ch11-media.html",
+   "shot": "/exports/cinematic-intro-cut-v-directors/director-film/media.json",
+   "version": "8fabb99b8cb8",
+   "updated": "2026-11-26T06:40:45Z"
+  },
+  {
+   "n": 12,
+   "id": "hero",
+   "title": "One desk. Every part of your day.",
+   "seconds": 25.95,
+   "page": "/exports/cinematic-intro-cut-v-directors/director-ch12-hero.html",
+   "shot": "/exports/cinematic-intro-cut-v-directors/director-film/hero.json",
+   "version": "70fa145b2c4e",
+   "updated": "2026-11-26T06:40:45Z"
+  }
+ ]
+}

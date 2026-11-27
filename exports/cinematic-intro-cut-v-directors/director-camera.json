@@ -1,0 +1,267 @@
+{
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-18741e3a68c4-Film-chapter-awaken-48-3-s-__3_.json",
+ "seconds": 20.0,
+ "keys": [
+  {
+   "at": 0.0,
+   "position": [
+    1.1244,
+    0.2203,
+    1.7861
+   ],
+   "target": [
+    0.093,
+    0.179,
+    0.972
+   ],
+   "fov": 24,
+   "label": "Wheel macro, desk dark"
+  },
+  {
+   "at": 1.8,
+   "position": [
+    1.4073105312344516,
+    0.10547882423809757,
+    1.2756851360475794
+   ],
+   "target": [
+    0.17937996947715468,
+    0.16944163275148474,
+    0.9445145072956719
+   ],
+   "fov": 23.99999999999714,
+   "label": "Wheels start"
+  },
+  {
+   "at": 2.0,
+   "position": [
+    1.4073105312344516,
+    0.10547882423809757,
+    1.2756851360475794
+   ],
+   "target": [
+    0.17937996947715468,
+    0.16944163275148474,
+    0.9445145072956719
+   ],
+   "fov": 23.99999999999714,
+   "label": "Wheels start copy"
+  },
+  {
+   "at": 4.1,
+   "position": [
+    3.624539509726648,
+    1.0017562057712788,
+    1.7747961695715306
+   ],
+   "target": [
+    0.47067549155267324,
+    0.6473779466404054,
+    0.9174711039906447
+   ],
+   "fov": 25.004833158313204,
+   "label": "Roll lands, pull back"
+  },
+  {
+   "at": 4.8,
+   "position": [
+    3.624539509726648,
+    1.0017562057712788,
+    1.7747961695715306
+   ],
+   "target": [
+    0.47067549155267324,
+    0.6473779466404054,
+    0.9174711039906447
+   ],
+   "fov": 25.004833158313204,
+   "label": "Roll lands, pull back copy"
+  },
+  {
+   "at": 8.8,
+   "position": [
+    4.701060026836172,
+    2.1205197503053057,
+    2.3919173865976484
+   ],
+   "target": [
+    0.08230087454839057,
+    1.1688533923173572,
+    0.6892318675417873
+   ],
+   "fov": 32.998962224820005,
+   "label": "Lift starts: in and down toward the floor"
+  },
+  {
+   "at": 9.25,
+   "position": [
+    4.701060026836172,
+    2.1205197503053057,
+    2.3919173865976484
+   ],
+   "target": [
+    0.08230087454839057,
+    1.1688533923173572,
+    0.6892318675417873
+   ],
+   "fov": 32.998962224820005,
+   "label": "Lift starts: in and down toward the floor copy"
+  },
+  {
+   "at": 11.2,
+   "position": [
+    4.0,
+    0.55,
+    3.1
+   ],
+   "target": [
+    0.1281,
+    1.25,
+    0.6586
+   ],
+   "fov": 36,
+   "label": "Low three-quarter: the desktop climbs (blue)"
+  },
+  {
+   "at": 11.7,
+   "position": [
+    4,
+    0.55,
+    3.1
+   ],
+   "target": [
+    0.1281,
+    1.25,
+    0.6586
+   ],
+   "fov": 36,
+   "label": "Low three-quarter: the desktop climbs (blue) copy"
+  },
+  {
+   "at": 16.15,
+   "position": [
+    4.169322970083778,
+    1.5532438429119804,
+    3.1190557931878384
+   ],
+   "target": [
+    0.0324977794135692,
+    1.32383817614352,
+    0.855729478969145
+   ],
+   "fov": 38.99441465740602,
+   "label": "Craning up with it: the desktop and its light, standing height"
+  },
+  {
+   "at": 17.9,
+   "position": [
+    4.169322970083778,
+    1.5532438429119804,
+    3.1190557931878384
+   ],
+   "target": [
+    0.0324977794135692,
+    1.32383817614352,
+    0.855729478969145
+   ],
+   "fov": 38.99441465740602,
+   "label": "Craning up with it: the desktop and its light, standing heig"
+  },
+  {
+   "at": 20.0,
+   "position": [
+    3.8147582074479276,
+    1.6848510143409783,
+    4.394473233016262
+   ],
+   "target": [
+    0.43713317367850074,
+    1.3700612260245608,
+    0.41762449165880516
+   ],
+   "fov": 36.064881242871614,
+   "label": "Drifting off the hold into the dissolve"
+  }
+ ],
+ "clips": [
+  {
+   "id": "op-roll",
+   "lane": "wheels",
+   "kind": "travel",
+   "start": 2,
+   "duration": 2.3,
+   "easing": "smooth",
+   "label": "Move forward",
+   "value": 12,
+   "direction": "forward"
+  },
+  {
+   "id": "03582967-0974-43a8-9379-a000caa92dfb",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 9.25,
+   "duration": 3,
+   "easing": "linear",
+   "label": "",
+   "target": -5
+  },
+  {
+   "id": "op-lift",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 10.4,
+   "duration": 5.75,
+   "easing": "smooth",
+   "label": "Lift up",
+   "target": 45.5
+  }
+ ],
+ "initial": {
+  "height": 28,
+  "tilt": 0
+ },
+ "props": [
+  {
+   "match": "^Accessory:obsbot-tiny-2$",
+   "label": "Accessory:obsbot-tiny-2",
+   "space": "local",
+   "position": [
+    0,
+    0,
+    -0.04
+   ]
+  }
+ ],
+ "tray": [
+  {
+   "keys": [
+    {
+     "id": "k1",
+     "t": 16.3,
+     "pose": {
+      "slide": 0,
+      "swing": 0,
+      "tilt": 0
+     }
+    },
+    {
+     "id": "k8",
+     "t": 17.2,
+     "pose": {
+      "tilt": -10
+     }
+    },
+    {
+     "id": "k2",
+     "t": 17.9,
+     "pose": {
+      "slide": 0,
+      "swing": 0,
+      "baseTilt": 0,
+      "tilt": -10
+     }
+    }
+   ]
+  }
+ ]
+}
