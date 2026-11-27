@@ -104,7 +104,7 @@ const lightsKey=s=>{const l=exportLighting(s);return JSON.stringify([l.ledStatus
 // film-fx resolves 'three' through the stage page's import map, so it loads inside the stage frame.
 async function stageFx(){
   const win=frame.contentWindow;if(win.__filmFx)return win.__filmFx;
-  await new Promise((resolve,reject)=>{win.__filmFxDone=resolve;win.__filmFxFail=reject;const s=win.document.createElement('script');s.type='module';s.textContent="import('/tools/experience/film-fx.mjs?v=20261127-featured-restore').then(m=>{window.__filmFx=m;window.__filmFxDone();},e=>window.__filmFxFail(e));";win.document.head.append(s);});
+  await new Promise((resolve,reject)=>{win.__filmFxDone=resolve;win.__filmFxFail=reject;const s=win.document.createElement('script');s.type='module';s.textContent="import('/tools/experience/film-fx.mjs?v=20261127-featured-settle').then(m=>{window.__filmFx=m;window.__filmFxDone();},e=>window.__filmFxFail(e));";win.document.head.append(s);});
   return win.__filmFx;
 }
 // Film chapters: the live camera is the film's (film-render.mjs filmCamera, what Render still and the 4K use):
@@ -125,7 +125,7 @@ async function prepareStage(next,seconds){
   if(!setup||!fx)return stage().prepare(next);
   const base=liveFilmShot(setup,next),finish=finishFadeAt(finishSource(next),seconds);
   const look=finish?.weight>=.5?finish.look:null,shot=look?{...base,...look}:base;
-  fx.beforePrepare(shot);
+  await fx.settled?.();fx.beforePrepare(shot);
   // The stage casts the room from the shot it prepares: the film's people with the Director's cast over them.
   fxPeople=JSON.stringify(shot.people??null);fxSonar=JSON.stringify(shot.sonar??null);
   // (and its onboard touchscreen: the Director's if the chapter has one, else the film's)
