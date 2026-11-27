@@ -5,7 +5,7 @@ let shot, canvas;
 const api=()=>window.ErgoPresentation;
 window.FilmReview={
  async prepare(s){
-  fx.clear();shot=s;fx.beforePrepare(s);
+  fx.clear();await fx.settled();shot=s;fx.beforePrepare(s);
   try{await api().prepare(s);}finally{fx.unhookPreset();}
   await fx.install({...s,__stageClip:'exports/cinematic-intro-20261030/post/screen-film.mp4'});
   return {screens:fx.listScreens(s),clocks:fx.listClocks()};

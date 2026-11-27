@@ -629,11 +629,16 @@ function installDeskFinish(spec) {
 // A restore() is synchronous but the accessories it puts back load on their own time: the next install waits for them
 // (a blank desk, accessories [], was followed by a desk whose screens sit on a monitor that was not there yet: 'no screen matches main-landscape').
 let restoring = null;
+// Resolves when the accessories a featuredBuild restore flipped back have loaded. Callers await it between clear() and the stage's prepare():
+// applyPreset first SAVES the desk as it is into the preset's saved build and then reads it back, so a desk that is still half restored
+// (a blank Pearl White opener followed by the same preset's Artist desk) would be saved as the Artist's own build and come back bare.
+export async function settled() { if (restoring) { const r = restoring; restoring = null; await r; } }
 async function installFeaturedBuild(build) {
   const DB = await import('../../experience/desk-build.mjs'), objects = api.sceneDesks?.objects, rec = () => api.sceneDesks?.active;
   const frames = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
   const finish = (build.woodFinish || build.baseFinish || build.trimColor) ? installDeskFinish({ wood: build.woodFinish, base: build.baseFinish, trim: build.trimColor }) : null;
   const was = { accessories: [...api.currentConfig.accessories], roles: {} }, fresh = new Set(), flip = id => { try { api.toggleAccessory(id); } catch (e) { console.warn('[film-fx] featuredBuild toggle', id, e); } };
+  console.log('[film-fx] featuredBuild was', JSON.stringify({ wood: api.currentConfig.woodFinish, accessories: was.accessories }));
   if (build.accessories) {
     const want = new Set(build.accessories.map(a => a.id));
     for (const id of want) if (!api.currentConfig.accessories.includes(id)) { flip(id); if (api.currentConfig.accessories.includes(id)) fresh.add(id); else console.warn('[film-fx] featuredBuild: ' + id + ' does not fit this desk size'); }
@@ -657,7 +662,7 @@ async function installFeaturedBuild(build) {
       for (const [id, o] of Object.entries(was.roles)) { const item = r?.objects?.get('accessory-' + id); if (!item || !objects) continue; item.saved.role = o.role; item.saved.transform = o.transform; objects.register(r, item.id, item.obj, item.saved, item.baseScale); }
       if (build.accessories) {
         for (const id of [...now]) if (!was.accessories.includes(id)) flip(id); for (const id of was.accessories) if (!api.currentConfig.accessories.includes(id)) flip(id);
-        restoring = (async () => { try { await api.workspaceAccessories?.ready; await objects?.ready; objects?.syncAccessories(); await frames(); await objects?.ready; } catch (e) { console.warn('[film-fx] featuredBuild restore', e); } })();
+        restoring = (async () => { try { await api.workspaceAccessories?.ready; await objects?.ready; objects?.syncAccessories(); await frames(); await objects?.ready; } catch (e) { console.warn('[film-fx] featuredBuild restore', e); } console.log('[film-fx] featuredBuild restored', JSON.stringify({ wood: api.currentConfig.woodFinish, accessories: api.currentConfig.accessories })); })();
       }
       finish?.restore();
     },
