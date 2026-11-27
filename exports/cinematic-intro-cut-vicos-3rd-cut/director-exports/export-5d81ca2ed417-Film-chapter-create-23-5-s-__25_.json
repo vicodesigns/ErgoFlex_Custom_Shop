@@ -1,0 +1,1324 @@
+{
+  "schema": "ergoflex.client-cut",
+  "version": 1,
+  "id": "film-vicos-3rd-cut-create",
+  "name": "Film chapter: create (23.5 s)",
+  "client": "Vicos 3rd cut",
+  "volume": 0.32,
+  "updated": "2026-11-24T02:20:07.161Z",
+  "shots": [
+    {
+      "id": "create",
+      "room": "creative",
+      "kind": "tilt",
+      "seconds": 23.5,
+      "title": "One Surface. Zero Friction.",
+      "detail": "From digital to drafting to painting. True value in every form.",
+      "preset": "artist",
+      "transition": 1.1,
+      "size": "60x30",
+      "layout": "premium",
+      "mode": "morning",
+      "motion": {
+        "version": 2,
+        "initial": {
+          "height": 43.5,
+          "tilt": 0,
+          "x": 0,
+          "z": 0,
+          "yaw": 0
+        },
+        "clips": [
+          {
+            "id": "b5418102-1403-4470-9f42-8efd6dfbddaa",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 1.5,
+            "duration": 1.9,
+            "easing": "linear",
+            "label": "",
+            "target": 7
+          },
+          {
+            "id": "stand-to-draw",
+            "lane": "lift",
+            "kind": "lift",
+            "start": 4.2,
+            "duration": 2.6,
+            "easing": "smooth",
+            "label": "Lift up · 52 in",
+            "target": 52
+          },
+          {
+            "id": "drafting",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 6.8,
+            "duration": 5.6,
+            "easing": "smooth",
+            "label": "Drafting · 40°",
+            "target": 40
+          },
+          {
+            "id": "painting",
+            "lane": "tilt",
+            "kind": "tilt",
+            "start": 16.9,
+            "duration": 2.6,
+            "easing": "smooth",
+            "label": "Easel · 55°",
+            "target": 55
+          }
+        ]
+      },
+      "camera": {
+        "keys": [
+          {
+            "id": "plan-00",
+            "time": 0,
+            "label": "Lin at the wheel, the desk at the back of the studio",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                5.1976918697381,
+                1.9765427015748804,
+                3.314937674815405
+              ],
+              "target": [
+                -1.7591389716239645,
+                1.3838267424331514,
+                -0.03864685704586046
+              ],
+              "fov": 35,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-01",
+            "time": 0.089489,
+            "label": "Ease away from the wheel",
+            "easing": "linear",
+            "view": {
+              "position": [
+                4.75,
+                2,
+                2.62
+              ],
+              "target": [
+                -1.6,
+                1.46,
+                0.1
+              ],
+              "fov": 36.5,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-02",
+            "time": 0.254596,
+            "label": "Across the front as the desk lifts",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.2,
+                1.98,
+                -0.2
+              ],
+              "target": [
+                -1.33,
+                1.68,
+                0.5
+              ],
+              "fov": 43,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-03",
+            "time": 0.395489,
+            "label": "Round to the window side: drafting begins",
+            "easing": "linear",
+            "view": {
+              "position": [
+                2.55,
+                1.9,
+                -2.95
+              ],
+              "target": [
+                -1.32,
+                1.7,
+                0.6
+              ],
+              "fov": 45.5,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-04",
+            "time": 0.476936,
+            "label": "Side three-quarter: the board tilts to drafting",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.4,
+                1.98,
+                -3.2
+              ],
+              "target": [
+                -1.32,
+                1.74,
+                0.44
+              ],
+              "fov": 47,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-05",
+            "time": 0.540426,
+            "label": "Lean in on the drafting board and turn back",
+            "easing": "linear",
+            "view": {
+              "position": [
+                0.97,
+                2.02,
+                -2.88
+              ],
+              "target": [
+                -1.34,
+                1.78,
+                0.38
+              ],
+              "fov": 48.5,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-06",
+            "time": 0.589617,
+            "label": "The arc goes on as the board tilts to the easel",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.33,
+                2.04,
+                -2.55
+              ],
+              "target": [
+                -1.36,
+                1.86,
+                0.33
+              ],
+              "fov": 48.5,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-07",
+            "time": 0.77634,
+            "label": "Settle to the front",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.33,
+                2.048,
+                0.02
+              ],
+              "target": [
+                -1.37,
+                1.68,
+                0.31
+              ],
+              "fov": 42.2,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-08",
+            "time": 0.828383,
+            "label": "Round to the front: the board tilts on to the painting",
+            "easing": "linear",
+            "view": {
+              "position": [
+                3.4,
+                2.05,
+                0.35
+              ],
+              "target": [
+                -1.37,
+                1.64,
+                0.31
+              ],
+              "fov": 42,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-09",
+            "time": 0.829787,
+            "label": "Cut: later, Lin paints at the tilted canvas",
+            "easing": "linear",
+            "view": {
+              "position": [
+                1.0862,
+                2.2932,
+                -0.7845
+              ],
+              "target": [
+                -1.2069,
+                2.1121,
+                0.528
+              ],
+              "fov": 42,
+              "aspect": 1.7777777777777777
+            }
+          },
+          {
+            "id": "plan-10",
+            "time": 1,
+            "label": "Slow arc around her brush hand",
+            "easing": "smooth",
+            "view": {
+              "position": [
+                0.9957,
+                2.0065,
+                -1.2974
+              ],
+              "target": [
+                -1.3578,
+                1.7802,
+                0.347
+              ],
+              "fov": 43,
+              "aspect": 1.7777777777777777
+            }
+          }
+        ]
+      },
+      "propEdits": [
+        {
+          "match": "^Artist materials worktable$",
+          "asset": "creative:premium:fixture:artist-worktable",
+          "label": "Artist materials worktable",
+          "position": [
+            0,
+            0,
+            0.365
+          ]
+        },
+        {
+          "match": "^Colour studies · daily activity$",
+          "asset": "creative:premium:life:activity",
+          "label": "Colour studies · daily activity",
+          "position": [
+            0.792,
+            0,
+            1.012
+          ]
+        },
+        {
+          "match": "^Artist painting easel$",
+          "asset": "creative:premium:fixture:artist-easel",
+          "label": "Artist painting easel",
+          "position": [
+            0,
+            0,
+            0.161
+          ]
+        },
+        {
+          "match": "^$",
+          "asset": "creative:premium:placement:0:0:",
+          "label": "Unnamed prop",
+          "position": [
+            -0.279,
+            0,
+            0
+          ]
+        },
+        {
+          "match": "^Prop:long-scissors$",
+          "asset": "creative:premium:room:12:long-scissors",
+          "label": "Prop:long-scissors",
+          "position": [
+            -0.168,
+            0,
+            0.248
+          ],
+          "rotation": [
+            0,
+            121.3,
+            0
+          ]
+        },
+        {
+          "match": "^Prop:ruler-set-square$",
+          "asset": "creative:premium:room:11:ruler-set-square",
+          "label": "Prop:ruler-set-square",
+          "position": [
+            -0.116,
+            0,
+            0.33
+          ],
+          "rotation": [
+            0,
+            -11.5,
+            0
+          ]
+        },
+        {
+          "match": "^Atelier artist · Illustration tablet & stylus · Pale ash & brushed silver$",
+          "asset": "creative:premium:room:10:papers",
+          "label": "Atelier artist · Illustration tablet & stylus · Pale ash & brushed silver",
+          "position": [
+            0,
+            0,
+            0.597
+          ]
+        },
+        {
+          "match": "^Prop:ergoflex-artist-stool$",
+          "label": "Prop:ergoflex-artist-stool",
+          "space": "local",
+          "position": [
+            0.176,
+            0,
+            0.633
+          ]
+        },
+        {
+          "match": "^Prop:atelier-artist-pen-display-oak$",
+          "label": "Prop:atelier-artist-pen-display-oak",
+          "space": "local",
+          "position": [
+            0.689,
+            0,
+            0
+          ],
+          "hide": true
+        },
+        {
+          "match": "^Prop:painted-mug$",
+          "path": "^Room:creative > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Prop:painted-mug$",
+          "label": "Prop:painted-mug",
+          "space": "local",
+          "position": [
+            0,
+            0,
+            0.179
+          ],
+          "hide": true
+        },
+        {
+          "match": "^Prop:sketchbook$",
+          "path": "^Room:creative > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Prop:sketchbook$",
+          "label": "Prop:sketchbook",
+          "hide": true
+        },
+        {
+          "match": "^Prop:apple-pencil$",
+          "path": "^Room:creative > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Prop:apple-pencil$",
+          "label": "Prop:apple-pencil",
+          "space": "local",
+          "position": [
+            -0.154,
+            0,
+            0
+          ]
+        },
+        {
+          "match": "^Prop:ergoflex-plant-2$",
+          "near": [
+            -2.3535,
+            3.5454,
+            0.3
+          ],
+          "label": "Prop:ergoflex-plant-2 (behind the bust)",
+          "hide": true
+        },
+        {
+          "match": "^Original color study 2$",
+          "asset": "creative:premium:fixture:artist-study-1",
+          "label": "Original color study 2",
+          "position": [
+            0,
+            -0.655,
+            2.047
+          ]
+        },
+        {
+          "match": "^Original color study 1$",
+          "asset": "creative:premium:fixture:artist-study-0",
+          "label": "Original color study 1",
+          "position": [
+            0,
+            -0.635,
+            0.109
+          ],
+          "hide": true
+        },
+        {
+          "match": "^Original atelier painting$",
+          "asset": "creative:premium:placement:35:0:Original atelier painting",
+          "label": "Original atelier painting",
+          "position": [
+            -1.069,
+            0,
+            0
+          ]
+        },
+        {
+          "match": "^Original color study 3$",
+          "asset": "creative:premium:fixture:artist-study-2",
+          "label": "Original color study 3",
+          "position": [
+            0,
+            -0.697,
+            -1.585
+          ]
+        },
+        {
+          "add": {
+            "asset": "tea-cup"
+          },
+          "id": "iktqfoa9x",
+          "match": "^Added prop:tea-cup#iktqfoa9x$",
+          "label": "Japanese tea cup",
+          "parent": "desk",
+          "position": [
+            1.296,
+            -0.159,
+            0.297
+          ],
+          "rotation": [
+            0,
+            41.7,
+            0
+          ],
+          "scale": [
+            1.2976,
+            1.2149,
+            1.3011
+          ],
+          "show": {
+            "from": 0,
+            "to": 7.4,
+            "fadeOut": 0.4
+          }
+        },
+        {
+          "add": {
+            "asset": "ergoflex-side-cup-holder"
+          },
+          "id": "ouy3umddv",
+          "match": "^Added prop:ergoflex-side-cup-holder#ouy3umddv$",
+          "label": "Side cup holder · acrylic",
+          "parent": "desk",
+          "position": [
+            1.093,
+            -0.168,
+            0.303
+          ],
+          "rotation": [
+            0,
+            -90,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "show": {
+            "from": 0,
+            "to": 7.4,
+            "fadeOut": 0.4
+          }
+        },
+        {
+          "match": "^Accessory:cable-tray$",
+          "label": "Accessory:cable-tray",
+          "show": {
+            "from": 0,
+            "to": 23.5,
+            "fadeIn": 1,
+            "fadeOut": 1
+          }
+        },
+        {
+          "add": {
+            "asset": "ergoflex-side-shelf-large-cubby"
+          },
+          "id": "vima7dnnn",
+          "match": "^Added prop:ergoflex-side-shelf-large-cubby#vima7dnnn$",
+          "label": "Side shelf · large, cubby and cups",
+          "parent": "desk",
+          "position": [
+            1.133,
+            -0.183,
+            0.485
+          ],
+          "rotation": [
+            0,
+            -90,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "show": {
+            "from": 7.4,
+            "to": 17.3,
+            "fadeOut": 0.4
+          }
+        },
+        {
+          "match": "^Prop:ergoflex-drawing-tablet$",
+          "path": "^Room:creative > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Prop:ergoflex-drawing-tablet$",
+          "label": "Prop:ergoflex-drawing-tablet",
+          "space": "local",
+          "position": [
+            1.111,
+            0,
+            0.275
+          ],
+          "rotation": [
+            0,
+            -26.7,
+            0
+          ],
+          "show": {
+            "from": 0,
+            "to": 7.6,
+            "fadeOut": 0.5
+          }
+        },
+        {
+          "match": "^Colour palette$",
+          "path": "^Room:creative > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Groove tabletop · daily materials > Colour palette$",
+          "label": "Colour palette",
+          "space": "local",
+          "position": [
+            -0.579,
+            0.006,
+            -0.23
+          ]
+        },
+        {
+          "match": "^Accessory:painter-shelf$",
+          "path": "^Room:creative > Cinematic demonstration desk · ErgoFlex desk > Desk dressing:desktop > Accessory:painter-shelf$",
+          "label": "Accessory:painter-shelf",
+          "space": "local",
+          "position": [
+            -0.021,
+            -0.096,
+            -0.004
+          ],
+          "rotation": [
+            45.5,
+            0,
+            0
+          ],
+          "show": {
+            "from": 17.3,
+            "to": 100000,
+            "fadeIn": 0.45
+          }
+        },
+        {
+          "match": "^Prop:ficus$",
+          "asset": "creative:premium:room:2:kenney-furniture-potted-plant",
+          "label": "Prop:ficus",
+          "hide": true
+        },
+        {
+          "match": "^Prop:atelier-artist-palette-oak$",
+          "label": "Prop:atelier-artist-palette-oak",
+          "space": "local",
+          "position": [
+            3.798,
+            0.645,
+            0.877
+          ]
+        },
+        {
+          "add": {
+            "asset": "ergoflex-side-cup-holder"
+          },
+          "id": "crdigL",
+          "match": "^Added prop:ergoflex-side-cup-holder#crdigL$",
+          "label": "Side cup holder · acrylic (left wing)",
+          "parent": "desk",
+          "position": [
+            -1.093,
+            -0.168,
+            0.303
+          ],
+          "rotation": [
+            0,
+            90,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "show": {
+            "from": 0,
+            "to": 7.4,
+            "fadeOut": 0.4
+          }
+        },
+        {
+          "add": {
+            "asset": "water-bottle"
+          },
+          "id": "crdigLbot",
+          "match": "^Added prop:water-bottle#crdigLbot$",
+          "label": "Studio water bottle (left cup holder)",
+          "parent": "desk",
+          "position": [
+            -1.296,
+            -0.159,
+            0.303
+          ],
+          "rotation": [
+            0,
+            22,
+            0
+          ],
+          "scale": [
+            0.85,
+            0.85,
+            0.85
+          ],
+          "show": {
+            "from": 0,
+            "to": 7.4,
+            "fadeOut": 0.4
+          }
+        },
+        {
+          "add": {
+            "asset": "atelier-artist-brushes-oak"
+          },
+          "id": "crptRbru",
+          "match": "^Added prop:atelier-artist-brushes-oak#crptRbru$",
+          "label": "Ceramic brush pot & brushes (right painter shelf)",
+          "parent": "desk",
+          "position": [
+            1.515,
+            -0.0615,
+            0.22
+          ],
+          "rotation": [
+            0,
+            -18,
+            0
+          ],
+          "scale": [
+            0.88,
+            0.88,
+            0.88
+          ],
+          "show": {
+            "from": 17.3,
+            "to": 100000,
+            "fadeIn": 0.45
+          }
+        },
+        {
+          "add": {
+            "asset": "atelier-artist-palette-oak"
+          },
+          "id": "crptRpal",
+          "match": "^Added prop:atelier-artist-palette-oak#crptRpal$",
+          "label": "Oak paint palette & knife (right painter shelf)",
+          "parent": "desk",
+          "position": [
+            1.335,
+            -0.061,
+            0.245
+          ],
+          "rotation": [
+            0,
+            14,
+            0
+          ],
+          "scale": [
+            0.78,
+            0.78,
+            0.78
+          ],
+          "show": {
+            "from": 17.3,
+            "to": 100000,
+            "fadeIn": 0.45
+          }
+        },
+        {
+          "add": {
+            "asset": "painters-tape"
+          },
+          "id": "crptRtap",
+          "match": "^Added prop:painters-tape#crptRtap$",
+          "label": "Canvas masking tape (right painter shelf)",
+          "parent": "desk",
+          "position": [
+            1.435,
+            -0.061,
+            0.275
+          ],
+          "rotation": [
+            0,
+            32,
+            0
+          ],
+          "scale": [
+            0.7,
+            0.7,
+            0.7
+          ],
+          "show": {
+            "from": 17.3,
+            "to": 100000,
+            "fadeIn": 0.45
+          }
+        },
+        {
+          "add": {
+            "asset": "bottle-set"
+          },
+          "id": "crptRbot",
+          "match": "^Added prop:bottle-set#crptRbot$",
+          "label": "Pigment & medium bottles (right painter shelf)",
+          "parent": "desk",
+          "position": [
+            1.41,
+            -0.061,
+            0.165
+          ],
+          "rotation": [
+            0,
+            4,
+            0
+          ],
+          "scale": [
+            0.68,
+            0.68,
+            0.68
+          ],
+          "show": {
+            "from": 17.3,
+            "to": 100000,
+            "fadeIn": 0.45
+          }
+        },
+        {
+          "add": {
+            "asset": "ergoflex-painter-shelf"
+          },
+          "id": "crpaintL",
+          "match": "^Added prop:ergoflex-painter-shelf#crpaintL$",
+          "label": "Painter accessory shelf (left wing)",
+          "parent": "desk",
+          "position": [
+            -1.2491,
+            -0.3254,
+            0.1364
+          ],
+          "rotation": [
+            19.5,
+            180,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "show": {
+            "from": 17.3,
+            "to": 100000,
+            "fadeIn": 0.45
+          }
+        },
+        {
+          "add": {
+            "asset": "atelier-artist-brushes-chalk"
+          },
+          "id": "crptLbru",
+          "match": "^Added prop:atelier-artist-brushes-chalk#crptLbru$",
+          "label": "Pale-ash brush pot & brushes (left painter shelf)",
+          "parent": "desk",
+          "position": [
+            -1.325,
+            -0.061,
+            0.215
+          ],
+          "rotation": [
+            0,
+            28,
+            0
+          ],
+          "scale": [
+            0.9,
+            0.9,
+            0.9
+          ],
+          "show": {
+            "from": 17.3,
+            "to": 100000,
+            "fadeIn": 0.45
+          }
+        },
+        {
+          "add": {
+            "asset": "ink-quill"
+          },
+          "id": "crptLink",
+          "match": "^Added prop:ink-quill#crptLink$",
+          "label": "Ink bottle & quill (left painter shelf)",
+          "parent": "desk",
+          "position": [
+            -1.455,
+            -0.0612,
+            0.235
+          ],
+          "rotation": [
+            0,
+            -25,
+            0
+          ],
+          "scale": [
+            0.76,
+            0.76,
+            0.76
+          ],
+          "show": {
+            "from": 17.3,
+            "to": 100000,
+            "fadeIn": 0.45
+          }
+        },
+        {
+          "add": {
+            "asset": "atelier-artist-palette-chalk"
+          },
+          "id": "crptLpal",
+          "match": "^Added prop:atelier-artist-palette-chalk#crptLpal$",
+          "label": "Pale-ash palette & knife (left painter shelf)",
+          "parent": "desk",
+          "position": [
+            -1.545,
+            -0.0615,
+            0.245
+          ],
+          "rotation": [
+            0,
+            -16,
+            0
+          ],
+          "scale": [
+            0.74,
+            0.74,
+            0.74
+          ],
+          "show": {
+            "from": 17.3,
+            "to": 100000,
+            "fadeIn": 0.45
+          }
+        },
+        {
+          "add": {
+            "asset": "polish-bottle"
+          },
+          "id": "crptLmed",
+          "match": "^Added prop:polish-bottle#crptLmed$",
+          "label": "Artist varnish medium bottle (left painter shelf)",
+          "parent": "desk",
+          "position": [
+            -1.565,
+            -0.0615,
+            0.17
+          ],
+          "rotation": [
+            0,
+            12,
+            0
+          ],
+          "scale": [
+            0.68,
+            0.68,
+            0.68
+          ],
+          "show": {
+            "from": 17.3,
+            "to": 100000,
+            "fadeIn": 0.45
+          }
+        },
+        {
+          "add": {
+            "asset": "metal-ruler"
+          },
+          "id": "crdrRrul",
+          "match": "^Added prop:metal-ruler#crdrRrul$",
+          "label": "Architect steel scale ruler (right cubby)",
+          "parent": "desk",
+          "position": [
+            1.399,
+            -0.065,
+            0.66
+          ],
+          "rotation": [
+            76,
+            8,
+            -5
+          ],
+          "scale": [
+            0.6625,
+            0.85,
+            0.4716
+          ],
+          "show": {
+            "from": 7.4,
+            "to": 17.3,
+            "fadeOut": 0.4
+          }
+        },
+        {
+          "add": {
+            "asset": "pen"
+          },
+          "id": "crdrRpen1",
+          "match": "^Added prop:pen#crdrRpen1$",
+          "label": "Technical drafting pen (right cubby)",
+          "parent": "desk",
+          "position": [
+            1.33,
+            -0.039,
+            0.676
+          ],
+          "rotation": [
+            78,
+            -20,
+            8
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "show": {
+            "from": 7.4,
+            "to": 17.3,
+            "fadeOut": 0.4
+          }
+        },
+        {
+          "add": {
+            "asset": "painters-tape"
+          },
+          "id": "crdrRtap",
+          "match": "^Added prop:painters-tape#crdrRtap$",
+          "label": "Drafting masking tape (right shelf)",
+          "parent": "desk",
+          "position": [
+            1.326,
+            -0.135,
+            0.64
+          ],
+          "rotation": [
+            0,
+            18,
+            0
+          ],
+          "scale": [
+            0.4689,
+            0.5106,
+            0.2819
+          ],
+          "show": {
+            "from": 7.4,
+            "to": 17.3,
+            "fadeOut": 0.4
+          }
+        },
+        {
+          "add": {
+            "asset": "ergoflex-side-shelf-large-cubby"
+          },
+          "id": "crdraftL",
+          "match": "^Added prop:ergoflex-side-shelf-large-cubby#crdraftL$",
+          "label": "Side shelf · large, cubby and cups (left wing)",
+          "parent": "desk",
+          "position": [
+            -1.133,
+            -0.183,
+            0.485
+          ],
+          "rotation": [
+            0,
+            90,
+            0
+          ],
+          "scale": [
+            -1,
+            1,
+            1
+          ],
+          "show": {
+            "from": 7.4,
+            "to": 17.3,
+            "fadeOut": 0.4
+          }
+        },
+        {
+          "add": {
+            "asset": "tea-cup"
+          },
+          "id": "crdrLcup",
+          "match": "^Added prop:tea-cup#crdrLcup$",
+          "label": "Studio ceramic cup (left drafting shelf)",
+          "parent": "desk",
+          "position": [
+            -1.326,
+            -0.182,
+            0.428
+          ],
+          "rotation": [
+            0,
+            -35,
+            0
+          ],
+          "scale": [
+            1.18,
+            1.18,
+            1.18
+          ],
+          "show": {
+            "from": 7.4,
+            "to": 17.3,
+            "fadeOut": 0.4
+          }
+        },
+        {
+          "add": {
+            "asset": "multi-tool"
+          },
+          "id": "crdrLmto",
+          "match": "^Added prop:multi-tool#crdrLmto$",
+          "label": "Precision utility tool (left drafting shelf)",
+          "parent": "desk",
+          "position": [
+            -1.403,
+            -0.024,
+            0.656
+          ],
+          "rotation": [
+            82,
+            -10.6,
+            -97
+          ],
+          "scale": [
+            0.85,
+            0.85,
+            0.85
+          ],
+          "show": {
+            "from": 7.4,
+            "to": 17.3,
+            "fadeOut": 0.4
+          }
+        },
+        {
+          "add": {
+            "asset": "long-scissors"
+          },
+          "id": "crdrLsci",
+          "match": "^Added prop:long-scissors#crdrLsci$",
+          "label": "Drafting shears (left cubby)",
+          "parent": "desk",
+          "position": [
+            -1.326,
+            -0.057,
+            0.69
+          ],
+          "rotation": [
+            118.5,
+            -7,
+            93
+          ],
+          "scale": [
+            0.6572,
+            0.82,
+            0.6734
+          ],
+          "show": {
+            "from": 7.4,
+            "to": 17.3,
+            "fadeOut": 0.4
+          }
+        },
+        {
+          "add": {
+            "asset": "apple-pencil"
+          },
+          "id": "crdrRpen2",
+          "match": "^Added prop:apple-pencil#crdrRpen2$",
+          "label": "Drafting stylus (right cubby)",
+          "parent": "desk",
+          "position": [
+            1.248,
+            -0.058,
+            0.618
+          ],
+          "rotation": [
+            -90,
+            85.9,
+            152
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "show": {
+            "from": 7.4,
+            "to": 17.3,
+            "fadeOut": 0.4
+          }
+        },
+        {
+          "add": {
+            "asset": "atelier-artist-stylus-chalk"
+          },
+          "id": "crdrLsty",
+          "match": "^Added prop:atelier-artist-stylus-chalk#crdrLsty$",
+          "label": "Drafting compass stylus (left shelf)",
+          "parent": "desk",
+          "position": [
+            -1.256,
+            -0.061,
+            0.672
+          ],
+          "rotation": [
+            91.4,
+            74,
+            0
+          ],
+          "scale": [
+            1,
+            1,
+            1
+          ],
+          "show": {
+            "from": 7.4,
+            "to": 17.3,
+            "fadeOut": 0.4
+          }
+        }
+      ],
+      "filmTitles": [
+        {
+          "id": "create-0",
+          "rel_in": 3.6,
+          "rel_out": 9.2,
+          "eyebrow": "PATENTED PRECISION",
+          "title": "One Surface. Zero Friction.",
+          "detail": "From digital to drafting to painting. True value in every form.",
+          "timed": true,
+          "typography": {
+            "eyebrow": {
+              "size": 35,
+              "spacing": 3.9,
+              "dy": 21
+            },
+            "title": {
+              "dy": -5
+            },
+            "detail": {
+              "dy": -27
+            }
+          },
+          "position": {
+            "x": 140.73,
+            "y": 854.98
+          },
+          "shadow": {
+            "paths": [
+              {
+                "line": "eyebrow",
+                "points": [
+                  {
+                    "x": -4.37,
+                    "y": -110.7
+                  },
+                  {
+                    "x": 280.92,
+                    "y": -111.38
+                  },
+                  {
+                    "x": 282.34,
+                    "y": -88.6
+                  },
+                  {
+                    "x": -1.15,
+                    "y": -87.64
+                  }
+                ]
+              },
+              {
+                "line": "title",
+                "points": [
+                  {
+                    "x": -6.2,
+                    "y": -71.7
+                  },
+                  {
+                    "x": 647.11,
+                    "y": -77.2
+                  },
+                  {
+                    "x": 650.93,
+                    "y": -23.42
+                  },
+                  {
+                    "x": -5.38,
+                    "y": -18.16
+                  }
+                ]
+              },
+              {
+                "line": "detail",
+                "points": [
+                  {
+                    "x": -5.67,
+                    "y": -5.26
+                  },
+                  {
+                    "x": 688.93,
+                    "y": -8.25
+                  },
+                  {
+                    "x": 695.96,
+                    "y": 31.65
+                  },
+                  {
+                    "x": -6.27,
+                    "y": 28.09
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

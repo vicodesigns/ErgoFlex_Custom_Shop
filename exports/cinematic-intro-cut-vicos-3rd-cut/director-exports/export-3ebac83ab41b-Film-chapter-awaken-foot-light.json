@@ -1,0 +1,728 @@
+{
+ "schema": "ergoflex.client-cut",
+ "version": 1,
+ "id": "film-vicos-3rd-cut-awaken",
+ "name": "Film chapter: awaken (44.85 s)",
+ "client": "Vicos 3rd cut",
+ "volume": 0.32,
+ "shots": [
+  {
+   "id": "awaken",
+   "room": "product",
+   "kind": "glide",
+   "seconds": 44.85,
+   "title": "Level up your every day.",
+   "detail": "Better health. Clearer focus. More joy in your work.",
+   "preset": "gaming",
+   "transition": 0.35,
+   "size": "60x30",
+   "motion": {
+    "version": 2,
+    "initial": {
+     "height": 28,
+     "tilt": 0,
+     "x": 0,
+     "z": 0,
+     "yaw": 0
+    },
+    "clips": [
+     {
+      "id": "op-roll",
+      "lane": "wheels",
+      "kind": "travel",
+      "start": 2.0,
+      "duration": 2.3,
+      "easing": "smooth",
+      "label": "Move forward",
+      "value": 12,
+      "direction": "forward"
+     },
+     {
+      "id": "03582967-0974-43a8-9379-a000caa92dfb",
+      "lane": "tilt",
+      "kind": "tilt",
+      "start": 9.25,
+      "duration": 3.0,
+      "easing": "linear",
+      "label": "",
+      "target": -5
+     },
+     {
+      "id": "op-lift",
+      "lane": "lift",
+      "kind": "lift",
+      "start": 10.4,
+      "duration": 5.75,
+      "easing": "smooth",
+      "label": "Lift up",
+      "target": 45.5
+     },
+     {
+      "id": "op-tilt-down",
+      "lane": "tilt",
+      "kind": "tilt",
+      "start": 18.65,
+      "duration": 5.950000000000003,
+      "easing": "smooth",
+      "label": "Tilt up",
+      "target": 65
+     },
+     {
+      "id": "8fd6bb67-5297-4296-a82b-e38b974d9b58",
+      "lane": "lift",
+      "kind": "lift",
+      "start": 21.1,
+      "duration": 3.5,
+      "easing": "linear",
+      "label": "",
+      "target": 52.5
+     },
+     {
+      "id": "op-turn",
+      "lane": "wheels",
+      "kind": "rotate",
+      "start": 25.55,
+      "duration": 6.7,
+      "easing": "smooth",
+      "label": "Rotating left",
+      "value": 100,
+      "direction": "left"
+     },
+     {
+      "id": "op-tilt-back",
+      "lane": "tilt",
+      "kind": "tilt",
+      "start": 31.55,
+      "duration": 4.150000000000002,
+      "easing": "smooth",
+      "label": "Tilt level",
+      "target": 0
+     },
+     {
+      "id": "op-lower",
+      "lane": "lift",
+      "kind": "lift",
+      "start": 33.800000000000004,
+      "duration": 4.55,
+      "easing": "smooth",
+      "label": "Lift down",
+      "target": 28
+     },
+     {
+      "id": "op-roll-lit",
+      "lane": "wheels",
+      "kind": "travel",
+      "start": 37.9,
+      "duration": 5.000000000000007,
+      "easing": "smooth",
+      "label": "Move forward",
+      "value": 24,
+      "direction": "forward"
+     }
+    ]
+   },
+   "camera": {
+    "keys": [
+     {
+      "id": "plan-00",
+      "time": 0.0,
+      "label": "Wheel macro, desk dark",
+      "easing": "smooth",
+      "view": {
+       "position": [
+        1.1244,
+        0.2203,
+        1.7861
+       ],
+       "target": [
+        0.093,
+        0.179,
+        0.972
+       ],
+       "fov": 24,
+       "aspect": 1.7777777777777777
+      }
+     },
+     {
+      "id": "plan-01",
+      "time": 0.040134,
+      "label": "Wheels start",
+      "easing": "linear",
+      "view": {
+       "position": [
+        1.4073105312344516,
+        0.10547882423809757,
+        1.2756851360475794
+       ],
+       "target": [
+        0.17937996947715468,
+        0.16944163275148474,
+        0.9445145072956719
+       ],
+       "fov": 23.99999999999714,
+       "aspect": 1.7777777777777777
+      }
+     },
+     {
+      "id": "plan-02",
+      "time": 0.044593,
+      "label": "Wheels start copy",
+      "easing": "linear",
+      "view": {
+       "position": [
+        1.4073105312344516,
+        0.10547882423809757,
+        1.2756851360475794
+       ],
+       "target": [
+        0.17937996947715468,
+        0.16944163275148474,
+        0.9445145072956719
+       ],
+       "fov": 23.99999999999714,
+       "aspect": 1.7777777777777777
+      }
+     },
+     {
+      "id": "plan-03",
+      "time": 0.091416,
+      "label": "Roll lands, pull back",
+      "easing": "linear",
+      "view": {
+       "position": [
+        3.624539509726648,
+        1.0017562057712788,
+        1.7747961695715306
+       ],
+       "target": [
+        0.47067549155267324,
+        0.6473779466404054,
+        0.9174711039906447
+       ],
+       "fov": 25.004833158313204,
+       "aspect": 1.7777777777777777
+      }
+     },
+     {
+      "id": "plan-04",
+      "time": 0.107023,
+      "label": "Roll lands, pull back copy",
+      "easing": "linear",
+      "view": {
+       "position": [
+        3.624539509726648,
+        1.0017562057712788,
+        1.7747961695715306
+       ],
+       "target": [
+        0.47067549155267324,
+        0.6473779466404054,
+        0.9174711039906447
+       ],
+       "fov": 25.004833158313204,
+       "aspect": 1.7777777777777777
+      }
+     },
+     {
+      "id": "plan-05",
+      "time": 0.19621,
+      "label": "Lift starts: in and down toward the floor",
+      "easing": "linear",
+      "view": {
+       "position": [
+        4.701060026836172,
+        2.1205197503053057,
+        2.3919173865976484
+       ],
+       "target": [
+        0.08230087454839057,
+        1.1688533923173572,
+        0.6892318675417873
+       ],
+       "fov": 32.998962224820005,
+       "aspect": 1.7777777777777777
+      }
+     },
+     {
+      "id": "plan-06",
+      "time": 0.206243,
+      "label": "Lift starts: in and down toward the floor copy",
+      "easing": "linear",
+      "view": {
+       "position": [
+        4.701060026836172,
+        2.1205197503053057,
+        2.3919173865976484
+       ],
+       "target": [
+        0.08230087454839057,
+        1.1688533923173572,
+        0.6892318675417873
+       ],
+       "fov": 32.998962224820005,
+       "aspect": 1.7777777777777777
+      }
+     },
+     {
+      "id": "plan-07",
+      "time": 0.249721,
+      "label": "Low three-quarter: the desktop climbs (blue)",
+      "easing": "linear",
+      "view": {
+       "position": [
+        4.0,
+        0.55,
+        3.1
+       ],
+       "target": [
+        0.1281,
+        1.25,
+        0.6586
+       ],
+       "fov": 36,
+       "aspect": 1.7777777777777777
+      }
+     },
+     {
+      "id": "plan-08",
+      "time": 0.26087,
+      "label": "Low three-quarter: the desktop climbs (blue) copy",
+      "easing": "linear",
+      "view": {
+       "position": [
+        4,
+        0.55,
+        3.1
+       ],
+       "target": [
+        0.1281,
+        1.25,
+        0.6586
+       ],
+       "fov": 36,
+       "aspect": 1.7777777777777777
+      }
+     },
+     {
+      "id": "plan-09",
+      "time": 0.360089,
+      "label": "Craning up with it: the desktop and its light, standing heig",
+      "easing": "linear",
+      "view": {
+       "position": [
+        4.169322970083778,
+        1.5532438429119804,
+        3.1190557931878384
+       ],
+       "target": [
+        0.0324977794135692,
+        1.32383817614352,
+        0.855729478969145
+       ],
+       "fov": 38.99441465740602,
+       "aspect": 1.7777777777777777
+      }
+     },
+     {
+      "id": "plan-10",
+      "time": 0.448161,
+      "label": "Side three-quarter: the board will tilt",
+      "easing": "linear",
+      "view": {
+       "position": [
+        3.371463162345224,
+        1.6981692285400767,
+        5.5709417017276985
+       ],
+       "target": [
+        0.8234097709097628,
+        1.429538265773861,
+        0.02146716066267882
+       ],
+       "fov": 33.503855763939704,
+       "aspect": 1.7777777777777777
+      }
+     },
+     {
+      "id": "plan-11",
+      "time": 0.548495,
+      "label": "Side three-quarter: 65 degrees, raised (purple)",
+      "easing": "linear",
+      "view": {
+       "position": [
+        3.1401650260813008,
+        1.521701439993176,
+        5.677652511882694
+       ],
+       "target": [
+        0.879873114536459,
+        1.4626172761201832,
+        -0.0013822457897625982
+       ],
+       "fov": 33.50373443831399,
+       "aspect": 1.7777777777777777
+      }
+     },
+     {
+      "id": "plan-12",
+      "time": 0.569677,
+      "label": "Side three-quarter: 65 degrees, raised (purple) copy",
+      "easing": "linear",
+      "view": {
+       "position": [
+        3.1401650260813008,
+        1.521701439993176,
+        5.677652511882694
+       ],
+       "target": [
+        0.879873114536459,
+        1.4626172761201832,
+        -0.0013822457897625982
+       ],
+       "fov": 33.50373443831399,
+       "aspect": 1.7777777777777777
+      }
+     },
+     {
+      "id": "plan-13",
+      "time": 0.787068,
+      "label": "3/4: red lowering",
+      "easing": "linear",
+      "view": {
+       "position": [
+        3.4509,
+        1.9,
+        5.3859
+       ],
+       "target": [
+        0.5406,
+        1.4224,
+        0.0126
+       ],
+       "fov": 33,
+       "aspect": 1.7777777777777777
+      }
+     },
+     {
+      "id": "plan-14",
+      "time": 0.829431,
+      "label": "Lit roll toward the lens: swing starts",
+      "easing": "linear",
+      "view": {
+       "position": [
+        3.2631,
+        1.95,
+        5.0705
+       ],
+       "target": [
+        0.7438,
+        1.2136,
+        -0.0081
+       ],
+       "fov": 33,
+       "aspect": 1.7777777777777777
+      }
+     },
+     {
+      "id": "plan-15",
+      "time": 0.84058,
+      "label": "Lit roll toward the lens: swing starts copy",
+      "easing": "linear",
+      "view": {
+       "position": [
+        3.2631,
+        1.95,
+        5.0705
+       ],
+       "target": [
+        0.7438,
+        1.2136,
+        -0.0081
+       ],
+       "fov": 33,
+       "aspect": 1.7777777777777777
+      }
+     },
+     {
+      "id": "plan-16",
+      "time": 0.896321,
+      "label": "Across the front: the roll comes to the lens",
+      "easing": "linear",
+      "view": {
+       "position": [
+        -0.432,
+        1.82,
+        6.029
+       ],
+       "target": [
+        0.1895,
+        1.26,
+        0.967
+       ],
+       "fov": 33.3,
+       "aspect": 1.7777777777777777
+      }
+     },
+     {
+      "id": "plan-17",
+      "time": 0.947603,
+      "label": "Hero 3/4: slow push into the dissolve",
+      "easing": "linear",
+      "view": {
+       "position": [
+        -2.9278,
+        1.78,
+        5.3927
+       ],
+       "target": [
+        0.061,
+        1.31,
+        1.0749
+       ],
+       "fov": 33.5,
+       "aspect": 1.7777777777777777
+      }
+     },
+     {
+      "id": "plan-18",
+      "time": 1.0,
+      "label": "Push into the dissolve",
+      "easing": "smooth",
+      "view": {
+       "position": [
+        -3.088,
+        1.74,
+        5.0139
+       ],
+       "target": [
+        0.0661,
+        1.31,
+        1.0683
+       ],
+       "fov": 33,
+       "aspect": 1.7777777777777777
+      }
+     }
+    ]
+   },
+   "sceneGlobals": {
+    "ledFloorSources": {
+     "foot": {
+      "brightness": [
+       [
+        7.5,
+        1.0
+       ],
+       [
+        7.75,
+        1.25
+       ],
+       [
+        8.0,
+        1.8
+       ],
+       [
+        8.25,
+        2.35
+       ],
+       [
+        8.5,
+        2.6
+       ],
+       [
+        9.0,
+        2.6
+       ],
+       [
+        9.125,
+        2.35
+       ],
+       [
+        9.25,
+        1.8
+       ],
+       [
+        9.375,
+        1.25
+       ],
+       [
+        9.5,
+        1.0
+       ]
+      ],
+      "saturation": [
+       [
+        7.5,
+        1.0
+       ],
+       [
+        7.75,
+        1.0625
+       ],
+       [
+        8.0,
+        1.2
+       ],
+       [
+        8.25,
+        1.3375
+       ],
+       [
+        8.5,
+        1.4
+       ],
+       [
+        9.0,
+        1.4
+       ],
+       [
+        9.125,
+        1.3375
+       ],
+       [
+        9.25,
+        1.2
+       ],
+       [
+        9.375,
+        1.0625
+       ],
+       [
+        9.5,
+        1.0
+       ]
+      ],
+      "spread": [
+       [
+        7.5,
+        1.0
+       ],
+       [
+        7.75,
+        1.0391
+       ],
+       [
+        8.0,
+        1.125
+       ],
+       [
+        8.25,
+        1.2109
+       ],
+       [
+        8.5,
+        1.25
+       ],
+       [
+        9.0,
+        1.25
+       ],
+       [
+        9.125,
+        1.2109
+       ],
+       [
+        9.25,
+        1.125
+       ],
+       [
+        9.375,
+        1.0391
+       ],
+       [
+        9.5,
+        1.0
+       ]
+      ],
+      "edge": [
+       [
+        7.5,
+        1.0
+       ],
+       [
+        7.75,
+        1.0781
+       ],
+       [
+        8.0,
+        1.25
+       ],
+       [
+        8.25,
+        1.4219
+       ],
+       [
+        8.5,
+        1.5
+       ],
+       [
+        9.0,
+        1.5
+       ],
+       [
+        9.125,
+        1.4219
+       ],
+       [
+        9.25,
+        1.25
+       ],
+       [
+        9.375,
+        1.0781
+       ],
+       [
+        9.5,
+        1.0
+       ]
+      ],
+      "tintAmount": [
+       [
+        7.5,
+        0.0
+       ],
+       [
+        7.75,
+        0.125
+       ],
+       [
+        8.0,
+        0.4
+       ],
+       [
+        8.25,
+        0.675
+       ],
+       [
+        8.5,
+        0.8
+       ],
+       [
+        9.0,
+        0.8
+       ],
+       [
+        9.125,
+        0.675
+       ],
+       [
+        9.25,
+        0.4
+       ],
+       [
+        9.375,
+        0.125
+       ],
+       [
+        9.5,
+        0.0
+       ]
+      ],
+      "tint": "#2438ff"
+     }
+    }
+   }
+  }
+ ],
+ "updated": "2026-11-22T04:38:51Z"
+}

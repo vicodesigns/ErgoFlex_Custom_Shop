@@ -1,0 +1,49 @@
+{
+ "note": "polish1125 score (Nov 25 2026): awaken 44.85 -> 48.3 s (Vico). Every dissolve bar line from rise -> create to storage -> hero where the 44.85 s cut's score had it, + 3.45 s (those chapters keep tempo and bars); awaken -> rise where the fit puts it with those pinned: awaken 15 ->16 whole bars, rise keeps its bars. Earlier note: polish1124 commons5 (Nov 25 2026): the dissolve bar lines before commons pinned where the 16 s commons had them, so the 20.3 s commons does not retime awaken, rise and create; pins after commons (if any) moved 4.3 s with the picture. ",
+ "bar_lines": [
+  {
+   "at": 46.9,
+   "why": "awaken -> rise dissolve bar line (polish1125 score, awaken 48.3 s)"
+  },
+  {
+   "at": 74.85,
+   "why": "rise -> create dissolve bar line (polish1125 score, awaken 48.3 s)"
+  },
+  {
+   "at": 96.25,
+   "why": "create -> commons dissolve bar line (polish1125 score, awaken 48.3 s)"
+  },
+  {
+   "at": 115.65,
+   "why": "commons -> coast dissolve bar line (polish1125 score, awaken 48.3 s)"
+  },
+  {
+   "at": 128.625,
+   "why": "coast -> oilers dissolve bar line (polish1125 score, awaken 48.3 s)"
+  },
+  {
+   "at": 141.55,
+   "why": "oilers -> wellness dissolve bar line (polish1125 score, awaken 48.3 s)"
+  },
+  {
+   "at": 162.95,
+   "why": "wellness -> awareness dissolve bar line (polish1125 score, awaken 48.3 s)"
+  },
+  {
+   "at": 173.65,
+   "why": "awareness -> music dissolve bar line (polish1125 score, awaken 48.3 s)"
+  },
+  {
+   "at": 184.425,
+   "why": "music -> media dissolve bar line (polish1125 score, awaken 48.3 s)"
+  },
+  {
+   "at": 199.55,
+   "why": "media -> storage dissolve bar line (polish1125 score, awaken 48.3 s)"
+  },
+  {
+   "at": 225.32,
+   "why": "storage -> hero dissolve bar line (polish1125 score, awaken 48.3 s)"
+  }
+ ]
+}

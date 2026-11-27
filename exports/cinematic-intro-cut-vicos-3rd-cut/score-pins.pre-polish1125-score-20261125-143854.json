@@ -1,0 +1,17 @@
+{
+ "note": "polish1124 commons5 (Nov 25 2026): the dissolve bar lines before commons pinned where the 16 s commons had them, so the 20.3 s commons does not retime awaken, rise and create; pins after commons (if any) moved 4.3 s with the picture. ",
+ "bar_lines": [
+  {
+   "at": 43.85,
+   "why": "awaken -> rise dissolve bar line (commons 16 s fit, polish1124 commons5)"
+  },
+  {
+   "at": 71.4,
+   "why": "rise -> create dissolve bar line (commons 16 s fit, polish1124 commons5)"
+  },
+  {
+   "at": 92.8,
+   "why": "create -> commons dissolve bar line (commons 16 s fit, polish1124 commons5)"
+  }
+ ]
+}
