@@ -25,15 +25,19 @@ export function cleanFade(f,{max=3600}={}){
   if(!f.set||typeof f.set!=='object'||Array.isArray(f.set))return null;
   const set={};for(const k of FADE_SET_KEYS)if(k in f.set&&f.set[k]!==undefined)set[k]=structuredClone(f.set[k]);
   if(!Object.keys(set).length||JSON.stringify(set).length>400000)return null;
-  return {at:[round(at[0]),round(at[1])],set};
+  const a=round(at[0]),b=round(at[1]);if(!(b>a))return null;      // (rounded, like the importer: a hundredth is the finest fade)
+  return {at:[a,b],set};
 }
 // shot.finishFades as the cut keeps it: {finishFades:{<letter>:fade}} ({} kept: every fade taken away), or {} when the field is absent.
-export function cleanFinishFadesField(v={}){
+export function cleanFinishFadesField(v={},seconds=null){
   const m=v?.finishFades;if(!m||typeof m!=='object'||Array.isArray(m))return {};
   const out={};
   for(const [n,f] of Object.entries(m).slice(0,12)){
     if(!/^[A-Za-z][A-Za-z0-9_-]{0,11}$/.test(n))continue;
-    const c=cleanFade(f);if(c)out[n]=c;
+    const c=cleanFade(f);if(!c)continue;
+    // a chapter shortened after the fade was placed: one that starts past the end goes, one that runs past it ends with the chapter
+    if(Number.isFinite(seconds)&&seconds>0){if(c.at[0]>=seconds-MIN_FADE)continue;if(c.at[1]>seconds)c.at[1]=round(seconds);}
+    out[n]=c;
   }
   return {finishFades:out};
 }

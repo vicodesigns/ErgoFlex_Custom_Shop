@@ -32,3 +32,12 @@ assert.deepEqual(retime([19.2,20.45],'both',25,25.95),[24.7,25.95]);
 assert.deepEqual(retime([19.2,20.45],'both',-3,25.95),[0,1.25]);
 assert.ok(MIN_FADE>0);
 console.log('finish-fades-test ok');
+// review fixes: rounding can not make an empty fade; a shortened chapter trims or drops fades
+import {cleanFinishFadesField as cff} from '../experience/finish-fades.mjs';
+assert.equal(cleanFade({at:[0.001,0.004],set:{ledGlow:.1}}),null);
+const L={ledGlow:.1};
+assert.deepEqual(cff({finishFades:{H:{at:[19.2,20.45],set:L}}},15),{finishFades:{}},'starts past the end: dropped');
+assert.deepEqual(cff({finishFades:{H:{at:[13,20.45],set:L}}},15),{finishFades:{H:{at:[13,15],set:L}}},'runs past the end: ends with the chapter');
+assert.deepEqual(cff({finishFades:{H:{at:[14.95,20],set:L}}},15),{finishFades:{}},'less than a fade left: dropped');
+assert.deepEqual(cff({finishFades:{H:{at:[19.2,20.45],set:L}}},25.95),{finishFades:{H:{at:[19.2,20.45],set:L}}});
+console.log('finish-fades review fixes ok');
