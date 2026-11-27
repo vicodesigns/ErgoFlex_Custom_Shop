@@ -1010,14 +1010,24 @@ function installGlobals(shot) {
     active.globals.exposureCell = { cell, keys: k, capture: cell.value, undo: () => { delete r.toneMappingExposure; if (own) Object.defineProperty(r, 'toneMappingExposure', own); r.toneMappingExposure = raw; } };
   }
 }
+// shot.keepDeskItems (28 Nov 2026, Vico, hero Office desk): the desk does not put its loose desktop items away on the shelf while it is tilted
+// (desk-auto-stow.mjs off), so they are on the desk from the first frame and the Props lane's bars are theirs to time. The easel / painter shelf /
+// drafting kit tilt rules and the rest of the stow are untouched; the keyboard / mouse hand-off follows (rider-handoff.mjs: no stow, no hand-off).
+function installKeepDeskItems() {
+  const stow = api.sceneDesks?.objects?.stow; if (!stow) return null;
+  const was = !!stow.off; stow.off = true;
+  const r = api.sceneDesks.active; if (r) stow.restore(r);
+  return { restore() { stow.off = was; const now = api.sceneDesks?.active; if (now) stow.restore(now); } };
+}
 export async function install(shot) {
   clear();
   unhookPreset();
-  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length || shot.sceneDeskPoses?.length || shot.sceneBranding || shot.sceneDeskEdits?.length || shot.sceneTray?.length || shot.featuredBuild || shot.statusLight === false;
+  const wants = shot.quality || shot.screens?.length || shot.ledMode === 'media' || shot.clock || shot.timeOfDay || shot.accessories || shot.keepDeskItems || shot.ledGlow !== undefined || shot.sceneEdits || shot.lights || shot.ledSurfaces || shot.sceneGlobals || shot.ledStatus || shot.obstacles || shot.ledColor || shot.deskObjects || shot.floorLight || shot.ledReceivers || shot.deskFinish || shot.lightEdits?.length || shot.sceneDeskPoses?.length || shot.sceneBranding || shot.sceneDeskEdits?.length || shot.sceneTray?.length || shot.featuredBuild || shot.statusLight === false;
   if (!wants) return null;
   active = { shot, list: [], screens: [], led: null, clocks: [], tod: null, desk: null, edits: null, lights: null };
   active.desk = await installDeskObjects(shot);
   if (shot.deskFinish) active.finish = installDeskFinish(shot.deskFinish);
+  if (shot.keepDeskItems) active.keepItems = installKeepDeskItems();
   if (shot.featuredBuild) active.featured = await installFeaturedBuild(shot.featuredBuild);
   if (shot.room === 'workshop') active.workshopToyStory = await (await import('./workshop-toy-story.mjs?v=20261113-andre-shelf')).installWorkshopToyStory(api);
   if (shot.sceneDeskPoses?.length) active.deskPoses = installSceneDeskPoses(shot.sceneDeskPoses);
@@ -1230,6 +1240,7 @@ export function clear() {
   active.workshopToyStory?.restore();
   active.featured?.restore();   // before the film's own accessories / finish go back
   clearDeskObjects(active.desk);
+  active.keepItems?.restore();
   active.finish?.restore();
   active.branding?.restore();   // before the poses go back: it only swaps the desks' artwork
   active.deskEdits?.restore();   // before deskPoses (installed after it)

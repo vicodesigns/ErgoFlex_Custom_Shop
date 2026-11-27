@@ -1155,7 +1155,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     return true;
   }
   const laneName=e=>isAddEdit(e)?(e.label||propName(e.add.asset)):propName(e.label||e.match.replace(/^\^|\$$/g,'').replace(/\\/g,''));
-  let laneList=[],laneRows=1,barDrag=null,barSuppress=0,wanted=null,lastLaneKey=null;const ROW=17,MAX_ROWS=9;
+  let laneList=[],laneRows=1,barDrag=null,barSuppress=0,wanted=null,lastLaneKey=null;const ROW=17,maxRows=()=>Math.max(9,Math.floor((globalThis.innerHeight||900)*.62/ROW));   // (Vico, 27 Nov: nine rows was too few for a chapter with 70 props; the lane now takes up to ~62 % of the window, then scrolls)
   function laneItems(){
     const T=seconds()||1,vs=versions(),out=[],chapter={t0:0,lo:0,hi:T},all=edits();
     let tiltAt=null;
@@ -1164,11 +1164,11 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const stowed=(row,span)=>{if(!tiltAt||!span.desk||row.e?.show)return null;
       const text=`${row.id||''} ${row.name||''} ${row.target?.match||''} ${row.target?.path||''}`.replace(/\\/g,'');
       try{return stowWindow(text,span.desk,tiltAt,span.lo,span.hi);}catch{return null;}};
-    const away=(row,span,from,to)=>{if(!tiltAt||row.e?.hide===true||!(row.role==='desktop'||row.rider))return [];
+    const away=(row,span,from,to)=>{if(!tiltAt||span.keep||row.e?.hide===true||!(row.role==='desktop'||row.rider))return [];
       const recipe=span.desk==='architect'||span.desk==='artist'?span.desk:'';
       try{return awayStretches({text:`${row.id||''} ${row.name||''} ${row.target?.match||''} ${row.target?.path||''}`.replace(/\\/g,''),role:row.role||'',rider:!!row.rider,recipe,tiltAt,lo:from,hi:to});}catch{return [];}};
     const push=(span,row)=>{const s=screenOf(row.e,row.target,span),nat=s.film?null:stowed(row,span),from=nat?nat.from:s.from,to=nat?nat.to:s.to;out.push({...row,id:row.key+'|'+(span.n||''),span,start:from,end:Math.max(from+.01,to),timed:s.timed||!!s.film,fadeIn:s.fadeIn,fadeOut:s.fadeOut,ease:s.ease,film:s.film||null,stowed:!!nat,away:nat?[]:away(row,span,from,Math.max(from+.01,to))});};
-    const spans=vs.length?vs.map(v=>({t0:v.start,lo:v.from,hi:Math.min(T,v.to),n:v.n,label:v.label,desk:v.preset})):[chapter];
+    const spans=vs.length?vs.map(v=>({t0:v.start,lo:v.from,hi:Math.min(T,v.to),n:v.n,label:v.label,desk:v.preset,keep:!!v.setup?.keepDeskItems})):[chapter];
     for(const span of spans){
       const rows=new Map(),known=seen.get(seenKey(span.desk));
       for(const k of known||[])rows.set(k.key,{key:k.key,target:k.target,name:k.name,id:k.id,role:k.role,rider:k.rider,e:editOfKey(k.key)});
@@ -1196,7 +1196,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       const ramps=awayHtml+`<i class="prop-ramp in ${it.ease==='smooth'?'smooth':''}" style="width:${fi}%"></i><i class="prop-ramp out ${it.ease==='smooth'?'smooth':''}" style="width:${fo}%"></i><i class="prop-fade-h" data-fade="in" style="left:${fi?fi+'%':'calc(0% + 12px)'}" title="Drag: fade in ${r1(it.fadeIn)} s"></i><i class="prop-fade-h" data-fade="out" style="left:${fo?100-fo+'%':'calc(100% - 12px)'}" title="Drag: fade out ${r1(it.fadeOut)} s"></i>`;
       return `<button type="button" class="prop-bar ${e?'prop-chip':'film'} ${hiddenBar?'prop-hidden':''} ${added?'prop-added':''} ${it.timed?'timed':''} ${isSel(it.key)?'selected':''}" data-action="pp-lane" data-index="${i}" data-prop-key="${escape(it.key)}" style="left:${x}%;width:${w}%;top:${top}px;height:${ROW-2}px;--fade-in:${fi}%;--fade-out:${fo}%" title="${escape(tip)}">${ramps}${added?'<b aria-label="added">+</b>':''}${escape(it.name)}</button>`;}).join('');
   }
-  const laneHeight=()=>Math.min(MAX_ROWS,Math.max(2,laneRows))*ROW+4;
+  const laneHeight=()=>Math.min(maxRows(),Math.max(2,laneRows))*ROW+4;
   // A click on a bar: plain click selects one (seeking into its window if outside); Ctrl/Cmd+click toggles it in/out
   // of a multi-selection; Shift+click adds it (or the range of bars from the last clicked bar).
   function laneEntry(it){return {key:it.key,target:it.target,obj:tools?find(it.key,it.target):null};}

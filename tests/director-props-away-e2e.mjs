@@ -1,3 +1,4 @@
+// (28 Nov 2026: the hero's Office desk now keeps its items on the desk, shot.keepDeskItems: NO put-away stretches there; the lane still draws them for a desk without the flag.)
 // Director Props lane: a loose item of the desktop that the desk puts away on its shelf while it is tilted is drawn with a hatched
 // "put away" stretch (prop-stow-window.mjs awayStretches), so what comes onto the desktop later is seen coming. The hero's Office desk
 // (D) opens tilted 30 deg and is level by 12.4 s (c-tilt 10.1 s + 2.3 s): its desktop items are on the shelf until about 11.5 s, the keyboard
@@ -16,10 +17,10 @@ try{
   const bars=await page.$$eval('#director-timeline .prop-bar',b=>b.map(x=>({name:x.textContent.trim(),title:x.title,left:parseFloat(x.style.left),width:parseFloat(x.style.width),away:[...x.querySelectorAll('.prop-away')].map(a=>({left:parseFloat(a.style.left),width:parseFloat(a.style.width)}))})));
   const T=25.95,withAway=bars.filter(b=>b.away.length);
   console.log(`info  ${bars.length} bars, ${withAway.length} with a put-away stretch: ${withAway.slice(0,8).map(b=>b.name).join(' | ')}`);
-  check(withAway.length>=3,'the Office desk shows several items put away while it is tilted');
-  const ends=withAway.map(b=>(b.left+(b.away[0].left+b.away[0].width)/100*b.width)/100*T);
-  check(ends.every(e=>e>9.5&&e<12.5),`every put-away stretch ends while the desk comes level (${ends.map(e=>e.toFixed(1)).join(', ')})`);
-  check(withAway.every(b=>/put away on the desk's shelf/.test(b.title)),'the tooltip says why');
+  check(withAway.length===0,'the Office desk keeps its items on the desk: no put-away stretch in any bar');
+  check(bars.length>20,`the Props lane lists the desk's items (${bars.length} bars)`);
+  const laneH=await page.$eval('[data-props-lane]',e=>e.getBoundingClientRect().height);
+  check(laneH>9*17+10,`the Props lane is taller than nine rows (${Math.round(laneH)} px)`);
   if(errors.length)for(const e of errors)check(false,'page error: '+e);
 }catch(e){check(false,'e2e threw: '+(e.stack||e));}
 finally{await close();}

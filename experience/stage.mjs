@@ -11,7 +11,7 @@ import {cleanPose,cleanCamera,defaultPreset} from './cuts.mjs';
 import {cameraFollows,poseOf,putPose} from './editing-camera.mjs';
 import {createDeskChoreo,roomDesks} from './desk-choreo.mjs';
 import {activeTrayEdit} from './tray-pose.mjs';
-import {createRiderHandoff} from './rider-handoff.mjs?v=rider-fade-hero-20261126';
+import {createRiderHandoff} from './rider-handoff.mjs?v=keep-desk-items-20261127';
 import {touchscreenAt} from './touchscreen-track.mjs';
 import {cleanSonar,pingRows,fullSec,meshesFor} from './sonar.mjs';
 

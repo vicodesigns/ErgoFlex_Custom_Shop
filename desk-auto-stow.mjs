@@ -49,7 +49,9 @@ export function visibleDeskBounds(root,matrix) {
 const overlaps=(a,b,gap=8)=>a.min.x<b.max.x+gap&&a.max.x>b.min.x-gap&&a.min.z<b.max.z+gap&&a.max.z>b.min.z-gap&&a.min.y<b.max.y+gap&&a.max.y>b.min.y-gap;
 
 export class DeskAutoStow {
-    constructor(editor){this.editor=editor;}
+    // off: the film says this desk keeps its loose desktop items where they are (shot.keepDeskItems, film-fx.mjs): nothing is put away on the
+    // shelf while the desk is tilted. The tilt rules that HIDE the easel, painter shelf and drafting kit still run.
+    constructor(editor){this.editor=editor;this.off=false;}
     restoreItem(item){
         if(!item.autoStow)return;
         const {parent,transform}=item.autoStow;
@@ -77,7 +79,7 @@ export class DeskAutoStow {
         const edited=editing?this.editor.selected:null;
         if(edited)this.restoreItem(r.objects?.get(edited)||{});
         const items=[...(r.objects?.values()||[])];
-        const wanted=items.filter(i=>i.id!==edited&&i.obj.visible&&!i.saved.removed&&deskItemDisposition(i,angle,recipe)==='stow');
+        const wanted=this.off?[]:items.filter(i=>i.id!==edited&&i.obj.visible&&!i.saved.removed&&deskItemDisposition(i,angle,recipe)==='stow');
         this.hideItems(items,angle,recipe);
         const signature=JSON.stringify([r.state.size,angle>=EASEL_ANGLE?'easel':'drafting',recipe,edited,this.editor.manager.ctx.phase(),items.map(i=>[i.id,i.obj.visible,i.obj.children.filter(c=>c.visible).map(c=>c.uuid),this.authored(i)])]);
         if(r.stowSignature===signature){if(r.stowStatus)r.stowStatus.angle=angle;for(const i of wanted)if(i.autoStow?.hidden||i.autoStow?.parts)i.obj.visible=false;return;}

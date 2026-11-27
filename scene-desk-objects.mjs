@@ -5,7 +5,7 @@ import { surfaceDrop, usable, mmOf } from './item-surface-drop.mjs';
 import { dropToSurface as dropShared } from './experience/drop-to-surface.mjs';
 import { notebookTransform } from './notebook-transform.mjs';
 import { matchingHighschoolDefault } from './hbhs-design.mjs';
-import { DeskAutoStow } from './desk-auto-stow.mjs?v=middle-shelf-stow-20261026';
+import { DeskAutoStow } from './desk-auto-stow.mjs?v=keep-desk-items-20261127';
 import {isSideShelving,syncDeskMatch} from './side-shelving.mjs';
 
 export const DESK_SURFACES={desktop:'Desktop',shelf:'Top shelf','lower-shelf':'Lower shelf','base-shelf':'Base shelf'};

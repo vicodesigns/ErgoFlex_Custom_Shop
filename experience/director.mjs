@@ -969,7 +969,7 @@ export function mountDirector(bridge,catalog,initial){
     onSelect:()=>{const had=picked()||lightSel||keyId||deskEditor.selectedId()||titleEditor.selectedId()||sceneProps.selected();for(const set of Object.values(picks))set.clear();lightSel=null;keyId=null;deskEditor.clearSelection();titleEditor.clear();graphics.clear?.();sceneProps.deselect();scenePeople.deselect();deskSel.deselect();if(had)renderTimeline();syncSelectedHeader();reveal('light');}});
   // Props (scene-prop-editor.mjs): click a prop in the view, gizmo, Props tab, Props lane; per chapter only.
   function renderSceneProps(soft=false){
-    const box=panel.querySelector('[data-scene-props]');if(box&&!(soft&&typing())){const active=box.contains(document.activeElement)?document.activeElement.name:null;box.innerHTML=sceneProps.panel();if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});}
+    const box=panel.querySelector('[data-scene-props]');if(box&&!(soft&&typing())){const active=box.contains(document.activeElement)?document.activeElement.name:null;keepScroll(box,()=>{box.innerHTML=sceneProps.panel();});if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});}
     const lane=timeline.querySelector('[data-props-lane]');if(lane){const html=sceneProps.lane(),bars=html.includes('prop-bar'),h=bars?sceneProps.laneHeight():0,row=lane.closest('.desk-lane-row'),top=lane.scrollTop;
       lane.innerHTML=html;lane.style.height=h?h+'px':'';lane.scrollTop=top;if(row){row.style.height=h?h+4+'px':'';row.classList.toggle('empty',!bars);}const n=timeline.querySelector('[data-props-count]');if(n)n.textContent=propCount();}
     syncLightTools?.();syncSelectedHeader();renderLayers();repulse();
@@ -1052,10 +1052,13 @@ export function mountDirector(bridge,catalog,initial){
   // Sonar (sonar-editor.mjs): a proximity chapter's rings, in the Graphics tab; shot.sonar.
   const sonarEditor=createSonarEditor({panel,bridge,shot,filmShot,commit,status,showing:()=>open&&inspector==='graphics'});
   const layers=createLayersPanel({root:panel,shot,commit,status,props:sceneProps,rerender:()=>renderLayers(),studio:layersStudio});
+  // A panel box rebuilt in place keeps the scroll of everything inside it (the Layers list, the prop list) and of the inspector itself:
+  // an edit used to send it back to the top, away from the layer Vico was working on (27 Nov).
+  function keepScroll(box,fn){const saved=[...box.querySelectorAll('*')].map((e,i)=>e.scrollTop>0?[i,e.scrollTop]:null).filter(Boolean),top=panel.scrollTop;fn();const now=box.querySelectorAll('*');for(const [i,t] of saved)if(now[i])now[i].scrollTop=t;if(panel.scrollTop!==top)panel.scrollTop=top;}
   function renderLayers(){
     const box=panel.querySelector('[data-scene-layers]');if(!box||inspector!=='layers')return;
     const active=box.contains(document.activeElement)?document.activeElement.name:null;if(active==='ly-search'&&typing())return;
-    box.innerHTML=layers.panel();if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});syncSelection();
+    keepScroll(box,()=>{box.innerHTML=layers.panel();});if(active)box.querySelector(`[name="${active}"]`)?.focus({preventScroll:true});syncSelection();
   }
   // Desks (scene-desk-editor.mjs): every other ErgoFlex desk in the room: the Desks tab, a click in the view, size / place / start; per chapter only.
   function renderSceneDesks(soft=false){
@@ -1340,7 +1343,7 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
     repulse();
   }
   function renderTimeline(){
-    adoptView();const t0=performance.now(),was=timeline.querySelector('.timeline-viewport'),live=was&&renderedView===viewKey?{left:was.scrollLeft,top:was.scrollTop}:null,s=shot();renderedView=viewKey;
+    adoptView();const t0=performance.now(),was=timeline.querySelector('.timeline-viewport'),laneTops=['[data-props-lane]','[data-people-lane]'].map(q=>[q,timeline.querySelector(q)?.scrollTop||0]),live=was&&renderedView===viewKey?{left:was.scrollLeft,top:was.scrollTop}:null,s=shot();renderedView=viewKey;
     // (an old top that looks lost, 0 or clamped, and is not the meant one: the meant one goes back instead)
     if(live&&performance.now()>=userScrollUntil&&lostTop({top:live.top,max:was.scrollHeight-was.clientHeight,want:meantTop()}))live.top=meantTop();
     const ticks=timelineTicks(s.seconds,Math.max(300,(timeline.clientWidth-150)*zoom));
@@ -1362,6 +1365,8 @@ for(const set of Object.values(picks))set.clear();lightSel=null;selected=0;keyId
       <label class="timeline-pan" ${zoom===1?'hidden':''}><span>Pan view</span><input name="timeline-pan" type="range" min="0" max="100" step=".1" value="0" aria-label="Timeline horizontal position"></label>
       <div class="timeline-footer"><span data-bake-summary class="timeline-bake-summary" role="status"></span><span data-timeline-status role="status">Click ruler to scrub · Drag empty lanes to select several · Shift/Ctrl-click adds · Ctrl+A all · Alt: bypass snap · Space: play</span><span class="sb-pills" data-sb-pills></span><output data-track-time>${(playhead*s.seconds).toFixed(2)}s / ${s.seconds}s</output></div>`;
     restoreScroll(timeline.querySelector('.timeline-viewport'),live);
+    // (the Props / People lanes scroll inside themselves once they have more rows than fit: a rebuilt lane starts at its top, so the one Vico was working in is put back; 27 Nov)
+    for(const [q,top] of laneTops){const lane=top?timeline.querySelector(q):null;if(lane)lane.scrollTop=top;}
     if(topKeeper){topKeeper.disconnect();const v=timeline.querySelector('.timeline-viewport');topKeeper.observe(v);topKeeper.observe(v.querySelector('.timeline-content'));}
     renderPills();drawScore();decorateLocks();decorateGroups();decorateEyes();
     if(debugTimeline){const ms=performance.now()-t0,el=timeline.querySelector('[data-track-time]');if(el)el.title=`renderTimeline ${ms.toFixed(1)} ms · ${timeline.getElementsByTagName('*').length} elements`;const f=timeline.querySelector('.timeline-footer');if(f)f.dataset.debug=`${ms.toFixed(1)} ms · ${timeline.getElementsByTagName('*').length} el`;}

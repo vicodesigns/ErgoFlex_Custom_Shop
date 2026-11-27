@@ -35,7 +35,8 @@ export function createRiderHandoff(api) {
     const shelf = new WeakMap(); // obj -> { parent, matrix } where the stow put it last (kept for the way back, the stow lets go at 9 deg)
     const desk = () => api.sceneDesks?.active || null;
     const stow = () => api.sceneDesks?.objects?.stow || null;
-    const active = () => !!trayOf || !!timeline?.events.length || timeline?.start === 'shelf';
+    // (a desk the film keeps its loose items on, stow.off: nothing goes to the shelf, so there is no hand-off either)
+    const active = () => !stow()?.off && (!!trayOf || !!timeline?.events.length || timeline?.start === 'shelf');
 
     function unapply() {
         fades.hide();      // the shelf copies out of the scene and the riders' own materials back, before anything else looks at them
