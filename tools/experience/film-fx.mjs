@@ -25,7 +25,7 @@ import {screenTiming} from './screen-timing.mjs';
 //   ledGlow:0…1   LED brightness as a fraction of full (stage default .35)
 //   ledSurfaces:{desktopStrength:0…200, floorStrength, shelfStrength, …}  the app's LED surface sliders
 //   deskObjects:{<object id>: {p:{x,y,z}, q:{x,y,z,w}}}  place the featured desk's objects as saved
-//   deskFinish:{wood:'<wood finish name, catalog.mjs>', trim:'#hex (a TRIM_COLORS value)'}  the featured desk's wood and
+//   deskFinish:{wood:'<wood finish name>', base:'<frame finish name>', trim:'#rrggbb', version:{wood,base,trim}}  the featured desk's wood and
 //     trim for this shot, through the configurator's own swatches (#wood-finishes / #trim-palette clicks: the app's
 //     species tint, grain photo and trim material), restored after. E.g. the gaming desk: {wood:'Black Birch', trim:'#dc0909'}.
 //     in a studio state (the stage resets a layout room's saved desks to the authored defaults)
@@ -587,12 +587,17 @@ function installSceneDeskPoses(list) {
   return { posed, restore() { for (const f of undo.reverse()) f(); } };
 }
 function installDeskFinish(spec) {
-  const was = { wood: api.currentConfig.woodFinish, trim: api.currentConfig.trimColor };
+  const was = { wood: api.currentConfig.woodFinish, base: api.currentConfig.baseFinish, trim: api.currentConfig.trimColor };
   const click = sel => { const el = document.querySelector(sel); if (!el) { console.warn('[film-fx] deskFinish: no swatch ' + sel); return false; } el.click(); return true; };
-  const was2 = { base: api.currentConfig.baseFinish };
   const wood = name => click(`#wood-finishes [data-finish="${CSS.escape(name)}"]`);
   const base = name => click(`#base-finishes [data-finish="${CSS.escape(name)}"]`);
-  const trim = hex => click(`#trim-palette [data-trim-color="${CSS.escape(String(hex).toLowerCase())}"]`);
+  const trim = hex => {
+    if (!/^#[0-9a-f]{6}$/i.test(hex)) return false;
+    const value = hex.toLowerCase();
+    if (!api.setTrimColor) return click(`#trim-palette [data-trim-color="${CSS.escape(value)}"]`);
+    api.setTrimColor(value, false);
+    return true;
+  };
   const syncActiveDeskFinish = () => {
     const r = api.sceneDesks?.active;
     if (!r) return;
@@ -621,7 +626,13 @@ function installDeskFinish(spec) {
   const info = { wood: spec.wood ? wood(spec.wood) && spec.wood : undefined, base: spec.base ? base(spec.base) && spec.base : undefined, trim: spec.trim ? trim(spec.trim) && spec.trim : undefined };
   syncActiveDeskFinish();
   console.log('[film-fx] deskFinish', JSON.stringify(info), 'was', JSON.stringify(was));
-  return { info, restore() { if (info.wood && was.wood) wood(was.wood); if (info.base && was2.base) base(was2.base); if (info.trim && was.trim) trim(was.trim); syncActiveDeskFinish(); } };
+  return { info, restore() { if (info.wood && was.wood) wood(was.wood); if (info.base && was.base) base(was.base); if (info.trim && was.trim) trim(was.trim); syncActiveDeskFinish(); } };
+}
+// The version finish is applied after the featured build. That keeps colour-only edits separate
+// from the build's accessories and leaves timed finish fades free to replace the look.
+function withoutVersionFinish(value) {
+  const { version, ...base } = value || {};
+  return base;
 }
 // The featured desk's build (Director Build tab, shot.featuredBuild = {woodFinish, baseFinish, trimColor, accessories:[{id, slot}]}):
 // finishes through the configurator's swatches (installDeskFinish), accessories toggled in / out like accessories.add / remove
@@ -1044,9 +1055,11 @@ export async function install(shot) {
   if (!wants) return null;
   active = { shot, list: [], screens: [], led: null, clocks: [], tod: null, desk: null, edits: null, lights: null };
   active.desk = await installDeskObjects(shot);
-  if (shot.deskFinish) active.finish = installDeskFinish(shot.deskFinish);
+  const finish = withoutVersionFinish(shot.deskFinish);
+  if (finish.wood || finish.base || finish.trim) active.finish = installDeskFinish(finish);
   if (shot.keepDeskItems) active.keepItems = installKeepDeskItems();
   if (shot.featuredBuild) active.featured = await installFeaturedBuild(shot.featuredBuild, shot.deskLook === 'blank-pearl');
+  if (shot.deskFinish?.version) active.versionFinish = installDeskFinish(shot.deskFinish.version);
   if (shot.room === 'workshop') active.workshopToyStory = await (await import('./workshop-toy-story.mjs?v=20261113-andre-shelf')).installWorkshopToyStory(api);
   if (shot.sceneDeskPoses?.length) active.deskPoses = installSceneDeskPoses(shot.sceneDeskPoses);
   if (shot.sceneDeskEdits?.length) { active.deskEdits = (await import('./film-desk-edits.mjs')).installDeskEdits(shot.sceneDeskEdits, api); await active.deskEdits.ready; }
@@ -1113,12 +1126,13 @@ export async function install(shot) {
 // sceneEdits too (the Director's prop edits): the edits layer and everything chained after it re-install in place.
 // People are updated independently by the stage; treating them as a film-layer change
 // forced a full scene reinstall when a desk's assigned person was hidden or shown.
-const LIVE_FIELDS = ['screenLook', 'people', 'lights', 'lightEdits', 'ledStatus', 'ledNeutral', 'ledColor', 'sceneGlobals', 'timeOfDay', 'obstacles', 'sceneEdits', 'sceneBranding', 'sceneDeskEdits', 'featuredBuild'];
+const LIVE_FIELDS = ['screenLook', 'people', 'lights', 'lightEdits', 'ledStatus', 'ledNeutral', 'ledColor', 'sceneGlobals', 'timeOfDay', 'obstacles', 'sceneEdits', 'sceneBranding', 'sceneDeskEdits', 'featuredBuild', 'deskFinish'];
 const TAIL = ['tod', 'edits', 'lights', 'roomLight', 'roomSpill', 'lightEdits'];
 export async function update(shot, { onSlow } = {}) {
   if (!active) return 'full';
   const prev = active.shot, bare = v => JSON.stringify(v, (k, x) => k === '__count' ? undefined : x), same = (a, b) => bare(a) === bare(b), changed = k => !same(prev[k], shot[k]);
   for (const k of new Set([...Object.keys(prev), ...Object.keys(shot)])) if (!LIVE_FIELDS.includes(k) && changed(k)) return 'full';
+  if (!same(withoutVersionFinish(prev.deskFinish), withoutVersionFinish(shot.deskFinish))) return 'full';
   const g0 = prev.sceneGlobals || {}, g1 = shot.sceneGlobals || {}, gChanged = k => !same(g0[k], g1[k]);
   let tail = TAIL.length, globals = false, status = false;
   if (gChanged('exposure') || gChanged('environmentScale') || gChanged('exposureScale')) {
@@ -1176,12 +1190,16 @@ export async function update(shot, { onSlow } = {}) {
     await active.deskEdits?.restore(); active.deskEdits = null;   // (the room's own builds in again before the new edits read the desks)
     if (shot.sceneDeskEdits?.length) { active.deskEdits = (await import('./film-desk-edits.mjs')).installDeskEdits(shot.sceneDeskEdits, api); await active.deskEdits.ready; }
   }
+  const buildChanged = changed('featuredBuild');
+  const versionFinishChanged = buildChanged || changed('deskFinish');
+  if (versionFinishChanged) { active.versionFinish?.restore(); active.versionFinish = null; }
   // featuredBuild (the Director's Build tab on the featured desk): swatches and accessories back, then applied again.
-  if (changed('featuredBuild')) {
+  if (buildChanged) {
     active.featured?.restore(); active.featured = null;
     if (restoring) { const r = restoring; restoring = null; await r; }
     if (shot.featuredBuild) active.featured = await installFeaturedBuild(shot.featuredBuild, shot.deskLook === 'blank-pearl');
   }
+  if (versionFinishChanged && shot.deskFinish?.version) active.versionFinish = installDeskFinish(shot.deskFinish.version);
   if (globals) installGlobals(shot);
   if (status) {
     if (shot.ledColor && active.ledColor === undefined) active.ledColor = active.ledColor0;
@@ -1257,6 +1275,7 @@ export function clear() {
   active.lights?.restore(); active.edits?.restore();
   active.tod?.restore();
   active.workshopToyStory?.restore();
+  active.versionFinish?.restore();
   active.featured?.restore();   // before the film's own accessories / finish go back
   clearDeskObjects(active.desk);
   active.keepItems?.restore();

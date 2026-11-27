@@ -12896,6 +12896,7 @@ window.ErgoFlex = {
     setChildAgeStage,
     get childAgeStage(){return childAgeId;},
     resetSceneDeskStyle,
+    setTrimColor,
     get sceneDeskStyles() { return JSON.parse(JSON.stringify(sceneDeskStyles)); },
     get measuredRoom() { return measuredRoomProfile(); },
     setRoomPeople, get roomPeople() { return roomPeopleEnabled; }, setRoomPeopleTime(seconds, track = null) { roomPeopleTime = Number.isFinite(seconds) ? seconds : null; roomPeopleTrack = track; },

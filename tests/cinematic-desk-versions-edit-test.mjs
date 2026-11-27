@@ -12,7 +12,9 @@ import {execFileSync,spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {cleanDeskVersionList,cleanDeskVersionsField,nextVersionId,addVersion,removeVersion,canAddVersion,moveVersion,moveSeam,seamsOf,shown,
   resolveSubshots,resolveFilm,libraryEntry,effectiveVersions,MIN_SHOWN,MAX_VERSIONS} from '../experience/desk-versions-edit.mjs';
-import {deskVersions,versionAt} from '../experience/desk-versions.mjs';
+import {deskVersions,versionAt,versionRenderShot} from '../experience/desk-versions.mjs';
+import {encodeCut,decodeCut} from '../experience/cuts.mjs';
+import finishFade from '../tools/experience/finish-fade.cjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..'),T=48;
 const WIN={A:[0,5.3],B:[4.7,13.1],C:[12.5,21.9],D:[21.3,27.7],E:[27.1,34],F:[33.4,48]},PRESETS=['gaming','artist','office','hbhs','occ','architect'];
@@ -146,8 +148,40 @@ assert.equal(dv[6].setup.subshot,'G');assert.notEqual(dv[6].sig,dv[0].sig,'the c
 assert.equal(deskVersions(film,{shots:subs},[seven[6]]).length,1);assert.equal(deskVersions(film,subs,null).length,6);
 assert.equal(deskVersions(film,{shots:out5,library},back)[5].setup.accessories.add[0].id,'calculator','the Director reads the library too');
 
+// The selected desk's colours follow its model when moved or copied, and travel through cut links and stills.
+const finish={wood:'Forest Green',base:'Silver',trim:'#6d36a5'};
+const styled=cleanDeskVersionList(six.map(v=>v.n==='F'?{...v,finish:{...finish,trim:'#6D36A5',extra:'ignored'}}:v));
+assert.deepEqual(styled[5].finish,finish);
+assert.equal(cleanDeskVersionList([{...six[0],finish:{wood:'unknown',trim:'bogus'}}])[0].finish,undefined);
+assert.deepEqual(moveVersion(styled,5,1)[1].finish,finish);
+assert.deepEqual(addVersion(styled,5,6,'G',T)[6].finish,finish);
+assert.deepEqual(decodeCut(encodeCut({schema:'ergoflex.client-cut',version:1,id:'finish-check',name:'Finish check',shots:[{...film,motion:undefined,deskVersions:styled}]})).shots[0].deskVersions,styled);
+const target={at:[45,46],set:{deskFinish:{wood:'Pearl White',base:'White',trim:'#f5f5f2'}}};
+const starting={wood:'Warm Ivory'},withOriginal=subs.map(s=>s.subshot==='F'?{...s,deskFinish:starting,finishFade:target}:s);
+const styles=deskVersions(film,withOriginal,styled),architect=styles[5];
+assert.deepEqual(architect.finish,finish);
+assert.equal(architect.swatch.woodName,'Forest Green');
+assert.equal(architect.swatch.baseName,'Silver');
+assert.equal(architect.swatch.trim,finish.trim);
+assert.notEqual(architect.sig,deskVersions(film,withOriginal)[5].sig,'changing the finish refreshes the live preview');
+const still=versionRenderShot(film,film,[],architect);
+assert.deepEqual(still.deskFinish,{...starting,version:finish});
+assert.deepEqual(finishFade.variantShot(still,finishFade.finishFadeOf(still)).deskFinish,target.set.deskFinish);
+assert.deepEqual(still.screens,withOriginal[5].screens);
+const bakedVersion=resolveSubshots(withOriginal,styled);
+assert.deepEqual(bakedVersion[5].deskFinish,still.deskFinish);
+assert.deepEqual(resolveSubshots(bakedVersion,styled),bakedVersion);
+assert.deepEqual(deskVersions(film,bakedVersion)[5].finish,finish,'the Director picks up the imported colours');
+assert.deepEqual(resolveSubshots(bakedVersion,six),withOriginal,'reset restores the original colours after an import');
+assert.deepEqual(resolveSubshots(subs,styled).map(s=>s.deskFinish),[undefined,undefined,undefined,undefined,undefined,{version:finish}]);
+const bareVersion=resolveSubshots(withOriginal,styled.map(v=>v.n==='F'?{...v,look:'blank-pearl'}:v))[5];
+assert.deepEqual(bareVersion.featuredBuild.accessories,[]);
+assert.equal(bareVersion.featuredBuild.woodFinish,'Pearl White');
+assert.deepEqual(bareVersion.deskFinish,{version:finish});
+
 // ---- the importer's helper
 const apply=input=>JSON.parse(execFileSync('node',[path.join(root,'tools/experience/desk-versions-apply.mjs')],{input:JSON.stringify(input),maxBuffer:1<<28}).toString());
+assert.deepEqual(apply({subshots:withOriginal,versions:styled}).subshots,bakedVersion);
 const a7=apply({subshots:subs,versions:seven});
 same(a7.subshots,out7);same(a7.film,{subshots:resolveFilm({},seven).subshots,presets:[...PRESETS,'gaming']});assert.deepEqual(a7.library,[]);
 const a5=apply({subshots:subs,versions:five});

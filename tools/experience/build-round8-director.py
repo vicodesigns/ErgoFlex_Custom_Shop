@@ -1032,7 +1032,7 @@ DESK_LOOKS = ('blank-pearl',)      # experience/desk-versions-edit.mjs LOOKS: a 
 
 def clean_versions(v):
     """Desk versions as the Director cleaned them (experience/desk-versions-edit.mjs cleanDeskVersionList): hero's
-    desks [{n, preset, name, start, end, look?}] in time order (1 to 12; ids A..Z, AA..ZZ), or None."""
+    desks [{n, preset, name, start, end, look?, finish?}] in time order (1 to 12; ids A..Z, AA..ZZ), or None."""
     if not isinstance(v, list) or not 1 <= len(v) <= 12: return None
     out = []
     for e in v:
@@ -1040,8 +1040,17 @@ def clean_versions(v):
         try: a, b = float(e['start']), float(e['end'])
         except (KeyError, TypeError, ValueError): return None
         if not (0 <= a < b <= 600): return None
+        raw_finish = e.get('finish')
+        finish = {}
+        if isinstance(raw_finish, dict):
+            for key in ('wood', 'base'):
+                if isinstance(raw_finish.get(key), str) and 0 < len(raw_finish[key]) <= 60:
+                    finish[key] = raw_finish[key]
+            if isinstance(raw_finish.get('trim'), str) and re.fullmatch(r'#[0-9a-fA-F]{6}', raw_finish['trim']):
+                finish['trim'] = raw_finish['trim'].lower()
         out.append({'n': e['n'], 'preset': e['preset'], 'name': re.sub(r'[\x00-\x1f]', ' ', str(e.get('name') or '')).strip()[:40],
-                    'start': round(a, 2), 'end': round(b, 2), **({'look': e['look']} if e.get('look') in DESK_LOOKS else {})})
+                    'start': round(a, 2), 'end': round(b, 2), **({'look': e['look']} if e.get('look') in DESK_LOOKS else {}),
+                    **({'finish': finish} if finish else {})})
     if len({e['n'] for e in out}) != len(out): return None
     return sorted(out, key=lambda e: (e['start'], e['n']))
 

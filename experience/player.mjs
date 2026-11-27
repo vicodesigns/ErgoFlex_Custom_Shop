@@ -5,14 +5,14 @@ import {BakeCache,bakeKey,bakeDefinition,sourceSnapshot,renderBake,BAKE_PROFILE}
 import {score,safeReturn} from './score.mjs';
 import {ShotClock} from './timing.mjs';
 import {escapeAction,isField} from './escape-rule.mjs?v=escape-field-20261121';
-import {cleanCut,decodeCut} from './cuts.mjs';
+import {cleanCut,decodeCut} from './cuts.mjs?v=20261127-desk-version-finishes';
 import {filmLink,loadFilmChapters,loadFilmShot,liveFilmShot} from './film-chapters.mjs';
 import {effectiveDeskEdits} from './desk-edits.mjs';
 import {effectiveTrayEdits} from './tray-pose.mjs';
 import {latestFilmCut,withCut,filmFresh} from './film-fresh.mjs';
 import {exportLighting} from './film-lighting.mjs';
-import {filmCamera,finishFadeAt} from './film-render.mjs';
-import {deskVersions,versionAt,versionShot,loadFilmSubshots,loadStorageSeed} from './desk-versions.mjs';
+import {filmCamera,finishFadeAt} from './film-render.mjs?v=20261127-desk-version-finishes';
+import {deskVersions,versionAt,versionShot,loadFilmSubshots,loadStorageSeed} from './desk-versions.mjs?v=20261127-desk-version-finishes';
 const $=id=>document.getElementById(id), frame=$('stage'), query=new URLSearchParams(location.search), linkQuery=new URLSearchParams(location.hash.slice(1));
 let cut=query.get('cut')==='social'?'social':'full',shots=score(cut),index=-1,playing=true,busy=true,finished=false,generation=0,sound=false,app=null,preparation=Promise.resolve(),hasFrame=false,lastUI=0;
 const clock=new ShotClock(),cover=$('transition-frame');
@@ -104,7 +104,7 @@ const lightsKey=s=>{const l=exportLighting(s);return JSON.stringify([l.ledStatus
 // film-fx resolves 'three' through the stage page's import map, so it loads inside the stage frame.
 async function stageFx(){
   const win=frame.contentWindow;if(win.__filmFx)return win.__filmFx;
-  await new Promise((resolve,reject)=>{win.__filmFxDone=resolve;win.__filmFxFail=reject;const s=win.document.createElement('script');s.type='module';s.textContent="import('/tools/experience/film-fx.mjs?v=20261127-featured-hide').then(m=>{window.__filmFx=m;window.__filmFxDone();},e=>window.__filmFxFail(e));";win.document.head.append(s);});
+  await new Promise((resolve,reject)=>{win.__filmFxDone=resolve;win.__filmFxFail=reject;const s=win.document.createElement('script');s.type='module';s.textContent="import('/tools/experience/film-fx.mjs?v=20261127-desk-version-finishes').then(m=>{window.__filmFx=m;window.__filmFxDone();},e=>window.__filmFxFail(e));";win.document.head.append(s);});
   return win.__filmFx;
 }
 // Film chapters: the live camera is the film's (film-render.mjs filmCamera, what Render still and the 4K use):
@@ -375,7 +375,7 @@ async function openDirector(){
   if(director){if(director.isOpen())director.close();else director.open();return;}
   mountingDirector=true;
   try{
-  const {mountDirector}=await import('./director.mjs');
+  const {mountDirector}=await import('./director.mjs?v=20261127-desk-version-finishes');
   director=mountDirector({
     stage,
     ready:()=>!busy,
@@ -385,7 +385,14 @@ async function openDirector(){
     // holds the last frame meanwhile), playing on if it was playing.
     async setDeskVersion(value,i,version){
       if(bakeController||busy)throw Error('Wait for this chapter to finish loading.');
-      const id=value.shots[i]?.id;if(!id)return false;deskVersion.set(id,version||null);
+      const id=value.shots[i]?.id;if(!id)return false;
+      const before=activeVersion(id);
+      const restyle=index===i&&!activeBake&&liveFx&&fxShot===id&&before?.n===version?.n&&before?.preset===version?.preset&&before?.look===version?.look;
+      deskVersion.set(id,version||null);
+      if(restyle){
+        applyClient(value);await refreshFilmLights();
+        if(liveFx){stage().wake?.();preparedShot=JSON.stringify(shots[i]);return true;}
+      }
       const position=index===i?Math.min(1,clock.progress(performance.now(),shots[index].seconds)):0;applyClient(value);
       if(!await playShot(i,{position,forceLive:true,range:previewRange}))throw Error('The chapter could not be loaded with this desk.');
       if(fxError)throw Error('the film setup could not be applied: '+fxError);return true;

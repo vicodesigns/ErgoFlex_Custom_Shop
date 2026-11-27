@@ -22,6 +22,7 @@
 // sub-shots, then in the library (film sub-shots an earlier import dropped: build-round8-director.py keeps their
 // bundles). A model with no bundle anywhere gets its preset's defaults (model-specific dressing reset).
 // The desk changes at the middle of each overlap.
+import {PRODUCT_CONFIG} from '../catalog.mjs';
 import {whiteLook,PEARL} from './finish-fades.mjs';
 // A desk's `look` (optional): 'blank-pearl' = the desk with no accessories, no props and no screens, in the Pearl White finish
 // (the opener of the hero: the same desk and camera as the one after it, bare, in the ending's white look).
@@ -39,7 +40,20 @@ const num=(v,lo,hi)=>Number.isFinite(Number(v))?Math.max(lo,Math.min(hi,Number(v
 const r2=x=>Math.round(x*100)/100;
 const clone=v=>v===undefined?undefined:JSON.parse(JSON.stringify(v));
 
-// shot.deskVersions as the cut keeps it: [{n,preset,name,start,end}] in time order; invalid entries drop the list.
+export function cleanDeskVersionFinish(value){
+  if(!value||typeof value!=='object')return null;
+  const finish={};
+  if(PRODUCT_CONFIG.woodFinishes.some(f=>f.name===value.wood))finish.wood=value.wood;
+  if(PRODUCT_CONFIG.baseFinishes.some(f=>f.name===value.base))finish.base=value.base;
+  if(typeof value.trim==='string'&&/^#[0-9a-f]{6}$/i.test(value.trim))finish.trim=value.trim.toLowerCase();
+  return Object.keys(finish).length?finish:null;
+}
+function appearance(v){
+  const finish=cleanDeskVersionFinish(v.finish);
+  return {...(LOOKS.includes(v.look)?{look:v.look}:{}),...(finish?{finish}:{})};
+}
+
+// shot.deskVersions as the cut keeps it: [{n,preset,name,start,end,look?,finish?}] in time order.
 export function cleanDeskVersionList(value){
   if(!Array.isArray(value)||value.length<1||value.length>MAX_VERSIONS)return null;
   const out=[];
@@ -48,7 +62,7 @@ export function cleanDeskVersionList(value){
     const preset=String(e.preset||'');if(!/^[a-z0-9-]{1,40}$/.test(preset))return null;
     const start=num(e.start,0,600),end=num(e.end,0,600);if(start===null||end===null||end<=start)return null;
     const name=String(e.name??'').replace(/[\u0000-\u001f]/g,' ').trim().slice(0,40);
-    out.push({n:e.n,preset,name,start:r2(start),end:r2(end),...(LOOKS.includes(e.look)?{look:e.look}:{})});
+    out.push({n:e.n,preset,name,start:r2(start),end:r2(end),...appearance(e)});
   }
   if(new Set(out.map(e=>e.n)).size!==out.length)return null;
   out.sort((a,b)=>a.start-b.start||a.n.localeCompare(b.n));
@@ -80,7 +94,7 @@ export function windowsFrom(seams,overlaps,total){
   return Array.from({length:n},(_,i)=>[i?r2(seams[i-1]-overlaps[i-1]/2):0,i<n-1?r2(seams[i]+overlaps[i]/2):r2(total)]);
 }
 // `desks` (id, model, name) in time order over the windows `wins`.
-const place=(desks,wins)=>desks.map((v,i)=>({n:v.n,preset:v.preset,name:v.name||'',start:wins[i][0],end:wins[i][1],...(LOOKS.includes(v.look)?{look:v.look}:{})}));
+const place=(desks,wins)=>desks.map((v,i)=>({n:v.n,preset:v.preset,name:v.name||'',start:wins[i][0],end:wins[i][1],...appearance(v)}));
 // Drag a desk to another place in the order: the others shift along; the time slots (letters and windows) stay where they are.
 export function moveVersion(list,from,to){
   if(from===to||from<0||to<0||from>=list.length||to>=list.length)return list;
@@ -121,7 +135,7 @@ export function addVersion(list,src,at,id,total){
   lens.splice(at,0,mine);
   const next=[];let t=0;for(const l of lens.slice(0,-1)){t+=l;next.push(r2(t));}
   const near=[overlaps[at-1],overlaps[at-2]].find(o=>o>0)??DEFAULT_OVERLAP,ov=overlaps.slice();ov.splice(at-1,0,near);
-  const desks=list.slice();desks.splice(at,0,{n:id,preset:list[src].preset,name:list[src].name||'',...(list[src].look?{look:list[src].look}:{})});
+  const desks=list.slice();desks.splice(at,0,{...list[src],n:id});
   return place(desks,windowsFrom(next,ov,total));
 }
 // A new desk at the very start of the chapter (a copy of desk `src`, with `look` when given). When the desks were slid right and
@@ -137,7 +151,7 @@ export function addVersionAtStart(list,src,id,total,{look=null}={}){
     const first=seams.length?seams[0]:total;if(first<2*MIN_SHOWN-1e-9)return null;
     seam=Math.max(MIN_SHOWN,Math.round(first/2*10)/10);ov=DEFAULT_OVERLAP;
   }
-  const mine={n:id,preset:list[src].preset,name:look==='blank-pearl'?BLANK_NAME:list[src].name||'',...(LOOKS.includes(look)?{look}:{})};
+  const source=list[src],mine={n:id,preset:source.preset,name:look==='blank-pearl'?BLANK_NAME:source.name||'',...appearance(look?{look}:source)};
   return place([mine,...list],windowsFrom([seam,...seams],[ov,...overlaps],total));
 }
 // Slide the picked desks by `delta` seconds (a group move: the desks keep their lengths and crossfades). The order stays, no
@@ -205,6 +219,14 @@ export function resolveSubshots(subs,versions,library=[]){
     }
     if(slot.deskLook&&v.look!=='blank-pearl'){delete out.deskLook;delete out.featuredBuild;for(const k of ['ledColor','ledGlow']){const d=donor?.[k];if(d!==undefined)out[k]=clone(d);else delete out[k];}}
     if(v.look==='blank-pearl')blankPearl(out);
+    // Keep the version's colours separate from the sub-shot's original finish. Resolving the film
+    // again after a reset must expose the original finish, including after an export was imported.
+    const {version:previousFinish,...originalFinish}=out.deskFinish||{};
+    if(v.finish)out.deskFinish={...originalFinish,version:clone(v.finish)};
+    else if(previousFinish){
+      if(Object.keys(originalFinish).length)out.deskFinish=originalFinish;
+      else delete out.deskFinish;
+    }
     if(v.name&&v.name!==labelOf(v.preset))out.name=v.name;else if(v.look==='blank-pearl')out.name=BLANK_NAME;else delete out.name;
     return out;
   }).filter(Boolean);
@@ -216,7 +238,7 @@ export const libraryEntry=s=>({id:s.id,subshot:s.subshot,renderRange:clone(s.ren
 
 // The list the Director shows: the cut's own (shot.deskVersions) when it has a valid one, else the film's.
 export function effectiveVersions(base,edits){
-  return cleanDeskVersionList(edits)||base.map(v=>({n:v.n,preset:v.preset,name:v.setup?.name||'',start:v.start,end:v.end,...(v.look?{look:v.look}:{})}));
+  return cleanDeskVersionList(edits)||base.map(v=>({n:v.n,preset:v.preset,name:v.setup?.name||'',start:v.start,end:v.end,...appearance(v)}));
 }
 // "Model-specific dressing" a model change resets, for the panel's hint.
 export const RESET_NOTE='Model-specific screens and dressing reset to this model’s defaults; camera and light are kept.';

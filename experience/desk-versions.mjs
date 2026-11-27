@@ -14,15 +14,23 @@
 // the film renders it as one more sub-shot, a copy of its model's film sub-shot in its own window.
 import {PRESETS,PRODUCT_CONFIG} from '../catalog.mjs';
 import {SHARED_BUILD_PRESETS} from '../preset-defaults.mjs';
-import {filmRenderShot} from './film-render.mjs';
-import {effectiveFades,edited as finishEdited} from './finish-fades.mjs';
-import {NAMES,resolveSubshots,resolveFilm,moveVersion,moveSeam,seamsOf,shown,MIN_SHOWN,MAX_VERSIONS,RESET_NOTE,cleanDeskVersionList,addVersion,addVersionAtStart,removeVersion,canAddVersion,nextVersionId,BLANK_NAME} from './desk-versions-edit.mjs';
+import {filmRenderShot} from './film-render.mjs?v=20261127-desk-version-finishes';
+import {effectiveFades,edited as finishEdited,PEARL} from './finish-fades.mjs';
+import {NAMES,resolveSubshots,resolveFilm,moveVersion,moveSeam,seamsOf,shown,MIN_SHOWN,MAX_VERSIONS,RESET_NOTE,cleanDeskVersionList,cleanDeskVersionFinish,addVersion,addVersionAtStart,removeVersion,canAddVersion,nextVersionId,BLANK_NAME} from './desk-versions-edit.mjs?v=20261127-desk-version-finishes';
 
 export const presetLabel=id=>NAMES[id]||PRESETS.find(p=>p.id===id)?.name||String(id||'Desk');
 // The build's own colours: desktop finish, frame, trim (preset-defaults.mjs wins over the catalog card, as applyPreset).
 export function presetSwatch(id){
   const c={...PRESETS.find(p=>p.id===id)?.config,...SHARED_BUILD_PRESETS[id]?.config},find=(list,name)=>list.find(f=>f.name===name)?.color;
   return {wood:find(PRODUCT_CONFIG.woodFinishes,c.woodFinish)||'#7d8790',base:find(PRODUCT_CONFIG.baseFinishes,c.baseFinish)||'#1c1c1e',trim:c.trimColor||'#85888c',woodName:c.woodFinish||'',baseName:c.baseFinish||''};
+}
+function versionSwatch(preset,setup,finish){
+  const swatch=presetSwatch(preset),base=setup?.deskFinish,build=setup?.featuredBuild;
+  const woodName=finish?.wood||build?.woodFinish||base?.wood||(setup?.deskLook?PEARL.wood:swatch.woodName);
+  const baseName=finish?.base||build?.baseFinish||base?.base||(setup?.deskLook?PEARL.base:swatch.baseName);
+  const trim=finish?.trim||build?.trimColor||base?.trim||(setup?.deskLook?PEARL.trim:swatch.trim);
+  return {woodName,baseName,trim,wood:PRODUCT_CONFIG.woodFinishes.find(f=>f.name===woodName)?.color||swatch.wood,
+    base:PRODUCT_CONFIG.baseFinishes.find(f=>f.name===baseName)?.color||swatch.base};
 }
 // [{n, preset, label, start, end, from, to, setup, kind}] in time order; from / to: where this desk is the one shown
 // (overlap midpoints). setup is the sub-shot's film shot (null: the sub-shots file is missing, so only the preset changes).
@@ -37,7 +45,9 @@ function deskVersionsBase(film,subshots){
   const presets=Array.isArray(film.presets)?film.presets:[],subs=Array.isArray(subshots)?subshots:Array.isArray(subshots?.shots)?subshots.shots:[];
   const list=Object.entries(map).filter(([,r])=>Array.isArray(r)&&r.length===2&&r.every(Number.isFinite)).sort((a,b)=>a[1][0]-b[1][0]||a[0].localeCompare(b[0]))
     .map(([n,[start,end]],i)=>{const setup=subs.find(s=>s?.subshot===n)||null,preset=setup?.preset||presets[i]||film.preset;
-      return {n,preset,label:setup?.name||presetLabel(preset),sig:n+'|'+preset+(setup?.deskLook?'|'+setup.deskLook:''),start,end,setup,kind:setup?.kind||null,look:setup?.deskLook||null,swatch:setup?.deskLook?{wood:'#f4f3ef',base:'#f8f8f8',trim:'#f5f5f2',woodName:'Pearl White',baseName:'White'}:presetSwatch(preset)};});
+      const look=setup?.deskLook||null,finish=cleanDeskVersionFinish(setup?.deskFinish?.version);
+      const sig=JSON.stringify([n,preset,look,finish]);
+      return {n,preset,label:setup?.name||presetLabel(preset),sig,start,end,setup,kind:setup?.kind||null,look,finish,swatch:versionSwatch(preset,setup,finish)};});
   for(const [i,v] of list.entries()){
     const prev=list[i-1],next=list[i+1];
     v.from=prev?(prev.end>v.start?(v.start+prev.end)/2:v.start):0;
@@ -77,7 +87,7 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     if(memo&&memo.film===film&&memo.subs===subs&&memo.id===s.id&&memo.key===JSON.stringify(edits||null))return memo.list;
     memo={film,subs,id:s.id,key:JSON.stringify(edits||null),list:deskVersions(film,subs,edits)};return memo.list;
   };
-  const asEdits=l=>l.map(v=>({n:v.n,preset:v.preset,name:v.setup?.name||'',start:v.start,end:v.end,...(v.look?{look:v.look}:{})}));
+  const asEdits=l=>l.map(v=>({n:v.n,preset:v.preset,name:v.setup?.name||'',start:v.start,end:v.end,...(v.look?{look:v.look}:{}),...(v.finish?{finish:v.finish}:{})}));
   const edited=()=>!!cleanDeskVersionList(shot()?.deskVersions);
   const fmt=x=>Number(x.toFixed(2));
   // The desk an add / duplicate copies and a remove takes: the one picked in the lane or the panel, else the one showing.
@@ -117,8 +127,11 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     if(scrubbing()||!bridge.ready()){schedule(150);return;}
     const {id,v}=want,i=selected();if(project().shots[i]?.id!==id||bridge.deskVersion?.(id)?.sig===v.sig)return;
     busy=true;const started=performance.now();
-    try{status(`Switching the desk to ${v.n} · ${v.label}…`);await bridge.setDeskVersion(project(),i,v);
-      status(said&&Date.now()<said.until&&said.at===lastPlayhead?said.text:`Desk ${v.n} · ${v.label}: the film's sub-shot ${v.n} desk (${v.preset}${v.setup?'':', preset only'}), ${((performance.now()-started)/1000).toFixed(1)} s to switch.`);said=null;}
+    const before=bridge.deskVersion?.(id),restyle=before?.n===v.n&&before.preset===v.preset&&before.look===v.look;
+    try{if(!restyle)status(`Switching the desk to ${v.n} · ${v.label}…`);await bridge.setDeskVersion(project(),i,v);
+      if(said&&Date.now()<said.until&&said.at===lastPlayhead)status(said.text);
+      else if(!restyle)status(`Desk ${v.n} · ${v.label}: the film's sub-shot ${v.n} desk (${v.preset}${v.setup?'':', preset only'}), ${((performance.now()-started)/1000).toFixed(1)} s to switch.`);
+      said=null;}
     catch(error){status('The desk version could not load: '+error.message,true);}
     finally{busy=false;if(want&&bridge.deskVersion?.(want.id)?.sig!==want.v.sig)schedule();}
   }
@@ -137,7 +150,7 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     const next=asEdits(l),old=next[i];
     // The name follows the model unless it was renamed.
     next[i]={...old,preset,name:!old.name||old.name===presetLabel(old.preset)?'':old.name};
-    write(next,`Desk ${n} is now ${presetLabel(preset)}: finishes, accessories and artwork follow the model; ${RESET_NOTE}`);
+    write(next,`Desk ${n} now uses the ${presetLabel(preset)} model. ${RESET_NOTE}`);
   }
   function setName(n,name){
     const l=list(),i=l.findIndex(x=>x.n===n);if(i<0)return;const next=asEdits(l);
@@ -149,6 +162,21 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     const next=asEdits(l),old=next[i];delete old.look;
     next[i]={...old,...(look?{look}:{}),name:look&&!old.name?BLANK_NAME:(!look&&old.name===BLANK_NAME?'':old.name)};
     write(next,look?`Desk ${n} is now the blank Pearl White desk: the Pearl White finish with no accessories, no props and no screens, in the ending’s white look. Undo takes it back.`:`Desk ${n} is back to its model’s own look: accessories, props and screens return.`,{tab:true});
+  }
+  function setFinish(n,field,value){
+    const l=list(),i=l.findIndex(v=>v.n===n);if(i<0||!l[i].setup)return;
+    const next=asEdits(l),v=l[i],finish=cleanDeskVersionFinish(field?{...v.finish,[field]:value}:null);
+    if(JSON.stringify(finish)===JSON.stringify(v.finish))return;
+    if(finish)next[i].finish=finish;else delete next[i].finish;
+    pickedN=n;
+    const text=`Desk ${n} · ${v.label}${finish?' finishes updated.':' finishes reset.'}`;
+    write(next,text);
+    // Preview the finish on the desk being edited, before its timed finish fade if it has one.
+    const at=lastPlayhead*total(),fade=effectiveFades(shot(),l)[n],end=Math.min(v.to,total(),fade?.at?.[0]??Infinity);
+    if(current(at)?.n!==n||at>=end){
+      const start=v.from,limit=end>start?end:Math.min(v.to,total());
+      reveal(n,Math.min(1,(start+(limit-start)/4)/total()),text);
+    }
   }
   function setShown(n,which,seconds){
     const l=list(),i=l.findIndex(x=>x.n===n);if(i<0||!Number.isFinite(seconds))return;
@@ -249,13 +277,21 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     const l=list();if(!l.length)return '<h3>Desk version</h3><p class="director-hint">This chapter has one desk.</p>';
     const v=l.find(x=>x.n===pickedN)||l.find(x=>x.n===(current(lastPlayhead*total())||l[0]).n)||l[0],i=l.indexOf(v),[a,b]=shown(asEdits(l),i);
     const first=i===0,last=i===l.length-1;
+    const finish=v.finish||{},options=(finishes,chosen)=>
+      `<option value="">Use desk default</option>${finishes.map(f=>`<option value="${escape(f.name)}" ${f.name===chosen?'selected':''}>${escape(f.name)}</option>`).join('')}`;
     return `<h3>Desk version <span class="inspector-subtitle">${escape(v.n)} · ${escape(v.label)}</span></h3>
-      <p class="director-hint">This chapter shows ${l.length} desk${l.length===1?'':'s'} one after the other. Change a desk’s model, name and how long it shows here; add a desk, duplicate this one or remove it below; drag a desk in the Desk versions lane to reorder, or drag the line between two desks to retime them. ${edited()?'Edited here; Export cut sends it to the film.':'As the film has it; your first change is kept in this cut.'}</p>
+      <p class="director-hint">This chapter shows ${l.length} desk${l.length===1?'':'s'} one after the other. Change a desk’s model, finishes, name and how long it shows here; add a desk, duplicate this one or remove it below; drag a desk in the Desk versions lane to reorder, or drag the line between two desks to retime them. ${edited()?'Edited here; Export cut sends it to the film.':'As the film has it; your first change is kept in this cut.'}</p>
       <label class="build-desk">Desk<select name="dv-pick">${l.map(x=>`<option value="${escape(x.n)}" ${x.n===v.n?'selected':''}>${escape(x.n)} · ${escape(x.label)} · ${fmtIn(shown(asEdits(l),l.indexOf(x))[0])}–${fmtIn(shown(asEdits(l),l.indexOf(x))[1])} s</option>`).join('')}</select></label>
       <label class="build-desk">Model<select name="dv-model" aria-label="Desk model">${models().map(m=>`<option value="${escape(m.id)}" ${m.id===v.preset?'selected':''}>${escape(m.name)}</option>`).join('')}</select></label>
-      <p class="director-hint" data-dv-note>The whole model comes with it: finishes, accessories and artwork or stickers (a model without stickers shows none). ${RESET_NOTE}</p>
+      <p class="director-hint" data-dv-note>Each model brings its default finishes, accessories and artwork. ${RESET_NOTE}</p>
       <label class="build-desk">Name<input name="dv-name" type="text" maxlength="40" value="${escape(v.setup?.name||'')}" placeholder="${escape(presetLabel(v.preset))}" aria-label="Name shown on the lane and the frame badge"></label>
       <label class="build-desk">Look<select name="dv-look" aria-label="Desk look"><option value="" ${v.look?'':'selected'}>The model’s own (accessories, props, screens)</option><option value="blank-pearl" ${v.look==='blank-pearl'?'selected':''}>Blank Pearl White (no accessories, no props, no screens)</option></select></label>
+      ${v.setup?`<fieldset class="chapter-pacing build-box"><legend>Desk finishes · ${escape(v.label)}</legend>
+        <label class="build-desk">Top finish<select name="dv-wood" data-dv-n="${escape(v.n)}" aria-label="Desk top finish">${options(PRODUCT_CONFIG.woodFinishes,finish.wood)}</select></label>
+        <label class="build-desk">Frame<select name="dv-base" data-dv-n="${escape(v.n)}" aria-label="Desk frame finish">${options(PRODUCT_CONFIG.baseFinishes,finish.base)}</select></label>
+        <label class="build-desk">Trim colour<input name="dv-trim" data-dv-n="${escape(v.n)}" type="color" value="${escape(v.swatch.trim)}" aria-label="Desk trim colour"></label>
+        <button type="button" data-dv-finish-reset data-dv-n="${escape(v.n)}" ${v.finish?'':'disabled'}>Use default finishes</button>
+      </fieldset>`:''}
       <div class="build-desk-times"><label>Shown from <input name="dv-start" type="number" step=".1" min="0" max="${total()}" value="${fmtIn(a)}" ${first?'disabled title="The first desk starts the chapter"':''}> s</label>
       <label>until <input name="dv-end" type="number" step=".1" min="0" max="${total()}" value="${fmtIn(b)}" ${last?'disabled title="The last desk runs to the end of the chapter"':''}> s</label></div>
       <p class="director-hint">Each desk shows at least ${MIN_SHOWN} s and the chapter keeps its length; the crossfade between desks keeps its width. The film renders this desk from ${fmtIn(v.start)} to ${fmtIn(v.end)} s.</p>
@@ -270,12 +306,13 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     else if(t.name==='dv-model')setModel(n,t.value);
     else if(t.name==='dv-look')setLook(n,t.value);
     else if(t.name==='dv-name'){setName(n,t.value);}
+    else if(['dv-wood','dv-base','dv-trim'].includes(t.name))setFinish(t.dataset.dvN,t.name.slice(3),t.value);
     else if(t.name==='dv-start'||t.name==='dv-end')setShown(n,t.name==='dv-start'?'start':'end',Number(t.value));
   }
   function onClick(event){
-    const b=event.target.closest?.('[data-dv-reset],[data-dv-add],[data-dv-duplicate],[data-dv-remove],[data-dv-add-start],[data-dv-opener]');if(!b||!panel.contains(b)||b.disabled)return;
+    const b=event.target.closest?.('[data-dv-reset],[data-dv-finish-reset],[data-dv-add],[data-dv-duplicate],[data-dv-remove],[data-dv-add-start],[data-dv-opener]');if(!b||!panel.contains(b)||b.disabled)return;
     const n=b.dataset.dvN||null;
-    if(b.matches('[data-dv-reset]'))reset();else if(b.matches('[data-dv-add-start]'))addAtStart({n});else if(b.matches('[data-dv-opener]'))addAtStart({look:'blank-pearl'});else if(b.matches('[data-dv-add]'))add({n});else if(b.matches('[data-dv-duplicate]'))add({after:true,n});else remove(n);
+    if(b.matches('[data-dv-reset]'))reset();else if(b.matches('[data-dv-finish-reset]'))setFinish(n);else if(b.matches('[data-dv-add-start]'))addAtStart({n});else if(b.matches('[data-dv-opener]'))addAtStart({look:'blank-pearl'});else if(b.matches('[data-dv-add]'))add({n});else if(b.matches('[data-dv-duplicate]'))add({after:true,n});else remove(n);
   }
   if(panel){panel.addEventListener('change',onChange);panel.addEventListener('click',onClick);}
   document.addEventListener('pointerdown',event=>{if(event.target.closest?.('#director-timeline'))down(event);});

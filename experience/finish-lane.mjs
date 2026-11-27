@@ -13,7 +13,7 @@ export function createFinishLane({shot,versions,commit,endGroup,status,seek,rere
   const has=()=>list().length>0;
   const woods=PRODUCT_CONFIG.woodFinishes,bases=PRODUCT_CONFIG.baseFinishes;
   const colourOf=(table,name,fallback)=>table.find(f=>f.name===name)?.color||fallback;
-  // What a desk looks like before its fade: its preset's own swatch.
+  // What a desk looks like before its fade, including its selected finishes.
   const baseSwatch=v=>v?.swatch||{wood:'#444',base:'#222',trim:'#888'};
   const pct=x=>Math.max(0,Math.min(100,x/(seconds()||1)*100));
   const fadeList=()=>list().filter(v=>fades()[v.n]).map(v=>({v,fade:fades()[v.n]}));
@@ -96,13 +96,13 @@ export function createFinishLane({shot,versions,commit,endGroup,status,seek,rere
     const fl=fadeList(),v=picked(),f=v&&fades()[v.n],k=f?looksOf(f):null,total=seconds();
     const opt=(table,sel)=>table.map(x=>`<option value="${escape(x.name)}" ${x.name===sel?'selected':''}>${escape(x.name)}</option>`).join('')+(sel&&!table.some(x=>x.name===sel)?`<option value="${escape(sel)}" selected>${escape(sel)}</option>`:'');
     const here=l.find(x=>(playhead()||0)*total<x.to)||l.at(-1);
-    return `<h3 class="finish-head">Finish fade <span class="inspector-subtitle">${fl.length?fl.map(x=>`Desk ${escape(x.v.n)}`).join(', '):'none'}</span></h3>
-      <p class="director-hint">A desk turns to a second finish over a few seconds (the hero's gaming desk goes Pearl White before the logo). The picture cross-fades between the two looks; the desk's lights, LED and exposure come with the look. Drag the block in the Finish lane, or type the numbers here.</p>
+    return `<h3 class="finish-head">Timed finish fade <span class="inspector-subtitle">${v?`Desk ${escape(v.n)} · ${escape(v.label)}`:''}</span></h3>
+      <p class="director-hint">Set a second finish for the desk chosen below. Drag its block in the Finish lane or enter the fade times here.</p>
       ${f?`<label class="build-desk">Desk<select name="ff-pick" aria-label="Desk with a finish fade">${fl.map(x=>`<option value="${escape(x.v.n)}" ${x.v.n===v.n?'selected':''}>${escape(x.v.n)} · ${escape(x.v.label)} · ${fmt(x.fade.at[0])}–${fmt(x.fade.at[1])} s</option>`).join('')}</select></label>
       <div class="build-desk-times"><label>Starts <input name="ff-start" type="number" step=".05" min="0" max="${total}" value="${fmt(f.at[0])}" aria-label="Finish fade starts (seconds)"> s</label><label>Fully changed <input name="ff-end" type="number" step=".05" min="0" max="${total}" value="${fmt(f.at[1])}" aria-label="Finish fade complete (seconds)"> s</label><label>Takes <input name="ff-len" type="number" step=".05" min="${MIN_FADE}" max="${total}" value="${fmt(f.at[1]-f.at[0])}" aria-label="Finish fade length (seconds)"> s</label></div>
-      <label class="build-desk">Top finish<select name="ff-wood" aria-label="Finish of the desktop">${opt(woods,k.wood)}</select></label>
-      <label class="build-desk">Frame<select name="ff-base" aria-label="Finish of the frame">${opt(bases,k.base)}</select></label>
-      <label class="build-desk">Trim colour<input name="ff-trim" type="color" value="${/^#[0-9a-f]{6}$/i.test(k.trim)?k.trim:'#f5f5f2'}" aria-label="Trim colour"></label>`:'<p class="director-hint">No desk in this chapter has a finish fade right now.</p>'}
+      <label class="build-desk">Fade to top finish<select name="ff-wood" aria-label="Fade to top finish">${opt(woods,k.wood)}</select></label>
+      <label class="build-desk">Fade to frame<select name="ff-base" aria-label="Fade to frame finish">${opt(bases,k.base)}</select></label>
+      <label class="build-desk">Fade to trim colour<input name="ff-trim" type="color" value="${/^#[0-9a-f]{6}$/i.test(k.trim)?k.trim:'#f5f5f2'}" aria-label="Fade to trim colour"></label>`:'<p class="director-hint">No desk in this chapter has a finish fade right now.</p>'}
       <div class="director-actions desk-version-actions"><button type="button" data-ff-add title="Add a Pearl White fade to Desk ${escape(here?.n||'')} starting at the playhead" ${here&&!fades()[here.n]?'':'disabled'}>+ Finish fade on Desk ${escape(here?.n||'')}</button>${f?`<button type="button" data-ff-remove="${escape(v.n)}">Remove Desk ${escape(v.n)}'s fade</button>`:''}<button type="button" data-ff-reset ${fadesEdited(shot())?'':'disabled'} title="Back to the finish fades the film has (the hero ending). One Undo takes it back.">Reset to the film</button></div>`;
   }
   function onChange(event){

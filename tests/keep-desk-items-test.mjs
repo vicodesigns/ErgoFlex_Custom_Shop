@@ -13,8 +13,8 @@ assert.match(fx,/shot\.accessories \|\| shot\.keepDeskItems \|\|/,'a shot with o
 // module versions bumped, so an open page does not keep the old stow
 assert.match(read('scene-desk-objects.mjs'),/desk-auto-stow\.mjs\?v=keep-desk-items-20261127/);
 assert.match(read('experience/stage.mjs'),/rider-handoff\.mjs\?v=keep-desk-items-20261127/);
-assert.match(read('experience/player.mjs'),/film-fx\.mjs\?v=20261127-featured-hide/);
-assert.match(read('experience/film-render.mjs'),/film-fx\.mjs\?v=20261127-featured-hide/);
+assert.match(read('experience/player.mjs'),/film-fx\.mjs\?v=20261127-desk-version-finishes/);
+assert.match(read('experience/film-render.mjs'),/film-fx\.mjs\?v=20261127-desk-version-finishes/);
 // the cut: the Office sub-shot only
 const subs=JSON.parse(read('exports/cinematic-intro-cut-vicos-3rd-cut/shots/13-subshots.json').replace(/^﻿/,'')).shots;
 assert.deepEqual(subs.filter(s=>s.keepDeskItems).map(s=>s.subshot),['D'],'only the Office sub-shot carries the flag');
