@@ -15,6 +15,7 @@
 import {PRESETS,PRODUCT_CONFIG} from '../catalog.mjs';
 import {SHARED_BUILD_PRESETS} from '../preset-defaults.mjs';
 import {filmRenderShot} from './film-render.mjs';
+import {effectiveFades,edited as finishEdited} from './finish-fades.mjs';
 import {NAMES,resolveSubshots,resolveFilm,moveVersion,moveSeam,seamsOf,shown,MIN_SHOWN,MAX_VERSIONS,RESET_NOTE,cleanDeskVersionList,addVersion,removeVersion,canAddVersion,nextVersionId} from './desk-versions-edit.mjs';
 
 export const presetLabel=id=>NAMES[id]||PRESETS.find(p=>p.id===id)?.name||String(id||'Desk');
@@ -256,6 +257,8 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
   if(panel){panel.addEventListener('change',onChange);panel.addEventListener('click',onClick);}
   document.addEventListener('pointerdown',event=>{if(event.target.closest?.('#director-timeline'))down(event);});
   return {lane,sync,click,current:()=>{const s=shot();return s?bridge.deskVersion?.(s.id)||null:null;},renderShot:(film,s,keys,seconds)=>{const v=current(seconds),job=versionRenderShot(film,s,keys,v),seed=v&&bridge.deskStorage?.(s.id);
+    // The Director's own finish fades (finish-fades.mjs) replace the film's on the still too.
+    if(v&&finishEdited(s)){const f=effectiveFades(s,list())[v.n];if(f)job.finishFade=f;else delete job.finishFade;}
     // The still renderer's stage takes the render's storage seed too (film-render.mjs; not part of the shot's JSON).
     if(seed)Object.defineProperty(job,'__storage',{value:seed,enumerable:false});return job;},has:()=>list().length>0,panel:panelHtml,list,select,edited,add,remove};
 }

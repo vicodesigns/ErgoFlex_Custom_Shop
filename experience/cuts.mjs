@@ -17,6 +17,7 @@ import {cleanDeskEdits} from './desk-edits.mjs';
 import {cleanTrayEdits} from './tray-pose.mjs';
 import {cleanDeskBuildField} from './desk-build.mjs';
 import {cleanDeskVersionsField} from './desk-versions-edit.mjs';
+import {cleanFinishFadesField} from './finish-fades.mjs';
 import {cleanFilmTitles} from './film-titles.mjs';
 import {cleanEndCard} from './end-card.mjs';
 import {cleanTouchscreenField} from './touchscreen-track.mjs';
@@ -58,7 +59,7 @@ export function cleanShot(v={},catalog){
   const keys=cleanCameraKeys(v.camera?.keys);
   if(keys.length)shot.camera={keys};else if(from||to)shot.camera={...(from?{from}:{}),...(to?{to}:{} )};
   // Film lighting edited in the Director (absent until then).
-  Object.assign(shot,cleanLighting(v),cleanSceneLights(v),cleanPropEdits(v),cleanPeopleEdits(v),cleanPropLayers(v),cleanBrandingEdits(v),cleanDeskEdits(v),cleanTrayEdits(v),cleanDeskBuildField(v),cleanDeskVersionsField(v),cleanScreenLookField(v),cleanSonarField(v));
+  Object.assign(shot,cleanLighting(v),cleanSceneLights(v),cleanPropEdits(v),cleanPeopleEdits(v),cleanPropLayers(v),cleanBrandingEdits(v),cleanDeskEdits(v),cleanTrayEdits(v),cleanDeskBuildField(v),cleanDeskVersionsField(v),cleanFinishFadesField(v),cleanScreenLookField(v),cleanSonarField(v));
   // Clips: lift / tilt only, valid and non-overlapping (desk-choreo.mjs).
   if(shot.deskEdits)shot.deskEdits=cleanDeskChoreo({deskEdits:shot.deskEdits},shot.seconds).deskEdits;
   // Film titles edited in the Director (absent until then): copy, timing, shadow shape.

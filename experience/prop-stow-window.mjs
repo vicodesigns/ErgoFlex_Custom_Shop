@@ -83,3 +83,45 @@ export function keyedWindow(keys,op,lo,hi){
   if(!(to-from>=.1-1e-9))return null;
   return {from:r(from),to:r(to),fadeIn:r(Math.min(fadeIn,to-from)),fadeOut:r(Math.min(fadeOut,to-from)),keyed:true};
 }
+
+// ---- Loose desktop items (28 Nov 2026, Vico, hero Office desk: "a bunch of the props fade in … the calculator and the mouse … I look at
+// the props layer and they all seem like they're there the whole time"). Besides the easel / painter shelf / drafting kit the desk's
+// auto-stow (desk-auto-stow.mjs deskItemDisposition 'stow') puts EVERY other loose item of the desktop mount away on its shelf unit while
+// the desk is tilted past STOW_ANGLE, and brings it back when the tilt is down again; the keyboard and mouse follow the hand-off
+// timeline instead (tray-riders.mjs riderTimeline: leave above 9 deg, back below 7 deg). The Props lane draws such an item's bar whole
+// (it is on screen) with its shelf stretches hatched: "put away" - so what comes onto the desktop later is seen coming.
+const KEEP_ARCHITECT=/ruler|pencil|draft|plan|sketch|drawing/,KEEP_ARTIST=/brush|palette|paint|easel|canvas/;
+// true: the desk moves this loose item (role 'desktop') to its shelf at this tilt. Same rule as deskItemDisposition's 'stow'.
+export function stowsToShelf(text,role,tilt,recipe=''){
+  if(role!=='desktop'||!(tilt>STOW_ANGLE))return false;
+  const t=String(text||'').toLowerCase();
+  if(PAINTER.test(t)||EASEL.test(t)||DRAFTING.test(t)||FIXED.test(t))return false;
+  if(tilt<EASEL_ANGLE&&recipe==='architect'&&KEEP_ARCHITECT.test(t))return false;
+  if(tilt>=EASEL_ANGLE&&recipe==='artist'&&KEEP_ARTIST.test(t))return false;
+  return true;
+}
+// The stretches of [lo, hi] (chapter seconds) in which the desk keeps the item on its shelf: [{from, to}] in time order, rounded to a
+// hundredth, [] when it stays on the desktop. rider: the keyboard / mouse (they leave above LEAVE_DEG and come back below RETURN_DEG,
+// walked along the tilt so the decision does not depend on the playhead); tiltAt: seconds -> degrees.
+export const LEAVE_DEG=9,RETURN_DEG=7;
+export function awayStretches({text='',role='',rider=false,recipe='',tiltAt=null,lo,hi,step=.05}){
+  if(!tiltAt||!(hi>lo)||(!rider&&role!=='desktop'))return [];
+  const r=v=>Math.round(v*100)/100;
+  let away;
+  if(rider){
+    // hysteresis, walked from the chapter's start
+    let on=Number(tiltAt(0))>LEAVE_DEG;const flips=[];
+    for(let t=step;t<=hi+1e-9;t+=step){const v=Number(tiltAt(Math.min(hi,t))),flip=on?v<RETURN_DEG:v>LEAVE_DEG;if(flip){const test=x=>on?Number(tiltAt(x))<RETURN_DEG:Number(tiltAt(x))>LEAVE_DEG;let a=t-step,b=t;for(let i=0;i<20;i++){const m=(a+b)/2;if(test(m))b=m;else a=m;}flips.push(b);on=!on;}}
+    const start=Number(tiltAt(0))>LEAVE_DEG,edges=[...flips];
+    away=t=>{let o=start;for(const e of edges){if(e<=t)o=!o;else break;}return o;};
+  }else away=t=>stowsToShelf(text,role,Number(tiltAt(t)),recipe);
+  const edge=(a,b)=>{const inside=away(a);for(let i=0;i<20;i++){const m=(a+b)/2;if(away(m)===inside)a=m;else b=m;}return (a+b)/2;};
+  const pts=[];for(let t=lo;t<hi;t+=step)pts.push(+t.toFixed(6));pts.push(hi);
+  const out=[];let start=away(pts[0])?lo:null;
+  for(let i=1;i<pts.length;i++){
+    const sa=away(pts[i-1]),sb=away(pts[i]);if(sa===sb)continue;
+    const x=edge(pts[i-1],pts[i]);if(sb)start=x;else{out.push({from:r(start),to:r(x)});start=null;}
+  }
+  if(start!==null)out.push({from:r(start),to:r(hi)});
+  return out.filter(s=>s.to-s.from>=.02);
+}

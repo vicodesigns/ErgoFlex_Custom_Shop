@@ -511,3 +511,26 @@ body.df-shell #director-timeline .camera-segment i{opacity:.8}
 #director-timeline .camera-segment.seg-warn i{padding-left:14px}
 #director-timeline .camera-segment .seg-warn-mark{position:absolute;left:1px;top:50%;transform:translateY(-50%);pointer-events:auto;cursor:help;color:#ffb347;font-size:12px;text-shadow:0 1px 3px #000}
 #director-panel .transition-warn{color:#ffcf7a}
+
+/* Finish lane (finish-lane.mjs): a desk version turning to its second look. The ramp cross-fades from the desk's own finish to the new one,
+   the held block after it carries the new finish's swatch and name. Edges drag the start and the end, the middle shifts the whole fade. */
+#director-timeline .desk-lane-row[data-lane-color=finish]{--lane:#e8e4d8;height:34px}
+#director-timeline .timeline-content .finish-lane{height:34px;cursor:default}
+#director-timeline .finish-row .desk-lane-label{flex-direction:row!important;align-items:center;justify-content:space-between;gap:4px}
+#director-timeline .finish-row .desk-lane-label small{margin-right:auto;margin-left:5px;font-family:var(--df-mono);font-weight:650;color:var(--df-select-text)}
+#director-timeline .finish-row .desk-lane-label .lane-add{flex:none;font-weight:650}
+#director-timeline .finish-empty{position:absolute;left:8px;top:0;bottom:0;display:flex;align-items:center;font-size:var(--df-fs-2xs);color:var(--df-text-3);pointer-events:none}
+#director-timeline .timeline-content .finish-ramp{position:absolute;top:4px;height:26px;min-height:26px;padding:0;box-sizing:border-box;border:1px solid color-mix(in srgb,var(--to) 55%,var(--df-border-2));border-radius:var(--df-r-1) 0 0 var(--df-r-1);background:linear-gradient(90deg,var(--from),var(--to));cursor:grab;overflow:visible;z-index:2}
+#director-timeline .timeline-content .finish-ramp:active{cursor:grabbing}
+#director-timeline .timeline-content .finish-ramp.picked,#director-timeline .timeline-content .finish-held.picked{box-shadow:0 0 0 1px var(--lane),0 0 0 3px color-mix(in srgb,var(--lane) 30%,transparent)}
+#director-timeline .timeline-content .finish-held{position:absolute;top:4px;height:26px;min-height:26px;box-sizing:border-box;display:flex;align-items:center;gap:6px;padding:0 8px 0 6px;overflow:hidden;white-space:nowrap;border:1px solid color-mix(in srgb,var(--to) 55%,var(--df-border-2));border-left:0;border-radius:0 var(--df-r-1) var(--df-r-1) 0;background:linear-gradient(color-mix(in srgb,var(--to) 38%,var(--df-surface-2)),color-mix(in srgb,var(--to) 24%,var(--df-surface-2)));cursor:default}
+#director-timeline .timeline-content .finish-held strong{font-size:var(--df-fs-sm);font-weight:600;color:#f6f9fc;overflow:hidden;text-overflow:ellipsis}
+#director-timeline .finish-h{position:absolute;top:-2px;bottom:-2px;width:8px;cursor:ew-resize;z-index:3}
+#director-timeline .finish-h.start{left:-4px}
+#director-timeline .finish-h.end{right:-4px}
+#director-timeline .finish-h::after{content:"";position:absolute;top:5px;bottom:5px;left:3px;width:2px;border-radius:1px;background:#ffffffb0;box-shadow:0 0 0 1px #0007}
+#director-timeline .finish-lane .camera-track-playhead{z-index:4}
+#director-panel .finish-head{margin-top:18px}
+
+/* Props lane: the stretches a loose desktop item is put away on the desk's shelf (the desk is tilted): hatched over the bar */
+#director-timeline .prop-bar .prop-away{position:absolute;top:0;bottom:0;pointer-events:none;background:repeating-linear-gradient(135deg,#0b111890 0 3px,#0b111860 3px 6px);border-right:1px dashed #ffffff60;box-sizing:border-box;z-index:1}

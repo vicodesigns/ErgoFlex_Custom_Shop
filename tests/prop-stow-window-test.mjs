@@ -1,5 +1,5 @@
 // The Props lane draws a film item the desk puts away (easel, painter shelf, drafting kit) only while it is shown.
-import {stowHides,stowWindow,hasStowRule,EASEL_ANGLE} from '../experience/prop-stow-window.mjs';
+import {stowHides,stowWindow,hasStowRule,EASEL_ANGLE,stowsToShelf,awayStretches} from '../experience/prop-stow-window.mjs';
 import {deskItemDisposition} from '../desk-auto-stow.mjs';
 import {legacyMotionToClips,sampleClipMotion} from '../experience/desk-clips.mjs';
 import fs from 'node:fs';
@@ -24,4 +24,23 @@ check(stowWindow('accessory:task-light','artist',tilt,lo,hi)===null&&stowWindow(
 const C=sub.find(s=>s.subshot==='C');check(stowWindow('accessory:drafting-kit','architect',t=>sampleClipMotion(legacyMotionToClips(C.motion,48),t).tilt,12.5,20.4)===null,'architect desk (under 50 deg while it is on): the drafting kit keeps its whole stretch');
 check(stowWindow('accessory:artist-easel','artist',()=>65,lo,hi)===null,'always above 50: the bar stays whole');
 check(stowWindow('accessory:artist-easel','artist',()=>20,lo,hi)===null,'never shown: the bar stays whole');
+// 4. loose desktop items (the Office desk of the hero): same decision as deskItemDisposition's 'stow', and the stretches they are on the shelf
+let sameStow=true;
+for(const recipe of ['artist','architect','office'])for(const n of [...names,'calculator','pen','glasses 3','ruler','brush set','tablet folder'])for(const tilt of [0,5,9,10,30,49.9,50,65,80])for(const role of ['desktop','shelf']){
+  const item={obj:{userData:{},isGroup:false,isMesh:false,children:[],name:n},saved:{role,propId:'',label:''}},real=deskItemDisposition(item,tilt,recipe)==='stow',mine=stowsToShelf(n,role,tilt,recipe);
+  if(real!==mine){sameStow=false;console.log('  differs:',recipe,n,tilt,role,real,mine);}
+}
+check(sameStow,'stowsToShelf agrees with deskItemDisposition (stow)');
+// the hero's Office desk: tilt 30 until 10.1 s, then to -5 by 12.4 s (linear): the calculator is on the shelf until the tilt falls to 9 deg
+const office=t=>t<=10.1?30:t>=12.4?-5:30-(t-10.1)/2.3*35;
+const calc=awayStretches({text:'calculator',role:'desktop',tiltAt:office,lo:9.34,hi:17.04});
+check(calc.length===1&&calc[0].from===9.34&&Math.abs(calc[0].to-(10.1+(30-9)/35*2.3))<.06,'a desktop item is on the shelf until the tilt falls to 9 deg '+JSON.stringify(calc));
+const mouse=awayStretches({text:'mouse',role:'desktop',rider:true,tiltAt:office,lo:9.34,hi:17.04});
+check(mouse.length===1&&mouse[0].from===9.34&&Math.abs(mouse[0].to-(10.1+(30-7)/35*2.3))<.06,'the mouse (a rider) comes back below 7 deg, later '+JSON.stringify(mouse));
+check(awayStretches({text:'accessory:task-light',role:'desktop',tiltAt:office,lo:9.34,hi:17.04}).length===0,'fixed hardware is never put away');
+check(awayStretches({text:'snake plant',role:'shelf',tiltAt:office,lo:9.34,hi:17.04}).length===0,'a shelf item is not put away');
+check(awayStretches({text:'calculator',role:'desktop',tiltAt:()=>0,lo:0,hi:10}).length===0,'a level desk puts nothing away');
+check(awayStretches({text:'calculator',role:'desktop',tiltAt:()=>30,lo:0,hi:10}).length===1,'a tilted desk keeps it on the shelf all the time');
+const down=awayStretches({text:'pen',role:'desktop',tiltAt:t=>t<5?0:30,lo:0,hi:10});
+check(down.length===1&&Math.abs(down[0].from-5)<.06&&down[0].to===10,'a desk that tilts up later puts it away from there '+JSON.stringify(down));
 console.log(bad?'FAILED: '+bad:'all ok');process.exit(bad?1:0);

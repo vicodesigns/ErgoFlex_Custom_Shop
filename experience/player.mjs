@@ -42,6 +42,8 @@ const subshotsOf=(id,url,s)=>s?.subshots?loadFilmSubshots(url,id).then(list=>fil
 const filmReady=film&&clientCut?loadFilmChapters(film.film).then(list=>Promise.all(list.filter(c=>c.shot&&clientCut.shots.some(s=>s.id===c.id)).map(c=>loadFilmShot(c.shot,c.id).then(s=>{filmShots.set(c.id,s);return subshotsOf(c.id,c.shot,s);})))).catch(error=>console.warn('[film setup]',error.message)):Promise.resolve();
 function activeVersion(id){if(deskVersion.has(id))return deskVersion.get(id);const list=deskVersions(filmShots.get(id),filmSubshots.get(id));return list.length?versionAt(list,0):null;}
 const filmSetup=id=>{const v=activeVersion(id);return v?.setup||filmShots.get(id);};
+// Where a chapter's finish fade comes from: the Director's own list (shot.finishFades, finish-fades.mjs) when the cut has one, else the film's (the sub-shot's finishFade).
+const finishSource=s=>{const v=activeVersion(s?.id),m=s?.finishFades;return m&&typeof m==='object'&&v?{finishFade:m[v.n]??null}:filmSetup(s?.id);};
 // The finale renders with a storage seed (its saved builds are the presets' desks): the stage's memory-only storage
 // takes the seed's keys while a desk version is on and gets its own values back after.
 const seeds=new Map();let seededKeys=null,fxError=null;
@@ -98,7 +100,7 @@ let fxLast=0,fxScreensAt=0,fxScrubbed=false,liveFx=null,fxShot=null,fxAt=-1,fxPe
 let fxFinish=null;
 // Film layers the Director edits in place (film-fx update): lighting and its prop edits.
 let fxPeople='null',fxSonar='null';
-const lightsKey=s=>{const l=exportLighting(s);return JSON.stringify([l.ledStatus,l.ledNeutral,l.ledColor,l.sceneGlobals,l.lights,l.lightEdits,l.timeOfDay,s.statusLight,l.propEdits,l.brandingEdits,l.deskEdits,l.deskBuild,l.screens,s.screenLook]);};   // (screenLook: the Graphics tab, applied in place by film-fx update)
+const lightsKey=s=>{const l=exportLighting(s);return JSON.stringify([l.ledStatus,l.ledNeutral,l.ledColor,l.sceneGlobals,l.lights,l.lightEdits,l.timeOfDay,s.statusLight,l.propEdits,l.brandingEdits,l.deskEdits,l.deskBuild,l.screens,s.screenLook,s.finishFades]);};   // (screenLook: the Graphics tab, applied in place by film-fx update)
 // film-fx resolves 'three' through the stage page's import map, so it loads inside the stage frame.
 async function stageFx(){
   const win=frame.contentWindow;if(win.__filmFx)return win.__filmFx;
@@ -121,7 +123,7 @@ async function prepareStage(next,seconds){
   if(setup&&next.trayEdits===undefined&&setup.sceneTray?.length)next={...next,trayEdits:effectiveTrayEdits(setup,next)};   // an import's keyboard tray keys (tray-pose.mjs): the live stage plays them, as it does the desk clips
   const seed=version?await storageSeed(next.id):null;if(seed)seeds.get(seed.url).done=seed;seedStage(seed);
   if(!setup||!fx)return stage().prepare(next);
-  const base=liveFilmShot(setup,next),finish=finishFadeAt(setup,seconds);
+  const base=liveFilmShot(setup,next),finish=finishFadeAt(finishSource(next),seconds);
   const look=finish?.weight>=.5?finish.look:null,shot=look?{...base,...look}:base;
   fx.beforePrepare(shot);
   // The stage casts the room from the shot it prepares: the film's people with the Director's cast over them.
@@ -143,7 +145,7 @@ async function reinstallFilmLights(){
   // Not under a Director gizmo drag: the dragged light would jump back mid-gesture.
   while(frame.contentWindow.__directorDragging)await new Promise(r=>setTimeout(r,100));
   await fxPending;const s=shots[index],setup=s&&filmSetup(s.id),fx=liveFx;if(!fx||busy||!setup||s.id!==fxShot||activeBake||bakeController)return;
-  const base=liveFilmShot(setup,s),finish=finishFadeAt(setup,clock.progress(performance.now(),s.seconds)*s.seconds);
+  const base=liveFilmShot(setup,s),finish=finishFadeAt(finishSource(s),clock.progress(performance.now(),s.seconds)*s.seconds);
   const look=finish?.weight>=.5?finish.look:null,shot=look?{...base,...look}:base;
   let held=false;const hold=()=>{if(!held){held=true;stage().hold?.(true);}};
   liveFx=null;
@@ -161,7 +163,7 @@ function filmFrame(){
   if(!liveFx||fxPending||busy||index<0||activeBake||bakeController||shots[index]?.id!==fxShot)return;
   const s=shots[index],at=clock.progress(performance.now(),s.seconds)*s.seconds,fx=liveFx,now=performance.now(),scrubbing=director?.scrubbing?.();
   if(scrubbing&&now-fxLast<100)return;if(!scrubbing&&fxScrubbed){fxScrubbed=false;fxAt=-1;}if(scrubbing)fxScrubbed=true;
-  const finish=finishFadeAt(filmSetup(s.id),at);
+  const finish=finishFadeAt(finishSource(s),at);
   if((finish?.weight>=.5?finish.look:null)!==fxFinish){void refreshFilmLights();return;}
   if(Math.abs(at-fxAt)<1/30)return;fxLast=now;stage()?.wake?.();
   const drawScreens=!playing||now-fxScreensAt>=250;if(drawScreens)fxScreensAt=now;
