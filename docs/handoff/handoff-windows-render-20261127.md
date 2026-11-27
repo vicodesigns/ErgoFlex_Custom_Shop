@@ -1,0 +1,31 @@
+# Handoff: Windows render PC (2026-11-27)
+
+For whoever drives the Windows machine (Codex / Gemini / Claude "Windows" session) while Vico's Claude credits are out. This machine is the GPU powerhouse: **all rendering, stills, clips and browser tests run here, never on the Linux desk** (12 GB RAM). The Linux desk side is described in `handoff-linux-desk-20261127.md` (same folder; read its "Hard rules").
+
+## Setup facts
+- Code arrives by git: pull `video/cinematic-intro-hq` (main line, Vico's live checkout lives on the desk). Work on your own branch and push it; **never push to `video/cinematic-intro-hq`**, the desk side reviews and merges (Vico must say "merge").
+- Clones: `C:\work\ergoflex-cine`, `C:\work\ergoflex-people` (older); use a fresh worktree/clone of the repo for new jobs. `python3` is a stub here, use `python`. Blender 4.2.3 portable at `C:\Users\Vico\blender\blender-4.2.3-windows-x64\blender.exe` (people builds, `BLENDER_USER_RESOURCES=C:/Users/Vico/blender/mpfb-user`).
+- One GPU job at a time behind the lock `C:\work\gpu.lock`; at most 2 agents at once. Film jobs come from the render watcher/queue (`exports/render-queue`); quick stills/previews Vico asks for go first.
+- Trap: previews use the committed `studio-state.json`; the desk checkpoint commit pushed with this handoff carries Vico's current one. Say which studio-state rev a preview used.
+- Delivery to Vico: stills/clips via the delivery route (`~/ErgoFlex-Renders` on the desk, or SendUserFile, 30 MiB cap).
+
+## Job 1: re-check the hero blank Pearl White -> Artist fix (code `e492ad5a`, on `video/cinematic-intro-hq` and `director/hero-leadin-verify` = `8420a9cc`)
+Background: hero now starts with a 1.5 s bare Pearl White desk (sub-shot "I", `look:'blank-pearl'`, same preset `artist` as the Artist desk "B"), then Artist, Architect, Office, black/red Gaming, then a Pearl White finish fade. Chapter is 27.45 s. Earlier bugs: "no screen matches main-landscape", Artist coming back with Pearl White wood and no accessories, then easel and painting upside down. Latest fix hides the accessories with `saved.removed` instead of toggling them (`tools/experience/film-fx.mjs installFeaturedBuild(build, bare)`).
+
+Run, in the Director (live) and with Render still (same page): bare -> Artist -> bare -> Artist at 0.4 / 1.35 / 1.5 / 1.65 / 2.2 / 4 s. Pass criteria:
+- blank frame really bare: no easel, shelf, monitors, props, no light from a hidden task-light; Pearl White wood;
+- Artist frame equals the older good still (`9d4c3002` Render still 1.5/1.65/2.2): Warm Ivory, accessories artist-easel, painter-shelf, task-light, monitor-arm, flat-monitor, **easel rail at the bottom, painting upright**, lit screens, no "film setup could not be applied" status;
+- Artist -> Architect -> Office -> Gaming -> Pearl White-finish dissolves unchanged; timeline max 27.45;
+- console lines `[film-fx] featuredBuild was {wood, accessories}` and `featuredBuild restored {...}` should show the same Warm Ivory + artist list. If the Artist is still incomplete, send both lines (was blank = first-load problem; restored blank = restore failing). If the blank still shows an accessory, name the meshes.
+Previous results (6c6fbe66, before the later fixes): main-landscape error gone, 0.4 s bare OK, Artist incomplete. `director-desk-versions-edit-e2e` fails on 8e105c7c too (pre-existing, expects old A-F desks).
+
+## Job 2: Kai's arms in the Oilers chapter (Vico's request, branch `director/oilers-kai-arms`)
+Problem: chapter 6 "Space to discover" (high school): when Kai brings his hands up from the wheelchair to type, arms/hands pass through the keyboard and the keyboard tray. Improve the movement/sequence (not a redo). Screenshot: on the desk at `/home/ergo/Pictures/Screenshots/Screenshot from 2026-11-27 13-42-52.png` (Kai from behind, hands on keyboard).
+Facts: cut `exports/cinematic-intro-cut-vicos-3rd-cut`, chapter `oilers`. Cast entries: `kai-rolls` (people-kai-wheel-roll, 0 to 9.4 s), `kai-docks` (9.4 to 12.75 s, ends at [-3757,-1212] turn 180), `kai` (people-kai-wheel-type-31, from 12.75 s). The only arm animation at the hand-over is `postures['people-kai-wheel-type-31'].poseKeys`: identity key at 12.75 s and a typing key at 13.5 s (upperarm/lowerarm/hand L+R, e.g. upperarm_l [-0.267,-0.011,0.016,0.964]). Pose keys slerp every bone separately with smoothstep (`people-pose-keys.mjs poseAt`), so the hands go straight through the tray lip and keyboard. The posture also switches from wheel-roll (hands on the rims) to wheel-type-31 at 12.75 s.
+To do: (1) still strip every ~0.15 s from 12.4 to 14.5 chapter s, camera from behind-left and from low side; (2) add 3 to 5 pose keys between 12.75 and about 13.9 s: hands leave the rims, rise above tray and keyboard (elbows slightly out), travel forward over the keys, lower onto the home row; keep typing from 13.5 s on, other people, camera, desk lift (8.5 to 11.5 s), titles, score and the 15 s length untouched; change motion code (`room-people-motion.mjs`, `people-lap*.mjs`) only if data cannot do it; (3) second strip proving no intersections at any frame including the film's real camera cuts; (4) write the keys as Vico's Director would: `director-camera-oilers.json` (people), `director-film/oilers.json`, `review-cut.json` via `tools/experience/build-round8-director.py`, then `--pages oilers`, so they show as editable diamonds on the People track; do not touch hero/rise files (Vico's live uncommitted import) ; (5) before/after strips, a 720p clip of 12 to 15 s if cheap, branch + sha, notes. Earlier fixes to read first: commits 86997631, 013024fd, 2c1b1dd8. Run `tests/people-pose-keys-test.mjs` and the room-people tests if code changes; ESLint no-use-before-define.
+Status at handoff: the Opus agent was started and was due to get the GPU after the rise render; see `docs/handoff/kai-arms-notes.md` and `windows-state.md` on the branches the Windows session pushes (names reported to the desk).
+
+## Other state
+- Rise render `req-20261127T213557` (1080p, started about 13:40) was holding the GPU when the desk last heard; check the queue (the desk's copy of `queue.json` is stale).
+- No film render has been queued for the hero lead-in. If Vico asks for a Hero 720p preview of it, say the wait first.
+- Nothing from this machine is merged without Vico's "merge", relayed through the desk session.

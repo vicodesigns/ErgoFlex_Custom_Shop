@@ -1,5 +1,84 @@
 [
  {
+  "file": "20261127-222459-edit.json.gz",
+  "at": "2026-11-27T22:24:59.601Z",
+  "reason": "edit",
+  "groups": [
+   "camera"
+  ],
+  "bytes": 2923,
+  "hash": "e36ec841f6a6a2ec",
+  "edits": 10
+ },
+ {
+  "file": "20261127-214342-aside.json.gz",
+  "at": "2026-11-27T21:43:42.893Z",
+  "reason": "aside",
+  "groups": [],
+  "bytes": 3493,
+  "hash": "f6663134b73d8947",
+  "edits": 11,
+  "note": "your changes from 13:18",
+  "protected": true
+ },
+ {
+  "file": "20261127-211842-edit.json.gz",
+  "at": "2026-11-27T21:18:42.334Z",
+  "reason": "edit",
+  "groups": [
+   "camera",
+   "length"
+  ],
+  "bytes": 3493,
+  "hash": "f6663134b73d8947",
+  "edits": 11
+ },
+ {
+  "file": "20261127-211830-edit.json.gz",
+  "at": "2026-11-27T21:18:30.928Z",
+  "reason": "edit",
+  "groups": [],
+  "bytes": 3416,
+  "hash": "8f8d202a1c5c9a02",
+  "edits": 10
+ },
+ {
+  "file": "20261127-211321-edit.json.gz",
+  "at": "2026-11-27T21:13:21.968Z",
+  "reason": "edit",
+  "groups": [],
+  "bytes": 3416,
+  "hash": "e378d1786460fe8e",
+  "edits": 10
+ },
+ {
+  "file": "20261127-211157-edit.json.gz",
+  "at": "2026-11-27T21:11:57.523Z",
+  "reason": "edit",
+  "groups": [],
+  "bytes": 3008,
+  "hash": "3f9e6d67a3cbd309",
+  "edits": 10
+ },
+ {
+  "file": "20261127-211115-edit.json.gz",
+  "at": "2026-11-27T21:11:15.985Z",
+  "reason": "edit",
+  "groups": [],
+  "bytes": 3007,
+  "hash": "e10e7ea307cd5211",
+  "edits": 10
+ },
+ {
+  "file": "20261127-211110-edit.json.gz",
+  "at": "2026-11-27T21:11:10.243Z",
+  "reason": "edit",
+  "groups": [],
+  "bytes": 3006,
+  "hash": "2065a4dc2bbea1ff",
+  "edits": 10
+ },
+ {
   "file": "20261126-011008-reopen.json.gz",
   "at": "2026-11-26T01:10:08.760Z",
   "reason": "reopen",
@@ -240,83 +319,6 @@
   "bytes": 5891,
   "hash": "38e8d3bbcc79d594",
   "edits": 80
- },
- {
-  "file": "20261126-010602-edit.json.gz",
-  "at": "2026-11-26T01:06:02.239Z",
-  "reason": "edit",
-  "groups": [
-   "props"
-  ],
-  "bytes": 5908,
-  "hash": "f9ebf500dc95a245",
-  "edits": 80
- },
- {
-  "file": "20261126-010555-edit.json.gz",
-  "at": "2026-11-26T01:05:55.554Z",
-  "reason": "edit",
-  "groups": [
-   "props"
-  ],
-  "bytes": 5911,
-  "hash": "8526a02c17d75879",
-  "edits": 80
- },
- {
-  "file": "20261126-010546-edit.json.gz",
-  "at": "2026-11-26T01:05:46.945Z",
-  "reason": "edit",
-  "groups": [
-   "props"
-  ],
-  "bytes": 5914,
-  "hash": "6c6aa4ae4c3ee177",
-  "edits": 80
- },
- {
-  "file": "20261126-010530-edit.json.gz",
-  "at": "2026-11-26T01:05:30.428Z",
-  "reason": "edit",
-  "groups": [
-   "props"
-  ],
-  "bytes": 5866,
-  "hash": "bd6c0141fdb83338",
-  "edits": 79
- },
- {
-  "file": "20261126-010520-edit.json.gz",
-  "at": "2026-11-26T01:05:20.300Z",
-  "reason": "edit",
-  "groups": [
-   "props"
-  ],
-  "bytes": 5860,
-  "hash": "0875f2f468e8fc68",
-  "edits": 79
- },
- {
-  "file": "20261126-010510-edit.json.gz",
-  "at": "2026-11-26T01:05:10.203Z",
-  "reason": "edit",
-  "groups": [
-   "props"
-  ],
-  "bytes": 5854,
-  "hash": "1c29f6ac719b529f",
-  "edits": 79
- },
- {
-  "file": "20261126-010454-edit.json.gz",
-  "at": "2026-11-26T01:04:54.204Z",
-  "reason": "edit",
-  "groups": [
-   "props"
-  ],
-  "bytes": 5856,
-  "hash": "7e7f5b3a3bf1820b",
-  "edits": 79
  },
  {
   "file": "20261126-005953-export.json.gz",

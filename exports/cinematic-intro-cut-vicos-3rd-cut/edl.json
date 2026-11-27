@@ -1,7 +1,7 @@
 {
  "fps": 30,
  "dissolve": 1.5,
- "total": 250.22,
+ "total": 251.72,
  "chapters": [
   {
    "index": 1,
@@ -83,9 +83,9 @@
   {
    "index": 12,
    "id": "hero",
-   "duration": 25.95,
+   "duration": 27.45,
    "start": 224.27,
-   "end": 250.22
+   "end": 251.72
   }
  ],
  "beats": [
@@ -98,11 +98,11 @@
    "what": "awaken title B: Make room for what\u2019s next."
   },
   {
-   "at": 244.64,
+   "at": 246.14,
    "what": "end card: ErgoFlex wordmark"
   },
   {
-   "at": 250.22,
+   "at": 251.72,
    "what": "cut to black / onboarding"
   }
  ],

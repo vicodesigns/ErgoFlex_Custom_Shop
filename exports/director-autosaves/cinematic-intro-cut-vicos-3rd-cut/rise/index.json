@@ -1,5 +1,27 @@
 [
  {
+  "file": "20261127-213107-edit.json.gz",
+  "at": "2026-11-27T21:31:07.039Z",
+  "reason": "edit",
+  "groups": [
+   "camera"
+  ],
+  "bytes": 1395,
+  "hash": "11946d6668af79a2",
+  "edits": 9
+ },
+ {
+  "file": "20261127-213005-edit.json.gz",
+  "at": "2026-11-27T21:30:05.827Z",
+  "reason": "edit",
+  "groups": [
+   "camera"
+  ],
+  "bytes": 1396,
+  "hash": "1eac459c7a095662",
+  "edits": 9
+ },
+ {
   "file": "20261125-205158-aside.json.gz",
   "at": "2026-11-25T20:51:58.092Z",
   "reason": "aside",
@@ -322,26 +344,6 @@
   "groups": [],
   "bytes": 1377,
   "hash": "e1e0a854750cd597"
- },
- {
-  "file": "20261121-223410-edit.json.gz",
-  "at": "2026-11-21T22:34:10.190Z",
-  "reason": "edit",
-  "groups": [
-   "people"
-  ],
-  "bytes": 30185,
-  "hash": "293a56fee3494f27"
- },
- {
-  "file": "20261121-223229-edit.json.gz",
-  "at": "2026-11-21T22:32:29.768Z",
-  "reason": "edit",
-  "groups": [
-   "people"
-  ],
-  "bytes": 30161,
-  "hash": "e75630bbc46d7d29"
  },
  {
   "file": "20261121-201045-edit.json.gz",

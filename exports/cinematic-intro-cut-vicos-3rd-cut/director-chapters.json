@@ -17,8 +17,8 @@
    "seconds": 28.5,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-ch02-rise.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-film/rise.json",
-   "version": "aaa671917cf3",
-   "updated": "2026-11-21T11:58:59Z"
+   "version": "6711a872bc70",
+   "updated": "2026-11-27T21:31:47Z"
   },
   {
    "n": 3,
@@ -114,11 +114,11 @@
    "n": 12,
    "id": "hero",
    "title": "One desk. Every part of your day.",
-   "seconds": 25.95,
+   "seconds": 27.45,
    "page": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-ch12-hero.html",
    "shot": "/exports/cinematic-intro-cut-vicos-3rd-cut/director-film/hero.json",
-   "version": "b4cad73ffc65",
-   "updated": "2026-11-25T05:41:11Z"
+   "version": "9a293642f037",
+   "updated": "2026-11-27T22:25:25Z"
   }
  ]
 }
