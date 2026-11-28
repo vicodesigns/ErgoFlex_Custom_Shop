@@ -167,9 +167,11 @@ export function cleanPropEdits(v={}){
 export function filmPropEdits(film){return (film?.sceneEdits||[]).filter(e=>e?.director).map(cleanPropEdit).filter(Boolean);}
 export function effectivePropEdits(film,shot){return shot?.propEdits?structuredClone(shot.propEdits):filmPropEdits(film);}
 // The chapter's sceneEdits for the stage: the film's hand-made ones, then the Director's ({} = the film's as they are).
+// A blank Pearl White desk carries no desk-scoped or added props (its preset is copied from the desk after it, e.g. artist).
 export function mergePropEdits(film,shot){
   if(!Array.isArray(shot?.propEdits))return {};
-  return {sceneEdits:[...structuredClone((film?.sceneEdits||[]).filter(e=>!e?.director)),...shot.propEdits.map(e=>({...structuredClone(e),director:true}))]};
+  const edits=film?.deskLook==='blank-pearl'?shot.propEdits.filter(e=>!e?.desk&&!e?.add):shot.propEdits;
+  return {sceneEdits:[...structuredClone((film?.sceneEdits||[]).filter(e=>!e?.director)),...edits.map(e=>({...structuredClone(e),director:true}))]};
 }
 // Readable names: 'Prop:steelcase-leap-v2' -> 'Steelcase leap v2', 'Oak study chair · lichen' stays.
 export function propName(name){

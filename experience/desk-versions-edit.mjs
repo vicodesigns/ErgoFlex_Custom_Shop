@@ -195,7 +195,7 @@ export function removeVersion(list,i,total){
 // the rest of the dressing are the desk's own, so it stands where that desk stands.
 function blankPearl(out){
   const white=whiteLook(out);
-  out.sceneEdits=(out.sceneEdits||[]).filter(e=>!e?.add);
+  out.sceneEdits=(out.sceneEdits||[]).filter(e=>!e?.add&&!e?.desk);
   out.screens=[];delete out.accessories;delete out.deskFinish;
   out.featuredBuild={woodFinish:PEARL.wood,baseFinish:PEARL.base,trimColor:PEARL.trim,accessories:[]};
   out.ledColor=white.ledColor;out.ledGlow=white.ledGlow;

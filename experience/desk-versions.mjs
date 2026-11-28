@@ -14,7 +14,7 @@
 // the film renders it as one more sub-shot, a copy of its model's film sub-shot in its own window.
 import {PRESETS,PRODUCT_CONFIG} from '../catalog.mjs';
 import {SHARED_BUILD_PRESETS} from '../preset-defaults.mjs';
-import {filmRenderShot} from './film-render.mjs?v=20261127-desk-version-finishes';
+import {filmRenderShot} from './film-render.mjs?v=20261127-hero-min-shown';
 import {effectiveFades,edited as finishEdited,PEARL} from './finish-fades.mjs';
 import {NAMES,resolveSubshots,resolveFilm,moveVersion,moveSeam,seamsOf,shown,MIN_SHOWN,MAX_VERSIONS,RESET_NOTE,cleanDeskVersionList,cleanDeskVersionFinish,addVersion,addVersionAtStart,removeVersion,canAddVersion,nextVersionId,BLANK_NAME} from './desk-versions-edit.mjs?v=20261127-hero-min-shown';
 

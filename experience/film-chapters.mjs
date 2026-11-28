@@ -2,7 +2,7 @@ import {withScreenLook} from './screen-look.mjs';
 import {withSonar} from './sonar.mjs';
 import {exportLighting} from './film-lighting.mjs';
 import {mergeSceneLights} from './light-edits.mjs';
-import {mergePropEdits} from './prop-edits.mjs';
+import {mergePropEdits} from './prop-edits.mjs?v=20261127-hero-min-shown';
 import {mergePeople} from './people-edits.mjs';
 import {mergeBranding} from './branding-edits.mjs';
 import {mergeDeskEdits} from './desk-edits.mjs';

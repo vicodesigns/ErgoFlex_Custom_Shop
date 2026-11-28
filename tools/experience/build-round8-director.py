@@ -563,7 +563,8 @@ def apply_props(cid, f, props):
         for s in (d['shots'] if 'shots' in d else [d]):
             if s.get('id') != cid: continue
             hand = [e for e in s.get('sceneEdits') or [] if not e.get('director')]
-            if hand or mine: s['sceneEdits'] = hand + copy.deepcopy(mine)
+            sub_mine = [e for e in mine if not e.get('desk') and not e.get('add')] if s.get('deskLook') == 'blank-pearl' else mine
+            if hand or sub_mine: s['sceneEdits'] = hand + copy.deepcopy(sub_mine)
             else: s.pop('sceneEdits', None)
         if dump(p, d, **({'indent': None} if p.endswith('13-subshots.json') else {})): wrote.append(os.path.relpath(p, H))
     return wrote
