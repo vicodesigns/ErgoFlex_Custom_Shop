@@ -1,0 +1,5 @@
+frames 481 both copies shown in 0 frames
+max penetration (mm, + = below surface) -0.7 at 2.458
+largest per-frame robot steps (mm, deg, scale%, t): 10.48/0.35/0.00/2.01  9.90/0.11/0.00/1.07  9.84/0.11/0.00/1.07  9.82/0.01/0.00/1.19  9.80/0.02/0.00/1.20  9.79/0.10/0.00/1.06
+largest step-to-step change (mm, t): 5.9@2.008 4.1@2.017 2.6@2.300 2.4@2.283 1.8@2.025
+min hand-bone clearance to the shelf robot box (mm): 13.2 at 2.62499475 middle_02_r
