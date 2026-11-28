@@ -104,9 +104,9 @@ for (let t = T0; t <= T1 + 1e-9; t += STEP) {
     if (all.length) {
         const min = [1e18, 1e18, 1e18], max = [-1e18, -1e18, -1e18]; for (const p of all) for (let k = 0; k < 3; k++) { min[k] = Math.min(min[k], p[k]); max[k] = Math.max(max[k], p[k]); }
         // gap: how near each hand comes to the robot's surface (mm; left / right hand and finger skin outside the robot)
-        const gap = { l: 1e9, r: 1e9 }, pad = 40;
-        for (const p of s.body) { const side = /^(hand|thumb|index|middle|ring|pinky)\w*_([lr])$/.exec(p[3])?.[2]; if (!side) continue; if (p[0] < min[0] - pad || p[1] < min[1] - pad || p[2] < min[2] - pad || p[0] > max[0] + pad || p[1] > max[1] + pad || p[2] > max[2] + pad) continue; for (const pt of s.tris) for (const tr of pt) { const d = triDist(p, tr); if (d < gap[side]) gap[side] = d; } }
-        row.gapL = +gap.l.toFixed(1); row.gapR = +gap.r.toFixed(1);
+        const gap = { l: 1e9, r: 1e9 }, palm = { l: 1e9, r: 1e9 }, pad = 40;
+        for (const p of s.body) { const side = /^(hand|thumb|index|middle|ring|pinky)\w*_([lr])$/.exec(p[3])?.[2]; if (!side) continue; if (p[0] < min[0] - pad || p[1] < min[1] - pad || p[2] < min[2] - pad || p[0] > max[0] + pad || p[1] > max[1] + pad || p[2] > max[2] + pad) continue; for (const pt of s.tris) for (const tr of pt) { const d = triDist(p, tr); if (d < gap[side]) gap[side] = d; if (/^hand_/.test(p[3]) && d < palm[side]) palm[side] = d; } }
+        row.gapL = +gap.l.toFixed(1); row.gapR = +gap.r.toFixed(1); row.palmL = +Math.min(palm.l, 999).toFixed(1); row.palmR = +Math.min(palm.r, 999).toFixed(1);   // palm (hand_* skin) to the robot surface, mm (unsigned; see depthBy.hand_* for inside)
         for (const p of s.body) {
             if (p[0] < min[0] || p[1] < min[1] || p[2] < min[2] || p[0] > max[0] || p[1] > max[1] || p[2] > max[2]) continue;
             if (!s.tris.some(pt => { let odd = 0; for (const d of D) odd += rayHits(p, d, pt) & 1; return odd >= 2; })) continue;

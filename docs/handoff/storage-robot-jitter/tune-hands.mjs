@@ -58,7 +58,7 @@ people.setFilter(filter); await people.setEnabled(true); people.update(state(T0)
 // robot, a hand that touched the robot still touches it (nearest skin <= CONTACT), and the turns stay small and smooth.
 // The robot is rigid to hand_r, so its signed distance field is built once per posture model in hand_r's frame.
 const OUT = flag('--out', null), KEYS = String(flag('--keys', '')).split(',').filter(Boolean).map(Number);
-const MARGIN = +flag('--margin', 0.0008), CONTACT = +flag('--contact', 0.0025);   // metres (hand_r frame is in model metres)
+const MARGIN = +flag('--margin', 0.0008), CONTACT = +flag('--contact', 0.0025), FCONTACT = +flag('--finger-contact', 0.003);   // metres (hand_r frame is in model metres)
 const tri = (p, a, b, c) => {
     const ab = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], ac = [c[0] - a[0], c[1] - a[1], c[2] - a[2]], ap = [p[0] - a[0], p[1] - a[1], p[2] - a[2]];
     const dot = (u, w) => u[0] * w[0] + u[1] * w[1] + u[2] * w[2], d1 = dot(ab, ap), d2 = dot(ac, ap); let q;
@@ -130,6 +130,8 @@ let staticParts = null;   // world tris (scaled to metres) of the robot at STATI
 const PARAMS = [...['upperarm_l', 'lowerarm_l', 'hand_l', 'thumb_01_l'].flatMap(b => ['x', 'y', 'z'].map(a => ({ b, a }))),
     ...FING.map(f => ({ f, s: 'l' })), { thumb: 'l' }, ...FING.map(f => ({ f, s: 'r' })), { thumb: 'r' }, ...['x', 'y', 'z'].map(a => ({ b: 'thumb_01_r', a })),
 ].filter(p => !args.includes('--fingers-only') || !p.b || /thumb/.test(p.b));
+// turn limits (deg): a finger's curl / the thumb's base, so a finger never bends back or folds away
+const LIMIT = p => p.b ? (/thumb/.test(p.b) ? +flag('--thumb-limit', 20) : 30) : +flag('--finger-limit', 25);
 const sdfs = new Map(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3();
 let bendAxis = null;
 function current(t) { people.update(state(t)); const o = people.people.find(x => x.visible && x.userData.realGlb && (x.userData.personAmount ?? 1) > .5); o.updateMatrixWorld(true); return o; }
@@ -155,7 +157,7 @@ function setup(o) {
         const g = m.geometry, si = g.attributes.skinIndex, sw = g.attributes.skinWeight, bs = m.skeleton.bones;
         for (let i = 0; i < g.attributes.position.count; i++) {
             let best = 0, bi = -1; for (let k = 0; k < 4; k++) { const w = sw.getComponent(i, k); if (w > best) { best = w; bi = si.getComponent(i, k); } }
-            const r = RE.exec(bs[bi]?.name || ''); if (!r) continue; verts.push({ m, i, side: r[2], fing: r[1] !== 'lowerarm', bone: bs[bi].name });
+            const r = RE.exec(bs[bi]?.name || ''); if (!r) continue; verts.push({ m, i, side: r[2], fing: r[1] !== 'lowerarm', bone: bs[bi].name, finger: /^(thumb|index|middle|ring|pinky)/.test(r[1]) ? r[1] + '_' + r[2] : null });
         }
     }
     return { id, bones, rb, inv, verts, sdf: sdfs.get(id), q0: new Map([...bones].map(([n, b]) => [n, b.quaternion.clone()])) };
@@ -173,22 +175,24 @@ function apply(S, th) {
     for (const n of ['upperarm_l', STATIC_T !== null ? 'upperarm_r' : 'hand_r']) S.bones.get(n).updateMatrixWorld(true);
 }
 function measure(S) {   // signed distances (m): penalty, nearest finger/hand skin per side, the deepest vertex
-    const out = { pen: 0, minL: 1, minR: 1, worst: 1, worstBone: '' }, cache = new Map();
+    const out = { pen: 0, minL: 1, minR: 1, worst: 1, worstBone: '', fmin: {}, palmL: 1, palmR: 1 }, cache = new Map();
     for (const v of S.verts) {
         let M = cache.get(v.m); if (!M) { M = S.inv.clone().multiply(v.m.matrixWorld); cache.set(v.m, M); }
         v.m.getVertexPosition(v.i, V); V.applyMatrix4(M); const d = S.sdf.at(V.x, V.y, V.z);
         if (d < MARGIN) out.pen += (MARGIN - d) ** 2;
         if (d < out.worst) { out.worst = d; out.worstBone = v.bone; }
         if (v.fing) { if (v.side === 'l') out.minL = Math.min(out.minL, d); else out.minR = Math.min(out.minR, d); }
+        if (v.finger) out.fmin[v.finger] = Math.min(out.fmin[v.finger] ?? 1, d); else if (/^hand_l/.test(v.bone)) out.palmL = Math.min(out.palmL, d); else if (/^hand_r/.test(v.bone)) out.palmR = Math.min(out.palmR, d);
     }
     return out;
 }
-function solve(S, init, prev, contactL, contactR) {
+function solve(S, init, prev, contactL, contactR, touching = []) {
     let th = init.slice();
     const cost = x => {
         apply(S, x); const m = measure(S); let c = m.pen * 4e7;
         if (contactL) c += Math.max(0, m.minL - CONTACT) ** 2 * 4e6;
         if (contactR) c += Math.max(0, m.minR - CONTACT) ** 2 * 4e6;
+        for (const f of touching) c += Math.max(0, (m.fmin[f] ?? 1) - FCONTACT) ** 2 * 4e7;
         for (let k = 0; k < x.length; k++) c += 0.002 * x[k] ** 2 + (prev ? 0.01 * (x[k] - prev[k]) ** 2 : 0);
         return c;
     };
@@ -197,7 +201,7 @@ function solve(S, init, prev, contactL, contactR) {
         let improved = true, guard = 0;
         while (improved && guard++ < 12) {
             improved = false;
-            for (let k = 0; k < th.length; k++) for (const s of [step, -step]) { const x = th.slice(); x[k] += s; const c = cost(x); if (c < best - 1e-9) { best = c; th = x; improved = true; } }
+            for (let k = 0; k < th.length; k++) for (const s of [step, -step]) { const x = th.slice(); x[k] += s; if (Math.abs(x[k]) > LIMIT(PARAMS[k])) continue; const c = cost(x); if (c < best - 1e-9) { best = c; th = x; improved = true; } }
         }
     }
     apply(S, th); return { th, m: measure(S) };
@@ -236,13 +240,13 @@ for (const t of KEYS) {
     const S = setup(o), zero = PARAMS.map(() => 0); apply(S, zero); const m0 = measure(S);
     const contactL = STATIC_T === null && m0.minL < 0.006, contactR = STATIC_T === null && m0.minR < 0.006;
     const pinned = PIN.has(t) ? solvedTh.get(PIN.get(t)) || INIT.find(x => Math.abs(x.t - PIN.get(t)) < 1e-6)?.th : null;
-    const r = pinned ? (apply(S, pinned), { th: pinned, m: measure(S) }) : NOTUNE ? (apply(S, zero), { th: zero, m: measure(S) }) : solve(S, prevTh && prevId === S.id ? prevTh : zero, prevId === S.id ? prevTh : null, contactL, contactR);
+    const r = pinned ? (apply(S, pinned), { th: pinned, m: measure(S) }) : NOTUNE ? (apply(S, zero), { th: zero, m: measure(S) }) : solve(S, prevTh && prevId === S.id ? prevTh : zero, prevId === S.id ? prevTh : null, contactL, contactR, Object.keys(m0.fmin).filter(f => m0.fmin[f] < FCONTACT));
     const turns = {}; for (const [n, b] of S.bones) { const d = S.q0.get(n).clone().invert().multiply(b.quaternion); if (1 - Math.abs(d.w) > 1e-7) turns[n] = d.toArray().map(x => +x.toFixed(5)); }
     apply(S, zero);
     const mm = x => +(x * 1000).toFixed(2);
-    const row = { t, id: S.id, turns, before: { worst: mm(m0.worst), bone: m0.worstBone, minL: mm(m0.minL), minR: mm(m0.minR) }, after: { worst: mm(r.m.worst), bone: r.m.worstBone, minL: mm(r.m.minL), minR: mm(r.m.minR) }, th: r.th };
+    const row = { t, id: S.id, palm: { L: mm(m0.palmL) + '->' + mm(r.m.palmL), R: mm(m0.palmR) + '->' + mm(r.m.palmR) }, fingers: Object.fromEntries(Object.keys(m0.fmin).map(f => [f, mm(m0.fmin[f]) + '->' + mm(r.m.fmin[f])])), turns, before: { worst: mm(m0.worst), bone: m0.worstBone, minL: mm(m0.minL), minR: mm(m0.minR) }, after: { worst: mm(r.m.worst), bone: r.m.worstBone, minL: mm(r.m.minL), minR: mm(r.m.minR) }, th: r.th };
     results.push(row);
-    console.log(t.toFixed(4), S.id.slice(13), 'worst', row.before.worst, row.before.bone, '->', row.after.worst, row.after.bone, 'mm; nearest L', row.before.minL, '->', row.after.minL, 'R', row.before.minR, '->', row.after.minR, 'max turn', Math.max(...r.th.map(Math.abs)).toFixed(1));
+    console.log(t.toFixed(4), S.id.slice(13), 'worst', row.before.worst, row.before.bone, '->', row.after.worst, row.after.bone, 'mm; nearest L', row.before.minL, '->', row.after.minL, 'R', row.before.minR, '->', row.after.minR, 'max turn', Math.max(...r.th.map(Math.abs)).toFixed(1), 'palm', JSON.stringify(row.palm), JSON.stringify(row.fingers));
     solvedTh.set(t, r.th); prevTh = r.th; prevId = S.id;
 }
 if (OUT) fs.writeFileSync(OUT, JSON.stringify({ PARAMS, bendAxis, results }, null, 1));
