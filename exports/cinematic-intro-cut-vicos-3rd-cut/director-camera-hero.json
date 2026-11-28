@@ -1,5 +1,5 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-7654e3bf2d6a-Film-chapter-hero-27-45-s-__12_.json",
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-3c36bdf16ae9-Film-chapter-hero-27-45-s-__13_.json",
  "seconds": 27.45,
  "keys": [
   {
@@ -620,8 +620,8 @@
    "id": "c-lift",
    "lane": "lift",
    "kind": "lift",
-   "start": 10.9,
-   "duration": 3,
+   "start": 10.3,
+   "duration": 2.8000000000000007,
    "easing": "linear",
    "label": "",
    "target": 28,
@@ -938,8 +938,8 @@
    "id": "c-tilt",
    "lane": "tilt",
    "kind": "tilt",
-   "start": 11.6,
-   "duration": 2.3,
+   "start": 11,
+   "duration": 2.1000000000000014,
    "easing": "linear",
    "label": "",
    "target": -5,
