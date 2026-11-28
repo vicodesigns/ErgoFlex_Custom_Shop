@@ -129279,42 +129279,6 @@
      "director": true
     },
     {
-     "match": "^Accessory:easel-rail$",
-     "label": "Accessory:easel-rail",
-     "desk": "architect",
-     "show": {
-      "from": 1.8,
-      "to": 6.65,
-      "fadeIn": 0.25,
-      "fadeOut": 0.3
-     },
-     "director": true
-    },
-    {
-     "match": "^Accessory:drafting-kit$",
-     "label": "Accessory:drafting-kit",
-     "desk": "architect",
-     "show": {
-      "from": 1.8,
-      "to": 6.65,
-      "fadeIn": 0.25,
-      "fadeOut": 0.3
-     },
-     "director": true
-    },
-    {
-     "match": "^Accessory:task-light$",
-     "label": "Accessory:task-light",
-     "desk": "architect",
-     "show": {
-      "from": 1.8,
-      "to": 6.65,
-      "fadeIn": 0.2,
-      "fadeOut": 0.3
-     },
-     "director": true
-    },
-    {
      "match": "^Accessory:monitor-arm$",
      "label": "Accessory:monitor-arm",
      "hide": true,
@@ -129417,270 +129381,14 @@
      "director": true
     },
     {
-     "add": {
-      "asset": "ergoflex-wide-monitor"
-     },
-     "id": "gvmdrt6n4",
-     "match": "^Added prop:ergoflex-wide-monitor#gvmdrt6n4$",
-     "label": "AETHER 34UW \u00b7 curved ultrawide",
-     "parent": "shelf",
-     "position": [
-      0,
-      0,
-      0.504
-     ],
-     "rotation": [
-      0,
-      0,
-      0
-     ],
-     "scale": [
-      1.1,
-      1.1,
-      1.1
-     ],
-     "desk": "architect",
-     "show": {
-      "from": 1.8,
-      "to": 6.65,
-      "fadeIn": 0.25,
-      "fadeOut": 0.3
-     },
-     "director": true
-    },
-    {
-     "add": {
-      "asset": "ergoflex-single-monitor-arm"
-     },
-     "id": "10y4a92rf",
-     "match": "^Added prop:ergoflex-single-monitor-arm#10y4a92rf$",
-     "label": "Single monitor arm",
-     "parent": "shelf",
-     "position": [
-      0,
-      0,
-      0.082
-     ],
-     "rotation": [
-      -180,
-      -87.2,
-      -180
-     ],
-     "scale": [
-      1,
-      1,
-      1
-     ],
-     "desk": "architect",
-     "show": {
-      "from": 1.8,
-      "to": 6.65,
-      "fadeIn": 0.25,
-      "fadeOut": 0.3
-     },
-     "director": true
-    },
-    {
-     "add": {
-      "asset": "ergoflex-side-shelf-large"
-     },
-     "id": "6fdq03ibv",
-     "match": "^Added prop:ergoflex-side-shelf-large#6fdq03ibv$",
-     "label": "Side shelf \u00b7 large",
-     "parent": "base-shelf",
-     "position": [
-      0.938,
-      0.025,
-      -0.119
-     ],
-     "rotation": [
-      0,
-      90,
-      0
-     ],
-     "scale": [
-      1,
-      1,
-      1
-     ],
-     "desk": "architect",
-     "show": {
-      "from": 1.8,
-      "to": 6.65,
-      "fadeIn": 0.25,
-      "fadeOut": 0.3
-     },
-     "director": true
-    },
-    {
-     "add": {
-      "asset": "ergoflex-side-shelf-large"
-     },
-     "id": "6f52lf1nf",
-     "match": "^Added prop:ergoflex-side-shelf-large#6f52lf1nf$",
-     "label": "Side shelf \u00b7 large",
-     "parent": "base-shelf",
-     "position": [
-      -0.923,
-      0.024,
-      -0.113
-     ],
-     "rotation": [
-      0,
-      -90,
-      0
-     ],
-     "scale": [
-      1,
-      1,
-      1
-     ],
-     "desk": "architect",
-     "show": {
-      "from": 1.8,
-      "to": 6.65,
-      "fadeIn": 0.25,
-      "fadeOut": 0.3
-     },
-     "director": true
-    },
-    {
-     "add": {
-      "asset": "ergoflex-side-shelf-small"
-     },
-     "id": "wd4hxbong",
-     "match": "^Added prop:ergoflex-side-shelf-small#wd4hxbong$",
-     "label": "Side shelf \u00b7 small",
-     "parent": "shelf",
-     "position": [
-      -0.944,
-      -0.175,
-      0.116
-     ],
-     "rotation": [
-      0,
-      90,
-      0
-     ],
-     "scale": [
-      1,
-      1,
-      1
-     ],
-     "desk": "architect",
-     "show": {
-      "from": 1.8,
-      "to": 6.65,
-      "fadeIn": 0.25,
-      "fadeOut": 0.3
-     },
-     "director": true
-    },
-    {
-     "add": {
-      "asset": "ergoflex-side-shelf-small"
-     },
-     "id": "fi8308l2v",
-     "match": "^Added prop:ergoflex-side-shelf-small#fi8308l2v$",
-     "label": "Side shelf \u00b7 small",
-     "parent": "shelf",
-     "position": [
-      0.945,
-      -0.168,
-      0.098
-     ],
-     "rotation": [
-      0,
-      -90,
-      0
-     ],
-     "scale": [
-      1,
-      1,
-      1
-     ],
-     "desk": "architect",
-     "show": {
-      "from": 1.8,
-      "to": 6.65,
-      "fadeIn": 0.25,
-      "fadeOut": 0.3
-     },
-     "director": true
-    },
-    {
-     "add": {
-      "asset": "ergoflex-side-shelf-large-cubby"
-     },
-     "id": "kwdk8pqfc",
-     "match": "^Added prop:ergoflex-side-shelf-large-cubby#kwdk8pqfc$",
-     "label": "Side shelf \u00b7 large, cubby and cups",
-     "parent": "desk",
-     "position": [
-      -1.137,
-      -0.183,
-      0.306
-     ],
-     "rotation": [
-      -17.4,
-      90,
-      0
-     ],
-     "scale": [
-      -1,
-      1,
-      1
-     ],
-     "desk": "architect",
-     "show": {
-      "from": 1.8,
-      "to": 6.65,
-      "fadeIn": 0.25,
-      "fadeOut": 0.3
-     },
-     "director": true
-    },
-    {
-     "add": {
-      "asset": "ergoflex-side-cup-holder"
-     },
-     "id": "evb37kaue",
-     "match": "^Added prop:ergoflex-side-cup-holder#evb37kaue$",
-     "label": "Side cup holder \u00b7 acrylic",
-     "parent": "desk",
-     "position": [
-      1.079,
-      -0.237,
-      0.096
-     ],
-     "rotation": [
-      -31.7,
-      -84.6,
-      -15.5
-     ],
-     "scale": [
-      1,
-      1,
-      1
-     ],
-     "desk": "architect",
-     "show": {
-      "from": 1.8,
-      "to": 6.65,
-      "fadeIn": 0.25,
-      "fadeOut": 0.3
-     },
-     "director": true
-    },
-    {
      "match": "^Accessory:cable-tray$",
      "label": "Accessory:cable-tray",
      "desk": "office",
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -129711,8 +129419,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -129743,8 +129451,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -129775,8 +129483,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -129807,8 +129515,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -129819,8 +129527,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -129831,8 +129539,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -129843,8 +129551,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -129855,8 +129563,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -129872,8 +129580,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -129895,8 +129603,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -129913,8 +129621,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -129931,8 +129639,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -129954,8 +129662,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -129966,8 +129674,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -129978,8 +129686,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -129990,8 +129698,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -130088,8 +129796,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -130120,230 +129828,6 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
-     },
-     "director": true
-    },
-    {
-     "add": {
-      "asset": "herodesk-arch-cup-fill"
-     },
-     "id": "hdarchcupf",
-     "match": "^Added prop:herodesk-arch-cup-fill#hdarchcupf$",
-     "label": "Drafting pencils, fineliners and a compass (for the cubby cup)",
-     "parent": "desk",
-     "position": [
-      -1.3309,
-      -0.1902,
-      0.2628
-     ],
-     "rotation": [
-      -17.4,
-      90,
-      0
-     ],
-     "scale": [
-      1,
-      1,
-      1
-     ],
-     "desk": "architect",
-     "show": {
-      "from": 1.8,
-      "to": 6.65,
-      "fadeIn": 0.25,
-      "fadeOut": 0.3
-     },
-     "director": true
-    },
-    {
-     "add": {
-      "asset": "herodesk-arch-trace-roll"
-     },
-     "id": "hdarchtrac",
-     "match": "^Added prop:herodesk-arch-trace-roll#hdarchtrac$",
-     "label": "Yellow tracing-paper roll (12 in) with a pulled-out sheet",
-     "parent": "desk",
-     "position": [
-      -0.9771,
-      0.0016,
-      0.1705
-     ],
-     "rotation": [
-      0,
-      90,
-      0
-     ],
-     "scale": [
-      1,
-      1,
-      1
-     ],
-     "desk": "architect",
-     "show": {
-      "from": 1.8,
-      "to": 6.65,
-      "fadeIn": 0.25,
-      "fadeOut": 0.3
-     },
-     "director": true
-    },
-    {
-     "add": {
-      "asset": "herodesk-arch-rolls"
-     },
-     "id": "hdarchroll",
-     "match": "^Added prop:herodesk-arch-rolls#hdarchroll$",
-     "label": "Rolled drawings (white, blueprint, kraft)",
-     "parent": "desk",
-     "position": [
-      1.2854,
-      -0.2429,
-      0.076
-     ],
-     "rotation": [
-      -31.7,
-      -84.6,
-      -15.5
-     ],
-     "scale": [
-      1,
-      1,
-      1
-     ],
-     "desk": "architect",
-     "show": {
-      "from": 1.8,
-      "to": 6.65,
-      "fadeIn": 0.25,
-      "fadeOut": 0.3
-     },
-     "director": true
-    },
-    {
-     "add": {
-      "asset": "herodesk-arch-coffee"
-     },
-     "id": "hdarchcoff",
-     "match": "^Added prop:herodesk-arch-coffee#hdarchcoff$",
-     "label": "Coffee mug (charcoal ceramic)",
-     "parent": "shelf",
-     "position": [
-      0.945,
-      -0.1395,
-      0.098
-     ],
-     "rotation": [
-      0,
-      -35,
-      0
-     ],
-     "scale": [
-      1,
-      1,
-      1
-     ],
-     "desk": "architect",
-     "show": {
-      "from": 1.8,
-      "to": 6.65,
-      "fadeIn": 0.25,
-      "fadeOut": 0.3
-     },
-     "director": true
-    },
-    {
-     "add": {
-      "asset": "herodesk-arch-model-house"
-     },
-     "id": "hdarchmode",
-     "match": "^Added prop:herodesk-arch-model-house#hdarchmode$",
-     "label": "Study model house (white card, basswood; a variant of House A)",
-     "parent": "shelf",
-     "position": [
-      -0.9741,
-      -0.1465,
-      0.116
-     ],
-     "rotation": [
-      0,
-      0,
-      0
-     ],
-     "scale": [
-      0.9,
-      0.9,
-      0.9
-     ],
-     "desk": "architect",
-     "show": {
-      "from": 1.8,
-      "to": 6.65,
-      "fadeIn": 0.25,
-      "fadeOut": 0.3
-     },
-     "director": true
-    },
-    {
-     "add": {
-      "asset": "herodesk-arch-scale-ruler"
-     },
-     "id": "hdarchscal",
-     "match": "^Added prop:herodesk-arch-scale-ruler#hdarchscal$",
-     "label": "Triangular architect scale ruler (1:100 / 1:200 / 1:500)",
-     "parent": "desk",
-     "position": [
-      0.68,
-      0.0272,
-      0.08
-     ],
-     "rotation": [
-      0,
-      90,
-      0
-     ],
-     "scale": [
-      1,
-      1,
-      1
-     ],
-     "desk": "architect",
-     "show": {
-      "from": 1.8,
-      "to": 6.65,
-      "fadeIn": 0.25,
-      "fadeOut": 0.3
-     },
-     "director": true
-    },
-    {
-     "add": {
-      "asset": "herodesk-arch-tube"
-     },
-     "id": "hdarchtube",
-     "match": "^Added prop:herodesk-arch-tube#hdarchtube$",
-     "label": "Telescoping drawing tube (black)",
-     "parent": "base-shelf",
-     "position": [
-      1.0179,
-      0.0538,
-      -0.2789
-     ],
-     "rotation": [
-      0,
-      90,
-      0
-     ],
-     "scale": [
-      1,
-      1,
-      1
-     ],
-     "desk": "architect",
-     "show": {
-      "from": 1.8,
-      "to": 6.65,
       "fadeIn": 0.25,
       "fadeOut": 0.3
      },
@@ -130610,8 +130094,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -130642,8 +130126,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -130674,8 +130158,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -130706,8 +130190,8 @@
      "show": {
       "from": 1.8,
       "to": 7.86,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -130738,8 +130222,8 @@
      "show": {
       "from": 1.8,
       "to": 7.86,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -130770,8 +130254,8 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -130802,8 +130286,524 @@
      "show": {
       "from": 1.8,
       "to": 7.83,
-      "fadeOut": 0.3,
-      "fadeIn": 0.25
+      "fadeIn": 0.25,
+      "fadeOut": 0.3
+     },
+     "director": true
+    },
+    {
+     "match": "^Accessory:task-light$",
+     "label": "Accessory:task-light",
+     "desk": "architect",
+     "show": {
+      "from": 0.96,
+      "to": 5.41,
+      "fadeIn": 0.4,
+      "fadeOut": 0.3
+     },
+     "director": true
+    },
+    {
+     "match": "^Accessory:drafting-kit$",
+     "label": "Accessory:drafting-kit",
+     "desk": "architect",
+     "show": {
+      "from": 0.96,
+      "to": 5.41,
+      "fadeIn": 0.4,
+      "fadeOut": 0.3
+     },
+     "director": true
+    },
+    {
+     "match": "^Accessory:easel-rail$",
+     "label": "Accessory:easel-rail",
+     "desk": "architect",
+     "show": {
+      "from": 0.96,
+      "to": 5.41,
+      "fadeIn": 0.4,
+      "fadeOut": 0.3
+     },
+     "director": true
+    },
+    {
+     "add": {
+      "asset": "ergoflex-wide-monitor"
+     },
+     "id": "gvmdrt6n4",
+     "match": "^Added prop:ergoflex-wide-monitor#gvmdrt6n4$",
+     "label": "AETHER 34UW \u00b7 curved ultrawide",
+     "parent": "shelf",
+     "position": [
+      0,
+      0,
+      0.504
+     ],
+     "rotation": [
+      0,
+      0,
+      0
+     ],
+     "scale": [
+      1.1,
+      1.1,
+      1.1
+     ],
+     "desk": "architect",
+     "show": {
+      "from": 0.96,
+      "to": 5.41,
+      "fadeIn": 0.4,
+      "fadeOut": 0.3
+     },
+     "director": true
+    },
+    {
+     "add": {
+      "asset": "ergoflex-single-monitor-arm"
+     },
+     "id": "10y4a92rf",
+     "match": "^Added prop:ergoflex-single-monitor-arm#10y4a92rf$",
+     "label": "Single monitor arm",
+     "parent": "shelf",
+     "position": [
+      0,
+      0,
+      0.082
+     ],
+     "rotation": [
+      -180,
+      -87.2,
+      -180
+     ],
+     "scale": [
+      1,
+      1,
+      1
+     ],
+     "desk": "architect",
+     "show": {
+      "from": 0.96,
+      "to": 5.41,
+      "fadeIn": 0.4,
+      "fadeOut": 0.3
+     },
+     "director": true
+    },
+    {
+     "add": {
+      "asset": "ergoflex-side-shelf-large"
+     },
+     "id": "6fdq03ibv",
+     "match": "^Added prop:ergoflex-side-shelf-large#6fdq03ibv$",
+     "label": "Side shelf \u00b7 large",
+     "parent": "base-shelf",
+     "position": [
+      0.938,
+      0.025,
+      -0.119
+     ],
+     "rotation": [
+      0,
+      90,
+      0
+     ],
+     "scale": [
+      1,
+      1,
+      1
+     ],
+     "desk": "architect",
+     "show": {
+      "from": 0.96,
+      "to": 5.41,
+      "fadeIn": 0.4,
+      "fadeOut": 0.3
+     },
+     "director": true
+    },
+    {
+     "add": {
+      "asset": "ergoflex-side-shelf-large"
+     },
+     "id": "6f52lf1nf",
+     "match": "^Added prop:ergoflex-side-shelf-large#6f52lf1nf$",
+     "label": "Side shelf \u00b7 large",
+     "parent": "base-shelf",
+     "position": [
+      -0.923,
+      0.024,
+      -0.113
+     ],
+     "rotation": [
+      0,
+      -90,
+      0
+     ],
+     "scale": [
+      1,
+      1,
+      1
+     ],
+     "desk": "architect",
+     "show": {
+      "from": 0.96,
+      "to": 5.41,
+      "fadeIn": 0.4,
+      "fadeOut": 0.3
+     },
+     "director": true
+    },
+    {
+     "add": {
+      "asset": "ergoflex-side-shelf-small"
+     },
+     "id": "wd4hxbong",
+     "match": "^Added prop:ergoflex-side-shelf-small#wd4hxbong$",
+     "label": "Side shelf \u00b7 small",
+     "parent": "shelf",
+     "position": [
+      -0.944,
+      -0.175,
+      0.116
+     ],
+     "rotation": [
+      0,
+      90,
+      0
+     ],
+     "scale": [
+      1,
+      1,
+      1
+     ],
+     "desk": "architect",
+     "show": {
+      "from": 0.96,
+      "to": 5.41,
+      "fadeIn": 0.4,
+      "fadeOut": 0.3
+     },
+     "director": true
+    },
+    {
+     "add": {
+      "asset": "ergoflex-side-shelf-small"
+     },
+     "id": "fi8308l2v",
+     "match": "^Added prop:ergoflex-side-shelf-small#fi8308l2v$",
+     "label": "Side shelf \u00b7 small",
+     "parent": "shelf",
+     "position": [
+      0.945,
+      -0.168,
+      0.098
+     ],
+     "rotation": [
+      0,
+      -90,
+      0
+     ],
+     "scale": [
+      1,
+      1,
+      1
+     ],
+     "desk": "architect",
+     "show": {
+      "from": 0.96,
+      "to": 5.41,
+      "fadeIn": 0.4,
+      "fadeOut": 0.3
+     },
+     "director": true
+    },
+    {
+     "add": {
+      "asset": "ergoflex-side-shelf-large-cubby"
+     },
+     "id": "kwdk8pqfc",
+     "match": "^Added prop:ergoflex-side-shelf-large-cubby#kwdk8pqfc$",
+     "label": "Side shelf \u00b7 large, cubby and cups",
+     "parent": "desk",
+     "position": [
+      -1.137,
+      -0.183,
+      0.306
+     ],
+     "rotation": [
+      -17.4,
+      90,
+      0
+     ],
+     "scale": [
+      -1,
+      1,
+      1
+     ],
+     "desk": "architect",
+     "show": {
+      "from": 0.96,
+      "to": 5.41,
+      "fadeIn": 0.4,
+      "fadeOut": 0.3
+     },
+     "director": true
+    },
+    {
+     "add": {
+      "asset": "ergoflex-side-cup-holder"
+     },
+     "id": "evb37kaue",
+     "match": "^Added prop:ergoflex-side-cup-holder#evb37kaue$",
+     "label": "Side cup holder \u00b7 acrylic",
+     "parent": "desk",
+     "position": [
+      1.079,
+      -0.237,
+      0.096
+     ],
+     "rotation": [
+      -31.7,
+      -84.6,
+      -15.5
+     ],
+     "scale": [
+      1,
+      1,
+      1
+     ],
+     "desk": "architect",
+     "show": {
+      "from": 0.96,
+      "to": 5.41,
+      "fadeIn": 0.4,
+      "fadeOut": 0.3
+     },
+     "director": true
+    },
+    {
+     "add": {
+      "asset": "herodesk-arch-cup-fill"
+     },
+     "id": "hdarchcupf",
+     "match": "^Added prop:herodesk-arch-cup-fill#hdarchcupf$",
+     "label": "Drafting pencils, fineliners and a compass (for the cubby cup)",
+     "parent": "desk",
+     "position": [
+      -1.3309,
+      -0.1902,
+      0.2628
+     ],
+     "rotation": [
+      -17.4,
+      90,
+      0
+     ],
+     "scale": [
+      1,
+      1,
+      1
+     ],
+     "desk": "architect",
+     "show": {
+      "from": 0.96,
+      "to": 5.41,
+      "fadeIn": 0.4,
+      "fadeOut": 0.3
+     },
+     "director": true
+    },
+    {
+     "add": {
+      "asset": "herodesk-arch-trace-roll"
+     },
+     "id": "hdarchtrac",
+     "match": "^Added prop:herodesk-arch-trace-roll#hdarchtrac$",
+     "label": "Yellow tracing-paper roll (12 in) with a pulled-out sheet",
+     "parent": "desk",
+     "position": [
+      -0.9771,
+      0.0016,
+      0.1705
+     ],
+     "rotation": [
+      0,
+      90,
+      0
+     ],
+     "scale": [
+      1,
+      1,
+      1
+     ],
+     "desk": "architect",
+     "show": {
+      "from": 0.96,
+      "to": 5.41,
+      "fadeIn": 0.4,
+      "fadeOut": 0.3
+     },
+     "director": true
+    },
+    {
+     "add": {
+      "asset": "herodesk-arch-rolls"
+     },
+     "id": "hdarchroll",
+     "match": "^Added prop:herodesk-arch-rolls#hdarchroll$",
+     "label": "Rolled drawings (white, blueprint, kraft)",
+     "parent": "desk",
+     "position": [
+      1.2854,
+      -0.2429,
+      0.076
+     ],
+     "rotation": [
+      -31.7,
+      -84.6,
+      -15.5
+     ],
+     "scale": [
+      1,
+      1,
+      1
+     ],
+     "desk": "architect",
+     "show": {
+      "from": 0.96,
+      "to": 5.41,
+      "fadeIn": 0.4,
+      "fadeOut": 0.3
+     },
+     "director": true
+    },
+    {
+     "add": {
+      "asset": "herodesk-arch-coffee"
+     },
+     "id": "hdarchcoff",
+     "match": "^Added prop:herodesk-arch-coffee#hdarchcoff$",
+     "label": "Coffee mug (charcoal ceramic)",
+     "parent": "shelf",
+     "position": [
+      0.945,
+      -0.1395,
+      0.098
+     ],
+     "rotation": [
+      0,
+      -35,
+      0
+     ],
+     "scale": [
+      1,
+      1,
+      1
+     ],
+     "desk": "architect",
+     "show": {
+      "from": 0.96,
+      "to": 5.41,
+      "fadeIn": 0.4,
+      "fadeOut": 0.3
+     },
+     "director": true
+    },
+    {
+     "add": {
+      "asset": "herodesk-arch-model-house"
+     },
+     "id": "hdarchmode",
+     "match": "^Added prop:herodesk-arch-model-house#hdarchmode$",
+     "label": "Study model house (white card, basswood; a variant of House A)",
+     "parent": "shelf",
+     "position": [
+      -0.9741,
+      -0.1465,
+      0.116
+     ],
+     "rotation": [
+      0,
+      0,
+      0
+     ],
+     "scale": [
+      0.9,
+      0.9,
+      0.9
+     ],
+     "desk": "architect",
+     "show": {
+      "from": 0.96,
+      "to": 5.41,
+      "fadeIn": 0.4,
+      "fadeOut": 0.3
+     },
+     "director": true
+    },
+    {
+     "add": {
+      "asset": "herodesk-arch-scale-ruler"
+     },
+     "id": "hdarchscal",
+     "match": "^Added prop:herodesk-arch-scale-ruler#hdarchscal$",
+     "label": "Triangular architect scale ruler (1:100 / 1:200 / 1:500)",
+     "parent": "desk",
+     "position": [
+      0.68,
+      0.0272,
+      0.08
+     ],
+     "rotation": [
+      0,
+      90,
+      0
+     ],
+     "scale": [
+      1,
+      1,
+      1
+     ],
+     "desk": "architect",
+     "show": {
+      "from": 0.96,
+      "to": 5.41,
+      "fadeIn": 0.4,
+      "fadeOut": 0.3
+     },
+     "director": true
+    },
+    {
+     "add": {
+      "asset": "herodesk-arch-tube"
+     },
+     "id": "hdarchtube",
+     "match": "^Added prop:herodesk-arch-tube#hdarchtube$",
+     "label": "Telescoping drawing tube (black)",
+     "parent": "base-shelf",
+     "position": [
+      1.0179,
+      0.0538,
+      -0.2789
+     ],
+     "rotation": [
+      0,
+      90,
+      0
+     ],
+     "scale": [
+      1,
+      1,
+      1
+     ],
+     "desk": "architect",
+     "show": {
+      "from": 0.96,
+      "to": 5.41,
+      "fadeIn": 0.4,
+      "fadeOut": 0.3
      },
      "director": true
     },
@@ -130832,9 +130832,9 @@
      ],
      "desk": "architect",
      "show": {
-      "from": 1.8,
-      "to": 6.65,
-      "fadeIn": 0.25,
+      "from": 0.96,
+      "to": 5.41,
+      "fadeIn": 0.4,
       "fadeOut": 0.3
      },
      "director": true
@@ -130849,8 +130849,8 @@
      "parent": "base-shelf",
      "position": [
       0.4,
-      0.0,
-      0.0
+      0,
+      0
      ],
      "rotation": [
       0,
@@ -130864,9 +130864,9 @@
      ],
      "desk": "architect",
      "show": {
-      "from": 1.8,
-      "to": 6.65,
-      "fadeIn": 0.25,
+      "from": 0.96,
+      "to": 5.41,
+      "fadeIn": 0.4,
       "fadeOut": 0.3
      },
      "director": true
@@ -130897,10 +130897,10 @@
    "subshots": {
     "I": [
      0,
-     1.8
+     2.3
     ],
     "B": [
-     1.2,
+     1.7,
      7.14
     ],
     "C": [
@@ -130930,7 +130930,7 @@
    },
    "screenGain": 1.3,
    "directorEdited": {
-    "at": "2026-11-27T22:25:24Z",
+    "at": "2026-11-28T01:17:50Z",
     "fields": [
      "camera",
      "cameraPlan",
