@@ -145,6 +145,9 @@ const PARAMS = [...['upperarm_l', 'lowerarm_l', 'hand_l', 'thumb_01_l'].flatMap(
     ...FING.map(f => ({ f, s: 'l' })), { thumb: 'l' }, ...FING.map(f => ({ f, s: 'r' })), { thumb: 'r' }, ...['x', 'y', 'z'].map(a => ({ b: 'thumb_01_r', a })),
 ].filter(p => !args.includes('--fingers-only') || !p.b || /thumb/.test(p.b));
 // turn limits (deg): a finger's curl / the thumb's base, so a finger never bends back or folds away
+const TUNED = [...new Set(PARAMS.flatMap(p => p.b ? [p.b] : p.f ? [1, 2, 3].map(j => `${p.f}_0${j}_${p.s}`) : [`thumb_02_${p.thumb}`, `thumb_03_${p.thumb}`]))];
+// --touch thumb_l,...: fingers that must touch the robot at every key (the fallback's near-hand grip is its thumb/thenar)
+const TOUCH = String(flag('--touch', '')).split(',').filter(Boolean);
 const LIMIT = p => p.b ? (/thumb/.test(p.b) ? +flag('--thumb-limit', 20) : 30) : +flag('--finger-limit', 25);
 const sdfs = new Map(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3();
 let bendAxis = null;
@@ -257,8 +260,10 @@ for (const t of KEYS) {
     const S = setup(o), zero = PARAMS.map(() => 0); apply(S, zero); const m0 = measure(S);
     const contactL = STATIC_T === null && m0.minL < 0.006, contactR = STATIC_T === null && m0.minR < 0.006;
     const pinned = PIN.has(t) ? solvedTh.get(PIN.get(t)) || INIT.find(x => Math.abs(x.t - PIN.get(t)) < 1e-6)?.th : null;
-    const r = pinned ? (apply(S, pinned), { th: pinned, m: measure(S) }) : NOTUNE ? (apply(S, zero), { th: zero, m: measure(S) }) : solve(S, prevTh && prevId === S.id ? prevTh : zero, prevId === S.id ? prevTh : null, contactL, contactR, Object.keys(m0.fmin).filter(f => m0.fmin[f] < FCONTACT), m0.palmL);
-    const turns = {}; for (const [n, b] of S.bones) { const d = S.q0.get(n).clone().invert().multiply(b.quaternion); if (1 - Math.abs(d.w) > 1e-7) turns[n] = d.toArray().map(x => +x.toFixed(5)); }
+    const r = pinned ? (apply(S, pinned), { th: pinned, m: measure(S) }) : NOTUNE ? (apply(S, zero), { th: zero, m: measure(S) }) : solve(S, prevTh && prevId === S.id ? prevTh : zero, prevId === S.id ? prevTh : null, contactL, contactR, [...new Set([...Object.keys(m0.fmin).filter(f => m0.fmin[f] < FCONTACT), ...TOUCH])], m0.palmL);
+    // every bone the tuner may turn is written at every key, the identity included: a bone left out of a key is interpolated
+    // between its neighbours' turns there (H3 fix: unnamed bones at a key took the neighbours' curls)
+    const turns = {}; for (const n of TUNED) { const b = S.bones.get(n); if (!b) continue; const d = S.q0.get(n).clone().invert().multiply(b.quaternion); turns[n] = d.toArray().map(x => +x.toFixed(5)); }
     apply(S, zero);
     const mm = x => +(x * 1000).toFixed(2);
     const row = { t, id: S.id, palm: { L: mm(m0.palmL) + '->' + mm(r.m.palmL), R: mm(m0.palmR) + '->' + mm(r.m.palmR) }, fingers: Object.fromEntries(Object.keys(m0.fmin).map(f => [f, mm(m0.fmin[f]) + '->' + mm(r.m.fmin[f])])), turns, before: { worst: mm(m0.worst), bone: m0.worstBone, minL: mm(m0.minL), minR: mm(m0.minR) }, after: { worst: mm(r.m.worst), bone: r.m.worstBone, minL: mm(r.m.minL), minR: mm(r.m.minR) }, th: r.th };
