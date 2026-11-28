@@ -2,9 +2,11 @@
 // and finish fades as a group (Vico, 27 Nov 2026: open a 1.5 s Pearl White lead-in by sliding the whole line-up right).
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
-import {cleanDeskVersionList,addVersionAtStart,shiftVersions,resolveSubshots,resolveFilm,seamsOf,shown,LOOKS,BLANK_NAME} from '../experience/desk-versions-edit.mjs';
+import {cleanDeskVersionList,addVersionAtStart,shiftVersions,moveSeam,resolveSubshots,resolveFilm,seamsOf,shown,LOOKS,BLANK_NAME} from '../experience/desk-versions-edit.mjs';
 import {shiftGroup,groupRange} from '../experience/timeline-group.mjs';
 import {whiteLook,PEARL} from '../experience/finish-fades.mjs';
+import {mergePropEdits} from '../experience/prop-edits.mjs';
+import {createScenePropEditor} from '../experience/scene-prop-editor.mjs';
 let n=0;const ok=(c,m)=>{assert.ok(c,m);n++;console.log('ok  '+m);};
 const film=[{n:'B',preset:'artist',name:'',start:0,end:5.64},{n:'C',preset:'architect',name:'',start:5.04,end:9.94},{n:'D',preset:'office',name:'',start:9.34,end:17.08},{n:'H',preset:'gaming',name:'',start:15.08,end:25.95}];
 // the look field
@@ -27,7 +29,12 @@ ok(added[1].end===moved[0].end&&added.slice(2).every((v,i)=>v.start===moved[i+1]
 // no gap: it takes the first half of the first desk
 let split=addVersionAtStart(film,0,'I',T,{look:'blank-pearl'});
 ok(split&&split[0].start===0&&shown(split,0)[1]>=2&&shown(split,1)[1]-shown(split,1)[0]>=2,'no gap: it shares the first desk\'s time');
-ok(addVersionAtStart([{n:'B',preset:'artist',name:'',start:0,end:3}],0,'I',3.5)===null,'a first desk too short to share refuses');
+ok(addVersionAtStart([{n:'B',preset:'artist',name:'',start:0,end:.9}],0,'I',.9)===null,'a first desk too short to share refuses');
+// shortening the opener below 1.5 s (e.g. 1.25 s, down to 0.5 s)
+let shorter=moveSeam(added,0,1.25,27.45);
+ok(shown(shorter,0)[1]===1.25&&shorter[0].end===1.55&&shorter[1].start===.95,'opener can be shortened to 1.25 s');
+let shortest=moveSeam(added,0,.2,27.45);
+ok(shown(shortest,0)[1]===.5&&shortest[0].end===.8&&shortest[1].start===.2,'opener clamps at 0.5 s with positive Artist start');
 // resolve against the real film sub-shots
 const dir='exports/cinematic-intro-cut-vicos-3rd-cut/';
 if(fs.existsSync(dir+'shots/13-subshots.json')){
@@ -36,10 +43,51 @@ if(fs.existsSync(dir+'shots/13-subshots.json')){
   const p=out.find(s=>s.subshot==='I'),b=out.find(s=>s.subshot==='B');
   ok(p&&p.deskLook==='blank-pearl'&&p.name===BLANK_NAME&&p.preset==='artist','the blank desk is an Artist desk named Pearl White');
   ok(p.renderRange[0]===0&&p.renderRange[1]===1.8,'its window is 0-1.8 s');
-  ok(!(p.sceneEdits||[]).some(e=>e.add)&&p.screens.length===0&&!p.accessories,'no added props, no screens, no accessory list');
+  ok(!(p.sceneEdits||[]).some(e=>e.add)&&!(p.sceneEdits||[]).some(e=>e.desk)&&p.screens.length===0&&!p.accessories,'no added props, no desk-scoped props, no screens, no accessory list');
+  // mergePropEdits never injects desk-scoped or added props onto a blank Pearl White desk (live stage + Render still)
+  const sampleProps=[
+    {match:'^Accessory:task-light$',label:'Task light',desk:'artist',show:{from:0,to:6.63}},
+    {add:{asset:'ergoflex-side-shelf-large'},id:'testadd1',match:'^Added prop:ergoflex-side-shelf-large#testadd1$',label:'Side shelf · large',parent:'base-shelf',position:[0,0,0],rotation:[0,0,0],scale:[1,1,1],desk:'artist'}
+  ];
+  const mergedPearl=mergePropEdits(p,{propEdits:sampleProps}),mergedArtist=mergePropEdits(b,{propEdits:sampleProps});
+  ok(!(mergedPearl.sceneEdits||[]).some(e=>e.desk||e.add),'mergePropEdits keeps blank Pearl White free of Artist desk/added props');
+  ok((mergedArtist.sceneEdits||[]).some(e=>e.add&&e.desk==='artist'),'mergePropEdits keeps Artist props on Artist');
+  // Props lane in Director: blank Pearl White gets no bars and no ghost row, while Artist gets its bars
+  const prevDoc=globalThis.document,prevWin=globalThis.addEventListener;
+  const el=()=>({hidden:false,className:'',setAttribute(){},addEventListener(){},append(){},remove(){}});
+  globalThis.document={createElement:el,head:{append(){}},body:{append(){}},getElementById:()=>null,addEventListener(){},removeEventListener(){}};
+  globalThis.addEventListener=()=>{};
+  let laneHtml='';
+  try{
+    const laneEd=createScenePropEditor({
+      bridge:{stage:()=>null,ready:()=>false,playback:()=>({playing:false}),bakeState:()=>({baking:false})},
+      shot:()=>({id:'hero',seconds:27.45,propEdits:sampleProps}),
+      film:()=>subs[1],
+      commit:()=>{},status:()=>{},open:()=>false,rerender:()=>{},
+      scope:()=>({n:'I',preset:'artist',label:BLANK_NAME,look:'blank-pearl',start:0,end:1.8,from:0,to:1.5,setup:p}),
+      versions:()=>[
+        {n:'I',preset:'artist',label:BLANK_NAME,look:'blank-pearl',start:0,end:1.8,from:0,to:1.5,setup:p},
+        {n:'B',preset:'artist',label:'Artist',look:null,start:1.2,end:7.14,from:1.5,to:6.84,setup:b},
+      ],
+      seconds:()=>27.45,time:()=>.5,seek:()=>{}
+    });
+    laneHtml=laneEd.lane();
+  }finally{globalThis.document=prevDoc;globalThis.addEventListener=prevWin;}
+  ok(!laneHtml.includes('Desk I')&&!laneHtml.includes(BLANK_NAME),'Props lane draws no bars or ghost row for blank Pearl White');
+  ok(laneHtml.includes('Desk B · Artist')&&laneHtml.includes('Side shelf · large'),'Props lane still draws Artist props under Desk B · Artist');
+  // film-edits.mjs defense-in-depth: forThisDesk rejects desk/add edits on blank-pearl
+  const filmEditsSrc=fs.readFileSync('tools/experience/film-edits.mjs','utf8');
+  ok(/shot\?\.deskLook === 'blank-pearl' && \(edit\?\.desk \|\| edit\?\.add\)\) return false/.test(filmEditsSrc),'film-edits forThisDesk skips desk/add edits on blank-pearl');
   ok(p.featuredBuild&&p.featuredBuild.woodFinish===PEARL.wood&&p.featuredBuild.accessories.length===0,'Pearl White finish, no accessories');
   ok(p.ledColor===whiteLook(subs[0]).ledColor,'the LED is the warm white of the ending');
   const rig=p.lights.find(l=>l.preset==='productRig');ok(typeof rig.key.intensity==='number','the rig is the white look\'s fixed levels');
+  // per-desk fixed lighting on all five Hero sub-shots survives seam retiming
+  const wantKey={I:11,B:30,C:4.5,D:4.5,H:30},wantKick={I:7,B:30,C:18,D:18,H:30};
+  const retimedSubs=resolveSubshots(subs,shorter);
+  for(const s of retimedSubs){
+    const r=s.lights.find(l=>l.preset==='productRig'),k=s.lights.find(l=>l.name==='kicker');
+    ok(r.key.intensity===wantKey[s.subshot]&&k.intensity===wantKick[s.subshot],`sub-shot ${s.subshot} keeps fixed per-desk lighting (key=${r.key.intensity}, kicker=${k.intensity}) after retiming`);
+  }
   ok(b.sceneEdits.some(e=>e.add)&&!b.deskLook,'the Artist desk next to it keeps its props');
   ok(b.renderRange[0]===1.2,'Artist window starts at 1.2 s');
   // switching the look off again brings the plain desk back

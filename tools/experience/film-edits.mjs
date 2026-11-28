@@ -156,7 +156,11 @@ export function propLibrary() {
 const prepared = new WeakMap();
 // Load every added prop of the shot (cached GLBs, fresh instances) so installEdits can place them synchronously.
 // An edit kept to one desk of a sub-shot chapter (desk:'<preset id>') holds only in the shot whose preset is that desk.
-export const forThisDesk = (edit, shot) => !edit?.desk || edit.desk === shot?.preset;
+// A blank Pearl White desk (deskLook:'blank-pearl') keeps no desk-scoped or added props even though it shares its model's preset.
+export const forThisDesk = (edit, shot) => {
+  if (shot?.deskLook === 'blank-pearl' && (edit?.desk || edit?.add)) return false;
+  return !edit?.desk || edit.desk === shot?.preset;
+};
 // Opacity (0…1) of a timed edit at chapter seconds s (the same rule as experience/prop-edits.mjs showFactor);
 // a window that reaches the end of the shot stays on through its last frame.
 export function showFactor(edit, shot, s) {

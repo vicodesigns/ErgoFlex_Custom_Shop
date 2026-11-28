@@ -2,7 +2,7 @@ import {enhanceGizmo,mmPerUnitOf} from './gumball.mjs';
 let altHeld=false;   // Alt held as a prop drag starts: Alt+drag copies (P3)
 import {noteStudioValue} from './studio-sync.mjs';
 import {layersOn,splitPermanent,writePermanentLayers,permanentCells,foldDeskHides,LAYERS_KEY} from './layers-exchange.mjs';
-import {FOLLOW_LABELS,cleanPlace,cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,propTarget,DESK_SURFACES,MOUNTS,mountLabel,onDesk,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets,keyedFadeWindow,filmFadeKeys,combineFilmFade,showOverFilm,copyPropEffect,cleanPropEffect,applyPropEffect,describePropEffect,copyPropPosition,cleanPropPosition,applyPropPositionToAdd,describePropPosition,cleanPasteMask,describePasteMask} from './prop-edits.mjs';
+import {FOLLOW_LABELS,cleanPlace,cleanPropEdit,cleanAddEdit,isAddEdit,newAddId,propKey,propTarget,DESK_SURFACES,MOUNTS,mountLabel,onDesk,effectivePropEdits,escapeRegex,propName,describePropEdit,studioSceneIds,writeSceneAssets,keyedFadeWindow,filmFadeKeys,combineFilmFade,showOverFilm,copyPropEffect,cleanPropEffect,applyPropEffect,describePropEffect,copyPropPosition,cleanPropPosition,applyPropPositionToAdd,describePropPosition,cleanPasteMask,describePasteMask} from './prop-edits.mjs?v=20261127-hero-min-shown';
 import {stackRows} from './lane-rows.mjs';
 import {stowWindow,EASEL_ANGLE,filmVisibleKeys,keyedWindow,awayStretches,LEAVE_DEG,RETURN_DEG} from './prop-stow-window.mjs';
 import {accessory as catalogAccessory} from '../catalog.mjs';
@@ -49,13 +49,15 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   // scope(): the desk on stage in a chapter rendered as sub-shots {n, preset, label, start, from, to}, null elsewhere.
   // versions(): that chapter's desks in time order ([] elsewhere). A new edit there belongs to the desk on stage.
   const deskNow=()=>scope()||null;
-  const withDesk=t=>{const d=deskNow();return d?.preset&&!t.desk?{...t,desk:d.preset}:t;};
+  const isBlank=v=>(v?.look||v?.setup?.deskLook)==='blank-pearl';
+  const deskPreset=v=>v&&!isBlank(v)?v.preset:null;
+  const withDesk=t=>{const p=deskPreset(deskNow());return p&&!t.desk?{...t,desk:p}:t;};
   const END=100000,r2=v=>Math.round(v*100)/100;   // show.to END: until the desk (or the chapter) ends
   // Where an edit's seconds count from and when it can be on screen, in chapter seconds: {t0, lo, hi, desk, n, label}.
   // A desk's edit counts from its sub-shot's start (t0) and can show while that desk is the one on screen (lo…hi).
   function spanOf(desk,n=null){
     const T=seconds()||0;if(!desk)return {t0:0,lo:0,hi:T};
-    const list=versions().filter(v=>v.preset===desk),t=time(),v=list.find(x=>x.n===n)||list.find(x=>x.n===deskNow()?.n)||list.find(x=>t>=x.from&&t<x.to)||list[0];
+    const list=versions().filter(v=>deskPreset(v)===desk),t=time(),v=list.find(x=>x.n===n)||list.find(x=>x.n===deskNow()?.n)||list.find(x=>t>=x.from&&t<x.to)||list[0];
     return v?{t0:v.start,lo:v.from,hi:Math.min(T,v.to),desk,n:v.n,label:v.label}:{t0:0,lo:0,hi:T,desk,missing:true};
   }
   // An edit's time on screen within its span, in chapter seconds.
@@ -382,11 +384,12 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   }
   async function addProp(entry){
     await ensure();if(!editing()){status('Pause the chapter first: props are added on the paused frame.',true);return;}
+    const d=deskNow();if(isBlank(d)){status('Blank Pearl White has no props: switch to another desk (or change its Look in Desk version) to add props.',true);return;}
     // It comes in at the playhead (from the start when the playhead is within half a second of it) and stays to the
     // end of the chapter, or of the desk on stage in a sub-shot chapter: its bar in the Props lane trims it.
-    const d=deskNow(),span=spanOf(d?.preset,d?.n),now=Math.max(span.lo,Math.min(span.hi,time())),late=now-span.lo>.5&&span.hi-now>=.3;
+    const span=spanOf(deskPreset(d),d?.n),now=Math.max(span.lo,Math.min(span.hi,time())),late=now-span.lo>.5&&span.hi-now>=.3;
     const at=placement(entry),e=cleanAddEdit({add:{asset:entry.id},id:newAddId(),label:entry.name,parent:at.kind,position:at.position,rotation:at.rotation,scale:[1,1,1],
-      ...(d?.preset?{desk:d.preset}:{}),...(late?{show:showFor(span,{from:r2(now),to:span.hi})}:{})});
+      ...(deskPreset(d)?{desk:deskPreset(d)}:{}),...(late?{show:showFor(span,{from:r2(now),to:span.hi})}:{})});
     if(!e)throw Error(`${entry.name} can't be added (its library id is unusual).`);
     const key=propKey(e);write(key,e,`Added ${entry.name} ${at.kind==='desk'?'on the desk (it rides the lift and tilt)':'on the floor in front of the camera'}${d?` of Desk ${d.n} · ${d.label}`:''}${late?`, from ${r1(now)} s (drag its bar in the Props lane to change when it shows)`:''}: W move · E rotate · R scale · Shift snaps · Delete removes it.`);
     sel={key,target:propTarget(e),obj:null};onSelect();rerender();
@@ -413,13 +416,14 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   }
   async function addToDesks(entry,targets){
     await ensure();if(!editing()){status('Pause the chapter first: props are added on the paused frame.',true);return [];}
-    const E=win().__filmEdits,{THREE}=tools,d=deskNow(),span=spanOf(d?.preset,d?.n),now=Math.max(span.lo,Math.min(span.hi,time())),late=now-span.lo>.5&&span.hi-now>=.3;
+    const E=win().__filmEdits,{THREE}=tools,d=deskNow();if(isBlank(d)){status('Blank Pearl White has no props: switch to another desk (or change its Look in Desk version) to add props.',true);return [];}
+    const span=spanOf(deskPreset(d),d?.n),now=Math.max(span.lo,Math.min(span.hi,time())),late=now-span.lo>.5&&span.hi-now>=.3;
     const made=[],missed=[];
     for(const {desk,kind} of targets){
       const parent=E.addParent(kind,desk||null);if(!parent){missed.push(`${deskName(desk)} (no ${mountLabel(kind).toLowerCase()})`);continue;}
       parent.updateWorldMatrix(true,false);const k=parent.getWorldScale(new THREE.Vector3()).x||1,local=kind==='lift'?levelDesktop(parent,desk||null):new THREE.Vector3();
       const e=cleanAddEdit({add:{asset:entry.id},id:newAddId(),label:entry.name,parent:kind,position:local.toArray().map(v=>r3(v*k)),rotation:[0,0,0],scale:[1,1,1],
-        ...(desk?{on:desk}:{}),...(d?.preset?{desk:d.preset}:{}),...(late?{show:showFor(span,{from:r2(now),to:span.hi})}:{})});
+        ...(desk?{on:desk}:{}),...(deskPreset(d)?{desk:deskPreset(d)}:{}),...(late?{show:showFor(span,{from:r2(now),to:span.hi})}:{})});
       if(e)made.push(e);
     }
     if(!made.length){status(`${entry.name} was not added: ${missed.join(', ')||'tick a desk'}.`,true);return [];}
@@ -431,7 +435,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     load:async()=>{await ensure();return (await win().__filmEdits.propLibrary()).index.props;},
     onPick:(entry,targets)=>{(targets?addToDesks(entry,targets):addProp(entry)).catch(error=>status(error.message,true));}});
   // The object a selected prop is on stage now: none while another desk shows (a same-named item there is that desk's).
-  function objOf(m){const d=(editOfKey(m.key)||m.target)?.desk;if(d&&d!==deskNow()?.preset){m.obj=null;return null;}if(m.obj&&!inScene(m.obj))m.obj=null;if(!m.obj&&tools)m.obj=find(m.key,m.target);return m.obj;}
+  function objOf(m){const d=(editOfKey(m.key)||m.target)?.desk;if(d&&d!==deskPreset(deskNow())){m.obj=null;return null;}if(m.obj&&!inScene(m.obj))m.obj=null;if(!m.obj&&tools)m.obj=find(m.key,m.target);return m.obj;}
   const current=()=>sel?objOf(sel):null;
   const members=()=>sel?[...others,sel]:[];
   const isSel=key=>members().some(m=>m.key===key);
@@ -446,7 +450,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const scene=sceneOf();if(!scene)return null;const hit=installedIndex().get(key);if(hit&&inScene(hit))return hit;
     const e=editOfKey(key)||target||sel?.target;if(!e||!win()?.__filmEdits)return null;
     // Another desk's prop: the item of that name on stage now belongs to the desk that is showing, not to this edit.
-    if(e.desk&&e.desk!==deskNow()?.preset)return null;
+    if(e.desk&&e.desk!==deskPreset(deskNow()))return null;
     // (an accessory in the scene twice, one copy under the hidden accessory mount: the drawn one)
     const f=win().__filmEdits.editTargets(e),live=f.filter(shown);return f.length===1?f[0]:live.length===1?live[0]:null;
   }
@@ -454,7 +458,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
   async function boot(){
     const w=win(),t=three();if(!t)throw Error('The stage is still loading.');
     if(!w.__directorThree)await new Promise((resolve,reject)=>{w.__dirThreeDone=resolve;w.__dirThreeFail=reject;const s=w.document.createElement('script');s.type='module';s.textContent="Promise.all([import('three'),import('three/addons/controls/TransformControls.js')]).then(([T,C])=>{window.__directorThree={THREE:T,TransformControls:C.TransformControls};window.__dirThreeDone();},e=>window.__dirThreeFail(e));";w.document.head.append(s);});
-    if(!w.__filmEdits)await new Promise((resolve,reject)=>{w.__dirEditsDone=resolve;w.__dirEditsFail=reject;const s=w.document.createElement('script');s.type='module';s.textContent="import('/tools/experience/film-edits.mjs').then(m=>{window.__filmEdits=m;window.__dirEditsDone();},e=>window.__dirEditsFail(e));";w.document.head.append(s);});
+    if(!w.__filmEdits)await new Promise((resolve,reject)=>{w.__dirEditsDone=resolve;w.__dirEditsFail=reject;const s=w.document.createElement('script');s.type='module';s.textContent="import('/tools/experience/film-edits.mjs?v=20261127-hero-min-shown').then(m=>{window.__filmEdits=m;window.__dirEditsDone();},e=>window.__dirEditsFail(e));";w.document.head.append(s);});
     muteStudioEditing();
     const {THREE,TransformControls}=w.__directorThree,group=new THREE.Group();group.name='Director prop tools';group.userData.directorTools=true;t.scene.add(group);
     const box=new THREE.BoxHelper(undefined,0x63d8f5);box.material.depthTest=false;box.material.transparent=true;box.renderOrder=998;box.visible=false;group.add(box);
@@ -1019,7 +1023,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       <div class="director-actions"><button data-action="pp-add" class="prop-add-button" title="Add a model from the prop library: it goes on the desk or the floor in front of the camera, ready to move">+ Add prop</button><button data-action="pp-reset-all" ${n?'':'disabled'} title="Every prop back to the film in this chapter: one step, Undo brings them back">Reset all props to the film${n?' ('+n+')':''}</button><button data-action="pp-permanent" ${st.ok?'':'disabled'} title="${escape(st.ok?'Write these prop edits into Studio\'s room layout (you confirm each one)':st.why)}">Make permanent in Studio…</button></div>${st.ok?'':`<p class="director-hint" data-permanent-why>${escape(st.why)}</p>`}`;
     if(!sel)return head+'<p class="director-hint">No prop selected. Shift+click adds to the selection, Ctrl+click adds or removes.</p>';
     if(group())return head+groupPanelHtml({members:members().map(m=>({key:m.key,name:nice(m.target.label||''),desk:!!(objOf(m)&&(onDeskItself(objOf(m))||ridesDesk(objOf(m)))),hidden:editOfKey(m.key)?.hide===true||(!!objOf(m)&&!shown(objOf(m))),blocked:m.blocked,missing:!objOf(m)})),mode,escape,edited:members().some(m=>editOfKey(m.key)),extra:dropButtons()+posButtons(true),timing:groupTimingHtml()});
-    if(!o)return head+`<div class="movement-inspector prop-inspector" data-reveal="prop"><h4 title="${escape(sel.target.label||'')}">${escape(nice(sel.target.label))}</h4><p class="director-hint">${(e||sel.target).desk&&(e||sel.target).desk!==deskNow()?.preset?'It belongs to another desk of this chapter: click its bar in the Props lane to go to that desk.':'Not in the room right now (the film setup did not find it).'}</p>${posButtons(false)}${timingHtml()}<div class="director-actions"><button data-action="pp-reset" ${e?'':'disabled'}>Reset to the film</button></div></div>`;
+    if(!o)return head+`<div class="movement-inspector prop-inspector" data-reveal="prop"><h4 title="${escape(sel.target.label||'')}">${escape(nice(sel.target.label))}</h4><p class="director-hint">${(e||sel.target).desk&&(e||sel.target).desk!==deskPreset(deskNow())?'It belongs to another desk of this chapter: click its bar in the Props lane to go to that desk.':'Not in the room right now (the film setup did not find it).'}</p>${posButtons(false)}${timingHtml()}<div class="director-actions"><button data-action="pp-reset" ${e?'':'disabled'}>Reset to the film</button></div></div>`;
     if(!tools)return head;if(isAddEdit(e))return head+addPanel(o,e);if(isFollow(e))return head+followPanel(o,e);const b=base(o),{THREE}=tools,pos=o.getWorldPosition(new THREE.Vector3()).toArray(),turn=e?.rotation||[0,0,0],fac=e?.scale||[1,1,1],uniform=Math.abs(fac[0]-fac[1])<1e-4&&Math.abs(fac[1]-fac[2])<1e-4;
     const num=(name,text,value,step,extra='')=>`<label>${text}<input name="${name}" type="number" step="${step}" value="${value}" ${extra}></label>`;
     const studio=plan().find(r=>r.key===sel.key),hidden=e?.hide===true||!shown(o),moved=b?o.getWorldPosition(new THREE.Vector3()).distanceTo(b.world):0;
@@ -1143,7 +1147,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     return {...(role?{role}:{}),...(rider?{rider:true}:{})};
   }
   function learn(){
-    if(!tools||!three()?.scene)return;const d=deskNow();if(versions().length&&!d)return;
+    if(!tools||!three()?.scene)return;const d=deskNow();if(versions().length&&(!d||isBlank(d)))return;
     // An item hidden when the stage was installed but timed by the film (create at 0 s: the drafting kit, easel rail and
     // easel, held hidden by their visible keys / opacity until 7 or 17.4 s) is the desk's too; the copies under the
     // always-hidden accessory mount are not.
@@ -1168,7 +1172,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
       const recipe=span.desk==='architect'||span.desk==='artist'?span.desk:'';
       try{return awayStretches({text:`${row.id||''} ${row.name||''} ${row.target?.match||''} ${row.target?.path||''}`.replace(/\\/g,''),role:row.role||'',rider:!!row.rider,recipe,tiltAt,lo:from,hi:to});}catch{return [];}};
     const push=(span,row)=>{const s=screenOf(row.e,row.target,span),nat=s.film?null:stowed(row,span),from=nat?nat.from:s.from,to=nat?nat.to:s.to;out.push({...row,id:row.key+'|'+(span.n||''),span,start:from,end:Math.max(from+.01,to),timed:s.timed||!!s.film,fadeIn:s.fadeIn,fadeOut:s.fadeOut,ease:s.ease,film:s.film||null,stowed:!!nat,away:nat?[]:away(row,span,from,Math.max(from+.01,to))});};
-    const spans=vs.length?vs.map(v=>({t0:v.start,lo:v.from,hi:Math.min(T,v.to),n:v.n,label:v.label,desk:v.preset,keep:!!v.setup?.keepDeskItems})):[chapter];
+    const spans=vs.length?vs.filter(v=>!isBlank(v)).map(v=>({t0:v.start,lo:v.from,hi:Math.min(T,v.to),n:v.n,label:v.label,desk:v.preset,keep:!!v.setup?.keepDeskItems})):[chapter];
     for(const span of spans){
       const rows=new Map(),known=seen.get(seenKey(span.desk));
       for(const k of known||[])rows.set(k.key,{key:k.key,target:k.target,name:k.name,id:k.id,role:k.role,rider:k.rider,e:editOfKey(k.key)});
@@ -1224,7 +1228,7 @@ export function createScenePropEditor({bridge,shot,film,commit,status,open,reren
     const t=time(),inside=t>=it.start-1e-3&&t<=it.end+1e-3;
     if(!inside){const to=Math.min(it.end-.05,it.start+.1);seek(Math.max(0,to));}
     lastLaneKey=it.key;setMembers([laneEntry(it)]);
-    const o=current();wanted=o?null:{key:it.key,target:it.target,until:performance.now()+8000};status(o?`${label(o)} selected · Ctrl+C copies timing & fades · Shift/Ctrl+click bars for several.`:`${it.name} selected${it.span.desk&&it.span.desk!==deskNow()?.preset?`: going to Desk ${it.span.n} · ${it.span.label}`:''}.`);
+    const o=current();wanted=o?null:{key:it.key,target:it.target,until:performance.now()+8000};status(o?`${label(o)} selected · Ctrl+C copies timing & fades · Shift/Ctrl+click bars for several.`:`${it.name} selected${it.span.desk&&it.span.desk!==deskPreset(deskNow())?`: going to Desk ${it.span.n} · ${it.span.label}`:''}.`);
     if(!tools)ensure().catch(error=>status(error.message,true));
   }
   // Right-click on a bar in the Props lane: keep multi-selection if already selected, else select that bar without seeking.

@@ -68,15 +68,15 @@ assert.equal(addVersion(six.map(v=>v.n==='D'?{...v,name:'Humboldt'}:v),3,6,'G',T
 // eight, with two copies of one model
 const eight=addVersion(seven,2,3,'H',T);
 assert.equal(ids(eight),'A B C H D E F G');assert.equal(models(eight),'gaming artist office office hbhs occ architect gaming');tiles(eight);
-// a desk too short to share: every desk gives part of what it has above the minimum
-const tight=addVersion([{n:'A',preset:'gaming',name:'',start:0,end:3.3},{n:'B',preset:'artist',name:'',start:2.7,end:48}],0,1,'G',T);
-assert.equal(ids(tight),'A G B');tiles(tight);assert.ok(Math.abs(shown(tight,1)[1]-shown(tight,1)[0]-MIN_SHOWN)<.02,'the new desk shows the minimum');
+// a desk too short to share: every desk gives part of what it has above its minimum
+const tight=addVersion([{n:'A',preset:'gaming',name:'',start:0,end:1.1},{n:'B',preset:'artist',name:'',start:.5,end:48}],0,1,'G',T);
+assert.equal(ids(tight),'A G B');tiles(tight);assert.ok(Math.abs(shown(tight,1)[1]-shown(tight,1)[0]-.6)<.02,'the new desk shows enough room for its 0.6 s crossfades');
 // one desk -> two: the seam gets the default crossfade
 const two=addVersion([{n:'A',preset:'gaming',name:'',start:0,end:T}],0,1,'G',T);
 assert.deepEqual(two.map(v=>[v.n,v.start,v.end]),[['A',0,24.3],['G',23.7,48]]);
 // refusals: the id in use, no room, the limit
 assert.equal(addVersion(six,0,6,'C',T),null);assert.equal(addVersion(six,0,0,'G',T),null,'a new desk goes after one');
-assert.equal(canAddVersion(six,13.9),false,'7 desks need 14 s');assert.equal(addVersion(six,0,6,'G',13.9),null);
+assert.equal(canAddVersion(six,3.4),false,'7 desks need 3.5 s');assert.equal(addVersion(six,0,6,'G',3.4),null);
 let many=six;for(let i=6;i<MAX_VERSIONS;i++)many=addVersion(many,0,many.length,nextVersionId(many.map(v=>v.n)),T);
 assert.equal(many.length,MAX_VERSIONS);tiles(many);assert.equal(canAddVersion(many,T),false);assert.equal(addVersion(many,0,many.length,'S',T),null);
 
@@ -96,7 +96,13 @@ assert.equal(ids(moved),'A B C D E F G');assert.equal(models(moved),'gaming gami
 assert.deepEqual(moved.map(v=>[v.start,v.end]),seven.map(v=>[v.start,v.end]),'the time windows stay');
 assert.equal(ids(moveVersion(six,0,5)),'A B C D E F');assert.equal(models(moveVersion(six,0,5)),'artist office hbhs occ architect gaming','Gaming to the end: the letters stay in time order');
 const retimed=moveSeam(seven,5,44,T);assert.equal(seamsOf(retimed).seams[5],44);assert.deepEqual([retimed[5].end,retimed[6].start],[44.3,43.7]);
-assert.equal(seamsOf(moveSeam(seven,5,47.5,T)).seams[5],46,'a seam stops 2 s before the end');
+assert.equal(seamsOf(moveSeam(seven,5,47.9,T)).seams[5],47.5,'a seam stops 0.5 s before the end');
+// short opener & wide crossfade protection (hero: 0.6 s seams and a 2.0 s D/H crossfade)
+const hero5=[{n:'I',preset:'artist',name:'Pearl White',start:0,end:1.8,look:'blank-pearl'},{n:'B',preset:'artist',name:'',start:1.2,end:7.14},{n:'C',preset:'architect',name:'',start:6.54,end:12.25},{n:'D',preset:'office',name:'',start:11.65,end:18.58},{n:'H',preset:'gaming',name:'',start:16.58,end:27.45}];
+const short125=moveSeam(hero5,0,1.25,27.45);assert.equal(seamsOf(short125).seams[0],1.25);assert.deepEqual([short125[0].start,short125[0].end,short125[1].start],[0,1.55,.95]);
+const shortMin=moveSeam(hero5,0,.2,27.45);assert.equal(seamsOf(shortMin).seams[0],.5,'opener clamps at 0.5 s');assert.deepEqual([shortMin[0].end,shortMin[1].start],[.8,.2]);
+const wideMid=moveSeam(hero5,2,17,27.45);assert.equal(seamsOf(wideMid).seams[2],16.28,'C/D stops 1.3 s before D/H so 0.6 s and 2.0 s crossfades do not overlap');assert.ok(wideMid[2].end<=wideMid[4].start+1e-9);
+const wideEnd=moveSeam(hero5,3,27,27.45);assert.equal(seamsOf(wideEnd).seams[3],26.4,'D/H stops 1.05 s before chapter end so D stays inside the chapter');assert.ok(wideEnd[3].end<27.45);
 
 // ---- the film's sub-shots for the list
 const same=(a,b,what)=>assert.equal(JSON.stringify(a),JSON.stringify(b),what);

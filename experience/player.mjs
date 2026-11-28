@@ -5,14 +5,14 @@ import {BakeCache,bakeKey,bakeDefinition,sourceSnapshot,renderBake,BAKE_PROFILE}
 import {score,safeReturn} from './score.mjs';
 import {ShotClock} from './timing.mjs';
 import {escapeAction,isField} from './escape-rule.mjs?v=escape-field-20261121';
-import {cleanCut,decodeCut} from './cuts.mjs?v=20261127-desk-version-finishes';
-import {filmLink,loadFilmChapters,loadFilmShot,liveFilmShot} from './film-chapters.mjs';
+import {cleanCut,decodeCut} from './cuts.mjs?v=20261127-hero-min-shown';
+import {filmLink,loadFilmChapters,loadFilmShot,liveFilmShot} from './film-chapters.mjs?v=20261127-hero-min-shown';
 import {effectiveDeskEdits} from './desk-edits.mjs';
 import {effectiveTrayEdits} from './tray-pose.mjs';
 import {latestFilmCut,withCut,filmFresh} from './film-fresh.mjs';
 import {exportLighting} from './film-lighting.mjs';
-import {filmCamera,finishFadeAt} from './film-render.mjs?v=20261127-desk-version-finishes';
-import {deskVersions,versionAt,versionShot,loadFilmSubshots,loadStorageSeed} from './desk-versions.mjs?v=20261127-desk-version-finishes';
+import {filmCamera,finishFadeAt} from './film-render.mjs?v=20261127-hero-min-shown';
+import {deskVersions,versionAt,versionShot,loadFilmSubshots,loadStorageSeed} from './desk-versions.mjs?v=20261127-hero-min-shown';
 const $=id=>document.getElementById(id), frame=$('stage'), query=new URLSearchParams(location.search), linkQuery=new URLSearchParams(location.hash.slice(1));
 let cut=query.get('cut')==='social'?'social':'full',shots=score(cut),index=-1,playing=true,busy=true,finished=false,generation=0,sound=false,app=null,preparation=Promise.resolve(),hasFrame=false,lastUI=0;
 const clock=new ShotClock(),cover=$('transition-frame');
@@ -375,7 +375,7 @@ async function openDirector(){
   if(director){if(director.isOpen())director.close();else director.open();return;}
   mountingDirector=true;
   try{
-  const {mountDirector}=await import('./director.mjs?v=20261127-desk-version-finishes');
+  const {mountDirector}=await import('./director.mjs?v=20261127-hero-min-shown');
   director=mountDirector({
     stage,
     ready:()=>!busy,

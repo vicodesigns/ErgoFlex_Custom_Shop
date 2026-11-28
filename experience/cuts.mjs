@@ -16,7 +16,7 @@ import {cleanDeskChoreo} from './desk-choreo.mjs';
 import {cleanDeskEdits} from './desk-edits.mjs';
 import {cleanTrayEdits} from './tray-pose.mjs';
 import {cleanDeskBuildField} from './desk-build.mjs';
-import {cleanDeskVersionsField} from './desk-versions-edit.mjs?v=20261127-desk-version-finishes';
+import {cleanDeskVersionsField} from './desk-versions-edit.mjs?v=20261127-hero-min-shown';
 import {cleanFinishFadesField} from './finish-fades.mjs';
 import {cleanFilmTitles} from './film-titles.mjs';
 import {cleanEndCard} from './end-card.mjs';

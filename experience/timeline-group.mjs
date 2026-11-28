@@ -1,6 +1,6 @@
 import {validateClipSchedule,clipEnd} from './desk-clips.mjs';
 import {validateStatus} from './film-lighting.mjs';
-import {shiftVersions} from './desk-versions-edit.mjs?v=20261127-desk-version-finishes';
+import {shiftVersions} from './desk-versions-edit.mjs?v=20261127-hero-min-shown';
 // A timeline group: camera keys (fractions of the chapter), desk clips (seconds), light states
 // ({id, at, dur}) and neutral light keys ([seconds, hex, id]) picked together. Moving it shifts
 // their times only; holds, easings, durations and colours stay as they are. Items pushed past

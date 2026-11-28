@@ -14,9 +14,9 @@
 // the film renders it as one more sub-shot, a copy of its model's film sub-shot in its own window.
 import {PRESETS,PRODUCT_CONFIG} from '../catalog.mjs';
 import {SHARED_BUILD_PRESETS} from '../preset-defaults.mjs';
-import {filmRenderShot} from './film-render.mjs?v=20261127-desk-version-finishes';
+import {filmRenderShot} from './film-render.mjs?v=20261127-hero-min-shown';
 import {effectiveFades,edited as finishEdited,PEARL} from './finish-fades.mjs';
-import {NAMES,resolveSubshots,resolveFilm,moveVersion,moveSeam,seamsOf,shown,MIN_SHOWN,MAX_VERSIONS,RESET_NOTE,cleanDeskVersionList,cleanDeskVersionFinish,addVersion,addVersionAtStart,removeVersion,canAddVersion,nextVersionId,BLANK_NAME} from './desk-versions-edit.mjs?v=20261127-desk-version-finishes';
+import {NAMES,resolveSubshots,resolveFilm,moveVersion,moveSeam,seamsOf,shown,MIN_SHOWN,MAX_VERSIONS,RESET_NOTE,cleanDeskVersionList,cleanDeskVersionFinish,addVersion,addVersionAtStart,removeVersion,canAddVersion,nextVersionId,BLANK_NAME} from './desk-versions-edit.mjs?v=20261127-hero-min-shown';
 
 export const presetLabel=id=>NAMES[id]||PRESETS.find(p=>p.id===id)?.name||String(id||'Desk');
 // The build's own colours: desktop finish, frame, trim (preset-defaults.mjs wins over the catalog card, as applyPreset).
@@ -219,7 +219,7 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
     const l=list();if(!l.length)return;
     if(!room()){status(full(),true);return;}
     const v=look?l[0]:picked(n),id=nextVersionId(usedIds()),next=id&&addVersionAtStart(asEdits(l),l.indexOf(v),id,total(),{look});
-    if(!next){status('There is no room at the start: slide the desks right first (select them in the Desk versions lane, drag them), or give the first desk at least 4 s.',true);return;}
+    if(!next){status(`There is no room at the start: slide the desks right first (select them in the Desk versions lane, drag them), or give the first desk at least ${2*MIN_SHOWN} s.`,true);return;}
     const first=l[0],text=`Desk ${id} · ${look?BLANK_NAME+', blank':v.label} added at the start: it shows ${span(next,0)}, then Desk ${first.n} · ${first.label} takes over (${span(next,1)}). ${look?'No accessories, no props, no screens: the desk in the ending’s Pearl White look. ':''}Undo takes it back.`;
     pickedN=id;said=null;
     write(next,text,{last:id,tab:true});
@@ -292,9 +292,9 @@ export function createDeskVersions({bridge,shot,project,selected,seek,status,esc
         <label class="build-desk">Trim colour<input name="dv-trim" data-dv-n="${escape(v.n)}" type="color" value="${escape(v.swatch.trim)}" aria-label="Desk trim colour"></label>
         <button type="button" data-dv-finish-reset data-dv-n="${escape(v.n)}" ${v.finish?'':'disabled'}>Use default finishes</button>
       </fieldset>`:''}
-      <div class="build-desk-times"><label>Shown from <input name="dv-start" type="number" step=".1" min="0" max="${total()}" value="${fmtIn(a)}" ${first?'disabled title="The first desk starts the chapter"':''}> s</label>
-      <label>until <input name="dv-end" type="number" step=".1" min="0" max="${total()}" value="${fmtIn(b)}" ${last?'disabled title="The last desk runs to the end of the chapter"':''}> s</label></div>
-      <p class="director-hint">Each desk shows at least ${MIN_SHOWN} s and the chapter keeps its length; the crossfade between desks keeps its width. The film renders this desk from ${fmtIn(v.start)} to ${fmtIn(v.end)} s.</p>
+      <div class="build-desk-times"><label>Shown from <input name="dv-start" type="number" step=".05" min="0" max="${total()}" value="${fmtIn(a)}" ${first?'disabled title="The first desk starts the chapter"':''}> s</label>
+      <label>until <input name="dv-end" type="number" step=".05" min="0" max="${total()}" value="${fmtIn(b)}" ${last?'disabled title="The last desk runs to the end of the chapter"':''}> s</label></div>
+      <p class="director-hint">Each desk shows at least ${MIN_SHOWN} s (more where a wider crossfade needs room) and the chapter keeps its length; the crossfade between desks keeps its width. The film renders this desk from ${fmtIn(v.start)} to ${fmtIn(v.end)} s.</p>
       <div class="director-actions desk-version-actions"><button type="button" data-dv-add data-dv-n="${escape(v.n)}" ${room()?'':'disabled'} title="${escape(addTip(v.n))}">+ Desk version</button><button type="button" data-dv-duplicate data-dv-n="${escape(v.n)}" ${room()?'':'disabled'} title="${escape(dupTip(v.n))}">Duplicate</button> <button type="button" data-dv-add-start data-dv-n="${escape(v.n)}" ${room()?'':'disabled'} title="Add a copy of this desk at the very start of the chapter. If you slid the desks right, it fills the gap in front of the first one.">+ Desk at the start</button><button type="button" data-dv-opener ${room()?'':'disabled'} title="Add a blank Pearl White desk (no accessories, no props, no screens) at the very start, in front of the first desk. Slide the desks right first to make room: it fills that gap; else it takes the first half of the first desk's time.">+ Pearl White opener</button><button type="button" data-dv-remove data-dv-n="${escape(v.n)}" ${l.length>1?'':'disabled'} title="${escape(removeTip(v.n))}">Remove</button></div>
       <p class="director-hint" data-dv-count>${l.length} of ${MAX_VERSIONS} desks. A new desk is a copy of this one, with its own letter; the film renders one sub-shot per desk and crossfades them.</p>
       <div class="director-actions"><button type="button" data-dv-reset ${edited()?'':'disabled'} title="Back to the desks, order, lengths and models the film has now; desks added here go, removed ones return. One Undo takes it back.">Reset desk versions to the film</button></div>`;
