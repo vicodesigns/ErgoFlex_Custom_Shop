@@ -1,5 +1,5 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-c09c80711bc9-Film-chapter-hero-27-45-s-__7_.json",
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-7654e3bf2d6a-Film-chapter-hero-27-45-s-__12_.json",
  "seconds": 27.45,
  "keys": [
   {
@@ -138,16 +138,16 @@
    "label": "Arrive on the end-card pose (21.60 s)"
   },
   {
-   "at": 27.45,
+   "at": 27.3,
    "position": [
-    5.482268002415035,
-    3.0207927917373976,
-    -4.277585972045252
+    6.041550416018539,
+    2.9745012985787875,
+    -3.5573362230220904
    ],
    "target": [
-    -0.07365264965981755,
-    1.2023893141113149,
-    -0.08021956679763062
+    0.48562976394368573,
+    1.1560978209527044,
+    0.6400301822255315
    ],
    "fov": 28.488785729795904,
    "label": "Hold on the end card (25.95 s)"
@@ -2092,18 +2092,7 @@
    "label": "Accessory:task-light",
    "desk": "architect",
    "show": {
-    "from": 0.96,
-    "to": 5.41,
-    "fadeIn": 0.7,
-    "fadeOut": 0.3
-   }
-  },
-  {
-   "match": "^Accessory:drafting-kit$",
-   "label": "Accessory:drafting-kit",
-   "desk": "architect",
-   "show": {
-    "from": 0.96,
+    "from": 0.36,
     "to": 5.41,
     "fadeIn": 0.7,
     "fadeOut": 0.3
@@ -2114,7 +2103,18 @@
    "label": "Accessory:easel-rail",
    "desk": "architect",
    "show": {
-    "from": 0.96,
+    "from": 0.36,
+    "to": 5.41,
+    "fadeIn": 0.7,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:drafting-kit$",
+   "label": "Accessory:drafting-kit",
+   "desk": "architect",
+   "show": {
+    "from": 0.36,
     "to": 5.41,
     "fadeIn": 0.7,
     "fadeOut": 0.3
@@ -2145,7 +2145,7 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.96,
+    "from": 0.36,
     "to": 5.41,
     "fadeIn": 0.7,
     "fadeOut": 0.3
@@ -2176,7 +2176,7 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.96,
+    "from": 0.36,
     "to": 5.41,
     "fadeIn": 0.7,
     "fadeOut": 0.3
@@ -2207,7 +2207,7 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.96,
+    "from": 0.36,
     "to": 5.41,
     "fadeIn": 0.7,
     "fadeOut": 0.3
@@ -2238,7 +2238,7 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.96,
+    "from": 0.36,
     "to": 5.41,
     "fadeIn": 0.7,
     "fadeOut": 0.3
@@ -2269,7 +2269,7 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.96,
+    "from": 0.36,
     "to": 5.41,
     "fadeIn": 0.7,
     "fadeOut": 0.3
@@ -2300,7 +2300,7 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.96,
+    "from": 0.36,
     "to": 5.41,
     "fadeIn": 0.7,
     "fadeOut": 0.3
@@ -2331,7 +2331,7 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.96,
+    "from": 0.36,
     "to": 5.41,
     "fadeIn": 0.7,
     "fadeOut": 0.3
@@ -2362,7 +2362,7 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.96,
+    "from": 0.36,
     "to": 5.41,
     "fadeIn": 0.7,
     "fadeOut": 0.3
@@ -2393,7 +2393,7 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.96,
+    "from": 0.36,
     "to": 5.41,
     "fadeIn": 0.7,
     "fadeOut": 0.3
@@ -2424,7 +2424,7 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.96,
+    "from": 0.36,
     "to": 5.41,
     "fadeIn": 0.7,
     "fadeOut": 0.3
@@ -2455,7 +2455,7 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.96,
+    "from": 0.36,
     "to": 5.41,
     "fadeIn": 0.7,
     "fadeOut": 0.3
@@ -2486,7 +2486,7 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.96,
+    "from": 0.36,
     "to": 5.41,
     "fadeIn": 0.7,
     "fadeOut": 0.3
@@ -2517,7 +2517,7 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.96,
+    "from": 0.36,
     "to": 5.41,
     "fadeIn": 0.7,
     "fadeOut": 0.3
@@ -2548,7 +2548,7 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.96,
+    "from": 0.36,
     "to": 5.41,
     "fadeIn": 0.7,
     "fadeOut": 0.3
@@ -2579,7 +2579,7 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.96,
+    "from": 0.36,
     "to": 5.41,
     "fadeIn": 0.7,
     "fadeOut": 0.3
@@ -2610,7 +2610,7 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.96,
+    "from": 0.36,
     "to": 5.41,
     "fadeIn": 0.7,
     "fadeOut": 0.3
@@ -2641,7 +2641,7 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.96,
+    "from": 0.36,
     "to": 5.41,
     "fadeIn": 0.7,
     "fadeOut": 0.3
@@ -2652,550 +2652,7 @@
    "label": "Accessory:cable-tray",
    "desk": "office",
    "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "match": "^Accessory:keyboard-tray$",
-   "label": "Accessory:keyboard-tray",
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "match": "^Accessory:logitech-mx-master$",
-   "label": "Accessory:logitech-mx-master",
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "match": "^Accessory:ergo-keyboard$",
-   "label": "Accessory:ergo-keyboard",
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "match": "^Prop:tablet-folder$",
-   "label": "Prop:tablet-folder",
-   "rotation": [
-    1,
-    -36.3,
-    4.6
-   ],
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "match": "^Prop:pen$",
-   "label": "Prop:pen",
-   "space": "local",
-   "position": [
-    -0.557,
-    -0.111,
-    0.164
-   ],
-   "rotation": [
-    58.3,
-    -34.1,
-    -77.3
-   ],
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "match": "^Prop:glasses-3$",
-   "label": "Prop:glasses-3",
-   "space": "local",
-   "position": [
-    -0.769,
-    -0.06,
-    0.06
-   ],
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "match": "^Prop:calculator$",
-   "label": "Prop:calculator",
-   "space": "local",
-   "position": [
-    0.017,
-    -0.006,
-    -0.052
-   ],
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "match": "^Prop:insulated-mug$",
-   "label": "Prop:insulated-mug",
-   "space": "local",
-   "position": [
-    0.329,
-    -0.166,
-    0.37
-   ],
-   "scale": [
-    0.7,
-    0.7,
-    0.7
-   ],
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "match": "^Accessory:obsbot-tiny-2$",
-   "label": "Accessory:obsbot-tiny-2",
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "match": "^Accessory:monitor-arm-2$",
-   "label": "Accessory:monitor-arm-2",
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "match": "^Accessory:wide-monitor$",
-   "label": "Accessory:wide-monitor",
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "match": "^Accessory:portrait-monitor$",
-   "label": "Accessory:portrait-monitor",
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "add": {
-    "asset": "herodesk-office-phone"
-   },
-   "id": "hdofficeph",
-   "match": "^Added prop:herodesk-office-phone#hdofficeph$",
-   "label": "Smartphone (stands in the cubby slot)",
-   "parent": "desk",
-   "position": [
-    1.299,
-    -0.184,
-    0.669
-   ],
-   "rotation": [
-    42,
-    -81.7,
-    36.7
-   ],
-   "scale": [
-    1,
-    1,
-    1
-   ],
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "add": {
-    "asset": "herodesk-office-plant"
-   },
-   "id": "hdofficepl",
-   "match": "^Added prop:herodesk-office-plant#hdofficepl$",
-   "label": "Snake plant in a white ceramic pot (fits the cubby cup)",
-   "parent": "shelf",
-   "position": [
-    0.945,
-    -0.1395,
-    0.098
-   ],
-   "rotation": [
-    0,
-    -90,
-    0
-   ],
-   "scale": [
-    1,
-    1,
-    1
-   ],
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "add": {
-    "asset": "ergoflex-side-shelf-large"
-   },
-   "id": "1zr1k8lwb",
-   "match": "^Added prop:ergoflex-side-shelf-large#1zr1k8lwb$",
-   "label": "Side shelf \u00b7 large",
-   "parent": "base-shelf",
-   "position": [
-    -0.923,
-    0.024,
-    -0.113
-   ],
-   "rotation": [
-    0,
-    -90,
-    0
-   ],
-   "scale": [
-    1,
-    1,
-    1
-   ],
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "add": {
-    "asset": "ergoflex-side-shelf-large-cubby"
-   },
-   "id": "4lq1al8mj",
-   "match": "^Added prop:ergoflex-side-shelf-large-cubby#4lq1al8mj$",
-   "label": "Side shelf \u00b7 large, cubby and cups",
-   "parent": "desk",
-   "position": [
-    -1.117,
-    -0.191,
-    0.493
-   ],
-   "rotation": [
-    0,
-    90,
-    0
-   ],
-   "scale": [
-    -1,
-    1,
-    1
-   ],
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "add": {
-    "asset": "ergoflex-side-shelf-large-cubby"
-   },
-   "id": "zq7lk6r1w",
-   "match": "^Added prop:ergoflex-side-shelf-large-cubby#zq7lk6r1w$",
-   "label": "Side shelf \u00b7 large, cubby and cups",
-   "parent": "desk",
-   "position": [
-    1.112,
-    -0.191,
-    0.493
-   ],
-   "rotation": [
-    0,
-    -90,
-    0
-   ],
-   "scale": [
-    1,
-    1,
-    1
-   ],
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "add": {
-    "asset": "ergoflex-side-shelf-large"
-   },
-   "id": "mq9mg01h7",
-   "match": "^Added prop:ergoflex-side-shelf-large#mq9mg01h7$",
-   "label": "Side shelf \u00b7 large",
-   "parent": "base-shelf",
-   "position": [
-    0.926,
-    0.025,
-    -0.119
-   ],
-   "rotation": [
-    0,
-    90,
-    0
-   ],
-   "scale": [
-    1,
-    1,
-    1
-   ],
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "add": {
-    "asset": "herodesk-office-pen-cup"
-   },
-   "id": "hdofficepe",
-   "match": "^Added prop:herodesk-office-pen-cup#hdofficepe$",
-   "label": "Pens, pencil, highlighter and scissors (for the cubby cup)",
-   "parent": "desk",
-   "position": [
-    -1.3109,
-    -0.1849,
-    0.4497
-   ],
-   "rotation": [
-    0,
-    90,
-    0
-   ],
-   "scale": [
-    1,
-    1,
-    1
-   ],
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "add": {
-    "asset": "ergoflex-mic-boom-arm"
-   },
-   "id": "hdmicbooma",
-   "match": "^Added prop:ergoflex-mic-boom-arm#hdmicbooma$",
-   "label": "ErgoFlex mic boom arm on the accessory port (posed for the office desk, right port)",
-   "parent": "shelf",
-   "position": [
-    0.8264,
-    -0.054,
-    0.3821
-   ],
-   "rotation": [
-    0,
-    0,
-    0
-   ],
-   "scale": [
-    1,
-    1,
-    1
-   ],
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "add": {
-    "asset": "herodesk-office-files"
-   },
-   "id": "hdofficefi",
-   "match": "^Added prop:herodesk-office-files#hdofficefi$",
-   "label": "Tidy files (2 lever-arch binders, slim file)",
-   "parent": "base-shelf",
-   "position": [
-    -0.947,
-    0.053,
-    -0.113
-   ],
-   "rotation": [
-    180,
-    1.8,
-    -180
-   ],
-   "scale": [
-    0.55,
-    0.55,
-    0.55
-   ],
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "add": {
-    "asset": "herodesk-office-briefcase"
-   },
-   "id": "hdofficebr",
-   "match": "^Added prop:herodesk-office-briefcase#hdofficebr$",
-   "label": "Leather attach\u00e9 briefcase (chestnut, brass)",
-   "parent": "base-shelf",
-   "position": [
-    0.95,
-    0.0538,
-    -0.119
-   ],
-   "rotation": [
-    0,
-    90,
-    0
-   ],
-   "scale": [
-    0.6,
-    0.6,
-    0.6
-   ],
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "add": {
-    "asset": "herodesk-office-photo-frame"
-   },
-   "id": "hdofficeph",
-   "match": "^Added prop:herodesk-office-photo-frame#hdofficeph$",
-   "label": "Framed photo (5x7 in, walnut, beach at golden hour)",
-   "parent": "shelf",
-   "position": [
-    -0.9882,
-    -0.1241,
-    0.217
-   ],
-   "rotation": [
-    0,
-    -18.8,
-    0
-   ],
-   "scale": [
-    1,
-    1,
-    1
-   ],
-   "desk": "office",
-   "show": {
-    "from": 0.3,
-    "to": 5.93,
-    "fadeIn": 0.7,
-    "fadeOut": 0.4
-   }
-  },
-  {
-   "add": {
-    "asset": "ergoflex-side-shelf-small"
-   },
-   "id": "o51inok91",
-   "match": "^Added prop:ergoflex-side-shelf-small#o51inok91$",
-   "label": "Side shelf \u00b7 small",
-   "parent": "shelf",
-   "position": [
-    -0.944,
-    -0.175,
-    0.116
-   ],
-   "rotation": [
-    0,
-    90,
-    0
-   ],
-   "scale": [
-    1,
-    1,
-    1
-   ],
-   "desk": "office",
-   "show": {
-    "from": 0.3,
+    "from": 1.25,
     "to": 5.93,
     "fadeIn": 0.7,
     "fadeOut": 0.4
@@ -3226,7 +2683,550 @@
    ],
    "desk": "office",
    "show": {
-    "from": 0.3,
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "match": "^Accessory:keyboard-tray$",
+   "label": "Accessory:keyboard-tray",
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "match": "^Accessory:logitech-mx-master$",
+   "label": "Accessory:logitech-mx-master",
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "match": "^Accessory:ergo-keyboard$",
+   "label": "Accessory:ergo-keyboard",
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "match": "^Prop:tablet-folder$",
+   "label": "Prop:tablet-folder",
+   "rotation": [
+    1,
+    -36.3,
+    4.6
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "match": "^Prop:pen$",
+   "label": "Prop:pen",
+   "space": "local",
+   "position": [
+    -0.557,
+    -0.111,
+    0.164
+   ],
+   "rotation": [
+    58.3,
+    -34.1,
+    -77.3
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "match": "^Prop:glasses-3$",
+   "label": "Prop:glasses-3",
+   "space": "local",
+   "position": [
+    -0.769,
+    -0.06,
+    0.06
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "match": "^Prop:calculator$",
+   "label": "Prop:calculator",
+   "space": "local",
+   "position": [
+    0.017,
+    -0.006,
+    -0.052
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "match": "^Prop:insulated-mug$",
+   "label": "Prop:insulated-mug",
+   "space": "local",
+   "position": [
+    0.329,
+    -0.166,
+    0.37
+   ],
+   "scale": [
+    0.7,
+    0.7,
+    0.7
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "match": "^Accessory:obsbot-tiny-2$",
+   "label": "Accessory:obsbot-tiny-2",
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "match": "^Accessory:monitor-arm-2$",
+   "label": "Accessory:monitor-arm-2",
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "match": "^Accessory:wide-monitor$",
+   "label": "Accessory:wide-monitor",
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "match": "^Accessory:portrait-monitor$",
+   "label": "Accessory:portrait-monitor",
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-office-phone"
+   },
+   "id": "hdofficeph",
+   "match": "^Added prop:herodesk-office-phone#hdofficeph$",
+   "label": "Smartphone (stands in the cubby slot)",
+   "parent": "desk",
+   "position": [
+    1.299,
+    -0.184,
+    0.669
+   ],
+   "rotation": [
+    42,
+    -81.7,
+    36.7
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-office-plant"
+   },
+   "id": "hdofficepl",
+   "match": "^Added prop:herodesk-office-plant#hdofficepl$",
+   "label": "Snake plant in a white ceramic pot (fits the cubby cup)",
+   "parent": "shelf",
+   "position": [
+    0.945,
+    -0.1395,
+    0.098
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large"
+   },
+   "id": "1zr1k8lwb",
+   "match": "^Added prop:ergoflex-side-shelf-large#1zr1k8lwb$",
+   "label": "Side shelf \u00b7 large",
+   "parent": "base-shelf",
+   "position": [
+    -0.923,
+    0.024,
+    -0.113
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large-cubby"
+   },
+   "id": "4lq1al8mj",
+   "match": "^Added prop:ergoflex-side-shelf-large-cubby#4lq1al8mj$",
+   "label": "Side shelf \u00b7 large, cubby and cups",
+   "parent": "desk",
+   "position": [
+    -1.117,
+    -0.191,
+    0.493
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    -1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large-cubby"
+   },
+   "id": "zq7lk6r1w",
+   "match": "^Added prop:ergoflex-side-shelf-large-cubby#zq7lk6r1w$",
+   "label": "Side shelf \u00b7 large, cubby and cups",
+   "parent": "desk",
+   "position": [
+    1.112,
+    -0.191,
+    0.493
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large"
+   },
+   "id": "mq9mg01h7",
+   "match": "^Added prop:ergoflex-side-shelf-large#mq9mg01h7$",
+   "label": "Side shelf \u00b7 large",
+   "parent": "base-shelf",
+   "position": [
+    0.926,
+    0.025,
+    -0.119
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-office-pen-cup"
+   },
+   "id": "hdofficepe",
+   "match": "^Added prop:herodesk-office-pen-cup#hdofficepe$",
+   "label": "Pens, pencil, highlighter and scissors (for the cubby cup)",
+   "parent": "desk",
+   "position": [
+    -1.3109,
+    -0.1849,
+    0.4497
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-mic-boom-arm"
+   },
+   "id": "hdmicbooma",
+   "match": "^Added prop:ergoflex-mic-boom-arm#hdmicbooma$",
+   "label": "ErgoFlex mic boom arm on the accessory port (posed for the office desk, right port)",
+   "parent": "shelf",
+   "position": [
+    0.8264,
+    -0.054,
+    0.3821
+   ],
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-office-files"
+   },
+   "id": "hdofficefi",
+   "match": "^Added prop:herodesk-office-files#hdofficefi$",
+   "label": "Tidy files (2 lever-arch binders, slim file)",
+   "parent": "base-shelf",
+   "position": [
+    -0.947,
+    0.053,
+    -0.113
+   ],
+   "rotation": [
+    180,
+    1.8,
+    -180
+   ],
+   "scale": [
+    0.55,
+    0.55,
+    0.55
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-office-briefcase"
+   },
+   "id": "hdofficebr",
+   "match": "^Added prop:herodesk-office-briefcase#hdofficebr$",
+   "label": "Leather attach\u00e9 briefcase (chestnut, brass)",
+   "parent": "base-shelf",
+   "position": [
+    0.95,
+    0.0538,
+    -0.119
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    0.6,
+    0.6,
+    0.6
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-office-photo-frame"
+   },
+   "id": "hdofficeph",
+   "match": "^Added prop:herodesk-office-photo-frame#hdofficeph$",
+   "label": "Framed photo (5x7 in, walnut, beach at golden hour)",
+   "parent": "shelf",
+   "position": [
+    -0.9882,
+    -0.1241,
+    0.217
+   ],
+   "rotation": [
+    0,
+    -18.8,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.25,
+    "to": 5.93,
+    "fadeIn": 0.7,
+    "fadeOut": 0.4
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-small"
+   },
+   "id": "o51inok91",
+   "match": "^Added prop:ergoflex-side-shelf-small#o51inok91$",
+   "label": "Side shelf \u00b7 small",
+   "parent": "shelf",
+   "position": [
+    -0.944,
+    -0.175,
+    0.116
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.25,
     "to": 5.93,
     "fadeIn": 0.7,
     "fadeOut": 0.4

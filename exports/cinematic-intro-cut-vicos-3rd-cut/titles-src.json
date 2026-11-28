@@ -505,14 +505,14 @@
   "font": "Poppins SemiBold",
   "spacing": 3.3,
   "gap": 9.75,
-  "x": 342.47,
+  "x": 425.25,
   "edited": true
  },
  "logo": {
   "chapter": "hero",
   "rel_in": 21.87,
-  "x": 338.49,
-  "y": 484.99,
+  "x": 421.27,
+  "y": 436.26,
   "scale": 0.67,
   "edited": true,
   "show_delay": 1
