@@ -27,10 +27,11 @@ material centroids, 0.06 mm residual):
 2. Held offsets (`postures[...].held.hand_r`) for the three robot postures solved as one chain so the robot is continuous in the
    world at 1.0 s and 2.0 s, and sits 0.5 mm above the maker mat at the start (it was 15.6 mm in). They are now nearly the same
    hand-relative offset in all three models (`at` about [0.062-0.069, 0.010-0.014, 0.034-0.037] m, turns under 0.3 deg).
-3. `andre-shelf` right-arm keys 2.2-2.467 (upperarm/lowerarm/hand, rotations of at most 4 deg) tuned in the stage so the robot
-   comes down upright (tilt 0.01 deg) with its lowest point 2.5 mm above the shelf at the release.
-4. Stowed shelf figure (sceneEdit `Smart robot figure · Robo-Pal (stowed)`): position [0.09955, 0.01993, 0.23388] (local),
-   rotation [0, 3.95, 0], scale 0.94366: exactly the held robot's last frame, so the hand-over moves it 0.0 mm / 0.01 deg.
+3. `andre-shelf` right-arm keys 2.2-2.467 (upperarm/lowerarm/hand, changes of at most 7 deg) tuned in the stage so the robot
+   comes down upright (tilt 0.01 deg), its lowest point 2.5 mm above the shelf at the release, set 30 mm further in than his
+   hands now reached so the whole figure stands on the shelf (its bounding box ends 18 mm short of the front edge).
+4. Stowed shelf figure (sceneEdit `Smart robot figure · Robo-Pal (stowed)`): position [0.09953, 0.01995, 0.20387] (local),
+   rotation [0, -2.31, 0], scale 0.94366: exactly the held robot's last frame, so the hand-over moves it 0.0 mm / 0.01 deg.
 5. `andre-lets-go`: pose keys on its model (`people-andre-stand-wait`) from the shelf's last arm pose at 2.548 s to none at 3.22 s;
    change parts arms [0.6,1] -> [0.06,0.9], turn [0,0.6] -> [0.45,1]: the hands come off and down first, then he turns, and the
    peak hand speed falls from ~4.8 to 3.2 m/s. Change start/length, the `when` windows and the walk are unchanged.
@@ -40,8 +41,10 @@ material centroids, 0.06 mm residual):
 - never two robots at once; robot's lowest point never below the shelf (closest 0.7 mm above, 2.458 s; 2.5 mm above from the release on),
   0.4 mm above the maker mat while it rests there (0.4-0.7 s); at the hand-over 0.0 mm / 0.01 deg step; largest frame-to-frame change of the robot's step 5.9
   mm (2.008 s, it speeds up with the carry, no jump); hand bones: largest frame-to-frame change of a step 3.4 mm (was 200 mm);
-  hand bones stay 13 mm or more outside the shelf robot's bounding box after the release.
-- Phone: film frames at 9.6 s and 9.8 s before/after, PSNR 65 dB (identical up to render noise), `phone-9.8s-before-after.jpg`.
+  hand bones stay 23 mm or more outside the shelf robot's bounding box after the release.
+- Phone: film frames at 9.6 s and 9.8 s before/after, PSNR 65 dB (identical up to render noise), `phone-9.8s-before-after.jpg`
+  (taken on the previous iteration; the last iteration changed only the shelf arm keys before 2.55 s and the shelf robot's spot,
+  nothing the phone shot shows). No other prop on the shelf overlaps the robot's box (checked at 3.0 s).
 - Tests: people-pose-keys, room-people-robot, room-people-motion, people-held, cinematic-cuts, film-edits-show-screen pass.
   `people-motion-fields-test.mjs` fails on the base too on this PC (calls `python3`, not on PATH); its `clean_people` step run with
   `python` keeps the new held offsets, keys and change parts. No .mjs edited, so no ESLint run applies.
