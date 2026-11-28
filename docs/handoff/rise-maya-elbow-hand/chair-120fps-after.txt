@@ -1,0 +1,5 @@
+frames 1237 min clearance to chair 15.4 mm middle_03_l @18.875 (60 mm search cap)
+  head 60.0 mm head @13.000
+  upper 34.2 mm upperarm_l @13.042
+  fore 18.7 mm lowerarm_l @13.017
+  hand 15.4 mm middle_03_l @18.875
