@@ -2,7 +2,7 @@
 // and finish fades as a group (Vico, 27 Nov 2026: open a 1.5 s Pearl White lead-in by sliding the whole line-up right).
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
-import {cleanDeskVersionList,addVersionAtStart,shiftVersions,resolveSubshots,resolveFilm,seamsOf,shown,LOOKS,BLANK_NAME} from '../experience/desk-versions-edit.mjs';
+import {cleanDeskVersionList,addVersionAtStart,shiftVersions,moveSeam,resolveSubshots,resolveFilm,seamsOf,shown,LOOKS,BLANK_NAME} from '../experience/desk-versions-edit.mjs';
 import {shiftGroup,groupRange} from '../experience/timeline-group.mjs';
 import {whiteLook,PEARL} from '../experience/finish-fades.mjs';
 let n=0;const ok=(c,m)=>{assert.ok(c,m);n++;console.log('ok  '+m);};
@@ -27,7 +27,12 @@ ok(added[1].end===moved[0].end&&added.slice(2).every((v,i)=>v.start===moved[i+1]
 // no gap: it takes the first half of the first desk
 let split=addVersionAtStart(film,0,'I',T,{look:'blank-pearl'});
 ok(split&&split[0].start===0&&shown(split,0)[1]>=2&&shown(split,1)[1]-shown(split,1)[0]>=2,'no gap: it shares the first desk\'s time');
-ok(addVersionAtStart([{n:'B',preset:'artist',name:'',start:0,end:3}],0,'I',3.5)===null,'a first desk too short to share refuses');
+ok(addVersionAtStart([{n:'B',preset:'artist',name:'',start:0,end:.9}],0,'I',.9)===null,'a first desk too short to share refuses');
+// shortening the opener below 1.5 s (e.g. 1.25 s, down to 0.5 s)
+let shorter=moveSeam(added,0,1.25,27.45);
+ok(shown(shorter,0)[1]===1.25&&shorter[0].end===1.55&&shorter[1].start===.95,'opener can be shortened to 1.25 s');
+let shortest=moveSeam(added,0,.2,27.45);
+ok(shown(shortest,0)[1]===.5&&shortest[0].end===.8&&shortest[1].start===.2,'opener clamps at 0.5 s with positive Artist start');
 // resolve against the real film sub-shots
 const dir='exports/cinematic-intro-cut-vicos-3rd-cut/';
 if(fs.existsSync(dir+'shots/13-subshots.json')){
@@ -40,6 +45,13 @@ if(fs.existsSync(dir+'shots/13-subshots.json')){
   ok(p.featuredBuild&&p.featuredBuild.woodFinish===PEARL.wood&&p.featuredBuild.accessories.length===0,'Pearl White finish, no accessories');
   ok(p.ledColor===whiteLook(subs[0]).ledColor,'the LED is the warm white of the ending');
   const rig=p.lights.find(l=>l.preset==='productRig');ok(typeof rig.key.intensity==='number','the rig is the white look\'s fixed levels');
+  // per-desk fixed lighting on all five Hero sub-shots survives seam retiming
+  const wantKey={I:11,B:30,C:4.5,D:4.5,H:30},wantKick={I:7,B:30,C:18,D:18,H:30};
+  const retimedSubs=resolveSubshots(subs,shorter);
+  for(const s of retimedSubs){
+    const r=s.lights.find(l=>l.preset==='productRig'),k=s.lights.find(l=>l.name==='kicker');
+    ok(r.key.intensity===wantKey[s.subshot]&&k.intensity===wantKick[s.subshot],`sub-shot ${s.subshot} keeps fixed per-desk lighting (key=${r.key.intensity}, kicker=${k.intensity}) after retiming`);
+  }
   ok(b.sceneEdits.some(e=>e.add)&&!b.deskLook,'the Artist desk next to it keeps its props');
   ok(b.renderRange[0]===1.2,'Artist window starts at 1.2 s');
   // switching the look off again brings the plain desk back

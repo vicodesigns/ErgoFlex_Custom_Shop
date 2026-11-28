@@ -19,7 +19,7 @@ import {addCameraHolds} from './camera-holds.mjs';
 import {cinematicViews,polishMovement,openingSwoop} from './cinematography.mjs';
 import {paceChapter,lengthenChapter,chapterFloor,shortenChapter,viewsPastEnd} from './chapter-timing.mjs?v=chapter-shorten-20261121';
 import {validateClipSchedule,sampledMotionToClips,legacyMotionToClips,cleanClipMotion,planClipInsertion,clipSummary,clipEnd} from './desk-clips.mjs';
-import {groupRange,snapGroupDelta,shiftGroup,CHAPTER_MAX} from './timeline-group.mjs?v=20261127-desk-version-finishes';
+import {groupRange,snapGroupDelta,shiftGroup,CHAPTER_MAX} from './timeline-group.mjs?v=20261127-hero-min-shown';
 import {LIGHT_KINDS,WHEEL_MODES,cleanLighting,exportLighting,lightKindColor,validateStatus,neutralAt,lightAt,scaleColor,warmthOf,withWarmth,whiteName,daypartAt,DAYPART_TINTS,lightnessOf,withLightness,WHITE_PRESETS} from './film-lighting.mjs?v=screen-light-20261121';
 import {syncStatus,motionSig,resolveLinks,lightOfClip,enableClipLight,disableClipLight,unlinkEntry,linkEntryToClip,linkAllMatching,unlinkAll,followCounts,followMode,canFollow,followLane,deriveLight,lightName} from './status-follow.mjs';
 import {clipFollowHtml,followModeHtml,statusInspectorHtml,moveLane,span as followSpan} from './status-follow-ui.mjs';
@@ -50,7 +50,7 @@ import {createSonarEditor} from './sonar-editor.mjs?v=sonar-preview-20261121';
 import {createRenderRequest} from './render-request.mjs';
 import {createSceneDeskEditor} from './scene-desk-editor.mjs';
 import {createStudioSync} from './studio-sync.mjs';
-import {createDeskVersions,deskVersions as deskVersionList} from './desk-versions.mjs?v=20261127-desk-version-finishes';
+import {createDeskVersions,deskVersions as deskVersionList} from './desk-versions.mjs?v=20261127-hero-min-shown';
 import {createFinishLane} from './finish-lane.mjs?v=20261127-desk-version-finishes';
 import {createDeskBuildPanel} from './desk-build-panel.mjs';
 import {createTitleEditor,loadTitleSource} from './title-editor.mjs?v=textopts-20261125';
@@ -62,7 +62,7 @@ import {resolveCameraKeys,moveCameraKey,CAMERA_EASINGS} from './camera-track.mjs
 import {TRANSITION_LABELS,DEFAULT_DUR,MIN_DUR,hasLength,fromPlan,matchPlanKeys,segmentInfo,segmentType,setTransition,transitionRoom,transitionBands,dragLength,createTransitionPreview} from './camera-transitions.mjs?v=transitions-fix-20261120';
 import {createSelection,markSelection,centreIn,GROUP_OF,deleteTarget} from './director-selection.mjs?v=timeline-delete-20261120';
 import {viewFor,saveView,isFolded,inView,holdScroll,nextWantTop,reapplyTop,lostTop} from './timeline-view.mjs?v=timeline-want-top-20261121';
-import {CutLibrary,makeCut,cleanCut,cleanShot,sceneShot,generateCut,encodeCut,KINDS,PRESET_IDS,defaultPreset} from './cuts.mjs?v=20261127-desk-version-finishes';
+import {CutLibrary,makeCut,cleanCut,cleanShot,sceneShot,generateCut,encodeCut,KINDS,PRESET_IDS,defaultPreset} from './cuts.mjs?v=20261127-hero-min-shown';
 import {looksOf,lookOf,lookName} from '../room-looks.mjs';
 
 const escape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

@@ -30,7 +30,7 @@ export const LOOKS=Object.freeze(['blank-pearl']);
 export const BLANK_NAME='Pearl White';
 export const NAMES={artist:'Artist',occ:'OCC',architect:'Architect',hbhs:'HBHS',office:'Office',gaming:'Gaming',library:'Library',music:'Music',compact:'Compact',creative:'Creative'};
 export const labelOf=id=>NAMES[id]||(String(id||'Desk')[0].toUpperCase()+String(id||'Desk').slice(1));
-export const MIN_SHOWN=2;                       // s a desk is shown at least
+export const MIN_SHOWN=.5;                      // s a desk is shown at least
 export const MAX_VERSIONS=12;                   // desks in one chapter at most
 export const DEFAULT_OVERLAP=.6;                // s of crossfade at a new seam when the chapter has none to copy
 const BUNDLE=['kind','preset','lights','sceneEdits','screens','sceneGlobals','accessories'];
@@ -101,10 +101,17 @@ export function moveVersion(list,from,to){
   const order=list.map((_,i)=>i);order.splice(to,0,order.splice(from,1)[0]);
   return place(order.map((j,i)=>({...list[j],n:list[i].n})),list.map(v=>[v.start,v.end]));
 }
-// Move the seam between versions i and i+1 to `seconds`; every desk keeps at least MIN_SHOWN s; overlaps keep their width.
+// Minimum shown time for slot k: at least MIN_SHOWN s, wide enough that adjacent crossfades never overlap,
+// and keeping first / last sub-shot windows strictly inside [0, total].
+function minSlot(overlaps,k){
+  const ovL=k>0?overlaps[k-1]:0,ovR=k<overlaps.length?overlaps[k]:0;
+  const pad=k===0||k===overlaps.length?.05:0;
+  return r2(Math.max(MIN_SHOWN,(ovL+ovR)/2+pad));
+}
+// Move the seam between versions i and i+1 to `seconds`; every desk keeps at least minSlot s; overlaps keep their width.
 export function moveSeam(list,i,seconds,total){
   const {seams,overlaps}=seamsOf(list);if(i<0||i>=seams.length)return list;
-  const lo=(i?seams[i-1]:0)+MIN_SHOWN,hi=(i<seams.length-1?seams[i+1]:total)-MIN_SHOWN;
+  const lo=(i?seams[i-1]:0)+minSlot(overlaps,i),hi=(i<seams.length-1?seams[i+1]:total)-minSlot(overlaps,i+1);
   if(hi<lo)return list;
   const next=seams.slice();next[i]=r2(Math.max(lo,Math.min(hi,seconds)));
   return place(list,windowsFrom(next,overlaps,total));
@@ -117,39 +124,44 @@ export const canAddVersion=(list,total)=>list.length<MAX_VERSIONS&&total>=(list.
 // A copy of version `src` (model and name) with the id `id`, as the desk number `at` (1..length: after the desk
 // before it). It takes the second half of the time of the desk before it (the seam on a tenth of a second); when that
 // desk is too short to share,
-// every desk gives part of what it has above the minimum. The new seam crossfades as wide as its neighbour.
+// every desk gives part of what it has above its minimum. The new seam crossfades as wide as its neighbour.
 // null when it does not fit (canAddVersion) or the id is taken.
 export function addVersion(list,src,at,id,total){
   if(!list[src]||!Number.isInteger(at)||at<1||at>list.length||!ID.test(String(id||''))||list.some(v=>v.n===id)||!canAddVersion(list,total))return null;
   const {seams,overlaps}=seamsOf(list),edges=[0,...seams,total],lens=edges.slice(1).map((e,i)=>e-edges[i]),give=at-1;
+  const near=[overlaps[at-1],overlaps[at-2]].find(o=>o>0)??DEFAULT_OVERLAP,ov=overlaps.slice();ov.splice(at-1,0,near);
+  const mL=minSlot(ov,give),mR=minSlot(ov,at);
   let mine;
-  if(lens[give]>=2*MIN_SHOWN){
+  if(lens[give]>=mL+mR-1e-9){
     // The new seam on the 0.1 s grid: whole frames at 30 fps, like the film's own seams.
-    const a=edges[give],b=edges[give+1],seam=Math.max(a+MIN_SHOWN,Math.min(b-MIN_SHOWN,Math.round((a+b)/2*10+1e-6)/10));
+    const a=edges[give],b=edges[give+1],seam=Math.max(a+mL,Math.min(b-mR,Math.round((a+b)/2*10+1e-6)/10));
     mine=b-seam;lens[give]=seam-a;
   }
   else{
-    const slack=lens.reduce((s,l)=>s+Math.max(0,l-MIN_SHOWN),0);mine=Math.min(MIN_SHOWN,slack);
-    for(const [i,l] of lens.entries())lens[i]=l-(slack>0?Math.max(0,l-MIN_SHOWN)*mine/slack:0);
+    const mins=lens.map((_,k)=>minSlot(ov,k<at?k:k+1));
+    const slack=lens.reduce((s,l,k)=>s+Math.max(0,l-mins[k]),0);
+    if(slack<mR-1e-9)return null;
+    mine=mR;
+    for(const [i,l] of lens.entries())lens[i]=l-(slack>0?Math.max(0,l-mins[i])*mine/slack:0);
   }
   lens.splice(at,0,mine);
   const next=[];let t=0;for(const l of lens.slice(0,-1)){t+=l;next.push(r2(t));}
-  const near=[overlaps[at-1],overlaps[at-2]].find(o=>o>0)??DEFAULT_OVERLAP,ov=overlaps.slice();ov.splice(at-1,0,near);
   const desks=list.slice();desks.splice(at,0,{...list[src],n:id});
   return place(desks,windowsFrom(next,ov,total));
 }
 // A new desk at the very start of the chapter (a copy of desk `src`, with `look` when given). When the desks were slid right and
 // left a gap in front of the first one, the new desk fills it: it shows from 0 to the gap's end, where the change happens (the
-// crossfade centred on it); else it takes the first half of the first desk's time (the first desk must show at least twice
-// MIN_SHOWN). null when it does not fit (canAddVersion), the first desk is too short to share, or the id is taken.
+// crossfade centred on it); else it takes the first half of the first desk's time (the first desk must be wide enough to share).
+// null when it does not fit (canAddVersion), the first desk is too short to share, or the id is taken.
 export function addVersionAtStart(list,src,id,total,{look=null}={}){
   if(!list[0]||!list[src]||!ID.test(String(id||''))||list.some(v=>v.n===id)||!canAddVersion(list,total))return null;
   const {seams,overlaps}=seamsOf(list),gap=list[0].start;
   let seam,ov;
   if(gap>=.5-1e-9){seam=r2(gap);ov=r2(Math.min(DEFAULT_OVERLAP,2*gap));}
   else{
-    const first=seams.length?seams[0]:total;if(first<2*MIN_SHOWN-1e-9)return null;
-    seam=Math.max(MIN_SHOWN,Math.round(first/2*10)/10);ov=DEFAULT_OVERLAP;
+    ov=DEFAULT_OVERLAP;const nextOv=[ov,...overlaps],mL=minSlot(nextOv,0),mR=minSlot(nextOv,1);
+    const first=seams.length?seams[0]:total;if(first<mL+mR-1e-9)return null;
+    seam=Math.max(mL,Math.min(first-mR,Math.round(first/2*10)/10));
   }
   const source=list[src],mine={n:id,preset:source.preset,name:look==='blank-pearl'?BLANK_NAME:source.name||'',...appearance(look?{look}:source)};
   return place([mine,...list],windowsFrom([seam,...seams],[ov,...overlaps],total));
@@ -164,8 +176,8 @@ export function shiftVersions(list,picked,delta,total){
     if(!(next[i].start>next[i-1].start&&next[i].end>next[i-1].end))throw Error(`Desk ${next[i].n} cannot pass Desk ${next[i-1].n}: drag a desk in the Desk versions lane to reorder.`);
     if(next[i].start>next[i-1].end+1e-9)throw Error(`That would leave a gap between Desk ${next[i-1].n} and Desk ${next[i].n}: move them together, or retime the line between them.`);
   }
-  const {seams}=seamsOf(next);
-  for(let i=1;i<seams.length;i++)if(seams[i]-seams[i-1]<MIN_SHOWN-1e-9)throw Error(`Each desk shows at least ${MIN_SHOWN} s.`);
+  const {seams,overlaps}=seamsOf(next);
+  for(let i=1;i<seams.length;i++){const m=minSlot(overlaps,i);if(seams[i]-seams[i-1]<m-1e-9)throw Error(`Each desk shows at least ${m} s.`);}
   const last=next.at(-1);if(Number.isFinite(total)&&last.end<total-1e-9)last.end=r2(total);
   return next;
 }
