@@ -64,7 +64,7 @@ function sample(t) {
             const si = g.attributes.skinIndex, sw = g.attributes.skinWeight, bones = (m.skeleton).bones;
             m.skeleton.update?.();
             const pts = new Array(n);
-            for (let i = 0; i < n; i++) { m.getVertexPosition(i, v); m.applyBoneTransform(i, v); v.applyMatrix4(m.matrixWorld); pts[i] = [v.x, v.y, v.z]; }
+            for (let i = 0; i < n; i++) { m.getVertexPosition(i, v); v.applyMatrix4(m.matrixWorld); pts[i] = [v.x, v.y, v.z]; }   // (three r163: getVertexPosition already skins)
             if (held && !handInv.length) { const hb = (m.userData.heldOriginal || m.skeleton).bones.find(b => b.name === 'hand_r'); if (hb) { hb.updateMatrixWorld(true); handInv.push(hb.matrixWorld.clone().invert()); } }
             if (held) {
                 const key = name + '@' + o.userData.person.id; parts.set(key, pts);

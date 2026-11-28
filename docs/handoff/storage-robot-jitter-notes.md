@@ -106,3 +106,14 @@ node tools/experience/render-cut.cjs --cut scratch-cut-after.json --shots 0 --ou
   the 1.0/2.0 s swaps), checked against the 4K view. No such change is pushed. Whether 17 mm reads at film size (~420 px robot)
   must be judged on the GPU after-render.
 - Nothing after 4.5 s was measured at 60 fps (stills at 6/12/20 s only); the shelf robot is static there.
+
+## CORRECTION (H2, 28 Nov ~01:00): headless numbers above were double-skinned
+three r163 `getVertexPosition` already applies the skinning; the first headless runs applied it twice, which produced the
+fake 250 mm step at 1.0 s and the 17-18 mm depths. Fixed in the tool (robot verified rigid in hand_r: a hand_r-weighted skin
+vertex and a robot vertex keep the same hand-frame coordinates to 0.1 mm across 0.3-1.6 s). Re-measured, 0-2.6 s at 60 fps:
+- Robot world motion, before (frozen render data): 41.9 mm step at 1.000 s (step change 32.8 mm: the pop seen in the 4K).
+  After the restore: largest step 13.2 mm/frame at 1.067 s (the lift, smooth), largest step change 4.3 mm at 2.033 s
+  (a small kink at the lift -> shelf swap). No pop at 1.0 s; 2.548 s needs the stage (stowed figure is a scene prop).
+- Andre's skin inside the robot, after the restore: every sample 0-2.6 s, deepest 10.0 mm (left palm/thumb, 2.00 s),
+  left thumb 7-9 mm through the lift (1.4-1.93 s), right thumb 5-6.5 mm (1.0-2.0 s); before: up to 15 mm (left thumb 0.98 s).
+  The hand-tuning (H2) below addresses these.
