@@ -98,3 +98,11 @@ node tools/experience/render-cut.cjs --cut scratch-cut-after.json --shots 0 --ou
 # phone: renderRange [9.4,10.0] after vs film frames 9.6/9.8 s (expect identical up to noise)
 # spans after 4.5 s: renderRange [11,13] (tilt) and [20,21] still crops of the shelf robot
 ```
+
+## Remaining (not fixed, needs the stage to judge and tune)
+- Left hand in the robot: index_01_l/02_l/middle_01_l turns of +-12/25 deg (any axis) leave the worst depth at 17.2 mm,
+  because at 0.95 s it is the left PALM (hand_l, 17.2 mm), not the fingers; turning hand_l/lowerarm_l 4-16 deg either keeps
+  it in or lifts the hand 35+ mm off. A proper fix is a stage-tuned left-arm pose key set per robot posture (continuous at
+  the 1.0/2.0 s swaps), checked against the 4K view. No such change is pushed. Whether 17 mm reads at film size (~420 px robot)
+  must be judged on the GPU after-render.
+- Nothing after 4.5 s was measured at 60 fps (stills at 6/12/20 s only); the shelf robot is static there.
