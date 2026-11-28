@@ -1,0 +1,165 @@
+{
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-62804144f43c-Film-chapter-awareness-12-s-__7_.json",
+ "seconds": 12.0,
+ "keys": [
+  {
+   "at": 0,
+   "position": [
+    -2.3,
+    1.75,
+    2.6
+   ],
+   "target": [
+    2.8,
+    0.5,
+    -0.2
+   ],
+   "fov": 40,
+   "label": "Over the desk's shoulder: the dog ahead"
+  },
+  {
+   "at": 1.95,
+   "position": [
+    -2.2,
+    1.73,
+    2.6
+   ],
+   "target": [
+    2.8,
+    0.5,
+    -0.2
+   ],
+   "fov": 40,
+   "label": "Over the shoulder: slow push"
+  },
+  {
+   "at": 2.0,
+   "position": [
+    3.0,
+    2.38,
+    5.27
+   ],
+   "target": [
+    0.0849,
+    0.6705,
+    0.2216
+   ],
+   "fov": 41,
+   "label": "Cut: three-quarter, the desk drives at the dog, rings on the floor",
+   "cut": true
+  },
+  {
+   "at": 5.35,
+   "position": [
+    2.75,
+    2.25,
+    4.85
+   ],
+   "target": [
+    0.4352,
+    0.6094,
+    0.2199
+   ],
+   "fov": 41,
+   "label": "Rolling toward it"
+  },
+  {
+   "at": 5.4,
+   "position": [
+    1.4,
+    0.35,
+    4.9
+   ],
+   "target": [
+    1.4,
+    0.3908,
+    -0.0039
+   ],
+   "fov": 36,
+   "label": "Floor level, side on: it stops short, amber",
+   "cut": true
+  },
+  {
+   "at": 9.4,
+   "position": [
+    1.45,
+    0.42,
+    4.4
+   ],
+   "target": [
+    1.45,
+    0.457,
+    -0.0035
+   ],
+   "fov": 36,
+   "label": "The gap holds"
+  },
+  {
+   "at": 12.0,
+   "position": [
+    4.491,
+    1.58,
+    3.851
+   ],
+   "target": [
+    0.6201,
+    0.9052,
+    -0.0196
+   ],
+   "fov": 39,
+   "label": "Front three-quarter: stopped safely, into the fade"
+  }
+ ],
+ "clips": [
+  {
+   "id": "aw-roll",
+   "lane": "wheels",
+   "kind": "travel",
+   "start": 2.7,
+   "duration": 2.7,
+   "easing": "smooth",
+   "label": "Roll toward the pylon",
+   "value": 20,
+   "direction": "forward"
+  }
+ ],
+ "initial": {
+  "height": 30,
+  "tilt": 0
+ },
+ "props": [
+  {
+   "add": {
+    "asset": "obsbot-tiny-2"
+   },
+   "id": "9m5btf89g",
+   "match": "^Added prop:obsbot-tiny-2#9m5btf89g$",
+   "label": "OBSBOT Tiny 2 webcam / mic",
+   "parent": "shelf",
+   "position": [
+    -0.037,
+    0.557,
+    0.503
+   ],
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "show": {
+    "from": 5.03,
+    "to": 100000
+   }
+  }
+ ],
+ "sonar": {
+  "radius": 42,
+  "rings": 2,
+  "x": -1.5
+ }
+}

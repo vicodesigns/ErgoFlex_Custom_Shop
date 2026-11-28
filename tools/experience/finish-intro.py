@@ -428,6 +428,15 @@ def main():
         tags = (f'\\an8\\move({cx},{cy + 10:.1f},{cx},{cy:.1f},0,1100)\\fad({int(round(cta_in * 1000))},{fade_out})\\fs{cta_px}'
                 f'\\fn{src["cta"].get("font", "Poppins Medium")}\\fsp{float(src["cta"].get("spacing", 1.5)):g}\\blur4\\t(0,800,\\blur0)')
         ass.append(f'Dialogue: 1,{ts(cta["start"])},{ts(cta_end)},CTA,,0,0,0,,{{{tags}}}{cta["text"]}')
+        # optional (film audit, 4th cut): a small line under the CTA, e.g. the web address. cta.sub = {text, size (px, default 30), gap (px under
+        # the CTA line's box, default 6), delay (s after the CTA, default 0.5), font (default Poppins), spacing (default 2.5)}; absent = nothing added.
+        sub = src['cta'].get('sub')
+        if isinstance(sub, dict) and sub.get('text'):
+            sy = cy + cta_px * 1.762 + float(sub.get('gap', 6))
+            s_start = min(cta_end - 0.2, cta['start'] + float(sub.get('delay', 0.5)))
+            stags = (f'\\an8\\move({cx},{sy + 10:.1f},{cx},{sy:.1f},0,1100)\\fad({int(round(cta_in * 1000))},{fade_out})\\fs{int(sub.get("size", 30))}'
+                     f'\\fn{sub.get("font", "Poppins")}\\fsp{float(sub.get("spacing", 2.5)):g}\\1c&HE6DED6&\\blur4\\t(0,800,\\blur0)')
+            ass.append(f'Dialogue: 1,{ts(s_start)},{ts(cta_end)},CTA,,0,0,0,,{{{stags}}}{sub["text"]}')
     else:
         ass.append(f'Dialogue: 1,{ts(cta["start"])},{ts(total)},CTA,,0,0,0,,{{\\an5\\move(960,{CTA_Y + 10},960,{CTA_Y},0,1100)\\fad({int(round(cta_in * 1000))},1400)\\fs{cta_px}\\blur4\\t(0,800,\\blur0)}}{cta["text"]}')
     open(os.path.join(out, 'titles.ass'), 'w', encoding='utf-8').write('\n'.join(ass) + '\n')

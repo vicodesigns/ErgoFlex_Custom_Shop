@@ -1,0 +1,3943 @@
+{
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-44ae7b02ecfb-Film-chapter-hero-27-45-s-__3_.json",
+ "seconds": 27.45,
+ "keys": [
+  {
+   "at": 0.0,
+   "position": [
+    5.476144125217537,
+    2.2304701588316247,
+    9.62698043708028
+   ],
+   "target": [
+    -1.3022924387743022,
+    1.2329509276347648,
+    0.7596212477585418
+   ],
+   "fov": 26,
+   "label": "Opening arc (0.00 s), as Vico set it"
+  },
+  {
+   "at": 2.9,
+   "position": [
+    6.051256553292804,
+    2.5114484372054626,
+    7.986932236927871
+   ],
+   "target": [
+    -0.7839446861576304,
+    1.2838808634066987,
+    0.47098398388820295
+   ],
+   "fov": 26.578553889610117,
+   "label": "Opening arc rises over the artist desk (1.40 s)"
+  },
+  {
+   "at": 5.5,
+   "position": [
+    6.744006708977229,
+    3.295468587174425,
+    5.042141895473764
+   ],
+   "target": [
+    -0.2608098477001457,
+    1.6512799157529512,
+    0.3663377622742852
+   ],
+   "fov": 28.06428778136962,
+   "label": "Artist desk B: Vico framing, screens clear of the top"
+  },
+  {
+   "at": 8.7,
+   "position": [
+    6.3651,
+    2.9278,
+    4.1497
+   ],
+   "target": [
+    -0.2731,
+    1.3657000000000001,
+    0.5913
+   ],
+   "fov": 28.0036,
+   "label": "Architect desk C: Vico framing"
+  },
+  {
+   "at": 11.65,
+   "position": [
+    6.951243614674714,
+    2.966258415968225,
+    2.8951471551350476
+   ],
+   "target": [
+    -0.029677270710757427,
+    1.452556780143007,
+    0.1938116910426441
+   ],
+   "fov": 27.998601442987255,
+   "label": "Office desk D: Vico framing, glide right"
+  },
+  {
+   "at": 15.5,
+   "position": [
+    7.2444,
+    2.693,
+    1.6296
+   ],
+   "target": [
+    -0.0169,
+    1.298,
+    0.8458
+   ],
+   "fov": 27.9877,
+   "label": "Office desk D: track with the lowered desk (14.00 s)"
+  },
+  {
+   "at": 17.6,
+   "position": [
+    7.5949,
+    2.5382,
+    0.3177
+   ],
+   "target": [
+    0.1202,
+    1.1445,
+    1.0165
+   ],
+   "fov": 28.0026,
+   "label": "Into the gaming desk H (16.10 s)"
+  },
+  {
+   "at": 21.1,
+   "position": [
+    7.3327,
+    2.8815,
+    -3.6959
+   ],
+   "target": [
+    0.0084,
+    0.8995,
+    0.1924
+   ],
+   "fov": 28.4276,
+   "label": "Gaming desk H: swing to the end card (19.60 s)"
+  },
+  {
+   "at": 23.1,
+   "position": [
+    6.025489250250201,
+    3.1851927899769152,
+    -4.588263986815632
+   ],
+   "target": [
+    -0.030463268861634092,
+    1.2031427967945454,
+    -0.013171750280005843
+   ],
+   "fov": 28.488784203684432,
+   "label": "Arrive on the end-card pose (21.60 s)"
+  },
+  {
+   "at": 27.45,
+   "position": [
+    5.482268002415035,
+    3.0207927917373976,
+    -4.277585972045252
+   ],
+   "target": [
+    -0.07365264965981755,
+    1.2023893141113149,
+    -0.08021956679763062
+   ],
+   "fov": 28.488785729795904,
+   "label": "Hold on the end card (25.95 s)"
+  }
+ ],
+ "clips": [
+  {
+   "id": "b-lift",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 5.9,
+   "duration": 1.9,
+   "easing": "linear",
+   "label": "",
+   "target": 48,
+   "path": [
+    {
+     "time": 0,
+     "pose": {
+      "height": 52.5
+     }
+    },
+    {
+     "time": 0.066667,
+     "pose": {
+      "height": 52.455
+     }
+    },
+    {
+     "time": 0.133333,
+     "pose": {
+      "height": 52.32
+     }
+    },
+    {
+     "time": 0.2,
+     "pose": {
+      "height": 52.095
+     }
+    },
+    {
+     "time": 0.266667,
+     "pose": {
+      "height": 51.78
+     }
+    },
+    {
+     "time": 0.333333,
+     "pose": {
+      "height": 51.375
+     }
+    },
+    {
+     "time": 0.4,
+     "pose": {
+      "height": 50.925
+     }
+    },
+    {
+     "time": 0.466667,
+     "pose": {
+      "height": 50.475
+     }
+    },
+    {
+     "time": 0.533333,
+     "pose": {
+      "height": 50.025
+     }
+    },
+    {
+     "time": 0.6,
+     "pose": {
+      "height": 49.575
+     }
+    },
+    {
+     "time": 0.666667,
+     "pose": {
+      "height": 49.125
+     }
+    },
+    {
+     "time": 0.733333,
+     "pose": {
+      "height": 48.72
+     }
+    },
+    {
+     "time": 0.8,
+     "pose": {
+      "height": 48.405
+     }
+    },
+    {
+     "time": 0.866667,
+     "pose": {
+      "height": 48.18
+     }
+    },
+    {
+     "time": 0.933333,
+     "pose": {
+      "height": 48.045
+     }
+    },
+    {
+     "time": 1,
+     "pose": {
+      "height": 48
+     }
+    }
+   ]
+  },
+  {
+   "id": "b-tilt",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 5.9,
+   "duration": 3.2,
+   "easing": "linear",
+   "label": "",
+   "target": 30,
+   "path": [
+    {
+     "time": 0,
+     "pose": {
+      "tilt": 65
+     }
+    },
+    {
+     "time": 0.017857,
+     "pose": {
+      "tilt": 64.9308
+     }
+    },
+    {
+     "time": 0.035714,
+     "pose": {
+      "tilt": 64.7233
+     }
+    },
+    {
+     "time": 0.053571,
+     "pose": {
+      "tilt": 64.3774
+     }
+    },
+    {
+     "time": 0.071429,
+     "pose": {
+      "tilt": 63.8931
+     }
+    },
+    {
+     "time": 0.089286,
+     "pose": {
+      "tilt": 63.2706
+     }
+    },
+    {
+     "time": 0.107143,
+     "pose": {
+      "tilt": 62.585
+     }
+    },
+    {
+     "time": 0.125,
+     "pose": {
+      "tilt": 61.8993
+     }
+    },
+    {
+     "time": 0.142857,
+     "pose": {
+      "tilt": 61.2136
+     }
+    },
+    {
+     "time": 0.160714,
+     "pose": {
+      "tilt": 60.5279
+     }
+    },
+    {
+     "time": 0.178571,
+     "pose": {
+      "tilt": 59.8422
+     }
+    },
+    {
+     "time": 0.196429,
+     "pose": {
+      "tilt": 59.1566
+     }
+    },
+    {
+     "time": 0.214286,
+     "pose": {
+      "tilt": 58.4709
+     }
+    },
+    {
+     "time": 0.232143,
+     "pose": {
+      "tilt": 57.7852
+     }
+    },
+    {
+     "time": 0.25,
+     "pose": {
+      "tilt": 57.0995
+     }
+    },
+    {
+     "time": 0.267857,
+     "pose": {
+      "tilt": 56.4138
+     }
+    },
+    {
+     "time": 0.285714,
+     "pose": {
+      "tilt": 55.7282
+     }
+    },
+    {
+     "time": 0.303571,
+     "pose": {
+      "tilt": 55.0425
+     }
+    },
+    {
+     "time": 0.321429,
+     "pose": {
+      "tilt": 54.3568
+     }
+    },
+    {
+     "time": 0.339286,
+     "pose": {
+      "tilt": 53.6711
+     }
+    },
+    {
+     "time": 0.357143,
+     "pose": {
+      "tilt": 52.9854
+     }
+    },
+    {
+     "time": 0.375,
+     "pose": {
+      "tilt": 52.2998
+     }
+    },
+    {
+     "time": 0.392857,
+     "pose": {
+      "tilt": 51.6141
+     }
+    },
+    {
+     "time": 0.410714,
+     "pose": {
+      "tilt": 50.9284
+     }
+    },
+    {
+     "time": 0.428571,
+     "pose": {
+      "tilt": 50.2427
+     }
+    },
+    {
+     "time": 0.446429,
+     "pose": {
+      "tilt": 49.557
+     }
+    },
+    {
+     "time": 0.464286,
+     "pose": {
+      "tilt": 48.8714
+     }
+    },
+    {
+     "time": 0.482143,
+     "pose": {
+      "tilt": 48.1857
+     }
+    },
+    {
+     "time": 0.5,
+     "pose": {
+      "tilt": 47.5
+     }
+    },
+    {
+     "time": 0.517857,
+     "pose": {
+      "tilt": 46.8143
+     }
+    },
+    {
+     "time": 0.535714,
+     "pose": {
+      "tilt": 46.1286
+     }
+    },
+    {
+     "time": 0.553571,
+     "pose": {
+      "tilt": 45.443
+     }
+    },
+    {
+     "time": 0.571429,
+     "pose": {
+      "tilt": 44.7573
+     }
+    },
+    {
+     "time": 0.589286,
+     "pose": {
+      "tilt": 44.0716
+     }
+    },
+    {
+     "time": 0.607143,
+     "pose": {
+      "tilt": 43.3859
+     }
+    },
+    {
+     "time": 0.625,
+     "pose": {
+      "tilt": 42.7002
+     }
+    },
+    {
+     "time": 0.642857,
+     "pose": {
+      "tilt": 42.0146
+     }
+    },
+    {
+     "time": 0.660714,
+     "pose": {
+      "tilt": 41.3289
+     }
+    },
+    {
+     "time": 0.678571,
+     "pose": {
+      "tilt": 40.6432
+     }
+    },
+    {
+     "time": 0.696429,
+     "pose": {
+      "tilt": 39.9575
+     }
+    },
+    {
+     "time": 0.714286,
+     "pose": {
+      "tilt": 39.2718
+     }
+    },
+    {
+     "time": 0.732143,
+     "pose": {
+      "tilt": 38.5862
+     }
+    },
+    {
+     "time": 0.75,
+     "pose": {
+      "tilt": 37.9005
+     }
+    },
+    {
+     "time": 0.767857,
+     "pose": {
+      "tilt": 37.2148
+     }
+    },
+    {
+     "time": 0.785714,
+     "pose": {
+      "tilt": 36.5291
+     }
+    },
+    {
+     "time": 0.803571,
+     "pose": {
+      "tilt": 35.8434
+     }
+    },
+    {
+     "time": 0.821429,
+     "pose": {
+      "tilt": 35.1578
+     }
+    },
+    {
+     "time": 0.839286,
+     "pose": {
+      "tilt": 34.4721
+     }
+    },
+    {
+     "time": 0.857143,
+     "pose": {
+      "tilt": 33.7864
+     }
+    },
+    {
+     "time": 0.875,
+     "pose": {
+      "tilt": 33.1007
+     }
+    },
+    {
+     "time": 0.892857,
+     "pose": {
+      "tilt": 32.415
+     }
+    },
+    {
+     "time": 0.910714,
+     "pose": {
+      "tilt": 31.7294
+     }
+    },
+    {
+     "time": 0.928571,
+     "pose": {
+      "tilt": 31.1069
+     }
+    },
+    {
+     "time": 0.946429,
+     "pose": {
+      "tilt": 30.6226
+     }
+    },
+    {
+     "time": 0.964286,
+     "pose": {
+      "tilt": 30.2767
+     }
+    },
+    {
+     "time": 0.982143,
+     "pose": {
+      "tilt": 30.0692
+     }
+    },
+    {
+     "time": 1,
+     "pose": {
+      "tilt": 30
+     }
+    }
+   ]
+  },
+  {
+   "id": "c-lift",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 10.9,
+   "duration": 3,
+   "easing": "linear",
+   "label": "",
+   "target": 28,
+   "path": [
+    {
+     "time": 0,
+     "pose": {
+      "height": 48
+     }
+    },
+    {
+     "time": 0.02,
+     "pose": {
+      "height": 47.956
+     }
+    },
+    {
+     "time": 0.04,
+     "pose": {
+      "height": 47.8238
+     }
+    },
+    {
+     "time": 0.06,
+     "pose": {
+      "height": 47.6036
+     }
+    },
+    {
+     "time": 0.08,
+     "pose": {
+      "height": 47.2952
+     }
+    },
+    {
+     "time": 0.1,
+     "pose": {
+      "height": 46.8988
+     }
+    },
+    {
+     "time": 0.12,
+     "pose": {
+      "height": 46.4539
+     }
+    },
+    {
+     "time": 0.14,
+     "pose": {
+      "height": 46.009
+     }
+    },
+    {
+     "time": 0.16,
+     "pose": {
+      "height": 45.564
+     }
+    },
+    {
+     "time": 0.18,
+     "pose": {
+      "height": 45.1191
+     }
+    },
+    {
+     "time": 0.2,
+     "pose": {
+      "height": 44.6742
+     }
+    },
+    {
+     "time": 0.22,
+     "pose": {
+      "height": 44.2292
+     }
+    },
+    {
+     "time": 0.24,
+     "pose": {
+      "height": 43.7843
+     }
+    },
+    {
+     "time": 0.26,
+     "pose": {
+      "height": 43.3393
+     }
+    },
+    {
+     "time": 0.28,
+     "pose": {
+      "height": 42.8944
+     }
+    },
+    {
+     "time": 0.3,
+     "pose": {
+      "height": 42.4494
+     }
+    },
+    {
+     "time": 0.32,
+     "pose": {
+      "height": 42.0045
+     }
+    },
+    {
+     "time": 0.34,
+     "pose": {
+      "height": 41.5596
+     }
+    },
+    {
+     "time": 0.36,
+     "pose": {
+      "height": 41.1146
+     }
+    },
+    {
+     "time": 0.38,
+     "pose": {
+      "height": 40.6697
+     }
+    },
+    {
+     "time": 0.4,
+     "pose": {
+      "height": 40.2247
+     }
+    },
+    {
+     "time": 0.42,
+     "pose": {
+      "height": 39.7798
+     }
+    },
+    {
+     "time": 0.44,
+     "pose": {
+      "height": 39.3348
+     }
+    },
+    {
+     "time": 0.46,
+     "pose": {
+      "height": 38.8899
+     }
+    },
+    {
+     "time": 0.48,
+     "pose": {
+      "height": 38.4449
+     }
+    },
+    {
+     "time": 0.5,
+     "pose": {
+      "height": 38
+     }
+    },
+    {
+     "time": 0.52,
+     "pose": {
+      "height": 37.5551
+     }
+    },
+    {
+     "time": 0.54,
+     "pose": {
+      "height": 37.1101
+     }
+    },
+    {
+     "time": 0.56,
+     "pose": {
+      "height": 36.6652
+     }
+    },
+    {
+     "time": 0.58,
+     "pose": {
+      "height": 36.2202
+     }
+    },
+    {
+     "time": 0.6,
+     "pose": {
+      "height": 35.7753
+     }
+    },
+    {
+     "time": 0.62,
+     "pose": {
+      "height": 35.3303
+     }
+    },
+    {
+     "time": 0.64,
+     "pose": {
+      "height": 34.8854
+     }
+    },
+    {
+     "time": 0.66,
+     "pose": {
+      "height": 34.4404
+     }
+    },
+    {
+     "time": 0.68,
+     "pose": {
+      "height": 33.9955
+     }
+    },
+    {
+     "time": 0.7,
+     "pose": {
+      "height": 33.5506
+     }
+    },
+    {
+     "time": 0.72,
+     "pose": {
+      "height": 33.1056
+     }
+    },
+    {
+     "time": 0.74,
+     "pose": {
+      "height": 32.6607
+     }
+    },
+    {
+     "time": 0.76,
+     "pose": {
+      "height": 32.2157
+     }
+    },
+    {
+     "time": 0.78,
+     "pose": {
+      "height": 31.7708
+     }
+    },
+    {
+     "time": 0.8,
+     "pose": {
+      "height": 31.3258
+     }
+    },
+    {
+     "time": 0.82,
+     "pose": {
+      "height": 30.8809
+     }
+    },
+    {
+     "time": 0.84,
+     "pose": {
+      "height": 30.436
+     }
+    },
+    {
+     "time": 0.86,
+     "pose": {
+      "height": 29.991
+     }
+    },
+    {
+     "time": 0.88,
+     "pose": {
+      "height": 29.5461
+     }
+    },
+    {
+     "time": 0.9,
+     "pose": {
+      "height": 29.1012
+     }
+    },
+    {
+     "time": 0.92,
+     "pose": {
+      "height": 28.7048
+     }
+    },
+    {
+     "time": 0.94,
+     "pose": {
+      "height": 28.3964
+     }
+    },
+    {
+     "time": 0.96,
+     "pose": {
+      "height": 28.1762
+     }
+    },
+    {
+     "time": 0.98,
+     "pose": {
+      "height": 28.044
+     }
+    },
+    {
+     "time": 1,
+     "pose": {
+      "height": 28
+     }
+    }
+   ]
+  },
+  {
+   "id": "c-tilt",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 11.6,
+   "duration": 2.3,
+   "easing": "linear",
+   "label": "",
+   "target": -5,
+   "path": [
+    {
+     "time": 0,
+     "pose": {
+      "tilt": 30
+     }
+    },
+    {
+     "time": 0.017857,
+     "pose": {
+      "tilt": 29.9308
+     }
+    },
+    {
+     "time": 0.035714,
+     "pose": {
+      "tilt": 29.7233
+     }
+    },
+    {
+     "time": 0.053571,
+     "pose": {
+      "tilt": 29.3774
+     }
+    },
+    {
+     "time": 0.071429,
+     "pose": {
+      "tilt": 28.8931
+     }
+    },
+    {
+     "time": 0.089286,
+     "pose": {
+      "tilt": 28.2706
+     }
+    },
+    {
+     "time": 0.107143,
+     "pose": {
+      "tilt": 27.585
+     }
+    },
+    {
+     "time": 0.125,
+     "pose": {
+      "tilt": 26.8993
+     }
+    },
+    {
+     "time": 0.142857,
+     "pose": {
+      "tilt": 26.2136
+     }
+    },
+    {
+     "time": 0.160714,
+     "pose": {
+      "tilt": 25.5279
+     }
+    },
+    {
+     "time": 0.178571,
+     "pose": {
+      "tilt": 24.8422
+     }
+    },
+    {
+     "time": 0.196429,
+     "pose": {
+      "tilt": 24.1566
+     }
+    },
+    {
+     "time": 0.214286,
+     "pose": {
+      "tilt": 23.4709
+     }
+    },
+    {
+     "time": 0.232143,
+     "pose": {
+      "tilt": 22.7852
+     }
+    },
+    {
+     "time": 0.25,
+     "pose": {
+      "tilt": 22.0995
+     }
+    },
+    {
+     "time": 0.267857,
+     "pose": {
+      "tilt": 21.4138
+     }
+    },
+    {
+     "time": 0.285714,
+     "pose": {
+      "tilt": 20.7282
+     }
+    },
+    {
+     "time": 0.303571,
+     "pose": {
+      "tilt": 20.0425
+     }
+    },
+    {
+     "time": 0.321429,
+     "pose": {
+      "tilt": 19.3568
+     }
+    },
+    {
+     "time": 0.339286,
+     "pose": {
+      "tilt": 18.6711
+     }
+    },
+    {
+     "time": 0.357143,
+     "pose": {
+      "tilt": 17.9854
+     }
+    },
+    {
+     "time": 0.375,
+     "pose": {
+      "tilt": 17.2998
+     }
+    },
+    {
+     "time": 0.392857,
+     "pose": {
+      "tilt": 16.6141
+     }
+    },
+    {
+     "time": 0.410714,
+     "pose": {
+      "tilt": 15.9284
+     }
+    },
+    {
+     "time": 0.428571,
+     "pose": {
+      "tilt": 15.2427
+     }
+    },
+    {
+     "time": 0.446429,
+     "pose": {
+      "tilt": 14.557
+     }
+    },
+    {
+     "time": 0.464286,
+     "pose": {
+      "tilt": 13.8714
+     }
+    },
+    {
+     "time": 0.482143,
+     "pose": {
+      "tilt": 13.1857
+     }
+    },
+    {
+     "time": 0.5,
+     "pose": {
+      "tilt": 12.5
+     }
+    },
+    {
+     "time": 0.517857,
+     "pose": {
+      "tilt": 11.8143
+     }
+    },
+    {
+     "time": 0.535714,
+     "pose": {
+      "tilt": 11.1286
+     }
+    },
+    {
+     "time": 0.553571,
+     "pose": {
+      "tilt": 10.443
+     }
+    },
+    {
+     "time": 0.571429,
+     "pose": {
+      "tilt": 9.7573
+     }
+    },
+    {
+     "time": 0.589286,
+     "pose": {
+      "tilt": 9.0716
+     }
+    },
+    {
+     "time": 0.607143,
+     "pose": {
+      "tilt": 8.3859
+     }
+    },
+    {
+     "time": 0.625,
+     "pose": {
+      "tilt": 7.7002
+     }
+    },
+    {
+     "time": 0.642857,
+     "pose": {
+      "tilt": 7.0146
+     }
+    },
+    {
+     "time": 0.660714,
+     "pose": {
+      "tilt": 6.3289
+     }
+    },
+    {
+     "time": 0.678571,
+     "pose": {
+      "tilt": 5.6432
+     }
+    },
+    {
+     "time": 0.696429,
+     "pose": {
+      "tilt": 4.9575
+     }
+    },
+    {
+     "time": 0.714286,
+     "pose": {
+      "tilt": 4.2718
+     }
+    },
+    {
+     "time": 0.732143,
+     "pose": {
+      "tilt": 3.5862
+     }
+    },
+    {
+     "time": 0.75,
+     "pose": {
+      "tilt": 2.9005
+     }
+    },
+    {
+     "time": 0.767857,
+     "pose": {
+      "tilt": 2.2148
+     }
+    },
+    {
+     "time": 0.785714,
+     "pose": {
+      "tilt": 1.5291
+     }
+    },
+    {
+     "time": 0.803571,
+     "pose": {
+      "tilt": 0.8434
+     }
+    },
+    {
+     "time": 0.821429,
+     "pose": {
+      "tilt": 0.1578
+     }
+    },
+    {
+     "time": 0.839286,
+     "pose": {
+      "tilt": -0.5279
+     }
+    },
+    {
+     "time": 0.857143,
+     "pose": {
+      "tilt": -1.2136
+     }
+    },
+    {
+     "time": 0.875,
+     "pose": {
+      "tilt": -1.8993
+     }
+    },
+    {
+     "time": 0.892857,
+     "pose": {
+      "tilt": -2.585
+     }
+    },
+    {
+     "time": 0.910714,
+     "pose": {
+      "tilt": -3.2706
+     }
+    },
+    {
+     "time": 0.928571,
+     "pose": {
+      "tilt": -3.8931
+     }
+    },
+    {
+     "time": 0.946429,
+     "pose": {
+      "tilt": -4.3774
+     }
+    },
+    {
+     "time": 0.964286,
+     "pose": {
+      "tilt": -4.7233
+     }
+    },
+    {
+     "time": 0.982143,
+     "pose": {
+      "tilt": -4.9308
+     }
+    },
+    {
+     "time": 1,
+     "pose": {
+      "tilt": -5
+     }
+    }
+   ]
+  },
+  {
+   "id": "d-lift",
+   "lane": "lift",
+   "kind": "lift",
+   "start": 17.83,
+   "duration": 3.19,
+   "easing": "linear",
+   "label": "",
+   "target": 45,
+   "path": [
+    {
+     "time": 0,
+     "pose": {
+      "height": 28
+     }
+    },
+    {
+     "time": 0.031348,
+     "pose": {
+      "height": 28.0444
+     }
+    },
+    {
+     "time": 0.062696,
+     "pose": {
+      "height": 28.1778
+     }
+    },
+    {
+     "time": 0.094044,
+     "pose": {
+      "height": 28.4
+     }
+    },
+    {
+     "time": 0.125392,
+     "pose": {
+      "height": 28.7111
+     }
+    },
+    {
+     "time": 0.15674,
+     "pose": {
+      "height": 29.1111
+     }
+    },
+    {
+     "time": 0.188088,
+     "pose": {
+      "height": 29.5556
+     }
+    },
+    {
+     "time": 0.219436,
+     "pose": {
+      "height": 30
+     }
+    },
+    {
+     "time": 0.250784,
+     "pose": {
+      "height": 30.4444
+     }
+    },
+    {
+     "time": 0.282132,
+     "pose": {
+      "height": 30.8889
+     }
+    },
+    {
+     "time": 0.31348,
+     "pose": {
+      "height": 31.3333
+     }
+    },
+    {
+     "time": 0.344828,
+     "pose": {
+      "height": 31.7778
+     }
+    },
+    {
+     "time": 0.376176,
+     "pose": {
+      "height": 32.2222
+     }
+    },
+    {
+     "time": 0.407524,
+     "pose": {
+      "height": 32.6667
+     }
+    },
+    {
+     "time": 0.438871,
+     "pose": {
+      "height": 33.1111
+     }
+    },
+    {
+     "time": 0.470219,
+     "pose": {
+      "height": 33.5556
+     }
+    },
+    {
+     "time": 0.501567,
+     "pose": {
+      "height": 34
+     }
+    },
+    {
+     "time": 0.532915,
+     "pose": {
+      "height": 34.4444
+     }
+    },
+    {
+     "time": 0.564263,
+     "pose": {
+      "height": 34.8889
+     }
+    },
+    {
+     "time": 0.595611,
+     "pose": {
+      "height": 35.3333
+     }
+    },
+    {
+     "time": 0.626959,
+     "pose": {
+      "height": 35.7778
+     }
+    },
+    {
+     "time": 0.658307,
+     "pose": {
+      "height": 36.2222
+     }
+    },
+    {
+     "time": 0.689655,
+     "pose": {
+      "height": 36.6667
+     }
+    },
+    {
+     "time": 0.721003,
+     "pose": {
+      "height": 37.1111
+     }
+    },
+    {
+     "time": 0.752351,
+     "pose": {
+      "height": 37.5556
+     }
+    },
+    {
+     "time": 0.783699,
+     "pose": {
+      "height": 38
+     }
+    },
+    {
+     "time": 0.815047,
+     "pose": {
+      "height": 38.4444
+     }
+    },
+    {
+     "time": 0.846395,
+     "pose": {
+      "height": 38.8889
+     }
+    },
+    {
+     "time": 0.877743,
+     "pose": {
+      "height": 39.2889
+     }
+    },
+    {
+     "time": 0.909091,
+     "pose": {
+      "height": 39.6
+     }
+    },
+    {
+     "time": 0.940439,
+     "pose": {
+      "height": 39.8222
+     }
+    },
+    {
+     "time": 0.971787,
+     "pose": {
+      "height": 39.9556
+     }
+    },
+    {
+     "time": 1,
+     "pose": {
+      "height": 39.9956
+     }
+    }
+   ]
+  },
+  {
+   "id": "g-tilt",
+   "lane": "tilt",
+   "kind": "tilt",
+   "start": 18.53,
+   "duration": 3.17,
+   "easing": "linear",
+   "label": "",
+   "target": -5,
+   "path": [
+    {
+     "time": 0,
+     "pose": {
+      "tilt": -5
+     }
+    },
+    {
+     "time": 1,
+     "pose": {
+      "tilt": -5
+     }
+    }
+   ]
+  }
+ ],
+ "initial": {
+  "height": 52.5,
+  "tilt": 65
+ },
+ "props": [
+  {
+   "match": "^Accessory:artist-easel$",
+   "label": "Accessory:artist-easel",
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 6.63,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:painter-shelf$",
+   "label": "Accessory:painter-shelf",
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 6.63,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large"
+   },
+   "id": "mys3r28ti",
+   "match": "^Added prop:ergoflex-side-shelf-large#mys3r28ti$",
+   "label": "Side shelf \u00b7 large",
+   "parent": "base-shelf",
+   "position": [
+    0.938,
+    0.025,
+    -0.119
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 6.63,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large"
+   },
+   "id": "od9s27p2e",
+   "match": "^Added prop:ergoflex-side-shelf-large#od9s27p2e$",
+   "label": "Side shelf \u00b7 large",
+   "parent": "base-shelf",
+   "position": [
+    -0.923,
+    0.024,
+    -0.113
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 6.63,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-small"
+   },
+   "id": "wjdm9pvoq",
+   "match": "^Added prop:ergoflex-side-shelf-small#wjdm9pvoq$",
+   "label": "Side shelf \u00b7 small",
+   "parent": "shelf",
+   "position": [
+    0.945,
+    -0.168,
+    0.098
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 6.63,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-small"
+   },
+   "id": "ty7t6ksvx",
+   "match": "^Added prop:ergoflex-side-shelf-small#ty7t6ksvx$",
+   "label": "Side shelf \u00b7 small",
+   "parent": "shelf",
+   "position": [
+    -0.944,
+    -0.175,
+    0.116
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 6.63,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large-cubby"
+   },
+   "id": "ubuyk82ct",
+   "match": "^Added prop:ergoflex-side-shelf-large-cubby#ubuyk82ct$",
+   "label": "Side shelf \u00b7 large, cubby and cups",
+   "parent": "desk",
+   "position": [
+    -1.123,
+    -0.034,
+    0.288
+   ],
+   "rotation": [
+    -58.7,
+    90,
+    0
+   ],
+   "scale": [
+    -1,
+    1,
+    1
+   ],
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 6.63,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:monitor-arm$",
+   "label": "Accessory:monitor-arm",
+   "hide": true,
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 6.63,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:flat-monitor$",
+   "label": "Accessory:flat-monitor",
+   "hide": true,
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 6.63,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-dual-monitor-arm-compact"
+   },
+   "id": "qcobypzmi",
+   "match": "^Added prop:ergoflex-dual-monitor-arm-compact#qcobypzmi$",
+   "label": "Dual monitor arms \u00b7 extended",
+   "parent": "shelf",
+   "position": [
+    0,
+    -0.046,
+    0.124
+   ],
+   "rotation": [
+    -180,
+    3.5,
+    -180
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "artist"
+  },
+  {
+   "add": {
+    "asset": "ergoflex-portrait-monitor"
+   },
+   "id": "bvm1mxp20",
+   "match": "^Added prop:ergoflex-portrait-monitor#bvm1mxp20$",
+   "label": "ProVision Ultra 32\u2033 \u00b7 portrait panel",
+   "parent": "shelf",
+   "position": [
+    -0.534,
+    -0.187,
+    0.464
+   ],
+   "rotation": [
+    0,
+    7.8,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "artist"
+  },
+  {
+   "add": {
+    "asset": "ergoflex-wide-monitor"
+   },
+   "id": "j7rkts842",
+   "match": "^Added prop:ergoflex-wide-monitor#j7rkts842$",
+   "label": "AETHER 34UW \u00b7 curved ultrawide",
+   "parent": "shelf",
+   "position": [
+    0.474,
+    0.127,
+    0.55
+   ],
+   "rotation": [
+    0,
+    -13.2,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "artist"
+  },
+  {
+   "match": "^Accessory:cable-tray$",
+   "label": "Accessory:cable-tray",
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large"
+   },
+   "id": "1zr1k8lwb",
+   "match": "^Added prop:ergoflex-side-shelf-large#1zr1k8lwb$",
+   "label": "Side shelf \u00b7 large",
+   "parent": "base-shelf",
+   "position": [
+    -0.923,
+    0.024,
+    -0.113
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large-cubby"
+   },
+   "id": "4lq1al8mj",
+   "match": "^Added prop:ergoflex-side-shelf-large-cubby#4lq1al8mj$",
+   "label": "Side shelf \u00b7 large, cubby and cups",
+   "parent": "desk",
+   "position": [
+    -1.117,
+    -0.191,
+    0.493
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    -1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large-cubby"
+   },
+   "id": "zq7lk6r1w",
+   "match": "^Added prop:ergoflex-side-shelf-large-cubby#zq7lk6r1w$",
+   "label": "Side shelf \u00b7 large, cubby and cups",
+   "parent": "desk",
+   "position": [
+    1.112,
+    -0.191,
+    0.493
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large"
+   },
+   "id": "mq9mg01h7",
+   "match": "^Added prop:ergoflex-side-shelf-large#mq9mg01h7$",
+   "label": "Side shelf \u00b7 large",
+   "parent": "base-shelf",
+   "position": [
+    0.926,
+    0.025,
+    -0.119
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:portrait-monitor$",
+   "label": "Accessory:portrait-monitor",
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:logitech-mx-master$",
+   "label": "Accessory:logitech-mx-master",
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:keyboard-tray$",
+   "label": "Accessory:keyboard-tray",
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:ergo-keyboard$",
+   "label": "Accessory:ergo-keyboard",
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Prop:tablet-folder$",
+   "label": "Prop:tablet-folder",
+   "rotation": [
+    1,
+    -36.3,
+    4.6
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Prop:pen$",
+   "label": "Prop:pen",
+   "space": "local",
+   "position": [
+    -0.557,
+    -0.111,
+    0.164
+   ],
+   "rotation": [
+    58.3,
+    -34.1,
+    -77.3
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Prop:glasses-3$",
+   "label": "Prop:glasses-3",
+   "space": "local",
+   "position": [
+    -0.769,
+    -0.06,
+    0.06
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Prop:calculator$",
+   "label": "Prop:calculator",
+   "space": "local",
+   "position": [
+    0.017,
+    -0.006,
+    -0.052
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Prop:insulated-mug$",
+   "label": "Prop:insulated-mug",
+   "space": "local",
+   "position": [
+    0.329,
+    -0.166,
+    0.37
+   ],
+   "scale": [
+    0.7,
+    0.7,
+    0.7
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:obsbot-tiny-2$",
+   "label": "Accessory:obsbot-tiny-2",
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:monitor-arm-2$",
+   "label": "Accessory:monitor-arm-2",
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:wide-monitor$",
+   "label": "Accessory:wide-monitor",
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:cable-tray$",
+   "label": "Accessory:cable-tray",
+   "desk": "gaming",
+   "show": {
+    "from": 0,
+    "to": 5.72,
+    "fadeOut": 0.55
+   }
+  },
+  {
+   "match": "^Accessory:logitech-mx-master$",
+   "label": "Accessory:logitech-mx-master",
+   "desk": "gaming",
+   "show": {
+    "from": 0,
+    "to": 5.72,
+    "fadeOut": 0.55
+   }
+  },
+  {
+   "match": "^Accessory:keyboard-tray$",
+   "label": "Accessory:keyboard-tray",
+   "desk": "gaming",
+   "show": {
+    "from": 0,
+    "to": 5.72,
+    "fadeOut": 0.55
+   }
+  },
+  {
+   "match": "^Accessory:ergo-keyboard$",
+   "label": "Accessory:ergo-keyboard",
+   "desk": "gaming",
+   "show": {
+    "from": 0,
+    "to": 5.72,
+    "fadeOut": 0.55
+   }
+  },
+  {
+   "match": "^Accessory:monitor-arm$",
+   "label": "Accessory:monitor-arm",
+   "desk": "gaming",
+   "show": {
+    "from": 0,
+    "to": 5.72,
+    "fadeOut": 0.55
+   }
+  },
+  {
+   "match": "^Accessory:wide-monitor$",
+   "label": "Accessory:wide-monitor",
+   "desk": "gaming",
+   "show": {
+    "from": 0,
+    "to": 5.72,
+    "fadeOut": 0.55
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-office-pen-cup"
+   },
+   "id": "hdofficepe",
+   "match": "^Added prop:herodesk-office-pen-cup#hdofficepe$",
+   "label": "Pens, pencil, highlighter and scissors (for the cubby cup)",
+   "parent": "desk",
+   "position": [
+    -1.3109,
+    -0.1849,
+    0.4497
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-mic-boom-arm"
+   },
+   "id": "hdmicbooma",
+   "match": "^Added prop:ergoflex-mic-boom-arm#hdmicbooma$",
+   "label": "ErgoFlex mic boom arm on the accessory port (posed for the office desk, right port)",
+   "parent": "shelf",
+   "position": [
+    0.8264,
+    -0.054,
+    0.3821
+   ],
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-art-brushes"
+   },
+   "id": "hdartbrush",
+   "match": "^Added prop:herodesk-art-brushes#hdartbrush$",
+   "label": "Paint brushes (8, for the cubby cup)",
+   "parent": "desk",
+   "position": [
+    -1.3169,
+    -0.0679,
+    0.2603
+   ],
+   "rotation": [
+    -58.7,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 6.63,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-art-tools"
+   },
+   "id": "hdarttools",
+   "match": "^Added prop:herodesk-art-tools#hdarttools$",
+   "label": "Markers, palette knives and pencils (for the cubby)",
+   "parent": "desk",
+   "position": [
+    -1.3169,
+    0.1252,
+    0.3777
+   ],
+   "rotation": [
+    -58.7,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 6.63,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-art-paint-jars"
+   },
+   "id": "hdartpaint",
+   "match": "^Added prop:herodesk-art-paint-jars#hdartpaint$",
+   "label": "Paint jars (ultramarine, cadmium red, ochre, sap green)",
+   "parent": "shelf",
+   "position": [
+    -1.008,
+    -0.1465,
+    0.172
+   ],
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 6.63,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-art-swatches"
+   },
+   "id": "hdartswatc",
+   "match": "^Added prop:herodesk-art-swatches#hdartswatc$",
+   "label": "Colour swatch fan deck",
+   "parent": "shelf",
+   "position": [
+    -0.928,
+    -0.1465,
+    0.084
+   ],
+   "rotation": [
+    0,
+    25,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 6.63,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:task-light$",
+   "label": "Accessory:task-light",
+   "space": "local",
+   "position": [
+    0.042,
+    -0.016,
+    -0.12
+   ],
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 6.63,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-art-case"
+   },
+   "id": "hdartcase",
+   "match": "^Added prop:herodesk-art-case#hdartcase$",
+   "label": "Wooden art case (beech, brass corners, leather handle)",
+   "parent": "base-shelf",
+   "position": [
+    0.962,
+    0.054,
+    -0.119
+   ],
+   "rotation": [
+    -180,
+    -89.1,
+    -180
+   ],
+   "scale": [
+    0.75,
+    0.75,
+    0.75
+   ],
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 6.63,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-art-sketchbooks"
+   },
+   "id": "hdartsketc",
+   "match": "^Added prop:herodesk-art-sketchbooks#hdartsketc$",
+   "label": "Sketchbook stack (A4 hardcover, A5 kraft, pocket book)",
+   "parent": "base-shelf",
+   "position": [
+    -0.947,
+    0.053,
+    -0.113
+   ],
+   "rotation": [
+    0,
+    1,
+    0
+   ],
+   "scale": [
+    0.7,
+    0.7,
+    0.7
+   ],
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 6.63,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-art-canvas"
+   },
+   "id": "hdartcanva",
+   "match": "^Added prop:herodesk-art-canvas#hdartcanva$",
+   "label": "Small canvas on a table easel (lakeside dusk oil study)",
+   "parent": "shelf",
+   "position": [
+    1.019,
+    -0.155,
+    0.17
+   ],
+   "rotation": [
+    0,
+    39.1,
+    0
+   ],
+   "scale": [
+    0.45,
+    0.45,
+    0.45
+   ],
+   "desk": "artist",
+   "show": {
+    "from": 0,
+    "to": 6.63,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-office-files"
+   },
+   "id": "hdofficefi",
+   "match": "^Added prop:herodesk-office-files#hdofficefi$",
+   "label": "Tidy files (2 lever-arch binders, slim file)",
+   "parent": "base-shelf",
+   "position": [
+    -0.947,
+    0.053,
+    -0.113
+   ],
+   "rotation": [
+    180,
+    1.8,
+    -180
+   ],
+   "scale": [
+    0.55,
+    0.55,
+    0.55
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-office-briefcase"
+   },
+   "id": "hdofficebr",
+   "match": "^Added prop:herodesk-office-briefcase#hdofficebr$",
+   "label": "Leather attach\u00e9 briefcase (chestnut, brass)",
+   "parent": "base-shelf",
+   "position": [
+    0.95,
+    0.0538,
+    -0.119
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    0.6,
+    0.6,
+    0.6
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-office-photo-frame"
+   },
+   "id": "hdofficeph",
+   "match": "^Added prop:herodesk-office-photo-frame#hdofficeph$",
+   "label": "Framed photo (5x7 in, walnut, beach at golden hour)",
+   "parent": "shelf",
+   "position": [
+    -0.9882,
+    -0.1241,
+    0.217
+   ],
+   "rotation": [
+    0,
+    -18.8,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-small"
+   },
+   "id": "o51inok91",
+   "match": "^Added prop:ergoflex-side-shelf-small#o51inok91$",
+   "label": "Side shelf \u00b7 small",
+   "parent": "shelf",
+   "position": [
+    -0.944,
+    -0.175,
+    0.116
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.86,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-small"
+   },
+   "id": "hvv5x6erf",
+   "match": "^Added prop:ergoflex-side-shelf-small#hvv5x6erf$",
+   "label": "Side shelf \u00b7 small",
+   "parent": "shelf",
+   "position": [
+    0.945,
+    -0.168,
+    0.098
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.86,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-office-plant"
+   },
+   "id": "hdofficepl",
+   "match": "^Added prop:herodesk-office-plant#hdofficepl$",
+   "label": "Snake plant in a white ceramic pot (fits the cubby cup)",
+   "parent": "shelf",
+   "position": [
+    0.945,
+    -0.1395,
+    0.098
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-office-phone"
+   },
+   "id": "hdofficeph",
+   "match": "^Added prop:herodesk-office-phone#hdofficeph$",
+   "label": "Smartphone (stands in the cubby slot)",
+   "parent": "desk",
+   "position": [
+    1.299,
+    -0.184,
+    0.669
+   ],
+   "rotation": [
+    42,
+    -81.7,
+    36.7
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "office",
+   "show": {
+    "from": 1.8,
+    "to": 7.83,
+    "fadeIn": 0.25,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:task-light$",
+   "label": "Accessory:task-light",
+   "desk": "architect",
+   "show": {
+    "from": 0.96,
+    "to": 5.41,
+    "fadeIn": 0.4,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:drafting-kit$",
+   "label": "Accessory:drafting-kit",
+   "desk": "architect",
+   "show": {
+    "from": 0.96,
+    "to": 5.41,
+    "fadeIn": 0.4,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "match": "^Accessory:easel-rail$",
+   "label": "Accessory:easel-rail",
+   "desk": "architect",
+   "show": {
+    "from": 0.96,
+    "to": 5.41,
+    "fadeIn": 0.4,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-wide-monitor"
+   },
+   "id": "gvmdrt6n4",
+   "match": "^Added prop:ergoflex-wide-monitor#gvmdrt6n4$",
+   "label": "AETHER 34UW \u00b7 curved ultrawide",
+   "parent": "shelf",
+   "position": [
+    0,
+    0,
+    0.504
+   ],
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    1.1,
+    1.1,
+    1.1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.96,
+    "to": 5.41,
+    "fadeIn": 0.4,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-single-monitor-arm"
+   },
+   "id": "10y4a92rf",
+   "match": "^Added prop:ergoflex-single-monitor-arm#10y4a92rf$",
+   "label": "Single monitor arm",
+   "parent": "shelf",
+   "position": [
+    0,
+    0,
+    0.082
+   ],
+   "rotation": [
+    -180,
+    -87.2,
+    -180
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.96,
+    "to": 5.41,
+    "fadeIn": 0.4,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large"
+   },
+   "id": "6fdq03ibv",
+   "match": "^Added prop:ergoflex-side-shelf-large#6fdq03ibv$",
+   "label": "Side shelf \u00b7 large",
+   "parent": "base-shelf",
+   "position": [
+    0.938,
+    0.025,
+    -0.119
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.96,
+    "to": 5.41,
+    "fadeIn": 0.4,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large"
+   },
+   "id": "6f52lf1nf",
+   "match": "^Added prop:ergoflex-side-shelf-large#6f52lf1nf$",
+   "label": "Side shelf \u00b7 large",
+   "parent": "base-shelf",
+   "position": [
+    -0.923,
+    0.024,
+    -0.113
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.96,
+    "to": 5.41,
+    "fadeIn": 0.4,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-small"
+   },
+   "id": "wd4hxbong",
+   "match": "^Added prop:ergoflex-side-shelf-small#wd4hxbong$",
+   "label": "Side shelf \u00b7 small",
+   "parent": "shelf",
+   "position": [
+    -0.944,
+    -0.175,
+    0.116
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.96,
+    "to": 5.41,
+    "fadeIn": 0.4,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-small"
+   },
+   "id": "fi8308l2v",
+   "match": "^Added prop:ergoflex-side-shelf-small#fi8308l2v$",
+   "label": "Side shelf \u00b7 small",
+   "parent": "shelf",
+   "position": [
+    0.945,
+    -0.168,
+    0.098
+   ],
+   "rotation": [
+    0,
+    -90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.96,
+    "to": 5.41,
+    "fadeIn": 0.4,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-shelf-large-cubby"
+   },
+   "id": "kwdk8pqfc",
+   "match": "^Added prop:ergoflex-side-shelf-large-cubby#kwdk8pqfc$",
+   "label": "Side shelf \u00b7 large, cubby and cups",
+   "parent": "desk",
+   "position": [
+    -1.137,
+    -0.183,
+    0.306
+   ],
+   "rotation": [
+    -17.4,
+    90,
+    0
+   ],
+   "scale": [
+    -1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.96,
+    "to": 5.41,
+    "fadeIn": 0.4,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "ergoflex-side-cup-holder"
+   },
+   "id": "evb37kaue",
+   "match": "^Added prop:ergoflex-side-cup-holder#evb37kaue$",
+   "label": "Side cup holder \u00b7 acrylic",
+   "parent": "desk",
+   "position": [
+    1.079,
+    -0.237,
+    0.096
+   ],
+   "rotation": [
+    -31.7,
+    -84.6,
+    -15.5
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.96,
+    "to": 5.41,
+    "fadeIn": 0.4,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-arch-cup-fill"
+   },
+   "id": "hdarchcupf",
+   "match": "^Added prop:herodesk-arch-cup-fill#hdarchcupf$",
+   "label": "Drafting pencils, fineliners and a compass (for the cubby cup)",
+   "parent": "desk",
+   "position": [
+    -1.3309,
+    -0.1902,
+    0.2628
+   ],
+   "rotation": [
+    -17.4,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.96,
+    "to": 5.41,
+    "fadeIn": 0.4,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-arch-trace-roll"
+   },
+   "id": "hdarchtrac",
+   "match": "^Added prop:herodesk-arch-trace-roll#hdarchtrac$",
+   "label": "Yellow tracing-paper roll (12 in) with a pulled-out sheet",
+   "parent": "desk",
+   "position": [
+    -0.9771,
+    0.0016,
+    0.1705
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.96,
+    "to": 5.41,
+    "fadeIn": 0.4,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-arch-rolls"
+   },
+   "id": "hdarchroll",
+   "match": "^Added prop:herodesk-arch-rolls#hdarchroll$",
+   "label": "Rolled drawings (white, blueprint, kraft)",
+   "parent": "desk",
+   "position": [
+    1.2854,
+    -0.2429,
+    0.076
+   ],
+   "rotation": [
+    -31.7,
+    -84.6,
+    -15.5
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.96,
+    "to": 5.41,
+    "fadeIn": 0.4,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-arch-coffee"
+   },
+   "id": "hdarchcoff",
+   "match": "^Added prop:herodesk-arch-coffee#hdarchcoff$",
+   "label": "Coffee mug (charcoal ceramic)",
+   "parent": "shelf",
+   "position": [
+    0.945,
+    -0.1395,
+    0.098
+   ],
+   "rotation": [
+    0,
+    -35,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.96,
+    "to": 5.41,
+    "fadeIn": 0.4,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-arch-model-house"
+   },
+   "id": "hdarchmode",
+   "match": "^Added prop:herodesk-arch-model-house#hdarchmode$",
+   "label": "Study model house (white card, basswood; a variant of House A)",
+   "parent": "shelf",
+   "position": [
+    -0.9741,
+    -0.1465,
+    0.116
+   ],
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    0.9,
+    0.9,
+    0.9
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.96,
+    "to": 5.41,
+    "fadeIn": 0.4,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-arch-scale-ruler"
+   },
+   "id": "hdarchscal",
+   "match": "^Added prop:herodesk-arch-scale-ruler#hdarchscal$",
+   "label": "Triangular architect scale ruler (1:100 / 1:200 / 1:500)",
+   "parent": "desk",
+   "position": [
+    0.68,
+    0.0272,
+    0.08
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.96,
+    "to": 5.41,
+    "fadeIn": 0.4,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "herodesk-arch-tube"
+   },
+   "id": "hdarchtube",
+   "match": "^Added prop:herodesk-arch-tube#hdarchtube$",
+   "label": "Telescoping drawing tube (black)",
+   "parent": "base-shelf",
+   "position": [
+    1.0179,
+    0.0538,
+    -0.2789
+   ],
+   "rotation": [
+    0,
+    90,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.96,
+    "to": 5.41,
+    "fadeIn": 0.4,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "retro-camera"
+   },
+   "id": "hpropcam",
+   "match": "^Added prop:retro-camera#hpropcam$",
+   "label": "Site-survey camera (little side shelf)",
+   "parent": "base-shelf",
+   "position": [
+    -0.923,
+    0.054,
+    -0.113
+   ],
+   "rotation": [
+    0,
+    55,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.96,
+    "to": 5.41,
+    "fadeIn": 0.4,
+    "fadeOut": 0.3
+   }
+  },
+  {
+   "add": {
+    "asset": "paper-drawer"
+   },
+   "id": "hpropflat",
+   "match": "^Added prop:paper-drawer#hpropflat$",
+   "label": "Drawing-sheet drawers (base shelf)",
+   "parent": "base-shelf",
+   "position": [
+    0.4,
+    0,
+    0
+   ],
+   "rotation": [
+    0,
+    0,
+    0
+   ],
+   "scale": [
+    1,
+    1,
+    1
+   ],
+   "desk": "architect",
+   "show": {
+    "from": 0.96,
+    "to": 5.41,
+    "fadeIn": 0.4,
+    "fadeOut": 0.3
+   }
+  }
+ ],
+ "finishFades": {
+  "H": {
+   "at": [
+    20.7,
+    21.95
+   ],
+   "set": {
+    "deskFinish": {
+     "wood": "Pearl White",
+     "base": "White",
+     "trim": "#f5f5f2"
+    },
+    "ledColor": "#fff6ea",
+    "ledGlow": 0.06,
+    "lights": [
+     {
+      "preset": "productRig",
+      "key": {
+       "at": {
+        "az": 35,
+        "el": 22,
+        "dist": 3.4
+       },
+       "width": 2.6,
+       "height": 1.3,
+       "intensity": 11
+      },
+      "rimLeft": {
+       "at": {
+        "az": 135,
+        "el": 45,
+        "dist": 3.6
+       },
+       "intensity": 34
+      },
+      "rimRight": {
+       "at": {
+        "az": -135,
+        "el": 45,
+        "dist": 3.6
+       },
+       "intensity": 34
+      },
+      "pool": {
+       "strength": 0.3
+      },
+      "contact": {
+       "opacity": 0.8
+      }
+     },
+     {
+      "type": "rect",
+      "name": "kicker",
+      "at": {
+       "az": 180,
+       "el": 25,
+       "dist": 3.2
+      },
+      "width": 0.5,
+      "height": 2,
+      "color": "#eef1ff",
+      "intensity": 7
+     },
+     {
+      "type": "rect",
+      "name": "frontLow",
+      "at": {
+       "az": -45,
+       "el": 8,
+       "dist": 4
+      },
+      "width": 1.2,
+      "height": 0.6,
+      "color": "#fff0e0",
+      "intensity": 1.8
+     }
+    ],
+    "sceneGlobals": {
+     "environmentScale": 0.4,
+     "exposure": 0.57
+    }
+   }
+  }
+ },
+ "versions": [
+  {
+   "n": "I",
+   "preset": "artist",
+   "name": "Pearl White",
+   "start": 0.0,
+   "end": 1.55,
+   "look": "blank-pearl"
+  },
+  {
+   "n": "B",
+   "preset": "artist",
+   "name": "",
+   "start": 0.95,
+   "end": 7.14,
+   "finish": {
+    "wood": "Deep Navy",
+    "trim": "#242249"
+   }
+  },
+  {
+   "n": "C",
+   "preset": "architect",
+   "name": "",
+   "start": 6.54,
+   "end": 12.25,
+   "finish": {
+    "trim": "#fbfbe4"
+   }
+  },
+  {
+   "n": "D",
+   "preset": "office",
+   "name": "",
+   "start": 11.65,
+   "end": 18.58,
+   "finish": {
+    "wood": "Modern Grey",
+    "trim": "#9198a1"
+   }
+  },
+  {
+   "n": "H",
+   "preset": "gaming",
+   "name": "",
+   "start": 16.58,
+   "end": 27.45
+  }
+ ],
+ "versionLibrary": [
+  {
+   "id": "hero",
+   "subshot": "E",
+   "renderRange": [
+    25.69,
+    31.29
+   ],
+   "kind": "hero",
+   "preset": "library",
+   "lights": [
+    {
+     "preset": "productRig",
+     "key": {
+      "at": {
+       "az": 35,
+       "el": 22,
+       "dist": 3.4
+      },
+      "width": 2.6,
+      "height": 1.3,
+      "intensity": [
+       [
+        0,
+        30
+       ],
+       [
+        4,
+        30
+       ],
+       [
+        4.55,
+        4
+       ],
+       [
+        6.87,
+        4
+       ],
+       [
+        8.64,
+        12
+       ],
+       [
+        9.96,
+        10
+       ],
+       [
+        13.3,
+        10
+       ],
+       [
+        15,
+        30
+       ]
+      ]
+     },
+     "rimLeft": {
+      "at": {
+       "az": 135,
+       "el": 45,
+       "dist": 3.6
+      },
+      "intensity": 170
+     },
+     "rimRight": {
+      "at": {
+       "az": -135,
+       "el": 45,
+       "dist": 3.6
+      },
+      "intensity": 170
+     },
+     "pool": {
+      "strength": 0.3
+     },
+     "contact": {
+      "opacity": 0.8
+     }
+    },
+    {
+     "type": "rect",
+     "name": "kicker",
+     "at": {
+      "az": 180,
+      "el": 25,
+      "dist": 3.2
+     },
+     "width": 0.5,
+     "height": 2,
+     "color": "#eef1ff",
+     "intensity": 18
+    },
+    {
+     "type": "rect",
+     "name": "frontLow",
+     "at": {
+      "az": -45,
+      "el": 8,
+      "dist": 4
+     },
+     "width": 1.2,
+     "height": 0.6,
+     "color": "#fff0e0",
+     "intensity": 6
+    }
+   ],
+   "sceneEdits": [
+    {
+     "match": "@grid",
+     "opacity": [
+      [
+       0,
+       0.35
+      ],
+      [
+       34.22,
+       0.25
+      ],
+      [
+       39.54,
+       0
+      ]
+     ],
+     "radialFade": [
+      3,
+      8
+     ]
+    },
+    {
+     "match": "@pulse",
+     "opacity": [
+      [
+       0,
+       1
+      ],
+      [
+       34.22,
+       0.6
+      ],
+      [
+       39.54,
+       0
+      ]
+     ]
+    },
+    {
+     "lightType": "DirectionalLight",
+     "intensity": 0.45
+    },
+    {
+     "lightType": "HemisphereLight",
+     "intensity": 0.5
+    },
+    {
+     "match": "@stageLight",
+     "intensity": 0.5
+    },
+    {
+     "match": "^Accessory:artist-easel$",
+     "label": "Accessory:artist-easel",
+     "desk": "artist",
+     "show": {
+      "from": 0,
+      "to": 7.2
+     },
+     "director": true
+    },
+    {
+     "match": "^Accessory:painter-shelf$",
+     "label": "Accessory:painter-shelf",
+     "desk": "artist",
+     "show": {
+      "from": 0,
+      "to": 7.8
+     },
+     "director": true
+    }
+   ],
+   "screens": [],
+   "sceneGlobals": {
+    "environmentScale": 0.4,
+    "exposure": 0.8
+   }
+  },
+  {
+   "id": "hero",
+   "subshot": "F",
+   "renderRange": [
+    30.29,
+    34.52
+   ],
+   "kind": "hero",
+   "preset": "hbhs",
+   "lights": [
+    {
+     "preset": "productRig",
+     "key": {
+      "at": {
+       "az": 35,
+       "el": 22,
+       "dist": 3.4
+      },
+      "width": 2.6,
+      "height": 1.3,
+      "intensity": [
+       [
+        0,
+        30
+       ],
+       [
+        4,
+        30
+       ],
+       [
+        4.55,
+        4
+       ],
+       [
+        6.87,
+        4
+       ],
+       [
+        8.64,
+        12
+       ],
+       [
+        9.96,
+        10
+       ],
+       [
+        13.3,
+        10
+       ],
+       [
+        15,
+        30
+       ]
+      ]
+     },
+     "rimLeft": {
+      "at": {
+       "az": 135,
+       "el": 45,
+       "dist": 3.6
+      },
+      "intensity": 170
+     },
+     "rimRight": {
+      "at": {
+       "az": -135,
+       "el": 45,
+       "dist": 3.6
+      },
+      "intensity": 170
+     },
+     "pool": {
+      "strength": 0.3
+     },
+     "contact": {
+      "opacity": 0.8
+     }
+    },
+    {
+     "type": "rect",
+     "name": "kicker",
+     "at": {
+      "az": 180,
+      "el": 25,
+      "dist": 3.2
+     },
+     "width": 0.5,
+     "height": 2,
+     "color": "#eef1ff",
+     "intensity": 26
+    },
+    {
+     "type": "rect",
+     "name": "frontLow",
+     "at": {
+      "az": -45,
+      "el": 8,
+      "dist": 4
+     },
+     "width": 1.2,
+     "height": 0.6,
+     "color": "#fff0e0",
+     "intensity": 6
+    }
+   ],
+   "sceneEdits": [
+    {
+     "match": "@grid",
+     "opacity": [
+      [
+       0,
+       0.35
+      ],
+      [
+       34.22,
+       0.25
+      ],
+      [
+       39.54,
+       0
+      ]
+     ],
+     "radialFade": [
+      3,
+      8
+     ]
+    },
+    {
+     "match": "@pulse",
+     "opacity": [
+      [
+       0,
+       1
+      ],
+      [
+       34.22,
+       0.6
+      ],
+      [
+       39.54,
+       0
+      ]
+     ]
+    },
+    {
+     "lightType": "DirectionalLight",
+     "intensity": 0.45
+    },
+    {
+     "lightType": "HemisphereLight",
+     "intensity": 0.5
+    },
+    {
+     "match": "@stageLight",
+     "intensity": 0.5
+    },
+    {
+     "match": "^(Desktop|Top_Shelf)(_\\d+)?$",
+     "material": {
+      "clearcoat": 0,
+      "specularIntensity": 0.05
+     }
+    },
+    {
+     "match": "^Accessory:artist-easel$",
+     "label": "Accessory:artist-easel",
+     "desk": "artist",
+     "show": {
+      "from": 0,
+      "to": 7.2
+     },
+     "director": true
+    },
+    {
+     "match": "^Accessory:painter-shelf$",
+     "label": "Accessory:painter-shelf",
+     "desk": "artist",
+     "show": {
+      "from": 0,
+      "to": 7.8
+     },
+     "director": true
+    }
+   ],
+   "screens": [
+    {
+     "target": "main-landscape",
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-hero-hbhs.mp4",
+     "offset": -8.99,
+     "loop": false
+    },
+    {
+     "target": "main-portrait",
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-oilers-portrait.mp4",
+     "offset": -29.29,
+     "loop": false
+    }
+   ],
+   "sceneGlobals": {
+    "environmentScale": 0.4,
+    "exposure": 0.95
+   },
+   "accessories": {}
+  },
+  {
+   "id": "hero",
+   "subshot": "G",
+   "renderRange": [
+    33.92,
+    39.07
+   ],
+   "kind": "hero",
+   "preset": "occ",
+   "lights": [
+    {
+     "preset": "productRig",
+     "key": {
+      "at": {
+       "az": 35,
+       "el": 22,
+       "dist": 3.4
+      },
+      "width": 2.6,
+      "height": 1.3,
+      "intensity": [
+       [
+        0,
+        30
+       ],
+       [
+        4,
+        30
+       ],
+       [
+        4.55,
+        4
+       ],
+       [
+        6.87,
+        4
+       ],
+       [
+        8.64,
+        12
+       ],
+       [
+        9.96,
+        10
+       ],
+       [
+        13.3,
+        10
+       ],
+       [
+        15,
+        30
+       ]
+      ]
+     },
+     "rimLeft": {
+      "at": {
+       "az": 135,
+       "el": 45,
+       "dist": 3.6
+      },
+      "intensity": 170
+     },
+     "rimRight": {
+      "at": {
+       "az": -135,
+       "el": 45,
+       "dist": 3.6
+      },
+      "intensity": 170
+     },
+     "pool": {
+      "strength": 0.3
+     },
+     "contact": {
+      "opacity": 0.8
+     }
+    },
+    {
+     "type": "rect",
+     "name": "kicker",
+     "at": {
+      "az": 180,
+      "el": 25,
+      "dist": 3.2
+     },
+     "width": 0.5,
+     "height": 2,
+     "color": "#eef1ff",
+     "intensity": 18
+    },
+    {
+     "type": "rect",
+     "name": "frontLow",
+     "at": {
+      "az": -45,
+      "el": 8,
+      "dist": 4
+     },
+     "width": 1.2,
+     "height": 0.6,
+     "color": "#fff0e0",
+     "intensity": 6
+    }
+   ],
+   "sceneEdits": [
+    {
+     "match": "@grid",
+     "opacity": [
+      [
+       0,
+       0.35
+      ],
+      [
+       34.22,
+       0.25
+      ],
+      [
+       39.54,
+       0
+      ]
+     ],
+     "radialFade": [
+      3,
+      8
+     ]
+    },
+    {
+     "match": "@pulse",
+     "opacity": [
+      [
+       0,
+       1
+      ],
+      [
+       34.22,
+       0.6
+      ],
+      [
+       39.54,
+       0
+      ]
+     ]
+    },
+    {
+     "lightType": "DirectionalLight",
+     "intensity": 0.45
+    },
+    {
+     "lightType": "HemisphereLight",
+     "intensity": 0.5
+    },
+    {
+     "match": "@stageLight",
+     "intensity": 0.5
+    },
+    {
+     "match": "^Accessory:artist-easel$",
+     "label": "Accessory:artist-easel",
+     "desk": "artist",
+     "show": {
+      "from": 0,
+      "to": 7.2
+     },
+     "director": true
+    },
+    {
+     "match": "^Accessory:painter-shelf$",
+     "label": "Accessory:painter-shelf",
+     "desk": "artist",
+     "show": {
+      "from": 0,
+      "to": 7.8
+     },
+     "director": true
+    }
+   ],
+   "screens": [
+    {
+     "target": "main-landscape",
+     "src": "exports/cinematic-intro-cut-cine/screens/cine-hero-occ.mp4",
+     "offset": -6.82,
+     "loop": false
+    }
+   ],
+   "sceneGlobals": {
+    "environmentScale": 0.4,
+    "exposure": 0.85
+   },
+   "accessories": {}
+  }
+ ]
+}
