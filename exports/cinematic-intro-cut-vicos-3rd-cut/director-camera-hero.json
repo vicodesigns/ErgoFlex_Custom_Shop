@@ -2424,9 +2424,8 @@
    ],
    "desk": "architect",
    "show": {
-    "from": 0.36,
+    "from": 0,
     "to": 5.41,
-    "fadeIn": 0.7,
     "fadeOut": 0.3
    }
   },
