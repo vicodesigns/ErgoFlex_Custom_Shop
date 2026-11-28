@@ -13,9 +13,11 @@ Base `origin/video/cinematic-intro-hq` 499a58ef9 (storage stores = b2f57a3c rest
   2.7-22 mm through the lift). That is what film 2 shows from 0.85 s to 2.1 s.
 
 ## This pass
-- Only finger curls (index/middle/ring/pinky, one bend per finger, all three joints) and thumb bases + thumb bend turn.
-  Limits: finger curls 25 deg or less, thumb base 20 deg or less. Never the upper arm, forearm or hand, so **both palms are exactly where the
-  fallback holds the robot** (palm contact unchanged by construction).
+- Only finger curls (index/middle/ring/pinky, one bend per finger, all three joints) and the RIGHT thumb turn
+  (limits: curls 25 deg or less, thumb base 20 deg or less). Never an upper arm, forearm or hand, and never the near
+  (left) thumb: the fallback's near-hand grip is its palm/thenar and thumb (7-10 mm into the robot), which is what reads
+  as holding it at film size, so that grip is kept exactly (allowed overlap). Removing the thumb from the robot (pass
+  hc3/hc4) moved the visible contact off: rejected.
 - A finger that touched or was inside the robot at a key is kept touching (its nearest skin 3 mm or less from the surface);
   the rest stay at least 0.5 mm outside. Palm skin may still overlap the robot (allowed: up to the fallback's 6-10 mm).
 - Keys every 0.1 s on the three robot postures; the 1.0 and 2.0 s keys equal the last key before the swap; the shelf's
@@ -27,7 +29,25 @@ Base `origin/video/cinematic-intro-hq` 499a58ef9 (storage stores = b2f57a3c rest
   `robot-motion-headless.mjs` (now also reports palm-to-robot distance per frame), `merge_keys.py`.
 
 ## Headless numbers
-(filled in below)
+Final state (commit after 035d8bded), exact triangle tests, production people code with the real GLBs, 60 fps:
+- Near palm to robot: equal to the fallback within 0.3 mm at every frame 0-2.55 s; 1.0-2.2 s (the carry) at most 3.5 mm
+  off the surface (palm on the robot), so the near hand never leaves it.
+- Near grip overlap (left palm + thumb): up to 10.0 mm (2.00 s), as the fallback (9.1 mm at 30 fps): kept on purpose.
+- All other skin: deepest 2.2 mm (left pinky tip, 2.18 s); 7/153 frames with more than 1 mm (left pinky 1.1-1.7 mm at
+  0.98-1.03 s, 2.18 s). Fallback: 8.3 mm (right thumb, all through 0-2.5 s) and left middle/ring 5-7.7 mm (0-0.8 s),
+  every frame.
+- After the release (2.55-4.5 s, stowed robot = the held robot's triangles at 2.54 s): every hand vertex at least 0.83 mm
+  outside (distance field; fallback right/left thumb 6-6.7 mm in at 2.57-2.67 s).
+- Robot motion unchanged (rigid to hand_r, which is not keyed): largest step 13.2 mm/frame (1.067 s), largest change 4.3 mm (2.033 s).
+- Ghost audit: no ghosts, no pops (1.0 / 2.0 / 2.548 s included); fastest Andre part 23 mm per 1/120 s (6.35 s walk, unchanged).
+- Only the robot postures and andre-lets-go change (field diff vs 499a58ef9); the phone postures are untouched.
+- Tests: people-pose-keys, room-people-robot, people-held, cinematic-cuts, room-people-motion pass.
+
+Other bugs found in my H2 tools on the way (fixed): the distance field read cells deeper than its band as outside; the
+tuner jumped between keys instead of walking the people motion at 240 Hz; keys nearer than 1/60 s (H2 had 1.967/1.983).
+
+Measurement limits: headless, not the stage; finger shapes (curls up to 25 deg) and the pinky/thumb at the 1.0 s swap
+are not visually checked; the stowed robot after 2.548 s is taken as the held robot's own triangles at 2.54 s.
 
 ## Still strip to look at before merging (GPU)
 Preconditions: watcher.log last line `queue: N jobs, ... new=0`, `C:\work\gpu.lock` absent, `mkdir C:/Users/Vico/polish-wt/_stills-render.lock`.
