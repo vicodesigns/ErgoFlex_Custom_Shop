@@ -322,9 +322,33 @@ def logo_xy(L):
     return f"x=W*{L['x'] / 1920:.6f}-w/2:y=H*{L['y'] / 1080:.6f}-h/2"
 
 
+def end_card_ass(src, logo_png, total):
+    """ASS Dialogue lines of the end card's CTA (and cta.sub) for a CHAPTER file: seconds from the chapter's start, shown to the chapter's end
+    (rel_out if set), no fade-out. The same placement as the film's (main(): under the wordmark when cta.gap is set, else centred at y 904)."""
+    cta = src['cta']; L = end_logo(src['logo']); start = float(cta['rel_in']); cta_in = float(cta.get('fade_in', 0.9)); cta_px = int(cta.get('size', 46))
+    end = min(total, float(cta['rel_out'])) if cta.get('rel_out') is not None else total
+    if start >= end - 0.2: return []
+    out = []
+    if 'gap' in cta:
+        cy = L['y'] + 1920 * .22 * L['scale'] * logo_aspect(logo_png) / 2 + float(cta['gap']); cx = ass_num(cta.get('x', L['x']))
+        tags = (f'\\an8\\move({cx},{cy + 10:.1f},{cx},{cy:.1f},0,1100)\\fad({int(round(cta_in * 1000))},0)\\fs{cta_px}'
+                f'\\fn{cta.get("font", "Poppins Medium")}\\fsp{float(cta.get("spacing", 1.5)):g}\\blur4\\t(0,800,\\blur0)')
+        out.append(f'Dialogue: 1,{ts(start)},{ts(end)},CTA,,0,0,0,,{{{tags}}}{cta["text"]}')
+        sub = cta.get('sub')
+        if isinstance(sub, dict) and sub.get('text'):
+            sy = cy + cta_px * 1.762 + float(sub.get('gap', 6)); s_start = min(end - 0.2, start + float(sub.get('delay', 0.5)))
+            stags = (f'\\an8\\move({cx},{sy + 10:.1f},{cx},{sy:.1f},0,1100)\\fad({int(round(cta_in * 1000))},0)\\fs{int(sub.get("size", 30))}'
+                     f'\\fn{sub.get("font", "Poppins")}\\fsp{float(sub.get("spacing", 2.5)):g}\\1c&HE6DED6&\\blur4\\t(0,800,\\blur0)')
+            out.append(f'Dialogue: 1,{ts(s_start)},{ts(end)},CTA,,0,0,0,,{{{stags}}}{sub["text"]}')
+    else:
+        out.append(f'Dialogue: 1,{ts(start)},{ts(end)},CTA,,0,0,0,,{{\\an5\\move(960,{904 + 10},960,904,0,1100)\\fad({int(round(cta_in * 1000))},0)\\fs{cta_px}\\blur4\\t(0,800,\\blur0)}}{cta["text"]}')
+    return out
+
 def chapter_titles(argv):
     """--chapter-titles <chapter id> <in video> <out video>: burn ONE chapter's titles (titles-src.json, chapter seconds, no film
-    offset) onto a chapter file with the film's own ASS look. No dissolves, end card, wordmark or CTA (those belong to the film).
+    offset) onto a chapter file with the film's own ASS look. No dissolves. The chapter that owns the end card (the hero: titles-src 'logo' /
+    'cta') also gets it, chapter-relative and without the film's last fade-out: the shade, the wordmark and the CTA line (+ cta.sub), as the
+    film lays them, when post/logo-color.png and post/shade.png are found (the cut's, else the master's); without them it is titles only.
     Video re-encoded like the watcher's PhoneCopy (x264 slow, two-pass, same bitrate rule), audio copied, duration / fps kept."""
     i = argv.index('--chapter-titles'); pos = [a for a in argv[1:i] + argv[i + 1:] if not a.startswith('--')]
     if len(pos) != 4: sys.exit('usage: finish-intro.py <cut dir> --chapter-titles <chapter id> <in video> <out video>')
@@ -338,26 +362,44 @@ def chapter_titles(argv):
     known.discard(None)
     if cid not in known: sys.exit(f'chapter-titles: unknown chapter id {cid!r} (known: {", ".join(sorted(known))}); nothing written')
     if not os.path.isfile(vin): sys.exit(f'chapter-titles: input video missing: {vin}; nothing written')
-    mine = [t for t in src['titles'] if t['chapter'] == cid]     # hero: its own entries only; the CTA / wordmark stay film-only
+    mine = [t for t in src['titles'] if t['chapter'] == cid]     # the chapter's own title entries
+    # the end card (wordmark + shade + CTA): on the chapter that owns it, when its two PNGs are found (the cut's post/, else the master's)
+    post = lambda n: next((q for q in (os.path.join(d, 'post', n), None if os.environ.get('ERGO_NO_MASTER_POST') else os.path.join(ROOT, 'exports', 'cinematic-intro-20261104-hq14', 'post', n)) if q and os.path.isfile(q)), None)
+    logo_png, shade_png = post('logo-color.png'), post('shade.png')
+    card = bool(logo_png and shade_png and src.get('cta') and src.get('logo') and cid in (src['cta'].get('chapter'), src['logo'].get('chapter')))
     os.makedirs(os.path.dirname(vout) or '.', exist_ok=True)
     part = vout + '.part.mp4'
-    if not mine:
+    if not mine and not card:
         print(f'chapter-titles: {cid} has no titles: plain copy'); shutil.copyfile(vin, part); os.replace(part, vout); return
     titles = [dict(chapter=cid, start=float(t['rel_in']), end=float(t['rel_out']), eyebrow=t['eyebrow'], title=t['title'], detail=t['detail'],
                    scrim=t.get('scrim'), shadow=t.get('shadow') or {}, **({k: t[k] for k in ('position', 'scale', 'typography', 'align') if k in t}), **({'place': t['place']} if t.get('place') in PLACES else {})) for t in mine]
     tmp = tempfile.mkdtemp(prefix='chtitles-')
     try:
-        assf = os.path.join(tmp, 'titles.ass'); open(assf, 'w', encoding='utf-8').write('\n'.join(ASS_HEAD + title_dialogues(titles)) + '\n')
+        pr = subprocess.run(['ffprobe', '-v', 'error', '-select_streams', 'v:0', '-show_entries', 'stream=width,height,r_frame_rate:format=duration', '-of', 'json', vin], capture_output=True, text=True)
+        info = json.loads(pr.stdout or '{}'); st = (info.get('streams') or [{}])[0]; dur = float((info.get('format') or {}).get('duration') or 0)
+        W, H = int(st.get('width') or 1920), int(st.get('height') or 1080); fr = st.get('r_frame_rate') or '30/1'
+        extra = end_card_ass(src, logo_png, dur) if card else []
+        assf = os.path.join(tmp, 'titles.ass'); open(assf, 'w', encoding='utf-8').write('\n'.join(ASS_HEAD + title_dialogues(titles) + extra) + '\n')
         # Windows: no drive colons in a filtergraph, so ffmpeg runs inside tmp with the .ass and the Poppins files beside it.
         for f in glob.glob(os.path.join(FONTS, 'Poppins-*.ttf')): shutil.copy(f, tmp)
         subs = 'subtitles=filename=titles.ass:fontsdir=.'
-        pr = subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', vin], capture_output=True, text=True)
-        dur = float(pr.stdout.strip() or 0)
         if dur <= 0: sys.exit(f'chapter-titles: cannot read the duration of {vin}')
+        vf, ins, vmap = ['-vf', subs], [], '0:v'
+        if card:
+            # the film's end card (main()): the shade fades in 1 s before the wordmark (2.2 s), the wordmark in 1.4 s; here the chapter's
+            # own clock, no fade-out. The CTA line is in the .ass (end_card_ass), burned last.
+            L = end_logo(src['logo']); logo_at = float(src['logo']['rel_in']) + float(src['logo'].get('show_delay', 0))
+            for n_, q in (('logo.png', logo_png), ('shade.png', shade_png)): shutil.copy(q, os.path.join(tmp, n_))
+            ins = ['-loop', '1', '-framerate', fr, '-i', os.path.join(tmp, 'logo.png'), '-loop', '1', '-framerate', fr, '-i', os.path.join(tmp, 'shade.png')]
+            graph = (f'[2:v]scale={W}:{H},format=rgba,trim=0:{dur:.3f},fade=t=in:st={max(0, logo_at - 1.0):.3f}:d=2.2:alpha=1[shade];'
+                     f'[0:v][shade]overlay=shortest=1:format=auto[shaded];'
+                     f'[1:v]scale={logo_w(W, L)}:-1:flags=lanczos,format=rgba,trim=0:{dur:.3f},fade=t=in:st={logo_at:.3f}:d=1.4:alpha=1[logo];'
+                     f'[shaded][logo]overlay={logo_xy(L)}:shortest=1:format=auto,format=yuv420p,{subs}[v]')
+            vf, vmap = ['-filter_complex', graph], '[v]'
         kb = int(min(6000, 27.5 * 8192 / dur - 128)); pl = 'pp'   # the watcher's PhoneCopy bitrate rule
         enc = ['-c:v', 'libx264', '-preset', 'slow', '-b:v', f'{kb}k', '-pix_fmt', 'yuv420p']
-        run(['ffmpeg', '-v', 'error', '-y', '-i', vin, '-vf', subs, *enc, '-pass', '1', '-passlogfile', pl, '-an', '-f', 'null', os.devnull], cwd=tmp)
-        run(['ffmpeg', '-v', 'error', '-y', '-i', vin, '-vf', subs, *enc, '-pass', '2', '-passlogfile', pl, '-map', '0:v', '-map', '0:a?',
+        run(['ffmpeg', '-v', 'error', '-y', '-i', vin, *ins, *vf, *(['-map', '[v]'] if card else []), *enc, '-pass', '1', '-passlogfile', pl, '-an', '-f', 'null', os.devnull], cwd=tmp)
+        run(['ffmpeg', '-v', 'error', '-y', '-i', vin, *ins, *vf, *enc, '-pass', '2', '-passlogfile', pl, '-map', vmap, '-map', '0:a?',
              '-c:a', 'copy', '-movflags', '+faststart', '-f', 'mp4', part], cwd=tmp)
         os.replace(part, vout)
     except subprocess.CalledProcessError as e:
@@ -365,7 +407,7 @@ def chapter_titles(argv):
         sys.exit(f'chapter-titles: ffmpeg failed ({e.returncode}); nothing written')
     finally:
         shutil.rmtree(tmp, ignore_errors=True)
-    print(f'chapter-titles: {cid}: {len(mine)} title(s) -> {vout}')
+    print(f'chapter-titles: {cid}: {len(mine)} title(s){" + end card" if card else ""} -> {vout}')
 
 def main():
     if '--chapter-titles' in sys.argv: return chapter_titles(sys.argv)

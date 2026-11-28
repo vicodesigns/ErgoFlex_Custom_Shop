@@ -11,7 +11,7 @@ def check(ok, msg):
     print(('PASS ' if ok else 'FAIL ') + msg); ok or fails.append(msg)
 def sh(cmd, **kw): return subprocess.run(cmd, capture_output=True, **kw)
 def cli(cut, *a):
-    r = sh([sys.executable, '-X', 'utf8', SCRIPT, cut, *a], text=True, encoding='utf-8'); return r.returncode, r.stdout + r.stderr
+    r = sh([sys.executable, '-X', 'utf8', SCRIPT, cut, *a], text=True, encoding='utf-8', env={**os.environ, 'ERGO_NO_MASTER_POST': '1'}); return r.returncode, r.stdout + r.stderr
 def frame(path, t):
     r = sh(['ffmpeg', '-v', 'error', '-ss', str(t), '-i', path, '-frames:v', '1', '-vf', f'scale={W}:{H}', '-pix_fmt', 'gray', '-f', 'rawvideo', '-'])
     assert len(r.stdout) == W * H, f'frame at {t}: {len(r.stdout)} bytes'; return r.stdout
@@ -51,7 +51,17 @@ try:
     check(rc != 0 and 'unknown chapter id' in msg and not os.path.exists(bad) and not os.path.exists(os.path.dirname(bad)), f'unknown chapter: exit {rc}, message, no output')
     # edge: chapter with no titles -> plain copy (byte-identical), no error. 'hero' only owns the CTA/logo, never a chapter title.
     cp = os.path.join(tmp, 'copy.mp4'); rc, msg = cli(cut, '--chapter-titles', 'hero', clip, cp)
-    check(rc == 0 and os.path.exists(cp) and open(cp, 'rb').read() == open(clip, 'rb').read(), 'no-title chapter (hero CTA is film-only): plain byte copy')
+    check(rc == 0 and os.path.exists(cp) and open(cp, 'rb').read() == open(clip, 'rb').read(), 'hero without end-card PNGs (cut has no post/, master fallback off): plain byte copy')
+    # the hero (owner of the end card) gets the shade, the wordmark and the CTA line when the cut / master has post/logo-color.png + shade.png
+    cut2 = os.path.join(tmp, 'cut2'); os.makedirs(os.path.join(cut2, 'post')); shutil.copy(os.path.join(cut, 'titles-src.json'), cut2)
+    for nm, spec in (('logo-color.png', 'color=c=white:s=200x60'), ('shade.png', f'color=c=black:s={W}x{H}')):
+        assert sh(['ffmpeg', '-v', 'error', '-y', '-f', 'lavfi', '-i', spec, '-frames:v', '1', os.path.join(cut2, 'post', nm)]).returncode == 0
+    card = os.path.join(tmp, 'card.mp4'); rc, msg = cli(cut2, '--chapter-titles', 'hero', clip, card)
+    check(rc == 0 and os.path.getsize(card) > 0 and 'end card' in msg, f'hero chapter with end-card PNGs: burns the end card ({msg.strip().splitlines()[-1:]})')
+    b0, b49 = frame(card, 0.1), frame(card, 4.9); LOGO = (100, 100, 220, 150)
+    check(changed(b0, b49, LOGO) > 100, f'end card wordmark/shade PRESENT at 4.9 s ({changed(b0, b49, LOGO)} px)')
+    check(changed(frame(clip, 0.1), b0, (0, 0, W, H)) < 5, 'end card ABSENT at the start of the chapter')
+    check(abs(float(pi(clip, 'format=duration')['format']['duration']) - float(pi(card, 'format=duration')['format']['duration'])) < 0.15, 'end-card burn keeps the duration')
     # edge: missing input -> non-zero, no output
     rc, msg = cli(cut, '--chapter-titles', 'awaken', os.path.join(tmp, 'nope.mp4'), os.path.join(tmp, 'o2.mp4'))
     check(rc != 0 and not os.path.exists(os.path.join(tmp, 'o2.mp4')), 'missing input: non-zero, no output')
