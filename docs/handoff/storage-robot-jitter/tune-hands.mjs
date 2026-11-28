@@ -143,7 +143,9 @@ const STATIC_T = flag('--static', null) === null ? null : +flag('--static', 0);
 let staticParts = null;   // world tris (scaled to metres) of the robot at STATIC_T: the stowed figure takes exactly this spot
 const PARAMS = [...['upperarm_l', 'lowerarm_l', 'hand_l', 'thumb_01_l'].flatMap(b => ['x', 'y', 'z'].map(a => ({ b, a }))),
     ...FING.map(f => ({ f, s: 'l' })), { thumb: 'l' }, ...FING.map(f => ({ f, s: 'r' })), { thumb: 'r' }, ...['x', 'y', 'z'].map(a => ({ b: 'thumb_01_r', a })),
-].filter(p => !args.includes('--fingers-only') || !p.b || /thumb/.test(p.b));
+].filter(p => !args.includes('--fingers-only') || !p.b || /thumb/.test(p.b))
+    // --keep-near-thumb: the near (left) thumb and its base stay as the fallback has them: they are the grip you see
+    .filter(p => !args.includes('--keep-near-thumb') || !(p.thumb === 'l' || p.b === 'thumb_01_l'));
 // turn limits (deg): a finger's curl / the thumb's base, so a finger never bends back or folds away
 const TUNED = [...new Set(PARAMS.flatMap(p => p.b ? [p.b] : p.f ? [1, 2, 3].map(j => `${p.f}_0${j}_${p.s}`) : [`thumb_02_${p.thumb}`, `thumb_03_${p.thumb}`]))];
 // --touch thumb_l,...: fingers that must touch the robot at every key (the fallback's near-hand grip is its thumb/thenar)
