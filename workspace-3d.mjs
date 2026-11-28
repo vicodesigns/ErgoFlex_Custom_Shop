@@ -26,7 +26,7 @@ import { buildScifiRoom, scifiLayoutForSize, scifiLayoutById } from './scifi-roo
 import { buildGalleryRoom, galleryLayoutForSize, galleryLayoutById } from './gallery-room.mjs?v=polish-20261113b';
 import { buildChildRoom, CHILD_MODES, childLayoutForSize, childLayoutById } from './child-room.mjs?v=polish-20261113b';
 import { buildBedroomRoom, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=polish-20261113b';
-import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById, polishWorkshopEquipment } from './workshop-room.mjs?v=polish-20261124-workshop';
+import { buildWorkshopRoom, workshopLayoutForSize, workshopLayoutById, polishWorkshopEquipment } from './workshop-room.mjs?v=storage-clock-20261127';
 import * as THREE from 'three';
 import { RoomBounceLight } from './room-bounce-light.mjs?v=polish-20261111f';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
@@ -1420,6 +1420,7 @@ export class WorkspaceRoom {
         disposeTree([...(this.campusRetired || []), ...(this.root ? [this.root] : [])]);
         this.campusRetired=[];this.campusFixtures=[];
         this.id = id; this.root = null; this.walls = []; this.missingProps = [];
+        this.setWorkshopClockTime = null;
         // The room's look (room-looks.mjs): options.look, else the room's default; null for a room with one look.
         this.look = lookOf(id, options.look);
         this.atelierGamingGlows = []; this.atelierDecorGlows = []; this.atelierBedGlows = []; this.atelierLamps = []; this.atelierLampPhase = ['afternoon',1];
