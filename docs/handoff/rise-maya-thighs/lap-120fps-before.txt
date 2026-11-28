@@ -1,0 +1,2 @@
+C:/Users/Vico/AppData/Local/Temp/claude/9f9a2178443cce16/6d0530a0-fb15-4a72-8d55-036a7ed5ac61/scratchpad/rise-maya-thighs/pen-lap-base.json 12-14.2 hand_l: skin 30.0mm middle_03_l>thigh_l @13.458 | joint 18.3mm J:middle_03_l>thigh_l @13.267 | frames>2mm 138 12.208..13.592
+C:/Users/Vico/AppData/Local/Temp/claude/9f9a2178443cce16/6d0530a0-fb15-4a72-8d55-036a7ed5ac61/scratchpad/rise-maya-thighs/pen-lap-base.json 12-14.2 hand_r: skin 20.5mm middle_03_r>thigh_r @13.258 | joint 0.0mm undefined>undefined @undefined | frames>2mm 86 12.225..13.375

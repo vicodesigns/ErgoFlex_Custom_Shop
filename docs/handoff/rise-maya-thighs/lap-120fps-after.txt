@@ -1,0 +1,15 @@
+C:/Users/Vico/AppData/Local/Temp/claude/9f9a2178443cce16/6d0530a0-fb15-4a72-8d55-036a7ed5ac61/scratchpad/rise-maya-thighs/pen-lap-new2.json 12-14.2 hand_l: skin 4.0mm middle_03_l>thigh_l @12.217 | joint 0.0mm undefined>undefined @undefined | frames>2mm 14 12.208..12.717
+C:/Users/Vico/AppData/Local/Temp/claude/9f9a2178443cce16/6d0530a0-fb15-4a72-8d55-036a7ed5ac61/scratchpad/rise-maya-thighs/pen-lap-new2.json 12-14.2 hand_r: skin 6.3mm ring_03_r>thigh_r @12.250 | joint 0.0mm undefined>undefined @undefined | frames>2mm 22 12.233..12.975
+accel (2nd diff, mm/frame^2) max A 22.66 l.elbow 12.225 | B 22.66 l.elbow 12.225 | max B-A 7.98 r.tip 12.283
+  12.275 r.tip base 0.98 new 8.71
+  12.283 r.tip base 0.55 new 8.53
+  13.542 l.tip base 1.75 new 8.40
+  12.300 r.tip base 0.27 new 7.24
+  12.275 r.wrist base 1.05 new 7.20
+  13.542 l.wrist base 1.24 new 6.66
+  12.308 r.tip base 0.21 new 6.46
+  13.642 l.tip base 2.66 new 5.98
+  12.267 r.wrist base 2.95 new 5.72
+  12.283 r.wrist base 0.60 new 5.22
+  13.642 l.wrist base 1.77 new 5.14
+  12.267 r.tip base 2.80 new 4.87

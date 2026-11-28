@@ -1,0 +1,5 @@
+frames 217 min clearance to chair 18.7 mm lowerarm_l @12.975 (60 mm search cap)
+  head 60.0 mm head @12.000
+  upper 34.2 mm upperarm_l @13.042
+  fore 18.7 mm lowerarm_l @12.975
+  hand 60.0 mm hand_r @12.000

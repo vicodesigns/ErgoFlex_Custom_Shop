@@ -1,0 +1,5 @@
+motion @120 step 21.25 (l.tip 18.842)  dstep 8.40 (l.tip 13.533)  jump 0.55 (r.tip 21.800)  turn 38.41 (l.elbow 14.700)
+pen-full-new.json 14-23.3 hand_l: skin 1.3mm pinky_03_l>head @17.300 | joint 0.0mm undefined>undefined @undefined | frames>2mm 0
+pen-full-new.json 14-23.3 hand_r: skin 1.4mm index_03_r>lowerarm_l @19.342 | joint 0.0mm undefined>undefined @undefined | frames>2mm 0
+pen-full-new.json 13-14 hand_l: skin 0.0mm undefined>undefined @undefined | joint 0.0mm undefined>undefined @undefined | frames>2mm 0
+pen-full-new.json 13-14 hand_r: skin 1.4mm middle_03_r>thigh_r @13.325 | joint 0.0mm undefined>undefined @undefined | frames>2mm 0
