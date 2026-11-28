@@ -3317,14 +3317,14 @@
    "preset": "artist",
    "name": "Pearl White",
    "start": 0.0,
-   "end": 1.8,
+   "end": 1.55,
    "look": "blank-pearl"
   },
   {
    "n": "B",
    "preset": "artist",
    "name": "",
-   "start": 1.2,
+   "start": 0.95,
    "end": 7.14,
    "finish": {
     "wood": "Deep Navy",
