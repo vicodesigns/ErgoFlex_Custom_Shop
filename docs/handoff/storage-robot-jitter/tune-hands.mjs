@@ -114,6 +114,20 @@ function buildSdf(parts) {   // parts: [[tri...]] in hand_r frame (metres). 2 mm
         let inside = false; for (const T of parts) { let odd = 0; for (const r of RAYS) odd += hits(p, r, T) & 1; if (odd >= 2) { inside = true; break; } }
         g[(i * n[1] + j) * n[2] + k] = inside ? -d : d;
     }
+    // cells deeper than the band inside a part (H3 fix: they were left at +band, so a finger 19 mm deep read as 12 mm OUT):
+    // scanline parity along +x per part, -band for every far cell inside
+    for (const T of parts) for (let j = 0; j < n[1]; j++) for (let k = 0; k < n[2]; k++) {
+        const y = o[1] + j * h + 1.3e-6, z = o[2] + k * h + 0.7e-6, xs = [];
+        for (const [a, b, c] of T) {
+            const e1 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]], e2 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+            const py = -e2[2], pz = e2[1], det = e1[1] * py + e1[2] * pz; if (Math.abs(det) < 1e-14) continue;   // dir (1,0,0)
+            const iv = 1 / det, tx = o[0] - a[0], ty = y - a[1], tz = z - a[2], u = (ty * py + tz * pz) * iv; if (u < 0 || u > 1) continue;
+            const qx = ty * e1[2] - tz * e1[1], qy = tz * e1[0] - tx * e1[2], qz = tx * e1[1] - ty * e1[0], w = qx * iv; if (w < 0 || u + w > 1) continue;
+            xs.push(o[0] + (e2[0] * qx + e2[1] * qy + e2[2] * qz) * iv);
+        }
+        if (xs.length < 2) continue; xs.sort((p, q) => p - q);
+        for (let i = 0; i < n[0]; i++) { const at = (i * n[1] + j) * n[2] + k; if (g[at] < band) continue; const x = o[0] + i * h; let c = 0; for (const v of xs) if (v < x) c++; if (c & 1) g[at] = -band; }
+    }
     return {
         o, n, h, g, min, max,
         at(x, y, z) {
@@ -134,7 +148,9 @@ const PARAMS = [...['upperarm_l', 'lowerarm_l', 'hand_l', 'thumb_01_l'].flatMap(
 const LIMIT = p => p.b ? (/thumb/.test(p.b) ? +flag('--thumb-limit', 20) : 30) : +flag('--finger-limit', 25);
 const sdfs = new Map(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3();
 let bendAxis = null;
-function current(t) { people.update(state(t)); const o = people.people.find(x => x.visible && x.userData.realGlb && (x.userData.personAmount ?? 1) > .5); o.updateMatrixWorld(true); return o; }
+// the people motion carries state from frame to frame (as the film draws it, 240 Hz sub-frames in order): walk there
+let clock = T0;
+function current(t) { for (let u = clock + 1 / 240; u < t - 1e-9; u += 1 / 240) people.update(state(u)); clock = t; people.update(state(t)); const o = people.people.find(x => x.visible && x.userData.realGlb && (x.userData.personAmount ?? 1) > .5); o.updateMatrixWorld(true); return o; }
 function setup(o) {
     const id = o.userData.person.id, bones = o.userData.personRig.bones, rb = bones.get('hand_r');
     const inv = STATIC_T !== null ? new THREE.Matrix4().makeScale(1e-3, 1e-3, 1e-3) : rb.matrixWorld.clone().invert();
@@ -186,13 +202,14 @@ function measure(S) {   // signed distances (m): penalty, nearest finger/hand sk
     }
     return out;
 }
-function solve(S, init, prev, contactL, contactR, touching = []) {
+function solve(S, init, prev, contactL, contactR, touching = [], palm0 = 1) {
     let th = init.slice();
     const cost = x => {
         apply(S, x); const m = measure(S); let c = m.pen * 4e7;
         if (contactL) c += Math.max(0, m.minL - CONTACT) ** 2 * 4e6;
         if (contactR) c += Math.max(0, m.minR - CONTACT) ** 2 * 4e6;
         for (const f of touching) c += Math.max(0, (m.fmin[f] ?? 1) - FCONTACT) ** 2 * 4e7;
+        if (palm0 < 0.003) c += Math.max(0, m.palmL - Math.max(palm0, 0) - 0.001) ** 2 * 4e8;
         for (let k = 0; k < x.length; k++) c += 0.002 * x[k] ** 2 + (prev ? 0.01 * (x[k] - prev[k]) ** 2 : 0);
         return c;
     };
@@ -240,7 +257,7 @@ for (const t of KEYS) {
     const S = setup(o), zero = PARAMS.map(() => 0); apply(S, zero); const m0 = measure(S);
     const contactL = STATIC_T === null && m0.minL < 0.006, contactR = STATIC_T === null && m0.minR < 0.006;
     const pinned = PIN.has(t) ? solvedTh.get(PIN.get(t)) || INIT.find(x => Math.abs(x.t - PIN.get(t)) < 1e-6)?.th : null;
-    const r = pinned ? (apply(S, pinned), { th: pinned, m: measure(S) }) : NOTUNE ? (apply(S, zero), { th: zero, m: measure(S) }) : solve(S, prevTh && prevId === S.id ? prevTh : zero, prevId === S.id ? prevTh : null, contactL, contactR, Object.keys(m0.fmin).filter(f => m0.fmin[f] < FCONTACT));
+    const r = pinned ? (apply(S, pinned), { th: pinned, m: measure(S) }) : NOTUNE ? (apply(S, zero), { th: zero, m: measure(S) }) : solve(S, prevTh && prevId === S.id ? prevTh : zero, prevId === S.id ? prevTh : null, contactL, contactR, Object.keys(m0.fmin).filter(f => m0.fmin[f] < FCONTACT), m0.palmL);
     const turns = {}; for (const [n, b] of S.bones) { const d = S.q0.get(n).clone().invert().multiply(b.quaternion); if (1 - Math.abs(d.w) > 1e-7) turns[n] = d.toArray().map(x => +x.toFixed(5)); }
     apply(S, zero);
     const mm = x => +(x * 1000).toFixed(2);
