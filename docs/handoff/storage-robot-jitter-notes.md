@@ -117,3 +117,32 @@ vertex and a robot vertex keep the same hand-frame coordinates to 0.1 mm across 
 - Andre's skin inside the robot, after the restore: every sample 0-2.6 s, deepest 10.0 mm (left palm/thumb, 2.00 s),
   left thumb 7-9 mm through the lift (1.4-1.93 s), right thumb 5-6.5 mm (1.0-2.0 s); before: up to 15 mm (left thumb 0.98 s).
   The hand-tuning (H2) below addresses these.
+
+## H2 (28 Nov ~02:00): hands hold the outside of the robot; robot no longer vanishes
+Changes on top of b2f57a3c:
+- `2524eec7`: the stowed Robo-Pal's sceneEdit `show.to` was 24.978 (the old chapter length) in a 26.67 s chapter: the robot
+  vanished from the shelf at 24.983 s (4K frames, `before-4k-24.92-25.0s-robot-vanishes.jpg`; player ~3:43). Now 26.67.
+- `3f33f101` + `4c8e7713`: pose keys on Andre's left arm/hand/fingers and right fingers/thumb (never upperarm/lowerarm/
+  hand_r, so the robot and its carry chain do not move): every 0.1 s on the three robot postures, extra finger keys at
+  1.0-1.2 s and 2.15-2.3 s, and on `andre-lets-go` 2.548-2.667 s (the shelf's last turns carried in, eased to none by
+  3.22 s). Solved by `tune-hands.mjs` (signed distance field of the robot in hand_r's frame, margin 0.8-4.5 mm, a touching
+  hand kept within 2.5-6 mm), merged by `merge_keys.py` into all three 3rd-cut stores: `director-film/storage.json`, the
+  `review-cut.json` storage shot and `director-camera-storage.json` (that one still held the stale pre-fix people block
+  and is the likely source of the 6e7e586d regression). Only the four robot/release posture records change; the phone
+  postures and everything after 3.22 s are untouched (field diff).
+
+Measured (headless, production people code, real GLBs, exact triangle tests), 60 fps:
+- 0-2.55 s (held robot): Andre's skin inside the robot in **0 of 153 frames** (was 153/153, up to 10 mm; frozen render
+  data up to 15 mm). A 120 Hz pass over 2.1-2.4 s finds 0.2 mm at 2.175 s (left thumb tip, between frames).
+  Nearest skin to the robot: work L 0-7.7 mm (mean 1.5, touching), R 0.9 mm; lift L 2.7-22 mm (mean 7.6), R 0.7-2.5;
+  shelf L 0.7-13 mm, R 0.7-6 mm. So the left hand comes off the robot by up to 22 mm during the lift.
+- 2.55-4.5 s (released, the stowed figure taken as the held robot's own triangles at 2.54 s, its exact spot by the earlier
+  fix): nearest hand skin >= 0.89 mm at every frame (was 2-6.4 mm inside, right thumb/index, 2.58-2.68 s).
+- Robot motion: largest step 13.2 mm/frame (1.067 s, the lift), largest step change 4.3 mm (2.033 s); no direction reversals.
+- Pops: ghost audit (240 Hz on swaps): no pops, no ghosts; fastest Andre part 23 mm per 1/120 s (6.35 s walk, unchanged).
+- Tests: people-pose-keys, room-people-robot, people-held, cinematic-cuts, room-people-motion, film-edits-show-screen pass.
+
+NOT visually confirmed (GPU busy all night): finger/thumb shapes after the turns (up to 20 deg on the left arm at 0.9-1.0 s,
+16.5 deg at 2.4-2.53 s), the thumb change at the 1.0 s swap, the 22 mm lift gap, the hand-over at 2.548 s and shelf
+clearance (stage-only), the phone shot (data untouched). Run the GPU commands above (renderRange [0.5,3.3] 4K/60/blur 4,
+and [24.5,26.67] for the shelf robot staying put).
