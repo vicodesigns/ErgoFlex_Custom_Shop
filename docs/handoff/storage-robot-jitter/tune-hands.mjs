@@ -32,7 +32,7 @@ function stripGlb(buf) {   // drop images/textures so GLTFLoader parses in node
 }
 const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder), glbCache = new Map();
 async function realModel(id) {
-    const e = entries.get(id); if (!e?.file || !/people-andre-stand-robot/.test(id)) return null;
+    const e = entries.get(id); if (!e?.file || !/^people-andre-/.test(id)) return null;
     if (!glbCache.has(id)) { const b = stripGlb(fs.readFileSync(path.join(root, e.file))); glbCache.set(id, b); }
     const b = glbCache.get(id), ab = b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
     const g = await new Promise((res, rej) => loader.parse(ab, '', res, rej)).catch(e => { console.error('glb', id, e?.message || e); throw e; });
@@ -129,7 +129,7 @@ const STATIC_T = flag('--static', null) === null ? null : +flag('--static', 0);
 let staticParts = null;   // world tris (scaled to metres) of the robot at STATIC_T: the stowed figure takes exactly this spot
 const PARAMS = [...['upperarm_l', 'lowerarm_l', 'hand_l', 'thumb_01_l'].flatMap(b => ['x', 'y', 'z'].map(a => ({ b, a }))),
     ...FING.map(f => ({ f, s: 'l' })), { thumb: 'l' }, ...FING.map(f => ({ f, s: 'r' })), { thumb: 'r' }, ...['x', 'y', 'z'].map(a => ({ b: 'thumb_01_r', a })),
-    ...(STATIC_T !== null ? ['upperarm_r', 'lowerarm_r', 'hand_r'].flatMap(b => ['x', 'y', 'z'].map(a => ({ b, a }))) : [])];
+].filter(p => !args.includes('--fingers-only') || !p.b || /thumb/.test(p.b));
 const sdfs = new Map(), Q = new THREE.Quaternion(), E = new THREE.Euler(), V = new THREE.Vector3();
 let bendAxis = null;
 function current(t) { people.update(state(t)); const o = people.people.find(x => x.visible && x.userData.realGlb && (x.userData.personAmount ?? 1) > .5); o.updateMatrixWorld(true); return o; }
