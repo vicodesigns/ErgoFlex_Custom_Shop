@@ -4829,6 +4829,62 @@
    },
    "epoch": "13",
    "estimateMinutes": 3.3
+  },
+  {
+   "id": "req-20261127T235456",
+   "created": "2026-11-27T23:55:41Z",
+   "scope": "chapter",
+   "chapter": "hero",
+   "chapterIndex": 11,
+   "resolution": "1080p",
+   "height": 1080,
+   "note": "",
+   "manifest": "exports/cinematic-intro-20261104-req-20261127T235456-freeze-rev9654/manifest.txt",
+   "cut": "exports/cinematic-intro-20261104-req-20261127T235456-freeze-rev9654/request/cut.json",
+   "shots": "0",
+   "requestCreated": "2026-11-27T23:54:35.074Z",
+   "clientSignature": "206b7b7ca1026fa4",
+   "requestSha": "34c9e82d7e923129b0125dd343a5eb04ce3d164f54a44d637f87381f537deebd",
+   "force": false,
+   "status": "queued",
+   "cutDir": "exports/cinematic-intro-cut-vicos-3rd-cut",
+   "cutName": "Vicos 3rd cut",
+   "fps": 30,
+   "blur": 4,
+   "format": "h264",
+   "chapterKeys": {
+    "hero": "fa1b589a495e179bf05379c7efe2bbe125d67a17170c8da99aece6d6db462d58"
+   },
+   "epoch": "13",
+   "estimateMinutes": 3.3
+  },
+  {
+   "id": "req-20261128T000957",
+   "created": "2026-11-28T00:10:42Z",
+   "scope": "chapter",
+   "chapter": "hero",
+   "chapterIndex": 11,
+   "resolution": "1080p",
+   "height": 1080,
+   "note": "",
+   "manifest": "exports/cinematic-intro-20261104-req-20261128T000957-freeze-rev9670/manifest.txt",
+   "cut": "exports/cinematic-intro-20261104-req-20261128T000957-freeze-rev9670/request/cut.json",
+   "shots": "0",
+   "requestCreated": "2026-11-28T00:09:29.874Z",
+   "clientSignature": "9fa13230e48a28f1",
+   "requestSha": "1b35eed0ce31f976b0a24aba13a3782b652d81a8cb27a684f6f19589170b6d1e",
+   "force": false,
+   "status": "queued",
+   "cutDir": "exports/cinematic-intro-cut-vicos-3rd-cut",
+   "cutName": "Vicos 3rd cut",
+   "fps": 30,
+   "blur": 4,
+   "format": "h264",
+   "chapterKeys": {
+    "hero": "a4aeff2ed8e4140983bf1cb4199ad6d77ebe2e9453ae85b03d34e1803e67c2e5"
+   },
+   "epoch": "13",
+   "estimateMinutes": 3.3
   }
  ]
 }

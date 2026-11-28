@@ -1,5 +1,5 @@
 {
- "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-a76bc324474b-Film-chapter-hero-27-45-s-.json",
+ "source": "/home/ergo/ErgoFlex_Custom_Shop/exports/cinematic-intro-cut-vicos-3rd-cut/director-exports/export-967ec831f995-Film-chapter-hero-27-45-s-__2_.json",
  "seconds": 27.45,
  "keys": [
   {
@@ -3316,7 +3316,7 @@
    "n": "I",
    "preset": "artist",
    "name": "Pearl White",
-   "start": 0,
+   "start": 0.0,
    "end": 1.8,
    "look": "blank-pearl"
   },
@@ -3325,21 +3325,32 @@
    "preset": "artist",
    "name": "",
    "start": 1.2,
-   "end": 7.14
+   "end": 7.14,
+   "finish": {
+    "wood": "Deep Navy",
+    "trim": "#242249"
+   }
   },
   {
    "n": "C",
    "preset": "architect",
    "name": "",
    "start": 6.54,
-   "end": 12.25
+   "end": 12.25,
+   "finish": {
+    "trim": "#fbfbe4"
+   }
   },
   {
    "n": "D",
    "preset": "office",
    "name": "",
    "start": 11.65,
-   "end": 18.58
+   "end": 18.58,
+   "finish": {
+    "wood": "Modern Grey",
+    "trim": "#9198a1"
+   }
   },
   {
    "n": "H",
