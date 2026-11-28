@@ -429,12 +429,57 @@ export function buildWorkshopRoom(room, root, layout, helpers) {
     if(tier){signPlate(right,2,[220,220],[w/2-3,1690,bz+1660],-Math.PI/2);signPlate(right,7,[220,220],[w/2-3,1690,bz+1900],-Math.PI/2);}
 
     // Shop clock and the safe-days board above the rolling cart.
-    const clockFace=texture((c,tw)=>{c.fillStyle='#f6f3ea';c.fillRect(0,0,tw,tw);c.translate(tw/2,tw/2);c.fillStyle='#1f2a2c';for(let i=0;i<60;i++){c.save();c.rotate(i*Math.PI/30);c.fillRect(-1.5,-118,3,i%5?8:20);c.restore();}
-        c.font='bold 26px sans-serif';c.textAlign='center';c.textBaseline='middle';for(let i=1;i<=12;i++)c.fillText(i,Math.sin(i*Math.PI/6)*86,-Math.cos(i*Math.PI/6)*86);
-        c.lineCap='round';c.lineWidth=8;c.beginPath();c.moveTo(0,0);c.lineTo(Math.sin(-1.03)*55,-Math.cos(-1.03)*55);c.stroke();c.lineWidth=5;c.beginPath();c.moveTo(0,0);c.lineTo(Math.sin(1.05)*92,-Math.cos(1.05)*92);c.stroke();
-        c.strokeStyle='#c2342a';c.lineWidth=2;c.beginPath();c.moveTo(0,20);c.lineTo(Math.sin(2.6)*100,-Math.cos(2.6)*100);c.stroke();},256,256);
-    const clock=group('shop-clock','Shop clock and safe-days board',[w/2,1720,front-700],0,right);
-    kcyl(clock,[170,170,46,32],[-23,0,0],steel,[0,0,Math.PI/2]);mesh(clock,new THREE.CylinderGeometry(152,152,8,32),material('#ffffff',{map:clockFace,roughness:.5}),[-48,0,0]).rotation.z=Math.PI/2;
+    const clockFace = texture((c, tw) => {
+        c.fillStyle = '#f6f3ea';
+        c.fillRect(0, 0, tw, tw);
+        c.translate(tw / 2, tw / 2);
+        c.fillStyle = '#1f2a2c';
+        for (let i = 0; i < 60; i++) {
+            c.save();
+            c.rotate(i * Math.PI / 30);
+            c.fillRect(-1.5, -118, 3, i % 5 ? 8 : 20);
+            c.restore();
+        }
+        c.font = 'bold 26px sans-serif';
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        for (let i = 1; i <= 12; i++) {
+            const angle = i * Math.PI / 6;
+            c.fillText(i, Math.sin(angle) * 86, -Math.cos(angle) * 86);
+        }
+    }, 256, 256);
+    const clock = group('shop-clock', 'Shop clock and safe-days board', [w / 2, 1720, front - 700], 0, right);
+    kcyl(clock, [170, 170, 46, 32], [-23, 0, 0], steel, [0, 0, Math.PI / 2]);
+    kcyl(clock, [152, 152, 8, 32], [-48, 0, 0], enamel, [0, 0, Math.PI / 2]);
+    // Face the room (-X), with the dial's up aligned to world +Y and its right to +Z.
+    const dial = mesh(clock, new THREE.CircleGeometry(152, 32),
+        material('#ffffff', { map: clockFace, roughness: .5 }), [-52.1, 0, 0]);
+    dial.rotation.y = -Math.PI / 2;
+    dial.castShadow = false;
+
+    const handMaterial = material('#1f2a2c', { roughness: .5 });
+    const secondMaterial = material('#c2342a', { roughness: .5 });
+    const clockHand = (name, depth, width, tip, tail, mat) => {
+        const pivot = new THREE.Group();
+        pivot.name = name;
+        pivot.position.x = depth;
+        clock.add(pivot);
+        const hand = mesh(pivot, new THREE.BoxGeometry(1, tip + tail, width), mat, [0, (tip - tail) / 2, 0]);
+        hand.castShadow = false;
+        return pivot;
+    };
+    const hour = clockHand('Hour hand', -54, 9, 65, 0, handMaterial);
+    const minute = clockHand('Minute hand', -56, 6, 109, 0, handMaterial);
+    const second = clockHand('Second hand', -58, 3, 119, 24, secondMaterial);
+    kcyl(clock, [6, 6, 4, 16], [-60, 0, 0], handMaterial, [0, 0, Math.PI / 2]);
+
+    room.setWorkshopClockTime = seconds => {
+        const time = 3 * 3600 + 42 * 60 + seconds;
+        hour.rotation.x = (time % 43200) / 43200 * 2 * Math.PI;
+        minute.rotation.x = (time % 3600) / 3600 * 2 * Math.PI;
+        second.rotation.x = (time % 60) / 60 * 2 * Math.PI;
+    };
+    room.setWorkshopClockTime(0);
     signPlate(clock,5,[300,300],[-3,-400,0],-Math.PI/2);signPlate(clock,6,[300,300],[-3,-400,-340],-Math.PI/2);
 
     // Supply shelf above the pegboard with a task light underneath.

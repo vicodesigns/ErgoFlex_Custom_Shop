@@ -370,6 +370,7 @@ export async function mountStage(ctx) {
     if(paused||!shot)return;
     lastProgress=t;
     ctx.scene.userData.windowSkySeconds = t * shot.seconds;
+    ctx.setWorkshopClockTime(t * shot.seconds);
     if(reduced)t=1;
     const u=reduced?1:ease(t),kind=shot.kind;
     if(kind==='proximity'&&reach&&!sonar&&sonarDue())sonar=sonarReach();

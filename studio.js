@@ -43,7 +43,7 @@ import { GALLERY_MODES, GALLERY_LAYOUTS, galleryLayoutForSize, galleryLayoutById
 import { CHILD_AGE_STAGES, childAgeStage, childModesForStage, upgradeChildDesk } from './child-growth-profiles.mjs';
 import { CHILD_MODES, CHILD_LAYOUTS, CHILD_ALL_LAYOUTS, childLayoutsForStage, childLayoutForSize, childLayoutById } from './child-room.mjs?v=polish-20261113b';
 import { BEDROOM_MODES, BEDROOM_LAYOUTS, bedroomLayoutForSize, bedroomLayoutById } from './bedroom-room.mjs?v=polish-20261113b';
-import { WORKSHOP_MODES, WORKSHOP_LAYOUTS, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=polish-20261124-workshop';
+import { WORKSHOP_MODES, WORKSHOP_LAYOUTS, workshopLayoutForSize, workshopLayoutById } from './workshop-room.mjs?v=storage-clock-20261127';
 import * as THREE from 'three';
 import { LED_EFFECTS, normalizeLedEffect, sampleLedEffect } from './led-effects.mjs?v=led-effects-20261003';
 import { LED_STRIPS, LED_STRIP_MAP_VERSION, createLedFrame, sampleLedDiagnostic } from './led-strip-map.mjs?v=led-game-20261003';
@@ -66,7 +66,7 @@ import { layersSwitch, UI_SWITCH_KEY as LAYERS_UI_SWITCH_KEY, frameView, project
 import { TILT_SPEEDS, GLIDE_SPEEDS, TILT_MIN, TILT_MAX, maximumTiltForHeight, minimumHeightForTilt, rigDegreesForTilt } from './motion-limits.mjs?v=desktop-bands-back-20261005';
 import { validateBuild, blockingFindings, validationCacheKey } from './validation.mjs';
 import { INSTITUTIONAL_ROOMS, INSTITUTIONAL_IDS, INSTITUTIONAL_GROUPS, institutionalGroup, institutionalLayout, institutionalModule, institutionalModes } from './institutional-scenes.mjs?v=polish-20261111f';
-import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY, setEaselLook } from './workspace-3d.mjs?v=miaphone-20261126';
+import { WorkspaceAccessories, WorkspaceRoom, createSceneAccessorySet, loadDeskProp, cloneHeadphoneHook, disposeWorkspaceObject, ROOM_SCENES, ROOM_ATMOSPHERES, PROP_LIBRARY, setEaselLook } from './workspace-3d.mjs?v=storage-clock-20261127';
 import { cleanLook, lookOf } from './room-looks.mjs';
 // The look each room builds (room-looks.mjs), by room id; none = the room's default. Not saved: the Studio always opens a
 // room in its default look unless a Director chapter asks for another (setRoomLook).
@@ -13212,7 +13212,7 @@ if (!EVENT_DEMO && !window.__ERGO_PRESENTATION__) window.ErgoStudioShell?.mount(
 if (window.__ERGO_PRESENTATION__) {
     let presentationRoute = null, presentationOrigin = null, directorAnchor = null, bakeViewport = null;
     const presentationProductOrigins=new Map();
-    import('./experience/stage.mjs?v=rider-fade-hero-20261126').then(({mountStage}) => mountStage({
+    import('./experience/stage.mjs?v=storage-clock-20261127').then(({mountStage}) => mountStage({
         get scene(){return scene;}, get camera(){return camera;}, get renderer(){return renderer;},
         get controls(){return controls;}, get loadedModel(){return loadedModel;},
         catalog(){
@@ -13256,6 +13256,7 @@ if (window.__ERGO_PRESENTATION__) {
         readDirector(){const a=directorAnchor;return{height:liftToHeight(currentLift),tilt:primaryTiltConfig()?.currentDeg||0,
             x:a?-(glideOffset.z-a.offset.z)/a.unit:0,z:a?(glideOffset.x-a.offset.x)/a.unit:0,yaw:a?THREE.MathUtils.radToDeg(deskYaw-a.yaw):0};},
         onFrame(callback){presentationBeforeFrame=callback;},
+        setWorkshopClockTime(seconds){workspaceRoom?.setWorkshopClockTime?.(seconds);},
         async warm(){
             workspaceRoom?.update(camera);pruneTinyCasters(scene);
             // Presentation shadows are soft and update only when geometry
